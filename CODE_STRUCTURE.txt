@@ -1,0 +1,54 @@
+튜토리얼 코드 구조
+
+SimpleGame.cpp
+  창 생성과 FreeGLUT 콜백 등록. Tutorial.h의 공개 인터페이스만 사용.
+
+Tutorial.h
+  초기화, 화면 출력, 입력, 타이머 콜백 선언. 구현이나 전역 상태 정의는 없음.
+
+Tutorial.cpp
+  단일 TutorialState 인스턴스, 초기화, 키 입력, 이동 업데이트, 카메라 추적.
+
+TutorialState.h
+  좌표·건물 자료형, 퀘스트/상호작용 열거형, 상태 구조와 내부 게임플레이 선언.
+  상태 인스턴스는 extern 선언만 있으며 정의는 Tutorial.cpp 한 곳에 위치.
+
+TutorialGameplay.cpp
+  거리와 충돌 판정, 주변 상호작용 탐색, 대화와 퀘스트 상태 전환.
+
+TutorialDrawing.h / TutorialDrawing.cpp
+  기본 도형·텍스트·발광·인물 그리기, 월드 좌표를 화면으로 변환.
+  OpenGL은 현재 프로토타입과 동일하게 호환 컨텍스트를 사용.
+
+TutorialWorldRenderer.cpp
+  원경·관문·교통 연출, 실내와 도시 장면.
+  도시 장면은 바닥, 가로 시설, 깊이 정렬 대상, 장치, 차량, 표식 순서로 구성.
+
+TutorialHud.cpp
+  목표, 미니맵, 상호작용 안내, 대화 패널, 완료 패널, 일시정지 화면.
+
+TutorialRenderer.cpp / TutorialGraphics.h
+  Renderer 수명 관리, 배경 → 월드 → 후처리 → HUD 렌더링 호출.
+
+Renderer.h / Renderer.cpp
+  기존 렌더러를 현재 튜토리얼의 렌더링 백엔드로 확장.
+  장면 FBO, 다중 반경 블룸, 색 보정, 비네팅, 미세 노이즈 합성.
+  후처리 지원이 부족하면 직접 렌더링으로 전환.
+
+RenderAssets.h / RenderAssets.cpp
+  콘크리트·아스팔트·금속·유리 텍스처 생성과 수명 관리.
+  4방향 캐릭터 아틀라스와 프레임 애니메이션.
+  Windows 맑은 고딕 기반 UTF-8 한글 텍스트 텍스처 및 LRU 캐시.
+
+작업 규칙
+  렌더링 모듈은 TutorialState를 읽고, 상태 변경은 입력/게임플레이 모듈에서 수행.
+  선언은 헤더에, 함수 구현과 전역 상태 정의는 소스 파일에 배치.
+  새 .cpp를 추가할 때 vcxproj와 vcxproj.filters에도 함께 등록.
+  각 .cpp 첫 include는 stdafx.h로 유지. GLEW는 FreeGLUT보다 먼저 include.
+  .clang-format은 include 순서를 보존하고 들여쓰기·줄 길이·중괄호 규칙을 적용.
+
+현재 렌더링 진입점은 TutorialRenderer.cpp이며 실제 자원과 후처리는 Renderer가 담당.
+기존 SolidRect 셰이더 파일은 보존되어 있으나 새 후처리 셰이더는 Renderer.cpp에 내장.
+
+이후 그래픽 확장: 전체 한글, 맵 면적 4배, 주민 추가, 재질·그림자·차량 개선.
+빌드와 실행 결과 확인은 사용자가 수행.

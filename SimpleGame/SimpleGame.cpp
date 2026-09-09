@@ -9,81 +9,30 @@ but WITHOUT ANY WARRANTY.
 */
 
 #include "stdafx.h"
-#include <iostream>
-#include "Dependencies\glew.h"
-#include "Dependencies\freeglut.h"
-
-#include "Renderer.h"
-
-Renderer *g_Renderer = NULL;
-
-void RenderScene(void)
-{
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearColor(0.0f, 0.3f, 0.3f, 1.0f);
-
-	// Renderer Test
-	g_Renderer->DrawSolidRect(0, 0, 0, 4, 1, 0, 1, 1);
-
-	glutSwapBuffers();
-}
-
-void Idle(void)
-{
-	RenderScene();
-}
-
-void MouseInput(int button, int state, int x, int y)
-{
-	RenderScene();
-}
-
-void KeyInput(unsigned char key, int x, int y)
-{
-	RenderScene();
-}
-
-void SpecialKeyInput(int key, int x, int y)
-{
-	RenderScene();
-}
+#include "Tutorial.h"
+#include "TutorialGraphics.h"
+#include "Dependencies/glew.h"
+#include "Dependencies/freeglut.h"
+#include <windows.h>
 
 int main(int argc, char **argv)
 {
-	// Initialize GL things
-	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
-	glutInitWindowPosition(0, 0);
-	glutInitWindowSize(500, 500);
-	glutCreateWindow("Game Software Engineering KPU");
-
-	glewInit();
-	if (glewIsSupported("GL_VERSION_3_0"))
-	{
-		std::cout << " GLEW Version is 3.0\n ";
-	}
-	else
-	{
-		std::cout << "GLEW 3.0 not supported\n ";
-	}
-
-	// Initialize Renderer
-	g_Renderer = new Renderer(500, 500);
-	if (!g_Renderer->IsInitialized())
-	{
-		std::cout << "Renderer could not be initialized.. \n";
-	}
-
-	glutDisplayFunc(RenderScene);
-	glutIdleFunc(Idle);
-	glutKeyboardFunc(KeyInput);
-	glutMouseFunc(MouseInput);
-	glutSpecialFunc(SpecialKeyInput);
-
-	glutMainLoop();
-
-	delete g_Renderer;
-
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
+    glutInitWindowSize(1280, 800);
+    glutCreateWindow("헤일로 / 관문 인접 주거 구역 07");
+    SetWindowTextW(GetActiveWindow(), L"헤일로 / 관문 인접 주거 구역 07");
+    glewInit();
+    tutorial::InitializeGraphics();
+    glutCloseFunc(tutorial::ShutdownGraphics);
+    glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
+    glutIgnoreKeyRepeat(1);
+    tutorial::Reset();
+    glutDisplayFunc(tutorial::Draw);
+    glutReshapeFunc(tutorial::Resize);
+    glutKeyboardFunc(tutorial::KeyDown);
+    glutKeyboardUpFunc(tutorial::KeyUp);
+    glutTimerFunc(16, tutorial::Tick, 0);
+    glutMainLoop();
     return 0;
 }
-
