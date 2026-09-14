@@ -63,10 +63,9 @@ void DrawBackdrop()
         SetColor(ColorRGBA(.18f, .62f, .7f, j == 1 ? .85f : .025f));
         glLineWidth((float)j * 2);
         glBegin(GL_LINE_LOOP);
-        for (int i = 0; i < 96; i++)
+        for (const auto &point : models::Get().gateRing)
         {
-            float angle = i * 2 * kPi / 96;
-            glVertex2f(gateX + std::cos(angle) * 115, gateY + std::sin(angle) * 145);
+            glVertex2f(gateX + point.x * 115, gateY + point.y * 145);
         }
         glEnd();
     }

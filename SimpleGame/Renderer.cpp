@@ -49,9 +49,48 @@ Renderer::Renderer(int width, int height)
     {
         CreatePostProcessing();
     }
+    if (GLEW_VERSION_2_0)
+    {
+        const char *vertex = R"GLSL(
+#version 120
+varying vec2 uv;
+void main() { gl_Position=gl_ModelViewProjectionMatrix*gl_Vertex; uv=gl_MultiTexCoord0.xy; }
+)GLSL";
+        const char *fragment = R"GLSL(
+#version 120
+uniform float seconds;
+uniform int effect;
+varying vec2 uv;
+void main() {
+    if(effect==0) {
+        float wave=sin(uv.x*25.0+uv.y*13.0-seconds*2.2)*0.5+0.5;
+        float ripple=sin(length(uv-0.5)*48.0-seconds*3.0)*0.5+0.5;
+        vec3 water=mix(vec3(0.025,0.13,0.19),vec3(0.12,0.52,0.59),pow(wave*ripple,3.0));
+        gl_FragColor=vec4(water,0.86);
+    } else if(effect==1) {
+        float height=1.0-uv.y;
+        float sway=sin(height*12.0-seconds*6.0)*0.09*height;
+        float width=(1.0-height)*0.35+0.035;
+        float flame=1.0-smoothstep(width*0.3,width,abs(uv.x-0.5+sway));
+        flame*=smoothstep(0.0,0.08,uv.y)*smoothstep(0.0,0.1,height);
+        vec3 color=mix(vec3(1.0,0.22,0.035),vec3(1.0,0.9,0.3),flame*(1.0-height));
+        gl_FragColor=vec4(color,flame);
+    } else {
+        float radius=length((uv-0.5)*2.0);
+        float ring=1.0-smoothstep(0.02,0.11,abs(radius-0.78));
+        gl_FragColor=vec4(0.35,0.93,1.0,ring*0.8);
+    }
+}
+)GLSL";
+        m_effectProgram = CompileProgram(vertex, fragment);
+    }
 }
 Renderer::~Renderer()
 {
+    if (m_effectProgram)
+    {
+        glDeleteProgram(m_effectProgram);
+    }
     if (m_postProgram)
     {
         glDeleteProgram(m_postProgram);
@@ -207,6 +246,34 @@ void Renderer::EndScene(float seconds)
 void Renderer::DrawMaterial(const RenderPoint (&vertices)[4], SurfaceMaterial material)
 {
     m_assets->DrawMaterial(vertices, material);
+}
+
+void Renderer::DrawEffect(const RenderPoint (&vertices)[4], SurfaceEffect effect, float seconds)
+{
+    if (m_effectProgram)
+    {
+        glUseProgram(m_effectProgram);
+        glUniform1f(glGetUniformLocation(m_effectProgram, "seconds"), seconds);
+        glUniform1i(glGetUniformLocation(m_effectProgram, "effect"), static_cast<int>(effect));
+    }
+    else
+    {
+        glColor4f(.12f, .4f, .5f, .4f); // Static fallback; animation belongs to the shader.
+    }
+    glBegin(GL_QUADS);
+    glTexCoord2f(0, 0);
+    glVertex2f(vertices[0].x, vertices[0].y);
+    glTexCoord2f(1, 0);
+    glVertex2f(vertices[1].x, vertices[1].y);
+    glTexCoord2f(1, 1);
+    glVertex2f(vertices[2].x, vertices[2].y);
+    glTexCoord2f(0, 1);
+    glVertex2f(vertices[3].x, vertices[3].y);
+    glEnd();
+    if (m_effectProgram)
+    {
+        glUseProgram(0);
+    }
 }
 void Renderer::DrawCharacter(float x, float y, int frame, int direction)
 {

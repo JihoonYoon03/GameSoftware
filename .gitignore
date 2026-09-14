@@ -361,3 +361,10 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Generated model and material cache beside the executable.
+Cache/
+
+# Checked-in graphics dependencies are not build output.
+!SimpleGame/Dependencies/x64/
+!SimpleGame/Dependencies/Win32/

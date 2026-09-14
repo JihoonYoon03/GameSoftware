@@ -2,6 +2,7 @@
 
 #include "Tutorial.h"
 #include "TutorialDrawing.h"
+#include "LevelOne.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -110,7 +111,7 @@ void DrawCompletionPanel()
         DrawLabel(kCanvasWidth * .5f - 224, 300,
                   g_state.isSideQuestComplete ? "남겨 둔 불빛: 완료"
                                               : "선택 목표: 마라의 전력 복구를 도와주세요.");
-        DrawLabel(kCanvasWidth * .5f - 224, 329, "계속 탐험하거나 Esc → R로 다시 시작하세요.");
+        DrawLabel(kCanvasWidth * .5f - 224, 329, "관문에서 E: 첫 사냥 레벨 / 1: 바로 진입");
     }
 }
 
@@ -128,6 +129,13 @@ void DrawPauseOverlay()
 
 void DrawHud()
 {
+    if (levelone::IsActive())
+    {
+        levelone::DrawHud();
+        DrawNoticePanel();
+        DrawPauseOverlay();
+        return;
+    }
     DrawRectangle(22, 20, 365, 111, ColorRGBA(.025f, .06f, .09f, .92f));
     DrawRectangle(22, 20, 3, 111, ColorRGBA(.27f, .86f, .83f));
     DrawLabel(40, 45, "헤일로 / 주거 구역 07", ColorRGBA(.67f, .9f, .91f), GLUT_BITMAP_HELVETICA_18);
@@ -151,7 +159,8 @@ void DrawHud()
               : g_state.isPowerRestored     ? "광장의 마라에게 돌아가세요."
               : g_state.isSideQuestAccepted ? "마라 동쪽의 전력 장치를 복구하세요."
                                             : "주거 광장의 마라와 대화하세요.");
-    DrawLabel(26, (float)kCanvasHeight - 22, "WASD 이동 / E 상호작용 / Esc 일시정지 / 정지 중 R 다시 시작",
+    DrawLabel(26, (float)kCanvasHeight - 22,
+              "WASD 이동 / E 상호작용 / 1 사냥터 / Esc 일시정지 / 정지 중 R 다시 시작",
               ColorRGBA(.63f, .78f, .81f));
     DrawInteractionPrompt();
     DrawNoticePanel();

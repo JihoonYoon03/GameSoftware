@@ -2,6 +2,7 @@
 #include "Dependencies/glew.h"
 #include <windows.h>
 #include "RenderAssets.h"
+#include "AssetCache.h"
 #include <algorithm>
 #include <cmath>
 #include <cstring>
@@ -48,7 +49,13 @@ void Quad(GLuint texture, float x, float y, float width, float height, float u0 
 GLuint CreateMaterial(int type)
 {
     constexpr int size = 64;
-    std::vector<unsigned char> pixels(size * size * 4);
+    std::vector<unsigned char> pixels;
+    const std::string cacheName = "material-" + std::to_string(type) + ".rgba";
+    if (assetcache::Load(cacheName, 1, size * size * 4, pixels))
+    {
+        return Upload(size, size, pixels, true);
+    }
+    pixels.resize(size * size * 4);
     for (int y = 0; y < size; ++y)
     {
         for (int x = 0; x < size; ++x)
@@ -86,6 +93,7 @@ GLuint CreateMaterial(int type)
             pixels[offset + 3] = 255;
         }
     }
+    assetcache::Save(cacheName, 1, pixels.data(), pixels.size());
     return Upload(size, size, pixels, true);
 }
 
@@ -93,7 +101,12 @@ GLuint CreateCharacterAtlas()
 {
     constexpr int frameWidth = 48, frameHeight = 64, columns = 8, rows = 4;
     constexpr int width = frameWidth * columns, height = frameHeight * rows;
-    std::vector<unsigned char> pixels(width * height * 4, 0);
+    std::vector<unsigned char> pixels;
+    if (assetcache::Load("characters.rgba", 1, width * height * 4, pixels))
+    {
+        return Upload(width, height, pixels);
+    }
+    pixels.resize(width * height * 4, 0);
     for (int direction = 0; direction < rows; ++direction)
     {
         for (int frame = 0; frame < columns; ++frame)
@@ -148,6 +161,7 @@ GLuint CreateCharacterAtlas()
             }
         }
     }
+    assetcache::Save("characters.rgba", 1, pixels.data(), pixels.size());
     return Upload(width, height, pixels);
 }
 } // namespace

@@ -3,6 +3,7 @@
 #include "Dependencies/freeglut.h"
 #include "Tutorial.h"
 #include "TutorialState.h"
+#include "LevelOne.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -28,6 +29,10 @@ void ShowNotice(const std::string &message)
 
 bool IsPositionBlocked(Vector2 position)
 {
+    if (levelone::IsActive())
+    {
+        return levelone::IsBlocked(position);
+    }
     if (g_state.isInsideHome)
     {
         if (position.x < -2.8f || position.x > 2.8f || position.y < -2.8f || position.y > 2.8f)
@@ -186,6 +191,11 @@ void InteractWithNearbyTarget()
     }
     if (target == InteractionTarget::GateBeacon)
     {
+        if (g_state.isComplete)
+        {
+            levelone::Enter();
+            return;
+        }
         if (g_state.mainQuestStage < MainQuestStage::ReadGateSignal)
         {
             ShowNotice("전망대 / 리아가 접근 코드를 가지고 있습니다. 집 근처의 리아와 먼저 대화하세요.");

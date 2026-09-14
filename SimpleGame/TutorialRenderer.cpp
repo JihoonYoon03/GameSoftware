@@ -2,6 +2,7 @@
 #include "Tutorial.h"
 #include "TutorialDrawing.h"
 #include "TutorialGraphics.h"
+#include "LevelOne.h"
 #include <memory>
 
 namespace tutorial
@@ -16,6 +17,7 @@ Renderer &GetRenderer()
 }
 void InitializeGraphics()
 {
+    models::Get();
     renderer.reset(new Renderer(kCanvasWidth, kCanvasHeight));
 }
 void ShutdownGraphics()
@@ -39,7 +41,11 @@ void Draw()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     DrawBackdrop();
-    if (g_state.isInsideHome)
+    if (levelone::IsActive())
+    {
+        levelone::DrawWorld();
+    }
+    else if (g_state.isInsideHome)
     {
         DrawInterior();
     }

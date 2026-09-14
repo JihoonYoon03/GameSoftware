@@ -2,6 +2,7 @@
 
 #include "Tutorial.h"
 #include "TutorialState.h"
+#include "LevelOne.h"
 #include "Dependencies/freeglut.h"
 #include <algorithm>
 #include <cmath>
@@ -75,6 +76,7 @@ void UpdateCamera(float deltaSeconds)
 
 void Reset()
 {
+    levelone::ResetProgress();
     // Keep the current window size when restarting the play session.
     const int viewportWidth = g_state.viewportWidth;
     const int viewportHeight = g_state.viewportHeight;
@@ -130,7 +132,16 @@ void KeyDown(unsigned char key, int, int)
     {
         if (key == 'r')
         {
-            Reset();
+            if (levelone::IsActive())
+            {
+                levelone::ResetProgress();
+                levelone::Enter();
+                g_state.isPaused = false;
+            }
+            else
+            {
+                Reset();
+            }
         }
         if (key == 'q')
         {
@@ -140,6 +151,24 @@ void KeyDown(unsigned char key, int, int)
     }
 
     g_state.pressedKeys[key] = true;
+    if (levelone::IsActive())
+    {
+        if (key == 'e')
+        {
+            levelone::Interact();
+        }
+        if (key == 'q')
+        {
+            levelone::UseRecoveryKit();
+        }
+        return;
+    }
+    // Direct access for first-level iteration without replaying the tutorial.
+    if (key == '1')
+    {
+        levelone::Enter();
+        return;
+    }
     if (key == 'e')
     {
         InteractWithNearbyTarget();
@@ -167,6 +196,10 @@ void Tick(int)
         }
         g_state.noticeSecondsRemaining -= deltaSeconds;
         UpdatePlayerMovement(deltaSeconds);
+        if (levelone::IsActive())
+        {
+            levelone::Update(deltaSeconds);
+        }
         UpdateCamera(deltaSeconds);
     }
 

@@ -1,5 +1,6 @@
 #pragma once
 #include "Renderer.h"
+#include "ModelLibrary.h"
 #include "Dependencies/glew.h"
 #include "Dependencies/freeglut.h"
 #include "TutorialState.h"
@@ -26,6 +27,8 @@ void DrawGlow(Vector2 position, float size, ColorRGBA color);
 void DrawPerson(Vector2 worldPosition, ColorRGBA coat, bool isPlayer = false);
 
 void DrawBackdrop();
+void DrawCachedModel(const models::Model &model, Vector2 position, float scale = 1);
+void DrawEffectRectangle(Vector2 topLeft, float width, float height, SurfaceEffect effect);
 void DrawMaterialQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d, SurfaceMaterial material, ColorRGBA color);
 void DrawMaterialTile(float x, float y, SurfaceMaterial material, ColorRGBA color);
 void DrawSoftShadow(Vector2 center, float radiusX, float radiusY, float opacity);

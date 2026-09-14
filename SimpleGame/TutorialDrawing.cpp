@@ -43,7 +43,14 @@ void DrawLine(Vector2 start, Vector2 end, ColorRGBA color, float lineWidth)
 
 void DrawRectangle(float x, float y, float width, float height, ColorRGBA color)
 {
-    DrawPolygon({{x, y}, {x + width, y}, {x + width, y + height}, {x, y + height}}, color);
+    SetColor(color);
+    glBegin(GL_QUADS);
+    for (int i = 0; i < 4; ++i)
+    {
+        const auto &point = models::Get().cube[i];
+        glVertex2f(x + point.x * width, y + point.y * height);
+    }
+    glEnd();
 }
 
 void DrawLabel(float x, float y, const std::string &text, ColorRGBA color, void *font)
@@ -58,10 +65,9 @@ void DrawEllipse(float x, float y, float radiusX, float radiusY, ColorRGBA color
     SetColor(color);
     glBegin(GL_TRIANGLE_FAN);
     glVertex2f(x, y);
-    for (int i = 0; i <= 48; i++)
+    for (const auto &point : models::Get().circle)
     {
-        float angle = i * 2 * kPi / 48;
-        glVertex2f(x + std::cos(angle) * radiusX, y + std::sin(angle) * radiusY);
+        glVertex2f(x + point.x * radiusX, y + point.y * radiusY);
     }
     glEnd();
 }
@@ -75,24 +81,33 @@ Vector2 WorldToScreen(float x, float y, float height)
 
 void DrawTile(float x, float y, float width, float depth, ColorRGBA color)
 {
-    DrawPolygon({WorldToScreen(x, y), WorldToScreen(x + width, y), WorldToScreen(x + width, y + depth),
-                 WorldToScreen(x, y + depth)},
-                color);
+    SetColor(color);
+    glBegin(GL_QUADS);
+    for (int i = 0; i < 4; ++i)
+    {
+        const auto &point = models::Get().cube[i];
+        Vector2 screen = WorldToScreen(x + point.x * width, y + point.y * depth);
+        glVertex2f(screen.x, screen.y);
+    }
+    glEnd();
 }
 
 void DrawBox(float x, float y, float width, float depth, float height, ColorRGBA color)
 {
-    Vector2 back = WorldToScreen(x, y, height), right = WorldToScreen(x + width, y, height);
-    Vector2 front = WorldToScreen(x + width, y + depth, height), left = WorldToScreen(x, y + depth, height);
-    Vector2 baseFront = WorldToScreen(x + width, y + depth), baseLeft = WorldToScreen(x, y + depth),
-            baseRight = WorldToScreen(x + width, y);
-    DrawMaterialQuad(left, front, baseFront, baseLeft, SurfaceMaterial::Metal,
+    // Buildings, furniture and level obstacles instance the same cached cube.
+    Vector2 vertices[8];
+    const auto &cube = models::Get().cube;
+    for (size_t i = 0; i < cube.size(); ++i)
+    {
+        vertices[i] = WorldToScreen(x + cube[i].x * width, y + cube[i].y * depth, cube[i].z * height);
+    }
+    DrawMaterialQuad(vertices[7], vertices[6], vertices[2], vertices[3], SurfaceMaterial::Metal,
                      ColorRGBA(color.r * .58f, color.g * .58f, color.b * .65f, color.a));
-    DrawMaterialQuad(right, front, baseFront, baseRight, SurfaceMaterial::Metal,
+    DrawMaterialQuad(vertices[5], vertices[6], vertices[2], vertices[1], SurfaceMaterial::Metal,
                      ColorRGBA(color.r * .78f, color.g * .78f, color.b * .85f, color.a));
-    DrawMaterialQuad(back, right, front, left, SurfaceMaterial::Concrete, color);
-    DrawLine(back, right, ColorRGBA(.35f, .65f, .7f, color.a));
-    DrawLine(back, left, ColorRGBA(.25f, .45f, .5f, color.a));
+    DrawMaterialQuad(vertices[4], vertices[5], vertices[6], vertices[7], SurfaceMaterial::Concrete, color);
+    DrawLine(vertices[4], vertices[5], ColorRGBA(.35f, .65f, .7f, color.a));
+    DrawLine(vertices[4], vertices[7], ColorRGBA(.25f, .45f, .5f, color.a));
 }
 
 void DrawGlow(Vector2 position, float size, ColorRGBA color)
@@ -135,38 +150,69 @@ void DrawSoftShadow(Vector2 center, float radiusX, float radiusY, float opacity)
     glBegin(GL_TRIANGLE_FAN);
     glColor4f(.005f, .01f, .025f, opacity);
     glVertex2f(center.x, center.y);
-    for (int i = 0; i <= 64; ++i)
+    glColor4f(.005f, .01f, .025f, 0);
+    for (const auto &point : models::Get().softCircle)
     {
-        float angle = i * 2 * kPi / 64;
-        glColor4f(.005f, .01f, .025f, 0);
-        glVertex2f(center.x + std::cos(angle) * radiusX, center.y + std::sin(angle) * radiusY);
+        glVertex2f(center.x + point.x * radiusX, center.y + point.y * radiusY);
     }
     glEnd();
 }
 void DrawVehicle(Vector2 center, float scale)
 {
+    DrawCachedModel(models::Get().vehicle, center, scale);
     glPushMatrix();
     glTranslatef(center.x, center.y, 0);
     glScalef(scale, scale, 1);
-    // Thick hull, near side, raised cabin and paired thruster nacelles.
-    DrawPolygon({{-46, -4}, {-14, -22}, {44, -2}, {21, 15}, {-28, 8}}, ColorRGBA(.32f, .45f, .53f));
-    DrawPolygon({{-28, 8}, {21, 15}, {44, -2}, {44, 12}, {21, 29}, {-28, 21}}, ColorRGBA(.1f, .19f, .27f));
-    DrawPolygon({{-46, -4}, {-28, 8}, {-28, 21}, {-46, 9}}, ColorRGBA(.17f, .28f, .35f));
-    DrawPolygon({{-20, -10}, {-5, -28}, {21, -20}, {28, -5}, {11, 5}}, ColorRGBA(.35f, .48f, .55f));
-    DrawMaterialQuad({-17, -10}, {-4, -25}, {19, -18}, {24, -6}, SurfaceMaterial::Glass,
-                     ColorRGBA(.13f, .53f, .66f));
-    DrawLine({-4, -25}, {-1, -7}, ColorRGBA(.5f, .66f, .7f), 2);
-    DrawLine({-26, 11}, {17, 18}, ColorRGBA(.5f, .62f, .65f), 2);
-    for (int side = -1; side <= 1; side += 2)
-    {
-        float x = side == 1 ? 25.f : -31.f, y = side == 1 ? 22.f : 10.f;
-        DrawEllipse(x, y, 11, 7, ColorRGBA(.045f, .09f, .13f));
-        DrawEllipse(x, y, 7, 4, ColorRGBA(.15f, .5f, .6f));
-        DrawGlow({x, y + 3}, 10, ColorRGBA(.3f, .85f, 1));
-    }
-    DrawLine({28, 8}, {36, 2}, ColorRGBA(1, .89f, .58f), 3);
-    DrawLine({-43, 6}, {-35, 11}, ColorRGBA(.9f, .22f, .18f), 3);
+    DrawEffectRectangle({-39, 13}, 16, 18, SurfaceEffect::Flame);
+    DrawEffectRectangle({17, 25}, 16, 18, SurfaceEffect::Flame);
     glPopMatrix();
+}
+
+void DrawCachedModel(const models::Model &model, Vector2 position, float scale)
+{
+    glPushMatrix();
+    glTranslatef(position.x, position.y, 0);
+    glScalef(scale, scale, 1);
+    for (std::uint32_t i = 0; i < model.count; ++i)
+    {
+        const auto &part = model.parts[i];
+        ColorRGBA color(part.color[0], part.color[1], part.color[2], part.color[3]);
+        const auto &points = part.points;
+        if (part.kind == models::PartKind::Ellipse)
+        {
+            DrawEllipse(points[0].x, points[0].y, points[1].x, points[1].y, color);
+        }
+        else if (part.kind == models::PartKind::Line)
+        {
+            DrawLine({points[0].x, points[0].y}, {points[1].x, points[1].y}, color, part.width);
+        }
+        else if (part.kind == models::PartKind::Glass)
+        {
+            DrawMaterialQuad({points[0].x, points[0].y}, {points[1].x, points[1].y},
+                             {points[2].x, points[2].y}, {points[3].x, points[3].y}, SurfaceMaterial::Glass,
+                             color);
+        }
+        else
+        {
+            SetColor(color);
+            glBegin(GL_POLYGON);
+            for (std::uint32_t vertex = 0; vertex < part.count; ++vertex)
+            {
+                glVertex2f(points[vertex].x, points[vertex].y);
+            }
+            glEnd();
+        }
+    }
+    glPopMatrix();
+}
+
+void DrawEffectRectangle(Vector2 topLeft, float width, float height, SurfaceEffect effect)
+{
+    const RenderPoint points[] = {{topLeft.x, topLeft.y},
+                                  {topLeft.x + width, topLeft.y},
+                                  {topLeft.x + width, topLeft.y + height},
+                                  {topLeft.x, topLeft.y + height}};
+    GetRenderer().DrawEffect(points, effect, g_state.animationTimeSeconds);
 }
 
 } // namespace tutorial
