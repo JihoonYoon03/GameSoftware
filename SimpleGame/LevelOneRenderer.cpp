@@ -10,12 +10,6 @@ namespace levelone
 using namespace tutorial;
 namespace
 {
-bool Visible(Vector2 screen)
-{
-    return screen.x > -100 && screen.x < kCanvasWidth + 100 && screen.y > -80 &&
-           screen.y < kCanvasHeight + 80;
-}
-
 void DrawMapOverview()
 {
     constexpr float left = kCanvasWidth - 210.f, top = 35, cellSize = 5;
@@ -47,122 +41,6 @@ void DrawMapOverview()
     DrawLabel(left, top + 185, "빨강: 적 / 보라: 귀환");
 }
 } // namespace
-
-void DrawWorld()
-{
-    enum class ObjectKind
-    {
-        Wall,
-        Enemy,
-        Drop,
-        Player,
-        Flame
-    };
-    struct RenderObject
-    {
-        float depth;
-        ObjectKind kind;
-        int index;
-    };
-    std::vector<RenderObject> objects;
-    for (int y = 0; y < kMapSize; ++y)
-    {
-        for (int x = 0; x < kMapSize; ++x)
-        {
-            Vector2 screen = WorldToScreen(float(x), float(y));
-            if (!Visible(screen))
-            {
-                continue;
-            }
-            int cell = y * kMapSize + x;
-            if (g_level.tiles[cell] == Tile::Wall)
-            {
-                objects.push_back({float(x + y + 2), ObjectKind::Wall, cell});
-                continue;
-            }
-            DrawMaterialTile(float(x), float(y), SurfaceMaterial::Metal, ColorRGBA(.23f, .3f, .33f));
-            if (g_level.tiles[cell] == Tile::Water)
-            {
-                Vector2 a = WorldToScreen(float(x), float(y)), b = WorldToScreen(x + 1.f, float(y));
-                Vector2 c = WorldToScreen(x + 1.f, y + 1.f), d = WorldToScreen(float(x), y + 1.f);
-                const RenderPoint vertices[] = {{a.x, a.y}, {b.x, b.y}, {c.x, c.y}, {d.x, d.y}};
-                GetRenderer().DrawEffect(vertices, SurfaceEffect::Water, g_state.animationTimeSeconds);
-            }
-            if (cell % 71 == 0 && Distance({x + .5f, y + .5f}, g_level.entry) > 3)
-            {
-                objects.push_back({x + y + 1.f, ObjectKind::Flame, cell});
-            }
-        }
-    }
-    for (size_t i = 0; i < g_level.drops.size(); ++i)
-    {
-        objects.push_back(
-            {g_level.drops[i].position.x + g_level.drops[i].position.y, ObjectKind::Drop, int(i)});
-    }
-    for (size_t i = 0; i < g_level.enemies.size(); ++i)
-    {
-        if (g_level.enemies[i].health > 0)
-        {
-            objects.push_back(
-                {g_level.enemies[i].position.x + g_level.enemies[i].position.y, ObjectKind::Enemy, int(i)});
-        }
-    }
-    objects.push_back({g_state.playerPosition.x + g_state.playerPosition.y, ObjectKind::Player, 0});
-    std::stable_sort(objects.begin(), objects.end(),
-                     [](const RenderObject &a, const RenderObject &b) { return a.depth < b.depth; });
-    for (const RenderObject &object : objects)
-    {
-        if (object.kind == ObjectKind::Wall)
-        {
-            int x = object.index % kMapSize, y = object.index / kMapSize;
-            DrawBox(float(x), float(y), .98f, .98f, 18, ColorRGBA(.18f, .23f, .28f));
-        }
-        else if (object.kind == ObjectKind::Enemy)
-        {
-            const Enemy &enemy = g_level.enemies[object.index];
-            Vector2 screen = WorldToScreen(enemy.position.x, enemy.position.y);
-            if (!Visible(screen))
-            {
-                continue;
-            }
-            DrawSoftShadow(screen, 23, 8, .5f);
-            DrawCachedModel(models::Get().drone, screen);
-            DrawRectangle(screen.x - 18, screen.y - 37, 36, 4, ColorRGBA(.12f, .07f, .08f));
-            DrawRectangle(screen.x - 18, screen.y - 37, 36 * enemy.health / float(kEnemyMaxHealth), 4,
-                          ColorRGBA(.95f, .28f, .24f));
-        }
-        else if (object.kind == ObjectKind::Drop)
-        {
-            const Drop &drop = g_level.drops[object.index];
-            Vector2 screen = WorldToScreen(drop.position.x, drop.position.y);
-            if (!Visible(screen))
-            {
-                continue;
-            }
-            DrawGlow(screen, 13, ColorRGBA(.3f, .9f, .7f));
-            DrawCachedModel(drop.kind == ItemKind::RecoveryKit ? models::Get().recoveryKit
-                                                               : models::Get().salvage,
-                            screen);
-        }
-        else if (object.kind == ObjectKind::Player)
-        {
-            DrawPerson(g_state.playerPosition, ColorRGBA(.75f, .86f, .92f), true);
-            if (g_level.attackFlash > 0)
-            {
-                Vector2 center = WorldToScreen(g_state.playerPosition.x, g_state.playerPosition.y);
-                DrawEffectRectangle({center.x - 91, center.y - 45}, 182, 90, SurfaceEffect::Pulse);
-            }
-        }
-        else
-        {
-            Vector2 center = WorldToScreen(object.index % kMapSize + .5f, object.index / kMapSize + .5f);
-            DrawEffectRectangle({center.x - 12, center.y - 43}, 24, 44, SurfaceEffect::Flame);
-        }
-    }
-    Vector2 entry = WorldToScreen(g_level.entry.x, g_level.entry.y);
-    DrawEffectRectangle({entry.x - 24, entry.y - 12}, 48, 24, SurfaceEffect::Pulse);
-    DrawLabel(entry.x - 35, entry.y - 30, "E 도시 귀환", ColorRGBA(.75f, .9f, 1));
-}
 
 void DrawHud()
 {

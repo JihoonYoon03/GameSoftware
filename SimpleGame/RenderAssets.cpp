@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "DrawCallCounter.h"
 #include "Dependencies/glew.h"
 #include <windows.h>
 #include "RenderAssets.h"
@@ -32,7 +33,7 @@ void Quad(GLuint texture, float x, float y, float width, float height, float u0 
 {
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glBegin(GL_QUADS);
+    renderdebug::BeginPrimitive(GL_QUADS);
     glTexCoord2f(u0, v0);
     glVertex2f(x, y);
     glTexCoord2f(u1, v0);
@@ -201,7 +202,7 @@ void RenderAssets::DrawMaterial(const RenderPoint (&points)[4], SurfaceMaterial 
 {
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, m_data->materials[static_cast<int>(material)]);
-    glBegin(GL_QUADS);
+    renderdebug::BeginPrimitive(GL_QUADS);
     glTexCoord2f(0, 0);
     glVertex2f(points[0].x, points[0].y);
     glTexCoord2f(1, 0);

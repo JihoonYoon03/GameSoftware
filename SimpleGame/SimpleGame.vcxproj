@@ -157,6 +157,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Renderer.h" />
+    <ClInclude Include="DrawCallCounter.h" />
     <ClInclude Include="AssetCache.h" />
     <ClInclude Include="ModelLibrary.h" />
     <ClInclude Include="LevelOne.h" />
@@ -170,6 +171,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="DrawCallCounter.cpp" />
     <ClCompile Include="AssetCache.cpp" />
     <ClCompile Include="ModelLibrary.cpp" />
     <ClCompile Include="LevelOne.cpp" />
@@ -199,10 +201,23 @@
       <AdditionalLibraryDirectories>$(ProjectDir)Dependencies\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="Actor\Actor.h" />
+    <ClInclude Include="Scene\SceneGraph.h" />
+    <ClInclude Include="Scene\Scene.h" />
+    <ClInclude Include="Scene\WorldScene.h" />
+    <ClCompile Include="Actor\Actor.cpp" />
+    <ClCompile Include="Scene\SceneGraph.cpp" />
+    <ClCompile Include="Scene\Scene.cpp" />
+    <ClCompile Include="Scene\WorldScene.cpp" />
+    <ClCompile Include="Scene\TutorialScene.cpp" />
+    <ClCompile Include="Scene\HuntingScene.cpp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Target Name="CopyGraphicsRuntimeLibraries" AfterTargets="Build">
     <ItemGroup>

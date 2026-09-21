@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "DrawCallCounter.h"
 #include "Dependencies/glew.h"
 #include "Renderer.h"
 #include "RenderAssets.h"
@@ -229,7 +230,7 @@ void Renderer::EndScene(float seconds)
     glUniform1i(glGetUniformLocation(m_postProgram, "scene"), 0);
     glUniform2f(glGetUniformLocation(m_postProgram, "texel"), 1.f / m_width, 1.f / m_height);
     glUniform1f(glGetUniformLocation(m_postProgram, "clockTime"), seconds);
-    glBegin(GL_QUADS);
+    renderdebug::BeginPrimitive(GL_QUADS);
     glTexCoord2f(0, 0);
     glVertex2f(-1, -1);
     glTexCoord2f(1, 0);
@@ -260,7 +261,7 @@ void Renderer::DrawEffect(const RenderPoint (&vertices)[4], SurfaceEffect effect
     {
         glColor4f(.12f, .4f, .5f, .4f); // Static fallback; animation belongs to the shader.
     }
-    glBegin(GL_QUADS);
+    renderdebug::BeginPrimitive(GL_QUADS);
     glTexCoord2f(0, 0);
     glVertex2f(vertices[0].x, vertices[0].y);
     glTexCoord2f(1, 0);
@@ -290,7 +291,7 @@ void Renderer::DrawSolidRect(float x, float y, float z, float size, float r, flo
     glLoadIdentity();
     glTranslatef(m_width * .5f + x, m_height * .5f - y, 0);
     glColor4f(r, g, b, a);
-    glBegin(GL_QUADS);
+    renderdebug::BeginPrimitive(GL_QUADS);
     glVertex3f(-size / 2, -size / 2, z);
     glVertex3f(size / 2, -size / 2, z);
     glVertex3f(size / 2, size / 2, z);

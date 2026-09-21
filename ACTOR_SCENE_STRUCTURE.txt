@@ -1,0 +1,62 @@
+Actor / Scene 1차 분리
+
+1. 파일 역할
+  SimpleGame/Actor/Actor.h, Actor.cpp
+    Actor 이름, 부모, 위치 오프셋, 투영 경계, 표시/갱신 여부, 출력 순서.
+    Update를 재정의할 수 있다. 소유권은 SceneGraph에만 있다.
+    OpenGL이나 튜토리얼 전역 상태에 의존하지 않는다.
+  SimpleGame/Scene/SceneGraph.h, SceneGraph.cpp
+    Actor 등록/검색/하위 트리 삭제/부모 변경, 순환 관계 방지.
+    부모 이동 상속, 하위 경계 합산, 변경된 계층의 경계 캐싱.
+    화면 영역과 겹치지 않는 하위 트리 제외, 표시 Actor만 레이어/깊이/생성 순 정렬.
+  SimpleGame/Scene/Scene.h, Scene.cpp
+    기존 게임 데이터와 Actor를 이름으로 동기화한다.
+    매 프레임 Actor를 다시 생성하지 않는다. 사라진 배치만 제거한다.
+  SimpleGame/Scene/WorldScene.h, WorldScene.cpp
+    실내/도시/사냥터/배경/HUD Scene 수명 관리와 기존 렌더러 연결 어댑터.
+    8x8 월드 셀 단위 그룹, 카메라와 무관한 쿼터뷰 투영 경계 계산.
+  SimpleGame/Scene/TutorialScene.cpp
+    실내 소품/벽/바닥, 도시 건물/주민/차량/그림자/장치/표식 배치.
+  SimpleGame/Scene/HuntingScene.cpp
+    사냥터 타일/벽/적/아이템/플레이어/불꽃/귀환 표식 배치.
+
+2. 출력 흐름
+  기존 게임 상태 → Scene 배치 동기화 → 경계 갱신 → 그룹/Actor 컬링
+  → 보이는 Actor만 정렬 → 기존 그리기 콜백 → 기존 후처리 → HUD.
+  배경과 HUD는 월드 컬링과 분리된 화면 공간 복합 Actor이다.
+  도형 한 개가 아니라 논리적 객체 하나를 Actor로 취급한다.
+  예: 차량의 몸체/창/불빛은 차량 Actor 내부의 기존 표현이다.
+
+3. API와 좌표 규칙
+  GetWorldScene(kind).GetGraph().Find(name)으로 등록된 Actor에 접근한다.
+  SetVisible(false)는 하위 트리 전체를 감추지만 갱신은 멈추지 않는다.
+  SetEnabled(false)는 하위 트리의 Actor::Update를 멈춘다. 표시는 별도이다.
+  SetPosition은 카메라 독립 투영 공간의 로컬 이동 오프셋이다.
+  현재 월드 어댑터에서는 게임 상태의 기존 위치에 이 오프셋을 더해 출력한다.
+  Reparent는 로컬 오프셋을 유지하며, 월드 위치 보존 방식은 아니다.
+  CollectVisible 결과는 다음 수집/삭제/Clear 전까지만 유효하다.
+  순회/그리기 콜백 안에서는 노드를 추가·삭제·재부모화하지 않는다.
+  SetDrawCallback에는 값을 캡처하고 임시 변수의 참조를 저장하지 않는다.
+  아이템 이름은 벡터 인덱스가 아닌 고유 actorId를 사용한다.
+
+4. 이번 단계의 경계
+  Renderer, 셰이더, 모델 캐시, 머터리얼 구현은 변경하지 않았다.
+  전투/퀘스트/충돌 상태는 기존 TutorialState/LevelOne::State를 유지한다.
+  따라서 Actor의 출력 오프셋 변경은 게임플레이 충돌 좌표를 변경하지 않는다.
+  기존 플레이어/적 시뮬레이션은 종전 코드에서 갱신하며 화면 컬링으로 정지하지 않는다.
+  Scene 동기화는 기존 배치 데이터를 매 프레임 방문한다. 정적 배치의 증분 동기화는 아직 없다.
+  경계는 보수적 AABB이며 GPU 픽셀 클리핑/오클루전 컬링/LOD/인스턴싱은 구현하지 않았다.
+  부모 변환은 현재 2D 이동만 지원한다. 회전/스케일은 향후 Render 분리와 함께 확장한다.
+
+5. 확인 항목 (사용자 빌드/실행)
+  집 → 도시 → 사냥터 → 도시 이동 및 초기화.
+  카메라 가장자리의 높은 건물, 그림자, 차량, 이름표, 공격 이펙트가 조기에 사라지지 않는지.
+  적 사망/리스폰, 여러 아이템 중간 항목 획득 후 남은 아이템 표시.
+  그래프의 부모 숨김/이동, 순환 재부모화 거부, 하위 트리 삭제.
+  SceneGraph::GetStatistics로 방문 노드/제외 하위 트리/표시 Actor 수 확인.
+  tests/SceneGraphTests.cpp에 렌더러 없이 실행 가능한 독립 단위 테스트를 제공한다.
+  게임 프로젝트에는 테스트 main을 포함하지 않는다.
+  Visual Studio Developer Command Prompt에서 저장소 루트 기준:
+    cl /nologo /EHsc /std:c++17 /utf-8 /Y- /I SimpleGame tests\SceneGraphTests.cpp SimpleGame\Actor\Actor.cpp SimpleGame\Scene\SceneGraph.cpp SimpleGame\Scene\Scene.cpp /Fe:SceneGraphTests.exe
+    SceneGraphTests.exe
+  이번 작업에서는 빌드와 테스트 실행을 하지 않았다.

@@ -1,6 +1,22 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <ClInclude Include="DrawCallCounter.h"><Filter>헤더 파일</Filter></ClInclude>
+    <ClCompile Include="DrawCallCounter.cpp"><Filter>소스 파일</Filter></ClCompile>
+    <Filter Include="Actor" />
+    <Filter Include="Scene" />
+    <ClInclude Include="Actor\Actor.h"><Filter>Actor</Filter></ClInclude>
+    <ClInclude Include="Scene\SceneGraph.h"><Filter>Scene</Filter></ClInclude>
+    <ClInclude Include="Scene\Scene.h"><Filter>Scene</Filter></ClInclude>
+    <ClInclude Include="Scene\WorldScene.h"><Filter>Scene</Filter></ClInclude>
+    <ClCompile Include="Actor\Actor.cpp"><Filter>Actor</Filter></ClCompile>
+    <ClCompile Include="Scene\SceneGraph.cpp"><Filter>Scene</Filter></ClCompile>
+    <ClCompile Include="Scene\Scene.cpp"><Filter>Scene</Filter></ClCompile>
+    <ClCompile Include="Scene\WorldScene.cpp"><Filter>Scene</Filter></ClCompile>
+    <ClCompile Include="Scene\TutorialScene.cpp"><Filter>Scene</Filter></ClCompile>
+    <ClCompile Include="Scene\HuntingScene.cpp"><Filter>Scene</Filter></ClCompile>
+  </ItemGroup>
+  <ItemGroup>
     <Filter Include="소스 파일">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>

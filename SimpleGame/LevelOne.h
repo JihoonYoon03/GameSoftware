@@ -42,6 +42,7 @@ struct Drop
 {
     tutorial::Vector2 position;
     ItemKind kind;
+    std::uint64_t actorId = 0;
 };
 struct State
 {
@@ -61,6 +62,7 @@ struct State
     float invulnerability = 0;
     float navigationCooldown = 0;
     int kills = 0;
+    std::uint64_t nextDropActorId = 1;
 };
 extern State g_level;
 

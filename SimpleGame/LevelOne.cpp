@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "LevelOne.h"
+#include "Scene/WorldScene.h"
 #include <algorithm>
 #include <cmath>
 #include <random>
@@ -145,6 +146,10 @@ void Leave()
 
 void ResetProgress()
 {
+    auto &scene = tutorial::GetWorldScene(tutorial::WorldSceneKind::Hunting);
+    scene.BeginPlacement();
+    scene.EndPlacement();
+    scene.GetGraph().Clear();
     g_level = State{};
 }
 
@@ -171,8 +176,9 @@ void Attack()
         }
         ++g_level.kills;
         enemy.respawnSeconds = 12;
-        g_level.drops.push_back(
-            {enemy.position, g_level.kills % 3 == 0 ? ItemKind::RecoveryKit : ItemKind::Salvage});
+        g_level.drops.push_back({enemy.position,
+                                 g_level.kills % 3 == 0 ? ItemKind::RecoveryKit : ItemKind::Salvage,
+                                 g_level.nextDropActorId++});
         // Limit abandoned drops to keep the endless hunting loop bounded.
         if (g_level.drops.size() > 128)
         {

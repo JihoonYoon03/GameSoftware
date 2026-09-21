@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "DrawCallCounter.h"
 
 #include "TutorialDrawing.h"
 #include "Tutorial.h"
@@ -23,7 +24,7 @@ void SetColor(ColorRGBA color)
 void DrawPolygon(std::initializer_list<Vector2> vertices, ColorRGBA color)
 {
     SetColor(color);
-    glBegin(GL_POLYGON);
+    renderdebug::BeginPrimitive(GL_POLYGON);
     for (auto vertex : vertices)
     {
         glVertex2f(vertex.x, vertex.y);
@@ -35,7 +36,7 @@ void DrawLine(Vector2 start, Vector2 end, ColorRGBA color, float lineWidth)
 {
     SetColor(color);
     glLineWidth(lineWidth);
-    glBegin(GL_LINES);
+    renderdebug::BeginPrimitive(GL_LINES);
     glVertex2f(start.x, start.y);
     glVertex2f(end.x, end.y);
     glEnd();
@@ -44,7 +45,7 @@ void DrawLine(Vector2 start, Vector2 end, ColorRGBA color, float lineWidth)
 void DrawRectangle(float x, float y, float width, float height, ColorRGBA color)
 {
     SetColor(color);
-    glBegin(GL_QUADS);
+    renderdebug::BeginPrimitive(GL_QUADS);
     for (int i = 0; i < 4; ++i)
     {
         const auto &point = models::Get().cube[i];
@@ -63,7 +64,7 @@ void DrawLabel(float x, float y, const std::string &text, ColorRGBA color, void 
 void DrawEllipse(float x, float y, float radiusX, float radiusY, ColorRGBA color)
 {
     SetColor(color);
-    glBegin(GL_TRIANGLE_FAN);
+    renderdebug::BeginPrimitive(GL_TRIANGLE_FAN);
     glVertex2f(x, y);
     for (const auto &point : models::Get().circle)
     {
@@ -82,7 +83,7 @@ Vector2 WorldToScreen(float x, float y, float height)
 void DrawTile(float x, float y, float width, float depth, ColorRGBA color)
 {
     SetColor(color);
-    glBegin(GL_QUADS);
+    renderdebug::BeginPrimitive(GL_QUADS);
     for (int i = 0; i < 4; ++i)
     {
         const auto &point = models::Get().cube[i];
@@ -147,7 +148,7 @@ void DrawMaterialTile(float x, float y, SurfaceMaterial material, ColorRGBA colo
 }
 void DrawSoftShadow(Vector2 center, float radiusX, float radiusY, float opacity)
 {
-    glBegin(GL_TRIANGLE_FAN);
+    renderdebug::BeginPrimitive(GL_TRIANGLE_FAN);
     glColor4f(.005f, .01f, .025f, opacity);
     glVertex2f(center.x, center.y);
     glColor4f(.005f, .01f, .025f, 0);
@@ -195,7 +196,7 @@ void DrawCachedModel(const models::Model &model, Vector2 position, float scale)
         else
         {
             SetColor(color);
-            glBegin(GL_POLYGON);
+            renderdebug::BeginPrimitive(GL_POLYGON);
             for (std::uint32_t vertex = 0; vertex < part.count; ++vertex)
             {
                 glVertex2f(points[vertex].x, points[vertex].y);

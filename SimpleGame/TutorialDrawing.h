@@ -27,6 +27,8 @@ void DrawGlow(Vector2 position, float size, ColorRGBA color);
 void DrawPerson(Vector2 worldPosition, ColorRGBA coat, bool isPlayer = false);
 
 void DrawBackdrop();
+void DrawBuilding(Building building);
+void DrawInteractionMarker(Vector2 worldPosition, const std::string &label, ColorRGBA color);
 void DrawCachedModel(const models::Model &model, Vector2 position, float scale = 1);
 void DrawEffectRectangle(Vector2 topLeft, float width, float height, SurfaceEffect effect);
 void DrawMaterialQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d, SurfaceMaterial material, ColorRGBA color);

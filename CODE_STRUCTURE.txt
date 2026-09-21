@@ -21,8 +21,8 @@ TutorialDrawing.h / TutorialDrawing.cpp
   OpenGL은 현재 프로토타입과 동일하게 호환 컨텍스트를 사용.
 
 TutorialWorldRenderer.cpp
-  원경·관문·교통 연출, 실내와 도시 장면.
-  도시 장면은 바닥, 가로 시설, 깊이 정렬 대상, 장치, 차량, 표식 순서로 구성.
+  원경·관문·교통 연출과 건물/상호작용 표식의 기존 그리기 함수.
+  실내와 도시의 배치/순서 구성은 Scene/TutorialScene.cpp로 분리.
 
 TutorialHud.cpp
   목표, 미니맵, 상호작용 안내, 대화 패널, 완료 패널, 일시정지 화면.
@@ -48,6 +48,11 @@ RenderAssets.h / RenderAssets.cpp
   .clang-format은 include 순서를 보존하고 들여쓰기·줄 길이·중괄호 규칙을 적용.
 
 현재 렌더링 진입점은 TutorialRenderer.cpp이며 실제 자원과 후처리는 Renderer가 담당.
+DrawCallCounter.h / DrawCallCounter.cpp는 즉시 모드 glBegin/glEnd 구간을 1회로 집계한다.
+새 즉시 모드 출력은 glBegin 대신 renderdebug::BeginPrimitive를 사용한다.
+TutorialRenderer::Draw에서 프레임 시작 시 초기화하고 SwapBuffers 후 콘솔에 한 줄 출력한다.
+배경/월드/후처리/HUD를 포함하며 glClear, 상태 변경, 텍스처 업로드는 집계하지 않는다.
+프레임별 콘솔 출력은 성능에 영향을 줄 수 있다. 드라이버 내부 GPU 호출 횟수와는 다르다.
 기존 SolidRect 셰이더 파일은 보존되어 있으나 새 후처리 셰이더는 Renderer.cpp에 내장.
 
 이후 그래픽 확장: 전체 한글, 맵 면적 4배, 주민 추가, 재질·그림자·차량 개선.
@@ -57,10 +62,19 @@ RenderAssets.h / RenderAssets.cpp
   LevelOne.h: 첫 레벨의 상태·스탯·적·아이템 자료형과 인터페이스.
   LevelOne.cpp: 입장/귀환, 전투, 드롭, 회복, 경험치와 자동 스탯 계산.
   LevelOneMap.cpp: 연결된 랜덤 방/통로 생성, BFS 검사, 이동/시야 판정.
-  LevelOneRenderer.cpp: 레벨 월드, 적/아이템, 미니맵과 성장 HUD.
+  LevelOneRenderer.cpp: 미니맵과 성장 HUD. 월드 배치는 Scene/HuntingScene.cpp로 분리.
   ModelLibrary.cpp: 기존/신규 도형 모델을 버전별 파일로 캐싱하고 재사용.
   AssetCache.cpp: 실행 파일 기준 Cache 디렉터리, 크기/버전/체크섬 검사와 저장.
   RenderAssets.cpp: 기존 캐릭터 아틀라스와 머터리얼도 파일 캐시 사용.
   Renderer.cpp: 물결·불꽃·펄스 이펙트 셰이더 추가.
   CODE_CONVENTIONS.txt: 앞으로 적용할 코드 컨벤션.
   LEVEL_ONE.txt: 조작, 성장 수치, 캐시 범위 및 사용자 확인 항목.
+
+Actor / Scene 분리
+  Actor/Actor.h, Actor.cpp: 출력 객체의 공통 제어 인터페이스와 경계 자료형.
+  Scene/SceneGraph.h, SceneGraph.cpp: 소유권, 계층, 경계 캐싱, 영역 컬링, 표시 목록 정렬.
+  Scene/Scene.h, Scene.cpp: 기존 배치 데이터를 지속적인 Actor로 동기화.
+  Scene/WorldScene.h, WorldScene.cpp: 장면 수명과 기존 출력 코드 연결.
+  Scene/TutorialScene.cpp, HuntingScene.cpp: 장면별 객체 등록.
+  ACTOR_SCENE_STRUCTURE.txt: 적용 범위, 좌표 규칙, 제한 사항, 사용자 테스트 안내.
+  tests/SceneGraphTests.cpp: 그래프 독립 테스트 (게임 프로젝트의 main과 별도).

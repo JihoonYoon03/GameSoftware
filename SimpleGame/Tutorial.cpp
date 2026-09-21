@@ -3,6 +3,7 @@
 #include "Tutorial.h"
 #include "TutorialState.h"
 #include "LevelOne.h"
+#include "Scene/WorldScene.h"
 #include "Dependencies/freeglut.h"
 #include <algorithm>
 #include <cmath>
@@ -76,6 +77,7 @@ void UpdateCamera(float deltaSeconds)
 
 void Reset()
 {
+    ResetWorldScenes();
     levelone::ResetProgress();
     // Keep the current window size when restarting the play session.
     const int viewportWidth = g_state.viewportWidth;
@@ -201,6 +203,7 @@ void Tick(int)
             levelone::Update(deltaSeconds);
         }
         UpdateCamera(deltaSeconds);
+        UpdateWorldScene(deltaSeconds);
     }
 
     glutPostRedisplay();
