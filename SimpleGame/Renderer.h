@@ -35,6 +35,7 @@ class Renderer
     void EndScene(float seconds);
     void DrawMaterial(const RenderPoint (&vertices)[4], SurfaceMaterial material);
     void DrawCharacter(float x, float footY, int frame, int direction);
+    void DrawGlow(float x, float y, float size);
     void DrawEffect(const RenderPoint (&vertices)[4], SurfaceEffect effect, float seconds);
     void DrawUtf8Text(float x, float baselineY, const std::string &utf8, int fontSize);
     void DrawSolidRect(float x, float y, float z, float size, float r, float g, float b, float a);

@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "Profiler.h"
 
 #include "Tutorial.h"
 #include "TutorialState.h"
@@ -30,6 +31,7 @@ unsigned char NormalizeKey(unsigned char key)
 
 void UpdatePlayerMovement(float deltaSeconds)
 {
+    profiling::Scope profileTimer(profiling::Timer::Movement);
     float screenX = (g_state.pressedKeys['d'] ? 1.f : 0) - (g_state.pressedKeys['a'] ? 1.f : 0);
     float screenY = (g_state.pressedKeys['s'] ? 1.f : 0) - (g_state.pressedKeys['w'] ? 1.f : 0);
     float inputLength = std::sqrt(screenX * screenX + screenY * screenY);
@@ -184,6 +186,7 @@ void KeyUp(unsigned char key, int, int)
 
 void Tick(int)
 {
+    profiling::Scope profileTimer(profiling::Timer::Update);
     const int nowMilliseconds = glutGet(GLUT_ELAPSED_TIME);
     float deltaSeconds =
         Clamp((nowMilliseconds - g_state.lastUpdateMilliseconds) / 1000.f, 0, kMaximumDeltaSeconds);

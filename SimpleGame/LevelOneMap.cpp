@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "LevelOne.h"
+#include "RenderCache.h"
+#include "Profiler.h"
 #include <algorithm>
 #include <cmath>
 #include <queue>
@@ -28,6 +30,7 @@ bool IsWalkable(int x, int y)
 
 bool IsBlocked(tutorial::Vector2 position)
 {
+    profiling::Count(profiling::Counter::CollisionQueries);
     // Match the player's footprint, not just its center, against map collision.
     constexpr float radius = .18f;
     for (float offsetX : {-radius, radius})
@@ -45,6 +48,7 @@ bool IsBlocked(tutorial::Vector2 position)
 
 bool HasLineOfSight(tutorial::Vector2 from, tutorial::Vector2 to)
 {
+    profiling::Count(profiling::Counter::LineOfSightQueries);
     const int steps = (std::max)(1, int(tutorial::Distance(from, to) / .12f));
     for (int step = 0; step <= steps; ++step)
     {
@@ -59,6 +63,7 @@ bool HasLineOfSight(tutorial::Vector2 from, tutorial::Vector2 to)
 
 void UpdateNavigation()
 {
+    profiling::Scope profileTimer(profiling::Timer::Navigation);
     g_level.navigationDistances.assign(kMapSize * kMapSize, -1);
     int x = int(std::floor(tutorial::g_state.playerPosition.x));
     int y = int(std::floor(tutorial::g_state.playerPosition.y));
@@ -74,6 +79,7 @@ void UpdateNavigation()
     {
         int cell = frontier.front();
         frontier.pop();
+        profiling::Count(profiling::Counter::NavigationVisitedCells);
         for (const auto &direction : kDirections)
         {
             int nextX = cell % kMapSize + direction[0];
@@ -95,6 +101,8 @@ void UpdateNavigation()
 
 void GenerateMap(std::uint32_t seed)
 {
+    profiling::Scope timer(profiling::Timer::MapGeneration);
+    rendercache::InvalidateTerrain();
     g_level.seed = seed;
     g_level.tiles.assign(kMapSize * kMapSize, Tile::Wall);
     std::mt19937 random(seed);

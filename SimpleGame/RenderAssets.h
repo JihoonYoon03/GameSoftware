@@ -10,6 +10,7 @@ class RenderAssets
     ~RenderAssets();
     void DrawMaterial(const RenderPoint (&vertices)[4], SurfaceMaterial material);
     void DrawCharacter(float x, float footY, int frame, int direction);
+    void DrawGlow(float x, float y, float size);
     void DrawUtf8Text(float x, float baselineY, const std::string &utf8, int fontSize);
 
   private:

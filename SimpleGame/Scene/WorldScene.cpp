@@ -1,4 +1,6 @@
 #include "stdafx.h"
+#include "../Profiler.h"
+#include "../RenderQueue.h"
 #include "WorldScene.h"
 #include "../TutorialDrawing.h"
 #include "../LevelOne.h"
@@ -26,6 +28,7 @@ void ResetWorldScenes()
 }
 void UpdateWorldScene(float deltaSeconds)
 {
+    profiling::Scope profileTimer(profiling::Timer::SceneUpdate);
     WorldSceneKind kind = levelone::IsActive()
                               ? WorldSceneKind::Hunting
                               : (g_state.isInsideHome ? WorldSceneKind::Interior : WorldSceneKind::Exterior);
@@ -46,10 +49,10 @@ void PlaceWorldActor(game::Scene &scene, const std::string &name, float x, float
     scene.Place(name, group, bounds, layer, depth * 18, [draw = std::move(draw)](const game::Actor &actor) {
         // The bridge alone knows OpenGL; Actor and SceneGraph do not depend on the renderer.
         auto offset = actor.GetWorldPosition();
-        glPushMatrix();
-        glTranslatef(offset.x, offset.y, 0);
+        renderqueue::PushMatrix();
+        renderqueue::Translate(offset.x, offset.y, 0);
         draw();
-        glPopMatrix();
+        renderqueue::PopMatrix();
     });
 }
 void DrawScene(game::Scene &scene)

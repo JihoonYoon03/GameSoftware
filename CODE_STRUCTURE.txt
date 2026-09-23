@@ -48,11 +48,14 @@ RenderAssets.h / RenderAssets.cpp
   .clang-format은 include 순서를 보존하고 들여쓰기·줄 길이·중괄호 규칙을 적용.
 
 현재 렌더링 진입점은 TutorialRenderer.cpp이며 실제 자원과 후처리는 Renderer가 담당.
-DrawCallCounter.h / DrawCallCounter.cpp는 즉시 모드 glBegin/glEnd 구간을 1회로 집계한다.
-새 즉시 모드 출력은 glBegin 대신 renderdebug::BeginPrimitive를 사용한다.
-TutorialRenderer::Draw에서 프레임 시작 시 초기화하고 SwapBuffers 후 콘솔에 한 줄 출력한다.
-배경/월드/후처리/HUD를 포함하며 glClear, 상태 변경, 텍스처 업로드는 집계하지 않는다.
-프레임별 콘솔 출력은 성능에 영향을 줄 수 있다. 드라이버 내부 GPU 호출 횟수와는 다르다.
+RenderQueue.h / RenderQueue.cpp: 삼각형 배칭, 재질/단색 아틀라스 공유, 스트리밍 VBO,
+  정적 GPU 메시, 순서가 연속되는 동일 메시의 조건부 인스턴싱.
+RenderCache.h / RenderCache.cpp: 바닥 청크/모델 GPU 캐시, 사냥터 미니맵 지형 텍스처.
+Profiler.h / Profiler.cpp: 초당 FPS/드로우 콜 통계, CPU/GPU 구간, 카운터, 메모리 JSONL.
+DrawCallCounter는 남아 있는 즉시 모드 후처리 호출용 호환 래퍼이다.
+새 도형은 RenderQueue로 제출하며 드로우 콜은 최종 GL 제출 시에만 집계한다.
+배경/월드/후처리/HUD를 포함하며 glClear나 업로드를 드로우 콜로 집계하지 않는다.
+PERFORMANCE_PROFILING.txt에 로그 의미, 확장 규칙, 사용자 검증 항목을 정리했다.
 기존 SolidRect 셰이더 파일은 보존되어 있으나 새 후처리 셰이더는 Renderer.cpp에 내장.
 
 이후 그래픽 확장: 전체 한글, 맵 면적 4배, 주민 추가, 재질·그림자·차량 개선.

@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "../Profiler.h"
 #include "SceneGraph.h"
 #include <algorithm>
 #include <stdexcept>
@@ -137,6 +138,7 @@ void SceneGraph::ResolveNode(Actor &actor, Position parentPosition)
         return;
     }
     actor.worldPosition = position;
+    profiling::Count(profiling::Counter::SceneBoundsRecomputed);
     actor.worldBounds = actor.localBounds.Translated(actor.worldPosition);
     actor.subtreeBounds = {};
     // Hidden parents hide their descendants, but do not stop their gameplay updates.
@@ -171,6 +173,7 @@ void SceneGraph::CollectNode(const Actor &actor, Bounds viewport)
 }
 const std::vector<const Actor *> &SceneGraph::CollectVisible(Bounds viewport)
 {
+    profiling::Scope profileTimer(profiling::Timer::SceneCullSort);
     visibleActors.clear();
     statistics = {};
     ResolveNode(root, {});
@@ -189,6 +192,9 @@ const std::vector<const Actor *> &SceneGraph::CollectVisible(Bounds viewport)
         return a->order < b->order;
     });
     statistics.visibleActors = visibleActors.size();
+    profiling::Count(profiling::Counter::SceneVisited, statistics.visitedNodes);
+    profiling::Count(profiling::Counter::SceneRejected, statistics.rejectedSubtrees);
+    profiling::Count(profiling::Counter::SceneVisible, statistics.visibleActors);
     return visibleActors;
 }
 const SceneStatistics &SceneGraph::GetStatistics() const

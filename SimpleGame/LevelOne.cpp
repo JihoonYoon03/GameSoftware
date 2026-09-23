@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "Profiler.h"
 #include "LevelOne.h"
 #include "Scene/WorldScene.h"
 #include <algorithm>
@@ -240,6 +241,7 @@ void UseRecoveryKit()
 
 void Update(float deltaSeconds)
 {
+    profiling::Scope profileTimer(profiling::Timer::Combat);
     g_level.attackCooldown = (std::max)(0.f, g_level.attackCooldown - deltaSeconds);
     g_level.attackFlash = (std::max)(0.f, g_level.attackFlash - deltaSeconds);
     g_level.invulnerability = (std::max)(0.f, g_level.invulnerability - deltaSeconds);

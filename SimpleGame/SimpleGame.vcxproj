@@ -158,6 +158,9 @@
   <ItemGroup>
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="DrawCallCounter.h" />
+    <ClInclude Include="Profiler.h" />
+    <ClInclude Include="RenderQueue.h" />
+    <ClInclude Include="RenderCache.h" />
     <ClInclude Include="AssetCache.h" />
     <ClInclude Include="ModelLibrary.h" />
     <ClInclude Include="LevelOne.h" />
@@ -172,6 +175,9 @@
   <ItemGroup>
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="DrawCallCounter.cpp" />
+    <ClCompile Include="Profiler.cpp" />
+    <ClCompile Include="RenderQueue.cpp" />
+    <ClCompile Include="RenderCache.cpp" />
     <ClCompile Include="AssetCache.cpp" />
     <ClCompile Include="ModelLibrary.cpp" />
     <ClCompile Include="LevelOne.cpp" />

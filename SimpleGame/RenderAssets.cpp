@@ -1,5 +1,6 @@
 #include "stdafx.h"
-#include "DrawCallCounter.h"
+#include "RenderQueue.h"
+#include "Profiler.h"
 #include "Dependencies/glew.h"
 #include <windows.h>
 #include "RenderAssets.h"
@@ -9,6 +10,7 @@
 #include <cstring>
 #include <map>
 #include <vector>
+#include <iterator>
 
 #pragma comment(lib, "gdi32.lib")
 
@@ -16,6 +18,8 @@ namespace
 {
 GLuint Upload(int width, int height, const std::vector<unsigned char> &pixels, bool repeat = false)
 {
+    profiling::Scope timer(profiling::Timer::TextureUpload);
+    profiling::Count(profiling::Counter::TextureUploadBytes, pixels.size());
     GLuint texture = 0;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -31,20 +35,18 @@ GLuint Upload(int width, int height, const std::vector<unsigned char> &pixels, b
 void Quad(GLuint texture, float x, float y, float width, float height, float u0 = 0, float v0 = 0,
           float u1 = 1, float v1 = 1)
 {
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    renderdebug::BeginPrimitive(GL_QUADS);
-    glTexCoord2f(u0, v0);
-    glVertex2f(x, y);
-    glTexCoord2f(u1, v0);
-    glVertex2f(x + width, y);
-    glTexCoord2f(u1, v1);
-    glVertex2f(x + width, y + height);
-    glTexCoord2f(u0, v1);
-    glVertex2f(x, y + height);
-    glEnd();
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glDisable(GL_TEXTURE_2D);
+    renderqueue::Texture(texture);
+    renderqueue::Begin(GL_QUADS);
+    renderqueue::TexCoord(u0, v0);
+    renderqueue::Vertex(x, y);
+    renderqueue::TexCoord(u1, v0);
+    renderqueue::Vertex(x + width, y);
+    renderqueue::TexCoord(u1, v1);
+    renderqueue::Vertex(x + width, y + height);
+    renderqueue::TexCoord(u0, v1);
+    renderqueue::Vertex(x, y + height);
+    renderqueue::End();
+    renderqueue::Texture(0);
 }
 
 GLuint CreateMaterial(int type)
@@ -177,6 +179,7 @@ struct RenderAssets::Data
     };
     GLuint materials[4] = {};
     GLuint characters = 0;
+    GLuint atlas = 0;
     std::map<std::pair<int, std::string>, TextTexture> texts;
     unsigned long long clock = 0;
 };
@@ -187,10 +190,58 @@ RenderAssets::RenderAssets() : m_data(new Data())
     {
         m_data->materials[i] = CreateMaterial(i);
     }
+    // Four materials, a white cell, and a radial glow share a padded atlas.
+    constexpr int cell = 66, atlasWidth = cell * 6;
+    std::vector<unsigned char> atlas(atlasWidth * cell * 4, 255);
+    for (int type = 0; type < 6; ++type)
+    {
+        std::vector<unsigned char> pixels(64 * 64 * 4, 255);
+        if (type < 4)
+        {
+            glBindTexture(GL_TEXTURE_2D, m_data->materials[type]);
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+        }
+        if (type == 5)
+        {
+            for (int y = 0; y < 64; ++y)
+            {
+                for (int x = 0; x < 64; ++x)
+                {
+                    float dx = (x - 31.5f) / 31.5f, dy = (y - 31.5f) / 31.5f;
+                    float radius = std::sqrt(dx * dx + dy * dy);
+                    float alpha = 0;
+                    for (int ring = 5; ring > 0; --ring)
+                    {
+                        float edge = ring / 5.f;
+                        float coverage = (std::max)(0.f, (std::min)(1.f, (edge - radius) * 32));
+                        alpha = 1 - (1 - alpha) * (1 - coverage * .02f * (6 - ring));
+                    }
+                    alpha = (std::max)(alpha, std::exp(-radius * radius * 180));
+                    pixels[(y * 64 + x) * 4 + 3] = static_cast<unsigned char>(alpha * 255);
+                }
+            }
+        }
+        for (int y = 0; y < cell; ++y)
+        {
+            for (int x = 0; x < cell; ++x)
+            {
+                int sourceX = (std::max)(0, (std::min)(63, x - 1));
+                int sourceY = (std::max)(0, (std::min)(63, y - 1));
+                std::memcpy(&atlas[(y * atlasWidth + type * cell + x) * 4],
+                            &pixels[(sourceY * 64 + sourceX) * 4], 4);
+            }
+        }
+    }
+    glDeleteTextures(4, m_data->materials);
+    std::fill(std::begin(m_data->materials), std::end(m_data->materials), 0);
+    m_data->atlas = Upload(atlasWidth, cell, atlas);
+    renderqueue::SolidSample(m_data->atlas, (4 * cell + 32.f) / atlasWidth, .5f);
     m_data->characters = CreateCharacterAtlas();
 }
 RenderAssets::~RenderAssets()
 {
+    renderqueue::Flush();
+    glDeleteTextures(1, &m_data->atlas);
     glDeleteTextures(4, m_data->materials);
     glDeleteTextures(1, &m_data->characters);
     for (const auto &entry : m_data->texts)
@@ -200,21 +251,28 @@ RenderAssets::~RenderAssets()
 }
 void RenderAssets::DrawMaterial(const RenderPoint (&points)[4], SurfaceMaterial material)
 {
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, m_data->materials[static_cast<int>(material)]);
-    renderdebug::BeginPrimitive(GL_QUADS);
-    glTexCoord2f(0, 0);
-    glVertex2f(points[0].x, points[0].y);
-    glTexCoord2f(1, 0);
-    glVertex2f(points[1].x, points[1].y);
-    glTexCoord2f(1, 1);
-    glVertex2f(points[2].x, points[2].y);
-    glTexCoord2f(0, 1);
-    glVertex2f(points[3].x, points[3].y);
-    glEnd();
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glDisable(GL_TEXTURE_2D);
+    int index = static_cast<int>(material);
+    float u0 = (index * 66 + 1.5f) / 396.f, u1 = (index * 66 + 64.5f) / 396.f;
+    float v0 = 1.5f / 66, v1 = 64.5f / 66;
+    renderqueue::Texture(m_data->atlas);
+    renderqueue::Begin(GL_QUADS);
+    renderqueue::TexCoord(u0, v0);
+    renderqueue::Vertex(points[0].x, points[0].y);
+    renderqueue::TexCoord(u1, v0);
+    renderqueue::Vertex(points[1].x, points[1].y);
+    renderqueue::TexCoord(u1, v1);
+    renderqueue::Vertex(points[2].x, points[2].y);
+    renderqueue::TexCoord(u0, v1);
+    renderqueue::Vertex(points[3].x, points[3].y);
+    renderqueue::End();
+    renderqueue::Texture(0);
 }
+void RenderAssets::DrawGlow(float x, float y, float size)
+{
+    Quad(m_data->atlas, x - size * 2.1f, y - size * .9f, size * 4.2f, size * 1.8f, (5 * 66 + 1.5f) / 396,
+         1.5f / 66, (5 * 66 + 64.5f) / 396, 64.5f / 66);
+}
+
 void RenderAssets::DrawCharacter(float x, float footY, int frame, int direction)
 {
     frame = (std::max)(0, (std::min)(7, frame));
@@ -233,6 +291,8 @@ void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf
     auto found = m_data->texts.find(key);
     if (found == m_data->texts.end())
     {
+        profiling::Count(profiling::Counter::TextCacheMisses);
+        profiling::Scope timer(profiling::Timer::TextRasterize);
         int count =
             MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, utf8.data(), (int)utf8.size(), nullptr, 0);
         if (count <= 0)
@@ -299,10 +359,16 @@ void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf
             auto oldest = std::min_element(
                 m_data->texts.begin(), m_data->texts.end(),
                 [](const auto &a, const auto &b) { return a.second.lastUse < b.second.lastUse; });
+            renderqueue::Flush();
+            profiling::Count(profiling::Counter::TextCacheEvictions);
             glDeleteTextures(1, &oldest->second.texture);
             m_data->texts.erase(oldest);
         }
         found = m_data->texts.emplace(key, Data::TextTexture{texture, width, height, 0}).first;
+    }
+    else
+    {
+        profiling::Count(profiling::Counter::TextCacheHits);
     }
     found->second.lastUse = ++m_data->clock;
     const auto &texture = found->second;

@@ -1,0 +1,130 @@
+렌더링 최적화 및 프로파일링
+
+적용 사항
+1. RenderQueue: GL_POLYGON/QUADS/FAN/LINE을 삼각형으로 변환하여 연속된 같은 상태끼리 배칭.
+   텍스처/프로그램/이펙트 uniform 상태가 바뀌거나 버퍼 한계, 캐시 메시/패스 경계에서 분리.
+   임의의 재질 정렬은 하지 않는다. 기존 painter order와 알파 합성 순서를 유지한다.
+   선은 사각형 삼각형으로 변환하므로 원래 드라이버 선 래스터화와 가장자리가 조금 다를 수 있다.
+2. 도시/사냥터 바닥: 8x8 청크별 GPU 메시를 첫 표시 시 생성하고 카메라 이동에는 재사용.
+   물결은 정적 지형에 굽지 않고 별도 동적 셰이더 배치로 유지한다.
+   맵 생성 시 지형 캐시와 미니맵 지형 텍스처를 무효화한다.
+3. 단색 도형과 4종 재질: 패딩 있는 공용 아틀라스의 단색 셀/재질 셀을 사용한다.
+   건물 면, 창문, 윤곽선 등이 같은 텍스처로 배칭될 수 있다.
+4. 발광: 6개의 타원 대신 미리 생성한 그라데이션 아틀라스 셀 사각형 1개.
+   원래의 빛 번짐을 근사하며 정확히 동일한 픽셀을 보장하지 않는다.
+5. models::Get()의 불변 모델: 모델별 GPU 메시 캐시. 부품을 매 프레임 다시 생성하지 않는다.
+   OpenGL 3.3 이상에서 연속된 동일 단일 범위 메시들을 인스턴싱한다.
+   다른 도형이 사이에 있거나 다중 범위/미지원 환경이면 개별 캐시 메시로 출력한다.
+   인스턴싱 지원 조건을 충족하지 않아도 배칭/캐시는 유지한다.
+   실제 장면에서는 순서 제약 때문에 instanced_draw_calls가 0일 수 있다.
+6. 사냥터 미니맵: 지형을 160x160 RGBA 텍스처로 캐싱하고 플레이어/적/귀환 표식만 동적 출력.
+   도시 미니맵의 단색 건물 표시는 공용 도형 배칭을 사용한다.
+
+로그 위치 및 빈도
+- 프레임별 출력 대신 약 1초에 한 줄, 종료 시 남은 구간 한 줄.
+- 콘솔과 실행 파일 옆 Logs/performance-<pid>-<session>-<segment>.jsonl에 동시 기록.
+- 파일은 한 실행당 최대 4개 세그먼트, 각 약 16MiB로 순환한다. 가장 오래된 세그먼트를 덮어쓴다.
+- 다른 실행의 로그는 자동 삭제하지 않는다. 장기 수집 시 사용자가 보관/정리한다.
+- 디렉터리/파일 쓰기가 실패하면 콘솔 출력은 계속되며 file_logging_enabled=false로 표시된다.
+- 파일은 JSON만 기록한다. 콘솔에는 기존 캐시/셰이더 진단 메시지도 섞일 수 있다.
+- 키는 영어 snake_case, 단위는 명시적 ms/bytes/seconds, schema=game_performance_v1.
+
+주요 필드 정의
+event: performance_window
+scene: interior/exterior/hunting/mixed. 구간에서 장면이 바뀌면 mixed.
+frame_id: 실행 내 마지막 프레임 번호.
+window_index: 보고 구간 번호. 1번은 초기 로딩 영향이 포함될 수 있다.
+opengl/build_config: GPU 벤더·렌더러·버전과 Debug/Release 구성을 비교용으로 기록.
+window_seconds: 실제 steady_clock 경과 시간. 정확히 1초라고 가정하지 않는다.
+frames/fps: 구간 내 완료 프레임 수 / 실제 구간 시간.
+target_fps/below_target_fps: 60 FPS 기준 여부. 원인 추정이나 성능 보장이 아니다.
+frame_interval_ms: 프레임 시작 사이 간격의 p95/p99/max와 표본 수.
+  타이머 대기, 이벤트 처리, 표시 대기, 로깅 지연을 포함한다.
+  최대 4096개 표본, 초과분은 dropped_samples로 명시. max는 초과분도 포함.
+draw_calls_per_frame: 마지막/구간 평균/구간 최대 실제 GL 제출 횟수.
+  glDrawArrays/Instanced 한 번=1. 후처리 glBegin/glEnd 한 구간=1.
+  제출한 Actor 수나 논리 도형 수와 다르며 드라이버 내부 명령 수는 아니다.
+gpu_timer_supported: 타이머 쿼리 지원 여부.
+gpu_elapsed_ms: 완성된 비동기 GPU 프레임 쿼리의 avg/max/samples.
+gpu_scopes_ms: background/world/post_process/hud의 비동기 timestamp 구간.
+  GPU 결과는 몇 프레임 늦게 도착하며 CPU 구간과 동일 프레임 집합이 아니다.
+  미지원/미도착은 null 또는 해당 GPU 항목 없음. 0ms로 해석하지 않는다.
+  query 결과 준비 여부만 검사하고 기다리지 않는다. 풀 부족은 gpu_query_skipped로 집계.
+  GPU elapsed에는 명령 사이 GPU 유휴 구간도 포함될 수 있으며 GPU 사용률이 아니다.
+process_memory_bytes: 프로세스 working_set/private_commit. GPU VRAM 사용량이 아니다.
+
+cpu_scopes_ms 항목
+- frame_cpu: 프레임 콜백 경과 시간. present 대기를 포함한다.
+- update/movement/combat/navigation: 업데이트/이동/전투·적 갱신/BFS 시간.
+- scene_update/scene_placement/scene_cull_sort: Actor 갱신/배치 동기화/컬링·정렬.
+- background/world/hud/post_process: 출력 구간별 CPU 경과 시간.
+- queue_flush/mesh_build: 최종 제출/캐시 메시 생성 비용.
+- texture_upload/text_rasterize/disk_cache_read/disk_cache_write/map_generation: 자원·맵 비용.
+- log_output: 통계 정렬/직렬화/파일·콘솔 출력 비용. 다음 구간에 보고한다.
+- resource_initialize/shader_compile: 초기 자원 준비/셰이더 컴파일·링크 비용.
+- 각 항목의 total/avg/max는 ms, samples는 호출 수, draw_calls_total은 구간 내 제출 수.
+- 타이머는 중첩된 inclusive 시간이다. 항목을 전부 더해서 프레임 시간으로 사용하지 않는다.
+- samples=0은 미실행이다. 시간이 0이라는 뜻이 아니다.
+
+counters 항목 (최근 구간 누계)
+- submitted_primitives: 캐시 모델을 포함한 논리 도형 수.
+- submitted_vertices: 삼각형 변환 후 제출 정점 수(캐시 메시 재사용 포함, 인스턴스별 합계).
+- draw_calls: GPU 제출 횟수. avg draw calls는 draw_calls_per_frame.avg를 사용한다.
+- batch_state_breaks: 텍스처/프로그램/uniform 차이로 배치가 갈라진 횟수.
+- batch_capacity_breaks: 스트리밍 정점 수 제한(65536)으로 출력한 횟수.
+- batch_barrier_breaks: 캐시 메시 전환 때문에 보류 중 출력을 제출한 횟수.
+  배치 분할 카운터는 일부 원인이 겹칠 수 있어 합계가 draw_calls와 같지 않다.
+- mesh_cache_hits/misses: 모델/지형 GPU 메시 캐시 적중·생성.
+- mesh_upload_bytes/stream_upload_bytes/texture_upload_bytes: 해당 구간 업로드 바이트.
+  누계 할당량이나 현재 GPU 메모리 점유량이 아니다.
+- text_cache_hits/misses/evictions: 한글 문자열 텍스처 캐시 상태.
+- scene_placements/visited_nodes/rejected_subtrees/visible_actors/bounds_recomputed:
+  반복 배치/컬링/경계 캐시 효율. 여러 장면 수집의 누계이며 고유 Actor 개수가 아니다.
+- disk_cache_hits/misses: 파일 캐시 검증 결과. 초기 로딩에도 집계된다.
+- minimap_rebuilds: 지도 지형 텍스처 생성 횟수. 정상적인 사냥 중에는 0이어야 한다.
+- instanced_draw_calls/rendered_instances: 실제 하드웨어 인스턴싱 호출/캐시 메시 인스턴스 수.
+  rendered_instances에는 개별 메시 fallback도 포함한다.
+- collision_queries/line_of_sight_queries/navigation_visited_cells: 게임플레이 공간 탐색량.
+
+AI 분석 규칙
+1. 첫 구간은 초기 로딩과 셰이더/메시 생성 영향을 받는다. 워밍업 이후 동일 장면끼리 비교한다.
+2. FPS < 60만 보고 GPU 병목이라고 단정하지 않는다.
+3. present가 크고 나머지가 작으면 VSync/표시 대기를 조사한다. 타이머 16ms 설정은 유지했다.
+4. scene_placement/update가 크면 CPU 상태 동기화·게임 로직을 조사한다.
+5. GPU world/post_process가 크면 도형 수 외에 픽셀 수/오버드로/셰이더 부하를 조사한다.
+6. text_cache_misses/texture_upload_bytes 급증과 p99 악화가 겹치면 문자열 캐시 churn을 조사한다.
+7. mesh_cache_misses/minimap_rebuilds가 정지 장면에서 반복되면 캐시 무효화 정책을 조사한다.
+8. draw_calls가 줄어도 FPS가 오르지 않을 수 있다. 타이머/동기화/필레이트 병목을 구분한다.
+9. log_output 비용도 확인한다. 콘솔 파이프나 파일 시스템이 느리면 계측 자체가 영향을 준다.
+10. GPU 미지원/미수집, 표본 누락을 0으로 대체하지 않는다.
+
+향후 확장
+- Profiler.h의 Timer/Counter enum과 Profiler.cpp의 이름 배열에 같은 순서로 항목 추가.
+  static_assert로 항목 수 불일치를 검사한다.
+- CPU 함수 범위: profiling::Scope timer(profiling::Timer::...);
+- 카운터: profiling::Count(profiling::Counter::..., amount);
+- GPU 패스: profiling::GpuScope timer(profiling::Timer::...);
+  GPU 구간 종료 전에 해당 패스 RenderQueue::Flush를 실행해야 올바르게 측정된다.
+- 현재는 GLUT 단일 스레드 전용이다. 작업 스레드 추가 시 thread-local 집계/병합을 먼저 구현한다.
+- 새 저수준 GL 출력 경로는 큐를 통하거나 최종 제출 지점에서 DrawCalls를 집계한다.
+- framebuffer/viewport/projection/blending 변경과 텍스처/메시 삭제 전에는 반드시 큐를 Flush한다.
+- 성능 문제가 생길 수 있는 모든 함수를 자동 추적하지는 않는다. 주요 경로에 계측 지점을 제공한다.
+  개별 함수/할당 추적, GPU 점유율·VRAM·드라이버 stall 분석은 추가 계측/외부 프로파일러가 필요하다.
+
+사용자 확인 항목
+- 빌드 후 집/도시/사냥터에서 각각 워밍업 후 10초 이상 로그 수집.
+- 이전과 같은 위치/해상도/빌드 구성에서 FPS와 draw_calls_per_frame 비교.
+- 건물 앞뒤, 반투명 건물, 그림자, 글자 색, 차량/인물 위치, 물결/불꽃, 발광 확인.
+- 맵 재생성 후 미니맵과 지형 캐시가 갱신되는지 확인.
+- Logs JSONL을 AI에게 전달하면 항목별 병목 후보를 분석할 수 있다.
+- 이번 구현에서 빌드/실행/실측은 수행하지 않았다. 60 FPS 달성이나 감소율은 아직 검증되지 않았다.
+
+배칭 스모크 테스트 (사용자 실행)
+- tests/RenderQueueSmokeTests.cpp는 게임 main과 별도이며 OpenGL 컨텍스트를 생성한다.
+- 숨겨진 창의 픽셀 소유권 문제를 피하려고 오프스크린 FBO를 사용한다. OpenGL 3.0 미지원 시 종료 코드 77.
+- 같은 상태 사각형 2개가 1회로 합쳐지는지, 알파 순서, 캐시 메시 이동/인스턴싱 fallback을 확인한다.
+- x64 Native Tools Command Prompt에서 저장소 루트 기준(테스트는 NDEBUG 없이 빌드):
+  cl /nologo /EHsc /std:c++17 /utf-8 /Y- /I SimpleGame tests\RenderQueueSmokeTests.cpp SimpleGame\RenderQueue.cpp SimpleGame\Profiler.cpp /Fe:RenderQueueSmokeTests.exe /link /LIBPATH:SimpleGame\Dependencies\x64 freeglut.lib glew32.lib opengl32.lib psapi.lib
+  set "PATH=%CD%\SimpleGame\Dependencies\x64;%PATH%"
+  RenderQueueSmokeTests.exe
+- 이 테스트의 glReadPixels는 검증용 동기화이다. 실제 게임의 프로파일링은 GPU 결과를 기다리지 않는다.

@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "Profiler.h"
 
 #include "Dependencies/freeglut.h"
 #include "Tutorial.h"
@@ -29,6 +30,7 @@ void ShowNotice(const std::string &message)
 
 bool IsPositionBlocked(Vector2 position)
 {
+    profiling::Count(profiling::Counter::CollisionQueries);
     if (levelone::IsActive())
     {
         return levelone::IsBlocked(position);

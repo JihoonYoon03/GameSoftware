@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "Tutorial.h"
 #include "DrawCallCounter.h"
+#include "Profiler.h"
+#include "RenderQueue.h"
+#include "RenderCache.h"
 #include "TutorialDrawing.h"
 #include "TutorialGraphics.h"
 #include "LevelOne.h"
@@ -32,13 +35,18 @@ Renderer &GetRenderer()
 }
 void InitializeGraphics()
 {
+    profiling::Initialize();
+    profiling::Scope timer(profiling::Timer::ResourceInitialize);
     models::Get();
     renderer.reset(new Renderer(kCanvasWidth, kCanvasHeight));
 }
 void ShutdownGraphics()
 {
     ResetWorldScenes();
+    rendercache::Clear();
+    renderqueue::Shutdown();
     renderer.reset();
+    profiling::Shutdown();
 }
 
 void Draw()
@@ -47,7 +55,9 @@ void Draw()
     {
         return;
     }
-    renderdebug::BeginFrame();
+    profiling::BeginFrame(levelone::IsActive() ? "hunting"
+                                               : (g_state.isInsideHome ? "interior" : "exterior"));
+    renderqueue::BeginFrame();
     renderer->BeginScene(g_state.viewportWidth, g_state.viewportHeight);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -57,22 +67,41 @@ void Draw()
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    DrawScreenLayer(WorldSceneKind::Background, "background", DrawBackdrop);
-    if (levelone::IsActive())
     {
-        levelone::DrawWorld();
+        profiling::Scope timer(profiling::Timer::Background);
+        profiling::GpuScope gpuTimer(profiling::Timer::Background);
+        DrawScreenLayer(WorldSceneKind::Background, "background", DrawBackdrop);
+        renderqueue::Flush();
     }
-    else if (g_state.isInsideHome)
     {
-        DrawInterior();
-    }
-    else
-    {
-        DrawExterior();
+        profiling::Scope timer(profiling::Timer::World);
+        profiling::GpuScope gpuTimer(profiling::Timer::World);
+        if (levelone::IsActive())
+        {
+            levelone::DrawWorld();
+        }
+        else if (g_state.isInsideHome)
+        {
+            DrawInterior();
+        }
+        else
+        {
+            DrawExterior();
+        }
+        renderqueue::Flush();
     }
     renderer->EndScene(g_state.animationTimeSeconds);
-    DrawScreenLayer(WorldSceneKind::Hud, "hud", DrawHud);
-    glutSwapBuffers();
-    renderdebug::EndFrame();
+    {
+        profiling::Scope timer(profiling::Timer::Hud);
+        profiling::GpuScope gpuTimer(profiling::Timer::Hud);
+        DrawScreenLayer(WorldSceneKind::Hud, "hud", DrawHud);
+        renderqueue::Flush();
+    }
+    profiling::EndGpuFrame();
+    {
+        profiling::Scope timer(profiling::Timer::Present);
+        glutSwapBuffers();
+    }
+    profiling::EndFrame();
 }
 } // namespace tutorial

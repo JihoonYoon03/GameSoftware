@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "LevelOne.h"
+#include "RenderCache.h"
 #include "TutorialDrawing.h"
 #include "TutorialGraphics.h"
 #include <algorithm>
@@ -15,17 +16,7 @@ void DrawMapOverview()
     constexpr float left = kCanvasWidth - 210.f, top = 35, cellSize = 5;
     DrawRectangle(left - 12, top - 18, 186, 205, ColorRGBA(.025f, .055f, .075f, .95f));
     DrawLabel(left, top, "연결된 격리 구역", ColorRGBA(.6f, .9f, .9f));
-    for (int y = 0; y < kMapSize; ++y)
-    {
-        for (int x = 0; x < kMapSize; ++x)
-        {
-            if (IsWalkable(x, y))
-            {
-                DrawRectangle(left + x * cellSize, top + 12 + y * cellSize, 4, 4,
-                              ColorRGBA(.21f, .34f, .37f));
-            }
-        }
-    }
+    rendercache::DrawMinimapTerrain(left, top + 12);
     for (const auto &enemy : g_level.enemies)
     {
         if (enemy.health > 0)

@@ -1,4 +1,6 @@
 #include "stdafx.h"
+#include "RenderQueue.h"
+#include "Profiler.h"
 #include "DrawCallCounter.h"
 #include "Dependencies/glew.h"
 #include "Renderer.h"
@@ -115,6 +117,7 @@ bool Renderer::HasPostProcessing() const
 }
 unsigned int Renderer::CompileProgram(const char *vertex, const char *fragment)
 {
+    profiling::Scope timer(profiling::Timer::ShaderCompile);
     GLuint shaders[] = {glCreateShader(GL_VERTEX_SHADER), glCreateShader(GL_FRAGMENT_SHADER)};
     const char *sources[] = {vertex, fragment};
     bool valid = true;
@@ -215,6 +218,9 @@ void Renderer::BeginScene(int width, int height)
 }
 void Renderer::EndScene(float seconds)
 {
+    renderqueue::Flush();
+    profiling::Scope timer(profiling::Timer::PostProcess);
+    profiling::GpuScope gpuTimer(profiling::Timer::PostProcess);
     if (!HasPostProcessing())
     {
         return;
@@ -231,6 +237,7 @@ void Renderer::EndScene(float seconds)
     glUniform2f(glGetUniformLocation(m_postProgram, "texel"), 1.f / m_width, 1.f / m_height);
     glUniform1f(glGetUniformLocation(m_postProgram, "clockTime"), seconds);
     renderdebug::BeginPrimitive(GL_QUADS);
+    profiling::Count(profiling::Counter::SubmittedVertices, 4);
     glTexCoord2f(0, 0);
     glVertex2f(-1, -1);
     glTexCoord2f(1, 0);
@@ -248,32 +255,34 @@ void Renderer::DrawMaterial(const RenderPoint (&vertices)[4], SurfaceMaterial ma
 {
     m_assets->DrawMaterial(vertices, material);
 }
+void Renderer::DrawGlow(float x, float y, float size)
+{
+    m_assets->DrawGlow(x, y, size);
+}
 
 void Renderer::DrawEffect(const RenderPoint (&vertices)[4], SurfaceEffect effect, float seconds)
 {
     if (m_effectProgram)
     {
-        glUseProgram(m_effectProgram);
-        glUniform1f(glGetUniformLocation(m_effectProgram, "seconds"), seconds);
-        glUniform1i(glGetUniformLocation(m_effectProgram, "effect"), static_cast<int>(effect));
+        renderqueue::Effect(m_effectProgram, static_cast<int>(effect), seconds);
     }
     else
     {
-        glColor4f(.12f, .4f, .5f, .4f); // Static fallback; animation belongs to the shader.
+        renderqueue::Color(.12f, .4f, .5f, .4f); // Static fallback; animation belongs to the shader.
     }
-    renderdebug::BeginPrimitive(GL_QUADS);
-    glTexCoord2f(0, 0);
-    glVertex2f(vertices[0].x, vertices[0].y);
-    glTexCoord2f(1, 0);
-    glVertex2f(vertices[1].x, vertices[1].y);
-    glTexCoord2f(1, 1);
-    glVertex2f(vertices[2].x, vertices[2].y);
-    glTexCoord2f(0, 1);
-    glVertex2f(vertices[3].x, vertices[3].y);
-    glEnd();
+    renderqueue::Begin(GL_QUADS);
+    renderqueue::TexCoord(0, 0);
+    renderqueue::Vertex(vertices[0].x, vertices[0].y);
+    renderqueue::TexCoord(1, 0);
+    renderqueue::Vertex(vertices[1].x, vertices[1].y);
+    renderqueue::TexCoord(1, 1);
+    renderqueue::Vertex(vertices[2].x, vertices[2].y);
+    renderqueue::TexCoord(0, 1);
+    renderqueue::Vertex(vertices[3].x, vertices[3].y);
+    renderqueue::End();
     if (m_effectProgram)
     {
-        glUseProgram(0);
+        renderqueue::Effect(0, 0, 0);
     }
 }
 void Renderer::DrawCharacter(float x, float y, int frame, int direction)
@@ -287,15 +296,15 @@ void Renderer::DrawUtf8Text(float x, float y, const std::string &text, int size)
 void Renderer::DrawSolidRect(float x, float y, float z, float size, float r, float g, float b, float a)
 {
     // Preserve the old centered pixel-coordinate API.
-    glPushMatrix();
-    glLoadIdentity();
-    glTranslatef(m_width * .5f + x, m_height * .5f - y, 0);
-    glColor4f(r, g, b, a);
-    renderdebug::BeginPrimitive(GL_QUADS);
-    glVertex3f(-size / 2, -size / 2, z);
-    glVertex3f(size / 2, -size / 2, z);
-    glVertex3f(size / 2, size / 2, z);
-    glVertex3f(-size / 2, size / 2, z);
-    glEnd();
-    glPopMatrix();
+    renderqueue::PushMatrix();
+    renderqueue::LoadIdentity();
+    renderqueue::Translate(m_width * .5f + x, m_height * .5f - y, 0);
+    renderqueue::Color(r, g, b, a);
+    renderqueue::Begin(GL_QUADS);
+    renderqueue::Vertex(-size / 2, -size / 2, z);
+    renderqueue::Vertex(size / 2, -size / 2, z);
+    renderqueue::Vertex(size / 2, size / 2, z);
+    renderqueue::Vertex(-size / 2, size / 2, z);
+    renderqueue::End();
+    renderqueue::PopMatrix();
 }

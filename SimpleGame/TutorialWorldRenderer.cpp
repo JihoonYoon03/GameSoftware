@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "RenderQueue.h"
 #include "DrawCallCounter.h"
 
 #include "Tutorial.h"
@@ -62,13 +63,13 @@ void DrawBackdrop()
     for (int j = 8; j > 0; j--)
     {
         SetColor(ColorRGBA(.18f, .62f, .7f, j == 1 ? .85f : .025f));
-        glLineWidth((float)j * 2);
-        renderdebug::BeginPrimitive(GL_LINE_LOOP);
+        renderqueue::LineWidth((float)j * 2);
+        renderqueue::Begin(GL_LINE_LOOP);
         for (const auto &point : models::Get().gateRing)
         {
-            glVertex2f(gateX + point.x * 115, gateY + point.y * 145);
+            renderqueue::Vertex(gateX + point.x * 115, gateY + point.y * 145);
         }
-        glEnd();
+        renderqueue::End();
     }
     for (int i = 0; i < 12; i++)
     {

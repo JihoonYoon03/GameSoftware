@@ -40,12 +40,14 @@ Actor / Scene 1차 분리
   아이템 이름은 벡터 인덱스가 아닌 고유 actorId를 사용한다.
 
 4. 이번 단계의 경계
-  Renderer, 셰이더, 모델 캐시, 머터리얼 구현은 변경하지 않았다.
+  최초 Actor/Scene 분리는 렌더러를 보존했으며 이후 배칭/GPU 캐시가 추가되었다.
+  현재 렌더링 및 프로파일링 설명은 PERFORMANCE_PROFILING.txt를 참조한다.
   전투/퀘스트/충돌 상태는 기존 TutorialState/LevelOne::State를 유지한다.
   따라서 Actor의 출력 오프셋 변경은 게임플레이 충돌 좌표를 변경하지 않는다.
   기존 플레이어/적 시뮬레이션은 종전 코드에서 갱신하며 화면 컬링으로 정지하지 않는다.
   Scene 동기화는 기존 배치 데이터를 매 프레임 방문한다. 정적 배치의 증분 동기화는 아직 없다.
-  경계는 보수적 AABB이며 GPU 픽셀 클리핑/오클루전 컬링/LOD/인스턴싱은 구현하지 않았다.
+  경계는 보수적 AABB이며 오클루전 컬링/LOD는 구현하지 않았다.
+  RenderQueue는 출력 순서가 연속된 동일 단일 범위 메시만 조건부 인스턴싱한다.
   부모 변환은 현재 2D 이동만 지원한다. 회전/스케일은 향후 Render 분리와 함께 확장한다.
 
 5. 확인 항목 (사용자 빌드/실행)
@@ -57,6 +59,7 @@ Actor / Scene 1차 분리
   tests/SceneGraphTests.cpp에 렌더러 없이 실행 가능한 독립 단위 테스트를 제공한다.
   게임 프로젝트에는 테스트 main을 포함하지 않는다.
   Visual Studio Developer Command Prompt에서 저장소 루트 기준:
-    cl /nologo /EHsc /std:c++17 /utf-8 /Y- /I SimpleGame tests\SceneGraphTests.cpp SimpleGame\Actor\Actor.cpp SimpleGame\Scene\SceneGraph.cpp SimpleGame\Scene\Scene.cpp /Fe:SceneGraphTests.exe
+    cl /nologo /EHsc /std:c++17 /utf-8 /Y- /I SimpleGame tests\SceneGraphTests.cpp SimpleGame\Actor\Actor.cpp SimpleGame\Scene\SceneGraph.cpp SimpleGame\Scene\Scene.cpp SimpleGame\Profiler.cpp /Fe:SceneGraphTests.exe /link /LIBPATH:SimpleGame\Dependencies\x64 glew32.lib opengl32.lib psapi.lib
+    set "PATH=%CD%\SimpleGame\Dependencies\x64;%PATH%"
     SceneGraphTests.exe
   이번 작업에서는 빌드와 테스트 실행을 하지 않았다.

@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Scene.h"
+#include "../Profiler.h"
 #include <utility>
 
 namespace game
@@ -12,6 +13,7 @@ Actor &Scene::Place(const std::string &name, const std::string &group, Bounds bo
                     Actor::DrawCallback callback)
 {
     const std::string groupName = "group/" + group;
+    profiling::Count(profiling::Counter::ScenePlacements);
     Actor *parent = graph.Find(groupName);
     if (!parent)
     {

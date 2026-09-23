@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "WorldScene.h"
+#include "../RenderCache.h"
+#include "../Profiler.h"
 #include "../Tutorial.h"
 #include "../TutorialDrawing.h"
 #include <cmath>
@@ -9,55 +11,58 @@ namespace tutorial
 void DrawInterior()
 {
     auto &scene = GetWorldScene(WorldSceneKind::Interior);
-    scene.BeginPlacement();
-    for (int x = -3; x < 3; ++x)
     {
-        for (int y = -3; y < 3; ++y)
+        profiling::Scope placementTimer(profiling::Timer::ScenePlacement);
+        scene.BeginPlacement();
+        for (int x = -3; x < 3; ++x)
         {
-            PlaceWorldActor(scene, "tile/" + std::to_string(x) + "/" + std::to_string(y), float(x), float(y),
-                            WorldBounds(float(x), float(y), 1, 1, 0), 0, 0, [x, y]() {
-                                DrawMaterialTile(float(x), float(y), SurfaceMaterial::Metal,
-                                                 ColorRGBA(.23f, .3f, .34f));
-                            });
+            for (int y = -3; y < 3; ++y)
+            {
+                PlaceWorldActor(scene, "tile/" + std::to_string(x) + "/" + std::to_string(y), float(x),
+                                float(y), WorldBounds(float(x), float(y), 1, 1, 0), 0, 0, [x, y]() {
+                                    DrawMaterialTile(float(x), float(y), SurfaceMaterial::Metal,
+                                                     ColorRGBA(.23f, .3f, .34f));
+                                });
+            }
         }
+        PlaceWorldActor(scene, "wall/back", -3, -3, WorldBounds(-3, -3, 6, .12f, 95), 1, 0,
+                        []() { DrawBox(-3, -3, 6, .12f, 95, ColorRGBA(.13f, .21f, .28f)); });
+        PlaceWorldActor(scene, "wall/side", -3, -3, WorldBounds(-3, -3, .12f, 6, 95), 1, 1,
+                        []() { DrawBox(-3, -3, .12f, 6, 95, ColorRGBA(.1f, .18f, .24f)); });
+        PlaceWorldActor(scene, "window", -1, -2.85f, WorldBounds(-1, -2.85f, 0, 0, 80, 150), 1, 2, []() {
+            Vector2 window = WorldToScreen(-1, -2.85f, 68);
+            DrawLine(window, {window.x + 110, window.y + 55}, ColorRGBA(.25f, .72f, .82f), 18);
+        });
+        PlaceWorldActor(scene, "bed", -2.6f, -2.6f, WorldBounds(-2.6f, -2.6f, 1.8f, 1.1f, 22), 1, 3, []() {
+            DrawBox(-2.6f, -2.6f, 1.8f, 1.1f, 16, ColorRGBA(.32f, .39f, .46f));
+            DrawBox(-2.5f, -2.5f, .5f, .8f, 22, ColorRGBA(.66f, .68f, .62f));
+        });
+        PlaceWorldActor(scene, "terminal", 1.3f, -2.6f, WorldBounds(1, -2.6f, 1.6f, 1.4f, 65), 1, 4, []() {
+            DrawBox(1.3f, -2.6f, 1.3f, .8f, 27, ColorRGBA(.26f, .34f, .39f));
+            Vector2 terminalScreen = WorldToScreen(1.6f, -1.9f, 46);
+            DrawRectangle(terminalScreen.x - 15, terminalScreen.y - 12, 30, 19, ColorRGBA(.15f, .65f, .72f));
+            DrawGlow(WorldToScreen(1, -1.2f), 20, ColorRGBA(.3f, .95f, .9f));
+        });
+        PlaceWorldActor(scene, "table", -2.4f, 1.1f, WorldBounds(-2.4f, 1.1f, 1.2f, .6f, 55), 1, 5, []() {
+            DrawBox(-2.4f, 1.1f, 1.2f, .6f, 20, ColorRGBA(.35f, .28f, .25f));
+            DrawGlow(WorldToScreen(-2, 1.4f, 35), 18, ColorRGBA(1, .63f, .28f));
+        });
+        PlaceWorldActor(scene, "door", 1.9f, 1.9f, WorldBounds(1.9f, 1.9f, 1, 1, 0), 1, 6,
+                        []() { DrawTile(1.9f, 1.9f, 1, 1, ColorRGBA(.15f, .45f, .47f)); });
+        PlaceWorldActor(scene, "player", g_state.playerPosition.x, g_state.playerPosition.y,
+                        WorldBounds(g_state.playerPosition.x, g_state.playerPosition.y, 0, 0, 90), 2, 0,
+                        []() { DrawPerson(g_state.playerPosition, ColorRGBA(.67f, .8f, .82f), true); });
+        PlaceWorldActor(scene, "terminal-label", 1, -1.2f, WorldBounds(1, -1.2f, 0, 0, 80, 80), 3, 0, []() {
+            Vector2 label = WorldToScreen(1, -1.2f, 65);
+            DrawLabel(label.x - 30, label.y, "´Ü¸»");
+        });
+        PlaceWorldActor(scene, "door-label", 2.4f, 2.4f, WorldBounds(2.4f, 2.4f, 0, 0, 0, 80), 3, 0, []() {
+            Vector2 label = WorldToScreen(2.4f, 2.4f);
+            DrawLabel(label.x - 20, label.y + 25, "Ãâ±¸");
+        });
+        scene.GetGraph().Reparent("terminal-label", *scene.GetGraph().Find("terminal"));
+        scene.GetGraph().Reparent("door-label", *scene.GetGraph().Find("door"));
     }
-    PlaceWorldActor(scene, "wall/back", -3, -3, WorldBounds(-3, -3, 6, .12f, 95), 1, 0,
-                    []() { DrawBox(-3, -3, 6, .12f, 95, ColorRGBA(.13f, .21f, .28f)); });
-    PlaceWorldActor(scene, "wall/side", -3, -3, WorldBounds(-3, -3, .12f, 6, 95), 1, 1,
-                    []() { DrawBox(-3, -3, .12f, 6, 95, ColorRGBA(.1f, .18f, .24f)); });
-    PlaceWorldActor(scene, "window", -1, -2.85f, WorldBounds(-1, -2.85f, 0, 0, 80, 150), 1, 2, []() {
-        Vector2 window = WorldToScreen(-1, -2.85f, 68);
-        DrawLine(window, {window.x + 110, window.y + 55}, ColorRGBA(.25f, .72f, .82f), 18);
-    });
-    PlaceWorldActor(scene, "bed", -2.6f, -2.6f, WorldBounds(-2.6f, -2.6f, 1.8f, 1.1f, 22), 1, 3, []() {
-        DrawBox(-2.6f, -2.6f, 1.8f, 1.1f, 16, ColorRGBA(.32f, .39f, .46f));
-        DrawBox(-2.5f, -2.5f, .5f, .8f, 22, ColorRGBA(.66f, .68f, .62f));
-    });
-    PlaceWorldActor(scene, "terminal", 1.3f, -2.6f, WorldBounds(1, -2.6f, 1.6f, 1.4f, 65), 1, 4, []() {
-        DrawBox(1.3f, -2.6f, 1.3f, .8f, 27, ColorRGBA(.26f, .34f, .39f));
-        Vector2 terminalScreen = WorldToScreen(1.6f, -1.9f, 46);
-        DrawRectangle(terminalScreen.x - 15, terminalScreen.y - 12, 30, 19, ColorRGBA(.15f, .65f, .72f));
-        DrawGlow(WorldToScreen(1, -1.2f), 20, ColorRGBA(.3f, .95f, .9f));
-    });
-    PlaceWorldActor(scene, "table", -2.4f, 1.1f, WorldBounds(-2.4f, 1.1f, 1.2f, .6f, 55), 1, 5, []() {
-        DrawBox(-2.4f, 1.1f, 1.2f, .6f, 20, ColorRGBA(.35f, .28f, .25f));
-        DrawGlow(WorldToScreen(-2, 1.4f, 35), 18, ColorRGBA(1, .63f, .28f));
-    });
-    PlaceWorldActor(scene, "door", 1.9f, 1.9f, WorldBounds(1.9f, 1.9f, 1, 1, 0), 1, 6,
-                    []() { DrawTile(1.9f, 1.9f, 1, 1, ColorRGBA(.15f, .45f, .47f)); });
-    PlaceWorldActor(scene, "player", g_state.playerPosition.x, g_state.playerPosition.y,
-                    WorldBounds(g_state.playerPosition.x, g_state.playerPosition.y, 0, 0, 90), 2, 0,
-                    []() { DrawPerson(g_state.playerPosition, ColorRGBA(.67f, .8f, .82f), true); });
-    PlaceWorldActor(scene, "terminal-label", 1, -1.2f, WorldBounds(1, -1.2f, 0, 0, 80, 80), 3, 0, []() {
-        Vector2 label = WorldToScreen(1, -1.2f, 65);
-        DrawLabel(label.x - 30, label.y, "ë‹¨ë§");
-    });
-    PlaceWorldActor(scene, "door-label", 2.4f, 2.4f, WorldBounds(2.4f, 2.4f, 0, 0, 0, 80), 3, 0, []() {
-        Vector2 label = WorldToScreen(2.4f, 2.4f);
-        DrawLabel(label.x - 20, label.y + 25, "ì¶œêµ¬");
-    });
-    scene.GetGraph().Reparent("terminal-label", *scene.GetGraph().Find("terminal"));
-    scene.GetGraph().Reparent("door-label", *scene.GetGraph().Find("door"));
     DrawScene(scene);
 }
 
@@ -65,12 +70,20 @@ namespace
 {
 void DrawStreetTiles(game::Scene &scene)
 {
-    for (int x = -20; x < 20; x++)
+    constexpr int chunkSize = 8;
+    for (int x0 = -20; x0 < 20; x0 += chunkSize)
     {
-        for (int y = -14; y < 16; y++)
+        for (int y0 = -14; y0 < 16; y0 += chunkSize)
         {
-            PlaceWorldActor(scene, "tile/" + std::to_string(x) + "/" + std::to_string(y), float(x), float(y),
-                            WorldBounds(float(x), float(y), 1, 1, 0), 0, 0, [x, y]() {
+            std::string key = "terrain/city/" + std::to_string(x0) + "/" + std::to_string(y0);
+            PlaceWorldActor(
+                scene, key, float(x0), float(y0), WorldBounds(float(x0), float(y0), chunkSize, chunkSize, 0),
+                0, 0, [x0, y0, key, &chunkSize]() {
+                    rendercache::DrawWorld(key, [x0, y0, &chunkSize]() {
+                        for (int x = x0; x < x0 + chunkSize && x < 20; ++x)
+                        {
+                            for (int y = y0; y < y0 + chunkSize && y < 16; ++y)
+                            {
                                 bool road = (y >= -1 && y <= 0) || (x >= 1 && x <= 2) || y == 7 || x == -10;
                                 float shade = (x + y + 30) % 2 * .009f;
                                 DrawMaterialTile(float(x), float(y),
@@ -81,7 +94,10 @@ void DrawStreetTiles(game::Scene &scene)
                                 {
                                     DrawTile(x + .1f, y + .1f, .6f, .035f, ColorRGBA(.37f, .59f, .63f));
                                 }
-                            });
+                            }
+                        }
+                    });
+                });
         }
     }
 }
@@ -295,17 +311,17 @@ void DrawQuestMarkers(game::Scene &scene)
                         WorldBounds(position.x, position.y, 0, 0, 70, 230), 5, 0,
                         [position, label, color]() { DrawInteractionMarker(position, label, color); });
     };
-    marker("home", kHomeDoor, "ì§‘", ColorRGBA(.6f, .78f, .81f));
-    marker("lia", kLiaPosition, "ë¦¬ì•„", ColorRGBA(1, .69f, .38f));
-    marker("mara", kMaraPosition, g_state.isSideQuestComplete ? "ë§ˆë¼ / ê³ ë§ˆì›Œìš”" : "ë§ˆë¼ / ì„œë¸Œí€˜ìŠ¤íŠ¸",
+    marker("home", kHomeDoor, "Áý", ColorRGBA(.6f, .78f, .81f));
+    marker("lia", kLiaPosition, "¸®¾Æ", ColorRGBA(1, .69f, .38f));
+    marker("mara", kMaraPosition, g_state.isSideQuestComplete ? "¸¶¶ó / °í¸¶¿ö¿ä" : "¸¶¶ó / ¼­ºêÄù½ºÆ®",
            ColorRGBA(1, .77f, .4f));
     if (g_state.isSideQuestAccepted && !g_state.isPowerRestored)
     {
-        marker("relay", kRelayPosition, "ì „ë ¥ ë³µêµ¬", ColorRGBA(1, .7f, .3f));
+        marker("relay", kRelayPosition, "Àü·Â º¹±¸", ColorRGBA(1, .7f, .3f));
     }
     if (g_state.mainQuestStage >= MainQuestStage::ReadGateSignal)
     {
-        marker("beacon", kBeaconPosition, "ê´€ë¬¸ ì‹ í˜¸", ColorRGBA(.4f, .93f, .96f));
+        marker("beacon", kBeaconPosition, "°ü¹® ½ÅÈ£", ColorRGBA(.4f, .93f, .96f));
     }
 }
 } // namespace
@@ -313,27 +329,32 @@ void DrawQuestMarkers(game::Scene &scene)
 void DrawExterior()
 {
     auto &scene = GetWorldScene(WorldSceneKind::Exterior);
-    scene.BeginPlacement();
-    DrawStreetTiles(scene);
-    DrawBuildingShadows(scene);
-    DrawVehicleShadows(scene);
-    DrawStreetFurniture(scene);
-    DrawDepthSortedObjects(scene);
-    DrawUtilityDevices(scene);
-    DrawQuestMarkers(scene);
-    auto &graph = scene.GetGraph();
-    for (size_t i = 0; i < g_state.buildings.size(); ++i)
     {
-        graph.Reparent("shadow/building/" + std::to_string(i), *graph.Find("building/" + std::to_string(i)));
+        profiling::Scope placementTimer(profiling::Timer::ScenePlacement);
+        scene.BeginPlacement();
+        DrawStreetTiles(scene);
+        DrawBuildingShadows(scene);
+        DrawVehicleShadows(scene);
+        DrawStreetFurniture(scene);
+        DrawDepthSortedObjects(scene);
+        DrawUtilityDevices(scene);
+        DrawQuestMarkers(scene);
+        auto &graph = scene.GetGraph();
+        for (size_t i = 0; i < g_state.buildings.size(); ++i)
+        {
+            graph.Reparent("shadow/building/" + std::to_string(i),
+                           *graph.Find("building/" + std::to_string(i)));
+        }
+        for (int i = 0; i < 6; ++i)
+        {
+            graph.Reparent("shadow/vehicle/" + std::to_string(i),
+                           *graph.Find("vehicle/" + std::to_string(i)));
+        }
+        graph.Reparent("marker/lia", *graph.Find("lia"));
+        graph.Reparent("marker/mara", *graph.Find("mara"));
+        graph.Reparent("marker/relay", *graph.Find("relay"));
+        graph.Reparent("marker/beacon", *graph.Find("beacon"));
     }
-    for (int i = 0; i < 6; ++i)
-    {
-        graph.Reparent("shadow/vehicle/" + std::to_string(i), *graph.Find("vehicle/" + std::to_string(i)));
-    }
-    graph.Reparent("marker/lia", *graph.Find("lia"));
-    graph.Reparent("marker/mara", *graph.Find("mara"));
-    graph.Reparent("marker/relay", *graph.Find("relay"));
-    graph.Reparent("marker/beacon", *graph.Find("beacon"));
     DrawScene(scene);
 }
 } // namespace tutorial
