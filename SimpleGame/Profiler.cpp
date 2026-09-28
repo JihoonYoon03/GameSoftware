@@ -47,7 +47,10 @@ const char *counterNames[] = {"draw_calls",
                               "collision_queries",
                               "line_of_sight_queries",
                               "navigation_visited_cells",
-                              "scene_bounds_recomputed"};
+                              "scene_bounds_recomputed",
+                              "npc_decisions",
+                              "npc_path_requests",
+                              "npc_path_visited_cells"};
 const char *timerNames[] = {"frame_cpu",
                             "update",
                             "movement",
@@ -70,7 +73,9 @@ const char *timerNames[] = {"frame_cpu",
                             "map_generation",
                             "log_output",
                             "resource_initialize",
-                            "shader_compile"};
+                            "shader_compile",
+                            "npc_update",
+                            "npc_navigation"};
 static_assert(sizeof(counterNames) / sizeof(*counterNames) == kCounterCount);
 static_assert(sizeof(timerNames) / sizeof(*timerNames) == kTimerCount);
 struct Sample

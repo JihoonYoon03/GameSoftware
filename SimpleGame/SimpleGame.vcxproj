@@ -164,6 +164,7 @@
     <ClInclude Include="AssetCache.h" />
     <ClInclude Include="ModelLibrary.h" />
     <ClInclude Include="LevelOne.h" />
+    <ClInclude Include="LevelOneNpc.h" />
     <ClInclude Include="RenderAssets.h" />
     <ClInclude Include="TutorialGraphics.h" />
     <ClInclude Include="Tutorial.h" />
@@ -181,6 +182,8 @@
     <ClCompile Include="AssetCache.cpp" />
     <ClCompile Include="ModelLibrary.cpp" />
     <ClCompile Include="LevelOne.cpp" />
+    <ClCompile Include="LevelOneNpc.cpp" />
+    <ClCompile Include="LevelOneNpcRenderer.cpp" />
     <ClCompile Include="LevelOneMap.cpp" />
     <ClCompile Include="LevelOneRenderer.cpp" />
     <ClCompile Include="RenderAssets.cpp" />

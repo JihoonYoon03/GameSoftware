@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "LevelOne.h"
+#include "LevelOneNpc.h"
 #include "RenderCache.h"
 #include "TutorialDrawing.h"
 #include "TutorialGraphics.h"
@@ -13,10 +14,15 @@ namespace
 {
 void DrawMapOverview()
 {
-    constexpr float left = kCanvasWidth - 210.f, top = 35, cellSize = 5;
+    constexpr float left = kCanvasWidth - 210.f, top = 35, cellSize = kMinimapSize / kMapSize;
     DrawRectangle(left - 12, top - 18, 186, 205, ColorRGBA(.025f, .055f, .075f, .95f));
     DrawLabel(left, top, "연결된 격리 구역", ColorRGBA(.6f, .9f, .9f));
     rendercache::DrawMinimapTerrain(left, top + 12);
+    for (const auto &npc : GetNpcs())
+    {
+        DrawEllipse(left + npc.position.x * cellSize, top + 12 + npc.position.y * cellSize, 2, 2,
+                    ColorRGBA(.95f, .85f, .25f));
+    }
     for (const auto &enemy : g_level.enemies)
     {
         if (enemy.health > 0)
@@ -29,7 +35,7 @@ void DrawMapOverview()
                 ColorRGBA(.8f, .65f, 1));
     DrawEllipse(left + g_state.playerPosition.x * cellSize, top + 12 + g_state.playerPosition.y * cellSize, 3,
                 3, ColorRGBA(.3f, 1, .85f));
-    DrawLabel(left, top + 185, "빨강: 적 / 보라: 귀환");
+    DrawLabel(left, top + 185, "적: 빨강 / 주민: 노랑 / 귀환: 보라");
 }
 } // namespace
 
@@ -58,9 +64,10 @@ void DrawHud()
     DrawLabel(40, 186,
               g_level.growthGoalReached ? "성장 목표 완료 / 계속 사냥할 수 있습니다."
                                         : "목표: 캐릭터 레벨 3 달성 및 스탯 성장 확인");
-    std::snprintf(text, sizeof(text), "지도 시드: %u", g_level.seed);
+    std::snprintf(text, sizeof(text), "지도 %d×%d / 주민 %u / 적 정원 %u", kMapSize, kMapSize,
+                  unsigned(GetNpcs().size()), unsigned(g_level.enemies.size()));
     DrawLabel(40, 215, text, ColorRGBA(.5f, .68f, .72f));
     DrawMapOverview();
-    DrawLabel(26, kCanvasHeight - 22.f, "WASD 이동 / Space 공격 / E 줍기·귀환 / Q 회복 / Esc 일시정지");
+    DrawLabel(26, kCanvasHeight - 22.f, "WASD 이동 / Space 공격 / E 대화·줍기·귀환 / Q 회복 / Esc 일시정지");
 }
 } // namespace levelone

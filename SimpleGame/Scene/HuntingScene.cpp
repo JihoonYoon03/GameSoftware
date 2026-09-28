@@ -3,6 +3,7 @@
 #include "../RenderCache.h"
 #include "../Profiler.h"
 #include "../LevelOne.h"
+#include "../LevelOneNpc.h"
 #include "../TutorialDrawing.h"
 #include "../TutorialGraphics.h"
 
@@ -125,9 +126,12 @@ void DrawWorld()
                                             {
                                                 if (g_level.tiles[y * kMapSize + x] != Tile::Wall)
                                                 {
+                                                    bool safeArea = Distance({x + .5f, y + .5f},
+                                                                             g_level.entry) < kSafeAreaRadius;
                                                     DrawMaterialTile(float(x), float(y),
                                                                      SurfaceMaterial::Metal,
-                                                                     ColorRGBA(.23f, .3f, .33f));
+                                                                     safeArea ? ColorRGBA(.28f, .4f, .38f)
+                                                                              : ColorRGBA(.23f, .3f, .33f));
                                                 }
                                             }
                                         }
@@ -176,6 +180,13 @@ void DrawWorld()
                 placeObject({g_level.enemies[i].position.x + g_level.enemies[i].position.y, ObjectKind::Enemy,
                              int(i)});
             }
+        }
+        for (size_t i = 0; i < GetNpcs().size(); ++i)
+        {
+            const auto position = GetNpcs()[i].position;
+            PlaceWorldActor(scene, "npc/" + std::to_string(i), position.x, position.y,
+                            WorldBounds(position.x, position.y, 0, 0, 90, 180), 1, position.x + position.y,
+                            [i]() { DrawNpc(i); });
         }
         placeObject({g_state.playerPosition.x + g_state.playerPosition.y, ObjectKind::Player, 0});
         PlaceWorldActor(scene, "exit", g_level.entry.x, g_level.entry.y,

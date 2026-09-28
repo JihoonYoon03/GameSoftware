@@ -34,6 +34,9 @@ enum class Counter
     LineOfSightQueries,
     NavigationVisitedCells,
     SceneBoundsRecomputed,
+    NpcDecisions,
+    NpcPathRequests,
+    NpcPathVisitedCells,
     Count
 };
 enum class Timer
@@ -61,6 +64,8 @@ enum class Timer
     LogOutput,
     ResourceInitialize,
     ShaderCompile,
+    NpcUpdate,
+    NpcNavigation,
     Count
 };
 class Scope

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Profiler.h"
 #include "LevelOne.h"
+#include "LevelOneNpc.h"
 #include "Scene/WorldScene.h"
 #include <algorithm>
 #include <cmath>
@@ -26,6 +27,10 @@ void RespawnPlayer()
 
 void MoveEnemy(Enemy &enemy, float deltaSeconds)
 {
+    if (tutorial::Distance(tutorial::g_state.playerPosition, g_level.entry) < kSafeAreaRadius)
+    {
+        return;
+    }
     int x = int(std::floor(enemy.position.x)), y = int(std::floor(enemy.position.y));
     if (!IsWalkable(x, y))
     {
@@ -134,7 +139,7 @@ void Enter()
     g_level.invulnerability = 2;
     g_level.navigationCooldown = 0;
     tutorial::ShowNotice(
-        "격리 구역 / Space 근거리 펄스 공격, E 아이템 획득, Q 회복약. 레벨 3까지 성장하세요.");
+        "격리 구역 / 중앙 NPC에게 E 대화·지원. 외곽 Space 사냥, Q 회복. 리아·카인 E 시험 동행.");
 }
 
 void Leave()
@@ -152,6 +157,7 @@ void ResetProgress()
     scene.EndPlacement();
     scene.GetGraph().Clear();
     g_level = State{};
+    ClearNpcs();
 }
 
 void Attack()
@@ -221,9 +227,13 @@ void Interact()
     {
         Leave();
     }
+    else if (InteractWithNpc())
+    {
+        return;
+    }
     else
     {
-        tutorial::ShowNotice("가까운 드롭 아이템에서 E를 누르세요. 입구의 관문에서는 도시로 귀환합니다.");
+        tutorial::ShowNotice("NPC에서 E 대화·지원 / 드롭에서 E 획득 / 입구에서 E 도시 귀환");
     }
 }
 
@@ -242,6 +252,7 @@ void UseRecoveryKit()
 void Update(float deltaSeconds)
 {
     profiling::Scope profileTimer(profiling::Timer::Combat);
+    UpdateNpcs(deltaSeconds);
     g_level.attackCooldown = (std::max)(0.f, g_level.attackCooldown - deltaSeconds);
     g_level.attackFlash = (std::max)(0.f, g_level.attackFlash - deltaSeconds);
     g_level.invulnerability = (std::max)(0.f, g_level.invulnerability - deltaSeconds);
@@ -270,7 +281,7 @@ void Update(float deltaSeconds)
                 int cell = g_level.reachableCells[(i + g_level.kills * 17u) % g_level.reachableCells.size()];
                 tutorial::Vector2 position = {cell % kMapSize + .5f, cell / kMapSize + .5f};
                 if (tutorial::Distance(position, tutorial::g_state.playerPosition) < 6 ||
-                    tutorial::Distance(position, g_level.entry) < 4)
+                    tutorial::Distance(position, g_level.entry) < kEnemySpawnRadius)
                 {
                     continue;
                 }
@@ -291,7 +302,8 @@ void Update(float deltaSeconds)
         }
         enemy.attackCooldown -= deltaSeconds;
         MoveEnemy(enemy, deltaSeconds);
-        if (g_level.invulnerability <= 0 && enemy.attackCooldown <= 0 &&
+        if (tutorial::Distance(tutorial::g_state.playerPosition, g_level.entry) >= kSafeAreaRadius &&
+            g_level.invulnerability <= 0 && enemy.attackCooldown <= 0 &&
             tutorial::Distance(enemy.position, tutorial::g_state.playerPosition) < .8f &&
             HasLineOfSight(enemy.position, tutorial::g_state.playerPosition))
         {

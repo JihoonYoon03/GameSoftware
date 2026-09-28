@@ -5,7 +5,11 @@
 
 namespace levelone
 {
-constexpr int kMapSize = 32;
+constexpr int kMapSize = 64;
+constexpr int kEnemyPopulation = 72;
+constexpr float kMinimapSize = 160.f;
+constexpr float kSafeAreaRadius = 7.f;
+constexpr float kEnemySpawnRadius = 8.f;
 constexpr int kEnemyMaxHealth = 32;
 constexpr int kExperiencePerKill = 20;
 enum class Tile
@@ -56,7 +60,7 @@ struct State
     std::vector<int> navigationDistances;
     std::vector<Enemy> enemies;
     std::vector<Drop> drops;
-    tutorial::Vector2 entry = {16.5f, 16.5f};
+    tutorial::Vector2 entry = {kMapSize / 2 + .5f, kMapSize / 2 + .5f};
     float attackCooldown = 0;
     float attackFlash = 0;
     float invulnerability = 0;

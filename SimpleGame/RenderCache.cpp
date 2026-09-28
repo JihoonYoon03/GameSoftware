@@ -114,11 +114,11 @@ void DrawMinimapTerrain(float left, float top)
     renderqueue::TexCoord(0, 0);
     renderqueue::Vertex(left, top);
     renderqueue::TexCoord(1, 0);
-    renderqueue::Vertex(left + size, top);
+    renderqueue::Vertex(left + levelone::kMinimapSize, top);
     renderqueue::TexCoord(1, 1);
-    renderqueue::Vertex(left + size, top + size);
+    renderqueue::Vertex(left + levelone::kMinimapSize, top + levelone::kMinimapSize);
     renderqueue::TexCoord(0, 1);
-    renderqueue::Vertex(left, top + size);
+    renderqueue::Vertex(left, top + levelone::kMinimapSize);
     renderqueue::End();
     renderqueue::Texture(0);
 }

@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "LevelOne.h"
+#include "LevelOneNpc.h"
 #include "RenderCache.h"
 #include "Profiler.h"
 #include <algorithm>
@@ -107,20 +108,21 @@ void GenerateMap(std::uint32_t seed)
     g_level.tiles.assign(kMapSize * kMapSize, Tile::Wall);
     std::mt19937 random(seed);
     std::uniform_int_distribution<int> coordinate(3, kMapSize - 4);
-    int previousX = 16, previousY = 16;
+    constexpr int kRoomCount = 80;
+    int previousX = kMapSize / 2, previousY = kMapSize / 2;
     // Every room is joined to the preceding room before it is carved.
     // Thus random rooms cannot introduce a disconnected playable island.
-    for (int room = 0; room < 20; ++room)
+    for (int room = 0; room < kRoomCount; ++room)
     {
-        int centerX = room == 0 ? 16 : coordinate(random);
-        int centerY = room == 0 ? 16 : coordinate(random);
+        int centerX = room == 0 ? kMapSize / 2 : coordinate(random);
+        int centerY = room == 0 ? kMapSize / 2 : coordinate(random);
         // Fixed distant anchor rooms guarantee enough hunting space even for degenerate random draws.
-        if (room == 18)
+        if (room == kRoomCount - 2)
         {
             centerX = 4;
             centerY = 4;
         }
-        if (room == 19)
+        if (room == kRoomCount - 1)
         {
             centerX = kMapSize - 5;
             centerY = kMapSize - 5;
@@ -145,6 +147,14 @@ void GenerateMap(std::uint32_t seed)
             }
         }
     }
+    // A clear central muster area keeps conversations separate from hunting.
+    for (int y = kMapSize / 2 - 6; y <= kMapSize / 2 + 6; ++y)
+    {
+        for (int x = kMapSize / 2 - 6; x <= kMapSize / 2 + 6; ++x)
+        {
+            Carve(x, y);
+        }
+    }
     tutorial::g_state.playerPosition = g_level.entry;
     UpdateNavigation();
     g_level.reachableCells.clear();
@@ -157,7 +167,8 @@ void GenerateMap(std::uint32_t seed)
         }
         g_level.reachableCells.push_back(cell);
         // Shallow water is traversable and never breaks the connectivity contract.
-        if (random() % 13 == 0)
+        if (random() % 13 == 0 && tutorial::Distance({cell % kMapSize + .5f, cell / kMapSize + .5f},
+                                                     g_level.entry) > kSafeAreaRadius)
         {
             g_level.tiles[cell] = Tile::Water;
         }
@@ -167,17 +178,18 @@ void GenerateMap(std::uint32_t seed)
     for (int cell : g_level.reachableCells)
     {
         tutorial::Vector2 position = {cell % kMapSize + .5f, cell / kMapSize + .5f};
-        if (tutorial::Distance(position, g_level.entry) < 5)
+        if (tutorial::Distance(position, g_level.entry) < kEnemySpawnRadius)
         {
             continue;
         }
         g_level.enemies.push_back({position});
-        if (g_level.enemies.size() == 14)
+        if (g_level.enemies.size() == kEnemyPopulation)
         {
             break;
         }
     }
     g_level.drops.clear();
+    InitializeNpcs();
     g_level.generated = true;
 }
 } // namespace levelone
