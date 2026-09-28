@@ -188,6 +188,80 @@ void PollGpu()
         }
     }
 }
+// Console formatting only; preserve the machine-readable JSONL file.
+std::string FormatConsoleReport(const std::string &json)
+{
+    std::string result;
+    result.reserve(json.size() + 1024);
+    size_t depth = 0;
+    bool inString = false, escaped = false;
+    auto newLine = [&]() {
+        result += '\n';
+        result.append(depth * 2, ' ');
+    };
+    for (char character : json)
+    {
+        if (inString)
+        {
+            result += character;
+            if (escaped)
+            {
+                escaped = false;
+            }
+            else if (character == '\\')
+            {
+                escaped = true;
+            }
+            else if (character == '"')
+            {
+                inString = false;
+            }
+            continue;
+        }
+        switch (character)
+        {
+        case '"':
+            inString = true;
+            result += character;
+            break;
+        case '{':
+            result += character;
+            ++depth;
+            if (depth <= 2)
+            {
+                newLine();
+            }
+            break;
+        case '}':
+            --depth;
+            if (depth < 2)
+            {
+                newLine();
+            }
+            result += character;
+            break;
+        case ',':
+            result += character;
+            if (depth <= 2)
+            {
+                newLine();
+            }
+            else
+            {
+                result += ' ';
+            }
+            break;
+        case ':':
+            result += ": ";
+            break;
+        default:
+            result += character;
+            break;
+        }
+    }
+    result += '\n';
+    return result;
+}
 void Report(Clock::time_point now)
 {
     const auto reportStart = Clock::now();
@@ -280,7 +354,8 @@ void Report(Clock::time_point now)
     mixedScene = false;
     auto logStart = reportStart;
     const std::string line = out.str();
-    std::fwrite(line.data(), 1, line.size(), stdout);
+    const std::string consoleReport = FormatConsoleReport(line);
+    std::fwrite(consoleReport.data(), 1, consoleReport.size(), stdout);
     std::fflush(stdout);
     if (logFile)
     {

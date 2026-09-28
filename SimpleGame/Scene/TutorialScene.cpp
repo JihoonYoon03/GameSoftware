@@ -54,11 +54,11 @@ void DrawInterior()
                         []() { DrawPerson(g_state.playerPosition, ColorRGBA(.67f, .8f, .82f), true); });
         PlaceWorldActor(scene, "terminal-label", 1, -1.2f, WorldBounds(1, -1.2f, 0, 0, 80, 80), 3, 0, []() {
             Vector2 label = WorldToScreen(1, -1.2f, 65);
-            DrawLabel(label.x - 30, label.y, "¥‹∏ª");
+            DrawLabel(label.x - 30, label.y, "Îã®Îßê");
         });
         PlaceWorldActor(scene, "door-label", 2.4f, 2.4f, WorldBounds(2.4f, 2.4f, 0, 0, 0, 80), 3, 0, []() {
             Vector2 label = WorldToScreen(2.4f, 2.4f);
-            DrawLabel(label.x - 20, label.y + 25, "√‚±∏");
+            DrawLabel(label.x - 20, label.y + 25, "Ï∂úÍµ¨");
         });
         scene.GetGraph().Reparent("terminal-label", *scene.GetGraph().Find("terminal"));
         scene.GetGraph().Reparent("door-label", *scene.GetGraph().Find("door"));
@@ -78,8 +78,8 @@ void DrawStreetTiles(game::Scene &scene)
             std::string key = "terrain/city/" + std::to_string(x0) + "/" + std::to_string(y0);
             PlaceWorldActor(
                 scene, key, float(x0), float(y0), WorldBounds(float(x0), float(y0), chunkSize, chunkSize, 0),
-                0, 0, [x0, y0, key, &chunkSize]() {
-                    rendercache::DrawWorld(key, [x0, y0, &chunkSize]() {
+                0, 0, [x0, y0, key, chunkSize]() {
+                    rendercache::DrawWorld(key, [x0, y0, chunkSize]() {
                         for (int x = x0; x < x0 + chunkSize && x < 20; ++x)
                         {
                             for (int y = y0; y < y0 + chunkSize && y < 16; ++y)
@@ -311,17 +311,17 @@ void DrawQuestMarkers(game::Scene &scene)
                         WorldBounds(position.x, position.y, 0, 0, 70, 230), 5, 0,
                         [position, label, color]() { DrawInteractionMarker(position, label, color); });
     };
-    marker("home", kHomeDoor, "¡˝", ColorRGBA(.6f, .78f, .81f));
-    marker("lia", kLiaPosition, "∏Ææ∆", ColorRGBA(1, .69f, .38f));
-    marker("mara", kMaraPosition, g_state.isSideQuestComplete ? "∏∂∂Û / ∞Ì∏∂øˆø‰" : "∏∂∂Û / º≠∫Íƒ˘Ω∫∆Æ",
+    marker("home", kHomeDoor, "Ïßë", ColorRGBA(.6f, .78f, .81f));
+    marker("lia", kLiaPosition, "Î¶¨ÏïÑ", ColorRGBA(1, .69f, .38f));
+    marker("mara", kMaraPosition, g_state.isSideQuestComplete ? "ÎßàÎùº / Í≥†ÎßàÏõåÏöî" : "ÎßàÎùº / ÏÑúÎ∏åÌÄòÏä§Ìä∏",
            ColorRGBA(1, .77f, .4f));
     if (g_state.isSideQuestAccepted && !g_state.isPowerRestored)
     {
-        marker("relay", kRelayPosition, "¿¸∑¬ ∫π±∏", ColorRGBA(1, .7f, .3f));
+        marker("relay", kRelayPosition, "Ï†ÑÎ†• Î≥µÍµ¨", ColorRGBA(1, .7f, .3f));
     }
     if (g_state.mainQuestStage >= MainQuestStage::ReadGateSignal)
     {
-        marker("beacon", kBeaconPosition, "∞¸πÆ Ω≈»£", ColorRGBA(.4f, .93f, .96f));
+        marker("beacon", kBeaconPosition, "Í¥ÄÎ¨∏ Ïã†Ìò∏", ColorRGBA(.4f, .93f, .96f));
     }
 }
 } // namespace

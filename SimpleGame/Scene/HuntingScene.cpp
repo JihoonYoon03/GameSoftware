@@ -115,23 +115,24 @@ void DrawWorld()
             for (int x0 = 0; x0 < kMapSize; x0 += chunkSize)
             {
                 std::string key = "terrain/hunting/" + std::to_string(x0) + "/" + std::to_string(y0);
-                PlaceWorldActor(
-                    scene, key, float(x0), float(y0),
-                    WorldBounds(float(x0), float(y0), chunkSize, chunkSize, 0), 0, -1, [x0, y0, key, &chunkSize]() {
-                        rendercache::DrawWorld(key, [x0, y0, &chunkSize]() {
-                            for (int y = y0; y < y0 + chunkSize && y < kMapSize; ++y)
-                            {
-                                for (int x = x0; x < x0 + chunkSize && x < kMapSize; ++x)
-                                {
-                                    if (g_level.tiles[y * kMapSize + x] != Tile::Wall)
-                                    {
-                                        DrawMaterialTile(float(x), float(y), SurfaceMaterial::Metal,
-                                                         ColorRGBA(.23f, .3f, .33f));
-                                    }
-                                }
-                            }
-                        });
-                    });
+                PlaceWorldActor(scene, key, float(x0), float(y0),
+                                WorldBounds(float(x0), float(y0), chunkSize, chunkSize, 0), 0, -1,
+                                [x0, y0, key, chunkSize]() {
+                                    rendercache::DrawWorld(key, [x0, y0, chunkSize]() {
+                                        for (int y = y0; y < y0 + chunkSize && y < kMapSize; ++y)
+                                        {
+                                            for (int x = x0; x < x0 + chunkSize && x < kMapSize; ++x)
+                                            {
+                                                if (g_level.tiles[y * kMapSize + x] != Tile::Wall)
+                                                {
+                                                    DrawMaterialTile(float(x), float(y),
+                                                                     SurfaceMaterial::Metal,
+                                                                     ColorRGBA(.23f, .3f, .33f));
+                                                }
+                                            }
+                                        }
+                                    });
+                                });
             }
         }
         for (int y = 0; y < kMapSize; ++y)
@@ -181,7 +182,7 @@ void DrawWorld()
                         WorldBounds(g_level.entry.x, g_level.entry.y, 0, 0, 50, 110), 2, 0, []() {
                             Vector2 entry = WorldToScreen(g_level.entry.x, g_level.entry.y);
                             DrawEffectRectangle({entry.x - 24, entry.y - 12}, 48, 24, SurfaceEffect::Pulse);
-                            DrawLabel(entry.x - 35, entry.y - 30, "E µµ½Ã ±ÍÈ¯", ColorRGBA(.75f, .9f, 1));
+                            DrawLabel(entry.x - 35, entry.y - 30, "E ë„ì‹œ ê·€í™˜", ColorRGBA(.75f, .9f, 1));
                         });
     }
     DrawScene(scene);
