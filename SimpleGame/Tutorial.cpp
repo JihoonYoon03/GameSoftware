@@ -5,6 +5,7 @@
 #include "TutorialState.h"
 #include "LevelOne.h"
 #include "Scene/WorldScene.h"
+#include "Monitoring/GameMonitor.h"
 #include "Dependencies/freeglut.h"
 #include <algorithm>
 #include <cmath>
@@ -209,6 +210,7 @@ void Tick(int)
         UpdateWorldScene(deltaSeconds);
     }
 
+    monitoring::Update();
     glutPostRedisplay();
     glutTimerFunc(kUpdateIntervalMilliseconds, Tick, 0);
 }

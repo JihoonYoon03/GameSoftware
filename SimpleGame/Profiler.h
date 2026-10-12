@@ -1,6 +1,7 @@
 #pragma once
 #include <chrono>
 #include <cstdint>
+#include <string>
 
 namespace profiling
 {
@@ -37,6 +38,7 @@ enum class Counter
     NpcDecisions,
     NpcPathRequests,
     NpcPathVisitedCells,
+    MonitorSnapshots,
     Count
 };
 enum class Timer
@@ -66,6 +68,7 @@ enum class Timer
     ShaderCompile,
     NpcUpdate,
     NpcNavigation,
+    MonitorSnapshot,
     Count
 };
 class Scope
@@ -99,4 +102,6 @@ void EndGpuFrame();
 void EndFrame();
 void Count(Counter counter, std::uint64_t amount = 1);
 std::uint64_t ReadCounter(Counter counter);
+// Latest completed one-second window. Read only on the game thread.
+const std::string &GetLatestReportJson();
 } // namespace profiling

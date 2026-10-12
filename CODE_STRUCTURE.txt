@@ -81,3 +81,11 @@ Actor / Scene 분리
   Scene/TutorialScene.cpp, HuntingScene.cpp: 장면별 객체 등록.
   ACTOR_SCENE_STRUCTURE.txt: 적용 범위, 좌표 규칙, 제한 사항, 사용자 테스트 안내.
   tests/SceneGraphTests.cpp: 그래프 독립 테스트 (게임 프로젝트의 main과 별도).
+
+로컬 브라우저 모니터
+  Monitoring/GameMonitor.cpp: 게임 수명 연결, 500ms 상태 발행, 프로파일링.
+  Monitoring/WorldSnapshot.cpp: 현재 NPC/몹/플레이어/지역 상태를 JSON으로 변환.
+  Monitoring/LocalMonitorServer.cpp: 별도 통신 스레드에서 loopback HTTP 제공.
+  monitor/index.html, app.js, style.css: 한글 대시보드, JSON 수신과 필터·상세 화면.
+  빌드 시 웹 파일을 실행 폴더의 Monitor에 복사. 기본 주소 http://127.0.0.1:17707/.
+  docs/Game_Monitoring.md: 조작, 데이터 의미, JSON 스키마, 사용자 확인 안내.

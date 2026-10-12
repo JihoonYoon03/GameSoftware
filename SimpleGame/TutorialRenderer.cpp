@@ -8,6 +8,7 @@
 #include "TutorialGraphics.h"
 #include "LevelOne.h"
 #include "Scene/WorldScene.h"
+#include "Monitoring/GameMonitor.h"
 #include <memory>
 
 namespace tutorial
@@ -42,6 +43,7 @@ void InitializeGraphics()
 }
 void ShutdownGraphics()
 {
+    monitoring::Shutdown();
     ResetWorldScenes();
     rendercache::Clear();
     renderqueue::Shutdown();

@@ -50,7 +50,8 @@ const char *counterNames[] = {"draw_calls",
                               "scene_bounds_recomputed",
                               "npc_decisions",
                               "npc_path_requests",
-                              "npc_path_visited_cells"};
+                              "npc_path_visited_cells",
+                              "monitor_snapshots"};
 const char *timerNames[] = {"frame_cpu",
                             "update",
                             "movement",
@@ -75,7 +76,8 @@ const char *timerNames[] = {"frame_cpu",
                             "resource_initialize",
                             "shader_compile",
                             "npc_update",
-                            "npc_navigation"};
+                            "npc_navigation",
+                            "monitor_snapshot"};
 static_assert(sizeof(counterNames) / sizeof(*counterNames) == kCounterCount);
 static_assert(sizeof(timerNames) / sizeof(*timerNames) == kTimerCount);
 struct Sample
@@ -117,6 +119,7 @@ unsigned int logSegment = 0;
 constexpr std::uint64_t kLogSegmentBytes = 16 * 1024 * 1024;
 std::string vendorJson = "null", rendererJson = "null", versionJson = "null";
 std::uint64_t windowIndex = 0;
+std::string latestReportJson = "null";
 std::string JsonString(const GLubyte *text)
 {
     if (!text)
@@ -359,6 +362,7 @@ void Report(Clock::time_point now)
     mixedScene = false;
     auto logStart = reportStart;
     const std::string line = out.str();
+    latestReportJson = line;
     const std::string consoleReport = FormatConsoleReport(line);
     std::fwrite(consoleReport.data(), 1, consoleReport.size(), stdout);
     std::fflush(stdout);
@@ -439,6 +443,10 @@ std::uint64_t ReadCounter(Counter counter)
 {
     return counters[static_cast<size_t>(counter)];
 }
+const std::string &GetLatestReportJson()
+{
+    return latestReportJson;
+}
 void Initialize()
 {
     if (initialized)
@@ -446,6 +454,7 @@ void Initialize()
         return;
     }
     initialized = true;
+    latestReportJson = "null";
     windowIndex = 0;
     vendorJson = JsonString(glGetString(GL_VENDOR));
     rendererJson = JsonString(glGetString(GL_RENDERER));

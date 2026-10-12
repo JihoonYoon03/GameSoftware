@@ -11,6 +11,7 @@ but WITHOUT ANY WARRANTY.
 #include "stdafx.h"
 #include "Tutorial.h"
 #include "TutorialGraphics.h"
+#include "Monitoring/GameMonitor.h"
 #include "Dependencies/glew.h"
 #include "Dependencies/freeglut.h"
 #include <windows.h>
@@ -28,11 +29,13 @@ int main(int argc, char **argv)
     glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
     glutIgnoreKeyRepeat(1);
     tutorial::Reset();
+    monitoring::Initialize();
     glutDisplayFunc(tutorial::Draw);
     glutReshapeFunc(tutorial::Resize);
     glutKeyboardFunc(tutorial::KeyDown);
     glutKeyboardUpFunc(tutorial::KeyUp);
     glutTimerFunc(16, tutorial::Tick, 0);
     glutMainLoop();
+    monitoring::Shutdown();
     return 0;
 }

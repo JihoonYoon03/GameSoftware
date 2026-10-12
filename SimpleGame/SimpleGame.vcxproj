@@ -165,6 +165,9 @@
     <ClInclude Include="ModelLibrary.h" />
     <ClInclude Include="LevelOne.h" />
     <ClInclude Include="LevelOneNpc.h" />
+    <ClInclude Include="Monitoring\GameMonitor.h" />
+    <ClInclude Include="Monitoring\LocalMonitorServer.h" />
+    <ClInclude Include="Monitoring\WorldSnapshot.h" />
     <ClInclude Include="RenderAssets.h" />
     <ClInclude Include="TutorialGraphics.h" />
     <ClInclude Include="Tutorial.h" />
@@ -184,6 +187,9 @@
     <ClCompile Include="LevelOne.cpp" />
     <ClCompile Include="LevelOneNpc.cpp" />
     <ClCompile Include="LevelOneNpcRenderer.cpp" />
+    <ClCompile Include="Monitoring\GameMonitor.cpp" />
+    <ClCompile Include="Monitoring\LocalMonitorServer.cpp" />
+    <ClCompile Include="Monitoring\WorldSnapshot.cpp" />
     <ClCompile Include="LevelOneMap.cpp" />
     <ClCompile Include="LevelOneRenderer.cpp" />
     <ClCompile Include="RenderAssets.cpp" />
@@ -204,6 +210,9 @@
   <ItemGroup>
     <None Include="Shaders\SolidRect.fs" />
     <None Include="Shaders\SolidRect.vs" />
+    <None Include="..\monitor\index.html" />
+    <None Include="..\monitor\app.js" />
+    <None Include="..\monitor\style.css" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <Link>
@@ -234,6 +243,12 @@
       <GraphicsRuntimeLibrary Include="$(ProjectDir)Dependencies\$(Platform)\glew32.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(GraphicsRuntimeLibrary)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CopyMonitorDashboard" AfterTargets="Build">
+    <ItemGroup>
+      <MonitorAsset Include="$(ProjectDir)..\monitor\index.html;$(ProjectDir)..\monitor\app.js;$(ProjectDir)..\monitor\style.css" />
+    </ItemGroup>
+    <Copy SourceFiles="@(MonitorAsset)" DestinationFolder="$(OutDir)Monitor\" SkipUnchangedFiles="true" />
   </Target>
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
