@@ -4,6 +4,7 @@
 #include "Tutorial.h"
 #include "TutorialState.h"
 #include "LevelOne.h"
+#include "JetTravel.h"
 #include "Scene/WorldScene.h"
 #include "Monitoring/GameMonitor.h"
 #include "Dependencies/freeglut.h"
@@ -71,7 +72,9 @@ void UpdatePlayerMovement(float deltaSeconds)
 
 void UpdateCamera(float deltaSeconds)
 {
-    Vector2 target = g_state.isInsideHome ? Vector2{0, 0} : g_state.playerPosition;
+    Vector2 target = (g_state.isInsideHome || g_state.isInObservatory || g_state.isJetTravel)
+                         ? Vector2{0, 0}
+                         : g_state.playerPosition;
     float followAmount = 1 - std::exp(-kCameraFollowRate * deltaSeconds);
     g_state.cameraPosition.x += (target.x - g_state.cameraPosition.x) * followAmount;
     g_state.cameraPosition.y += (target.y - g_state.cameraPosition.y) * followAmount;
@@ -82,6 +85,7 @@ void Reset()
 {
     ResetWorldScenes();
     levelone::ResetProgress();
+    jettravel::Reset();
     // Keep the current window size when restarting the play session.
     const int viewportWidth = g_state.viewportWidth;
     const int viewportHeight = g_state.viewportHeight;
@@ -102,6 +106,29 @@ void Reset()
         g_state.buildings.push_back({-16, float(y), 2.5f, 2, 140});
         g_state.buildings.push_back({13, float(y), 2.5f, 2, 120});
     }
+    constexpr models::BuildingType buildingTypes[] = {
+        models::BuildingType::Habitat, models::BuildingType::Terraced, models::BuildingType::Workshop,
+        models::BuildingType::Dome};
+    const std::array<float, 4> buildingColors[] = {{.3f, .42f, .5f, 1},
+                                                   {.52f, .37f, .31f, 1},
+                                                   {.36f, .47f, .4f, 1},
+                                                   {.42f, .35f, .52f, 1},
+                                                   {.5f, .49f, .36f, 1}};
+    for (size_t i = 0; i < g_state.buildings.size(); ++i)
+    {
+        auto &building = g_state.buildings[i];
+        building.type = buildingTypes[i % 4];
+        building.palette.body = buildingColors[(i / 4 + i) % 5];
+        building.palette.accent =
+            i % 2 == 0 ? std::array<float, 4>{.32f, .7f, .78f, 1} : std::array<float, 4>{.85f, .62f, .35f, 1};
+        building.palette.emission = {.25f, .75f, .85f, 1};
+    }
+    Building observatory{5, -8, 5, 4, 220};
+    observatory.type = models::BuildingType::Observatory;
+    observatory.palette.body = {.46f, .55f, .6f, 1};
+    observatory.palette.accent = {.3f, .76f, .86f, 1};
+    observatory.palette.emission = {.42f, .9f, 1, 1};
+    g_state.buildings.push_back(observatory);
     g_state.residents = {
         {{-5, 0}, "배송 기사", "배송 기사 / 오늘은 관문 쪽 배송이 전부 취소됐어요. 이유도 없이요."},
         {{-1, 3}, "야간 근무자", "야간 근무자 / 밤새 불빛이 깜빡였어. 어제도 같은 아침을 본 것 같은데."},
@@ -112,9 +139,16 @@ void Reset()
         {{-8, 8}, "주민", "주민 / 이곳에서 삼십 년을 살았지만 관문이 저런 색인 건 처음이야."},
         {{2, 8}, "아이", "아이 / 엄마는 저 빛이 우리를 지켜 준대요. 정말 그럴까요?"},
         {{-10, -7}, "통신 기술자", "통신 기술자 / 발신 기록이 없는 응답이 잡혀요. 수신기가 고장 난 걸까요?"},
-        {{6, -8}, "탐사원", "탐사원 / 낯선 곳에 갈 때는 꼭 누군가와 함께 가요."},
+        {{11, -3}, "탐사원", "탐사원 / 낯선 곳에 갈 때는 꼭 누군가와 함께 가요."},
         {{11, -5}, "순찰대원", "순찰대원 / 이상한 방송을 들으면 혼자 따라가지 마세요."},
         {{-12, 7}, "퇴역 항해사", "퇴역 항해사 / 저 문이 열리기 전부터 그 너머에는 무언가 있었지."}};
+    for (size_t i = 0; i < g_state.residents.size(); ++i)
+    {
+        auto &resident = g_state.residents[i];
+        resident.type =
+            static_cast<models::CharacterType>(i % static_cast<size_t>(models::CharacterType::Count));
+        resident.coat = buildingColors[(i / 5 + i) % 5];
+    }
     ShowNotice("리아 / 좋은 아침. 집 단말이 또 깜빡이네. 확인하고 밖에서 만나자.");
 }
 
@@ -171,6 +205,9 @@ void KeyDown(unsigned char key, int, int)
     // Direct access for first-level iteration without replaying the tutorial.
     if (key == '1')
     {
+        jettravel::Reset();
+        g_state.isJetTravel = false;
+        g_state.isInObservatory = false;
         levelone::Enter();
         return;
     }
@@ -201,10 +238,17 @@ void Tick(int)
             g_state.playTimeSeconds += deltaSeconds;
         }
         g_state.noticeSecondsRemaining -= deltaSeconds;
-        UpdatePlayerMovement(deltaSeconds);
-        if (levelone::IsActive())
+        if (jettravel::IsActive())
         {
-            levelone::Update(deltaSeconds);
+            jettravel::Update(deltaSeconds);
+        }
+        else
+        {
+            UpdatePlayerMovement(deltaSeconds);
+            if (levelone::IsActive())
+            {
+                levelone::Update(deltaSeconds);
+            }
         }
         UpdateCamera(deltaSeconds);
         UpdateWorldScene(deltaSeconds);

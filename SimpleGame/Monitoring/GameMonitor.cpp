@@ -2,6 +2,7 @@
 #include "GameMonitor.h"
 #include "LocalMonitorServer.h"
 #include "WorldSnapshot.h"
+#include "ModelCatalog.h"
 #include "../Profiler.h"
 #include <windows.h>
 #include <chrono>
@@ -36,6 +37,7 @@ void Initialize()
     }
     sessionId = std::to_string(GetCurrentProcessId()) + "-" + std::to_string(GetTickCount64());
     sequence = 0;
+    transport::PublishModels(BuildModelCatalog());
     transport::Publish(BuildWorldSnapshot(++sequence, sessionId));
     enabled = transport::Start(std::filesystem::path(module).parent_path() / L"Monitor", kPort);
     if (enabled)

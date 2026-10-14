@@ -16,6 +16,7 @@
       <strong id="connection-status" role="status">게임 연결 대기</strong>
       <span id="connection-meta" class="muted">0.5초 간격 JSON 수신</span>
       <div class="actions"><button id="new-window" type="button">새 창으로 열기</button>
+        <a class="button-link" href="/models.html" target="_blank" rel="noopener">모델 형태 확인</a>
         <button id="download" type="button" disabled>JSON 저장</button></div>
     </div>
   </header>
@@ -34,6 +35,11 @@
         <p class="muted">인구는 배치된 NPC 수 · 분위기는 현재 상태에서 도출 · 성향과 소문은 설정 정보</p></div>
       <div id="regions" class="regions"><p class="empty">지역 정보 대기 중</p></div>
     </section>
+    <section aria-labelledby="stations-heading">
+      <div class="section-heading"><h2 id="stations-heading">격리 구역 · 팀 작업장</h2>
+        <p class="muted">보급 → 설비 수리 → 가동 유지 · 경비 인력은 실제 접근 몹을 방어</p></div>
+      <div id="workstations" class="workstations"><p class="empty">격리 구역 진입 후 표시됩니다.</p></div>
+    </section>
     <section aria-labelledby="npcs-heading">
       <div class="section-heading"><h2 id="npcs-heading">NPC 상태</h2><span id="npc-result-count" class="muted"></span></div>
       <div class="filters">
@@ -42,14 +48,17 @@
           <option value="">전체 행동</option><option value="working">작업·대기</option>
           <option value="walking">순찰·이동</option><option value="following">동행</option>
           <option value="retreating">위험 회피</option><option value="talking">대화</option>
+          <option value="repairing">설비 수리</option><option value="defending">팀 방어</option>
+          <option value="supplying">보급 운반</option><option value="healing">치료 지원</option>
+          <option value="investigating">관측·지원</option><option value="recovering">회복</option>
           <option value="idle">정위치 대기</option>
         </select></label>
-        <label class="search">인물 검색<input id="search" type="search" placeholder="이름, 역할, 성격" autocomplete="off"></label>
+        <label class="search">인물 검색<input id="search" type="search" placeholder="이름, 역할, 성격, 팀, 작업장" autocomplete="off"></label>
       </div>
       <div class="npc-layout">
         <div class="table-wrap"><table>
-          <thead><tr><th>인물 / 역할</th><th>지역</th><th>행동</th><th>성격</th><th>위치</th><th>경로</th></tr></thead>
-          <tbody id="npc-table"><tr><td colspan="6" class="empty">NPC 정보 대기 중</td></tr></tbody>
+          <thead><tr><th>인물 / 역할</th><th>지역</th><th>행동</th><th>팀 / 작업장</th><th>성격</th><th>위치</th><th>경로</th></tr></thead>
+          <tbody id="npc-table"><tr><td colspan="7" class="empty">NPC 정보 대기 중</td></tr></tbody>
         </table></div>
         <aside id="npc-detail" class="panel" aria-label="선택한 NPC 상세"><h3>인물 상세</h3><p class="muted">목록에서 이름을 선택하세요.</p></aside>
       </div>

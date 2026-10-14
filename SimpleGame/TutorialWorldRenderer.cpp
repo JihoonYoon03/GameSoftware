@@ -10,47 +10,6 @@
 
 namespace tutorial
 {
-void DrawBuilding(Building building)
-{
-    Vector2 buildingScreen =
-                WorldToScreen(building.x + building.width * .5f, building.y + building.depth * .5f),
-            playerScreen = WorldToScreen(g_state.playerPosition.x, g_state.playerPosition.y);
-    float opacity =
-        (building.x + building.y + building.width + building.depth >
-             g_state.playerPosition.x + g_state.playerPosition.y &&
-         std::fabs(buildingScreen.x - playerScreen.x) < (building.width + building.depth) * 22 &&
-         playerScreen.y > buildingScreen.y - building.height - 25 && playerScreen.y < buildingScreen.y + 35)
-            ? .28f
-            : 1;
-    DrawBox(building.x, building.y, building.width, building.depth, building.height,
-            ColorRGBA(.3f, .37f, .44f, opacity));
-    DrawBox(building.x + .2f, building.y + .2f, building.width - .4f, building.depth - .4f,
-            building.height + 8, ColorRGBA(.34f, .42f, .47f, opacity));
-    for (int floor = 18; floor < building.height - 10; floor += 22)
-    {
-        for (int column = 0; column < 3; column++)
-        {
-            Vector2 windowPosition = WorldToScreen(
-                building.x + building.width, building.y + .25f + column * building.depth / 3, (float)floor);
-            DrawMaterialQuad(windowPosition, {windowPosition.x - 10, windowPosition.y + 5},
-                             {windowPosition.x - 10, windowPosition.y + 13},
-                             {windowPosition.x, windowPosition.y + 8}, SurfaceMaterial::Glass,
-                             ColorRGBA(.18f, .42f, .52f, opacity));
-            DrawLine(windowPosition, {windowPosition.x - 9, windowPosition.y + 4.5f},
-                     g_state.isPowerRestored ? ColorRGBA(.95f, .72f, .37f, opacity)
-                                             : ColorRGBA(.2f, .65f, .73f, opacity),
-                     3);
-            windowPosition = WorldToScreen(building.x + .25f + column * building.width / 3,
-                                           building.y + building.depth, (float)floor);
-            DrawLine(windowPosition, {windowPosition.x + 9, windowPosition.y + 4.5f},
-                     ColorRGBA(.35f, .6f, .72f, opacity * .7f), 3);
-        }
-    }
-    Vector2 roof = WorldToScreen(building.x + .5f, building.y + .5f, building.height + 8);
-    DrawLine(roof, {roof.x, roof.y - 22}, ColorRGBA(.35f, .55f, .64f, opacity));
-    DrawGlow({roof.x, roof.y - 22}, 6, ColorRGBA(.9f, .37f, .3f, opacity));
-}
-
 void DrawBackdrop()
 {
     DrawRectangle(0, 0, (float)kCanvasWidth, (float)kCanvasHeight, ColorRGBA(.025f, .045f, .085f));
@@ -93,9 +52,13 @@ void DrawBackdrop()
     DrawLine({0, railY}, {(float)kCanvasWidth, railY - 55}, ColorRGBA(.22f, .42f, .51f), 3);
     for (int i = 0; i < 4; i++)
     {
-        float x = std::fmod(g_state.animationTimeSeconds * 45 + i * 360.f, kCanvasWidth + 180.f) - 90,
+        float x = std::fmod(g_state.animationTimeSeconds * 115 + i * 360.f, kCanvasWidth + 300.f) - 150,
               y = railY - x * 55 / kCanvasWidth - 12;
-        DrawVehicle({x, y}, .65f);
+        models::Palette palette;
+        palette.body = {.38f + i * .09f, .54f, .7f - i * .08f, 1};
+        palette.emission =
+            i % 2 ? std::array<float, 4>{1, .55f, .22f, 1} : std::array<float, 4>{.25f, .8f, 1, 1};
+        DrawVehicle({x, y}, .65f, models::VehicleType(i % 4), palette, .8f);
     }
 }
 

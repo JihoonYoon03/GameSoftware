@@ -58,7 +58,20 @@ const NpcProfile kProfiles[] = {
     {"시온", "불안한 통신원", NpcPattern::Researcher,
      "내가 보내기 전에 답이 왔어요. 우연인지 아직 모르겠어요.", "반복 응답을 따라가지 마세요."}};
 std::vector<QuarantineNpc> npcs;
+std::vector<Workstation> workstations;
 constexpr int kDirections[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+constexpr float kGuardRange = 6.f;
+constexpr float kGuardInterval = .7f;
+constexpr int kGuardDamage = 12;
+constexpr float kRepairRate = 3.f;
+constexpr float kWorkRadius = 1.4f;
+constexpr float kRecoverySeconds = 8.f;
+
+bool IsDefender(const QuarantineNpc &npc)
+{
+    return kProfiles[npc.profileIndex].pattern == NpcPattern::Guard || npc.profileIndex == 14 ||
+           npc.profileIndex == 19;
+}
 
 tutorial::Vector2 CellCenter(int cell)
 {
@@ -70,6 +83,10 @@ int CellAt(tutorial::Vector2 position)
 }
 tutorial::Vector2 NearestFloor(tutorial::Vector2 desired)
 {
+    if (IsWalkable(int(std::floor(desired.x)), int(std::floor(desired.y))))
+    {
+        return {std::floor(desired.x) + .5f, std::floor(desired.y) + .5f};
+    }
     float best = (std::numeric_limits<float>::max)();
     auto result = g_level.entry;
     for (int cell : g_level.reachableCells)
@@ -92,6 +109,10 @@ void PlanRoute(QuarantineNpc &npc, tutorial::Vector2 target)
     npc.routeIndex = 0;
     npc.destination = NearestFloor(target);
     int start = CellAt(npc.position), goal = CellAt(npc.destination);
+    if (start < 0 || start >= kMapSize * kMapSize || goal < 0 || goal >= kMapSize * kMapSize)
+    {
+        return;
+    }
     std::array<int, kMapSize * kMapSize> parents;
     parents.fill(-1);
     std::queue<int> frontier;
@@ -129,38 +150,162 @@ void PlanRoute(QuarantineNpc &npc, tutorial::Vector2 target)
     npc.route.push_back(CellCenter(start));
     std::reverse(npc.route.begin(), npc.route.end());
 }
-bool IsThreatened(const QuarantineNpc &npc)
+int NearestThreat(tutorial::Vector2 position, float radius, bool requireSight)
 {
-    for (const auto &enemy : g_level.enemies)
+    int result = -1;
+    for (size_t i = 0; i < g_level.enemies.size(); ++i)
     {
-        if (enemy.health > 0 && tutorial::Distance(enemy.position, npc.position) < 4 &&
-            HasLineOfSight(enemy.position, npc.position))
+        const auto &enemy = g_level.enemies[i];
+        float distance = tutorial::Distance(enemy.position, position);
+        if (enemy.health > 0 && distance < radius &&
+            (!requireSight || HasLineOfSight(enemy.position, position)))
         {
-            return true;
+            radius = distance;
+            result = int(i);
         }
     }
-    return false;
+    return result;
+}
+bool IsThreatened(const QuarantineNpc &npc)
+{
+    return NearestThreat(npc.position, 2.6f, true) >= 0;
+}
+void GoTo(QuarantineNpc &npc, tutorial::Vector2 destination, NpcActivity activity)
+{
+    npc.activity = activity;
+    auto target = NearestFloor(destination);
+    // Keep the existing path until its target changes, rather than rebuilding it every decision.
+    if (tutorial::Distance(npc.destination, target) > .5f || npc.routeIndex >= npc.route.size())
+    {
+        PlanRoute(npc, target);
+    }
+}
+void BuildStationNavigation(Workstation &station)
+{
+    profiling::Scope timer(profiling::Timer::NpcNavigation);
+    station.navigationDistances.assign(kMapSize * kMapSize, -1);
+    std::queue<int> frontier;
+    int start = CellAt(station.position);
+    station.navigationDistances[start] = 0;
+    frontier.push(start);
+    while (!frontier.empty())
+    {
+        int cell = frontier.front();
+        frontier.pop();
+        profiling::Count(profiling::Counter::NpcPathVisitedCells);
+        for (const auto &direction : kDirections)
+        {
+            int x = cell % kMapSize + direction[0], y = cell / kMapSize + direction[1];
+            if (!IsWalkable(x, y))
+            {
+                continue;
+            }
+            int next = y * kMapSize + x;
+            if (station.navigationDistances[next] < 0)
+            {
+                station.navigationDistances[next] = station.navigationDistances[cell] + 1;
+                frontier.push(next);
+            }
+        }
+    }
 }
 void Decide(QuarantineNpc &npc)
 {
     profiling::Count(profiling::Counter::NpcDecisions);
     const auto &profile = kProfiles[npc.profileIndex];
-    if (IsThreatened(npc))
+    npc.targetEnemy = -1;
+    if (npc.health < 30 && !IsDefender(npc))
     {
-        npc.activity = NpcActivity::Retreating;
-        PlanRoute(npc, npc.home);
+        GoTo(npc, npc.home, NpcActivity::Retreating);
         return;
     }
     if (npc.following)
     {
-        npc.activity = NpcActivity::Following;
         if (tutorial::Distance(npc.position, tutorial::g_state.playerPosition) > 2)
         {
-            PlanRoute(npc, tutorial::g_state.playerPosition);
+            GoTo(npc, tutorial::g_state.playerPosition, NpcActivity::Following);
         }
         else
         {
             npc.route.clear();
+            npc.activity = NpcActivity::Following;
+        }
+        return;
+    }
+    if (npc.stationId >= 0)
+    {
+        auto &station = workstations[npc.stationId];
+        if (IsDefender(npc))
+        {
+            npc.targetEnemy = NearestThreat(npc.position, kGuardRange, true);
+            if (npc.targetEnemy >= 0)
+            {
+                npc.activity = NpcActivity::Defending;
+                npc.route.clear();
+                return;
+            }
+            int threat = NearestThreat(station.position, 8.f, false);
+            if (threat >= 0)
+            {
+                GoTo(npc, g_level.enemies[threat].position, NpcActivity::Defending);
+                return;
+            }
+            if (npc.routeIndex >= npc.route.size())
+            {
+                ++npc.routineStep;
+                const auto &direction = kDirections[(npc.routineStep + npc.profileIndex) % 4];
+                GoTo(npc, {station.position.x + direction[0] * 2, station.position.y + direction[1] * 2},
+                     NpcActivity::Defending);
+            }
+            return;
+        }
+        if (profile.pattern == NpcPattern::Engineer)
+        {
+            if (IsThreatened(npc))
+            {
+                GoTo(npc, {station.position.x - .5f, station.position.y + 2}, NpcActivity::Retreating);
+            }
+            else
+            {
+                GoTo(npc, {station.position.x - 1, station.position.y}, NpcActivity::Repairing);
+            }
+            return;
+        }
+        if (profile.pattern == NpcPattern::Courier)
+        {
+            GoTo(npc, npc.carryingSupplies ? station.position : npc.home, NpcActivity::Supplying);
+            return;
+        }
+        if (profile.pattern == NpcPattern::Medic)
+        {
+            QuarantineNpc *patient = nullptr;
+            float best = 999.f;
+            for (auto &other : npcs)
+            {
+                if (other.health <= 0 || other.health >= other.maxHealth)
+                {
+                    continue;
+                }
+                float distance = tutorial::Distance(other.position, npc.position);
+                if (distance < best)
+                {
+                    best = distance;
+                    patient = &other;
+                }
+            }
+            GoTo(npc, patient ? patient->position : station.position, NpcActivity::Healing);
+            return;
+        }
+        if (IsThreatened(npc))
+        {
+            GoTo(npc, npc.home, NpcActivity::Retreating);
+        }
+        else if (npc.routeIndex >= npc.route.size())
+        {
+            ++npc.routineStep;
+            const auto &direction = kDirections[(npc.routineStep + npc.profileIndex) % 4];
+            GoTo(npc, {station.position.x + direction[0], station.position.y + direction[1]},
+                 NpcActivity::Investigating);
         }
         return;
     }
@@ -168,7 +313,7 @@ void Decide(QuarantineNpc &npc)
     {
         return;
     }
-    // Alternate work pauses and movement; individuals have independent phase offsets.
+    // Residents and traders remain in the safe muster area, with independent idle routines.
     ++npc.routineStep;
     if (npc.routineStep % 2)
     {
@@ -176,47 +321,128 @@ void Decide(QuarantineNpc &npc)
         npc.decisionCooldown = 2.f + float(npc.profileIndex % 4);
         return;
     }
-    float radius = 2;
-    switch (profile.pattern)
-    {
-    case NpcPattern::Guard:
-        radius = 5;
-        break;
-    case NpcPattern::Courier:
-        radius = 10;
-        break;
-    case NpcPattern::Researcher:
-        radius = 7;
-        break;
-    case NpcPattern::Engineer:
-        radius = 3;
-        break;
-    case NpcPattern::Medic:
-        radius = 1;
-        break;
-    case NpcPattern::Civilian:
-        radius = 2;
-        break;
-    case NpcPattern::Trader:
-        radius = 0;
-        break;
-    }
+    float radius = profile.pattern == NpcPattern::Trader ? 0.f : 1.f;
     const auto &direction = kDirections[(npc.routineStep / 2 + npc.profileIndex) % 4];
     auto target = npc.home;
-    // Couriers return to their station after each supply trip.
-    if (profile.pattern != NpcPattern::Courier || npc.routineStep % 4 == 0)
-    {
-        target.x += direction[0] * radius;
-        target.y += direction[1] * radius;
-    }
+    target.x += direction[0] * radius;
+    target.y += direction[1] * radius;
     npc.activity = radius > 0 ? NpcActivity::Walking : NpcActivity::Working;
     PlanRoute(npc, target);
+}
+void UpdateActions(QuarantineNpc &npc, float deltaSeconds)
+{
+    profiling::Scope timer(profiling::Timer::NpcCooperation);
+    const auto &profile = kProfiles[npc.profileIndex];
+    if (IsDefender(npc) && npc.combatCooldown <= 0)
+    {
+        int target = NearestThreat(npc.position, kGuardRange, true);
+        npc.targetEnemy = target;
+        if (target >= 0)
+        {
+            profiling::Count(profiling::Counter::NpcShots);
+            npc.combatCooldown = kGuardInterval;
+            npc.actionFlash = .16f;
+            npc.actionTarget = g_level.enemies[target].position;
+            if (!npc.following)
+            {
+                npc.activity = NpcActivity::Defending;
+            }
+            if (DamageEnemy(size_t(target), kGuardDamage, false))
+            {
+                ++npc.kills;
+                profiling::Count(profiling::Counter::NpcEnemyKills);
+            }
+        }
+    }
+    if (npc.following || npc.stationId < 0)
+    {
+        return;
+    }
+    auto &station = workstations[npc.stationId];
+    float distance = tutorial::Distance(npc.position, station.position);
+    if (profile.pattern == NpcPattern::Courier)
+    {
+        if (!npc.carryingSupplies && tutorial::Distance(npc.position, npc.home) < .3f)
+        {
+            // The southern transport specialist shares deliveries with the western repair team.
+            if (npc.profileIndex == 18)
+            {
+                npc.stationId = npc.stationId == 2 ? 3 : 2;
+                npc.teamId = npc.stationId;
+            }
+            npc.carryingSupplies = true;
+            npc.decisionCooldown = 0;
+        }
+        else if (npc.carryingSupplies && distance < .8f)
+        {
+            profiling::Count(profiling::Counter::WorkstationSupplyDeliveries);
+            station.supplies = (std::min)(4, station.supplies + 2);
+            npc.carryingSupplies = false;
+            npc.actionFlash = .25f;
+            npc.actionTarget = station.position;
+            npc.decisionCooldown = 0;
+        }
+    }
+    if (profile.pattern == NpcPattern::Engineer && npc.activity == NpcActivity::Repairing &&
+        distance <= kWorkRadius && !IsThreatened(npc) && station.repairProgress < 100 && station.supplies > 0)
+    {
+        float rate = kRepairRate;
+        for (const auto &other : npcs)
+        {
+            if (other.teamId == npc.teamId && other.activity == NpcActivity::Investigating &&
+                tutorial::Distance(other.position, station.position) < 2)
+            {
+                rate += 1.5f;
+            }
+        }
+        float previous = station.repairProgress;
+        station.repairProgress = (std::min)(100.f, previous + rate * deltaSeconds);
+        if (int(previous / 25) < int(station.repairProgress / 25))
+        {
+            --station.supplies;
+        }
+        npc.actionTarget = station.position;
+        npc.actionFlash = .1f;
+        if (station.repairProgress >= 100)
+        {
+            profiling::Count(profiling::Counter::WorkstationRepairCompletions);
+            station.integrity = 100;
+            station.cycleCooldown = 20;
+            ++station.completedCycles;
+            // Equipment support is separate from the player's combat experience and story quest flags.
+            g_level.player.recoveryKits = (std::min)(999, g_level.player.recoveryKits + 1);
+            if (tutorial::Distance(tutorial::g_state.playerPosition, station.position) < 9)
+            {
+                tutorial::ShowNotice(std::string(station.name) + " / 공동 수리 완료. 회복 키트 1 지원.");
+            }
+        }
+    }
+    if (profile.pattern == NpcPattern::Medic && npc.combatCooldown <= 0)
+    {
+        for (auto &other : npcs)
+        {
+            if (other.health > 0 && other.health < other.maxHealth &&
+                tutorial::Distance(other.position, npc.position) < 2 &&
+                HasLineOfSight(other.position, npc.position))
+            {
+                other.health = (std::min)(other.maxHealth, other.health + 16);
+                npc.combatCooldown = 1.2f;
+                npc.actionFlash = .3f;
+                npc.actionTarget = other.position;
+                break;
+            }
+        }
+    }
 }
 } // namespace
 
 const std::vector<QuarantineNpc> &GetNpcs()
 {
     return npcs;
+}
+const std::vector<Workstation> &GetWorkstations()
+{
+    return workstations;
 }
 const NpcProfile &GetNpcProfile(size_t index)
 {
@@ -236,16 +462,123 @@ const char *GetNpcActivityName(NpcActivity activity)
         return "위험 회피";
     case NpcActivity::Talking:
         return "대화";
+    case NpcActivity::Repairing:
+        return "설비 수리";
+    case NpcActivity::Defending:
+        return "팀 엄호·교전";
+    case NpcActivity::Supplying:
+        return "부품 운반";
+    case NpcActivity::Healing:
+        return "팀 치료";
+    case NpcActivity::Investigating:
+        return "설비 측정·지원";
+    case NpcActivity::Recovering:
+        return "집결지 회복";
     }
     return "대기";
+}
+const char *GetWorkstationStatusName(WorkstationStatus status)
+{
+    switch (status)
+    {
+    case WorkstationStatus::AwaitingSupplies:
+        return "보급 대기";
+    case WorkstationStatus::Repairing:
+        return "공동 수리";
+    case WorkstationStatus::Threatened:
+        return "접근 위협·엄호";
+    case WorkstationStatus::Operational:
+        return "정상 작동";
+    }
+    return "대기";
+}
+int FindNpcThreatTarget(tutorial::Vector2 position, int teamId)
+{
+    int result = -1;
+    float best = 4.f;
+    for (size_t i = 0; i < npcs.size(); ++i)
+    {
+        const auto &npc = npcs[i];
+        if (npc.health <= 0 || npc.teamId != teamId ||
+            tutorial::Distance(npc.position, g_level.entry) < kSafeAreaRadius)
+        {
+            continue;
+        }
+        float distance = tutorial::Distance(position, npc.position);
+        if (distance < best && HasLineOfSight(position, npc.position))
+        {
+            best = distance;
+            result = int(i);
+        }
+    }
+    return result;
+}
+void DamageNpc(size_t index, int damage)
+{
+    if (index >= npcs.size() || damage <= 0)
+    {
+        return;
+    }
+    auto &npc = npcs[index];
+    if (npc.health <= 0)
+    {
+        return;
+    }
+    npc.health = (std::max)(0, npc.health - damage);
+    if (npc.health == 0)
+    {
+        profiling::Count(profiling::Counter::NpcRescues);
+        // The test level rescues injured workers; it cannot trigger permanent companion loss.
+        npc.position = npc.destination = npc.home;
+        npc.route.clear();
+        npc.activity = NpcActivity::Recovering;
+        npc.decisionCooldown = kRecoverySeconds;
+        npc.targetEnemy = -1;
+        npc.actionFlash = 0;
+        npc.talkSeconds = 0;
+    }
+    else
+    {
+        npc.decisionCooldown = 0;
+    }
+}
+void DamageWorkstation(size_t index, float damage)
+{
+    if (index >= workstations.size() || damage <= 0)
+    {
+        return;
+    }
+    auto &station = workstations[index];
+    station.integrity = (std::max)(0.f, station.integrity - damage);
+    // Damage to completed equipment starts a new repair cycle, preventing repeated finish rewards.
+    station.repairProgress =
+        station.repairProgress >= 100 ? 0.f : (std::max)(0.f, station.repairProgress - damage * .5f);
+    station.cycleCooldown = 0;
+    station.status = WorkstationStatus::Threatened;
 }
 void ClearNpcs()
 {
     npcs.clear();
+    workstations.clear();
 }
 void InitializeNpcs()
 {
-    npcs.clear();
+    ClearNpcs();
+    const tutorial::Vector2 offsets[] = {{0, -12}, {12, 0}, {0, 12}, {-12, 0}};
+    const char *names[] = {"북측 통신 중계기", "동측 비상 전원", "남측 수로 펌프", "서측 회수 설비"};
+    const WorkstationType types[] = {WorkstationType::CommunicationRelay, WorkstationType::EmergencyPower,
+                                     WorkstationType::WaterPump, WorkstationType::SalvageCrane};
+    for (int i = 0; i < 4; ++i)
+    {
+        Workstation station;
+        station.id = station.teamId = i;
+        station.name = names[i];
+        station.type = types[i];
+        station.position = NearestFloor({g_level.entry.x + offsets[i].x, g_level.entry.y + offsets[i].y});
+        BuildStationNavigation(station);
+        workstations.push_back(std::move(station));
+    }
+    constexpr int assignments[] = {0, 0, 1, 0, 0, 0, -1, -1, 1, 2, 1, 1, 2, 3, 3, 2, -1, -1, 2, 3};
     for (size_t i = 0; i < sizeof(kProfiles) / sizeof(*kProfiles); ++i)
     {
         QuarantineNpc npc;
@@ -257,6 +590,18 @@ void InitializeNpcs()
             npc.home.y += 5;
         }
         npc.position = npc.destination = npc.home;
+        npc.teamId = npc.stationId = assignments[i];
+        // Work teams start at their assigned equipment, while couriers start with depot deliveries.
+        if (npc.stationId >= 0 && kProfiles[i].pattern != NpcPattern::Courier)
+        {
+            const auto &station = workstations[npc.stationId];
+            float offsetY = kProfiles[i].pattern == NpcPattern::Medic        ? -1.f
+                            : kProfiles[i].pattern == NpcPattern::Researcher ? 1.f
+                            : IsDefender(npc)                                ? float(i % 3) - 1
+                                                                             : 0.f;
+            npc.position = npc.destination =
+                NearestFloor({station.position.x + (IsDefender(npc) ? 1 : -1), station.position.y + offsetY});
+        }
         npc.decisionCooldown = float(i) * .13f;
         npcs.push_back(npc);
     }
@@ -264,10 +609,48 @@ void InitializeNpcs()
 void UpdateNpcs(float deltaSeconds)
 {
     profiling::Scope timer(profiling::Timer::NpcUpdate);
+    for (auto &station : workstations)
+    {
+        if (station.repairProgress >= 100)
+        {
+            station.cycleCooldown -= deltaSeconds;
+            if (station.cycleCooldown <= 0)
+            {
+                station.repairProgress = 0;
+                station.integrity = 80;
+            }
+        }
+        station.status = NearestThreat(station.position, 4.f, true) >= 0 ? WorkstationStatus::Threatened
+                         : station.repairProgress >= 100                 ? WorkstationStatus::Operational
+                         : station.supplies > 0 ? WorkstationStatus::Repairing
+                                                : WorkstationStatus::AwaitingSupplies;
+    }
     for (auto &npc : npcs)
     {
         npc.serviceCooldown = (std::max)(0.f, npc.serviceCooldown - deltaSeconds);
+        npc.combatCooldown = (std::max)(0.f, npc.combatCooldown - deltaSeconds);
+        npc.actionFlash = (std::max)(0.f, npc.actionFlash - deltaSeconds);
         npc.talkSeconds = (std::max)(0.f, npc.talkSeconds - deltaSeconds);
+        if (npc.targetEnemy >= 0 && g_level.enemies[npc.targetEnemy].health <= 0)
+        {
+            npc.targetEnemy = -1;
+        }
+        if (npc.health <= 0)
+        {
+            npc.decisionCooldown -= deltaSeconds;
+            if (npc.decisionCooldown <= 0)
+            {
+                npc.health = npc.maxHealth;
+                npc.activity = NpcActivity::Working;
+            }
+            continue;
+        }
+        if (tutorial::Distance(npc.position, npc.home) < 1 && npc.health < npc.maxHealth &&
+            npc.serviceCooldown <= 0)
+        {
+            npc.health = (std::min)(npc.maxHealth, npc.health + 10);
+            npc.serviceCooldown = 1;
+        }
         if (npc.talkSeconds > 0)
         {
             continue;
@@ -275,9 +658,10 @@ void UpdateNpcs(float deltaSeconds)
         npc.decisionCooldown -= deltaSeconds;
         if (npc.decisionCooldown <= 0)
         {
-            npc.decisionCooldown = .8f + float(npc.profileIndex % 5) * .07f;
+            npc.decisionCooldown = .65f + float(npc.profileIndex % 5) * .07f;
             Decide(npc);
         }
+        UpdateActions(npc, deltaSeconds);
         if (npc.routeIndex >= npc.route.size())
         {
             continue;
@@ -290,13 +674,16 @@ void UpdateNpcs(float deltaSeconds)
             ++npc.routeIndex;
             continue;
         }
-        float speed = npc.activity == NpcActivity::Retreating ? 2.8f : 1.25f;
+        float speed = npc.activity == NpcActivity::Retreating  ? 2.8f
+                      : npc.activity == NpcActivity::Supplying ? 2.6f
+                                                               : 1.7f;
         float step = (std::min)(distance, speed * deltaSeconds);
         tutorial::Vector2 next = {npc.position.x + (target.x - npc.position.x) * step / distance,
                                   npc.position.y + (target.y - npc.position.y) * step / distance};
         if (!IsBlocked(next))
         {
             npc.position = next;
+            npc.walkPhase += step * 5;
         }
         else
         {
@@ -311,6 +698,10 @@ bool InteractWithNpc()
     float best = 1.7f;
     for (auto &npc : npcs)
     {
+        if (npc.health <= 0)
+        {
+            continue;
+        }
         float distance = tutorial::Distance(npc.position, tutorial::g_state.playerPosition);
         if (distance < best && HasLineOfSight(npc.position, tutorial::g_state.playerPosition))
         {

@@ -29,10 +29,16 @@ void ResetWorldScenes()
 void UpdateWorldScene(float deltaSeconds)
 {
     profiling::Scope profileTimer(profiling::Timer::SceneUpdate);
-    WorldSceneKind kind = levelone::IsActive()
-                              ? WorldSceneKind::Hunting
+    WorldSceneKind kind = levelone::IsActive()  ? WorldSceneKind::Hunting
+                          : g_state.isJetTravel ? WorldSceneKind::JetTravel
+                          : g_state.isInObservatory
+                              ? WorldSceneKind::Observatory
                               : (g_state.isInsideHome ? WorldSceneKind::Interior : WorldSceneKind::Exterior);
     GetWorldScene(kind).GetGraph().Update(deltaSeconds);
+    if (g_state.isJetTravel)
+    {
+        GetWorldScene(WorldSceneKind::TravelBackground).GetGraph().Update(deltaSeconds);
+    }
     GetWorldScene(WorldSceneKind::Background).GetGraph().Update(deltaSeconds);
     GetWorldScene(WorldSceneKind::Hud).GetGraph().Update(deltaSeconds);
 }

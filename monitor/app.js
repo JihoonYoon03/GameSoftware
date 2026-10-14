@@ -10,6 +10,8 @@ const events = [];
 const format = (value, digits = 0) => typeof value === "number" && Number.isFinite(value)
   ? value.toLocaleString("ko-KR", { maximumFractionDigits: digits }) : "—";
 const position = (value) => value ? format(value.x, 1) + ", " + format(value.y, 1) : "—";
+const teamName = (id) => Number.isInteger(id) && id >= 0 ? "팀 " + (id + 1) : "미배정";
+const stationFor = (npc) => snapshot?.workstations?.find((station) => station.id === npc.station_id);
 
 // Game strings stay text, including dialogue containing HTML-like characters.
 function node(tag, text, className) {
@@ -39,6 +41,9 @@ function trackChanges(data) {
     addEvent("게임 세션 연결");
   } else if (previous.sequence !== data.sequence) {
     if (previous.current_region_id !== data.current_region_id) addEvent("지역 이동 / " + data.current_area);
+    else if (previous.current_area !== data.current_area) addEvent("장소 이동 / " + data.current_area);
+    if (previous.quests.tutorial_stage !== data.quests.tutorial_stage)
+      addEvent("튜토리얼 / " + data.quests.tutorial_stage);
     if (previous.paused !== data.paused) addEvent(data.paused ? "게임 일시정지" : "게임 재개");
     if (previous.counts.mob_alive !== data.counts.mob_alive)
       addEvent("생존 몹 " + previous.counts.mob_alive + " → " + data.counts.mob_alive);
@@ -49,6 +54,13 @@ function trackChanges(data) {
       const old = oldNpcs.get(npc.id);
       if (old && (old.activity !== npc.activity || old.following !== npc.following))
         addEvent(npc.name + " / " + npc.activity_label + (npc.following ? " · 동행 설정" : ""));
+    }
+    const oldStations = new Map((previous.workstations ?? []).map((station) => [station.id, station]));
+    for (const station of data.workstations ?? []) {
+      const old = oldStations.get(station.id);
+      if (old && old.status !== station.status) addEvent(station.name + " / " + station.status_label);
+      if (old && old.completed_cycles !== station.completed_cycles)
+        addEvent(station.name + " / 정비 " + station.completed_cycles + "회 완료");
     }
   }
   if (!previous || previous.session_id !== data.session_id || previous.sequence !== data.sequence)
@@ -87,7 +99,11 @@ function renderRegions(data) {
       ["관문 신호", region.loaded ? region.gate_signal : "—"],
       ["전투", "생존 " + region.mob_alive + " / 재출현 대기 " + region.mob_respawning],
       ["NPC 상황", "동행 설정 " + region.following_npcs + " / 위험 회피 " + region.retreating_npcs],
-      ["구역 크기", region.map_width + " × " + region.map_height],
+      ["팀 활동", "수리 " + format(region.repairing_npcs) + " / 방어 " + format(region.defending_npcs)
+        + " / 보급 " + format(region.supplying_npcs)],
+      ["작업장", "가동 " + format(region.operational_workstations) + " / 전체 " + format(region.workstations)
+        + " / 위협 " + format(region.threatened_workstations)],
+      ["구역 크기", region.map_size_label ?? region.map_width + " × " + region.map_height],
     ]));
     const rumors = node("ul", undefined, "rumors");
     if (region.loaded) for (const rumor of region.rumors) {
@@ -108,6 +124,33 @@ function renderRegions(data) {
     filter.value = selection;
   }
 }
+function renderWorkstations(data) {
+  const stations = data.workstations ?? [];
+  if (!stations.length) {
+    byId("workstations").replaceChildren(node("p", "격리 구역 진입 후 팀과 작업장이 생성됩니다.", "empty"));
+    return;
+  }
+  byId("workstations").replaceChildren(...stations.map((station) => {
+    const card = node("article", undefined, "panel station " + station.status);
+    const progress = node("progress");
+    progress.max = 100;
+    progress.value = Math.max(0, Math.min(100, station.repair_progress_percent));
+    progress.setAttribute("aria-label", station.name + " 수리 진행률");
+    const members = data.npcs.filter((npc) => npc.station_id === station.id);
+    card.append(node("h3", teamName(station.team_id) + " · " + station.name),
+      node("span", station.status_label, "badge" + (station.status === "operational" ? " live" : "")),
+      progress, facts([
+        ["수리", format(station.repair_progress_percent, 1) + "%"],
+        ["설비 내구", format(station.integrity, 1) + "%"],
+        ["보급 재고", format(station.supplies)],
+        ["정비 완료", format(station.completed_cycles) + "회"],
+        ["유지 대기", format(station.cycle_cooldown_seconds, 1) + "초"],
+        ["위치", position(station.position)],
+        ["AI 갱신", station.simulation_active ? "진행 중" : "중지 / 보관 상태"],
+      ]), node("p", members.map((npc) => npc.name + " · " + npc.activity_label).join(" / "), "team-members"));
+    return card;
+  }));
+}
 function renderNpcs() {
   if (!snapshot) return;
   const regionId = byId("region-filter").value;
@@ -116,7 +159,8 @@ function renderNpcs() {
   const regions = new Map(snapshot.regions.map((region) => [region.id, region.name]));
   const filtered = snapshot.npcs.filter((npc) => (!regionId || npc.region_id === regionId)
     && (!activity || npc.activity === activity)
-    && (npc.name + " " + npc.role + " " + (npc.personality ?? "")).toLocaleLowerCase("ko-KR").includes(search));
+    && (npc.name + " " + npc.role + " " + (npc.personality ?? "") + " " + teamName(npc.team_id)
+      + " " + (stationFor(npc)?.name ?? "")).toLocaleLowerCase("ko-KR").includes(search));
   byId("npc-result-count").textContent = filtered.length + " / " + snapshot.npcs.length + "명";
   const rows = filtered.map((npc) => {
     const row = node("tr");
@@ -131,14 +175,16 @@ function renderNpcs() {
     const stateCell = node("td");
     stateCell.append(node("span", npc.activity_label, "activity " + npc.activity),
       node("small", npc.simulation_active ? (npc.following ? "동행 설정 · AI 갱신" : "AI 갱신") : "정적 배치 / 갱신 중지"));
+    const teamCell = node("td", teamName(npc.team_id));
+    teamCell.append(node("small", stationFor(npc)?.name ?? "작업장 미배정"));
     row.append(nameCell, node("td", regions.get(npc.region_id)), stateCell,
-      node("td", npc.personality ?? "미설정"), node("td", position(npc.position), "coords"),
+      teamCell, node("td", npc.personality ?? "미설정"), node("td", position(npc.position), "coords"),
       node("td", npc.route_remaining + "칸"));
     return row;
   });
   if (!rows.length) {
     const row = node("tr"), cell = node("td", "조건에 맞는 NPC가 없습니다.", "empty");
-    cell.colSpan = 6;
+    cell.colSpan = 7;
     row.append(cell);
     rows.push(row);
   }
@@ -158,9 +204,17 @@ function renderNpcDetail() {
     panel.replaceChildren(node("h3", "인물 상세"), node("p", "목록에서 이름을 선택하세요.", "muted"));
     return;
   }
+  const station = stationFor(npc);
   panel.replaceChildren(node("h3", npc.name), node("p", npc.personality ?? "성격 정보 미설정", "muted"), facts([
     ["역할", npc.role], ["패턴", npc.behavior_pattern],
-    ["생존", npc.life_state === "alive" ? "생존" : npc.life_state],
+    ["생존", npc.life_state === "alive" ? "생존" : npc.life_state === "recovering" ? "안전 구역 회복" : npc.life_state],
+    ["체력", npc.health == null ? "미계측" : format(npc.health) + " / " + format(npc.max_health)],
+    ["팀", teamName(npc.team_id)], ["작업장", station?.name ?? "미배정"],
+    ["팀 수리", station ? format(station.repair_progress_percent, 1) + "% / " + station.status_label : "—"],
+    ["보급 운반", npc.carrying_supplies ? "운반 중" : "미보유"],
+    ["교전 대상", npc.target_enemy_id ?? "없음"], ["처치", format(npc.kills) + "기"],
+    ["공격 대기", format(npc.combat_cooldown_seconds, 2) + "초"],
+    ["행동 대상", position(npc.action_target)],
     ["행동", npc.activity_label], ["동행 설정", npc.following ? "켜짐" : "꺼짐"],
     ["AI 갱신", npc.simulation_active ? "진행 중" : "중지 / 정적 배치"],
     ["현재 위치", position(npc.position)], ["집결 위치", position(npc.home)],
@@ -181,8 +235,17 @@ function renderEnvironment(data) {
     metric("보유품", "회복 키트 " + data.player.recovery_kits + " / 부품 " + data.player.salvage),
     metric("몹 처치 · 드롭", data.player.kills + "회 / " + data.counts.drops + "개"),
     metric("튜토리얼", data.quests.tutorial_stage),
+    metric("전망대", data.quests.in_observatory ? "관측실 내부" : data.quests.observatory_descended ? "관측 후 하층 복귀" : "진입 전 / 하층"),
+    metric("관문 신호", data.quests.gate_signal_heard ? "관측 기록 확보" : "미조사"),
     metric("동쪽 전력", data.quests.mara_power_restored ? "복구 완료" : "복구 전"),
     metric("성장 목표", data.quests.growth_goal_reached ? "완료" : "진행 전 / 진행 중"),
+  );
+  const travel = data.jet_travel;
+  if (travel) byId("world-status").append(
+    metric("제트 주행", (travel.active ? "조종 중" : "대기 / 마지막 기록") + " · " + format(travel.progress_percent, 1) + "%"),
+    metric("이동 거리 / 속도", format(travel.distance, 1) + " / " + format(travel.route_length) + " · 속도 " + format(travel.speed, 1)),
+    metric("측면 위치 / 부스트", format(travel.lateral_offset, 1) + " / " + format(travel.boost_charge, 2)),
+    metric("회피 / 접촉", format(travel.avoided_obstacles) + " / " + format(travel.collision_count)),
   );
   const perf = data.performance;
   if (!perf) {
@@ -212,6 +275,7 @@ function renderEvents() {
 function render(data) {
   renderSummary(data);
   renderRegions(data);
+  renderWorkstations(data);
   renderNpcs();
   renderEnvironment(data);
   renderEvents();

@@ -5,6 +5,7 @@
 #include "Tutorial.h"
 #include "TutorialState.h"
 #include "LevelOne.h"
+#include "JetTravel.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -43,6 +44,10 @@ bool IsPositionBlocked(Vector2 position)
         }
         return (position.x < -.6f && position.y < -1.3f) || (position.x > 1.2f && position.y < -1.5f);
     }
+    if (g_state.isInObservatory)
+    {
+        return position.x < -3.8f || position.x > 3.8f || position.y < -3.8f || position.y > 3.8f;
+    }
     if (position.x < kWorldMinX || position.x > kWorldMaxX || position.y < kWorldMinY ||
         position.y > kWorldMaxY)
     {
@@ -61,6 +66,22 @@ bool IsPositionBlocked(Vector2 position)
 
 InteractionTarget FindNearbyInteraction()
 {
+    if (g_state.isJetTravel)
+    {
+        return InteractionTarget::None;
+    }
+    if (g_state.isInObservatory)
+    {
+        if (Distance(g_state.playerPosition, kObservatoryConsole) < 1.4f)
+        {
+            return InteractionTarget::ObservatorySignal;
+        }
+        if (Distance(g_state.playerPosition, kObservatoryStairs) < 1.4f)
+        {
+            return InteractionTarget::ObservatoryExit;
+        }
+        return InteractionTarget::None;
+    }
     if (g_state.isInsideHome)
     {
         if (Distance(g_state.playerPosition, {1, -1.2f}) < 1.5f)
@@ -79,11 +100,10 @@ InteractionTarget FindNearbyInteraction()
         Vector2 position;
         InteractionTarget target;
     };
-    const InteractionPoint points[] = {{kHomeDoor, InteractionTarget::HomeEntrance},
-                                       {kLiaPosition, InteractionTarget::Lia},
-                                       {kMaraPosition, InteractionTarget::Mara},
-                                       {kRelayPosition, InteractionTarget::PowerRelay},
-                                       {kBeaconPosition, InteractionTarget::GateBeacon}};
+    const InteractionPoint points[] = {
+        {kHomeDoor, InteractionTarget::HomeEntrance},     {kLiaPosition, InteractionTarget::Lia},
+        {kMaraPosition, InteractionTarget::Mara},         {kRelayPosition, InteractionTarget::PowerRelay},
+        {kBeaconPosition, InteractionTarget::GateBeacon}, {kJetBikePosition, InteractionTarget::JetBike}};
     InteractionTarget nearestTarget = InteractionTarget::None;
     float nearestDistance = 1.35f;
     for (const auto &point : points)
@@ -156,8 +176,14 @@ void InteractWithNearbyTarget()
     }
     if (target == InteractionTarget::Lia)
     {
-        g_state.mainQuestStage = (std::max)(g_state.mainQuestStage, MainQuestStage::ReadGateSignal);
-        ShowNotice("리아 / 전망대는 북동쪽이야. 가는 길에 마라의 집 조명도 살펴보자.");
+        if (g_state.mainQuestStage < MainQuestStage::MeetLia)
+        {
+            ShowNotice("리아 / 집 단말에 접근 코드를 보냈어. 먼저 확인해 줘.");
+            return;
+        }
+        g_state.mainQuestStage = (std::max)(g_state.mainQuestStage, MainQuestStage::EnterObservatory);
+        ShowNotice("리아 / 북동쪽 전망대 입구에서 E로 올라가. 신호 측정 뒤 내려오면 네 제트 바이크로 격리 "
+                   "구역에 가자.");
     }
     if (target == InteractionTarget::Mara)
     {
@@ -193,19 +219,51 @@ void InteractWithNearbyTarget()
     }
     if (target == InteractionTarget::GateBeacon)
     {
-        if (g_state.isComplete)
-        {
-            levelone::Enter();
-            return;
-        }
-        if (g_state.mainQuestStage < MainQuestStage::ReadGateSignal)
+        if (g_state.mainQuestStage < MainQuestStage::EnterObservatory)
         {
             ShowNotice("전망대 / 리아가 접근 코드를 가지고 있습니다. 집 근처의 리아와 먼저 대화하세요.");
             return;
         }
-        g_state.isComplete = true;
-        g_state.mainQuestStage = MainQuestStage::Complete;
+        g_state.isInObservatory = true;
+        g_state.isInsideHome = false;
+        g_state.playerPosition = kObservatoryStairs;
+        g_state.cameraPosition = {0, 0};
+        std::fill(g_state.pressedKeys, g_state.pressedKeys + 256, false);
+        if (!g_state.gateSignalHeard)
+        {
+            g_state.mainQuestStage = MainQuestStage::ReadGateSignal;
+        }
+        ShowNotice("전망대 / 승강기를 타고 관측 데크에 도착했습니다. 북동쪽의 신호 측정 콘솔로 이동하세요.");
+    }
+    if (target == InteractionTarget::ObservatorySignal)
+    {
+        g_state.gateSignalHeard = true;
+        g_state.mainQuestStage = (std::max)(g_state.mainQuestStage, MainQuestStage::DescendObservatory);
         ShowNotice("알 수 없음 / …여긴 아직 빛이 있어… 리아 / 방금 네 목소리였어. 넌 아무 말도 안 했잖아.");
+    }
+    if (target == InteractionTarget::ObservatoryExit)
+    {
+        if (!g_state.gateSignalHeard)
+        {
+            ShowNotice("리아 / 먼저 관측 데크 북동쪽의 콘솔에서 신호를 확인해 줘.");
+            return;
+        }
+        g_state.isInObservatory = false;
+        g_state.hasDescendedObservatory = true;
+        g_state.playerPosition = kBeaconPosition;
+        g_state.cameraPosition = kBeaconPosition;
+        std::fill(g_state.pressedKeys, g_state.pressedKeys + 256, false);
+        g_state.mainQuestStage = (std::max)(g_state.mainQuestStage, MainQuestStage::MountJetBike);
+        ShowNotice("리아 / 아래 주차장에 네 제트 바이크가 있어. 바이크에서 E로 탑승해 격리 구역으로 가자.");
+    }
+    if (target == InteractionTarget::JetBike)
+    {
+        if (!g_state.gateSignalHeard || !g_state.hasDescendedObservatory)
+        {
+            ShowNotice("제트 바이크 / 먼저 리아와 대화하고 전망대에서 신호를 측정한 뒤 내려오세요.");
+            return;
+        }
+        jettravel::Begin();
     }
     if (target == InteractionTarget::None)
     {

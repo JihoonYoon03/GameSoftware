@@ -1,6 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <ClInclude Include="ModelVariants.h"><Filter>헤더 파일</Filter></ClInclude>
+    <ClInclude Include="JetTravel.h"><Filter>헤더 파일</Filter></ClInclude>
+    <ClInclude Include="Monitoring\ModelCatalog.h"><Filter>Monitoring</Filter></ClInclude>
+    <ClCompile Include="ModelVariants.cpp"><Filter>소스 파일</Filter></ClCompile>
+    <ClCompile Include="ModelRenderer.cpp"><Filter>소스 파일</Filter></ClCompile>
+    <ClCompile Include="JetTravel.cpp"><Filter>소스 파일</Filter></ClCompile>
+    <ClCompile Include="JetTravelRenderer.cpp"><Filter>소스 파일</Filter></ClCompile>
+    <ClCompile Include="Scene\ObservatoryScene.cpp"><Filter>Scene</Filter></ClCompile>
+    <ClCompile Include="Monitoring\ModelCatalog.cpp"><Filter>Monitoring</Filter></ClCompile>
+    <None Include="..\monitor\models.html"><Filter>Monitor Web</Filter></None>
+    <None Include="..\monitor\models.js"><Filter>Monitor Web</Filter></None>
+    <None Include="..\monitor\models.css"><Filter>Monitor Web</Filter></None>
     <Filter Include="Monitoring" />
     <Filter Include="Monitor Web" />
     <None Include="..\monitor\index.html"><Filter>Monitor Web</Filter></None>

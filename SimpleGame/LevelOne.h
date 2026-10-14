@@ -1,5 +1,6 @@
 #pragma once
 #include "TutorialState.h"
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 
@@ -41,6 +42,8 @@ struct Enemy
     int health = kEnemyMaxHealth;
     float attackCooldown = 0;
     float respawnSeconds = 0;
+    int targetStation = -1;
+    int targetNpc = -1;
 };
 struct Drop
 {
@@ -66,6 +69,8 @@ struct State
     float invulnerability = 0;
     float navigationCooldown = 0;
     int kills = 0;
+    int npcKills = 0;
+    unsigned int totalEnemyDeaths = 0;
     std::uint64_t nextDropActorId = 1;
 };
 extern State g_level;
@@ -81,6 +86,7 @@ bool HasLineOfSight(tutorial::Vector2 from, tutorial::Vector2 to);
 void UpdateNavigation();
 void Update(float deltaSeconds);
 void Attack();
+bool DamageEnemy(size_t index, int damage, bool playerCredit);
 void Interact();
 void UseRecoveryKit();
 int ExperienceForLevel(int level);

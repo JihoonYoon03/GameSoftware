@@ -40,7 +40,10 @@ struct Client
 };
 Asset assets[] = {{"/", "text/html; charset=utf-8", {}},
                   {"/app.js", "text/javascript; charset=utf-8", {}},
-                  {"/style.css", "text/css; charset=utf-8", {}}};
+                  {"/style.css", "text/css; charset=utf-8", {}},
+                  {"/models.html", "text/html; charset=utf-8", {}},
+                  {"/models.js", "text/javascript; charset=utf-8", {}},
+                  {"/models.css", "text/css; charset=utf-8", {}}};
 std::atomic<bool> running{false};
 std::atomic<std::uint64_t> requestCount{0};
 std::thread serverThread;
@@ -48,6 +51,7 @@ SOCKET listener = INVALID_SOCKET;
 bool winsockInitialized = false;
 std::mutex snapshotMutex;
 std::string latestSnapshot = "{\"schema\":\"game_monitor_v1\",\"ready\":false}";
+std::string modelCatalog = "{\"schema\":\"game_models_v1\",\"models\":[]}";
 
 bool SetNonblocking(SOCKET socket)
 {
@@ -80,12 +84,12 @@ std::string Route(const std::string &request)
     {
         return Response("400 Bad Request", "text/plain; charset=utf-8", "Invalid HTTP request");
     }
-    if (path == "/api/state")
+    if (path == "/api/state" || path == "/api/models")
     {
         std::string snapshot;
         {
             std::lock_guard<std::mutex> lock(snapshotMutex);
-            snapshot = latestSnapshot;
+            snapshot = path == "/api/models" ? modelCatalog : latestSnapshot;
         }
         return Response("200 OK", "application/json; charset=utf-8", snapshot);
     }
@@ -210,7 +214,8 @@ void Run()
 bool Start(const std::filesystem::path &assetDirectory, unsigned short port)
 {
     Stop();
-    const wchar_t *files[] = {L"index.html", L"app.js", L"style.css"};
+    const wchar_t *files[] = {L"index.html",  L"app.js",    L"style.css",
+                              L"models.html", L"models.js", L"models.css"};
     for (size_t i = 0; i < sizeof(assets) / sizeof(*assets); ++i)
     {
         std::error_code error;
@@ -290,6 +295,11 @@ void Stop()
         WSACleanup();
         winsockInitialized = false;
     }
+}
+void PublishModels(std::string catalog)
+{
+    std::lock_guard<std::mutex> lock(snapshotMutex);
+    modelCatalog = std::move(catalog);
 }
 std::uint64_t ReadRequestCount()
 {

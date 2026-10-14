@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>침묵하는 관문 · 모델 도감</title>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./models.css">
+  <script src="./models.js" defer></script>
+</head>
+<body>
+  <header><div><p class="eyebrow">헤일로 / 모델 관측</p><h1>형태와 색상 도감</h1><p class="muted">게임에서 실제 사용하는 캐시 모델의 면과 장착점</p></div><a href="/">월드 모니터로 돌아가기</a></header>
+  <main>
+    <p id="catalog-status" role="status" class="notice">게임의 모델 데이터 수신 중</p>
+    <div class="filters">
+      <label>차체·옷·외벽 색<input id="body-color" type="color" value="#7198b0"></label>
+      <label>장식·돔 색<input id="accent-color" type="color" value="#7195bf"></label>
+      <label>추진기·발광 색<input id="emission-color" type="color" value="#ff9652"></label>
+    </div>
+    <p class="muted">타입은 그대로 두고 색상만 바꿔 비교할 수 있습니다. 차량은 화면 오른쪽이 전면이며 붉은 장착점에서 왼쪽으로 배기가 나갑니다.</p>
+    <div id="model-grid"></div>
+    <p class="muted small">형태 비교용 Canvas 투영입니다. 게임의 재질·후처리·애니메이션 결과는 실제 플레이 화면에서 확인하세요. 캐릭터는 저장된 기본 스프라이트의 첫 프레임과 타입별 파츠를 합성합니다.</p>
+  </main>
+</body>
+</html>

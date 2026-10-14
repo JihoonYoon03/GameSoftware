@@ -24,17 +24,23 @@ Vector2 WorldToScreen(float x, float y, float height = 0);
 void DrawTile(float x, float y, float width, float depth, ColorRGBA color);
 void DrawBox(float x, float y, float width, float depth, float height, ColorRGBA color);
 void DrawGlow(Vector2 position, float size, ColorRGBA color);
-void DrawPerson(Vector2 worldPosition, ColorRGBA coat, bool isPlayer = false);
+void DrawPerson(Vector2 worldPosition, ColorRGBA coat, bool isPlayer = false,
+                models::CharacterType type = models::CharacterType::Explorer, bool walking = false);
+void DrawCharacterAppearance(Vector2 screenPosition, ColorRGBA coat, models::CharacterType type,
+                             int frame = 0, int direction = 0);
 
 void DrawBackdrop();
 void DrawBuilding(Building building);
 void DrawInteractionMarker(Vector2 worldPosition, const std::string &label, ColorRGBA color);
-void DrawCachedModel(const models::Model &model, Vector2 position, float scale = 1);
+void DrawCachedModel(const models::Model &model, Vector2 position, float scale = 1,
+                     const models::Palette &palette = {});
 void DrawEffectRectangle(Vector2 topLeft, float width, float height, SurfaceEffect effect);
 void DrawMaterialQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d, SurfaceMaterial material, ColorRGBA color);
 void DrawMaterialTile(float x, float y, SurfaceMaterial material, ColorRGBA color);
 void DrawSoftShadow(Vector2 center, float radiusX, float radiusY, float opacity);
-void DrawVehicle(Vector2 center, float scale);
+void DrawVehicle(Vector2 center, float scale, models::VehicleType type = models::VehicleType::Coupe,
+                 const models::Palette &palette = {}, float throttle = .5f, float direction = 1);
+void DrawObservatoryInterior();
 void DrawInterior();
 void DrawExterior();
 void DrawHud();

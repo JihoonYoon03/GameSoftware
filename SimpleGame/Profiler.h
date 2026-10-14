@@ -39,6 +39,11 @@ enum class Counter
     NpcPathRequests,
     NpcPathVisitedCells,
     MonitorSnapshots,
+    NpcShots,
+    NpcEnemyKills,
+    WorkstationRepairCompletions,
+    WorkstationSupplyDeliveries,
+    NpcRescues,
     Count
 };
 enum class Timer
@@ -69,6 +74,7 @@ enum class Timer
     NpcUpdate,
     NpcNavigation,
     MonitorSnapshot,
+    NpcCooperation,
     Count
 };
 class Scope

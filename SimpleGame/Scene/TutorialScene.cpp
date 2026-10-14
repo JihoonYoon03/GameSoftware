@@ -4,6 +4,7 @@
 #include "../Profiler.h"
 #include "../Tutorial.h"
 #include "../TutorialDrawing.h"
+#include "../JetTravel.h"
 #include <cmath>
 
 namespace tutorial
@@ -68,6 +69,25 @@ void DrawInterior()
 
 namespace
 {
+Vector2 GetTrafficPosition(int index)
+{
+    float direction = index % 2 == 0 ? 1.f : -1.f;
+    float phase = std::fmod(g_state.animationTimeSeconds * 2.4f + index * 5.f, 30.f);
+    return {direction * (phase - 15), index % 2 == 0 ? -.7f : .3f};
+}
+
+models::Palette GetTrafficPalette(int index)
+{
+    constexpr std::array<float, 4> bodyColors[] = {
+        {.72f, .38f, .26f, 1}, {.28f, .49f, .65f, 1}, {.42f, .63f, .45f, 1}, {.58f, .43f, .65f, 1}};
+    models::Palette palette;
+    palette.body = bodyColors[(index / 4 + index) % 4];
+    palette.accent = {.5f, .65f, .72f, 1};
+    palette.emission =
+        index % 2 == 0 ? std::array<float, 4>{.2f, .8f, 1, 1} : std::array<float, 4>{1, .55f, .22f, 1};
+    return palette;
+}
+
 void DrawStreetTiles(game::Scene &scene)
 {
     constexpr int chunkSize = 8;
@@ -159,7 +179,8 @@ void DrawDepthSortedObjects(game::Scene &scene)
         Lia,
         Mara,
         Resident,
-        Vehicle
+        Vehicle,
+        JetBike
     };
     struct SceneObject
     {
@@ -174,14 +195,18 @@ void DrawDepthSortedObjects(game::Scene &scene)
         {
             const auto &building = g_state.buildings[item.index];
             position = {building.x, building.y};
-            bounds =
-                WorldBounds(position.x, position.y, building.width, building.depth, building.height + 40);
+            bounds = WorldBounds(position.x, position.y, building.width, building.depth,
+                                 building.height * 1.14f + 40);
         }
         else
         {
             if (item.kind == SceneObjectKind::Vehicle)
             {
-                position = {-12 + item.index * 5.f, -.5f};
+                position = GetTrafficPosition(item.index);
+            }
+            else if (item.kind == SceneObjectKind::JetBike)
+            {
+                position = kJetBikePosition;
             }
             else if (item.kind == SceneObjectKind::Resident)
             {
@@ -218,18 +243,29 @@ void DrawDepthSortedObjects(game::Scene &scene)
         case SceneObjectKind::Vehicle:
             name = "vehicle/" + std::to_string(item.index);
             break;
+        case SceneObjectKind::JetBike:
+            name = "personal-jet-bike";
+            break;
         }
         PlaceWorldActor(scene, name, position.x, position.y, bounds, 3, item.depth, [item]() {
             if (item.kind == SceneObjectKind::Vehicle)
             {
-                Vector2 body = WorldToScreen(-12 + item.index * 5.f, -.5f,
+                Vector2 position = GetTrafficPosition(item.index);
+                Vector2 body = WorldToScreen(position.x, position.y,
                                              20 + std::sin(g_state.animationTimeSeconds + item.index) * 1.5f);
-                DrawVehicle(body, .8f);
+                DrawVehicle(body, .8f, static_cast<models::VehicleType>(item.index % 4),
+                            GetTrafficPalette(item.index), .78f, item.index % 2 == 0 ? 1.f : -1.f);
+            }
+            if (item.kind == SceneObjectKind::JetBike)
+            {
+                DrawVehicle(WorldToScreen(kJetBikePosition.x, kJetBikePosition.y, 16), .95f,
+                            models::VehicleType::JetBike, jettravel::GetBikePalette(), .08f, 1);
             }
             if (item.kind == SceneObjectKind::Resident)
             {
                 const auto &resident = g_state.residents[item.index];
-                DrawPerson(resident.position, ColorRGBA(.55f + (item.index % 3) * .15f, .65f, .75f));
+                DrawPerson(resident.position, ColorRGBA(resident.coat[0], resident.coat[1], resident.coat[2]),
+                           false, resident.type);
                 if (Distance(g_state.playerPosition, resident.position) < 2.2f)
                 {
                     Vector2 label = WorldToScreen(resident.position.x, resident.position.y, 62);
@@ -246,11 +282,12 @@ void DrawDepthSortedObjects(game::Scene &scene)
             }
             if (item.kind == SceneObjectKind::Lia)
             {
-                DrawPerson(kLiaPosition, ColorRGBA(.89f, .52f, .28f));
+                DrawPerson(kLiaPosition, ColorRGBA(.89f, .52f, .28f), false,
+                           models::CharacterType::Researcher);
             }
             if (item.kind == SceneObjectKind::Mara)
             {
-                DrawPerson(kMaraPosition, ColorRGBA(.48f, .4f, .64f));
+                DrawPerson(kMaraPosition, ColorRGBA(.48f, .4f, .64f), false, models::CharacterType::Medic);
             }
         });
     };
@@ -265,8 +302,10 @@ void DrawDepthSortedObjects(game::Scene &scene)
     placeObject({kMaraPosition.x + kMaraPosition.y, SceneObjectKind::Mara, 0});
     for (int i = 0; i < 6; ++i)
     {
-        placeObject({-12 + i * 5.f - .5f, SceneObjectKind::Vehicle, i});
+        Vector2 position = GetTrafficPosition(i);
+        placeObject({position.x + position.y, SceneObjectKind::Vehicle, i});
     }
+    placeObject({kJetBikePosition.x + kJetBikePosition.y, SceneObjectKind::JetBike, 0});
     for (size_t i = 0; i < g_state.residents.size(); ++i)
     {
         placeObject({g_state.residents[i].position.x + g_state.residents[i].position.y,
@@ -295,13 +334,18 @@ void DrawVehicleShadows(game::Scene &scene)
 {
     for (int i = 0; i < 6; ++i)
     {
-        float worldX = -12 + i * 5.f;
-        PlaceWorldActor(scene, "shadow/vehicle/" + std::to_string(i), worldX, -.5f,
-                        WorldBounds(worldX, -.5f, 0, 0, 0, 75), 1, 0, [worldX]() {
-                            Vector2 ground = WorldToScreen(worldX, -.5f);
+        Vector2 position = GetTrafficPosition(i);
+        PlaceWorldActor(scene, "shadow/vehicle/" + std::to_string(i), position.x, position.y,
+                        WorldBounds(position.x, position.y, 0, 0, 0, 90), 1, 0, [position]() {
+                            Vector2 ground = WorldToScreen(position.x, position.y);
                             DrawSoftShadow({ground.x + 8, ground.y + 5}, 48, 16, .55f);
                         });
     }
+    PlaceWorldActor(scene, "shadow/personal-jet-bike", kJetBikePosition.x, kJetBikePosition.y,
+                    WorldBounds(kJetBikePosition.x, kJetBikePosition.y, 0, 0, 0, 85), 1, 0, []() {
+                        Vector2 ground = WorldToScreen(kJetBikePosition.x, kJetBikePosition.y);
+                        DrawSoftShadow({ground.x + 8, ground.y + 5}, 46, 15, .45f);
+                    });
 }
 
 void DrawQuestMarkers(game::Scene &scene)
@@ -319,9 +363,13 @@ void DrawQuestMarkers(game::Scene &scene)
     {
         marker("relay", kRelayPosition, "전력 복구", ColorRGBA(1, .7f, .3f));
     }
-    if (g_state.mainQuestStage >= MainQuestStage::ReadGateSignal)
+    if (g_state.mainQuestStage >= MainQuestStage::EnterObservatory)
     {
-        marker("beacon", kBeaconPosition, "관문 신호", ColorRGBA(.4f, .93f, .96f));
+        marker("beacon", kBeaconPosition, "전망대 승강기 [E]", ColorRGBA(.4f, .93f, .96f));
+    }
+    if (g_state.hasDescendedObservatory)
+    {
+        marker("jet-bike", kJetBikePosition, "제트 바이크 탑승 [E]", ColorRGBA(1, .75f, .4f));
     }
 }
 } // namespace
@@ -354,6 +402,8 @@ void DrawExterior()
         graph.Reparent("marker/mara", *graph.Find("mara"));
         graph.Reparent("marker/relay", *graph.Find("relay"));
         graph.Reparent("marker/beacon", *graph.Find("beacon"));
+        graph.Reparent("shadow/personal-jet-bike", *graph.Find("personal-jet-bike"));
+        graph.Reparent("marker/jet-bike", *graph.Find("personal-jet-bike"));
     }
     DrawScene(scene);
 }

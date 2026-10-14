@@ -23,6 +23,13 @@ void DrawMapOverview()
         DrawEllipse(left + npc.position.x * cellSize, top + 12 + npc.position.y * cellSize, 2, 2,
                     ColorRGBA(.95f, .85f, .25f));
     }
+    for (const auto &station : GetWorkstations())
+    {
+        DrawRectangle(left + station.position.x * cellSize - 3, top + 12 + station.position.y * cellSize - 3,
+                      6, 6,
+                      station.status == WorkstationStatus::Threatened ? ColorRGBA(1, .6f, .15f)
+                                                                      : ColorRGBA(.3f, 1, .8f));
+    }
     for (const auto &enemy : g_level.enemies)
     {
         if (enemy.health > 0)
@@ -35,14 +42,14 @@ void DrawMapOverview()
                 ColorRGBA(.8f, .65f, 1));
     DrawEllipse(left + g_state.playerPosition.x * cellSize, top + 12 + g_state.playerPosition.y * cellSize, 3,
                 3, ColorRGBA(.3f, 1, .85f));
-    DrawLabel(left, top + 185, "적: 빨강 / 주민: 노랑 / 귀환: 보라");
+    DrawLabel(left, top + 185, "적: 빨강 / 팀: 노랑 / 설비: 청록");
 }
 } // namespace
 
 void DrawHud()
 {
     const auto &stats = g_level.player;
-    DrawRectangle(22, 20, 390, 220, ColorRGBA(.02f, .05f, .08f, .95f));
+    DrawRectangle(22, 20, 390, 255, ColorRGBA(.02f, .05f, .08f, .95f));
     DrawLabel(40, 46, "레벨 1 / 관문 외곽 격리 구역", ColorRGBA(.65f, .93f, .9f), GLUT_BITMAP_HELVETICA_18);
     char text[200];
     std::snprintf(text, sizeof(text), "캐릭터 레벨 %d   체력 %d / %d", stats.level, stats.health,
@@ -67,6 +74,14 @@ void DrawHud()
     std::snprintf(text, sizeof(text), "지도 %d×%d / 주민 %u / 적 정원 %u", kMapSize, kMapSize,
                   unsigned(GetNpcs().size()), unsigned(g_level.enemies.size()));
     DrawLabel(40, 215, text, ColorRGBA(.5f, .68f, .72f));
+    int completions = 0;
+    for (const auto &station : GetWorkstations())
+    {
+        completions += station.completedCycles;
+    }
+    std::snprintf(text, sizeof(text), "팀 처치 %d / 공동 수리 %d회 / 네 설비에서 보급·엄호", g_level.npcKills,
+                  completions);
+    DrawLabel(40, 240, text, ColorRGBA(.55f, .85f, .75f));
     DrawMapOverview();
     DrawLabel(26, kCanvasHeight - 22.f, "WASD 이동 / Space 공격 / E 대화·줍기·귀환 / Q 회복 / Esc 일시정지");
 }

@@ -57,13 +57,15 @@ Renderer::Renderer(int width, int height)
         const char *vertex = R"GLSL(
 #version 120
 varying vec2 uv;
-void main() { gl_Position=gl_ModelViewProjectionMatrix*gl_Vertex; uv=gl_MultiTexCoord0.xy; }
+varying vec4 tint;
+void main() { gl_Position=gl_ModelViewProjectionMatrix*gl_Vertex; uv=gl_MultiTexCoord0.xy; tint=gl_Color; }
 )GLSL";
         const char *fragment = R"GLSL(
 #version 120
 uniform float seconds;
 uniform int effect;
 varying vec2 uv;
+varying vec4 tint;
 void main() {
     if(effect==0) {
         float wave=sin(uv.x*25.0+uv.y*13.0-seconds*2.2)*0.5+0.5;
@@ -78,6 +80,20 @@ void main() {
         flame*=smoothstep(0.0,0.08,uv.y)*smoothstep(0.0,0.1,height);
         vec3 color=mix(vec3(1.0,0.22,0.035),vec3(1.0,0.9,0.3),flame*(1.0-height));
         gl_FragColor=vec4(color,flame);
+    } else if(effect==3) {
+        float width=mix(0.34,0.015,uv.x);
+        float jitter=sin(uv.x*39.0-seconds*43.0)*0.065*uv.x;
+        float core=1.0-smoothstep(width*0.25,width,abs(uv.y-0.5+jitter));
+        float fade=(1.0-uv.x)*smoothstep(0.0,0.035,uv.x);
+        float sparks=0.0;
+        for(int i=0;i<6;++i) {
+            float phase=fract(seconds*2.8+float(i)*0.163);
+            float side=mod(float(i),2.0)*2.0-1.0;
+            vec2 p=vec2(phase,0.5+side*phase*0.4);
+            sparks+=exp(-dot((uv-p)*vec2(35.0,65.0),(uv-p)*vec2(35.0,65.0)))*(1.0-phase);
+        }
+        float alpha=clamp(core*fade+sparks,0.0,1.0)*tint.a;
+        gl_FragColor=vec4(mix(tint.rgb,vec3(1.0),core*fade*0.3),alpha);
     } else {
         float radius=length((uv-0.5)*2.0);
         float ring=1.0-smoothstep(0.02,0.11,abs(radius-0.78));
@@ -268,7 +284,10 @@ void Renderer::DrawEffect(const RenderPoint (&vertices)[4], SurfaceEffect effect
     }
     else
     {
-        renderqueue::Color(.12f, .4f, .5f, .4f); // Static fallback; animation belongs to the shader.
+        if (effect != SurfaceEffect::JetExhaust)
+        {
+            renderqueue::Color(.12f, .4f, .5f, .4f);
+        }
     }
     renderqueue::Begin(GL_QUADS);
     renderqueue::TexCoord(0, 0);

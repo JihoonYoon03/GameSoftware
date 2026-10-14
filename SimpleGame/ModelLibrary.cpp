@@ -1,16 +1,20 @@
 #include "stdafx.h"
 #include "ModelLibrary.h"
+#include "ModelVariants.h"
 #include "AssetCache.h"
 #include <cmath>
 #include <cstring>
 #include <initializer_list>
 #include <type_traits>
+#include <stdexcept>
+#include <cstdio>
+#include <memory>
 
 namespace models
 {
 namespace
 {
-constexpr std::uint32_t kModelVersion = 2;
+constexpr std::uint32_t kModelVersion = 3;
 static_assert(std::is_trivially_copyable<Library>::value, "Model cache needs a stable POD payload");
 
 void Add(Model &model, PartKind kind, std::initializer_list<Point> points, std::array<float, 4> color,
@@ -28,9 +32,8 @@ void Add(Model &model, PartKind kind, std::initializer_list<Point> points, std::
     part.width = width;
 }
 
-Library Generate()
+void Generate(Library &library)
 {
-    Library library = {};
     for (std::size_t i = 0; i < library.circle.size(); ++i)
     {
         float angle = float(i) * 6.2831853f / 48;
@@ -77,11 +80,53 @@ Library Generate()
     Add(library.recoveryKit, PartKind::Polygon, {{-8, -15}, {8, -15}, {8, 0}, {-8, 0}}, {.2f, .65f, .4f, 1});
     Add(library.recoveryKit, PartKind::Line, {{0, -12}, {0, -3}}, {.85f, 1, .9f, 1}, 3);
     Add(library.recoveryKit, PartKind::Line, {{-4, -7}, {4, -7}}, {.85f, 1, .9f, 1}, 3);
-    return library;
+    for (size_t i = 0; i < library.vehicles.size(); ++i)
+    {
+        GenerateVehicle(library.vehicles[i], VehicleType(i));
+    }
+    for (size_t i = 0; i < library.characters.size(); ++i)
+    {
+        GenerateCharacter(library.characters[i], CharacterType(i));
+    }
+    for (size_t i = 0; i < library.buildings.size(); ++i)
+    {
+        GenerateBuilding(library.buildings[i], BuildingType(i));
+    }
 }
 
 bool Valid(const Library &library)
 {
+    for (const auto &vehicle : library.vehicles)
+    {
+        if (!ValidateModel(vehicle.body))
+        {
+            return false;
+        }
+        for (size_t i = 0; i < 2; ++i)
+        {
+            if (!std::isfinite(vehicle.exhausts[i].x) || !std::isfinite(vehicle.exhausts[i].y) ||
+                !std::isfinite(vehicle.exhausts[i].z) || !std::isfinite(vehicle.headlights[i].x) ||
+                !std::isfinite(vehicle.headlights[i].y) || !std::isfinite(vehicle.headlights[i].z) ||
+                vehicle.exhausts[i].x >= 0 || vehicle.headlights[i].x <= 0)
+            {
+                return false;
+            }
+        }
+    }
+    for (const auto &character : library.characters)
+    {
+        if (!ValidateModel(character))
+        {
+            return false;
+        }
+    }
+    for (const auto &building : library.buildings)
+    {
+        if (!ValidateModel(building))
+        {
+            return false;
+        }
+    }
     auto finitePoints = [](const auto &points) {
         for (const Point &point : points)
         {
@@ -139,27 +184,33 @@ bool Valid(const Library &library)
     return true;
 }
 
-Library LoadOrGenerate()
+std::unique_ptr<Library> LoadOrGenerate()
 {
-    Library library = {};
+    auto library = std::make_unique<Library>();
     std::vector<unsigned char> bytes;
     if (assetcache::Load("models.bin", kModelVersion, sizeof(Library), bytes))
     {
-        std::memcpy(&library, bytes.data(), sizeof(library));
-        if (Valid(library))
+        std::memcpy(library.get(), bytes.data(), sizeof(Library));
+        if (Valid(*library))
         {
             return library;
         }
     }
-    library = Generate();
-    assetcache::Save("models.bin", kModelVersion, &library, sizeof(library));
+    // Invalid cached bytes must not survive in unused vertices or palette slots.
+    library = std::make_unique<Library>();
+    Generate(*library);
+    if (!Valid(*library))
+    {
+        throw std::runtime_error("Generated model geometry failed validation");
+    }
+    assetcache::Save("models.bin", kModelVersion, library.get(), sizeof(Library));
     return library;
 }
 } // namespace
 
 const Library &Get()
 {
-    static const Library library = LoadOrGenerate();
-    return library;
+    static const auto library = LoadOrGenerate();
+    return *library;
 }
 } // namespace models

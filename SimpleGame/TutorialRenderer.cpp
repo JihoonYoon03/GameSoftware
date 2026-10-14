@@ -7,6 +7,7 @@
 #include "TutorialDrawing.h"
 #include "TutorialGraphics.h"
 #include "LevelOne.h"
+#include "JetTravel.h"
 #include "Scene/WorldScene.h"
 #include "Monitoring/GameMonitor.h"
 #include <memory>
@@ -57,8 +58,10 @@ void Draw()
     {
         return;
     }
-    profiling::BeginFrame(levelone::IsActive() ? "hunting"
-                                               : (g_state.isInsideHome ? "interior" : "exterior"));
+    profiling::BeginFrame(levelone::IsActive()      ? "hunting"
+                          : g_state.isJetTravel     ? "jet_travel"
+                          : g_state.isInObservatory ? "observatory"
+                                                    : (g_state.isInsideHome ? "interior" : "exterior"));
     renderqueue::BeginFrame();
     renderer->BeginScene(g_state.viewportWidth, g_state.viewportHeight);
     glMatrixMode(GL_PROJECTION);
@@ -72,7 +75,14 @@ void Draw()
     {
         profiling::Scope timer(profiling::Timer::Background);
         profiling::GpuScope gpuTimer(profiling::Timer::Background);
-        DrawScreenLayer(WorldSceneKind::Background, "background", DrawBackdrop);
+        if (jettravel::IsActive())
+        {
+            jettravel::DrawBackground();
+        }
+        else
+        {
+            DrawScreenLayer(WorldSceneKind::Background, "background", DrawBackdrop);
+        }
         renderqueue::Flush();
     }
     {
@@ -81,6 +91,14 @@ void Draw()
         if (levelone::IsActive())
         {
             levelone::DrawWorld();
+        }
+        else if (jettravel::IsActive())
+        {
+            jettravel::DrawWorld();
+        }
+        else if (g_state.isInObservatory)
+        {
+            DrawObservatoryInterior();
         }
         else if (g_state.isInsideHome)
         {

@@ -18,7 +18,8 @@ enum class SurfaceEffect
 {
     Water,
     Flame,
-    Pulse
+    Pulse,
+    JetExhaust
 };
 
 // Owns GPU resources; lifetime must stay inside the current GL context.

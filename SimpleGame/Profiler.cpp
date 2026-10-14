@@ -51,7 +51,12 @@ const char *counterNames[] = {"draw_calls",
                               "npc_decisions",
                               "npc_path_requests",
                               "npc_path_visited_cells",
-                              "monitor_snapshots"};
+                              "monitor_snapshots",
+                              "npc_shots",
+                              "npc_enemy_kills",
+                              "workstation_repair_completions",
+                              "workstation_supply_deliveries",
+                              "npc_rescues"};
 const char *timerNames[] = {"frame_cpu",
                             "update",
                             "movement",
@@ -77,7 +82,8 @@ const char *timerNames[] = {"frame_cpu",
                             "shader_compile",
                             "npc_update",
                             "npc_navigation",
-                            "monitor_snapshot"};
+                            "monitor_snapshot",
+                            "npc_cooperation"};
 static_assert(sizeof(counterNames) / sizeof(*counterNames) == kCounterCount);
 static_assert(sizeof(timerNames) / sizeof(*timerNames) == kTimerCount);
 struct Sample

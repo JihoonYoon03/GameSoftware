@@ -163,6 +163,9 @@
     <ClInclude Include="RenderCache.h" />
     <ClInclude Include="AssetCache.h" />
     <ClInclude Include="ModelLibrary.h" />
+    <ClInclude Include="ModelVariants.h" />
+    <ClInclude Include="JetTravel.h" />
+    <ClInclude Include="Monitoring\ModelCatalog.h" />
     <ClInclude Include="LevelOne.h" />
     <ClInclude Include="LevelOneNpc.h" />
     <ClInclude Include="Monitoring\GameMonitor.h" />
@@ -184,6 +187,12 @@
     <ClCompile Include="RenderCache.cpp" />
     <ClCompile Include="AssetCache.cpp" />
     <ClCompile Include="ModelLibrary.cpp" />
+    <ClCompile Include="ModelVariants.cpp" />
+    <ClCompile Include="ModelRenderer.cpp" />
+    <ClCompile Include="JetTravel.cpp" />
+    <ClCompile Include="JetTravelRenderer.cpp" />
+    <ClCompile Include="Scene\ObservatoryScene.cpp" />
+    <ClCompile Include="Monitoring\ModelCatalog.cpp" />
     <ClCompile Include="LevelOne.cpp" />
     <ClCompile Include="LevelOneNpc.cpp" />
     <ClCompile Include="LevelOneNpcRenderer.cpp" />
@@ -213,6 +222,9 @@
     <None Include="..\monitor\index.html" />
     <None Include="..\monitor\app.js" />
     <None Include="..\monitor\style.css" />
+    <None Include="..\monitor\models.html" />
+    <None Include="..\monitor\models.js" />
+    <None Include="..\monitor\models.css" />
   </ItemGroup>
   <ItemDefinitionGroup>
     <Link>
@@ -246,7 +258,7 @@
   </Target>
   <Target Name="CopyMonitorDashboard" AfterTargets="Build">
     <ItemGroup>
-      <MonitorAsset Include="$(ProjectDir)..\monitor\index.html;$(ProjectDir)..\monitor\app.js;$(ProjectDir)..\monitor\style.css" />
+      <MonitorAsset Include="$(ProjectDir)..\monitor\index.html;$(ProjectDir)..\monitor\app.js;$(ProjectDir)..\monitor\style.css;$(ProjectDir)..\monitor\models.html;$(ProjectDir)..\monitor\models.js;$(ProjectDir)..\monitor\models.css" />
     </ItemGroup>
     <Copy SourceFiles="@(MonitorAsset)" DestinationFolder="$(OutDir)Monitor\" SkipUnchangedFiles="true" />
   </Target>

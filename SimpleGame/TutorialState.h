@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include "ModelLibrary.h"
 
 namespace tutorial
 {
@@ -11,6 +12,8 @@ struct Vector2
 struct Building
 {
     float x, y, width, depth, height;
+    models::BuildingType type = models::BuildingType::Habitat;
+    models::Palette palette = {};
 };
 
 struct Resident
@@ -18,13 +21,18 @@ struct Resident
     Vector2 position;
     std::string name;
     std::string dialogue;
+    models::CharacterType type = models::CharacterType::Explorer;
+    std::array<float, 4> coat = {.55f, .65f, .75f, 1};
 };
 
 enum class MainQuestStage
 {
     ReadHomeTerminal,
     MeetLia,
+    EnterObservatory,
     ReadGateSignal,
+    DescendObservatory,
+    MountJetBike,
     Complete
 };
 
@@ -38,7 +46,10 @@ enum class InteractionTarget
     Mara,
     PowerRelay,
     GateBeacon,
-    Resident
+    Resident,
+    ObservatorySignal,
+    ObservatoryExit,
+    JetBike
 };
 
 constexpr float kPi = 3.14159265f;
@@ -49,6 +60,10 @@ constexpr Vector2 kLiaPosition = {-3, 2};
 constexpr Vector2 kMaraPosition = {0, 1};
 constexpr Vector2 kRelayPosition = {3, 1};
 constexpr Vector2 kBeaconPosition = {6, -3};
+constexpr Vector2 kObservatoryLiaPosition = {-1.5f, -1};
+constexpr Vector2 kJetBikePosition = {3, -2};
+constexpr Vector2 kObservatoryConsole = {2, -2};
+constexpr Vector2 kObservatoryStairs = {-2.8f, 2.8f};
 // Double both dimensions of the original 18 x 13 walkable bounds: 4x area.
 constexpr float kWorldMinX = -18;
 constexpr float kWorldMaxX = 18;
@@ -64,6 +79,10 @@ struct TutorialState
     MainQuestStage mainQuestStage = MainQuestStage::ReadHomeTerminal;
     bool pressedKeys[256] = {};
     bool isInsideHome = true;
+    bool isInObservatory = false;
+    bool isJetTravel = false;
+    bool gateSignalHeard = false;
+    bool hasDescendedObservatory = false;
     bool isPaused = false;
     bool isComplete = false;
     bool isSideQuestAccepted = false;

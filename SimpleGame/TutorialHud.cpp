@@ -3,6 +3,7 @@
 #include "Tutorial.h"
 #include "TutorialDrawing.h"
 #include "LevelOne.h"
+#include "JetTravel.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -13,7 +14,7 @@ namespace
 {
 void DrawMinimap()
 {
-    if (!g_state.isInsideHome)
+    if (!g_state.isInsideHome && !g_state.isInObservatory && !g_state.isJetTravel)
     {
         float mapCenterX = kCanvasWidth - 125.f, mapCenterY = 105;
         DrawRectangle(kCanvasWidth - 235.f, 20, 213, 150, ColorRGBA(.02f, .055f, .08f, .92f));
@@ -24,15 +25,20 @@ void DrawMinimap()
                   y = mapCenterY + (building.x + building.y) * 1.25f;
             DrawRectangle(x, y, 9, 6, ColorRGBA(.24f, .34f, .4f));
         }
-        const Vector2 points[] = {kHomeDoor, kLiaPosition, kMaraPosition, kRelayPosition, kBeaconPosition};
-        for (int i = 0; i < 5; i++)
+        const Vector2 points[] = {kHomeDoor,      kLiaPosition,    kMaraPosition,
+                                  kRelayPosition, kBeaconPosition, kJetBikePosition};
+        for (int i = 0; i < 6; i++)
         {
             float x = mapCenterX + (points[i].x - points[i].y) * 2.5f,
                   y = mapCenterY + (points[i].x + points[i].y) * 1.25f;
             DrawEllipse(x, y, 3, 3, ColorRGBA(1, .68f, .35f));
             if (i == 4)
             {
-                DrawLabel(x + 5, y, "관문");
+                DrawLabel(x + 5, y, "전망대");
+            }
+            if (i == 5)
+            {
+                DrawLabel(x + 5, y, "바이크");
             }
         }
         DrawEllipse(mapCenterX + (g_state.playerPosition.x - g_state.playerPosition.y) * 2.5f,
@@ -111,7 +117,7 @@ void DrawCompletionPanel()
         DrawLabel(kCanvasWidth * .5f - 224, 300,
                   g_state.isSideQuestComplete ? "남겨 둔 불빛: 완료"
                                               : "선택 목표: 마라의 전력 복구를 도와주세요.");
-        DrawLabel(kCanvasWidth * .5f - 224, 329, "관문에서 E: 첫 사냥 레벨 / 1: 바로 진입");
+        DrawLabel(kCanvasWidth * .5f - 224, 329, "제트 바이크에서 E: 격리 구역 재진입 / 1: 디버그 바로 진입");
     }
 }
 
@@ -136,17 +142,32 @@ void DrawHud()
         DrawPauseOverlay();
         return;
     }
+    if (jettravel::IsActive())
+    {
+        jettravel::DrawHud();
+        DrawNoticePanel();
+        DrawPauseOverlay();
+        return;
+    }
     DrawRectangle(22, 20, 365, 111, ColorRGBA(.025f, .06f, .09f, .92f));
     DrawRectangle(22, 20, 3, 111, ColorRGBA(.27f, .86f, .83f));
-    DrawLabel(40, 45, "헤일로 / 주거 구역 07", ColorRGBA(.67f, .9f, .91f), GLUT_BITMAP_HELVETICA_18);
-    DrawLabel(40, 68, g_state.isInsideHome ? "플레이어의 집 / 06:14" : "관문 인접 주거 구역 / 06:14",
+    DrawLabel(40, 45, g_state.isInObservatory ? "헤일로 / N-0 전망대" : "헤일로 / 주거 구역 07",
+              ColorRGBA(.67f, .9f, .91f), GLUT_BITMAP_HELVETICA_18);
+    DrawLabel(40, 68,
+              g_state.isInsideHome      ? "플레이어의 집 / 06:14"
+              : g_state.isInObservatory ? "상층 관측 데크 / 고도 180 m"
+                                        : "관문 인접 주거 구역 / 06:14",
               ColorRGBA(.4f, .66f, .73f));
-    DrawLabel(40, 94,
-              g_state.mainQuestStage == MainQuestStage::ReadHomeTerminal ? "01  집 단말 확인 [E]"
-              : g_state.mainQuestStage == MainQuestStage::MeetLia        ? "02  밖에서 리아와 대화 [E]"
-              : g_state.mainQuestStage == MainQuestStage::ReadGateSignal ? "03  전망대에서 관문 신호 측정"
-                                                                         : "04  있을 수 없는 응답",
-              ColorRGBA(.91f, .89f, .75f));
+    DrawLabel(
+        40, 94,
+        g_state.mainQuestStage == MainQuestStage::ReadHomeTerminal   ? "01  집 단말 확인 [E]"
+        : g_state.mainQuestStage == MainQuestStage::MeetLia          ? "02  밖에서 리아와 대화 [E]"
+        : g_state.mainQuestStage == MainQuestStage::EnterObservatory ? "03  전망대 승강기로 올라가기 [E]"
+        : g_state.mainQuestStage == MainQuestStage::ReadGateSignal   ? "04  상층 콘솔에서 관문 신호 측정 [E]"
+        : g_state.mainQuestStage == MainQuestStage::DescendObservatory ? "05  승강기로 도시에 내려가기 [E]"
+        : g_state.mainQuestStage == MainQuestStage::MountJetBike       ? "06  개인용 제트 바이크 탑승 [E]"
+                                                                       : "07  격리 구역 도착 / 서막 완료",
+        ColorRGBA(.91f, .89f, .75f));
     char timer[80];
     std::snprintf(timer, sizeof(timer), "%02d:%02d / 짧은 서막", (int)g_state.playTimeSeconds / 60,
                   (int)g_state.playTimeSeconds % 60);
@@ -160,7 +181,7 @@ void DrawHud()
               : g_state.isSideQuestAccepted ? "마라 동쪽의 전력 장치를 복구하세요."
                                             : "주거 광장의 마라와 대화하세요.");
     DrawLabel(26, (float)kCanvasHeight - 22,
-              "WASD 이동 / E 상호작용 / 1 사냥터 / Esc 일시정지 / 정지 중 R 다시 시작",
+              "WASD 이동 / E 상호작용 / 1 디버그 사냥터 / Esc 일시정지 / 정지 중 R 다시 시작",
               ColorRGBA(.63f, .78f, .81f));
     DrawInteractionPrompt();
     DrawNoticePanel();

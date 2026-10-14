@@ -8,6 +8,9 @@ enum class WorldSceneKind
 {
     Interior,
     Exterior,
+    Observatory,
+    JetTravel,
+    TravelBackground,
     Hunting,
     Background,
     Hud,

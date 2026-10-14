@@ -155,6 +155,28 @@ void GenerateMap(std::uint32_t seed)
             Carve(x, y);
         }
     }
+    // Four outside work pads are explicitly joined to the protected muster area.
+    // Their clear three-cell access lanes keep workers, couriers, and attackers on valid BFS routes.
+    for (const auto &direction : kDirections)
+    {
+        int centerX = kMapSize / 2 + direction[0] * 12;
+        int centerY = kMapSize / 2 + direction[1] * 12;
+        for (int step = 0; step <= 12; ++step)
+        {
+            for (int width = -1; width <= 1; ++width)
+            {
+                Carve(kMapSize / 2 + direction[0] * step + direction[1] * width,
+                      kMapSize / 2 + direction[1] * step + direction[0] * width);
+            }
+        }
+        for (int y = centerY - 3; y <= centerY + 3; ++y)
+        {
+            for (int x = centerX - 3; x <= centerX + 3; ++x)
+            {
+                Carve(x, y);
+            }
+        }
+    }
     tutorial::g_state.playerPosition = g_level.entry;
     UpdateNavigation();
     g_level.reachableCells.clear();
@@ -174,11 +196,33 @@ void GenerateMap(std::uint32_t seed)
         }
     }
     g_level.enemies.clear();
+    InitializeNpcs();
+    // Initial threats outside each work pad make team protection visible on first arrival.
+    const tutorial::Vector2 approachDirections[] = {{0, -1}, {1, 0}, {0, 1}, {-1, 0}};
+    for (size_t i = 0; i < GetWorkstations().size(); ++i)
+    {
+        auto center = GetWorkstations()[i].position;
+        auto direction = approachDirections[i];
+        for (int offset = -2; offset <= 2; ++offset)
+        {
+            tutorial::Vector2 position = {center.x + direction.x * 3 + direction.y * offset,
+                                          center.y + direction.y * 3 + direction.x * offset};
+            if (!IsBlocked(position))
+            {
+                g_level.enemies.push_back({position});
+            }
+        }
+    }
     std::shuffle(g_level.reachableCells.begin(), g_level.reachableCells.end(), random);
     for (int cell : g_level.reachableCells)
     {
         tutorial::Vector2 position = {cell % kMapSize + .5f, cell / kMapSize + .5f};
         if (tutorial::Distance(position, g_level.entry) < kEnemySpawnRadius)
+        {
+            continue;
+        }
+        if (std::any_of(g_level.enemies.begin(), g_level.enemies.end(),
+                        [&](const Enemy &enemy) { return tutorial::Distance(enemy.position, position) < 1; }))
         {
             continue;
         }
@@ -189,7 +233,6 @@ void GenerateMap(std::uint32_t seed)
         }
     }
     g_level.drops.clear();
-    InitializeNpcs();
     g_level.generated = true;
 }
 } // namespace levelone

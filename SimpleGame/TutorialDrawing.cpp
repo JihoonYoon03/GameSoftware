@@ -119,20 +119,6 @@ void DrawGlow(Vector2 position, float size, ColorRGBA color)
     GetRenderer().DrawGlow(position.x, position.y, size);
 }
 
-void DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer)
-{
-    Vector2 screen = WorldToScreen(position.x, position.y);
-    DrawSoftShadow({screen.x + 5, screen.y + 1}, 14, 6, .48f);
-    if (isPlayer)
-    {
-        DrawEllipse(screen.x, screen.y, 16, 6, ColorRGBA(.25f, .95f, .9f, .17f));
-    }
-    int frame = isPlayer && g_state.movementAmount > 0 ? 1 + int(g_state.animationTimeSeconds * 10) % 7 : 0;
-    int direction = isPlayer ? g_state.facingDirection : 0;
-    SetColor(coat);
-    GetRenderer().DrawCharacter(screen.x, screen.y, frame, direction);
-}
-
 void DrawMaterialQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d, SurfaceMaterial material, ColorRGBA color)
 {
     const RenderPoint vertices[] = {{a.x, a.y}, {b.x, b.y}, {c.x, c.y}, {d.x, d.y}};
@@ -155,57 +141,6 @@ void DrawSoftShadow(Vector2 center, float radiusX, float radiusY, float opacity)
         renderqueue::Vertex(center.x + point.x * radiusX, center.y + point.y * radiusY);
     }
     renderqueue::End();
-}
-void DrawVehicle(Vector2 center, float scale)
-{
-    DrawCachedModel(models::Get().vehicle, center, scale);
-    renderqueue::PushMatrix();
-    renderqueue::Translate(center.x, center.y, 0);
-    renderqueue::Scale(scale, scale, 1);
-    DrawEffectRectangle({-39, 13}, 16, 18, SurfaceEffect::Flame);
-    DrawEffectRectangle({17, 25}, 16, 18, SurfaceEffect::Flame);
-    renderqueue::PopMatrix();
-}
-
-void DrawCachedModel(const models::Model &model, Vector2 position, float scale)
-{
-    renderqueue::PushMatrix();
-    renderqueue::Translate(position.x, position.y, 0);
-    renderqueue::Scale(scale, scale, 1);
-    const std::string key = "model/" + std::to_string(reinterpret_cast<std::uintptr_t>(&model));
-    rendercache::Draw(key, [&model]() {
-        for (std::uint32_t i = 0; i < model.count; ++i)
-        {
-            const auto &part = model.parts[i];
-            ColorRGBA color(part.color[0], part.color[1], part.color[2], part.color[3]);
-            const auto &points = part.points;
-            if (part.kind == models::PartKind::Ellipse)
-            {
-                DrawEllipse(points[0].x, points[0].y, points[1].x, points[1].y, color);
-            }
-            else if (part.kind == models::PartKind::Line)
-            {
-                DrawLine({points[0].x, points[0].y}, {points[1].x, points[1].y}, color, part.width);
-            }
-            else if (part.kind == models::PartKind::Glass)
-            {
-                DrawMaterialQuad({points[0].x, points[0].y}, {points[1].x, points[1].y},
-                                 {points[2].x, points[2].y}, {points[3].x, points[3].y},
-                                 SurfaceMaterial::Glass, color);
-            }
-            else
-            {
-                SetColor(color);
-                renderqueue::Begin(GL_POLYGON);
-                for (std::uint32_t vertex = 0; vertex < part.count; ++vertex)
-                {
-                    renderqueue::Vertex(points[vertex].x, points[vertex].y);
-                }
-                renderqueue::End();
-            }
-        }
-    });
-    renderqueue::PopMatrix();
 }
 
 void DrawEffectRectangle(Vector2 topLeft, float width, float height, SurfaceEffect effect)

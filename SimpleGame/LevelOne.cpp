@@ -27,22 +27,49 @@ void RespawnPlayer()
 
 void MoveEnemy(Enemy &enemy, float deltaSeconds)
 {
-    if (tutorial::Distance(tutorial::g_state.playerPosition, g_level.entry) < kSafeAreaRadius)
-    {
-        return;
-    }
     int x = int(std::floor(enemy.position.x)), y = int(std::floor(enemy.position.y));
     if (!IsWalkable(x, y))
     {
         return;
     }
     int cell = y * kMapSize + x;
-    int best = g_level.navigationDistances[cell];
-    if (best < 0 || best > 11)
+    bool playerExposed =
+        tutorial::Distance(tutorial::g_state.playerPosition, g_level.entry) >= kSafeAreaRadius;
+    int playerDistance =
+        g_level.navigationDistances.size() == kMapSize * kMapSize ? g_level.navigationDistances[cell] : -1;
+    bool chasePlayer = playerExposed && playerDistance >= 0 && playerDistance <= 11;
+    int best = chasePlayer ? playerDistance : 29;
+    const std::vector<int> *distances = chasePlayer ? &g_level.navigationDistances : nullptr;
+    tutorial::Vector2 target = tutorial::g_state.playerPosition;
+    enemy.targetStation = -1;
+    enemy.targetNpc = -1;
+    if (!chasePlayer)
+    {
+        const auto &stations = GetWorkstations();
+        for (size_t i = 0; i < stations.size(); ++i)
+        {
+            int distance = stations[i].navigationDistances[cell];
+            if (distance >= 0 && distance < best)
+            {
+                best = distance;
+                distances = &stations[i].navigationDistances;
+                target = stations[i].position;
+                enemy.targetStation = int(i);
+            }
+        }
+        if (enemy.targetStation >= 0)
+        {
+            enemy.targetNpc = FindNpcThreatTarget(enemy.position, stations[enemy.targetStation].teamId);
+            if (enemy.targetNpc >= 0)
+            {
+                target = GetNpcs()[enemy.targetNpc].position;
+            }
+        }
+    }
+    if (!distances)
     {
         return;
     }
-    tutorial::Vector2 target = tutorial::g_state.playerPosition;
     if (!HasLineOfSight(enemy.position, target))
     {
         target = {x + .5f, y + .5f};
@@ -54,7 +81,7 @@ void MoveEnemy(Enemy &enemy, float deltaSeconds)
             {
                 continue;
             }
-            int distance = g_level.navigationDistances[nextY * kMapSize + nextX];
+            int distance = (*distances)[nextY * kMapSize + nextX];
             if (distance >= 0 && distance < best)
             {
                 best = distance;
@@ -70,6 +97,10 @@ void MoveEnemy(Enemy &enemy, float deltaSeconds)
     float step = (std::min)(distance, 1.25f * deltaSeconds);
     tutorial::Vector2 candidate = {enemy.position.x + (target.x - enemy.position.x) / distance * step,
                                    enemy.position.y + (target.y - enemy.position.y) / distance * step};
+    if (tutorial::Distance(candidate, g_level.entry) < kSafeAreaRadius)
+    {
+        return;
+    }
     if (!IsBlocked(candidate))
     {
         enemy.position = candidate;
@@ -133,21 +164,25 @@ void Enter()
     }
     g_level.active = true;
     tutorial::g_state.isInsideHome = false;
+    tutorial::g_state.isInObservatory = false;
+    tutorial::g_state.isJetTravel = false;
     tutorial::g_state.playerPosition = g_level.entry;
     tutorial::g_state.cameraPosition = g_level.entry;
     std::fill(tutorial::g_state.pressedKeys, tutorial::g_state.pressedKeys + 256, false);
     g_level.invulnerability = 2;
     g_level.navigationCooldown = 0;
-    tutorial::ShowNotice(
-        "격리 구역 / 중앙 NPC에게 E 대화·지원. 외곽 Space 사냥, Q 회복. 리아·카인 E 시험 동행.");
+    tutorial::ShowNotice("격리 구역 / 네 작업팀이 수리·보급·엄호 중입니다. Space 사냥, E 대화·줍기, Q 회복.");
 }
 
 void Leave()
 {
     g_level.active = false;
-    tutorial::g_state.playerPosition = tutorial::kBeaconPosition;
-    tutorial::g_state.cameraPosition = tutorial::kBeaconPosition;
-    tutorial::ShowNotice("헤일로 / 경험치와 가방은 유지됩니다. E를 누르면 다시 사냥터에 진입합니다.");
+    tutorial::g_state.isInsideHome = false;
+    tutorial::g_state.isInObservatory = false;
+    tutorial::g_state.isJetTravel = false;
+    tutorial::g_state.playerPosition = tutorial::kJetBikePosition;
+    tutorial::g_state.cameraPosition = tutorial::kJetBikePosition;
+    tutorial::ShowNotice("헤일로 / 경험치와 가방은 유지됩니다. E 제트 오토바이 탑승으로 다시 출발하세요.");
 }
 
 void ResetProgress()
@@ -168,31 +203,50 @@ void Attack()
     }
     g_level.attackCooldown = kAttackInterval;
     g_level.attackFlash = .18f;
-    for (auto &enemy : g_level.enemies)
+    for (size_t i = 0; i < g_level.enemies.size(); ++i)
     {
+        const auto &enemy = g_level.enemies[i];
         if (enemy.health <= 0 ||
             tutorial::Distance(enemy.position, tutorial::g_state.playerPosition) > kAttackRange ||
             !HasLineOfSight(enemy.position, tutorial::g_state.playerPosition))
         {
             continue;
         }
-        enemy.health -= g_level.player.attack;
-        if (enemy.health > 0)
-        {
-            continue;
-        }
+        DamageEnemy(i, g_level.player.attack, true);
+    }
+}
+bool DamageEnemy(size_t index, int damage, bool playerCredit)
+{
+    if (index >= g_level.enemies.size() || damage <= 0 || g_level.enemies[index].health <= 0)
+    {
+        return false;
+    }
+    auto &enemy = g_level.enemies[index];
+    enemy.health = (std::max)(0, enemy.health - damage);
+    if (enemy.health > 0)
+    {
+        return false;
+    }
+    ++g_level.totalEnemyDeaths;
+    enemy.respawnSeconds = 12;
+    enemy.targetNpc = enemy.targetStation = -1;
+    g_level.drops.push_back({enemy.position,
+                             g_level.totalEnemyDeaths % 3 == 0 ? ItemKind::RecoveryKit : ItemKind::Salvage,
+                             g_level.nextDropActorId++});
+    if (g_level.drops.size() > 128)
+    {
+        g_level.drops.erase(g_level.drops.begin());
+    }
+    if (playerCredit)
+    {
         ++g_level.kills;
-        enemy.respawnSeconds = 12;
-        g_level.drops.push_back({enemy.position,
-                                 g_level.kills % 3 == 0 ? ItemKind::RecoveryKit : ItemKind::Salvage,
-                                 g_level.nextDropActorId++});
-        // Limit abandoned drops to keep the endless hunting loop bounded.
-        if (g_level.drops.size() > 128)
-        {
-            g_level.drops.erase(g_level.drops.begin());
-        }
         AddExperience(kExperiencePerKill);
     }
+    else
+    {
+        ++g_level.npcKills;
+    }
+    return true;
 }
 
 void Interact()
@@ -266,8 +320,9 @@ void Update(float deltaSeconds)
     {
         Attack();
     }
-    for (auto &enemy : g_level.enemies)
+    for (size_t enemyIndex = 0; enemyIndex < g_level.enemies.size(); ++enemyIndex)
     {
+        auto &enemy = g_level.enemies[enemyIndex];
         if (enemy.health <= 0)
         {
             enemy.respawnSeconds -= deltaSeconds;
@@ -276,32 +331,65 @@ void Update(float deltaSeconds)
                 continue;
             }
             // Deterministic rotating search; every spawn is on the connected floor component.
-            for (size_t i = 0; i < g_level.reachableCells.size(); ++i)
+            const auto &stations = GetWorkstations();
+            for (int searchPass = 0; searchPass < 2 && enemy.health <= 0; ++searchPass)
             {
-                int cell = g_level.reachableCells[(i + g_level.kills * 17u) % g_level.reachableCells.size()];
-                tutorial::Vector2 position = {cell % kMapSize + .5f, cell / kMapSize + .5f};
-                if (tutorial::Distance(position, tutorial::g_state.playerPosition) < 6 ||
-                    tutorial::Distance(position, g_level.entry) < kEnemySpawnRadius)
+                for (size_t i = 0; i < g_level.reachableCells.size(); ++i)
                 {
-                    continue;
+                    int cell = g_level.reachableCells[(i + g_level.totalEnemyDeaths * 17u) %
+                                                      g_level.reachableCells.size()];
+                    if (searchPass == 0 && !stations.empty())
+                    {
+                        int distance = stations[enemyIndex % stations.size()].navigationDistances[cell];
+                        if (distance < 7 || distance > 14)
+                        {
+                            continue;
+                        }
+                    }
+                    tutorial::Vector2 position = {cell % kMapSize + .5f, cell / kMapSize + .5f};
+                    if (tutorial::Distance(position, tutorial::g_state.playerPosition) < 6 ||
+                        tutorial::Distance(position, g_level.entry) < kEnemySpawnRadius)
+                    {
+                        continue;
+                    }
+                    bool occupied =
+                        std::any_of(g_level.enemies.begin(), g_level.enemies.end(), [&](const Enemy &other) {
+                            return other.health > 0 && tutorial::Distance(other.position, position) < 1;
+                        });
+                    if (occupied)
+                    {
+                        continue;
+                    }
+                    enemy.position = position;
+                    enemy.health = kEnemyMaxHealth;
+                    enemy.attackCooldown = 1;
+                    enemy.targetNpc = enemy.targetStation = -1;
+                    break;
                 }
-                bool occupied =
-                    std::any_of(g_level.enemies.begin(), g_level.enemies.end(), [&](const Enemy &other) {
-                        return other.health > 0 && tutorial::Distance(other.position, position) < 1;
-                    });
-                if (occupied)
-                {
-                    continue;
-                }
-                enemy.position = position;
-                enemy.health = kEnemyMaxHealth;
-                enemy.attackCooldown = 1;
-                break;
             }
             continue;
         }
         enemy.attackCooldown -= deltaSeconds;
         MoveEnemy(enemy, deltaSeconds);
+        if (enemy.attackCooldown <= 0 && enemy.targetNpc >= 0)
+        {
+            const auto &npc = GetNpcs()[enemy.targetNpc];
+            if (tutorial::Distance(enemy.position, npc.position) < .9f &&
+                HasLineOfSight(enemy.position, npc.position))
+            {
+                DamageNpc(size_t(enemy.targetNpc), 8);
+                enemy.attackCooldown = 1;
+            }
+        }
+        else if (enemy.attackCooldown <= 0 && enemy.targetStation >= 0)
+        {
+            const auto &station = GetWorkstations()[enemy.targetStation];
+            if (tutorial::Distance(enemy.position, station.position) < 1.1f)
+            {
+                DamageWorkstation(size_t(enemy.targetStation), 5);
+                enemy.attackCooldown = 1;
+            }
+        }
         if (tutorial::Distance(tutorial::g_state.playerPosition, g_level.entry) >= kSafeAreaRadius &&
             g_level.invulnerability <= 0 && enemy.attackCooldown <= 0 &&
             tutorial::Distance(enemy.position, tutorial::g_state.playerPosition) < .8f &&

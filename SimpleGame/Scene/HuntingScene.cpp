@@ -184,9 +184,17 @@ void DrawWorld()
         for (size_t i = 0; i < GetNpcs().size(); ++i)
         {
             const auto position = GetNpcs()[i].position;
-            PlaceWorldActor(scene, "npc/" + std::to_string(i), position.x, position.y,
-                            WorldBounds(position.x, position.y, 0, 0, 90, 180), 1, position.x + position.y,
-                            [i]() { DrawNpc(i); });
+            PlaceWorldActor(
+                scene, "npc/" + std::to_string(i), position.x, position.y,
+                WorldBounds(position.x, position.y, 0, 0, 90, GetNpcs()[i].actionFlash > 0 ? 330.f : 180.f),
+                1, position.x + position.y, [i]() { DrawNpc(i); });
+        }
+        for (size_t i = 0; i < GetWorkstations().size(); ++i)
+        {
+            const auto position = GetWorkstations()[i].position;
+            PlaceWorldActor(scene, "workstation/" + std::to_string(GetWorkstations()[i].id), position.x,
+                            position.y, WorldBounds(position.x, position.y, 1, 1, 110, 130), 1,
+                            position.x + position.y, [i]() { DrawWorkstation(i); });
         }
         placeObject({g_state.playerPosition.x + g_state.playerPosition.y, ObjectKind::Player, 0});
         PlaceWorldActor(scene, "exit", g_level.entry.x, g_level.entry.y,
