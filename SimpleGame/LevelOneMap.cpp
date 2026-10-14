@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "LevelOne.h"
-#include "LevelOneNpc.h"
 #include "RenderCache.h"
 #include "Profiler.h"
 #include <algorithm>
@@ -13,7 +12,6 @@ namespace levelone
 namespace
 {
 constexpr int kDirections[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
-
 void Carve(int x, int y)
 {
     if (x > 0 && y > 0 && x < kMapSize - 1 && y < kMapSize - 1)
@@ -21,24 +19,89 @@ void Carve(int x, int y)
         g_level.tiles[y * kMapSize + x] = Tile::Floor;
     }
 }
+void Room(int left, int top, int right, int bottom)
+{
+    for (int y = top; y <= bottom; ++y)
+    {
+        for (int x = left; x <= right; ++x)
+        {
+            Carve(x, y);
+        }
+    }
+}
+void Tunnel(int x, int y, int targetX, int targetY)
+{
+    for (;;)
+    {
+        Room(x - 1, y - 1, x + 1, y + 1);
+        if (x == targetX && y == targetY)
+        {
+            break;
+        }
+        if (x != targetX)
+        {
+            x += x < targetX ? 1 : -1;
+        }
+        else
+        {
+            y += y < targetY ? 1 : -1;
+        }
+    }
+}
+std::vector<int> Distances(tutorial::Vector2 destination, bool ignoreGate = false)
+{
+    std::vector<int> distances(kMapSize * kMapSize, -1);
+    int x = int(std::floor(destination.x)), y = int(std::floor(destination.y));
+    if (!IsWalkable(x, y))
+    {
+        return distances;
+    }
+    std::queue<int> frontier;
+    frontier.push(y * kMapSize + x);
+    distances[y * kMapSize + x] = 0;
+    while (!frontier.empty())
+    {
+        int cell = frontier.front();
+        frontier.pop();
+        for (const auto &direction : kDirections)
+        {
+            int nx = cell % kMapSize + direction[0], ny = cell / kMapSize + direction[1];
+            if (nx < 0 || nx >= kMapSize || ny < 0 || ny >= kMapSize)
+            {
+                continue;
+            }
+            int next = ny * kMapSize + nx;
+            bool walkable = ignoreGate ? g_level.tiles[next] != Tile::Wall : IsWalkable(nx, ny);
+            if (walkable && distances[next] < 0)
+            {
+                distances[next] = distances[cell] + 1;
+                frontier.push(next);
+            }
+        }
+    }
+    return distances;
+}
 } // namespace
 
+bool IsGateCell(int x, int y)
+{
+    return x == 32 && y >= 28 && y <= 30;
+}
 bool IsWalkable(int x, int y)
 {
     return x >= 0 && y >= 0 && x < kMapSize && y < kMapSize && g_level.tiles.size() == kMapSize * kMapSize &&
-           g_level.tiles[y * kMapSize + x] != Tile::Wall;
+           g_level.tiles[y * kMapSize + x] != Tile::Wall &&
+           (!IsGateCell(x, y) || g_level.quest.IsPowerBypassed());
 }
-
 bool IsBlocked(tutorial::Vector2 position)
 {
     profiling::Count(profiling::Counter::CollisionQueries);
-    // Match the player's footprint, not just its center, against map collision.
     constexpr float radius = .18f;
-    for (float offsetX : {-radius, radius})
+    for (float dx : {-radius, radius})
     {
-        for (float offsetY : {-radius, radius})
+        for (float dy : {-radius, radius})
         {
-            if (!IsWalkable(int(std::floor(position.x + offsetX)), int(std::floor(position.y + offsetY))))
+            if (!IsWalkable(int(std::floor(position.x + dx)), int(std::floor(position.y + dy))))
             {
                 return true;
             }
@@ -46,58 +109,56 @@ bool IsBlocked(tutorial::Vector2 position)
     }
     return false;
 }
-
 bool HasLineOfSight(tutorial::Vector2 from, tutorial::Vector2 to)
 {
     profiling::Count(profiling::Counter::LineOfSightQueries);
-    const int steps = (std::max)(1, int(tutorial::Distance(from, to) / .12f));
-    for (int step = 0; step <= steps; ++step)
+    int steps = (std::max)(1, int(tutorial::Distance(from, to) / .12f));
+    for (int i = 0; i <= steps; ++i)
     {
-        float fraction = float(step) / steps;
-        if (IsBlocked({from.x + (to.x - from.x) * fraction, from.y + (to.y - from.y) * fraction}))
+        float t = float(i) / steps;
+        if (!IsWalkable(int(std::floor(from.x + (to.x - from.x) * t)),
+                        int(std::floor(from.y + (to.y - from.y) * t))))
         {
             return false;
         }
     }
     return true;
 }
-
-void UpdateNavigation()
+std::vector<tutorial::Vector2> FindRoute(tutorial::Vector2 from, tutorial::Vector2 to)
 {
-    profiling::Scope profileTimer(profiling::Timer::Navigation);
-    g_level.navigationDistances.assign(kMapSize * kMapSize, -1);
-    int x = int(std::floor(tutorial::g_state.playerPosition.x));
-    int y = int(std::floor(tutorial::g_state.playerPosition.y));
-    if (!IsWalkable(x, y))
+    profiling::Scope timer(profiling::Timer::NpcNavigation);
+    profiling::Count(profiling::Counter::NpcPathRequests);
+    auto distances = Distances(to);
+    std::vector<tutorial::Vector2> route;
+    int x = int(std::floor(from.x)), y = int(std::floor(from.y));
+    if (!IsWalkable(x, y) || distances[y * kMapSize + x] < 0)
     {
-        return;
+        return route;
     }
-    std::queue<int> frontier;
-    int start = y * kMapSize + x;
-    frontier.push(start);
-    g_level.navigationDistances[start] = 0;
-    while (!frontier.empty())
+    // First reach the current cell center; turns then remain clear of wall corners.
+    route.push_back({x + .5f, y + .5f});
+    while (distances[y * kMapSize + x] > 0)
     {
-        int cell = frontier.front();
-        frontier.pop();
-        profiling::Count(profiling::Counter::NavigationVisitedCells);
+        int current = distances[y * kMapSize + x];
         for (const auto &direction : kDirections)
         {
-            int nextX = cell % kMapSize + direction[0];
-            int nextY = cell / kMapSize + direction[1];
-            if (!IsWalkable(nextX, nextY))
+            int nx = x + direction[0], ny = y + direction[1];
+            if (IsWalkable(nx, ny) && distances[ny * kMapSize + nx] == current - 1)
             {
-                continue;
+                x = nx;
+                y = ny;
+                route.push_back({x + .5f, y + .5f});
+                profiling::Count(profiling::Counter::NpcPathVisitedCells);
+                break;
             }
-            int next = nextY * kMapSize + nextX;
-            if (g_level.navigationDistances[next] >= 0)
-            {
-                continue;
-            }
-            g_level.navigationDistances[next] = g_level.navigationDistances[cell] + 1;
-            frontier.push(next);
         }
     }
+    return route;
+}
+void UpdateNavigation()
+{
+    profiling::Scope timer(profiling::Timer::Navigation);
+    g_level.navigationDistances = Distances(tutorial::g_state.playerPosition);
 }
 
 void GenerateMap(std::uint32_t seed)
@@ -106,123 +167,69 @@ void GenerateMap(std::uint32_t seed)
     rendercache::InvalidateTerrain();
     g_level.seed = seed;
     g_level.tiles.assign(kMapSize * kMapSize, Tile::Wall);
-    std::mt19937 random(seed);
-    std::uniform_int_distribution<int> coordinate(3, kMapSize - 4);
-    constexpr int kRoomCount = 80;
-    int previousX = kMapSize / 2, previousY = kMapSize / 2;
-    // Every room is joined to the preceding room before it is carved.
-    // Thus random rooms cannot introduce a disconnected playable island.
-    for (int room = 0; room < kRoomCount; ++room)
+    // Authored mine topology: branching drifts, one closed bulkhead, deeper ruins.
+    // No four-team test arena or randomly scattered repair facilities remain.
+    Room(5, 5, 13, 13);
+    Tunnel(8, 10, 24, 10);
+    Tunnel(24, 10, 24, 29);
+    Room(22, 22, 29, 31);
+    Tunnel(24, 29, 48, 29);
+    Tunnel(48, 29, 48, 47);
+    Room(42, 42, 55, 54);
+    Room(13, 17, 21, 24);
+    Tunnel(17, 20, 24, 20);
+    Tunnel(12, 20, 12, 43);
+    Tunnel(12, 20, 17, 20);
+    Room(7, 40, 16, 47);
+    Room(40, 11, 47, 18);
+    Tunnel(44, 15, 44, 29);
+    Room(49, 33, 57, 40);
+    Tunnel(48, 36, 54, 36);
+    // Wall x=32 can only be crossed at the powered bulkhead.
+    for (int y = 1; y < kMapSize - 1; ++y)
     {
-        int centerX = room == 0 ? kMapSize / 2 : coordinate(random);
-        int centerY = room == 0 ? kMapSize / 2 : coordinate(random);
-        // Fixed distant anchor rooms guarantee enough hunting space even for degenerate random draws.
-        if (room == kRoomCount - 2)
+        if (!IsGateCell(32, y))
         {
-            centerX = 4;
-            centerY = 4;
-        }
-        if (room == kRoomCount - 1)
-        {
-            centerX = kMapSize - 5;
-            centerY = kMapSize - 5;
-        }
-        while (previousX != centerX)
-        {
-            Carve(previousX, previousY);
-            Carve(previousX, previousY + 1);
-            previousX += previousX < centerX ? 1 : -1;
-        }
-        while (previousY != centerY)
-        {
-            Carve(previousX, previousY);
-            Carve(previousX + 1, previousY);
-            previousY += previousY < centerY ? 1 : -1;
-        }
-        for (int y = centerY - 2; y <= centerY + 2; ++y)
-        {
-            for (int x = centerX - 2; x <= centerX + 2; ++x)
-            {
-                Carve(x, y);
-            }
+            g_level.tiles[y * kMapSize + 32] = Tile::Wall;
         }
     }
-    // A clear central muster area keeps conversations separate from hunting.
-    for (int y = kMapSize / 2 - 6; y <= kMapSize / 2 + 6; ++y)
-    {
-        for (int x = kMapSize / 2 - 6; x <= kMapSize / 2 + 6; ++x)
-        {
-            Carve(x, y);
-        }
-    }
-    // Four outside work pads are explicitly joined to the protected muster area.
-    // Their clear three-cell access lanes keep workers, couriers, and attackers on valid BFS routes.
-    for (const auto &direction : kDirections)
-    {
-        int centerX = kMapSize / 2 + direction[0] * 12;
-        int centerY = kMapSize / 2 + direction[1] * 12;
-        for (int step = 0; step <= 12; ++step)
-        {
-            for (int width = -1; width <= 1; ++width)
-            {
-                Carve(kMapSize / 2 + direction[0] * step + direction[1] * width,
-                      kMapSize / 2 + direction[1] * step + direction[0] * width);
-            }
-        }
-        for (int y = centerY - 3; y <= centerY + 3; ++y)
-        {
-            for (int x = centerX - 3; x <= centerX + 3; ++x)
-            {
-                Carve(x, y);
-            }
-        }
-    }
-    tutorial::g_state.playerPosition = g_level.entry;
-    UpdateNavigation();
+    auto connected = Distances(g_level.entry, true);
     g_level.reachableCells.clear();
+    std::mt19937 random(seed);
     for (int cell = 0; cell < kMapSize * kMapSize; ++cell)
     {
-        if (g_level.navigationDistances[cell] < 0)
+        if (connected[cell] < 0)
         {
             g_level.tiles[cell] = Tile::Wall;
-            continue;
         }
-        g_level.reachableCells.push_back(cell);
-        // Shallow water is traversable and never breaks the connectivity contract.
-        if (random() % 13 == 0 && tutorial::Distance({cell % kMapSize + .5f, cell / kMapSize + .5f},
-                                                     g_level.entry) > kSafeAreaRadius)
+        else
         {
-            g_level.tiles[cell] = Tile::Water;
+            g_level.reachableCells.push_back(cell);
         }
     }
-    g_level.enemies.clear();
-    InitializeNpcs();
-    // Initial threats outside each work pad make team protection visible on first arrival.
-    const tutorial::Vector2 approachDirections[] = {{0, -1}, {1, 0}, {0, 1}, {-1, 0}};
-    for (size_t i = 0; i < GetWorkstations().size(); ++i)
+    g_level.lights = {{g_level.entry, 4.8f},     {{17.5f, 10.5f}, 2.8f}, {{17.5f, 20.5f}, 3.2f},
+                      {{11.5f, 43.5f}, 3.2f},    {kPowerBypass, 3.5f},   {{32.5f, 29.5f}, 4.f, true},
+                      {{44.5f, 15.5f}, 3.2f},    {{53.5f, 36.5f}, 3.2f}, {kRuinSignal, 3.8f},
+                      {kCoordinateTerminal, 3.f}};
+    g_level.rescueGroups = {
+        {{17.5f, 20.5f}, false}, {{11.5f, 43.5f}, true}, {{44.5f, 15.5f}, false}, {{53.5f, 36.5f}, true}};
+    g_level.survivors.clear();
+    std::uint64_t id = 1;
+    for (size_t i = 0; i < g_level.rescueGroups.size(); ++i)
     {
-        auto center = GetWorkstations()[i].position;
-        auto direction = approachDirections[i];
-        for (int offset = -2; offset <= 2; ++offset)
+        auto center = g_level.rescueGroups[i].position;
+        for (int member = 0; member < 3; ++member)
         {
-            tutorial::Vector2 position = {center.x + direction.x * 3 + direction.y * offset,
-                                          center.y + direction.y * 3 + direction.x * offset};
-            if (!IsBlocked(position))
-            {
-                g_level.enemies.push_back({position});
-            }
+            g_level.survivors.push_back({id++, i, {center.x + (member - 1) * .6f, center.y + .5f}});
         }
     }
     std::shuffle(g_level.reachableCells.begin(), g_level.reachableCells.end(), random);
+    g_level.enemies.clear();
     for (int cell : g_level.reachableCells)
     {
         tutorial::Vector2 position = {cell % kMapSize + .5f, cell / kMapSize + .5f};
-        if (tutorial::Distance(position, g_level.entry) < kEnemySpawnRadius)
-        {
-            continue;
-        }
-        if (std::any_of(g_level.enemies.begin(), g_level.enemies.end(),
-                        [&](const Enemy &enemy) { return tutorial::Distance(enemy.position, position) < 1; }))
+        if (tutorial::Distance(position, g_level.entry) < kEnemySpawnRadius ||
+            tutorial::Distance(position, kPowerBypass) < 2 || IsGateCell(cell % kMapSize, cell / kMapSize))
         {
             continue;
         }
@@ -233,6 +240,13 @@ void GenerateMap(std::uint32_t seed)
         }
     }
     g_level.drops.clear();
+    g_level.bullets.clear();
+    g_level.tracers.clear();
+    g_level.scannerContacts.clear();
+    g_level.riaPosition = {9.5f, 10.5f};
+    g_level.riaRoute.clear();
+    g_level.riaRouteIndex = 0;
+    UpdateNavigation();
     g_level.generated = true;
 }
 } // namespace levelone

@@ -83,7 +83,8 @@ const char *timerNames[] = {"frame_cpu",
                             "npc_update",
                             "npc_navigation",
                             "monitor_snapshot",
-                            "npc_cooperation"};
+                            "npc_cooperation",
+                            "mine_lighting"};
 static_assert(sizeof(counterNames) / sizeof(*counterNames) == kCounterCount);
 static_assert(sizeof(timerNames) / sizeof(*timerNames) == kTimerCount);
 struct Sample

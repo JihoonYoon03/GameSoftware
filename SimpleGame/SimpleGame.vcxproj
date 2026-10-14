@@ -166,8 +166,11 @@
     <ClInclude Include="ModelVariants.h" />
     <ClInclude Include="JetTravel.h" />
     <ClInclude Include="Monitoring\ModelCatalog.h" />
+    <ClInclude Include="MineQuest.h" />
+    <ClInclude Include="Weapons\Weapon.h" />
+    <ClInclude Include="Weapons\Firearm.h" />
+    <ClInclude Include="Weapons\Pistol.h" />
     <ClInclude Include="LevelOne.h" />
-    <ClInclude Include="LevelOneNpc.h" />
     <ClInclude Include="Monitoring\GameMonitor.h" />
     <ClInclude Include="Monitoring\LocalMonitorServer.h" />
     <ClInclude Include="Monitoring\WorldSnapshot.h" />
@@ -193,9 +196,12 @@
     <ClCompile Include="JetTravelRenderer.cpp" />
     <ClCompile Include="Scene\ObservatoryScene.cpp" />
     <ClCompile Include="Monitoring\ModelCatalog.cpp" />
+    <ClCompile Include="MineQuest.cpp" />
+    <ClCompile Include="MineLighting.cpp" />
+    <ClCompile Include="Weapons\Firearm.cpp" />
+    <ClCompile Include="Weapons\Pistol.cpp" />
+    <ClCompile Include="MineVisibility.cpp" />
     <ClCompile Include="LevelOne.cpp" />
-    <ClCompile Include="LevelOneNpc.cpp" />
-    <ClCompile Include="LevelOneNpcRenderer.cpp" />
     <ClCompile Include="Monitoring\GameMonitor.cpp" />
     <ClCompile Include="Monitoring\LocalMonitorServer.cpp" />
     <ClCompile Include="Monitoring\WorldSnapshot.cpp" />
@@ -246,7 +252,7 @@
     <ClCompile Include="Scene\Scene.cpp" />
     <ClCompile Include="Scene\WorldScene.cpp" />
     <ClCompile Include="Scene\TutorialScene.cpp" />
-    <ClCompile Include="Scene\HuntingScene.cpp" />
+    <ClCompile Include="Scene\MineScene.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Target Name="CopyGraphicsRuntimeLibraries" AfterTargets="Build">

@@ -22,6 +22,11 @@ void Reset()
 }
 void Begin()
 {
+    if (!levelone::g_level.quest.BeginJourney())
+    {
+        tutorial::ShowNotice("리아 / 도시 수신망에서 광산 중계 흔적부터 확인하자.");
+        return;
+    }
     Reset();
     g_travel.active = true;
     constexpr float lanes[kObstacleCount] = {0, -.65f, .6f, -.35f, .75f, -.75f, .15f};
@@ -36,7 +41,7 @@ void Begin()
     tutorial::g_state.movementAmount = 0;
     std::fill(tutorial::g_state.pressedKeys, tutorial::g_state.pressedKeys + 256, false);
     tutorial::ShowNotice("제트 바이크 / W·S로 위아래 조종, D 가속, A 감속, Space 부스트. 붉은 장애물을 "
-                         "피하며 격리 구역으로 이동하세요.");
+                         "피하며 광산으로 이동하세요.");
 }
 bool IsActive()
 {
@@ -108,8 +113,8 @@ void Update(float deltaSeconds)
         tutorial::g_state.isComplete = true;
         tutorial::g_state.mainQuestStage = tutorial::MainQuestStage::Complete;
         levelone::Enter();
-        tutorial::ShowNotice("격리 구역 / 제트 바이크를 입구에 주차했습니다. 수리팀과 경비팀이 외곽에서 작업 "
-                             "중입니다. Space 공격 / E 대화·획득 / Q 회복.");
+        tutorial::ShowNotice("광산 / 제트 바이크를 입구에 주차했습니다. 구조 요청이 갱도 곳곳에서 들립니다. "
+                             "마우스 사격 / R 재장전 / F 구조 스캔 / E 조사·구조.");
     }
 }
 } // namespace jettravel

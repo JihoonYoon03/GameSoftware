@@ -11,7 +11,7 @@ enum class WorldSceneKind
     Observatory,
     JetTravel,
     TravelBackground,
-    Hunting,
+    Mine,
     Background,
     Hud,
     Count

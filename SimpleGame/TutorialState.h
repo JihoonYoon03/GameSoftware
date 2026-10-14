@@ -49,7 +49,8 @@ enum class InteractionTarget
     Resident,
     ObservatorySignal,
     ObservatoryExit,
-    JetBike
+    JetBike,
+    CityReceiver
 };
 
 constexpr float kPi = 3.14159265f;
@@ -62,6 +63,7 @@ constexpr Vector2 kRelayPosition = {3, 1};
 constexpr Vector2 kBeaconPosition = {6, -3};
 constexpr Vector2 kObservatoryLiaPosition = {-1.5f, -1};
 constexpr Vector2 kJetBikePosition = {3, -2};
+constexpr Vector2 kCityReceiverPosition = {0, -2};
 constexpr Vector2 kObservatoryConsole = {2, -2};
 constexpr Vector2 kObservatoryStairs = {-2.8f, 2.8f};
 // Double both dimensions of the original 18 x 13 walkable bounds: 4x area.
@@ -78,6 +80,10 @@ struct TutorialState
     int lastUpdateMilliseconds = 0;
     MainQuestStage mainQuestStage = MainQuestStage::ReadHomeTerminal;
     bool pressedKeys[256] = {};
+    Vector2 cursorPosition = {900, 400};
+    Vector2 cursorWindowPosition = {900, 400};
+    bool cursorInsideViewport = true;
+    bool mouseFiring = false;
     bool isInsideHome = true;
     bool isInObservatory = false;
     bool isJetTravel = false;

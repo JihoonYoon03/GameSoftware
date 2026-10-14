@@ -152,8 +152,7 @@ void DrawHud()
 {
     using namespace tutorial;
     DrawRectangle(22, 20, 445, 108, ColorRGBA(.015f, .05f, .08f, .94f));
-    DrawLabel(40, 47, "제트 바이크 / 격리 구역 진입 회랑", ColorRGBA(.55f, .93f, .94f),
-              GLUT_BITMAP_HELVETICA_18);
+    DrawLabel(40, 47, "제트 바이크 / 광산 진입 회랑", ColorRGBA(.55f, .93f, .94f), GLUT_BITMAP_HELVETICA_18);
     char progress[128];
     std::snprintf(progress, sizeof(progress), "이동 %.0f%% / 속도 %.0f km/h / 잔해 회피 %d",
                   g_travel.distance / kRouteLength * 100, g_travel.speed * 3.6f, g_travel.avoidedObstacles);

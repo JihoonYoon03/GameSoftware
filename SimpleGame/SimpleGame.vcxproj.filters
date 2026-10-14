@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="ModelVariants.h"><Filter>헤더 파일</Filter></ClInclude>
@@ -24,15 +24,21 @@
     <ClCompile Include="Monitoring\GameMonitor.cpp"><Filter>Monitoring</Filter></ClCompile>
     <ClCompile Include="Monitoring\LocalMonitorServer.cpp"><Filter>Monitoring</Filter></ClCompile>
     <ClCompile Include="Monitoring\WorldSnapshot.cpp"><Filter>Monitoring</Filter></ClCompile>
-    <ClInclude Include="LevelOneNpc.h"><Filter>헤더 파일</Filter></ClInclude>
-    <ClCompile Include="LevelOneNpc.cpp"><Filter>소스 파일</Filter></ClCompile>
-    <ClCompile Include="LevelOneNpcRenderer.cpp"><Filter>소스 파일</Filter></ClCompile>
     <ClInclude Include="Profiler.h"><Filter>헤더 파일</Filter></ClInclude>
     <ClInclude Include="RenderQueue.h"><Filter>헤더 파일</Filter></ClInclude>
     <ClInclude Include="RenderCache.h"><Filter>헤더 파일</Filter></ClInclude>
     <ClCompile Include="Profiler.cpp"><Filter>소스 파일</Filter></ClCompile>
     <ClCompile Include="RenderQueue.cpp"><Filter>소스 파일</Filter></ClCompile>
     <ClCompile Include="RenderCache.cpp"><Filter>소스 파일</Filter></ClCompile>
+    <ClInclude Include="MineQuest.h"><Filter>헤더 파일</Filter></ClInclude>
+    <ClInclude Include="Weapons\Weapon.h"><Filter>헤더 파일</Filter></ClInclude>
+    <ClInclude Include="Weapons\Firearm.h"><Filter>헤더 파일</Filter></ClInclude>
+    <ClInclude Include="Weapons\Pistol.h"><Filter>헤더 파일</Filter></ClInclude>
+    <ClCompile Include="MineQuest.cpp"><Filter>소스 파일</Filter></ClCompile>
+    <ClCompile Include="MineVisibility.cpp"><Filter>소스 파일</Filter></ClCompile>
+    <ClCompile Include="MineLighting.cpp"><Filter>소스 파일</Filter></ClCompile>
+    <ClCompile Include="Weapons\Firearm.cpp"><Filter>소스 파일</Filter></ClCompile>
+    <ClCompile Include="Weapons\Pistol.cpp"><Filter>소스 파일</Filter></ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DrawCallCounter.h"><Filter>헤더 파일</Filter></ClInclude>
@@ -48,7 +54,7 @@
     <ClCompile Include="Scene\Scene.cpp"><Filter>Scene</Filter></ClCompile>
     <ClCompile Include="Scene\WorldScene.cpp"><Filter>Scene</Filter></ClCompile>
     <ClCompile Include="Scene\TutorialScene.cpp"><Filter>Scene</Filter></ClCompile>
-    <ClCompile Include="Scene\HuntingScene.cpp"><Filter>Scene</Filter></ClCompile>
+    <ClCompile Include="Scene\MineScene.cpp"><Filter>Scene</Filter></ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="소스 파일">

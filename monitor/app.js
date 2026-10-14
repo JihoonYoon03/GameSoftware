@@ -10,8 +10,8 @@ const events = [];
 const format = (value, digits = 0) => typeof value === "number" && Number.isFinite(value)
   ? value.toLocaleString("ko-KR", { maximumFractionDigits: digits }) : "—";
 const position = (value) => value ? format(value.x, 1) + ", " + format(value.y, 1) : "—";
-const teamName = (id) => Number.isInteger(id) && id >= 0 ? "팀 " + (id + 1) : "미배정";
-const stationFor = (npc) => snapshot?.workstations?.find((station) => station.id === npc.station_id);
+const groupName = (id) => Number.isInteger(id) && id >= 0 ? "구조 무리 " + (id + 1) : "동료·주민";
+const groupFor = (npc) => snapshot?.mine?.rescue_groups?.find((group) => group.id === npc.group_id);
 
 // Game strings stay text, including dialogue containing HTML-like characters.
 function node(tag, text, className) {
@@ -55,13 +55,8 @@ function trackChanges(data) {
       if (old && (old.activity !== npc.activity || old.following !== npc.following))
         addEvent(npc.name + " / " + npc.activity_label + (npc.following ? " · 동행 설정" : ""));
     }
-    const oldStations = new Map((previous.workstations ?? []).map((station) => [station.id, station]));
-    for (const station of data.workstations ?? []) {
-      const old = oldStations.get(station.id);
-      if (old && old.status !== station.status) addEvent(station.name + " / " + station.status_label);
-      if (old && old.completed_cycles !== station.completed_cycles)
-        addEvent(station.name + " / 정비 " + station.completed_cycles + "회 완료");
-    }
+    if (previous.quests.main_quest !== data.quests.main_quest)
+      addEvent("광산 조사 / " + data.quests.main_quest);
   }
   if (!previous || previous.session_id !== data.session_id || previous.sequence !== data.sequence)
     sequenceChangedAt = performance.now();
@@ -98,11 +93,7 @@ function renderRegions(data) {
       ["전력", region.loaded ? region.power : "—"],
       ["관문 신호", region.loaded ? region.gate_signal : "—"],
       ["전투", "생존 " + region.mob_alive + " / 재출현 대기 " + region.mob_respawning],
-      ["NPC 상황", "동행 설정 " + region.following_npcs + " / 위험 회피 " + region.retreating_npcs],
-      ["팀 활동", "수리 " + format(region.repairing_npcs) + " / 방어 " + format(region.defending_npcs)
-        + " / 보급 " + format(region.supplying_npcs)],
-      ["작업장", "가동 " + format(region.operational_workstations) + " / 전체 " + format(region.workstations)
-        + " / 위협 " + format(region.threatened_workstations)],
+      ["구조 성과", "발견 " + format(data.counts.rescued_people) + "명 / 화면 밖 철수 " + format(data.counts.returned_people) + "명"],
       ["구역 크기", region.map_size_label ?? region.map_width + " × " + region.map_height],
     ]));
     const rumors = node("ul", undefined, "rumors");
@@ -124,32 +115,15 @@ function renderRegions(data) {
     filter.value = selection;
   }
 }
-function renderWorkstations(data) {
-  const stations = data.workstations ?? [];
-  if (!stations.length) {
-    byId("workstations").replaceChildren(node("p", "격리 구역 진입 후 팀과 작업장이 생성됩니다.", "empty"));
-    return;
-  }
-  byId("workstations").replaceChildren(...stations.map((station) => {
-    const card = node("article", undefined, "panel station " + station.status);
-    const progress = node("progress");
-    progress.max = 100;
-    progress.value = Math.max(0, Math.min(100, station.repair_progress_percent));
-    progress.setAttribute("aria-label", station.name + " 수리 진행률");
-    const members = data.npcs.filter((npc) => npc.station_id === station.id);
-    card.append(node("h3", teamName(station.team_id) + " · " + station.name),
-      node("span", station.status_label, "badge" + (station.status === "operational" ? " live" : "")),
-      progress, facts([
-        ["수리", format(station.repair_progress_percent, 1) + "%"],
-        ["설비 내구", format(station.integrity, 1) + "%"],
-        ["보급 재고", format(station.supplies)],
-        ["정비 완료", format(station.completed_cycles) + "회"],
-        ["유지 대기", format(station.cycle_cooldown_seconds, 1) + "초"],
-        ["위치", position(station.position)],
-        ["AI 갱신", station.simulation_active ? "진행 중" : "중지 / 보관 상태"],
-      ]), node("p", members.map((npc) => npc.name + " · " + npc.activity_label).join(" / "), "team-members"));
+function renderRescueGroups(data) {
+  const groups = data.mine?.rescue_groups ?? [];
+  byId("rescue-groups").replaceChildren(...(groups.length ? groups.map((group) => {
+    const card = node("article", undefined, "panel station");
+    card.append(node("h3", groupName(group.id) + " · " + group.name),
+      node("span", group.rescued ? "구조 확인 · 귀환로 철수" : "구조 요청 중", "badge"),
+      facts([["인원", group.members + "명"], ["위치 · 개발 관측", position(group.position)]]));
     return card;
-  }));
+  }) : [node("p", "광산 진입 후 구조 요청 무리가 표시됩니다.", "empty")]));
 }
 function renderNpcs() {
   if (!snapshot) return;
@@ -159,8 +133,8 @@ function renderNpcs() {
   const regions = new Map(snapshot.regions.map((region) => [region.id, region.name]));
   const filtered = snapshot.npcs.filter((npc) => (!regionId || npc.region_id === regionId)
     && (!activity || npc.activity === activity)
-    && (npc.name + " " + npc.role + " " + (npc.personality ?? "") + " " + teamName(npc.team_id)
-      + " " + (stationFor(npc)?.name ?? "")).toLocaleLowerCase("ko-KR").includes(search));
+    && (npc.name + " " + npc.role + " " + (npc.personality ?? "") + " " + groupName(npc.group_id)
+      + " " + (groupFor(npc)?.name ?? "")).toLocaleLowerCase("ko-KR").includes(search));
   byId("npc-result-count").textContent = filtered.length + " / " + snapshot.npcs.length + "명";
   const rows = filtered.map((npc) => {
     const row = node("tr");
@@ -175,8 +149,8 @@ function renderNpcs() {
     const stateCell = node("td");
     stateCell.append(node("span", npc.activity_label, "activity " + npc.activity),
       node("small", npc.simulation_active ? (npc.following ? "동행 설정 · AI 갱신" : "AI 갱신") : "정적 배치 / 갱신 중지"));
-    const teamCell = node("td", teamName(npc.team_id));
-    teamCell.append(node("small", stationFor(npc)?.name ?? "작업장 미배정"));
+    const teamCell = node("td", groupName(npc.group_id));
+    teamCell.append(node("small", groupFor(npc)?.name ?? "구조 대상 외"));
     row.append(nameCell, node("td", regions.get(npc.region_id)), stateCell,
       teamCell, node("td", npc.personality ?? "미설정"), node("td", position(npc.position), "coords"),
       node("td", npc.route_remaining + "칸"));
@@ -204,27 +178,13 @@ function renderNpcDetail() {
     panel.replaceChildren(node("h3", "인물 상세"), node("p", "목록에서 이름을 선택하세요.", "muted"));
     return;
   }
-  const station = stationFor(npc);
-  panel.replaceChildren(node("h3", npc.name), node("p", npc.personality ?? "성격 정보 미설정", "muted"), facts([
-    ["역할", npc.role], ["패턴", npc.behavior_pattern],
-    ["생존", npc.life_state === "alive" ? "생존" : npc.life_state === "recovering" ? "안전 구역 회복" : npc.life_state],
-    ["체력", npc.health == null ? "미계측" : format(npc.health) + " / " + format(npc.max_health)],
-    ["팀", teamName(npc.team_id)], ["작업장", station?.name ?? "미배정"],
-    ["팀 수리", station ? format(station.repair_progress_percent, 1) + "% / " + station.status_label : "—"],
-    ["보급 운반", npc.carrying_supplies ? "운반 중" : "미보유"],
-    ["교전 대상", npc.target_enemy_id ?? "없음"], ["처치", format(npc.kills) + "기"],
-    ["공격 대기", format(npc.combat_cooldown_seconds, 2) + "초"],
-    ["행동 대상", position(npc.action_target)],
-    ["행동", npc.activity_label], ["동행 설정", npc.following ? "켜짐" : "꺼짐"],
+  panel.replaceChildren(node("h3", npc.name), facts([
+    ["역할", npc.role], ["행동", npc.activity_label], ["패턴", npc.behavior_pattern],
+    ["구조 무리", groupName(npc.group_id)], ["동행", npc.following ? "동행 중" : "해당 없음"],
+    ["현재 위치", position(npc.position)], ["목적지", position(npc.destination)],
+    ["남은 경로", format(npc.route_remaining) + "칸"],
     ["AI 갱신", npc.simulation_active ? "진행 중" : "중지 / 정적 배치"],
-    ["현재 위치", position(npc.position)], ["집결 위치", position(npc.home)],
-    ["목적지", position(npc.destination)], ["남은 경로", npc.route_remaining + "칸"],
-    ["다음 판단", format(npc.decision_cooldown_seconds, 2) + "초"],
-    ["대화 대기", format(npc.talk_seconds, 2) + "초"],
-    ["치료 대기", format(npc.service_cooldown_seconds, 2) + "초"],
-    ["배치 ID", npc.id],
-  ]), node("blockquote", npc.dialogue));
-  if (npc.warning) panel.append(node("p", "위험 대사 / " + npc.warning, "small muted"));
+  ]));
 }
 function renderEnvironment(data) {
   byId("world-status").replaceChildren(
@@ -238,7 +198,11 @@ function renderEnvironment(data) {
     metric("전망대", data.quests.in_observatory ? "관측실 내부" : data.quests.observatory_descended ? "관측 후 하층 복귀" : "진입 전 / 하층"),
     metric("관문 신호", data.quests.gate_signal_heard ? "관측 기록 확보" : "미조사"),
     metric("동쪽 전력", data.quests.mara_power_restored ? "복구 완료" : "복구 전"),
-    metric("성장 목표", data.quests.growth_goal_reached ? "완료" : "진행 전 / 진행 중"),
+    metric("광산 조사", data.quests.main_quest),
+    metric("권총", data.player.magazine_rounds + " / " + data.player.magazine_capacity + (data.player.reloading ? " · 재장전" : "")),
+    metric("탄퍼짐", format(data.player.spread_radians, 3) + " rad"),
+    metric("구조", format(data.mine?.rescued_people) + "명 / 화면 밖 철수 " + format(data.mine?.returned_people) + "명"),
+    metric("스캐너", format(data.mine?.scanner_seconds, 1) + "초 / 대기 " + format(data.mine?.scanner_cooldown, 1) + "초"),
   );
   const travel = data.jet_travel;
   if (travel) byId("world-status").append(
@@ -260,6 +224,7 @@ function renderEnvironment(data) {
     metric("GPU 평균", format(perf.gpu_elapsed_ms?.avg, 2) + " ms"),
     metric("NPC 갱신 평균", format(cpu.npc_update?.avg, 3) + " ms"),
     metric("NPC 길 찾기 평균", format(cpu.npc_navigation?.avg, 3) + " ms"),
+    metric("광산 조명 평균", format(cpu.mine_lighting?.avg, 3) + " ms"),
     metric("JSON 생성 평균", format(cpu.monitor_snapshot?.avg, 3) + " ms"),
     metric("NPC 경로 요청 / 방문 셀", format(perf.counters.npc_path_requests) + " / " + format(perf.counters.npc_path_visited_cells)),
     metric("메모리 · 작업 집합", format(perf.process_memory_bytes?.working_set / 1048576, 1) + " MiB"),
@@ -275,7 +240,7 @@ function renderEvents() {
 function render(data) {
   renderSummary(data);
   renderRegions(data);
-  renderWorkstations(data);
+  renderRescueGroups(data);
   renderNpcs();
   renderEnvironment(data);
   renderEvents();

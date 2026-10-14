@@ -100,10 +100,13 @@ InteractionTarget FindNearbyInteraction()
         Vector2 position;
         InteractionTarget target;
     };
-    const InteractionPoint points[] = {
-        {kHomeDoor, InteractionTarget::HomeEntrance},     {kLiaPosition, InteractionTarget::Lia},
-        {kMaraPosition, InteractionTarget::Mara},         {kRelayPosition, InteractionTarget::PowerRelay},
-        {kBeaconPosition, InteractionTarget::GateBeacon}, {kJetBikePosition, InteractionTarget::JetBike}};
+    const InteractionPoint points[] = {{kHomeDoor, InteractionTarget::HomeEntrance},
+                                       {kLiaPosition, InteractionTarget::Lia},
+                                       {kMaraPosition, InteractionTarget::Mara},
+                                       {kRelayPosition, InteractionTarget::PowerRelay},
+                                       {kBeaconPosition, InteractionTarget::GateBeacon},
+                                       {kJetBikePosition, InteractionTarget::JetBike},
+                                       {kCityReceiverPosition, InteractionTarget::CityReceiver}};
     InteractionTarget nearestTarget = InteractionTarget::None;
     float nearestDistance = 1.35f;
     for (const auto &point : points)
@@ -174,16 +177,45 @@ void InteractWithNearbyTarget()
         g_state.cameraPosition = {0, 0};
         ShowNotice("집 / 문이 닫히자 도시의 웅성거림이 멀어집니다.");
     }
+    if (target == InteractionTarget::CityReceiver)
+    {
+        if (g_state.gateSignalHeard &&
+            levelone::g_level.quest.Advance(levelone::MineQuestStage::CheckCityRelay))
+        {
+            ShowNotice("도시 수신망 / 관문 신호에 광산 통신선 주소가 겹칩니다. 실종 탐사선의 구조 요청도 "
+                       "같은 시각입니다. 리아와 바이크로 광산에 가세요.");
+        }
+        else
+        {
+            ShowNotice(levelone::g_level.quest.GetStage() < levelone::MineQuestStage::CheckCityRelay
+                           ? "수신망 / 전망대 신호 기록을 먼저 리아에게 보여 주세요."
+                           : "수신망 / 광산 통신선의 중계 흔적을 확인했습니다. 신호들의 동일 발신 여부는 "
+                             "미확인입니다.");
+        }
+        return;
+    }
     if (target == InteractionTarget::Lia)
     {
+        if (g_state.gateSignalHeard)
+        {
+            if (levelone::g_level.quest.Advance(levelone::MineQuestStage::ShowRecord))
+            {
+                ShowNotice("리아 / 장비가 거짓말할 수는 있어. 그래도 어디서부터 틀렸는지는 찾아봐야지. 광장 "
+                           "남쪽 도시 수신망에서 중계 흔적을 확인하자.");
+            }
+            else
+            {
+                ShowNotice(std::string("리아 / ") + levelone::g_level.quest.GetObjective());
+            }
+            return;
+        }
         if (g_state.mainQuestStage < MainQuestStage::MeetLia)
         {
             ShowNotice("리아 / 집 단말에 접근 코드를 보냈어. 먼저 확인해 줘.");
             return;
         }
         g_state.mainQuestStage = (std::max)(g_state.mainQuestStage, MainQuestStage::EnterObservatory);
-        ShowNotice("리아 / 북동쪽 전망대 입구에서 E로 올라가. 신호 측정 뒤 내려오면 네 제트 바이크로 격리 "
-                   "구역에 가자.");
+        ShowNotice("리아 / 북동쪽 전망대에서 신호를 측정하고 내려와. 기록을 확인한 뒤 어디로 갈지 정하자.");
     }
     if (target == InteractionTarget::Mara)
     {
@@ -239,7 +271,8 @@ void InteractWithNearbyTarget()
     {
         g_state.gateSignalHeard = true;
         g_state.mainQuestStage = (std::max)(g_state.mainQuestStage, MainQuestStage::DescendObservatory);
-        ShowNotice("알 수 없음 / …여긴 아직 빛이 있어… 리아 / 방금 네 목소리였어. 넌 아무 말도 안 했잖아.");
+        ShowNotice("알 수 없음 / …수신 확인… 이 목소리가 들리면… 리아 / 방금 네 목소리였어. 넌 아무 말도 안 "
+                   "했잖아.");
     }
     if (target == InteractionTarget::ObservatoryExit)
     {
@@ -254,13 +287,18 @@ void InteractWithNearbyTarget()
         g_state.cameraPosition = kBeaconPosition;
         std::fill(g_state.pressedKeys, g_state.pressedKeys + 256, false);
         g_state.mainQuestStage = (std::max)(g_state.mainQuestStage, MainQuestStage::MountJetBike);
-        ShowNotice("리아 / 아래 주차장에 네 제트 바이크가 있어. 바이크에서 E로 탑승해 격리 구역으로 가자.");
+        ShowNotice("리아 / 이상 신호 기록을 집 근처의 나에게 보여 줘. 도시 수신망에서 발신 경로를 대조하자.");
     }
     if (target == InteractionTarget::JetBike)
     {
         if (!g_state.gateSignalHeard || !g_state.hasDescendedObservatory)
         {
             ShowNotice("제트 바이크 / 먼저 리아와 대화하고 전망대에서 신호를 측정한 뒤 내려오세요.");
+            return;
+        }
+        if (!levelone::g_level.quest.BeginJourney())
+        {
+            ShowNotice("리아 / 먼저 나에게 신호 기록을 보여 주고 도시 수신망을 확인하자.");
             return;
         }
         jettravel::Begin();

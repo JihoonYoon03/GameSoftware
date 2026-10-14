@@ -75,6 +75,7 @@ enum class Timer
     NpcNavigation,
     MonitorSnapshot,
     NpcCooperation,
+    MineLighting,
     Count
 };
 class Scope

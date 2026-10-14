@@ -2,7 +2,6 @@
 #include "WorldSnapshot.h"
 #include "LocalMonitorServer.h"
 #include "../LevelOne.h"
-#include "../LevelOneNpc.h"
 #include "../JetTravel.h"
 #include "../Profiler.h"
 #include "../TutorialState.h"
@@ -87,92 +86,6 @@ void Append(std::string &array, const std::string &object)
 {
     array += (array.empty() ? "" : ",") + object;
 }
-const char *Role(levelone::NpcPattern pattern)
-{
-    switch (pattern)
-    {
-    case levelone::NpcPattern::Engineer:
-        return "정비·전력";
-    case levelone::NpcPattern::Guard:
-        return "경비·순찰";
-    case levelone::NpcPattern::Medic:
-        return "의료";
-    case levelone::NpcPattern::Courier:
-        return "운송·보급";
-    case levelone::NpcPattern::Researcher:
-        return "관측·기록";
-    case levelone::NpcPattern::Civilian:
-        return "주민";
-    case levelone::NpcPattern::Trader:
-        return "거래";
-    }
-    return "미분류";
-}
-const char *Pattern(levelone::NpcPattern pattern)
-{
-    switch (pattern)
-    {
-    case levelone::NpcPattern::Engineer:
-        return "담당 설비 수리·보급 소비";
-    case levelone::NpcPattern::Guard:
-        return "팀 작업장 경계·접근 몹 처치";
-    case levelone::NpcPattern::Medic:
-        return "부상 팀원 치료·플레이어 지원";
-    case levelone::NpcPattern::Courier:
-        return "집결지와 작업장 보급 왕복";
-    case levelone::NpcPattern::Researcher:
-        return "팀 작업장 조사·수리 지원";
-    case levelone::NpcPattern::Civilian:
-        return "주변 산책·위험 회피";
-    case levelone::NpcPattern::Trader:
-        return "고정 대기·부품 교환";
-    }
-    return "미분류";
-}
-const char *Activity(levelone::NpcActivity activity)
-{
-    switch (activity)
-    {
-    case levelone::NpcActivity::Working:
-        return "working";
-    case levelone::NpcActivity::Walking:
-        return "walking";
-    case levelone::NpcActivity::Following:
-        return "following";
-    case levelone::NpcActivity::Retreating:
-        return "retreating";
-    case levelone::NpcActivity::Talking:
-        return "talking";
-    case levelone::NpcActivity::Repairing:
-        return "repairing";
-    case levelone::NpcActivity::Defending:
-        return "defending";
-    case levelone::NpcActivity::Supplying:
-        return "supplying";
-    case levelone::NpcActivity::Healing:
-        return "healing";
-    case levelone::NpcActivity::Investigating:
-        return "investigating";
-    case levelone::NpcActivity::Recovering:
-        return "recovering";
-    }
-    return "unknown";
-}
-const char *StationStatus(levelone::WorkstationStatus status)
-{
-    switch (status)
-    {
-    case levelone::WorkstationStatus::AwaitingSupplies:
-        return "awaiting_supplies";
-    case levelone::WorkstationStatus::Repairing:
-        return "repairing";
-    case levelone::WorkstationStatus::Threatened:
-        return "threatened";
-    case levelone::WorkstationStatus::Operational:
-        return "operational";
-    }
-    return "unknown";
-}
 const char *QuestStage()
 {
     switch (tutorial::g_state.mainQuestStage)
@@ -246,30 +159,16 @@ std::string BuildWorldSnapshot(std::uint64_t sequence, const std::string &sessio
     const auto &world = tutorial::g_state;
     const auto &level = levelone::g_level;
     const auto &travel = jettravel::g_travel;
-    const auto &npcs = levelone::GetNpcs();
-    const auto &stations = levelone::GetWorkstations();
-    const size_t cityPopulation = world.residents.size() + 2; // Separate Lia and Mara actors.
-    size_t aliveMobs = 0, retreating = 0, followers = 0, repairing = 0, defending = 0, supplying = 0;
-    size_t operationalStations = 0, threatenedStations = 0;
+    const bool simulating = level.active && !world.isPaused;
+    const bool cityLia = !level.active && !world.isJetTravel;
+    const size_t cityPopulation = world.residents.size() + 1 + (cityLia ? 1 : 0);
+    const size_t minePopulation = level.survivors.size() + (level.active ? 1 : 0);
+    size_t aliveMobs = 0;
     for (const auto &enemy : level.enemies)
     {
         aliveMobs += enemy.health > 0 ? 1 : 0;
     }
-    for (const auto &npc : npcs)
-    {
-        retreating += npc.activity == levelone::NpcActivity::Retreating ? 1 : 0;
-        followers += npc.following ? 1 : 0;
-        repairing += npc.activity == levelone::NpcActivity::Repairing ? 1 : 0;
-        defending += npc.activity == levelone::NpcActivity::Defending ? 1 : 0;
-        supplying += npc.activity == levelone::NpcActivity::Supplying ? 1 : 0;
-    }
-    for (const auto &station : stations)
-    {
-        operationalStations += station.status == levelone::WorkstationStatus::Operational ? 1 : 0;
-        threatenedStations += station.status == levelone::WorkstationStatus::Threatened ? 1 : 0;
-    }
-    const bool quarantineSimulating = level.active && !world.isPaused;
-    JsonObject result, counts, player, quests, city, quarantine, corridor, journey, network;
+    JsonObject result, counts, player, quests, city, mine, corridor, journey, network, flags;
     result.Text("schema", "game_monitor_v1");
     result.Bool("ready", true);
     result.Text("session_id", sessionId);
@@ -279,29 +178,25 @@ std::string BuildWorldSnapshot(std::uint64_t sequence, const std::string &sessio
                                          .count());
     result.Number("publish_interval_ms", 500);
     result.Bool("paused", world.isPaused);
-    result.Text("current_region_id", level.active        ? "quarantine"
-                                     : world.isJetTravel ? "jet_corridor"
-                                                         : "halo_07");
-    result.Text("current_area", level.active            ? "격리 구역"
-                                : world.isJetTravel     ? "관문 외곽 제트 주행 회랑"
+    result.Text("current_region_id", level.active ? "mine" : world.isJetTravel ? "jet_corridor" : "halo_07");
+    result.Text("current_area", level.active            ? "광산 · 구조 신호 조사"
+                                : world.isJetTravel     ? "광산행 제트 주행 회랑"
                                 : world.isInObservatory ? "헤일로 전망대 관측실"
                                 : world.isInsideHome    ? "플레이어의 집"
                                                         : "헤일로 주거 구역 07");
     result.Seconds("play_time_seconds", world.playTimeSeconds);
-    counts.Number("npc_total", cityPopulation + npcs.size());
-    counts.Number("npc_current_region", level.active ? npcs.size() : world.isJetTravel ? 0 : cityPopulation);
-    counts.Number("npc_simulating", quarantineSimulating ? npcs.size() : 0);
+    counts.Number("npc_total", cityPopulation + minePopulation);
+    counts.Number("npc_current_region", level.active        ? minePopulation
+                                        : world.isJetTravel ? 0
+                                                            : cityPopulation);
+    counts.Number("npc_simulating", simulating ? minePopulation : 0);
     counts.Number("mob_total", level.enemies.size());
     counts.Number("mob_alive", aliveMobs);
     counts.Number("mob_respawning", level.enemies.size() - aliveMobs);
     counts.Number("mob_current_region_alive", level.active ? aliveMobs : 0);
     counts.Number("drops", level.drops.size());
-    counts.Number("repairing_npcs", repairing);
-    counts.Number("defending_npcs", defending);
-    counts.Number("supplying_npcs", supplying);
-    counts.Number("workstations", stations.size());
-    counts.Number("operational_workstations", operationalStations);
-    counts.Number("threatened_workstations", threatenedStations);
+    counts.Number("rescued_people", level.rescuedPeople);
+    counts.Number("returned_people", level.returnedPeople);
     result.Raw("counts", counts.Finish());
     player.Raw("position", Position(world.playerPosition));
     player.Number("level", level.player.level);
@@ -313,8 +208,13 @@ std::string BuildWorldSnapshot(std::uint64_t sequence, const std::string &sessio
     player.Number("recovery_kits", level.player.recoveryKits);
     player.Number("salvage", level.player.salvage);
     player.Number("kills", level.kills);
+    player.Number("magazine_rounds", level.pistol.GetRounds());
+    player.Number("magazine_capacity", level.pistol.GetMagazineSize());
+    player.Bool("reloading", level.pistol.IsReloading());
+    player.Seconds("spread_radians", level.pistol.GetSpread());
     result.Raw("player", player.Finish());
     quests.Text("tutorial_stage", QuestStage());
+    quests.Text("main_quest", level.quest.GetObjective());
     quests.Bool("gate_signal_heard", world.gateSignalHeard);
     quests.Bool("in_observatory", world.isInObservatory);
     quests.Bool("observatory_descended", world.hasDescendedObservatory);
@@ -322,8 +222,17 @@ std::string BuildWorldSnapshot(std::uint64_t sequence, const std::string &sessio
     quests.Bool("mara_power_restored", world.isPowerRestored);
     quests.Bool("side_quest_accepted", world.isSideQuestAccepted);
     quests.Bool("side_quest_complete", world.isSideQuestComplete);
-    quests.Bool("growth_goal_reached", level.growthGoalReached);
     result.Raw("quests", quests.Finish());
+    auto stage = level.quest.GetStage();
+    flags.Bool("main.signal_record_shown", stage >= levelone::MineQuestStage::CheckCityRelay);
+    flags.Bool("main.mine_trace_confirmed", stage >= levelone::MineQuestStage::TravelToMine);
+    flags.Bool("companion.ria_joined", level.quest.IsRiaJoined());
+    flags.Bool("main.mine_power_bypassed", level.quest.IsPowerBypassed());
+    flags.Bool("main.mine_signal_investigated", stage >= levelone::MineQuestStage::InvestigateGlyph);
+    flags.Bool("main.observer_glyph_investigated", stage >= levelone::MineQuestStage::CollectCoordinates);
+    flags.Bool("main.mine_relay_coordinate_found", level.quest.AreCoordinatesFound());
+    flags.Bool("main.mine_returned_to_halo", stage == levelone::MineQuestStage::Complete);
+    result.Raw("flags", flags.Finish());
     journey.Bool("active", world.isJetTravel);
     journey.Seconds("elapsed_seconds", travel.elapsedSeconds);
     journey.Seconds("distance", travel.distance);
@@ -339,206 +248,133 @@ std::string BuildWorldSnapshot(std::uint64_t sequence, const std::string &sessio
     journey.Number("collision_count", travel.collisionCount);
     result.Raw("jet_travel", journey.Finish());
 
-    city.Text("id", "halo_07");
-    city.Text("name", "헤일로 주거 구역 07");
-    city.Text("kind", "마을");
-    city.Bool("loaded", true);
-    city.Bool("current", !level.active && !world.isJetTravel);
-    city.Bool("simulation_active", false); // Current city NPCs have no AI updates.
-    city.Number("population", cityPopulation);
-    city.Text("population_source", "placed_npcs");
-    city.Text("mood", world.gateSignalHeard   ? "신호 확인 이후의 불안"
-                      : world.isPowerRestored ? "복구된 불빛과 조심스러운 안도"
-                                              : "정전 속 경이와 불안");
-    city.Text("mood_source", "derived_from_quest_flags");
-    city.Text("disposition", "개척 생활 · 이웃 협력 · 관문 경계");
-    city.Text("disposition_source", "authored_context");
+    auto fillRegion = [](JsonObject &region, const char *id, const char *name, bool loaded, bool current,
+                         bool simulation, size_t population, size_t mobs, size_t respawning) {
+        region.Text("id", id);
+        region.Text("name", name);
+        region.Bool("loaded", loaded);
+        region.Bool("current", current);
+        region.Bool("simulation_active", simulation);
+        region.Number("population", population);
+        region.Text("population_source", "placed_npcs");
+        region.Text("disposition", "구조 우선 · 신호와 기록의 출처 확인");
+        region.Number("mob_alive", mobs);
+        region.Number("mob_respawning", respawning);
+        region.Raw("rumors", "[]");
+    };
+    fillRegion(city, "halo_07", "헤일로 주거 구역 07", true, cityLia, false, cityPopulation, 0, 0);
+    city.Text("mood",
+              level.quest.AreCoordinatesFound() ? "광산 중계 좌표 확보" : "관문 신호의 발신 경로 조사");
     city.Text("power", world.isPowerRestored ? "동쪽 전력 복구" : "동쪽 전력 장애");
-    city.Text("gate_signal", world.gateSignalHeard ? "자기 목소리 신호 확인 / 원인 미확인" : "미조사");
-    city.Number("buildings", world.buildings.size());
-    city.Number("mob_alive", 0);
-    city.Number("mob_respawning", 0);
-    city.Number("following_npcs", 0);
-    city.Number("retreating_npcs", 0);
-    city.Number("repairing_npcs", 0);
-    city.Number("defending_npcs", 0);
-    city.Number("supplying_npcs", 0);
-    city.Number("workstations", 0);
-    city.Number("operational_workstations", 0);
-    city.Number("threatened_workstations", 0);
-    city.Number("map_width", 36);
-    city.Number("map_height", 26);
-    city.Raw("rumors", "[" + Rumor("관문 쪽 배송이 이유 없이 취소되었다.", "주민 대사") + "," +
-                           Rumor("발신 기록이 없는 응답이 수신된다.", "주민 대사") + "]");
-
-    quarantine.Text("id", "quarantine");
-    quarantine.Text("name", "관문 외곽 격리 구역 · 집결지");
-    quarantine.Text("kind", "시험 거점");
-    quarantine.Bool("loaded", level.generated);
-    quarantine.Bool("current", level.active);
-    quarantine.Bool("simulation_active", quarantineSimulating);
-    quarantine.Number("population", npcs.size());
-    quarantine.Text("population_source", "placed_npcs");
-    quarantine.Text("mood", !level.generated          ? "아직 진입하지 않음"
-                            : threatenedStations > 0  ? "작업장 위협 · 팀 방어 진행"
-                            : retreating > 0          ? "위험 감지 · 부상자와 귀환로 보호"
-                            : operationalStations > 0 ? "설비 가동 · 공동 정비 유지"
-                                                      : "경계 속 공동 작업");
-    quarantine.Text("mood_source", "derived_from_npc_activity");
-    quarantine.Text("disposition", "안전 우선 · 기록 보존 · 상호 지원");
-    quarantine.Text("disposition_source", "authored_context");
-    quarantine.Text("power", "작업장 " + std::to_string(operationalStations) + "/" +
-                                 std::to_string(stations.size()) + " 가동 · 중앙 집결지 운영");
-    quarantine.Text("gate_signal", "반복 응답 · 원인 미확인");
-    quarantine.Raw("buildings", "null");
-    quarantine.Number("mob_alive", aliveMobs);
-    quarantine.Number("mob_respawning", level.enemies.size() - aliveMobs);
-    quarantine.Number("following_npcs", followers);
-    quarantine.Number("retreating_npcs", retreating);
-    quarantine.Number("repairing_npcs", repairing);
-    quarantine.Number("defending_npcs", defending);
-    quarantine.Number("supplying_npcs", supplying);
-    quarantine.Number("workstations", stations.size());
-    quarantine.Number("operational_workstations", operationalStations);
-    quarantine.Number("threatened_workstations", threatenedStations);
-    quarantine.Number("map_width", levelone::kMapSize);
-    quarantine.Number("map_height", levelone::kMapSize);
-    quarantine.Number("map_seed", level.seed);
-    quarantine.Raw("rumors", "[" +
-                                 Rumor("현장 인원은 다섯인데 무전에는 여섯이 응답했다.", "도윤의 설정 대사") +
-                                 "," + Rumor("질문을 보내기 전에 답이 왔다.", "시온의 설정 대사") + "]");
-    corridor.Text("id", "jet_corridor");
-    corridor.Text("name", "관문 외곽 제트 주행 회랑");
-    corridor.Text("kind", "이동 구간");
-    corridor.Bool("loaded", world.isJetTravel || world.isComplete);
-    corridor.Bool("current", world.isJetTravel);
-    corridor.Bool("simulation_active", world.isJetTravel && !world.isPaused);
-    corridor.Number("population", 0);
-    corridor.Text("population_source", "placed_npcs");
-    corridor.Text("mood", world.isJetTravel ? "빠른 주행 · 격리 구역으로 접근" : "주행 대기 / 이동 기록");
-    corridor.Text("mood_source", "derived_from_travel_state");
-    corridor.Text("disposition", "주거 구역과 격리 구역을 연결하는 이동로");
-    corridor.Text("disposition_source", "authored_context");
+    city.Text("gate_signal", world.gateSignalHeard ? "기록 확보 / 원인 미확인" : "미조사");
+    city.Text("map_size_label", "도시 주거 구역");
+    fillRegion(mine, "mine", "광산 · 폐쇄 갱도와 지하 유적", level.generated, level.active, simulating,
+               minePopulation, aliveMobs, level.enemies.size() - aliveMobs);
+    mine.Text("mood", level.quest.GetObjective());
+    mine.Text("power", level.quest.IsPowerBypassed() ? "전력 우회 · 격벽 개방" : "단전 · 격벽 폐쇄");
+    mine.Text("gate_signal", level.quest.AreCoordinatesFound() ? "중계 좌표 확보 / 헤일로 귀환"
+                                                               : "광부·전투원 구조 요청 및 실종 탐사선 신호");
+    mine.Number("map_width", levelone::kMapSize);
+    mine.Number("map_height", levelone::kMapSize);
+    mine.Number("map_seed", level.seed);
+    fillRegion(corridor, "jet_corridor", "광산행 제트 주행 회랑", world.isJetTravel || world.isComplete,
+               world.isJetTravel, world.isJetTravel && !world.isPaused, 0, 0, 0);
+    corridor.Text("mood", "리아와 광산으로 이동");
     corridor.Text("power", "개인용 제트 추진기");
-    corridor.Text("gate_signal", world.gateSignalHeard ? "관측 기록 보유" : "미조사");
-    corridor.Number("buildings", 0);
-    corridor.Number("mob_alive", 0);
-    corridor.Number("mob_respawning", 0);
-    corridor.Number("following_npcs", 0);
-    corridor.Number("retreating_npcs", 0);
-    corridor.Number("repairing_npcs", 0);
-    corridor.Number("defending_npcs", 0);
-    corridor.Number("supplying_npcs", 0);
-    corridor.Number("workstations", 0);
-    corridor.Number("operational_workstations", 0);
-    corridor.Number("threatened_workstations", 0);
-    corridor.Number("map_width", jettravel::kRouteLength);
-    corridor.Raw("map_height", "null");
-    corridor.Text("map_size_label", "주행 거리 " + std::to_string(int(jettravel::kRouteLength)));
-    corridor.Raw("rumors", "[]");
-    result.Raw("regions", "[" + city.Finish() + "," + quarantine.Finish() + "," + corridor.Finish() + "]");
+    corridor.Text("gate_signal", "광산 통신선의 중계 흔적 확인");
+    corridor.Text("map_size_label", "주행 거리 1800");
+    result.Raw("regions", "[" + city.Finish() + "," + mine.Finish() + "," + corridor.Finish() + "]");
 
     std::string npcArray;
-    Append(npcArray,
-           StaticNpc("halo/lia", "리아",
-                     world.isInObservatory ? tutorial::kObservatoryLiaPosition : tutorial::kLiaPosition,
-                     "정비사", "전망대에서 관문 신호를 측정해 줘."));
-    Append(npcArray,
-           StaticNpc("halo/mara", "마라", tutorial::kMaraPosition, "주민",
-                     world.isPowerRestored ? "집에 불빛이 돌아왔어요." : "동쪽 전력 장치를 확인해 주세요."));
+    if (cityLia)
+    {
+        Append(npcArray,
+               StaticNpc("halo/ria", "리아",
+                         world.isInObservatory ? tutorial::kObservatoryLiaPosition : tutorial::kLiaPosition,
+                         "정비사", level.quest.GetObjective()));
+    }
+    Append(npcArray, StaticNpc("halo/mara", "마라", tutorial::kMaraPosition, "주민",
+                               world.isPowerRestored ? "불빛이 돌아왔어요." : "전력 장치를 확인해 주세요."));
     for (size_t i = 0; i < world.residents.size(); ++i)
     {
         const auto &resident = world.residents[i];
         Append(npcArray, StaticNpc("halo/resident/" + std::to_string(i), resident.name, resident.position,
                                    "주민", resident.dialogue));
     }
-    for (size_t i = 0; i < npcs.size(); ++i)
-    {
-        const auto &npc = npcs[i];
-        const auto &profile = levelone::GetNpcProfile(i);
+    auto mineNpc = [&](const std::string &id, const char *name, const char *role, tutorial::Vector2 position,
+                       const char *activity, const char *label, size_t remaining, bool following, int group) {
         JsonObject item;
-        item.Text("id", "quarantine/npc/" + std::to_string(i));
-        item.Text("region_id", "quarantine");
-        item.Text("name", profile.name);
-        item.Text("role", Role(profile.pattern));
-        item.Text("personality", profile.personality);
-        item.Text("behavior_pattern", Pattern(profile.pattern));
-        item.Text("activity", Activity(npc.activity));
-        item.Text("activity_label", levelone::GetNpcActivityName(npc.activity));
-        item.Bool("simulation_active", quarantineSimulating);
-        item.Bool("following", npc.following);
-        item.Text("life_state", npc.activity == levelone::NpcActivity::Recovering ? "recovering" : "alive");
-        item.Number("health", (std::max)(0, npc.health));
-        item.Number("max_health", npc.maxHealth);
-        if (npc.teamId >= 0)
-        {
-            item.Number("team_id", npc.teamId);
-        }
-        else
-        {
-            item.Raw("team_id", "null");
-        }
-        if (npc.stationId >= 0)
-        {
-            item.Number("station_id", npc.stationId);
-        }
-        else
-        {
-            item.Raw("station_id", "null");
-        }
-        if (npc.targetEnemy >= 0)
-        {
-            item.Text("target_enemy_id", "quarantine/mob/" + std::to_string(npc.targetEnemy));
-        }
-        else
-        {
-            item.Raw("target_enemy_id", "null");
-        }
-        item.Seconds("combat_cooldown_seconds", npc.combatCooldown);
-        item.Number("kills", npc.kills);
-        item.Bool("carrying_supplies", npc.carryingSupplies);
-        item.Raw("action_target", npc.actionFlash > 0 ? Position(npc.actionTarget) : "null");
-        item.Raw("position", Position(npc.position));
-        item.Raw("home", Position(npc.home));
-        item.Raw("destination", Position(npc.destination));
-        item.Number("route_remaining", npc.route.size() - (std::min)(npc.routeIndex, npc.route.size()));
-        item.Seconds("decision_cooldown_seconds", npc.decisionCooldown);
-        item.Seconds("talk_seconds", npc.talkSeconds);
-        item.Seconds("service_cooldown_seconds", npc.serviceCooldown);
-        item.Number("routine_step", npc.routineStep);
-        item.Text("dialogue", profile.dialogue);
-        item.Text("warning", profile.warning);
-        item.Text("source", "quarantine_test_actor");
+        item.Text("id", id);
+        item.Text("region_id", "mine");
+        item.Text("name", name);
+        item.Text("role", role);
+        item.Text("personality", following ? "실증적 · 기록 우선" : "구조 요청 중");
+        item.Text("behavior_pattern", following ? "벽을 우회하며 플레이어 동행" : "구조 확인 후 귀환로 보행");
+        item.Text("activity", activity);
+        item.Text("activity_label", label);
+        item.Bool("simulation_active", simulating);
+        item.Bool("following", following);
+        item.Text("life_state", "alive");
+        item.Raw("health", "null");
+        item.Raw("max_health", "null");
+        item.Raw("team_id", "null");
+        item.Raw("station_id", "null");
+        item.Raw("target_enemy_id", "null");
+        item.Number("kills", 0);
+        item.Bool("carrying_supplies", false);
+        item.Raw("position", Position(position));
+        item.Raw("home", Position(level.entry));
+        item.Raw("destination", Position(following ? world.playerPosition : level.entry));
+        item.Number("route_remaining", remaining);
+        item.Number("group_id", group);
+        item.Text("source", "mine_story_actor");
         Append(npcArray, item.Finish());
+    };
+    if (level.active)
+    {
+        mineNpc("mine/ria", "리아", "동료 · 정비사", level.riaPosition, "following", "동행",
+                level.riaRoute.size() - (std::min)(level.riaRoute.size(), level.riaRouteIndex), true, -1);
+    }
+    for (const auto &npc : level.survivors)
+    {
+        bool guard = level.rescueGroups[npc.group].combatants;
+        mineNpc("mine/survivor/" + std::to_string(npc.id), guard ? "고립 전투원" : "광부",
+                guard ? "전투원" : "광부", npc.position, npc.evacuating ? "evacuating" : "distress",
+                npc.evacuating ? "헤일로로 철수" : "구조 요청",
+                npc.route.size() - (std::min)(npc.route.size(), npc.routeIndex), false, int(npc.group));
     }
     result.Raw("npcs", "[" + npcArray + "]");
-    std::string stationArray;
-    for (const auto &station : stations)
+    result.Raw("workstations", "[]");
+    std::string groups;
+    for (size_t i = 0; i < level.rescueGroups.size(); ++i)
     {
+        const auto &group = level.rescueGroups[i];
         JsonObject item;
-        item.Number("id", station.id);
-        item.Number("team_id", station.teamId);
-        item.Text("region_id", "quarantine");
-        item.Text("name", station.name);
-        item.Raw("position", Position(station.position));
-        item.Seconds("integrity", station.integrity);
-        item.Seconds("repair_progress_percent", station.repairProgress);
-        item.Number("supplies", station.supplies);
-        item.Number("completed_cycles", station.completedCycles);
-        item.Seconds("cycle_cooldown_seconds", station.cycleCooldown);
-        item.Text("status", StationStatus(station.status));
-        item.Text("status_label", levelone::GetWorkstationStatusName(station.status));
-        item.Bool("simulation_active", quarantineSimulating);
-        Append(stationArray, item.Finish());
+        item.Number("id", i);
+        item.Text("name", group.combatants ? "고립 전투원 무리" : "광부 구조 요청");
+        item.Bool("rescued", group.rescued);
+        item.Raw("position", Position(group.position));
+        item.Number("members", 3);
+        Append(groups, item.Finish());
     }
-    result.Raw("workstations", "[" + stationArray + "]");
+    JsonObject investigation;
+    investigation.Text("quest", level.quest.GetObjective());
+    investigation.Bool("ria_joined", level.quest.IsRiaJoined());
+    investigation.Number("rescued_people", level.rescuedPeople);
+    investigation.Number("returned_people", level.returnedPeople);
+    investigation.Seconds("scanner_seconds", level.scannerSeconds);
+    investigation.Seconds("scanner_cooldown", level.scannerCooldown);
+    investigation.Number("active_bullets", level.bullets.size());
+    investigation.Seconds("flashlight_angle", levelone::GetAimAngle());
+    investigation.Raw("rescue_groups", "[" + groups + "]");
+    result.Raw("mine", investigation.Finish());
     std::string mobArray;
     for (size_t i = 0; i < level.enemies.size(); ++i)
     {
         const auto &enemy = level.enemies[i];
         JsonObject item;
-        item.Text("id", "quarantine/mob/" + std::to_string(i));
-        item.Text("region_id", "quarantine");
+        item.Text("id", "mine/mob/" + std::to_string(i));
+        item.Text("region_id", "mine");
         item.Number("health", (std::max)(0, enemy.health));
         item.Number("max_health", levelone::kEnemyMaxHealth);
         item.Bool("alive", enemy.health > 0);

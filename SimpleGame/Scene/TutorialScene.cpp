@@ -315,6 +315,13 @@ void DrawDepthSortedObjects(game::Scene &scene)
 
 void DrawUtilityDevices(game::Scene &scene)
 {
+    PlaceWorldActor(scene, "city-receiver", kCityReceiverPosition.x, kCityReceiverPosition.y,
+                    WorldBounds(kCityReceiverPosition.x, kCityReceiverPosition.y, .5f, .5f, 60), 4, 0, []() {
+                        DrawBox(kCityReceiverPosition.x, kCityReceiverPosition.y, .5f, .5f, 36,
+                                ColorRGBA(.2f, .36f, .4f));
+                        DrawGlow(WorldToScreen(kCityReceiverPosition.x, kCityReceiverPosition.y, 40), 16,
+                                 ColorRGBA(.35f, .9f, 1));
+                    });
     PlaceWorldActor(
         scene, "relay", kRelayPosition.x, kRelayPosition.y,
         WorldBounds(kRelayPosition.x, kRelayPosition.y, .35f, .35f, 50), 4, 0, []() {
@@ -356,6 +363,10 @@ void DrawQuestMarkers(game::Scene &scene)
                         [position, label, color]() { DrawInteractionMarker(position, label, color); });
     };
     marker("home", kHomeDoor, "집", ColorRGBA(.6f, .78f, .81f));
+    if (g_state.gateSignalHeard)
+    {
+        marker("city-receiver", kCityReceiverPosition, "도시 수신망 [E]", ColorRGBA(.4f, .9f, 1));
+    }
     marker("lia", kLiaPosition, "리아", ColorRGBA(1, .69f, .38f));
     marker("mara", kMaraPosition, g_state.isSideQuestComplete ? "마라 / 고마워요" : "마라 / 서브퀘스트",
            ColorRGBA(1, .77f, .4f));

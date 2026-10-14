@@ -58,7 +58,7 @@ void Draw()
     {
         return;
     }
-    profiling::BeginFrame(levelone::IsActive()      ? "hunting"
+    profiling::BeginFrame(levelone::IsActive()      ? "mine"
                           : g_state.isJetTravel     ? "jet_travel"
                           : g_state.isInObservatory ? "observatory"
                                                     : (g_state.isInsideHome ? "interior" : "exterior"));
@@ -75,7 +75,11 @@ void Draw()
     {
         profiling::Scope timer(profiling::Timer::Background);
         profiling::GpuScope gpuTimer(profiling::Timer::Background);
-        if (jettravel::IsActive())
+        if (levelone::IsActive())
+        {
+            DrawRectangle(0, 0, float(kCanvasWidth), float(kCanvasHeight), ColorRGBA(0, 0, 0));
+        }
+        else if (jettravel::IsActive())
         {
             jettravel::DrawBackground();
         }
@@ -114,6 +118,10 @@ void Draw()
     {
         profiling::Scope timer(profiling::Timer::Hud);
         profiling::GpuScope gpuTimer(profiling::Timer::Hud);
+        if (levelone::IsActive())
+        {
+            levelone::DrawDarkness();
+        }
         DrawScreenLayer(WorldSceneKind::Hud, "hud", DrawHud);
         renderqueue::Flush();
     }

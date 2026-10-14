@@ -29,7 +29,7 @@ void ResetWorldScenes()
 void UpdateWorldScene(float deltaSeconds)
 {
     profiling::Scope profileTimer(profiling::Timer::SceneUpdate);
-    WorldSceneKind kind = levelone::IsActive()  ? WorldSceneKind::Hunting
+    WorldSceneKind kind = levelone::IsActive()  ? WorldSceneKind::Mine
                           : g_state.isJetTravel ? WorldSceneKind::JetTravel
                           : g_state.isInObservatory
                               ? WorldSceneKind::Observatory

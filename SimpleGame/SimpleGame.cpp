@@ -34,6 +34,10 @@ int main(int argc, char **argv)
     glutReshapeFunc(tutorial::Resize);
     glutKeyboardFunc(tutorial::KeyDown);
     glutKeyboardUpFunc(tutorial::KeyUp);
+    glutPassiveMotionFunc(tutorial::MouseMotion);
+    glutMotionFunc(tutorial::MouseMotion);
+    glutMouseFunc(tutorial::MouseButton);
+    glutEntryFunc(tutorial::MouseEntry);
     glutTimerFunc(16, tutorial::Tick, 0);
     glutMainLoop();
     monitoring::Shutdown();

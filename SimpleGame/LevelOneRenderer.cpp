@@ -1,10 +1,8 @@
 #include "stdafx.h"
 #include "LevelOne.h"
-#include "LevelOneNpc.h"
-#include "RenderCache.h"
 #include "TutorialDrawing.h"
-#include "TutorialGraphics.h"
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
 
 namespace levelone
@@ -12,77 +10,81 @@ namespace levelone
 using namespace tutorial;
 namespace
 {
-void DrawMapOverview()
+void DrawScanner()
 {
-    constexpr float left = kCanvasWidth - 210.f, top = 35, cellSize = kMinimapSize / kMapSize;
-    DrawRectangle(left - 12, top - 18, 186, 205, ColorRGBA(.025f, .055f, .075f, .95f));
-    DrawLabel(left, top, "연결된 격리 구역", ColorRGBA(.6f, .9f, .9f));
-    rendercache::DrawMinimapTerrain(left, top + 12);
-    for (const auto &npc : GetNpcs())
+    constexpr float centerX = 1136, centerY = 139, radius = 90;
+    if (g_level.scannerSeconds <= 0)
     {
-        DrawEllipse(left + npc.position.x * cellSize, top + 12 + npc.position.y * cellSize, 2, 2,
-                    ColorRGBA(.95f, .85f, .25f));
+        char message[100];
+        std::snprintf(message, sizeof(message),
+                      g_level.scannerCooldown > 0 ? "F 스캐너 충전 %.1f초" : "F 구조 신호 스캔",
+                      g_level.scannerCooldown);
+        DrawLabel(1040, 42, message, {.45f, .8f, .8f});
+        return;
     }
-    for (const auto &station : GetWorkstations())
+    DrawRectangle(1014, 22, 244, 266, {.015f, .055f, .065f, .96f});
+    DrawLabel(1032, 46, "구조 신호 / 대략적 방위");
+    DrawEllipse(centerX, centerY, radius, radius, {.035f, .12f, .14f});
+    float progress = 1 - g_level.scannerSeconds / 2.8f;
+    float sweep = (std::min)(1.f, progress * 1.6f);
+    constexpr int segments = 48;
+    for (int i = 0; i < segments; ++i)
     {
-        DrawRectangle(left + station.position.x * cellSize - 3, top + 12 + station.position.y * cellSize - 3,
-                      6, 6,
-                      station.status == WorkstationStatus::Threatened ? ColorRGBA(1, .6f, .15f)
-                                                                      : ColorRGBA(.3f, 1, .8f));
+        float a = i * kPi * 2 / segments, b = (i + 1) * kPi * 2 / segments;
+        DrawLine({centerX + std::cos(a) * radius * sweep, centerY + std::sin(a) * radius * sweep},
+                 {centerX + std::cos(b) * radius * sweep, centerY + std::sin(b) * radius * sweep},
+                 {.3f, 1, .8f, 1 - progress}, 2);
     }
-    for (const auto &enemy : g_level.enemies)
+    for (const auto &contact : g_level.scannerContacts)
     {
-        if (enemy.health > 0)
+        if (g_level.rescueGroups[contact.group].rescued || contact.distance / 42 > sweep)
         {
-            DrawEllipse(left + enemy.position.x * cellSize, top + 12 + enemy.position.y * cellSize, 2, 2,
-                        ColorRGBA(1, .3f, .2f));
+            continue;
         }
+        float r = contact.distance / 42 * radius;
+        float x = centerX + std::cos(contact.angle) * r, y = centerY + std::sin(contact.angle) * r;
+        DrawGlow({x, y}, 15, {.45f, 1, .7f, 1 - progress});
+        DrawEllipse(x, y, 5, 5, {.5f, 1, .7f, 1 - progress});
     }
-    DrawEllipse(left + g_level.entry.x * cellSize, top + 12 + g_level.entry.y * cellSize, 4, 4,
-                ColorRGBA(.8f, .65f, 1));
-    DrawEllipse(left + g_state.playerPosition.x * cellSize, top + 12 + g_state.playerPosition.y * cellSize, 3,
-                3, ColorRGBA(.3f, 1, .85f));
-    DrawLabel(left, top + 185, "적: 빨강 / 팀: 노랑 / 설비: 청록");
+    DrawEllipse(centerX, centerY, 3, 3, {.7f, 1, .9f});
+    DrawLabel(1032, 254, "범위 42 / 표시 오차 있음");
+    DrawLabel(1032, 277, "스캔 시 위치 기준 · 곧 소멸");
 }
 } // namespace
-
 void DrawHud()
 {
     const auto &stats = g_level.player;
-    DrawRectangle(22, 20, 390, 255, ColorRGBA(.02f, .05f, .08f, .95f));
-    DrawLabel(40, 46, "레벨 1 / 관문 외곽 격리 구역", ColorRGBA(.65f, .93f, .9f), GLUT_BITMAP_HELVETICA_18);
-    char text[200];
-    std::snprintf(text, sizeof(text), "캐릭터 레벨 %d   체력 %d / %d", stats.level, stats.health,
-                  stats.maxHealth);
-    DrawLabel(40, 74, text);
-    DrawRectangle(40, 85, 350, 8, ColorRGBA(.2f, .08f, .09f));
-    DrawRectangle(40, 85, 350 * stats.health / float(stats.maxHealth), 8, ColorRGBA(.8f, .25f, .25f));
-    int floor = ExperienceForLevel(stats.level),
-        ceiling = ExperienceForLevel((std::min)(100, stats.level + 1));
-    float progress = stats.level == 100 ? 1.f : float(stats.experience - floor) / (ceiling - floor);
-    std::snprintf(text, sizeof(text), "누적 경험치 %d / %d   공격력 %d   방어력 %d", stats.experience,
-                  ceiling, stats.attack, stats.defense);
-    DrawLabel(40, 115, text);
-    DrawRectangle(40, 125, 350, 7, ColorRGBA(.06f, .17f, .22f));
-    DrawRectangle(40, 125, 350 * progress, 7, ColorRGBA(.25f, .8f, .9f));
-    std::snprintf(text, sizeof(text), "회복 키트 %d   회수 부품 %d   처치 %d", stats.recoveryKits,
-                  stats.salvage, g_level.kills);
-    DrawLabel(40, 158, text);
-    DrawLabel(40, 186,
-              g_level.growthGoalReached ? "성장 목표 완료 / 계속 사냥할 수 있습니다."
-                                        : "목표: 캐릭터 레벨 3 달성 및 스탯 성장 확인");
-    std::snprintf(text, sizeof(text), "지도 %d×%d / 주민 %u / 적 정원 %u", kMapSize, kMapSize,
-                  unsigned(GetNpcs().size()), unsigned(g_level.enemies.size()));
-    DrawLabel(40, 215, text, ColorRGBA(.5f, .68f, .72f));
-    int completions = 0;
-    for (const auto &station : GetWorkstations())
+    DrawRectangle(22, 20, 650, 183, {.02f, .04f, .055f, .94f});
+    DrawLabel(40, 47, "낙하한 신호 / 광산 구조 신호 조사", {.85f, .85f, .68f}, GLUT_BITMAP_HELVETICA_18);
+    DrawLabel(40, 77, g_level.quest.GetObjective(), {.6f, .95f, .87f});
+    char text[180];
+    std::snprintf(text, sizeof(text), "체력 %d / %d  ·  레벨 %d  ·  경험치 %d  ·  처치 %d", stats.health,
+                  stats.maxHealth, stats.level, stats.experience, g_level.kills);
+    DrawLabel(40, 105, text);
+    DrawRectangle(40, 116, 440, 7, {.2f, .07f, .07f});
+    DrawRectangle(40, 116, 440.f * stats.health / stats.maxHealth, 7, {.8f, .28f, .2f});
+    std::snprintf(text, sizeof(text), "%s  %d / %d  ·  %s", g_level.pistol.GetName(),
+                  g_level.pistol.GetRounds(), g_level.pistol.GetMagazineSize(),
+                  g_level.pistol.IsReloading() ? "재장전 중" : "R 재장전 / 예비 탄창 무제한");
+    DrawLabel(40, 148, text, {.95f, .8f, .47f});
+    if (g_level.pistol.IsReloading())
     {
-        completions += station.completedCycles;
+        DrawRectangle(40, 156, 440 * g_level.pistol.GetReloadProgress(), 4, {.95f, .75f, .3f});
     }
-    std::snprintf(text, sizeof(text), "팀 처치 %d / 공동 수리 %d회 / 네 설비에서 보급·엄호", g_level.npcKills,
-                  completions);
-    DrawLabel(40, 240, text, ColorRGBA(.55f, .85f, .75f));
-    DrawMapOverview();
-    DrawLabel(26, kCanvasHeight - 22.f, "WASD 이동 / Space 공격 / E 대화·줍기·귀환 / Q 회복 / Esc 일시정지");
+    std::snprintf(text, sizeof(text), "구조 %d / 12명 · 회복 키트 %d · 부품 %d · 리아 동행",
+                  g_level.rescuedPeople, stats.recoveryKits, stats.salvage);
+    DrawLabel(40, 185, text, {.55f, .75f, .75f});
+    DrawScanner();
+    const auto cursor = g_state.cursorPosition;
+    float gap = 6 + g_level.pistol.GetSpread() * 120;
+    ColorRGBA crosshair = g_level.pistol.IsReloading() ? ColorRGBA(1, .65f, .3f) : ColorRGBA(.75f, 1, .92f);
+    DrawLine({cursor.x - gap - 9, cursor.y}, {cursor.x - gap, cursor.y}, crosshair, 2);
+    DrawLine({cursor.x + gap, cursor.y}, {cursor.x + gap + 9, cursor.y}, crosshair, 2);
+    DrawLine({cursor.x, cursor.y - gap - 9}, {cursor.x, cursor.y - gap}, crosshair, 2);
+    DrawLine({cursor.x, cursor.y + gap}, {cursor.x, cursor.y + gap + 9}, crosshair, 2);
+    DrawEllipse(cursor.x, cursor.y, 1.5f, 1.5f, crosshair);
+    DrawLabel(
+        26, kCanvasHeight - 22.f,
+        "WASD 이동 / 마우스 조준·좌클릭 사격 / R 재장전 / F 스캔 / E 조사·구조·회수 / Q 회복 / Esc 정지");
 }
 } // namespace levelone

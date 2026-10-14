@@ -25,9 +25,9 @@ void DrawMinimap()
                   y = mapCenterY + (building.x + building.y) * 1.25f;
             DrawRectangle(x, y, 9, 6, ColorRGBA(.24f, .34f, .4f));
         }
-        const Vector2 points[] = {kHomeDoor,      kLiaPosition,    kMaraPosition,
-                                  kRelayPosition, kBeaconPosition, kJetBikePosition};
-        for (int i = 0; i < 6; i++)
+        const Vector2 points[] = {kHomeDoor,       kLiaPosition,     kMaraPosition,        kRelayPosition,
+                                  kBeaconPosition, kJetBikePosition, kCityReceiverPosition};
+        for (int i = 0; i < 7; i++)
         {
             float x = mapCenterX + (points[i].x - points[i].y) * 2.5f,
                   y = mapCenterY + (points[i].x + points[i].y) * 1.25f;
@@ -35,6 +35,10 @@ void DrawMinimap()
             if (i == 4)
             {
                 DrawLabel(x + 5, y, "전망대");
+            }
+            if (i == 6)
+            {
+                DrawLabel(x + 5, y, "수신망");
             }
             if (i == 5)
             {
@@ -106,21 +110,6 @@ void DrawNoticePanel()
     }
 }
 
-void DrawCompletionPanel()
-{
-    if (g_state.isComplete && g_state.noticeSecondsRemaining > 0)
-    {
-        DrawRectangle(kCanvasWidth * .5f - 250, 215, 500, 135, ColorRGBA(.025f, .045f, .08f, .95f));
-        DrawLabel(kCanvasWidth * .5f - 224, 247, "튜토리얼 완료", ColorRGBA(.5f, .93f, .93f),
-                  GLUT_BITMAP_HELVETICA_18);
-        DrawLabel(kCanvasWidth * .5f - 224, 277, "관문이 당신의 목소리로 응답했습니다.");
-        DrawLabel(kCanvasWidth * .5f - 224, 300,
-                  g_state.isSideQuestComplete ? "남겨 둔 불빛: 완료"
-                                              : "선택 목표: 마라의 전력 복구를 도와주세요.");
-        DrawLabel(kCanvasWidth * .5f - 224, 329, "제트 바이크에서 E: 격리 구역 재진입 / 1: 디버그 바로 진입");
-    }
-}
-
 void DrawPauseOverlay()
 {
     if (g_state.isPaused)
@@ -149,7 +138,7 @@ void DrawHud()
         DrawPauseOverlay();
         return;
     }
-    DrawRectangle(22, 20, 365, 111, ColorRGBA(.025f, .06f, .09f, .92f));
+    DrawRectangle(22, 20, 650, 111, ColorRGBA(.025f, .06f, .09f, .92f));
     DrawRectangle(22, 20, 3, 111, ColorRGBA(.27f, .86f, .83f));
     DrawLabel(40, 45, g_state.isInObservatory ? "헤일로 / N-0 전망대" : "헤일로 / 주거 구역 07",
               ColorRGBA(.67f, .9f, .91f), GLUT_BITMAP_HELVETICA_18);
@@ -160,13 +149,14 @@ void DrawHud()
               ColorRGBA(.4f, .66f, .73f));
     DrawLabel(
         40, 94,
-        g_state.mainQuestStage == MainQuestStage::ReadHomeTerminal   ? "01  집 단말 확인 [E]"
+        g_state.gateSignalHeard && g_state.hasDescendedObservatory   ? levelone::g_level.quest.GetObjective()
+        : g_state.mainQuestStage == MainQuestStage::ReadHomeTerminal ? "01  집 단말 확인 [E]"
         : g_state.mainQuestStage == MainQuestStage::MeetLia          ? "02  밖에서 리아와 대화 [E]"
         : g_state.mainQuestStage == MainQuestStage::EnterObservatory ? "03  전망대 승강기로 올라가기 [E]"
         : g_state.mainQuestStage == MainQuestStage::ReadGateSignal   ? "04  상층 콘솔에서 관문 신호 측정 [E]"
         : g_state.mainQuestStage == MainQuestStage::DescendObservatory ? "05  승강기로 도시에 내려가기 [E]"
         : g_state.mainQuestStage == MainQuestStage::MountJetBike       ? "06  개인용 제트 바이크 탑승 [E]"
-                                                                       : "07  격리 구역 도착 / 서막 완료",
+                                                                       : "07  광산 이동 / 서막 완료",
         ColorRGBA(.91f, .89f, .75f));
     char timer[80];
     std::snprintf(timer, sizeof(timer), "%02d:%02d / 짧은 서막", (int)g_state.playTimeSeconds / 60,
@@ -181,11 +171,10 @@ void DrawHud()
               : g_state.isSideQuestAccepted ? "마라 동쪽의 전력 장치를 복구하세요."
                                             : "주거 광장의 마라와 대화하세요.");
     DrawLabel(26, (float)kCanvasHeight - 22,
-              "WASD 이동 / E 상호작용 / 1 디버그 사냥터 / Esc 일시정지 / 정지 중 R 다시 시작",
+              "WASD 이동 / E 상호작용 / 1 디버그 광산 / Esc 일시정지 / 정지 중 R 다시 시작",
               ColorRGBA(.63f, .78f, .81f));
     DrawInteractionPrompt();
     DrawNoticePanel();
-    DrawCompletionPanel();
     DrawPauseOverlay();
 }
 } // namespace tutorial

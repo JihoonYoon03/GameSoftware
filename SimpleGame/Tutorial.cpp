@@ -156,6 +156,7 @@ void Resize(int width, int height)
 {
     g_state.viewportWidth = (std::max)(width, 1);
     g_state.viewportHeight = (std::max)(height, 1);
+    MouseMotion(int(g_state.cursorWindowPosition.x), int(g_state.cursorWindowPosition.y));
 }
 
 void KeyDown(unsigned char key, int, int)
@@ -164,6 +165,7 @@ void KeyDown(unsigned char key, int, int)
     if (key == 27) // Escape
     {
         g_state.isPaused = !g_state.isPaused;
+        g_state.mouseFiring = false;
         std::fill(g_state.pressedKeys, g_state.pressedKeys + 256, false);
         return;
     }
@@ -173,8 +175,7 @@ void KeyDown(unsigned char key, int, int)
         {
             if (levelone::IsActive())
             {
-                levelone::ResetProgress();
-                levelone::Enter();
+                levelone::RestartMine();
                 g_state.isPaused = false;
             }
             else
@@ -200,6 +201,14 @@ void KeyDown(unsigned char key, int, int)
         {
             levelone::UseRecoveryKit();
         }
+        if (key == 'r')
+        {
+            levelone::Reload();
+        }
+        if (key == 'f')
+        {
+            levelone::Scan();
+        }
         return;
     }
     // Direct access for first-level iteration without replaying the tutorial.
@@ -208,7 +217,7 @@ void KeyDown(unsigned char key, int, int)
         jettravel::Reset();
         g_state.isJetTravel = false;
         g_state.isInObservatory = false;
-        levelone::Enter();
+        levelone::Enter(true);
         return;
     }
     if (key == 'e')
@@ -222,6 +231,38 @@ void KeyUp(unsigned char key, int, int)
     g_state.pressedKeys[NormalizeKey(key)] = false;
 }
 
+void MouseMotion(int x, int y)
+{
+    g_state.cursorWindowPosition = {float(x), float(y)};
+    float scale = (std::min)(g_state.viewportWidth / float(kCanvasWidth),
+                             g_state.viewportHeight / float(kCanvasHeight));
+    int width = (std::max)(1, int(kCanvasWidth * scale));
+    int height = (std::max)(1, int(kCanvasHeight * scale));
+    int left = (g_state.viewportWidth - width) / 2, top = (g_state.viewportHeight - height) / 2;
+    g_state.cursorInsideViewport = x >= left && y >= top && x < left + width && y < top + height;
+    g_state.cursorPosition = {Clamp((x - left) * float(kCanvasWidth) / width, 0, float(kCanvasWidth)),
+                              Clamp((y - top) * float(kCanvasHeight) / height, 0, float(kCanvasHeight))};
+    if (!g_state.cursorInsideViewport)
+    {
+        g_state.mouseFiring = false;
+    }
+}
+void MouseButton(int button, int state, int x, int y)
+{
+    MouseMotion(x, y);
+    if (button == GLUT_LEFT_BUTTON)
+    {
+        g_state.mouseFiring =
+            state == GLUT_DOWN && levelone::IsActive() && !g_state.isPaused && g_state.cursorInsideViewport;
+    }
+}
+void MouseEntry(int state)
+{
+    if (state == GLUT_LEFT)
+    {
+        g_state.mouseFiring = false;
+    }
+}
 void Tick(int)
 {
     profiling::Scope profileTimer(profiling::Timer::Update);
@@ -255,6 +296,7 @@ void Tick(int)
     }
 
     monitoring::Update();
+    glutSetCursor(levelone::IsActive() ? GLUT_CURSOR_NONE : GLUT_CURSOR_INHERIT);
     glutPostRedisplay();
     glutTimerFunc(kUpdateIntervalMilliseconds, Tick, 0);
 }
