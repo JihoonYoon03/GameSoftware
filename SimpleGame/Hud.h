@@ -1,6 +1,7 @@
 #pragma once
 namespace tutorial
 {
+struct Building;
 
 // ============================================================================
 // Hud — shared display lifecycle
@@ -24,6 +25,7 @@ class CityHud final : public Hud
 {
   public:
     void Draw() override;
+    static bool ContainsMinimapBuilding(const Building &building);
 
   private:
     void DrawMinimap();

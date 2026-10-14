@@ -34,6 +34,7 @@ struct FrameStatistics
 struct RenderPoint
 {
     float x, y;
+    float z = 0;
 };
 enum class SurfaceMaterial
 {

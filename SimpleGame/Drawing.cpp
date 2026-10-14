@@ -290,7 +290,7 @@ void Drawing::DrawModel3D(const models::Model &model, Vector2 screen, models::Po
     renderqueue::Depth(false);
 }
 void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models::CharacterType type,
-                         bool walking)
+                         bool walking, float facingYaw, models::Gender gender)
 {
     auto &world = Game::Get().GetState();
     Vector2 screen = WorldToScreen(position.x, position.y);
@@ -300,7 +300,11 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
         DrawEllipse(screen.x, screen.y, 16, 6, {.25f, .95f, .9f, .17f});
     }
     bool armed = isPlayer && game::GameLevels::Mine().IsActive();
-    float yaw = isPlayer ? world.facingYaw : .78539816f;
+    float yaw = isPlayer ? world.facingYaw : facingYaw;
+    if (isPlayer)
+    {
+        gender = world.playerGender;
+    }
     if (armed)
     {
         auto dir = game::GameLevels::Mine().GetAimDirection(game::GameLevels::Mine().GetAimAngle());
@@ -313,11 +317,15 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
     palette.body = {coat.r, coat.g, coat.b, coat.a};
     models::Transform3D rotation;
     rotation.yaw = yaw;
-    DrawModel3D(models::ModelLibrary::Get().characters.at(size_t(type)), screen, {1, 1, 1}, rotation,
-                (position.x + position.y) * 36, palette, &pose);
+    DrawModel3D(models::ModelLibrary::Character(type, gender), screen,
+                {models::WorldScale::characterScale, models::WorldScale::characterScale,
+                 models::WorldScale::characterScale},
+                rotation, (position.x + position.y) * 36, palette, &pose);
     if (armed && game::GameLevels::Mine().GetState().muzzleFlash > 0)
     {
-        auto muzzle = rotation.Apply(models::ModelRig::Muzzle(pose));
+        auto muzzle = models::ModelRig::Muzzle(pose);
+        float bodyScale = models::WorldScale::characterScale;
+        muzzle = rotation.Apply({muzzle.x * bodyScale, muzzle.y * bodyScale, muzzle.z * bodyScale});
         DrawGlow(WorldToScreen(position.x + muzzle.x, position.y + muzzle.y, muzzle.z * 44), 19,
                  {1, .85f, .4f});
     }
@@ -337,25 +345,39 @@ void Drawing::DrawCharacterAppearance(Vector2 screen, ColorRGBA coat, models::Ch
 namespace
 {
 void VehicleEffects(const models::VehicleModel &vehicle, Vector2 screen, float scale,
-                    const models::Transform3D &rotation, const models::Palette &palette, float throttle)
+                    const models::Transform3D &rotation, const models::Palette &palette, float throttle,
+                    float baseDepth)
 {
     auto project = [&](models::Point p) {
         p = rotation.Apply({p.x * scale, p.y * scale, p.z * scale});
         return Vector2{screen.x + (p.x - p.y) * 36, screen.y + (p.x + p.y) * 18 - p.z * 44};
     };
-    if (GameRenderer::Get().Backend().DeferOverlay(
-            [=, &vehicle]() { VehicleEffects(vehicle, screen, scale, rotation, palette, throttle); }))
+    if (GameRenderer::Get().Backend().DeferOverlay([=, &vehicle]() {
+            VehicleEffects(vehicle, screen, scale, rotation, palette, throttle, baseDepth);
+        }))
     {
         return;
     }
     // Project sockets from the model, then expand camera-facing 2D quads.
     // Flame width never collapses when the vehicle banks or turns.
-    renderqueue::Depth(false);
+    // Alpha billboards test against the opaque scene, without writing depth themselves.
+    renderqueue::Depth(true, false);
+    auto depthAt = [&](models::Point p) {
+        p = rotation.Apply({p.x * scale, p.y * scale, p.z * scale});
+        return baseDepth + (p.x + p.y) * 36 + p.z * (1296.f / 44);
+    };
+    auto glowAt = [&](Vector2 point, float size, ColorRGBA color, float depth) {
+        renderqueue::PushMatrix();
+        renderqueue::Translate(0, 0, depth);
+        Drawing::DrawGlow(point, size, color);
+        renderqueue::PopMatrix();
+    };
     ColorRGBA emission(palette.emission[0], palette.emission[1], palette.emission[2], .86f);
     float power = Game::Clamp(throttle, 0, 1);
     for (auto socket : vehicle.exhausts)
     {
         Vector2 nozzle = project(socket);
+        const float nozzleDepth = depthAt(socket);
         auto back = socket;
         back.x -= 1;
         auto projectedBack = project(back);
@@ -367,21 +389,22 @@ void VehicleEffects(const models::VehicleModel &vehicle, Vector2 screen, float s
             dy = 0;
             magnitude = 1;
         }
+        const float depthPerPixel = (depthAt(back) - nozzleDepth) / magnitude;
         dx /= magnitude;
         dy /= magnitude;
         float length = (22 + power * 72) * scale, halfWidth = (6 + power * 5) * scale;
         Vector2 tail = {nozzle.x + dx * length, nozzle.y + dy * length};
         Vector2 edge = {-dy * halfWidth, dx * halfWidth};
-        const RenderPoint quad[] = {{nozzle.x + edge.x, nozzle.y + edge.y},
-                                    {tail.x + edge.x, tail.y + edge.y},
-                                    {tail.x - edge.x, tail.y - edge.y},
-                                    {nozzle.x - edge.x, nozzle.y - edge.y}};
+        const float tailDepth = nozzleDepth + depthPerPixel * length;
+        const RenderPoint quad[] = {{nozzle.x + edge.x, nozzle.y + edge.y, nozzleDepth},
+                                    {tail.x + edge.x, tail.y + edge.y, tailDepth},
+                                    {tail.x - edge.x, tail.y - edge.y, tailDepth},
+                                    {nozzle.x - edge.x, nozzle.y - edge.y, nozzleDepth}};
         Drawing::SetColor(emission);
         GameRenderer::Get().Backend().DrawEffect(quad, SurfaceEffect::JetExhaust,
                                                  Game::Get().GetState().animationTimeSeconds);
-        Drawing::DrawGlow(
-            nozzle, (6 + power * 4) * scale,
-            emission); // Separate screen-space sparks survive beyond the flame quad's UV bounds.
+        glowAt(nozzle, (6 + power * 4) * scale, emission, nozzleDepth);
+        // Sparks extend beyond the flame quad, but share its world depth.
         float clock = Game::Get().GetState().animationTimeSeconds;
         for (int i = 0; i < 10; ++i)
         {
@@ -391,15 +414,20 @@ void VehicleEffects(const models::VehicleModel &vehicle, Vector2 screen, float s
                          nozzle.y + dy * life * length * 1.5f + dx * spread};
             float opacity = (1 - life) * .95f;
             ColorRGBA spark(.64f, .97f, 1, opacity);
+            float depth = nozzleDepth + depthPerPixel * life * length * 1.5f;
+            renderqueue::PushMatrix();
+            renderqueue::Translate(0, 0, depth);
             Drawing::DrawLine(p, {p.x - dx * (3 + life * 6) * scale, p.y - dy * (3 + life * 6) * scale},
                               spark, 1.6f * scale);
-            Drawing::DrawGlow(p, 1.5f * scale, {emission.r, emission.g, emission.b, opacity * .6f});
+            renderqueue::PopMatrix();
+            glowAt(p, 1.5f * scale, {emission.r, emission.g, emission.b, opacity * .6f}, depth);
         }
     }
     for (auto lamp : vehicle.headlights)
     {
-        Drawing::DrawGlow(project(lamp), 4 * scale, {1, .9f, .65f, .65f});
+        glowAt(project(lamp), 4 * scale, {1, .9f, .65f, .65f}, depthAt(lamp));
     }
+    renderqueue::Depth(false);
 }
 } // namespace
 void Drawing::DrawVehicle(Vector2 center, float scale, models::VehicleType type,
@@ -408,7 +436,7 @@ void Drawing::DrawVehicle(Vector2 center, float scale, models::VehicleType type,
     const auto &vehicle = models::ModelLibrary::Get().vehicles.at(size_t(type));
     models::Transform3D rotation;
     rotation.yaw = -kPi / 4 + (direction < 0 ? kPi : 0);
-    VehicleEffects(vehicle, center, scale, rotation, palette, throttle);
+    VehicleEffects(vehicle, center, scale, rotation, palette, throttle, 0);
     DrawModel3D(vehicle.body, center, {scale, scale, scale}, rotation, 0, palette);
 }
 void Drawing::DrawWorldVehicle(Vector2 position, float altitude, float scale, models::VehicleType type,
@@ -418,29 +446,33 @@ void Drawing::DrawWorldVehicle(Vector2 position, float altitude, float scale, mo
     auto screen = WorldToScreen(position.x, position.y, altitude);
     models::Transform3D rotation;
     rotation.yaw = yaw;
-    VehicleEffects(vehicle, screen, scale, rotation, palette, throttle);
+    VehicleEffects(vehicle, screen, scale, rotation, palette, throttle,
+                   (position.x + position.y) * 36 + altitude * (1296.f / 1936));
     DrawModel3D(vehicle.body, screen, {scale, scale, scale}, rotation,
                 (position.x + position.y) * 36 + altitude * (1296.f / 1936), palette);
 }
-void Drawing::DrawTravelBike(Vector2 screen, float roll, float throttle)
+void Drawing::DrawTravelBike(Vector2 screen, float yaw, float throttle)
 {
     const auto &vehicle = models::ModelLibrary::Get().vehicles[size_t(models::VehicleType::JetBike)];
     const auto palette = game::GameLevels::Travel().GetBikePalette();
     models::Transform3D rotation;
-    rotation.yaw = -kPi / 4;
-    rotation.roll = roll;
+    rotation.yaw = -kPi / 4 + yaw;
     constexpr float scale = 1.65f;
-    VehicleEffects(vehicle, screen, scale, rotation, palette, throttle);
+    VehicleEffects(vehicle, screen, scale, rotation, palette, throttle, (screen.y - 485) * 2);
     DrawModel3D(vehicle.body, screen, {scale, scale, scale}, rotation, (screen.y - 485) * 2, palette);
     auto pose = models::ModelRig::Pose(0, false, false, 0, true);
     models::Palette clothing;
     clothing.body = {.55f, .68f, .72f, 1};
     // Seat, torso, limbs and hands are transformed with the same bike attitude.
-    auto seat = rotation.Apply({-.23f * scale, 0, .42f * scale});
+    constexpr float bodyScale = models::WorldScale::characterScale;
+    auto seat = rotation.Apply(
+        {vehicle.seat.x * scale, vehicle.seat.y * scale, (vehicle.seat.z - .17f * bodyScale) * scale});
     auto riderRotation = rotation;
     riderRotation.position = seat;
-    DrawModel3D(models::ModelLibrary::Get().characters[0], screen, {scale * .74f, scale * .74f, scale * .74f},
-                riderRotation, (screen.y - 485) * 2, clothing, &pose);
+    DrawModel3D(
+        models::ModelLibrary::Character(models::CharacterType::Explorer, Game::Get().GetState().playerGender),
+        screen, {scale * bodyScale, scale * bodyScale, scale * bodyScale}, riderRotation,
+        (screen.y - 485) * 2, clothing, &pose);
 }
 void Drawing::DrawBuilding(Building building)
 {

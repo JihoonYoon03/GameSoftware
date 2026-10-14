@@ -125,6 +125,8 @@ struct RescueNpc
     float outsideSeconds = 0;
     size_t routeIndex = 0;
     std::vector<tutorial::Vector2> route;
+    tutorial::MovementFacing facing;
+    models::Gender gender = models::Gender::Male;
 };
 struct ScannerContact
 {
@@ -158,6 +160,7 @@ struct MineState
     size_t riaRouteIndex = 0;
     float riaNavigationCooldown = 0;
     float riaMovement = 0;
+    tutorial::MovementFacing riaFacing;
     float invulnerability = 0;
     float navigationCooldown = 0;
     float scannerSeconds = 0;
@@ -190,7 +193,7 @@ struct TravelState
     float speed = 35;
     float lateralOffset = 0;
     float lateralVelocity = 0;
-    float rollRadians = 0;
+    float yawRadians = 0;
     float boostCharge = 1;
     float speedPenaltySeconds = 0;
     int avoidedObstacles = 0;
@@ -281,7 +284,7 @@ class MineRescue
     MineLevel &level;
     MineState &state;
     float WalkRoute(tutorial::Vector2 &position, const std::vector<tutorial::Vector2> &route, size_t &index,
-                    float amount);
+                    float amount, tutorial::MovementFacing &facing);
 };
 
 // ============================================================================

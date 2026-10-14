@@ -129,14 +129,12 @@ void InteriorScene::Draw()
             Drawing::DrawLine(window, {window.x + 110, window.y + 55}, ColorRGBA(.25f, .72f, .82f), 18);
         });
         scene.PlaceWorldActor("bed", -2.6f, -2.6f, WorldBounds(-2.6f, -2.6f, 1.8f, 1.1f, 22), 1, 3, [this]() {
-            Drawing::DrawBox(-2.6f, -2.6f, 1.8f, 1.1f, 16, ColorRGBA(.32f, .39f, .46f));
-            Drawing::DrawBox(-2.5f, -2.5f, .5f, .8f, 22, ColorRGBA(.66f, .68f, .62f));
+            Drawing::DrawBox(-2.6f, -2.6f, 1.05f, .8f, 12, ColorRGBA(.32f, .39f, .46f));
+            Drawing::DrawBox(-2.5f, -2.5f, .3f, .7f, 16, ColorRGBA(.66f, .68f, .62f));
         });
         scene.PlaceWorldActor("terminal", 1.3f, -2.6f, WorldBounds(1, -2.6f, 1.6f, 1.4f, 65), 1, 4, [this]() {
-            Drawing::DrawBox(1.3f, -2.6f, 1.3f, .8f, 27, ColorRGBA(.26f, .34f, .39f));
-            Vector2 terminalScreen = Drawing::WorldToScreen(1.6f, -1.9f, 46);
-            Drawing::DrawRectangle(terminalScreen.x - 15, terminalScreen.y - 12, 30, 19,
-                                   ColorRGBA(.15f, .65f, .72f));
+            Drawing::DrawModel3D(models::ModelLibrary::Get().console, Drawing::WorldToScreen(1.6f, -2.4f),
+                                 {.64f, .64f, .64f}, {}, (1.6f - 2.4f) * 36, {});
             Drawing::DrawGlow(Drawing::WorldToScreen(1, -1.2f), 20, ColorRGBA(.3f, .95f, .9f));
         });
         scene.PlaceWorldActor("table", -2.4f, 1.1f, WorldBounds(-2.4f, 1.1f, 1.2f, .6f, 55), 1, 5, [this]() {
@@ -190,18 +188,18 @@ models::Palette CityScene::GetTrafficPalette(int index)
 void CityScene::DrawStreetTiles(game::Scene &scene)
 {
     constexpr int chunkSize = 8;
-    for (int x0 = -20; x0 < 20; x0 += chunkSize)
+    for (int x0 = CityLayout::kTerrainMinX; x0 < CityLayout::kTerrainMaxX; x0 += chunkSize)
     {
-        for (int y0 = -14; y0 < 16; y0 += chunkSize)
+        for (int y0 = CityLayout::kTerrainMinY; y0 < CityLayout::kTerrainMaxY; y0 += chunkSize)
         {
             std::string key = "terrain/city/" + std::to_string(x0) + "/" + std::to_string(y0);
             scene.PlaceWorldActor(
                 key, float(x0), float(y0), WorldBounds(float(x0), float(y0), chunkSize, chunkSize, 0), 0, 0,
                 [this, x0, y0, key, chunkSize]() {
                     rendercache::DrawWorld(key, [this, x0, y0, chunkSize]() {
-                        for (int x = x0; x < x0 + chunkSize && x < 20; ++x)
+                        for (int x = x0; x < x0 + chunkSize && x < CityLayout::kTerrainMaxX; ++x)
                         {
-                            for (int y = y0; y < y0 + chunkSize && y < 16; ++y)
+                            for (int y = y0; y < y0 + chunkSize && y < CityLayout::kTerrainMaxY; ++y)
                             {
                                 bool road = CityLayout::IsRoadTile(x, y);
                                 float shade = 0;
@@ -220,6 +218,68 @@ void CityScene::DrawStreetTiles(game::Scene &scene)
                     });
                 });
         }
+    }
+}
+
+void CityScene::DrawBoundary(game::Scene &scene)
+{
+    auto side = [&](const std::string &name, float fixed, float first, float last, bool vertical,
+                    std::array<std::pair<float, float>, 2> openings) {
+        int panel = 0;
+        auto place = [&](float start, float length, bool gate) {
+            Vector2 p = vertical ? Vector2{fixed, start} : Vector2{start, fixed};
+            std::string id = "boundary/" + name + "/" + (gate ? "gate/" : "wall/") + std::to_string(panel++);
+            scene.PlaceWorldActor(id, p.x, p.y,
+                                  WorldBounds(p.x - .2f, p.y - .2f, vertical ? .4f : length + .4f,
+                                              vertical ? length + .4f : .4f, gate ? 94.f : 75.f),
+                                  3, p.x + p.y, [=]() {
+                                      models::Transform3D transform;
+                                      transform.yaw = vertical ? kPi / 2 : 0;
+                                      models::Palette palette;
+                                      palette.body = {.37f, .48f, .55f, 1};
+                                      palette.accent = {.2f, .32f, .4f, 1};
+                                      // Fade only the panel hiding the nearby player, while retaining the
+                                      // boundary silhouette.
+                                      auto player = Game::Get().GetState().playerPosition;
+                                      Vector2 middle = vertical ? Vector2{fixed, start + length * .5f}
+                                                                : Vector2{start + length * .5f, fixed};
+                                      if (!gate && Game::Distance(player, middle) < 1.4f)
+                                      {
+                                          palette.body[3] = palette.accent[3] = palette.emission[3] = .35f;
+                                      }
+                                      Drawing::DrawModel3D(gate ? models::ModelLibrary::Get().trafficGate
+                                                                : models::ModelLibrary::Get().bulkhead,
+                                                           Drawing::WorldToScreen(p.x, p.y),
+                                                           {length, 1, gate ? 2.f : 1.6f}, transform,
+                                                           (p.x + p.y) * 36, palette);
+                                  });
+        };
+        float cursor = first;
+        for (auto opening : openings)
+        {
+            while (cursor < opening.first - .001f)
+            {
+                float length = (std::min)(1.f, opening.first - cursor);
+                place(cursor, length, false);
+                cursor += length;
+            }
+            place(opening.first, opening.second - opening.first, true);
+            cursor = opening.second;
+        }
+        while (cursor < last - .001f)
+        {
+            float length = (std::min)(1.f, last - cursor);
+            place(cursor, length, false);
+            cursor += length;
+        }
+    };
+    for (auto edge : {std::pair<const char *, float>{"west", kWorldMinX}, {"east", kWorldMaxX}})
+    {
+        side(edge.first, edge.second, kWorldMinY, kWorldMaxY, true, {{{-1, 1}, {7, 8}}});
+    }
+    for (auto edge : {std::pair<const char *, float>{"north", kWorldMinY}, {"south", kWorldMaxY}})
+    {
+        side(edge.first, edge.second, kWorldMinX, kWorldMaxX, false, {{{-10, -9}, {1, 3}}});
     }
 }
 
@@ -321,21 +381,21 @@ void CityScene::DrawDepthSortedObjects(game::Scene &scene)
             if (item.kind == SceneObjectKind::Vehicle)
             {
                 Vector2 position = GetTrafficPosition(item.index);
-                Drawing::DrawWorldVehicle(position, 7, .8f, static_cast<models::VehicleType>(item.index % 4),
-                                          GetTrafficPalette(item.index), .78f,
-                                          CityLayout::TrafficYaw(item.index));
+                Drawing::DrawWorldVehicle(
+                    position, 3.3f, 1.f, static_cast<models::VehicleType>(item.index % 4),
+                    GetTrafficPalette(item.index), .78f, CityLayout::TrafficYaw(item.index));
             }
             if (item.kind == SceneObjectKind::JetBike)
             {
-                Drawing::DrawWorldVehicle(kJetBikePosition, 9, .95f, models::VehicleType::JetBike,
+                Drawing::DrawWorldVehicle(kJetBikePosition, 4.4f, 1.f, models::VehicleType::JetBike,
                                           GameLevels::Travel().GetBikePalette(), .08f, 0);
             }
             if (item.kind == SceneObjectKind::Resident)
             {
                 const auto &resident = Game::Get().GetState().residents[item.index];
-                Drawing::DrawPerson(resident.position,
-                                    ColorRGBA(resident.coat[0], resident.coat[1], resident.coat[2]), false,
-                                    resident.type);
+                Drawing::DrawPerson(
+                    resident.position, ColorRGBA(resident.coat[0], resident.coat[1], resident.coat[2]), false,
+                    resident.type, resident.facing.walking, resident.facing.yaw, resident.gender);
                 if (Game::Distance(Game::Get().GetState().playerPosition, resident.position) < 2.2f)
                 {
                     Vector2 label = Drawing::WorldToScreen(resident.position.x, resident.position.y, 62);
@@ -353,12 +413,13 @@ void CityScene::DrawDepthSortedObjects(game::Scene &scene)
             if (item.kind == SceneObjectKind::Lia)
             {
                 Drawing::DrawPerson(kLiaPosition, ColorRGBA(.89f, .52f, .28f), false,
-                                    models::CharacterType::Researcher);
+                                    models::CharacterType::Researcher, false, .78539816f,
+                                    models::Gender::Female);
             }
             if (item.kind == SceneObjectKind::Mara)
             {
                 Drawing::DrawPerson(kMaraPosition, ColorRGBA(.48f, .4f, .64f), false,
-                                    models::CharacterType::Medic);
+                                    models::CharacterType::Medic, false, .78539816f, models::Gender::Female);
             }
         });
     };
@@ -460,6 +521,7 @@ void CityScene::Draw()
         scene.BeginPlacement();
         DrawStreetTiles(scene);
         DrawStreetFurniture(scene);
+        DrawBoundary(scene);
         DrawDepthSortedObjects(scene);
         DrawUtilityDevices(scene);
         DrawQuestMarkers(scene);
@@ -539,7 +601,7 @@ void ObservatoryScene::Draw()
             WorldBounds(kObservatoryConsole.x, kObservatoryConsole.y, .8f, .65f, 95, 75), 2, 0, [this]() {
                 Drawing::DrawModel3D(models::ModelLibrary::Get().console,
                                      Drawing::WorldToScreen(kObservatoryConsole.x, kObservatoryConsole.y),
-                                     {1.4f, 1.4f, 1.4f}, {},
+                                     {.64f, .64f, .64f}, {},
                                      (kObservatoryConsole.x + kObservatoryConsole.y) * 36, {});
             });
         scene.PlaceWorldActor("telescope", 2.6f, -3.2f, WorldBounds(2.6f, -3.2f, 0, 0, 140, 90), 2, -2,
@@ -547,7 +609,7 @@ void ObservatoryScene::Draw()
                                   models::Transform3D rotation;
                                   rotation.yaw = -kPi / 2;
                                   Drawing::DrawModel3D(models::ModelLibrary::Get().telescope,
-                                                       Drawing::WorldToScreen(2.6f, -3.2f), {1, 1, 1},
+                                                       Drawing::WorldToScreen(2.6f, -3.2f), {.8f, .8f, .8f},
                                                        rotation, (2.6f - 3.2f) * 36, {});
                               });
         scene.PlaceWorldActor(
@@ -565,7 +627,8 @@ void ObservatoryScene::Draw()
                               WorldBounds(kObservatoryLiaPosition.x, kObservatoryLiaPosition.y, 0, 0, 95), 3,
                               -2.5f, [this]() {
                                   Drawing::DrawPerson(kObservatoryLiaPosition, ColorRGBA(.89f, .52f, .28f),
-                                                      false, models::CharacterType::Engineer);
+                                                      false, models::CharacterType::Engineer, false,
+                                                      .78539816f, models::Gender::Female);
                               });
         scene.PlaceWorldActor(
             "player", Game::Get().GetState().playerPosition.x, Game::Get().GetState().playerPosition.y,
@@ -607,22 +670,23 @@ void ObservatoryScene::Draw()
 // MineScene
 // ============================================================================
 void MineScene::PlacePerson(game::Scene &scene, const std::string &id, Vector2 position, ColorRGBA coat,
-                            models::CharacterType type, bool walking, const std::string &label)
+                            models::CharacterType type, bool walking, const std::string &label,
+                            float facingYaw, models::Gender gender)
 {
     if (GameLevels::Mine().Lighting().At(position) < .025f)
     {
         return;
     }
-    scene.PlaceWorldActor(id, position.x, position.y, WorldBounds(position.x, position.y, 0, 0, 85, 100), 1,
-                          position.x + position.y, [this, position, coat, type, walking, label]() {
-                              Drawing::DrawPerson(position, coat, false, type, walking);
-                              if (Game::Distance(position, Game::Get().GetState().playerPosition) < 3 &&
-                                  !label.empty())
-                              {
-                                  auto screen = Drawing::WorldToScreen(position.x, position.y, 66);
-                                  Drawing::DrawLabel(screen.x - 25, screen.y, label, coat);
-                              }
-                          });
+    scene.PlaceWorldActor(
+        id, position.x, position.y, WorldBounds(position.x, position.y, 0, 0, 85, 100), 1,
+        position.x + position.y, [this, position, coat, type, walking, label, facingYaw, gender]() {
+            Drawing::DrawPerson(position, coat, false, type, walking, facingYaw, gender);
+            if (Game::Distance(position, Game::Get().GetState().playerPosition) < 3 && !label.empty())
+            {
+                auto screen = Drawing::WorldToScreen(position.x, position.y, 66);
+                Drawing::DrawLabel(screen.x - 25, screen.y, label, coat);
+            }
+        });
 }
 
 void MineScene::PlaceClue(game::Scene &scene, const char *id, Vector2 position, const char *label,
@@ -822,13 +886,15 @@ void MineScene::Draw()
         PlacePerson(scene, "survivor/" + std::to_string(npc.id), npc.position,
                     guard ? ColorRGBA(.38f, .62f, .8f) : ColorRGBA(.9f, .68f, .28f),
                     guard ? models::CharacterType::Guard : models::CharacterType::Engineer,
-                    npc.evacuating && npc.routeIndex < npc.route.size(),
+                    npc.facing.walking,
                     npc.evacuating ? "헤일로로 철수 중"
                     : guard        ? "고립 전투원 / E 구조"
-                                   : "광부 / E 구조");
+                                   : "광부 / E 구조",
+                    npc.facing.yaw, npc.gender);
     }
     PlacePerson(scene, "ria", GameLevels::Mine().GetState().riaPosition, {.95f, .55f, .25f},
-                models::CharacterType::Engineer, GameLevels::Mine().GetState().riaMovement > 0, "리아");
+                models::CharacterType::Engineer, GameLevels::Mine().GetState().riaFacing.walking, "리아",
+                GameLevels::Mine().GetState().riaFacing.yaw, models::Gender::Female);
     auto player = Game::Get().GetState().playerPosition;
     scene.PlaceWorldActor("player", player.x, player.y, WorldBounds(player.x, player.y, 0, 0, 85), 1,
                           player.x + player.y,
@@ -1000,7 +1066,7 @@ void JetTravelScene::Draw()
     PlaceScreenActor(
         scene, "bike", {bike.x - 210, bike.y - 75, bike.x + 140, bike.y + 80}, 2, [this, bike]() {
             float bob = std::sin(Game::Get().GetState().animationTimeSeconds * 9) * 2;
-            Drawing::DrawTravelBike({bike.x, bike.y + bob}, GameLevels::Travel().GetState().rollRadians,
+            Drawing::DrawTravelBike({bike.x, bike.y + bob}, GameLevels::Travel().GetState().yawRadians,
                                     GameLevels::Travel().GetState().speed / 108.f);
         });
     scene.GetGraph().Reparent("bike-shadow", *scene.GetGraph().Find("bike"));
@@ -1081,6 +1147,12 @@ void MineScene::DrawDarkness()
 void BackgroundScene::Draw()
 {
     BeginPlacement();
+    if (SceneManager::Current() == SceneKind::Exterior)
+    {
+        // The city now fills the view with world geometry, including outside its walkable bounds.
+        EndPlacement();
+        return;
+    }
     PlaceScreenActor(*this, "background", {0, 0, float(kCanvasWidth), float(kCanvasHeight)}, 0,
                      []() { Drawing::DrawBackdrop(); });
     DrawScreenScene(*this);

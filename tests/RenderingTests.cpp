@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "Drawing.h"
 #include "Scene.h"
+#include "Hud.h"
 #include "Level.h"
 #include "RenderQueue.h"
 #include "Profiler.h"
@@ -63,7 +64,7 @@ void TestModelsAndRig()
         assert(Distance3D(right, {.36f, 0, 26.f / 44}) < .0001f);
         assert(Distance3D(right, left) < .0001f);
         auto muzzle = ModelRig::Muzzle(pose);
-        assert(std::fabs(muzzle.x - right.x - .34f) < .0001f);
+        assert(std::fabs(muzzle.x - right.x - .22f) < .0001f);
         auto recoil = ModelRig::Pose(i * .2f, true, true, 1);
         assert(ModelRig::Muzzle(recoil).x < muzzle.x - .04f);
         // No torso/sleeve vertex reaches the face, for any walking/aiming frame.
@@ -88,14 +89,14 @@ void TestModelsAndRig()
             }
         }
     }
-    // Banking tilts the sides around the forward axis; the nose stays level.
+    // Steering rotates around world up: the nose turns, without roll or pitch.
     for (float sign : {-1.f, 1.f})
     {
         Transform3D attitude;
-        attitude.roll = sign * kPi / 6;
+        attitude.yaw = sign * kPi / 6;
         auto nose = attitude.Apply({1, 0, 0}), side = attitude.Apply({0, 1, 0});
-        assert(Distance3D(nose, {1, 0, 0}) < .00001f);
-        assert(std::fabs(std::atan2(side.z, side.y) - sign * kPi / 6) < .0001f);
+        assert(std::fabs(nose.z) < .00001f && std::fabs(side.z) < .00001f);
+        assert(std::fabs(std::atan2(nose.y, nose.x) - sign * kPi / 6) < .0001f);
     }
     // A shared palette must still yield five structurally different wardrobes.
     for (size_t i = 0; i < library.characters.size(); ++i)
@@ -147,7 +148,7 @@ void TestCityAndTravel()
                 for (size_t k = 0; k < model.parts[j].count; ++k)
                 {
                     auto v = transform.Apply(model.parts[j].points[k]);
-                    float x = p.x + v.x * .8f, y = p.y + v.y * .8f;
+                    float x = p.x + v.x, y = p.y + v.y;
                     assert(y > -1 && y < 1);
                     for (const auto &b : world.buildings)
                     {
@@ -168,14 +169,112 @@ void TestCityAndTravel()
         travel.lateralOffset = 0; // Exercise sustained steering before reaching the road edge.
         game::GameLevels::Travel().Update(.025f);
     }
-    assert(travel.rollRadians > .51f && travel.rollRadians <= kPi / 6);
+    assert(travel.yawRadians < -.51f && travel.yawRadians >= -kPi / 6);
     world.pressedKeys['w'] = false;
     for (int i = 0; i < 80; ++i)
     {
         game::GameLevels::Travel().Update(.025f);
     }
-    assert(std::fabs(travel.rollRadians) < .001f);
+    assert(std::fabs(travel.yawRadians) < .001f);
     game::GameLevels::Reset();
+}
+void TestScaleGenderAndDistrict()
+{
+    const auto &library = ModelLibrary::Get();
+    constexpr Point dimensions[] = {{4.3f, 1.7f, 1.35f},
+                                    {5.6f, 1.85f, 2.1f},
+                                    {5.2f, 1.9f, 2.f},
+                                    {4.6f, 1.75f, 1.55f},
+                                    {2.5f, .95f, 1.05f}};
+    for (size_t index = 0; index < library.vehicles.size(); ++index)
+    {
+        const auto &model = library.vehicles[index].body;
+        Point lo = {100, 100, 100}, hi = {-100, -100, -100};
+        for (size_t i = 0; i < model.count; ++i)
+        {
+            for (size_t j = 0; j < model.parts[i].count; ++j)
+            {
+                auto p = model.parts[i].points[j];
+                lo.x = (std::min)(lo.x, p.x);
+                lo.y = (std::min)(lo.y, p.y);
+                lo.z = (std::min)(lo.z, p.z);
+                hi.x = (std::max)(hi.x, p.x);
+                hi.y = (std::max)(hi.y, p.y);
+                hi.z = (std::max)(hi.z, p.z);
+            }
+        }
+        Point size = {(hi.x - lo.x) * 2, (hi.y - lo.y) * 2, (hi.z - lo.z) * 2};
+        assert(Distance3D(size, dimensions[index]) < .001f);
+    }
+    for (Gender gender : {Gender::Male, Gender::Female})
+    {
+        for (int role = 0; role < 5; ++role)
+        {
+            const auto &model = ModelLibrary::Character(CharacterType(role), gender);
+            assert(ModelFactory::ValidateModel(model));
+            auto pose = ModelRig::Pose(0, false);
+            float top = -100, bottom = 100;
+            for (size_t i = 0; i < model.count; ++i)
+            {
+                for (size_t j = 0; j < model.parts[i].count; ++j)
+                {
+                    const auto &part = model.parts[i];
+                    if (part.joint == Joint::Weapon)
+                    {
+                        continue;
+                    }
+                    auto p = pose.Apply(part.points[j], part.joint);
+                    top = (std::max)(top, p.z);
+                    bottom = (std::min)(bottom, p.z);
+                }
+            }
+            float height = (top - bottom) * WorldScale::characterScale * WorldScale::metersPerUnit;
+            assert(height > 1.79f && height < 1.88f); // 180cm barefoot, plus role-specific headgear.
+            if (role == 0)
+            {
+                assert(std::fabs(height - 1.8f) < .002f);
+            }
+            for (int frame = 0; frame < 32; ++frame)
+            {
+                auto moving = ModelRig::Pose(frame * .2f, true, true);
+                float face = moving.Apply({0, 0, 0}, Joint::Head).z;
+                for (size_t i = 0; i < model.count; ++i)
+                {
+                    if (model.parts[i].clothing && model.parts[i].joint != Joint::Head)
+                    {
+                        for (size_t j = 0; j < model.parts[i].count; ++j)
+                        {
+                            assert(moving.Apply(model.parts[i].points[j], model.parts[i].joint).z <
+                                   face - .015f);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    assert(&ModelLibrary::Character(CharacterType::Explorer, Gender::Female) != &library.characters[0]);
+    assert(ModelFactory::ValidateModel(library.bulkhead) && ModelFactory::ValidateModel(library.trafficGate));
+    assert(CityHud::ContainsMinimapBuilding({-8, -5, 2, 3, 150}));
+    assert(!CityHud::ContainsMinimapBuilding({kWorldMaxX - 1, 0, 2, 2, 150}));
+    assert(!CityHud::ContainsMinimapBuilding({35, 25, 3, 3, 150}));
+    // A traffic wrap is permitted only when the entire vehicle has left the extended terrain.
+    for (int car = 0; car < 6; ++car)
+    {
+        for (int frame = 0; frame < 2500; ++frame)
+        {
+            auto p = CityLayout::TrafficPosition(car, frame * .05f),
+                 q = CityLayout::TrafficPosition(car, (frame + 1) * .05f);
+            if (std::fabs(q.x - p.x) > 1)
+            {
+                assert(std::fabs(p.x) > CityLayout::kTerrainMaxX + 2 &&
+                       std::fabs(q.x) > CityLayout::kTerrainMaxX + 2);
+            }
+        }
+        float crossing = (18 - (-20 + (car / 2) * 13.333333f)) / 2.4f;
+        auto a = CityLayout::TrafficPosition(car, crossing - .001f),
+             b = CityLayout::TrafficPosition(car, crossing + .001f);
+        assert(std::fabs(b.x - a.x) < .01f);
+    }
 }
 
 void TestScrolling()
@@ -338,6 +437,94 @@ void TestDepth()
     };
     assert(overlay(true) == overlay(false)); // Deferred effects retain their Actor's parent offset.
 }
+void TestEffectDepth()
+{
+    auto draw = [](int effect) {
+        Begin();
+        auto &renderer = GameRenderer::Get().Backend();
+        renderer.BeginModels();
+        Drawing::DrawModel3D(ModelLibrary::Get().box, {640, 500}, {4, 4, 3}, {}, 100, {});
+        renderer.EndModels();
+        if (effect)
+        {
+            float depth = effect < 0 ? -1000.f : 1000.f;
+            const RenderPoint quad[] = {
+                {625, 425, depth}, {655, 425, depth}, {655, 455, depth}, {625, 455, depth}};
+            renderqueue::Depth(true, false);
+            Drawing::SetColor({.2f, .8f, 1, 1});
+            renderer.DrawEffect(quad, SurfaceEffect::JetExhaust, .7f);
+            renderqueue::Flush();
+            GLboolean writing = GL_TRUE;
+            glGetBooleanv(GL_DEPTH_WRITEMASK, &writing);
+            assert(!writing); // Alpha effects must not occlude one another via depth writes.
+            renderqueue::Depth(false);
+        }
+        return Pixels();
+    };
+    const auto solid = draw(0);
+    assert(draw(-1) == solid); // A mesh in front completely hides the same billboard.
+    assert(draw(1) != solid);  // A billboard in front remains visible.
+    auto coveredVehicle = [](bool effects) {
+        Begin();
+        auto &renderer = GameRenderer::Get().Backend();
+        renderer.BeginModels();
+        if (effects)
+        {
+            Drawing::DrawVehicle({640, 440}, 1.5f, VehicleType::JetBike, {}, 1);
+        }
+        else
+        {
+            Transform3D rotation;
+            rotation.yaw = -kPi / 4;
+            Drawing::DrawModel3D(ModelLibrary::Get().vehicles[size_t(VehicleType::JetBike)].body, {640, 440},
+                                 {1.5f, 1.5f, 1.5f}, rotation, 0, {});
+        }
+        Drawing::DrawModel3D(ModelLibrary::Get().box, {640, 650}, {12, 12, 14}, {}, 1000, {});
+        renderer.EndModels();
+        return Pixels();
+    };
+    assert(coveredVehicle(true) == coveredVehicle(false)); // Production flame, glow and sparks all hide.
+}
+void TestCityCoverage(const std::filesystem::path &output)
+{
+    auto &game = Game::Get();
+    game.Reset();
+    auto &world = game.GetState();
+    world.isInsideHome = false;
+    assert(game.IsPositionBlocked({kWorldMaxX + .01f, 0}));
+    assert(game.IsPositionBlocked({kWorldMinX - .01f, 0}));
+    assert(game.IsPositionBlocked({0, kWorldMaxY + .01f}));
+    assert(game.IsPositionBlocked({0, kWorldMinY - .01f}));
+    int index = 0;
+    for (Vector2 camera : {Vector2{kWorldMinX, kWorldMinY},
+                           {kWorldMinX, kWorldMaxY},
+                           {kWorldMaxX, kWorldMinY},
+                           {kWorldMaxX, kWorldMaxY},
+                           {0, kWorldMinY},
+                           {0, kWorldMaxY},
+                           {kWorldMinX, 0},
+                           {kWorldMaxX, 0}})
+    {
+        world.cameraPosition = world.playerPosition = camera;
+        Begin();
+        game::SceneManager::Get(game::SceneKind::Background).Draw();
+        assert(!game::SceneManager::Get(game::SceneKind::Background).GetGraph().Find("background"));
+        game::SceneManager::Get(game::SceneKind::Exterior).Draw();
+        renderqueue::Flush();
+        for (auto sample :
+             {Vector2{1, 1}, {1278, 1}, {1, 798}, {1278, 798}, {640, 1}, {640, 798}, {1, 400}, {1278, 400}})
+        {
+            float depth = 1;
+            glReadPixels(int(sample.x), int(sample.y), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
+            assert(depth < .999f); // Every viewport edge has actual world geometry, not a backdrop.
+        }
+        GameRenderer::Get().Backend().EndScene(0);
+        if (index++ < 4)
+        {
+            Save(output / ("city-edge-" + std::to_string(index) + ".bmp"));
+        }
+    }
+}
 void CaptureScenes(const std::filesystem::path &output)
 {
     auto &world = Game::Get().GetState();
@@ -366,10 +553,10 @@ void CaptureScenes(const std::filesystem::path &output)
     assert(quest.Advance(game::MineQuestStage::ShowRecord));
     assert(quest.Advance(game::MineQuestStage::CheckCityRelay));
     game::GameLevels::Travel().Enter();
-    for (float roll : {-kPi / 6, 0.f, kPi / 6})
+    for (float yaw : {-kPi / 6, 0.f, kPi / 6})
     {
         auto &travel = game::GameLevels::Travel().GetState();
-        travel.rollRadians = roll;
+        travel.yawRadians = yaw;
         Begin();
         game::SceneManager::Get(game::SceneKind::TravelBackground).Draw();
         renderqueue::Flush();
@@ -377,9 +564,7 @@ void CaptureScenes(const std::filesystem::path &output)
         glClear(GL_DEPTH_BUFFER_BIT);
         game::SceneManager::Get(game::SceneKind::JetTravel).Draw();
         GameRenderer::Get().Backend().EndScene(0);
-        Save(output / (roll < 0   ? "bike-bank-left.bmp"
-                       : roll > 0 ? "bike-bank-right.bmp"
-                                  : "bike-neutral.bmp"));
+        Save(output / (yaw < 0 ? "bike-yaw-up.bmp" : yaw > 0 ? "bike-yaw-down.bmp" : "bike-neutral.bmp"));
     }
     Begin();
     for (int i = 0; i < 8; ++i)
@@ -417,7 +602,7 @@ void CaptureScenes(const std::filesystem::path &output)
     {
         auto &travel = game::GameLevels::Travel().GetState();
         travel.distance = float(240.0 / 4.5 + (frame ? .001 : -.001));
-        travel.rollRadians = 0;
+        travel.yawRadians = 0;
         Begin();
         game::SceneManager::Get(game::SceneKind::TravelBackground).Draw();
         renderqueue::Flush();
@@ -574,6 +759,77 @@ void QualityCaptures(const std::filesystem::path &output)
     static_cast<game::MineScene &>(game::SceneManager::Get(game::SceneKind::Mine)).DrawDarkness();
     Save(output / "mine-wall-lighting.bmp");
 }
+void CaptureDistrictAndBodies(const std::filesystem::path &output)
+{
+    auto &game = Game::Get();
+    game.Reset();
+    auto &world = game.GetState();
+    world.isInsideHome = false;
+    for (Vector2 camera : {Vector2{16.5f, 0}, {0, 12.f}})
+    {
+        world.cameraPosition = world.playerPosition = camera;
+        Begin();
+        game::SceneManager::Get(game::SceneKind::Exterior).Draw();
+        auto &graph = game::SceneManager::Get(game::SceneKind::Exterior).GetGraph();
+        int gates = 0, walls = 0;
+        for (const auto *actor : graph.CollectVisible({-100000, -100000, 100000, 100000}))
+        {
+            const auto &name = actor->GetName();
+            if (name.find("boundary/") != 0)
+            {
+                continue;
+            }
+            gates += name.find("/gate/") != std::string::npos;
+            walls += name.find("/wall/") != std::string::npos;
+        }
+        assert(gates == 8 && walls > 90);
+        GameRenderer::Get().Backend().EndScene(0);
+        CityHud{}.Draw();
+        Save(output / (camera.x > 0 ? "east-gate.bmp" : "south-bulkhead.bmp"));
+    }
+    Begin();
+    auto &renderer = GameRenderer::Get().Backend();
+    renderer.BeginModels();
+    for (int gender = 0; gender < 2; ++gender)
+    {
+        for (int role = 0; role < 5; ++role)
+        {
+            auto pose = ModelRig::Pose(.8f, true, role == 0);
+            Transform3D rotation;
+            rotation.yaw = -.25f;
+            Palette palette;
+            palette.body = {.6f, .7f, .74f, 1};
+            palette.accent = {.95f, .59f, .24f, 1};
+            Drawing::DrawModel3D(ModelLibrary::Character(CharacterType(role), Gender(gender)),
+                                 {140.f + role * 245, 320.f + gender * 340}, {3.2f, 3.2f, 3.2f}, rotation, 0,
+                                 palette, &pose);
+            Drawing::DrawLabel(78.f + role * 245, 360.f + gender * 340,
+                               gender ? "여성형 장비복" : "남성형 장비복");
+        }
+    }
+    renderer.EndModels();
+    renderer.EndScene(0);
+    Save(output / "body-variants.bmp");
+    // The same scene actor selects body type from game data, rather than outfit or palette.
+    game.Reset();
+    world.isInsideHome = false;
+    world.playerGender = Gender::Female;
+    world.cameraPosition = world.playerPosition = {-3, 2};
+    Begin();
+    game::SceneManager::Get(game::SceneKind::Exterior).Draw();
+    renderer.EndScene(0);
+    auto *actor = game::SceneManager::Get(game::SceneKind::Exterior).GetGraph().Find("player");
+    assert(actor && !actor->GetRenderObjects().empty());
+    auto female = actor->GetRenderObjects()[0].mesh;
+    world.playerGender = Gender::Male;
+    Begin();
+    game::SceneManager::Get(game::SceneKind::Exterior).Draw();
+    renderer.EndScene(0);
+    assert(actor->GetRenderObjects()[0].mesh != female);
+    CityHud{}.Draw();
+    Save(output / "district-hud.bmp");
+}
+
 void BenchmarkQuality(const std::filesystem::path &output)
 {
     std::ofstream report(output / "performance.json");
@@ -693,19 +949,23 @@ int main(int argc, char **argv)
     glutInit(&argc, argv);
     TestModelsAndRig();
     TestCityAndTravel();
+    TestScaleGenderAndDistrict();
     TestScrolling();
     OffscreenContext context;
     GameRenderer::Get().Initialize();
     TestDepth();
+    TestEffectDepth();
     TestQuestAndResources();
     std::filesystem::path output = argc > 1 ? argv[1] : "x64/ModelChecks/renders";
     std::filesystem::create_directories(output);
+    TestCityCoverage(output);
     CaptureScenes(output);
     TestPixelPresentation(output);
     QualityCaptures(output);
+    CaptureDistrictAndBodies(output);
     BenchmarkQuality(output);
     GameRenderer::Get().Shutdown();
     std::cout
-        << "3D rig, five wardrobes, banking, continuous scrolling, billboard effects, cartoon lighting, "
+        << "3D rig, five wardrobes, yaw steering, continuous scrolling, billboard effects, cartoon lighting, "
            "pixel presentation and scene checks passed.\n";
 }

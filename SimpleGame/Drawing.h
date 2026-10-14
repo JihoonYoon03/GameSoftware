@@ -32,8 +32,8 @@ class Drawing
     static void DrawBox(float x, float y, float width, float depth, float height, ColorRGBA color);
     static void DrawGlow(Vector2 position, float size, ColorRGBA color);
     static void DrawPerson(Vector2 worldPosition, ColorRGBA coat, bool isPlayer = false,
-                           models::CharacterType type = models::CharacterType::Explorer,
-                           bool walking = false);
+                           models::CharacterType type = models::CharacterType::Explorer, bool walking = false,
+                           float facingYaw = .78539816f, models::Gender gender = models::Gender::Male);
     static void DrawCharacterAppearance(Vector2 screenPosition, ColorRGBA coat, models::CharacterType type,
                                         int frame = 0, int direction = 0);
 
@@ -50,7 +50,7 @@ class Drawing
                             const models::Palette &palette = {}, float throttle = .5f, float direction = 1);
     static void DrawWorldVehicle(Vector2 position, float altitude, float scale, models::VehicleType type,
                                  const models::Palette &palette, float throttle, float yaw);
-    static void DrawTravelBike(Vector2 screen, float roll, float throttle);
+    static void DrawTravelBike(Vector2 screen, float yaw, float throttle);
     static void DrawModel3D(const models::Model &model, Vector2 screen, models::Point scale,
                             const models::Transform3D &transform, float depth, const models::Palette &palette,
                             const models::CharacterPose *pose = nullptr);

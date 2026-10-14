@@ -87,6 +87,7 @@ class CityScene final : public Scene
     static Vector2 GetTrafficPosition(int index);
     static models::Palette GetTrafficPalette(int index);
     void DrawStreetTiles(game::Scene &scene);
+    void DrawBoundary(game::Scene &scene);
     void DrawStreetFurniture(game::Scene &scene);
     void DrawDepthSortedObjects(game::Scene &scene);
     void DrawUtilityDevices(game::Scene &scene);
@@ -113,7 +114,8 @@ class MineScene final : public Scene
 
   private:
     void PlacePerson(game::Scene &scene, const std::string &id, Vector2 position, ColorRGBA coat,
-                     models::CharacterType type, bool walking, const std::string &label);
+                     models::CharacterType type, bool walking, const std::string &label, float facingYaw,
+                     models::Gender gender);
     void PlaceClue(game::Scene &scene, const char *id, Vector2 position, const char *label, ColorRGBA color,
                    MineQuestStage expected, bool glyph = false);
     std::uint64_t cachedRevision = 0;

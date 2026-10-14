@@ -20,7 +20,7 @@ void Texture(unsigned int texture);
 void SolidSample(unsigned int texture, float u, float v);
 void Effect(unsigned int program, int kind, float seconds);
 void LineWidth(float width);
-void Depth(bool enabled);
+void Depth(bool enabled, bool write = true);
 void PushMatrix();
 void PopMatrix();
 void Translate(float x, float y, float z);

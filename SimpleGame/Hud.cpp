@@ -12,6 +12,24 @@ namespace tutorial
 // ============================================================================
 // CityHud
 // ============================================================================
+bool CityHud::ContainsMinimapBuilding(const Building &b)
+{
+    if (b.x < kWorldMinX || b.y < kWorldMinY || b.x + b.width > kWorldMaxX || b.y + b.depth > kWorldMaxY)
+    {
+        return false;
+    }
+    for (Vector2 p :
+         {Vector2{b.x, b.y}, {b.x + b.width, b.y}, {b.x, b.y + b.depth}, {b.x + b.width, b.y + b.depth}})
+    {
+        float x = kCanvasWidth - 125.f + (p.x - p.y) * 2.5f;
+        float y = 105 + (p.x + p.y) * 1.25f;
+        if (x < kCanvasWidth - 229.f || x > kCanvasWidth - 28.f || y < 54 || y > 164)
+        {
+            return false;
+        }
+    }
+    return true;
+}
 void CityHud::DrawMinimap()
 {
     auto &world = Game::Get().GetState();
@@ -20,11 +38,20 @@ void CityHud::DrawMinimap()
         float mapCenterX = kCanvasWidth - 125.f, mapCenterY = 105;
         Drawing::DrawRectangle(kCanvasWidth - 235.f, 20, 213, 150, ColorRGBA(.02f, .055f, .08f, .92f));
         Drawing::DrawLabel(kCanvasWidth - 220.f, 42, "구역 지도 / 청록색: 내 위치");
-        for (auto building : world.buildings)
+        for (const auto &building : world.buildings)
         {
-            float x = mapCenterX + (building.x - building.y) * 2.5f,
-                  y = mapCenterY + (building.x + building.y) * 1.25f;
-            Drawing::DrawRectangle(x, y, 9, 6, ColorRGBA(.24f, .34f, .4f));
+            if (!ContainsMinimapBuilding(building))
+            {
+                continue;
+            }
+            auto project = [=](float x, float y) {
+                return Vector2{mapCenterX + (x - y) * 2.5f, mapCenterY + (x + y) * 1.25f};
+            };
+            Drawing::DrawPolygon({project(building.x, building.y),
+                                  project(building.x + building.width, building.y),
+                                  project(building.x + building.width, building.y + building.depth),
+                                  project(building.x, building.y + building.depth)},
+                                 ColorRGBA(.24f, .34f, .4f));
         }
         const Vector2 points[] = {kHomeDoor,       kLiaPosition,     kMaraPosition,        kRelayPosition,
                                   kBeaconPosition, kJetBikePosition, kCityReceiverPosition};

@@ -70,7 +70,7 @@ function render() {
   if (!catalog) return;
   grid.replaceChildren(...catalog.models.map((model) => {
     const card = document.createElement("article"); card.className = "panel model-card";
-    const title = document.createElement("h3"); title.textContent = model.name;
+    const title = document.createElement("h3"); title.textContent = model.name + (model.gender ? " / " + (model.gender === "female" ? "여성형" : "남성형") : "");
     const validation = document.createElement("small");
     validation.textContent = model.validated ? "면·좌표 검사 통과" : "구조 검사 실패";
     title.append(validation);

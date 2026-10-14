@@ -271,7 +271,7 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
         }
         for (const auto &m : library.characters)
         {
-            if (&model == &m)
+            if (&model == &m || &model == &library.femaleCharacters[&m - library.characters.data()])
             {
                 geometry.roughness = .9f;
                 geometry.metallic = 0;
@@ -1191,13 +1191,13 @@ void Renderer::DrawEffect(const RenderPoint (&vertices)[4], SurfaceEffect effect
     }
     renderqueue::Begin(GL_QUADS);
     renderqueue::TexCoord(0, 0);
-    renderqueue::Vertex(vertices[0].x, vertices[0].y);
+    renderqueue::Vertex(vertices[0].x, vertices[0].y, vertices[0].z);
     renderqueue::TexCoord(1, 0);
-    renderqueue::Vertex(vertices[1].x, vertices[1].y);
+    renderqueue::Vertex(vertices[1].x, vertices[1].y, vertices[1].z);
     renderqueue::TexCoord(1, 1);
-    renderqueue::Vertex(vertices[2].x, vertices[2].y);
+    renderqueue::Vertex(vertices[2].x, vertices[2].y, vertices[2].z);
     renderqueue::TexCoord(0, 1);
-    renderqueue::Vertex(vertices[3].x, vertices[3].y);
+    renderqueue::Vertex(vertices[3].x, vertices[3].y, vertices[3].z);
     renderqueue::End();
     if (m_effectProgram)
     {

@@ -28,6 +28,15 @@ GameState &Game::GetState()
 {
     return state;
 }
+void MovementFacing::Update(Vector2 from, Vector2 to)
+{
+    const float dx = to.x - from.x, dy = to.y - from.y;
+    walking = dx * dx + dy * dy > 1.e-10f;
+    if (walking)
+    {
+        yaw = std::atan2(dy, dx);
+    }
+}
 bool CityLayout::IsRoadTile(int x, int y)
 {
     return (y >= -1 && y <= 0) || (x >= 1 && x <= 2) || y == 7 || x == -10;
@@ -64,8 +73,9 @@ void CityLayout::ValidateBuildings(std::vector<Building> &buildings)
 Vector2 CityLayout::TrafficPosition(int index, float seconds)
 {
     float direction = index % 2 == 0 ? 1.f : -1.f;
-    float phase = std::fmod(seconds * 2.4f + (index / 2) * 13.333333f, 40.f);
-    return {direction * (phase - 20), index % 2 == 0 ? -.5f : .5f};
+    const float length = kTrafficMaxX - kTrafficMinX;
+    float phase = std::fmod(seconds * 2.4f + (index / 2) * 13.333333f + (-20 - kTrafficMinX), length);
+    return {direction * (kTrafficMinX + phase), index % 2 == 0 ? -.5f : .5f};
 }
 float CityLayout::TrafficYaw(int index)
 {
@@ -151,6 +161,20 @@ void Game::Reset()
         state.buildings.push_back({-16, float(y), 2.5f, 2, 140});
         state.buildings.push_back({13, float(y), 2.5f, 2, 120});
     }
+    // Surrounding city blocks are scenery; player collision limits stay unchanged.
+    for (int x = CityLayout::kTerrainMinX + 3; x < CityLayout::kTerrainMaxX - 3; x += 6)
+    {
+        for (int y = CityLayout::kTerrainMinY + 3; y < CityLayout::kTerrainMaxY - 3; y += 6)
+        {
+            if (x < kWorldMaxX + 3 && x + 3 > kWorldMinX - 3 && y < kWorldMaxY + 3 && y + 3 > kWorldMinY - 3)
+            {
+                continue;
+            }
+            unsigned int seed = unsigned((x + 64) * 73 + (y + 64) * 151);
+            state.buildings.push_back({float(x), float(y), 2.5f + float(seed % 3) * .3f,
+                                       2.3f + float(seed % 4) * .2f, 90.f + float(seed % 95)});
+        }
+    }
     constexpr models::BuildingType buildingTypes[] = {
         models::BuildingType::Habitat, models::BuildingType::Terraced, models::BuildingType::Workshop,
         models::BuildingType::Dome};
@@ -163,12 +187,14 @@ void Game::Reset()
     {
         auto &building = state.buildings[i];
         building.type = buildingTypes[i % 4];
+        constexpr float heightsMeters[] = {7.2f, 10.8f, 5.4f, 6.5f};
+        building.height = heightsMeters[i % 4] * models::WorldScale::pixelsPerMeter;
         building.palette.body = buildingColors[(i / 4 + i) % 5];
         building.palette.accent =
             i % 2 == 0 ? std::array<float, 4>{.32f, .7f, .78f, 1} : std::array<float, 4>{.85f, .62f, .35f, 1};
         building.palette.emission = {.25f, .75f, .85f, 1};
     }
-    Building observatory{5, -8, 5, 4, 220};
+    Building observatory{5, -8, 5, 4, 11.5f * models::WorldScale::pixelsPerMeter};
     observatory.type = models::BuildingType::Observatory;
     observatory.palette.body = {.46f, .55f, .6f, 1};
     observatory.palette.accent = {.3f, .76f, .86f, 1};
@@ -194,6 +220,7 @@ void Game::Reset()
         resident.type =
             static_cast<models::CharacterType>(i % static_cast<size_t>(models::CharacterType::Count));
         resident.coat = buildingColors[(i / 5 + i) % 5];
+        resident.gender = i % 2 ? models::Gender::Female : models::Gender::Male;
     }
     ShowNotice("리아 / 좋은 아침. 집 단말이 또 깜빡이네. 확인하고 밖에서 만나자.");
 }
@@ -392,7 +419,9 @@ bool Game::IsPositionBlocked(Vector2 position)
         {
             return true;
         }
-        return (position.x < -.6f && position.y < -1.3f) || (position.x > 1.2f && position.y < -1.5f);
+        const bool bed = position.x < -1.35f && position.y < -1.6f;
+        const bool console = position.x > 1.15f && position.x < 2.06f && position.y < -1.98f;
+        return bed || console;
     }
     if (state.isInObservatory)
     {

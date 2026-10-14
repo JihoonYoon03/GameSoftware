@@ -9,6 +9,15 @@ struct Vector2
 {
     float x, y;
 };
+// ============================================================================
+// MovementFacing — persistent heading from actual movement, including route turns
+// ============================================================================
+struct MovementFacing
+{
+    float yaw = .78539816f;
+    bool walking = false;
+    void Update(Vector2 from, Vector2 to);
+};
 struct Building
 {
     float x, y, width, depth, height;
@@ -23,6 +32,8 @@ struct Resident
     std::string dialogue;
     models::CharacterType type = models::CharacterType::Explorer;
     std::array<float, 4> coat = {.55f, .65f, .75f, 1};
+    MovementFacing facing;
+    models::Gender gender = models::Gender::Male;
 };
 
 enum class MainQuestStage
@@ -101,6 +112,7 @@ struct GameState
     int facingDirection = 0;
     float facingYaw = .78539816f;
     Vector2 playerPosition = {0, 0};
+    models::Gender playerGender = models::Gender::Male;
     Vector2 cameraPosition = {0, 0};
     std::string noticeText;
     std::vector<Building> buildings;
@@ -112,6 +124,10 @@ struct GameState
 class CityLayout
 {
   public:
+    // Scenery extends past the unchanged playable bounds far enough for every viewport corner.
+    static constexpr int kTerrainMinX = -48, kTerrainMaxX = 48;
+    static constexpr int kTerrainMinY = -44, kTerrainMaxY = 44;
+    static constexpr float kTrafficMinX = kTerrainMinX - 4.f, kTrafficMaxX = kTerrainMaxX + 4.f;
     static bool IsRoadTile(int x, int y);
     static bool OverlapsRoad(const Building &building, float clearance = .3f);
     static void ValidateBuildings(std::vector<Building> &buildings);

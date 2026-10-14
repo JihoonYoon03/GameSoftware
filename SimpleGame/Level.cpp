@@ -306,6 +306,7 @@ void MineMap::Generate(std::uint32_t seed)
         for (int member = 0; member < 3; ++member)
         {
             state.survivors.push_back({id++, i, {center.x + (member - 1) * .6f, center.y + .5f}});
+            state.survivors.back().gender = (member + i) % 2 ? models::Gender::Female : models::Gender::Male;
         }
     }
     std::shuffle(state.reachableCells.begin(), state.reachableCells.end(), random);
@@ -330,6 +331,7 @@ void MineMap::Generate(std::uint32_t seed)
     state.tracers.clear();
     state.scannerContacts.clear();
     state.riaPosition = {9.5f, 10.5f};
+    state.riaFacing = {};
     state.riaRoute.clear();
     state.riaRouteIndex = 0;
     UpdateNavigation();
@@ -476,7 +478,8 @@ void MineCombat::Attack()
     auto aim = level.GetAimDirection(level.GetAimAngle());
     auto pose = models::ModelRig::Pose(0, false, true, 1);
     auto muzzle = models::ModelRig::Muzzle(pose);
-    float muzzleDistance = std::sqrt(muzzle.x * muzzle.x + muzzle.y * muzzle.y);
+    float muzzleDistance =
+        std::sqrt(muzzle.x * muzzle.x + muzzle.y * muzzle.y) * models::WorldScale::characterScale;
     Bullet bullet = {world.playerPosition, aim, shot.speed, shot.range,
                      shot.damage + (state.player.level - 1) * 4};
     // A gun pressed against a wall cannot spawn a projectile on its far side.
@@ -617,9 +620,10 @@ MineRescue::MineRescue(MineLevel &owner) : level(owner), state(owner.GetState())
 {
 }
 float MineRescue::WalkRoute(tutorial::Vector2 &position, const std::vector<tutorial::Vector2> &route,
-                            size_t &index, float amount)
+                            size_t &index, float amount, tutorial::MovementFacing &facing)
 {
     float travelled = 0;
+    facing.walking = false;
     while (index < route.size() && amount > 0)
     {
         auto target = route[index];
@@ -636,6 +640,7 @@ float MineRescue::WalkRoute(tutorial::Vector2 &position, const std::vector<tutor
         {
             break;
         }
+        facing.Update(position, next);
         position = next;
         travelled += step;
         amount -= step;
@@ -669,15 +674,17 @@ void MineRescue::Update(float deltaSeconds)
             state.riaRouteIndex = 0;
         }
     }
-    state.riaMovement =
-        WalkRoute(state.riaPosition, state.riaRoute, state.riaRouteIndex, 4.8f * deltaSeconds);
+    state.riaMovement = WalkRoute(state.riaPosition, state.riaRoute, state.riaRouteIndex, 4.8f * deltaSeconds,
+                                  state.riaFacing);
     for (auto &npc : state.survivors)
     {
         if (!npc.evacuating)
         {
+            npc.facing.walking = false;
             continue;
         }
-        npc.walkedDistance += WalkRoute(npc.position, npc.route, npc.routeIndex, 2.1f * deltaSeconds);
+        npc.walkedDistance +=
+            WalkRoute(npc.position, npc.route, npc.routeIndex, 2.1f * deltaSeconds, npc.facing);
         auto screen = level.Project(npc.position, 25);
         bool outside = screen.x < -240 || screen.x > tutorial::kCanvasWidth + 240 || screen.y < -200 ||
                        screen.y > tutorial::kCanvasHeight + 200;
@@ -965,7 +972,7 @@ void MineLevel::Restart()
 float MineLevel::GetAimAngle()
 {
     auto &world = tutorial::Game::Get().GetState();
-    auto origin = Project(world.playerPosition, 26);
+    auto origin = Project(world.playerPosition, models::WorldScale::aimHeightPixels);
     return std::atan2(world.cursorPosition.y - origin.y, world.cursorPosition.x - origin.x);
 }
 
@@ -1198,9 +1205,8 @@ void JetTravelLevel::Update(float deltaSeconds)
     {
         state.lateralVelocity = 0;
     }
-    float targetRoll =
-        -tutorial::Game::Clamp(state.lateralVelocity / kSteeringRate, -1, 1) * tutorial::kPi / 6;
-    state.rollRadians += (targetRoll - state.rollRadians) * smoothing;
+    float targetYaw = tutorial::Game::Clamp(state.lateralVelocity / kSteeringRate, -1, 1) * tutorial::kPi / 6;
+    state.yawRadians += (targetYaw - state.yawRadians) * smoothing;
     bool boosting = keys[' '] && state.boostCharge > .03f;
     state.boostCharge =
         tutorial::Game::Clamp(state.boostCharge + (boosting ? -.32f : .18f) * deltaSeconds, 0, 1);

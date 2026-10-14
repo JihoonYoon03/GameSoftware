@@ -27,6 +27,22 @@ enum class CharacterType : std::uint32_t
     Researcher,
     Count
 };
+enum class Gender : std::uint32_t
+{
+    Male,
+    Female
+};
+// ============================================================================
+// WorldScale — physical scale shared by models, animation and gameplay
+// ============================================================================
+struct WorldScale
+{
+    static constexpr float metersPerUnit = 2;
+    static constexpr float pixelsPerMeter = 22;
+    static constexpr float humanHeightMeters = 1.8f;
+    static constexpr float characterScale = humanHeightMeters / (metersPerUnit * 1.295f);
+    static constexpr float aimHeightPixels = 26 * characterScale;
+};
 enum class BuildingType : std::uint32_t
 {
     Habitat,
@@ -134,6 +150,7 @@ struct VehicleModel
     Model body;
     std::array<Point, 2> exhausts = {};
     std::array<Point, 2> headlights = {};
+    Point seat = {};
 };
 struct Library
 {
@@ -148,9 +165,12 @@ struct Library
     Model rock;
     Model telescope;
     Model console;
+    Model bulkhead;
+    Model trafficGate;
     std::array<Model, 4> grounds;
     std::array<VehicleModel, static_cast<size_t>(VehicleType::Count)> vehicles;
     std::array<Model, static_cast<size_t>(CharacterType::Count)> characters;
+    std::array<Model, static_cast<size_t>(CharacterType::Count)> femaleCharacters;
     std::array<Model, static_cast<size_t>(BuildingType::Count)> buildings;
 };
 
@@ -159,6 +179,7 @@ class ModelLibrary
 {
   public:
     static const Library &Get();
+    static const Model &Character(CharacterType type, Gender gender);
 };
 
 // ============================================================================
@@ -168,7 +189,7 @@ class ModelFactory
 {
   public:
     static void GenerateVehicle(VehicleModel &result, VehicleType type);
-    static void GenerateCharacter(Model &result, CharacterType type);
+    static void GenerateCharacter(Model &result, CharacterType type, Gender gender = Gender::Male);
     static void GenerateBuilding(Model &result, BuildingType type);
     static bool ValidateModel(const Model &model);
 };

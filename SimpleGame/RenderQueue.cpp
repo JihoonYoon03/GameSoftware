@@ -24,13 +24,14 @@ struct Transform
 struct State
 {
     bool depth = false;
+    bool depthWrite = false;
     GLuint texture = 0, program = 0;
     int effect = 0;
     float seconds = 0;
     bool operator==(const State &other) const
     {
-        return depth == other.depth && texture == other.texture && program == other.program &&
-               effect == other.effect && seconds == other.seconds;
+        return depth == other.depth && depthWrite == other.depthWrite && texture == other.texture &&
+               program == other.program && effect == other.effect && seconds == other.seconds;
     }
 };
 struct Range
@@ -132,7 +133,7 @@ void ApplyState(const State &value)
     {
         glDisable(GL_DEPTH_TEST);
     }
-    glDepthMask(value.depth ? GL_TRUE : GL_FALSE);
+    glDepthMask(value.depthWrite ? GL_TRUE : GL_FALSE);
     glDepthFunc(GL_LEQUAL);
     if (GLEW_VERSION_2_0)
     {
@@ -494,9 +495,10 @@ void LineWidth(float width)
 {
     lineWidth = width;
 }
-void Depth(bool enabled)
+void Depth(bool enabled, bool write)
 {
     state.depth = enabled;
+    state.depthWrite = enabled && write;
 }
 void PushMatrix()
 {

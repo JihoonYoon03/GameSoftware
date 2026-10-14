@@ -407,7 +407,7 @@ void PointJson(std::ostream &out, models::Point point)
     out << '[' << point.x << ',' << point.y << ',' << point.z << ']';
 }
 void ModelJson(std::ostream &out, const models::Model &model, const char *category, const char *name,
-               size_t type, const models::VehicleModel *vehicle = nullptr)
+               size_t type, const models::VehicleModel *vehicle = nullptr, const char *gender = nullptr)
 {
     out << "{\"category\":\"" << category << "\",\"name\":\"" << name << "\",\"type\":" << type
         << ",\"space\":\"" << (model.space == models::CoordinateSpace::World ? "world" : "screen")
@@ -442,6 +442,10 @@ void ModelJson(std::ostream &out, const models::Model &model, const char *catego
         firstPart = false;
     }
     out << ']';
+    if (gender)
+    {
+        out << ",\"gender\":\"" << gender << "\"";
+    }
     if (vehicle)
     {
         out << ",\"exhausts\":[";
@@ -473,8 +477,8 @@ std::string ModelCatalog::Build()
     constexpr const char *kVehicleNames[] = {"쿠페", "여객 셔틀", "화물 수송차", "순찰차",
                                              "개인용 제트 오토바이"};
     constexpr const char *kCharacterNames[] = {"탐험가", "정비사", "경비원", "의무관", "연구원"};
-    constexpr const char *kBuildingNames[] = {"발코니 주거동", "계단식 테라스", "박공 작업장", "돔 시설",
-                                              "관문 전망대"};
+    constexpr const char *kBuildingNames[] = {"압력 주거 모듈", "적층 거주 포드", "자기장 정비 격납고",
+                                              "리브 돔 시설", "관문 전망대"};
     std::ostringstream out;
     out.imbue(std::locale::classic());
     out << std::fixed << std::setprecision(5) << "{\"schema\":\"game_models_v1\",\"models\":[";
@@ -491,7 +495,10 @@ std::string ModelCatalog::Build()
     for (size_t i = 0; i < library.characters.size(); ++i)
     {
         out << ',';
-        ModelJson(out, library.characters[i], "character", kCharacterNames[i], i);
+        ModelJson(out, library.characters[i], "character", kCharacterNames[i], i, nullptr, "male");
+        out << ',';
+        ModelJson(out, library.femaleCharacters[i], "character", kCharacterNames[i],
+                  i + library.characters.size(), nullptr, "female");
     }
     for (size_t i = 0; i < library.buildings.size(); ++i)
     {

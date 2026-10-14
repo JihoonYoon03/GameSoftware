@@ -31,12 +31,46 @@ void ReadyMine(unsigned int seed = 13)
     mineState.active = true;
     mineState.invulnerability = 1000;
 }
+void TestNpcFacing()
+{
+    tutorial::MovementFacing facing;
+    for (Vector2 delta : {Vector2{1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {-1, -1}})
+    {
+        facing.Update({0, 0}, delta);
+        assert(facing.walking);
+        assert(std::fabs(facing.yaw - std::atan2(delta.y, delta.x)) < .00001f);
+        float lastYaw = facing.yaw;
+        facing.Update(delta, delta);
+        assert(!facing.walking && facing.yaw == lastYaw);
+    }
+    ReadyMine();
+    mineState.survivors.clear();
+    RescueNpc npc{100, 0, {8.5f, 9.5f}};
+    npc.evacuating = true;
+    npc.route = {{9.5f, 9.5f}, {9.5f, 10.5f}};
+    mineState.survivors.push_back(npc);
+    mineState.riaPosition = {8.5f, 9.5f};
+    mineState.riaRoute = npc.route;
+    mineState.riaNavigationCooldown = 100;
+    GameLevels::Mine().Rescue().Update(.1f);
+    assert(mineState.survivors.front().facing.walking);
+    assert(std::fabs(mineState.survivors.front().facing.yaw) < .0001f);
+    assert(mineState.riaFacing.walking && std::fabs(mineState.riaFacing.yaw) < .0001f);
+    for (int i = 0; i < 12; ++i)
+    {
+        GameLevels::Mine().Rescue().Update(.1f);
+    }
+    const auto &rescued = mineState.survivors.front();
+    assert(!rescued.facing.walking && std::fabs(rescued.facing.yaw - tutorial::kPi / 2) < .0001f);
+    assert(!mineState.riaFacing.walking && std::fabs(mineState.riaFacing.yaw - tutorial::kPi / 2) < .0001f);
+}
 void AimAt(Vector2 target)
 {
     auto camera = tutorial::Game::Get().GetState().cameraPosition;
     tutorial::Game::Get().GetState().cursorPosition = {
         tutorial::kCanvasWidth * .5f + (target.x - target.y - camera.x + camera.y) * 36,
-        tutorial::kCanvasHeight * .57f + (target.x + target.y - camera.x - camera.y) * 18 - 26};
+        tutorial::kCanvasHeight * .57f + (target.x + target.y - camera.x - camera.y) * 18 -
+            models::WorldScale::aimHeightPixels};
 }
 void Step(float seconds)
 {
@@ -163,7 +197,8 @@ void TestAimLightingAndWallShots()
     assert(mineState.bullets.size() == 1);
     auto muzzle = models::ModelRig::Muzzle(models::ModelRig::Pose(0, false, true, 1));
     assert(std::fabs(mineState.bullets[0].position.x - 24.5f) < .0001f);
-    assert(std::fabs(mineState.bullets[0].position.y - 17.5f - muzzle.x) < .0001f);
+    assert(std::fabs(mineState.bullets[0].position.y - 17.5f -
+                     muzzle.x * models::WorldScale::characterScale) < .0001f);
     mineState.bullets.clear();
     mineState.pistol.Reset();
     tutorial::Game::Get().GetState().playerPosition = {29.5f, 29.5f};
@@ -258,6 +293,7 @@ int main(int argc, char **argv)
     TestWeapon();
     TestQuest();
     TestMapAndGate();
+    TestNpcFacing();
     TestAimLightingAndWallShots();
     TestRescueAndScanner();
     TestStoryAndReentry();

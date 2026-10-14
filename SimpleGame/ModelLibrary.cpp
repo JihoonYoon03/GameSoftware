@@ -412,86 +412,131 @@ CharacterPose ModelRig::Pose(float phase, bool walking, bool armed, float recoil
 }
 Point ModelRig::Muzzle(const CharacterPose &pose)
 {
-    return pose.Apply({.34f, 0, 0}, Joint::Weapon);
+    return pose.Apply({.22f, 0, 0}, Joint::Weapon);
 }
 
 void ModelFactory::GenerateVehicle(VehicleModel &result, VehicleType type)
 {
     auto &m = result.body;
-    m.count = 0;
+    m = Model{};
     m.space = CoordinateSpace::World;
     bool bike = type == VehicleType::JetBike;
-    float length = bike ? .95f : type == VehicleType::Hauler ? 1.50f : 1.24f;
-    float w = bike ? .17f : .38f;
-    MeshBox(m, {-length, -w, .15f}, {length * .82f, w, .43f}, {.85f, .9f, 1, 1});
-    MeshBox(m, {-length * .93f, -w * .96f, .08f}, {length * .9f, w * .96f, .18f}, {.18f, .22f, .26f, 1},
+    float length = bike ? .95f : type == VehicleType::Hauler ? 1.5f : 1.24f, w = bike ? .17f : .38f;
+    MeshBox(m, {-length, -w, .17f}, {length * .82f, w, .45f}, {.85f, .92f, 1, 1});
+    MeshBox(m, {-length * .9f, -w * .9f, .1f}, {length * .9f, w * .9f, .22f}, {.12f, .19f, .24f, 1},
             PaletteSlot::Fixed);
     if (bike)
     {
-        MeshBox(m, {-.38f, -.16f, .43f}, {.13f, .16f, .55f}, {.12f, .15f, .19f, 1}, PaletteSlot::Fixed);
-        MeshBox(m, {.16f, -.22f, .42f}, {.68f, .22f, .65f}, {1, 1, 1, 1}, PaletteSlot::Accent);
-        MeshBox(m, {.36f, -.31f, .64f}, {.43f, .31f, .69f}, {.42f, .48f, .52f, 1}, PaletteSlot::Fixed);
+        MeshBox(m, {-.38f, -.16f, .44f}, {.13f, .16f, .55f}, {.1f, .15f, .19f, 1}, PaletteSlot::Fixed);
+        MeshBox(m, {.16f, -.22f, .43f}, {.67f, .22f, .64f}, {1, 1, 1, 1}, PaletteSlot::Accent);
+        Tube(m, {.37f, -.31f, .67f}, {.37f, .31f, .67f}, .027f, .027f, {.5f, .65f, .7f, 1},
+             PaletteSlot::Fixed, 8);
+        result.seat = {-.125f, 0, .55f};
     }
     else
     {
-        float roof = type == VehicleType::Shuttle ? .96f : .78f;
-        MeshBox(m, {-.65f, -w * .84f, .43f}, {.48f, w * .84f, roof}, {.65f, .76f, .86f, 1});
-        // Solid tinted window insets, offset from the shell to avoid z fighting.
-        MeshBox(m, {.481f, -w * .75f, .50f}, {.492f, w * .75f, roof - .06f}, {.09f, .27f, .34f, 1},
-                PaletteSlot::Fixed);
-        for (float side : {-1.f, 1.f})
+        size_t first = m.count;
+        Ellipsoid(m, {-.04f, 0, .51f}, {.69f, w * .92f, type == VehicleType::Shuttle ? .39f : .28f},
+                  {.10f, .29f, .37f, 1}, PaletteSlot::Fixed, Joint::Root, 16, 6);
+        for (size_t i = first; i < m.count; ++i)
         {
-            MeshBox(m, {-.52f, side * w * .85f - .008f, .51f}, {.35f, side * w * .85f + .008f, roof - .06f},
-                    {.08f, .24f, .31f, 1}, PaletteSlot::Fixed);
+            m.parts[i].surface = Surface::Glass;
         }
+        // Armoured dorsal spine and flush sensor, replacing a conventional car roof.
+        MeshBox(m, {-.58f, -.07f, .73f}, {.36f, .07f, .81f}, {1, 1, 1, 1}, PaletteSlot::Accent);
         if (type == VehicleType::Hauler)
         {
-            MeshBox(m, {-1.45f, -.37f, .44f}, {-.65f, .37f, 1.08f}, {1, 1, 1, 1}, PaletteSlot::Accent);
+            MeshBox(m, {-1.45f, -.36f, .45f}, {-.64f, .36f, 1.05f}, {1, 1, 1, 1}, PaletteSlot::Accent);
+            for (int i = 0; i < 4; ++i)
+            {
+                MeshBox(m, {-1.4f + i * .17f, -.37f, .52f}, {-1.37f + i * .17f, .37f, 1.08f},
+                        {.19f, .28f, .34f, 1}, PaletteSlot::Fixed);
+            }
         }
         if (type == VehicleType::Patrol)
         {
-            MeshBox(m, {-.2f, -.25f, roof}, {.06f, .25f, roof + .10f}, {1, .35f, .25f, 1},
-                    PaletteSlot::Emission);
+            MeshBox(m, {-.23f, -.24f, .81f}, {.07f, .24f, .87f}, {.15f, .65f, 1, 1}, PaletteSlot::Emission);
+            Tube(m, {-.5f, 0, .79f}, {-.5f, 0, 1.02f}, .018f, .008f, {.4f, .65f, .75f, 1}, PaletteSlot::Fixed,
+                 8);
         }
     }
     for (int side = 0; side < 2; ++side)
     {
-        float y = (side ? 1.f : -1.f) * (bike ? .27f : .36f);
-        MeshBox(m, {-length * .85f, y - .10f, 0}, {length * .65f, y + .10f, .14f}, {.13f, .17f, .21f, 1},
-                PaletteSlot::Fixed);
-        result.exhausts[side] = {-length - .03f, y, .20f};
-        result.headlights[side] = {length * .84f, y * .75f, .34f};
-        MeshBox(m, {length * .82f, y * .75f - .055f, .29f}, {length * .88f, y * .75f + .055f, .39f},
-                {1, .93f, .7f, 1}, PaletteSlot::Fixed);
-        MeshBox(m, {-length - .01f, y - .06f, .17f}, {-length + .03f, y + .06f, .25f}, {1, .3f, .16f, 1},
-                PaletteSlot::Fixed);
-    }
-    for (int side = 0; side < 2; ++side)
-    {
+        float y = (side ? 1.f : -1.f) * (bike ? .27f : .46f);
+        // Independent magnetic drive pods and exposed luminous coil collars.
+        Tube(m, {-length * .82f, y, .17f}, {length * .68f, y, .17f}, .12f, .10f, {.24f, .34f, .41f, 1},
+             PaletteSlot::Fixed, 12);
+        for (float x : {-length * .52f, length * .30f})
+        {
+            Tube(m, {x, y, .17f}, {x + .045f, y, .17f}, .125f, .125f, {1, 1, 1, 1}, PaletteSlot::Emission, 8);
+        }
+        result.exhausts[side] = {-length - .04f, y, .23f};
+        result.headlights[side] = {length * .84f, y * .65f, .38f};
         auto nozzle = result.exhausts[side];
-        Tube(m, {nozzle.x + .18f, nozzle.y, nozzle.z}, {nozzle.x - .04f, nozzle.y, nozzle.z}, .105f, .14f,
-             {.3f, .36f, .4f, 1}, PaletteSlot::Fixed);
-        Tube(m, {nozzle.x - .041f, nozzle.y, nozzle.z}, {nozzle.x - .046f, nozzle.y, nozzle.z}, .10f, .10f,
-             {1, 1, 1, 1}, PaletteSlot::Emission);
-        for (int vent = 0; vent < 4; ++vent)
-        {
-            MeshBox(m, {-.35f + vent * .13f, (side ? 1.f : -1.f) * w - .008f, .25f},
-                    {-.30f + vent * .13f, (side ? 1.f : -1.f) * w + .008f, .36f}, {.12f, .17f, .20f, 1},
-                    PaletteSlot::Fixed);
-        }
+        Tube(m, {nozzle.x + .16f, y, .23f}, {nozzle.x - .04f, y, .23f}, .10f, .14f, {.32f, .45f, .52f, 1},
+             PaletteSlot::Fixed, 12);
+        Tube(m, {nozzle.x - .041f, y, .23f}, {nozzle.x - .046f, y, .23f}, .10f, .10f, {1, 1, 1, 1},
+             PaletteSlot::Emission, 12);
+        MeshBox(m, {-.38f, y - .055f, .32f}, {.40f, y + .055f, .37f}, {1, 1, 1, 1}, PaletteSlot::Accent);
+        MeshBox(m, {-.32f, y - .058f, .371f}, {.29f, y + .058f, .38f}, {1, 1, 1, 1}, PaletteSlot::Emission);
+        auto lamp = result.headlights[side];
+        MeshBox(m, {lamp.x - .025f, lamp.y - .06f, lamp.z - .025f},
+                {lamp.x + .025f, lamp.y + .06f, lamp.z + .025f}, {.75f, .95f, 1, 1}, PaletteSlot::Emission);
     }
-    if (!bike)
+    // Bake physical dimensions once, leaving instance scale at 1 in the walking world.
+    constexpr Point sizesMeters[] = {{4.3f, 1.7f, 1.35f},
+                                     {5.6f, 1.85f, 2.1f},
+                                     {5.2f, 1.9f, 2.0f},
+                                     {4.6f, 1.75f, 1.55f},
+                                     {2.5f, .95f, 1.05f}};
+    Point lo = {100, 100, 100}, hi = {-100, -100, -100};
+    for (size_t i = 0; i < m.count; ++i)
     {
-        MeshBox(m, {.55f, -w * .65f, .432f}, {.9f, w * .65f, .45f}, {.55f, .62f, .68f, 1},
-                PaletteSlot::Accent);
-        for (float side : {-1.f, 1.f})
+        for (size_t j = 0; j < m.parts[i].count; ++j)
         {
-            MeshBox(m, {-.15f, side * w - .035f, .45f}, {.05f, side * w + .035f, .48f}, {.7f, .76f, .8f, 1},
-                    PaletteSlot::Fixed);
+            auto p = m.parts[i].points[j];
+            lo.x = (std::min)(lo.x, p.x);
+            lo.y = (std::min)(lo.y, p.y);
+            lo.z = (std::min)(lo.z, p.z);
+            hi.x = (std::max)(hi.x, p.x);
+            hi.y = (std::max)(hi.y, p.y);
+            hi.z = (std::max)(hi.z, p.z);
         }
     }
+    auto size = sizesMeters[size_t(type)];
+    Point scale = {size.x / (2 * (hi.x - lo.x)), size.y / (2 * (hi.y - lo.y)), size.z / (2 * (hi.z - lo.z))};
+    auto convert = [&](Point p) { return Point{p.x * scale.x, p.y * scale.y, (p.z - lo.z) * scale.z}; };
+    for (size_t i = 0; i < m.count; ++i)
+    {
+        auto &part = m.parts[i];
+        if (part.surface == Surface::Default)
+        {
+            part.surface = Surface::Metal;
+        }
+        for (size_t j = 0; j < part.count; ++j)
+        {
+            part.points[j] = convert(part.points[j]);
+            auto n = part.normals[j];
+            float x = n.x / scale.x, y = n.y / scale.y, z = n.z / scale.z,
+                  len = std::sqrt(x * x + y * y + z * z);
+            if (len > 0)
+            {
+                part.normals[j] = {x / len, y / len, z / len};
+            }
+        }
+    }
+    for (auto &p : result.exhausts)
+    {
+        p = convert(p);
+    }
+    for (auto &p : result.headlights)
+    {
+        p = convert(p);
+    }
+    result.seat = convert(result.seat);
 }
-void ModelFactory::GenerateCharacter(Model &m, CharacterType type)
+
+void ModelFactory::GenerateCharacter(Model &m, CharacterType type, Gender gender)
 {
     m.count = 0;
     m.space = CoordinateSpace::World;
@@ -610,110 +655,208 @@ void ModelFactory::GenerateCharacter(Model &m, CharacterType type)
     }
     MeshBox(m, {-.035f, -.035f, -.10f}, {.045f, .035f, .015f}, {.17f, .19f, .21f, 1}, PaletteSlot::Fixed,
             Joint::Weapon);
-    MeshBox(m, {0, -.039f, -.035f}, {.34f, .039f, .035f}, {.35f, .39f, .43f, 1}, PaletteSlot::Fixed,
+    MeshBox(m, {0, -.039f, -.035f}, {.22f, .039f, .035f}, {.35f, .39f, .43f, 1}, PaletteSlot::Fixed,
             Joint::Weapon);
+    // Powered suit seams, sealed comms and joint-mounted equipment retain each role's wardrobe.
+    ClothingBox(m, {.14f, -.10f, .69f}, {.19f, .10f, .93f}, {.18f, .27f, .33f, 1}, PaletteSlot::Fixed);
+    Badge(m, .191f, 0, .83f, .15f, .022f, {1, 1, 1, 1}, PaletteSlot::Emission);
+    if (medic)
+    {
+        Badge(m, .193f, 0, .81f, .045f, .15f, {.9f, .16f, .18f, 1});
+        Badge(m, .194f, 0, .81f, .13f, .045f, {.9f, .16f, .18f, 1});
+    }
+    for (float side : {-1.f, 1.f})
+    {
+        ClothingBox(m, {-.07f, side * .15f - .025f, .08f}, {.03f, side * .15f + .025f, .16f},
+                    {.17f, .27f, .34f, 1}, PaletteSlot::Fixed, Joint::Head);
+        ClothingBox(m, {-.02f, side * .174f - .008f, .105f}, {.02f, side * .174f + .008f, .14f}, {1, 1, 1, 1},
+                    PaletteSlot::Emission, Joint::Head);
+        ClothingBox(m, {.052f, -.05f, -.19f}, {.075f, .05f, -.075f}, {.22f, .33f, .39f, 1},
+                    PaletteSlot::Fixed, side < 0 ? Joint::RightForearm : Joint::LeftForearm);
+    }
+    // Compact coil pistol: segmented barrel shroud, luminous induction rails and capacitor.
+    for (int cell = 0; cell < 3; ++cell)
+    {
+        MeshBox(m, {.045f + cell * .05f, -.048f, -.028f}, {.070f + cell * .05f, .048f, .043f},
+                {.2f, .65f, .85f, 1}, PaletteSlot::Emission, Joint::Weapon);
+    }
+    MeshBox(m, {.02f, -.031f, .038f}, {.20f, .031f, .055f}, {.12f, .2f, .25f, 1}, PaletteSlot::Fixed,
+            Joint::Weapon);
+    if (gender == Gender::Female)
+    {
+        // Distinct fitted silhouette on the same skeleton; armour follows the body rather than overlaying
+        // skin.
+        for (size_t i = 0; i < m.count; ++i)
+        {
+            auto &part = m.parts[i];
+            if (part.joint == Joint::Weapon)
+            {
+                continue;
+            }
+            for (size_t j = 0; j < part.count; ++j)
+            {
+                auto &p = part.points[j];
+                if (part.joint == Joint::Root)
+                {
+                    float width = p.z < .55f ? 1.04f : (.83f + (.98f - (std::min)(.98f, p.z)) * .40f);
+                    p.y *= width;
+                    p.x *= .94f;
+                }
+                else if (part.joint == Joint::Head)
+                {
+                    p.x *= .94f;
+                    p.y *= .91f;
+                    auto &n = part.normals[j];
+                    n.x /= .94f;
+                    n.y /= .91f;
+                }
+                else
+                {
+                    p.x *= .94f;
+                    p.y *= .92f;
+                }
+            }
+        }
+        // Swept-back hair has volume, leaving the face and comms clear.
+        if (!guard)
+        {
+            Ellipsoid(m, {-.12f, 0, engineer || medic ? .11f : .18f}, {.07f, .075f, .065f},
+                      {.12f, .075f, .06f, 1}, PaletteSlot::Fixed, Joint::Head, 10, 4);
+        }
+    }
 }
-void ModelFactory::GenerateBuilding(Model &result, BuildingType type)
+void ModelFactory::GenerateBuilding(Model &m, BuildingType type)
 {
-    result.count = 0;
-    result.space = CoordinateSpace::World;
+    m = Model{};
+    m.space = CoordinateSpace::World;
+    auto shell = [&](Point a, Point b, PaletteSlot slot = PaletteSlot::Body) {
+        MeshBox(m, a, b, {1, 1, 1, 1}, slot);
+    };
+    auto band = [&](float edge, float start, float span, float z, float height) {
+        AddVariantPart(m, PartKind::Glass,
+                       {{edge + .003f, start, z},
+                        {edge + .003f, start + span, z},
+                        {edge + .003f, start + span, z + height},
+                        {edge + .003f, start, z + height}},
+                       {.09f, .32f, .4f, 1}, PaletteSlot::Fixed);
+        AddVariantPart(m, PartKind::Glass,
+                       {{start, edge + .003f, z},
+                        {start, edge + .003f, z + height},
+                        {start + span, edge + .003f, z + height},
+                        {start + span, edge + .003f, z}},
+                       {.09f, .32f, .4f, 1}, PaletteSlot::Fixed);
+        MeshBox(m, {edge + .004f, start, z + height}, {edge + .009f, start + span, z + height + .009f},
+                {1, 1, 1, 1}, PaletteSlot::Emission);
+        MeshBox(m, {start, edge + .004f, z + height}, {start + span, edge + .009f, z + height + .009f},
+                {1, 1, 1, 1}, PaletteSlot::Emission);
+    };
+    // Shared raised plinth and pressure-hull base, with no pitched roofs or chimneys.
+    shell({0, 0, 0}, {1, 1, .06f}, PaletteSlot::Accent);
     if (type == BuildingType::Habitat)
     {
-        Box(result, 0, 0, 1, 1, 0, .64f);
-        Box(result, .08f, .08f, .84f, .84f, .64f, .78f);
-        for (float z : {.24f, .46f})
+        shell({.02f, .02f, .06f}, {.98f, .98f, .78f});
+        shell({0, 0, .78f}, {1, 1, .86f}, PaletteSlot::Accent);
+        band(.98f, .10f, .77f, .39f, .07f);
+        band(.98f, .10f, .77f, .66f, .07f);
+        for (float x : {.05f, .89f})
         {
-            Box(result, .16f, .78f, .68f, .22f, z, z + .06f);
+            shell({x, .04f, .08f}, {x + .06f, .95f, .92f}, PaletteSlot::Accent);
         }
-        AddVariantPart(result, PartKind::Polygon, {{0, 0, .78f}, {1, 0, .78f}, {1, .5f, 1}, {0, .5f, 1}},
-                       {.78f, .8f, .9f, 1}, PaletteSlot::Accent);
-        AddVariantPart(result, PartKind::Polygon, {{0, .5f, 1}, {1, .5f, 1}, {1, 1, .78f}, {0, 1, .78f}},
-                       {.55f, .65f, .8f, 1}, PaletteSlot::Accent);
+        // Slanted solar/thermal array on the flat service deck.
+        AddVariantPart(m, PartKind::Polygon,
+                       {{.14f, .15f, .88f}, {.82f, .15f, .88f}, {.82f, .65f, 1.f}, {.14f, .65f, 1.f}},
+                       {.10f, .24f, .31f, 1}, PaletteSlot::Fixed);
+        for (float x : {.2f, .4f, .6f})
+        {
+            AddVariantPart(m, PartKind::Line, {{x, .15f, .884f}, {x, .65f, 1.004f}}, {.25f, .8f, .9f, 1},
+                           PaletteSlot::Emission, .8f);
+        }
     }
     else if (type == BuildingType::Terraced)
     {
-        Box(result, 0, 0, 1, 1, 0, .36f);
-        Box(result, .05f, .05f, .7f, .7f, .36f, .7f);
-        Box(result, .1f, .1f, .42f, .42f, .7f, 1);
-        AddVariantPart(result, PartKind::Line, {{.8f, .85f, .37f}, {.95f, .85f, .37f}}, {1, 1, 1, 1},
-                       PaletteSlot::Accent, 4);
+        // Cantilevered habitat pods connected to an exposed service spine.
+        shell({.08f, .08f, .06f}, {.30f, .36f, 1.06f}, PaletteSlot::Accent);
+        for (int tier = 0; tier < 3; ++tier)
+        {
+            float inset = tier * .10f, z = .08f + tier * .29f, edge = 1 - inset;
+            shell({inset, inset, z}, {edge, edge, z + .25f});
+            shell({inset, inset, z + .25f}, {edge, edge, z + .28f}, PaletteSlot::Accent);
+            band(edge, inset + .08f, .75f - inset * 2, z + .11f, .075f);
+            for (float x : {inset + .08f, edge - .08f})
+            {
+                Tube(m, {x, inset + .04f, z}, {x + .035f, edge - .05f, z + .27f}, .012f, .012f,
+                     {.5f, .65f, .7f, 1}, PaletteSlot::Fixed, 6);
+            }
+        }
+        Tube(m, {.19f, .22f, 1.04f}, {.19f, .22f, 1.15f}, .03f, .018f, {1, 1, 1, 1}, PaletteSlot::Emission,
+             8);
     }
     else if (type == BuildingType::Workshop)
     {
-        Box(result, 0, 0, 1, 1, 0, .45f);
-        AddVariantPart(result, PartKind::Polygon, {{0, 0, .45f}, {1, 0, .45f}, {1, .5f, .8f}, {0, .5f, .8f}},
-                       {.8f, .85f, .9f, 1}, PaletteSlot::Accent);
-        AddVariantPart(result, PartKind::Polygon, {{0, .5f, .8f}, {1, .5f, .8f}, {1, 1, .45f}, {0, 1, .45f}},
-                       {.5f, .65f, .75f, 1}, PaletteSlot::Accent);
-        Box(result, .65f, .05f, .18f, .18f, .6f, 1);
-        AddVariantPart(result, PartKind::Polygon,
-                       {{.15f, 1, .02f}, {.7f, 1, .02f}, {.7f, 1, .35f}, {.15f, 1, .35f}},
-                       {.2f, .25f, .3f, 1}, PaletteSlot::Fixed);
+        shell({.04f, .04f, .06f}, {.96f, .96f, .68f});
+        shell({0, 0, .68f}, {1, 1, .77f}, PaletteSlot::Accent);
+        for (float x : {.05f, .88f})
+        {
+            shell({x, .02f, .06f}, {x + .07f, .98f, .84f}, PaletteSlot::Accent);
+            Tube(m, {x + .035f, .2f, .1f}, {x + .035f, .65f, .85f}, .018f, .018f, {.4f, .65f, .7f, 1},
+                 PaletteSlot::Fixed, 8);
+        }
+        Tube(m, {.25f, .3f, .79f}, {.73f, .3f, .79f}, .13f, .13f, {.28f, .4f, .45f, 1}, PaletteSlot::Fixed,
+             16);
+        Tube(m, {.3f, .3f, .79f}, {.32f, .3f, .79f}, .138f, .138f, {1, 1, 1, 1}, PaletteSlot::Emission, 12);
+        band(.96f, .16f, .66f, .48f, .075f);
+        // Recessed segmented hangar shutter instead of a domestic garage facade.
+        for (int i = 0; i < 5; ++i)
+        {
+            MeshBox(m, {.22f, .963f, .07f + i * .065f}, {.78f, .975f, .13f + i * .065f},
+                    {.18f, .27f, .33f, 1}, PaletteSlot::Fixed);
+        }
     }
     else
     {
-        Box(result, 0, 0, 1, 1, 0, type == BuildingType::Observatory ? .3f : .2f);
-        Dome(result, type == BuildingType::Observatory ? .3f : .2f,
-             type == BuildingType::Observatory ? .6f : .75f);
+        shell({.02f, .02f, .06f}, {.98f, .98f, .19f});
+        Dome(m, .19f, type == BuildingType::Observatory ? .65f : .70f);
+        // Meridian ribs follow the curved shell rather than floating at its outside.
+        for (int rib = 0; rib < 8; ++rib)
+        {
+            float longitude = rib * 6.2831853f / 8;
+            for (int ring = 0; ring < 4; ++ring)
+            {
+                auto at = [&](int n) {
+                    float t = n * 1.5707963f / 4;
+                    float h = type == BuildingType::Observatory ? .65f : .70f;
+                    return Point{.5f + .464f * std::cos(t) * std::cos(longitude),
+                                 .5f + .464f * std::cos(t) * std::sin(longitude), .19f + h * std::sin(t)};
+                };
+                AddVariantPart(m, PartKind::Line, {at(ring), at(ring + 1)}, {.42f, .67f, .72f, 1},
+                               rib % 2 ? PaletteSlot::Accent : PaletteSlot::Emission, .8f);
+            }
+        }
         if (type == BuildingType::Observatory)
         {
-            AddVariantPart(result, PartKind::Line, {{.5f, .5f, .7f}, {.82f, .2f, 1.12f}},
-                           {.75f, .85f, .9f, 1}, PaletteSlot::Fixed, 12);
-            AddVariantPart(result, PartKind::Line, {{.74f, .18f, 1.1f}, {.9f, .22f, 1.14f}}, {1, 1, 1, 1},
-                           PaletteSlot::Emission, 5);
-            Box(result, .35f, .8f, .3f, .2f, 0, .28f);
+            Tube(m, {.5f, .5f, .82f}, {.5f, .5f, 1.04f}, .06f, .045f, {.65f, .75f, .8f, 1},
+                 PaletteSlot::Fixed, 12);
+            Tube(m, {.32f, .5f, 1.04f}, {.78f, .5f, 1.17f}, .05f, .11f, {.5f, .68f, .76f, 1},
+                 PaletteSlot::Accent, 16);
+            Tube(m, {.78f, .5f, 1.17f}, {.8f, .5f, 1.176f}, .095f, .095f, {1, 1, 1, 1}, PaletteSlot::Emission,
+                 12);
         }
     }
-    // Each row belongs to an actual facade, including the recessed upper tiers.
-    auto windows = [&](float edge, float start, float span, float z, float height) {
-        for (int i = 0; i < 3; ++i)
+    constexpr float heightMeters[] = {7.2f, 10.8f, 5.4f, 6.5f, 11.5f};
+    float door = 2.15f / heightMeters[size_t(type)];
+    // Pressure lock has the same 2.15m clearance across building types.
+    shell({.36f, .78f, .01f}, {.64f, 1.f, door + .035f}, PaletteSlot::Accent);
+    MeshBox(m, {.40f, 1.001f, .015f}, {.60f, 1.009f, door}, {.08f, .17f, .22f, 1}, PaletteSlot::Fixed);
+    MeshBox(m, {.495f, 1.01f, .04f}, {.505f, 1.014f, door - .025f}, {1, 1, 1, 1}, PaletteSlot::Emission);
+    for (size_t i = 0; i < m.count; ++i)
+    {
+        if (m.parts[i].surface == Surface::Default)
         {
-            float t = start + span * (i + .2f) / 3, width = span * .55f / 3;
-            AddVariantPart(result, PartKind::Glass,
-                           {{edge + .002f, t, z},
-                            {edge + .002f, t + width, z},
-                            {edge + .002f, t + width, z + height},
-                            {edge + .002f, t, z + height}},
-                           {.17f, .39f, .48f, 1}, PaletteSlot::Fixed);
-            AddVariantPart(result, PartKind::Glass,
-                           {{t, edge + .002f, z},
-                            {t, edge + .002f, z + height},
-                            {t + width, edge + .002f, z + height},
-                            {t + width, edge + .002f, z}},
-                           {.17f, .39f, .48f, 1}, PaletteSlot::Fixed);
-        }
-    };
-    if (type == BuildingType::Habitat)
-    {
-        windows(1, .10f, .73f, .22f, .10f);
-        windows(1, .10f, .73f, .43f, .10f);
-    }
-    else if (type == BuildingType::Terraced)
-    {
-        windows(1, .10f, .73f, .17f, .10f);
-        windows(.75f, .12f, .55f, .48f, .10f);
-        windows(.52f, .15f, .31f, .80f, .08f);
-    }
-    else if (type == BuildingType::Workshop)
-    {
-        windows(1, .10f, .73f, .28f, .10f);
-    }
-    else
-    {
-        windows(1, .10f, .73f, .06f, .08f);
-    }
-    if (type != BuildingType::Dome && type != BuildingType::Observatory)
-    {
-        float roof = type == BuildingType::Terraced ? 1.f : type == BuildingType::Habitat ? .82f : .52f;
-        MeshBox(result, {.10f, .10f, roof}, {.30f, .29f, roof + .12f}, {.44f, .5f, .52f, 1},
-                PaletteSlot::Fixed);
-        for (int i = 0; i < 4; ++i)
-        {
-            MeshBox(result, {.105f, .12f + i * .035f, roof + .121f}, {.295f, .133f + i * .035f, roof + .135f},
-                    {.15f, .22f, .25f, 1}, PaletteSlot::Fixed);
+            m.parts[i].surface = Surface::Metal;
         }
     }
 }
+
 bool ModelFactory::ValidateModel(const Model &model)
 {
     if (unsigned(model.space) > unsigned(CoordinateSpace::World))
@@ -796,7 +939,7 @@ bool ModelFactory::ValidateModel(const Model &model)
 // ============================================================================
 namespace
 {
-constexpr std::uint32_t kModelVersion = 7;
+constexpr std::uint32_t kModelVersion = 8;
 static_assert(std::is_trivially_copyable<Library>::value, "Model cache needs a stable POD payload");
 
 void Generate(Library &library)
@@ -875,13 +1018,58 @@ void Generate(Library &library)
         MeshBox(console, {-.30f + i * .13f, -.15f, .602f}, {-.24f + i * .13f, -.06f, .62f},
                 {.5f, .75f, .78f, 1}, PaletteSlot::Fixed);
     }
+    library.bulkhead.space = library.trafficGate.space = CoordinateSpace::World;
+    auto &wall = library.bulkhead;
+    MeshBox(wall, {0, -.06f, 0}, {1, .06f, 1}, {.38f, .51f, .58f, 1});
+    for (float x : {.06f, .47f, .88f})
+    {
+        MeshBox(wall, {x, -.085f, .02f}, {x + .06f, .085f, .93f}, {.18f, .27f, .33f, 1}, PaletteSlot::Fixed);
+    }
+    MeshBox(wall, {0, -.075f, .92f}, {1, .075f, 1.02f}, {.35f, .5f, .58f, 1}, PaletteSlot::Accent);
+    MeshBox(wall, {.12f, -.087f, .80f}, {.88f, -.081f, .82f}, {1, 1, 1, 1}, PaletteSlot::Emission);
+    MeshBox(wall, {.12f, .081f, .80f}, {.88f, .087f, .82f}, {1, 1, 1, 1}, PaletteSlot::Emission);
+    for (int i = 0; i < 4; ++i)
+    {
+        float x = .15f + i * .18f;
+        AddVariantPart(
+            wall, PartKind::Polygon,
+            {{x, -.087f, .14f}, {x + .07f, -.087f, .14f}, {x + .13f, -.087f, .26f}, {x + .06f, -.087f, .26f}},
+            {.95f, .63f, .18f, 1}, PaletteSlot::Fixed);
+        AddVariantPart(
+            wall, PartKind::Polygon,
+            {{x, .087f, .14f}, {x + .07f, .087f, .14f}, {x + .13f, .087f, .26f}, {x + .06f, .087f, .26f}},
+            {.95f, .63f, .18f, 1}, PaletteSlot::Fixed);
+    }
+    auto &gate = library.trafficGate;
+    for (float x : {-.06f, 1.f})
+    {
+        MeshBox(gate, {x, -.12f, 0}, {x + .06f, .12f, 1}, {.30f, .43f, .5f, 1});
+        MeshBox(gate, {x < 0 ? x - .02f : x, -.16f, 0}, {x < 0 ? 0 : x + .08f, .16f, .10f},
+                {.16f, .25f, .3f, 1}, PaletteSlot::Fixed);
+        MeshBox(gate, {x + .02f, -.125f, .18f}, {x + .04f, -.12f, .85f}, {1, 1, 1, 1}, PaletteSlot::Emission);
+    }
+    MeshBox(gate, {-.06f, -.14f, .92f}, {1.06f, .14f, 1.03f}, {.28f, .42f, .5f, 1});
+    MeshBox(gate, {.18f, -.146f, .95f}, {.82f, -.14f, 1.00f}, {.1f, .85f, .65f, 1}, PaletteSlot::Emission);
+    MeshBox(gate, {.18f, .14f, .95f}, {.82f, .146f, 1.00f}, {.1f, .85f, .65f, 1}, PaletteSlot::Emission);
+    for (auto *mesh : {&wall, &gate})
+    {
+        for (size_t i = 0; i < mesh->count; ++i)
+        {
+            if (mesh->parts[i].surface == Surface::Default)
+            {
+                mesh->parts[i].surface = Surface::Metal;
+            }
+        }
+    }
+
     for (size_t i = 0; i < library.vehicles.size(); ++i)
     {
         ModelFactory::GenerateVehicle(library.vehicles[i], VehicleType(i));
     }
     for (size_t i = 0; i < library.characters.size(); ++i)
     {
-        ModelFactory::GenerateCharacter(library.characters[i], CharacterType(i));
+        ModelFactory::GenerateCharacter(library.characters[i], CharacterType(i), Gender::Male);
+        ModelFactory::GenerateCharacter(library.femaleCharacters[i], CharacterType(i), Gender::Female);
     }
     for (size_t i = 0; i < library.buildings.size(); ++i)
     {
@@ -908,9 +1096,10 @@ bool Valid(const Library &library)
             }
         }
     }
-    for (const auto &character : library.characters)
+    for (size_t i = 0; i < library.characters.size(); ++i)
     {
-        if (!ModelFactory::ValidateModel(character))
+        if (!ModelFactory::ValidateModel(library.characters[i]) ||
+            !ModelFactory::ValidateModel(library.femaleCharacters[i]))
         {
             return false;
         }
@@ -937,8 +1126,9 @@ bool Valid(const Library &library)
     {
         return false;
     }
-    for (const Model *model : {&library.box, &library.drone, &library.salvage, &library.recoveryKit,
-                               &library.rock, &library.telescope, &library.console})
+    for (const Model *model :
+         {&library.box, &library.drone, &library.salvage, &library.recoveryKit, &library.rock,
+          &library.telescope, &library.console, &library.bulkhead, &library.trafficGate})
     {
         if (!ModelFactory::ValidateModel(*model))
         {
@@ -983,5 +1173,11 @@ const Library &ModelLibrary::Get()
 {
     static const auto library = LoadOrGenerate();
     return *library;
+}
+const Model &ModelLibrary::Character(CharacterType type, Gender gender)
+{
+    const auto &library = Get();
+    return gender == Gender::Female ? library.femaleCharacters.at(size_t(type))
+                                    : library.characters.at(size_t(type));
 }
 } // namespace models
