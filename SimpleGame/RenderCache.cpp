@@ -1,8 +1,8 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "RenderCache.h"
 #include "RenderQueue.h"
 #include "Profiler.h"
-#include "TutorialDrawing.h"
+#include "Drawing.h"
 #include <vector>
 #include <unordered_map>
 
@@ -28,14 +28,9 @@ void Draw(const std::string &key, const std::function<void()> &build)
 }
 void DrawWorld(const std::string &key, const std::function<void()> &build)
 {
-    auto origin = tutorial::WorldToScreen(0, 0);
-    renderqueue::PushMatrix();
-    renderqueue::Translate(origin.x, origin.y, 0);
-    Draw(key, [&]() {
-        renderqueue::Translate(-origin.x, -origin.y, 0);
-        build();
-    });
-    renderqueue::PopMatrix();
+    // Geometry is now shared in the material renderer. Emit instances for each
+    // visible terrain chunk; capturing submissions would freeze scene membership.
+    build();
 }
 void Clear()
 {

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "RenderQueue.h"
 #include "Profiler.h"
 #include "Dependencies/glew.h"
@@ -54,7 +54,7 @@ GLuint CreateMaterial(int type)
     constexpr int size = 64;
     std::vector<unsigned char> pixels;
     const std::string cacheName = "material-" + std::to_string(type) + ".rgba";
-    if (assetcache::Load(cacheName, 1, size * size * 4, pixels))
+    if (assetcache::Load(cacheName, 2, size * size * 4, pixels))
     {
         return Upload(size, size, pixels, true);
     }
@@ -66,21 +66,13 @@ GLuint CreateMaterial(int type)
             unsigned int hash = unsigned(x * 73856093u) ^ unsigned(y * 19349663u);
             int grain = int((hash ^ (hash >> 13)) % 29) - 14;
             int brightness = 215 + grain;
-            if (type == 0 && (x < 2 || y < 2))
-            {
-                brightness = 115; // Concrete panel joints.
-            }
             if (type == 1)
             {
                 brightness = 175 + grain * 2; // Granular asphalt.
             }
-            if (type == 2) // Brushed alloy, panel seams and corner rivets.
+            if (type == 2) // Brushed alloy without repeating tile borders.
             {
                 brightness = 210 + grain / 3 + (y % 3) * 5;
-                if (x < 2 || y < 2)
-                {
-                    brightness = 90;
-                }
                 if ((x == 5 || x == 58) && (y == 5 || y == 58))
                 {
                     brightness = 255;
@@ -96,77 +88,10 @@ GLuint CreateMaterial(int type)
             pixels[offset + 3] = 255;
         }
     }
-    assetcache::Save(cacheName, 1, pixels.data(), pixels.size());
+    assetcache::Save(cacheName, 2, pixels.data(), pixels.size());
     return Upload(size, size, pixels, true);
 }
 
-GLuint CreateCharacterAtlas()
-{
-    constexpr int frameWidth = 48, frameHeight = 64, columns = 8, rows = 4;
-    constexpr int width = frameWidth * columns, height = frameHeight * rows;
-    std::vector<unsigned char> pixels;
-    if (assetcache::Load("characters.rgba", 1, width * height * 4, pixels))
-    {
-        return Upload(width, height, pixels);
-    }
-    pixels.resize(width * height * 4, 0);
-    for (int direction = 0; direction < rows; ++direction)
-    {
-        for (int frame = 0; frame < columns; ++frame)
-        {
-            const int step = frame == 0 ? 0 : int(std::sin(frame * 6.2831853f / 8) * 4);
-            const int bob = frame == 0 ? 0 : std::abs(step) / 2;
-            auto rectangle = [&](int x, int y, int w, int h, int r, int g, int b) {
-                for (int py = y; py < y + h; ++py)
-                {
-                    for (int px = x; px < x + w; ++px)
-                    {
-                        if (px < 0 || px >= frameWidth || py < 0 || py >= frameHeight)
-                        {
-                            continue;
-                        }
-                        size_t i = ((direction * frameHeight + py) * width + frame * frameWidth + px) * 4;
-                        pixels[i] = (unsigned char)r;
-                        pixels[i + 1] = (unsigned char)g;
-                        pixels[i + 2] = (unsigned char)b;
-                        pixels[i + 3] = 255;
-                    }
-                }
-            };
-            // Boots, separated legs, articulated arms, jacket panels, head and visor.
-            rectangle(15, 43, 7, 13 + step, 65, 77, 95);
-            rectangle(26, 43, 7, 13 - step, 48, 60, 79);
-            rectangle(13, 55 + step, 10, 4, 35, 45, 59);
-            rectangle(26, 55 - step, 10, 4, 35, 45, 59);
-            rectangle(9, 28 - bob - step / 2, 6, 17, 170, 180, 188);
-            rectangle(34, 28 - bob + step / 2, 6, 17, 145, 157, 170);
-            rectangle(9, 44 - bob - step / 2, 6, 4, 195, 175, 159);
-            rectangle(34, 44 - bob + step / 2, 6, 4, 195, 175, 159);
-            rectangle(15, 25 - bob, 19, 22, 225, 235, 240);
-            rectangle(16, 27 - bob, 7, 14, 185, 199, 211);
-            rectangle(25, 27 - bob, 8, 14, 151, 171, 189);
-            rectangle(23, 26 - bob, 2, 20, 60, 80, 97);
-            rectangle(16, 43 - bob, 18, 4, 55, 68, 84);
-            rectangle(17, 34 - bob, 4, 5, 70, 98, 113);
-            rectangle(27, 30 - bob, 4, 2, 110, 255, 255);
-            rectangle(18, 12 - bob, 13, 12, 207, 181, 162);
-            rectangle(17, 9 - bob, 15, 6, 44, 55, 72);
-            rectangle(18, 23 - bob, 12, 4, 79, 95, 109);
-            if (direction != 3)
-            {
-                int visorX = direction == 1 ? 16 : direction == 2 ? 24 : 18;
-                rectangle(visorX, 16 - bob, 10, 4, 61, 200, 223);
-                rectangle(visorX + 1, 16 - bob, 7, 1, 210, 255, 255);
-            }
-            else
-            {
-                rectangle(18, 15 - bob, 13, 8, 44, 55, 72);
-            }
-        }
-    }
-    assetcache::Save("characters.rgba", 1, pixels.data(), pixels.size());
-    return Upload(width, height, pixels);
-}
 } // namespace
 
 struct RenderAssets::Data
@@ -178,7 +103,6 @@ struct RenderAssets::Data
         unsigned long long lastUse;
     };
     GLuint materials[4] = {};
-    GLuint characters = 0;
     GLuint atlas = 0;
     std::map<std::pair<int, std::string>, TextTexture> texts;
     unsigned long long clock = 0;
@@ -236,14 +160,12 @@ RenderAssets::RenderAssets() : m_data(new Data())
     std::fill(std::begin(m_data->materials), std::end(m_data->materials), 0);
     m_data->atlas = Upload(atlasWidth, cell, atlas);
     renderqueue::SolidSample(m_data->atlas, (4 * cell + 32.f) / atlasWidth, .5f);
-    m_data->characters = CreateCharacterAtlas();
 }
 RenderAssets::~RenderAssets()
 {
     renderqueue::Flush();
     glDeleteTextures(1, &m_data->atlas);
     glDeleteTextures(4, m_data->materials);
-    glDeleteTextures(1, &m_data->characters);
     for (const auto &entry : m_data->texts)
     {
         glDeleteTextures(1, &entry.second.texture);
@@ -271,14 +193,6 @@ void RenderAssets::DrawGlow(float x, float y, float size)
 {
     Quad(m_data->atlas, x - size * 2.1f, y - size * .9f, size * 4.2f, size * 1.8f, (5 * 66 + 1.5f) / 396,
          1.5f / 66, (5 * 66 + 64.5f) / 396, 64.5f / 66);
-}
-
-void RenderAssets::DrawCharacter(float x, float footY, int frame, int direction)
-{
-    frame = (std::max)(0, (std::min)(7, frame));
-    direction = (std::max)(0, (std::min)(3, direction));
-    Quad(m_data->characters, x - 20, footY - 50, 40, 53, frame / 8.f, direction / 4.f, (frame + 1) / 8.f,
-         (direction + 1) / 4.f);
 }
 
 void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf8, int fontSize)

@@ -10,12 +10,12 @@
 
 - **현재 구현:** 도시 도입부 → 전망대 조사·하강 → 리아에게 신호 기록 제시 → 도시 수신망 확인 → 리아와 바이크 이동 → 광산 구조 신호 조사 → 좌표 확보·헤일로 귀환.
 - **향후 기획:** 광산 이후 메인 스토리 1~3장, 정식 장비·동료 관계 확장, 영구 저장·복원, 오픈 월드 스트리밍.
-- **검증 상태:** 광산 전환의 C++ 구문 검사와 독립 게임 규칙 테스트를 수행했다. 게임 전체 빌드·실제 화면·플레이·FPS 실측 및 기존 스택 오버플로 수정의 게임 실행 확인은 별도다.
+- **검증 상태:** 전체 C++ 소스의 컴파일·링크와 실제 게임 코어를 연결한 게임 규칙·장면 그래프 회귀 테스트를 통과했다. 실제 GPU 장면 출력과 자동 캡처를 확인했다. 1280×800 최적화 빌드의 장면별 CPU/GPU 동기화 성능도 측정했다. 표시창 프레젠테이션을 포함한 연속 플레이 및 다양한 하드웨어의 60FPS 보장은 별도다.
 - **내용 우선순위:** 현재 구현과 조작은 1·6·7절을 따른다. 2~5절의 장기 기획·서사·명세는 구현 완료를 뜻하지 않는다.
 - 기존 격리 구역의 작업장 4곳·협업 NPC 20명·성장 목표·전체 미니맵·펄스 공격은 제거했다. 같은 진입 구간을 광산 프롤로그로 교체했다.
 - 중복 MD/TXT 사본은 통합했다. 초기 기획, 서사 확장안, 퀘스트 명세의 서로 다른 세부 내용은 보존했다.
 - 서사 문서에서 차량 조종을 요구하지 않는다는 문구는 해당 본편 명세의 범위다. 별도로 구현한 바이크 이동 스테이지와 구분한다.
-- 바닥의 8×8 렌더링 캐시는 오픈 월드의 데이터 로딩·스트리밍 구현을 뜻하지 않는다.
+- 바닥의 8×8 표시 범위 분할과 GPU 인스턴싱은 오픈 월드의 데이터 로딩·스트리밍 구현을 뜻하지 않는다.
 
 ## 목차
 
@@ -36,6 +36,57 @@
 
 ## 1. 현재 개발 현황과 확인 대기 사항
 
+### 메시·머터리얼·그림자 품질 개선 — 2026-10-14
+
+- Actor의 RenderObject가 실제 출력에 사용하는 `shared_ptr<rendering::Mesh>`와 `shared_ptr<rendering::Material>`을 보유한다. 불변 로컬 메시 VBO와 머터리얼은 Renderer에서 공유한다. 매 프레임 전체 정점을 CPU에서 다시 투영하지 않고 크기·위치·회전·팔레트·관절을 GPU에 전달한다.
+- 동일 메시·관절 포즈는 팔레트와 크기가 달라도 하나의 하드웨어 인스턴스 묶음으로 그린다. 바닥 → 바닥 장식 → 그림자 → 입체 모델 → 글자·발광·빌보드 순서를 사용한다. 텍스트/이펙트의 UV 배열과 인스턴스 속성이 충돌하지 않도록 속성 divisor를 복구한다.
+- 모서리 베벨, 세분화한 돔과 부드러운 법선, 둥근 얼굴·머리카락·노즐, 건물별 외벽 창호·옥상 설비, 차량 흡기구·해치·손잡이를 추가했다. 휘어진 지붕과 층별 후퇴면에 맞춰 디테일을 배치한다. 광산 벽은 방향·높이를 셀별로 달리한 암석 메시다. 모델 캐시는 버전 7, 파츠 용량은 1024다.
+- 머터리얼은 body/accent/emission과 roughness/metallic/emission 강도/그림자 여부를 가진다. 파츠의 금속·직물·유리·고무·암석·피부·발광 표면을 구분해 카툰 명암 위에 반사광을 적용한다. 물리 기반 조명 전체를 구현한 것은 아니다.
+- 모델 실루엣을 방향광에 따라 바닥에 투영하고, 최대 640×400 그림자 마스크에서 겹침을 합집합으로 만든 뒤 9개 샘플로 부드럽게 합성한다. 인물·차량·건물·암석에 같은 경로를 사용한다. 현재 수광면은 바닥이며 모델끼리의 그림자나 캐스케이드 그림자 맵은 구현 범위에 없다.
+- 바닥을 1.001 크기의 공유 평면 인스턴스로 채워 틈을 막고 반복 테두리·타일별 명암을 제거했다. 지형의 청크 구분은 표시 범위 관리에만 사용한다.
+- 광산 암막은 기존 16px CPU 블록 대신 장면 깊이를 읽는 GPU 마스크로 출력한다. 기본 모드에서는 1280×800 해상도와 타일 경계 DDA 가시성·광원별 3회 샘플·1px 경계 필터를 사용한다. 벽 표면의 높이를 복원해 바닥 그림자가 벽 위로 계단처럼 올라오는 현상을 줄인다. 픽셀 모드는 선택 해상도와 최근접 확대를 유지한다. 게임 규칙의 CPU 가시성 판정은 별도 유지한다.
+- Game::IsQuestInteraction에서 도시의 월드 표시·미니맵·상호작용 HUD를 함께 제어한다. 전망대 하강 직후는 리아, 기록 제시 후는 수신망, 수신망 확인 후에만 바이크 안내가 나온다. 광산 조사 표시는 MineQuestStage와 직접 연결한다.
+- 전망대 망원경과 조작 콘솔을 삼각대·경통·렌즈·구동부·화면·키보드가 있는 공유 입체 메시로 바꿨다.
+- 추진기는 첨부 참고 이미지의 양쪽 청록 코어가 긴 푸른 꼬리로 합쳐지는 곡선형 발광을 절차적 빌보드로 구현했다. 노즐당 10개의 불티가 불꽃 쿼드 바깥으로도 날아가며, 모델 출력 뒤에 별도로 합성한다.
+- 검증: 최적화(/O2, assert 활성) 코어·게임 컴파일/링크, GameplayTests·SceneGraphTests·RenderingTests 통과. 메시 공유, 인스턴싱·그림자 호출, 퀘스트 표시 순서와 그래픽 상태 복원·부모 이동을 따르는 이펙트, 기존 깊이·조준·의복·주행·해상도 검사를 포함한다. 실제 GPU 캡처와 측정 자료는 `x64/QualityChecks/renders`에 보관한다. 측정 조건과 결과는 10절을 따른다.
+
+이하 날짜별 항목은 당시 구현 기록이며 현재 경로·캐시·검증 상태는 이 항목과 6·8·10절을 우선한다.
+
+### 주행 연출·의복 복원·카툰/도트 출력 준비 — 2026-10-14
+
+- 바이크 기울기를 피치에서 진행 축 기준 좌우 롤로 교체했다. 이동하는 쪽으로 최대 30도 기울며 탑승자와 좌석·추진기 위치도 함께 변환한다. 조작 중지·도로 끝에서는 수평으로 돌아온다.
+- 도로·잔해의 화면 이동 배율을 거리당 2.3px에서 12px로 올렸다. 근거리 구조물은 18px, 원경→근경 건물은 0.5/1.9/4.5px를 사용한다. 순항 시 도로는 약 696px/s, 근거리 구조물은 약 1044px/s다.
+- TravelScenery가 누적 거리와 고정된 월드 번호로 보이는 구간을 산출한다. 건물의 모양·높이는 월드 번호에 묶이며, 화면 슬롯 재활용이나 나머지 연산 경계에서 다른 모양으로 바뀌지 않는다. 차선·노면 이음매·속도선·근거리 구조물도 이 기준으로 연속 이동한다.
+- 의복 5종을 별도 입체 형상으로 복원했다. 탐험복(짧은 재킷·배낭), 정비 작업복(멜빵·공구 벨트·안전모), 경비 방호복(방탄판·어깨/팔 보호대·바이저), 의무복(흰 가운·의료 표식·의료 가방), 연구원 코트(긴 분할 옷자락·스카프·어깨 가방)를 사용한다. 옷자락은 다리 관절을 따라가며 의복 정점과 얼굴 간격을 검사한다.
+- 추진기 노즐 위치와 분사 방향은 3D 모델을 따라가되 불꽃은 카메라를 향하는 2D 쿼드로 그린다. 기존 JetExhaust 셰이더의 발광 코어·흔들림·불티와 emission 색·출력에 따른 길이를 복원했다. 광원 번짐·물결·총구 이펙트도 2D 합성을 유지한다.
+- RenderStyle로 기본 카툰 명암(3단계)을 적용했다. F7은 카툰/연속 명암 비교, F8은 기본 해상도→640×400→320×200 월드 출력 비교다. 기본은 1280×800이다. 해상도를 낮추면 색상/깊이 FBO를 실제 크기로 다시 확보하고 최근접 필터로 확대하며, 픽셀 모드에서는 블룸·필름 그레인을 끈다.
+- HUD와 커서는 1280×800 논리 좌표를 유지하므로 도트 미리보기에서 조준 위치와 UI 배치가 달라지지 않는다. 도트 스타일은 비교 옵션이며 최종 아트 방향으로 확정하지 않는다. 카툰 명암 변경 시 색이 구워진 정적 메시 캐시도 무효화한다.
+- 의복 형상과 파츠 정보 변경으로 모델 캐시는 버전 5다. 이전 버전 캐시는 재생성한다.
+- 검증: 전체 코어/게임 컴파일·링크, GameplayTests·SceneGraphTests·RenderingTests 통과. 실제 GPU에서 스크롤 경계 프레임 비교, 양방향 롤/복귀, 5종 의복과 얼굴 간격, F7/F8, 해상도 전환 및 확대 픽셀 블록의 RGB 일치를 확인했다. 캡처는 x64/PresentationChecks/renders에 보관한다.
+
+### 3D 모델 기반 쿼터뷰 전환 — 2026-10-14
+
+- 2.5D는 3D 메시를 고정 직교 쿼터뷰 카메라로 렌더링하는 방식으로 정의한다. 캐릭터 스프라이트·의복 덧그리기와 평면 차량을 제거했다.
+- 캐릭터·차량·건물·광산 드론·아이템·주행 잔해를 입체 메시로 표현한다. 면 방향에 따른 명암과 깊이 버퍼를 적용하고, 후처리 FBO에도 깊이 첨부를 추가했다.
+- CityLayout이 도로 타일·건물 이격·차량 위치·전방 각도를 함께 관리한다. 도로/다른 건물과 겹친 배치는 제거하고, 반대 차선 차량은 월드에서 180도 회전한다.
+- 바이크 주행은 같은 쿼터뷰 메시를 사용한다. 실제 측면 속도에 따라 최대 ±30도 좌우 롤로 부드럽게 회전하고, 조작 중지나 도로 끝에서는 수평으로 복귀한다. 탑승자·손·좌석·추진기에도 같은 자세를 적용한다.
+- ModelRig의 어깨→팔꿈치→손 관절에 의복과 총기를 연결했다. 양손 IK 조준·보행·반동·탑승 포즈를 지원하고, 얼굴 아래에서 의복이 끝나도록 형상을 분리했다.
+- 탄환은 실제 손/총구 위치에서 출발한다. 몸에서 총구까지도 충돌 검사를 수행하므로 총을 벽에 붙여도 벽 너머로 탄환이 생성되지 않는다.
+- 모델 캐시는 버전 4다. 모델 도감도 스프라이트 대신 실제 관절의 기본 포즈를 펼친 3D 좌표를 표시한다.
+- 전체 소스 컴파일·링크, 기존 게임/장면 그래프 테스트와 RenderingTests를 통과했다. 실제 NVIDIA 드라이버의 숨겨진 WGL 표면에서 24비트 깊이·FBO·후처리·장면 출력과 8방향 조준을 검사하고 이미지를 확인했다. 연속 플레이와 FPS 실측은 별도다.
+- 빌드 환경 메모: 기본 Debug 링크는 설치된 MSPDB140.DLL 버전 호환 오류(LNK1101)로 실패했다. 코어·게임 실행 파일은 심볼 없는 빌드로 연결했고, 일반 프로젝트도 일시적으로 `_LINK_=/DEBUG:NONE /INCREMENTAL:NO`를 적용해 연결했다. 프로젝트의 디버깅 설정은 유지했다.
+
+참고: Project Zomboid의 고정 대각 시점과 입체 캐릭터·차량 표현을 방향으로 삼았다. 깊이 버퍼와 캐릭터·차량 가림의 배경은 공식 [42 Techdoid](https://projectzomboid.com/blog/news/2022/02/42-techdoid/)를 참고한다. 기존 게임의 자산을 사용하지 않으며 현재 형상은 절차적으로 생성하며 베벨·곡면·설비 등 디테일을 추가한 입체 모델이다.
+
+### 역할별 클래스와 파일 통합 — 2026-10-14
+
+- 게임 소스·헤더를 68개에서 38개로 통합했다. 레벨은 Level, 무기는 Weapon, 장면은 Scene, HUD는 Hud에서 관리한다.
+- 같은 부모를 상속하는 클래스는 같은 파일에 두고 클래스 경계 주석을 넣었다.
+- 광산의 맵·전투·구조·조명 담당 클래스를 분리하고 게임·레벨 상태 소유자를 명확히 했다.
+- 모델 생성과 모니터링의 작은 파일들도 기능별 클래스로 통합했다.
+- 프로젝트·필터·테스트와 문서의 소스 경로를 갱신했다.
+- 전체 코드의 컴파일·링크와 실제 코어를 연결한 게임 규칙·장면 그래프 회귀 검사가 통과했다. 화면·플레이 검증은 별도다.
+
 ### 광산 프롤로그 전환 — 2026-10-14
 
 이전 격리 구역은 기술 시험 구간으로 종료하고, 바이크 목적지를 광산으로 교체했다.
@@ -50,8 +101,8 @@
 | 구조 | 광부 2무리·고립 전투원 2무리, 각 3명. F 스캔으로 대략적 방위·거리 확인, E 구조 시 입구로 보행 |
 | 동료 | 바이크 출발 시 companion.ria_joined 활성화, 광산에서는 리아가 실제 경로를 따라 동행 |
 | 모니터 | mine 지역·퀘스트·명시적 플래그·탄창·탄퍼짐·스캐너·구조 무리·철수 인원 표시. 시험 작업장 제거 |
-| 검증 | C++ 구문 검사, 독립 규칙 테스트, 30개 시드의 경로 연결, 모니터 JS 구문·JSON·프로젝트 등록 검사 |
-| 실행 확인 | 게임 전체 빌드·실제 렌더링·플레이·성능은 사용자 확인 대상 |
+| 검증 | C++ 컴파일·링크, 실제 코어의 회귀 테스트, 30개 시드의 경로 연결, 모니터 JS 구문·JSON·프로젝트 등록 검사 |
+| 실행 확인 | 전체 소스 컴파일·링크 완료. 실제 렌더링·플레이·성능 확인은 남아 있음 |
 
 퀘스트·성장·탄창·구조 성과는 같은 실행에서 도시 왕복 시 유지한다. 프로그램 종료 후 영구 저장은 아직 없다.
 광산 조사를 완료해도 구조와 사냥을 계속할 수 있으며, 구조 인원이나 처치 수가 필수 스토리 진행을 막지 않는다.
@@ -132,7 +183,7 @@
 
 ### 2. 표현 및 공간 원칙
 
-게임 세계는 2D 타일 좌표를 중심으로 관리하고, 화면에는 쿼터뷰(등각투영에 가까운 대각 시점)로 표시한다.
+게임 규칙과 길 찾기는 2D 타일 좌표를 중심으로 관리한다. 화면은 3D 모델을 고정 직교 쿼터뷰 카메라로 렌더링한다. 캐릭터·차량을 2D 스프라이트나 화면 도형으로 대체하지 않는다.
 
 기본 월드 좌표 변환은 다음을 기준으로 한다.
 
@@ -143,7 +194,7 @@ screenY = (worldX + worldY) * tileHeight / 2 - worldZ * heightUnit
 
 - `worldZ`는 높이를 나타내며 화면상으로는 위쪽으로 이동시킨다.
 - 카메라, 좌표 변환, 월드 타일, 오브젝트 정렬은 렌더러에서 분리된 명확한 계층으로 설계한다.
-- 오브젝트는 화면상 아래쪽에 있는 대상이 나중에 그려지도록 정렬해 자연스러운 가림을 구현한다.
+- Actor는 레이어와 깊이 순으로 배치하고, 실제 3D 메시 표면의 가림은 깊이 버퍼로 해결한다. HUD와 발광·어둠 마스크는 별도 합성한다.
 - 2.5D 표현을 위해 타일·지형·구조물·캐릭터의 높이와 겹침을 일관되게 처리한다.
 
 ### 3. 오픈 월드 구조 원칙
@@ -402,7 +453,7 @@ Resource   : 텍스처, 셰이더, 사운드 등 리소스의 로딩과 캐싱
 | 공포 | 불가능한 연결, 사라진 지형, 관측당하는 연출 | 응답 없는 채널, 낯익은 목소리의 부조화 |
 | 상실 이후 | 익숙한 공간의 빈자리와 사고 흔적 | 이전에 있던 특정 대화와 작업음의 부재 |
 
-쿼터뷰에서는 캐릭터와 상호작용 대상의 식별을 유지하고, 큰 구조물이 플레이어를 가릴 때 표시 방식을 마련한다. 공간 왜곡은 길 찾기 규칙과 단서를 갖추어 버그로 오해되지 않게 한다. 최종 아트 스타일, 해상도, 자산 제작 방식은 미정이다.
+쿼터뷰에서는 캐릭터와 상호작용 대상의 식별을 유지하고, 큰 구조물이 플레이어를 가릴 때 표시 방식을 마련한다. 공간 왜곡은 길 찾기 규칙과 단서를 갖추어 버그로 오해되지 않게 한다. 카툰 명암을 기본으로 개발하며, 최종 아트 자산과 도트 출력 채택 여부는 미정이다. 640×400·320×200 출력은 비교 가능한 미리보기로 준비한다.
 
 ### 10. 기술 및 데이터 설계 방향
 
@@ -1095,24 +1146,22 @@ N-0 외곽에서 폐측량소와 옛 야영지를 자유 순서로 조사한다.
 
 타입은 형상을 정하고 Palette는 몸체(body)·장식(accent)·발광(emission) 색을 정한다.
 동일한 타입에도 다른 팔레트를 지정할 수 있다. 생성된 형상은 기존 파일 캐시로 저장하고,
-캐시 버전 3과 크기·체크섬 검증을 통과한 경우 다음 실행에서 읽어 사용한다.
-약 238KiB인 라이브러리는 힙에 보관하며 생성·로딩·반환 중 스택 복사를 만들지 않는다.
+캐시 버전 7과 크기·체크섬 검증을 통과한 경우 다음 실행에서 읽어 사용한다.
+라이브러리는 힙에 보관하며 생성·로딩·반환 중 스택 복사를 만들지 않는다.
 차량·캐릭터·건물 생성 함수도 참조로 받은 저장 공간에 직접 채운다.
-타입별 GPU 메시는 팔레트를 포함한 키로 구분한다.
+3D 메시 정점은 공유 정적 VBO에 한 번 올리고 GPU에서 관절·크기·회전·직교 투영을 적용한다. 바닥은 공유 평면의 인스턴스로 출력한다. Actor가 실제 메시와 머터리얼의 shared_ptr을 보유한다.
 
 차량의 기본 전방은 로컬 +X다. 헤드라이트는 앞쪽, 추진기 노즐은 뒤쪽에 있으며
 불꽃은 노즐에서 로컬 -X로 뻗는다. 반대 방향 차량은 차체·노즐·헤드라이트·불꽃을 함께
-반전한다. 추진기 셰이더는 emission 색을 사용하며, 주 불꽃 주변의 튀는 불꽃과
-가속에 따른 길이 변화를 표현한다.
+180도 회전한다. 추진기와 헤드라이트도 같은 3D 변환을 적용하며,
+발광과 추진 궤적의 길이는 emission 색과 가속 정도를 따른다.
 
 게임 실행 중 http://127.0.0.1:17707/models.html 에서 실제 모델 캐시의 15개 타입과
-독립 색상 배치를 확인할 수 있다. 형태의 유한 좌표, 투영된 다각형의 볼록성,
+독립 색상 배치를 확인할 수 있다. 형태의 유한 좌표, 3D 다각형의 볼록성,
 노즐·헤드라이트의 앞뒤 배치는 데이터 검증 대상으로 포함한다.
 브라우저의 형태 미리보기에는 실제 머터리얼·후처리·그림자·불꽃의 최종 합성이 포함되지 않는다.
 
-수치 검토 결과: 차량·캐릭터·건물의 폴리곤/유리 면 214개에서 오목한 면이나 면적 0인 면은 없었다.
-헤드라이트 중심 10개와 선 끝점 20개는 차체 면 내부/경계에, 추진기 앵커 10개는 노즐 면에 위치한다.
-최대 파츠 수는 68개(용량 96개)다. 이 검토는 형상 데이터와 투영 좌표 검사이며 실제 렌더링 검증과는 별개다.
+입체 모델은 파츠당 최대 8정점, 모델당 최대 1024파츠를 사용한다. 면적·볼록성은 카메라와 독립적인 3D 법선으로 검사하므로 특정 방향에서 얇게 보이는 정상 면을 거부하지 않는다. RenderingTests는 실제 GPU에서 그리기 순서를 반대로 바꿔도 깊이 결과가 같은지 검사한다.
 
 ### 도시 도입부에서 광산으로
 
@@ -1124,13 +1173,14 @@ N-0 외곽에서 폐측량소와 옛 야영지를 자유 순서로 조사한다.
 신호들의 동일 발신 여부와 플레이어의 정체는 확정하지 않는다.
 
 바이크 조작은 W·S 측면 이동, D 가속, A 감속, Space 부스트다. 1800 거리의 회랑에서 잔해를 피한다.
+주행체·탑승자는 동일한 3D 자세로 회전하며, W·S 조종 시 측면 속도에 따라 최대 ±30도 좌우 롤로 기울어진다. 도로·잔해는 거리당 12px, 근거리 구조물은 18px로 이동하며, 월드 번호가 고정된 배경을 사용해 스크롤 경계의 순간이동을 방지한다.
 도착 시 광산의 도보 조사·총기 전투로 전환한다. 1 키는 앞부분을 생략하는 개발용 광산 진입이며 정상 퀘스트 동선은 아니다.
 
 ### 광산 프롤로그와 기존 시험 구간의 교체
 
 옛 격리 구역의 수리팀·보급팀·작업장 순환은 삭제했다. 광산에는 구조 요청을 보내는 실제 NPC 무리와
 전력 우회 장치·폐쇄 격벽·구조 신호·관측자 문양·중계 단말을 둔다. 세부 규칙과 조작은 7절을 따른다.
-차량·캐릭터·건물 각 5종과 모델 캐시 버전 3은 유지한다.
+차량·캐릭터·건물은 각 5종이며, 머터리얼/법선·곡면·인테리어 변경으로 모델 캐시는 버전 7을 사용한다.
 
 <a id="gameplay"></a>
 
@@ -1166,6 +1216,8 @@ N-0 외곽에서 폐측량소와 옛 야영지를 자유 순서로 조사한다.
 | E | 조사·구조·물품 회수·입구 귀환 |
 | Q | 체력 45를 회복하는 키트, 최대 체력이면 미소모 |
 | Esc | 일시정지·복귀 |
+| F7 | 카툰 명암 ↔ 연속 명암 비교 |
+| F8 | 기본 해상도 → 640×400 → 320×200 도트 출력 미리보기 |
 | 일시정지 중 R | 광산 조사·맵 배치·성장·구조를 처음부터 다시 시작 |
 | 일시정지 중 Q | 종료 |
 | 도시/주행 중 1 | 광산 시험 진입 |
@@ -1184,13 +1236,13 @@ N-0 외곽에서 폐측량소와 옛 야영지를 자유 순서로 조사한다.
 플래시라이트는 커서 방향의 원뿔과 거리 감쇠를 사용하고 벽·격벽에 막힌다.
 플레이어 발밑의 제한된 근접 시야는 후진 이동을 돕는다. 총구와 탄환 궤적도 잠깐 주변을 밝힌다.
 화면 전체의 어둠을 블룸 이후, HUD 이전에 적용해 가려진 방의 발광·이름표가 노출되지 않게 한다.
-현재 조명은 CPU 가시성 계산과 16픽셀 간격의 보간 마스크이며 물리 기반 3D 조명은 아니다.
+게임 규칙은 CPU 가시성 판정을 사용한다. 출력은 장면 깊이·타일 가시성을 읽는 GPU 암막이며 기본 해상도에서 계산하고 경계를 필터링한다. GPU 경로를 지원하지 않는 환경에서만 기존 CPU 보간 마스크를 사용한다.
 
 ### 7.4. 권총과 반복 전투
 
 `combat::Weapon`은 무기의 공통 수명·갱신·발사·재장전 인터페이스,
 `Firearm`은 탄창·연사 간격·재장전·탄퍼짐,
-`Pistol`은 권총의 설정과 표시 이름을 담당한다. 새 총기는 Firearm을 상속하고 별도 설정을 제공한다.
+`Pistol`은 권총의 설정과 표시 이름을 담당한다. 새 총기는 Weapon 파일에서 Firearm을 상속하고 별도 설정을 제공한다.
 
 | 항목 | 권총 설정 |
 |---|---|
@@ -1241,7 +1293,7 @@ F 스캔은 2.8초 동안만 HUD의 원형 펄스를 표시하며 재사용 대�
 
 ### 7.6. 검증과 사용자 확인
 
-독립 검사 `tests/MineGameplayTests.cpp`는 게임 창이나 OpenGL 없이 실제 게임 규칙 소스를 연결한다.
+독립 검사 `tests/GameplayTests.cpp`는 게임 창이나 OpenGL 없이 실제 게임 규칙 소스를 연결한다.
 
 - 무기 상속, 발사 간격, 탄창 소진, 자동·수동 재장전, 사격 차단, 탄퍼짐 누적·회복.
 - 퀘스트 순서·중복 진행 방지와 리아 합류 플래그.
@@ -1251,13 +1303,29 @@ F 스캔은 2.8초 동안만 HUD의 원형 펄스를 표시하며 재사용 대�
 - 좌표 확보·도시 귀환 완료 및 재입장 상태 유지.
 - 실제 모니터 스냅샷 출력 및 JSON 해석.
 
-Visual Studio x64 개발자 명령 프롬프트에서 독립 검사를 다시 실행할 수 있다.
-게임 프로젝트에 테스트의 main을 포함하지 않으며, 테스트 산출물은 x64/MineChecks에 둔다.
+Visual Studio x64 Developer PowerShell에서 다음과 같이 실제 코어와 회귀 테스트를 연결할 수 있다.
+테스트 main은 게임 프로젝트에 포함하지 않는다. GameplayTests와 SceneGraphTests는 창이나 GL 컨텍스트를 만들지 않는다. RenderingTests는 화면에 표시하지 않는 WGL 표면을 만들어 실제 그래픽 드라이버로 검사한다. 그래픽 DLL은 검색 경로에 있어야 한다. RenderingTests의 BMP 캡처·모델 JSON·performance.json은 기본적으로 x64/ModelChecks/renders에 저장한다. 첫 인자로 다른 출력 폴더를 지정할 수 있다. 아래 /O2 최적화 빌드에서도 NDEBUG를 정의하지 않아 assert 검증을 유지한다.
 
-```bat
-if not exist x64\MineChecks mkdir x64\MineChecks
-cl /nologo /EHsc /std:c++17 /utf-8 /Y- /I SimpleGame /Fo:x64\MineChecks\ /Fe:x64\MineChecks\MineGameplayTests.exe tests\MineGameplayTests.cpp SimpleGame\LevelOne.cpp SimpleGame\LevelOneMap.cpp SimpleGame\MineQuest.cpp SimpleGame\MineVisibility.cpp SimpleGame\Weapons\Firearm.cpp SimpleGame\Weapons\Pistol.cpp SimpleGame\JetTravel.cpp SimpleGame\Actor\Actor.cpp SimpleGame\Scene\Scene.cpp SimpleGame\Scene\SceneGraph.cpp SimpleGame\Monitoring\WorldSnapshot.cpp
-x64\MineChecks\MineGameplayTests.exe x64\MineChecks\snapshot.json
+```powershell
+$checkDir = "x64/CoreChecks"
+New-Item -ItemType Directory -Force $checkDir | Out-Null
+$sourceFiles = @(Get-ChildItem SimpleGame -Recurse -Filter *.cpp |
+    Where-Object { $_.FullName -notmatch '\\Dependencies\\|\\x64\\' -and $_.Name -ne 'SimpleGame.cpp' } |
+    Select-Object -ExpandProperty FullName)
+cl /nologo /O2 /c /EHsc /std:c++17 /utf-8 /Y- /I SimpleGame "/Fo:$checkDir/" @sourceFiles
+if ($LASTEXITCODE -ne 0) { throw "코어 컴파일 실패" }
+$objectFiles = @($sourceFiles | ForEach-Object {
+    Join-Path $checkDir (([IO.Path]::GetFileNameWithoutExtension($_)) + '.obj')
+})
+lib /nologo "/OUT:$checkDir/GameCore.lib" @objectFiles
+if ($LASTEXITCODE -ne 0) { throw "코어 라이브러리 생성 실패" }
+$env:PATH = (Resolve-Path SimpleGame/Dependencies/x64).Path + ';' + $env:PATH
+foreach ($testName in @('GameplayTests', 'SceneGraphTests', 'RenderingTests')) {
+    cl /nologo /O2 /EHsc /std:c++17 /utf-8 /Y- /I SimpleGame "/Fo:$checkDir/" "/Fe:$checkDir/$testName.exe" "tests/$testName.cpp" /link "$checkDir/GameCore.lib" /LIBPATH:SimpleGame/Dependencies/x64 freeglut.lib glew32.lib opengl32.lib user32.lib gdi32.lib psapi.lib ws2_32.lib
+    if ($LASTEXITCODE -ne 0) { throw "$testName 링크 실패" }
+    & "$checkDir/$testName.exe"
+    if ($LASTEXITCODE -ne 0) { throw "$testName 검사 실패" }
+}
 ```
 
 게임 실행에서는 다음 순서로 확인한다.
@@ -1276,147 +1344,108 @@ x64\MineChecks\MineGameplayTests.exe x64\MineChecks\snapshot.json
 
 ## 8. 코드·클래스·Scene 구조
 
-### 8.1. 주요 클래스와 상태
+### 8.1. 역할별 파일 구성
 
-| 타입·모듈 | 책임과 소유 관계 |
+외부 라이브러리·테스트·빌드 산출물을 제외한 게임 소스는 C++ 39개 + 헤더 29개(68개)에서
+C++ 19개 + 헤더 19개(38개)로 통합했다. 새 레벨·무기·장면·HUD마다 파일을 추가하지 않고 해당 계열 파일에 클래스를 추가한다.
+
+| 파일 | 클래스와 책임 |
 |---|---|
-| `game::Actor` | 이름, 부모·자식 관계, 로컬/월드 위치, 경계, 표시·갱신 여부, 레이어·깊이와 출력 콜백. 복사 불가이며 SceneGraph 계층이 소유한다. |
-| `game::SceneGraph` | Actor 검색·추가·삭제·부모 변경, 순환 방지, 계층 갱신, 경계 캐시, 컬링과 출력 정렬. |
-| `game::Scene` | BeginPlacement → Place → EndPlacement로 기존 배치 데이터를 지속적인 Actor와 동기화. 사라진 배치만 제거한다. |
-| `tutorial::WorldSceneKind` | 실내·도시·전망대·제트 주행·주행 배경·광산·배경·HUD 장면을 구분한다. WorldScene 모듈이 Scene 수명을 관리한다. |
-| `tutorial::TutorialState` | 튜토리얼 퀘스트, 실내·전망대·주행 상태, 입력, 위치, 카메라와 도시 배치. 전역 인스턴스는 `g_state`. |
-| `levelone::State` | 광산 맵, 플레이어 성장, 적·드롭, 총기·탄환, 구조 무리, 길 찾기와 광산 퀘스트. 전역 인스턴스는 `g_level`. |
-| `RescueNpc / RescueGroup` | 실제 구조 요청의 출처와 구조 여부, 귀환 경로·이동·화면 밖 삭제. |
-| `jettravel::State` | 바이크 거리·속도·측면 이동·부스트·장애물·충돌 및 도착 상태. |
-| `Renderer` | 장면 FBO, 후처리·이펙트, 그래픽 자원 수명. TutorialRenderer가 소유한다. |
-| `renderqueue::Mesh` | 공용 GPU 메시. `MeshPtr`는 공유 소유이며 RenderQueue가 배칭·출력을 담당한다. |
-| `models::Library` | 공용 모델 데이터. 힙에서 보관하고 `models::Get()`으로 불변 참조를 제공한다. |
-| `profiling::Scope / GpuScope` | CPU 범위와 비동기 GPU 구간의 수명 기반 계측. |
+| `Game.h / Game.cpp` | GameState, Game, GameCallbacks, CityLayout. 상태·입력·도시 진행·카메라·도로/건물/차량 배치 |
+| `Level.h / Level.cpp` | Level, MineLevel, JetTravelLevel, GameLevels. 레벨 수명·진행·갱신 |
+| `Level.h / Level.cpp` 내부 | MineQuest, MineMap, MineCombat, MineRescue, MineLighting. 퀘스트·지형·전투·구조·빛 가시성 |
+| `Weapon.h / Weapon.cpp` | Weapon, Firearm, Pistol. 공통 무기·총기 규칙·권총 |
+| `Scene.h / Scene.cpp` | Scene, ScreenScene과 실내·도시·전망대·광산·주행·배경·HUD 장면 클래스, SceneManager |
+| `Hud.h / Hud.cpp` | Hud, CityHud, MineHud, JetTravelHud. 목표·알림·일시정지·탄창·스캐너 |
+| `Drawing.h / Drawing.cpp` | Drawing, ColorRGBA. 도형·문자·투영·인물·차량·건물 공통 출력 |
+| `Renderer.h / Renderer.cpp` | Renderer, GameRenderer, RenderStyle, rendering::Mesh/Material/FrameStatistics. 공유 GPU 자원·FBO·카툰 명암·해상도 선택·후처리·프레임 출력 순서 |
+| `ModelLibrary.h / ModelLibrary.cpp` | ModelLibrary, ModelFactory, ModelRig, CharacterPose, Transform3D. 파일 캐시·입체 모델 생성·관절 포즈 |
+| `Monitoring/Monitor.h / Monitor.cpp` | GameMonitor, WorldSnapshot, ModelCatalog. 발행 일정·게임 JSON·모델 도감 |
+| `Monitoring/LocalMonitorServer.h / LocalMonitorServer.cpp` | loopback HTTP·통신 스레드·정적 파일 |
+| `Actor/Actor.h / Actor.cpp` | Actor, Position, Bounds, rendering::RenderObject. 객체 계층·오프셋·가시성·경계·공유 메시/머터리얼 소유 |
+| `Scene/SceneGraph.h / SceneGraph.cpp` | SceneGraph. 소유권·순환 방지·경계 캐싱·컬링·정렬 |
+| `RenderQueue.h / RenderQueue.cpp` | Mesh와 삼각형 배칭·VBO·인스턴싱 |
+| `RenderAssets.h / RenderAssets.cpp` | 재질·발광 아틀라스·한글 텍스처 LRU |
+| `RenderCache.h / RenderCache.cpp` | 기존 2D 메시 캐시·지형 표시 범위 어댑터 |
+| `AssetCache.h / AssetCache.cpp` | 파일 크기·버전·체크섬·원자적 교체 |
+| `Profiler.h / Profiler.cpp` | CPU/GPU 계측·JSONL·즉시 모드 드로우 콜 래퍼 |
+| `SimpleGame.cpp` | 창 생성·초기화·콜백 등록 |
+| `stdafx.h / stdafx.cpp`, `targetver.h` | 기존 공통 빌드 설정 |
+| `tests/GameplayTests.cpp` | 실제 코어의 무기·레벨·퀘스트·조명·구조·재진입 회귀 검사 |
+| `tests/SceneGraphTests.cpp` | 그래프 계층·소유권·배치·정렬 검사 |
+| `tests/RenderingTests.cpp` | 3D/의복·관절·차량·주행·GPU 깊이·카툰/도트·퀘스트 표시·공유 자원·인스턴싱·그림자·장면 성능 검사 |
+| `tests/RenderQueueSmokeTests.cpp` | OpenGL 컨텍스트가 필요한 기존 배칭 검사 |
 
-클래스 계층과 게임플레이 상태는 아직 별도다. Actor 위치 오프셋 변경만으로 충돌이나 전투 좌표가 바뀌지 않는다.
+### 8.2. 공통 부모와 계열별 클래스
 
-### 8.2. 파일별 역할
+```text
+Level
+  ├─ MineLevel
+  └─ JetTravelLevel
 
-| 파일 | 책임 |
-|---|---|
-| `SimpleGame.cpp` | 창·그래픽·모니터 초기화, 키보드·마우스·타이머 콜백 등록 |
-| `Tutorial.cpp / TutorialState.h` | 도시·실내·전망대·주행 상태, 입력, 레터박스 보정, 이동과 카메라 |
-| `TutorialGameplay.cpp` | 도시 대화·선택 의뢰·전망대·수신망·바이크 출발 조건 |
-| `TutorialRenderer.cpp / TutorialGraphics.h` | 배경 → 장면 → 후처리 → 광산 어둠 → HUD |
-| `TutorialDrawing.cpp / TutorialDrawing.h` | 좌표 투영, 기본 도형·문자·인물·모델 출력 |
-| `TutorialWorldRenderer.cpp` | 도시 원경·관문·교통·건물 등 공용 표현 |
-| `TutorialHud.cpp` | 도시 목표·안내·일시정지 화면, 광산/주행 HUD 분기 |
-| `MineQuest.h / MineQuest.cpp` | 광산 프롤로그 단계·순서 검사·동료 합류·목표 문구 |
-| `LevelOne.h / LevelOne.cpp` | 현재 광산 상태·진입/귀환·총기 사격·탄환 충돌·성장·구조·리아 동행 |
-| `LevelOneMap.cpp` | 갱도·방·격벽 생성, 이동·시야·BFS 경로와 구조 배치 |
-| `MineVisibility.cpp` | 고정등·플래시라이트·궤적의 거리 감쇠와 벽 차단 |
-| `MineLighting.cpp` | 후처리 이후의 어둠 마스크 출력, mine_lighting 계측 |
-| `Scene/MineScene.cpp` | 광산 지형·벽·램프·조사 지점·NPC·적·권총·탄환 궤적 배치 |
-| `LevelOneRenderer.cpp` | 광산 목표·체력·탄창·스캐너·조준 십자선 HUD |
-| `Weapons/Weapon.h` | 추상 무기 인터페이스 |
-| `Weapons/Firearm.h / Firearm.cpp` | 탄창·재장전·발사 간격·탄퍼짐·탄환 설정 |
-| `Weapons/Pistol.h / Pistol.cpp` | 권총 구현과 설정 |
-| `JetTravel.cpp / JetTravelRenderer.cpp` | 광산행 주행 상태·조종·부스트·장애물·시차 스크롤 |
-| `Actor/Actor.h / Actor.cpp` | 출력 객체의 공통 제어·경계 |
-| `Scene/SceneGraph.h / SceneGraph.cpp` | 소유권·계층·경계 캐싱·컬링·정렬 |
-| `Scene/Scene.h / Scene.cpp` | 기존 배치를 지속적인 Actor로 동기화 |
-| `Scene/WorldScene.h / WorldScene.cpp` | 실내·도시·전망대·주행·광산·배경·HUD 수명과 어댑터 |
-| `Scene/TutorialScene.cpp / ObservatoryScene.cpp` | 도시·집·전망대 장면 |
-| `Renderer.h / Renderer.cpp` | FBO·블룸·색 보정·비네팅·노이즈·이펙트와 GPU 자원 |
-| `RenderQueue.h / RenderQueue.cpp` | 삼각형 배칭·VBO·메시·조건부 인스턴싱 |
-| `RenderCache.h / RenderCache.cpp` | 지형·모델 GPU 메시 캐시. 전체 지도 미니맵 캐시는 제거 |
-| `ModelLibrary.cpp / ModelVariants.cpp / ModelRenderer.cpp` | 공용 모델 파일 캐시·형상·팔레트·출력 |
-| `AssetCache.cpp / RenderAssets.cpp` | 파일 검증·재질·캐릭터 아틀라스·한글 텍스처 LRU |
-| `Profiler.h / Profiler.cpp` | CPU/GPU 시간·드로우 콜·메모리·JSONL |
-| `Monitoring/GameMonitor.cpp` | 모니터 수명·500ms 발행 |
-| `Monitoring/WorldSnapshot.cpp` | 실제 퀘스트·광산·구조·총기 상태를 JSON으로 변환 |
-| `Monitoring/LocalMonitorServer.cpp` | loopback HTTP·정적 파일·최신 JSON |
-| `Monitoring/ModelCatalog.cpp` | 실제 캐시 모델 15종 도감 |
-| `monitor/` | 한글 대시보드·NPC 필터·구조 무리·모델 도감 |
-| `tests/MineGameplayTests.cpp` | GPU 없는 광산·총기·스토리 규칙 검사 |
-| `tests/SceneGraphTests.cpp / RenderQueueSmokeTests.cpp` | 기존 그래프·배칭 독립 검사 |
+Weapon
+  └─ Firearm
+       └─ Pistol
 
-옛 `LevelOneNpc.h/.cpp`, `LevelOneNpcRenderer.cpp`, `Scene/HuntingScene.cpp`는 삭제했다.
-`levelone` 네임스페이스와 LevelOne 파일명은 기존 진입점·성장 상태의 연결을 유지하며 실제 역할은 광산이다.
-공용 모델 파일은 버전 3, 크기·버전·체크섬 검증과 쓰기 실패 시 메모리 대체를 유지한다.
-기존 SolidRect 셰이더 파일은 보존하고 후처리·이펙트는 Renderer.cpp 내장 소스를 사용한다.
+Scene
+  ├─ InteriorScene / CityScene / ObservatoryScene / MineScene
+  └─ ScreenScene
+       └─ JetTravelScene / TravelBackgroundScene / BackgroundScene / HudScene
 
-### 8.3. Actor·Scene API와 제한 사항
-
-Actor / Scene 1차 분리
-
-#### 1. 파일 역할
-
-SimpleGame/Actor/Actor.h, Actor.cpp
-Actor 이름, 부모, 위치 오프셋, 투영 경계, 표시/갱신 여부, 출력 순서.
-Update를 재정의할 수 있다. 소유권은 SceneGraph에만 있다.
-OpenGL이나 튜토리얼 전역 상태에 의존하지 않는다.
-SimpleGame/Scene/SceneGraph.h, SceneGraph.cpp
-Actor 등록/검색/하위 트리 삭제/부모 변경, 순환 관계 방지.
-부모 이동 상속, 하위 경계 합산, 변경된 계층의 경계 캐싱.
-화면 영역과 겹치지 않는 하위 트리 제외, 표시 Actor만 레이어/깊이/생성 순 정렬.
-SimpleGame/Scene/Scene.h, Scene.cpp
-기존 게임 데이터와 Actor를 이름으로 동기화한다.
-매 프레임 Actor를 다시 생성하지 않는다. 사라진 배치만 제거한다.
-SimpleGame/Scene/WorldScene.h, WorldScene.cpp
-실내/도시/전망대/주행/주행 배경/광산/배경/HUD Scene 수명 관리와 기존 렌더러 연결 어댑터.
-8x8 월드 셀 단위 그룹, 카메라와 무관한 쿼터뷰 투영 경계 계산.
-SimpleGame/Scene/TutorialScene.cpp
-실내 소품/벽/바닥, 도시 건물/주민/차량/그림자/장치/표식 배치.
-SimpleGame/Scene/MineScene.cpp
-광산 타일/벽/적/아이템/플레이어/불꽃/귀환 표식 배치.
-
-#### 2. 출력 흐름
-
-기존 게임 상태 → Scene 배치 동기화 → 경계 갱신 → 그룹/Actor 컬링
-→ 보이는 Actor만 정렬 → 기존 그리기 콜백 → 기존 후처리 → HUD.
-배경과 HUD는 월드 컬링과 분리된 화면 공간 복합 Actor이다.
-도형 한 개가 아니라 논리적 객체 하나를 Actor로 취급한다.
-예: 차량의 몸체/창/불빛은 차량 Actor 내부의 기존 표현이다.
-
-#### 3. API와 좌표 규칙
-
-GetWorldScene(kind).GetGraph().Find(name)으로 등록된 Actor에 접근한다.
-SetVisible(false)는 하위 트리 전체를 감추지만 갱신은 멈추지 않는다.
-SetEnabled(false)는 하위 트리의 Actor::Update를 멈춘다. 표시는 별도이다.
-SetPosition은 카메라 독립 투영 공간의 로컬 이동 오프셋이다.
-현재 월드 어댑터에서는 게임 상태의 기존 위치에 이 오프셋을 더해 출력한다.
-Reparent는 로컬 오프셋을 유지하며, 월드 위치 보존 방식은 아니다.
-CollectVisible 결과는 다음 수집/삭제/Clear 전까지만 유효하다.
-순회/그리기 콜백 안에서는 노드를 추가·삭제·재부모화하지 않는다.
-SetDrawCallback에는 값을 캡처하고 임시 변수의 참조를 저장하지 않는다.
-아이템 이름은 벡터 인덱스가 아닌 고유 actorId를 사용한다.
-
-#### 4. 이번 단계의 경계
-
-최초 Actor/Scene 분리는 렌더러를 보존했으며 이후 배칭/GPU 캐시가 추가되었다.
-현재 렌더링 및 프로파일링 설명은 이 문서의 렌더링·성능 분석 절를 참조한다.
-전투/퀘스트/충돌 상태는 기존 TutorialState/LevelOne::State를 유지한다.
-따라서 Actor의 출력 오프셋 변경은 게임플레이 충돌 좌표를 변경하지 않는다.
-기존 플레이어/적 시뮬레이션은 종전 코드에서 갱신하며 화면 컬링으로 정지하지 않는다.
-Scene 동기화는 기존 배치 데이터를 매 프레임 방문한다. 정적 배치의 증분 동기화는 아직 없다.
-경계는 보수적 AABB이며 오클루전 컬링/LOD는 구현하지 않았다.
-RenderQueue는 출력 순서가 연속된 동일 단일 범위 메시만 조건부 인스턴싱한다.
-부모 변환은 현재 2D 이동만 지원한다. 회전/스케일은 향후 Render 분리와 함께 확장한다.
-
-#### 5. 확인 항목 (사용자 빌드/실행)
-
-집 → 도시 → 광산 → 도시 이동 및 초기화.
-카메라 가장자리의 높은 건물, 그림자, 차량, 이름표, 공격 이펙트가 조기에 사라지지 않는지.
-적 사망/리스폰, 여러 아이템 중간 항목 획득 후 남은 아이템 표시.
-그래프의 부모 숨김/이동, 순환 재부모화 거부, 하위 트리 삭제.
-SceneGraph::GetStatistics로 방문 노드/제외 하위 트리/표시 Actor 수 확인.
-tests/SceneGraphTests.cpp에 렌더러 없이 실행 가능한 독립 단위 테스트를 제공한다.
-게임 프로젝트에는 테스트 main을 포함하지 않는다.
-Visual Studio Developer Command Prompt에서 저장소 루트 기준:
-
-```bat
-cl /nologo /EHsc /std:c++17 /utf-8 /Y- /I SimpleGame tests\SceneGraphTests.cpp SimpleGame\Actor\Actor.cpp SimpleGame\Scene\SceneGraph.cpp SimpleGame\Scene\Scene.cpp SimpleGame\Profiler.cpp /Fe:SceneGraphTests.exe /link /LIBPATH:SimpleGame\Dependencies\x64 glew32.lib opengl32.lib psapi.lib
-set "PATH=%CD%\SimpleGame\Dependencies\x64;%PATH%"
-SceneGraphTests.exe
+Hud
+  └─ CityHud / MineHud / JetTravelHud
 ```
 
-이번 작업에서는 빌드와 테스트 실행을 하지 않았다.
+각 계열의 선언과 구현은 같은 이름의 .h/.cpp 한 쌍에 유지한다.
+파일 내부의 구분 주석에 클래스 이름과 역할을 적어 경계를 표시한다.
+새 권총·새 레벨 하나마다 파일을 만들지 않는다.
+
+### 8.3. 상태 소유권과 갱신
+
+- Game이 GameState를 소유한다. g_state 전역 정의는 제거하고 Game::Get().GetState()로 접근한다.
+- GameLevels가 MineLevel과 JetTravelLevel을 소유한다. g_level·g_travel 전역 정의는 제거했다.
+- Game은 Level 인터페이스로 활성 레벨을 갱신한다. UsesWalkingControls로 도보·주행을 구분한다.
+- MineLevel은 MineState를 소유한다. 맵·전투·구조·조명 클래스는 같은 상태의 안정적인 참조를 사용한다.
+- Level과 Game은 복사를 금지해 내부 참조가 다른 소유자를 가리키지 않도록 한다.
+- 광산 갱신 순서는 총기·탄환 → 구조·동료 → 적 경로·전투로 유지한다. 조작·수치·퀘스트 순서는 유지한다.
+- 맵 생성은 CPU 데이터와 mapRevision만 바꾼다. MineScene은 revision 변경 시 다음 출력에서 지형 GPU 캐시를 무효화한다.
+- GameRenderer가 Renderer를 소유하고 GL 컨텍스트가 살아 있을 때 자원을 정리한다.
+- SceneManager가 장면을 소유하고 Scene은 기존 배치를 지속적인 Actor로 동기화한다.
+
+### 8.4. 3D 메시·관절·깊이
+
+- 로컬 모델 좌표는 +X 전방, +Y 측면, +Z 위쪽이다. 고정 카메라는 방위 45도·고도 약 30도이며 기존 2:1 바닥 타일 투영을 유지한다.
+- DrawModel3D는 공유 메시·머터리얼과 인스턴스 정보를 제출한다. GPU가 관절→크기→회전과 화면 좌표·카메라 깊이를 계산한다. DrawBox도 같은 입체 메시 경로를 사용한다. OpenGL 3.3 미지원 시 기존 CPU 투영 경로로 돌아간다.
+- RenderQueue의 깊이 사용 여부는 배치 상태에 포함된다. 입체 표면은 GL_DEPTH_TEST/LEQUAL과 깊이 쓰기를 사용하고, HUD·글자·빛은 2D 합성한다.
+- 주 프레임과 후처리 FBO에 깊이 버퍼를 확보하고, 배경과 월드 사이에 깊이만 초기화한다. 불투명 표면의 가림은 Actor 제출 순서에 의존하지 않는다.
+- CharacterPose는 부모 상대 관절을 재귀적으로 적용한다. 의복을 몸 표면으로 구성하고 목·얼굴과 분리했다. 총 위치는 오른팔과 팔꿈치·손을 따라가며 손목은 조준면에 총열을 안정화한다.
+- 현재 관절은 강체 파츠의 계층 애니메이션이다. 외부 스킨 메시 파일 가져오기나 의복 물리 시뮬레이션은 구현하지 않았다.
+
+### 8.5. 카툰·저해상도 출력과 빌보드
+
+- RenderStyle.cartoon은 면 법선의 명암을 3단계(0.46/0.72/1.0)로 나누며 기본값은 켜짐이다. 베벨과 곡면의 법선 및 머터리얼별 반사광에도 적용한다. 외곽선이나 별도 팔레트 제한은 구현하지 않았다.
+- RenderStyle.resolution은 Native/Half/Quarter다. SetStyle이 색상·깊이 타깃의 크기와 확대 필터를 함께 변경한다. 카메라·모델 좌표·HUD의 논리 해상도와 입력 변환은 유지한다.
+- 픽셀 모드는 실제 작은 FBO로 장면을 렌더링하고 GL_NEAREST로 확대한다. 색상 샘플·비네트도 원본 픽셀 중심에서 계산하며 블룸과 필름 그레인은 끄므로 한 원본 픽셀 안의 색이 흔들리지 않는다. 임의 크기의 창에서는 화면 맞춤 비율에 따라 표시 픽셀 폭이 달라질 수 있다.
+- 추진기 불꽃은 노즐을 투영한 뒤 화면 공간에서 일정한 폭의 2D 쿼드로 확장한다. 3D 조명·면 명암을 불꽃에 적용하지 않으며, 차체가 롤해도 불꽃 폭이 찌그러지지 않는다.
+
+### 8.6. Scene과 Actor API
+
+BeginPlacement → Place 또는 PlaceWorldActor → EndPlacement는 같은 이름의 Actor를 재사용하고 사라진 배치만 제거한다.
+SceneGraph는 부모 이동 상속·하위 경계 합산·컬링을 수행한다. 출력 순서는 레이어 → 깊이 → 생성 순서다.
+배경·주행·HUD는 화면 공간, 도보 장면은 카메라와 독립적인 쿼터뷰 투영 공간이다.
+
+GetGraph().Find(name)으로 객체를 찾는다. SetVisible(false)는 하위 표시를 숨기고,
+SetEnabled(false)는 Actor 갱신을 중지한다. SetPosition은 로컬 투영 오프셋이며 게임플레이 충돌 좌표를 바꾸지 않는다.
+Reparent는 로컬 오프셋을 유지한다. CollectVisible 결과는 다음 수집·삭제·Clear 전까지만 유효하다.
+
+순회·그리기 콜백 중에는 노드를 추가·삭제·재부모화하지 않는다.
+저장되는 콜백에는 임시 변수의 참조를 캡처하지 않는다. 장면 멤버를 사용하는 콜백은 장면 수명 내에서 this를 캡처한다.
+아이템·구조 NPC는 벡터 인덱스 대신 안정적인 배치 ID를 사용한다. 화면 컬링은 시뮬레이션을 멈추지 않는다.
+
+Scene 동기화는 배치를 매 프레임 방문하며 정적 배치의 증분 동기화는 없다.
+경계는 보수적 AABB이고 오클루전 컬링·LOD는 없다. 부모 변환은 2D 이동만 지원한다.
+Renderer의 입체 모델 경로는 동일 메시·관절 포즈를 모아 인스턴싱한다. RenderQueue의 기존 2D/캐시 경로는 순서가 연속된 동일 단일 범위 메시만 조건부 인스턴싱한다.
+
 
 <a id="conventions"></a>
 
@@ -1451,27 +1480,37 @@ GLEW는 FreeGLUT보다 먼저 포함하고, Windows 매크로와 충돌하는 �
 ### 적용 사항
 
 1. RenderQueue: GL_POLYGON/QUADS/FAN/LINE을 삼각형으로 변환하여 연속된 같은 상태끼리 배칭.
-텍스처/프로그램/이펙트 uniform 상태가 바뀌거나 버퍼 한계, 캐시 메시/패스 경계에서 분리.
+텍스처/프로그램/깊이 사용/이펙트 uniform 상태가 바뀌거나 버퍼 한계, 캐시 메시/패스 경계에서 분리.
 임의의 재질 정렬은 하지 않는다. 기존 painter order와 알파 합성 순서를 유지한다.
 선은 사각형 삼각형으로 변환하므로 원래 드라이버 선 래스터화와 가장자리가 조금 다를 수 있다.
 
-2. 도시/광산 바닥: 8x8 청크별 GPU 메시를 첫 표시 시 생성하고 카메라 이동에는 재사용.
-물결은 정적 지형에 굽지 않고 별도 동적 셰이더 배치로 유지한다.
-맵 생성 시 지형 캐시를 무효화한다.
+2. 도시/광산 바닥: 8×8 청크의 표시 범위를 방문해 공유 평면 메시와 머터리얼 인스턴스를 제출한다. 타일별 CPU 정점/청크 메시를 재생성하지 않는다. 평면은 미세하게 겹쳐 래스터 틈을 막고 테두리 패턴을 넣지 않는다. 물결은 별도 동적 셰이더 배치로 유지한다.
 
-3. 단색 도형과 4종 재질: 패딩 있는 공용 아틀라스의 단색 셀/재질 셀을 사용한다.
-건물 면, 창문, 윤곽선 등이 같은 텍스처로 배칭될 수 있다.
+3. 입체 모델은 공유 머터리얼의 팔레트·거칠기·금속성·발광과 파츠별 표면 분류를 사용한다. 기존 단색/2D 도형·빌보드·글자는 공용 아틀라스와 RenderQueue를 사용한다.
 
 4. 발광: 6개의 타원 대신 미리 생성한 그라데이션 아틀라스 셀 사각형 1개.
 원래의 빛 번짐을 근사하며 정확히 동일한 픽셀을 보장하지 않는다.
 
-5. models::Get()의 불변 모델: 모델별 GPU 메시 캐시. 부품을 매 프레임 다시 생성하지 않는다.
-OpenGL 3.3 이상에서 연속된 동일 단일 범위 메시들을 인스턴싱한다.
-다른 도형이 사이에 있거나 다중 범위/미지원 환경이면 개별 캐시 메시로 출력한다.
-인스턴싱 지원 조건을 충족하지 않아도 배칭/캐시는 유지한다.
-실제 장면에서는 순서 제약 때문에 instanced_draw_calls가 0일 수 있다.
+5. models::ModelLibrary::Get()의 불변 3D 모델: 모델별 VBO를 캐시하고 Actor가 메시·머터리얼 shared_ptr을 보유한다. 동일 메시·포즈는 비연속 객체여도 묶으며 위치·스케일·회전·색·머터리얼 수치는 인스턴스 속성으로 전달한다. 서로 다른 관절 포즈는 별도 묶음이다. 3D 가림은 깊이 버퍼를 사용하고, 글자·발광·불꽃은 모델 패스 뒤에 합성한다. 미지원 환경은 CPU 투영 경로로 돌아간다.
 
 6. 광산의 전체 지도·적 위치 미니맵과 관련 텍스처 캐시는 제거했다. 도시 미니맵은 유지하며 광산에서는 F 스캐너의 짧은 방위 펄스를 사용한다.
+
+### 2026-10-14 품질 개선 후 자동 성능 측정
+
+측정 장치: NVIDIA GeForce RTX 5080, Windows, MSVC /O2 최적화(검증 assert 활성), 1280×800 기본 카툰 출력.
+각 장면에서 24프레임 준비 후 120프레임을 측정했다. 활성 레벨·장면 그래프 갱신, 모델·그림자·불꽃, 후처리, 광산 암막, HUD와 glFinish GPU 완료 대기를 포함한다.
+숨겨진 WGL 표면에서 실행하므로 창 표시/SwapBuffers/VSync 대기와 실제 입력·모니터 발행은 포함하지 않는다. 적 90마리 조건은 전체 시뮬레이션 개수이며 화면 밖 적까지 렌더링하는 조건은 아니다.
+
+| 장면 | 평균 ms | P95 ms | 최댓값 ms | 프레임당 출력 호출 | 인스턴싱 호출 |
+|---|---:|---:|---:|---:|---:|
+| 도시 | 0.953 | 1.220 | 1.389 | 111 | 33 |
+| 전망대 | 0.439 | 0.639 | 0.960 | 58 | 9 |
+| 바이크 | 0.405 | 0.665 | 0.981 | 30 | 8 |
+| 광산 입구 | 0.575 | 0.823 | 1.087 | 28 | 9 |
+| 광산 유적 | 0.611 | 0.844 | 1.035 | 28 | 9 |
+| 광산 적 90마리 | 0.649 | 0.782 | 1.300 | 28 | 9 |
+
+현재 장치·위치·짧은 자동 측정 구간은 모두 60FPS의 16.67ms 프레임 예산 안에 들었다. 모든 PC나 장시간 실제 플레이의 60FPS를 보장하는 결과는 아니다. 셰이더 초기 컴파일은 준비 구간 이전이다. 원본 수치·모델 데이터·장면 캡처는 `x64/QualityChecks/renders/performance.json`, `models.json`, BMP/PNG 파일에 보관한다. 출력 호출에는 그림자/합성/글자도 포함하고, 인스턴싱 호출은 모델·그림자 패스 중 2개 이상 인스턴스를 그린 묶음 수다.
 
 ### 로그 위치 및 빈도
 
@@ -1593,7 +1632,7 @@ GPU 구간 종료 전에 해당 패스 RenderQueue::Flush를 실행해야 올바
 - 건물 앞뒤, 반투명 건물, 그림자, 글자 색, 차량/인물 위치, 물결/불꽃, 발광 확인.
 - 광산 재시작 후 지형 캐시와 구조 무리·조사 상태가 갱신되는지 확인.
 - Logs JSONL을 AI에게 전달하면 항목별 병목 후보를 분석할 수 있다.
-- 광산 전환은 구문·독립 규칙 검사를 수행했다. 실제 게임 렌더링·플레이·FPS·GPU 성능은 아직 검증하지 않았다.
+- 광산을 포함한 실제 GPU 장면 출력·회귀 검사와 아래 조건의 성능 측정을 완료했다. 장시간 수동 플레이와 다른 하드웨어 검증은 남아 있다.
 
 ### 배칭 스모크 테스트 (사용자 실행)
 

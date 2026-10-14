@@ -23,13 +23,14 @@ struct Transform
 };
 struct State
 {
+    bool depth = false;
     GLuint texture = 0, program = 0;
     int effect = 0;
     float seconds = 0;
     bool operator==(const State &other) const
     {
-        return texture == other.texture && program == other.program && effect == other.effect &&
-               seconds == other.seconds;
+        return depth == other.depth && texture == other.texture && program == other.program &&
+               effect == other.effect && seconds == other.seconds;
     }
 };
 struct Range
@@ -123,6 +124,16 @@ void InitializeInstances()
 
 void ApplyState(const State &value)
 {
+    if (value.depth)
+    {
+        glEnable(GL_DEPTH_TEST);
+    }
+    else
+    {
+        glDisable(GL_DEPTH_TEST);
+    }
+    glDepthMask(value.depth ? GL_TRUE : GL_FALSE);
+    glDepthFunc(GL_LEQUAL);
     if (GLEW_VERSION_2_0)
     {
         glUseProgram(value.program);
@@ -284,6 +295,7 @@ void FlushInstances()
     compatible = compatible && geometry.ranges.size() == 1;
     if (compatible)
     {
+        ApplyState(geometry.ranges[0].state);
         glBindBuffer(GL_ARRAY_BUFFER, instanceMesh->buffer);
         for (GLuint attribute = 0; attribute < 5; ++attribute)
         {
@@ -482,9 +494,18 @@ void LineWidth(float width)
 {
     lineWidth = width;
 }
+void Depth(bool enabled)
+{
+    state.depth = enabled;
+}
 void PushMatrix()
 {
     transforms.push_back(transforms.back());
+}
+std::array<float, 3> GetTranslation()
+{
+    const auto &t = transforms.back();
+    return {t.x, t.y, t.z};
 }
 void PopMatrix()
 {

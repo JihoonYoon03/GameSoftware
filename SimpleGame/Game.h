@@ -1,7 +1,7 @@
 #pragma once
+#include "ModelLibrary.h"
 #include <string>
 #include <vector>
-#include "ModelLibrary.h"
 
 namespace tutorial
 {
@@ -72,8 +72,8 @@ constexpr float kWorldMaxX = 18;
 constexpr float kWorldMinY = -12.5f;
 constexpr float kWorldMaxY = 13.5f;
 
-// Internal state shared by tutorial modules. Renderers only read this state.
-struct TutorialState
+// State owned by Game. Renderers read it without changing gameplay.
+struct GameState
 {
     int viewportWidth = kCanvasWidth;
     int viewportHeight = kCanvasHeight;
@@ -99,18 +99,77 @@ struct TutorialState
     float noticeSecondsRemaining = 0;
     float movementAmount = 0;
     int facingDirection = 0;
+    float facingYaw = .78539816f;
     Vector2 playerPosition = {0, 0};
     Vector2 cameraPosition = {0, 0};
     std::string noticeText;
     std::vector<Building> buildings;
     std::vector<Resident> residents;
 };
-extern TutorialState g_state;
+// ============================================================================
+// CityLayout — shared road footprints, building clearance and traffic heading
+// ============================================================================
+class CityLayout
+{
+  public:
+    static bool IsRoadTile(int x, int y);
+    static bool OverlapsRoad(const Building &building, float clearance = .3f);
+    static void ValidateBuildings(std::vector<Building> &buildings);
+    static Vector2 TrafficPosition(int index, float seconds);
+    static float TrafficYaw(int index);
+};
 
-float Clamp(float value, float minimum, float maximum);
-float Distance(Vector2 first, Vector2 second);
-void ShowNotice(const std::string &message);
-bool IsPositionBlocked(Vector2 position);
-InteractionTarget FindNearbyInteraction();
-void InteractWithNearbyTarget();
+// ============================================================================
+// Game — state, input, city progression
+// ============================================================================
+
+class Game
+{
+  public:
+    Game(const Game &) = delete;
+    Game &operator=(const Game &) = delete;
+    static Game &Get();
+    GameState &GetState();
+    void Reset();
+    void Resize(int width, int height);
+    void KeyDown(unsigned char key, int x, int y);
+    void KeyUp(unsigned char key, int x, int y);
+    void SpecialKeyDown(int key, int x, int y);
+    void MouseMotion(int x, int y);
+    void MouseButton(int button, int state, int x, int y);
+    void MouseEntry(int state);
+    void Tick(int timer);
+    static float Clamp(float value, float minimum, float maximum);
+    static float Distance(Vector2 first, Vector2 second);
+    void ShowNotice(const std::string &message);
+    bool IsPositionBlocked(Vector2 position);
+    InteractionTarget FindNearbyInteraction();
+    bool IsQuestInteraction(InteractionTarget target) const;
+    void InteractWithNearbyTarget();
+
+  private:
+    Game() = default;
+    GameState state;
+    static unsigned char NormalizeKey(unsigned char key);
+    void UpdatePlayerMovement(float deltaSeconds);
+    void UpdateCamera(float deltaSeconds);
+};
+// ============================================================================
+// GameCallbacks - GLUT adapters
+// ============================================================================
+class GameCallbacks
+{
+  public:
+    static void Draw();
+    static void Shutdown();
+    static void Resize(int width, int height);
+    static void KeyDown(unsigned char key, int x, int y);
+    static void KeyUp(unsigned char key, int x, int y);
+    static void SpecialKeyDown(int key, int x, int y);
+    static void MouseMotion(int x, int y);
+    static void MouseButton(int button, int state, int x, int y);
+    static void MouseEntry(int state);
+    static void Tick(int timer);
+};
+
 } // namespace tutorial

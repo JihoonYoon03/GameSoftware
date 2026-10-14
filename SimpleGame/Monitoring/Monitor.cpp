@@ -1,20 +1,27 @@
-#include "stdafx.h"
-#include "WorldSnapshot.h"
+﻿#include "stdafx.h"
+#include "Monitor.h"
 #include "LocalMonitorServer.h"
-#include "../LevelOne.h"
-#include "../JetTravel.h"
+#include "../Level.h"
+#include "../ModelLibrary.h"
+#include "../AssetCache.h"
 #include "../Profiler.h"
-#include "../TutorialState.h"
+#include <windows.h>
 #include <algorithm>
-#include <chrono>
 #include <cmath>
+#include <cstdio>
+#include <filesystem>
 #include <iomanip>
 #include <locale>
 #include <sstream>
 #include <string_view>
+#include <vector>
 
 namespace monitoring
 {
+
+// ============================================================================
+// WorldSnapshot
+// ============================================================================
 namespace
 {
 std::string Quote(std::string_view value)
@@ -88,7 +95,7 @@ void Append(std::string &array, const std::string &object)
 }
 const char *QuestStage()
 {
-    switch (tutorial::g_state.mainQuestStage)
+    switch (tutorial::Game::Get().GetState().mainQuestStage)
     {
     case tutorial::MainQuestStage::ReadHomeTerminal:
         return "집 단말 확인";
@@ -154,11 +161,11 @@ std::string StaticNpc(const std::string &id, const std::string &name, tutorial::
 }
 } // namespace
 
-std::string BuildWorldSnapshot(std::uint64_t sequence, const std::string &sessionId)
+std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sessionId)
 {
-    const auto &world = tutorial::g_state;
-    const auto &level = levelone::g_level;
-    const auto &travel = jettravel::g_travel;
+    const auto &world = tutorial::Game::Get().GetState();
+    const auto &level = game::GameLevels::Mine().GetState();
+    const auto &travel = game::GameLevels::Travel().GetState();
     const bool simulating = level.active && !world.isPaused;
     const bool cityLia = !level.active && !world.isJetTravel;
     const size_t cityPopulation = world.residents.size() + 1 + (cityLia ? 1 : 0);
@@ -224,21 +231,21 @@ std::string BuildWorldSnapshot(std::uint64_t sequence, const std::string &sessio
     quests.Bool("side_quest_complete", world.isSideQuestComplete);
     result.Raw("quests", quests.Finish());
     auto stage = level.quest.GetStage();
-    flags.Bool("main.signal_record_shown", stage >= levelone::MineQuestStage::CheckCityRelay);
-    flags.Bool("main.mine_trace_confirmed", stage >= levelone::MineQuestStage::TravelToMine);
+    flags.Bool("main.signal_record_shown", stage >= game::MineQuestStage::CheckCityRelay);
+    flags.Bool("main.mine_trace_confirmed", stage >= game::MineQuestStage::TravelToMine);
     flags.Bool("companion.ria_joined", level.quest.IsRiaJoined());
     flags.Bool("main.mine_power_bypassed", level.quest.IsPowerBypassed());
-    flags.Bool("main.mine_signal_investigated", stage >= levelone::MineQuestStage::InvestigateGlyph);
-    flags.Bool("main.observer_glyph_investigated", stage >= levelone::MineQuestStage::CollectCoordinates);
+    flags.Bool("main.mine_signal_investigated", stage >= game::MineQuestStage::InvestigateGlyph);
+    flags.Bool("main.observer_glyph_investigated", stage >= game::MineQuestStage::CollectCoordinates);
     flags.Bool("main.mine_relay_coordinate_found", level.quest.AreCoordinatesFound());
-    flags.Bool("main.mine_returned_to_halo", stage == levelone::MineQuestStage::Complete);
+    flags.Bool("main.mine_returned_to_halo", stage == game::MineQuestStage::Complete);
     result.Raw("flags", flags.Finish());
     journey.Bool("active", world.isJetTravel);
     journey.Seconds("elapsed_seconds", travel.elapsedSeconds);
     journey.Seconds("distance", travel.distance);
-    journey.Number("route_length", jettravel::kRouteLength);
+    journey.Number("route_length", game::kRouteLength);
     journey.Seconds("progress_percent",
-                    tutorial::Clamp(travel.distance / jettravel::kRouteLength * 100, 0, 100));
+                    tutorial::Game::Clamp(travel.distance / game::kRouteLength * 100, 0, 100));
     journey.Seconds("speed", travel.speed);
     journey.Seconds("lateral_offset", travel.lateralOffset);
     journey.Seconds("lateral_velocity", travel.lateralVelocity);
@@ -274,8 +281,8 @@ std::string BuildWorldSnapshot(std::uint64_t sequence, const std::string &sessio
     mine.Text("power", level.quest.IsPowerBypassed() ? "전력 우회 · 격벽 개방" : "단전 · 격벽 폐쇄");
     mine.Text("gate_signal", level.quest.AreCoordinatesFound() ? "중계 좌표 확보 / 헤일로 귀환"
                                                                : "광부·전투원 구조 요청 및 실종 탐사선 신호");
-    mine.Number("map_width", levelone::kMapSize);
-    mine.Number("map_height", levelone::kMapSize);
+    mine.Number("map_width", game::kMapSize);
+    mine.Number("map_height", game::kMapSize);
     mine.Number("map_seed", level.seed);
     fillRegion(corridor, "jet_corridor", "광산행 제트 주행 회랑", world.isJetTravel || world.isComplete,
                world.isJetTravel, world.isJetTravel && !world.isPaused, 0, 0, 0);
@@ -365,7 +372,7 @@ std::string BuildWorldSnapshot(std::uint64_t sequence, const std::string &sessio
     investigation.Seconds("scanner_seconds", level.scannerSeconds);
     investigation.Seconds("scanner_cooldown", level.scannerCooldown);
     investigation.Number("active_bullets", level.bullets.size());
-    investigation.Seconds("flashlight_angle", levelone::GetAimAngle());
+    investigation.Seconds("flashlight_angle", game::GameLevels::Mine().GetAimAngle());
     investigation.Raw("rescue_groups", "[" + groups + "]");
     result.Raw("mine", investigation.Finish());
     std::string mobArray;
@@ -376,7 +383,7 @@ std::string BuildWorldSnapshot(std::uint64_t sequence, const std::string &sessio
         item.Text("id", "mine/mob/" + std::to_string(i));
         item.Text("region_id", "mine");
         item.Number("health", (std::max)(0, enemy.health));
-        item.Number("max_health", levelone::kEnemyMaxHealth);
+        item.Number("max_health", game::kEnemyMaxHealth);
         item.Bool("alive", enemy.health > 0);
         item.Seconds("respawn_seconds", (std::max)(0.f, enemy.respawnSeconds));
         item.Raw("position", Position(enemy.position));
@@ -390,4 +397,165 @@ std::string BuildWorldSnapshot(std::uint64_t sequence, const std::string &sessio
     result.Text("notice", world.noticeSecondsRemaining > 0 ? world.noticeText : "");
     return result.Finish();
 }
+// ============================================================================
+// ModelCatalog
+// ============================================================================
+namespace
+{
+void PointJson(std::ostream &out, models::Point point)
+{
+    out << '[' << point.x << ',' << point.y << ',' << point.z << ']';
+}
+void ModelJson(std::ostream &out, const models::Model &model, const char *category, const char *name,
+               size_t type, const models::VehicleModel *vehicle = nullptr)
+{
+    out << "{\"category\":\"" << category << "\",\"name\":\"" << name << "\",\"type\":" << type
+        << ",\"space\":\"" << (model.space == models::CoordinateSpace::World ? "world" : "screen")
+        << "\",\"validated\":" << (models::ModelFactory::ValidateModel(model) ? "true" : "false")
+        << ",\"parts\":[";
+    bool character = std::string(category) == "character";
+    const auto bindPose = models::ModelRig::Pose(0, false);
+    bool firstPart = true;
+    for (size_t i = 0; i < model.count; ++i)
+    {
+        const auto &part = model.parts[i];
+        if (character && part.joint == models::Joint::Weapon)
+        {
+            continue;
+        }
+        out << (firstPart ? "" : ",") << "{\"kind\":" << unsigned(part.kind)
+            << ",\"palette\":" << unsigned(part.palette) << ",\"width\":" << part.width << ",\"color\":[";
+        for (size_t j = 0; j < 4; ++j)
+        {
+            out << (j ? "," : "") << part.color[j];
+        }
+        out << "],\"points\":[";
+        for (size_t j = 0; j < part.count; ++j)
+        {
+            if (j)
+            {
+                out << ',';
+            }
+            PointJson(out, character ? bindPose.Apply(part.points[j], part.joint) : part.points[j]);
+        }
+        out << "]}";
+        firstPart = false;
+    }
+    out << ']';
+    if (vehicle)
+    {
+        out << ",\"exhausts\":[";
+        for (size_t i = 0; i < 2; ++i)
+        {
+            if (i)
+            {
+                out << ',';
+            }
+            PointJson(out, vehicle->exhausts[i]);
+        }
+        out << "],\"headlights\":[";
+        for (size_t i = 0; i < 2; ++i)
+        {
+            if (i)
+            {
+                out << ',';
+            }
+            PointJson(out, vehicle->headlights[i]);
+        }
+        out << ']';
+    }
+    out << '}';
+}
+} // namespace
+std::string ModelCatalog::Build()
+{
+    const auto &library = models::ModelLibrary::Get();
+    constexpr const char *kVehicleNames[] = {"쿠페", "여객 셔틀", "화물 수송차", "순찰차",
+                                             "개인용 제트 오토바이"};
+    constexpr const char *kCharacterNames[] = {"탐험가", "정비사", "경비원", "의무관", "연구원"};
+    constexpr const char *kBuildingNames[] = {"발코니 주거동", "계단식 테라스", "박공 작업장", "돔 시설",
+                                              "관문 전망대"};
+    std::ostringstream out;
+    out.imbue(std::locale::classic());
+    out << std::fixed << std::setprecision(5) << "{\"schema\":\"game_models_v1\",\"models\":[";
+    bool first = true;
+    for (size_t i = 0; i < library.vehicles.size(); ++i)
+    {
+        if (!first)
+        {
+            out << ',';
+        }
+        first = false;
+        ModelJson(out, library.vehicles[i].body, "vehicle", kVehicleNames[i], i, &library.vehicles[i]);
+    }
+    for (size_t i = 0; i < library.characters.size(); ++i)
+    {
+        out << ',';
+        ModelJson(out, library.characters[i], "character", kCharacterNames[i], i);
+    }
+    for (size_t i = 0; i < library.buildings.size(); ++i)
+    {
+        out << ',';
+        ModelJson(out, library.buildings[i], "building", kBuildingNames[i], i);
+    }
+    out << "],\"character_base\":null}";
+    return out.str();
+}
+// ============================================================================
+// GameMonitor
+// ============================================================================
+namespace
+{
+using Clock = std::chrono::steady_clock;
+constexpr unsigned short kPort = 17707;
+constexpr auto kPublishInterval = std::chrono::milliseconds(500);
+
+} // namespace
+void GameMonitor::Initialize()
+{
+    if (enabled)
+    {
+        return;
+    }
+    wchar_t module[MAX_PATH] = {};
+    DWORD length = GetModuleFileNameW(nullptr, module, MAX_PATH);
+    if (!length || length >= MAX_PATH)
+    {
+        std::fprintf(stderr, "[Monitor] cannot resolve executable directory\n");
+        return;
+    }
+    sessionId = std::to_string(GetCurrentProcessId()) + "-" + std::to_string(GetTickCount64());
+    sequence = 0;
+    transport::PublishModels(ModelCatalog::Build());
+    transport::Publish(WorldSnapshot::Build(++sequence, sessionId));
+    enabled = transport::Start(std::filesystem::path(module).parent_path() / L"Monitor", kPort);
+    if (enabled)
+    {
+        nextPublish = Clock::now() + kPublishInterval;
+        std::printf("\n[Monitor] Open browser: http://127.0.0.1:%u/\n[Monitor] JSON: /api/state (500 ms)\n\n",
+                    unsigned(kPort));
+    }
+}
+void GameMonitor::Update()
+{
+    if (!enabled || Clock::now() < nextPublish)
+    {
+        return;
+    }
+    profiling::Scope timer(profiling::Timer::MonitorSnapshot);
+    transport::Publish(WorldSnapshot::Build(++sequence, sessionId));
+    profiling::Count(profiling::Counter::MonitorSnapshots);
+    nextPublish = Clock::now() + kPublishInterval;
+}
+void GameMonitor::Shutdown()
+{
+    transport::Stop();
+    enabled = false;
+}
+GameMonitor &GameMonitor::Get()
+{
+    static GameMonitor monitor;
+    return monitor;
+}
+
 } // namespace monitoring

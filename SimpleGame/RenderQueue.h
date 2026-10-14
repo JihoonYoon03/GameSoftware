@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <array>
 
 namespace renderqueue
 {
@@ -19,6 +20,7 @@ void Texture(unsigned int texture);
 void SolidSample(unsigned int texture, float u, float v);
 void Effect(unsigned int program, int kind, float seconds);
 void LineWidth(float width);
+void Depth(bool enabled);
 void PushMatrix();
 void PopMatrix();
 void Translate(float x, float y, float z);
@@ -26,4 +28,5 @@ void Scale(float x, float y, float z);
 void LoadIdentity();
 MeshPtr Capture(const std::function<void()> &draw);
 void DrawMesh(const MeshPtr &mesh);
+std::array<float, 3> GetTranslation();
 } // namespace renderqueue

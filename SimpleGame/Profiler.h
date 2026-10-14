@@ -112,3 +112,14 @@ std::uint64_t ReadCounter(Counter counter);
 // Latest completed one-second window. Read only on the game thread.
 const std::string &GetLatestReportJson();
 } // namespace profiling
+
+// Compatibility draw-call instrumentation.
+
+namespace renderdebug
+{
+// Compatibility wrapper for remaining immediate-mode submissions (post-processing).
+// Batched glDrawArrays/instanced calls are counted at submission in RenderQueue.
+void BeginFrame();
+void BeginPrimitive(unsigned int mode);
+void EndFrame();
+} // namespace renderdebug

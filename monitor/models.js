@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 let catalog = null;
 const grid = document.getElementById("model-grid");
 const status = document.getElementById("catalog-status");
@@ -12,8 +12,11 @@ function color(part) {
   return "rgba(" + part.color.slice(0,3).map((v,i)=>Math.round(v*tint[i]*255)).join(",") + "," + part.color[3] + ")";
 }
 function project(model, p) {
-  const width = model.type === 4 ? 5 : 2.5, depth = model.type === 4 ? 4 : 2.5;
-  return model.space === "world" ? [(p[0]*width-p[1]*depth)*36,(p[0]*width+p[1]*depth)*18-p[2]*(model.type===4?170:130)] : p;
+  const building = model.category === "building";
+  const width = building ? (model.type === 4 ? 5 : 2.5) : 1;
+  const depth = building ? (model.type === 4 ? 4 : 2.5) : 1;
+  const height = building ? (model.type === 4 ? 170 : 130) : 44;
+  return model.space === "world" ? [(p[0]*width-p[1]*depth)*36,(p[0]*width+p[1]*depth)*18-p[2]*height] : p;
 }
 function draw(model, canvas) {
   const context = canvas.getContext("2d");
@@ -25,24 +28,15 @@ function draw(model, canvas) {
     }
     return part.points.map((p)=>project(model,p));
   });
-  if (model.category === "character") points = points.concat([[-20,-53],[20,3]]);
   const minX = Math.min(...points.map((p)=>p[0])), maxX = Math.max(...points.map((p)=>p[0]));
   const minY = Math.min(...points.map((p)=>p[1])), maxY = Math.max(...points.map((p)=>p[1]));
   const scale = Math.min((canvas.width-70)/(maxX-minX),(canvas.height-65)/(maxY-minY),3);
   context.save();
   context.translate(canvas.width/2-(minX+maxX)*scale/2,canvas.height/2-(minY+maxY)*scale/2);
   context.scale(scale,scale);
-  if (model.category === "character" && catalog.character_base) {
-    const base = catalog.character_base;
-    const sprite = document.createElement("canvas");
-    sprite.width = base.width; sprite.height = base.height;
-    const pixels = Uint8ClampedArray.from(base.rgba), tint = rgb("body-color");
-    for (let i=0;i<pixels.length;i+=4) for (let c=0;c<3;c++) pixels[i+c]*=tint[c];
-    sprite.getContext("2d").putImageData(new ImageData(pixels,base.width,base.height),0,0);
-    context.imageSmoothingEnabled = false;
-    context.drawImage(sprite,-20,-50,40,53);
-  }
-  for (const part of model.parts) {
+  const depth = (part) => part.points.reduce((sum,p)=>sum+p[0]+p[1]+p[2]*.81818,0)/part.points.length;
+  const parts = model.space === "world" ? [...model.parts].sort((a,b)=>depth(a)-depth(b)) : model.parts;
+  for (const part of parts) {
     context.fillStyle = context.strokeStyle = color(part);
     context.lineWidth = part.width;
     context.beginPath();
@@ -59,12 +53,15 @@ function draw(model, canvas) {
   }
   if (model.category === "vehicle") {
     for (const socket of model.exhausts) {
-      context.fillStyle = "#ff6969"; context.beginPath(); context.arc(socket[0],socket[1],2,0,Math.PI*2); context.fill();
+      const point = project(model,socket);
+      const tail = project(model,[socket[0]-.5,socket[1],socket[2]]);
+      context.fillStyle = "#ff6969"; context.beginPath(); context.arc(point[0],point[1],2,0,Math.PI*2); context.fill();
       context.strokeStyle = "#ff6969"; context.lineWidth = 1;
-      context.beginPath(); context.moveTo(socket[0],socket[1]); context.lineTo(socket[0]-17,socket[1]); context.stroke();
+      context.beginPath(); context.moveTo(point[0],point[1]); context.lineTo(tail[0],tail[1]); context.stroke();
     }
     for (const lamp of model.headlights) {
-      context.fillStyle = "#ffe59a"; context.beginPath(); context.arc(lamp[0],lamp[1],2,0,Math.PI*2); context.fill();
+      const point = project(model,lamp);
+      context.fillStyle = "#ffe59a"; context.beginPath(); context.arc(point[0],point[1],2,0,Math.PI*2); context.fill();
     }
   }
   context.restore();

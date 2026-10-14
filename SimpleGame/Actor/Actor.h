@@ -5,6 +5,17 @@
 #include <string>
 #include <vector>
 
+namespace rendering
+{
+class Mesh;
+struct Material;
+struct RenderObject
+{
+    std::shared_ptr<Mesh> mesh;
+    std::shared_ptr<Material> material;
+};
+} // namespace rendering
+
 namespace game
 {
 struct Position
@@ -49,6 +60,7 @@ class Actor
     void SetDrawCallback(DrawCallback callback);
     virtual void Update(float deltaSeconds);
     void Draw() const;
+    std::vector<rendering::RenderObject> &GetRenderObjects() const;
 
   private:
     friend class SceneGraph;
@@ -68,5 +80,6 @@ class Actor
     float depth = 0;
     std::uint64_t order = 0;
     DrawCallback drawCallback;
+    mutable std::vector<rendering::RenderObject> renderObjects;
 };
 } // namespace game

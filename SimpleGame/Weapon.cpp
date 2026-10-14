@@ -1,10 +1,14 @@
 #include "stdafx.h"
-#include "Firearm.h"
+#include "Weapon.h"
 #include <algorithm>
 #include <cmath>
 
 namespace combat
 {
+
+// ============================================================================
+// Firearm
+// ============================================================================
 Firearm::Firearm(FirearmSettings settings) : settings(settings)
 {
     Reset();
@@ -87,5 +91,15 @@ float Firearm::GetReloadProgress() const
 bool Firearm::IsReloading() const
 {
     return reloadRemaining > 0;
+}
+// ============================================================================
+// Pistol
+// ============================================================================
+Pistol::Pistol() : Firearm({12, 18, .2f, 1.4f, 38.f, 24.f, .008f, .16f, .033f, .09f})
+{
+}
+const char *Pistol::GetName() const
+{
+    return "개척자 권총";
 }
 } // namespace combat

@@ -128,4 +128,8 @@ void Actor::Draw() const
         drawCallback(*this);
     }
 }
+std::vector<rendering::RenderObject> &Actor::GetRenderObjects() const
+{
+    return renderObjects;
+}
 } // namespace game

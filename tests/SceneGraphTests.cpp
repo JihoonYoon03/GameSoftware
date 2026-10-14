@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "Actor/Actor.h"
-#include "Scene/Scene.h"
+#include "Scene.h"
 #include <cassert>
 #include <memory>
 

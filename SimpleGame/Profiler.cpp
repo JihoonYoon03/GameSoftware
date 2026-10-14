@@ -599,3 +599,22 @@ void Shutdown()
     timerSupported = false;
 }
 } // namespace profiling
+
+// Compatibility draw-call instrumentation.
+namespace renderdebug
+{
+void BeginFrame()
+{
+    profiling::BeginFrame("unknown");
+}
+void BeginPrimitive(unsigned int mode)
+{
+    profiling::Count(profiling::Counter::DrawCalls);
+    profiling::Count(profiling::Counter::SubmittedPrimitives);
+    glBegin(mode);
+}
+void EndFrame()
+{
+    profiling::EndFrame();
+}
+} // namespace renderdebug
