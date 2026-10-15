@@ -166,16 +166,24 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     const auto &world = tutorial::Game::Get().GetState();
     const auto &level = game::GameLevels::Mine().GetState();
     const auto &travel = game::GameLevels::Travel().GetState();
+    const auto &chapter = game::GameLevels::Chapter().GetState();
+    const size_t fieldScrappers = std::count_if(chapter.scrappers.begin(), chapter.scrappers.end(),
+                                                [](const game::FrontierPerson &p) { return !p.arrived; });
+    const size_t frontierPopulation =
+        chapter.generated ? chapter.survivors.size() + (chapter.active ? 1 : 0) +
+                                (!chapter.kainJoined || chapter.active ? 1 : 0) + fieldScrappers
+                          : 0;
     const bool simulating = level.active && !world.isPaused;
-    const bool cityLia = !level.active && !world.isJetTravel;
-    const size_t cityPopulation = world.residents.size() + 1 + (cityLia ? 1 : 0);
+    const bool cityLia = !level.active && !world.isJetTravel && !chapter.active;
+    const bool cityKain = chapter.kainJoined && !chapter.active;
+    const size_t cityPopulation = world.residents.size() + 1 + (cityLia ? 1 : 0) + (cityKain ? 1 : 0);
     const size_t minePopulation = level.survivors.size() + (level.active ? 1 : 0);
     size_t aliveMobs = 0;
     for (const auto &enemy : level.enemies)
     {
         aliveMobs += enemy.health > 0 ? 1 : 0;
     }
-    JsonObject result, counts, player, quests, city, mine, corridor, journey, network, flags;
+    JsonObject result, counts, player, quests, city, mine, corridor, frontier, journey, network, flags;
     result.Text("schema", "game_monitor_v1");
     result.Bool("ready", true);
     result.Text("session_id", sessionId);
@@ -185,18 +193,25 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                                          .count());
     result.Number("publish_interval_ms", 500);
     result.Bool("paused", world.isPaused);
-    result.Text("current_region_id", level.active ? "mine" : world.isJetTravel ? "jet_corridor" : "halo_07");
-    result.Text("current_area", level.active            ? "광산 · 구조 신호 조사"
+    result.Text("current_region_id", chapter.active      ? "frontier"
+                                     : level.active      ? "mine"
+                                     : world.isJetTravel ? "jet_corridor"
+                                                         : "halo_07");
+    result.Text("current_area", chapter.active          ? "빛나는 개척지 · 발전기/운송대/폐설비"
+                                : level.active          ? "광산 · 구조 신호 조사"
                                 : world.isJetTravel     ? "광산행 제트 주행 회랑"
                                 : world.isInObservatory ? "헤일로 전망대 관측실"
                                 : world.isInsideHome    ? "플레이어의 집"
                                                         : "헤일로 주거 구역 07");
     result.Seconds("play_time_seconds", world.playTimeSeconds);
-    counts.Number("npc_total", cityPopulation + minePopulation);
-    counts.Number("npc_current_region", level.active        ? minePopulation
+    counts.Number("npc_total", cityPopulation + minePopulation + frontierPopulation);
+    counts.Number("npc_current_region", chapter.active      ? frontierPopulation
+                                        : level.active      ? minePopulation
                                         : world.isJetTravel ? 0
                                                             : cityPopulation);
-    counts.Number("npc_simulating", simulating ? minePopulation : 0);
+    counts.Number("npc_simulating", chapter.active && !world.isPaused ? frontierPopulation
+                                    : simulating                      ? minePopulation
+                                                                      : 0);
     counts.Number("mob_total", level.enemies.size());
     counts.Number("mob_alive", aliveMobs);
     counts.Number("mob_respawning", level.enemies.size() - aliveMobs);
@@ -221,7 +236,9 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     player.Seconds("spread_radians", level.pistol.GetSpread());
     result.Raw("player", player.Finish());
     quests.Text("tutorial_stage", QuestStage());
-    quests.Text("main_quest", level.quest.GetObjective());
+    quests.Text("main_quest", game::GameLevels::Chapter().IsAvailable()
+                                  ? game::GameLevels::Chapter().Objective()
+                                  : level.quest.GetObjective());
     quests.Bool("gate_signal_heard", world.gateSignalHeard);
     quests.Bool("in_observatory", world.isInObservatory);
     quests.Bool("observatory_descended", world.hasDescendedObservatory);
@@ -239,6 +256,15 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     flags.Bool("main.observer_glyph_investigated", stage >= game::MineQuestStage::CollectCoordinates);
     flags.Bool("main.mine_relay_coordinate_found", level.quest.AreCoordinatesFound());
     flags.Bool("main.mine_returned_to_halo", stage == game::MineQuestStage::Complete);
+    flags.Bool("main.city_generator_restored", chapter.generatorRestored);
+    flags.Bool("main.convoy_survivors_rescued", chapter.convoyRescued);
+    flags.Bool("companion.kain_joined", chapter.kainJoined);
+    flags.Bool("main.scrapper_ledger_found", chapter.ledgerFound);
+    flags.Bool("side.scrapper_detail_ledger_found", chapter.detailLedgerFound);
+    flags.Bool("side.convoy_vehicle_repaired", chapter.vehicleRepaired);
+    flags.Bool("side.ria_portable_light_repaired", chapter.portableLightRepaired);
+    flags.Bool("main.chapter1_complete", chapter.recordsCompared);
+    flags.Bool("main.outer_waterway_unlocked", chapter.waterwayUnlocked);
     result.Raw("flags", flags.Finish());
     journey.Bool("active", world.isJetTravel);
     journey.Seconds("elapsed_seconds", travel.elapsedSeconds);
@@ -290,7 +316,16 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     corridor.Text("power", "개인용 제트 추진기");
     corridor.Text("gate_signal", "광산 통신선의 중계 흔적 확인");
     corridor.Text("map_size_label", "주행 거리 1800");
-    result.Raw("regions", "[" + city.Finish() + "," + mine.Finish() + "," + corridor.Finish() + "]");
+    size_t activeScrappers = 0;
+    for (const auto &person : chapter.scrappers)
+    {
+        activeScrappers += person.combat.health > 0 && !person.arrived;
+    }
+    fillRegion(frontier, "frontier", "빛나는 개척지", chapter.generated, chapter.active,
+               chapter.active && !world.isPaused, frontierPopulation, 0, 0);
+    frontier.Text("mood", game::GameLevels::Chapter().Objective());
+    result.Raw("regions", "[" + city.Finish() + "," + mine.Finish() + "," + corridor.Finish() + "," +
+                              frontier.Finish() + "]");
 
     std::string npcArray;
     if (cityLia)
@@ -360,6 +395,55 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                 npc.route.size() - (std::min)(npc.route.size(), npc.routeIndex), false, int(npc.group),
                 npc.combat);
     }
+    auto frontierNpc = [&](const std::string &id, const char *name, const game::FrontierPerson &person,
+                           bool following, bool hostile) {
+        JsonObject item;
+        item.Text("id", id);
+        item.Text("region_id", "frontier");
+        item.Text("name", name);
+        item.Text("role", hostile ? "폐설비 점거자" : following ? "동료" : "운송대 생존자");
+        item.Raw("position", Position(person.position));
+        item.Number("health", person.combat.health);
+        item.Number("max_health", hostile ? 60 : 100);
+        item.Text("life_state", person.combat.health > 0 ? "alive" : "downed");
+        item.Text("activity", person.combat.engaged   ? "defending"
+                              : person.facing.walking ? "walking"
+                                                      : "idle");
+        item.Bool("simulation_active", chapter.active && !world.isPaused && !person.arrived);
+        item.Bool("following", following);
+        item.Number("magazine_rounds", person.combat.pistol.GetRounds());
+        item.Text("source", "chapter_one_actor");
+        Append(npcArray, item.Finish());
+    };
+    if (chapter.generated)
+    {
+        if (chapter.active)
+        {
+            frontierNpc("frontier/ria", "리아", chapter.ria, true, false);
+        }
+        if (!chapter.kainJoined || chapter.active)
+        {
+            frontierNpc("frontier/kain", "카인", chapter.kain, chapter.kainJoined, false);
+        }
+        else if (cityKain)
+        {
+            Append(npcArray, StaticNpc("halo/kain", "카인", tutorial::kCityKainPosition, "동료",
+                                       "N-0 외곽 수로로 돌아갈 표식을 남깁시다."));
+        }
+        for (size_t i = 0; i < chapter.survivors.size(); ++i)
+        {
+            frontierNpc("frontier/convoy/" + std::to_string(i), "운송대 생존자", chapter.survivors[i], false,
+                        false);
+        }
+        for (size_t i = 0; i < chapter.scrappers.size(); ++i)
+        {
+            if (!chapter.scrappers[i].arrived)
+            {
+                frontierNpc("frontier/scrapper/" + std::to_string(i), "폐설비 점거자", chapter.scrappers[i],
+                            false, true);
+            }
+        }
+    }
     result.Raw("npcs", "[" + npcArray + "]");
     result.Raw("workstations", "[]");
     std::string groups;
@@ -385,6 +469,17 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     investigation.Seconds("flashlight_angle", game::GameLevels::Mine().GetAimAngle());
     investigation.Raw("rescue_groups", "[" + groups + "]");
     result.Raw("mine", investigation.Finish());
+    JsonObject field;
+    field.Bool("active", chapter.active);
+    field.Number("completed_sites", game::GameLevels::Chapter().CompletedSites());
+    field.Number("survey_markers", chapter.surveyMarkers);
+    field.Bool("escort_started", chapter.escortStarted);
+    field.Bool("receiver_replay_confirmed", chapter.receiverInspected);
+    field.Bool("negotiated", chapter.negotiated);
+    field.Bool("hostile", chapter.hostile);
+    field.Number("active_scrappers", chapter.negotiated ? 0 : activeScrappers);
+    field.Seconds("comparison_seconds", chapter.comparisonSeconds);
+    result.Raw("chapter_one", field.Finish());
     std::string mobArray;
     for (size_t i = 0; i < level.enemies.size(); ++i)
     {

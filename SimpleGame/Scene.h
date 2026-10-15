@@ -50,6 +50,7 @@ enum class SceneKind
     JetTravel,
     TravelBackground,
     Mine,
+    Frontier,
     Background,
     Hud,
     Count
@@ -119,6 +120,15 @@ class MineScene final : public Scene
     void PlaceClue(game::Scene &scene, const char *id, Vector2 position, const char *label, ColorRGBA color,
                    MineQuestStage expected, bool glyph = false);
     std::uint64_t cachedRevision = 0;
+};
+
+// ============================================================================
+// FrontierScene : Scene — grassland, convoy channel and abandoned relay
+// ============================================================================
+class FrontierScene final : public Scene
+{
+  public:
+    void Draw() override;
 };
 
 // ============================================================================

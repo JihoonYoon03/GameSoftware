@@ -71,7 +71,8 @@ enum class InteractionTarget
     ObservatorySignal,
     ObservatoryExit,
     JetBike,
-    CityReceiver
+    CityReceiver,
+    Kain
 };
 
 constexpr float kPi = 3.14159265f;
@@ -79,6 +80,7 @@ constexpr int kCanvasWidth = 1280;
 constexpr int kCanvasHeight = 800;
 constexpr Vector2 kHomeDoor = {-5, 2};
 constexpr Vector2 kLiaPosition = {-3, 2};
+constexpr Vector2 kCityKainPosition = {-2.2f, 2.8f};
 constexpr Vector2 kMaraPosition = {0, 1};
 constexpr Vector2 kRelayPosition = {3, 1};
 constexpr Vector2 kBeaconPosition = {6, -3};
@@ -105,6 +107,7 @@ struct GameState
     Vector2 cursorWindowPosition = {900, 400};
     bool cursorInsideViewport = true;
     bool mouseFiring = false;
+    bool interactionHeld = false;
     bool isInsideHome = true;
     bool isInObservatory = false;
     bool isJetTravel = false;

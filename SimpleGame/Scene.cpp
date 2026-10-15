@@ -317,14 +317,20 @@ void CityScene::DrawStreetFurniture(game::Scene &scene)
                           [this]() { Drawing::DrawTile(5, -3.8f, 2.6f, 1.7f, ColorRGBA(.2f, .28f, .34f)); });
     for (int i = -6; i <= 6; i += 3)
     {
-        scene.PlaceWorldActor("lamp/" + std::to_string(i), float(i), 3.7f,
-                              WorldBounds(float(i), 3.7f, .55f, .6f, 80), 2, 0, [this, i]() {
-                                  Drawing::DrawBox((float)i, 3.7f, .55f, .6f, 12, ColorRGBA(.2f, .28f, .3f));
-                                  Vector2 p = Drawing::WorldToScreen((float)i, 3.7f, 52);
-                                  Drawing::DrawLine(Drawing::WorldToScreen((float)i, 3.7f), p,
-                                                    ColorRGBA(.25f, .4f, .47f), 2);
-                                  Drawing::DrawGlow(p, 18, ColorRGBA(.35f, .85f, .85f));
-                              });
+        scene.PlaceWorldActor(
+            "lamp/" + std::to_string(i), float(i), 3.7f, WorldBounds(float(i), 3.7f, .55f, .6f, 80), 2, 0,
+            [this, i]() {
+                Drawing::DrawBox((float)i, 3.7f, .55f, .6f, 12, ColorRGBA(.2f, .28f, .3f));
+                Vector2 p = Drawing::WorldToScreen((float)i, 3.7f, 52);
+                Drawing::DrawLine(Drawing::WorldToScreen((float)i, 3.7f), p, ColorRGBA(.25f, .4f, .47f), 2);
+                Drawing::DrawGlow(
+                    p, 18,
+                    ColorRGBA(.35f, .85f, .85f,
+                              !GameLevels::Chapter().IsAvailable() ||
+                                      GameLevels::Chapter().GetState().generatorRestored
+                                  ? 1.f
+                                  : .45f + .2f * std::sin(Game::Get().GetState().animationTimeSeconds * 3)));
+            });
     }
 }
 
@@ -535,7 +541,14 @@ void CityScene::DrawQuestMarkers(game::Scene &scene)
     }
     if (game.IsQuestInteraction(InteractionTarget::CityReceiver))
     {
-        marker("city-receiver", kCityReceiverPosition, "도시 수신망 [E]", {.4f, .9f, 1});
+        marker("city-receiver", kCityReceiverPosition,
+               GameLevels::Chapter().IsAvailable()
+                   ? (GameLevels::Chapter().CompletedSites() == 3 &&
+                              !GameLevels::Chapter().GetState().recordsCompared
+                          ? "1장 / 기록 대조 [E]"
+                          : "1장 / 현장 출발 [E]")
+                   : "도시 수신망 [E]",
+               {.4f, .9f, 1});
     }
     if (game.IsQuestInteraction(InteractionTarget::JetBike))
     {
@@ -556,6 +569,20 @@ void CityScene::Draw()
         DrawDepthSortedObjects(scene);
         DrawUtilityDevices(scene);
         DrawQuestMarkers(scene);
+        if (GameLevels::Chapter().GetState().kainJoined)
+        {
+            auto p = kCityKainPosition;
+            scene.PlaceWorldActor("chapter/kain", p.x, p.y, WorldBounds(p.x, p.y, 0, 0, 85, 100), 1,
+                                  p.x + p.y, [p]() {
+                                      Drawing::DrawPerson(p, {.38f, .53f, .66f}, false,
+                                                          models::CharacterType::Guard, false, .785f);
+                                      if (Game::Distance(p, Game::Get().GetState().playerPosition) < 3)
+                                      {
+                                          auto label = Drawing::WorldToScreen(p.x, p.y, 60);
+                                          Drawing::DrawLabel(label.x - 16, label.y, "카인");
+                                      }
+                                  });
+        }
         auto &graph = scene.GetGraph();
         for (size_t i = 0; i < Game::Get().GetState().buildings.size(); ++i)
         {
@@ -962,6 +989,256 @@ void MineScene::Draw()
 }
 
 // ============================================================================
+// FrontierScene : Scene
+// ============================================================================
+void FrontierScene::Draw()
+{
+    WorldView view;
+    auto &level = GameLevels::Chapter();
+    const auto &state = level.GetState();
+    BeginPlacement();
+    for (int y0 = -16; y0 < kFrontierHeight + 16; y0 += 8)
+    {
+        for (int x0 = -16; x0 < kFrontierWidth + 16; x0 += 8)
+        {
+            std::string key = "terrain/frontier/" + std::to_string(x0) + "/" + std::to_string(y0);
+            PlaceWorldActor(key, float(x0), float(y0), WorldBounds(float(x0), float(y0), 8, 8, 0), 0, 0,
+                            [x0, y0, key, &level]() {
+                                rendercache::DrawWorld(key, [x0, y0, &level]() {
+                                    const auto &s = level.GetState();
+                                    for (int y = y0; y < y0 + 8; ++y)
+                                    {
+                                        for (int x = x0; x < x0 + 8; ++x)
+                                        {
+                                            auto tile = x < 24 ? FrontierTile::Grass : FrontierTile::Sand;
+                                            if (x >= 0 && y >= 0 && x < kFrontierWidth && y < kFrontierHeight)
+                                            {
+                                                tile = s.tiles[y * kFrontierWidth + x];
+                                            }
+                                            ColorRGBA color =
+                                                tile == FrontierTile::Grass   ? ColorRGBA(.24f, .37f, .26f)
+                                                : tile == FrontierTile::Sand  ? ColorRGBA(.55f, .44f, .28f)
+                                                : tile == FrontierTile::Canal ? ColorRGBA(.12f, .15f, .14f)
+                                                : tile == FrontierTile::Road  ? ColorRGBA(.28f, .30f, .30f)
+                                                                              : ColorRGBA(.31f, .34f, .35f);
+                                            Drawing::DrawMaterialTile(float(x), float(y),
+                                                                      tile == FrontierTile::Road
+                                                                          ? SurfaceMaterial::Asphalt
+                                                                          : SurfaceMaterial::Concrete,
+                                                                      color);
+                                        }
+                                    }
+                                });
+                            });
+        }
+    }
+    auto prop = [this](const std::string &id, Vector2 p, float height, std::function<void()> draw) {
+        PlaceWorldActor(id, p.x, p.y, WorldBounds(p.x, p.y, 3, 3, height, 70), 1, p.x + p.y, std::move(draw));
+    };
+    for (size_t i = 0; i < state.structures.size(); ++i)
+    {
+        auto b = state.structures[i];
+        PlaceWorldActor("facility/" + std::to_string(i), b.x, b.y,
+                        WorldBounds(b.x, b.y, b.width, b.depth, b.height * 1.14f + 40), 1, b.x + b.y,
+                        [b]() { Drawing::DrawBuilding(b); });
+    }
+    for (int i = 0; i < 75; ++i)
+    {
+        Vector2 p = {2.5f + float((i * 17) % 43), 3.5f + float((i * 13) % 37)};
+        if (level.IsBlocked(p) || std::fabs(p.x - 5.5f) < 1.5f || std::fabs(p.x - 24.5f) < 1.5f ||
+            std::fabs(p.y - 20.5f) < 1.5f)
+        {
+            continue;
+        }
+        prop("flora/" + std::to_string(i), p, 28, [p, i]() {
+            if (p.x < 24)
+            {
+                Drawing::DrawBox(p.x, p.y, .06f, .06f, 15 + float(i % 5), {.2f, .46f, .34f});
+                models::Transform3D leaf;
+                leaf.yaw =
+                    float(i % 7) * .8f + .07f * std::sin(Game::Get().GetState().animationTimeSeconds + p.y);
+                leaf.position.z = .26f;
+                Drawing::DrawModel3D(models::ModelLibrary::Get().box, Drawing::WorldToScreen(p.x - .12f, p.y),
+                                     {.28f, .06f, .04f}, leaf, (p.x + p.y) * 36, {{.3f, .67f, .45f, 1}});
+                Drawing::DrawGlow(Drawing::WorldToScreen(p.x, p.y, 17), 7, {.35f, .85f, .64f, .5f});
+            }
+            else
+            {
+                Drawing::DrawModel3D(models::ModelLibrary::Get().rock, Drawing::WorldToScreen(p.x, p.y),
+                                     {.3f, .3f, .28f}, {}, (p.x + p.y) * 36, {{.65f, .47f, .28f, 1}});
+            }
+        });
+    }
+    for (int edge = 0; edge < 4; ++edge)
+    {
+        int length = edge < 2 ? kFrontierWidth : kFrontierHeight;
+        for (int n = 1; n < length - 1; n += 2)
+        {
+            if (edge == 0 && n >= 3 && n <= 7)
+            {
+                continue;
+            }
+            Vector2 p = edge < 2 ? Vector2{float(n), edge == 0 ? 1.f : float(kFrontierHeight - 1)}
+                                 : Vector2{edge == 2 ? 1.f : float(kFrontierWidth - 1), float(n)};
+            prop("boundary/" + std::to_string(edge) + "/" + std::to_string(n), p, 45, [p, edge]() {
+                Drawing::DrawBox(p.x, p.y, edge < 2 ? 2.f : .15f, edge < 2 ? .15f : 2.f, 35,
+                                 {.23f, .29f, .29f});
+                Drawing::DrawBox(p.x, p.y, .18f, .18f, 43, {.55f, .55f, .38f});
+            });
+        }
+    }
+    prop("return-gate", {4, 1}, 115, []() {
+        Drawing::DrawModel3D(models::ModelLibrary::Get().trafficGate, Drawing::WorldToScreen(4, 1),
+                             {1.5f, 1, 1}, {}, 5 * 36, {});
+    });
+    prop("generator", {10, 9.5f}, 55, [&state]() {
+        Drawing::DrawBox(9.2f, 9.4f, 3, .65f, 24, {.20f, .3f, .34f});
+        for (int i = 0; i < 7; ++i)
+        {
+            Drawing::DrawBox(9.35f + i * .38f, 9.35f, .12f, .75f, 38, {.38f, .48f, .5f});
+            Drawing::DrawGlow(Drawing::WorldToScreen(9.4f + i * .38f, 9.7f, 28), 7,
+                              state.generatorRestored ? ColorRGBA(.35f, .94f, .8f)
+                                                      : ColorRGBA(.9f, .52f, .2f));
+        }
+        Drawing::DrawModel3D(models::ModelLibrary::Get().console, Drawing::WorldToScreen(10.5f, 10.5f),
+                             {.7f, .7f, .7f}, {}, 21 * 36, {});
+        Drawing::DrawBox(12.2f, 10.3f, .4f, .4f, 35, {.28f, .38f, .4f});
+        // Even after isolation, the one remaining gauge repeats the recorded pulse.
+        float pulse = .5f + .5f * std::sin(Game::Get().GetState().animationTimeSeconds * 2.4f);
+        Drawing::DrawGlow(Drawing::WorldToScreen(12.4f, 10.5f, 31), 8, {1, .67f, .28f, .35f + pulse * .65f});
+    });
+    prop("workbench", {9.5f, 13.5f}, 36, [&state]() {
+        Drawing::DrawBox(9.1f, 13.2f, .9f, .6f, 24, {.34f, .4f, .41f});
+        Drawing::DrawBox(9.5f, 13.5f, .14f, .14f, 32, {.68f, .59f, .36f});
+        if (state.portableLightRepaired)
+        {
+            Drawing::DrawGlow(Drawing::WorldToScreen(9.55f, 13.55f, 35), 18, {1, .82f, .5f});
+        }
+    });
+    for (int i = 0; i < 2; ++i)
+    {
+        Vector2 p = {32.5f + i * 3.5f, 9.5f};
+        prop("convoy/vehicle/" + std::to_string(i), p, 65, [p, i, &state]() {
+            models::Palette palette;
+            palette.body = state.vehicleRepaired ? std::array<float, 4>{.42f, .65f, .65f, 1}
+                                                 : std::array<float, 4>{.57f, .43f, .27f, 1};
+            Drawing::DrawWorldVehicle(p, 4, 1, i ? models::VehicleType::Shuttle : models::VehicleType::Hauler,
+                                      palette, 0, 0);
+        });
+    }
+    for (int i = 0; i < 3; ++i)
+    {
+        constexpr Vector2 markers[] = {{36.5f, 13.5f}, {36.5f, 18.5f}, {29.5f, 18.5f}};
+        auto p = markers[i];
+        prop("survey/" + std::to_string(i), p, 38, [p, i, &state]() {
+            Drawing::DrawBox(p.x - .07f, p.y - .07f, .14f, .14f, 32, {.65f, .6f, .4f});
+            Drawing::DrawGlow(Drawing::WorldToScreen(p.x, p.y, 34), 12,
+                              state.surveyMarkers > i ? ColorRGBA(.3f, 1, .8f)
+                                                      : ColorRGBA(1, .6f, .25f, .5f));
+        });
+    }
+    for (int i = 0; i < 3; ++i)
+    {
+        Vector2 p = i == 0 ? Vector2{24.5f, 30.5f} : i == 1 ? Vector2{33.5f, 32.5f} : Vector2{35.5f, 33.5f};
+        prop("relay/device/" + std::to_string(i), p, 45, [p, i]() {
+            Drawing::DrawModel3D(i == 1 ? models::ModelLibrary::Get().console
+                                        : models::ModelLibrary::Get().salvage,
+                                 Drawing::WorldToScreen(p.x, p.y), {1, 1, 1}, {}, (p.x + p.y) * 36, {});
+        });
+    }
+    prop("camp", {24, 20}, 50, [&state]() {
+        Drawing::DrawBox(23.2f, 21.7f, 2.8f, .5f, 15, {.33f, .36f, .35f});
+        if (state.portableLightRepaired)
+        {
+            Drawing::DrawBox(24.5f, 21.6f, .12f, .12f, 34, {.7f, .64f, .45f});
+            Drawing::DrawGlow(Drawing::WorldToScreen(24.5f, 21.6f, 37), 26, {1, .82f, .5f});
+        }
+    });
+    auto person = [this](std::string id, const FrontierPerson &npc, models::CharacterType role,
+                         models::Gender gender, models::HairStyle hair, ColorRGBA color, std::string label,
+                         bool armed) {
+        auto p = npc.position;
+        PlaceWorldActor(
+            id, p.x, p.y, WorldBounds(p.x, p.y, 0, 0, 85, 110), 1, p.x + p.y,
+            [npc, role, gender, hair, color, label, armed]() {
+                Drawing::DrawPerson(npc.position, color, false, role, npc.facing.walking,
+                                    npc.combat.engaged ? npc.combat.aimYaw : npc.facing.yaw, gender, hair,
+                                    armed && npc.combat.engaged && npc.combat.health > 0,
+                                    npc.combat.muzzleFlash, npc.combat.health <= 0);
+                if (Game::Distance(npc.position, Game::Get().GetState().playerPosition) < 4 && !label.empty())
+                {
+                    auto screen = Drawing::WorldToScreen(npc.position.x, npc.position.y, 60);
+                    Drawing::DrawLabel(screen.x - 20, screen.y, label, color);
+                    if (label == "폐설비 점거자")
+                    {
+                        Drawing::DrawRectangle(screen.x - 15, screen.y + 7, 30, 3, {.2f, .08f, .05f});
+                        Drawing::DrawRectangle(screen.x - 15, screen.y + 7, 30.f * npc.combat.health / 60, 3,
+                                               {.95f, .4f, .2f});
+                    }
+                }
+            });
+    };
+    person("companion/ria", state.ria, models::CharacterType::Engineer, models::Gender::Female,
+           models::HairStyle::Ponytail, {.9f, .58f, .3f}, "리아", true);
+    person("companion/kain", state.kain, models::CharacterType::Guard, models::Gender::Male,
+           models::HairStyle::Buzz, {.38f, .53f, .66f}, "카인", state.kainJoined);
+    for (size_t i = 0; i < state.survivors.size(); ++i)
+    {
+        person("convoy/person/" + std::to_string(i), state.survivors[i],
+               i % 3 ? models::CharacterType::Engineer : models::CharacterType::Explorer,
+               i % 2 ? models::Gender::Female : models::Gender::Male, models::HairStyle(i % 6),
+               {.65f, .69f, .51f},
+               i == 0 ? (state.convoyRescued ? "구조된 운송대 · 5명" : "운송대 생존자 · 5명") : "", false);
+    }
+    for (size_t i = 0; i < state.scrappers.size(); ++i)
+    {
+        const auto &npc = state.scrappers[i];
+        if (state.negotiated && npc.arrived)
+        {
+            continue;
+        }
+        person("scrapper/" + std::to_string(i), npc,
+               i ? models::CharacterType::Guard : models::CharacterType::Explorer,
+               i == 1 ? models::Gender::Female : models::Gender::Male, models::HairStyle::Curls,
+               {.7f, .36f, .25f},
+               state.negotiated         ? "철수 중"
+               : npc.combat.health <= 0 ? "제압됨"
+                                        : "폐설비 점거자",
+               true);
+    }
+    auto player = Game::Get().GetState().playerPosition;
+    PlaceWorldActor("player", player.x, player.y, WorldBounds(player.x, player.y, 0, 0, 85, 110), 1,
+                    player.x + player.y,
+                    [player]() { Drawing::DrawPerson(player, {.67f, .8f, .82f}, true); });
+    for (const auto &point : level.Interactions())
+    {
+        if (point.action == ChapterAction::ConvoySupply)
+        {
+            continue;
+        }
+        if (point.action == ChapterAction::Exit && Game::Distance(player, point.position) > 9)
+        {
+            continue;
+        }
+        PlaceWorldActor("objective/" + std::to_string(int(point.action)), point.position.x, point.position.y,
+                        WorldBounds(point.position.x, point.position.y, 0, 0, 70, 230), 5, 0, [point]() {
+                            Drawing::DrawInteractionMarker(point.position, point.label, {.9f, .78f, .4f});
+                        });
+    }
+    DrawActors();
+    for (const auto &tracer : state.tracers)
+    {
+        auto start =
+            Drawing::WorldToScreen(tracer.start.x, tracer.start.y, models::WorldScale::aimHeightPixels);
+        auto end = Drawing::WorldToScreen(tracer.end.x, tracer.end.y, models::WorldScale::aimHeightPixels);
+        Drawing::DrawLine(start, end,
+                          tracer.npcOwned ? ColorRGBA(.3f, .85f, 1, tracer.remaining / .12f)
+                                          : ColorRGBA(1, .74f, .3f, tracer.remaining / .12f),
+                          2);
+    }
+}
+
+// ============================================================================
 // ScreenScene
 // ============================================================================
 void ScreenScene::PlaceScreenActor(game::Scene &scene, const std::string &name, game::Bounds bounds,
@@ -1229,6 +1506,7 @@ Scene &SceneManager::Get(SceneKind kind)
         result[size_t(SceneKind::JetTravel)] = std::make_unique<JetTravelScene>();
         result[size_t(SceneKind::TravelBackground)] = std::make_unique<TravelBackgroundScene>();
         result[size_t(SceneKind::Mine)] = std::make_unique<MineScene>();
+        result[size_t(SceneKind::Frontier)] = std::make_unique<FrontierScene>();
         result[size_t(SceneKind::Background)] = std::make_unique<BackgroundScene>();
         result[size_t(SceneKind::Hud)] = std::make_unique<HudScene>();
         return result;
@@ -1238,11 +1516,12 @@ Scene &SceneManager::Get(SceneKind kind)
 SceneKind SceneManager::Current()
 {
     const auto &state = Game::Get().GetState();
-    return GameLevels::Mine().IsActive() ? SceneKind::Mine
-           : state.isJetTravel           ? SceneKind::JetTravel
-           : state.isInObservatory       ? SceneKind::Observatory
-           : state.isInsideHome          ? SceneKind::Interior
-                                         : SceneKind::Exterior;
+    return GameLevels::Chapter().IsActive() ? SceneKind::Frontier
+           : GameLevels::Mine().IsActive()  ? SceneKind::Mine
+           : state.isJetTravel              ? SceneKind::JetTravel
+           : state.isInObservatory          ? SceneKind::Observatory
+           : state.isInsideHome             ? SceneKind::Interior
+                                            : SceneKind::Exterior;
 }
 void SceneManager::Reset()
 {

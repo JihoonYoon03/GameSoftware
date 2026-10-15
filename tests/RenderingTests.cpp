@@ -944,13 +944,90 @@ void CaptureHairAndCombat(const std::filesystem::path &output)
     Save(output / "npc-defence.bmp");
     game::GameLevels::Reset();
 }
+void CaptureChapter(const std::filesystem::path &output)
+{
+    auto &game = Game::Get();
+    auto &world = game.GetState();
+    auto &level = game::GameLevels::Chapter();
+    auto &renderer = GameRenderer::Get().Backend();
+    game.Reset();
+    level.Enter(true);
+    auto &s = level.GetState();
+    auto interact = [&](game::ChapterAction action) {
+        bool found = false;
+        for (auto point : level.Interactions())
+        {
+            if (point.action == action)
+            {
+                world.playerPosition = point.position;
+                found = true;
+                break;
+            }
+        }
+        assert(found);
+        level.Interact();
+    };
+    auto capture = [&](const char *name, Vector2 camera, bool city = false) {
+        world.cameraPosition = world.playerPosition = camera;
+        s.ria.position = {camera.x + .8f, camera.y + .8f};
+        Begin();
+        game::SceneManager::Get(city ? game::SceneKind::Exterior : game::SceneKind::Frontier).Draw();
+        renderer.EndScene(world.animationTimeSeconds);
+        game::SceneManager::Get(game::SceneKind::Hud).Draw();
+        renderqueue::Flush();
+        assert(glGetError() == GL_NO_ERROR);
+        const auto &stats = renderer.GetFrameStatistics();
+        assert(stats.instancedDraws > 0 && stats.shadowDraws > 0);
+        Save(output / name);
+    };
+    capture("chapter-generator.bmp", {11, 12});
+    interact(game::ChapterAction::Generator);
+    interact(game::ChapterAction::IsolateLine);
+    interact(game::ChapterAction::PortableLight);
+    capture("chapter-generator-restored.bmp", {11, 12});
+    interact(game::ChapterAction::Kain);
+    interact(game::ChapterAction::Receiver);
+    capture("chapter-convoy.bmp", {33, 12.5f});
+    interact(game::ChapterAction::SurveyOne);
+    interact(game::ChapterAction::SurveyTwo);
+    interact(game::ChapterAction::SurveyThree);
+    interact(game::ChapterAction::Escort);
+    for (int i = 0; i < 140; ++i)
+    {
+        level.Update(.05f);
+    }
+    capture("chapter-escort.bmp", {32, 19});
+    for (int i = 0; i < 600 && !s.convoyRescued; ++i)
+    {
+        level.Update(.05f);
+    }
+    assert(s.convoyRescued && s.kainJoined);
+    capture("chapter-relay.bmp", {30, 32});
+    interact(game::ChapterAction::TradeProof);
+    interact(game::ChapterAction::Scrappers);
+    interact(game::ChapterAction::Ledger);
+    interact(game::ChapterAction::DetailLedger);
+    s.journalVisible = true;
+    capture("chapter-journal.bmp", {32, 32});
+    s.journalVisible = false;
+    level.Leave();
+    level.InteractHub();
+    assert(s.comparisonStarted);
+    level.Update(8.1f);
+    assert(s.recordsCompared);
+    capture("chapter-comparison.bmp", kCityReceiverPosition, true);
+    std::ofstream snapshot(output / "chapter-snapshot.json");
+    snapshot << monitoring::WorldSnapshot::Build(1, "chapter-render");
+    game.Reset();
+}
+
 void BenchmarkQuality(const std::filesystem::path &output)
 {
     std::ofstream report(output / "performance.json");
     report << "{\"gpu\":\"" << glGetString(GL_RENDERER)
            << "\",\"resolution\":[1280,800],\"optimized\":true,\"warmup\":24,\"frames\":120,\"scenes\":[";
     auto &world = Game::Get().GetState();
-    for (int scenario = 0; scenario < 7; ++scenario)
+    for (int scenario = 0; scenario < 10; ++scenario)
     {
         Game::Get().Reset();
         world.noticeSecondsRemaining = 0;
@@ -960,7 +1037,10 @@ void BenchmarkQuality(const std::filesystem::path &output)
                                          "mine_entry",
                                          "mine_ruins",
                                          "mine_90_enemies",
-                                         "npc_firefight_90_enemies"};
+                                         "npc_firefight_90_enemies",
+                                         "frontier_generator",
+                                         "frontier_convoy",
+                                         "frontier_relay_combat"};
         if (scenario == 0)
         {
             world.isInsideHome = false;
@@ -979,7 +1059,7 @@ void BenchmarkQuality(const std::filesystem::path &output)
             q.Advance(game::MineQuestStage::CheckCityRelay);
             game::GameLevels::Travel().Enter();
         }
-        if (scenario >= 3)
+        if (scenario >= 3 && scenario < 7)
         {
             game::GameLevels::Mine().Enter(true);
             auto &mine = game::GameLevels::Mine().GetState();
@@ -1024,6 +1104,23 @@ void BenchmarkQuality(const std::filesystem::path &output)
             }
             mine.lights.push_back({{47, 46.5f}, 10, false});
         }
+        if (scenario >= 7)
+        {
+            auto &chapter = game::GameLevels::Chapter();
+            chapter.Enter(true);
+            world.cameraPosition = world.playerPosition = scenario == 7   ? Vector2{11, 12}
+                                                          : scenario == 8 ? Vector2{33, 13}
+                                                                          : Vector2{30, 32};
+            auto &s = chapter.GetState();
+            s.ria.position = {world.playerPosition.x + 1, world.playerPosition.y};
+            s.invulnerability = 1000;
+            if (scenario == 9)
+            {
+                s.hostile = true;
+                s.kainJoined = true;
+                s.kain.position = {30, 33};
+            }
+        }
         bool npcShotsObserved = false;
         std::vector<double> samples;
         double draws = 0, instanced = 0, triangles = 0;
@@ -1052,7 +1149,7 @@ void BenchmarkQuality(const std::filesystem::path &output)
             }
             game::SceneManager::Get(game::SceneManager::Current()).Draw();
             GameRenderer::Get().Backend().EndScene(world.animationTimeSeconds);
-            if (scenario >= 3)
+            if (scenario >= 3 && scenario < 7)
             {
                 static_cast<game::MineScene &>(game::SceneManager::Get(game::SceneKind::Mine)).DrawDarkness();
             }
@@ -1118,6 +1215,7 @@ int main(int argc, char **argv)
     QualityCaptures(output);
     CaptureDistrictAndBodies(output);
     CaptureHairAndCombat(output);
+    CaptureChapter(output);
     BenchmarkQuality(output);
     GameRenderer::Get().Shutdown();
     std::cout

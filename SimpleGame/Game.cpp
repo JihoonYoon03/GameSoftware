@@ -255,7 +255,12 @@ void Game::KeyDown(unsigned char key, int, int)
     {
         if (key == 'r')
         {
-            if (game::GameLevels::Mine().IsActive())
+            if (game::GameLevels::Chapter().IsActive())
+            {
+                game::GameLevels::Chapter().Leave();
+                state.isPaused = false;
+            }
+            else if (game::GameLevels::Mine().IsActive())
             {
                 game::GameLevels::Mine().Restart();
                 state.isPaused = false;
@@ -272,7 +277,47 @@ void Game::KeyDown(unsigned char key, int, int)
         return;
     }
 
+    if (key == 'e')
+    {
+        if (state.interactionHeld)
+        {
+            return;
+        }
+        state.interactionHeld = true;
+    }
+    bool repeated = state.pressedKeys[key];
     state.pressedKeys[key] = true;
+    if (repeated && (key == 'j' || key == 'm'))
+    {
+        return;
+    }
+    auto &chapter = game::GameLevels::Chapter();
+    if (key == 'j' && chapter.IsAvailable())
+    {
+        chapter.GetState().journalVisible = !chapter.GetState().journalVisible;
+        state.mouseFiring = false;
+        return;
+    }
+    if (chapter.IsActive())
+    {
+        if (key == 'e')
+        {
+            chapter.Interact();
+        }
+        if (key == 'r')
+        {
+            game::GameLevels::Mine().Combat().Reload();
+        }
+        if (key == 'q')
+        {
+            game::GameLevels::Mine().UseRecoveryKit();
+        }
+        if (key == 'm')
+        {
+            chapter.GetState().mapVisible = !chapter.GetState().mapVisible;
+        }
+        return;
+    }
     if (game::GameLevels::Mine().IsActive())
     {
         if (key == 'e')
@@ -291,6 +336,11 @@ void Game::KeyDown(unsigned char key, int, int)
         {
             game::GameLevels::Mine().Rescue().Scan();
         }
+        return;
+    }
+    if (key == '2')
+    {
+        chapter.Enter(true);
         return;
     }
     // Direct access for first-level iteration without replaying the tutorial.
@@ -336,6 +386,10 @@ void Game::SpecialKeyDown(int key, int, int)
 void Game::KeyUp(unsigned char key, int, int)
 {
     state.pressedKeys[NormalizeKey(key)] = false;
+    if (NormalizeKey(key) == 'e')
+    {
+        state.interactionHeld = false;
+    }
 }
 void Game::MouseMotion(int x, int y)
 {
@@ -358,8 +412,9 @@ void Game::MouseButton(int button, int buttonState, int x, int y)
     MouseMotion(x, y);
     if (button == GLUT_LEFT_BUTTON)
     {
-        state.mouseFiring = buttonState == GLUT_DOWN && game::GameLevels::Mine().IsActive() &&
-                            !state.isPaused && state.cursorInsideViewport;
+        state.mouseFiring = buttonState == GLUT_DOWN && game::GameLevels::IsCombatActive() &&
+                            !state.isPaused && state.cursorInsideViewport &&
+                            !game::GameLevels::Chapter().GetState().journalVisible;
     }
 }
 void Game::MouseEntry(int pointerState)
@@ -394,12 +449,16 @@ void Game::Tick(int)
         {
             activeLevel->Update(deltaSeconds);
         }
+        if (activeLevel != &game::GameLevels::Chapter())
+        {
+            game::GameLevels::Chapter().Update(deltaSeconds);
+        }
         UpdateCamera(deltaSeconds);
         game::SceneManager::Update(deltaSeconds);
     }
 
     monitoring::GameMonitor::Get().Update();
-    glutSetCursor(game::GameLevels::Mine().IsActive() ? GLUT_CURSOR_NONE : GLUT_CURSOR_INHERIT);
+    glutSetCursor(game::GameLevels::IsCombatActive() ? GLUT_CURSOR_NONE : GLUT_CURSOR_INHERIT);
     glutPostRedisplay();
     glutTimerFunc(kUpdateIntervalMilliseconds, GameCallbacks::Tick, 0);
 }
@@ -420,6 +479,10 @@ void Game::ShowNotice(const std::string &message)
 bool Game::IsPositionBlocked(Vector2 position)
 {
     profiling::Count(profiling::Counter::CollisionQueries);
+    if (game::GameLevels::Chapter().IsActive())
+    {
+        return game::GameLevels::Chapter().IsBlocked(position);
+    }
     if (game::GameLevels::Mine().IsActive())
     {
         return game::GameLevels::Mine().Map().IsBlocked(position);
@@ -456,6 +519,14 @@ bool Game::IsPositionBlocked(Vector2 position)
 bool Game::IsQuestInteraction(InteractionTarget target) const
 {
     auto stage = game::GameLevels::Mine().GetState().quest.GetStage();
+    if (game::GameLevels::Chapter().IsAvailable() &&
+        (target == InteractionTarget::HomeTerminal || target == InteractionTarget::ApartmentExit ||
+         target == InteractionTarget::HomeEntrance || target == InteractionTarget::Lia ||
+         target == InteractionTarget::GateBeacon || target == InteractionTarget::JetBike ||
+         target == InteractionTarget::ObservatorySignal || target == InteractionTarget::ObservatoryExit))
+    {
+        return false;
+    }
     switch (target)
     {
     case InteractionTarget::HomeTerminal:
@@ -474,7 +545,12 @@ bool Game::IsQuestInteraction(InteractionTarget target) const
     case InteractionTarget::GateBeacon:
         return state.mainQuestStage == MainQuestStage::EnterObservatory && !state.gateSignalHeard;
     case InteractionTarget::CityReceiver:
-        return state.hasDescendedObservatory && stage == game::MineQuestStage::CheckCityRelay;
+        return (game::GameLevels::Chapter().IsAvailable() && !state.isInsideHome && !state.isInObservatory &&
+                (!game::GameLevels::Chapter().GetState().recordsCompared ||
+                 !game::GameLevels::Chapter().GetState().portableLightRepaired ||
+                 !game::GameLevels::Chapter().GetState().vehicleRepaired ||
+                 !game::GameLevels::Chapter().GetState().detailLedgerFound)) ||
+               (state.hasDescendedObservatory && stage == game::MineQuestStage::CheckCityRelay);
     case InteractionTarget::JetBike:
         return state.hasDescendedObservatory && state.gateSignalHeard &&
                stage == game::MineQuestStage::TravelToMine;
@@ -517,6 +593,16 @@ InteractionTarget Game::FindNearbyInteraction()
         return InteractionTarget::None;
     }
 
+    if (game::GameLevels::Chapter().IsAvailable() &&
+        Distance(state.playerPosition, kCityReceiverPosition) < 1.5f)
+    {
+        return InteractionTarget::CityReceiver;
+    }
+    if (game::GameLevels::Chapter().GetState().kainJoined &&
+        Distance(state.playerPosition, kCityKainPosition) < 1.1f)
+    {
+        return InteractionTarget::Kain;
+    }
     struct InteractionPoint
     {
         Vector2 position;
@@ -600,6 +686,11 @@ void Game::InteractWithNearbyTarget()
     }
     if (target == InteractionTarget::CityReceiver)
     {
+        if (game::GameLevels::Chapter().IsAvailable())
+        {
+            game::GameLevels::Chapter().InteractHub();
+            return;
+        }
         if (state.gateSignalHeard &&
             game::GameLevels::Mine().GetState().quest.Advance(game::MineQuestStage::CheckCityRelay))
         {
@@ -616,8 +707,26 @@ void Game::InteractWithNearbyTarget()
         }
         return;
     }
+    if (target == InteractionTarget::Kain)
+    {
+        ShowNotice(game::GameLevels::Chapter().GetState().recordsCompared
+                       ? "카인 / 옛 지도에 있는 다리는 사라졌지만, 아래로 지나던 수로는 남아 있을 겁니다. "
+                         "돌아올 표식을 남기며 갑시다."
+                       : "카인 / N-0 외곽에서 근무했습니다. 지금은 기록부터 모읍시다. 길보다 먼저 사람 수를 "
+                         "확인해야 합니다.");
+        return;
+    }
     if (target == InteractionTarget::Lia)
     {
+        if (game::GameLevels::Chapter().IsAvailable())
+        {
+            ShowNotice(game::GameLevels::Chapter().GetState().generatorRestored
+                           ? "리아 / 도시 전력이 안정됐어. 아직 N-0 외곽으로 흐르던 주기는 기록에 남아 있어. "
+                             "나머지 현장도 확인하자."
+                           : "리아 / 광산 좌표가 폐쇄된 N-0 외곽 설비 목록에도 있었어. 그래도 주민들은 지금 "
+                             "정전과 운송 지연이 더 급해. 수신망 단말에서 출발하자.");
+            return;
+        }
         if (state.gateSignalHeard)
         {
             if (game::GameLevels::Mine().GetState().quest.Advance(game::MineQuestStage::ShowRecord))

@@ -383,6 +383,165 @@ class JetTravelLevel final : public Level
 };
 
 // ============================================================================
+// ChapterOneLevel : Level — Light of the Frontier, three freely ordered sites
+// ============================================================================
+constexpr int kFrontierWidth = 48, kFrontierHeight = 44;
+constexpr tutorial::Vector2 kFrontierEntry = {5.5f, 5.5f};
+enum class FrontierTile
+{
+    Grass,
+    Sand,
+    Road,
+    Canal,
+    Foundation
+};
+enum class ChapterAction
+{
+    Exit,
+    Generator,
+    IsolateLine,
+    PortableLight,
+    Kain,
+    Receiver,
+    SurveyOne,
+    SurveyTwo,
+    SurveyThree,
+    Escort,
+    Vehicle,
+    TradeProof,
+    Scrappers,
+    Ledger,
+    DetailLedger,
+    ConvoySupply
+};
+struct ChapterInteraction
+{
+    ChapterAction action;
+    tutorial::Vector2 position;
+    const char *label;
+};
+struct FrontierPerson
+{
+    tutorial::Vector2 position = {};
+    tutorial::MovementFacing facing;
+    NpcCombatState combat;
+    std::vector<tutorial::Vector2> route;
+    size_t waypoint = 0;
+    bool arrived = false;
+    float departureDelay = 0;
+};
+enum class ChapterTeam
+{
+    Player,
+    Companion,
+    Scrapper
+};
+struct ChapterProjectile
+{
+    Bullet shot;
+    ChapterTeam team;
+};
+struct ChapterOneState
+{
+    bool unlocked = false, active = false, generated = false;
+    bool generatorInspected = false, generatorRestored = false, portableLightRepaired = false;
+    bool convoyBriefed = false, receiverInspected = false, escortStarted = false, convoyRescued = false;
+    int surveyMarkers = 0;
+    bool kainJoined = false, vehicleRepaired = false, tradeProofFound = false;
+    bool hostile = false, negotiated = false, ledgerFound = false, detailLedgerFound = false;
+    bool comparisonStarted = false, recordsCompared = false, waterwayUnlocked = false;
+    float comparisonSeconds = 0, invulnerability = 0, muzzleFlash = 0;
+    bool mapVisible = true, journalVisible = false;
+    std::vector<FrontierTile> tiles;
+    std::vector<tutorial::Building> structures;
+    std::vector<FrontierPerson> survivors, scrappers;
+    FrontierPerson ria, kain;
+    std::vector<ChapterProjectile> bullets;
+    std::vector<Tracer> tracers;
+};
+class ChapterOneLevel;
+// ============================================================================
+// FrontierMap — connected outdoor terrain and route planning
+// ============================================================================
+class FrontierMap
+{
+  public:
+    explicit FrontierMap(ChapterOneLevel &owner);
+    void Generate();
+    bool IsBlocked(tutorial::Vector2 position) const;
+    bool HasLineOfSight(tutorial::Vector2 from, tutorial::Vector2 to) const;
+    std::vector<tutorial::Vector2> FindRoute(tutorial::Vector2 from, tutorial::Vector2 to) const;
+
+  private:
+    ChapterOneState &state;
+    bool IsWalkable(int x, int y) const;
+};
+// ============================================================================
+// FrontierCombat — firearms, faction hits and combat recovery
+// ============================================================================
+class FrontierCombat
+{
+  public:
+    explicit FrontierCombat(ChapterOneLevel &owner);
+    void Attack();
+    void Update(float deltaSeconds);
+
+  private:
+    ChapterOneLevel &level;
+    ChapterOneState &state;
+    void Advance(ChapterProjectile &projectile, float distance);
+    void Fire(FrontierPerson &person, tutorial::Vector2 target, ChapterTeam team);
+};
+// ============================================================================
+// FrontierParty — companions, escorted survivors and departing scrappers
+// ============================================================================
+class FrontierParty
+{
+  public:
+    explicit FrontierParty(ChapterOneLevel &owner);
+    void Update(float deltaSeconds);
+
+  private:
+    ChapterOneLevel &level;
+    ChapterOneState &state;
+    bool Move(FrontierPerson &person, float amount);
+};
+// ============================================================================
+// ChapterOneLevel : Level — quest progression and field/hub lifecycle
+// ============================================================================
+class ChapterOneLevel final : public Level
+{
+  public:
+    ChapterOneLevel();
+    ChapterOneState &GetState();
+    bool IsAvailable() const;
+    bool IsActive() const override;
+    bool Unlock();
+    void Enter(bool debugEntry = false) override;
+    void Leave();
+    void Reset() override;
+    void Update(float deltaSeconds) override;
+    void Interact();
+    void InteractHub();
+    bool IsBlocked(tutorial::Vector2 position) const;
+    bool HasLineOfSight(tutorial::Vector2 from, tutorial::Vector2 to) const;
+    std::vector<tutorial::Vector2> FindRoute(tutorial::Vector2 from, tutorial::Vector2 to) const;
+    std::vector<ChapterInteraction> Interactions() const;
+    bool NearestInteraction(ChapterInteraction &result) const;
+    int CompletedSites() const;
+    const char *Objective() const;
+    float GetAimAngle() const;
+    void Attack();
+
+  private:
+    ChapterOneState state;
+    FrontierMap map;
+    FrontierCombat combat;
+    FrontierParty party;
+    bool RelayClear() const;
+};
+
+// ============================================================================
 // GameLevels — lifetime and polymorphic active-level access
 // ============================================================================
 class GameLevels
@@ -390,6 +549,10 @@ class GameLevels
   public:
     static MineLevel &Mine();
     static JetTravelLevel &Travel();
+    static ChapterOneLevel &Chapter();
+    static bool IsCombatActive();
+    static float AimAngle();
+    static float MuzzleFlash();
     static Level *Active();
     static void Reset();
 
@@ -397,6 +560,7 @@ class GameLevels
     static GameLevels &Get();
     MineLevel mine;
     JetTravelLevel travel;
+    ChapterOneLevel chapter;
 };
 
 } // namespace game

@@ -45,6 +45,16 @@ class MineHud final : public Hud
 };
 
 // ============================================================================
+// ChapterHud : Hud — objectives, field map and evidence journal
+// ============================================================================
+class ChapterHud final : public Hud
+{
+  public:
+    void Draw() override;
+    static void DrawJournal();
+};
+
+// ============================================================================
 // JetTravelHud : Hud
 // ============================================================================
 class JetTravelHud final : public Hud

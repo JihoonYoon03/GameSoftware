@@ -300,7 +300,7 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
     {
         DrawEllipse(screen.x, screen.y, 16, 6, {.25f, .95f, .9f, .17f});
     }
-    bool armed = (isPlayer && game::GameLevels::Mine().IsActive()) || npcArmed;
+    bool armed = (isPlayer && game::GameLevels::IsCombatActive()) || npcArmed;
     float yaw = isPlayer ? world.facingYaw : facingYaw;
     if (isPlayer)
     {
@@ -309,10 +309,10 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
     }
     if (armed && isPlayer)
     {
-        auto dir = game::GameLevels::Mine().GetAimDirection(game::GameLevels::Mine().GetAimAngle());
+        auto dir = game::GameLevels::Mine().GetAimDirection(game::GameLevels::AimAngle());
         yaw = std::atan2(dir.y, dir.x);
     }
-    float flash = isPlayer ? game::GameLevels::Mine().GetState().muzzleFlash : npcFlash;
+    float flash = isPlayer ? game::GameLevels::MuzzleFlash() : npcFlash;
     auto pose = models::ModelRig::Pose(world.animationTimeSeconds * 10,
                                        (isPlayer && world.movementAmount > 0) || walking, armed,
                                        armed ? flash / .055f : 0, false, gender);

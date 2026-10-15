@@ -1174,9 +1174,14 @@ void MineLevel::Leave()
     world.isJetTravel = false;
     world.playerPosition = tutorial::kJetBikePosition;
     world.cameraPosition = tutorial::kJetBikePosition;
+    if (state.quest.GetStage() == MineQuestStage::Complete)
+    {
+        GameLevels::Chapter().Unlock();
+    }
     tutorial::Game::Get().ShowNotice(
         state.quest.GetStage() == MineQuestStage::Complete
-            ? "낙하한 신호 완료 / 중계 좌표를 헤일로에 보고했습니다. N-0 외곽 설비가 다음 조사 대상입니다."
+            ? "낙하한 신호 완료 / 중계 좌표를 헤일로에 보고했습니다. 도시 수신망 단말에서 1장 현장 조사를 "
+              "시작하세요. 발전기·운송대·폐설비를 원하는 순서로 조사할 수 있습니다."
             : "헤일로 / 조사와 구조 기록은 유지됩니다. 준비되면 바이크로 광산에 다시 갈 수 있습니다.");
 }
 
@@ -1482,6 +1487,919 @@ TravelState &JetTravelLevel::GetState()
 }
 
 // ============================================================================
+// ChapterOneLevel : Level — Light of the Frontier
+// ============================================================================
+ChapterOneLevel::ChapterOneLevel() : map(*this), combat(*this), party(*this)
+{
+}
+FrontierMap::FrontierMap(ChapterOneLevel &owner) : state(owner.GetState())
+{
+}
+FrontierCombat::FrontierCombat(ChapterOneLevel &owner) : level(owner), state(owner.GetState())
+{
+}
+FrontierParty::FrontierParty(ChapterOneLevel &owner) : level(owner), state(owner.GetState())
+{
+}
+bool ChapterOneLevel::IsBlocked(tutorial::Vector2 p) const
+{
+    return map.IsBlocked(p);
+}
+bool ChapterOneLevel::HasLineOfSight(tutorial::Vector2 from, tutorial::Vector2 to) const
+{
+    return map.HasLineOfSight(from, to);
+}
+std::vector<tutorial::Vector2> ChapterOneLevel::FindRoute(tutorial::Vector2 from, tutorial::Vector2 to) const
+{
+    return map.FindRoute(from, to);
+}
+void ChapterOneLevel::Attack()
+{
+    combat.Attack();
+}
+ChapterOneState &ChapterOneLevel::GetState()
+{
+    return state;
+}
+bool ChapterOneLevel::IsAvailable() const
+{
+    return state.unlocked || GameLevels::Mine().GetState().quest.GetStage() == MineQuestStage::Complete;
+}
+bool ChapterOneLevel::IsActive() const
+{
+    return state.active;
+}
+bool ChapterOneLevel::Unlock()
+{
+    if (!IsAvailable())
+    {
+        return false;
+    }
+    state.unlocked = true;
+    return true;
+}
+void ChapterOneLevel::Reset()
+{
+    state = ChapterOneState{};
+}
+void FrontierMap::Generate()
+{
+    state.tiles.resize(kFrontierWidth * kFrontierHeight);
+    for (int y = 0; y < kFrontierHeight; ++y)
+    {
+        for (int x = 0; x < kFrontierWidth; ++x)
+        {
+            auto tile = x < 24 ? FrontierTile::Grass : FrontierTile::Sand;
+            if ((x >= 4 && x <= 6) || (y >= 19 && y <= 21) || (x >= 23 && x <= 25) ||
+                (y >= 29 && y <= 31 && x >= 23))
+            {
+                tile = FrontierTile::Road;
+            }
+            // A dry, collapsed channel. Surveyed crossings at both ends remain usable.
+            if (y >= 15 && y <= 16 && x >= 27 && x <= 35)
+            {
+                tile = FrontierTile::Canal;
+            }
+            state.tiles[y * kFrontierWidth + x] = tile;
+        }
+    }
+    state.structures = {
+        {8, 7, 5, 2, 100, models::BuildingType::Workshop, {{.30f, .46f, .5f, 1}, {.7f, .74f, .5f, 1}}},
+        {14, 7, 3, 4, 125, models::BuildingType::Habitat, {{.3f, .43f, .5f, 1}, {.65f, .5f, .32f, 1}}},
+        {31, 28, 3, 2, 85, models::BuildingType::Workshop, {{.33f, .36f, .4f, 1}, {.68f, .39f, .2f, 1}}},
+        {36, 30, 3, 5, 120, models::BuildingType::Terraced, {{.35f, .32f, .34f, 1}, {.5f, .42f, .29f, 1}}}};
+    for (const auto &b : state.structures)
+    {
+        for (int y = int(b.y); y < int(b.y + b.depth); ++y)
+        {
+            for (int x = int(b.x); x < int(b.x + b.width); ++x)
+            {
+                state.tiles[y * kFrontierWidth + x] = FrontierTile::Foundation;
+            }
+        }
+    }
+    state.ria.position = {6.5f, 6.5f};
+    state.kain.position = {30.5f, 10.5f};
+    for (int i = 0; i < 5; ++i)
+    {
+        FrontierPerson survivor;
+        survivor.position = {31.f + (i % 3) * .7f, 12.f + (i / 3) * .8f};
+        state.survivors.push_back(survivor);
+    }
+    for (tutorial::Vector2 p : {tutorial::Vector2{32.5f, 31.5f}, {34.5f, 29.5f}, {31.5f, 34.5f}})
+    {
+        FrontierPerson raider;
+        raider.position = p;
+        raider.combat.health = 60;
+        state.scrappers.push_back(raider);
+    }
+    state.generated = true;
+}
+bool FrontierMap::IsWalkable(int x, int y) const
+{
+    if (x < 1 || y < 1 || x >= kFrontierWidth - 1 || y >= kFrontierHeight - 1 || state.tiles.empty())
+    {
+        return false;
+    }
+    auto tile = state.tiles[y * kFrontierWidth + x];
+    return tile != FrontierTile::Canal && tile != FrontierTile::Foundation;
+}
+bool FrontierMap::IsBlocked(tutorial::Vector2 position) const
+{
+    for (float x : {-.18f, .18f})
+    {
+        for (float y : {-.18f, .18f})
+        {
+            if (!IsWalkable(int(std::floor(position.x + x)), int(std::floor(position.y + y))))
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+bool FrontierMap::HasLineOfSight(tutorial::Vector2 from, tutorial::Vector2 to) const
+{
+    float distance = tutorial::Game::Distance(from, to);
+    int steps = (std::max)(1, int(std::ceil(distance / .12f)));
+    for (int i = 0; i <= steps; ++i)
+    {
+        float t = float(i) / steps;
+        if (!IsWalkable(int(std::floor(from.x + (to.x - from.x) * t)),
+                        int(std::floor(from.y + (to.y - from.y) * t))))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+std::vector<tutorial::Vector2> FrontierMap::FindRoute(tutorial::Vector2 from, tutorial::Vector2 to) const
+{
+    int sx = int(std::floor(from.x)), sy = int(std::floor(from.y)), tx = int(std::floor(to.x)),
+        ty = int(std::floor(to.y));
+    if (!IsWalkable(sx, sy) || !IsWalkable(tx, ty))
+    {
+        return {};
+    }
+    std::vector<int> previous(kFrontierWidth * kFrontierHeight, -1), queue;
+    int start = sy * kFrontierWidth + sx, end = ty * kFrontierWidth + tx;
+    previous[start] = start;
+    queue.push_back(start);
+    for (size_t i = 0; i < queue.size() && previous[end] < 0; ++i)
+    {
+        int cell = queue[i];
+        for (auto direction : {tutorial::Vector2{1, 0}, {-1, 0}, {0, 1}, {0, -1}})
+        {
+            int x = cell % kFrontierWidth + int(direction.x), y = cell / kFrontierWidth + int(direction.y);
+            if (!IsWalkable(x, y))
+            {
+                continue;
+            }
+            int next = y * kFrontierWidth + x;
+            if (previous[next] >= 0)
+            {
+                continue;
+            }
+            previous[next] = cell;
+            queue.push_back(next);
+        }
+    }
+    if (previous[end] < 0)
+    {
+        return {};
+    }
+    std::vector<tutorial::Vector2> result;
+    for (int cell = end; cell != start; cell = previous[cell])
+    {
+        result.push_back({cell % kFrontierWidth + .5f, cell / kFrontierWidth + .5f});
+    }
+    std::reverse(result.begin(), result.end());
+    result.push_back(to);
+    return result;
+}
+bool FrontierParty::Move(FrontierPerson &person, float amount)
+{
+    person.facing.walking = false;
+    if (person.combat.health <= 0)
+    {
+        return false;
+    }
+    while (amount > 0 && person.waypoint < person.route.size())
+    {
+        auto to = person.route[person.waypoint];
+        float distance = tutorial::Game::Distance(person.position, to);
+        if (distance < .02f)
+        {
+            ++person.waypoint;
+            continue;
+        }
+        float step = (std::min)(distance, amount);
+        tutorial::Vector2 next = {person.position.x + (to.x - person.position.x) * step / distance,
+                                  person.position.y + (to.y - person.position.y) * step / distance};
+        if (level.IsBlocked(next))
+        {
+            break;
+        }
+        person.facing.Update(person.position, next);
+        person.position = next;
+        amount -= step;
+        if (step >= distance)
+        {
+            ++person.waypoint;
+        }
+    }
+    return person.waypoint >= person.route.size();
+}
+void ChapterOneLevel::Enter(bool debugEntry)
+{
+    if (debugEntry)
+    {
+        state.unlocked = true;
+    }
+    if (!Unlock())
+    {
+        tutorial::Game::Get().ShowNotice("리아 / 광산 중계 좌표를 확보하고 헤일로에 보고한 뒤 출발하자.");
+        return;
+    }
+    if (!state.generated)
+    {
+        map.Generate();
+    }
+    GameLevels::Mine().GetState().active = false;
+    GameLevels::Travel().GetState().active = false;
+    state.active = true;
+    state.invulnerability = 3;
+    state.bullets.clear();
+    state.tracers.clear();
+    auto &world = tutorial::Game::Get().GetState();
+    world.isInsideHome = world.isInObservatory = world.isJetTravel = world.mouseFiring = false;
+    std::fill(std::begin(world.pressedKeys), std::end(world.pressedKeys), false);
+    world.playerPosition = world.cameraPosition = kFrontierEntry;
+    state.ria.position = {6.5f, 6.5f};
+    state.ria.route.clear();
+    state.ria.waypoint = 0;
+    if (state.kainJoined)
+    {
+        state.kain.position = {6.5f, 7.5f};
+        state.kain.route.clear();
+        state.kain.waypoint = 0;
+    }
+    tutorial::Game::Get().ShowNotice(
+        "1장 / 빛나는 개척지. 발전기·실종 운송대·폐설비를 원하는 순서로 조사하자. M 지도, J 기록. 북서쪽 "
+        "통행 게이트에서 헤일로로 돌아갈 수 있다.");
+}
+void ChapterOneLevel::Leave()
+{
+    state.active = false;
+    state.bullets.clear();
+    state.tracers.clear();
+    auto &world = tutorial::Game::Get().GetState();
+    world.mouseFiring = false;
+    std::fill(std::begin(world.pressedKeys), std::end(world.pressedKeys), false);
+    world.playerPosition = world.cameraPosition = tutorial::kCityReceiverPosition;
+    tutorial::Game::Get().ShowNotice(
+        CompletedSites() == 3 && !state.recordsCompared
+            ? "헤일로 / 세 현장의 기록이 모였습니다. 도시 수신망 단말에서 대조하세요. [E]"
+            : "헤일로 / 조사 기록과 현장 상태는 유지됩니다. 수신망 단말에서 다시 출발할 수 있습니다.");
+}
+int ChapterOneLevel::CompletedSites() const
+{
+    return int(state.generatorRestored) + int(state.convoyRescued) + int(state.ledgerFound);
+}
+const char *ChapterOneLevel::Objective() const
+{
+    if (state.recordsCompared)
+    {
+        return "1장 완료 / 카인이 N-0 외곽 수로 진입로를 표시했다";
+    }
+    if (state.comparisonStarted)
+    {
+        return "기록 대조 / N-0 외곽의 순차 점등을 관측 중";
+    }
+    if (CompletedSites() == 3)
+    {
+        return "헤일로 수신망으로 귀환 / 세 기록 대조 [E]";
+    }
+    if (state.escortStarted && !state.convoyRescued)
+    {
+        return "운송대 5명이 측량 우회로를 따라 안전 지점으로 이동 중";
+    }
+    return "발전기 · 운송대 · 폐설비 / 원하는 순서로 조사";
+}
+bool ChapterOneLevel::RelayClear() const
+{
+    return state.negotiated || std::all_of(state.scrappers.begin(), state.scrappers.end(),
+                                           [](const FrontierPerson &p) { return p.combat.health <= 0; });
+}
+std::vector<ChapterInteraction> ChapterOneLevel::Interactions() const
+{
+    std::vector<ChapterInteraction> result = {{ChapterAction::Exit, kFrontierEntry, "헤일로 귀환 [E]"}};
+    if (!state.generatorInspected)
+    {
+        result.push_back({ChapterAction::Generator, {10.5f, 10.5f}, "발전기 / 전력 유출 조사 [E]"});
+    }
+    else if (!state.generatorRestored)
+    {
+        result.push_back({ChapterAction::IsolateLine, {12.5f, 10.5f}, "폐쇄 선로 분리 [E]"});
+    }
+    if (state.generatorRestored && !state.portableLightRepaired)
+    {
+        result.push_back({ChapterAction::PortableLight, {9.5f, 13.5f}, "리아 / 휴대 조명 수리 [E]"});
+    }
+    if (!state.convoyBriefed)
+    {
+        result.push_back({ChapterAction::Kain, {30.5f, 10.5f}, "카인 / 현장 인원 확인 [E]"});
+    }
+    if (!state.receiverInspected)
+    {
+        result.push_back({ChapterAction::Receiver, {33.5f, 9.5f}, "끊어진 수신기 / 교신 확인 [E]"});
+    }
+    if (state.convoyBriefed && state.surveyMarkers < 3)
+    {
+        constexpr tutorial::Vector2 markers[] = {{36.5f, 13.5f}, {36.5f, 18.5f}, {29.5f, 18.5f}};
+        result.push_back({ChapterAction(int(ChapterAction::SurveyOne) + state.surveyMarkers),
+                          markers[state.surveyMarkers], "측량 표식 / 안전 우회로 확인 [E]"});
+    }
+    if (state.surveyMarkers == 3 && !state.escortStarted)
+    {
+        result.push_back({ChapterAction::Escort, {32.5f, 12.5f}, "운송대 / 5명 대피 시작 [E]"});
+    }
+    if (state.convoyRescued && !state.vehicleRepaired)
+    {
+        result.push_back({ChapterAction::Vehicle, {34.5f, 10.5f}, "선택 / 운송 차량 수리 [E]"});
+    }
+    if (!state.tradeProofFound && !state.ledgerFound)
+    {
+        result.push_back({ChapterAction::TradeProof, {24.5f, 30.5f}, "적재함 / 거래 기록 확인 [E]"});
+    }
+    if (!RelayClear() && !state.ledgerFound)
+    {
+        result.push_back({ChapterAction::Scrappers,
+                          {28.5f, 27.5f},
+                          state.tradeProofFound ? "약탈자 / 거래 기록 제시 [E]" : "약탈자 / 대화 [E]"});
+    }
+    if (RelayClear() && !state.ledgerFound)
+    {
+        result.push_back({ChapterAction::Ledger, {33.5f, 32.5f}, "중계 단말 / 기본 장부 확보 [E]"});
+    }
+    if (RelayClear() && !state.detailLedgerFound)
+    {
+        result.push_back({ChapterAction::DetailLedger, {35.5f, 33.5f}, "선택 / 상세 구매 장부 [E]"});
+    }
+    if (state.convoyRescued)
+    {
+        result.push_back(
+            {ChapterAction::ConvoySupply, {24.5f, 20.5f}, "운송대 보급 / 부품 2 → 회복 키트 1 [E]"});
+    }
+    return result;
+}
+bool ChapterOneLevel::NearestInteraction(ChapterInteraction &result) const
+{
+    float best = 1.5f;
+    bool found = false;
+    for (const auto &point : Interactions())
+    {
+        float distance =
+            tutorial::Game::Distance(tutorial::Game::Get().GetState().playerPosition, point.position);
+        if (distance < best)
+        {
+            best = distance;
+            result = point;
+            found = true;
+        }
+    }
+    return found;
+}
+void ChapterOneLevel::Interact()
+{
+    ChapterInteraction point{};
+    if (!NearestInteraction(point))
+    {
+        return;
+    }
+    auto &game = tutorial::Game::Get();
+    switch (point.action)
+    {
+    case ChapterAction::Exit:
+        Leave();
+        return;
+    case ChapterAction::Generator:
+        state.generatorInspected = true;
+        game.ShowNotice("리아 / 고장이 아니야. 폐쇄된 N-0 외곽 선로가 일정한 주기로 전력을 가져가고 있어. "
+                        "오른쪽 차단기를 분리하자.");
+        break;
+    case ChapterAction::IsolateLine:
+        state.generatorRestored = true;
+        game.ShowNotice("발전기 복구 / 헤일로 전력·정비 설비가 안정되었습니다. 멈춘 계기판 하나만 같은 "
+                        "주기로 움직입니다. 리아는 바늘에서 손을 뗍니다.");
+        break;
+    case ChapterAction::PortableLight:
+        state.portableLightRepaired = true;
+        game.ShowNotice("리아 / 비싼 유물보다 이런 게 좋아. 고치면 다시 쓸 수 있잖아. 수리한 휴대 조명은 "
+                        "이후 야영지에도 놓인다.");
+        break;
+    case ChapterAction::Kain:
+        state.convoyBriefed = true;
+        game.ShowNotice("카인 / 여기 있는 사람은 다섯, 무전 응답은 여섯입니다. 대답이 온다고 그쪽으로 가면 "
+                        "안 됩니다. 먼저 여기 있는 사람부터 옮기죠. 측량 표식을 따라 우회로부터 확인합시다.");
+        break;
+    case ChapterAction::Receiver:
+        state.receiverInspected = true;
+        game.ShowNotice("끊어진 수신기 / 여섯 번째 응답은 앞선 교신의 일부가 반복된 것입니다. 새 생존자로 "
+                        "확정하지 않습니다. 교신 이상 시각과 설비 식별자 N-0/17을 기록합니다.");
+        break;
+    case ChapterAction::SurveyOne:
+    case ChapterAction::SurveyTwo:
+    case ChapterAction::SurveyThree:
+        ++state.surveyMarkers;
+        game.ShowNotice(state.surveyMarkers == 3
+                            ? "카인 / 세 표식이 이어졌습니다. 무전이 부르는 방향 대신 확인한 우회로로 다섯 "
+                              "명을 옮깁시다. 운송대로 돌아가세요."
+                            : "측량 표식 / 우회로가 끊긴 수로를 돌아 이어집니다. 다음 표식을 확인하세요.");
+        break;
+    case ChapterAction::Escort:
+        for (auto &person : state.survivors)
+        {
+            person.route.clear();
+            auto from = person.position;
+            for (auto to : {tutorial::Vector2{36.5f, 13.5f}, {36.5f, 18.5f}, {29.5f, 18.5f}, {24.5f, 20.5f}})
+            {
+                auto leg = FindRoute(from, to);
+                person.route.insert(person.route.end(), leg.begin(), leg.end());
+                from = to;
+            }
+            auto destination =
+                tutorial::Vector2{23.5f + float(&person - state.survivors.data()) * .55f,
+                                  20.5f + float((&person - state.survivors.data()) % 2) * .55f};
+            auto lastLeg = FindRoute(from, destination);
+            person.route.insert(person.route.end(), lastLeg.begin(), lastLeg.end());
+            person.waypoint = 0;
+            person.departureDelay = float(&person - state.survivors.data()) * .8f;
+        }
+        state.escortStarted = true;
+        game.ShowNotice("운송대 / 다섯 명이 확인된 우회로로 이동합니다. 안전 지점에서 카인이 점호합니다. "
+                        "다른 현장 조사도 계속할 수 있습니다.");
+        break;
+    case ChapterAction::Vehicle:
+        state.vehicleRepaired = true;
+        game.ShowNotice("운송 차량 회수 / 예비 부품으로 구동계를 복구했습니다. 운송대의 물자 거래와 이동로 "
+                        "안내가 재개됩니다.");
+        break;
+    case ChapterAction::TradeProof:
+        state.tradeProofFound = true;
+        game.ShowNotice("거래 기록 / 정체불명의 구매자가 N-0/17 중계 부품에 높은 값을 지불했습니다. 이 "
+                        "기록을 보여 주면 약탈자들을 싸우지 않고 물러나게 할 수 있습니다.");
+        break;
+    case ChapterAction::Scrappers:
+        if (!state.tradeProofFound)
+        {
+            game.ShowNotice("약탈자 / 우린 고철을 팔았을 뿐이야. 발주 내역은 입구 적재함에 있어. 확인하고 "
+                            "와. 안쪽 경계선을 넘거나 먼저 쏘면 가만있지 않겠어.");
+            break;
+        }
+        state.negotiated = true;
+        state.hostile = false;
+        state.bullets.clear();
+        state.tracers.clear();
+        for (auto &person : state.scrappers)
+        {
+            person.route = FindRoute(person.position, {44.5f, 39.5f});
+            person.waypoint = 0;
+        }
+        game.ShowNotice("약탈자 / 주문자는 몰라. 부품을 빼고 나서 폐설비에 새 전원이 들어왔어. 장부는 단말에 "
+                        "있다. 우린 철수하지. 여기서 무슨 일이 일어나는지는 우리도 몰라.");
+        break;
+    case ChapterAction::Ledger:
+        state.ledgerFound = true;
+        game.ShowNotice("기본 장부 확보 / 발주처는 삭제되어 있습니다. 광산 좌표·전력 유출 주기·운송대 이상 "
+                        "시각이 N-0/17 아래 연결됩니다. 다른 기록도 모아 헤일로에서 대조하세요.");
+        break;
+    case ChapterAction::ConvoySupply: {
+        auto &stats = GameLevels::Mine().GetState().player;
+        if (stats.salvage >= 2 && stats.recoveryKits < 999)
+        {
+            stats.salvage -= 2;
+            ++stats.recoveryKits;
+            game.ShowNotice("운송대 보급상 / 부품 2개와 회복 키트 1개를 교환했습니다. 북서 게이트는 헤일로, "
+                            "서쪽 도로는 발전기, 남쪽 도로는 폐설비로 이어집니다.");
+        }
+        else
+        {
+            game.ShowNotice("운송대 보급상 / 회복 키트 한 개에 부품 두 개입니다. 북서 게이트는 헤일로, "
+                            "서쪽은 발전기, 남쪽 도로는 폐설비로 이어집니다.");
+        }
+        break;
+    }
+    case ChapterAction::DetailLedger:
+        state.detailLedgerFound = true;
+        game.ShowNotice("상세 장부 확보 / 구매자 추적 단서를 보관합니다. 삭제된 발주처의 정체는 아직 "
+                        "확인되지 않았습니다.");
+        break;
+    }
+}
+void ChapterOneLevel::InteractHub()
+{
+    if (!Unlock())
+    {
+        return;
+    }
+    if (state.comparisonStarted && !state.recordsCompared)
+    {
+        tutorial::Game::Get().ShowNotice("기록 대조 / N-0 외곽 조명 순서를 관측하고 있습니다.");
+        return;
+    }
+    if (CompletedSites() == 3 && !state.recordsCompared)
+    {
+        state.comparisonStarted = true;
+        state.comparisonSeconds = 0;
+        tutorial::Game::Get().GetState().mouseFiring = false;
+        tutorial::Game::Get().ShowNotice("기록 대조 / 광산 좌표, 전력 유출 주기, 운송대 교신이 모두 N-0/17을 "
+                                         "가리킵니다. 신호들의 동일 발신 여부는 미확인입니다.");
+        return;
+    }
+    Enter();
+}
+float ChapterOneLevel::GetAimAngle() const
+{
+    const auto &world = tutorial::Game::Get().GetState();
+    auto p = world.playerPosition, c = world.cameraPosition;
+    auto origin =
+        tutorial::WorldCamera::ToViewport({tutorial::kCanvasWidth * .5f + (p.x - p.y - c.x + c.y) * 36,
+                                           tutorial::kCanvasHeight * .57f + (p.x + p.y - c.x - c.y) * 18 -
+                                               models::WorldScale::aimHeightPixels});
+    return std::atan2(world.cursorPosition.y - origin.y, world.cursorPosition.x - origin.x);
+}
+void FrontierCombat::Attack()
+{
+    if (!state.active || state.bullets.size() >= 128)
+    {
+        return;
+    }
+    auto &mine = GameLevels::Mine().GetState();
+    combat::Shot shot;
+    if (!mine.pistol.TryFire(level.GetAimAngle(), shot))
+    {
+        return;
+    }
+    ChapterProjectile projectile{{tutorial::Game::Get().GetState().playerPosition,
+                                  MineLevel::GetAimDirection(shot.angle), shot.speed, shot.range,
+                                  shot.damage + (mine.player.level - 1) * 4, true},
+                                 ChapterTeam::Player};
+    auto muzzle = models::ModelRig::Muzzle(models::ModelRig::Pose(0, false, true, 1));
+    Advance(projectile, muzzle.x * models::WorldScale::characterScale);
+    if (projectile.shot.remaining > 0)
+    {
+        state.bullets.push_back(projectile);
+    }
+    state.muzzleFlash = .055f;
+}
+void FrontierCombat::Fire(FrontierPerson &person, tutorial::Vector2 target, ChapterTeam team)
+{
+    auto &combat = person.combat;
+    combat.engaged = true;
+    combat.aimYaw = std::atan2(target.y - person.position.y, target.x - person.position.x);
+    if (combat.pistol.GetRounds() == 0)
+    {
+        combat.pistol.Reload();
+    }
+    if (combat.cooldown > 0 || state.bullets.size() >= 128)
+    {
+        return;
+    }
+    float x = target.x - person.position.x, y = target.y - person.position.y;
+    combat::Shot shot;
+    if (!combat.pistol.TryFire(std::atan2((x + y) * .5f, x - y), shot))
+    {
+        return;
+    }
+    ChapterProjectile projectile{{person.position, MineLevel::GetAimDirection(shot.angle), shot.speed, 9,
+                                  team == ChapterTeam::Companion ? 10 : 8, false},
+                                 team};
+    Advance(projectile, .38f);
+    if (projectile.shot.remaining > 0)
+    {
+        state.bullets.push_back(projectile);
+    }
+    combat.cooldown = team == ChapterTeam::Companion ? .6f : .8f;
+    combat.muzzleFlash = .055f;
+    if (team == ChapterTeam::Companion)
+    {
+        profiling::Count(profiling::Counter::NpcShots);
+    }
+}
+void FrontierCombat::Advance(ChapterProjectile &projectile, float distance)
+{
+    auto &shot = projectile.shot;
+    int steps = (std::max)(1, int(std::ceil(distance / .08f)));
+    float step = distance / steps;
+    auto damagePerson = [&](FrontierPerson &person) {
+        if (person.combat.health <= 0 || person.combat.hitGrace > 0 ||
+            tutorial::Game::Distance(shot.position, person.position) > .35f)
+        {
+            return false;
+        }
+        person.combat.health = (std::max)(0, person.combat.health - shot.damage);
+        person.combat.hitGrace = .25f;
+        if (!person.combat.health)
+        {
+            person.combat.downedSeconds = 12;
+            person.combat.engaged = false;
+        }
+        return true;
+    };
+    for (int i = 0; i < steps && shot.remaining > 0; ++i)
+    {
+        shot.position.x += shot.direction.x * step;
+        shot.position.y += shot.direction.y * step;
+        shot.remaining = (std::max)(0.f, shot.remaining - step);
+        if (!level.HasLineOfSight(shot.position, shot.position))
+        {
+            shot.remaining = 0;
+            break;
+        }
+        if (projectile.team == ChapterTeam::Scrapper)
+        {
+            auto &world = tutorial::Game::Get().GetState();
+            if (state.invulnerability <= 0 &&
+                tutorial::Game::Distance(shot.position, world.playerPosition) < .35f)
+            {
+                auto &stats = GameLevels::Mine().GetState().player;
+                stats.health -= (std::max)(1, shot.damage - stats.defense);
+                state.invulnerability = .45f;
+                shot.remaining = 0;
+            }
+            else if (damagePerson(state.ria) || (state.kainJoined && damagePerson(state.kain)))
+            {
+                shot.remaining = 0;
+            }
+        }
+        else if (!state.negotiated)
+        {
+            for (auto &person : state.scrappers)
+            {
+                if (person.combat.health > 0 &&
+                    tutorial::Game::Distance(shot.position, person.position) < .4f)
+                {
+                    state.hostile = true;
+                    person.combat.health = (std::max)(0, person.combat.health - shot.damage);
+                    if (person.combat.health == 0 && projectile.team == ChapterTeam::Player)
+                    {
+                        GameLevels::Mine().AddExperience(kExperiencePerKill);
+                    }
+                    shot.remaining = 0;
+                    break;
+                }
+            }
+        }
+    }
+}
+void FrontierCombat::Update(float deltaSeconds)
+{
+    auto &world = tutorial::Game::Get().GetState();
+    auto &mine = GameLevels::Mine().GetState();
+    mine.pistol.Update(deltaSeconds);
+    state.invulnerability = (std::max)(0.f, state.invulnerability - deltaSeconds);
+    state.muzzleFlash = (std::max)(0.f, state.muzzleFlash - deltaSeconds);
+    for (auto &tracer : state.tracers)
+    {
+        tracer.remaining -= deltaSeconds;
+    }
+    state.tracers.erase(std::remove_if(state.tracers.begin(), state.tracers.end(),
+                                       [](const Tracer &t) { return t.remaining <= 0; }),
+                        state.tracers.end());
+    if (world.mouseFiring)
+    {
+        Attack();
+    }
+    if (!state.ledgerFound && !state.negotiated &&
+        tutorial::Game::Distance(world.playerPosition, {33, 32}) < 3.8f)
+    {
+        state.hostile = true;
+    }
+    auto updatePerson = [&](FrontierPerson &person, bool friendly) {
+        auto &combat = person.combat;
+        combat.pistol.Update(deltaSeconds);
+        combat.cooldown = (std::max)(0.f, combat.cooldown - deltaSeconds);
+        combat.hitGrace = (std::max)(0.f, combat.hitGrace - deltaSeconds);
+        combat.muzzleFlash = (std::max)(0.f, combat.muzzleFlash - deltaSeconds);
+        combat.engaged = false;
+        if (combat.health <= 0)
+        {
+            if (friendly)
+            {
+                combat.downedSeconds -= deltaSeconds;
+                if (combat.downedSeconds <= 0)
+                {
+                    combat.health = 50;
+                    combat.hitGrace = 3;
+                }
+            }
+            return;
+        }
+        if (!state.hostile || state.negotiated)
+        {
+            return;
+        }
+        if (friendly)
+        {
+            const FrontierPerson *target = nullptr;
+            float nearest = 7;
+            for (const auto &enemy : state.scrappers)
+            {
+                float distance = tutorial::Game::Distance(person.position, enemy.position);
+                if (enemy.combat.health > 0 && distance < nearest &&
+                    level.HasLineOfSight(person.position, enemy.position))
+                {
+                    nearest = distance;
+                    target = &enemy;
+                }
+            }
+            if (target)
+            {
+                Fire(person, target->position, ChapterTeam::Companion);
+            }
+        }
+        else
+        {
+            tutorial::Vector2 target = world.playerPosition;
+            float nearest = tutorial::Game::Distance(person.position, target);
+            for (const auto *ally : {&state.ria, &state.kain})
+            {
+                if (ally == &state.kain && !state.kainJoined)
+                {
+                    continue;
+                }
+                float distance = tutorial::Game::Distance(person.position, ally->position);
+                if (ally->combat.health > 0 && distance < nearest &&
+                    level.HasLineOfSight(person.position, ally->position))
+                {
+                    target = ally->position;
+                    nearest = distance;
+                }
+            }
+            if (nearest < 8 && level.HasLineOfSight(person.position, target))
+            {
+                Fire(person, target, ChapterTeam::Scrapper);
+            }
+        }
+    };
+    updatePerson(state.ria, true);
+    if (state.kainJoined)
+    {
+        updatePerson(state.kain, true);
+    }
+    for (auto &person : state.scrappers)
+    {
+        updatePerson(person, false);
+    }
+    for (auto &projectile : state.bullets)
+    {
+        auto start = projectile.shot.position;
+        Advance(projectile, (std::min)(projectile.shot.remaining, projectile.shot.speed * deltaSeconds));
+        state.tracers.push_back(
+            {start, projectile.shot.position, .12f, projectile.team == ChapterTeam::Companion});
+    }
+    state.bullets.erase(std::remove_if(state.bullets.begin(), state.bullets.end(),
+                                       [](const ChapterProjectile &p) { return p.shot.remaining <= 0; }),
+                        state.bullets.end());
+    if (state.tracers.size() > 256)
+    {
+        state.tracers.erase(state.tracers.begin(), state.tracers.end() - 256);
+    }
+    if (mine.player.health <= 0)
+    {
+        mine.player.health = mine.player.maxHealth;
+        world.playerPosition = world.cameraPosition = kFrontierEntry;
+        state.ria.position = {6.5f, 6.5f};
+        state.ria.route.clear();
+        state.ria.waypoint = 0;
+        if (state.kainJoined)
+        {
+            state.kain.position = {6.5f, 7.5f};
+            state.kain.route.clear();
+            state.kain.waypoint = 0;
+        }
+        state.bullets.clear();
+        state.tracers.clear();
+        state.invulnerability = 3;
+        world.mouseFiring = false;
+        tutorial::Game::Get().ShowNotice(
+            "리아 / 안전 게이트로 후퇴했어. 확보한 기록과 구조 상태는 그대로야.");
+    }
+}
+void FrontierParty::Update(float deltaSeconds)
+{
+    auto &world = tutorial::Game::Get().GetState();
+    auto follow = [&](FrontierPerson &person, float spacing) {
+        if (person.combat.health <= 0)
+        {
+            person.facing.walking = false;
+            return;
+        }
+        if (tutorial::Game::Distance(person.position, world.playerPosition) > spacing)
+        {
+            if (person.waypoint >= person.route.size() ||
+                tutorial::Game::Distance(person.route.back(), world.playerPosition) > 2)
+            {
+                person.route = level.FindRoute(person.position, world.playerPosition);
+                person.waypoint = 0;
+            }
+            Move(person, 4 * deltaSeconds);
+        }
+        else
+        {
+            person.facing.walking = false;
+            person.route.clear();
+            person.waypoint = 0;
+        }
+    };
+    follow(state.ria, 1.6f);
+    if (state.kainJoined)
+    {
+        follow(state.kain, 2.4f);
+    }
+    if (state.escortStarted && !state.convoyRescued)
+    {
+        bool all = true;
+        for (auto &person : state.survivors)
+        {
+            if (person.departureDelay > 0)
+            {
+                person.departureDelay = (std::max)(0.f, person.departureDelay - deltaSeconds);
+                person.facing.walking = false;
+            }
+            else if (!person.arrived)
+            {
+                person.arrived = Move(person, 2.7f * deltaSeconds);
+            }
+            if (person.arrived)
+            {
+                person.facing.walking = false;
+            }
+            all = all && person.arrived;
+        }
+        if (all)
+        {
+            state.convoyRescued = state.kainJoined = true;
+            auto &stats = GameLevels::Mine().GetState().player;
+            stats.salvage = (std::min)(9999, stats.salvage + 3);
+            state.receiverInspected =
+                true; // The wrapped receiver is logged at the final headcount, even if skipped earlier.
+            state.kain.position = {25.5f, 20.5f};
+            tutorial::Game::Get().ShowNotice(
+                "카인 / 다섯 명, 전원 확인했습니다.… 광산 기록에 이 설비 번호가 있군요. N-0 주변에서 "
+                "근무했습니다. 같이 가겠습니다. 운송대 거래와 안내가 재개됩니다. 감사의 표시로 부품 3개를 "
+                "받았습니다.");
+        }
+    }
+    if (state.negotiated)
+    {
+        for (auto &person : state.scrappers)
+        {
+            if (person.combat.health > 0 && !person.arrived)
+            {
+                person.arrived = Move(person, 2.7f * deltaSeconds);
+            }
+            else
+            {
+                person.facing.walking = false;
+            }
+        }
+    }
+}
+void ChapterOneLevel::Update(float deltaSeconds)
+{
+    if (state.comparisonStarted && state.recordsCompared)
+    {
+        state.comparisonSeconds = (std::min)(12.5f, state.comparisonSeconds + deltaSeconds);
+    }
+    else if (state.comparisonStarted && !state.recordsCompared)
+    {
+        float previous = state.comparisonSeconds;
+        state.comparisonSeconds += deltaSeconds;
+        if (previous < 3 && state.comparisonSeconds >= 3)
+        {
+            tutorial::Game::Get().ShowNotice(
+                "리아 / 문이 안 열렸다는 건 맞을 거야. 문 주위에서 아무 일도 없었다는 뜻은 아니고. 도시 "
+                "당국은 관문 자체의 가동 기록이 없다고 합니다.");
+        }
+        if (state.comparisonSeconds >= 8)
+        {
+            state.recordsCompared = state.waterwayUnlocked = true;
+            tutorial::Game::Get().ShowNotice(
+                "1장 완료 / 카인이 옛 탐사대의 N-0 외곽 수로 진입로를 지도에 표시합니다. 사라진 다리 아래 "
+                "수로가 남아 있을 거라고 합니다. 2장 조사 경로를 확보했습니다.");
+        }
+    }
+    if (!state.active)
+    {
+        return;
+    }
+    combat.Update(deltaSeconds);
+    party.Update(deltaSeconds);
+}
+
+// ============================================================================
 // GameLevels
 // ============================================================================
 
@@ -1498,8 +2416,28 @@ JetTravelLevel &GameLevels::Travel()
 {
     return Get().travel;
 }
+ChapterOneLevel &GameLevels::Chapter()
+{
+    return Get().chapter;
+}
+bool GameLevels::IsCombatActive()
+{
+    return Mine().IsActive() || Chapter().IsActive();
+}
+float GameLevels::AimAngle()
+{
+    return Chapter().IsActive() ? Chapter().GetAimAngle() : Mine().GetAimAngle();
+}
+float GameLevels::MuzzleFlash()
+{
+    return Chapter().IsActive() ? Chapter().GetState().muzzleFlash : Mine().GetState().muzzleFlash;
+}
 Level *GameLevels::Active()
 {
+    if (Chapter().IsActive())
+    {
+        return &Chapter();
+    }
     if (Travel().IsActive())
     {
         return &Travel();
@@ -1512,7 +2450,8 @@ Level *GameLevels::Active()
 }
 void GameLevels::Reset()
 {
-    for (Level *level : {static_cast<Level *>(&Mine()), static_cast<Level *>(&Travel())})
+    for (Level *level :
+         {static_cast<Level *>(&Mine()), static_cast<Level *>(&Travel()), static_cast<Level *>(&Chapter())})
     {
         level->Reset();
     }

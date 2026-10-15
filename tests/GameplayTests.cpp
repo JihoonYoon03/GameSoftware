@@ -401,6 +401,238 @@ void TestWorldCamera()
         assert(std::fabs(actual.y - direction.y / length) < .001f);
     }
 }
+void ChapterInteract(game::ChapterAction action)
+{
+    auto &level = game::GameLevels::Chapter();
+    bool found = false;
+    for (auto point : level.Interactions())
+    {
+        if (point.action == action)
+        {
+            assert(!level.FindRoute(game::kFrontierEntry, point.position).empty());
+            tutorial::Game::Get().GetState().playerPosition = point.position;
+            found = true;
+            break;
+        }
+    }
+    assert(found);
+    level.Interact();
+}
+void CompleteChapterSite(int site, bool peaceful = true)
+{
+    auto &level = GameLevels::Chapter();
+    auto &s = level.GetState();
+    if (site == 0)
+    {
+        ChapterInteract(ChapterAction::Generator);
+        assert(s.generatorInspected && !s.generatorRestored);
+        ChapterInteract(ChapterAction::IsolateLine);
+        assert(s.generatorRestored);
+    }
+    else if (site == 1)
+    {
+        ChapterInteract(ChapterAction::Kain);
+        assert(s.convoyBriefed && s.survivors.size() == 5);
+        // The repeated sixth response is evidence, never an extra rescue actor.
+        ChapterInteract(ChapterAction::Receiver);
+        assert(s.receiverInspected && s.survivors.size() == 5);
+        ChapterInteract(ChapterAction::SurveyOne);
+        ChapterInteract(ChapterAction::SurveyTwo);
+        ChapterInteract(ChapterAction::SurveyThree);
+        ChapterInteract(ChapterAction::Escort);
+        assert(s.escortStarted && !s.convoyRescued);
+        for (int i = 0; i < 700 && !s.convoyRescued; ++i)
+        {
+            level.Update(.05f);
+        }
+        assert(s.convoyRescued && s.kainJoined);
+        for (const auto &person : s.survivors)
+        {
+            assert(person.arrived && !level.IsBlocked(person.position));
+        }
+    }
+    else
+    {
+        if (peaceful)
+        {
+            ChapterInteract(ChapterAction::Scrappers);
+            assert(!s.negotiated && !s.hostile);
+            ChapterInteract(ChapterAction::TradeProof);
+            ChapterInteract(ChapterAction::Scrappers);
+            assert(s.negotiated && !s.hostile);
+            for (const auto &person : s.scrappers)
+            {
+                assert(person.combat.health == 60);
+            }
+        }
+        else
+        {
+            auto &world = tutorial::Game::Get().GetState();
+            s.invulnerability = 1000;
+            for (size_t i = 0; i < s.scrappers.size(); ++i)
+            {
+                auto target = s.scrappers[i].position;
+                bool found = false;
+                for (Vector2 delta : {Vector2{2, 0}, {-2, 0}, {0, 2}, {0, -2}})
+                {
+                    Vector2 p = {target.x + delta.x, target.y + delta.y};
+                    if (!level.IsBlocked(p) && level.HasLineOfSight(p, target))
+                    {
+                        world.playerPosition = world.cameraPosition = p;
+                        found = true;
+                        break;
+                    }
+                }
+                assert(found);
+                AimAt(target);
+                world.mouseFiring = true;
+                for (int frame = 0; frame < 300 && s.scrappers[i].combat.health > 0; ++frame)
+                {
+                    level.Update(.025f);
+                }
+                world.mouseFiring = false;
+                assert(s.scrappers[i].combat.health == 0);
+            }
+            assert(!s.negotiated);
+        }
+        ChapterInteract(ChapterAction::Ledger);
+        assert(s.ledgerFound);
+    }
+}
+void TestChapterOne()
+{
+    auto &game = tutorial::Game::Get();
+    auto &level = GameLevels::Chapter();
+    game.Reset();
+    level.Enter();
+    assert(!level.IsActive() && !level.IsAvailable());
+    ReadyMine();
+    for (auto stage : {MineQuestStage::BypassPower, MineQuestStage::InvestigateSignal,
+                       MineQuestStage::InvestigateGlyph, MineQuestStage::CollectCoordinates})
+    {
+        assert(mineState.quest.Advance(stage));
+    }
+    GameLevels::Mine().Leave();
+    assert(level.IsAvailable() && !level.IsActive());
+    game.GetState().playerPosition = tutorial::kCityReceiverPosition;
+    game.InteractWithNearbyTarget();
+    assert(level.IsActive() && SceneManager::Current() == SceneKind::Frontier);
+    level.Leave();
+    assert(!level.IsActive() && SceneManager::Current() == SceneKind::Exterior);
+    // All six permutations must reach the same chapter conclusion.
+    std::array<int, 3> order = {0, 1, 2};
+    do
+    {
+        game.Reset();
+        level.Enter(true);
+        for (int site : order)
+        {
+            CompleteChapterSite(site);
+        }
+        auto &s = level.GetState();
+        assert(level.CompletedSites() == 3 && !s.recordsCompared);
+        assert(!s.vehicleRepaired && !s.portableLightRepaired && !s.detailLedgerFound);
+        level.Leave();
+        game.InteractWithNearbyTarget();
+        assert(s.comparisonStarted && !s.recordsCompared && !level.IsActive());
+        level.Update(3.1f);
+        assert(!s.recordsCompared);
+        level.Update(5.1f);
+        assert(s.recordsCompared && s.waterwayUnlocked);
+        level.Enter();
+        assert(level.CompletedSites() == 3 && s.kainJoined && s.recordsCompared);
+        auto snapshot = monitoring::WorldSnapshot::Build(1, "chapter-test");
+        assert(snapshot.find("\"current_region_id\":\"frontier\"") != std::string::npos);
+        assert(snapshot.find("\"main.chapter1_complete\":true") != std::string::npos);
+    } while (std::next_permutation(order.begin(), order.end()));
+    // Held E must not bounce between the city board and the entrance gate.
+    game.Reset();
+    level.Enter(true);
+    level.Leave();
+    game.KeyDown('e', 0, 0);
+    assert(level.IsActive());
+    game.KeyDown('e', 0, 0);
+    assert(level.IsActive());
+    game.KeyUp('e', 0, 0);
+    game.KeyDown('e', 0, 0);
+    assert(!level.IsActive());
+    game.KeyDown('e', 0, 0);
+    assert(!level.IsActive());
+    game.KeyUp('e', 0, 0);
+    game.Reset();
+    level.Enter(true);
+    ChapterInteract(ChapterAction::Kain);
+    ChapterInteract(ChapterAction::SurveyOne);
+    ChapterInteract(ChapterAction::SurveyTwo);
+    ChapterInteract(ChapterAction::SurveyThree);
+    ChapterInteract(ChapterAction::Escort);
+    level.Update(1);
+    auto pausedPosition = level.GetState().survivors.front().position;
+    level.Leave();
+    level.Update(5);
+    assert(tutorial::Game::Distance(pausedPosition, level.GetState().survivors.front().position) < .001f);
+    level.Enter();
+    for (int frame = 0; frame < 700 && !level.GetState().convoyRescued; ++frame)
+    {
+        level.Update(.05f);
+    }
+    assert(level.GetState().convoyRescued);
+    for (const auto &person : level.GetState().survivors)
+    {
+        assert(person.arrived && !person.facing.walking);
+    }
+    game.Reset();
+    level.Enter(true);
+    CompleteChapterSite(2, false);
+    assert(level.GetState().ledgerFound && !level.GetState().negotiated);
+    ChapterInteract(ChapterAction::DetailLedger);
+    assert(level.GetState().detailLedgerFound);
+    CompleteChapterSite(0);
+    ChapterInteract(ChapterAction::PortableLight);
+    CompleteChapterSite(1);
+    ChapterInteract(ChapterAction::Vehicle);
+    int kits = mineState.player.recoveryKits, salvage = mineState.player.salvage;
+    assert(salvage >= 2);
+    ChapterInteract(ChapterAction::ConvoySupply);
+    assert(mineState.player.recoveryKits == kits + 1 && mineState.player.salvage == salvage - 2);
+    assert(level.GetState().portableLightRepaired && level.GetState().vehicleRepaired);
+    auto &s = level.GetState();
+    // No quest or optional outcome is lost on an early return/re-entry.
+    level.Leave();
+    level.Enter();
+    assert(s.detailLedgerFound && s.portableLightRepaired && s.vehicleRepaired);
+    game.Reset();
+    level.Enter(true);
+    // Companions retaliate, take damage and recover without blocking the story.
+    s.hostile = true;
+    s.ria.position = {31.5f, 31.5f};
+    int rounds = s.ria.combat.pistol.GetRounds();
+    for (int i = 0; i < 40; ++i)
+    {
+        level.Update(.05f);
+    }
+    assert(s.ria.combat.pistol.GetRounds() < rounds && s.ria.combat.health < 100);
+    s.hostile = false;
+    s.bullets.clear();
+    s.ria.combat.health = 0;
+    s.ria.combat.downedSeconds = 12;
+    level.Update(12.1f);
+    assert(s.ria.combat.health == 50);
+    // Swept projectiles stop at a facility wall, and friendly shots cannot harm evacuees.
+    s.bullets = {{{{10.5f, 6.5f}, {0, 1}, 100, 20, 100, true}, ChapterTeam::Player}};
+    level.Update(.1f);
+    assert(s.bullets.empty());
+    auto person = s.survivors.front().position;
+    s.bullets = {{{{person.x - 1, person.y}, {1, 0}, 100, 20, 100, true}, ChapterTeam::Player}};
+    level.Update(.02f);
+    assert(s.survivors.front().combat.health == 100);
+    mineState.player.health = 0;
+    bool generator = s.generatorRestored;
+    level.Update(.05f);
+    assert(mineState.player.health == mineState.player.maxHealth && s.generatorRestored == generator);
+    assert(tutorial::Game::Distance(game.GetState().playerPosition, kFrontierEntry) < .001f);
+    game.Reset();
+}
 void TestStoryAndReentry()
 {
     ReadyMine();
@@ -444,6 +676,7 @@ int main(int argc, char **argv)
     TestAimLightingAndWallShots();
     TestRescueAndScanner();
     TestStoryAndReentry();
+    TestChapterOne();
     if (argc > 1)
     {
         std::ofstream snapshot(argv[1]);
