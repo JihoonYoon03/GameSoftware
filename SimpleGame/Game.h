@@ -10,6 +10,15 @@ struct Vector2
     float x, y;
 };
 // ============================================================================
+// WorldCamera — world view magnification; HUD/cursor stay in viewport coordinates
+// ============================================================================
+struct WorldCamera
+{
+    static constexpr float zoom = 1.35f;
+    static Vector2 ToViewport(Vector2 point);
+    static Vector2 FromViewport(Vector2 point);
+};
+// ============================================================================
 // MovementFacing — persistent heading from actual movement, including route turns
 // ============================================================================
 struct MovementFacing
@@ -34,6 +43,7 @@ struct Resident
     std::array<float, 4> coat = {.55f, .65f, .75f, 1};
     MovementFacing facing;
     models::Gender gender = models::Gender::Male;
+    models::HairStyle hair = models::HairStyle::SidePart;
 };
 
 enum class MainQuestStage
@@ -113,6 +123,7 @@ struct GameState
     float facingYaw = .78539816f;
     Vector2 playerPosition = {0, 0};
     models::Gender playerGender = models::Gender::Male;
+    models::HairStyle playerHair = models::HairStyle::SidePart;
     Vector2 cameraPosition = {0, 0};
     std::string noticeText;
     std::vector<Building> buildings;

@@ -288,21 +288,38 @@ void ClothingBox(Model &m, Point lo, Point hi, std::array<float, 4> color,
     }
 }
 void Garment(Model &m, float hem, float shoulders, float hemWidth, float shoulderWidth, float front,
-             std::array<float, 4> color, PaletteSlot slot = PaletteSlot::Body)
+             std::array<float, 4> color, PaletteSlot slot, Gender gender)
 {
-    const Point v[] = {{-.13f, -hemWidth, hem},
-                       {front, -hemWidth, hem},
-                       {front, hemWidth, hem},
-                       {-.13f, hemWidth, hem},
-                       {-.13f, -shoulderWidth, shoulders},
-                       {front, -shoulderWidth, shoulders},
-                       {front, shoulderWidth, shoulders},
-                       {-.13f, shoulderWidth, shoulders}};
-    const int faces[][4] = {{0, 3, 2, 1}, {0, 1, 5, 4}, {1, 2, 6, 5},
-                            {2, 3, 7, 6}, {3, 0, 4, 7}, {4, 5, 6, 7}};
-    for (const auto &f : faces)
+    const bool female = gender == Gender::Female;
+    const float z[] = {hem, .755f, shoulders}, width[] = {hemWidth, female ? .108f : .158f, shoulderWidth};
+    for (int ring = 0; ring < 2; ++ring)
     {
-        AddVariantPart(m, PartKind::Polygon, {v[f[0]], v[f[1]], v[f[2]], v[f[3]]}, color, slot);
+        Point v[8];
+        for (int level = 0; level < 2; ++level)
+        {
+            int n = ring + level;
+            float back = n == 1 ? (female ? -.102f : -.13f) : -.13f;
+            float face = n == 1 ? (female ? .105f : .14f) : front;
+            v[level * 4] = {back, -width[n], z[n]};
+            v[level * 4 + 1] = {face, -width[n], z[n]};
+            v[level * 4 + 2] = {face, width[n], z[n]};
+            v[level * 4 + 3] = {back, width[n], z[n]};
+        }
+        for (int side = 0; side < 4; ++side)
+        {
+            int next = (side + 1) % 4;
+            AddVariantPart(m, PartKind::Polygon, {v[side], v[next], v[next + 4], v[side + 4]}, color, slot);
+            m.parts[m.count - 1].clothing = true;
+        }
+    }
+    for (int n : {0, 2})
+    {
+        AddVariantPart(m, PartKind::Polygon,
+                       {{-.13f, -width[n], z[n]},
+                        {front, -width[n], z[n]},
+                        {front, width[n], z[n]},
+                        {-.13f, width[n], z[n]}},
+                       color, slot);
         m.parts[m.count - 1].clothing = true;
     }
 }
@@ -352,20 +369,22 @@ Point CharacterPose::Apply(Point p, Joint joint) const
         joint = kParents[size_t(joint)];
     }
 }
-CharacterPose ModelRig::Pose(float phase, bool walking, bool armed, float recoil, bool riding)
+CharacterPose ModelRig::Pose(float phase, bool walking, bool armed, float recoil, bool riding, Gender gender)
 {
     CharacterPose p{};
     p.armed = armed;
     auto &j = p.joints;
+    const float shoulder = gender == Gender::Female ? .18f : .225f,
+                hip = gender == Gender::Female ? .125f : .105f;
     float step = walking ? std::sin(phase) * .48f : 0;
     j[size_t(Joint::Root)].position.z = walking && !armed ? std::fabs(std::sin(phase)) * .025f : 0;
     j[size_t(Joint::Head)].position = {0, 0, 1.04f};
-    j[size_t(Joint::RightArm)].position = {0, -.20f, .94f};
-    j[size_t(Joint::LeftArm)].position = {0, .20f, .94f};
+    j[size_t(Joint::RightArm)].position = {0, -shoulder, .94f};
+    j[size_t(Joint::LeftArm)].position = {0, shoulder, .94f};
     j[size_t(Joint::RightForearm)].position = {0, 0, -.29f};
     j[size_t(Joint::LeftForearm)].position = {0, 0, -.29f};
-    j[size_t(Joint::RightLeg)].position = {0, -.105f, .57f};
-    j[size_t(Joint::LeftLeg)].position = {0, .105f, .57f};
+    j[size_t(Joint::RightLeg)].position = {0, -hip, .57f};
+    j[size_t(Joint::LeftLeg)].position = {0, hip, .57f};
     j[size_t(Joint::RightShin)].position = {0, 0, -.26f};
     j[size_t(Joint::LeftShin)].position = {0, 0, -.26f};
     j[size_t(Joint::RightLeg)].pitch = step;
@@ -546,11 +565,11 @@ void ModelFactory::GenerateCharacter(Model &m, CharacterType type, Gender gender
     std::array<float, 4> fabric =
         medic ? std::array<float, 4>{.93f, .96f, .94f, 1} : std::array<float, 4>{1, 1, 1, 1};
     // Outfit shells replace the torso surface. Each role has a different cut.
-    Garment(m, .55f, .98f,
-            guard        ? .15f
-            : researcher ? .19f
-                         : .15f,
-            guard ? .19f : .16f, guard ? .16f : .13f, fabric, fabricSlot);
+    const bool female = gender == Gender::Female;
+    Garment(m, .55f, .98f, female ? (researcher ? .20f : .18f) : (researcher ? .19f : .155f),
+            female ? (guard ? .18f : .16f) : (guard ? .225f : .205f), female ? .14f : .16f, fabric,
+            fabricSlot, gender);
+    const size_t torsoParts = m.count;
     if (type == CharacterType::Explorer)
     {
         ClothingBox(m, {-.26f, -.14f, .65f}, {-.135f, .14f, .91f}, {.45f, .51f, .48f, 1}, PaletteSlot::Fixed);
@@ -592,8 +611,6 @@ void ModelFactory::GenerateCharacter(Model &m, CharacterType type, Gender gender
     // Skin and hair are separate from all collars and sleeves.
     MeshBox(m, {-.055f, -.055f, .99f}, {.06f, .055f, 1.06f}, {.76f, .56f, .42f, 1}, PaletteSlot::Fixed);
     Ellipsoid(m, {0, 0, .11f}, {.116f, .112f, .11f}, {.81f, .62f, .48f, 1}, PaletteSlot::Fixed, Joint::Head);
-    Ellipsoid(m, {-.018f, 0, .21f}, {.114f, .115f, .045f}, {.12f, .09f, .08f, 1}, PaletteSlot::Fixed,
-              Joint::Head, 12, 4);
     Ellipsoid(m, {.116f, 0, .096f}, {.025f, .025f, .035f}, {.81f, .62f, .48f, 1}, PaletteSlot::Fixed,
               Joint::Head, 8, 3);
     for (float side : {-1.f, 1.f})
@@ -698,6 +715,10 @@ void ModelFactory::GenerateCharacter(Model &m, CharacterType type, Gender gender
                 auto &p = part.points[j];
                 if (part.joint == Joint::Root)
                 {
+                    if (i < torsoParts)
+                    {
+                        continue;
+                    }
                     float width = p.z < .55f ? 1.04f : (.83f + (.98f - (std::min)(.98f, p.z)) * .40f);
                     p.y *= width;
                     p.x *= .94f;
@@ -717,14 +738,68 @@ void ModelFactory::GenerateCharacter(Model &m, CharacterType type, Gender gender
                 }
             }
         }
-        // Swept-back hair has volume, leaving the face and comms clear.
-        if (!guard)
-        {
-            Ellipsoid(m, {-.12f, 0, engineer || medic ? .11f : .18f}, {.07f, .075f, .065f},
-                      {.12f, .075f, .06f, 1}, PaletteSlot::Fixed, Joint::Head, 10, 4);
-        }
     }
 }
+void GenerateHair(Model &m, HairStyle style, bool covered)
+{
+    m.count = 0;
+    m.space = CoordinateSpace::World;
+    const std::array<float, 4> color = {1, 1, 1, 1};
+    auto lock = [&](Point center, Point radius, int segments = 10) {
+        Ellipsoid(m, center, radius, color, PaletteSlot::Body, Joint::Head, segments, 4);
+    };
+    if (covered)
+    {
+        lock({-.09f, 0, .075f}, {.043f, .10f, .075f});
+    }
+    else
+    {
+        lock({-.02f, 0, .208f}, {.126f, .119f, style == HairStyle::Buzz ? .029f : .047f}, 12);
+        if (style == HairStyle::SidePart)
+        {
+            lock({.025f, -.05f, .23f}, {.09f, .075f, .032f});
+            lock({-.015f, .06f, .218f}, {.095f, .052f, .03f});
+        }
+        if (style == HairStyle::Curls)
+        {
+            for (int i = 0; i < 8; ++i)
+            {
+                float t = i * 6.2831853f / 8;
+                lock({-.015f + .07f * std::cos(t), .075f * std::sin(t), .235f}, {.046f, .043f, .036f}, 8);
+            }
+        }
+    }
+    if (style == HairStyle::Bob)
+    {
+        for (float side : {-1.f, 1.f})
+        {
+            lock({-.035f, side * .111f, .079f}, {.085f, .034f, .106f});
+        }
+        lock({-.105f, 0, .063f}, {.045f, .103f, .105f});
+    }
+    if (style == HairStyle::Ponytail)
+    {
+        lock({-.14f, 0, covered ? .11f : .17f}, {.045f, .044f, .038f});
+        lock({-.195f, 0, covered ? .03f : .085f}, {.057f, .043f, .095f});
+        lock({-.22f, 0, covered ? -.055f : -.01f}, {.044f, .034f, .067f});
+    }
+    if (style == HairStyle::Bun)
+    {
+        lock({-.143f, 0, covered ? .10f : .19f}, {.073f, .07f, .055f});
+    }
+    if (covered && style == HairStyle::Curls)
+    {
+        for (float side : {-1.f, 1.f})
+        {
+            lock({-.09f, side * .08f, .11f}, {.045f, .035f, .045f}, 8);
+        }
+    }
+    for (size_t i = 0; i < m.count; ++i)
+    {
+        m.parts[i].surface = Surface::Fabric;
+    }
+}
+
 void ModelFactory::GenerateBuilding(Model &m, BuildingType type)
 {
     m = Model{};
@@ -939,7 +1014,7 @@ bool ModelFactory::ValidateModel(const Model &model)
 // ============================================================================
 namespace
 {
-constexpr std::uint32_t kModelVersion = 8;
+constexpr std::uint32_t kModelVersion = 9;
 static_assert(std::is_trivially_copyable<Library>::value, "Model cache needs a stable POD payload");
 
 void Generate(Library &library)
@@ -1062,6 +1137,11 @@ void Generate(Library &library)
         }
     }
 
+    for (size_t i = 0; i < library.hairs.size(); ++i)
+    {
+        GenerateHair(library.hairs[i], HairStyle(i), false);
+        GenerateHair(library.coveredHairs[i], HairStyle(i), true);
+    }
     for (size_t i = 0; i < library.vehicles.size(); ++i)
     {
         ModelFactory::GenerateVehicle(library.vehicles[i], VehicleType(i));
@@ -1079,6 +1159,15 @@ void Generate(Library &library)
 
 bool Valid(const Library &library)
 {
+    for (size_t i = 0; i < library.hairs.size(); ++i)
+    {
+        if (!ModelFactory::ValidateModel(library.hairs[i]) ||
+            !ModelFactory::ValidateModel(library.coveredHairs[i]))
+        {
+            return false;
+        }
+    }
+
     for (const auto &vehicle : library.vehicles)
     {
         if (!ModelFactory::ValidateModel(vehicle.body))
@@ -1179,5 +1268,9 @@ const Model &ModelLibrary::Character(CharacterType type, Gender gender)
     const auto &library = Get();
     return gender == Gender::Female ? library.femaleCharacters.at(size_t(type))
                                     : library.characters.at(size_t(type));
+}
+const Model &ModelLibrary::Hair(HairStyle style, bool covered)
+{
+    return covered ? Get().coveredHairs.at(size_t(style)) : Get().hairs.at(size_t(style));
 }
 } // namespace models

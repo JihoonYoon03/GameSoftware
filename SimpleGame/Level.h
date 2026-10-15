@@ -82,6 +82,8 @@ struct Enemy
     int health = kEnemyMaxHealth;
     float attackCooldown = 0;
     float respawnSeconds = 0;
+    tutorial::MovementFacing facing;
+    tutorial::Vector2 target = {};
 };
 struct Drop
 {
@@ -96,12 +98,14 @@ struct Bullet
     float speed;
     float remaining;
     int damage;
+    bool playerOwned = true;
 };
 struct Tracer
 {
     tutorial::Vector2 start;
     tutorial::Vector2 end;
     float remaining = .12f;
+    bool npcOwned = false;
 };
 struct MineLight
 {
@@ -115,6 +119,14 @@ struct RescueGroup
     bool combatants = false;
     bool rescued = false;
 };
+struct NpcCombatState
+{
+    int health = 100;
+    float cooldown = 0, hitGrace = 0, muzzleFlash = 0, downedSeconds = 0;
+    bool engaged = false, evading = false;
+    float aimYaw = 0;
+    combat::Pistol pistol;
+};
 struct RescueNpc
 {
     std::uint64_t id;
@@ -127,6 +139,8 @@ struct RescueNpc
     std::vector<tutorial::Vector2> route;
     tutorial::MovementFacing facing;
     models::Gender gender = models::Gender::Male;
+    models::HairStyle hair = models::HairStyle::SidePart;
+    NpcCombatState combat;
 };
 struct ScannerContact
 {
@@ -161,6 +175,7 @@ struct MineState
     float riaNavigationCooldown = 0;
     float riaMovement = 0;
     tutorial::MovementFacing riaFacing;
+    NpcCombatState riaCombat;
     float invulnerability = 0;
     float navigationCooldown = 0;
     float scannerSeconds = 0;
@@ -257,14 +272,15 @@ class MineCombat
     void UpdateEnemies(float deltaSeconds);
     void Attack();
     void Reload();
-    bool DamageEnemy(size_t index, int damage);
+    bool DamageEnemy(size_t index, int damage, bool playerCredit = true);
+    void UpdateNpcs(float deltaSeconds);
     void Update(float deltaSeconds);
 
   private:
     MineLevel &level;
     MineState &state;
     void RespawnPlayer();
-    void MoveEnemy(Enemy &enemy, float deltaSeconds);
+    void MoveEnemy(Enemy &enemy, float deltaSeconds, tutorial::Vector2 target, bool playerTarget);
     void UpdateBullets(float deltaSeconds);
     void AdvanceBullet(Bullet &bullet, float movement);
 };

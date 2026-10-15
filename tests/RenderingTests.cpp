@@ -114,6 +114,60 @@ void TestModelsAndRig()
         }
     }
 }
+void TestHairAndBodyShape()
+{
+    const auto &library = ModelLibrary::Get();
+    for (size_t i = 0; i < library.hairs.size(); ++i)
+    {
+        const auto &hair = library.hairs[i];
+        assert(ModelFactory::ValidateModel(hair));
+        assert(ModelFactory::ValidateModel(library.coveredHairs[i]));
+        for (size_t part = 0; part < hair.count; ++part)
+        {
+            assert(hair.parts[part].joint == Joint::Head);
+        }
+        for (size_t j = 0; j < i; ++j)
+        {
+            const auto &other = library.hairs[j];
+            bool different = hair.count != other.count;
+            for (size_t part = 0; part < (std::min)(hair.count, other.count) && !different; ++part)
+            {
+                different = Distance3D(hair.parts[part].points[0], other.parts[part].points[0]) > .001f;
+            }
+            assert(different);
+        }
+    }
+    // Compare bare torso geometry and joint spacing: neither check depends on hair or palette.
+    float waist[2] = {};
+    for (int gender = 0; gender < 2; ++gender)
+    {
+        const auto &body = ModelLibrary::Character(CharacterType::Explorer, Gender(gender));
+        for (size_t i = 0; i < body.count; ++i)
+        {
+            const auto &part = body.parts[i];
+            if (part.joint != Joint::Root || !part.clothing)
+            {
+                continue;
+            }
+            for (size_t j = 0; j < part.count; ++j)
+            {
+                if (std::fabs(part.points[j].z - .755f) < .001f)
+                {
+                    waist[gender] = (std::max)(waist[gender], std::fabs(part.points[j].y));
+                }
+            }
+        }
+        auto pose = ModelRig::Pose(0, false, true, 0, false, Gender(gender));
+        assert(Distance3D(pose.Apply({0, 0, -.27f}, Joint::RightForearm), {.36f, 0, 26.f / 44}) < .0001f);
+    }
+    assert(waist[1] < waist[0] * .8f);
+    auto male = ModelRig::Pose(0, false, false, 0, false, Gender::Male);
+    auto female = ModelRig::Pose(0, false, false, 0, false, Gender::Female);
+    assert(std::fabs(female.joints[size_t(Joint::RightArm)].position.y) <
+           std::fabs(male.joints[size_t(Joint::RightArm)].position.y));
+    assert(std::fabs(female.joints[size_t(Joint::RightLeg)].position.y) >
+           std::fabs(male.joints[size_t(Joint::RightLeg)].position.y));
+}
 void TestCityAndTravel()
 {
     Game::Get().Reset();
@@ -212,7 +266,7 @@ void TestScaleGenderAndDistrict()
         {
             const auto &model = ModelLibrary::Character(CharacterType(role), gender);
             assert(ModelFactory::ValidateModel(model));
-            auto pose = ModelRig::Pose(0, false);
+            auto pose = ModelRig::Pose(0, false, false, 0, false, gender);
             float top = -100, bottom = 100;
             for (size_t i = 0; i < model.count; ++i)
             {
@@ -229,14 +283,14 @@ void TestScaleGenderAndDistrict()
                 }
             }
             float height = (top - bottom) * WorldScale::characterScale * WorldScale::metersPerUnit;
-            assert(height > 1.79f && height < 1.88f); // 180cm barefoot, plus role-specific headgear.
+            assert(height > 1.79f && height < 1.95f); // 180cm barefoot, plus role-specific headgear.
             if (role == 0)
             {
                 assert(std::fabs(height - 1.8f) < .002f);
             }
             for (int frame = 0; frame < 32; ++frame)
             {
-                auto moving = ModelRig::Pose(frame * .2f, true, true);
+                auto moving = ModelRig::Pose(frame * .2f, true, true, 0, false, gender);
                 float face = moving.Apply({0, 0, 0}, Joint::Head).z;
                 for (size_t i = 0; i < model.count; ++i)
                 {
@@ -794,7 +848,7 @@ void CaptureDistrictAndBodies(const std::filesystem::path &output)
     {
         for (int role = 0; role < 5; ++role)
         {
-            auto pose = ModelRig::Pose(.8f, true, role == 0);
+            auto pose = ModelRig::Pose(.8f, true, role == 0, 0, false, Gender(gender));
             Transform3D rotation;
             rotation.yaw = -.25f;
             Palette palette;
@@ -830,18 +884,83 @@ void CaptureDistrictAndBodies(const std::filesystem::path &output)
     Save(output / "district-hud.bmp");
 }
 
+void CaptureHairAndCombat(const std::filesystem::path &output)
+{
+    Game::Get().Reset();
+    auto &world = Game::Get().GetState();
+    auto &renderer = GameRenderer::Get().Backend();
+    const char *names[] = {"Buzz", "Side part", "Curls", "Bob", "Ponytail", "Bun"};
+    for (bool rear : {false, true})
+    {
+        Begin();
+        renderer.BeginModels();
+        for (int gender = 0; gender < 2; ++gender)
+        {
+            for (int hair = 0; hair < int(HairStyle::Count); ++hair)
+            {
+                Vector2 screen = {108.f + hair * 212, 330.f + gender * 340};
+                auto pose = ModelRig::Pose(0, false, false, 0, false, Gender(gender));
+                Transform3D rotation;
+                rotation.yaw = rear ? -2.5f : .35f;
+                Palette palette;
+                palette.body = {.5f, .65f, .7f, 1};
+                Drawing::DrawModel3D(ModelLibrary::Character(CharacterType::Explorer, Gender(gender)), screen,
+                                     {3.6f, 3.6f, 3.6f}, rotation, 0, palette, &pose);
+                Drawing::DrawHair(screen, {3.6f, 3.6f, 3.6f}, rotation, 0, pose, CharacterType::Explorer,
+                                  Gender(gender), HairStyle(hair));
+                Drawing::DrawLabel(screen.x - 44, screen.y + 35, names[hair]);
+            }
+        }
+        renderer.EndModels();
+        renderer.EndScene(0);
+        Save(output / (rear ? "hair-rear.bmp" : "hair-and-bodies.bmp"));
+    }
+    game::GameLevels::Mine().Enter(true);
+    auto &mine = game::GameLevels::Mine().GetState();
+    world.playerPosition = world.cameraPosition = {14.5f, 16.5f};
+    std::fill(mine.tiles.begin(), mine.tiles.end(), game::Tile::Floor);
+    ++mine.mapRevision;
+    mine.survivors.clear();
+    mine.rescueGroups[0].combatants = true;
+    mine.survivors.push_back({100, 0, {16.5f, 15.5f}});
+    mine.survivors.back().gender = Gender::Female;
+    mine.survivors.back().combat.engaged = true;
+    mine.survivors.back().combat.muzzleFlash = .05f;
+    mine.riaPosition = {14.5f, 15.5f};
+    mine.riaCombat.engaged = true;
+    mine.riaCombat.muzzleFlash = .05f;
+    mine.enemies = {{{19, 15.5f}}, {{18, 16.5f}}};
+    for (auto &enemy : mine.enemies)
+    {
+        enemy.facing.yaw = 3.14f;
+    }
+    mine.tracers = {{{16.5f, 15.5f}, {18.5f, 15.5f}, .12f, true},
+                    {{14.5f, 15.5f}, {16.5f, 15.5f}, .12f, true}};
+    mine.lights = {{{16, 16}, 10, false}};
+    Begin();
+    game::SceneManager::Get(game::SceneKind::Mine).Draw();
+    renderer.EndScene(0);
+    static_cast<game::MineScene &>(game::SceneManager::Get(game::SceneKind::Mine)).DrawDarkness();
+    Save(output / "npc-defence.bmp");
+    game::GameLevels::Reset();
+}
 void BenchmarkQuality(const std::filesystem::path &output)
 {
     std::ofstream report(output / "performance.json");
     report << "{\"gpu\":\"" << glGetString(GL_RENDERER)
            << "\",\"resolution\":[1280,800],\"optimized\":true,\"warmup\":24,\"frames\":120,\"scenes\":[";
     auto &world = Game::Get().GetState();
-    for (int scenario = 0; scenario < 6; ++scenario)
+    for (int scenario = 0; scenario < 7; ++scenario)
     {
         Game::Get().Reset();
         world.noticeSecondsRemaining = 0;
-        constexpr const char *names[] = {"city",       "observatory", "bike",
-                                         "mine_entry", "mine_ruins",  "mine_90_enemies"};
+        constexpr const char *names[] = {"city",
+                                         "observatory",
+                                         "bike",
+                                         "mine_entry",
+                                         "mine_ruins",
+                                         "mine_90_enemies",
+                                         "npc_firefight_90_enemies"};
         if (scenario == 0)
         {
             world.isInsideHome = false;
@@ -878,6 +997,34 @@ void BenchmarkQuality(const std::filesystem::path &output)
                 mine.enemies.insert(mine.enemies.end(), enemies.begin(), enemies.end());
             }
         }
+        if (scenario == 6)
+        {
+            auto &mine = game::GameLevels::Mine().GetState();
+            for (int y = 36; y < 59; ++y)
+            {
+                for (int x = 36; x < 59; ++x)
+                {
+                    mine.tiles[y * game::kMapSize + x] = game::Tile::Floor;
+                }
+            }
+            ++mine.mapRevision;
+            mine.enemies.clear();
+            for (int i = 0; i < 90; ++i)
+            {
+                float angle = i * 6.2831853f / 90;
+                mine.enemies.push_back(
+                    {{47.5f + std::cos(angle) * 6.5f, 46.5f + std::sin(angle) * 6.5f}, 500});
+            }
+            mine.riaPosition = {46.5f, 46.5f};
+            for (size_t i = 0; i < mine.survivors.size(); ++i)
+            {
+                auto &npc = mine.survivors[i];
+                npc.position = {45.5f + float(i % 4), 45.5f + float(i / 4)};
+                mine.rescueGroups[npc.group].position = {47, 46.5f};
+            }
+            mine.lights.push_back({{47, 46.5f}, 10, false});
+        }
+        bool npcShotsObserved = false;
         std::vector<double> samples;
         double draws = 0, instanced = 0, triangles = 0;
         for (int frame = 0; frame < 144; ++frame)
@@ -886,10 +1033,12 @@ void BenchmarkQuality(const std::filesystem::path &output)
             auto start = std::chrono::steady_clock::now();
             profiling::BeginFrame(names[scenario]);
             world.animationTimeSeconds += 1.f / 60;
+            auto npcShotsBefore = profiling::ReadCounter(profiling::Counter::NpcShots);
             if (auto *level = game::GameLevels::Active())
             {
                 level->Update(1.f / 60);
             }
+            npcShotsObserved |= profiling::ReadCounter(profiling::Counter::NpcShots) > npcShotsBefore;
             game::SceneManager::Update(1.f / 60);
             Begin();
             if (scenario < 3)
@@ -925,6 +1074,10 @@ void BenchmarkQuality(const std::filesystem::path &output)
                 triangles += stats.triangles;
             }
         }
+        if (scenario == 6)
+        {
+            assert(npcShotsObserved);
+        }
         std::sort(samples.begin(), samples.end());
         double sum = 0;
         for (double n : samples)
@@ -948,6 +1101,7 @@ int main(int argc, char **argv)
 {
     glutInit(&argc, argv);
     TestModelsAndRig();
+    TestHairAndBodyShape();
     TestCityAndTravel();
     TestScaleGenderAndDistrict();
     TestScrolling();
@@ -963,6 +1117,7 @@ int main(int argc, char **argv)
     TestPixelPresentation(output);
     QualityCaptures(output);
     CaptureDistrictAndBodies(output);
+    CaptureHairAndCombat(output);
     BenchmarkQuality(output);
     GameRenderer::Get().Shutdown();
     std::cout

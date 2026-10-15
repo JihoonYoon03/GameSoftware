@@ -28,6 +28,16 @@ GameState &Game::GetState()
 {
     return state;
 }
+Vector2 WorldCamera::ToViewport(Vector2 p)
+{
+    return {kCanvasWidth * .5f + (p.x - kCanvasWidth * .5f) * zoom,
+            kCanvasHeight * .57f + (p.y - kCanvasHeight * .57f) * zoom};
+}
+Vector2 WorldCamera::FromViewport(Vector2 p)
+{
+    return {kCanvasWidth * .5f + (p.x - kCanvasWidth * .5f) / zoom,
+            kCanvasHeight * .57f + (p.y - kCanvasHeight * .57f) / zoom};
+}
 void MovementFacing::Update(Vector2 from, Vector2 to)
 {
     const float dx = to.x - from.x, dy = to.y - from.y;
@@ -221,6 +231,7 @@ void Game::Reset()
             static_cast<models::CharacterType>(i % static_cast<size_t>(models::CharacterType::Count));
         resident.coat = buildingColors[(i / 5 + i) % 5];
         resident.gender = i % 2 ? models::Gender::Female : models::Gender::Male;
+        resident.hair = models::HairStyle(i % size_t(models::HairStyle::Count));
     }
     ShowNotice("리아 / 좋은 아침. 집 단말이 또 깜빡이네. 확인하고 밖에서 만나자.");
 }

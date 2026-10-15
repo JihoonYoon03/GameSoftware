@@ -309,7 +309,8 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                                    "주민", resident.dialogue));
     }
     auto mineNpc = [&](const std::string &id, const char *name, const char *role, tutorial::Vector2 position,
-                       const char *activity, const char *label, size_t remaining, bool following, int group) {
+                       const char *activity, const char *label, size_t remaining, bool following, int group,
+                       const game::NpcCombatState &combat) {
         JsonObject item;
         item.Text("id", id);
         item.Text("region_id", "mine");
@@ -317,13 +318,20 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         item.Text("role", role);
         item.Text("personality", following ? "실증적 · 기록 우선" : "구조 요청 중");
         item.Text("behavior_pattern", following ? "벽을 우회하며 플레이어 동행" : "구조 확인 후 귀환로 보행");
-        item.Text("activity", activity);
-        item.Text("activity_label", label);
+        item.Text("activity", combat.health <= 0 ? "downed"
+                              : combat.evading   ? "evading"
+                              : combat.engaged   ? "defending"
+                                                 : activity);
+        item.Text("activity_label", combat.health <= 0 ? "응급 처치 대기"
+                                    : combat.evading   ? "회피"
+                                    : combat.engaged   ? "자체 방어"
+                                                       : label);
         item.Bool("simulation_active", simulating);
         item.Bool("following", following);
-        item.Text("life_state", "alive");
-        item.Raw("health", "null");
-        item.Raw("max_health", "null");
+        item.Text("life_state", combat.health <= 0 ? "downed" : "alive");
+        item.Number("health", combat.health);
+        item.Number("max_health", 100);
+        item.Number("magazine_rounds", combat.pistol.GetRounds());
         item.Raw("team_id", "null");
         item.Raw("station_id", "null");
         item.Raw("target_enemy_id", "null");
@@ -340,7 +348,8 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     if (level.active)
     {
         mineNpc("mine/ria", "리아", "동료 · 정비사", level.riaPosition, "following", "동행",
-                level.riaRoute.size() - (std::min)(level.riaRoute.size(), level.riaRouteIndex), true, -1);
+                level.riaRoute.size() - (std::min)(level.riaRoute.size(), level.riaRouteIndex), true, -1,
+                level.riaCombat);
     }
     for (const auto &npc : level.survivors)
     {
@@ -348,7 +357,8 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         mineNpc("mine/survivor/" + std::to_string(npc.id), guard ? "고립 전투원" : "광부",
                 guard ? "전투원" : "광부", npc.position, npc.evacuating ? "evacuating" : "distress",
                 npc.evacuating ? "헤일로로 철수" : "구조 요청",
-                npc.route.size() - (std::min)(npc.route.size(), npc.routeIndex), false, int(npc.group));
+                npc.route.size() - (std::min)(npc.route.size(), npc.routeIndex), false, int(npc.group),
+                npc.combat);
     }
     result.Raw("npcs", "[" + npcArray + "]");
     result.Raw("workstations", "[]");
@@ -414,7 +424,9 @@ void ModelJson(std::ostream &out, const models::Model &model, const char *catego
         << "\",\"validated\":" << (models::ModelFactory::ValidateModel(model) ? "true" : "false")
         << ",\"parts\":[";
     bool character = std::string(category) == "character";
-    const auto bindPose = models::ModelRig::Pose(0, false);
+    const auto bindPose = models::ModelRig::Pose(
+        0, false, false, 0, false,
+        gender && std::string(gender) == "female" ? models::Gender::Female : models::Gender::Male);
     bool firstPart = true;
     for (size_t i = 0; i < model.count; ++i)
     {

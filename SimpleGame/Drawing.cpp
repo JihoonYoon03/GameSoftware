@@ -290,7 +290,8 @@ void Drawing::DrawModel3D(const models::Model &model, Vector2 screen, models::Po
     renderqueue::Depth(false);
 }
 void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models::CharacterType type,
-                         bool walking, float facingYaw, models::Gender gender)
+                         bool walking, float facingYaw, models::Gender gender, models::HairStyle hair,
+                         bool npcArmed, float npcFlash, bool downed)
 {
     auto &world = Game::Get().GetState();
     Vector2 screen = WorldToScreen(position.x, position.y);
@@ -299,29 +300,40 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
     {
         DrawEllipse(screen.x, screen.y, 16, 6, {.25f, .95f, .9f, .17f});
     }
-    bool armed = isPlayer && game::GameLevels::Mine().IsActive();
+    bool armed = (isPlayer && game::GameLevels::Mine().IsActive()) || npcArmed;
     float yaw = isPlayer ? world.facingYaw : facingYaw;
     if (isPlayer)
     {
         gender = world.playerGender;
+        hair = world.playerHair;
     }
-    if (armed)
+    if (armed && isPlayer)
     {
         auto dir = game::GameLevels::Mine().GetAimDirection(game::GameLevels::Mine().GetAimAngle());
         yaw = std::atan2(dir.y, dir.x);
     }
+    float flash = isPlayer ? game::GameLevels::Mine().GetState().muzzleFlash : npcFlash;
     auto pose = models::ModelRig::Pose(world.animationTimeSeconds * 10,
                                        (isPlayer && world.movementAmount > 0) || walking, armed,
-                                       armed ? game::GameLevels::Mine().GetState().muzzleFlash / .055f : 0);
+                                       armed ? flash / .055f : 0, false, gender);
     models::Palette palette;
     palette.body = {coat.r, coat.g, coat.b, coat.a};
     models::Transform3D rotation;
     rotation.yaw = yaw;
+    if (downed)
+    {
+        rotation.pitch = -1.35f;
+        rotation.position.z = .12f;
+    }
     DrawModel3D(models::ModelLibrary::Character(type, gender), screen,
                 {models::WorldScale::characterScale, models::WorldScale::characterScale,
                  models::WorldScale::characterScale},
                 rotation, (position.x + position.y) * 36, palette, &pose);
-    if (armed && game::GameLevels::Mine().GetState().muzzleFlash > 0)
+    DrawHair(screen,
+             {models::WorldScale::characterScale, models::WorldScale::characterScale,
+              models::WorldScale::characterScale},
+             rotation, (position.x + position.y) * 36, pose, type, gender, hair);
+    if (armed && flash > 0)
     {
         auto muzzle = models::ModelRig::Muzzle(pose);
         float bodyScale = models::WorldScale::characterScale;
@@ -329,6 +341,27 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
         DrawGlow(WorldToScreen(position.x + muzzle.x, position.y + muzzle.y, muzzle.z * 44), 19,
                  {1, .85f, .4f});
     }
+}
+void Drawing::DrawHair(Vector2 screen, models::Point scale, const models::Transform3D &rotation, float depth,
+                       const models::CharacterPose &pose, models::CharacterType type, models::Gender gender,
+                       models::HairStyle hair)
+{
+    if (type == models::CharacterType::Guard)
+    {
+        return; // Sealed helmet.
+    }
+    bool covered = type == models::CharacterType::Engineer || type == models::CharacterType::Medic;
+    models::Palette palette;
+    static constexpr float colors[][3] = {{.14f, .10f, .08f}, {.22f, .13f, .085f}, {.11f, .08f, .065f},
+                                          {.34f, .18f, .10f}, {.13f, .09f, .075f}, {.23f, .16f, .12f}};
+    const auto &color = colors[size_t(hair)];
+    palette.body = {color[0], color[1], color[2], 1};
+    if (gender == models::Gender::Female)
+    {
+        scale.x *= .94f;
+        scale.y *= .91f;
+    }
+    DrawModel3D(models::ModelLibrary::Hair(hair, covered), screen, scale, rotation, depth, palette, &pose);
 }
 void Drawing::DrawCharacterAppearance(Vector2 screen, ColorRGBA coat, models::CharacterType type, int frame,
                                       int direction)
@@ -341,6 +374,7 @@ void Drawing::DrawCharacterAppearance(Vector2 screen, ColorRGBA coat, models::Ch
     rotation.yaw = yaw[(std::max)(0, (std::min)(3, direction))];
     DrawModel3D(models::ModelLibrary::Get().characters.at(size_t(type)), screen, {1, 1, 1}, rotation, 0,
                 palette, &pose);
+    DrawHair(screen, {1, 1, 1}, rotation, 0, pose, type, models::Gender::Male, models::HairStyle::SidePart);
 }
 namespace
 {
@@ -460,7 +494,8 @@ void Drawing::DrawTravelBike(Vector2 screen, float yaw, float throttle)
     constexpr float scale = 1.65f;
     VehicleEffects(vehicle, screen, scale, rotation, palette, throttle, (screen.y - 485) * 2);
     DrawModel3D(vehicle.body, screen, {scale, scale, scale}, rotation, (screen.y - 485) * 2, palette);
-    auto pose = models::ModelRig::Pose(0, false, false, 0, true);
+    const auto &world = Game::Get().GetState();
+    auto pose = models::ModelRig::Pose(0, false, false, 0, true, world.playerGender);
     models::Palette clothing;
     clothing.body = {.55f, .68f, .72f, 1};
     // Seat, torso, limbs and hands are transformed with the same bike attitude.
@@ -473,6 +508,9 @@ void Drawing::DrawTravelBike(Vector2 screen, float yaw, float throttle)
         models::ModelLibrary::Character(models::CharacterType::Explorer, Game::Get().GetState().playerGender),
         screen, {scale * bodyScale, scale * bodyScale, scale * bodyScale}, riderRotation,
         (screen.y - 485) * 2, clothing, &pose);
+    DrawHair(screen, {scale * bodyScale, scale * bodyScale, scale * bodyScale}, riderRotation,
+             (screen.y - 485) * 2, pose, models::CharacterType::Explorer, world.playerGender,
+             world.playerHair);
 }
 void Drawing::DrawBuilding(Building building)
 {

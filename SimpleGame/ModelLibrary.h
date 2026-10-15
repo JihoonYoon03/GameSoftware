@@ -32,6 +32,16 @@ enum class Gender : std::uint32_t
     Male,
     Female
 };
+enum class HairStyle : std::uint32_t
+{
+    Buzz,
+    SidePart,
+    Curls,
+    Bob,
+    Ponytail,
+    Bun,
+    Count
+};
 // ============================================================================
 // WorldScale — physical scale shared by models, animation and gameplay
 // ============================================================================
@@ -40,7 +50,7 @@ struct WorldScale
     static constexpr float metersPerUnit = 2;
     static constexpr float pixelsPerMeter = 22;
     static constexpr float humanHeightMeters = 1.8f;
-    static constexpr float characterScale = humanHeightMeters / (metersPerUnit * 1.295f);
+    static constexpr float characterScale = humanHeightMeters / (metersPerUnit * 1.26f);
     static constexpr float aimHeightPixels = 26 * characterScale;
 };
 enum class BuildingType : std::uint32_t
@@ -123,7 +133,7 @@ class ModelRig
 {
   public:
     static CharacterPose Pose(float phase, bool walking, bool armed = false, float recoil = 0,
-                              bool riding = false);
+                              bool riding = false, Gender gender = Gender::Male);
     static Point Muzzle(const CharacterPose &pose);
 };
 struct Part
@@ -171,6 +181,8 @@ struct Library
     std::array<VehicleModel, static_cast<size_t>(VehicleType::Count)> vehicles;
     std::array<Model, static_cast<size_t>(CharacterType::Count)> characters;
     std::array<Model, static_cast<size_t>(CharacterType::Count)> femaleCharacters;
+    std::array<Model, static_cast<size_t>(HairStyle::Count)> hairs;
+    std::array<Model, static_cast<size_t>(HairStyle::Count)> coveredHairs;
     std::array<Model, static_cast<size_t>(BuildingType::Count)> buildings;
 };
 
@@ -180,6 +192,7 @@ class ModelLibrary
   public:
     static const Library &Get();
     static const Model &Character(CharacterType type, Gender gender);
+    static const Model &Hair(HairStyle style, bool covered);
 };
 
 // ============================================================================

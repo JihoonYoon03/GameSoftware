@@ -13,6 +13,31 @@
 namespace game
 {
 using namespace tutorial;
+namespace
+{
+class WorldView
+{
+  public:
+    WorldView()
+    {
+        renderqueue::Flush();
+        const auto first = WorldCamera::FromViewport({0, 0}),
+                   last = WorldCamera::FromViewport({float(kCanvasWidth), float(kCanvasHeight)});
+        glMatrixMode(GL_PROJECTION);
+        glPushMatrix();
+        glLoadIdentity();
+        glOrtho(first.x, last.x, last.y, first.y, -8192, 8192);
+        glMatrixMode(GL_MODELVIEW);
+    }
+    ~WorldView()
+    {
+        renderqueue::Flush();
+        glMatrixMode(GL_PROJECTION);
+        glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
+    }
+};
+} // namespace
 
 // ============================================================================
 // Scene — Actor placement
@@ -85,8 +110,10 @@ void Scene::DrawActors()
     EndPlacement();
     Vector2 origin = Drawing::WorldToScreen(0, 0);
     auto &graph = GetGraph();
-    const auto &actors =
-        graph.CollectVisible({-origin.x, -origin.y, kCanvasWidth - origin.x, kCanvasHeight - origin.y});
+    const auto &actors = graph.CollectVisible(
+        {WorldCamera::FromViewport({0, 0}).x - origin.x, WorldCamera::FromViewport({0, 0}).y - origin.y,
+         WorldCamera::FromViewport({float(kCanvasWidth), float(kCanvasHeight)}).x - origin.x,
+         WorldCamera::FromViewport({float(kCanvasWidth), float(kCanvasHeight)}).y - origin.y});
     auto &renderer = GameRenderer::Get().Backend();
     renderer.BeginModels();
     for (const game::Actor *actor : actors)
@@ -102,6 +129,7 @@ void Scene::DrawActors()
 // ============================================================================
 void InteriorScene::Draw()
 {
+    WorldView view;
     auto &scene = *this;
     {
         profiling::Scope placementTimer(profiling::Timer::ScenePlacement);
@@ -393,9 +421,10 @@ void CityScene::DrawDepthSortedObjects(game::Scene &scene)
             if (item.kind == SceneObjectKind::Resident)
             {
                 const auto &resident = Game::Get().GetState().residents[item.index];
-                Drawing::DrawPerson(
-                    resident.position, ColorRGBA(resident.coat[0], resident.coat[1], resident.coat[2]), false,
-                    resident.type, resident.facing.walking, resident.facing.yaw, resident.gender);
+                Drawing::DrawPerson(resident.position,
+                                    ColorRGBA(resident.coat[0], resident.coat[1], resident.coat[2]), false,
+                                    resident.type, resident.facing.walking, resident.facing.yaw,
+                                    resident.gender, resident.hair);
                 if (Game::Distance(Game::Get().GetState().playerPosition, resident.position) < 2.2f)
                 {
                     Vector2 label = Drawing::WorldToScreen(resident.position.x, resident.position.y, 62);
@@ -414,12 +443,13 @@ void CityScene::DrawDepthSortedObjects(game::Scene &scene)
             {
                 Drawing::DrawPerson(kLiaPosition, ColorRGBA(.89f, .52f, .28f), false,
                                     models::CharacterType::Researcher, false, .78539816f,
-                                    models::Gender::Female);
+                                    models::Gender::Female, models::HairStyle::Ponytail);
             }
             if (item.kind == SceneObjectKind::Mara)
             {
                 Drawing::DrawPerson(kMaraPosition, ColorRGBA(.48f, .4f, .64f), false,
-                                    models::CharacterType::Medic, false, .78539816f, models::Gender::Female);
+                                    models::CharacterType::Medic, false, .78539816f, models::Gender::Female,
+                                    models::HairStyle::Bun);
             }
         });
     };
@@ -515,6 +545,7 @@ void CityScene::DrawQuestMarkers(game::Scene &scene)
 
 void CityScene::Draw()
 {
+    WorldView view;
     auto &scene = *this;
     {
         profiling::Scope placementTimer(profiling::Timer::ScenePlacement);
@@ -551,6 +582,7 @@ void CityScene::Draw()
 // ============================================================================
 void ObservatoryScene::Draw()
 {
+    WorldView view;
     auto &scene = *this;
     {
         profiling::Scope timer(profiling::Timer::ScenePlacement);
@@ -623,13 +655,13 @@ void ObservatoryScene::Draw()
                                       ColorRGBA(.45f, .7f, .76f), 3);
                 }
             });
-        scene.PlaceWorldActor("lia", kObservatoryLiaPosition.x, kObservatoryLiaPosition.y,
-                              WorldBounds(kObservatoryLiaPosition.x, kObservatoryLiaPosition.y, 0, 0, 95), 3,
-                              -2.5f, [this]() {
-                                  Drawing::DrawPerson(kObservatoryLiaPosition, ColorRGBA(.89f, .52f, .28f),
-                                                      false, models::CharacterType::Engineer, false,
-                                                      .78539816f, models::Gender::Female);
-                              });
+        scene.PlaceWorldActor(
+            "lia", kObservatoryLiaPosition.x, kObservatoryLiaPosition.y,
+            WorldBounds(kObservatoryLiaPosition.x, kObservatoryLiaPosition.y, 0, 0, 95), 3, -2.5f, [this]() {
+                Drawing::DrawPerson(kObservatoryLiaPosition, ColorRGBA(.89f, .52f, .28f), false,
+                                    models::CharacterType::Engineer, false, .78539816f,
+                                    models::Gender::Female, models::HairStyle::Ponytail);
+            });
         scene.PlaceWorldActor(
             "player", Game::Get().GetState().playerPosition.x, Game::Get().GetState().playerPosition.y,
             WorldBounds(Game::Get().GetState().playerPosition.x, Game::Get().GetState().playerPosition.y, 0,
@@ -671,7 +703,8 @@ void ObservatoryScene::Draw()
 // ============================================================================
 void MineScene::PlacePerson(game::Scene &scene, const std::string &id, Vector2 position, ColorRGBA coat,
                             models::CharacterType type, bool walking, const std::string &label,
-                            float facingYaw, models::Gender gender)
+                            float facingYaw, models::Gender gender, models::HairStyle hair,
+                            const NpcCombatState &combat)
 {
     if (GameLevels::Mine().Lighting().At(position) < .025f)
     {
@@ -679,12 +712,24 @@ void MineScene::PlacePerson(game::Scene &scene, const std::string &id, Vector2 p
     }
     scene.PlaceWorldActor(
         id, position.x, position.y, WorldBounds(position.x, position.y, 0, 0, 85, 100), 1,
-        position.x + position.y, [this, position, coat, type, walking, label, facingYaw, gender]() {
-            Drawing::DrawPerson(position, coat, false, type, walking, facingYaw, gender);
+        position.x + position.y,
+        [this, position, coat, type, walking, label, facingYaw, gender, hair, combat, id]() {
+            bool downed = combat.health <= 0;
+            Drawing::DrawPerson(position, coat, false, type, walking && !downed,
+                                combat.engaged ? combat.aimYaw : facingYaw, gender, hair,
+                                combat.engaged && !downed &&
+                                    (type == models::CharacterType::Guard || id == "ria"),
+                                combat.muzzleFlash, downed);
             if (Game::Distance(position, Game::Get().GetState().playerPosition) < 3 && !label.empty())
             {
                 auto screen = Drawing::WorldToScreen(position.x, position.y, 66);
-                Drawing::DrawLabel(screen.x - 25, screen.y, label, coat);
+                Drawing::DrawLabel(screen.x - 25, screen.y, downed ? "E 응급 처치" : label, coat);
+                if (combat.health < 100)
+                {
+                    Drawing::DrawRectangle(screen.x - 18, screen.y + 8, 36, 3, {.12f, .18f, .2f});
+                    Drawing::DrawRectangle(screen.x - 18, screen.y + 8, 36.f * combat.health / 100, 3,
+                                           {.25f, .85f, .65f});
+                }
             }
         });
 }
@@ -719,6 +764,7 @@ void MineScene::PlaceClue(game::Scene &scene, const char *id, Vector2 position, 
 
 void MineScene::Draw()
 {
+    WorldView view;
     auto &scene = *this;
     if (cachedRevision != GameLevels::Mine().GetState().mapRevision)
     {
@@ -850,8 +896,7 @@ void MineScene::Draw()
                 auto screen = Drawing::WorldToScreen(enemy.position.x, enemy.position.y);
                 Drawing::DrawSoftShadow(screen, 22, 8, .6f);
                 models::Transform3D rotation;
-                auto target = Game::Get().GetState().playerPosition;
-                rotation.yaw = std::atan2(target.y - enemy.position.y, target.x - enemy.position.x);
+                rotation.yaw = enemy.facing.yaw;
                 Drawing::DrawModel3D(models::ModelLibrary::Get().drone, screen, {1, 1, 1}, rotation,
                                      (enemy.position.x + enemy.position.y) * 36,
                                      {{.35f, .27f, .2f, 1}, {.75f, .35f, .2f, 1}, {1, .2f, .08f, 1}});
@@ -890,11 +935,12 @@ void MineScene::Draw()
                     npc.evacuating ? "헤일로로 철수 중"
                     : guard        ? "고립 전투원 / E 구조"
                                    : "광부 / E 구조",
-                    npc.facing.yaw, npc.gender);
+                    npc.facing.yaw, npc.gender, npc.hair, npc.combat);
     }
     PlacePerson(scene, "ria", GameLevels::Mine().GetState().riaPosition, {.95f, .55f, .25f},
                 models::CharacterType::Engineer, GameLevels::Mine().GetState().riaFacing.walking, "리아",
-                GameLevels::Mine().GetState().riaFacing.yaw, models::Gender::Female);
+                GameLevels::Mine().GetState().riaFacing.yaw, models::Gender::Female,
+                models::HairStyle::Ponytail, GameLevels::Mine().GetState().riaCombat);
     auto player = Game::Get().GetState().playerPosition;
     scene.PlaceWorldActor("player", player.x, player.y, WorldBounds(player.x, player.y, 0, 0, 85), 1,
                           player.x + player.y,
@@ -903,10 +949,13 @@ void MineScene::Draw()
     // Projectile segments stop at the collision point and are masked with the rest of the world.
     for (const auto &tracer : GameLevels::Mine().GetState().tracers)
     {
-        auto start = Drawing::WorldToScreen(tracer.start.x, tracer.start.y, 26);
-        auto end = Drawing::WorldToScreen(tracer.end.x, tracer.end.y, 26);
+        auto start =
+            Drawing::WorldToScreen(tracer.start.x, tracer.start.y, models::WorldScale::aimHeightPixels);
+        auto end = Drawing::WorldToScreen(tracer.end.x, tracer.end.y, models::WorldScale::aimHeightPixels);
         float fade = tracer.remaining / .12f;
-        Drawing::DrawLine(start, end, {1, .65f, .2f, fade * .45f}, 7);
+        Drawing::DrawLine(
+            start, end,
+            tracer.npcOwned ? ColorRGBA(.2f, .8f, 1, fade * .45f) : ColorRGBA(1, .65f, .2f, fade * .45f), 7);
         Drawing::DrawLine(start, end, {1, .96f, .7f, fade}, 2);
         Drawing::DrawGlow(end, 10, {1, .68f, .3f, fade});
     }
@@ -1116,8 +1165,9 @@ void MineScene::DrawDarkness()
     {
         for (int x = 0; x < columns; ++x)
         {
-            float sx = (x * step - origin.x) / 36;
-            float sy = (y * step - origin.y) / 18;
+            auto screen = WorldCamera::FromViewport({float(x * step), float(y * step)});
+            float sx = (screen.x - origin.x) / 36;
+            float sy = (screen.y - origin.y) / 18;
             tutorial::Vector2 world = {(sx + sy) * .5f, (sy - sx) * .5f};
             alpha[y * columns + x] = 1 - GameLevels::Mine().Lighting().At(world);
         }

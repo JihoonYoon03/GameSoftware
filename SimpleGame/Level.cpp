@@ -307,6 +307,8 @@ void MineMap::Generate(std::uint32_t seed)
         {
             state.survivors.push_back({id++, i, {center.x + (member - 1) * .6f, center.y + .5f}});
             state.survivors.back().gender = (member + i) % 2 ? models::Gender::Female : models::Gender::Male;
+            state.survivors.back().hair =
+                models::HairStyle((member + i * 3) % size_t(models::HairStyle::Count));
         }
     }
     std::shuffle(state.reachableCells.begin(), state.reachableCells.end(), random);
@@ -332,6 +334,7 @@ void MineMap::Generate(std::uint32_t seed)
     state.scannerContacts.clear();
     state.riaPosition = {9.5f, 10.5f};
     state.riaFacing = {};
+    state.riaCombat = {};
     state.riaRoute.clear();
     state.riaRouteIndex = 0;
     UpdateNavigation();
@@ -359,22 +362,21 @@ void MineCombat::RespawnPlayer()
     tutorial::Game::Get().ShowNotice("리아 / 입구로 구조했어. 조사 기록·구조 성과·경험치는 그대로야.");
 }
 
-void MineCombat::MoveEnemy(Enemy &enemy, float deltaSeconds)
+void MineCombat::MoveEnemy(Enemy &enemy, float deltaSeconds, tutorial::Vector2 target, bool playerTarget)
 {
-    auto &world = tutorial::Game::Get().GetState();
     int x = int(std::floor(enemy.position.x)), y = int(std::floor(enemy.position.y));
     if (!level.Map().IsWalkable(x, y) || state.navigationDistances.empty())
     {
         return;
     }
     int best = state.navigationDistances[y * kMapSize + x];
-    if (best < 0 || best > 19 ||
-        tutorial::Game::Distance(world.playerPosition, state.entry) < kSafeAreaRadius)
+    if ((playerTarget && (best < 0 || best > 19)) ||
+        tutorial::Game::Distance(target, state.entry) < kSafeAreaRadius)
     {
         return;
     }
-    auto target = world.playerPosition;
-    if (!level.Map().HasLineOfSight(enemy.position, target))
+    auto previous = enemy.position;
+    if (playerTarget && !level.Map().HasLineOfSight(enemy.position, target))
     {
         target = {x + .5f, y + .5f};
         constexpr int directions[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
@@ -415,6 +417,7 @@ void MineCombat::MoveEnemy(Enemy &enemy, float deltaSeconds)
             enemy.position.y = next.y;
         }
     }
+    enemy.facing.Update(previous, enemy.position);
 }
 
 void MineCombat::AdvanceBullet(Bullet &bullet, float movement)
@@ -438,7 +441,7 @@ void MineCombat::AdvanceBullet(Bullet &bullet, float movement)
             if (state.enemies[j].health > 0 &&
                 tutorial::Game::Distance(next, state.enemies[j].position) < .4f)
             {
-                DamageEnemy(j, bullet.damage);
+                DamageEnemy(j, bullet.damage, bullet.playerOwned);
                 bullet.remaining = 0;
                 break;
             }
@@ -451,7 +454,7 @@ void MineCombat::UpdateBullets(float deltaSeconds)
     {
         auto start = bullet.position;
         AdvanceBullet(bullet, (std::min)(bullet.remaining, bullet.speed * deltaSeconds));
-        state.tracers.push_back({start, bullet.position});
+        state.tracers.push_back({start, bullet.position, .12f, !bullet.playerOwned});
     }
     auto &bullets = state.bullets;
     bullets.erase(std::remove_if(bullets.begin(), bullets.end(),
@@ -500,7 +503,7 @@ void MineCombat::Reload()
     }
 }
 
-bool MineCombat::DamageEnemy(size_t index, int damage)
+bool MineCombat::DamageEnemy(size_t index, int damage, bool playerCredit)
 {
     if (index >= state.enemies.size() || damage <= 0 || state.enemies[index].health <= 0)
     {
@@ -513,8 +516,13 @@ bool MineCombat::DamageEnemy(size_t index, int damage)
         return false;
     }
     ++state.totalEnemyDeaths;
-    ++state.kills;
     enemy.respawnSeconds = 15;
+    if (!playerCredit)
+    {
+        profiling::Count(profiling::Counter::NpcEnemyKills);
+        return true; // NPC defence does not grant unattended player rewards.
+    }
+    ++state.kills;
     state.drops.push_back({enemy.position,
                            state.totalEnemyDeaths % 3 == 0 ? ItemKind::RecoveryKit : ItemKind::Salvage,
                            state.nextDropActorId++});
@@ -548,6 +556,108 @@ void MineCombat::Update(float deltaSeconds)
         Attack();
     }
     UpdateBullets(deltaSeconds);
+}
+
+void MineCombat::UpdateNpcs(float deltaSeconds)
+{
+    auto defend = [&](tutorial::Vector2 &position, tutorial::MovementFacing &facing, NpcCombatState &combat,
+                      bool armed, bool evacuating, tutorial::Vector2 anchor) {
+        combat.pistol.Update(deltaSeconds);
+        combat.cooldown = (std::max)(0.f, combat.cooldown - deltaSeconds);
+        combat.hitGrace = (std::max)(0.f, combat.hitGrace - deltaSeconds);
+        combat.muzzleFlash = (std::max)(0.f, combat.muzzleFlash - deltaSeconds);
+        combat.engaged = combat.evading = false;
+        if (combat.health <= 0)
+        {
+            facing.walking = false;
+            combat.downedSeconds -= deltaSeconds;
+            if (combat.downedSeconds <= 0)
+            {
+                combat.health = 50;
+                combat.hitGrace = 3;
+            }
+            return;
+        }
+        profiling::Count(profiling::Counter::NpcDecisions);
+        size_t target = state.enemies.size();
+        float nearest = armed ? 7.f : 3.f;
+        for (size_t i = 0; i < state.enemies.size(); ++i)
+        {
+            const auto &enemy = state.enemies[i];
+            float distance = tutorial::Game::Distance(position, enemy.position);
+            if (enemy.health > 0 && distance < nearest &&
+                level.Map().HasLineOfSight(position, enemy.position))
+            {
+                nearest = distance;
+                target = i;
+            }
+        }
+        if (target == state.enemies.size())
+        {
+            return;
+        }
+        auto threat = state.enemies[target].position;
+        combat.aimYaw = std::atan2(threat.y - position.y, threat.x - position.x);
+        combat.engaged = true;
+        if (armed)
+        {
+            if (combat.pistol.GetRounds() == 0)
+            {
+                combat.pistol.Reload();
+            }
+            if (combat.cooldown > 0 || state.bullets.size() >= 128)
+            {
+                return;
+            }
+            // Weapon spread is measured in projected aim space, just like the player's shots.
+            float aim = std::atan2((threat.x - position.x + threat.y - position.y) * .5f,
+                                   threat.x - position.x - threat.y + position.y);
+            combat::Shot shot;
+            if (!combat.pistol.TryFire(aim, shot))
+            {
+                return;
+            }
+            Bullet bullet = {position, level.GetAimDirection(shot.angle), shot.speed, 7.5f, 10, false};
+            auto muzzle = models::ModelRig::Muzzle(models::ModelRig::Pose(0, false, true, 1));
+            AdvanceBullet(bullet, std::sqrt(muzzle.x * muzzle.x + muzzle.y * muzzle.y) *
+                                      models::WorldScale::characterScale);
+            profiling::Count(profiling::Counter::NpcShots);
+            if (bullet.remaining > 0)
+            {
+                state.bullets.push_back(bullet);
+            }
+            combat.cooldown = .55f;
+            combat.muzzleFlash = .055f;
+        }
+        else
+        {
+            if (nearest < 1.15f && combat.cooldown <= 0)
+            {
+                DamageEnemy(target, 8, false);
+                combat.cooldown = 1.1f;
+            }
+            // Miners back away within their distress-signal area; evacuees keep following the exit route.
+            if (!evacuating && nearest > .01f)
+            {
+                auto previous = position;
+                float step = 1.8f * deltaSeconds;
+                tutorial::Vector2 next = {position.x + (position.x - threat.x) / nearest * step,
+                                          position.y + (position.y - threat.y) / nearest * step};
+                if (!level.Map().IsBlocked(next) && tutorial::Game::Distance(next, anchor) < 3)
+                {
+                    position = next;
+                }
+                facing.Update(previous, position);
+                combat.evading = facing.walking;
+            }
+        }
+    };
+    defend(state.riaPosition, state.riaFacing, state.riaCombat, true, false, state.riaPosition);
+    for (auto &npc : state.survivors)
+    {
+        const auto &group = state.rescueGroups[npc.group];
+        defend(npc.position, npc.facing, npc.combat, group.combatants, npc.evacuating, group.position);
+    }
 }
 
 void MineCombat::UpdateEnemies(float deltaSeconds)
@@ -584,6 +694,12 @@ void MineCombat::UpdateEnemies(float deltaSeconds)
                     std::any_of(state.enemies.begin(), state.enemies.end(), [&](const Enemy &other) {
                         return other.health > 0 && tutorial::Game::Distance(other.position, position) < 1;
                     });
+                occupied = occupied || tutorial::Game::Distance(position, state.riaPosition) < 4 ||
+                           std::any_of(
+                               state.survivors.begin(), state.survivors.end(),
+                               [&](const RescueNpc &npc) {
+                                   return tutorial::Game::Distance(position, npc.position) < 4;
+                               });
                 if (!occupied)
                 {
                     enemy.position = position;
@@ -595,11 +711,64 @@ void MineCombat::UpdateEnemies(float deltaSeconds)
             continue;
         }
         enemy.attackCooldown -= deltaSeconds;
-        MoveEnemy(enemy, deltaSeconds);
-        if (enemy.attackCooldown <= 0 && state.invulnerability <= 0 &&
-            tutorial::Game::Distance(world.playerPosition, state.entry) >= kSafeAreaRadius &&
-            tutorial::Game::Distance(enemy.position, world.playerPosition) < .8f &&
-            level.Map().HasLineOfSight(enemy.position, world.playerPosition))
+        // Select the closest reachable combatant. NPC targets require a clear sight line;
+        // the player can also be reached through the existing navigation field.
+        tutorial::Vector2 target = world.playerPosition;
+        NpcCombatState *victim = nullptr;
+        int x = int(std::floor(enemy.position.x)), y = int(std::floor(enemy.position.y));
+        int navigation =
+            x >= 0 && y >= 0 && x < kMapSize && y < kMapSize && !state.navigationDistances.empty()
+                ? state.navigationDistances[y * kMapSize + x]
+                : -1;
+        bool playerTarget = tutorial::Game::Distance(target, state.entry) >= kSafeAreaRadius &&
+                            navigation >= 0 && navigation <= 19;
+        float nearest = playerTarget ? tutorial::Game::Distance(enemy.position, target) : 1000.f;
+        auto consider = [&](tutorial::Vector2 position, NpcCombatState &combat) {
+            float distance = tutorial::Game::Distance(enemy.position, position);
+            if (combat.health > 0 && distance < 10 && distance < nearest &&
+                tutorial::Game::Distance(position, state.entry) >= kSafeAreaRadius &&
+                level.Map().HasLineOfSight(enemy.position, position))
+            {
+                nearest = distance;
+                target = position;
+                victim = &combat;
+                playerTarget = false;
+            }
+        };
+        consider(state.riaPosition, state.riaCombat);
+        for (auto &npc : state.survivors)
+        {
+            consider(npc.position, npc.combat);
+        }
+        enemy.facing.walking = false;
+        if (!playerTarget && !victim)
+        {
+            continue;
+        }
+        enemy.target = target;
+        MoveEnemy(enemy, deltaSeconds, target, playerTarget);
+        if (enemy.attackCooldown > 0 || tutorial::Game::Distance(enemy.position, target) >= .8f ||
+            !level.Map().HasLineOfSight(enemy.position, target))
+        {
+            continue;
+        }
+        enemy.facing.yaw = std::atan2(target.y - enemy.position.y, target.x - enemy.position.x);
+        if (victim)
+        {
+            if (victim->hitGrace > 0)
+            {
+                continue;
+            }
+            victim->health = (std::max)(0, victim->health - 12);
+            victim->hitGrace = .45f;
+            if (!victim->health)
+            {
+                victim->downedSeconds = 12;
+                victim->engaged = false;
+            }
+            enemy.attackCooldown = 1;
+        }
+        else if (state.invulnerability <= 0)
         {
             state.player.health -= (std::max)(1, 10 - state.player.defense);
             enemy.attackCooldown = 1;
@@ -674,13 +843,28 @@ void MineRescue::Update(float deltaSeconds)
             state.riaRouteIndex = 0;
         }
     }
-    state.riaMovement = WalkRoute(state.riaPosition, state.riaRoute, state.riaRouteIndex, 4.8f * deltaSeconds,
-                                  state.riaFacing);
+    if (state.riaCombat.health > 0)
+    {
+        state.riaMovement = WalkRoute(state.riaPosition, state.riaRoute, state.riaRouteIndex,
+                                      4.8f * deltaSeconds, state.riaFacing);
+    }
+    else
+    {
+        state.riaFacing.walking = false;
+    }
     for (auto &npc : state.survivors)
     {
-        if (!npc.evacuating)
+        if (npc.combat.health <= 0)
         {
             npc.facing.walking = false;
+            continue;
+        }
+        if (!npc.evacuating)
+        {
+            if (!npc.combat.evading)
+            {
+                npc.facing.walking = false;
+            }
             continue;
         }
         npc.walkedDistance +=
@@ -734,6 +918,28 @@ void MineRescue::Scan()
 
 bool MineRescue::TryInteract()
 {
+    auto aid = [&](tutorial::Vector2 position, NpcCombatState &combat) {
+        if (combat.health > 0 || !level.IsNear(position))
+        {
+            return false;
+        }
+        combat.health = 50;
+        combat.downedSeconds = 0;
+        combat.hitGrace = 3;
+        tutorial::Game::Get().ShowNotice("응급 처치 / 다시 움직일 수 있습니다.");
+        return true;
+    };
+    if (aid(state.riaPosition, state.riaCombat))
+    {
+        return true;
+    }
+    for (auto &npc : state.survivors)
+    {
+        if (npc.evacuating && aid(npc.position, npc.combat))
+        {
+            return true;
+        }
+    }
     for (auto &group : state.rescueGroups)
     {
         size_t index = size_t(&group - state.rescueGroups.data());
@@ -748,6 +954,12 @@ bool MineRescue::TryInteract()
             {
                 if (npc.group == index)
                 {
+                    if (npc.combat.health <= 0)
+                    {
+                        npc.combat.health = 50;
+                        npc.combat.downedSeconds = 0;
+                        npc.combat.hitGrace = 3;
+                    }
                     npc.route = level.Map().FindRoute(npc.position, state.entry);
                     npc.routeIndex = 0;
                     npc.evacuating = true;
@@ -839,6 +1051,17 @@ float MineLighting::At(tutorial::Vector2 position)
     {
         light = (std::max)(light, RadialLight(player, position, 3.5f));
     }
+    if (state.riaCombat.muzzleFlash > 0)
+    {
+        light = (std::max)(light, RadialLight(state.riaPosition, position, 3));
+    }
+    for (const auto &npc : state.survivors)
+    {
+        if (npc.combat.muzzleFlash > 0)
+        {
+            light = (std::max)(light, RadialLight(npc.position, position, 3));
+        }
+    }
     return tutorial::Game::Clamp(light, 0, 1);
 }
 
@@ -849,8 +1072,9 @@ tutorial::Vector2 MineLevel::Project(tutorial::Vector2 p, float height)
 {
     auto &world = tutorial::Game::Get().GetState();
     const auto camera = world.cameraPosition;
-    return {tutorial::kCanvasWidth * .5f + (p.x - p.y - camera.x + camera.y) * 36,
-            tutorial::kCanvasHeight * .57f + (p.x + p.y - camera.x - camera.y) * 18 - height};
+    return tutorial::WorldCamera::ToViewport(
+        {tutorial::kCanvasWidth * .5f + (p.x - p.y - camera.x + camera.y) * 36,
+         tutorial::kCanvasHeight * .57f + (p.x + p.y - camera.x - camera.y) * 18 - height});
 }
 
 void MineLevel::ClearInput()
@@ -1129,6 +1353,7 @@ void MineLevel::Update(float deltaSeconds)
 {
     profiling::Scope timer(profiling::Timer::Combat);
     combat.Update(deltaSeconds);
+    combat.UpdateNpcs(deltaSeconds);
     rescue.Update(deltaSeconds);
     combat.UpdateEnemies(deltaSeconds);
 }

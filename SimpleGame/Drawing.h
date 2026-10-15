@@ -33,7 +33,12 @@ class Drawing
     static void DrawGlow(Vector2 position, float size, ColorRGBA color);
     static void DrawPerson(Vector2 worldPosition, ColorRGBA coat, bool isPlayer = false,
                            models::CharacterType type = models::CharacterType::Explorer, bool walking = false,
-                           float facingYaw = .78539816f, models::Gender gender = models::Gender::Male);
+                           float facingYaw = .78539816f, models::Gender gender = models::Gender::Male,
+                           models::HairStyle hair = models::HairStyle::SidePart, bool npcArmed = false,
+                           float npcFlash = 0, bool downed = false);
+    static void DrawHair(Vector2 screen, models::Point scale, const models::Transform3D &rotation,
+                         float depth, const models::CharacterPose &pose, models::CharacterType type,
+                         models::Gender gender, models::HairStyle hair);
     static void DrawCharacterAppearance(Vector2 screenPosition, ColorRGBA coat, models::CharacterType type,
                                         int frame = 0, int direction = 0);
 

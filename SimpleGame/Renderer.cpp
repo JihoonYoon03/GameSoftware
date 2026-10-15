@@ -647,6 +647,7 @@ namespace
 const char *kDarkFragment = R"GLSL(
 #version 120
 uniform sampler2D occupancy,depthImage;
+uniform float viewZoom;
 uniform vec2 origin;
 uniform vec4 lights[24];
 uniform int lightCount;
@@ -668,6 +669,7 @@ float trace(vec2 from,vec2 to) {
 }
 void main() {
  vec2 screen=vec2(uv.x*1280.,(1.-uv.y)*800.);
+ screen=vec2(640.,456.)+(screen-vec2(640.,456.))/viewZoom;
  vec2 s=screen-origin;
  float d=texture2D(depthImage,uv).r;
  float height=d<.9999?max(0.,((.5-d)*16384.-2.*s.y)/(88.+1296./44.)):0.;
@@ -802,6 +804,17 @@ bool Renderer::DrawMineDarkness()
     {
         lights.push_back({world.playerPosition.x, world.playerPosition.y, 3.5f, 1});
     }
+    if (state.riaCombat.muzzleFlash > 0)
+    {
+        lights.push_back({state.riaPosition.x, state.riaPosition.y, 3, 1});
+    }
+    for (const auto &npc : state.survivors)
+    {
+        if (npc.combat.muzzleFlash > 0 && lights.size() < 24)
+        {
+            lights.push_back({npc.position.x, npc.position.y, 3, 1});
+        }
+    }
     for (const auto &tracer : state.tracers)
     {
         if (lights.size() < 24)
@@ -818,6 +831,7 @@ bool Renderer::DrawMineDarkness()
     glDepthMask(GL_FALSE);
     glDisable(GL_BLEND);
     glUseProgram(d.darkProgram);
+    glUniform1f(glGetUniformLocation(d.darkProgram, "viewZoom"), tutorial::WorldCamera::zoom);
     glUniform1i(glGetUniformLocation(d.darkProgram, "occupancy"), 0);
     glUniform1i(glGetUniformLocation(d.darkProgram, "depthImage"), 1);
     glUniform2f(glGetUniformLocation(d.darkProgram, "origin"), origin.x, origin.y);

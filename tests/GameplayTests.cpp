@@ -67,10 +67,10 @@ void TestNpcFacing()
 void AimAt(Vector2 target)
 {
     auto camera = tutorial::Game::Get().GetState().cameraPosition;
-    tutorial::Game::Get().GetState().cursorPosition = {
-        tutorial::kCanvasWidth * .5f + (target.x - target.y - camera.x + camera.y) * 36,
-        tutorial::kCanvasHeight * .57f + (target.x + target.y - camera.x - camera.y) * 18 -
-            models::WorldScale::aimHeightPixels};
+    tutorial::Game::Get().GetState().cursorPosition = tutorial::WorldCamera::ToViewport(
+        {tutorial::kCanvasWidth * .5f + (target.x - target.y - camera.x + camera.y) * 36,
+         tutorial::kCanvasHeight * .57f + (target.x + target.y - camera.x - camera.y) * 18 -
+             models::WorldScale::aimHeightPixels});
 }
 void Step(float seconds)
 {
@@ -256,6 +256,151 @@ void TestRescueAndScanner()
     Step(3.f);
     assert(mineState.survivors.size() == 9 && mineState.returnedPeople == 3);
 }
+void TestNpcCombat()
+{
+    ReadyMine();
+    auto &level = GameLevels::Mine();
+    auto &world = tutorial::Game::Get().GetState();
+    std::fill(mineState.tiles.begin(), mineState.tiles.end(), Tile::Floor);
+    mineState.survivors.clear();
+    mineState.riaPosition = mineState.entry;
+    mineState.rescueGroups[0].position = {15.5f, 15.5f};
+    mineState.rescueGroups[0].combatants = true;
+    mineState.survivors.push_back({100, 0, {15.5f, 15.5f}});
+    auto &npc = mineState.survivors.front();
+    mineState.enemies = {{{16.f, 15.5f}}};
+    int playerHealth = mineState.player.health;
+    level.Combat().UpdateEnemies(.05f);
+    assert(npc.combat.health == 88 && mineState.player.health == playerHealth);
+    assert(mineState.enemies.front().target.x == npc.position.x);
+    // A guard returns fire with its own magazine. NPC kills grant no player rewards.
+    mineState.enemies = {{{18.5f, 15.5f}}};
+    int xp = mineState.player.experience;
+    level.Combat().UpdateNpcs(.05f);
+    assert(npc.combat.engaged && npc.combat.pistol.GetRounds() == 11);
+    assert(!mineState.bullets.empty() && !mineState.bullets.front().playerOwned);
+    for (int i = 0; i < 80; ++i)
+    {
+        level.Combat().UpdateNpcs(.05f);
+        level.Combat().Update(.05f);
+    }
+    assert(mineState.enemies.front().health == 0 && mineState.totalEnemyDeaths == 1);
+    assert(mineState.kills == 0 && mineState.player.experience == xp && mineState.drops.empty());
+    mineState.enemies = {{{18.5f, 15.5f}, 5000}};
+    bool reloaded = false, reloading = false;
+    int previous = npc.combat.pistol.GetRounds();
+    for (int i = 0; i < 400; ++i)
+    {
+        level.Combat().UpdateNpcs(.05f);
+        level.Combat().Update(.05f);
+        int rounds = npc.combat.pistol.GetRounds();
+        reloading |= npc.combat.pistol.IsReloading();
+        reloaded |= rounds > previous;
+        previous = rounds;
+    }
+    assert(reloading && reloaded && mineState.enemies.front().health < 5000);
+    // A wall blocks both guard fire and monster acquisition.
+    npc.combat.pistol.Reset();
+    npc.combat.cooldown = 0;
+    for (int y = 0; y < kMapSize; ++y)
+    {
+        mineState.tiles[y * kMapSize + 17] = Tile::Wall;
+    }
+    mineState.bullets.clear();
+    level.Combat().UpdateNpcs(.1f);
+    assert(!npc.combat.engaged && npc.combat.pistol.GetRounds() == 12);
+    int health = npc.combat.health;
+    level.Combat().UpdateEnemies(.1f);
+    assert(npc.combat.health == health);
+    std::fill(mineState.tiles.begin(), mineState.tiles.end(), Tile::Floor);
+    // Miners retreat and defend at close range without a firearm.
+    mineState.rescueGroups[0].combatants = false;
+    npc.position = {15.5f, 15.5f};
+    mineState.enemies = {{{16.f, 15.5f}}};
+    npc.combat.cooldown = 0;
+    level.Combat().UpdateNpcs(.1f);
+    assert(npc.combat.evading && npc.facing.walking && npc.position.x < 15.5f);
+    assert(mineState.enemies.front().health == 32 && npc.combat.pistol.GetRounds() == 12);
+    // Downed people stop walking and can recover or receive aid without losing rescue state.
+    npc.combat.health = 12;
+    npc.combat.hitGrace = 0;
+    mineState.enemies = {{{npc.position.x + .2f, npc.position.y}}};
+    level.Combat().UpdateEnemies(.1f);
+    assert(npc.combat.health == 0 && npc.combat.downedSeconds > 0);
+    auto position = npc.position;
+    npc.evacuating = true;
+    npc.route = {{15.5f, 14.5f}};
+    level.Rescue().Update(.1f);
+    assert(tutorial::Game::Distance(position, npc.position) < .001f);
+    level.Combat().UpdateNpcs(12.1f);
+    assert(npc.combat.health == 50 && npc.evacuating);
+    npc.combat.health = 0;
+    npc.combat.downedSeconds = 12;
+    world.playerPosition = npc.position;
+    assert(level.Rescue().TryInteract() && npc.combat.health == 50);
+    npc.evacuating = false;
+    npc.combat.health = 0;
+    npc.combat.downedSeconds = 12;
+    assert(!mineState.rescueGroups[0].rescued);
+    assert(level.Rescue().TryInteract());
+    assert(mineState.rescueGroups[0].rescued && npc.evacuating && npc.combat.health == 50 &&
+           !npc.route.empty());
+    // Player projectiles never turn a rescue NPC into a PK target.
+    mineState.enemies.clear();
+    mineState.bullets = {{{npc.position.x - 1, npc.position.y}, {1, 0}, 30, 5, 100, true}};
+    level.Combat().Update(.1f);
+    assert(npc.combat.health == 50);
+    // Ria can also be attacked independently of the player.
+    world.playerPosition = mineState.entry;
+    mineState.survivors.clear();
+    mineState.riaPosition = {20.5f, 20.5f};
+    mineState.enemies = {{{21.f, 20.5f}}};
+    level.Combat().UpdateEnemies(.1f);
+    assert(mineState.riaCombat.health == 88);
+    mineState.riaPosition = mineState.entry;
+    mineState.survivors.push_back({101, 0, {mineState.entry.x + 1, mineState.entry.y}});
+    mineState.enemies = {{{mineState.entry.x + 1.5f, mineState.entry.y}}};
+    level.Combat().UpdateEnemies(.1f);
+    assert(mineState.survivors.front().combat.health == 100 && !mineState.enemies.front().facing.walking);
+    // NPC muzzle flashes reveal their source in darkness and still obey walls.
+    mineState.lights.clear();
+    mineState.tracers.clear();
+    mineState.muzzleFlash = 0;
+    auto &flashingNpc = mineState.survivors.front();
+    flashingNpc.position = {40.5f, 40.5f};
+    flashingNpc.combat.muzzleFlash = .05f;
+    assert(level.Lighting().At(flashingNpc.position) > .99f);
+    assert(level.Lighting().At({42.5f, 40.5f}) > .5f);
+    mineState.tiles[40 * kMapSize + 41] = Tile::Wall;
+    assert(level.Lighting().At({42.5f, 40.5f}) < .01f);
+    flashingNpc.combat.muzzleFlash = 0;
+    assert(level.Lighting().At(flashingNpc.position) < .01f);
+    mineState.riaPosition = {45.5f, 45.5f};
+    mineState.riaCombat.muzzleFlash = .05f;
+    assert(level.Lighting().At(mineState.riaPosition) > .99f);
+}
+void TestWorldCamera()
+{
+    using tutorial::WorldCamera;
+    for (Vector2 point : {Vector2{0, 0}, {1280, 800}, {640, 456}, {930, 390}})
+    {
+        auto restored = WorldCamera::FromViewport(WorldCamera::ToViewport(point));
+        assert(tutorial::Game::Distance(point, restored) < .001f);
+    }
+    assert(WorldCamera::zoom > 1 && WorldCamera::zoom < 1.5f);
+    ReadyMine();
+    auto &world = tutorial::Game::Get().GetState();
+    world.cameraPosition = {12, 9};
+    for (Vector2 direction : {Vector2{1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {1, -1}})
+    {
+        Vector2 target = {world.playerPosition.x + direction.x * 4, world.playerPosition.y + direction.y * 4};
+        AimAt(target);
+        auto actual = GameLevels::Mine().GetAimDirection(GameLevels::Mine().GetAimAngle());
+        float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+        assert(std::fabs(actual.x - direction.x / length) < .001f);
+        assert(std::fabs(actual.y - direction.y / length) < .001f);
+    }
+}
 void TestStoryAndReentry()
 {
     ReadyMine();
@@ -294,6 +439,8 @@ int main(int argc, char **argv)
     TestQuest();
     TestMapAndGate();
     TestNpcFacing();
+    TestWorldCamera();
+    TestNpcCombat();
     TestAimLightingAndWallShots();
     TestRescueAndScanner();
     TestStoryAndReentry();
