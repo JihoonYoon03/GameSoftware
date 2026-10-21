@@ -1,0 +1,48 @@
+{
+  "mesh_parts": 1031,
+  "max_triangles": 424,
+  "all_parts_under_500": true,
+  "rigs": {
+    "HUMAN_7H": {
+      "bone_count": 23,
+      "clips": 15
+    },
+    "RiftGrazer": {
+      "bone_count": 20,
+      "clips": 15
+    },
+    "VeilWalker": {
+      "bone_count": 27,
+      "clips": 15
+    },
+    "RelaySentinel": {
+      "bone_count": 12,
+      "clips": 15
+    },
+    "PressureDoor_Rig": {
+      "bone_count": 2,
+      "clips": 2
+    },
+    "VEHICLE_Coupe": {
+      "bone_count": 16,
+      "clips": 10
+    },
+    "VEHICLE_Shuttle": {
+      "bone_count": 16,
+      "clips": 10
+    },
+    "VEHICLE_Hauler": {
+      "bone_count": 16,
+      "clips": 10
+    },
+    "VEHICLE_Patrol": {
+      "bone_count": 16,
+      "clips": 11
+    },
+    "VEHICLE_JetBike": {
+      "bone_count": 16,
+      "clips": 10
+    }
+  },
+  "issues": []
+}

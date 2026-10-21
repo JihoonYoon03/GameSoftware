@@ -47,8 +47,6 @@ enum class SceneKind
     Interior,
     Exterior,
     Observatory,
-    JetTravel,
-    TravelBackground,
     Mine,
     Frontier,
     Background,
@@ -88,7 +86,6 @@ class CityScene final : public Scene
     static Vector2 GetTrafficPosition(int index);
     static models::Palette GetTrafficPalette(int index);
     void DrawStreetTiles(game::Scene &scene);
-    void DrawBoundary(game::Scene &scene);
     void DrawStreetFurniture(game::Scene &scene);
     void DrawDepthSortedObjects(game::Scene &scene);
     void DrawUtilityDevices(game::Scene &scene);
@@ -126,39 +123,6 @@ class MineScene final : public Scene
 // FrontierScene : Scene — grassland, convoy channel and abandoned relay
 // ============================================================================
 class FrontierScene final : public Scene
-{
-  public:
-    void Draw() override;
-};
-
-// ============================================================================
-// JetTravelScene : ScreenScene
-// ============================================================================
-struct SceneryTile
-{
-    int id;
-    float x;
-};
-// Unwrapped distance and persistent world indices keep varied scenery continuous.
-class TravelScenery
-{
-  public:
-    static constexpr float kRoadScroll = kRoutePixelScale;
-    static constexpr float kForegroundScroll = 18;
-    static std::vector<SceneryTile> VisibleTiles(double distance, float pixelsPerUnit, float spacing,
-                                                 float margin = 200);
-    static unsigned int Variant(int id, int layer);
-};
-class JetTravelScene final : public ScreenScene
-{
-  public:
-    void Draw() override;
-};
-
-// ============================================================================
-// TravelBackgroundScene : ScreenScene
-// ============================================================================
-class TravelBackgroundScene final : public ScreenScene
 {
   public:
     void Draw() override;

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Scene.h"
 #include "Level.h"
+#include "Overworld.h"
 #include "Drawing.h"
 #include "Hud.h"
 #include "Profiler.h"
@@ -26,7 +27,7 @@ class WorldView
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
         glLoadIdentity();
-        glOrtho(first.x, last.x, last.y, first.y, -8192, 8192);
+        glOrtho(first.x, last.x, last.y, first.y, -65536, 65536);
         glMatrixMode(GL_MODELVIEW);
     }
     ~WorldView()
@@ -147,26 +148,33 @@ void InteriorScene::Draw()
             }
         }
         scene.PlaceWorldActor("wall/back", -3, -3, WorldBounds(-3, -3, 6, .12f, 95), 1, 0, [this]() {
-            Drawing::DrawBox(-3, -3, 6, .12f, 95, ColorRGBA(.13f, .21f, .28f));
+            for (int i = 0; i < 6; ++i)
+            {
+                Drawing::DrawProp(models::ModelLibrary::Get().wall, {-3.f + i, -3}, {1, .12f, 95.f / 44});
+            }
         });
         scene.PlaceWorldActor("wall/side", -3, -3, WorldBounds(-3, -3, .12f, 6, 95), 1, 1, [this]() {
-            Drawing::DrawBox(-3, -3, .12f, 6, 95, ColorRGBA(.1f, .18f, .24f));
+            for (int i = 0; i < 6; ++i)
+            {
+                Drawing::DrawProp(models::ModelLibrary::Get().wall, {-3, -3.f + i}, {1, .12f, 95.f / 44}, {},
+                                  kPi / 2);
+            }
         });
         scene.PlaceWorldActor("window", -1, -2.85f, WorldBounds(-1, -2.85f, 0, 0, 80, 150), 1, 2, [this]() {
             Vector2 window = Drawing::WorldToScreen(-1, -2.85f, 68);
             Drawing::DrawLine(window, {window.x + 110, window.y + 55}, ColorRGBA(.25f, .72f, .82f), 18);
         });
         scene.PlaceWorldActor("bed", -2.6f, -2.6f, WorldBounds(-2.6f, -2.6f, 1.8f, 1.1f, 22), 1, 3, [this]() {
-            Drawing::DrawBox(-2.6f, -2.6f, 1.05f, .8f, 12, ColorRGBA(.32f, .39f, .46f));
-            Drawing::DrawBox(-2.5f, -2.5f, .3f, .7f, 16, ColorRGBA(.66f, .68f, .62f));
+            Drawing::DrawProp(models::ModelLibrary::Get().bed, {-2.05f, -2.05f});
         });
         scene.PlaceWorldActor("terminal", 1.3f, -2.6f, WorldBounds(1, -2.6f, 1.6f, 1.4f, 65), 1, 4, [this]() {
             Drawing::DrawModel3D(models::ModelLibrary::Get().console, Drawing::WorldToScreen(1.6f, -2.4f),
-                                 {.64f, .64f, .64f}, {}, (1.6f - 2.4f) * 36, {});
+                                 {1, 1, 1}, {}, (1.6f - 2.4f) * 36, {});
             Drawing::DrawGlow(Drawing::WorldToScreen(1, -1.2f), 20, ColorRGBA(.3f, .95f, .9f));
         });
         scene.PlaceWorldActor("table", -2.4f, 1.1f, WorldBounds(-2.4f, 1.1f, 1.2f, .6f, 55), 1, 5, [this]() {
-            Drawing::DrawBox(-2.4f, 1.1f, 1.2f, .6f, 20, ColorRGBA(.35f, .28f, .25f));
+            Drawing::DrawProp(models::ModelLibrary::Get().table, {-1.8f, 1.4f});
+            Drawing::DrawProp(models::ModelLibrary::Get().chair, {-1.8f, 2.15f});
             Drawing::DrawGlow(Drawing::WorldToScreen(-2, 1.4f, 35), 18, ColorRGBA(1, .63f, .28f));
         });
         scene.PlaceWorldActor("door", 1.9f, 1.9f, WorldBounds(1.9f, 1.9f, 1, 1, 0), 1, 6,
@@ -216,9 +224,14 @@ models::Palette CityScene::GetTrafficPalette(int index)
 void CityScene::DrawStreetTiles(game::Scene &scene)
 {
     constexpr int chunkSize = 8;
-    for (int x0 = CityLayout::kTerrainMinX; x0 < CityLayout::kTerrainMaxX; x0 += chunkSize)
+    const auto camera = Game::Get().GetState().cameraPosition;
+    int minX = (std::max)(CityLayout::kTerrainMinX, int(std::floor((camera.x - 28) / chunkSize)) * chunkSize);
+    int minY = (std::max)(CityLayout::kTerrainMinY, int(std::floor((camera.y - 28) / chunkSize)) * chunkSize);
+    int maxX = (std::min)(CityLayout::kTerrainMaxX, int(std::ceil(camera.x + 28)));
+    int maxY = (std::min)(CityLayout::kTerrainMaxY, int(std::ceil(camera.y + 28)));
+    for (int x0 = minX; x0 < maxX; x0 += chunkSize)
     {
-        for (int y0 = CityLayout::kTerrainMinY; y0 < CityLayout::kTerrainMaxY; y0 += chunkSize)
+        for (int y0 = minY; y0 < maxY; y0 += chunkSize)
         {
             std::string key = "terrain/city/" + std::to_string(x0) + "/" + std::to_string(y0);
             scene.PlaceWorldActor(
@@ -230,12 +243,14 @@ void CityScene::DrawStreetTiles(game::Scene &scene)
                             for (int y = y0; y < y0 + chunkSize && y < CityLayout::kTerrainMaxY; ++y)
                             {
                                 bool road = CityLayout::IsRoadTile(x, y);
+                                bool city = Overworld::CityAt({float(x), float(y)}) >= 0;
                                 float shade = 0;
                                 Drawing::DrawMaterialTile(
                                     float(x), float(y),
                                     road ? SurfaceMaterial::Asphalt : SurfaceMaterial::Concrete,
-                                    road ? ColorRGBA(.13f, .19f, .23f)
-                                         : ColorRGBA(.28f + shade, .34f + shade, .37f + shade));
+                                    road   ? ColorRGBA(.13f, .19f, .23f)
+                                    : city ? ColorRGBA(.28f + shade, .34f + shade, .37f + shade)
+                                           : ColorRGBA(.17f, .2f, .22f));
                                 if (road && x % 2 == 0 && y == 0)
                                 {
                                     Drawing::DrawTile(x + .1f, y + .1f, .6f, .035f,
@@ -249,78 +264,20 @@ void CityScene::DrawStreetTiles(game::Scene &scene)
     }
 }
 
-void CityScene::DrawBoundary(game::Scene &scene)
-{
-    auto side = [&](const std::string &name, float fixed, float first, float last, bool vertical,
-                    std::array<std::pair<float, float>, 2> openings) {
-        int panel = 0;
-        auto place = [&](float start, float length, bool gate) {
-            Vector2 p = vertical ? Vector2{fixed, start} : Vector2{start, fixed};
-            std::string id = "boundary/" + name + "/" + (gate ? "gate/" : "wall/") + std::to_string(panel++);
-            scene.PlaceWorldActor(id, p.x, p.y,
-                                  WorldBounds(p.x - .2f, p.y - .2f, vertical ? .4f : length + .4f,
-                                              vertical ? length + .4f : .4f, gate ? 94.f : 75.f),
-                                  3, p.x + p.y, [=]() {
-                                      models::Transform3D transform;
-                                      transform.yaw = vertical ? kPi / 2 : 0;
-                                      models::Palette palette;
-                                      palette.body = {.37f, .48f, .55f, 1};
-                                      palette.accent = {.2f, .32f, .4f, 1};
-                                      // Fade only the panel hiding the nearby player, while retaining the
-                                      // boundary silhouette.
-                                      auto player = Game::Get().GetState().playerPosition;
-                                      Vector2 middle = vertical ? Vector2{fixed, start + length * .5f}
-                                                                : Vector2{start + length * .5f, fixed};
-                                      if (!gate && Game::Distance(player, middle) < 1.4f)
-                                      {
-                                          palette.body[3] = palette.accent[3] = palette.emission[3] = .35f;
-                                      }
-                                      Drawing::DrawModel3D(gate ? models::ModelLibrary::Get().trafficGate
-                                                                : models::ModelLibrary::Get().bulkhead,
-                                                           Drawing::WorldToScreen(p.x, p.y),
-                                                           {length, 1, gate ? 2.f : 1.6f}, transform,
-                                                           (p.x + p.y) * 36, palette);
-                                  });
-        };
-        float cursor = first;
-        for (auto opening : openings)
-        {
-            while (cursor < opening.first - .001f)
-            {
-                float length = (std::min)(1.f, opening.first - cursor);
-                place(cursor, length, false);
-                cursor += length;
-            }
-            place(opening.first, opening.second - opening.first, true);
-            cursor = opening.second;
-        }
-        while (cursor < last - .001f)
-        {
-            float length = (std::min)(1.f, last - cursor);
-            place(cursor, length, false);
-            cursor += length;
-        }
-    };
-    for (auto edge : {std::pair<const char *, float>{"west", kWorldMinX}, {"east", kWorldMaxX}})
-    {
-        side(edge.first, edge.second, kWorldMinY, kWorldMaxY, true, {{{-1, 1}, {7, 8}}});
-    }
-    for (auto edge : {std::pair<const char *, float>{"north", kWorldMinY}, {"south", kWorldMaxY}})
-    {
-        side(edge.first, edge.second, kWorldMinX, kWorldMaxX, false, {{{-10, -9}, {1, 3}}});
-    }
-}
-
 void CityScene::DrawStreetFurniture(game::Scene &scene)
 {
     scene.PlaceWorldActor("beacon-platform", 5, -3.8f, WorldBounds(5, -3.8f, 2.6f, 1.7f, 0), 2, 0,
                           [this]() { Drawing::DrawTile(5, -3.8f, 2.6f, 1.7f, ColorRGBA(.2f, .28f, .34f)); });
     for (int i = -6; i <= 6; i += 3)
     {
+        if (i == 0)
+        {
+            continue; // The widened north/south carriageway must remain clear.
+        }
         scene.PlaceWorldActor(
             "lamp/" + std::to_string(i), float(i), 3.7f, WorldBounds(float(i), 3.7f, .55f, .6f, 80), 2, 0,
             [this, i]() {
-                Drawing::DrawBox((float)i, 3.7f, .55f, .6f, 12, ColorRGBA(.2f, .28f, .3f));
+                Drawing::DrawProp(models::ModelLibrary::Get().lamp, {float(i), 3.7f});
                 Vector2 p = Drawing::WorldToScreen((float)i, 3.7f, 52);
                 Drawing::DrawLine(Drawing::WorldToScreen((float)i, 3.7f), p, ColorRGBA(.25f, .4f, .47f), 2);
                 Drawing::DrawGlow(
@@ -370,7 +327,7 @@ void CityScene::DrawDepthSortedObjects(game::Scene &scene)
             }
             else if (item.kind == SceneObjectKind::JetBike)
             {
-                position = kJetBikePosition;
+                position = Game::Get().GetState().bikePosition;
             }
             else if (item.kind == SceneObjectKind::Resident)
             {
@@ -421,8 +378,10 @@ void CityScene::DrawDepthSortedObjects(game::Scene &scene)
             }
             if (item.kind == SceneObjectKind::JetBike)
             {
-                Drawing::DrawWorldVehicle(kJetBikePosition, 4.4f, 1.f, models::VehicleType::JetBike,
-                                          GameLevels::Travel().GetBikePalette(), .08f, 0);
+                const auto &world = Game::Get().GetState();
+                Drawing::DrawWorldBike(world.bikePosition, world.bikeYaw,
+                                       .08f + .92f * world.bikeSpeed / Overworld::kBikeCruiseSpeed,
+                                       world.isBikeMounted);
             }
             if (item.kind == SceneObjectKind::Resident)
             {
@@ -448,7 +407,7 @@ void CityScene::DrawDepthSortedObjects(game::Scene &scene)
             if (item.kind == SceneObjectKind::Lia)
             {
                 Drawing::DrawPerson(kLiaPosition, ColorRGBA(.89f, .52f, .28f), false,
-                                    models::CharacterType::Researcher, false, .78539816f,
+                                    models::CharacterType::Engineer, false, .78539816f,
                                     models::Gender::Female, models::HairStyle::Ponytail);
             }
             if (item.kind == SceneObjectKind::Mara)
@@ -465,8 +424,11 @@ void CityScene::DrawDepthSortedObjects(game::Scene &scene)
                          Game::Get().GetState().buildings[i].y + Game::Get().GetState().buildings[i].depth,
                      SceneObjectKind::Building, (int)i});
     }
-    placeObject({Game::Get().GetState().playerPosition.x + Game::Get().GetState().playerPosition.y,
-                 SceneObjectKind::Player, 0});
+    if (!Game::Get().GetState().isBikeMounted)
+    {
+        placeObject({Game::Get().GetState().playerPosition.x + Game::Get().GetState().playerPosition.y,
+                     SceneObjectKind::Player, 0});
+    }
     placeObject({kLiaPosition.x + kLiaPosition.y, SceneObjectKind::Lia, 0});
     placeObject({kMaraPosition.x + kMaraPosition.y, SceneObjectKind::Mara, 0});
     for (int i = 0; i < 6; ++i)
@@ -474,9 +436,14 @@ void CityScene::DrawDepthSortedObjects(game::Scene &scene)
         Vector2 position = GetTrafficPosition(i);
         placeObject({position.x + position.y, SceneObjectKind::Vehicle, i});
     }
-    placeObject({kJetBikePosition.x + kJetBikePosition.y, SceneObjectKind::JetBike, 0});
+    auto bike = Game::Get().GetState().bikePosition;
+    placeObject({bike.x + bike.y, SceneObjectKind::JetBike, 0});
     for (size_t i = 0; i < Game::Get().GetState().residents.size(); ++i)
     {
+        if (i == Overworld::kKainResidentSlot && GameLevels::Chapter().GetState().kainJoined)
+        {
+            continue;
+        }
         placeObject(
             {Game::Get().GetState().residents[i].position.x + Game::Get().GetState().residents[i].position.y,
              SceneObjectKind::Resident, int(i)});
@@ -485,29 +452,44 @@ void CityScene::DrawDepthSortedObjects(game::Scene &scene)
 
 void CityScene::DrawUtilityDevices(game::Scene &scene)
 {
+    auto entrance = Overworld::kMineEntrance;
+    scene.PlaceWorldActor(
+        "mine-entrance", entrance.x, entrance.y, WorldBounds(entrance.x - 3, entrance.y - 2, 6, 4, 140), 3,
+        entrance.x + entrance.y, [entrance]() {
+            Drawing::DrawProp(models::ModelLibrary::Get().trafficGate, {entrance.x - 3, entrance.y - 1},
+                              {6, .3f, 2.5f});
+            Drawing::DrawInteractionMarker(entrance, "광산 입구 / 하차 후 E 입장", {.4f, .9f, 1});
+        });
+    for (const auto &city : Overworld::Cities())
+    {
+        auto p = city.center;
+        std::string label = std::string(city.name) + " / 주민 20명";
+        scene.PlaceWorldActor(
+            std::string("city-sign/") + city.id, p.x, p.y, WorldBounds(p.x, p.y, 0, 0, 100, 150), 4, 0,
+            [p, label]() { Drawing::DrawInteractionMarker({p.x, p.y + 4}, label, {.5f, .8f, .85f}); });
+    }
     scene.PlaceWorldActor(
         "city-receiver", kCityReceiverPosition.x, kCityReceiverPosition.y,
         WorldBounds(kCityReceiverPosition.x, kCityReceiverPosition.y, .5f, .5f, 60), 4, 0, [this]() {
-            Drawing::DrawBox(kCityReceiverPosition.x, kCityReceiverPosition.y, .5f, .5f, 36,
-                             ColorRGBA(.2f, .36f, .4f));
+            Drawing::DrawProp(models::ModelLibrary::Get().console, kCityReceiverPosition);
             Drawing::DrawGlow(Drawing::WorldToScreen(kCityReceiverPosition.x, kCityReceiverPosition.y, 40),
                               16, ColorRGBA(.35f, .9f, 1));
         });
-    scene.PlaceWorldActor(
-        "relay", kRelayPosition.x, kRelayPosition.y,
-        WorldBounds(kRelayPosition.x, kRelayPosition.y, .35f, .35f, 50), 4, 0, [this]() {
-            Drawing::DrawBox(kRelayPosition.x, kRelayPosition.y, .35f, .35f, 25, ColorRGBA(.25f, .35f, .4f));
-            Drawing::DrawGlow(Drawing::WorldToScreen(kRelayPosition.x, kRelayPosition.y, 29), 14,
-                              Game::Get().GetState().isPowerRestored ? ColorRGBA(.3f, 1, .65f)
-                                                                     : ColorRGBA(1, .65f, .25f));
-        });
-    scene.PlaceWorldActor(
-        "beacon", kBeaconPosition.x, kBeaconPosition.y,
-        WorldBounds(kBeaconPosition.x, kBeaconPosition.y, .4f, .4f, 60), 4, 0, [this]() {
-            Drawing::DrawBox(kBeaconPosition.x, kBeaconPosition.y, .4f, .4f, 30, ColorRGBA(.3f, .45f, .5f));
-            Drawing::DrawGlow(Drawing::WorldToScreen(kBeaconPosition.x, kBeaconPosition.y, 34), 20,
-                              ColorRGBA(.5f, .83f, 1));
-        });
+    scene.PlaceWorldActor("relay", kRelayPosition.x, kRelayPosition.y,
+                          WorldBounds(kRelayPosition.x, kRelayPosition.y, .35f, .35f, 50), 4, 0, [this]() {
+                              Drawing::DrawProp(models::ModelLibrary::Get().breaker, kRelayPosition);
+                              Drawing::DrawGlow(
+                                  Drawing::WorldToScreen(kRelayPosition.x, kRelayPosition.y, 29), 14,
+                                  Game::Get().GetState().isPowerRestored ? ColorRGBA(.3f, 1, .65f)
+                                                                         : ColorRGBA(1, .65f, .25f));
+                          });
+    scene.PlaceWorldActor("beacon", kBeaconPosition.x, kBeaconPosition.y,
+                          WorldBounds(kBeaconPosition.x, kBeaconPosition.y, .4f, .4f, 60), 4, 0, [this]() {
+                              Drawing::DrawProp(models::ModelLibrary::Get().beacon, kBeaconPosition);
+                              Drawing::DrawGlow(
+                                  Drawing::WorldToScreen(kBeaconPosition.x, kBeaconPosition.y, 34), 20,
+                                  ColorRGBA(.5f, .83f, 1));
+                          });
 }
 
 void CityScene::DrawQuestMarkers(game::Scene &scene)
@@ -552,7 +534,10 @@ void CityScene::DrawQuestMarkers(game::Scene &scene)
     }
     if (game.IsQuestInteraction(InteractionTarget::JetBike))
     {
-        marker("jet-bike", kJetBikePosition, "제트 바이크 탑승 [E]", {1, .75f, .4f});
+        if (!game.GetState().isBikeMounted)
+        {
+            marker("jet-bike", game.GetState().bikePosition, "제트 바이크 탑승 [E]", {1, .75f, .4f});
+        }
     }
 }
 
@@ -565,7 +550,7 @@ void CityScene::Draw()
         scene.BeginPlacement();
         DrawStreetTiles(scene);
         DrawStreetFurniture(scene);
-        DrawBoundary(scene);
+        // Open arterial roads replace the closed tutorial boundary.
         DrawDepthSortedObjects(scene);
         DrawUtilityDevices(scene);
         DrawQuestMarkers(scene);
@@ -767,8 +752,8 @@ void MineScene::PlaceClue(game::Scene &scene, const char *id, Vector2 position, 
     scene.PlaceWorldActor(
         id, position.x, position.y, WorldBounds(position.x, position.y, 1, 1, 80, 180), 1,
         position.x + position.y, [this, position, label, color, glyph, expected]() {
-            Drawing::DrawBox(position.x - .25f, position.y - .25f, .5f, .5f, glyph ? 65.f : 25.f,
-                             glyph ? ColorRGBA(.25f, .23f, .28f) : ColorRGBA(.25f, .3f, .32f));
+            Drawing::DrawProp(
+                glyph ? models::ModelLibrary::Get().relief : models::ModelLibrary::Get().console, position);
             auto center = Drawing::WorldToScreen(position.x, position.y, glyph ? 48.f : 30.f);
             Drawing::DrawGlow(center, 15, color);
             if (glyph)
@@ -801,9 +786,14 @@ void MineScene::Draw()
     }
     scene.BeginPlacement();
     constexpr int chunkSize = 8;
-    for (int y0 = 0; y0 < kMapSize; y0 += chunkSize)
+    const auto camera = Game::Get().GetState().cameraPosition;
+    int minX = (std::max)(0, int(std::floor((camera.x - 28) / chunkSize)) * chunkSize);
+    int minY = (std::max)(0, int(std::floor((camera.y - 28) / chunkSize)) * chunkSize);
+    int maxX = (std::min)(kMapSize, int(std::ceil(camera.x + 28)));
+    int maxY = (std::min)(kMapSize, int(std::ceil(camera.y + 28)));
+    for (int y0 = minY; y0 < maxY; y0 += chunkSize)
     {
-        for (int x0 = 0; x0 < kMapSize; x0 += chunkSize)
+        for (int x0 = minX; x0 < maxX; x0 += chunkSize)
         {
             std::string key = "terrain/mine/" + std::to_string(x0) + "/" + std::to_string(y0);
             scene.PlaceWorldActor(
@@ -816,12 +806,12 @@ void MineScene::Draw()
                             {
                                 if (GameLevels::Mine().GetState().tiles[y * kMapSize + x] != Tile::Wall)
                                 {
-                                    bool ruins = x >= 42 && y >= 42;
-                                    Drawing::DrawMaterialTile(float(x), float(y), SurfaceMaterial::Concrete,
-                                                              ruins ? ColorRGBA(.33f, .29f, .37f)
-                                                                    : ColorRGBA(.28f, .25f, .22f));
-                                    if ((y == 10 && x <= 24) || (x == 24 && y <= 29) ||
-                                        (y == 29 && x >= 24 && x <= 48))
+                                    bool ruins = x >= 84 && y >= 84;
+                                    Drawing::DrawProp(models::ModelLibrary::Get().mineGround,
+                                                      {float(x), float(y)}, {1, 1, 1},
+                                                      {ruins ? std::array<float, 4>{.8f, .72f, .9f, 1}
+                                                             : std::array<float, 4>{1, 1, 1, 1}});
+                                    if ((x * 13 + y * 7) % 31 == 0)
                                     {
                                         auto a = Drawing::WorldToScreen(x + .2f, y + .2f);
                                         auto b = Drawing::WorldToScreen(x + .8f, y + .8f);
@@ -834,9 +824,9 @@ void MineScene::Draw()
                 });
         }
     }
-    for (int y = 1; y < kMapSize - 1; ++y)
+    for (int y = (std::max)(1, minY); y < (std::min)(kMapSize - 1, maxY); ++y)
     {
-        for (int x = 1; x < kMapSize - 1; ++x)
+        for (int x = (std::max)(1, minX); x < (std::min)(kMapSize - 1, maxX); ++x)
         {
             bool gate = GameLevels::Mine().Map().IsGateCell(x, y);
             if (GameLevels::Mine().GetState().tiles[y * kMapSize + x] != Tile::Wall && !gate)
@@ -864,7 +854,8 @@ void MineScene::Draw()
                     WorldBounds(float(x), float(y), 1, 1, 38), 1, float(x + y + 2), [this, x, y, gate]() {
                         if (gate)
                         {
-                            Drawing::DrawBox(float(x), float(y), 1, 1, 48, {.38f, .22f, .16f});
+                            Drawing::DrawProp(models::ModelLibrary::Get().bulkhead, {float(x), float(y)},
+                                              {1, 1, 48.f / 44});
                         }
                         else
                         {
@@ -895,7 +886,7 @@ void MineScene::Draw()
                               WorldBounds(lamp.position.x, lamp.position.y, 0, 0, 45, 100), 1,
                               lamp.position.x + lamp.position.y, [this, lamp]() {
                                   auto center = Drawing::WorldToScreen(lamp.position.x, lamp.position.y, 16);
-                                  Drawing::DrawRectangle(center.x - 4, center.y - 8, 8, 12, {.9f, .7f, .34f});
+                                  Drawing::DrawProp(models::ModelLibrary::Get().lantern, lamp.position);
                                   Drawing::DrawGlow(center, 32, {.95f, .63f, .23f});
                               });
     }
@@ -919,14 +910,17 @@ void MineScene::Draw()
         scene.PlaceWorldActor(
             "enemy/" + std::to_string(i), enemy.position.x, enemy.position.y,
             WorldBounds(enemy.position.x, enemy.position.y, 0, 0, 65), 1, enemy.position.x + enemy.position.y,
-            [this, enemy]() {
+            [this, enemy, i]() {
                 auto screen = Drawing::WorldToScreen(enemy.position.x, enemy.position.y);
                 Drawing::DrawSoftShadow(screen, 22, 8, .6f);
                 models::Transform3D rotation;
                 rotation.yaw = enemy.facing.yaw;
-                Drawing::DrawModel3D(models::ModelLibrary::Get().drone, screen, {1, 1, 1}, rotation,
-                                     (enemy.position.x + enemy.position.y) * 36,
-                                     {{.35f, .27f, .2f, 1}, {.75f, .35f, .2f, 1}, {1, .2f, .08f, 1}});
+                auto pose = models::ModelRig::Pose(Game::Get().GetState().animationTimeSeconds * 10,
+                                                   enemy.facing.walking);
+                const size_t variant = enemy.position.x < kMineGateX ? i % 2 : 2 + i % 4;
+                Drawing::DrawModel3D(models::ModelLibrary::Get().creatures[variant], screen, {1, 1, 1},
+                                     rotation, (enemy.position.x + enemy.position.y) * 36,
+                                     {{.35f, .27f, .2f, 1}, {.75f, .35f, .2f, 1}, {1, .2f, .08f, 1}}, &pose);
                 if (Game::Distance(enemy.position, Game::Get().GetState().playerPosition) < 5)
                 {
                     Drawing::DrawRectangle(screen.x - 18, screen.y - 39, 36, 3, {.15f, .05f, .04f});
@@ -957,7 +951,7 @@ void MineScene::Draw()
         bool guard = GameLevels::Mine().GetState().rescueGroups[npc.group].combatants;
         PlacePerson(scene, "survivor/" + std::to_string(npc.id), npc.position,
                     guard ? ColorRGBA(.38f, .62f, .8f) : ColorRGBA(.9f, .68f, .28f),
-                    guard ? models::CharacterType::Guard : models::CharacterType::Engineer,
+                    guard ? models::CharacterType::HeavyCombat : models::CharacterType::Miner,
                     npc.facing.walking,
                     npc.evacuating ? "헤일로로 철수 중"
                     : guard        ? "고립 전투원 / E 구조"
@@ -989,6 +983,53 @@ void MineScene::Draw()
 }
 
 // ============================================================================
+// MineScene — darkness overlay
+// ============================================================================
+void MineScene::DrawDarkness()
+{
+    profiling::Scope timer(profiling::Timer::MineLighting);
+    // Apply after bloom so concealed rooms cannot leak emissive surfaces or glow.
+    if (GameRenderer::Get().Backend().DrawMineDarkness())
+    {
+        return;
+    }
+
+    // Keep the CPU visibility mask for devices without the GPU darkness path.
+    constexpr int step = 16;
+    constexpr int columns = kCanvasWidth / step + 1;
+    constexpr int rows = kCanvasHeight / step + 1;
+    std::vector<float> alpha(columns * rows);
+    auto origin = Drawing::WorldToScreen(0, 0);
+    for (int y = 0; y < rows; ++y)
+    {
+        for (int x = 0; x < columns; ++x)
+        {
+            auto screen = WorldCamera::FromViewport({float(x * step), float(y * step)});
+            float sx = (screen.x - origin.x) / 36;
+            float sy = (screen.y - origin.y) / 18;
+            Vector2 world = {(sx + sy) * .5f, (sy - sx) * .5f};
+            alpha[y * columns + x] = 1 - GameLevels::Mine().Lighting().At(world);
+        }
+    }
+    renderqueue::Texture(0);
+    renderqueue::Effect(0, 0, 0);
+    renderqueue::Begin(GL_QUADS);
+    for (int y = 0; y < rows - 1; ++y)
+    {
+        for (int x = 0; x < columns - 1; ++x)
+        {
+            const int corners[4][2] = {{x, y}, {x + 1, y}, {x + 1, y + 1}, {x, y + 1}};
+            for (const auto &corner : corners)
+            {
+                renderqueue::Color(0, 0, 0, alpha[corner[1] * columns + corner[0]]);
+                renderqueue::Vertex(float(corner[0] * step), float(corner[1] * step));
+            }
+        }
+    }
+    renderqueue::End();
+}
+
+// ============================================================================
 // FrontierScene : Scene
 // ============================================================================
 void FrontierScene::Draw()
@@ -1002,34 +1043,46 @@ void FrontierScene::Draw()
         for (int x0 = -16; x0 < kFrontierWidth + 16; x0 += 8)
         {
             std::string key = "terrain/frontier/" + std::to_string(x0) + "/" + std::to_string(y0);
-            PlaceWorldActor(key, float(x0), float(y0), WorldBounds(float(x0), float(y0), 8, 8, 0), 0, 0,
-                            [x0, y0, key, &level]() {
-                                rendercache::DrawWorld(key, [x0, y0, &level]() {
-                                    const auto &s = level.GetState();
-                                    for (int y = y0; y < y0 + 8; ++y)
-                                    {
-                                        for (int x = x0; x < x0 + 8; ++x)
-                                        {
-                                            auto tile = x < 24 ? FrontierTile::Grass : FrontierTile::Sand;
-                                            if (x >= 0 && y >= 0 && x < kFrontierWidth && y < kFrontierHeight)
-                                            {
-                                                tile = s.tiles[y * kFrontierWidth + x];
-                                            }
-                                            ColorRGBA color =
-                                                tile == FrontierTile::Grass   ? ColorRGBA(.24f, .37f, .26f)
-                                                : tile == FrontierTile::Sand  ? ColorRGBA(.55f, .44f, .28f)
-                                                : tile == FrontierTile::Canal ? ColorRGBA(.12f, .15f, .14f)
-                                                : tile == FrontierTile::Road  ? ColorRGBA(.28f, .30f, .30f)
-                                                                              : ColorRGBA(.31f, .34f, .35f);
-                                            Drawing::DrawMaterialTile(float(x), float(y),
-                                                                      tile == FrontierTile::Road
-                                                                          ? SurfaceMaterial::Asphalt
-                                                                          : SurfaceMaterial::Concrete,
-                                                                      color);
-                                        }
-                                    }
-                                });
-                            });
+            PlaceWorldActor(
+                key, float(x0), float(y0), WorldBounds(float(x0), float(y0), 8, 8, 0), 0, 0,
+                [x0, y0, key, &level]() {
+                    rendercache::DrawWorld(key, [x0, y0, &level]() {
+                        const auto &s = level.GetState();
+                        for (int y = y0; y < y0 + 8; ++y)
+                        {
+                            for (int x = x0; x < x0 + 8; ++x)
+                            {
+                                auto tile = x < 24 ? FrontierTile::Grass : FrontierTile::Sand;
+                                if (x >= 0 && y >= 0 && x < kFrontierWidth && y < kFrontierHeight)
+                                {
+                                    tile = s.tiles[y * kFrontierWidth + x];
+                                }
+                                ColorRGBA color = tile == FrontierTile::Grass   ? ColorRGBA(.24f, .37f, .26f)
+                                                  : tile == FrontierTile::Sand  ? ColorRGBA(.55f, .44f, .28f)
+                                                  : tile == FrontierTile::Canal ? ColorRGBA(.12f, .15f, .14f)
+                                                  : tile == FrontierTile::Road  ? ColorRGBA(.28f, .30f, .30f)
+                                                                                : ColorRGBA(.31f, .34f, .35f);
+                                if (tile == FrontierTile::Grass || tile == FrontierTile::Sand)
+                                {
+                                    const auto &ground =
+                                        models::ModelLibrary::Get()
+                                            .outdoorGrounds[tile == FrontierTile::Grass ? 0 : 1];
+                                    models::Palette palette;
+                                    palette.body = {color.r, color.g, color.b, color.a};
+                                    Drawing::DrawProp(ground, {float(x), float(y)}, {1, 1, 1}, palette);
+                                }
+                                else
+                                {
+                                    Drawing::DrawMaterialTile(float(x), float(y),
+                                                              tile == FrontierTile::Road
+                                                                  ? SurfaceMaterial::Asphalt
+                                                                  : SurfaceMaterial::Concrete,
+                                                              color);
+                                }
+                            }
+                        }
+                    });
+                });
         }
     }
     auto prop = [this](const std::string &id, Vector2 p, float height, std::function<void()> draw) {
@@ -1053,13 +1106,9 @@ void FrontierScene::Draw()
         prop("flora/" + std::to_string(i), p, 28, [p, i]() {
             if (p.x < 24)
             {
-                Drawing::DrawBox(p.x, p.y, .06f, .06f, 15 + float(i % 5), {.2f, .46f, .34f});
-                models::Transform3D leaf;
-                leaf.yaw =
-                    float(i % 7) * .8f + .07f * std::sin(Game::Get().GetState().animationTimeSeconds + p.y);
-                leaf.position.z = .26f;
-                Drawing::DrawModel3D(models::ModelLibrary::Get().box, Drawing::WorldToScreen(p.x - .12f, p.y),
-                                     {.28f, .06f, .04f}, leaf, (p.x + p.y) * 36, {{.3f, .67f, .45f, 1}});
+                const auto &plant =
+                    i % 3 == 0 ? models::ModelLibrary::Get().fungus : models::ModelLibrary::Get().reeds;
+                Drawing::DrawProp(plant, p, {.8f, .8f, .8f});
                 Drawing::DrawGlow(Drawing::WorldToScreen(p.x, p.y, 17), 7, {.35f, .85f, .64f, .5f});
             }
             else
@@ -1081,9 +1130,8 @@ void FrontierScene::Draw()
             Vector2 p = edge < 2 ? Vector2{float(n), edge == 0 ? 1.f : float(kFrontierHeight - 1)}
                                  : Vector2{edge == 2 ? 1.f : float(kFrontierWidth - 1), float(n)};
             prop("boundary/" + std::to_string(edge) + "/" + std::to_string(n), p, 45, [p, edge]() {
-                Drawing::DrawBox(p.x, p.y, edge < 2 ? 2.f : .15f, edge < 2 ? .15f : 2.f, 35,
-                                 {.23f, .29f, .29f});
-                Drawing::DrawBox(p.x, p.y, .18f, .18f, 43, {.55f, .55f, .38f});
+                Drawing::DrawProp(models::ModelLibrary::Get().bulkhead, p, {2, .15f, 35.f / 44}, {},
+                                  edge < 2 ? 0.f : kPi / 2);
             });
         }
     }
@@ -1092,24 +1140,23 @@ void FrontierScene::Draw()
                              {1.5f, 1, 1}, {}, 5 * 36, {});
     });
     prop("generator", {10, 9.5f}, 55, [&state]() {
-        Drawing::DrawBox(9.2f, 9.4f, 3, .65f, 24, {.20f, .3f, .34f});
-        for (int i = 0; i < 7; ++i)
+        for (int i = 0; i < 3; ++i)
         {
-            Drawing::DrawBox(9.35f + i * .38f, 9.35f, .12f, .75f, 38, {.38f, .48f, .5f});
-            Drawing::DrawGlow(Drawing::WorldToScreen(9.4f + i * .38f, 9.7f, 28), 7,
+            Drawing::DrawProp(models::ModelLibrary::Get().generator, {9.5f + i * .9f, 9.7f});
+            Drawing::DrawGlow(Drawing::WorldToScreen(9.5f + i * .9f, 9.7f, 28), 7,
                               state.generatorRestored ? ColorRGBA(.35f, .94f, .8f)
                                                       : ColorRGBA(.9f, .52f, .2f));
         }
         Drawing::DrawModel3D(models::ModelLibrary::Get().console, Drawing::WorldToScreen(10.5f, 10.5f),
                              {.7f, .7f, .7f}, {}, 21 * 36, {});
-        Drawing::DrawBox(12.2f, 10.3f, .4f, .4f, 35, {.28f, .38f, .4f});
+        Drawing::DrawProp(models::ModelLibrary::Get().breaker, {12.4f, 10.5f});
         // Even after isolation, the one remaining gauge repeats the recorded pulse.
         float pulse = .5f + .5f * std::sin(Game::Get().GetState().animationTimeSeconds * 2.4f);
         Drawing::DrawGlow(Drawing::WorldToScreen(12.4f, 10.5f, 31), 8, {1, .67f, .28f, .35f + pulse * .65f});
     });
     prop("workbench", {9.5f, 13.5f}, 36, [&state]() {
-        Drawing::DrawBox(9.1f, 13.2f, .9f, .6f, 24, {.34f, .4f, .41f});
-        Drawing::DrawBox(9.5f, 13.5f, .14f, .14f, 32, {.68f, .59f, .36f});
+        Drawing::DrawProp(models::ModelLibrary::Get().table, {9.5f, 13.5f});
+        Drawing::DrawProp(models::ModelLibrary::Get().lantern, {9.5f, 13.5f}, {.7f, .7f, .7f});
         if (state.portableLightRepaired)
         {
             Drawing::DrawGlow(Drawing::WorldToScreen(9.55f, 13.55f, 35), 18, {1, .82f, .5f});
@@ -1131,7 +1178,7 @@ void FrontierScene::Draw()
         constexpr Vector2 markers[] = {{36.5f, 13.5f}, {36.5f, 18.5f}, {29.5f, 18.5f}};
         auto p = markers[i];
         prop("survey/" + std::to_string(i), p, 38, [p, i, &state]() {
-            Drawing::DrawBox(p.x - .07f, p.y - .07f, .14f, .14f, 32, {.65f, .6f, .4f});
+            Drawing::DrawProp(models::ModelLibrary::Get().beacon, p);
             Drawing::DrawGlow(Drawing::WorldToScreen(p.x, p.y, 34), 12,
                               state.surveyMarkers > i ? ColorRGBA(.3f, 1, .8f)
                                                       : ColorRGBA(1, .6f, .25f, .5f));
@@ -1147,10 +1194,10 @@ void FrontierScene::Draw()
         });
     }
     prop("camp", {24, 20}, 50, [&state]() {
-        Drawing::DrawBox(23.2f, 21.7f, 2.8f, .5f, 15, {.33f, .36f, .35f});
+        Drawing::DrawProp(models::ModelLibrary::Get().table, {24.5f, 21.7f});
         if (state.portableLightRepaired)
         {
-            Drawing::DrawBox(24.5f, 21.6f, .12f, .12f, 34, {.7f, .64f, .45f});
+            Drawing::DrawProp(models::ModelLibrary::Get().lantern, {24.5f, 21.6f});
             Drawing::DrawGlow(Drawing::WorldToScreen(24.5f, 21.6f, 37), 26, {1, .82f, .5f});
         }
     });
@@ -1262,212 +1309,6 @@ void ScreenScene::DrawScreenScene(game::Scene &scene)
 }
 
 // ============================================================================
-// TravelBackgroundScene
-// ============================================================================
-std::vector<SceneryTile> TravelScenery::VisibleTiles(double distance, float pixelsPerUnit, float spacing,
-                                                     float margin)
-{
-    std::vector<SceneryTile> result;
-    if (!std::isfinite(distance) || !std::isfinite(pixelsPerUnit) || !std::isfinite(spacing) ||
-        !std::isfinite(margin) || spacing <= 0 || margin < 0 || pixelsPerUnit < 0)
-    {
-        return result;
-    }
-    double offset = distance * pixelsPerUnit;
-    int first = int(std::floor((offset - margin) / spacing));
-    int last = int(std::ceil((offset + tutorial::kCanvasWidth + margin) / spacing));
-    for (int id = first; id <= last; ++id)
-    {
-        result.push_back({id, float(id * double(spacing) - offset)});
-    }
-    return result;
-}
-unsigned int TravelScenery::Variant(int id, int layer)
-{
-    unsigned int hash =
-        static_cast<unsigned int>(id) * 73856093u ^ static_cast<unsigned int>(layer) * 19349663u;
-    hash ^= hash >> 13;
-    hash *= 1274126177u;
-    return hash ^ (hash >> 16);
-}
-void TravelBackgroundScene::Draw()
-{
-    using namespace tutorial;
-    auto &scene = *this;
-    scene.BeginPlacement();
-    PlaceScreenActor(scene, "sky", {0, 0, float(kCanvasWidth), float(kCanvasHeight)}, 0, [this]() {
-        Drawing::DrawRectangle(0, 0, float(kCanvasWidth), float(kCanvasHeight),
-                               ColorRGBA(.018f, .035f, .067f));
-        Drawing::DrawRectangle(0, 280, float(kCanvasWidth), 390, ColorRGBA(.065f, .13f, .17f));
-    });
-    PlaceScreenActor(scene, "gate", {900, 45, 1190, 380}, 1, [this]() {
-        float drift = GameLevels::Travel().GetState().distance * .012f;
-        Vector2 center = {1040 - drift, 205};
-        Drawing::DrawEllipse(center.x, center.y, 105, 130, ColorRGBA(.09f, .3f, .34f, .7f));
-        Drawing::DrawEllipse(center.x, center.y, 96, 121, ColorRGBA(.019f, .045f, .067f));
-        Drawing::DrawGlow(center, 170, ColorRGBA(.2f, .7f, .8f, .13f));
-        Drawing::DrawLabel(center.x - 55, center.y + 155, "관문 N-0 / 격리 회랑");
-    });
-    for (int layer = 0; layer < 3; ++layer)
-    {
-        constexpr float factors[] = {.5f, 1.9f, 4.5f};
-        float spacing = 160 + layer * 40.f;
-        for (const auto tile : TravelScenery::VisibleTiles(GameLevels::Travel().GetState().distance,
-                                                           factors[layer], spacing, 280))
-        {
-            unsigned int variant = TravelScenery::Variant(tile.id, layer);
-            float base = 355 + layer * 52.f, height = 58 + float(variant % 105);
-            PlaceScreenActor(scene, "skyline/" + std::to_string(layer) + "/" + std::to_string(tile.id),
-                             {tile.x - 120, base - height - 35, tile.x + spacing, base}, 2 + layer,
-                             [tile, base, height, layer, variant]() {
-                                 float shade = .055f + layer * .018f;
-                                 models::Palette palette;
-                                 palette.body = {shade, shade + .055f, shade + .08f, 1};
-                                 Drawing::DrawModel3D(models::ModelLibrary::Get().buildings[variant % 4],
-                                                      {tile.x, base}, {1.25f, 1.25f, height / 44}, {}, -6000,
-                                                      palette);
-                             });
-        }
-    }
-    PlaceScreenActor(scene, "fog", {0, 350, float(kCanvasWidth), 640}, 5, [this]() {
-        Drawing::DrawRectangle(0, 390, float(kCanvasWidth), 240, ColorRGBA(.12f, .27f, .3f, .12f));
-    });
-    DrawScreenScene(scene);
-}
-
-// ============================================================================
-// JetTravelScene
-// ============================================================================
-void JetTravelScene::Draw()
-{
-    using namespace tutorial;
-    auto &scene = *this;
-    scene.BeginPlacement();
-    PlaceScreenActor(scene, "corridor", {0, 335, float(kCanvasWidth), 695}, 0, [this]() {
-        models::Palette road;
-        road.body = {.10f, .16f, .19f, 1};
-        models::Transform3D rotation;
-        rotation.yaw = -kPi / 4;
-        rotation.position = rotation.Apply({-35, -5.5f, -.45f});
-        Drawing::DrawModel3D(models::ModelLibrary::Get().grounds[1], {640, 485}, {70, 11, .08f}, rotation, 0,
-                             road);
-        Drawing::DrawLine({0, 359}, {float(kCanvasWidth), 359}, ColorRGBA(.3f, .68f, .73f), 4);
-        Drawing::DrawLine({0, 641}, {float(kCanvasWidth), 641}, ColorRGBA(.25f, .5f, .55f), 5);
-        for (const auto tile : TravelScenery::VisibleTiles(GameLevels::Travel().GetState().distance,
-                                                           TravelScenery::kRoadScroll, 170))
-        {
-            float x = tile.x;
-            Drawing::DrawLine({x, 445}, {x + 85, 445}, {.35f, .56f, .59f, .8f}, 3);
-            Drawing::DrawLine({x, 545}, {x + 85, 545}, {.35f, .56f, .59f, .8f}, 3);
-            Drawing::DrawLine({x, 373}, {x + 16, 373}, {.65f, .72f, .57f, .7f}, 4);
-            Drawing::DrawLine({x, 627}, {x + 16, 627}, {.65f, .72f, .57f, .7f}, 4);
-        }
-        // Frequent expansion joints make the road surface's motion legible.
-        for (const auto tile : TravelScenery::VisibleTiles(GameLevels::Travel().GetState().distance,
-                                                           TravelScenery::kRoadScroll, 85))
-        {
-            Drawing::DrawLine({tile.x, 365}, {tile.x, 635}, {.35f, .46f, .49f, .16f});
-        }
-    });
-    for (int i = 0; i < kObstacleCount; ++i)
-    {
-        const auto obstacle = GameLevels::Travel().GetState().obstacles[i];
-        float x = GameLevels::Travel().GetObstacleScreenX(obstacle);
-        float y = 485 + obstacle.lane * 115;
-        PlaceScreenActor(scene, "debris/" + std::to_string(i), {x - 38, y - 44, x + 45, y + 32}, 1,
-                         [this, x, y]() {
-                             Drawing::DrawSoftShadow({x + 8, y + 27}, 40, 13, .45f);
-                             models::Palette debris;
-                             debris.body = {.38f, .29f, .27f, 1};
-                             models::Transform3D rotation;
-                             rotation.yaw = -kPi / 4;
-                             Drawing::DrawModel3D(models::ModelLibrary::Get().box, {x, y}, {1.1f, .9f, .8f},
-                                                  rotation, (y - 485) * 2, debris);
-                             Drawing::DrawGlow({x, y}, 45, ColorRGBA(1, .22f, .12f, .3f));
-                         });
-    }
-    Vector2 bike = GameLevels::Travel().GetBikeScreenPosition();
-    PlaceScreenActor(scene, "bike-shadow", {bike.x - 100, bike.y + 12, bike.x + 115, bike.y + 65}, 1,
-                     [this, bike]() { Drawing::DrawSoftShadow({bike.x + 15, bike.y + 40}, 85, 20, .5f); });
-    PlaceScreenActor(
-        scene, "bike", {bike.x - 210, bike.y - 75, bike.x + 140, bike.y + 80}, 2, [this, bike]() {
-            float bob = std::sin(Game::Get().GetState().animationTimeSeconds * 9) * 2;
-            Drawing::DrawTravelBike({bike.x, bike.y + bob}, GameLevels::Travel().GetState().yawRadians,
-                                    GameLevels::Travel().GetState().speed / 108.f);
-        });
-    scene.GetGraph().Reparent("bike-shadow", *scene.GetGraph().Find("bike"));
-    PlaceScreenActor(scene, "speed-trails", {0, 250, float(kCanvasWidth), 710}, 4, [this]() {
-        float distance = GameLevels::Travel().GetState().distance;
-        float speed = GameLevels::Travel().GetState().speed;
-        for (int row = 0; row < 9; ++row)
-        {
-            float y = 312 + row * 44.f;
-            for (const auto tile : TravelScenery::VisibleTiles(distance, 14 + float(row % 3) * 2, 390, 240))
-            {
-                unsigned int v = TravelScenery::Variant(tile.id, row);
-                float x = tile.x + (v % 73), length = 30 + speed * .7f;
-                Drawing::DrawLine({x, y}, {x + length, y}, {.6f, .8f, .86f, .10f}, 1);
-            }
-        }
-        for (const auto tile :
-             TravelScenery::VisibleTiles(distance, TravelScenery::kForegroundScroll, 310, 120))
-        {
-            float x = tile.x;
-            Drawing::DrawRectangle(x, 660, 20, 140, {.04f, .11f, .15f, .9f});
-            Drawing::DrawLine({x, 672}, {x + 20, 672}, {.7f, .56f, .28f}, 4);
-        }
-    });
-    DrawScreenScene(scene);
-}
-
-// ============================================================================
-// MineScene — darkness overlay
-// ============================================================================
-void MineScene::DrawDarkness()
-{
-    using namespace tutorial;
-    profiling::Scope timer(profiling::Timer::MineLighting);
-    // A smooth vertex mask works with the existing compatibility renderer and its fallback.
-    // Applied AFTER bloom: concealed rooms cannot leak bright sprites or post-process glow.
-    if (GameRenderer::Get().Backend().DrawMineDarkness())
-    {
-        return;
-    }
-    constexpr int step = 16;
-    constexpr int columns = kCanvasWidth / step + 1;
-    constexpr int rows = kCanvasHeight / step + 1;
-    std::vector<float> alpha(columns * rows);
-    auto origin = Drawing::WorldToScreen(0, 0);
-    for (int y = 0; y < rows; ++y)
-    {
-        for (int x = 0; x < columns; ++x)
-        {
-            auto screen = WorldCamera::FromViewport({float(x * step), float(y * step)});
-            float sx = (screen.x - origin.x) / 36;
-            float sy = (screen.y - origin.y) / 18;
-            tutorial::Vector2 world = {(sx + sy) * .5f, (sy - sx) * .5f};
-            alpha[y * columns + x] = 1 - GameLevels::Mine().Lighting().At(world);
-        }
-    }
-    renderqueue::Texture(0);
-    renderqueue::Effect(0, 0, 0);
-    renderqueue::Begin(GL_QUADS);
-    for (int y = 0; y < rows - 1; ++y)
-    {
-        for (int x = 0; x < columns - 1; ++x)
-        {
-            const int corners[4][2] = {{x, y}, {x + 1, y}, {x + 1, y + 1}, {x, y + 1}};
-            for (const auto &corner : corners)
-            {
-                renderqueue::Color(0, 0, 0, alpha[corner[1] * columns + corner[0]]);
-                renderqueue::Vertex(float(corner[0] * step), float(corner[1] * step));
-            }
-        }
-    }
-    renderqueue::End();
-}
-
-// ============================================================================
 // BackgroundScene / HudScene — screen-space compositions
 // ============================================================================
 
@@ -1503,8 +1344,6 @@ Scene &SceneManager::Get(SceneKind kind)
         result[size_t(SceneKind::Interior)] = std::make_unique<InteriorScene>();
         result[size_t(SceneKind::Exterior)] = std::make_unique<CityScene>();
         result[size_t(SceneKind::Observatory)] = std::make_unique<ObservatoryScene>();
-        result[size_t(SceneKind::JetTravel)] = std::make_unique<JetTravelScene>();
-        result[size_t(SceneKind::TravelBackground)] = std::make_unique<TravelBackgroundScene>();
         result[size_t(SceneKind::Mine)] = std::make_unique<MineScene>();
         result[size_t(SceneKind::Frontier)] = std::make_unique<FrontierScene>();
         result[size_t(SceneKind::Background)] = std::make_unique<BackgroundScene>();
@@ -1518,7 +1357,6 @@ SceneKind SceneManager::Current()
     const auto &state = Game::Get().GetState();
     return GameLevels::Chapter().IsActive() ? SceneKind::Frontier
            : GameLevels::Mine().IsActive()  ? SceneKind::Mine
-           : state.isJetTravel              ? SceneKind::JetTravel
            : state.isInObservatory          ? SceneKind::Observatory
            : state.isInsideHome             ? SceneKind::Interior
                                             : SceneKind::Exterior;
@@ -1537,10 +1375,6 @@ void SceneManager::Update(float deltaSeconds)
 {
     profiling::Scope timer(profiling::Timer::SceneUpdate);
     Get(Current()).GetGraph().Update(deltaSeconds);
-    if (GameLevels::Travel().IsActive())
-    {
-        Get(SceneKind::TravelBackground).GetGraph().Update(deltaSeconds);
-    }
     Get(SceneKind::Background).GetGraph().Update(deltaSeconds);
     Get(SceneKind::Hud).GetGraph().Update(deltaSeconds);
 }

@@ -25,6 +25,10 @@ enum class CharacterType : std::uint32_t
     Guard,
     Medic,
     Researcher,
+    Miner,
+    HeavyCombat,
+    Pilot,
+    Civilian,
     Count
 };
 enum class Gender : std::uint32_t
@@ -51,7 +55,7 @@ struct WorldScale
     static constexpr float pixelsPerMeter = 22;
     static constexpr float humanHeightMeters = 1.8f;
     static constexpr float characterScale = humanHeightMeters / (metersPerUnit * 1.26f);
-    static constexpr float aimHeightPixels = 26 * characterScale;
+    static constexpr float aimHeightPixels = .9464f * 44 * characterScale;
 };
 enum class BuildingType : std::uint32_t
 {
@@ -124,6 +128,8 @@ struct CharacterPose
 {
     std::array<Transform3D, static_cast<size_t>(Joint::Count)> joints;
     bool armed = false;
+    bool walking = false, riding = false;
+    float animationPhase = 0, recoil = 0, locomotionSpeed = 2.1f;
     Point Apply(Point point, Joint joint) const;
 };
 // ============================================================================
@@ -151,6 +157,7 @@ struct Part
 };
 struct Model
 {
+    std::uint32_t resourceId = 0;
     CoordinateSpace space = CoordinateSpace::Screen;
     std::uint32_t count = 0;
     std::array<Part, 1024> parts = {};
@@ -177,6 +184,11 @@ struct Library
     Model console;
     Model bulkhead;
     Model trafficGate;
+    Model bed, chair, table, lamp, generator, breaker, beacon, relief, wall, door, lantern, support;
+    Model tree, fungus, crystal, reeds;
+    std::array<Model, 6> creatures;
+    std::array<Model, 2> outdoorGrounds;
+    Model mineGround;
     std::array<Model, 4> grounds;
     std::array<VehicleModel, static_cast<size_t>(VehicleType::Count)> vehicles;
     std::array<Model, static_cast<size_t>(CharacterType::Count)> characters;
@@ -186,7 +198,7 @@ struct Library
     std::array<Model, static_cast<size_t>(BuildingType::Count)> buildings;
 };
 
-// Immutable heap-owned model data: loaded once, generated in place on cache miss/version change.
+// Heap-owned immutable bindings. ResourceAssets owns the converted GLB geometry and animation cache.
 class ModelLibrary
 {
   public:

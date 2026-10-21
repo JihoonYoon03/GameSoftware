@@ -1,0 +1,60 @@
+{
+  "schema": "erma_animation_blending_v1",
+  "fps": 30,
+  "units": "meters",
+  "quaternion_interpolation": "shortest_path_slerp",
+  "translation_interpolation": "linear",
+  "clips_file": "animation_clips.json",
+  "skeleton_file": "skeletons.json",
+  "locomotion": {
+    "root_translation": "in_place",
+    "phase_unit": "normalized_cycle",
+    "phase_reset_on_speed_change": false,
+    "walk_cycle_seconds": 1.0,
+    "run_cycle_seconds": 0.666666667,
+    "phase_frequency_hz": [1.0, 1.5],
+    "human_contact_groups": [["foot.L"], ["foot.R"]],
+    "quadruped_contact_groups": [[0, 3], [1, 2]],
+    "hexapod_contact_groups": [[0, 3, 4], [1, 2, 5]],
+    "biped_contact_groups": [[0], [1]],
+    "group_contact_phases": [0.0, 0.5],
+    "stance_phase_range_per_foot": [0.0, 0.5],
+    "swing_phase_range_per_foot": [0.5, 1.0],
+    "speed_anchors_mps": {
+      "HUMAN_7H": {"Walk": 1.08, "Run": 2.46},
+      "RiftGrazer": {"Walk": 0.72, "Run": 1.98},
+      "VeilWalker": {"Walk": 0.72, "Run": 1.98},
+      "RelaySentinel": {"Walk": 0.80, "Run": 2.10}
+    },
+    "weight_initial_estimate": "clamp((speed-walk_speed)/(run_speed-walk_speed),0,1)",
+    "phase_advance": "dt*lerp(1.0,1.5,weight)",
+    "walk_to_run_clip": {"name": "Walk_To_Run", "duration_seconds": 0.8, "entry_phase": 0.0, "exit_phase": 0.0, "internal_cycle": "0.8*t+0.2*t*t", "mid_cycle_changes": "use synchronized blending"},
+    "contact_compensation": "speed anchors are flat-ground references; blended stride and phase frequency may need foot locking or calibration"
+  },
+  "transitions": [
+    {"from": "Idle", "to": "Walk", "crossfade_seconds": 0.18},
+    {"from": "Walk", "to": "Run", "crossfade_seconds": 0.20, "synchronize_phase": true},
+    {"from": "Run", "to": "Walk", "crossfade_seconds": 0.20, "synchronize_phase": true},
+    {"from": "Locomotion", "to": "Idle", "crossfade_seconds": 0.18},
+    {"from": "Idle", "to": "Aim_Base", "crossfade_seconds": 0.15, "mask": "human_upper_body"},
+    {"from": "Aim_Base", "to": "Attack_Fire", "crossfade_seconds": 0.03},
+    {"from": "Attack_Fire", "to": "Aim_Base", "crossfade_seconds": 0.06},
+    {"from": "Locomotion", "to": "Jump_Start", "crossfade_seconds": 0.08},
+    {"from": "Jump_Start", "to": "Jump_Air", "crossfade_seconds": 0.0, "trigger": "start_clip_finished"},
+    {"from": "Jump_Air", "to": "Jump_Land", "crossfade_seconds": 0.03, "trigger": "ground_contact"},
+    {"from": "Jump_Land", "to": "Locomotion", "crossfade_seconds": 0.12},
+    {"from": "Idle", "to": "Turn_Left_90", "crossfade_seconds": 0.10},
+    {"from": "Idle", "to": "Turn_Right_90", "crossfade_seconds": 0.10},
+    {"from": "Turn", "to": "Idle", "crossfade_seconds": 0.12}
+  ],
+  "masks": {
+    "human_upper_body": ["spine", "chest", "neck", "head", "clavicle.L", "upper_arm.L", "forearm.L", "hand.L", "clavicle.R", "upper_arm.R", "forearm.R", "hand.R", "weapon_socket", "back_socket", "muzzle"],
+    "human_lower_body": ["root", "pelvis", "thigh.L", "shin.L", "foot.L", "thigh.R", "shin.R", "foot.R"],
+    "creature_fire": ["head", "jaw", "weapon_socket", "muzzle"]
+  },
+  "attack_layer": {"default_mode": "masked_override", "aim_reference": "Aim_Base", "fire_clip": "Attack_Fire", "additive_conversion": "derive per-bone delta against Aim_Base before using as additive", "melee_default": "full_body"},
+  "turning": {"reference": "Turn_Base", "root_bone": "root", "left_degrees": 90, "right_degrees": -90, "duration_seconds": 0.8, "yaw_policy": "extract root yaw delta to Actor and remove it from pose; do not apply twice", "moving_turns": "keep locomotion phase and interpolate Actor yaw"},
+  "jump": {"recommended": ["Jump_Start", "Jump_Air", "Jump_Land"], "repeat_air_until": "ground_contact", "external_trajectory": true, "alternative": "Jump_Full", "alternative_contains_visual_vertical_arc": true, "avoid_double_vertical_motion": true},
+  "world_unit_conversion": {"meters_per_world_unit": 2.0, "multiply_meter_values_by": 0.5},
+  "runtime_implementation_included": false
+}

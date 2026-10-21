@@ -42,17 +42,19 @@ class MineQuest
 // ============================================================================
 // Mine data
 // ============================================================================
-constexpr int kMapSize = 64;
-constexpr int kEnemyPopulation = 30;
+constexpr int kMapSize = 128;
+constexpr int kEnemyPopulation = 120;
 constexpr float kSafeAreaRadius = 4.f;
 constexpr float kEnemySpawnRadius = 7.f;
 constexpr int kEnemyMaxHealth = 40;
 constexpr int kExperiencePerKill = 20;
 constexpr tutorial::Vector2 kMineEntry = {8.5f, 9.5f};
-constexpr tutorial::Vector2 kPowerBypass = {25.5f, 24.5f};
-constexpr tutorial::Vector2 kRuinSignal = {47.5f, 46.5f};
-constexpr tutorial::Vector2 kObserverGlyph = {51.5f, 46.5f};
-constexpr tutorial::Vector2 kCoordinateTerminal = {52.5f, 51.5f};
+constexpr tutorial::Vector2 kPowerBypass = {51.5f, 49.5f};
+constexpr tutorial::Vector2 kRuinSignal = {95.5f, 93.5f};
+constexpr tutorial::Vector2 kObserverGlyph = {103.5f, 93.5f};
+constexpr tutorial::Vector2 kCoordinateTerminal = {105.5f, 103.5f};
+constexpr int kMineGateX = kMapSize / 2;
+constexpr int kMineGateY = 58;
 
 enum class Tile
 {
@@ -189,34 +191,6 @@ struct MineState
 };
 
 // ============================================================================
-// Travel data
-// ============================================================================
-constexpr float kRouteLength = 1800;
-constexpr float kRoutePixelScale = 12;
-constexpr int kObstacleCount = 7;
-struct Obstacle
-{
-    float distance;
-    float lane;
-    bool passed = false;
-};
-struct TravelState
-{
-    bool active = false;
-    float elapsedSeconds = 0;
-    float distance = 0;
-    float speed = 35;
-    float lateralOffset = 0;
-    float lateralVelocity = 0;
-    float yawRadians = 0;
-    float boostCharge = 1;
-    float speedPenaltySeconds = 0;
-    int avoidedObstacles = 0;
-    int collisionCount = 0;
-    std::array<Obstacle, kObstacleCount> obstacles = {};
-};
-
-// ============================================================================
 // Level — shared lifecycle
 // ============================================================================
 
@@ -258,7 +232,6 @@ class MineMap
     MineState &state;
     void Carve(int x, int y);
     void Room(int left, int top, int right, int bottom);
-    void Tunnel(int x, int y, int targetX, int targetY);
     std::vector<int> Distances(tutorial::Vector2 destination, bool ignoreGate = false);
 };
 
@@ -357,29 +330,6 @@ class MineLevel final : public Level
     std::uint64_t generationRevision = 0;
     static tutorial::Vector2 Project(tutorial::Vector2 position, float height = 0);
     static void ClearInput();
-};
-
-// ============================================================================
-// JetTravelLevel : Level — bike controls and travel progression
-// ============================================================================
-class JetTravelLevel final : public Level
-{
-  public:
-    TravelState &GetState();
-    bool UsesWalkingControls() const override
-    {
-        return false;
-    }
-    void Reset() override;
-    void Enter(bool debugEntry = false) override;
-    bool IsActive() const override;
-    tutorial::Vector2 GetBikeScreenPosition();
-    float GetObstacleScreenX(const Obstacle &obstacle);
-    models::Palette GetBikePalette();
-    void Update(float deltaSeconds) override;
-
-  private:
-    TravelState state;
 };
 
 // ============================================================================
@@ -548,7 +498,6 @@ class GameLevels
 {
   public:
     static MineLevel &Mine();
-    static JetTravelLevel &Travel();
     static ChapterOneLevel &Chapter();
     static bool IsCombatActive();
     static float AimAngle();
@@ -559,7 +508,6 @@ class GameLevels
   private:
     static GameLevels &Get();
     MineLevel mine;
-    JetTravelLevel travel;
     ChapterOneLevel chapter;
 };
 

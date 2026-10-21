@@ -183,6 +183,8 @@
     <ClInclude Include="Hud.h" />
     <ClInclude Include="Level.h" />
     <ClInclude Include="ModelLibrary.h" />
+    <ClInclude Include="Overworld.h" />
+    <ClInclude Include="ResourceAssets.h" />
     <ClInclude Include="Monitoring\LocalMonitorServer.h" />
     <ClInclude Include="Monitoring\Monitor.h" />
     <ClInclude Include="Profiler.h" />
@@ -202,6 +204,8 @@
     <ClCompile Include="Hud.cpp" />
     <ClCompile Include="Level.cpp" />
     <ClCompile Include="ModelLibrary.cpp" />
+    <ClCompile Include="Overworld.cpp" />
+    <ClCompile Include="ResourceAssets.cpp" />
     <ClCompile Include="Monitoring\LocalMonitorServer.cpp" />
     <ClCompile Include="Monitoring\Monitor.cpp" />
     <ClCompile Include="Profiler.cpp" />
@@ -233,6 +237,13 @@
       <MonitorAsset Include="$(ProjectDir)..\monitor\index.html;$(ProjectDir)..\monitor\app.js;$(ProjectDir)..\monitor\style.css;$(ProjectDir)..\monitor\models.html;$(ProjectDir)..\monitor\models.js;$(ProjectDir)..\monitor\models.css" />
     </ItemGroup>
     <Copy SourceFiles="@(MonitorAsset)" DestinationFolder="$(OutDir)Monitor\" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CopyGameResourcePack" AfterTargets="Build">
+    <ItemGroup>
+      <GameResourcePack Include="$(ProjectDir)..\Resource\Runtime\game-assets.bin;$(ProjectDir)..\Resource\Runtime\manifest.json" />
+    </ItemGroup>
+    <Error Condition="!Exists('$(ProjectDir)..\Resource\Runtime\game-assets.bin')" Text="게임용 리소스 캐시가 없습니다. node tools/pack-resources.mjs 로 생성하세요." />
+    <Copy SourceFiles="@(GameResourcePack)" DestinationFolder="$(OutDir)Resource\Runtime\" SkipUnchangedFiles="true" />
   </Target>
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

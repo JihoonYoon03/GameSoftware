@@ -1,5 +1,7 @@
 ﻿#include "stdafx.h"
 #include "Monitor.h"
+#include "Overworld.h"
+#include "ResourceAssets.h"
 #include "LocalMonitorServer.h"
 #include "../Level.h"
 #include "../ModelLibrary.h"
@@ -123,11 +125,11 @@ std::string Rumor(const char *text, const char *source)
     return result.Finish();
 }
 std::string StaticNpc(const std::string &id, const std::string &name, tutorial::Vector2 position,
-                      const char *role, const std::string &dialogue)
+                      const char *role, const std::string &dialogue, const char *regionId = "halo_07")
 {
     JsonObject result;
     result.Text("id", id);
-    result.Text("region_id", "halo_07");
+    result.Text("region_id", regionId);
     result.Text("name", name);
     result.Text("role", role);
     result.Raw("personality", "null");
@@ -165,7 +167,6 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
 {
     const auto &world = tutorial::Game::Get().GetState();
     const auto &level = game::GameLevels::Mine().GetState();
-    const auto &travel = game::GameLevels::Travel().GetState();
     const auto &chapter = game::GameLevels::Chapter().GetState();
     const size_t fieldScrappers = std::count_if(chapter.scrappers.begin(), chapter.scrappers.end(),
                                                 [](const game::FrontierPerson &p) { return !p.arrived; });
@@ -174,9 +175,15 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                                 (!chapter.kainJoined || chapter.active ? 1 : 0) + fieldScrappers
                           : 0;
     const bool simulating = level.active && !world.isPaused;
-    const bool cityLia = !level.active && !world.isJetTravel && !chapter.active;
+    const bool cityLia = !level.active && !chapter.active;
     const bool cityKain = chapter.kainJoined && !chapter.active;
-    const size_t cityPopulation = world.residents.size() + 1 + (cityLia ? 1 : 0) + (cityKain ? 1 : 0);
+    const size_t haloPopulation = 19 + (cityLia ? 1 : 0) - (chapter.kainJoined ? 1 : 0) + (cityKain ? 1 : 0);
+    const size_t cityPopulation =
+        haloPopulation + (tutorial::Overworld::kCityCount - 1) * tutorial::Overworld::kPopulationPerCity;
+    int currentCity = tutorial::Overworld::CityAt(world.playerPosition);
+    const char *outdoorId = currentCity >= 0 ? tutorial::Overworld::Cities()[currentCity].id : "overworld";
+    const char *outdoorName =
+        currentCity >= 0 ? tutorial::Overworld::Cities()[currentCity].name : "도시 간 연결 도로";
     const size_t minePopulation = level.survivors.size() + (level.active ? 1 : 0);
     size_t aliveMobs = 0;
     for (const auto &enemy : level.enemies)
@@ -193,22 +200,19 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                                          .count());
     result.Number("publish_interval_ms", 500);
     result.Bool("paused", world.isPaused);
-    result.Text("current_region_id", chapter.active      ? "frontier"
-                                     : level.active      ? "mine"
-                                     : world.isJetTravel ? "jet_corridor"
-                                                         : "halo_07");
+    result.Text("current_region_id", chapter.active ? "frontier" : level.active ? "mine" : outdoorId);
     result.Text("current_area", chapter.active          ? "빛나는 개척지 · 발전기/운송대/폐설비"
                                 : level.active          ? "광산 · 구조 신호 조사"
-                                : world.isJetTravel     ? "광산행 제트 주행 회랑"
                                 : world.isInObservatory ? "헤일로 전망대 관측실"
                                 : world.isInsideHome    ? "플레이어의 집"
-                                                        : "헤일로 주거 구역 07");
+                                                        : outdoorName);
     result.Seconds("play_time_seconds", world.playTimeSeconds);
     counts.Number("npc_total", cityPopulation + minePopulation + frontierPopulation);
-    counts.Number("npc_current_region", chapter.active      ? frontierPopulation
-                                        : level.active      ? minePopulation
-                                        : world.isJetTravel ? 0
-                                                            : cityPopulation);
+    counts.Number("npc_current_region", chapter.active     ? frontierPopulation
+                                        : level.active     ? minePopulation
+                                        : currentCity == 0 ? haloPopulation
+                                        : currentCity > 0  ? tutorial::Overworld::kPopulationPerCity
+                                                           : 0);
     counts.Number("npc_simulating", chapter.active && !world.isPaused ? frontierPopulation
                                     : simulating                      ? minePopulation
                                                                       : 0);
@@ -266,23 +270,18 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     flags.Bool("main.chapter1_complete", chapter.recordsCompared);
     flags.Bool("main.outer_waterway_unlocked", chapter.waterwayUnlocked);
     result.Raw("flags", flags.Finish());
-    journey.Bool("active", world.isJetTravel);
-    journey.Seconds("elapsed_seconds", travel.elapsedSeconds);
-    journey.Seconds("distance", travel.distance);
-    journey.Number("route_length", game::kRouteLength);
-    journey.Seconds("progress_percent",
-                    tutorial::Game::Clamp(travel.distance / game::kRouteLength * 100, 0, 100));
-    journey.Seconds("speed", travel.speed);
-    journey.Seconds("lateral_offset", travel.lateralOffset);
-    journey.Seconds("lateral_velocity", travel.lateralVelocity);
-    journey.Seconds("boost_charge", travel.boostCharge);
-    journey.Seconds("speed_penalty_seconds", travel.speedPenaltySeconds);
-    journey.Number("avoided_obstacles", travel.avoidedObstacles);
-    journey.Number("collision_count", travel.collisionCount);
+    journey.Text("mode", "direct_overworld_driving");
+    journey.Bool("active", world.isBikeMounted);
+    journey.Raw("position", Position(world.bikePosition));
+    journey.Seconds("speed", world.bikeSpeed);
+    journey.Seconds("speed_kmh", world.bikeSpeed * models::WorldScale::metersPerUnit * 3.6f);
+    journey.Number("city_spacing", tutorial::Overworld::kCitySpacing);
+    journey.Number("nominal_city_travel_seconds", 20);
     result.Raw("jet_travel", journey.Finish());
 
     auto fillRegion = [](JsonObject &region, const char *id, const char *name, bool loaded, bool current,
-                         bool simulation, size_t population, size_t mobs, size_t respawning) {
+                         bool simulation, size_t population, size_t mobs, size_t respawning,
+                         const char *rumor = nullptr) {
         region.Text("id", id);
         region.Text("name", name);
         region.Bool("loaded", loaded);
@@ -293,9 +292,10 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         region.Text("disposition", "구조 우선 · 신호와 기록의 출처 확인");
         region.Number("mob_alive", mobs);
         region.Number("mob_respawning", respawning);
-        region.Raw("rumors", "[]");
+        region.Raw("rumors", rumor ? "[" + Rumor(rumor, "주민 구전") + "]" : "[]");
     };
-    fillRegion(city, "halo_07", "헤일로 주거 구역 07", true, cityLia, false, cityPopulation, 0, 0);
+    fillRegion(city, "halo_07", "헤일로 주거 구역 07", true, currentCity == 0 && cityLia, false,
+               haloPopulation, 0, 0, tutorial::Overworld::Cities()[0].rumor);
     city.Text("mood",
               level.quest.AreCoordinatesFound() ? "광산 중계 좌표 확보" : "관문 신호의 발신 경로 조사");
     city.Text("power", world.isPowerRestored ? "동쪽 전력 복구" : "동쪽 전력 장애");
@@ -310,12 +310,12 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     mine.Number("map_width", game::kMapSize);
     mine.Number("map_height", game::kMapSize);
     mine.Number("map_seed", level.seed);
-    fillRegion(corridor, "jet_corridor", "광산행 제트 주행 회랑", world.isJetTravel || world.isComplete,
-               world.isJetTravel, world.isJetTravel && !world.isPaused, 0, 0, 0);
-    corridor.Text("mood", "리아와 광산으로 이동");
-    corridor.Text("power", "개인용 제트 추진기");
-    corridor.Text("gate_signal", "광산 통신선의 중계 흔적 확인");
-    corridor.Text("map_size_label", "주행 거리 1800");
+    mine.Number("generation_revision", level.mapRevision);
+    mine.Number("walkable_cells", level.reachableCells.size());
+    fillRegion(corridor, "overworld", "도시 간 연결 도로", true, currentCity < 0 && cityLia, false, 0, 0, 0);
+    corridor.Text("mood", "다섯 도시와 광산을 잇는 개방 도로");
+    corridor.Number("map_width", tutorial::kWorldMaxX - tutorial::kWorldMinX);
+    corridor.Number("map_height", tutorial::kWorldMaxY - tutorial::kWorldMinY);
     size_t activeScrappers = 0;
     for (const auto &person : chapter.scrappers)
     {
@@ -324,8 +324,19 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     fillRegion(frontier, "frontier", "빛나는 개척지", chapter.generated, chapter.active,
                chapter.active && !world.isPaused, frontierPopulation, 0, 0);
     frontier.Text("mood", game::GameLevels::Chapter().Objective());
-    result.Raw("regions", "[" + city.Finish() + "," + mine.Finish() + "," + corridor.Finish() + "," +
-                              frontier.Finish() + "]");
+    std::string regions = city.Finish();
+    for (int i = 1; i < tutorial::Overworld::kCityCount; ++i)
+    {
+        const auto &info = tutorial::Overworld::Cities()[i];
+        JsonObject region;
+        fillRegion(region, info.id, info.name, true, cityLia && currentCity == i, false,
+                   tutorial::Overworld::kPopulationPerCity, 0, 0, info.rumor);
+        region.Text("mood", info.mood);
+        region.Raw("center", Position(info.center));
+        Append(regions, region.Finish());
+    }
+    result.Raw("regions",
+               "[" + regions + "," + mine.Finish() + "," + corridor.Finish() + "," + frontier.Finish() + "]");
 
     std::string npcArray;
     if (cityLia)
@@ -339,9 +350,15 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                                world.isPowerRestored ? "불빛이 돌아왔어요." : "전력 장치를 확인해 주세요."));
     for (size_t i = 0; i < world.residents.size(); ++i)
     {
+        if (i == tutorial::Overworld::kKainResidentSlot && chapter.kainJoined)
+        {
+            continue;
+        }
         const auto &resident = world.residents[i];
-        Append(npcArray, StaticNpc("halo/resident/" + std::to_string(i), resident.name, resident.position,
-                                   "주민", resident.dialogue));
+        Append(npcArray, StaticNpc(std::string(tutorial::Overworld::Cities()[resident.cityIndex].id) +
+                                       "/resident/" + std::to_string(i),
+                                   resident.name, resident.position, "주민", resident.dialogue,
+                                   tutorial::Overworld::Cities()[resident.cityIndex].id));
     }
     auto mineNpc = [&](const std::string &id, const char *name, const char *role, tutorial::Vector2 position,
                        const char *activity, const char *label, size_t remaining, bool following, int group,
@@ -389,9 +406,9 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     for (const auto &npc : level.survivors)
     {
         bool guard = level.rescueGroups[npc.group].combatants;
-        mineNpc("mine/survivor/" + std::to_string(npc.id), guard ? "고립 전투원" : "광부",
-                guard ? "전투원" : "광부", npc.position, npc.evacuating ? "evacuating" : "distress",
-                npc.evacuating ? "헤일로로 철수" : "구조 요청",
+        mineNpc("mine/" + std::to_string(level.mapRevision) + "/survivor/" + std::to_string(npc.id),
+                guard ? "고립 전투원" : "광부", guard ? "전투원" : "광부", npc.position,
+                npc.evacuating ? "evacuating" : "distress", npc.evacuating ? "헤일로로 철수" : "구조 요청",
                 npc.route.size() - (std::min)(npc.route.size(), npc.routeIndex), false, int(npc.group),
                 npc.combat);
     }
@@ -466,6 +483,9 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     investigation.Seconds("scanner_seconds", level.scannerSeconds);
     investigation.Seconds("scanner_cooldown", level.scannerCooldown);
     investigation.Number("active_bullets", level.bullets.size());
+    investigation.Number("map_seed", level.seed);
+    investigation.Number("generation_revision", level.mapRevision);
+    investigation.Number("walkable_cells", level.reachableCells.size());
     investigation.Seconds("flashlight_angle", game::GameLevels::Mine().GetAimAngle());
     investigation.Raw("rescue_groups", "[" + groups + "]");
     result.Raw("mine", investigation.Finish());
@@ -485,7 +505,7 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     {
         const auto &enemy = level.enemies[i];
         JsonObject item;
-        item.Text("id", "mine/mob/" + std::to_string(i));
+        item.Text("id", "mine/" + std::to_string(level.mapRevision) + "/mob/" + std::to_string(i));
         item.Text("region_id", "mine");
         item.Number("health", (std::max)(0, enemy.health));
         item.Number("max_health", game::kEnemyMaxHealth);
@@ -523,6 +543,42 @@ void ModelJson(std::ostream &out, const models::Model &model, const char *catego
         0, false, false, 0, false,
         gender && std::string(gender) == "female" ? models::Gender::Female : models::Gender::Male);
     bool firstPart = true;
+    if (model.resourceId)
+    {
+        auto appendResource = [&](unsigned int resourceId) {
+            const auto &resource = models::ResourceAssets::Get(resourceId);
+            models::SkinMatrices matrices;
+            models::ResourceAssets::Sample(resourceId, nullptr, matrices);
+            for (size_t triangle = 0; triangle < resource.vertices.size(); triangle += 3)
+            {
+                const auto &v = resource.vertices[triangle];
+                if (v.visibility == 1)
+                {
+                    continue;
+                }
+                out << (firstPart ? "" : ",") << "{\"kind\":0,\"palette\":" << unsigned(v.palette)
+                    << ",\"width\":1,\"color\":[" << v.r << ',' << v.g << ',' << v.b << ',' << v.a
+                    << "],\"points\":[";
+                for (size_t j = 0; j < 3; ++j)
+                {
+                    out << (j ? "," : "");
+                    PointJson(out,
+                              models::ResourceAssets::SkinPoint(resource.vertices[triangle + j], matrices));
+                }
+                out << "]}";
+                firstPart = false;
+            }
+        };
+        appendResource(model.resourceId);
+        if (character &&
+            type % size_t(models::CharacterType::Count) != size_t(models::CharacterType::HeavyCombat))
+        {
+            constexpr const char *hairs[] = {"SidePart", "Ponytail", "Buzz",     "Bun",  "Bob",
+                                             "Buzz",     "Buzz",     "SidePart", "Curls"};
+            appendResource(models::ResourceAssets::Find(std::string("hair/") +
+                                                        hairs[type % size_t(models::CharacterType::Count)]));
+        }
+    }
     for (size_t i = 0; i < model.count; ++i)
     {
         const auto &part = model.parts[i];
@@ -549,6 +605,25 @@ void ModelJson(std::ostream &out, const models::Model &model, const char *catego
         firstPart = false;
     }
     out << ']';
+    if (model.resourceId)
+    {
+        const auto &resource = models::ResourceAssets::Get(model.resourceId);
+        out << ",\"source\":" << Quote(resource.source + ".glb")
+            << ",\"triangles\":" << resource.vertices.size() / 3;
+        models::Point previewScale = {1, 1, 1};
+        if (std::string(category) == "building")
+        {
+            previewScale = {resource.physicalSize.x, resource.physicalSize.y,
+                            resource.physicalSize.z / resource.maximum.z};
+        }
+        else if (character)
+        {
+            previewScale = {models::WorldScale::characterScale, models::WorldScale::characterScale,
+                            models::WorldScale::characterScale};
+        }
+        out << ",\"preview_scale\":";
+        PointJson(out, previewScale);
+    }
     if (gender)
     {
         out << ",\"gender\":\"" << gender << "\"";
@@ -583,7 +658,8 @@ std::string ModelCatalog::Build()
     const auto &library = models::ModelLibrary::Get();
     constexpr const char *kVehicleNames[] = {"쿠페", "여객 셔틀", "화물 수송차", "순찰차",
                                              "개인용 제트 오토바이"};
-    constexpr const char *kCharacterNames[] = {"탐험가", "정비사", "경비원", "의무관", "연구원"};
+    constexpr const char *kCharacterNames[] = {"탐험가", "정비사",        "경비원", "의무관", "연구원",
+                                               "광부",   "중장갑 전투원", "조종사", "주민"};
     constexpr const char *kBuildingNames[] = {"압력 주거 모듈", "적층 거주 포드", "자기장 정비 격납고",
                                               "리브 돔 시설", "관문 전망대"};
     std::ostringstream out;

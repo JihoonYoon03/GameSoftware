@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "Hud.h"
 #include "Drawing.h"
+#include "Overworld.h"
 #include "Level.h"
 #include <algorithm>
 #include <cmath>
@@ -12,79 +13,38 @@ namespace tutorial
 // ============================================================================
 // CityHud
 // ============================================================================
-bool CityHud::ContainsMinimapBuilding(const Building &b)
-{
-    if (b.x < kWorldMinX || b.y < kWorldMinY || b.x + b.width > kWorldMaxX || b.y + b.depth > kWorldMaxY)
-    {
-        return false;
-    }
-    for (Vector2 p :
-         {Vector2{b.x, b.y}, {b.x + b.width, b.y}, {b.x, b.y + b.depth}, {b.x + b.width, b.y + b.depth}})
-    {
-        float x = kCanvasWidth - 125.f + (p.x - p.y) * 2.5f;
-        float y = 105 + (p.x + p.y) * 1.25f;
-        if (x < kCanvasWidth - 229.f || x > kCanvasWidth - 28.f || y < 54 || y > 164)
-        {
-            return false;
-        }
-    }
-    return true;
-}
 void CityHud::DrawMinimap()
 {
-    auto &world = Game::Get().GetState();
-    if (!world.isInsideHome && !world.isInObservatory && !world.isJetTravel)
+    const auto &world = Game::Get().GetState();
+    if (world.isInsideHome || world.isInObservatory)
     {
-        float mapCenterX = kCanvasWidth - 125.f, mapCenterY = 105;
-        Drawing::DrawRectangle(kCanvasWidth - 235.f, 20, 213, 150, ColorRGBA(.02f, .055f, .08f, .92f));
-        Drawing::DrawLabel(kCanvasWidth - 220.f, 42, "구역 지도 / 청록색: 내 위치");
-        for (const auto &building : world.buildings)
-        {
-            if (!ContainsMinimapBuilding(building))
-            {
-                continue;
-            }
-            auto project = [=](float x, float y) {
-                return Vector2{mapCenterX + (x - y) * 2.5f, mapCenterY + (x + y) * 1.25f};
-            };
-            Drawing::DrawPolygon({project(building.x, building.y),
-                                  project(building.x + building.width, building.y),
-                                  project(building.x + building.width, building.y + building.depth),
-                                  project(building.x, building.y + building.depth)},
-                                 ColorRGBA(.24f, .34f, .4f));
-        }
-        const Vector2 points[] = {kHomeDoor,       kLiaPosition,     kMaraPosition,        kRelayPosition,
-                                  kBeaconPosition, kJetBikePosition, kCityReceiverPosition};
-        const InteractionTarget targets[] = {InteractionTarget::HomeEntrance, InteractionTarget::Lia,
-                                             InteractionTarget::Mara,         InteractionTarget::PowerRelay,
-                                             InteractionTarget::GateBeacon,   InteractionTarget::JetBike,
-                                             InteractionTarget::CityReceiver};
-        for (int i = 0; i < 7; i++)
-        {
-            if (!Game::Get().IsQuestInteraction(targets[i]))
-            {
-                continue;
-            }
-            float x = mapCenterX + (points[i].x - points[i].y) * 2.5f,
-                  y = mapCenterY + (points[i].x + points[i].y) * 1.25f;
-            Drawing::DrawEllipse(x, y, 3, 3, ColorRGBA(1, .68f, .35f));
-            if (i == 4)
-            {
-                Drawing::DrawLabel(x + 5, y, "전망대");
-            }
-            if (i == 6)
-            {
-                Drawing::DrawLabel(x + 5, y, game::GameLevels::Chapter().IsAvailable() ? "개척지" : "수신망");
-            }
-            if (i == 5)
-            {
-                Drawing::DrawLabel(x + 5, y, "바이크");
-            }
-        }
-        Drawing::DrawEllipse(mapCenterX + (world.playerPosition.x - world.playerPosition.y) * 2.5f,
-                             mapCenterY + (world.playerPosition.x + world.playerPosition.y) * 1.25f, 4, 4,
-                             ColorRGBA(.25f, 1, .9f));
+        return;
     }
+    Drawing::DrawRectangle(1004, 20, 254, 208, {.02f, .055f, .08f, .94f});
+    Drawing::DrawLabel(1016, 42, "도시 연결망 / 인접 도시 약 20초");
+    auto project = [](Vector2 p) { return Vector2{1022 + p.x * .4f, 66 + p.y * .42f}; };
+    const auto &cities = Overworld::Cities();
+    constexpr int links[][2] = {{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 1}};
+    for (const auto &link : links)
+    {
+        Drawing::DrawLine(project(cities[link[0]].center), project(cities[link[1]].center),
+                          {.28f, .48f, .55f}, 2);
+    }
+    Drawing::DrawLine(project({128, 0}), project(Overworld::kMineEntrance), {.8f, .6f, .3f}, 2);
+    for (const auto &city : cities)
+    {
+        auto p = project(city.center);
+        Drawing::DrawEllipse(p.x, p.y, 4, 4, {.5f, .75f, .8f});
+        Drawing::DrawLabel(p.x - 12, p.y + 17, city.name);
+    }
+    auto entrance = project(Overworld::kMineEntrance);
+    Drawing::DrawEllipse(entrance.x, entrance.y, 3, 3, {1, .72f, .3f});
+    Drawing::DrawLabel(entrance.x - 12, entrance.y + 20, "광산");
+    auto bike = project(world.bikePosition);
+    Drawing::DrawEllipse(bike.x, bike.y, 3, 3, {.95f, .65f, .25f});
+    auto player = project(world.playerPosition);
+    Drawing::DrawEllipse(player.x, player.y, 4, 4, {.25f, 1, .9f});
+    Drawing::DrawLabel(1016, 215, "청록: 플레이어 / 주황: 바이크");
 }
 
 // ============================================================================
@@ -92,7 +52,7 @@ void CityHud::DrawMinimap()
 // ============================================================================
 void CityHud::DrawInteractionPrompt()
 {
-    if (Game::Get().IsQuestInteraction(Game::Get().FindNearbyInteraction()))
+    if (Game::Get().FindNearbyInteraction() != InteractionTarget::None)
     {
         Drawing::DrawRectangle(kCanvasWidth * .5f - 95, kCanvasHeight * .69f, 190, 30,
                                ColorRGBA(.02f, .08f, .11f, .9f));
@@ -180,7 +140,9 @@ void CityHud::Draw()
     auto &world = Game::Get().GetState();
     Drawing::DrawRectangle(22, 20, 650, 111, ColorRGBA(.025f, .06f, .09f, .92f));
     Drawing::DrawRectangle(22, 20, 3, 111, ColorRGBA(.27f, .86f, .83f));
-    Drawing::DrawLabel(40, 45, world.isInObservatory ? "헤일로 / N-0 전망대" : "헤일로 / 주거 구역 07",
+    int cityIndex = Overworld::CityAt(world.playerPosition);
+    const char *area = cityIndex >= 0 ? Overworld::Cities()[cityIndex].name : "도시 간 연결 도로";
+    Drawing::DrawLabel(40, 45, world.isInObservatory ? "헤일로 / N-0 전망대" : area,
                        ColorRGBA(.67f, .9f, .91f), GLUT_BITMAP_HELVETICA_18);
     Drawing::DrawLabel(40, 68,
                        world.isInsideHome                          ? "플레이어의 집 / 06:14"
@@ -208,6 +170,15 @@ void CityHud::Draw()
         40, 116, game::GameLevels::Chapter().IsAvailable() ? "1장 / 빛나는 개척지 · J 조사 기록" : timer,
         ColorRGBA(.4f, .6f, .66f));
     DrawMinimap();
+    if (!world.isInsideHome && !world.isInObservatory)
+    {
+        char bike[160];
+        std::snprintf(bike, sizeof(bike),
+                      world.isBikeMounted ? "개인 바이크 / %.0f km/h · W 가속 S 제동 A/D 조향 · E 하차"
+                                          : "도시 5곳 · 도시당 20명 / 주황 표시: 주차한 바이크 · E 탑승",
+                      world.bikeSpeed * models::WorldScale::metersPerUnit * 3.6f);
+        Drawing::DrawLabel(26, float(kCanvasHeight) - 46, bike, {.6f, .9f, .9f});
+    }
     Drawing::DrawRectangle(22, 143, 365, 64, ColorRGBA(.025f, .06f, .09f, .88f));
     Drawing::DrawLabel(40, 165, "선택 목표 / 남겨 둔 불빛", ColorRGBA(.96f, .72f, .4f));
     Drawing::DrawLabel(40, 188,
@@ -216,7 +187,7 @@ void CityHud::Draw()
                        : world.isSideQuestAccepted ? "마라 동쪽의 전력 장치를 복구하세요."
                                                    : "주거 광장의 마라와 대화하세요.");
     Drawing::DrawLabel(26, (float)kCanvasHeight - 22,
-                       "WASD 이동 / E 상호작용 / J 기록 / 1 광산 시험 / 2 현장 시험 / Esc 일시정지",
+                       "WASD 이동·운전 / E 상호작용·승하차 / 광산 입구에서 하차 후 E 입장 / Esc 휴식",
                        ColorRGBA(.63f, .78f, .81f));
     DrawInteractionPrompt();
 }
@@ -312,31 +283,6 @@ void MineHud::Draw()
     Drawing::DrawLabel(
         26, kCanvasHeight - 22.f,
         "WASD 이동 / 마우스 조준·좌클릭 사격 / R 재장전 / F 스캔 / E 조사·구조·회수 / Q 회복 / Esc 정지");
-}
-
-// ============================================================================
-// JetTravelHud
-// ============================================================================
-void JetTravelHud::Draw()
-{
-    using namespace tutorial;
-    Drawing::DrawRectangle(22, 20, 445, 108, ColorRGBA(.015f, .05f, .08f, .94f));
-    Drawing::DrawLabel(40, 47, "제트 바이크 / 광산 진입 회랑", ColorRGBA(.55f, .93f, .94f),
-                       GLUT_BITMAP_HELVETICA_18);
-    char progress[128];
-    std::snprintf(progress, sizeof(progress), "이동 %.0f%% / 속도 %.0f km/h / 잔해 회피 %d",
-                  game::GameLevels::Travel().GetState().distance / game::kRouteLength * 100,
-                  game::GameLevels::Travel().GetState().speed * 3.6f,
-                  game::GameLevels::Travel().GetState().avoidedObstacles);
-    Drawing::DrawLabel(40, 74, progress);
-    Drawing::DrawRectangle(40, 88, 400, 7, ColorRGBA(.11f, .2f, .23f));
-    Drawing::DrawRectangle(40, 88, 400 * game::GameLevels::Travel().GetState().distance / game::kRouteLength,
-                           7, ColorRGBA(.3f, .85f, .88f));
-    Drawing::DrawLabel(40, 118, "부스트 잔량", ColorRGBA(.7f, .78f, .8f));
-    Drawing::DrawRectangle(142, 107, 290 * game::GameLevels::Travel().GetState().boostCharge, 7,
-                           ColorRGBA(.95f, .64f, .26f));
-    Drawing::DrawLabel(26, float(kCanvasHeight) - 22,
-                       "W·S 위아래 조종 / D 가속 / A 감속 / Space 부스트 / Esc 일시정지");
 }
 
 // ============================================================================
@@ -485,11 +431,9 @@ void Hud::Render()
     static ChapterHud chapter;
     static CityHud city;
     static MineHud mine;
-    static JetTravelHud travel;
-    Hud &current = game::GameLevels::Chapter().IsActive()  ? static_cast<Hud &>(chapter)
-                   : game::GameLevels::Mine().IsActive()   ? static_cast<Hud &>(mine)
-                   : game::GameLevels::Travel().IsActive() ? static_cast<Hud &>(travel)
-                                                           : static_cast<Hud &>(city);
+    Hud &current = game::GameLevels::Chapter().IsActive() ? static_cast<Hud &>(chapter)
+                   : game::GameLevels::Mine().IsActive()  ? static_cast<Hud &>(mine)
+                                                          : static_cast<Hud &>(city);
     current.Draw();
     ChapterHud::DrawJournal();
     DrawNoticePanel();

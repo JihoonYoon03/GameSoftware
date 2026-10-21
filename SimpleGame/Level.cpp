@@ -1,10 +1,12 @@
 ﻿#include "stdafx.h"
 #include "Level.h"
 #include "Profiler.h"
+#include "ResourceAssets.h"
 #include <algorithm>
 #include <cmath>
 #include <queue>
 #include <random>
+#include <utility>
 
 namespace game
 {
@@ -74,11 +76,6 @@ const char *MineQuest::GetObjective() const
 }
 namespace
 {
-constexpr float kCruiseSpeed = 58;
-constexpr float kBoostSpeed = 108;
-constexpr float kMinimumSpeed = 22;
-constexpr float kSteeringRate = 2.8f;
-constexpr float kBikeScreenX = 400;
 constexpr int kDirections[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 constexpr float kPi = tutorial::kPi;
 } // namespace
@@ -104,26 +101,6 @@ void MineMap::Room(int left, int top, int right, int bottom)
         for (int x = left; x <= right; ++x)
         {
             Carve(x, y);
-        }
-    }
-}
-
-void MineMap::Tunnel(int x, int y, int targetX, int targetY)
-{
-    for (;;)
-    {
-        Room(x - 1, y - 1, x + 1, y + 1);
-        if (x == targetX && y == targetY)
-        {
-            break;
-        }
-        if (x != targetX)
-        {
-            x += x < targetX ? 1 : -1;
-        }
-        else
-        {
-            y += y < targetY ? 1 : -1;
         }
     }
 }
@@ -164,7 +141,7 @@ std::vector<int> MineMap::Distances(tutorial::Vector2 destination, bool ignoreGa
 
 bool MineMap::IsGateCell(int x, int y)
 {
-    return x == 32 && y >= 28 && y <= 30;
+    return x == kMineGateX && y >= kMineGateY - 3 && y <= kMineGateY + 3;
 }
 
 bool MineMap::IsWalkable(int x, int y)
@@ -252,35 +229,108 @@ void MineMap::Generate(std::uint32_t seed)
     state.mapRevision = ++level.generationRevision;
     state.seed = seed;
     state.tiles.assign(kMapSize * kMapSize, Tile::Wall);
-    // Authored mine topology: branching drifts, one closed bulkhead, deeper ruins.
-    // No four-team test arena or randomly scattered repair facilities remain.
-    Room(5, 5, 13, 13);
-    Tunnel(8, 10, 24, 10);
-    Tunnel(24, 10, 24, 29);
-    Room(22, 22, 29, 31);
-    Tunnel(24, 29, 48, 29);
-    Tunnel(48, 29, 48, 47);
-    Room(42, 42, 55, 54);
-    Room(13, 17, 21, 24);
-    Tunnel(17, 20, 24, 20);
-    Tunnel(12, 20, 12, 43);
-    Tunnel(12, 20, 17, 20);
-    Room(7, 40, 16, 47);
-    Room(40, 11, 47, 18);
-    Tunnel(44, 15, 44, 29);
-    Room(49, 33, 57, 40);
-    Tunnel(48, 36, 54, 36);
-    // Wall x=32 can only be crossed at the powered bulkhead.
+    std::mt19937 random(seed);
+    auto integer = [&random](int low, int high) {
+        return std::uniform_int_distribution<int>(low, high)(random);
+    };
+    auto chamber = [this](int x, int y, int rx, int ry) {
+        for (int dy = -ry; dy <= ry; ++dy)
+        {
+            for (int dx = -rx; dx <= rx; ++dx)
+            {
+                if (float(dx * dx) / (rx * rx) + float(dy * dy) / (ry * ry) <= 1.15f)
+                {
+                    Carve(x + dx, y + dy);
+                }
+            }
+        }
+    };
+    auto passage = [&chamber, &integer](tutorial::Vector2 from, tutorial::Vector2 to) {
+        // A drifting midpoint breaks up straight grid corridors; circular brushes widen turns.
+        tutorial::Vector2 middle = {(from.x + to.x) * .5f + integer(-5, 5),
+                                    (from.y + to.y) * .5f + integer(-5, 5)};
+        for (auto segment : {std::make_pair(from, middle), std::make_pair(middle, to)})
+        {
+            int steps =
+                (std::max)(1, int(std::ceil(tutorial::Game::Distance(segment.first, segment.second) * 2)));
+            int radius = integer(3, 4);
+            for (int step = 0; step <= steps; ++step)
+            {
+                float t = float(step) / steps;
+                chamber(int(segment.first.x + (segment.second.x - segment.first.x) * t),
+                        int(segment.first.y + (segment.second.y - segment.first.y) * t), radius, radius);
+            }
+        }
+    };
+    // Each half has its own connected, loop-rich graph. The quest bulkhead is the only crossing.
+    std::vector<tutorial::Vector2> nodes;
+    for (int side = 0; side < 2; ++side)
+    {
+        for (int row = 0; row < 6; ++row)
+        {
+            for (int column = 0; column < 3; ++column)
+            {
+                tutorial::Vector2 p = {float(side * 64 + 12 + column * 18 + integer(-3, 3)),
+                                       float(12 + row * 20 + integer(-4, 4))};
+                nodes.push_back(p);
+                chamber(int(p.x), int(p.y), integer(5, 9), integer(5, 9));
+                if (column > 0)
+                {
+                    passage(nodes.back(), nodes[nodes.size() - 2]);
+                }
+                if (row > 0)
+                {
+                    passage(nodes.back(), nodes[nodes.size() - 4]);
+                }
+            }
+        }
+    }
+    auto attach = [&nodes, &chamber, &passage](tutorial::Vector2 p) {
+        const tutorial::Vector2 *nearest = nullptr;
+        float distance = 1.e9f;
+        for (const auto &node : nodes)
+        {
+            if ((node.x < kMineGateX) != (p.x < kMineGateX))
+            {
+                continue;
+            }
+            float candidate = tutorial::Game::Distance(p, node);
+            if (candidate < distance)
+            {
+                distance = candidate;
+                nearest = &node;
+            }
+        }
+        chamber(int(p.x), int(p.y), 5, 5);
+        if (nearest)
+        {
+            passage(p, *nearest);
+        }
+    };
+    for (auto p : {state.entry,
+                   kPowerBypass,
+                   kRuinSignal,
+                   kObserverGlyph,
+                   kCoordinateTerminal,
+                   tutorial::Vector2{35.5f, 41.5f},
+                   {23.5f, 87.5f},
+                   {89.5f, 31.5f},
+                   {107.5f, 73.5f},
+                   {54.5f, kMineGateY + .5f},
+                   {74.5f, kMineGateY + .5f}})
+    {
+        attach(p);
+    }
+    Room(54, kMineGateY - 3, 74, kMineGateY + 3);
     for (int y = 1; y < kMapSize - 1; ++y)
     {
-        if (!IsGateCell(32, y))
+        if (!IsGateCell(kMineGateX, y))
         {
-            state.tiles[y * kMapSize + 32] = Tile::Wall;
+            state.tiles[y * kMapSize + kMineGateX] = Tile::Wall;
         }
     }
     auto connected = Distances(state.entry, true);
     state.reachableCells.clear();
-    std::mt19937 random(seed);
     for (int cell = 0; cell < kMapSize * kMapSize; ++cell)
     {
         if (connected[cell] < 0)
@@ -292,13 +342,21 @@ void MineMap::Generate(std::uint32_t seed)
             state.reachableCells.push_back(cell);
         }
     }
-    state.lights = {{state.entry, 4.8f},       {{17.5f, 10.5f}, 2.8f}, {{17.5f, 20.5f}, 3.2f},
-                    {{11.5f, 43.5f}, 3.2f},    {kPowerBypass, 3.5f},   {{32.5f, 29.5f}, 4.f, true},
-                    {{44.5f, 15.5f}, 3.2f},    {{53.5f, 36.5f}, 3.2f}, {kRuinSignal, 3.8f},
+    state.lights = {{state.entry, 4.8f},
+                    {{35.5f, 41.5f}, 3.2f},
+                    {{23.5f, 87.5f}, 3.2f},
+                    {kPowerBypass, 3.5f},
+                    {{kMineGateX + .5f, kMineGateY + .5f}, 4.f, true},
+                    {{89.5f, 31.5f}, 3.2f},
+                    {{107.5f, 73.5f}, 3.2f},
+                    {kRuinSignal, 3.8f},
                     {kCoordinateTerminal, 3.f}};
     state.rescueGroups = {
-        {{17.5f, 20.5f}, false}, {{11.5f, 43.5f}, true}, {{44.5f, 15.5f}, false}, {{53.5f, 36.5f}, true}};
+        {{35.5f, 41.5f}, false}, {{23.5f, 87.5f}, true}, {{89.5f, 31.5f}, false}, {{107.5f, 73.5f}, true}};
     state.survivors.clear();
+    state.rescuedPeople = 0;
+    state.returnedPeople = 0;
+    state.scannerCooldown = 0;
     std::uint64_t id = 1;
     for (size_t i = 0; i < state.rescueGroups.size(); ++i)
     {
@@ -332,12 +390,12 @@ void MineMap::Generate(std::uint32_t seed)
     state.bullets.clear();
     state.tracers.clear();
     state.scannerContacts.clear();
-    state.riaPosition = {9.5f, 10.5f};
+    state.riaPosition = {state.entry.x + 1, state.entry.y + 1};
     state.riaFacing = {};
     state.riaCombat = {};
     state.riaRoute.clear();
     state.riaRouteIndex = 0;
-    UpdateNavigation();
+    state.navigationDistances = Distances(state.entry);
     state.generated = true;
 }
 
@@ -1136,14 +1194,13 @@ void MineLevel::Enter(bool debugEntry)
         return;
     }
     state.quest.Advance(MineQuestStage::TravelToMine);
-    if (!state.generated)
-    {
-        Map().Generate(std::random_device{}());
-    }
+    // Every entry is a fresh instance; story flags, inventory and RPG stats survive regeneration.
+    Map().Generate(std::random_device{}());
     state.active = true;
     world.isInsideHome = false;
     world.isInObservatory = false;
-    world.isJetTravel = false;
+    world.isBikeMounted = false;
+    world.bikeSpeed = 0;
     world.playerPosition = state.entry;
     world.cameraPosition = state.entry;
     state.riaPosition = {state.entry.x + 1, state.entry.y + 1};
@@ -1163,7 +1220,6 @@ void MineLevel::Enter(bool debugEntry)
 void MineLevel::Leave()
 {
     auto &world = tutorial::Game::Get().GetState();
-    state.quest.Advance(MineQuestStage::ReturnToHalo);
     state.active = false;
     state.bullets.clear();
     state.tracers.clear();
@@ -1171,18 +1227,16 @@ void MineLevel::Leave()
     ClearInput();
     world.isInsideHome = false;
     world.isInObservatory = false;
-    world.isJetTravel = false;
-    world.playerPosition = tutorial::kJetBikePosition;
-    world.cameraPosition = tutorial::kJetBikePosition;
+    world.playerPosition = world.mineReturnPosition;
+    world.cameraPosition = world.playerPosition;
     if (state.quest.GetStage() == MineQuestStage::Complete)
     {
         GameLevels::Chapter().Unlock();
     }
     tutorial::Game::Get().ShowNotice(
-        state.quest.GetStage() == MineQuestStage::Complete
-            ? "낙하한 신호 완료 / 중계 좌표를 헤일로에 보고했습니다. 도시 수신망 단말에서 1장 현장 조사를 "
-              "시작하세요. 발전기·운송대·폐설비를 원하는 순서로 조사할 수 있습니다."
-            : "헤일로 / 조사와 구조 기록은 유지됩니다. 준비되면 바이크로 광산에 다시 갈 수 있습니다.");
+        state.quest.GetStage() == MineQuestStage::ReturnToHalo
+            ? "광산 입구 / 바이크로 헤일로에 돌아가 도시 수신망에서 중계 좌표를 보고하세요."
+            : "광산 입구 / 조사·경험치는 유지됩니다. 주차한 바이크로 돌아가거나 E로 새 광산에 입장하세요.");
 }
 
 void MineLevel::Reset()
@@ -1364,129 +1418,6 @@ void MineLevel::Update(float deltaSeconds)
 }
 
 // ============================================================================
-// JetTravelLevel : Level
-// ============================================================================
-void JetTravelLevel::Reset()
-{
-    state = TravelState{};
-    tutorial::Game::Get().GetState().isJetTravel = false;
-}
-void JetTravelLevel::Enter(bool)
-{
-    auto &world = tutorial::Game::Get().GetState();
-    if (!GameLevels::Mine().GetState().quest.BeginJourney())
-    {
-        tutorial::Game::Get().ShowNotice("리아 / 도시 수신망에서 광산 중계 흔적부터 확인하자.");
-        return;
-    }
-    Reset();
-    state.active = true;
-    constexpr float lanes[kObstacleCount] = {0, -.65f, .6f, -.35f, .75f, -.75f, .15f};
-    for (int i = 0; i < kObstacleCount; ++i)
-    {
-        state.obstacles[i] = {240.f + i * 215.f, lanes[i], false};
-    }
-    world.isJetTravel = true;
-    world.isInsideHome = false;
-    world.isInObservatory = false;
-    world.cameraPosition = {0, 0};
-    world.movementAmount = 0;
-    std::fill(world.pressedKeys, world.pressedKeys + 256, false);
-    tutorial::Game::Get().ShowNotice(
-        "제트 바이크 / W·S로 위아래 조종, D 가속, A 감속, Space 부스트. 붉은 장애물을 "
-        "피하며 광산으로 이동하세요.");
-}
-bool JetTravelLevel::IsActive() const
-{
-    return state.active;
-}
-tutorial::Vector2 JetTravelLevel::GetBikeScreenPosition()
-{
-    return {kBikeScreenX, 485 + state.lateralOffset * 115};
-}
-float JetTravelLevel::GetObstacleScreenX(const Obstacle &obstacle)
-{
-    return kBikeScreenX + (obstacle.distance - state.distance) * kRoutePixelScale;
-}
-models::Palette JetTravelLevel::GetBikePalette()
-{
-    models::Palette palette;
-    palette.body = {.62f, .69f, .74f, 1};
-    palette.accent = {.9f, .5f, .22f, 1};
-    palette.emission = {.3f, .9f, 1, 1};
-    return palette;
-}
-void JetTravelLevel::Update(float deltaSeconds)
-{
-    auto &world = tutorial::Game::Get().GetState();
-    if (!state.active)
-    {
-        return;
-    }
-    const auto &keys = world.pressedKeys;
-    state.elapsedSeconds += deltaSeconds;
-    float steering = (keys['s'] ? 1.f : 0) - (keys['w'] ? 1.f : 0);
-    float smoothing = 1 - std::exp(-8 * deltaSeconds);
-    state.lateralVelocity += (steering * kSteeringRate - state.lateralVelocity) * smoothing;
-    state.lateralOffset =
-        tutorial::Game::Clamp(state.lateralOffset + state.lateralVelocity * deltaSeconds, -1, 1);
-    if ((state.lateralOffset >= 1 && state.lateralVelocity > 0) ||
-        (state.lateralOffset <= -1 && state.lateralVelocity < 0))
-    {
-        state.lateralVelocity = 0;
-    }
-    float targetYaw = tutorial::Game::Clamp(state.lateralVelocity / kSteeringRate, -1, 1) * tutorial::kPi / 6;
-    state.yawRadians += (targetYaw - state.yawRadians) * smoothing;
-    bool boosting = keys[' '] && state.boostCharge > .03f;
-    state.boostCharge =
-        tutorial::Game::Clamp(state.boostCharge + (boosting ? -.32f : .18f) * deltaSeconds, 0, 1);
-    state.speedPenaltySeconds = (std::max)(0.f, state.speedPenaltySeconds - deltaSeconds);
-    float targetSpeed = boosting ? kBoostSpeed : keys['d'] ? 82.f : keys['a'] ? kMinimumSpeed : kCruiseSpeed;
-    if (state.speedPenaltySeconds > 0)
-    {
-        targetSpeed = kMinimumSpeed;
-    }
-    state.speed += (targetSpeed - state.speed) * (1 - std::exp(-2 * deltaSeconds));
-    state.distance = (std::min)(kRouteLength, state.distance + state.speed * deltaSeconds);
-    for (auto &obstacle : state.obstacles)
-    {
-        if (obstacle.passed || obstacle.distance > state.distance)
-        {
-            continue;
-        }
-        obstacle.passed = true;
-        if (std::fabs(state.lateralOffset - obstacle.lane) < .3f)
-        {
-            ++state.collisionCount;
-            state.speed *= .45f;
-            state.speedPenaltySeconds = .8f;
-            tutorial::Game::Get().ShowNotice(
-                "차체 경고 / 부유 잔해에 접촉했습니다. 자세를 회복하고 주행을 계속하세요.");
-        }
-        else
-        {
-            ++state.avoidedObstacles;
-        }
-    }
-    if (state.distance >= kRouteLength)
-    {
-        state.active = false;
-        world.isJetTravel = false;
-        world.isComplete = true;
-        world.mainQuestStage = tutorial::MainQuestStage::Complete;
-        GameLevels::Mine().Enter();
-        tutorial::Game::Get().ShowNotice(
-            "광산 / 제트 바이크를 입구에 주차했습니다. 구조 요청이 갱도 곳곳에서 들립니다. "
-            "마우스 사격 / R 재장전 / F 구조 스캔 / E 조사·구조.");
-    }
-}
-
-TravelState &JetTravelLevel::GetState()
-{
-    return state;
-}
-
-// ============================================================================
 // ChapterOneLevel : Level — Light of the Frontier
 // ============================================================================
 ChapterOneLevel::ChapterOneLevel() : map(*this), combat(*this), party(*this)
@@ -1568,8 +1499,15 @@ void FrontierMap::Generate()
         {14, 7, 3, 4, 125, models::BuildingType::Habitat, {{.3f, .43f, .5f, 1}, {.65f, .5f, .32f, 1}}},
         {31, 28, 3, 2, 85, models::BuildingType::Workshop, {{.33f, .36f, .4f, 1}, {.68f, .39f, .2f, 1}}},
         {36, 30, 3, 5, 120, models::BuildingType::Terraced, {{.35f, .32f, .34f, 1}, {.5f, .42f, .29f, 1}}}};
-    for (const auto &b : state.structures)
+    for (auto &b : state.structures)
     {
+        // Fit imported proportions inside the authored foundations without blocking quest approaches.
+        const auto &model = models::ModelLibrary::Get().buildings[size_t(b.type)];
+        const auto &resource = models::ResourceAssets::Get(model.resourceId);
+        const float scale = (std::min)(b.width / resource.physicalSize.x, b.depth / resource.physicalSize.y);
+        b.width = resource.physicalSize.x * scale;
+        b.depth = resource.physicalSize.y * scale;
+        b.height = resource.physicalSize.z / resource.maximum.z * scale * 44.f;
         for (int y = int(b.y); y < int(b.y + b.depth); ++y)
         {
             for (int x = int(b.x); x < int(b.x + b.width); ++x)
@@ -1726,13 +1664,14 @@ void ChapterOneLevel::Enter(bool debugEntry)
         map.Generate();
     }
     GameLevels::Mine().GetState().active = false;
-    GameLevels::Travel().GetState().active = false;
     state.active = true;
     state.invulnerability = 3;
     state.bullets.clear();
     state.tracers.clear();
     auto &world = tutorial::Game::Get().GetState();
-    world.isInsideHome = world.isInObservatory = world.isJetTravel = world.mouseFiring = false;
+    world.isBikeMounted = false;
+    world.bikeSpeed = 0;
+    world.isInsideHome = world.isInObservatory = world.mouseFiring = false;
     std::fill(std::begin(world.pressedKeys), std::end(world.pressedKeys), false);
     world.playerPosition = world.cameraPosition = kFrontierEntry;
     state.ria.position = {6.5f, 6.5f};
@@ -2412,10 +2351,6 @@ MineLevel &GameLevels::Mine()
 {
     return Get().mine;
 }
-JetTravelLevel &GameLevels::Travel()
-{
-    return Get().travel;
-}
 ChapterOneLevel &GameLevels::Chapter()
 {
     return Get().chapter;
@@ -2438,10 +2373,6 @@ Level *GameLevels::Active()
     {
         return &Chapter();
     }
-    if (Travel().IsActive())
-    {
-        return &Travel();
-    }
     if (Mine().IsActive())
     {
         return &Mine();
@@ -2450,8 +2381,7 @@ Level *GameLevels::Active()
 }
 void GameLevels::Reset()
 {
-    for (Level *level :
-         {static_cast<Level *>(&Mine()), static_cast<Level *>(&Travel()), static_cast<Level *>(&Chapter())})
+    for (Level *level : {static_cast<Level *>(&Mine()), static_cast<Level *>(&Chapter())})
     {
         level->Reset();
     }

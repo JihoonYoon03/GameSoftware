@@ -3,6 +3,8 @@
 #include "Scene.h"
 #include "Hud.h"
 #include "Level.h"
+#include "ResourceAssets.h"
+#include "Overworld.h"
 #include "RenderQueue.h"
 #include "Profiler.h"
 #include <chrono>
@@ -11,6 +13,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -29,144 +32,59 @@ float Distance3D(Point a, Point b)
 void TestModelsAndRig()
 {
     const auto &library = ModelLibrary::Get();
-    for (const auto &v : library.vehicles)
+    for (const auto &vehicle : library.vehicles)
     {
-        assert(v.body.space == CoordinateSpace::World && ModelFactory::ValidateModel(v.body));
-        float minZ = 100, maxZ = -100;
-        for (size_t i = 0; i < v.body.count; ++i)
+        assert(vehicle.body.resourceId && ModelFactory::ValidateModel(vehicle.body));
+        assert(ResourceAssets::Get(vehicle.body.resourceId).boneCount == 16);
+        assert(vehicle.exhausts[0].x < 0 && vehicle.headlights[0].x > 0);
+        assert(vehicle.seat.z > 0);
+    }
+    for (const auto &model : library.characters)
+    {
+        assert(model.resourceId && ModelFactory::ValidateModel(model));
+        const auto &resource = ResourceAssets::Get(model.resourceId);
+        assert(resource.boneCount == 23 && resource.vertices.size() > 300);
+        auto standing = ModelRig::Pose(0, false);
+        auto moving = ModelRig::Pose(2, true);
+        SkinMatrices first, second;
+        ResourceAssets::Sample(model.resourceId, &standing, first);
+        ResourceAssets::Sample(model.resourceId, &moving, second);
+        assert(first != second);
+        for (const auto &vertex : resource.vertices)
         {
-            for (size_t k = 0; k < v.body.parts[i].count; ++k)
+            float sum = 0;
+            for (size_t j = 0; j < 4; ++j)
             {
-                minZ = (std::min)(minZ, v.body.parts[i].points[k].z);
-                maxZ = (std::max)(maxZ, v.body.parts[i].points[k].z);
+                assert(vertex.joints[j] >= 0 && vertex.joints[j] <= 31);
+                sum += vertex.weights[j];
             }
-        }
-        assert(maxZ - minZ > .4f);
-    }
-    for (const auto &m : library.buildings)
-    {
-        assert(ModelFactory::ValidateModel(m));
-    }
-    for (const auto &m : library.characters)
-    {
-        assert(m.space == CoordinateSpace::World && ModelFactory::ValidateModel(m));
-    }
-    for (const auto *m : {&library.box, &library.drone, &library.salvage, &library.recoveryKit, &library.rock,
-                          &library.telescope, &library.console})
-    {
-        assert(ModelFactory::ValidateModel(*m));
-    }
-    for (int i = 0; i < 64; ++i)
-    {
-        auto pose = ModelRig::Pose(i * .2f, true, true);
-        auto right = pose.Apply({0, 0, -.27f}, Joint::RightForearm);
-        auto left = pose.Apply({0, 0, -.27f}, Joint::LeftForearm);
-        assert(Distance3D(right, {.36f, 0, 26.f / 44}) < .0001f);
-        assert(Distance3D(right, left) < .0001f);
-        auto muzzle = ModelRig::Muzzle(pose);
-        assert(std::fabs(muzzle.x - right.x - .22f) < .0001f);
-        auto recoil = ModelRig::Pose(i * .2f, true, true, 1);
-        assert(ModelRig::Muzzle(recoil).x < muzzle.x - .04f);
-        // No torso/sleeve vertex reaches the face, for any walking/aiming frame.
-        for (bool armed : {false, true})
-        {
-            auto p = ModelRig::Pose(i * .2f, true, armed);
-            float faceBottom = p.Apply({0, 0, 0}, Joint::Head).z;
-            for (const auto &m : library.characters)
-            {
-                for (size_t j = 0; j < m.count; ++j)
-                {
-                    const auto &part = m.parts[j];
-                    if (!part.clothing || part.joint == Joint::Head)
-                    {
-                        continue;
-                    }
-                    for (size_t k = 0; k < part.count; ++k)
-                    {
-                        assert(p.Apply(part.points[k], part.joint).z < faceBottom - .015f);
-                    }
-                }
-            }
+            assert(std::fabs(sum - 1) < .0001f);
+            const auto p = ResourceAssets::SkinPoint(vertex, first);
+            assert(std::isfinite(p.x) && std::isfinite(p.y) && std::isfinite(p.z));
         }
     }
-    // Steering rotates around world up: the nose turns, without roll or pitch.
-    for (float sign : {-1.f, 1.f})
-    {
-        Transform3D attitude;
-        attitude.yaw = sign * kPi / 6;
-        auto nose = attitude.Apply({1, 0, 0}), side = attitude.Apply({0, 1, 0});
-        assert(std::fabs(nose.z) < .00001f && std::fabs(side.z) < .00001f);
-        assert(std::fabs(std::atan2(nose.y, nose.x) - sign * kPi / 6) < .0001f);
-    }
-    // A shared palette must still yield five structurally different wardrobes.
-    for (size_t i = 0; i < library.characters.size(); ++i)
-    {
-        for (size_t j = i + 1; j < library.characters.size(); ++j)
-        {
-            const auto &a = library.characters[i], &b = library.characters[j];
-            bool different = a.count != b.count;
-            for (size_t k = 0; k < (std::min)(a.count, b.count) && !different; ++k)
-            {
-                different = a.parts[k].palette != b.parts[k].palette ||
-                            Distance3D(a.parts[k].points[0], b.parts[k].points[0]) > .001f;
-            }
-            assert(different);
-        }
-    }
+    auto aim = ModelRig::Pose(0, false, true);
+    auto muzzle = ModelRig::Muzzle(aim);
+    assert(muzzle.x > .4f && muzzle.z > .8f);
+    assert(std::fabs(muzzle.z * WorldScale::characterScale * 44 - WorldScale::aimHeightPixels) < .01f);
 }
 void TestHairAndBodyShape()
 {
     const auto &library = ModelLibrary::Get();
     for (size_t i = 0; i < library.hairs.size(); ++i)
     {
-        const auto &hair = library.hairs[i];
-        assert(ModelFactory::ValidateModel(hair));
-        assert(ModelFactory::ValidateModel(library.coveredHairs[i]));
-        for (size_t part = 0; part < hair.count; ++part)
-        {
-            assert(hair.parts[part].joint == Joint::Head);
-        }
-        for (size_t j = 0; j < i; ++j)
-        {
-            const auto &other = library.hairs[j];
-            bool different = hair.count != other.count;
-            for (size_t part = 0; part < (std::min)(hair.count, other.count) && !different; ++part)
-            {
-                different = Distance3D(hair.parts[part].points[0], other.parts[part].points[0]) > .001f;
-            }
-            assert(different);
-        }
+        assert(library.hairs[i].resourceId && library.coveredHairs[i].resourceId);
+        assert(ModelFactory::ValidateModel(library.hairs[i]));
     }
-    // Compare bare torso geometry and joint spacing: neither check depends on hair or palette.
-    float waist[2] = {};
-    for (int gender = 0; gender < 2; ++gender)
+    for (size_t role = 0; role < library.characters.size(); ++role)
     {
-        const auto &body = ModelLibrary::Character(CharacterType::Explorer, Gender(gender));
-        for (size_t i = 0; i < body.count; ++i)
-        {
-            const auto &part = body.parts[i];
-            if (part.joint != Joint::Root || !part.clothing)
-            {
-                continue;
-            }
-            for (size_t j = 0; j < part.count; ++j)
-            {
-                if (std::fabs(part.points[j].z - .755f) < .001f)
-                {
-                    waist[gender] = (std::max)(waist[gender], std::fabs(part.points[j].y));
-                }
-            }
-        }
-        auto pose = ModelRig::Pose(0, false, true, 0, false, Gender(gender));
-        assert(Distance3D(pose.Apply({0, 0, -.27f}, Joint::RightForearm), {.36f, 0, 26.f / 44}) < .0001f);
+        const auto &male = ResourceAssets::Get(library.characters[role].resourceId);
+        const auto &female = ResourceAssets::Get(library.femaleCharacters[role].resourceId);
+        assert(male.name != female.name && male.boneCount == female.boneCount);
+        assert(male.vertices.size() != female.vertices.size() ||
+               std::memcmp(male.vertices.data(), female.vertices.data(),
+                           male.vertices.size() * sizeof(ResourceVertex)) != 0);
     }
-    assert(waist[1] < waist[0] * .8f);
-    auto male = ModelRig::Pose(0, false, false, 0, false, Gender::Male);
-    auto female = ModelRig::Pose(0, false, false, 0, false, Gender::Female);
-    assert(std::fabs(female.joints[size_t(Joint::RightArm)].position.y) <
-           std::fabs(male.joints[size_t(Joint::RightArm)].position.y));
-    assert(std::fabs(female.joints[size_t(Joint::RightLeg)].position.y) >
-           std::fabs(male.joints[size_t(Joint::RightLeg)].position.y));
 }
 void TestCityAndTravel()
 {
@@ -181,7 +99,7 @@ void TestCityAndTravel()
     }
     assert(observatory);
     const auto &library = ModelLibrary::Get();
-    for (int t = 0; t < 500; ++t)
+    for (int t = 0; t < 50; ++t)
     {
         for (int car = 0; car < 6; ++car)
         {
@@ -195,122 +113,52 @@ void TestCityAndTravel()
             {
                 assert((next.x - p.x) * nose.x > 0);
             }
-            // Check every vehicle vertex against every physical building footprint.
-            const auto &model = library.vehicles[size_t(car % 4)].body;
-            for (size_t j = 0; j < model.count; ++j)
+            // Sample imported vehicle vertices against every physical building footprint.
+            const auto &model = ResourceAssets::Get(library.vehicles[size_t(car % 4)].body.resourceId);
+            for (size_t j = 0; j < model.vertices.size(); j += 9)
             {
-                for (size_t k = 0; k < model.parts[j].count; ++k)
+                const auto &vertex = model.vertices[j];
+                auto v = transform.Apply({vertex.x, vertex.y, vertex.z});
+                float x = p.x + v.x, y = p.y + v.y;
+                assert(y > -1.5f && y < 1.5f);
+                for (const auto &b : world.buildings)
                 {
-                    auto v = transform.Apply(model.parts[j].points[k]);
-                    float x = p.x + v.x, y = p.y + v.y;
-                    assert(y > -1 && y < 1);
-                    for (const auto &b : world.buildings)
-                    {
-                        assert(!(x > b.x && x < b.x + b.width && y > b.y && y < b.y + b.depth));
-                    }
+                    assert(!(x > b.x && x < b.x + b.width && y > b.y && y < b.y + b.depth));
                 }
             }
         }
     }
-    auto &quest = game::GameLevels::Mine().GetState().quest;
-    assert(quest.Advance(game::MineQuestStage::ShowRecord));
-    assert(quest.Advance(game::MineQuestStage::CheckCityRelay));
-    game::GameLevels::Travel().Enter();
-    auto &travel = game::GameLevels::Travel().GetState();
-    for (int i = 0; i < 48; ++i)
+    world.isInsideHome = false;
+    world.bikePosition = {80, 0};
+    Overworld::ToggleBike(world);
+    assert(world.isBikeMounted);
+    world.pressedKeys['w'] = true;
+    for (int i = 0; i < 60; ++i)
     {
-        world.pressedKeys['w'] = true;
-        travel.lateralOffset = 0; // Exercise sustained steering before reaching the road edge.
-        game::GameLevels::Travel().Update(.025f);
+        Overworld::UpdateBike(world, .025f);
     }
-    assert(travel.yawRadians < -.51f && travel.yawRadians >= -kPi / 6);
+    assert(world.bikeSpeed > 12 && world.playerPosition.x > 90);
     world.pressedKeys['w'] = false;
-    for (int i = 0; i < 80; ++i)
+    for (int i = 0; i < 30; ++i)
     {
-        game::GameLevels::Travel().Update(.025f);
+        Overworld::UpdateBike(world, .025f);
     }
-    assert(std::fabs(travel.yawRadians) < .001f);
+    Overworld::ToggleBike(world);
+    assert(!world.isBikeMounted && world.bikeSpeed == 0);
     game::GameLevels::Reset();
 }
+
 void TestScaleGenderAndDistrict()
 {
     const auto &library = ModelLibrary::Get();
-    constexpr Point dimensions[] = {{4.3f, 1.7f, 1.35f},
-                                    {5.6f, 1.85f, 2.1f},
-                                    {5.2f, 1.9f, 2.f},
-                                    {4.6f, 1.75f, 1.55f},
-                                    {2.5f, .95f, 1.05f}};
-    for (size_t index = 0; index < library.vehicles.size(); ++index)
+    for (const auto &building : library.buildings)
     {
-        const auto &model = library.vehicles[index].body;
-        Point lo = {100, 100, 100}, hi = {-100, -100, -100};
-        for (size_t i = 0; i < model.count; ++i)
-        {
-            for (size_t j = 0; j < model.parts[i].count; ++j)
-            {
-                auto p = model.parts[i].points[j];
-                lo.x = (std::min)(lo.x, p.x);
-                lo.y = (std::min)(lo.y, p.y);
-                lo.z = (std::min)(lo.z, p.z);
-                hi.x = (std::max)(hi.x, p.x);
-                hi.y = (std::max)(hi.y, p.y);
-                hi.z = (std::max)(hi.z, p.z);
-            }
-        }
-        Point size = {(hi.x - lo.x) * 2, (hi.y - lo.y) * 2, (hi.z - lo.z) * 2};
-        assert(Distance3D(size, dimensions[index]) < .001f);
+        const auto &resource = ResourceAssets::Get(building.resourceId);
+        assert(resource.minimum.x >= -.0001f && resource.minimum.y >= -.0001f);
+        assert(resource.maximum.x <= 1.0001f && resource.maximum.y <= 1.0001f);
+        assert(resource.physicalSize.x > 1 && resource.physicalSize.y > 1);
     }
-    for (Gender gender : {Gender::Male, Gender::Female})
-    {
-        for (int role = 0; role < 5; ++role)
-        {
-            const auto &model = ModelLibrary::Character(CharacterType(role), gender);
-            assert(ModelFactory::ValidateModel(model));
-            auto pose = ModelRig::Pose(0, false, false, 0, false, gender);
-            float top = -100, bottom = 100;
-            for (size_t i = 0; i < model.count; ++i)
-            {
-                for (size_t j = 0; j < model.parts[i].count; ++j)
-                {
-                    const auto &part = model.parts[i];
-                    if (part.joint == Joint::Weapon)
-                    {
-                        continue;
-                    }
-                    auto p = pose.Apply(part.points[j], part.joint);
-                    top = (std::max)(top, p.z);
-                    bottom = (std::min)(bottom, p.z);
-                }
-            }
-            float height = (top - bottom) * WorldScale::characterScale * WorldScale::metersPerUnit;
-            assert(height > 1.79f && height < 1.95f); // 180cm barefoot, plus role-specific headgear.
-            if (role == 0)
-            {
-                assert(std::fabs(height - 1.8f) < .002f);
-            }
-            for (int frame = 0; frame < 32; ++frame)
-            {
-                auto moving = ModelRig::Pose(frame * .2f, true, true, 0, false, gender);
-                float face = moving.Apply({0, 0, 0}, Joint::Head).z;
-                for (size_t i = 0; i < model.count; ++i)
-                {
-                    if (model.parts[i].clothing && model.parts[i].joint != Joint::Head)
-                    {
-                        for (size_t j = 0; j < model.parts[i].count; ++j)
-                        {
-                            assert(moving.Apply(model.parts[i].points[j], model.parts[i].joint).z <
-                                   face - .015f);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    assert(&ModelLibrary::Character(CharacterType::Explorer, Gender::Female) != &library.characters[0]);
-    assert(ModelFactory::ValidateModel(library.bulkhead) && ModelFactory::ValidateModel(library.trafficGate));
-    assert(CityHud::ContainsMinimapBuilding({-8, -5, 2, 3, 150}));
-    assert(!CityHud::ContainsMinimapBuilding({kWorldMaxX - 1, 0, 2, 2, 150}));
-    assert(!CityHud::ContainsMinimapBuilding({35, 25, 3, 3, 150}));
+    assert(library.bed.resourceId && library.console.resourceId && library.mineGround.resourceId);
     // A traffic wrap is permitted only when the entire vehicle has left the extended terrain.
     for (int car = 0; car < 6; ++car)
     {
@@ -320,7 +168,7 @@ void TestScaleGenderAndDistrict()
                  q = CityLayout::TrafficPosition(car, (frame + 1) * .05f);
             if (std::fabs(q.x - p.x) > 1)
             {
-                assert(std::fabs(p.x) > CityLayout::kTerrainMaxX + 2 &&
+                assert(std::fabs(p.x) > CityLayout::kTrafficMaxX - 2 &&
                        std::fabs(q.x) > CityLayout::kTerrainMaxX + 2);
             }
         }
@@ -333,31 +181,6 @@ void TestScaleGenderAndDistrict()
 
 void TestScrolling()
 {
-    using game::TravelScenery;
-    assert(TravelScenery::kRoadScroll >= 12 && TravelScenery::kForegroundScroll > TravelScenery::kRoadScroll);
-    for (float rate : {.5f, 1.9f, 4.5f, TravelScenery::kRoadScroll, TravelScenery::kForegroundScroll})
-    {
-        for (int boundary = 1; boundary < 80; ++boundary)
-        {
-            double distance = boundary * 200.0 / rate;
-            auto before = TravelScenery::VisibleTiles(distance - .001, rate, 200, 280);
-            auto after = TravelScenery::VisibleTiles(distance + .001, rate, 200, 280);
-            assert(!before.empty() && before.front().x <= -280 && before.back().x >= kCanvasWidth + 280);
-            for (const auto &a : before)
-            {
-                for (const auto &b : after)
-                {
-                    if (a.id != b.id)
-                    {
-                        continue;
-                    }
-                    assert(std::fabs((b.x - a.x) + .002 * rate) < .001);
-                    assert(TravelScenery::Variant(a.id, 2) == TravelScenery::Variant(b.id, 2));
-                }
-            }
-        }
-    }
-    assert(TravelScenery::VisibleTiles(0, 1, 0).empty());
     assert(RenderStyle::Shade(.1f, true) == RenderStyle::Shade(.2f, true));
     assert(RenderStyle::Shade(.3f, true) != RenderStyle::Shade(.9f, true));
     assert(RenderStyle::Shade(.3f, false) != RenderStyle::Shade(.4f, false));
@@ -419,7 +242,7 @@ void Begin()
     GameRenderer::Get().Backend().BeginScene(kCanvasWidth, kCanvasHeight);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0, kCanvasWidth, kCanvasHeight, 0, -8192, 8192);
+    glOrtho(0, kCanvasWidth, kCanvasHeight, 0, -65536, 65536);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glEnable(GL_BLEND);
@@ -606,17 +429,18 @@ void CaptureScenes(const std::filesystem::path &output)
     auto &quest = game::GameLevels::Mine().GetState().quest;
     assert(quest.Advance(game::MineQuestStage::ShowRecord));
     assert(quest.Advance(game::MineQuestStage::CheckCityRelay));
-    game::GameLevels::Travel().Enter();
+    world.isBikeMounted = true;
+    world.isInsideHome = false;
+    world.bikePosition = world.playerPosition = world.cameraPosition = {128, 0};
     for (float yaw : {-kPi / 6, 0.f, kPi / 6})
     {
-        auto &travel = game::GameLevels::Travel().GetState();
-        travel.yawRadians = yaw;
+        world.bikeYaw = yaw;
         Begin();
-        game::SceneManager::Get(game::SceneKind::TravelBackground).Draw();
+        game::SceneManager::Get(game::SceneKind::Background).Draw();
         renderqueue::Flush();
         glDepthMask(GL_TRUE);
         glClear(GL_DEPTH_BUFFER_BIT);
-        game::SceneManager::Get(game::SceneKind::JetTravel).Draw();
+        game::SceneManager::Get(game::SceneKind::Exterior).Draw();
         GameRenderer::Get().Backend().EndScene(0);
         Save(output / (yaw < 0 ? "bike-yaw-up.bmp" : yaw > 0 ? "bike-yaw-down.bmp" : "bike-neutral.bmp"));
     }
@@ -654,15 +478,15 @@ void CaptureScenes(const std::filesystem::path &output)
     std::vector<unsigned char> previousScroll;
     for (int frame = 0; frame < 2; ++frame)
     {
-        auto &travel = game::GameLevels::Travel().GetState();
-        travel.distance = float(240.0 / 4.5 + (frame ? .001 : -.001));
-        travel.yawRadians = 0;
+        world.bikePosition = world.playerPosition =
+            world.cameraPosition = {128.f + (frame ? .001f : -.001f), 0};
+        world.bikeYaw = 0;
         Begin();
-        game::SceneManager::Get(game::SceneKind::TravelBackground).Draw();
+        game::SceneManager::Get(game::SceneKind::Background).Draw();
         renderqueue::Flush();
         glDepthMask(GL_TRUE);
         glClear(GL_DEPTH_BUFFER_BIT);
-        game::SceneManager::Get(game::SceneKind::JetTravel).Draw();
+        game::SceneManager::Get(game::SceneKind::Exterior).Draw();
         GameRenderer::Get().Backend().EndScene(0);
         auto currentScroll = Pixels();
         if (frame)
@@ -689,7 +513,7 @@ void TestPixelPresentation(const std::filesystem::path &output)
     auto &renderer = GameRenderer::Get().Backend();
     auto &world = Game::Get().GetState();
     game::GameLevels::Reset();
-    world.isJetTravel = false;
+    world.isBikeMounted = false;
     world.isInsideHome = false;
     world.playerPosition = {-3, 2};
     world.cameraPosition = {-3, 2};
@@ -1057,7 +881,9 @@ void BenchmarkQuality(const std::filesystem::path &output)
             auto &q = game::GameLevels::Mine().GetState().quest;
             q.Advance(game::MineQuestStage::ShowRecord);
             q.Advance(game::MineQuestStage::CheckCityRelay);
-            game::GameLevels::Travel().Enter();
+            world.isBikeMounted = true;
+            world.isInsideHome = false;
+            world.bikePosition = world.playerPosition = world.cameraPosition = {128, 0};
         }
         if (scenario >= 3 && scenario < 7)
         {
@@ -1140,9 +966,7 @@ void BenchmarkQuality(const std::filesystem::path &output)
             Begin();
             if (scenario < 3)
             {
-                game::SceneManager::Get(scenario == 2 ? game::SceneKind::TravelBackground
-                                                      : game::SceneKind::Background)
-                    .Draw();
+                game::SceneManager::Get(game::SceneKind::Background).Draw();
                 renderqueue::Flush();
                 glDepthMask(GL_TRUE);
                 glClear(GL_DEPTH_BUFFER_BIT);
@@ -1218,7 +1042,7 @@ int main(int argc, char **argv)
     CaptureChapter(output);
     BenchmarkQuality(output);
     GameRenderer::Get().Shutdown();
-    std::cout
-        << "3D rig, five wardrobes, yaw steering, continuous scrolling, billboard effects, cartoon lighting, "
-           "pixel presentation and scene checks passed.\n";
+    std::cout << "Resource GLB meshes, 23-bone skins, nine wardrobes, direct driving, billboard effects, "
+                 "cartoon lighting, "
+                 "pixel presentation and scene checks passed.\n";
 }

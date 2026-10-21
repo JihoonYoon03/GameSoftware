@@ -44,6 +44,7 @@ struct Resident
     MovementFacing facing;
     models::Gender gender = models::Gender::Male;
     models::HairStyle hair = models::HairStyle::SidePart;
+    int cityIndex = 0;
 };
 
 enum class MainQuestStage
@@ -72,7 +73,8 @@ enum class InteractionTarget
     ObservatoryExit,
     JetBike,
     CityReceiver,
-    Kain
+    Kain,
+    MineEntrance
 };
 
 constexpr float kPi = 3.14159265f;
@@ -89,11 +91,10 @@ constexpr Vector2 kJetBikePosition = {3, -2};
 constexpr Vector2 kCityReceiverPosition = {0, -2};
 constexpr Vector2 kObservatoryConsole = {2, -2};
 constexpr Vector2 kObservatoryStairs = {-2.8f, 2.8f};
-// Double both dimensions of the original 18 x 13 walkable bounds: 4x area.
-constexpr float kWorldMinX = -18;
-constexpr float kWorldMaxX = 18;
-constexpr float kWorldMinY = -12.5f;
-constexpr float kWorldMaxY = 13.5f;
+constexpr float kWorldMinX = -48;
+constexpr float kWorldMaxX = 560;
+constexpr float kWorldMinY = -48;
+constexpr float kWorldMaxY = 304;
 
 // State owned by Game. Renderers read it without changing gameplay.
 struct GameState
@@ -110,7 +111,11 @@ struct GameState
     bool interactionHeld = false;
     bool isInsideHome = true;
     bool isInObservatory = false;
-    bool isJetTravel = false;
+    bool isBikeMounted = false;
+    float bikeSpeed = 0;
+    float bikeYaw = 0;
+    Vector2 bikePosition = kJetBikePosition;
+    Vector2 mineReturnPosition = {128, 18};
     bool gateSignalHeard = false;
     bool hasDescendedObservatory = false;
     bool isPaused = false;
@@ -122,6 +127,7 @@ struct GameState
     float animationTimeSeconds = 0;
     float noticeSecondsRemaining = 0;
     float movementAmount = 0;
+    float movementSpeed = 0;
     int facingDirection = 0;
     float facingYaw = .78539816f;
     Vector2 playerPosition = {0, 0};
@@ -138,10 +144,10 @@ struct GameState
 class CityLayout
 {
   public:
-    // Scenery extends past the unchanged playable bounds far enough for every viewport corner.
-    static constexpr int kTerrainMinX = -48, kTerrainMaxX = 48;
-    static constexpr int kTerrainMinY = -44, kTerrainMaxY = 44;
-    static constexpr float kTrafficMinX = kTerrainMinX - 4.f, kTrafficMaxX = kTerrainMaxX + 4.f;
+    // Ground extends beyond the outdoor movement limits to cover viewport corners at the boundary.
+    static constexpr int kTerrainMinX = int(kWorldMinX) - 32, kTerrainMaxX = int(kWorldMaxX) + 32;
+    static constexpr int kTerrainMinY = int(kWorldMinY) - 32, kTerrainMaxY = int(kWorldMaxY) + 32;
+    static constexpr float kTrafficMinX = -52.f, kTrafficMaxX = 52.f;
     static bool IsRoadTile(int x, int y);
     static bool OverlapsRoad(const Building &building, float clearance = .3f);
     static void ValidateBuildings(std::vector<Building> &buildings);

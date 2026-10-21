@@ -55,7 +55,9 @@ class Drawing
                             const models::Palette &palette = {}, float throttle = .5f, float direction = 1);
     static void DrawWorldVehicle(Vector2 position, float altitude, float scale, models::VehicleType type,
                                  const models::Palette &palette, float throttle, float yaw);
-    static void DrawTravelBike(Vector2 screen, float yaw, float throttle);
+    static void DrawWorldBike(Vector2 position, float yaw, float throttle, bool mounted);
+    static void DrawProp(const models::Model &model, Vector2 position, models::Point scale = {1, 1, 1},
+                         const models::Palette &palette = {}, float yaw = 0);
     static void DrawModel3D(const models::Model &model, Vector2 screen, models::Point scale,
                             const models::Transform3D &transform, float depth, const models::Palette &palette,
                             const models::CharacterPose *pose = nullptr);

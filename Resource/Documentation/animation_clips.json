@@ -1,0 +1,1394 @@
+{
+  "HUMAN_7H": [
+    {
+      "clip": "Reference_A",
+      "action": "HUMAN_7H__Reference_A",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Turn_Base",
+      "action": "HUMAN_7H__Turn_Base",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Idle",
+      "action": "HUMAN_7H__Idle",
+      "fps": 30,
+      "start": 0,
+      "end": 60,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Walk",
+      "action": "HUMAN_7H__Walk",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0,
+          "event": "left_contact_or_tripod_A"
+        },
+        {
+          "phase": 0.5,
+          "event": "right_contact_or_tripod_B"
+        }
+      ]
+    },
+    {
+      "clip": "Run",
+      "action": "HUMAN_7H__Run",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0,
+          "event": "left_contact_or_tripod_A"
+        },
+        {
+          "phase": 0.5,
+          "event": "right_contact_or_tripod_B"
+        }
+      ]
+    },
+    {
+      "clip": "Turn_Left_90",
+      "action": "HUMAN_7H__Turn_Left_90",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 90,
+      "events": []
+    },
+    {
+      "clip": "Turn_Right_90",
+      "action": "HUMAN_7H__Turn_Right_90",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": -90,
+      "events": []
+    },
+    {
+      "clip": "Attack_Melee",
+      "action": "HUMAN_7H__Attack_Melee",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0.46,
+          "event": "melee_hit_window_start"
+        },
+        {
+          "phase": 0.6,
+          "event": "melee_hit_window_end"
+        }
+      ]
+    },
+    {
+      "clip": "Aim_Base",
+      "action": "HUMAN_7H__Aim_Base",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Attack_Fire",
+      "action": "HUMAN_7H__Attack_Fire",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0.08,
+          "event": "projectile_or_emitter_trigger"
+        }
+      ]
+    },
+    {
+      "clip": "Jump_Start",
+      "action": "HUMAN_7H__Jump_Start",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Jump_Air",
+      "action": "HUMAN_7H__Jump_Air",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Jump_Land",
+      "action": "HUMAN_7H__Jump_Land",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Jump_Full",
+      "action": "HUMAN_7H__Jump_Full",
+      "fps": 30,
+      "start": 0,
+      "end": 36,
+      "duration_seconds": 1.2,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Walk_To_Run",
+      "action": "HUMAN_7H__Walk_To_Run",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    }
+  ],
+  "RiftGrazer": [
+    {
+      "clip": "Reference_A",
+      "action": "RiftGrazer__Reference_A",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Turn_Base",
+      "action": "RiftGrazer__Turn_Base",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Idle",
+      "action": "RiftGrazer__Idle",
+      "fps": 30,
+      "start": 0,
+      "end": 60,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Walk",
+      "action": "RiftGrazer__Walk",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0,
+          "event": "left_contact_or_tripod_A"
+        },
+        {
+          "phase": 0.5,
+          "event": "right_contact_or_tripod_B"
+        }
+      ]
+    },
+    {
+      "clip": "Run",
+      "action": "RiftGrazer__Run",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0,
+          "event": "left_contact_or_tripod_A"
+        },
+        {
+          "phase": 0.5,
+          "event": "right_contact_or_tripod_B"
+        }
+      ]
+    },
+    {
+      "clip": "Turn_Left_90",
+      "action": "RiftGrazer__Turn_Left_90",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 90,
+      "events": []
+    },
+    {
+      "clip": "Turn_Right_90",
+      "action": "RiftGrazer__Turn_Right_90",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": -90,
+      "events": []
+    },
+    {
+      "clip": "Attack_Melee",
+      "action": "RiftGrazer__Attack_Melee",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0.46,
+          "event": "melee_hit_window_start"
+        },
+        {
+          "phase": 0.6,
+          "event": "melee_hit_window_end"
+        }
+      ]
+    },
+    {
+      "clip": "Aim_Base",
+      "action": "RiftGrazer__Aim_Base",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Attack_Fire",
+      "action": "RiftGrazer__Attack_Fire",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0.08,
+          "event": "projectile_or_emitter_trigger"
+        }
+      ]
+    },
+    {
+      "clip": "Jump_Start",
+      "action": "RiftGrazer__Jump_Start",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Jump_Air",
+      "action": "RiftGrazer__Jump_Air",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Jump_Land",
+      "action": "RiftGrazer__Jump_Land",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Jump_Full",
+      "action": "RiftGrazer__Jump_Full",
+      "fps": 30,
+      "start": 0,
+      "end": 36,
+      "duration_seconds": 1.2,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Walk_To_Run",
+      "action": "RiftGrazer__Walk_To_Run",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    }
+  ],
+  "VeilWalker": [
+    {
+      "clip": "Reference_A",
+      "action": "VeilWalker__Reference_A",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Turn_Base",
+      "action": "VeilWalker__Turn_Base",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Idle",
+      "action": "VeilWalker__Idle",
+      "fps": 30,
+      "start": 0,
+      "end": 60,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Walk",
+      "action": "VeilWalker__Walk",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0,
+          "event": "left_contact_or_tripod_A"
+        },
+        {
+          "phase": 0.5,
+          "event": "right_contact_or_tripod_B"
+        }
+      ]
+    },
+    {
+      "clip": "Run",
+      "action": "VeilWalker__Run",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0,
+          "event": "left_contact_or_tripod_A"
+        },
+        {
+          "phase": 0.5,
+          "event": "right_contact_or_tripod_B"
+        }
+      ]
+    },
+    {
+      "clip": "Turn_Left_90",
+      "action": "VeilWalker__Turn_Left_90",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 90,
+      "events": []
+    },
+    {
+      "clip": "Turn_Right_90",
+      "action": "VeilWalker__Turn_Right_90",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": -90,
+      "events": []
+    },
+    {
+      "clip": "Attack_Melee",
+      "action": "VeilWalker__Attack_Melee",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0.46,
+          "event": "melee_hit_window_start"
+        },
+        {
+          "phase": 0.6,
+          "event": "melee_hit_window_end"
+        }
+      ]
+    },
+    {
+      "clip": "Aim_Base",
+      "action": "VeilWalker__Aim_Base",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Attack_Fire",
+      "action": "VeilWalker__Attack_Fire",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0.08,
+          "event": "projectile_or_emitter_trigger"
+        }
+      ]
+    },
+    {
+      "clip": "Jump_Start",
+      "action": "VeilWalker__Jump_Start",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Jump_Air",
+      "action": "VeilWalker__Jump_Air",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Jump_Land",
+      "action": "VeilWalker__Jump_Land",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Jump_Full",
+      "action": "VeilWalker__Jump_Full",
+      "fps": 30,
+      "start": 0,
+      "end": 36,
+      "duration_seconds": 1.2,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Walk_To_Run",
+      "action": "VeilWalker__Walk_To_Run",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    }
+  ],
+  "RelaySentinel": [
+    {
+      "clip": "Reference_A",
+      "action": "RelaySentinel__Reference_A",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Turn_Base",
+      "action": "RelaySentinel__Turn_Base",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Idle",
+      "action": "RelaySentinel__Idle",
+      "fps": 30,
+      "start": 0,
+      "end": 60,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Walk",
+      "action": "RelaySentinel__Walk",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0,
+          "event": "left_contact_or_tripod_A"
+        },
+        {
+          "phase": 0.5,
+          "event": "right_contact_or_tripod_B"
+        }
+      ]
+    },
+    {
+      "clip": "Run",
+      "action": "RelaySentinel__Run",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0,
+          "event": "left_contact_or_tripod_A"
+        },
+        {
+          "phase": 0.5,
+          "event": "right_contact_or_tripod_B"
+        }
+      ]
+    },
+    {
+      "clip": "Turn_Left_90",
+      "action": "RelaySentinel__Turn_Left_90",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 90,
+      "events": []
+    },
+    {
+      "clip": "Turn_Right_90",
+      "action": "RelaySentinel__Turn_Right_90",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": -90,
+      "events": []
+    },
+    {
+      "clip": "Attack_Melee",
+      "action": "RelaySentinel__Attack_Melee",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0.46,
+          "event": "melee_hit_window_start"
+        },
+        {
+          "phase": 0.6,
+          "event": "melee_hit_window_end"
+        }
+      ]
+    },
+    {
+      "clip": "Aim_Base",
+      "action": "RelaySentinel__Aim_Base",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Attack_Fire",
+      "action": "RelaySentinel__Attack_Fire",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0.08,
+          "event": "projectile_or_emitter_trigger"
+        }
+      ]
+    },
+    {
+      "clip": "Jump_Start",
+      "action": "RelaySentinel__Jump_Start",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Jump_Air",
+      "action": "RelaySentinel__Jump_Air",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Jump_Land",
+      "action": "RelaySentinel__Jump_Land",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Jump_Full",
+      "action": "RelaySentinel__Jump_Full",
+      "fps": 30,
+      "start": 0,
+      "end": 36,
+      "duration_seconds": 1.2,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Walk_To_Run",
+      "action": "RelaySentinel__Walk_To_Run",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    }
+  ],
+  "PressureDoor_Rig": [
+    {
+      "clip": "Door_Open",
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1,
+      "loop": false
+    },
+    {
+      "clip": "Door_Close",
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1,
+      "loop": false
+    }
+  ],
+  "VEHICLE_Coupe": [
+    {
+      "clip": "Vehicle_Reference",
+      "start": 0,
+      "end": 1,
+      "fps": 30,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Hover_Idle",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cruise",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Boost",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Steer_Left",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Steer_Right",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Canopy_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Canopy_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cargo_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cargo_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    }
+  ],
+  "VEHICLE_Shuttle": [
+    {
+      "clip": "Vehicle_Reference",
+      "start": 0,
+      "end": 1,
+      "fps": 30,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Hover_Idle",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cruise",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Boost",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Steer_Left",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Steer_Right",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Canopy_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Canopy_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cargo_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cargo_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    }
+  ],
+  "VEHICLE_Hauler": [
+    {
+      "clip": "Vehicle_Reference",
+      "start": 0,
+      "end": 1,
+      "fps": 30,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Hover_Idle",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cruise",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Boost",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Steer_Left",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Steer_Right",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Canopy_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Canopy_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cargo_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cargo_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    }
+  ],
+  "VEHICLE_Patrol": [
+    {
+      "clip": "Vehicle_Reference",
+      "start": 0,
+      "end": 1,
+      "fps": 30,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Hover_Idle",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cruise",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Boost",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Steer_Left",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Steer_Right",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Canopy_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Canopy_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cargo_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cargo_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Vehicle_Fire",
+      "start": 0,
+      "end": 12,
+      "fps": 30,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    }
+  ],
+  "VEHICLE_JetBike": [
+    {
+      "clip": "Vehicle_Reference",
+      "start": 0,
+      "end": 1,
+      "fps": 30,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Hover_Idle",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cruise",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Boost",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Steer_Left",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Steer_Right",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Canopy_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Canopy_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cargo_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cargo_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    }
+  ]
+}

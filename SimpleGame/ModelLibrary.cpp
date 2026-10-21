@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "ModelLibrary.h"
+#include "ResourceAssets.h"
 #include "AssetCache.h"
 #include <algorithm>
 #include <cmath>
@@ -10,6 +11,7 @@
 #include <cstdio>
 #include <memory>
 #include <vector>
+#include <utility>
 
 namespace models
 {
@@ -373,6 +375,10 @@ CharacterPose ModelRig::Pose(float phase, bool walking, bool armed, float recoil
 {
     CharacterPose p{};
     p.armed = armed;
+    p.walking = walking;
+    p.riding = riding;
+    p.animationPhase = phase;
+    p.recoil = recoil;
     auto &j = p.joints;
     const float shoulder = gender == Gender::Female ? .18f : .225f,
                 hip = gender == Gender::Female ? .125f : .105f;
@@ -431,7 +437,7 @@ CharacterPose ModelRig::Pose(float phase, bool walking, bool armed, float recoil
 }
 Point ModelRig::Muzzle(const CharacterPose &pose)
 {
-    return pose.Apply({.22f, 0, 0}, Joint::Weapon);
+    return ResourceAssets::Muzzle(pose);
 }
 
 void ModelFactory::GenerateVehicle(VehicleModel &result, VehicleType type)
@@ -934,6 +940,12 @@ void ModelFactory::GenerateBuilding(Model &m, BuildingType type)
 
 bool ModelFactory::ValidateModel(const Model &model)
 {
+    if (model.resourceId)
+    {
+        const auto &mesh = ResourceAssets::Get(model.resourceId);
+        return model.space == CoordinateSpace::World && !mesh.vertices.empty() &&
+               mesh.vertices.size() % 3 == 0;
+    }
     if (unsigned(model.space) > unsigned(CoordinateSpace::World))
     {
         return false;
@@ -1014,147 +1026,97 @@ bool ModelFactory::ValidateModel(const Model &model)
 // ============================================================================
 namespace
 {
-constexpr std::uint32_t kModelVersion = 9;
-static_assert(std::is_trivially_copyable<Library>::value, "Model cache needs a stable POD payload");
 
 void Generate(Library &library)
 {
-    for (std::size_t i = 0; i < library.circle.size(); ++i)
+    library.cube = {{{0, 0, 0}, {1, 0, 0}, {1, 1, 0}, {0, 1, 0}, {0, 0, 1}, {1, 0, 1}, {1, 1, 1}, {0, 1, 1}}};
+    for (size_t i = 0; i < library.circle.size(); ++i)
     {
         float angle = float(i) * 6.2831853f / 48;
         library.circle[i] = {std::cos(angle), std::sin(angle), 0};
     }
-    for (std::size_t i = 0; i < library.softCircle.size(); ++i)
+    for (size_t i = 0; i < library.softCircle.size(); ++i)
     {
         float angle = float(i) * 6.2831853f / 64;
         library.softCircle[i] = {std::cos(angle), std::sin(angle), 0};
     }
-    library.cube = {{{0, 0, 0}, {1, 0, 0}, {1, 1, 0}, {0, 1, 0}, {0, 0, 1}, {1, 0, 1}, {1, 1, 1}, {0, 1, 1}}};
-    for (std::size_t i = 0; i < library.gateRing.size(); ++i)
+    for (size_t i = 0; i < library.gateRing.size(); ++i)
     {
         float angle = float(i) * 6.2831853f / 96;
         library.gateRing[i] = {std::cos(angle), std::sin(angle), 0};
     }
-    library.box.space = CoordinateSpace::World;
-    MeshBox(library.box, {0, 0, 0}, {1, 1, 1}, {1, 1, 1, 1});
-    library.drone.space = library.salvage.space = library.recoveryKit.space = CoordinateSpace::World;
-    MeshBox(library.drone, {-.34f, -.30f, .24f}, {.34f, .30f, .53f}, {1, 1, 1, 1});
-    MeshBox(library.drone, {.341f, -.11f, .32f}, {.38f, .11f, .43f}, {1, .25f, .12f, 1},
-            PaletteSlot::Emission);
-    for (float side : {-1.f, 1.f})
-    {
-        MeshBox(library.drone, {-.48f, side * .35f - .07f, .12f}, {.48f, side * .35f + .07f, .24f},
-                {.35f, .4f, .45f, 1}, PaletteSlot::Accent);
-    }
-    MeshBox(library.salvage, {-.13f, -.13f, .02f}, {.13f, .13f, .25f}, {.3f, .87f, .94f, 1},
-            PaletteSlot::Fixed);
-    MeshBox(library.recoveryKit, {-.17f, -.12f, .02f}, {.17f, .12f, .25f}, {.2f, .65f, .4f, 1},
-            PaletteSlot::Fixed);
-    MeshBox(library.recoveryKit, {.171f, -.035f, .07f}, {.18f, .035f, .21f}, {.85f, 1, .9f, 1},
-            PaletteSlot::Fixed);
-    MeshBox(library.recoveryKit, {.171f, -.085f, .12f}, {.181f, .085f, .16f}, {.85f, 1, .9f, 1},
-            PaletteSlot::Fixed);
-    for (auto &ground : library.grounds)
-    {
-        ground.space = CoordinateSpace::World;
-        AddVariantPart(ground, PartKind::Polygon,
-                       {{0, 0, 0}, {1.001f, 0, 0}, {1.001f, 1.001f, 0}, {0, 1.001f, 0}}, {1, 1, 1, 1},
-                       PaletteSlot::Body);
-        ground.parts[0].surface = Surface::Stone;
-    }
-    library.grounds[1].parts[0].surface = Surface::Rubber; // Rough, non-metallic asphalt.
-    library.grounds[2].parts[0].surface = Surface::Metal;
-    library.grounds[3].parts[0].surface = Surface::Glass;
-    library.rock.space = library.telescope.space = library.console.space = CoordinateSpace::World;
-    Ellipsoid(library.rock, {.5f, .5f, .29f}, {.58f, .58f, .33f}, {1, 1, 1, 1}, PaletteSlot::Body,
-              Joint::Root, 12, 5, true);
-    auto &telescope = library.telescope;
-    Tube(telescope, {0, 0, .06f}, {0, 0, .85f}, .10f, .08f, {.38f, .45f, .5f, 1}, PaletteSlot::Fixed);
-    for (int i = 0; i < 3; ++i)
-    {
-        float angle = i * 6.2831853f / 3;
-        Tube(telescope, {0, 0, .35f}, {std::cos(angle) * .4f, std::sin(angle) * .4f, .02f}, .045f, .065f,
-             {.28f, .36f, .41f, 1}, PaletteSlot::Fixed, 8);
-    }
-    Tube(telescope, {-.38f, 0, .91f}, {.62f, 0, 1.25f}, .16f, .23f, {.75f, .8f, .83f, 1}, PaletteSlot::Body,
-         16);
-    Tube(telescope, {.62f, 0, 1.25f}, {.67f, 0, 1.267f}, .235f, .235f, {.12f, .34f, .43f, 1},
-         PaletteSlot::Fixed, 16, Surface::Glass);
-    MeshBox(telescope, {-.18f, -.22f, .66f}, {.18f, .22f, .83f}, {.26f, .34f, .4f, 1}, PaletteSlot::Accent);
-    auto &console = library.console;
-    MeshBox(console, {-.36f, -.25f, 0}, {.36f, .25f, .48f}, {.35f, .43f, .47f, 1});
-    MeshBox(console, {-.4f, -.23f, .48f}, {.4f, .17f, .60f}, {.17f, .24f, .29f, 1}, PaletteSlot::Fixed);
-    MeshBox(console, {-.38f, .12f, .60f}, {.38f, .18f, .98f}, {.22f, .3f, .35f, 1}, PaletteSlot::Fixed);
-    AddVariantPart(console, PartKind::Glass,
-                   {{-.32f, .181f, .67f}, {.32f, .181f, .67f}, {.32f, .181f, .92f}, {-.32f, .181f, .92f}},
-                   {.2f, .75f, .82f, 1}, PaletteSlot::Emission);
-    for (int i = 0; i < 5; ++i)
-    {
-        MeshBox(console, {-.30f + i * .13f, -.15f, .602f}, {-.24f + i * .13f, -.06f, .62f},
-                {.5f, .75f, .78f, 1}, PaletteSlot::Fixed);
-    }
-    library.bulkhead.space = library.trafficGate.space = CoordinateSpace::World;
-    auto &wall = library.bulkhead;
-    MeshBox(wall, {0, -.06f, 0}, {1, .06f, 1}, {.38f, .51f, .58f, 1});
-    for (float x : {.06f, .47f, .88f})
-    {
-        MeshBox(wall, {x, -.085f, .02f}, {x + .06f, .085f, .93f}, {.18f, .27f, .33f, 1}, PaletteSlot::Fixed);
-    }
-    MeshBox(wall, {0, -.075f, .92f}, {1, .075f, 1.02f}, {.35f, .5f, .58f, 1}, PaletteSlot::Accent);
-    MeshBox(wall, {.12f, -.087f, .80f}, {.88f, -.081f, .82f}, {1, 1, 1, 1}, PaletteSlot::Emission);
-    MeshBox(wall, {.12f, .081f, .80f}, {.88f, .087f, .82f}, {1, 1, 1, 1}, PaletteSlot::Emission);
-    for (int i = 0; i < 4; ++i)
-    {
-        float x = .15f + i * .18f;
-        AddVariantPart(
-            wall, PartKind::Polygon,
-            {{x, -.087f, .14f}, {x + .07f, -.087f, .14f}, {x + .13f, -.087f, .26f}, {x + .06f, -.087f, .26f}},
-            {.95f, .63f, .18f, 1}, PaletteSlot::Fixed);
-        AddVariantPart(
-            wall, PartKind::Polygon,
-            {{x, .087f, .14f}, {x + .07f, .087f, .14f}, {x + .13f, .087f, .26f}, {x + .06f, .087f, .26f}},
-            {.95f, .63f, .18f, 1}, PaletteSlot::Fixed);
-    }
-    auto &gate = library.trafficGate;
-    for (float x : {-.06f, 1.f})
-    {
-        MeshBox(gate, {x, -.12f, 0}, {x + .06f, .12f, 1}, {.30f, .43f, .5f, 1});
-        MeshBox(gate, {x < 0 ? x - .02f : x, -.16f, 0}, {x < 0 ? 0 : x + .08f, .16f, .10f},
-                {.16f, .25f, .3f, 1}, PaletteSlot::Fixed);
-        MeshBox(gate, {x + .02f, -.125f, .18f}, {x + .04f, -.12f, .85f}, {1, 1, 1, 1}, PaletteSlot::Emission);
-    }
-    MeshBox(gate, {-.06f, -.14f, .92f}, {1.06f, .14f, 1.03f}, {.28f, .42f, .5f, 1});
-    MeshBox(gate, {.18f, -.146f, .95f}, {.82f, -.14f, 1.00f}, {.1f, .85f, .65f, 1}, PaletteSlot::Emission);
-    MeshBox(gate, {.18f, .14f, .95f}, {.82f, .146f, 1.00f}, {.1f, .85f, .65f, 1}, PaletteSlot::Emission);
-    for (auto *mesh : {&wall, &gate})
-    {
-        for (size_t i = 0; i < mesh->count; ++i)
-        {
-            if (mesh->parts[i].surface == Surface::Default)
-            {
-                mesh->parts[i].surface = Surface::Metal;
-            }
-        }
-    }
-
-    for (size_t i = 0; i < library.hairs.size(); ++i)
-    {
-        GenerateHair(library.hairs[i], HairStyle(i), false);
-        GenerateHair(library.coveredHairs[i], HairStyle(i), true);
-    }
+    constexpr const char *vehicles[] = {"Coupe", "Shuttle", "Hauler", "Patrol", "JetBike"};
     for (size_t i = 0; i < library.vehicles.size(); ++i)
     {
-        ModelFactory::GenerateVehicle(library.vehicles[i], VehicleType(i));
+        auto &vehicle = library.vehicles[i];
+        ResourceAssets::Bind(vehicle.body, std::string("vehicle/") + vehicles[i]);
+        const auto &resource = ResourceAssets::Get(vehicle.body.resourceId);
+        std::copy_n(resource.sockets.begin(), 2, vehicle.exhausts.begin());
+        std::copy_n(resource.sockets.begin() + 2, 2, vehicle.headlights.begin());
+        vehicle.seat = resource.sockets[4];
     }
+    constexpr const char *roles[] = {"Explorer", "Engineer",    "Guard", "Medic",   "Researcher",
+                                     "Miner",    "HeavyCombat", "Pilot", "Civilian"};
     for (size_t i = 0; i < library.characters.size(); ++i)
     {
-        ModelFactory::GenerateCharacter(library.characters[i], CharacterType(i), Gender::Male);
-        ModelFactory::GenerateCharacter(library.femaleCharacters[i], CharacterType(i), Gender::Female);
+        ResourceAssets::Bind(library.characters[i], std::string("character/Male/") + roles[i]);
+        ResourceAssets::Bind(library.femaleCharacters[i], std::string("character/Female/") + roles[i]);
     }
+    constexpr const char *hairs[] = {"Buzz", "SidePart", "Curls", "Bob", "Ponytail", "Bun"};
+    for (size_t i = 0; i < library.hairs.size(); ++i)
+    {
+        ResourceAssets::Bind(library.hairs[i], std::string("hair/") + hairs[i]);
+        ResourceAssets::Bind(library.coveredHairs[i], std::string("hair/covered/") + hairs[i]);
+    }
+    constexpr const char *buildings[] = {"Habitat", "Terraced", "Workshop", "Dome", "Observatory"};
     for (size_t i = 0; i < library.buildings.size(); ++i)
     {
-        ModelFactory::GenerateBuilding(library.buildings[i], BuildingType(i));
+        ResourceAssets::Bind(library.buildings[i], std::string("building/") + buildings[i]);
     }
+    constexpr const char *creatures[] = {"RelaySentinel", "RelaySentinel_Variant",
+                                         "RiftGrazer",    "RiftGrazer_Variant",
+                                         "VeilWalker",    "VeilWalker_Variant"};
+    for (size_t i = 0; i < library.creatures.size(); ++i)
+    {
+        ResourceAssets::Bind(library.creatures[i], std::string("creature/") + creatures[i]);
+    }
+    ResourceAssets::Bind(library.drone, "creature/RelaySentinel");
+    const std::pair<Model *, const char *> props[] = {{&library.box, "box"},
+                                                      {&library.salvage, "salvage"},
+                                                      {&library.recoveryKit, "recoveryKit"},
+                                                      {&library.rock, nullptr},
+                                                      {&library.telescope, "telescope"},
+                                                      {&library.console, "console"},
+                                                      {&library.bulkhead, "bulkhead"},
+                                                      {&library.trafficGate, "trafficGate"},
+                                                      {&library.bed, "bed"},
+                                                      {&library.chair, "chair"},
+                                                      {&library.table, "table"},
+                                                      {&library.lamp, "lamp"},
+                                                      {&library.generator, "generator"},
+                                                      {&library.breaker, "breaker"},
+                                                      {&library.beacon, "beacon"},
+                                                      {&library.relief, "relief"},
+                                                      {&library.wall, "wall"},
+                                                      {&library.door, "door"},
+                                                      {&library.lantern, "lantern"},
+                                                      {&library.support, "support"}};
+    for (auto prop : props)
+    {
+        ResourceAssets::Bind(*prop.first, prop.second ? std::string("prop/") + prop.second : "nature/rock");
+    }
+    constexpr const char *grounds[] = {"concrete", "asphalt", "metal", "glass"};
+    for (size_t i = 0; i < library.grounds.size(); ++i)
+    {
+        ResourceAssets::Bind(library.grounds[i], std::string("ground/") + grounds[i]);
+    }
+    ResourceAssets::Bind(library.mineGround, "ground/mine");
+    ResourceAssets::Bind(library.outdoorGrounds[0], "ground/grass");
+    ResourceAssets::Bind(library.outdoorGrounds[1], "ground/sand");
+    ResourceAssets::Bind(library.tree, "nature/tree");
+    ResourceAssets::Bind(library.fungus, "nature/fungus");
+    ResourceAssets::Bind(library.crystal, "nature/crystal");
+    ResourceAssets::Bind(library.reeds, "nature/reeds");
 }
 
 bool Valid(const Library &library)
@@ -1237,23 +1199,11 @@ bool Valid(const Library &library)
 std::unique_ptr<Library> LoadOrGenerate()
 {
     auto library = std::make_unique<Library>();
-    std::vector<unsigned char> bytes;
-    if (assetcache::Load("models.bin", kModelVersion, sizeof(Library), bytes))
-    {
-        std::memcpy(library.get(), bytes.data(), sizeof(Library));
-        if (Valid(*library))
-        {
-            return library;
-        }
-    }
-    // Invalid cached bytes must not survive in unused vertices or palette slots.
-    library = std::make_unique<Library>();
     Generate(*library);
     if (!Valid(*library))
     {
-        throw std::runtime_error("Generated model geometry failed validation");
+        throw std::runtime_error("Resource model mappings failed validation");
     }
-    assetcache::Save("models.bin", kModelVersion, library.get(), sizeof(Library));
     return library;
 }
 } // namespace

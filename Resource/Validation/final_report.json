@@ -1,0 +1,18 @@
+{
+  "schema": "erma_delivery_v2",
+  "blender": "4.5.2 LTS",
+  "body_profiles": 6,
+  "outfit_purposes": 9,
+  "fitted_outfit_sets": 54,
+  "independent_accessories": 34,
+  "vehicle_types": 5,
+  "vehicle_parts": 122,
+  "unique_mesh_parts": 1031,
+  "max_triangles_per_part": 424,
+  "glb_files": 1063,
+  "roundtrip_files": 12,
+  "all_checks_passed": true,
+  "source": "Source/Erma_Resource_Library.blend",
+  "preview": "Preview/00_asset_overview.jpg",
+  "game_code_modified": false
+}

@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Level.h"
+#include "Overworld.h"
 #include "Profiler.h"
 #include "Scene.h"
 #include "Monitoring/Monitor.h"
@@ -83,18 +84,6 @@ void TestLevelLifecycle()
 {
     GameLevels::Reset();
     assert(GameLevels::Active() == nullptr);
-    GameLevels::Travel().Enter();
-    assert(!GameLevels::Travel().IsActive());
-    auto &quest = GameLevels::Mine().GetState().quest;
-    assert(quest.Advance(MineQuestStage::ShowRecord));
-    assert(quest.Advance(MineQuestStage::CheckCityRelay));
-    GameLevels::Travel().Enter();
-    Level *active = GameLevels::Active();
-    assert(active == &GameLevels::Travel() && !active->UsesWalkingControls());
-    active->Update(.1f);
-    assert(GameLevels::Travel().GetState().distance > 0);
-    GameLevels::Reset();
-    assert(!tutorial::Game::Get().GetState().isJetTravel);
     ReadyMine();
     assert(GameLevels::Active() == &GameLevels::Mine());
     assert(GameLevels::Active()->UsesWalkingControls());
@@ -156,16 +145,25 @@ void TestQuest()
 }
 void TestMapAndGate()
 {
+    static_assert(kMapSize * kMapSize == 4 * 64 * 64);
+    std::vector<Tile> previous;
     for (unsigned seed = 0; seed < 30; ++seed)
     {
         ReadyMine(seed);
+        if (!previous.empty())
+        {
+            assert(previous != mineState.tiles);
+        }
+        previous = mineState.tiles;
+        GameLevels::Mine().Map().Generate(seed);
+        assert(previous == mineState.tiles); // A reported seed reproduces the exact layout.
         assert(!GameLevels::Mine().Map().FindRoute(mineState.entry, kPowerBypass).empty());
         assert(GameLevels::Mine().Map().FindRoute(mineState.entry, kRuinSignal).empty());
-        assert(!GameLevels::Mine().Map().IsWalkable(32, 29));
+        assert(!GameLevels::Mine().Map().IsWalkable(kMineGateX, kMineGateY));
         assert(mineState.survivors.size() == 12 && mineState.rescueGroups.size() == 4);
         assert(mineState.enemies.size() == kEnemyPopulation);
         assert(mineState.quest.Advance(MineQuestStage::BypassPower));
-        assert(GameLevels::Mine().Map().IsWalkable(32, 29));
+        assert(GameLevels::Mine().Map().IsWalkable(kMineGateX, kMineGateY));
         assert(!GameLevels::Mine().Map().FindRoute(mineState.entry, kRuinSignal).empty());
         assert(!GameLevels::Mine().Map().FindRoute(mineState.entry, kObserverGlyph).empty());
         assert(!GameLevels::Mine().Map().FindRoute(mineState.entry, kCoordinateTerminal).empty());
@@ -180,11 +178,84 @@ void TestMapAndGate()
         {
             assert(mineState.navigationDistances[cell] >= 0);
         }
+        int junctions = 0;
+        for (int cell : mineState.reachableCells)
+        {
+            int x = cell % kMapSize, y = cell / kMapSize;
+            int exits = 0;
+            for (Vector2 d : {Vector2{1, 0}, {-1, 0}, {0, 1}, {0, -1}})
+            {
+                exits += GameLevels::Mine().Map().IsWalkable(x + int(d.x), y + int(d.y)) ? 1 : 0;
+            }
+            junctions += exits >= 3 ? 1 : 0;
+        }
+        assert(junctions > 100 && mineState.reachableCells.size() > 3000);
     }
+}
+void TestConnectedOverworld()
+{
+    auto &game = tutorial::Game::Get();
+    game.Reset();
+    auto &world = game.GetState();
+    world.isInsideHome = false;
+    std::array<int, tutorial::Overworld::kCityCount> population = {2, 0, 0, 0, 0};
+    for (const auto &resident : world.residents)
+    {
+        ++population[resident.cityIndex];
+        assert(!game.IsPositionBlocked(resident.position));
+    }
+    for (int count : population)
+    {
+        assert(count == tutorial::Overworld::kPopulationPerCity);
+    }
+    const auto &cities = tutorial::Overworld::Cities();
+    constexpr int connections[][2] = {{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 1}};
+    for (const auto &connection : connections)
+    {
+        auto from = cities[connection[0]].center, to = cities[connection[1]].center;
+        world.bikePosition = from;
+        world.bikeYaw = std::atan2(to.y - from.y, to.x - from.x);
+        tutorial::Overworld::ToggleBike(world);
+        assert(world.isBikeMounted && GameLevels::Active() == nullptr);
+        world.pressedKeys['w'] = true;
+        for (int frame = 0; frame < 1200; ++frame)
+        {
+            tutorial::Overworld::UpdateBike(world, 1.f / 60);
+        }
+        assert(tutorial::Game::Distance(world.playerPosition, to) < 4); // ~20 seconds including acceleration.
+        world.pressedKeys['w'] = false;
+        for (int frame = 0; frame < 30; ++frame)
+        {
+            tutorial::Overworld::UpdateBike(world, 1.f / 60);
+        }
+        auto parked = world.bikePosition;
+        tutorial::Overworld::ToggleBike(world);
+        assert(!world.isBikeMounted && world.bikeSpeed == 0);
+        assert(tutorial::Game::Distance(parked, world.bikePosition) < .001f);
+    }
+    world.bikePosition = tutorial::Overworld::kMineEntrance;
+    world.playerPosition = {world.bikePosition.x + 1.2f, world.bikePosition.y};
+    assert(game.FindNearbyInteraction() == tutorial::InteractionTarget::MineEntrance);
+    auto snapshot = monitoring::WorldSnapshot::Build(1, "overworld-test");
+    for (const auto &city : cities)
+    {
+        assert(snapshot.find(std::string("\"id\":\"") + city.id + "\"") != std::string::npos);
+    }
+    game.Reset();
 }
 void TestAimLightingAndWallShots()
 {
     ReadyMine();
+    // Combat fixtures are explicit; procedural topology is covered separately by TestMapAndGate.
+    std::fill(mineState.tiles.begin(), mineState.tiles.end(), Tile::Floor);
+    mineState.lights.clear();
+    for (int y = 0; y < kMapSize; ++y)
+    {
+        if (!GameLevels::Mine().Map().IsGateCell(kMineGateX, y))
+        {
+            mineState.tiles[y * kMapSize + kMineGateX] = Tile::Wall;
+        }
+    }
     mineState.enemies.clear();
     tutorial::Game::Get().GetState().playerPosition = {24.5f, 17.5f};
     tutorial::Game::Get().GetState().cameraPosition = tutorial::Game::Get().GetState().playerPosition;
@@ -196,22 +267,24 @@ void TestAimLightingAndWallShots()
     GameLevels::Mine().Combat().Attack();
     assert(mineState.bullets.size() == 1);
     auto muzzle = models::ModelRig::Muzzle(models::ModelRig::Pose(0, false, true, 1));
-    assert(std::fabs(mineState.bullets[0].position.x - 24.5f) < .0001f);
+    assert(std::fabs(mineState.bullets[0].position.x - 24.5f +
+                     muzzle.y * models::WorldScale::characterScale) < .0001f);
     assert(std::fabs(mineState.bullets[0].position.y - 17.5f -
                      muzzle.x * models::WorldScale::characterScale) < .0001f);
     mineState.bullets.clear();
     mineState.pistol.Reset();
-    tutorial::Game::Get().GetState().playerPosition = {29.5f, 29.5f};
+    tutorial::Game::Get().GetState().playerPosition = {kMineGateX - 2.5f, kMineGateY + .5f};
     tutorial::Game::Get().GetState().cameraPosition = tutorial::Game::Get().GetState().playerPosition;
-    AimAt({35.5f, 29.5f});
-    mineState.enemies.push_back({{35.5f, 29.5f}});
-    assert(GameLevels::Mine().Lighting().At({35.5f, 29.5f}) == 0);
+    Vector2 beyondGate = {kMineGateX + 3.5f, kMineGateY + .5f};
+    AimAt(beyondGate);
+    mineState.enemies.push_back({beyondGate});
+    assert(GameLevels::Mine().Lighting().At(beyondGate) == 0);
     GameLevels::Mine().Combat().Attack();
     Step(.3f);
     assert(mineState.enemies[0].health == kEnemyMaxHealth);
     assert(mineState.bullets.empty());
     assert(mineState.quest.Advance(MineQuestStage::BypassPower));
-    assert(GameLevels::Mine().Lighting().At({35.5f, 29.5f}) > .1f);
+    assert(GameLevels::Mine().Lighting().At(beyondGate) > .1f);
     tutorial::Game::Get().GetState().playerPosition = {20.5f, 10.5f};
     tutorial::Game::Get().GetState().cameraPosition = tutorial::Game::Get().GetState().playerPosition;
     mineState.enemies = {{{23.f, 10.5f}}};
@@ -513,8 +586,10 @@ void TestChapterOne()
         assert(mineState.quest.Advance(stage));
     }
     GameLevels::Mine().Leave();
-    assert(level.IsAvailable() && !level.IsActive());
+    assert(!level.IsAvailable() && !level.IsActive());
     game.GetState().playerPosition = tutorial::kCityReceiverPosition;
+    game.InteractWithNearbyTarget();
+    assert(level.IsAvailable() && !level.IsActive());
     game.InteractWithNearbyTarget();
     assert(level.IsActive() && SceneManager::Current() == SceneKind::Frontier);
     level.Leave();
@@ -649,23 +724,28 @@ void TestStoryAndReentry()
     tutorial::Game::Get().GetState().playerPosition = kCoordinateTerminal;
     GameLevels::Mine().Interact();
     assert(mineState.quest.GetStage() == MineQuestStage::ReturnToHalo);
-    unsigned seed = mineState.seed;
+    auto revision = mineState.mapRevision;
     mineState.player.salvage = 7;
     tutorial::Game::Get().GetState().playerPosition = mineState.entry;
     GameLevels::Mine().Interact();
-    assert(!GameLevels::Mine().IsActive() && mineState.quest.GetStage() == MineQuestStage::Complete);
+    assert(!GameLevels::Mine().IsActive() && mineState.quest.GetStage() == MineQuestStage::ReturnToHalo);
+    auto &world = tutorial::Game::Get().GetState();
+    assert(tutorial::Game::Distance(world.playerPosition, world.mineReturnPosition) < .001f);
+    world.isBikeMounted = false;
+    world.playerPosition = tutorial::kCityReceiverPosition;
+    tutorial::Game::Get().InteractWithNearbyTarget();
+    assert(mineState.quest.GetStage() == MineQuestStage::Complete);
     GameLevels::Mine().Enter();
-    assert(GameLevels::Mine().IsActive() && mineState.seed == seed && mineState.player.salvage == 7);
+    assert(GameLevels::Mine().IsActive() && mineState.mapRevision > revision &&
+           mineState.player.salvage == 7);
     assert(mineState.quest.GetStage() == MineQuestStage::Complete);
 }
 } // namespace
 int main(int argc, char **argv)
 {
     static_assert(std::is_base_of<game::Level, game::MineLevel>::value);
-    static_assert(std::is_base_of<game::Level, game::JetTravelLevel>::value);
     static_assert(!std::is_copy_constructible<game::MineLevel>::value);
     static_assert(std::is_base_of<game::Scene, game::MineScene>::value);
-    static_assert(std::is_base_of<game::Scene, game::JetTravelScene>::value);
     TestLevelLifecycle();
     TestWeapon();
     TestQuest();
@@ -677,6 +757,7 @@ int main(int argc, char **argv)
     TestRescueAndScanner();
     TestStoryAndReentry();
     TestChapterOne();
+    TestConnectedOverworld();
     if (argc > 1)
     {
         std::ofstream snapshot(argv[1]);

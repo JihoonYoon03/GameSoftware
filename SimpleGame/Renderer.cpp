@@ -3,6 +3,7 @@
 #include "Level.h"
 #include "Scene.h"
 #include "Drawing.h"
+#include "ResourceAssets.h"
 #include "Monitoring/Monitor.h"
 
 #include "RenderQueue.h"
@@ -65,11 +66,13 @@ struct Mesh::Data
     struct Vertex
     {
         float x, y, z, nx, ny, nz, r, g, b, a, palette, joint, surface;
+        std::array<float, 4> joints, weights;
     };
     unsigned int buffer = 0;
     std::vector<Vertex> vertices;
     float roughness = .7f, metallic = .2f;
     bool ground = false;
+    bool imported = false;
 };
 Mesh::Mesh() : data(new Data())
 {
@@ -91,7 +94,7 @@ struct Renderer::MeshData
     struct Batch
     {
         std::shared_ptr<rendering::Mesh> mesh;
-        std::array<float, 176> bones;
+        models::SkinMatrices bones;
         bool armed = false;
         std::vector<Instance> instances;
     };
@@ -163,9 +166,10 @@ const char *kMeshVertex = R"GLSL(
 attribute vec3 vertexPosition,vertexNormal;
 attribute vec4 vertexColor;
 attribute vec3 vertexInfo;
+attribute vec4 vertexJoints,vertexWeights;
 attribute vec4 instanceAnchor,instanceScale,instanceRotation,instanceBody,instanceAccent,instanceEmission,instanceFinish,instanceTranslation;
-uniform mat4 bones[11];
-uniform int armed,shadowPass;
+uniform mat4 bones[32];
+uniform int armed,shadowPass,imported;
 uniform vec2 shadowJitter;
 varying vec3 normal,localPosition;
 varying vec4 tint,finish;
@@ -177,8 +181,10 @@ mat3 rotation(vec3 a) {
 void main() {
  int j=int(vertexInfo.y+0.5);
  mat3 rotate=rotation(instanceRotation.xyz);
- vec3 p=rotate*((bones[j]*vec4(vertexPosition,1.)).xyz*instanceScale.xyz)+instanceTranslation.xyz;
- normal=normalize(rotate*((mat3(bones[j])*vertexNormal)/instanceScale.xyz));
+ mat4 skin=bones[int(vertexJoints.x+.5)]*vertexWeights.x+bones[int(vertexJoints.y+.5)]*vertexWeights.y
+          +bones[int(vertexJoints.z+.5)]*vertexWeights.z+bones[int(vertexJoints.w+.5)]*vertexWeights.w;
+ vec3 p=rotate*((skin*vec4(vertexPosition,1.)).xyz*instanceScale.xyz)+instanceTranslation.xyz;
+ normal=normalize(rotate*((mat3(skin)*vertexNormal)/instanceScale.xyz));
  localPosition=p;surface=vertexInfo.z;
  tint=vertexColor;
  if(vertexInfo.x>2.5)tint*=instanceEmission;
@@ -192,7 +198,7 @@ void main() {
  float depth=instanceAnchor.z+(p.x+p.y)*36.+p.z*(1296./44.);
  if(shadowPass!=0) {screen+=shadowJitter;depth=-7000.;}
  gl_Position=gl_ModelViewProjectionMatrix*vec4(screen,depth,1.);
- if((j==10 && armed==0)||(shadowPass!=0 && finish.w<.5))gl_Position=vec4(2.,2.,2.,1.);
+ if(((imported!=0?j==1:j==10) && armed==0)||(shadowPass!=0 && finish.w<.5))gl_Position=vec4(2.,2.,2.,1.);
 }
 )GLSL";
 const char *kSoftShadow = R"GLSL(
@@ -262,6 +268,18 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
         mesh = std::make_shared<rendering::Mesh>();
         auto &geometry = *mesh->data;
         const auto &library = models::ModelLibrary::Get();
+        geometry.imported = model.resourceId != 0;
+        if (model.resourceId)
+        {
+            const auto &resource = models::ResourceAssets::Get(model.resourceId);
+            geometry.ground = resource.name.find("ground/") == 0;
+            geometry.vertices.reserve(resource.vertices.size());
+            for (const auto &v : resource.vertices)
+            {
+                geometry.vertices.push_back({v.x, v.y, v.z, v.nx, v.ny, v.nz, v.r, v.g, v.b, v.a, v.palette,
+                                             v.visibility, v.surface, v.joints, v.weights});
+            }
+        }
         for (const auto &m : library.grounds)
         {
             if (&model == &m)
@@ -295,9 +313,21 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
             {
                 surface = models::Surface::Glass;
             }
-            geometry.vertices.push_back({p.x, p.y, p.z, n.x, n.y, n.z, part.color[0], part.color[1],
-                                         part.color[2], part.color[3], float(part.palette), float(part.joint),
-                                         float(surface)});
+            geometry.vertices.push_back({p.x,
+                                         p.y,
+                                         p.z,
+                                         n.x,
+                                         n.y,
+                                         n.z,
+                                         part.color[0],
+                                         part.color[1],
+                                         part.color[2],
+                                         part.color[3],
+                                         float(part.palette),
+                                         float(part.joint),
+                                         float(surface),
+                                         {float(part.joint), 31, 31, 31},
+                                         {1, 0, 0, 0}});
         };
         for (size_t i = 0; i < model.count; ++i)
         {
@@ -375,7 +405,7 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
         }
         (*data.owner)[data.ownerSlot++] = {mesh, material};
     }
-    std::array<float, 176> bones = {};
+    models::SkinMatrices bones = {};
     for (size_t j = 0; j < 11; ++j)
     {
         models::Point o = {}, x = {1, 0, 0}, y = {0, 1, 0}, z = {0, 0, 1};
@@ -389,6 +419,10 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
         float matrix[] = {x.x - o.x, x.y - o.y, x.z - o.z, 0, y.x - o.x, y.y - o.y, y.z - o.z, 0,
                           z.x - o.x, z.y - o.y, z.z - o.z, 0, o.x,       o.y,       o.z,       1};
         std::copy(matrix, matrix + 16, bones.begin() + j * 16);
+    }
+    if (model.resourceId)
+    {
+        models::ResourceAssets::Sample(model.resourceId, pose, bones);
     }
     bool armed = pose && pose->armed;
     std::string key; // identity + pose; palette is per instance
@@ -482,7 +516,7 @@ void Renderer::DrawModels()
     GLint originalFbo = 0;
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &originalFbo);
     auto attributes = [](bool enabled) {
-        for (unsigned int i = 0; i < 12; ++i)
+        for (unsigned int i = 0; i < 14; ++i)
         {
             if (enabled)
             {
@@ -525,6 +559,10 @@ void Renderer::DrawModels()
                                   reinterpret_cast<void *>(offsetof(V, r)));
             glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(V),
                                   reinterpret_cast<void *>(offsetof(V, palette)));
+            glVertexAttribPointer(12, 4, GL_FLOAT, GL_FALSE, sizeof(V),
+                                  reinterpret_cast<void *>(offsetof(V, joints)));
+            glVertexAttribPointer(13, 4, GL_FLOAT, GL_FALSE, sizeof(V),
+                                  reinterpret_cast<void *>(offsetof(V, weights)));
             glBindBuffer(GL_ARRAY_BUFFER, data.instancesBuffer);
             glBufferData(GL_ARRAY_BUFFER, batch.instances.size() * sizeof(MeshData::Instance),
                          batch.instances.data(), GL_STREAM_DRAW);
@@ -534,9 +572,10 @@ void Renderer::DrawModels()
                                       reinterpret_cast<void *>(size_t(a - 4) * 16));
                 glVertexAttribDivisor(a, 1);
             }
-            glUniformMatrix4fv(glGetUniformLocation(data.program, "bones[0]"), 11, GL_FALSE,
+            glUniformMatrix4fv(glGetUniformLocation(data.program, "bones[0]"), 32, GL_FALSE,
                                batch.bones.data());
             glUniform1i(glGetUniformLocation(data.program, "armed"), batch.armed ? 1 : 0);
+            glUniform1i(glGetUniformLocation(data.program, "imported"), mesh.imported ? 1 : 0);
             glDrawArraysInstanced(GL_TRIANGLES, 0, GLsizei(mesh.vertices.size()),
                                   GLsizei(batch.instances.size()));
             profiling::Count(profiling::Counter::DrawCalls);
@@ -647,7 +686,7 @@ namespace
 const char *kDarkFragment = R"GLSL(
 #version 120
 uniform sampler2D occupancy,depthImage;
-uniform float viewZoom;
+uniform float viewZoom, mapSize;
 uniform vec2 origin;
 uniform vec4 lights[24];
 uniform int lightCount;
@@ -660,8 +699,8 @@ float trace(vec2 from,vec2 to) {
  vec2 crossing=abs(edge-from)*inverse;
  for(int i=0;i<48;++i) {
   if(all(equal(cell,end)))return 1.;
-  if(any(lessThan(cell,vec2(0.)))||any(greaterThanEqual(cell,vec2(64.))))return 0.;
-  if(texture2D(occupancy,(cell+.5)/64.).r>.5)return 0.;
+  if(any(lessThan(cell,vec2(0.)))||any(greaterThanEqual(cell,vec2(mapSize))))return 0.;
+  if(texture2D(occupancy,(cell+.5)/mapSize).r>.5)return 0.;
   if(crossing.x<crossing.y){cell.x+=step.x;crossing.x+=inverse.x;}
   else {cell.y+=step.y;crossing.y+=inverse.y;}
  }
@@ -672,7 +711,7 @@ void main() {
  screen=vec2(640.,456.)+(screen-vec2(640.,456.))/viewZoom;
  vec2 s=screen-origin;
  float d=texture2D(depthImage,uv).r;
- float height=d<.9999?max(0.,((.5-d)*16384.-2.*s.y)/(88.+1296./44.)):0.;
+ float height=d<.9999?max(0.,((.5-d)*131072.-2.*s.y)/(88.+1296./44.)):0.;
  float sum=(s.y+44.*height)/18.,difference=s.x/36.;
  vec2 world=vec2(sum+difference,sum-difference)*.5;
  float light=0.;
@@ -773,15 +812,16 @@ bool Renderer::DrawMineDarkness()
     bool powered = state.quest.IsPowerBypassed();
     if (d.mapRevision != state.mapRevision || d.powered != powered)
     {
-        std::vector<unsigned char> cells(64 * 64);
-        for (int y = 0; y < 64; ++y)
+        std::vector<unsigned char> cells(game::kMapSize * game::kMapSize);
+        for (int y = 0; y < game::kMapSize; ++y)
         {
-            for (int x = 0; x < 64; ++x)
+            for (int x = 0; x < game::kMapSize; ++x)
             {
-                cells[y * 64 + x] = mine.Map().IsWalkable(x, y) ? 0 : 255;
+                cells[y * game::kMapSize + x] = mine.Map().IsWalkable(x, y) ? 0 : 255;
             }
         }
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 64, 64, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, cells.data());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, game::kMapSize, game::kMapSize, 0, GL_LUMINANCE,
+                     GL_UNSIGNED_BYTE, cells.data());
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -832,6 +872,7 @@ bool Renderer::DrawMineDarkness()
     glDisable(GL_BLEND);
     glUseProgram(d.darkProgram);
     glUniform1f(glGetUniformLocation(d.darkProgram, "viewZoom"), tutorial::WorldCamera::zoom);
+    glUniform1f(glGetUniformLocation(d.darkProgram, "mapSize"), float(game::kMapSize));
     glUniform1i(glGetUniformLocation(d.darkProgram, "occupancy"), 0);
     glUniform1i(glGetUniformLocation(d.darkProgram, "depthImage"), 1);
     glUniform2f(glGetUniformLocation(d.darkProgram, "origin"), origin.x, origin.y);
@@ -989,11 +1030,11 @@ unsigned int Renderer::CompileProgram(const char *vertex, const char *fragment)
         {
             glAttachShader(program, shader);
         }
-        const char *attributes[] = {"vertexPosition",   "vertexNormal",   "vertexColor",
-                                    "vertexInfo",       "instanceAnchor", "instanceScale",
-                                    "instanceRotation", "instanceBody",   "instanceAccent",
-                                    "instanceEmission", "instanceFinish", "instanceTranslation"};
-        for (GLuint a = 0; a < 12; ++a)
+        const char *attributes[] = {
+            "vertexPosition", "vertexNormal",        "vertexColor",  "vertexInfo",     "instanceAnchor",
+            "instanceScale",  "instanceRotation",    "instanceBody", "instanceAccent", "instanceEmission",
+            "instanceFinish", "instanceTranslation", "vertexJoints", "vertexWeights"};
+        for (GLuint a = 0; a < 14; ++a)
         {
             glBindAttribLocation(program, a, attributes[a]);
         }
@@ -1277,8 +1318,8 @@ void GameRenderer::Draw()
     {
         return;
     }
-    profiling::BeginFrame(game::GameLevels::Mine().IsActive()  ? "mine"
-                          : Game::Get().GetState().isJetTravel ? "jet_travel"
+    profiling::BeginFrame(game::GameLevels::Mine().IsActive()    ? "mine"
+                          : Game::Get().GetState().isBikeMounted ? "overworld_bike"
                           : Game::Get().GetState().isInObservatory
                               ? "observatory"
                               : (Game::Get().GetState().isInsideHome ? "interior" : "exterior"));
@@ -1286,7 +1327,7 @@ void GameRenderer::Draw()
     renderer->BeginScene(Game::Get().GetState().viewportWidth, Game::Get().GetState().viewportHeight);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0, kCanvasWidth, kCanvasHeight, 0, -8192, 8192);
+    glOrtho(0, kCanvasWidth, kCanvasHeight, 0, -65536, 65536);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glDisable(GL_DEPTH_TEST);
@@ -1298,10 +1339,6 @@ void GameRenderer::Draw()
         if (game::GameLevels::Mine().IsActive())
         {
             Drawing::DrawRectangle(0, 0, float(kCanvasWidth), float(kCanvasHeight), ColorRGBA(0, 0, 0));
-        }
-        else if (game::GameLevels::Travel().IsActive())
-        {
-            game::SceneManager::Get(game::SceneKind::TravelBackground).Draw();
         }
         else
         {

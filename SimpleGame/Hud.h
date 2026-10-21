@@ -25,7 +25,6 @@ class CityHud final : public Hud
 {
   public:
     void Draw() override;
-    static bool ContainsMinimapBuilding(const Building &building);
 
   private:
     void DrawMinimap();
@@ -54,12 +53,4 @@ class ChapterHud final : public Hud
     static void DrawJournal();
 };
 
-// ============================================================================
-// JetTravelHud : Hud
-// ============================================================================
-class JetTravelHud final : public Hud
-{
-  public:
-    void Draw() override;
-};
 } // namespace tutorial

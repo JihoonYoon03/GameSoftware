@@ -13,9 +13,9 @@ function color(part) {
 }
 function project(model, p) {
   const building = model.category === "building";
-  const width = building ? (model.type === 4 ? 5 : 2.5) : 1;
-  const depth = building ? (model.type === 4 ? 4 : 2.5) : 1;
-  const height = building ? (model.type === 4 ? 170 : 130) : 44;
+  const width = model.preview_scale?.[0] ?? (building ? (model.type === 4 ? 5 : 2.5) : 1);
+  const depth = model.preview_scale?.[1] ?? (building ? (model.type === 4 ? 4 : 2.5) : 1);
+  const height = model.preview_scale ? model.preview_scale[2]*44 : building ? (model.type === 4 ? 170 : 130) : 44;
   return model.space === "world" ? [(p[0]*width-p[1]*depth)*36,(p[0]*width+p[1]*depth)*18-p[2]*height] : p;
 }
 function draw(model, canvas) {
@@ -76,7 +76,8 @@ function render() {
     title.append(validation);
     const canvas = document.createElement("canvas"); canvas.width = 420; canvas.height = 280;
     const note = document.createElement("p"); note.className = "muted small";
-    note.textContent = model.parts.length + "개 파츠 · " + (model.space==="world"?"쿼터뷰 월드 좌표":"화면 좌표");
+    note.textContent = (model.triangles ? model.triangles + "개 삼각형" : model.parts.length + "개 파츠") +
+      " · " + (model.space==="world"?"쿼터뷰 월드 좌표":"화면 좌표") + (model.source ? " · " + model.source : "");
     card.append(title,canvas,note); draw(model,canvas);
     return card;
   }));

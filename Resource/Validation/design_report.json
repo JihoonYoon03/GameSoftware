@@ -1,0 +1,68 @@
+{
+  "body_profiles": {
+    "Male_Lean": {
+      "hip_width_m": 0.2720021605491638,
+      "hip_depth_m": 0.1899999976158142,
+      "waist_width_m": 0.20542821288108826,
+      "waist_depth_m": 0.1679999977350235,
+      "chest_width_m": 0.3671078085899353,
+      "chest_depth_m": 0.17000000178813934
+    },
+    "Male_Normal": {
+      "hip_width_m": 0.3138486444950104,
+      "hip_depth_m": 0.23600000143051147,
+      "waist_width_m": 0.26439371705055237,
+      "waist_depth_m": 0.210999995470047,
+      "chest_width_m": 0.42987754940986633,
+      "chest_depth_m": 0.21899999678134918
+    },
+    "Male_Heavy": {
+      "hip_width_m": 0.42135608196258545,
+      "hip_depth_m": 0.4335099905729294,
+      "waist_width_m": 0.40515008568763733,
+      "waist_depth_m": 0.330999992787838,
+      "chest_width_m": 0.47362613677978516,
+      "chest_depth_m": 0.27799999713897705
+    },
+    "Female_Lean": {
+      "hip_width_m": 0.3138486444950104,
+      "hip_depth_m": 0.18199999630451202,
+      "waist_width_m": 0.15787538886070251,
+      "waist_depth_m": 0.15600000321865082,
+      "chest_width_m": 0.3119465410709381,
+      "chest_depth_m": 0.17972354590892792
+    },
+    "Female_Normal": {
+      "hip_width_m": 0.36330360174179077,
+      "hip_depth_m": 0.20999999344348907,
+      "waist_width_m": 0.19972187280654907,
+      "waist_depth_m": 0.18700000643730164,
+      "chest_width_m": 0.3480866849422455,
+      "chest_depth_m": 0.2214617282152176
+    },
+    "Female_Heavy": {
+      "hip_width_m": 0.45270290970802307,
+      "hip_depth_m": 0.39976999163627625,
+      "waist_width_m": 0.34998878836631775,
+      "waist_depth_m": 0.3059999868273735,
+      "chest_width_m": 0.3975416123867035,
+      "chest_depth_m": 0.2873082906007767
+    }
+  },
+  "outfit_torso_geometry_hashes": {
+    "Explorer": "4f222718f106f81dceb1b0147d5c5b29cdc3b553d1897e20e6e8bbde24ded7b4",
+    "Engineer": "937e72590752dbd669609212c6fbf6efa1089b6ca33b2fb94c3805c3e1648392",
+    "Guard": "f9990378a50114ac510ae1eab88aa2acd7edf578c69d6b8c18754e002765f52c",
+    "Medic": "f3c8752e502b29d0fb8c78ee551f49aa3539807a8a9ddba90c66ae72e48b1bb4",
+    "Researcher": "552cbcaf988351f7383a7bf0827f1e756bf37f51b2d98bf59cb3ef1fbe409cc2",
+    "Miner": "2271f5b5c4c18464c39ffc700293f134404950e9192f308be7eb85ead96407bb",
+    "HeavyCombat": "95be13d8d43af51ea20c76df301bd0c40e88994c58fe92e3d86b1d09675c7732",
+    "Pilot": "4af69a835a23f2ab23409cbe14e6e3b7ffecea2cc805d14ba5fbf88ccbae5a23",
+    "Civilian": "a1bf2dee6dfcd0173a3edb63b123803439ad768afb09673b6bcb814f526a3a99"
+  },
+  "distinct_outfit_geometries": 9,
+  "accessory_meshes": 34,
+  "vehicle_types": 5,
+  "vehicle_parts": 122,
+  "all_checks_passed": true
+}

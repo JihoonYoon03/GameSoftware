@@ -44,6 +44,12 @@
     <ClInclude Include="ModelLibrary.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="Overworld.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceAssets.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
     <ClInclude Include="Monitoring\LocalMonitorServer.h">
       <Filter>Monitoring</Filter>
     </ClInclude>
@@ -99,6 +105,12 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="ModelLibrary.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Overworld.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceAssets.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Monitoring\LocalMonitorServer.cpp">

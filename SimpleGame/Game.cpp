@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "Game.h"
+#include "Overworld.h"
 #include "Level.h"
 #include "Scene.h"
 #include "Renderer.h"
@@ -49,14 +50,21 @@ void MovementFacing::Update(Vector2 from, Vector2 to)
 }
 bool CityLayout::IsRoadTile(int x, int y)
 {
-    return (y >= -1 && y <= 0) || (x >= 1 && x <= 2) || y == 7 || x == -10;
+    return Overworld::IsRoad(x, y);
 }
 bool CityLayout::OverlapsRoad(const Building &b, float clearance)
 {
-    return (b.y < 1 + clearance && b.y + b.depth > -1 - clearance) ||
-           (b.y < 8 + clearance && b.y + b.depth > 7 - clearance) ||
-           (b.x < 3 + clearance && b.x + b.width > 1 - clearance) ||
-           (b.x < -9 + clearance && b.x + b.width > -10 - clearance);
+    for (int x = int(std::floor(b.x - clearance)); x <= int(std::floor(b.x + b.width + clearance)); ++x)
+    {
+        for (int y = int(std::floor(b.y - clearance)); y <= int(std::floor(b.y + b.depth + clearance)); ++y)
+        {
+            if (IsRoadTile(x, y))
+            {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 void CityLayout::ValidateBuildings(std::vector<Building> &buildings)
 {
@@ -102,6 +110,13 @@ unsigned char Game::NormalizeKey(unsigned char key)
 void Game::UpdatePlayerMovement(float deltaSeconds)
 {
     profiling::Scope profileTimer(profiling::Timer::Movement);
+    const Vector2 previous = state.playerPosition;
+    state.movementSpeed = 0;
+    if (state.isBikeMounted && !game::GameLevels::Active() && !state.isInsideHome && !state.isInObservatory)
+    {
+        Overworld::UpdateBike(state, deltaSeconds);
+        return;
+    }
     float screenX = (state.pressedKeys['d'] ? 1.f : 0) - (state.pressedKeys['a'] ? 1.f : 0);
     float screenY = (state.pressedKeys['s'] ? 1.f : 0) - (state.pressedKeys['w'] ? 1.f : 0);
     float inputLength = std::sqrt(screenX * screenX + screenY * screenY);
@@ -137,12 +152,12 @@ void Game::UpdatePlayerMovement(float deltaSeconds)
     {
         state.playerPosition = candidate;
     }
+    state.movementSpeed = deltaSeconds > 0 ? Distance(previous, state.playerPosition) / deltaSeconds : 0;
+    state.movementAmount = state.movementSpeed > .001f ? inputLength : 0;
 }
 void Game::UpdateCamera(float deltaSeconds)
 {
-    Vector2 target = (state.isInsideHome || state.isInObservatory || state.isJetTravel)
-                         ? Vector2{0, 0}
-                         : state.playerPosition;
+    Vector2 target = (state.isInsideHome || state.isInObservatory) ? Vector2{0, 0} : state.playerPosition;
     float followAmount = 1 - std::exp(-kCameraFollowRate * deltaSeconds);
     state.cameraPosition.x += (target.x - state.cameraPosition.x) * followAmount;
     state.cameraPosition.y += (target.y - state.cameraPosition.y) * followAmount;
@@ -171,12 +186,12 @@ void Game::Reset()
         state.buildings.push_back({-16, float(y), 2.5f, 2, 140});
         state.buildings.push_back({13, float(y), 2.5f, 2, 120});
     }
-    // Surrounding city blocks are scenery; player collision limits stay unchanged.
-    for (int x = CityLayout::kTerrainMinX + 3; x < CityLayout::kTerrainMaxX - 3; x += 6)
+    // Only generate city blocks, not buildings across the entire outdoor world.
+    for (int x = -39; x < 40; x += 6)
     {
-        for (int y = CityLayout::kTerrainMinY + 3; y < CityLayout::kTerrainMaxY - 3; y += 6)
+        for (int y = -33; y < 34; y += 6)
         {
-            if (x < kWorldMaxX + 3 && x + 3 > kWorldMinX - 3 && y < kWorldMaxY + 3 && y + 3 > kWorldMinY - 3)
+            if (x < 21 && x + 3 > -21 && y < 17 && y + 3 > -16)
             {
                 continue;
             }
@@ -210,29 +225,7 @@ void Game::Reset()
     observatory.palette.accent = {.3f, .76f, .86f, 1};
     observatory.palette.emission = {.42f, .9f, 1, 1};
     state.buildings.push_back(observatory);
-    CityLayout::ValidateBuildings(state.buildings);
-    state.residents = {
-        {{-5, 0}, "배송 기사", "배송 기사 / 오늘은 관문 쪽 배송이 전부 취소됐어요. 이유도 없이요."},
-        {{-1, 3}, "야간 근무자", "야간 근무자 / 밤새 불빛이 깜빡였어. 어제도 같은 아침을 본 것 같은데."},
-        {{5, 2}, "정비공", "정비공 / 저건 바퀴가 아니라 자기부상 장치예요. 엔진 소리가 달라졌죠?"},
-        {{8, -2}, "관문 경비", "관문 경비 / 전망대까지는 개방되어 있습니다. 울타리 너머로는 가지 마세요."},
-        {{-11, 2}, "학생", "학생 / 별들이 어제와 달라요. 선생님은 구름 때문이라고 하지만요."},
-        {{10, 6}, "상인", "상인 / 북쪽 광장에서 따뜻한 차를 팔아요. 리아에게도 전해주세요."},
-        {{-8, 8}, "주민", "주민 / 이곳에서 삼십 년을 살았지만 관문이 저런 색인 건 처음이야."},
-        {{2, 8}, "아이", "아이 / 엄마는 저 빛이 우리를 지켜 준대요. 정말 그럴까요?"},
-        {{-10, -7}, "통신 기술자", "통신 기술자 / 발신 기록이 없는 응답이 잡혀요. 수신기가 고장 난 걸까요?"},
-        {{11, -3}, "탐사원", "탐사원 / 낯선 곳에 갈 때는 꼭 누군가와 함께 가요."},
-        {{11, -5}, "순찰대원", "순찰대원 / 이상한 방송을 들으면 혼자 따라가지 마세요."},
-        {{-12, 7}, "퇴역 항해사", "퇴역 항해사 / 저 문이 열리기 전부터 그 너머에는 무언가 있었지."}};
-    for (size_t i = 0; i < state.residents.size(); ++i)
-    {
-        auto &resident = state.residents[i];
-        resident.type =
-            static_cast<models::CharacterType>(i % static_cast<size_t>(models::CharacterType::Count));
-        resident.coat = buildingColors[(i / 5 + i) % 5];
-        resident.gender = i % 2 ? models::Gender::Female : models::Gender::Male;
-        resident.hair = models::HairStyle(i % size_t(models::HairStyle::Count));
-    }
+    Overworld::Populate(state);
     ShowNotice("리아 / 좋은 아침. 집 단말이 또 깜빡이네. 확인하고 밖에서 만나자.");
 }
 void Game::Resize(int width, int height)
@@ -346,8 +339,6 @@ void Game::KeyDown(unsigned char key, int, int)
     // Direct access for first-level iteration without replaying the tutorial.
     if (key == '1')
     {
-        game::GameLevels::Travel().Reset();
-        state.isJetTravel = false;
         state.isInObservatory = false;
         game::GameLevels::Mine().Enter(true);
         return;
@@ -493,9 +484,13 @@ bool Game::IsPositionBlocked(Vector2 position)
         {
             return true;
         }
-        const bool bed = position.x < -1.35f && position.y < -1.6f;
-        const bool console = position.x > 1.15f && position.x < 2.06f && position.y < -1.98f;
-        return bed || console;
+        const bool bed =
+            position.x > -2.48f && position.x < -1.62f && position.y > -2.75f && position.y < -1.35f;
+        const bool console =
+            position.x > 1.23f && position.x < 1.97f && position.y > -2.69f && position.y < -2.1f;
+        const bool table =
+            position.x > -2.32f && position.x < -1.28f && position.y > 1.03f && position.y < 1.77f;
+        return bed || console || table;
     }
     if (state.isInObservatory)
     {
@@ -506,7 +501,15 @@ bool Game::IsPositionBlocked(Vector2 position)
     {
         return true;
     }
-    for (auto building : state.buildings)
+    auto entrance = Overworld::kMineEntrance;
+    float entranceX = position.x - entrance.x, entranceY = position.y - entrance.y;
+    bool entrancePillars =
+        entranceY > -1.3f && entranceY < -.4f && std::fabs(entranceX) > 2.7f && std::fabs(entranceX) < 3.2f;
+    if (entrancePillars)
+    {
+        return true;
+    }
+    for (const auto &building : state.buildings)
     {
         if (position.x > building.x - .2f && position.x < building.x + building.width + .2f &&
             position.y > building.y - .2f && position.y < building.y + building.depth + .2f)
@@ -550,10 +553,13 @@ bool Game::IsQuestInteraction(InteractionTarget target) const
                  !game::GameLevels::Chapter().GetState().portableLightRepaired ||
                  !game::GameLevels::Chapter().GetState().vehicleRepaired ||
                  !game::GameLevels::Chapter().GetState().detailLedgerFound)) ||
-               (state.hasDescendedObservatory && stage == game::MineQuestStage::CheckCityRelay);
+               (state.hasDescendedObservatory && stage == game::MineQuestStage::CheckCityRelay) ||
+               stage == game::MineQuestStage::ReturnToHalo;
     case InteractionTarget::JetBike:
         return state.hasDescendedObservatory && state.gateSignalHeard &&
                stage == game::MineQuestStage::TravelToMine;
+    case InteractionTarget::MineEntrance:
+        return stage >= game::MineQuestStage::TravelToMine;
     case InteractionTarget::ObservatorySignal:
         return state.isInObservatory && !state.gateSignalHeard;
     case InteractionTarget::ObservatoryExit:
@@ -564,10 +570,6 @@ bool Game::IsQuestInteraction(InteractionTarget target) const
 }
 InteractionTarget Game::FindNearbyInteraction()
 {
-    if (state.isJetTravel)
-    {
-        return InteractionTarget::None;
-    }
     if (state.isInObservatory)
     {
         if (Distance(state.playerPosition, kObservatoryConsole) < 1.4f)
@@ -593,6 +595,19 @@ InteractionTarget Game::FindNearbyInteraction()
         return InteractionTarget::None;
     }
 
+    if (state.isBikeMounted)
+    {
+        return InteractionTarget::JetBike;
+    }
+    if (Distance(state.playerPosition, Overworld::kMineEntrance) < 2.5f)
+    {
+        return InteractionTarget::MineEntrance;
+    }
+    if (Distance(state.playerPosition, state.bikePosition) < 1.8f)
+    {
+        return InteractionTarget::JetBike;
+    }
+
     if (game::GameLevels::Chapter().IsAvailable() &&
         Distance(state.playerPosition, kCityReceiverPosition) < 1.5f)
     {
@@ -613,7 +628,6 @@ InteractionTarget Game::FindNearbyInteraction()
                                        {kMaraPosition, InteractionTarget::Mara},
                                        {kRelayPosition, InteractionTarget::PowerRelay},
                                        {kBeaconPosition, InteractionTarget::GateBeacon},
-                                       {kJetBikePosition, InteractionTarget::JetBike},
                                        {kCityReceiverPosition, InteractionTarget::CityReceiver}};
     InteractionTarget nearestTarget = InteractionTarget::None;
     float nearestDistance = 1.35f;
@@ -628,6 +642,11 @@ InteractionTarget Game::FindNearbyInteraction()
     }
     for (const auto &resident : state.residents)
     {
+        if (&resident - state.residents.data() == Overworld::kKainResidentSlot &&
+            game::GameLevels::Chapter().GetState().kainJoined)
+        {
+            continue;
+        }
         float distance = Distance(state.playerPosition, resident.position);
         if (distance < nearestDistance)
         {
@@ -640,12 +659,28 @@ InteractionTarget Game::FindNearbyInteraction()
 void Game::InteractWithNearbyTarget()
 {
     const InteractionTarget target = FindNearbyInteraction();
+    if (target == InteractionTarget::MineEntrance)
+    {
+        if (game::GameLevels::Mine().GetState().quest.GetStage() < game::MineQuestStage::TravelToMine)
+        {
+            ShowNotice("광산 / 리아에게 기록을 보여 주고 헤일로 수신망에서 접근 경로를 확인하세요.");
+            return;
+        }
+        state.mineReturnPosition = state.playerPosition;
+        game::GameLevels::Mine().Enter();
+        return;
+    }
     if (target == InteractionTarget::Resident)
     {
         const Resident *nearest = nullptr;
         float distance = 1.35f;
         for (const auto &resident : state.residents)
         {
+            if (&resident - state.residents.data() == Overworld::kKainResidentSlot &&
+                game::GameLevels::Chapter().GetState().kainJoined)
+            {
+                continue;
+            }
             float candidate = Distance(state.playerPosition, resident.position);
             if (candidate < distance)
             {
@@ -686,6 +721,15 @@ void Game::InteractWithNearbyTarget()
     }
     if (target == InteractionTarget::CityReceiver)
     {
+        if (game::GameLevels::Mine().GetState().quest.Advance(game::MineQuestStage::ReturnToHalo))
+        {
+            state.isComplete = true;
+            state.mainQuestStage = MainQuestStage::Complete;
+            game::GameLevels::Chapter().Unlock();
+            ShowNotice("낙하한 신호 완료 / 헤일로에 광산 좌표를 보고했습니다. 수신망에서 1장 현장 조사를 "
+                       "시작하세요.");
+            return;
+        }
         if (game::GameLevels::Chapter().IsAvailable())
         {
             game::GameLevels::Chapter().InteractHub();
@@ -822,17 +866,14 @@ void Game::InteractWithNearbyTarget()
     }
     if (target == InteractionTarget::JetBike)
     {
-        if (!state.gateSignalHeard || !state.hasDescendedObservatory)
+        if ((!state.gateSignalHeard || !state.hasDescendedObservatory) &&
+            !game::GameLevels::Mine().GetState().quest.IsRiaJoined())
         {
             ShowNotice("제트 바이크 / 먼저 리아와 대화하고 전망대에서 신호를 측정한 뒤 내려오세요.");
             return;
         }
-        if (!game::GameLevels::Mine().GetState().quest.BeginJourney())
-        {
-            ShowNotice("리아 / 먼저 나에게 신호 기록을 보여 주고 도시 수신망을 확인하자.");
-            return;
-        }
-        game::GameLevels::Travel().Enter();
+        game::GameLevels::Mine().GetState().quest.BeginJourney();
+        Overworld::ToggleBike(state);
     }
     if (target == InteractionTarget::None)
     {

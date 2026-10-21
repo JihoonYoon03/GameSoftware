@@ -1,5 +1,7 @@
 ﻿#include "stdafx.h"
 #include "Drawing.h"
+#include "Overworld.h"
+#include "ResourceAssets.h"
 #include "Level.h"
 #pragma comment(lib, "opengl32.lib")
 #include "RenderQueue.h"
@@ -232,6 +234,53 @@ void Drawing::DrawModel3D(const models::Model &model, Vector2 screen, models::Po
     {
         return;
     }
+    if (model.resourceId)
+    {
+        const auto &resource = models::ResourceAssets::Get(model.resourceId);
+        models::SkinMatrices matrices;
+        models::ResourceAssets::Sample(model.resourceId, pose, matrices);
+        renderqueue::Depth(true);
+        renderqueue::Begin(GL_TRIANGLES);
+        for (size_t triangle = 0; triangle < resource.vertices.size(); triangle += 3)
+        {
+            if (resource.vertices[triangle].visibility == 1 && (!pose || !pose->armed))
+            {
+                continue;
+            }
+            models::Point positions[3];
+            for (size_t j = 0; j < 3; ++j)
+            {
+                auto p = models::ResourceAssets::SkinPoint(resource.vertices[triangle + j], matrices);
+                positions[j] = transform.Apply({p.x * scale.x, p.y * scale.y, p.z * scale.z});
+            }
+            auto a = positions[0], b = positions[1], c = positions[2];
+            models::Point n = {(b.y - a.y) * (c.z - a.z) - (b.z - a.z) * (c.y - a.y),
+                               (b.z - a.z) * (c.x - a.x) - (b.x - a.x) * (c.z - a.z),
+                               (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)};
+            float length = std::sqrt(n.x * n.x + n.y * n.y + n.z * n.z);
+            float light = length > 1.e-8f
+                              ? RenderStyle::Shade((-.35f * n.x - .45f * n.y + .82f * n.z) / length,
+                                                   GameRenderer::Get().Backend().GetStyle().cartoon)
+                              : 1;
+            for (size_t j = 0; j < 3; ++j)
+            {
+                const auto &v = resource.vertices[triangle + j];
+                const auto &tint = v.palette == 1   ? palette.body
+                                   : v.palette == 2 ? palette.accent
+                                                    : palette.emission;
+                float shade = v.palette == 3 ? 1 : light;
+                renderqueue::Color(v.r * (v.palette ? tint[0] : 1) * shade,
+                                   v.g * (v.palette ? tint[1] : 1) * shade,
+                                   v.b * (v.palette ? tint[2] : 1) * shade, v.a * palette.body[3]);
+                const auto &p = positions[j];
+                renderqueue::Vertex(screen.x + (p.x - p.y) * 36, screen.y + (p.x + p.y) * 18 - p.z * 44,
+                                    depth + (p.x + p.y) * 36 + p.z * (1296.f / 44));
+            }
+        }
+        renderqueue::End();
+        renderqueue::Depth(false);
+        return;
+    }
     renderqueue::Depth(true);
     auto transformed = [&](models::Point p, models::Joint joint) {
         if (pose)
@@ -316,6 +365,7 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
     auto pose = models::ModelRig::Pose(world.animationTimeSeconds * 10,
                                        (isPlayer && world.movementAmount > 0) || walking, armed,
                                        armed ? flash / .055f : 0, false, gender);
+    pose.locomotionSpeed = isPlayer ? world.movementSpeed : 2.1f;
     models::Palette palette;
     palette.body = {coat.r, coat.g, coat.b, coat.a};
     models::Transform3D rotation;
@@ -346,17 +396,17 @@ void Drawing::DrawHair(Vector2 screen, models::Point scale, const models::Transf
                        const models::CharacterPose &pose, models::CharacterType type, models::Gender gender,
                        models::HairStyle hair)
 {
-    if (type == models::CharacterType::Guard)
+    if (type == models::CharacterType::HeavyCombat)
     {
         return; // Sealed helmet.
     }
-    bool covered = type == models::CharacterType::Engineer || type == models::CharacterType::Medic;
+    bool covered = type == models::CharacterType::Miner;
     models::Palette palette;
     static constexpr float colors[][3] = {{.14f, .10f, .08f}, {.22f, .13f, .085f}, {.11f, .08f, .065f},
                                           {.34f, .18f, .10f}, {.13f, .09f, .075f}, {.23f, .16f, .12f}};
     const auto &color = colors[size_t(hair)];
     palette.body = {color[0], color[1], color[2], 1};
-    if (gender == models::Gender::Female)
+    if (gender == models::Gender::Female && !models::ModelLibrary::Hair(hair, covered).resourceId)
     {
         scale.x *= .94f;
         scale.y *= .91f;
@@ -480,37 +530,44 @@ void Drawing::DrawWorldVehicle(Vector2 position, float altitude, float scale, mo
     auto screen = WorldToScreen(position.x, position.y, altitude);
     models::Transform3D rotation;
     rotation.yaw = yaw;
+    auto pose = models::ModelRig::Pose(Game::Get().GetState().animationTimeSeconds * 10, throttle > .2f);
     VehicleEffects(vehicle, screen, scale, rotation, palette, throttle,
                    (position.x + position.y) * 36 + altitude * (1296.f / 1936));
     DrawModel3D(vehicle.body, screen, {scale, scale, scale}, rotation,
-                (position.x + position.y) * 36 + altitude * (1296.f / 1936), palette);
+                (position.x + position.y) * 36 + altitude * (1296.f / 1936), palette, &pose);
 }
-void Drawing::DrawTravelBike(Vector2 screen, float yaw, float throttle)
+void Drawing::DrawProp(const models::Model &model, Vector2 position, models::Point scale,
+                       const models::Palette &palette, float yaw)
 {
+    models::Transform3D transform;
+    transform.yaw = yaw;
+    DrawModel3D(model, WorldToScreen(position.x, position.y), scale, transform,
+                (position.x + position.y) * 36, palette);
+}
+void Drawing::DrawWorldBike(Vector2 position, float yaw, float throttle, bool mounted)
+{
+    constexpr float altitude = 4.4f;
+    DrawWorldVehicle(position, altitude, 1, models::VehicleType::JetBike, Overworld::BikePalette(), throttle,
+                     yaw);
+    if (!mounted)
+    {
+        return;
+    }
     const auto &vehicle = models::ModelLibrary::Get().vehicles[size_t(models::VehicleType::JetBike)];
-    const auto palette = game::GameLevels::Travel().GetBikePalette();
-    models::Transform3D rotation;
-    rotation.yaw = -kPi / 4 + yaw;
-    constexpr float scale = 1.65f;
-    VehicleEffects(vehicle, screen, scale, rotation, palette, throttle, (screen.y - 485) * 2);
-    DrawModel3D(vehicle.body, screen, {scale, scale, scale}, rotation, (screen.y - 485) * 2, palette);
     const auto &world = Game::Get().GetState();
+    auto screen = WorldToScreen(position.x, position.y, altitude);
+    float depth = (position.x + position.y) * 36 + altitude * (1296.f / 1936);
+    constexpr float bodyScale = models::WorldScale::characterScale;
+    models::Transform3D rotation;
+    rotation.yaw = yaw;
+    rotation.position = rotation.Apply({vehicle.seat.x, vehicle.seat.y, vehicle.seat.z - .17f * bodyScale});
     auto pose = models::ModelRig::Pose(0, false, false, 0, true, world.playerGender);
     models::Palette clothing;
     clothing.body = {.55f, .68f, .72f, 1};
-    // Seat, torso, limbs and hands are transformed with the same bike attitude.
-    constexpr float bodyScale = models::WorldScale::characterScale;
-    auto seat = rotation.Apply(
-        {vehicle.seat.x * scale, vehicle.seat.y * scale, (vehicle.seat.z - .17f * bodyScale) * scale});
-    auto riderRotation = rotation;
-    riderRotation.position = seat;
-    DrawModel3D(
-        models::ModelLibrary::Character(models::CharacterType::Explorer, Game::Get().GetState().playerGender),
-        screen, {scale * bodyScale, scale * bodyScale, scale * bodyScale}, riderRotation,
-        (screen.y - 485) * 2, clothing, &pose);
-    DrawHair(screen, {scale * bodyScale, scale * bodyScale, scale * bodyScale}, riderRotation,
-             (screen.y - 485) * 2, pose, models::CharacterType::Explorer, world.playerGender,
-             world.playerHair);
+    DrawModel3D(models::ModelLibrary::Character(models::CharacterType::Explorer, world.playerGender), screen,
+                {bodyScale, bodyScale, bodyScale}, rotation, depth, clothing, &pose);
+    DrawHair(screen, {bodyScale, bodyScale, bodyScale}, rotation, depth, pose,
+             models::CharacterType::Explorer, world.playerGender, world.playerHair);
 }
 void Drawing::DrawBuilding(Building building)
 {

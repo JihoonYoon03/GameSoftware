@@ -206,10 +206,10 @@ function renderEnvironment(data) {
   );
   const travel = data.jet_travel;
   if (travel) byId("world-status").append(
-    metric("제트 주행", (travel.active ? "조종 중" : "대기 / 마지막 기록") + " · " + format(travel.progress_percent, 1) + "%"),
-    metric("이동 거리 / 속도", format(travel.distance, 1) + " / " + format(travel.route_length) + " · 속도 " + format(travel.speed, 1)),
-    metric("측면 위치 / 부스트", format(travel.lateral_offset, 1) + " / " + format(travel.boost_charge, 2)),
-    metric("회피 / 접촉", format(travel.avoided_obstacles) + " / " + format(travel.collision_count)),
+    metric("개인 바이크", travel.active ? "야외 직접 운전 중" : "주차 / 도보 이동"),
+    metric("속도", format(travel.speed_kmh, 1) + " km/h"),
+    metric("주차 / 주행 위치", format(travel.position?.x, 1) + ", " + format(travel.position?.y, 1)),
+    metric("도시 간 기준", format(travel.city_spacing) + " 월드 단위 · 약 " + format(travel.nominal_city_travel_seconds) + "초"),
   );
   const perf = data.performance;
   if (!perf) {

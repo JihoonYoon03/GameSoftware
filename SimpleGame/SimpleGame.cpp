@@ -15,6 +15,8 @@ but WITHOUT ANY WARRANTY.
 #include "Dependencies/glew.h"
 #include "Dependencies/freeglut.h"
 #include <windows.h>
+#include <cstdio>
+#include <exception>
 
 int main(int argc, char **argv)
 {
@@ -24,11 +26,22 @@ int main(int argc, char **argv)
     glutCreateWindow("헤일로 / 관문 인접 주거 구역 07");
     SetWindowTextW(GetActiveWindow(), L"헤일로 / 관문 인접 주거 구역 07");
     glewInit();
-    tutorial::GameRenderer::Get().Initialize();
+    try
+    {
+        tutorial::GameRenderer::Get().Initialize();
+        tutorial::Game::Get().Reset();
+    }
+    catch (const std::exception &error)
+    {
+        std::fprintf(stderr, "게임 리소스 초기화 실패: %s\nResource/Runtime 캐시와 배포 경로를 확인하세요.\n",
+                     error.what());
+        tutorial::GameRenderer::Get().Shutdown();
+        glutDestroyWindow(glutGetWindow());
+        return 1;
+    }
     glutCloseFunc(tutorial::GameCallbacks::Shutdown);
     glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
     glutIgnoreKeyRepeat(1);
-    tutorial::Game::Get().Reset();
     monitoring::GameMonitor::Get().Initialize();
     glutDisplayFunc(tutorial::GameCallbacks::Draw);
     glutReshapeFunc(tutorial::GameCallbacks::Resize);
