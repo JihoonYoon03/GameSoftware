@@ -4,23 +4,26 @@
 
 이후 추가된 차선 수별 곡선·교차로·폭 전환부·보행로·비행 안내는 [통행로 확장 안내](TRANSIT_KIT_ko.md)를 따릅니다. 아래 도로 규격은 기존 확장 34종에 대한 설명이며, 최신 Blender 원본은 `16_Transit_Connected_Example` 장면으로 열립니다.
 
-기존 팩의 청록·아이보리·산업용 황토색 외장, 금속 골조, 청록 발광 장치와 선행 문명의 보라색 흔적을 재사용했습니다. 비행체 4종의 A/B 예제 8개와 배경 조립체 34종을 추가했습니다. 새 독립 메시 **218개(비행체 82 / 배경 136)**는 삼각형 변환 후 **최대 352개**입니다. 완성 모델은 여러 파트를 유지하므로 모델 전체 합계가 500개를 넘을 수 있습니다.
+기존 팩의 청록·아이보리·산업용 황토색 외장, 금속 골조, 청록 발광 장치와 선행 문명의 보라색 흔적을 재사용했습니다. 비행체 4종의 A/B 예제 8개와 배경 조립체 34종을 추가했습니다. 현재 독립 메시 **227개(비행체 90 / 배경 137)**는 삼각형 변환 후 **최대 464개**입니다. 완성 모델은 여러 파트를 유지하므로 모델 전체 합계가 500개를 넘을 수 있습니다.
 
-디자인 수정본 `sf_field_drive_v2`에서는 노출된 팬·로터 축·가로대를 없앴습니다. 비행체 추진부는 3개의 분절된 외장 코일과 안쪽 발광 아크, 공중에 떠 있는 코어로 구성합니다. 날개의 분리된 외장판, 기울어진 꼬리 필드 베인, 엔진의 발광 띠로 미래형 기술을 표현했습니다. 충전기는 비접촉 유도 방식, 통신 중계기는 분절된 부유 배열, 정류장은 갈라진 쉘 지붕, 태양광 장치는 네 장의 광자 수집 패널로 바꿨습니다.
+제작 순서는 [디테일 우선 파이프라인](MODELING_PIPELINE_ko.md)으로 변경했습니다. 필요한 패널·곡면·체결부·통풍구·계기판을 먼저 제작하고, 같은 고정 부품에 가려진 면과 불필요한 평면 분할을 정리합니다. 기존 확장 219개 파트의 현재 상세 원본 27,146삼각형에서 외부 형상을 유지하며 최종 25,606삼각형으로 정리했습니다. 이후 추가된 유리/실링 8개는 별도 후속 보고서에 기록했습니다. 납품 수치를 무조건 낮추는 방식은 사용하지 않습니다.
+
+디자인 수정본 `sf_detail_first_v3`에서는 노출된 팬·로터 축·가로대를 없앴습니다. 비행체 추진부는 3개의 분절된 외장 코일과 안쪽 발광 아크, 공중에 떠 있는 코어로 구성합니다. 날개의 분리된 외장판, 기울어진 꼬리 필드 베인, 엔진의 발광 띠로 미래형 기술을 표현했습니다. 충전기는 비접촉 유도 방식, 통신 중계기는 분절된 부유 배열, 정류장은 갈라진 쉘 지붕, 태양광 장치는 네 장의 광자 수집 패널로 바꿨습니다.
 
 형태 참고는 [No Man’s Sky의 공식 Interceptor 자료](https://www.nomanssky.com/interceptor-update/)와 [Star Citizen의 공식 ARGO SRV 디자인 소개](https://robertsspaceindustries.com/en/comm-link/transmission/16971-The-ARGO-SRV)입니다. 기체 분절과 산업용 모듈의 조형을 참고했으며 메시·텍스처·로고는 가져오지 않았습니다. 제작물은 이 팩의 조립 규격과 팔레트에 맞춘 독자 형상입니다.
 
 ## 파일과 Blender 장면
 
-- `Source/Erma_Resource_Library.blend`: 기존 자산과 함께 편집 가능한 전체 원본. 기본 장면은 `10_Aircraft`.
+- `Source/Erma_Resource_Library.blend`: 기존 자산과 함께 편집 가능한 전체 원본. 기본 장면은 `16_Transit_Connected_Example`.
 - `00_Library` → `RESOURCE_LIBRARY` → `10_Air_City_Expansion`: 공통 원점에 있는 실제 교체 파트. 같은 종류의 모든 선택지를 동시에 표시하면 겹칩니다.
 - `10_Aircraft` / `10b_Aircraft_Variants`: 4종의 기본 / 대체 조합.
 - `10c_Aircraft_Exploded`: Warden 파트 분해 배치. 분해도 위치는 실제 조립 좌표가 아닙니다.
 - `11_City_Frontier_Props` / `11b_Road_Modules`: 프롭 도감과 도로 모듈 도감.
 - `12_Airfield_Outpost`: 에어택시·착륙장·정류장·전력·물류 시설을 조합한 배치 예제.
 - `13_Field_Tech_Details`: 부상 필드·비접촉 충전기·차량 공중 신호기·보행자 바닥 홀로그램을 가까이 확인하는 장면.
-- `Export/Aircraft`: 조립 GLB 8개. `Parts`에 독립 교체 GLB 82개.
-- `Export/Scenery`: 배경 조립 GLB 34개. `Parts`에 독립 파트 GLB 136개.
+- `17_Detail_Sources` / `18_Detail_Comparison`: 편집 가능한 상세 원본과 이전/원본/최적화 비교 예제.
+- `Export/Aircraft`: 조립 GLB 8개. `Parts`에 독립 교체 GLB 90개.
+- `Export/Scenery`: 배경 조립 GLB 34개. `Parts`에 독립 파트 GLB 137개.
 - `Preview/12_aircraft.png`부터 `17_field_tech_details.png`: 렌더 7개. 도로 도감은 `15b_road_modules.png`.
 
 ## 비행체
@@ -73,7 +76,7 @@ Blender 라이브러리 리그의 NLA 트랙은 기본 음소거 상태입니다
 
 ## 차량 공중 신호와 보행자 바닥 홀로그램
 
-`City_TrafficSignal`은 **차량 전용**이며 중심 높이 Z=5.25m에 떠 있습니다. 발판·기둥·보행자 신호 헤드는 없습니다. 공통 원점은 도로 지면이고 표시 면은 Blender -Y 방향입니다. `HoverHousing`, `FieldStabilizers`, `StopGlyph`, `WaitGlyph`, `GoGlyph`의 5개 파트로 조립합니다.
+`City_TrafficSignal`은 **차량 전용**이며 중심 높이 Z=5.25m에 떠 있습니다. 발판·기둥·보행자 신호 헤드는 없습니다. 공통 원점은 도로 지면이고 표시 면은 Blender -Y 방향입니다. `HoverHousing`, `FieldStabilizer_L`, `FieldStabilizer_R`, `StopGlyph`, `WaitGlyph`, `GoGlyph`의 6개 파트로 조립합니다. 좌우 안정화 장치는 각각 정비 가능한 부품으로 분리했습니다.
 
 기본 조립은 정지 표시만 빨간 `Signal_Stop` 재질로 켜져 있습니다. 대기·진행은 비발광 `Glass_Opaque` 상태입니다. 상태 변경 시 `scenery_assemblies.json`의 `signal_states`에서 지정한 파트에 각각 `Signal_Stop` / `Glow_Amber` / `Glow_Cyan`을 적용하고 나머지 두 표시는 `Glass_Opaque`로 바꿉니다. 하나의 활성 상태만 표시하는 자산 규칙이며 실제 교통 로직은 이 리소스 작업에 포함하지 않았습니다.
 

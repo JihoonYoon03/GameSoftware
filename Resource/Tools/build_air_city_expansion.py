@@ -14,11 +14,16 @@ from mathutils import Vector, Quaternion, Matrix
 
 ROOT = Path(__file__).resolve().parents[1]
 TAG = 'air_city_v1'
-DESIGN_REVISION = 'sf_field_drive_v2'
+DESIGN_REVISION = 'sf_detail_first_v3'
 SOURCE = ROOT / 'Source/Erma_Resource_Library.blend'
 old_catalog=json.loads((ROOT/'Documentation/asset_catalog.json').read_text(encoding='utf-8'))
 previous_exports={e['file'] for e in old_catalog['exports'] if e.get('expansion')==TAG}
 bpy.ops.wm.open_mainfile(filepath=str(SOURCE))
+entry_scene_name=bpy.context.scene.name
+comparison_ids=['Aircraft_Warden_Survey_LiftField_Front_L','Aircraft_Warden_Survey_Engine_Boost_L',
+                'Utility_Transformer_Cabinet']
+before_detail_meshes={n:(bpy.data.objects.get('Comparison_'+n+'_0') or bpy.data.objects[n]).data.copy()
+                      for n in comparison_ids if bpy.data.objects.get(n)}
 bpy.context.preferences.filepaths.save_version = 0
 # Remove only this expansion's previous authoring and display data.
 for s in list(bpy.data.scenes):
@@ -54,6 +59,13 @@ ASSETS, PROTOTYPES, EXPORTS, CRAFT, PROPS, CLIPS = [], {}, [], {}, {}, {}
 tree = ast.parse((ROOT / 'Tools/build_resource_pack.py').read_text(encoding='utf-8'))
 geo_node = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'Geo')
 exec(compile(ast.Module(body=[geo_node], type_ignores=[]), '<existing Geo>', 'exec'))
+LegacyGeo=Geo
+sys.path.insert(0,str(ROOT/'Tools'))
+from detail_mesh_pipeline import DetailGeometry, DetailPipeline
+
+
+class Geo(DetailGeometry,LegacyGeo):
+    pass
 
 
 def col(name, parent=None):
@@ -64,10 +76,21 @@ def col(name, parent=None):
 
 
 LIB = col('10_Air_City_Expansion', bpy.data.collections.get('RESOURCE_LIBRARY'))
+SOURCE_SCENE=bpy.data.scenes.new('17_Detail_Sources')
+SOURCE_SCENE['expansion']=TAG
+SOURCE_SCENE.unit_settings.system='METRIC'
+SOURCE_COLLECTION=bpy.data.collections.new('Detail_Sources_Air_City')
+SOURCE_COLLECTION['expansion']=TAG
+SOURCE_SCENE.collection.children.link(SOURCE_COLLECTION)
+PIPELINE=DetailPipeline(SOURCE_COLLECTION,MATS,TAG,allow_draft_over_budget=True)
 
 
 def make(g, name, c, slot, family, rig=None):
-    obj = g.make(name, c, rig, slot, family)
+    if family.startswith('scenery.'):
+        add_prop_detail(g,name)
+    obj,asset=PIPELINE.build(g,name,c,rig,slot,family)
+    ASSETS.append(asset)
+    PROTOTYPES[name]=obj
     obj['expansion'] = TAG
     obj['authoring_up'] = '+Z'
     obj['forward'] = '+X'
@@ -106,6 +129,7 @@ def chamfer(g,c,size,mat,bone=None):
 
 def arc(g,c,r,inner,depth,start,end,mat,bone=None,steps=3):
     """Solid open arc: gaps between coil sectors remain visible at game scale."""
+    steps=max(steps,6) if r>.30 else steps
     v=[]
     for i in range(steps+1):
         a=start+(end-start)*i/steps
@@ -126,8 +150,67 @@ def field(g,c,radius,depth,bone,paint):
         arc(g,c,radius,radius*.77,depth,a+.10,a+1.75,paint,bone)
         arc(g,(c[0],c[1],c[2]+depth*.45),radius*.72,radius*.66,.045,
             a+.28,a+1.95,'Field_Core',bone,2)
+        # Coil service fastener and a recessed coolant/inspection slot on every
+        # induction shoe. These are physical details, not extra tessellation.
+        angle=a+.85
+        p=(c[0]+radius*.88*math.cos(angle),c[1]+radius*.88*math.sin(angle),c[2]+depth*.51)
+        g.rod(p,(p[0],p[1],p[2]+.018),min(.05,radius*.065),min(.05,radius*.065),'Alloy_Light',bone,6)
+        angle=a+1.25
+        p=(c[0]+radius*.89*math.cos(angle),c[1]+radius*.89*math.sin(angle),c[2]+depth*.52)
+        g.box(p,(radius*.18,radius*.055,.015),'Rubber',bone,Quaternion((0,0,1),angle+math.pi/2))
     g.rings([(c[0],c[1],c[2]+.04),(c[0],c[1],c[2]+.23),(c[0],c[1],c[2]+.48)],
             [radius*.22,radius*.34,radius*.08],'Field_Core',bone,sides=6)
+    return g
+
+
+def vents(g,c,length,width,count,mat='Rubber',bone=None):
+    for i in range(count):
+        g.box((c[0]+(i-(count-1)/2)*length/count,c[1],c[2]),
+              (length/count*.45,width,.018),mat,bone)
+    return g
+
+
+def add_prop_detail(g,name):
+    """Purposeful manufacturing detail; ground/road connection surfaces stay exact."""
+    if name=='City_TrafficSignal_HoverHousing':
+        g.box((0,-.215,5.64),(1.8,.018,.035),'Glow_Cyan')
+        for x in [-.93,.93]:
+            g.rod((x,-.22,5.45),(x,-.25,5.45),.038,.038,'Alloy_Light',sides=6)
+    elif name=='City_ChargePost_Pedestal':
+        g.box((0,-.283,.45),(.40,.018,.38),'Glass_Opaque')
+        for x in [-.12,0,.12]:
+            g.box((x,-.30,.45),(.045,.015,.09),'Alloy_Light')
+    elif name=='Utility_Transformer_Cabinet':
+        g.box((0,-.565,.80),(1.2,.025,.55),'Steel')
+        for x in [-.44,-.22,0,.22,.44]:
+            g.box((x,-.585,.8),(.09,.025,.34),'Rubber')
+    elif name=='Utility_CargoContainer_6m_Shell':
+        for s in [-1,1]:
+            for x in [-1.8,0,1.8]:
+                g.box((x,s*1.21,1.25),(1.45,.035,1.55),'Steel')
+            for x in [-2.3,2.3]:
+                g.box((x,s*1.24,1.6),(.055,.02,.35),'Glow_Cyan')
+    elif name in ['Utility_CargoContainer_6m_Door_L','Utility_CargoContainer_6m_Door_R']:
+        s=-1 if name.endswith('_L') else 1
+        g.box((3.065,s*.60,1.25),(.018,.82,1.7),'Vehicle_Utility')
+        for z in [.42,2.08]:
+            g.box((3.08,s*.60,z),(.025,.70,.04),'Alloy_Light')
+    elif name=='Utility_SolarArray_Panel':
+        for s in [-1,1]:
+            for x in [-.92,.92]:
+                for offset in [-.38,0,.38]:
+                    g.box((x+offset,s*.62,1.70),(.012,.85,.012),'Alloy_Light',rot=Quaternion((1,0,0),s*.23))
+    elif name=='Nature_SailTree_Canopy':
+        for i in range(6):
+            a=i*math.tau/6
+            g.rod((.2,0,2.91),(.2+1.7*math.cos(a),math.sin(a),3.2),.025,.012,'Alien_Petal',sides=6)
+    elif name=='City_TransitShelter_Frame':
+        for x in [-1.7,1.7]:
+            g.box((x,-.073,1.75),(.045,.025,1.5),'Glow_Cyan')
+    elif name=='Frontier_SurveyTripod_Scanner':
+        g.box((0,-.19,1.40),(.30,.025,.22),'Glass_Opaque')
+        for x in [-.15,.15]:
+            g.rod((x,-.21,1.40),(x,-.24,1.40),.035,.035,'Glow_Cyan',sides=6)
     return g
 
 
@@ -195,6 +278,8 @@ for kind, (L,W,H,paint,purpose) in TYPES.items():
     for s in [-1,1]:
         g.box((L*.29,s*hw*.60,z+H*.46),(.30,.065,.08),'Glow_Cyan','hull')
         g.box((-.05*L,s*hw*.985,z+H*.40),(L*.42,.035,.07),'Field_Core','hull')
+        g.box((-.03*L,s*hw*.99,z+H*.28),(L*.30,.035,H*.14),'Alloy_Light','hull')
+    vents(g,(L*.35,0,z+H*.45),L*.09,hw*.70,4,'Rubber','hull')
     part('hull','PressureHull',g)
     for label,armored in [('Canopy_Glass',False),('Canopy_Reinforced',True)]:
         g = loft(Geo(),[(-L*.07,hw*.89,z+H*.5,z+H*.73),
@@ -206,12 +291,19 @@ for kind, (L,W,H,paint,purpose) in TYPES.items():
                 g.box((L*.10,s*hw*.89,z+H*.77),(L*.19,.025,H*.17),'Glass_Opaque','canopy')
         else:
             g.rod((-L*.04,0,z+H*.90),(L*.23,0,z+H*.86),.035,.035,'Alloy_Light','canopy',6)
+        for s in [-1,1]:
+            g.rod((-L*.06,s*hw*.78,z+H*.65),(L*.22,s*hw*.64,z+H*.66),
+                  .026,.026,'Steel','canopy',8)
         part('canopy',label,g,not armored)
     g = Geo()
     for x in ([L*.12] if narrow else [L*.12,-L*.06]):
         for y in ([0] if narrow else [-hw*.45,hw*.45]):
             g.box((x,y,z+H*.49),(.42,.38,.12),'Rubber','hull')
             g.box((x-.20,y,z+H*.61),(.10,.38,.36),'Rubber','hull')
+            g.box((x,y,z+H*.557),(.28,.018,.012),'Cloth_Teal','hull')
+    g=chamfer(g,(L*.22,0,z+H*.63),(.22,hw*.85,.15),'Steel','hull')
+    for s in [-1,1]:
+        g.box((L*.225,s*hw*.22,z+H*.71),(.10,.12,.018),'Glow_Cyan','hull')
     part('seats','CabinSeats',g)
     for suf,s in [('L',1),('R',-1)]:
         bone = 'wing.'+suf
@@ -230,6 +322,8 @@ for kind, (L,W,H,paint,purpose) in TYPES.items():
         wing(g,[(L*.02,s*W*.17,bz+.32),(-L*.12,s*W*.32,bz+.36),
                 (-L*.29,s*W*.34,bz+.27),(-L*.19,s*W*.16,bz+.27)],.075,'Alloy_Light',bone)
         g.rod((-L*.09,s*hw,bz+.25),(-L*.14,s*W*.30,bz+.30),.032,.032,'Field_Core',bone,6)
+        for u in [.20,.29]:
+            g.rod((-L*.20,s*W*u,bz+.33),(-L*.20,s*W*u,bz+.36),.045,.045,'Steel',bone,6)
         part('wing_'+suf,'Wing_'+suf,g)
         # Swept fields, quad-field taxi, industrial lifting arms and survey array.
         liftareas = [('Front',.17),('Rear',-.26)] if kind in ['Manta_AirTaxi','Mule_Skycrane'] else [('Front',-.08)]
@@ -248,6 +342,7 @@ for kind, (L,W,H,paint,purpose) in TYPES.items():
                 g.rod((x+offset-.045,y,bz),(x+offset+.045,y,bz),r*1.12,r*1.12,
                       'Field_Core' if boost else 'Glow_Cyan',bone,8)
             g.rod((x-.77,y,bz),(x-.84,y,bz),r*.72,r*.40,'Field_Core',bone,8)
+            vents(g,(x+.15,y,bz+r*1.12),.55,r*.7,4,'Rubber',bone)
             part('engine_'+suf,('Engine_Efficient_' if not boost else 'Engine_Boost_')+suf,g,not boost)
         bone='gear.'+suf
         g=Geo().rod((L*.17,s*hw*.85,z+.25),(L*.10,s*hw*1.55,.15),.06,.075,'Steel',bone,6)
@@ -294,6 +389,8 @@ for kind, (L,W,H,paint,purpose) in TYPES.items():
     # The service hatch is independent from payload, with a real hinge bone.
     g=Geo().box((-L*.345,0,z+H*.49),(.10,hw*1.45,H*.28),paint,'cargo')
     g.box((-L*.405,0,z+H*.51),(.05,.30,.06),'Alloy_Light','cargo')
+    for s in [-1,1]:
+        g.rod((-L*.407,s*hw*.52,z+H*.48),(-L*.43,s*hw*.52,z+H*.48),.045,.045,'Steel','cargo',6)
     part('hatch','ServiceHatch',g)
     info['alternate_parts']=[choices[-1] for choices in info['slots'].values()]
 
@@ -434,9 +531,8 @@ prop('City_Streetlight_4m',[
        .rod((0,-.30,3.88),(0,-.30,3.94),.22,.22,'Field_Core',sides=8))], 'split-halo light over an induction spine')
 g=chamfer(Geo(),(0,0,5.25),(2.4,.28,.94),'Steel')
 g=chamfer(g,(0,-.165,5.25),(2.16,.06,.68),'Glass_Opaque')
-stabilizers=Geo()
-for x in [-1.28,1.28]:
-    field(stabilizers,(x,0,5.12),.28,.10,None,'Ceramic')
+stabilizer_l=field(Geo(),(-1.28,0,5.12),.28,.10,None,'Ceramic')
+stabilizer_r=field(Geo(),(1.28,0,5.12),.28,.10,None,'Ceramic')
 stop=Geo().box((-.64,-.215,5.25),(.30,.045,.30),'Signal_Stop')
 wait=Geo().box((0,-.215,5.25),(.28,.045,.28),'Glass_Opaque',rot=Quaternion((0,1,0),math.pi/4))
 go=Geo().add([(.48,y,5.05) for y in [-.24,-.21]]+
@@ -444,7 +540,7 @@ go=Geo().add([(.48,y,5.05) for y in [-.24,-.21]]+
             [(.48,y,5.45) for y in [-.24,-.21]],
             [(0,2,4),(1,5,3),(0,1,3,2),(2,3,5,4),(4,5,1,0)],'Glass_Opaque')
 prop('City_TrafficSignal',[
-    ('HoverHousing',g),('FieldStabilizers',stabilizers),('StopGlyph',stop),
+    ('HoverHousing',g),('FieldStabilizer_L',stabilizer_l),('FieldStabilizer_R',stabilizer_r),('StopGlyph',stop),
     ('WaitGlyph',wait),('GoGlyph',go)], 'vehicle-only signal floating at 5.25m; no pole, foundation or pedestrian head')
 PROPS['City_TrafficSignal'].update(hover_height_m=5.25,facing='-Y',
     signal_states={'STOP':{'part':'City_TrafficSignal_StopGlyph','material':'Signal_Stop'},
@@ -622,10 +718,29 @@ prop('Nature_SailTree',[
     ('GlowSeedpods',Geo().ellipsoid((-.7,-.5,2.8),(.16,.16,.35),'Glow_Cyan',sides=6,rings=3)
       .ellipsoid((.8,-.2,2.7),(.18,.18,.4),'Glow_Cyan',sides=6,rings=3))], 'alien umbrella canopy; frontier silhouette')
 
+over_budget=[r for r in PIPELINE.records if r['optimized_triangles']>500]
+draft_report=dict(parts=len(PIPELINE.records),over_budget=over_budget,
+                  source_triangles=sum(r['source_triangles'] for r in PIPELINE.records),
+                  optimized_triangles=sum(r['optimized_triangles'] for r in PIPELINE.records),
+                  max_surface_error_m=max(r['max_surface_error_m'] for r in PIPELINE.records))
+draft_report['max_source_triangles']=max(r['source_triangles'] for r in PIPELINE.records)
+draft_report['max_optimized_triangles']=max(r['optimized_triangles'] for r in PIPELINE.records)
+(ROOT/'Validation/detail_draft_check.json').write_text(json.dumps(draft_report,indent=2)+'\n',encoding='utf-8')
+if over_budget:
+    drafts=ROOT/'Source/Drafts'
+    drafts.mkdir(parents=True,exist_ok=True)
+    bpy.data.libraries.write(str(drafts/'Air_City_Detail_Overbudget.blend'),{SOURCE_SCENE},
+                             path_remap='RELATIVE',fake_user=True,compress=True)
+assert not over_budget,[(r['id'],r['optimized_triangles']) for r in over_budget]
+if '--geometry-check' in sys.argv:
+    print('DETAIL_GEOMETRY_CHECK',json.dumps(draft_report),flush=True)
+    raise SystemExit(0)
+
 
 def export(path,names,rig=None,animated=False,kind='scenery'):
     path=ROOT/path
     path.parent.mkdir(parents=True,exist_ok=True)
+    staged=path.with_name(path.stem+'.staging.glb')
     bpy.context.window.scene=scene
     bpy.ops.object.select_all(action='DESELECT')
     for n in names:
@@ -638,12 +753,13 @@ def export(path,names,rig=None,animated=False,kind='scenery'):
             t.mute=not animated
         reset(rig)
     scene.frame_set(0)
-    bpy.ops.export_scene.gltf(filepath=str(path),export_format='GLB',use_selection=True,use_active_scene=True,
+    bpy.ops.export_scene.gltf(filepath=str(staged),export_format='GLB',use_selection=True,use_active_scene=True,
         export_animations=animated,export_animation_mode='NLA_TRACKS',export_nla_strips=True,
         export_force_sampling=True,export_frame_range=False,export_skins=bool(rig),export_def_bones=False,
         export_yup=True,export_extras=True,export_cameras=False,export_lights=False,
         export_materials='EXPORT',export_apply=False,export_texcoords=True,export_normals=True,
         export_anim_slide_to_zero=True)
+    staged.replace(path)
     EXPORTS.append(dict(file=str(path.relative_to(ROOT)).replace('\\','/'),type=kind,
                         mesh_parts=names,clips=len(CLIPS[rig.name]) if animated else 0,expansion=TAG))
     if rig:
@@ -812,6 +928,28 @@ label(dcol,'GROUND CROSSING HOLOGRAM',(-4,2.1,-.18),.24)
 label(dcol,'INDUCTION DOCK',(2,-2.4,-.18),.26)
 label(dcol,'FIELD DRIVE / NO ROTOR',(6,1,-.18),.28)
 label(dcol,'HALO / NON-CONTACT INFRASTRUCTURE',(0,4,-.18),.42)
+COMPARISON,qcol=studio('18_Detail_Comparison',(0,0,.2),19,(2400,1800))
+record_by_name={r['id']:r for r in PIPELINE.records}
+for row,name in enumerate(comparison_ids):
+    if name not in before_detail_meshes:
+        continue
+    old_mesh=before_detail_meshes[name]
+    old_mesh.calc_loop_triangles()
+    record=record_by_name[name]
+    meshes=[old_mesh,bpy.data.objects[record['source_object']].data,PROTOTYPES[name].data]
+    counts=[len(old_mesh.loop_triangles),record['source_triangles'],record['optimized_triangles']]
+    for column,(mesh,count) in enumerate(zip(meshes,counts)):
+        x=(column-1)*5.5
+        y=(1-row)*4.4
+        obj=tagged(bpy.data.objects.new('Comparison_'+name+'_'+str(column),mesh))
+        qcol.objects.link(obj)
+        lo=[min(v.co[i] for v in mesh.vertices) for i in range(3)]
+        hi=[max(v.co[i] for v in mesh.vertices) for i in range(3)]
+        obj.location=(x-(lo[0]+hi[0])/2,y-(lo[1]+hi[1])/2,.15-lo[2])
+        label(qcol,f'{count} TRIANGLES',(x,y-1.7,-.18),.24)
+for i,caption in enumerate(['PREVIOUS SIMPLE MODEL','DETAILED EDITABLE SOURCE','DETAIL-PRESERVING CLEANUP']):
+    label(qcol,caption,((i-1)*5.5,7,-.18),.25)
+label(qcol,'COIL / ENGINE / POWER CABINET',(0,-7,-.18),.35)
 
 
 def write_json(path,value):
@@ -852,7 +990,7 @@ def fit_camera(s):
     s['framing_margin']=.06
 
 
-for s in [GALLERY,VARIANTS,EXPLODED,CATALOG,ROADS,OUTPOST,DETAILS]:
+for s in [GALLERY,VARIANTS,EXPLODED,CATALOG,ROADS,OUTPOST,DETAILS,COMPARISON]:
     fit_camera(s)
 
 
@@ -874,6 +1012,11 @@ for a in ASSETS:
     report['parts'].append(dict(id=a['id'],polygons=a['polygons'],triangles=a['triangles']))
 assert not report['issues'],report['issues']
 write_json('Validation/air_city_source_report.json',report)
+write_json('Validation/detail_pipeline_report.json',dict(
+    schema='detail_first_lossless_cleanup_v1',scope=TAG,triangle_limit=500,
+    source_scene=SOURCE_SCENE.name,comparison_scene=COMPARISON.name,
+    simplification_policy='preserve external geometry, materials and rigid joint assignments; no ratio decimation',
+    summary=draft_report,parts=PIPELINE.records))
 write_json('Documentation/aircraft_assemblies.json',dict(schema='erma_aircraft_v1',units='meters',
     design_revision=DESIGN_REVISION,propulsion='segmented induction fields; no mechanical rotors',
     authoring_forward='+X',authoring_up='+Z',gltf_forward='+X',gltf_up='+Y',
@@ -908,9 +1051,9 @@ for info in CRAFT.values():
     overall['rigs'][rig.name]=dict(bone_count=len(rig.data.bones),clips=len(CLIPS[rig.name]))
 overall['expansion_report']='air_city_source_report.json'
 write_json('Validation/source_report.json',overall)
-# Present the completed aviation gallery when the source is opened.
-bpy.context.window.scene=GALLERY
-for s in [GALLERY,VARIANTS,EXPLODED,CATALOG,ROADS,OUTPOST,DETAILS]:
+# Preserve the current entry scene when extending a library edited by other tools.
+bpy.context.window.scene=bpy.data.scenes.get(entry_scene_name) or GALLERY
+for s in [GALLERY,VARIANTS,EXPLODED,CATALOG,ROADS,OUTPOST,DETAILS,COMPARISON]:
     s.frame_set(0)
 for screen in bpy.data.screens:
     for area in screen.areas:
@@ -921,7 +1064,8 @@ print('EXPANSION_SAVED',len(ASSETS),len(PROPS),flush=True)
 if '--no-render' not in sys.argv:
     for s,file in [(GALLERY,'12_aircraft'),(VARIANTS,'13_aircraft_variants'),
                    (EXPLODED,'14_aircraft_exploded'),(CATALOG,'15_city_frontier_props'),
-                   (ROADS,'15b_road_modules'),(OUTPOST,'16_airfield_outpost'),(DETAILS,'17_field_tech_details')]:
+                   (ROADS,'15b_road_modules'),(OUTPOST,'16_airfield_outpost'),(DETAILS,'17_field_tech_details'),
+                   (COMPARISON,'23_detail_pipeline_comparison')]:
         bpy.context.window.scene=s
         s.render.filepath=str(ROOT/'Preview'/f'{file}.png')
         bpy.ops.render.render(write_still=True)

@@ -9,6 +9,28 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const folder = path.join(root, 'Resource', 'Runtime');
 const data = fs.readFileSync(path.join(folder, 'game-assets.bin'));
 const manifest = JSON.parse(fs.readFileSync(path.join(folder, 'manifest.json'), 'utf8'));
+const recipes = JSON.parse(fs.readFileSync(path.join(root, 'Resource/Documentation/assembly_recipes.json')));
+const characterDetail = JSON.parse(fs.readFileSync(path.join(root, 'Resource/Documentation/character_detail_assemblies.json')));
+const documents = new Map();
+function glbDocument(relative) {
+    if (!documents.has(relative)) {
+        const glb = fs.readFileSync(path.join(root, 'Resource/Export', relative + '.glb'));
+        documents.set(relative, JSON.parse(glb.toString('utf8', 20, 20 + glb.readUInt32LE(12))));
+    }
+    return documents.get(relative);
+}
+function sourceTriangles(relative) {
+    const source = glbDocument(relative);
+    let triangles = 0;
+    function visit(index) {
+        const node = source.nodes[index];
+        if (node.mesh !== undefined) for (const primitive of source.meshes[node.mesh].primitives)
+            triangles += source.accessors[primitive.indices ?? primitive.attributes.POSITION].count / 3;
+        for (const child of node.children ?? []) visit(child);
+    }
+    source.scenes[source.scene ?? 0].nodes.forEach(visit);
+    return triangles;
+}
 assert.equal(manifest.schema, 'game_resource_pack_v1');
 assert.equal(data.length, manifest.bytes);
 assert.equal(crypto.createHash('sha256').update(data).digest('hex'), manifest.sha256);
@@ -37,6 +59,9 @@ assert.equal(count, manifest.assets.length);
 for (let asset = 0; asset < count; ++asset) {
     const name = text(), source = text(), vertexCount = u32(), bones = u32(), clips = u32();
     const report = manifest.assets[asset];
+    const recipe = name.startsWith('character/') ? recipes[path.basename(source)] : undefined;
+    const skinColor = recipe?.skin ? glbDocument(source).materials.find(material => material.name === recipe.skin)
+        ?.pbrMetallicRoughness?.baseColorFactor : undefined;
     assert.ok(!names.has(name)); names.add(name);
     assert.equal(name, report.name); assert.equal(source, report.source);
     assert.equal(vertexCount, report.triangles * 3); assert.equal(bones, report.bones);
@@ -75,6 +100,9 @@ for (let asset = 0; asset < count; ++asset) {
         }
         assert.ok(Math.abs(sum - 1) < .001, 'Unnormalized skin');
         if (name.startsWith('ground/')) assert.equal(values[2], 0, 'Ground must meet actor floor');
+        if (skinColor && values[12] === 7) for (let channel = 0; channel < 4; ++channel)
+            assert.ok(Math.abs(values[6 + channel] - skinColor[channel]) < 1e-6,
+                'Authored character skin color was replaced: ' + name);
     }
     if (name.startsWith('scenery/City_TrafficSignal'))
         signalDigests.add(crypto.createHash('sha256').update(data.subarray(vertexStart, offset)).digest('hex'));
@@ -91,6 +119,11 @@ for (let asset = 0; asset < count; ++asset) {
     }
     assert.deepEqual(clipNames, report.clips);
     if (name.startsWith('character/')) for (const clip of ['Idle', 'Run', 'Aim_Base', 'Attack_Fire', 'Ride']) assert.ok(clipNames.includes(clip));
+    if (recipe) {
+        const sourceClips = glbDocument(source).animations.map(clip => clip.name);
+        assert.equal(sourceClips.length, 15, 'HUMAN_7H source animation set changed');
+        assert.deepEqual(clipNames, [...sourceClips, 'Ride'], 'Human source animations must all survive conversion');
+    }
     if (name.startsWith('vehicle/')) for (const clip of ['Hover_Idle', 'Cruise']) assert.ok(clipNames.includes(clip));
     if (name.startsWith('aircraft/')) for (const clip of ['Aircraft_Reference', 'Cruise', 'LandingGear_Retract', 'LandingGear_Deploy', 'Canopy_Open', 'Cargo_Open']) assert.ok(clipNames.includes(clip));
     if (name.startsWith('aircraft/')) assert.notDeepEqual(gear.get('Cruise'), gear.get('Aircraft_Reference'), 'Cruising landing gear must retract');
@@ -100,4 +133,33 @@ assert.equal(offset, data.length, 'Unexpected trailing data');
 assert.equal([...names].filter(n => n.startsWith('aircraft/')).length, 8);
 assert.equal([...names].filter(n => n.startsWith('scenery/')).length, 36);
 assert.equal(signalDigests.size, 3, 'Red/amber/green traffic heads must differ');
+for (const [name, file] of [['SpireHelix', 'Spire_Helix_12F'], ['TwinBridge', 'Tower_TwinBridge_16F'],
+    ['ArcologyTerrace', 'Arcology_Terrace_10F'], ['TransitAtrium', 'Civic_TransitAtrium_4F'],
+    ['CourtyardHabitat', 'Habitat_Courtyard_3F']]) {
+    const report = manifest.assets.find(asset => asset.name === 'building/' + name);
+    assert.ok(report, 'New architecture assembly missing: ' + name);
+    assert.equal(report.source, 'Buildings/' + file);
+    assert.equal(report.triangles, sourceTriangles('Buildings/' + file), 'Architecture conversion lost authored detail: ' + name);
+    assert.deepEqual(report.bounds[0], [0, 0, 0]);
+    assert.equal(report.bounds[1][0], 1);
+    assert.equal(report.bounds[1][1], 1);
+    assert.ok(report.physical_world_units.every(size => size > 2));
+}
+for (const report of manifest.assets.filter(asset => asset.name.startsWith('character/'))) {
+    const gender = report.name.split('/')[1], recipe = recipes[path.basename(report.source)];
+    const body = gender + '_' + recipe.body.split('_')[1];
+    const parts = new Set(recipe.parts.filter(part => !part.startsWith('Hair'))
+        .map(part => part.replace(/(?:Male|Female)_(?:Lean|Normal|Heavy)/g, body)));
+    for (const part of [...parts]) {
+        const outer = characterDetail.outer_assemblies[part];
+        if (/_Torso$/.test(part)) assert.ok(outer, 'Missing matching outer assembly: ' + part);
+        if (outer) parts.add(outer);
+    }
+    let triangles = 0;
+    for (const part of parts) {
+        assert.ok(manifest.sources['Modules/' + part], 'Character module not included: ' + part);
+        triangles += sourceTriangles('Modules/' + part);
+    }
+    assert.equal(report.triangles, triangles, 'Character gender/profile/outer assembly is incomplete or duplicated: ' + report.name);
+}
 console.log(JSON.stringify({ event: 'resource_pack_validated', assets: count, vertices, animation_frames: animationFrames, bytes: data.length }));

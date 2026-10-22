@@ -1,7 +1,7 @@
 {
   "schema": "erma_scenery_v1",
   "units": "meters",
-  "design_revision": "sf_field_drive_v2",
+  "design_revision": "sf_detail_first_v3",
   "authoring_up": "+Z",
   "gltf_up": "+Y",
   "origin": "ground center unless explicit sockets below",
@@ -116,7 +116,8 @@
     "City_TrafficSignal": {
       "parts": [
         "City_TrafficSignal_HoverHousing",
-        "City_TrafficSignal_FieldStabilizers",
+        "City_TrafficSignal_FieldStabilizer_L",
+        "City_TrafficSignal_FieldStabilizer_R",
         "City_TrafficSignal_StopGlyph",
         "City_TrafficSignal_WaitGlyph",
         "City_TrafficSignal_GoGlyph"

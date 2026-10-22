@@ -112,7 +112,7 @@ for name in ['Road_6Lane_4m','Road_Crossroad_12m','Airfield_LandingPad_16m',
         if name=='City_TrafficSignal':
             assert bounds[2][0]>=4.7,'vehicle signal has ground support geometry'
             assert not any(any(word in o.get('asset_id','') for word in ['Pole','Foot','Pedestrian']) for o in meshes)
-            assert len(meshes)==5,'hover housing, coils and three independent state glyphs required'
+            assert len(meshes)==6,'hover housing, two serviceable stabilizers and three state glyphs required'
         if name=='City_PedestrianHologram_6m':
             assert bounds[2][1]<=.15,'pedestrian control must remain on the road surface'
         report['files'][file]={'mesh_parts':len(meshes),'bounds_m':bounds}

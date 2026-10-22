@@ -180,6 +180,7 @@ function convert(name, relative, kind = 'prop', options = {}) {
     if (jointNames.length >= 32) throw Error('Skin palette exceeds 31 joints: ' + relative);
     const vertices = [], c = basis(kind); let invC = inverse(c);
     const attachments = { 'engine.L': [], 'engine.R': [], nose: [] };
+    const engineSurfaces = { 'engine.L': [], 'engine.R': [] };
     if (kind === 'human' && JSON.stringify(jointNames) !== JSON.stringify(load('Characters/Player_Explorer').json.skins[0].joints.map(i => load('Characters/Player_Explorer').json.nodes[i].name)))
         throw Error('HUMAN_7H palette order changed');
     const components = options.components ?? [{ data: template }];
@@ -220,9 +221,10 @@ function convert(name, relative, kind = 'prop', options = {}) {
                     const transform = nodeSkin ? identity() : world[i];
                     const source = point(transform, positions[index]);
                     const pos = point(c, source.map((v, axis) => v + offset[axis]));
-                    if (kind === 'vehicle' && palette === 3) {
+                    if (kind === 'vehicle' || kind === 'aircraft') {
                         const slot = /Engine_.*_L$/.test(nodeName) ? 'engine.L' : /Engine_.*_R$/.test(nodeName) ? 'engine.R' : /Nose_/.test(nodeName) ? 'nose' : null;
-                        if (slot) attachments[slot].push(pos);
+                        if (slot && palette === 3) attachments[slot].push(pos);
+                        if (slot && slot !== 'nose') engineSurfaces[slot].push(pos);
                     }
                     const normalMatrix = inverse(multiply(c, transform));
                     const n = [0, 1, 2].map(r => normals[index].reduce((sum, v, axis) => sum + normalMatrix[r * 4 + axis] * v, 0));
@@ -267,6 +269,7 @@ function convert(name, relative, kind = 'prop', options = {}) {
         const ground = lo[2];
         for (const v of vertices) v[2] -= ground;
         for (const list of Object.values(attachments)) for (const v of list) v[2] -= ground;
+        for (const list of Object.values(engineSurfaces)) for (const v of list) v[2] -= ground;
         c[14] -= ground; invC = inverse(c);
         [lo, hi] = bounds(vertices);
     }
@@ -294,25 +297,34 @@ function convert(name, relative, kind = 'prop', options = {}) {
     const baseWorld = globals(template);
     const socketNode = name => template.json.nodes.findIndex(n => n.name === name);
     function socket(name, world = baseWorld) { const n = socketNode(name); return n < 0 ? [0, 0, 0] : point(c, point(world[n], [0, 0, 0])); }
-    if (kind === 'vehicle') {
+    if (kind === 'vehicle' || kind === 'aircraft') {
         // Engine and lamp geometry determines attachment points, not guessed sprite coordinates.
         for (let side = 0; side < 2; ++side) {
-            const engine = attachments[side ? 'engine.R' : 'engine.L'];
-            if (!engine.length) throw Error('Missing emissive engine socket: ' + name);
+            const slot = side ? 'engine.R' : 'engine.L';
+            // Refined metal exhausts may have no emissive faces. Keep the socket on the actual rear port.
+            let engine = attachments[slot];
+            if (!engine.length) {
+                const surface = engineSurfaces[slot];
+                const rear = Math.min(...surface.map(p => p[0]));
+                engine = surface.filter(p => p[0] <= rear + .0001);
+            }
+            if (!engine.length) throw Error('Missing engine geometry: ' + name);
             sockets[side] = [Math.min(...engine.map(p => p[0])) - .005,
                 ...[1, 2].map(axis => engine.reduce((sum, p) => sum + p[axis], 0) / engine.length)];
+            if (kind === 'aircraft') continue;
             const lamp = attachments.nose.filter(p => side ? p[1] < 0 : p[1] >= 0);
             if (!lamp.length) throw Error('Missing nose lamp geometry: ' + name);
             sockets[side + 2] = [Math.max(...lamp.map(p => p[0])) + .005,
                 ...[1, 2].map(axis => lamp.reduce((sum, p) => sum + p[axis], 0) / lamp.length)];
         }
         sockets[4] = socket('driver_socket');
+        if (kind === 'aircraft') sockets[5] = ['engine.L', 'engine.R'].map(n => jointNames.indexOf(n)).concat(0);
     }
     const clips = [];
     if (skin) {
         const inverseBinds = accessor(template, skin.inverseBindMatrices);
         const sourceClips = template.json.animations ?? [];
-        const selected = sourceClips.filter(a => ['Reference_A', 'Idle', 'Walk', 'Run', 'Aim_Base', 'Attack_Fire', 'Attack_Melee', 'Jump_Air',
+        const selected = kind === 'human' ? [...sourceClips] : sourceClips.filter(a => ['Reference_A', 'Idle', 'Walk', 'Run', 'Aim_Base', 'Attack_Fire', 'Attack_Melee', 'Jump_Air',
             'Vehicle_Reference', 'Hover_Idle', 'Cruise', 'Boost', 'Steer_Left', 'Steer_Right',
             'Aircraft_Reference', 'Flight_Idle', 'Bank_Left', 'Bank_Right', 'LandingGear_Deploy',
             'LandingGear_Retract', 'Canopy_Open', 'Canopy_Close', 'Cargo_Open', 'Cargo_Close'].includes(a.name));
@@ -351,16 +363,35 @@ function convert(name, relative, kind = 'prop', options = {}) {
 
 const recipes = JSON.parse(fs.readFileSync(path.join(resources, 'Documentation/assembly_recipes.json')));
 const fitting = JSON.parse(fs.readFileSync(path.join(resources, 'Documentation/accessory_fitting_offsets.json')));
+const characterDetail = JSON.parse(fs.readFileSync(path.join(resources, 'Documentation/character_detail_assemblies.json')));
+if (characterDetail.skeleton !== 'HUMAN_7H') throw Error('Character detail skeleton changed');
 const roles = ['Explorer', 'Engineer', 'Guard', 'Medic', 'Researcher', 'Miner', 'HeavyCombat', 'Pilot', 'Civilian'];
 const examples = ['Player_Explorer', 'Ria_Engineer', 'Kain_Guard', 'Mara_Medic', 'NPC_Researcher', 'NPC_Miner', 'NPC_HeavyCombat', 'NPC_Pilot', 'NPC_Civilian'];
 for (let role = 0; role < roles.length; ++role) for (const gender of ['Male', 'Female']) {
-    const recipe = recipes[examples[role]], body = gender + '_Normal';
-    const parts = recipe.parts.filter(p => !p.startsWith('Hair'));
-    const components = parts.map(original => {
-        const part = original.replace(/(?:Male|Female)_Normal/g, body);
-        const offset = fitting[body]?.[roles[role]]?.[part] ?? recipe.offsets?.[original] ?? [0, 0, 0];
+    const recipe = recipes[examples[role]], body = gender + '_' + recipe.body.split('_')[1];
+    if (!characterDetail.body_profiles.includes(body)) throw Error('Character body profile missing: ' + body);
+    const originalParts = new Map();
+    for (const original of recipe.parts.filter(part => !part.startsWith('Hair'))) {
+        const part = original.replace(/(?:Male|Female)_(?:Lean|Normal|Heavy)/g, body);
+        if (!originalParts.has(part)) originalParts.set(part, original);
+        const outer = characterDetail.outer_assemblies[part];
+        if (/_Torso$/.test(part) && !outer) throw Error('Character outer assembly missing: ' + part);
+        if (outer && !originalParts.has(outer)) {
+            originalParts.set(outer, characterDetail.outer_assemblies[original] ?? outer);
+        }
+    }
+    const template = load('Characters/' + examples[role]);
+    const skinColor = recipe.skin ? template.json.materials.find(material => material.name === recipe.skin)
+        ?.pbrMetallicRoughness?.baseColorFactor : undefined;
+    if (recipe.skin && !skinColor) throw Error('Authored character skin missing: ' + recipe.skin);
+    const components = [...originalParts].map(([part, original]) => {
+        // An outer harness shares its torso's bind coordinates and fitting offset, exactly once.
+        const torso = part.endsWith('_OuterAssembly') ? part.slice(0, -'_OuterAssembly'.length) : part;
+        const originalTorso = original.endsWith('_OuterAssembly') ? original.slice(0, -'_OuterAssembly'.length) : original;
+        const offset = fitting[body]?.[roles[role]]?.[part] ?? recipe.offsets?.[original]
+            ?? fitting[body]?.[roles[role]]?.[torso] ?? recipe.offsets?.[originalTorso] ?? [0, 0, 0];
         // Blender offset (x,y,z) -> GLB (x,z,-y).
-        return { data: load('Modules/' + part), offset: [offset[0], offset[2], -offset[1]], skinOverride: gender === 'Female' ? [.82, .65, .52, 1] : [.69, .49, .35, 1] };
+        return { data: load('Modules/' + part), offset: [offset[0], offset[2], -offset[1]], skinOverride: skinColor };
     });
     convert(`character/${gender}/${roles[role]}`, 'Characters/' + examples[role], 'human', { components });
 }
@@ -374,6 +405,18 @@ for (const vehicle of ['Coupe', 'Shuttle', 'Hauler', 'Patrol', 'JetBike']) conve
 for (const [name, file, height] of [['Habitat', 'Habitat_7p2m', 7.2], ['Terraced', 'TerracedPods_10p8m', 10.8],
     ['Workshop', 'Workshop_5p4m', 5.4], ['Dome', 'RibDome_6p5m', 6.5], ['Observatory', 'Observatory_11p5m', 11.5]])
     convert('building/' + name, 'Buildings/' + file, 'prop', { normalize: true, height });
+const architecture = JSON.parse(fs.readFileSync(path.join(resources, 'Documentation/architecture_styles.json')));
+for (const [name, file] of [['SpireHelix', 'Spire_Helix_12F'], ['TwinBridge', 'Tower_TwinBridge_16F'],
+    ['ArcologyTerrace', 'Arcology_Terrace_10F'], ['TransitAtrium', 'Civic_TransitAtrium_4F'],
+    ['CourtyardHabitat', 'Habitat_Courtyard_3F']]) {
+    const style = architecture.styles[file];
+    if (!style || !(style.floor_count > 0) || !(style.storey_height_m > 0))
+        throw Error('Architecture dimensions missing: ' + file);
+    // Match the existing normalized building contract while retaining every authored façade,
+    // glazing and roof component. Physical dimensions remain derived from the assembled GLB.
+    convert('building/' + name, 'Buildings/' + file, 'prop',
+        { normalize: true, height: style.floor_count * style.storey_height_m });
+}
 for (const name of ['RelaySentinel', 'RiftGrazer', 'VeilWalker']) for (const variant of ['', '_Variant']) convert('creature/' + name + variant, 'Creatures/' + name + variant, 'creature');
 for (const [name, file, normalize] of [['box', 'Interior_Crate', true], ['salvage', 'Gear_Engineer_Powerpack', false],
     ['recoveryKit', 'Interior_Med_Kit', false], ['console', 'Interior_Terminal', false], ['telescope', 'Hab_Sensor_Mast', false],

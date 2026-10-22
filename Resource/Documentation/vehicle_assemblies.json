@@ -76,6 +76,7 @@
         "Vehicle_Coupe_Chassis",
         "Vehicle_Coupe_Nose_Sport",
         "Vehicle_Coupe_Canopy_Panoramic",
+        "Vehicle_Coupe_Canopy_Panoramic_Glazing",
         "Vehicle_Coupe_Seat_Cockpit",
         "Vehicle_Coupe_Pod_Front_Standard_L",
         "Vehicle_Coupe_Pod_Rear_Standard_L",
@@ -93,6 +94,7 @@
         "Vehicle_Coupe_Chassis",
         "Vehicle_Coupe_Nose_Utility",
         "Vehicle_Coupe_Canopy_Armored",
+        "Vehicle_Coupe_Canopy_Armored_Glazing",
         "Vehicle_Coupe_Seat_Cockpit",
         "Vehicle_Coupe_Pod_Front_Rugged_L",
         "Vehicle_Coupe_Pod_Rear_Rugged_L",
@@ -105,7 +107,11 @@
         "Vehicle_Coupe_Rail_L",
         "Vehicle_Coupe_Rail_R",
         "Vehicle_Coupe_Underbody_FieldCoil"
-      ]
+      ],
+      "glazing_companions": {
+        "Vehicle_Coupe_Canopy_Panoramic": "Vehicle_Coupe_Canopy_Panoramic_Glazing",
+        "Vehicle_Coupe_Canopy_Armored": "Vehicle_Coupe_Canopy_Armored_Glazing"
+      }
     },
     "Shuttle": {
       "parameters": {
@@ -176,6 +182,7 @@
         "Vehicle_Shuttle_Chassis",
         "Vehicle_Shuttle_Nose_Sport",
         "Vehicle_Shuttle_Canopy_Panoramic",
+        "Vehicle_Shuttle_Canopy_Panoramic_Glazing",
         "Vehicle_Shuttle_Seat_Cockpit",
         "Vehicle_Shuttle_Pod_Front_Standard_L",
         "Vehicle_Shuttle_Pod_Rear_Standard_L",
@@ -184,6 +191,7 @@
         "Vehicle_Shuttle_Pod_Rear_Standard_R",
         "Vehicle_Shuttle_Engine_Efficient_R",
         "Vehicle_Shuttle_Payload_Passenger",
+        "Vehicle_Shuttle_Payload_Passenger_Glazing",
         "Vehicle_Shuttle_Service_Hatch",
         "Vehicle_Shuttle_Rail_L",
         "Vehicle_Shuttle_Rail_R",
@@ -193,6 +201,7 @@
         "Vehicle_Shuttle_Chassis",
         "Vehicle_Shuttle_Nose_Utility",
         "Vehicle_Shuttle_Canopy_Armored",
+        "Vehicle_Shuttle_Canopy_Armored_Glazing",
         "Vehicle_Shuttle_Seat_Cockpit",
         "Vehicle_Shuttle_Pod_Front_Rugged_L",
         "Vehicle_Shuttle_Pod_Rear_Rugged_L",
@@ -205,7 +214,12 @@
         "Vehicle_Shuttle_Rail_L",
         "Vehicle_Shuttle_Rail_R",
         "Vehicle_Shuttle_Underbody_FieldCoil"
-      ]
+      ],
+      "glazing_companions": {
+        "Vehicle_Shuttle_Canopy_Panoramic": "Vehicle_Shuttle_Canopy_Panoramic_Glazing",
+        "Vehicle_Shuttle_Canopy_Armored": "Vehicle_Shuttle_Canopy_Armored_Glazing",
+        "Vehicle_Shuttle_Payload_Passenger": "Vehicle_Shuttle_Payload_Passenger_Glazing"
+      }
     },
     "Hauler": {
       "parameters": {
@@ -276,6 +290,7 @@
         "Vehicle_Hauler_Chassis",
         "Vehicle_Hauler_Nose_Sport",
         "Vehicle_Hauler_Canopy_Panoramic",
+        "Vehicle_Hauler_Canopy_Panoramic_Glazing",
         "Vehicle_Hauler_Seat_Cockpit",
         "Vehicle_Hauler_Pod_Front_Standard_L",
         "Vehicle_Hauler_Pod_Rear_Standard_L",
@@ -293,6 +308,7 @@
         "Vehicle_Hauler_Chassis",
         "Vehicle_Hauler_Nose_Utility",
         "Vehicle_Hauler_Canopy_Armored",
+        "Vehicle_Hauler_Canopy_Armored_Glazing",
         "Vehicle_Hauler_Seat_Cockpit",
         "Vehicle_Hauler_Pod_Front_Rugged_L",
         "Vehicle_Hauler_Pod_Rear_Rugged_L",
@@ -305,7 +321,11 @@
         "Vehicle_Hauler_Rail_L",
         "Vehicle_Hauler_Rail_R",
         "Vehicle_Hauler_Underbody_FieldCoil"
-      ]
+      ],
+      "glazing_companions": {
+        "Vehicle_Hauler_Canopy_Panoramic": "Vehicle_Hauler_Canopy_Panoramic_Glazing",
+        "Vehicle_Hauler_Canopy_Armored": "Vehicle_Hauler_Canopy_Armored_Glazing"
+      }
     },
     "Patrol": {
       "parameters": {
@@ -376,6 +396,7 @@
         "Vehicle_Patrol_Chassis",
         "Vehicle_Patrol_Nose_Sport",
         "Vehicle_Patrol_Canopy_Panoramic",
+        "Vehicle_Patrol_Canopy_Panoramic_Glazing",
         "Vehicle_Patrol_Seat_Cockpit",
         "Vehicle_Patrol_Pod_Front_Standard_L",
         "Vehicle_Patrol_Pod_Rear_Standard_L",
@@ -393,6 +414,7 @@
         "Vehicle_Patrol_Chassis",
         "Vehicle_Patrol_Nose_Utility",
         "Vehicle_Patrol_Canopy_Armored",
+        "Vehicle_Patrol_Canopy_Armored_Glazing",
         "Vehicle_Patrol_Seat_Cockpit",
         "Vehicle_Patrol_Pod_Front_Rugged_L",
         "Vehicle_Patrol_Pod_Rear_Rugged_L",
@@ -405,7 +427,11 @@
         "Vehicle_Patrol_Rail_L",
         "Vehicle_Patrol_Rail_R",
         "Vehicle_Patrol_Underbody_FieldCoil"
-      ]
+      ],
+      "glazing_companions": {
+        "Vehicle_Patrol_Canopy_Panoramic": "Vehicle_Patrol_Canopy_Panoramic_Glazing",
+        "Vehicle_Patrol_Canopy_Armored": "Vehicle_Patrol_Canopy_Armored_Glazing"
+      }
     },
     "JetBike": {
       "parameters": {
@@ -482,6 +508,7 @@
         "Vehicle_JetBike_Chassis",
         "Vehicle_JetBike_Nose_Sport",
         "Vehicle_JetBike_Canopy_Windscreen",
+        "Vehicle_JetBike_Canopy_Windscreen_Glazing",
         "Vehicle_JetBike_Seat_Tandem",
         "Vehicle_JetBike_Pod_Front_Standard_L",
         "Vehicle_JetBike_Pod_Rear_Standard_L",
@@ -501,6 +528,7 @@
         "Vehicle_JetBike_Chassis",
         "Vehicle_JetBike_Nose_Utility",
         "Vehicle_JetBike_Canopy_RallyScreen",
+        "Vehicle_JetBike_Canopy_RallyScreen_Glazing",
         "Vehicle_JetBike_Seat_Tandem",
         "Vehicle_JetBike_Pod_Front_Rugged_L",
         "Vehicle_JetBike_Pod_Rear_Rugged_L",
@@ -515,7 +543,11 @@
         "Vehicle_JetBike_Rail_L",
         "Vehicle_JetBike_Rail_R",
         "Vehicle_JetBike_Underbody_FieldCoil"
-      ]
+      ],
+      "glazing_companions": {
+        "Vehicle_JetBike_Canopy_Windscreen": "Vehicle_JetBike_Canopy_Windscreen_Glazing",
+        "Vehicle_JetBike_Canopy_RallyScreen": "Vehicle_JetBike_Canopy_RallyScreen_Glazing"
+      }
     }
   }
 }

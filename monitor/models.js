@@ -1,4 +1,5 @@
 ﻿"use strict";
+const apiBase = location.port === "17707" ? "" : "http://127.0.0.1:17707";
 let catalog = null;
 const grid = document.getElementById("model-grid");
 const status = document.getElementById("catalog-status");
@@ -84,9 +85,9 @@ function render() {
 }
 async function load() {
   const controller = new AbortController();
-  const timeout = setTimeout(()=>controller.abort(),3000);
+  const timeout = setTimeout(()=>controller.abort(),15000);
   try {
-    const response = await fetch("/api/models",{cache:"no-store",signal:controller.signal});
+    const response = await fetch(apiBase + "/api/models",{cache:"no-store",signal:controller.signal});
     if (!response.ok) throw new Error("HTTP "+response.status);
     const data = await response.json();
     if (data.schema !== "game_models_v1" || !Array.isArray(data.models)) throw new Error("모델 스키마 불일치");
@@ -98,5 +99,5 @@ async function load() {
   } finally { clearTimeout(timeout); }
 }
 for (const id of ["body-color","accent-color","emission-color"]) document.getElementById(id).addEventListener("input",render);
-if (location.protocol==="file:") status.textContent="게임 실행 후 http://127.0.0.1:17707/models.html 로 접속하세요.";
+if (location.protocol==="file:") location.replace("http://127.0.0.1:17707/models.html");
 else load();

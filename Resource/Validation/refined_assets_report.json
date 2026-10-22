@@ -1,0 +1,44 @@
+{
+  "source_pairs": 183,
+  "glazing_assemblies": 19,
+  "buildings": {
+    "Spire_Helix_12F": {
+      "floors": 12,
+      "measured_height_m": 46.18000030517578,
+      "storey_levels_checked": 12
+    },
+    "Tower_TwinBridge_16F": {
+      "floors": 16,
+      "measured_height_m": 60.58000183105469,
+      "storey_levels_checked": 16
+    },
+    "Arcology_Terrace_10F": {
+      "floors": 10,
+      "measured_height_m": 38.97999954223633,
+      "storey_levels_checked": 10
+    },
+    "Civic_TransitAtrium_4F": {
+      "floors": 4,
+      "measured_height_m": 17.139999389648438,
+      "storey_levels_checked": 4
+    },
+    "Habitat_Courtyard_3F": {
+      "floors": 3,
+      "measured_height_m": 13.539999961853027,
+      "storey_levels_checked": 3
+    }
+  },
+  "paint_modules": 3,
+  "opening_roundtrips": {
+    "Coupe": {
+      "glazing_meshes": 1,
+      "max_glazing_motion_m": 1.3327756239338935
+    },
+    "Warden_Survey": {
+      "glazing_meshes": 1,
+      "max_glazing_motion_m": 1.9613060623869973
+    }
+  },
+  "errors": [],
+  "all_checks_passed": true
+}

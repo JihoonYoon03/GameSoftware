@@ -218,10 +218,10 @@
       "yaw_degrees": -90.0
     },
     {
-      "module": "Transit_Walk_W4_Straight_8m",
+      "module": "Transit_Walk_W4_Straight_2m",
       "translation_m": [
         38.0,
-        -6.0,
+        -9.0,
         0.0
       ],
       "yaw_degrees": -270.00000250447806
@@ -230,7 +230,7 @@
       "module": "Transit_Walk_W4_EndCap",
       "translation_m": [
         38.0,
-        -1.5,
+        -7.5,
         0.0
       ],
       "yaw_degrees": -270.00000432571113
@@ -245,10 +245,10 @@
       "yaw_degrees": 90.0
     },
     {
-      "module": "Transit_Walk_W4_Straight_8m",
+      "module": "Transit_Walk_W4_Straight_2m",
       "translation_m": [
         38.0,
-        -28.0,
+        -25.0,
         0.0
       ],
       "yaw_degrees": -90.0000043257111
@@ -257,7 +257,7 @@
       "module": "Transit_Walk_W4_EndCap",
       "translation_m": [
         38.0,
-        -32.5,
+        -26.5,
         0.0
       ],
       "yaw_degrees": -90.00000250447806

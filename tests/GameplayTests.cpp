@@ -1,12 +1,12 @@
 #include "stdafx.h"
 #include "Level.h"
-#include "Overworld.h"
-#include "ResidentAI.h"
-#include "TransitLayout.h"
-#include "Profiler.h"
-#include "Scene.h"
-#include "Monitoring/Monitor.h"
 #include "Monitoring/LocalMonitorServer.h"
+#include "Monitoring/Monitor.h"
+#include "Overworld.h"
+#include "Profiler.h"
+#include "ResidentAI.h"
+#include "Scene.h"
+#include "TransitLayout.h"
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -359,7 +359,7 @@ void TestCityQuestAccess()
     {
         Overworld::UpdateBike(world, 1.f / 60);
     }
-    assert(RoadNetwork::Get().Contains(world.bikePosition));
+    assert(!game.IsPositionBlocked(world.bikePosition)); // Braking may coast onto the open shoulder.
     auto parked = world.bikePosition;
     game.InteractWithNearbyTarget();
     assert(!world.isBikeMounted && Game::Distance(parked, world.bikePosition) < .001f);
@@ -456,16 +456,17 @@ void TestUrbanTraffic()
     world.isInsideHome = false;
     world.cameraPosition = world.playerPosition = {0, 0};
     const auto &network = RoadNetwork::Get();
-    bool two = false, four = false, six = false, inclined = false;
+    bool two = false, four = false, elevated = false, inclined = false;
     for (const auto &road : network.roads)
     {
         two |= road.lanes == 2;
         four |= road.lanes == 4;
-        six |= road.lanes == 6;
+        elevated |= network.junctions[road.from].altitude > 1 || network.junctions[road.to].altitude > 1;
+        assert(road.lanes <= 4);
         auto a = network.junctions[road.from].position, b = network.junctions[road.to].position;
         inclined |= std::fabs(a.x - b.x) > 2 && std::fabs(a.y - b.y) > 2;
     }
-    assert(two && four && six && !inclined && network.airCorridors.size() == 4);
+    assert(two && four && elevated && inclined && network.airCorridors.size() == 4);
     assert(!TransitLayout::Get().empty());
     for (const auto &module : TransitLayout::Get())
     {
@@ -475,10 +476,15 @@ void TestUrbanTraffic()
     {
         assert(lane.length > 3.5f && std::fabs(Game::Distance(lane.start, lane.end) - lane.length) < .001f);
         auto mid = network.LanePosition(int(&lane - network.lanes.data()), lane.length * .5f);
-        assert(network.Contains(mid));
+        assert(network.ContainsSurface(mid, network.RoadElevation(lane.road, .5f)));
         auto origin = network.junctions[lane.from].position;
         auto right = RoadNetwork::RightOf(lane.direction);
         assert((mid.x - origin.x) * right.x + (mid.y - origin.y) * right.y > 0);
+        // Test the displayed driving side independently of RightOf's implementation.
+        auto screenDirection =
+            Vector2{(lane.direction.x - lane.direction.y) * 36, (lane.direction.x + lane.direction.y) * 18};
+        auto screenOffset = Vector2{(right.x - right.y) * 36, (right.x + right.y) * 18};
+        assert(screenDirection.x * screenOffset.y - screenDirection.y * screenOffset.x > 0);
     }
     assert(!network.Contains(kLiaPosition) && !network.Contains(kMaraPosition));
     assert(TrafficSystem::SweptHit({-5, 0}, {5, 0}, 0, {0, 0}));
@@ -487,6 +493,7 @@ void TestUrbanTraffic()
     auto &traffic = Overworld::Traffic();
     std::unordered_map<std::uint64_t, TrafficVehicle> previous;
     bool sawTurn = false, sawStop = false, sawWalk = false, sawCar = false;
+    bool sawSingleWalk = false, sawAxisWalk = false, sawRedRight = false;
     for (int frame = 0; frame < 7200; ++frame)
     {
         traffic.Update(world, 1.f / 60);
@@ -495,14 +502,33 @@ void TestUrbanTraffic()
         for (const auto &car : traffic.Vehicles())
         {
             sawCar = true;
+            assert(network.ContainsSurface(
+                car.position, traffic.RenderElevation(size_t(&car - traffic.Vehicles().data())), .25f));
             auto old = previous.find(car.id);
             if (old == previous.end())
             {
-                assert(TrafficSystem::OutsideView(car.position, world.cameraPosition, 230));
+                assert(TrafficSystem::OutsideView(
+                    car.position, world.cameraPosition, 230,
+                    traffic.RenderElevation(size_t(&car - traffic.Vehicles().data()))));
             }
             else
             {
                 assert(Game::Distance(old->second.position, car.position) < .8f);
+                if (old->second.lane == car.lane && old->second.reservedFrom != car.lane &&
+                    car.reservedFrom == car.lane && network.IsSignalized(network.lanes[car.lane].to))
+                {
+                    auto light = traffic.Light(car.lane, car.turn);
+                    if (car.turn == TrafficTurn::Right && light == TrafficLight::Red)
+                    {
+                        assert(!traffic.HasRightTurnSignal(car.lane));
+                        assert(old->second.stoppedSeconds >= .75f && car.speed <= 1.51f);
+                        sawRedRight = true;
+                    }
+                    else
+                    {
+                        assert(light == TrafficLight::Green);
+                    }
+                }
                 auto rendered = traffic.RenderPosition(size_t(&car - traffic.Vehicles().data()));
                 assert(Game::Distance(rendered, car.position) < .8f);
             }
@@ -531,6 +557,23 @@ void TestUrbanTraffic()
                 continue;
             }
             sawWalk = true;
+            int greens = 0, width = 0;
+            for (int outgoing : network.junctions[j].outgoing)
+            {
+                if (network.lanes[outgoing].slot != 0)
+                {
+                    continue;
+                }
+                int road = network.lanes[outgoing].road;
+                width = (std::max)(width, network.roads[road].lanes);
+                greens += traffic.PedestrianGreen(int(j), road);
+                if (!traffic.PedestrianGreen(int(j), road))
+                {
+                    assert(!traffic.CanStartCrossing(int(j), 1, road));
+                }
+            }
+            sawSingleWalk |= width == 2 && greens == 1;
+            sawAxisWalk |= width == 4 && greens > 0 && greens < int(arms);
             for (size_t lane = 0; lane < network.lanes.size(); ++lane)
             {
                 if (network.lanes[lane].to != int(j))
@@ -546,15 +589,194 @@ void TestUrbanTraffic()
         previous.swap(current);
     }
     assert(sawCar && sawTurn && sawStop && sawWalk);
+    if (!sawSingleWalk || !sawAxisWalk)
+    {
+        std::cerr << "walk coverage " << sawSingleWalk << " " << sawAxisWalk << std::endl;
+        for (size_t j = 0; j < network.junctions.size(); ++j)
+        {
+            if (network.IsSignalized(int(j)))
+            {
+                std::cerr << "junction " << j << " at " << network.junctions[j].position.x << ","
+                          << network.junctions[j].position.y << " phase " << int(traffic.Signals()[j].phase)
+                          << " elapsed " << traffic.Signals()[j].elapsed << std::endl;
+            }
+        }
+    }
+    assert(sawSingleWalk && sawAxisWalk);
     // sawWalk above must occur without any key or crossing request.
     // Production impact path, using an approaching moving vehicle rather than a damage mock.
-    auto hit = std::find_if(traffic.Vehicles().begin(), traffic.Vehicles().end(),
-                            [](const TrafficVehicle &car) { return car.speed > 1; });
+    auto hit =
+        std::find_if(traffic.Vehicles().begin(), traffic.Vehicles().end(), [&](const TrafficVehicle &car) {
+            return car.speed > 1 && traffic.RenderElevation(size_t(&car - traffic.Vehicles().data())) < .1f;
+        });
     assert(hit != traffic.Vehicles().end());
     world.playerPosition = hit->position;
     mineState.player.health = mineState.player.maxHealth;
     traffic.Update(world, .05f);
     assert(mineState.player.health < mineState.player.maxHealth);
+    game.Reset();
+}
+void TestCityPlanAndSignalProgress()
+{
+    using namespace tutorial;
+    auto &game = Game::Get();
+    game.Reset();
+    auto &world = game.GetState();
+    const auto &net = RoadNetwork::Get();
+    assert(CityPlan::Connections().size() == world.buildings.size());
+    assert(!CityPlan::Walkways().empty());
+    for (const auto &connection : CityPlan::Connections())
+    {
+        assert(connection.path.size() >= 2);
+        for (size_t segment = 1; segment < connection.path.size(); ++segment)
+        {
+            auto a = connection.path[segment - 1], b = connection.path[segment];
+            int samples = int(std::ceil(Game::Distance(a, b) * 6)) + 1;
+            for (int step = 0; step <= samples; ++step)
+            {
+                Vector2 p = {a.x + (b.x - a.x) * step / samples, a.y + (b.y - a.y) * step / samples};
+                assert(!net.Contains(p, .1f));
+                assert(!Overworld::Scenery().IsBlocked(p, .15f));
+                for (const auto &building : world.buildings)
+                {
+                    assert(!(p.x > building.x - .2f && p.x < building.x + building.width + .2f &&
+                             p.y > building.y - .2f && p.y < building.y + building.depth + .2f));
+                }
+            }
+        }
+    }
+    auto home = std::find_if(world.buildings.begin(), world.buildings.end(), [](const Building &b) {
+        return b.x == kHomeBuildingPosition.x && b.y == kHomeBuildingPosition.y;
+    });
+    assert(home != world.buildings.end());
+    assert(world.bikePosition.x > home->x + home->width &&
+           world.bikePosition.x < home->x + home->width + 1.6f);
+    assert(world.bikePosition.y > home->y - 1 && world.bikePosition.y < home->y + home->depth + 1);
+    world.playerPosition = world.cameraPosition = {-425, -425};
+    world.residents.clear();
+    Resident lingering;
+    lingering.crossingJunction = 0;
+    while (!net.IsSignalized(lingering.crossingJunction))
+    {
+        ++lingering.crossingJunction;
+    }
+    lingering.position = net.junctions[lingering.crossingJunction].position;
+    world.residents.push_back(lingering);
+    std::vector<int> changes(net.junctions.size(), 0);
+    std::vector<SignalPhase> phases;
+    for (const auto &signal : Overworld::Traffic().Signals())
+    {
+        phases.push_back(signal.phase);
+    }
+    std::vector<bool> crossingServed(net.roads.size() * 2, false);
+    for (int frame = 0; frame < 18000; ++frame)
+    {
+        Overworld::Traffic().Update(world, 1.f / 60);
+        for (size_t j = 0; j < phases.size(); ++j)
+        {
+            if (!net.IsSignalized(int(j)))
+            {
+                continue;
+            }
+            if (frame < 7200)
+            {
+                for (int lane : net.junctions[j].outgoing)
+                {
+                    if (net.lanes[lane].slot == 0 &&
+                        Overworld::Traffic().PedestrianGreen(int(j), net.lanes[lane].road))
+                    {
+                        int road = net.lanes[lane].road;
+                        crossingServed[road * 2 + (net.roads[road].from == int(j) ? 0 : 1)] = true;
+                    }
+                }
+            }
+            const auto &signal = Overworld::Traffic().Signals()[j];
+            assert(signal.elapsed <= Overworld::Traffic().PhaseDuration(int(j)) + .1f);
+            if (signal.phase != phases[j])
+            {
+                ++changes[j];
+                phases[j] = signal.phase;
+            }
+        }
+    }
+    for (size_t j = 0; j < changes.size(); ++j)
+    {
+        if (net.IsSignalized(int(j)))
+        {
+            assert(changes[j] >= 14);
+        }
+    }
+    for (size_t road = 0; road < net.roads.size(); ++road)
+    {
+        if (net.IsSignalized(net.roads[road].from))
+        {
+            assert(crossingServed[road * 2]);
+        }
+        if (net.IsSignalized(net.roads[road].to))
+        {
+            assert(crossingServed[road * 2 + 1]);
+        }
+    }
+    game.Reset();
+}
+void TestVehicleQueueProgress()
+{
+    using namespace tutorial;
+    auto &game = Game::Get();
+    auto &traffic = Overworld::Traffic();
+    const auto &net = RoadNetwork::Get();
+    for (int city : {0, 1})
+    {
+        game.Reset();
+        auto &world = game.GetState();
+        world.isInsideHome = false;
+        world.residents.clear();
+        world.playerPosition = world.cameraPosition = Overworld::Cities()[city].center;
+        for (int frame = 0; frame < 9000; ++frame)
+        {
+            traffic.Update(world, 1.f / 30);
+            for (size_t j = 0; j < traffic.Signals().size(); ++j)
+            {
+                if (net.IsSignalized(int(j)))
+                {
+                    if (traffic.Signals()[j].elapsed >= traffic.PhaseDuration(int(j)) + 20)
+                    {
+                        std::cerr << "Held junction " << j << " at " << net.junctions[j].position.x << ","
+                                  << net.junctions[j].position.y << " phase "
+                                  << int(traffic.Signals()[j].phase) << std::endl;
+                        for (const auto &car : traffic.Vehicles())
+                        {
+                            if (car.reservedFrom >= 0 && net.lanes[car.reservedFrom].to == int(j))
+                            {
+                                std::cerr << "car " << car.id << " lane " << car.lane << " next "
+                                          << car.nextLane << " dist " << car.distance << " length "
+                                          << net.lanes[car.lane].length << " speed " << car.speed << " turn "
+                                          << car.turnDistance << " reservation " << car.reservedFrom << " -> "
+                                          << car.reservedTo << std::endl;
+                            }
+                        }
+                    }
+                    assert(traffic.Signals()[j].elapsed < traffic.PhaseDuration(int(j)) + 20);
+                }
+            }
+            for (const auto &car : traffic.Vehicles())
+            {
+                assert(net.ContainsSurface(
+                    car.position, traffic.RenderElevation(size_t(&car - traffic.Vehicles().data())), .25f));
+                if (car.speed > .01f || car.turnDistance >= 0 || car.distance < 1 ||
+                    car.distance > net.lanes[car.lane].length - 5)
+                {
+                    continue;
+                }
+                bool queued = std::any_of(
+                    traffic.Vehicles().begin(), traffic.Vehicles().end(), [&](const TrafficVehicle &leader) {
+                        return leader.id != car.id && leader.lane == car.lane && leader.turnDistance < 0 &&
+                               leader.distance > car.distance && leader.distance - car.distance < 4.1f;
+                    });
+                assert(queued); // A free approach must keep moving toward its marked stop line.
+            }
+        }
+    }
     game.Reset();
 }
 void TestCityResidentsAndShadowLifetime()
@@ -586,7 +808,14 @@ void TestCityResidentsAndShadowLifetime()
             if (resident.activity == ResidentActivity::Crossing)
             {
                 const auto &signal = Overworld::Traffic().Signals()[resident.crossingJunction];
-                assert(signal.phase == SignalPhase::Walk || signal.phase == SignalPhase::WalkClear);
+                if (signal.phase != SignalPhase::Walk && signal.phase != SignalPhase::WalkClear)
+                {
+                    for (const auto &car : Overworld::Traffic().Vehicles())
+                    {
+                        assert(car.reservedFrom < 0 ||
+                               RoadNetwork::Get().lanes[car.reservedFrom].to != resident.crossingJunction);
+                    }
+                }
             }
             else
             {
@@ -629,10 +858,10 @@ void TestAimLightingAndWallShots()
     GameLevels::Mine().Combat().Attack();
     assert(mineState.bullets.size() == 1);
     auto muzzle = models::ModelRig::Muzzle(models::ModelRig::Pose(0, false, true, 1));
-    assert(std::fabs(mineState.bullets[0].position.x - 24.5f +
-                     muzzle.y * models::WorldScale::characterScale) < .0001f);
-    assert(std::fabs(mineState.bullets[0].position.y - 17.5f -
-                     muzzle.x * models::WorldScale::characterScale) < .0001f);
+    // Wall-safe muzzle advance follows the aim ray, before spread is applied.
+    float muzzleDistance = std::hypot(muzzle.x, muzzle.y) * models::WorldScale::characterScale;
+    assert(std::fabs(mineState.bullets[0].position.x - 24.5f) < .0001f);
+    assert(std::fabs(mineState.bullets[0].position.y - 17.5f - muzzleDistance) < .0001f);
     mineState.bullets.clear();
     mineState.pistol.Reset();
     tutorial::Game::Get().GetState().playerPosition = {kMineGateX - 2.5f, kMineGateY + .5f};
@@ -690,6 +919,56 @@ void TestRescueAndScanner()
     tutorial::Game::Get().GetState().cameraPosition = tutorial::Game::Get().GetState().playerPosition;
     Step(3.f);
     assert(mineState.survivors.size() == 9 && mineState.returnedPeople == 3);
+}
+void TestScannerPropagation()
+{
+    ReadyMine();
+    auto &level = GameLevels::Mine();
+    auto &world = tutorial::Game::Get().GetState();
+    const Vector2 origin = world.playerPosition;
+    mineState.survivors.clear();
+    mineState.riaNavigationCooldown = 1000;
+    mineState.rescueGroups = {{{origin.x + 15, origin.y}, false},
+                              {{origin.x + 30, origin.y}, true},
+                              {{origin.x + 43, origin.y}, false}};
+    level.Rescue().Scan();
+    assert(mineState.scannerRadius == 0 && mineState.scannerContacts.empty());
+    level.Rescue().Update(.5f);
+    assert(std::fabs(mineState.scannerRadius - 7.5f) < .001f && mineState.scannerContacts.empty());
+    level.Rescue().Update(.51f);
+    assert(mineState.scannerContacts.size() == 1 && mineState.scannerContacts.front().group == 0);
+    assert(std::fabs(mineState.scannerContacts.front().secondsRemaining - 4.99f) < .001f);
+    world.playerPosition = {origin.x + 80, origin.y + 80};
+    level.Rescue().Scan(); // Cooldown cannot move or restart a wave already in flight.
+    assert(tutorial::Game::Distance(mineState.scannerOrigin, origin) < .001f);
+    level.Rescue().Update(1.01f);
+    assert(std::fabs(mineState.scannerRadius - 30.3f) < .001f && mineState.scannerContacts.size() == 2);
+    level.Rescue().Update(1);
+    assert(mineState.scannerSeconds == 0 && mineState.scannerRadius == kScannerRange);
+    assert(mineState.scannerContacts.size() == 2); // The pulse never detects the 43-unit transmitter.
+    level.Rescue().Update(3.1f);
+    assert(mineState.scannerContacts.size() == 1 && mineState.scannerContacts.front().group == 1);
+    level.Rescue().Update(1);
+    assert(mineState.scannerContacts.empty());
+
+    world.playerPosition = origin;
+    level.Rescue().Scan();
+    level.Rescue().Update(1.1f);
+    assert(mineState.scannerContacts.size() == 1);
+    mineState.rescueGroups[0].rescued = true;
+    level.Rescue().Update(0);
+    assert(mineState.scannerContacts.empty());
+
+    // A long frame ages discoveries from their arrival time rather than granting five fresh seconds.
+    mineState.scannerCooldown = 0;
+    mineState.rescueGroups[0].rescued = false;
+    level.Rescue().Scan();
+    level.Rescue().Update(6.2f);
+    assert(mineState.scannerSeconds == 0 && mineState.scannerContacts.size() == 1);
+    assert(mineState.scannerContacts.front().group == 1 &&
+           std::fabs(mineState.scannerContacts.front().secondsRemaining - .8f) < .001f);
+    level.Rescue().Update(1);
+    assert(mineState.scannerContacts.empty());
 }
 void TestNpcCombat()
 {
@@ -1056,7 +1335,12 @@ void TestChapterOne()
     level.Update(12.1f);
     assert(s.ria.combat.health == 50);
     // Swept projectiles stop at a facility wall, and friendly shots cannot harm evacuees.
-    s.bullets = {{{{10.5f, 6.5f}, {0, 1}, 100, 20, 100, true}, ChapterTeam::Player}};
+    // Imported proportions can change the footprint; locate an actual foundation edge.
+    auto wall = std::find(s.tiles.begin(), s.tiles.end(), FrontierTile::Foundation);
+    assert(wall != s.tiles.end());
+    const int wallCell = int(wall - s.tiles.begin());
+    Vector2 wallApproach = {float(wallCell % kFrontierWidth) + .5f, float(wallCell / kFrontierWidth) - .5f};
+    s.bullets = {{{wallApproach, {0, 1}, 100, 20, 100, true}, ChapterTeam::Player}};
     level.Update(.1f);
     assert(s.bullets.empty());
     auto person = s.survivors.front().position;
@@ -1108,6 +1392,16 @@ int main(int argc, char **argv)
     static_assert(std::is_base_of<game::Level, game::MineLevel>::value);
     static_assert(!std::is_copy_constructible<game::MineLevel>::value);
     static_assert(std::is_base_of<game::Scene, game::MineScene>::value);
+    if (argc > 1 && std::string(argv[1]) == "--urban")
+    {
+        TestUrbanTraffic();
+        TestCityPlanAndSignalProgress();
+        TestVehicleQueueProgress();
+        TestCityResidentsAndShadowLifetime();
+        std::ofstream("x64/RevisionChecks/state.json") << monitoring::WorldSnapshot::Build(1, "urban-test");
+        std::cout << "Urban traffic, crossing and resident checks passed.\n";
+        return 0;
+    }
     TestLevelLifecycle();
     TestWeapon();
     TestQuest();
@@ -1117,12 +1411,15 @@ int main(int argc, char **argv)
     TestNpcCombat();
     TestAimLightingAndWallShots();
     TestRescueAndScanner();
+    TestScannerPropagation();
     TestStoryAndReentry();
     TestChapterOne();
     TestConnectedOverworld();
     TestCityQuestAccess();
     TestImportedWorldAndFlights();
     TestUrbanTraffic();
+    TestCityPlanAndSignalProgress();
+    TestVehicleQueueProgress();
     TestCityResidentsAndShadowLifetime();
     if (argc > 1)
     {

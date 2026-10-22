@@ -1,0 +1,9 @@
+{
+  "parts": 219,
+  "over_budget": [],
+  "source_triangles": 26586,
+  "optimized_triangles": 25046,
+  "max_surface_error_m": 7.049083153671118e-08,
+  "max_source_triangles": 464,
+  "max_optimized_triangles": 464
+}

@@ -1,5 +1,7 @@
 "use strict";
 
+const monitorOrigin = "http://127.0.0.1:17707";
+const apiBase = location.port === "17707" ? "" : monitorOrigin;
 const byId = (id) => document.getElementById(id);
 let snapshot = null;
 let previous = null;
@@ -217,7 +219,7 @@ function renderEnvironment(data) {
   );
   if (data.traffic) byId("world-status").append(
     metric("지상 교통", format(data.traffic.active_vehicles) + " / " + format(data.traffic.vehicle_limit) + "대 · " + (data.traffic.simulating ? "주행 중" : "정지")),
-    metric("통행 / 보행 신호", "우측통행 · 자동 순환 · 교차로 비움 후 보행"),
+    metric("통행 / 보행 신호", "우측통행 · 보호 좌회전 · 도로별 보행 신호"),
     metric("도시 보행 AI", "신호 대기 " + format(data.traffic.residents_waiting_signal) + "명 · 횡단 " +
       format(data.traffic.residents_crossing) + "명 · 경로 없음 " + format(data.traffic.residents_without_route) + "명"),
     metric("도로 / 항공망", format(data.traffic.lanes) + "개 차선 · 항공 회랑 " + format(data.traffic.air_corridors) + "개"),
@@ -266,7 +268,7 @@ async function poll() {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 2000);
   try {
-    const response = await fetch("/api/state", { cache: "no-store", signal: controller.signal });
+    const response = await fetch(apiBase + "/api/state", { cache: "no-store", signal: controller.signal });
     if (!response.ok) throw new Error("HTTP " + response.status);
     const data = await response.json();
     if (data.schema !== "game_monitor_v1" || !data.ready || !Array.isArray(data.npcs)
@@ -276,7 +278,13 @@ async function poll() {
     if (recovered) addEvent("연결 복구");
     snapshot = data;
     consecutiveFailures = 0;
-    render(data);
+    try { render(data); }
+    catch (error) {
+      byId("connection-status").textContent = "연결됨 · 화면 갱신 오류";
+      byId("connection-meta").textContent = error.message;
+      console.error("Monitor render failed", error);
+      return;
+    }
     const stale = performance.now() - sequenceChangedAt > 3000;
     byId("connection-status").textContent = stale ? "상태 갱신 지연" : data.paused ? "연결됨 · 게임 일시정지" : "실시간 연결됨";
     byId("connection-status").dataset.state = stale ? "error" : "live";
@@ -319,7 +327,8 @@ byId("download").addEventListener("click", () => {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
 if (location.protocol === "file:") {
-  byId("connection-status").textContent = "로컬 서버 주소로 열어 주세요";
+  location.replace(monitorOrigin + "/");
+  byId("connection-status").textContent = "게임 모니터로 연결 중";
   byId("connection-meta").textContent = "http://127.0.0.1:17707/";
   byId("notice").textContent = "게임을 실행한 뒤 브라우저에서 http://127.0.0.1:17707/ 주소를 여세요.";
 } else {

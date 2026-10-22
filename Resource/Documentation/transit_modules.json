@@ -5933,7 +5933,22 @@
         }
       ],
       "lanes": 2,
-      "pedestrian_crossing": true
+      "pedestrian_crossing": true,
+      "marking_module": "Transit_CrosswalkPaint_2L",
+      "surface_module": "Transit_Road_2L_Straight_4m",
+      "walkway_is_separate": true
+    },
+    "Transit_CrosswalkPaint_2L": {
+      "parts": [
+        "Transit_CrosswalkPaint_2L_MarkCrosswalk"
+      ],
+      "category": "marking",
+      "ports": [],
+      "lanes": 2,
+      "paint_only": true,
+      "collision_role": "none",
+      "surface_module": "Transit_Road_2L_Straight_4m",
+      "walkway_is_separate": true
     },
     "Transit_Road_4L_Crosswalk_4m": {
       "parts": [
@@ -6004,7 +6019,22 @@
         }
       ],
       "lanes": 4,
-      "pedestrian_crossing": true
+      "pedestrian_crossing": true,
+      "marking_module": "Transit_CrosswalkPaint_4L",
+      "surface_module": "Transit_Road_4L_Straight_4m",
+      "walkway_is_separate": true
+    },
+    "Transit_CrosswalkPaint_4L": {
+      "parts": [
+        "Transit_CrosswalkPaint_4L_MarkCrosswalk"
+      ],
+      "category": "marking",
+      "ports": [],
+      "lanes": 4,
+      "paint_only": true,
+      "collision_role": "none",
+      "surface_module": "Transit_Road_4L_Straight_4m",
+      "walkway_is_separate": true
     },
     "Transit_Road_6L_Crosswalk_4m": {
       "parts": [
@@ -6075,7 +6105,22 @@
         }
       ],
       "lanes": 6,
-      "pedestrian_crossing": true
+      "pedestrian_crossing": true,
+      "marking_module": "Transit_CrosswalkPaint_6L",
+      "surface_module": "Transit_Road_6L_Straight_4m",
+      "walkway_is_separate": true
+    },
+    "Transit_CrosswalkPaint_6L": {
+      "parts": [
+        "Transit_CrosswalkPaint_6L_MarkCrosswalk"
+      ],
+      "category": "marking",
+      "ports": [],
+      "lanes": 6,
+      "paint_only": true,
+      "collision_role": "none",
+      "surface_module": "Transit_Road_6L_Straight_4m",
+      "walkway_is_separate": true
     },
     "Transit_AirGuide_Straight_32m": {
       "parts": [

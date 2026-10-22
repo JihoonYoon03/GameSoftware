@@ -286,7 +286,12 @@ for lanes in [2,4,6]:
            [('Surface',ribbon(Geo(),path,0,1,w,0,.2,'Road_Basalt')),('MarkCrosswalk',g)],
            path_ports(path,w)+[port('walk_left',(0,w/2),(0,1),4,0,'walk'),
                                port('walk_right',(0,-w/2),(0,-1),4,0,'walk')],
-           'road',lanes=lanes,pedestrian_crossing=True)
+           'road',lanes=lanes,pedestrian_crossing=True,
+           marking_module=f'Transit_CrosswalkPaint_{lanes}L',
+           surface_module=f'Transit_Road_{lanes}L_Straight_4m',walkway_is_separate=True)
+    module(f'Transit_CrosswalkPaint_{lanes}L',[('MarkCrosswalk',g)],[],
+           'marking',lanes=lanes,paint_only=True,collision_role='none',
+           surface_module=f'Transit_Road_{lanes}L_Straight_4m',walkway_is_separate=True)
 
 # Sparse actual geometry: no transparent sheets, tube walls, overhead frames or full-width arrows.
 def airguide(name,path,length,steps=1,**meta):
@@ -384,7 +389,7 @@ overall.update(mesh_parts=len(catalog['assets']),max_triangles=max(a['triangles'
 overall['transit_expansion_report']='transit_source_report.json'
 write('Validation/source_report.json',overall)
 write('Validation/transit_source_report.json',dict(expansion=TAG,modules=len(MODULES),mesh_parts=len(ASSETS),
-    categories={k:sum(m['category']==k for m in MODULES.values()) for k in ['road','walk','airguide']},
+    categories={k:sum(m['category']==k for m in MODULES.values()) for k in ['road','walk','airguide','marking']},
     max_triangles=max(a['triangles'] for a in ASSETS),all_parts_under_500=True,issues=issues,
     source_geometry_passed=True))
 
@@ -441,7 +446,7 @@ for pid,angle in [('road_1_0',90),('road_-1_0',45),('road_0_-1',30),('road_0_1',
 crossing=place('Transit_Road_2L_Crosswalk_4m',38,-17)
 for pid in ['walk_left','walk_right']:
     ramp=attach(crossing,pid,'Transit_Walk_W4_AccessibleRamp_4m','flush',False)
-    walk=attach(ramp,'raised','Transit_Walk_W4_Straight_8m','start',False)
+    walk=attach(ramp,'raised','Transit_Walk_W4_Straight_2m','start',False)
     attach(walk,'end','Transit_Walk_W4_EndCap','start',False)
 write('Documentation/transit_layout_example.json',dict(units='meters',placements=PLACEMENTS,connections=CONNECTIONS))
 

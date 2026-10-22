@@ -1,11 +1,12 @@
 {
   "expansion": "transit_kit_v1",
-  "modules": 112,
-  "mesh_parts": 494,
+  "modules": 115,
+  "mesh_parts": 497,
   "categories": {
     "road": 45,
     "walk": 55,
-    "airguide": 12
+    "airguide": 12,
+    "marking": 3
   },
   "max_triangles": 288,
   "all_parts_under_500": true,

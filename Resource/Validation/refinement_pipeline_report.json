@@ -1,0 +1,2781 @@
+{
+  "schema": "detail_first_lossless_cleanup_v1",
+  "summary": {
+    "parts": 183,
+    "source_triangles": 25256,
+    "optimized_triangles": 23475,
+    "max_triangles": 386,
+    "over_budget": []
+  },
+  "parts": [
+    {
+      "id": "Vehicle_Coupe_Chassis",
+      "source_triangles": 168,
+      "optimized_triangles": 162,
+      "removed_triangles": 6,
+      "max_surface_error_m": 8.211339563514836e-17,
+      "occluded_internal_triangles_removed": 6,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Chassis",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Nose_Sport",
+      "source_triangles": 116,
+      "optimized_triangles": 112,
+      "removed_triangles": 4,
+      "max_surface_error_m": 4.243211714597809e-17,
+      "occluded_internal_triangles_removed": 4,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Nose_Sport",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Nose_Utility",
+      "source_triangles": 216,
+      "optimized_triangles": 216,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.1792473220894105e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Nose_Utility",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Canopy_Panoramic_Glazing",
+      "source_triangles": 396,
+      "optimized_triangles": 360,
+      "removed_triangles": 36,
+      "max_surface_error_m": 2.0690658548009985e-08,
+      "occluded_internal_triangles_removed": 36,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Canopy_Panoramic_Glazing",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Canopy_Panoramic",
+      "source_triangles": 276,
+      "optimized_triangles": 276,
+      "removed_triangles": 0,
+      "max_surface_error_m": 9.915058304003713e-09,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Canopy_Panoramic",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Canopy_Armored_Glazing",
+      "source_triangles": 396,
+      "optimized_triangles": 369,
+      "removed_triangles": 27,
+      "max_surface_error_m": 1.9237603147765426e-08,
+      "occluded_internal_triangles_removed": 27,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Canopy_Armored_Glazing",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Canopy_Armored",
+      "source_triangles": 276,
+      "optimized_triangles": 276,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.5593251796497744e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Canopy_Armored",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Seat_Cockpit",
+      "source_triangles": 176,
+      "optimized_triangles": 168,
+      "removed_triangles": 8,
+      "max_surface_error_m": 5.278819563011007e-17,
+      "occluded_internal_triangles_removed": 8,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Seat_Cockpit",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Pod_Front_Standard_L",
+      "source_triangles": 88,
+      "optimized_triangles": 88,
+      "removed_triangles": 0,
+      "max_surface_error_m": 4.3495404182308385e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Pod_Front_Standard_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Pod_Front_Rugged_L",
+      "source_triangles": 112,
+      "optimized_triangles": 112,
+      "removed_triangles": 0,
+      "max_surface_error_m": 4.2767125233357643e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Pod_Front_Rugged_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Pod_Rear_Standard_L",
+      "source_triangles": 88,
+      "optimized_triangles": 88,
+      "removed_triangles": 0,
+      "max_surface_error_m": 4.2020104833637e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Pod_Rear_Standard_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Pod_Rear_Rugged_L",
+      "source_triangles": 112,
+      "optimized_triangles": 112,
+      "removed_triangles": 0,
+      "max_surface_error_m": 4.2767125233357643e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Pod_Rear_Rugged_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Engine_Efficient_L",
+      "source_triangles": 88,
+      "optimized_triangles": 44,
+      "removed_triangles": 44,
+      "max_surface_error_m": 3.099489173883613e-09,
+      "occluded_internal_triangles_removed": 44,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Engine_Efficient_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Engine_Boost_L",
+      "source_triangles": 124,
+      "optimized_triangles": 80,
+      "removed_triangles": 44,
+      "max_surface_error_m": 5.1220770782358294e-17,
+      "occluded_internal_triangles_removed": 44,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Engine_Boost_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Pod_Front_Standard_R",
+      "source_triangles": 88,
+      "optimized_triangles": 88,
+      "removed_triangles": 0,
+      "max_surface_error_m": 4.3495404182308385e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Pod_Front_Standard_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Pod_Front_Rugged_R",
+      "source_triangles": 112,
+      "optimized_triangles": 112,
+      "removed_triangles": 0,
+      "max_surface_error_m": 4.2767125233357643e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Pod_Front_Rugged_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Pod_Rear_Standard_R",
+      "source_triangles": 88,
+      "optimized_triangles": 88,
+      "removed_triangles": 0,
+      "max_surface_error_m": 4.2020104833637e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Pod_Rear_Standard_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Pod_Rear_Rugged_R",
+      "source_triangles": 112,
+      "optimized_triangles": 112,
+      "removed_triangles": 0,
+      "max_surface_error_m": 4.2767125233357643e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Pod_Rear_Rugged_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Engine_Efficient_R",
+      "source_triangles": 88,
+      "optimized_triangles": 44,
+      "removed_triangles": 44,
+      "max_surface_error_m": 3.099489173883613e-09,
+      "occluded_internal_triangles_removed": 44,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Engine_Efficient_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Engine_Boost_R",
+      "source_triangles": 124,
+      "optimized_triangles": 80,
+      "removed_triangles": 44,
+      "max_surface_error_m": 5.1220770782358294e-17,
+      "occluded_internal_triangles_removed": 44,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Engine_Boost_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Payload_RearDeck",
+      "source_triangles": 56,
+      "optimized_triangles": 56,
+      "removed_triangles": 0,
+      "max_surface_error_m": 4.306549468984381e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Payload_RearDeck",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Payload_UtilityBox",
+      "source_triangles": 72,
+      "optimized_triangles": 72,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.850367337442452e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Payload_UtilityBox",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Service_Hatch",
+      "source_triangles": 24,
+      "optimized_triangles": 22,
+      "removed_triangles": 2,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 2,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Service_Hatch",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Rail_L",
+      "source_triangles": 28,
+      "optimized_triangles": 28,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Rail_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Rail_R",
+      "source_triangles": 28,
+      "optimized_triangles": 28,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Rail_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Coupe_Underbody_FieldCoil",
+      "source_triangles": 60,
+      "optimized_triangles": 60,
+      "removed_triangles": 0,
+      "max_surface_error_m": 5.5596617362151306e-18,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Coupe_Underbody_FieldCoil",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Chassis",
+      "source_triangles": 168,
+      "optimized_triangles": 164,
+      "removed_triangles": 4,
+      "max_surface_error_m": 9.029828862682852e-17,
+      "occluded_internal_triangles_removed": 4,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Chassis",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Nose_Sport",
+      "source_triangles": 116,
+      "optimized_triangles": 116,
+      "removed_triangles": 0,
+      "max_surface_error_m": 8.62749573403312e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Nose_Sport",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Nose_Utility",
+      "source_triangles": 216,
+      "optimized_triangles": 216,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.076572395355532e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Nose_Utility",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Canopy_Panoramic_Glazing",
+      "source_triangles": 396,
+      "optimized_triangles": 362,
+      "removed_triangles": 34,
+      "max_surface_error_m": 3.8556705172467715e-08,
+      "occluded_internal_triangles_removed": 34,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Canopy_Panoramic_Glazing",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Canopy_Panoramic",
+      "source_triangles": 276,
+      "optimized_triangles": 276,
+      "removed_triangles": 0,
+      "max_surface_error_m": 4.309332918945379e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Canopy_Panoramic",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Canopy_Armored_Glazing",
+      "source_triangles": 396,
+      "optimized_triangles": 376,
+      "removed_triangles": 20,
+      "max_surface_error_m": 1.7033074359537572e-08,
+      "occluded_internal_triangles_removed": 20,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Canopy_Armored_Glazing",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Canopy_Armored",
+      "source_triangles": 276,
+      "optimized_triangles": 276,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.0087591896680572e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Canopy_Armored",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Seat_Cockpit",
+      "source_triangles": 240,
+      "optimized_triangles": 240,
+      "removed_triangles": 0,
+      "max_surface_error_m": 4.6259736764089264e-18,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Seat_Cockpit",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Pod_Front_Standard_L",
+      "source_triangles": 88,
+      "optimized_triangles": 84,
+      "removed_triangles": 4,
+      "max_surface_error_m": 5.0838002503577256e-17,
+      "occluded_internal_triangles_removed": 4,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Pod_Front_Standard_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Pod_Front_Rugged_L",
+      "source_triangles": 112,
+      "optimized_triangles": 108,
+      "removed_triangles": 4,
+      "max_surface_error_m": 5.1041759824673054e-17,
+      "occluded_internal_triangles_removed": 4,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Pod_Front_Rugged_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Pod_Rear_Standard_L",
+      "source_triangles": 88,
+      "optimized_triangles": 84,
+      "removed_triangles": 4,
+      "max_surface_error_m": 5.0838002503577256e-17,
+      "occluded_internal_triangles_removed": 4,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Pod_Rear_Standard_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Pod_Rear_Rugged_L",
+      "source_triangles": 112,
+      "optimized_triangles": 108,
+      "removed_triangles": 4,
+      "max_surface_error_m": 5.1041759824673054e-17,
+      "occluded_internal_triangles_removed": 4,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Pod_Rear_Rugged_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Engine_Efficient_L",
+      "source_triangles": 88,
+      "optimized_triangles": 44,
+      "removed_triangles": 44,
+      "max_surface_error_m": 3.741257784579994e-09,
+      "occluded_internal_triangles_removed": 44,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Engine_Efficient_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Engine_Boost_L",
+      "source_triangles": 124,
+      "optimized_triangles": 80,
+      "removed_triangles": 44,
+      "max_surface_error_m": 1.6500125608134298e-08,
+      "occluded_internal_triangles_removed": 44,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Engine_Boost_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Pod_Front_Standard_R",
+      "source_triangles": 88,
+      "optimized_triangles": 84,
+      "removed_triangles": 4,
+      "max_surface_error_m": 5.0838002503577256e-17,
+      "occluded_internal_triangles_removed": 4,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Pod_Front_Standard_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Pod_Front_Rugged_R",
+      "source_triangles": 112,
+      "optimized_triangles": 108,
+      "removed_triangles": 4,
+      "max_surface_error_m": 5.1041759824673054e-17,
+      "occluded_internal_triangles_removed": 4,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Pod_Front_Rugged_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Pod_Rear_Standard_R",
+      "source_triangles": 88,
+      "optimized_triangles": 84,
+      "removed_triangles": 4,
+      "max_surface_error_m": 5.0838002503577256e-17,
+      "occluded_internal_triangles_removed": 4,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Pod_Rear_Standard_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Pod_Rear_Rugged_R",
+      "source_triangles": 112,
+      "optimized_triangles": 108,
+      "removed_triangles": 4,
+      "max_surface_error_m": 5.1041759824673054e-17,
+      "occluded_internal_triangles_removed": 4,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Pod_Rear_Rugged_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Engine_Efficient_R",
+      "source_triangles": 88,
+      "optimized_triangles": 44,
+      "removed_triangles": 44,
+      "max_surface_error_m": 3.741257784579994e-09,
+      "occluded_internal_triangles_removed": 44,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Engine_Efficient_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Engine_Boost_R",
+      "source_triangles": 124,
+      "optimized_triangles": 80,
+      "removed_triangles": 44,
+      "max_surface_error_m": 8.22567650332602e-17,
+      "occluded_internal_triangles_removed": 44,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Engine_Boost_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Payload_Passenger_Glazing",
+      "source_triangles": 144,
+      "optimized_triangles": 144,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Payload_Passenger_Glazing",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Payload_Passenger",
+      "source_triangles": 200,
+      "optimized_triangles": 196,
+      "removed_triangles": 4,
+      "max_surface_error_m": 1.4802975037728018e-16,
+      "occluded_internal_triangles_removed": 4,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Payload_Passenger",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Payload_Ambulance",
+      "source_triangles": 108,
+      "optimized_triangles": 108,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.4803008863510415e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Payload_Ambulance",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Service_Hatch",
+      "source_triangles": 56,
+      "optimized_triangles": 54,
+      "removed_triangles": 2,
+      "max_surface_error_m": 1.5703236974957049e-16,
+      "occluded_internal_triangles_removed": 2,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Service_Hatch",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Rail_L",
+      "source_triangles": 28,
+      "optimized_triangles": 28,
+      "removed_triangles": 0,
+      "max_surface_error_m": 7.853103301336774e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Rail_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Rail_R",
+      "source_triangles": 28,
+      "optimized_triangles": 28,
+      "removed_triangles": 0,
+      "max_surface_error_m": 7.853103301336774e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Rail_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Shuttle_Underbody_FieldCoil",
+      "source_triangles": 60,
+      "optimized_triangles": 60,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.0435512386636586e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Shuttle_Underbody_FieldCoil",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Chassis",
+      "source_triangles": 168,
+      "optimized_triangles": 164,
+      "removed_triangles": 4,
+      "max_surface_error_m": 9.541980019108207e-17,
+      "occluded_internal_triangles_removed": 4,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Chassis",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Nose_Sport",
+      "source_triangles": 116,
+      "optimized_triangles": 116,
+      "removed_triangles": 0,
+      "max_surface_error_m": 8.391609947465291e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Nose_Sport",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Nose_Utility",
+      "source_triangles": 216,
+      "optimized_triangles": 216,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.0502252021701822e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Nose_Utility",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Canopy_Panoramic_Glazing",
+      "source_triangles": 396,
+      "optimized_triangles": 366,
+      "removed_triangles": 30,
+      "max_surface_error_m": 3.593527217627255e-08,
+      "occluded_internal_triangles_removed": 30,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Canopy_Panoramic_Glazing",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Canopy_Panoramic",
+      "source_triangles": 276,
+      "optimized_triangles": 276,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.081021462421486e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Canopy_Panoramic",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Canopy_Armored_Glazing",
+      "source_triangles": 396,
+      "optimized_triangles": 386,
+      "removed_triangles": 10,
+      "max_surface_error_m": 1.932499483507467e-08,
+      "occluded_internal_triangles_removed": 10,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Canopy_Armored_Glazing",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Canopy_Armored",
+      "source_triangles": 276,
+      "optimized_triangles": 276,
+      "removed_triangles": 0,
+      "max_surface_error_m": 9.917217474526912e-09,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Canopy_Armored",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Seat_Cockpit",
+      "source_triangles": 176,
+      "optimized_triangles": 168,
+      "removed_triangles": 8,
+      "max_surface_error_m": 2.769457550707242e-17,
+      "occluded_internal_triangles_removed": 8,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Seat_Cockpit",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Pod_Front_Standard_L",
+      "source_triangles": 88,
+      "optimized_triangles": 84,
+      "removed_triangles": 4,
+      "max_surface_error_m": 5.1698131115466026e-17,
+      "occluded_internal_triangles_removed": 4,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Pod_Front_Standard_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Pod_Front_Rugged_L",
+      "source_triangles": 112,
+      "optimized_triangles": 112,
+      "removed_triangles": 0,
+      "max_surface_error_m": 5.309985490581865e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Pod_Front_Rugged_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Pod_Rear_Standard_L",
+      "source_triangles": 88,
+      "optimized_triangles": 84,
+      "removed_triangles": 4,
+      "max_surface_error_m": 5.1698131115466026e-17,
+      "occluded_internal_triangles_removed": 4,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Pod_Rear_Standard_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Pod_Rear_Rugged_L",
+      "source_triangles": 112,
+      "optimized_triangles": 112,
+      "removed_triangles": 0,
+      "max_surface_error_m": 5.309985490581865e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Pod_Rear_Rugged_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Engine_Efficient_L",
+      "source_triangles": 88,
+      "optimized_triangles": 44,
+      "removed_triangles": 44,
+      "max_surface_error_m": 7.159780344344706e-17,
+      "occluded_internal_triangles_removed": 44,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Engine_Efficient_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Engine_Boost_L",
+      "source_triangles": 124,
+      "optimized_triangles": 80,
+      "removed_triangles": 44,
+      "max_surface_error_m": 1.9518289719944643e-08,
+      "occluded_internal_triangles_removed": 44,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Engine_Boost_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Pod_Front_Standard_R",
+      "source_triangles": 88,
+      "optimized_triangles": 84,
+      "removed_triangles": 4,
+      "max_surface_error_m": 5.1698131115466026e-17,
+      "occluded_internal_triangles_removed": 4,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Pod_Front_Standard_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Pod_Front_Rugged_R",
+      "source_triangles": 112,
+      "optimized_triangles": 112,
+      "removed_triangles": 0,
+      "max_surface_error_m": 5.309985490581865e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Pod_Front_Rugged_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Pod_Rear_Standard_R",
+      "source_triangles": 88,
+      "optimized_triangles": 84,
+      "removed_triangles": 4,
+      "max_surface_error_m": 5.1698131115466026e-17,
+      "occluded_internal_triangles_removed": 4,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Pod_Rear_Standard_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Pod_Rear_Rugged_R",
+      "source_triangles": 112,
+      "optimized_triangles": 112,
+      "removed_triangles": 0,
+      "max_surface_error_m": 5.309985490581865e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Pod_Rear_Rugged_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Engine_Efficient_R",
+      "source_triangles": 88,
+      "optimized_triangles": 44,
+      "removed_triangles": 44,
+      "max_surface_error_m": 7.159780344344706e-17,
+      "occluded_internal_triangles_removed": 44,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Engine_Efficient_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Engine_Boost_R",
+      "source_triangles": 124,
+      "optimized_triangles": 80,
+      "removed_triangles": 44,
+      "max_surface_error_m": 1.951828972143164e-08,
+      "occluded_internal_triangles_removed": 44,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Engine_Boost_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Payload_Container",
+      "source_triangles": 132,
+      "optimized_triangles": 132,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.1571826635619064e-18,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Payload_Container",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Payload_Flatbed",
+      "source_triangles": 80,
+      "optimized_triangles": 76,
+      "removed_triangles": 4,
+      "max_surface_error_m": 1.2820128544830626e-16,
+      "occluded_internal_triangles_removed": 4,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Payload_Flatbed",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Service_Hatch",
+      "source_triangles": 56,
+      "optimized_triangles": 54,
+      "removed_triangles": 2,
+      "max_surface_error_m": 1.5698101457137199e-16,
+      "occluded_internal_triangles_removed": 2,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Service_Hatch",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Rail_L",
+      "source_triangles": 28,
+      "optimized_triangles": 28,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.602206019292362e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Rail_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Rail_R",
+      "source_triangles": 28,
+      "optimized_triangles": 28,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.602206019292362e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Rail_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Hauler_Underbody_FieldCoil",
+      "source_triangles": 60,
+      "optimized_triangles": 60,
+      "removed_triangles": 0,
+      "max_surface_error_m": 4.974433836855607e-18,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Hauler_Underbody_FieldCoil",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Chassis",
+      "source_triangles": 168,
+      "optimized_triangles": 162,
+      "removed_triangles": 6,
+      "max_surface_error_m": 6.416045811284255e-17,
+      "occluded_internal_triangles_removed": 6,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Chassis",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Nose_Sport",
+      "source_triangles": 116,
+      "optimized_triangles": 112,
+      "removed_triangles": 4,
+      "max_surface_error_m": 7.425690732248717e-17,
+      "occluded_internal_triangles_removed": 4,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Nose_Sport",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Nose_Utility",
+      "source_triangles": 216,
+      "optimized_triangles": 216,
+      "removed_triangles": 0,
+      "max_surface_error_m": 5.3883546179983623e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Nose_Utility",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Canopy_Panoramic_Glazing",
+      "source_triangles": 396,
+      "optimized_triangles": 360,
+      "removed_triangles": 36,
+      "max_surface_error_m": 1.983295117958339e-08,
+      "occluded_internal_triangles_removed": 36,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Canopy_Panoramic_Glazing",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Canopy_Panoramic",
+      "source_triangles": 276,
+      "optimized_triangles": 276,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.953222541612452e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Canopy_Panoramic",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Canopy_Armored_Glazing",
+      "source_triangles": 396,
+      "optimized_triangles": 369,
+      "removed_triangles": 27,
+      "max_surface_error_m": 1.6142387267802768e-08,
+      "occluded_internal_triangles_removed": 27,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Canopy_Armored_Glazing",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Canopy_Armored",
+      "source_triangles": 276,
+      "optimized_triangles": 276,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.942421369272824e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Canopy_Armored",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Seat_Cockpit",
+      "source_triangles": 176,
+      "optimized_triangles": 168,
+      "removed_triangles": 8,
+      "max_surface_error_m": 6.391244611657021e-17,
+      "occluded_internal_triangles_removed": 8,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Seat_Cockpit",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Pod_Front_Standard_L",
+      "source_triangles": 88,
+      "optimized_triangles": 88,
+      "removed_triangles": 0,
+      "max_surface_error_m": 5.168693469967857e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Pod_Front_Standard_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Pod_Front_Rugged_L",
+      "source_triangles": 112,
+      "optimized_triangles": 112,
+      "removed_triangles": 0,
+      "max_surface_error_m": 4.784956934795737e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Pod_Front_Rugged_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Pod_Rear_Standard_L",
+      "source_triangles": 88,
+      "optimized_triangles": 88,
+      "removed_triangles": 0,
+      "max_surface_error_m": 5.168693469967857e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Pod_Rear_Standard_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Pod_Rear_Rugged_L",
+      "source_triangles": 112,
+      "optimized_triangles": 112,
+      "removed_triangles": 0,
+      "max_surface_error_m": 4.784956934795737e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Pod_Rear_Rugged_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Engine_Efficient_L",
+      "source_triangles": 88,
+      "optimized_triangles": 44,
+      "removed_triangles": 44,
+      "max_surface_error_m": 5.5498730203043284e-17,
+      "occluded_internal_triangles_removed": 44,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Engine_Efficient_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Engine_Boost_L",
+      "source_triangles": 124,
+      "optimized_triangles": 80,
+      "removed_triangles": 44,
+      "max_surface_error_m": 1.5100360930534585e-08,
+      "occluded_internal_triangles_removed": 44,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Engine_Boost_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Pod_Front_Standard_R",
+      "source_triangles": 88,
+      "optimized_triangles": 88,
+      "removed_triangles": 0,
+      "max_surface_error_m": 5.168693469967857e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Pod_Front_Standard_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Pod_Front_Rugged_R",
+      "source_triangles": 112,
+      "optimized_triangles": 112,
+      "removed_triangles": 0,
+      "max_surface_error_m": 4.784956934795737e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Pod_Front_Rugged_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Pod_Rear_Standard_R",
+      "source_triangles": 88,
+      "optimized_triangles": 88,
+      "removed_triangles": 0,
+      "max_surface_error_m": 5.168693469967857e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Pod_Rear_Standard_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Pod_Rear_Rugged_R",
+      "source_triangles": 112,
+      "optimized_triangles": 112,
+      "removed_triangles": 0,
+      "max_surface_error_m": 4.784956934795737e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Pod_Rear_Rugged_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Engine_Efficient_R",
+      "source_triangles": 88,
+      "optimized_triangles": 44,
+      "removed_triangles": 44,
+      "max_surface_error_m": 4.864600231503838e-17,
+      "occluded_internal_triangles_removed": 44,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Engine_Efficient_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Engine_Boost_R",
+      "source_triangles": 124,
+      "optimized_triangles": 80,
+      "removed_triangles": 44,
+      "max_surface_error_m": 5.531907317628499e-17,
+      "occluded_internal_triangles_removed": 44,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Engine_Boost_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Payload_Lightbar",
+      "source_triangles": 68,
+      "optimized_triangles": 68,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.3922440580093354e-18,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Payload_Lightbar",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Payload_CoilTurret",
+      "source_triangles": 248,
+      "optimized_triangles": 238,
+      "removed_triangles": 10,
+      "max_surface_error_m": 1.2673707344852616e-08,
+      "occluded_internal_triangles_removed": 10,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Payload_CoilTurret",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Service_Hatch",
+      "source_triangles": 24,
+      "optimized_triangles": 22,
+      "removed_triangles": 2,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 2,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Service_Hatch",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Rail_L",
+      "source_triangles": 28,
+      "optimized_triangles": 28,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Rail_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Rail_R",
+      "source_triangles": 28,
+      "optimized_triangles": 28,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Rail_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_Patrol_Underbody_FieldCoil",
+      "source_triangles": 60,
+      "optimized_triangles": 60,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.1603256532760075e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_Patrol_Underbody_FieldCoil",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Chassis",
+      "source_triangles": 136,
+      "optimized_triangles": 132,
+      "removed_triangles": 4,
+      "max_surface_error_m": 4.7506634668497157e-17,
+      "occluded_internal_triangles_removed": 4,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Chassis",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Nose_Sport",
+      "source_triangles": 92,
+      "optimized_triangles": 92,
+      "removed_triangles": 0,
+      "max_surface_error_m": 5.0151460346326807e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Nose_Sport",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Nose_Utility",
+      "source_triangles": 192,
+      "optimized_triangles": 190,
+      "removed_triangles": 2,
+      "max_surface_error_m": 6.140682706562068e-17,
+      "occluded_internal_triangles_removed": 2,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Nose_Utility",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Canopy_Windscreen_Glazing",
+      "source_triangles": 300,
+      "optimized_triangles": 278,
+      "removed_triangles": 22,
+      "max_surface_error_m": 2.4835140545586663e-09,
+      "occluded_internal_triangles_removed": 22,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Canopy_Windscreen_Glazing",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Canopy_Windscreen",
+      "source_triangles": 228,
+      "optimized_triangles": 226,
+      "removed_triangles": 2,
+      "max_surface_error_m": 1.3522434877039015e-08,
+      "occluded_internal_triangles_removed": 2,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Canopy_Windscreen",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Canopy_RallyScreen_Glazing",
+      "source_triangles": 300,
+      "optimized_triangles": 277,
+      "removed_triangles": 23,
+      "max_surface_error_m": 1.9659308012774405e-08,
+      "occluded_internal_triangles_removed": 23,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Canopy_RallyScreen_Glazing",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Canopy_RallyScreen",
+      "source_triangles": 228,
+      "optimized_triangles": 226,
+      "removed_triangles": 2,
+      "max_surface_error_m": 8.038955925102791e-17,
+      "occluded_internal_triangles_removed": 2,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Canopy_RallyScreen",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Seat_Tandem",
+      "source_triangles": 56,
+      "optimized_triangles": 54,
+      "removed_triangles": 2,
+      "max_surface_error_m": 7.098581831598758e-18,
+      "occluded_internal_triangles_removed": 2,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Seat_Tandem",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Pod_Front_Standard_L",
+      "source_triangles": 72,
+      "optimized_triangles": 70,
+      "removed_triangles": 2,
+      "max_surface_error_m": 2.047096572026381e-17,
+      "occluded_internal_triangles_removed": 2,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Pod_Front_Standard_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Pod_Front_Rugged_L",
+      "source_triangles": 112,
+      "optimized_triangles": 108,
+      "removed_triangles": 4,
+      "max_surface_error_m": 2.017852659882489e-17,
+      "occluded_internal_triangles_removed": 4,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Pod_Front_Rugged_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Pod_Rear_Standard_L",
+      "source_triangles": 72,
+      "optimized_triangles": 70,
+      "removed_triangles": 2,
+      "max_surface_error_m": 2.047096572026381e-17,
+      "occluded_internal_triangles_removed": 2,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Pod_Rear_Standard_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Pod_Rear_Rugged_L",
+      "source_triangles": 112,
+      "optimized_triangles": 108,
+      "removed_triangles": 4,
+      "max_surface_error_m": 2.017852659882489e-17,
+      "occluded_internal_triangles_removed": 4,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Pod_Rear_Rugged_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Engine_Efficient_L",
+      "source_triangles": 80,
+      "optimized_triangles": 44,
+      "removed_triangles": 36,
+      "max_surface_error_m": 4.1221096526108263e-17,
+      "occluded_internal_triangles_removed": 36,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Engine_Efficient_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Engine_Boost_L",
+      "source_triangles": 116,
+      "optimized_triangles": 80,
+      "removed_triangles": 36,
+      "max_surface_error_m": 3.402111857747213e-17,
+      "occluded_internal_triangles_removed": 36,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Engine_Boost_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Pod_Front_Standard_R",
+      "source_triangles": 72,
+      "optimized_triangles": 70,
+      "removed_triangles": 2,
+      "max_surface_error_m": 2.047096572026381e-17,
+      "occluded_internal_triangles_removed": 2,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Pod_Front_Standard_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Pod_Front_Rugged_R",
+      "source_triangles": 112,
+      "optimized_triangles": 108,
+      "removed_triangles": 4,
+      "max_surface_error_m": 2.017852659882489e-17,
+      "occluded_internal_triangles_removed": 4,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Pod_Front_Rugged_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Pod_Rear_Standard_R",
+      "source_triangles": 72,
+      "optimized_triangles": 70,
+      "removed_triangles": 2,
+      "max_surface_error_m": 2.047096572026381e-17,
+      "occluded_internal_triangles_removed": 2,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Pod_Rear_Standard_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Pod_Rear_Rugged_R",
+      "source_triangles": 112,
+      "optimized_triangles": 108,
+      "removed_triangles": 4,
+      "max_surface_error_m": 2.017852659882489e-17,
+      "occluded_internal_triangles_removed": 4,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Pod_Rear_Rugged_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Engine_Efficient_R",
+      "source_triangles": 80,
+      "optimized_triangles": 44,
+      "removed_triangles": 36,
+      "max_surface_error_m": 3.918989556750974e-17,
+      "occluded_internal_triangles_removed": 36,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Engine_Efficient_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Engine_Boost_R",
+      "source_triangles": 116,
+      "optimized_triangles": 80,
+      "removed_triangles": 36,
+      "max_surface_error_m": 3.402111857747213e-17,
+      "occluded_internal_triangles_removed": 36,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Engine_Boost_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Payload_StowBox",
+      "source_triangles": 56,
+      "optimized_triangles": 56,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.689417133989805e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Payload_StowBox",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Payload_Panniers",
+      "source_triangles": 24,
+      "optimized_triangles": 24,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Payload_Panniers",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Footrest_L",
+      "source_triangles": 28,
+      "optimized_triangles": 28,
+      "removed_triangles": 0,
+      "max_surface_error_m": 9.985284548239508e-18,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Footrest_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Footrest_R",
+      "source_triangles": 28,
+      "optimized_triangles": 28,
+      "removed_triangles": 0,
+      "max_surface_error_m": 9.985284548239508e-18,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Footrest_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Service_Hatch",
+      "source_triangles": 24,
+      "optimized_triangles": 22,
+      "removed_triangles": 2,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 2,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Service_Hatch",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Rail_L",
+      "source_triangles": 28,
+      "optimized_triangles": 28,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.974878384647199e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Rail_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Rail_R",
+      "source_triangles": 28,
+      "optimized_triangles": 28,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.974878384647199e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Rail_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Vehicle_JetBike_Underbody_FieldCoil",
+      "source_triangles": 44,
+      "optimized_triangles": 44,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.749584646234446e-18,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Vehicle_JetBike_Underbody_FieldCoil",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Canopy_Glass_Glazing",
+      "source_triangles": 396,
+      "optimized_triangles": 359,
+      "removed_triangles": 37,
+      "max_surface_error_m": 8.186498607387452e-08,
+      "occluded_internal_triangles_removed": 37,
+      "source_object": "RefinedDetail__Aircraft_Kite_Courier_Canopy_Glass_Glazing",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Canopy_Glass",
+      "source_triangles": 276,
+      "optimized_triangles": 276,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.3736072540703933e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Aircraft_Kite_Courier_Canopy_Glass",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Canopy_Reinforced_Glazing",
+      "source_triangles": 396,
+      "optimized_triangles": 364,
+      "removed_triangles": 32,
+      "max_surface_error_m": 8.249302856727887e-08,
+      "occluded_internal_triangles_removed": 32,
+      "source_object": "RefinedDetail__Aircraft_Kite_Courier_Canopy_Reinforced_Glazing",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Canopy_Reinforced",
+      "source_triangles": 276,
+      "optimized_triangles": 276,
+      "removed_triangles": 0,
+      "max_surface_error_m": 4.104541995691245e-09,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Aircraft_Kite_Courier_Canopy_Reinforced",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Canopy_Glass_Glazing",
+      "source_triangles": 396,
+      "optimized_triangles": 366,
+      "removed_triangles": 30,
+      "max_surface_error_m": 3.9526217147432516e-08,
+      "occluded_internal_triangles_removed": 30,
+      "source_object": "RefinedDetail__Aircraft_Manta_AirTaxi_Canopy_Glass_Glazing",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Canopy_Glass",
+      "source_triangles": 276,
+      "optimized_triangles": 276,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.9705507162934225e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Aircraft_Manta_AirTaxi_Canopy_Glass",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Canopy_Reinforced_Glazing",
+      "source_triangles": 396,
+      "optimized_triangles": 382,
+      "removed_triangles": 14,
+      "max_surface_error_m": 1.9866190280313045e-08,
+      "occluded_internal_triangles_removed": 14,
+      "source_object": "RefinedDetail__Aircraft_Manta_AirTaxi_Canopy_Reinforced_Glazing",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Canopy_Reinforced",
+      "source_triangles": 276,
+      "optimized_triangles": 276,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.2566779814972696e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Aircraft_Manta_AirTaxi_Canopy_Reinforced",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Canopy_Glass_Glazing",
+      "source_triangles": 396,
+      "optimized_triangles": 368,
+      "removed_triangles": 28,
+      "max_surface_error_m": 2.8658468153193867e-08,
+      "occluded_internal_triangles_removed": 28,
+      "source_object": "RefinedDetail__Aircraft_Mule_Skycrane_Canopy_Glass_Glazing",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Canopy_Glass",
+      "source_triangles": 276,
+      "optimized_triangles": 276,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.2700580944689918e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Aircraft_Mule_Skycrane_Canopy_Glass",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Canopy_Reinforced_Glazing",
+      "source_triangles": 396,
+      "optimized_triangles": 378,
+      "removed_triangles": 18,
+      "max_surface_error_m": 1.9733704405049592e-08,
+      "occluded_internal_triangles_removed": 18,
+      "source_object": "RefinedDetail__Aircraft_Mule_Skycrane_Canopy_Reinforced_Glazing",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Canopy_Reinforced",
+      "source_triangles": 276,
+      "optimized_triangles": 276,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.973336704385073e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Aircraft_Mule_Skycrane_Canopy_Reinforced",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Canopy_Glass_Glazing",
+      "source_triangles": 396,
+      "optimized_triangles": 357,
+      "removed_triangles": 39,
+      "max_surface_error_m": 4.5162682314114e-08,
+      "occluded_internal_triangles_removed": 39,
+      "source_object": "RefinedDetail__Aircraft_Warden_Survey_Canopy_Glass_Glazing",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Canopy_Glass",
+      "source_triangles": 276,
+      "optimized_triangles": 276,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.4458802277793095e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Aircraft_Warden_Survey_Canopy_Glass",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Canopy_Reinforced_Glazing",
+      "source_triangles": 396,
+      "optimized_triangles": 368,
+      "removed_triangles": 28,
+      "max_surface_error_m": 7.283686288707867e-08,
+      "occluded_internal_triangles_removed": 28,
+      "source_object": "RefinedDetail__Aircraft_Warden_Survey_Canopy_Reinforced_Glazing",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Canopy_Reinforced",
+      "source_triangles": 276,
+      "optimized_triangles": 276,
+      "removed_triangles": 0,
+      "max_surface_error_m": 4.094093101436209e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Aircraft_Warden_Survey_Canopy_Reinforced",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Hab_Wall_Window_2m_Glazing",
+      "source_triangles": 24,
+      "optimized_triangles": 24,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Hab_Wall_Window_2m_Glazing",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Hab_Wall_Window_2m",
+      "source_triangles": 208,
+      "optimized_triangles": 188,
+      "removed_triangles": 20,
+      "max_surface_error_m": 2.6619647160414286e-17,
+      "occluded_internal_triangles_removed": 20,
+      "source_object": "RefinedDetail__Hab_Wall_Window_2m",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Hab_Slit_Window",
+      "source_triangles": 160,
+      "optimized_triangles": 140,
+      "removed_triangles": 20,
+      "max_surface_error_m": 2.6635646961556846e-17,
+      "occluded_internal_triangles_removed": 20,
+      "source_object": "RefinedDetail__Hab_Slit_Window",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Interior_Terminal",
+      "source_triangles": 244,
+      "optimized_triangles": 230,
+      "removed_triangles": 14,
+      "max_surface_error_m": 2.6896872968899923e-17,
+      "occluded_internal_triangles_removed": 14,
+      "source_object": "RefinedDetail__Interior_Terminal",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_Crossing_2m",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Road_Crossing_2m",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_Crossing_Paint_2m",
+      "source_triangles": 60,
+      "optimized_triangles": 60,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Road_Crossing_Paint_2m",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Facade_Frame_3m",
+      "source_triangles": 96,
+      "optimized_triangles": 96,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Arch_Facade_Frame_3m",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Facade_Glazing_3m",
+      "source_triangles": 24,
+      "optimized_triangles": 24,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Arch_Facade_Glazing_3m",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Facade_Porcelain_Fin",
+      "source_triangles": 24,
+      "optimized_triangles": 24,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Arch_Facade_Porcelain_Fin",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Facade_Terracotta_Fin",
+      "source_triangles": 24,
+      "optimized_triangles": 24,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Arch_Facade_Terracotta_Fin",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Storey_Column",
+      "source_triangles": 72,
+      "optimized_triangles": 72,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Arch_Storey_Column",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Floor_Slab_Unit",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Arch_Floor_Slab_Unit",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Plinth_Unit",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Arch_Plinth_Unit",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Roof_Coping_Unit",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Arch_Roof_Coping_Unit",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Balcony_3m",
+      "source_triangles": 96,
+      "optimized_triangles": 90,
+      "removed_triangles": 6,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 6,
+      "source_object": "RefinedDetail__Arch_Balcony_3m",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Planter_3m",
+      "source_triangles": 472,
+      "optimized_triangles": 286,
+      "removed_triangles": 186,
+      "max_surface_error_m": 1.716244472324904e-16,
+      "occluded_internal_triangles_removed": 186,
+      "source_object": "RefinedDetail__Arch_Planter_3m",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Roof_Service_Pod",
+      "source_triangles": 24,
+      "optimized_triangles": 24,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Arch_Roof_Service_Pod",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Roof_Service_Louvres",
+      "source_triangles": 48,
+      "optimized_triangles": 48,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Arch_Roof_Service_Louvres",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Solar_Screen_2m",
+      "source_triangles": 108,
+      "optimized_triangles": 88,
+      "removed_triangles": 20,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 20,
+      "source_object": "RefinedDetail__Arch_Solar_Screen_2m",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Entry_Airlock",
+      "source_triangles": 72,
+      "optimized_triangles": 72,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Arch_Entry_Airlock",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Diagonal_ExoBrace",
+      "source_triangles": 24,
+      "optimized_triangles": 12,
+      "removed_triangles": 12,
+      "max_surface_error_m": 1.159574645608893e-16,
+      "occluded_internal_triangles_removed": 12,
+      "source_object": "RefinedDetail__Arch_Diagonal_ExoBrace",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Vault_Glazing_0",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.4337713022980035e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Arch_Vault_Glazing_0",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Vault_Rib_0",
+      "source_triangles": 24,
+      "optimized_triangles": 24,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.2191599684223904e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Arch_Vault_Rib_0",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Vault_Glazing_1",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.2433449564083246e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Arch_Vault_Glazing_1",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Vault_Rib_1",
+      "source_triangles": 24,
+      "optimized_triangles": 24,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.868619739871366e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Arch_Vault_Rib_1",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Vault_Glazing_2",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.4572301178931117e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Arch_Vault_Glazing_2",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Vault_Rib_2",
+      "source_triangles": 24,
+      "optimized_triangles": 24,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.3661528594102996e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Arch_Vault_Rib_2",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Vault_Glazing_3",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.4572301178931117e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Arch_Vault_Glazing_3",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Vault_Rib_3",
+      "source_triangles": 24,
+      "optimized_triangles": 24,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.4681881454069836e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Arch_Vault_Rib_3",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Vault_Glazing_4",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.2433449564083246e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Arch_Vault_Glazing_4",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Vault_Rib_4",
+      "source_triangles": 24,
+      "optimized_triangles": 24,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.2977805971622263e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Arch_Vault_Rib_4",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Vault_Glazing_5",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.4337713022980035e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Arch_Vault_Glazing_5",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Vault_Rib_5",
+      "source_triangles": 24,
+      "optimized_triangles": 24,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.219159307656879e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Arch_Vault_Rib_5",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Arch_Crown_Induction_Halo",
+      "source_triangles": 144,
+      "optimized_triangles": 144,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.2341532351323335e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Arch_Crown_Induction_Halo",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    }
+  ],
+  "glazing_companions": {
+    "Vehicle_Coupe_Canopy_Panoramic": "Vehicle_Coupe_Canopy_Panoramic_Glazing",
+    "Vehicle_Coupe_Canopy_Armored": "Vehicle_Coupe_Canopy_Armored_Glazing",
+    "Vehicle_Shuttle_Canopy_Panoramic": "Vehicle_Shuttle_Canopy_Panoramic_Glazing",
+    "Vehicle_Shuttle_Canopy_Armored": "Vehicle_Shuttle_Canopy_Armored_Glazing",
+    "Vehicle_Shuttle_Payload_Passenger": "Vehicle_Shuttle_Payload_Passenger_Glazing",
+    "Vehicle_Hauler_Canopy_Panoramic": "Vehicle_Hauler_Canopy_Panoramic_Glazing",
+    "Vehicle_Hauler_Canopy_Armored": "Vehicle_Hauler_Canopy_Armored_Glazing",
+    "Vehicle_Patrol_Canopy_Panoramic": "Vehicle_Patrol_Canopy_Panoramic_Glazing",
+    "Vehicle_Patrol_Canopy_Armored": "Vehicle_Patrol_Canopy_Armored_Glazing",
+    "Vehicle_JetBike_Canopy_Windscreen": "Vehicle_JetBike_Canopy_Windscreen_Glazing",
+    "Vehicle_JetBike_Canopy_RallyScreen": "Vehicle_JetBike_Canopy_RallyScreen_Glazing",
+    "Aircraft_Kite_Courier_Canopy_Glass": "Aircraft_Kite_Courier_Canopy_Glass_Glazing",
+    "Aircraft_Kite_Courier_Canopy_Reinforced": "Aircraft_Kite_Courier_Canopy_Reinforced_Glazing",
+    "Aircraft_Manta_AirTaxi_Canopy_Glass": "Aircraft_Manta_AirTaxi_Canopy_Glass_Glazing",
+    "Aircraft_Manta_AirTaxi_Canopy_Reinforced": "Aircraft_Manta_AirTaxi_Canopy_Reinforced_Glazing",
+    "Aircraft_Mule_Skycrane_Canopy_Glass": "Aircraft_Mule_Skycrane_Canopy_Glass_Glazing",
+    "Aircraft_Mule_Skycrane_Canopy_Reinforced": "Aircraft_Mule_Skycrane_Canopy_Reinforced_Glazing",
+    "Aircraft_Warden_Survey_Canopy_Glass": "Aircraft_Warden_Survey_Canopy_Glass_Glazing",
+    "Aircraft_Warden_Survey_Canopy_Reinforced": "Aircraft_Warden_Survey_Canopy_Reinforced_Glazing",
+    "Hab_Wall_Window_2m": "Hab_Wall_Window_2m_Glazing",
+    "Road_Crossing_2m": "Road_Crossing_Paint_2m"
+  },
+  "source_scene": "24_Refined_Detail_Sources"
+}

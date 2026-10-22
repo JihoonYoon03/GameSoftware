@@ -12,26 +12,27 @@ Blender 4.5.2 LTS에서 제작한 로우 폴리 모듈 라이브러리입니다.
 - `Preview`: Blender 렌더 이미지, 동작별 8프레임 시퀀스, 애니메이션 GIF와 접촉 시트.
 - `Export/Characters`, `Creatures`: 조립된 스켈레탈 GLB. 각 캐릭터/몹에 15개 애니메이션 포함.
 - `Export/Modules`: 교체용 신체·의복·몹 부위·건축·가구 GLB. 동적 부위에는 공통 리그와 스킨을 포함하고 동작 중복은 생략했습니다.
-- `Export/Buildings`: 5개 조립식 건물 GLB. 파트는 합쳐지지 않아 개별 교체가 가능합니다.
+- `Export/Buildings`: 기존 5종과 새 5종, 총 10개 조립식 건물 GLB. 파트는 합쳐지지 않아 개별 교체가 가능합니다.
 - `Export/Environment`: 지면·도로·바위·발광 식생 GLB.
-- `Export/Vehicles`: 차량 5종의 A/B 조립 예제 10개와 `Parts` 하위의 교체 파트 122개.
-- `Export/Aircraft`: 비행체 4종의 A/B 조립 예제 8개와 `Parts`의 교체 파트 82개. 각 타입에 17본·12개 클립.
-- `Export/Scenery`: 도시·도로·야외 배경 조립체 34종과 `Parts`의 파트 136개. [확장 사용 안내](AIR_CITY_ko.md)를 참고합니다.
+- `Export/Vehicles`: 차량 5종의 A/B 조립 예제 10개와 `Parts` 하위의 교체 파트 133개.
+- `Export/Aircraft`: 비행체 4종의 A/B 조립 예제 8개와 `Parts`의 교체 파트 90개. 각 타입에 17본·12개 클립.
+- `Export/Scenery`: 도시·도로·야외 배경 조립체 34종과 `Parts`의 파트 137개. [확장 사용 안내](AIR_CITY_ko.md)를 참고합니다.
 - `Export/Textures`: 직접 생성한 512×512 반복 PBR PNG 8세트. 각 세트는 BaseColor / OpenGL Normal / ORM입니다. ORM은 R=AO(1), G=Roughness, B=Metallic입니다.
 - `Validation`: 실제 메시·GLB 검사 결과와 제작 로그.
 
-2026-10-22 확장 후 전체 독립 파트는 1,249개, GLB는 1,323개입니다. 새 파트 218개는 최대 352삼각형이며 전체 팩의 최대값은 기존과 같은 424삼각형입니다. 기본 장면은 `10_Aircraft`로 변경했습니다. 추가 장면 `10b_Aircraft_Variants`, `10c_Aircraft_Exploded`, `11_City_Frontier_Props`, `11b_Road_Modules`, `12_Airfield_Outpost`에서 조합과 배치를 확인할 수 있습니다.
+2026-10-22 현재 통행로 확장을 포함한 전체 독립 파트는 1,865개, GLB는 2,059개입니다. 지상 차량·비행체·도시 프롭·선별한 기존 자산·새 건축을 포함한 394개 파트와 캐릭터 854개 파트, 총 1,248개에 디테일 원본과 보존 최적화를 적용했습니다. 전체 파트의 최대값은 464삼각형입니다. 기본 장면은 `16_Transit_Connected_Example`입니다. 추가 장면 `10b_Aircraft_Variants`, `10c_Aircraft_Exploded`, `11_City_Frontier_Props`, `11b_Road_Modules`, `12_Airfield_Outpost`에서 조합과 배치를 확인할 수 있습니다.
 
 후속 디자인 수정에서 로터를 분절된 부상 필드로 교체하고 차량용 신호기를 지지대 없는 공중 부유형으로 바꿨습니다. 보행자 안내는 바닥 홀로그램이며 `13_Field_Tech_Details`에서 확인할 수 있습니다. 자세한 상태별 파트·재질 규칙은 [확장 안내](AIR_CITY_ko.md)를 따릅니다.
 
 ## 제작 규격
 
+- **디테일 원본 → 내부 면·중복·평면 정리 → 보존 비교 → 500삼각형 이하 검증** 순서로 제작합니다. 최소 폴리곤으로 형체만 유지하는 방식이 아닙니다. `17_Detail_Sources`에 원본, `18_Detail_Comparison`에 비교 예제가 있으며 [파이프라인 안내](MODELING_PIPELINE_ko.md)에 적용 범위와 검사 규칙을 적었습니다.
 - 모든 **독립 메시 파트**는 삼각형으로 변환한 뒤에도 최대 500개입니다. 완성 캐릭터·건물 전체의 합계를 500개로 제한하는 규격은 아닙니다.
-- 미세 분할 대신 실루엣과 큰 면을 사용했습니다. 베이스 컬러, 금속, 고무, 직물, 피부, 키틴, 암석, 선행 문명 물질과 발광 재질을 구분했습니다.
+- 실루엣·곡면·패널·창틀·실링·체결부를 먼저 제작하고 외부 디테일을 보존하며 정리했습니다. 베이스 컬러, 금속, 고무, 직물, 피부, 키틴, 암석, 선행 문명 물질과 발광 재질을 구분했습니다.
 - 인체 맨머리 높이는 1.8 m, 머리 높이는 1.8/7 m입니다. 헤어·모자·안테나는 별도 높이입니다.
 - Blender 단위는 미터, +Z 위, -Y 전방입니다. GLB의 표준 축 변환은 (x,y,z) → (x,z,-y)이며 +Y 위, +Z 전방입니다.
 - 기획 문서의 1월드 단위=2m에 맞춰 가져올 때는 **미터 좌표에 0.5를 곱합니다.** GLB 축 변환과 단위 변환은 별개입니다.
-- 건축 기본 격자는 수평 2m, 주거 층고 3.6m입니다. 압력문 잎 높이는 2.15m입니다.
+- 기존 건축 기본 격자는 수평 2m, 새 외벽 베이는 3m, 주거 층고는 3.6m입니다. 압력문 잎 높이는 2.15m입니다.
 - 건물 본체 높이: Habitat 7.2m / TerracedPods 10.8m / Workshop 5.4m / RibDome 6.5m / Observatory 11.5m. 태양광·센서·안테나는 위에 추가됩니다.
 - 파트에는 UV, 법선, 재질과 식별용 extras를 포함했습니다. 콜리전·LOD·게임 런타임용 로더는 이번 작업 범위에 포함하지 않았습니다.
 
@@ -79,3 +80,7 @@ Blender 4.5.2 LTS에서 제작한 로우 폴리 모듈 라이브러리입니다.
 애니메이션은 이 라이브러리의 공통 본 비율에 맞춘 제작본이며, 실제 게임의 속도·무기 조준·발 접지 보정·피격 타이밍은 통합 단계에서 조율해야 합니다. 게임 코드 연결이나 현재 커스텀 OpenGL 렌더러의 GLB 로딩은 수행하지 않았습니다.
 
 제작 재실행: Blender를 background 모드로 실행하고 `Tools/build_resource_pack.py`를 지정합니다. 같은 산출물 이름을 갱신하므로 수작업 편집본은 별도 이름으로 보관하십시오. 검사만 할 때는 `python Tools/verify_resource_pack.py`를 실행합니다. 모든 제작 파일과 텍스처는 이 팩에서 생성했으며 외부 게임 자산은 사용하지 않았습니다.
+
+후속 교체: [유리창·횡단보도·건물 5종 안내](REFINED_CITY_ko.md). `19_Glazing_Review`에서 이동수단 창호, `20_Architecture_Styles`에서 12·16·10·4·3층 건물을 확인합니다. 원본은 `24_Refined_Detail_Sources`에 보관했습니다. 횡단보도 페인트는 노면·보행로와 독립된 파일입니다.
+
+캐릭터의 기존 785개 파트도 새 메시로 교체했습니다. 의복 외장 69개를 별도로 조립하며 `character_detail_assemblies.json`의 Torso/OuterAssembly 대응을 따릅니다. [캐릭터 디테일 개선 안내](CHARACTER_DETAIL_ko.md) · [이전/개선 비교](../Preview/29_character_detail_comparison.png).

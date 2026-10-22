@@ -1,0 +1,10 @@
+{
+  "cases": {
+    "opaque_same_bone_inner_box_removed": true,
+    "different_joint_faces_preserved": true,
+    "transparent_occluder_excluded": true,
+    "partially_exposed_surface_preserved": true
+  },
+  "saved_part_pairs_checked": 219,
+  "all_checks_passed": true
+}

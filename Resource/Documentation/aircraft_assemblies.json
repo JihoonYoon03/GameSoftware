@@ -1,7 +1,7 @@
 {
   "schema": "erma_aircraft_v1",
   "units": "meters",
-  "design_revision": "sf_field_drive_v2",
+  "design_revision": "sf_detail_first_v3",
   "propulsion": "segmented induction fields; no mechanical rotors",
   "authoring_forward": "+X",
   "authoring_up": "+Z",
@@ -64,6 +64,7 @@
       "default_parts": [
         "Aircraft_Kite_Courier_PressureHull",
         "Aircraft_Kite_Courier_Canopy_Glass",
+        "Aircraft_Kite_Courier_Canopy_Glass_Glazing",
         "Aircraft_Kite_Courier_CabinSeats",
         "Aircraft_Kite_Courier_Wing_L",
         "Aircraft_Kite_Courier_LiftField_Front_L",
@@ -81,6 +82,7 @@
       "alternate_parts": [
         "Aircraft_Kite_Courier_PressureHull",
         "Aircraft_Kite_Courier_Canopy_Reinforced",
+        "Aircraft_Kite_Courier_Canopy_Reinforced_Glazing",
         "Aircraft_Kite_Courier_CabinSeats",
         "Aircraft_Kite_Courier_Wing_L",
         "Aircraft_Kite_Courier_LiftField_Front_L",
@@ -98,7 +100,9 @@
       "parts": [
         "Aircraft_Kite_Courier_PressureHull",
         "Aircraft_Kite_Courier_Canopy_Glass",
+        "Aircraft_Kite_Courier_Canopy_Glass_Glazing",
         "Aircraft_Kite_Courier_Canopy_Reinforced",
+        "Aircraft_Kite_Courier_Canopy_Reinforced_Glazing",
         "Aircraft_Kite_Courier_CabinSeats",
         "Aircraft_Kite_Courier_Wing_L",
         "Aircraft_Kite_Courier_LiftField_Front_L",
@@ -123,7 +127,11 @@
         "paint": "Vehicle_Teal",
         "purpose": "swept-wing one-seat frontier courier"
       },
-      "skeleton": "AIRCRAFT_Kite_Courier"
+      "skeleton": "AIRCRAFT_Kite_Courier",
+      "glazing_companions": {
+        "Aircraft_Kite_Courier_Canopy_Glass": "Aircraft_Kite_Courier_Canopy_Glass_Glazing",
+        "Aircraft_Kite_Courier_Canopy_Reinforced": "Aircraft_Kite_Courier_Canopy_Reinforced_Glazing"
+      }
     },
     "Manta_AirTaxi": {
       "slots": {
@@ -186,6 +194,7 @@
       "default_parts": [
         "Aircraft_Manta_AirTaxi_PressureHull",
         "Aircraft_Manta_AirTaxi_Canopy_Glass",
+        "Aircraft_Manta_AirTaxi_Canopy_Glass_Glazing",
         "Aircraft_Manta_AirTaxi_CabinSeats",
         "Aircraft_Manta_AirTaxi_Wing_L",
         "Aircraft_Manta_AirTaxi_LiftField_Front_L",
@@ -205,6 +214,7 @@
       "alternate_parts": [
         "Aircraft_Manta_AirTaxi_PressureHull",
         "Aircraft_Manta_AirTaxi_Canopy_Reinforced",
+        "Aircraft_Manta_AirTaxi_Canopy_Reinforced_Glazing",
         "Aircraft_Manta_AirTaxi_CabinSeats",
         "Aircraft_Manta_AirTaxi_Wing_L",
         "Aircraft_Manta_AirTaxi_LiftField_Front_L",
@@ -224,7 +234,9 @@
       "parts": [
         "Aircraft_Manta_AirTaxi_PressureHull",
         "Aircraft_Manta_AirTaxi_Canopy_Glass",
+        "Aircraft_Manta_AirTaxi_Canopy_Glass_Glazing",
         "Aircraft_Manta_AirTaxi_Canopy_Reinforced",
+        "Aircraft_Manta_AirTaxi_Canopy_Reinforced_Glazing",
         "Aircraft_Manta_AirTaxi_CabinSeats",
         "Aircraft_Manta_AirTaxi_Wing_L",
         "Aircraft_Manta_AirTaxi_LiftField_Front_L",
@@ -251,7 +263,11 @@
         "paint": "Vehicle_Ivory",
         "purpose": "four-field enclosed settlement air taxi"
       },
-      "skeleton": "AIRCRAFT_Manta_AirTaxi"
+      "skeleton": "AIRCRAFT_Manta_AirTaxi",
+      "glazing_companions": {
+        "Aircraft_Manta_AirTaxi_Canopy_Glass": "Aircraft_Manta_AirTaxi_Canopy_Glass_Glazing",
+        "Aircraft_Manta_AirTaxi_Canopy_Reinforced": "Aircraft_Manta_AirTaxi_Canopy_Reinforced_Glazing"
+      }
     },
     "Mule_Skycrane": {
       "slots": {
@@ -320,6 +336,7 @@
       "default_parts": [
         "Aircraft_Mule_Skycrane_PressureHull",
         "Aircraft_Mule_Skycrane_Canopy_Glass",
+        "Aircraft_Mule_Skycrane_Canopy_Glass_Glazing",
         "Aircraft_Mule_Skycrane_CabinSeats",
         "Aircraft_Mule_Skycrane_Wing_L",
         "Aircraft_Mule_Skycrane_LiftField_Front_L",
@@ -341,6 +358,7 @@
       "alternate_parts": [
         "Aircraft_Mule_Skycrane_PressureHull",
         "Aircraft_Mule_Skycrane_Canopy_Reinforced",
+        "Aircraft_Mule_Skycrane_Canopy_Reinforced_Glazing",
         "Aircraft_Mule_Skycrane_CabinSeats",
         "Aircraft_Mule_Skycrane_Wing_L",
         "Aircraft_Mule_Skycrane_LiftField_Front_L",
@@ -362,7 +380,9 @@
       "parts": [
         "Aircraft_Mule_Skycrane_PressureHull",
         "Aircraft_Mule_Skycrane_Canopy_Glass",
+        "Aircraft_Mule_Skycrane_Canopy_Glass_Glazing",
         "Aircraft_Mule_Skycrane_Canopy_Reinforced",
+        "Aircraft_Mule_Skycrane_Canopy_Reinforced_Glazing",
         "Aircraft_Mule_Skycrane_CabinSeats",
         "Aircraft_Mule_Skycrane_Wing_L",
         "Aircraft_Mule_Skycrane_LiftField_Front_L",
@@ -391,7 +411,11 @@
         "paint": "Vehicle_Utility",
         "purpose": "twin-boom suspended freight VTOL"
       },
-      "skeleton": "AIRCRAFT_Mule_Skycrane"
+      "skeleton": "AIRCRAFT_Mule_Skycrane",
+      "glazing_companions": {
+        "Aircraft_Mule_Skycrane_Canopy_Glass": "Aircraft_Mule_Skycrane_Canopy_Glass_Glazing",
+        "Aircraft_Mule_Skycrane_Canopy_Reinforced": "Aircraft_Mule_Skycrane_Canopy_Reinforced_Glazing"
+      }
     },
     "Warden_Survey": {
       "slots": {
@@ -448,6 +472,7 @@
       "default_parts": [
         "Aircraft_Warden_Survey_PressureHull",
         "Aircraft_Warden_Survey_Canopy_Glass",
+        "Aircraft_Warden_Survey_Canopy_Glass_Glazing",
         "Aircraft_Warden_Survey_CabinSeats",
         "Aircraft_Warden_Survey_Wing_L",
         "Aircraft_Warden_Survey_LiftField_Front_L",
@@ -465,6 +490,7 @@
       "alternate_parts": [
         "Aircraft_Warden_Survey_PressureHull",
         "Aircraft_Warden_Survey_Canopy_Reinforced",
+        "Aircraft_Warden_Survey_Canopy_Reinforced_Glazing",
         "Aircraft_Warden_Survey_CabinSeats",
         "Aircraft_Warden_Survey_Wing_L",
         "Aircraft_Warden_Survey_LiftField_Front_L",
@@ -482,7 +508,9 @@
       "parts": [
         "Aircraft_Warden_Survey_PressureHull",
         "Aircraft_Warden_Survey_Canopy_Glass",
+        "Aircraft_Warden_Survey_Canopy_Glass_Glazing",
         "Aircraft_Warden_Survey_Canopy_Reinforced",
+        "Aircraft_Warden_Survey_Canopy_Reinforced_Glazing",
         "Aircraft_Warden_Survey_CabinSeats",
         "Aircraft_Warden_Survey_Wing_L",
         "Aircraft_Warden_Survey_LiftField_Front_L",
@@ -507,7 +535,11 @@
         "paint": "Vehicle_Patrol",
         "purpose": "gimbaled-field long-range survey aircraft"
       },
-      "skeleton": "AIRCRAFT_Warden_Survey"
+      "skeleton": "AIRCRAFT_Warden_Survey",
+      "glazing_companions": {
+        "Aircraft_Warden_Survey_Canopy_Glass": "Aircraft_Warden_Survey_Canopy_Glass_Glazing",
+        "Aircraft_Warden_Survey_Canopy_Reinforced": "Aircraft_Warden_Survey_Canopy_Reinforced_Glazing"
+      }
     }
   }
 }

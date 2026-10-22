@@ -1,6 +1,6 @@
 {
-  "mesh_parts": 1743,
-  "max_triangles": 424,
+  "mesh_parts": 1865,
+  "max_triangles": 464,
   "all_parts_under_500": true,
   "rigs": {
     "HUMAN_7H": {

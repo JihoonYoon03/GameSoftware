@@ -1,11 +1,11 @@
 {
-  "files_checked": 1929,
-  "meshes_checked": 3051,
-  "skinned_mesh_nodes": 1689,
+  "files_checked": 2059,
+  "meshes_checked": 3437,
+  "skinned_mesh_nodes": 1806,
   "animated_exports": 35,
-  "max_triangles_per_mesh": 424,
+  "max_triangles_per_mesh": 464,
   "animation_counts": {
-    "Export\\Characters\\Player_Explorer.glb": [
+    "Export/Characters/Player_Explorer.glb": [
       "Reference_A",
       "Turn_Base",
       "Idle",
@@ -22,7 +22,7 @@
       "Jump_Full",
       "Walk_To_Run"
     ],
-    "Export\\Characters\\Ria_Engineer.glb": [
+    "Export/Characters/Ria_Engineer.glb": [
       "Reference_A",
       "Turn_Base",
       "Idle",
@@ -39,7 +39,7 @@
       "Jump_Full",
       "Walk_To_Run"
     ],
-    "Export\\Characters\\Kain_Guard.glb": [
+    "Export/Characters/Kain_Guard.glb": [
       "Reference_A",
       "Turn_Base",
       "Idle",
@@ -56,7 +56,7 @@
       "Jump_Full",
       "Walk_To_Run"
     ],
-    "Export\\Characters\\Mara_Medic.glb": [
+    "Export/Characters/Mara_Medic.glb": [
       "Reference_A",
       "Turn_Base",
       "Idle",
@@ -73,7 +73,7 @@
       "Jump_Full",
       "Walk_To_Run"
     ],
-    "Export\\Characters\\NPC_Researcher.glb": [
+    "Export/Characters/NPC_Researcher.glb": [
       "Reference_A",
       "Turn_Base",
       "Idle",
@@ -90,7 +90,7 @@
       "Jump_Full",
       "Walk_To_Run"
     ],
-    "Export\\Characters\\NPC_Miner.glb": [
+    "Export/Characters/NPC_Miner.glb": [
       "Reference_A",
       "Turn_Base",
       "Idle",
@@ -107,7 +107,7 @@
       "Jump_Full",
       "Walk_To_Run"
     ],
-    "Export\\Characters\\NPC_Guard_Helmet.glb": [
+    "Export/Characters/NPC_Guard_Helmet.glb": [
       "Reference_A",
       "Turn_Base",
       "Idle",
@@ -124,7 +124,7 @@
       "Jump_Full",
       "Walk_To_Run"
     ],
-    "Export\\Characters\\NPC_HeavyCombat.glb": [
+    "Export/Characters/NPC_HeavyCombat.glb": [
       "Reference_A",
       "Turn_Base",
       "Idle",
@@ -141,7 +141,7 @@
       "Jump_Full",
       "Walk_To_Run"
     ],
-    "Export\\Characters\\NPC_Pilot.glb": [
+    "Export/Characters/NPC_Pilot.glb": [
       "Reference_A",
       "Turn_Base",
       "Idle",
@@ -158,7 +158,7 @@
       "Jump_Full",
       "Walk_To_Run"
     ],
-    "Export\\Characters\\NPC_Civilian.glb": [
+    "Export/Characters/NPC_Civilian.glb": [
       "Reference_A",
       "Turn_Base",
       "Idle",
@@ -175,7 +175,7 @@
       "Jump_Full",
       "Walk_To_Run"
     ],
-    "Export\\Creatures\\RiftGrazer.glb": [
+    "Export/Creatures/RiftGrazer.glb": [
       "Reference_A",
       "Turn_Base",
       "Idle",
@@ -192,7 +192,7 @@
       "Jump_Full",
       "Walk_To_Run"
     ],
-    "Export\\Creatures\\RiftGrazer_Variant.glb": [
+    "Export/Creatures/RiftGrazer_Variant.glb": [
       "Reference_A",
       "Turn_Base",
       "Idle",
@@ -209,7 +209,7 @@
       "Jump_Full",
       "Walk_To_Run"
     ],
-    "Export\\Creatures\\VeilWalker.glb": [
+    "Export/Creatures/VeilWalker.glb": [
       "Reference_A",
       "Turn_Base",
       "Idle",
@@ -226,7 +226,7 @@
       "Jump_Full",
       "Walk_To_Run"
     ],
-    "Export\\Creatures\\VeilWalker_Variant.glb": [
+    "Export/Creatures/VeilWalker_Variant.glb": [
       "Reference_A",
       "Turn_Base",
       "Idle",
@@ -243,7 +243,7 @@
       "Jump_Full",
       "Walk_To_Run"
     ],
-    "Export\\Creatures\\RelaySentinel.glb": [
+    "Export/Creatures/RelaySentinel.glb": [
       "Reference_A",
       "Turn_Base",
       "Idle",
@@ -260,7 +260,7 @@
       "Jump_Full",
       "Walk_To_Run"
     ],
-    "Export\\Creatures\\RelaySentinel_Variant.glb": [
+    "Export/Creatures/RelaySentinel_Variant.glb": [
       "Reference_A",
       "Turn_Base",
       "Idle",
@@ -277,7 +277,7 @@
       "Jump_Full",
       "Walk_To_Run"
     ],
-    "Export\\Vehicles\\Coupe.glb": [
+    "Export/Vehicles/Coupe.glb": [
       "Vehicle_Reference",
       "Hover_Idle",
       "Cruise",
@@ -289,7 +289,7 @@
       "Cargo_Open",
       "Cargo_Close"
     ],
-    "Export\\Vehicles\\Coupe_Variant.glb": [
+    "Export/Vehicles/Coupe_Variant.glb": [
       "Vehicle_Reference",
       "Hover_Idle",
       "Cruise",
@@ -301,7 +301,7 @@
       "Cargo_Open",
       "Cargo_Close"
     ],
-    "Export\\Vehicles\\Shuttle.glb": [
+    "Export/Vehicles/Shuttle.glb": [
       "Vehicle_Reference",
       "Hover_Idle",
       "Cruise",
@@ -313,7 +313,7 @@
       "Cargo_Open",
       "Cargo_Close"
     ],
-    "Export\\Vehicles\\Shuttle_Variant.glb": [
+    "Export/Vehicles/Shuttle_Variant.glb": [
       "Vehicle_Reference",
       "Hover_Idle",
       "Cruise",
@@ -325,7 +325,7 @@
       "Cargo_Open",
       "Cargo_Close"
     ],
-    "Export\\Vehicles\\Hauler.glb": [
+    "Export/Vehicles/Hauler.glb": [
       "Vehicle_Reference",
       "Hover_Idle",
       "Cruise",
@@ -337,7 +337,7 @@
       "Cargo_Open",
       "Cargo_Close"
     ],
-    "Export\\Vehicles\\Hauler_Variant.glb": [
+    "Export/Vehicles/Hauler_Variant.glb": [
       "Vehicle_Reference",
       "Hover_Idle",
       "Cruise",
@@ -349,7 +349,7 @@
       "Cargo_Open",
       "Cargo_Close"
     ],
-    "Export\\Vehicles\\Patrol.glb": [
+    "Export/Vehicles/Patrol.glb": [
       "Vehicle_Reference",
       "Hover_Idle",
       "Cruise",
@@ -362,7 +362,7 @@
       "Cargo_Close",
       "Vehicle_Fire"
     ],
-    "Export\\Vehicles\\Patrol_Variant.glb": [
+    "Export/Vehicles/Patrol_Variant.glb": [
       "Vehicle_Reference",
       "Hover_Idle",
       "Cruise",
@@ -375,7 +375,7 @@
       "Cargo_Close",
       "Vehicle_Fire"
     ],
-    "Export\\Vehicles\\JetBike.glb": [
+    "Export/Vehicles/JetBike.glb": [
       "Vehicle_Reference",
       "Hover_Idle",
       "Cruise",
@@ -387,7 +387,7 @@
       "Cargo_Open",
       "Cargo_Close"
     ],
-    "Export\\Vehicles\\JetBike_Variant.glb": [
+    "Export/Vehicles/JetBike_Variant.glb": [
       "Vehicle_Reference",
       "Hover_Idle",
       "Cruise",
@@ -399,7 +399,7 @@
       "Cargo_Open",
       "Cargo_Close"
     ],
-    "Export\\Modules\\PressureDoor_Animated.glb": [
+    "Export/Modules/PressureDoor_Animated.glb": [
       "Door_Open",
       "Door_Close"
     ],

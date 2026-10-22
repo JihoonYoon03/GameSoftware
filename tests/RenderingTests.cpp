@@ -1,23 +1,24 @@
 #include "stdafx.h"
 #include "Drawing.h"
-#include "Scene.h"
 #include "Hud.h"
 #include "Level.h"
-#include "ResourceAssets.h"
-#include "Overworld.h"
-#include "RenderQueue.h"
-#include "Profiler.h"
-#include <chrono>
 #include "Monitoring/Monitor.h"
-#include <windows.h>
+#include "Overworld.h"
+#include "Profiler.h"
+#include "RenderQueue.h"
+#include "ResidentAI.h"
+#include "ResourceAssets.h"
+#include "Scene.h"
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <cmath>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <vector>
+#include <windows.h>
 
 // Hidden WGL surface: exercises the production mesh and FBO depth path without
 // displaying a game window or changing the user's desktop.
@@ -37,6 +38,10 @@ void TestModelsAndRig()
         assert(model.resourceId && ModelFactory::ValidateModel(model));
         const auto &resource = ResourceAssets::Get(model.resourceId);
         assert(resource.boneCount == 17 && resource.clips.size() == 12);
+        assert(resource.sockets[0].x < 0 && resource.sockets[1].x < 0);
+        assert(resource.sockets[0].y > 0 && resource.sockets[1].y < 0);
+        assert(resource.sockets[5].x >= 0 && resource.sockets[5].x < resource.boneCount);
+        assert(resource.sockets[5].y >= 0 && resource.sockets[5].y < resource.boneCount);
         auto pose = ModelRig::Pose(10, true);
         SkinMatrices parked, cruising;
         ResourceAssets::Sample(model.resourceId, nullptr, parked);
@@ -608,6 +613,171 @@ void TestQuestAndResources()
     draw();
     assert(graph.Find("marker/jet-bike") && !graph.Find("marker/city-receiver"));
 }
+void TestTrafficOcclusion(const std::filesystem::path &output)
+{
+    auto &world = Game::Get().GetState();
+    Game::Get().Reset();
+    world.isInsideHome = false;
+    world.cameraPosition = world.playerPosition = {0, 0};
+    auto &renderer = GameRenderer::Get().Backend();
+    const auto &model = ModelLibrary::Aircraft(AircraftType::AirTaxi, false);
+    const auto &mesh = ResourceAssets::Get(model.resourceId);
+    const float altitude = 12;
+    Point center = {(mesh.minimum.x + mesh.maximum.x) * .5f, (mesh.minimum.y + mesh.maximum.y) * .5f,
+                    (mesh.minimum.z + mesh.maximum.z) * .5f};
+    // Align the projected hull with the player's torso at its real flight altitude.
+    float sum = ((altitude + center.z) * 44 - WorldScale::aimHeightPixels * .65f) / 18 - center.x - center.y;
+    Vector2 position = {sum * .5f - (center.x - center.y) * .5f, sum * .5f + (center.x - center.y) * .5f};
+    static const auto playerMarker = [] {
+        auto marker = std::make_unique<Model>();
+        marker->space = CoordinateSpace::World;
+        marker->count = 1;
+        auto &part = marker->parts[0];
+        part.count = 4;
+        part.points[0] = {-.25f, .25f, 0};
+        part.points[1] = {.25f, -.25f, 0};
+        part.points[2] = {.25f, -.25f, .8f};
+        part.points[3] = {-.25f, .25f, .8f};
+        part.color = {1, .01f, .01f, 1};
+        part.surface = Surface::Emissive;
+        return marker;
+    }();
+    auto draw = [&](bool faded, bool reverse) {
+        Begin();
+        renderer.BeginModels();
+        std::vector<rendering::RenderObject> aircraft;
+        auto plane = [&]() {
+            renderer.BindObject(&aircraft);
+            if (faded)
+            {
+                Drawing::DrawWorldAircraft(position, altitude, AircraftType::AirTaxi, false, 0, 0);
+            }
+            else
+            {
+                Transform3D transform;
+                transform.position.z = altitude;
+                auto pose = ModelRig::Pose(world.animationTimeSeconds * 10, true);
+                Drawing::DrawModel3D(model, Drawing::WorldToScreen(position.x, position.y), {1, 1, 1},
+                                     transform, (position.x + position.y) * 36, {}, &pose);
+            }
+            renderer.BindObject(nullptr);
+        };
+        if (reverse)
+        {
+            plane();
+        }
+        Drawing::DrawModel3D(*playerMarker, Drawing::WorldToScreen(0, 0), {1, 1, 1}, {}, 0, {});
+        if (!reverse)
+        {
+            plane();
+        }
+        renderer.EndModels();
+        if (faded)
+        {
+            assert(aircraft.front().material->palette.body[3] < .5f);
+        }
+        else
+        {
+            assert(aircraft.front().material->palette.body[3] == 1);
+        }
+        auto pixels = Pixels();
+        Save(output / (faded ? "aircraft-faded.bmp" : "aircraft-opaque.bmp"));
+        int red = 0;
+        for (int y = 320; y < 400; ++y)
+        {
+            for (int x = 615; x < 665; ++x)
+            {
+                size_t at = size_t(y * kCanvasWidth + x) * 4;
+                red += pixels[at] > pixels[at + 1] * 2 && pixels[at] > pixels[at + 2] * 2;
+            }
+        }
+        return red;
+    };
+    int opaque = draw(false, false), translucent = draw(true, false);
+    std::cout << "Occlusion red pixels " << opaque << " -> " << translucent << std::endl;
+    assert(translucent > opaque + 50);
+    assert(draw(true, true) == translucent); // The player remains visible in either batching order.
+    Save(output / "aircraft-player-occlusion.bmp");
+    // A nearby ground car fades too; a car well away from the player keeps its material.
+    for (float offset : {0.f, 20.f})
+    {
+        Begin();
+        renderer.BeginModels();
+        std::vector<rendering::RenderObject> car;
+        renderer.BindObject(&car);
+        Drawing::DrawWorldVehicle({offset, offset}, 3.3f, 1, VehicleType::Coupe, {}, 0, 0);
+        renderer.EndModels();
+        assert((car.front().material->palette.body[3] < .5f) == (offset == 0));
+    }
+}
+void CaptureCrossingSignals(const std::filesystem::path &output)
+{
+    auto &world = Game::Get().GetState();
+    const auto &net = RoadNetwork::Get();
+    for (int lanes : {2, 4})
+    {
+        Game::Get().Reset();
+        world.isInsideHome = false;
+        int junction = -1, arm = -1;
+        for (size_t j = 0; j < net.junctions.size(); ++j)
+        {
+            if (!net.IsSignalized(int(j)))
+            {
+                continue;
+            }
+            for (int out : net.junctions[j].outgoing)
+            {
+                if (net.roads[net.lanes[out].road].lanes == lanes)
+                {
+                    junction = int(j);
+                    arm = out;
+                    break;
+                }
+            }
+            if (junction >= 0)
+            {
+                break;
+            }
+        }
+        assert(junction >= 0);
+        auto direction = net.lanes[arm].direction, normal = RoadNetwork::RightOf(direction);
+        const auto &j = net.junctions[junction];
+        world.cameraPosition = j.position;
+        world.playerPosition = {j.position.x + direction.x * (j.radius + 1) + normal.x * (lanes * .75f + 1),
+                                j.position.y + direction.y * (j.radius + 1) + normal.y * (lanes * .75f + 1)};
+        for (int frame = 0; frame < 7200 && !Overworld::Traffic().PedestrianGreen(junction); ++frame)
+        {
+            Overworld::Traffic().Update(world, 1.f / 60);
+        }
+        assert(Overworld::Traffic().PedestrianGreen(junction));
+        Begin();
+        game::SceneManager::Get(game::SceneKind::Exterior).Draw();
+        GameRenderer::Get().Backend().EndScene(0);
+        Save(output / ("crosswalk-" + std::to_string(lanes) + "lane.bmp"));
+    }
+}
+void CaptureAircraftThrusters(const std::filesystem::path &output)
+{
+    Game::Get().Reset();
+    auto &world = Game::Get().GetState();
+    world.cameraPosition = {0, 0};
+    world.playerPosition = {80, 80};
+    world.animationTimeSeconds = .4f;
+    Begin();
+    auto &renderer = GameRenderer::Get().Backend();
+    renderer.BeginModels();
+    for (int i = 0; i < 4; ++i)
+    {
+        constexpr float altitude = 4;
+        float screenX = 370.f + (i % 2) * 550, screenY = 230.f + (i / 2) * 350;
+        float u = (screenX - 640) / 36, v = (screenY - 456 + altitude * 44) / 18;
+        Vector2 position = {(u + v) * .5f, (v - u) * .5f};
+        Drawing::DrawWorldAircraft(position, altitude, AircraftType(i), i % 2 == 0, 0, .08f);
+    }
+    renderer.EndModels();
+    renderer.EndScene(.4f);
+    Save(output / "aircraft-thrusters.bmp");
+}
 void QualityCaptures(const std::filesystem::path &output)
 {
     auto &world = Game::Get().GetState();
@@ -663,7 +833,8 @@ void CaptureDistrictAndBodies(const std::filesystem::path &output)
             gates += name.find("/gate/") != std::string::npos;
             walls += name.find("/wall/") != std::string::npos;
         }
-        assert(gates == 8 && walls > 90);
+        // The connected overworld removed the old tutorial enclosure around Halo.
+        assert(gates == 0 && walls == 0);
         GameRenderer::Get().Backend().EndScene(0);
         CityHud{}.Draw();
         Save(output / (camera.x > 0 ? "east-gate.bmp" : "south-bulkhead.bmp"));
@@ -771,6 +942,107 @@ void CaptureHairAndCombat(const std::filesystem::path &output)
     Save(output / "npc-defence.bmp");
     game::GameLevels::Reset();
 }
+void CaptureMapNavigation(const std::filesystem::path &output)
+{
+    auto &game = Game::Get();
+    auto &world = game.GetState();
+    auto &renderer = GameRenderer::Get().Backend();
+    game.Reset();
+    world.isInsideHome = false;
+    world.noticeSecondsRemaining = 0;
+    world.cameraPosition = world.playerPosition = {0, 0};
+    auto mapPixels = [&]() {
+        Begin();
+        renderer.EndScene(0);
+        Drawing::DrawRectangle(0, 0, kCanvasWidth, kCanvasHeight, {.01f, .02f, .03f});
+        MapHud::DrawMinimap();
+        return Pixels();
+    };
+    auto baseline = mapPixels();
+    world.facingYaw += 1.7f;
+    auto rotated = mapPixels();
+    auto pixelIndex = [](int x, int y) { return size_t((kCanvasHeight - y - 1) * kCanvasWidth + x) * 4; };
+    // Rotating the player cannot rotate any road/building outside the arrow itself.
+    for (int y = 34; y < 253; ++y)
+    {
+        for (int x = 1025; x < 1247; ++x)
+        {
+            if ((x - 1136) * (x - 1136) + (y - 144) * (y - 144) > 18 * 18)
+            {
+                size_t index = pixelIndex(x, y);
+                assert(std::equal(baseline.begin() + index, baseline.begin() + index + 4,
+                                  rotated.begin() + index));
+            }
+        }
+    }
+    auto buildings = world.buildings;
+    world.buildings = {{-40, -40, 80, 80, 100}};
+    auto spanning = mapPixels();
+    for (int y = 0; y < 260; ++y)
+    {
+        for (int x = 1015; x < 1256; ++x)
+        {
+            // A huge building crosses the entire rim; no fragment may escape the clipped map.
+            if ((x - 1136) * (x - 1136) + (y - 144) * (y - 144) > 104 * 104)
+            {
+                size_t index = pixelIndex(x, y);
+                assert(std::equal(rotated.begin() + index, rotated.begin() + index + 4,
+                                  spanning.begin() + index));
+            }
+        }
+    }
+    world.buildings = std::move(buildings);
+    world.mapVisible = true;
+    assert(MapHud::HandleClick(MapHud::WorldToMap({200, 0}, true)));
+    world.mapVisible = false;
+    auto waypoint = mapPixels();
+    int blueArrowPixels = 0;
+    for (int y = 131; y < 157; ++y)
+    {
+        for (int x = 1213; x < 1240; ++x)
+        {
+            size_t i = pixelIndex(x, y);
+            blueArrowPixels += waypoint[i] < 160 && waypoint[i + 1] > 180 && waypoint[i + 2] > 240;
+        }
+    }
+    assert(blueArrowPixels > 20);
+    auto captureScene = [&](const char *name) {
+        Begin();
+        game::SceneManager::Get(game::SceneManager::Current()).Draw();
+        renderer.EndScene(world.animationTimeSeconds);
+        if (game::GameLevels::Mine().IsActive())
+        {
+            static_cast<game::MineScene &>(game::SceneManager::Get(game::SceneKind::Mine)).DrawDarkness();
+        }
+        Hud::Render();
+        Save(output / name);
+    };
+    captureScene("map-city-circle-destination.bmp");
+    world.mapVisible = true;
+    captureScene("map-city-full.bmp");
+    world.mapVisible = false;
+    game::GameLevels::Mine().Enter(true);
+    auto &mine = game::GameLevels::Mine().GetState();
+    assert(!mine.rescueGroups.empty());
+    world.cameraPosition =
+        world.playerPosition = {mine.rescueGroups[0].position.x - 8, mine.rescueGroups[0].position.y};
+    mine.enemies.clear();
+    mine.lights.push_back({world.playerPosition, 16, false});
+    game::GameLevels::Mine().Rescue().Scan();
+    game::GameLevels::Mine().Rescue().Update(.8f);
+    assert(!mine.scannerContacts.empty());
+    captureScene("map-mine-scan-bearings.bmp");
+    world.mapVisible = true;
+    assert(MapHud::HandleClick(MapHud::WorldToMap(game::kRuinSignal, true)));
+    captureScene("map-mine-full.bmp");
+    game::GameLevels::Chapter().Enter(true);
+    world.noticeSecondsRemaining = 0;
+    world.mapVisible = true;
+    assert(MapHud::HandleClick(MapHud::WorldToMap({32.5f, 12.5f}, true)));
+    captureScene("map-frontier-full.bmp");
+    game.Reset();
+}
+
 void CaptureChapter(const std::filesystem::path &output)
 {
     auto &game = Game::Get();
@@ -851,8 +1123,14 @@ void CaptureChapter(const std::filesystem::path &output)
 void BenchmarkQuality(const std::filesystem::path &output)
 {
     std::ofstream report(output / "performance.json");
+#ifdef _DEBUG
+    constexpr bool optimized = false;
+#else
+    constexpr bool optimized = true;
+#endif
     report << "{\"gpu\":\"" << glGetString(GL_RENDERER)
-           << "\",\"resolution\":[1280,800],\"optimized\":true,\"warmup\":24,\"frames\":120,\"scenes\":[";
+           << "\",\"resolution\":[1280,800],\"optimized\":" << (optimized ? "true" : "false")
+           << ",\"warmup\":24,\"frames\":120,\"scenes\":[";
     auto &world = Game::Get().GetState();
     for (int scenario = 0; scenario < 10; ++scenario)
     {
@@ -950,6 +1228,15 @@ void BenchmarkQuality(const std::filesystem::path &output)
                 s.kain.position = {30, 33};
             }
         }
+        if (scenario == 0 || scenario == 2)
+        {
+            for (int warm = 0; warm < 900; ++warm)
+            {
+                Overworld::Traffic().Update(world, 1.f / 60);
+                Overworld::Flights().Update(world, 1.f / 60);
+                CityResidents::Get().Update(world, 1.f / 60);
+            }
+        }
         bool npcShotsObserved = false;
         std::vector<double> samples;
         double draws = 0, instanced = 0, triangles = 0;
@@ -959,6 +1246,12 @@ void BenchmarkQuality(const std::filesystem::path &output)
             auto start = std::chrono::steady_clock::now();
             profiling::BeginFrame(names[scenario]);
             world.animationTimeSeconds += 1.f / 60;
+            if (scenario == 0 || scenario == 2)
+            {
+                Overworld::Traffic().Update(world, 1.f / 60);
+                Overworld::Flights().Update(world, 1.f / 60);
+                CityResidents::Get().Update(world, 1.f / 60);
+            }
             auto npcShotsBefore = profiling::ReadCounter(profiling::Counter::NpcShots);
             if (auto *level = game::GameLevels::Active())
             {
@@ -1024,6 +1317,27 @@ void BenchmarkQuality(const std::filesystem::path &output)
 int main(int argc, char **argv)
 {
     glutInit(&argc, argv);
+    if (argc > 1 && std::string(argv[1]) == "--maps-only")
+    {
+        OffscreenContext context;
+        GameRenderer::Get().Initialize();
+        std::filesystem::path output = argc > 2 ? argv[2] : "x64/RevisionChecks/renders";
+        std::filesystem::create_directories(output);
+        CaptureMapNavigation(output);
+        GameRenderer::Get().Shutdown();
+        std::cout << "Map visual checks passed.\n";
+        return 0;
+    }
+    if (argc > 1 && std::string(argv[1]) == "--benchmark")
+    {
+        OffscreenContext context;
+        GameRenderer::Get().Initialize();
+        std::filesystem::path output = argc > 2 ? argv[2] : "x64/RevisionChecks/renders";
+        std::filesystem::create_directories(output);
+        BenchmarkQuality(output);
+        GameRenderer::Get().Shutdown();
+        return 0;
+    }
     TestModelsAndRig();
     TestHairAndBodyShape();
     TestCityAndTravel();
@@ -1040,9 +1354,13 @@ int main(int argc, char **argv)
     CaptureScenes(output);
     TestPixelPresentation(output);
     QualityCaptures(output);
+    TestTrafficOcclusion(output);
+    CaptureCrossingSignals(output);
+    CaptureAircraftThrusters(output);
     CaptureDistrictAndBodies(output);
     CaptureHairAndCombat(output);
     CaptureChapter(output);
+    CaptureMapNavigation(output);
     BenchmarkQuality(output);
     GameRenderer::Get().Shutdown();
     std::cout << "Resource GLB meshes, 23-bone skins, nine wardrobes, direct driving, billboard effects, "
