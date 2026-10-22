@@ -4808,5 +4808,449 @@
         ]
       }
     }
+  },
+  "Kite_Courier": {
+    "parts": [
+      "Aircraft_Kite_Courier_PressureHull",
+      "Aircraft_Kite_Courier_Canopy_Glass",
+      "Aircraft_Kite_Courier_CabinSeats",
+      "Aircraft_Kite_Courier_Wing_L",
+      "Aircraft_Kite_Courier_LiftField_Front_L",
+      "Aircraft_Kite_Courier_Engine_Efficient_L",
+      "Aircraft_Kite_Courier_LandingSkid_L",
+      "Aircraft_Kite_Courier_TailFin_L",
+      "Aircraft_Kite_Courier_Wing_R",
+      "Aircraft_Kite_Courier_LiftField_Front_R",
+      "Aircraft_Kite_Courier_Engine_Efficient_R",
+      "Aircraft_Kite_Courier_LandingSkid_R",
+      "Aircraft_Kite_Courier_TailFin_R",
+      "Aircraft_Kite_Courier_Payload_Standard",
+      "Aircraft_Kite_Courier_ServiceHatch"
+    ],
+    "skeleton": "AIRCRAFT_Kite_Courier"
+  },
+  "Manta_AirTaxi": {
+    "parts": [
+      "Aircraft_Manta_AirTaxi_PressureHull",
+      "Aircraft_Manta_AirTaxi_Canopy_Glass",
+      "Aircraft_Manta_AirTaxi_CabinSeats",
+      "Aircraft_Manta_AirTaxi_Wing_L",
+      "Aircraft_Manta_AirTaxi_LiftField_Front_L",
+      "Aircraft_Manta_AirTaxi_LiftField_Rear_L",
+      "Aircraft_Manta_AirTaxi_Engine_Efficient_L",
+      "Aircraft_Manta_AirTaxi_LandingSkid_L",
+      "Aircraft_Manta_AirTaxi_TailFin_L",
+      "Aircraft_Manta_AirTaxi_Wing_R",
+      "Aircraft_Manta_AirTaxi_LiftField_Front_R",
+      "Aircraft_Manta_AirTaxi_LiftField_Rear_R",
+      "Aircraft_Manta_AirTaxi_Engine_Efficient_R",
+      "Aircraft_Manta_AirTaxi_LandingSkid_R",
+      "Aircraft_Manta_AirTaxi_TailFin_R",
+      "Aircraft_Manta_AirTaxi_Payload_Standard",
+      "Aircraft_Manta_AirTaxi_ServiceHatch"
+    ],
+    "skeleton": "AIRCRAFT_Manta_AirTaxi"
+  },
+  "Mule_Skycrane": {
+    "parts": [
+      "Aircraft_Mule_Skycrane_PressureHull",
+      "Aircraft_Mule_Skycrane_Canopy_Glass",
+      "Aircraft_Mule_Skycrane_CabinSeats",
+      "Aircraft_Mule_Skycrane_Wing_L",
+      "Aircraft_Mule_Skycrane_LiftField_Front_L",
+      "Aircraft_Mule_Skycrane_LiftField_Rear_L",
+      "Aircraft_Mule_Skycrane_Engine_Efficient_L",
+      "Aircraft_Mule_Skycrane_LandingSkid_L",
+      "Aircraft_Mule_Skycrane_TailFin_L",
+      "Aircraft_Mule_Skycrane_Wing_R",
+      "Aircraft_Mule_Skycrane_LiftField_Front_R",
+      "Aircraft_Mule_Skycrane_LiftField_Rear_R",
+      "Aircraft_Mule_Skycrane_Engine_Efficient_R",
+      "Aircraft_Mule_Skycrane_LandingSkid_R",
+      "Aircraft_Mule_Skycrane_TailFin_R",
+      "Aircraft_Mule_Skycrane_OutboardBoom_L",
+      "Aircraft_Mule_Skycrane_OutboardBoom_R",
+      "Aircraft_Mule_Skycrane_Payload_Standard",
+      "Aircraft_Mule_Skycrane_ServiceHatch"
+    ],
+    "skeleton": "AIRCRAFT_Mule_Skycrane"
+  },
+  "Warden_Survey": {
+    "parts": [
+      "Aircraft_Warden_Survey_PressureHull",
+      "Aircraft_Warden_Survey_Canopy_Glass",
+      "Aircraft_Warden_Survey_CabinSeats",
+      "Aircraft_Warden_Survey_Wing_L",
+      "Aircraft_Warden_Survey_LiftField_Front_L",
+      "Aircraft_Warden_Survey_Engine_Efficient_L",
+      "Aircraft_Warden_Survey_LandingSkid_L",
+      "Aircraft_Warden_Survey_TailFin_L",
+      "Aircraft_Warden_Survey_Wing_R",
+      "Aircraft_Warden_Survey_LiftField_Front_R",
+      "Aircraft_Warden_Survey_Engine_Efficient_R",
+      "Aircraft_Warden_Survey_LandingSkid_R",
+      "Aircraft_Warden_Survey_TailFin_R",
+      "Aircraft_Warden_Survey_Payload_Standard",
+      "Aircraft_Warden_Survey_ServiceHatch"
+    ],
+    "skeleton": "AIRCRAFT_Warden_Survey"
+  },
+  "Kite_Courier_Variant": {
+    "parts": [
+      "Aircraft_Kite_Courier_PressureHull",
+      "Aircraft_Kite_Courier_Canopy_Reinforced",
+      "Aircraft_Kite_Courier_CabinSeats",
+      "Aircraft_Kite_Courier_Wing_L",
+      "Aircraft_Kite_Courier_LiftField_Front_L",
+      "Aircraft_Kite_Courier_Engine_Boost_L",
+      "Aircraft_Kite_Courier_LandingSkid_L",
+      "Aircraft_Kite_Courier_TailFin_L",
+      "Aircraft_Kite_Courier_Wing_R",
+      "Aircraft_Kite_Courier_LiftField_Front_R",
+      "Aircraft_Kite_Courier_Engine_Boost_R",
+      "Aircraft_Kite_Courier_LandingSkid_R",
+      "Aircraft_Kite_Courier_TailFin_R",
+      "Aircraft_Kite_Courier_Payload_Alternate",
+      "Aircraft_Kite_Courier_ServiceHatch"
+    ],
+    "skeleton": "AIRCRAFT_Kite_Courier"
+  },
+  "Manta_AirTaxi_Variant": {
+    "parts": [
+      "Aircraft_Manta_AirTaxi_PressureHull",
+      "Aircraft_Manta_AirTaxi_Canopy_Reinforced",
+      "Aircraft_Manta_AirTaxi_CabinSeats",
+      "Aircraft_Manta_AirTaxi_Wing_L",
+      "Aircraft_Manta_AirTaxi_LiftField_Front_L",
+      "Aircraft_Manta_AirTaxi_LiftField_Rear_L",
+      "Aircraft_Manta_AirTaxi_Engine_Boost_L",
+      "Aircraft_Manta_AirTaxi_LandingSkid_L",
+      "Aircraft_Manta_AirTaxi_TailFin_L",
+      "Aircraft_Manta_AirTaxi_Wing_R",
+      "Aircraft_Manta_AirTaxi_LiftField_Front_R",
+      "Aircraft_Manta_AirTaxi_LiftField_Rear_R",
+      "Aircraft_Manta_AirTaxi_Engine_Boost_R",
+      "Aircraft_Manta_AirTaxi_LandingSkid_R",
+      "Aircraft_Manta_AirTaxi_TailFin_R",
+      "Aircraft_Manta_AirTaxi_Payload_Alternate",
+      "Aircraft_Manta_AirTaxi_ServiceHatch"
+    ],
+    "skeleton": "AIRCRAFT_Manta_AirTaxi"
+  },
+  "Mule_Skycrane_Variant": {
+    "parts": [
+      "Aircraft_Mule_Skycrane_PressureHull",
+      "Aircraft_Mule_Skycrane_Canopy_Reinforced",
+      "Aircraft_Mule_Skycrane_CabinSeats",
+      "Aircraft_Mule_Skycrane_Wing_L",
+      "Aircraft_Mule_Skycrane_LiftField_Front_L",
+      "Aircraft_Mule_Skycrane_LiftField_Rear_L",
+      "Aircraft_Mule_Skycrane_Engine_Boost_L",
+      "Aircraft_Mule_Skycrane_LandingSkid_L",
+      "Aircraft_Mule_Skycrane_TailFin_L",
+      "Aircraft_Mule_Skycrane_Wing_R",
+      "Aircraft_Mule_Skycrane_LiftField_Front_R",
+      "Aircraft_Mule_Skycrane_LiftField_Rear_R",
+      "Aircraft_Mule_Skycrane_Engine_Boost_R",
+      "Aircraft_Mule_Skycrane_LandingSkid_R",
+      "Aircraft_Mule_Skycrane_TailFin_R",
+      "Aircraft_Mule_Skycrane_OutboardBoom_L",
+      "Aircraft_Mule_Skycrane_OutboardBoom_R",
+      "Aircraft_Mule_Skycrane_Payload_Alternate",
+      "Aircraft_Mule_Skycrane_ServiceHatch"
+    ],
+    "skeleton": "AIRCRAFT_Mule_Skycrane"
+  },
+  "Warden_Survey_Variant": {
+    "parts": [
+      "Aircraft_Warden_Survey_PressureHull",
+      "Aircraft_Warden_Survey_Canopy_Reinforced",
+      "Aircraft_Warden_Survey_CabinSeats",
+      "Aircraft_Warden_Survey_Wing_L",
+      "Aircraft_Warden_Survey_LiftField_Front_L",
+      "Aircraft_Warden_Survey_Engine_Boost_L",
+      "Aircraft_Warden_Survey_LandingSkid_L",
+      "Aircraft_Warden_Survey_TailFin_L",
+      "Aircraft_Warden_Survey_Wing_R",
+      "Aircraft_Warden_Survey_LiftField_Front_R",
+      "Aircraft_Warden_Survey_Engine_Boost_R",
+      "Aircraft_Warden_Survey_LandingSkid_R",
+      "Aircraft_Warden_Survey_TailFin_R",
+      "Aircraft_Warden_Survey_Payload_Alternate",
+      "Aircraft_Warden_Survey_ServiceHatch"
+    ],
+    "skeleton": "AIRCRAFT_Warden_Survey"
+  },
+  "Road_2Lane_4m": {
+    "parts": [
+      "Road_2Lane_4m_Lane_01",
+      "Road_2Lane_4m_Lane_02",
+      "Road_2Lane_4m_LaneMarkings",
+      "Road_2Lane_4m_EdgeMarkings"
+    ]
+  },
+  "Road_4Lane_4m": {
+    "parts": [
+      "Road_4Lane_4m_Lane_01",
+      "Road_4Lane_4m_Lane_02",
+      "Road_4Lane_4m_Lane_03",
+      "Road_4Lane_4m_Lane_04",
+      "Road_4Lane_4m_LaneMarkings",
+      "Road_4Lane_4m_EdgeMarkings"
+    ]
+  },
+  "Road_6Lane_4m": {
+    "parts": [
+      "Road_6Lane_4m_Lane_01",
+      "Road_6Lane_4m_Lane_02",
+      "Road_6Lane_4m_Lane_03",
+      "Road_6Lane_4m_Lane_04",
+      "Road_6Lane_4m_Lane_05",
+      "Road_6Lane_4m_Lane_06",
+      "Road_6Lane_4m_LaneMarkings",
+      "Road_6Lane_4m_EdgeMarkings"
+    ]
+  },
+  "Road_Crossroad_12m": {
+    "parts": [
+      "Road_Crossroad_12m_Surface",
+      "Road_Crossroad_12m_Crosswalk_0_-1",
+      "Road_Crossroad_12m_Crosswalk_0_1",
+      "Road_Crossroad_12m_Crosswalk_1_-1",
+      "Road_Crossroad_12m_Crosswalk_1_1"
+    ]
+  },
+  "Road_TJunction_12m": {
+    "parts": [
+      "Road_TJunction_12m_Surface",
+      "Road_TJunction_12m_Crosswalk_0_-1",
+      "Road_TJunction_12m_Crosswalk_0_1",
+      "Road_TJunction_12m_Crosswalk_1_-1",
+      "Road_TJunction_12m_ClosedEdge"
+    ]
+  },
+  "Road_Curve90_R9m": {
+    "parts": [
+      "Road_Curve90_R9m_ArcSurface",
+      "Road_Curve90_R9m_CenterMarkings"
+    ]
+  },
+  "City_Sidewalk_2x4m": {
+    "parts": [
+      "City_Sidewalk_2x4m_Slab",
+      "City_Sidewalk_2x4m_Curb",
+      "City_Sidewalk_2x4m_ServiceStrip"
+    ]
+  },
+  "Road_SpeedTable_4m": {
+    "parts": [
+      "Road_SpeedTable_4m_Ramp",
+      "Road_SpeedTable_4m_WarningBars"
+    ]
+  },
+  "City_Streetlight_4m": {
+    "parts": [
+      "City_Streetlight_4m_Foundation",
+      "City_Streetlight_4m_Mast",
+      "City_Streetlight_4m_Luminaire"
+    ]
+  },
+  "City_TrafficSignal": {
+    "parts": [
+      "City_TrafficSignal_HoverHousing",
+      "City_TrafficSignal_FieldStabilizers",
+      "City_TrafficSignal_StopGlyph",
+      "City_TrafficSignal_WaitGlyph",
+      "City_TrafficSignal_GoGlyph"
+    ]
+  },
+  "City_Bollard": {
+    "parts": [
+      "City_Bollard_Base",
+      "City_Bollard_Post"
+    ]
+  },
+  "Road_CrashBarrier_4m": {
+    "parts": [
+      "Road_CrashBarrier_4m_Feet",
+      "Road_CrashBarrier_4m_Rail",
+      "Road_CrashBarrier_4m_Reflectors"
+    ]
+  },
+  "City_Bench": {
+    "parts": [
+      "City_Bench_Legs",
+      "City_Bench_Seat",
+      "City_Bench_Back"
+    ]
+  },
+  "City_Planter": {
+    "parts": [
+      "City_Planter_Vessel",
+      "City_Planter_Soil",
+      "City_Planter_AlienFoliage"
+    ]
+  },
+  "City_TransitShelter": {
+    "parts": [
+      "City_TransitShelter_Frame",
+      "City_TransitShelter_Roof",
+      "City_TransitShelter_BackPanel",
+      "City_TransitShelter_Seat",
+      "City_TransitShelter_RouteDisplay"
+    ]
+  },
+  "City_Wayfinding": {
+    "parts": [
+      "City_Wayfinding_Mast",
+      "City_Wayfinding_SignBoards",
+      "City_Wayfinding_Arrows"
+    ]
+  },
+  "City_ChargePost": {
+    "parts": [
+      "City_ChargePost_Pedestal",
+      "City_ChargePost_Display",
+      "City_ChargePost_InductionHalo"
+    ]
+  },
+  "Utility_Transformer": {
+    "parts": [
+      "Utility_Transformer_Cabinet",
+      "Utility_Transformer_CoolingFins",
+      "Utility_Transformer_FieldCapacitors",
+      "Utility_Transformer_Status"
+    ]
+  },
+  "Utility_CargoContainer_6m": {
+    "parts": [
+      "Utility_CargoContainer_6m_Shell",
+      "Utility_CargoContainer_6m_RoofRibs",
+      "Utility_CargoContainer_6m_Door_L",
+      "Utility_CargoContainer_6m_Door_R",
+      "Utility_CargoContainer_6m_SealEmitters"
+    ]
+  },
+  "Utility_HVAC": {
+    "parts": [
+      "Utility_HVAC_Housing",
+      "Utility_HVAC_Grille",
+      "Utility_HVAC_Exhaust"
+    ]
+  },
+  "Utility_PipeRack_4m": {
+    "parts": [
+      "Utility_PipeRack_4m_Supports",
+      "Utility_PipeRack_4m_Pipe_0",
+      "Utility_PipeRack_4m_Pipe_1",
+      "Utility_PipeRack_4m_Pipe_2"
+    ]
+  },
+  "Utility_CommRelay": {
+    "parts": [
+      "Utility_CommRelay_Mast",
+      "Utility_CommRelay_Panel_L",
+      "Utility_CommRelay_Panel_R",
+      "Utility_CommRelay_Beacon"
+    ]
+  },
+  "Utility_SolarArray": {
+    "parts": [
+      "Utility_SolarArray_Stand",
+      "Utility_SolarArray_Panel",
+      "Utility_SolarArray_Rails"
+    ]
+  },
+  "Utility_WaterTank": {
+    "parts": [
+      "Utility_WaterTank_Legs",
+      "Utility_WaterTank_Tank",
+      "Utility_WaterTank_Pipe"
+    ]
+  },
+  "Airfield_LandingPad_16m": {
+    "parts": [
+      "Airfield_LandingPad_16m_Deck_0_0",
+      "Airfield_LandingPad_16m_Deck_0_1",
+      "Airfield_LandingPad_16m_Deck_0_2",
+      "Airfield_LandingPad_16m_Deck_0_3",
+      "Airfield_LandingPad_16m_Deck_1_0",
+      "Airfield_LandingPad_16m_Deck_1_1",
+      "Airfield_LandingPad_16m_Deck_1_2",
+      "Airfield_LandingPad_16m_Deck_1_3",
+      "Airfield_LandingPad_16m_Deck_2_0",
+      "Airfield_LandingPad_16m_Deck_2_1",
+      "Airfield_LandingPad_16m_Deck_2_2",
+      "Airfield_LandingPad_16m_Deck_2_3",
+      "Airfield_LandingPad_16m_Deck_3_0",
+      "Airfield_LandingPad_16m_Deck_3_1",
+      "Airfield_LandingPad_16m_Deck_3_2",
+      "Airfield_LandingPad_16m_Deck_3_3",
+      "Airfield_LandingPad_16m_GuidanceReticle",
+      "Airfield_LandingPad_16m_CornerLights"
+    ]
+  },
+  "Airfield_Beacon": {
+    "parts": [
+      "Airfield_Beacon_Base",
+      "Airfield_Beacon_Light",
+      "Airfield_Beacon_Guard"
+    ]
+  },
+  "Frontier_SurveyTripod": {
+    "parts": [
+      "Frontier_SurveyTripod_Tripod",
+      "Frontier_SurveyTripod_Scanner",
+      "Frontier_SurveyTripod_Lens"
+    ]
+  },
+  "Frontier_FieldShelter": {
+    "parts": [
+      "Frontier_FieldShelter_Frame",
+      "Frontier_FieldShelter_Canopy",
+      "Frontier_FieldShelter_SupplyBox"
+    ]
+  },
+  "Frontier_MiningConveyor": {
+    "parts": [
+      "Frontier_MiningConveyor_Frame",
+      "Frontier_MiningConveyor_Belt",
+      "Frontier_MiningConveyor_Legs",
+      "Frontier_MiningConveyor_Motor"
+    ]
+  },
+  "Ruin_ObserverMonolith": {
+    "parts": [
+      "Ruin_ObserverMonolith_Foot",
+      "Ruin_ObserverMonolith_Shaft",
+      "Ruin_ObserverMonolith_Inlay"
+    ]
+  },
+  "Ruin_FracturedArch": {
+    "parts": [
+      "Ruin_FracturedArch_Pier_L",
+      "Ruin_FracturedArch_Pier_R",
+      "Ruin_FracturedArch_SuspendedShard"
+    ]
+  },
+  "Nature_PrismBloom": {
+    "parts": [
+      "Nature_PrismBloom_RockBed",
+      "Nature_PrismBloom_Crystals"
+    ]
+  },
+  "Nature_SailTree": {
+    "parts": [
+      "Nature_SailTree_Trunk",
+      "Nature_SailTree_Canopy",
+      "Nature_SailTree_GlowSeedpods"
+    ]
+  },
+  "City_PedestrianHologram_6m": {
+    "parts": [
+      "City_PedestrianHologram_6m_Projectors",
+      "City_PedestrianHologram_6m_WalkGrid",
+      "City_PedestrianHologram_6m_Guidance"
+    ]
   }
 }

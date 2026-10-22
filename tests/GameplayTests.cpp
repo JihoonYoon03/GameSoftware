@@ -10,8 +10,10 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <limits>
 #include <type_traits>
+#include <unordered_map>
 
 // Link the production core; tests exercise CPU rules without creating a window or GL context.
 namespace
@@ -209,20 +211,42 @@ void TestConnectedOverworld()
         assert(count == tutorial::Overworld::kPopulationPerCity);
     }
     const auto &cities = tutorial::Overworld::Cities();
-    constexpr int connections[][2] = {{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 1}};
-    for (const auto &connection : connections)
+    const auto &network = tutorial::RoadNetwork::Get();
+    std::vector<bool> reached(network.junctions.size(), false);
+    std::vector<int> pending = {0};
+    reached[0] = true;
+    for (size_t i = 0; i < pending.size(); ++i)
     {
-        auto from = cities[connection[0]].center, to = cities[connection[1]].center;
-        world.bikePosition = from;
-        world.bikeYaw = std::atan2(to.y - from.y, to.x - from.x);
+        for (int lane : network.junctions[pending[i]].outgoing)
+        {
+            int next = network.lanes[lane].to;
+            if (!reached[next])
+            {
+                reached[next] = true;
+                pending.push_back(next);
+            }
+        }
+    }
+    assert(std::all_of(reached.begin(), reached.end(), [](bool b) { return b; }));
+    // City positions occupy different sectors around Halo, with reproducible organic offsets.
+    assert(cities[1].center.x > 0 && cities[2].center.y > 0 && cities[3].center.x < 0 &&
+           cities[4].center.y < 0);
+    for (const auto &city : cities)
+    {
+        assert(city.center.x > tutorial::kWorldMinX + 50 && city.center.x < tutorial::kWorldMaxX - 50);
+    }
+    for (float yaw : {0.f, tutorial::kPi * .5f})
+    {
+        world.bikePosition = {70, 50};
+        world.bikeYaw = yaw;
         tutorial::Overworld::ToggleBike(world);
         assert(world.isBikeMounted && GameLevels::Active() == nullptr);
         world.pressedKeys['w'] = true;
-        for (int frame = 0; frame < 1200; ++frame)
+        for (int frame = 0; frame < 120; ++frame)
         {
             tutorial::Overworld::UpdateBike(world, 1.f / 60);
         }
-        assert(tutorial::Game::Distance(world.playerPosition, to) < 4); // ~20 seconds including acceleration.
+        assert(tutorial::Game::Distance(world.playerPosition, Vector2{70, 50}) > 20);
         world.pressedKeys['w'] = false;
         for (int frame = 0; frame < 30; ++frame)
         {
@@ -241,6 +265,304 @@ void TestConnectedOverworld()
     {
         assert(snapshot.find(std::string("\"id\":\"") + city.id + "\"") != std::string::npos);
     }
+    game.Reset();
+}
+void TestCityQuestAccess()
+{
+    using namespace tutorial;
+    auto &game = Game::Get();
+    game.Reset();
+    auto &world = game.GetState();
+    world.isInsideHome = false;
+    bool home = false, observatory = false;
+    for (const auto &building : world.buildings)
+    {
+        assert(!CityLayout::OverlapsQuestSpace(building));
+        home |= building.type == models::BuildingType::Habitat &&
+                Game::Distance({building.x, building.y}, kHomeBuildingPosition) < .001f;
+        observatory |= building.type == models::BuildingType::Observatory &&
+                       Game::Distance({building.x, building.y}, kObservatoryBuildingPosition) < .001f;
+    }
+    assert(home && observatory);
+    for (const auto &resident : world.residents)
+    {
+        assert(!CityLayout::IsQuestSpace(resident.position, .5f));
+    }
+    auto clear = [&](Vector2 position) {
+        for (float dx : {-.65f, 0.f, .65f})
+        {
+            for (float dy : {-.65f, 0.f, .65f})
+            {
+                assert(!game.IsPositionBlocked({position.x + dx, position.y + dy}));
+            }
+        }
+    };
+    for (Vector2 point : {kHomeDoor, kLiaPosition, kMaraPosition, kRelayPosition, kBeaconPosition,
+                          kCityReceiverPosition, kCityKainPosition, kJetBikePosition})
+    {
+        clear(point);
+        assert(CityLayout::IsQuestSpace(point));
+        assert(!RoadNetwork::Get().Contains(point));
+    }
+    // Verify the actual approach paths, rather than only testing individual spawn centers.
+    const Vector2 route[] = {kHomeDoor,        kLiaPosition, kMaraPosition,         kRelayPosition,
+                             kBeaconPosition,  kLiaPosition, kCityReceiverPosition, {kJetBikePosition.x, -3},
+                             kJetBikePosition, kBikeRoadExit};
+    for (size_t i = 1; i < std::size(route); ++i)
+    {
+        int steps = int(std::ceil(Game::Distance(route[i - 1], route[i]) / .1f));
+        for (int step = 0; step <= steps; ++step)
+        {
+            float t = float(step) / steps;
+            clear({route[i - 1].x + (route[i].x - route[i - 1].x) * t,
+                   route[i - 1].y + (route[i].y - route[i - 1].y) * t});
+        }
+    }
+    game.Reset();
+    // Follow the production interaction sequence through the relocated outdoor targets.
+    world.playerPosition = {1, -1.2f};
+    game.InteractWithNearbyTarget();
+    world.playerPosition = {2.4f, 2.4f};
+    game.InteractWithNearbyTarget();
+    assert(!world.isInsideHome && Game::Distance(world.playerPosition, kHomeDoor) < .001f);
+    auto interact = [&](Vector2 position, InteractionTarget target) {
+        world.playerPosition = position;
+        assert(game.FindNearbyInteraction() == target);
+        game.InteractWithNearbyTarget();
+    };
+    interact(kLiaPosition, InteractionTarget::Lia);
+    interact(kMaraPosition, InteractionTarget::Mara);
+    interact(kRelayPosition, InteractionTarget::PowerRelay);
+    interact(kMaraPosition, InteractionTarget::Mara);
+    assert(world.isSideQuestComplete);
+    interact(kBeaconPosition, InteractionTarget::GateBeacon);
+    assert(world.isInObservatory);
+    interact(kObservatoryConsole, InteractionTarget::ObservatorySignal);
+    interact(kObservatoryStairs, InteractionTarget::ObservatoryExit);
+    assert(!world.isInObservatory && Game::Distance(world.playerPosition, kBeaconPosition) < .001f);
+    interact(kLiaPosition, InteractionTarget::Lia);
+    interact(kCityReceiverPosition, InteractionTarget::CityReceiver);
+    assert(mineState.quest.GetStage() == MineQuestStage::TravelToMine);
+    assert(Game::Distance(world.bikePosition, kJetBikePosition) < .001f && world.bikeYaw == kJetBikeYaw);
+    interact({kJetBikePosition.x + 1.2f, kJetBikePosition.y}, InteractionTarget::JetBike);
+    assert(world.isBikeMounted);
+    world.pressedKeys['w'] = true;
+    for (int frame = 0; frame < 120 && world.playerPosition.y > kBikeRoadExit.y; ++frame)
+    {
+        Overworld::UpdateBike(world, 1.f / 60);
+    }
+    assert(world.playerPosition.y <= kBikeRoadExit.y && world.bikeSpeed > 0);
+    world.pressedKeys['w'] = false;
+    for (int frame = 0; frame < 30; ++frame)
+    {
+        Overworld::UpdateBike(world, 1.f / 60);
+    }
+    assert(RoadNetwork::Get().Contains(world.bikePosition));
+    auto parked = world.bikePosition;
+    game.InteractWithNearbyTarget();
+    assert(!world.isBikeMounted && Game::Distance(parked, world.bikePosition) < .001f);
+    assert(!game.IsPositionBlocked(world.playerPosition));
+    game.Reset();
+}
+void TestImportedWorldAndFlights()
+{
+    using namespace tutorial;
+    auto &game = Game::Get();
+    game.Reset();
+    auto &world = game.GetState();
+    world.isInsideHome = false;
+    const auto &props = Overworld::Scenery().Props();
+    assert(props.size() > 100);
+    size_t pads = 0, parked = 0;
+    for (const auto &prop : props)
+    {
+        assert(prop.model && prop.model->resourceId);
+        assert(
+            !CityLayout::OverlapsQuestSpace({prop.minimum.x, prop.minimum.y, prop.maximum.x - prop.minimum.x,
+                                             prop.maximum.y - prop.minimum.y, 0},
+                                            .7f));
+        pads += prop.type == models::SceneryType::LandingPad;
+        parked += prop.type == models::SceneryType::Count;
+        if (prop.solid)
+        {
+            assert(game.IsPositionBlocked(
+                {(prop.minimum.x + prop.maximum.x) * .5f, (prop.minimum.y + prop.maximum.y) * .5f}));
+        }
+    }
+    assert(pads == Overworld::kCityCount && parked == pads);
+    for (const auto &person : world.residents)
+    {
+        assert(!game.IsPositionBlocked(person.position));
+    }
+    for (int route = 0; route < int(RoadNetwork::Get().airCorridors.size()); ++route)
+    {
+        for (float t : {-.1f, 0.f, .1f, .3f, .5f, .7f, .9f, 1.f, 1.1f})
+        {
+            auto tangent = AirTraffic::Tangent(route, t);
+            assert(std::sqrt(tangent.x * tangent.x + tangent.y * tangent.y) > 30);
+            assert(Game::Distance(AirTraffic::Position(route, t - .0001f),
+                                  AirTraffic::Position(route, t + .0001f)) < .3f);
+        }
+    }
+    auto &traffic = Overworld::Flights();
+    std::unordered_map<std::uint64_t, AircraftActor> previous;
+    bool visible = false;
+    unsigned int variants = 0;
+    for (int frame = 0; frame < 3600; ++frame)
+    {
+        traffic.Update(world, 1.f / 60);
+        assert(traffic.Aircraft().size() <= AirTraffic::kAircraftLimit);
+        std::unordered_map<std::uint64_t, AircraftActor> current;
+        for (const auto &craft : traffic.Aircraft())
+        {
+            variants |= 1u << (unsigned(craft.type) * 2 + (craft.alternate ? 1 : 0));
+            auto old = previous.find(craft.id);
+            if (old == previous.end())
+            {
+                assert(TrafficSystem::OutsideView(craft.position, world.cameraPosition, 270, craft.altitude));
+            }
+            else
+            {
+                assert(Game::Distance(old->second.position, craft.position) < .8f);
+            }
+            visible |= !TrafficSystem::OutsideView(craft.position, world.cameraPosition, 0, craft.altitude);
+            assert(std::fabs(craft.bank) <= .181f);
+            current.emplace(craft.id, craft);
+        }
+        for (const auto &old : previous)
+        {
+            if (!current.count(old.first))
+            {
+                assert(Game::Distance(old.second.position, world.playerPosition) > 179);
+                assert(TrafficSystem::OutsideView(old.second.position, world.cameraPosition, 330,
+                                                  old.second.altitude));
+            }
+        }
+        previous.swap(current);
+    }
+    assert(visible && variants == 255);
+    game.Reset();
+}
+void TestUrbanTraffic()
+{
+    using namespace tutorial;
+    auto &game = Game::Get();
+    game.Reset();
+    auto &world = game.GetState();
+    world.isInsideHome = false;
+    world.cameraPosition = world.playerPosition = {0, 0};
+    const auto &network = RoadNetwork::Get();
+    bool two = false, four = false, six = false, inclined = false;
+    for (const auto &road : network.roads)
+    {
+        two |= road.lanes == 2;
+        four |= road.lanes == 4;
+        six |= road.lanes == 6;
+        auto a = network.junctions[road.from].position, b = network.junctions[road.to].position;
+        inclined |= std::fabs(a.x - b.x) > 2 && std::fabs(a.y - b.y) > 2;
+    }
+    assert(two && four && six && inclined && network.airCorridors.size() == 4);
+    for (const auto &lane : network.lanes)
+    {
+        assert(lane.length > 3.5f && std::fabs(Game::Distance(lane.start, lane.end) - lane.length) < .001f);
+        auto mid = network.LanePosition(int(&lane - network.lanes.data()), lane.length * .5f);
+        assert(network.Contains(mid));
+    }
+    assert(!network.Contains(kLiaPosition) && !network.Contains(kMaraPosition));
+    assert(TrafficSystem::SweptHit({-5, 0}, {5, 0}, 0, {0, 0}));
+    assert(!TrafficSystem::SweptHit({-5, 0}, {5, 0}, 0, {0, 2}));
+    assert(TrafficSystem::SweptHit({0, -5}, {0, 5}, kPi * .5f, {0, 0}));
+    auto &traffic = Overworld::Traffic();
+    std::unordered_map<std::uint64_t, TrafficVehicle> previous;
+    bool sawTurn = false, sawStop = false, sawWalk = false, sawCar = false;
+    for (int frame = 0; frame < 7200; ++frame)
+    {
+        traffic.Update(world, 1.f / 60);
+        assert(traffic.Vehicles().size() <= TrafficSystem::kVehicleLimit);
+        std::unordered_map<std::uint64_t, TrafficVehicle> current;
+        for (const auto &car : traffic.Vehicles())
+        {
+            sawCar = true;
+            auto old = previous.find(car.id);
+            if (old == previous.end())
+            {
+                assert(TrafficSystem::OutsideView(car.position, world.cameraPosition, 230));
+            }
+            else
+            {
+                assert(Game::Distance(old->second.position, car.position) < .8f);
+                auto rendered = traffic.RenderPosition(size_t(&car - traffic.Vehicles().data()));
+                assert(Game::Distance(rendered, car.position) < .8f);
+            }
+            sawTurn |= car.turnDistance >= 0 && car.turn != TrafficTurn::Straight;
+            sawStop |= car.speed < .05f && traffic.Light(car.lane, car.turn) == TrafficLight::Red;
+            current.emplace(car.id, car);
+        }
+        for (const auto &old : previous)
+        {
+            if (current.count(old.first) == 0)
+            {
+                assert(Game::Distance(old.second.position, world.playerPosition) >
+                       TrafficSystem::kDespawnDistance - 1);
+                assert(TrafficSystem::OutsideView(old.second.position, world.cameraPosition, 300));
+            }
+        }
+        for (size_t j = 0; j < network.junctions.size(); ++j)
+        {
+            size_t arms = 0;
+            for (int lane : network.junctions[j].outgoing)
+            {
+                arms += network.lanes[lane].slot == 0;
+            }
+            if (arms < 3 || !traffic.PedestrianGreen(int(j)))
+            {
+                continue;
+            }
+            sawWalk = true;
+            for (size_t lane = 0; lane < network.lanes.size(); ++lane)
+            {
+                if (network.lanes[lane].to != int(j))
+                {
+                    continue;
+                }
+                for (auto turn : {TrafficTurn::Straight, TrafficTurn::Left, TrafficTurn::Right})
+                {
+                    assert(traffic.Light(int(lane), turn) == TrafficLight::Red);
+                }
+            }
+        }
+        previous.swap(current);
+    }
+    assert(sawCar && sawTurn && sawStop && sawWalk);
+    // A crossing request cannot grant an immediate green across moving traffic.
+    for (size_t j = 0; j < network.junctions.size(); ++j)
+    {
+        const auto &junction = network.junctions[j];
+        if (junction.outgoing.size() < 6)
+        {
+            continue;
+        }
+        auto d = network.lanes[junction.outgoing[0]].direction;
+        Vector2 crossing = {junction.position.x + d.x * junction.radius,
+                            junction.position.y + d.y * junction.radius};
+        int nearby = traffic.NearbyCrossing(crossing);
+        if (nearby < 0)
+        {
+            continue;
+        }
+        bool before = traffic.PedestrianGreen(nearby);
+        assert(traffic.RequestCrossing(crossing));
+        assert(traffic.PedestrianGreen(nearby) == before);
+        break;
+    }
+    // Production impact path, using an approaching moving vehicle rather than a damage mock.
+    auto hit = std::find_if(traffic.Vehicles().begin(), traffic.Vehicles().end(),
+                            [](const TrafficVehicle &car) { return car.speed > 1; });
+    assert(hit != traffic.Vehicles().end());
+    world.playerPosition = hit->position;
+    mineState.player.health = mineState.player.maxHealth;
+    traffic.Update(world, .05f);
+    assert(mineState.player.health < mineState.player.maxHealth);
     game.Reset();
 }
 void TestAimLightingAndWallShots()
@@ -758,6 +1080,9 @@ int main(int argc, char **argv)
     TestStoryAndReentry();
     TestChapterOne();
     TestConnectedOverworld();
+    TestCityQuestAccess();
+    TestImportedWorldAndFlights();
+    TestUrbanTraffic();
     if (argc > 1)
     {
         std::ofstream snapshot(argv[1]);

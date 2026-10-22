@@ -209,7 +209,13 @@ function renderEnvironment(data) {
     metric("개인 바이크", travel.active ? "야외 직접 운전 중" : "주차 / 도보 이동"),
     metric("속도", format(travel.speed_kmh, 1) + " km/h"),
     metric("주차 / 주행 위치", format(travel.position?.x, 1) + ", " + format(travel.position?.y, 1)),
-    metric("도시 간 기준", format(travel.city_spacing) + " 월드 단위 · 약 " + format(travel.nominal_city_travel_seconds) + "초"),
+    metric("순항 기준", format(travel.cruise_speed_kmh, 1) + " km/h · 도로와 신호에 따라 이동 시간 변동"),
+  );
+  if (data.traffic) byId("world-status").append(
+    metric("지상 교통", format(data.traffic.active_vehicles) + " / " + format(data.traffic.vehicle_limit) + "대 · " + (data.traffic.simulating ? "주행 중" : "정지")),
+    metric("도로 / 항공망", format(data.traffic.lanes) + "개 차선 · 항공 회랑 " + format(data.traffic.air_corridors) + "개"),
+    metric("항공 교통", format(data.traffic.aircraft) + " / " + format(data.traffic.aircraft_limit) + "대"),
+    metric("배치 프롭", format(data.traffic.scenery_props) + "개"),
   );
   const perf = data.performance;
   if (!perf) {

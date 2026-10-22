@@ -66,12 +66,28 @@ bool CityLayout::OverlapsRoad(const Building &b, float clearance)
     }
     return false;
 }
+bool CityLayout::IsQuestSpace(Vector2 p, float clearance)
+{
+    auto inside = [=](Vector2 minimum, Vector2 maximum) {
+        return p.x >= minimum.x - clearance && p.x <= maximum.x + clearance && p.y >= minimum.y - clearance &&
+               p.y <= maximum.y + clearance;
+    };
+    return inside(kPlazaMin, kPlazaMax) || inside(kBikeAccessMin, kBikeAccessMax);
+}
+bool CityLayout::OverlapsQuestSpace(const Building &b, float clearance)
+{
+    auto overlaps = [&](Vector2 minimum, Vector2 maximum) {
+        return b.x - clearance < maximum.x && b.x + b.width + clearance > minimum.x &&
+               b.y - clearance < maximum.y && b.y + b.depth + clearance > minimum.y;
+    };
+    return overlaps(kPlazaMin, kPlazaMax) || overlaps(kBikeAccessMin, kBikeAccessMax);
+}
 void CityLayout::ValidateBuildings(std::vector<Building> &buildings)
 {
     std::vector<Building> valid;
     for (const auto &b : buildings)
     {
-        if (OverlapsRoad(b))
+        if (OverlapsRoad(b) || OverlapsQuestSpace(b))
         {
             continue;
         }
@@ -87,17 +103,6 @@ void CityLayout::ValidateBuildings(std::vector<Building> &buildings)
         }
     }
     buildings.swap(valid);
-}
-Vector2 CityLayout::TrafficPosition(int index, float seconds)
-{
-    float direction = index % 2 == 0 ? 1.f : -1.f;
-    const float length = kTrafficMaxX - kTrafficMinX;
-    float phase = std::fmod(seconds * 2.4f + (index / 2) * 13.333333f + (-20 - kTrafficMinX), length);
-    return {direction * (kTrafficMinX + phase), index % 2 == 0 ? -.5f : .5f};
-}
-float CityLayout::TrafficYaw(int index)
-{
-    return index % 2 == 0 ? 0.f : kPi;
 }
 unsigned char Game::NormalizeKey(unsigned char key)
 {
@@ -219,7 +224,11 @@ void Game::Reset()
             i % 2 == 0 ? std::array<float, 4>{.32f, .7f, .78f, 1} : std::array<float, 4>{.85f, .62f, .35f, 1};
         building.palette.emission = {.25f, .75f, .85f, 1};
     }
-    Building observatory{5, -8, 5, 4, 11.5f * models::WorldScale::pixelsPerMeter};
+    // Keep the existing home and template order while moving its facade to the plaza entrance.
+    state.buildings.front().x = kHomeBuildingPosition.x;
+    state.buildings.front().y = kHomeBuildingPosition.y;
+    Building observatory{kObservatoryBuildingPosition.x, kObservatoryBuildingPosition.y, 5, 4,
+                         11.5f * models::WorldScale::pixelsPerMeter};
     observatory.type = models::BuildingType::Observatory;
     observatory.palette.body = {.46f, .55f, .6f, 1};
     observatory.palette.accent = {.3f, .76f, .86f, 1};
@@ -347,6 +356,11 @@ void Game::KeyDown(unsigned char key, int, int)
     {
         InteractWithNearbyTarget();
     }
+    if (key == 'f' && !repeated && !state.isInsideHome && !state.isInObservatory && !state.isBikeMounted &&
+        Overworld::Traffic().RequestCrossing(state.playerPosition))
+    {
+        ShowNotice("보행 신호 요청 / 차량이 교차로를 빠져나간 뒤 횡단 신호가 켜집니다.");
+    }
 }
 void Game::SpecialKeyDown(int key, int, int)
 {
@@ -440,6 +454,11 @@ void Game::Tick(int)
         {
             activeLevel->Update(deltaSeconds);
         }
+        if (!activeLevel && !state.isInsideHome && !state.isInObservatory)
+        {
+            Overworld::Traffic().Update(state, deltaSeconds);
+            Overworld::Flights().Update(state, deltaSeconds);
+        }
         if (activeLevel != &game::GameLevels::Chapter())
         {
             game::GameLevels::Chapter().Update(deltaSeconds);
@@ -506,6 +525,10 @@ bool Game::IsPositionBlocked(Vector2 position)
     bool entrancePillars =
         entranceY > -1.3f && entranceY < -.4f && std::fabs(entranceX) > 2.7f && std::fabs(entranceX) < 3.2f;
     if (entrancePillars)
+    {
+        return true;
+    }
+    if (Overworld::Scenery().IsBlocked(position))
     {
         return true;
     }
@@ -775,8 +798,9 @@ void Game::InteractWithNearbyTarget()
         {
             if (game::GameLevels::Mine().GetState().quest.Advance(game::MineQuestStage::ShowRecord))
             {
-                ShowNotice("리아 / 장비가 거짓말할 수는 있어. 그래도 어디서부터 틀렸는지는 찾아봐야지. 광장 "
-                           "남쪽 도시 수신망에서 중계 흔적을 확인하자.");
+                ShowNotice(
+                    "리아 / 장비가 거짓말할 수는 있어. 그래도 어디서부터 틀렸는지는 찾아봐야지. 광장의 "
+                    "도시 수신망에서 중계 흔적을 확인하자.");
             }
             else
             {
@@ -790,7 +814,8 @@ void Game::InteractWithNearbyTarget()
             return;
         }
         state.mainQuestStage = (std::max)(state.mainQuestStage, MainQuestStage::EnterObservatory);
-        ShowNotice("리아 / 북동쪽 전망대에서 신호를 측정하고 내려와. 기록을 확인한 뒤 어디로 갈지 정하자.");
+        ShowNotice(
+            "리아 / 광장 동쪽 전망대에서 신호를 측정하고 내려와. 기록을 확인한 뒤 어디로 갈지 정하자.");
     }
     if (target == InteractionTarget::Mara)
     {

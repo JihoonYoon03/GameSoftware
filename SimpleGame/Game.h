@@ -80,21 +80,25 @@ enum class InteractionTarget
 constexpr float kPi = 3.14159265f;
 constexpr int kCanvasWidth = 1280;
 constexpr int kCanvasHeight = 800;
-constexpr Vector2 kHomeDoor = {-5, 2};
-constexpr Vector2 kLiaPosition = {-3, 2};
-constexpr Vector2 kCityKainPosition = {-2.2f, 2.8f};
-constexpr Vector2 kMaraPosition = {0, 1};
-constexpr Vector2 kRelayPosition = {3, 1};
-constexpr Vector2 kBeaconPosition = {6, -3};
+constexpr Vector2 kHomeBuildingPosition = {-9, -7};
+constexpr Vector2 kObservatoryBuildingPosition = {10, -9};
+constexpr Vector2 kHomeDoor = {-7, -3.5f};
+constexpr Vector2 kLiaPosition = {-4, 0};
+constexpr Vector2 kCityKainPosition = {-1, .5f};
+constexpr Vector2 kMaraPosition = {0, 3};
+constexpr Vector2 kRelayPosition = {8, 3};
+constexpr Vector2 kBeaconPosition = {12, -3.5f};
 constexpr Vector2 kObservatoryLiaPosition = {-1.5f, -1};
-constexpr Vector2 kJetBikePosition = {3, -2};
-constexpr Vector2 kCityReceiverPosition = {0, -2};
+constexpr Vector2 kJetBikePosition = {7, -10};
+constexpr float kJetBikeYaw = -kPi * .5f;
+constexpr Vector2 kBikeRoadExit = {7, -17};
+constexpr Vector2 kCityReceiverPosition = {1, -3};
 constexpr Vector2 kObservatoryConsole = {2, -2};
 constexpr Vector2 kObservatoryStairs = {-2.8f, 2.8f};
-constexpr float kWorldMinX = -48;
-constexpr float kWorldMaxX = 560;
-constexpr float kWorldMinY = -48;
-constexpr float kWorldMaxY = 304;
+constexpr float kWorldMinX = -440;
+constexpr float kWorldMaxX = 440;
+constexpr float kWorldMinY = -440;
+constexpr float kWorldMaxY = 440;
 
 // State owned by Game. Renderers read it without changing gameplay.
 struct GameState
@@ -113,7 +117,7 @@ struct GameState
     bool isInObservatory = false;
     bool isBikeMounted = false;
     float bikeSpeed = 0;
-    float bikeYaw = 0;
+    float bikeYaw = kJetBikeYaw;
     Vector2 bikePosition = kJetBikePosition;
     Vector2 mineReturnPosition = {128, 18};
     bool gateSignalHeard = false;
@@ -139,7 +143,7 @@ struct GameState
     std::vector<Resident> residents;
 };
 // ============================================================================
-// CityLayout — shared road footprints, building clearance and traffic heading
+// CityLayout — road footprints and reserved quest/parking access
 // ============================================================================
 class CityLayout
 {
@@ -147,12 +151,13 @@ class CityLayout
     // Ground extends beyond the outdoor movement limits to cover viewport corners at the boundary.
     static constexpr int kTerrainMinX = int(kWorldMinX) - 32, kTerrainMaxX = int(kWorldMaxX) + 32;
     static constexpr int kTerrainMinY = int(kWorldMinY) - 32, kTerrainMaxY = int(kWorldMaxY) + 32;
-    static constexpr float kTrafficMinX = -52.f, kTrafficMaxX = 52.f;
     static bool IsRoadTile(int x, int y);
     static bool OverlapsRoad(const Building &building, float clearance = .3f);
+    static constexpr Vector2 kPlazaMin = {-10, -4.5f}, kPlazaMax = {14.5f, 6.5f};
+    static constexpr Vector2 kBikeAccessMin = {5.6f, -18.8f}, kBikeAccessMax = {8.4f, -3.2f};
+    static bool IsQuestSpace(Vector2 position, float clearance = 0);
+    static bool OverlapsQuestSpace(const Building &building, float clearance = .2f);
     static void ValidateBuildings(std::vector<Building> &buildings);
-    static Vector2 TrafficPosition(int index, float seconds);
-    static float TrafficYaw(int index);
 };
 
 // ============================================================================

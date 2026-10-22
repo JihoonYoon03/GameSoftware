@@ -122,6 +122,50 @@ void Drawing::DrawMaterialTile(float x, float y, SurfaceMaterial material, Color
     DrawModel3D(models::ModelLibrary::Get().grounds[size_t(material)], WorldToScreen(x, y), {1, 1, 1}, {},
                 (x + y) * 36, palette);
 }
+void Drawing::DrawGroundStrip(Vector2 start, Vector2 end, float width, ColorRGBA color, float elevation,
+                              SurfaceMaterial material)
+{
+    float dx = end.x - start.x, dy = end.y - start.y;
+    float length = std::sqrt(dx * dx + dy * dy);
+    if (length < .001f)
+    {
+        return;
+    }
+    Vector2 origin = {start.x + dy / length * width * .5f, start.y - dx / length * width * .5f};
+    models::Transform3D transform;
+    transform.yaw = std::atan2(dy, dx);
+    transform.position.z = elevation;
+    models::Palette palette;
+    palette.body = {color.r, color.g, color.b, color.a};
+    // Shared ground meshes retain instancing and participate in normal scene depth testing.
+    static const auto hologram = [] {
+        auto model = std::make_unique<models::Model>();
+        model->space = models::CoordinateSpace::World;
+        model->ground = true;
+        model->count = 1;
+        auto &part = model->parts[0];
+        part.count = 4;
+        part.points[0] = {0, 0, 0};
+        part.points[1] = {1, 0, 0};
+        part.points[2] = {1, 1, 0};
+        part.points[3] = {0, 1, 0};
+        part.color = {1, 1, 1, 1};
+        part.palette = models::PaletteSlot::Body;
+        part.surface = models::Surface::Emissive;
+        return model;
+    }();
+    const auto &model = material == SurfaceMaterial::Glass
+                            ? *hologram
+                            : models::ModelLibrary::Get().grounds[size_t(material)];
+    DrawModel3D(model, WorldToScreen(origin.x, origin.y), {length + .015f, width + .015f, 1}, transform,
+                (origin.x + origin.y) * 36, palette);
+}
+void Drawing::DrawHologramStrip(Vector2 start, Vector2 end, float width, ColorRGBA color, float elevation)
+{
+    Drawing::DrawGroundStrip(start, end, width * 2.4f, {color.r, color.g, color.b, .12f}, elevation - .004f,
+                             SurfaceMaterial::Glass);
+    Drawing::DrawGroundStrip(start, end, width, color, elevation, SurfaceMaterial::Glass);
+}
 void Drawing::DrawSoftShadow(Vector2 center, float radiusX, float radiusY, float opacity)
 {
     renderqueue::Begin(GL_TRIANGLE_FAN);
@@ -537,12 +581,25 @@ void Drawing::DrawWorldVehicle(Vector2 position, float altitude, float scale, mo
                 (position.x + position.y) * 36 + altitude * (1296.f / 1936), palette, &pose);
 }
 void Drawing::DrawProp(const models::Model &model, Vector2 position, models::Point scale,
-                       const models::Palette &palette, float yaw)
+                       const models::Palette &palette, float yaw, float elevation)
 {
     models::Transform3D transform;
     transform.yaw = yaw;
+    transform.position.z = elevation;
     DrawModel3D(model, WorldToScreen(position.x, position.y), scale, transform,
                 (position.x + position.y) * 36, palette);
+}
+void Drawing::DrawWorldAircraft(Vector2 position, float altitude, models::AircraftType type, bool alternate,
+                                float yaw, float bank)
+{
+    models::Transform3D transform;
+    transform.yaw = yaw;
+    transform.roll = bank;
+    transform.position.z = altitude;
+    auto pose = models::ModelRig::Pose(Game::Get().GetState().animationTimeSeconds * 10, true);
+    Drawing::DrawModel3D(models::ModelLibrary::Aircraft(type, alternate),
+                         WorldToScreen(position.x, position.y), {1, 1, 1}, transform,
+                         (position.x + position.y) * 36, {}, &pose);
 }
 void Drawing::DrawWorldBike(Vector2 position, float yaw, float throttle, bool mounted)
 {

@@ -12,6 +12,7 @@
 #include <memory>
 #include <vector>
 #include <utility>
+#include <iterator>
 
 namespace models
 {
@@ -1117,10 +1118,47 @@ void Generate(Library &library)
     ResourceAssets::Bind(library.fungus, "nature/fungus");
     ResourceAssets::Bind(library.crystal, "nature/crystal");
     ResourceAssets::Bind(library.reeds, "nature/reeds");
+    constexpr const char *aircraft[] = {"Kite_Courier", "Manta_AirTaxi", "Mule_Skycrane", "Warden_Survey"};
+    for (size_t i = 0; i < library.aircraft.size(); ++i)
+    {
+        ResourceAssets::Bind(library.aircraft[i],
+                             std::string("aircraft/") + aircraft[i / 2] + (i % 2 ? "_Variant" : ""));
+    }
+    for (size_t i = 0; i < library.scenery.size(); ++i)
+    {
+        auto &model = library.scenery[i];
+        auto type = static_cast<SceneryType>(i);
+        ResourceAssets::Bind(model, std::string("scenery/") + ModelLibrary::SceneryName(type));
+        model.ground = type <= SceneryType::SpeedTable || type == SceneryType::PedestrianHologram ||
+                       type == SceneryType::LandingPad;
+    }
+    ResourceAssets::Bind(library.signalStates[0], "scenery/City_TrafficSignal_Amber");
+    ResourceAssets::Bind(library.signalStates[1], "scenery/City_TrafficSignal_Green");
 }
 
 bool Valid(const Library &library)
 {
+    for (const auto &model : library.aircraft)
+    {
+        if (!ModelFactory::ValidateModel(model))
+        {
+            return false;
+        }
+    }
+    for (const auto &model : library.scenery)
+    {
+        if (!ModelFactory::ValidateModel(model))
+        {
+            return false;
+        }
+    }
+    for (const auto &model : library.signalStates)
+    {
+        if (!ModelFactory::ValidateModel(model))
+        {
+            return false;
+        }
+    }
     for (size_t i = 0; i < library.hairs.size(); ++i)
     {
         if (!ModelFactory::ValidateModel(library.hairs[i]) ||
@@ -1222,5 +1260,39 @@ const Model &ModelLibrary::Character(CharacterType type, Gender gender)
 const Model &ModelLibrary::Hair(HairStyle style, bool covered)
 {
     return covered ? Get().coveredHairs.at(size_t(style)) : Get().hairs.at(size_t(style));
+}
+const Model &ModelLibrary::Aircraft(AircraftType type, bool alternate)
+{
+    return Get().aircraft.at(size_t(type) * 2 + (alternate ? 1 : 0));
+}
+const Model &ModelLibrary::Scenery(SceneryType type)
+{
+    return Get().scenery.at(size_t(type));
+}
+const Model &ModelLibrary::TrafficSignal(unsigned int state)
+{
+    return state == 0 ? Scenery(SceneryType::TrafficSignal) : Get().signalStates.at(state - 1);
+}
+const char *ModelLibrary::SceneryName(SceneryType type)
+{
+    constexpr const char *names[] = {"Road_2Lane_4m",         "Road_4Lane_4m",
+                                     "Road_6Lane_4m",         "Road_Crossroad_12m",
+                                     "Road_TJunction_12m",    "Road_Curve90_R9m",
+                                     "City_Sidewalk_2x4m",    "Road_SpeedTable_4m",
+                                     "Road_CrashBarrier_4m",  "City_Streetlight_4m",
+                                     "City_TrafficSignal",    "City_PedestrianHologram_6m",
+                                     "City_Bollard",          "City_Bench",
+                                     "City_Planter",          "City_TransitShelter",
+                                     "City_Wayfinding",       "City_ChargePost",
+                                     "Utility_Transformer",   "Utility_CargoContainer_6m",
+                                     "Utility_HVAC",          "Utility_PipeRack_4m",
+                                     "Utility_CommRelay",     "Utility_SolarArray",
+                                     "Utility_WaterTank",     "Airfield_LandingPad_16m",
+                                     "Airfield_Beacon",       "Frontier_SurveyTripod",
+                                     "Frontier_FieldShelter", "Frontier_MiningConveyor",
+                                     "Ruin_ObserverMonolith", "Ruin_FracturedArch",
+                                     "Nature_PrismBloom",     "Nature_SailTree"};
+    static_assert(std::size(names) == size_t(SceneryType::Count));
+    return names[size_t(type)];
 }
 } // namespace models

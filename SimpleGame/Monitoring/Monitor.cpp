@@ -275,9 +275,52 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     journey.Raw("position", Position(world.bikePosition));
     journey.Seconds("speed", world.bikeSpeed);
     journey.Seconds("speed_kmh", world.bikeSpeed * models::WorldScale::metersPerUnit * 3.6f);
-    journey.Number("city_spacing", tutorial::Overworld::kCitySpacing);
-    journey.Number("nominal_city_travel_seconds", 20);
+    journey.Number("cruise_speed_kmh",
+                   tutorial::Overworld::kBikeCruiseSpeed * models::WorldScale::metersPerUnit * 3.6f);
+    journey.Text("road_layout", "seeded_radial_districts");
     result.Raw("jet_travel", journey.Finish());
+    JsonObject traffic;
+    const auto &trafficSystem = tutorial::Overworld::Traffic();
+    const auto &roads = tutorial::RoadNetwork::Get();
+    traffic.Number("active_vehicles", trafficSystem.Vehicles().size());
+    traffic.Number("vehicle_limit", tutorial::TrafficSystem::kVehicleLimit);
+    traffic.Number("lanes", roads.lanes.size());
+    traffic.Number("junctions", roads.junctions.size());
+    traffic.Number("air_corridors", roads.airCorridors.size());
+    traffic.Number("aircraft", tutorial::Overworld::Flights().Aircraft().size());
+    traffic.Number("aircraft_limit", tutorial::AirTraffic::kAircraftLimit);
+    traffic.Number("scenery_props", tutorial::Overworld::Scenery().Props().size());
+    traffic.Bool("simulating", !level.active && !chapter.active && !world.isInsideHome &&
+                                   !world.isInObservatory && !world.isPaused);
+    std::string cars = "[";
+    for (const auto &car : trafficSystem.Vehicles())
+    {
+        JsonObject item;
+        item.Number("id", car.id);
+        item.Number("lane", car.lane);
+        item.Raw("position", Position(car.position));
+        item.Seconds("speed", car.speed);
+        item.Bool("turning", car.turnDistance >= 0);
+        item.Text("turn", car.turn == tutorial::TrafficTurn::Left    ? "left"
+                          : car.turn == tutorial::TrafficTurn::Right ? "right"
+                                                                     : "straight");
+        Append(cars, item.Finish());
+    }
+    traffic.Raw("vehicles", cars + "]");
+    std::string flights = "[";
+    for (const auto &craft : tutorial::Overworld::Flights().Aircraft())
+    {
+        JsonObject item;
+        item.Number("id", craft.id);
+        item.Number("route", craft.route);
+        item.Raw("position", Position(craft.position));
+        item.Seconds("altitude_m", craft.altitude * 2);
+        item.Number("type", unsigned(craft.type));
+        item.Bool("alternate", craft.alternate);
+        Append(flights, item.Finish());
+    }
+    traffic.Raw("flights", flights + "]");
+    result.Raw("traffic", traffic.Finish());
 
     auto fillRegion = [](JsonObject &region, const char *id, const char *name, bool loaded, bool current,
                          bool simulation, size_t population, size_t mobs, size_t respawning,
@@ -687,6 +730,19 @@ std::string ModelCatalog::Build()
     {
         out << ',';
         ModelJson(out, library.buildings[i], "building", kBuildingNames[i], i);
+    }
+    constexpr const char *aircraftNames[] = {"운송기", "에어택시", "화물 인양기", "탐사기"};
+    for (size_t i = 0; i < library.aircraft.size(); ++i)
+    {
+        out << ',';
+        auto name = std::string(aircraftNames[i / 2]) + (i % 2 ? " / 대체 모듈" : " / 기본 모듈");
+        ModelJson(out, library.aircraft[i], "aircraft", name.c_str(), i);
+    }
+    for (size_t i = 0; i < library.scenery.size(); ++i)
+    {
+        out << ',';
+        ModelJson(out, library.scenery[i], "scenery",
+                  models::ModelLibrary::SceneryName(static_cast<models::SceneryType>(i)), i);
     }
     out << "],\"character_base\":null}";
     return out.str();

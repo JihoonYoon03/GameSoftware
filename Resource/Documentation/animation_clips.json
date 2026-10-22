@@ -1390,5 +1390,445 @@
       "root_translation": "in_place",
       "purpose": "skeletal vehicle mechanism"
     }
+  ],
+  "AIRCRAFT_Kite_Courier": [
+    {
+      "clip": "Aircraft_Reference",
+      "start": 0,
+      "end": 1,
+      "fps": 30,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Flight_Idle",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Cruise",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Boost",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Bank_Left",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Bank_Right",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "LandingGear_Deploy",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "LandingGear_Retract",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Canopy_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Canopy_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Cargo_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Cargo_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    }
+  ],
+  "AIRCRAFT_Manta_AirTaxi": [
+    {
+      "clip": "Aircraft_Reference",
+      "start": 0,
+      "end": 1,
+      "fps": 30,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Flight_Idle",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Cruise",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Boost",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Bank_Left",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Bank_Right",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "LandingGear_Deploy",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "LandingGear_Retract",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Canopy_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Canopy_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Cargo_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Cargo_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    }
+  ],
+  "AIRCRAFT_Mule_Skycrane": [
+    {
+      "clip": "Aircraft_Reference",
+      "start": 0,
+      "end": 1,
+      "fps": 30,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Flight_Idle",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Cruise",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Boost",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Bank_Left",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Bank_Right",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "LandingGear_Deploy",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "LandingGear_Retract",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Canopy_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Canopy_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Cargo_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Cargo_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    }
+  ],
+  "AIRCRAFT_Warden_Survey": [
+    {
+      "clip": "Aircraft_Reference",
+      "start": 0,
+      "end": 1,
+      "fps": 30,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Flight_Idle",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Cruise",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Boost",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Bank_Left",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Bank_Right",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "LandingGear_Deploy",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "LandingGear_Retract",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Canopy_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Canopy_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Cargo_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Cargo_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    }
   ]
 }

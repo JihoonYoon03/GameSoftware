@@ -16635,6 +16635,3186 @@
       "vehicle_type": "JetBike",
       "forward": "+X",
       "attachment_slot": "underbody"
+    },
+    {
+      "id": "Aircraft_Kite_Courier_PressureHull",
+      "family": "aircraft.Kite_Courier",
+      "slot": "hull",
+      "vertices": 72,
+      "polygons": 56,
+      "triangles": 120,
+      "materials": [
+        "Vehicle_Teal",
+        "Steel",
+        "Glow_Cyan",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Kite_Courier",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Canopy_Glass",
+      "family": "aircraft.Kite_Courier",
+      "slot": "canopy",
+      "vertices": 44,
+      "polygons": 34,
+      "triangles": 80,
+      "materials": [
+        "Glass_Opaque",
+        "Alloy_Light"
+      ],
+      "skeleton": "AIRCRAFT_Kite_Courier",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Canopy_Reinforced",
+      "family": "aircraft.Kite_Courier",
+      "slot": "canopy",
+      "vertices": 48,
+      "polygons": 38,
+      "triangles": 84,
+      "materials": [
+        "Vehicle_Teal",
+        "Glass_Opaque"
+      ],
+      "skeleton": "AIRCRAFT_Kite_Courier",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Kite_Courier_CabinSeats",
+      "family": "aircraft.Kite_Courier",
+      "slot": "seats",
+      "vertices": 16,
+      "polygons": 12,
+      "triangles": 24,
+      "materials": [
+        "Rubber"
+      ],
+      "skeleton": "AIRCRAFT_Kite_Courier",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Wing_L",
+      "family": "aircraft.Kite_Courier",
+      "slot": "wing_L",
+      "vertices": 28,
+      "polygons": 20,
+      "triangles": 44,
+      "materials": [
+        "Vehicle_Teal",
+        "Alloy_Light",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Kite_Courier",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Kite_Courier_LiftField_Front_L",
+      "family": "aircraft.Kite_Courier",
+      "slot": "lift_Front_L",
+      "vertices": 102,
+      "polygons": 86,
+      "triangles": 176,
+      "materials": [
+        "Vehicle_Teal",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Kite_Courier",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Engine_Efficient_L",
+      "family": "aircraft.Kite_Courier",
+      "slot": "engine_L",
+      "vertices": 80,
+      "polygons": 50,
+      "triangles": 140,
+      "materials": [
+        "Vehicle_Teal",
+        "Glow_Cyan",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Kite_Courier",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Engine_Boost_L",
+      "family": "aircraft.Kite_Courier",
+      "slot": "engine_L",
+      "vertices": 80,
+      "polygons": 50,
+      "triangles": 140,
+      "materials": [
+        "Vehicle_Teal",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Kite_Courier",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Kite_Courier_LandingSkid_L",
+      "family": "aircraft.Kite_Courier",
+      "slot": "gear_L",
+      "vertices": 32,
+      "polygons": 22,
+      "triangles": 52,
+      "materials": [
+        "Steel",
+        "Rubber"
+      ],
+      "skeleton": "AIRCRAFT_Kite_Courier",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Kite_Courier_TailFin_L",
+      "family": "aircraft.Kite_Courier",
+      "slot": "tail_L",
+      "vertices": 20,
+      "polygons": 14,
+      "triangles": 32,
+      "materials": [
+        "Vehicle_Teal",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Kite_Courier",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Wing_R",
+      "family": "aircraft.Kite_Courier",
+      "slot": "wing_R",
+      "vertices": 28,
+      "polygons": 20,
+      "triangles": 44,
+      "materials": [
+        "Vehicle_Teal",
+        "Alloy_Light",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Kite_Courier",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Kite_Courier_LiftField_Front_R",
+      "family": "aircraft.Kite_Courier",
+      "slot": "lift_Front_R",
+      "vertices": 102,
+      "polygons": 86,
+      "triangles": 176,
+      "materials": [
+        "Vehicle_Teal",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Kite_Courier",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Engine_Efficient_R",
+      "family": "aircraft.Kite_Courier",
+      "slot": "engine_R",
+      "vertices": 80,
+      "polygons": 50,
+      "triangles": 140,
+      "materials": [
+        "Vehicle_Teal",
+        "Glow_Cyan",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Kite_Courier",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Engine_Boost_R",
+      "family": "aircraft.Kite_Courier",
+      "slot": "engine_R",
+      "vertices": 80,
+      "polygons": 50,
+      "triangles": 140,
+      "materials": [
+        "Vehicle_Teal",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Kite_Courier",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Kite_Courier_LandingSkid_R",
+      "family": "aircraft.Kite_Courier",
+      "slot": "gear_R",
+      "vertices": 32,
+      "polygons": 22,
+      "triangles": 52,
+      "materials": [
+        "Steel",
+        "Rubber"
+      ],
+      "skeleton": "AIRCRAFT_Kite_Courier",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Kite_Courier_TailFin_R",
+      "family": "aircraft.Kite_Courier",
+      "slot": "tail_R",
+      "vertices": 20,
+      "polygons": 14,
+      "triangles": 32,
+      "materials": [
+        "Vehicle_Teal",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Kite_Courier",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Payload_Standard",
+      "family": "aircraft.Kite_Courier",
+      "slot": "payload",
+      "vertices": 16,
+      "polygons": 12,
+      "triangles": 24,
+      "materials": [
+        "Vehicle_Teal",
+        "Glow_Amber"
+      ],
+      "skeleton": "AIRCRAFT_Kite_Courier",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Payload_Alternate",
+      "family": "aircraft.Kite_Courier",
+      "slot": "payload",
+      "vertices": 16,
+      "polygons": 12,
+      "triangles": 24,
+      "materials": [
+        "Steel",
+        "Glow_Amber"
+      ],
+      "skeleton": "AIRCRAFT_Kite_Courier",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Kite_Courier_ServiceHatch",
+      "family": "aircraft.Kite_Courier",
+      "slot": "hatch",
+      "vertices": 16,
+      "polygons": 12,
+      "triangles": 24,
+      "materials": [
+        "Vehicle_Teal",
+        "Alloy_Light"
+      ],
+      "skeleton": "AIRCRAFT_Kite_Courier",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_PressureHull",
+      "family": "aircraft.Manta_AirTaxi",
+      "slot": "hull",
+      "vertices": 72,
+      "polygons": 56,
+      "triangles": 120,
+      "materials": [
+        "Vehicle_Ivory",
+        "Steel",
+        "Glow_Cyan",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Manta_AirTaxi",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Canopy_Glass",
+      "family": "aircraft.Manta_AirTaxi",
+      "slot": "canopy",
+      "vertices": 44,
+      "polygons": 34,
+      "triangles": 80,
+      "materials": [
+        "Glass_Opaque",
+        "Alloy_Light"
+      ],
+      "skeleton": "AIRCRAFT_Manta_AirTaxi",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Canopy_Reinforced",
+      "family": "aircraft.Manta_AirTaxi",
+      "slot": "canopy",
+      "vertices": 48,
+      "polygons": 38,
+      "triangles": 84,
+      "materials": [
+        "Vehicle_Ivory",
+        "Glass_Opaque"
+      ],
+      "skeleton": "AIRCRAFT_Manta_AirTaxi",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_CabinSeats",
+      "family": "aircraft.Manta_AirTaxi",
+      "slot": "seats",
+      "vertices": 64,
+      "polygons": 48,
+      "triangles": 96,
+      "materials": [
+        "Rubber"
+      ],
+      "skeleton": "AIRCRAFT_Manta_AirTaxi",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Wing_L",
+      "family": "aircraft.Manta_AirTaxi",
+      "slot": "wing_L",
+      "vertices": 28,
+      "polygons": 20,
+      "triangles": 44,
+      "materials": [
+        "Vehicle_Ivory",
+        "Alloy_Light",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Manta_AirTaxi",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_LiftField_Front_L",
+      "family": "aircraft.Manta_AirTaxi",
+      "slot": "lift_Front_L",
+      "vertices": 102,
+      "polygons": 86,
+      "triangles": 176,
+      "materials": [
+        "Vehicle_Ivory",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Manta_AirTaxi",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_LiftField_Rear_L",
+      "family": "aircraft.Manta_AirTaxi",
+      "slot": "lift_Rear_L",
+      "vertices": 102,
+      "polygons": 86,
+      "triangles": 176,
+      "materials": [
+        "Vehicle_Ivory",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Manta_AirTaxi",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Engine_Efficient_L",
+      "family": "aircraft.Manta_AirTaxi",
+      "slot": "engine_L",
+      "vertices": 80,
+      "polygons": 50,
+      "triangles": 140,
+      "materials": [
+        "Vehicle_Ivory",
+        "Glow_Cyan",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Manta_AirTaxi",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Engine_Boost_L",
+      "family": "aircraft.Manta_AirTaxi",
+      "slot": "engine_L",
+      "vertices": 80,
+      "polygons": 50,
+      "triangles": 140,
+      "materials": [
+        "Vehicle_Ivory",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Manta_AirTaxi",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_LandingSkid_L",
+      "family": "aircraft.Manta_AirTaxi",
+      "slot": "gear_L",
+      "vertices": 32,
+      "polygons": 22,
+      "triangles": 52,
+      "materials": [
+        "Steel",
+        "Rubber"
+      ],
+      "skeleton": "AIRCRAFT_Manta_AirTaxi",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_TailFin_L",
+      "family": "aircraft.Manta_AirTaxi",
+      "slot": "tail_L",
+      "vertices": 20,
+      "polygons": 14,
+      "triangles": 32,
+      "materials": [
+        "Vehicle_Ivory",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Manta_AirTaxi",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Wing_R",
+      "family": "aircraft.Manta_AirTaxi",
+      "slot": "wing_R",
+      "vertices": 28,
+      "polygons": 20,
+      "triangles": 44,
+      "materials": [
+        "Vehicle_Ivory",
+        "Alloy_Light",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Manta_AirTaxi",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_LiftField_Front_R",
+      "family": "aircraft.Manta_AirTaxi",
+      "slot": "lift_Front_R",
+      "vertices": 102,
+      "polygons": 86,
+      "triangles": 176,
+      "materials": [
+        "Vehicle_Ivory",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Manta_AirTaxi",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_LiftField_Rear_R",
+      "family": "aircraft.Manta_AirTaxi",
+      "slot": "lift_Rear_R",
+      "vertices": 102,
+      "polygons": 86,
+      "triangles": 176,
+      "materials": [
+        "Vehicle_Ivory",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Manta_AirTaxi",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Engine_Efficient_R",
+      "family": "aircraft.Manta_AirTaxi",
+      "slot": "engine_R",
+      "vertices": 80,
+      "polygons": 50,
+      "triangles": 140,
+      "materials": [
+        "Vehicle_Ivory",
+        "Glow_Cyan",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Manta_AirTaxi",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Engine_Boost_R",
+      "family": "aircraft.Manta_AirTaxi",
+      "slot": "engine_R",
+      "vertices": 80,
+      "polygons": 50,
+      "triangles": 140,
+      "materials": [
+        "Vehicle_Ivory",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Manta_AirTaxi",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_LandingSkid_R",
+      "family": "aircraft.Manta_AirTaxi",
+      "slot": "gear_R",
+      "vertices": 32,
+      "polygons": 22,
+      "triangles": 52,
+      "materials": [
+        "Steel",
+        "Rubber"
+      ],
+      "skeleton": "AIRCRAFT_Manta_AirTaxi",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_TailFin_R",
+      "family": "aircraft.Manta_AirTaxi",
+      "slot": "tail_R",
+      "vertices": 20,
+      "polygons": 14,
+      "triangles": 32,
+      "materials": [
+        "Vehicle_Ivory",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Manta_AirTaxi",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Payload_Standard",
+      "family": "aircraft.Manta_AirTaxi",
+      "slot": "payload",
+      "vertices": 24,
+      "polygons": 18,
+      "triangles": 36,
+      "materials": [
+        "Vehicle_Ivory",
+        "Glass_Opaque"
+      ],
+      "skeleton": "AIRCRAFT_Manta_AirTaxi",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Payload_Alternate",
+      "family": "aircraft.Manta_AirTaxi",
+      "slot": "payload",
+      "vertices": 56,
+      "polygons": 42,
+      "triangles": 84,
+      "materials": [
+        "Ceramic",
+        "Glass_Opaque",
+        "Cloth_Burgundy"
+      ],
+      "skeleton": "AIRCRAFT_Manta_AirTaxi",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_ServiceHatch",
+      "family": "aircraft.Manta_AirTaxi",
+      "slot": "hatch",
+      "vertices": 16,
+      "polygons": 12,
+      "triangles": 24,
+      "materials": [
+        "Vehicle_Ivory",
+        "Alloy_Light"
+      ],
+      "skeleton": "AIRCRAFT_Manta_AirTaxi",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_PressureHull",
+      "family": "aircraft.Mule_Skycrane",
+      "slot": "hull",
+      "vertices": 72,
+      "polygons": 56,
+      "triangles": 120,
+      "materials": [
+        "Vehicle_Utility",
+        "Steel",
+        "Glow_Cyan",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Mule_Skycrane",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Canopy_Glass",
+      "family": "aircraft.Mule_Skycrane",
+      "slot": "canopy",
+      "vertices": 44,
+      "polygons": 34,
+      "triangles": 80,
+      "materials": [
+        "Glass_Opaque",
+        "Alloy_Light"
+      ],
+      "skeleton": "AIRCRAFT_Mule_Skycrane",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Canopy_Reinforced",
+      "family": "aircraft.Mule_Skycrane",
+      "slot": "canopy",
+      "vertices": 48,
+      "polygons": 38,
+      "triangles": 84,
+      "materials": [
+        "Vehicle_Utility",
+        "Glass_Opaque"
+      ],
+      "skeleton": "AIRCRAFT_Mule_Skycrane",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_CabinSeats",
+      "family": "aircraft.Mule_Skycrane",
+      "slot": "seats",
+      "vertices": 64,
+      "polygons": 48,
+      "triangles": 96,
+      "materials": [
+        "Rubber"
+      ],
+      "skeleton": "AIRCRAFT_Mule_Skycrane",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Wing_L",
+      "family": "aircraft.Mule_Skycrane",
+      "slot": "wing_L",
+      "vertices": 28,
+      "polygons": 20,
+      "triangles": 44,
+      "materials": [
+        "Vehicle_Utility",
+        "Alloy_Light",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Mule_Skycrane",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_LiftField_Front_L",
+      "family": "aircraft.Mule_Skycrane",
+      "slot": "lift_Front_L",
+      "vertices": 102,
+      "polygons": 86,
+      "triangles": 176,
+      "materials": [
+        "Vehicle_Utility",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Mule_Skycrane",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_LiftField_Rear_L",
+      "family": "aircraft.Mule_Skycrane",
+      "slot": "lift_Rear_L",
+      "vertices": 102,
+      "polygons": 86,
+      "triangles": 176,
+      "materials": [
+        "Vehicle_Utility",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Mule_Skycrane",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Engine_Efficient_L",
+      "family": "aircraft.Mule_Skycrane",
+      "slot": "engine_L",
+      "vertices": 80,
+      "polygons": 50,
+      "triangles": 140,
+      "materials": [
+        "Vehicle_Utility",
+        "Glow_Cyan",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Mule_Skycrane",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Engine_Boost_L",
+      "family": "aircraft.Mule_Skycrane",
+      "slot": "engine_L",
+      "vertices": 80,
+      "polygons": 50,
+      "triangles": 140,
+      "materials": [
+        "Vehicle_Utility",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Mule_Skycrane",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_LandingSkid_L",
+      "family": "aircraft.Mule_Skycrane",
+      "slot": "gear_L",
+      "vertices": 32,
+      "polygons": 22,
+      "triangles": 52,
+      "materials": [
+        "Steel",
+        "Rubber"
+      ],
+      "skeleton": "AIRCRAFT_Mule_Skycrane",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_TailFin_L",
+      "family": "aircraft.Mule_Skycrane",
+      "slot": "tail_L",
+      "vertices": 20,
+      "polygons": 14,
+      "triangles": 32,
+      "materials": [
+        "Vehicle_Utility",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Mule_Skycrane",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Wing_R",
+      "family": "aircraft.Mule_Skycrane",
+      "slot": "wing_R",
+      "vertices": 28,
+      "polygons": 20,
+      "triangles": 44,
+      "materials": [
+        "Vehicle_Utility",
+        "Alloy_Light",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Mule_Skycrane",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_LiftField_Front_R",
+      "family": "aircraft.Mule_Skycrane",
+      "slot": "lift_Front_R",
+      "vertices": 102,
+      "polygons": 86,
+      "triangles": 176,
+      "materials": [
+        "Vehicle_Utility",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Mule_Skycrane",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_LiftField_Rear_R",
+      "family": "aircraft.Mule_Skycrane",
+      "slot": "lift_Rear_R",
+      "vertices": 102,
+      "polygons": 86,
+      "triangles": 176,
+      "materials": [
+        "Vehicle_Utility",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Mule_Skycrane",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Engine_Efficient_R",
+      "family": "aircraft.Mule_Skycrane",
+      "slot": "engine_R",
+      "vertices": 80,
+      "polygons": 50,
+      "triangles": 140,
+      "materials": [
+        "Vehicle_Utility",
+        "Glow_Cyan",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Mule_Skycrane",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Engine_Boost_R",
+      "family": "aircraft.Mule_Skycrane",
+      "slot": "engine_R",
+      "vertices": 80,
+      "polygons": 50,
+      "triangles": 140,
+      "materials": [
+        "Vehicle_Utility",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Mule_Skycrane",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_LandingSkid_R",
+      "family": "aircraft.Mule_Skycrane",
+      "slot": "gear_R",
+      "vertices": 32,
+      "polygons": 22,
+      "triangles": 52,
+      "materials": [
+        "Steel",
+        "Rubber"
+      ],
+      "skeleton": "AIRCRAFT_Mule_Skycrane",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_TailFin_R",
+      "family": "aircraft.Mule_Skycrane",
+      "slot": "tail_R",
+      "vertices": 20,
+      "polygons": 14,
+      "triangles": 32,
+      "materials": [
+        "Vehicle_Utility",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Mule_Skycrane",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_OutboardBoom_L",
+      "family": "aircraft.Mule_Skycrane",
+      "slot": "boom_L",
+      "vertices": 16,
+      "polygons": 10,
+      "triangles": 28,
+      "materials": [
+        "Steel"
+      ],
+      "skeleton": "AIRCRAFT_Mule_Skycrane",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_OutboardBoom_R",
+      "family": "aircraft.Mule_Skycrane",
+      "slot": "boom_R",
+      "vertices": 16,
+      "polygons": 10,
+      "triangles": 28,
+      "materials": [
+        "Steel"
+      ],
+      "skeleton": "AIRCRAFT_Mule_Skycrane",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Payload_Standard",
+      "family": "aircraft.Mule_Skycrane",
+      "slot": "payload",
+      "vertices": 88,
+      "polygons": 62,
+      "triangles": 140,
+      "materials": [
+        "Vehicle_Utility",
+        "Steel",
+        "Alloy_Light"
+      ],
+      "skeleton": "AIRCRAFT_Mule_Skycrane",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Payload_Alternate",
+      "family": "aircraft.Mule_Skycrane",
+      "slot": "payload",
+      "vertices": 56,
+      "polygons": 38,
+      "triangles": 92,
+      "materials": [
+        "Vehicle_Utility",
+        "Steel"
+      ],
+      "skeleton": "AIRCRAFT_Mule_Skycrane",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_ServiceHatch",
+      "family": "aircraft.Mule_Skycrane",
+      "slot": "hatch",
+      "vertices": 16,
+      "polygons": 12,
+      "triangles": 24,
+      "materials": [
+        "Vehicle_Utility",
+        "Alloy_Light"
+      ],
+      "skeleton": "AIRCRAFT_Mule_Skycrane",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Warden_Survey_PressureHull",
+      "family": "aircraft.Warden_Survey",
+      "slot": "hull",
+      "vertices": 72,
+      "polygons": 56,
+      "triangles": 120,
+      "materials": [
+        "Vehicle_Patrol",
+        "Steel",
+        "Glow_Cyan",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Warden_Survey",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Canopy_Glass",
+      "family": "aircraft.Warden_Survey",
+      "slot": "canopy",
+      "vertices": 44,
+      "polygons": 34,
+      "triangles": 80,
+      "materials": [
+        "Glass_Opaque",
+        "Alloy_Light"
+      ],
+      "skeleton": "AIRCRAFT_Warden_Survey",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Canopy_Reinforced",
+      "family": "aircraft.Warden_Survey",
+      "slot": "canopy",
+      "vertices": 48,
+      "polygons": 38,
+      "triangles": 84,
+      "materials": [
+        "Vehicle_Patrol",
+        "Glass_Opaque"
+      ],
+      "skeleton": "AIRCRAFT_Warden_Survey",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Warden_Survey_CabinSeats",
+      "family": "aircraft.Warden_Survey",
+      "slot": "seats",
+      "vertices": 16,
+      "polygons": 12,
+      "triangles": 24,
+      "materials": [
+        "Rubber"
+      ],
+      "skeleton": "AIRCRAFT_Warden_Survey",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Wing_L",
+      "family": "aircraft.Warden_Survey",
+      "slot": "wing_L",
+      "vertices": 28,
+      "polygons": 20,
+      "triangles": 44,
+      "materials": [
+        "Vehicle_Patrol",
+        "Alloy_Light",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Warden_Survey",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Warden_Survey_LiftField_Front_L",
+      "family": "aircraft.Warden_Survey",
+      "slot": "lift_Front_L",
+      "vertices": 102,
+      "polygons": 86,
+      "triangles": 176,
+      "materials": [
+        "Vehicle_Patrol",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Warden_Survey",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Engine_Efficient_L",
+      "family": "aircraft.Warden_Survey",
+      "slot": "engine_L",
+      "vertices": 80,
+      "polygons": 50,
+      "triangles": 140,
+      "materials": [
+        "Vehicle_Patrol",
+        "Glow_Cyan",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Warden_Survey",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Engine_Boost_L",
+      "family": "aircraft.Warden_Survey",
+      "slot": "engine_L",
+      "vertices": 80,
+      "polygons": 50,
+      "triangles": 140,
+      "materials": [
+        "Vehicle_Patrol",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Warden_Survey",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Warden_Survey_LandingSkid_L",
+      "family": "aircraft.Warden_Survey",
+      "slot": "gear_L",
+      "vertices": 32,
+      "polygons": 22,
+      "triangles": 52,
+      "materials": [
+        "Steel",
+        "Rubber"
+      ],
+      "skeleton": "AIRCRAFT_Warden_Survey",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Warden_Survey_TailFin_L",
+      "family": "aircraft.Warden_Survey",
+      "slot": "tail_L",
+      "vertices": 20,
+      "polygons": 14,
+      "triangles": 32,
+      "materials": [
+        "Vehicle_Patrol",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Warden_Survey",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Wing_R",
+      "family": "aircraft.Warden_Survey",
+      "slot": "wing_R",
+      "vertices": 28,
+      "polygons": 20,
+      "triangles": 44,
+      "materials": [
+        "Vehicle_Patrol",
+        "Alloy_Light",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Warden_Survey",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Warden_Survey_LiftField_Front_R",
+      "family": "aircraft.Warden_Survey",
+      "slot": "lift_Front_R",
+      "vertices": 102,
+      "polygons": 86,
+      "triangles": 176,
+      "materials": [
+        "Vehicle_Patrol",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Warden_Survey",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Engine_Efficient_R",
+      "family": "aircraft.Warden_Survey",
+      "slot": "engine_R",
+      "vertices": 80,
+      "polygons": 50,
+      "triangles": 140,
+      "materials": [
+        "Vehicle_Patrol",
+        "Glow_Cyan",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Warden_Survey",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Engine_Boost_R",
+      "family": "aircraft.Warden_Survey",
+      "slot": "engine_R",
+      "vertices": 80,
+      "polygons": 50,
+      "triangles": 140,
+      "materials": [
+        "Vehicle_Patrol",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Warden_Survey",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Warden_Survey_LandingSkid_R",
+      "family": "aircraft.Warden_Survey",
+      "slot": "gear_R",
+      "vertices": 32,
+      "polygons": 22,
+      "triangles": 52,
+      "materials": [
+        "Steel",
+        "Rubber"
+      ],
+      "skeleton": "AIRCRAFT_Warden_Survey",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Warden_Survey_TailFin_R",
+      "family": "aircraft.Warden_Survey",
+      "slot": "tail_R",
+      "vertices": 20,
+      "polygons": 14,
+      "triangles": 32,
+      "materials": [
+        "Vehicle_Patrol",
+        "Field_Core"
+      ],
+      "skeleton": "AIRCRAFT_Warden_Survey",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Payload_Standard",
+      "family": "aircraft.Warden_Survey",
+      "slot": "payload",
+      "vertices": 40,
+      "polygons": 24,
+      "triangles": 72,
+      "materials": [
+        "Steel",
+        "Glow_Cyan"
+      ],
+      "skeleton": "AIRCRAFT_Warden_Survey",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Payload_Alternate",
+      "family": "aircraft.Warden_Survey",
+      "slot": "payload",
+      "vertices": 56,
+      "polygons": 36,
+      "triangles": 96,
+      "materials": [
+        "Steel",
+        "Glow_Violet",
+        "Warning"
+      ],
+      "skeleton": "AIRCRAFT_Warden_Survey",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Aircraft_Warden_Survey_ServiceHatch",
+      "family": "aircraft.Warden_Survey",
+      "slot": "hatch",
+      "vertices": 16,
+      "polygons": 12,
+      "triangles": 24,
+      "materials": [
+        "Vehicle_Patrol",
+        "Alloy_Light"
+      ],
+      "skeleton": "AIRCRAFT_Warden_Survey",
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_2Lane_4m_Lane_01",
+      "family": "scenery.Road_2Lane_4m",
+      "slot": "Lane_01",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Road_Basalt"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_2Lane_4m_Lane_02",
+      "family": "scenery.Road_2Lane_4m",
+      "slot": "Lane_02",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Road_Basalt"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_2Lane_4m_LaneMarkings",
+      "family": "scenery.Road_2Lane_4m",
+      "slot": "LaneMarkings",
+      "vertices": 16,
+      "polygons": 12,
+      "triangles": 24,
+      "materials": [
+        "Warning"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_2Lane_4m_EdgeMarkings",
+      "family": "scenery.Road_2Lane_4m",
+      "slot": "EdgeMarkings",
+      "vertices": 16,
+      "polygons": 12,
+      "triangles": 24,
+      "materials": [
+        "Ceramic"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_4Lane_4m_Lane_01",
+      "family": "scenery.Road_4Lane_4m",
+      "slot": "Lane_01",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Road_Basalt"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_4Lane_4m_Lane_02",
+      "family": "scenery.Road_4Lane_4m",
+      "slot": "Lane_02",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Road_Basalt"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_4Lane_4m_Lane_03",
+      "family": "scenery.Road_4Lane_4m",
+      "slot": "Lane_03",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Road_Basalt"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_4Lane_4m_Lane_04",
+      "family": "scenery.Road_4Lane_4m",
+      "slot": "Lane_04",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Road_Basalt"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_4Lane_4m_LaneMarkings",
+      "family": "scenery.Road_4Lane_4m",
+      "slot": "LaneMarkings",
+      "vertices": 32,
+      "polygons": 24,
+      "triangles": 48,
+      "materials": [
+        "Ceramic",
+        "Warning"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_4Lane_4m_EdgeMarkings",
+      "family": "scenery.Road_4Lane_4m",
+      "slot": "EdgeMarkings",
+      "vertices": 16,
+      "polygons": 12,
+      "triangles": 24,
+      "materials": [
+        "Ceramic"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_6Lane_4m_Lane_01",
+      "family": "scenery.Road_6Lane_4m",
+      "slot": "Lane_01",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Road_Basalt"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_6Lane_4m_Lane_02",
+      "family": "scenery.Road_6Lane_4m",
+      "slot": "Lane_02",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Road_Basalt"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_6Lane_4m_Lane_03",
+      "family": "scenery.Road_6Lane_4m",
+      "slot": "Lane_03",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Road_Basalt"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_6Lane_4m_Lane_04",
+      "family": "scenery.Road_6Lane_4m",
+      "slot": "Lane_04",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Road_Basalt"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_6Lane_4m_Lane_05",
+      "family": "scenery.Road_6Lane_4m",
+      "slot": "Lane_05",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Road_Basalt"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_6Lane_4m_Lane_06",
+      "family": "scenery.Road_6Lane_4m",
+      "slot": "Lane_06",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Road_Basalt"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_6Lane_4m_LaneMarkings",
+      "family": "scenery.Road_6Lane_4m",
+      "slot": "LaneMarkings",
+      "vertices": 48,
+      "polygons": 36,
+      "triangles": 72,
+      "materials": [
+        "Ceramic",
+        "Warning"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_6Lane_4m_EdgeMarkings",
+      "family": "scenery.Road_6Lane_4m",
+      "slot": "EdgeMarkings",
+      "vertices": 16,
+      "polygons": 12,
+      "triangles": 24,
+      "materials": [
+        "Ceramic"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_Crossroad_12m_Surface",
+      "family": "scenery.Road_Crossroad_12m",
+      "slot": "Surface",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Road_Basalt"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_Crossroad_12m_Crosswalk_0_-1",
+      "family": "scenery.Road_Crossroad_12m",
+      "slot": "Crosswalk_0_-1",
+      "vertices": 64,
+      "polygons": 48,
+      "triangles": 96,
+      "materials": [
+        "Glow_Cyan"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_Crossroad_12m_Crosswalk_0_1",
+      "family": "scenery.Road_Crossroad_12m",
+      "slot": "Crosswalk_0_1",
+      "vertices": 64,
+      "polygons": 48,
+      "triangles": 96,
+      "materials": [
+        "Glow_Cyan"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_Crossroad_12m_Crosswalk_1_-1",
+      "family": "scenery.Road_Crossroad_12m",
+      "slot": "Crosswalk_1_-1",
+      "vertices": 64,
+      "polygons": 48,
+      "triangles": 96,
+      "materials": [
+        "Glow_Cyan"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_Crossroad_12m_Crosswalk_1_1",
+      "family": "scenery.Road_Crossroad_12m",
+      "slot": "Crosswalk_1_1",
+      "vertices": 64,
+      "polygons": 48,
+      "triangles": 96,
+      "materials": [
+        "Glow_Cyan"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_TJunction_12m_Surface",
+      "family": "scenery.Road_TJunction_12m",
+      "slot": "Surface",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Road_Basalt"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_TJunction_12m_Crosswalk_0_-1",
+      "family": "scenery.Road_TJunction_12m",
+      "slot": "Crosswalk_0_-1",
+      "vertices": 64,
+      "polygons": 48,
+      "triangles": 96,
+      "materials": [
+        "Glow_Cyan"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_TJunction_12m_Crosswalk_0_1",
+      "family": "scenery.Road_TJunction_12m",
+      "slot": "Crosswalk_0_1",
+      "vertices": 64,
+      "polygons": 48,
+      "triangles": 96,
+      "materials": [
+        "Glow_Cyan"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_TJunction_12m_Crosswalk_1_-1",
+      "family": "scenery.Road_TJunction_12m",
+      "slot": "Crosswalk_1_-1",
+      "vertices": 64,
+      "polygons": 48,
+      "triangles": 96,
+      "materials": [
+        "Glow_Cyan"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_TJunction_12m_ClosedEdge",
+      "family": "scenery.Road_TJunction_12m",
+      "slot": "ClosedEdge",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Ceramic"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_Curve90_R9m_ArcSurface",
+      "family": "scenery.Road_Curve90_R9m",
+      "slot": "ArcSurface",
+      "vertices": 96,
+      "polygons": 72,
+      "triangles": 144,
+      "materials": [
+        "Road_Basalt"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_Curve90_R9m_CenterMarkings",
+      "family": "scenery.Road_Curve90_R9m",
+      "slot": "CenterMarkings",
+      "vertices": 96,
+      "polygons": 72,
+      "triangles": 144,
+      "materials": [
+        "Warning"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_Sidewalk_2x4m_Slab",
+      "family": "scenery.City_Sidewalk_2x4m",
+      "slot": "Slab",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Habitat_Concrete"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_Sidewalk_2x4m_Curb",
+      "family": "scenery.City_Sidewalk_2x4m",
+      "slot": "Curb",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Ceramic"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_Sidewalk_2x4m_ServiceStrip",
+      "family": "scenery.City_Sidewalk_2x4m",
+      "slot": "ServiceStrip",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Steel"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_SpeedTable_4m_Ramp",
+      "family": "scenery.Road_SpeedTable_4m",
+      "slot": "Ramp",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Steel"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_SpeedTable_4m_WarningBars",
+      "family": "scenery.Road_SpeedTable_4m",
+      "slot": "WarningBars",
+      "vertices": 48,
+      "polygons": 36,
+      "triangles": 72,
+      "materials": [
+        "Warning",
+        "Rubber"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_Streetlight_4m_Foundation",
+      "family": "scenery.City_Streetlight_4m",
+      "slot": "Foundation",
+      "vertices": 16,
+      "polygons": 10,
+      "triangles": 28,
+      "materials": [
+        "Steel"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_Streetlight_4m_Mast",
+      "family": "scenery.City_Streetlight_4m",
+      "slot": "Mast",
+      "vertices": 24,
+      "polygons": 16,
+      "triangles": 40,
+      "materials": [
+        "Ceramic",
+        "Field_Core"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_Streetlight_4m_Luminaire",
+      "family": "scenery.City_Streetlight_4m",
+      "slot": "Luminaire",
+      "vertices": 44,
+      "polygons": 36,
+      "triangles": 80,
+      "materials": [
+        "Ceramic",
+        "Field_Core"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_TrafficSignal_HoverHousing",
+      "family": "scenery.City_TrafficSignal",
+      "slot": "HoverHousing",
+      "vertices": 32,
+      "polygons": 20,
+      "triangles": 56,
+      "materials": [
+        "Steel",
+        "Glass_Opaque"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_TrafficSignal_FieldStabilizers",
+      "family": "scenery.City_TrafficSignal",
+      "slot": "FieldStabilizers",
+      "vertices": 204,
+      "polygons": 172,
+      "triangles": 352,
+      "materials": [
+        "Ceramic",
+        "Field_Core"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_TrafficSignal_StopGlyph",
+      "family": "scenery.City_TrafficSignal",
+      "slot": "StopGlyph",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Signal_Stop"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_TrafficSignal_WaitGlyph",
+      "family": "scenery.City_TrafficSignal",
+      "slot": "WaitGlyph",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Glass_Opaque"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_TrafficSignal_GoGlyph",
+      "family": "scenery.City_TrafficSignal",
+      "slot": "GoGlyph",
+      "vertices": 6,
+      "polygons": 5,
+      "triangles": 8,
+      "materials": [
+        "Glass_Opaque"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_PedestrianHologram_6m_Projectors",
+      "family": "scenery.City_PedestrianHologram_6m",
+      "slot": "Projectors",
+      "vertices": 128,
+      "polygons": 80,
+      "triangles": 224,
+      "materials": [
+        "Steel",
+        "Field_Core"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_PedestrianHologram_6m_WalkGrid",
+      "family": "scenery.City_PedestrianHologram_6m",
+      "slot": "WalkGrid",
+      "vertices": 64,
+      "polygons": 48,
+      "triangles": 96,
+      "materials": [
+        "Field_Core"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_PedestrianHologram_6m_Guidance",
+      "family": "scenery.City_PedestrianHologram_6m",
+      "slot": "Guidance",
+      "vertices": 16,
+      "polygons": 12,
+      "triangles": 24,
+      "materials": [
+        "Glow_Cyan"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_Bollard_Base",
+      "family": "scenery.City_Bollard",
+      "slot": "Base",
+      "vertices": 16,
+      "polygons": 10,
+      "triangles": 28,
+      "materials": [
+        "Steel"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_Bollard_Post",
+      "family": "scenery.City_Bollard",
+      "slot": "Post",
+      "vertices": 32,
+      "polygons": 20,
+      "triangles": 56,
+      "materials": [
+        "Ceramic",
+        "Glow_Cyan"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_CrashBarrier_4m_Feet",
+      "family": "scenery.Road_CrashBarrier_4m",
+      "slot": "Feet",
+      "vertices": 16,
+      "polygons": 12,
+      "triangles": 24,
+      "materials": [
+        "Steel"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_CrashBarrier_4m_Rail",
+      "family": "scenery.Road_CrashBarrier_4m",
+      "slot": "Rail",
+      "vertices": 16,
+      "polygons": 10,
+      "triangles": 28,
+      "materials": [
+        "Ceramic"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Road_CrashBarrier_4m_Reflectors",
+      "family": "scenery.Road_CrashBarrier_4m",
+      "slot": "Reflectors",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Field_Core"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_Bench_Legs",
+      "family": "scenery.City_Bench",
+      "slot": "Legs",
+      "vertices": 16,
+      "polygons": 12,
+      "triangles": 24,
+      "materials": [
+        "Steel"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_Bench_Seat",
+      "family": "scenery.City_Bench",
+      "slot": "Seat",
+      "vertices": 16,
+      "polygons": 10,
+      "triangles": 28,
+      "materials": [
+        "Ceramic"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_Bench_Back",
+      "family": "scenery.City_Bench",
+      "slot": "Back",
+      "vertices": 24,
+      "polygons": 16,
+      "triangles": 40,
+      "materials": [
+        "Vehicle_Teal",
+        "Field_Core"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_Planter_Vessel",
+      "family": "scenery.City_Planter",
+      "slot": "Vessel",
+      "vertices": 16,
+      "polygons": 10,
+      "triangles": 28,
+      "materials": [
+        "Ceramic"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_Planter_Soil",
+      "family": "scenery.City_Planter",
+      "slot": "Soil",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Terrain_Regolith"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_Planter_AlienFoliage",
+      "family": "scenery.City_Planter",
+      "slot": "AlienFoliage",
+      "vertices": 56,
+      "polygons": 42,
+      "triangles": 100,
+      "materials": [
+        "Alien_Leaf",
+        "Glow_Cyan"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_TransitShelter_Frame",
+      "family": "scenery.City_TransitShelter",
+      "slot": "Frame",
+      "vertices": 16,
+      "polygons": 12,
+      "triangles": 24,
+      "materials": [
+        "Steel"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_TransitShelter_Roof",
+      "family": "scenery.City_TransitShelter",
+      "slot": "Roof",
+      "vertices": 24,
+      "polygons": 18,
+      "triangles": 36,
+      "materials": [
+        "Ceramic",
+        "Field_Core"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_TransitShelter_BackPanel",
+      "family": "scenery.City_TransitShelter",
+      "slot": "BackPanel",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Glass_Opaque"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_TransitShelter_Seat",
+      "family": "scenery.City_TransitShelter",
+      "slot": "Seat",
+      "vertices": 16,
+      "polygons": 10,
+      "triangles": 28,
+      "materials": [
+        "Ceramic"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_TransitShelter_RouteDisplay",
+      "family": "scenery.City_TransitShelter",
+      "slot": "RouteDisplay",
+      "vertices": 40,
+      "polygons": 28,
+      "triangles": 64,
+      "materials": [
+        "Steel",
+        "Field_Core"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_Wayfinding_Mast",
+      "family": "scenery.City_Wayfinding",
+      "slot": "Mast",
+      "vertices": 24,
+      "polygons": 16,
+      "triangles": 40,
+      "materials": [
+        "Ceramic",
+        "Field_Core"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_Wayfinding_SignBoards",
+      "family": "scenery.City_Wayfinding",
+      "slot": "SignBoards",
+      "vertices": 24,
+      "polygons": 16,
+      "triangles": 40,
+      "materials": [
+        "Vehicle_Teal",
+        "Field_Core"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_Wayfinding_Arrows",
+      "family": "scenery.City_Wayfinding",
+      "slot": "Arrows",
+      "vertices": 6,
+      "polygons": 5,
+      "triangles": 8,
+      "materials": [
+        "Glow_Cyan"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_ChargePost_Pedestal",
+      "family": "scenery.City_ChargePost",
+      "slot": "Pedestal",
+      "vertices": 16,
+      "polygons": 10,
+      "triangles": 28,
+      "materials": [
+        "Ceramic"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_ChargePost_Display",
+      "family": "scenery.City_ChargePost",
+      "slot": "Display",
+      "vertices": 16,
+      "polygons": 12,
+      "triangles": 24,
+      "materials": [
+        "Glass_Opaque",
+        "Glow_Cyan"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "City_ChargePost_InductionHalo",
+      "family": "scenery.City_ChargePost",
+      "slot": "InductionHalo",
+      "vertices": 102,
+      "polygons": 86,
+      "triangles": 176,
+      "materials": [
+        "Vehicle_Teal",
+        "Field_Core"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_Transformer_Cabinet",
+      "family": "scenery.Utility_Transformer",
+      "slot": "Cabinet",
+      "vertices": 16,
+      "polygons": 10,
+      "triangles": 28,
+      "materials": [
+        "Vehicle_Teal"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_Transformer_CoolingFins",
+      "family": "scenery.Utility_Transformer",
+      "slot": "CoolingFins",
+      "vertices": 56,
+      "polygons": 42,
+      "triangles": 84,
+      "materials": [
+        "Steel"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_Transformer_FieldCapacitors",
+      "family": "scenery.Utility_Transformer",
+      "slot": "FieldCapacitors",
+      "vertices": 102,
+      "polygons": 86,
+      "triangles": 176,
+      "materials": [
+        "Ceramic",
+        "Field_Core"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_Transformer_Status",
+      "family": "scenery.Utility_Transformer",
+      "slot": "Status",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Glow_Amber"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_CargoContainer_6m_Shell",
+      "family": "scenery.Utility_CargoContainer_6m",
+      "slot": "Shell",
+      "vertices": 16,
+      "polygons": 10,
+      "triangles": 28,
+      "materials": [
+        "Vehicle_Utility"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_CargoContainer_6m_RoofRibs",
+      "family": "scenery.Utility_CargoContainer_6m",
+      "slot": "RoofRibs",
+      "vertices": 64,
+      "polygons": 48,
+      "triangles": 96,
+      "materials": [
+        "Alloy_Light"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_CargoContainer_6m_Door_L",
+      "family": "scenery.Utility_CargoContainer_6m",
+      "slot": "Door_L",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Steel"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_CargoContainer_6m_Door_R",
+      "family": "scenery.Utility_CargoContainer_6m",
+      "slot": "Door_R",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Steel"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_CargoContainer_6m_SealEmitters",
+      "family": "scenery.Utility_CargoContainer_6m",
+      "slot": "SealEmitters",
+      "vertices": 16,
+      "polygons": 12,
+      "triangles": 24,
+      "materials": [
+        "Field_Core"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_HVAC_Housing",
+      "family": "scenery.Utility_HVAC",
+      "slot": "Housing",
+      "vertices": 16,
+      "polygons": 10,
+      "triangles": 28,
+      "materials": [
+        "Ceramic"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_HVAC_Grille",
+      "family": "scenery.Utility_HVAC",
+      "slot": "Grille",
+      "vertices": 48,
+      "polygons": 36,
+      "triangles": 72,
+      "materials": [
+        "Steel"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_HVAC_Exhaust",
+      "family": "scenery.Utility_HVAC",
+      "slot": "Exhaust",
+      "vertices": 102,
+      "polygons": 86,
+      "triangles": 176,
+      "materials": [
+        "Steel",
+        "Field_Core"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_PipeRack_4m_Supports",
+      "family": "scenery.Utility_PipeRack_4m",
+      "slot": "Supports",
+      "vertices": 16,
+      "polygons": 12,
+      "triangles": 24,
+      "materials": [
+        "Steel"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_PipeRack_4m_Pipe_0",
+      "family": "scenery.Utility_PipeRack_4m",
+      "slot": "Pipe_0",
+      "vertices": 20,
+      "polygons": 12,
+      "triangles": 36,
+      "materials": [
+        "Alloy_Light"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_PipeRack_4m_Pipe_1",
+      "family": "scenery.Utility_PipeRack_4m",
+      "slot": "Pipe_1",
+      "vertices": 20,
+      "polygons": 12,
+      "triangles": 36,
+      "materials": [
+        "Copper"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_PipeRack_4m_Pipe_2",
+      "family": "scenery.Utility_PipeRack_4m",
+      "slot": "Pipe_2",
+      "vertices": 20,
+      "polygons": 12,
+      "triangles": 36,
+      "materials": [
+        "Alloy_Light"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_CommRelay_Mast",
+      "family": "scenery.Utility_CommRelay",
+      "slot": "Mast",
+      "vertices": 24,
+      "polygons": 16,
+      "triangles": 40,
+      "materials": [
+        "Ceramic",
+        "Field_Core"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_CommRelay_Panel_L",
+      "family": "scenery.Utility_CommRelay",
+      "slot": "Panel_L",
+      "vertices": 28,
+      "polygons": 26,
+      "triangles": 52,
+      "materials": [
+        "Ceramic"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_CommRelay_Panel_R",
+      "family": "scenery.Utility_CommRelay",
+      "slot": "Panel_R",
+      "vertices": 28,
+      "polygons": 26,
+      "triangles": 52,
+      "materials": [
+        "Ceramic"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_CommRelay_Beacon",
+      "family": "scenery.Utility_CommRelay",
+      "slot": "Beacon",
+      "vertices": 18,
+      "polygons": 14,
+      "triangles": 32,
+      "materials": [
+        "Field_Core"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_SolarArray_Stand",
+      "family": "scenery.Utility_SolarArray",
+      "slot": "Stand",
+      "vertices": 24,
+      "polygons": 16,
+      "triangles": 40,
+      "materials": [
+        "Steel"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_SolarArray_Panel",
+      "family": "scenery.Utility_SolarArray",
+      "slot": "Panel",
+      "vertices": 32,
+      "polygons": 24,
+      "triangles": 48,
+      "materials": [
+        "Solar"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_SolarArray_Rails",
+      "family": "scenery.Utility_SolarArray",
+      "slot": "Rails",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Field_Core"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_WaterTank_Legs",
+      "family": "scenery.Utility_WaterTank",
+      "slot": "Legs",
+      "vertices": 48,
+      "polygons": 32,
+      "triangles": 80,
+      "materials": [
+        "Steel"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_WaterTank_Tank",
+      "family": "scenery.Utility_WaterTank",
+      "slot": "Tank",
+      "vertices": 48,
+      "polygons": 38,
+      "triangles": 92,
+      "materials": [
+        "Ceramic"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Utility_WaterTank_Pipe",
+      "family": "scenery.Utility_WaterTank",
+      "slot": "Pipe",
+      "vertices": 16,
+      "polygons": 10,
+      "triangles": 28,
+      "materials": [
+        "Copper"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_0_0",
+      "family": "scenery.Airfield_LandingPad_16m",
+      "slot": "Deck_0_0",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Habitat_Concrete"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_0_1",
+      "family": "scenery.Airfield_LandingPad_16m",
+      "slot": "Deck_0_1",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Habitat_Concrete"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_0_2",
+      "family": "scenery.Airfield_LandingPad_16m",
+      "slot": "Deck_0_2",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Habitat_Concrete"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_0_3",
+      "family": "scenery.Airfield_LandingPad_16m",
+      "slot": "Deck_0_3",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Habitat_Concrete"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_1_0",
+      "family": "scenery.Airfield_LandingPad_16m",
+      "slot": "Deck_1_0",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Habitat_Concrete"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_1_1",
+      "family": "scenery.Airfield_LandingPad_16m",
+      "slot": "Deck_1_1",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Habitat_Concrete"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_1_2",
+      "family": "scenery.Airfield_LandingPad_16m",
+      "slot": "Deck_1_2",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Habitat_Concrete"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_1_3",
+      "family": "scenery.Airfield_LandingPad_16m",
+      "slot": "Deck_1_3",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Habitat_Concrete"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_2_0",
+      "family": "scenery.Airfield_LandingPad_16m",
+      "slot": "Deck_2_0",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Habitat_Concrete"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_2_1",
+      "family": "scenery.Airfield_LandingPad_16m",
+      "slot": "Deck_2_1",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Habitat_Concrete"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_2_2",
+      "family": "scenery.Airfield_LandingPad_16m",
+      "slot": "Deck_2_2",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Habitat_Concrete"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_2_3",
+      "family": "scenery.Airfield_LandingPad_16m",
+      "slot": "Deck_2_3",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Habitat_Concrete"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_3_0",
+      "family": "scenery.Airfield_LandingPad_16m",
+      "slot": "Deck_3_0",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Habitat_Concrete"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_3_1",
+      "family": "scenery.Airfield_LandingPad_16m",
+      "slot": "Deck_3_1",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Habitat_Concrete"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_3_2",
+      "family": "scenery.Airfield_LandingPad_16m",
+      "slot": "Deck_3_2",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Habitat_Concrete"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_3_3",
+      "family": "scenery.Airfield_LandingPad_16m",
+      "slot": "Deck_3_3",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Habitat_Concrete"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Airfield_LandingPad_16m_GuidanceReticle",
+      "family": "scenery.Airfield_LandingPad_16m",
+      "slot": "GuidanceReticle",
+      "vertices": 96,
+      "polygons": 84,
+      "triangles": 168,
+      "materials": [
+        "Field_Core",
+        "Glow_Amber"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Airfield_LandingPad_16m_CornerLights",
+      "family": "scenery.Airfield_LandingPad_16m",
+      "slot": "CornerLights",
+      "vertices": 64,
+      "polygons": 40,
+      "triangles": 112,
+      "materials": [
+        "Glow_Cyan"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Airfield_Beacon_Base",
+      "family": "scenery.Airfield_Beacon",
+      "slot": "Base",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Steel"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Airfield_Beacon_Light",
+      "family": "scenery.Airfield_Beacon",
+      "slot": "Light",
+      "vertices": 16,
+      "polygons": 10,
+      "triangles": 28,
+      "materials": [
+        "Glow_Amber"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Airfield_Beacon_Guard",
+      "family": "scenery.Airfield_Beacon",
+      "slot": "Guard",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Steel"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Frontier_SurveyTripod_Tripod",
+      "family": "scenery.Frontier_SurveyTripod",
+      "slot": "Tripod",
+      "vertices": 36,
+      "polygons": 24,
+      "triangles": 60,
+      "materials": [
+        "Steel"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Frontier_SurveyTripod_Scanner",
+      "family": "scenery.Frontier_SurveyTripod",
+      "slot": "Scanner",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Vehicle_Utility"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Frontier_SurveyTripod_Lens",
+      "family": "scenery.Frontier_SurveyTripod",
+      "slot": "Lens",
+      "vertices": 102,
+      "polygons": 86,
+      "triangles": 176,
+      "materials": [
+        "Vehicle_Teal",
+        "Field_Core"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Frontier_FieldShelter_Frame",
+      "family": "scenery.Frontier_FieldShelter",
+      "slot": "Frame",
+      "vertices": 24,
+      "polygons": 16,
+      "triangles": 40,
+      "materials": [
+        "Steel"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Frontier_FieldShelter_Canopy",
+      "family": "scenery.Frontier_FieldShelter",
+      "slot": "Canopy",
+      "vertices": 16,
+      "polygons": 12,
+      "triangles": 24,
+      "materials": [
+        "Solar",
+        "Field_Core"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Frontier_FieldShelter_SupplyBox",
+      "family": "scenery.Frontier_FieldShelter",
+      "slot": "SupplyBox",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Vehicle_Utility"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Frontier_MiningConveyor_Frame",
+      "family": "scenery.Frontier_MiningConveyor",
+      "slot": "Frame",
+      "vertices": 8,
+      "polygons": 6,
+      "triangles": 12,
+      "materials": [
+        "Steel"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Frontier_MiningConveyor_Belt",
+      "family": "scenery.Frontier_MiningConveyor",
+      "slot": "Belt",
+      "vertices": 32,
+      "polygons": 22,
+      "triangles": 52,
+      "materials": [
+        "Vehicle_Teal",
+        "Field_Core"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Frontier_MiningConveyor_Legs",
+      "family": "scenery.Frontier_MiningConveyor",
+      "slot": "Legs",
+      "vertices": 16,
+      "polygons": 12,
+      "triangles": 24,
+      "materials": [
+        "Steel"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Frontier_MiningConveyor_Motor",
+      "family": "scenery.Frontier_MiningConveyor",
+      "slot": "Motor",
+      "vertices": 20,
+      "polygons": 12,
+      "triangles": 36,
+      "materials": [
+        "Vehicle_Utility"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Ruin_ObserverMonolith_Foot",
+      "family": "scenery.Ruin_ObserverMonolith",
+      "slot": "Foot",
+      "vertices": 12,
+      "polygons": 8,
+      "triangles": 20,
+      "materials": [
+        "Ruin_Obsidian"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Ruin_ObserverMonolith_Shaft",
+      "family": "scenery.Ruin_ObserverMonolith",
+      "slot": "Shaft",
+      "vertices": 18,
+      "polygons": 14,
+      "triangles": 32,
+      "materials": [
+        "Ruin_Obsidian"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Ruin_ObserverMonolith_Inlay",
+      "family": "scenery.Ruin_ObserverMonolith",
+      "slot": "Inlay",
+      "vertices": 16,
+      "polygons": 12,
+      "triangles": 24,
+      "materials": [
+        "Glow_Violet"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Ruin_FracturedArch_Pier_L",
+      "family": "scenery.Ruin_FracturedArch",
+      "slot": "Pier_L",
+      "vertices": 24,
+      "polygons": 16,
+      "triangles": 40,
+      "materials": [
+        "Ruin_Obsidian"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Ruin_FracturedArch_Pier_R",
+      "family": "scenery.Ruin_FracturedArch",
+      "slot": "Pier_R",
+      "vertices": 24,
+      "polygons": 16,
+      "triangles": 40,
+      "materials": [
+        "Ruin_Obsidian"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Ruin_FracturedArch_SuspendedShard",
+      "family": "scenery.Ruin_FracturedArch",
+      "slot": "SuspendedShard",
+      "vertices": 12,
+      "polygons": 8,
+      "triangles": 20,
+      "materials": [
+        "Glow_Violet"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Nature_PrismBloom_RockBed",
+      "family": "scenery.Nature_PrismBloom",
+      "slot": "RockBed",
+      "vertices": 32,
+      "polygons": 26,
+      "triangles": 60,
+      "materials": [
+        "Rock_Mine"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Nature_PrismBloom_Crystals",
+      "family": "scenery.Nature_PrismBloom",
+      "slot": "Crystals",
+      "vertices": 75,
+      "polygons": 60,
+      "triangles": 130,
+      "materials": [
+        "Alien_Petal",
+        "Glow_Violet"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Nature_SailTree_Trunk",
+      "family": "scenery.Nature_SailTree",
+      "slot": "Trunk",
+      "vertices": 14,
+      "polygons": 9,
+      "triangles": 24,
+      "materials": [
+        "Wood_Composite"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Nature_SailTree_Canopy",
+      "family": "scenery.Nature_SailTree",
+      "slot": "Canopy",
+      "vertices": 50,
+      "polygons": 42,
+      "triangles": 96,
+      "materials": [
+        "Alien_Leaf"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
+    },
+    {
+      "id": "Nature_SailTree_GlowSeedpods",
+      "family": "scenery.Nature_SailTree",
+      "slot": "GlowSeedpods",
+      "vertices": 48,
+      "polygons": 40,
+      "triangles": 88,
+      "materials": [
+        "Glow_Cyan"
+      ],
+      "skeleton": null,
+      "expansion": "air_city_v1",
+      "design_revision": "sf_field_drive_v2"
     }
   ],
   "exports": [
@@ -25887,6 +29067,2572 @@
         "Hab_Pressure_Door"
       ],
       "clips": 2
+    },
+    {
+      "file": "Export/Aircraft/Kite_Courier.glb",
+      "type": "aircraft",
+      "mesh_parts": [
+        "Aircraft_Kite_Courier_PressureHull",
+        "Aircraft_Kite_Courier_Canopy_Glass",
+        "Aircraft_Kite_Courier_CabinSeats",
+        "Aircraft_Kite_Courier_Wing_L",
+        "Aircraft_Kite_Courier_LiftField_Front_L",
+        "Aircraft_Kite_Courier_Engine_Efficient_L",
+        "Aircraft_Kite_Courier_LandingSkid_L",
+        "Aircraft_Kite_Courier_TailFin_L",
+        "Aircraft_Kite_Courier_Wing_R",
+        "Aircraft_Kite_Courier_LiftField_Front_R",
+        "Aircraft_Kite_Courier_Engine_Efficient_R",
+        "Aircraft_Kite_Courier_LandingSkid_R",
+        "Aircraft_Kite_Courier_TailFin_R",
+        "Aircraft_Kite_Courier_Payload_Standard",
+        "Aircraft_Kite_Courier_ServiceHatch"
+      ],
+      "clips": 12,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Kite_Courier_Variant.glb",
+      "type": "aircraft",
+      "mesh_parts": [
+        "Aircraft_Kite_Courier_PressureHull",
+        "Aircraft_Kite_Courier_Canopy_Reinforced",
+        "Aircraft_Kite_Courier_CabinSeats",
+        "Aircraft_Kite_Courier_Wing_L",
+        "Aircraft_Kite_Courier_LiftField_Front_L",
+        "Aircraft_Kite_Courier_Engine_Boost_L",
+        "Aircraft_Kite_Courier_LandingSkid_L",
+        "Aircraft_Kite_Courier_TailFin_L",
+        "Aircraft_Kite_Courier_Wing_R",
+        "Aircraft_Kite_Courier_LiftField_Front_R",
+        "Aircraft_Kite_Courier_Engine_Boost_R",
+        "Aircraft_Kite_Courier_LandingSkid_R",
+        "Aircraft_Kite_Courier_TailFin_R",
+        "Aircraft_Kite_Courier_Payload_Alternate",
+        "Aircraft_Kite_Courier_ServiceHatch"
+      ],
+      "clips": 12,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Kite_Courier_PressureHull.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Kite_Courier_PressureHull"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Kite_Courier_Canopy_Glass.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Kite_Courier_Canopy_Glass"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Kite_Courier_Canopy_Reinforced.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Kite_Courier_Canopy_Reinforced"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Kite_Courier_CabinSeats.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Kite_Courier_CabinSeats"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Kite_Courier_Wing_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Kite_Courier_Wing_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Kite_Courier_LiftField_Front_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Kite_Courier_LiftField_Front_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Kite_Courier_Engine_Efficient_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Kite_Courier_Engine_Efficient_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Kite_Courier_Engine_Boost_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Kite_Courier_Engine_Boost_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Kite_Courier_LandingSkid_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Kite_Courier_LandingSkid_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Kite_Courier_TailFin_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Kite_Courier_TailFin_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Kite_Courier_Wing_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Kite_Courier_Wing_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Kite_Courier_LiftField_Front_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Kite_Courier_LiftField_Front_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Kite_Courier_Engine_Efficient_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Kite_Courier_Engine_Efficient_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Kite_Courier_Engine_Boost_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Kite_Courier_Engine_Boost_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Kite_Courier_LandingSkid_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Kite_Courier_LandingSkid_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Kite_Courier_TailFin_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Kite_Courier_TailFin_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Kite_Courier_Payload_Standard.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Kite_Courier_Payload_Standard"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Kite_Courier_Payload_Alternate.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Kite_Courier_Payload_Alternate"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Kite_Courier_ServiceHatch.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Kite_Courier_ServiceHatch"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Manta_AirTaxi.glb",
+      "type": "aircraft",
+      "mesh_parts": [
+        "Aircraft_Manta_AirTaxi_PressureHull",
+        "Aircraft_Manta_AirTaxi_Canopy_Glass",
+        "Aircraft_Manta_AirTaxi_CabinSeats",
+        "Aircraft_Manta_AirTaxi_Wing_L",
+        "Aircraft_Manta_AirTaxi_LiftField_Front_L",
+        "Aircraft_Manta_AirTaxi_LiftField_Rear_L",
+        "Aircraft_Manta_AirTaxi_Engine_Efficient_L",
+        "Aircraft_Manta_AirTaxi_LandingSkid_L",
+        "Aircraft_Manta_AirTaxi_TailFin_L",
+        "Aircraft_Manta_AirTaxi_Wing_R",
+        "Aircraft_Manta_AirTaxi_LiftField_Front_R",
+        "Aircraft_Manta_AirTaxi_LiftField_Rear_R",
+        "Aircraft_Manta_AirTaxi_Engine_Efficient_R",
+        "Aircraft_Manta_AirTaxi_LandingSkid_R",
+        "Aircraft_Manta_AirTaxi_TailFin_R",
+        "Aircraft_Manta_AirTaxi_Payload_Standard",
+        "Aircraft_Manta_AirTaxi_ServiceHatch"
+      ],
+      "clips": 12,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Manta_AirTaxi_Variant.glb",
+      "type": "aircraft",
+      "mesh_parts": [
+        "Aircraft_Manta_AirTaxi_PressureHull",
+        "Aircraft_Manta_AirTaxi_Canopy_Reinforced",
+        "Aircraft_Manta_AirTaxi_CabinSeats",
+        "Aircraft_Manta_AirTaxi_Wing_L",
+        "Aircraft_Manta_AirTaxi_LiftField_Front_L",
+        "Aircraft_Manta_AirTaxi_LiftField_Rear_L",
+        "Aircraft_Manta_AirTaxi_Engine_Boost_L",
+        "Aircraft_Manta_AirTaxi_LandingSkid_L",
+        "Aircraft_Manta_AirTaxi_TailFin_L",
+        "Aircraft_Manta_AirTaxi_Wing_R",
+        "Aircraft_Manta_AirTaxi_LiftField_Front_R",
+        "Aircraft_Manta_AirTaxi_LiftField_Rear_R",
+        "Aircraft_Manta_AirTaxi_Engine_Boost_R",
+        "Aircraft_Manta_AirTaxi_LandingSkid_R",
+        "Aircraft_Manta_AirTaxi_TailFin_R",
+        "Aircraft_Manta_AirTaxi_Payload_Alternate",
+        "Aircraft_Manta_AirTaxi_ServiceHatch"
+      ],
+      "clips": 12,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Manta_AirTaxi_PressureHull.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Manta_AirTaxi_PressureHull"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Manta_AirTaxi_Canopy_Glass.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Manta_AirTaxi_Canopy_Glass"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Manta_AirTaxi_Canopy_Reinforced.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Manta_AirTaxi_Canopy_Reinforced"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Manta_AirTaxi_CabinSeats.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Manta_AirTaxi_CabinSeats"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Manta_AirTaxi_Wing_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Manta_AirTaxi_Wing_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Manta_AirTaxi_LiftField_Front_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Manta_AirTaxi_LiftField_Front_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Manta_AirTaxi_LiftField_Rear_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Manta_AirTaxi_LiftField_Rear_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Manta_AirTaxi_Engine_Efficient_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Manta_AirTaxi_Engine_Efficient_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Manta_AirTaxi_Engine_Boost_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Manta_AirTaxi_Engine_Boost_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Manta_AirTaxi_LandingSkid_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Manta_AirTaxi_LandingSkid_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Manta_AirTaxi_TailFin_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Manta_AirTaxi_TailFin_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Manta_AirTaxi_Wing_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Manta_AirTaxi_Wing_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Manta_AirTaxi_LiftField_Front_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Manta_AirTaxi_LiftField_Front_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Manta_AirTaxi_LiftField_Rear_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Manta_AirTaxi_LiftField_Rear_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Manta_AirTaxi_Engine_Efficient_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Manta_AirTaxi_Engine_Efficient_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Manta_AirTaxi_Engine_Boost_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Manta_AirTaxi_Engine_Boost_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Manta_AirTaxi_LandingSkid_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Manta_AirTaxi_LandingSkid_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Manta_AirTaxi_TailFin_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Manta_AirTaxi_TailFin_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Manta_AirTaxi_Payload_Standard.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Manta_AirTaxi_Payload_Standard"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Manta_AirTaxi_Payload_Alternate.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Manta_AirTaxi_Payload_Alternate"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Manta_AirTaxi_ServiceHatch.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Manta_AirTaxi_ServiceHatch"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Mule_Skycrane.glb",
+      "type": "aircraft",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_PressureHull",
+        "Aircraft_Mule_Skycrane_Canopy_Glass",
+        "Aircraft_Mule_Skycrane_CabinSeats",
+        "Aircraft_Mule_Skycrane_Wing_L",
+        "Aircraft_Mule_Skycrane_LiftField_Front_L",
+        "Aircraft_Mule_Skycrane_LiftField_Rear_L",
+        "Aircraft_Mule_Skycrane_Engine_Efficient_L",
+        "Aircraft_Mule_Skycrane_LandingSkid_L",
+        "Aircraft_Mule_Skycrane_TailFin_L",
+        "Aircraft_Mule_Skycrane_Wing_R",
+        "Aircraft_Mule_Skycrane_LiftField_Front_R",
+        "Aircraft_Mule_Skycrane_LiftField_Rear_R",
+        "Aircraft_Mule_Skycrane_Engine_Efficient_R",
+        "Aircraft_Mule_Skycrane_LandingSkid_R",
+        "Aircraft_Mule_Skycrane_TailFin_R",
+        "Aircraft_Mule_Skycrane_OutboardBoom_L",
+        "Aircraft_Mule_Skycrane_OutboardBoom_R",
+        "Aircraft_Mule_Skycrane_Payload_Standard",
+        "Aircraft_Mule_Skycrane_ServiceHatch"
+      ],
+      "clips": 12,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Mule_Skycrane_Variant.glb",
+      "type": "aircraft",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_PressureHull",
+        "Aircraft_Mule_Skycrane_Canopy_Reinforced",
+        "Aircraft_Mule_Skycrane_CabinSeats",
+        "Aircraft_Mule_Skycrane_Wing_L",
+        "Aircraft_Mule_Skycrane_LiftField_Front_L",
+        "Aircraft_Mule_Skycrane_LiftField_Rear_L",
+        "Aircraft_Mule_Skycrane_Engine_Boost_L",
+        "Aircraft_Mule_Skycrane_LandingSkid_L",
+        "Aircraft_Mule_Skycrane_TailFin_L",
+        "Aircraft_Mule_Skycrane_Wing_R",
+        "Aircraft_Mule_Skycrane_LiftField_Front_R",
+        "Aircraft_Mule_Skycrane_LiftField_Rear_R",
+        "Aircraft_Mule_Skycrane_Engine_Boost_R",
+        "Aircraft_Mule_Skycrane_LandingSkid_R",
+        "Aircraft_Mule_Skycrane_TailFin_R",
+        "Aircraft_Mule_Skycrane_OutboardBoom_L",
+        "Aircraft_Mule_Skycrane_OutboardBoom_R",
+        "Aircraft_Mule_Skycrane_Payload_Alternate",
+        "Aircraft_Mule_Skycrane_ServiceHatch"
+      ],
+      "clips": 12,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Mule_Skycrane_PressureHull.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_PressureHull"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Mule_Skycrane_Canopy_Glass.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_Canopy_Glass"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Mule_Skycrane_Canopy_Reinforced.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_Canopy_Reinforced"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Mule_Skycrane_CabinSeats.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_CabinSeats"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Mule_Skycrane_Wing_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_Wing_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Mule_Skycrane_LiftField_Front_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_LiftField_Front_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Mule_Skycrane_LiftField_Rear_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_LiftField_Rear_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Mule_Skycrane_Engine_Efficient_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_Engine_Efficient_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Mule_Skycrane_Engine_Boost_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_Engine_Boost_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Mule_Skycrane_LandingSkid_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_LandingSkid_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Mule_Skycrane_TailFin_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_TailFin_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Mule_Skycrane_Wing_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_Wing_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Mule_Skycrane_LiftField_Front_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_LiftField_Front_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Mule_Skycrane_LiftField_Rear_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_LiftField_Rear_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Mule_Skycrane_Engine_Efficient_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_Engine_Efficient_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Mule_Skycrane_Engine_Boost_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_Engine_Boost_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Mule_Skycrane_LandingSkid_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_LandingSkid_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Mule_Skycrane_TailFin_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_TailFin_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Mule_Skycrane_OutboardBoom_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_OutboardBoom_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Mule_Skycrane_OutboardBoom_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_OutboardBoom_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Mule_Skycrane_Payload_Standard.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_Payload_Standard"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Mule_Skycrane_Payload_Alternate.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_Payload_Alternate"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Mule_Skycrane_ServiceHatch.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Mule_Skycrane_ServiceHatch"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Warden_Survey.glb",
+      "type": "aircraft",
+      "mesh_parts": [
+        "Aircraft_Warden_Survey_PressureHull",
+        "Aircraft_Warden_Survey_Canopy_Glass",
+        "Aircraft_Warden_Survey_CabinSeats",
+        "Aircraft_Warden_Survey_Wing_L",
+        "Aircraft_Warden_Survey_LiftField_Front_L",
+        "Aircraft_Warden_Survey_Engine_Efficient_L",
+        "Aircraft_Warden_Survey_LandingSkid_L",
+        "Aircraft_Warden_Survey_TailFin_L",
+        "Aircraft_Warden_Survey_Wing_R",
+        "Aircraft_Warden_Survey_LiftField_Front_R",
+        "Aircraft_Warden_Survey_Engine_Efficient_R",
+        "Aircraft_Warden_Survey_LandingSkid_R",
+        "Aircraft_Warden_Survey_TailFin_R",
+        "Aircraft_Warden_Survey_Payload_Standard",
+        "Aircraft_Warden_Survey_ServiceHatch"
+      ],
+      "clips": 12,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Warden_Survey_Variant.glb",
+      "type": "aircraft",
+      "mesh_parts": [
+        "Aircraft_Warden_Survey_PressureHull",
+        "Aircraft_Warden_Survey_Canopy_Reinforced",
+        "Aircraft_Warden_Survey_CabinSeats",
+        "Aircraft_Warden_Survey_Wing_L",
+        "Aircraft_Warden_Survey_LiftField_Front_L",
+        "Aircraft_Warden_Survey_Engine_Boost_L",
+        "Aircraft_Warden_Survey_LandingSkid_L",
+        "Aircraft_Warden_Survey_TailFin_L",
+        "Aircraft_Warden_Survey_Wing_R",
+        "Aircraft_Warden_Survey_LiftField_Front_R",
+        "Aircraft_Warden_Survey_Engine_Boost_R",
+        "Aircraft_Warden_Survey_LandingSkid_R",
+        "Aircraft_Warden_Survey_TailFin_R",
+        "Aircraft_Warden_Survey_Payload_Alternate",
+        "Aircraft_Warden_Survey_ServiceHatch"
+      ],
+      "clips": 12,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Warden_Survey_PressureHull.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Warden_Survey_PressureHull"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Warden_Survey_Canopy_Glass.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Warden_Survey_Canopy_Glass"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Warden_Survey_Canopy_Reinforced.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Warden_Survey_Canopy_Reinforced"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Warden_Survey_CabinSeats.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Warden_Survey_CabinSeats"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Warden_Survey_Wing_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Warden_Survey_Wing_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Warden_Survey_LiftField_Front_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Warden_Survey_LiftField_Front_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Warden_Survey_Engine_Efficient_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Warden_Survey_Engine_Efficient_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Warden_Survey_Engine_Boost_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Warden_Survey_Engine_Boost_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Warden_Survey_LandingSkid_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Warden_Survey_LandingSkid_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Warden_Survey_TailFin_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Warden_Survey_TailFin_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Warden_Survey_Wing_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Warden_Survey_Wing_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Warden_Survey_LiftField_Front_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Warden_Survey_LiftField_Front_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Warden_Survey_Engine_Efficient_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Warden_Survey_Engine_Efficient_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Warden_Survey_Engine_Boost_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Warden_Survey_Engine_Boost_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Warden_Survey_LandingSkid_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Warden_Survey_LandingSkid_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Warden_Survey_TailFin_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Warden_Survey_TailFin_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Warden_Survey_Payload_Standard.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Warden_Survey_Payload_Standard"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Warden_Survey_Payload_Alternate.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Warden_Survey_Payload_Alternate"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Aircraft/Parts/Aircraft_Warden_Survey_ServiceHatch.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Aircraft_Warden_Survey_ServiceHatch"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Road_2Lane_4m.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "Road_2Lane_4m_Lane_01",
+        "Road_2Lane_4m_Lane_02",
+        "Road_2Lane_4m_LaneMarkings",
+        "Road_2Lane_4m_EdgeMarkings"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_2Lane_4m_Lane_01.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_2Lane_4m_Lane_01"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_2Lane_4m_Lane_02.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_2Lane_4m_Lane_02"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_2Lane_4m_LaneMarkings.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_2Lane_4m_LaneMarkings"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_2Lane_4m_EdgeMarkings.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_2Lane_4m_EdgeMarkings"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Road_4Lane_4m.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "Road_4Lane_4m_Lane_01",
+        "Road_4Lane_4m_Lane_02",
+        "Road_4Lane_4m_Lane_03",
+        "Road_4Lane_4m_Lane_04",
+        "Road_4Lane_4m_LaneMarkings",
+        "Road_4Lane_4m_EdgeMarkings"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_4Lane_4m_Lane_01.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_4Lane_4m_Lane_01"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_4Lane_4m_Lane_02.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_4Lane_4m_Lane_02"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_4Lane_4m_Lane_03.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_4Lane_4m_Lane_03"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_4Lane_4m_Lane_04.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_4Lane_4m_Lane_04"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_4Lane_4m_LaneMarkings.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_4Lane_4m_LaneMarkings"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_4Lane_4m_EdgeMarkings.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_4Lane_4m_EdgeMarkings"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Road_6Lane_4m.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "Road_6Lane_4m_Lane_01",
+        "Road_6Lane_4m_Lane_02",
+        "Road_6Lane_4m_Lane_03",
+        "Road_6Lane_4m_Lane_04",
+        "Road_6Lane_4m_Lane_05",
+        "Road_6Lane_4m_Lane_06",
+        "Road_6Lane_4m_LaneMarkings",
+        "Road_6Lane_4m_EdgeMarkings"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_6Lane_4m_Lane_01.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_6Lane_4m_Lane_01"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_6Lane_4m_Lane_02.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_6Lane_4m_Lane_02"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_6Lane_4m_Lane_03.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_6Lane_4m_Lane_03"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_6Lane_4m_Lane_04.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_6Lane_4m_Lane_04"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_6Lane_4m_Lane_05.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_6Lane_4m_Lane_05"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_6Lane_4m_Lane_06.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_6Lane_4m_Lane_06"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_6Lane_4m_LaneMarkings.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_6Lane_4m_LaneMarkings"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_6Lane_4m_EdgeMarkings.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_6Lane_4m_EdgeMarkings"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Road_Crossroad_12m.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "Road_Crossroad_12m_Surface",
+        "Road_Crossroad_12m_Crosswalk_0_-1",
+        "Road_Crossroad_12m_Crosswalk_0_1",
+        "Road_Crossroad_12m_Crosswalk_1_-1",
+        "Road_Crossroad_12m_Crosswalk_1_1"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_Crossroad_12m_Surface.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_Crossroad_12m_Surface"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_Crossroad_12m_Crosswalk_0_-1.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_Crossroad_12m_Crosswalk_0_-1"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_Crossroad_12m_Crosswalk_0_1.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_Crossroad_12m_Crosswalk_0_1"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_Crossroad_12m_Crosswalk_1_-1.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_Crossroad_12m_Crosswalk_1_-1"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_Crossroad_12m_Crosswalk_1_1.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_Crossroad_12m_Crosswalk_1_1"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Road_TJunction_12m.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "Road_TJunction_12m_Surface",
+        "Road_TJunction_12m_Crosswalk_0_-1",
+        "Road_TJunction_12m_Crosswalk_0_1",
+        "Road_TJunction_12m_Crosswalk_1_-1",
+        "Road_TJunction_12m_ClosedEdge"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_TJunction_12m_Surface.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_TJunction_12m_Surface"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_TJunction_12m_Crosswalk_0_-1.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_TJunction_12m_Crosswalk_0_-1"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_TJunction_12m_Crosswalk_0_1.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_TJunction_12m_Crosswalk_0_1"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_TJunction_12m_Crosswalk_1_-1.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_TJunction_12m_Crosswalk_1_-1"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_TJunction_12m_ClosedEdge.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_TJunction_12m_ClosedEdge"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Road_Curve90_R9m.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "Road_Curve90_R9m_ArcSurface",
+        "Road_Curve90_R9m_CenterMarkings"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_Curve90_R9m_ArcSurface.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_Curve90_R9m_ArcSurface"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_Curve90_R9m_CenterMarkings.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_Curve90_R9m_CenterMarkings"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/City_Sidewalk_2x4m.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "City_Sidewalk_2x4m_Slab",
+        "City_Sidewalk_2x4m_Curb",
+        "City_Sidewalk_2x4m_ServiceStrip"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_Sidewalk_2x4m_Slab.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_Sidewalk_2x4m_Slab"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_Sidewalk_2x4m_Curb.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_Sidewalk_2x4m_Curb"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_Sidewalk_2x4m_ServiceStrip.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_Sidewalk_2x4m_ServiceStrip"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Road_SpeedTable_4m.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "Road_SpeedTable_4m_Ramp",
+        "Road_SpeedTable_4m_WarningBars"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_SpeedTable_4m_Ramp.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_SpeedTable_4m_Ramp"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_SpeedTable_4m_WarningBars.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_SpeedTable_4m_WarningBars"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/City_Streetlight_4m.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "City_Streetlight_4m_Foundation",
+        "City_Streetlight_4m_Mast",
+        "City_Streetlight_4m_Luminaire"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_Streetlight_4m_Foundation.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_Streetlight_4m_Foundation"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_Streetlight_4m_Mast.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_Streetlight_4m_Mast"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_Streetlight_4m_Luminaire.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_Streetlight_4m_Luminaire"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/City_TrafficSignal.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "City_TrafficSignal_HoverHousing",
+        "City_TrafficSignal_FieldStabilizers",
+        "City_TrafficSignal_StopGlyph",
+        "City_TrafficSignal_WaitGlyph",
+        "City_TrafficSignal_GoGlyph"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_TrafficSignal_HoverHousing.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_TrafficSignal_HoverHousing"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_TrafficSignal_FieldStabilizers.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_TrafficSignal_FieldStabilizers"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_TrafficSignal_StopGlyph.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_TrafficSignal_StopGlyph"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_TrafficSignal_WaitGlyph.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_TrafficSignal_WaitGlyph"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_TrafficSignal_GoGlyph.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_TrafficSignal_GoGlyph"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/City_PedestrianHologram_6m.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "City_PedestrianHologram_6m_Projectors",
+        "City_PedestrianHologram_6m_WalkGrid",
+        "City_PedestrianHologram_6m_Guidance"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_PedestrianHologram_6m_Projectors.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_PedestrianHologram_6m_Projectors"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_PedestrianHologram_6m_WalkGrid.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_PedestrianHologram_6m_WalkGrid"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_PedestrianHologram_6m_Guidance.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_PedestrianHologram_6m_Guidance"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/City_Bollard.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "City_Bollard_Base",
+        "City_Bollard_Post"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_Bollard_Base.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_Bollard_Base"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_Bollard_Post.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_Bollard_Post"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Road_CrashBarrier_4m.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "Road_CrashBarrier_4m_Feet",
+        "Road_CrashBarrier_4m_Rail",
+        "Road_CrashBarrier_4m_Reflectors"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_CrashBarrier_4m_Feet.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_CrashBarrier_4m_Feet"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_CrashBarrier_4m_Rail.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_CrashBarrier_4m_Rail"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Road_CrashBarrier_4m_Reflectors.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Road_CrashBarrier_4m_Reflectors"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/City_Bench.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "City_Bench_Legs",
+        "City_Bench_Seat",
+        "City_Bench_Back"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_Bench_Legs.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_Bench_Legs"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_Bench_Seat.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_Bench_Seat"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_Bench_Back.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_Bench_Back"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/City_Planter.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "City_Planter_Vessel",
+        "City_Planter_Soil",
+        "City_Planter_AlienFoliage"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_Planter_Vessel.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_Planter_Vessel"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_Planter_Soil.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_Planter_Soil"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_Planter_AlienFoliage.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_Planter_AlienFoliage"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/City_TransitShelter.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "City_TransitShelter_Frame",
+        "City_TransitShelter_Roof",
+        "City_TransitShelter_BackPanel",
+        "City_TransitShelter_Seat",
+        "City_TransitShelter_RouteDisplay"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_TransitShelter_Frame.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_TransitShelter_Frame"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_TransitShelter_Roof.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_TransitShelter_Roof"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_TransitShelter_BackPanel.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_TransitShelter_BackPanel"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_TransitShelter_Seat.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_TransitShelter_Seat"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_TransitShelter_RouteDisplay.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_TransitShelter_RouteDisplay"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/City_Wayfinding.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "City_Wayfinding_Mast",
+        "City_Wayfinding_SignBoards",
+        "City_Wayfinding_Arrows"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_Wayfinding_Mast.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_Wayfinding_Mast"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_Wayfinding_SignBoards.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_Wayfinding_SignBoards"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_Wayfinding_Arrows.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_Wayfinding_Arrows"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/City_ChargePost.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "City_ChargePost_Pedestal",
+        "City_ChargePost_Display",
+        "City_ChargePost_InductionHalo"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_ChargePost_Pedestal.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_ChargePost_Pedestal"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_ChargePost_Display.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_ChargePost_Display"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/City_ChargePost_InductionHalo.glb",
+      "type": "module",
+      "mesh_parts": [
+        "City_ChargePost_InductionHalo"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Utility_Transformer.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "Utility_Transformer_Cabinet",
+        "Utility_Transformer_CoolingFins",
+        "Utility_Transformer_FieldCapacitors",
+        "Utility_Transformer_Status"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_Transformer_Cabinet.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_Transformer_Cabinet"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_Transformer_CoolingFins.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_Transformer_CoolingFins"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_Transformer_FieldCapacitors.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_Transformer_FieldCapacitors"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_Transformer_Status.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_Transformer_Status"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Utility_CargoContainer_6m.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "Utility_CargoContainer_6m_Shell",
+        "Utility_CargoContainer_6m_RoofRibs",
+        "Utility_CargoContainer_6m_Door_L",
+        "Utility_CargoContainer_6m_Door_R",
+        "Utility_CargoContainer_6m_SealEmitters"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_CargoContainer_6m_Shell.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_CargoContainer_6m_Shell"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_CargoContainer_6m_RoofRibs.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_CargoContainer_6m_RoofRibs"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_CargoContainer_6m_Door_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_CargoContainer_6m_Door_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_CargoContainer_6m_Door_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_CargoContainer_6m_Door_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_CargoContainer_6m_SealEmitters.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_CargoContainer_6m_SealEmitters"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Utility_HVAC.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "Utility_HVAC_Housing",
+        "Utility_HVAC_Grille",
+        "Utility_HVAC_Exhaust"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_HVAC_Housing.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_HVAC_Housing"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_HVAC_Grille.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_HVAC_Grille"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_HVAC_Exhaust.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_HVAC_Exhaust"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Utility_PipeRack_4m.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "Utility_PipeRack_4m_Supports",
+        "Utility_PipeRack_4m_Pipe_0",
+        "Utility_PipeRack_4m_Pipe_1",
+        "Utility_PipeRack_4m_Pipe_2"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_PipeRack_4m_Supports.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_PipeRack_4m_Supports"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_PipeRack_4m_Pipe_0.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_PipeRack_4m_Pipe_0"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_PipeRack_4m_Pipe_1.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_PipeRack_4m_Pipe_1"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_PipeRack_4m_Pipe_2.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_PipeRack_4m_Pipe_2"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Utility_CommRelay.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "Utility_CommRelay_Mast",
+        "Utility_CommRelay_Panel_L",
+        "Utility_CommRelay_Panel_R",
+        "Utility_CommRelay_Beacon"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_CommRelay_Mast.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_CommRelay_Mast"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_CommRelay_Panel_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_CommRelay_Panel_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_CommRelay_Panel_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_CommRelay_Panel_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_CommRelay_Beacon.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_CommRelay_Beacon"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Utility_SolarArray.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "Utility_SolarArray_Stand",
+        "Utility_SolarArray_Panel",
+        "Utility_SolarArray_Rails"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_SolarArray_Stand.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_SolarArray_Stand"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_SolarArray_Panel.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_SolarArray_Panel"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_SolarArray_Rails.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_SolarArray_Rails"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Utility_WaterTank.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "Utility_WaterTank_Legs",
+        "Utility_WaterTank_Tank",
+        "Utility_WaterTank_Pipe"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_WaterTank_Legs.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_WaterTank_Legs"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_WaterTank_Tank.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_WaterTank_Tank"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Utility_WaterTank_Pipe.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Utility_WaterTank_Pipe"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Airfield_LandingPad_16m.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "Airfield_LandingPad_16m_Deck_0_0",
+        "Airfield_LandingPad_16m_Deck_0_1",
+        "Airfield_LandingPad_16m_Deck_0_2",
+        "Airfield_LandingPad_16m_Deck_0_3",
+        "Airfield_LandingPad_16m_Deck_1_0",
+        "Airfield_LandingPad_16m_Deck_1_1",
+        "Airfield_LandingPad_16m_Deck_1_2",
+        "Airfield_LandingPad_16m_Deck_1_3",
+        "Airfield_LandingPad_16m_Deck_2_0",
+        "Airfield_LandingPad_16m_Deck_2_1",
+        "Airfield_LandingPad_16m_Deck_2_2",
+        "Airfield_LandingPad_16m_Deck_2_3",
+        "Airfield_LandingPad_16m_Deck_3_0",
+        "Airfield_LandingPad_16m_Deck_3_1",
+        "Airfield_LandingPad_16m_Deck_3_2",
+        "Airfield_LandingPad_16m_Deck_3_3",
+        "Airfield_LandingPad_16m_GuidanceReticle",
+        "Airfield_LandingPad_16m_CornerLights"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Airfield_LandingPad_16m_Deck_0_0.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Airfield_LandingPad_16m_Deck_0_0"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Airfield_LandingPad_16m_Deck_0_1.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Airfield_LandingPad_16m_Deck_0_1"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Airfield_LandingPad_16m_Deck_0_2.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Airfield_LandingPad_16m_Deck_0_2"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Airfield_LandingPad_16m_Deck_0_3.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Airfield_LandingPad_16m_Deck_0_3"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Airfield_LandingPad_16m_Deck_1_0.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Airfield_LandingPad_16m_Deck_1_0"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Airfield_LandingPad_16m_Deck_1_1.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Airfield_LandingPad_16m_Deck_1_1"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Airfield_LandingPad_16m_Deck_1_2.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Airfield_LandingPad_16m_Deck_1_2"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Airfield_LandingPad_16m_Deck_1_3.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Airfield_LandingPad_16m_Deck_1_3"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Airfield_LandingPad_16m_Deck_2_0.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Airfield_LandingPad_16m_Deck_2_0"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Airfield_LandingPad_16m_Deck_2_1.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Airfield_LandingPad_16m_Deck_2_1"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Airfield_LandingPad_16m_Deck_2_2.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Airfield_LandingPad_16m_Deck_2_2"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Airfield_LandingPad_16m_Deck_2_3.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Airfield_LandingPad_16m_Deck_2_3"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Airfield_LandingPad_16m_Deck_3_0.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Airfield_LandingPad_16m_Deck_3_0"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Airfield_LandingPad_16m_Deck_3_1.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Airfield_LandingPad_16m_Deck_3_1"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Airfield_LandingPad_16m_Deck_3_2.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Airfield_LandingPad_16m_Deck_3_2"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Airfield_LandingPad_16m_Deck_3_3.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Airfield_LandingPad_16m_Deck_3_3"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Airfield_LandingPad_16m_GuidanceReticle.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Airfield_LandingPad_16m_GuidanceReticle"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Airfield_LandingPad_16m_CornerLights.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Airfield_LandingPad_16m_CornerLights"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Airfield_Beacon.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "Airfield_Beacon_Base",
+        "Airfield_Beacon_Light",
+        "Airfield_Beacon_Guard"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Airfield_Beacon_Base.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Airfield_Beacon_Base"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Airfield_Beacon_Light.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Airfield_Beacon_Light"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Airfield_Beacon_Guard.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Airfield_Beacon_Guard"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Frontier_SurveyTripod.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "Frontier_SurveyTripod_Tripod",
+        "Frontier_SurveyTripod_Scanner",
+        "Frontier_SurveyTripod_Lens"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Frontier_SurveyTripod_Tripod.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Frontier_SurveyTripod_Tripod"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Frontier_SurveyTripod_Scanner.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Frontier_SurveyTripod_Scanner"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Frontier_SurveyTripod_Lens.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Frontier_SurveyTripod_Lens"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Frontier_FieldShelter.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "Frontier_FieldShelter_Frame",
+        "Frontier_FieldShelter_Canopy",
+        "Frontier_FieldShelter_SupplyBox"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Frontier_FieldShelter_Frame.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Frontier_FieldShelter_Frame"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Frontier_FieldShelter_Canopy.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Frontier_FieldShelter_Canopy"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Frontier_FieldShelter_SupplyBox.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Frontier_FieldShelter_SupplyBox"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Frontier_MiningConveyor.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "Frontier_MiningConveyor_Frame",
+        "Frontier_MiningConveyor_Belt",
+        "Frontier_MiningConveyor_Legs",
+        "Frontier_MiningConveyor_Motor"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Frontier_MiningConveyor_Frame.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Frontier_MiningConveyor_Frame"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Frontier_MiningConveyor_Belt.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Frontier_MiningConveyor_Belt"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Frontier_MiningConveyor_Legs.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Frontier_MiningConveyor_Legs"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Frontier_MiningConveyor_Motor.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Frontier_MiningConveyor_Motor"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Ruin_ObserverMonolith.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "Ruin_ObserverMonolith_Foot",
+        "Ruin_ObserverMonolith_Shaft",
+        "Ruin_ObserverMonolith_Inlay"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Ruin_ObserverMonolith_Foot.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Ruin_ObserverMonolith_Foot"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Ruin_ObserverMonolith_Shaft.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Ruin_ObserverMonolith_Shaft"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Ruin_ObserverMonolith_Inlay.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Ruin_ObserverMonolith_Inlay"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Ruin_FracturedArch.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "Ruin_FracturedArch_Pier_L",
+        "Ruin_FracturedArch_Pier_R",
+        "Ruin_FracturedArch_SuspendedShard"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Ruin_FracturedArch_Pier_L.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Ruin_FracturedArch_Pier_L"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Ruin_FracturedArch_Pier_R.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Ruin_FracturedArch_Pier_R"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Ruin_FracturedArch_SuspendedShard.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Ruin_FracturedArch_SuspendedShard"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Nature_PrismBloom.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "Nature_PrismBloom_RockBed",
+        "Nature_PrismBloom_Crystals"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Nature_PrismBloom_RockBed.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Nature_PrismBloom_RockBed"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Nature_PrismBloom_Crystals.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Nature_PrismBloom_Crystals"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Nature_SailTree.glb",
+      "type": "scenery",
+      "mesh_parts": [
+        "Nature_SailTree_Trunk",
+        "Nature_SailTree_Canopy",
+        "Nature_SailTree_GlowSeedpods"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Nature_SailTree_Trunk.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Nature_SailTree_Trunk"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Nature_SailTree_Canopy.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Nature_SailTree_Canopy"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
+    },
+    {
+      "file": "Export/Scenery/Parts/Nature_SailTree_GlowSeedpods.glb",
+      "type": "module",
+      "mesh_parts": [
+        "Nature_SailTree_GlowSeedpods"
+      ],
+      "clips": 0,
+      "expansion": "air_city_v1"
     }
   ],
   "textures": [

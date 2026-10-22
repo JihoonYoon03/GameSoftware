@@ -1,0 +1,387 @@
+{
+  "schema": "erma_scenery_v1",
+  "units": "meters",
+  "design_revision": "sf_field_drive_v2",
+  "authoring_up": "+Z",
+  "gltf_up": "+Y",
+  "origin": "ground center unless explicit sockets below",
+  "assemblies": {
+    "Road_2Lane_4m": {
+      "parts": [
+        "Road_2Lane_4m_Lane_01",
+        "Road_2Lane_4m_Lane_02",
+        "Road_2Lane_4m_LaneMarkings",
+        "Road_2Lane_4m_EdgeMarkings"
+      ],
+      "purpose": "2-lane road; endpoints X +/-2 m",
+      "grid_m": {
+        "x": 4,
+        "y": 3
+      }
+    },
+    "Road_4Lane_4m": {
+      "parts": [
+        "Road_4Lane_4m_Lane_01",
+        "Road_4Lane_4m_Lane_02",
+        "Road_4Lane_4m_Lane_03",
+        "Road_4Lane_4m_Lane_04",
+        "Road_4Lane_4m_LaneMarkings",
+        "Road_4Lane_4m_EdgeMarkings"
+      ],
+      "purpose": "4-lane road; endpoints X +/-2 m",
+      "grid_m": {
+        "x": 4,
+        "y": 3
+      }
+    },
+    "Road_6Lane_4m": {
+      "parts": [
+        "Road_6Lane_4m_Lane_01",
+        "Road_6Lane_4m_Lane_02",
+        "Road_6Lane_4m_Lane_03",
+        "Road_6Lane_4m_Lane_04",
+        "Road_6Lane_4m_Lane_05",
+        "Road_6Lane_4m_Lane_06",
+        "Road_6Lane_4m_LaneMarkings",
+        "Road_6Lane_4m_EdgeMarkings"
+      ],
+      "purpose": "6-lane road; endpoints X +/-2 m",
+      "grid_m": {
+        "x": 4,
+        "y": 3
+      }
+    },
+    "Road_Crossroad_12m": {
+      "parts": [
+        "Road_Crossroad_12m_Surface",
+        "Road_Crossroad_12m_Crosswalk_0_-1",
+        "Road_Crossroad_12m_Crosswalk_0_1",
+        "Road_Crossroad_12m_Crosswalk_1_-1",
+        "Road_Crossroad_12m_Crosswalk_1_1"
+      ],
+      "purpose": "12m intersection; 4-lane connections at +/-6m",
+      "grid_m": {
+        "x": 12,
+        "y": 12
+      }
+    },
+    "Road_TJunction_12m": {
+      "parts": [
+        "Road_TJunction_12m_Surface",
+        "Road_TJunction_12m_Crosswalk_0_-1",
+        "Road_TJunction_12m_Crosswalk_0_1",
+        "Road_TJunction_12m_Crosswalk_1_-1",
+        "Road_TJunction_12m_ClosedEdge"
+      ],
+      "purpose": "12m intersection; 4-lane connections at +/-6m",
+      "grid_m": {
+        "x": 12,
+        "y": 12
+      }
+    },
+    "Road_Curve90_R9m": {
+      "parts": [
+        "Road_Curve90_R9m_ArcSurface",
+        "Road_Curve90_R9m_CenterMarkings"
+      ],
+      "purpose": "2-lane quarter turn; center (0,0), radius9; sockets (9,0),(0,9); tangent +Y/-X",
+      "grid_m": null
+    },
+    "City_Sidewalk_2x4m": {
+      "parts": [
+        "City_Sidewalk_2x4m_Slab",
+        "City_Sidewalk_2x4m_Curb",
+        "City_Sidewalk_2x4m_ServiceStrip"
+      ],
+      "purpose": "2m sidewalk on 2m grid",
+      "grid_m": 2
+    },
+    "Road_SpeedTable_4m": {
+      "parts": [
+        "Road_SpeedTable_4m_Ramp",
+        "Road_SpeedTable_4m_WarningBars"
+      ],
+      "purpose": "raised low speed marking",
+      "grid_m": 2
+    },
+    "City_Streetlight_4m": {
+      "parts": [
+        "City_Streetlight_4m_Foundation",
+        "City_Streetlight_4m_Mast",
+        "City_Streetlight_4m_Luminaire"
+      ],
+      "purpose": "split-halo light over an induction spine",
+      "grid_m": null
+    },
+    "City_TrafficSignal": {
+      "parts": [
+        "City_TrafficSignal_HoverHousing",
+        "City_TrafficSignal_FieldStabilizers",
+        "City_TrafficSignal_StopGlyph",
+        "City_TrafficSignal_WaitGlyph",
+        "City_TrafficSignal_GoGlyph"
+      ],
+      "purpose": "vehicle-only signal floating at 5.25m; no pole, foundation or pedestrian head",
+      "grid_m": null,
+      "hover_height_m": 5.25,
+      "facing": "-Y",
+      "signal_states": {
+        "STOP": {
+          "part": "City_TrafficSignal_StopGlyph",
+          "material": "Signal_Stop"
+        },
+        "WAIT": {
+          "part": "City_TrafficSignal_WaitGlyph",
+          "material": "Glow_Amber"
+        },
+        "GO": {
+          "part": "City_TrafficSignal_GoGlyph",
+          "material": "Glow_Cyan"
+        }
+      },
+      "default_state": "STOP",
+      "inactive_material": "Glass_Opaque",
+      "pedestrian_control": "road surface holograms only"
+    },
+    "City_PedestrianHologram_6m": {
+      "parts": [
+        "City_PedestrianHologram_6m_Projectors",
+        "City_PedestrianHologram_6m_WalkGrid",
+        "City_PedestrianHologram_6m_Guidance"
+      ],
+      "purpose": "pedestrian crossing projected on road surface; no elevated pedestrian signal",
+      "grid_m": {
+        "x": 6,
+        "y": 3
+      }
+    },
+    "City_Bollard": {
+      "parts": [
+        "City_Bollard_Base",
+        "City_Bollard_Post"
+      ],
+      "purpose": "pedestrian edge marker",
+      "grid_m": null
+    },
+    "Road_CrashBarrier_4m": {
+      "parts": [
+        "Road_CrashBarrier_4m_Feet",
+        "Road_CrashBarrier_4m_Rail",
+        "Road_CrashBarrier_4m_Reflectors"
+      ],
+      "purpose": "4m ceramic crash barrier with luminous guidance",
+      "grid_m": 4
+    },
+    "City_Bench": {
+      "parts": [
+        "City_Bench_Legs",
+        "City_Bench_Seat",
+        "City_Bench_Back"
+      ],
+      "purpose": "cantilever composite settlement seating",
+      "grid_m": null
+    },
+    "City_Planter": {
+      "parts": [
+        "City_Planter_Vessel",
+        "City_Planter_Soil",
+        "City_Planter_AlienFoliage"
+      ],
+      "purpose": "contained local vegetation",
+      "grid_m": null
+    },
+    "City_TransitShelter": {
+      "parts": [
+        "City_TransitShelter_Frame",
+        "City_TransitShelter_Roof",
+        "City_TransitShelter_BackPanel",
+        "City_TransitShelter_Seat",
+        "City_TransitShelter_RouteDisplay"
+      ],
+      "purpose": "split-shell transit canopy with projected route display",
+      "grid_m": 2
+    },
+    "City_Wayfinding": {
+      "parts": [
+        "City_Wayfinding_Mast",
+        "City_Wayfinding_SignBoards",
+        "City_Wayfinding_Arrows"
+      ],
+      "purpose": "direction boards; no baked text",
+      "grid_m": null
+    },
+    "City_ChargePost": {
+      "parts": [
+        "City_ChargePost_Pedestal",
+        "City_ChargePost_Display",
+        "City_ChargePost_InductionHalo"
+      ],
+      "purpose": "contactless vehicle induction dock; no cable",
+      "grid_m": null
+    },
+    "Utility_Transformer": {
+      "parts": [
+        "Utility_Transformer_Cabinet",
+        "Utility_Transformer_CoolingFins",
+        "Utility_Transformer_FieldCapacitors",
+        "Utility_Transformer_Status"
+      ],
+      "purpose": "settlement power distribution",
+      "grid_m": null
+    },
+    "Utility_CargoContainer_6m": {
+      "parts": [
+        "Utility_CargoContainer_6m_Shell",
+        "Utility_CargoContainer_6m_RoofRibs",
+        "Utility_CargoContainer_6m_Door_L",
+        "Utility_CargoContainer_6m_Door_R",
+        "Utility_CargoContainer_6m_SealEmitters"
+      ],
+      "purpose": "faceted pressure cargo pod with separate doors and luminous seals",
+      "grid_m": 2
+    },
+    "Utility_HVAC": {
+      "parts": [
+        "Utility_HVAC_Housing",
+        "Utility_HVAC_Grille",
+        "Utility_HVAC_Exhaust"
+      ],
+      "purpose": "closed-cycle habitat climate pod",
+      "grid_m": null
+    },
+    "Utility_PipeRack_4m": {
+      "parts": [
+        "Utility_PipeRack_4m_Supports",
+        "Utility_PipeRack_4m_Pipe_0",
+        "Utility_PipeRack_4m_Pipe_1",
+        "Utility_PipeRack_4m_Pipe_2"
+      ],
+      "purpose": "stackable utility conduit bay",
+      "grid_m": 4
+    },
+    "Utility_CommRelay": {
+      "parts": [
+        "Utility_CommRelay_Mast",
+        "Utility_CommRelay_Panel_L",
+        "Utility_CommRelay_Panel_R",
+        "Utility_CommRelay_Beacon"
+      ],
+      "purpose": "split induction-array communications relay",
+      "grid_m": null
+    },
+    "Utility_SolarArray": {
+      "parts": [
+        "Utility_SolarArray_Stand",
+        "Utility_SolarArray_Panel",
+        "Utility_SolarArray_Rails"
+      ],
+      "purpose": "four-petal photonic energy collector",
+      "grid_m": null
+    },
+    "Utility_WaterTank": {
+      "parts": [
+        "Utility_WaterTank_Legs",
+        "Utility_WaterTank_Tank",
+        "Utility_WaterTank_Pipe"
+      ],
+      "purpose": "pressurized settlement reservoir",
+      "grid_m": null
+    },
+    "Airfield_LandingPad_16m": {
+      "parts": [
+        "Airfield_LandingPad_16m_Deck_0_0",
+        "Airfield_LandingPad_16m_Deck_0_1",
+        "Airfield_LandingPad_16m_Deck_0_2",
+        "Airfield_LandingPad_16m_Deck_0_3",
+        "Airfield_LandingPad_16m_Deck_1_0",
+        "Airfield_LandingPad_16m_Deck_1_1",
+        "Airfield_LandingPad_16m_Deck_1_2",
+        "Airfield_LandingPad_16m_Deck_1_3",
+        "Airfield_LandingPad_16m_Deck_2_0",
+        "Airfield_LandingPad_16m_Deck_2_1",
+        "Airfield_LandingPad_16m_Deck_2_2",
+        "Airfield_LandingPad_16m_Deck_2_3",
+        "Airfield_LandingPad_16m_Deck_3_0",
+        "Airfield_LandingPad_16m_Deck_3_1",
+        "Airfield_LandingPad_16m_Deck_3_2",
+        "Airfield_LandingPad_16m_Deck_3_3",
+        "Airfield_LandingPad_16m_GuidanceReticle",
+        "Airfield_LandingPad_16m_CornerLights"
+      ],
+      "purpose": "16m modular landing deck; origin at ground center",
+      "grid_m": 4
+    },
+    "Airfield_Beacon": {
+      "parts": [
+        "Airfield_Beacon_Base",
+        "Airfield_Beacon_Light",
+        "Airfield_Beacon_Guard"
+      ],
+      "purpose": "landing corridor light",
+      "grid_m": null
+    },
+    "Frontier_SurveyTripod": {
+      "parts": [
+        "Frontier_SurveyTripod_Tripod",
+        "Frontier_SurveyTripod_Scanner",
+        "Frontier_SurveyTripod_Lens"
+      ],
+      "purpose": "anchored survey station with levitated scan crystal",
+      "grid_m": null
+    },
+    "Frontier_FieldShelter": {
+      "parts": [
+        "Frontier_FieldShelter_Frame",
+        "Frontier_FieldShelter_Canopy",
+        "Frontier_FieldShelter_SupplyBox"
+      ],
+      "purpose": "open survey camp shelter",
+      "grid_m": null
+    },
+    "Frontier_MiningConveyor": {
+      "parts": [
+        "Frontier_MiningConveyor_Frame",
+        "Frontier_MiningConveyor_Belt",
+        "Frontier_MiningConveyor_Legs",
+        "Frontier_MiningConveyor_Motor"
+      ],
+      "purpose": "4m modular mine service conveyor",
+      "grid_m": 4
+    },
+    "Ruin_ObserverMonolith": {
+      "parts": [
+        "Ruin_ObserverMonolith_Foot",
+        "Ruin_ObserverMonolith_Shaft",
+        "Ruin_ObserverMonolith_Inlay"
+      ],
+      "purpose": "abstract precursor observation trace",
+      "grid_m": null
+    },
+    "Ruin_FracturedArch": {
+      "parts": [
+        "Ruin_FracturedArch_Pier_L",
+        "Ruin_FracturedArch_Pier_R",
+        "Ruin_FracturedArch_SuspendedShard"
+      ],
+      "purpose": "open broken arch with separated anomaly shard",
+      "grid_m": null
+    },
+    "Nature_PrismBloom": {
+      "parts": [
+        "Nature_PrismBloom_RockBed",
+        "Nature_PrismBloom_Crystals"
+      ],
+      "purpose": "alien mineral growth",
+      "grid_m": null
+    },
+    "Nature_SailTree": {
+      "parts": [
+        "Nature_SailTree_Trunk",
+        "Nature_SailTree_Canopy",
+        "Nature_SailTree_GlowSeedpods"
+      ],
+      "purpose": "alien umbrella canopy; frontier silhouette",
+      "grid_m": null
+    }
+  }
+}

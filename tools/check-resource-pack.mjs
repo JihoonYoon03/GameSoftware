@@ -32,6 +32,7 @@ function text() {
 assert.equal(u32(), 0x41524d45);
 assert.equal(u32(), 1);
 const count = u32(), names = new Set();
+const signalDigests = new Set();
 assert.equal(count, manifest.assets.length);
 for (let asset = 0; asset < count; ++asset) {
     const name = text(), source = text(), vertexCount = u32(), bones = u32(), clips = u32();
@@ -51,6 +52,13 @@ for (let asset = 0; asset < count; ++asset) {
         assert.ok(sockets[1] > sockets[4] && sockets[7] > sockets[10], 'Reversed left/right sockets');
     }
     if (name.startsWith('character/')) assert.equal(bones, 23);
+    if (name.startsWith('aircraft/')) {
+        assert.equal(bones, 17);
+        assert.ok(physical[0] > 2 && physical[1] > 3 && physical[2] > .8, 'Aircraft must retain meter-derived scale');
+    }
+    if (name.startsWith('scenery/City_TrafficSignal')) assert.ok(bounds[2] > 2.3, 'Traffic head must hover above the road');
+    if (name === 'scenery/City_PedestrianHologram_6m') assert.ok(bounds[5] < .076, 'Pedestrian signal must remain at floor level');
+    const vertexStart = offset;
     for (let vertex = 0; vertex < vertexCount; ++vertex) {
         const values = floats(21);
         for (let axis = 0; axis < 3; ++axis) {
@@ -68,18 +76,28 @@ for (let asset = 0; asset < count; ++asset) {
         assert.ok(Math.abs(sum - 1) < .001, 'Unnormalized skin');
         if (name.startsWith('ground/')) assert.equal(values[2], 0, 'Ground must meet actor floor');
     }
+    if (name.startsWith('scenery/City_TrafficSignal'))
+        signalDigests.add(crypto.createHash('sha256').update(data.subarray(vertexStart, offset)).digest('hex'));
     const clipNames = [];
+    const gear = new Map();
     for (let clip = 0; clip < clips; ++clip) {
         clipNames.push(text());
         const frames = u32(), [duration] = floats(1);
         assert.ok(bones > 0 && frames >= 2 && frames <= 10000 && duration > 0);
-        floats(frames * bones * 16); floats(frames * 3);
+        const matrices = floats(frames * bones * 16); floats(frames * 3);
+        if (name.startsWith('aircraft/') && ['Aircraft_Reference', 'Cruise'].includes(clipNames.at(-1)))
+            gear.set(clipNames.at(-1), [...matrices.slice(11 * 16, 12 * 16), ...matrices.slice(16 * 16, 17 * 16)]);
         animationFrames += frames;
     }
     assert.deepEqual(clipNames, report.clips);
     if (name.startsWith('character/')) for (const clip of ['Idle', 'Run', 'Aim_Base', 'Attack_Fire', 'Ride']) assert.ok(clipNames.includes(clip));
     if (name.startsWith('vehicle/')) for (const clip of ['Hover_Idle', 'Cruise']) assert.ok(clipNames.includes(clip));
+    if (name.startsWith('aircraft/')) for (const clip of ['Aircraft_Reference', 'Cruise', 'LandingGear_Retract', 'LandingGear_Deploy', 'Canopy_Open', 'Cargo_Open']) assert.ok(clipNames.includes(clip));
+    if (name.startsWith('aircraft/')) assert.notDeepEqual(gear.get('Cruise'), gear.get('Aircraft_Reference'), 'Cruising landing gear must retract');
     vertices += vertexCount;
 }
 assert.equal(offset, data.length, 'Unexpected trailing data');
+assert.equal([...names].filter(n => n.startsWith('aircraft/')).length, 8);
+assert.equal([...names].filter(n => n.startsWith('scenery/')).length, 36);
+assert.equal(signalDigests.size, 3, 'Red/amber/green traffic heads must differ');
 console.log(JSON.stringify({ event: 'resource_pack_validated', assets: count, vertices, animation_frames: animationFrames, bytes: data.length }));

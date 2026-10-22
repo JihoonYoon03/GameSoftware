@@ -267,12 +267,13 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
     {
         mesh = std::make_shared<rendering::Mesh>();
         auto &geometry = *mesh->data;
+        geometry.ground = model.ground;
         const auto &library = models::ModelLibrary::Get();
         geometry.imported = model.resourceId != 0;
         if (model.resourceId)
         {
             const auto &resource = models::ResourceAssets::Get(model.resourceId);
-            geometry.ground = resource.name.find("ground/") == 0;
+            geometry.ground = geometry.ground || resource.name.find("ground/") == 0;
             geometry.vertices.reserve(resource.vertices.size());
             for (const auto &v : resource.vertices)
             {

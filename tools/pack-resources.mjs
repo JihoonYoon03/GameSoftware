@@ -206,6 +206,13 @@ function convert(name, relative, kind = 'prop', options = {}) {
                 if (skinOverride && /Skin/.test(materialName)) base.splice(0, 4, ...skinOverride);
                 let palette = /Glow|Emission|Emissive/.test(materialName) || material.emissiveFactor?.some(x => x > 0) ? 3
                     : /Cloth|Vehicle_|Hair/.test(materialName) ? 1 : /Accent|Trim/.test(materialName) ? 2 : 0;
+                if (options.neutralEmission && palette === 3) base.splice(0, 4, 1, 1, 1, 1);
+                if (options.signalState !== undefined && /StopGlyph|WaitGlyph|GoGlyph/.test(nodeName)) {
+                    const active = ['StopGlyph', 'WaitGlyph', 'GoGlyph'][options.signalState];
+                    const colors = [[1, .12, .16, 1], [1, .65, .1, 1], [.15, 1, .8, 1]];
+                    base.splice(0, 4, ...(nodeName.includes(active) ? colors[options.signalState] : [.025, .045, .055, 1]));
+                    palette = nodeName.includes(active) ? 3 : 0;
+                }
                 const surface = palette === 3 ? 4 : /Skin/.test(materialName) ? 7 : /Glass/.test(materialName) ? 3
                     : /Cloth|Fabric|Hair/.test(materialName) ? 1 : /Rubber/.test(materialName) ? 5 : /Rock|Soil|Grass|Sand|Mine/.test(materialName) ? 6 : 2;
                 const visibility = /Weapon_CoilPistol/.test(nodeName) ? 1 : /Hair/.test(nodeName) ? 2 : 0;
@@ -281,7 +288,9 @@ function convert(name, relative, kind = 'prop', options = {}) {
         const inverseBinds = accessor(template, skin.inverseBindMatrices);
         const sourceClips = template.json.animations ?? [];
         const selected = sourceClips.filter(a => ['Reference_A', 'Idle', 'Walk', 'Run', 'Aim_Base', 'Attack_Fire', 'Attack_Melee', 'Jump_Air',
-            'Vehicle_Reference', 'Hover_Idle', 'Cruise', 'Boost', 'Steer_Left', 'Steer_Right'].includes(a.name));
+            'Vehicle_Reference', 'Hover_Idle', 'Cruise', 'Boost', 'Steer_Left', 'Steer_Right',
+            'Aircraft_Reference', 'Flight_Idle', 'Bank_Left', 'Bank_Right', 'LandingGear_Deploy',
+            'LandingGear_Retract', 'Canopy_Open', 'Canopy_Close', 'Cargo_Open', 'Cargo_Close'].includes(a.name));
         if (kind === 'human') selected.push({ name: 'Ride' });
         for (const clip of selected) {
             let duration = Math.max(1 / 30, ...((clip.samplers ?? []).map(s => accessor(template, s.input).at(-1)[0])));
@@ -289,6 +298,11 @@ function convert(name, relative, kind = 'prop', options = {}) {
             const frames = Math.max(2, Math.round(duration * 30) + 1), matrices = [], muzzles = [];
             for (let frame = 0; frame < frames; ++frame) {
                 let overrides = sampleOverrides(template, clip, Math.min(duration, frame / 30));
+                if (kind === 'aircraft' && ['Cruise', 'Boost', 'Flight_Idle'].includes(clip.name)) {
+                    const gear = sourceClips.find(a => a.name === 'LandingGear_Retract');
+                    for (const [node, transform] of sampleOverrides(template, gear, 1))
+                        if (/gear/i.test(template.json.nodes[node].name)) overrides.set(node, transform);
+                }
                 if (clip.name === 'Ride') {
                     overrides = sampleOverrides(template, sourceClips.find(a => a.name === 'Jump_Air'), .22);
                     const aim = sampleOverrides(template, sourceClips.find(a => a.name === 'Aim_Base'), 0);
@@ -350,6 +364,16 @@ convert('ground/metal', 'Modules/Hab_Floor_2m', 'prop', { normalize: true });
 for (const [name, file, normalize] of [['rock', 'Nature_Rock_01', true], ['tree', 'Nature_Alien_Tree_01', false],
     ['fungus', 'Nature_Fungal_Cluster', false], ['crystal', 'Nature_Crystal_Cluster', false], ['reeds', 'Nature_Glow_Reeds_01', false]])
     convert('nature/' + name, 'Environment/' + file, 'prop', { normalize });
+
+for (const type of ['Kite_Courier', 'Manta_AirTaxi', 'Mule_Skycrane', 'Warden_Survey'])
+    for (const variant of ['', '_Variant']) convert('aircraft/' + type + variant, 'Aircraft/' + type + variant, 'aircraft');
+const scenery = JSON.parse(fs.readFileSync(path.join(resources, 'Documentation/scenery_assemblies.json')));
+for (const name of Object.keys(scenery.assemblies)) {
+    convert('scenery/' + name, 'Scenery/' + name, 'prop',
+        name === 'City_TrafficSignal' ? { signalState: 0 } : name === 'City_PedestrianHologram_6m' ? { neutralEmission: true } : {});
+}
+for (const [state, index] of [['Amber', 1], ['Green', 2]])
+    convert('scenery/City_TrafficSignal_' + state, 'Scenery/City_TrafficSignal', 'prop', { signalState: index });
 
 const chunks = [];
 function u32(value) { const b = Buffer.alloc(4); b.writeUInt32LE(value); chunks.push(b); }

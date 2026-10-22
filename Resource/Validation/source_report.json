@@ -1,5 +1,5 @@
 {
-  "mesh_parts": 1031,
+  "mesh_parts": 1249,
   "max_triangles": 424,
   "all_parts_under_500": true,
   "rigs": {
@@ -42,7 +42,24 @@
     "VEHICLE_JetBike": {
       "bone_count": 16,
       "clips": 10
+    },
+    "AIRCRAFT_Kite_Courier": {
+      "bone_count": 17,
+      "clips": 12
+    },
+    "AIRCRAFT_Manta_AirTaxi": {
+      "bone_count": 17,
+      "clips": 12
+    },
+    "AIRCRAFT_Mule_Skycrane": {
+      "bone_count": 17,
+      "clips": 12
+    },
+    "AIRCRAFT_Warden_Survey": {
+      "bone_count": 17,
+      "clips": 12
     }
   },
-  "issues": []
+  "issues": [],
+  "expansion_report": "air_city_source_report.json"
 }

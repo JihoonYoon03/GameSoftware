@@ -203,13 +203,16 @@ struct Selection
 };
 Selection Select(const ResourceMesh &mesh, const CharacterPose *pose, bool upper = false)
 {
-    std::string name = mesh.name.find("vehicle/") == 0 ? "Hover_Idle" : "Idle";
+    const bool aircraft = mesh.name.find("aircraft/") == 0;
+    std::string name = aircraft                          ? "Aircraft_Reference"
+                       : mesh.name.find("vehicle/") == 0 ? "Hover_Idle"
+                                                         : "Idle";
     float time = pose ? pose->animationPhase / 10 : 0;
     if (pose)
     {
-        if (mesh.name.find("vehicle/") == 0)
+        if (aircraft || mesh.name.find("vehicle/") == 0)
         {
-            name = pose->walking ? "Cruise" : "Hover_Idle";
+            name = pose->walking ? "Cruise" : aircraft ? "Aircraft_Reference" : "Hover_Idle";
         }
         else if (pose->riding)
         {

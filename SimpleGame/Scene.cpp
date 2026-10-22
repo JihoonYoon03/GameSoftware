@@ -3,6 +3,7 @@
 #include "Level.h"
 #include "Overworld.h"
 #include "Drawing.h"
+#include "ResourceAssets.h"
 #include "Hud.h"
 #include "Profiler.h"
 #include "RenderQueue.h"
@@ -206,7 +207,7 @@ void InteriorScene::Draw()
 // ============================================================================
 Vector2 CityScene::GetTrafficPosition(int index)
 {
-    return CityLayout::TrafficPosition(index, Game::Get().GetState().animationTimeSeconds);
+    return Overworld::Traffic().RenderPosition(size_t(index));
 }
 
 models::Palette CityScene::GetTrafficPalette(int index)
@@ -242,20 +243,12 @@ void CityScene::DrawStreetTiles(game::Scene &scene)
                         {
                             for (int y = y0; y < y0 + chunkSize && y < CityLayout::kTerrainMaxY; ++y)
                             {
-                                bool road = CityLayout::IsRoadTile(x, y);
                                 bool city = Overworld::CityAt({float(x), float(y)}) >= 0;
                                 float shade = 0;
                                 Drawing::DrawMaterialTile(
-                                    float(x), float(y),
-                                    road ? SurfaceMaterial::Asphalt : SurfaceMaterial::Concrete,
-                                    road   ? ColorRGBA(.13f, .19f, .23f)
-                                    : city ? ColorRGBA(.28f + shade, .34f + shade, .37f + shade)
-                                           : ColorRGBA(.17f, .2f, .22f));
-                                if (road && x % 2 == 0 && y == 0)
-                                {
-                                    Drawing::DrawTile(x + .1f, y + .1f, .6f, .035f,
-                                                      ColorRGBA(.37f, .59f, .63f));
-                                }
+                                    float(x), float(y), SurfaceMaterial::Concrete,
+                                    city ? ColorRGBA(.28f + shade, .34f + shade, .37f + shade)
+                                         : ColorRGBA(.17f, .2f, .22f));
                             }
                         }
                     });
@@ -264,10 +257,228 @@ void CityScene::DrawStreetTiles(game::Scene &scene)
     }
 }
 
+void CityScene::DrawTrafficInfrastructure(game::Scene &scene)
+{
+    const auto &net = RoadNetwork::Get();
+    const auto camera = Game::Get().GetState().cameraPosition;
+    auto add = [](Vector2 a, Vector2 b) { return Vector2{a.x + b.x, a.y + b.y}; };
+    auto mul = [](Vector2 a, float b) { return Vector2{a.x * b, a.y * b}; };
+    for (size_t roadIndex = 0; roadIndex < net.roads.size(); ++roadIndex)
+    {
+        const auto &road = net.roads[roadIndex];
+        auto a = net.junctions[road.from].position, b = net.junctions[road.to].position;
+        float length = Game::Distance(a, b), width = road.lanes * RoadNetwork::kLaneWidth;
+        Vector2 d = {(b.x - a.x) / length, (b.y - a.y) / length};
+        float alongCamera = (camera.x - a.x) * d.x + (camera.y - a.y) * d.y;
+        int first = (std::max)(0, int(std::floor((alongCamera - 38) / 12)));
+        int last = (std::min)(int(std::ceil(length / 12)), int(std::ceil((alongCamera + 38) / 12)));
+        for (int chunk = first; chunk < last; ++chunk)
+        {
+            float begin = chunk * 12.f, end = (std::min)(length, begin + 12);
+            auto start = add(a, mul(d, begin)), finish = add(a, mul(d, end));
+            auto center = add(a, mul(d, (begin + end) * .5f));
+            if (Game::Distance(center, camera) > 48)
+            {
+                continue;
+            }
+            float x = (std::min)(start.x, finish.x) - width, y = (std::min)(start.y, finish.y) - width;
+            scene.PlaceWorldActor(
+                "road/" + std::to_string(roadIndex) + "/" + std::to_string(chunk), center.x, center.y,
+                WorldBounds(x, y, std::fabs(finish.x - start.x) + width * 2,
+                            std::fabs(finish.y - start.y) + width * 2, 0),
+                1, 0, [=, &net]() {
+                    Drawing::DrawGroundStrip(start, finish, width + 1.4f, {.32f, .39f, .41f}, .04f);
+                    Drawing::DrawGroundStrip(start, finish, width, {.13f, .19f, .23f}, .075f,
+                                             SurfaceMaterial::Asphalt);
+                    float markStart = (std::max)(begin, net.junctions[road.from].radius + 3.6f);
+                    float markEnd = (std::min)(end, length - net.junctions[road.to].radius - 3.6f);
+                    if (markEnd <= markStart)
+                    {
+                        return;
+                    }
+                    auto type = road.lanes == 6   ? models::SceneryType::Road6Lane
+                                : road.lanes == 4 ? models::SceneryType::Road4Lane
+                                                  : models::SceneryType::Road2Lane;
+                    for (float t = std::ceil(markStart / 2) * 2; t + 2 <= markEnd + .001f; t += 2)
+                    {
+                        Drawing::DrawProp(models::ModelLibrary::Scenery(type), add(a, mul(d, t + 1)),
+                                          {1, RoadNetwork::kLaneWidth / 1.5f, 1}, {}, std::atan2(d.y, d.x),
+                                          .1f);
+                    }
+                });
+        }
+    }
+    for (size_t junction = 0; junction < net.junctions.size(); ++junction)
+    {
+        const auto &j = net.junctions[junction];
+        if (Game::Distance(j.position, camera) > 46)
+        {
+            continue;
+        }
+        auto p = j.position;
+        scene.PlaceWorldActor(
+            "junction/" + std::to_string(junction), p.x, p.y,
+            WorldBounds(p.x - j.radius, p.y - j.radius, j.radius * 2, j.radius * 2, 150), 1, 0, [=, &net]() {
+                // Round the apron with shared, narrow ground strips, rather than stepped tiles.
+                for (int slice = 0; slice < 16; ++slice)
+                {
+                    float y = (-1 + (slice + .5f) / 8.f) * j.radius;
+                    float half = std::sqrt((std::max)(0.f, j.radius * j.radius - y * y));
+                    Drawing::DrawGroundStrip({p.x - half, p.y + y}, {p.x + half, p.y + y},
+                                             j.radius / 8 + .02f, {.13f, .19f, .23f}, .09f,
+                                             SurfaceMaterial::Asphalt);
+                }
+                std::vector<int> arms;
+                for (int lane : j.outgoing)
+                {
+                    if (net.lanes[lane].slot == 0)
+                    {
+                        arms.push_back(lane);
+                    }
+                }
+                if (arms.size() < 3)
+                {
+                    return;
+                }
+                bool walk = Overworld::Traffic().PedestrianGreen(int(junction));
+                ColorRGBA pedestrian = walk ? ColorRGBA(.15f, 1, .78f) : ColorRGBA(.95f, .21f, .28f);
+                for (int arm : arms)
+                {
+                    const auto &out = net.lanes[arm];
+                    auto d = out.direction;
+                    Vector2 n = {-d.y, d.x};
+                    float half = net.roads[out.road].lanes * RoadNetwork::kLaneWidth * .5f;
+                    auto across = add(p, mul(d, j.radius - .45f));
+                    models::Palette pedestrianPalette;
+                    pedestrianPalette.emission = {pedestrian.r, pedestrian.g, pedestrian.b, 1};
+                    Drawing::DrawProp(models::ModelLibrary::Scenery(models::SceneryType::PedestrianHologram),
+                                      across, {half * 2 / 2.948f, .5f, 1}, pedestrianPalette,
+                                      std::atan2(n.y, n.x), .10f);
+                    // Ground arrows distinguish protected left turns from straight/right lanes.
+                    for (int incoming = 0; incoming < int(net.lanes.size()); ++incoming)
+                    {
+                        const auto &lane = net.lanes[incoming];
+                        if (lane.road != out.road || lane.to != int(junction))
+                        {
+                            continue;
+                        }
+                        std::vector<TrafficTurn> turns;
+                        for (auto turn : {TrafficTurn::Straight, TrafficTurn::Left, TrafficTurn::Right})
+                        {
+                            if (net.CanTurn(incoming, turn))
+                            {
+                                turns.push_back(turn);
+                            }
+                        }
+                        auto base = add(add(p, mul(d, j.radius + 2.1f)),
+                                        mul(n, (lane.slot + .5f) * RoadNetwork::kLaneWidth));
+                        unsigned int signal = 0;
+                        for (auto turn : turns)
+                        {
+                            signal = (std::max)(signal, unsigned(Overworld::Traffic().Light(incoming, turn)));
+                        }
+                        auto head = add(add(p, mul(d, j.radius - 1)),
+                                        mul(n, (lane.slot + .5f) * RoadNetwork::kLaneWidth));
+                        Drawing::DrawProp(models::ModelLibrary::TrafficSignal(signal), head, {.9f, 1, 1}, {},
+                                          std::atan2(d.y, d.x) + kPi * .5f);
+                        for (size_t t = 0; t < turns.size(); ++t)
+                        {
+                            auto light = Overworld::Traffic().Light(incoming, turns[t]);
+                            ColorRGBA color = light == TrafficLight::Green   ? ColorRGBA(.18f, 1, .8f)
+                                              : light == TrafficLight::Amber ? ColorRGBA(1, .65f, .12f)
+                                                                             : ColorRGBA(.95f, .17f, .24f);
+                            auto origin = add(base, mul(d, float(t) * .65f));
+                            Vector2 heading = turns[t] == TrafficTurn::Straight
+                                                  ? mul(d, -1)
+                                                  : mul(n, turns[t] == TrafficTurn::Left ? -1.f : 1.f);
+                            auto tip = add(origin, mul(heading, .48f));
+                            Vector2 wing = {-heading.y, heading.x};
+                            Drawing::DrawHologramStrip(add(origin, mul(heading, -.25f)), tip, .07f, color,
+                                                       .17f);
+                            Drawing::DrawHologramStrip(
+                                tip, add(add(tip, mul(heading, -.23f)), mul(wing, .18f)), .07f, color, .17f);
+                            Drawing::DrawHologramStrip(
+                                tip, add(add(tip, mul(heading, -.23f)), mul(wing, -.18f)), .07f, color, .17f);
+                        }
+                    }
+                    // Small glowing sidewalk pads keep the pedestrian light legible from either side.
+                    for (float side : {-1.f, 1.f})
+                    {
+                        auto pad = add(across, mul(n, (half + .45f) * side));
+                        Drawing::DrawHologramStrip(add(pad, mul(d, -.48f)), add(pad, mul(d, .48f)), .45f,
+                                                   pedestrian, .18f);
+                    }
+                }
+            });
+    }
+    for (size_t route = 0; route < net.airCorridors.size(); ++route)
+    {
+        auto corridor = net.airCorridors[route];
+        auto point = [=](float t) {
+            float s = 1 - t;
+            return add(add(mul(corridor.start, s * s), mul(corridor.control, 2 * s * t)),
+                       mul(corridor.end, t * t));
+        };
+        for (int segment = 0; segment < 160; segment += 2)
+        {
+            auto a = point(segment / 160.f), b = point((segment + 1) / 160.f);
+            if (Game::Distance(a, camera) > 65)
+            {
+                continue;
+            }
+            scene.PlaceWorldActor(
+                "air-corridor/" + std::to_string(route) + "/" + std::to_string(segment), a.x, a.y,
+                WorldBounds(a.x - 4, a.y - 4, 8, 8, corridor.altitude * 44), 2, a.x + a.y, [=]() {
+                    Drawing::DrawHologramStrip(a, b, .08f, {.28f, .66f, .92f, .46f}, corridor.altitude);
+                    if (segment % 20 == 0)
+                    {
+                        auto label = Drawing::WorldToScreen(a.x, a.y, corridor.altitude * 44 + 10);
+                        Drawing::DrawLabel(label.x, label.y, "항공 회랑 " + std::to_string(route + 1),
+                                           {.4f, .65f, .8f, .65f});
+                    }
+                });
+        }
+    }
+}
+
 void CityScene::DrawStreetFurniture(game::Scene &scene)
 {
-    scene.PlaceWorldActor("beacon-platform", 5, -3.8f, WorldBounds(5, -3.8f, 2.6f, 1.7f, 0), 2, 0,
-                          [this]() { Drawing::DrawTile(5, -3.8f, 2.6f, 1.7f, ColorRGBA(.2f, .28f, .34f)); });
+    auto minimum = CityLayout::kPlazaMin, maximum = CityLayout::kPlazaMax;
+    scene.PlaceWorldActor("quest-plaza", minimum.x, minimum.y,
+                          WorldBounds(minimum.x, minimum.y, maximum.x - minimum.x, maximum.y - minimum.y, 0),
+                          1, 0, [=]() {
+                              float centerY = (minimum.y + maximum.y) * .5f;
+                              Drawing::DrawGroundStrip({minimum.x, centerY}, {maximum.x, centerY},
+                                                       maximum.y - minimum.y, {.25f, .33f, .36f}, .025f);
+                          });
+    auto bayMin = CityLayout::kBikeAccessMin, bayMax = CityLayout::kBikeAccessMax;
+    scene.PlaceWorldActor(
+        "bike-bay", kJetBikePosition.x, kJetBikePosition.y,
+        WorldBounds(bayMin.x, bayMin.y, bayMax.x - bayMin.x, bayMax.y - bayMin.y, 0), 2, 0, [=]() {
+            // A visible driveway connects the reserved bay to the six-lane boulevard.
+            float roadEdgeY = kBikeRoadExit.y + 3 * RoadNetwork::kLaneWidth + .05f;
+            Drawing::DrawGroundStrip({kJetBikePosition.x, CityLayout::kPlazaMin.y},
+                                     {kJetBikePosition.x, roadEdgeY}, bayMax.x - bayMin.x, {.18f, .27f, .3f},
+                                     .045f);
+            for (float side : {-1.f, 1.f})
+            {
+                Drawing::DrawHologramStrip({kJetBikePosition.x + side * .8f, kJetBikePosition.y - 1},
+                                           {kJetBikePosition.x + side * .8f, kJetBikePosition.y + 1}, .045f,
+                                           {.3f, .78f, .87f}, .08f);
+            }
+        });
+    auto beacon = kBeaconPosition;
+    scene.PlaceWorldActor("beacon-platform", beacon.x, beacon.y,
+                          WorldBounds(beacon.x - 1.3f, beacon.y - .6f, 2.6f, 1.2f, 0), 2, 0, [beacon]() {
+                              Drawing::DrawGroundStrip({beacon.x - 1.3f, beacon.y},
+                                                       {beacon.x + 1.3f, beacon.y}, 1.2f, {.2f, .28f, .34f},
+                                                       .05f);
+                          });
+    scene.PlaceWorldActor("home-entry", kHomeDoor.x, kHomeDoor.y,
+                          WorldBounds(kHomeDoor.x - 1, kHomeDoor.y - 1.4f, 2, 1.7f, 0), 2, 0, []() {
+                              Drawing::DrawGroundStrip({kHomeDoor.x, kHomeDoor.y - 1.25f}, kHomeDoor, 1.4f,
+                                                       {.22f, .36f, .39f}, .04f);
+                          });
     for (int i = -6; i <= 6; i += 3)
     {
         if (i == 0)
@@ -277,7 +488,8 @@ void CityScene::DrawStreetFurniture(game::Scene &scene)
         scene.PlaceWorldActor(
             "lamp/" + std::to_string(i), float(i), 3.7f, WorldBounds(float(i), 3.7f, .55f, .6f, 80), 2, 0,
             [this, i]() {
-                Drawing::DrawProp(models::ModelLibrary::Get().lamp, {float(i), 3.7f});
+                Drawing::DrawProp(models::ModelLibrary::Scenery(models::SceneryType::Streetlight),
+                                  {float(i), 3.7f});
                 Vector2 p = Drawing::WorldToScreen((float)i, 3.7f, 52);
                 Drawing::DrawLine(Drawing::WorldToScreen((float)i, 3.7f), p, ColorRGBA(.25f, .4f, .47f), 2);
                 Drawing::DrawGlow(
@@ -291,6 +503,39 @@ void CityScene::DrawStreetFurniture(game::Scene &scene)
     }
 }
 
+void CityScene::DrawImportedScenery(game::Scene &scene)
+{
+    for (size_t i = 0; i < Overworld::Scenery().Props().size(); ++i)
+    {
+        const auto &prop = Overworld::Scenery().Props()[i];
+        const auto &resource = models::ResourceAssets::Get(prop.model->resourceId);
+        scene.PlaceWorldActor(
+            "scenery/" + std::to_string(i), prop.position.x, prop.position.y,
+            WorldBounds(prop.minimum.x, prop.minimum.y, prop.maximum.x - prop.minimum.x,
+                        prop.maximum.y - prop.minimum.y, (resource.maximum.z + prop.elevation) * 44 + 8),
+            prop.model->ground ? 1 : 3, prop.position.x + prop.position.y, [prop]() {
+                models::Transform3D transform;
+                transform.yaw = prop.yaw;
+                transform.position.z = prop.elevation;
+                Drawing::DrawModel3D(*prop.model, Drawing::WorldToScreen(prop.position.x, prop.position.y),
+                                     {1, 1, 1}, transform, (prop.position.x + prop.position.y) * 36, {});
+            });
+    }
+    for (const auto &craft : Overworld::Flights().Aircraft())
+    {
+        const auto &model = models::ModelLibrary::Aircraft(craft.type, craft.alternate);
+        const auto &resource = models::ResourceAssets::Get(model.resourceId);
+        float radius = (std::max)(resource.physicalSize.x, resource.physicalSize.y) * .75f + .5f;
+        auto p = craft.position;
+        scene.PlaceWorldActor("aircraft/" + std::to_string(craft.id), p.x, p.y,
+                              WorldBounds(p.x - radius, p.y - radius, radius * 2, radius * 2,
+                                          (craft.altitude + resource.maximum.z) * 44 + 24),
+                              3, p.x + p.y, [craft]() {
+                                  Drawing::DrawWorldAircraft(craft.position, craft.altitude, craft.type,
+                                                             craft.alternate, craft.yaw, craft.bank);
+                              });
+    }
+}
 void CityScene::DrawDepthSortedObjects(game::Scene &scene)
 {
     enum class SceneObjectKind
@@ -362,7 +607,7 @@ void CityScene::DrawDepthSortedObjects(game::Scene &scene)
             name = "resident/" + std::to_string(item.index);
             break;
         case SceneObjectKind::Vehicle:
-            name = "vehicle/" + std::to_string(item.index);
+            name = "vehicle/" + std::to_string(Overworld::Traffic().Vehicles()[item.index].id);
             break;
         case SceneObjectKind::JetBike:
             name = "personal-jet-bike";
@@ -373,8 +618,11 @@ void CityScene::DrawDepthSortedObjects(game::Scene &scene)
             {
                 Vector2 position = GetTrafficPosition(item.index);
                 Drawing::DrawWorldVehicle(
-                    position, 3.3f, 1.f, static_cast<models::VehicleType>(item.index % 4),
-                    GetTrafficPalette(item.index), .78f, CityLayout::TrafficYaw(item.index));
+                    position, 3.3f, 1.f,
+                    static_cast<models::VehicleType>(Overworld::Traffic().Vehicles()[item.index].id % 4),
+                    GetTrafficPalette(int(Overworld::Traffic().Vehicles()[item.index].id % 12)),
+                    Overworld::Traffic().Vehicles()[item.index].speed / 10.f,
+                    Overworld::Traffic().RenderYaw(size_t(item.index)));
             }
             if (item.kind == SceneObjectKind::JetBike)
             {
@@ -431,7 +679,7 @@ void CityScene::DrawDepthSortedObjects(game::Scene &scene)
     }
     placeObject({kLiaPosition.x + kLiaPosition.y, SceneObjectKind::Lia, 0});
     placeObject({kMaraPosition.x + kMaraPosition.y, SceneObjectKind::Mara, 0});
-    for (int i = 0; i < 6; ++i)
+    for (int i = 0; i < int(Overworld::Traffic().Vehicles().size()); ++i)
     {
         Vector2 position = GetTrafficPosition(i);
         placeObject({position.x + position.y, SceneObjectKind::Vehicle, i});
@@ -549,7 +797,9 @@ void CityScene::Draw()
         profiling::Scope placementTimer(profiling::Timer::ScenePlacement);
         scene.BeginPlacement();
         DrawStreetTiles(scene);
+        DrawTrafficInfrastructure(scene);
         DrawStreetFurniture(scene);
+        DrawImportedScenery(scene);
         // Open arterial roads replace the closed tutorial boundary.
         DrawDepthSortedObjects(scene);
         DrawUtilityDevices(scene);
@@ -574,10 +824,10 @@ void CityScene::Draw()
             graph.Reparent("shadow/building/" + std::to_string(i),
                            *graph.Find("building/" + std::to_string(i)));
         }
-        for (int i = 0; i < 6; ++i)
+        for (const auto &vehicle : Overworld::Traffic().Vehicles())
         {
-            graph.Reparent("shadow/vehicle/" + std::to_string(i),
-                           *graph.Find("vehicle/" + std::to_string(i)));
+            auto name = "vehicle/" + std::to_string(vehicle.id);
+            graph.Reparent("shadow/" + name, *graph.Find(name));
         }
         graph.Reparent("marker/lia", *graph.Find("lia"));
         graph.Reparent("marker/mara", *graph.Find("mara"));
@@ -752,8 +1002,9 @@ void MineScene::PlaceClue(game::Scene &scene, const char *id, Vector2 position, 
     scene.PlaceWorldActor(
         id, position.x, position.y, WorldBounds(position.x, position.y, 1, 1, 80, 180), 1,
         position.x + position.y, [this, position, label, color, glyph, expected]() {
-            Drawing::DrawProp(
-                glyph ? models::ModelLibrary::Get().relief : models::ModelLibrary::Get().console, position);
+            Drawing::DrawProp(glyph ? models::ModelLibrary::Scenery(models::SceneryType::ObserverMonolith)
+                                    : models::ModelLibrary::Get().console,
+                              position, glyph ? models::Point{.6f, .6f, .6f} : models::Point{1, 1, 1});
             auto center = Drawing::WorldToScreen(position.x, position.y, glyph ? 48.f : 30.f);
             Drawing::DrawGlow(center, 15, color);
             if (glyph)
@@ -1106,8 +1357,9 @@ void FrontierScene::Draw()
         prop("flora/" + std::to_string(i), p, 28, [p, i]() {
             if (p.x < 24)
             {
-                const auto &plant =
-                    i % 3 == 0 ? models::ModelLibrary::Get().fungus : models::ModelLibrary::Get().reeds;
+                const auto &plant = i % 3 == 0
+                                        ? models::ModelLibrary::Scenery(models::SceneryType::PrismBloom)
+                                        : models::ModelLibrary::Get().reeds;
                 Drawing::DrawProp(plant, p, {.8f, .8f, .8f});
                 Drawing::DrawGlow(Drawing::WorldToScreen(p.x, p.y, 17), 7, {.35f, .85f, .64f, .5f});
             }
@@ -1142,7 +1394,9 @@ void FrontierScene::Draw()
     prop("generator", {10, 9.5f}, 55, [&state]() {
         for (int i = 0; i < 3; ++i)
         {
-            Drawing::DrawProp(models::ModelLibrary::Get().generator, {9.5f + i * .9f, 9.7f});
+            Drawing::DrawProp(i == 0 ? models::ModelLibrary::Scenery(models::SceneryType::Transformer)
+                                     : models::ModelLibrary::Get().generator,
+                              {9.5f + i * .9f, 9.7f});
             Drawing::DrawGlow(Drawing::WorldToScreen(9.5f + i * .9f, 9.7f, 28), 7,
                               state.generatorRestored ? ColorRGBA(.35f, .94f, .8f)
                                                       : ColorRGBA(.9f, .52f, .2f));
@@ -1178,7 +1432,7 @@ void FrontierScene::Draw()
         constexpr Vector2 markers[] = {{36.5f, 13.5f}, {36.5f, 18.5f}, {29.5f, 18.5f}};
         auto p = markers[i];
         prop("survey/" + std::to_string(i), p, 38, [p, i, &state]() {
-            Drawing::DrawProp(models::ModelLibrary::Get().beacon, p);
+            Drawing::DrawProp(models::ModelLibrary::Scenery(models::SceneryType::SurveyTripod), p);
             Drawing::DrawGlow(Drawing::WorldToScreen(p.x, p.y, 34), 12,
                               state.surveyMarkers > i ? ColorRGBA(.3f, 1, .8f)
                                                       : ColorRGBA(1, .6f, .25f, .5f));

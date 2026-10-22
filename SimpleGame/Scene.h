@@ -86,7 +86,9 @@ class CityScene final : public Scene
     static Vector2 GetTrafficPosition(int index);
     static models::Palette GetTrafficPalette(int index);
     void DrawStreetTiles(game::Scene &scene);
+    void DrawTrafficInfrastructure(game::Scene &scene);
     void DrawStreetFurniture(game::Scene &scene);
+    void DrawImportedScenery(game::Scene &scene);
     void DrawDepthSortedObjects(game::Scene &scene);
     void DrawUtilityDevices(game::Scene &scene);
     void DrawQuestMarkers(game::Scene &scene);

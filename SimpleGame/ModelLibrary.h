@@ -18,6 +18,52 @@ enum class VehicleType : std::uint32_t
     JetBike,
     Count
 };
+enum class AircraftType : std::uint32_t
+{
+    Courier,
+    AirTaxi,
+    Skycrane,
+    Survey,
+    Count
+};
+enum class SceneryType : std::uint32_t
+{
+    Road2Lane,
+    Road4Lane,
+    Road6Lane,
+    Crossroad,
+    TJunction,
+    Curve90,
+    Sidewalk,
+    SpeedTable,
+    CrashBarrier,
+    Streetlight,
+    TrafficSignal,
+    PedestrianHologram,
+    Bollard,
+    Bench,
+    Planter,
+    TransitShelter,
+    Wayfinding,
+    ChargePost,
+    Transformer,
+    CargoContainer,
+    HVAC,
+    PipeRack,
+    CommRelay,
+    SolarArray,
+    WaterTank,
+    LandingPad,
+    AirfieldBeacon,
+    SurveyTripod,
+    FieldShelter,
+    MiningConveyor,
+    ObserverMonolith,
+    FracturedArch,
+    PrismBloom,
+    SailTree,
+    Count
+};
 enum class CharacterType : std::uint32_t
 {
     Explorer,
@@ -158,6 +204,7 @@ struct Part
 struct Model
 {
     std::uint32_t resourceId = 0;
+    bool ground = false;
     CoordinateSpace space = CoordinateSpace::Screen;
     std::uint32_t count = 0;
     std::array<Part, 1024> parts = {};
@@ -191,6 +238,9 @@ struct Library
     Model mineGround;
     std::array<Model, 4> grounds;
     std::array<VehicleModel, static_cast<size_t>(VehicleType::Count)> vehicles;
+    std::array<Model, static_cast<size_t>(AircraftType::Count) * 2> aircraft;
+    std::array<Model, static_cast<size_t>(SceneryType::Count)> scenery;
+    std::array<Model, 2> signalStates;
     std::array<Model, static_cast<size_t>(CharacterType::Count)> characters;
     std::array<Model, static_cast<size_t>(CharacterType::Count)> femaleCharacters;
     std::array<Model, static_cast<size_t>(HairStyle::Count)> hairs;
@@ -205,6 +255,10 @@ class ModelLibrary
     static const Library &Get();
     static const Model &Character(CharacterType type, Gender gender);
     static const Model &Hair(HairStyle style, bool covered);
+    static const Model &Aircraft(AircraftType type, bool alternate = false);
+    static const Model &Scenery(SceneryType type);
+    static const char *SceneryName(SceneryType type);
+    static const Model &TrafficSignal(unsigned int state);
 };
 
 // ============================================================================

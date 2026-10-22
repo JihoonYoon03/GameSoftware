@@ -15,8 +15,14 @@ Blender 4.5.2 LTS에서 제작한 로우 폴리 모듈 라이브러리입니다.
 - `Export/Buildings`: 5개 조립식 건물 GLB. 파트는 합쳐지지 않아 개별 교체가 가능합니다.
 - `Export/Environment`: 지면·도로·바위·발광 식생 GLB.
 - `Export/Vehicles`: 차량 5종의 A/B 조립 예제 10개와 `Parts` 하위의 교체 파트 122개.
+- `Export/Aircraft`: 비행체 4종의 A/B 조립 예제 8개와 `Parts`의 교체 파트 82개. 각 타입에 17본·12개 클립.
+- `Export/Scenery`: 도시·도로·야외 배경 조립체 34종과 `Parts`의 파트 136개. [확장 사용 안내](AIR_CITY_ko.md)를 참고합니다.
 - `Export/Textures`: 직접 생성한 512×512 반복 PBR PNG 8세트. 각 세트는 BaseColor / OpenGL Normal / ORM입니다. ORM은 R=AO(1), G=Roughness, B=Metallic입니다.
 - `Validation`: 실제 메시·GLB 검사 결과와 제작 로그.
+
+2026-10-22 확장 후 전체 독립 파트는 1,249개, GLB는 1,323개입니다. 새 파트 218개는 최대 352삼각형이며 전체 팩의 최대값은 기존과 같은 424삼각형입니다. 기본 장면은 `10_Aircraft`로 변경했습니다. 추가 장면 `10b_Aircraft_Variants`, `10c_Aircraft_Exploded`, `11_City_Frontier_Props`, `11b_Road_Modules`, `12_Airfield_Outpost`에서 조합과 배치를 확인할 수 있습니다.
+
+후속 디자인 수정에서 로터를 분절된 부상 필드로 교체하고 차량용 신호기를 지지대 없는 공중 부유형으로 바꿨습니다. 보행자 안내는 바닥 홀로그램이며 `13_Field_Tech_Details`에서 확인할 수 있습니다. 자세한 상태별 파트·재질 규칙은 [확장 안내](AIR_CITY_ko.md)를 따릅니다.
 
 ## 제작 규격
 

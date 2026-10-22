@@ -1,0 +1,638 @@
+{
+  "files": {
+    "Export/Aircraft/Kite_Courier.glb": {
+      "mesh_parts": 15,
+      "bones": 17,
+      "clips": {
+        "Aircraft_Reference": {
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Bank_Left": {
+          "max_vertex_motion_m": 0.7051215896045185,
+          "loop_seam_m": null
+        },
+        "Bank_Right": {
+          "max_vertex_motion_m": 0.7051216030188643,
+          "loop_seam_m": null
+        },
+        "Cargo_Close": {
+          "max_vertex_motion_m": 0.8092615898682396,
+          "loop_seam_m": null
+        },
+        "Flight_Idle": {
+          "max_vertex_motion_m": 0.06619676952492996,
+          "loop_seam_m": 0.0
+        },
+        "Boost": {
+          "max_vertex_motion_m": 0.15798172794379084,
+          "loop_seam_m": 0.0
+        },
+        "Canopy_Close": {
+          "max_vertex_motion_m": 1.5966911292176535,
+          "loop_seam_m": null
+        },
+        "Canopy_Open": {
+          "max_vertex_motion_m": 1.5966911292176535,
+          "loop_seam_m": null
+        },
+        "LandingGear_Retract": {
+          "max_vertex_motion_m": 0.6328956555255001,
+          "loop_seam_m": null
+        },
+        "LandingGear_Deploy": {
+          "max_vertex_motion_m": 0.6328956555255001,
+          "loop_seam_m": null
+        },
+        "Cruise": {
+          "max_vertex_motion_m": 0.06619676952492996,
+          "loop_seam_m": 0.0
+        },
+        "Cargo_Open": {
+          "max_vertex_motion_m": 0.8092615898682396,
+          "loop_seam_m": null
+        }
+      },
+      "endpoint_errors_m": {
+        "Canopy_Open_0": 0.0,
+        "Canopy_Open_1": 0.0,
+        "Cargo_Open_0": 0.0,
+        "Cargo_Open_1": 0.0,
+        "LandingGear_Retract_0": 0.0,
+        "LandingGear_Retract_1": 0.0
+      }
+    },
+    "Export/Aircraft/Kite_Courier_Variant.glb": {
+      "mesh_parts": 15,
+      "bones": 17,
+      "clips": {
+        "Canopy_Open": {
+          "max_vertex_motion_m": 1.5966911292176535,
+          "loop_seam_m": null
+        },
+        "Cargo_Close": {
+          "max_vertex_motion_m": 0.8092615898682396,
+          "loop_seam_m": null
+        },
+        "Boost": {
+          "max_vertex_motion_m": 0.15798172794379084,
+          "loop_seam_m": 0.0
+        },
+        "LandingGear_Deploy": {
+          "max_vertex_motion_m": 0.6328956555255001,
+          "loop_seam_m": null
+        },
+        "Aircraft_Reference": {
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Flight_Idle": {
+          "max_vertex_motion_m": 0.06619676952492996,
+          "loop_seam_m": 0.0
+        },
+        "Cargo_Open": {
+          "max_vertex_motion_m": 0.8092615898682396,
+          "loop_seam_m": null
+        },
+        "LandingGear_Retract": {
+          "max_vertex_motion_m": 0.6328956555255001,
+          "loop_seam_m": null
+        },
+        "Cruise": {
+          "max_vertex_motion_m": 0.06619676952492996,
+          "loop_seam_m": 0.0
+        },
+        "Bank_Right": {
+          "max_vertex_motion_m": 0.7051216030188643,
+          "loop_seam_m": null
+        },
+        "Bank_Left": {
+          "max_vertex_motion_m": 0.7051215896045185,
+          "loop_seam_m": null
+        },
+        "Canopy_Close": {
+          "max_vertex_motion_m": 1.5966911292176535,
+          "loop_seam_m": null
+        }
+      },
+      "endpoint_errors_m": {
+        "Canopy_Open_0": 0.0,
+        "Canopy_Open_1": 0.0,
+        "Cargo_Open_0": 0.0,
+        "Cargo_Open_1": 0.0,
+        "LandingGear_Retract_0": 0.0,
+        "LandingGear_Retract_1": 0.0
+      }
+    },
+    "Export/Aircraft/Manta_AirTaxi.glb": {
+      "mesh_parts": 17,
+      "bones": 17,
+      "clips": {
+        "Bank_Left": {
+          "max_vertex_motion_m": 0.7273839624424344,
+          "loop_seam_m": null
+        },
+        "Canopy_Open": {
+          "max_vertex_motion_m": 1.7981840672634735,
+          "loop_seam_m": null
+        },
+        "Cargo_Close": {
+          "max_vertex_motion_m": 1.4924972572173674,
+          "loop_seam_m": null
+        },
+        "Cruise": {
+          "max_vertex_motion_m": 0.02830172368791638,
+          "loop_seam_m": 0.0
+        },
+        "LandingGear_Retract": {
+          "max_vertex_motion_m": 0.9059836452498231,
+          "loop_seam_m": null
+        },
+        "LandingGear_Deploy": {
+          "max_vertex_motion_m": 0.9059836452498231,
+          "loop_seam_m": null
+        },
+        "Canopy_Close": {
+          "max_vertex_motion_m": 1.7981840672634735,
+          "loop_seam_m": null
+        },
+        "Boost": {
+          "max_vertex_motion_m": 0.06754319468238633,
+          "loop_seam_m": 0.0
+        },
+        "Aircraft_Reference": {
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Flight_Idle": {
+          "max_vertex_motion_m": 0.02830172368791638,
+          "loop_seam_m": 0.0
+        },
+        "Bank_Right": {
+          "max_vertex_motion_m": 0.7273835739292367,
+          "loop_seam_m": null
+        },
+        "Cargo_Open": {
+          "max_vertex_motion_m": 1.4924972572173674,
+          "loop_seam_m": null
+        }
+      },
+      "endpoint_errors_m": {
+        "Canopy_Open_0": 0.0,
+        "Canopy_Open_1": 0.0,
+        "Cargo_Open_0": 0.0,
+        "Cargo_Open_1": 0.0,
+        "LandingGear_Retract_0": 0.0,
+        "LandingGear_Retract_1": 0.0
+      }
+    },
+    "Export/Aircraft/Manta_AirTaxi_Variant.glb": {
+      "mesh_parts": 17,
+      "bones": 17,
+      "clips": {
+        "Canopy_Close": {
+          "max_vertex_motion_m": 1.7981840672634735,
+          "loop_seam_m": null
+        },
+        "Canopy_Open": {
+          "max_vertex_motion_m": 1.7981840672634735,
+          "loop_seam_m": null
+        },
+        "LandingGear_Retract": {
+          "max_vertex_motion_m": 0.9059836452498231,
+          "loop_seam_m": null
+        },
+        "Cargo_Open": {
+          "max_vertex_motion_m": 1.4924972572173674,
+          "loop_seam_m": null
+        },
+        "Cruise": {
+          "max_vertex_motion_m": 0.02839502742280527,
+          "loop_seam_m": 0.0
+        },
+        "LandingGear_Deploy": {
+          "max_vertex_motion_m": 0.9059836452498231,
+          "loop_seam_m": null
+        },
+        "Aircraft_Reference": {
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Bank_Right": {
+          "max_vertex_motion_m": 0.7273835739292367,
+          "loop_seam_m": null
+        },
+        "Cargo_Close": {
+          "max_vertex_motion_m": 1.4924972572173674,
+          "loop_seam_m": null
+        },
+        "Bank_Left": {
+          "max_vertex_motion_m": 0.7273839624424344,
+          "loop_seam_m": null
+        },
+        "Flight_Idle": {
+          "max_vertex_motion_m": 0.02839502742280527,
+          "loop_seam_m": 0.0
+        },
+        "Boost": {
+          "max_vertex_motion_m": 0.06776595886662759,
+          "loop_seam_m": 0.0
+        }
+      },
+      "endpoint_errors_m": {
+        "Canopy_Open_0": 0.0,
+        "Canopy_Open_1": 0.0,
+        "Cargo_Open_0": 0.0,
+        "Cargo_Open_1": 0.0,
+        "LandingGear_Retract_0": 0.0,
+        "LandingGear_Retract_1": 0.0
+      }
+    },
+    "Export/Aircraft/Mule_Skycrane.glb": {
+      "mesh_parts": 19,
+      "bones": 17,
+      "clips": {
+        "Bank_Right": {
+          "max_vertex_motion_m": 0.8107868712519466,
+          "loop_seam_m": null
+        },
+        "Canopy_Open": {
+          "max_vertex_motion_m": 2.2983018634122514,
+          "loop_seam_m": null
+        },
+        "Cargo_Open": {
+          "max_vertex_motion_m": 2.1430786716529995,
+          "loop_seam_m": null
+        },
+        "Bank_Left": {
+          "max_vertex_motion_m": 0.8107867869147976,
+          "loop_seam_m": null
+        },
+        "Flight_Idle": {
+          "max_vertex_motion_m": 0.030725625648932994,
+          "loop_seam_m": 0.0
+        },
+        "LandingGear_Retract": {
+          "max_vertex_motion_m": 1.3961089263074267,
+          "loop_seam_m": null
+        },
+        "LandingGear_Deploy": {
+          "max_vertex_motion_m": 1.3961089263074267,
+          "loop_seam_m": null
+        },
+        "Canopy_Close": {
+          "max_vertex_motion_m": 2.2983018634122514,
+          "loop_seam_m": null
+        },
+        "Boost": {
+          "max_vertex_motion_m": 0.07332808583494974,
+          "loop_seam_m": 0.0
+        },
+        "Cargo_Close": {
+          "max_vertex_motion_m": 2.1430786716529995,
+          "loop_seam_m": null
+        },
+        "Cruise": {
+          "max_vertex_motion_m": 0.030725625648932994,
+          "loop_seam_m": 0.0
+        },
+        "Aircraft_Reference": {
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        }
+      },
+      "endpoint_errors_m": {
+        "Canopy_Open_0": 0.0,
+        "Canopy_Open_1": 0.0,
+        "Cargo_Open_0": 0.0,
+        "Cargo_Open_1": 0.0,
+        "LandingGear_Retract_0": 0.0,
+        "LandingGear_Retract_1": 0.0
+      }
+    },
+    "Export/Aircraft/Mule_Skycrane_Variant.glb": {
+      "mesh_parts": 19,
+      "bones": 17,
+      "clips": {
+        "Canopy_Open": {
+          "max_vertex_motion_m": 2.2983018634122514,
+          "loop_seam_m": null
+        },
+        "Aircraft_Reference": {
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "LandingGear_Retract": {
+          "max_vertex_motion_m": 1.3961089263074267,
+          "loop_seam_m": null
+        },
+        "Cargo_Open": {
+          "max_vertex_motion_m": 2.1430786716529995,
+          "loop_seam_m": null
+        },
+        "Canopy_Close": {
+          "max_vertex_motion_m": 2.2983018634122514,
+          "loop_seam_m": null
+        },
+        "Boost": {
+          "max_vertex_motion_m": 0.07332808583494974,
+          "loop_seam_m": 0.0
+        },
+        "Cargo_Close": {
+          "max_vertex_motion_m": 2.1430786716529995,
+          "loop_seam_m": null
+        },
+        "LandingGear_Deploy": {
+          "max_vertex_motion_m": 1.3961089263074267,
+          "loop_seam_m": null
+        },
+        "Flight_Idle": {
+          "max_vertex_motion_m": 0.030725625648932994,
+          "loop_seam_m": 0.0
+        },
+        "Bank_Right": {
+          "max_vertex_motion_m": 0.8107868712519466,
+          "loop_seam_m": null
+        },
+        "Bank_Left": {
+          "max_vertex_motion_m": 0.8107867869147976,
+          "loop_seam_m": null
+        },
+        "Cruise": {
+          "max_vertex_motion_m": 0.030725625648932994,
+          "loop_seam_m": 0.0
+        }
+      },
+      "endpoint_errors_m": {
+        "Canopy_Open_0": 0.0,
+        "Canopy_Open_1": 0.0,
+        "Cargo_Open_0": 0.0,
+        "Cargo_Open_1": 0.0,
+        "LandingGear_Retract_0": 0.0,
+        "LandingGear_Retract_1": 0.0
+      }
+    },
+    "Export/Aircraft/Warden_Survey.glb": {
+      "mesh_parts": 15,
+      "bones": 17,
+      "clips": {
+        "Cargo_Open": {
+          "max_vertex_motion_m": 1.219319479502972,
+          "loop_seam_m": null
+        },
+        "Canopy_Open": {
+          "max_vertex_motion_m": 1.9464685000377613,
+          "loop_seam_m": null
+        },
+        "Flight_Idle": {
+          "max_vertex_motion_m": 0.07861794138062367,
+          "loop_seam_m": 0.0
+        },
+        "Bank_Right": {
+          "max_vertex_motion_m": 0.8120203275791926,
+          "loop_seam_m": null
+        },
+        "Aircraft_Reference": {
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Cruise": {
+          "max_vertex_motion_m": 0.07861794138062367,
+          "loop_seam_m": 0.0
+        },
+        "Cargo_Close": {
+          "max_vertex_motion_m": 1.219319479502972,
+          "loop_seam_m": null
+        },
+        "Boost": {
+          "max_vertex_motion_m": 0.1876255748932744,
+          "loop_seam_m": 0.0
+        },
+        "Bank_Left": {
+          "max_vertex_motion_m": 0.8120205528325106,
+          "loop_seam_m": null
+        },
+        "LandingGear_Retract": {
+          "max_vertex_motion_m": 0.6337631996179665,
+          "loop_seam_m": null
+        },
+        "Canopy_Close": {
+          "max_vertex_motion_m": 1.9464685000377613,
+          "loop_seam_m": null
+        },
+        "LandingGear_Deploy": {
+          "max_vertex_motion_m": 0.6337631996179665,
+          "loop_seam_m": null
+        }
+      },
+      "endpoint_errors_m": {
+        "Canopy_Open_0": 0.0,
+        "Canopy_Open_1": 0.0,
+        "Cargo_Open_0": 0.0,
+        "Cargo_Open_1": 0.0,
+        "LandingGear_Retract_0": 0.0,
+        "LandingGear_Retract_1": 0.0
+      }
+    },
+    "Export/Aircraft/Warden_Survey_Variant.glb": {
+      "mesh_parts": 15,
+      "bones": 17,
+      "clips": {
+        "LandingGear_Retract": {
+          "max_vertex_motion_m": 0.6337631996179665,
+          "loop_seam_m": null
+        },
+        "Cargo_Close": {
+          "max_vertex_motion_m": 1.219319479502972,
+          "loop_seam_m": null
+        },
+        "Cargo_Open": {
+          "max_vertex_motion_m": 1.219319479502972,
+          "loop_seam_m": null
+        },
+        "Flight_Idle": {
+          "max_vertex_motion_m": 0.07861794138062367,
+          "loop_seam_m": 0.0
+        },
+        "LandingGear_Deploy": {
+          "max_vertex_motion_m": 0.6337631996179665,
+          "loop_seam_m": null
+        },
+        "Canopy_Open": {
+          "max_vertex_motion_m": 1.9464685000377613,
+          "loop_seam_m": null
+        },
+        "Aircraft_Reference": {
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Canopy_Close": {
+          "max_vertex_motion_m": 1.9464685000377613,
+          "loop_seam_m": null
+        },
+        "Boost": {
+          "max_vertex_motion_m": 0.1876255748932744,
+          "loop_seam_m": 0.0
+        },
+        "Bank_Right": {
+          "max_vertex_motion_m": 0.8120203275791926,
+          "loop_seam_m": null
+        },
+        "Bank_Left": {
+          "max_vertex_motion_m": 0.8120205528325106,
+          "loop_seam_m": null
+        },
+        "Cruise": {
+          "max_vertex_motion_m": 0.07861794138062367,
+          "loop_seam_m": 0.0
+        }
+      },
+      "endpoint_errors_m": {
+        "Canopy_Open_0": 0.0,
+        "Canopy_Open_1": 0.0,
+        "Cargo_Open_0": 0.0,
+        "Cargo_Open_1": 0.0,
+        "LandingGear_Retract_0": 0.0,
+        "LandingGear_Retract_1": 0.0
+      }
+    },
+    "Export/Scenery/Road_6Lane_4m.glb": {
+      "mesh_parts": 8,
+      "bounds_m": [
+        [
+          -2.0,
+          2.0
+        ],
+        [
+          -9.0,
+          9.0
+        ],
+        [
+          -0.20000000298023224,
+          0.020999999716877937
+        ]
+      ]
+    },
+    "Export/Scenery/Road_Crossroad_12m.glb": {
+      "mesh_parts": 5,
+      "bounds_m": [
+        [
+          -6.0,
+          6.0
+        ],
+        [
+          -6.0,
+          6.0
+        ],
+        [
+          -0.20000000298023224,
+          0.023000000044703484
+        ]
+      ]
+    },
+    "Export/Scenery/Airfield_LandingPad_16m.glb": {
+      "mesh_parts": 18,
+      "bounds_m": [
+        [
+          -8.0,
+          8.0
+        ],
+        [
+          -8.0,
+          8.0
+        ],
+        [
+          -0.20000000298023224,
+          0.20000000298023224
+        ]
+      ]
+    },
+    "Export/Scenery/City_TransitShelter.glb": {
+      "mesh_parts": 5,
+      "bounds_m": [
+        [
+          -2.200000047683716,
+          2.200000047683716
+        ],
+        [
+          -1.600000023841858,
+          1.100000023841858
+        ],
+        [
+          0.0,
+          3.509999990463257
+        ]
+      ]
+    },
+    "Export/Scenery/Ruin_FracturedArch.glb": {
+      "mesh_parts": 3,
+      "bounds_m": [
+        [
+          -2.0887880325317383,
+          2.0887880325317383
+        ],
+        [
+          -0.44999998807907104,
+          0.44999998807907104
+        ],
+        [
+          0.07318703085184097,
+          4.341053009033203
+        ]
+      ]
+    },
+    "Export/Scenery/Nature_SailTree.glb": {
+      "mesh_parts": 3,
+      "bounds_m": [
+        [
+          -1.797218680381775,
+          2.197218656539917
+        ],
+        [
+          -1.2999999523162842,
+          1.2999999523162842
+        ],
+        [
+          -0.012956829741597176,
+          4.0
+        ]
+      ]
+    },
+    "Export/Scenery/City_TrafficSignal.glb": {
+      "mesh_parts": 5,
+      "bounds_m": [
+        [
+          -1.5567375421524048,
+          1.5586011409759521
+        ],
+        [
+          -0.2777661681175232,
+          0.2755160629749298
+        ],
+        [
+          4.78000020980835,
+          5.71999979019165
+        ]
+      ]
+    },
+    "Export/Scenery/City_PedestrianHologram_6m.glb": {
+      "mesh_parts": 3,
+      "bounds_m": [
+        [
+          -2.9478206634521484,
+          2.9478206634521484
+        ],
+        [
+          -1.3975000381469727,
+          1.3975000381469727
+        ],
+        [
+          0.014999999664723873,
+          0.14000000059604645
+        ]
+      ]
+    }
+  },
+  "errors": [],
+  "all_checks_passed": true
+}

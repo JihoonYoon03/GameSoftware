@@ -21,16 +21,28 @@ void CityHud::DrawMinimap()
         return;
     }
     Drawing::DrawRectangle(1004, 20, 254, 208, {.02f, .055f, .08f, .94f});
-    Drawing::DrawLabel(1016, 42, "도시 연결망 / 인접 도시 약 20초");
-    auto project = [](Vector2 p) { return Vector2{1022 + p.x * .4f, 66 + p.y * .42f}; };
-    const auto &cities = Overworld::Cities();
-    constexpr int links[][2] = {{0, 1}, {1, 2}, {2, 3}, {3, 4}, {4, 1}};
-    for (const auto &link : links)
+    Drawing::DrawLabel(1016, 42, "헤일로 주변 도시 / 교통 연결망");
+    const auto &network = RoadNetwork::Get();
+    Vector2 minimum = {kWorldMaxX, kWorldMaxY}, maximum = {kWorldMinX, kWorldMinY};
+    for (const auto &junction : network.junctions)
     {
-        Drawing::DrawLine(project(cities[link[0]].center), project(cities[link[1]].center),
-                          {.28f, .48f, .55f}, 2);
+        minimum.x = (std::min)(minimum.x, junction.position.x - 18);
+        minimum.y = (std::min)(minimum.y, junction.position.y - 18);
+        maximum.x = (std::max)(maximum.x, junction.position.x + 18);
+        maximum.y = (std::max)(maximum.y, junction.position.y + 18);
     }
-    Drawing::DrawLine(project({128, 0}), project(Overworld::kMineEntrance), {.8f, .6f, .3f}, 2);
+    float scale = (std::min)(220.f / (maximum.x - minimum.x), 132.f / (maximum.y - minimum.y));
+    auto project = [=](Vector2 p) {
+        return Vector2{1131 + (p.x - (minimum.x + maximum.x) * .5f) * scale,
+                       126 + (p.y - (minimum.y + maximum.y) * .5f) * scale};
+    };
+    const auto &cities = Overworld::Cities();
+    for (const auto &road : network.roads)
+    {
+        Drawing::DrawLine(project(network.junctions[road.from].position),
+                          project(network.junctions[road.to].position), {.28f, .48f, .55f},
+                          road.lanes == 6 ? 2.f : 1.f);
+    }
     for (const auto &city : cities)
     {
         auto p = project(city.center);
@@ -41,8 +53,13 @@ void CityHud::DrawMinimap()
     Drawing::DrawEllipse(entrance.x, entrance.y, 3, 3, {1, .72f, .3f});
     Drawing::DrawLabel(entrance.x - 12, entrance.y + 20, "광산");
     auto bike = project(world.bikePosition);
-    Drawing::DrawEllipse(bike.x, bike.y, 3, 3, {.95f, .65f, .25f});
+    if (bike.x >= 1012 && bike.x <= 1250 && bike.y >= 56 && bike.y <= 198)
+    {
+        Drawing::DrawEllipse(bike.x, bike.y, 3, 3, {.95f, .65f, .25f});
+    }
     auto player = project(world.playerPosition);
+    player.x = Game::Clamp(player.x, 1012, 1250);
+    player.y = Game::Clamp(player.y, 56, 198);
     Drawing::DrawEllipse(player.x, player.y, 4, 4, {.25f, 1, .9f});
     Drawing::DrawLabel(1016, 215, "청록: 플레이어 / 주황: 바이크");
 }
@@ -178,6 +195,18 @@ void CityHud::Draw()
                                           : "도시 5곳 · 도시당 20명 / 주황 표시: 주차한 바이크 · E 탑승",
                       world.bikeSpeed * models::WorldScale::metersPerUnit * 3.6f);
         Drawing::DrawLabel(26, float(kCanvasHeight) - 46, bike, {.6f, .9f, .9f});
+        const auto &player = game::GameLevels::Mine().GetState().player;
+        Drawing::DrawLabel(26, float(kCanvasHeight) - 69,
+                           "체력 " + std::to_string(player.health) + "/" + std::to_string(player.maxHealth),
+                           {.9f, .78f, .67f});
+        int crossing = Overworld::Traffic().NearbyCrossing(world.playerPosition);
+        if (crossing >= 0)
+        {
+            bool walk = Overworld::Traffic().PedestrianGreen(crossing);
+            Drawing::DrawRectangle(425, 143, 420, 32, {.02f, .055f, .08f, .92f});
+            Drawing::DrawLabel(438, 165, walk ? "보행 신호 / 횡단 가능" : "보행 신호 / 대기 · F 횡단 요청",
+                               walk ? ColorRGBA(.2f, 1, .8f) : ColorRGBA(1, .43f, .37f));
+        }
     }
     Drawing::DrawRectangle(22, 143, 365, 64, ColorRGBA(.025f, .06f, .09f, .88f));
     Drawing::DrawLabel(40, 165, "선택 목표 / 남겨 둔 불빛", ColorRGBA(.96f, .72f, .4f));

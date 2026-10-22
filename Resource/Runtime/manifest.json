@@ -1,9 +1,17 @@
 {
   "schema": "game_resource_pack_v1",
   "converter": "tools/pack-resources.mjs",
-  "bytes": 26209597,
-  "sha256": "30790011ef546b8e6e1197362ea3b283d6ef1bd5154668377fcab7c2e0a7b390",
+  "bytes": 35078501,
+  "sha256": "563ff90a3b45971c578d62fb7ebbd2bc45f3415a998014de07497d03a4ff058f",
   "sources": {
+    "Aircraft/Kite_Courier": "3af1fe838b77a6b0391d82be50bf4627c95e953d074bdd63772cd2875ad6d4f8",
+    "Aircraft/Kite_Courier_Variant": "5be43ab72c5e3fed1417b71f305de2ca27ccc166868ecbd81e972cce3c8d7971",
+    "Aircraft/Manta_AirTaxi": "cc91ae70cdd535ba024d3b6cf0ef7c3fe5947f555296bc2a642172829498d8bd",
+    "Aircraft/Manta_AirTaxi_Variant": "985dd6e511d1b58cb2164b7cf726e12ea6535ecffa69e4cd7444ab3e9f48fd74",
+    "Aircraft/Mule_Skycrane": "90ae7eb2502f48b5a7a03887660b09065fff44b3225f4c2e089796207c52de3b",
+    "Aircraft/Mule_Skycrane_Variant": "2f5184eca0eec536767e6897fa4871f5a212ee8b406c42dea89e80875a9fb2fa",
+    "Aircraft/Warden_Survey": "bb4afced1600eb5a009c130edb9bd089d1c95e55fc385e97b3ce1a9b64fd7c86",
+    "Aircraft/Warden_Survey_Variant": "baf8eb44a0933d0f62449fe14083638ab8afeaedc64fcd413185c137000eeb03",
     "Buildings/Habitat_7p2m": "4fd0e176233923ad81aebc2e26b501581c45a5dc2b0b276fa2c4d39022054151",
     "Buildings/Observatory_11p5m": "737acc0b07d3469c6e430aa4a50e32f7e95c0626c6a3ebee682f9e6826954ca6",
     "Buildings/RibDome_6p5m": "e04ff449e486ad9dd55e65918de51c037ed48b7723a49046392a92f15ceef5c5",
@@ -239,6 +247,40 @@
     "Modules/Street_Gate_Frame_4m": "81429b9944538d526e048a0b8180d304d18f17cc5cb7426b96d8affe0791c26c",
     "Modules/Street_Lamp_3p2m": "1a7fac43eaa99e655cd0d5869dc8126792e37ec6ec3af1eccd59471bf7ba967d",
     "Modules/Weapon_CoilPistol_35cm": "6250ec4c65c42b15f71e2408ec912b2f4e67eb25cd675a65e378a1e8b40429c3",
+    "Scenery/Airfield_Beacon": "247149ab89c6f3bd05352e70e672886ec8732a240ea6a5f1ea0bd2526dc0a652",
+    "Scenery/Airfield_LandingPad_16m": "02940c7ca374c8c4b2449f50098ed11ab311a38b331345c00c75b6de3a73ae06",
+    "Scenery/City_Bench": "0b6d0f1fd2b0b31be979769b3d80e64015b135e3314842d64f46b5e29191ee3c",
+    "Scenery/City_Bollard": "0177e3ed32508d2e268007bf580e9dd968aefa1a0f49ec32f53b78ff5487f61c",
+    "Scenery/City_ChargePost": "3b977742c791a9fea4f0c63b38d3b1c1cb617a5e066be30152d78c0007d5c8f1",
+    "Scenery/City_PedestrianHologram_6m": "d4554c0bea41fd062954cc581be4d59ed69b64a7af346aff794a9fd81eb60ad9",
+    "Scenery/City_Planter": "21ca594bb3d5aea84c4a405cf7601dc41e1d61a721191c64a6b78c08c3b6c7d4",
+    "Scenery/City_Sidewalk_2x4m": "626c0119877df11fc3fc4502f0246498643720878ce31609237a3fe7007240cf",
+    "Scenery/City_Streetlight_4m": "1f247dda1ad062ca04bb2be3c732ff9425a42b3debdd64c7b5ccfab40d18a012",
+    "Scenery/City_TrafficSignal": "1d189a691681ced6d7bb689409538672a69396d8491cbb3afc16caf680e2326d",
+    "Scenery/City_TransitShelter": "55b04b43f1c7d0109e89c06de08bb9c4399f4bc476ee9cb0617fb1f1c207af19",
+    "Scenery/City_Wayfinding": "ce38d87bcfe7eb37cf1d3c81cc2de2e9b8e8cc34f804d4dede6cdc11fadc9acd",
+    "Scenery/Frontier_FieldShelter": "f6a0e6e9b5e7cb9f99efc539c39792a914b0809a10f2e00ea70e0c8383b9403b",
+    "Scenery/Frontier_MiningConveyor": "41889eb8e5584b4d6dad0f52917e404d5de6914c85d8ed81daef4336dc7763af",
+    "Scenery/Frontier_SurveyTripod": "b897872f841f0e1323418eeba823e6a391f4e5477d39d31a7629a1ba91ceb49d",
+    "Scenery/Nature_PrismBloom": "f7512d6db6b320ee13a3c6363b2009a1157687e5a4d12d28185421dc5899ed1e",
+    "Scenery/Nature_SailTree": "298ca53498c5c77572d2d76f1a940ba0fb972b5947497bc9813286ccf59c21a5",
+    "Scenery/Road_2Lane_4m": "f6d008e8218bdc4b0b9e39c828825b7becc6b019b0f720df9ba8209370bd6e7e",
+    "Scenery/Road_4Lane_4m": "f0d5f9ce1d0cca7db20ec863a2b7479b63f9ce46a533c1e05a35c162eca42056",
+    "Scenery/Road_6Lane_4m": "389dc134d218914ff7230bb7abfd9b0d769e9838d38b5be16ca7f9f3033bef09",
+    "Scenery/Road_CrashBarrier_4m": "605c4a7bdc133944942b69e057825b9e1e3b62012a7dff3b843ef8a01d64ef6b",
+    "Scenery/Road_Crossroad_12m": "da30cc715dfbc011c3eaaab2a9d286c93fd4a68991d28c77446562453da5b9f6",
+    "Scenery/Road_Curve90_R9m": "609126d0ca30e160de194d369963c02715f74e04716c05005fa88e5f1ca71189",
+    "Scenery/Road_SpeedTable_4m": "55ed1d3abe8d5f8d85baf2f780f3094a939a7f87bd454eee82f3e6040ad6d4b8",
+    "Scenery/Road_TJunction_12m": "c6a009853166fd6f5c428b489fa77a330ec53088bae9d8c988563f3d8483280f",
+    "Scenery/Ruin_FracturedArch": "49b25c2dfc4baafd873ccca48b8b8910612df615fe54497da6b432c4d0ab01c4",
+    "Scenery/Ruin_ObserverMonolith": "e1671cde9b64ea694307f04853ba77b72b4d3215964589c444df214431b7f603",
+    "Scenery/Utility_CargoContainer_6m": "ee5036c0598a97bcc39d3315e592ef032f0d36b33d4868b634b9368a2ce455b0",
+    "Scenery/Utility_CommRelay": "a050938a31acfc39a0130171ba852f3ba39f4aff6ae804090bd079e2d27ad555",
+    "Scenery/Utility_HVAC": "17c3deb1675cf8b5638229bb487637c74b3cbbf8b3a1955ca3dccde0f1cd66fe",
+    "Scenery/Utility_PipeRack_4m": "7cbbbefcffaadf60746c647d1554252529e8fec1f9af39b676586bdbe4b4b07b",
+    "Scenery/Utility_SolarArray": "476289040b0fd3c7de7cc7e821fbf017a4e9286167c55130081f9c6659de9a95",
+    "Scenery/Utility_Transformer": "7e1b5be9a826e4707e1975c3d9823a13c35616ff70c5eb248171345b22abe0b0",
+    "Scenery/Utility_WaterTank": "d832d4a26e4c07f2e265ec6b8c4d77427712c7a4d4abc215384511e2f120eef3",
     "Vehicles/Coupe": "6fd776e0278dd61832ad2cb3f89badab0e228cfdd1f766b4dd309fd0b8f43bd1",
     "Vehicles/Hauler": "b8d88c497dfc3043e3e5160467c132a0137a5e18af33bb3af7c56816c891a511",
     "Vehicles/JetBike": "142b7c04a9142810249e08b93a83a378376f675d91b65567da1e76d340fc6bb5",
@@ -1294,7 +1336,11 @@
         "Cruise",
         "Boost",
         "Steer_Left",
-        "Steer_Right"
+        "Steer_Right",
+        "Canopy_Open",
+        "Canopy_Close",
+        "Cargo_Open",
+        "Cargo_Close"
       ]
     },
     {
@@ -1325,7 +1371,11 @@
         "Cruise",
         "Boost",
         "Steer_Left",
-        "Steer_Right"
+        "Steer_Right",
+        "Canopy_Open",
+        "Canopy_Close",
+        "Cargo_Open",
+        "Cargo_Close"
       ]
     },
     {
@@ -1356,7 +1406,11 @@
         "Cruise",
         "Boost",
         "Steer_Left",
-        "Steer_Right"
+        "Steer_Right",
+        "Canopy_Open",
+        "Canopy_Close",
+        "Cargo_Open",
+        "Cargo_Close"
       ]
     },
     {
@@ -1387,7 +1441,11 @@
         "Cruise",
         "Boost",
         "Steer_Left",
-        "Steer_Right"
+        "Steer_Right",
+        "Canopy_Open",
+        "Canopy_Close",
+        "Cargo_Open",
+        "Cargo_Close"
       ]
     },
     {
@@ -1418,7 +1476,11 @@
         "Cruise",
         "Boost",
         "Steer_Left",
-        "Steer_Right"
+        "Steer_Right",
+        "Canopy_Open",
+        "Canopy_Close",
+        "Cargo_Open",
+        "Cargo_Close"
       ]
     },
     {
@@ -2503,6 +2565,1166 @@
           0.13124999403953552,
           0.14797894656658173,
           0.26749998331069946
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "aircraft/Kite_Courier",
+      "source": "Aircraft/Kite_Courier",
+      "triangles": 1160,
+      "bones": 17,
+      "physical_world_units": [
+        2.944000005722046,
+        3.9000000953674316,
+        1.0505561828613281
+      ],
+      "bounds": [
+        [
+          -1.503999948501587,
+          -1.9500000476837158,
+          0
+        ],
+        [
+          1.440000057220459,
+          1.9500000476837158,
+          1.0505561828613281
+        ]
+      ],
+      "clips": [
+        "Aircraft_Reference",
+        "Flight_Idle",
+        "Cruise",
+        "Boost",
+        "Bank_Left",
+        "Bank_Right",
+        "LandingGear_Deploy",
+        "LandingGear_Retract",
+        "Canopy_Open",
+        "Canopy_Close",
+        "Cargo_Open",
+        "Cargo_Close"
+      ]
+    },
+    {
+      "name": "aircraft/Kite_Courier_Variant",
+      "source": "Aircraft/Kite_Courier_Variant",
+      "triangles": 1164,
+      "bones": 17,
+      "physical_world_units": [
+        2.944000005722046,
+        3.9000000953674316,
+        1.0505561828613281
+      ],
+      "bounds": [
+        [
+          -1.503999948501587,
+          -1.9500000476837158,
+          0
+        ],
+        [
+          1.440000057220459,
+          1.9500000476837158,
+          1.0505561828613281
+        ]
+      ],
+      "clips": [
+        "Aircraft_Reference",
+        "Flight_Idle",
+        "Cruise",
+        "Boost",
+        "Bank_Left",
+        "Bank_Right",
+        "LandingGear_Deploy",
+        "LandingGear_Retract",
+        "Canopy_Open",
+        "Canopy_Close",
+        "Cargo_Open",
+        "Cargo_Close"
+      ]
+    },
+    {
+      "name": "aircraft/Manta_AirTaxi",
+      "source": "Aircraft/Manta_AirTaxi",
+      "triangles": 1596,
+      "bones": 17,
+      "physical_world_units": [
+        3.312000036239624,
+        4.01262640953064,
+        1.5418022871017456
+      ],
+      "bounds": [
+        [
+          -1.6920000314712524,
+          -2.008352041244507,
+          0
+        ],
+        [
+          1.6200000047683716,
+          2.004274368286133,
+          1.5418022871017456
+        ]
+      ],
+      "clips": [
+        "Aircraft_Reference",
+        "Flight_Idle",
+        "Cruise",
+        "Boost",
+        "Bank_Left",
+        "Bank_Right",
+        "LandingGear_Deploy",
+        "LandingGear_Retract",
+        "Canopy_Open",
+        "Canopy_Close",
+        "Cargo_Open",
+        "Cargo_Close"
+      ]
+    },
+    {
+      "name": "aircraft/Manta_AirTaxi_Variant",
+      "source": "Aircraft/Manta_AirTaxi_Variant",
+      "triangles": 1648,
+      "bones": 17,
+      "physical_world_units": [
+        3.312000036239624,
+        4.01262640953064,
+        1.5418022871017456
+      ],
+      "bounds": [
+        [
+          -1.6920000314712524,
+          -2.008352041244507,
+          0
+        ],
+        [
+          1.6200000047683716,
+          2.004274368286133,
+          1.5418022871017456
+        ]
+      ],
+      "clips": [
+        "Aircraft_Reference",
+        "Flight_Idle",
+        "Cruise",
+        "Boost",
+        "Bank_Left",
+        "Bank_Right",
+        "LandingGear_Deploy",
+        "LandingGear_Retract",
+        "Canopy_Open",
+        "Canopy_Close",
+        "Cargo_Open",
+        "Cargo_Close"
+      ]
+    },
+    {
+      "name": "aircraft/Mule_Skycrane",
+      "source": "Aircraft/Mule_Skycrane",
+      "triangles": 1756,
+      "bones": 17,
+      "physical_world_units": [
+        4.2779998779296875,
+        4.479211091995239,
+        2.2934861183166504
+      ],
+      "bounds": [
+        [
+          -2.2079999446868896,
+          -2.2418813705444336,
+          0
+        ],
+        [
+          2.069999933242798,
+          2.2373297214508057,
+          2.2934861183166504
+        ]
+      ],
+      "clips": [
+        "Aircraft_Reference",
+        "Flight_Idle",
+        "Cruise",
+        "Boost",
+        "Bank_Left",
+        "Bank_Right",
+        "LandingGear_Deploy",
+        "LandingGear_Retract",
+        "Canopy_Open",
+        "Canopy_Close",
+        "Cargo_Open",
+        "Cargo_Close"
+      ]
+    },
+    {
+      "name": "aircraft/Mule_Skycrane_Variant",
+      "source": "Aircraft/Mule_Skycrane_Variant",
+      "triangles": 1712,
+      "bones": 17,
+      "physical_world_units": [
+        4.2779998779296875,
+        4.479211091995239,
+        2.2934861183166504
+      ],
+      "bounds": [
+        [
+          -2.2079999446868896,
+          -2.2418813705444336,
+          0
+        ],
+        [
+          2.069999933242798,
+          2.2373297214508057,
+          2.2934861183166504
+        ]
+      ],
+      "clips": [
+        "Aircraft_Reference",
+        "Flight_Idle",
+        "Cruise",
+        "Boost",
+        "Bank_Left",
+        "Bank_Right",
+        "LandingGear_Deploy",
+        "LandingGear_Retract",
+        "Canopy_Open",
+        "Canopy_Close",
+        "Cargo_Open",
+        "Cargo_Close"
+      ]
+    },
+    {
+      "name": "aircraft/Warden_Survey",
+      "source": "Aircraft/Warden_Survey",
+      "triangles": 1208,
+      "bones": 17,
+      "physical_world_units": [
+        3.587999939918518,
+        4.485964775085449,
+        1.3453038930892944
+      ],
+      "bounds": [
+        [
+          -1.8329999446868896,
+          -2.245332956314087,
+          0
+        ],
+        [
+          1.7549999952316284,
+          2.2406318187713623,
+          1.3453038930892944
+        ]
+      ],
+      "clips": [
+        "Aircraft_Reference",
+        "Flight_Idle",
+        "Cruise",
+        "Boost",
+        "Bank_Left",
+        "Bank_Right",
+        "LandingGear_Deploy",
+        "LandingGear_Retract",
+        "Canopy_Open",
+        "Canopy_Close",
+        "Cargo_Open",
+        "Cargo_Close"
+      ]
+    },
+    {
+      "name": "aircraft/Warden_Survey_Variant",
+      "source": "Aircraft/Warden_Survey_Variant",
+      "triangles": 1236,
+      "bones": 17,
+      "physical_world_units": [
+        3.587999939918518,
+        4.485964775085449,
+        1.3453038930892944
+      ],
+      "bounds": [
+        [
+          -1.8329999446868896,
+          -2.245332956314087,
+          0
+        ],
+        [
+          1.7549999952316284,
+          2.2406318187713623,
+          1.3453038930892944
+        ]
+      ],
+      "clips": [
+        "Aircraft_Reference",
+        "Flight_Idle",
+        "Cruise",
+        "Boost",
+        "Bank_Left",
+        "Bank_Right",
+        "LandingGear_Deploy",
+        "LandingGear_Retract",
+        "Canopy_Open",
+        "Canopy_Close",
+        "Cargo_Open",
+        "Cargo_Close"
+      ]
+    },
+    {
+      "name": "scenery/Road_2Lane_4m",
+      "source": "Scenery/Road_2Lane_4m",
+      "triangles": 72,
+      "bones": 0,
+      "physical_world_units": [
+        2,
+        3,
+        0.11050000134855509
+      ],
+      "bounds": [
+        [
+          -1,
+          -1.5,
+          -0.10000000149011612
+        ],
+        [
+          1,
+          1.5,
+          0.010499999858438969
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/Road_4Lane_4m",
+      "source": "Scenery/Road_4Lane_4m",
+      "triangles": 120,
+      "bones": 0,
+      "physical_world_units": [
+        2,
+        6,
+        0.11050000134855509
+      ],
+      "bounds": [
+        [
+          -1,
+          -3,
+          -0.10000000149011612
+        ],
+        [
+          1,
+          3,
+          0.010499999858438969
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/Road_6Lane_4m",
+      "source": "Scenery/Road_6Lane_4m",
+      "triangles": 168,
+      "bones": 0,
+      "physical_world_units": [
+        2,
+        9,
+        0.11050000134855509
+      ],
+      "bounds": [
+        [
+          -1,
+          -4.5,
+          -0.10000000149011612
+        ],
+        [
+          1,
+          4.5,
+          0.010499999858438969
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/Road_Crossroad_12m",
+      "source": "Scenery/Road_Crossroad_12m",
+      "triangles": 396,
+      "bones": 0,
+      "physical_world_units": [
+        6,
+        6,
+        0.11150000151246786
+      ],
+      "bounds": [
+        [
+          -3,
+          -3,
+          -0.10000000149011612
+        ],
+        [
+          3,
+          3,
+          0.011500000022351742
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/Road_TJunction_12m",
+      "source": "Scenery/Road_TJunction_12m",
+      "triangles": 312,
+      "bones": 0,
+      "physical_world_units": [
+        6,
+        6,
+        0.11150000151246786
+      ],
+      "bounds": [
+        [
+          -3,
+          -3,
+          -0.10000000149011612
+        ],
+        [
+          3,
+          3,
+          0.011500000022351742
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/Road_Curve90_R9m",
+      "source": "Scenery/Road_Curve90_R9m",
+      "triangles": 288,
+      "bones": 0,
+      "physical_world_units": [
+        6,
+        6,
+        0.11200000159442425
+      ],
+      "bounds": [
+        [
+          1.8369701465288538e-16,
+          0,
+          -0.10000000149011612
+        ],
+        [
+          6,
+          6,
+          0.012000000104308128
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/City_Sidewalk_2x4m",
+      "source": "Scenery/City_Sidewalk_2x4m",
+      "triangles": 36,
+      "bones": 0,
+      "physical_world_units": [
+        2,
+        1,
+        0.12999999523162842
+      ],
+      "bounds": [
+        [
+          -1,
+          -0.5,
+          0
+        ],
+        [
+          1,
+          0.5,
+          0.12999999523162842
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/Road_SpeedTable_4m",
+      "source": "Scenery/Road_SpeedTable_4m",
+      "triangles": 84,
+      "bones": 0,
+      "physical_world_units": [
+        2,
+        1,
+        0.03500000014901161
+      ],
+      "bounds": [
+        [
+          -1,
+          -0.5,
+          0
+        ],
+        [
+          1,
+          0.5,
+          0.03500000014901161
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/City_Streetlight_4m",
+      "source": "Scenery/City_Streetlight_4m",
+      "triangles": 148,
+      "bones": 0,
+      "physical_world_units": [
+        0.6956324577331543,
+        0.6982514560222626,
+        1.9850000143051147
+      ],
+      "bounds": [
+        [
+          -0.3495625853538513,
+          -0.5,
+          0
+        ],
+        [
+          0.346069872379303,
+          0.19825145602226257,
+          1.9850000143051147
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/City_TrafficSignal",
+      "source": "Scenery/City_TrafficSignal",
+      "triangles": 440,
+      "bones": 0,
+      "physical_world_units": [
+        1.5576693415641785,
+        0.2766411155462265,
+        0.4699997901916504
+      ],
+      "bounds": [
+        [
+          -0.7783687710762024,
+          -0.1388830840587616,
+          2.390000104904175
+        ],
+        [
+          0.7793005704879761,
+          0.1377580314874649,
+          2.859999895095825
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/City_PedestrianHologram_6m",
+      "source": "Scenery/City_PedestrianHologram_6m",
+      "triangles": 344,
+      "bones": 0,
+      "physical_world_units": [
+        2.9478206634521484,
+        1.3975000381469727,
+        0.06250000046566129
+      ],
+      "bounds": [
+        [
+          -1.4739103317260742,
+          -0.6987500190734863,
+          0.007499999832361937
+        ],
+        [
+          1.4739103317260742,
+          0.6987500190734863,
+          0.07000000029802322
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/City_Bollard",
+      "source": "Scenery/City_Bollard",
+      "triangles": 84,
+      "bones": 0,
+      "physical_world_units": [
+        0.18477590382099152,
+        0.18477590382099152,
+        0.44999998807907104
+      ],
+      "bounds": [
+        [
+          -0.09238795191049576,
+          -0.09238795191049576,
+          0
+        ],
+        [
+          0.09238795191049576,
+          0.09238795191049576,
+          0.44999998807907104
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/Road_CrashBarrier_4m",
+      "source": "Scenery/Road_CrashBarrier_4m",
+      "triangles": 64,
+      "bones": 0,
+      "physical_world_units": [
+        2,
+        0.36000001430511475,
+        0.47999998927116394
+      ],
+      "bounds": [
+        [
+          -1,
+          -0.18000000715255737,
+          0
+        ],
+        [
+          1,
+          0.18000000715255737,
+          0.47999998927116394
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/City_Bench",
+      "source": "Scenery/City_Bench",
+      "triangles": 92,
+      "bones": 0,
+      "physical_world_units": [
+        1.0499999523162842,
+        0.36124999821186066,
+        0.5699999928474426
+      ],
+      "bounds": [
+        [
+          -0.5249999761581421,
+          -0.1862500011920929,
+          0
+        ],
+        [
+          0.5249999761581421,
+          0.17499999701976776,
+          0.5699999928474426
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/City_Planter",
+      "source": "Scenery/City_Planter",
+      "triangles": 140,
+      "bones": 0,
+      "physical_world_units": [
+        0.6929096579551697,
+        0.6929096579551697,
+        1.00999996624887
+      ],
+      "bounds": [
+        [
+          -0.34645482897758484,
+          -0.34645482897758484,
+          0.02500000037252903
+        ],
+        [
+          0.34645482897758484,
+          0.34645482897758484,
+          1.034999966621399
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/City_TransitShelter",
+      "source": "Scenery/City_TransitShelter",
+      "triangles": 164,
+      "bones": 0,
+      "physical_world_units": [
+        2.200000047683716,
+        1.350000023841858,
+        1.7549999952316284
+      ],
+      "bounds": [
+        [
+          -1.100000023841858,
+          -0.800000011920929,
+          0
+        ],
+        [
+          1.100000023841858,
+          0.550000011920929,
+          1.7549999952316284
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/City_Wayfinding",
+      "source": "Scenery/City_Wayfinding",
+      "triangles": 88,
+      "bones": 0,
+      "physical_world_units": [
+        1.0274999737739563,
+        0.17625000327825546,
+        1.3650000095367432
+      ],
+      "bounds": [
+        [
+          -0.44999998807907104,
+          -0.0962500050663948,
+          0
+        ],
+        [
+          0.5774999856948853,
+          0.07999999821186066,
+          1.3650000095367432
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/City_ChargePost",
+      "source": "Scenery/City_ChargePost",
+      "triangles": 228,
+      "bones": 0,
+      "physical_world_units": [
+        0.7463259994983673,
+        0.46436186134815216,
+        0.6499999761581421
+      ],
+      "bounds": [
+        [
+          -0.16249999403953552,
+          -0.23312516510486603,
+          0
+        ],
+        [
+          0.5838260054588318,
+          0.23123669624328613,
+          0.6499999761581421
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/Utility_Transformer",
+      "source": "Scenery/Utility_Transformer",
+      "triangles": 300,
+      "bones": 0,
+      "physical_world_units": [
+        0.800000011920929,
+        0.5699999928474426,
+        1.3049999475479126
+      ],
+      "bounds": [
+        [
+          -0.4000000059604645,
+          -0.29499998688697815,
+          0
+        ],
+        [
+          0.4000000059604645,
+          0.2750000059604645,
+          1.3049999475479126
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/Utility_CargoContainer_6m",
+      "source": "Scenery/Utility_CargoContainer_6m",
+      "triangles": 172,
+      "bones": 0,
+      "physical_world_units": [
+        3.052500009536743,
+        1.2300000190734863,
+        1.274999976158142
+      ],
+      "bounds": [
+        [
+          -1.5,
+          -0.6150000095367432,
+          0
+        ],
+        [
+          1.5525000095367432,
+          0.6150000095367432,
+          1.274999976158142
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/Utility_HVAC",
+      "source": "Scenery/Utility_HVAC",
+      "triangles": 276,
+      "bones": 0,
+      "physical_world_units": [
+        1.0499999523162842,
+        0.42249999940395355,
+        0.9800000190734863
+      ],
+      "bounds": [
+        [
+          -0.5249999761581421,
+          -0.2224999964237213,
+          0
+        ],
+        [
+          0.5249999761581421,
+          0.20000000298023224,
+          0.9800000190734863
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/Utility_PipeRack_4m",
+      "source": "Scenery/Utility_PipeRack_4m",
+      "triangles": 132,
+      "bones": 0,
+      "physical_world_units": [
+        2,
+        0.6000000238418579,
+        0.7415739893913269
+      ],
+      "bounds": [
+        [
+          -1,
+          -0.30000001192092896,
+          0
+        ],
+        [
+          1,
+          0.30000001192092896,
+          0.7415739893913269
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/Utility_CommRelay",
+      "source": "Scenery/Utility_CommRelay",
+      "triangles": 176,
+      "bones": 0,
+      "physical_world_units": [
+        1.2340340614318848,
+        1.25,
+        2.549999952316284
+      ],
+      "bounds": [
+        [
+          -0.6170170307159424,
+          -0.625,
+          0
+        ],
+        [
+          0.6170170307159424,
+          0.625,
+          2.549999952316284
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/Utility_SolarArray",
+      "source": "Scenery/Utility_SolarArray",
+      "triangles": 100,
+      "bones": 0,
+      "physical_world_units": [
+        1.899999976158142,
+        1.2599999904632568,
+        0.9262499809265137
+      ],
+      "bounds": [
+        [
+          -0.949999988079071,
+          -0.6299999952316284,
+          0
+        ],
+        [
+          0.949999988079071,
+          0.6299999952316284,
+          0.9262499809265137
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/Utility_WaterTank",
+      "source": "Scenery/Utility_WaterTank",
+      "triangles": 200,
+      "bones": 0,
+      "physical_world_units": [
+        1.0663759112358093,
+        1.0142221450805664,
+        1.524999976158142
+      ],
+      "bounds": [
+        [
+          -0.5071110725402832,
+          -0.5071110725402832,
+          0
+        ],
+        [
+          0.5592648386955261,
+          0.5071110725402832,
+          1.524999976158142
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/Airfield_LandingPad_16m",
+      "source": "Scenery/Airfield_LandingPad_16m",
+      "triangles": 472,
+      "bones": 0,
+      "physical_world_units": [
+        8,
+        8,
+        0.20000000298023224
+      ],
+      "bounds": [
+        [
+          -4,
+          -4,
+          -0.10000000149011612
+        ],
+        [
+          4,
+          4,
+          0.10000000149011612
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/Airfield_Beacon",
+      "source": "Scenery/Airfield_Beacon",
+      "triangles": 52,
+      "bones": 0,
+      "physical_world_units": [
+        0.30000001192092896,
+        0.30000001192092896,
+        0.3800000250339508
+      ],
+      "bounds": [
+        [
+          -0.15000000596046448,
+          -0.15000000596046448,
+          0
+        ],
+        [
+          0.15000000596046448,
+          0.15000000596046448,
+          0.3800000250339508
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/Frontier_SurveyTripod",
+      "source": "Scenery/Frontier_SurveyTripod",
+      "triangles": 248,
+      "bones": 0,
+      "physical_world_units": [
+        0.49489066004753113,
+        0.5698680877685547,
+        1.1960921101272106
+      ],
+      "bounds": [
+        [
+          -0.17381569743156433,
+          -0.28493404388427734,
+          0.018907923251390457
+        ],
+        [
+          0.3210749626159668,
+          0.28493404388427734,
+          1.215000033378601
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/Frontier_FieldShelter",
+      "source": "Scenery/Frontier_FieldShelter",
+      "triangles": 76,
+      "bones": 0,
+      "physical_world_units": [
+        1.7000000476837158,
+        1.2999999523162842,
+        1.372499942779541
+      ],
+      "bounds": [
+        [
+          -0.8500000238418579,
+          -0.6499999761581421,
+          0
+        ],
+        [
+          0.8500000238418579,
+          0.6499999761581421,
+          1.372499942779541
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/Frontier_MiningConveyor",
+      "source": "Scenery/Frontier_MiningConveyor",
+      "triangles": 124,
+      "bones": 0,
+      "physical_world_units": [
+        2,
+        0.675000011920929,
+        0.4950000047683716
+      ],
+      "bounds": [
+        [
+          -1,
+          -0.42500001192092896,
+          0
+        ],
+        [
+          1,
+          0.25,
+          0.4950000047683716
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/Ruin_ObserverMonolith",
+      "source": "Scenery/Ruin_ObserverMonolith",
+      "triangles": 76,
+      "bones": 0,
+      "physical_world_units": [
+        0.952627956867218,
+        1.100000023841858,
+        2.25
+      ],
+      "bounds": [
+        [
+          -0.476313978433609,
+          -0.550000011920929,
+          0
+        ],
+        [
+          0.476313978433609,
+          0.550000011920929,
+          2.25
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/Ruin_FracturedArch",
+      "source": "Scenery/Ruin_FracturedArch",
+      "triangles": 100,
+      "bones": 0,
+      "physical_world_units": [
+        2.0887880325317383,
+        0.44999998807907104,
+        2.133932989090681
+      ],
+      "bounds": [
+        [
+          -1.0443940162658691,
+          -0.22499999403953552,
+          0.036593515425920486
+        ],
+        [
+          1.0443940162658691,
+          0.22499999403953552,
+          2.1705265045166016
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/Nature_PrismBloom",
+      "source": "Scenery/Nature_PrismBloom",
+      "triangles": 190,
+      "bones": 0,
+      "physical_world_units": [
+        0.7200928330421448,
+        0.6542264223098755,
+        0.900000024586916
+      ],
+      "bounds": [
+        [
+          -0.3600464165210724,
+          -0.3341851532459259,
+          -0.05000000074505806
+        ],
+        [
+          0.3600464165210724,
+          0.3200412690639496,
+          0.8500000238418579
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/Nature_SailTree",
+      "source": "Scenery/Nature_SailTree",
+      "triangles": 208,
+      "bones": 0,
+      "physical_world_units": [
+        1.997218668460846,
+        1.2999999523162842,
+        2.0064784148707986
+      ],
+      "bounds": [
+        [
+          -0.8986093401908875,
+          -0.6499999761581421,
+          -0.006478414870798588
+        ],
+        [
+          1.0986093282699585,
+          0.6499999761581421,
+          2
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/City_TrafficSignal_Amber",
+      "source": "Scenery/City_TrafficSignal",
+      "triangles": 440,
+      "bones": 0,
+      "physical_world_units": [
+        1.5576693415641785,
+        0.2766411155462265,
+        0.4699997901916504
+      ],
+      "bounds": [
+        [
+          -0.7783687710762024,
+          -0.1388830840587616,
+          2.390000104904175
+        ],
+        [
+          0.7793005704879761,
+          0.1377580314874649,
+          2.859999895095825
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "scenery/City_TrafficSignal_Green",
+      "source": "Scenery/City_TrafficSignal",
+      "triangles": 440,
+      "bones": 0,
+      "physical_world_units": [
+        1.5576693415641785,
+        0.2766411155462265,
+        0.4699997901916504
+      ],
+      "bounds": [
+        [
+          -0.7783687710762024,
+          -0.1388830840587616,
+          2.390000104904175
+        ],
+        [
+          0.7793005704879761,
+          0.1377580314874649,
+          2.859999895095825
         ]
       ],
       "clips": []

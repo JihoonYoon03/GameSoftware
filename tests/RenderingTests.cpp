@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include "Drawing.h"
 #include "Scene.h"
 #include "Hud.h"
@@ -32,6 +32,22 @@ float Distance3D(Point a, Point b)
 void TestModelsAndRig()
 {
     const auto &library = ModelLibrary::Get();
+    for (const auto &model : library.aircraft)
+    {
+        assert(model.resourceId && ModelFactory::ValidateModel(model));
+        const auto &resource = ResourceAssets::Get(model.resourceId);
+        assert(resource.boneCount == 17 && resource.clips.size() == 12);
+        auto pose = ModelRig::Pose(10, true);
+        SkinMatrices parked, cruising;
+        ResourceAssets::Sample(model.resourceId, nullptr, parked);
+        ResourceAssets::Sample(model.resourceId, &pose, cruising);
+        assert(parked != cruising);
+    }
+    for (const auto &model : library.scenery)
+    {
+        assert(model.resourceId && ModelFactory::ValidateModel(model));
+    }
+    assert(ModelLibrary::TrafficSignal(0).resourceId != ModelLibrary::TrafficSignal(2).resourceId);
     for (const auto &vehicle : library.vehicles)
     {
         assert(vehicle.body.resourceId && ModelFactory::ValidateModel(vehicle.body));
@@ -99,28 +115,22 @@ void TestCityAndTravel()
     }
     assert(observatory);
     const auto &library = ModelLibrary::Get();
-    for (int t = 0; t < 50; ++t)
+    const auto &network = RoadNetwork::Get();
+    for (const auto &lane : network.lanes)
     {
-        for (int car = 0; car < 6; ++car)
+        Vector2 p = {(lane.start.x + lane.end.x) * .5f, (lane.start.y + lane.end.y) * .5f};
+        Transform3D transform;
+        transform.yaw = std::atan2(lane.direction.y, lane.direction.x);
+        auto nose = transform.Apply({1, 0, 0});
+        assert(nose.x * lane.direction.x + nose.y * lane.direction.y > .999f);
+        for (size_t car = 0; car < 4; ++car)
         {
-            auto p = CityLayout::TrafficPosition(car, t * .05f);
-            auto next = CityLayout::TrafficPosition(car, t * .05f + .001f);
-            Transform3D transform;
-            transform.yaw = CityLayout::TrafficYaw(car);
-            auto nose = transform.Apply({1, 0, 0});
-            assert(std::fabs(p.y - next.y) < .00001f);
-            if (std::fabs(next.x - p.x) < 1)
-            {
-                assert((next.x - p.x) * nose.x > 0);
-            }
-            // Sample imported vehicle vertices against every physical building footprint.
-            const auto &model = ResourceAssets::Get(library.vehicles[size_t(car % 4)].body.resourceId);
+            const auto &model = ResourceAssets::Get(library.vehicles[car].body.resourceId);
             for (size_t j = 0; j < model.vertices.size(); j += 9)
             {
                 const auto &vertex = model.vertices[j];
                 auto v = transform.Apply({vertex.x, vertex.y, vertex.z});
                 float x = p.x + v.x, y = p.y + v.y;
-                assert(y > -1.5f && y < 1.5f);
                 for (const auto &b : world.buildings)
                 {
                     assert(!(x > b.x && x < b.x + b.width && y > b.y && y < b.y + b.depth));
@@ -130,6 +140,7 @@ void TestCityAndTravel()
     }
     world.isInsideHome = false;
     world.bikePosition = {80, 0};
+    world.bikeYaw = 0;
     Overworld::ToggleBike(world);
     assert(world.isBikeMounted);
     world.pressedKeys['w'] = true;
@@ -159,24 +170,9 @@ void TestScaleGenderAndDistrict()
         assert(resource.physicalSize.x > 1 && resource.physicalSize.y > 1);
     }
     assert(library.bed.resourceId && library.console.resourceId && library.mineGround.resourceId);
-    // A traffic wrap is permitted only when the entire vehicle has left the extended terrain.
-    for (int car = 0; car < 6; ++car)
-    {
-        for (int frame = 0; frame < 2500; ++frame)
-        {
-            auto p = CityLayout::TrafficPosition(car, frame * .05f),
-                 q = CityLayout::TrafficPosition(car, (frame + 1) * .05f);
-            if (std::fabs(q.x - p.x) > 1)
-            {
-                assert(std::fabs(p.x) > CityLayout::kTrafficMaxX - 2 &&
-                       std::fabs(q.x) > CityLayout::kTerrainMaxX + 2);
-            }
-        }
-        float crossing = (18 - (-20 + (car / 2) * 13.333333f)) / 2.4f;
-        auto a = CityLayout::TrafficPosition(car, crossing - .001f),
-             b = CityLayout::TrafficPosition(car, crossing + .001f);
-        assert(std::fabs(b.x - a.x) < .01f);
-    }
+    // Traffic now follows connected lanes; it has no wrapping render-time position function.
+    assert(RoadNetwork::Get().lanes.size() > 100);
+    assert(Overworld::Traffic().Vehicles().empty());
 }
 
 void TestScrolling()
@@ -407,8 +403,8 @@ void CaptureScenes(const std::filesystem::path &output)
     auto &world = Game::Get().GetState();
     Game::Get().Reset();
     world.isInsideHome = false;
-    world.playerPosition = {-3, 2};
-    world.cameraPosition = {-3, 2};
+    world.playerPosition = kLiaPosition;
+    world.cameraPosition = kLiaPosition;
     Begin();
     game::SceneManager::Get(game::SceneKind::Background).Draw();
     renderqueue::Flush();
@@ -515,8 +511,8 @@ void TestPixelPresentation(const std::filesystem::path &output)
     game::GameLevels::Reset();
     world.isBikeMounted = false;
     world.isInsideHome = false;
-    world.playerPosition = {-3, 2};
-    world.cameraPosition = {-3, 2};
+    world.playerPosition = kLiaPosition;
+    world.cameraPosition = kLiaPosition;
     for (auto resolution : {WorldResolution::Half, WorldResolution::Quarter})
     {
         RenderStyle style;
@@ -571,8 +567,8 @@ void TestQuestAndResources()
     world.gateSignalHeard = true;
     world.hasDescendedObservatory = true;
     world.mainQuestStage = MainQuestStage::MountJetBike;
-    world.playerPosition = {-3, 2};
-    world.cameraPosition = {-3, 2};
+    world.playerPosition = kLiaPosition;
+    world.cameraPosition = kLiaPosition;
     auto &quest = game::GameLevels::Mine().GetState().quest;
     auto draw = [&]() {
         Begin();
@@ -584,10 +580,17 @@ void TestQuestAndResources()
     assert(!game.IsQuestInteraction(InteractionTarget::JetBike));
     draw();
     assert(graph.Find("marker/lia") && !graph.Find("marker/jet-bike") && !graph.Find("marker/city-receiver"));
-    const auto *car0 = graph.Find("vehicle/0"), *car4 = graph.Find("vehicle/4");
-    assert(car0 && car4 && !car0->GetRenderObjects().empty() && !car4->GetRenderObjects().empty());
-    assert(car0->GetRenderObjects()[0].mesh == car4->GetRenderObjects()[0].mesh);
-    assert(car0->GetRenderObjects()[0].material && car4->GetRenderObjects()[0].material);
+    // Shared vehicle resources are independent of whether off-screen traffic has arrived yet.
+    std::vector<rendering::RenderObject> carA, carB;
+    auto &backend = GameRenderer::Get().Backend();
+    backend.BeginModels();
+    backend.BindObject(&carA);
+    Drawing::DrawWorldVehicle({-1, 0}, 3.3f, 1, VehicleType::Coupe, {}, .2f, 0);
+    backend.BindObject(&carB);
+    Drawing::DrawWorldVehicle({1, 0}, 3.3f, 1, VehicleType::Coupe, {}, .2f, 0);
+    backend.EndModels();
+    assert(!carA.empty() && !carB.empty() && carA[0].mesh == carB[0].mesh);
+    assert(carA[0].material && carB[0].material);
     auto statistics = GameRenderer::Get().Backend().GetFrameStatistics();
     assert(statistics.instancedDraws > 0 && statistics.shadowDraws > 0 && statistics.objects > 100);
     // Legacy text/effect UV arrays alias generic attributes. Leaked instance divisors
@@ -692,7 +695,7 @@ void CaptureDistrictAndBodies(const std::filesystem::path &output)
     game.Reset();
     world.isInsideHome = false;
     world.playerGender = Gender::Female;
-    world.cameraPosition = world.playerPosition = {-3, 2};
+    world.cameraPosition = world.playerPosition = kLiaPosition;
     Begin();
     game::SceneManager::Get(game::SceneKind::Exterior).Draw();
     renderer.EndScene(0);
@@ -868,8 +871,8 @@ void BenchmarkQuality(const std::filesystem::path &output)
         if (scenario == 0)
         {
             world.isInsideHome = false;
-            world.playerPosition = {-3, 2};
-            world.cameraPosition = {-3, 2};
+            world.playerPosition = kLiaPosition;
+            world.cameraPosition = kLiaPosition;
         }
         if (scenario == 1)
         {

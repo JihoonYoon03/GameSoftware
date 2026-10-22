@@ -49,6 +49,11 @@ class Drawing
     static void DrawMaterialQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d, SurfaceMaterial material,
                                  ColorRGBA color);
     static void DrawMaterialTile(float x, float y, SurfaceMaterial material, ColorRGBA color);
+    static void DrawGroundStrip(Vector2 start, Vector2 end, float width, ColorRGBA color,
+                                float elevation = .025f,
+                                SurfaceMaterial material = SurfaceMaterial::Concrete);
+    static void DrawHologramStrip(Vector2 start, Vector2 end, float width, ColorRGBA color,
+                                  float elevation = .16f);
     static void DrawSoftShadow(Vector2 center, float radiusX, float radiusY, float opacity);
     static void DrawVehicle(Vector2 center, float scale,
                             models::VehicleType type = models::VehicleType::Coupe,
@@ -56,8 +61,10 @@ class Drawing
     static void DrawWorldVehicle(Vector2 position, float altitude, float scale, models::VehicleType type,
                                  const models::Palette &palette, float throttle, float yaw);
     static void DrawWorldBike(Vector2 position, float yaw, float throttle, bool mounted);
+    static void DrawWorldAircraft(Vector2 position, float altitude, models::AircraftType type, bool alternate,
+                                  float yaw, float bank);
     static void DrawProp(const models::Model &model, Vector2 position, models::Point scale = {1, 1, 1},
-                         const models::Palette &palette = {}, float yaw = 0);
+                         const models::Palette &palette = {}, float yaw = 0, float elevation = 0);
     static void DrawModel3D(const models::Model &model, Vector2 screen, models::Point scale,
                             const models::Transform3D &transform, float depth, const models::Palette &palette,
                             const models::CharacterPose *pose = nullptr);
