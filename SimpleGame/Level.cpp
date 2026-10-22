@@ -357,6 +357,9 @@ void MineMap::Generate(std::uint32_t seed)
     state.rescuedPeople = 0;
     state.returnedPeople = 0;
     state.scannerCooldown = 0;
+    state.scannerSeconds = 0;
+    state.scannerOrigin = state.entry;
+    state.scannerRadius = 0;
     std::uint64_t id = 1;
     for (size_t i = 0; i < state.rescueGroups.size(); ++i)
     {
@@ -882,7 +885,7 @@ float MineRescue::WalkRoute(tutorial::Vector2 &position, const std::vector<tutor
 void MineRescue::Update(float deltaSeconds)
 {
     auto &world = tutorial::Game::Get().GetState();
-    state.scannerSeconds = (std::max)(0.f, state.scannerSeconds - deltaSeconds);
+    UpdateScanner(deltaSeconds);
     state.scannerCooldown = (std::max)(0.f, state.scannerCooldown - deltaSeconds);
     profiling::Scope timer(profiling::Timer::NpcUpdate);
     state.riaNavigationCooldown -= deltaSeconds;
@@ -945,33 +948,73 @@ void MineRescue::Update(float deltaSeconds)
                  people.end());
 }
 
+void MineRescue::UpdateScanner(float deltaSeconds)
+{
+    for (auto &contact : state.scannerContacts)
+    {
+        contact.secondsRemaining -= deltaSeconds;
+    }
+    auto &contacts = state.scannerContacts;
+    contacts.erase(std::remove_if(contacts.begin(), contacts.end(),
+                                  [&](const ScannerContact &contact) {
+                                      return contact.secondsRemaining <= 0 ||
+                                             contact.group >= state.rescueGroups.size() ||
+                                             state.rescueGroups[contact.group].rescued;
+                                  }),
+                   contacts.end());
+    if (state.scannerSeconds <= 0)
+    {
+        return;
+    }
+    const float elapsed = kScannerDuration - state.scannerSeconds;
+    const float frameEnd = elapsed + deltaSeconds;
+    state.scannerSeconds = (std::max)(0.f, state.scannerSeconds - deltaSeconds);
+    state.scannerRadius = (std::min)(kScannerRange, frameEnd * kScannerSpeed);
+    for (size_t groupIndex = 0; groupIndex < state.rescueGroups.size(); ++groupIndex)
+    {
+        const auto &group = state.rescueGroups[groupIndex];
+        const float distance = tutorial::Game::Distance(state.scannerOrigin, group.position);
+        if (group.rescued || distance > state.scannerRadius || distance > kScannerRange ||
+            std::any_of(contacts.begin(), contacts.end(),
+                        [=](const ScannerContact &contact) { return contact.group == groupIndex; }))
+        {
+            continue;
+        }
+        // Discovery and contact lifetime use the wave's actual arrival time, including long frames.
+        const float lifetime = kScannerContactSeconds - (frameEnd - distance / kScannerSpeed);
+        if (lifetime <= 0)
+        {
+            continue;
+        }
+        float dx = (group.position.x - state.scannerOrigin.x) - (group.position.y - state.scannerOrigin.y);
+        float dy =
+            ((group.position.x - state.scannerOrigin.x) + (group.position.y - state.scannerOrigin.y)) * .5f;
+        float angle = std::round(std::atan2(dy, dx) / (kPi / 8)) * (kPi / 8);
+        float approximateDistance = (std::min)(kScannerRange, std::floor(distance / 6) * 6 + 3);
+        tutorial::Vector2 bearing = {std::cos(angle) + 2 * std::sin(angle),
+                                     2 * std::sin(angle) - std::cos(angle)};
+        float magnitude = std::hypot(bearing.x, bearing.y);
+        float estimate = distance < .1f ? 0 : approximateDistance / magnitude;
+        tutorial::Vector2 marker = {state.scannerOrigin.x + bearing.x * estimate,
+                                    state.scannerOrigin.y + bearing.y * estimate};
+        contacts.push_back({angle, approximateDistance, groupIndex, marker, lifetime});
+    }
+}
+
 void MineRescue::Scan()
 {
-    auto &world = tutorial::Game::Get().GetState();
     if (state.scannerCooldown > 0)
     {
         return;
     }
-    state.scannerSeconds = 2.8f;
+    state.scannerOrigin = tutorial::Game::Get().GetState().playerPosition;
+    state.scannerSeconds = kScannerDuration;
+    state.scannerRadius = 0;
     state.scannerCooldown = 6;
     state.scannerContacts.clear();
-    auto origin = world.playerPosition;
-    for (size_t i = 0; i < state.rescueGroups.size(); ++i)
-    {
-        const auto &group = state.rescueGroups[i];
-        float distance = tutorial::Game::Distance(origin, group.position);
-        if (group.rescued || distance > 42)
-        {
-            continue;
-        }
-        float dx = (group.position.x - origin.x) - (group.position.y - origin.y);
-        float dy = ((group.position.x - origin.x) + (group.position.y - origin.y)) * .5f;
-        float angle = std::round(std::atan2(dy, dx) / (kPi / 8)) * (kPi / 8);
-        float approximateDistance = (std::min)(42.f, std::floor(distance / 6) * 6 + 3);
-        state.scannerContacts.push_back({angle, approximateDistance, i});
-    }
+    UpdateScanner(0); // A transmitter at the scan origin is reached immediately.
     tutorial::Game::Get().ShowNotice(
-        "스캐너 / 실제 구조 요청의 대략적인 방향·거리만 표시합니다. 펄스가 지나간 뒤 사라집니다.");
+        "스캐너 / 펄스가 구조 신호에 도달하면 방향을 표시합니다. 표시된 신호는 잠시 후 사라집니다.");
 }
 
 bool MineRescue::TryInteract()
@@ -1072,6 +1115,14 @@ float MineLighting::At(tutorial::Vector2 position)
     auto &world = tutorial::Game::Get().GetState();
     auto player = world.playerPosition;
     float light = RadialLight(player, position, 2.8f) * .8f;
+    if (state.scannerSeconds > 0 && !level.Map().IsBlocked(position))
+    {
+        const float band =
+            std::fabs(tutorial::Game::Distance(state.scannerOrigin, position) - state.scannerRadius) /
+            (std::max)(.05f, state.scannerRadius * .024f);
+        const float opacity = (std::min)(1.f, state.scannerSeconds / .3f);
+        light = (std::max)(light, (std::max)(0.f, 1 - band) * opacity);
+    }
     float distance = tutorial::Game::Distance(player, position);
     if (distance < 12)
     {
@@ -1138,6 +1189,7 @@ tutorial::Vector2 MineLevel::Project(tutorial::Vector2 p, float height)
 void MineLevel::ClearInput()
 {
     auto &world = tutorial::Game::Get().GetState();
+    world.mapVisible = false;
     std::fill(world.pressedKeys, world.pressedKeys + 256, false);
     world.mouseFiring = false;
 }
@@ -1210,6 +1262,8 @@ void MineLevel::Enter(bool debugEntry)
     state.bullets.clear();
     state.tracers.clear();
     state.scannerSeconds = 0;
+    state.scannerRadius = 0;
+    state.scannerContacts.clear();
     ClearInput();
     state.invulnerability = 2;
     state.navigationCooldown = 0;
@@ -1224,6 +1278,8 @@ void MineLevel::Leave()
     state.bullets.clear();
     state.tracers.clear();
     state.scannerSeconds = 0;
+    state.scannerRadius = 0;
+    state.scannerContacts.clear();
     ClearInput();
     world.isInsideHome = false;
     world.isInObservatory = false;
@@ -1650,6 +1706,7 @@ bool FrontierParty::Move(FrontierPerson &person, float amount)
 }
 void ChapterOneLevel::Enter(bool debugEntry)
 {
+    tutorial::Game::Get().GetState().mapVisible = false;
     if (debugEntry)
     {
         state.unlocked = true;
@@ -1689,6 +1746,7 @@ void ChapterOneLevel::Enter(bool debugEntry)
 }
 void ChapterOneLevel::Leave()
 {
+    tutorial::Game::Get().GetState().mapVisible = false;
     state.active = false;
     state.bullets.clear();
     state.tracers.clear();

@@ -55,6 +55,10 @@ constexpr tutorial::Vector2 kObserverGlyph = {103.5f, 93.5f};
 constexpr tutorial::Vector2 kCoordinateTerminal = {105.5f, 103.5f};
 constexpr int kMineGateX = kMapSize / 2;
 constexpr int kMineGateY = 58;
+constexpr float kScannerRange = 42.f;
+constexpr float kScannerDuration = 2.8f;
+constexpr float kScannerSpeed = kScannerRange / kScannerDuration;
+constexpr float kScannerContactSeconds = 5.f;
 
 enum class Tile
 {
@@ -149,6 +153,8 @@ struct ScannerContact
     float angle;
     float distance;
     size_t group;
+    tutorial::Vector2 position = {};
+    float secondsRemaining = 0;
 };
 struct MineState
 {
@@ -182,6 +188,8 @@ struct MineState
     float navigationCooldown = 0;
     float scannerSeconds = 0;
     float scannerCooldown = 0;
+    tutorial::Vector2 scannerOrigin = {};
+    float scannerRadius = 0;
     float muzzleFlash = 0;
     int kills = 0;
     int rescuedPeople = 0;
@@ -272,6 +280,7 @@ class MineRescue
   private:
     MineLevel &level;
     MineState &state;
+    void UpdateScanner(float deltaSeconds);
     float WalkRoute(tutorial::Vector2 &position, const std::vector<tutorial::Vector2> &route, size_t &index,
                     float amount, tutorial::MovementFacing &facing);
 };

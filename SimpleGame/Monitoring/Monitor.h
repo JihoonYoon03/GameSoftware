@@ -36,7 +36,7 @@ class GameMonitor
 
   private:
     bool enabled = false;
-    std::uint64_t sequence = 0;
+    std::uint64_t sequence = 0, lastRequestCount = 0;
     std::string sessionId;
     std::chrono::steady_clock::time_point nextPublish;
 };

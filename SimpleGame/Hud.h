@@ -1,4 +1,5 @@
 #pragma once
+#include "Game.h"
 namespace tutorial
 {
 struct Building;
@@ -19,6 +20,22 @@ class Hud
 };
 
 // ============================================================================
+// MapHud — north-up schematic maps, circular clipping and destination selection
+// ============================================================================
+class MapHud
+{
+  public:
+    static MapRegion Region();
+    static void DrawMinimap();
+    static void DrawFullMap();
+    static bool HandleClick(Vector2 canvasPoint, bool clear = false);
+    // Shared by rendering and pointer input, so selection survives letterboxed windows.
+    static Vector2 WorldToMap(Vector2 worldPoint, bool fullMap);
+    static Vector2 MapToWorld(Vector2 canvasPoint, bool fullMap);
+    static bool Contains(Vector2 canvasPoint, bool fullMap);
+};
+
+// ============================================================================
 // CityHud : Hud
 // ============================================================================
 class CityHud final : public Hud
@@ -27,7 +44,6 @@ class CityHud final : public Hud
     void Draw() override;
 
   private:
-    void DrawMinimap();
     void DrawInteractionPrompt();
 };
 

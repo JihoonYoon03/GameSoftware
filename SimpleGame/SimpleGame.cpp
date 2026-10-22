@@ -11,6 +11,7 @@ but WITHOUT ANY WARRANTY.
 #include "stdafx.h"
 #include "Game.h"
 #include "Renderer.h"
+#include "Profiler.h"
 #include "Monitoring/Monitor.h"
 #include "Dependencies/glew.h"
 #include "Dependencies/freeglut.h"
@@ -20,6 +21,7 @@ but WITHOUT ANY WARRANTY.
 
 int main(int argc, char **argv)
 {
+    profiling::InitializeConsoleOutput();
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
     glutInitWindowSize(1280, 800);

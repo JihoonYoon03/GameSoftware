@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <array>
 #include <cstdio>
+#include <clocale>
 #include <filesystem>
 #include <sstream>
 #include <iomanip>
@@ -277,6 +278,190 @@ std::string FormatConsoleReport(const std::string &json)
     result += '\n';
     return result;
 }
+
+// Live console report: rewrite its own reserved cells without clearing startup diagnostics,
+// moving the viewport, or appending another report each second. Pipes/files keep the full stream.
+class ConsoleReport
+{
+  public:
+    bool Write(const std::string &text)
+    {
+        HANDLE output = GetStdHandle(STD_OUTPUT_HANDLE);
+        DWORD mode = 0;
+        CONSOLE_SCREEN_BUFFER_INFO info = {};
+        if (!GetConsoleMode(output, &mode) || !GetConsoleScreenBufferInfo(output, &info))
+        {
+            return false;
+        }
+        const int count = MultiByteToWideChar(CP_UTF8, 0, text.data(), int(text.size()), nullptr, 0);
+        if (count <= 0)
+        {
+            return false;
+        }
+        std::wstring wide(size_t(count), L'\0');
+        MultiByteToWideChar(CP_UTF8, 0, text.data(), int(text.size()), wide.data(), count);
+        const short width = info.dwSize.X;
+        if (width <= 1)
+        {
+            return false;
+        }
+        std::vector<CHAR_INFO> cells;
+        auto blankRow = [&]() {
+            CHAR_INFO blank = {};
+            blank.Char.UnicodeChar = L' ';
+            blank.Attributes = info.wAttributes;
+            cells.insert(cells.end(), size_t(width), blank);
+        };
+        blankRow();
+        size_t column = 0;
+        for (wchar_t character : wide)
+        {
+            if (character == L'\r')
+            {
+                continue;
+            }
+            if (character == L'\n')
+            {
+                blankRow();
+                column = 0;
+                continue;
+            }
+            const size_t glyphWidth = WideGlyph(character) ? 2 : 1;
+            if (column + glyphWidth > size_t(width))
+            {
+                blankRow();
+                column = 0;
+            }
+            auto &cell = cells[cells.size() - size_t(width) + column];
+            cell.Char.UnicodeChar = character;
+            if (glyphWidth == 2)
+            {
+                cell.Attributes |= COMMON_LVB_LEADING_BYTE;
+                auto &trailing = cells[cells.size() - size_t(width) + column + 1];
+                trailing.Char.UnicodeChar = character;
+                trailing.Attributes |= COMMON_LVB_TRAILING_BYTE;
+            }
+            column += glyphWidth;
+        }
+        if (column == 0 && cells.size() > size_t(width))
+        {
+            cells.resize(cells.size() - size_t(width));
+        }
+        const size_t rows = cells.size() / size_t(width);
+        bool intact = output == handle && width == columns && anchor.Y + reservedRows < info.dwSize.Y;
+        if (intact && !footer.empty())
+        {
+            std::wstring current(footer.size(), L' ');
+            DWORD read = 0;
+            intact = ReadConsoleOutputCharacterW(output, current.data(), DWORD(current.size()),
+                                                 {0, short(anchor.Y + reservedRows - 1)}, &read) &&
+                     read == footer.size() && current == footer;
+        }
+        if (!intact)
+        {
+            // Reserve only once using normal output, preserving terminal scrollback. Windows
+            // Terminal has no extensible native screen buffer, so long reports use pages.
+            const int visibleRows = info.srWindow.Bottom - info.srWindow.Top + 1;
+            reservedRows = short((std::min)(
+                int(rows + 1), (std::min)((std::max)(4, visibleRows * 2 / 3), int(info.dwSize.Y) - 2)));
+            if (reservedRows < 2)
+            {
+                return false;
+            }
+            std::fflush(stdout);
+            std::wstring space(size_t(reservedRows + (info.dwCursorPosition.X ? 1 : 0)), L'\n');
+            DWORD written = 0;
+            if (!WriteConsoleW(output, space.data(), DWORD(space.size()), &written, nullptr) ||
+                !GetConsoleScreenBufferInfo(output, &info))
+            {
+                return false;
+            }
+            handle = output;
+            columns = width;
+            anchor = {0, short(info.dwCursorPosition.Y - reservedRows)};
+            page = 0;
+        }
+        const size_t contentRows = size_t(reservedRows - 1);
+        const size_t pages = (rows + contentRows - 1) / contentRows;
+        page = (std::min)(page, pages - 1);
+        ReadPageKeys(pages);
+        CHAR_INFO blank = {};
+        blank.Char.UnicodeChar = L' ';
+        blank.Attributes = info.wAttributes;
+        std::vector<CHAR_INFO> visible(size_t(columns) * size_t(reservedRows), blank);
+        const size_t begin = page * contentRows * size_t(columns);
+        const size_t countCells = (std::min)(contentRows * size_t(columns), cells.size() - begin);
+        std::copy_n(cells.begin() + begin, countCells, visible.begin());
+        footer = L"[PgUp/PgDn] " + std::to_wstring(page + 1) + L"/" + std::to_wstring(pages) +
+                 L" | Full data: Logs/performance-*.jsonl";
+        footer.resize((std::min)(footer.size(), size_t(columns)));
+        for (size_t i = 0; i < footer.size(); ++i)
+        {
+            visible[contentRows * size_t(columns) + i].Char.UnicodeChar = footer[i];
+        }
+        SMALL_RECT region = {0, anchor.Y, short(columns - 1), short(anchor.Y + reservedRows - 1)};
+        return WriteConsoleOutputW(output, visible.data(), {columns, reservedRows}, {0, 0}, &region) != FALSE;
+    }
+    void Reset()
+    {
+        handle = INVALID_HANDLE_VALUE;
+        columns = reservedRows = 0;
+        anchor = {};
+        footer.clear();
+        page = 0;
+    }
+
+  private:
+    void ReadPageKeys(size_t pages)
+    {
+        HANDLE input = GetStdHandle(STD_INPUT_HANDLE);
+        DWORD mode = 0, available = 0;
+        INPUT_RECORD events[16] = {};
+        if (!GetConsoleMode(input, &mode) || !PeekConsoleInputW(input, events, 16, &available) || !available)
+        {
+            return;
+        }
+        if (!ReadConsoleInputW(input, events, available, &available))
+        {
+            return;
+        }
+        for (DWORD i = 0; i < available; ++i)
+        {
+            if (events[i].EventType != KEY_EVENT || !events[i].Event.KeyEvent.bKeyDown)
+            {
+                continue;
+            }
+            switch (events[i].Event.KeyEvent.wVirtualKeyCode)
+            {
+            case VK_PRIOR:
+                page = page ? page - 1 : 0;
+                break;
+            case VK_NEXT:
+                page = (std::min)(page + 1, pages - 1);
+                break;
+            case VK_HOME:
+                page = 0;
+                break;
+            case VK_END:
+                page = pages - 1;
+                break;
+            }
+        }
+    }
+    static bool WideGlyph(wchar_t character)
+    {
+        return (character >= 0x1100 && character <= 0x115f) || (character >= 0x2e80 && character <= 0xa4cf) ||
+               (character >= 0xac00 && character <= 0xd7a3) || (character >= 0xf900 && character <= 0xfaff) ||
+               (character >= 0xfe10 && character <= 0xfe19) || (character >= 0xfe30 && character <= 0xfe6f) ||
+               (character >= 0xff00 && character <= 0xff60) || (character >= 0xffe0 && character <= 0xffe6);
+    }
+    HANDLE handle = INVALID_HANDLE_VALUE;
+    COORD anchor = {};
+    short columns = 0, reservedRows = 0;
+    size_t page = 0;
+    std::wstring footer;
+};
+ConsoleReport consoleReport;
 void Report(Clock::time_point now)
 {
     const auto reportStart = Clock::now();
@@ -370,9 +555,12 @@ void Report(Clock::time_point now)
     auto logStart = reportStart;
     const std::string line = out.str();
     latestReportJson = line;
-    const std::string consoleReport = FormatConsoleReport(line);
-    std::fwrite(consoleReport.data(), 1, consoleReport.size(), stdout);
-    std::fflush(stdout);
+    const std::string formatted = FormatConsoleReport(line);
+    if (!consoleReport.Write(formatted))
+    {
+        std::fwrite(formatted.data(), 1, formatted.size(), stdout);
+        std::fflush(stdout);
+    }
     if (logFile)
     {
         if (logBytes + line.size() > kLogSegmentBytes)
@@ -398,6 +586,13 @@ void Report(Clock::time_point now)
     Add(timers[static_cast<size_t>(Timer::LogOutput)], Milliseconds(Clock::now() - logStart));
 }
 } // namespace
+void InitializeConsoleOutput()
+{
+    // Keep UTF-8 source strings and %ls path diagnostics consistent without changing numeric locale.
+    std::setlocale(LC_CTYPE, ".UTF-8");
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+}
 Scope::Scope(Timer value) : timer(value), start(Clock::now())
 {
     drawStart = counters[static_cast<size_t>(Counter::DrawCalls)];
@@ -461,6 +656,7 @@ void Initialize()
         return;
     }
     initialized = true;
+    InitializeConsoleOutput();
     latestReportJson = "null";
     windowIndex = 0;
     vendorJson = JsonString(glGetString(GL_VENDOR));
@@ -597,6 +793,7 @@ void Shutdown()
     }
     initialized = false;
     timerSupported = false;
+    consoleReport.Reset();
 }
 } // namespace profiling
 

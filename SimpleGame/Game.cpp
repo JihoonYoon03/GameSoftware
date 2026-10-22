@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "Game.h"
+#include "Hud.h"
 #include "Overworld.h"
 #include "ResidentAI.h"
 #include "TransitLayout.h"
@@ -64,7 +65,7 @@ bool CityLayout::OverlapsRoad(const Building &b, float clearance)
     {
         for (int y = int(std::floor(b.y - clearance)); y <= int(std::floor(b.y + b.depth + clearance)); ++y)
         {
-            if (IsRoadTile(x, y))
+            if (RoadNetwork::Get().ContainsFootprint({x + .5f, y + .5f}))
             {
                 return true;
             }
@@ -184,55 +185,14 @@ void Game::Reset()
     state.viewportWidth = viewportWidth;
     state.viewportHeight = viewportHeight;
     state.lastUpdateMilliseconds = glutGet(GLUT_ELAPSED_TIME);
-    state.buildings = {{-8, -5, 2, 3, 130}, {-5, -5, 2, 3, 180}, {-1, -5, 2, 2, 120}, {3, -6, 2, 2, 160},
-                       {-8, 4, 2, 2, 85},   {-4, 5, 2, 2, 110},  {0, 5, 2, 2, 135},   {4, 4, 2, 2, 95},
-                       {7, 1, 2, 2, 150},   {-9, -1, 2, 3, 105}};
-    for (int x = -16; x <= 16; x += 4)
-    {
-        state.buildings.push_back({float(x), -11, 2.4f, 2, float(100 + (x + 16) * 3)});
-        state.buildings.push_back({float(x), 10, 2.4f, 2, float(95 + (x + 16) * 2)});
-    }
-    for (int y = -6; y <= 6; y += 4)
-    {
-        state.buildings.push_back({-16, float(y), 2.5f, 2, 140});
-        state.buildings.push_back({13, float(y), 2.5f, 2, 120});
-    }
-    // Only generate city blocks, not buildings across the entire outdoor world.
-    for (int x = -39; x < 40; x += 6)
-    {
-        for (int y = -33; y < 34; y += 6)
-        {
-            if (x < 21 && x + 3 > -21 && y < 17 && y + 3 > -16)
-            {
-                continue;
-            }
-            unsigned int seed = unsigned((x + 64) * 73 + (y + 64) * 151);
-            state.buildings.push_back({float(x), float(y), 2.5f + float(seed % 3) * .3f,
-                                       2.3f + float(seed % 4) * .2f, 90.f + float(seed % 95)});
-        }
-    }
-    constexpr models::BuildingType buildingTypes[] = {
-        models::BuildingType::Habitat, models::BuildingType::Terraced, models::BuildingType::Workshop,
-        models::BuildingType::Dome};
-    const std::array<float, 4> buildingColors[] = {{.3f, .42f, .5f, 1},
-                                                   {.52f, .37f, .31f, 1},
-                                                   {.36f, .47f, .4f, 1},
-                                                   {.42f, .35f, .52f, 1},
-                                                   {.5f, .49f, .36f, 1}};
-    for (size_t i = 0; i < state.buildings.size(); ++i)
-    {
-        auto &building = state.buildings[i];
-        building.type = buildingTypes[i % 4];
-        constexpr float heightsMeters[] = {7.2f, 10.8f, 5.4f, 6.5f};
-        building.height = heightsMeters[i % 4] * models::WorldScale::pixelsPerMeter;
-        building.palette.body = buildingColors[(i / 4 + i) % 5];
-        building.palette.accent =
-            i % 2 == 0 ? std::array<float, 4>{.32f, .7f, .78f, 1} : std::array<float, 4>{.85f, .62f, .35f, 1};
-        building.palette.emission = {.25f, .75f, .85f, 1};
-    }
-    // Keep the existing home and template order while moving its facade to the plaza entrance.
-    state.buildings.front().x = kHomeBuildingPosition.x;
-    state.buildings.front().y = kHomeBuildingPosition.y;
+    // Only narrative landmarks precede the road plan; ordinary lots are generated from its frontages.
+    Building home{kHomeBuildingPosition.x, kHomeBuildingPosition.y, 1, 1,
+                  7.2f * models::WorldScale::pixelsPerMeter};
+    home.type = models::BuildingType::Habitat;
+    home.palette.body = {.3f, .42f, .5f, 1};
+    home.palette.accent = {.32f, .7f, .78f, 1};
+    home.palette.emission = {.25f, .75f, .85f, 1};
+    state.buildings = {home};
     Building observatory{kObservatoryBuildingPosition.x, kObservatoryBuildingPosition.y, 5, 4,
                          11.5f * models::WorldScale::pixelsPerMeter};
     observatory.type = models::BuildingType::Observatory;
@@ -254,6 +214,11 @@ void Game::KeyDown(unsigned char key, int, int)
     key = NormalizeKey(key);
     if (key == 27) // Escape
     {
+        if (state.mapVisible)
+        {
+            state.mapVisible = false;
+            return;
+        }
         state.isPaused = !state.isPaused;
         state.mouseFiring = false;
         std::fill(state.pressedKeys, state.pressedKeys + 256, false);
@@ -299,6 +264,19 @@ void Game::KeyDown(unsigned char key, int, int)
     {
         return;
     }
+    if (key == 'm')
+    {
+        state.mapVisible = !state.mapVisible;
+        state.mouseFiring = false;
+        std::fill(state.pressedKeys, state.pressedKeys + 256, false);
+        state.pressedKeys['m'] = true;
+        game::GameLevels::Chapter().GetState().journalVisible = false;
+        return;
+    }
+    if (state.mapVisible)
+    {
+        return;
+    }
     auto &chapter = game::GameLevels::Chapter();
     if (key == 'j' && chapter.IsAvailable())
     {
@@ -319,10 +297,6 @@ void Game::KeyDown(unsigned char key, int, int)
         if (key == 'q')
         {
             game::GameLevels::Mine().UseRecoveryKit();
-        }
-        if (key == 'm')
-        {
-            chapter.GetState().mapVisible = !chapter.GetState().mapVisible;
         }
         return;
     }
@@ -416,6 +390,18 @@ void Game::MouseMotion(int x, int y)
 void Game::MouseButton(int button, int buttonState, int x, int y)
 {
     MouseMotion(x, y);
+    if (state.mapVisible)
+    {
+        state.mouseFiring = false;
+        if (buttonState == GLUT_DOWN && state.cursorInsideViewport && !state.isPaused)
+        {
+            if (button == GLUT_LEFT_BUTTON || button == GLUT_RIGHT_BUTTON)
+            {
+                MapHud::HandleClick(state.cursorPosition, button == GLUT_RIGHT_BUTTON);
+            }
+        }
+        return;
+    }
     if (button == GLUT_LEFT_BUTTON)
     {
         state.mouseFiring = buttonState == GLUT_DOWN && game::GameLevels::IsCombatActive() &&
@@ -438,7 +424,7 @@ void Game::Tick(int)
         Clamp((nowMilliseconds - state.lastUpdateMilliseconds) / 1000.f, 0, kMaximumDeltaSeconds);
     state.lastUpdateMilliseconds = nowMilliseconds;
 
-    if (!state.isPaused)
+    if (!state.isPaused && !state.mapVisible)
     {
         state.animationTimeSeconds += deltaSeconds;
         if (!state.isComplete)
@@ -470,7 +456,9 @@ void Game::Tick(int)
     }
 
     monitoring::GameMonitor::Get().Update();
-    glutSetCursor(game::GameLevels::IsCombatActive() ? GLUT_CURSOR_NONE : GLUT_CURSOR_INHERIT);
+    glutSetCursor(game::GameLevels::IsCombatActive() && !state.mapVisible && !state.isPaused
+                      ? GLUT_CURSOR_NONE
+                      : GLUT_CURSOR_INHERIT);
     glutPostRedisplay();
     glutTimerFunc(kUpdateIntervalMilliseconds, GameCallbacks::Tick, 0);
 }
@@ -521,6 +509,10 @@ bool Game::IsPositionBlocked(Vector2 position)
         position.y > kWorldMaxY)
     {
         return true;
+    }
+    if (state.isBikeMounted && state.bikeElevation > 1)
+    {
+        return false;
     }
     auto entrance = Overworld::kMineEntrance;
     float entranceX = position.x - entrance.x, entranceY = position.y - entrance.y;

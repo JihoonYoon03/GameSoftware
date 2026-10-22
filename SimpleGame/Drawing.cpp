@@ -1,11 +1,12 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include "Drawing.h"
-#include "Overworld.h"
-#include "ResourceAssets.h"
 #include "Level.h"
+#include "Overworld.h"
+#include "TransitLayout.h"
+#include "ResourceAssets.h"
 #pragma comment(lib, "opengl32.lib")
-#include "RenderQueue.h"
 #include "RenderCache.h"
+#include "RenderQueue.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -154,8 +155,9 @@ void Drawing::DrawGroundStrip(Vector2 start, Vector2 end, float width, ColorRGBA
         part.surface = models::Surface::Emissive;
         return model;
     }();
-    const auto &model = material == SurfaceMaterial::Glass
-                            ? *hologram
+    const auto &model = material == SurfaceMaterial::Glass ? *hologram
+                        : material == SurfaceMaterial::Concrete
+                            ? CityPlan::Ground(DistrictGround::Pavement)
                             : models::ModelLibrary::Get().grounds[size_t(material)];
     DrawModel3D(model, WorldToScreen(origin.x, origin.y), {length + .015f, width + .015f, 1}, transform,
                 (origin.x + origin.y) * 36, palette);
@@ -165,6 +167,44 @@ void Drawing::DrawHologramStrip(Vector2 start, Vector2 end, float width, ColorRG
     Drawing::DrawGroundStrip(start, end, width * 2.4f, {color.r, color.g, color.b, .12f}, elevation - .004f,
                              SurfaceMaterial::Glass);
     Drawing::DrawGroundStrip(start, end, width, color, elevation, SurfaceMaterial::Glass);
+}
+void Drawing::DrawScannerPulse(Vector2 origin, float radius, float opacity)
+{
+    if (radius <= .015f || opacity <= 0)
+    {
+        return;
+    }
+    // Cached annuli follow world-space perspective and depth, including walls and actors.
+    static const auto pulse = [] {
+        auto model = std::make_unique<models::Model>();
+        model->space = models::CoordinateSpace::World;
+        model->ground = true;
+        constexpr int segments = 128;
+        for (int layer = 0; layer < 2; ++layer)
+        {
+            const float width = layer ? .006f : .024f;
+            for (int i = 0; i < segments; ++i)
+            {
+                const float a = i * kPi * 2 / segments, b = (i + 1) * kPi * 2 / segments;
+                auto &part = model->parts[model->count++];
+                part.count = 4;
+                part.points[0] = {std::cos(a) * (1 - width), std::sin(a) * (1 - width), 0};
+                part.points[1] = {std::cos(a) * (1 + width), std::sin(a) * (1 + width), 0};
+                part.points[2] = {std::cos(b) * (1 + width), std::sin(b) * (1 + width), 0};
+                part.points[3] = {std::cos(b) * (1 - width), std::sin(b) * (1 - width), 0};
+                part.color = {.16f, 1, .78f, layer ? .92f : .15f};
+                part.palette = models::PaletteSlot::Body;
+                part.surface = models::Surface::Emissive;
+            }
+        }
+        return model;
+    }();
+    models::Transform3D transform;
+    transform.position.z = .055f;
+    models::Palette palette;
+    palette.body = {1, 1, 1, opacity};
+    DrawModel3D(*pulse, WorldToScreen(origin.x, origin.y), {radius, radius, 1}, transform,
+                (origin.x + origin.y) * 36, palette);
 }
 void Drawing::DrawSoftShadow(Vector2 center, float radiusX, float radiusY, float opacity)
 {
@@ -472,7 +512,8 @@ void Drawing::DrawCharacterAppearance(Vector2 screen, ColorRGBA coat, models::Ch
 }
 namespace
 {
-void VehicleEffects(const models::VehicleModel &vehicle, Vector2 screen, float scale,
+void VehicleEffects(const std::array<models::Point, 2> &exhausts,
+                    const std::array<models::Point, 2> &headlights, Vector2 screen, float scale,
                     const models::Transform3D &rotation, const models::Palette &palette, float throttle,
                     float baseDepth)
 {
@@ -480,8 +521,8 @@ void VehicleEffects(const models::VehicleModel &vehicle, Vector2 screen, float s
         p = rotation.Apply({p.x * scale, p.y * scale, p.z * scale});
         return Vector2{screen.x + (p.x - p.y) * 36, screen.y + (p.x + p.y) * 18 - p.z * 44};
     };
-    if (GameRenderer::Get().Backend().DeferOverlay([=, &vehicle]() {
-            VehicleEffects(vehicle, screen, scale, rotation, palette, throttle, baseDepth);
+    if (GameRenderer::Get().Backend().DeferOverlay([=]() {
+            VehicleEffects(exhausts, headlights, screen, scale, rotation, palette, throttle, baseDepth);
         }))
     {
         return;
@@ -500,10 +541,15 @@ void VehicleEffects(const models::VehicleModel &vehicle, Vector2 screen, float s
         Drawing::DrawGlow(point, size, color);
         renderqueue::PopMatrix();
     };
-    ColorRGBA emission(palette.emission[0], palette.emission[1], palette.emission[2], .86f);
+    ColorRGBA emission(palette.emission[0], palette.emission[1], palette.emission[2],
+                       .86f * palette.emission[3]);
     float power = Game::Clamp(throttle, 0, 1);
-    for (auto socket : vehicle.exhausts)
+    for (auto socket : exhausts)
     {
+        if (power <= .001f)
+        {
+            continue;
+        }
         Vector2 nozzle = project(socket);
         const float nozzleDepth = depthAt(socket);
         auto back = socket;
@@ -540,7 +586,7 @@ void VehicleEffects(const models::VehicleModel &vehicle, Vector2 screen, float s
             float side = i % 2 ? -1.f : 1.f, spread = side * life * life * (18 + power * 17) * scale;
             Vector2 p = {nozzle.x + dx * life * length * 1.5f - dy * spread,
                          nozzle.y + dy * life * length * 1.5f + dx * spread};
-            float opacity = (1 - life) * .95f;
+            float opacity = (1 - life) * .95f * palette.emission[3];
             ColorRGBA spark(.64f, .97f, 1, opacity);
             float depth = nozzleDepth + depthPerPixel * life * length * 1.5f;
             renderqueue::PushMatrix();
@@ -551,9 +597,13 @@ void VehicleEffects(const models::VehicleModel &vehicle, Vector2 screen, float s
             glowAt(p, 1.5f * scale, {emission.r, emission.g, emission.b, opacity * .6f}, depth);
         }
     }
-    for (auto lamp : vehicle.headlights)
+    for (auto lamp : headlights)
     {
-        glowAt(project(lamp), 4 * scale, {1, .9f, .65f, .65f}, depthAt(lamp));
+        if (lamp.x == 0 && lamp.y == 0 && lamp.z == 0)
+        {
+            continue;
+        }
+        glowAt(project(lamp), 4 * scale, {1, .9f, .65f, .65f * palette.emission[3]}, depthAt(lamp));
     }
     renderqueue::Depth(false);
 }
@@ -564,9 +614,51 @@ void Drawing::DrawVehicle(Vector2 center, float scale, models::VehicleType type,
     const auto &vehicle = models::ModelLibrary::Get().vehicles.at(size_t(type));
     models::Transform3D rotation;
     rotation.yaw = -kPi / 4 + (direction < 0 ? kPi : 0);
-    VehicleEffects(vehicle, center, scale, rotation, palette, throttle, 0);
+    VehicleEffects(vehicle.exhausts, vehicle.headlights, center, scale, rotation, palette, throttle, 0);
     DrawModel3D(vehicle.body, center, {scale, scale, scale}, rotation, 0, palette);
 }
+namespace
+{
+models::Palette OcclusionPalette(const models::Model &model, Vector2 position, float elevation, float yaw,
+                                 float roll, models::Palette palette)
+{
+    if (!model.resourceId)
+    {
+        return palette;
+    }
+    const auto &world = Game::Get().GetState();
+    auto player = Drawing::WorldToScreen(world.playerPosition.x, world.playerPosition.y,
+                                         models::WorldScale::aimHeightPixels * .65f);
+    auto anchor = Drawing::WorldToScreen(position.x, position.y);
+    const auto &mesh = models::ResourceAssets::Get(model.resourceId);
+    models::Transform3D transform;
+    transform.yaw = yaw;
+    transform.roll = roll;
+    transform.position.z = elevation;
+    float minX = 1.e9f, minY = 1.e9f, maxX = -1.e9f, maxY = -1.e9f, front = -1.e9f;
+    for (int corner = 0; corner < 8; ++corner)
+    {
+        auto p = transform.Apply({corner & 1 ? mesh.maximum.x : mesh.minimum.x,
+                                  corner & 2 ? mesh.maximum.y : mesh.minimum.y,
+                                  corner & 4 ? mesh.maximum.z : mesh.minimum.z});
+        float x = anchor.x + (p.x - p.y) * 36;
+        float y = anchor.y + (p.x + p.y) * 18 - p.z * 44;
+        minX = (std::min)(minX, x);
+        maxX = (std::max)(maxX, x);
+        minY = (std::min)(minY, y);
+        maxY = (std::max)(maxY, y);
+        front = (std::max)(front, (position.x + position.y + p.x + p.y) * 36 + p.z * (1296.f / 44));
+    }
+    float playerDepth = (world.playerPosition.x + world.playerPosition.y) * 36 +
+                        models::WorldScale::aimHeightPixels * .65f * (1296.f / 1936);
+    if (front > playerDepth && player.x >= minX - 10 && player.x <= maxX + 10 && player.y >= minY - 8 &&
+        player.y <= maxY + 8)
+    {
+        palette.body[3] = palette.accent[3] = palette.emission[3] = .28f;
+    }
+    return palette;
+}
+} // namespace
 void Drawing::DrawWorldVehicle(Vector2 position, float altitude, float scale, models::VehicleType type,
                                const models::Palette &palette, float throttle, float yaw)
 {
@@ -575,10 +667,13 @@ void Drawing::DrawWorldVehicle(Vector2 position, float altitude, float scale, mo
     models::Transform3D rotation;
     rotation.yaw = yaw;
     auto pose = models::ModelRig::Pose(Game::Get().GetState().animationTimeSeconds * 10, throttle > .2f);
-    VehicleEffects(vehicle, screen, scale, rotation, palette, throttle,
+    auto visiblePalette = type == models::VehicleType::JetBike
+                              ? palette
+                              : OcclusionPalette(vehicle.body, position, altitude / 44, yaw, 0, palette);
+    VehicleEffects(vehicle.exhausts, vehicle.headlights, screen, scale, rotation, visiblePalette, throttle,
                    (position.x + position.y) * 36 + altitude * (1296.f / 1936));
     DrawModel3D(vehicle.body, screen, {scale, scale, scale}, rotation,
-                (position.x + position.y) * 36 + altitude * (1296.f / 1936), palette, &pose);
+                (position.x + position.y) * 36 + altitude * (1296.f / 1936), visiblePalette, &pose);
 }
 void Drawing::DrawProp(const models::Model &model, Vector2 position, models::Point scale,
                        const models::Palette &palette, float yaw, float elevation)
@@ -586,8 +681,13 @@ void Drawing::DrawProp(const models::Model &model, Vector2 position, models::Poi
     models::Transform3D transform;
     transform.yaw = yaw;
     transform.position.z = elevation;
+    auto visiblePalette = palette;
+    if (model.resourceId && models::ResourceAssets::Get(model.resourceId).name.find("aircraft/") == 0)
+    {
+        visiblePalette = OcclusionPalette(model, position, elevation, yaw, 0, palette);
+    }
     DrawModel3D(model, WorldToScreen(position.x, position.y), scale, transform,
-                (position.x + position.y) * 36, palette);
+                (position.x + position.y) * 36, visiblePalette);
 }
 void Drawing::DrawWorldAircraft(Vector2 position, float altitude, models::AircraftType type, bool alternate,
                                 float yaw, float bank)
@@ -597,15 +697,33 @@ void Drawing::DrawWorldAircraft(Vector2 position, float altitude, models::Aircra
     transform.roll = bank;
     transform.position.z = altitude;
     auto pose = models::ModelRig::Pose(Game::Get().GetState().animationTimeSeconds * 10, true);
-    Drawing::DrawModel3D(models::ModelLibrary::Aircraft(type, alternate),
-                         WorldToScreen(position.x, position.y), {1, 1, 1}, transform,
-                         (position.x + position.y) * 36, {}, &pose);
+    const auto &model = models::ModelLibrary::Aircraft(type, alternate);
+    const auto &resource = models::ResourceAssets::Get(model.resourceId);
+    std::array<models::Point, 2> exhausts = {resource.sockets[0], resource.sockets[1]};
+    models::SkinMatrices matrices;
+    models::ResourceAssets::Sample(model.resourceId, &pose, matrices);
+    for (int side = 0; side < 2; ++side)
+    {
+        models::ResourceVertex attachment = {};
+        attachment.x = exhausts[side].x;
+        attachment.y = exhausts[side].y;
+        attachment.z = exhausts[side].z;
+        float joint = side ? resource.sockets[5].y : resource.sockets[5].x;
+        attachment.joints = {joint, 31, 31, 31};
+        attachment.weights = {1, 0, 0, 0};
+        exhausts[side] = models::ResourceAssets::SkinPoint(attachment, matrices);
+    }
+    auto palette = OcclusionPalette(model, position, altitude, yaw, bank, {});
+    VehicleEffects(exhausts, {}, WorldToScreen(position.x, position.y), 1, transform, palette, .65f,
+                   (position.x + position.y) * 36);
+    Drawing::DrawModel3D(model, WorldToScreen(position.x, position.y), {1, 1, 1}, transform,
+                         (position.x + position.y) * 36, palette, &pose);
 }
 void Drawing::DrawWorldBike(Vector2 position, float yaw, float throttle, bool mounted)
 {
-    constexpr float altitude = 4.4f;
-    DrawWorldVehicle(position, altitude, 1, models::VehicleType::JetBike, Overworld::BikePalette(), throttle,
-                     yaw);
+    const float altitude = 4.4f + 44.f * Game::Get().GetState().bikeElevation;
+    DrawWorldVehicle(position, altitude, 1, models::VehicleType::JetBike, Overworld::BikePalette(),
+                     mounted ? throttle : 0, yaw);
     if (!mounted)
     {
         return;

@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "Overworld.h"
-#include "ResourceAssets.h"
 #include "Level.h"
 #include "ResidentAI.h"
+#include "ResourceAssets.h"
 #include "TransitLayout.h"
 #include <algorithm>
 #include <cmath>
@@ -39,7 +39,7 @@ Vector2 Unit(Vector2 v)
 TrafficTurn ClassifyTurn(Vector2 in, Vector2 out)
 {
     return Dot(in, out) > .82f   ? TrafficTurn::Straight
-           : Cross(in, out) >= 0 ? TrafficTurn::Left
+           : Cross(in, out) <= 0 ? TrafficTurn::Left
                                  : TrafficTurn::Right;
 }
 float SegmentDistance(Vector2 p, Vector2 a, Vector2 b)
@@ -60,7 +60,10 @@ Vector2 TurnPoint(const TrafficVehicle &car, float t)
     const float dot = Dot(in.direction, out.direction);
     const float chord = Game::Distance(in.end, out.start);
     // Quarter-circle control points match the native 90-degree road module's lane arcs.
-    float handle = chord * (std::fabs(dot) < .001f ? .3905243f : dot > .99f ? 1.f / 3 : 2.f / 3);
+    float handle = chord * (std::fabs(dot) < .001f ? .3905243f
+                            : dot > .99f           ? 1.f / 3
+                            : dot < -.8f           ? 2.f / 3
+                                                   : .45f);
     return Bezier(in.end, Add(in.end, Mul(in.direction, handle)), Sub(out.start, Mul(out.direction, handle)),
                   out.start, t);
 }
@@ -94,56 +97,61 @@ RoadNetwork::RoadNetwork()
     {
         Vector2 a, b;
         int lanes;
-        float speed;
+        float speed, heightA, heightB;
     };
     std::vector<Source> sources;
-    auto add = [&](Vector2 a, Vector2 b, int lanes, float speed) { sources.push_back({a, b, lanes, speed}); };
-    // Orthogonal city blocks and a regional ring replace overlapping diagonal shortcut spokes.
+    auto add = [&](Vector2 a, Vector2 b, int lanes, float speed, float heightA = 0, float heightB = 0) {
+        sources.push_back({a, b, lanes, speed, heightA, heightB});
+    };
+    // Streets are the primary plan: one collector with spaced T junctions, then local access loops.
+    // No automatic nearby-node welding: a short link must be redesigned, never folded into a mega-junction.
     for (int city = 0; city < Overworld::kCityCount; ++city)
     {
         auto center = Overworld::Cities()[city].center;
         auto p = [center](float x, float y) { return Add(center, {x, y}); };
-        int lanes = city == 1 ? 6 : city >= 3 ? 4 : 2;
-        add(p(-36, -17), p(36, -17), lanes, 6);
-        add(p(36, -17), p(36, 33), lanes, 5);
-        add(p(36, 33), p(-36, 33), lanes, 5);
-        add(p(-36, 33), p(-36, -17), lanes, 5);
-        add(p(-36, 10), p(36, 10), lanes, 4);
-        add(p(-12, -17), p(-12, 33), lanes, 4);
-        if (city == 0)
-        {
-            continue;
-        }
-        Vector2 direction, gateway;
-        if (std::fabs(center.x) > std::fabs(center.y))
-        {
-            direction = {center.x > 0 ? 1.f : -1.f, 0};
-            gateway = p(direction.x * 36, 10);
-        }
-        else
-        {
-            direction = {0, center.y > 0 ? 1.f : -1.f};
-            gateway = p(-12, direction.y > 0 ? 33.f : -17.f);
-        }
-        auto taper = Add(gateway, Mul(direction, 24));
-        Vector2 ring =
-            direction.x ? Vector2{direction.x * 390, gateway.y} : Vector2{gateway.x, direction.y * 390};
-        add(gateway, taper, lanes, 7);
-        add(taper, ring, 4, 10);
-        auto airDirection = Unit(center);
-        Vector2 airNormal = {-airDirection.y, airDirection.x};
-        Vector2 hub = {0, 8};
-        airCorridors.push_back({Sub(hub, Mul(airDirection, 28)),
-                                Add(Add(hub, Mul(airDirection, 30)), Mul(airNormal, 12)),
-                                Add(center, {12, 8}), 8.f + city * 3.f});
+        int collector = city <= 1 || city == 4 ? 4 : 2;
+        add(p(-90, -17), p(60, -17), collector, 6);
+        add(p(-32, -17), p(-32, 32), 2, 3.5f);
+        add(p(30, -17), p(30, 32), 2, 3.5f);
+        add(p(-32, 32), p(30, 32), 2, 3.5f);
+        add(p(-32, 10), p(30, 10), 2, 3);
+        add(p(-12, 10), p(-12, 32), 2, 3);
     }
-    add({-390, -390}, {390, -390}, 4, 10);
-    add({390, -390}, {390, 390}, 4, 10);
-    add({390, 390}, {-390, 390}, 4, 10);
-    add({-390, 390}, {-390, -390}, 4, 10);
-    add({36, -17}, {60, -17}, 2, 6);
-    add({60, -17}, {390, -17}, 4, 10);
-    add({128, -17}, Overworld::kMineEntrance, 4, 5);
+    // Four independent regional portals preserve the scattered city positions without funneling all
+    // traffic through one intersection. Narrow two-lane links remain subordinate to local collectors.
+    auto cinder = Overworld::Cities()[1].center;
+    add({60, -17}, {128, -17}, 2, 8);
+    add({128, -17}, {180, -17}, 2, 8);
+    add({180, -17}, Add(cinder, {-90, -17}), 2, 8);
+    add({128, -17}, Overworld::kMineEntrance, 2, 4);
+    auto south = Overworld::Cities()[2].center;
+    add({30, 32}, {30, 100}, 2, 5);
+    add({30, 100}, {48, 100}, 2, 5);
+    add({30, 100}, {-40, 150}, 2, 8);
+    add({-40, 150}, Add(south, {-90, -17}), 2, 8);
+    auto west = Overworld::Cities()[3].center;
+    add({-90, -17}, {-155, -70}, 2, 8);
+    add({-155, -70}, Add(west, {60, -17}), 2, 8);
+    auto north = Overworld::Cities()[4].center;
+    add({-60, -17}, {-60, -75}, 2, 5);
+    add({-60, -75}, {48, -100}, 2, 7);
+    add({48, -100}, Add(north, {-90, -17}), 2, 8);
+    // Eight-metre clearance over the eastern collector. The 110 m ramps keep the usable driving grade below
+    // 9%. The crossing at (48,-17) has no graph node: traffic above and below is independent.
+    add({48, -100}, {48, -45}, 2, 6, 0, 4);
+    add({48, -45}, {48, 45}, 2, 7, 4, 4);
+    add({48, 45}, {48, 100}, 2, 6, 4, 0);
+    auto halo = Overworld::Cities()[0].center;
+    for (int city = 1; city < Overworld::kCityCount; ++city)
+    {
+        auto c = Overworld::Cities()[city].center;
+        auto airDirection = Unit(Sub(c, halo));
+        Vector2 airNormal = {-airDirection.y, airDirection.x};
+        auto hub = Add(halo, {0, 8});
+        airCorridors.push_back({Sub(hub, Mul(airDirection, 28)),
+                                Add(Add(hub, Mul(airDirection, 30)), Mul(airNormal, 12)), Add(c, {12, 8}),
+                                8.f + city * 3.f});
+    }
     std::vector<std::vector<float>> cuts(sources.size(), {0, 1});
     for (size_t i = 0; i < sources.size(); ++i)
     {
@@ -159,20 +167,26 @@ RoadNetwork::RoadNetwork()
             float t = Cross(delta, s) / denominator, u = Cross(delta, r) / denominator;
             if (t >= -.0001f && t <= 1.0001f && u >= -.0001f && u <= 1.0001f)
             {
-                cuts[i].push_back(Game::Clamp(t, 0, 1));
-                cuts[j].push_back(Game::Clamp(u, 0, 1));
+                float hi = sources[i].heightA + (sources[i].heightB - sources[i].heightA) * t;
+                float hj = sources[j].heightA + (sources[j].heightB - sources[j].heightA) * u;
+                if (std::fabs(hi - hj) < .05f)
+                {
+                    cuts[i].push_back(Game::Clamp(t, 0, 1));
+                    cuts[j].push_back(Game::Clamp(u, 0, 1));
+                }
             }
         }
     }
-    auto node = [&](Vector2 p) {
+    auto node = [&](Vector2 p, float height) {
         for (size_t i = 0; i < junctions.size(); ++i)
         {
-            if (Game::Distance(p, junctions[i].position) < .12f)
+            if (Game::Distance(p, junctions[i].position) < .12f &&
+                std::fabs(height - junctions[i].altitude) < .05f)
             {
                 return int(i);
             }
         }
-        junctions.push_back({p, 3, {}});
+        junctions.push_back({p, 3, {}, height});
         return int(junctions.size() - 1);
     };
     for (size_t i = 0; i < sources.size(); ++i)
@@ -187,7 +201,10 @@ RoadNetwork::RoadNetwork()
             {
                 continue;
             }
-            int from = node(a), to = node(b);
+            auto height = [&](float t) {
+                return sources[i].heightA + (sources[i].heightB - sources[i].heightA) * t;
+            };
+            int from = node(a, height(split[j - 1])), to = node(b, height(split[j]));
             if (from == to)
             {
                 continue;
@@ -195,6 +212,25 @@ RoadNetwork::RoadNetwork()
             roads.push_back({from, to, sources[i].lanes, sources[i].speed});
         }
     }
+    std::vector<int> remap(junctions.size(), -1);
+    std::vector<RoadJunction> compact;
+    for (const auto &r : roads)
+    {
+        for (int node : {r.from, r.to})
+        {
+            if (remap[node] < 0)
+            {
+                remap[node] = int(compact.size());
+                compact.push_back(junctions[node]);
+            }
+        }
+    }
+    for (auto &r : roads)
+    {
+        r.from = remap[r.from];
+        r.to = remap[r.to];
+    }
+    junctions.swap(compact);
     TransitLayout::ConfigureJunctions(*this);
     for (size_t i = 0; i < roads.size(); ++i)
     {
@@ -215,28 +251,86 @@ RoadNetwork::RoadNetwork()
             }
         }
     }
+    // Broad phase shared by collision, zoning and pedestrian graph construction.
+    auto insert = [&](Vector2 a, Vector2 b, int index, bool junction) {
+        for (int x = int(std::floor((std::min)(a.x, b.x) / 16));
+             x <= int(std::floor((std::max)(a.x, b.x) / 16)); ++x)
+        {
+            for (int y = int(std::floor((std::min)(a.y, b.y) / 16));
+                 y <= int(std::floor((std::max)(a.y, b.y) / 16)); ++y)
+            {
+                (junction ? cells[{x, y}].junctions : cells[{x, y}].roads).push_back(index);
+            }
+        }
+    };
+    for (size_t i = 0; i < roads.size(); ++i)
+    {
+        auto a = junctions[roads[i].from].position, b = junctions[roads[i].to].position;
+        insert({(std::min)(a.x, b.x) - 8, (std::min)(a.y, b.y) - 8},
+               {(std::max)(a.x, b.x) + 8, (std::max)(a.y, b.y) + 8}, int(i), false);
+    }
+    for (size_t i = 0; i < junctions.size(); ++i)
+    {
+        auto p = junctions[i].position;
+        float r = junctions[i].radius + 12;
+        insert({p.x - r, p.y - r}, {p.x + r, p.y + r}, int(i), true);
+    }
 }
 bool RoadNetwork::Contains(Vector2 position, float margin) const
 {
-    for (const auto &road : roads)
-    {
+    auto roadContains = [&](int index) {
+        const auto &road = roads[index];
         auto a = junctions[road.from].position, b = junctions[road.to].position;
         auto direction = Unit(Sub(b, a));
         auto start = Add(a, Mul(direction, junctions[road.from].radius));
-        auto end = Sub(b, Mul(direction, junctions[road.to].radius));
-        const auto offset = Sub(position, start);
-        const float along = Dot(offset, direction);
-        if (along >= -margin && along <= Game::Distance(start, end) + margin &&
-            std::fabs(Cross(offset, direction)) <= road.lanes * kLaneWidth * .5f + margin)
+        float span = Game::Distance(a, b) - junctions[road.from].radius - junctions[road.to].radius;
+        auto offset = Sub(position, start);
+        float along = Dot(offset, direction);
+        if (RoadElevation(index, along / span) > 1.4f)
         {
-            return true;
+            return false; // Keep low ramp mouths reserved; the clear span can be walked below.
+        }
+        return along >= -margin && along <= span + margin &&
+               std::fabs(Cross(offset, direction)) <= road.lanes * kLaneWidth * .5f + margin;
+    };
+    if (margin <= 2)
+    {
+        auto found = cells.find({int(std::floor(position.x / 16)), int(std::floor(position.y / 16))});
+        if (found == cells.end())
+        {
+            return false;
+        }
+        for (int road : found->second.roads)
+        {
+            if (roadContains(road))
+            {
+                return true;
+            }
+        }
+        for (int junction : found->second.junctions)
+        {
+            if (junctions[junction].altitude < .1f &&
+                TransitLayout::ContainsJunction(junction, position, margin))
+            {
+                return true;
+            }
         }
     }
-    for (const auto &junction : junctions)
+    else
     {
-        if (TransitLayout::ContainsJunction(int(&junction - junctions.data()), position, margin))
+        for (size_t i = 0; i < roads.size(); ++i)
         {
-            return true;
+            if (roadContains(int(i)))
+            {
+                return true;
+            }
+        }
+        for (size_t i = 0; i < junctions.size(); ++i)
+        {
+            if (junctions[i].altitude < .1f && TransitLayout::ContainsJunction(int(i), position, margin))
+            {
+                return true;
+            }
         }
     }
     return false;
@@ -244,6 +338,90 @@ bool RoadNetwork::Contains(Vector2 position, float margin) const
 Vector2 RoadNetwork::LanePosition(int lane, float distance) const
 {
     return Add(lanes[lane].start, Mul(lanes[lane].direction, Game::Clamp(distance, 0, lanes[lane].length)));
+}
+bool RoadNetwork::ContainsFootprint(Vector2 position, float margin) const
+{
+    for (const auto &road : roads)
+    {
+        auto a = junctions[road.from].position, b = junctions[road.to].position;
+        if (SegmentDistance(position, a, b) <= road.lanes * kLaneWidth * .5f + margin)
+        {
+            return true;
+        }
+    }
+    for (size_t j = 0; j < junctions.size(); ++j)
+    {
+        if (TransitLayout::ContainsJunction(int(j), position, margin))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+float RoadNetwork::RoadElevation(int index, float fraction) const
+{
+    const auto &road = roads[index];
+    return junctions[road.from].altitude +
+           (junctions[road.to].altitude - junctions[road.from].altitude) * Game::Clamp(fraction, 0, 1);
+}
+bool RoadNetwork::ContainsSurface(Vector2 position, float height, float margin) const
+{
+    for (size_t index = 0; index < roads.size(); ++index)
+    {
+        const auto &r = roads[index];
+        auto a = junctions[r.from].position, b = junctions[r.to].position, d = Unit(Sub(b, a));
+        a = Add(a, Mul(d, junctions[r.from].radius));
+        b = Sub(b, Mul(d, junctions[r.to].radius));
+        float span = Game::Distance(a, b), along = Dot(Sub(position, a), d);
+        if (along >= -margin && along <= span + margin &&
+            std::fabs(Cross(Sub(position, a), d)) <= r.lanes * kLaneWidth * .5f + margin &&
+            std::fabs(RoadElevation(int(index), along / span) - height) < .15f)
+        {
+            return true;
+        }
+    }
+    for (size_t j = 0; j < junctions.size(); ++j)
+    {
+        if (std::fabs(junctions[j].altitude - height) < .15f &&
+            TransitLayout::ContainsJunction(int(j), position, margin))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+float RoadNetwork::DriveElevation(Vector2 position, float previousHeight) const
+{
+    float result = 0, best = 10000;
+    for (size_t index = 0; index < roads.size(); ++index)
+    {
+        const auto &road = roads[index];
+        auto a = junctions[road.from].position, b = junctions[road.to].position, d = Unit(Sub(b, a));
+        a = Add(a, Mul(d, junctions[road.from].radius));
+        b = Sub(b, Mul(d, junctions[road.to].radius));
+        float t = Game::Clamp(Dot(Sub(position, a), Sub(b, a)) / Dot(Sub(b, a), Sub(b, a)), 0, 1);
+        float distance = Game::Distance(position, Add(a, Mul(Sub(b, a), t)));
+        float height = RoadElevation(int(index), t);
+        if (distance > road.lanes * kLaneWidth * .5f + .2f || std::fabs(height - previousHeight) > .6f)
+        {
+            continue;
+        }
+        float score = distance + std::fabs(height - previousHeight) * 8;
+        if (score < best)
+        {
+            best = score;
+            result = height;
+        }
+    }
+    for (size_t j = 0; j < junctions.size(); ++j)
+    {
+        if (std::fabs(junctions[j].altitude - previousHeight) < .6f &&
+            TransitLayout::ContainsJunction(int(j), position, 0) && best > 1)
+        {
+            return junctions[j].altitude;
+        }
+    }
+    return result;
 }
 bool RoadNetwork::CanTurn(int index, TrafficTurn turn) const
 {
@@ -289,17 +467,17 @@ bool RoadNetwork::CanTurn(int index, TrafficTurn turn) const
 
 Vector2 RoadNetwork::RightOf(Vector2 direction)
 {
-    // Game-space +Y is left of +X, independent of the isometric screen projection.
-    return {direction.y, -direction.x};
+    // The screen's downward Y axis makes this the displayed driver's right.
+    return {-direction.y, direction.x};
 }
 bool RoadNetwork::IsSignalized(int junction) const
 {
     return junction >= 0 && junction < int(junctions.size()) && Signalized(junctions[junction]);
 }
-int RoadNetwork::SignalAxis(int index) const
+int RoadNetwork::SignalAxis(int index, int atJunction) const
 {
     const auto &lane = lanes[index];
-    const auto &junction = junctions[lane.to];
+    const auto &junction = junctions[atJunction < 0 ? lane.to : atJunction];
     int reference = junction.outgoing.front();
     for (int candidate : junction.outgoing)
     {
@@ -356,6 +534,22 @@ float TrafficSystem::RenderYaw(size_t index) const
     const auto &car = vehicles[index];
     return car.previousYaw + std::remainder(car.yaw - car.previousYaw, 2 * kPi) * accumulator * 30;
 }
+float TrafficSystem::RenderElevation(size_t index) const
+{
+    const auto &car = vehicles[index];
+    const auto &net = RoadNetwork::Get();
+    const auto &lane = net.lanes[car.lane];
+    if (car.turnDistance >= 0)
+    {
+        return net.junctions[lane.to].altitude;
+    }
+    float fraction = car.distance / (std::max)(.001f, lane.length);
+    if (lane.from != net.roads[lane.road].from)
+    {
+        fraction = 1 - fraction;
+    }
+    return net.RoadElevation(lane.road, fraction);
+}
 TrafficLight TrafficSystem::Light(int laneIndex, TrafficTurn turn) const
 {
     const auto &net = RoadNetwork::Get();
@@ -381,10 +575,105 @@ TrafficLight TrafficSystem::Light(int laneIndex, TrafficTurn turn) const
     }
     return phase == greenPhase + 1 ? TrafficLight::Amber : TrafficLight::Red;
 }
-bool TrafficSystem::PedestrianGreen(int junction) const
+bool TrafficSystem::HasRightTurnSignal(int lane) const
 {
-    return junction >= 0 && junction < int(signals.size()) && signals[junction].phase == SignalPhase::Walk &&
-           Signalized(RoadNetwork::Get().junctions[junction]);
+    const auto &net = RoadNetwork::Get();
+    return net.IsSignalized(net.lanes[lane].to) && net.roads[net.lanes[lane].road].lanes >= 6;
+}
+bool TrafficSystem::PedestrianGreen(int junction, int road) const
+{
+    if (junction < 0 || junction >= int(signals.size()) || signals[junction].phase != SignalPhase::Walk)
+    {
+        return false;
+    }
+    const auto &net = RoadNetwork::Get();
+    if (!net.IsSignalized(junction))
+    {
+        return false;
+    }
+    std::vector<int> arms;
+    int width = 0;
+    for (int lane : net.junctions[junction].outgoing)
+    {
+        if (net.lanes[lane].slot != 0)
+        {
+            continue;
+        }
+        arms.push_back(lane);
+        width = (std::max)(width, net.roads[net.lanes[lane].road].lanes);
+    }
+    if (road < 0 || width >= 6)
+    {
+        return true;
+    }
+    // Local streets serve one crossing per cycle; collectors serve an opposing pair.
+    const auto cycle = signals[junction].walkCycle;
+    if (width <= 2)
+    {
+        return net.lanes[arms[cycle % arms.size()]].road == road;
+    }
+    bool hasAxis[2] = {false, false};
+    for (int lane : arms)
+    {
+        hasAxis[net.SignalAxis(lane, junction)] = true;
+    }
+    int selected = hasAxis[0] && hasAxis[1] ? int(cycle % 2) : hasAxis[0] ? 0 : 1;
+    for (int lane : arms)
+    {
+        if (net.lanes[lane].road == road)
+        {
+            return net.SignalAxis(lane, junction) == selected;
+        }
+    }
+    return false;
+}
+unsigned int TrafficSystem::PedestrianGroups(int junction) const
+{
+    const auto &net = RoadNetwork::Get();
+    unsigned int arms = 0;
+    int width = 0;
+    bool axes[2] = {false, false};
+    for (int lane : net.junctions[junction].outgoing)
+    {
+        if (net.lanes[lane].slot != 0)
+        {
+            continue;
+        }
+        ++arms;
+        width = (std::max)(width, net.roads[net.lanes[lane].road].lanes);
+        axes[net.SignalAxis(lane, junction)] = true;
+    }
+    return width >= 6 ? 1 : width <= 2 ? arms : unsigned(axes[0]) + unsigned(axes[1]);
+}
+int TrafficSystem::CrossingRoad(int junction, Vector2 position) const
+{
+    const auto &net = RoadNetwork::Get();
+    if (junction < 0 || junction >= int(net.junctions.size()))
+    {
+        return -1;
+    }
+    int result = -1;
+    float best = 1.e9f;
+    const auto &j = net.junctions[junction];
+    for (int index : j.outgoing)
+    {
+        const auto &lane = net.lanes[index];
+        if (lane.slot != 0)
+        {
+            continue;
+        }
+        auto center = Add(j.position, Mul(lane.direction, j.radius + 1.f));
+        auto normal = RoadNetwork::RightOf(lane.direction);
+        float half = net.roads[lane.road].lanes * RoadNetwork::kLaneWidth * .5f + 1.f;
+        float distance =
+            SegmentDistance(position, Add(center, Mul(normal, half)), Sub(center, Mul(normal, half)));
+        if (distance < best)
+        {
+            best = distance;
+            result = lane.road;
+        }
+    }
+    return result;
 }
 float TrafficSystem::PhaseDuration(int junction) const
 {
@@ -395,7 +684,10 @@ float TrafficSystem::PhaseDuration(int junction) const
         const auto &net = RoadNetwork::Get();
         for (int lane : net.junctions[junction].outgoing)
         {
-            width = (std::max)(width, net.roads[net.lanes[lane].road].lanes * RoadNetwork::kLaneWidth);
+            if (PedestrianGreen(junction, net.lanes[lane].road))
+            {
+                width = (std::max)(width, net.roads[net.lanes[lane].road].lanes * RoadNetwork::kLaneWidth);
+            }
         }
         return (std::max)(8.f, (width + 1.9f) / .5f + 3.f);
     }
@@ -403,29 +695,45 @@ float TrafficSystem::PhaseDuration(int junction) const
     {
         return 2;
     }
-    return int(phase) % 3 == 0 ? (int(phase) % 6 == 0 ? 8.f : 4.f) : 1.5f;
+    return int(phase) % 3 == 0 ? (int(phase) % 6 == 0 ? 10.f : 5.f) : 3.f;
 }
-bool TrafficSystem::CanStartCrossing(int junction, float travelSeconds) const
+bool TrafficSystem::CanStartCrossing(int junction, float travelSeconds, int road) const
 {
-    return PedestrianGreen(junction) &&
+    return PedestrianGreen(junction, road) &&
            PhaseDuration(junction) - signals[junction].elapsed >= travelSeconds + 1.f;
 }
 bool TrafficSystem::CrossingOccupied(const GameState &world, int junction) const
 {
-    if (!world.isBikeMounted && RoadNetwork::Get().Contains(world.playerPosition, .5f) &&
-        NearbyCrossing(world.playerPosition) == junction)
+    if (!world.isBikeMounted)
     {
-        return true;
-    }
-    return std::any_of(
-        world.residents.begin(), world.residents.end(), [&world, junction](const Resident &resident) {
-            if (&resident - world.residents.data() == Overworld::kKainResidentSlot &&
-                game::GameLevels::Chapter().GetState().kainJoined)
+        const auto &net = RoadNetwork::Get();
+        const auto &j = net.junctions[junction];
+        for (int index : j.outgoing)
+        {
+            const auto &lane = net.lanes[index];
+            if (lane.slot != 0)
             {
-                return false;
+                continue;
             }
-            return resident.activity == ResidentActivity::Crossing && resident.crossingJunction == junction;
-        });
+            auto center = Add(j.position, Mul(lane.direction, j.radius + 1));
+            auto offset = Sub(world.playerPosition, center);
+            if (std::fabs(Dot(offset, lane.direction)) <= 1.05f &&
+                std::fabs(Cross(offset, lane.direction)) <=
+                    net.roads[lane.road].lanes * RoadNetwork::kLaneWidth * .5f + .25f)
+            {
+                return true;
+            }
+        }
+    }
+    return std::any_of(world.residents.begin(), world.residents.end(),
+                       [&world, junction](const Resident &resident) {
+                           if (&resident - world.residents.data() == Overworld::kKainResidentSlot &&
+                               game::GameLevels::Chapter().GetState().kainJoined)
+                           {
+                               return false;
+                           }
+                           return resident.crossingJunction == junction;
+                       });
 }
 int TrafficSystem::NearbyCrossing(Vector2 position) const
 {
@@ -542,29 +850,47 @@ void TrafficSystem::ChooseExit(TrafficVehicle &car)
 void TrafficSystem::Populate(const GameState &world)
 {
     const auto &net = RoadNetwork::Get();
-    // Candidate positions are sampled locally on every directed lane, even on very long roads.
-    for (int attempt = 0; attempt < 100 && vehicles.size() < kVehicleLimit; ++attempt)
+    float localLength = 0;
+    for (const auto &lane : net.lanes)
+    {
+        float projection = Dot(Sub(world.playerPosition, lane.start), lane.direction);
+        auto nearest =
+            net.LanePosition(int(&lane - net.lanes.data()), Game::Clamp(projection, 0, lane.length));
+        if (Game::Distance(nearest, world.playerPosition) < 100)
+        {
+            localLength += (std::min)(lane.length, 120.f);
+        }
+    }
+    const auto desired = (std::min)(kVehicleLimit, size_t((std::max)(12.f, localLength / 22)));
+    // Leave queue storage between adjacent junctions; short links are populated only by incoming cars.
+    for (int attempt = 0; attempt < 100 && vehicles.size() < desired; ++attempt)
     {
         int laneIndex = int(Random() % net.lanes.size());
         const auto &lane = net.lanes[laneIndex];
         float projection = Dot(Sub(world.playerPosition, lane.start), lane.direction);
         float distance =
-            Game::Clamp(projection + (int(Random() % 181) - 90), 2, (std::max)(2.f, lane.length - 3));
-        if (lane.length < 8)
+            Game::Clamp(projection + (int(Random() % 181) - 90), 2, (std::max)(2.f, lane.length - 5));
+        if (lane.length < 18)
         {
             continue;
         }
         auto p = net.LanePosition(laneIndex, distance);
         float range = Game::Distance(p, world.playerPosition);
-        if (range < 28 || range > 100 || !OutsideView(p, world.cameraPosition, 240) ||
-            !OutsideView(p, world.playerPosition, 240))
+        float fraction = distance / lane.length;
+        if (lane.from != net.roads[lane.road].from)
+        {
+            fraction = 1 - fraction;
+        }
+        float height = net.RoadElevation(lane.road, fraction);
+        if (range < 28 || range > 100 || !OutsideView(p, world.cameraPosition, 240, height) ||
+            !OutsideView(p, world.playerPosition, 240, height))
         {
             continue;
         }
         bool crowded = false;
         for (const auto &car : vehicles)
         {
-            if (Game::Distance(p, car.position) < 7)
+            if (Game::Distance(p, car.position) < 7 || (car.reservedTo == laneIndex && distance < 7))
             {
                 crowded = true;
                 break;
@@ -616,28 +942,102 @@ void TrafficSystem::Step(GameState &world, float dt)
         bool occupied = false;
         for (const auto &car : vehicles)
         {
-            if (car.turnDistance >= 0 && net.lanes[car.lane].to == int(i))
+            if (car.reservedFrom >= 0 && net.lanes[car.reservedFrom].to == int(i))
             {
                 occupied = true;
                 break;
             }
         }
         const bool clearance = signal.phase == SignalPhase::WalkClear || int(signal.phase) % 3 == 2;
-        const auto next = static_cast<SignalPhase>((int(signal.phase) + 1) % 14);
-        if (clearance && (occupied || (next != SignalPhase::Walk && CrossingOccupied(world, int(i)))))
+        auto next = static_cast<SignalPhase>((int(signal.phase) + 1) % 14);
+        for (int skipped = 0; skipped < 4 && int(next) < 12 && int(next) % 3 == 0; ++skipped)
+        {
+            bool available = false;
+            int axis = int(next) / 6;
+            bool left = int(next) % 6 == 3;
+            for (size_t lane = 0; lane < net.lanes.size(); ++lane)
+            {
+                if (net.lanes[lane].to == int(i) && net.SignalAxis(int(lane)) == axis &&
+                    (left ? net.CanTurn(int(lane), TrafficTurn::Left)
+                          : net.CanTurn(int(lane), TrafficTurn::Straight) ||
+                                net.CanTurn(int(lane), TrafficTurn::Right)))
+                {
+                    available = true;
+                    break;
+                }
+            }
+            if (available)
+            {
+                break;
+            }
+            next = static_cast<SignalPhase>((int(next) + 3) % 14);
+        }
+        if (clearance && occupied)
         {
             continue;
+        }
+        if (signal.phase == SignalPhase::WalkClear)
+        {
+            // Serve every crossing group within this cycle, not one group every several minutes.
+            if (++signal.walkCycle < PedestrianGroups(int(i)))
+            {
+                next = SignalPhase::Walk;
+            }
+            else
+            {
+                signal.walkCycle = 0;
+            }
         }
         signal.phase = next;
         signal.elapsed = 0;
     }
-    // Reservations are rebuilt once per step, including cars entering earlier in this step.
-    std::vector<std::uint64_t> occupied(net.junctions.size(), UINT64_MAX);
-    for (const auto &car : vehicles)
-    {
-        if (car.turnDistance >= 0)
+    // Reservations cover intersecting paths, rather than locking every lane of a junction.
+    auto conflicts = [&](int from, int to, const TrafficVehicle &other) {
+        if (other.reservedFrom < 0 || net.lanes[other.reservedFrom].to != net.lanes[from].to)
         {
-            occupied[net.lanes[car.lane].to] = car.id;
+            return false;
+        }
+        if (to == other.reservedTo)
+        {
+            return true;
+        }
+        TrafficVehicle candidate, existing;
+        candidate.lane = from;
+        candidate.nextLane = to;
+        existing.lane = other.reservedFrom;
+        existing.nextLane = other.reservedTo;
+        for (int a = 0; a < 12; ++a)
+        {
+            auto p = TurnPoint(candidate, a / 12.f), q = TurnPoint(candidate, (a + 1) / 12.f);
+            for (int b = 0; b < 12; ++b)
+            {
+                auto r = TurnPoint(existing, b / 12.f), t = TurnPoint(existing, (b + 1) / 12.f);
+                auto pq = Sub(q, p), rt = Sub(t, r);
+                float denom = Cross(pq, rt);
+                if (std::fabs(denom) > .00001f)
+                {
+                    auto delta = Sub(r, p);
+                    float u = Cross(delta, rt) / denom, v = Cross(delta, pq) / denom;
+                    if (u >= 0 && u <= 1 && v >= 0 && v <= 1)
+                    {
+                        return true;
+                    }
+                }
+                if ((std::min)({SegmentDistance(p, r, t), SegmentDistance(q, r, t), SegmentDistance(r, p, q),
+                                SegmentDistance(t, p, q)}) < 1.35f)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+    for (auto &car : vehicles)
+    {
+        if (car.reservedFrom >= 0 && car.lane != car.reservedFrom && car.turnDistance < 0 &&
+            car.distance >= 2)
+        {
+            car.reservedFrom = car.reservedTo = -1;
         }
     }
     for (auto &car : vehicles)
@@ -647,6 +1047,12 @@ void TrafficSystem::Step(GameState &world, float dt)
         const auto &lane = net.lanes[car.lane];
         float target = lane.speedLimit;
         float gap = 10000;
+        bool permissiveRight = false;
+        bool committed = car.reservedFrom == car.lane;
+        if (committed && car.yieldingRight)
+        {
+            target = (std::min)(target, 1.5f);
+        }
         for (const auto &other : vehicles)
         {
             if (car.id == other.id)
@@ -657,24 +1063,70 @@ void TrafficSystem::Step(GameState &world, float dt)
             {
                 gap = (std::min)(gap, other.distance - car.distance - 3.5f);
             }
-            if (car.turnDistance < 0 && other.turnDistance >= 0 && net.lanes[other.lane].to == lane.to)
-            {
-                gap = (std::min)(gap, lane.length - car.distance - 2);
-            }
         }
         if (car.turnDistance < 0)
         {
             bool exitBlocked = false;
             for (const auto &other : vehicles)
             {
-                if (other.id != car.id && other.lane == car.nextLane && other.distance < 5)
+                if (other.id != car.id && other.lane == car.nextLane && other.distance < 6.5f)
                 {
                     exitBlocked = true;
                     break;
                 }
             }
-            bool red = Light(car.lane, car.turn) != TrafficLight::Green;
-            bool reserved = occupied[lane.to] != UINT64_MAX && occupied[lane.to] != car.id;
+            bool red = !committed && Light(car.lane, car.turn) != TrafficLight::Green;
+            if (car.distance >= lane.length - 4.1f && car.speed < .08f)
+            {
+                car.stoppedSeconds += dt;
+            }
+            else if (car.distance < lane.length - 4.1f)
+            {
+                car.stoppedSeconds = 0;
+            }
+            // Ordinary Korean right turns: stop on red, then creep only after yielding.
+            // Six-lane arterials have a dedicated right-turn signal instead.
+            permissiveRight =
+                red && car.turn == TrafficTurn::Right && !HasRightTurnSignal(car.lane) &&
+                car.stoppedSeconds >= .8f && Light(car.lane, TrafficTurn::Right) == TrafficLight::Red &&
+                int(signals[lane.to].phase) % 3 == 0 && signals[lane.to].phase != SignalPhase::WalkClear &&
+                !PedestrianGreen(lane.to, lane.road) &&
+                !PedestrianGreen(lane.to, net.lanes[car.nextLane].road) && !CrossingOccupied(world, lane.to);
+            if (permissiveRight)
+            {
+                for (const auto &other : vehicles)
+                {
+                    const auto &approach = net.lanes[other.lane];
+                    if (other.id != car.id && approach.to == lane.to && other.turnDistance < 0 &&
+                        approach.length - other.distance < 18 &&
+                        Light(other.lane, other.turn) == TrafficLight::Green)
+                    {
+                        permissiveRight = false;
+                        break;
+                    }
+                }
+            }
+            red &= !permissiveRight;
+            if (permissiveRight)
+            {
+                target = (std::min)(target, 1.5f);
+            }
+            bool reserved = false;
+            if (!committed && car.distance >= lane.length - 8)
+            {
+                for (const auto &other : vehicles)
+                {
+                    if (other.id != car.id && conflicts(car.lane, car.nextLane, other))
+                    {
+                        reserved = true;
+                        break;
+                    }
+                }
+            }
+            if (committed)
+            {
+                exitBlocked = false;
+            }
             if (red || reserved || exitBlocked)
             {
                 gap = (std::min)(gap, lane.length - car.distance - 3.6f);
@@ -685,8 +1137,11 @@ void TrafficSystem::Step(GameState &world, float dt)
             }
             // Legal pedestrian crossings have an exclusive phase. Drivers also yield to a person
             // who remains on the crossing as it closes; a jaywalker in a live lane can be struck.
-            if (PedestrianGreen(lane.to) ||
-                (signals[lane.to].phase == SignalPhase::WalkClear && CrossingOccupied(world, lane.to)))
+            if (!committed &&
+                (PedestrianGreen(lane.to) ||
+                 (signals[lane.to].phase == SignalPhase::WalkClear && CrossingOccupied(world, lane.to)) ||
+                 std::any_of(world.residents.begin(), world.residents.end(),
+                             [&](const Resident &r) { return r.crossingJunction == lane.to; })))
             {
                 gap = (std::min)(gap, lane.length - car.distance - 3.6f);
                 target = (std::min)(target, (std::max)(0.f, gap * 2));
@@ -694,7 +1149,16 @@ void TrafficSystem::Step(GameState &world, float dt)
         }
         else
         {
-            target = (std::min)(lane.speedLimit, car.turn == TrafficTurn::Straight ? 5.f : 3.2f);
+            target = (std::min)(lane.speedLimit, car.yieldingRight                   ? 1.5f
+                                                 : car.turn == TrafficTurn::Straight ? 5.f
+                                                                                     : 3.2f);
+        }
+        if (car.turnDistance < 0 && !committed && car.distance >= lane.length - 4.8f &&
+            gap >= lane.length - car.distance - .05f && target > .1f)
+        {
+            car.reservedFrom = car.lane;
+            car.reservedTo = car.nextLane;
+            car.yieldingRight = permissiveRight;
         }
         car.speed += Game::Clamp(target - car.speed, -7.f * dt, 3.f * dt);
         float travel = car.speed * dt;
@@ -709,7 +1173,6 @@ void TrafficSystem::Step(GameState &world, float dt)
             if (car.distance >= lane.length)
             {
                 car.turnDistance = car.distance - lane.length;
-                occupied[lane.to] = car.id;
             }
             else
             {
@@ -732,6 +1195,8 @@ void TrafficSystem::Step(GameState &world, float dt)
                 car.lane = car.nextLane;
                 car.distance = 0;
                 car.turnDistance = -1;
+                car.stoppedSeconds = 0;
+                car.yieldingRight = false;
                 ChooseExit(car);
             }
         }
@@ -740,6 +1205,8 @@ void TrafficSystem::Step(GameState &world, float dt)
             car.yaw = std::atan2(lane.direction.y, lane.direction.x);
         }
         if (impactCooldown <= 0 && car.speed > .8f &&
+            std::fabs(RenderElevation(size_t(&car - vehicles.data())) -
+                      (world.isBikeMounted ? world.bikeElevation : 0)) < .8f &&
             SweptHit(car.previousPosition, car.position, car.yaw, world.playerPosition,
                      world.isBikeMounted ? .5f : .25f))
         {
@@ -973,7 +1440,8 @@ bool WorldScenery::Place(const GameState &world, const models::Model &model, mod
     }
     Building footprint{prop.minimum.x, prop.minimum.y, prop.maximum.x - prop.minimum.x,
                        prop.maximum.y - prop.minimum.y, 0};
-    if (CityLayout::OverlapsQuestSpace(footprint, .7f))
+    if (CityLayout::OverlapsQuestSpace(footprint, .7f) ||
+        CityPlan::OverlapsAccess(prop.minimum, prop.maximum))
     {
         return false;
     }
@@ -1149,43 +1617,72 @@ void Overworld::Populate(GameState &state)
 {
     Traffic().Reset();
     Flights().Reset();
-    // Preserve each GLB's footprint/aspect instead of stretching imported buildings into old pillars.
+    // Fix the street hierarchy before allocating any ordinary lots. Only the two story landmarks
+    // have authored footprints; every other building is a setback from a real local street frontage.
     const auto &library = models::ModelLibrary::Get();
-    for (auto &building : state.buildings)
-    {
+    Building home = state.buildings.front();
+    Building observatory =
+        *std::find_if(state.buildings.begin(), state.buildings.end(),
+                      [](const Building &b) { return b.type == models::BuildingType::Observatory; });
+    auto physical = [&](Building &building) {
         const auto &resource =
             models::ResourceAssets::Get(library.buildings[size_t(building.type)].resourceId);
         building.width = resource.physicalSize.x;
         building.depth = resource.physicalSize.y;
-        // Building vertices use nominal height; antennae may extend above normalized z=1.
         building.height = resource.physicalSize.z / resource.maximum.z * 44.f;
-    }
-    // Keep the authored Halo landmarks; duplicate only its architectural vocabulary.
-    const auto haloBuildings = state.buildings;
-    for (int cityIndex = 1; cityIndex < kCityCount; ++cityIndex)
+    };
+    physical(home);
+    physical(observatory);
+    state.buildings = {home, observatory};
+    const auto &network = RoadNetwork::Get();
+    unsigned lot = 0;
+    for (int city = 0; city < kCityCount; ++city)
     {
-        const auto center = Cities()[cityIndex].center;
-        for (size_t i = 0; i < haloBuildings.size(); ++i)
+        auto center = Cities()[city].center;
+        for (const auto &road : network.roads)
         {
-            auto building = haloBuildings[i];
-            if (building.type == models::BuildingType::Observatory)
+            const auto &a = network.junctions[road.from], &b = network.junctions[road.to];
+            if (a.altitude > .1f || b.altitude > .1f)
             {
                 continue;
             }
-            // District-specific setbacks break the repeated square-block silhouette.
-            float angle = float((i * 47 + cityIndex * 71) % 360) * kPi / 180;
-            building.x += center.x + std::cos(angle) * (cityIndex == 1 ? 1.1f : 2.8f);
-            building.y += center.y + std::sin(angle) * 2.4f;
-            std::rotate(building.palette.body.begin(), building.palette.body.begin() + cityIndex % 3,
-                        building.palette.body.begin() + 3);
-            state.buildings.push_back(building);
+            auto d = Unit(Sub(b.position, a.position)), normal = RoadNetwork::RightOf(d);
+            float length = Game::Distance(a.position, b.position);
+            for (float along = a.radius + 8; along < length - b.radius - 6; along += 12)
+            {
+                auto anchor = Add(a.position, Mul(d, along));
+                if (std::fabs(anchor.x - center.x) > 50 || std::fabs(anchor.y - center.y) > 43)
+                {
+                    continue;
+                }
+                for (float side : {-1.f, 1.f})
+                {
+                    Building building = {};
+                    ++lot;
+                    unsigned count = unsigned(models::BuildingType::Count);
+                    unsigned type = (lot + city) % 4;
+                    if (count > 5 && lot % 5 == 0 && Game::Distance(anchor, center) > 24)
+                    {
+                        type = 5 + (lot / 5 + city) % (count - 5);
+                    }
+                    building.type = models::BuildingType(type);
+                    physical(building);
+                    float extent = std::fabs(normal.x) * building.width * .5f +
+                                   std::fabs(normal.y) * building.depth * .5f;
+                    auto position = Add(anchor, Mul(normal, side * (road.lanes * .75f + 2.2f + extent)));
+                    building.x = position.x - building.width * .5f;
+                    building.y = position.y - building.depth * .5f;
+                    building.palette.body = {.32f + .055f * (lot % 4), .38f + .04f * (city % 3),
+                                             .43f + .035f * (lot % 5), 1};
+                    building.palette.accent = {.32f, .7f, .78f, 1};
+                    building.palette.emission = {.25f, .75f, .85f, 1};
+                    state.buildings.push_back(building);
+                }
+            }
         }
     }
-    // Reserve the quest landmark before nearby blocks: its new footprint must not be discarded.
-    std::stable_partition(state.buildings.begin(), state.buildings.end(), [](const Building &building) {
-        return building.type == models::BuildingType::Observatory;
-    });
     CityLayout::ValidateBuildings(state.buildings);
+    CityPlan::Rebuild(state);
     // Lia + Mara + eighteen residents = twenty Halo citizens. Kain replaces a reserved citizen.
     constexpr Vector2 positions[] = {{-5, 3}, {-1, 3},   {5, 3},    {8, -3},  {-11, 3}, {10, 6},  {-8, 8},
                                      {2, 8},  {-10, -7}, {11, -3},  {11, -5}, {-12, 7}, {-6, -7}, {-2, -7},
@@ -1267,6 +1764,13 @@ void Overworld::UpdateBike(GameState &state, float deltaSeconds)
             state.bikeSpeed = 0;
             break;
         }
+        float height = RoadNetwork::Get().DriveElevation(next, state.bikeElevation);
+        if (state.bikeElevation > .5f && height < state.bikeElevation - .6f)
+        {
+            state.bikeSpeed = 0; // The raised deck's parapet prevents driving off its side.
+            break;
+        }
+        state.bikeElevation = height;
         state.playerPosition = next;
     }
     state.bikePosition = state.playerPosition;
@@ -1279,6 +1783,11 @@ void Overworld::ToggleBike(GameState &state)
 {
     if (state.isBikeMounted)
     {
+        if (state.bikeElevation > .3f)
+        {
+            Game::Get().ShowNotice("바이크 / 고가도로에서는 하차할 수 없습니다. 진출 경사로로 이동하세요.");
+            return;
+        }
         if (state.bikeSpeed > 1)
         {
             Game::Get().ShowNotice("바이크 / 방향키를 놓고 정차한 뒤 E로 내리세요.");

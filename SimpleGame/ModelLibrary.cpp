@@ -1070,7 +1070,10 @@ void Generate(Library &library)
         ResourceAssets::Bind(library.hairs[i], std::string("hair/") + hairs[i]);
         ResourceAssets::Bind(library.coveredHairs[i], std::string("hair/covered/") + hairs[i]);
     }
-    constexpr const char *buildings[] = {"Habitat", "Terraced", "Workshop", "Dome", "Observatory"};
+    constexpr const char *buildings[] = {"Habitat",       "Terraced",        "Workshop",   "Dome",
+                                         "Observatory",   "SpireHelix",      "TwinBridge", "ArcologyTerrace",
+                                         "TransitAtrium", "CourtyardHabitat"};
+    static_assert(std::size(buildings) == size_t(BuildingType::Count));
     for (size_t i = 0; i < library.buildings.size(); ++i)
     {
         ResourceAssets::Bind(library.buildings[i], std::string("building/") + buildings[i]);

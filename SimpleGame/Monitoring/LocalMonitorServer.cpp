@@ -1,9 +1,8 @@
 #include "stdafx.h"
-#include <winsock2.h>
-#include <ws2tcpip.h>
 #include "LocalMonitorServer.h"
 #include <algorithm>
 #include <atomic>
+#include <cctype>
 #include <chrono>
 #include <cstdio>
 #include <fstream>
@@ -13,6 +12,8 @@
 #include <thread>
 #include <utility>
 #include <vector>
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #pragma comment(lib, "Ws2_32.lib")
 
 namespace monitoring::transport
@@ -23,7 +24,7 @@ using Clock = std::chrono::steady_clock;
 constexpr size_t kMaximumClients = 16;
 constexpr size_t kMaximumHeaderBytes = 4096;
 constexpr size_t kMaximumAssetBytes = 1024 * 1024;
-constexpr auto kClientTimeout = std::chrono::seconds(3);
+constexpr auto kClientTimeout = std::chrono::seconds(10);
 struct Asset
 {
     const char *path;
@@ -58,13 +59,16 @@ bool SetNonblocking(SOCKET socket)
     u_long enabled = 1;
     return ioctlsocket(socket, FIONBIO, &enabled) == 0;
 }
-std::string Response(const char *status, const char *mime, const std::string &body)
+std::string Response(const char *status, const char *mime, const std::string &body,
+                     const std::string &origin = {})
 {
     std::ostringstream out;
     out << "HTTP/1.1 " << status << "\r\nContent-Type: " << mime << "\r\nContent-Length: " << body.size()
         << "\r\nCache-Control: no-store\r\nConnection: close\r\n"
-        << "X-Content-Type-Options: nosniff\r\n"
-        << "Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; "
+        << "X-Content-Type-Options: nosniff\r\n";
+    if (!origin.empty())
+        out << "Access-Control-Allow-Origin: " << origin << "\r\nVary: Origin\r\n";
+    out << "Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; "
            "connect-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'\r\n\r\n"
         << body;
     return out.str();
@@ -76,14 +80,48 @@ std::string Route(const std::string &request)
     std::istringstream firstLine(request.substr(0, end));
     std::string method, path, version;
     firstLine >> method >> path >> version;
+    std::string origin;
+    std::istringstream headers(request.substr(end + 2));
+    std::string header;
+    while (std::getline(headers, header))
+    {
+        auto colon = header.find(':');
+        if (colon == std::string::npos)
+            continue;
+        std::string name = header.substr(0, colon);
+        std::transform(name.begin(), name.end(), name.begin(),
+                       [](unsigned char c) { return char(std::tolower(c)); });
+        if (name != "origin")
+            continue;
+        auto value = header.substr(colon + 1);
+        auto begin = value.find_first_not_of(" \t");
+        auto finish = value.find_last_not_of(" \t\r");
+        if (begin == std::string::npos)
+            continue;
+        value = value.substr(begin, finish - begin + 1);
+        // A separately served local dashboard may read telemetry; external sites may not.
+        for (const auto *host : {"http://127.0.0.1", "http://localhost", "http://[::1]"})
+        {
+            const std::string base(host);
+            if (value == base ||
+                (value.compare(0, base.size() + 1, base + ":") == 0 && value.size() > base.size() + 1 &&
+                 value.size() <= base.size() + 6 &&
+                 value.find_first_not_of("0123456789", base.size() + 1) == std::string::npos))
+                origin = value;
+        }
+    }
+    auto respond = [&](const char *status, const char *mime, const std::string &body) {
+        return Response(status, mime, body, origin);
+    };
     if (method != "GET")
     {
-        return Response("405 Method Not Allowed", "text/plain; charset=utf-8", "GET only");
+        return respond("405 Method Not Allowed", "text/plain; charset=utf-8", "GET only");
     }
     if (version != "HTTP/1.1" && version != "HTTP/1.0")
     {
-        return Response("400 Bad Request", "text/plain; charset=utf-8", "Invalid HTTP request");
+        return respond("400 Bad Request", "text/plain; charset=utf-8", "Invalid HTTP request");
     }
+    path = path.substr(0, path.find('?'));
     if (path == "/api/state" || path == "/api/models")
     {
         std::string snapshot;
@@ -91,7 +129,7 @@ std::string Route(const std::string &request)
             std::lock_guard<std::mutex> lock(snapshotMutex);
             snapshot = path == "/api/models" ? modelCatalog : latestSnapshot;
         }
-        return Response("200 OK", "application/json; charset=utf-8", snapshot);
+        return respond("200 OK", "application/json; charset=utf-8", snapshot);
     }
     if (path == "/index.html")
     {
@@ -101,10 +139,10 @@ std::string Route(const std::string &request)
     {
         if (path == asset.path)
         {
-            return Response("200 OK", asset.mime, asset.body);
+            return respond("200 OK", asset.mime, asset.body);
         }
     }
-    return Response("404 Not Found", "text/plain; charset=utf-8", "Not found");
+    return respond("404 Not Found", "text/plain; charset=utf-8", "Not found");
 }
 void Run()
 {
@@ -160,6 +198,7 @@ void Run()
                 int received = recv(it->socket, buffer, sizeof(buffer), 0);
                 if (received > 0)
                 {
+                    it->opened = Clock::now();
                     it->request.append(buffer, size_t(received));
                     if (it->request.size() > kMaximumHeaderBytes)
                     {
@@ -184,6 +223,7 @@ void Run()
                 int sent = send(it->socket, it->response.data() + it->sentBytes, bytes, 0);
                 if (sent > 0)
                 {
+                    it->opened = Clock::now();
                     it->sentBytes += size_t(sent);
                     close = it->sentBytes == it->response.size();
                 }

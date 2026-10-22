@@ -111,6 +111,11 @@ enum class BuildingType : std::uint32_t
     Workshop,
     Dome,
     Observatory,
+    SpireHelix,
+    TwinBridge,
+    ArcologyTerrace,
+    TransitAtrium,
+    CourtyardHabitat,
     Count
 };
 enum class PaletteSlot : std::uint32_t

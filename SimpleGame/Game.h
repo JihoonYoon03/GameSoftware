@@ -128,9 +128,9 @@ constexpr Vector2 kMaraPosition = {0, 3};
 constexpr Vector2 kRelayPosition = {8, 3};
 constexpr Vector2 kBeaconPosition = {12, -3.5f};
 constexpr Vector2 kObservatoryLiaPosition = {-1.5f, -1};
-constexpr Vector2 kJetBikePosition = {7, -10};
+constexpr Vector2 kJetBikePosition = {-4.5f, -6.5f};
 constexpr float kJetBikeYaw = -kPi * .5f;
-constexpr Vector2 kBikeRoadExit = {7, -17};
+constexpr Vector2 kBikeRoadExit = {-4.5f, -17};
 constexpr Vector2 kCityReceiverPosition = {1, -3};
 constexpr Vector2 kObservatoryConsole = {2, -2};
 constexpr Vector2 kObservatoryStairs = {-2.8f, 2.8f};
@@ -138,6 +138,20 @@ constexpr float kWorldMinX = -440;
 constexpr float kWorldMaxX = 440;
 constexpr float kWorldMinY = -440;
 constexpr float kWorldMaxY = 440;
+
+// Each playable area keeps its own destination in its own world coordinates.
+enum class MapRegion
+{
+    City,
+    Mine,
+    Frontier,
+    Count
+};
+struct MapDestination
+{
+    bool active = false;
+    Vector2 position = {};
+};
 
 // State owned by Game. Renderers read it without changing gameplay.
 struct GameState
@@ -156,12 +170,15 @@ struct GameState
     bool isInObservatory = false;
     bool isBikeMounted = false;
     float bikeSpeed = 0;
+    float bikeElevation = 0;
     float bikeYaw = kJetBikeYaw;
     Vector2 bikePosition = kJetBikePosition;
     Vector2 mineReturnPosition = {128, 18};
     bool gateSignalHeard = false;
     bool hasDescendedObservatory = false;
     bool isPaused = false;
+    bool mapVisible = false;
+    std::array<MapDestination, size_t(MapRegion::Count)> mapDestinations = {};
     bool isComplete = false;
     bool isSideQuestAccepted = false;
     bool isPowerRestored = false;
@@ -193,7 +210,7 @@ class CityLayout
     static bool IsRoadTile(int x, int y);
     static bool OverlapsRoad(const Building &building, float clearance = .3f);
     static constexpr Vector2 kPlazaMin = {-10, -4.5f}, kPlazaMax = {14.5f, 6.5f};
-    static constexpr Vector2 kBikeAccessMin = {5.6f, -18.8f}, kBikeAccessMax = {8.4f, -3.2f};
+    static constexpr Vector2 kBikeAccessMin = {-5.5f, -18.8f}, kBikeAccessMax = {-3.4f, -4.9f};
     static bool IsQuestSpace(Vector2 position, float clearance = 0);
     static bool OverlapsQuestSpace(const Building &building, float clearance = .2f);
     static void ValidateBuildings(std::vector<Building> &buildings);

@@ -96,6 +96,7 @@ std::filesystem::path FindPack()
 struct Store
 {
     std::vector<ResourceMesh> meshes;
+    std::vector<std::unique_ptr<ResourceMesh>> assemblies;
     std::map<std::string, unsigned int> names;
     Store()
     {
@@ -191,7 +192,7 @@ struct Store
                     meshes.size(), vertices / 3);
     }
 };
-const Store &Assets()
+Store &Assets()
 {
     static const auto store = std::make_unique<Store>();
     return *store;
@@ -263,12 +264,40 @@ unsigned int ResourceAssets::Find(const std::string &name)
 }
 const ResourceMesh &ResourceAssets::Get(unsigned int id)
 {
-    if (!id || id > Assets().meshes.size())
-    {
+    auto &store = Assets();
+    if (!id || id > store.meshes.size() + store.assemblies.size())
         throw std::out_of_range("Invalid resource model id");
-    }
-    return Assets().meshes[id - 1];
+    return id <= store.meshes.size() ? store.meshes[id - 1] : *store.assemblies[id - store.meshes.size() - 1];
 }
+unsigned int ResourceAssets::RegisterStatic(ResourceMesh mesh)
+{
+    auto &store = Assets();
+    auto found = store.names.find(mesh.name);
+    if (found != store.names.end())
+        return found->second;
+    mesh.boneCount = 0;
+    mesh.clips.clear();
+    mesh.minimum = {1.e9f, 1.e9f, 1.e9f};
+    mesh.maximum = {-1.e9f, -1.e9f, -1.e9f};
+    for (auto &v : mesh.vertices)
+    {
+        mesh.minimum.x = (std::min)(mesh.minimum.x, v.x);
+        mesh.maximum.x = (std::max)(mesh.maximum.x, v.x);
+        mesh.minimum.y = (std::min)(mesh.minimum.y, v.y);
+        mesh.maximum.y = (std::max)(mesh.maximum.y, v.y);
+        mesh.minimum.z = (std::min)(mesh.minimum.z, v.z);
+        mesh.maximum.z = (std::max)(mesh.maximum.z, v.z);
+        v.joints = {31, 31, 31, 31};
+        v.weights = {1, 0, 0, 0};
+    }
+    mesh.physicalSize = {mesh.maximum.x - mesh.minimum.x, mesh.maximum.y - mesh.minimum.y,
+                         mesh.maximum.z - mesh.minimum.z};
+    unsigned int id = unsigned(store.meshes.size() + store.assemblies.size() + 1);
+    store.names[mesh.name] = id;
+    store.assemblies.push_back(std::make_unique<ResourceMesh>(std::move(mesh)));
+    return id;
+}
+
 void ResourceAssets::Bind(Model &model, const std::string &name)
 {
     model.resourceId = Find(name);

@@ -102,6 +102,8 @@ class GpuScope
   private:
     int slot = -1;
 };
+// Call before startup diagnostics so both stdout/stderr and wide path conversions use UTF-8.
+void InitializeConsoleOutput();
 void Initialize();
 void Shutdown();
 void BeginFrame(const char *scene);

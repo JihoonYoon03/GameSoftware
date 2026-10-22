@@ -54,6 +54,7 @@ class Drawing
                                 SurfaceMaterial material = SurfaceMaterial::Concrete);
     static void DrawHologramStrip(Vector2 start, Vector2 end, float width, ColorRGBA color,
                                   float elevation = .16f);
+    static void DrawScannerPulse(Vector2 origin, float radius, float opacity = 1);
     static void DrawSoftShadow(Vector2 center, float radiusX, float radiusY, float opacity);
     static void DrawVehicle(Vector2 center, float scale,
                             models::VehicleType type = models::VehicleType::Coupe,

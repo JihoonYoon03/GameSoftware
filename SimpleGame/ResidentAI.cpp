@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "ResidentAI.h"
-#include "Overworld.h"
 #include "Level.h"
+#include "Overworld.h"
+#include "TransitLayout.h"
 #include "Profiler.h"
 #include <algorithm>
 #include <cmath>
@@ -111,7 +112,7 @@ void CityResidents::Build(const GameState &world)
                 {
                     grid[y * width + x] = int(nodes.size());
                     nodes.push_back({p, city, -1, {}});
-                    nodes.back().sidewalk = net.Contains(p, 1.5f);
+                    nodes.back().sidewalk = net.Contains(p, 1.5f) || CityPlan::IsWalkway(p);
                 }
             }
         }
@@ -475,7 +476,9 @@ void CityResidents::Update(GameState &world, float dt)
         if (waypoint.crossing >= 0 && resident.crossingJunction < 0)
         {
             const float travel = Game::Distance(resident.position, waypoint.position) / resident.speed;
-            if (!Overworld::Traffic().CanStartCrossing(waypoint.crossing, travel))
+            if (!Overworld::Traffic().CanStartCrossing(
+                    waypoint.crossing, travel,
+                    Overworld::Traffic().CrossingRoad(waypoint.crossing, resident.position)))
             {
                 resident.activity = ResidentActivity::WaitingSignal;
                 continue;
@@ -534,6 +537,9 @@ void CityResidents::Update(GameState &world, float dt)
         if (distance <= amount + .001f)
         {
             resident.crossingJunction = -1;
+            resident.activity = resident.profession == ResidentProfession::Guard
+                                    ? ResidentActivity::Patrolling
+                                    : ResidentActivity::Walking;
             ++resident.routeCursor;
             if (resident.routeCursor == resident.route.size())
             {

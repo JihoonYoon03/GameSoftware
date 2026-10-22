@@ -38,6 +38,8 @@ class ResourceAssets
     static unsigned int Find(const std::string &name);
     static const ResourceMesh &Get(unsigned int id);
     static void Bind(Model &model, const std::string &name);
+    // Immutable runtime assembly of imported transit surfaces; source pack remains unchanged.
+    static unsigned int RegisterStatic(ResourceMesh mesh);
     static void Sample(unsigned int id, const CharacterPose *pose, SkinMatrices &matrices);
     static Point Muzzle(const CharacterPose &pose);
     static Point SkinPoint(const ResourceVertex &vertex, const SkinMatrices &matrices);

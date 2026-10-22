@@ -1,23 +1,23 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
+#include "Drawing.h"
 #include "Game.h"
 #include "Level.h"
-#include "Scene.h"
-#include "Drawing.h"
-#include "ResourceAssets.h"
 #include "Monitoring/Monitor.h"
+#include "ResourceAssets.h"
+#include "Scene.h"
 
-#include "RenderQueue.h"
-#include "RenderCache.h"
-#include "Profiler.h"
 #include "Dependencies/glew.h"
-#include "Renderer.h"
+#include "Profiler.h"
 #include "RenderAssets.h"
+#include "RenderCache.h"
+#include "RenderQueue.h"
+#include "Renderer.h"
 #include <algorithm>
-#include <cstdio>
-#include <map>
-#include <cmath>
 #include <array>
+#include <cmath>
+#include <cstdio>
 #include <cstring>
+#include <map>
 #include <sstream>
 #pragma comment(lib, "opengl32.lib")
 
@@ -73,6 +73,8 @@ struct Mesh::Data
     float roughness = .7f, metallic = .2f;
     bool ground = false;
     bool imported = false;
+    bool holographic = false;
+    models::SkinMatrices bindPose = {};
 };
 Mesh::Mesh() : data(new Data())
 {
@@ -97,11 +99,13 @@ struct Renderer::MeshData
         models::SkinMatrices bones;
         bool armed = false;
         std::vector<Instance> instances;
+        size_t instanceOffset = 0;
     };
     std::map<const models::Model *, std::shared_ptr<rendering::Mesh>> meshes;
     std::map<std::string, std::shared_ptr<rendering::Material>> materials;
     std::map<std::string, size_t> batchKeys;
     std::vector<Batch> batches;
+    std::vector<Instance> instanceStream;
     std::vector<std::function<void()>> overlays;
     std::vector<rendering::RenderObject> *owner = nullptr;
     size_t ownerSlot = 0;
@@ -171,9 +175,10 @@ attribute vec4 instanceAnchor,instanceScale,instanceRotation,instanceBody,instan
 uniform mat4 bones[32];
 uniform int armed,shadowPass,imported;
 uniform vec2 shadowJitter;
+uniform float hologramTime;
 varying vec3 normal,localPosition;
 varying vec4 tint,finish;
-varying float surface;
+varying float surface,coverage,holographic;
 mat3 rotation(vec3 a) {
  float c=cos(a.x),s=sin(a.x),p=cos(a.y),q=sin(a.y),r=cos(a.z),t=sin(a.z);
  return mat3(c,s,0.,-s,c,0.,0.,0.,1.)*mat3(p,0.,-q,0.,1.,0.,q,0.,p)*mat3(1.,0.,0.,0.,r,t,0.,-t,r);
@@ -192,6 +197,8 @@ void main() {
  else if(vertexInfo.x>0.5)tint*=instanceBody;
  else tint.a*=instanceBody.a;
  finish=instanceFinish;
+ coverage=instanceBody.a; holographic=instanceAnchor.w;
+ if(holographic>.5){ tint.rgb=mix(tint.rgb,vec3(.22,.72,1.),.6)*(1.15+.08*sin(hologramTime));tint.a*=.64;coverage=.64;}
  if(vertexInfo.x>2.5)surface=4.;
  if(shadowPass!=0) { p.xy+=vec2(.38,.55)*p.z;p.z=0.; }
  vec2 screen=instanceAnchor.xy+vec2((p.x-p.y)*36.,(p.x+p.y)*18.-p.z*44.);
@@ -219,9 +226,18 @@ const char *kMeshFragment = R"GLSL(
 uniform int cartoon,shadowPass;
 varying vec3 normal,localPosition;
 varying vec4 tint,finish;
-varying float surface;
+varying float surface,coverage,holographic;
 void main() {
  if(shadowPass!=0) {gl_FragColor=vec4(0.,0.,0.,.30*tint.a);return;}
+ // Stable ordered coverage preserves depth for the player, regardless of batch order.
+ if(coverage<.99){
+   vec2 cell=mod(floor(gl_FragCoord.xy),4.);
+   float rank=mod(cell.x,2.)*8.+mod(cell.y,2.)*12.;
+   rank=mod(rank,16.)+mod(floor(cell.x/2.)*2.+floor(cell.y/2.)*3.,4.);
+   rank=mod(rank,16.);
+   if((rank+.5)/16.>coverage)discard;
+ }
+ if(holographic>.5){gl_FragColor=vec4(tint.rgb,1.);return;}
  vec3 n=normalize(normal),l=normalize(vec3(-.35,-.45,.82)),v=normalize(vec3(1.,1.,.818));
  float diffuse=max(0.,dot(n,l));
  float light=cartoon!=0?(diffuse<.22?.46:diffuse<.65?.72:1.):.48+.52*diffuse;
@@ -236,7 +252,7 @@ void main() {
  float rim=pow(1.-max(0.,dot(n,v)),3.)*.08;
  vec3 color=tint.rgb*light+mix(vec3(.7,.83,.9),tint.rgb,metal)*spec+vec3(.2,.4,.48)*rim;
  if(surface>3.5 && surface<4.5)color=tint.rgb*(1.+finish.z*.25);
- gl_FragColor=vec4(color,tint.a);
+ gl_FragColor=vec4(color,coverage<.5?tint.a/max(.01,coverage):tint.a);
 }
 )GLSL";
 models::Point Cross(models::Point a, models::Point b)
@@ -270,10 +286,16 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
         geometry.ground = model.ground;
         const auto &library = models::ModelLibrary::Get();
         geometry.imported = model.resourceId != 0;
+        for (size_t joint = 0; joint < 32; ++joint)
+            for (size_t axis = 0; axis < 4; ++axis)
+                geometry.bindPose[joint * 16 + axis * 5] = 1;
+        if (model.resourceId)
+            models::ResourceAssets::Sample(model.resourceId, nullptr, geometry.bindPose);
         if (model.resourceId)
         {
             const auto &resource = models::ResourceAssets::Get(model.resourceId);
             geometry.ground = geometry.ground || resource.name.find("ground/") == 0;
+            geometry.holographic = resource.name.find("Transit_AirGuide_") != std::string::npos;
             geometry.vertices.reserve(resource.vertices.size());
             for (const auto &v : resource.vertices)
             {
@@ -406,22 +428,19 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
         }
         (*data.owner)[data.ownerSlot++] = {mesh, material};
     }
-    models::SkinMatrices bones = {};
-    for (size_t j = 0; j < 11; ++j)
+    models::SkinMatrices bones = mesh->data->bindPose;
+    for (size_t j = 0; pose && !model.resourceId && j < 11; ++j)
     {
         models::Point o = {}, x = {1, 0, 0}, y = {0, 1, 0}, z = {0, 0, 1};
-        if (pose)
-        {
-            o = pose->Apply(o, models::Joint(j));
-            x = pose->Apply(x, models::Joint(j));
-            y = pose->Apply(y, models::Joint(j));
-            z = pose->Apply(z, models::Joint(j));
-        }
+        o = pose->Apply(o, models::Joint(j));
+        x = pose->Apply(x, models::Joint(j));
+        y = pose->Apply(y, models::Joint(j));
+        z = pose->Apply(z, models::Joint(j));
         float matrix[] = {x.x - o.x, x.y - o.y, x.z - o.z, 0, y.x - o.x, y.y - o.y, y.z - o.z, 0,
                           z.x - o.x, z.y - o.y, z.z - o.z, 0, o.x,       o.y,       o.z,       1};
         std::copy(matrix, matrix + 16, bones.begin() + j * 16);
     }
-    if (model.resourceId)
+    if (model.resourceId && pose)
     {
         models::ResourceAssets::Sample(model.resourceId, pose, bones);
     }
@@ -429,7 +448,8 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
     std::string key; // identity + pose; palette is per instance
     auto identity = reinterpret_cast<std::uintptr_t>(&model);
     key.assign(reinterpret_cast<char *>(&identity), sizeof(identity));
-    key.append(reinterpret_cast<char *>(bones.data()), sizeof(bones));
+    if (pose)
+        key.append(reinterpret_cast<char *>(bones.data()), sizeof(bones));
     key.push_back(armed ? '1' : '0');
     auto found = data.batchKeys.find(key);
     if (found == data.batchKeys.end())
@@ -439,7 +459,7 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
         found = data.batchKeys.find(key);
     }
     MeshData::Instance instance = {
-        {screen.x, screen.y, depth, 0},
+        {screen.x, screen.y, depth, mesh->data->holographic ? 1.f : 0.f},
         {scale.x, scale.y, scale.z, 0},
         {transform.yaw, transform.pitch, transform.roll, 0},
         {},
@@ -537,11 +557,25 @@ void Renderer::DrawModels()
         glUniform1i(glGetUniformLocation(data.program, "cartoon"), m_style.cartoon ? 1 : 0);
         glUniform1i(glGetUniformLocation(data.program, "shadowPass"), shadow);
         glUniform2f(glGetUniformLocation(data.program, "shadowJitter"), 0, 0);
+        glUniform1f(glGetUniformLocation(data.program, "hologramTime"),
+                    float(std::fmod(double(GetTickCount64()) * .0018, 6.283185307179586)));
     };
     if (!data.instancesBuffer)
     {
         glGenBuffers(1, &data.instancesBuffer);
     }
+    // One upload is reused by ground, shadow and surface passes.
+    data.instanceStream.clear();
+    for (auto &batch : data.batches)
+    {
+        batch.instanceOffset = data.instanceStream.size() * sizeof(MeshData::Instance);
+        data.instanceStream.insert(data.instanceStream.end(), batch.instances.begin(), batch.instances.end());
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, data.instancesBuffer);
+    glBufferData(GL_ARRAY_BUFFER, data.instanceStream.size() * sizeof(MeshData::Instance),
+                 data.instanceStream.data(), GL_STREAM_DRAW);
+    profiling::Count(profiling::Counter::StreamUploadBytes,
+                     data.instanceStream.size() * sizeof(MeshData::Instance));
     auto draw = [&](int pass) {
         for (auto &batch : data.batches)
         {
@@ -565,12 +599,10 @@ void Renderer::DrawModels()
             glVertexAttribPointer(13, 4, GL_FLOAT, GL_FALSE, sizeof(V),
                                   reinterpret_cast<void *>(offsetof(V, weights)));
             glBindBuffer(GL_ARRAY_BUFFER, data.instancesBuffer);
-            glBufferData(GL_ARRAY_BUFFER, batch.instances.size() * sizeof(MeshData::Instance),
-                         batch.instances.data(), GL_STREAM_DRAW);
             for (unsigned int a = 4; a < 12; ++a)
             {
                 glVertexAttribPointer(a, 4, GL_FLOAT, GL_FALSE, sizeof(MeshData::Instance),
-                                      reinterpret_cast<void *>(size_t(a - 4) * 16));
+                                      reinterpret_cast<void *>(batch.instanceOffset + size_t(a - 4) * 16));
                 glVertexAttribDivisor(a, 1);
             }
             glUniformMatrix4fv(glGetUniformLocation(data.program, "bones[0]"), 32, GL_FALSE,
@@ -690,6 +722,7 @@ uniform sampler2D occupancy,depthImage;
 uniform float viewZoom, mapSize;
 uniform vec2 origin;
 uniform vec4 lights[24];
+uniform vec4 scanner;
 uniform int lightCount;
 uniform vec2 aim;
 varying vec2 uv;
@@ -730,6 +763,11 @@ void main() {
   if(amount<=.001)continue;
   float visible=(trace(source.xy,world)+trace(source.xy+vec2(.025,-.025),world)+trace(source.xy+vec2(-.025,.025),world))/3.;
   light=max(light,amount*visible);
+ }
+ // The sensor illuminates only its thin floor band; walls and people retain the darkness mask.
+ if(scanner.w>0. && height<.10) {
+  float band=abs(length(world-scanner.xy)-scanner.z)/max(.05,scanner.z*.024);
+  light=max(light,(1.-smoothstep(.25,1.,band))*scanner.w);
  }
  gl_FragColor=vec4(0.,0.,0.,1.-clamp(light,0.,1.));
 }
@@ -877,6 +915,9 @@ bool Renderer::DrawMineDarkness()
     glUniform1i(glGetUniformLocation(d.darkProgram, "occupancy"), 0);
     glUniform1i(glGetUniformLocation(d.darkProgram, "depthImage"), 1);
     glUniform2f(glGetUniformLocation(d.darkProgram, "origin"), origin.x, origin.y);
+    glUniform4f(glGetUniformLocation(d.darkProgram, "scanner"), state.scannerOrigin.x, state.scannerOrigin.y,
+                state.scannerRadius,
+                state.scannerSeconds > 0 ? (std::min)(1.f, state.scannerSeconds / .3f) : 0);
     float angle = mine.GetAimAngle();
     glUniform2f(glGetUniformLocation(d.darkProgram, "aim"), std::cos(angle), std::sin(angle));
     glUniform1i(glGetUniformLocation(d.darkProgram, "lightCount"), GLint(lights.size()));

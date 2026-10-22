@@ -1,25 +1,27 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include "Monitor.h"
-#include "Overworld.h"
-#include "ResidentAI.h"
-#include "TransitLayout.h"
-#include "ResourceAssets.h"
-#include "LocalMonitorServer.h"
+#include "../AssetCache.h"
 #include "../Level.h"
 #include "../ModelLibrary.h"
-#include "../AssetCache.h"
 #include "../Profiler.h"
-#include <windows.h>
+#include "LocalMonitorServer.h"
+#include "Overworld.h"
+#include "ResidentAI.h"
+#include "ResourceAssets.h"
+#include "TransitLayout.h"
 #include <algorithm>
-#include <set>
+#include <charconv>
 #include <cmath>
 #include <cstdio>
 #include <filesystem>
 #include <iomanip>
 #include <locale>
+#include <set>
 #include <sstream>
 #include <string_view>
+#include <type_traits>
 #include <vector>
+#include <windows.h>
 
 namespace monitoring
 {
@@ -70,10 +72,18 @@ class JsonObject
     }
     template <typename T> void Number(const char *key, T value)
     {
-        std::ostringstream out;
-        out.imbue(std::locale::classic());
-        out << std::fixed << std::setprecision(3) << value;
-        Raw(key, out.str());
+        char buffer[96];
+        std::to_chars_result converted;
+        if constexpr (std::is_floating_point_v<T>)
+        {
+            converted = std::to_chars(buffer, buffer + sizeof(buffer), std::isfinite(value) ? value : T(0),
+                                      std::chars_format::fixed, 3);
+        }
+        else
+        {
+            converted = std::to_chars(buffer, buffer + sizeof(buffer), value);
+        }
+        Raw(key, converted.ec == std::errc() ? std::string(buffer, converted.ptr) : "0");
     }
     void Seconds(const char *key, float value)
     {
@@ -329,10 +339,20 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     traffic.Number("aircraft_limit", tutorial::AirTraffic::kAircraftLimit);
     traffic.Number("scenery_props", tutorial::Overworld::Scenery().Props().size());
     traffic.Text("driving_side", "right");
-    traffic.Text("pedestrian_mode", "automatic_exclusive_cycle");
+    traffic.Text("pedestrian_mode", "road_context_crossing_cycle");
     traffic.Number("pedestrian_navigation_nodes", tutorial::CityResidents::Get().NavigationNodeCount());
-    traffic.Text("road_layout", "native_transit_city_blocks_and_regional_ring");
+    traffic.Text("road_layout", "road_first_compact_junctions_and_elevated_bypass");
+    size_t elevatedRoads = 0;
+    for (size_t i = 0; i < roads.roads.size(); ++i)
+    {
+        elevatedRoads += (std::max)(roads.junctions[roads.roads[i].from].altitude,
+                                    roads.junctions[roads.roads[i].to].altitude) > .1f;
+    }
+    traffic.Number("elevated_roads", elevatedRoads);
+    traffic.Text("road_geometry", "procedural_plan_blockout");
     traffic.Number("transit_module_instances", tutorial::TransitLayout::Get().size());
+    traffic.Number("connected_building_frontages", tutorial::CityPlan::Connections().size());
+    traffic.Number("pedestrian_access_modules", tutorial::CityPlan::Walkways().size());
     size_t waitingResidents = 0, crossingResidents = 0, noRouteResidents = 0;
     for (const auto &resident : world.residents)
     {
@@ -359,11 +379,26 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         JsonObject item;
         item.Number("junction", junction);
         item.Number("phase", int(signal.phase));
+        item.Number("pedestrian_group", signal.walkCycle);
+        item.Number("pedestrian_groups", trafficSystem.PedestrianGroups(int(junction)));
         item.Seconds("elapsed_seconds", signal.elapsed);
         item.Seconds("remaining_seconds",
                      (std::max)(0.f, trafficSystem.PhaseDuration(int(junction)) - signal.elapsed));
         item.Bool("pedestrian_green", trafficSystem.PedestrianGreen(int(junction)));
         item.Bool("crossing_occupied", trafficSystem.CrossingOccupied(world, int(junction)));
+        std::string crossings;
+        for (int lane : roads.junctions[junction].outgoing)
+        {
+            if (roads.lanes[lane].slot != 0)
+            {
+                continue;
+            }
+            JsonObject crossing;
+            crossing.Number("road", roads.lanes[lane].road);
+            crossing.Bool("green", trafficSystem.PedestrianGreen(int(junction), roads.lanes[lane].road));
+            Append(crossings, crossing.Finish());
+        }
+        item.Raw("crossings", "[" + crossings + "]");
         Append(junctionSignals, item.Finish());
     }
     traffic.Raw("signals", "[" + junctionSignals + "]");
@@ -779,8 +814,10 @@ std::string ModelCatalog::Build()
                                              "개인용 제트 오토바이"};
     constexpr const char *kCharacterNames[] = {"탐험가", "정비사",        "경비원", "의무관", "연구원",
                                                "광부",   "중장갑 전투원", "조종사", "주민"};
-    constexpr const char *kBuildingNames[] = {"압력 주거 모듈", "적층 거주 포드", "자기장 정비 격납고",
-                                              "리브 돔 시설", "관문 전망대"};
+    constexpr const char *kBuildingNames[] = {
+        "압력 주거 모듈", "적층 거주 포드", "자기장 정비 격납고", "리브 돔",       "전망대",
+        "나선 첨탑",      "연결 교량 타워", "테라스 아콜로지",    "환승 아트리움", "중정 주거동"};
+    static_assert(std::size(kBuildingNames) == size_t(models::BuildingType::Count));
     std::ostringstream out;
     out.imbue(std::locale::classic());
     out << std::fixed << std::setprecision(5) << "{\"schema\":\"game_models_v1\",\"models\":[";
@@ -859,11 +896,23 @@ void GameMonitor::Initialize()
     }
     sessionId = std::to_string(GetCurrentProcessId()) + "-" + std::to_string(GetTickCount64());
     sequence = 0;
-    transport::PublishModels(ModelCatalog::Build());
+    lastRequestCount = 0;
     transport::Publish(WorldSnapshot::Build(++sequence, sessionId));
-    enabled = transport::Start(std::filesystem::path(module).parent_path() / L"Monitor", kPort);
+    const auto executable = std::filesystem::path(module).parent_path();
+    // Support both deployed binaries and starting a test/debug executable from the source tree.
+    for (const auto &directory : {executable / L"Monitor", executable / L".." / L".." / L"monitor",
+                                  std::filesystem::current_path() / L"monitor"})
+    {
+        if (!std::filesystem::exists(directory / L"index.html"))
+        {
+            continue;
+        }
+        enabled = transport::Start(directory, kPort);
+        break;
+    }
     if (enabled)
     {
+        transport::PublishModels(ModelCatalog::Build());
         nextPublish = Clock::now() + kPublishInterval;
         std::printf("\n[Monitor] Open browser: http://127.0.0.1:%u/\n[Monitor] JSON: /api/state (500 ms)\n\n",
                     unsigned(kPort));
@@ -875,6 +924,13 @@ void GameMonitor::Update()
     {
         return;
     }
+    nextPublish = Clock::now() + kPublishInterval;
+    const auto requests = transport::ReadRequestCount();
+    if (requests == lastRequestCount)
+    {
+        return; // No serialization work with no dashboard polling.
+    }
+    lastRequestCount = requests;
     profiling::Scope timer(profiling::Timer::MonitorSnapshot);
     transport::Publish(WorldSnapshot::Build(++sequence, sessionId));
     profiling::Count(profiling::Counter::MonitorSnapshots);
