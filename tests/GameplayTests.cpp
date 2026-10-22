@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "Level.h"
 #include "Overworld.h"
+#include "ResidentAI.h"
+#include "TransitLayout.h"
 #include "Profiler.h"
 #include "Scene.h"
 #include "Monitoring/Monitor.h"
@@ -436,6 +438,8 @@ void TestImportedWorldAndFlights()
                 assert(Game::Distance(old.second.position, world.playerPosition) > 179);
                 assert(TrafficSystem::OutsideView(old.second.position, world.cameraPosition, 330,
                                                   old.second.altitude));
+                // The last sampled hull AND shadow must already be outside before despawn.
+                assert(AirTraffic::OutsideVisibleFootprint(old.second, world.cameraPosition, 300));
             }
         }
         previous.swap(current);
@@ -461,12 +465,20 @@ void TestUrbanTraffic()
         auto a = network.junctions[road.from].position, b = network.junctions[road.to].position;
         inclined |= std::fabs(a.x - b.x) > 2 && std::fabs(a.y - b.y) > 2;
     }
-    assert(two && four && six && inclined && network.airCorridors.size() == 4);
+    assert(two && four && six && !inclined && network.airCorridors.size() == 4);
+    assert(!TransitLayout::Get().empty());
+    for (const auto &module : TransitLayout::Get())
+    {
+        assert(models::ModelLibrary::Transit(module.asset).resourceId);
+    }
     for (const auto &lane : network.lanes)
     {
         assert(lane.length > 3.5f && std::fabs(Game::Distance(lane.start, lane.end) - lane.length) < .001f);
         auto mid = network.LanePosition(int(&lane - network.lanes.data()), lane.length * .5f);
         assert(network.Contains(mid));
+        auto origin = network.junctions[lane.from].position;
+        auto right = RoadNetwork::RightOf(lane.direction);
+        assert((mid.x - origin.x) * right.x + (mid.y - origin.y) * right.y > 0);
     }
     assert(!network.Contains(kLiaPosition) && !network.Contains(kMaraPosition));
     assert(TrafficSystem::SweptHit({-5, 0}, {5, 0}, 0, {0, 0}));
@@ -534,27 +546,7 @@ void TestUrbanTraffic()
         previous.swap(current);
     }
     assert(sawCar && sawTurn && sawStop && sawWalk);
-    // A crossing request cannot grant an immediate green across moving traffic.
-    for (size_t j = 0; j < network.junctions.size(); ++j)
-    {
-        const auto &junction = network.junctions[j];
-        if (junction.outgoing.size() < 6)
-        {
-            continue;
-        }
-        auto d = network.lanes[junction.outgoing[0]].direction;
-        Vector2 crossing = {junction.position.x + d.x * junction.radius,
-                            junction.position.y + d.y * junction.radius};
-        int nearby = traffic.NearbyCrossing(crossing);
-        if (nearby < 0)
-        {
-            continue;
-        }
-        bool before = traffic.PedestrianGreen(nearby);
-        assert(traffic.RequestCrossing(crossing));
-        assert(traffic.PedestrianGreen(nearby) == before);
-        break;
-    }
+    // sawWalk above must occur without any key or crossing request.
     // Production impact path, using an approaching moving vehicle rather than a damage mock.
     auto hit = std::find_if(traffic.Vehicles().begin(), traffic.Vehicles().end(),
                             [](const TrafficVehicle &car) { return car.speed > 1; });
@@ -563,6 +555,54 @@ void TestUrbanTraffic()
     mineState.player.health = mineState.player.maxHealth;
     traffic.Update(world, .05f);
     assert(mineState.player.health < mineState.player.maxHealth);
+    game.Reset();
+}
+void TestCityResidentsAndShadowLifetime()
+{
+    using namespace tutorial;
+    auto &game = Game::Get();
+    game.Reset();
+    auto &world = game.GetState();
+    world.isInsideHome = false;
+    world.playerPosition = world.cameraPosition = {0, 0};
+    assert(CityResidents::Get().NavigationNodeCount() > 1000);
+    const auto initial = world.residents;
+    bool moved = false, patrol = false, waiting = false, crossed = false, worked = false;
+    for (int frame = 0; frame < 14400; ++frame)
+    {
+        Overworld::Traffic().Update(world, 1.f / 60);
+        CityResidents::Get().Update(world, 1.f / 60);
+        for (size_t i = 0; i < world.residents.size(); ++i)
+        {
+            const auto &resident = world.residents[i];
+            moved |= Game::Distance(initial[i].position, resident.position) > 2;
+            patrol |= resident.activity == ResidentActivity::Patrolling;
+            waiting |= resident.activity == ResidentActivity::WaitingSignal;
+            crossed |= resident.activity == ResidentActivity::Crossing;
+            worked |= resident.activity == ResidentActivity::Working;
+            assert(resident.routeCursor <= resident.route.size());
+            assert(!Overworld::Scenery().IsBlocked(resident.position, .2f));
+            assert(!CityLayout::IsQuestSpace(resident.position, .2f));
+            if (resident.activity == ResidentActivity::Crossing)
+            {
+                const auto &signal = Overworld::Traffic().Signals()[resident.crossingJunction];
+                assert(signal.phase == SignalPhase::Walk || signal.phase == SignalPhase::WalkClear);
+            }
+            else
+            {
+                assert(!RoadNetwork::Get().Contains(resident.position, .2f));
+            }
+        }
+    }
+    assert(moved && patrol && waiting && crossed && worked);
+    // A high hull can be offscreen while its projected shadow remains centered in the view.
+    AircraftActor craft;
+    craft.altitude = 200;
+    craft.position = {-craft.altitude * .38f, -craft.altitude * .55f};
+    assert(TrafficSystem::OutsideView(craft.position, {0, 0}, 0, craft.altitude));
+    assert(!AirTraffic::OutsideVisibleFootprint(craft, {0, 0}));
+    craft.position = {1000, 1000};
+    assert(AirTraffic::OutsideVisibleFootprint(craft, {0, 0}));
     game.Reset();
 }
 void TestAimLightingAndWallShots()
@@ -1083,6 +1123,7 @@ int main(int argc, char **argv)
     TestCityQuestAccess();
     TestImportedWorldAndFlights();
     TestUrbanTraffic();
+    TestCityResidentsAndShadowLifetime();
     if (argc > 1)
     {
         std::ofstream snapshot(argv[1]);

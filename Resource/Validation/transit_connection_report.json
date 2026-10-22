@@ -1,0 +1,12 @@
+{
+  "modules_checked": 112,
+  "physical_ports_checked": 303,
+  "example_connections_checked": 14,
+  "companion_edges_checked": 2342,
+  "airguide_modules_checked": 12,
+  "max_port_error_m": 1.5198831446857055e-06,
+  "max_example_connection_error_m": 1.2688115019480763e-06,
+  "max_airguide_plan_coverage_ratio": 0.0017687383001302466,
+  "errors": [],
+  "all_checks_passed": true
+}

@@ -1,5 +1,5 @@
 {
-  "mesh_parts": 1249,
+  "mesh_parts": 1743,
   "max_triangles": 424,
   "all_parts_under_500": true,
   "rigs": {
@@ -61,5 +61,6 @@
     }
   },
   "issues": [],
-  "expansion_report": "air_city_source_report.json"
+  "expansion_report": "air_city_source_report.json",
+  "transit_expansion_report": "transit_source_report.json"
 }

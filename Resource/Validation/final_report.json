@@ -1,5 +1,5 @@
 {
-  "schema": "erma_delivery_v2",
+  "schema": "erma_delivery_v3",
   "blender": "4.5.2 LTS",
   "body_profiles": 6,
   "outfit_purposes": 9,
@@ -7,12 +7,28 @@
   "independent_accessories": 34,
   "vehicle_types": 5,
   "vehicle_parts": 122,
-  "unique_mesh_parts": 1031,
+  "unique_mesh_parts": 1743,
   "max_triangles_per_part": 424,
-  "glb_files": 1063,
+  "glb_files": 1929,
   "roundtrip_files": 12,
   "all_checks_passed": true,
   "source": "Source/Erma_Resource_Library.blend",
-  "preview": "Preview/00_asset_overview.jpg",
-  "game_code_modified": false
+  "preview": "Preview/20_transit_connected.png",
+  "game_code_modified": false,
+  "updated": "2026-10-22",
+  "aircraft_types": 4,
+  "aircraft_parts": 82,
+  "city_frontier_assemblies": 34,
+  "transit_modules": 112,
+  "transit_parts": 494,
+  "transit_categories": {
+    "road": 45,
+    "walk": 55,
+    "airguide": 12
+  },
+  "transit_roundtrip_files": 18,
+  "transit_physical_ports_checked": 303,
+  "transit_example_connections": 14,
+  "roundtrip_files_note": "roundtrip_files=12 is original pack verification; air_city_roundtrip_report=16; transit_roundtrip_report=18. Historical reports remain separate.",
+  "transit_game_integration": "pending in separate development task; Runtime cache and game code unchanged by transit authoring"
 }

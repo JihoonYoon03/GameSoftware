@@ -182,6 +182,10 @@ function renderNpcDetail() {
     ["역할", npc.role], ["행동", npc.activity_label], ["패턴", npc.behavior_pattern],
     ["구조 무리", groupName(npc.group_id)], ["동행", npc.following ? "동행 중" : "해당 없음"],
     ["현재 위치", position(npc.position)], ["목적지", position(npc.destination)],
+    ["출발/생활 거점", position(npc.home)],
+    ["생활 일정 단계", npc.routine_step ?? "해당 없음"],
+    ["횡단 교차로", npc.crossing_junction >= 0 ? npc.crossing_junction : "해당 없음"],
+    ["경로 상태", npc.warning ?? "정상"],
     ["남은 경로", format(npc.route_remaining) + "칸"],
     ["AI 갱신", npc.simulation_active ? "진행 중" : "중지 / 정적 배치"],
   ]));
@@ -213,6 +217,9 @@ function renderEnvironment(data) {
   );
   if (data.traffic) byId("world-status").append(
     metric("지상 교통", format(data.traffic.active_vehicles) + " / " + format(data.traffic.vehicle_limit) + "대 · " + (data.traffic.simulating ? "주행 중" : "정지")),
+    metric("통행 / 보행 신호", "우측통행 · 자동 순환 · 교차로 비움 후 보행"),
+    metric("도시 보행 AI", "신호 대기 " + format(data.traffic.residents_waiting_signal) + "명 · 횡단 " +
+      format(data.traffic.residents_crossing) + "명 · 경로 없음 " + format(data.traffic.residents_without_route) + "명"),
     metric("도로 / 항공망", format(data.traffic.lanes) + "개 차선 · 항공 회랑 " + format(data.traffic.air_corridors) + "개"),
     metric("항공 교통", format(data.traffic.aircraft) + " / " + format(data.traffic.aircraft_limit) + "대"),
     metric("배치 프롭", format(data.traffic.scenery_props) + "개"),

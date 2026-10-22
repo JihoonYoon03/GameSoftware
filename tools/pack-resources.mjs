@@ -237,6 +237,31 @@ function convert(name, relative, kind = 'prop', options = {}) {
             }
         }
     }
+    if (options.trimLength) {
+        // Trim only a final straight segment; never stretch lane widths, markings or curved modules.
+        let triangles = vertices.slice();
+        for (const sign of [-1, 1]) {
+            const clipped = [];
+            for (let i = 0; i < triangles.length; i += 3) {
+                const input = triangles.slice(i, i + 3), polygon = [];
+                for (let edge = 0; edge < input.length; ++edge) {
+                    const a = input[edge], b = input[(edge + 1) % input.length];
+                    const da = options.trimLength / 2 - sign * a[0], db = options.trimLength / 2 - sign * b[0];
+                    if (da >= 0) polygon.push(a);
+                    if ((da >= 0) !== (db >= 0)) {
+                        const t = da / (da - db);
+                        const v = a.map((value, axis) => value + (b[axis] - value) * t);
+                        const normal = Math.hypot(...v.slice(3, 6));
+                        for (let axis = 3; axis < 6; ++axis) v[axis] /= normal;
+                        polygon.push(v);
+                    }
+                }
+                for (let j = 1; j + 1 < polygon.length; ++j) clipped.push(polygon[0], polygon[j], polygon[j + 1]);
+            }
+            triangles = clipped;
+        }
+        vertices.splice(0, vertices.length, ...triangles);
+    }
     let [lo, hi] = bounds(vertices), physical = hi.map((v, i) => (v - lo[i]) * (kind === 'human' ? characterScale : 1));
     if (kind === 'vehicle') {
         const ground = lo[2];
@@ -374,6 +399,12 @@ for (const name of Object.keys(scenery.assemblies)) {
 }
 for (const [state, index] of [['Amber', 1], ['Green', 2]])
     convert('scenery/City_TrafficSignal_' + state, 'Scenery/City_TrafficSignal', 'prop', { signalState: index });
+
+const transit = JSON.parse(fs.readFileSync(path.join(resources, 'Documentation/transit_modules.json')));
+for (const name of Object.keys(transit.modules)) convert('transit/' + name, 'Transit/' + name, 'prop');
+for (const lanes of [2, 4, 6]) for (const length of [.5, 1, 1.5])
+    convert(`transit/Trim_Road_${lanes}L_${length}`, `Transit/Transit_Road_${lanes}L_Straight_4m`, 'prop', { trimLength: length });
+convert('transit/Trim_Walk_W2_0.5', 'Transit/Transit_Walk_W2_Straight_2m', 'prop', { trimLength: .5 });
 
 const chunks = [];
 function u32(value) { const b = Buffer.alloc(4); b.writeUInt32LE(value); chunks.push(b); }

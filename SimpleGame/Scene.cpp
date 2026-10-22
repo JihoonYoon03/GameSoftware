@@ -2,6 +2,8 @@
 #include "Scene.h"
 #include "Level.h"
 #include "Overworld.h"
+#include "ResidentAI.h"
+#include "TransitLayout.h"
 #include "Drawing.h"
 #include "ResourceAssets.h"
 #include "Hud.h"
@@ -263,50 +265,23 @@ void CityScene::DrawTrafficInfrastructure(game::Scene &scene)
     const auto camera = Game::Get().GetState().cameraPosition;
     auto add = [](Vector2 a, Vector2 b) { return Vector2{a.x + b.x, a.y + b.y}; };
     auto mul = [](Vector2 a, float b) { return Vector2{a.x * b, a.y * b}; };
-    for (size_t roadIndex = 0; roadIndex < net.roads.size(); ++roadIndex)
+    const auto &modules = TransitLayout::Get();
+    for (size_t i = 0; i < modules.size(); ++i)
     {
-        const auto &road = net.roads[roadIndex];
-        auto a = net.junctions[road.from].position, b = net.junctions[road.to].position;
-        float length = Game::Distance(a, b), width = road.lanes * RoadNetwork::kLaneWidth;
-        Vector2 d = {(b.x - a.x) / length, (b.y - a.y) / length};
-        float alongCamera = (camera.x - a.x) * d.x + (camera.y - a.y) * d.y;
-        int first = (std::max)(0, int(std::floor((alongCamera - 38) / 12)));
-        int last = (std::min)(int(std::ceil(length / 12)), int(std::ceil((alongCamera + 38) / 12)));
-        for (int chunk = first; chunk < last; ++chunk)
+        const auto &module = modules[i];
+        if (Game::Distance(module.position, camera) > (module.air ? 85.f : 48.f) + module.radius)
         {
-            float begin = chunk * 12.f, end = (std::min)(length, begin + 12);
-            auto start = add(a, mul(d, begin)), finish = add(a, mul(d, end));
-            auto center = add(a, mul(d, (begin + end) * .5f));
-            if (Game::Distance(center, camera) > 48)
-            {
-                continue;
-            }
-            float x = (std::min)(start.x, finish.x) - width, y = (std::min)(start.y, finish.y) - width;
-            scene.PlaceWorldActor(
-                "road/" + std::to_string(roadIndex) + "/" + std::to_string(chunk), center.x, center.y,
-                WorldBounds(x, y, std::fabs(finish.x - start.x) + width * 2,
-                            std::fabs(finish.y - start.y) + width * 2, 0),
-                1, 0, [=, &net]() {
-                    Drawing::DrawGroundStrip(start, finish, width + 1.4f, {.32f, .39f, .41f}, .04f);
-                    Drawing::DrawGroundStrip(start, finish, width, {.13f, .19f, .23f}, .075f,
-                                             SurfaceMaterial::Asphalt);
-                    float markStart = (std::max)(begin, net.junctions[road.from].radius + 3.6f);
-                    float markEnd = (std::min)(end, length - net.junctions[road.to].radius - 3.6f);
-                    if (markEnd <= markStart)
-                    {
-                        return;
-                    }
-                    auto type = road.lanes == 6   ? models::SceneryType::Road6Lane
-                                : road.lanes == 4 ? models::SceneryType::Road4Lane
-                                                  : models::SceneryType::Road2Lane;
-                    for (float t = std::ceil(markStart / 2) * 2; t + 2 <= markEnd + .001f; t += 2)
-                    {
-                        Drawing::DrawProp(models::ModelLibrary::Scenery(type), add(a, mul(d, t + 1)),
-                                          {1, RoadNetwork::kLaneWidth / 1.5f, 1}, {}, std::atan2(d.y, d.x),
-                                          .1f);
-                    }
-                });
+            continue;
         }
+        const float r = module.radius;
+        scene.PlaceWorldActor("transit/" + std::to_string(i), module.position.x, module.position.y,
+                              WorldBounds(module.position.x - r, module.position.y - r, r * 2, r * 2,
+                                          (module.altitude + 2) * 44, 24),
+                              1, 0, [module]() {
+                                  Drawing::DrawProp(models::ModelLibrary::Transit(module.asset),
+                                                    module.position, {1, 1, 1}, {}, module.yaw,
+                                                    module.altitude);
+                              });
     }
     for (size_t junction = 0; junction < net.junctions.size(); ++junction)
     {
@@ -319,15 +294,6 @@ void CityScene::DrawTrafficInfrastructure(game::Scene &scene)
         scene.PlaceWorldActor(
             "junction/" + std::to_string(junction), p.x, p.y,
             WorldBounds(p.x - j.radius, p.y - j.radius, j.radius * 2, j.radius * 2, 150), 1, 0, [=, &net]() {
-                // Round the apron with shared, narrow ground strips, rather than stepped tiles.
-                for (int slice = 0; slice < 16; ++slice)
-                {
-                    float y = (-1 + (slice + .5f) / 8.f) * j.radius;
-                    float half = std::sqrt((std::max)(0.f, j.radius * j.radius - y * y));
-                    Drawing::DrawGroundStrip({p.x - half, p.y + y}, {p.x + half, p.y + y},
-                                             j.radius / 8 + .02f, {.13f, .19f, .23f}, .09f,
-                                             SurfaceMaterial::Asphalt);
-                }
                 std::vector<int> arms;
                 for (int lane : j.outgoing)
                 {
@@ -348,7 +314,7 @@ void CityScene::DrawTrafficInfrastructure(game::Scene &scene)
                     auto d = out.direction;
                     Vector2 n = {-d.y, d.x};
                     float half = net.roads[out.road].lanes * RoadNetwork::kLaneWidth * .5f;
-                    auto across = add(p, mul(d, j.radius - .45f));
+                    auto across = add(p, mul(d, j.radius + 1.f));
                     models::Palette pedestrianPalette;
                     pedestrianPalette.emission = {pedestrian.r, pedestrian.g, pedestrian.b, 1};
                     Drawing::DrawProp(models::ModelLibrary::Scenery(models::SceneryType::PedestrianHologram),
@@ -525,11 +491,13 @@ void CityScene::DrawImportedScenery(game::Scene &scene)
     {
         const auto &model = models::ModelLibrary::Aircraft(craft.type, craft.alternate);
         const auto &resource = models::ResourceAssets::Get(model.resourceId);
-        float radius = (std::max)(resource.physicalSize.x, resource.physicalSize.y) * .75f + .5f;
+        // Parent Actor bounds must retain a visible ground shadow even when the hull is above view.
+        float radius = (std::max)(resource.physicalSize.x, resource.physicalSize.y) +
+                       (craft.altitude + resource.maximum.z + 2) * .55f + 2;
         auto p = craft.position;
         scene.PlaceWorldActor("aircraft/" + std::to_string(craft.id), p.x, p.y,
                               WorldBounds(p.x - radius, p.y - radius, radius * 2, radius * 2,
-                                          (craft.altitude + resource.maximum.z) * 44 + 24),
+                                          (craft.altitude + resource.maximum.z + 3) * 44 + 24),
                               3, p.x + p.y, [craft]() {
                                   Drawing::DrawWorldAircraft(craft.position, craft.altitude, craft.type,
                                                              craft.alternate, craft.yaw, craft.bank);
@@ -637,11 +605,13 @@ void CityScene::DrawDepthSortedObjects(game::Scene &scene)
                 Drawing::DrawPerson(resident.position,
                                     ColorRGBA(resident.coat[0], resident.coat[1], resident.coat[2]), false,
                                     resident.type, resident.facing.walking, resident.facing.yaw,
-                                    resident.gender, resident.hair);
+                                    resident.gender, resident.hair, false, 0, false, resident.speed);
                 if (Game::Distance(Game::Get().GetState().playerPosition, resident.position) < 2.2f)
                 {
                     Vector2 label = Drawing::WorldToScreen(resident.position.x, resident.position.y, 62);
                     Drawing::DrawLabel(label.x - 20, label.y, resident.name);
+                    Drawing::DrawLabel(label.x - 20, label.y + 16, CityResidents::ActivityLabel(resident),
+                                       {.5f, .8f, .85f});
                 }
             }
             if (item.kind == SceneObjectKind::Building)

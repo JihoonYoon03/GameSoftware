@@ -1,0 +1,6742 @@
+{
+  "schema": "erma_transit_v1",
+  "units": "meters",
+  "authoring_up": "+Z",
+  "gltf_up": "+Y",
+  "gltf_coordinate_mapping": "(x,y,z) -> (x,z,-y)",
+  "road_surface_z_m": 0,
+  "walk_surface_z_m": 0.15,
+  "lane_width_m": 3,
+  "modules": {
+    "Transit_Road_2L_Straight_4m": {
+      "parts": [
+        "Transit_Road_2L_Straight_4m_Surface",
+        "Transit_Road_2L_Straight_4m_MarkLane1",
+        "Transit_Road_2L_Straight_4m_MarkEdge-1",
+        "Transit_Road_2L_Straight_4m_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -2.0,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            2.0,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        }
+      ],
+      "lanes": 2,
+      "path_length_m": 4
+    },
+    "Transit_Road_2L_Straight_8m": {
+      "parts": [
+        "Transit_Road_2L_Straight_8m_Surface",
+        "Transit_Road_2L_Straight_8m_MarkLane1",
+        "Transit_Road_2L_Straight_8m_MarkEdge-1",
+        "Transit_Road_2L_Straight_8m_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -4.0,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            4.0,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        }
+      ],
+      "lanes": 2,
+      "path_length_m": 8
+    },
+    "Transit_Road_2L_Straight_16m": {
+      "parts": [
+        "Transit_Road_2L_Straight_16m_Surface",
+        "Transit_Road_2L_Straight_16m_MarkLane1",
+        "Transit_Road_2L_Straight_16m_MarkEdge-1",
+        "Transit_Road_2L_Straight_16m_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -8.0,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            8.0,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        }
+      ],
+      "lanes": 2,
+      "path_length_m": 16
+    },
+    "Transit_Road_4L_Straight_4m": {
+      "parts": [
+        "Transit_Road_4L_Straight_4m_Surface",
+        "Transit_Road_4L_Straight_4m_MarkLane1",
+        "Transit_Road_4L_Straight_4m_MarkLane2",
+        "Transit_Road_4L_Straight_4m_MarkLane3",
+        "Transit_Road_4L_Straight_4m_MarkEdge-1",
+        "Transit_Road_4L_Straight_4m_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -2.0,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            2.0,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        }
+      ],
+      "lanes": 4,
+      "path_length_m": 4
+    },
+    "Transit_Road_4L_Straight_8m": {
+      "parts": [
+        "Transit_Road_4L_Straight_8m_Surface",
+        "Transit_Road_4L_Straight_8m_MarkLane1",
+        "Transit_Road_4L_Straight_8m_MarkLane2",
+        "Transit_Road_4L_Straight_8m_MarkLane3",
+        "Transit_Road_4L_Straight_8m_MarkEdge-1",
+        "Transit_Road_4L_Straight_8m_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -4.0,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            4.0,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        }
+      ],
+      "lanes": 4,
+      "path_length_m": 8
+    },
+    "Transit_Road_4L_Straight_16m": {
+      "parts": [
+        "Transit_Road_4L_Straight_16m_Surface",
+        "Transit_Road_4L_Straight_16m_MarkLane1",
+        "Transit_Road_4L_Straight_16m_MarkLane2",
+        "Transit_Road_4L_Straight_16m_MarkLane3",
+        "Transit_Road_4L_Straight_16m_MarkEdge-1",
+        "Transit_Road_4L_Straight_16m_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -8.0,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            8.0,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        }
+      ],
+      "lanes": 4,
+      "path_length_m": 16
+    },
+    "Transit_Road_6L_Straight_4m": {
+      "parts": [
+        "Transit_Road_6L_Straight_4m_Surface",
+        "Transit_Road_6L_Straight_4m_MarkLane1",
+        "Transit_Road_6L_Straight_4m_MarkLane2",
+        "Transit_Road_6L_Straight_4m_MarkLane3",
+        "Transit_Road_6L_Straight_4m_MarkLane4",
+        "Transit_Road_6L_Straight_4m_MarkLane5",
+        "Transit_Road_6L_Straight_4m_MarkEdge-1",
+        "Transit_Road_6L_Straight_4m_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -2.0,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            2.0,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        }
+      ],
+      "lanes": 6,
+      "path_length_m": 4
+    },
+    "Transit_Road_6L_Straight_8m": {
+      "parts": [
+        "Transit_Road_6L_Straight_8m_Surface",
+        "Transit_Road_6L_Straight_8m_MarkLane1",
+        "Transit_Road_6L_Straight_8m_MarkLane2",
+        "Transit_Road_6L_Straight_8m_MarkLane3",
+        "Transit_Road_6L_Straight_8m_MarkLane4",
+        "Transit_Road_6L_Straight_8m_MarkLane5",
+        "Transit_Road_6L_Straight_8m_MarkEdge-1",
+        "Transit_Road_6L_Straight_8m_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -4.0,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            4.0,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        }
+      ],
+      "lanes": 6,
+      "path_length_m": 8
+    },
+    "Transit_Road_6L_Straight_16m": {
+      "parts": [
+        "Transit_Road_6L_Straight_16m_Surface",
+        "Transit_Road_6L_Straight_16m_MarkLane1",
+        "Transit_Road_6L_Straight_16m_MarkLane2",
+        "Transit_Road_6L_Straight_16m_MarkLane3",
+        "Transit_Road_6L_Straight_16m_MarkLane4",
+        "Transit_Road_6L_Straight_16m_MarkLane5",
+        "Transit_Road_6L_Straight_16m_MarkEdge-1",
+        "Transit_Road_6L_Straight_16m_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -8.0,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            8.0,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        }
+      ],
+      "lanes": 6,
+      "path_length_m": 16
+    },
+    "Transit_Road_2L_Curve15_R18": {
+      "parts": [
+        "Transit_Road_2L_Curve15_R18_Surface",
+        "Transit_Road_2L_Curve15_R18_MarkLane1",
+        "Transit_Road_2L_Curve15_R18_MarkEdge-1",
+        "Transit_Road_2L_Curve15_R18_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            4.658742811845373,
+            0.6133351267967704,
+            0
+          ],
+          "outward": [
+            0.9659258262890683,
+            0.25881904510252074,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        }
+      ],
+      "lanes": 2,
+      "path_length_m": 4.71238898038469,
+      "radius_m": 18,
+      "turn_degrees": 15,
+      "walk_companion": "Transit_WalkSides_2L_Curve15_R18"
+    },
+    "Transit_WalkSides_2L_Curve15_R18": {
+      "parts": [
+        "Transit_WalkSides_2L_Curve15_R18_LeftPavement",
+        "Transit_WalkSides_2L_Curve15_R18_LeftCurb",
+        "Transit_WalkSides_2L_Curve15_R18_RightPavement",
+        "Transit_WalkSides_2L_Curve15_R18_RightCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "Left_start",
+          "position_m": [
+            0.0,
+            4.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Left_end",
+          "position_m": [
+            3.6234666314352904,
+            4.477038431953043,
+            0.15
+          ],
+          "outward": [
+            0.9659258262890683,
+            0.25881904510252074,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_start",
+          "position_m": [
+            0.0,
+            -4.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_end",
+          "position_m": [
+            5.694018992255456,
+            -3.250368178359503,
+            0.15
+          ],
+          "outward": [
+            0.9659258262890683,
+            0.25881904510252074,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_2L_Curve15_R18",
+      "walk_width_m": 2,
+      "turn_degrees": 15,
+      "radius_m": 18
+    },
+    "Transit_Road_2L_Curve30_R18": {
+      "parts": [
+        "Transit_Road_2L_Curve30_R18_Surface",
+        "Transit_Road_2L_Curve30_R18_MarkLane1",
+        "Transit_Road_2L_Curve30_R18_MarkEdge-1",
+        "Transit_Road_2L_Curve30_R18_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            8.999999999999998,
+            2.411542731880103,
+            0
+          ],
+          "outward": [
+            0.8660254037844387,
+            0.49999999999999994,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        }
+      ],
+      "lanes": 2,
+      "path_length_m": 9.42477796076938,
+      "radius_m": 18,
+      "turn_degrees": 30,
+      "walk_companion": "Transit_WalkSides_2L_Curve30_R18"
+    },
+    "Transit_WalkSides_2L_Curve30_R18": {
+      "parts": [
+        "Transit_WalkSides_2L_Curve30_R18_LeftPavement",
+        "Transit_WalkSides_2L_Curve30_R18_LeftCurb",
+        "Transit_WalkSides_2L_Curve30_R18_RightPavement",
+        "Transit_WalkSides_2L_Curve30_R18_RightCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "Left_start",
+          "position_m": [
+            0.0,
+            4.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Left_end",
+          "position_m": [
+            6.999999999999998,
+            5.875644347017857,
+            0.15
+          ],
+          "outward": [
+            0.8660254037844387,
+            0.49999999999999994,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_start",
+          "position_m": [
+            0.0,
+            -4.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_end",
+          "position_m": [
+            10.999999999999998,
+            -1.0525588832576518,
+            0.15
+          ],
+          "outward": [
+            0.8660254037844387,
+            0.49999999999999994,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_2L_Curve30_R18",
+      "walk_width_m": 2,
+      "turn_degrees": 30,
+      "radius_m": 18
+    },
+    "Transit_Road_2L_Curve45_R18": {
+      "parts": [
+        "Transit_Road_2L_Curve45_R18_Surface",
+        "Transit_Road_2L_Curve45_R18_MarkLane1",
+        "Transit_Road_2L_Curve45_R18_MarkEdge-1",
+        "Transit_Road_2L_Curve45_R18_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            12.727922061357857,
+            5.272077938642144,
+            0
+          ],
+          "outward": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        }
+      ],
+      "lanes": 2,
+      "path_length_m": 14.137166941154069,
+      "radius_m": 18,
+      "turn_degrees": 45,
+      "walk_companion": "Transit_WalkSides_2L_Curve45_R18"
+    },
+    "Transit_WalkSides_2L_Curve45_R18": {
+      "parts": [
+        "Transit_WalkSides_2L_Curve45_R18_LeftPavement",
+        "Transit_WalkSides_2L_Curve45_R18_LeftCurb",
+        "Transit_WalkSides_2L_Curve45_R18_RightPavement",
+        "Transit_WalkSides_2L_Curve45_R18_RightCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "Left_start",
+          "position_m": [
+            0.0,
+            4.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Left_end",
+          "position_m": [
+            9.899494936611667,
+            8.100505063388335,
+            0.15
+          ],
+          "outward": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_start",
+          "position_m": [
+            0.0,
+            -4.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_end",
+          "position_m": [
+            15.556349186104047,
+            2.4436508138959536,
+            0.15
+          ],
+          "outward": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_2L_Curve45_R18",
+      "walk_width_m": 2,
+      "turn_degrees": 45,
+      "radius_m": 18
+    },
+    "Transit_Road_2L_Curve90_R18": {
+      "parts": [
+        "Transit_Road_2L_Curve90_R18_Surface",
+        "Transit_Road_2L_Curve90_R18_MarkLane1",
+        "Transit_Road_2L_Curve90_R18_MarkEdge-1",
+        "Transit_Road_2L_Curve90_R18_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            18.0,
+            17.999999999999996,
+            0
+          ],
+          "outward": [
+            6.123233995736766e-17,
+            1.0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        }
+      ],
+      "lanes": 2,
+      "path_length_m": 28.274333882308138,
+      "radius_m": 18,
+      "turn_degrees": 90,
+      "walk_companion": "Transit_WalkSides_2L_Curve90_R18"
+    },
+    "Transit_WalkSides_2L_Curve90_R18": {
+      "parts": [
+        "Transit_WalkSides_2L_Curve90_R18_LeftPavement",
+        "Transit_WalkSides_2L_Curve90_R18_LeftCurb",
+        "Transit_WalkSides_2L_Curve90_R18_RightPavement",
+        "Transit_WalkSides_2L_Curve90_R18_RightCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "Left_start",
+          "position_m": [
+            0.0,
+            4.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Left_end",
+          "position_m": [
+            14.0,
+            17.999999999999996,
+            0.15
+          ],
+          "outward": [
+            6.123233995736766e-17,
+            1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_start",
+          "position_m": [
+            0.0,
+            -4.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_end",
+          "position_m": [
+            22.0,
+            17.999999999999996,
+            0.15
+          ],
+          "outward": [
+            6.123233995736766e-17,
+            1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_2L_Curve90_R18",
+      "walk_width_m": 2,
+      "turn_degrees": 90,
+      "radius_m": 18
+    },
+    "Transit_Road_2L_Curve15_R36": {
+      "parts": [
+        "Transit_Road_2L_Curve15_R36_Surface",
+        "Transit_Road_2L_Curve15_R36_MarkLane1",
+        "Transit_Road_2L_Curve15_R36_MarkEdge-1",
+        "Transit_Road_2L_Curve15_R36_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            9.317485623690747,
+            1.2266702535935408,
+            0
+          ],
+          "outward": [
+            0.9659258262890683,
+            0.25881904510252074,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        }
+      ],
+      "lanes": 2,
+      "path_length_m": 9.42477796076938,
+      "radius_m": 36,
+      "turn_degrees": 15,
+      "walk_companion": "Transit_WalkSides_2L_Curve15_R36"
+    },
+    "Transit_WalkSides_2L_Curve15_R36": {
+      "parts": [
+        "Transit_WalkSides_2L_Curve15_R36_LeftPavement",
+        "Transit_WalkSides_2L_Curve15_R36_LeftCurb",
+        "Transit_WalkSides_2L_Curve15_R36_RightPavement",
+        "Transit_WalkSides_2L_Curve15_R36_RightCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "Left_start",
+          "position_m": [
+            0.0,
+            4.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Left_end",
+          "position_m": [
+            8.282209443280664,
+            5.090373558749814,
+            0.15
+          ],
+          "outward": [
+            0.9659258262890683,
+            0.25881904510252074,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_start",
+          "position_m": [
+            0.0,
+            -4.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_end",
+          "position_m": [
+            10.35276180410083,
+            -2.6370330515627325,
+            0.15
+          ],
+          "outward": [
+            0.9659258262890683,
+            0.25881904510252074,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_2L_Curve15_R36",
+      "walk_width_m": 2,
+      "turn_degrees": 15,
+      "radius_m": 36
+    },
+    "Transit_Road_2L_Curve30_R36": {
+      "parts": [
+        "Transit_Road_2L_Curve30_R36_Surface",
+        "Transit_Road_2L_Curve30_R36_MarkLane1",
+        "Transit_Road_2L_Curve30_R36_MarkEdge-1",
+        "Transit_Road_2L_Curve30_R36_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            17.999999999999996,
+            4.823085463760206,
+            0
+          ],
+          "outward": [
+            0.8660254037844387,
+            0.49999999999999994,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        }
+      ],
+      "lanes": 2,
+      "path_length_m": 18.84955592153876,
+      "radius_m": 36,
+      "turn_degrees": 30,
+      "walk_companion": "Transit_WalkSides_2L_Curve30_R36"
+    },
+    "Transit_WalkSides_2L_Curve30_R36": {
+      "parts": [
+        "Transit_WalkSides_2L_Curve30_R36_LeftPavement",
+        "Transit_WalkSides_2L_Curve30_R36_LeftCurb",
+        "Transit_WalkSides_2L_Curve30_R36_RightPavement",
+        "Transit_WalkSides_2L_Curve30_R36_RightCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "Left_start",
+          "position_m": [
+            0.0,
+            4.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Left_end",
+          "position_m": [
+            15.999999999999996,
+            8.287187078897961,
+            0.15
+          ],
+          "outward": [
+            0.8660254037844387,
+            0.49999999999999994,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_start",
+          "position_m": [
+            0.0,
+            -4.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_end",
+          "position_m": [
+            19.999999999999996,
+            1.3589838486224513,
+            0.15
+          ],
+          "outward": [
+            0.8660254037844387,
+            0.49999999999999994,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_2L_Curve30_R36",
+      "walk_width_m": 2,
+      "turn_degrees": 30,
+      "radius_m": 36
+    },
+    "Transit_Road_2L_Curve45_R36": {
+      "parts": [
+        "Transit_Road_2L_Curve45_R36_Surface",
+        "Transit_Road_2L_Curve45_R36_MarkLane1",
+        "Transit_Road_2L_Curve45_R36_MarkEdge-1",
+        "Transit_Road_2L_Curve45_R36_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            25.455844122715714,
+            10.544155877284288,
+            0
+          ],
+          "outward": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        }
+      ],
+      "lanes": 2,
+      "path_length_m": 28.274333882308138,
+      "radius_m": 36,
+      "turn_degrees": 45,
+      "walk_companion": "Transit_WalkSides_2L_Curve45_R36"
+    },
+    "Transit_WalkSides_2L_Curve45_R36": {
+      "parts": [
+        "Transit_WalkSides_2L_Curve45_R36_LeftPavement",
+        "Transit_WalkSides_2L_Curve45_R36_LeftCurb",
+        "Transit_WalkSides_2L_Curve45_R36_RightPavement",
+        "Transit_WalkSides_2L_Curve45_R36_RightCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "Left_start",
+          "position_m": [
+            0.0,
+            4.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Left_end",
+          "position_m": [
+            22.627416997969522,
+            13.372583002030478,
+            0.15
+          ],
+          "outward": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_start",
+          "position_m": [
+            0.0,
+            -4.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_end",
+          "position_m": [
+            28.284271247461906,
+            7.715728752538098,
+            0.15
+          ],
+          "outward": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_2L_Curve45_R36",
+      "walk_width_m": 2,
+      "turn_degrees": 45,
+      "radius_m": 36
+    },
+    "Transit_Road_2L_Curve90_R36": {
+      "parts": [
+        "Transit_Road_2L_Curve90_R36_Surface",
+        "Transit_Road_2L_Curve90_R36_MarkLane1",
+        "Transit_Road_2L_Curve90_R36_MarkEdge-1",
+        "Transit_Road_2L_Curve90_R36_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            36.0,
+            35.99999999999999,
+            0
+          ],
+          "outward": [
+            6.123233995736766e-17,
+            1.0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        }
+      ],
+      "lanes": 2,
+      "path_length_m": 56.548667764616276,
+      "radius_m": 36,
+      "turn_degrees": 90,
+      "walk_companion": "Transit_WalkSides_2L_Curve90_R36"
+    },
+    "Transit_WalkSides_2L_Curve90_R36": {
+      "parts": [
+        "Transit_WalkSides_2L_Curve90_R36_LeftPavement",
+        "Transit_WalkSides_2L_Curve90_R36_LeftCurb",
+        "Transit_WalkSides_2L_Curve90_R36_RightPavement",
+        "Transit_WalkSides_2L_Curve90_R36_RightCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "Left_start",
+          "position_m": [
+            0.0,
+            4.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Left_end",
+          "position_m": [
+            32.0,
+            35.99999999999999,
+            0.15
+          ],
+          "outward": [
+            6.123233995736766e-17,
+            1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_start",
+          "position_m": [
+            0.0,
+            -4.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_end",
+          "position_m": [
+            40.0,
+            35.99999999999999,
+            0.15
+          ],
+          "outward": [
+            6.123233995736766e-17,
+            1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_2L_Curve90_R36",
+      "walk_width_m": 2,
+      "turn_degrees": 90,
+      "radius_m": 36
+    },
+    "Transit_Road_4L_Curve15_R18": {
+      "parts": [
+        "Transit_Road_4L_Curve15_R18_Surface",
+        "Transit_Road_4L_Curve15_R18_MarkLane1",
+        "Transit_Road_4L_Curve15_R18_MarkLane2",
+        "Transit_Road_4L_Curve15_R18_MarkLane3",
+        "Transit_Road_4L_Curve15_R18_MarkEdge-1",
+        "Transit_Road_4L_Curve15_R18_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            4.658742811845373,
+            0.6133351267967704,
+            0
+          ],
+          "outward": [
+            0.9659258262890683,
+            0.25881904510252074,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        }
+      ],
+      "lanes": 4,
+      "path_length_m": 4.71238898038469,
+      "radius_m": 18,
+      "turn_degrees": 15,
+      "walk_companion": "Transit_WalkSides_4L_Curve15_R18"
+    },
+    "Transit_WalkSides_4L_Curve15_R18": {
+      "parts": [
+        "Transit_WalkSides_4L_Curve15_R18_LeftPavement",
+        "Transit_WalkSides_4L_Curve15_R18_LeftCurb",
+        "Transit_WalkSides_4L_Curve15_R18_RightPavement",
+        "Transit_WalkSides_4L_Curve15_R18_RightCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "Left_start",
+          "position_m": [
+            0.0,
+            7.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Left_end",
+          "position_m": [
+            2.847009496127728,
+            7.3748159108202485,
+            0.15
+          ],
+          "outward": [
+            0.9659258262890683,
+            0.25881904510252074,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_start",
+          "position_m": [
+            0.0,
+            -7.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_end",
+          "position_m": [
+            6.4704761275630185,
+            -6.148145657226707,
+            0.15
+          ],
+          "outward": [
+            0.9659258262890683,
+            0.25881904510252074,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_4L_Curve15_R18",
+      "walk_width_m": 2,
+      "turn_degrees": 15,
+      "radius_m": 18
+    },
+    "Transit_Road_4L_Curve30_R18": {
+      "parts": [
+        "Transit_Road_4L_Curve30_R18_Surface",
+        "Transit_Road_4L_Curve30_R18_MarkLane1",
+        "Transit_Road_4L_Curve30_R18_MarkLane2",
+        "Transit_Road_4L_Curve30_R18_MarkLane3",
+        "Transit_Road_4L_Curve30_R18_MarkEdge-1",
+        "Transit_Road_4L_Curve30_R18_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            8.999999999999998,
+            2.411542731880103,
+            0
+          ],
+          "outward": [
+            0.8660254037844387,
+            0.49999999999999994,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        }
+      ],
+      "lanes": 4,
+      "path_length_m": 9.42477796076938,
+      "radius_m": 18,
+      "turn_degrees": 30,
+      "walk_companion": "Transit_WalkSides_4L_Curve30_R18"
+    },
+    "Transit_WalkSides_4L_Curve30_R18": {
+      "parts": [
+        "Transit_WalkSides_4L_Curve30_R18_LeftPavement",
+        "Transit_WalkSides_4L_Curve30_R18_LeftCurb",
+        "Transit_WalkSides_4L_Curve30_R18_RightPavement",
+        "Transit_WalkSides_4L_Curve30_R18_RightCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "Left_start",
+          "position_m": [
+            0.0,
+            7.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Left_end",
+          "position_m": [
+            5.499999999999998,
+            8.473720558371173,
+            0.15
+          ],
+          "outward": [
+            0.8660254037844387,
+            0.49999999999999994,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_start",
+          "position_m": [
+            0.0,
+            -7.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_end",
+          "position_m": [
+            12.499999999999998,
+            -3.6506350946109682,
+            0.15
+          ],
+          "outward": [
+            0.8660254037844387,
+            0.49999999999999994,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_4L_Curve30_R18",
+      "walk_width_m": 2,
+      "turn_degrees": 30,
+      "radius_m": 18
+    },
+    "Transit_Road_4L_Curve45_R18": {
+      "parts": [
+        "Transit_Road_4L_Curve45_R18_Surface",
+        "Transit_Road_4L_Curve45_R18_MarkLane1",
+        "Transit_Road_4L_Curve45_R18_MarkLane2",
+        "Transit_Road_4L_Curve45_R18_MarkLane3",
+        "Transit_Road_4L_Curve45_R18_MarkEdge-1",
+        "Transit_Road_4L_Curve45_R18_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            12.727922061357857,
+            5.272077938642144,
+            0
+          ],
+          "outward": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        }
+      ],
+      "lanes": 4,
+      "path_length_m": 14.137166941154069,
+      "radius_m": 18,
+      "turn_degrees": 45,
+      "walk_companion": "Transit_WalkSides_4L_Curve45_R18"
+    },
+    "Transit_WalkSides_4L_Curve45_R18": {
+      "parts": [
+        "Transit_WalkSides_4L_Curve45_R18_LeftPavement",
+        "Transit_WalkSides_4L_Curve45_R18_LeftCurb",
+        "Transit_WalkSides_4L_Curve45_R18_RightPavement",
+        "Transit_WalkSides_4L_Curve45_R18_RightCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "Left_start",
+          "position_m": [
+            0.0,
+            7.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Left_end",
+          "position_m": [
+            7.778174593052024,
+            10.221825406947977,
+            0.15
+          ],
+          "outward": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_start",
+          "position_m": [
+            0.0,
+            -7.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_end",
+          "position_m": [
+            17.67766952966369,
+            0.32233047033631124,
+            0.15
+          ],
+          "outward": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_4L_Curve45_R18",
+      "walk_width_m": 2,
+      "turn_degrees": 45,
+      "radius_m": 18
+    },
+    "Transit_Road_4L_Curve90_R18": {
+      "parts": [
+        "Transit_Road_4L_Curve90_R18_Surface",
+        "Transit_Road_4L_Curve90_R18_MarkLane1",
+        "Transit_Road_4L_Curve90_R18_MarkLane2",
+        "Transit_Road_4L_Curve90_R18_MarkLane3",
+        "Transit_Road_4L_Curve90_R18_MarkEdge-1",
+        "Transit_Road_4L_Curve90_R18_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            18.0,
+            17.999999999999996,
+            0
+          ],
+          "outward": [
+            6.123233995736766e-17,
+            1.0,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        }
+      ],
+      "lanes": 4,
+      "path_length_m": 28.274333882308138,
+      "radius_m": 18,
+      "turn_degrees": 90,
+      "walk_companion": "Transit_WalkSides_4L_Curve90_R18"
+    },
+    "Transit_WalkSides_4L_Curve90_R18": {
+      "parts": [
+        "Transit_WalkSides_4L_Curve90_R18_LeftPavement",
+        "Transit_WalkSides_4L_Curve90_R18_LeftCurb",
+        "Transit_WalkSides_4L_Curve90_R18_RightPavement",
+        "Transit_WalkSides_4L_Curve90_R18_RightCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "Left_start",
+          "position_m": [
+            0.0,
+            7.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Left_end",
+          "position_m": [
+            11.0,
+            17.999999999999996,
+            0.15
+          ],
+          "outward": [
+            6.123233995736766e-17,
+            1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_start",
+          "position_m": [
+            0.0,
+            -7.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_end",
+          "position_m": [
+            25.0,
+            17.999999999999996,
+            0.15
+          ],
+          "outward": [
+            6.123233995736766e-17,
+            1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_4L_Curve90_R18",
+      "walk_width_m": 2,
+      "turn_degrees": 90,
+      "radius_m": 18
+    },
+    "Transit_Road_4L_Curve15_R36": {
+      "parts": [
+        "Transit_Road_4L_Curve15_R36_Surface",
+        "Transit_Road_4L_Curve15_R36_MarkLane1",
+        "Transit_Road_4L_Curve15_R36_MarkLane2",
+        "Transit_Road_4L_Curve15_R36_MarkLane3",
+        "Transit_Road_4L_Curve15_R36_MarkEdge-1",
+        "Transit_Road_4L_Curve15_R36_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            9.317485623690747,
+            1.2266702535935408,
+            0
+          ],
+          "outward": [
+            0.9659258262890683,
+            0.25881904510252074,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        }
+      ],
+      "lanes": 4,
+      "path_length_m": 9.42477796076938,
+      "radius_m": 36,
+      "turn_degrees": 15,
+      "walk_companion": "Transit_WalkSides_4L_Curve15_R36"
+    },
+    "Transit_WalkSides_4L_Curve15_R36": {
+      "parts": [
+        "Transit_WalkSides_4L_Curve15_R36_LeftPavement",
+        "Transit_WalkSides_4L_Curve15_R36_LeftCurb",
+        "Transit_WalkSides_4L_Curve15_R36_RightPavement",
+        "Transit_WalkSides_4L_Curve15_R36_RightCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "Left_start",
+          "position_m": [
+            0.0,
+            7.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Left_end",
+          "position_m": [
+            7.5057523079731014,
+            7.988151037617019,
+            0.15
+          ],
+          "outward": [
+            0.9659258262890683,
+            0.25881904510252074,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_start",
+          "position_m": [
+            0.0,
+            -7.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_end",
+          "position_m": [
+            11.129218939408393,
+            -5.534810530429937,
+            0.15
+          ],
+          "outward": [
+            0.9659258262890683,
+            0.25881904510252074,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_4L_Curve15_R36",
+      "walk_width_m": 2,
+      "turn_degrees": 15,
+      "radius_m": 36
+    },
+    "Transit_Road_4L_Curve30_R36": {
+      "parts": [
+        "Transit_Road_4L_Curve30_R36_Surface",
+        "Transit_Road_4L_Curve30_R36_MarkLane1",
+        "Transit_Road_4L_Curve30_R36_MarkLane2",
+        "Transit_Road_4L_Curve30_R36_MarkLane3",
+        "Transit_Road_4L_Curve30_R36_MarkEdge-1",
+        "Transit_Road_4L_Curve30_R36_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            17.999999999999996,
+            4.823085463760206,
+            0
+          ],
+          "outward": [
+            0.8660254037844387,
+            0.49999999999999994,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        }
+      ],
+      "lanes": 4,
+      "path_length_m": 18.84955592153876,
+      "radius_m": 36,
+      "turn_degrees": 30,
+      "walk_companion": "Transit_WalkSides_4L_Curve30_R36"
+    },
+    "Transit_WalkSides_4L_Curve30_R36": {
+      "parts": [
+        "Transit_WalkSides_4L_Curve30_R36_LeftPavement",
+        "Transit_WalkSides_4L_Curve30_R36_LeftCurb",
+        "Transit_WalkSides_4L_Curve30_R36_RightPavement",
+        "Transit_WalkSides_4L_Curve30_R36_RightCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "Left_start",
+          "position_m": [
+            0.0,
+            7.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Left_end",
+          "position_m": [
+            14.499999999999996,
+            10.885263290251277,
+            0.15
+          ],
+          "outward": [
+            0.8660254037844387,
+            0.49999999999999994,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_start",
+          "position_m": [
+            0.0,
+            -7.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_end",
+          "position_m": [
+            21.499999999999996,
+            -1.2390923627308652,
+            0.15
+          ],
+          "outward": [
+            0.8660254037844387,
+            0.49999999999999994,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_4L_Curve30_R36",
+      "walk_width_m": 2,
+      "turn_degrees": 30,
+      "radius_m": 36
+    },
+    "Transit_Road_4L_Curve45_R36": {
+      "parts": [
+        "Transit_Road_4L_Curve45_R36_Surface",
+        "Transit_Road_4L_Curve45_R36_MarkLane1",
+        "Transit_Road_4L_Curve45_R36_MarkLane2",
+        "Transit_Road_4L_Curve45_R36_MarkLane3",
+        "Transit_Road_4L_Curve45_R36_MarkEdge-1",
+        "Transit_Road_4L_Curve45_R36_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            25.455844122715714,
+            10.544155877284288,
+            0
+          ],
+          "outward": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        }
+      ],
+      "lanes": 4,
+      "path_length_m": 28.274333882308138,
+      "radius_m": 36,
+      "turn_degrees": 45,
+      "walk_companion": "Transit_WalkSides_4L_Curve45_R36"
+    },
+    "Transit_WalkSides_4L_Curve45_R36": {
+      "parts": [
+        "Transit_WalkSides_4L_Curve45_R36_LeftPavement",
+        "Transit_WalkSides_4L_Curve45_R36_LeftCurb",
+        "Transit_WalkSides_4L_Curve45_R36_RightPavement",
+        "Transit_WalkSides_4L_Curve45_R36_RightCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "Left_start",
+          "position_m": [
+            0.0,
+            7.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Left_end",
+          "position_m": [
+            20.50609665440988,
+            15.49390334559012,
+            0.15
+          ],
+          "outward": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_start",
+          "position_m": [
+            0.0,
+            -7.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_end",
+          "position_m": [
+            30.405591591021548,
+            5.594408408978455,
+            0.15
+          ],
+          "outward": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_4L_Curve45_R36",
+      "walk_width_m": 2,
+      "turn_degrees": 45,
+      "radius_m": 36
+    },
+    "Transit_Road_4L_Curve90_R36": {
+      "parts": [
+        "Transit_Road_4L_Curve90_R36_Surface",
+        "Transit_Road_4L_Curve90_R36_MarkLane1",
+        "Transit_Road_4L_Curve90_R36_MarkLane2",
+        "Transit_Road_4L_Curve90_R36_MarkLane3",
+        "Transit_Road_4L_Curve90_R36_MarkEdge-1",
+        "Transit_Road_4L_Curve90_R36_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            36.0,
+            35.99999999999999,
+            0
+          ],
+          "outward": [
+            6.123233995736766e-17,
+            1.0,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        }
+      ],
+      "lanes": 4,
+      "path_length_m": 56.548667764616276,
+      "radius_m": 36,
+      "turn_degrees": 90,
+      "walk_companion": "Transit_WalkSides_4L_Curve90_R36"
+    },
+    "Transit_WalkSides_4L_Curve90_R36": {
+      "parts": [
+        "Transit_WalkSides_4L_Curve90_R36_LeftPavement",
+        "Transit_WalkSides_4L_Curve90_R36_LeftCurb",
+        "Transit_WalkSides_4L_Curve90_R36_RightPavement",
+        "Transit_WalkSides_4L_Curve90_R36_RightCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "Left_start",
+          "position_m": [
+            0.0,
+            7.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Left_end",
+          "position_m": [
+            29.0,
+            35.99999999999999,
+            0.15
+          ],
+          "outward": [
+            6.123233995736766e-17,
+            1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_start",
+          "position_m": [
+            0.0,
+            -7.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_end",
+          "position_m": [
+            43.0,
+            35.99999999999999,
+            0.15
+          ],
+          "outward": [
+            6.123233995736766e-17,
+            1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_4L_Curve90_R36",
+      "walk_width_m": 2,
+      "turn_degrees": 90,
+      "radius_m": 36
+    },
+    "Transit_Road_6L_Curve15_R18": {
+      "parts": [
+        "Transit_Road_6L_Curve15_R18_Surface",
+        "Transit_Road_6L_Curve15_R18_MarkLane1",
+        "Transit_Road_6L_Curve15_R18_MarkLane2",
+        "Transit_Road_6L_Curve15_R18_MarkLane3",
+        "Transit_Road_6L_Curve15_R18_MarkLane4",
+        "Transit_Road_6L_Curve15_R18_MarkLane5",
+        "Transit_Road_6L_Curve15_R18_MarkEdge-1",
+        "Transit_Road_6L_Curve15_R18_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            4.658742811845373,
+            0.6133351267967704,
+            0
+          ],
+          "outward": [
+            0.9659258262890683,
+            0.25881904510252074,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        }
+      ],
+      "lanes": 6,
+      "path_length_m": 4.71238898038469,
+      "radius_m": 18,
+      "turn_degrees": 15,
+      "walk_companion": "Transit_WalkSides_6L_Curve15_R18"
+    },
+    "Transit_WalkSides_6L_Curve15_R18": {
+      "parts": [
+        "Transit_WalkSides_6L_Curve15_R18_LeftPavement",
+        "Transit_WalkSides_6L_Curve15_R18_LeftCurb",
+        "Transit_WalkSides_6L_Curve15_R18_RightPavement",
+        "Transit_WalkSides_6L_Curve15_R18_RightCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "Left_start",
+          "position_m": [
+            0.0,
+            10.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Left_end",
+          "position_m": [
+            2.070552360820166,
+            10.272593389687453,
+            0.15
+          ],
+          "outward": [
+            0.9659258262890683,
+            0.25881904510252074,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_start",
+          "position_m": [
+            0.0,
+            -10.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_end",
+          "position_m": [
+            7.246933262870581,
+            -9.045923136093913,
+            0.15
+          ],
+          "outward": [
+            0.9659258262890683,
+            0.25881904510252074,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_6L_Curve15_R18",
+      "walk_width_m": 2,
+      "turn_degrees": 15,
+      "radius_m": 18
+    },
+    "Transit_Road_6L_Curve30_R18": {
+      "parts": [
+        "Transit_Road_6L_Curve30_R18_Surface",
+        "Transit_Road_6L_Curve30_R18_MarkLane1",
+        "Transit_Road_6L_Curve30_R18_MarkLane2",
+        "Transit_Road_6L_Curve30_R18_MarkLane3",
+        "Transit_Road_6L_Curve30_R18_MarkLane4",
+        "Transit_Road_6L_Curve30_R18_MarkLane5",
+        "Transit_Road_6L_Curve30_R18_MarkEdge-1",
+        "Transit_Road_6L_Curve30_R18_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            8.999999999999998,
+            2.411542731880103,
+            0
+          ],
+          "outward": [
+            0.8660254037844387,
+            0.49999999999999994,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        }
+      ],
+      "lanes": 6,
+      "path_length_m": 9.42477796076938,
+      "radius_m": 18,
+      "turn_degrees": 30,
+      "walk_companion": "Transit_WalkSides_6L_Curve30_R18"
+    },
+    "Transit_WalkSides_6L_Curve30_R18": {
+      "parts": [
+        "Transit_WalkSides_6L_Curve30_R18_LeftPavement",
+        "Transit_WalkSides_6L_Curve30_R18_LeftCurb",
+        "Transit_WalkSides_6L_Curve30_R18_RightPavement",
+        "Transit_WalkSides_6L_Curve30_R18_RightCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "Left_start",
+          "position_m": [
+            0.0,
+            10.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Left_end",
+          "position_m": [
+            3.999999999999999,
+            11.07179676972449,
+            0.15
+          ],
+          "outward": [
+            0.8660254037844387,
+            0.49999999999999994,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_start",
+          "position_m": [
+            0.0,
+            -10.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_end",
+          "position_m": [
+            13.999999999999996,
+            -6.248711305964284,
+            0.15
+          ],
+          "outward": [
+            0.8660254037844387,
+            0.49999999999999994,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_6L_Curve30_R18",
+      "walk_width_m": 2,
+      "turn_degrees": 30,
+      "radius_m": 18
+    },
+    "Transit_Road_6L_Curve45_R18": {
+      "parts": [
+        "Transit_Road_6L_Curve45_R18_Surface",
+        "Transit_Road_6L_Curve45_R18_MarkLane1",
+        "Transit_Road_6L_Curve45_R18_MarkLane2",
+        "Transit_Road_6L_Curve45_R18_MarkLane3",
+        "Transit_Road_6L_Curve45_R18_MarkLane4",
+        "Transit_Road_6L_Curve45_R18_MarkLane5",
+        "Transit_Road_6L_Curve45_R18_MarkEdge-1",
+        "Transit_Road_6L_Curve45_R18_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            12.727922061357857,
+            5.272077938642144,
+            0
+          ],
+          "outward": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        }
+      ],
+      "lanes": 6,
+      "path_length_m": 14.137166941154069,
+      "radius_m": 18,
+      "turn_degrees": 45,
+      "walk_companion": "Transit_WalkSides_6L_Curve45_R18"
+    },
+    "Transit_WalkSides_6L_Curve45_R18": {
+      "parts": [
+        "Transit_WalkSides_6L_Curve45_R18_LeftPavement",
+        "Transit_WalkSides_6L_Curve45_R18_LeftCurb",
+        "Transit_WalkSides_6L_Curve45_R18_RightPavement",
+        "Transit_WalkSides_6L_Curve45_R18_RightCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "Left_start",
+          "position_m": [
+            0.0,
+            10.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Left_end",
+          "position_m": [
+            5.6568542494923815,
+            12.34314575050762,
+            0.15
+          ],
+          "outward": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_start",
+          "position_m": [
+            0.0,
+            -10.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_end",
+          "position_m": [
+            19.798989873223334,
+            -1.7989898732233316,
+            0.15
+          ],
+          "outward": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_6L_Curve45_R18",
+      "walk_width_m": 2,
+      "turn_degrees": 45,
+      "radius_m": 18
+    },
+    "Transit_Road_6L_Curve90_R18": {
+      "parts": [
+        "Transit_Road_6L_Curve90_R18_Surface",
+        "Transit_Road_6L_Curve90_R18_MarkLane1",
+        "Transit_Road_6L_Curve90_R18_MarkLane2",
+        "Transit_Road_6L_Curve90_R18_MarkLane3",
+        "Transit_Road_6L_Curve90_R18_MarkLane4",
+        "Transit_Road_6L_Curve90_R18_MarkLane5",
+        "Transit_Road_6L_Curve90_R18_MarkEdge-1",
+        "Transit_Road_6L_Curve90_R18_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            18.0,
+            17.999999999999996,
+            0
+          ],
+          "outward": [
+            6.123233995736766e-17,
+            1.0,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        }
+      ],
+      "lanes": 6,
+      "path_length_m": 28.274333882308138,
+      "radius_m": 18,
+      "turn_degrees": 90,
+      "walk_companion": "Transit_WalkSides_6L_Curve90_R18"
+    },
+    "Transit_WalkSides_6L_Curve90_R18": {
+      "parts": [
+        "Transit_WalkSides_6L_Curve90_R18_LeftPavement",
+        "Transit_WalkSides_6L_Curve90_R18_LeftCurb",
+        "Transit_WalkSides_6L_Curve90_R18_RightPavement",
+        "Transit_WalkSides_6L_Curve90_R18_RightCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "Left_start",
+          "position_m": [
+            0.0,
+            10.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Left_end",
+          "position_m": [
+            8.0,
+            17.999999999999996,
+            0.15
+          ],
+          "outward": [
+            6.123233995736766e-17,
+            1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_start",
+          "position_m": [
+            0.0,
+            -10.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_end",
+          "position_m": [
+            28.0,
+            17.999999999999996,
+            0.15
+          ],
+          "outward": [
+            6.123233995736766e-17,
+            1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_6L_Curve90_R18",
+      "walk_width_m": 2,
+      "turn_degrees": 90,
+      "radius_m": 18
+    },
+    "Transit_Road_6L_Curve15_R36": {
+      "parts": [
+        "Transit_Road_6L_Curve15_R36_Surface",
+        "Transit_Road_6L_Curve15_R36_MarkLane1",
+        "Transit_Road_6L_Curve15_R36_MarkLane2",
+        "Transit_Road_6L_Curve15_R36_MarkLane3",
+        "Transit_Road_6L_Curve15_R36_MarkLane4",
+        "Transit_Road_6L_Curve15_R36_MarkLane5",
+        "Transit_Road_6L_Curve15_R36_MarkEdge-1",
+        "Transit_Road_6L_Curve15_R36_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            9.317485623690747,
+            1.2266702535935408,
+            0
+          ],
+          "outward": [
+            0.9659258262890683,
+            0.25881904510252074,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        }
+      ],
+      "lanes": 6,
+      "path_length_m": 9.42477796076938,
+      "radius_m": 36,
+      "turn_degrees": 15,
+      "walk_companion": "Transit_WalkSides_6L_Curve15_R36"
+    },
+    "Transit_WalkSides_6L_Curve15_R36": {
+      "parts": [
+        "Transit_WalkSides_6L_Curve15_R36_LeftPavement",
+        "Transit_WalkSides_6L_Curve15_R36_LeftCurb",
+        "Transit_WalkSides_6L_Curve15_R36_RightPavement",
+        "Transit_WalkSides_6L_Curve15_R36_RightCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "Left_start",
+          "position_m": [
+            0.0,
+            10.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Left_end",
+          "position_m": [
+            6.729295172665539,
+            10.885928516484224,
+            0.15
+          ],
+          "outward": [
+            0.9659258262890683,
+            0.25881904510252074,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_start",
+          "position_m": [
+            0.0,
+            -10.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_end",
+          "position_m": [
+            11.905676074715954,
+            -8.432588009297142,
+            0.15
+          ],
+          "outward": [
+            0.9659258262890683,
+            0.25881904510252074,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_6L_Curve15_R36",
+      "walk_width_m": 2,
+      "turn_degrees": 15,
+      "radius_m": 36
+    },
+    "Transit_Road_6L_Curve30_R36": {
+      "parts": [
+        "Transit_Road_6L_Curve30_R36_Surface",
+        "Transit_Road_6L_Curve30_R36_MarkLane1",
+        "Transit_Road_6L_Curve30_R36_MarkLane2",
+        "Transit_Road_6L_Curve30_R36_MarkLane3",
+        "Transit_Road_6L_Curve30_R36_MarkLane4",
+        "Transit_Road_6L_Curve30_R36_MarkLane5",
+        "Transit_Road_6L_Curve30_R36_MarkEdge-1",
+        "Transit_Road_6L_Curve30_R36_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            17.999999999999996,
+            4.823085463760206,
+            0
+          ],
+          "outward": [
+            0.8660254037844387,
+            0.49999999999999994,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        }
+      ],
+      "lanes": 6,
+      "path_length_m": 18.84955592153876,
+      "radius_m": 36,
+      "turn_degrees": 30,
+      "walk_companion": "Transit_WalkSides_6L_Curve30_R36"
+    },
+    "Transit_WalkSides_6L_Curve30_R36": {
+      "parts": [
+        "Transit_WalkSides_6L_Curve30_R36_LeftPavement",
+        "Transit_WalkSides_6L_Curve30_R36_LeftCurb",
+        "Transit_WalkSides_6L_Curve30_R36_RightPavement",
+        "Transit_WalkSides_6L_Curve30_R36_RightCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "Left_start",
+          "position_m": [
+            0.0,
+            10.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Left_end",
+          "position_m": [
+            12.999999999999996,
+            13.483339501604593,
+            0.15
+          ],
+          "outward": [
+            0.8660254037844387,
+            0.49999999999999994,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_start",
+          "position_m": [
+            0.0,
+            -10.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_end",
+          "position_m": [
+            22.999999999999996,
+            -3.837168574084181,
+            0.15
+          ],
+          "outward": [
+            0.8660254037844387,
+            0.49999999999999994,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_6L_Curve30_R36",
+      "walk_width_m": 2,
+      "turn_degrees": 30,
+      "radius_m": 36
+    },
+    "Transit_Road_6L_Curve45_R36": {
+      "parts": [
+        "Transit_Road_6L_Curve45_R36_Surface",
+        "Transit_Road_6L_Curve45_R36_MarkLane1",
+        "Transit_Road_6L_Curve45_R36_MarkLane2",
+        "Transit_Road_6L_Curve45_R36_MarkLane3",
+        "Transit_Road_6L_Curve45_R36_MarkLane4",
+        "Transit_Road_6L_Curve45_R36_MarkLane5",
+        "Transit_Road_6L_Curve45_R36_MarkEdge-1",
+        "Transit_Road_6L_Curve45_R36_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            25.455844122715714,
+            10.544155877284288,
+            0
+          ],
+          "outward": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        }
+      ],
+      "lanes": 6,
+      "path_length_m": 28.274333882308138,
+      "radius_m": 36,
+      "turn_degrees": 45,
+      "walk_companion": "Transit_WalkSides_6L_Curve45_R36"
+    },
+    "Transit_WalkSides_6L_Curve45_R36": {
+      "parts": [
+        "Transit_WalkSides_6L_Curve45_R36_LeftPavement",
+        "Transit_WalkSides_6L_Curve45_R36_LeftCurb",
+        "Transit_WalkSides_6L_Curve45_R36_RightPavement",
+        "Transit_WalkSides_6L_Curve45_R36_RightCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "Left_start",
+          "position_m": [
+            0.0,
+            10.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Left_end",
+          "position_m": [
+            18.38477631085024,
+            17.615223689149765,
+            0.15
+          ],
+          "outward": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_start",
+          "position_m": [
+            0.0,
+            -10.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_end",
+          "position_m": [
+            32.52691193458119,
+            3.4730880654188123,
+            0.15
+          ],
+          "outward": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_6L_Curve45_R36",
+      "walk_width_m": 2,
+      "turn_degrees": 45,
+      "radius_m": 36
+    },
+    "Transit_Road_6L_Curve90_R36": {
+      "parts": [
+        "Transit_Road_6L_Curve90_R36_Surface",
+        "Transit_Road_6L_Curve90_R36_MarkLane1",
+        "Transit_Road_6L_Curve90_R36_MarkLane2",
+        "Transit_Road_6L_Curve90_R36_MarkLane3",
+        "Transit_Road_6L_Curve90_R36_MarkLane4",
+        "Transit_Road_6L_Curve90_R36_MarkLane5",
+        "Transit_Road_6L_Curve90_R36_MarkEdge-1",
+        "Transit_Road_6L_Curve90_R36_MarkEdge+1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            36.0,
+            35.99999999999999,
+            0
+          ],
+          "outward": [
+            6.123233995736766e-17,
+            1.0,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        }
+      ],
+      "lanes": 6,
+      "path_length_m": 56.548667764616276,
+      "radius_m": 36,
+      "turn_degrees": 90,
+      "walk_companion": "Transit_WalkSides_6L_Curve90_R36"
+    },
+    "Transit_WalkSides_6L_Curve90_R36": {
+      "parts": [
+        "Transit_WalkSides_6L_Curve90_R36_LeftPavement",
+        "Transit_WalkSides_6L_Curve90_R36_LeftCurb",
+        "Transit_WalkSides_6L_Curve90_R36_RightPavement",
+        "Transit_WalkSides_6L_Curve90_R36_RightCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "Left_start",
+          "position_m": [
+            0.0,
+            10.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Left_end",
+          "position_m": [
+            26.0,
+            35.99999999999999,
+            0.15
+          ],
+          "outward": [
+            6.123233995736766e-17,
+            1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_start",
+          "position_m": [
+            0.0,
+            -10.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "Right_end",
+          "position_m": [
+            46.0,
+            35.99999999999999,
+            0.15
+          ],
+          "outward": [
+            6.123233995736766e-17,
+            1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_6L_Curve90_R36",
+      "walk_width_m": 2,
+      "turn_degrees": 90,
+      "radius_m": 36
+    },
+    "Transit_Road_2L_XJunction_R4": {
+      "parts": [
+        "Transit_Road_2L_XJunction_R4_Surface",
+        "Transit_Road_2L_XJunction_R4_MarkStop0",
+        "Transit_Road_2L_XJunction_R4_MarkStop1",
+        "Transit_Road_2L_XJunction_R4_MarkStop2",
+        "Transit_Road_2L_XJunction_R4_MarkStop3"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "road_-1_0",
+          "position_m": [
+            -7.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        },
+        {
+          "id": "road_1_0",
+          "position_m": [
+            7.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        },
+        {
+          "id": "road_0_-1",
+          "position_m": [
+            0.0,
+            -7.0,
+            0
+          ],
+          "outward": [
+            0,
+            -1,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        },
+        {
+          "id": "road_0_1",
+          "position_m": [
+            0.0,
+            7.0,
+            0
+          ],
+          "outward": [
+            0,
+            1,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        }
+      ],
+      "lanes": 2,
+      "corner_radius_m": 4,
+      "footprint_m": [
+        14.0,
+        14.0
+      ],
+      "walk_companion": "Transit_WalkCorners_2L_XJunction_R4"
+    },
+    "Transit_WalkCorners_2L_XJunction_R4": {
+      "parts": [
+        "Transit_WalkCorners_2L_XJunction_R4_Corner11",
+        "Transit_WalkCorners_2L_XJunction_R4_Curb11",
+        "Transit_WalkCorners_2L_XJunction_R4_Corner1-1",
+        "Transit_WalkCorners_2L_XJunction_R4_Curb1-1",
+        "Transit_WalkCorners_2L_XJunction_R4_Corner-1-1",
+        "Transit_WalkCorners_2L_XJunction_R4_Curb-1-1",
+        "Transit_WalkCorners_2L_XJunction_R4_Corner-11",
+        "Transit_WalkCorners_2L_XJunction_R4_Curb-11"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "1_1_start",
+          "position_m": [
+            4.0,
+            7.0,
+            0.15
+          ],
+          "outward": [
+            1.2246467991473532e-16,
+            1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "1_1_end",
+          "position_m": [
+            6.999999999999999,
+            4.0,
+            0.15
+          ],
+          "outward": [
+            1.0,
+            -1.8369701987210297e-16,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "1_-1_start",
+          "position_m": [
+            7.0,
+            -4.0,
+            0.15
+          ],
+          "outward": [
+            1.0,
+            -6.123233995736766e-17,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "1_-1_end",
+          "position_m": [
+            4.0,
+            -7.0,
+            0.15
+          ],
+          "outward": [
+            -1.2246467991473532e-16,
+            -1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "-1_-1_start",
+          "position_m": [
+            -4.0,
+            -7.0,
+            0.15
+          ],
+          "outward": [
+            0.0,
+            -1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "-1_-1_end",
+          "position_m": [
+            -7.0,
+            -4.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            6.123233995736766e-17,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "-1_1_start",
+          "position_m": [
+            -7.0,
+            4.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -6.123233995736766e-17,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "-1_1_end",
+          "position_m": [
+            -4.0,
+            7.0,
+            0.15
+          ],
+          "outward": [
+            -0.0,
+            1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_2L_XJunction_R4",
+      "walk_width_m": 2
+    },
+    "Transit_Road_2L_TJunction_R4": {
+      "parts": [
+        "Transit_Road_2L_TJunction_R4_Surface",
+        "Transit_Road_2L_TJunction_R4_MarkStop0",
+        "Transit_Road_2L_TJunction_R4_MarkStop1",
+        "Transit_Road_2L_TJunction_R4_MarkStop2"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "road_-1_0",
+          "position_m": [
+            -7.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        },
+        {
+          "id": "road_1_0",
+          "position_m": [
+            7.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        },
+        {
+          "id": "road_0_-1",
+          "position_m": [
+            0.0,
+            -7.0,
+            0
+          ],
+          "outward": [
+            0,
+            -1,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        }
+      ],
+      "lanes": 2,
+      "corner_radius_m": 4,
+      "footprint_m": [
+        14.0,
+        14.0
+      ],
+      "walk_companion": "Transit_WalkCorners_2L_TJunction_R4"
+    },
+    "Transit_WalkCorners_2L_TJunction_R4": {
+      "parts": [
+        "Transit_WalkCorners_2L_TJunction_R4_Corner1-1",
+        "Transit_WalkCorners_2L_TJunction_R4_Curb1-1",
+        "Transit_WalkCorners_2L_TJunction_R4_Corner-1-1",
+        "Transit_WalkCorners_2L_TJunction_R4_Curb-1-1",
+        "Transit_WalkCorners_2L_TJunction_R4_ClosedSideWalk",
+        "Transit_WalkCorners_2L_TJunction_R4_ClosedSideCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "1_-1_start",
+          "position_m": [
+            7.0,
+            -4.0,
+            0.15
+          ],
+          "outward": [
+            1.0,
+            -6.123233995736766e-17,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "1_-1_end",
+          "position_m": [
+            4.0,
+            -7.0,
+            0.15
+          ],
+          "outward": [
+            -1.2246467991473532e-16,
+            -1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "-1_-1_start",
+          "position_m": [
+            -4.0,
+            -7.0,
+            0.15
+          ],
+          "outward": [
+            0.0,
+            -1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "-1_-1_end",
+          "position_m": [
+            -7.0,
+            -4.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            6.123233995736766e-17,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "closed_start",
+          "position_m": [
+            -7.0,
+            4.0,
+            0.15
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "closed_end",
+          "position_m": [
+            7.0,
+            4.0,
+            0.15
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_2L_TJunction_R4",
+      "walk_width_m": 2
+    },
+    "Transit_Road_4L_XJunction_R4": {
+      "parts": [
+        "Transit_Road_4L_XJunction_R4_Surface",
+        "Transit_Road_4L_XJunction_R4_MarkStop0",
+        "Transit_Road_4L_XJunction_R4_MarkStop1",
+        "Transit_Road_4L_XJunction_R4_MarkStop2",
+        "Transit_Road_4L_XJunction_R4_MarkStop3"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "road_-1_0",
+          "position_m": [
+            -10.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        },
+        {
+          "id": "road_1_0",
+          "position_m": [
+            10.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        },
+        {
+          "id": "road_0_-1",
+          "position_m": [
+            0.0,
+            -10.0,
+            0
+          ],
+          "outward": [
+            0,
+            -1,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        },
+        {
+          "id": "road_0_1",
+          "position_m": [
+            0.0,
+            10.0,
+            0
+          ],
+          "outward": [
+            0,
+            1,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        }
+      ],
+      "lanes": 4,
+      "corner_radius_m": 4,
+      "footprint_m": [
+        20.0,
+        20.0
+      ],
+      "walk_companion": "Transit_WalkCorners_4L_XJunction_R4"
+    },
+    "Transit_WalkCorners_4L_XJunction_R4": {
+      "parts": [
+        "Transit_WalkCorners_4L_XJunction_R4_Corner11",
+        "Transit_WalkCorners_4L_XJunction_R4_Curb11",
+        "Transit_WalkCorners_4L_XJunction_R4_Corner1-1",
+        "Transit_WalkCorners_4L_XJunction_R4_Curb1-1",
+        "Transit_WalkCorners_4L_XJunction_R4_Corner-1-1",
+        "Transit_WalkCorners_4L_XJunction_R4_Curb-1-1",
+        "Transit_WalkCorners_4L_XJunction_R4_Corner-11",
+        "Transit_WalkCorners_4L_XJunction_R4_Curb-11"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "1_1_start",
+          "position_m": [
+            7.0,
+            10.0,
+            0.15
+          ],
+          "outward": [
+            1.2246467991473532e-16,
+            1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "1_1_end",
+          "position_m": [
+            10.0,
+            7.0,
+            0.15
+          ],
+          "outward": [
+            1.0,
+            -1.8369701987210297e-16,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "1_-1_start",
+          "position_m": [
+            10.0,
+            -7.0,
+            0.15
+          ],
+          "outward": [
+            1.0,
+            -6.123233995736766e-17,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "1_-1_end",
+          "position_m": [
+            7.0,
+            -10.0,
+            0.15
+          ],
+          "outward": [
+            -1.2246467991473532e-16,
+            -1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "-1_-1_start",
+          "position_m": [
+            -7.0,
+            -10.0,
+            0.15
+          ],
+          "outward": [
+            0.0,
+            -1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "-1_-1_end",
+          "position_m": [
+            -10.0,
+            -7.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            6.123233995736766e-17,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "-1_1_start",
+          "position_m": [
+            -10.0,
+            7.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -6.123233995736766e-17,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "-1_1_end",
+          "position_m": [
+            -7.0,
+            10.0,
+            0.15
+          ],
+          "outward": [
+            -0.0,
+            1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_4L_XJunction_R4",
+      "walk_width_m": 2
+    },
+    "Transit_Road_4L_TJunction_R4": {
+      "parts": [
+        "Transit_Road_4L_TJunction_R4_Surface",
+        "Transit_Road_4L_TJunction_R4_MarkStop0",
+        "Transit_Road_4L_TJunction_R4_MarkStop1",
+        "Transit_Road_4L_TJunction_R4_MarkStop2"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "road_-1_0",
+          "position_m": [
+            -10.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        },
+        {
+          "id": "road_1_0",
+          "position_m": [
+            10.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        },
+        {
+          "id": "road_0_-1",
+          "position_m": [
+            0.0,
+            -10.0,
+            0
+          ],
+          "outward": [
+            0,
+            -1,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        }
+      ],
+      "lanes": 4,
+      "corner_radius_m": 4,
+      "footprint_m": [
+        20.0,
+        20.0
+      ],
+      "walk_companion": "Transit_WalkCorners_4L_TJunction_R4"
+    },
+    "Transit_WalkCorners_4L_TJunction_R4": {
+      "parts": [
+        "Transit_WalkCorners_4L_TJunction_R4_Corner1-1",
+        "Transit_WalkCorners_4L_TJunction_R4_Curb1-1",
+        "Transit_WalkCorners_4L_TJunction_R4_Corner-1-1",
+        "Transit_WalkCorners_4L_TJunction_R4_Curb-1-1",
+        "Transit_WalkCorners_4L_TJunction_R4_ClosedSideWalk",
+        "Transit_WalkCorners_4L_TJunction_R4_ClosedSideCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "1_-1_start",
+          "position_m": [
+            10.0,
+            -7.0,
+            0.15
+          ],
+          "outward": [
+            1.0,
+            -6.123233995736766e-17,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "1_-1_end",
+          "position_m": [
+            7.0,
+            -10.0,
+            0.15
+          ],
+          "outward": [
+            -1.2246467991473532e-16,
+            -1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "-1_-1_start",
+          "position_m": [
+            -7.0,
+            -10.0,
+            0.15
+          ],
+          "outward": [
+            0.0,
+            -1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "-1_-1_end",
+          "position_m": [
+            -10.0,
+            -7.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            6.123233995736766e-17,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "closed_start",
+          "position_m": [
+            -10.0,
+            7.0,
+            0.15
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "closed_end",
+          "position_m": [
+            10.0,
+            7.0,
+            0.15
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_4L_TJunction_R4",
+      "walk_width_m": 2
+    },
+    "Transit_Road_6L_XJunction_R4": {
+      "parts": [
+        "Transit_Road_6L_XJunction_R4_Surface",
+        "Transit_Road_6L_XJunction_R4_MarkStop0",
+        "Transit_Road_6L_XJunction_R4_MarkStop1",
+        "Transit_Road_6L_XJunction_R4_MarkStop2",
+        "Transit_Road_6L_XJunction_R4_MarkStop3"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "road_-1_0",
+          "position_m": [
+            -13.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        },
+        {
+          "id": "road_1_0",
+          "position_m": [
+            13.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        },
+        {
+          "id": "road_0_-1",
+          "position_m": [
+            0.0,
+            -13.0,
+            0
+          ],
+          "outward": [
+            0,
+            -1,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        },
+        {
+          "id": "road_0_1",
+          "position_m": [
+            0.0,
+            13.0,
+            0
+          ],
+          "outward": [
+            0,
+            1,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        }
+      ],
+      "lanes": 6,
+      "corner_radius_m": 4,
+      "footprint_m": [
+        26.0,
+        26.0
+      ],
+      "walk_companion": "Transit_WalkCorners_6L_XJunction_R4"
+    },
+    "Transit_WalkCorners_6L_XJunction_R4": {
+      "parts": [
+        "Transit_WalkCorners_6L_XJunction_R4_Corner11",
+        "Transit_WalkCorners_6L_XJunction_R4_Curb11",
+        "Transit_WalkCorners_6L_XJunction_R4_Corner1-1",
+        "Transit_WalkCorners_6L_XJunction_R4_Curb1-1",
+        "Transit_WalkCorners_6L_XJunction_R4_Corner-1-1",
+        "Transit_WalkCorners_6L_XJunction_R4_Curb-1-1",
+        "Transit_WalkCorners_6L_XJunction_R4_Corner-11",
+        "Transit_WalkCorners_6L_XJunction_R4_Curb-11"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "1_1_start",
+          "position_m": [
+            10.0,
+            13.0,
+            0.15
+          ],
+          "outward": [
+            1.2246467991473532e-16,
+            1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "1_1_end",
+          "position_m": [
+            13.0,
+            10.0,
+            0.15
+          ],
+          "outward": [
+            1.0,
+            -1.8369701987210297e-16,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "1_-1_start",
+          "position_m": [
+            13.0,
+            -10.0,
+            0.15
+          ],
+          "outward": [
+            1.0,
+            -6.123233995736766e-17,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "1_-1_end",
+          "position_m": [
+            10.0,
+            -13.0,
+            0.15
+          ],
+          "outward": [
+            -1.2246467991473532e-16,
+            -1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "-1_-1_start",
+          "position_m": [
+            -10.0,
+            -13.0,
+            0.15
+          ],
+          "outward": [
+            0.0,
+            -1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "-1_-1_end",
+          "position_m": [
+            -13.0,
+            -10.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            6.123233995736766e-17,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "-1_1_start",
+          "position_m": [
+            -13.0,
+            10.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -6.123233995736766e-17,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "-1_1_end",
+          "position_m": [
+            -10.0,
+            13.0,
+            0.15
+          ],
+          "outward": [
+            -0.0,
+            1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_6L_XJunction_R4",
+      "walk_width_m": 2
+    },
+    "Transit_Road_6L_TJunction_R4": {
+      "parts": [
+        "Transit_Road_6L_TJunction_R4_Surface",
+        "Transit_Road_6L_TJunction_R4_MarkStop0",
+        "Transit_Road_6L_TJunction_R4_MarkStop1",
+        "Transit_Road_6L_TJunction_R4_MarkStop2"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "road_-1_0",
+          "position_m": [
+            -13.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        },
+        {
+          "id": "road_1_0",
+          "position_m": [
+            13.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        },
+        {
+          "id": "road_0_-1",
+          "position_m": [
+            0.0,
+            -13.0,
+            0
+          ],
+          "outward": [
+            0,
+            -1,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        }
+      ],
+      "lanes": 6,
+      "corner_radius_m": 4,
+      "footprint_m": [
+        26.0,
+        26.0
+      ],
+      "walk_companion": "Transit_WalkCorners_6L_TJunction_R4"
+    },
+    "Transit_WalkCorners_6L_TJunction_R4": {
+      "parts": [
+        "Transit_WalkCorners_6L_TJunction_R4_Corner1-1",
+        "Transit_WalkCorners_6L_TJunction_R4_Curb1-1",
+        "Transit_WalkCorners_6L_TJunction_R4_Corner-1-1",
+        "Transit_WalkCorners_6L_TJunction_R4_Curb-1-1",
+        "Transit_WalkCorners_6L_TJunction_R4_ClosedSideWalk",
+        "Transit_WalkCorners_6L_TJunction_R4_ClosedSideCurb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "1_-1_start",
+          "position_m": [
+            13.0,
+            -10.0,
+            0.15
+          ],
+          "outward": [
+            1.0,
+            -6.123233995736766e-17,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "1_-1_end",
+          "position_m": [
+            10.0,
+            -13.0,
+            0.15
+          ],
+          "outward": [
+            -1.2246467991473532e-16,
+            -1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "-1_-1_start",
+          "position_m": [
+            -10.0,
+            -13.0,
+            0.15
+          ],
+          "outward": [
+            0.0,
+            -1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "-1_-1_end",
+          "position_m": [
+            -13.0,
+            -10.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            6.123233995736766e-17,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "closed_start",
+          "position_m": [
+            -13.0,
+            10.0,
+            0.15
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "closed_end",
+          "position_m": [
+            13.0,
+            10.0,
+            0.15
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_6L_TJunction_R4",
+      "walk_width_m": 2
+    },
+    "Transit_Road_Taper_2L_4L_24m": {
+      "parts": [
+        "Transit_Road_Taper_2L_4L_24m_Surface",
+        "Transit_Road_Taper_2L_4L_24m_MarkCenter",
+        "Transit_Road_Taper_2L_4L_24m_MarkEdge-1",
+        "Transit_Road_Taper_2L_4L_24m_MarkEdge1",
+        "Transit_Road_Taper_2L_4L_24m_MarkMerge-1_1",
+        "Transit_Road_Taper_2L_4L_24m_MarkMerge1_1"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -12.0,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            12.0,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        }
+      ],
+      "start_lanes": 2,
+      "end_lanes": 4,
+      "path_length_m": 24,
+      "profile": "cubic_smoothstep",
+      "reverse_allowed": true,
+      "walk_companion": "Transit_WalkSides_Taper_2L_4L_24m"
+    },
+    "Transit_WalkSides_Taper_2L_4L_24m": {
+      "parts": [
+        "Transit_WalkSides_Taper_2L_4L_24m_Walk-1",
+        "Transit_WalkSides_Taper_2L_4L_24m_Curb-1",
+        "Transit_WalkSides_Taper_2L_4L_24m_Walk1",
+        "Transit_WalkSides_Taper_2L_4L_24m_Curb1"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "-1_start",
+          "position_m": [
+            -12.0,
+            -4.0,
+            0.15
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "-1_end",
+          "position_m": [
+            12.0,
+            -7.0,
+            0.15
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "1_start",
+          "position_m": [
+            -12.0,
+            4.0,
+            0.15
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "1_end",
+          "position_m": [
+            12.0,
+            7.0,
+            0.15
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_Taper_2L_4L_24m"
+    },
+    "Transit_Road_Taper_4L_6L_24m": {
+      "parts": [
+        "Transit_Road_Taper_4L_6L_24m_Surface",
+        "Transit_Road_Taper_4L_6L_24m_MarkCenter",
+        "Transit_Road_Taper_4L_6L_24m_MarkEdge-1",
+        "Transit_Road_Taper_4L_6L_24m_MarkEdge1",
+        "Transit_Road_Taper_4L_6L_24m_MarkMerge-1_1",
+        "Transit_Road_Taper_4L_6L_24m_MarkMerge-1_2",
+        "Transit_Road_Taper_4L_6L_24m_MarkMerge1_1",
+        "Transit_Road_Taper_4L_6L_24m_MarkMerge1_2"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -12.0,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            12.0,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        }
+      ],
+      "start_lanes": 4,
+      "end_lanes": 6,
+      "path_length_m": 24,
+      "profile": "cubic_smoothstep",
+      "reverse_allowed": true,
+      "walk_companion": "Transit_WalkSides_Taper_4L_6L_24m"
+    },
+    "Transit_WalkSides_Taper_4L_6L_24m": {
+      "parts": [
+        "Transit_WalkSides_Taper_4L_6L_24m_Walk-1",
+        "Transit_WalkSides_Taper_4L_6L_24m_Curb-1",
+        "Transit_WalkSides_Taper_4L_6L_24m_Walk1",
+        "Transit_WalkSides_Taper_4L_6L_24m_Curb1"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "-1_start",
+          "position_m": [
+            -12.0,
+            -7.0,
+            0.15
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "-1_end",
+          "position_m": [
+            12.0,
+            -10.0,
+            0.15
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "1_start",
+          "position_m": [
+            -12.0,
+            7.0,
+            0.15
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "1_end",
+          "position_m": [
+            12.0,
+            10.0,
+            0.15
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_Taper_4L_6L_24m"
+    },
+    "Transit_Road_Taper_2L_6L_36m": {
+      "parts": [
+        "Transit_Road_Taper_2L_6L_36m_Surface",
+        "Transit_Road_Taper_2L_6L_36m_MarkCenter",
+        "Transit_Road_Taper_2L_6L_36m_MarkEdge-1",
+        "Transit_Road_Taper_2L_6L_36m_MarkEdge1",
+        "Transit_Road_Taper_2L_6L_36m_MarkMerge-1_1",
+        "Transit_Road_Taper_2L_6L_36m_MarkMerge-1_2",
+        "Transit_Road_Taper_2L_6L_36m_MarkMerge1_1",
+        "Transit_Road_Taper_2L_6L_36m_MarkMerge1_2"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -18.0,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            18.0,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        }
+      ],
+      "start_lanes": 2,
+      "end_lanes": 6,
+      "path_length_m": 36,
+      "profile": "cubic_smoothstep",
+      "reverse_allowed": true,
+      "walk_companion": "Transit_WalkSides_Taper_2L_6L_36m"
+    },
+    "Transit_WalkSides_Taper_2L_6L_36m": {
+      "parts": [
+        "Transit_WalkSides_Taper_2L_6L_36m_Walk-1",
+        "Transit_WalkSides_Taper_2L_6L_36m_Curb-1",
+        "Transit_WalkSides_Taper_2L_6L_36m_Walk1",
+        "Transit_WalkSides_Taper_2L_6L_36m_Curb1"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "-1_start",
+          "position_m": [
+            -18.0,
+            -4.0,
+            0.15
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "-1_end",
+          "position_m": [
+            18.0,
+            -10.0,
+            0.15
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "1_start",
+          "position_m": [
+            -18.0,
+            4.0,
+            0.15
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "1_end",
+          "position_m": [
+            18.0,
+            10.0,
+            0.15
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "companion_road": "Transit_Road_Taper_2L_6L_36m"
+    },
+    "Transit_Walk_W2_Straight_2m": {
+      "parts": [
+        "Transit_Walk_W2_Straight_2m_Pavement",
+        "Transit_Walk_W2_Straight_2m_Curb",
+        "Transit_Walk_W2_Straight_2m_MarkPaverJoints"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -1.0,
+            0,
+            0.15
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            1.0,
+            0,
+            0.15
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "walk_width_m": 2,
+      "path_length_m": 2
+    },
+    "Transit_Walk_W2_Straight_4m": {
+      "parts": [
+        "Transit_Walk_W2_Straight_4m_Pavement",
+        "Transit_Walk_W2_Straight_4m_Curb",
+        "Transit_Walk_W2_Straight_4m_MarkPaverJoints"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -2.0,
+            0,
+            0.15
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            2.0,
+            0,
+            0.15
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "walk_width_m": 2,
+      "path_length_m": 4
+    },
+    "Transit_Walk_W2_Straight_8m": {
+      "parts": [
+        "Transit_Walk_W2_Straight_8m_Pavement",
+        "Transit_Walk_W2_Straight_8m_Curb",
+        "Transit_Walk_W2_Straight_8m_MarkPaverJoints"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -4.0,
+            0,
+            0.15
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            4.0,
+            0,
+            0.15
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "walk_width_m": 2,
+      "path_length_m": 8
+    },
+    "Transit_Walk_W2_Curve45_R4": {
+      "parts": [
+        "Transit_Walk_W2_Curve45_R4_Pavement",
+        "Transit_Walk_W2_Curve45_R4_Curb",
+        "Transit_Walk_W2_Curve45_R4_MarkPaverJoints"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            2.8284271247461903,
+            1.1715728752538097,
+            0.15
+          ],
+          "outward": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "walk_width_m": 2,
+      "path_length_m": 3.141592653589793,
+      "radius_m": 4,
+      "turn_degrees": 45
+    },
+    "Transit_Walk_W2_Curve90_R4": {
+      "parts": [
+        "Transit_Walk_W2_Curve90_R4_Pavement",
+        "Transit_Walk_W2_Curve90_R4_Curb",
+        "Transit_Walk_W2_Curve90_R4_MarkPaverJoints"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            4.0,
+            3.9999999999999996,
+            0.15
+          ],
+          "outward": [
+            6.123233995736766e-17,
+            1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "walk_width_m": 2,
+      "path_length_m": 6.283185307179586,
+      "radius_m": 4,
+      "turn_degrees": 90
+    },
+    "Transit_Walk_W2_Curve45_R8": {
+      "parts": [
+        "Transit_Walk_W2_Curve45_R8_Pavement",
+        "Transit_Walk_W2_Curve45_R8_Curb",
+        "Transit_Walk_W2_Curve45_R8_MarkPaverJoints"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            5.656854249492381,
+            2.3431457505076194,
+            0.15
+          ],
+          "outward": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "walk_width_m": 2,
+      "path_length_m": 6.283185307179586,
+      "radius_m": 8,
+      "turn_degrees": 45
+    },
+    "Transit_Walk_W2_Curve90_R8": {
+      "parts": [
+        "Transit_Walk_W2_Curve90_R8_Pavement",
+        "Transit_Walk_W2_Curve90_R8_Curb",
+        "Transit_Walk_W2_Curve90_R8_MarkPaverJoints"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            8.0,
+            7.999999999999999,
+            0.15
+          ],
+          "outward": [
+            6.123233995736766e-17,
+            1.0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "walk_width_m": 2,
+      "path_length_m": 12.566370614359172,
+      "radius_m": 8,
+      "turn_degrees": 90
+    },
+    "Transit_Walk_W2_XJunction": {
+      "parts": [
+        "Transit_Walk_W2_XJunction_Pavement"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "(-1, 0)",
+          "position_m": [
+            -3.0,
+            0.0,
+            0.15
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "(1, 0)",
+          "position_m": [
+            3.0,
+            0.0,
+            0.15
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "(0, -1)",
+          "position_m": [
+            0.0,
+            -3.0,
+            0.15
+          ],
+          "outward": [
+            0,
+            -1,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "(0, 1)",
+          "position_m": [
+            0.0,
+            3.0,
+            0.15
+          ],
+          "outward": [
+            0,
+            1,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "walk_width_m": 2
+    },
+    "Transit_Walk_W2_TJunction": {
+      "parts": [
+        "Transit_Walk_W2_TJunction_Pavement"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "(-1, 0)",
+          "position_m": [
+            -3.0,
+            0.0,
+            0.15
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "(1, 0)",
+          "position_m": [
+            3.0,
+            0.0,
+            0.15
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "(0, -1)",
+          "position_m": [
+            0.0,
+            -3.0,
+            0.15
+          ],
+          "outward": [
+            0,
+            -1,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "walk_width_m": 2
+    },
+    "Transit_Walk_W2_AccessibleRamp_4m": {
+      "parts": [
+        "Transit_Walk_W2_AccessibleRamp_4m_Ramp",
+        "Transit_Walk_W2_AccessibleRamp_4m_Tactile"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "raised",
+          "position_m": [
+            -2,
+            0,
+            0.15
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        },
+        {
+          "id": "flush",
+          "position_m": [
+            2,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ],
+      "slope": 0.0375,
+      "height_delta_m": 0.15
+    },
+    "Transit_Walk_W2_EndCap": {
+      "parts": [
+        "Transit_Walk_W2_EndCap_Pavement",
+        "Transit_Walk_W2_EndCap_Curb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -0.5,
+            0,
+            0.15
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 2,
+          "kind": "walk"
+        }
+      ]
+    },
+    "Transit_Walk_W4_Straight_2m": {
+      "parts": [
+        "Transit_Walk_W4_Straight_2m_Pavement",
+        "Transit_Walk_W4_Straight_2m_Curb",
+        "Transit_Walk_W4_Straight_2m_MarkPaverJoints"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -1.0,
+            0,
+            0.15
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            1.0,
+            0,
+            0.15
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        }
+      ],
+      "walk_width_m": 4,
+      "path_length_m": 2
+    },
+    "Transit_Walk_W4_Straight_4m": {
+      "parts": [
+        "Transit_Walk_W4_Straight_4m_Pavement",
+        "Transit_Walk_W4_Straight_4m_Curb",
+        "Transit_Walk_W4_Straight_4m_MarkPaverJoints"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -2.0,
+            0,
+            0.15
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            2.0,
+            0,
+            0.15
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        }
+      ],
+      "walk_width_m": 4,
+      "path_length_m": 4
+    },
+    "Transit_Walk_W4_Straight_8m": {
+      "parts": [
+        "Transit_Walk_W4_Straight_8m_Pavement",
+        "Transit_Walk_W4_Straight_8m_Curb",
+        "Transit_Walk_W4_Straight_8m_MarkPaverJoints"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -4.0,
+            0,
+            0.15
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            4.0,
+            0,
+            0.15
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        }
+      ],
+      "walk_width_m": 4,
+      "path_length_m": 8
+    },
+    "Transit_Walk_W4_Curve45_R4": {
+      "parts": [
+        "Transit_Walk_W4_Curve45_R4_Pavement",
+        "Transit_Walk_W4_Curve45_R4_Curb",
+        "Transit_Walk_W4_Curve45_R4_MarkPaverJoints"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            2.8284271247461903,
+            1.1715728752538097,
+            0.15
+          ],
+          "outward": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        }
+      ],
+      "walk_width_m": 4,
+      "path_length_m": 3.141592653589793,
+      "radius_m": 4,
+      "turn_degrees": 45
+    },
+    "Transit_Walk_W4_Curve90_R4": {
+      "parts": [
+        "Transit_Walk_W4_Curve90_R4_Pavement",
+        "Transit_Walk_W4_Curve90_R4_Curb",
+        "Transit_Walk_W4_Curve90_R4_MarkPaverJoints"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            4.0,
+            3.9999999999999996,
+            0.15
+          ],
+          "outward": [
+            6.123233995736766e-17,
+            1.0,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        }
+      ],
+      "walk_width_m": 4,
+      "path_length_m": 6.283185307179586,
+      "radius_m": 4,
+      "turn_degrees": 90
+    },
+    "Transit_Walk_W4_Curve45_R8": {
+      "parts": [
+        "Transit_Walk_W4_Curve45_R8_Pavement",
+        "Transit_Walk_W4_Curve45_R8_Curb",
+        "Transit_Walk_W4_Curve45_R8_MarkPaverJoints"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            5.656854249492381,
+            2.3431457505076194,
+            0.15
+          ],
+          "outward": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        }
+      ],
+      "walk_width_m": 4,
+      "path_length_m": 6.283185307179586,
+      "radius_m": 8,
+      "turn_degrees": 45
+    },
+    "Transit_Walk_W4_Curve90_R8": {
+      "parts": [
+        "Transit_Walk_W4_Curve90_R8_Pavement",
+        "Transit_Walk_W4_Curve90_R8_Curb",
+        "Transit_Walk_W4_Curve90_R8_MarkPaverJoints"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0.15
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            8.0,
+            7.999999999999999,
+            0.15
+          ],
+          "outward": [
+            6.123233995736766e-17,
+            1.0,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        }
+      ],
+      "walk_width_m": 4,
+      "path_length_m": 12.566370614359172,
+      "radius_m": 8,
+      "turn_degrees": 90
+    },
+    "Transit_Walk_W4_XJunction": {
+      "parts": [
+        "Transit_Walk_W4_XJunction_Pavement"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "(-1, 0)",
+          "position_m": [
+            -6.0,
+            0.0,
+            0.15
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        },
+        {
+          "id": "(1, 0)",
+          "position_m": [
+            6.0,
+            0.0,
+            0.15
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        },
+        {
+          "id": "(0, -1)",
+          "position_m": [
+            0.0,
+            -6.0,
+            0.15
+          ],
+          "outward": [
+            0,
+            -1,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        },
+        {
+          "id": "(0, 1)",
+          "position_m": [
+            0.0,
+            6.0,
+            0.15
+          ],
+          "outward": [
+            0,
+            1,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        }
+      ],
+      "walk_width_m": 4
+    },
+    "Transit_Walk_W4_TJunction": {
+      "parts": [
+        "Transit_Walk_W4_TJunction_Pavement"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "(-1, 0)",
+          "position_m": [
+            -6.0,
+            0.0,
+            0.15
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        },
+        {
+          "id": "(1, 0)",
+          "position_m": [
+            6.0,
+            0.0,
+            0.15
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        },
+        {
+          "id": "(0, -1)",
+          "position_m": [
+            0.0,
+            -6.0,
+            0.15
+          ],
+          "outward": [
+            0,
+            -1,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        }
+      ],
+      "walk_width_m": 4
+    },
+    "Transit_Walk_W4_AccessibleRamp_4m": {
+      "parts": [
+        "Transit_Walk_W4_AccessibleRamp_4m_Ramp",
+        "Transit_Walk_W4_AccessibleRamp_4m_Tactile"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "raised",
+          "position_m": [
+            -2,
+            0,
+            0.15
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        },
+        {
+          "id": "flush",
+          "position_m": [
+            2,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        }
+      ],
+      "slope": 0.0375,
+      "height_delta_m": 0.15
+    },
+    "Transit_Walk_W4_EndCap": {
+      "parts": [
+        "Transit_Walk_W4_EndCap_Pavement",
+        "Transit_Walk_W4_EndCap_Curb"
+      ],
+      "category": "walk",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -0.5,
+            0,
+            0.15
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        }
+      ]
+    },
+    "Transit_Road_2L_Crosswalk_4m": {
+      "parts": [
+        "Transit_Road_2L_Crosswalk_4m_Surface",
+        "Transit_Road_2L_Crosswalk_4m_MarkCrosswalk"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -2.0,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            2.0,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "road"
+        },
+        {
+          "id": "walk_left",
+          "position_m": [
+            0,
+            3.0,
+            0
+          ],
+          "outward": [
+            0,
+            1,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        },
+        {
+          "id": "walk_right",
+          "position_m": [
+            0,
+            -3.0,
+            0
+          ],
+          "outward": [
+            0,
+            -1,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        }
+      ],
+      "lanes": 2,
+      "pedestrian_crossing": true
+    },
+    "Transit_Road_4L_Crosswalk_4m": {
+      "parts": [
+        "Transit_Road_4L_Crosswalk_4m_Surface",
+        "Transit_Road_4L_Crosswalk_4m_MarkCrosswalk"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -2.0,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            2.0,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 12,
+          "kind": "road"
+        },
+        {
+          "id": "walk_left",
+          "position_m": [
+            0,
+            6.0,
+            0
+          ],
+          "outward": [
+            0,
+            1,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        },
+        {
+          "id": "walk_right",
+          "position_m": [
+            0,
+            -6.0,
+            0
+          ],
+          "outward": [
+            0,
+            -1,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        }
+      ],
+      "lanes": 4,
+      "pedestrian_crossing": true
+    },
+    "Transit_Road_6L_Crosswalk_4m": {
+      "parts": [
+        "Transit_Road_6L_Crosswalk_4m_Surface",
+        "Transit_Road_6L_Crosswalk_4m_MarkCrosswalk"
+      ],
+      "category": "road",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -2.0,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            2.0,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 18,
+          "kind": "road"
+        },
+        {
+          "id": "walk_left",
+          "position_m": [
+            0,
+            9.0,
+            0
+          ],
+          "outward": [
+            0,
+            1,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        },
+        {
+          "id": "walk_right",
+          "position_m": [
+            0,
+            -9.0,
+            0
+          ],
+          "outward": [
+            0,
+            -1,
+            0
+          ],
+          "width_m": 4,
+          "kind": "walk"
+        }
+      ],
+      "lanes": 6,
+      "pedestrian_crossing": true
+    },
+    "Transit_AirGuide_Straight_32m": {
+      "parts": [
+        "Transit_AirGuide_Straight_32m_EdgeTicks-1",
+        "Transit_AirGuide_Straight_32m_EdgeTicks1",
+        "Transit_AirGuide_Straight_32m_DirectionTicks"
+      ],
+      "category": "airguide",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -16.0,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            16.0,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        }
+      ],
+      "path_length_m": 32,
+      "corridor_width_m": 6,
+      "central_clear_width_m": 5,
+      "marker_width_m": 0.035,
+      "tick_length_m": 0.65,
+      "tick_spacing_target_m": 8,
+      "emission_strength": 0.25,
+      "nominal_plan_coverage_ratio": 0.0014279166666666665,
+      "collision": false,
+      "altitude_placement": "translate whole module to flight altitude"
+    },
+    "Transit_AirGuide_Straight_16m": {
+      "parts": [
+        "Transit_AirGuide_Straight_16m_EdgeTicks-1",
+        "Transit_AirGuide_Straight_16m_EdgeTicks1",
+        "Transit_AirGuide_Straight_16m_DirectionTicks"
+      ],
+      "category": "airguide",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            -8.0,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            8.0,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        }
+      ],
+      "path_length_m": 16,
+      "corridor_width_m": 6,
+      "central_clear_width_m": 5,
+      "marker_width_m": 0.035,
+      "tick_length_m": 0.65,
+      "tick_spacing_target_m": 8,
+      "emission_strength": 0.25,
+      "nominal_plan_coverage_ratio": 0.0014279166666666667,
+      "collision": false,
+      "altitude_placement": "translate whole module to flight altitude"
+    },
+    "Transit_AirGuide_Curve15_R32": {
+      "parts": [
+        "Transit_AirGuide_Curve15_R32_EdgeTicks-1",
+        "Transit_AirGuide_Curve15_R32_EdgeTicks1",
+        "Transit_AirGuide_Curve15_R32_DirectionTicks"
+      ],
+      "category": "airguide",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            8.282209443280664,
+            1.090373558749814,
+            0
+          ],
+          "outward": [
+            0.9659258262890683,
+            0.25881904510252074,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        }
+      ],
+      "path_length_m": 8.377580409572781,
+      "corridor_width_m": 6,
+      "central_clear_width_m": 5,
+      "marker_width_m": 0.035,
+      "tick_length_m": 0.65,
+      "tick_spacing_target_m": 8,
+      "emission_strength": 0.25,
+      "nominal_plan_coverage_ratio": 0.001821926211044472,
+      "collision": false,
+      "altitude_placement": "translate whole module to flight altitude",
+      "radius_m": 32,
+      "turn_degrees": 15
+    },
+    "Transit_AirGuide_Curve30_R32": {
+      "parts": [
+        "Transit_AirGuide_Curve30_R32_EdgeTicks-1",
+        "Transit_AirGuide_Curve30_R32_EdgeTicks1",
+        "Transit_AirGuide_Curve30_R32_DirectionTicks"
+      ],
+      "category": "airguide",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            15.999999999999998,
+            4.287187078897961,
+            0
+          ],
+          "outward": [
+            0.8660254037844387,
+            0.49999999999999994,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        }
+      ],
+      "path_length_m": 16.755160819145562,
+      "corridor_width_m": 6,
+      "central_clear_width_m": 5,
+      "marker_width_m": 0.035,
+      "tick_length_m": 0.65,
+      "tick_spacing_target_m": 8,
+      "emission_strength": 0.25,
+      "nominal_plan_coverage_ratio": 0.0013635599749398134,
+      "collision": false,
+      "altitude_placement": "translate whole module to flight altitude",
+      "radius_m": 32,
+      "turn_degrees": 30
+    },
+    "Transit_AirGuide_Curve45_R32": {
+      "parts": [
+        "Transit_AirGuide_Curve45_R32_EdgeTicks-1",
+        "Transit_AirGuide_Curve45_R32_EdgeTicks1",
+        "Transit_AirGuide_Curve45_R32_DirectionTicks"
+      ],
+      "category": "airguide",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            22.627416997969522,
+            9.372583002030478,
+            0
+          ],
+          "outward": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        }
+      ],
+      "path_length_m": 25.132741228718345,
+      "corridor_width_m": 6,
+      "central_clear_width_m": 5,
+      "marker_width_m": 0.035,
+      "tick_length_m": 0.65,
+      "tick_spacing_target_m": 8,
+      "emission_strength": 0.25,
+      "nominal_plan_coverage_ratio": 0.001516348720308033,
+      "collision": false,
+      "altitude_placement": "translate whole module to flight altitude",
+      "radius_m": 32,
+      "turn_degrees": 45
+    },
+    "Transit_AirGuide_Curve90_R32": {
+      "parts": [
+        "Transit_AirGuide_Curve90_R32_EdgeTicks-1",
+        "Transit_AirGuide_Curve90_R32_EdgeTicks1",
+        "Transit_AirGuide_Curve90_R32_DirectionTicks"
+      ],
+      "category": "airguide",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            32.0,
+            31.999999999999996,
+            0
+          ],
+          "outward": [
+            6.123233995736766e-17,
+            1.0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        }
+      ],
+      "path_length_m": 50.26548245743669,
+      "corridor_width_m": 6,
+      "central_clear_width_m": 5,
+      "marker_width_m": 0.035,
+      "tick_length_m": 0.65,
+      "tick_spacing_target_m": 8,
+      "emission_strength": 0.25,
+      "nominal_plan_coverage_ratio": 0.0013635599749398121,
+      "collision": false,
+      "altitude_placement": "translate whole module to flight altitude",
+      "radius_m": 32,
+      "turn_degrees": 90
+    },
+    "Transit_AirGuide_Curve15_R64": {
+      "parts": [
+        "Transit_AirGuide_Curve15_R64_EdgeTicks-1",
+        "Transit_AirGuide_Curve15_R64_EdgeTicks1",
+        "Transit_AirGuide_Curve15_R64_DirectionTicks"
+      ],
+      "category": "airguide",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            16.564418886561327,
+            2.180747117499628,
+            0
+          ],
+          "outward": [
+            0.9659258262890683,
+            0.25881904510252074,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        }
+      ],
+      "path_length_m": 16.755160819145562,
+      "corridor_width_m": 6,
+      "central_clear_width_m": 5,
+      "marker_width_m": 0.035,
+      "tick_length_m": 0.65,
+      "tick_spacing_target_m": 8,
+      "emission_strength": 0.25,
+      "nominal_plan_coverage_ratio": 0.0013635599749398134,
+      "collision": false,
+      "altitude_placement": "translate whole module to flight altitude",
+      "radius_m": 64,
+      "turn_degrees": 15
+    },
+    "Transit_AirGuide_Curve30_R64": {
+      "parts": [
+        "Transit_AirGuide_Curve30_R64_EdgeTicks-1",
+        "Transit_AirGuide_Curve30_R64_EdgeTicks1",
+        "Transit_AirGuide_Curve30_R64_DirectionTicks"
+      ],
+      "category": "airguide",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            31.999999999999996,
+            8.574374157795923,
+            0
+          ],
+          "outward": [
+            0.8660254037844387,
+            0.49999999999999994,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        }
+      ],
+      "path_length_m": 33.510321638291124,
+      "corridor_width_m": 6,
+      "central_clear_width_m": 5,
+      "marker_width_m": 0.035,
+      "tick_length_m": 0.65,
+      "tick_spacing_target_m": 8,
+      "emission_strength": 0.25,
+      "nominal_plan_coverage_ratio": 0.0013635599749398132,
+      "collision": false,
+      "altitude_placement": "translate whole module to flight altitude",
+      "radius_m": 64,
+      "turn_degrees": 30
+    },
+    "Transit_AirGuide_Curve45_R64": {
+      "parts": [
+        "Transit_AirGuide_Curve45_R64_EdgeTicks-1",
+        "Transit_AirGuide_Curve45_R64_EdgeTicks1",
+        "Transit_AirGuide_Curve45_R64_DirectionTicks"
+      ],
+      "category": "airguide",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            45.254833995939045,
+            18.745166004060955,
+            0
+          ],
+          "outward": [
+            0.7071067811865476,
+            0.7071067811865476,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        }
+      ],
+      "path_length_m": 50.26548245743669,
+      "corridor_width_m": 6,
+      "central_clear_width_m": 5,
+      "marker_width_m": 0.035,
+      "tick_length_m": 0.65,
+      "tick_spacing_target_m": 8,
+      "emission_strength": 0.25,
+      "nominal_plan_coverage_ratio": 0.0013635599749398121,
+      "collision": false,
+      "altitude_placement": "translate whole module to flight altitude",
+      "radius_m": 64,
+      "turn_degrees": 45
+    },
+    "Transit_AirGuide_Curve90_R64": {
+      "parts": [
+        "Transit_AirGuide_Curve90_R64_EdgeTicks-1",
+        "Transit_AirGuide_Curve90_R64_EdgeTicks1",
+        "Transit_AirGuide_Curve90_R64_DirectionTicks"
+      ],
+      "category": "airguide",
+      "ports": [
+        {
+          "id": "start",
+          "position_m": [
+            0.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1.0,
+            -0.0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        },
+        {
+          "id": "end",
+          "position_m": [
+            64.0,
+            63.99999999999999,
+            0
+          ],
+          "outward": [
+            6.123233995736766e-17,
+            1.0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        }
+      ],
+      "path_length_m": 100.53096491487338,
+      "corridor_width_m": 6,
+      "central_clear_width_m": 5,
+      "marker_width_m": 0.035,
+      "tick_length_m": 0.65,
+      "tick_spacing_target_m": 8,
+      "emission_strength": 0.25,
+      "nominal_plan_coverage_ratio": 0.0014389927865094089,
+      "collision": false,
+      "altitude_placement": "translate whole module to flight altitude",
+      "radius_m": 64,
+      "turn_degrees": 90
+    },
+    "Transit_AirGuide_XJunction": {
+      "parts": [
+        "Transit_AirGuide_XJunction_MouthTicks0",
+        "Transit_AirGuide_XJunction_MouthTicks1",
+        "Transit_AirGuide_XJunction_MouthTicks2",
+        "Transit_AirGuide_XJunction_MouthTicks3"
+      ],
+      "category": "airguide",
+      "ports": [
+        {
+          "id": "0",
+          "position_m": [
+            -8,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        },
+        {
+          "id": "1",
+          "position_m": [
+            8,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        },
+        {
+          "id": "2",
+          "position_m": [
+            0,
+            -8,
+            0
+          ],
+          "outward": [
+            0,
+            -1,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        },
+        {
+          "id": "3",
+          "position_m": [
+            0,
+            8,
+            0
+          ],
+          "outward": [
+            0,
+            1,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        }
+      ],
+      "corridor_width_m": 6,
+      "central_clear_width_m": 5,
+      "collision": false,
+      "marker_width_m": 0.035,
+      "nominal_plan_coverage_ratio": 0.001,
+      "altitude_placement": "translate whole module to flight altitude"
+    },
+    "Transit_AirGuide_TJunction": {
+      "parts": [
+        "Transit_AirGuide_TJunction_MouthTicks0",
+        "Transit_AirGuide_TJunction_MouthTicks1",
+        "Transit_AirGuide_TJunction_MouthTicks2"
+      ],
+      "category": "airguide",
+      "ports": [
+        {
+          "id": "0",
+          "position_m": [
+            -8,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        },
+        {
+          "id": "1",
+          "position_m": [
+            8,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        },
+        {
+          "id": "2",
+          "position_m": [
+            0,
+            -8,
+            0
+          ],
+          "outward": [
+            0,
+            -1,
+            0
+          ],
+          "width_m": 6,
+          "kind": "air"
+        }
+      ],
+      "corridor_width_m": 6,
+      "central_clear_width_m": 5,
+      "collision": false,
+      "marker_width_m": 0.035,
+      "nominal_plan_coverage_ratio": 0.001,
+      "altitude_placement": "translate whole module to flight altitude"
+    }
+  },
+  "connection_rule": "Match kind and width. Transform port positions equal; outward vectors opposite. No rescaling.",
+  "legacy_compatible": [
+    "Road_2Lane_4m",
+    "Road_4Lane_4m",
+    "Road_6Lane_4m"
+  ],
+  "legacy_curve_note": "Legacy Road_Curve90_R9m uses arc-center origin; new curves use incoming centerline endpoint."
+}

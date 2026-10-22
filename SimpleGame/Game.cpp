@@ -1,6 +1,8 @@
 ﻿#include "stdafx.h"
 #include "Game.h"
 #include "Overworld.h"
+#include "ResidentAI.h"
+#include "TransitLayout.h"
 #include "Level.h"
 #include "Scene.h"
 #include "Renderer.h"
@@ -54,6 +56,10 @@ bool CityLayout::IsRoadTile(int x, int y)
 }
 bool CityLayout::OverlapsRoad(const Building &b, float clearance)
 {
+    if (TransitLayout::OverlapsPavement({b.x, b.y}, {b.x + b.width, b.y + b.depth}, clearance))
+    {
+        return true;
+    }
     for (int x = int(std::floor(b.x - clearance)); x <= int(std::floor(b.x + b.width + clearance)); ++x)
     {
         for (int y = int(std::floor(b.y - clearance)); y <= int(std::floor(b.y + b.depth + clearance)); ++y)
@@ -356,11 +362,6 @@ void Game::KeyDown(unsigned char key, int, int)
     {
         InteractWithNearbyTarget();
     }
-    if (key == 'f' && !repeated && !state.isInsideHome && !state.isInObservatory && !state.isBikeMounted &&
-        Overworld::Traffic().RequestCrossing(state.playerPosition))
-    {
-        ShowNotice("보행 신호 요청 / 차량이 교차로를 빠져나간 뒤 횡단 신호가 켜집니다.");
-    }
 }
 void Game::SpecialKeyDown(int key, int, int)
 {
@@ -457,6 +458,7 @@ void Game::Tick(int)
         if (!activeLevel && !state.isInsideHome && !state.isInObservatory)
         {
             Overworld::Traffic().Update(state, deltaSeconds);
+            CityResidents::Get().Update(state, deltaSeconds);
             Overworld::Flights().Update(state, deltaSeconds);
         }
         if (activeLevel != &game::GameLevels::Chapter())
@@ -695,9 +697,9 @@ void Game::InteractWithNearbyTarget()
     }
     if (target == InteractionTarget::Resident)
     {
-        const Resident *nearest = nullptr;
+        Resident *nearest = nullptr;
         float distance = 1.35f;
-        for (const auto &resident : state.residents)
+        for (auto &resident : state.residents)
         {
             if (&resident - state.residents.data() == Overworld::kKainResidentSlot &&
                 game::GameLevels::Chapter().GetState().kainJoined)
@@ -713,6 +715,7 @@ void Game::InteractWithNearbyTarget()
         }
         if (nearest)
         {
+            nearest->conversationSeconds = 3;
             ShowNotice(nearest->dialogue);
         }
         return;

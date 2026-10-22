@@ -48,7 +48,7 @@ enum class TrafficTurn
 class RoadNetwork
 {
   public:
-    static constexpr float kLaneWidth = 1.55f;
+    static constexpr float kLaneWidth = 1.5f; // Transit kit: 3 m per lane, never stretched.
     static const RoadNetwork &Get();
     std::vector<RoadJunction> junctions;
     std::vector<RoadSegment> roads;
@@ -57,6 +57,9 @@ class RoadNetwork
     bool Contains(Vector2 position, float margin = 0) const;
     Vector2 LanePosition(int lane, float distance) const;
     bool CanTurn(int lane, TrafficTurn turn) const;
+    static Vector2 RightOf(Vector2 direction);
+    bool IsSignalized(int junction) const;
+    int SignalAxis(int lane) const;
 
   private:
     RoadNetwork();
@@ -71,11 +74,27 @@ enum class TrafficLight
     Amber,
     Green
 };
+enum class SignalPhase
+{
+    MainThrough,
+    MainAmber,
+    MainClear,
+    MainLeft,
+    MainLeftAmber,
+    MainLeftClear,
+    SideThrough,
+    SideAmber,
+    SideClear,
+    SideLeft,
+    SideLeftAmber,
+    SideLeftClear,
+    Walk,
+    WalkClear
+};
 struct JunctionSignal
 {
-    int phase = 0;
+    SignalPhase phase = SignalPhase::MainThrough;
     float elapsed = 0;
-    bool requested = false;
 };
 struct TrafficVehicle
 {
@@ -105,8 +124,10 @@ class TrafficSystem
     float RenderYaw(size_t index) const;
     TrafficLight Light(int lane, TrafficTurn turn) const;
     bool PedestrianGreen(int junction) const;
+    bool CanStartCrossing(int junction, float travelSeconds) const;
+    float PhaseDuration(int junction) const;
+    bool CrossingOccupied(const GameState &world, int junction) const;
     int NearbyCrossing(Vector2 position) const;
-    bool RequestCrossing(Vector2 position);
     static bool OutsideView(Vector2 position, Vector2 camera, float padding = 180, float altitude = 0);
     static bool SweptHit(Vector2 from, Vector2 to, float yaw, Vector2 pedestrian, float padding = .25f);
 
@@ -146,6 +167,8 @@ class AirTraffic
     }
     static Vector2 Position(int route, float parameter);
     static Vector2 Tangent(int route, float parameter);
+    // Includes both the banked hull and the renderer's projected, blurred ground shadow.
+    static bool OutsideVisibleFootprint(const AircraftActor &craft, Vector2 camera, float padding = 40);
 
   private:
     std::vector<AircraftActor> aircraft;

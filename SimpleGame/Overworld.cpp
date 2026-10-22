@@ -2,6 +2,8 @@
 #include "Overworld.h"
 #include "ResourceAssets.h"
 #include "Level.h"
+#include "ResidentAI.h"
+#include "TransitLayout.h"
 #include <algorithm>
 #include <cmath>
 #include <iterator>
@@ -55,7 +57,10 @@ Vector2 TurnPoint(const TrafficVehicle &car, float t)
 {
     const auto &net = RoadNetwork::Get();
     const auto &in = net.lanes[car.lane], &out = net.lanes[car.nextLane];
-    float handle = Game::Distance(in.end, out.start) * .55f;
+    const float dot = Dot(in.direction, out.direction);
+    const float chord = Game::Distance(in.end, out.start);
+    // Quarter-circle control points match the native 90-degree road module's lane arcs.
+    float handle = chord * (std::fabs(dot) < .001f ? .3905243f : dot > .99f ? 1.f / 3 : 2.f / 3);
     return Bezier(in.end, Add(in.end, Mul(in.direction, handle)), Sub(out.start, Mul(out.direction, handle)),
                   out.start, t);
 }
@@ -93,50 +98,52 @@ RoadNetwork::RoadNetwork()
     };
     std::vector<Source> sources;
     auto add = [&](Vector2 a, Vector2 b, int lanes, float speed) { sources.push_back({a, b, lanes, speed}); };
+    // Orthogonal city blocks and a regional ring replace overlapping diagonal shortcut spokes.
     for (int city = 0; city < Overworld::kCityCount; ++city)
     {
         auto center = Overworld::Cities()[city].center;
         auto p = [center](float x, float y) { return Add(center, {x, y}); };
-        // A pedestrian civic core, a freight boulevard and two skew residential streets.
-        int boulevard = city <= 1 ? 6 : city == 4 ? 4 : 2;
-        add(p(-32, -17), p(21, -17), boulevard, city == 1 ? 8.f : 6.f);
-        add(p(21, -17), p(25, 25), 4, 5);
-        add(p(25, 25), p(-28, 28), 2, 4);
-        add(p(-28, 28), p(-32, -17), 2, 4);
-        add(p(-29.6f, 10), p(23.5714f, 10), 2, 4);
-        add(p(-12, -17), p(-12, 27.1f), 2, 4);
-        add(p(-32, -17), p(-41, -25), 4, 6);
-        add(p(-41, -25), p(30, -31), 4, 8);
-        add(p(30, -31), p(36, 33), 4, 7);
-        add(p(36, 33), p(25, 25), 2, 5);
-    }
-    auto halo = Overworld::Cities()[0].center;
-    for (int city = 1; city < Overworld::kCityCount; ++city)
-    {
-        auto c = Overworld::Cities()[city].center;
-        Vector2 gateway = Add(c, c.x >= 0 ? Vector2{-41, -25} : Vector2{36, 33});
-        Vector2 departure = Add(halo, c.x >= 0 ? Vector2{36, 33} : Vector2{-41, -25});
-        if (city == 1)
+        int lanes = city == 1 ? 6 : city >= 3 ? 4 : 2;
+        add(p(-36, -17), p(36, -17), lanes, 6);
+        add(p(36, -17), p(36, 33), lanes, 5);
+        add(p(36, 33), p(-36, 33), lanes, 5);
+        add(p(-36, 33), p(-36, -17), lanes, 5);
+        add(p(-36, 10), p(36, 10), lanes, 4);
+        add(p(-12, -17), p(-12, 33), lanes, 4);
+        if (city == 0)
         {
-            add(departure, {128, -17}, 6, 10);
-            add({128, -17}, gateway, 6, 10);
-            add({128, -17}, Overworld::kMineEntrance, 2, 5);
+            continue;
+        }
+        Vector2 direction, gateway;
+        if (std::fabs(center.x) > std::fabs(center.y))
+        {
+            direction = {center.x > 0 ? 1.f : -1.f, 0};
+            gateway = p(direction.x * 36, 10);
         }
         else
         {
-            // Separate outbound sectors keep long-distance routes away from the civic plaza.
-            Vector2 elbow = {departure.x + (c.x >= 0 ? 34.f : -34.f), c.y * .45f};
-            add(departure, elbow, 4, 10);
-            add(elbow, gateway, 4, 10);
+            direction = {0, center.y > 0 ? 1.f : -1.f};
+            gateway = p(-12, direction.y > 0 ? 33.f : -17.f);
         }
-        auto airDirection = Unit(Sub(c, halo));
+        auto taper = Add(gateway, Mul(direction, 24));
+        Vector2 ring =
+            direction.x ? Vector2{direction.x * 390, gateway.y} : Vector2{gateway.x, direction.y * 390};
+        add(gateway, taper, lanes, 7);
+        add(taper, ring, 4, 10);
+        auto airDirection = Unit(center);
         Vector2 airNormal = {-airDirection.y, airDirection.x};
-        auto hub = Add(halo, {0, 8});
-        // Both endpoint tangents point toward the destination, avoiding zero-speed cusps.
+        Vector2 hub = {0, 8};
         airCorridors.push_back({Sub(hub, Mul(airDirection, 28)),
-                                Add(Add(hub, Mul(airDirection, 30)), Mul(airNormal, 12)), Add(c, {12, 8}),
-                                8.f + city * 3.f});
+                                Add(Add(hub, Mul(airDirection, 30)), Mul(airNormal, 12)),
+                                Add(center, {12, 8}), 8.f + city * 3.f});
     }
+    add({-390, -390}, {390, -390}, 4, 10);
+    add({390, -390}, {390, 390}, 4, 10);
+    add({390, 390}, {-390, 390}, 4, 10);
+    add({-390, 390}, {-390, -390}, 4, 10);
+    add({36, -17}, {60, -17}, 2, 6);
+    add({60, -17}, {390, -17}, 4, 10);
+    add({128, -17}, Overworld::kMineEntrance, 4, 5);
     std::vector<std::vector<float>> cuts(sources.size(), {0, 1});
     for (size_t i = 0; i < sources.size(); ++i)
     {
@@ -186,18 +193,9 @@ RoadNetwork::RoadNetwork()
                 continue;
             }
             roads.push_back({from, to, sources[i].lanes, sources[i].speed});
-            float radius = sources[i].lanes * kLaneWidth * .5f + 2.2f;
-            junctions[from].radius = (std::max)(junctions[from].radius, radius);
-            junctions[to].radius = (std::max)(junctions[to].radius, radius);
         }
     }
-    // Short junction links must still have a positive travel span.
-    for (const auto &road : roads)
-    {
-        float limit = Game::Distance(junctions[road.from].position, junctions[road.to].position) * .35f;
-        junctions[road.from].radius = (std::min)(junctions[road.from].radius, limit);
-        junctions[road.to].radius = (std::min)(junctions[road.to].radius, limit);
-    }
+    TransitLayout::ConfigureJunctions(*this);
     for (size_t i = 0; i < roads.size(); ++i)
     {
         const auto &road = roads[i];
@@ -205,7 +203,7 @@ RoadNetwork::RoadNetwork()
         {
             int from = direction ? road.to : road.from, to = direction ? road.from : road.to;
             auto d = Unit(Sub(junctions[to].position, junctions[from].position));
-            Vector2 right = {d.y, -d.x};
+            Vector2 right = RightOf(d);
             for (int slot = 0; slot < road.lanes / 2; ++slot)
             {
                 auto offset = Mul(right, (slot + .5f) * kLaneWidth);
@@ -222,15 +220,21 @@ bool RoadNetwork::Contains(Vector2 position, float margin) const
 {
     for (const auto &road : roads)
     {
-        if (SegmentDistance(position, junctions[road.from].position, junctions[road.to].position) <=
-            road.lanes * kLaneWidth * .5f + margin)
+        auto a = junctions[road.from].position, b = junctions[road.to].position;
+        auto direction = Unit(Sub(b, a));
+        auto start = Add(a, Mul(direction, junctions[road.from].radius));
+        auto end = Sub(b, Mul(direction, junctions[road.to].radius));
+        const auto offset = Sub(position, start);
+        const float along = Dot(offset, direction);
+        if (along >= -margin && along <= Game::Distance(start, end) + margin &&
+            std::fabs(Cross(offset, direction)) <= road.lanes * kLaneWidth * .5f + margin)
         {
             return true;
         }
     }
     for (const auto &junction : junctions)
     {
-        if (Game::Distance(position, junction.position) < junction.radius + margin)
+        if (TransitLayout::ContainsJunction(int(&junction - junctions.data()), position, margin))
         {
             return true;
         }
@@ -283,6 +287,30 @@ bool RoadNetwork::CanTurn(int index, TrafficTurn turn) const
     return lane.slot == count - 1 || (!straight && !left);
 }
 
+Vector2 RoadNetwork::RightOf(Vector2 direction)
+{
+    // Game-space +Y is left of +X, independent of the isometric screen projection.
+    return {direction.y, -direction.x};
+}
+bool RoadNetwork::IsSignalized(int junction) const
+{
+    return junction >= 0 && junction < int(junctions.size()) && Signalized(junctions[junction]);
+}
+int RoadNetwork::SignalAxis(int index) const
+{
+    const auto &lane = lanes[index];
+    const auto &junction = junctions[lane.to];
+    int reference = junction.outgoing.front();
+    for (int candidate : junction.outgoing)
+    {
+        if (roads[lanes[candidate].road].lanes > roads[lanes[reference].road].lanes)
+        {
+            reference = candidate;
+        }
+    }
+    return std::fabs(Dot(lane.direction, lanes[reference].direction)) >= .7071f ? 0 : 1;
+}
+
 // ============================================================================
 // TrafficSystem — simulation is bounded; rendering never advances vehicle state
 // ============================================================================
@@ -307,7 +335,7 @@ void TrafficSystem::Reset()
     accumulator = spawnTimer = impactCooldown = 0;
     for (size_t i = 0; i < signals.size(); ++i)
     {
-        signals[i].phase = int(i % 4) * 3;
+        signals[i].phase = static_cast<SignalPhase>(int(i % 4) * 3);
     }
 }
 bool TrafficSystem::OutsideView(Vector2 p, Vector2 camera, float padding, float altitude)
@@ -344,8 +372,8 @@ TrafficLight TrafficSystem::Light(int laneIndex, TrafficTurn turn) const
     {
         return TrafficLight::Red;
     }
-    int phase = signals[lane.to].phase;
-    int axis = std::fabs(lane.direction.x) >= std::fabs(lane.direction.y) ? 0 : 6;
+    int phase = int(signals[lane.to].phase);
+    int axis = net.SignalAxis(laneIndex) * 6;
     int greenPhase = axis + (turn == TrafficTurn::Left ? 3 : 0);
     if (phase == greenPhase)
     {
@@ -355,8 +383,49 @@ TrafficLight TrafficSystem::Light(int laneIndex, TrafficTurn turn) const
 }
 bool TrafficSystem::PedestrianGreen(int junction) const
 {
-    return junction >= 0 && junction < int(signals.size()) && signals[junction].phase == 12 &&
+    return junction >= 0 && junction < int(signals.size()) && signals[junction].phase == SignalPhase::Walk &&
            Signalized(RoadNetwork::Get().junctions[junction]);
+}
+float TrafficSystem::PhaseDuration(int junction) const
+{
+    const auto phase = signals.at(size_t(junction)).phase;
+    if (phase == SignalPhase::Walk)
+    {
+        float width = 0;
+        const auto &net = RoadNetwork::Get();
+        for (int lane : net.junctions[junction].outgoing)
+        {
+            width = (std::max)(width, net.roads[net.lanes[lane].road].lanes * RoadNetwork::kLaneWidth);
+        }
+        return (std::max)(8.f, (width + 1.9f) / .5f + 3.f);
+    }
+    if (phase == SignalPhase::WalkClear)
+    {
+        return 2;
+    }
+    return int(phase) % 3 == 0 ? (int(phase) % 6 == 0 ? 8.f : 4.f) : 1.5f;
+}
+bool TrafficSystem::CanStartCrossing(int junction, float travelSeconds) const
+{
+    return PedestrianGreen(junction) &&
+           PhaseDuration(junction) - signals[junction].elapsed >= travelSeconds + 1.f;
+}
+bool TrafficSystem::CrossingOccupied(const GameState &world, int junction) const
+{
+    if (!world.isBikeMounted && RoadNetwork::Get().Contains(world.playerPosition, .5f) &&
+        NearbyCrossing(world.playerPosition) == junction)
+    {
+        return true;
+    }
+    return std::any_of(
+        world.residents.begin(), world.residents.end(), [&world, junction](const Resident &resident) {
+            if (&resident - world.residents.data() == Overworld::kKainResidentSlot &&
+                game::GameLevels::Chapter().GetState().kainJoined)
+            {
+                return false;
+            }
+            return resident.activity == ResidentActivity::Crossing && resident.crossingJunction == junction;
+        });
 }
 int TrafficSystem::NearbyCrossing(Vector2 position) const
 {
@@ -373,7 +442,7 @@ int TrafficSystem::NearbyCrossing(Vector2 position) const
         for (int index : j.outgoing)
         {
             const auto &lane = net.lanes[index];
-            auto across = Add(j.position, Mul(lane.direction, j.radius - .45f));
+            auto across = Add(j.position, Mul(lane.direction, j.radius + 1.f));
             Vector2 normal = {-lane.direction.y, lane.direction.x};
             float half = net.roads[lane.road].lanes * RoadNetwork::kLaneWidth * .5f + .7f;
             float distance =
@@ -386,16 +455,6 @@ int TrafficSystem::NearbyCrossing(Vector2 position) const
         }
     }
     return result;
-}
-bool TrafficSystem::RequestCrossing(Vector2 position)
-{
-    int junction = NearbyCrossing(position);
-    if (junction < 0 || signals.empty())
-    {
-        return false;
-    }
-    signals[junction].requested = true;
-    return true;
 }
 bool TrafficSystem::SweptHit(Vector2 from, Vector2 to, float yaw, Vector2 p, float padding)
 {
@@ -549,14 +608,7 @@ void TrafficSystem::Step(GameState &world, float dt)
     {
         auto &signal = signals[i];
         signal.elapsed += dt;
-        float duration = signal.phase == 12      ? 6.f
-                         : signal.phase == 13    ? 2.f
-                         : signal.phase % 3 == 0 ? (signal.phase % 6 == 0 ? 8.f : 4.f)
-                                                 : 1.5f;
-        if (signal.requested && signal.phase % 3 == 0 && signal.phase < 12)
-        {
-            duration = 3;
-        }
+        float duration = PhaseDuration(int(i));
         if (signal.elapsed < duration)
         {
             continue;
@@ -570,24 +622,14 @@ void TrafficSystem::Step(GameState &world, float dt)
                 break;
             }
         }
-        bool crossingOccupied = signal.phase == 13 && !world.isBikeMounted &&
-                                net.Contains(world.playerPosition, .5f) &&
-                                NearbyCrossing(world.playerPosition) == int(i);
-        if (((signal.phase == 13 || signal.phase % 3 == 2) && occupied) || crossingOccupied)
+        const bool clearance = signal.phase == SignalPhase::WalkClear || int(signal.phase) % 3 == 2;
+        const auto next = static_cast<SignalPhase>((int(signal.phase) + 1) % 14);
+        if (clearance && (occupied || (next != SignalPhase::Walk && CrossingOccupied(world, int(i)))))
         {
             continue;
         }
-        int next = (signal.phase + 1) % 14;
-        if (signal.requested && signal.phase < 12 && signal.phase % 3 == 2)
-        {
-            next = 12;
-        }
         signal.phase = next;
         signal.elapsed = 0;
-        if (next == 12)
-        {
-            signal.requested = false;
-        }
     }
     // Reservations are rebuilt once per step, including cars entering earlier in this step.
     std::vector<std::uint64_t> occupied(net.junctions.size(), UINT64_MAX);
@@ -635,7 +677,7 @@ void TrafficSystem::Step(GameState &world, float dt)
             bool reserved = occupied[lane.to] != UINT64_MAX && occupied[lane.to] != car.id;
             if (red || reserved || exitBlocked)
             {
-                gap = (std::min)(gap, lane.length - car.distance - 1.9f);
+                gap = (std::min)(gap, lane.length - car.distance - 3.6f);
             }
             if (gap < 15)
             {
@@ -644,9 +686,9 @@ void TrafficSystem::Step(GameState &world, float dt)
             // Legal pedestrian crossings have an exclusive phase. Drivers also yield to a person
             // who remains on the crossing as it closes; a jaywalker in a live lane can be struck.
             if (PedestrianGreen(lane.to) ||
-                (signals[lane.to].phase == 13 && NearbyCrossing(world.playerPosition) == lane.to))
+                (signals[lane.to].phase == SignalPhase::WalkClear && CrossingOccupied(world, lane.to)))
             {
-                gap = (std::min)(gap, lane.length - car.distance - 1.9f);
+                gap = (std::min)(gap, lane.length - car.distance - 3.6f);
                 target = (std::min)(target, (std::max)(0.f, gap * 2));
             }
         }
@@ -779,6 +821,39 @@ Vector2 AirTraffic::Position(int index, float t)
                      Mul(route.end, clamped * clamped));
     return Add(point, Mul(Tangent(index, clamped), t - clamped));
 }
+bool AirTraffic::OutsideVisibleFootprint(const AircraftActor &craft, Vector2 camera, float padding)
+{
+    const auto &model = models::ModelLibrary::Aircraft(craft.type, craft.alternate);
+    const auto &resource = models::ResourceAssets::Get(model.resourceId);
+    models::Transform3D transform;
+    transform.yaw = craft.yaw;
+    transform.roll = craft.bank;
+    transform.position.z = craft.altitude;
+    float minX = 1.e20f, minY = 1.e20f, maxX = -1.e20f, maxY = -1.e20f;
+    // Include banked hull, moving gear and the renderer's projected, blurred ground shadow.
+    for (int corner = 0; corner < 8; ++corner)
+    {
+        auto p = transform.Apply({corner & 1 ? resource.maximum.x + 1 : resource.minimum.x - 1,
+                                  corner & 2 ? resource.maximum.y + 1 : resource.minimum.y - 1,
+                                  corner & 4 ? resource.maximum.z + 1 : resource.minimum.z - 1});
+        for (int shadow = 0; shadow < 2; ++shadow)
+        {
+            float x = p.x + (shadow ? .38f * p.z : 0), y = p.y + (shadow ? .55f * p.z : 0),
+                  z = shadow ? 0 : p.z;
+            auto screen = WorldCamera::ToViewport(
+                {kCanvasWidth * .5f +
+                     (craft.position.x + x - craft.position.y - y - camera.x + camera.y) * 36,
+                 kCanvasHeight * .57f +
+                     (craft.position.x + x + craft.position.y + y - camera.x - camera.y) * 18 - z * 44});
+            minX = (std::min)(minX, screen.x);
+            maxX = (std::max)(maxX, screen.x);
+            minY = (std::min)(minY, screen.y);
+            maxY = (std::max)(maxY, screen.y);
+        }
+    }
+    return maxX < -padding || minX > kCanvasWidth + padding || maxY < -padding ||
+           minY > kCanvasHeight + padding;
+}
 void AirTraffic::Update(const GameState &world, float dt)
 {
     dt = Game::Clamp(dt, 0, .05f);
@@ -798,8 +873,8 @@ void AirTraffic::Update(const GameState &world, float dt)
                                   [&](const AircraftActor &craft) {
                                       return Game::Distance(craft.position, world.playerPosition) > 180 &&
                                              Game::Distance(craft.position, world.cameraPosition) > 180 &&
-                                             TrafficSystem::OutsideView(craft.position, world.cameraPosition,
-                                                                        340, craft.altitude);
+                                             OutsideVisibleFootprint(craft, world.cameraPosition, 340) &&
+                                             OutsideVisibleFootprint(craft, world.playerPosition, 340);
                                   }),
                    aircraft.end());
     spawnTimer -= dt;
@@ -820,15 +895,6 @@ void AirTraffic::Update(const GameState &world, float dt)
         float t = float(random() % 1400) / 1000.f - .2f;
         auto position = Position(route, t);
         float altitude = RoadNetwork::Get().airCorridors[route].altitude;
-        auto shadow = Add(position, {(altitude + 3) * .38f, (altitude + 3) * .55f});
-        if (Game::Distance(position, world.playerPosition) > 115 ||
-            !TrafficSystem::OutsideView(position, world.cameraPosition, 280, altitude) ||
-            !TrafficSystem::OutsideView(position, world.playerPosition, 280, altitude) ||
-            !TrafficSystem::OutsideView(shadow, world.cameraPosition, 240) ||
-            !TrafficSystem::OutsideView(shadow, world.playerPosition, 240))
-        {
-            continue;
-        }
         bool crowded = std::any_of(aircraft.begin(), aircraft.end(), [&](const AircraftActor &craft) {
             return std::fabs(craft.altitude - altitude) < 2.5f &&
                    Game::Distance(craft.position, position) < 14;
@@ -838,7 +904,7 @@ void AirTraffic::Update(const GameState &world, float dt)
             continue;
         }
         AircraftActor craft;
-        craft.id = nextId++;
+        craft.id = nextId;
         craft.route = route;
         craft.parameter = t;
         // Each corridor is one way; its altitude separates it from the other routes.
@@ -850,6 +916,13 @@ void AirTraffic::Update(const GameState &world, float dt)
         craft.altitude = altitude;
         auto heading = Mul(Tangent(route, t), float(craft.direction));
         craft.yaw = std::atan2(heading.y, heading.x);
+        if (Game::Distance(position, world.playerPosition) > 115 ||
+            !OutsideVisibleFootprint(craft, world.cameraPosition, 280) ||
+            !OutsideVisibleFootprint(craft, world.playerPosition, 280))
+        {
+            continue;
+        }
+        ++nextId;
         aircraft.push_back(craft);
     }
 }
@@ -922,6 +995,10 @@ bool WorldScenery::Place(const GameState &world, const models::Model &model, mod
             return false;
         }
     }
+    if (solid && TransitLayout::OverlapsPavement(prop.minimum, prop.maximum, .35f))
+    {
+        return false;
+    }
     for (const auto &person : world.residents)
     {
         if (overlap(person.position, person.position, 1.1f))
@@ -954,8 +1031,8 @@ void WorldScenery::Generate(const GameState &world)
         return Place(world, models::ModelLibrary::Scenery(type), type, p, yaw,
                      type != S::LandingPad && type != S::Sidewalk);
     };
-    constexpr S streets[] = {S::Bench,      S::Planter,     S::Bollard,  S::TransitShelter, S::Wayfinding,
-                             S::ChargePost, S::Streetlight, S::Sidewalk, S::CrashBarrier};
+    constexpr S streets[] = {S::Bench,      S::Planter,    S::Bollard,     S::TransitShelter,
+                             S::Wayfinding, S::ChargePost, S::Streetlight, S::CrashBarrier};
     constexpr S industry[] = {S::Transformer, S::CargoContainer, S::HVAC,     S::PipeRack,
                               S::CommRelay,   S::SolarArray,     S::WaterTank};
     for (int city = 0; city < Overworld::kCityCount; ++city)
@@ -1153,10 +1230,12 @@ void Overworld::Populate(GameState &state)
             resident.gender = i % 2 ? models::Gender::Female : models::Gender::Male;
             resident.hair = models::HairStyle(i % int(models::HairStyle::Count));
             resident.cityIndex = cityIndex;
+            resident.profession = static_cast<ResidentProfession>(i % 10);
             state.residents.push_back(resident);
         }
     }
     Scenery().Generate(state);
+    CityResidents::Get().Reset(state);
 }
 
 void Overworld::UpdateBike(GameState &state, float deltaSeconds)

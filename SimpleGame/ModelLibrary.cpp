@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <memory>
 #include <vector>
+#include <map>
 #include <utility>
 #include <iterator>
 
@@ -1272,6 +1273,19 @@ const Model &ModelLibrary::Scenery(SceneryType type)
 const Model &ModelLibrary::TrafficSignal(unsigned int state)
 {
     return state == 0 ? Scenery(SceneryType::TrafficSignal) : Get().signalStates.at(state - 1);
+}
+const Model &ModelLibrary::Transit(const std::string &name)
+{
+    // Stable heap addresses are the mesh-cache identity; no large Model values on the stack.
+    static std::map<std::string, std::unique_ptr<Model>> models;
+    auto &model = models[name];
+    if (!model)
+    {
+        model = std::make_unique<Model>();
+        ResourceAssets::Bind(*model, "transit/" + name);
+        model->ground = true; // All transit surfaces and sparse air guides are non-shadow-casting.
+    }
+    return *model;
 }
 const char *ModelLibrary::SceneryName(SceneryType type)
 {

@@ -5252,5 +5252,1059 @@
       "City_PedestrianHologram_6m_WalkGrid",
       "City_PedestrianHologram_6m_Guidance"
     ]
+  },
+  "Transit_Road_2L_Straight_4m": {
+    "parts": [
+      "Transit_Road_2L_Straight_4m_Surface",
+      "Transit_Road_2L_Straight_4m_MarkLane1",
+      "Transit_Road_2L_Straight_4m_MarkEdge-1",
+      "Transit_Road_2L_Straight_4m_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_2L_Straight_8m": {
+    "parts": [
+      "Transit_Road_2L_Straight_8m_Surface",
+      "Transit_Road_2L_Straight_8m_MarkLane1",
+      "Transit_Road_2L_Straight_8m_MarkEdge-1",
+      "Transit_Road_2L_Straight_8m_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_2L_Straight_16m": {
+    "parts": [
+      "Transit_Road_2L_Straight_16m_Surface",
+      "Transit_Road_2L_Straight_16m_MarkLane1",
+      "Transit_Road_2L_Straight_16m_MarkEdge-1",
+      "Transit_Road_2L_Straight_16m_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_4L_Straight_4m": {
+    "parts": [
+      "Transit_Road_4L_Straight_4m_Surface",
+      "Transit_Road_4L_Straight_4m_MarkLane1",
+      "Transit_Road_4L_Straight_4m_MarkLane2",
+      "Transit_Road_4L_Straight_4m_MarkLane3",
+      "Transit_Road_4L_Straight_4m_MarkEdge-1",
+      "Transit_Road_4L_Straight_4m_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_4L_Straight_8m": {
+    "parts": [
+      "Transit_Road_4L_Straight_8m_Surface",
+      "Transit_Road_4L_Straight_8m_MarkLane1",
+      "Transit_Road_4L_Straight_8m_MarkLane2",
+      "Transit_Road_4L_Straight_8m_MarkLane3",
+      "Transit_Road_4L_Straight_8m_MarkEdge-1",
+      "Transit_Road_4L_Straight_8m_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_4L_Straight_16m": {
+    "parts": [
+      "Transit_Road_4L_Straight_16m_Surface",
+      "Transit_Road_4L_Straight_16m_MarkLane1",
+      "Transit_Road_4L_Straight_16m_MarkLane2",
+      "Transit_Road_4L_Straight_16m_MarkLane3",
+      "Transit_Road_4L_Straight_16m_MarkEdge-1",
+      "Transit_Road_4L_Straight_16m_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_6L_Straight_4m": {
+    "parts": [
+      "Transit_Road_6L_Straight_4m_Surface",
+      "Transit_Road_6L_Straight_4m_MarkLane1",
+      "Transit_Road_6L_Straight_4m_MarkLane2",
+      "Transit_Road_6L_Straight_4m_MarkLane3",
+      "Transit_Road_6L_Straight_4m_MarkLane4",
+      "Transit_Road_6L_Straight_4m_MarkLane5",
+      "Transit_Road_6L_Straight_4m_MarkEdge-1",
+      "Transit_Road_6L_Straight_4m_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_6L_Straight_8m": {
+    "parts": [
+      "Transit_Road_6L_Straight_8m_Surface",
+      "Transit_Road_6L_Straight_8m_MarkLane1",
+      "Transit_Road_6L_Straight_8m_MarkLane2",
+      "Transit_Road_6L_Straight_8m_MarkLane3",
+      "Transit_Road_6L_Straight_8m_MarkLane4",
+      "Transit_Road_6L_Straight_8m_MarkLane5",
+      "Transit_Road_6L_Straight_8m_MarkEdge-1",
+      "Transit_Road_6L_Straight_8m_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_6L_Straight_16m": {
+    "parts": [
+      "Transit_Road_6L_Straight_16m_Surface",
+      "Transit_Road_6L_Straight_16m_MarkLane1",
+      "Transit_Road_6L_Straight_16m_MarkLane2",
+      "Transit_Road_6L_Straight_16m_MarkLane3",
+      "Transit_Road_6L_Straight_16m_MarkLane4",
+      "Transit_Road_6L_Straight_16m_MarkLane5",
+      "Transit_Road_6L_Straight_16m_MarkEdge-1",
+      "Transit_Road_6L_Straight_16m_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_2L_Curve15_R18": {
+    "parts": [
+      "Transit_Road_2L_Curve15_R18_Surface",
+      "Transit_Road_2L_Curve15_R18_MarkLane1",
+      "Transit_Road_2L_Curve15_R18_MarkEdge-1",
+      "Transit_Road_2L_Curve15_R18_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_2L_Curve15_R18": {
+    "parts": [
+      "Transit_WalkSides_2L_Curve15_R18_LeftPavement",
+      "Transit_WalkSides_2L_Curve15_R18_LeftCurb",
+      "Transit_WalkSides_2L_Curve15_R18_RightPavement",
+      "Transit_WalkSides_2L_Curve15_R18_RightCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_2L_Curve30_R18": {
+    "parts": [
+      "Transit_Road_2L_Curve30_R18_Surface",
+      "Transit_Road_2L_Curve30_R18_MarkLane1",
+      "Transit_Road_2L_Curve30_R18_MarkEdge-1",
+      "Transit_Road_2L_Curve30_R18_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_2L_Curve30_R18": {
+    "parts": [
+      "Transit_WalkSides_2L_Curve30_R18_LeftPavement",
+      "Transit_WalkSides_2L_Curve30_R18_LeftCurb",
+      "Transit_WalkSides_2L_Curve30_R18_RightPavement",
+      "Transit_WalkSides_2L_Curve30_R18_RightCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_2L_Curve45_R18": {
+    "parts": [
+      "Transit_Road_2L_Curve45_R18_Surface",
+      "Transit_Road_2L_Curve45_R18_MarkLane1",
+      "Transit_Road_2L_Curve45_R18_MarkEdge-1",
+      "Transit_Road_2L_Curve45_R18_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_2L_Curve45_R18": {
+    "parts": [
+      "Transit_WalkSides_2L_Curve45_R18_LeftPavement",
+      "Transit_WalkSides_2L_Curve45_R18_LeftCurb",
+      "Transit_WalkSides_2L_Curve45_R18_RightPavement",
+      "Transit_WalkSides_2L_Curve45_R18_RightCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_2L_Curve90_R18": {
+    "parts": [
+      "Transit_Road_2L_Curve90_R18_Surface",
+      "Transit_Road_2L_Curve90_R18_MarkLane1",
+      "Transit_Road_2L_Curve90_R18_MarkEdge-1",
+      "Transit_Road_2L_Curve90_R18_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_2L_Curve90_R18": {
+    "parts": [
+      "Transit_WalkSides_2L_Curve90_R18_LeftPavement",
+      "Transit_WalkSides_2L_Curve90_R18_LeftCurb",
+      "Transit_WalkSides_2L_Curve90_R18_RightPavement",
+      "Transit_WalkSides_2L_Curve90_R18_RightCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_2L_Curve15_R36": {
+    "parts": [
+      "Transit_Road_2L_Curve15_R36_Surface",
+      "Transit_Road_2L_Curve15_R36_MarkLane1",
+      "Transit_Road_2L_Curve15_R36_MarkEdge-1",
+      "Transit_Road_2L_Curve15_R36_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_2L_Curve15_R36": {
+    "parts": [
+      "Transit_WalkSides_2L_Curve15_R36_LeftPavement",
+      "Transit_WalkSides_2L_Curve15_R36_LeftCurb",
+      "Transit_WalkSides_2L_Curve15_R36_RightPavement",
+      "Transit_WalkSides_2L_Curve15_R36_RightCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_2L_Curve30_R36": {
+    "parts": [
+      "Transit_Road_2L_Curve30_R36_Surface",
+      "Transit_Road_2L_Curve30_R36_MarkLane1",
+      "Transit_Road_2L_Curve30_R36_MarkEdge-1",
+      "Transit_Road_2L_Curve30_R36_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_2L_Curve30_R36": {
+    "parts": [
+      "Transit_WalkSides_2L_Curve30_R36_LeftPavement",
+      "Transit_WalkSides_2L_Curve30_R36_LeftCurb",
+      "Transit_WalkSides_2L_Curve30_R36_RightPavement",
+      "Transit_WalkSides_2L_Curve30_R36_RightCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_2L_Curve45_R36": {
+    "parts": [
+      "Transit_Road_2L_Curve45_R36_Surface",
+      "Transit_Road_2L_Curve45_R36_MarkLane1",
+      "Transit_Road_2L_Curve45_R36_MarkEdge-1",
+      "Transit_Road_2L_Curve45_R36_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_2L_Curve45_R36": {
+    "parts": [
+      "Transit_WalkSides_2L_Curve45_R36_LeftPavement",
+      "Transit_WalkSides_2L_Curve45_R36_LeftCurb",
+      "Transit_WalkSides_2L_Curve45_R36_RightPavement",
+      "Transit_WalkSides_2L_Curve45_R36_RightCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_2L_Curve90_R36": {
+    "parts": [
+      "Transit_Road_2L_Curve90_R36_Surface",
+      "Transit_Road_2L_Curve90_R36_MarkLane1",
+      "Transit_Road_2L_Curve90_R36_MarkEdge-1",
+      "Transit_Road_2L_Curve90_R36_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_2L_Curve90_R36": {
+    "parts": [
+      "Transit_WalkSides_2L_Curve90_R36_LeftPavement",
+      "Transit_WalkSides_2L_Curve90_R36_LeftCurb",
+      "Transit_WalkSides_2L_Curve90_R36_RightPavement",
+      "Transit_WalkSides_2L_Curve90_R36_RightCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_4L_Curve15_R18": {
+    "parts": [
+      "Transit_Road_4L_Curve15_R18_Surface",
+      "Transit_Road_4L_Curve15_R18_MarkLane1",
+      "Transit_Road_4L_Curve15_R18_MarkLane2",
+      "Transit_Road_4L_Curve15_R18_MarkLane3",
+      "Transit_Road_4L_Curve15_R18_MarkEdge-1",
+      "Transit_Road_4L_Curve15_R18_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_4L_Curve15_R18": {
+    "parts": [
+      "Transit_WalkSides_4L_Curve15_R18_LeftPavement",
+      "Transit_WalkSides_4L_Curve15_R18_LeftCurb",
+      "Transit_WalkSides_4L_Curve15_R18_RightPavement",
+      "Transit_WalkSides_4L_Curve15_R18_RightCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_4L_Curve30_R18": {
+    "parts": [
+      "Transit_Road_4L_Curve30_R18_Surface",
+      "Transit_Road_4L_Curve30_R18_MarkLane1",
+      "Transit_Road_4L_Curve30_R18_MarkLane2",
+      "Transit_Road_4L_Curve30_R18_MarkLane3",
+      "Transit_Road_4L_Curve30_R18_MarkEdge-1",
+      "Transit_Road_4L_Curve30_R18_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_4L_Curve30_R18": {
+    "parts": [
+      "Transit_WalkSides_4L_Curve30_R18_LeftPavement",
+      "Transit_WalkSides_4L_Curve30_R18_LeftCurb",
+      "Transit_WalkSides_4L_Curve30_R18_RightPavement",
+      "Transit_WalkSides_4L_Curve30_R18_RightCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_4L_Curve45_R18": {
+    "parts": [
+      "Transit_Road_4L_Curve45_R18_Surface",
+      "Transit_Road_4L_Curve45_R18_MarkLane1",
+      "Transit_Road_4L_Curve45_R18_MarkLane2",
+      "Transit_Road_4L_Curve45_R18_MarkLane3",
+      "Transit_Road_4L_Curve45_R18_MarkEdge-1",
+      "Transit_Road_4L_Curve45_R18_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_4L_Curve45_R18": {
+    "parts": [
+      "Transit_WalkSides_4L_Curve45_R18_LeftPavement",
+      "Transit_WalkSides_4L_Curve45_R18_LeftCurb",
+      "Transit_WalkSides_4L_Curve45_R18_RightPavement",
+      "Transit_WalkSides_4L_Curve45_R18_RightCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_4L_Curve90_R18": {
+    "parts": [
+      "Transit_Road_4L_Curve90_R18_Surface",
+      "Transit_Road_4L_Curve90_R18_MarkLane1",
+      "Transit_Road_4L_Curve90_R18_MarkLane2",
+      "Transit_Road_4L_Curve90_R18_MarkLane3",
+      "Transit_Road_4L_Curve90_R18_MarkEdge-1",
+      "Transit_Road_4L_Curve90_R18_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_4L_Curve90_R18": {
+    "parts": [
+      "Transit_WalkSides_4L_Curve90_R18_LeftPavement",
+      "Transit_WalkSides_4L_Curve90_R18_LeftCurb",
+      "Transit_WalkSides_4L_Curve90_R18_RightPavement",
+      "Transit_WalkSides_4L_Curve90_R18_RightCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_4L_Curve15_R36": {
+    "parts": [
+      "Transit_Road_4L_Curve15_R36_Surface",
+      "Transit_Road_4L_Curve15_R36_MarkLane1",
+      "Transit_Road_4L_Curve15_R36_MarkLane2",
+      "Transit_Road_4L_Curve15_R36_MarkLane3",
+      "Transit_Road_4L_Curve15_R36_MarkEdge-1",
+      "Transit_Road_4L_Curve15_R36_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_4L_Curve15_R36": {
+    "parts": [
+      "Transit_WalkSides_4L_Curve15_R36_LeftPavement",
+      "Transit_WalkSides_4L_Curve15_R36_LeftCurb",
+      "Transit_WalkSides_4L_Curve15_R36_RightPavement",
+      "Transit_WalkSides_4L_Curve15_R36_RightCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_4L_Curve30_R36": {
+    "parts": [
+      "Transit_Road_4L_Curve30_R36_Surface",
+      "Transit_Road_4L_Curve30_R36_MarkLane1",
+      "Transit_Road_4L_Curve30_R36_MarkLane2",
+      "Transit_Road_4L_Curve30_R36_MarkLane3",
+      "Transit_Road_4L_Curve30_R36_MarkEdge-1",
+      "Transit_Road_4L_Curve30_R36_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_4L_Curve30_R36": {
+    "parts": [
+      "Transit_WalkSides_4L_Curve30_R36_LeftPavement",
+      "Transit_WalkSides_4L_Curve30_R36_LeftCurb",
+      "Transit_WalkSides_4L_Curve30_R36_RightPavement",
+      "Transit_WalkSides_4L_Curve30_R36_RightCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_4L_Curve45_R36": {
+    "parts": [
+      "Transit_Road_4L_Curve45_R36_Surface",
+      "Transit_Road_4L_Curve45_R36_MarkLane1",
+      "Transit_Road_4L_Curve45_R36_MarkLane2",
+      "Transit_Road_4L_Curve45_R36_MarkLane3",
+      "Transit_Road_4L_Curve45_R36_MarkEdge-1",
+      "Transit_Road_4L_Curve45_R36_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_4L_Curve45_R36": {
+    "parts": [
+      "Transit_WalkSides_4L_Curve45_R36_LeftPavement",
+      "Transit_WalkSides_4L_Curve45_R36_LeftCurb",
+      "Transit_WalkSides_4L_Curve45_R36_RightPavement",
+      "Transit_WalkSides_4L_Curve45_R36_RightCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_4L_Curve90_R36": {
+    "parts": [
+      "Transit_Road_4L_Curve90_R36_Surface",
+      "Transit_Road_4L_Curve90_R36_MarkLane1",
+      "Transit_Road_4L_Curve90_R36_MarkLane2",
+      "Transit_Road_4L_Curve90_R36_MarkLane3",
+      "Transit_Road_4L_Curve90_R36_MarkEdge-1",
+      "Transit_Road_4L_Curve90_R36_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_4L_Curve90_R36": {
+    "parts": [
+      "Transit_WalkSides_4L_Curve90_R36_LeftPavement",
+      "Transit_WalkSides_4L_Curve90_R36_LeftCurb",
+      "Transit_WalkSides_4L_Curve90_R36_RightPavement",
+      "Transit_WalkSides_4L_Curve90_R36_RightCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_6L_Curve15_R18": {
+    "parts": [
+      "Transit_Road_6L_Curve15_R18_Surface",
+      "Transit_Road_6L_Curve15_R18_MarkLane1",
+      "Transit_Road_6L_Curve15_R18_MarkLane2",
+      "Transit_Road_6L_Curve15_R18_MarkLane3",
+      "Transit_Road_6L_Curve15_R18_MarkLane4",
+      "Transit_Road_6L_Curve15_R18_MarkLane5",
+      "Transit_Road_6L_Curve15_R18_MarkEdge-1",
+      "Transit_Road_6L_Curve15_R18_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_6L_Curve15_R18": {
+    "parts": [
+      "Transit_WalkSides_6L_Curve15_R18_LeftPavement",
+      "Transit_WalkSides_6L_Curve15_R18_LeftCurb",
+      "Transit_WalkSides_6L_Curve15_R18_RightPavement",
+      "Transit_WalkSides_6L_Curve15_R18_RightCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_6L_Curve30_R18": {
+    "parts": [
+      "Transit_Road_6L_Curve30_R18_Surface",
+      "Transit_Road_6L_Curve30_R18_MarkLane1",
+      "Transit_Road_6L_Curve30_R18_MarkLane2",
+      "Transit_Road_6L_Curve30_R18_MarkLane3",
+      "Transit_Road_6L_Curve30_R18_MarkLane4",
+      "Transit_Road_6L_Curve30_R18_MarkLane5",
+      "Transit_Road_6L_Curve30_R18_MarkEdge-1",
+      "Transit_Road_6L_Curve30_R18_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_6L_Curve30_R18": {
+    "parts": [
+      "Transit_WalkSides_6L_Curve30_R18_LeftPavement",
+      "Transit_WalkSides_6L_Curve30_R18_LeftCurb",
+      "Transit_WalkSides_6L_Curve30_R18_RightPavement",
+      "Transit_WalkSides_6L_Curve30_R18_RightCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_6L_Curve45_R18": {
+    "parts": [
+      "Transit_Road_6L_Curve45_R18_Surface",
+      "Transit_Road_6L_Curve45_R18_MarkLane1",
+      "Transit_Road_6L_Curve45_R18_MarkLane2",
+      "Transit_Road_6L_Curve45_R18_MarkLane3",
+      "Transit_Road_6L_Curve45_R18_MarkLane4",
+      "Transit_Road_6L_Curve45_R18_MarkLane5",
+      "Transit_Road_6L_Curve45_R18_MarkEdge-1",
+      "Transit_Road_6L_Curve45_R18_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_6L_Curve45_R18": {
+    "parts": [
+      "Transit_WalkSides_6L_Curve45_R18_LeftPavement",
+      "Transit_WalkSides_6L_Curve45_R18_LeftCurb",
+      "Transit_WalkSides_6L_Curve45_R18_RightPavement",
+      "Transit_WalkSides_6L_Curve45_R18_RightCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_6L_Curve90_R18": {
+    "parts": [
+      "Transit_Road_6L_Curve90_R18_Surface",
+      "Transit_Road_6L_Curve90_R18_MarkLane1",
+      "Transit_Road_6L_Curve90_R18_MarkLane2",
+      "Transit_Road_6L_Curve90_R18_MarkLane3",
+      "Transit_Road_6L_Curve90_R18_MarkLane4",
+      "Transit_Road_6L_Curve90_R18_MarkLane5",
+      "Transit_Road_6L_Curve90_R18_MarkEdge-1",
+      "Transit_Road_6L_Curve90_R18_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_6L_Curve90_R18": {
+    "parts": [
+      "Transit_WalkSides_6L_Curve90_R18_LeftPavement",
+      "Transit_WalkSides_6L_Curve90_R18_LeftCurb",
+      "Transit_WalkSides_6L_Curve90_R18_RightPavement",
+      "Transit_WalkSides_6L_Curve90_R18_RightCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_6L_Curve15_R36": {
+    "parts": [
+      "Transit_Road_6L_Curve15_R36_Surface",
+      "Transit_Road_6L_Curve15_R36_MarkLane1",
+      "Transit_Road_6L_Curve15_R36_MarkLane2",
+      "Transit_Road_6L_Curve15_R36_MarkLane3",
+      "Transit_Road_6L_Curve15_R36_MarkLane4",
+      "Transit_Road_6L_Curve15_R36_MarkLane5",
+      "Transit_Road_6L_Curve15_R36_MarkEdge-1",
+      "Transit_Road_6L_Curve15_R36_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_6L_Curve15_R36": {
+    "parts": [
+      "Transit_WalkSides_6L_Curve15_R36_LeftPavement",
+      "Transit_WalkSides_6L_Curve15_R36_LeftCurb",
+      "Transit_WalkSides_6L_Curve15_R36_RightPavement",
+      "Transit_WalkSides_6L_Curve15_R36_RightCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_6L_Curve30_R36": {
+    "parts": [
+      "Transit_Road_6L_Curve30_R36_Surface",
+      "Transit_Road_6L_Curve30_R36_MarkLane1",
+      "Transit_Road_6L_Curve30_R36_MarkLane2",
+      "Transit_Road_6L_Curve30_R36_MarkLane3",
+      "Transit_Road_6L_Curve30_R36_MarkLane4",
+      "Transit_Road_6L_Curve30_R36_MarkLane5",
+      "Transit_Road_6L_Curve30_R36_MarkEdge-1",
+      "Transit_Road_6L_Curve30_R36_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_6L_Curve30_R36": {
+    "parts": [
+      "Transit_WalkSides_6L_Curve30_R36_LeftPavement",
+      "Transit_WalkSides_6L_Curve30_R36_LeftCurb",
+      "Transit_WalkSides_6L_Curve30_R36_RightPavement",
+      "Transit_WalkSides_6L_Curve30_R36_RightCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_6L_Curve45_R36": {
+    "parts": [
+      "Transit_Road_6L_Curve45_R36_Surface",
+      "Transit_Road_6L_Curve45_R36_MarkLane1",
+      "Transit_Road_6L_Curve45_R36_MarkLane2",
+      "Transit_Road_6L_Curve45_R36_MarkLane3",
+      "Transit_Road_6L_Curve45_R36_MarkLane4",
+      "Transit_Road_6L_Curve45_R36_MarkLane5",
+      "Transit_Road_6L_Curve45_R36_MarkEdge-1",
+      "Transit_Road_6L_Curve45_R36_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_6L_Curve45_R36": {
+    "parts": [
+      "Transit_WalkSides_6L_Curve45_R36_LeftPavement",
+      "Transit_WalkSides_6L_Curve45_R36_LeftCurb",
+      "Transit_WalkSides_6L_Curve45_R36_RightPavement",
+      "Transit_WalkSides_6L_Curve45_R36_RightCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_6L_Curve90_R36": {
+    "parts": [
+      "Transit_Road_6L_Curve90_R36_Surface",
+      "Transit_Road_6L_Curve90_R36_MarkLane1",
+      "Transit_Road_6L_Curve90_R36_MarkLane2",
+      "Transit_Road_6L_Curve90_R36_MarkLane3",
+      "Transit_Road_6L_Curve90_R36_MarkLane4",
+      "Transit_Road_6L_Curve90_R36_MarkLane5",
+      "Transit_Road_6L_Curve90_R36_MarkEdge-1",
+      "Transit_Road_6L_Curve90_R36_MarkEdge+1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_6L_Curve90_R36": {
+    "parts": [
+      "Transit_WalkSides_6L_Curve90_R36_LeftPavement",
+      "Transit_WalkSides_6L_Curve90_R36_LeftCurb",
+      "Transit_WalkSides_6L_Curve90_R36_RightPavement",
+      "Transit_WalkSides_6L_Curve90_R36_RightCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_2L_XJunction_R4": {
+    "parts": [
+      "Transit_Road_2L_XJunction_R4_Surface",
+      "Transit_Road_2L_XJunction_R4_MarkStop0",
+      "Transit_Road_2L_XJunction_R4_MarkStop1",
+      "Transit_Road_2L_XJunction_R4_MarkStop2",
+      "Transit_Road_2L_XJunction_R4_MarkStop3"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkCorners_2L_XJunction_R4": {
+    "parts": [
+      "Transit_WalkCorners_2L_XJunction_R4_Corner11",
+      "Transit_WalkCorners_2L_XJunction_R4_Curb11",
+      "Transit_WalkCorners_2L_XJunction_R4_Corner1-1",
+      "Transit_WalkCorners_2L_XJunction_R4_Curb1-1",
+      "Transit_WalkCorners_2L_XJunction_R4_Corner-1-1",
+      "Transit_WalkCorners_2L_XJunction_R4_Curb-1-1",
+      "Transit_WalkCorners_2L_XJunction_R4_Corner-11",
+      "Transit_WalkCorners_2L_XJunction_R4_Curb-11"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_2L_TJunction_R4": {
+    "parts": [
+      "Transit_Road_2L_TJunction_R4_Surface",
+      "Transit_Road_2L_TJunction_R4_MarkStop0",
+      "Transit_Road_2L_TJunction_R4_MarkStop1",
+      "Transit_Road_2L_TJunction_R4_MarkStop2"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkCorners_2L_TJunction_R4": {
+    "parts": [
+      "Transit_WalkCorners_2L_TJunction_R4_Corner1-1",
+      "Transit_WalkCorners_2L_TJunction_R4_Curb1-1",
+      "Transit_WalkCorners_2L_TJunction_R4_Corner-1-1",
+      "Transit_WalkCorners_2L_TJunction_R4_Curb-1-1",
+      "Transit_WalkCorners_2L_TJunction_R4_ClosedSideWalk",
+      "Transit_WalkCorners_2L_TJunction_R4_ClosedSideCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_4L_XJunction_R4": {
+    "parts": [
+      "Transit_Road_4L_XJunction_R4_Surface",
+      "Transit_Road_4L_XJunction_R4_MarkStop0",
+      "Transit_Road_4L_XJunction_R4_MarkStop1",
+      "Transit_Road_4L_XJunction_R4_MarkStop2",
+      "Transit_Road_4L_XJunction_R4_MarkStop3"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkCorners_4L_XJunction_R4": {
+    "parts": [
+      "Transit_WalkCorners_4L_XJunction_R4_Corner11",
+      "Transit_WalkCorners_4L_XJunction_R4_Curb11",
+      "Transit_WalkCorners_4L_XJunction_R4_Corner1-1",
+      "Transit_WalkCorners_4L_XJunction_R4_Curb1-1",
+      "Transit_WalkCorners_4L_XJunction_R4_Corner-1-1",
+      "Transit_WalkCorners_4L_XJunction_R4_Curb-1-1",
+      "Transit_WalkCorners_4L_XJunction_R4_Corner-11",
+      "Transit_WalkCorners_4L_XJunction_R4_Curb-11"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_4L_TJunction_R4": {
+    "parts": [
+      "Transit_Road_4L_TJunction_R4_Surface",
+      "Transit_Road_4L_TJunction_R4_MarkStop0",
+      "Transit_Road_4L_TJunction_R4_MarkStop1",
+      "Transit_Road_4L_TJunction_R4_MarkStop2"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkCorners_4L_TJunction_R4": {
+    "parts": [
+      "Transit_WalkCorners_4L_TJunction_R4_Corner1-1",
+      "Transit_WalkCorners_4L_TJunction_R4_Curb1-1",
+      "Transit_WalkCorners_4L_TJunction_R4_Corner-1-1",
+      "Transit_WalkCorners_4L_TJunction_R4_Curb-1-1",
+      "Transit_WalkCorners_4L_TJunction_R4_ClosedSideWalk",
+      "Transit_WalkCorners_4L_TJunction_R4_ClosedSideCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_6L_XJunction_R4": {
+    "parts": [
+      "Transit_Road_6L_XJunction_R4_Surface",
+      "Transit_Road_6L_XJunction_R4_MarkStop0",
+      "Transit_Road_6L_XJunction_R4_MarkStop1",
+      "Transit_Road_6L_XJunction_R4_MarkStop2",
+      "Transit_Road_6L_XJunction_R4_MarkStop3"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkCorners_6L_XJunction_R4": {
+    "parts": [
+      "Transit_WalkCorners_6L_XJunction_R4_Corner11",
+      "Transit_WalkCorners_6L_XJunction_R4_Curb11",
+      "Transit_WalkCorners_6L_XJunction_R4_Corner1-1",
+      "Transit_WalkCorners_6L_XJunction_R4_Curb1-1",
+      "Transit_WalkCorners_6L_XJunction_R4_Corner-1-1",
+      "Transit_WalkCorners_6L_XJunction_R4_Curb-1-1",
+      "Transit_WalkCorners_6L_XJunction_R4_Corner-11",
+      "Transit_WalkCorners_6L_XJunction_R4_Curb-11"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_6L_TJunction_R4": {
+    "parts": [
+      "Transit_Road_6L_TJunction_R4_Surface",
+      "Transit_Road_6L_TJunction_R4_MarkStop0",
+      "Transit_Road_6L_TJunction_R4_MarkStop1",
+      "Transit_Road_6L_TJunction_R4_MarkStop2"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkCorners_6L_TJunction_R4": {
+    "parts": [
+      "Transit_WalkCorners_6L_TJunction_R4_Corner1-1",
+      "Transit_WalkCorners_6L_TJunction_R4_Curb1-1",
+      "Transit_WalkCorners_6L_TJunction_R4_Corner-1-1",
+      "Transit_WalkCorners_6L_TJunction_R4_Curb-1-1",
+      "Transit_WalkCorners_6L_TJunction_R4_ClosedSideWalk",
+      "Transit_WalkCorners_6L_TJunction_R4_ClosedSideCurb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_Taper_2L_4L_24m": {
+    "parts": [
+      "Transit_Road_Taper_2L_4L_24m_Surface",
+      "Transit_Road_Taper_2L_4L_24m_MarkCenter",
+      "Transit_Road_Taper_2L_4L_24m_MarkEdge-1",
+      "Transit_Road_Taper_2L_4L_24m_MarkEdge1",
+      "Transit_Road_Taper_2L_4L_24m_MarkMerge-1_1",
+      "Transit_Road_Taper_2L_4L_24m_MarkMerge1_1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_Taper_2L_4L_24m": {
+    "parts": [
+      "Transit_WalkSides_Taper_2L_4L_24m_Walk-1",
+      "Transit_WalkSides_Taper_2L_4L_24m_Curb-1",
+      "Transit_WalkSides_Taper_2L_4L_24m_Walk1",
+      "Transit_WalkSides_Taper_2L_4L_24m_Curb1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_Taper_4L_6L_24m": {
+    "parts": [
+      "Transit_Road_Taper_4L_6L_24m_Surface",
+      "Transit_Road_Taper_4L_6L_24m_MarkCenter",
+      "Transit_Road_Taper_4L_6L_24m_MarkEdge-1",
+      "Transit_Road_Taper_4L_6L_24m_MarkEdge1",
+      "Transit_Road_Taper_4L_6L_24m_MarkMerge-1_1",
+      "Transit_Road_Taper_4L_6L_24m_MarkMerge-1_2",
+      "Transit_Road_Taper_4L_6L_24m_MarkMerge1_1",
+      "Transit_Road_Taper_4L_6L_24m_MarkMerge1_2"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_Taper_4L_6L_24m": {
+    "parts": [
+      "Transit_WalkSides_Taper_4L_6L_24m_Walk-1",
+      "Transit_WalkSides_Taper_4L_6L_24m_Curb-1",
+      "Transit_WalkSides_Taper_4L_6L_24m_Walk1",
+      "Transit_WalkSides_Taper_4L_6L_24m_Curb1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_Taper_2L_6L_36m": {
+    "parts": [
+      "Transit_Road_Taper_2L_6L_36m_Surface",
+      "Transit_Road_Taper_2L_6L_36m_MarkCenter",
+      "Transit_Road_Taper_2L_6L_36m_MarkEdge-1",
+      "Transit_Road_Taper_2L_6L_36m_MarkEdge1",
+      "Transit_Road_Taper_2L_6L_36m_MarkMerge-1_1",
+      "Transit_Road_Taper_2L_6L_36m_MarkMerge-1_2",
+      "Transit_Road_Taper_2L_6L_36m_MarkMerge1_1",
+      "Transit_Road_Taper_2L_6L_36m_MarkMerge1_2"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_WalkSides_Taper_2L_6L_36m": {
+    "parts": [
+      "Transit_WalkSides_Taper_2L_6L_36m_Walk-1",
+      "Transit_WalkSides_Taper_2L_6L_36m_Curb-1",
+      "Transit_WalkSides_Taper_2L_6L_36m_Walk1",
+      "Transit_WalkSides_Taper_2L_6L_36m_Curb1"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Walk_W2_Straight_2m": {
+    "parts": [
+      "Transit_Walk_W2_Straight_2m_Pavement",
+      "Transit_Walk_W2_Straight_2m_Curb",
+      "Transit_Walk_W2_Straight_2m_MarkPaverJoints"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Walk_W2_Straight_4m": {
+    "parts": [
+      "Transit_Walk_W2_Straight_4m_Pavement",
+      "Transit_Walk_W2_Straight_4m_Curb",
+      "Transit_Walk_W2_Straight_4m_MarkPaverJoints"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Walk_W2_Straight_8m": {
+    "parts": [
+      "Transit_Walk_W2_Straight_8m_Pavement",
+      "Transit_Walk_W2_Straight_8m_Curb",
+      "Transit_Walk_W2_Straight_8m_MarkPaverJoints"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Walk_W2_Curve45_R4": {
+    "parts": [
+      "Transit_Walk_W2_Curve45_R4_Pavement",
+      "Transit_Walk_W2_Curve45_R4_Curb",
+      "Transit_Walk_W2_Curve45_R4_MarkPaverJoints"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Walk_W2_Curve90_R4": {
+    "parts": [
+      "Transit_Walk_W2_Curve90_R4_Pavement",
+      "Transit_Walk_W2_Curve90_R4_Curb",
+      "Transit_Walk_W2_Curve90_R4_MarkPaverJoints"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Walk_W2_Curve45_R8": {
+    "parts": [
+      "Transit_Walk_W2_Curve45_R8_Pavement",
+      "Transit_Walk_W2_Curve45_R8_Curb",
+      "Transit_Walk_W2_Curve45_R8_MarkPaverJoints"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Walk_W2_Curve90_R8": {
+    "parts": [
+      "Transit_Walk_W2_Curve90_R8_Pavement",
+      "Transit_Walk_W2_Curve90_R8_Curb",
+      "Transit_Walk_W2_Curve90_R8_MarkPaverJoints"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Walk_W2_XJunction": {
+    "parts": [
+      "Transit_Walk_W2_XJunction_Pavement"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Walk_W2_TJunction": {
+    "parts": [
+      "Transit_Walk_W2_TJunction_Pavement"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Walk_W2_AccessibleRamp_4m": {
+    "parts": [
+      "Transit_Walk_W2_AccessibleRamp_4m_Ramp",
+      "Transit_Walk_W2_AccessibleRamp_4m_Tactile"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Walk_W2_EndCap": {
+    "parts": [
+      "Transit_Walk_W2_EndCap_Pavement",
+      "Transit_Walk_W2_EndCap_Curb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Walk_W4_Straight_2m": {
+    "parts": [
+      "Transit_Walk_W4_Straight_2m_Pavement",
+      "Transit_Walk_W4_Straight_2m_Curb",
+      "Transit_Walk_W4_Straight_2m_MarkPaverJoints"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Walk_W4_Straight_4m": {
+    "parts": [
+      "Transit_Walk_W4_Straight_4m_Pavement",
+      "Transit_Walk_W4_Straight_4m_Curb",
+      "Transit_Walk_W4_Straight_4m_MarkPaverJoints"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Walk_W4_Straight_8m": {
+    "parts": [
+      "Transit_Walk_W4_Straight_8m_Pavement",
+      "Transit_Walk_W4_Straight_8m_Curb",
+      "Transit_Walk_W4_Straight_8m_MarkPaverJoints"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Walk_W4_Curve45_R4": {
+    "parts": [
+      "Transit_Walk_W4_Curve45_R4_Pavement",
+      "Transit_Walk_W4_Curve45_R4_Curb",
+      "Transit_Walk_W4_Curve45_R4_MarkPaverJoints"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Walk_W4_Curve90_R4": {
+    "parts": [
+      "Transit_Walk_W4_Curve90_R4_Pavement",
+      "Transit_Walk_W4_Curve90_R4_Curb",
+      "Transit_Walk_W4_Curve90_R4_MarkPaverJoints"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Walk_W4_Curve45_R8": {
+    "parts": [
+      "Transit_Walk_W4_Curve45_R8_Pavement",
+      "Transit_Walk_W4_Curve45_R8_Curb",
+      "Transit_Walk_W4_Curve45_R8_MarkPaverJoints"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Walk_W4_Curve90_R8": {
+    "parts": [
+      "Transit_Walk_W4_Curve90_R8_Pavement",
+      "Transit_Walk_W4_Curve90_R8_Curb",
+      "Transit_Walk_W4_Curve90_R8_MarkPaverJoints"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Walk_W4_XJunction": {
+    "parts": [
+      "Transit_Walk_W4_XJunction_Pavement"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Walk_W4_TJunction": {
+    "parts": [
+      "Transit_Walk_W4_TJunction_Pavement"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Walk_W4_AccessibleRamp_4m": {
+    "parts": [
+      "Transit_Walk_W4_AccessibleRamp_4m_Ramp",
+      "Transit_Walk_W4_AccessibleRamp_4m_Tactile"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Walk_W4_EndCap": {
+    "parts": [
+      "Transit_Walk_W4_EndCap_Pavement",
+      "Transit_Walk_W4_EndCap_Curb"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_2L_Crosswalk_4m": {
+    "parts": [
+      "Transit_Road_2L_Crosswalk_4m_Surface",
+      "Transit_Road_2L_Crosswalk_4m_MarkCrosswalk"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_4L_Crosswalk_4m": {
+    "parts": [
+      "Transit_Road_4L_Crosswalk_4m_Surface",
+      "Transit_Road_4L_Crosswalk_4m_MarkCrosswalk"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_Road_6L_Crosswalk_4m": {
+    "parts": [
+      "Transit_Road_6L_Crosswalk_4m_Surface",
+      "Transit_Road_6L_Crosswalk_4m_MarkCrosswalk"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_AirGuide_Straight_32m": {
+    "parts": [
+      "Transit_AirGuide_Straight_32m_EdgeTicks-1",
+      "Transit_AirGuide_Straight_32m_EdgeTicks1",
+      "Transit_AirGuide_Straight_32m_DirectionTicks"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_AirGuide_Straight_16m": {
+    "parts": [
+      "Transit_AirGuide_Straight_16m_EdgeTicks-1",
+      "Transit_AirGuide_Straight_16m_EdgeTicks1",
+      "Transit_AirGuide_Straight_16m_DirectionTicks"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_AirGuide_Curve15_R32": {
+    "parts": [
+      "Transit_AirGuide_Curve15_R32_EdgeTicks-1",
+      "Transit_AirGuide_Curve15_R32_EdgeTicks1",
+      "Transit_AirGuide_Curve15_R32_DirectionTicks"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_AirGuide_Curve30_R32": {
+    "parts": [
+      "Transit_AirGuide_Curve30_R32_EdgeTicks-1",
+      "Transit_AirGuide_Curve30_R32_EdgeTicks1",
+      "Transit_AirGuide_Curve30_R32_DirectionTicks"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_AirGuide_Curve45_R32": {
+    "parts": [
+      "Transit_AirGuide_Curve45_R32_EdgeTicks-1",
+      "Transit_AirGuide_Curve45_R32_EdgeTicks1",
+      "Transit_AirGuide_Curve45_R32_DirectionTicks"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_AirGuide_Curve90_R32": {
+    "parts": [
+      "Transit_AirGuide_Curve90_R32_EdgeTicks-1",
+      "Transit_AirGuide_Curve90_R32_EdgeTicks1",
+      "Transit_AirGuide_Curve90_R32_DirectionTicks"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_AirGuide_Curve15_R64": {
+    "parts": [
+      "Transit_AirGuide_Curve15_R64_EdgeTicks-1",
+      "Transit_AirGuide_Curve15_R64_EdgeTicks1",
+      "Transit_AirGuide_Curve15_R64_DirectionTicks"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_AirGuide_Curve30_R64": {
+    "parts": [
+      "Transit_AirGuide_Curve30_R64_EdgeTicks-1",
+      "Transit_AirGuide_Curve30_R64_EdgeTicks1",
+      "Transit_AirGuide_Curve30_R64_DirectionTicks"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_AirGuide_Curve45_R64": {
+    "parts": [
+      "Transit_AirGuide_Curve45_R64_EdgeTicks-1",
+      "Transit_AirGuide_Curve45_R64_EdgeTicks1",
+      "Transit_AirGuide_Curve45_R64_DirectionTicks"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_AirGuide_Curve90_R64": {
+    "parts": [
+      "Transit_AirGuide_Curve90_R64_EdgeTicks-1",
+      "Transit_AirGuide_Curve90_R64_EdgeTicks1",
+      "Transit_AirGuide_Curve90_R64_DirectionTicks"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_AirGuide_XJunction": {
+    "parts": [
+      "Transit_AirGuide_XJunction_MouthTicks0",
+      "Transit_AirGuide_XJunction_MouthTicks1",
+      "Transit_AirGuide_XJunction_MouthTicks2",
+      "Transit_AirGuide_XJunction_MouthTicks3"
+    ],
+    "expansion": "transit_kit_v1"
+  },
+  "Transit_AirGuide_TJunction": {
+    "parts": [
+      "Transit_AirGuide_TJunction_MouthTicks0",
+      "Transit_AirGuide_TJunction_MouthTicks1",
+      "Transit_AirGuide_TJunction_MouthTicks2"
+    ],
+    "expansion": "transit_kit_v1"
   }
 }

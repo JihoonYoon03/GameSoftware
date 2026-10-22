@@ -384,7 +384,7 @@ void Drawing::DrawModel3D(const models::Model &model, Vector2 screen, models::Po
 }
 void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models::CharacterType type,
                          bool walking, float facingYaw, models::Gender gender, models::HairStyle hair,
-                         bool npcArmed, float npcFlash, bool downed)
+                         bool npcArmed, float npcFlash, bool downed, float locomotionSpeed)
 {
     auto &world = Game::Get().GetState();
     Vector2 screen = WorldToScreen(position.x, position.y);
@@ -409,7 +409,7 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
     auto pose = models::ModelRig::Pose(world.animationTimeSeconds * 10,
                                        (isPlayer && world.movementAmount > 0) || walking, armed,
                                        armed ? flash / .055f : 0, false, gender);
-    pose.locomotionSpeed = isPlayer ? world.movementSpeed : 2.1f;
+    pose.locomotionSpeed = isPlayer ? world.movementSpeed : locomotionSpeed;
     models::Palette palette;
     palette.body = {coat.r, coat.g, coat.b, coat.a};
     models::Transform3D rotation;

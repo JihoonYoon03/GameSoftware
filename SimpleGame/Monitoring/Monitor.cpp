@@ -1,6 +1,8 @@
 ﻿#include "stdafx.h"
 #include "Monitor.h"
 #include "Overworld.h"
+#include "ResidentAI.h"
+#include "TransitLayout.h"
 #include "ResourceAssets.h"
 #include "LocalMonitorServer.h"
 #include "../Level.h"
@@ -9,6 +11,7 @@
 #include "../Profiler.h"
 #include <windows.h>
 #include <algorithm>
+#include <set>
 #include <cmath>
 #include <cstdio>
 #include <filesystem>
@@ -161,6 +164,38 @@ std::string StaticNpc(const std::string &id, const std::string &name, tutorial::
     result.Text("source", "tutorial_static_actor");
     return result.Finish();
 }
+std::string ResidentNpc(const std::string &id, const tutorial::Resident &resident, bool active)
+{
+    JsonObject result;
+    result.Text("id", id);
+    result.Text("region_id", tutorial::Overworld::Cities()[resident.cityIndex].id);
+    result.Text("name", resident.name);
+    result.Text("role", tutorial::CityResidents::ProfessionName(resident.profession));
+    result.Text("personality", resident.profession == tutorial::ResidentProfession::Guard
+                                   ? "질서·안전 우선"
+                                   : "직업 일정·생활 동선");
+    result.Text("behavior_pattern", "직업 시설 방문 / 보행로 이동 / 자동 신호 대기·횡단 / 휴식");
+    result.Text("activity", tutorial::CityResidents::ActivityName(resident.activity));
+    result.Text("activity_label", tutorial::CityResidents::ActivityLabel(resident));
+    result.Bool("simulation_active", active);
+    result.Bool("following", false);
+    result.Text("life_state", "alive");
+    result.Raw("position", Position(resident.position));
+    result.Raw("home", Position(resident.home));
+    result.Raw("destination", Position(resident.destination));
+    result.Number("route_remaining", resident.route.size() - resident.routeCursor);
+    result.Number("crossing_junction", resident.crossingJunction);
+    result.Seconds("walking_speed", resident.speed);
+    result.Seconds("decision_cooldown_seconds", resident.waitSeconds);
+    result.Seconds("talk_seconds", resident.conversationSeconds);
+    result.Number("routine_step", resident.routineStep);
+    result.Text("dialogue", resident.dialogue);
+    result.Raw("warning", resident.activity == tutorial::ResidentActivity::NoRoute
+                              ? Quote("보행 경로 없음 · 재탐색 대기")
+                              : "null");
+    result.Text("source", "city_resident_simulation");
+    return result.Finish();
+}
 } // namespace
 
 std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sessionId)
@@ -175,6 +210,8 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                                 (!chapter.kainJoined || chapter.active ? 1 : 0) + fieldScrappers
                           : 0;
     const bool simulating = level.active && !world.isPaused;
+    const bool citySimulation =
+        !level.active && !chapter.active && !world.isPaused && !world.isInsideHome && !world.isInObservatory;
     const bool cityLia = !level.active && !chapter.active;
     const bool cityKain = chapter.kainJoined && !chapter.active;
     const size_t haloPopulation = 19 + (cityLia ? 1 : 0) - (chapter.kainJoined ? 1 : 0) + (cityKain ? 1 : 0);
@@ -215,7 +252,8 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                                                            : 0);
     counts.Number("npc_simulating", chapter.active && !world.isPaused ? frontierPopulation
                                     : simulating                      ? minePopulation
-                                                                      : 0);
+                                    : citySimulation ? world.residents.size() - (chapter.kainJoined ? 1 : 0)
+                                                     : 0);
     counts.Number("mob_total", level.enemies.size());
     counts.Number("mob_alive", aliveMobs);
     counts.Number("mob_respawning", level.enemies.size() - aliveMobs);
@@ -290,6 +328,45 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     traffic.Number("aircraft", tutorial::Overworld::Flights().Aircraft().size());
     traffic.Number("aircraft_limit", tutorial::AirTraffic::kAircraftLimit);
     traffic.Number("scenery_props", tutorial::Overworld::Scenery().Props().size());
+    traffic.Text("driving_side", "right");
+    traffic.Text("pedestrian_mode", "automatic_exclusive_cycle");
+    traffic.Number("pedestrian_navigation_nodes", tutorial::CityResidents::Get().NavigationNodeCount());
+    traffic.Text("road_layout", "native_transit_city_blocks_and_regional_ring");
+    traffic.Number("transit_module_instances", tutorial::TransitLayout::Get().size());
+    size_t waitingResidents = 0, crossingResidents = 0, noRouteResidents = 0;
+    for (const auto &resident : world.residents)
+    {
+        if (&resident - world.residents.data() == tutorial::Overworld::kKainResidentSlot &&
+            chapter.kainJoined)
+        {
+            continue;
+        }
+        waitingResidents += resident.activity == tutorial::ResidentActivity::WaitingSignal;
+        crossingResidents += resident.activity == tutorial::ResidentActivity::Crossing;
+        noRouteResidents += resident.activity == tutorial::ResidentActivity::NoRoute;
+    }
+    traffic.Number("residents_waiting_signal", waitingResidents);
+    traffic.Number("residents_crossing", crossingResidents);
+    traffic.Number("residents_without_route", noRouteResidents);
+    std::string junctionSignals;
+    for (size_t junction = 0; junction < trafficSystem.Signals().size(); ++junction)
+    {
+        if (!roads.IsSignalized(int(junction)))
+        {
+            continue;
+        }
+        const auto &signal = trafficSystem.Signals()[junction];
+        JsonObject item;
+        item.Number("junction", junction);
+        item.Number("phase", int(signal.phase));
+        item.Seconds("elapsed_seconds", signal.elapsed);
+        item.Seconds("remaining_seconds",
+                     (std::max)(0.f, trafficSystem.PhaseDuration(int(junction)) - signal.elapsed));
+        item.Bool("pedestrian_green", trafficSystem.PedestrianGreen(int(junction)));
+        item.Bool("crossing_occupied", trafficSystem.CrossingOccupied(world, int(junction)));
+        Append(junctionSignals, item.Finish());
+    }
+    traffic.Raw("signals", "[" + junctionSignals + "]");
     traffic.Bool("simulating", !level.active && !chapter.active && !world.isInsideHome &&
                                    !world.isInObservatory && !world.isPaused);
     std::string cars = "[";
@@ -398,10 +475,9 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
             continue;
         }
         const auto &resident = world.residents[i];
-        Append(npcArray, StaticNpc(std::string(tutorial::Overworld::Cities()[resident.cityIndex].id) +
-                                       "/resident/" + std::to_string(i),
-                                   resident.name, resident.position, "주민", resident.dialogue,
-                                   tutorial::Overworld::Cities()[resident.cityIndex].id));
+        Append(npcArray, ResidentNpc(std::string(tutorial::Overworld::Cities()[resident.cityIndex].id) +
+                                         "/resident/" + std::to_string(i),
+                                     resident, citySimulation));
     }
     auto mineNpc = [&](const std::string &id, const char *name, const char *role, tutorial::Vector2 position,
                        const char *activity, const char *label, size_t remaining, bool following, int group,
@@ -743,6 +819,17 @@ std::string ModelCatalog::Build()
         out << ',';
         ModelJson(out, library.scenery[i], "scenery",
                   models::ModelLibrary::SceneryName(static_cast<models::SceneryType>(i)), i);
+    }
+    std::set<std::string> transitNames;
+    for (const auto &module : tutorial::TransitLayout::Get())
+    {
+        transitNames.insert(module.asset);
+    }
+    size_t transitType = 0;
+    for (const auto &name : transitNames)
+    {
+        out << ',';
+        ModelJson(out, models::ModelLibrary::Transit(name), "transit", name.c_str(), transitType++);
     }
     out << "],\"character_base\":null}";
     return out.str();

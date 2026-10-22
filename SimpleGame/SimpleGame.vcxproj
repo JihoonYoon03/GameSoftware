@@ -184,6 +184,8 @@
     <ClInclude Include="Level.h" />
     <ClInclude Include="ModelLibrary.h" />
     <ClInclude Include="Overworld.h" />
+    <ClInclude Include="ResidentAI.h" />
+    <ClInclude Include="TransitLayout.h" />
     <ClInclude Include="ResourceAssets.h" />
     <ClInclude Include="Monitoring\LocalMonitorServer.h" />
     <ClInclude Include="Monitoring\Monitor.h" />
@@ -205,6 +207,8 @@
     <ClCompile Include="Level.cpp" />
     <ClCompile Include="ModelLibrary.cpp" />
     <ClCompile Include="Overworld.cpp" />
+    <ClCompile Include="ResidentAI.cpp" />
+    <ClCompile Include="TransitLayout.cpp" />
     <ClCompile Include="ResourceAssets.cpp" />
     <ClCompile Include="Monitoring\LocalMonitorServer.cpp" />
     <ClCompile Include="Monitoring\Monitor.cpp" />

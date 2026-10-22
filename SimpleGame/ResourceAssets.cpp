@@ -225,10 +225,13 @@ Selection Select(const ResourceMesh &mesh, const CharacterPose *pose, bool upper
         }
         else if (pose->walking)
         {
-            name = "Run";
             const bool creature = mesh.name.find("creature/") == 0;
+            const bool walk = !creature && pose->locomotionSpeed < .9f;
+            name = walk ? "Walk" : "Run";
             const float referenceSpeed =
-                creature ? (mesh.name.find("RelaySentinel") != std::string::npos ? 2.1f : 1.98f) : 2.46f;
+                creature ? (mesh.name.find("RelaySentinel") != std::string::npos ? 2.1f : 1.98f)
+                : walk   ? 1.08f
+                         : 2.46f;
             time *= pose->locomotionSpeed * WorldScale::metersPerUnit / referenceSpeed;
         }
     }

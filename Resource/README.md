@@ -2,21 +2,33 @@
 
 세계관에 맞춘 조립식 로우 폴리 그래픽 팩입니다. 모든 작업 파일은 이 Resource 폴더 안에 있습니다.
 
-- **1,249개 독립 메시 파트**: 인체·의복·액세서리 785 / 몹 63 / 건축·환경 61 / 차량 122 / 비행체 82 / 도시·도로·야외 확장 136. 기존 인체·의복 호환 파트 199개를 포함합니다.
+- **1,743개 독립 메시 파트**: 인체·의복·액세서리 785 / 몹 63 / 건축·환경 61 / 차량 122 / 비행체 82 / 도시·도로·야외 확장 136 / 통행로 확장 494. 기존 인체·의복 호환 파트 199개를 포함합니다.
 - **파트당 최대 424삼각형**: 삼각형 변환 후에도 요청한 500개 이하
 - **체형 6종**, 목적별 의복 **9종 × 6체형**, 독립 액세서리 **34개**
 - **인물 조립 예제 10개**, 몹 3계열·머리 교체형 포함 **6개**, 건물 예제 **5개**, 차량 5종의 A/B 예제 **10개**, 비행체 4종의 A/B 예제 **8개**, 도시·도로·야외 프롭 **34종**
 - 공통 인체와 3개 몹 리그에 **각 15개 스켈레탈 클립**, 압력문에 개폐 2개, 차량에 타입별 10~11개, 비행체에 타입별 **12개**
 - 512×512 반복 PBR 재질 **8세트·PNG 24개**
-- **GLB 1,323개**, Blender 편집 원본, 조립·본·클립·블렌딩 JSON, 검증 결과와 렌더 미리보기
+- **GLB 1,929개**, Blender 편집 원본, 조립·본·클립·블렌딩·통행로 접속 JSON, 검증 결과와 렌더 미리보기
 
-시작 파일은 [Blender 원본](Source/Erma_Resource_Library.blend)입니다. 기본 Scene은 `10_Aircraft` 비행체 도감이며, Scene 메뉴에서 기존 인물·몹·주거 구역과 새로운 도로·프롭·비행장 예제로 이동할 수 있습니다.
+시작 파일은 [Blender 원본](Source/Erma_Resource_Library.blend)입니다. 기본 Scene은 `16_Transit_Connected_Example` 통행로 조립 예제이며, Scene 메뉴에서 기존 인물·몹·주거 구역과 도로·프롭·비행체 예제로 이동할 수 있습니다.
 
 [상세 사용·조립 안내](Documentation/README_ko.md) · [애니메이션 조합 안내](Documentation/ANIMATION_GUIDE_ko.md) · [조합 데이터](Documentation/assembly_recipes.json) · [애니메이션 블렌딩 데이터](Documentation/animation_blending.json)
 
 [새 체형·의복·액세서리 설계](Documentation/CHARACTER_DESIGN_ko.md) · [차량 조립 안내](Documentation/VEHICLES_ko.md)
 
 [비행체·도시·도로·야외 프롭 안내](Documentation/AIR_CITY_ko.md) · [비행체 조합](Documentation/aircraft_assemblies.json) · [배경 조합](Documentation/scenery_assemblies.json)
+
+## 도로·보행로·비행 안내 확장 — 2026-10-22
+
+**도로 45종·보행로 55종·비행 안내 12종**, 총 112개 조립 모듈을 추가했습니다. 독립 메시 494개는 파트당 최대 288삼각형이며 `Export/Transit`에 조립 GLB와 개별 파트를 모두 저장했습니다. 2·4·6차선의 곡선·둥근 모서리 교차로·폭 전환부, 별도 보도·경사로·횡단 연결부를 접속점으로 조립할 수 있습니다. 하늘의 안내는 중앙 5m를 비우고 약 3.5cm 두께의 짧은 양측 표식만 사용합니다.
+
+[통행로 조립 안내](Documentation/TRANSIT_KIT_ko.md) · [접속 규격](Documentation/transit_modules.json) · [연결 예제 배치](Documentation/transit_layout_example.json)
+
+![통행로 연결 예제](Preview/20_transit_connected.png)
+
+![눈높이에서 본 비행 안내](Preview/22_air_guide_player_view.png)
+
+이번 통행로 확장은 Blender 원본·GLB·조립 정보까지 제작한 상태입니다. 아래의 기존 게임 연결 기록과 별개로, **새 통행로의 Runtime 캐시 등록·월드 배치·기존 비행 경로 표시 교체는 별도 개발 작업**입니다. 이번 작업은 게임 코드와 Runtime 캐시를 변경하지 않았습니다.
 
 ## 비행체·배경 확장 — 2026-10-22
 

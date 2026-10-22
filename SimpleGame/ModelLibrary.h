@@ -2,6 +2,7 @@
 #include <array>
 #include <cstdint>
 #include <cstddef>
+#include <string>
 
 namespace models
 {
@@ -259,6 +260,7 @@ class ModelLibrary
     static const Model &Scenery(SceneryType type);
     static const char *SceneryName(SceneryType type);
     static const Model &TrafficSignal(unsigned int state);
+    static const Model &Transit(const std::string &name);
 };
 
 // ============================================================================

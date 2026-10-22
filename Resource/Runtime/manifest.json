@@ -1,8 +1,8 @@
 {
   "schema": "game_resource_pack_v1",
   "converter": "tools/pack-resources.mjs",
-  "bytes": 35078501,
-  "sha256": "563ff90a3b45971c578d62fb7ebbd2bc45f3415a998014de07497d03a4ff058f",
+  "bytes": 45132535,
+  "sha256": "0ae8c77dcd41c93342bcfa630ed3a8ed5d4a0f8f921b174766c2e8b04fedddc2",
   "sources": {
     "Aircraft/Kite_Courier": "3af1fe838b77a6b0391d82be50bf4627c95e953d074bdd63772cd2875ad6d4f8",
     "Aircraft/Kite_Courier_Variant": "5be43ab72c5e3fed1417b71f305de2ca27ccc166868ecbd81e972cce3c8d7971",
@@ -281,6 +281,118 @@
     "Scenery/Utility_SolarArray": "476289040b0fd3c7de7cc7e821fbf017a4e9286167c55130081f9c6659de9a95",
     "Scenery/Utility_Transformer": "7e1b5be9a826e4707e1975c3d9823a13c35616ff70c5eb248171345b22abe0b0",
     "Scenery/Utility_WaterTank": "d832d4a26e4c07f2e265ec6b8c4d77427712c7a4d4abc215384511e2f120eef3",
+    "Transit/Transit_AirGuide_Curve15_R32": "3e58c940ccec25e1b6b7c8a5738a519c2973fea121a667880ed34ff607e80903",
+    "Transit/Transit_AirGuide_Curve15_R64": "47708d010205eca6b770918343b97b4825c9c39d2427f1235109c7daa81a7bdd",
+    "Transit/Transit_AirGuide_Curve30_R32": "c86757389484126a629c87273f91e399fcdab77c611dfd39f0b3612ea8ef467f",
+    "Transit/Transit_AirGuide_Curve30_R64": "6d472d9511179916128ffedf70809a1d4fbab855e64816cdcdc735d3dd6acc5b",
+    "Transit/Transit_AirGuide_Curve45_R32": "7a8b386aeb5621b8e4d88f75d3b8924d89427e1bcc8301cf767d1f2270efc713",
+    "Transit/Transit_AirGuide_Curve45_R64": "27466974973a09cd4548f914e9e8d7e08cd8c01722fcf2c1dd292f6fe28378f5",
+    "Transit/Transit_AirGuide_Curve90_R32": "7dc98615e2dff945dfae67e48b0a9271f35bc7f47336bf2b5259d1a471d06413",
+    "Transit/Transit_AirGuide_Curve90_R64": "9f09782db5cf698f391efd57ac523e970be946f555df8e6498d3beb80cf47b09",
+    "Transit/Transit_AirGuide_Straight_16m": "54295b8e70a9317e545e84ffe15be6999ad878527eb6f99ed9130bc610bd9dc7",
+    "Transit/Transit_AirGuide_Straight_32m": "051fdb09b0cf26d96a4e29c6252108a632a34ef5de58aee1518df8cd43c2cbf8",
+    "Transit/Transit_AirGuide_TJunction": "eb3d2e1c1cc87a7fe4cdc4c69f716bebd0d3d67a358e780add119e2f7439b338",
+    "Transit/Transit_AirGuide_XJunction": "d69df902cd3d63ae1135ab4c7e575cde54663d3e0d9496ba0a543c2864c165c6",
+    "Transit/Transit_Road_2L_Crosswalk_4m": "11bee7487d191ef6c2a202c5867418f36009b1d6631cbad0213ec63530b33783",
+    "Transit/Transit_Road_2L_Curve15_R18": "956668cf6c342c1e15cd113ce421c4e243f14ef6578cfa5845a11bd7ecb94f5c",
+    "Transit/Transit_Road_2L_Curve15_R36": "9378ed103dc81cefb3099f8cc72484322df9316bfc06f55a5374ffc8c736a14f",
+    "Transit/Transit_Road_2L_Curve30_R18": "e9813d0a3cc8506863ba092093ff4f0a97698772c7591512179ac51f653e6ac7",
+    "Transit/Transit_Road_2L_Curve30_R36": "e19db65c24bafecf03a5d5811f81405e700f3bc7bf2cd4d9482dcf2374dd30b5",
+    "Transit/Transit_Road_2L_Curve45_R18": "81a6334773b077534c2bd389efefae5bbde8fbf53334c65bcacfe99249ece22f",
+    "Transit/Transit_Road_2L_Curve45_R36": "ab0e93dcdd85cb2c0a0797fd5e08c8670ca8cfc04f296d0e16fe18af0ec9d506",
+    "Transit/Transit_Road_2L_Curve90_R18": "d789044be20d2804b814fb1a386b56bfe0f6f66f18652e6627996e1b723d588d",
+    "Transit/Transit_Road_2L_Curve90_R36": "cffd1da73e811a368b8de19bad8656ff1b558646322b288a958d5c68a6d5c0b4",
+    "Transit/Transit_Road_2L_Straight_16m": "fd49a572285f8870ef999a59904b63a83504dd87958c2f8b19e26504c0779a16",
+    "Transit/Transit_Road_2L_Straight_4m": "db71da86d656368d95cb4b604cba6abf78d60c3ff2510512ec247c3ff948a28e",
+    "Transit/Transit_Road_2L_Straight_8m": "d3288ad6cf213f80b03168b094af1ca824835a7234a1271d9302756f7ce7b25b",
+    "Transit/Transit_Road_2L_TJunction_R4": "b5fc624c3492bb23a8ab7794a23837ccf584723cb53b81d3eac8ac32aac2e3c2",
+    "Transit/Transit_Road_2L_XJunction_R4": "af181a7b7e8daa1a9f97babc84a162cf1cbda218b9aa01caaad1b3199a17863a",
+    "Transit/Transit_Road_4L_Crosswalk_4m": "342878803fb173f9c888c0f7faef114942456e5b3f84b9fe759a4635a966e556",
+    "Transit/Transit_Road_4L_Curve15_R18": "a7ed43688142fa2cd75acb2f91f4ef7ac393805430df836d435b8e7c51604e4e",
+    "Transit/Transit_Road_4L_Curve15_R36": "b3d70cbd64f9ffd9e61db595fbc4b0de0e40362e2018dbbfcc34a8f55eb98d77",
+    "Transit/Transit_Road_4L_Curve30_R18": "5c4b517ae98369b1348b4fea179449971ebfaaa34680a8683aab0702e3bafa61",
+    "Transit/Transit_Road_4L_Curve30_R36": "29e50f96bae004004939019a4c9eddab2ba439648f29e836465082f7319ddbe4",
+    "Transit/Transit_Road_4L_Curve45_R18": "d536a12ca7883d8adb80dc4e5bf22e09d4c153074e3270c1551c7c1a052bbf27",
+    "Transit/Transit_Road_4L_Curve45_R36": "b052669c449b0a36f0c2e60b6436cfc94bd34eeac65da1408968161707df8dc1",
+    "Transit/Transit_Road_4L_Curve90_R18": "c9391bbf6dc1f038fdc4cbd3331155bab7530c004d225e24639003915074bc39",
+    "Transit/Transit_Road_4L_Curve90_R36": "2e7c58cfb85971b9fe1d4df14085438e03afe621362c2f8323d875dad3e55c0e",
+    "Transit/Transit_Road_4L_Straight_16m": "64f9828cd951c02c23c897f79691ae86043c82d96166846b77cbeafa00ebf98c",
+    "Transit/Transit_Road_4L_Straight_4m": "d65b18790ef35668a374fdd616f1f6f3dc56d5e2961ad1a3ac2cade034c1c424",
+    "Transit/Transit_Road_4L_Straight_8m": "2b9472242803d262301f713dc3e5dfc3c16cd660f9c1d6af1773065709bc04e7",
+    "Transit/Transit_Road_4L_TJunction_R4": "fb197969bc5690586cb9634c65b018acbfcdf4e87108984ad856a46d882de0ff",
+    "Transit/Transit_Road_4L_XJunction_R4": "44b50350dc4dc2f57b707c7ae843a9c15e3b8eef2f65cb8ee949067035c1842c",
+    "Transit/Transit_Road_6L_Crosswalk_4m": "8d8526b930912f85c228dd80feb0b31a80a639b31f3e6f54270a6a4242758470",
+    "Transit/Transit_Road_6L_Curve15_R18": "31fbc549c721b5b6a219a5bd1b1c9c45d96cfa7df3c28d14d0b1cf21c6f3a9e1",
+    "Transit/Transit_Road_6L_Curve15_R36": "812669f8ceafafb02a2ae07fe9e9ba188d9fa891dcd5f61c24d9a89e45870e28",
+    "Transit/Transit_Road_6L_Curve30_R18": "98e1d1579c6cef507b8eae06f11a820a1681d72c5a43adbaa01a8f083214c8e3",
+    "Transit/Transit_Road_6L_Curve30_R36": "3450b5bd6c180771bb16ad270575b4ecb2a45a4a4aa12346672b1fd3236d87b5",
+    "Transit/Transit_Road_6L_Curve45_R18": "13e532177e780ee03b1de027ce2f4b6d1cdb0635852ef9a5b1e078620287f9e7",
+    "Transit/Transit_Road_6L_Curve45_R36": "9b51e4f4cf0d52888fd062c1ac4e6325c0cc7b8aec8c5f6b142ae92d411a58df",
+    "Transit/Transit_Road_6L_Curve90_R18": "8207d2f072b090e10771c19b06f86971744b65595bbaa2034c001a1d9cfb8a0a",
+    "Transit/Transit_Road_6L_Curve90_R36": "48d587f8b4ae3548786b1c377be9d0b8846ba1e9e1abe612399ad093d2fb0297",
+    "Transit/Transit_Road_6L_Straight_16m": "d61b2d585827ed9986a869170e1049a7a039ec7ab78480674b56ecaa45aa0de5",
+    "Transit/Transit_Road_6L_Straight_4m": "24d97c64b99becf4497da42727eccf16acdfbee3550ab87c07c61bc5321cfa48",
+    "Transit/Transit_Road_6L_Straight_8m": "a41158071b8edbce5647ef19ef3853770dc9bc395264479f9128c11b23092cce",
+    "Transit/Transit_Road_6L_TJunction_R4": "14757381857d30b20a3c3bfdc8975693273f4abfac0fbab827a79909320c697b",
+    "Transit/Transit_Road_6L_XJunction_R4": "17b35195ed45560e0171bb3d033073143c6eff7a800c293c838515699fd2dff1",
+    "Transit/Transit_Road_Taper_2L_4L_24m": "87d821489da7a52bef2e105f12d32c7c3e6b327856d804ed793c10af236ae970",
+    "Transit/Transit_Road_Taper_2L_6L_36m": "259ba96b7b0e63ecd8d5fda27cdfd7361e5d5cd3e44e50f3c5e54f122e219f27",
+    "Transit/Transit_Road_Taper_4L_6L_24m": "c860029c7ba410bf37d06e3868d8034136f10d0a5bc4ce414647ab4da8dd174d",
+    "Transit/Transit_WalkCorners_2L_TJunction_R4": "6a3f27a8cd40d30405a16960ce6e6d1d96bd0831d22a3ea95f85abffe395a45f",
+    "Transit/Transit_WalkCorners_2L_XJunction_R4": "30665725b9bcef66da96b6e869df3218eff011523d095e71e548b6dd2ddbb3f2",
+    "Transit/Transit_WalkCorners_4L_TJunction_R4": "8c760b7a4afb43b0efc4913a4e7ff8d6dc826f16adb3ee3adf46e09bd9aacf8d",
+    "Transit/Transit_WalkCorners_4L_XJunction_R4": "f4b7e1a1dbc32ee0e115274bb5bde7813260fae90b9dbdca4a914d64acd11bb4",
+    "Transit/Transit_WalkCorners_6L_TJunction_R4": "6bcf890bbdca397e1f1687257ed0dba0577fd0fc5c7eefe59896e3e1f8463891",
+    "Transit/Transit_WalkCorners_6L_XJunction_R4": "b391742cc7507be0efa0632337a0b374d496dbc0522bb36fca37e9bb086051df",
+    "Transit/Transit_WalkSides_2L_Curve15_R18": "eb2e279db682f59eeb0ec745b8d724c5861aedb14f9fe294345c60e342de112b",
+    "Transit/Transit_WalkSides_2L_Curve15_R36": "fc97e19c0b229436c582c858a991e914e0e3884bc9ee4239a203f9e74fcf5e57",
+    "Transit/Transit_WalkSides_2L_Curve30_R18": "d50d70824500c66d6fd90fbe0b2358ccebc05360594e85e2260e79e6502b44d4",
+    "Transit/Transit_WalkSides_2L_Curve30_R36": "45114622c4933259bd2a368e9f2ba20063e89ff69eb90632beddb28aed9d53b4",
+    "Transit/Transit_WalkSides_2L_Curve45_R18": "344c0a76ce9859c61cbfcc5e2a018bd7e8da9e0d245a300f037fc7e2ad0c1bda",
+    "Transit/Transit_WalkSides_2L_Curve45_R36": "be20dc24a11c0a3ea6b34008ff14d27791a12ea942e27087d067fa6a354df341",
+    "Transit/Transit_WalkSides_2L_Curve90_R18": "68f710ff376489fc8bea1dcef286198f5b44cf9485fd5487594b1f86d7e3bf60",
+    "Transit/Transit_WalkSides_2L_Curve90_R36": "9202a5c6f0597b94cf2934a92acb8e7aeae5e0eaa9578109ee7421358b6a1e1e",
+    "Transit/Transit_WalkSides_4L_Curve15_R18": "24a576cbbbeb3b1a6bd302da27fd90da22eea53942f7dfb4f60df73fff4ab1ae",
+    "Transit/Transit_WalkSides_4L_Curve15_R36": "6d5a3cb9efa20bebcc111b569b947267c32d82460faf590735b788e3f1bddccb",
+    "Transit/Transit_WalkSides_4L_Curve30_R18": "435604560743294dd9cf7a4de249ec54b8543efb836545b041c3a1b01e2045b3",
+    "Transit/Transit_WalkSides_4L_Curve30_R36": "9d964e5e5a9da27dc77be843634563da994480dd0173d817f08a65c994e4d22f",
+    "Transit/Transit_WalkSides_4L_Curve45_R18": "7b804f5665096553d54ce50d6f53c52c2662fa2072ae3d4a1c77ccbfeeaf9f59",
+    "Transit/Transit_WalkSides_4L_Curve45_R36": "c522d59e1bce0f16bcd4cf0ce807412891caea5ed025423e39eed15940785300",
+    "Transit/Transit_WalkSides_4L_Curve90_R18": "e5176d04bc6cf78180810536e2829abb896d90f2dea465331caeaae6e2e8336a",
+    "Transit/Transit_WalkSides_4L_Curve90_R36": "23f533663e7a004b5732044ed6a4dbce490a6cdcd86ca1ec2868ffd7c97a10e2",
+    "Transit/Transit_WalkSides_6L_Curve15_R18": "533b3772c5ea5fa5e07449dfa2c3da28f782a9cde14a00a7d6c03dc47ab28090",
+    "Transit/Transit_WalkSides_6L_Curve15_R36": "2fa22c7a1ea68fd635d71b4180469bbdd070bd3123773bdd22816dfbfdea5f40",
+    "Transit/Transit_WalkSides_6L_Curve30_R18": "4b7748ff40a9802439ec34b071875e42efb81a097ba511a149578834ebdb53e4",
+    "Transit/Transit_WalkSides_6L_Curve30_R36": "87a138697276ef68f1c7a043061d852d6c0dcd0a3a10d210e870490eb14deb00",
+    "Transit/Transit_WalkSides_6L_Curve45_R18": "da5070b99db5d7160735915a94935b5a1c493dbbb612c691f1f70a1a3e38ac19",
+    "Transit/Transit_WalkSides_6L_Curve45_R36": "64277c35a7c62de5b644a7fb9c309f7824b28493c286fd61001a61472d4e001c",
+    "Transit/Transit_WalkSides_6L_Curve90_R18": "5dc5ab224bc6b2480701f4f8799163c81c8dc3e7d9841837be82a6e432f85e09",
+    "Transit/Transit_WalkSides_6L_Curve90_R36": "694438bc799f1437ad6bfea8414a545dec169594fe9a825237be6ceced550ece",
+    "Transit/Transit_WalkSides_Taper_2L_4L_24m": "7d036ca24aeb75eb2ca118a87fbde909565c996ab20058601f3b70e61c19d143",
+    "Transit/Transit_WalkSides_Taper_2L_6L_36m": "51b356e6992c60e499fe938500b808681b1d38d94864b62e9b679184e39e90d5",
+    "Transit/Transit_WalkSides_Taper_4L_6L_24m": "811443b696374b5ed48461235d008d4124a599dd2d338a56f471ce5ecc76661b",
+    "Transit/Transit_Walk_W2_AccessibleRamp_4m": "e8fc44ac57c9c15b598ed0dc05f791d55b9bfa1a78362666ef8245c21d3b90a0",
+    "Transit/Transit_Walk_W2_Curve45_R4": "4e74a305e1f50e69fcfb8c4c9caae85e918450f748a240aae5b82fba9a053ba9",
+    "Transit/Transit_Walk_W2_Curve45_R8": "e2f3f861b476429da93a9c67eff1daa6c1d06369ffa53e6e2fb96ea24f84e961",
+    "Transit/Transit_Walk_W2_Curve90_R4": "8846d649d811298199da5372bd70cf005afda3badba9c87aeb6756a512c088ab",
+    "Transit/Transit_Walk_W2_Curve90_R8": "9c60a9b59e61c72594b964614a5e926591c165c45580235b0af668bff2ea5baf",
+    "Transit/Transit_Walk_W2_EndCap": "15eedb95e30a90feece8703d3f92f63ed6858e54251b5f167935f35664123d44",
+    "Transit/Transit_Walk_W2_Straight_2m": "5fdb2a301f0a2fbcc5ab402ed36be911503f79650edb0d14f8df35ab574694d9",
+    "Transit/Transit_Walk_W2_Straight_4m": "ae40036053803f3fd393ed1393b67222f08d21050d83cf90edc96d3e7d4cecdf",
+    "Transit/Transit_Walk_W2_Straight_8m": "80059a23a061f07f548587e0f0e4588708c36710da077684dd8ba6f1f7eefefc",
+    "Transit/Transit_Walk_W2_TJunction": "f8adcc62422cdefe374d3adec8e44ebb6bc05a184eda0086c6c13b3267c0a66f",
+    "Transit/Transit_Walk_W2_XJunction": "a867a287d9521e5366eb9efe53b2adde6f03f6609fe42922930344d104c32c5c",
+    "Transit/Transit_Walk_W4_AccessibleRamp_4m": "8f4579ebe87d1711c70d26d687c223448ecc0f9afda98f4aaad498d1d02ee8cf",
+    "Transit/Transit_Walk_W4_Curve45_R4": "7adcf39edb1bea7778599519dafe7f23458cd683d5692b303468820513538aa2",
+    "Transit/Transit_Walk_W4_Curve45_R8": "5423fc217fc4a942d4f644efccc3926c3d12877826cfb7754a422101e01650c8",
+    "Transit/Transit_Walk_W4_Curve90_R4": "2a3923fe1ca3380ab3a562a9fa5c2f3940f5cff3671abad1ebde39c70b04222a",
+    "Transit/Transit_Walk_W4_Curve90_R8": "bb9cb1399bdc4f270e57bfdd5d71c1318ffe3bba38e38ee34ba70de66306affd",
+    "Transit/Transit_Walk_W4_EndCap": "cafe4eda7be9c21537b05e34bb7a87df0d176ee858b1852fa3edb9ecc839a3a9",
+    "Transit/Transit_Walk_W4_Straight_2m": "e8ba513fd2a192151e4ad24774696986da6889102eb8b7997abde37446b0e681",
+    "Transit/Transit_Walk_W4_Straight_4m": "27067caeed19ad1b975de59436f05a2ec8141fbb44e923e022a6c0bf5d9903c9",
+    "Transit/Transit_Walk_W4_Straight_8m": "8d4037ecaaf8836886af3d3989cd69a8264257a4436fc13baf2540736a133a9f",
+    "Transit/Transit_Walk_W4_TJunction": "f62152afacc65c7fe1ee8c6923f6f63b66efd61050cca9a9420406504f1fff1e",
+    "Transit/Transit_Walk_W4_XJunction": "905767108a6e802b7f625ee2ac56260552f572270192e73ffdb455b8ea3f94a2",
     "Vehicles/Coupe": "6fd776e0278dd61832ad2cb3f89badab0e228cfdd1f766b4dd309fd0b8f43bd1",
     "Vehicles/Hauler": "b8d88c497dfc3043e3e5160467c132a0137a5e18af33bb3af7c56816c891a511",
     "Vehicles/JetBike": "142b7c04a9142810249e08b93a83a378376f675d91b65567da1e76d340fc6bb5",
@@ -3725,6 +3837,2934 @@
           0.7793005704879761,
           0.1377580314874649,
           2.859999895095825
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_2L_Straight_4m",
+      "source": "Transit/Transit_Road_2L_Straight_4m",
+      "triangles": 48,
+      "bones": 0,
+      "physical_world_units": [
+        2,
+        3,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          -1,
+          -1.5,
+          -0.10000000149011612
+        ],
+        [
+          1,
+          1.5,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_2L_Straight_8m",
+      "source": "Transit/Transit_Road_2L_Straight_8m",
+      "triangles": 48,
+      "bones": 0,
+      "physical_world_units": [
+        4,
+        3,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          -2,
+          -1.5,
+          -0.10000000149011612
+        ],
+        [
+          2,
+          1.5,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_2L_Straight_16m",
+      "source": "Transit/Transit_Road_2L_Straight_16m",
+      "triangles": 48,
+      "bones": 0,
+      "physical_world_units": [
+        8,
+        3,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          -4,
+          -1.5,
+          -0.10000000149011612
+        ],
+        [
+          4,
+          1.5,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_4L_Straight_4m",
+      "source": "Transit/Transit_Road_4L_Straight_4m",
+      "triangles": 72,
+      "bones": 0,
+      "physical_world_units": [
+        2,
+        6,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          -1,
+          -3,
+          -0.10000000149011612
+        ],
+        [
+          1,
+          3,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_4L_Straight_8m",
+      "source": "Transit/Transit_Road_4L_Straight_8m",
+      "triangles": 96,
+      "bones": 0,
+      "physical_world_units": [
+        4,
+        6,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          -2,
+          -3,
+          -0.10000000149011612
+        ],
+        [
+          2,
+          3,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_4L_Straight_16m",
+      "source": "Transit/Transit_Road_4L_Straight_16m",
+      "triangles": 144,
+      "bones": 0,
+      "physical_world_units": [
+        8,
+        6,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          -4,
+          -3,
+          -0.10000000149011612
+        ],
+        [
+          4,
+          3,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_6L_Straight_4m",
+      "source": "Transit/Transit_Road_6L_Straight_4m",
+      "triangles": 96,
+      "bones": 0,
+      "physical_world_units": [
+        2,
+        9,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          -1,
+          -4.5,
+          -0.10000000149011612
+        ],
+        [
+          1,
+          4.5,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_6L_Straight_8m",
+      "source": "Transit/Transit_Road_6L_Straight_8m",
+      "triangles": 144,
+      "bones": 0,
+      "physical_world_units": [
+        4,
+        9,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          -2,
+          -4.5,
+          -0.10000000149011612
+        ],
+        [
+          2,
+          4.5,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_6L_Straight_16m",
+      "source": "Transit/Transit_Road_6L_Straight_16m",
+      "triangles": 240,
+      "bones": 0,
+      "physical_world_units": [
+        8,
+        9,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          -4,
+          -4.5,
+          -0.10000000149011612
+        ],
+        [
+          4,
+          4.5,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_2L_Curve15_R18",
+      "source": "Transit/Transit_Road_2L_Curve15_R18",
+      "triangles": 144,
+      "bones": 0,
+      "physical_world_units": [
+        2.717599868774414,
+        3.255556344985962,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          0,
+          -1.5,
+          -0.10000000149011612
+        ],
+        [
+          2.717599868774414,
+          1.755556344985962,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_2L_Curve15_R18",
+      "source": "Transit/Transit_WalkSides_2L_Curve15_R18",
+      "triangles": 144,
+      "bones": 0,
+      "physical_world_units": [
+        2.976418972015381,
+        5.221482038497925,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          0,
+          -2.5,
+          -0.10000000149011612
+        ],
+        [
+          2.976418972015381,
+          2.721482038497925,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_2L_Curve30_R18",
+      "source": "Transit/Transit_Road_2L_Curve30_R18",
+      "triangles": 272,
+      "bones": 0,
+      "physical_world_units": [
+        5.25,
+        4.004809379577637,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          0,
+          -1.5,
+          -0.10000000149011612
+        ],
+        [
+          5.25,
+          2.5048093795776367,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_2L_Curve30_R18",
+      "source": "Transit/Transit_WalkSides_2L_Curve30_R18",
+      "triangles": 272,
+      "bones": 0,
+      "physical_world_units": [
+        5.75,
+        5.870834827423096,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          0,
+          -2.5,
+          -0.10000000149011612
+        ],
+        [
+          5.75,
+          3.3708348274230957,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_2L_Curve45_R18",
+      "source": "Transit/Transit_Road_2L_Curve45_R18",
+      "triangles": 400,
+      "bones": 0,
+      "physical_world_units": [
+        7.424621105194092,
+        5.196699142456055,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          0,
+          -1.5,
+          -0.10000000149011612
+        ],
+        [
+          7.424621105194092,
+          3.6966991424560547,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_2L_Curve45_R18",
+      "source": "Transit/Transit_WalkSides_2L_Curve45_R18",
+      "triangles": 400,
+      "bones": 0,
+      "physical_world_units": [
+        8.131728172302246,
+        6.903805732727051,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          0,
+          -2.5,
+          -0.10000000149011612
+        ],
+        [
+          8.131728172302246,
+          4.403805732727051,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_2L_Curve90_R18",
+      "source": "Transit/Transit_Road_2L_Curve90_R18",
+      "triangles": 784,
+      "bones": 0,
+      "physical_world_units": [
+        10.5,
+        10.5,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          0,
+          -1.5,
+          -0.10000000149011612
+        ],
+        [
+          10.5,
+          9,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_2L_Curve90_R18",
+      "source": "Transit/Transit_WalkSides_2L_Curve90_R18",
+      "triangles": 784,
+      "bones": 0,
+      "physical_world_units": [
+        11.5,
+        11.5,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          0,
+          -2.5,
+          -0.10000000149011612
+        ],
+        [
+          11.5,
+          9,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_2L_Curve15_R36",
+      "source": "Transit/Transit_Road_2L_Curve15_R36",
+      "triangles": 144,
+      "bones": 0,
+      "physical_world_units": [
+        5.046971321105957,
+        3.5622239112854004,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          0,
+          -1.5,
+          -0.10000000149011612
+        ],
+        [
+          5.046971321105957,
+          2.0622239112854004,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_2L_Curve15_R36",
+      "source": "Transit/Transit_WalkSides_2L_Curve15_R36",
+      "triangles": 144,
+      "bones": 0,
+      "physical_world_units": [
+        5.305790424346924,
+        5.528149604797363,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          0,
+          -2.5,
+          -0.10000000149011612
+        ],
+        [
+          5.305790424346924,
+          3.0281496047973633,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_2L_Curve30_R36",
+      "source": "Transit/Transit_Road_2L_Curve30_R36",
+      "triangles": 272,
+      "bones": 0,
+      "physical_world_units": [
+        9.75,
+        5.210580825805664,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          0,
+          -1.5,
+          -0.10000000149011612
+        ],
+        [
+          9.75,
+          3.710580825805664,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_2L_Curve30_R36",
+      "source": "Transit/Transit_WalkSides_2L_Curve30_R36",
+      "triangles": 272,
+      "bones": 0,
+      "physical_world_units": [
+        10.25,
+        7.076606273651123,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          0,
+          -2.5,
+          -0.10000000149011612
+        ],
+        [
+          10.25,
+          4.576606273651123,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_2L_Curve45_R36",
+      "source": "Transit/Transit_Road_2L_Curve45_R36",
+      "triangles": 400,
+      "bones": 0,
+      "physical_world_units": [
+        13.788581848144531,
+        7.832737922668457,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          0,
+          -1.5,
+          -0.10000000149011612
+        ],
+        [
+          13.788581848144531,
+          6.332737922668457,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_2L_Curve45_R36",
+      "source": "Transit/Transit_WalkSides_2L_Curve45_R36",
+      "triangles": 400,
+      "bones": 0,
+      "physical_world_units": [
+        14.495689392089844,
+        9.539844989776611,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          0,
+          -2.5,
+          -0.10000000149011612
+        ],
+        [
+          14.495689392089844,
+          7.039844989776611,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_2L_Curve90_R36",
+      "source": "Transit/Transit_Road_2L_Curve90_R36",
+      "triangles": 784,
+      "bones": 0,
+      "physical_world_units": [
+        19.5,
+        19.5,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          0,
+          -1.5,
+          -0.10000000149011612
+        ],
+        [
+          19.5,
+          18,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_2L_Curve90_R36",
+      "source": "Transit/Transit_WalkSides_2L_Curve90_R36",
+      "triangles": 784,
+      "bones": 0,
+      "physical_world_units": [
+        20.5,
+        20.5,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          0,
+          -2.5,
+          -0.10000000149011612
+        ],
+        [
+          20.5,
+          18,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_4L_Curve15_R18",
+      "source": "Transit/Transit_Road_4L_Curve15_R18",
+      "triangles": 184,
+      "bones": 0,
+      "physical_world_units": [
+        3.1058285236358643,
+        6.204445123672485,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          0,
+          -3,
+          -0.10000000149011612
+        ],
+        [
+          3.1058285236358643,
+          3.2044451236724854,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_4L_Curve15_R18",
+      "source": "Transit/Transit_WalkSides_4L_Curve15_R18",
+      "triangles": 144,
+      "bones": 0,
+      "physical_world_units": [
+        3.364647626876831,
+        8.170371055603027,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          0,
+          -4,
+          -0.10000000149011612
+        ],
+        [
+          3.364647626876831,
+          4.170371055603027,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_4L_Curve30_R18",
+      "source": "Transit/Transit_Road_4L_Curve30_R18",
+      "triangles": 352,
+      "bones": 0,
+      "physical_world_units": [
+        6,
+        6.803847551345825,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          0,
+          -3,
+          -0.10000000149011612
+        ],
+        [
+          6,
+          3.803847551345825,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_4L_Curve30_R18",
+      "source": "Transit/Transit_WalkSides_4L_Curve30_R18",
+      "triangles": 272,
+      "bones": 0,
+      "physical_world_units": [
+        6.5,
+        8.669872760772705,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          0,
+          -4,
+          -0.10000000149011612
+        ],
+        [
+          6.5,
+          4.669872760772705,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_4L_Curve45_R18",
+      "source": "Transit/Transit_Road_4L_Curve45_R18",
+      "triangles": 520,
+      "bones": 0,
+      "physical_world_units": [
+        8.485280990600586,
+        7.757359504699707,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          0,
+          -3,
+          -0.10000000149011612
+        ],
+        [
+          8.485280990600586,
+          4.757359504699707,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_4L_Curve45_R18",
+      "source": "Transit/Transit_WalkSides_4L_Curve45_R18",
+      "triangles": 400,
+      "bones": 0,
+      "physical_world_units": [
+        9.192388534545898,
+        9.464466094970703,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          0,
+          -4,
+          -0.10000000149011612
+        ],
+        [
+          9.192388534545898,
+          5.464466094970703,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_4L_Curve90_R18",
+      "source": "Transit/Transit_Road_4L_Curve90_R18",
+      "triangles": 1064,
+      "bones": 0,
+      "physical_world_units": [
+        12,
+        12,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          0,
+          -3,
+          -0.10000000149011612
+        ],
+        [
+          12,
+          9,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_4L_Curve90_R18",
+      "source": "Transit/Transit_WalkSides_4L_Curve90_R18",
+      "triangles": 784,
+      "bones": 0,
+      "physical_world_units": [
+        13,
+        13,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          0,
+          -4,
+          -0.10000000149011612
+        ],
+        [
+          13,
+          9,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_4L_Curve15_R36",
+      "source": "Transit/Transit_Road_4L_Curve15_R36",
+      "triangles": 192,
+      "bones": 0,
+      "physical_world_units": [
+        5.435199737548828,
+        6.511112689971924,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          0,
+          -3,
+          -0.10000000149011612
+        ],
+        [
+          5.435199737548828,
+          3.511112689971924,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_4L_Curve15_R36",
+      "source": "Transit/Transit_WalkSides_4L_Curve15_R36",
+      "triangles": 144,
+      "bones": 0,
+      "physical_world_units": [
+        5.694018840789795,
+        8.477038383483887,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          0,
+          -4,
+          -0.10000000149011612
+        ],
+        [
+          5.694018840789795,
+          4.477038383483887,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_4L_Curve30_R36",
+      "source": "Transit/Transit_Road_4L_Curve30_R36",
+      "triangles": 368,
+      "bones": 0,
+      "physical_world_units": [
+        10.5,
+        8.009618759155273,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          0,
+          -3,
+          -0.10000000149011612
+        ],
+        [
+          10.5,
+          5.009618759155273,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_4L_Curve30_R36",
+      "source": "Transit/Transit_WalkSides_4L_Curve30_R36",
+      "triangles": 272,
+      "bones": 0,
+      "physical_world_units": [
+        11,
+        9.875644207000732,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          0,
+          -4,
+          -0.10000000149011612
+        ],
+        [
+          11,
+          5.875644207000732,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_4L_Curve45_R36",
+      "source": "Transit/Transit_Road_4L_Curve45_R36",
+      "triangles": 568,
+      "bones": 0,
+      "physical_world_units": [
+        14.849242210388184,
+        10.39339828491211,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          0,
+          -3,
+          -0.10000000149011612
+        ],
+        [
+          14.849242210388184,
+          7.393398284912109,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_4L_Curve45_R36",
+      "source": "Transit/Transit_WalkSides_4L_Curve45_R36",
+      "triangles": 400,
+      "bones": 0,
+      "physical_world_units": [
+        15.55634880065918,
+        12.100504875183105,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          0,
+          -4,
+          -0.10000000149011612
+        ],
+        [
+          15.55634880065918,
+          8.100504875183105,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_4L_Curve90_R36",
+      "source": "Transit/Transit_Road_4L_Curve90_R36",
+      "triangles": 1120,
+      "bones": 0,
+      "physical_world_units": [
+        21,
+        21,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          0,
+          -3,
+          -0.10000000149011612
+        ],
+        [
+          21,
+          18,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_4L_Curve90_R36",
+      "source": "Transit/Transit_WalkSides_4L_Curve90_R36",
+      "triangles": 784,
+      "bones": 0,
+      "physical_world_units": [
+        22,
+        22,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          0,
+          -4,
+          -0.10000000149011612
+        ],
+        [
+          22,
+          18,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_6L_Curve15_R18",
+      "source": "Transit/Transit_Road_6L_Curve15_R18",
+      "triangles": 224,
+      "bones": 0,
+      "physical_world_units": [
+        3.4940571784973145,
+        9.15333366394043,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          0,
+          -4.5,
+          -0.10000000149011612
+        ],
+        [
+          3.4940571784973145,
+          4.65333366394043,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_6L_Curve15_R18",
+      "source": "Transit/Transit_WalkSides_6L_Curve15_R18",
+      "triangles": 144,
+      "bones": 0,
+      "physical_world_units": [
+        3.752876043319702,
+        11.11925983428955,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          0,
+          -5.5,
+          -0.10000000149011612
+        ],
+        [
+          3.752876043319702,
+          5.619259834289551,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_6L_Curve30_R18",
+      "source": "Transit/Transit_Road_6L_Curve30_R18",
+      "triangles": 432,
+      "bones": 0,
+      "physical_world_units": [
+        6.75,
+        9.602885723114014,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          0,
+          -4.5,
+          -0.10000000149011612
+        ],
+        [
+          6.75,
+          5.102885723114014,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_6L_Curve30_R18",
+      "source": "Transit/Transit_WalkSides_6L_Curve30_R18",
+      "triangles": 272,
+      "bones": 0,
+      "physical_world_units": [
+        7.25,
+        11.468911170959473,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          0,
+          -5.5,
+          -0.10000000149011612
+        ],
+        [
+          7.25,
+          5.968911170959473,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_6L_Curve45_R18",
+      "source": "Transit/Transit_Road_6L_Curve45_R18",
+      "triangles": 640,
+      "bones": 0,
+      "physical_world_units": [
+        9.545941352844238,
+        10.318019390106201,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          0,
+          -4.5,
+          -0.10000000149011612
+        ],
+        [
+          9.545941352844238,
+          5.818019390106201,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_6L_Curve45_R18",
+      "source": "Transit/Transit_WalkSides_6L_Curve45_R18",
+      "triangles": 400,
+      "bones": 0,
+      "physical_world_units": [
+        10.253047943115234,
+        12.025126457214355,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          0,
+          -5.5,
+          -0.10000000149011612
+        ],
+        [
+          10.253047943115234,
+          6.5251264572143555,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_6L_Curve90_R18",
+      "source": "Transit/Transit_Road_6L_Curve90_R18",
+      "triangles": 1344,
+      "bones": 0,
+      "physical_world_units": [
+        13.5,
+        13.5,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          0,
+          -4.5,
+          -0.10000000149011612
+        ],
+        [
+          13.5,
+          9,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_6L_Curve90_R18",
+      "source": "Transit/Transit_WalkSides_6L_Curve90_R18",
+      "triangles": 784,
+      "bones": 0,
+      "physical_world_units": [
+        14.5,
+        14.5,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          0,
+          -5.5,
+          -0.10000000149011612
+        ],
+        [
+          14.5,
+          9,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_6L_Curve15_R36",
+      "source": "Transit/Transit_Road_6L_Curve15_R36",
+      "triangles": 240,
+      "bones": 0,
+      "physical_world_units": [
+        5.823428630828857,
+        9.460001468658447,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          0,
+          -4.5,
+          -0.10000000149011612
+        ],
+        [
+          5.823428630828857,
+          4.960001468658447,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_6L_Curve15_R36",
+      "source": "Transit/Transit_WalkSides_6L_Curve15_R36",
+      "triangles": 144,
+      "bones": 0,
+      "physical_world_units": [
+        6.082247734069824,
+        11.42592716217041,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          0,
+          -5.5,
+          -0.10000000149011612
+        ],
+        [
+          6.082247734069824,
+          5.92592716217041,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_6L_Curve30_R36",
+      "source": "Transit/Transit_Road_6L_Curve30_R36",
+      "triangles": 464,
+      "bones": 0,
+      "physical_world_units": [
+        11.25,
+        10.808657169342041,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          0,
+          -4.5,
+          -0.10000000149011612
+        ],
+        [
+          11.25,
+          6.308657169342041,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_6L_Curve30_R36",
+      "source": "Transit/Transit_WalkSides_6L_Curve30_R36",
+      "triangles": 272,
+      "bones": 0,
+      "physical_world_units": [
+        11.75,
+        12.6746826171875,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          0,
+          -5.5,
+          -0.10000000149011612
+        ],
+        [
+          11.75,
+          7.1746826171875,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_6L_Curve45_R36",
+      "source": "Transit/Transit_Road_6L_Curve45_R36",
+      "triangles": 736,
+      "bones": 0,
+      "physical_world_units": [
+        15.909902572631836,
+        12.954058647155762,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          0,
+          -4.5,
+          -0.10000000149011612
+        ],
+        [
+          15.909902572631836,
+          8.454058647155762,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_6L_Curve45_R36",
+      "source": "Transit/Transit_WalkSides_6L_Curve45_R36",
+      "triangles": 400,
+      "bones": 0,
+      "physical_world_units": [
+        16.61701011657715,
+        14.661165237426758,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          0,
+          -5.5,
+          -0.10000000149011612
+        ],
+        [
+          16.61701011657715,
+          9.161165237426758,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_6L_Curve90_R36",
+      "source": "Transit/Transit_Road_6L_Curve90_R36",
+      "triangles": 1456,
+      "bones": 0,
+      "physical_world_units": [
+        22.5,
+        22.5,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          0,
+          -4.5,
+          -0.10000000149011612
+        ],
+        [
+          22.5,
+          18,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_6L_Curve90_R36",
+      "source": "Transit/Transit_WalkSides_6L_Curve90_R36",
+      "triangles": 784,
+      "bones": 0,
+      "physical_world_units": [
+        23.5,
+        23.5,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          0,
+          -5.5,
+          -0.10000000149011612
+        ],
+        [
+          23.5,
+          18,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_2L_XJunction_R4",
+      "source": "Transit/Transit_Road_2L_XJunction_R4",
+      "triangles": 300,
+      "bones": 0,
+      "physical_world_units": [
+        7,
+        7,
+        0.10825000144541264
+      ],
+      "bounds": [
+        [
+          -3.5,
+          -3.5,
+          -0.10000000149011612
+        ],
+        [
+          3.5,
+          3.5,
+          0.008249999955296516
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkCorners_2L_XJunction_R4",
+      "source": "Transit/Transit_WalkCorners_2L_XJunction_R4",
+      "triangles": 800,
+      "bones": 0,
+      "physical_world_units": [
+        7,
+        7,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          -3.5,
+          -3.5,
+          -0.10000000149011612
+        ],
+        [
+          3.5,
+          3.5,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_2L_TJunction_R4",
+      "source": "Transit/Transit_Road_2L_TJunction_R4",
+      "triangles": 180,
+      "bones": 0,
+      "physical_world_units": [
+        7,
+        5,
+        0.10825000144541264
+      ],
+      "bounds": [
+        [
+          -3.5,
+          -3.5,
+          -0.10000000149011612
+        ],
+        [
+          3.5,
+          1.5,
+          0.008249999955296516
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkCorners_2L_TJunction_R4",
+      "source": "Transit/Transit_WalkCorners_2L_TJunction_R4",
+      "triangles": 424,
+      "bones": 0,
+      "physical_world_units": [
+        7,
+        6,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          -3.5,
+          -3.5,
+          -0.10000000149011612
+        ],
+        [
+          3.5,
+          2.5,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_4L_XJunction_R4",
+      "source": "Transit/Transit_Road_4L_XJunction_R4",
+      "triangles": 396,
+      "bones": 0,
+      "physical_world_units": [
+        10,
+        10,
+        0.10825000144541264
+      ],
+      "bounds": [
+        [
+          -5,
+          -5,
+          -0.10000000149011612
+        ],
+        [
+          5,
+          5,
+          0.008249999955296516
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkCorners_4L_XJunction_R4",
+      "source": "Transit/Transit_WalkCorners_4L_XJunction_R4",
+      "triangles": 800,
+      "bones": 0,
+      "physical_world_units": [
+        10,
+        10,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          -5,
+          -5,
+          -0.10000000149011612
+        ],
+        [
+          5,
+          5,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_4L_TJunction_R4",
+      "source": "Transit/Transit_Road_4L_TJunction_R4",
+      "triangles": 252,
+      "bones": 0,
+      "physical_world_units": [
+        10,
+        8,
+        0.10825000144541264
+      ],
+      "bounds": [
+        [
+          -5,
+          -5,
+          -0.10000000149011612
+        ],
+        [
+          5,
+          3,
+          0.008249999955296516
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkCorners_4L_TJunction_R4",
+      "source": "Transit/Transit_WalkCorners_4L_TJunction_R4",
+      "triangles": 424,
+      "bones": 0,
+      "physical_world_units": [
+        10,
+        9,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          -5,
+          -5,
+          -0.10000000149011612
+        ],
+        [
+          5,
+          4,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_6L_XJunction_R4",
+      "source": "Transit/Transit_Road_6L_XJunction_R4",
+      "triangles": 492,
+      "bones": 0,
+      "physical_world_units": [
+        13,
+        13,
+        0.10825000144541264
+      ],
+      "bounds": [
+        [
+          -6.5,
+          -6.5,
+          -0.10000000149011612
+        ],
+        [
+          6.5,
+          6.5,
+          0.008249999955296516
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkCorners_6L_XJunction_R4",
+      "source": "Transit/Transit_WalkCorners_6L_XJunction_R4",
+      "triangles": 800,
+      "bones": 0,
+      "physical_world_units": [
+        13,
+        13,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          -6.5,
+          -6.5,
+          -0.10000000149011612
+        ],
+        [
+          6.5,
+          6.5,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_6L_TJunction_R4",
+      "source": "Transit/Transit_Road_6L_TJunction_R4",
+      "triangles": 324,
+      "bones": 0,
+      "physical_world_units": [
+        13,
+        11,
+        0.10825000144541264
+      ],
+      "bounds": [
+        [
+          -6.5,
+          -6.5,
+          -0.10000000149011612
+        ],
+        [
+          6.5,
+          4.5,
+          0.008249999955296516
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkCorners_6L_TJunction_R4",
+      "source": "Transit/Transit_WalkCorners_6L_TJunction_R4",
+      "triangles": 424,
+      "bones": 0,
+      "physical_world_units": [
+        13,
+        12,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          -6.5,
+          -6.5,
+          -0.10000000149011612
+        ],
+        [
+          6.5,
+          5.5,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_Taper_2L_4L_24m",
+      "source": "Transit/Transit_Road_Taper_2L_4L_24m",
+      "triangles": 552,
+      "bones": 0,
+      "physical_world_units": [
+        12,
+        6.034999847412109,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          -6,
+          -3.0174999237060547,
+          -0.10000000149011612
+        ],
+        [
+          6,
+          3.0174999237060547,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_Taper_2L_4L_24m",
+      "source": "Transit/Transit_WalkSides_Taper_2L_4L_24m",
+      "triangles": 528,
+      "bones": 0,
+      "physical_world_units": [
+        12,
+        8,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          -6,
+          -4,
+          -0.10000000149011612
+        ],
+        [
+          6,
+          4,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_Taper_4L_6L_24m",
+      "source": "Transit/Transit_Road_Taper_4L_6L_24m",
+      "triangles": 696,
+      "bones": 0,
+      "physical_world_units": [
+        12,
+        9.03499984741211,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          -6,
+          -4.517499923706055,
+          -0.10000000149011612
+        ],
+        [
+          6,
+          4.517499923706055,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_Taper_4L_6L_24m",
+      "source": "Transit/Transit_WalkSides_Taper_4L_6L_24m",
+      "triangles": 528,
+      "bones": 0,
+      "physical_world_units": [
+        12,
+        11,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          -6,
+          -5.5,
+          -0.10000000149011612
+        ],
+        [
+          6,
+          5.5,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_Taper_2L_6L_36m",
+      "source": "Transit/Transit_Road_Taper_2L_6L_36m",
+      "triangles": 840,
+      "bones": 0,
+      "physical_world_units": [
+        18,
+        9.03499984741211,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          -9,
+          -4.517499923706055,
+          -0.10000000149011612
+        ],
+        [
+          9,
+          4.517499923706055,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_WalkSides_Taper_2L_6L_36m",
+      "source": "Transit/Transit_WalkSides_Taper_2L_6L_36m",
+      "triangles": 528,
+      "bones": 0,
+      "physical_world_units": [
+        18,
+        11,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          -9,
+          -5.5,
+          -0.10000000149011612
+        ],
+        [
+          9,
+          5.5,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Walk_W2_Straight_2m",
+      "source": "Transit/Transit_Walk_W2_Straight_2m",
+      "triangles": 36,
+      "bones": 0,
+      "physical_world_units": [
+        1,
+        1,
+        0.17599999904632568
+      ],
+      "bounds": [
+        [
+          -0.5,
+          -0.5,
+          -0.10000000149011612
+        ],
+        [
+          0.5,
+          0.5,
+          0.07599999755620956
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Walk_W2_Straight_4m",
+      "source": "Transit/Transit_Walk_W2_Straight_4m",
+      "triangles": 48,
+      "bones": 0,
+      "physical_world_units": [
+        2,
+        1,
+        0.17599999904632568
+      ],
+      "bounds": [
+        [
+          -1,
+          -0.5,
+          -0.10000000149011612
+        ],
+        [
+          1,
+          0.5,
+          0.07599999755620956
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Walk_W2_Straight_8m",
+      "source": "Transit/Transit_Walk_W2_Straight_8m",
+      "triangles": 72,
+      "bones": 0,
+      "physical_world_units": [
+        4,
+        1,
+        0.17599999904632568
+      ],
+      "bounds": [
+        [
+          -2,
+          -0.5,
+          -0.10000000149011612
+        ],
+        [
+          2,
+          0.5,
+          0.07599999755620956
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Walk_W2_Curve45_R4",
+      "source": "Transit/Transit_Walk_W2_Curve45_R4",
+      "triangles": 164,
+      "bones": 0,
+      "physical_world_units": [
+        1.7677669525146484,
+        1.439339816570282,
+        0.17599999904632568
+      ],
+      "bounds": [
+        [
+          0,
+          -0.5,
+          -0.10000000149011612
+        ],
+        [
+          1.7677669525146484,
+          0.939339816570282,
+          0.07599999755620956
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Walk_W2_Curve90_R4",
+      "source": "Transit/Transit_Walk_W2_Curve90_R4",
+      "triangles": 332,
+      "bones": 0,
+      "physical_world_units": [
+        2.5,
+        2.5,
+        0.17599999904632568
+      ],
+      "bounds": [
+        [
+          0,
+          -0.5,
+          -0.10000000149011612
+        ],
+        [
+          2.5,
+          2,
+          0.07599999755620956
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Walk_W2_Curve45_R8",
+      "source": "Transit/Transit_Walk_W2_Curve45_R8",
+      "triangles": 188,
+      "bones": 0,
+      "physical_world_units": [
+        3.181980609893799,
+        2.0251262187957764,
+        0.17599999904632568
+      ],
+      "bounds": [
+        [
+          0,
+          -0.5,
+          -0.10000000149011612
+        ],
+        [
+          3.181980609893799,
+          1.5251262187957764,
+          0.07599999755620956
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Walk_W2_Curve90_R8",
+      "source": "Transit/Transit_Walk_W2_Curve90_R8",
+      "triangles": 368,
+      "bones": 0,
+      "physical_world_units": [
+        4.5,
+        4.5,
+        0.17599999904632568
+      ],
+      "bounds": [
+        [
+          0,
+          -0.5,
+          -0.10000000149011612
+        ],
+        [
+          4.5,
+          4,
+          0.07599999755620956
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Walk_W2_XJunction",
+      "source": "Transit/Transit_Walk_W2_XJunction",
+      "triangles": 44,
+      "bones": 0,
+      "physical_world_units": [
+        3,
+        3,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          -1.5,
+          -1.5,
+          -0.10000000149011612
+        ],
+        [
+          1.5,
+          1.5,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Walk_W2_TJunction",
+      "source": "Transit/Transit_Walk_W2_TJunction",
+      "triangles": 28,
+      "bones": 0,
+      "physical_world_units": [
+        3,
+        2,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          -1.5,
+          -1.5,
+          -0.10000000149011612
+        ],
+        [
+          1.5,
+          0.5,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Walk_W2_AccessibleRamp_4m",
+      "source": "Transit/Transit_Walk_W2_AccessibleRamp_4m",
+      "triangles": 132,
+      "bones": 0,
+      "physical_world_units": [
+        2,
+        1,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          -1,
+          -0.5,
+          -0.10000000149011612
+        ],
+        [
+          1,
+          0.5,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Walk_W2_EndCap",
+      "source": "Transit/Transit_Walk_W2_EndCap",
+      "triangles": 24,
+      "bones": 0,
+      "physical_world_units": [
+        0.5,
+        1,
+        0.17499999701976776
+      ],
+      "bounds": [
+        [
+          -0.25,
+          -0.5,
+          -0.10000000149011612
+        ],
+        [
+          0.25,
+          0.5,
+          0.07499999552965164
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Walk_W4_Straight_2m",
+      "source": "Transit/Transit_Walk_W4_Straight_2m",
+      "triangles": 36,
+      "bones": 0,
+      "physical_world_units": [
+        1,
+        2,
+        0.17599999904632568
+      ],
+      "bounds": [
+        [
+          -0.5,
+          -1,
+          -0.10000000149011612
+        ],
+        [
+          0.5,
+          1,
+          0.07599999755620956
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Walk_W4_Straight_4m",
+      "source": "Transit/Transit_Walk_W4_Straight_4m",
+      "triangles": 48,
+      "bones": 0,
+      "physical_world_units": [
+        2,
+        2,
+        0.17599999904632568
+      ],
+      "bounds": [
+        [
+          -1,
+          -1,
+          -0.10000000149011612
+        ],
+        [
+          1,
+          1,
+          0.07599999755620956
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Walk_W4_Straight_8m",
+      "source": "Transit/Transit_Walk_W4_Straight_8m",
+      "triangles": 72,
+      "bones": 0,
+      "physical_world_units": [
+        4,
+        2,
+        0.17599999904632568
+      ],
+      "bounds": [
+        [
+          -2,
+          -1,
+          -0.10000000149011612
+        ],
+        [
+          2,
+          1,
+          0.07599999755620956
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Walk_W4_Curve45_R4",
+      "source": "Transit/Transit_Walk_W4_Curve45_R4",
+      "triangles": 164,
+      "bones": 0,
+      "physical_world_units": [
+        2.1213202476501465,
+        2.292893171310425,
+        0.17599999904632568
+      ],
+      "bounds": [
+        [
+          0,
+          -1,
+          -0.10000000149011612
+        ],
+        [
+          2.1213202476501465,
+          1.2928931713104248,
+          0.07599999755620956
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Walk_W4_Curve90_R4",
+      "source": "Transit/Transit_Walk_W4_Curve90_R4",
+      "triangles": 332,
+      "bones": 0,
+      "physical_world_units": [
+        3,
+        3,
+        0.17599999904632568
+      ],
+      "bounds": [
+        [
+          0,
+          -1,
+          -0.10000000149011612
+        ],
+        [
+          3,
+          2,
+          0.07599999755620956
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Walk_W4_Curve45_R8",
+      "source": "Transit/Transit_Walk_W4_Curve45_R8",
+      "triangles": 188,
+      "bones": 0,
+      "physical_world_units": [
+        3.535533905029297,
+        2.878679633140564,
+        0.17599999904632568
+      ],
+      "bounds": [
+        [
+          0,
+          -1,
+          -0.10000000149011612
+        ],
+        [
+          3.535533905029297,
+          1.878679633140564,
+          0.07599999755620956
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Walk_W4_Curve90_R8",
+      "source": "Transit/Transit_Walk_W4_Curve90_R8",
+      "triangles": 368,
+      "bones": 0,
+      "physical_world_units": [
+        5,
+        5,
+        0.17599999904632568
+      ],
+      "bounds": [
+        [
+          0,
+          -1,
+          -0.10000000149011612
+        ],
+        [
+          5,
+          4,
+          0.07599999755620956
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Walk_W4_XJunction",
+      "source": "Transit/Transit_Walk_W4_XJunction",
+      "triangles": 44,
+      "bones": 0,
+      "physical_world_units": [
+        6,
+        6,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          -3,
+          -3,
+          -0.10000000149011612
+        ],
+        [
+          3,
+          3,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Walk_W4_TJunction",
+      "source": "Transit/Transit_Walk_W4_TJunction",
+      "triangles": 28,
+      "bones": 0,
+      "physical_world_units": [
+        6,
+        4,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          -3,
+          -3,
+          -0.10000000149011612
+        ],
+        [
+          3,
+          1,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Walk_W4_AccessibleRamp_4m",
+      "source": "Transit/Transit_Walk_W4_AccessibleRamp_4m",
+      "triangles": 228,
+      "bones": 0,
+      "physical_world_units": [
+        2,
+        2,
+        0.17500000447034836
+      ],
+      "bounds": [
+        [
+          -1,
+          -1,
+          -0.10000000149011612
+        ],
+        [
+          1,
+          1,
+          0.07500000298023224
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Walk_W4_EndCap",
+      "source": "Transit/Transit_Walk_W4_EndCap",
+      "triangles": 24,
+      "bones": 0,
+      "physical_world_units": [
+        0.5,
+        2,
+        0.17499999701976776
+      ],
+      "bounds": [
+        [
+          -0.25,
+          -1,
+          -0.10000000149011612
+        ],
+        [
+          0.25,
+          1,
+          0.07499999552965164
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_2L_Crosswalk_4m",
+      "source": "Transit/Transit_Road_2L_Crosswalk_4m",
+      "triangles": 108,
+      "bones": 0,
+      "physical_world_units": [
+        2,
+        3,
+        0.10950000211596489
+      ],
+      "bounds": [
+        [
+          -1,
+          -1.5,
+          -0.10000000149011612
+        ],
+        [
+          1,
+          1.5,
+          0.00950000062584877
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_4L_Crosswalk_4m",
+      "source": "Transit/Transit_Road_4L_Crosswalk_4m",
+      "triangles": 204,
+      "bones": 0,
+      "physical_world_units": [
+        2,
+        6,
+        0.10950000211596489
+      ],
+      "bounds": [
+        [
+          -1,
+          -3,
+          -0.10000000149011612
+        ],
+        [
+          1,
+          3,
+          0.00950000062584877
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_Road_6L_Crosswalk_4m",
+      "source": "Transit/Transit_Road_6L_Crosswalk_4m",
+      "triangles": 300,
+      "bones": 0,
+      "physical_world_units": [
+        2,
+        9,
+        0.10950000211596489
+      ],
+      "bounds": [
+        [
+          -1,
+          -4.5,
+          -0.10000000149011612
+        ],
+        [
+          1,
+          4.5,
+          0.00950000062584877
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_AirGuide_Straight_32m",
+      "source": "Transit/Transit_AirGuide_Straight_32m",
+      "triangles": 192,
+      "bones": 0,
+      "physical_world_units": [
+        12.324999809265137,
+        3.4051878452301025,
+        0.01722981221973896
+      ],
+      "bounds": [
+        [
+          -6.162499904632568,
+          -1.7025939226150513,
+          -0.00861490610986948
+        ],
+        [
+          6.162499904632568,
+          1.7025939226150513,
+          0.00861490610986948
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_AirGuide_Straight_16m",
+      "source": "Transit/Transit_AirGuide_Straight_16m",
+      "triangles": 96,
+      "bones": 0,
+      "physical_world_units": [
+        4.324999809265137,
+        3.4051878452301025,
+        0.017229808494448662
+      ],
+      "bounds": [
+        [
+          -2.1624999046325684,
+          -1.7025939226150513,
+          -0.008614904247224331
+        ],
+        [
+          2.1624999046325684,
+          1.7025939226150513,
+          0.008614904247224331
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_AirGuide_Curve15_R32",
+      "source": "Transit/Transit_AirGuide_Curve15_R32",
+      "triangles": 72,
+      "bones": 0,
+      "physical_world_units": [
+        0.7360526323318481,
+        3.375885248184204,
+        0.017762314528226852
+      ],
+      "bounds": [
+        [
+          1.7254787683486938,
+          -1.5691046714782715,
+          -0.008881157264113426
+        ],
+        [
+          2.461531400680542,
+          1.8067805767059326,
+          0.008881157264113426
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_AirGuide_Curve30_R32",
+      "source": "Transit/Transit_AirGuide_Curve30_R32",
+      "triangles": 96,
+      "bones": 0,
+      "physical_world_units": [
+        5.118772268295288,
+        4.050117492675781,
+        0.01799090765416622
+      ],
+      "bounds": [
+        [
+          1.7454750537872314,
+          -1.3812751770019531,
+          -0.00899545382708311
+        ],
+        [
+          6.8642473220825195,
+          2.668842315673828,
+          0.00899545382708311
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_AirGuide_Curve45_R32",
+      "source": "Transit/Transit_AirGuide_Curve45_R32",
+      "triangles": 168,
+      "bones": 0,
+      "physical_world_units": [
+        9.053701162338257,
+        5.982732534408569,
+        0.017914967611432076
+      ],
+      "bounds": [
+        [
+          1.7454750537872314,
+          -1.3892271518707275,
+          -0.008957483805716038
+        ],
+        [
+          10.799176216125488,
+          4.593505382537842,
+          0.008957483805716038
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_AirGuide_Curve90_R32",
+      "source": "Transit/Transit_AirGuide_Curve90_R32",
+      "triangles": 288,
+      "bones": 0,
+      "physical_world_units": [
+        15.635800123214722,
+        15.6358003616333,
+        0.01799090765416622
+      ],
+      "bounds": [
+        [
+          1.7454750537872314,
+          -1.3812751770019531,
+          -0.00899545382708311
+        ],
+        [
+          17.381275177001953,
+          14.254525184631348,
+          0.00899545382708311
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_AirGuide_Curve15_R64",
+      "source": "Transit/Transit_AirGuide_Curve15_R64",
+      "triangles": 96,
+      "bones": 0,
+      "physical_world_units": [
+        4.864348769187927,
+        3.5729267597198486,
+        0.017762314528226852
+      ],
+      "bounds": [
+        [
+          1.8396912813186646,
+          -1.4477031230926514,
+          -0.008881157264113426
+        ],
+        [
+          6.704040050506592,
+          2.1252236366271973,
+          0.008881157264113426
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_AirGuide_Curve30_R64",
+      "source": "Transit/Transit_AirGuide_Curve30_R64",
+      "triangles": 192,
+      "bones": 0,
+      "physical_world_units": [
+        13.133271098136902,
+        6.169767618179321,
+        0.017911670729517937
+      ],
+      "bounds": [
+        [
+          1.8396912813186646,
+          -1.4477031230926514,
+          -0.008955835364758968
+        ],
+        [
+          14.972962379455566,
+          4.72206449508667,
+          0.008955835364758968
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_AirGuide_Curve45_R64",
+      "source": "Transit/Transit_AirGuide_Curve45_R64",
+      "triangles": 288,
+      "bones": 0,
+      "physical_world_units": [
+        20.381811022758484,
+        10.62555480003357,
+        0.017911670729517937
+      ],
+      "bounds": [
+        [
+          1.8396912813186646,
+          -1.4477031230926514,
+          -0.008955835364758968
+        ],
+        [
+          22.22150230407715,
+          9.177851676940918,
+          0.008955835364758968
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_AirGuide_Curve90_R64",
+      "source": "Transit/Transit_AirGuide_Curve90_R64",
+      "triangles": 600,
+      "bones": 0,
+      "physical_world_units": [
+        31.771021604537964,
+        31.77102029323578,
+        0.017911670729517937
+      ],
+      "bounds": [
+        [
+          1.6864368915557861,
+          -1.4574579000473022,
+          -0.008955835364758968
+        ],
+        [
+          33.45745849609375,
+          30.313562393188477,
+          0.008955835364758968
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_AirGuide_XJunction",
+      "source": "Transit/Transit_AirGuide_XJunction",
+      "triangles": 96,
+      "bones": 0,
+      "physical_world_units": [
+        7.324999809265137,
+        7.324999809265137,
+        0.012727922759950161
+      ],
+      "bounds": [
+        [
+          -3.6624999046325684,
+          -3.6624999046325684,
+          -0.0063639613799750805
+        ],
+        [
+          3.6624999046325684,
+          3.6624999046325684,
+          0.0063639613799750805
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Transit_AirGuide_TJunction",
+      "source": "Transit/Transit_AirGuide_TJunction",
+      "triangles": 72,
+      "bones": 0,
+      "physical_world_units": [
+        7.324999809265137,
+        5.168863892555237,
+        0.012727922759950161
+      ],
+      "bounds": [
+        [
+          -3.6624999046325684,
+          -3.6624999046325684,
+          -0.0063639613799750805
+        ],
+        [
+          3.6624999046325684,
+          1.5063639879226685,
+          0.0063639613799750805
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Trim_Road_2L_0.5",
+      "source": "Transit/Transit_Road_2L_Straight_4m",
+      "triangles": 80,
+      "bones": 0,
+      "physical_world_units": [
+        0.5,
+        3,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          -0.25,
+          -1.5,
+          -0.10000000149011612
+        ],
+        [
+          0.25,
+          1.5,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Trim_Road_2L_1",
+      "source": "Transit/Transit_Road_2L_Straight_4m",
+      "triangles": 80,
+      "bones": 0,
+      "physical_world_units": [
+        1,
+        3,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          -0.5,
+          -1.5,
+          -0.10000000149011612
+        ],
+        [
+          0.5,
+          1.5,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Trim_Road_2L_1.5",
+      "source": "Transit/Transit_Road_2L_Straight_4m",
+      "triangles": 80,
+      "bones": 0,
+      "physical_world_units": [
+        1.5,
+        3,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          -0.75,
+          -1.5,
+          -0.10000000149011612
+        ],
+        [
+          0.75,
+          1.5,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Trim_Road_4L_0.5",
+      "source": "Transit/Transit_Road_4L_Straight_4m",
+      "triangles": 120,
+      "bones": 0,
+      "physical_world_units": [
+        0.5,
+        6,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          -0.25,
+          -3,
+          -0.10000000149011612
+        ],
+        [
+          0.25,
+          3,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Trim_Road_4L_1",
+      "source": "Transit/Transit_Road_4L_Straight_4m",
+      "triangles": 104,
+      "bones": 0,
+      "physical_world_units": [
+        1,
+        6,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          -0.5,
+          -3,
+          -0.10000000149011612
+        ],
+        [
+          0.5,
+          3,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Trim_Road_4L_1.5",
+      "source": "Transit/Transit_Road_4L_Straight_4m",
+      "triangles": 104,
+      "bones": 0,
+      "physical_world_units": [
+        1.5,
+        6,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          -0.75,
+          -3,
+          -0.10000000149011612
+        ],
+        [
+          0.75,
+          3,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Trim_Road_6L_0.5",
+      "source": "Transit/Transit_Road_6L_Straight_4m",
+      "triangles": 160,
+      "bones": 0,
+      "physical_world_units": [
+        0.5,
+        9,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          -0.25,
+          -4.5,
+          -0.10000000149011612
+        ],
+        [
+          0.25,
+          4.5,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Trim_Road_6L_1",
+      "source": "Transit/Transit_Road_6L_Straight_4m",
+      "triangles": 128,
+      "bones": 0,
+      "physical_world_units": [
+        1,
+        9,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          -0.5,
+          -4.5,
+          -0.10000000149011612
+        ],
+        [
+          0.5,
+          4.5,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Trim_Road_6L_1.5",
+      "source": "Transit/Transit_Road_6L_Straight_4m",
+      "triangles": 128,
+      "bones": 0,
+      "physical_world_units": [
+        1.5,
+        9,
+        0.10600000154227018
+      ],
+      "bounds": [
+        [
+          -0.75,
+          -4.5,
+          -0.10000000149011612
+        ],
+        [
+          0.75,
+          4.5,
+          0.006000000052154064
+        ]
+      ],
+      "clips": []
+    },
+    {
+      "name": "transit/Trim_Walk_W2_0.5",
+      "source": "Transit/Transit_Walk_W2_Straight_2m",
+      "triangles": 52,
+      "bones": 0,
+      "physical_world_units": [
+        0.5,
+        1,
+        0.17599999904632568
+      ],
+      "bounds": [
+        [
+          -0.25,
+          -0.5,
+          -0.10000000149011612
+        ],
+        [
+          0.25,
+          0.5,
+          0.07599999755620956
         ]
       ],
       "clips": []

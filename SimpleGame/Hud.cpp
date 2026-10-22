@@ -204,7 +204,7 @@ void CityHud::Draw()
         {
             bool walk = Overworld::Traffic().PedestrianGreen(crossing);
             Drawing::DrawRectangle(425, 143, 420, 32, {.02f, .055f, .08f, .92f});
-            Drawing::DrawLabel(438, 165, walk ? "보행 신호 / 횡단 가능" : "보행 신호 / 대기 · F 횡단 요청",
+            Drawing::DrawLabel(438, 165, walk ? "보행 신호 / 횡단 가능" : "보행 신호 / 대기 · 자동 전환",
                                walk ? ColorRGBA(.2f, 1, .8f) : ColorRGBA(1, .43f, .37f));
         }
     }

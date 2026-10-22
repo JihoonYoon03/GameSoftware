@@ -34,9 +34,40 @@ struct Building
     models::Palette palette = {};
 };
 
+enum class ResidentProfession
+{
+    Courier,
+    Worker,
+    Engineer,
+    Guard,
+    Student,
+    Merchant,
+    Citizen,
+    Observer,
+    Technician,
+    Explorer
+};
+enum class ResidentActivity
+{
+    Resting,
+    Walking,
+    Patrolling,
+    WaitingSignal,
+    Crossing,
+    Working,
+    Talking,
+    Yielding,
+    NoRoute
+};
+struct ResidentWaypoint
+{
+    Vector2 position;
+    int crossing = -1; // The edge into this waypoint is an exclusive signal-controlled crossing.
+};
 struct Resident
 {
     Vector2 position;
+    Vector2 home = {}, destination = {};
     std::string name;
     std::string dialogue;
     models::CharacterType type = models::CharacterType::Explorer;
@@ -45,6 +76,14 @@ struct Resident
     models::Gender gender = models::Gender::Male;
     models::HairStyle hair = models::HairStyle::SidePart;
     int cityIndex = 0;
+    ResidentProfession profession = ResidentProfession::Citizen;
+    ResidentActivity activity = ResidentActivity::Resting;
+    std::vector<ResidentWaypoint> route;
+    size_t routeCursor = 0;
+    int crossingJunction = -1, routineStep = 0;
+    float speed = 1.2f, waitSeconds = 0, conversationSeconds = 0, blockedSeconds = 0;
+    unsigned int randomState = 1;
+    bool destinationIsWork = false;
 };
 
 enum class MainQuestStage

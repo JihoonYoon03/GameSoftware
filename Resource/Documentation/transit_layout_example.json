@@ -1,0 +1,352 @@
+{
+  "units": "meters",
+  "placements": [
+    {
+      "module": "Transit_Road_2L_XJunction_R4",
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "yaw_degrees": 0.0
+    },
+    {
+      "module": "Transit_WalkCorners_2L_XJunction_R4",
+      "translation_m": [
+        0,
+        0,
+        0
+      ],
+      "yaw_degrees": 0.0
+    },
+    {
+      "module": "Transit_Road_2L_Curve90_R18",
+      "translation_m": [
+        7.0,
+        0.0,
+        0.0
+      ],
+      "yaw_degrees": 0.0
+    },
+    {
+      "module": "Transit_WalkSides_2L_Curve90_R18",
+      "translation_m": [
+        7.0,
+        0.0,
+        0.0
+      ],
+      "yaw_degrees": 0.0
+    },
+    {
+      "module": "Transit_Road_2L_Straight_8m",
+      "translation_m": [
+        25.0,
+        22.0,
+        0.0
+      ],
+      "yaw_degrees": -270.0
+    },
+    {
+      "module": "Transit_Walk_W2_Straight_8m",
+      "translation_m": [
+        29.0,
+        21.999999698008395,
+        0
+      ],
+      "yaw_degrees": -90.0
+    },
+    {
+      "module": "Transit_Walk_W2_Straight_8m",
+      "translation_m": [
+        21.0,
+        22.000000301991605,
+        0
+      ],
+      "yaw_degrees": -270.0
+    },
+    {
+      "module": "Transit_Road_2L_Curve45_R18",
+      "translation_m": [
+        -7.0,
+        0.0,
+        0.0
+      ],
+      "yaw_degrees": 180.0
+    },
+    {
+      "module": "Transit_WalkSides_2L_Curve45_R18",
+      "translation_m": [
+        -7.0,
+        0.0,
+        0.0
+      ],
+      "yaw_degrees": 180.0
+    },
+    {
+      "module": "Transit_Road_2L_Straight_8m",
+      "translation_m": [
+        -22.55634880065918,
+        -8.100503921508789,
+        0.0
+      ],
+      "yaw_degrees": -135.00000482967314
+    },
+    {
+      "module": "Transit_Walk_W2_Straight_8m",
+      "translation_m": [
+        -25.3847758769989,
+        -5.272076845169067,
+        0
+      ],
+      "yaw_degrees": 44.99999517032685
+    },
+    {
+      "module": "Transit_Walk_W2_Straight_8m",
+      "translation_m": [
+        -19.727921724319458,
+        -10.92893099784851,
+        0
+      ],
+      "yaw_degrees": -135.00000482967314
+    },
+    {
+      "module": "Transit_Road_2L_Curve30_R18",
+      "translation_m": [
+        0.0,
+        -7.0,
+        0.0
+      ],
+      "yaw_degrees": 270.0
+    },
+    {
+      "module": "Transit_WalkSides_2L_Curve30_R18",
+      "translation_m": [
+        0.0,
+        -7.0,
+        0.0
+      ],
+      "yaw_degrees": 270.0
+    },
+    {
+      "module": "Transit_Road_2L_Straight_8m",
+      "translation_m": [
+        4.411543369293213,
+        -19.464101791381836,
+        0.0
+      ],
+      "yaw_degrees": -59.999994889601815
+    },
+    {
+      "module": "Transit_Walk_W2_Straight_8m",
+      "translation_m": [
+        0.947441577911377,
+        -21.464101672172546,
+        0
+      ],
+      "yaw_degrees": 120.00000511039818
+    },
+    {
+      "module": "Transit_Walk_W2_Straight_8m",
+      "translation_m": [
+        7.875645160675049,
+        -17.464101910591125,
+        0
+      ],
+      "yaw_degrees": -59.999994889601815
+    },
+    {
+      "module": "Transit_Road_2L_Curve15_R18",
+      "translation_m": [
+        0.0,
+        7.0,
+        0.0
+      ],
+      "yaw_degrees": 90.0
+    },
+    {
+      "module": "Transit_WalkSides_2L_Curve15_R18",
+      "translation_m": [
+        0.0,
+        7.0,
+        0.0
+      ],
+      "yaw_degrees": 90.0
+    },
+    {
+      "module": "Transit_Road_2L_Straight_8m",
+      "translation_m": [
+        -1.6486122608184814,
+        15.522445678710938,
+        0.0
+      ],
+      "yaw_degrees": -255.00000317867233
+    },
+    {
+      "module": "Transit_Walk_W2_Straight_8m",
+      "translation_m": [
+        2.215090751647949,
+        16.55772316455841,
+        0
+      ],
+      "yaw_degrees": -75.00000317867232
+    },
+    {
+      "module": "Transit_Walk_W2_Straight_8m",
+      "translation_m": [
+        -5.512315273284912,
+        14.487168192863464,
+        0
+      ],
+      "yaw_degrees": -255.00000317867233
+    },
+    {
+      "module": "Transit_Road_2L_Crosswalk_4m",
+      "translation_m": [
+        38,
+        -17,
+        0
+      ],
+      "yaw_degrees": 0.0
+    },
+    {
+      "module": "Transit_Walk_W4_AccessibleRamp_4m",
+      "translation_m": [
+        38.0,
+        -12.0,
+        0.0
+      ],
+      "yaw_degrees": -90.0
+    },
+    {
+      "module": "Transit_Walk_W4_Straight_8m",
+      "translation_m": [
+        38.0,
+        -6.0,
+        0.0
+      ],
+      "yaw_degrees": -270.00000250447806
+    },
+    {
+      "module": "Transit_Walk_W4_EndCap",
+      "translation_m": [
+        38.0,
+        -1.5,
+        0.0
+      ],
+      "yaw_degrees": -270.00000432571113
+    },
+    {
+      "module": "Transit_Walk_W4_AccessibleRamp_4m",
+      "translation_m": [
+        38.0,
+        -22.0,
+        0.0
+      ],
+      "yaw_degrees": 90.0
+    },
+    {
+      "module": "Transit_Walk_W4_Straight_8m",
+      "translation_m": [
+        38.0,
+        -28.0,
+        0.0
+      ],
+      "yaw_degrees": -90.0000043257111
+    },
+    {
+      "module": "Transit_Walk_W4_EndCap",
+      "translation_m": [
+        38.0,
+        -32.5,
+        0.0
+      ],
+      "yaw_degrees": -90.00000250447806
+    }
+  ],
+  "connections": [
+    {
+      "a": 0,
+      "port_a": "road_1_0",
+      "b": 2,
+      "port_b": "start"
+    },
+    {
+      "a": 2,
+      "port_a": "end",
+      "b": 4,
+      "port_b": "start"
+    },
+    {
+      "a": 0,
+      "port_a": "road_-1_0",
+      "b": 7,
+      "port_b": "start"
+    },
+    {
+      "a": 7,
+      "port_a": "end",
+      "b": 9,
+      "port_b": "start"
+    },
+    {
+      "a": 0,
+      "port_a": "road_0_-1",
+      "b": 12,
+      "port_b": "start"
+    },
+    {
+      "a": 12,
+      "port_a": "end",
+      "b": 14,
+      "port_b": "start"
+    },
+    {
+      "a": 0,
+      "port_a": "road_0_1",
+      "b": 17,
+      "port_b": "start"
+    },
+    {
+      "a": 17,
+      "port_a": "end",
+      "b": 19,
+      "port_b": "start"
+    },
+    {
+      "a": 22,
+      "port_a": "walk_left",
+      "b": 23,
+      "port_b": "flush"
+    },
+    {
+      "a": 23,
+      "port_a": "raised",
+      "b": 24,
+      "port_b": "start"
+    },
+    {
+      "a": 24,
+      "port_a": "end",
+      "b": 25,
+      "port_b": "start"
+    },
+    {
+      "a": 22,
+      "port_a": "walk_right",
+      "b": 26,
+      "port_b": "flush"
+    },
+    {
+      "a": 26,
+      "port_a": "raised",
+      "b": 27,
+      "port_b": "start"
+    },
+    {
+      "a": 27,
+      "port_a": "end",
+      "b": 28,
+      "port_b": "start"
+    }
+  ]
+}

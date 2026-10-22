@@ -1,0 +1,117 @@
+{
+  "source_reopened": true,
+  "source_parts_checked": 494,
+  "files": {
+    "Transit_Road_2L_Curve15_R18": {
+      "meshes": 4,
+      "triangles": 144,
+      "max_bounds_error_m": 0.0,
+      "passed": true
+    },
+    "Transit_Road_4L_Curve45_R36": {
+      "meshes": 6,
+      "triangles": 568,
+      "max_bounds_error_m": 0.0,
+      "passed": true
+    },
+    "Transit_Road_6L_Curve90_R18": {
+      "meshes": 8,
+      "triangles": 1344,
+      "max_bounds_error_m": 0.0,
+      "passed": true
+    },
+    "Transit_Road_2L_XJunction_R4": {
+      "meshes": 5,
+      "triangles": 300,
+      "max_bounds_error_m": 0.0,
+      "passed": true
+    },
+    "Transit_Road_6L_TJunction_R4": {
+      "meshes": 4,
+      "triangles": 324,
+      "max_bounds_error_m": 0.0,
+      "passed": true
+    },
+    "Transit_Road_Taper_2L_4L_24m": {
+      "meshes": 6,
+      "triangles": 552,
+      "max_bounds_error_m": 0.0,
+      "passed": true
+    },
+    "Transit_Road_Taper_4L_6L_24m": {
+      "meshes": 8,
+      "triangles": 696,
+      "max_bounds_error_m": 0.0,
+      "passed": true
+    },
+    "Transit_Road_Taper_2L_6L_36m": {
+      "meshes": 8,
+      "triangles": 840,
+      "max_bounds_error_m": 0.0,
+      "passed": true
+    },
+    "Transit_Walk_W2_Curve90_R4": {
+      "meshes": 3,
+      "triangles": 332,
+      "max_bounds_error_m": 0.0,
+      "passed": true
+    },
+    "Transit_Walk_W4_XJunction": {
+      "meshes": 1,
+      "triangles": 44,
+      "max_bounds_error_m": 0.0,
+      "passed": true
+    },
+    "Transit_Walk_W2_AccessibleRamp_4m": {
+      "meshes": 2,
+      "triangles": 132,
+      "max_bounds_error_m": 0.0,
+      "passed": true
+    },
+    "Transit_Walk_W4_AccessibleRamp_4m": {
+      "meshes": 2,
+      "triangles": 228,
+      "max_bounds_error_m": 0.0,
+      "passed": true
+    },
+    "Transit_Walk_W4_EndCap": {
+      "meshes": 2,
+      "triangles": 24,
+      "max_bounds_error_m": 0.0,
+      "passed": true
+    },
+    "Transit_Road_6L_Crosswalk_4m": {
+      "meshes": 2,
+      "triangles": 300,
+      "max_bounds_error_m": 0.0,
+      "passed": true
+    },
+    "Transit_AirGuide_Straight_32m": {
+      "meshes": 3,
+      "triangles": 192,
+      "max_bounds_error_m": 0.0,
+      "passed": true
+    },
+    "Transit_AirGuide_Curve90_R32": {
+      "meshes": 3,
+      "triangles": 288,
+      "max_bounds_error_m": 0.0,
+      "passed": true
+    },
+    "Transit_AirGuide_Curve15_R64": {
+      "meshes": 3,
+      "triangles": 96,
+      "max_bounds_error_m": 0.0,
+      "passed": true
+    },
+    "Transit_AirGuide_XJunction": {
+      "meshes": 4,
+      "triangles": 96,
+      "max_bounds_error_m": 0.0,
+      "passed": true
+    }
+  },
+  "errors": [],
+  "files_checked": 18,
+  "all_checks_passed": true
+}
