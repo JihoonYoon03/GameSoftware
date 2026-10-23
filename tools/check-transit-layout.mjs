@@ -6,10 +6,11 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const source = fs.readFileSync(path.join(root, 'SimpleGame/Overworld.cpp'), 'utf8');
 const transit = fs.readFileSync(path.join(root, 'SimpleGame/TransitLayout.cpp'), 'utf8');
-const metadata = JSON.parse(fs.readFileSync(path.join(root, 'Resource/Documentation/transit_modules.json'))).modules;
+const metadata = JSON.parse(fs.readFileSync(path.join(root, 'Resource/Documentation/road_plan_modules.json'))).modules;
 const names = new Set(JSON.parse(fs.readFileSync(path.join(root, 'Resource/Runtime/manifest.json'))).assets.map(a => a.name));
 for (const name of Object.keys(metadata)) assert(names.has('transit/' + name));
-assert(transit.includes('procedural/road_plan_v2'));
+assert(transit.includes('RoadPlan_Ramp_2L_Rise8p4_L110'));
+assert(!transit.includes('procedural/road_plan_v2'));
 assert(!source.includes('bool merged = true'), 'Never merge close crossings into a mega-junction');
 const cities = [[0, 0]];
 let seed = 0x458a91;
@@ -82,6 +83,7 @@ for(let i=0;i<nodes.length;++i) {
         const ds=arms.map(r=>sub(nodes[r.from===i?r.to:r.from].p,nodes[i].p));
         if(dot(ds[0],ds[1])/length(ds[0])/length(ds[1])<-.9999) radius=0;
     }
+    if(arms.length===2 && arms[0].lanes!==arms[1].lanes) radius=6;
     nodes[i].radius=radius;
 }
 assert(maxArms<=4 && maxLanes<=10,`Overloaded junction: ${maxArms} arms/${maxLanes} incident lanes`);

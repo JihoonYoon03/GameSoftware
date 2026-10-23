@@ -127,7 +127,7 @@ RoadNetwork::RoadNetwork()
     add({128, -17}, Overworld::kMineEntrance, 2, 4);
     auto south = Overworld::Cities()[2].center;
     add({30, 32}, {30, 100}, 2, 5);
-    add({30, 100}, {48, 100}, 2, 5);
+    add({30, 100}, {48, 103.5f}, 2, 5);
     add({30, 100}, {-40, 150}, 2, 8);
     add({-40, 150}, Add(south, {-90, -17}), 2, 8);
     auto west = Overworld::Cities()[3].center;
@@ -135,13 +135,13 @@ RoadNetwork::RoadNetwork()
     add({-155, -70}, Add(west, {60, -17}), 2, 8);
     auto north = Overworld::Cities()[4].center;
     add({-60, -17}, {-60, -75}, 2, 5);
-    add({-60, -75}, {48, -100}, 2, 7);
-    add({48, -100}, Add(north, {-90, -17}), 2, 8);
+    add({-60, -75}, {48, -103.5f}, 2, 7);
+    add({48, -103.5f}, Add(north, {-90, -17}), 2, 8);
     // Eight-metre clearance over the eastern collector. The 110 m ramps keep the usable driving grade below
     // 9%. The crossing at (48,-17) has no graph node: traffic above and below is independent.
-    add({48, -100}, {48, -45}, 2, 6, 0, 4);
-    add({48, -45}, {48, 45}, 2, 7, 4, 4);
-    add({48, 45}, {48, 100}, 2, 6, 4, 0);
+    add({48, -103.5f}, {48, -45}, 2, 6, 0, 4.2f);
+    add({48, -45}, {48, 45}, 2, 7, 4.2f, 4.2f);
+    add({48, 45}, {48, 103.5f}, 2, 6, 4.2f, 0);
     auto halo = Overworld::Cities()[0].center;
     for (int city = 1; city < Overworld::kCityCount; ++city)
     {
@@ -362,8 +362,23 @@ bool RoadNetwork::ContainsFootprint(Vector2 position, float margin) const
 float RoadNetwork::RoadElevation(int index, float fraction) const
 {
     const auto &road = roads[index];
-    return junctions[road.from].altitude +
-           (junctions[road.to].altitude - junctions[road.from].altitude) * Game::Clamp(fraction, 0, 1);
+    float t = Game::Clamp(fraction, 0, 1);
+    const float a = junctions[road.from].altitude, b = junctions[road.to].altitude;
+    if (std::fabs(a - b) > .1f)
+    {
+        // The delivered 110m ramp has 16m parabolic end curves and 78m constant grade.
+        // Its actual surface is faceted at 0.5m authoring intervals: interpolate those
+        // same heights so wheels cannot sink into the authored vertical curves.
+        auto profile = [](float x) {
+            constexpr float grade = 8.4f / 94.f;
+            return x < 16   ? grade * x * x / 32
+                   : x > 94 ? 8.4f - grade * (110 - x) * (110 - x) / 32
+                            : grade * (x - 8);
+        };
+        float x = t * 110, low = std::floor(x * 2) * .5f;
+        t = (profile(low) + (profile((std::min)(110.f, low + .5f)) - profile(low)) * (x - low) * 2) / 8.4f;
+    }
+    return a + (b - a) * t;
 }
 bool RoadNetwork::ContainsSurface(Vector2 position, float height, float margin) const
 {

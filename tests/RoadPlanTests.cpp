@@ -181,15 +181,15 @@ void TestCrossingsAndDuplicateSpace()
     }
     Require(gradeSeparated, "no functioning grade-separated regional route");
     const Vector2 crossing = {48, -17};
-    Require(net.ContainsSurface(crossing, 0) && net.ContainsSurface(crossing, 4),
-            "eastern underpass must contain distinct ground and eight-metre deck surfaces");
+    Require(net.ContainsSurface(crossing, 0) && net.ContainsSurface(crossing, 4.2f),
+            "eastern underpass must contain distinct ground and 8.4-metre deck surfaces");
     Require(std::none_of(net.junctions.begin(), net.junctions.end(),
                          [&](const RoadJunction &junction) {
                              return Game::Distance(junction.position, crossing) < .1f;
                          }),
             "grade-separated crossing was incorrectly turned into a junction");
     Require(std::fabs(net.DriveElevation(crossing, 0)) < .001f &&
-                std::fabs(net.DriveElevation(crossing, 4) - 4) < .001f,
+                std::fabs(net.DriveElevation(crossing, 4.2f) - 4.2f) < .001f,
             "driving through the underpass changes deck level");
 }
 void TestRampsAndSurfaceContinuity()
@@ -212,6 +212,17 @@ void TestRampsAndSurfaceContinuity()
         Require(std::fabs(net.RoadElevation(int(r), 0) - a.altitude) < .001f &&
                     std::fabs(net.RoadElevation(int(r), 1) - b.altitude) < .001f,
                 "ramp endpoints do not match their junction levels");
+        float previousHeight = net.RoadElevation(int(r), 0);
+        for (int sample = 1; sample <= 440; ++sample)
+        {
+            float height = net.RoadElevation(int(r), sample / 440.f);
+            Require(std::fabs(height - previousHeight) / (span / 440) < .09001f,
+                    "authored ramp vertical curve exceeds nine percent grade");
+            previousHeight = height;
+        }
+        Require(std::fabs(net.RoadElevation(int(r), .001f) - a.altitude) < .0001f &&
+                    std::fabs(net.RoadElevation(int(r), .999f) - b.altitude) < .0001f,
+                "native ramp endpoints must have horizontal tangents");
         for (bool reverse : {false, true})
         {
             float previous = reverse ? b.altitude : a.altitude;
@@ -229,6 +240,166 @@ void TestRampsAndSurfaceContinuity()
         }
     }
     Require(ramps >= 2, "elevated deck has no paired accessible ramps");
+}
+// Query the actual imported/fitted triangles, rather than just repeating graph maths.
+bool ArtSurface(Vector2 point, float height)
+{
+    for (const auto &placement : TransitLayout::Get())
+    {
+        if (placement.air || Game::Distance(point, placement.position) > placement.radius)
+        {
+            continue;
+        }
+        const auto &mesh =
+            models::ResourceAssets::Get(models::ResourceAssets::Find("transit/" + placement.asset));
+        Vector2 delta = Sub(point, placement.position);
+        Vector2 local = {delta.x * std::cos(placement.yaw) + delta.y * std::sin(placement.yaw),
+                         -delta.x * std::sin(placement.yaw) + delta.y * std::cos(placement.yaw)};
+        for (size_t i = 0; i < mesh.vertices.size(); i += 3)
+        {
+            const auto &a = mesh.vertices[i], &b = mesh.vertices[i + 1], &c = mesh.vertices[i + 2];
+            if (a.nz < .7f || a.surface == 4 || a.r > .3f)
+            {
+                continue;
+            }
+            Vector2 p = {a.x, a.y}, ab = {b.x - a.x, b.y - a.y}, ac = {c.x - a.x, c.y - a.y};
+            float determinant = Cross(ab, ac);
+            if (std::fabs(determinant) < .000001f)
+            {
+                continue;
+            }
+            float u = Cross(Sub(local, p), ac) / determinant, v = Cross(ab, Sub(local, p)) / determinant;
+            if (u >= -.0001f && v >= -.0001f && u + v <= 1.0001f &&
+                std::fabs(a.z + (b.z - a.z) * u + (c.z - a.z) * v + placement.altitude - height) < .004f)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+void TestDeliveredMeshes()
+{
+    const auto &net = RoadNetwork::Get();
+    int decks = 0, ramps = 0, piers = 0;
+    for (const auto &p : TransitLayout::Get())
+    {
+        Require(p.asset.find("Draft") == std::string::npos, "blockout road remains in production layout");
+        if (p.asset.find("Deck_2L") != std::string::npos)
+        {
+            ++decks;
+        }
+        if (p.asset.find("Ramp_2L") != std::string::npos)
+        {
+            ++ramps;
+        }
+        if (p.asset == "RoadPlan_Pier_H8")
+        {
+            ++piers;
+            Require(!net.Contains(p.position, 2.2f), "support placed inside a ground road or sidewalk");
+            auto leg = Add(p.position, RoadNetwork::RightOf({std::cos(p.yaw), std::sin(p.yaw)}), .9f);
+            Require(TransitLayout::IsBlocked(leg), "imported pier leg has no collision");
+            Require(!TransitLayout::IsBlocked(p.position),
+                    "crosshead blocks the open span beneath the bridge");
+        }
+    }
+    Require(decks == 12 && ramps == 2 && piers >= 4, "native bridge assembly is incomplete");
+    for (size_t r = 0; r < net.roads.size(); ++r)
+    {
+        const auto &road = net.roads[r];
+        auto ends = SurfaceEnds(net, road);
+        auto d = Unit(Sub(ends.second, ends.first)), n = RoadNetwork::RightOf(d);
+        // Native tile seams and both lane edges must be covered by actual surface geometry.
+        int samples = int(std::ceil(Game::Distance(ends.first, ends.second) * 2));
+        for (int i = 0; i <= samples; ++i)
+        {
+            float t = float(i) / samples;
+            auto p = Add(ends.first, Sub(ends.second, ends.first), t);
+            for (float across : {-.74f * road.lanes, 0.f, .74f * road.lanes})
+            {
+                Require(ArtSurface(Add(p, n, across), net.RoadElevation(int(r), t) + .025f),
+                        "mesh/graph gap at road " + std::to_string(r) + " t=" + std::to_string(t));
+            }
+            if (std::fabs(net.junctions[road.from].altitude - net.junctions[road.to].altitude) > .1f)
+            {
+                float h = net.RoadElevation(int(r), t);
+                Require(!TransitLayout::IsBlocked(p, .2f, h, true), "bike cannot climb the native ramp");
+            }
+        }
+    }
+    Require(ArtSurface({48, -17}, 4.225f) && ArtSurface({48, -17}, .025f),
+            "rendered bridge does not preserve independent ground and deck surfaces");
+}
+void TestTurnSurfaces()
+{
+    const auto &net = RoadNetwork::Get();
+    for (size_t i = 0; i < net.lanes.size(); ++i)
+    {
+        const auto &in = net.lanes[i];
+        const auto &junction = net.junctions[in.to];
+        for (int index : junction.outgoing)
+        {
+            const auto &out = net.lanes[index];
+            float dot = Dot(in.direction, out.direction);
+            TrafficTurn turn = dot > .82f                                ? TrafficTurn::Straight
+                               : Cross(in.direction, out.direction) <= 0 ? TrafficTurn::Left
+                                                                         : TrafficTurn::Right;
+            int target = turn == TrafficTurn::Right && net.IsSignalized(in.to)
+                             ? net.roads[out.road].lanes / 2 - 1
+                             : (std::min)(in.slot, net.roads[out.road].lanes / 2 - 1);
+            if (in.road == out.road || out.slot != target || !net.CanTurn(int(i), turn))
+            {
+                continue;
+            }
+            float handle = Game::Distance(in.end, out.start) * (std::fabs(dot) < .001f ? .3905243f
+                                                                : dot > .99f           ? 1.f / 3
+                                                                : dot < -.8f           ? 2.f / 3
+                                                                                       : .45f);
+            auto a = Add(in.end, in.direction, handle), b = Add(out.start, out.direction, -handle);
+            for (int step = 0; step <= 32; ++step)
+            {
+                float t = step / 32.f, u = 1 - t;
+                Vector2 p = {};
+                p = Add(p, in.end, u * u * u);
+                p = Add(p, a, 3 * u * u * t);
+                p = Add(p, b, 3 * u * t * t);
+                p = Add(p, out.start, t * t * t);
+                Require(ArtSurface(p, junction.altitude + .025f),
+                        "vehicle turn leaves delivered surface at junction " + std::to_string(in.to) +
+                            " from lane " + std::to_string(i) + " to " + std::to_string(index));
+            }
+        }
+    }
+}
+void TestBridgeDriving(Game &game)
+{
+    auto &world = game.GetState();
+    world.isInsideHome = false;
+    world.isBikeMounted = true;
+    for (bool reverse : {false, true})
+    {
+        world.bikeElevation = world.bikeSpeed = 0;
+        world.bikeYaw = reverse ? -1.57079632679f : 1.57079632679f;
+        world.playerPosition = world.bikePosition = {48, reverse ? 100.1f : -100.1f};
+        world.pressedKeys['w'] = true;
+        float highest = 0;
+        for (int frame = 0; frame < 1200; ++frame)
+        {
+            Overworld::UpdateBike(world, 1.f / 60);
+            highest = (std::max)(highest, world.bikeElevation);
+            if ((reverse && world.playerPosition.y < -100) || (!reverse && world.playerPosition.y > 100))
+            {
+                break;
+            }
+        }
+        Require(highest > 4.19f, "actual bike movement never reaches the delivered deck");
+        Require(reverse ? world.playerPosition.y < -100 : world.playerPosition.y > 100,
+                "actual bike cannot traverse both native ramps and the overpass");
+        Require(world.bikeElevation < .01f, "actual bike does not return to the ground road");
+    }
+    world.pressedKeys['w'] = false;
+    world.isBikeMounted = false;
+    world.bikeElevation = 0;
 }
 void TestLotsAndFrontages(Game &game)
 {
@@ -350,11 +521,14 @@ int main()
     TestConnectivityAndJunctions();
     TestCrossingsAndDuplicateSpace();
     TestRampsAndSurfaceContinuity();
+    TestDeliveredMeshes();
+    TestTurnSurfaces();
     auto &game = tutorial::Game::Get();
     game.Reset();
     game.GetState().isInsideHome = false;
     TestLotsAndFrontages(game);
     TestQuestApproaches(game);
+    TestBridgeDriving(game);
     std::cout << "Road plan checks passed: connected cities, sensible junctions, grade separation, ramps, "
                  "building frontages, architecture and quest access.\n";
 }

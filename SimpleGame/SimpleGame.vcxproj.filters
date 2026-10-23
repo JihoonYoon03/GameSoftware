@@ -51,6 +51,9 @@
     <ClInclude Include="ResidentAI.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="RoadPlanCatalog.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
     <ClInclude Include="TransitLayout.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>

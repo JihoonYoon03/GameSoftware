@@ -1286,7 +1286,9 @@ const Model &ModelLibrary::Transit(const std::string &name)
     {
         model = std::make_unique<Model>();
         ResourceAssets::Bind(*model, "transit/" + name);
-        model->ground = true; // All transit surfaces and sparse air guides are non-shadow-casting.
+        // Elevated slabs, rails and piers cast real shadows; flat road paint/paving do not.
+        model->ground = name.find("Deck") == std::string::npos && name.find("Ramp_2L") == std::string::npos &&
+                        name.find("Pier_") == std::string::npos;
     }
     return *model;
 }

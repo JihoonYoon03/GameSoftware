@@ -373,6 +373,10 @@ bool CivicJustice::IsExterior()
 }
 bool CivicJustice::Solid(Vector2 p, float radius)
 {
+    if (TransitLayout::IsBlocked(p, radius))
+    {
+        return true;
+    }
     if (p.x - radius < kWorldMinX || p.y - radius < kWorldMinY || p.x + radius > kWorldMaxX ||
         p.y + radius > kWorldMaxY)
     {

@@ -502,6 +502,8 @@ void CaptureScenes(const std::filesystem::path &output)
                     ++changed;
                 }
             }
+            Save(output / "scroll-after.bmp");
+            std::cout << "Scroll changed pixels: " << changed << std::endl;
             assert(changed < kCanvasWidth * kCanvasHeight / 50);
         }
         previousScroll = std::move(currentScroll);
@@ -755,6 +757,25 @@ void CaptureCrossingSignals(const std::filesystem::path &output)
         game::SceneManager::Get(game::SceneKind::Exterior).Draw();
         GameRenderer::Get().Backend().EndScene(0);
         Save(output / ("crosswalk-" + std::to_string(lanes) + "lane.bmp"));
+    }
+}
+void CaptureRoadDelivery(const std::filesystem::path &output)
+{
+    Game::Get().Reset();
+    auto &world = Game::Get().GetState();
+    world.isInsideHome = false;
+    world.playerPosition = {-30, -10};
+    constexpr Vector2 cameras[] = {{-32, -17}, {60, -17}, {48, -17}, {48, -85}};
+    constexpr const char *names[] = {"roads-junction.bmp", "roads-transition.bmp", "roads-overpass.bmp",
+                                     "roads-ramp.bmp"};
+    for (size_t i = 0; i < std::size(cameras); ++i)
+    {
+        world.cameraPosition = cameras[i];
+        Begin();
+        game::SceneManager::Get(game::SceneKind::Exterior).Draw();
+        GameRenderer::Get().Backend().EndScene(0);
+        assert(glGetError() == GL_NO_ERROR);
+        Save(output / names[i]);
     }
 }
 void CaptureAircraftThrusters(const std::filesystem::path &output)
@@ -1185,7 +1206,7 @@ void BenchmarkQuality(const std::filesystem::path &output)
            << "\",\"resolution\":[1280,800],\"optimized\":" << (optimized ? "true" : "false")
            << ",\"warmup\":24,\"frames\":120,\"scenes\":[";
     auto &world = Game::Get().GetState();
-    for (int scenario = 0; scenario < 11; ++scenario)
+    for (int scenario = 0; scenario < 14; ++scenario)
     {
         Game::Get().Reset();
         world.noticeSecondsRemaining = 0;
@@ -1199,12 +1220,21 @@ void BenchmarkQuality(const std::filesystem::path &output)
                                          "frontier_generator",
                                          "frontier_convoy",
                                          "frontier_relay_combat",
-                                         "city_security_5stars"};
+                                         "city_security_5stars",
+                                         "roads_junction",
+                                         "roads_overpass",
+                                         "roads_ramp"};
         if (scenario == 0)
         {
             world.isInsideHome = false;
             world.playerPosition = kLiaPosition;
             world.cameraPosition = kLiaPosition;
+        }
+        if (scenario >= 11)
+        {
+            world.isInsideHome = false;
+            constexpr Vector2 stations[] = {{-32, -17}, {48, -17}, {48, -85}};
+            world.playerPosition = world.cameraPosition = stations[scenario - 11];
         }
         if (scenario == 10)
         {
@@ -1306,7 +1336,7 @@ void BenchmarkQuality(const std::filesystem::path &output)
                 s.kain.position = {30, 33};
             }
         }
-        if (scenario == 0 || scenario == 2 || scenario == 10)
+        if (scenario == 0 || scenario == 2 || scenario >= 10)
         {
             for (int warm = 0; warm < 900; ++warm)
             {
@@ -1327,7 +1357,7 @@ void BenchmarkQuality(const std::filesystem::path &output)
             auto start = std::chrono::steady_clock::now();
             profiling::BeginFrame(names[scenario]);
             world.animationTimeSeconds += 1.f / 60;
-            if (scenario == 0 || scenario == 2 || scenario == 10)
+            if (scenario == 0 || scenario == 2 || scenario >= 10)
             {
                 CivicCombat::Update(1.f / 60);
                 CivicJustice::Update(1.f / 60);
@@ -1344,7 +1374,7 @@ void BenchmarkQuality(const std::filesystem::path &output)
             npcShotsObserved |= profiling::ReadCounter(profiling::Counter::NpcShots) > npcShotsBefore;
             game::SceneManager::Update(1.f / 60);
             Begin();
-            if (scenario < 3 || scenario == 10)
+            if (scenario < 3 || scenario >= 10)
             {
                 game::SceneManager::Get(game::SceneKind::Background).Draw();
                 renderqueue::Flush();
@@ -1401,6 +1431,16 @@ void BenchmarkQuality(const std::filesystem::path &output)
 int main(int argc, char **argv)
 {
     glutInit(&argc, argv);
+    if (argc > 1 && std::string(argv[1]) == "--roads-only")
+    {
+        OffscreenContext context;
+        GameRenderer::Get().Initialize();
+        std::filesystem::path output = argc > 2 ? argv[2] : "x64/RevisionChecks/road-renders";
+        std::filesystem::create_directories(output);
+        CaptureRoadDelivery(output);
+        GameRenderer::Get().Shutdown();
+        return 0;
+    }
     if (argc > 1 && std::string(argv[1]) == "--maps-only")
     {
         OffscreenContext context;
@@ -1440,6 +1480,7 @@ int main(int argc, char **argv)
     QualityCaptures(output);
     TestTrafficOcclusion(output);
     CaptureCrossingSignals(output);
+    CaptureRoadDelivery(output);
     CaptureAircraftThrusters(output);
     CaptureDistrictAndBodies(output);
     CaptureHairAndCombat(output);

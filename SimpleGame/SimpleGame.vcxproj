@@ -187,6 +187,7 @@
     <ClInclude Include="Overworld.h" />
     <ClInclude Include="ResidentAI.h" />
     <ClInclude Include="TransitLayout.h" />
+    <ClInclude Include="RoadPlanCatalog.h" />
     <ClInclude Include="ResourceAssets.h" />
     <ClInclude Include="Monitoring\LocalMonitorServer.h" />
     <ClInclude Include="Monitoring\Monitor.h" />

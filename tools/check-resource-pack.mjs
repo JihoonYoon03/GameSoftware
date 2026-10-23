@@ -162,4 +162,15 @@ for (const report of manifest.assets.filter(asset => asset.name.startsWith('char
     }
     assert.equal(report.triangles, triangles, 'Character gender/profile/outer assembly is incomplete or duplicated: ' + report.name);
 }
+// Road delivery is kept at authored scale and every independent part survives conversion.
+const roadPlan = JSON.parse(fs.readFileSync(path.join(root, 'Resource/Documentation/road_plan_modules.json')));
+for (const [name, module] of Object.entries(roadPlan.modules)) {
+    const report = manifest.assets.find(asset => asset.name === 'transit/' + name);
+    assert.ok(report, 'Road-plan module missing: ' + name);
+    assert.equal(report.triangles, sourceTriangles('RoadPlan/' + name), 'Road detail was lost: ' + name);
+    for (let axis = 0; axis < 3; ++axis) {
+        assert.ok(Math.abs(report.bounds[0][axis] - module.bounds.min[axis] * .5) < .00001);
+        assert.ok(Math.abs(report.bounds[1][axis] - module.bounds.max[axis] * .5) < .00001);
+    }
+}
 console.log(JSON.stringify({ event: 'resource_pack_validated', assets: count, vertices, animation_frames: animationFrames, bytes: data.length }));

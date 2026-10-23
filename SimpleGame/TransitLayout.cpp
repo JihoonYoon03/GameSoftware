@@ -90,10 +90,6 @@ std::vector<Vector2> Hull(std::vector<Vector2> points)
     }
     return result;
 }
-std::string RoadPrefix(int lanes)
-{
-    return "Transit_Road_" + std::to_string(lanes) + "L_";
-}
 const models::ResourceMesh &Source(const std::string &name)
 {
     return models::ResourceAssets::Get(models::ResourceAssets::Find("transit/" + name));
@@ -158,149 +154,232 @@ void Span(std::vector<TransitPlacement> &list, const std::string &asset, Vector2
         cursor += part;
     }
 }
-models::ResourceVertex MaterialVertex(const std::string &asset)
+// The artist's ports and companion offsets are compiled from the delivery catalogue.
+// Assemblies retain all component geometry/materials and share one immutable cached mesh.
+struct ArtPort
 {
-    const auto &m = Source(asset);
-    for (auto v : m.vertices)
+    Vector2 position, direction;
+    int lanes;
+};
+struct ArtCompanion
+{
+    std::string name;
+    Vector2 position;
+    float altitude, yaw;
+};
+struct ArtModule
+{
+    std::vector<ArtPort> ports;
+    std::vector<ArtCompanion> companions;
+};
+#include "RoadPlanCatalog.h"
+struct Support
+{
+    Vector2 position;
+    float yaw;
+};
+std::vector<Support> supports;
+void Append(models::ResourceMesh &mesh, const models::ResourceMesh &part, Vector2 offset = {},
+            float altitude = 0, float yaw = 0)
+{
+    float c = std::cos(yaw), s = std::sin(yaw);
+    for (auto v : part.vertices)
     {
-        if (v.nz > .9f && v.surface != 4)
+        float x = v.x, nx = v.nx;
+        v.x = offset.x + x * c - v.y * s;
+        v.y = offset.y + x * s + v.y * c;
+        v.z += altitude;
+        v.nx = nx * c - v.ny * s;
+        v.ny = nx * s + v.ny * c;
+        mesh.vertices.push_back(v);
+    }
+}
+std::string Paint(const std::string &asset)
+{
+    std::string name = "RoadPlanPaint_" + asset;
+    static std::set<std::string> ready;
+    if (ready.insert(name).second)
+    {
+        auto mesh = Source(asset);
+        mesh.vertices.clear();
+        const auto &vertices = Source(asset).vertices;
+        for (size_t i = 0; i < vertices.size(); i += 3)
         {
-            return v;
+            if (vertices[i].nz > .5f)
+            {
+                for (size_t k = 0; k < 3; ++k)
+                {
+                    auto v = vertices[i + k];
+                    v.z += .006f;
+                    mesh.vertices.push_back(v);
+                }
+            }
+        }
+        // Paint has sub-millimetre closed boxes in the source. Their buried undersides
+        // alias against the top with the game's 24-bit isometric depth range.
+        Register(std::move(mesh), name);
+    }
+    return name;
+}
+std::string Assembly(const std::string &asset)
+{
+    std::string name = "RoadPlanAssembly_" + asset;
+    static std::set<std::string> ready;
+    if (ready.insert(name).second)
+    {
+        auto mesh = Source(asset);
+        for (const auto &part : roadArt.at(asset).companions)
+        {
+            if (part.name.find("JunctionMarking_") != std::string::npos)
+            {
+                continue; // Traffic draws the stop bars before the external crosswalk, at its actual stop
+                          // line.
+            }
+            auto name = part.name.find("Marking_") != std::string::npos ? Paint(part.name) : part.name;
+            Append(mesh, Source(name), part.position, part.altitude, part.yaw);
+        }
+        Register(std::move(mesh), name);
+    }
+    return name;
+}
+// Fit only a short closing piece. Full-length modules always keep their native dimensions.
+void RoadSpan(std::vector<TransitPlacement> &result, const std::string &prefix, Vector2 a, Vector2 b,
+              float height)
+{
+    float length = Game::Distance(a, b), cursor = 0;
+    auto d = Unit(Sub(b, a));
+    while (cursor < length - .001f)
+    {
+        float left = length - cursor;
+        int meters = left >= 8 - .001f ? 16 : left >= 4 - .001f ? 8 : 4;
+        float part = (std::min)(meters * .5f, left);
+        auto asset = Assembly(prefix + std::to_string(meters));
+        Place(result, Fit(asset, part), Add(a, d, cursor + part * .5f), std::atan2(d.y, d.x), part * .5f + 6,
+              height + .025f);
+        cursor += part;
+    }
+}
+// Position fitting transforms normals by the inverse transpose of the local Jacobian.
+// The source GLBs stay untouched; fitted joins are cached once per transport plan.
+std::string Deform(const std::string &asset, const std::string &key,
+                   const std::function<Vector2(Vector2)> &map)
+{
+    auto mesh = Source(Assembly(asset));
+    for (auto &v : mesh.vertices)
+    {
+        Vector2 p = {v.x, v.y}, q = map(p);
+        auto dx = Sub(map(Add(p, {1, 0}, .001f)), q), dy = Sub(map(Add(p, {0, 1}, .001f)), q);
+        float determinant = Cross(dx, dy) / .000001f;
+        if (std::fabs(determinant) > .00001f)
+        {
+            float nx = (dy.y * v.nx - dx.y * v.ny) / (.001f * determinant);
+            float ny = (-dy.x * v.nx + dx.x * v.ny) / (.001f * determinant);
+            float n = std::hypot(std::hypot(nx, ny), v.nz);
+            v.nx = nx / n;
+            v.ny = ny / n;
+            v.nz /= n;
+        }
+        v.x = q.x;
+        v.y = q.y;
+    }
+    return Register(std::move(mesh), key);
+}
+std::string JunctionArt(const Plan &plan, size_t index)
+{
+    std::string asset = plan.arms.size() == 4 ? "RoadPlan_X_2L" : "RoadPlan_T_2L";
+    for (const auto &arm : plan.arms)
+    {
+        if (arm.lanes == 4)
+        {
+            asset = "RoadPlan_T_4L_2L";
         }
     }
-    return m.vertices.front();
-}
-void Triangle(models::ResourceMesh &mesh, Vector2 a, Vector2 b, Vector2 c, float height,
-              models::ResourceVertex material)
-{
-    material.z = height;
-    material.nx = material.ny = 0;
-    material.nz = 1;
-    for (auto p : {a, b, c})
+    auto ports = roadArt.at(asset).ports;
+    auto arms = plan.arms;
+    auto angle = [](Vector2 p) { return std::atan2(p.y, p.x); };
+    std::sort(ports.begin(), ports.end(),
+              [&](auto a, auto b) { return angle(a.direction) < angle(b.direction); });
+    std::sort(arms.begin(), arms.end(),
+              [&](auto a, auto b) { return angle(a.direction) < angle(b.direction); });
+    int selected = 0;
+    float best = 1.e9f;
+    for (int offset = 0; offset < int(arms.size()); ++offset)
     {
-        material.x = p.x;
-        material.y = p.y;
-        mesh.vertices.push_back(material);
-    }
-}
-void Quad(models::ResourceMesh &mesh, Vector2 a, Vector2 b, Vector2 c, Vector2 d, float z,
-          models::ResourceVertex material)
-{
-    Triangle(mesh, a, b, c, z, material);
-    Triangle(mesh, a, c, d, z, material);
-}
-// Road blockout deliberately does not use the imported road modules. Geometry and ports are
-// derived from the transport graph, so art cannot silently change the plan's lane count or height.
-models::ResourceVertex DraftMaterial(float r, float g, float b)
-{
-    models::ResourceVertex v = {};
-    v.nz = 1;
-    v.r = r;
-    v.g = g;
-    v.b = b;
-    v.a = 1;
-    v.surface = 2;
-    v.joints = {31, 31, 31, 31};
-    v.weights = {1, 0, 0, 0};
-    return v;
-}
-void SlopedQuad(models::ResourceMesh &mesh, Vector2 a, Vector2 b, Vector2 c, Vector2 d, float za, float zb,
-                models::ResourceVertex material)
-{
-    size_t first = mesh.vertices.size();
-    Quad(mesh, a, b, c, d, 0, material);
-    float heights[] = {za, zb, zb, za, zb, za};
-    for (size_t i = 0; i < 6; ++i)
-    {
-        mesh.vertices[first + i].z = heights[i];
-    }
-    // Cross product for each ramp triangle retains correct lighting, rather than a flat fake normal.
-    auto &v = mesh.vertices;
-    for (size_t i = first; i < v.size(); i += 3)
-    {
-        models::Point u = {v[i + 1].x - v[i].x, v[i + 1].y - v[i].y, v[i + 1].z - v[i].z};
-        models::Point w = {v[i + 2].x - v[i].x, v[i + 2].y - v[i].y, v[i + 2].z - v[i].z};
-        models::Point n = {u.y * w.z - u.z * w.y, u.z * w.x - u.x * w.z, u.x * w.y - u.y * w.x};
-        float length = std::sqrt(n.x * n.x + n.y * n.y + n.z * n.z);
-        for (size_t k = 0; k < 3; ++k)
+        float score = 0;
+        Vector2 rotation = {};
+        for (size_t i = 0; i < ports.size(); ++i)
         {
-            v[i + k].nx = n.x / length;
-            v[i + k].ny = n.y / length;
-            v[i + k].nz = n.z / length;
+            const auto &arm = arms[(i + offset) % arms.size()];
+            score += arm.lanes == ports[i].lanes ? 0 : 100;
+            rotation.x += Dot(ports[i].direction, arm.direction);
+            rotation.y += Cross(ports[i].direction, arm.direction);
+        }
+        score -= std::hypot(rotation.x, rotation.y);
+        if (score < best)
+        {
+            best = score;
+            selected = offset;
         }
     }
+    // Corresponding port-edge corners form a cage. Each mouth keeps its exact lane width,
+    // including skew regional T junctions; a single continuous mesh spans the centre.
+    std::vector<std::pair<Vector2, Vector2>> cage;
+    for (size_t i = 0; i < ports.size(); ++i)
+    {
+        const auto &p = ports[i];
+        const auto &a = arms[(i + selected) % arms.size()];
+        for (float side : {-1.f, 1.f})
+        {
+            cage.push_back({Add(p.position, RoadNetwork::RightOf(p.direction), side * p.lanes * .75f),
+                            Add(Add({}, a.direction, plan.radius), RoadNetwork::RightOf(a.direction),
+                                side * a.lanes * .75f)});
+        }
+    }
+    std::sort(cage.begin(), cage.end(), [&](auto a, auto b) { return angle(a.first) < angle(b.first); });
+    return Deform(asset, "RoadPlanJoin_" + std::to_string(index), [=](Vector2 p) {
+        if (std::hypot(p.x, p.y) < .00001f)
+        {
+            return Vector2{};
+        }
+        for (size_t i = 0; i < cage.size(); ++i)
+        {
+            auto a = cage[i], b = cage[(i + 1) % cage.size()];
+            float det = Cross(a.first, b.first);
+            float u = Cross(p, b.first) / det, v = Cross(a.first, p) / det;
+            if (u >= -.0001f && v >= -.0001f)
+            {
+                return Add(Add({}, a.second, u), b.second, v);
+            }
+        }
+        return p;
+    });
 }
 std::vector<TransitPlacement> Build()
 {
     const auto &net = RoadNetwork::Get();
     std::vector<TransitPlacement> result;
-    const auto asphalt = DraftMaterial(.105f, .145f, .17f);
-    const auto pavement = DraftMaterial(.34f, .40f, .41f);
-    const auto paint = DraftMaterial(.72f, .78f, .72f);
-    auto save = [&](models::ResourceMesh mesh, std::string name, Vector2 position, float radius) {
-        mesh.source = "procedural/road_plan_v2";
-        Place(result, Register(std::move(mesh), name), position, 0, radius, 0);
-    };
     for (size_t index = 0; index < net.roads.size(); ++index)
     {
         const auto &road = net.roads[index];
         const auto &from = net.junctions[road.from], &to = net.junctions[road.to];
-        auto direction = Unit(Sub(to.position, from.position)), normal = RoadNetwork::RightOf(direction);
+        auto direction = Unit(Sub(to.position, from.position));
         auto start = Add(from.position, direction, from.radius),
              end = Add(to.position, direction, -to.radius);
-        float length = Game::Distance(start, end), half = road.lanes * RoadNetwork::kLaneWidth * .5f;
-        bool elevated = from.altitude > .1f || to.altitude > .1f;
-        for (float cursor = 0; cursor < length - .001f; cursor += 8)
+        if (std::fabs(from.altitude - to.altitude) > .1f)
         {
-            float finish = (std::min)(length, cursor + 8),
-                  beginHeight = net.RoadElevation(int(index), cursor / length),
-                  endHeight = net.RoadElevation(int(index), finish / length);
-            auto center = Add(start, direction, (cursor + finish) * .5f);
-            auto a = Add({}, direction, -(finish - cursor) * .5f),
-                 b = Add({}, direction, (finish - cursor) * .5f);
-            models::ResourceMesh mesh;
-            auto strip = [&](float lo, float hi, float raise, models::ResourceVertex material) {
-                SlopedQuad(mesh, Add(a, normal, lo), Add(b, normal, lo), Add(b, normal, hi),
-                           Add(a, normal, hi), beginHeight + raise, endHeight + raise, material);
-            };
-            strip(-half, half, .025f, asphalt);
-            if (!elevated)
-            {
-                strip(-half - 1, -half, .075f, pavement);
-                strip(half, half + 1, .075f, pavement);
-            }
-            else
-            {
-                // Thin raised parapets show the deck's separate level; no false sidewalk on a highway.
-                strip(-half - .20f, -half, .45f, pavement);
-                strip(half, half + .20f, .45f, pavement);
-            }
-            for (float side : {-1.f, 1.f})
-            {
-                strip(side * half - .045f, side * half + .045f, .035f, paint);
-            }
-            strip(-.035f, .035f, .04f, DraftMaterial(.78f, .65f, .30f));
-            for (int lane = 1; lane < road.lanes; ++lane)
-            {
-                if (lane == road.lanes / 2)
-                {
-                    continue;
-                }
-                float across = -half + lane * RoadNetwork::kLaneWidth;
-                // Two-metre marks and four-metre gaps retain the same world phase across chunk seams.
-                for (float mark = std::ceil(cursor / 3) * 3; mark < finish; mark += 3)
-                {
-                    float mEnd = (std::min)(finish, mark + 1);
-                    auto ma = Add(start, direction, mark), mb = Add(start, direction, mEnd);
-                    auto la = Sub(ma, center), lb = Sub(mb, center);
-                    SlopedQuad(mesh, Add(la, normal, across - .025f), Add(lb, normal, across - .025f),
-                               Add(lb, normal, across + .025f), Add(la, normal, across + .025f),
-                               net.RoadElevation(int(index), mark / length) + .04f,
-                               net.RoadElevation(int(index), mEnd / length) + .04f, paint);
-                }
-            }
-            save(std::move(mesh), "DraftRoad_" + std::to_string(index) + "_" + std::to_string(int(cursor)),
-                 center, finish - cursor + half + 2);
+            // Both native 110m ramps rise from their local origin. Reverse the descending one.
+            bool rising = to.altitude > from.altitude;
+            auto lower = rising ? start : end;
+            auto uphill = rising ? direction : Add({}, direction, -1);
+            Place(result, Assembly("RoadPlan_Ramp_2L_Rise8p4_L110"), lower, std::atan2(uphill.y, uphill.x),
+                  58, .025f);
+        }
+        else
+        {
+            std::string prefix = from.altitude > .1f
+                                     ? "RoadPlan_Deck_2L_L"
+                                     : "RoadPlan_Surface_" + std::to_string(road.lanes) + "L_L";
+            RoadSpan(result, prefix, start, end, from.altitude);
         }
     }
     for (size_t index = 0; index < plans.size(); ++index)
@@ -311,68 +390,79 @@ std::vector<TransitPlacement> Build()
         {
             continue;
         }
-        models::ResourceMesh mesh;
-        if (plan.arms.size() == 2)
+        if (plan.arms.size() >= 3)
+        {
+            Place(result, JunctionArt(plan, index), junction.position, 0, plan.radius + 9,
+                  junction.altitude + .025f);
+        }
+        else if (plan.arms.size() == 2)
         {
             auto a = Add({}, plan.arms[0].direction, plan.radius),
                  b = Add({}, plan.arms[1].direction, plan.radius);
-            auto da = Add({}, plan.arms[0].direction, -1), db = plan.arms[1].direction;
-            for (int piece = 0; piece < 32; ++piece)
+            if (plan.arms[0].lanes != plan.arms[1].lanes)
             {
-                float t0 = piece / 32.f, t1 = (piece + 1) / 32.f;
-                auto p = Curve(a, b, da, db, t0), q = Curve(a, b, da, db, t1),
-                     n = RoadNetwork::RightOf(Unit(Sub(q, p)));
-                float h0 = (plan.arms[0].lanes + (plan.arms[1].lanes - plan.arms[0].lanes) * t0) * .75f;
-                float h1 = (plan.arms[0].lanes + (plan.arms[1].lanes - plan.arms[0].lanes) * t1) * .75f;
-                Quad(mesh, Add(p, n, -h0), Add(q, n, -h1), Add(q, n, h1), Add(p, n, h0),
-                     junction.altitude + .025f, asphalt);
-                if (junction.altitude < .1f)
+                auto wide = plan.arms[0].lanes == 4 ? plan.arms[0].direction : plan.arms[1].direction;
+                auto narrow = plan.arms[0].lanes == 2 ? plan.arms[0].direction : plan.arms[1].direction;
+                auto d = Add({}, wide, -1);
+                if (Dot(wide, narrow) < -.9999f)
                 {
-                    for (float side : {-1.f, 1.f})
-                    {
-                        Quad(mesh, Add(p, n, side * h0), Add(q, n, side * h1), Add(q, n, side * (h1 + 1)),
-                             Add(p, n, side * (h0 + 1)), .075f, pavement);
-                    }
+                    Place(result, Assembly("RoadPlan_Transition_4L_2L"), junction.position,
+                          std::atan2(d.y, d.x), 12, .025f);
+                }
+                else
+                {
+                    auto start = Add({}, wide, plan.radius), finish = Add({}, narrow, plan.radius);
+                    auto asset =
+                        Deform("RoadPlan_Transition_4L_2L",
+                               "RoadPlanJoin_Transition_" + std::to_string(index), [=](Vector2 p) {
+                                   float t = Game::Clamp((p.x + 6) / 12, 0, 1);
+                                   auto center = Curve(start, finish, d, narrow, t);
+                                   auto tangent = Unit(
+                                       Sub(Curve(start, finish, d, narrow, (std::min)(1.f, t + .0005f)),
+                                           Curve(start, finish, d, narrow, (std::max)(0.f, t - .0005f))));
+                                   return Add(center, RoadNetwork::RightOf(tangent), p.y);
+                               });
+                    Place(result, asset, junction.position, 0, 15, .025f);
                 }
             }
-        }
-        else if (plan.polygon.size() >= 3)
-        {
-            for (size_t p = 1; p + 1 < plan.polygon.size(); ++p)
+            else
             {
-                Triangle(mesh, plan.polygon[0], plan.polygon[p], plan.polygon[p + 1],
-                         junction.altitude + .025f, asphalt);
-            }
-            if (junction.altitude < .1f)
-            {
-                for (size_t edge = 0; edge < plan.polygon.size(); ++edge)
-                {
-                    auto a = plan.polygon[edge], b = plan.polygon[(edge + 1) % plan.polygon.size()];
-                    Vector2 middle = {(a.x + b.x) * .5f, (a.y + b.y) * .5f};
-                    bool mouth = false;
-                    for (const auto &arm : plan.arms)
-                    {
-                        mouth |= Dot(middle, arm.direction) > plan.radius - .1f;
-                    }
-                    if (mouth)
-                    {
-                        continue;
-                    }
-                    auto n = Add({}, RoadNetwork::RightOf(Unit(Sub(b, a))), -1);
-                    Quad(mesh, a, b, Add(b, n), Add(a, n), .075f, pavement);
-                    auto next = plan.polygon[(edge + 2) % plan.polygon.size()];
-                    auto nn = Add({}, RoadNetwork::RightOf(Unit(Sub(next, b))), -1);
-                    Triangle(mesh, b, Add(b, n), Add(b, nn), .075f, pavement);
-                }
+                auto da = Add({}, plan.arms[0].direction, -1), db = plan.arms[1].direction;
+                // Bend the delivered R7 surface, markings and paving together along the same
+                // cubic used by vehicle turns. Tangents and full-width ports meet the straights.
+                auto asset = Deform(
+                    "RoadPlan_Curve_2L_A90_R7", "RoadPlanBend_" + std::to_string(index), [=](Vector2 p) {
+                        constexpr float radius = 3.5f, quarter = 1.57079632679f;
+                        float theta = std::atan2(p.x, radius - p.y), t = Game::Clamp(theta / quarter, 0, 1);
+                        float across = radius - std::hypot(p.x, p.y - radius);
+                        auto center = Curve(a, b, da, db, t);
+                        auto tangent = Unit(Sub(Curve(a, b, da, db, (std::min)(1.f, t + .0005f)),
+                                                Curve(a, b, da, db, (std::max)(0.f, t - .0005f))));
+                        return Add(center, RoadNetwork::RightOf(tangent), across);
+                    });
+                Place(result, asset, junction.position, 0, plan.radius + 9, .025f);
             }
         }
         else
         {
-            continue;
+            auto end = Add(junction.position, plan.arms[0].direction, plan.radius);
+            RoadSpan(result, "RoadPlan_Surface_" + std::to_string(plan.arms[0].lanes) + "L_L",
+                     junction.position, end, 0);
+            Place(result, "RoadPlan_EdgeCap_" + std::to_string(plan.arms[0].lanes) + "L", junction.position,
+                  std::atan2(plan.arms[0].direction.y, plan.arms[0].direction.x), 5, .025f);
         }
-        save(std::move(mesh), "DraftJunction_" + std::to_string(index), junction.position, plan.radius + 8);
     }
-    // New paint-only meshes preserve a single road surface, avoiding two overlapping asphalt slabs.
+    // The 180m deck is eleven 16m spans plus one 4m closing span. Supports are separate,
+    // placed only at stations clear of the ground street and its two pedestrian pavements.
+    for (float y : {-41.f, -33.f, -5.f, 11.f, 27.f, 43.f})
+    {
+        Vector2 p = {48, y};
+        if (!net.Contains(p, 2.2f))
+        {
+            Place(result, "RoadPlan_Pier_H8", p, 1.57079632679f, 6, .025f);
+            supports.push_back({p, 1.57079632679f});
+        }
+    }
     for (const auto &road : net.roads)
     {
         for (int j : {road.from, road.to})
@@ -384,8 +474,8 @@ std::vector<TransitPlacement> Build()
             auto d = Unit(
                 Sub(net.junctions[j == road.from ? road.to : road.from].position, net.junctions[j].position));
             auto p = Add(net.junctions[j].position, d, net.junctions[j].radius + 1);
-            Place(result, "Transit_CrosswalkPaint_" + std::to_string(road.lanes) + "L", p,
-                  std::atan2(d.y, d.x), road.lanes + 3, .045f);
+            Place(result, Paint("RoadPlan_CrosswalkPaint_" + std::to_string(road.lanes) + "L"), p,
+                  std::atan2(d.y, d.x), road.lanes + 3, .025f);
         }
     }
     for (int route = 0; route < int(net.airCorridors.size()); ++route)
@@ -431,6 +521,10 @@ void TransitLayout::ConfigureJunctions(RoadNetwork &net)
             plan.arms[0].lanes == plan.arms[1].lanes)
         {
             plan.radius = 0;
+        }
+        if (plan.arms.size() == 2 && plan.arms[0].lanes != plan.arms[1].lanes)
+        {
+            plan.radius = 6; // Native 24m width transition, twelve metres on either side.
         }
         net.junctions[j].radius = plan.radius;
         std::vector<Vector2> corners;
@@ -488,9 +582,13 @@ bool TransitLayout::ContainsJunction(int j, Vector2 position, float margin)
             float u =
                 Game::Clamp(Dot(Sub(p, previous), delta) / (std::max)(.00001f, Dot(delta, delta)), 0, 1);
             auto at = Add(previous, delta, u);
-            float half =
-                (plan.arms[0].lanes + (plan.arms[1].lanes - plan.arms[0].lanes) * (t - (1 - u) / 24)) *
-                RoadNetwork::kLaneWidth * .5f;
+            float blend = t - (1 - u) / 24;
+            if (plan.arms[0].lanes != plan.arms[1].lanes)
+            {
+                blend = blend * blend * (3 - 2 * blend); // Native 24m smooth width transition.
+            }
+            float half = (plan.arms[0].lanes + (plan.arms[1].lanes - plan.arms[0].lanes) * blend) *
+                         RoadNetwork::kLaneWidth * .5f;
             if (Game::Distance(at, p) <= half + margin)
             {
                 return true;
@@ -518,6 +616,53 @@ const std::vector<TransitPlacement> &TransitLayout::Get()
     static const auto result = Build();
     return result;
 }
+bool TransitLayout::IsBlocked(Vector2 position, float radius, float altitude, bool driving)
+{
+    Get(); // Builds the support stations once, before any collision query.
+    if (altitude < 3.8f)
+    {
+        // Two independent legs; the overhead crosshead never blocks the underpass.
+        for (const auto &support : supports)
+        {
+            auto delta = Sub(position, support.position);
+            Vector2 p = {Dot(delta, {std::cos(support.yaw), std::sin(support.yaw)}),
+                         Dot(delta, {-std::sin(support.yaw), std::cos(support.yaw)})};
+            if (std::fabs(p.x) < .35f + radius && std::fabs(p.y) > .57815f - radius &&
+                std::fabs(p.y) < 1.25f + radius)
+            {
+                return true;
+            }
+        }
+    }
+    for (size_t i = 0; i < RoadNetwork::Get().roads.size(); ++i)
+    {
+        const auto &net = RoadNetwork::Get();
+        const auto &r = net.roads[i];
+        const auto &a = net.junctions[r.from], &b = net.junctions[r.to];
+        if (a.altitude < .1f && b.altitude < .1f)
+        {
+            continue;
+        }
+        auto d = Unit(Sub(b.position, a.position)), start = Add(a.position, d, a.radius);
+        float span = Game::Distance(a.position, b.position) - a.radius - b.radius;
+        float along = Dot(Sub(position, start), d), across = std::fabs(Cross(Sub(position, start), d));
+        if (along < 0 || along > span)
+        {
+            continue;
+        }
+        float top = net.RoadElevation(int(i), along / span), half = r.lanes * .75f;
+        if (!driving && altitude < .1f && top > .08f && top < 1.3f && across < half + .2f + radius)
+        {
+            return true; // Low ramp undersides are not traversable pedestrian tunnels.
+        }
+        if (altitude >= .1f && std::fabs(altitude - top) < .5f && across > half - .05f - radius &&
+            across < half + .35f + radius)
+        {
+            return true; // Native parapet, at the current driving level only.
+        }
+    }
+    return false;
+}
 bool TransitLayout::OverlapsPavement(Vector2 minimum, Vector2 maximum, float clearance)
 {
     struct Footprint
@@ -528,8 +673,9 @@ bool TransitLayout::OverlapsPavement(Vector2 minimum, Vector2 maximum, float cle
         std::vector<Footprint> result;
         for (const auto &m : Get())
         {
-            if (m.air || (m.asset.find("Walk") == std::string::npos && m.asset.find("DraftRoad_") != 0 &&
-                          m.asset.find("DraftJunction_") != 0))
+            if (m.air ||
+                (m.asset.find("Walk") == std::string::npos && m.asset.find("RoadPlanAssembly_") != 0 &&
+                 m.asset.find("RoadPlanJoin_") != 0 && m.asset.find("RoadPlanBend_") != 0))
             {
                 continue;
             }
@@ -577,7 +723,7 @@ size_t plannedSignature = 0;
 std::vector<Building> plannedBuildings;
 bool ClearFrontage(const GameState &world, Vector2 p)
 {
-    if (RoadNetwork::Get().Contains(p, .20f))
+    if (RoadNetwork::Get().Contains(p, .20f) || TransitLayout::IsBlocked(p, .4f))
     {
         return false;
     }
@@ -814,7 +960,7 @@ void CityPlan::Rebuild(GameState &world)
             std::string key = na < nb ? na + "/" + nb : nb + "/" + na;
             if (edges.insert(key).second)
             {
-                Span(accessModules, "Transit_Walk_W2_Straight_4m", a, b, .75f);
+                Span(accessModules, "RoadPlan_Walk_W2_L4", a, b, .75f);
                 for (int x = int(std::floor(((std::min)(a.x, b.x) - 1) / 8));
                      x <= int(std::floor(((std::max)(a.x, b.x) + 1) / 8)); ++x)
                 {

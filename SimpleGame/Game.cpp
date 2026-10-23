@@ -548,6 +548,11 @@ bool Game::IsPositionBlocked(Vector2 position)
     {
         return true;
     }
+    if (TransitLayout::IsBlocked(position, .2f, state.isBikeMounted ? state.bikeElevation : 0,
+                                 state.isBikeMounted))
+    {
+        return true;
+    }
     if (state.isBikeMounted && state.bikeElevation > 1)
     {
         return false;

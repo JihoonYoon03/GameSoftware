@@ -21,6 +21,7 @@ class TransitLayout
     static void ConfigureJunctions(RoadNetwork &network);
     static bool ContainsJunction(int junction, Vector2 position, float margin);
     static bool OverlapsPavement(Vector2 minimum, Vector2 maximum, float clearance = .3f);
+    static bool IsBlocked(Vector2 position, float radius = .2f, float altitude = 0, bool driving = false);
 };
 // ============================================================================
 // CityPlan — connected building frontages, pedestrian alleys and district ground.

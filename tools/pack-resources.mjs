@@ -5,6 +5,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
+import { roadPlanCatalog } from './road-plan-catalog.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const resources = path.join(root, 'Resource');
@@ -448,6 +449,9 @@ for (const name of Object.keys(transit.modules)) convert('transit/' + name, 'Tra
 for (const lanes of [2, 4, 6]) for (const length of [.5, 1, 1.5])
     convert(`transit/Trim_Road_${lanes}L_${length}`, `Transit/Transit_Road_${lanes}L_Straight_4m`, 'prop', { trimLength: length });
 convert('transit/Trim_Walk_W2_0.5', 'Transit/Transit_Walk_W2_Straight_2m', 'prop', { trimLength: .5 });
+
+const roadPlan = roadPlanCatalog(root, checking);
+for (const name of Object.keys(roadPlan.modules)) convert('transit/' + name, 'RoadPlan/' + name, 'prop');
 
 const chunks = [];
 function u32(value) { const b = Buffer.alloc(4); b.writeUInt32LE(value); chunks.push(b); }

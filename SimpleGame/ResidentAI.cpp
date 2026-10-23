@@ -31,7 +31,8 @@ unsigned int Random(Resident &resident)
 bool Clear(const GameState &world, Vector2 p)
 {
     if (p.x < kWorldMinX || p.x > kWorldMaxX || p.y < kWorldMinY || p.y > kWorldMaxY ||
-        CityLayout::IsQuestSpace(p, .4f) || Overworld::Scenery().IsBlocked(p, .3f))
+        CityLayout::IsQuestSpace(p, .4f) || Overworld::Scenery().IsBlocked(p, .3f) ||
+        TransitLayout::IsBlocked(p, .3f))
     {
         return false;
     }
