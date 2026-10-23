@@ -8,7 +8,7 @@ from mathutils import Vector
 
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'Tools'))
-from detail_mesh_pipeline import _occluded_faces
+from detail_mesh_pipeline import _occluded_faces,_surface_error
 
 
 def nested_box_case(center=(0,0,0),same_bone=True,opaque=True):
@@ -30,6 +30,14 @@ def nested_box_case(center=(0,0,0),same_bone=True,opaque=True):
 
 
 cases={}
+thin=bmesh.new();bmesh.ops.create_cube(thin,size=1)
+for v in thin.verts:v.co=Vector((v.co.x*78,v.co.y*.085,v.co.z*.0007+.003))
+same=thin.copy()
+assert _surface_error(thin,same)<1e-7,'identical thin paint produced a false surface error'
+for v in same.verts:v.co.z+=.0002
+assert _surface_error(thin,same)>.00019,'thin paint displacement was missed'
+thin.free();same.free()
+cases['submillimeter_paint_identity_and_real_displacement']=True
 result=nested_box_case()
 assert len(result)==12 and set(result)=={1},result
 cases['opaque_same_bone_inner_box_removed']=True

@@ -1,0 +1,33 @@
+{
+  "modules_checked": 88,
+  "standalone_parts_checked": 428,
+  "physical_ports_checked": 113,
+  "connections_checked": 22,
+  "max_triangles": 492,
+  "max_port_position_error_m": 9.368994121895078e-07,
+  "max_port_tangent_error_degrees": 0.07999843878903147,
+  "max_normal_tangent_dot": 8.371552380026515e-05,
+  "min_triangle_area_m2": 1.2560368910413509e-06,
+  "min_piecewise_linear_walk_width_m": 1.9990880217834757,
+  "ramps": {
+    "RoadPlan_Ramp_2L_Rise8_L110": {
+      "max_actual_grade": 0.08510638429568364,
+      "upper_surface_z_m": 8,
+      "upper_underclearance_m": 7.6
+    },
+    "RoadPlan_Ramp_2L_Rise8p4_L110": {
+      "max_actual_grade": 0.08936170049202748,
+      "upper_surface_z_m": 8.4,
+      "upper_underclearance_m": 8.0
+    }
+  },
+  "clearance_checks": [
+    {
+      "example": "33_RoadPlan_GradeSeparated_Crossing",
+      "actual_structural_clearance_m": 7.999999994039536,
+      "pier_clear_of_ground_walk": true
+    }
+  ],
+  "errors": [],
+  "all_checks_passed": true
+}

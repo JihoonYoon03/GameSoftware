@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Hud.h"
+#include "Civic.h"
 #include "Drawing.h"
 #include "Level.h"
 #include "Overworld.h"
@@ -430,6 +431,10 @@ void DrawCitySchematic(const SchematicView &view, bool full)
             MapLabel({p.x - 28, p.y - 5}, city.name, {.8f, .87f, .75f});
         }
     }
+    for (const auto &hospital : CivicJustice::State().hospitals)
+    {
+        MapPin(view, hospital.position, {.35f, 1, .72f}, "의료소", full, 4);
+    }
 }
 void DrawFieldSchematic(const SchematicView &view, bool full)
 {
@@ -501,7 +506,7 @@ void DrawSchematic(const SchematicView &view, bool full)
     DrawDestination(view, full);
     const auto &world = Game::Get().GetState();
     float heading = world.isBikeMounted ? world.bikeYaw : world.facingYaw;
-    if (game::GameLevels::IsCombatActive())
+    if (game::GameLevels::IsCombatActive() || CivicCombat::Available())
     {
         float angle = game::GameLevels::Chapter().IsActive() ? game::GameLevels::Chapter().GetAimAngle()
                                                              : game::GameLevels::Mine().GetAimAngle();
@@ -733,10 +738,16 @@ void CityHud::Draw()
     if (!world.isInsideHome && !world.isInObservatory)
     {
         char bike[160];
-        std::snprintf(bike, sizeof(bike),
-                      world.isBikeMounted ? "개인 바이크 / %.0f km/h · W 가속 S 제동 A/D 조향 · E 하차"
-                                          : "도시 5곳 · 도시당 20명 / 주황 표시: 주차한 바이크 · E 탑승",
-                      world.bikeSpeed * models::WorldScale::metersPerUnit * 3.6f);
+        if (world.isBikeMounted)
+        {
+            std::snprintf(bike, sizeof(bike), "개인 바이크 / %.0f km/h · W 가속 S 제동 A/D 조향 · E 하차",
+                          world.bikeSpeed * models::WorldScale::metersPerUnit * 3.6f);
+        }
+        else
+        {
+            std::snprintf(bike, sizeof(bike), "도시 5곳 · 주민 %d명 / 주황: 바이크 · E 탑승",
+                          CivicJustice::LivingPopulation());
+        }
         Drawing::DrawLabel(26, float(kCanvasHeight) - 46, bike, {.6f, .9f, .9f});
         const auto &player = game::GameLevels::Mine().GetState().player;
         Drawing::DrawLabel(26, float(kCanvasHeight) - 69,
@@ -1014,5 +1025,6 @@ void Hud::Render()
     DrawNoticePanel();
     MapHud::DrawFullMap();
     DrawPauseOverlay();
+    CivicPresentation::DrawHud();
 }
 } // namespace tutorial

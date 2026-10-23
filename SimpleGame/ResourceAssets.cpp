@@ -221,8 +221,10 @@ Selection Select(const ResourceMesh &mesh, const CharacterPose *pose, bool upper
         }
         else if (upper && pose->armed)
         {
-            name = pose->recoil > 0 ? "Attack_Fire" : "Aim_Base";
-            time = pose->recoil > 0 ? (1 - std::clamp(pose->recoil, 0.f, 1.f)) * .4f : 0;
+            name = pose->meleeSeconds > 0 ? "Attack_Melee" : pose->recoil > 0 ? "Attack_Fire" : "Aim_Base";
+            time = pose->meleeSeconds > 0 ? (1 - std::clamp(pose->meleeSeconds / .65f, 0.f, 1.f)) * .65f
+                   : pose->recoil > 0     ? (1 - std::clamp(pose->recoil, 0.f, 1.f)) * .4f
+                                          : 0;
         }
         else if (pose->walking)
         {
@@ -266,7 +268,9 @@ const ResourceMesh &ResourceAssets::Get(unsigned int id)
 {
     auto &store = Assets();
     if (!id || id > store.meshes.size() + store.assemblies.size())
+    {
         throw std::out_of_range("Invalid resource model id");
+    }
     return id <= store.meshes.size() ? store.meshes[id - 1] : *store.assemblies[id - store.meshes.size() - 1];
 }
 unsigned int ResourceAssets::RegisterStatic(ResourceMesh mesh)
@@ -274,7 +278,9 @@ unsigned int ResourceAssets::RegisterStatic(ResourceMesh mesh)
     auto &store = Assets();
     auto found = store.names.find(mesh.name);
     if (found != store.names.end())
+    {
         return found->second;
+    }
     mesh.boneCount = 0;
     mesh.clips.clear();
     mesh.minimum = {1.e9f, 1.e9f, 1.e9f};

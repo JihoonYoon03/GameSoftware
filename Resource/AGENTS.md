@@ -19,6 +19,9 @@
 - 후속 갱신의 원본은 `24_Refined_Detail_Sources`, 유리창 비교는 `22_Legacy_Asset_Refinements`, 건물 5종은 `20_Architecture_Styles`에 있다. 유리 패널+실링은 프레임의 별도 companion이며 같은 본으로 조립한다. 각 `Parts` GLB는 독립 메시 하나를 유지한다.
 - 캐릭터 상세 원본은 `25_Character_Detail_Sources`, 비교·확대·머리 검토는 `26_Character_Detail_Comparison`~`28_Character_Head_Study`에 있다. 인체 관련 854개 파트는 기존 785개 교체 + 흉부 외장/하네스 69개이다. `character_detail_assemblies.json`에 따라 Torso와 대응 OuterAssembly를 함께 조립한다. 23본·15클립·피부색·장비 오프셋을 유지하고 새 스킨을 원본과 대조한다.
 - 횡단보도 페인트 `Transit_CrosswalkPaint_2L/4L/6L`과 `Road_Crossing_Paint_2m`는 노면·보행로를 포함하지 않는다. 보행로는 별도 모듈을 연결한다.
+- 새 도시계획 도로는 `ROAD_MODULE_REQUEST.md`를 따른 `road_plan_v1` 확장이다. `Tools/build_road_plan.py`와 공통 상세 파이프라인을 사용한다. 2/4차선·T4+4+2·T2·X2·R7/18/36 곡선·110m 램프·고가·별도 보도/구조물의 P0/P1 88개 모듈, 428개 독립 파트이다. `Documentation/ROAD_PLAN_ko.md`, `road_plan_modules.json`, `road_plan_examples.json`이 현재 계약이다. `Export/RoadPlan`과 독립 `Source/RoadPlan_Modules.blend`로 납품한다. 형상은 `asset_id`로 식별한다.
+- 도로계획 확장은 노면 8m 상승형(구조 포함 하부 7.6m)과 권장 8.4m 상승형(하부 8m)을 함께 제공한다. 두 램프 최대 경사는 9% 이내이다. 8.4m형은 게임 그래프 고도 4.2월드 단위와 함께 통합해야 하며 모델링 도구가 게임 코드/Runtime을 수정하지 않는다. 180m 고가는 16m×11+4m 마감으로 조립한다. 지상/고가 level은 분리하고 교각은 도로·보도 예약 공간 밖에 둔다.
+- RoadPlan 독립 파일은 append 전용 데이터 라이브러리가 아니라 바로 열리는 일반 프로젝트로 저장한다. `road_plan_source.write_project`의 인메모리 정리는 마스터 저장 후 독립 도로 프로젝트에만 저장한다. 메인 원본의 기존 자산과 기본 장면은 보존한다.
 - 재제작 순서: 공통 원본 → air/city → transit → refined city → character detail. 앞 단계 제작 도구는 뒤 단계의 조립체를 자동 갱신하지 않으므로 뒤 단계를 다시 실행하고 검증한다.
 - 기존 라이브러리를 열어 해당 제작 도구가 소유한 데이터만 갱신한다. 다른 확장·본·재질·조립 데이터·기본 진입 장면을 보존한다.
 - 파트 공통 원점·미터 단위·축·본 이름과 통행로 접속 좌표를 지킨다. 원점 재중앙화와 임의 비율 변경을 하지 않는다.

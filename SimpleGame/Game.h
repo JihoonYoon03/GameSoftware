@@ -57,7 +57,24 @@ enum class ResidentActivity
     Working,
     Talking,
     Yielding,
-    NoRoute
+    NoRoute,
+    Fleeing,
+    Injured,
+    Dead
+};
+// Physics owns displacement; future reaction clips consume these states without root motion.
+enum class BodyResponse
+{
+    None,
+    Stagger,
+    Knockdown,
+    Dead
+};
+struct BodyImpact
+{
+    Vector2 velocity = {};
+    float seconds = 0, invulnerability = 0;
+    BodyResponse response = BodyResponse::None;
 };
 struct ResidentWaypoint
 {
@@ -84,6 +101,9 @@ struct Resident
     float speed = 1.2f, waitSeconds = 0, conversationSeconds = 0, blockedSeconds = 0;
     unsigned int randomState = 1;
     bool destinationIsWork = false;
+    int health = 100;
+    float fearSeconds = 0, corpseSeconds = 0;
+    BodyImpact impact;
 };
 
 enum class MainQuestStage

@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "ResidentAI.h"
+#include "Civic.h"
 #include "Level.h"
 #include "Overworld.h"
 #include "TransitLayout.h"
@@ -446,6 +447,48 @@ void CityResidents::Update(GameState &world, float dt)
             resident.routeCursor = 0;
             continue;
         }
+        if (resident.health <= 0)
+        {
+            resident.activity = ResidentActivity::Dead;
+            resident.crossingJunction = -1;
+            resident.route.clear();
+            resident.routeCursor = 0;
+            continue;
+        }
+        if (resident.impact.seconds > 0)
+        {
+            resident.activity = ResidentActivity::Injured;
+            continue;
+        }
+        resident.fearSeconds = (std::max)(0.f, resident.fearSeconds - dt);
+        float reputation = CivicJustice::State().infamy;
+        float nearPlayer = Game::Distance(resident.position, world.playerPosition);
+        if (reputation >= 25 && nearPlayer < 3 + reputation * .05f &&
+            CivicJustice::ClearLine(resident.position, world.playerPosition))
+        {
+            resident.fearSeconds = (std::max)(resident.fearSeconds, 2.f);
+        }
+        if (resident.fearSeconds > 0 && resident.crossingJunction < 0)
+        {
+            auto before = resident.position;
+            float angle = std::atan2(before.y - world.playerPosition.y, before.x - world.playerPosition.x);
+            for (float turn : {0.f, .6f, -.6f, 1.2f, -1.2f})
+            {
+                Vector2 next = {before.x + std::cos(angle + turn) * 2.2f * dt,
+                                before.y + std::sin(angle + turn) * 2.2f * dt};
+                if (CanWalkSegment(world, before, next))
+                {
+                    resident.position = BodyCollision::MoveResident(index, before, next);
+                    break;
+                }
+            }
+            resident.activity = ResidentActivity::Fleeing;
+            resident.conversationSeconds = 0;
+            resident.route.clear();
+            resident.routeCursor = 0;
+            resident.facing.Update(before, resident.position);
+            continue;
+        }
         const auto before = resident.position;
         if (resident.conversationSeconds > 0 && resident.activity != ResidentActivity::Crossing)
         {
@@ -503,7 +546,7 @@ void CityResidents::Update(GameState &world, float dt)
         }
         for (size_t other = 0; other < world.residents.size() && !blocked; ++other)
         {
-            if (other == index ||
+            if (world.residents[other].health <= 0 || other == index ||
                 (other == Overworld::kKainResidentSlot && game::GameLevels::Chapter().GetState().kainJoined))
             {
                 continue;
@@ -532,8 +575,8 @@ void CityResidents::Update(GameState &world, float dt)
             continue;
         }
         resident.blockedSeconds = 0;
-        resident.position = next;
-        resident.facing.Update(before, next);
+        resident.position = BodyCollision::MoveResident(index, before, next);
+        resident.facing.Update(before, resident.position);
         if (distance <= amount + .001f)
         {
             resident.crossingJunction = -1;
@@ -567,8 +610,9 @@ const char *CityResidents::ProfessionName(ResidentProfession profession)
 }
 const char *CityResidents::ActivityName(ResidentActivity activity)
 {
-    constexpr const char *names[] = {"resting", "walking", "patrolling", "waiting_signal", "crossing",
-                                     "working", "talking", "yielding",   "no_route"};
+    constexpr const char *names[] = {"resting",  "walking", "patrolling", "waiting_signal",
+                                     "crossing", "working", "talking",    "yielding",
+                                     "no_route", "fleeing", "injured",    "dead"};
     return names[size_t(activity)];
 }
 const char *CityResidents::ActivityLabel(const Resident &resident)
@@ -595,9 +639,18 @@ const char *CityResidents::ActivityLabel(const Resident &resident)
             return "직업 활동";
         }
     }
-    constexpr const char *labels[] = {
-        "휴식",      "보행로 이동",     "구역 순찰",   "횡단 신호 대기",  "횡단보도 이동",
-        "직업 활동", "플레이어와 대화", "보행자 양보", "경로 재탐색 대기"};
+    constexpr const char *labels[] = {"휴식",
+                                      "보행로 이동",
+                                      "구역 순찰",
+                                      "횡단 신호 대기",
+                                      "횡단보도 이동",
+                                      "직업 활동",
+                                      "플레이어와 대화",
+                                      "보행자 양보",
+                                      "경로 재탐색 대기",
+                                      "악명 높은 인물 회피",
+                                      "피격 / 회복",
+                                      "사망"};
     return labels[size_t(resident.activity)];
 }
 } // namespace tutorial

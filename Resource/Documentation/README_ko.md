@@ -20,7 +20,7 @@ Blender 4.5.2 LTS에서 제작한 로우 폴리 모듈 라이브러리입니다.
 - `Export/Textures`: 직접 생성한 512×512 반복 PBR PNG 8세트. 각 세트는 BaseColor / OpenGL Normal / ORM입니다. ORM은 R=AO(1), G=Roughness, B=Metallic입니다.
 - `Validation`: 실제 메시·GLB 검사 결과와 제작 로그.
 
-2026-10-22 현재 통행로 확장을 포함한 전체 독립 파트는 1,865개, GLB는 2,059개입니다. 지상 차량·비행체·도시 프롭·선별한 기존 자산·새 건축을 포함한 394개 파트와 캐릭터 854개 파트, 총 1,248개에 디테일 원본과 보존 최적화를 적용했습니다. 전체 파트의 최대값은 464삼각형입니다. 기본 장면은 `16_Transit_Connected_Example`입니다. 추가 장면 `10b_Aircraft_Variants`, `10c_Aircraft_Exploded`, `11_City_Frontier_Props`, `11b_Road_Modules`, `12_Airfield_Outpost`에서 조합과 배치를 확인할 수 있습니다.
+2026-10-23 현재 통행로 확장을 포함한 전체 독립 파트는 2,293개, GLB는 2,575개입니다. 지상 차량·비행체·도시 프롭·선별한 기존 자산·새 건축을 포함한 394개 파트와 캐릭터 854개 파트, 도로계획 428개까지 총 1,676개에 디테일 원본과 보존 최적화를 적용했습니다. 전체 파트의 최대값은 492삼각형입니다. 기본 장면은 `16_Transit_Connected_Example`입니다. 추가 장면 `10b_Aircraft_Variants`, `10c_Aircraft_Exploded`, `11_City_Frontier_Props`, `11b_Road_Modules`, `12_Airfield_Outpost`에서 조합과 배치를 확인할 수 있습니다.
 
 후속 디자인 수정에서 로터를 분절된 부상 필드로 교체하고 차량용 신호기를 지지대 없는 공중 부유형으로 바꿨습니다. 보행자 안내는 바닥 홀로그램이며 `13_Field_Tech_Details`에서 확인할 수 있습니다. 자세한 상태별 파트·재질 규칙은 [확장 안내](AIR_CITY_ko.md)를 따릅니다.
 
@@ -84,3 +84,5 @@ Blender 4.5.2 LTS에서 제작한 로우 폴리 모듈 라이브러리입니다.
 후속 교체: [유리창·횡단보도·건물 5종 안내](REFINED_CITY_ko.md). `19_Glazing_Review`에서 이동수단 창호, `20_Architecture_Styles`에서 12·16·10·4·3층 건물을 확인합니다. 원본은 `24_Refined_Detail_Sources`에 보관했습니다. 횡단보도 페인트는 노면·보행로와 독립된 파일입니다.
 
 캐릭터의 기존 785개 파트도 새 메시로 교체했습니다. 의복 외장 69개를 별도로 조립하며 `character_detail_assemblies.json`의 Torso/OuterAssembly 대응을 따릅니다. [캐릭터 디테일 개선 안내](CHARACTER_DETAIL_ko.md) · [이전/개선 비교](../Preview/29_character_detail_comparison.png).
+
+[새 도로계획 모듈 안내](ROAD_PLAN_ko.md): 독립 원본 `Source/RoadPlan_Modules.blend`, 납품 `Export/RoadPlan`, 포트/충돌 예약/높이 JSON `road_plan_modules.json`. 기존 임시 도로와 연결할 게임 측 절차는 별도이며 노면 8.4m 권장형은 상부 그래프도 월드 고도 4.2로 맞춰야 합니다.

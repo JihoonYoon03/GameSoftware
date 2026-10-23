@@ -32,6 +32,7 @@
     <ClInclude Include="Drawing.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="Civic.h"><Filter>헤더 파일</Filter></ClInclude>
     <ClInclude Include="Game.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -101,6 +102,7 @@
     <ClCompile Include="Drawing.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Civic.cpp"><Filter>소스 파일</Filter></ClCompile>
     <ClCompile Include="Game.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>

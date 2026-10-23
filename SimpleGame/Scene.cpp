@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Scene.h"
+#include "Civic.h"
 #include "Drawing.h"
 #include "Hud.h"
 #include "Level.h"
@@ -569,12 +570,24 @@ void CityScene::DrawDepthSortedObjects(game::Scene &scene)
             if (item.kind == SceneObjectKind::Vehicle)
             {
                 Vector2 position = GetTrafficPosition(item.index);
+                auto palette = GetTrafficPalette(int(Overworld::Traffic().Vehicles()[item.index].id % 12));
+                if (Overworld::Traffic().Vehicles()[item.index].health <= 0)
+                {
+                    palette.body = {.12f, .13f, .14f, 1};
+                    palette.accent = {.17f, .18f, .19f, 1};
+                    palette.emission = {.1f, .04f, .01f, 1};
+                }
                 Drawing::DrawWorldVehicle(
                     position, 3.3f + Overworld::Traffic().RenderElevation(size_t(item.index)) * 44, 1.f,
                     static_cast<models::VehicleType>(Overworld::Traffic().Vehicles()[item.index].id % 4),
-                    GetTrafficPalette(int(Overworld::Traffic().Vehicles()[item.index].id % 12)),
-                    Overworld::Traffic().Vehicles()[item.index].speed / 10.f,
+                    palette, Overworld::Traffic().Vehicles()[item.index].speed / 10.f,
                     Overworld::Traffic().RenderYaw(size_t(item.index)));
+                const auto &car = Overworld::Traffic().Vehicles()[item.index];
+                if (car.hitFlash > 0)
+                {
+                    Drawing::DrawGlow(Drawing::WorldToScreen(position.x, position.y, 32), 18,
+                                      {1, .6f, .2f, car.hitFlash / .15f});
+                }
             }
             if (item.kind == SceneObjectKind::JetBike)
             {
@@ -586,10 +599,12 @@ void CityScene::DrawDepthSortedObjects(game::Scene &scene)
             if (item.kind == SceneObjectKind::Resident)
             {
                 const auto &resident = Game::Get().GetState().residents[item.index];
-                Drawing::DrawPerson(resident.position,
-                                    ColorRGBA(resident.coat[0], resident.coat[1], resident.coat[2]), false,
-                                    resident.type, resident.facing.walking, resident.facing.yaw,
-                                    resident.gender, resident.hair, false, 0, false, resident.speed);
+                Drawing::DrawPerson(
+                    resident.position, ColorRGBA(resident.coat[0], resident.coat[1], resident.coat[2]), false,
+                    resident.type, resident.facing.walking, resident.facing.yaw, resident.gender,
+                    resident.hair, false, 0,
+                    resident.health <= 0 || resident.impact.response == BodyResponse::Knockdown,
+                    resident.speed);
                 if (Game::Distance(Game::Get().GetState().playerPosition, resident.position) < 2.2f)
                 {
                     Vector2 label = Drawing::WorldToScreen(resident.position.x, resident.position.y, 62);
@@ -610,13 +625,15 @@ void CityScene::DrawDepthSortedObjects(game::Scene &scene)
             {
                 Drawing::DrawPerson(kLiaPosition, ColorRGBA(.89f, .52f, .28f), false,
                                     models::CharacterType::Engineer, false, .78539816f,
-                                    models::Gender::Female, models::HairStyle::Ponytail);
+                                    models::Gender::Female, models::HairStyle::Ponytail, false, 0,
+                                    CivicJustice::State().landmarkHealth[0] <= 0);
             }
             if (item.kind == SceneObjectKind::Mara)
             {
                 Drawing::DrawPerson(kMaraPosition, ColorRGBA(.48f, .4f, .64f), false,
                                     models::CharacterType::Medic, false, .78539816f, models::Gender::Female,
-                                    models::HairStyle::Bun);
+                                    models::HairStyle::Bun, false, 0,
+                                    CivicJustice::State().landmarkHealth[1] <= 0);
             }
         });
     };
@@ -665,7 +682,9 @@ void CityScene::DrawUtilityDevices(game::Scene &scene)
     for (const auto &city : Overworld::Cities())
     {
         auto p = city.center;
-        std::string label = std::string(city.name) + " / 주민 20명";
+        std::string label =
+            std::string(city.name) + " / 주민 " +
+            std::to_string(CivicJustice::LivingPopulation(int(&city - Overworld::Cities().data()))) + "명";
         scene.PlaceWorldActor(
             std::string("city-sign/") + city.id, p.x, p.y, WorldBounds(p.x, p.y, 0, 0, 100, 150), 4, 0,
             [p, label]() { Drawing::DrawInteractionMarker({p.x, p.y + 4}, label, {.5f, .8f, .85f}); });
@@ -761,16 +780,17 @@ void CityScene::Draw()
         if (GameLevels::Chapter().GetState().kainJoined)
         {
             auto p = kCityKainPosition;
-            scene.PlaceWorldActor("chapter/kain", p.x, p.y, WorldBounds(p.x, p.y, 0, 0, 85, 100), 1,
-                                  p.x + p.y, [p]() {
-                                      Drawing::DrawPerson(p, {.38f, .53f, .66f}, false,
-                                                          models::CharacterType::Guard, false, .785f);
-                                      if (Game::Distance(p, Game::Get().GetState().playerPosition) < 3)
-                                      {
-                                          auto label = Drawing::WorldToScreen(p.x, p.y, 60);
-                                          Drawing::DrawLabel(label.x - 16, label.y, "카인");
-                                      }
-                                  });
+            scene.PlaceWorldActor(
+                "chapter/kain", p.x, p.y, WorldBounds(p.x, p.y, 0, 0, 85, 100), 1, p.x + p.y, [p]() {
+                    Drawing::DrawPerson(p, {.38f, .53f, .66f}, false, models::CharacterType::Guard, false,
+                                        .785f, models::Gender::Male, models::HairStyle::Buzz, false, 0,
+                                        CivicJustice::State().landmarkHealth[2] <= 0);
+                    if (Game::Distance(p, Game::Get().GetState().playerPosition) < 3)
+                    {
+                        auto label = Drawing::WorldToScreen(p.x, p.y, 60);
+                        Drawing::DrawLabel(label.x - 16, label.y, "카인");
+                    }
+                });
         }
         auto &graph = scene.GetGraph();
         for (size_t i = 0; i < Game::Get().GetState().buildings.size(); ++i)
@@ -791,6 +811,7 @@ void CityScene::Draw()
         graph.Reparent("marker/jet-bike", *graph.Find("personal-jet-bike"));
     }
     scene.DrawActors();
+    CivicPresentation::DrawWorld();
 }
 
 // ============================================================================

@@ -1,9 +1,9 @@
 {
-  "files_checked": 2059,
-  "meshes_checked": 3437,
+  "files_checked": 2575,
+  "meshes_checked": 4293,
   "skinned_mesh_nodes": 1806,
   "animated_exports": 35,
-  "max_triangles_per_mesh": 464,
+  "max_triangles_per_mesh": 492,
   "animation_counts": {
     "Export/Characters/Player_Explorer.glb": [
       "Reference_A",

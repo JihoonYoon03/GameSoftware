@@ -1,5 +1,6 @@
 {
   "cases": {
+    "submillimeter_paint_identity_and_real_displacement": true,
     "opaque_same_bone_inner_box_removed": true,
     "different_joint_faces_preserved": true,
     "transparent_occluder_excluded": true,

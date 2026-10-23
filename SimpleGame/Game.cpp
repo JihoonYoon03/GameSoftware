@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "Game.h"
+#include "Civic.h"
 #include "Hud.h"
 #include "Overworld.h"
 #include "ResidentAI.h"
@@ -123,6 +124,12 @@ void Game::UpdatePlayerMovement(float deltaSeconds)
 {
     profiling::Scope profileTimer(profiling::Timer::Movement);
     const Vector2 previous = state.playerPosition;
+    if (CivicJustice::IsExterior() && CivicJustice::State().playerImpact.seconds > 0 &&
+        CivicJustice::State().playerImpact.response == BodyResponse::Knockdown)
+    {
+        state.movementAmount = state.movementSpeed = 0;
+        return;
+    }
     state.movementSpeed = 0;
     if (state.isBikeMounted && !game::GameLevels::Active() && !state.isInsideHome && !state.isInObservatory)
     {
@@ -164,6 +171,7 @@ void Game::UpdatePlayerMovement(float deltaSeconds)
     {
         state.playerPosition = candidate;
     }
+    state.playerPosition = BodyCollision::MovePlayer(previous, state.playerPosition);
     state.movementSpeed = deltaSeconds > 0 ? Distance(previous, state.playerPosition) / deltaSeconds : 0;
     state.movementAmount = state.movementSpeed > .001f ? inputLength : 0;
 }
@@ -201,6 +209,7 @@ void Game::Reset()
     observatory.palette.emission = {.42f, .9f, 1, 1};
     state.buildings.push_back(observatory);
     Overworld::Populate(state);
+    CivicJustice::Reset(state);
     ShowNotice("리아 / 좋은 아침. 집 단말이 또 깜빡이네. 확인하고 밖에서 만나자.");
 }
 void Game::Resize(int width, int height)
@@ -211,6 +220,10 @@ void Game::Resize(int width, int height)
 }
 void Game::KeyDown(unsigned char key, int, int)
 {
+    if (HospitalRecovery::Active())
+    {
+        return;
+    }
     key = NormalizeKey(key);
     if (key == 27) // Escape
     {
@@ -275,6 +288,16 @@ void Game::KeyDown(unsigned char key, int, int)
     }
     if (state.mapVisible)
     {
+        return;
+    }
+    if (key == 'v' && !repeated)
+    {
+        CivicCombat::Melee();
+        return;
+    }
+    if (key == 'r' && CivicCombat::Available())
+    {
+        game::GameLevels::Mine().Combat().Reload();
         return;
     }
     auto &chapter = game::GameLevels::Chapter();
@@ -390,6 +413,11 @@ void Game::MouseMotion(int x, int y)
 void Game::MouseButton(int button, int buttonState, int x, int y)
 {
     MouseMotion(x, y);
+    if (HospitalRecovery::Active())
+    {
+        state.mouseFiring = false;
+        return;
+    }
     if (state.mapVisible)
     {
         state.mouseFiring = false;
@@ -404,7 +432,8 @@ void Game::MouseButton(int button, int buttonState, int x, int y)
     }
     if (button == GLUT_LEFT_BUTTON)
     {
-        state.mouseFiring = buttonState == GLUT_DOWN && game::GameLevels::IsCombatActive() &&
+        state.mouseFiring = buttonState == GLUT_DOWN &&
+                            (game::GameLevels::IsCombatActive() || CivicCombat::Available()) &&
                             !state.isPaused && state.cursorInsideViewport &&
                             !game::GameLevels::Chapter().GetState().journalVisible;
     }
@@ -424,7 +453,8 @@ void Game::Tick(int)
         Clamp((nowMilliseconds - state.lastUpdateMilliseconds) / 1000.f, 0, kMaximumDeltaSeconds);
     state.lastUpdateMilliseconds = nowMilliseconds;
 
-    if (!state.isPaused && !state.mapVisible)
+    HospitalRecovery::Update(deltaSeconds);
+    if (!state.isPaused && !state.mapVisible && !HospitalRecovery::Active())
     {
         state.animationTimeSeconds += deltaSeconds;
         if (!state.isComplete)
@@ -441,8 +471,14 @@ void Game::Tick(int)
         {
             activeLevel->Update(deltaSeconds);
         }
+        if (!HospitalRecovery::Active())
+        {
+            CivicCombat::Update(deltaSeconds);
+            CivicJustice::Update(deltaSeconds);
+        }
         if (!activeLevel && !state.isInsideHome && !state.isInObservatory)
         {
+            BodyCollision::Update(deltaSeconds);
             Overworld::Traffic().Update(state, deltaSeconds);
             CityResidents::Get().Update(state, deltaSeconds);
             Overworld::Flights().Update(state, deltaSeconds);
@@ -451,12 +487,14 @@ void Game::Tick(int)
         {
             game::GameLevels::Chapter().Update(deltaSeconds);
         }
+        HospitalRecovery::Update(0);
         UpdateCamera(deltaSeconds);
         game::SceneManager::Update(deltaSeconds);
     }
 
     monitoring::GameMonitor::Get().Update();
-    glutSetCursor(game::GameLevels::IsCombatActive() && !state.mapVisible && !state.isPaused
+    glutSetCursor((game::GameLevels::IsCombatActive() || CivicCombat::Available()) && !state.mapVisible &&
+                          !state.isPaused
                       ? GLUT_CURSOR_NONE
                       : GLUT_CURSOR_INHERIT);
     glutPostRedisplay();
@@ -587,6 +625,10 @@ bool Game::IsQuestInteraction(InteractionTarget target) const
 }
 InteractionTarget Game::FindNearbyInteraction()
 {
+    if (HospitalRecovery::Active())
+    {
+        return InteractionTarget::None;
+    }
     if (state.isInObservatory)
     {
         if (Distance(state.playerPosition, kObservatoryConsole) < 1.4f)
@@ -631,7 +673,8 @@ InteractionTarget Game::FindNearbyInteraction()
         return InteractionTarget::CityReceiver;
     }
     if (game::GameLevels::Chapter().GetState().kainJoined &&
-        Distance(state.playerPosition, kCityKainPosition) < 1.1f)
+        Distance(state.playerPosition, kCityKainPosition) < 1.1f &&
+        !CivicCombat::LandmarkDown(kCityKainPosition))
     {
         return InteractionTarget::Kain;
     }
@@ -650,6 +693,10 @@ InteractionTarget Game::FindNearbyInteraction()
     float nearestDistance = 1.35f;
     for (const auto &point : points)
     {
+        if (CivicCombat::LandmarkDown(point.position))
+        {
+            continue;
+        }
         float distance = Distance(state.playerPosition, point.position);
         if (distance < nearestDistance)
         {
@@ -664,6 +711,10 @@ InteractionTarget Game::FindNearbyInteraction()
         {
             continue;
         }
+        if (resident.health <= 0 || resident.fearSeconds > 0)
+        {
+            continue;
+        }
         float distance = Distance(state.playerPosition, resident.position);
         if (distance < nearestDistance)
         {
@@ -675,6 +726,10 @@ InteractionTarget Game::FindNearbyInteraction()
 }
 void Game::InteractWithNearbyTarget()
 {
+    if (HospitalRecovery::Active())
+    {
+        return;
+    }
     const InteractionTarget target = FindNearbyInteraction();
     if (target == InteractionTarget::MineEntrance)
     {
@@ -698,6 +753,10 @@ void Game::InteractWithNearbyTarget()
             {
                 continue;
             }
+            if (resident.health <= 0 || resident.fearSeconds > 0)
+            {
+                continue;
+            }
             float candidate = Distance(state.playerPosition, resident.position);
             if (candidate < distance)
             {
@@ -708,7 +767,10 @@ void Game::InteractWithNearbyTarget()
         if (nearest)
         {
             nearest->conversationSeconds = 3;
-            ShowNotice(nearest->dialogue);
+            ShowNotice(nearest->dialogue + (nearest->profession == ResidentProfession::Merchant
+                                                ? " / 보안망 신용에 따른 거래가 배율 " +
+                                                      std::to_string(CivicJustice::PriceMultiplier())
+                                                : ""));
         }
         return;
     }

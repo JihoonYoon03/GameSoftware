@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Drawing.h"
+#include "Civic.h"
 #include "Level.h"
 #include "Overworld.h"
 #include "TransitLayout.h"
@@ -300,7 +301,8 @@ void Drawing::DrawInteractionMarker(Vector2 worldPosition, const std::string &la
                  {screenPosition.x, screenPosition.y - 7},
                  {screenPosition.x + 5, screenPosition.y}},
                 color);
-    DrawLabel(screenPosition.x + 9, screenPosition.y + 4, label, color);
+    DrawLabel(screenPosition.x + 9, screenPosition.y + 4,
+              CivicCombat::LandmarkDown(worldPosition) ? "의료 지원 중 / 잠시 후 복귀" : label, color);
 }
 
 // ============================================================================
@@ -433,7 +435,7 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
     {
         DrawEllipse(screen.x, screen.y, 16, 6, {.25f, .95f, .9f, .17f});
     }
-    bool armed = (isPlayer && game::GameLevels::IsCombatActive()) || npcArmed;
+    bool armed = (isPlayer && (game::GameLevels::IsCombatActive() || CivicCombat::Available())) || npcArmed;
     float yaw = isPlayer ? world.facingYaw : facingYaw;
     if (isPlayer)
     {
@@ -445,11 +447,22 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
         auto dir = game::GameLevels::Mine().GetAimDirection(game::GameLevels::AimAngle());
         yaw = std::atan2(dir.y, dir.x);
     }
-    float flash = isPlayer ? game::GameLevels::MuzzleFlash() : npcFlash;
+    float flash = isPlayer ? (CivicCombat::Available() ? CivicJustice::State().muzzleFlash
+                                                       : game::GameLevels::MuzzleFlash())
+                           : npcFlash;
+    if (isPlayer && CivicJustice::IsExterior())
+    {
+        downed |= CivicJustice::State().playerImpact.response == BodyResponse::Knockdown ||
+                  HospitalRecovery::Active();
+    }
     auto pose = models::ModelRig::Pose(world.animationTimeSeconds * 10,
                                        (isPlayer && world.movementAmount > 0) || walking, armed,
                                        armed ? flash / .055f : 0, false, gender);
     pose.locomotionSpeed = isPlayer ? world.movementSpeed : locomotionSpeed;
+    if (isPlayer && CivicJustice::IsExterior())
+    {
+        pose.meleeSeconds = CivicJustice::State().meleeSeconds;
+    }
     models::Palette palette;
     palette.body = {coat.r, coat.g, coat.b, coat.a};
     models::Transform3D rotation;

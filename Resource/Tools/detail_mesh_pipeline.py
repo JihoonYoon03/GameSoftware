@@ -85,13 +85,14 @@ def _surface_error(a,b):
             t=dot(ap,n)/nn
             q=tuple(p[i]-t*n[i] for i in range(3))
             aq=sub(q,a)
-            d00,d01,d11=dot(ab,ab),dot(ab,ac),dot(ac,ac)
-            den=d00*d11-d01*d01
-            if den>1e-28:
-                u=(dot(aq,ab)*d11-dot(aq,ac)*d01)/den
-                v=(dot(aq,ac)*d00-dot(aq,ab)*d01)/den
-                if u>=-1e-10 and v>=-1e-10 and u+v<=1+1e-10:
-                    return abs(t)*math.sqrt(nn)
+            # Cross-product barycentrics avoid cancellation on long, sub-mm
+            # paint triangles (dot-product determinants subtract nearly equal
+            # numbers even when using Python doubles).
+            def cross(x,y):return (x[1]*y[2]-x[2]*y[1],x[2]*y[0]-x[0]*y[2],x[0]*y[1]-x[1]*y[0])
+            u=dot(cross(aq,ac),n)/nn
+            v=dot(cross(ab,aq),n)/nn
+            if u>=-1e-10 and v>=-1e-10 and u+v<=1+1e-10:
+                return abs(t)*math.sqrt(nn)
         best=float('inf')
         for x,y in [(a,b),(b,c),(c,a)]:
             xy=sub(y,x)
@@ -108,6 +109,13 @@ def _surface_error(a,b):
         mesh.free()
         tree=BVHTree.FromPolygons(vertices,triangles,all_triangles=True)
         surfaces.append((vertices,triangles,tree))
+    # Exact triangle-set identity is a stronger proof than float BVH sampling.
+    # It also covers a conservative rollback of sub-mm paint topology.
+    def geometry_key(surface):
+        vertices,triangles,_=surface
+        return sorted(tuple(sorted(vertices[i] for i in tri)) for tri in triangles)
+    if geometry_key(surfaces[0])==geometry_key(surfaces[1]):
+        return 0.0
     error=0
     for i in [0,1]:
         vertices,triangles,_=surfaces[i]
@@ -120,6 +128,12 @@ def _surface_error(a,b):
             if hit[3]>1e-5:
                 candidates.update(h[2] for h in target.find_nearest_range(p,hit[3]+1e-5))
             exact=min(distance(p,*(target_vertices[j] for j in target_triangles[index])) for index in candidates)
+            if exact>1e-6:
+                # A float BVH can report zero distance to the wrong face of a
+                # very thin solid. Recheck the full local candidate set in
+                # double precision before treating this as lost geometry.
+                candidates.update(h[2] for h in target.find_nearest_range(p,max(hit[3],exact)+1e-5))
+                exact=min(distance(p,*(target_vertices[j] for j in target_triangles[index])) for index in candidates)
             error=max(error,exact)
     return error
 

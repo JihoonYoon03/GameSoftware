@@ -180,6 +180,7 @@
     <ClInclude Include="AssetCache.h" />
     <ClInclude Include="Drawing.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="Civic.h" />
     <ClInclude Include="Hud.h" />
     <ClInclude Include="Level.h" />
     <ClInclude Include="ModelLibrary.h" />
@@ -203,6 +204,7 @@
     <ClCompile Include="AssetCache.cpp" />
     <ClCompile Include="Drawing.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="Civic.cpp" />
     <ClCompile Include="Hud.cpp" />
     <ClCompile Include="Level.cpp" />
     <ClCompile Include="ModelLibrary.cpp" />

@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Monitor.h"
+#include "../Civic.h"
 #include "../AssetCache.h"
 #include "../Level.h"
 #include "../ModelLibrary.h"
@@ -189,7 +190,9 @@ std::string ResidentNpc(const std::string &id, const tutorial::Resident &residen
     result.Text("activity_label", tutorial::CityResidents::ActivityLabel(resident));
     result.Bool("simulation_active", active);
     result.Bool("following", false);
-    result.Text("life_state", "alive");
+    result.Text("life_state", resident.health > 0 ? "alive" : "dead");
+    result.Number("health", resident.health);
+    result.Number("fear_seconds", resident.fearSeconds);
     result.Raw("position", Position(resident.position));
     result.Raw("home", Position(resident.home));
     result.Raw("destination", Position(resident.destination));
@@ -281,12 +284,28 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     player.Number("defense", level.player.defense);
     player.Number("recovery_kits", level.player.recoveryKits);
     player.Number("salvage", level.player.salvage);
+    player.Number("credits", level.player.credits);
     player.Number("kills", level.kills);
     player.Number("magazine_rounds", level.pistol.GetRounds());
     player.Number("magazine_capacity", level.pistol.GetMagazineSize());
     player.Bool("reloading", level.pistol.IsReloading());
     player.Seconds("spread_radians", level.pistol.GetSpread());
     result.Raw("player", player.Finish());
+    const auto &law = tutorial::CivicJustice::State();
+    JsonObject security;
+    security.Number("wanted_stars", law.wanted);
+    security.Number("heat", law.heat);
+    security.Number("infamy", law.infamy);
+    security.Number("price_multiplier", tutorial::CivicJustice::PriceMultiplier());
+    security.Number("officers", law.officers.size());
+    security.Number("hospital_transfers", law.deaths);
+    security.Bool("recovering", tutorial::HospitalRecovery::Active());
+    security.Number("recovery_opacity", tutorial::HospitalRecovery::Opacity());
+    security.Number("lost_levels", law.lostLevels);
+    security.Number("lost_credits", law.lostCredits);
+    security.Number("lost_salvage", law.lostSalvage);
+    result.Raw("security", security.Finish());
+
     quests.Text("tutorial_stage", QuestStage());
     quests.Text("main_quest", game::GameLevels::Chapter().IsAvailable()
                                   ? game::GameLevels::Chapter().Objective()

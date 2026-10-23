@@ -81,6 +81,7 @@ struct PlayerStats
     int defense = 2;
     int recoveryKits = 3;
     int salvage = 0;
+    int credits = 500;
 };
 struct Enemy
 {
@@ -260,7 +261,6 @@ class MineCombat
   private:
     MineLevel &level;
     MineState &state;
-    void RespawnPlayer();
     void MoveEnemy(Enemy &enemy, float deltaSeconds, tutorial::Vector2 target, bool playerTarget);
     void UpdateBullets(float deltaSeconds);
     void AdvanceBullet(Bullet &bullet, float movement);

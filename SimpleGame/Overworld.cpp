@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Overworld.h"
+#include "Civic.h"
 #include "Level.h"
 #include "ResidentAI.h"
 #include "ResourceAssets.h"
@@ -550,6 +551,39 @@ float TrafficSystem::RenderElevation(size_t index) const
     }
     return net.RoadElevation(lane.road, fraction);
 }
+bool TrafficSystem::DamageVehicle(std::uint64_t id, int damage, bool playerOwned)
+{
+    auto car =
+        std::find_if(vehicles.begin(), vehicles.end(), [=](const TrafficVehicle &v) { return v.id == id; });
+    if (car == vehicles.end() || car->health <= 0 || damage <= 0)
+    {
+        return false;
+    }
+    car->health = (std::max)(0, car->health - damage);
+    car->hitFlash = .15f;
+    if (playerOwned)
+    {
+        CivicJustice::Report(car->health ? Offense::VehicleDamage : Offense::VehicleDestruction,
+                             car->position);
+    }
+    if (car->health <= 0)
+    {
+        car->speed = 0;
+        car->reservedFrom = car->reservedTo = -1;
+    }
+    return true;
+}
+void TrafficSystem::StopForImpact(std::uint64_t id)
+{
+    auto car =
+        std::find_if(vehicles.begin(), vehicles.end(), [=](const TrafficVehicle &v) { return v.id == id; });
+    if (car == vehicles.end())
+    {
+        return;
+    }
+    car->speed = 0;
+    car->impactCooldown = (std::max)(car->impactCooldown, .6f);
+}
 TrafficLight TrafficSystem::Light(int laneIndex, TrafficTurn turn) const
 {
     const auto &net = RoadNetwork::Get();
@@ -1042,10 +1076,20 @@ void TrafficSystem::Step(GameState &world, float dt)
     }
     for (auto &car : vehicles)
     {
+        car.impactCooldown = (std::max)(0.f, car.impactCooldown - dt);
+        car.hitFlash = (std::max)(0.f, car.hitFlash - dt);
+        if (car.health <= 0)
+        {
+            car.previousPosition = car.position;
+            car.speed = 0;
+            car.wreckSeconds += dt;
+            car.reservedFrom = car.reservedTo = -1;
+            continue;
+        }
         car.previousPosition = car.position;
         car.previousYaw = car.yaw;
         const auto &lane = net.lanes[car.lane];
-        float target = lane.speedLimit;
+        float target = car.impactCooldown > 0 ? 0 : lane.speedLimit;
         float gap = 10000;
         bool permissiveRight = false;
         bool committed = car.reservedFrom == car.lane;
@@ -1204,48 +1248,75 @@ void TrafficSystem::Step(GameState &world, float dt)
         {
             car.yaw = std::atan2(lane.direction.y, lane.direction.x);
         }
-        if (impactCooldown <= 0 && car.speed > .8f &&
-            std::fabs(RenderElevation(size_t(&car - vehicles.data())) -
-                      (world.isBikeMounted ? world.bikeElevation : 0)) < .8f &&
-            SweptHit(car.previousPosition, car.position, car.yaw, world.playerPosition,
-                     world.isBikeMounted ? .5f : .25f))
+    }
+    // Oriented hulls are a final physical constraint even when routing normally avoids contact.
+    for (size_t a = 0; a < vehicles.size(); ++a)
+    {
+        for (size_t b = a + 1; b < vehicles.size(); ++b)
         {
-            auto &player = game::GameLevels::Mine().GetState().player;
-            int damage = int(Game::Clamp(car.speed * 4, 8, 38));
-            player.health = (std::max)(0, player.health - damage);
-            impactCooldown = 1.5f;
-            world.bikeSpeed = 0;
-            Game::Get().ShowNotice(
-                "교통 사고 / 체력이 감소했습니다. 바닥의 보행 신호가 청록색일 때 건너세요.");
-            if (player.health == 0)
+            auto &first = vehicles[a], &second = vehicles[b];
+            if (first.impactCooldown > 0 || second.impactCooldown > 0 ||
+                Game::Distance(first.position, second.position) > 4 ||
+                std::fabs(RenderElevation(a) - RenderElevation(b)) > .7f)
             {
-                int city = Overworld::CityAt(world.playerPosition);
-                auto center = Overworld::Cities()[city < 0 ? 0 : city].center;
-                auto refuge = Add(center, {0, 2});
-                for (int attempt = 0; attempt < 400; ++attempt)
+                continue;
+            }
+            auto extents = [](const TrafficVehicle &car) {
+                auto &mesh = models::ResourceAssets::Get(
+                    models::ModelLibrary::Get().vehicles[size_t(car.id % 4)].body.resourceId);
+                return Vector2{mesh.physicalSize.x * .5f, mesh.physicalSize.y * .5f};
+            };
+            auto ha = extents(first), hb = extents(second);
+            Vector2 ax = {std::cos(first.yaw), std::sin(first.yaw)}, ay = {-ax.y, ax.x};
+            Vector2 bx = {std::cos(second.yaw), std::sin(second.yaw)}, by = {-bx.y, bx.x};
+            bool overlap = true;
+            for (auto axis : {ax, ay, bx, by})
+            {
+                float ra = std::fabs(Dot(ax, axis)) * ha.x + std::fabs(Dot(ay, axis)) * ha.y;
+                float rb = std::fabs(Dot(bx, axis)) * hb.x + std::fabs(Dot(by, axis)) * hb.y;
+                overlap &= std::fabs(Dot(Sub(first.position, second.position), axis)) < ra + rb - .02f;
+            }
+            if (!overlap)
+            {
+                continue;
+            }
+            float speed = std::hypot(first.speed * ax.x - second.speed * bx.x,
+                                     first.speed * ax.y - second.speed * bx.y);
+            if (speed < .15f)
+            {
+                continue;
+            }
+            for (auto *car : {&first, &second})
+            {
+                car->impactCooldown = .8f;
+                car->speed = 0;
+                car->position = car->previousPosition;
+                if (car->turnDistance >= 0)
                 {
-                    Vector2 candidate = Add(center, {float(attempt % 20) - 10, float(attempt / 20) - 10});
-                    if (!Game::Get().IsPositionBlocked(candidate) && !net.Contains(candidate, 1))
-                    {
-                        refuge = candidate;
-                        break;
-                    }
+                    car->turnDistance = (std::max)(0.f, car->turnDistance - .25f);
                 }
-                world.playerPosition = refuge;
-                if (world.isBikeMounted)
+                else
                 {
-                    world.bikePosition = world.playerPosition;
+                    car->distance = (std::max)(0.f, car->distance - .25f);
                 }
-                player.health = player.maxHealth;
-                impactCooldown = 4;
-                Game::Get().ShowNotice(
-                    "도시 응급 구조 / 광장으로 이송되었습니다. 조사 기록과 소지품은 보존됩니다.");
+                if (speed > 3)
+                {
+                    DamageVehicle(car->id, int(speed * 6), false);
+                }
             }
         }
     }
+    BodyCollision::VehicleContacts(dt);
+
     vehicles.erase(
         std::remove_if(vehicles.begin(), vehicles.end(),
                        [&](const TrafficVehicle &car) {
+                           if (car.health <= 0 && (car.wreckSeconds > 60 ||
+                                                   (car.wreckSeconds > 12 &&
+                                                    OutsideView(car.position, world.cameraPosition, 180))))
+                           {
+                               return true;
+                           }
                            return Game::Distance(car.position, world.playerPosition) > kDespawnDistance &&
                                   Game::Distance(car.position, world.cameraPosition) > kDespawnDistance &&
                                   OutsideView(car.position, world.cameraPosition, 320);

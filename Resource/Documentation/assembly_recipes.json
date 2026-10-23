@@ -48730,5 +48730,1705 @@
       "Transit_CrosswalkPaint_6L_MarkCrosswalk"
     ],
     "expansion": "transit_kit_v1"
+  },
+  "RoadPlan_Surface_2L_L4": {
+    "parts": [
+      "RoadPlan_Surface_2L_L4_Surface"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": [
+      {
+        "module": "RoadPlan_Marking_2L_L4",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Walk_W2_L4",
+        "position_m": [
+          0,
+          -4.12,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Curb_L4",
+        "position_m": [
+          0,
+          -3.06,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Walk_W2_L4",
+        "position_m": [
+          0,
+          4.12,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Curb_L4",
+        "position_m": [
+          0,
+          3.06,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "RoadPlan_Marking_2L_L4": {
+    "parts": [
+      "RoadPlan_Marking_2L_L4_Center",
+      "RoadPlan_Marking_2L_L4_EdgeRight",
+      "RoadPlan_Marking_2L_L4_EdgeLeft"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Surface_2L_L8": {
+    "parts": [
+      "RoadPlan_Surface_2L_L8_Surface"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": [
+      {
+        "module": "RoadPlan_Marking_2L_L8",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Walk_W2_L8",
+        "position_m": [
+          0,
+          -4.12,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Curb_L8",
+        "position_m": [
+          0,
+          -3.06,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Walk_W2_L8",
+        "position_m": [
+          0,
+          4.12,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Curb_L8",
+        "position_m": [
+          0,
+          3.06,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "RoadPlan_Marking_2L_L8": {
+    "parts": [
+      "RoadPlan_Marking_2L_L8_Center",
+      "RoadPlan_Marking_2L_L8_EdgeRight",
+      "RoadPlan_Marking_2L_L8_EdgeLeft"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Surface_2L_L16": {
+    "parts": [
+      "RoadPlan_Surface_2L_L16_Surface"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": [
+      {
+        "module": "RoadPlan_Marking_2L_L16",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Walk_W2_L8",
+        "position_m": [
+          -4,
+          -4.12,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Curb_L8",
+        "position_m": [
+          -4,
+          -3.06,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Walk_W2_L8",
+        "position_m": [
+          4,
+          -4.12,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Curb_L8",
+        "position_m": [
+          4,
+          -3.06,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Walk_W2_L8",
+        "position_m": [
+          -4,
+          4.12,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Curb_L8",
+        "position_m": [
+          -4,
+          3.06,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Walk_W2_L8",
+        "position_m": [
+          4,
+          4.12,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Curb_L8",
+        "position_m": [
+          4,
+          3.06,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "RoadPlan_Marking_2L_L16": {
+    "parts": [
+      "RoadPlan_Marking_2L_L16_Center",
+      "RoadPlan_Marking_2L_L16_EdgeRight",
+      "RoadPlan_Marking_2L_L16_EdgeLeft"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Surface_4L_L4": {
+    "parts": [
+      "RoadPlan_Surface_4L_L4_Surface"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": [
+      {
+        "module": "RoadPlan_Marking_4L_L4",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Walk_W2_L4",
+        "position_m": [
+          0,
+          -7.12,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Curb_L4",
+        "position_m": [
+          0,
+          -6.06,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Walk_W2_L4",
+        "position_m": [
+          0,
+          7.12,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Curb_L4",
+        "position_m": [
+          0,
+          6.06,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "RoadPlan_Marking_4L_L4": {
+    "parts": [
+      "RoadPlan_Marking_4L_L4_Center",
+      "RoadPlan_Marking_4L_L4_EdgeRight",
+      "RoadPlan_Marking_4L_L4_EdgeLeft",
+      "RoadPlan_Marking_4L_L4_LaneRight",
+      "RoadPlan_Marking_4L_L4_LaneLeft"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Surface_4L_L8": {
+    "parts": [
+      "RoadPlan_Surface_4L_L8_Surface"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": [
+      {
+        "module": "RoadPlan_Marking_4L_L8",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Walk_W2_L8",
+        "position_m": [
+          0,
+          -7.12,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Curb_L8",
+        "position_m": [
+          0,
+          -6.06,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Walk_W2_L8",
+        "position_m": [
+          0,
+          7.12,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Curb_L8",
+        "position_m": [
+          0,
+          6.06,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "RoadPlan_Marking_4L_L8": {
+    "parts": [
+      "RoadPlan_Marking_4L_L8_Center",
+      "RoadPlan_Marking_4L_L8_EdgeRight",
+      "RoadPlan_Marking_4L_L8_EdgeLeft",
+      "RoadPlan_Marking_4L_L8_LaneRight",
+      "RoadPlan_Marking_4L_L8_LaneLeft"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Surface_4L_L16": {
+    "parts": [
+      "RoadPlan_Surface_4L_L16_Surface"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": [
+      {
+        "module": "RoadPlan_Marking_4L_L16",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Walk_W2_L8",
+        "position_m": [
+          -4,
+          -7.12,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Curb_L8",
+        "position_m": [
+          -4,
+          -6.06,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Walk_W2_L8",
+        "position_m": [
+          4,
+          -7.12,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Curb_L8",
+        "position_m": [
+          4,
+          -6.06,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Walk_W2_L8",
+        "position_m": [
+          -4,
+          7.12,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Curb_L8",
+        "position_m": [
+          -4,
+          6.06,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Walk_W2_L8",
+        "position_m": [
+          4,
+          7.12,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Curb_L8",
+        "position_m": [
+          4,
+          6.06,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "RoadPlan_Marking_4L_L16": {
+    "parts": [
+      "RoadPlan_Marking_4L_L16_Center",
+      "RoadPlan_Marking_4L_L16_EdgeRight",
+      "RoadPlan_Marking_4L_L16_EdgeLeft",
+      "RoadPlan_Marking_4L_L16_LaneRight",
+      "RoadPlan_Marking_4L_L16_LaneLeft"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Walk_W2_L2": {
+    "parts": [
+      "RoadPlan_Walk_W2_L2_Paving",
+      "RoadPlan_Walk_W2_L2_PanelJoints"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Walk_W2_L4": {
+    "parts": [
+      "RoadPlan_Walk_W2_L4_Paving",
+      "RoadPlan_Walk_W2_L4_PanelJoints"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Walk_W2_L8": {
+    "parts": [
+      "RoadPlan_Walk_W2_L8_Paving",
+      "RoadPlan_Walk_W2_L8_PanelJoints"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Walk_W2_EndCap_L1": {
+    "parts": [
+      "RoadPlan_Walk_W2_EndCap_L1_Paving",
+      "RoadPlan_Walk_W2_EndCap_L1_EndTrim"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_WalkLanding_W4_L2": {
+    "parts": [
+      "RoadPlan_WalkLanding_W4_L2_Paving",
+      "RoadPlan_WalkLanding_W4_L2_PanelJoints"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Curve_2L_A90_R7": {
+    "parts": [
+      "RoadPlan_Curve_2L_A90_R7_Surface"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": [
+      {
+        "module": "RoadPlan_CurveMarking_2L_A90_R7",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_WalkCurve_2L_A90_R7",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "RoadPlan_CurveMarking_2L_A90_R7": {
+    "parts": [
+      "RoadPlan_CurveMarking_2L_A90_R7_Center",
+      "RoadPlan_CurveMarking_2L_A90_R7_EdgeRight",
+      "RoadPlan_CurveMarking_2L_A90_R7_EdgeLeft"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Curve_2L_A15_R18": {
+    "parts": [
+      "RoadPlan_Curve_2L_A15_R18_Surface"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": [
+      {
+        "module": "RoadPlan_CurveMarking_2L_A15_R18",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_WalkCurve_2L_A15_R18",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "RoadPlan_CurveMarking_2L_A15_R18": {
+    "parts": [
+      "RoadPlan_CurveMarking_2L_A15_R18_Center",
+      "RoadPlan_CurveMarking_2L_A15_R18_EdgeRight",
+      "RoadPlan_CurveMarking_2L_A15_R18_EdgeLeft"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Curve_2L_A30_R18": {
+    "parts": [
+      "RoadPlan_Curve_2L_A30_R18_Surface"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": [
+      {
+        "module": "RoadPlan_CurveMarking_2L_A30_R18",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_WalkCurve_2L_A30_R18",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "RoadPlan_CurveMarking_2L_A30_R18": {
+    "parts": [
+      "RoadPlan_CurveMarking_2L_A30_R18_Center",
+      "RoadPlan_CurveMarking_2L_A30_R18_EdgeRight",
+      "RoadPlan_CurveMarking_2L_A30_R18_EdgeLeft"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Curve_2L_A45_R18": {
+    "parts": [
+      "RoadPlan_Curve_2L_A45_R18_Surface"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": [
+      {
+        "module": "RoadPlan_CurveMarking_2L_A45_R18",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_WalkCurve_2L_A45_R18",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "RoadPlan_CurveMarking_2L_A45_R18": {
+    "parts": [
+      "RoadPlan_CurveMarking_2L_A45_R18_Center",
+      "RoadPlan_CurveMarking_2L_A45_R18_EdgeRight",
+      "RoadPlan_CurveMarking_2L_A45_R18_EdgeLeft"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Curve_2L_A15_R36": {
+    "parts": [
+      "RoadPlan_Curve_2L_A15_R36_Surface"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": [
+      {
+        "module": "RoadPlan_CurveMarking_2L_A15_R36",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_WalkCurve_2L_A15_R36",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "RoadPlan_CurveMarking_2L_A15_R36": {
+    "parts": [
+      "RoadPlan_CurveMarking_2L_A15_R36_Center",
+      "RoadPlan_CurveMarking_2L_A15_R36_EdgeRight",
+      "RoadPlan_CurveMarking_2L_A15_R36_EdgeLeft"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Curve_2L_A30_R36": {
+    "parts": [
+      "RoadPlan_Curve_2L_A30_R36_Surface"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": [
+      {
+        "module": "RoadPlan_CurveMarking_2L_A30_R36",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_WalkCurve_2L_A30_R36",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "RoadPlan_CurveMarking_2L_A30_R36": {
+    "parts": [
+      "RoadPlan_CurveMarking_2L_A30_R36_Center",
+      "RoadPlan_CurveMarking_2L_A30_R36_EdgeRight",
+      "RoadPlan_CurveMarking_2L_A30_R36_EdgeLeft"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Curve_2L_A45_R36": {
+    "parts": [
+      "RoadPlan_Curve_2L_A45_R36_Surface"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": [
+      {
+        "module": "RoadPlan_CurveMarking_2L_A45_R36",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_WalkCurve_2L_A45_R36",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "RoadPlan_CurveMarking_2L_A45_R36": {
+    "parts": [
+      "RoadPlan_CurveMarking_2L_A45_R36_Center",
+      "RoadPlan_CurveMarking_2L_A45_R36_EdgeRight",
+      "RoadPlan_CurveMarking_2L_A45_R36_EdgeLeft"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_WalkCurve_2L_A90_R7": {
+    "parts": [
+      "RoadPlan_WalkCurve_2L_A90_R7_Paving_-1",
+      "RoadPlan_WalkCurve_2L_A90_R7_Curb_-1",
+      "RoadPlan_WalkCurve_2L_A90_R7_Paving_1",
+      "RoadPlan_WalkCurve_2L_A90_R7_Curb_1"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_WalkCurve_2L_A15_R18": {
+    "parts": [
+      "RoadPlan_WalkCurve_2L_A15_R18_Paving_-1",
+      "RoadPlan_WalkCurve_2L_A15_R18_Curb_-1",
+      "RoadPlan_WalkCurve_2L_A15_R18_Paving_1",
+      "RoadPlan_WalkCurve_2L_A15_R18_Curb_1"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_WalkCurve_2L_A30_R18": {
+    "parts": [
+      "RoadPlan_WalkCurve_2L_A30_R18_Paving_-1",
+      "RoadPlan_WalkCurve_2L_A30_R18_Curb_-1",
+      "RoadPlan_WalkCurve_2L_A30_R18_Paving_1",
+      "RoadPlan_WalkCurve_2L_A30_R18_Curb_1"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_WalkCurve_2L_A45_R18": {
+    "parts": [
+      "RoadPlan_WalkCurve_2L_A45_R18_Paving_-1",
+      "RoadPlan_WalkCurve_2L_A45_R18_Curb_-1",
+      "RoadPlan_WalkCurve_2L_A45_R18_Paving_1",
+      "RoadPlan_WalkCurve_2L_A45_R18_Curb_1"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_WalkCurve_2L_A15_R36": {
+    "parts": [
+      "RoadPlan_WalkCurve_2L_A15_R36_Paving_-1",
+      "RoadPlan_WalkCurve_2L_A15_R36_Curb_-1",
+      "RoadPlan_WalkCurve_2L_A15_R36_Paving_1",
+      "RoadPlan_WalkCurve_2L_A15_R36_Curb_1"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_WalkCurve_2L_A30_R36": {
+    "parts": [
+      "RoadPlan_WalkCurve_2L_A30_R36_Paving_-1",
+      "RoadPlan_WalkCurve_2L_A30_R36_Curb_-1",
+      "RoadPlan_WalkCurve_2L_A30_R36_Paving_1",
+      "RoadPlan_WalkCurve_2L_A30_R36_Curb_1"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_WalkCurve_2L_A45_R36": {
+    "parts": [
+      "RoadPlan_WalkCurve_2L_A45_R36_Paving_-1",
+      "RoadPlan_WalkCurve_2L_A45_R36_Curb_-1",
+      "RoadPlan_WalkCurve_2L_A45_R36_Paving_1",
+      "RoadPlan_WalkCurve_2L_A45_R36_Curb_1"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_T_4L_2L": {
+    "parts": [
+      "RoadPlan_T_4L_2L_Surface"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": [
+      {
+        "module": "RoadPlan_JunctionMarking_T_4L_2L",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_WalkCorner_T_4L_2L",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "RoadPlan_JunctionMarking_T_4L_2L": {
+    "parts": [
+      "RoadPlan_JunctionMarking_T_4L_2L_StopBars"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_WalkCorner_T_4L_2L": {
+    "parts": [
+      "RoadPlan_WalkCorner_T_4L_2L_CornerPaving_0",
+      "RoadPlan_WalkCorner_T_4L_2L_CornerCurb_0",
+      "RoadPlan_WalkCorner_T_4L_2L_ApproachPaving_0_0",
+      "RoadPlan_WalkCorner_T_4L_2L_ApproachCurb_0_0",
+      "RoadPlan_WalkCorner_T_4L_2L_ApproachPaving_0_1",
+      "RoadPlan_WalkCorner_T_4L_2L_ApproachCurb_0_1",
+      "RoadPlan_WalkCorner_T_4L_2L_CornerPaving_1",
+      "RoadPlan_WalkCorner_T_4L_2L_CornerCurb_1",
+      "RoadPlan_WalkCorner_T_4L_2L_ApproachPaving_1_0",
+      "RoadPlan_WalkCorner_T_4L_2L_ApproachCurb_1_0",
+      "RoadPlan_WalkCorner_T_4L_2L_ApproachPaving_1_1",
+      "RoadPlan_WalkCorner_T_4L_2L_ApproachCurb_1_1",
+      "RoadPlan_WalkCorner_T_4L_2L_ClosedSidePaving",
+      "RoadPlan_WalkCorner_T_4L_2L_ClosedSideCurb"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_T_2L": {
+    "parts": [
+      "RoadPlan_T_2L_Surface"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": [
+      {
+        "module": "RoadPlan_JunctionMarking_T_2L",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_WalkCorner_T_2L",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "RoadPlan_JunctionMarking_T_2L": {
+    "parts": [
+      "RoadPlan_JunctionMarking_T_2L_StopBars"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_WalkCorner_T_2L": {
+    "parts": [
+      "RoadPlan_WalkCorner_T_2L_CornerPaving_0",
+      "RoadPlan_WalkCorner_T_2L_CornerCurb_0",
+      "RoadPlan_WalkCorner_T_2L_ApproachPaving_0_0",
+      "RoadPlan_WalkCorner_T_2L_ApproachCurb_0_0",
+      "RoadPlan_WalkCorner_T_2L_ApproachPaving_0_1",
+      "RoadPlan_WalkCorner_T_2L_ApproachCurb_0_1",
+      "RoadPlan_WalkCorner_T_2L_CornerPaving_1",
+      "RoadPlan_WalkCorner_T_2L_CornerCurb_1",
+      "RoadPlan_WalkCorner_T_2L_ApproachPaving_1_0",
+      "RoadPlan_WalkCorner_T_2L_ApproachCurb_1_0",
+      "RoadPlan_WalkCorner_T_2L_ApproachPaving_1_1",
+      "RoadPlan_WalkCorner_T_2L_ApproachCurb_1_1",
+      "RoadPlan_WalkCorner_T_2L_ClosedSidePaving",
+      "RoadPlan_WalkCorner_T_2L_ClosedSideCurb"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_X_2L": {
+    "parts": [
+      "RoadPlan_X_2L_Surface"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": [
+      {
+        "module": "RoadPlan_JunctionMarking_X_2L",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_WalkCorner_X_2L",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "RoadPlan_JunctionMarking_X_2L": {
+    "parts": [
+      "RoadPlan_JunctionMarking_X_2L_StopBars"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_WalkCorner_X_2L": {
+    "parts": [
+      "RoadPlan_WalkCorner_X_2L_CornerPaving_0",
+      "RoadPlan_WalkCorner_X_2L_CornerCurb_0",
+      "RoadPlan_WalkCorner_X_2L_ApproachPaving_0_0",
+      "RoadPlan_WalkCorner_X_2L_ApproachCurb_0_0",
+      "RoadPlan_WalkCorner_X_2L_ApproachPaving_0_1",
+      "RoadPlan_WalkCorner_X_2L_ApproachCurb_0_1",
+      "RoadPlan_WalkCorner_X_2L_CornerPaving_1",
+      "RoadPlan_WalkCorner_X_2L_CornerCurb_1",
+      "RoadPlan_WalkCorner_X_2L_ApproachPaving_1_0",
+      "RoadPlan_WalkCorner_X_2L_ApproachCurb_1_0",
+      "RoadPlan_WalkCorner_X_2L_ApproachPaving_1_1",
+      "RoadPlan_WalkCorner_X_2L_ApproachCurb_1_1",
+      "RoadPlan_WalkCorner_X_2L_CornerPaving_2",
+      "RoadPlan_WalkCorner_X_2L_CornerCurb_2",
+      "RoadPlan_WalkCorner_X_2L_ApproachPaving_2_0",
+      "RoadPlan_WalkCorner_X_2L_ApproachCurb_2_0",
+      "RoadPlan_WalkCorner_X_2L_ApproachPaving_2_1",
+      "RoadPlan_WalkCorner_X_2L_ApproachCurb_2_1",
+      "RoadPlan_WalkCorner_X_2L_CornerPaving_3",
+      "RoadPlan_WalkCorner_X_2L_CornerCurb_3",
+      "RoadPlan_WalkCorner_X_2L_ApproachPaving_3_0",
+      "RoadPlan_WalkCorner_X_2L_ApproachCurb_3_0",
+      "RoadPlan_WalkCorner_X_2L_ApproachPaving_3_1",
+      "RoadPlan_WalkCorner_X_2L_ApproachCurb_3_1"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Transition_4L_2L": {
+    "parts": [
+      "RoadPlan_Transition_4L_2L_Surface"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": [
+      {
+        "module": "RoadPlan_TransitionMarking_4L_2L",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_WalkTransition_4L_2L",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "RoadPlan_TransitionMarking_4L_2L": {
+    "parts": [
+      "RoadPlan_TransitionMarking_4L_2L_Center",
+      "RoadPlan_TransitionMarking_4L_2L_Edge_-1",
+      "RoadPlan_TransitionMarking_4L_2L_MergeDash_-1",
+      "RoadPlan_TransitionMarking_4L_2L_Edge_1",
+      "RoadPlan_TransitionMarking_4L_2L_MergeDash_1"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_WalkTransition_4L_2L": {
+    "parts": [
+      "RoadPlan_WalkTransition_4L_2L_Paving_-1",
+      "RoadPlan_WalkTransition_4L_2L_Curb_-1",
+      "RoadPlan_WalkTransition_4L_2L_Paving_1",
+      "RoadPlan_WalkTransition_4L_2L_Curb_1"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_CrosswalkPaint_2L": {
+    "parts": [
+      "RoadPlan_CrosswalkPaint_2L_Paint"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_PedestrianHolo_2L": {
+    "parts": [
+      "RoadPlan_PedestrianHolo_2L_GroundBrackets"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_CrosswalkPaint_4L": {
+    "parts": [
+      "RoadPlan_CrosswalkPaint_4L_Paint"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_PedestrianHolo_4L": {
+    "parts": [
+      "RoadPlan_PedestrianHolo_4L_GroundBrackets"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_AccessibleRamp_W2": {
+    "parts": [
+      "RoadPlan_AccessibleRamp_W2_Surface"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": [
+      {
+        "module": "RoadPlan_AccessibleTactile_W2",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "RoadPlan_AccessibleTactile_W2": {
+    "parts": [
+      "RoadPlan_AccessibleTactile_W2_TactileCassette_0"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_AccessibleRamp_W4": {
+    "parts": [
+      "RoadPlan_AccessibleRamp_W4_Surface"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": [
+      {
+        "module": "RoadPlan_AccessibleTactile_W4",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "RoadPlan_AccessibleTactile_W4": {
+    "parts": [
+      "RoadPlan_AccessibleTactile_W4_TactileCassette_0",
+      "RoadPlan_AccessibleTactile_W4_TactileCassette_1"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Parapet_L4": {
+    "parts": [
+      "RoadPlan_Parapet_L4_TopRail",
+      "RoadPlan_Parapet_L4_MidRail",
+      "RoadPlan_Parapet_L4_ToeRail",
+      "RoadPlan_Parapet_L4_Upright_0",
+      "RoadPlan_Parapet_L4_Upright_1",
+      "RoadPlan_Parapet_L4_Upright_2"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Parapet_L8": {
+    "parts": [
+      "RoadPlan_Parapet_L8_TopRail",
+      "RoadPlan_Parapet_L8_MidRail",
+      "RoadPlan_Parapet_L8_ToeRail",
+      "RoadPlan_Parapet_L8_Upright_0",
+      "RoadPlan_Parapet_L8_Upright_1",
+      "RoadPlan_Parapet_L8_Upright_2",
+      "RoadPlan_Parapet_L8_Upright_3",
+      "RoadPlan_Parapet_L8_Upright_4"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Parapet_L16": {
+    "parts": [
+      "RoadPlan_Parapet_L16_TopRail",
+      "RoadPlan_Parapet_L16_MidRail",
+      "RoadPlan_Parapet_L16_ToeRail",
+      "RoadPlan_Parapet_L16_Upright_0",
+      "RoadPlan_Parapet_L16_Upright_1",
+      "RoadPlan_Parapet_L16_Upright_2",
+      "RoadPlan_Parapet_L16_Upright_3",
+      "RoadPlan_Parapet_L16_Upright_4",
+      "RoadPlan_Parapet_L16_Upright_5",
+      "RoadPlan_Parapet_L16_Upright_6",
+      "RoadPlan_Parapet_L16_Upright_7",
+      "RoadPlan_Parapet_L16_Upright_8"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Deck_2L_L4": {
+    "parts": [
+      "RoadPlan_Deck_2L_L4_Surface"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": [
+      {
+        "module": "RoadPlan_DeckMarking_2L_L4",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_DeckStructure_L4",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Parapet_L4",
+        "position_m": [
+          0,
+          -3.16,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Parapet_L4",
+        "position_m": [
+          0,
+          3.16,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "RoadPlan_DeckMarking_2L_L4": {
+    "parts": [
+      "RoadPlan_DeckMarking_2L_L4_Center",
+      "RoadPlan_DeckMarking_2L_L4_EdgeRight",
+      "RoadPlan_DeckMarking_2L_L4_EdgeLeft"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_DeckStructure_L4": {
+    "parts": [
+      "RoadPlan_DeckStructure_L4_Girder_-1",
+      "RoadPlan_DeckStructure_L4_Girder_1",
+      "RoadPlan_DeckStructure_L4_Crosshead_-1",
+      "RoadPlan_DeckStructure_L4_Crosshead_1"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Deck_2L_L8": {
+    "parts": [
+      "RoadPlan_Deck_2L_L8_Surface"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": [
+      {
+        "module": "RoadPlan_DeckMarking_2L_L8",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_DeckStructure_L8",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Parapet_L8",
+        "position_m": [
+          0,
+          -3.16,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Parapet_L8",
+        "position_m": [
+          0,
+          3.16,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "RoadPlan_DeckMarking_2L_L8": {
+    "parts": [
+      "RoadPlan_DeckMarking_2L_L8_Center",
+      "RoadPlan_DeckMarking_2L_L8_EdgeRight",
+      "RoadPlan_DeckMarking_2L_L8_EdgeLeft"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_DeckStructure_L8": {
+    "parts": [
+      "RoadPlan_DeckStructure_L8_Girder_-1",
+      "RoadPlan_DeckStructure_L8_Girder_1",
+      "RoadPlan_DeckStructure_L8_Crosshead_-1",
+      "RoadPlan_DeckStructure_L8_Crosshead_1"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Deck_2L_L16": {
+    "parts": [
+      "RoadPlan_Deck_2L_L16_Surface"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": [
+      {
+        "module": "RoadPlan_DeckMarking_2L_L16",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_DeckStructure_L16",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Parapet_L16",
+        "position_m": [
+          0,
+          -3.16,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_Parapet_L16",
+        "position_m": [
+          0,
+          3.16,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "RoadPlan_DeckMarking_2L_L16": {
+    "parts": [
+      "RoadPlan_DeckMarking_2L_L16_Center",
+      "RoadPlan_DeckMarking_2L_L16_EdgeRight",
+      "RoadPlan_DeckMarking_2L_L16_EdgeLeft"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_DeckStructure_L16": {
+    "parts": [
+      "RoadPlan_DeckStructure_L16_Girder_-1",
+      "RoadPlan_DeckStructure_L16_Girder_1",
+      "RoadPlan_DeckStructure_L16_Crosshead_-1",
+      "RoadPlan_DeckStructure_L16_Crosshead_1"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Pier_H7p6": {
+    "parts": [
+      "RoadPlan_Pier_H7p6_LegFoundation_-1",
+      "RoadPlan_Pier_H7p6_LegFoundation_1",
+      "RoadPlan_Pier_H7p6_CapBeam"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Pier_H8": {
+    "parts": [
+      "RoadPlan_Pier_H8_LegFoundation_-1",
+      "RoadPlan_Pier_H8_LegFoundation_1",
+      "RoadPlan_Pier_H8_CapBeam"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Abutment_W6": {
+    "parts": [
+      "RoadPlan_Abutment_W6_Foundation",
+      "RoadPlan_Abutment_W6_BackWall"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Barrier_EndProtection": {
+    "parts": [
+      "RoadPlan_Barrier_EndProtection_CrashCushion",
+      "RoadPlan_Barrier_EndProtection_Reflector"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Ramp_2L_Rise8_L110": {
+    "parts": [
+      "RoadPlan_Ramp_2L_Rise8_L110_LowerVerticalCurve",
+      "RoadPlan_Ramp_2L_Rise8_L110_ConstantGrade",
+      "RoadPlan_Ramp_2L_Rise8_L110_UpperVerticalCurve"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": [
+      {
+        "module": "RoadPlan_RampMarking_2L_Rise8_L110",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_RampParapet_2L_Rise8_L110",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_RampStructure_2L_Rise8_L110",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "RoadPlan_RampMarking_2L_Rise8_L110": {
+    "parts": [
+      "RoadPlan_RampMarking_2L_Rise8_L110_LowerVerticalCurve_Center",
+      "RoadPlan_RampMarking_2L_Rise8_L110_LowerVerticalCurve_EdgeRight",
+      "RoadPlan_RampMarking_2L_Rise8_L110_LowerVerticalCurve_EdgeLeft",
+      "RoadPlan_RampMarking_2L_Rise8_L110_ConstantGrade_Center",
+      "RoadPlan_RampMarking_2L_Rise8_L110_ConstantGrade_EdgeRight",
+      "RoadPlan_RampMarking_2L_Rise8_L110_ConstantGrade_EdgeLeft",
+      "RoadPlan_RampMarking_2L_Rise8_L110_UpperVerticalCurve_Center",
+      "RoadPlan_RampMarking_2L_Rise8_L110_UpperVerticalCurve_EdgeRight",
+      "RoadPlan_RampMarking_2L_Rise8_L110_UpperVerticalCurve_EdgeLeft"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_RampParapet_2L_Rise8_L110": {
+    "parts": [
+      "RoadPlan_RampParapet_2L_Rise8_L110_LowerVerticalCurve_TopRail_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_LowerVerticalCurve_MidRail_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_LowerVerticalCurve_ToeRail_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_LowerVerticalCurve_TopRail_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_LowerVerticalCurve_MidRail_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_LowerVerticalCurve_ToeRail_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_ConstantGrade_TopRail_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_ConstantGrade_MidRail_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_ConstantGrade_ToeRail_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_ConstantGrade_TopRail_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_ConstantGrade_MidRail_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_ConstantGrade_ToeRail_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_UpperVerticalCurve_TopRail_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_UpperVerticalCurve_MidRail_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_UpperVerticalCurve_ToeRail_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_UpperVerticalCurve_TopRail_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_UpperVerticalCurve_MidRail_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_UpperVerticalCurve_ToeRail_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_0m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_0m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_4m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_4m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_8m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_8m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_12m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_12m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_16m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_16m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_20m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_20m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_24m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_24m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_28m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_28m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_32m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_32m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_36m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_36m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_40m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_40m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_44m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_44m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_48m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_48m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_52m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_52m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_56m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_56m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_60m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_60m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_64m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_64m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_68m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_68m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_72m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_72m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_76m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_76m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_80m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_80m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_84m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_84m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_88m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_88m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_92m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_92m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_96m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_96m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_100m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_100m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_104m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_104m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_108m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_108m_1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_110m_-1",
+      "RoadPlan_RampParapet_2L_Rise8_L110_Upright_110m_1"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_RampStructure_2L_Rise8_L110": {
+    "parts": [
+      "RoadPlan_RampStructure_2L_Rise8_L110_LowerVerticalCurve_Girder_-1",
+      "RoadPlan_RampStructure_2L_Rise8_L110_LowerVerticalCurve_Girder_1",
+      "RoadPlan_RampStructure_2L_Rise8_L110_ConstantGrade_Girder_-1",
+      "RoadPlan_RampStructure_2L_Rise8_L110_ConstantGrade_Girder_1",
+      "RoadPlan_RampStructure_2L_Rise8_L110_UpperVerticalCurve_Girder_-1",
+      "RoadPlan_RampStructure_2L_Rise8_L110_UpperVerticalCurve_Girder_1"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Ramp_2L_Rise8p4_L110": {
+    "parts": [
+      "RoadPlan_Ramp_2L_Rise8p4_L110_LowerVerticalCurve",
+      "RoadPlan_Ramp_2L_Rise8p4_L110_ConstantGrade",
+      "RoadPlan_Ramp_2L_Rise8p4_L110_UpperVerticalCurve"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": [
+      {
+        "module": "RoadPlan_RampMarking_2L_Rise8p4_L110",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_RampParapet_2L_Rise8p4_L110",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      },
+      {
+        "module": "RoadPlan_RampStructure_2L_Rise8p4_L110",
+        "position_m": [
+          0,
+          0,
+          0
+        ],
+        "yaw_degrees": 0
+      }
+    ]
+  },
+  "RoadPlan_RampMarking_2L_Rise8p4_L110": {
+    "parts": [
+      "RoadPlan_RampMarking_2L_Rise8p4_L110_LowerVerticalCurve_Center",
+      "RoadPlan_RampMarking_2L_Rise8p4_L110_LowerVerticalCurve_EdgeRight",
+      "RoadPlan_RampMarking_2L_Rise8p4_L110_LowerVerticalCurve_EdgeLeft",
+      "RoadPlan_RampMarking_2L_Rise8p4_L110_ConstantGrade_Center",
+      "RoadPlan_RampMarking_2L_Rise8p4_L110_ConstantGrade_EdgeRight",
+      "RoadPlan_RampMarking_2L_Rise8p4_L110_ConstantGrade_EdgeLeft",
+      "RoadPlan_RampMarking_2L_Rise8p4_L110_UpperVerticalCurve_Center",
+      "RoadPlan_RampMarking_2L_Rise8p4_L110_UpperVerticalCurve_EdgeRight",
+      "RoadPlan_RampMarking_2L_Rise8p4_L110_UpperVerticalCurve_EdgeLeft"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_RampParapet_2L_Rise8p4_L110": {
+    "parts": [
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_LowerVerticalCurve_TopRail_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_LowerVerticalCurve_MidRail_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_LowerVerticalCurve_ToeRail_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_LowerVerticalCurve_TopRail_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_LowerVerticalCurve_MidRail_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_LowerVerticalCurve_ToeRail_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_ConstantGrade_TopRail_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_ConstantGrade_MidRail_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_ConstantGrade_ToeRail_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_ConstantGrade_TopRail_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_ConstantGrade_MidRail_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_ConstantGrade_ToeRail_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_UpperVerticalCurve_TopRail_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_UpperVerticalCurve_MidRail_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_UpperVerticalCurve_ToeRail_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_UpperVerticalCurve_TopRail_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_UpperVerticalCurve_MidRail_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_UpperVerticalCurve_ToeRail_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_0m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_0m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_4m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_4m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_8m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_8m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_12m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_12m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_16m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_16m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_20m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_20m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_24m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_24m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_28m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_28m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_32m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_32m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_36m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_36m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_40m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_40m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_44m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_44m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_48m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_48m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_52m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_52m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_56m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_56m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_60m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_60m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_64m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_64m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_68m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_68m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_72m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_72m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_76m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_76m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_80m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_80m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_84m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_84m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_88m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_88m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_92m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_92m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_96m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_96m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_100m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_100m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_104m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_104m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_108m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_108m_1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_110m_-1",
+      "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_110m_1"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_RampStructure_2L_Rise8p4_L110": {
+    "parts": [
+      "RoadPlan_RampStructure_2L_Rise8p4_L110_LowerVerticalCurve_Girder_-1",
+      "RoadPlan_RampStructure_2L_Rise8p4_L110_LowerVerticalCurve_Girder_1",
+      "RoadPlan_RampStructure_2L_Rise8p4_L110_ConstantGrade_Girder_-1",
+      "RoadPlan_RampStructure_2L_Rise8p4_L110_ConstantGrade_Girder_1",
+      "RoadPlan_RampStructure_2L_Rise8p4_L110_UpperVerticalCurve_Girder_-1",
+      "RoadPlan_RampStructure_2L_Rise8p4_L110_UpperVerticalCurve_Girder_1"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Curb_L2": {
+    "parts": [
+      "RoadPlan_Curb_L2_ChamferedCurb"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Curb_L4": {
+    "parts": [
+      "RoadPlan_Curb_L4_ChamferedCurb"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Curb_L8": {
+    "parts": [
+      "RoadPlan_Curb_L8_ChamferedCurb"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_Drain_L2": {
+    "parts": [
+      "RoadPlan_Drain_L2_RecessedChannel",
+      "RoadPlan_Drain_L2_ReplaceableGrate"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_EdgeCap_2L": {
+    "parts": [
+      "RoadPlan_EdgeCap_2L_EndClosure"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
+  },
+  "RoadPlan_EdgeCap_4L": {
+    "parts": [
+      "RoadPlan_EdgeCap_4L_EndClosure"
+    ],
+    "expansion": "road_plan_v1",
+    "companions": []
   }
 }

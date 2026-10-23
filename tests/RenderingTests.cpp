@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Drawing.h"
+#include "Civic.h"
 #include "Hud.h"
 #include "Level.h"
 #include "Monitoring/Monitor.h"
@@ -960,6 +961,7 @@ void CaptureMapNavigation(const std::filesystem::path &output)
     };
     auto baseline = mapPixels();
     world.facingYaw += 1.7f;
+    world.cursorPosition = {world.cursorPosition.x - 400, world.cursorPosition.y + 250};
     auto rotated = mapPixels();
     auto pixelIndex = [](int x, int y) { return size_t((kCanvasHeight - y - 1) * kCanvasWidth + x) * 4; };
     // Rotating the player cannot rotate any road/building outside the arrow itself.
@@ -1040,6 +1042,57 @@ void CaptureMapNavigation(const std::filesystem::path &output)
     world.mapVisible = true;
     assert(MapHud::HandleClick(MapHud::WorldToMap({32.5f, 12.5f}, true)));
     captureScene("map-frontier-full.bmp");
+    game.Reset();
+}
+
+void CaptureCivicSystems(const std::filesystem::path &output)
+{
+    auto &game = Game::Get();
+    auto &world = game.GetState();
+    auto &renderer = GameRenderer::Get().Backend();
+    game.Reset();
+    world.isInsideHome = false;
+    world.playerPosition = world.cameraPosition = {2, 0};
+    auto &law = CivicJustice::State();
+    for (int i = 0; i < 6; ++i)
+    {
+        CivicJustice::Report(Offense::Homicide, world.playerPosition);
+    }
+    SecurityOfficer officer;
+    officer.position = {4, 2};
+    officer.lastKnown = world.playerPosition;
+    officer.tier = 5;
+    officer.health = 260;
+    officer.facing.yaw = -2.2f;
+    officer.muzzleFlash = .05f;
+    law.officers.push_back(officer);
+    law.tracers.push_back({officer.position, world.playerPosition, .12f, true});
+    auto draw = [&](const char *name) {
+        Begin();
+        game::SceneManager::Get(game::SceneKind::Exterior).Draw();
+        renderer.EndScene(world.animationTimeSeconds);
+        game::SceneManager::Get(game::SceneKind::Hud).Draw();
+        renderqueue::Flush();
+        assert(glGetError() == GL_NO_ERROR);
+        Save(output / name);
+    };
+    draw("civic-wanted.bmp");
+    game::GameLevels::Mine().GetState().player.health = 0;
+    HospitalRecovery::Begin();
+    HospitalRecovery::Update(.84f);
+    assert(HospitalRecovery::Opacity() > .95f);
+    draw("civic-medical-fade.bmp");
+    auto pixels = Pixels();
+    size_t dark = 0;
+    for (size_t i = 0; i < pixels.size(); i += 4)
+    {
+        dark += pixels[i] < 30 && pixels[i + 1] < 30 && pixels[i + 2] < 30;
+    }
+    assert(dark > size_t(kCanvasWidth * kCanvasHeight * .9f));
+    HospitalRecovery::Update(1.6f);
+    assert(!HospitalRecovery::Active());
+    assert(game::GameLevels::Mine().GetState().player.health > 0 && law.wanted == 0 && law.infamy > 0);
+    draw("civic-hospital.bmp");
     game.Reset();
 }
 
@@ -1132,7 +1185,7 @@ void BenchmarkQuality(const std::filesystem::path &output)
            << "\",\"resolution\":[1280,800],\"optimized\":" << (optimized ? "true" : "false")
            << ",\"warmup\":24,\"frames\":120,\"scenes\":[";
     auto &world = Game::Get().GetState();
-    for (int scenario = 0; scenario < 10; ++scenario)
+    for (int scenario = 0; scenario < 11; ++scenario)
     {
         Game::Get().Reset();
         world.noticeSecondsRemaining = 0;
@@ -1145,12 +1198,37 @@ void BenchmarkQuality(const std::filesystem::path &output)
                                          "npc_firefight_90_enemies",
                                          "frontier_generator",
                                          "frontier_convoy",
-                                         "frontier_relay_combat"};
+                                         "frontier_relay_combat",
+                                         "city_security_5stars"};
         if (scenario == 0)
         {
             world.isInsideHome = false;
             world.playerPosition = kLiaPosition;
             world.cameraPosition = kLiaPosition;
+        }
+        if (scenario == 10)
+        {
+            world.isInsideHome = false;
+            world.playerPosition = world.cameraPosition = {2, 0};
+            auto &law = CivicJustice::State();
+            law.heat = 1000;
+            law.wanted = 5;
+            law.infamy = 100;
+            law.playerGrace = 1000;
+            for (int i = 0; i < 10; ++i)
+            {
+                SecurityOfficer officer;
+                officer.id = law.nextOfficer++;
+                officer.tier = 5;
+                officer.health = 260;
+                officer.position = {4.f + (i % 5) * 2.f, -2.f + (i / 5) * 3.f};
+                officer.lastKnown = world.playerPosition;
+                if (CivicJustice::Solid(officer.position, .35f))
+                {
+                    officer.position = {-18.f + i, 0};
+                }
+                law.officers.push_back(officer);
+            }
         }
         if (scenario == 1)
         {
@@ -1211,7 +1289,7 @@ void BenchmarkQuality(const std::filesystem::path &output)
             }
             mine.lights.push_back({{47, 46.5f}, 10, false});
         }
-        if (scenario >= 7)
+        if (scenario >= 7 && scenario < 10)
         {
             auto &chapter = game::GameLevels::Chapter();
             chapter.Enter(true);
@@ -1228,10 +1306,13 @@ void BenchmarkQuality(const std::filesystem::path &output)
                 s.kain.position = {30, 33};
             }
         }
-        if (scenario == 0 || scenario == 2)
+        if (scenario == 0 || scenario == 2 || scenario == 10)
         {
             for (int warm = 0; warm < 900; ++warm)
             {
+                CivicCombat::Update(1.f / 60);
+                CivicJustice::Update(1.f / 60);
+                BodyCollision::Update(1.f / 60);
                 Overworld::Traffic().Update(world, 1.f / 60);
                 Overworld::Flights().Update(world, 1.f / 60);
                 CityResidents::Get().Update(world, 1.f / 60);
@@ -1246,8 +1327,11 @@ void BenchmarkQuality(const std::filesystem::path &output)
             auto start = std::chrono::steady_clock::now();
             profiling::BeginFrame(names[scenario]);
             world.animationTimeSeconds += 1.f / 60;
-            if (scenario == 0 || scenario == 2)
+            if (scenario == 0 || scenario == 2 || scenario == 10)
             {
+                CivicCombat::Update(1.f / 60);
+                CivicJustice::Update(1.f / 60);
+                BodyCollision::Update(1.f / 60);
                 Overworld::Traffic().Update(world, 1.f / 60);
                 Overworld::Flights().Update(world, 1.f / 60);
                 CityResidents::Get().Update(world, 1.f / 60);
@@ -1260,7 +1344,7 @@ void BenchmarkQuality(const std::filesystem::path &output)
             npcShotsObserved |= profiling::ReadCounter(profiling::Counter::NpcShots) > npcShotsBefore;
             game::SceneManager::Update(1.f / 60);
             Begin();
-            if (scenario < 3)
+            if (scenario < 3 || scenario == 10)
             {
                 game::SceneManager::Get(game::SceneKind::Background).Draw();
                 renderqueue::Flush();
@@ -1361,6 +1445,7 @@ int main(int argc, char **argv)
     CaptureHairAndCombat(output);
     CaptureChapter(output);
     CaptureMapNavigation(output);
+    CaptureCivicSystems(output);
     BenchmarkQuality(output);
     GameRenderer::Get().Shutdown();
     std::cout << "Resource GLB meshes, 23-bone skins, nine wardrobes, direct driving, billboard effects, "

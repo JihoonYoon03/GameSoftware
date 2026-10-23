@@ -1,0 +1,3844 @@
+{
+  "units": "meters",
+  "examples": {
+    "29_RoadPlan_Ground_Connections": {
+      "placements": [
+        {
+          "id": "RoadPlan_Surface_2L_L4_0",
+          "module": "RoadPlan_Surface_2L_L4",
+          "position_m": [
+            -28.0,
+            -13,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Marking_2L_L4_1",
+          "module": "RoadPlan_Marking_2L_L4",
+          "position_m": [
+            -28.0,
+            -13.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L4_2",
+          "module": "RoadPlan_Walk_W2_L4",
+          "position_m": [
+            -28.0,
+            -17.119998931884766,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L4_3",
+          "module": "RoadPlan_Curb_L4",
+          "position_m": [
+            -28.0,
+            -16.059999465942383,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L4_4",
+          "module": "RoadPlan_Walk_W2_L4",
+          "position_m": [
+            -28.0,
+            -8.880000114440918,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L4_5",
+          "module": "RoadPlan_Curb_L4",
+          "position_m": [
+            -28.0,
+            -9.940000534057617,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Surface_2L_L8_6",
+          "module": "RoadPlan_Surface_2L_L8",
+          "position_m": [
+            -22.0,
+            -13,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Marking_2L_L8_7",
+          "module": "RoadPlan_Marking_2L_L8",
+          "position_m": [
+            -22.0,
+            -13.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L8_8",
+          "module": "RoadPlan_Walk_W2_L8",
+          "position_m": [
+            -22.0,
+            -17.119998931884766,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L8_9",
+          "module": "RoadPlan_Curb_L8",
+          "position_m": [
+            -22.0,
+            -16.059999465942383,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L8_10",
+          "module": "RoadPlan_Walk_W2_L8",
+          "position_m": [
+            -22.0,
+            -8.880000114440918,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L8_11",
+          "module": "RoadPlan_Curb_L8",
+          "position_m": [
+            -22.0,
+            -9.940000534057617,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Surface_2L_L16_12",
+          "module": "RoadPlan_Surface_2L_L16",
+          "position_m": [
+            -10.0,
+            -13,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Marking_2L_L16_13",
+          "module": "RoadPlan_Marking_2L_L16",
+          "position_m": [
+            -10.0,
+            -13.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L8_14",
+          "module": "RoadPlan_Walk_W2_L8",
+          "position_m": [
+            -14.0,
+            -17.119998931884766,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L8_15",
+          "module": "RoadPlan_Curb_L8",
+          "position_m": [
+            -14.0,
+            -16.059999465942383,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L8_16",
+          "module": "RoadPlan_Walk_W2_L8",
+          "position_m": [
+            -6.0,
+            -17.119998931884766,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L8_17",
+          "module": "RoadPlan_Curb_L8",
+          "position_m": [
+            -6.0,
+            -16.059999465942383,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L8_18",
+          "module": "RoadPlan_Walk_W2_L8",
+          "position_m": [
+            -14.0,
+            -8.880000114440918,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L8_19",
+          "module": "RoadPlan_Curb_L8",
+          "position_m": [
+            -14.0,
+            -9.940000534057617,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L8_20",
+          "module": "RoadPlan_Walk_W2_L8",
+          "position_m": [
+            -6.0,
+            -8.880000114440918,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L8_21",
+          "module": "RoadPlan_Curb_L8",
+          "position_m": [
+            -6.0,
+            -9.940000534057617,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Surface_4L_L4_22",
+          "module": "RoadPlan_Surface_4L_L4",
+          "position_m": [
+            -28.0,
+            8,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Marking_4L_L4_23",
+          "module": "RoadPlan_Marking_4L_L4",
+          "position_m": [
+            -28.0,
+            8.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L4_24",
+          "module": "RoadPlan_Walk_W2_L4",
+          "position_m": [
+            -28.0,
+            0.880000114440918,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L4_25",
+          "module": "RoadPlan_Curb_L4",
+          "position_m": [
+            -28.0,
+            1.940000057220459,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L4_26",
+          "module": "RoadPlan_Walk_W2_L4",
+          "position_m": [
+            -28.0,
+            15.119999885559082,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L4_27",
+          "module": "RoadPlan_Curb_L4",
+          "position_m": [
+            -28.0,
+            14.059999465942383,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Surface_4L_L8_28",
+          "module": "RoadPlan_Surface_4L_L8",
+          "position_m": [
+            -22.0,
+            8,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Marking_4L_L8_29",
+          "module": "RoadPlan_Marking_4L_L8",
+          "position_m": [
+            -22.0,
+            8.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L8_30",
+          "module": "RoadPlan_Walk_W2_L8",
+          "position_m": [
+            -22.0,
+            0.880000114440918,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L8_31",
+          "module": "RoadPlan_Curb_L8",
+          "position_m": [
+            -22.0,
+            1.940000057220459,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L8_32",
+          "module": "RoadPlan_Walk_W2_L8",
+          "position_m": [
+            -22.0,
+            15.119999885559082,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L8_33",
+          "module": "RoadPlan_Curb_L8",
+          "position_m": [
+            -22.0,
+            14.059999465942383,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Surface_4L_L16_34",
+          "module": "RoadPlan_Surface_4L_L16",
+          "position_m": [
+            -10.0,
+            8,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Marking_4L_L16_35",
+          "module": "RoadPlan_Marking_4L_L16",
+          "position_m": [
+            -10.0,
+            8.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L8_36",
+          "module": "RoadPlan_Walk_W2_L8",
+          "position_m": [
+            -14.0,
+            0.880000114440918,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L8_37",
+          "module": "RoadPlan_Curb_L8",
+          "position_m": [
+            -14.0,
+            1.940000057220459,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L8_38",
+          "module": "RoadPlan_Walk_W2_L8",
+          "position_m": [
+            -6.0,
+            0.880000114440918,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L8_39",
+          "module": "RoadPlan_Curb_L8",
+          "position_m": [
+            -6.0,
+            1.940000057220459,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L8_40",
+          "module": "RoadPlan_Walk_W2_L8",
+          "position_m": [
+            -14.0,
+            15.119999885559082,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L8_41",
+          "module": "RoadPlan_Curb_L8",
+          "position_m": [
+            -14.0,
+            14.059999465942383,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L8_42",
+          "module": "RoadPlan_Walk_W2_L8",
+          "position_m": [
+            -6.0,
+            15.119999885559082,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L8_43",
+          "module": "RoadPlan_Curb_L8",
+          "position_m": [
+            -6.0,
+            14.059999465942383,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_T_4L_2L_44",
+          "module": "RoadPlan_T_4L_2L",
+          "position_m": [
+            24,
+            -10,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_JunctionMarking_T_4L_2L_45",
+          "module": "RoadPlan_JunctionMarking_T_4L_2L",
+          "position_m": [
+            24.0,
+            -10.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_WalkCorner_T_4L_2L_46",
+          "module": "RoadPlan_WalkCorner_T_4L_2L",
+          "position_m": [
+            24.0,
+            -10.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_T_2L_47",
+          "module": "RoadPlan_T_2L",
+          "position_m": [
+            23,
+            20,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_JunctionMarking_T_2L_48",
+          "module": "RoadPlan_JunctionMarking_T_2L",
+          "position_m": [
+            23.0,
+            20.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_WalkCorner_T_2L_49",
+          "module": "RoadPlan_WalkCorner_T_2L",
+          "position_m": [
+            23.0,
+            20.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_X_2L_50",
+          "module": "RoadPlan_X_2L",
+          "position_m": [
+            48,
+            20,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_JunctionMarking_X_2L_51",
+          "module": "RoadPlan_JunctionMarking_X_2L",
+          "position_m": [
+            48.0,
+            20.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_WalkCorner_X_2L_52",
+          "module": "RoadPlan_WalkCorner_X_2L",
+          "position_m": [
+            48.0,
+            20.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Transition_4L_2L_53",
+          "module": "RoadPlan_Transition_4L_2L",
+          "position_m": [
+            -15,
+            32,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_TransitionMarking_4L_2L_54",
+          "module": "RoadPlan_TransitionMarking_4L_2L",
+          "position_m": [
+            -15.0,
+            32.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_WalkTransition_4L_2L_55",
+          "module": "RoadPlan_WalkTransition_4L_2L",
+          "position_m": [
+            -15.0,
+            32.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curve_2L_A90_R7_56",
+          "module": "RoadPlan_Curve_2L_A90_R7",
+          "position_m": [
+            53,
+            -20,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_CurveMarking_2L_A90_R7_57",
+          "module": "RoadPlan_CurveMarking_2L_A90_R7",
+          "position_m": [
+            53.0,
+            -20.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_WalkCurve_2L_A90_R7_58",
+          "module": "RoadPlan_WalkCurve_2L_A90_R7",
+          "position_m": [
+            53.0,
+            -20.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curve_2L_A90_R7_59",
+          "module": "RoadPlan_Curve_2L_A90_R7",
+          "position_m": [
+            82,
+            -13,
+            0
+          ],
+          "yaw_degrees": 180.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_CurveMarking_2L_A90_R7_60",
+          "module": "RoadPlan_CurveMarking_2L_A90_R7",
+          "position_m": [
+            82.0,
+            -13.0,
+            0.0
+          ],
+          "yaw_degrees": 180.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_WalkCurve_2L_A90_R7_61",
+          "module": "RoadPlan_WalkCurve_2L_A90_R7",
+          "position_m": [
+            82.0,
+            -13.0,
+            0.0
+          ],
+          "yaw_degrees": 180.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      ],
+      "connections": [
+        {
+          "a": 0,
+          "port_a": "end",
+          "b": 6,
+          "port_b": "start"
+        },
+        {
+          "a": 6,
+          "port_a": "end",
+          "b": 12,
+          "port_b": "start"
+        },
+        {
+          "a": 22,
+          "port_a": "end",
+          "b": 28,
+          "port_b": "start"
+        },
+        {
+          "a": 28,
+          "port_a": "end",
+          "b": 34,
+          "port_b": "start"
+        }
+      ],
+      "checks": []
+    },
+    "30_RoadPlan_Curves_Transition": {
+      "placements": [
+        {
+          "id": "RoadPlan_Curve_2L_A90_R7_0",
+          "module": "RoadPlan_Curve_2L_A90_R7",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_CurveMarking_2L_A90_R7_1",
+          "module": "RoadPlan_CurveMarking_2L_A90_R7",
+          "position_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_WalkCurve_2L_A90_R7_2",
+          "module": "RoadPlan_WalkCurve_2L_A90_R7",
+          "position_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curve_2L_A15_R18_3",
+          "module": "RoadPlan_Curve_2L_A15_R18",
+          "position_m": [
+            40,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_CurveMarking_2L_A15_R18_4",
+          "module": "RoadPlan_CurveMarking_2L_A15_R18",
+          "position_m": [
+            40.0,
+            0.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_WalkCurve_2L_A15_R18_5",
+          "module": "RoadPlan_WalkCurve_2L_A15_R18",
+          "position_m": [
+            40.0,
+            0.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curve_2L_A30_R18_6",
+          "module": "RoadPlan_Curve_2L_A30_R18",
+          "position_m": [
+            80,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_CurveMarking_2L_A30_R18_7",
+          "module": "RoadPlan_CurveMarking_2L_A30_R18",
+          "position_m": [
+            80.0,
+            0.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_WalkCurve_2L_A30_R18_8",
+          "module": "RoadPlan_WalkCurve_2L_A30_R18",
+          "position_m": [
+            80.0,
+            0.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curve_2L_A45_R18_9",
+          "module": "RoadPlan_Curve_2L_A45_R18",
+          "position_m": [
+            0,
+            38,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_CurveMarking_2L_A45_R18_10",
+          "module": "RoadPlan_CurveMarking_2L_A45_R18",
+          "position_m": [
+            0.0,
+            38.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_WalkCurve_2L_A45_R18_11",
+          "module": "RoadPlan_WalkCurve_2L_A45_R18",
+          "position_m": [
+            0.0,
+            38.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curve_2L_A15_R36_12",
+          "module": "RoadPlan_Curve_2L_A15_R36",
+          "position_m": [
+            40,
+            38,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_CurveMarking_2L_A15_R36_13",
+          "module": "RoadPlan_CurveMarking_2L_A15_R36",
+          "position_m": [
+            40.0,
+            38.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_WalkCurve_2L_A15_R36_14",
+          "module": "RoadPlan_WalkCurve_2L_A15_R36",
+          "position_m": [
+            40.0,
+            38.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curve_2L_A30_R36_15",
+          "module": "RoadPlan_Curve_2L_A30_R36",
+          "position_m": [
+            80,
+            38,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_CurveMarking_2L_A30_R36_16",
+          "module": "RoadPlan_CurveMarking_2L_A30_R36",
+          "position_m": [
+            80.0,
+            38.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_WalkCurve_2L_A30_R36_17",
+          "module": "RoadPlan_WalkCurve_2L_A30_R36",
+          "position_m": [
+            80.0,
+            38.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curve_2L_A45_R36_18",
+          "module": "RoadPlan_Curve_2L_A45_R36",
+          "position_m": [
+            0,
+            76,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_CurveMarking_2L_A45_R36_19",
+          "module": "RoadPlan_CurveMarking_2L_A45_R36",
+          "position_m": [
+            0.0,
+            76.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_WalkCurve_2L_A45_R36_20",
+          "module": "RoadPlan_WalkCurve_2L_A45_R36",
+          "position_m": [
+            0.0,
+            76.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Transition_4L_2L_21",
+          "module": "RoadPlan_Transition_4L_2L",
+          "position_m": [
+            55,
+            84,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_TransitionMarking_4L_2L_22",
+          "module": "RoadPlan_TransitionMarking_4L_2L",
+          "position_m": [
+            55.0,
+            84.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_WalkTransition_4L_2L_23",
+          "module": "RoadPlan_WalkTransition_4L_2L",
+          "position_m": [
+            55.0,
+            84.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      ],
+      "connections": [],
+      "checks": []
+    },
+    "31_RoadPlan_Accessibility": {
+      "placements": [
+        {
+          "id": "RoadPlan_Surface_2L_L4_0",
+          "module": "RoadPlan_Surface_2L_L4",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_CrosswalkPaint_2L_1",
+          "module": "RoadPlan_CrosswalkPaint_2L",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_PedestrianHolo_2L_2",
+          "module": "RoadPlan_PedestrianHolo_2L",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_AccessibleRamp_W2_3",
+          "module": "RoadPlan_AccessibleRamp_W2",
+          "position_m": [
+            0,
+            -5.0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_AccessibleTactile_W2_4",
+          "module": "RoadPlan_AccessibleTactile_W2",
+          "position_m": [
+            0.0,
+            -5.0,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L4_5",
+          "module": "RoadPlan_Walk_W2_L4",
+          "position_m": [
+            0,
+            -9.0,
+            0
+          ],
+          "yaw_degrees": -90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_AccessibleRamp_W2_6",
+          "module": "RoadPlan_AccessibleRamp_W2",
+          "position_m": [
+            0,
+            5.0,
+            0
+          ],
+          "yaw_degrees": -90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_AccessibleTactile_W2_7",
+          "module": "RoadPlan_AccessibleTactile_W2",
+          "position_m": [
+            0.0,
+            5.0,
+            0.0
+          ],
+          "yaw_degrees": -90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L4_8",
+          "module": "RoadPlan_Walk_W2_L4",
+          "position_m": [
+            0,
+            9.0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Surface_4L_L4_9",
+          "module": "RoadPlan_Surface_4L_L4",
+          "position_m": [
+            22,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_CrosswalkPaint_4L_10",
+          "module": "RoadPlan_CrosswalkPaint_4L",
+          "position_m": [
+            22,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_PedestrianHolo_4L_11",
+          "module": "RoadPlan_PedestrianHolo_4L",
+          "position_m": [
+            22,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_AccessibleRamp_W4_12",
+          "module": "RoadPlan_AccessibleRamp_W4",
+          "position_m": [
+            22,
+            -8.0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_AccessibleTactile_W4_13",
+          "module": "RoadPlan_AccessibleTactile_W4",
+          "position_m": [
+            22.0,
+            -8.0,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_WalkLanding_W4_L2_14",
+          "module": "RoadPlan_WalkLanding_W4_L2",
+          "position_m": [
+            22,
+            -11.0,
+            0
+          ],
+          "yaw_degrees": -90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_AccessibleRamp_W4_15",
+          "module": "RoadPlan_AccessibleRamp_W4",
+          "position_m": [
+            22,
+            8.0,
+            0
+          ],
+          "yaw_degrees": -90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_AccessibleTactile_W4_16",
+          "module": "RoadPlan_AccessibleTactile_W4",
+          "position_m": [
+            22.0,
+            8.0,
+            0.0
+          ],
+          "yaw_degrees": -90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_WalkLanding_W4_L2_17",
+          "module": "RoadPlan_WalkLanding_W4_L2",
+          "position_m": [
+            22,
+            11.0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      ],
+      "connections": [
+        {
+          "a": 3,
+          "port_a": "raised",
+          "b": 5,
+          "port_b": "start"
+        },
+        {
+          "a": 6,
+          "port_a": "raised",
+          "b": 8,
+          "port_b": "start"
+        },
+        {
+          "a": 12,
+          "port_a": "raised",
+          "b": 14,
+          "port_b": "start"
+        },
+        {
+          "a": 15,
+          "port_a": "raised",
+          "b": 17,
+          "port_b": "start"
+        }
+      ],
+      "checks": []
+    },
+    "32_RoadPlan_Overpass_Assembly": {
+      "placements": [
+        {
+          "id": "RoadPlan_Ramp_2L_Rise8p4_L110_0",
+          "module": "RoadPlan_Ramp_2L_Rise8p4_L110",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_RampMarking_2L_Rise8p4_L110_1",
+          "module": "RoadPlan_RampMarking_2L_Rise8p4_L110",
+          "position_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_RampParapet_2L_Rise8p4_L110_2",
+          "module": "RoadPlan_RampParapet_2L_Rise8p4_L110",
+          "position_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_RampStructure_2L_Rise8p4_L110_3",
+          "module": "RoadPlan_RampStructure_2L_Rise8p4_L110",
+          "position_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Deck_2L_L16_4",
+          "module": "RoadPlan_Deck_2L_L16",
+          "position_m": [
+            118.0,
+            0,
+            8.4
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckMarking_2L_L16_5",
+          "module": "RoadPlan_DeckMarking_2L_L16",
+          "position_m": [
+            118.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckStructure_L16_6",
+          "module": "RoadPlan_DeckStructure_L16",
+          "position_m": [
+            118.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_7",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            118.0,
+            -3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_8",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            118.0,
+            3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Deck_2L_L16_9",
+          "module": "RoadPlan_Deck_2L_L16",
+          "position_m": [
+            134.0,
+            0,
+            8.4
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckMarking_2L_L16_10",
+          "module": "RoadPlan_DeckMarking_2L_L16",
+          "position_m": [
+            134.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckStructure_L16_11",
+          "module": "RoadPlan_DeckStructure_L16",
+          "position_m": [
+            134.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_12",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            134.0,
+            -3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_13",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            134.0,
+            3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Deck_2L_L16_14",
+          "module": "RoadPlan_Deck_2L_L16",
+          "position_m": [
+            150.0,
+            0,
+            8.4
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckMarking_2L_L16_15",
+          "module": "RoadPlan_DeckMarking_2L_L16",
+          "position_m": [
+            150.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckStructure_L16_16",
+          "module": "RoadPlan_DeckStructure_L16",
+          "position_m": [
+            150.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_17",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            150.0,
+            -3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_18",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            150.0,
+            3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Deck_2L_L16_19",
+          "module": "RoadPlan_Deck_2L_L16",
+          "position_m": [
+            166.0,
+            0,
+            8.4
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckMarking_2L_L16_20",
+          "module": "RoadPlan_DeckMarking_2L_L16",
+          "position_m": [
+            166.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckStructure_L16_21",
+          "module": "RoadPlan_DeckStructure_L16",
+          "position_m": [
+            166.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_22",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            166.0,
+            -3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_23",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            166.0,
+            3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Deck_2L_L16_24",
+          "module": "RoadPlan_Deck_2L_L16",
+          "position_m": [
+            182.0,
+            0,
+            8.4
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckMarking_2L_L16_25",
+          "module": "RoadPlan_DeckMarking_2L_L16",
+          "position_m": [
+            182.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckStructure_L16_26",
+          "module": "RoadPlan_DeckStructure_L16",
+          "position_m": [
+            182.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_27",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            182.0,
+            -3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_28",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            182.0,
+            3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Deck_2L_L16_29",
+          "module": "RoadPlan_Deck_2L_L16",
+          "position_m": [
+            198.0,
+            0,
+            8.4
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckMarking_2L_L16_30",
+          "module": "RoadPlan_DeckMarking_2L_L16",
+          "position_m": [
+            198.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckStructure_L16_31",
+          "module": "RoadPlan_DeckStructure_L16",
+          "position_m": [
+            198.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_32",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            198.0,
+            -3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_33",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            198.0,
+            3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Deck_2L_L16_34",
+          "module": "RoadPlan_Deck_2L_L16",
+          "position_m": [
+            214.0,
+            0,
+            8.4
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckMarking_2L_L16_35",
+          "module": "RoadPlan_DeckMarking_2L_L16",
+          "position_m": [
+            214.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckStructure_L16_36",
+          "module": "RoadPlan_DeckStructure_L16",
+          "position_m": [
+            214.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_37",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            214.0,
+            -3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_38",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            214.0,
+            3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Deck_2L_L16_39",
+          "module": "RoadPlan_Deck_2L_L16",
+          "position_m": [
+            230.0,
+            0,
+            8.4
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckMarking_2L_L16_40",
+          "module": "RoadPlan_DeckMarking_2L_L16",
+          "position_m": [
+            230.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckStructure_L16_41",
+          "module": "RoadPlan_DeckStructure_L16",
+          "position_m": [
+            230.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_42",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            230.0,
+            -3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_43",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            230.0,
+            3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Deck_2L_L16_44",
+          "module": "RoadPlan_Deck_2L_L16",
+          "position_m": [
+            246.0,
+            0,
+            8.4
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckMarking_2L_L16_45",
+          "module": "RoadPlan_DeckMarking_2L_L16",
+          "position_m": [
+            246.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckStructure_L16_46",
+          "module": "RoadPlan_DeckStructure_L16",
+          "position_m": [
+            246.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_47",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            246.0,
+            -3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_48",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            246.0,
+            3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Deck_2L_L16_49",
+          "module": "RoadPlan_Deck_2L_L16",
+          "position_m": [
+            262.0,
+            0,
+            8.4
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckMarking_2L_L16_50",
+          "module": "RoadPlan_DeckMarking_2L_L16",
+          "position_m": [
+            262.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckStructure_L16_51",
+          "module": "RoadPlan_DeckStructure_L16",
+          "position_m": [
+            262.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_52",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            262.0,
+            -3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_53",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            262.0,
+            3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Deck_2L_L16_54",
+          "module": "RoadPlan_Deck_2L_L16",
+          "position_m": [
+            278.0,
+            0,
+            8.4
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckMarking_2L_L16_55",
+          "module": "RoadPlan_DeckMarking_2L_L16",
+          "position_m": [
+            278.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckStructure_L16_56",
+          "module": "RoadPlan_DeckStructure_L16",
+          "position_m": [
+            278.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_57",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            278.0,
+            -3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_58",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            278.0,
+            3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Deck_2L_L4_59",
+          "module": "RoadPlan_Deck_2L_L4",
+          "position_m": [
+            288.0,
+            0,
+            8.4
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckMarking_2L_L4_60",
+          "module": "RoadPlan_DeckMarking_2L_L4",
+          "position_m": [
+            288.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckStructure_L4_61",
+          "module": "RoadPlan_DeckStructure_L4",
+          "position_m": [
+            288.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L4_62",
+          "module": "RoadPlan_Parapet_L4",
+          "position_m": [
+            288.0,
+            -3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L4_63",
+          "module": "RoadPlan_Parapet_L4",
+          "position_m": [
+            288.0,
+            3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Ramp_2L_Rise8p4_L110_64",
+          "module": "RoadPlan_Ramp_2L_Rise8p4_L110",
+          "position_m": [
+            400,
+            0,
+            0
+          ],
+          "yaw_degrees": 180.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_RampMarking_2L_Rise8p4_L110_65",
+          "module": "RoadPlan_RampMarking_2L_Rise8p4_L110",
+          "position_m": [
+            400.0,
+            0.0,
+            0.0
+          ],
+          "yaw_degrees": 180.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_RampParapet_2L_Rise8p4_L110_66",
+          "module": "RoadPlan_RampParapet_2L_Rise8p4_L110",
+          "position_m": [
+            400.0,
+            0.0,
+            0.0
+          ],
+          "yaw_degrees": 180.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_RampStructure_2L_Rise8p4_L110_67",
+          "module": "RoadPlan_RampStructure_2L_Rise8p4_L110",
+          "position_m": [
+            400.0,
+            0.0,
+            0.0
+          ],
+          "yaw_degrees": 180.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Pier_H8_68",
+          "module": "RoadPlan_Pier_H8",
+          "position_m": [
+            118,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Pier_H8_69",
+          "module": "RoadPlan_Pier_H8",
+          "position_m": [
+            142,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Pier_H8_70",
+          "module": "RoadPlan_Pier_H8",
+          "position_m": [
+            154,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Pier_H8_71",
+          "module": "RoadPlan_Pier_H8",
+          "position_m": [
+            178,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Pier_H8_72",
+          "module": "RoadPlan_Pier_H8",
+          "position_m": [
+            202,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Pier_H8_73",
+          "module": "RoadPlan_Pier_H8",
+          "position_m": [
+            226,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Pier_H8_74",
+          "module": "RoadPlan_Pier_H8",
+          "position_m": [
+            250,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Pier_H8_75",
+          "module": "RoadPlan_Pier_H8",
+          "position_m": [
+            282,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      ],
+      "connections": [
+        {
+          "a": 0,
+          "port_a": "upper",
+          "b": 4,
+          "port_b": "start"
+        },
+        {
+          "a": 4,
+          "port_a": "end",
+          "b": 9,
+          "port_b": "start"
+        },
+        {
+          "a": 9,
+          "port_a": "end",
+          "b": 14,
+          "port_b": "start"
+        },
+        {
+          "a": 14,
+          "port_a": "end",
+          "b": 19,
+          "port_b": "start"
+        },
+        {
+          "a": 19,
+          "port_a": "end",
+          "b": 24,
+          "port_b": "start"
+        },
+        {
+          "a": 24,
+          "port_a": "end",
+          "b": 29,
+          "port_b": "start"
+        },
+        {
+          "a": 29,
+          "port_a": "end",
+          "b": 34,
+          "port_b": "start"
+        },
+        {
+          "a": 34,
+          "port_a": "end",
+          "b": 39,
+          "port_b": "start"
+        },
+        {
+          "a": 39,
+          "port_a": "end",
+          "b": 44,
+          "port_b": "start"
+        },
+        {
+          "a": 44,
+          "port_a": "end",
+          "b": 49,
+          "port_b": "start"
+        },
+        {
+          "a": 49,
+          "port_a": "end",
+          "b": 54,
+          "port_b": "start"
+        },
+        {
+          "a": 54,
+          "port_a": "end",
+          "b": 59,
+          "port_b": "start"
+        },
+        {
+          "a": 59,
+          "port_a": "end",
+          "b": 64,
+          "port_b": "upper"
+        }
+      ],
+      "checks": [
+        {
+          "flat_reach_m": 180,
+          "nominal_current_flat_reach_m": 180,
+          "closure_module": "RoadPlan_Deck_2L_L4",
+          "ground_to_ground_horizontal_m": 400,
+          "ground_crossing_station_m": 166,
+          "ground_walk_outer_edge_m": 8.12,
+          "pier_stations_m": [
+            118,
+            142,
+            154,
+            178,
+            202,
+            226,
+            250,
+            282
+          ]
+        }
+      ],
+      "game_layout_binding": {
+        "origin_m": [
+          96,
+          -200,
+          0
+        ],
+        "yaw_degrees": 90,
+        "game_scale": 0.5,
+        "lower_world_xy": [
+          48,
+          -100
+        ],
+        "upper_world_xy": [
+          48,
+          -45
+        ],
+        "opposite_upper_world_xy": [
+          48,
+          45
+        ],
+        "opposite_lower_world_xy": [
+          48,
+          100
+        ],
+        "current_upper_altitude_world": 4,
+        "recommended_upper_altitude_world": 4.2
+      }
+    },
+    "33_RoadPlan_GradeSeparated_Crossing": {
+      "placements": [
+        {
+          "id": "RoadPlan_Deck_2L_L16_0",
+          "module": "RoadPlan_Deck_2L_L16",
+          "position_m": [
+            -8,
+            0,
+            8.4
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckMarking_2L_L16_1",
+          "module": "RoadPlan_DeckMarking_2L_L16",
+          "position_m": [
+            -8.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckStructure_L16_2",
+          "module": "RoadPlan_DeckStructure_L16",
+          "position_m": [
+            -8.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_3",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            -8.0,
+            -3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_4",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            -8.0,
+            3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Deck_2L_L16_5",
+          "module": "RoadPlan_Deck_2L_L16",
+          "position_m": [
+            8,
+            0,
+            8.4
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckMarking_2L_L16_6",
+          "module": "RoadPlan_DeckMarking_2L_L16",
+          "position_m": [
+            8.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckStructure_L16_7",
+          "module": "RoadPlan_DeckStructure_L16",
+          "position_m": [
+            8.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_8",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            8.0,
+            -3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_9",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            8.0,
+            3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Pier_H8_10",
+          "module": "RoadPlan_Pier_H8",
+          "position_m": [
+            -12,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Pier_H8_11",
+          "module": "RoadPlan_Pier_H8",
+          "position_m": [
+            12,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Surface_4L_L16_12",
+          "module": "RoadPlan_Surface_4L_L16",
+          "position_m": [
+            0,
+            -16,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Marking_4L_L16_13",
+          "module": "RoadPlan_Marking_4L_L16",
+          "position_m": [
+            0.0,
+            -16.0,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L8_14",
+          "module": "RoadPlan_Walk_W2_L8",
+          "position_m": [
+            7.119999408721924,
+            -20.0,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L8_15",
+          "module": "RoadPlan_Curb_L8",
+          "position_m": [
+            6.059999465942383,
+            -20.0,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L8_16",
+          "module": "RoadPlan_Walk_W2_L8",
+          "position_m": [
+            7.12000036239624,
+            -12.0,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L8_17",
+          "module": "RoadPlan_Curb_L8",
+          "position_m": [
+            6.060000419616699,
+            -12.0,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L8_18",
+          "module": "RoadPlan_Walk_W2_L8",
+          "position_m": [
+            -7.12000036239624,
+            -20.0,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L8_19",
+          "module": "RoadPlan_Curb_L8",
+          "position_m": [
+            -6.060000419616699,
+            -20.0,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L8_20",
+          "module": "RoadPlan_Walk_W2_L8",
+          "position_m": [
+            -7.119999408721924,
+            -12.0,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L8_21",
+          "module": "RoadPlan_Curb_L8",
+          "position_m": [
+            -6.059999465942383,
+            -12.0,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Surface_4L_L16_22",
+          "module": "RoadPlan_Surface_4L_L16",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Marking_4L_L16_23",
+          "module": "RoadPlan_Marking_4L_L16",
+          "position_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L8_24",
+          "module": "RoadPlan_Walk_W2_L8",
+          "position_m": [
+            7.119999408721924,
+            -4.000000476837158,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L8_25",
+          "module": "RoadPlan_Curb_L8",
+          "position_m": [
+            6.059999465942383,
+            -4.000000476837158,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L8_26",
+          "module": "RoadPlan_Walk_W2_L8",
+          "position_m": [
+            7.12000036239624,
+            3.999999523162842,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L8_27",
+          "module": "RoadPlan_Curb_L8",
+          "position_m": [
+            6.060000419616699,
+            3.999999523162842,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L8_28",
+          "module": "RoadPlan_Walk_W2_L8",
+          "position_m": [
+            -7.12000036239624,
+            -3.999999523162842,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L8_29",
+          "module": "RoadPlan_Curb_L8",
+          "position_m": [
+            -6.060000419616699,
+            -3.999999523162842,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L8_30",
+          "module": "RoadPlan_Walk_W2_L8",
+          "position_m": [
+            -7.119999408721924,
+            4.000000476837158,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L8_31",
+          "module": "RoadPlan_Curb_L8",
+          "position_m": [
+            -6.059999465942383,
+            4.000000476837158,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Surface_4L_L16_32",
+          "module": "RoadPlan_Surface_4L_L16",
+          "position_m": [
+            0,
+            16,
+            0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Marking_4L_L16_33",
+          "module": "RoadPlan_Marking_4L_L16",
+          "position_m": [
+            0.0,
+            16.0,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L8_34",
+          "module": "RoadPlan_Walk_W2_L8",
+          "position_m": [
+            7.119999408721924,
+            12.0,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L8_35",
+          "module": "RoadPlan_Curb_L8",
+          "position_m": [
+            6.059999465942383,
+            12.0,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L8_36",
+          "module": "RoadPlan_Walk_W2_L8",
+          "position_m": [
+            7.12000036239624,
+            20.0,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L8_37",
+          "module": "RoadPlan_Curb_L8",
+          "position_m": [
+            6.060000419616699,
+            20.0,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L8_38",
+          "module": "RoadPlan_Walk_W2_L8",
+          "position_m": [
+            -7.12000036239624,
+            12.0,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L8_39",
+          "module": "RoadPlan_Curb_L8",
+          "position_m": [
+            -6.060000419616699,
+            12.0,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_L8_40",
+          "module": "RoadPlan_Walk_W2_L8",
+          "position_m": [
+            -7.119999408721924,
+            20.0,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L8_41",
+          "module": "RoadPlan_Curb_L8",
+          "position_m": [
+            -6.059999465942383,
+            20.0,
+            0.0
+          ],
+          "yaw_degrees": 90.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      ],
+      "connections": [
+        {
+          "a": 0,
+          "port_a": "end",
+          "b": 5,
+          "port_b": "start"
+        }
+      ],
+      "checks": [
+        {
+          "kind": "grade_separated_crossing",
+          "deck_surface_z_m": 8.4,
+          "lowest_structure_z_m": 8.0,
+          "ground_surface_z_m": 0,
+          "clearance_m": 8,
+          "pier_stations_m": [
+            -12,
+            12
+          ],
+          "ground_road_half_width_m": 6,
+          "ground_walk_outer_edge_m": 8.12,
+          "no_graph_connection_between_levels": true
+        }
+      ]
+    },
+    "34_RoadPlan_Structure_Details": {
+      "placements": [
+        {
+          "id": "RoadPlan_Deck_2L_L8_0",
+          "module": "RoadPlan_Deck_2L_L8",
+          "position_m": [
+            -5,
+            0,
+            9.3
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckStructure_L8_1",
+          "module": "RoadPlan_DeckStructure_L8",
+          "position_m": [
+            -5,
+            0,
+            8.5
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L8_2",
+          "module": "RoadPlan_Parapet_L8",
+          "position_m": [
+            -5,
+            -3.16,
+            9.3
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L8_3",
+          "module": "RoadPlan_Parapet_L8",
+          "position_m": [
+            -5,
+            3.16,
+            9.3
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Pier_H8_4",
+          "module": "RoadPlan_Pier_H8",
+          "position_m": [
+            -5,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Drain_L2_5",
+          "module": "RoadPlan_Drain_L2",
+          "position_m": [
+            6,
+            -2,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Curb_L4_6",
+          "module": "RoadPlan_Curb_L4",
+          "position_m": [
+            6,
+            -0.5,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Barrier_EndProtection_7",
+          "module": "RoadPlan_Barrier_EndProtection",
+          "position_m": [
+            8,
+            4,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Walk_W2_EndCap_L1_8",
+          "module": "RoadPlan_Walk_W2_EndCap_L1",
+          "position_m": [
+            6,
+            -5,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      ],
+      "connections": [],
+      "checks": []
+    },
+    "35_RoadPlan_Side_Elevation": {
+      "placements": [
+        {
+          "id": "RoadPlan_Ramp_2L_Rise8p4_L110_0",
+          "module": "RoadPlan_Ramp_2L_Rise8p4_L110",
+          "position_m": [
+            0,
+            0,
+            0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_RampMarking_2L_Rise8p4_L110_1",
+          "module": "RoadPlan_RampMarking_2L_Rise8p4_L110",
+          "position_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_RampParapet_2L_Rise8p4_L110_2",
+          "module": "RoadPlan_RampParapet_2L_Rise8p4_L110",
+          "position_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_RampStructure_2L_Rise8p4_L110_3",
+          "module": "RoadPlan_RampStructure_2L_Rise8p4_L110",
+          "position_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Deck_2L_L16_4",
+          "module": "RoadPlan_Deck_2L_L16",
+          "position_m": [
+            118,
+            0,
+            8.4
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckMarking_2L_L16_5",
+          "module": "RoadPlan_DeckMarking_2L_L16",
+          "position_m": [
+            118.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_DeckStructure_L16_6",
+          "module": "RoadPlan_DeckStructure_L16",
+          "position_m": [
+            118.0,
+            0.0,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_7",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            118.0,
+            -3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        },
+        {
+          "id": "RoadPlan_Parapet_L16_8",
+          "module": "RoadPlan_Parapet_L16",
+          "position_m": [
+            118.0,
+            3.1600000858306885,
+            8.399999618530273
+          ],
+          "yaw_degrees": 0.0,
+          "scale": [
+            1,
+            1,
+            1
+          ]
+        }
+      ],
+      "connections": [],
+      "checks": []
+    }
+  }
+}

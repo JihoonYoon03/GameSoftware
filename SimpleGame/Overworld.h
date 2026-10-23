@@ -119,6 +119,8 @@ struct TrafficVehicle
     float stoppedSeconds = 0;
     bool yieldingRight = false;
     int reservedFrom = -1, reservedTo = -1;
+    int health = 140;
+    float wreckSeconds = 0, impactCooldown = 0, hitFlash = 0;
 };
 class TrafficSystem
 {
@@ -138,6 +140,8 @@ class TrafficSystem
     Vector2 RenderPosition(size_t index) const;
     float RenderYaw(size_t index) const;
     float RenderElevation(size_t index) const;
+    bool DamageVehicle(std::uint64_t id, int damage, bool playerOwned = true);
+    void StopForImpact(std::uint64_t id);
     TrafficLight Light(int lane, TrafficTurn turn) const;
     bool PedestrianGreen(int junction, int road = -1) const;
     unsigned int PedestrianGroups(int junction) const;

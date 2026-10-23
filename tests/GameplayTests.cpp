@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Level.h"
+#include "Civic.h"
 #include "Monitoring/LocalMonitorServer.h"
 #include "Monitoring/Monitor.h"
 #include "Overworld.h"
@@ -1350,8 +1351,16 @@ void TestChapterOne()
     mineState.player.health = 0;
     bool generator = s.generatorRestored;
     level.Update(.05f);
-    assert(mineState.player.health == mineState.player.maxHealth && s.generatorRestored == generator);
-    assert(tutorial::Game::Distance(game.GetState().playerPosition, kFrontierEntry) < .001f);
+    assert(tutorial::HospitalRecovery::Active() && mineState.player.health <= 0);
+    for (int i = 0; i < 60; ++i)
+    {
+        tutorial::HospitalRecovery::Update(.05f);
+    }
+    assert(!tutorial::HospitalRecovery::Active() && mineState.player.health == mineState.player.maxHealth);
+    assert(s.generatorRestored == generator && !s.active);
+    const auto &clinic =
+        tutorial::CivicJustice::State().hospitals[size_t(tutorial::CivicJustice::State().hospital)];
+    assert(tutorial::Game::Distance(game.GetState().playerPosition, clinic.position) < .1f);
     game.Reset();
 }
 void TestStoryAndReentry()

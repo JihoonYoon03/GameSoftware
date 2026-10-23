@@ -182,6 +182,7 @@ struct CharacterPose
     bool armed = false;
     bool walking = false, riding = false;
     float animationPhase = 0, recoil = 0, locomotionSpeed = 2.1f;
+    float meleeSeconds = 0;
     Point Apply(Point point, Joint joint) const;
 };
 // ============================================================================

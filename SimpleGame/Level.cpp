@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "Level.h"
+#include "Civic.h"
 #include "Profiler.h"
 #include "ResourceAssets.h"
 #include <algorithm>
@@ -408,21 +409,6 @@ void MineMap::Generate(std::uint32_t seed)
 MineCombat::MineCombat(MineLevel &owner) : level(owner), state(owner.GetState())
 {
 }
-void MineCombat::RespawnPlayer()
-{
-    auto &world = tutorial::Game::Get().GetState();
-    state.player.health = state.player.maxHealth;
-    world.playerPosition = state.entry;
-    world.cameraPosition = state.entry;
-    state.invulnerability = 3;
-    state.navigationCooldown = 0;
-    state.bullets.clear();
-    state.tracers.clear();
-    state.pistol.Reset();
-    level.ClearInput();
-    tutorial::Game::Get().ShowNotice("리아 / 입구로 구조했어. 조사 기록·구조 성과·경험치는 그대로야.");
-}
-
 void MineCombat::MoveEnemy(Enemy &enemy, float deltaSeconds, tutorial::Vector2 target, bool playerTarget)
 {
     int x = int(std::floor(enemy.position.x)), y = int(std::floor(enemy.position.y));
@@ -836,7 +822,7 @@ void MineCombat::UpdateEnemies(float deltaSeconds)
             state.invulnerability = .45f;
             if (state.player.health <= 0)
             {
-                RespawnPlayer();
+                tutorial::HospitalRecovery::Begin();
                 break;
             }
         }
@@ -1410,6 +1396,7 @@ void MineLevel::Interact()
                                    else
                                    {
                                        state.player.salvage = (std::min)(9999, state.player.salvage + 1);
+                                       state.player.credits = (std::min)(9999999, state.player.credits + 5);
                                    }
                                    ++collected;
                                    return true;
@@ -1973,17 +1960,18 @@ void ChapterOneLevel::Interact()
         break;
     case ChapterAction::ConvoySupply: {
         auto &stats = GameLevels::Mine().GetState().player;
-        if (stats.salvage >= 2 && stats.recoveryKits < 999)
+        int price = tutorial::CivicJustice::ShopPrice(2);
+        if (stats.salvage >= price && stats.recoveryKits < 999)
         {
-            stats.salvage -= 2;
+            stats.salvage -= price;
             ++stats.recoveryKits;
-            game.ShowNotice("운송대 보급상 / 부품 2개와 회복 키트 1개를 교환했습니다. 북서 게이트는 헤일로, "
-                            "서쪽 도로는 발전기, 남쪽 도로는 폐설비로 이어집니다.");
+            game.ShowNotice("운송대 보급상 / 보안망 신용에 따른 부품 " + std::to_string(price) +
+                            "개와 회복 키트 1개를 교환했습니다.");
         }
         else
         {
-            game.ShowNotice("운송대 보급상 / 회복 키트 한 개에 부품 두 개입니다. 북서 게이트는 헤일로, "
-                            "서쪽은 발전기, 남쪽 도로는 폐설비로 이어집니다.");
+            game.ShowNotice("운송대 보급상 / 회복 키트 1개에 부품 " + std::to_string(price) +
+                            "개입니다. 공동 수신망의 평판이 거래가에 반영됩니다.");
         }
         break;
     }
@@ -2265,23 +2253,7 @@ void FrontierCombat::Update(float deltaSeconds)
     }
     if (mine.player.health <= 0)
     {
-        mine.player.health = mine.player.maxHealth;
-        world.playerPosition = world.cameraPosition = kFrontierEntry;
-        state.ria.position = {6.5f, 6.5f};
-        state.ria.route.clear();
-        state.ria.waypoint = 0;
-        if (state.kainJoined)
-        {
-            state.kain.position = {6.5f, 7.5f};
-            state.kain.route.clear();
-            state.kain.waypoint = 0;
-        }
-        state.bullets.clear();
-        state.tracers.clear();
-        state.invulnerability = 3;
-        world.mouseFiring = false;
-        tutorial::Game::Get().ShowNotice(
-            "리아 / 안전 게이트로 후퇴했어. 확보한 기록과 구조 상태는 그대로야.");
+        tutorial::HospitalRecovery::Begin();
     }
 }
 void FrontierParty::Update(float deltaSeconds)
