@@ -8,7 +8,7 @@
 - **파트당 최대 492삼각형**: 삼각형 변환 후에도 요청한 500개 이하
 - **체형 6종**, 목적별 의복 **9종 × 6체형**, 독립 액세서리 **34개**
 - **인물 조립 예제 10개**, 몹 3계열·머리 교체형 포함 **6개**, 건물 예제 **10개**, 차량 5종의 A/B 예제 **10개**, 비행체 4종의 A/B 예제 **8개**, 도시·도로·야외 프롭 **34종**
-- 공통 인체와 3개 몹 리그에 **각 15개 스켈레탈 클립**, 압력문에 개폐 2개, 차량에 타입별 10~11개, 비행체에 타입별 **12개**
+- 공통 인체 **43개 스켈레탈 클립**(기존 15개 유지·개선 + 새 동작 28개), 몹 리그별 15개, 압력문 개폐 2개, 차량 타입별 14~15개, 비행체 타입별 **12개**
 - 512×512 반복 PBR 재질 **8세트·PNG 24개**
 - **GLB 2,575개**, Blender 편집 원본, 조립·본·클립·블렌딩·통행로 접속 JSON, 검증 결과와 렌더 미리보기
 
@@ -19,6 +19,12 @@
 [캐릭터 디테일 개선·조립 규칙](Documentation/CHARACTER_DETAIL_ko.md) · [체형·의복·액세서리 설계](Documentation/CHARACTER_DESIGN_ko.md) · [차량 조립 안내](Documentation/VEHICLES_ko.md)
 
 [비행체·도시·도로·야외 프롭 안내](Documentation/AIR_CITY_ko.md) · [비행체 조합](Documentation/aircraft_assemblies.json) · [배경 조합](Documentation/scenery_assemblies.json)
+
+## 도시 반응·모션 개선 — 2026-10-23
+
+방향별 피격·넘어짐·누운 상태·기립·사망, 도주·제압 사격·의료 회복·바이크 버티기를 추가했습니다. 기존 인체 대기·보행·달리기·회전·공격·점프도 접지와 체중 이동을 다듬었습니다. 차량에는 충격·동력 차단과 정리 이벤트를 추가했습니다. 게임 코드와 Runtime 캐시는 수정하지 않았습니다.
+
+[바로 열어 재생하는 Blender 파일](Source/Civic_Animations.blend) · [동작·연결 안내](Documentation/CIVIC_ANIMATION_GUIDE_ko.md) · [통합 계약](Documentation/civic_animation_contract.json) · [렌더 미리보기](Preview/Civic/motion_overview.jpg)
 
 ## 도로·보행로·비행 안내 확장 — 2026-10-22
 

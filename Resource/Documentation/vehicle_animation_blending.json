@@ -4,10 +4,70 @@
   "units": "meters",
   "forward_axis": "+X",
   "root_motion": "in_place",
-  "locomotion": {"clips": ["Hover_Idle", "Cruise", "Boost"], "crossfade_seconds": 0.15, "synchronize_normalized_phase": true, "quaternions": "shortest_path_slerp"},
-  "steering": {"clips": ["Steer_Left", "Steer_Right"], "mask": ["frontpod.L", "frontpod.R", "engine.L", "engine.R"], "actor_yaw": "controlled externally", "chassis_roll_pitch": "not imposed"},
-  "canopy": {"open": "Canopy_Open", "close": "Canopy_Close", "mask": ["canopy"], "hold_open_end_pose": true},
-  "hatch": {"open": "Cargo_Open", "close": "Cargo_Close", "mask": ["cargo"], "hold_open_end_pose": true, "payload_shell_moves": false},
-  "fire": {"type": "Patrol", "clip": "Vehicle_Fire", "mask": ["turret_yaw", "turret_pitch", "muzzle"], "requires_payload": "Payload_CoilTurret", "fire_phase": 0.08},
-  "runtime_implementation_included": false
+  "locomotion": {
+    "clips": [
+      "Hover_Idle",
+      "Cruise",
+      "Boost"
+    ],
+    "crossfade_seconds": 0.15,
+    "synchronize_normalized_phase": true,
+    "quaternions": "shortest_path_slerp"
+  },
+  "steering": {
+    "clips": [
+      "Steer_Left",
+      "Steer_Right"
+    ],
+    "mask": [
+      "frontpod.L",
+      "frontpod.R",
+      "engine.L",
+      "engine.R"
+    ],
+    "actor_yaw": "controlled externally",
+    "chassis_roll_pitch": "not imposed"
+  },
+  "canopy": {
+    "open": "Canopy_Open",
+    "close": "Canopy_Close",
+    "mask": [
+      "canopy"
+    ],
+    "hold_open_end_pose": true
+  },
+  "hatch": {
+    "open": "Cargo_Open",
+    "close": "Cargo_Close",
+    "mask": [
+      "cargo"
+    ],
+    "hold_open_end_pose": true,
+    "payload_shell_moves": false
+  },
+  "fire": {
+    "type": "Patrol",
+    "clip": "Vehicle_Fire",
+    "mask": [
+      "turret_yaw",
+      "turret_pitch",
+      "muzzle"
+    ],
+    "requires_payload": "Payload_CoilTurret",
+    "fire_phase": 0.08
+  },
+  "runtime_implementation_included": false,
+  "civic": {
+    "impact": [
+      "Vehicle_Impact_Front",
+      "Vehicle_Impact_Rear",
+      "Vehicle_Impact_Side"
+    ],
+    "disabled": "Vehicle_Disabled",
+    "bike": "Bike_Impact",
+    "rider": "Rider_Brace",
+    "chassis_and_socket_motion": "fixed, physics owns displacement and yaw",
+    "power_cut_and_sparks": "metadata events; use existing depth-tested 2D billboard",
+    "tow": "tow_cleanup_eligible_when_offscreen event; game decides delay and opacity fade; collision stays solid until removal"
+  }
 }

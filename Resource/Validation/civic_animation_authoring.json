@@ -1,0 +1,606 @@
+{
+  "revision": "civic_motion_v1",
+  "geometry_before_sha256": "4da2e255a78ef12d271b1a564eb2f012e3364de82357b2fda46836c39377b8c7",
+  "human": {
+    "Reference_A": {
+      "frames": 1,
+      "loop": false,
+      "max_clearance_correction_m": 0,
+      "max_temporal_clearance_lift_m": 0.0,
+      "clearance_limiting_part": null,
+      "worst_frame": 0,
+      "min_source_vertex_z_m": null
+    },
+    "Turn_Base": {
+      "frames": 1,
+      "loop": false,
+      "max_clearance_correction_m": 0,
+      "max_temporal_clearance_lift_m": 0.0,
+      "clearance_limiting_part": null,
+      "worst_frame": 0,
+      "min_source_vertex_z_m": null
+    },
+    "Idle": {
+      "frames": 60,
+      "loop": true,
+      "max_clearance_correction_m": 0.0005003860832743763,
+      "max_temporal_clearance_lift_m": 0.0,
+      "clearance_limiting_part": "Boot_R",
+      "worst_frame": 5.5,
+      "min_source_vertex_z_m": 0.001,
+      "loop_max_matrix_error": 1.4695761072969157e-18
+    },
+    "Walk": {
+      "frames": 30,
+      "loop": true,
+      "max_clearance_correction_m": 0.0005004319042672825,
+      "max_temporal_clearance_lift_m": 0.007066566839083518,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 5.0,
+      "min_source_vertex_z_m": 0.001,
+      "loop_max_matrix_error": 4.408728321890747e-18
+    },
+    "Run": {
+      "frames": 20,
+      "loop": true,
+      "max_clearance_correction_m": 0.0005002543284102776,
+      "max_temporal_clearance_lift_m": 0.013629712072316336,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 3.5,
+      "min_source_vertex_z_m": 0.001,
+      "loop_max_matrix_error": 4.408728321890747e-18
+    },
+    "Turn_Left_90": {
+      "frames": 24,
+      "loop": false,
+      "max_clearance_correction_m": 0.0005005519837617149,
+      "max_temporal_clearance_lift_m": 0.0010681070123454975,
+      "clearance_limiting_part": "Boot_R",
+      "worst_frame": 10.0,
+      "min_source_vertex_z_m": 0.001
+    },
+    "Turn_Right_90": {
+      "frames": 24,
+      "loop": false,
+      "max_clearance_correction_m": 0.0005004661979662819,
+      "max_temporal_clearance_lift_m": 0.0,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 24.0,
+      "min_source_vertex_z_m": 0.001
+    },
+    "Attack_Melee": {
+      "frames": 24,
+      "loop": false,
+      "max_clearance_correction_m": 0.0005005499558090839,
+      "max_temporal_clearance_lift_m": 0.0028106441866569297,
+      "clearance_limiting_part": "Boot_R",
+      "worst_frame": 19.5,
+      "min_source_vertex_z_m": 0.001
+    },
+    "Aim_Base": {
+      "frames": 1,
+      "loop": false,
+      "max_clearance_correction_m": 0.0004999808723140191,
+      "max_temporal_clearance_lift_m": 0.0,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 0.0,
+      "min_source_vertex_z_m": 0.001
+    },
+    "Attack_Fire": {
+      "frames": 12,
+      "loop": false,
+      "max_clearance_correction_m": 0.0004999808723140191,
+      "max_temporal_clearance_lift_m": 0.0,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 0.0,
+      "min_source_vertex_z_m": 0.001
+    },
+    "Jump_Start": {
+      "frames": 12,
+      "loop": false,
+      "max_clearance_correction_m": 0.0005000711698717136,
+      "max_temporal_clearance_lift_m": 0.0007979230068170381,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 6.0,
+      "min_source_vertex_z_m": 0.001
+    },
+    "Jump_Air": {
+      "frames": 20,
+      "loop": true,
+      "max_clearance_correction_m": 0,
+      "max_temporal_clearance_lift_m": 0.0,
+      "clearance_limiting_part": null,
+      "worst_frame": 0,
+      "min_source_vertex_z_m": 0.157999900133763,
+      "loop_max_matrix_error": 0.0
+    },
+    "Jump_Land": {
+      "frames": 12,
+      "loop": false,
+      "max_clearance_correction_m": 0.0005003410601615232,
+      "max_temporal_clearance_lift_m": 0.0005715917395033637,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 4.5,
+      "min_source_vertex_z_m": 0.001
+    },
+    "Jump_Full": {
+      "frames": 36,
+      "loop": false,
+      "max_clearance_correction_m": 0.0005003967392719256,
+      "max_temporal_clearance_lift_m": 0.0032716379540950738,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 31.0,
+      "min_source_vertex_z_m": 0.001
+    },
+    "Walk_To_Run": {
+      "frames": 24,
+      "loop": false,
+      "max_clearance_correction_m": 0.000500302184215381,
+      "max_temporal_clearance_lift_m": 0.009412644416332334,
+      "clearance_limiting_part": "Boot_R",
+      "worst_frame": 21.5,
+      "min_source_vertex_z_m": 0.001
+    },
+    "Hit_Front": {
+      "frames": 9,
+      "loop": false,
+      "max_clearance_correction_m": 0.0004999808723140191,
+      "max_temporal_clearance_lift_m": 0.0,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 0.0,
+      "min_source_vertex_z_m": 0.001
+    },
+    "Hit_Back": {
+      "frames": 9,
+      "loop": false,
+      "max_clearance_correction_m": 0.0004999808723140191,
+      "max_temporal_clearance_lift_m": 0.0,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 0.0,
+      "min_source_vertex_z_m": 0.001
+    },
+    "Hit_Left": {
+      "frames": 9,
+      "loop": false,
+      "max_clearance_correction_m": 0.0004999808723140191,
+      "max_temporal_clearance_lift_m": 0.0,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 0.0,
+      "min_source_vertex_z_m": 0.001
+    },
+    "Hit_Right": {
+      "frames": 9,
+      "loop": false,
+      "max_clearance_correction_m": 0.0004999808723140191,
+      "max_temporal_clearance_lift_m": 0.0,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 0.0,
+      "min_source_vertex_z_m": 0.001
+    },
+    "Knockdown_Front": {
+      "frames": 24,
+      "loop": false,
+      "max_clearance_correction_m": 0.0005005304025982029,
+      "max_temporal_clearance_lift_m": 0.0022830371486730677,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 6.5,
+      "min_source_vertex_z_m": 0.001
+    },
+    "Knockdown_Back": {
+      "frames": 24,
+      "loop": false,
+      "max_clearance_correction_m": 0.0005020262200382533,
+      "max_temporal_clearance_lift_m": 0.008903554568762385,
+      "clearance_limiting_part": "Boot_R",
+      "worst_frame": 9.5,
+      "min_source_vertex_z_m": 0.001
+    },
+    "Knockdown_Left": {
+      "frames": 24,
+      "loop": false,
+      "max_clearance_correction_m": 0.0005013336665583004,
+      "max_temporal_clearance_lift_m": 0.016453677012460713,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 7.0,
+      "min_source_vertex_z_m": 0.001
+    },
+    "Knockdown_Right": {
+      "frames": 24,
+      "loop": false,
+      "max_clearance_correction_m": 0.0005003153752962514,
+      "max_temporal_clearance_lift_m": 0.03652077955404265,
+      "clearance_limiting_part": "Boot_R",
+      "worst_frame": 1.0,
+      "min_source_vertex_z_m": 0.001
+    },
+    "Downed_Loop": {
+      "frames": 60,
+      "loop": true,
+      "max_clearance_correction_m": 0,
+      "max_temporal_clearance_lift_m": 0.0,
+      "clearance_limiting_part": null,
+      "worst_frame": 0,
+      "min_source_vertex_z_m": 0.007041489846699278,
+      "loop_max_matrix_error": 0.0
+    },
+    "GetUp_Front": {
+      "frames": 42,
+      "loop": false,
+      "max_clearance_correction_m": 0.0005004583217553836,
+      "max_temporal_clearance_lift_m": 0.009197406508913653,
+      "clearance_limiting_part": "Boot_R",
+      "worst_frame": 38.0,
+      "min_source_vertex_z_m": 0.001
+    },
+    "GetUp_Back": {
+      "frames": 42,
+      "loop": false,
+      "max_clearance_correction_m": 0.04734854249836429,
+      "max_temporal_clearance_lift_m": 0.003620685800096479,
+      "clearance_limiting_part": "Outfit_Miner_Male_Heavy_Cuff_R",
+      "worst_frame": 3.0,
+      "min_source_vertex_z_m": 0.001
+    },
+    "Death_Front": {
+      "frames": 30,
+      "loop": false,
+      "max_clearance_correction_m": 0.0005004798911988993,
+      "max_temporal_clearance_lift_m": 0.0018467830561604828,
+      "clearance_limiting_part": "Boot_R",
+      "worst_frame": 1.0,
+      "min_source_vertex_z_m": 0.001
+    },
+    "Death_Back": {
+      "frames": 30,
+      "loop": false,
+      "max_clearance_correction_m": 0.0005017959233640781,
+      "max_temporal_clearance_lift_m": 0.005958093179280129,
+      "clearance_limiting_part": "Boot_R",
+      "worst_frame": 12.0,
+      "min_source_vertex_z_m": 0.001
+    },
+    "Death_Front_Pose": {
+      "frames": 1,
+      "loop": false,
+      "max_clearance_correction_m": 0,
+      "max_temporal_clearance_lift_m": 0.0,
+      "clearance_limiting_part": null,
+      "worst_frame": 0,
+      "min_source_vertex_z_m": 0.013490043418712183
+    },
+    "Death_Back_Pose": {
+      "frames": 1,
+      "loop": false,
+      "max_clearance_correction_m": 0,
+      "max_temporal_clearance_lift_m": 0.0,
+      "clearance_limiting_part": null,
+      "worst_frame": 0,
+      "min_source_vertex_z_m": 0.01349011949197898
+    },
+    "Flee_Start": {
+      "frames": 6,
+      "loop": false,
+      "max_clearance_correction_m": 0.0005003827172887268,
+      "max_temporal_clearance_lift_m": 0.0032980151623677205,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 1.0,
+      "min_source_vertex_z_m": 0.001
+    },
+    "Flee_Run": {
+      "frames": 20,
+      "loop": true,
+      "max_clearance_correction_m": 0.0005002543284102776,
+      "max_temporal_clearance_lift_m": 0.013629712072316336,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 3.5,
+      "min_source_vertex_z_m": 0.001,
+      "loop_max_matrix_error": 4.408728321890747e-18
+    },
+    "Flee_Stop": {
+      "frames": 6,
+      "loop": false,
+      "max_clearance_correction_m": 0.0005003592619299015,
+      "max_temporal_clearance_lift_m": 0.0032980151623677205,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 5.0,
+      "min_source_vertex_z_m": 0.001
+    },
+    "Security_StunFire": {
+      "frames": 12,
+      "loop": false,
+      "max_clearance_correction_m": 0.0004999808723140191,
+      "max_temporal_clearance_lift_m": 0.0,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 0.0,
+      "min_source_vertex_z_m": 0.001
+    },
+    "Medical_Stabilized": {
+      "frames": 30,
+      "loop": false,
+      "max_clearance_correction_m": 0,
+      "max_temporal_clearance_lift_m": 0.0,
+      "clearance_limiting_part": null,
+      "worst_frame": 0,
+      "min_source_vertex_z_m": 0.013490043418712183
+    },
+    "Medical_GetUp": {
+      "frames": 42,
+      "loop": false,
+      "max_clearance_correction_m": 0.0005004583217553836,
+      "max_temporal_clearance_lift_m": 0.009197406508913653,
+      "clearance_limiting_part": "Boot_R",
+      "worst_frame": 38.0,
+      "min_source_vertex_z_m": 0.001
+    },
+    "Ride_Base": {
+      "frames": 1,
+      "loop": false,
+      "max_clearance_correction_m": 0,
+      "max_temporal_clearance_lift_m": 0.0,
+      "clearance_limiting_part": null,
+      "worst_frame": 0,
+      "min_source_vertex_z_m": null
+    },
+    "Rider_Brace": {
+      "frames": 15,
+      "loop": false,
+      "max_clearance_correction_m": 0,
+      "max_temporal_clearance_lift_m": 0.0,
+      "clearance_limiting_part": null,
+      "worst_frame": 0,
+      "min_source_vertex_z_m": null
+    },
+    "Downed_Back_Loop": {
+      "frames": 60,
+      "loop": true,
+      "max_clearance_correction_m": 0,
+      "max_temporal_clearance_lift_m": 0.0,
+      "clearance_limiting_part": null,
+      "worst_frame": 0,
+      "min_source_vertex_z_m": 0.007041490045772925,
+      "loop_max_matrix_error": 0.0
+    },
+    "Downed_Left_Loop": {
+      "frames": 60,
+      "loop": true,
+      "max_clearance_correction_m": 0,
+      "max_temporal_clearance_lift_m": 0.0,
+      "clearance_limiting_part": null,
+      "worst_frame": 0,
+      "min_source_vertex_z_m": 0.007041484792970287,
+      "loop_max_matrix_error": 0.0
+    },
+    "Downed_Right_Loop": {
+      "frames": 60,
+      "loop": true,
+      "max_clearance_correction_m": 0,
+      "max_temporal_clearance_lift_m": 0.0,
+      "clearance_limiting_part": null,
+      "worst_frame": 0,
+      "min_source_vertex_z_m": 0.007041528588441537,
+      "loop_max_matrix_error": 0.0
+    },
+    "GetUp_Left": {
+      "frames": 42,
+      "loop": false,
+      "max_clearance_correction_m": 0.0005004583217553836,
+      "max_temporal_clearance_lift_m": 0.008018326823383881,
+      "clearance_limiting_part": "Boot_R",
+      "worst_frame": 38.0,
+      "min_source_vertex_z_m": 0.001
+    },
+    "GetUp_Right": {
+      "frames": 42,
+      "loop": false,
+      "max_clearance_correction_m": 0.06713628427611396,
+      "max_temporal_clearance_lift_m": 0.0463220418665472,
+      "clearance_limiting_part": "Outfit_HeavyCombat_Female_Heavy_Torso_OuterAssembly",
+      "worst_frame": 5.0,
+      "min_source_vertex_z_m": 0.001
+    }
+  },
+  "vehicles": {
+    "Coupe": {
+      "Vehicle_Impact_Front": {
+        "frames": 15,
+        "loop": false,
+        "max_clearance_correction_m": 0,
+        "max_temporal_clearance_lift_m": 0.0,
+        "clearance_limiting_part": null,
+        "worst_frame": 0,
+        "min_source_vertex_z_m": null
+      },
+      "Vehicle_Impact_Rear": {
+        "frames": 15,
+        "loop": false,
+        "max_clearance_correction_m": 0,
+        "max_temporal_clearance_lift_m": 0.0,
+        "clearance_limiting_part": null,
+        "worst_frame": 0,
+        "min_source_vertex_z_m": null
+      },
+      "Vehicle_Impact_Side": {
+        "frames": 15,
+        "loop": false,
+        "max_clearance_correction_m": 0,
+        "max_temporal_clearance_lift_m": 0.0,
+        "clearance_limiting_part": null,
+        "worst_frame": 0,
+        "min_source_vertex_z_m": null
+      },
+      "Vehicle_Disabled": {
+        "frames": 24,
+        "loop": false,
+        "max_clearance_correction_m": 0,
+        "max_temporal_clearance_lift_m": 0.0,
+        "clearance_limiting_part": null,
+        "worst_frame": 0,
+        "min_source_vertex_z_m": null
+      }
+    },
+    "Shuttle": {
+      "Vehicle_Impact_Front": {
+        "frames": 15,
+        "loop": false,
+        "max_clearance_correction_m": 0,
+        "max_temporal_clearance_lift_m": 0.0,
+        "clearance_limiting_part": null,
+        "worst_frame": 0,
+        "min_source_vertex_z_m": null
+      },
+      "Vehicle_Impact_Rear": {
+        "frames": 15,
+        "loop": false,
+        "max_clearance_correction_m": 0,
+        "max_temporal_clearance_lift_m": 0.0,
+        "clearance_limiting_part": null,
+        "worst_frame": 0,
+        "min_source_vertex_z_m": null
+      },
+      "Vehicle_Impact_Side": {
+        "frames": 15,
+        "loop": false,
+        "max_clearance_correction_m": 0,
+        "max_temporal_clearance_lift_m": 0.0,
+        "clearance_limiting_part": null,
+        "worst_frame": 0,
+        "min_source_vertex_z_m": null
+      },
+      "Vehicle_Disabled": {
+        "frames": 24,
+        "loop": false,
+        "max_clearance_correction_m": 0,
+        "max_temporal_clearance_lift_m": 0.0,
+        "clearance_limiting_part": null,
+        "worst_frame": 0,
+        "min_source_vertex_z_m": null
+      }
+    },
+    "Hauler": {
+      "Vehicle_Impact_Front": {
+        "frames": 15,
+        "loop": false,
+        "max_clearance_correction_m": 0,
+        "max_temporal_clearance_lift_m": 0.0,
+        "clearance_limiting_part": null,
+        "worst_frame": 0,
+        "min_source_vertex_z_m": null
+      },
+      "Vehicle_Impact_Rear": {
+        "frames": 15,
+        "loop": false,
+        "max_clearance_correction_m": 0,
+        "max_temporal_clearance_lift_m": 0.0,
+        "clearance_limiting_part": null,
+        "worst_frame": 0,
+        "min_source_vertex_z_m": null
+      },
+      "Vehicle_Impact_Side": {
+        "frames": 15,
+        "loop": false,
+        "max_clearance_correction_m": 0,
+        "max_temporal_clearance_lift_m": 0.0,
+        "clearance_limiting_part": null,
+        "worst_frame": 0,
+        "min_source_vertex_z_m": null
+      },
+      "Vehicle_Disabled": {
+        "frames": 24,
+        "loop": false,
+        "max_clearance_correction_m": 0,
+        "max_temporal_clearance_lift_m": 0.0,
+        "clearance_limiting_part": null,
+        "worst_frame": 0,
+        "min_source_vertex_z_m": null
+      }
+    },
+    "Patrol": {
+      "Vehicle_Impact_Front": {
+        "frames": 15,
+        "loop": false,
+        "max_clearance_correction_m": 0,
+        "max_temporal_clearance_lift_m": 0.0,
+        "clearance_limiting_part": null,
+        "worst_frame": 0,
+        "min_source_vertex_z_m": null
+      },
+      "Vehicle_Impact_Rear": {
+        "frames": 15,
+        "loop": false,
+        "max_clearance_correction_m": 0,
+        "max_temporal_clearance_lift_m": 0.0,
+        "clearance_limiting_part": null,
+        "worst_frame": 0,
+        "min_source_vertex_z_m": null
+      },
+      "Vehicle_Impact_Side": {
+        "frames": 15,
+        "loop": false,
+        "max_clearance_correction_m": 0,
+        "max_temporal_clearance_lift_m": 0.0,
+        "clearance_limiting_part": null,
+        "worst_frame": 0,
+        "min_source_vertex_z_m": null
+      },
+      "Vehicle_Disabled": {
+        "frames": 24,
+        "loop": false,
+        "max_clearance_correction_m": 0,
+        "max_temporal_clearance_lift_m": 0.0,
+        "clearance_limiting_part": null,
+        "worst_frame": 0,
+        "min_source_vertex_z_m": null
+      }
+    },
+    "JetBike": {
+      "Vehicle_Impact_Front": {
+        "frames": 15,
+        "loop": false,
+        "max_clearance_correction_m": 0,
+        "max_temporal_clearance_lift_m": 0.0,
+        "clearance_limiting_part": null,
+        "worst_frame": 0,
+        "min_source_vertex_z_m": null
+      },
+      "Vehicle_Impact_Rear": {
+        "frames": 15,
+        "loop": false,
+        "max_clearance_correction_m": 0,
+        "max_temporal_clearance_lift_m": 0.0,
+        "clearance_limiting_part": null,
+        "worst_frame": 0,
+        "min_source_vertex_z_m": null
+      },
+      "Vehicle_Impact_Side": {
+        "frames": 15,
+        "loop": false,
+        "max_clearance_correction_m": 0,
+        "max_temporal_clearance_lift_m": 0.0,
+        "clearance_limiting_part": null,
+        "worst_frame": 0,
+        "min_source_vertex_z_m": null
+      },
+      "Vehicle_Disabled": {
+        "frames": 24,
+        "loop": false,
+        "max_clearance_correction_m": 0,
+        "max_temporal_clearance_lift_m": 0.0,
+        "clearance_limiting_part": null,
+        "worst_frame": 0,
+        "min_source_vertex_z_m": null
+      },
+      "Bike_Impact": {
+        "frames": 15,
+        "loop": false,
+        "max_clearance_correction_m": 0,
+        "max_temporal_clearance_lift_m": 0.0,
+        "clearance_limiting_part": null,
+        "worst_frame": 0,
+        "min_source_vertex_z_m": null
+      }
+    }
+  },
+  "clearance_vertices": 101628,
+  "geometry_after_sha256": "4da2e255a78ef12d271b1a564eb2f012e3364de82357b2fda46836c39377b8c7",
+  "bind_poses_preserved": true
+}

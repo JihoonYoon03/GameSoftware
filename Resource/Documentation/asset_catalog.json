@@ -42453,7 +42453,7 @@
         "Outfit_Explorer_Male_Normal_Trouser_R",
         "Outfit_Explorer_Male_Normal_Greave_R"
       ],
-      "clips": 15
+      "clips": 43
     },
     {
       "file": "Export/Characters/Ria_Engineer.glb",
@@ -42485,7 +42485,7 @@
         "Outfit_Engineer_Female_Normal_Trouser_R",
         "Outfit_Engineer_Female_Normal_Greave_R"
       ],
-      "clips": 15
+      "clips": 43
     },
     {
       "file": "Export/Characters/Kain_Guard.glb",
@@ -42517,7 +42517,7 @@
         "Outfit_Guard_Male_Normal_Trouser_R",
         "Outfit_Guard_Male_Normal_Greave_R"
       ],
-      "clips": 15
+      "clips": 43
     },
     {
       "file": "Export/Characters/Mara_Medic.glb",
@@ -42548,7 +42548,7 @@
         "Outfit_Medic_Female_Normal_Trouser_R",
         "Outfit_Medic_Female_Normal_Greave_R"
       ],
-      "clips": 15
+      "clips": 43
     },
     {
       "file": "Export/Characters/NPC_Researcher.glb",
@@ -42578,7 +42578,7 @@
         "Outfit_Researcher_Male_Normal_Trouser_R",
         "Outfit_Researcher_Male_Normal_Greave_R"
       ],
-      "clips": 15
+      "clips": 43
     },
     {
       "file": "Export/Characters/NPC_Miner.glb",
@@ -42610,7 +42610,7 @@
         "Outfit_Miner_Male_Heavy_Trouser_R",
         "Outfit_Miner_Male_Heavy_Greave_R"
       ],
-      "clips": 15
+      "clips": 43
     },
     {
       "file": "Export/Characters/NPC_Guard_Helmet.glb",
@@ -42642,7 +42642,7 @@
         "Outfit_Guard_Male_Normal_Trouser_R",
         "Outfit_Guard_Male_Normal_Greave_R"
       ],
-      "clips": 15
+      "clips": 43
     },
     {
       "file": "Export/Characters/NPC_HeavyCombat.glb",
@@ -42673,7 +42673,7 @@
         "Outfit_HeavyCombat_Male_Heavy_Trouser_R",
         "Outfit_HeavyCombat_Male_Heavy_Greave_R"
       ],
-      "clips": 15
+      "clips": 43
     },
     {
       "file": "Export/Characters/NPC_Pilot.glb",
@@ -42703,7 +42703,7 @@
         "Outfit_Pilot_Female_Lean_Trouser_R",
         "Outfit_Pilot_Female_Lean_Greave_R"
       ],
-      "clips": 15
+      "clips": 43
     },
     {
       "file": "Export/Characters/NPC_Civilian.glb",
@@ -42731,7 +42731,7 @@
         "Outfit_Civilian_Female_Heavy_Trouser_R",
         "Outfit_Civilian_Female_Heavy_Greave_R"
       ],
-      "clips": 15
+      "clips": 43
     },
     {
       "file": "Export/Creatures/RiftGrazer.glb",
@@ -42917,7 +42917,7 @@
         "Vehicle_Coupe_Rail_R",
         "Vehicle_Coupe_Underbody_FieldCoil"
       ],
-      "clips": 10
+      "clips": 14
     },
     {
       "file": "Export/Vehicles/Coupe_Variant.glb",
@@ -42941,7 +42941,7 @@
         "Vehicle_Coupe_Rail_R",
         "Vehicle_Coupe_Underbody_FieldCoil"
       ],
-      "clips": 10
+      "clips": 14
     },
     {
       "file": "Export/Vehicles/Shuttle.glb",
@@ -42966,7 +42966,7 @@
         "Vehicle_Shuttle_Rail_R",
         "Vehicle_Shuttle_Underbody_FieldCoil"
       ],
-      "clips": 10
+      "clips": 14
     },
     {
       "file": "Export/Vehicles/Shuttle_Variant.glb",
@@ -42990,7 +42990,7 @@
         "Vehicle_Shuttle_Rail_R",
         "Vehicle_Shuttle_Underbody_FieldCoil"
       ],
-      "clips": 10
+      "clips": 14
     },
     {
       "file": "Export/Vehicles/Hauler.glb",
@@ -43014,7 +43014,7 @@
         "Vehicle_Hauler_Rail_R",
         "Vehicle_Hauler_Underbody_FieldCoil"
       ],
-      "clips": 10
+      "clips": 14
     },
     {
       "file": "Export/Vehicles/Hauler_Variant.glb",
@@ -43038,7 +43038,7 @@
         "Vehicle_Hauler_Rail_R",
         "Vehicle_Hauler_Underbody_FieldCoil"
       ],
-      "clips": 10
+      "clips": 14
     },
     {
       "file": "Export/Vehicles/Patrol.glb",
@@ -43062,7 +43062,7 @@
         "Vehicle_Patrol_Rail_R",
         "Vehicle_Patrol_Underbody_FieldCoil"
       ],
-      "clips": 11
+      "clips": 15
     },
     {
       "file": "Export/Vehicles/Patrol_Variant.glb",
@@ -43086,7 +43086,7 @@
         "Vehicle_Patrol_Rail_R",
         "Vehicle_Patrol_Underbody_FieldCoil"
       ],
-      "clips": 11
+      "clips": 15
     },
     {
       "file": "Export/Vehicles/JetBike.glb",
@@ -43112,7 +43112,7 @@
         "Vehicle_JetBike_Rail_R",
         "Vehicle_JetBike_Underbody_FieldCoil"
       ],
-      "clips": 10
+      "clips": 15
     },
     {
       "file": "Export/Vehicles/JetBike_Variant.glb",
@@ -43138,7 +43138,7 @@
         "Vehicle_JetBike_Rail_R",
         "Vehicle_JetBike_Underbody_FieldCoil"
       ],
-      "clips": 10
+      "clips": 15
     },
     {
       "file": "Export/Modules/Body_Standard_Pelvis.glb",

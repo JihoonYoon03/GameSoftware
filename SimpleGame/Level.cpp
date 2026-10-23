@@ -12,6 +12,30 @@
 namespace game
 {
 
+namespace
+{
+template <class Walkable> bool BodyHitsTile(tutorial::Vector2 p, Walkable walkable)
+{
+    constexpr float radius = .16f;
+    for (int y = int(std::floor(p.y - radius)); y <= int(std::floor(p.y + radius)); ++y)
+    {
+        for (int x = int(std::floor(p.x - radius)); x <= int(std::floor(p.x + radius)); ++x)
+        {
+            if (!walkable(x, y))
+            {
+                float dx = p.x - tutorial::Game::Clamp(p.x, float(x), float(x + 1));
+                float dy = p.y - tutorial::Game::Clamp(p.y, float(y), float(y + 1));
+                if (dx * dx + dy * dy < radius * radius)
+                {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+} // namespace
+
 // ============================================================================
 // MineQuest
 // ============================================================================
@@ -55,25 +79,50 @@ const char *MineQuest::GetObjective() const
     switch (stage)
     {
     case MineQuestStage::ShowRecord:
-        return "리아에게 관문 신호 기록 보여 주기 [E]";
+        return "집 근처 리아에게 신호 기록 보여 주기 [E]";
     case MineQuestStage::CheckCityRelay:
-        return "도시 수신망 단말에서 중계 흔적 확인 [E]";
+        return "광장 수신망 단말에서 신호 경로 확인 [E]";
     case MineQuestStage::TravelToMine:
-        return "리아와 제트 바이크로 광산 이동 [E]";
+        return "바이크로 광산 이동 → 하차 후 입장 [E]";
     case MineQuestStage::BypassPower:
         return "주 갱도 끝의 비상 배전반에서 전력 우회 [E]";
     case MineQuestStage::InvestigateSignal:
         return "격벽 너머 지하 유적의 구조 신호 조사 [E]";
     case MineQuestStage::InvestigateGlyph:
-        return "신호 옆의 관측자 문양 조사 [E]";
+        return "구조 신호 옆 벽면의 문양 조사 [E]";
     case MineQuestStage::CollectCoordinates:
         return "유적 안쪽 단말에서 중계 좌표 확보 [E]";
     case MineQuestStage::ReturnToHalo:
-        return "광산 입구로 돌아가 헤일로에 보고 [E]";
+        return "광산을 나와 헤일로 수신망에 좌표 보고 [E]";
     case MineQuestStage::Complete:
-        return "낙하한 신호 완료 / 자유 탐사·구조·사냥 가능";
+        return "광산 조사 완료 / 헤일로 수신망에서 다음 조사 시작";
     }
     return "광산 조사";
+}
+const char *MineQuest::GetRiaDialogue() const
+{
+    switch (stage)
+    {
+    case MineQuestStage::ShowRecord:
+        return "리아 / 전망대에서 받은 기록을 보여 줘. 수신 경로부터 살펴보자.";
+    case MineQuestStage::CheckCityRelay:
+        return "리아 / 목소리만으로는 누가 보냈는지 몰라. 광장 수신망에 기록을 대조해 보자.";
+    case MineQuestStage::TravelToMine:
+        return "리아 / 신호가 광산 통신선을 거쳤어. 바이크로 가자. 입구에서는 내려야 해.";
+    case MineQuestStage::BypassPower:
+        return "리아 / 격벽에 전력이 안 들어와. 주 갱도 끝 배전반에서 비상 전력을 연결하자.";
+    case MineQuestStage::InvestigateSignal:
+        return "리아 / 격벽이 열렸어. 불이 들어온 길을 따라 유적의 구조 신호를 확인하자.";
+    case MineQuestStage::InvestigateGlyph:
+        return "리아 / 신호가 나오는 벽에 사람 같은 문양이 있어. 가까이서 봐 줄래?";
+    case MineQuestStage::CollectCoordinates:
+        return "리아 / 문양은 기록해 뒀어. 안쪽 단말에 신호가 거쳐 간 좌표가 남아 있어.";
+    case MineQuestStage::ReturnToHalo:
+        return "리아 / 좌표는 챙겼어. 입구로 나가서 헤일로로 돌아가자. 수신망에 대조할 기록이 있을 거야.";
+    case MineQuestStage::Complete:
+        return "리아 / 광산 보고는 끝났어. 다음 현장은 헤일로 수신망에서 확인하자.";
+    }
+    return "리아 / 기록부터 다시 확인해 보자.";
 }
 namespace
 {
@@ -155,18 +204,7 @@ bool MineMap::IsWalkable(int x, int y)
 bool MineMap::IsBlocked(tutorial::Vector2 position)
 {
     profiling::Count(profiling::Counter::CollisionQueries);
-    constexpr float radius = .18f;
-    for (float dx : {-radius, radius})
-    {
-        for (float dy : {-radius, radius})
-        {
-            if (!IsWalkable(int(std::floor(position.x + dx)), int(std::floor(position.y + dy))))
-            {
-                return true;
-            }
-        }
-    }
-    return false;
+    return BodyHitsTile(position, [this](int x, int y) { return IsWalkable(x, y); });
 }
 
 bool MineMap::HasLineOfSight(tutorial::Vector2 from, tutorial::Vector2 to)
@@ -185,6 +223,42 @@ bool MineMap::HasLineOfSight(tutorial::Vector2 from, tutorial::Vector2 to)
     return true;
 }
 
+bool MineMap::IsExplored(tutorial::Vector2 p) const
+{
+    int x = int(std::floor(p.x)), y = int(std::floor(p.y));
+    return x >= 0 && y >= 0 && x < kMapSize && y < kMapSize && state.explored.size() == kMapSize * kMapSize &&
+           state.explored[y * kMapSize + x] != 0;
+}
+void MineMap::Reveal(tutorial::Vector2 position)
+{
+    if (state.explored.size() != kMapSize * kMapSize)
+    {
+        state.explored.assign(kMapSize * kMapSize, 0);
+    }
+    constexpr float radius = 4;
+    for (int y = (std::max)(0, int(position.y - radius));
+         y <= (std::min)(kMapSize - 1, int(position.y + radius)); ++y)
+    {
+        for (int x = (std::max)(0, int(position.x - radius));
+             x <= (std::min)(kMapSize - 1, int(position.x + radius)); ++x)
+        {
+            tutorial::Vector2 center = {x + .5f, y + .5f};
+            if (tutorial::Game::Distance(position, center) > radius)
+            {
+                continue;
+            }
+            // The final wall cell may be remembered, but nothing behind that wall is disclosed.
+            float distance = tutorial::Game::Distance(position, center);
+            float fraction = distance > .7f ? (distance - .7f) / distance : 0;
+            tutorial::Vector2 near = {position.x + (center.x - position.x) * fraction,
+                                      position.y + (center.y - position.y) * fraction};
+            if (HasLineOfSight(position, near))
+            {
+                state.explored[y * kMapSize + x] = 1;
+            }
+        }
+    }
+}
 std::vector<tutorial::Vector2> MineMap::FindRoute(tutorial::Vector2 from, tutorial::Vector2 to)
 {
     profiling::Scope timer(profiling::Timer::NpcNavigation);
@@ -401,6 +475,9 @@ void MineMap::Generate(std::uint32_t seed)
     state.riaRouteIndex = 0;
     state.navigationDistances = Distances(state.entry);
     state.generated = true;
+    state.explored.assign(kMapSize * kMapSize, 0);
+    state.meleeSeconds = 0;
+    Reveal(state.entry);
 }
 
 // ============================================================================
@@ -516,7 +593,7 @@ void MineCombat::UpdateBullets(float deltaSeconds)
 void MineCombat::Attack()
 {
     auto &world = tutorial::Game::Get().GetState();
-    if (state.bullets.size() >= 128)
+    if (state.meleeSeconds > 0 || state.bullets.size() >= 128)
     {
         return;
     }
@@ -540,6 +617,37 @@ void MineCombat::Attack()
         state.bullets.push_back(bullet);
     }
     state.muzzleFlash = .055f;
+}
+
+void MineCombat::Melee()
+{
+    auto &world = tutorial::Game::Get().GetState();
+    if (!state.active || world.isPaused || world.mapVisible || state.player.health <= 0 ||
+        tutorial::HospitalRecovery::Active() || state.meleeSeconds > 0)
+    {
+        return;
+    }
+    state.meleeSeconds = .65f;
+    auto aim = level.GetAimDirection(level.GetAimAngle());
+    size_t closest = state.enemies.size();
+    float best = .85f;
+    for (size_t i = 0; i < state.enemies.size(); ++i)
+    {
+        const auto &enemy = state.enemies[i];
+        float dx = enemy.position.x - world.playerPosition.x, dy = enemy.position.y - world.playerPosition.y;
+        float distance = std::hypot(dx, dy);
+        if (enemy.health > 0 && distance < best &&
+            (distance < .35f || dx * aim.x + dy * aim.y > distance * .5f) &&
+            level.Map().HasLineOfSight(world.playerPosition, enemy.position))
+        {
+            best = distance;
+            closest = i;
+        }
+    }
+    if (closest < state.enemies.size())
+    {
+        DamageEnemy(closest, 30 + (state.player.level - 1) * 4);
+    }
 }
 
 void MineCombat::Reload()
@@ -585,6 +693,7 @@ void MineCombat::Update(float deltaSeconds)
 {
     auto &world = tutorial::Game::Get().GetState();
     state.pistol.Update(deltaSeconds);
+    state.meleeSeconds = (std::max)(0.f, state.meleeSeconds - deltaSeconds);
     float angle = level.GetAimAngle();
     float aimX = std::cos(angle), aimY = std::sin(angle);
     world.facingDirection = std::fabs(aimX) > std::fabs(aimY) ? (aimX < 0 ? 1 : 2) : (aimY < 0 ? 3 : 0);
@@ -1053,10 +1162,11 @@ bool MineRescue::TryInteract()
                     ++state.rescuedPeople;
                 }
             }
-            tutorial::Game::Get().ShowNotice(
-                group.combatants ? "고립 전투원 / 실제 구조 요청을 찾아줘서 고맙습니다. 열린 갱도를 따라 "
-                                   "헤일로로 철수하겠습니다."
-                                 : "광부 / 우리 신호가 닿았군요! 알려준 귀환로로 마을까지 걸어가겠습니다.");
+            tutorial::Game::Get().ShowNotice(group.combatants
+                                                 ? "고립 전투원 / 신호를 보셨군요. 지원에 감사드립니다. "
+                                                   "확보된 갱도를 따라 입구로 철수하겠습니다."
+                                                 : "광부 / 신호가 닿았군요! 아무도 못 듣는 줄 알았어요. 알려 "
+                                                   "주신 길로 입구까지 나갈게요.");
             return true;
         }
     }
@@ -1253,8 +1363,7 @@ void MineLevel::Enter(bool debugEntry)
     ClearInput();
     state.invulnerability = 2;
     state.navigationCooldown = 0;
-    tutorial::Game::Get().ShowNotice(
-        "리아 / 수신망 주소가 이 광산이야. 전력부터 우회하자. 좌클릭 사격, R 재장전, F 구조 스캔.");
+    tutorial::Game::Get().ShowNotice(state.quest.GetRiaDialogue());
 }
 
 void MineLevel::Leave()
@@ -1278,7 +1387,8 @@ void MineLevel::Leave()
     tutorial::Game::Get().ShowNotice(
         state.quest.GetStage() == MineQuestStage::ReturnToHalo
             ? "광산 입구 / 바이크로 헤일로에 돌아가 도시 수신망에서 중계 좌표를 보고하세요."
-            : "광산 입구 / 조사·경험치는 유지됩니다. 주차한 바이크로 돌아가거나 E로 새 광산에 입장하세요.");
+            : "광산 입구 / 조사 기록과 보유품은 유지됩니다. 다시 입장하면 갱도와 현장 인원이 새로 "
+              "배치됩니다. 주차한 바이크로 이동하거나 입구에서 E로 재입장하세요.");
 }
 
 void MineLevel::Reset()
@@ -1317,11 +1427,12 @@ void MineLevel::Interact()
         {
             state.navigationCooldown = 0;
             tutorial::Game::Get().ShowNotice(
-                "리아 / 끊긴 선로를 우회했어. 동쪽 격벽이 열렸고 유적 쪽 비상등이 들어왔어.");
+                "리아 / 전력이 들어왔어. 동쪽 격벽도 열렸고. 비상등이 켜진 길을 따라가 보자.");
         }
         else
         {
-            tutorial::Game::Get().ShowNotice("배전반 / 비상 전력 우회 가동 중. 동쪽 격벽 너머를 조사하세요.");
+            tutorial::Game::Get().ShowNotice(
+                "배전반 / 비상 전력이 공급되고 있습니다. 동쪽 격벽은 열린 상태입니다.");
         }
         return;
     }
@@ -1330,8 +1441,8 @@ void MineLevel::Interact()
         if (state.quest.Advance(MineQuestStage::InvestigateSignal))
         {
             tutorial::Game::Get().ShowNotice(
-                "리아 / 오래전 실종 탐사선의 구조 신호야. 인간의 통신선은 벽 앞에서 "
-                "끝나는데 신호는 안쪽에서 와.");
+                "리아 / 식별자는 오래전에 실종된 탐사선의 것이야. 그런데 통신선은 이 벽 앞에서 끊겨 있어. "
+                "신호는 벽 안쪽에서 오고 있고.");
         }
         else
         {
@@ -1344,14 +1455,16 @@ void MineLevel::Interact()
     {
         if (state.quest.Advance(MineQuestStage::InvestigateGlyph))
         {
-            tutorial::Game::Get().ShowNotice(
-                "리아 / 닮았다는 것하고, 널 가리킨다는 건 다른 얘기야. 아직은. 안쪽 단말에 "
-                "중계 좌표가 있어.");
+            tutorial::Game::Get().ShowNotice("리아 / 이 문양, 너랑 닮았네. 그래도 널 새긴 거라고 단정하진 "
+                                             "말자. 기록해 둘게. 안쪽 단말도 확인해 보자.");
         }
         else
         {
             tutorial::Game::Get().ShowNotice(
-                "관측자 문양 / 플레이어와 닮은 형상. 먼저 가까운 구조 신호의 기록을 조사하세요.");
+                state.quest.GetStage() < MineQuestStage::InvestigateGlyph
+                    ? "벽면 문양 / 사람을 닮은 형상입니다. 먼저 옆에서 들리는 구조 신호를 조사하세요."
+                    : "문양 조사 기록 / 당신과 닮은 형상입니다. 제작 시기와 의미는 알 수 없습니다. 조사 "
+                      "기록에 보관했습니다.");
         }
         return;
     }
@@ -1360,8 +1473,8 @@ void MineLevel::Interact()
         if (state.quest.Advance(MineQuestStage::CollectCoordinates))
         {
             tutorial::Game::Get().ShowNotice(
-                "중계 좌표 확보 / N-0 외곽 폐설비와 연결됩니다. 입구로 귀환해 헤일로에 "
-                "보고하세요. 구조·사냥은 계속 가능합니다.");
+                "중계 좌표 저장 / 신호가 거쳐 간 좌표를 확보했습니다. 광산 입구로 나가 바이크로 헤일로에 "
+                "돌아가세요. 광장 수신망에서 좌표를 대조할 수 있습니다.");
         }
         else
         {
@@ -1404,11 +1517,11 @@ void MineLevel::Interact()
                 drops.end());
     if (collected > 0)
     {
-        tutorial::Game::Get().ShowNotice("회수 / 부품과 회복 키트를 챙겼습니다.");
+        tutorial::Game::Get().ShowNotice("물자 회수 / 주변 물자를 챙겼습니다. 보유품에 반영했습니다.");
     }
     else if (IsNear(state.riaPosition))
     {
-        tutorial::Game::Get().ShowNotice(std::string("리아 / ") + state.quest.GetObjective());
+        tutorial::Game::Get().ShowNotice(state.quest.GetRiaDialogue());
     }
     else
     {
@@ -1454,6 +1567,7 @@ MineLighting &MineLevel::Lighting()
 void MineLevel::Update(float deltaSeconds)
 {
     profiling::Scope timer(profiling::Timer::Combat);
+    map.Reveal(tutorial::Game::Get().GetState().playerPosition);
     combat.Update(deltaSeconds);
     combat.UpdateNpcs(deltaSeconds);
     rescue.Update(deltaSeconds);
@@ -1587,17 +1701,7 @@ bool FrontierMap::IsWalkable(int x, int y) const
 }
 bool FrontierMap::IsBlocked(tutorial::Vector2 position) const
 {
-    for (float x : {-.18f, .18f})
-    {
-        for (float y : {-.18f, .18f})
-        {
-            if (!IsWalkable(int(std::floor(position.x + x)), int(std::floor(position.y + y))))
-            {
-                return true;
-            }
-        }
-    }
-    return false;
+    return BodyHitsTile(position, [this](int x, int y) { return IsWalkable(x, y); });
 }
 bool FrontierMap::HasLineOfSight(tutorial::Vector2 from, tutorial::Vector2 to) const
 {
@@ -1754,7 +1858,7 @@ const char *ChapterOneLevel::Objective() const
 {
     if (state.recordsCompared)
     {
-        return "1장 완료 / 카인이 N-0 외곽 수로 진입로를 표시했다";
+        return "1장 완료 / 수로 진입로 기록 확보 · 후속 지역 준비 중";
     }
     if (state.comparisonStarted)
     {
@@ -1762,7 +1866,7 @@ const char *ChapterOneLevel::Objective() const
     }
     if (CompletedSites() == 3)
     {
-        return "헤일로 수신망으로 귀환 / 세 기록 대조 [E]";
+        return "헤일로 수신망에서 세 현장 기록 대조 [E]";
     }
     if (state.escortStarted && !state.convoyRescued)
     {
@@ -1832,8 +1936,7 @@ std::vector<ChapterInteraction> ChapterOneLevel::Interactions() const
     }
     if (state.convoyRescued)
     {
-        result.push_back(
-            {ChapterAction::ConvoySupply, {24.5f, 20.5f}, "운송대 보급 / 부품 2 → 회복 키트 1 [E]"});
+        result.push_back({ChapterAction::ConvoySupply, {24.5f, 20.5f}, "운송대 보급 / 회복 키트 교환 [E]"});
     }
     return result;
 }
@@ -1874,31 +1977,31 @@ void ChapterOneLevel::Interact()
         break;
     case ChapterAction::IsolateLine:
         state.generatorRestored = true;
-        game.ShowNotice("발전기 복구 / 헤일로 전력·정비 설비가 안정되었습니다. 멈춘 계기판 하나만 같은 "
-                        "주기로 움직입니다. 리아는 바늘에서 손을 뗍니다.");
+        game.ShowNotice("리아 / 도시 쪽 전력은 안정됐어. 이상하네… 끊어 놓은 선로의 계기판이 아직 움직여. "
+                        "같은 간격이야. 이것도 기록해 두자.");
         break;
     case ChapterAction::PortableLight:
         state.portableLightRepaired = true;
-        game.ShowNotice("리아 / 비싼 유물보다 이런 게 좋아. 고치면 다시 쓸 수 있잖아. 수리한 휴대 조명은 "
-                        "이후 야영지에도 놓인다.");
+        game.ShowNotice("리아 / 됐다, 켜지네. 접점만 손보면 되는 걸 버릴 뻔했어. 다음에 야영할 때 가져가자. "
+                        "네가 길 좀 밝혀 줘.");
         break;
     case ChapterAction::Kain:
         state.convoyBriefed = true;
-        game.ShowNotice("카인 / 여기 있는 사람은 다섯, 무전 응답은 여섯입니다. 대답이 온다고 그쪽으로 가면 "
-                        "안 됩니다. 먼저 여기 있는 사람부터 옮기죠. 측량 표식을 따라 우회로부터 확인합시다.");
+        game.ShowNotice("카인 / 눈앞에는 다섯 명인데 무전에는 여섯 명이 답합니다. 저 소리를 따라가진 맙시다. "
+                        "여기 있는 사람부터 옮기죠. 남쪽 측량 표식 세 곳을 확인해 주십시오.");
         break;
     case ChapterAction::Receiver:
         state.receiverInspected = true;
-        game.ShowNotice("끊어진 수신기 / 여섯 번째 응답은 앞선 교신의 일부가 반복된 것입니다. 새 생존자로 "
-                        "확정하지 않습니다. 교신 이상 시각과 설비 식별자 N-0/17을 기록합니다.");
+        game.ShowNotice("수신기 조사 / 전선이 끊겼는데도 같은 응답이 반복됩니다. 앞서 녹음된 교신과 "
+                        "일치합니다. 이상 발생 시각과 설비 번호 N-0/17을 저장했습니다.");
         break;
     case ChapterAction::SurveyOne:
     case ChapterAction::SurveyTwo:
     case ChapterAction::SurveyThree:
         ++state.surveyMarkers;
         game.ShowNotice(state.surveyMarkers == 3
-                            ? "카인 / 세 표식이 이어졌습니다. 무전이 부르는 방향 대신 확인한 우회로로 다섯 "
-                              "명을 옮깁시다. 운송대로 돌아가세요."
+                            ? "카인 / 세 표식이 이어지는 길은 안전합니다. 운송대로 돌아와 주십시오. 다섯 "
+                              "명을 그 길로 옮기겠습니다."
                             : "측량 표식 / 우회로가 끊긴 수로를 돌아 이어집니다. 다음 표식을 확인하세요.");
         break;
     case ChapterAction::Escort:
@@ -1921,18 +2024,18 @@ void ChapterOneLevel::Interact()
             person.departureDelay = float(&person - state.survivors.data()) * .8f;
         }
         state.escortStarted = true;
-        game.ShowNotice("운송대 / 다섯 명이 확인된 우회로로 이동합니다. 안전 지점에서 카인이 점호합니다. "
-                        "다른 현장 조사도 계속할 수 있습니다.");
+        game.ShowNotice("카인 / 다섯 분 모두 제 뒤로 오십시오. 안전 지점에서 다시 인원을 확인하겠습니다. "
+                        "[진행 안내] 운송대가 이동하는 동안 다른 현장도 조사할 수 있습니다.");
         break;
     case ChapterAction::Vehicle:
         state.vehicleRepaired = true;
-        game.ShowNotice("운송 차량 회수 / 예비 부품으로 구동계를 복구했습니다. 운송대의 물자 거래와 이동로 "
-                        "안내가 재개됩니다.");
+        game.ShowNotice("운송 차량 수리 완료 / 구동계를 복구했습니다. [선택 의뢰 완료] 운송대가 차량을 "
+                        "회수할 수 있게 됐습니다.");
         break;
     case ChapterAction::TradeProof:
         state.tradeProofFound = true;
-        game.ShowNotice("거래 기록 / 정체불명의 구매자가 N-0/17 중계 부품에 높은 값을 지불했습니다. 이 "
-                        "기록을 보여 주면 약탈자들을 싸우지 않고 물러나게 할 수 있습니다.");
+        game.ShowNotice("거래 기록 확보 / 이름을 숨긴 구매자가 N-0/17 부품을 시세보다 비싸게 샀습니다. 이 "
+                        "기록을 점거자들에게 보여 주고 거래 경위를 물을 수 있습니다.");
         break;
     case ChapterAction::Scrappers:
         if (!state.tradeProofFound)
@@ -1955,8 +2058,8 @@ void ChapterOneLevel::Interact()
         break;
     case ChapterAction::Ledger:
         state.ledgerFound = true;
-        game.ShowNotice("기본 장부 확보 / 발주처는 삭제되어 있습니다. 광산 좌표·전력 유출 주기·운송대 이상 "
-                        "시각이 N-0/17 아래 연결됩니다. 다른 기록도 모아 헤일로에서 대조하세요.");
+        game.ShowNotice("기본 장부 확보 / 발주처 이름은 지워졌습니다. 설비 N-0/17의 좌표·전력 사용 주기·교신 "
+                        "시각이 남아 있습니다. 다른 현장 기록도 모아 헤일로 수신망에서 대조하세요.");
         break;
     case ChapterAction::ConvoySupply: {
         auto &stats = GameLevels::Mine().GetState().player;
@@ -1965,13 +2068,16 @@ void ChapterOneLevel::Interact()
         {
             stats.salvage -= price;
             ++stats.recoveryKits;
-            game.ShowNotice("운송대 보급상 / 보안망 신용에 따른 부품 " + std::to_string(price) +
-                            "개와 회복 키트 1개를 교환했습니다.");
+            game.ShowNotice("보급품 교환 완료 / 부품 " + std::to_string(price) +
+                            "개를 건네고 회복 키트 1개를 받았습니다.");
         }
         else
         {
-            game.ShowNotice("운송대 보급상 / 회복 키트 1개에 부품 " + std::to_string(price) +
-                            "개입니다. 공동 수신망의 평판이 거래가에 반영됩니다.");
+            game.ShowNotice(stats.recoveryKits >= 999
+                                ? "보급품 교환 / 회복 키트를 더 소지할 수 없습니다."
+                                : "운송대 보급상 / 회복 키트 하나에 부품 " + std::to_string(price) +
+                                      "개가 필요해요. 지금은 부품이 모자라네요. [거래 안내] 악명이 높으면 "
+                                      "가격이 오릅니다.");
         }
         break;
     }
@@ -1998,8 +2104,8 @@ void ChapterOneLevel::InteractHub()
         state.comparisonStarted = true;
         state.comparisonSeconds = 0;
         tutorial::Game::Get().GetState().mouseFiring = false;
-        tutorial::Game::Get().ShowNotice("기록 대조 / 광산 좌표, 전력 유출 주기, 운송대 교신이 모두 N-0/17을 "
-                                         "가리킵니다. 신호들의 동일 발신 여부는 미확인입니다.");
+        tutorial::Game::Get().ShowNotice("기록 대조 / 광산 좌표·발전기 전력 유출·운송대 교신 시각이 설비 "
+                                         "N-0/17의 기록과 일치합니다. 외곽 설비의 원격 화면을 확인합니다.");
         return;
     }
     Enter();
@@ -2315,10 +2421,9 @@ void FrontierParty::Update(float deltaSeconds)
             state.receiverInspected =
                 true; // The wrapped receiver is logged at the final headcount, even if skipped earlier.
             state.kain.position = {25.5f, 20.5f};
-            tutorial::Game::Get().ShowNotice(
-                "카인 / 다섯 명, 전원 확인했습니다.… 광산 기록에 이 설비 번호가 있군요. N-0 주변에서 "
-                "근무했습니다. 같이 가겠습니다. 운송대 거래와 안내가 재개됩니다. 감사의 표시로 부품 3개를 "
-                "받았습니다.");
+            tutorial::Game::Get().ShowNotice("카인 / 다섯 명, 전원 확인했습니다. …그 기록에도 N-0이 있군요. "
+                                             "예전에 그 외곽에서 근무했습니다. 저도 동행하겠습니다. [구조 "
+                                             "완료] 카인 합류 · 보급품 교환 가능 · 부품 3개 획득");
         }
     }
     if (state.negotiated)
@@ -2348,16 +2453,15 @@ void ChapterOneLevel::Update(float deltaSeconds)
         state.comparisonSeconds += deltaSeconds;
         if (previous < 3 && state.comparisonSeconds >= 3)
         {
-            tutorial::Game::Get().ShowNotice(
-                "리아 / 문이 안 열렸다는 건 맞을 거야. 문 주위에서 아무 일도 없었다는 뜻은 아니고. 도시 "
-                "당국은 관문 자체의 가동 기록이 없다고 합니다.");
+            tutorial::Game::Get().ShowNotice("리아 / 관문 가동 기록은 없는데 외곽 설비에는 불이 들어오네. "
+                                             "관문이 멈춰 있어도 주변 장치는 작동하고 있었던 거야.");
         }
         if (state.comparisonSeconds >= 8)
         {
             state.recordsCompared = state.waterwayUnlocked = true;
             tutorial::Game::Get().ShowNotice(
-                "1장 완료 / 카인이 옛 탐사대의 N-0 외곽 수로 진입로를 지도에 표시합니다. 사라진 다리 아래 "
-                "수로가 남아 있을 거라고 합니다. 2장 조사 경로를 확보했습니다.");
+                "1장 완료 / 카인이 N-0 외곽 수로의 옛 진입로를 기록했습니다. [현재 플레이 안내] 2장 지역은 "
+                "아직 진입할 수 없습니다. 1장 현장 재방문과 남은 선택 의뢰는 계속할 수 있습니다.");
         }
     }
     if (!state.active)

@@ -234,7 +234,9 @@ class Overworld
     static constexpr int kCityCount = 5;
     static constexpr int kPopulationPerCity = 20;
     static constexpr int kKainResidentSlot = kPopulationPerCity - 3;
-    static constexpr float kBikeCruiseSpeed = 12.8f;
+    static constexpr float kBikeCruiseSpeed = 7.5f;
+    static constexpr float kBikeBoostSpeed = 12.8f;
+    static constexpr float kBikeReverseSpeed = .65f;
     static constexpr Vector2 kMineEntrance = {128, 18};
     static const std::array<CityInfo, kCityCount> &Cities();
     static int CityAt(Vector2 position);

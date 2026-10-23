@@ -1,12 +1,14 @@
 #include "stdafx.h"
 #include "Level.h"
 #include "Civic.h"
+#include "Drawing.h"
 #include "Monitoring/LocalMonitorServer.h"
 #include "Monitoring/Monitor.h"
 #include "Overworld.h"
 #include "Profiler.h"
 #include "ResidentAI.h"
 #include "Scene.h"
+#include "ResourceAssets.h"
 #include "TransitLayout.h"
 #include <algorithm>
 #include <cassert>
@@ -249,7 +251,9 @@ void TestConnectedOverworld()
         {
             tutorial::Overworld::UpdateBike(world, 1.f / 60);
         }
-        assert(tutorial::Game::Distance(world.playerPosition, Vector2{70, 50}) > 20);
+        assert(tutorial::Game::Distance(world.playerPosition, Vector2{70, 50}) > 12);
+        assert(tutorial::Game::Distance(world.playerPosition, Vector2{70, 50}) < 15);
+        assert(std::fabs(world.bikeSpeed - tutorial::Overworld::kBikeCruiseSpeed) < .001f);
         world.pressedKeys['w'] = false;
         for (int frame = 0; frame < 30; ++frame)
         {
@@ -388,8 +392,20 @@ void TestImportedWorldAndFlights()
         parked += prop.type == models::SceneryType::Count;
         if (prop.solid)
         {
-            assert(game.IsPositionBlocked(
-                {(prop.minimum.x + prop.maximum.x) * .5f, (prop.minimum.y + prop.maximum.y) * .5f}));
+            // An open shelter's AABB centre is walkable. Probe an actual low body surface
+            // instead of incorrectly requiring its empty centre/canopy to be solid.
+            const auto &mesh = models::ResourceAssets::Get(prop.model->resourceId);
+            for (const auto &vertex : mesh.vertices)
+            {
+                if (vertex.z > .05f && vertex.z < .9f)
+                {
+                    Vector2 point = {
+                        prop.position.x + vertex.x * std::cos(prop.yaw) - vertex.y * std::sin(prop.yaw),
+                        prop.position.y + vertex.x * std::sin(prop.yaw) + vertex.y * std::cos(prop.yaw)};
+                    assert(game.IsPositionBlocked(point));
+                    break;
+                }
+            }
         }
     }
     assert(pads == Overworld::kCityCount && parked == pads);
@@ -1395,6 +1411,107 @@ void TestStoryAndReentry()
            mineState.player.salvage == 7);
     assert(mineState.quest.GetStage() == MineQuestStage::Complete);
 }
+void TestExplorationAndMelee()
+{
+    using namespace tutorial;
+    auto &game = Game::Get();
+    game.Reset();
+    auto &level = GameLevels::Mine();
+    level.Enter(true);
+    auto &state = level.GetState();
+    auto &world = game.GetState();
+    state.tiles.assign(kMapSize * kMapSize, Tile::Floor);
+    state.explored.assign(kMapSize * kMapSize, 0);
+    for (int y = 0; y < kMapSize; ++y)
+    {
+        state.tiles[y * kMapSize + 15] = Tile::Wall;
+    }
+    world.playerPosition = world.cameraPosition = {12.5f, 12.5f};
+    level.Map().Reveal(world.playerPosition);
+    assert(level.Map().IsExplored({14.5f, 12.5f}));
+    assert(level.Map().IsExplored({15.5f, 12.5f}));
+    assert(!level.Map().IsExplored({16.5f, 12.5f}));
+    assert(!level.Map().IsExplored({90.5f, 90.5f}));
+    level.Map().Reveal({20.5f, 12.5f});
+    assert(level.Map().IsExplored({12.5f, 12.5f}) && level.Map().IsExplored({20.5f, 12.5f}));
+    state.tiles.assign(kMapSize * kMapSize, Tile::Floor);
+    state.tiles[13 * kMapSize + 13] = Tile::Wall;
+    assert(!level.Map().IsBlocked({12.88f, 12.88f}));
+    assert(level.Map().IsBlocked({12.9f, 12.9f}));
+    state.tiles[13 * kMapSize + 13] = Tile::Floor;
+    auto target = Drawing::WorldToScreen(14, 12.5f, models::WorldScale::aimHeightPixels);
+    world.cursorPosition = target;
+    auto aim = level.GetAimDirection(level.GetAimAngle());
+    state.enemies = {{{world.playerPosition.x + aim.x * .8f, world.playerPosition.y + aim.y * .8f}},
+                     {{world.playerPosition.x - aim.x * .8f, world.playerPosition.y - aim.y * .8f}},
+                     {{world.playerPosition.x + aim.x * 3.f, world.playerPosition.y + aim.y * 3.f}}};
+    int ammunition = state.pistol.GetRounds();
+    game.KeyDown('v', 0, 0);
+    game.KeyUp('v', 0, 0);
+    assert(state.meleeSeconds > 0 && state.enemies[0].health == 10);
+    assert(state.enemies[1].health == kEnemyMaxHealth && state.enemies[2].health == kEnemyMaxHealth);
+    level.Combat().Melee();
+    assert(state.enemies[0].health == 10 && state.pistol.GetRounds() == ammunition);
+    level.Combat().Update(.7f);
+    level.Combat().Melee();
+    assert(state.enemies[0].health == 0 && state.kills == 1 && state.player.experience >= kExperiencePerKill);
+    state.meleeSeconds = 0;
+    world.playerPosition = world.cameraPosition = {12.9f, 13.2f};
+    world.cursorPosition = Drawing::WorldToScreen(13.2f, 12.9f, models::WorldScale::aimHeightPixels);
+    state.enemies = {{{13.2f, 12.9f}}};
+    state.tiles[13 * kMapSize + 13] = Tile::Wall;
+    level.Combat().Melee();
+    assert(state.enemies[0].health == kEnemyMaxHealth); // No melee damage around a solid wall corner.
+    state.meleeSeconds = 0;
+    world.mapVisible = true;
+    level.Combat().Melee();
+    assert(state.meleeSeconds == 0);
+    world.mapVisible = false;
+    level.Map().Generate(703);
+    assert(!level.Map().IsExplored({90.5f, 90.5f}));
+    assert(level.Map().IsExplored(state.entry));
+    game.Reset();
+}
+void TestBikeSpeedsAndSliding()
+{
+    using namespace tutorial;
+    auto &game = Game::Get();
+    game.Reset();
+    auto &world = game.GetState();
+    world.isInsideHome = false;
+    world.isBikeMounted = true;
+    world.playerPosition = world.bikePosition = {70, 50};
+    world.bikeYaw = 0;
+    world.pressedKeys['w'] = true;
+    for (int i = 0; i < 120; ++i)
+    {
+        Overworld::UpdateBike(world, 1.f / 60);
+    }
+    assert(std::fabs(world.bikeSpeed - Overworld::kBikeCruiseSpeed) < .001f);
+    world.pressedKeys[' '] = true;
+    for (int i = 0; i < 120; ++i)
+    {
+        Overworld::UpdateBike(world, 1.f / 60);
+    }
+    assert(std::fabs(world.bikeSpeed - Overworld::kBikeBoostSpeed) < .001f);
+    world.pressedKeys[' '] = world.pressedKeys['w'] = false;
+    world.pressedKeys['s'] = true;
+    for (int i = 0; i < 150; ++i)
+    {
+        Overworld::UpdateBike(world, 1.f / 60);
+    }
+    assert(std::fabs(world.bikeSpeed + Overworld::kBikeReverseSpeed) < .001f);
+    auto before = world.playerPosition;
+    Overworld::UpdateBike(world, .1f);
+    assert(world.playerPosition.x < before.x && world.movementSpeed > 0 && world.movementAmount > 0);
+    auto straight = BodyCollision::Slide({0, 0}, {2, 1}, [](Vector2 p) { return p.x > .5f; });
+    assert(straight.x <= .501f && straight.y > .9f);
+    auto skew = BodyCollision::Slide({0, 0}, {2, .5f}, [](Vector2 p) { return p.x + p.y > 1; });
+    assert(skew.x + skew.y <= 1.001f && skew.x > 1 && skew.y < 0);
+    auto overlap = BodyCollision::Slide({.52f, 0}, {.52f, 1}, [](Vector2 p) { return p.x > .5f; });
+    assert(overlap.x <= .501f && overlap.y > .9f);
+    game.Reset();
+}
 } // namespace
 int main(int argc, char **argv)
 {
@@ -1411,6 +1528,8 @@ int main(int argc, char **argv)
         std::cout << "Urban traffic, crossing and resident checks passed.\n";
         return 0;
     }
+    TestExplorationAndMelee();
+    TestBikeSpeedsAndSliding();
     TestLevelLifecycle();
     TestWeapon();
     TestQuest();

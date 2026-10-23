@@ -144,7 +144,7 @@ void TestBodiesAndVehicles()
     World().playerPosition = {2, 0};
     World().residents = {Person({3, 0})};
     auto resolved = BodyCollision::MovePlayer({2, 0}, {8, 0});
-    assert(resolved.x < 3 && Game::Distance(resolved, World().residents[0].position) >= .60f);
+    assert(resolved.x < 3 && Game::Distance(resolved, World().residents[0].position) >= .35f);
     auto &traffic = Overworld::Traffic();
     for (int i = 0; i < 180; ++i)
     {

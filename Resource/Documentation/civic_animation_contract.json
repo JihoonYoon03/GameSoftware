@@ -1,0 +1,252 @@
+{
+  "revision": "civic_motion_v1",
+  "request": "../CIVIC_ANIMATION_REQUEST.md",
+  "units": "meters",
+  "authoring_fps": 30,
+  "delivery_sampling_fps": 60,
+  "humanoid_skeleton": "HUMAN_7H",
+  "bones": 23,
+  "original_clips_preserved": 15,
+  "humanoid_clips": 43,
+  "human_new_clips": 28,
+  "vehicle_new_actions": 21,
+  "human_forward": "-Y",
+  "human_left": "+X",
+  "human_up": "+Z",
+  "vehicle_forward": "+X",
+  "vehicle_left": "+Y",
+  "direction_selection": {
+    "input": "world impulse velocity transformed into character local coordinates; velocity is the direction the body is pushed",
+    "dominant_y": "vy >= 0 -> Front, vy < 0 -> Back",
+    "dominant_x": "vx <= 0 -> Left, vx > 0 -> Right",
+    "zero_vector": "retain last valid impact direction or Front",
+    "world_units": "1 world unit = 2 meters; rotate vectors before selecting; magnitude does not change visual root travel"
+  },
+  "physics_ownership": {
+    "actor_translation": "BodyCollision only",
+    "actor_yaw": "game only for new civic reactions",
+    "root_translation": "zero in every new reaction",
+    "collision_hull": "keep existing dimensions, do not derive it from posed vertices",
+    "pelvis_motion": "local anatomical collapse/compression only",
+    "damage_application": "animation events never reapply crime, health loss or collision impulse"
+  },
+  "directional_transitions": {
+    "Front": {
+      "knockdown": "Knockdown_Front",
+      "downed": "Downed_Loop",
+      "getup": "GetUp_Front",
+      "hit": "Hit_Front"
+    },
+    "Back": {
+      "knockdown": "Knockdown_Back",
+      "downed": "Downed_Back_Loop",
+      "getup": "GetUp_Back",
+      "hit": "Hit_Back"
+    },
+    "Left": {
+      "knockdown": "Knockdown_Left",
+      "downed": "Downed_Left_Loop",
+      "getup": "GetUp_Left",
+      "hit": "Hit_Left"
+    },
+    "Right": {
+      "knockdown": "Knockdown_Right",
+      "downed": "Downed_Right_Loop",
+      "getup": "GetUp_Right",
+      "hit": "Hit_Right"
+    }
+  },
+  "layering": {
+    "Hit_*": {
+      "mode": "masked_override",
+      "reference": "Aim_Base",
+      "mask": [
+        "spine",
+        "chest",
+        "neck",
+        "head",
+        "clavicle.L",
+        "upper_arm.L",
+        "forearm.L",
+        "hand.L",
+        "clavicle.R",
+        "upper_arm.R",
+        "forearm.R",
+        "hand.R",
+        "weapon_socket",
+        "back_socket",
+        "muzzle"
+      ],
+      "excluded": [
+        "root",
+        "pelvis",
+        "thigh.L",
+        "shin.L",
+        "foot.L",
+        "thigh.R",
+        "shin.R",
+        "foot.R"
+      ],
+      "derive_additive_delta": "clip local transforms relative to Aim_Base before additive use"
+    },
+    "Security_StunFire": {
+      "mode": "masked_override",
+      "reference": "Aim_Base",
+      "mask": [
+        "spine",
+        "chest",
+        "neck",
+        "head",
+        "clavicle.L",
+        "upper_arm.L",
+        "forearm.L",
+        "hand.L",
+        "clavicle.R",
+        "upper_arm.R",
+        "forearm.R",
+        "hand.R",
+        "weapon_socket",
+        "back_socket",
+        "muzzle"
+      ],
+      "event_phase": 0.08,
+      "event_seconds": 0.032,
+      "socket": "muzzle"
+    },
+    "reaction_priority": [
+      "Dead hold",
+      "Knockdown/Downed/GetUp",
+      "Hit over Aim + locomotion",
+      "Flee/normal locomotion"
+    ]
+  },
+  "recovery": {
+    "blend_in_seconds": 0.08,
+    "input_locked_until": "fully_upright at clip duration 1.4 seconds",
+    "blend_out_seconds": 0.12,
+    "request_game_response_duration": "hold Downed_Loop until recovery is permitted, then keep input locked through the actual get-up event; do not speed it up to a shorter timer",
+    "narrative_npcs": "Ria/Mara/Kain use Downed + Medical_Stabilized + Medical_GetUp; no Death routing"
+  },
+  "death": {
+    "clips": [
+      "Death_Front",
+      "Death_Back"
+    ],
+    "hold_clips": [
+      "Death_Front_Pose",
+      "Death_Back_Pose"
+    ],
+    "loop": false,
+    "automatic_getup": false,
+    "arms_and_weapon_socket_continuous": true
+  },
+  "flee": {
+    "start_seconds": 0.2,
+    "stop_seconds": 0.2,
+    "loop": "Flee_Run",
+    "escape_heading": "game supplies direction; keep gaze forward on that heading by Run entry",
+    "entry_stop_phase": 0,
+    "root_yaw": 0
+  },
+  "rider": {
+    "base": "Ride_Base",
+    "reaction": "Rider_Brace",
+    "vehicle_reaction": "Bike_Impact",
+    "duration_seconds": 0.5,
+    "authoring_to_bike_rotation_z_degrees": 90,
+    "authoring_to_bike_translation_m": [
+      0,
+      0,
+      -0.076
+    ],
+    "hand_contact_reference_bind_points": {
+      "L": [
+        0.448,
+        -0.03,
+        0.865
+      ],
+      "R": [
+        -0.448,
+        -0.03,
+        0.865
+      ]
+    },
+    "handlebar_contact_vehicle_m": {
+      "L": [
+        0.3,
+        0.209,
+        0.894
+      ],
+      "R": [
+        0.3,
+        -0.209,
+        0.894
+      ]
+    },
+    "foot_sole_reference_bind_points": {
+      "L": [
+        0.115,
+        0,
+        0
+      ],
+      "R": [
+        -0.115,
+        0,
+        0
+      ]
+    },
+    "footrest_contact_vehicle_m": {
+      "L": [
+        -0.1,
+        0.34,
+        0.4425
+      ],
+      "R": [
+        -0.1,
+        -0.34,
+        0.4425
+      ]
+    },
+    "seat_surface_vehicle_z_m": 0.818,
+    "weapon_visibility_event": "hide held pistol while riding; no visibility animation in GLB",
+    "existing_game_Ride": "not removed or rewritten; it is synthesized by the game packer. Ride_Base is a separately named optional authored reference. When integrating, explicitly select Ride_Base for Rider_Brace; avoid generating a second Ride name."
+  },
+  "vfx": {
+    "geometry_added": false,
+    "power_cut": "emission_multiplier .12 at Vehicle_Disabled start",
+    "spark": "existing 2D billboard on engine/frontpod sockets",
+    "tow_cleanup": "fade only when game allows cleanup; no root motion, airborne explosion or deletion of the collision body by animation"
+  },
+  "sources": [
+    {
+      "url": "https://www.ouhsc.edu/bserdac/dthompso/web/gait/terms.htm",
+      "application": "walking support timing and weight transfer"
+    },
+    {
+      "url": "https://www.ouhsc.edu/bserdac/dthompso/web/gait/knmatics/stance.htm",
+      "application": "loading response and heel/toe roll"
+    },
+    {
+      "url": "https://www.guysandstthomas.nhs.uk/health-information/falls/what-do-if-you-fall",
+      "application": "side roll, arm/knee support, staged rise; game choreography, not medical instruction"
+    }
+  ],
+  "authoring_method": "procedural hand-authored poses and analytic IK informed by movement references; no motion-capture recording imported",
+  "runtime_implementation_included": false,
+  "game_integration_checks_pending": [
+    "register exported clips and events",
+    "direction selection from impulse vector",
+    "input lock until fully_upright",
+    "no duplicate damage/crime application",
+    "narrative NPC hospital fade route",
+    "death end hold",
+    "10 surviving security / 100 residents update cost"
+  ],
+  "files": {
+    "source": "../Source/Civic_Animations.blend",
+    "master": "../Source/Erma_Resource_Library.blend",
+    "clips": "animation_clips.json",
+    "muzzle_tracks": "civic_muzzle_tracks.json",
+    "roundtrip_report": "../Validation/civic_animation_roundtrip.json"
+  }
+}

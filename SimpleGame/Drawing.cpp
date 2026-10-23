@@ -458,6 +458,10 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
     auto pose = models::ModelRig::Pose(world.animationTimeSeconds * 10,
                                        (isPlayer && world.movementAmount > 0) || walking, armed,
                                        armed ? flash / .055f : 0, false, gender);
+    if (isPlayer && game::GameLevels::Mine().IsActive())
+    {
+        pose.meleeSeconds = game::GameLevels::Mine().GetState().meleeSeconds;
+    }
     pose.locomotionSpeed = isPlayer ? world.movementSpeed : locomotionSpeed;
     if (isPlayer && CivicJustice::IsExterior())
     {

@@ -150,11 +150,12 @@ void TestCityAndTravel()
     Overworld::ToggleBike(world);
     assert(world.isBikeMounted);
     world.pressedKeys['w'] = true;
-    for (int i = 0; i < 60; ++i)
+    for (int i = 0; i < 80; ++i)
     {
         Overworld::UpdateBike(world, .025f);
     }
-    assert(world.bikeSpeed > 12 && world.playerPosition.x > 90);
+    assert(world.bikeSpeed > 7 && world.bikeSpeed <= Overworld::kBikeCruiseSpeed &&
+           world.playerPosition.x > 90);
     world.pressedKeys['w'] = false;
     for (int i = 0; i < 30; ++i)
     {
@@ -253,6 +254,7 @@ void Begin()
 std::vector<unsigned char> Pixels()
 {
     renderqueue::Flush();
+    GameRenderer::Get().Backend().ResolveScene();
     glFinish();
     assert(glGetError() == GL_NO_ERROR);
     std::vector<unsigned char> pixels(kCanvasWidth * kCanvasHeight * 4);
@@ -282,6 +284,24 @@ void Save(const std::filesystem::path &path)
     output.write(reinterpret_cast<char *>(&info), sizeof(info));
     output.write(reinterpret_cast<char *>(pixels.data()), pixels.size());
     assert(output.good());
+}
+void TestAntialiasing()
+{
+    auto &renderer = GameRenderer::Get().Backend();
+    renderer.SetStyle({});
+    Begin();
+    GLint samples = 0;
+    glGetIntegerv(GL_SAMPLES, &samples);
+    assert(renderer.GetAntialiasingSamples() == 4 && samples == 4 && glIsEnabled(GL_MULTISAMPLE));
+    renderer.EndScene(0);
+    auto style = renderer.GetStyle();
+    style.antialiasing = false;
+    renderer.SetStyle(style);
+    Begin();
+    glGetIntegerv(GL_SAMPLES, &samples);
+    assert(samples == 0 && renderer.GetAntialiasingSamples() == 0);
+    renderer.EndScene(0);
+    renderer.SetStyle({});
 }
 void TestDepth()
 {
@@ -390,6 +410,7 @@ void TestCityCoverage(const std::filesystem::path &output)
         assert(!game::SceneManager::Get(game::SceneKind::Background).GetGraph().Find("background"));
         game::SceneManager::Get(game::SceneKind::Exterior).Draw();
         renderqueue::Flush();
+        GameRenderer::Get().Backend().ResolveScene();
         for (auto sample :
              {Vector2{1, 1}, {1278, 1}, {1, 798}, {1278, 798}, {640, 1}, {640, 798}, {1, 400}, {1278, 400}})
         {
@@ -496,8 +517,11 @@ void CaptureScenes(const std::filesystem::path &output)
             size_t changed = 0;
             for (size_t i = 0; i < currentScroll.size(); i += 4)
             {
-                if (currentScroll[i] != previousScroll[i] || currentScroll[i + 1] != previousScroll[i + 1] ||
-                    currentScroll[i + 2] != previousScroll[i + 2])
+                // MSAA changes fractional edge coverage by a few quantisation levels during
+                // subpixel movement. Count visible changes, retaining the same 2% pop limit.
+                if (std::abs(int(currentScroll[i]) - int(previousScroll[i])) > 3 ||
+                    std::abs(int(currentScroll[i + 1]) - int(previousScroll[i + 1])) > 3 ||
+                    std::abs(int(currentScroll[i + 2]) - int(previousScroll[i + 2])) > 3)
                 {
                     ++changed;
                 }
@@ -1020,9 +1044,12 @@ void CaptureMapNavigation(const std::filesystem::path &output)
     world.mapVisible = false;
     auto waypoint = mapPixels();
     int blueArrowPixels = 0;
-    for (int y = 131; y < 157; ++y)
+    auto projected = MapHud::WorldToMap({200, 0}, false);
+    float bearing = std::atan2(projected.y - 144, projected.x - 1136);
+    int tipX = int(1136 + std::cos(bearing) * 91), tipY = int(144 + std::sin(bearing) * 91);
+    for (int y = tipY - 13; y < tipY + 14; ++y)
     {
-        for (int x = 1213; x < 1240; ++x)
+        for (int x = tipX - 13; x < tipX + 14; ++x)
         {
             size_t i = pixelIndex(x, y);
             blueArrowPixels += waypoint[i] < 160 && waypoint[i + 1] > 180 && waypoint[i + 2] > 240;
@@ -1047,8 +1074,15 @@ void CaptureMapNavigation(const std::filesystem::path &output)
     game::GameLevels::Mine().Enter(true);
     auto &mine = game::GameLevels::Mine().GetState();
     assert(!mine.rescueGroups.empty());
-    world.cameraPosition =
-        world.playerPosition = {mine.rescueGroups[0].position.x - 8, mine.rescueGroups[0].position.y};
+    auto &mineMap = game::GameLevels::Mine().Map();
+    auto route = mineMap.FindRoute(mine.entry, mine.rescueGroups[0].position);
+    assert(!route.empty());
+    size_t destination = route.size() > 8 ? route.size() - 8 : 0;
+    for (size_t i = 0; i <= destination; ++i)
+    {
+        mineMap.Reveal(route[i]);
+    }
+    world.cameraPosition = world.playerPosition = route[destination];
     mine.enemies.clear();
     mine.lights.push_back({world.playerPosition, 16, false});
     game::GameLevels::Mine().Rescue().Scan();
@@ -1056,8 +1090,15 @@ void CaptureMapNavigation(const std::filesystem::path &output)
     assert(!mine.scannerContacts.empty());
     captureScene("map-mine-scan-bearings.bmp");
     world.mapVisible = true;
-    assert(MapHud::HandleClick(MapHud::WorldToMap(game::kRuinSignal, true)));
+    assert(!MapHud::HandleClick(MapHud::WorldToMap(game::kRuinSignal, true)));
+    assert(MapHud::HandleClick(MapHud::WorldToMap(mine.entry, true)));
     captureScene("map-mine-full.bmp");
+    world.mapVisible = false;
+    auto aim = game::MineLevel::GetAimDirection(game::GameLevels::Mine().GetAimAngle());
+    mine.enemies = {{{world.playerPosition.x + aim.x * .8f, world.playerPosition.y + aim.y * .8f}}};
+    game::GameLevels::Mine().Combat().Melee();
+    mine.meleeSeconds = .4f;
+    captureScene("mine-melee.bmp");
     game::GameLevels::Chapter().Enter(true);
     world.noticeSecondsRemaining = 0;
     world.mapVisible = true;
@@ -1469,6 +1510,7 @@ int main(int argc, char **argv)
     TestScrolling();
     OffscreenContext context;
     GameRenderer::Get().Initialize();
+    TestAntialiasing();
     TestDepth();
     TestEffectDepth();
     TestQuestAndResources();

@@ -20,7 +20,7 @@ class Hud
 };
 
 // ============================================================================
-// MapHud — north-up schematic maps, circular clipping and destination selection
+// MapHud — fixed 45-degree schematic maps, circular clipping and destination selection
 // ============================================================================
 class MapHud
 {

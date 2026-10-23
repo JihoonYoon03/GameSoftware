@@ -160,17 +160,9 @@ void Game::UpdatePlayerMovement(float deltaSeconds)
     float worldDeltaY = (screenY - screenX * .5f) * kMovementSpeed * deltaSeconds;
     state.facingYaw = std::atan2(worldDeltaY, worldDeltaX);
 
-    // Resolve axes separately to allow sliding along a building edge.
-    Vector2 candidate = {state.playerPosition.x + worldDeltaX, state.playerPosition.y};
-    if (!IsPositionBlocked(candidate))
-    {
-        state.playerPosition = candidate;
-    }
-    candidate = {state.playerPosition.x, state.playerPosition.y + worldDeltaY};
-    if (!IsPositionBlocked(candidate))
-    {
-        state.playerPosition = candidate;
-    }
+    Vector2 candidate = {previous.x + worldDeltaX, previous.y + worldDeltaY};
+    state.playerPosition =
+        BodyCollision::Slide(previous, candidate, [this](Vector2 p) { return IsPositionBlocked(p); });
     state.playerPosition = BodyCollision::MovePlayer(previous, state.playerPosition);
     state.movementSpeed = deltaSeconds > 0 ? Distance(previous, state.playerPosition) / deltaSeconds : 0;
     state.movementAmount = state.movementSpeed > .001f ? inputLength : 0;
@@ -210,7 +202,8 @@ void Game::Reset()
     state.buildings.push_back(observatory);
     Overworld::Populate(state);
     CivicJustice::Reset(state);
-    ShowNotice("리아 / 좋은 아침. 집 단말이 또 깜빡이네. 확인하고 밖에서 만나자.");
+    ShowNotice("리아 · 수신 메시지 / 좋은 아침. 전망대 측정을 좀 도와줄래? 집 단말에 내용을 보냈어. 밖에서 "
+               "기다릴게.");
 }
 void Game::Resize(int width, int height)
 {
@@ -292,7 +285,14 @@ void Game::KeyDown(unsigned char key, int, int)
     }
     if (key == 'v' && !repeated)
     {
-        CivicCombat::Melee();
+        if (game::GameLevels::Mine().IsActive())
+        {
+            game::GameLevels::Mine().Combat().Melee();
+        }
+        else
+        {
+            CivicCombat::Melee();
+        }
         return;
     }
     if (key == 'r' && CivicCombat::Available())
@@ -565,19 +565,8 @@ bool Game::IsPositionBlocked(Vector2 position)
     {
         return true;
     }
-    if (Overworld::Scenery().IsBlocked(position))
-    {
-        return true;
-    }
-    for (const auto &building : state.buildings)
-    {
-        if (position.x > building.x - .2f && position.x < building.x + building.width + .2f &&
-            position.y > building.y - .2f && position.y < building.y + building.depth + .2f)
-        {
-            return true;
-        }
-    }
-    return false;
+    return CivicJustice::Solid(position, .16f, state.isBikeMounted ? state.bikeElevation : 0,
+                               state.isBikeMounted);
 }
 bool Game::IsQuestInteraction(InteractionTarget target) const
 {
@@ -773,7 +762,7 @@ void Game::InteractWithNearbyTarget()
         {
             nearest->conversationSeconds = 3;
             ShowNotice(nearest->dialogue + (nearest->profession == ResidentProfession::Merchant
-                                                ? " / 보안망 신용에 따른 거래가 배율 " +
+                                                ? " [거래 안내] 악명에 따른 가격 배율: " +
                                                       std::to_string(CivicJustice::PriceMultiplier())
                                                 : ""));
         }
@@ -782,7 +771,8 @@ void Game::InteractWithNearbyTarget()
     if (target == InteractionTarget::HomeTerminal)
     {
         state.mainQuestStage = (std::max)(state.mainQuestStage, MainQuestStage::MeetLia);
-        ShowNotice("단말 / 관문 N-0 정기 보정 중. 리아가 전망대에서 관문 신호를 측정해 달라고 요청했습니다.");
+        ShowNotice("리아 · 단말 메시지 / N-0 정기 측정일이야. 전망대 수신기가 이상한 응답을 잡았어. 같이 "
+                   "확인해 줘. 접근 코드는 첨부했어.");
     }
     if (target == InteractionTarget::ApartmentExit)
     {
@@ -811,8 +801,8 @@ void Game::InteractWithNearbyTarget()
             state.isComplete = true;
             state.mainQuestStage = MainQuestStage::Complete;
             game::GameLevels::Chapter().Unlock();
-            ShowNotice("낙하한 신호 완료 / 헤일로에 광산 좌표를 보고했습니다. 수신망에서 1장 현장 조사를 "
-                       "시작하세요.");
+            ShowNotice("광산 조사 보고 완료 / 좌표가 N-0 외곽 설비 목록과 일치합니다. 정전·운송대 "
+                       "실종·폐설비를 조사하세요. 이 단말에서 다시 E를 누르면 1장 현장으로 출발합니다.");
             return;
         }
         if (game::GameLevels::Chapter().IsAvailable())
@@ -823,24 +813,25 @@ void Game::InteractWithNearbyTarget()
         if (state.gateSignalHeard &&
             game::GameLevels::Mine().GetState().quest.Advance(game::MineQuestStage::CheckCityRelay))
         {
-            ShowNotice("도시 수신망 / 관문 신호에 광산 통신선 주소가 겹칩니다. 실종 탐사선의 구조 요청도 "
-                       "같은 시각입니다. 리아와 바이크로 광산에 가세요.");
+            ShowNotice("수신망 조회 / 전망대 신호가 인근 광산 통신선을 거쳤습니다. 같은 시각, 그 광산에서 "
+                       "실종 탐사선 식별자의 구조 신호도 수신됐습니다. 바이크로 광산에 가서 하차한 뒤 입구를 "
+                       "조사하세요.");
         }
         else
         {
             ShowNotice(game::GameLevels::Mine().GetState().quest.GetStage() <
                                game::MineQuestStage::CheckCityRelay
                            ? "수신망 / 전망대 신호 기록을 먼저 리아에게 보여 주세요."
-                           : "수신망 / 광산 통신선의 중계 흔적을 확인했습니다. 신호들의 동일 발신 여부는 "
-                             "미확인입니다.");
+                           : "수신망 / 광산을 거친 신호입니다. 전망대 음성과 탐사선 구조 신호가 같은 곳에서 "
+                             "왔는지는 아직 알 수 없습니다.");
         }
         return;
     }
     if (target == InteractionTarget::Kain)
     {
         ShowNotice(game::GameLevels::Chapter().GetState().recordsCompared
-                       ? "카인 / 옛 지도에 있는 다리는 사라졌지만, 아래로 지나던 수로는 남아 있을 겁니다. "
-                         "돌아올 표식을 남기며 갑시다."
+                       ? "카인 / 지도에 있던 다리는 사라졌습니다. 아래 수로가 남아 있는지 확인해야겠군요. "
+                         "예전 진입로는 기록해 뒀습니다."
                        : "카인 / N-0 외곽에서 근무했습니다. 지금은 기록부터 모읍시다. 길보다 먼저 사람 수를 "
                          "확인해야 합니다.");
         return;
@@ -849,9 +840,20 @@ void Game::InteractWithNearbyTarget()
     {
         if (game::GameLevels::Chapter().IsAvailable())
         {
+            if (game::GameLevels::Chapter().GetState().recordsCompared)
+            {
+                ShowNotice("리아 / 세 현장 모두 N-0 외곽 설비와 이어져 있어. 다음에는 카인이 기록한 수로를 "
+                           "확인해 보자.");
+                return;
+            }
+            if (game::GameLevels::Chapter().CompletedSites() == 3)
+            {
+                ShowNotice("리아 / 현장 기록은 다 모였어. 광장 수신망에서 광산 좌표와 대조해 보자.");
+                return;
+            }
             ShowNotice(game::GameLevels::Chapter().GetState().generatorRestored
-                           ? "리아 / 도시 전력이 안정됐어. 아직 N-0 외곽으로 흐르던 주기는 기록에 남아 있어. "
-                             "나머지 현장도 확인하자."
+                           ? "리아 / 발전기는 안정됐어. N-0 외곽으로 전력이 빠져나간 기록도 챙겼고. "
+                             "수신망에서 출발해서 남은 현장을 확인하자."
                            : "리아 / 광산 좌표가 폐쇄된 N-0 외곽 설비 목록에도 있었어. 그래도 주민들은 지금 "
                              "정전과 운송 지연이 더 급해. 수신망 단말에서 출발하자.");
             return;
@@ -860,13 +862,12 @@ void Game::InteractWithNearbyTarget()
         {
             if (game::GameLevels::Mine().GetState().quest.Advance(game::MineQuestStage::ShowRecord))
             {
-                ShowNotice(
-                    "리아 / 장비가 거짓말할 수는 있어. 그래도 어디서부터 틀렸는지는 찾아봐야지. 광장의 "
-                    "도시 수신망에서 중계 흔적을 확인하자.");
+                ShowNotice("리아 / 네가 보낸 적 없는 목소리라고? 수신기 오류일 수도 있어. 광장 수신망에서 이 "
+                           "신호가 어디를 거쳤는지 확인해 보자.");
             }
             else
             {
-                ShowNotice(std::string("리아 / ") + game::GameLevels::Mine().GetState().quest.GetObjective());
+                ShowNotice(game::GameLevels::Mine().GetState().quest.GetRiaDialogue());
             }
             return;
         }
@@ -876,27 +877,29 @@ void Game::InteractWithNearbyTarget()
             return;
         }
         state.mainQuestStage = (std::max)(state.mainQuestStage, MainQuestStage::EnterObservatory);
-        ShowNotice(
-            "리아 / 광장 동쪽 전망대에서 신호를 측정하고 내려와. 기록을 확인한 뒤 어디로 갈지 정하자.");
+        ShowNotice("리아 / 광장 동쪽 전망대에 같이 올라가자. 내가 수신기를 볼게. 넌 관측 데크 북동쪽 "
+                   "콘솔에서 신호를 측정해 줘.");
     }
     if (target == InteractionTarget::Mara)
     {
         if (!state.isSideQuestAccepted)
         {
             state.isSideQuestAccepted = true;
-            ShowNotice(
-                "마라 / 딸아이 방에 불이 안 들어와요. 동쪽 전력 장치를 봐 주실래요? [서브퀘스트 수락]");
+            ShowNotice("마라 / 딸아이 방에 불이 안 들어와요. 광장 동쪽 전력 장치를 좀 봐 주시겠어요? [선택 "
+                       "의뢰 시작: 남겨 둔 불빛]");
         }
         else if (state.isPowerRestored && !state.isSideQuestComplete)
         {
             state.isSideQuestComplete = true;
-            ShowNotice("마라 / 이제 아이가 편히 잘 수 있겠어요. 고마워요. [남겨 둔 불빛: 완료]");
+            ShowNotice("마라 / 불이 돌아왔어요. 아이가 어두우면 혼자 있질 못하거든요. 정말 고마워요. [선택 "
+                       "의뢰 완료: 남겨 둔 불빛]");
         }
         else
         {
-            ShowNotice(state.isSideQuestComplete
-                           ? "마라 / 언제든 들러요. 따뜻한 차를 준비해 둘게요."
-                           : "마라 / 광장 동쪽의 주황색 전력 장치를 복구하고 돌아와 주세요.");
+            ShowNotice(
+                state.isSideQuestComplete
+                    ? "마라 / 언제든 들러요. 따뜻한 차를 준비해 둘게요."
+                    : "마라 / 전력 장치는 광장 동쪽에 있어요. 주황색 표시가 있는 장치예요. 부탁드릴게요.");
         }
     }
     if (target == InteractionTarget::PowerRelay)
@@ -933,14 +936,14 @@ void Game::InteractWithNearbyTarget()
     {
         state.gateSignalHeard = true;
         state.mainQuestStage = (std::max)(state.mainQuestStage, MainQuestStage::DescendObservatory);
-        ShowNotice("알 수 없음 / …수신 확인… 이 목소리가 들리면… 리아 / 방금 네 목소리였어. 넌 아무 말도 안 "
-                   "했잖아.");
+        ShowNotice("발신자 미상 · 수신 기록 / …수신 확인. 이 목소리가 들리면… [기록] 당신의 목소리다. "
+                   "녹음한 기억은 없다. 내려가서 리아와 기록을 대조하자.");
     }
     if (target == InteractionTarget::ObservatoryExit)
     {
         if (!state.gateSignalHeard)
         {
-            ShowNotice("리아 / 먼저 관측 데크 북동쪽의 콘솔에서 신호를 확인해 줘.");
+            ShowNotice("조사 안내 / 관측 데크 북동쪽 콘솔에서 신호 기록을 받은 뒤 내려가세요.");
             return;
         }
         state.isInObservatory = false;
@@ -949,7 +952,7 @@ void Game::InteractWithNearbyTarget()
         state.cameraPosition = kBeaconPosition;
         std::fill(state.pressedKeys, state.pressedKeys + 256, false);
         state.mainQuestStage = (std::max)(state.mainQuestStage, MainQuestStage::MountJetBike);
-        ShowNotice("리아 / 이상 신호 기록을 집 근처의 나에게 보여 줘. 도시 수신망에서 발신 경로를 대조하자.");
+        ShowNotice("신호 기록 저장 / 집 근처에서 기다리는 리아에게 기록을 보여 주세요.");
     }
     if (target == InteractionTarget::JetBike)
     {

@@ -15,32 +15,130 @@ namespace tutorial
 namespace
 {
 CivicState civic;
+struct Footprint
+{
+    std::vector<Vector2> polygon;
+    Vector2 minimum, maximum;
+};
 struct Obstacle
 {
     Vector2 minimum, maximum;
+    std::shared_ptr<std::vector<Footprint>> surfaces;
 };
 std::map<std::pair<int, int>, std::vector<Obstacle>> obstacleCells;
+float EdgeDistance(Vector2 p, Vector2 a, Vector2 b)
+{
+    float x = b.x - a.x, y = b.y - a.y;
+    float t = Game::Clamp(((p.x - a.x) * x + (p.y - a.y) * y) / (std::max)(.0000001f, x * x + y * y), 0, 1);
+    return std::hypot(p.x - a.x - x * t, p.y - a.y - y * t);
+}
+bool Touches(const Footprint &shape, Vector2 p, float radius)
+{
+    if (p.x < shape.minimum.x - radius || p.x > shape.maximum.x + radius || p.y < shape.minimum.y - radius ||
+        p.y > shape.maximum.y + radius)
+    {
+        return false;
+    }
+    bool positive = false, negative = false;
+    float area = 0;
+    for (size_t i = 0; i < shape.polygon.size(); ++i)
+    {
+        auto a = shape.polygon[i], b = shape.polygon[(i + 1) % shape.polygon.size()];
+        if (EdgeDistance(p, a, b) <= radius)
+        {
+            return true;
+        }
+        float cross = (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x);
+        positive |= cross > .000001f;
+        negative |= cross < -.000001f;
+        area += a.x * b.y - a.y * b.x;
+    }
+    return std::fabs(area) > .000001f && !(positive && negative);
+}
 void BuildObstacles(const GameState &world)
 {
     obstacleCells.clear();
-    auto insert = [](Vector2 lo, Vector2 hi) {
-        for (int x = int(std::floor(lo.x / 8)); x <= int(std::floor(hi.x / 8)); ++x)
+    auto insert = [](const models::ResourceMesh &mesh, Vector2 position, models::Point scale, float yaw) {
+        Obstacle obstacle{{1.e9f, 1.e9f}, {-1.e9f, -1.e9f}, std::make_shared<std::vector<Footprint>>()};
+        float c = std::cos(yaw), s = std::sin(yaw);
+        for (size_t i = 0; i < mesh.vertices.size(); i += 3)
         {
-            for (int y = int(std::floor(lo.y / 8)); y <= int(std::floor(hi.y / 8)); ++y)
+            std::vector<models::Point> polygon;
+            for (size_t k = 0; k < 3; ++k)
             {
-                obstacleCells[{x, y}].push_back({lo, hi});
+                const auto &v = mesh.vertices[i + k];
+                polygon.push_back({position.x + v.x * scale.x * c - v.y * scale.y * s,
+                                   position.y + v.x * scale.x * s + v.y * scale.y * c, v.z * scale.z});
+            }
+            // Cut the actual triangles to the body's vertical span. Roofs, canopies and
+            // antennas do not inflate ground collision, and open courtyards stay open.
+            for (int plane = 0; plane < 2 && !polygon.empty(); ++plane)
+            {
+                float boundary = plane == 0 ? .04f : 1.f;
+                std::vector<models::Point> clipped;
+                auto previous = polygon.back();
+                for (auto current : polygon)
+                {
+                    bool a = plane == 0 ? previous.z >= boundary : previous.z <= boundary;
+                    bool b = plane == 0 ? current.z >= boundary : current.z <= boundary;
+                    if (a != b)
+                    {
+                        float t = (boundary - previous.z) / (current.z - previous.z);
+                        clipped.push_back({previous.x + (current.x - previous.x) * t,
+                                           previous.y + (current.y - previous.y) * t, boundary});
+                    }
+                    if (b)
+                    {
+                        clipped.push_back(current);
+                    }
+                    previous = current;
+                }
+                polygon = std::move(clipped);
+            }
+            if (polygon.empty())
+            {
+                continue;
+            }
+            Footprint shape{{}, {1.e9f, 1.e9f}, {-1.e9f, -1.e9f}};
+            for (auto v : polygon)
+            {
+                shape.polygon.push_back({v.x, v.y});
+                shape.minimum.x = (std::min)(shape.minimum.x, v.x);
+                shape.minimum.y = (std::min)(shape.minimum.y, v.y);
+                shape.maximum.x = (std::max)(shape.maximum.x, v.x);
+                shape.maximum.y = (std::max)(shape.maximum.y, v.y);
+            }
+            obstacle.minimum.x = (std::min)(obstacle.minimum.x, shape.minimum.x);
+            obstacle.minimum.y = (std::min)(obstacle.minimum.y, shape.minimum.y);
+            obstacle.maximum.x = (std::max)(obstacle.maximum.x, shape.maximum.x);
+            obstacle.maximum.y = (std::max)(obstacle.maximum.y, shape.maximum.y);
+            obstacle.surfaces->push_back(std::move(shape));
+        }
+        if (obstacle.surfaces->empty())
+        {
+            return;
+        }
+        for (int x = int(std::floor(obstacle.minimum.x / 8)); x <= int(std::floor(obstacle.maximum.x / 8));
+             ++x)
+        {
+            for (int y = int(std::floor(obstacle.minimum.y / 8));
+                 y <= int(std::floor(obstacle.maximum.y / 8)); ++y)
+            {
+                obstacleCells[{x, y}].push_back(obstacle);
             }
         }
     };
     for (const auto &b : world.buildings)
     {
-        insert({b.x, b.y}, {b.x + b.width, b.y + b.depth});
+        const auto &model = models::ModelLibrary::Get().buildings[size_t(b.type)];
+        insert(models::ResourceAssets::Get(model.resourceId), {b.x, b.y}, {b.width, b.depth, b.height / 44},
+               0);
     }
     for (const auto &p : Overworld::Scenery().Props())
     {
-        if (p.solid)
+        if (p.solid && p.model->resourceId)
         {
-            insert(p.minimum, p.maximum);
+            insert(models::ResourceAssets::Get(p.model->resourceId), p.position, {1, 1, 1}, p.yaw);
         }
     }
 }
@@ -161,7 +259,7 @@ void AdvanceImpact(Vector2 &position, BodyImpact &body, float dt)
     if (body.seconds > 0)
     {
         auto next = Add(position, body.velocity, dt);
-        if (SegmentClear(position, next, .32f))
+        if (SegmentClear(position, next, .18f))
         {
             position = next;
         }
@@ -181,8 +279,58 @@ bool CarContains(const TrafficVehicle &car, Vector2 position, float radius)
     const auto &mesh = models::ResourceAssets::Get(model.resourceId);
     float halfX = mesh.physicalSize.x * .5f, halfY = mesh.physicalSize.y * .5f;
     float x = q.x * d.x + q.y * d.y, y = q.x * n.x + q.y * n.y;
+    x -= (mesh.minimum.x + mesh.maximum.x) * .5f;
+    y -= (mesh.minimum.y + mesh.maximum.y) * .5f;
     float dx = (std::max)(0.f, std::fabs(x) - halfX), dy = (std::max)(0.f, std::fabs(y) - halfY);
     return dx * dx + dy * dy < radius * radius;
+}
+Vector2 BikeClosest(Vector2 p)
+{
+    const auto &world = Game::Get().GetState();
+    Vector2 d = {std::cos(world.bikeYaw), std::sin(world.bikeYaw)};
+    auto q = Sub(p, world.bikePosition);
+    float along = Game::Clamp(q.x * d.x + q.y * d.y, -.4023f, .4023f);
+    return Add(world.bikePosition, d, along);
+}
+bool BikeTouches(Vector2 p, float radius)
+{
+    return Game::Distance(p, BikeClosest(p)) < .22271f + radius;
+}
+void DeflectBike(Vector2 normal)
+{
+    auto &world = Game::Get().GetState();
+    if (!world.isBikeMounted)
+    {
+        return;
+    }
+    normal = Unit(normal);
+    Vector2 velocity = {std::cos(world.bikeYaw) * world.bikeSpeed, std::sin(world.bikeYaw) * world.bikeSpeed};
+    float inward = velocity.x * normal.x + velocity.y * normal.y;
+    if (inward >= 0)
+    {
+        return;
+    }
+    velocity = Add(velocity, normal, -inward);
+    float speed = std::hypot(velocity.x, velocity.y), sign = world.bikeSpeed < 0 ? -1.f : 1.f;
+    world.bikeSpeed = sign * speed;
+    if (speed > .05f)
+    {
+        world.bikeYaw = std::atan2(velocity.y * sign, velocity.x * sign);
+    }
+}
+void SeparateBikeFromPerson(Vector2 other)
+{
+    auto &world = Game::Get().GetState();
+    auto point = BikeClosest(other), normal = Unit(Sub(point, other));
+    float overlap = .22271f + .18f - Game::Distance(point, other);
+    if (overlap > 0)
+    {
+        auto desired = Add(world.bikePosition, normal, overlap + .002f);
+        world.bikePosition = BodyCollision::Slide(world.bikePosition, desired,
+                                                  [&](Vector2 p) { return CivicJustice::Solid(p, .23f); });
+        world.playerPosition = world.bikePosition;
+    }
+    DeflectBike(normal);
 }
 bool SweptCarContains(const TrafficVehicle &car, Vector2 p, float radius)
 {
@@ -238,11 +386,10 @@ Vector2 Separate(Vector2 from, Vector2 to, float radius, int ignoreResident, boo
     int steps = (std::max)(1, int(std::ceil(Game::Distance(from, to) / .12f)));
     for (int step = 1; step <= steps; ++step)
     {
-        Vector2 candidate = Add(result, Sub(to, from), 1.f / steps);
-        if ((player ? Game::Get().IsPositionBlocked(candidate) : CivicJustice::Solid(candidate, radius)))
-        {
-            break;
-        }
+        Vector2 candidate =
+            BodyCollision::Slide(result, Add(result, Sub(to, from), 1.f / steps), [&](Vector2 p) {
+                return player ? Game::Get().IsPositionBlocked(p) : CivicJustice::Solid(p, radius);
+            });
         if (PlayerHeight() < .7f || !player)
         {
             auto separate = [&](Vector2 other, float otherRadius) {
@@ -259,7 +406,7 @@ Vector2 Separate(Vector2 from, Vector2 to, float radius, int ignoreResident, boo
                     !(index == Overworld::kKainResidentSlot &&
                       game::GameLevels::Chapter().GetState().kainJoined))
                 {
-                    separate(world.residents[index].position, .29f);
+                    separate(world.residents[index].position, .18f);
                 }
             }
             for (size_t index = 0; index < std::size(kPeople); ++index)
@@ -267,7 +414,7 @@ Vector2 Separate(Vector2 from, Vector2 to, float radius, int ignoreResident, boo
                 if (civic.landmarkHealth[index] > 0 &&
                     (index != 2 || game::GameLevels::Chapter().GetState().kainJoined))
                 {
-                    separate(kPeople[index], .30f);
+                    separate(kPeople[index], .18f);
                 }
             }
             for (size_t index = 0; index < civic.officers.size(); ++index)
@@ -275,12 +422,12 @@ Vector2 Separate(Vector2 from, Vector2 to, float radius, int ignoreResident, boo
                 const auto &officer = civic.officers[index];
                 if (officer.health > 0 && int(index) != ignoreOfficer)
                 {
-                    separate(officer.position, .30f);
+                    separate(officer.position, .18f);
                 }
             }
             if (!player && !world.isBikeMounted)
             {
-                separate(world.playerPosition, .32f);
+                separate(world.playerPosition, .18f);
             }
         }
         const auto &traffic = Overworld::Traffic();
@@ -290,7 +437,10 @@ Vector2 Separate(Vector2 from, Vector2 to, float radius, int ignoreResident, boo
             if (std::fabs(traffic.RenderElevation(i) - (player ? PlayerHeight() : 0)) < .7f &&
                 CarContains(car, candidate, radius))
             {
-                candidate = result;
+                candidate = BodyCollision::Slide(result, candidate, [&](Vector2 p) {
+                    return CarContains(car, p, radius) ||
+                           (player ? Game::Get().IsPositionBlocked(p) : CivicJustice::Solid(p, radius));
+                });
             }
         }
         if ((player ? Game::Get().IsPositionBlocked(candidate) : CivicJustice::Solid(candidate, radius)))
@@ -371,9 +521,9 @@ bool CivicJustice::IsExterior()
     const auto &world = Game::Get().GetState();
     return !game::GameLevels::Active() && !world.isInsideHome && !world.isInObservatory;
 }
-bool CivicJustice::Solid(Vector2 p, float radius)
+bool CivicJustice::Solid(Vector2 p, float radius, float altitude, bool driving)
 {
-    if (TransitLayout::IsBlocked(p, radius))
+    if (TransitLayout::IsBlocked(p, radius, altitude, driving))
     {
         return true;
     }
@@ -396,7 +546,13 @@ bool CivicJustice::Solid(Vector2 p, float radius)
                 if (p.x > b.minimum.x - radius && p.x < b.maximum.x + radius && p.y > b.minimum.y - radius &&
                     p.y < b.maximum.y + radius)
                 {
-                    return true;
+                    for (const auto &shape : *b.surfaces)
+                    {
+                        if (Touches(shape, p, radius))
+                        {
+                            return true;
+                        }
+                    }
                 }
             }
         }
@@ -929,17 +1085,94 @@ void CivicCombat::Update(float dt)
     }
 }
 
+Vector2 BodyCollision::Slide(Vector2 from, Vector2 desired, const std::function<bool(Vector2)> &blocked)
+{
+    Vector2 result = from;
+    if (blocked(result))
+    {
+        // Correct small overlaps left by a moving body/rotation before applying new input.
+        bool freed = false;
+        for (int ring = 1; ring <= 20 && !freed; ++ring)
+        {
+            for (int i = 0; i < 32; ++i)
+            {
+                float angle = i * kPi / 16;
+                auto p = Add(from, {std::cos(angle), std::sin(angle)}, ring * .025f);
+                if (!blocked(p))
+                {
+                    result = p;
+                    freed = true;
+                    break;
+                }
+            }
+        }
+        if (!freed)
+        {
+            return from;
+        }
+    }
+    auto displacement = Sub(desired, from);
+    int steps = (std::max)(1, int(std::ceil(std::hypot(displacement.x, displacement.y) / .08f)));
+    auto increment = Add({}, displacement, 1.f / steps);
+    for (int step = 0; step < steps; ++step)
+    {
+        auto target = Add(result, increment);
+        if (!blocked(target))
+        {
+            result = target;
+            continue;
+        }
+        float lo = 0, hi = 1;
+        for (int i = 0; i < 8; ++i)
+        {
+            float mid = (lo + hi) * .5f;
+            if (blocked(Add(result, increment, mid)))
+            {
+                hi = mid;
+            }
+            else
+            {
+                lo = mid;
+            }
+        }
+        result = Add(result, increment, (std::max)(0.f, lo - .005f));
+        auto remaining = Add({}, increment, 1 - lo);
+        Vector2 best = result;
+        float progress = 0;
+        // Project the residual onto nearby tangents. This also follows skew/curved mesh
+        // walls, unlike an X-then-Y fallback, without adding a separation gap.
+        for (int i = 0; i < 32; ++i)
+        {
+            float angle = i * kPi / 16;
+            Vector2 tangent = {std::cos(angle), std::sin(angle)};
+            float distance = tangent.x * remaining.x + tangent.y * remaining.y;
+            if (distance <= .00001f)
+            {
+                continue;
+            }
+            auto slide = Add(result, tangent, distance);
+            float score = distance * distance;
+            if (score > progress && !blocked(slide) && !blocked(Add(result, Sub(slide, result), .5f)))
+            {
+                best = slide;
+                progress = score;
+            }
+        }
+        result = best;
+    }
+    return result;
+}
 Vector2 BodyCollision::MovePlayer(Vector2 from, Vector2 desired)
 {
     if (!CivicJustice::IsExterior())
     {
         return desired;
     }
-    return Separate(from, desired, .32f, -1, true);
+    return Separate(from, desired, .18f, -1, true);
 }
 Vector2 BodyCollision::MoveResident(size_t index, Vector2 from, Vector2 desired)
 {
-    return Separate(from, desired, .29f, int(index), false);
+    return Separate(from, desired, .18f, int(index), false);
 }
 void BodyCollision::Update(float dt)
 {
@@ -986,10 +1219,22 @@ void BodyCollision::VehicleContacts(float)
     {
         const auto &car = traffic.Vehicles()[i];
         float height = traffic.RenderElevation(i);
+        auto bikeHitsCar = [&](bool swept) {
+            Vector2 d = {std::cos(world.bikeYaw), std::sin(world.bikeYaw)};
+            for (float offset : {-.4023f, 0.f, .4023f})
+            {
+                auto p = Add(world.bikePosition, d, offset);
+                if (swept ? SweptCarContains(car, p, .22271f) : CarContains(car, p, .22271f))
+                {
+                    return true;
+                }
+            }
+            return false;
+        };
         if (std::fabs(height - PlayerHeight()) < .7f &&
-            SweptCarContains(car, world.playerPosition, world.isBikeMounted ? .65f : .3f))
+            (world.isBikeMounted ? bikeHitsCar(true) : SweptCarContains(car, world.playerPosition, .18f)))
         {
-            float speed = (std::max)(car.speed, world.isBikeMounted ? world.bikeSpeed : 0);
+            float speed = (std::max)(car.speed, world.isBikeMounted ? std::fabs(world.bikeSpeed) : 0);
             if (speed > .8f && civic.playerImpact.invulnerability <= 0)
             {
                 auto impulse =
@@ -1001,12 +1246,14 @@ void BodyCollision::VehicleContacts(float)
                     Overworld::Traffic().DamageVehicle(car.id, int(speed * 8));
                     CivicJustice::Report(Offense::RecklessDriving, world.playerPosition);
                 }
-                world.bikeSpeed = 0;
+                DeflectBike(Sub(world.playerPosition, car.position));
             }
-            if (CarContains(car, world.playerPosition, world.isBikeMounted ? .65f : .32f))
+            if (world.isBikeMounted ? bikeHitsCar(false) : CarContains(car, world.playerPosition, .18f))
             {
-                world.playerPosition =
-                    PushFromCar(car, world.playerPosition, world.isBikeMounted ? .65f : .32f);
+                auto contact = world.isBikeMounted ? BikeClosest(car.position) : world.playerPosition;
+                auto corrected = PushFromCar(car, contact, world.isBikeMounted ? .22271f : .18f);
+                world.playerPosition = Add(world.playerPosition, Sub(corrected, contact));
+                DeflectBike(Sub(contact, car.position));
                 if (world.isBikeMounted)
                 {
                     world.bikePosition = world.playerPosition;
@@ -1088,7 +1335,7 @@ void BodyCollision::VehicleContacts(float)
             {
                 continue;
             }
-            if (resident.health <= 0 || Game::Distance(resident.position, world.bikePosition) > .95f)
+            if (resident.health <= 0 || !BikeTouches(resident.position, .18f))
             {
                 continue;
             }
@@ -1098,12 +1345,11 @@ void BodyCollision::VehicleContacts(float)
                                             Add({}, Unit(Sub(resident.position, world.bikePosition)), 5),
                                             true);
             }
-            world.bikeSpeed = 0;
+            SeparateBikeFromPerson(resident.position);
         }
         for (size_t i = 0; i < civic.officers.size(); ++i)
         {
-            if (civic.officers[i].health > 0 &&
-                Game::Distance(civic.officers[i].position, world.bikePosition) < .95f)
+            if (civic.officers[i].health > 0 && BikeTouches(civic.officers[i].position, .18f))
             {
                 if (world.bikeSpeed > 2 && civic.officers[i].impact.invulnerability <= 0)
                 {
@@ -1111,20 +1357,20 @@ void BodyCollision::VehicleContacts(float)
                         i, int(world.bikeSpeed * 9),
                         Add({}, Unit(Sub(civic.officers[i].position, world.bikePosition)), 5));
                 }
-                world.bikeSpeed = 0;
+                SeparateBikeFromPerson(civic.officers[i].position);
             }
         }
         for (size_t i = 0; i < std::size(kPeople); ++i)
         {
             if (civic.landmarkHealth[i] > 0 &&
                 (i != 2 || game::GameLevels::Chapter().GetState().kainJoined) &&
-                Game::Distance(kPeople[i], world.bikePosition) < .95f)
+                BikeTouches(kPeople[i], .18f))
             {
                 if (world.bikeSpeed > 2)
                 {
                     CivicCombat::DamageLandmark(i, int(world.bikeSpeed * 9));
                 }
-                world.bikeSpeed = 0;
+                SeparateBikeFromPerson(kPeople[i]);
             }
         }
     }

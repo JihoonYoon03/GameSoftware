@@ -57,6 +57,7 @@ enum class WorldResolution
 struct RenderStyle
 {
     bool cartoon = true;
+    bool antialiasing = true;
     WorldResolution resolution = WorldResolution::Native;
     static float Shade(float diffuse, bool cartoon);
 };
@@ -84,6 +85,8 @@ class Renderer
     int GetRenderHeight() const;
     void BeginScene(int viewportWidth, int viewportHeight);
     void EndScene(float seconds);
+    void ResolveScene();
+    int GetAntialiasingSamples() const;
     void DrawMaterial(const RenderPoint (&vertices)[4], SurfaceMaterial material);
     void DrawGlow(float x, float y, float size);
     void DrawEffect(const RenderPoint (&vertices)[4], SurfaceEffect effect, float seconds);
@@ -112,6 +115,8 @@ class Renderer
     unsigned int m_sceneTexture = 0;
     unsigned int m_sceneFramebuffer = 0;
     unsigned int m_sceneDepth = 0;
+    unsigned int m_msaaFramebuffer = 0, m_msaaColor = 0, m_msaaDepth = 0;
+    int m_msaaSamples = 0;
     unsigned int m_postProgram = 0;
     unsigned int m_effectProgram = 0;
     std::unique_ptr<RenderAssets> m_assets;

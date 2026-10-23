@@ -14,7 +14,7 @@ namespace tutorial
 {
 
 // ============================================================================
-// MapHud — shared north-up schematic projection and CPU-clipped map geometry
+// MapHud — shared fixed 45-degree schematic projection and CPU-clipped map geometry
 // ============================================================================
 namespace
 {
@@ -45,12 +45,15 @@ struct SchematicView
     float scale, radius;
     Vector2 Project(Vector2 p) const
     {
-        // North is -world Y. This never uses the isometric camera or player heading.
-        return {center.x + (p.x - worldCenter.x) * scale, center.y + (p.y - worldCenter.y) * scale};
+        constexpr float diagonal = .70710678118f;
+        float x = p.x - worldCenter.x, y = p.y - worldCenter.y;
+        return {center.x + (x - y) * diagonal * scale, center.y + (x + y) * diagonal * scale};
     }
     Vector2 Unproject(Vector2 p) const
     {
-        return {worldCenter.x + (p.x - center.x) / scale, worldCenter.y + (p.y - center.y) / scale};
+        constexpr float diagonal = .70710678118f;
+        float x = (p.x - center.x) / scale, y = (p.y - center.y) / scale;
+        return {worldCenter.x + (x + y) * diagonal, worldCenter.y + (y - x) * diagonal};
     }
     bool Inside(Vector2 p, float inset = 0) const
     {
@@ -105,7 +108,8 @@ SchematicView MapView(bool full)
             include(destination.position);
         }
     }
-    float width = maximum.x - minimum.x, height = maximum.y - minimum.y;
+    float width = ((maximum.x - minimum.x) + (maximum.y - minimum.y)) * .70710678118f;
+    float height = width;
     float scale = (std::min)((kMapMaximum.x - kMapMinimum.x - 30) / (width + 8),
                              (kMapMaximum.y - kMapMinimum.y - 30) / (height + 8));
     return {{(kMapMinimum.x + kMapMaximum.x) * .5f, (kMapMinimum.y + kMapMaximum.y) * .5f},
@@ -192,13 +196,10 @@ void MapPolygon(const SchematicView &view, std::vector<Vector2> points, ColorRGB
 }
 void MapRectangle(const SchematicView &view, Vector2 minimum, Vector2 maximum, ColorRGBA color)
 {
-    Vector2 first = view.Project(minimum), last = view.Project(maximum);
-    if (view.radius > 0 && (last.x < view.center.x - view.radius || first.x > view.center.x + view.radius ||
-                            last.y < view.center.y - view.radius || first.y > view.center.y + view.radius))
-    {
-        return;
-    }
-    MapPolygon(view, {first, {last.x, first.y}, last, {first.x, last.y}}, color);
+    MapPolygon(view,
+               {view.Project(minimum), view.Project({maximum.x, minimum.y}), view.Project(maximum),
+                view.Project({minimum.x, maximum.y})},
+               color);
 }
 void MapLine(const SchematicView &view, Vector2 from, Vector2 to, ColorRGBA color, float width)
 {
@@ -292,6 +293,10 @@ void MapLabel(Vector2 anchor, const char *label, ColorRGBA color)
 void MapPin(const SchematicView &view, Vector2 position, ColorRGBA color, const char *label, bool full,
             float size = 5)
 {
+    if (MapHud::Region() == MapRegion::Mine && !game::GameLevels::Mine().Map().IsExplored(position))
+    {
+        return;
+    }
     auto p = view.Project(position);
     if (!view.Inside(p, size + 3))
     {
@@ -315,6 +320,10 @@ void DrawMapTiles(const SchematicView &view)
     int height = mine ? game::kMapSize : game::kFrontierHeight;
     auto tileAt = [&](int x, int y) {
         size_t index = size_t(y) * width + x;
+        if (mine && !game::GameLevels::Mine().Map().IsExplored({x + .5f, y + .5f}))
+        {
+            return -1;
+        }
         return mine ? (index < mineTiles.size() ? int(mineTiles[index]) : int(game::Tile::Wall))
                     : (index < frontierTiles.size() ? int(frontierTiles[index])
                                                     : int(game::FrontierTile::Grass));
@@ -337,6 +346,11 @@ void DrawMapTiles(const SchematicView &view)
             while (end < maxX && tileAt(end, y) == kind)
             {
                 ++end;
+            }
+            if (kind < 0)
+            {
+                x = end;
+                continue;
             }
             ColorRGBA color = mine ? (kind == int(game::Tile::Wall)    ? ColorRGBA(.09f, .15f, .17f)
                                       : kind == int(game::Tile::Water) ? ColorRGBA(.15f, .29f, .32f)
@@ -442,7 +456,7 @@ void DrawFieldSchematic(const SchematicView &view, bool full)
     if (MapHud::Region() == MapRegion::Mine)
     {
         const auto &mine = game::GameLevels::Mine().GetState();
-        MapPin(view, mine.entry, {.8f, .87f, .73f}, "헤일로 귀환", full, 4);
+        MapPin(view, mine.entry, {.8f, .87f, .73f}, "광산 밖으로", full, 4);
         auto stage = mine.quest.GetStage();
         Vector2 objective = stage == game::MineQuestStage::BypassPower          ? game::kPowerBypass
                             : stage == game::MineQuestStage::InvestigateSignal  ? game::kRuinSignal
@@ -475,6 +489,11 @@ void DrawDestination(const SchematicView &view, bool full)
 {
     const auto &destination = Game::Get().GetState().mapDestinations[size_t(MapHud::Region())];
     if (!destination.active)
+    {
+        return;
+    }
+    if (MapHud::Region() == MapRegion::Mine &&
+        !game::GameLevels::Mine().Map().IsExplored(destination.position))
     {
         return;
     }
@@ -513,7 +532,8 @@ void DrawSchematic(const SchematicView &view, bool full)
         auto aim = game::MineLevel::GetAimDirection(angle);
         heading = std::atan2(aim.y, aim.x);
     }
-    DirectionArrow(view.Project(PlayerMapPosition()), heading, full ? 8.f : 10.f, {.25f, 1, .94f});
+    DirectionArrow(view.Project(PlayerMapPosition()), heading + kPi * .25f, full ? 8.f : 10.f,
+                   {.25f, 1, .94f});
 }
 } // namespace
 MapRegion MapHud::Region()
@@ -562,6 +582,10 @@ bool MapHud::HandleClick(Vector2 point, bool clear)
     {
         return false;
     }
+    if (Region() == MapRegion::Mine && !game::GameLevels::Mine().Map().IsExplored(target))
+    {
+        return false;
+    }
     destination = {true, target};
     return true;
 }
@@ -571,14 +595,17 @@ void MapHud::DrawMinimap()
     Drawing::DrawEllipse(view.center.x, view.center.y, view.radius + 9, view.radius + 9,
                          {.015f, .06f, .075f, .97f});
     Drawing::DrawEllipse(view.center.x, view.center.y, view.radius + 3, view.radius + 3, {.46f, .66f, .61f});
-    Drawing::DrawEllipse(view.center.x, view.center.y, view.radius, view.radius, {.18f, .28f, .22f});
+    Drawing::DrawEllipse(view.center.x, view.center.y, view.radius, view.radius,
+                         Region() == MapRegion::Mine ? ColorRGBA(.015f, .025f, .035f)
+                                                     : ColorRGBA(.18f, .28f, .22f));
     DrawSchematic(view, false);
-    Drawing::DrawLabel(view.center.x - 5, view.center.y - view.radius + 17, "N", {.94f, .97f, .84f},
+    Drawing::DrawLabel(view.center.x + (view.radius - 15) * .70710678f - 5,
+                       view.center.y - (view.radius - 15) * .70710678f + 6, "N", {.94f, .97f, .84f},
                        GLUT_BITMAP_HELVETICA_18);
     const auto &destination = Game::Get().GetState().mapDestinations[size_t(Region())];
     Drawing::DrawRectangle(view.center.x - 110, view.center.y + view.radius + 12, 220,
                            destination.active ? 49.f : 27.f, {.015f, .055f, .065f, .9f});
-    Drawing::DrawLabel(view.center.x - 65, view.center.y + view.radius + 29, "M 전체 지도 · 북쪽 고정",
+    Drawing::DrawLabel(view.center.x - 65, view.center.y + view.radius + 29, "M 전체 지도 · 방향 고정",
                        {.66f, .84f, .8f});
     if (destination.active)
     {
@@ -597,13 +624,14 @@ void MapHud::DrawFullMap()
     }
     Drawing::DrawRectangle(0, 0, float(kCanvasWidth), float(kCanvasHeight), {.005f, .025f, .035f, .97f});
     Drawing::DrawRectangle(64, 40, 1152, 720, {.025f, .08f, .09f, .99f});
-    Drawing::DrawRectangle(kMapMinimum.x, kMapMinimum.y, kMapMaximum.x - kMapMinimum.x,
-                           kMapMaximum.y - kMapMinimum.y, {.16f, .26f, .21f});
+    Drawing::DrawRectangle(
+        kMapMinimum.x, kMapMinimum.y, kMapMaximum.x - kMapMinimum.x, kMapMaximum.y - kMapMinimum.y,
+        Region() == MapRegion::Mine ? ColorRGBA(.015f, .025f, .035f) : ColorRGBA(.16f, .26f, .21f));
     const char *title = Region() == MapRegion::City   ? "헤일로 주변 / 전체 도시 약도"
                         : Region() == MapRegion::Mine ? "광산 / 구조 신호 조사 약도"
                                                       : "개척지 / 조사 구역 약도";
     Drawing::DrawLabel(86, 80, title, {.8f, .94f, .86f}, GLUT_BITMAP_HELVETICA_18);
-    Drawing::DrawLabel(848, 80, "N ↑  /  M 또는 Esc 닫기", {.58f, .79f, .75f});
+    Drawing::DrawLabel(848, 80, "북쪽 ↗  /  M 또는 Esc 닫기", {.58f, .79f, .75f});
     DrawSchematic(MapView(true), true);
     Drawing::DrawLabel(86, 717, "좌클릭 목적지 설정 / 우클릭 목적지 해제 / 지도를 보는 동안 일시정지",
                        {.7f, .87f, .81f});
@@ -726,7 +754,7 @@ void CityHud::Draw()
         : world.mainQuestStage == MainQuestStage::ReadGateSignal     ? "04  상층 콘솔에서 관문 신호 측정 [E]"
         : world.mainQuestStage == MainQuestStage::DescendObservatory ? "05  승강기로 도시에 내려가기 [E]"
         : world.mainQuestStage == MainQuestStage::MountJetBike       ? "06  개인용 제트 바이크 탑승 [E]"
-                                                                     : "07  광산 이동 / 서막 완료",
+                                                                     : "광장 수신망에서 조사 경로 확인 [E]",
         ColorRGBA(.91f, .89f, .75f));
     char timer[80];
     std::snprintf(timer, sizeof(timer), "%02d:%02d / 짧은 서막", (int)world.playTimeSeconds / 60,
@@ -741,7 +769,7 @@ void CityHud::Draw()
         if (world.isBikeMounted)
         {
             std::snprintf(bike, sizeof(bike), "개인 바이크 / %.0f km/h · W 가속 S 제동 A/D 조향 · E 하차",
-                          world.bikeSpeed * models::WorldScale::metersPerUnit * 3.6f);
+                          std::fabs(world.bikeSpeed) * models::WorldScale::metersPerUnit * 3.6f);
         }
         else
         {
@@ -770,10 +798,9 @@ void CityHud::Draw()
                        : world.isPowerRestored     ? "광장의 마라에게 돌아가세요."
                        : world.isSideQuestAccepted ? "마라 동쪽의 전력 장치를 복구하세요."
                                                    : "주거 광장의 마라와 대화하세요.");
-    Drawing::DrawLabel(
-        26, (float)kCanvasHeight - 22,
-        "WASD 이동·운전 / E 상호작용·승하차 / M 전체 지도·목적지 / 광산 입구 하차 후 E / Esc 휴식",
-        ColorRGBA(.63f, .78f, .81f));
+    Drawing::DrawLabel(26, (float)kCanvasHeight - 22,
+                       "WASD 이동 / 바이크 W 가속·S 후진·AD 조향·Space 부스트 / E 승하차 / M 지도 / Esc 휴식",
+                       ColorRGBA(.63f, .78f, .81f));
     DrawInteractionPrompt();
 }
 
@@ -821,7 +848,7 @@ void MineHud::DrawScanner()
         {
             continue;
         }
-        // Use the camera's isometric bearing for screen-edge arrows, independently of north-up maps.
+        // Use the camera's isometric bearing for screen-edge arrows, independently of the fixed schematic rotation.
         Vector2 target =
             WorldCamera::ToViewport(Drawing::WorldToScreen(contact.position.x, contact.position.y, 20));
         Vector2 direction = {target.x - player.x, target.y - player.y};
@@ -893,9 +920,10 @@ void MineHud::Draw()
     Drawing::DrawLine({cursor.x, cursor.y - gap - 9}, {cursor.x, cursor.y - gap}, crosshair, 2);
     Drawing::DrawLine({cursor.x, cursor.y + gap}, {cursor.x, cursor.y + gap + 9}, crosshair, 2);
     Drawing::DrawEllipse(cursor.x, cursor.y, 1.5f, 1.5f, crosshair);
-    Drawing::DrawLabel(26, kCanvasHeight - 22.f,
-                       "WASD 이동 / 마우스 조준·좌클릭 사격 / R 재장전 / F 스캔 / E 조사·구조·회수 / Q 회복 "
-                       "/ M 지도 / Esc 정지");
+    Drawing::DrawLabel(
+        26, kCanvasHeight - 22.f,
+        "WASD 이동 / 마우스 조준·좌클릭 사격·V 근접 / R 재장전 / F 스캔 / E 조사·구조·회수 / Q 회복 "
+        "/ M 지도 / Esc 정지");
 }
 
 // ============================================================================
@@ -912,7 +940,8 @@ void ChapterHud::Draw()
     Drawing::DrawLabel(40, 74, level.Objective(), {.9f, .85f, .6f});
     Drawing::DrawLabel(40, 100,
                        state.generatorRestored ? "[완료] 발전기 / 폐쇄 선로 분리·도시 전력 안정"
-                                               : "[조사] 발전기 / 정전과 주기적 전력 유출",
+                       : state.generatorInspected ? "[진행] 발전기 / 전력 유출 선로 차단"
+                                                  : "[조사] 발전기 / 정전 원인 확인",
                        {.6f, .85f, .75f});
     Drawing::DrawLabel(40, 124,
                        state.convoyRescued   ? "[완료] 운송대 5명 구조 / 카인 합류"
@@ -934,7 +963,11 @@ void ChapterHud::Draw()
     if (level.NearestInteraction(point))
     {
         Drawing::DrawRectangle(350, 548, 580, 34, {.02f, .07f, .09f, .92f});
-        Drawing::DrawLabel(368, 571, point.label, {.9f, .95f, .8f}, GLUT_BITMAP_HELVETICA_18);
+        std::string label = point.action == game::ChapterAction::ConvoySupply
+                                ? "운송대 보급 / 부품 " + std::to_string(CivicJustice::ShopPrice(2)) +
+                                      " → 회복 키트 1 [E]"
+                                : point.label;
+        Drawing::DrawLabel(368, 571, label, {.9f, .95f, .8f}, GLUT_BITMAP_HELVETICA_18);
     }
     auto cursor = world.cursorPosition;
     float gap = 6 + mine.pistol.GetSpread() * 120;
@@ -966,8 +999,8 @@ void ChapterHud::DrawJournal()
                                    i < lamps ? ColorRGBA(.5f, .95f, .9f) : ColorRGBA(.1f, .2f, .23f));
         }
         Drawing::DrawLabel(426, 304,
-                           s.recordsCompared ? "2장 조사 경로 확보 / 카인의 외곽 수로 지도"
-                                             : "관문 자체 가동 기록 없음 / 신호 동일 발신 여부 미확인");
+                           s.recordsCompared ? "수로 진입로 기록 확보 / 2장 지역 준비 중"
+                                             : "관문 가동 기록 없음 / 외곽 설비에는 전력 공급 중");
     }
     if (!s.journalVisible)
     {
@@ -976,26 +1009,30 @@ void ChapterHud::DrawJournal()
     Drawing::DrawRectangle(110, 225, 1060, 350, {.02f, .045f, .065f, .97f});
     Drawing::DrawLabel(135, 256, "조사 기록 / J 닫기", {.7f, .95f, .9f}, GLUT_BITMAP_HELVETICA_18);
     Drawing::DrawLabel(
-        135, 290, "광산: 실종 탐사선의 구조 신호·관측자 문양·중계 좌표. 자기 음성과의 동일 원인은 미확인.");
+        135, 290, "광산: 실종 탐사선 신호와 나를 닮은 문양을 발견했다. 전망대에서 들은 내 목소리와의 관계는 모른다.");
     Drawing::DrawLabel(
         135, 326,
-        s.generatorInspected
-            ? "발전기: 폐쇄 선로로 주기적 전력 유출. 분리 후에도 정지한 계기판 바늘이 같은 주기로 움직임."
-            : "발전기: 아직 조사 기록 없음.");
+        s.generatorRestored
+            ? "발전기: 선로를 분리해 전력을 복구했다. 끊어 놓은 선로의 계기판은 여전히 같은 간격으로 움직인다."
+        : s.generatorInspected ? "발전기: 폐쇄된 N-0 외곽 선로로 전력이 빠져나간다. 옆 차단기에서 선로를 분리해야 한다."
+                               : "발전기: 정전 신고가 접수됐다. 현장은 아직 조사하지 않았다.");
     Drawing::DrawLabel(
         135, 362,
         s.receiverInspected
-            ? "운송대: 실제 5명, 교신 응답 6명. 끊어진 수신기의 과거 교신 반복. 여섯 번째 구조 대상은 미확정."
-            : "운송대: 아직 교신 조사 기록 없음.");
+            ? "운송대: 눈앞에는 5명, 무전 응답은 6명. 끊어진 수신기에서 이전 교신이 반복된다. 다른 생존자는 확인 못 했다."
+            : "운송대: 연락이 끊겼다. 현장의 카인에게 상황을 물어보자.");
     Drawing::DrawLabel(135, 398,
-                       s.tradeProofFound || s.ledgerFound
-                           ? "폐설비: 구매자가 특정 중계 부품에 높은 값을 제시. 부품 철거 뒤 새 전원 유입. "
-                             "점거자는 설계자가 아님."
-                           : "폐설비: 아직 거래 조사 기록 없음.");
+                       s.negotiated
+                           ? "폐설비: 점거자들은 부품을 판 뒤 새 전원이 들어왔다고 했다. 구매자가 누구인지는 모른다고 한다."
+                       : s.tradeProofFound || s.ledgerFound
+                           ? "폐설비: 거래 장부를 확보했다. 구매자가 누구인지, 왜 이 부품을 샀는지 더 알아봐야 한다."
+                           : "폐설비: 누군가 중계 부품을 빼내고 있다. 입구 적재함과 점거자들을 조사하자.");
     Drawing::DrawLabel(
         135, 434,
-        s.ledgerFound
-            ? "기본 장부: 발주처 삭제. 광산 좌표·유출 주기·교신 이상 시각은 동일 설비 N-0/17에 연결."
+        s.recordsCompared
+            ? "기록 대조: 광산 좌표·전력 유출·교신 시각이 N-0/17과 일치했다. 관문 외곽 설비가 작동하고 있다."
+        : s.ledgerFound
+            ? "기본 장부: 발주처는 지워졌다. N-0/17의 좌표·전력 주기·교신 시각을 다른 현장 기록과 비교해야 한다."
             : "기본 장부: 미확보.");
     Drawing::DrawLabel(
         135, 470,
@@ -1007,8 +1044,8 @@ void ChapterHud::DrawJournal()
                            : "선택 기록: 상세 구매 장부 미확보.");
     Drawing::DrawLabel(135, 548,
                        s.recordsCompared
-                           ? "다음 조사선: N-0 외곽 수로. 다리는 사라졌지만 아래 수로가 남아 있을 가능성."
-                           : "귀환 조건: 세 현장 조사 완료 후 헤일로 수신망에서 기록 대조.",
+                           ? "1장 완료: N-0 외곽 수로의 옛 진입로를 기록했다. 2장 지역 준비 중. 현장 재방문과 선택 의뢰는 가능."
+                           : "다음 행동: 세 현장 조사를 마치고 헤일로 수신망에서 광산 좌표와 기록을 대조하자.",
                        {.9f, .8f, .55f});
 }
 

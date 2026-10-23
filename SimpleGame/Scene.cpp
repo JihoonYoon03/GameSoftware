@@ -593,7 +593,7 @@ void CityScene::DrawDepthSortedObjects(game::Scene &scene)
             {
                 const auto &world = Game::Get().GetState();
                 Drawing::DrawWorldBike(world.bikePosition, world.bikeYaw,
-                                       .08f + .92f * world.bikeSpeed / Overworld::kBikeCruiseSpeed,
+                                       .08f + .92f * std::fabs(world.bikeSpeed) / Overworld::kBikeBoostSpeed,
                                        world.isBikeMounted);
             }
             if (item.kind == SceneObjectKind::Resident)
@@ -1124,7 +1124,7 @@ void MineScene::Draw()
               MineQuestStage::InvestigateGlyph, true);
     PlaceClue(scene, "relay-coordinates", kCoordinateTerminal, "E 중계 좌표 확보", {.4f, 1, .8f},
               MineQuestStage::CollectCoordinates);
-    PlaceClue(scene, "mine-exit", GameLevels::Mine().GetState().entry, "E 헤일로 귀환", {.4f, .9f, .8f},
+    PlaceClue(scene, "mine-exit", GameLevels::Mine().GetState().entry, "E 광산 밖으로", {.4f, .9f, .8f},
               MineQuestStage::ReturnToHalo);
     for (size_t i = 0; i < GameLevels::Mine().GetState().enemies.size(); ++i)
     {

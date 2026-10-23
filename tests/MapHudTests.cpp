@@ -9,7 +9,7 @@
 namespace
 {
 using namespace tutorial;
-void TestNorthUpProjection()
+void TestFixedRotatedProjection()
 {
     auto &world = Game::Get().GetState();
     world.isInsideHome = false;
@@ -17,8 +17,8 @@ void TestNorthUpProjection()
     Vector2 center = MapHud::WorldToMap(world.playerPosition, false);
     Vector2 east = MapHud::WorldToMap({16, -4}, false);
     Vector2 north = MapHud::WorldToMap({15, -5}, false);
-    assert(east.x > center.x && east.y == center.y);
-    assert(north.y < center.y && north.x == center.x);
+    assert(east.x > center.x && east.y > center.y);
+    assert(north.y < center.y && north.x > center.x);
     world.facingYaw += 1.9f;
     world.bikeYaw -= .7f;
     world.cameraPosition = {120, 80};
@@ -47,7 +47,11 @@ void TestFullMapAndLayerDestinations()
 
     game::GameLevels::Mine().GetState().active = true;
     assert(MapHud::Region() == MapRegion::Mine);
-    Vector2 mineDestination = {95.5f, 93.5f};
+    game::GameLevels::Mine().Map().Generate(702);
+    Vector2 unknown = {95.5f, 93.5f};
+    assert(!game::GameLevels::Mine().Map().IsExplored(unknown));
+    assert(!MapHud::HandleClick(MapHud::WorldToMap(unknown, true)));
+    Vector2 mineDestination = game::GameLevels::Mine().GetState().entry;
     assert(MapHud::HandleClick(MapHud::WorldToMap(mineDestination, true)));
     assert(Game::Distance(world.mapDestinations[size_t(MapRegion::Mine)].position, mineDestination) < .001f);
     assert(Game::Distance(city.position, cityDestination) < .001f);
@@ -99,9 +103,10 @@ void TestInputAndLetterboxing()
 int main()
 {
     Game::Get().Reset();
-    TestNorthUpProjection();
+    TestFixedRotatedProjection();
     TestFullMapAndLayerDestinations();
     TestInputAndLetterboxing();
-    std::cout << "Map checks passed: fixed north, circular bounds, full-map selection, area isolation, "
+    std::cout << "Map checks passed: fixed 45-degree rotation, fog selection, circular bounds, full-map "
+                 "selection, area isolation, "
                  "repeat-safe input and letterboxing.\n";
 }

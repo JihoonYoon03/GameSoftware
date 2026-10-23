@@ -1655,11 +1655,11 @@ const std::array<CityInfo, Overworld::kCityCount> &Overworld::Cities()
 {
     static const std::array<CityInfo, kCityCount> cities = [] {
         std::array<CityInfo, kCityCount> result = {
-            {{"halo_07", "헤일로", {0, 0}, "익숙한 일상 속 불안", "관문에서 발신자 없는 응답이 들린다."},
-             {"cinder", "신더", {0, 0}, "분주한 공업 도시", "광산 교대조의 출근 기록만 남아 있다."},
-             {"veil", "베일", {0, 0}, "고요한 관측 도시", "어젯밤 별자리 하나가 사라졌다."},
-             {"lumen", "루멘", {0, 0}, "빛으로 버티는 피난 도시", "꺼진 등 아래에서는 이름을 부르지 마라."},
-             {"echo", "에코", {0, 0}, "끊어진 통신을 기다리는 도시", "수신기에서 내일의 목소리가 들린다."}}};
+            {{"halo_07", "헤일로", {0, 0}, "익숙한 일상 속 불안", "요즘 관문 쪽 수신기에 잡음이 많대요. 정비가 밀렸나 봐요."},
+             {"cinder", "신더", {0, 0}, "분주한 공업 도시", "광산 교대조가 아직 안 돌아왔대요. 길이 막힌 건 아닌지 모르겠네요."},
+             {"veil", "베일", {0, 0}, "고요한 관측 도시", "관측소에서 별자리 기록을 다시 맞춘다더군요. 어제 것과 안 맞는대요."},
+             {"lumen", "루멘", {0, 0}, "빛으로 버티는 피난 도시", "밤길엔 불 켜진 길로 다니세요. 저도 요즘은 돌아가요."},
+             {"echo", "에코", {0, 0}, "끊어진 통신을 기다리는 도시", "수신기가 지난 교신을 자꾸 되풀이해요. 새 연락인 줄 알고 매번 들여다보게 되네요."}}};
         unsigned int seed = 0x458a91u;
         for (int i = 1; i < kCityCount; ++i)
         {
@@ -1775,6 +1775,17 @@ void Overworld::Populate(GameState &state)
                                      {4, 8},  {8, 8},    {-13, -3}, {12, 8},  {-3, 3},  {0, 3}};
     constexpr const char *roles[] = {"배송 기사", "교대 근무자", "정비공", "경비원",    "학생",
                                      "상인",      "주민",        "관측원", "통신 기사", "탐사원"};
+    constexpr const char *smallTalk[] = {
+        "다음 도시까지 배송이 남았어요. 오늘은 길이 덜 막혔으면 좋겠네요.",
+        "이제 교대하러 가요. 돌아올 때도 저 가게가 열려 있으면 좋겠는데.",
+        "부품은 남아 있는데 손이 모자라네요. 다들 고장 나기 전엔 안 가져오거든요.",
+        "횡단보도 신호가 바뀌면 건너세요. 조용해도 화물차가 금방 와요.",
+        "관측소 견학을 신청했어요. 관문이 멈추기 전에는 어땠는지 궁금해서요.",
+        "물건은 운송편이 오는 대로 채워요. 필요한 게 있으면 미리 말해 주세요.",
+        "해 질 때 도시 밖 풀밭을 보셨어요? 바람 부는 쪽부터 빛이 나요.",
+        "기록 하나가 다르면 오차일 수 있죠. 그래서 어제 것부터 다시 보고 있어요.",
+        "응답이 왔다고 연결된 건 아니에요. 발신 기록까지 확인해야죠.",
+        "돌아올 길에 표식을 남겨 두세요. 여기선 익숙한 풍경도 꽤 비슷해 보여요."};
     constexpr models::CharacterType appearances[] = {
         models::CharacterType::Pilot,    models::CharacterType::Civilian,   models::CharacterType::Engineer,
         models::CharacterType::Guard,    models::CharacterType::Civilian,   models::CharacterType::Civilian,
@@ -1807,7 +1818,7 @@ void Overworld::Populate(GameState &state)
             Resident resident;
             resident.position = position;
             resident.name = std::string(city.name) + " " + roles[i % 10] + " " + std::to_string(i + 1);
-            resident.dialogue = resident.name + " / " + city.rumor;
+            resident.dialogue = resident.name + " / " + (i % 3 == 0 ? city.rumor : smallTalk[i % 10]);
             resident.type = appearances[i % 10];
             resident.coat = {.3f + .08f * (i % 4), .36f + .06f * (cityIndex % 4), .46f + .04f * (i % 5), 1};
             resident.gender = i % 2 ? models::Gender::Female : models::Gender::Male;
@@ -1823,46 +1834,69 @@ void Overworld::Populate(GameState &state)
 
 void Overworld::UpdateBike(GameState &state, float deltaSeconds)
 {
+    Vector2 previous = state.playerPosition;
+    float oldYaw = state.bikeYaw;
     float steering = float(state.pressedKeys['d']) - float(state.pressedKeys['a']);
-    state.bikeYaw = std::remainder(state.bikeYaw + steering * 1.8f * deltaSeconds, 2 * kPi);
-    bool accelerating = state.pressedKeys['w'] && !state.pressedKeys['s'];
-    float targetSpeed = accelerating ? kBikeCruiseSpeed : 0;
-    float acceleration = accelerating ? 32.f : 48.f;
+    state.bikeYaw = std::remainder(
+        state.bikeYaw + steering * (state.bikeSpeed < -.05f ? -1 : 1) * 1.8f * deltaSeconds, 2 * kPi);
+    bool forward = state.pressedKeys['w'] && !state.pressedKeys['s'];
+    bool reverse = state.pressedKeys['s'] && !state.pressedKeys['w'];
+    float targetSpeed = forward   ? (state.pressedKeys[' '] ? kBikeBoostSpeed : kBikeCruiseSpeed)
+                        : reverse ? -kBikeReverseSpeed
+                                  : 0;
+    bool braking =
+        state.bikeSpeed * targetSpeed < 0 || (targetSpeed == 0 && std::fabs(state.bikeSpeed) > .01f);
+    float acceleration = braking ? 24.f : reverse ? 4.f : 18.f;
     state.bikeSpeed +=
         Game::Clamp(targetSpeed - state.bikeSpeed, -acceleration * deltaSeconds, acceleration * deltaSeconds);
-    // Substeps prevent tunnelling through a narrow building at maximum speed.
-    int steps = (std::max)(1, int(std::ceil(state.bikeSpeed * deltaSeconds / .15f)));
-    for (int step = 0; step < steps; ++step)
-    {
-        Vector2 next = {
-            state.playerPosition.x + std::cos(state.bikeYaw) * state.bikeSpeed * deltaSeconds / steps,
-            state.playerPosition.y + std::sin(state.bikeYaw) * state.bikeSpeed * deltaSeconds / steps};
-        bool blocked = false;
-        for (float dx : {-.45f, .45f})
+    const auto &mesh = models::ResourceAssets::Get(
+        models::ModelLibrary::Get().vehicles[size_t(models::VehicleType::JetBike)].body.resourceId);
+    auto blocked = [&](Vector2 p) {
+        float h = RoadNetwork::Get().DriveElevation(p, state.bikeElevation);
+        if (state.bikeElevation > .5f && h < state.bikeElevation - .6f)
         {
-            for (float dy : {-.45f, .45f})
+            return true;
+        }
+        Vector2 d = {std::cos(state.bikeYaw), std::sin(state.bikeYaw)}, n = {-d.y, d.x};
+        for (int sample = 0; sample <= 4; ++sample)
+        {
+            float along = mesh.minimum.x + .035f + (mesh.physicalSize.x - .07f) * sample / 4;
+            for (float across : {mesh.minimum.y + .035f, mesh.maximum.y - .035f})
             {
-                blocked = blocked || Game::Get().IsPositionBlocked({next.x + dx, next.y + dy});
+                Vector2 q = {p.x + d.x * along + n.x * across, p.y + d.y * along + n.y * across};
+                if (q.x < kWorldMinX || q.x > kWorldMaxX || q.y < kWorldMinY || q.y > kWorldMaxY ||
+                    TransitLayout::IsBlocked(q, .035f, h, true) ||
+                    (h <= 1 && CivicJustice::Solid(q, .035f, h, true)))
+                {
+                    return true;
+                }
             }
         }
-        if (blocked)
+        return false;
+    };
+    if (blocked(previous))
+    {
+        float proposedYaw = state.bikeYaw;
+        state.bikeYaw = oldYaw;
+        if (blocked(previous))
         {
-            state.bikeSpeed = 0;
-            break;
+            state.bikeYaw = proposedYaw;
         }
-        float height = RoadNetwork::Get().DriveElevation(next, state.bikeElevation);
-        if (state.bikeElevation > .5f && height < state.bikeElevation - .6f)
-        {
-            state.bikeSpeed = 0; // The raised deck's parapet prevents driving off its side.
-            break;
-        }
-        state.bikeElevation = height;
-        state.playerPosition = next;
     }
+    Vector2 desired = {previous.x + std::cos(state.bikeYaw) * state.bikeSpeed * deltaSeconds,
+                       previous.y + std::sin(state.bikeYaw) * state.bikeSpeed * deltaSeconds};
+    state.playerPosition = BodyCollision::Slide(previous, desired, blocked);
+    float requested = Game::Distance(previous, desired),
+          actual = Game::Distance(previous, state.playerPosition);
+    if (requested > .0001f && actual < requested * .99f)
+    {
+        state.bikeSpeed *= Game::Clamp(actual / requested, 0, 1);
+    }
+    state.bikeElevation = RoadNetwork::Get().DriveElevation(state.playerPosition, state.bikeElevation);
     state.bikePosition = state.playerPosition;
     state.facingYaw = state.bikeYaw;
-    state.movementAmount = state.bikeSpeed / kBikeCruiseSpeed;
-    state.movementSpeed = state.bikeSpeed;
+    state.movementSpeed = deltaSeconds > 0 ? actual / deltaSeconds : 0;
+    state.movementAmount = Game::Clamp(state.movementSpeed / kBikeBoostSpeed, 0, 1);
 }
 
 void Overworld::ToggleBike(GameState &state)
@@ -1874,7 +1908,7 @@ void Overworld::ToggleBike(GameState &state)
             Game::Get().ShowNotice("바이크 / 고가도로에서는 하차할 수 없습니다. 진출 경사로로 이동하세요.");
             return;
         }
-        if (state.bikeSpeed > 1)
+        if (std::fabs(state.bikeSpeed) > 1)
         {
             Game::Get().ShowNotice("바이크 / 방향키를 놓고 정차한 뒤 E로 내리세요.");
             return;

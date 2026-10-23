@@ -1,4 +1,5 @@
 #pragma once
+#include <functional>
 #include "Game.h"
 #include "Level.h"
 #include <array>
@@ -74,7 +75,7 @@ class CivicJustice
     static int LivingPopulation(int city = -1);
     static bool IsExterior();
     static bool ClearLine(Vector2 from, Vector2 to);
-    static bool Solid(Vector2 position, float radius = .3f);
+    static bool Solid(Vector2 position, float radius = .3f, float altitude = 0, bool driving = false);
     static void Update(float deltaSeconds);
 };
 // ============================================================================
@@ -99,6 +100,7 @@ class CivicCombat
 class BodyCollision
 {
   public:
+    static Vector2 Slide(Vector2 from, Vector2 desired, const std::function<bool(Vector2)> &blocked);
     static Vector2 MovePlayer(Vector2 from, Vector2 desired);
     static Vector2 MoveResident(size_t index, Vector2 from, Vector2 desired);
     static void Update(float deltaSeconds);

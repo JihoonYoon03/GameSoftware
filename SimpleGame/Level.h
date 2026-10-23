@@ -34,6 +34,7 @@ class MineQuest
     bool IsPowerBypassed() const;
     bool AreCoordinatesFound() const;
     const char *GetObjective() const;
+    const char *GetRiaDialogue() const;
 
   private:
     MineQuestStage stage = MineQuestStage::ShowRecord;
@@ -167,6 +168,7 @@ struct MineState
     PlayerStats player;
     combat::Pistol pistol;
     std::vector<Tile> tiles;
+    std::vector<std::uint8_t> explored;
     std::vector<int> reachableCells;
     std::vector<int> navigationDistances;
     std::vector<Enemy> enemies;
@@ -192,6 +194,7 @@ struct MineState
     tutorial::Vector2 scannerOrigin = {};
     float scannerRadius = 0;
     float muzzleFlash = 0;
+    float meleeSeconds = 0;
     int kills = 0;
     int rescuedPeople = 0;
     int returnedPeople = 0;
@@ -235,6 +238,8 @@ class MineMap
     std::vector<tutorial::Vector2> FindRoute(tutorial::Vector2 from, tutorial::Vector2 to);
     void UpdateNavigation();
     void Generate(std::uint32_t seed);
+    void Reveal(tutorial::Vector2 position);
+    bool IsExplored(tutorial::Vector2 position) const;
 
   private:
     MineLevel &level;
@@ -253,6 +258,7 @@ class MineCombat
     explicit MineCombat(MineLevel &level);
     void UpdateEnemies(float deltaSeconds);
     void Attack();
+    void Melee();
     void Reload();
     bool DamageEnemy(size_t index, int damage, bool playerCredit = true);
     void UpdateNpcs(float deltaSeconds);

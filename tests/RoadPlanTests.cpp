@@ -383,7 +383,7 @@ void TestBridgeDriving(Game &game)
         world.playerPosition = world.bikePosition = {48, reverse ? 100.1f : -100.1f};
         world.pressedKeys['w'] = true;
         float highest = 0;
-        for (int frame = 0; frame < 1200; ++frame)
+        for (int frame = 0; frame < 1800; ++frame)
         {
             Overworld::UpdateBike(world, 1.f / 60);
             highest = (std::max)(highest, world.bikeElevation);

@@ -287,10 +287,16 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
         const auto &library = models::ModelLibrary::Get();
         geometry.imported = model.resourceId != 0;
         for (size_t joint = 0; joint < 32; ++joint)
+        {
             for (size_t axis = 0; axis < 4; ++axis)
+            {
                 geometry.bindPose[joint * 16 + axis * 5] = 1;
+            }
+        }
         if (model.resourceId)
+        {
             models::ResourceAssets::Sample(model.resourceId, nullptr, geometry.bindPose);
+        }
         if (model.resourceId)
         {
             const auto &resource = models::ResourceAssets::Get(model.resourceId);
@@ -449,7 +455,9 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
     auto identity = reinterpret_cast<std::uintptr_t>(&model);
     key.assign(reinterpret_cast<char *>(&identity), sizeof(identity));
     if (pose)
+    {
         key.append(reinterpret_cast<char *>(bones.data()), sizeof(bones));
+    }
     key.push_back(armed ? '1' : '0');
     auto found = data.batchKeys.find(key);
     if (found == data.batchKeys.end())
@@ -1011,6 +1019,12 @@ void main() {
 }
 Renderer::~Renderer()
 {
+    if (m_msaaFramebuffer)
+    {
+        glDeleteFramebuffers(1, &m_msaaFramebuffer);
+        glDeleteRenderbuffers(1, &m_msaaColor);
+        glDeleteRenderbuffers(1, &m_msaaDepth);
+    }
     if (m_sceneDepth)
     {
         glDeleteTextures(1, &m_sceneDepth);
@@ -1136,7 +1150,7 @@ void Renderer::SetStyle(RenderStyle style)
     {
         style.resolution = WorldResolution::Native;
     }
-    bool resize = style.resolution != m_style.resolution;
+    bool resize = style.resolution != m_style.resolution || style.antialiasing != m_style.antialiasing;
     m_style = style;
     if (resize)
     {
@@ -1198,6 +1212,37 @@ void Renderer::CreatePostProcessing()
         m_sceneFramebuffer = 0;
         std::fprintf(stderr, "후처리 버퍼를 사용할 수 없어 기본 렌더링으로 전환합니다.\n");
     }
+    m_msaaSamples = 0;
+    if (m_sceneFramebuffer && m_style.antialiasing && m_style.resolution == WorldResolution::Native &&
+        GLEW_VERSION_3_0)
+    {
+        GLint supported = 0;
+        glGetIntegerv(GL_MAX_SAMPLES, &supported);
+        int samples = (std::min)(4, supported);
+        if (samples >= 2)
+        {
+            if (!m_msaaFramebuffer)
+            {
+                glGenFramebuffers(1, &m_msaaFramebuffer);
+                glGenRenderbuffers(1, &m_msaaColor);
+                glGenRenderbuffers(1, &m_msaaDepth);
+            }
+            glBindFramebuffer(GL_FRAMEBUFFER, m_msaaFramebuffer);
+            glBindRenderbuffer(GL_RENDERBUFFER, m_msaaColor);
+            glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_RGBA8, m_renderWidth,
+                                             m_renderHeight);
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, m_msaaColor);
+            glBindRenderbuffer(GL_RENDERBUFFER, m_msaaDepth);
+            glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_DEPTH_COMPONENT24, m_renderWidth,
+                                             m_renderHeight);
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_msaaDepth);
+            if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
+            {
+                m_msaaSamples = samples;
+            }
+            glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        }
+    }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -1214,20 +1259,53 @@ void Renderer::BeginScene(int width, int height)
     m_viewportHeight = height;
     if (HasPostProcessing())
     {
-        glBindFramebuffer(GL_FRAMEBUFFER, m_sceneFramebuffer);
+        glBindFramebuffer(GL_FRAMEBUFFER, m_msaaSamples > 0 ? m_msaaFramebuffer : m_sceneFramebuffer);
         glViewport(0, 0, m_renderWidth, m_renderHeight);
     }
     else
     {
         SetPresentationViewport();
     }
+    if (m_msaaSamples > 0)
+    {
+        glEnable(GL_MULTISAMPLE); // Enabled before any world geometry is submitted.
+    }
+    else
+    {
+        glDisable(GL_MULTISAMPLE);
+    }
     glClearColor(.02f, .04f, .07f, 1);
     glDepthMask(GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
+int Renderer::GetAntialiasingSamples() const
+{
+    return m_msaaSamples;
+}
+void Renderer::ResolveScene()
+{
+    if (m_msaaSamples <= 0)
+    {
+        return;
+    }
+    GLint current = 0;
+    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &current);
+    if (GLuint(current) != m_msaaFramebuffer)
+    {
+        return;
+    }
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, m_msaaFramebuffer);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_sceneFramebuffer);
+    glBlitFramebuffer(0, 0, m_renderWidth, m_renderHeight, 0, 0, m_renderWidth, m_renderHeight,
+                      GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_msaaFramebuffer);
+    // Colour captures and the mine's depth-based darkness read the resolved single-sample surface.
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, m_sceneFramebuffer);
+}
 void Renderer::EndScene(float seconds)
 {
     renderqueue::Flush();
+    ResolveScene();
     profiling::Scope timer(profiling::Timer::PostProcess);
     profiling::GpuScope gpuTimer(profiling::Timer::PostProcess);
     if (!HasPostProcessing())

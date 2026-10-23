@@ -344,6 +344,12 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     journey.Seconds("speed_kmh", world.bikeSpeed * models::WorldScale::metersPerUnit * 3.6f);
     journey.Number("cruise_speed_kmh",
                    tutorial::Overworld::kBikeCruiseSpeed * models::WorldScale::metersPerUnit * 3.6f);
+    journey.Bool("boosting", world.isBikeMounted && world.pressedKeys['w'] && world.pressedKeys[' ']);
+    journey.Bool("reversing", world.bikeSpeed < -.01f);
+    journey.Number("boost_speed_kmh",
+                   tutorial::Overworld::kBikeBoostSpeed * models::WorldScale::metersPerUnit * 3.6f);
+    journey.Number("reverse_speed_kmh",
+                   tutorial::Overworld::kBikeReverseSpeed * models::WorldScale::metersPerUnit * 3.6f);
     journey.Text("road_layout", "seeded_radial_districts");
     result.Raw("jet_travel", journey.Finish());
     JsonObject traffic;
