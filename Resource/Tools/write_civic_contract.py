@@ -59,6 +59,7 @@ contract={
  'death':{'clips':['Death_Front','Death_Back'],'hold_clips':['Death_Front_Pose','Death_Back_Pose'],'loop':False,'automatic_getup':False,'arms_and_weapon_socket_continuous':True},
  'flee':{'start_seconds':.2,'stop_seconds':.2,'loop':'Flee_Run','escape_heading':'game supplies direction; keep gaze forward on that heading by Run entry','entry_stop_phase':0,'root_yaw':0},
  'rider':{'base':'Ride_Base','reaction':'Rider_Brace','vehicle_reaction':'Bike_Impact','duration_seconds':.5,
+          'parent_space':'apply the animated chassis attachment matrix to the complete rider actor when mixing Hover_Idle/Cruise; do not bob rider root independently',
           'authoring_to_bike_rotation_z_degrees':90,'authoring_to_bike_translation_m':[0,0,-.076],
           'hand_contact_reference_bind_points':{'L':[.448,-.030,.865],'R':[-.448,-.030,.865]},
           'handlebar_contact_vehicle_m':{'L':[.300,.209,.894],'R':[.300,-.209,.894]},

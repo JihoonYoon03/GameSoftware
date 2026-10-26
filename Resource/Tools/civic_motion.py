@@ -77,6 +77,8 @@ class Pose:
             p.rotation_mode='QUATERNION';p.matrix_basis=self.basis[p.name]
 
 def blend(a,b,t):
+    if t<=0:return a
+    if t>=1:return b
     result=Pose(a.rig);w=smooth(t)
     for n in result.basis:
         la,qa,sa=a.basis[n].decompose();lb,qb,sb=b.basis[n].decompose()
@@ -128,10 +130,10 @@ def locomotion(rig,cycle,fast=0,flee=False):
         f=(cycle+phase)%1
         if f<stance:
             y=-half+stride*f;z=0
-            heel=.12*(1-smooth(f/.11));toe=-.26*smooth((f-(stance-.16))/.16)
+            heel=-.12*(1-smooth(f/.11));toe=.26*smooth((f-(stance-.16))/.16)
             angle=heel+toe
             # Rotate about heel/toe contact rather than sinking a flat foot.
-            pivot=Vector((s*.115,.065 if angle>=0 else -.195,0))
+            pivot=Vector((s*.115,.065 if angle<=0 else -.195,0))
             ankle=pivot+rx(angle)@(Vector((s*.115,0,.14))-pivot)
             ankle.y+=y
         else:
@@ -139,9 +141,11 @@ def locomotion(rig,cycle,fast=0,flee=False):
             # Hermite curve keeps the stance velocity at toe off and heel strike.
             m=stride*(1-stance)
             y=(2*u**3-3*u*u+1)*half+(u**3-2*u*u+u)*m+(-2*u**3+3*u*u)*(-half)+(u**3-u*u)*m
-            angle=-.26*(1-smooth(u/.35))+.12*smooth((u-.62)/.38)
+            angle=.26*(1-smooth(u/.35))-.12*smooth((u-.62)/.38)
             lift=(.105+.15*fast)*math.sin(PI*u)**1.35
-            ankle=Vector((s*.115,y,.14+lift))
+            pivot=Vector((s*.115,.065 if angle<=0 else -.195,0))
+            ankle=pivot+rx(angle)@(Vector((s*.115,0,.14))-pivot)
+            ankle.y+=y;ankle.z+=lift
             # The lowest rigid boot point remains above the swing clearance.
             boot=[Vector((s*.115,yy,0)) for yy in [-.195,.065]]
             zmin=min((rx(angle)@(v-Vector((s*.115,0,.14)))).z for v in boot)
@@ -187,10 +191,10 @@ def recovery_state(rig,label,back=False):
     p=Pose(rig)
     if label=='support':
         p.absolute('pelvis',rx(1.20)@ry(-.08),(.02,0,.45))
-        p.relative('spine',rx(.18));p.relative('chest',rx(-.05));p.relative('head',rx(-.65))
+        p.relative('spine',rx(.30));p.relative('chest',rx(-.05));p.relative('head',rx(-.20))
         # Left palm supports; armed right hand remains clear of the ground.
-        arms(p,{'L':(.28,-.52,.030),'R':(-.35,-.30,.42)},
-             {'L':rx(-PI/2),'R':rx(-PI/2)}, {'L':(.8,0,0),'R':(-1,.1,0)})
+        arms(p,{'L':(.28,-.52,.025),'R':(-.40,-.22,.47)},
+             {'L':rx(-PI/2),'R':rx(-PI/4)}, {'L':(.8,0,0),'R':(-1,.1,0)})
         feet(p,{'L':(.15,.36,.21),'R':(-.16,.31,.21)},
              {'L':rx(-.9),'R':rx(-.9)})
     elif label=='kneel':
@@ -304,7 +308,14 @@ def human_pose(rig,clip,t):
     if clip.startswith('GetUp_') or clip=='Medical_GetUp':
         direction=clip.split('_')[1] if clip.startswith('GetUp_') else 'Front'
         back=direction=='Back'
-        return keyposes(rig,t,[(0,orient_down(recovery_state(rig,'down'),direction)), (.26,recovery_state(rig,'support',back)),
+        down=orient_down(recovery_state(rig,'down'),direction)
+        guard=orient_down(recovery_state(rig,'down'),direction)
+        wrist=guard.fk('hand.R').translation.copy()
+        wrist+=Vector({'Front':(0,-.25,.13),'Back':(0,.25,.13),'Left':(.20,0,.13),'Right':(-.20,0,.13)}[direction])
+        hip=guard.fk('upper_arm.R').translation;elbow=guard.fk('forearm.R').translation
+        pole=elbow-(hip+guard.fk('hand.R').translation)*.5
+        guard.chain('upper_arm.R','forearm.R','hand.R',wrist,pole,rx(-PI/4))
+        return keyposes(rig,t,[(0,down),(.10,guard),(.26,recovery_state(rig,'support',back)),
                               (.53,recovery_state(rig,'kneel',back)),(.78,recovery_state(rig,'rise',back)),
                               (1,recovery_state(rig,'stand'))])
     if clip=='Flee_Start':

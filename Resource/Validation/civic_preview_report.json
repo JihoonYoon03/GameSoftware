@@ -1,0 +1,258 @@
+{
+  "sequences": {
+    "Attack_Fire": {
+      "source_frames": 13,
+      "gif_frames": 13,
+      "size": [
+        560,
+        560
+      ],
+      "loop": 0
+    },
+    "Attack_Melee": {
+      "source_frames": 13,
+      "gif_frames": 13,
+      "size": [
+        560,
+        560
+      ],
+      "loop": 0
+    },
+    "Before_After": {
+      "source_frames": 13,
+      "gif_frames": 12,
+      "size": [
+        715,
+        494
+      ],
+      "loop": 0
+    },
+    "Bike_Contact": {
+      "source_frames": 13,
+      "gif_frames": 12,
+      "size": [
+        650,
+        520
+      ],
+      "loop": 0
+    },
+    "Death_Back": {
+      "source_frames": 13,
+      "gif_frames": 13,
+      "size": [
+        560,
+        560
+      ],
+      "loop": null
+    },
+    "Death_Front": {
+      "source_frames": 13,
+      "gif_frames": 13,
+      "size": [
+        560,
+        560
+      ],
+      "loop": null
+    },
+    "Downed_Loop": {
+      "source_frames": 13,
+      "gif_frames": 12,
+      "size": [
+        560,
+        560
+      ],
+      "loop": 0
+    },
+    "Flee_Run": {
+      "source_frames": 13,
+      "gif_frames": 12,
+      "size": [
+        560,
+        560
+      ],
+      "loop": 0
+    },
+    "Flee_Start": {
+      "source_frames": 13,
+      "gif_frames": 13,
+      "size": [
+        560,
+        560
+      ],
+      "loop": 0
+    },
+    "Flee_Stop": {
+      "source_frames": 13,
+      "gif_frames": 13,
+      "size": [
+        560,
+        560
+      ],
+      "loop": 0
+    },
+    "GetUp_Back": {
+      "source_frames": 13,
+      "gif_frames": 13,
+      "size": [
+        560,
+        560
+      ],
+      "loop": 0
+    },
+    "GetUp_Front": {
+      "source_frames": 13,
+      "gif_frames": 13,
+      "size": [
+        560,
+        560
+      ],
+      "loop": 0
+    },
+    "GetUp_Left": {
+      "source_frames": 13,
+      "gif_frames": 13,
+      "size": [
+        560,
+        560
+      ],
+      "loop": 0
+    },
+    "GetUp_Right": {
+      "source_frames": 13,
+      "gif_frames": 13,
+      "size": [
+        560,
+        560
+      ],
+      "loop": 0
+    },
+    "Hit_Front": {
+      "source_frames": 13,
+      "gif_frames": 13,
+      "size": [
+        560,
+        560
+      ],
+      "loop": 0
+    },
+    "Idle": {
+      "source_frames": 13,
+      "gif_frames": 12,
+      "size": [
+        560,
+        560
+      ],
+      "loop": 0
+    },
+    "Jump_Full": {
+      "source_frames": 13,
+      "gif_frames": 13,
+      "size": [
+        560,
+        560
+      ],
+      "loop": 0
+    },
+    "Knockdown_Back": {
+      "source_frames": 13,
+      "gif_frames": 13,
+      "size": [
+        560,
+        560
+      ],
+      "loop": 0
+    },
+    "Knockdown_Front": {
+      "source_frames": 13,
+      "gif_frames": 13,
+      "size": [
+        560,
+        560
+      ],
+      "loop": 0
+    },
+    "Knockdown_Left": {
+      "source_frames": 13,
+      "gif_frames": 13,
+      "size": [
+        560,
+        560
+      ],
+      "loop": 0
+    },
+    "Knockdown_Right": {
+      "source_frames": 13,
+      "gif_frames": 13,
+      "size": [
+        560,
+        560
+      ],
+      "loop": 0
+    },
+    "Medical_GetUp": {
+      "source_frames": 13,
+      "gif_frames": 13,
+      "size": [
+        560,
+        560
+      ],
+      "loop": 0
+    },
+    "Medical_Stabilized": {
+      "source_frames": 13,
+      "gif_frames": 13,
+      "size": [
+        560,
+        560
+      ],
+      "loop": 0
+    },
+    "Rider_Brace": {
+      "source_frames": 13,
+      "gif_frames": 13,
+      "size": [
+        560,
+        560
+      ],
+      "loop": 0
+    },
+    "Run": {
+      "source_frames": 13,
+      "gif_frames": 12,
+      "size": [
+        560,
+        560
+      ],
+      "loop": 0
+    },
+    "Security_StunFire": {
+      "source_frames": 13,
+      "gif_frames": 13,
+      "size": [
+        560,
+        560
+      ],
+      "loop": 0
+    },
+    "Turn_Left_90": {
+      "source_frames": 13,
+      "gif_frames": 13,
+      "size": [
+        560,
+        560
+      ],
+      "loop": 0
+    },
+    "Walk": {
+      "source_frames": 13,
+      "gif_frames": 12,
+      "size": [
+        560,
+        560
+      ],
+      "loop": 0
+    }
+  },
+  "count": 28,
+  "all_checks_passed": true
+}

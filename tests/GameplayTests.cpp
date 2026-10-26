@@ -10,6 +10,7 @@
 #include "Scene.h"
 #include "ResourceAssets.h"
 #include "TransitLayout.h"
+#include "RenderAssets.h"
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -26,6 +27,20 @@ namespace
 using namespace game;
 MineState &mineState = GameLevels::Mine().GetState();
 using tutorial::Vector2;
+void ReadDialogue()
+{
+    auto &d = tutorial::Game::Get().GetState().dialogue;
+    int pages = 0;
+    while (tutorial::Dialogue::Active())
+    {
+        assert(++pages < 200);
+        if (!d.pages[d.page].choices.empty())
+        {
+            assert(tutorial::Dialogue::Select(0));
+        }
+        assert(tutorial::Dialogue::Advance());
+    }
+}
 void ReadyMine(unsigned int seed = 13)
 {
     GameLevels::Mine().Reset();
@@ -38,6 +53,113 @@ void ReadyMine(unsigned int seed = 13)
     GameLevels::Mine().Map().Generate(seed);
     mineState.active = true;
     mineState.invulnerability = 1000;
+}
+void TestDialogueProgress()
+{
+    using namespace tutorial;
+    auto &game = Game::Get();
+    auto &world = game.GetState();
+    game.Reset();
+    game.KeyDown('j', 0, 0);
+    assert(world.journalVisible && Dialogue::LocksWorld());
+    auto journal = Dialogue::Journal();
+    for (const auto &entry : journal)
+    {
+        assert(entry.find("문양:") == std::string::npos && entry.find("N-0/17") == std::string::npos);
+    }
+    game.KeyUp('j', 0, 0);
+    game.KeyDown('j', 0, 0);
+    game.KeyUp('j', 0, 0);
+    const std::string korean = "긴 한글 문장과 English words 123을 실제 글꼴 폭에 맞춰 누락 없이 읽는다.";
+    auto rows = Dialogue::Wrap(korean, 135);
+    std::string joined;
+    for (const auto &row : rows)
+    {
+        assert(RenderAssets::MeasureUtf8(row, 19) <= 135);
+        joined += row;
+    }
+    auto compact = [](std::string text) {
+        text.erase(std::remove(text.begin(), text.end(), ' '), text.end());
+        return text;
+    };
+    assert(compact(joined) == compact(korean));
+    int completions = 0;
+    auto scene = [&]() {
+        return Dialogue::Start("test/choice",
+                               {{"first", "검증 화자", "단말 기록", korean + korean + korean + korean, {}},
+                                {"choice",
+                                 "리아",
+                                 "현장",
+                                 "출발 여부를 선택해 줘.",
+                                 {{"depart", "출발한다"}, {"prepare", "아직 준비한다"}}}},
+                               [&](const std::string &choice) {
+                                   assert(choice == "prepare");
+                                   ++completions;
+                               });
+    };
+    assert(scene() && Dialogue::LocksWorld());
+    size_t page = world.dialogue.page;
+    world.mouseFiring = true;
+    game.KeyDown('e', 0, 0);
+    assert(world.dialogue.page == page + 1);
+    game.KeyDown('e', 0, 0);
+    assert(world.dialogue.page == page + 1); // Held E consumes exactly one page.
+    game.KeyUp('e', 0, 0);
+    while (world.dialogue.pages[world.dialogue.page].choices.empty())
+    {
+        assert(Dialogue::Advance());
+    }
+    assert(!Dialogue::Advance() && completions == 0);
+    assert(Dialogue::Select(1) && completions == 0);
+    auto savedPage = world.dialogue.page;
+    game.ShowNotice("재장전 / 전투 알림은 대사 본문을 덮지 않는다.");
+    assert(world.dialogue.page == savedPage && world.dialogue.selection == 1);
+    game.KeyDown(27, 0, 0);
+    assert(!Dialogue::Advance() && !world.dialogue.scenes.at("test/choice").choice.size());
+    game.KeyDown(27, 0, 0);
+    HospitalRecovery::Begin();
+    assert(world.dialogue.suspended && !Dialogue::Active() && !Dialogue::Resume());
+    for (int step = 0; step < 80; ++step)
+    {
+        HospitalRecovery::Update(.05f);
+    }
+    assert(!HospitalRecovery::Active());
+    game.KeyDown('j', 0, 0);
+    game.KeyUp('j', 0, 0);
+    game.KeyDown(13, 0, 0);
+    assert(Dialogue::Active());
+    assert(world.dialogue.page == savedPage && world.dialogue.selection == 1);
+    game.KeyDown(13, 0, 0); // Resume must retain the Enter latch even when movement keys are cleared.
+    assert(Dialogue::Active() && world.dialogue.page == savedPage && completions == 0);
+    game.KeyUp(13, 0, 0);
+    assert(Dialogue::Advance() && completions == 1);
+    assert(world.dialogue.scenes.at("test/choice").choice == "prepare");
+    assert(scene());
+    while (world.dialogue.pages[world.dialogue.page].choices.empty())
+    {
+        assert(Dialogue::Advance());
+    }
+    assert(Dialogue::Select(1) && Dialogue::Advance() && completions == 1);
+    auto history = world.dialogue.history.size();
+    assert(history > 1);
+    world.isInsideHome = false;
+    CivicJustice::State().wanted = 1;
+    assert(Dialogue::Start("test/radio", {{"radio", "리아", "무전", "안전 지점으로 이동해.", {}}}));
+    assert(Dialogue::Danger() && !Dialogue::LocksWorld() && CivicCombat::Available());
+    game.KeyDown('d', 0, 0);
+    assert(world.pressedKeys['d']);
+    ReadDialogue();
+    assert(world.dialogue.history.size() == history + 1);
+    game.Reset();
+    world.isInsideHome = false;
+    world.isInObservatory = true;
+    world.playerPosition = kObservatoryConsole;
+    game.InteractWithNearbyTarget();
+    assert(world.gateSignalHeard && world.dialogue.pages.size() == 3);
+    assert(world.dialogue.pages[0].speaker != world.dialogue.pages[1].speaker &&
+           world.dialogue.pages[1].speaker != world.dialogue.pages[2].speaker);
+    ReadDialogue();
+    game.Reset();
 }
 void TestNpcFacing()
 {
@@ -329,13 +451,16 @@ void TestCityQuestAccess()
     // Follow the production interaction sequence through the relocated outdoor targets.
     world.playerPosition = {1, -1.2f};
     game.InteractWithNearbyTarget();
+    ReadDialogue();
     world.playerPosition = {2.4f, 2.4f};
     game.InteractWithNearbyTarget();
+    ReadDialogue();
     assert(!world.isInsideHome && Game::Distance(world.playerPosition, kHomeDoor) < .001f);
     auto interact = [&](Vector2 position, InteractionTarget target) {
         world.playerPosition = position;
         assert(game.FindNearbyInteraction() == target);
         game.InteractWithNearbyTarget();
+        ReadDialogue();
     };
     interact(kLiaPosition, InteractionTarget::Lia);
     interact(kMaraPosition, InteractionTarget::Mara);
@@ -367,6 +492,7 @@ void TestCityQuestAccess()
     assert(!game.IsPositionBlocked(world.bikePosition)); // Braking may coast onto the open shoulder.
     auto parked = world.bikePosition;
     game.InteractWithNearbyTarget();
+    ReadDialogue();
     assert(!world.isBikeMounted && Game::Distance(parked, world.bikePosition) < .001f);
     assert(!game.IsPositionBlocked(world.playerPosition));
     game.Reset();
@@ -919,8 +1045,10 @@ void TestRescueAndScanner()
     GameLevels::Mine().Rescue().Scan();
     assert(mineState.scannerCooldown == cooldown);
     GameLevels::Mine().Interact();
+    ReadDialogue();
     assert(mineState.rescueGroups[0].rescued && mineState.rescuedPeople == 3);
     GameLevels::Mine().Interact();
+    ReadDialogue();
     assert(mineState.rescuedPeople == 3);
     for (const auto &npc : mineState.survivors)
     {
@@ -1147,7 +1275,9 @@ void ChapterInteract(game::ChapterAction action)
         }
     }
     assert(found);
+    ReadDialogue();
     level.Interact();
+    ReadDialogue();
 }
 void CompleteChapterSite(int site, bool peaceful = true)
 {
@@ -1176,6 +1306,7 @@ void CompleteChapterSite(int site, bool peaceful = true)
         {
             level.Update(.05f);
         }
+        ReadDialogue();
         assert(s.convoyRescued && s.kainJoined);
         for (const auto &person : s.survivors)
         {
@@ -1247,8 +1378,10 @@ void TestChapterOne()
     assert(!level.IsAvailable() && !level.IsActive());
     game.GetState().playerPosition = tutorial::kCityReceiverPosition;
     game.InteractWithNearbyTarget();
+    ReadDialogue();
     assert(level.IsAvailable() && !level.IsActive());
     game.InteractWithNearbyTarget();
+    ReadDialogue();
     assert(level.IsActive() && SceneManager::Current() == SceneKind::Frontier);
     level.Leave();
     assert(!level.IsActive() && SceneManager::Current() == SceneKind::Exterior);
@@ -1270,7 +1403,9 @@ void TestChapterOne()
         assert(s.comparisonStarted && !s.recordsCompared && !level.IsActive());
         level.Update(3.1f);
         assert(!s.recordsCompared);
-        level.Update(5.1f);
+        level.Update(500.f);
+        assert(!s.recordsCompared && !s.waterwayUnlocked);
+        ReadDialogue();
         assert(s.recordsCompared && s.waterwayUnlocked);
         level.Enter();
         assert(level.CompletedSites() == 3 && s.kainJoined && s.recordsCompared);
@@ -1278,17 +1413,22 @@ void TestChapterOne()
         assert(snapshot.find("\"current_region_id\":\"frontier\"") != std::string::npos);
         assert(snapshot.find("\"main.chapter1_complete\":true") != std::string::npos);
     } while (std::next_permutation(order.begin(), order.end()));
-    // Held E must not bounce between the city board and the entrance gate.
+    // Departure requires an explicit choice, and the confirmation key cannot also exit the field.
     game.Reset();
     level.Enter(true);
     level.Leave();
+    game.KeyDown('e', 0, 0);
+    assert(tutorial::Dialogue::Active() && !level.IsActive());
+    game.KeyDown('e', 0, 0);
+    assert(!level.IsActive());
+    game.KeyUp('e', 0, 0);
+    game.KeyDown('1', 0, 0);
+    game.KeyUp('1', 0, 0);
     game.KeyDown('e', 0, 0);
     assert(level.IsActive());
     game.KeyDown('e', 0, 0);
     assert(level.IsActive());
     game.KeyUp('e', 0, 0);
-    game.KeyDown('e', 0, 0);
-    assert(!level.IsActive());
     game.KeyDown('e', 0, 0);
     assert(!level.IsActive());
     game.KeyUp('e', 0, 0);
@@ -1385,26 +1525,33 @@ void TestStoryAndReentry()
     mineState.enemies.clear();
     tutorial::Game::Get().GetState().playerPosition = kCoordinateTerminal;
     GameLevels::Mine().Interact();
+    ReadDialogue();
     assert(!mineState.quest.AreCoordinatesFound());
     tutorial::Game::Get().GetState().playerPosition = kPowerBypass;
     GameLevels::Mine().Interact();
+    ReadDialogue();
     tutorial::Game::Get().GetState().playerPosition = kRuinSignal;
     GameLevels::Mine().Interact();
+    ReadDialogue();
     tutorial::Game::Get().GetState().playerPosition = kObserverGlyph;
     GameLevels::Mine().Interact();
+    ReadDialogue();
     tutorial::Game::Get().GetState().playerPosition = kCoordinateTerminal;
     GameLevels::Mine().Interact();
+    ReadDialogue();
     assert(mineState.quest.GetStage() == MineQuestStage::ReturnToHalo);
     auto revision = mineState.mapRevision;
     mineState.player.salvage = 7;
     tutorial::Game::Get().GetState().playerPosition = mineState.entry;
     GameLevels::Mine().Interact();
+    ReadDialogue();
     assert(!GameLevels::Mine().IsActive() && mineState.quest.GetStage() == MineQuestStage::ReturnToHalo);
     auto &world = tutorial::Game::Get().GetState();
     assert(tutorial::Game::Distance(world.playerPosition, world.mineReturnPosition) < .001f);
     world.isBikeMounted = false;
     world.playerPosition = tutorial::kCityReceiverPosition;
     tutorial::Game::Get().InteractWithNearbyTarget();
+    ReadDialogue();
     assert(mineState.quest.GetStage() == MineQuestStage::Complete);
     GameLevels::Mine().Enter();
     assert(GameLevels::Mine().IsActive() && mineState.mapRevision > revision &&
@@ -1528,6 +1675,7 @@ int main(int argc, char **argv)
         std::cout << "Urban traffic, crossing and resident checks passed.\n";
         return 0;
     }
+    TestDialogueProgress();
     TestExplorationAndMelee();
     TestBikeSpeedsAndSliding();
     TestLevelLifecycle();

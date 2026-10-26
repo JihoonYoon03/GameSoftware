@@ -195,6 +195,52 @@ void RenderAssets::DrawGlow(float x, float y, float size)
          1.5f / 66, (5 * 66 + 64.5f) / 396, 64.5f / 66);
 }
 
+int RenderAssets::MeasureUtf8(const std::string &utf8, int fontSize)
+{
+    struct Metrics
+    {
+        HDC dc = CreateCompatibleDC(nullptr);
+        HFONT font;
+        HGDIOBJ previous;
+        explicit Metrics(int size)
+        {
+            font = CreateFontW(-size, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+                               OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH,
+                               L"Malgun Gothic");
+            previous = dc && font ? SelectObject(dc, font) : nullptr;
+        }
+        ~Metrics()
+        {
+            if (previous)
+            {
+                SelectObject(dc, previous);
+            }
+            if (font)
+            {
+                DeleteObject(font);
+            }
+            if (dc)
+            {
+                DeleteDC(dc);
+            }
+        }
+    };
+    static std::map<int, std::unique_ptr<Metrics>> fonts;
+    auto &metrics = fonts[fontSize];
+    if (!metrics)
+    {
+        metrics = std::make_unique<Metrics>(fontSize);
+    }
+    int count = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, utf8.data(), int(utf8.size()), nullptr, 0);
+    if (!count || !metrics->dc || !metrics->font)
+    {
+        return 0;
+    }
+    std::wstring text(count, L' ');
+    MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, utf8.data(), int(utf8.size()), &text[0], count);
+    SIZE extent{};
+    return GetTextExtentPoint32W(metrics->dc, text.data(), count, &extent) ? int(extent.cx) : 0;
+}
 void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf8, int fontSize)
 {
     if (utf8.empty())

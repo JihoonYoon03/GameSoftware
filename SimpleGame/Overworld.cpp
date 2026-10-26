@@ -1901,6 +1901,11 @@ void Overworld::UpdateBike(GameState &state, float deltaSeconds)
 
 void Overworld::ToggleBike(GameState &state)
 {
+    if (Dialogue::Active() || state.journalVisible || state.dialogueHistoryVisible ||
+        HospitalRecovery::Active())
+    {
+        return;
+    }
     if (state.isBikeMounted)
     {
         if (state.bikeElevation > .3f)

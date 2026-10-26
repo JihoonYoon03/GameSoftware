@@ -416,7 +416,7 @@ struct ChapterOneState
     bool hostile = false, negotiated = false, ledgerFound = false, detailLedgerFound = false;
     bool comparisonStarted = false, recordsCompared = false, waterwayUnlocked = false;
     float comparisonSeconds = 0, invulnerability = 0, muzzleFlash = 0;
-    bool mapVisible = true, journalVisible = false;
+    bool mapVisible = true;
     std::vector<FrontierTile> tiles;
     std::vector<tutorial::Building> structures;
     std::vector<FrontierPerson> survivors, scrappers;

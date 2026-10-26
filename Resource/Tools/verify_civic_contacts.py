@@ -3,8 +3,8 @@ import bpy,json,math
 from pathlib import Path
 from mathutils import Vector,Matrix
 ROOT=Path(__file__).resolve().parents[1]
-scene=bpy.data.scenes['00_Library'];bpy.context.window.scene=scene
-rig=bpy.data.objects['HUMAN_7H'];report={}
+scene=bpy.data.scenes.new('Civic_Contact_QA');scene.render.fps=30;bpy.context.window.scene=scene
+rig=bpy.data.objects['HUMAN_7H'];scene.collection.objects.link(rig);report={}
 def sample(clip,phase):
     global evaluated
     a=bpy.data.actions['HUMAN_7H__'+clip]
@@ -27,6 +27,7 @@ for clip,speed,period,ranges in [('Walk',1.08,1.,[('heel',.13,.40),('toe',.49,.5
             p.y-=speed*period*t;coords.append(p)
         drift=max((Vector((p.x,p.y,0))-Vector((coords[0].x,coords[0].y,0))).length for p in coords)
         print('CONTACT_RANGE',clip,label,'START',tuple(coords[0]),'END',tuple(coords[-1]),'DRIFT',drift,flush=True)
+        if drift>.003:print('CONTACT_SAMPLES',[(round(start+(end-start)*i/20,4),tuple(p)) for i,p in enumerate(coords)],flush=True)
         # X retains the authored foot lane; Y compensates the documented Actor speed.
         assert drift<.003,(clip,label,'stance drift',drift)
         checks[label]={'compensated_horizontal_drift_m':drift,'phase_range':[start,end]}
@@ -75,7 +76,7 @@ sample('GetUp_Front',.26)
 hand=bpy.data.objects['Body_Hand_L']
 hand_low=min(point('hand.L',v.co).z for v in hand.data.vertices)
 report['getup_left_hand_min_z_at_support_m']=hand_low
-assert -.005<hand_low<.055,('get-up supporting hand misses floor',hand_low)
+assert -.005<hand_low<.012,('get-up supporting hand misses floor',hand_low)
 report['all_checks_passed']=True
 (ROOT/'Validation/civic_contact_report.json').write_text(json.dumps(report,indent=2)+'\n',encoding='utf-8')
 print('CIVIC_CONTACT_CHECKS_PASSED',json.dumps(report),flush=True)

@@ -1158,6 +1158,67 @@ void CaptureCivicSystems(const std::filesystem::path &output)
     game.Reset();
 }
 
+void ReadDialogue()
+{
+    auto &d = Game::Get().GetState().dialogue;
+    int count = 0;
+    while (Dialogue::Active())
+    {
+        assert(++count < 200);
+        if (!d.pages[d.page].choices.empty())
+        {
+            assert(Dialogue::Select(0));
+        }
+        assert(Dialogue::Advance());
+    }
+}
+void CaptureDialogue(const std::filesystem::path &output)
+{
+    auto &game = Game::Get();
+    auto &world = game.GetState();
+    auto &renderer = GameRenderer::Get().Backend();
+    game.Reset();
+    auto capture = [&](const char *name) {
+        Begin();
+        game::SceneManager::Get(game::SceneManager::Current()).Draw();
+        renderer.EndScene(world.animationTimeSeconds);
+        game::SceneManager::Get(game::SceneKind::Hud).Draw();
+        renderqueue::Flush();
+        assert(glGetError() == GL_NO_ERROR);
+        Save(output / name);
+    };
+    world.journalVisible = true;
+    capture("dialogue-prologue-journal.bmp");
+    world.journalVisible = false;
+    world.isInsideHome = false;
+    world.isInObservatory = true;
+    world.playerPosition = kObservatoryConsole;
+    world.cameraPosition = {0, 0};
+    game.InteractWithNearbyTarget();
+    assert(Dialogue::Active());
+    capture("dialogue-observatory-voice.bmp");
+    Dialogue::Advance();
+    capture("dialogue-observatory-player.bmp");
+    Dialogue::Advance();
+    capture("dialogue-observatory-ria.bmp");
+    ReadDialogue();
+    Dialogue::Start(
+        "render/choices",
+        {{"page",
+          "리아",
+          "현장",
+          "문장을 천천히 읽어도 기록은 사라지지 않아. 조사 내용을 다시 확인하고 준비가 끝나면 출발하자.",
+          {{"depart", "조사 기록을 확인했으니 현장으로 출발한다"},
+           {"prepare", "아직 준비한다. 헤일로에서 장비와 보급품을 다시 확인한다"},
+           {"review", "잠깐 기다린다. 지금까지 읽은 대사와 조사 기록을 다시 확인한다"}}}});
+    Dialogue::Select(1);
+    game.ShowNotice("보급품 획득 / 이 알림은 대화와 별도로 표시됩니다.");
+    capture("dialogue-choices.bmp");
+    world.dialogueHistoryVisible = true;
+    capture("dialogue-history.bmp");
+    game.Reset();
+}
+
 void CaptureChapter(const std::filesystem::path &output)
 {
     auto &game = Game::Get();
@@ -1179,7 +1240,9 @@ void CaptureChapter(const std::filesystem::path &output)
             }
         }
         assert(found);
+        ReadDialogue();
         level.Interact();
+        ReadDialogue();
     };
     auto capture = [&](const char *name, Vector2 camera, bool city = false) {
         world.cameraPosition = world.playerPosition = camera;
@@ -1216,18 +1279,22 @@ void CaptureChapter(const std::filesystem::path &output)
         level.Update(.05f);
     }
     assert(s.convoyRescued && s.kainJoined);
+    ReadDialogue();
     capture("chapter-relay.bmp", {30, 32});
     interact(game::ChapterAction::TradeProof);
     interact(game::ChapterAction::Scrappers);
     interact(game::ChapterAction::Ledger);
     interact(game::ChapterAction::DetailLedger);
-    s.journalVisible = true;
+    world.journalVisible = true;
     capture("chapter-journal.bmp", {32, 32});
-    s.journalVisible = false;
+    world.journalVisible = false;
     level.Leave();
     level.InteractHub();
     assert(s.comparisonStarted);
-    level.Update(8.1f);
+    level.Update(80.f);
+    assert(!s.recordsCompared);
+    capture("chapter-comparison-unread.bmp", kCityReceiverPosition, true);
+    ReadDialogue();
     assert(s.recordsCompared);
     capture("chapter-comparison.bmp", kCityReceiverPosition, true);
     std::ofstream snapshot(output / "chapter-snapshot.json");
@@ -1472,6 +1539,18 @@ void BenchmarkQuality(const std::filesystem::path &output)
 int main(int argc, char **argv)
 {
     glutInit(&argc, argv);
+    if (argc > 1 && std::string(argv[1]) == "--dialogue-only")
+    {
+        OffscreenContext context;
+        GameRenderer::Get().Initialize();
+        std::filesystem::path output = argc > 2 ? argv[2] : "x64/RevisionChecks/dialogue-renders";
+        std::filesystem::create_directories(output);
+        CaptureDialogue(output);
+        CaptureChapter(output);
+        GameRenderer::Get().Shutdown();
+        std::cout << "Dialogue visual checks passed.\n";
+        return 0;
+    }
     if (argc > 1 && std::string(argv[1]) == "--roads-only")
     {
         OffscreenContext context;
@@ -1526,6 +1605,7 @@ int main(int argc, char **argv)
     CaptureAircraftThrusters(output);
     CaptureDistrictAndBodies(output);
     CaptureHairAndCombat(output);
+    CaptureDialogue(output);
     CaptureChapter(output);
     CaptureMapNavigation(output);
     CaptureCivicSystems(output);

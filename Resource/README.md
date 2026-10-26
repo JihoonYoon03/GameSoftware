@@ -24,7 +24,9 @@
 
 방향별 피격·넘어짐·누운 상태·기립·사망, 도주·제압 사격·의료 회복·바이크 버티기를 추가했습니다. 기존 인체 대기·보행·달리기·회전·공격·점프도 접지와 체중 이동을 다듬었습니다. 차량에는 충격·동력 차단과 정리 이벤트를 추가했습니다. 게임 코드와 Runtime 캐시는 수정하지 않았습니다.
 
-[바로 열어 재생하는 Blender 파일](Source/Civic_Animations.blend) · [동작·연결 안내](Documentation/CIVIC_ANIMATION_GUIDE_ko.md) · [통합 계약](Documentation/civic_animation_contract.json) · [렌더 미리보기](Preview/Civic/motion_overview.jpg)
+[바로 열어 재생하는 Blender 파일](Source/Civic_Animations.blend) · [동작·연결 안내](Documentation/CIVIC_ANIMATION_GUIDE_ko.md) · [통합 계약](Documentation/civic_animation_contract.json) · [납품 미리보기](Preview/Civic/delivery_overview.jpg)
+
+[보행 개선 전/후](Preview/Civic/Before_After.gif) · [기립 동작](Preview/Civic/GetUp_Back.gif) · [바이크 탑승 접점](Preview/Civic/Bike_Contact.gif). 2026-10-26 최신 렌더를 GIF 28개와 접촉 시트에 반영했으며, 편집 원본 2개의 실제 재생도 확인했습니다.
 
 ## 도로·보행로·비행 안내 확장 — 2026-10-22
 

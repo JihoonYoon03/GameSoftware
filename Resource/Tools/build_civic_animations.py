@@ -69,7 +69,7 @@ class Clearance:
         self.groups=[(ws,np.array(points,dtype=np.float64)) for ws,points in groups.items()]
         self.labels=labels;self.offender=None
         self.vertices=sum(len(points) for ws,points in self.groups)
-        self.leg_groups={s:[(ws,points) for ws,points in self.groups if all(self.names[i] in ['shin.'+s,'foot.'+s] for i,w in ws)] for s in ['L','R']}
+        self.leg_groups={s:[(ws,points) for ws,points in self.groups if all(self.names[i]=='shin.'+s for i,w in ws)] for s in ['L','R']}
     def leg_minimum(self,p,suffix):
         transforms={i:p.deformation(self.names[i]) for ws,points in self.leg_groups[suffix] for i,w in ws}
         return min(float(np.min(points@sum((np.array(transforms[i][2])*w for i,w in ws),np.zeros(4)))) for ws,points in self.leg_groups[suffix])
@@ -86,13 +86,13 @@ class Clearance:
         for suffix in ['L','R']:
             end='foot.'+suffix;ob=PROTOTYPES['Boot_'+suffix]
             low=min(p.point(end,v.co).z for v in ob.data.vertices)
-            if low<.0005:
+            if low<.0003:
                 u='thigh.'+suffix;l='shin.'+suffix
                 hip=p.fk(u).translation;knee=p.fk(l).translation;target=p.fk(end).translation.copy()
                 delta=p.fk(end).to_quaternion()@p.rest[end].to_quaternion().inverted()
                 pole=knee-(hip+target)*.5;target.z+=.0005-low
                 p.chain(u,l,end,target,pole,delta)
-            if self.leg_minimum(p,suffix)<.0005:
+            if self.leg_minimum(p,suffix)<.00025:
                 u='thigh.'+suffix;l='shin.'+suffix
                 hip=p.fk(u).translation;knee=p.fk(l).translation;target=p.fk(end).translation.copy()
                 delta=p.fk(end).to_quaternion()@p.rest[end].to_quaternion().inverted()
@@ -108,6 +108,7 @@ class Clearance:
                         if self.leg_minimum(p,suffix)>=.0005:hi=mid
                         else:lo=mid
                     p.chain(u,l,end,target,pole+Vector((0,0,hi)),delta)
+                else:p.chain(u,l,end,target,pole,delta)
         weapon=PROTOTYPES['Weapon_CoilPistol_35cm']
         low=min(p.point('weapon_socket',v.co).z for v in weapon.data.vertices)
         if low<.015:
@@ -303,6 +304,7 @@ def export(file,objects,rig):
 if not DRAFT:
     for e in catalog['exports']:
         file=e['file'].replace('\\','/')
+        if '--characters-only' in sys.argv and e['type']!='character':continue
         if '--export-one' in sys.argv and Path(file).stem!=sys.argv[sys.argv.index('--export-one')+1]:continue
         if '--export-rest' in sys.argv and file=='Export/Characters/Player_Explorer.glb':continue
         if e['type']=='character':

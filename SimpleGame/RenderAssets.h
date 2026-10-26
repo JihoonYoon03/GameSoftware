@@ -6,6 +6,7 @@
 class RenderAssets
 {
   public:
+    static int MeasureUtf8(const std::string &text, int fontSize);
     RenderAssets();
     ~RenderAssets();
     void DrawMaterial(const RenderPoint (&vertices)[4], SurfaceMaterial material);

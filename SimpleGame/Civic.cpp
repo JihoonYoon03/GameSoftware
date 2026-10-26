@@ -504,11 +504,12 @@ void TransferToHospital()
     civic.playerGrace = 5;
     mine.invulnerability = 5;
     ++civic.deaths;
-    Game::Get().ShowNotice(std::string(Overworld::Cities()[hospital.city].name) + " 의료소 / 레벨 -" +
-                           std::to_string(civic.lostLevels) + " · 크레딧 -" +
-                           std::to_string(civic.lostCredits) + " · 거래 부품 -" +
-                           std::to_string(civic.lostSalvage) +
-                           ". 조사 기록은 유지되며 보안망의 평판은 남습니다.");
+    Game::Get().ShowNotice(
+        std::string(Overworld::Cities()[hospital.city].name) + " 의료소 / 레벨 -" +
+        std::to_string(civic.lostLevels) + " · 크레딧 -" + std::to_string(civic.lostCredits) +
+        " · 거래 부품 -" + std::to_string(civic.lostSalvage) +
+        ". 조사 기록은 유지되며 보안망의 평판은 남습니다." +
+        (world.dialogue.suspended ? " J 기록에서 Enter로 중단한 대화를 재개할 수 있습니다." : ""));
 }
 } // namespace
 
@@ -704,6 +705,13 @@ void CivicJustice::Update(float dt)
     auto &world = Game::Get().GetState();
     for (auto &officer : civic.officers)
     {
+        if (officer.weaponTier != officer.tier)
+        {
+            officer.weapon =
+                combat::SecurityCarbine(officer.tier, std::uint32_t(officer.id * 2654435761u) ^ 0x914e31u);
+            officer.weaponTier = officer.tier;
+        }
+        officer.weapon.Update(dt);
         officer.cooldown = (std::max)(0.f, officer.cooldown - dt);
         officer.muzzleFlash = (std::max)(0.f, officer.muzzleFlash - dt);
         if (officer.health <= 0)
@@ -757,15 +765,23 @@ void CivicJustice::Update(float dt)
         {
             officer.facing.yaw = std::atan2(delta.y, delta.x);
         }
-        if (civic.wanted > 0 && sees && distance < 8 + officer.tier * 1.5f && officer.cooldown <= 0)
+        if (civic.wanted > 0 && sees && distance < 8 + officer.tier * 1.5f && officer.impact.seconds <= 0 &&
+            civic.bullets.size() < 128)
         {
-            auto &stats = game::GameLevels::Mine().GetState().player;
-            int power =
-                stats.defense + (std::max)(8 + officer.tier * 4, int(stats.maxHealth * .015f * officer.tier));
-            CivicCombat::DamagePlayer(power, Add({}, Unit(delta), 1.5f));
-            civic.tracers.push_back({officer.position, world.playerPosition, .12f, true});
-            officer.cooldown = 1.6f - officer.tier * .2f;
-            officer.muzzleFlash = .07f;
+            combat::Shot shot;
+            if (officer.weapon.TryFire(std::atan2(delta.y, delta.x), shot))
+            {
+                const auto &stats = game::GameLevels::Mine().GetState().player;
+                int power = stats.defense +
+                            (std::max)(8 + officer.tier * 4, int(stats.maxHealth * .015f * officer.tier));
+                civic.bullets.push_back({officer.position,
+                                         {std::cos(shot.angle), std::sin(shot.angle)},
+                                         shot.speed,
+                                         shot.range,
+                                         power,
+                                         false});
+                officer.muzzleFlash = .07f;
+            }
         }
     }
     civic.unseenSeconds = visible ? 0 : civic.unseenSeconds + dt;
@@ -834,7 +850,10 @@ void CivicJustice::Update(float dt)
 
 bool CivicCombat::Available()
 {
-    return CivicJustice::IsExterior() && !Game::Get().GetState().isBikeMounted && !HospitalRecovery::Active();
+    const auto &world = Game::Get().GetState();
+    return CivicJustice::IsExterior() && !world.isBikeMounted && !HospitalRecovery::Active() &&
+           !world.isPaused && !world.mapVisible && !world.journalVisible && !world.dialogueHistoryVisible &&
+           !Dialogue::LocksWorld();
 }
 void CivicCombat::DamagePlayer(int damage, Vector2 impulse)
 {
@@ -1026,6 +1045,22 @@ void CivicCombat::Update(float dt)
             bullet.position = next;
             bullet.remaining = (std::max)(0.f, bullet.remaining - movement / steps);
             auto impulse = Add({}, bullet.direction, 2);
+            if (!bullet.playerOwned)
+            {
+                if (PlayerHeight() < .8f && Game::Distance(next, world.playerPosition) < .18f)
+                {
+                    DamagePlayer(bullet.damage, impulse);
+                    bullet.remaining = 0;
+                }
+                for (size_t i = 0; i < traffic.Vehicles().size() && bullet.remaining > 0; ++i)
+                {
+                    if (traffic.RenderElevation(i) < .7f && CarContains(traffic.Vehicles()[i], next, .02f))
+                    {
+                        bullet.remaining = 0;
+                    }
+                }
+                continue;
+            }
             for (size_t i = 0; i < civic.officers.size(); ++i)
             {
                 if (Game::Distance(next, civic.officers[i].position) < .35f &&
@@ -1074,7 +1109,7 @@ void CivicCombat::Update(float dt)
                 }
             }
         }
-        civic.tracers.push_back({start, bullet.position, .12f, false});
+        civic.tracers.push_back({start, bullet.position, .12f, !bullet.playerOwned});
     }
     civic.bullets.erase(std::remove_if(civic.bullets.begin(), civic.bullets.end(),
                                        [](const game::Bullet &b) { return b.remaining <= 0; }),
@@ -1401,6 +1436,7 @@ void HospitalRecovery::Begin()
             civic.hospital = int(i);
         }
     }
+    Dialogue::Interrupt();
     civic.recovery = RecoveryPhase::FadeOut;
     civic.recoverySeconds = 0;
     world.mouseFiring = false;

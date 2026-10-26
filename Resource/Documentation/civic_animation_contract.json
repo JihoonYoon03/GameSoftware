@@ -153,6 +153,7 @@
     "reaction": "Rider_Brace",
     "vehicle_reaction": "Bike_Impact",
     "duration_seconds": 0.5,
+    "parent_space": "apply the animated chassis attachment matrix to the complete rider actor when mixing Hover_Idle/Cruise; do not bob rider root independently",
     "authoring_to_bike_rotation_z_degrees": 90,
     "authoring_to_bike_translation_m": [
       0,

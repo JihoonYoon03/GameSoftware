@@ -1565,7 +1565,13 @@ void HudScene::Draw()
     BeginPlacement();
     PlaceScreenActor(*this, "hud", {0, 0, float(kCanvasWidth), float(kCanvasHeight)}, 0,
                      []() { Hud::Render(); });
-    DrawScreenScene(*this);
+    // HUD labels and panels must retain painter order; deferring labels with 3D meshes
+    // would draw ordinary HUD text over dialogue/journal panels.
+    EndPlacement();
+    for (const auto *actor : GetGraph().CollectVisible({0, 0, float(kCanvasWidth), float(kCanvasHeight)}))
+    {
+        actor->Draw();
+    }
 }
 
 // ============================================================================

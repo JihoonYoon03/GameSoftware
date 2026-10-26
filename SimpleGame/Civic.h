@@ -31,6 +31,8 @@ struct SecurityOfficer
     int tier = 1, health = 80;
     float cooldown = 0, navigationSeconds = 0, corpseSeconds = 0, muzzleFlash = 0;
     BodyImpact impact;
+    combat::SecurityCarbine weapon;
+    int weaponTier = 0;
     std::vector<Vector2> route;
     size_t waypoint = 0;
 };

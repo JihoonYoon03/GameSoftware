@@ -1,6 +1,9 @@
 #pragma once
 #include "ModelLibrary.h"
 #include <string>
+#include <functional>
+#include <map>
+#include <set>
 #include <vector>
 
 namespace tutorial
@@ -173,6 +176,66 @@ struct MapDestination
     Vector2 position = {};
 };
 
+// ============================================================================
+// Dialogue — stable scene/line identities, readable pages and session checkpoints
+// ============================================================================
+struct DialogueChoice
+{
+    std::string id, text;
+};
+struct DialogueLine
+{
+    std::string id, speaker, channel, text;
+    std::vector<DialogueChoice> choices;
+};
+enum class DialoguePhase
+{
+    NotStarted,
+    InProgress,
+    Completed
+};
+struct DialogueRecord
+{
+    DialoguePhase phase = DialoguePhase::NotStarted;
+    size_t nextPage = 0;
+    std::string choice, pendingChoice;
+};
+struct QueuedDialogue
+{
+    std::string id;
+    std::vector<DialogueLine> lines;
+    std::function<void(const std::string &)> completion;
+    bool repeatable = false;
+};
+struct DialogueState
+{
+    bool active = false, blocking = false, suspended = false, repeatable = false;
+    std::string sceneId;
+    std::vector<DialogueLine> pages, history;
+    std::vector<QueuedDialogue> pending;
+    size_t page = 0, historyOffset = 0;
+    int selection = -1;
+    std::map<std::string, DialogueRecord> scenes;
+    std::set<std::string> events;
+    std::function<void(const std::string &)> completion;
+};
+class Dialogue
+{
+  public:
+    static bool Start(const std::string &sceneId, std::vector<DialogueLine> lines,
+                      std::function<void(const std::string &)> completion = {}, bool repeatable = false);
+    static void Say(const std::string &sceneId, const std::string &message);
+    static bool Advance();
+    static bool Select(size_t index);
+    static void Interrupt();
+    static bool Resume();
+    static bool Active();
+    static bool LocksWorld();
+    static bool Danger();
+    static std::vector<std::string> Wrap(const std::string &text, float width, int fontSize = 19);
+    static std::vector<std::string> Journal();
+};
+
 // State owned by Game. Renderers read it without changing gameplay.
 struct GameState
 {
@@ -186,6 +249,7 @@ struct GameState
     bool cursorInsideViewport = true;
     bool mouseFiring = false;
     bool interactionHeld = false;
+    bool dialogueEnterHeld = false;
     bool isInsideHome = true;
     bool isInObservatory = false;
     bool isBikeMounted = false;
@@ -198,6 +262,8 @@ struct GameState
     bool hasDescendedObservatory = false;
     bool isPaused = false;
     bool mapVisible = false;
+    bool journalVisible = false, dialogueHistoryVisible = false;
+    DialogueState dialogue;
     std::array<MapDestination, size_t(MapRegion::Count)> mapDestinations = {};
     bool isComplete = false;
     bool isSideQuestAccepted = false;

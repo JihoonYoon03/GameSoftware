@@ -2,6 +2,7 @@
 #include "Game.h"
 #include "Civic.h"
 #include "Hud.h"
+#include "RenderAssets.h"
 #include "Overworld.h"
 #include "ResidentAI.h"
 #include "TransitLayout.h"
@@ -220,6 +221,11 @@ void Game::KeyDown(unsigned char key, int, int)
     key = NormalizeKey(key);
     if (key == 27) // Escape
     {
+        if (state.journalVisible || state.dialogueHistoryVisible)
+        {
+            state.journalVisible = state.dialogueHistoryVisible = false;
+            return;
+        }
         if (state.mapVisible)
         {
             state.mapVisible = false;
@@ -256,27 +262,81 @@ void Game::KeyDown(unsigned char key, int, int)
         return;
     }
 
-    if (key == 'e')
+    bool repeated = state.pressedKeys[key];
+    if (key == 13)
     {
-        if (state.interactionHeld)
+        if (state.dialogueEnterHeld)
         {
             return;
         }
-        state.interactionHeld = true;
+        state.dialogueEnterHeld = true;
     }
-    bool repeated = state.pressedKeys[key];
-    state.pressedKeys[key] = true;
-    if (repeated && (key == 'j' || key == 'm'))
+    if (key == 'e' && state.interactionHeld)
     {
         return;
+    }
+    state.pressedKeys[key] = true;
+    if (key == 'e')
+    {
+        state.interactionHeld = true;
+    }
+    if (repeated && (key == 'e' || key == 13 || key == 'j' || key == 'h' || key == 'm'))
+    {
+        return;
+    }
+    if (key == 'j' || key == 'h')
+    {
+        bool opening = key == 'j' ? !state.journalVisible : !state.dialogueHistoryVisible;
+        state.journalVisible = key == 'j' && opening;
+        state.dialogueHistoryVisible = key == 'h' && opening;
+        state.dialogue.historyOffset = 0;
+        state.mapVisible = false;
+        state.mouseFiring = false;
+        std::fill(std::begin(state.pressedKeys), std::end(state.pressedKeys), false);
+        state.pressedKeys[key] = true;
+        return;
+    }
+    if (state.journalVisible || state.dialogueHistoryVisible)
+    {
+        if (key == 13 && state.dialogue.suspended)
+        {
+            Dialogue::Resume();
+        }
+        return;
+    }
+    if (Dialogue::Active())
+    {
+        if (key == 'e' || key == 13)
+        {
+            Dialogue::Advance();
+            // Start/transition callbacks clear movement keys; retain the advance latch until key-up.
+            state.pressedKeys[key] = true;
+            if (key == 'e')
+            {
+                state.interactionHeld = true;
+            }
+            return;
+        }
+        if (key >= '1' && key <= '9')
+        {
+            if (!repeated)
+            {
+                Dialogue::Select(size_t(key - '1'));
+            }
+            return;
+        }
+        if (key == 'm' || Dialogue::LocksWorld())
+        {
+            state.pressedKeys[key] = false;
+            return;
+        }
     }
     if (key == 'm')
     {
         state.mapVisible = !state.mapVisible;
         state.mouseFiring = false;
-        std::fill(state.pressedKeys, state.pressedKeys + 256, false);
+        std::fill(std::begin(state.pressedKeys), std::end(state.pressedKeys), false);
         state.pressedKeys['m'] = true;
-        game::GameLevels::Chapter().GetState().journalVisible = false;
         return;
     }
     if (state.mapVisible)
@@ -301,12 +361,6 @@ void Game::KeyDown(unsigned char key, int, int)
         return;
     }
     auto &chapter = game::GameLevels::Chapter();
-    if (key == 'j' && chapter.IsAvailable())
-    {
-        chapter.GetState().journalVisible = !chapter.GetState().journalVisible;
-        state.mouseFiring = false;
-        return;
-    }
     if (chapter.IsActive())
     {
         if (key == 'e')
@@ -362,6 +416,23 @@ void Game::KeyDown(unsigned char key, int, int)
 }
 void Game::SpecialKeyDown(int key, int, int)
 {
+    if (HospitalRecovery::Active())
+    {
+        return;
+    }
+    if (state.journalVisible || state.dialogueHistoryVisible)
+    {
+        auto &offset = state.dialogue.historyOffset;
+        if (key == GLUT_KEY_PAGE_DOWN)
+        {
+            ++offset;
+        }
+        if (key == GLUT_KEY_PAGE_UP && offset > 0)
+        {
+            --offset;
+        }
+        return;
+    }
     if (key != GLUT_KEY_F7 && key != GLUT_KEY_F8)
     {
         return;
@@ -388,6 +459,10 @@ void Game::SpecialKeyDown(int key, int, int)
 }
 void Game::KeyUp(unsigned char key, int, int)
 {
+    if (key == 13)
+    {
+        state.dialogueEnterHeld = false;
+    }
     state.pressedKeys[NormalizeKey(key)] = false;
     if (NormalizeKey(key) == 'e')
     {
@@ -434,8 +509,8 @@ void Game::MouseButton(int button, int buttonState, int x, int y)
     {
         state.mouseFiring = buttonState == GLUT_DOWN &&
                             (game::GameLevels::IsCombatActive() || CivicCombat::Available()) &&
-                            !state.isPaused && state.cursorInsideViewport &&
-                            !game::GameLevels::Chapter().GetState().journalVisible;
+                            !state.isPaused && state.cursorInsideViewport && !Dialogue::LocksWorld() &&
+                            !state.journalVisible && !state.dialogueHistoryVisible;
     }
 }
 void Game::MouseEntry(int pointerState)
@@ -454,7 +529,11 @@ void Game::Tick(int)
     state.lastUpdateMilliseconds = nowMilliseconds;
 
     HospitalRecovery::Update(deltaSeconds);
-    if (!state.isPaused && !state.mapVisible && !HospitalRecovery::Active())
+    if (!state.isPaused && !state.mapVisible && !HospitalRecovery::Active() && Dialogue::LocksWorld())
+    {
+        game::GameLevels::Chapter().Update(deltaSeconds);
+    }
+    if (!state.isPaused && !state.mapVisible && !HospitalRecovery::Active() && !Dialogue::LocksWorld())
     {
         state.animationTimeSeconds += deltaSeconds;
         if (!state.isComplete)
@@ -494,7 +573,8 @@ void Game::Tick(int)
 
     monitoring::GameMonitor::Get().Update();
     glutSetCursor((game::GameLevels::IsCombatActive() || CivicCombat::Available()) && !state.mapVisible &&
-                          !state.isPaused
+                          !state.isPaused && !Dialogue::LocksWorld() && !state.journalVisible &&
+                          !state.dialogueHistoryVisible
                       ? GLUT_CURSOR_NONE
                       : GLUT_CURSOR_INHERIT);
     glutPostRedisplay();
@@ -509,6 +589,433 @@ float Game::Distance(Vector2 first, Vector2 second)
     return std::sqrt((first.x - second.x) * (first.x - second.x) +
                      (first.y - second.y) * (first.y - second.y));
 }
+// ============================================================================
+// Dialogue — input/state transitions; rendering never changes quest or page state.
+// ============================================================================
+namespace
+{
+void RememberDialoguePage()
+{
+    auto &d = Game::Get().GetState().dialogue;
+    const auto &line = d.pages[d.page];
+    if (std::none_of(d.history.begin(), d.history.end(),
+                     [&](const DialogueLine &other) { return other.id == line.id; }))
+    {
+        d.history.push_back(line);
+    }
+    d.scenes[d.sceneId].nextPage = d.page;
+}
+} // namespace
+std::vector<std::string> Dialogue::Wrap(const std::string &text, float width, int fontSize)
+{
+    std::vector<std::string> result;
+    for (size_t start = 0; start < text.size();)
+    {
+        size_t end = start, lastSpace = start;
+        while (end < text.size() && text[end] != '\n')
+        {
+            unsigned char lead = static_cast<unsigned char>(text[end]);
+            size_t bytes = lead < 0x80 ? 1 : lead < 0xe0 ? 2 : lead < 0xf0 ? 3 : 4;
+            if (end + bytes > text.size())
+            {
+                break;
+            }
+            if (RenderAssets::MeasureUtf8(text.substr(start, end + bytes - start), fontSize) > width &&
+                end > start)
+            {
+                break;
+            }
+            if (text[end] == ' ')
+            {
+                lastSpace = end;
+            }
+            end += bytes;
+        }
+        if (end == start && end < text.size() && text[end] != '\n')
+        {
+            ++end;
+        }
+        if (end < text.size() && text[end] != '\n' && lastSpace > start)
+        {
+            end = lastSpace;
+        }
+        result.push_back(text.substr(start, end - start));
+        start = end;
+        if (start < text.size() && text[start] == '\n')
+        {
+            ++start;
+        }
+        while (start < text.size() && text[start] == ' ')
+        {
+            ++start;
+        }
+    }
+    if (result.empty())
+    {
+        result.push_back("");
+    }
+    return result;
+}
+bool Dialogue::Danger()
+{
+    const auto &world = Game::Get().GetState();
+    if (CivicJustice::IsExterior() &&
+        (CivicJustice::State().wanted > 0 ||
+         std::any_of(CivicJustice::State().bullets.begin(), CivicJustice::State().bullets.end(),
+                     [](const game::Bullet &bullet) { return !bullet.playerOwned; })))
+    {
+        return true;
+    }
+    auto &mine = game::GameLevels::Mine();
+    if (mine.IsActive())
+    {
+        if (!mine.GetState().bullets.empty() ||
+            (mine.GetState().invulnerability > 0 &&
+             mine.GetState().player.health < mine.GetState().player.maxHealth))
+        {
+            return true;
+        }
+        for (const auto &enemy : mine.GetState().enemies)
+        {
+            if (enemy.health > 0 && Game::Distance(enemy.position, world.playerPosition) < 12 &&
+                mine.Map().HasLineOfSight(world.playerPosition, enemy.position))
+            {
+                return true;
+            }
+        }
+    }
+    auto &chapter = game::GameLevels::Chapter();
+    if (chapter.IsActive() && chapter.GetState().hostile)
+    {
+        if (!chapter.GetState().bullets.empty())
+        {
+            return true;
+        }
+        for (const auto &person : chapter.GetState().scrappers)
+        {
+            if (person.combat.health > 0 && Game::Distance(person.position, world.playerPosition) < 14 &&
+                chapter.HasLineOfSight(world.playerPosition, person.position))
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+bool Dialogue::Active()
+{
+    return Game::Get().GetState().dialogue.active;
+}
+bool Dialogue::LocksWorld()
+{
+    const auto &w = Game::Get().GetState();
+    return ((w.dialogue.active && w.dialogue.blocking) || w.journalVisible || w.dialogueHistoryVisible) &&
+           !Danger();
+}
+bool Dialogue::Start(const std::string &id, std::vector<DialogueLine> lines,
+                     std::function<void(const std::string &)> completion, bool repeatable)
+{
+    auto &world = Game::Get().GetState();
+    auto &d = world.dialogue;
+    if (id.empty() || lines.empty() || HospitalRecovery::Active())
+    {
+        return false;
+    }
+    if (d.suspended && d.sceneId == id)
+    {
+        return Resume();
+    }
+    if (d.active || d.suspended)
+    {
+        if (d.sceneId == id || std::any_of(d.pending.begin(), d.pending.end(),
+                                           [&](const QueuedDialogue &q) { return q.id == id; }))
+        {
+            return false;
+        }
+        if (d.pending.size() >= 16)
+        {
+            auto expendable = std::find_if(d.pending.begin(), d.pending.end(),
+                                           [](const QueuedDialogue &q) { return !q.completion; });
+            if (expendable == d.pending.end())
+            {
+                return false;
+            }
+            d.pending.erase(expendable);
+        }
+        d.pending.push_back({id, std::move(lines), std::move(completion), repeatable});
+        return true;
+    }
+    d.pages.clear();
+    for (size_t index = 0; index < lines.size(); ++index)
+    {
+        auto rows = Wrap(lines[index].text, 896, 19);
+        constexpr size_t pageLines = 3;
+        for (size_t row = 0; row < rows.size(); row += pageLines)
+        {
+            auto page = lines[index];
+            page.id = id + "/" + (page.id.empty() ? std::to_string(index) : page.id) + "/" +
+                      std::to_string(row / pageLines);
+            page.text.clear();
+            for (size_t k = row; k < (std::min)(rows.size(), row + pageLines); ++k)
+            {
+                page.text += (k == row ? "" : "\n") + rows[k];
+            }
+            if (row + pageLines < rows.size())
+            {
+                page.choices.clear();
+            }
+            d.pages.push_back(std::move(page));
+        }
+    }
+    auto &record = d.scenes[id];
+    d.page = record.phase == DialoguePhase::InProgress ? (std::min)(record.nextPage, d.pages.size() - 1) : 0;
+    if (record.phase != DialoguePhase::Completed)
+    {
+        record.phase = DialoguePhase::InProgress;
+    }
+    d.sceneId = id;
+    d.selection = -1;
+    for (size_t i = 0; i < d.pages[d.page].choices.size(); ++i)
+    {
+        if (d.pages[d.page].choices[i].id == record.pendingChoice)
+        {
+            d.selection = int(i);
+        }
+    }
+    d.active = true;
+    d.suspended = false;
+    d.blocking = !Danger();
+    d.repeatable = repeatable;
+    d.completion = std::move(completion);
+    world.mapVisible = false;
+    world.journalVisible = world.dialogueHistoryVisible = false;
+    if (d.blocking)
+    {
+        std::fill(std::begin(world.pressedKeys), std::end(world.pressedKeys), false);
+        world.mouseFiring = false;
+        world.movementAmount = world.movementSpeed = 0;
+        world.bikeSpeed = 0;
+    }
+    RememberDialoguePage();
+    return true;
+}
+bool Dialogue::Select(size_t index)
+{
+    auto &d = Game::Get().GetState().dialogue;
+    if (!d.active || index >= d.pages[d.page].choices.size() || Danger())
+    {
+        return false;
+    }
+    d.selection = int(index);
+    d.scenes[d.sceneId].pendingChoice = d.pages[d.page].choices[index].id;
+    return true;
+}
+bool Dialogue::Advance()
+{
+    auto &d = Game::Get().GetState().dialogue;
+    if (!d.active || HospitalRecovery::Active() || Game::Get().GetState().isPaused)
+    {
+        return false;
+    }
+    const auto &options = d.pages[d.page].choices;
+    if (!options.empty() && (d.selection < 0 || Danger()))
+    {
+        return false;
+    }
+    if (!options.empty())
+    {
+        d.scenes[d.sceneId].pendingChoice = options[size_t(d.selection)].id;
+    }
+    if (++d.page < d.pages.size())
+    {
+        d.selection = -1;
+        RememberDialoguePage();
+        return true;
+    }
+    if (LocksWorld())
+    {
+        auto &world = Game::Get().GetState();
+        std::fill(std::begin(world.pressedKeys), std::end(world.pressedKeys), false);
+        world.mouseFiring = false;
+    }
+    auto id = d.sceneId;
+    auto &record = d.scenes[id];
+    record.choice = record.pendingChoice;
+    record.phase = DialoguePhase::Completed;
+    record.nextPage = d.page;
+    auto callback = std::move(d.completion);
+    bool apply = d.repeatable || d.events.insert(id + "/complete").second;
+    d.active = false;
+    d.suspended = false;
+    if (callback && apply)
+    {
+        callback(record.choice);
+    }
+    if (!d.active && !d.pending.empty())
+    {
+        auto next = std::move(d.pending.front());
+        d.pending.erase(d.pending.begin());
+        Start(next.id, std::move(next.lines), std::move(next.completion), next.repeatable);
+    }
+    return true;
+}
+void Dialogue::Interrupt()
+{
+    auto &w = Game::Get().GetState();
+    w.journalVisible = w.dialogueHistoryVisible = false;
+    if (w.dialogue.active)
+    {
+        w.dialogue.active = false;
+        w.dialogue.suspended = true;
+    }
+}
+bool Dialogue::Resume()
+{
+    auto &w = Game::Get().GetState();
+    auto &d = w.dialogue;
+    if (!d.suspended || Danger() || HospitalRecovery::Active())
+    {
+        return false;
+    }
+    d.active = d.blocking = true;
+    d.suspended = false;
+    w.journalVisible = w.dialogueHistoryVisible = false;
+    w.mouseFiring = false;
+    std::fill(std::begin(w.pressedKeys), std::end(w.pressedKeys), false);
+    return true;
+}
+void Dialogue::Say(const std::string &id, const std::string &message)
+{
+    auto delimiter = message.find(" / ");
+    std::string speaker = delimiter == std::string::npos ? "현장 기록" : message.substr(0, delimiter);
+    std::string body = delimiter == std::string::npos ? message : message.substr(delimiter + 3);
+    std::string channel = "현장";
+    auto medium = speaker.find(" · ");
+    if (medium != std::string::npos)
+    {
+        channel = speaker.substr(medium + 4);
+        speaker.resize(medium);
+    }
+    else if (speaker.find("기록") != std::string::npos || speaker.find("수신") != std::string::npos ||
+             speaker.find("단말") != std::string::npos)
+    {
+        channel = "단말 기록";
+    }
+    auto instruction = body.find('[');
+    if (instruction != std::string::npos)
+    {
+        Game::Get().ShowNotice(body.substr(instruction));
+        body.resize(instruction);
+    }
+    std::vector<DialogueLine> lines;
+    size_t start = 0, sentences = 0;
+    for (size_t i = 0; i < body.size(); ++i)
+    {
+        if ((body[i] == '.' || body[i] == '?' || body[i] == '!') &&
+            (i + 1 == body.size() || body[i + 1] == ' '))
+        {
+            ++sentences;
+            if (sentences == 2)
+            {
+                lines.push_back(
+                    {std::to_string(lines.size()), speaker, channel, body.substr(start, i + 1 - start), {}});
+                start = i + 1;
+                while (start < body.size() && body[start] == ' ')
+                {
+                    ++start;
+                }
+                sentences = 0;
+            }
+        }
+    }
+    if (start < body.size())
+    {
+        lines.push_back({std::to_string(lines.size()), speaker, channel, body.substr(start), {}});
+    }
+    if (!lines.empty())
+    {
+        Start(id, std::move(lines));
+    }
+}
+std::vector<std::string> Dialogue::Journal()
+{
+    const auto &w = Game::Get().GetState();
+    const auto &mine = game::GameLevels::Mine().GetState();
+    const auto &s = game::GameLevels::Chapter().GetState();
+    std::vector<std::string> lines = {"인물: 리아는 헤일로의 정비 담당, 마라는 주거 구역 주민이다.",
+                                      "N-0은 도시 가까이의 관문이다."};
+    if (s.unlocked)
+    {
+        lines.push_back("N-0/17은 관문 자체가 아닌 외곽 설비 번호다.");
+    }
+    if (w.mainQuestStage >= MainQuestStage::MeetLia)
+    {
+        lines.push_back("집 단말: N-0 정기 측정 요청과 전망대 접근 코드를 받았다.");
+    }
+    if (w.gateSignalHeard)
+    {
+        lines.push_back(
+            "전망대: 내 목소리와 같은 수신 음성을 저장했다. 녹음한 기억은 없고 발신자는 확인하지 못했다.");
+    }
+    if (mine.quest.GetStage() >= game::MineQuestStage::TravelToMine)
+    {
+        lines.push_back(
+            "수신망: 전망대 기록과 광산 통신선의 중계 흔적이 겹친다. 같은 발신원인지는 아직 모른다.");
+    }
+    if (mine.quest.GetStage() >= game::MineQuestStage::InvestigateGlyph)
+    {
+        lines.push_back("광산 신호: 실종 탐사선 식별자가 남았다. 현재 생존자를 확인했다는 뜻은 아니다.");
+    }
+    if (mine.quest.GetStage() >= game::MineQuestStage::CollectCoordinates)
+    {
+        lines.push_back("문양: 나를 닮은 형상을 발견했다. 누가, 언제 새겼는지는 모른다.");
+    }
+    if (mine.quest.AreCoordinatesFound())
+    {
+        lines.push_back("광산 좌표: 중계 좌표를 확보했다. 입구로 나와 바이크로 헤일로 수신망에 보고한다.");
+    }
+    if (s.generatorInspected)
+    {
+        lines.push_back(
+            s.generatorRestored
+                ? "발전기: 외곽 선로를 분리했다. 끊어진 선로의 계기판은 여전히 같은 간격으로 움직인다."
+                : "발전기: 폐쇄된 외곽 선로로 전력이 빠져나간다. 차단기를 분리해야 한다.");
+    }
+    if (s.receiverInspected)
+    {
+        lines.push_back(
+            "운송대: 현장 인원은 다섯 명, 무전 응답은 여섯 명이다. 추가 생존자를 확인한 것은 아니다.");
+    }
+    if (s.convoyRescued)
+    {
+        lines.push_back(
+            "구조: 운송대 다섯 명이 실제 안전 지점에 도착했다. 카인이 인원을 재확인하고 동행했다.");
+    }
+    if (s.tradeProofFound)
+    {
+        lines.push_back("거래 기록: 익명의 구매자가 N-0/17 부품을 시세보다 비싸게 샀다.");
+    }
+    if (s.ledgerFound)
+    {
+        lines.push_back("기본 장부: 발주처는 지워졌다. 좌표·전력 주기·교신 시각을 확보했다.");
+    }
+    if (s.detailLedgerFound)
+    {
+        lines.push_back("상세 장부: 구매자 추적 단서를 보관한다. 발주처의 정체는 미확인이다.");
+    }
+    if (s.recordsCompared)
+    {
+        lines.push_back("기록 대조 완료: N-0 외곽 설비의 움직임이 겹친다. 수로 진입로 기록을 얻었지만 2장 "
+                        "지역은 아직 진입할 수 없다.");
+    }
+    lines.push_back(std::string("다음 행동: ") +
+                    (s.unlocked ? game::GameLevels::Chapter().Objective()
+                     : w.mainQuestStage >= MainQuestStage::MountJetBike ? mine.quest.GetObjective()
+                     : w.gateSignalHeard ? "전망대에서 내려와 리아에게 기록을 보여 준다."
+                                         : "집 단말과 리아의 안내에 따라 전망대에서 신호를 측정한다."));
+    return lines;
+}
+
 void Game::ShowNotice(const std::string &message)
 {
     state.noticeText = message;
@@ -570,6 +1077,12 @@ bool Game::IsPositionBlocked(Vector2 position)
 }
 bool Game::IsQuestInteraction(InteractionTarget target) const
 {
+    if ((target == InteractionTarget::Lia && CivicCombat::LandmarkDown(kLiaPosition)) ||
+        (target == InteractionTarget::Mara && CivicCombat::LandmarkDown(kMaraPosition)) ||
+        (target == InteractionTarget::Kain && CivicCombat::LandmarkDown(kCityKainPosition)))
+    {
+        return false;
+    }
     auto stage = game::GameLevels::Mine().GetState().quest.GetStage();
     if (game::GameLevels::Chapter().IsAvailable() &&
         (target == InteractionTarget::HomeTerminal || target == InteractionTarget::ApartmentExit ||
@@ -720,11 +1233,32 @@ InteractionTarget Game::FindNearbyInteraction()
 }
 void Game::InteractWithNearbyTarget()
 {
-    if (HospitalRecovery::Active())
+    if (HospitalRecovery::Active() || Dialogue::Active() || state.journalVisible ||
+        state.dialogueHistoryVisible)
     {
         return;
     }
+    for (auto position : {kLiaPosition, kMaraPosition, kCityKainPosition})
+    {
+        if (Distance(state.playerPosition, position) < 1.35f && CivicCombat::LandmarkDown(position))
+        {
+            ShowNotice("의료 지원 / 중상자를 치료하고 있습니다. 회복 후 다시 대화할 수 있습니다.");
+            return;
+        }
+    }
     const InteractionTarget target = FindNearbyInteraction();
+    auto tell = [&](const std::string &message) {
+        auto &chapter = game::GameLevels::Chapter();
+        Dialogue::Say(
+            "city/" + std::to_string(int(target)) + "/" + std::to_string(int(state.mainQuestStage)) + "/" +
+                std::to_string(int(game::GameLevels::Mine().GetState().quest.GetStage())) + "/" +
+                std::to_string(chapter.CompletedSites()) + "/" +
+                std::to_string(chapter.GetState().recordsCompared) + "/" +
+                std::to_string(state.isSideQuestComplete) + "/" + std::to_string(state.isSideQuestAccepted) +
+                "/" + std::to_string(state.isPowerRestored) + "/" +
+                std::to_string(chapter.GetState().generatorRestored),
+            message);
+    };
     if (target == InteractionTarget::MineEntrance)
     {
         if (game::GameLevels::Mine().GetState().quest.GetStage() < game::MineQuestStage::TravelToMine)
@@ -761,18 +1295,19 @@ void Game::InteractWithNearbyTarget()
         if (nearest)
         {
             nearest->conversationSeconds = 3;
-            ShowNotice(nearest->dialogue + (nearest->profession == ResidentProfession::Merchant
-                                                ? " [거래 안내] 악명에 따른 가격 배율: " +
-                                                      std::to_string(CivicJustice::PriceMultiplier())
-                                                : ""));
+            Dialogue::Say("resident/" + std::to_string(nearest - state.residents.data()),
+                          nearest->dialogue + (nearest->profession == ResidentProfession::Merchant
+                                                   ? " [거래 안내] 악명에 따른 가격 배율: " +
+                                                         std::to_string(CivicJustice::PriceMultiplier())
+                                                   : ""));
         }
         return;
     }
     if (target == InteractionTarget::HomeTerminal)
     {
         state.mainQuestStage = (std::max)(state.mainQuestStage, MainQuestStage::MeetLia);
-        ShowNotice("리아 · 단말 메시지 / N-0 정기 측정일이야. 전망대 수신기가 이상한 응답을 잡았어. 같이 "
-                   "확인해 줘. 접근 코드는 첨부했어.");
+        tell("리아 · 단말 메시지 / N-0 정기 측정일이야. 전망대 수신기가 이상한 응답을 잡았어. 같이 "
+             "확인해 줘. 접근 코드는 첨부했어.");
     }
     if (target == InteractionTarget::ApartmentExit)
     {
@@ -801,8 +1336,8 @@ void Game::InteractWithNearbyTarget()
             state.isComplete = true;
             state.mainQuestStage = MainQuestStage::Complete;
             game::GameLevels::Chapter().Unlock();
-            ShowNotice("광산 조사 보고 완료 / 좌표가 N-0 외곽 설비 목록과 일치합니다. 정전·운송대 "
-                       "실종·폐설비를 조사하세요. 이 단말에서 다시 E를 누르면 1장 현장으로 출발합니다.");
+            tell("광산 조사 보고 완료 / 좌표가 N-0 외곽 설비 목록과 일치합니다. 정전·운송대 "
+                 "실종·폐설비를 조사하세요. 이 단말에서 다시 E를 누르면 1장 현장으로 출발합니다.");
             return;
         }
         if (game::GameLevels::Chapter().IsAvailable())
@@ -813,27 +1348,26 @@ void Game::InteractWithNearbyTarget()
         if (state.gateSignalHeard &&
             game::GameLevels::Mine().GetState().quest.Advance(game::MineQuestStage::CheckCityRelay))
         {
-            ShowNotice("수신망 조회 / 전망대 신호가 인근 광산 통신선을 거쳤습니다. 같은 시각, 그 광산에서 "
-                       "실종 탐사선 식별자의 구조 신호도 수신됐습니다. 바이크로 광산에 가서 하차한 뒤 입구를 "
-                       "조사하세요.");
+            tell("수신망 조회 / 전망대 신호가 인근 광산 통신선을 거쳤습니다. 같은 시각, 그 광산에서 "
+                 "실종 탐사선 식별자의 구조 신호도 수신됐습니다. 바이크로 광산에 가서 하차한 뒤 입구를 "
+                 "조사하세요.");
         }
         else
         {
-            ShowNotice(game::GameLevels::Mine().GetState().quest.GetStage() <
-                               game::MineQuestStage::CheckCityRelay
-                           ? "수신망 / 전망대 신호 기록을 먼저 리아에게 보여 주세요."
-                           : "수신망 / 광산을 거친 신호입니다. 전망대 음성과 탐사선 구조 신호가 같은 곳에서 "
-                             "왔는지는 아직 알 수 없습니다.");
+            tell(game::GameLevels::Mine().GetState().quest.GetStage() < game::MineQuestStage::CheckCityRelay
+                     ? "수신망 / 전망대 신호 기록을 먼저 리아에게 보여 주세요."
+                     : "수신망 / 광산을 거친 신호입니다. 전망대 음성과 탐사선 구조 신호가 같은 곳에서 "
+                       "왔는지는 아직 알 수 없습니다.");
         }
         return;
     }
     if (target == InteractionTarget::Kain)
     {
-        ShowNotice(game::GameLevels::Chapter().GetState().recordsCompared
-                       ? "카인 / 지도에 있던 다리는 사라졌습니다. 아래 수로가 남아 있는지 확인해야겠군요. "
-                         "예전 진입로는 기록해 뒀습니다."
-                       : "카인 / N-0 외곽에서 근무했습니다. 지금은 기록부터 모읍시다. 길보다 먼저 사람 수를 "
-                         "확인해야 합니다.");
+        tell(game::GameLevels::Chapter().GetState().recordsCompared
+                 ? "카인 / 지도에 있던 다리는 사라졌습니다. 아래 수로가 남아 있는지 확인해야겠군요. "
+                   "예전 진입로는 기록해 뒀습니다."
+                 : "카인 / N-0 외곽에서 근무했습니다. 지금은 기록부터 모읍시다. 길보다 먼저 사람 수를 "
+                   "확인해야 합니다.");
         return;
     }
     if (target == InteractionTarget::Lia)
@@ -842,64 +1376,63 @@ void Game::InteractWithNearbyTarget()
         {
             if (game::GameLevels::Chapter().GetState().recordsCompared)
             {
-                ShowNotice("리아 / 세 현장 모두 N-0 외곽 설비와 이어져 있어. 다음에는 카인이 기록한 수로를 "
-                           "확인해 보자.");
+                tell("리아 / 세 현장 모두 N-0 외곽 설비와 이어져 있어. 다음에는 카인이 기록한 수로를 "
+                     "확인해 보자.");
                 return;
             }
             if (game::GameLevels::Chapter().CompletedSites() == 3)
             {
-                ShowNotice("리아 / 현장 기록은 다 모였어. 광장 수신망에서 광산 좌표와 대조해 보자.");
+                tell("리아 / 현장 기록은 다 모였어. 광장 수신망에서 광산 좌표와 대조해 보자.");
                 return;
             }
-            ShowNotice(game::GameLevels::Chapter().GetState().generatorRestored
-                           ? "리아 / 발전기는 안정됐어. N-0 외곽으로 전력이 빠져나간 기록도 챙겼고. "
-                             "수신망에서 출발해서 남은 현장을 확인하자."
-                           : "리아 / 광산 좌표가 폐쇄된 N-0 외곽 설비 목록에도 있었어. 그래도 주민들은 지금 "
-                             "정전과 운송 지연이 더 급해. 수신망 단말에서 출발하자.");
+            tell(game::GameLevels::Chapter().GetState().generatorRestored
+                     ? "리아 / 발전기는 안정됐어. N-0 외곽으로 전력이 빠져나간 기록도 챙겼고. "
+                       "수신망에서 출발해서 남은 현장을 확인하자."
+                     : "리아 / 광산 좌표가 폐쇄된 N-0 외곽 설비 목록에도 있었어. 그래도 주민들은 지금 "
+                       "정전과 운송 지연이 더 급해. 수신망 단말에서 출발하자.");
             return;
         }
         if (state.gateSignalHeard)
         {
             if (game::GameLevels::Mine().GetState().quest.Advance(game::MineQuestStage::ShowRecord))
             {
-                ShowNotice("리아 / 네가 보낸 적 없는 목소리라고? 수신기 오류일 수도 있어. 광장 수신망에서 이 "
-                           "신호가 어디를 거쳤는지 확인해 보자.");
+                tell("리아 / 네가 보낸 적 없는 목소리라고? 수신기 오류일 수도 있어. 광장 수신망에서 이 "
+                     "신호가 어디를 거쳤는지 확인해 보자.");
             }
             else
             {
-                ShowNotice(game::GameLevels::Mine().GetState().quest.GetRiaDialogue());
+                tell(game::GameLevels::Mine().GetState().quest.GetRiaDialogue());
             }
             return;
         }
         if (state.mainQuestStage < MainQuestStage::MeetLia)
         {
-            ShowNotice("리아 / 집 단말에 접근 코드를 보냈어. 먼저 확인해 줘.");
+            tell("리아 / 집 단말에 접근 코드를 보냈어. 먼저 확인해 줘.");
             return;
         }
         state.mainQuestStage = (std::max)(state.mainQuestStage, MainQuestStage::EnterObservatory);
-        ShowNotice("리아 / 광장 동쪽 전망대에 같이 올라가자. 내가 수신기를 볼게. 넌 관측 데크 북동쪽 "
-                   "콘솔에서 신호를 측정해 줘.");
+        tell("리아 / 광장 동쪽 전망대에 같이 올라가자. 내가 수신기를 볼게. 넌 관측 데크 북동쪽 "
+             "콘솔에서 신호를 측정해 줘.");
     }
     if (target == InteractionTarget::Mara)
     {
         if (!state.isSideQuestAccepted)
         {
             state.isSideQuestAccepted = true;
-            ShowNotice("마라 / 딸아이 방에 불이 안 들어와요. 광장 동쪽 전력 장치를 좀 봐 주시겠어요? [선택 "
-                       "의뢰 시작: 남겨 둔 불빛]");
+            tell("마라 / 딸아이 방에 불이 안 들어와요. 광장 동쪽 전력 장치를 좀 봐 주시겠어요? [선택 "
+                 "의뢰 시작: 남겨 둔 불빛]");
         }
         else if (state.isPowerRestored && !state.isSideQuestComplete)
         {
             state.isSideQuestComplete = true;
-            ShowNotice("마라 / 불이 돌아왔어요. 아이가 어두우면 혼자 있질 못하거든요. 정말 고마워요. [선택 "
-                       "의뢰 완료: 남겨 둔 불빛]");
+            tell("마라 / 불이 돌아왔어요. 아이가 어두우면 혼자 있질 못하거든요. 정말 고마워요. [선택 "
+                 "의뢰 완료: 남겨 둔 불빛]");
         }
         else
         {
-            ShowNotice(
-                state.isSideQuestComplete
-                    ? "마라 / 언제든 들러요. 따뜻한 차를 준비해 둘게요."
-                    : "마라 / 전력 장치는 광장 동쪽에 있어요. 주황색 표시가 있는 장치예요. 부탁드릴게요.");
+            tell(state.isSideQuestComplete
+                     ? "마라 / 언제든 들러요. 따뜻한 차를 준비해 둘게요."
+                     : "마라 / 전력 장치는 광장 동쪽에 있어요. 주황색 표시가 있는 장치예요. 부탁드릴게요.");
         }
     }
     if (target == InteractionTarget::PowerRelay)
@@ -936,8 +1469,10 @@ void Game::InteractWithNearbyTarget()
     {
         state.gateSignalHeard = true;
         state.mainQuestStage = (std::max)(state.mainQuestStage, MainQuestStage::DescendObservatory);
-        ShowNotice("발신자 미상 · 수신 기록 / …수신 확인. 이 목소리가 들리면… [기록] 당신의 목소리다. "
-                   "녹음한 기억은 없다. 내려가서 리아와 기록을 대조하자.");
+        Dialogue::Start("MQ00/observatory",
+                        {{"voice", "발신자 미상", "수신 기록", "…수신 확인. 이 목소리가 들리면…", {}},
+                         {"observation", "나", "현장", "내 목소리다. 이런 말을 녹음한 기억은 없는데.", {}},
+                         {"ria", "리아", "무전", "기록은 저장됐어. 내려오면 같이 확인해 보자.", {}}});
     }
     if (target == InteractionTarget::ObservatoryExit)
     {

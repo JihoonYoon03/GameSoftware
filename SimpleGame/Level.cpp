@@ -593,7 +593,7 @@ void MineCombat::UpdateBullets(float deltaSeconds)
 void MineCombat::Attack()
 {
     auto &world = tutorial::Game::Get().GetState();
-    if (state.meleeSeconds > 0 || state.bullets.size() >= 128)
+    if (tutorial::Dialogue::LocksWorld() || state.meleeSeconds > 0 || state.bullets.size() >= 128)
     {
         return;
     }
@@ -623,7 +623,8 @@ void MineCombat::Melee()
 {
     auto &world = tutorial::Game::Get().GetState();
     if (!state.active || world.isPaused || world.mapVisible || state.player.health <= 0 ||
-        tutorial::HospitalRecovery::Active() || state.meleeSeconds > 0)
+        tutorial::HospitalRecovery::Active() || tutorial::Dialogue::LocksWorld() || world.journalVisible ||
+        world.dialogueHistoryVisible || state.meleeSeconds > 0)
     {
         return;
     }
@@ -1421,18 +1422,31 @@ tutorial::Vector2 MineLevel::GetAimDirection(float angle)
 
 void MineLevel::Interact()
 {
+    const auto &world = tutorial::Game::Get().GetState();
+    if (tutorial::HospitalRecovery::Active() || tutorial::Dialogue::Active() || world.mapVisible ||
+        world.isPaused || world.journalVisible || world.dialogueHistoryVisible)
+    {
+        return;
+    }
+    auto tell = [&](const std::string &message) {
+        const char *action = IsNear(kPowerBypass)          ? "power"
+                             : IsNear(kRuinSignal)         ? "signal"
+                             : IsNear(kObserverGlyph)      ? "glyph"
+                             : IsNear(kCoordinateTerminal) ? "coordinates"
+                                                           : "ria";
+        tutorial::Dialogue::Say(
+            std::string("MQ00/mine/") + action + "/" + std::to_string(int(state.quest.GetStage())), message);
+    };
     if (IsNear(kPowerBypass))
     {
         if (state.quest.Advance(MineQuestStage::BypassPower))
         {
             state.navigationCooldown = 0;
-            tutorial::Game::Get().ShowNotice(
-                "리아 / 전력이 들어왔어. 동쪽 격벽도 열렸고. 비상등이 켜진 길을 따라가 보자.");
+            tell("리아 / 전력이 들어왔어. 동쪽 격벽도 열렸고. 비상등이 켜진 길을 따라가 보자.");
         }
         else
         {
-            tutorial::Game::Get().ShowNotice(
-                "배전반 / 비상 전력이 공급되고 있습니다. 동쪽 격벽은 열린 상태입니다.");
+            tell("배전반 / 비상 전력이 공급되고 있습니다. 동쪽 격벽은 열린 상태입니다.");
         }
         return;
     }
@@ -1440,14 +1454,12 @@ void MineLevel::Interact()
     {
         if (state.quest.Advance(MineQuestStage::InvestigateSignal))
         {
-            tutorial::Game::Get().ShowNotice(
-                "리아 / 식별자는 오래전에 실종된 탐사선의 것이야. 그런데 통신선은 이 벽 앞에서 끊겨 있어. "
-                "신호는 벽 안쪽에서 오고 있고.");
+            tell("리아 / 식별자는 오래전에 실종된 탐사선의 것이야. 그런데 통신선은 이 벽 앞에서 끊겨 있어. "
+                 "신호는 벽 안쪽에서 오고 있고.");
         }
         else
         {
-            tutorial::Game::Get().ShowNotice(
-                "구조 신호 / 실종 탐사선 식별자. 신호의 원인과 발신자의 정체는 아직 미확인.");
+            tell("구조 신호 / 실종 탐사선 식별자. 신호의 원인과 발신자의 정체는 아직 미확인.");
         }
         return;
     }
@@ -1455,16 +1467,15 @@ void MineLevel::Interact()
     {
         if (state.quest.Advance(MineQuestStage::InvestigateGlyph))
         {
-            tutorial::Game::Get().ShowNotice("리아 / 이 문양, 너랑 닮았네. 그래도 널 새긴 거라고 단정하진 "
-                                             "말자. 기록해 둘게. 안쪽 단말도 확인해 보자.");
+            tell("리아 / 이 문양, 너랑 닮았네. 그래도 널 새긴 거라고 단정하진 "
+                 "말자. 기록해 둘게. 안쪽 단말도 확인해 보자.");
         }
         else
         {
-            tutorial::Game::Get().ShowNotice(
-                state.quest.GetStage() < MineQuestStage::InvestigateGlyph
-                    ? "벽면 문양 / 사람을 닮은 형상입니다. 먼저 옆에서 들리는 구조 신호를 조사하세요."
-                    : "문양 조사 기록 / 당신과 닮은 형상입니다. 제작 시기와 의미는 알 수 없습니다. 조사 "
-                      "기록에 보관했습니다.");
+            tell(state.quest.GetStage() < MineQuestStage::InvestigateGlyph
+                     ? "벽면 문양 / 사람을 닮은 형상입니다. 먼저 옆에서 들리는 구조 신호를 조사하세요."
+                     : "문양 조사 기록 / 당신과 닮은 형상입니다. 제작 시기와 의미는 알 수 없습니다. 조사 "
+                       "기록에 보관했습니다.");
         }
         return;
     }
@@ -1472,15 +1483,13 @@ void MineLevel::Interact()
     {
         if (state.quest.Advance(MineQuestStage::CollectCoordinates))
         {
-            tutorial::Game::Get().ShowNotice(
-                "중계 좌표 저장 / 신호가 거쳐 간 좌표를 확보했습니다. 광산 입구로 나가 바이크로 헤일로에 "
-                "돌아가세요. 광장 수신망에서 좌표를 대조할 수 있습니다.");
+            tell("중계 좌표 저장 / 신호가 거쳐 간 좌표를 확보했습니다. 광산 입구로 나가 바이크로 헤일로에 "
+                 "돌아가세요. 광장 수신망에서 좌표를 대조할 수 있습니다.");
         }
         else
         {
-            tutorial::Game::Get().ShowNotice(state.quest.AreCoordinatesFound()
-                                                 ? "단말 / 중계 좌표를 이미 확보했습니다."
-                                                 : "리아 / 먼저 구조 신호와 관측자 문양을 조사하자.");
+            tell(state.quest.AreCoordinatesFound() ? "단말 / 중계 좌표를 이미 확보했습니다."
+                                                   : "리아 / 먼저 구조 신호와 관측자 문양을 조사하자.");
         }
         return;
     }
@@ -1521,7 +1530,7 @@ void MineLevel::Interact()
     }
     else if (IsNear(state.riaPosition))
     {
-        tutorial::Game::Get().ShowNotice(state.quest.GetRiaDialogue());
+        tell(state.quest.GetRiaDialogue());
     }
     else
     {
@@ -1532,6 +1541,10 @@ void MineLevel::Interact()
 
 void MineLevel::UseRecoveryKit()
 {
+    if (tutorial::Dialogue::LocksWorld())
+    {
+        return;
+    }
     auto &stats = state.player;
     if (stats.recoveryKits > 0 && stats.health < stats.maxHealth)
     {
@@ -1959,12 +1972,25 @@ bool ChapterOneLevel::NearestInteraction(ChapterInteraction &result) const
 }
 void ChapterOneLevel::Interact()
 {
+    const auto &world = tutorial::Game::Get().GetState();
+    if (tutorial::HospitalRecovery::Active() || tutorial::Dialogue::Active() || world.mapVisible ||
+        world.isPaused || world.journalVisible || world.dialogueHistoryVisible)
+    {
+        return;
+    }
     ChapterInteraction point{};
     if (!NearestInteraction(point))
     {
         return;
     }
     auto &game = tutorial::Game::Get();
+    auto tell = [&](const std::string &message) {
+        tutorial::Dialogue::Say("chapter1/action/" + std::to_string(int(point.action)) + "/" +
+                                    std::to_string(state.generatorRestored) + "/" +
+                                    std::to_string(state.convoyRescued) + "/" +
+                                    std::to_string(state.negotiated),
+                                message);
+    };
     switch (point.action)
     {
     case ChapterAction::Exit:
@@ -1972,37 +1998,37 @@ void ChapterOneLevel::Interact()
         return;
     case ChapterAction::Generator:
         state.generatorInspected = true;
-        game.ShowNotice("리아 / 고장이 아니야. 폐쇄된 N-0 외곽 선로가 일정한 주기로 전력을 가져가고 있어. "
-                        "오른쪽 차단기를 분리하자.");
+        tell("리아 / 고장이 아니야. 폐쇄된 N-0 외곽 선로가 일정한 주기로 전력을 가져가고 있어. "
+             "오른쪽 차단기를 분리하자.");
         break;
     case ChapterAction::IsolateLine:
         state.generatorRestored = true;
-        game.ShowNotice("리아 / 도시 쪽 전력은 안정됐어. 이상하네… 끊어 놓은 선로의 계기판이 아직 움직여. "
-                        "같은 간격이야. 이것도 기록해 두자.");
+        tell("리아 / 도시 쪽 전력은 안정됐어. 이상하네… 끊어 놓은 선로의 계기판이 아직 움직여. "
+             "같은 간격이야. 이것도 기록해 두자.");
         break;
     case ChapterAction::PortableLight:
         state.portableLightRepaired = true;
-        game.ShowNotice("리아 / 됐다, 켜지네. 접점만 손보면 되는 걸 버릴 뻔했어. 다음에 야영할 때 가져가자. "
-                        "네가 길 좀 밝혀 줘.");
+        tell("리아 / 됐다, 켜지네. 접점만 손보면 되는 걸 버릴 뻔했어. 다음에 야영할 때 가져가자. "
+             "네가 길 좀 밝혀 줘. 잠깐 이 불빛 아래서 쉬었다 가자.");
         break;
     case ChapterAction::Kain:
         state.convoyBriefed = true;
-        game.ShowNotice("카인 / 눈앞에는 다섯 명인데 무전에는 여섯 명이 답합니다. 저 소리를 따라가진 맙시다. "
-                        "여기 있는 사람부터 옮기죠. 남쪽 측량 표식 세 곳을 확인해 주십시오.");
+        tell("카인 / 눈앞에는 다섯 명인데 무전에는 여섯 명이 답합니다. 저 소리를 따라가진 맙시다. "
+             "여기 있는 사람부터 옮기죠. 남쪽 측량 표식 세 곳을 확인해 주십시오.");
         break;
     case ChapterAction::Receiver:
         state.receiverInspected = true;
-        game.ShowNotice("수신기 조사 / 전선이 끊겼는데도 같은 응답이 반복됩니다. 앞서 녹음된 교신과 "
-                        "일치합니다. 이상 발생 시각과 설비 번호 N-0/17을 저장했습니다.");
+        tell("수신기 조사 / 전선이 끊겼는데도 같은 응답이 반복됩니다. 앞서 녹음된 교신과 "
+             "일치합니다. 이상 발생 시각과 설비 번호 N-0/17을 저장했습니다.");
         break;
     case ChapterAction::SurveyOne:
     case ChapterAction::SurveyTwo:
     case ChapterAction::SurveyThree:
         ++state.surveyMarkers;
-        game.ShowNotice(state.surveyMarkers == 3
-                            ? "카인 / 세 표식이 이어지는 길은 안전합니다. 운송대로 돌아와 주십시오. 다섯 "
-                              "명을 그 길로 옮기겠습니다."
-                            : "측량 표식 / 우회로가 끊긴 수로를 돌아 이어집니다. 다음 표식을 확인하세요.");
+        tell(state.surveyMarkers == 3
+                 ? "카인 / 세 표식이 이어지는 길은 안전합니다. 운송대로 돌아와 주십시오. 다섯 "
+                   "명을 그 길로 옮기겠습니다."
+                 : "측량 표식 / 우회로가 끊긴 수로를 돌아 이어집니다. 다음 표식을 확인하세요.");
         break;
     case ChapterAction::Escort:
         for (auto &person : state.survivors)
@@ -2024,24 +2050,24 @@ void ChapterOneLevel::Interact()
             person.departureDelay = float(&person - state.survivors.data()) * .8f;
         }
         state.escortStarted = true;
-        game.ShowNotice("카인 / 다섯 분 모두 제 뒤로 오십시오. 안전 지점에서 다시 인원을 확인하겠습니다. "
-                        "[진행 안내] 운송대가 이동하는 동안 다른 현장도 조사할 수 있습니다.");
+        tell("카인 / 다섯 분 모두 제 뒤로 오십시오. 안전 지점에서 다시 인원을 확인하겠습니다. "
+             "[진행 안내] 운송대가 이동하는 동안 다른 현장도 조사할 수 있습니다.");
         break;
     case ChapterAction::Vehicle:
         state.vehicleRepaired = true;
-        game.ShowNotice("운송 차량 수리 완료 / 구동계를 복구했습니다. [선택 의뢰 완료] 운송대가 차량을 "
-                        "회수할 수 있게 됐습니다.");
+        tell("운송 차량 수리 완료 / 구동계를 복구했습니다. [선택 의뢰 완료] 운송대가 차량을 "
+             "회수할 수 있게 됐습니다.");
         break;
     case ChapterAction::TradeProof:
         state.tradeProofFound = true;
-        game.ShowNotice("거래 기록 확보 / 이름을 숨긴 구매자가 N-0/17 부품을 시세보다 비싸게 샀습니다. 이 "
-                        "기록을 점거자들에게 보여 주고 거래 경위를 물을 수 있습니다.");
+        tell("거래 기록 확보 / 이름을 숨긴 구매자가 N-0/17 부품을 시세보다 비싸게 샀습니다. 이 "
+             "기록을 점거자들에게 보여 주고 거래 경위를 물을 수 있습니다.");
         break;
     case ChapterAction::Scrappers:
         if (!state.tradeProofFound)
         {
-            game.ShowNotice("약탈자 / 우린 고철을 팔았을 뿐이야. 발주 내역은 입구 적재함에 있어. 확인하고 "
-                            "와. 안쪽 경계선을 넘거나 먼저 쏘면 가만있지 않겠어.");
+            tell("약탈자 / 우린 고철을 팔았을 뿐이야. 발주 내역은 입구 적재함에 있어. 확인하고 "
+                 "와. 안쪽 경계선을 넘거나 먼저 쏘면 가만있지 않겠어.");
             break;
         }
         state.negotiated = true;
@@ -2053,13 +2079,13 @@ void ChapterOneLevel::Interact()
             person.route = FindRoute(person.position, {44.5f, 39.5f});
             person.waypoint = 0;
         }
-        game.ShowNotice("약탈자 / 주문자는 몰라. 부품을 빼고 나서 폐설비에 새 전원이 들어왔어. 장부는 단말에 "
-                        "있다. 우린 철수하지. 여기서 무슨 일이 일어나는지는 우리도 몰라.");
+        tell("약탈자 / 주문자는 몰라. 부품을 빼고 나서 폐설비에 새 전원이 들어왔어. 장부는 단말에 "
+             "있다. 우린 철수하지. 여기서 무슨 일이 일어나는지는 우리도 몰라.");
         break;
     case ChapterAction::Ledger:
         state.ledgerFound = true;
-        game.ShowNotice("기본 장부 확보 / 발주처 이름은 지워졌습니다. 설비 N-0/17의 좌표·전력 사용 주기·교신 "
-                        "시각이 남아 있습니다. 다른 현장 기록도 모아 헤일로 수신망에서 대조하세요.");
+        tell("기본 장부 확보 / 발주처 이름은 지워졌습니다. 설비 N-0/17의 좌표·전력 사용 주기·교신 "
+             "시각이 남아 있습니다. 다른 현장 기록도 모아 헤일로 수신망에서 대조하세요.");
         break;
     case ChapterAction::ConvoySupply: {
         auto &stats = GameLevels::Mine().GetState().player;
@@ -2083,32 +2109,67 @@ void ChapterOneLevel::Interact()
     }
     case ChapterAction::DetailLedger:
         state.detailLedgerFound = true;
-        game.ShowNotice("상세 장부 확보 / 구매자 추적 단서를 보관합니다. 삭제된 발주처의 정체는 아직 "
-                        "확인되지 않았습니다.");
+        tell("상세 장부 확보 / 구매자 추적 단서를 보관합니다. 삭제된 발주처의 정체는 아직 "
+             "확인되지 않았습니다.");
         break;
     }
 }
 void ChapterOneLevel::InteractHub()
 {
-    if (!Unlock())
+    using tutorial::Dialogue;
+    if (!Unlock() || Dialogue::Active() || tutorial::HospitalRecovery::Active())
     {
-        return;
-    }
-    if (state.comparisonStarted && !state.recordsCompared)
-    {
-        tutorial::Game::Get().ShowNotice("기록 대조 / N-0 외곽 조명 순서를 관측하고 있습니다.");
         return;
     }
     if (CompletedSites() == 3 && !state.recordsCompared)
     {
-        state.comparisonStarted = true;
-        state.comparisonSeconds = 0;
-        tutorial::Game::Get().GetState().mouseFiring = false;
-        tutorial::Game::Get().ShowNotice("기록 대조 / 광산 좌표·발전기 전력 유출·운송대 교신 시각이 설비 "
-                                         "N-0/17의 기록과 일치합니다. 외곽 설비의 원격 화면을 확인합니다.");
+        bool started = Dialogue::Start(
+            "MQ01D/comparison",
+            {{"match",
+              "수신망",
+              "단말 기록",
+              "광산 좌표·발전기 전력 유출·운송대 교신 시각이 설비 N-0/17의 기록과 일치합니다. 외곽 설비의 "
+              "원격 화면을 연결합니다.",
+              {}},
+             {"observation", "나", "현장", "관문은 멈춰 있는데, 그 주변에는 차례로 불이 들어온다.", {}},
+             {"ria",
+              "리아",
+              "현장",
+              "관문 가동 기록은 없는데 외곽 설비에는 전력이 공급되고 있어. 멈춘 관문 주변에서 무언가 계속 "
+              "움직이고 있었던 거야.",
+              {}},
+             {"route",
+              "카인",
+              "현장",
+              "지도에 있던 다리는 사라졌습니다. 아래 수로의 옛 진입로는 기록해 뒀습니다.",
+              {}},
+             {"next", "카인", "현장", "먼저 그 길이 남아 있는지 확인합시다.", {}}},
+            [this](const std::string &) {
+                state.recordsCompared = state.waterwayUnlocked = true;
+                tutorial::Game::Get().ShowNotice("1장 완료 / 수로 진입로 기록 확보. 2장 지역은 아직 진입할 "
+                                                 "수 없습니다. 1장 재방문과 선택 의뢰를 계속할 수 있습니다.");
+            });
+        if (started && !state.comparisonStarted)
+        {
+            state.comparisonStarted = true;
+            state.comparisonSeconds = 0;
+        }
         return;
     }
-    Enter();
+    Dialogue::Start(
+        "chapter1/departure",
+        {{"confirm",
+          "리아",
+          "현장",
+          "현장으로 출발할까? 헤일로 수신망으로 다시 돌아올 수 있어.",
+          {{"depart", "현장으로 출발한다"}, {"prepare", "아직 준비한다"}}}},
+        [this](const std::string &choice) {
+            if (choice == "depart")
+            {
+                Enter();
+            }
+        },
+        true);
 }
 float ChapterOneLevel::GetAimAngle() const
 {
@@ -2122,6 +2183,10 @@ float ChapterOneLevel::GetAimAngle() const
 }
 void FrontierCombat::Attack()
 {
+    if (tutorial::Dialogue::LocksWorld())
+    {
+        return;
+    }
     if (!state.active || state.bullets.size() >= 128)
     {
         return;
@@ -2421,9 +2486,10 @@ void FrontierParty::Update(float deltaSeconds)
             state.receiverInspected =
                 true; // The wrapped receiver is logged at the final headcount, even if skipped earlier.
             state.kain.position = {25.5f, 20.5f};
-            tutorial::Game::Get().ShowNotice("카인 / 다섯 명, 전원 확인했습니다. …그 기록에도 N-0이 있군요. "
-                                             "예전에 그 외곽에서 근무했습니다. 저도 동행하겠습니다. [구조 "
-                                             "완료] 카인 합류 · 보급품 교환 가능 · 부품 3개 획득");
+            tutorial::Dialogue::Say("chapter1/convoy/received",
+                                    "카인 / 다섯 명, 전원 확인했습니다. …그 기록에도 N-0이 있군요. "
+                                    "예전에 그 외곽에서 근무했습니다. 저도 동행하겠습니다. [구조 "
+                                    "완료] 카인 합류 · 보급품 교환 가능 · 부품 3개 획득");
         }
     }
     if (state.negotiated)
@@ -2443,26 +2509,14 @@ void FrontierParty::Update(float deltaSeconds)
 }
 void ChapterOneLevel::Update(float deltaSeconds)
 {
-    if (state.comparisonStarted && state.recordsCompared)
+    // Cosmetic lamps never commit story progress. Reading the final page commits MQ01D.
+    if (state.comparisonStarted)
     {
         state.comparisonSeconds = (std::min)(12.5f, state.comparisonSeconds + deltaSeconds);
     }
-    else if (state.comparisonStarted && !state.recordsCompared)
+    if (tutorial::Dialogue::LocksWorld())
     {
-        float previous = state.comparisonSeconds;
-        state.comparisonSeconds += deltaSeconds;
-        if (previous < 3 && state.comparisonSeconds >= 3)
-        {
-            tutorial::Game::Get().ShowNotice("리아 / 관문 가동 기록은 없는데 외곽 설비에는 불이 들어오네. "
-                                             "관문이 멈춰 있어도 주변 장치는 작동하고 있었던 거야.");
-        }
-        if (state.comparisonSeconds >= 8)
-        {
-            state.recordsCompared = state.waterwayUnlocked = true;
-            tutorial::Game::Get().ShowNotice(
-                "1장 완료 / 카인이 N-0 외곽 수로의 옛 진입로를 기록했습니다. [현재 플레이 안내] 2장 지역은 "
-                "아직 진입할 수 없습니다. 1장 현장 재방문과 남은 선택 의뢰는 계속할 수 있습니다.");
-        }
+        return;
     }
     if (!state.active)
     {

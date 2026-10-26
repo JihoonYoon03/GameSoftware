@@ -1,0 +1,69 @@
+{
+  "Walk": {
+    "heel": {
+      "compensated_horizontal_drift_m": 2.9909477712518568e-05,
+      "phase_range": [
+        0.13,
+        0.4
+      ]
+    },
+    "toe": {
+      "compensated_horizontal_drift_m": 2.5205506865071735e-05,
+      "phase_range": [
+        0.49,
+        0.59
+      ]
+    }
+  },
+  "Run": {
+    "heel": {
+      "compensated_horizontal_drift_m": 0.00025459488576177233,
+      "phase_range": [
+        0.12,
+        0.22
+      ]
+    },
+    "toe": {
+      "compensated_horizontal_drift_m": 7.704004097023973e-05,
+      "phase_range": [
+        0.28,
+        0.39
+      ]
+    }
+  },
+  "weapon_grip_max_matrix_error": 7.450580596923828e-07,
+  "masked_hit_lower_body_max_matrix_error": 0,
+  "rider": {
+    "max_contact_drift_m": 5.204751848153168e-07,
+    "max_anchor_alignment_error_m": 0.000361791267709115,
+    "anchors_vehicle_m": {
+      "hand.L": [
+        0.3000984191894531,
+        0.20900015532970428,
+        0.8943476676940918
+      ],
+      "foot.L": [
+        -0.1000000461935997,
+        0.34000006318092346,
+        0.44249996542930603
+      ],
+      "hand.R": [
+        0.30009835958480835,
+        -0.20900021493434906,
+        0.8943476676940918
+      ],
+      "foot.R": [
+        -0.10000009089708328,
+        -0.34000006318092346,
+        0.44249996542930603
+      ],
+      "seat": [
+        0.11288464069366455,
+        -8.522553329726179e-09,
+        0.8180921673774719
+      ]
+    }
+  },
+  "getup_left_hand_min_z_at_support_m": 0.006603718269616365,
+  "all_checks_passed": true
+}

@@ -16,6 +16,7 @@ class Hud
 
   private:
     static void DrawNoticePanel();
+    static void DrawDialogue();
     static void DrawPauseOverlay();
 };
 

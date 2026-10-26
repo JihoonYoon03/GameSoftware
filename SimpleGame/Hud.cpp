@@ -645,7 +645,9 @@ void MapHud::DrawFullMap()
 // ============================================================================
 void CityHud::DrawInteractionPrompt()
 {
-    if (Game::Get().FindNearbyInteraction() != InteractionTarget::None)
+    if (!Dialogue::Active() && !Game::Get().GetState().journalVisible &&
+        !Game::Get().GetState().dialogueHistoryVisible &&
+        Game::Get().FindNearbyInteraction() != InteractionTarget::None)
     {
         Drawing::DrawRectangle(kCanvasWidth * .5f - 95, kCanvasHeight * .69f, 190, 30,
                                ColorRGBA(.02f, .08f, .11f, .9f));
@@ -659,51 +661,79 @@ void CityHud::DrawInteractionPrompt()
 // ============================================================================
 void Hud::DrawNoticePanel()
 {
-    auto &world = Game::Get().GetState();
-    if (world.noticeSecondsRemaining <= 0)
+    const auto &world = Game::Get().GetState();
+    if (world.noticeSecondsRemaining <= 0 || world.journalVisible || world.dialogueHistoryVisible)
     {
         return;
     }
     constexpr float panelWidth = 940;
-    constexpr float fontSize = 15;
     float x = (kCanvasWidth - panelWidth) / 2;
-    Drawing::DrawRectangle(x, kCanvasHeight - 132.f, panelWidth, 80, ColorRGBA(.02f, .055f, .085f, .96f));
-    Drawing::DrawRectangle(x, kCanvasHeight - 132.f, 3, 80, ColorRGBA(.32f, .75f, .78f));
-    // Advance complete UTF-8 codepoints; never split Korean syllables at byte offsets.
-    const std::string &text = world.noticeText;
-    size_t start = 0;
-    for (int line = 0; start < text.size() && line < 3; ++line)
+    float y = Dialogue::Active() ? 216.f : kCanvasHeight - 132.f;
+    Drawing::DrawRectangle(x, y, panelWidth, 80, {.02f, .055f, .085f, .96f});
+    Drawing::DrawRectangle(x, y, 3, 80, {.32f, .75f, .78f});
+    auto rows = Dialogue::Wrap(world.noticeText, panelWidth - 32, 15);
+    for (size_t i = 0; i < (std::min)(size_t(3), rows.size()); ++i)
     {
-        size_t end = start;
-        float advance = 0;
-        while (end < text.size())
-        {
-            unsigned char lead = static_cast<unsigned char>(text[end]);
-            size_t bytes = lead < 0x80 ? 1 : lead < 0xE0 ? 2 : lead < 0xF0 ? 3 : 4;
-            float glyphWidth = bytes == 1 ? fontSize * .55f : fontSize;
-            if (advance + glyphWidth > panelWidth - 32)
-            {
-                break;
-            }
-            if (end + bytes > text.size())
-            {
-                break;
-            }
-            advance += glyphWidth;
-            end += bytes;
-        }
-        if (end == start)
-        {
-            break;
-        }
-        Drawing::DrawLabel(x + 16, kCanvasHeight - 107.f + line * 23, text.substr(start, end - start),
-                           ColorRGBA(.82f, .9f, .91f));
-        start = end;
-        while (start < text.size() && text[start] == ' ')
-        {
-            ++start;
-        }
+        Drawing::DrawLabel(x + 16, y + 25 + float(i) * 23, rows[i], {.82f, .9f, .91f});
     }
+}
+void Hud::DrawDialogue()
+{
+    const auto &world = Game::Get().GetState();
+    const auto &d = world.dialogue;
+    if (!d.active || world.journalVisible || world.dialogueHistoryVisible || HospitalRecovery::Active())
+    {
+        return;
+    }
+    const auto &page = d.pages[d.page];
+    auto header = Dialogue::Wrap(page.speaker + "  ·  " + page.channel, 800, 19);
+    auto body = Dialogue::Wrap(page.text, 896, 19);
+    std::vector<std::vector<std::string>> choices;
+    size_t choiceRows = 0;
+    for (size_t i = 0; i < page.choices.size(); ++i)
+    {
+        choices.push_back(Dialogue::Wrap(std::to_string(i + 1) + ". " + page.choices[i].text, 866, 15));
+        choiceRows += choices.back().size() + 1;
+    }
+    float height = 88.f + float(header.size() + body.size()) * 25 + float(choiceRows) * 22;
+    float y = kCanvasHeight - 54.f - height;
+    Drawing::DrawRectangle(160, y, 960, height, {.015f, .04f, .065f, .98f});
+    Drawing::DrawRectangle(160, y, 4, height, {.28f, .86f, .88f});
+    float rowY = y + 29;
+    for (const auto &row : header)
+    {
+        Drawing::DrawLabel(188, rowY, row, {.45f, .94f, .93f}, GLUT_BITMAP_HELVETICA_18);
+        rowY += 25;
+    }
+    rowY += 10;
+    for (const auto &row : body)
+    {
+        Drawing::DrawLabel(188, rowY, row, {.9f, .94f, .95f}, GLUT_BITMAP_HELVETICA_18);
+        rowY += 25;
+    }
+    rowY += 10;
+    for (size_t i = 0; i < choices.size(); ++i)
+    {
+        if (d.selection == int(i))
+        {
+            Drawing::DrawRectangle(184, rowY - 17, 900, float(choices[i].size()) * 22 + 5,
+                                   {.08f, .22f, .27f});
+        }
+        for (const auto &row : choices[i])
+        {
+            Drawing::DrawLabel(198, rowY, row,
+                               d.selection == int(i) ? ColorRGBA(.6f, 1, .9f) : ColorRGBA(.72f, .8f, .83f));
+            rowY += 22;
+        }
+        rowY += 22;
+    }
+    std::string controls = page.choices.empty() ? "E / Enter 다음"
+                           : Dialogue::Danger() ? "안전한 곳에서 선택할 수 있습니다"
+                                                : "숫자 키 선택 · E / Enter 확정";
+    Drawing::DrawLabel(188, kCanvasHeight - 75.f, controls + "   ·   H 대사 이력   ·   J 조사 기록",
+                       {.65f, .78f, .82f});
+    Drawing::DrawLabel(1000, y + 29, std::to_string(d.page + 1) + "/" + std::to_string(d.pages.size()),
+                       {.65f, .78f, .82f});
 }
 
 // ============================================================================
@@ -799,7 +829,8 @@ void CityHud::Draw()
                        : world.isSideQuestAccepted ? "마라 동쪽의 전력 장치를 복구하세요."
                                                    : "주거 광장의 마라와 대화하세요.");
     Drawing::DrawLabel(26, (float)kCanvasHeight - 22,
-                       "WASD 이동 / 바이크 W 가속·S 후진·AD 조향·Space 부스트 / E 승하차 / M 지도 / Esc 휴식",
+                       "WASD 이동 / 바이크 W 가속·S 후진·AD 조향·Space 부스트 / E 승하차 / M 지도 / J 기록 / "
+                       "H 이력 / Esc 휴식",
                        ColorRGBA(.63f, .78f, .81f));
     DrawInteractionPrompt();
 }
@@ -848,7 +879,8 @@ void MineHud::DrawScanner()
         {
             continue;
         }
-        // Use the camera's isometric bearing for screen-edge arrows, independently of the fixed schematic rotation.
+        // Use the camera's isometric bearing for screen-edge arrows, independently of the fixed schematic
+        // rotation.
         Vector2 target =
             WorldCamera::ToViewport(Drawing::WorldToScreen(contact.position.x, contact.position.y, 20));
         Vector2 direction = {target.x - player.x, target.y - player.y};
@@ -939,7 +971,7 @@ void ChapterHud::Draw()
     Drawing::DrawLabel(40, 48, "1장 / 빛나는 개척지", {.85f, .94f, .84f}, GLUT_BITMAP_HELVETICA_18);
     Drawing::DrawLabel(40, 74, level.Objective(), {.9f, .85f, .6f});
     Drawing::DrawLabel(40, 100,
-                       state.generatorRestored ? "[완료] 발전기 / 폐쇄 선로 분리·도시 전력 안정"
+                       state.generatorRestored    ? "[완료] 발전기 / 폐쇄 선로 분리·도시 전력 안정"
                        : state.generatorInspected ? "[진행] 발전기 / 전력 유출 선로 차단"
                                                   : "[조사] 발전기 / 정전 원인 확인",
                        {.6f, .85f, .75f});
@@ -963,10 +995,10 @@ void ChapterHud::Draw()
     if (level.NearestInteraction(point))
     {
         Drawing::DrawRectangle(350, 548, 580, 34, {.02f, .07f, .09f, .92f});
-        std::string label = point.action == game::ChapterAction::ConvoySupply
-                                ? "운송대 보급 / 부품 " + std::to_string(CivicJustice::ShopPrice(2)) +
-                                      " → 회복 키트 1 [E]"
-                                : point.label;
+        std::string label =
+            point.action == game::ChapterAction::ConvoySupply
+                ? "운송대 보급 / 부품 " + std::to_string(CivicJustice::ShopPrice(2)) + " → 회복 키트 1 [E]"
+                : point.label;
         Drawing::DrawLabel(368, 571, label, {.9f, .95f, .8f}, GLUT_BITMAP_HELVETICA_18);
     }
     auto cursor = world.cursorPosition;
@@ -982,71 +1014,72 @@ void ChapterHud::Draw()
 }
 void ChapterHud::DrawJournal()
 {
-    auto &level = game::GameLevels::Chapter();
-    const auto &s = level.GetState();
-    if (!level.IsAvailable())
+    const auto &world = Game::Get().GetState();
+    const auto &s = game::GameLevels::Chapter().GetState();
+    if (HospitalRecovery::Active())
     {
         return;
     }
-    if (s.comparisonStarted && (s.comparisonSeconds < 12 || s.journalVisible))
+    if (s.comparisonStarted && s.comparisonSeconds < 12 && !world.journalVisible &&
+        !world.dialogueHistoryVisible)
     {
-        Drawing::DrawRectangle(408, 226, 565, 92, {.02f, .055f, .085f, .96f});
-        Drawing::DrawLabel(426, 249, "원격 관측 / N-0 외곽 설비 순차 점등");
+        Drawing::DrawRectangle(408, 272, 565, 70, {.02f, .055f, .085f, .96f});
+        Drawing::DrawLabel(426, 295, "원격 관측 / N-0 외곽 설비 순차 점등");
         int lamps = int(Game::Clamp(s.comparisonSeconds - 1, 0, 6) * 8 / 6);
         for (int i = 0; i < 8; ++i)
         {
-            Drawing::DrawRectangle(430.f + i * 62, 266, 44, 12,
+            Drawing::DrawRectangle(430.f + i * 62, 312, 44, 12,
                                    i < lamps ? ColorRGBA(.5f, .95f, .9f) : ColorRGBA(.1f, .2f, .23f));
         }
-        Drawing::DrawLabel(426, 304,
-                           s.recordsCompared ? "수로 진입로 기록 확보 / 2장 지역 준비 중"
-                                             : "관문 가동 기록 없음 / 외곽 설비에는 전력 공급 중");
     }
-    if (!s.journalVisible)
+    if (!world.journalVisible && !world.dialogueHistoryVisible)
     {
         return;
     }
-    Drawing::DrawRectangle(110, 225, 1060, 350, {.02f, .045f, .065f, .97f});
-    Drawing::DrawLabel(135, 256, "조사 기록 / J 닫기", {.7f, .95f, .9f}, GLUT_BITMAP_HELVETICA_18);
-    Drawing::DrawLabel(
-        135, 290, "광산: 실종 탐사선 신호와 나를 닮은 문양을 발견했다. 전망대에서 들은 내 목소리와의 관계는 모른다.");
-    Drawing::DrawLabel(
-        135, 326,
-        s.generatorRestored
-            ? "발전기: 선로를 분리해 전력을 복구했다. 끊어 놓은 선로의 계기판은 여전히 같은 간격으로 움직인다."
-        : s.generatorInspected ? "발전기: 폐쇄된 N-0 외곽 선로로 전력이 빠져나간다. 옆 차단기에서 선로를 분리해야 한다."
-                               : "발전기: 정전 신고가 접수됐다. 현장은 아직 조사하지 않았다.");
-    Drawing::DrawLabel(
-        135, 362,
-        s.receiverInspected
-            ? "운송대: 눈앞에는 5명, 무전 응답은 6명. 끊어진 수신기에서 이전 교신이 반복된다. 다른 생존자는 확인 못 했다."
-            : "운송대: 연락이 끊겼다. 현장의 카인에게 상황을 물어보자.");
-    Drawing::DrawLabel(135, 398,
-                       s.negotiated
-                           ? "폐설비: 점거자들은 부품을 판 뒤 새 전원이 들어왔다고 했다. 구매자가 누구인지는 모른다고 한다."
-                       : s.tradeProofFound || s.ledgerFound
-                           ? "폐설비: 거래 장부를 확보했다. 구매자가 누구인지, 왜 이 부품을 샀는지 더 알아봐야 한다."
-                           : "폐설비: 누군가 중계 부품을 빼내고 있다. 입구 적재함과 점거자들을 조사하자.");
-    Drawing::DrawLabel(
-        135, 434,
-        s.recordsCompared
-            ? "기록 대조: 광산 좌표·전력 유출·교신 시각이 N-0/17과 일치했다. 관문 외곽 설비가 작동하고 있다."
-        : s.ledgerFound
-            ? "기본 장부: 발주처는 지워졌다. N-0/17의 좌표·전력 주기·교신 시각을 다른 현장 기록과 비교해야 한다."
-            : "기본 장부: 미확보.");
-    Drawing::DrawLabel(
-        135, 470,
-        s.kainJoined ? "카인: 구조 후 동행 합류. N-0 외곽 근무 경험을 밝혔으나 세부 과거는 아직 말하지 않음."
-                     : "카인: 운송대 현장 점호·안전 우회로 확보를 우선.");
-    Drawing::DrawLabel(135, 506,
-                       s.detailLedgerFound
-                           ? "선택 기록: 상세 구매 장부 보관. 구매자 추적 단서 확보 / 발주처의 정체는 미확인."
-                           : "선택 기록: 상세 구매 장부 미확보.");
-    Drawing::DrawLabel(135, 548,
-                       s.recordsCompared
-                           ? "1장 완료: N-0 외곽 수로의 옛 진입로를 기록했다. 2장 지역 준비 중. 현장 재방문과 선택 의뢰는 가능."
-                           : "다음 행동: 세 현장 조사를 마치고 헤일로 수신망에서 광산 좌표와 기록을 대조하자.",
-                       {.9f, .8f, .55f});
+    std::vector<std::string> rows;
+    if (world.journalVisible)
+    {
+        for (const auto &entry : Dialogue::Journal())
+        {
+            auto wrapped = Dialogue::Wrap(entry, 960, 19);
+            rows.insert(rows.end(), wrapped.begin(), wrapped.end());
+            rows.push_back("");
+        }
+    }
+    else
+    {
+        for (const auto &entry : world.dialogue.history)
+        {
+            rows.push_back(entry.speaker + " · " + entry.channel);
+            auto wrapped = Dialogue::Wrap(entry.text, 960, 19);
+            rows.insert(rows.end(), wrapped.begin(), wrapped.end());
+            rows.push_back("");
+        }
+        if (rows.empty())
+        {
+            rows.push_back("아직 읽은 대사가 없습니다.");
+        }
+    }
+    constexpr size_t perPage = 16;
+    size_t pages = (std::max)(size_t(1), (rows.size() + perPage - 1) / perPage);
+    size_t offset = (std::min)(world.dialogue.historyOffset, pages - 1);
+    size_t page = world.dialogueHistoryVisible ? pages - 1 - offset : offset;
+    Drawing::DrawRectangle(110, 140, 1060, 574, {.015f, .035f, .055f, .98f});
+    Drawing::DrawLabel(138, 174,
+                       world.journalVisible ? "조사 기록 / J 닫기 · H 대사 이력"
+                                            : "대사 이력 / H 닫기 · J 조사 기록",
+                       {.5f, .95f, .92f}, GLUT_BITMAP_HELVETICA_18);
+    for (size_t i = 0; i < perPage && page * perPage + i < rows.size(); ++i)
+    {
+        Drawing::DrawLabel(138, 214 + float(i) * 27, rows[page * perPage + i], {.85f, .91f, .93f},
+                           GLUT_BITMAP_HELVETICA_18);
+    }
+    Drawing::DrawLabel(138, 686,
+                       "PageUp / PageDown 페이지   " + std::to_string(page + 1) + "/" +
+                           std::to_string(pages) +
+                           (world.dialogue.suspended ? "   ·   Enter 중단한 대화 재개 (안전한 곳)"
+                            : Dialogue::Danger()     ? "   ·   교전 중에는 시간이 계속 흐릅니다"
+                                                     : ""));
 }
 
 void Hud::Render()
@@ -1058,10 +1091,11 @@ void Hud::Render()
                    : game::GameLevels::Mine().IsActive()  ? static_cast<Hud &>(mine)
                                                           : static_cast<Hud &>(city);
     current.Draw();
-    ChapterHud::DrawJournal();
     DrawNoticePanel();
-    MapHud::DrawFullMap();
-    DrawPauseOverlay();
     CivicPresentation::DrawHud();
+    MapHud::DrawFullMap();
+    DrawDialogue();
+    ChapterHud::DrawJournal();
+    DrawPauseOverlay();
 }
 } // namespace tutorial

@@ -51,9 +51,15 @@ Vehicle_Disabled의 시작 이벤트로 발광을 0.12배로 줄이고 기존 �
 
 `40_Bike_Rider_Contact_Review`는 실제 바이크와 탑승자를 함께 보여준다. 인체를 Z축 +90° 돌리고 Z=-0.076m 옮겨 바이크 +X 전방에 맞춘다. 바, 발판, 좌석과 기준점 좌표는 `civic_animation_contract.json`에 있다. Rider_Brace의 골반·양손·양발 목표점은 반응 중 고정되며, 부상 장치만 흔들린다. 양손으로 핸들을 잡으므로 `riding_weapon_visibility` 이벤트로 손의 권총을 숨긴다.
 
+기존 Hover_Idle/Cruise의 차체 부상 움직임과 섞을 때는 탑승자 전체를 실제 chassis의 애니메이션 접속 행렬에 연결한다. 탑승자 루트에 별도의 부상 흔들림을 더하지 않는다.
+
 기존 게임의 `Ride`는 게임 패커가 Jump_Air와 Aim_Base에서 합성하는 별도 클립이다. 이 작업에서는 게임 패커와 Runtime을 수정하지 않았고 이름이 겹치는 Ride도 내보내지 않았다. 새 접점으로 Rider_Brace를 연결할 때만 **Ride_Base를 명시적으로 사용**하고 탑승 변환/장비 숨김을 함께 연결한다. 기존 Ride를 자동으로 대체하는 납품은 아니다.
 
 ## 검수와 미리보기
+
+[주요 결과 요약](../Preview/Civic/delivery_overview.jpg) · [보행 개선 전/후](../Preview/Civic/Before_After.gif) · [기립 동작](../Preview/Civic/GetUp_Back.gif) · [바이크 접점](../Preview/Civic/Bike_Contact.gif)
+
+2026-10-26 최신 렌더로 GIF/접촉 시트 28개씩을 갱신했다. 두 Blender 원본의 기본 장면·카메라·43개 인체 액션과 검토 장면 5개의 실제 스킨 재생도 확인했다(`civic_project_report.json`).
 
 - `37_Civic_Animation_Review`: 개별 인체 모션을 Action Editor에서 선택해 재생.
 - `38_Motion_Before_After`: 보존한 기존 Walk와 개선 Walk 비교.

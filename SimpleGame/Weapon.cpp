@@ -72,6 +72,10 @@ void Firearm::Reset()
     spread = settings.minimumSpread;
     randomState = 0x81b437u;
 }
+void Firearm::SetRandomSeed(std::uint32_t seed)
+{
+    randomState = seed ? seed : 1;
+}
 int Firearm::GetRounds() const
 {
     return rounds;
@@ -101,5 +105,15 @@ Pistol::Pistol() : Firearm({12, 18, .2f, 1.4f, 38.f, 24.f, .008f, .16f, .033f, .
 const char *Pistol::GetName() const
 {
     return "개척자 권총";
+}
+SecurityCarbine::SecurityCarbine(int tier, std::uint32_t seed)
+    : Firearm({18, 12, 1.6f - (std::max)(1, (std::min)(5, tier)) * .2f, 2.1f, 32, 20,
+               .08f - (std::max)(1, (std::min)(5, tier)) * .009f, .28f, .025f, .008f})
+{
+    SetRandomSeed(seed);
+}
+const char *SecurityCarbine::GetName() const
+{
+    return "보안 제압 카빈";
 }
 } // namespace combat

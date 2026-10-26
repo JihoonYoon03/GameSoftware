@@ -53,6 +53,7 @@ class Firearm : public Weapon
     int GetRounds() const;
     int GetMagazineSize() const;
     float GetSpread() const;
+    void SetRandomSeed(std::uint32_t seed);
     float GetReloadProgress() const;
     bool IsReloading() const;
 
@@ -71,6 +72,15 @@ class Pistol final : public Firearm
 {
   public:
     Pistol();
+    const char *GetName() const override;
+};
+// ============================================================================
+// SecurityCarbine — tier-scaled frontier suppression firearm
+// ============================================================================
+class SecurityCarbine final : public Firearm
+{
+  public:
+    explicit SecurityCarbine(int tier = 1, std::uint32_t seed = 1);
     const char *GetName() const override;
 };
 } // namespace combat

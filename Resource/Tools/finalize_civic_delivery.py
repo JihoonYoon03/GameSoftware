@@ -58,7 +58,7 @@ bind(rig,bpy.data.actions['VEHICLE_JetBike__Bike_Impact'])
 rider,obs=actor('Civic_Rider',c,(0,0,-.076));rider.rotation_euler.z=math.pi/2
 bind(rider,bpy.data.actions['HUMAN_7H__Rider_Brace'])
 for ob in obs:
-    if ob.get('asset_id')=='Weapon_CoilPistol_35cm':ob.hide_render=True;ob.hide_set(True)
+    if ob.get('asset_id')=='Weapon_CoilPistol_35cm':ob.hide_render=True;ob.hide_viewport=True
 s.frame_end=15;s.frame_set(3);s['instructions']='Bike_Impact and Rider_Brace share a 0.5 second clock. Weapon hidden by the riding_weapon_visibility event. Human yaw +90 degrees, translation Z=-0.076 m.'
 
 s,c=newscene('41_Vehicle_Impact_Review',(7,-10,7),(0,0,.8),15,(1400,900))
@@ -70,7 +70,8 @@ s.frame_end=15;s.frame_set(4)
 
 # Actual muzzle positions, sampled from the baked rig at 60 Hz. No runtime VFX
 # geometry is created; the consumer can attach the existing 2D billboard here.
-scene=bpy.data.scenes['00_Library'];bpy.context.window.scene=scene
+scene=bpy.data.scenes.new('Civic_Socket_Track_Evaluation');scene.render.fps=30
+scene.collection.objects.link(human);bpy.context.window.scene=scene
 tracks={}
 for clip in ['Aim_Base','Attack_Fire','Security_StunFire','Hit_Front','Hit_Back','Hit_Left','Hit_Right']:
     action=bpy.data.actions['HUMAN_7H__'+clip];bind(human,action)
@@ -86,6 +87,7 @@ for p in human.pose.bones:p.matrix_basis=Matrix.Identity(4)
 
 # Source entry scene remains the existing transit assembly.
 bpy.context.window.scene=bpy.data.scenes['16_Transit_Connected_Example']
+bpy.data.scenes.remove(scene)
 bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/'Source/Erma_Resource_Library.blend'),compress=True)
 
 # Prune only in memory after saving the master, then save a normal project.
@@ -103,6 +105,8 @@ def collect(c):
 for s in owned:collect(s.collection)
 for c in list(bpy.data.collections):
     if c not in keepcollections:bpy.data.collections.remove(c)
+for action in list(bpy.data.actions):
+    if not ('HUMAN_7H__' in action.name or 'VEHICLE_' in action.name):bpy.data.actions.remove(action)
 bpy.data.orphans_purge(do_local_ids=True,do_linked_ids=False,do_recursive=True)
 for screen in bpy.data.screens:
     for area in screen.areas:

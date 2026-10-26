@@ -230,6 +230,7 @@ void TestPolice()
                1000
         << " ms/update\n";
     law.officers.clear();
+    law.bullets.clear();
     SecurityOfficer officer;
     officer.position = {World().playerPosition.x + 3, World().playerPosition.y};
     officer.lastKnown = World().playerPosition;
@@ -241,6 +242,10 @@ void TestPolice()
     law.spawnSeconds = 100;
     Stats().health = Stats().maxHealth;
     CivicJustice::Update(.05f);
+    assert(Stats().health == Stats().maxHealth && law.bullets.size() == 1);
+    const auto shot = law.bullets.front();
+    assert(!shot.playerOwned && std::fabs(shot.direction.y) > .001f);
+    CivicCombat::Update(.15f); // Damage occurs along the deviated projectile path, never at trigger time.
     assert(Stats().health < Stats().maxHealth);
     int health = Stats().health;
     CivicJustice::Update(.05f);
@@ -248,6 +253,48 @@ void TestPolice()
     auto infamy = law.infamy;
     assert(CivicCombat::DamageOfficer(0, 999, {1, 0}));
     assert(law.infamy >= infamy);
+}
+void TestSecuritySpreadAndEvasion()
+{
+    combat::SecurityCarbine carbine(1, 4253), elite(5, 4254);
+    assert(carbine.GetSpread() > elite.GetSpread());
+    float initial = carbine.GetSpread();
+    combat::Shot shot;
+    int misses = 0;
+    for (int i = 0; i < carbine.GetMagazineSize(); ++i)
+    {
+        assert(carbine.TryFire(0, shot));
+        if (std::fabs(std::sin(shot.angle)) * 8 > .18f)
+        {
+            ++misses;
+        }
+        assert(std::fabs(shot.angle) <= .28f);
+        carbine.Update(1.41f);
+    }
+    assert(misses > 0 && carbine.GetSpread() > initial && carbine.GetRounds() == 0);
+    assert(!carbine.TryFire(0, shot) && carbine.IsReloading());
+    carbine.Update(2.2f);
+    assert(!carbine.IsReloading() && carbine.GetRounds() == carbine.GetMagazineSize());
+    carbine.Update(60);
+    assert(std::fabs(carbine.GetSpread() - initial) < .0001f);
+    Exterior();
+    auto &law = CivicJustice::State();
+    auto point = Open(0);
+    World().playerPosition = point;
+    law.playerGrace = 0;
+    law.playerImpact = {};
+    const int health = Stats().health;
+    law.bullets.push_back({{point.x - 1, point.y}, {1, 0}, 32, 20, 100, false});
+    World().playerPosition.y += 1;
+    CivicCombat::Update(.1f);
+    assert(Stats().health == health); // Moving off the path evades an already fired shot.
+    assert(!law.bullets.empty() && std::fabs(law.bullets.front().position.y - point.y) < .001f);
+    law.bullets.clear();
+    // Hostile bullets use the same swept wall obstruction as player bullets.
+    World().buildings = {{point.x + 1, point.y - 1, 2, 2, 100}};
+    law.bullets.push_back({point, {1, 0}, 32, 20, 100, false});
+    CivicCombat::Update(.2f);
+    assert(law.bullets.empty() && Stats().health == health);
 }
 void TestHospitalAllCauses()
 {
@@ -301,6 +348,7 @@ int main()
     TestFireMeleeAndWalls();
     TestBodiesAndVehicles();
     TestPolice();
+    TestSecuritySpreadAndEvasion();
     TestHospitalAllCauses();
     Game::Get().Reset();
     std::cout
