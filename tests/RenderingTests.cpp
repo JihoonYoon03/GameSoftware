@@ -132,6 +132,126 @@ void TestHairAndBodyShape()
                            male.vertices.size() * sizeof(ResourceVertex)) != 0);
     }
 }
+void TestAnimationBlending()
+{
+    auto id = ModelLibrary::Character(CharacterType::Explorer, Gender::Male).resourceId;
+    const auto &mesh = ResourceAssets::Get(id);
+    assert(mesh.rig && mesh.rig->samples.size() == 17 && mesh.rig->triangles.size() == 24);
+    const auto &rig = *mesh.rig;
+    auto reference = ModelRig::Pose(0, false, true);
+    SkinMatrices referenceSkin;
+    ResourceAssets::Sample(id, &reference, referenceSkin);
+    AnimationMatrix referenceMuzzle;
+    std::copy_n(referenceSkin.begin() + rig.muzzle * 16, 16, referenceMuzzle.begin());
+    referenceMuzzle = AnimationMath::Multiply(referenceMuzzle, rig.bind[size_t(rig.muzzle)]);
+    auto q = AnimationMath::Slerp({0, 0, 0, 1}, {0, 0, 0, -1}, .5f);
+    assert(std::fabs(q.w - 1) < .00001f); // Antipodal representations must not take a 360-degree detour.
+    for (const auto &sample : rig.samples)
+    {
+        auto weights = AnimationBlendSpace::Evaluate(rig, sample.left, sample.forward);
+        float x = 0, y = 0, sum = 0;
+        for (size_t i = 0; i < 3; ++i)
+        {
+            assert(weights.weights[i] >= 0);
+            sum += weights.weights[i];
+            x += rig.samples[weights.samples[i]].left * weights.weights[i];
+            y += rig.samples[weights.samples[i]].forward * weights.weights[i];
+        }
+        assert(std::fabs(sum - 1) < .00001f && std::hypot(x - sample.left, y - sample.forward) < .0001f);
+    }
+    for (int angle = 0; angle < 32; ++angle)
+    {
+        float a = angle * 6.2831853f / 32;
+        for (float speed : {0.f, .45f, 1.2f, 2.f, 7.f})
+        {
+            auto weights = AnimationBlendSpace::Evaluate(rig, std::cos(a) * speed, std::sin(a) * speed);
+            assert(std::fabs(weights.weights[0] + weights.weights[1] + weights.weights[2] - 1) < .0001f);
+            auto pose = ModelRig::Pose(0, true, true);
+            pose.blended = true;
+            pose.aimWeight = 1;
+            pose.locomotionPhase = .37f;
+            pose.moveLeft = std::cos(a) * speed;
+            pose.moveForward = std::sin(a) * speed;
+            SkinMatrices palette, adjacent;
+            ResourceAssets::Sample(id, &pose, palette);
+            AnimationMatrix muzzle;
+            std::copy_n(palette.begin() + rig.muzzle * 16, 16, muzzle.begin());
+            muzzle = AnimationMath::Multiply(muzzle, rig.bind[size_t(rig.muzzle)]);
+            for (size_t c = 0; c < 3; ++c)
+            {
+                for (size_t r = 0; r < 3; ++r)
+                {
+                    assert(std::fabs(muzzle[c * 4 + r] - referenceMuzzle[c * 4 + r]) < .001f);
+                }
+            }
+            pose.locomotionPhase += .0001f;
+            ResourceAssets::Sample(id, &pose, adjacent);
+            for (const auto &sole : rig.soles)
+            {
+                const float *m = palette.data() + sole.bone * 16;
+                float height =
+                    m[2] * sole.position.x + m[6] * sole.position.y + m[10] * sole.position.z + m[14];
+                assert(height >= -.0001f);
+            }
+            for (unsigned j = 0; j < mesh.boneCount; ++j)
+            {
+                for (unsigned c = 0; c < 3; ++c)
+                {
+                    const float *m = palette.data() + j * 16 + c * 4;
+                    assert(std::fabs(m[0] * m[0] + m[1] * m[1] + m[2] * m[2] - 1) < .003f);
+                }
+                for (unsigned k = 0; k < 16; ++k)
+                {
+                    assert(std::fabs(palette[j * 16 + k] - adjacent[j * 16 + k]) < .03f);
+                }
+            }
+        }
+    }
+    CharacterAnimation state;
+    auto front = ModelRig::Pose(0, true, true);
+    front.blended = true;
+    front.aimWeight = 1;
+    front.moveForward = 1.2f;
+    front.locomotionPhase = .21f;
+    auto back = front;
+    back.moveForward = -1.2f;
+    SkinMatrices forwardBones, backBones;
+    ResourceAssets::Sample(id, &front, forwardBones);
+    ResourceAssets::Sample(id, &back, backBones);
+    float lowerDifference = 0;
+    for (size_t j = 17 * 16; j < 23 * 16; ++j)
+    {
+        lowerDifference += (std::fabs(forwardBones[j] - backBones[j]));
+    }
+    assert(lowerDifference > .05f); // Real backward leg motion, not an actor rotation or a renamed clip.
+    for (int frame = 0; frame < 60; ++frame)
+    {
+        state.Update(1.f / 60, {-.6f, 0, 0}, 0, true, false);
+    }
+    auto pose = ModelRig::Pose(0, true, true);
+    state.Apply(pose);
+    assert(pose.moveForward < -.9f && std::fabs(pose.moveLeft) < .0001f && pose.aimWeight > .99f);
+    auto weights = AnimationBlendSpace::Evaluate(rig, pose.moveLeft, pose.moveForward);
+    for (size_t i = 0; i < 3; ++i)
+    {
+        if (weights.weights[i] > .001f)
+        {
+            assert(rig.samples[weights.samples[i]].clip.find("Back") != std::string::npos);
+        }
+    }
+    float phase = state.Phase();
+    for (int frame = 0; frame < 60; ++frame)
+    {
+        state.Update(1.f / 60, {}, 0, false, false);
+    }
+    assert(state.Phase() == phase && state.AimWeight() < .001f);
+    state.Fire();
+    state.Apply(pose);
+    assert(pose.fireSeconds > 0);
+    state.Update(.05f, {}, 0, false, true);
+    state.Apply(pose);
+    assert(pose.fireSeconds == 0 && pose.aimWeight == 0);
+}
 void TestCityAndTravel()
 {
     Game::Get().Reset();
@@ -1432,6 +1552,66 @@ void CaptureDeliveredUi(const std::filesystem::path &output)
     g.Resize(kCanvasWidth, kCanvasHeight);
     g.Reset();
 }
+void CaptureAnimationBlends(const std::filesystem::path &output)
+{
+    auto &renderer = GameRenderer::Get().Backend();
+    const char *labels[] = {"전진", "전진·왼쪽",   "왼쪽",   "후진·왼쪽",
+                            "후진", "후진·오른쪽", "오른쪽", "전진·오른쪽"};
+    for (int gender = 0; gender < 2; ++gender)
+    {
+        Begin();
+        renderer.BeginModels();
+        for (int direction = 0; direction < 8; ++direction)
+        {
+            auto pose = ModelRig::Pose(2, true, true, 0, false, Gender(gender));
+            pose.blended = true;
+            pose.aimWeight = 1;
+            pose.locomotionPhase = .21f;
+            float angle = direction * 6.2831853f / 8;
+            pose.moveLeft = std::sin(angle) * 1.25f;
+            pose.moveForward = std::cos(angle) * 1.25f;
+            Transform3D transform;
+            transform.yaw = -.3f;
+            Palette palette;
+            palette.body = {.55f, .72f, .78f, 1};
+            Vector2 screen = {180.f + (direction % 4) * 300, 300.f + (direction / 4) * 350};
+            Drawing::DrawModel3D(ModelLibrary::Character(CharacterType::Explorer, Gender(gender)), screen,
+                                 {3, 3, 3}, transform, 0, palette, &pose);
+            Drawing::DrawHair(screen, {3, 3, 3}, transform, 0, pose, CharacterType::Explorer, Gender(gender),
+                              HairStyle::SidePart);
+            Drawing::DrawLabel(screen.x - 65, screen.y + 35, labels[direction]);
+        }
+        renderer.EndModels();
+        renderer.EndScene(0);
+        Save(output / (gender ? "animation-aim-female.bmp" : "animation-aim-male.bmp"));
+    }
+    Begin();
+    renderer.BeginModels();
+    for (int state = 0; state < 4; ++state)
+    {
+        auto pose = ModelRig::Pose(2, true, state != 0);
+        pose.blended = true;
+        pose.moveForward = 1.8f;
+        pose.locomotionPhase = .23f;
+        pose.aimWeight = state >= 2 ? 1.f : 0;
+        if (state == 3)
+        {
+            pose.fireSeconds = .25f;
+        }
+        Transform3D transform;
+        transform.yaw = -.3f;
+        Palette palette;
+        palette.body = {.55f, .72f, .78f, 1};
+        Vector2 screen = {180.f + state * 300, 520};
+        Drawing::DrawModel3D(ModelLibrary::Character(CharacterType::Explorer, Gender::Male), screen,
+                             {4, 4, 4}, transform, 0, palette, &pose);
+        const char *names[] = {"맨손 이동", "무장 이동", "조준 이동", "사격 상체 레이어"};
+        Drawing::DrawLabel(screen.x - 80, screen.y + 45, names[state]);
+    }
+    renderer.EndModels();
+    renderer.EndScene(0);
+    Save(output / "animation-layers.bmp");
+}
 
 void CaptureChapter(const std::filesystem::path &output)
 {
@@ -1809,6 +1989,7 @@ int main(int argc, char **argv)
         return 0;
     }
     TestModelsAndRig();
+    TestAnimationBlending();
     TestHairAndBodyShape();
     TestCityAndTravel();
     TestScaleGenderAndDistrict();
@@ -1837,6 +2018,7 @@ int main(int argc, char **argv)
     CaptureChapter(output);
     CaptureDeliveredUi(output);
     CaptureMapNavigation(output);
+    CaptureAnimationBlends(output);
     CaptureCivicSystems(output);
     BenchmarkQuality(output);
     GameRenderer::Get().Shutdown();

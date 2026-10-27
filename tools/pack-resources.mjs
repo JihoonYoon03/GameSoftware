@@ -178,6 +178,8 @@ function bounds(vertices) {
 }
 const assets = [];
 const animationSamples = new Map();
+const animationRigs = new Map();
+const aimBlendSpace = JSON.parse(fs.readFileSync(path.join(resources, 'Documentation/aim_locomotion_blending.json')));
 function convert(name, relative, kind = 'prop', options = {}) {
     const template = load(relative), skin = template.json.skins?.[0], jointNames = skin?.joints.map(i => template.json.nodes[i].name) ?? ['root'];
     if (jointNames.length >= 32) throw Error('Skin palette exceeds 31 joints: ' + relative);
@@ -326,6 +328,22 @@ function convert(name, relative, kind = 'prop', options = {}) {
     // The same source rig is used by both body profiles and all hair variants.
     // Geometry fitting never changes these palettes; sample a source/basis only once.
     const animationKey = JSON.stringify([relative, kind, c]);
+    if (skin && !animationRigs.has(animationKey)) {
+        const nodeParents = new Map();
+        template.json.nodes.forEach((n, i) => (n.children ?? []).forEach(child => nodeParents.set(child, i)));
+        const inverseBinds = accessor(template, skin.inverseBindMatrices);
+        const parents = skin.joints.map(node => {
+            let parent = nodeParents.get(node);
+            while (parent !== undefined && !skin.joints.includes(parent)) parent = nodeParents.get(parent);
+            return parent === undefined ? -1 : skin.joints.indexOf(parent);
+        });
+        const bind = inverseBinds.map(m => multiply(c, multiply(inverse(m), invC)));
+        const human = kind === 'human';
+        const soles = human ? Object.entries(aimBlendSpace.blend_floor_correction.sole_bind_points).flatMap(([side, points]) =>
+            points.map(p => ({ bone: jointNames.indexOf('foot.' + side), point: point(c, [p[0], p[2], -p[1]]) }))) : [];
+        animationRigs.set(animationKey, { parents, bind, names: jointNames,
+            samples: human ? aimBlendSpace.samples : [], triangles: human ? aimBlendSpace.triangles : [], soles });
+    }
     let clips = animationSamples.get(animationKey);
     if (!clips) {
         clips = [];
@@ -369,7 +387,8 @@ function convert(name, relative, kind = 'prop', options = {}) {
     }
     if (!vertices.length || vertices.length % 3 || vertices.some(v => v.length !== 21 || v.some(n => !Number.isFinite(n)))) throw Error('Invalid converted mesh: ' + name);
     if (clips.length > maxAnimationClips) throw Error('Animation clip limit exceeded: ' + name);
-    assets.push({ name, relative, vertices, boneCount: skin?.joints.length ?? 0, clips, lo, hi, physical, sockets });
+    assets.push({ name, relative, vertices, boneCount: skin?.joints.length ?? 0, clips,
+        rig: animationRigs.get(animationKey), lo, hi, physical, sockets });
 }
 
 const recipes = JSON.parse(fs.readFileSync(path.join(resources, 'Documentation/assembly_recipes.json')));
@@ -472,6 +491,18 @@ for (const asset of assets) {
     if (sampledBankIndices.has(asset.clips)) { asset.bank = sampledBankIndices.get(asset.clips); continue; }
     const start = chunks.length;
     u32(asset.boneCount); u32(asset.clips.length);
+    for (let j = 0; j < asset.boneCount; ++j) {
+        text(asset.rig.names[j]); u32(asset.rig.parents[j] + 1); f32(asset.rig.bind[j]);
+    }
+    u32(asset.rig.samples.length);
+    for (const sample of asset.rig.samples) {
+        if (!asset.clips.some(c => c.name === sample.clip)) throw Error('Missing blend-space clip: ' + sample.clip);
+        text(sample.clip); f32(sample.velocity_mps);
+    }
+    u32(asset.rig.triangles.length);
+    for (const triangle of asset.rig.triangles) for (const index of triangle) u32(index);
+    u32(asset.rig.soles.length);
+    for (const sole of asset.rig.soles) { u32(sole.bone); f32(sole.point); }
     for (const clip of asset.clips) { text(clip.name); u32(clip.frames); f32([clip.duration]); f32(clip.matrices); f32(clip.muzzles); }
     const bytes = Buffer.concat(chunks.splice(start));
     const hash = crypto.createHash('sha256').update(bytes).digest('hex');
@@ -479,7 +510,7 @@ for (const asset of assets) {
     asset.bank = bankIndices.get(hash);
     sampledBankIndices.set(asset.clips, asset.bank);
 }
-u32(0x41524d45); u32(2); u32(assets.length); u32(banks.length);
+u32(0x41524d45); u32(3); u32(assets.length); u32(banks.length);
 chunks.push(...banks);
 for (const asset of assets) {
     text(asset.name); text(asset.relative); u32(asset.vertices.length); u32(asset.boneCount); u32(asset.bank);
@@ -488,7 +519,7 @@ for (const asset of assets) {
 }
 const binary = Buffer.concat(chunks), digest = crypto.createHash('sha256').update(binary).digest('hex');
 if (binary.length > maxPackBytes) throw Error('Resource pack exceeds the runtime size limit');
-const report = { schema: 'game_resource_pack_v2', converter: 'tools/pack-resources.mjs', bytes: binary.length, sha256: digest,
+const report = { schema: 'game_resource_pack_v3', converter: 'tools/pack-resources.mjs', bytes: binary.length, sha256: digest,
     animationBanks: banks.length,
     buildInputs: buildInputHashes(root),
     sources: Object.fromEntries([...inputs].sort()), assets: assets.map(a => ({ name: a.name, source: a.relative, triangles: a.vertices.length / 3,

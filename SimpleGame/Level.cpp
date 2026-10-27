@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include "Level.h"
 #include "Civic.h"
 #include "Hud.h"
@@ -607,12 +607,13 @@ void MineCombat::Attack()
         return;
     }
     combat::Shot shot;
-    if (!state.pistol.TryFire(level.GetAimAngle(), shot))
+    if (!state.pistol.TryFire(GameLevels::FireAngle(), shot))
     {
         return;
     }
-    auto aim = level.GetAimDirection(level.GetAimAngle());
-    auto pose = models::ModelRig::Pose(0, false, true, 1);
+    auto aim = level.GetAimDirection(GameLevels::FireAngle());
+    world.playerAnimation.Fire();
+    auto pose = tutorial::Game::Get().PlayerPose(1);
     auto muzzle = models::ModelRig::Muzzle(pose);
     float muzzleDistance =
         std::sqrt(muzzle.x * muzzle.x + muzzle.y * muzzle.y) * models::WorldScale::characterScale;
@@ -639,7 +640,7 @@ void MineCombat::Melee()
         return;
     }
     state.meleeSeconds = .65f;
-    auto aim = level.GetAimDirection(level.GetAimAngle());
+    auto aim = level.GetAimDirection(GameLevels::FireAngle());
     size_t closest = state.enemies.size();
     float best = .85f;
     for (size_t i = 0; i < state.enemies.size(); ++i)
@@ -1302,7 +1303,7 @@ void MineLevel::ClearInput()
     tutorial::WeaponWheel::Close();
     world.mapVisible = false;
     std::fill(world.pressedKeys, world.pressedKeys + 256, false);
-    world.mouseFiring = false;
+    world.mouseFiring = world.mouseAiming = false;
 }
 
 bool MineLevel::IsNear(tutorial::Vector2 position)
@@ -1414,7 +1415,7 @@ void MineLevel::Reset()
 {
     auto &world = tutorial::Game::Get().GetState();
     state = MineState{};
-    world.mouseFiring = false;
+    world.mouseFiring = world.mouseAiming = false;
 }
 
 void MineLevel::Restart()
@@ -1856,7 +1857,7 @@ void ChapterOneLevel::Enter(bool debugEntry)
     auto &world = tutorial::Game::Get().GetState();
     world.isBikeMounted = false;
     world.bikeSpeed = 0;
-    world.isInsideHome = world.isInObservatory = world.mouseFiring = false;
+    world.isInsideHome = world.isInObservatory = world.mouseFiring = world.mouseAiming = false;
     std::fill(std::begin(world.pressedKeys), std::end(world.pressedKeys), false);
     world.playerPosition = world.cameraPosition = kFrontierEntry;
     state.ria.position = {6.5f, 6.5f};
@@ -1880,7 +1881,7 @@ void ChapterOneLevel::Leave()
     state.bullets.clear();
     state.tracers.clear();
     auto &world = tutorial::Game::Get().GetState();
-    world.mouseFiring = false;
+    world.mouseFiring = world.mouseAiming = false;
     std::fill(std::begin(world.pressedKeys), std::end(world.pressedKeys), false);
     world.playerPosition = world.cameraPosition = tutorial::kCityReceiverPosition;
     tutorial::Game::Get().ShowNotice(
@@ -2216,7 +2217,7 @@ void FrontierCombat::Attack()
         return;
     }
     combat::Shot shot;
-    if (!mine.pistol.TryFire(level.GetAimAngle(), shot))
+    if (!mine.pistol.TryFire(GameLevels::FireAngle(), shot))
     {
         return;
     }
@@ -2224,8 +2225,9 @@ void FrontierCombat::Attack()
                                   MineLevel::GetAimDirection(shot.angle), shot.speed, shot.range,
                                   shot.damage + (mine.player.level - 1) * 4, true},
                                  ChapterTeam::Player};
-    auto muzzle = models::ModelRig::Muzzle(models::ModelRig::Pose(0, false, true, 1));
-    Advance(projectile, muzzle.x * models::WorldScale::characterScale);
+    tutorial::Game::Get().GetState().playerAnimation.Fire();
+    auto muzzle = models::ModelRig::Muzzle(tutorial::Game::Get().PlayerPose(1));
+    Advance(projectile, std::hypot(muzzle.x, muzzle.y) * models::WorldScale::characterScale);
     if (projectile.shot.remaining > 0)
     {
         state.bullets.push_back(projectile);
@@ -2247,7 +2249,7 @@ void FrontierCombat::Melee()
     {
         return;
     }
-    auto aim = MineLevel::GetAimDirection(level.GetAimAngle());
+    auto aim = MineLevel::GetAimDirection(GameLevels::FireAngle());
     FrontierPerson *closest = nullptr;
     float best = .85f;
     for (auto &person : state.scrappers)
@@ -2616,6 +2618,17 @@ bool GameLevels::IsCombatActive()
 float GameLevels::AimAngle()
 {
     return Chapter().IsActive() ? Chapter().GetAimAngle() : Mine().GetAimAngle();
+}
+float GameLevels::FireAngle()
+{
+    auto &game = tutorial::Game::Get();
+    if (game.IsAiming())
+    {
+        return AimAngle();
+    }
+    float yaw = game.GetState().facingYaw;
+    float x = std::cos(yaw), y = std::sin(yaw);
+    return std::atan2((x + y) * .5f, x - y);
 }
 float GameLevels::MuzzleFlash()
 {

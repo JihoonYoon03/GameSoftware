@@ -2003,6 +2003,7 @@ void Overworld::ToggleBike(GameState &state)
             {
                 state.playerPosition = position;
                 state.isBikeMounted = false;
+                state.mouseFiring = state.mouseAiming = false;
                 state.bikeSpeed = 0;
                 Game::Get().ShowNotice("바이크 / 하차했습니다. 주차 위치는 유지됩니다.");
                 return;
@@ -2012,6 +2013,7 @@ void Overworld::ToggleBike(GameState &state)
         return;
     }
     state.isBikeMounted = true;
+    state.mouseFiring = state.mouseAiming = false;
     state.playerPosition = state.bikePosition;
     state.bikeSpeed = 0;
     Game::Get().ShowNotice(

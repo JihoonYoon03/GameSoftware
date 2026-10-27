@@ -678,14 +678,6 @@ void DrawSchematic(const SchematicView &view, bool full)
     DrawDestination(view, full);
     const auto &world = Game::Get().GetState();
     float heading = world.isBikeMounted ? world.bikeYaw : world.facingYaw;
-    if (game::GameLevels::Mine().GetState().loadout.IsPistolEquipped() &&
-        (game::GameLevels::IsCombatActive() || CivicCombat::Available()))
-    {
-        float angle = game::GameLevels::Chapter().IsActive() ? game::GameLevels::Chapter().GetAimAngle()
-                                                             : game::GameLevels::Mine().GetAimAngle();
-        auto aim = game::MineLevel::GetAimDirection(angle);
-        heading = std::atan2(aim.y, aim.x);
-    }
     DirectionArrow(view.Project(PlayerMapPosition()), heading + kPi * .25f, full ? 8.f : 10.f,
                    {.25f, 1, .94f});
 }
@@ -1289,7 +1281,7 @@ void Hud::DrawVitals()
                 UiText(1248, 705, "R 재장전", 17, {1, .77f, .4f}, true, true);
             }
         }
-        if (w.cursorInsideViewport && !w.weaponWheel.visible)
+        if (w.cursorInsideViewport && !w.weaponWheel.visible && Game::Get().IsAiming())
         {
             auto c = w.cursorPosition;
             float gap = 6 + gun.GetSpread() * 120;
@@ -1316,11 +1308,15 @@ void Hud::DrawVitals()
     {
         UiText(1248, 736, "맨손", 25, kUiInk, true, true);
         UiText(1248, 764, "좌클릭 근접 · Q 홀드 무기 선택", 15, kUiInk, true, true);
-        if (w.cursorInsideViewport && !w.weaponWheel.visible)
+    }
+    if (combat && !Game::Get().IsAiming() && w.cursorInsideViewport && !w.weaponWheel.visible)
+    {
+        auto p = w.cursorPosition;
+        Drawing::DrawEllipse(p.x, p.y, 5, 5, {.02f, .05f, .06f, .8f});
+        Drawing::DrawEllipse(p.x, p.y, 2, 2, {.75f, .96f, .9f});
+        if (mine.loadout.IsPistolEquipped())
         {
-            auto p = w.cursorPosition;
-            Drawing::DrawEllipse(p.x, p.y, 5, 5, {.02f, .05f, .06f, .8f});
-            Drawing::DrawEllipse(p.x, p.y, 2, 2, {.75f, .96f, .9f});
+            UiText(1248, 683, "우클릭 홀드 · 조준", 15, kUiInk, true, true);
         }
     }
     const auto &law = CivicJustice::State();
@@ -1386,7 +1382,7 @@ void Hud::OpenMenu(UiScreen screen)
     w.ui.pressed = -1;
     w.isPaused = screen != UiScreen::None;
     w.mapVisible = w.journalVisible = w.dialogueHistoryVisible = false;
-    w.mouseFiring = false;
+    w.mouseFiring = w.mouseAiming = false;
     w.movementAmount = w.movementSpeed = 0;
     std::fill(std::begin(w.pressedKeys), std::end(w.pressedKeys), false);
 }
@@ -1939,7 +1935,7 @@ void Hud::DrawMenu()
     }
     if (screen == UiScreen::Help)
     {
-        const char *rows[] = {"WASD 이동 · 마우스 조준 · 좌클릭 장착 무기 공격",
+        const char *rows[] = {"WASD 이동·회전 · 우클릭 홀드 마우스 조준 · 좌클릭 공격",
                               "Q 홀드 + 마우스 무기 선택 · V 근접 · R 재장전",
                               "E 조사·대화·승하차 · G 회복 (광산·1장)",
                               "바이크 W 가속 / S 제동·후진 / AD 조향 / Space 부스트",

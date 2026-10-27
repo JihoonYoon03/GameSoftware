@@ -291,6 +291,9 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                                  : level.loadout.Selected() == combat::WeaponSlot::Primary ? "primary"
                                                                                            : "secondary");
     player.Bool("weapon_wheel_open", world.weaponWheel.visible);
+    player.Bool("aiming", tutorial::Game::Get().IsAiming());
+    player.Seconds("animation_phase", world.playerAnimation.Phase());
+    player.Seconds("aim_layer_weight", world.playerAnimation.AimWeight());
     player.Number("magazine_rounds", level.pistol.GetRounds());
     player.Number("magazine_capacity", level.pistol.GetMagazineSize());
     player.Bool("reloading", level.pistol.IsReloading());

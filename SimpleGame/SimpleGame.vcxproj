@@ -178,6 +178,7 @@
   <ItemGroup>
     <ClInclude Include="Actor\Actor.h" />
     <ClInclude Include="AssetCache.h" />
+    <ClInclude Include="Animation.h" />
     <ClInclude Include="Drawing.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Civic.h" />
@@ -203,6 +204,7 @@
     <ClInclude Include="targetver.h" />
     <ClCompile Include="Actor\Actor.cpp" />
     <ClCompile Include="AssetCache.cpp" />
+    <ClCompile Include="Animation.cpp" />
     <ClCompile Include="Drawing.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Civic.cpp" />

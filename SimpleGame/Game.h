@@ -1,6 +1,7 @@
 #pragma once
 #include "ModelLibrary.h"
 #include "Weapon.h"
+#include "Animation.h"
 #include <string>
 #include <functional>
 #include <map>
@@ -325,6 +326,8 @@ struct GameState
     Vector2 cursorWindowPosition = {900, 400};
     bool cursorInsideViewport = true;
     bool mouseFiring = false;
+    bool mouseAiming = false;
+    models::CharacterAnimation playerAnimation;
     bool interactionHeld = false;
     bool dialogueEnterHeld = false;
     bool isInsideHome = true;
@@ -408,6 +411,8 @@ class Game
     void MouseEntry(int state);
     // Deterministic simulation step, also used by the window timer.
     void Update(float deltaSeconds);
+    bool IsAiming() const;
+    models::CharacterPose PlayerPose(float recoil = 0) const;
     void Tick(int timer);
     static float Clamp(float value, float minimum, float maximum);
     static float Distance(Vector2 first, Vector2 second);

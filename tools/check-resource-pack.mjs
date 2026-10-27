@@ -32,7 +32,7 @@ function sourceTriangles(relative) {
     source.scenes[source.scene ?? 0].nodes.forEach(visit);
     return triangles;
 }
-assert.equal(manifest.schema, 'game_resource_pack_v2');
+assert.equal(manifest.schema, 'game_resource_pack_v3');
 assert.ok(data.length <= maxPackBytes);
 assert.equal(data.length, manifest.bytes);
 assert.equal(crypto.createHash('sha256').update(data).digest('hex'), manifest.sha256);
@@ -54,7 +54,7 @@ function text() {
     return result;
 }
 assert.equal(u32(), 0x41524d45);
-assert.equal(u32(), 2);
+assert.equal(u32(), 3);
 const count = u32(), names = new Set();
 const bankCount = u32(), banks = [];
 assert.equal(bankCount, manifest.animationBanks);
@@ -62,6 +62,18 @@ assert.ok(bankCount > 0 && bankCount <= 512);
 for (let bank = 0; bank < bankCount; ++bank) {
     const bones = u32(), clips = u32(), clipNames = [], gear = new Map();
     assert.ok(bones > 0 && bones < 32 && clips > 0 && clips <= maxAnimationClips);
+    const boneNames = [];
+    for (let j = 0; j < bones; ++j) {
+        boneNames.push(text()); const parent = u32() - 1; floats(16);
+        assert.ok(parent >= -1 && parent < bones && parent !== j);
+    }
+    const sampleCount = u32(), samples = [];
+    for (let j = 0; j < sampleCount; ++j) { samples.push(text()); floats(2); }
+    const triangleCount = u32();
+    for (let j = 0; j < triangleCount * 3; ++j) assert.ok(u32() < sampleCount);
+    const soleCount = u32();
+    for (let j = 0; j < soleCount; ++j) { assert.ok(u32() < bones); floats(3); }
+    if (bones === 23) { assert.equal(sampleCount, 17); assert.equal(triangleCount, 24); assert.equal(soleCount, 4); }
     for (let clip = 0; clip < clips; ++clip) {
         const name = text(); clipNames.push(name);
         const frames = u32(), [duration] = floats(1);
@@ -72,6 +84,7 @@ for (let bank = 0; bank < bankCount; ++bank) {
         animationFrames += frames;
     }
     assert.equal(new Set(clipNames).size, clips);
+    for (const sample of samples) assert.ok(clipNames.includes(sample));
     banks.push({ bones, clipNames, gear });
 }
 const signalDigests = new Set();

@@ -23,7 +23,7 @@ test('freshness detects missing, stale and corrupt caches after a pull', () => {
         fs.mkdirSync(folder);
         const binary = path.join(folder, 'game-assets.bin');
         fs.writeFileSync(binary, Buffer.alloc(12));
-        const manifest = { schema: 'game_resource_pack_v2', bytes: 12, sha256: fileHash(binary),
+        const manifest = { schema: 'game_resource_pack_v3', bytes: 12, sha256: fileHash(binary),
             assets: [{ name: 'test' }], sources: { 'Characters/Test': fileHash(source) },
             buildInputs: buildInputHashes(fixture) };
         const save = () => fs.writeFileSync(path.join(folder, 'manifest.json'), JSON.stringify(manifest));

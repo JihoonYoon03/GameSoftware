@@ -436,6 +436,10 @@ void AimAt(Vector2 target)
         {tutorial::kCanvasWidth * .5f + (target.x - target.y - camera.x + camera.y) * 36,
          tutorial::kCanvasHeight * .57f + (target.x + target.y - camera.x - camera.y) * 18 -
              models::WorldScale::aimHeightPixels});
+    auto &w = tutorial::Game::Get().GetState();
+    w.mouseAiming = true;
+    auto direction = game::MineLevel::GetAimDirection(game::GameLevels::AimAngle());
+    w.facingYaw = std::atan2(direction.y, direction.x);
 }
 void Step(float seconds)
 {
@@ -1235,7 +1239,7 @@ void TestAimLightingAndWallShots()
     assert(GameLevels::Mine().Lighting().At({24.5f, 13.5f}) < .01f);
     GameLevels::Mine().Combat().Attack();
     assert(mineState.bullets.size() == 1);
-    auto muzzle = models::ModelRig::Muzzle(models::ModelRig::Pose(0, false, true, 1));
+    auto muzzle = models::ModelRig::Muzzle(tutorial::Game::Get().PlayerPose(1));
     // Wall-safe muzzle advance follows the aim ray, before spread is applied.
     float muzzleDistance = std::hypot(muzzle.x, muzzle.y) * models::WorldScale::characterScale;
     assert(std::fabs(mineState.bullets[0].position.x - 24.5f) < .0001f);
@@ -1901,6 +1905,84 @@ void TestBikeSpeedsAndSliding()
     assert(overlap.x <= .501f && overlap.y > .9f);
     game.Reset();
 }
+void TestAimMovementAndLayers()
+{
+    using namespace tutorial;
+    auto &g = Game::Get();
+    g.EnterTestStage(TestStage::Mine);
+    g.Resize(1280, 800);
+    auto &w = g.GetState();
+    std::fill(mineState.tiles.begin(), mineState.tiles.end(), Tile::Floor);
+    mineState.enemies.clear();
+    mineState.survivors.clear();
+    w.playerPosition = w.cameraPosition = {20.5f, 20.5f};
+    for (auto slot : {combat::WeaponSlot::Unarmed, combat::WeaponSlot::Secondary})
+    {
+        mineState.loadout.Select(slot);
+        g.MouseMotion(100, 300);
+        auto before = w.playerPosition;
+        g.KeyDown('d', 0, 0);
+        g.Update(1.f / 60);
+        g.KeyUp('d', 0, 0);
+        auto delta = Vector2{w.playerPosition.x - before.x, w.playerPosition.y - before.y};
+        assert(std::fabs(std::remainder(w.facingYaw - std::atan2(delta.y, delta.x), 2 * kPi)) < .001f);
+        float yaw = w.facingYaw;
+        g.MouseMotion(1000, 680);
+        g.Update(1.f / 60);
+        assert(w.facingYaw == yaw && !g.IsAiming());
+    }
+    mineState.loadout.Select(combat::WeaponSlot::Unarmed);
+    g.MouseButton(GLUT_RIGHT_BUTTON, GLUT_DOWN, 100, 300);
+    assert(!g.IsAiming());
+    mineState.loadout.Select(combat::WeaponSlot::Secondary);
+    g.MouseButton(GLUT_RIGHT_BUTTON, GLUT_DOWN, 100, 300);
+    assert(g.IsAiming());
+    g.KeyDown('d', 0, 0);
+    auto before = w.playerPosition;
+    for (int frame = 0; frame < 30; ++frame)
+    {
+        g.Update(1.f / 60);
+    }
+    assert(w.playerPosition.x > before.x && w.playerPosition.y < before.y);
+    auto aim = MineLevel::GetAimDirection(GameLevels::AimAngle());
+    assert(std::cos(w.facingYaw) * aim.x + std::sin(w.facingYaw) * aim.y > .995f);
+    auto pose = g.PlayerPose();
+    assert(pose.blended && pose.moveForward < 0 && pose.aimWeight > .99f);
+    g.MouseButton(GLUT_RIGHT_BUTTON, GLUT_UP, 100, 300);
+    g.Update(1.f / 60);
+    assert(!g.IsAiming() && std::fabs(w.facingYaw + kPi / 4) < .001f);
+    g.KeyUp('d', 0, 0);
+    g.MouseButton(GLUT_RIGHT_BUTTON, GLUT_DOWN, 100, 300);
+    Hud::OpenMenu(UiScreen::Pause);
+    assert(!w.mouseAiming && !g.IsAiming());
+    Hud::CloseMenu();
+    assert(!g.IsAiming());
+    g.MouseButton(GLUT_RIGHT_BUTTON, GLUT_DOWN, 100, 300);
+    g.KeyDown('q', 0, 0);
+    assert(w.weaponWheel.visible && !w.mouseAiming);
+    g.KeyUp('q', 0, 0);
+    g.MouseButton(GLUT_RIGHT_BUTTON, GLUT_DOWN, 100, 300);
+    g.MouseEntry(GLUT_LEFT);
+    assert(!w.mouseAiming);
+    w.cursorInsideViewport = true;
+    // Hip fire follows the moving actor; aiming fire follows the cursor. Both use the same pose.
+    w.facingYaw = .4f;
+    mineState.meleeSeconds = 0;
+    mineState.pistol.Reset();
+    mineState.bullets.clear();
+    GameLevels::Mine().Combat().Attack();
+    assert(mineState.bullets.size() == 1);
+    auto direction = mineState.bullets.front().direction;
+    assert(direction.x * std::cos(.4f) + direction.y * std::sin(.4f) > .99f);
+    assert(g.PlayerPose().fireSeconds > 0);
+    g.MouseButton(GLUT_RIGHT_BUTTON, GLUT_DOWN, 100, 300);
+    GameLevels::Mine().Leave();
+    assert(!w.mouseAiming);
+    w.mouseFiring = w.mouseAiming = true;
+    Overworld::ToggleBike(w);
+    assert(w.isBikeMounted && !w.mouseAiming && !w.mouseFiring);
+    g.Reset();
+}
 } // namespace
 int main(int argc, char **argv)
 {
@@ -1917,6 +1999,7 @@ int main(int argc, char **argv)
         std::cout << "Urban traffic, crossing and resident checks passed.\n";
         return 0;
     }
+    TestAimMovementAndLayers();
     TestStageSelectionAndLoadout();
     TestUiMenusAndTransactions();
     TestDialogueProgress();

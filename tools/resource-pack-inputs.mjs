@@ -9,7 +9,8 @@ const buildFiles = [
     'Resource/Documentation/assembly_recipes.json', 'Resource/Documentation/accessory_fitting_offsets.json',
     'Resource/Documentation/character_detail_assemblies.json', 'Resource/Documentation/architecture_styles.json',
     'Resource/Documentation/scenery_assemblies.json', 'Resource/Documentation/transit_modules.json',
-    'Resource/Documentation/road_plan_modules.json', 'SimpleGame/RoadPlanCatalog.h'
+    'Resource/Documentation/road_plan_modules.json', 'SimpleGame/RoadPlanCatalog.h',
+    'Resource/Documentation/aim_locomotion_blending.json'
 ];
 export function fileHash(filename) {
     return crypto.createHash('sha256').update(fs.readFileSync(filename)).digest('hex');
@@ -32,7 +33,7 @@ export function resourcePackStatus(root) {
         const manifest = JSON.parse(fs.readFileSync(path.join(folder, 'manifest.json'), 'utf8'));
         const binary = path.join(folder, 'game-assets.bin');
         const size = fs.statSync(binary).size;
-        if (manifest.schema !== 'game_resource_pack_v2' || size !== manifest.bytes ||
+        if (manifest.schema !== 'game_resource_pack_v3' || size !== manifest.bytes ||
             size < 12 || size > maxPackBytes || !manifest.assets?.length || !manifest.sources ||
             !Object.keys(manifest.sources).length) return { current: false, reason: 'invalid resource pack' };
         if (JSON.stringify(manifest.buildInputs) !== JSON.stringify(buildInputHashes(root)))

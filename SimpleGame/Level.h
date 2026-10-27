@@ -519,6 +519,7 @@ class GameLevels
     static ChapterOneLevel &Chapter();
     static bool IsCombatActive();
     static float AimAngle();
+    static float FireAngle();
     static float MuzzleFlash();
     static Level *Active();
     static void Reset();

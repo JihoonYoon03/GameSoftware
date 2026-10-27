@@ -35,6 +35,9 @@ void Aim(Vector2 target)
     World().cursorPosition = WorldCamera::ToViewport(
         Drawing::WorldToScreen(target.x, target.y, models::WorldScale::aimHeightPixels));
     World().cursorInsideViewport = true;
+    World().mouseAiming = true;
+    auto direction = game::MineLevel::GetAimDirection(game::GameLevels::AimAngle());
+    World().facingYaw = std::atan2(direction.y, direction.x);
 }
 Resident Person(Vector2 position)
 {
@@ -664,6 +667,7 @@ void TestQualifyingDamageAndAircraft()
             World().playerPosition = World().cameraPosition = origin;
             World().cursorPosition = WorldCamera::ToViewport(Drawing::WorldToScreen(
                 craft.position.x + center.x, craft.position.y + center.y, center.z * 44));
+            World().mouseAiming = true;
             game::GameLevels::Mine().GetState().pistol.Reset();
             law.airBullets.clear();
             law.bullets.clear();

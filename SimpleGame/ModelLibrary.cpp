@@ -60,6 +60,7 @@ Point CharacterPose::Apply(Point p, Joint joint) const
 CharacterPose ModelRig::Pose(float phase, bool walking, bool armed, float recoil, bool riding, Gender gender)
 {
     CharacterPose p{};
+    p.gender = gender;
     p.armed = armed;
     p.walking = walking;
     p.riding = riding;

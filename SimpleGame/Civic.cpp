@@ -545,7 +545,7 @@ void TransferToHospital()
     auto hospital =
         civic.hospitals.empty() ? HospitalSite{0, kHomeDoor} : civic.hospitals[size_t(civic.hospital)];
     world.isInsideHome = world.isInObservatory = world.isBikeMounted = world.mapVisible = world.mouseFiring =
-        false;
+        world.mouseAiming = false;
     world.playerPosition = world.cameraPosition = hospital.position;
     world.bikeSpeed = world.bikeElevation = 0;
     world.bikePosition = hospital.position;
@@ -1257,12 +1257,13 @@ void CivicCombat::Fire()
     }
     combat::Shot shot;
     if (civic.bullets.size() + civic.airBullets.size() >= 96 ||
-        !mine.GetState().pistol.TryFire(mine.GetAimAngle(), shot))
+        !mine.GetState().pistol.TryFire(game::GameLevels::FireAngle(), shot))
     {
         return;
     }
+    world.playerAnimation.Fire();
     models::Point target{};
-    if (AimAtAirTraffic(shot.angle, target))
+    if (Game::Get().IsAiming() && AimAtAirTraffic(shot.angle, target))
     {
         models::Point origin{world.playerPosition.x, world.playerPosition.y,
                              models::WorldScale::aimHeightPixels / 44};
@@ -1291,7 +1292,7 @@ void CivicCombat::Melee()
     }
     civic.meleeSeconds = .65f;
     auto &world = Game::Get().GetState();
-    auto aim = game::MineLevel::GetAimDirection(game::GameLevels::Mine().GetAimAngle());
+    auto aim = game::MineLevel::GetAimDirection(game::GameLevels::FireAngle());
     auto hit = [&](Vector2 p) {
         auto d = Sub(p, world.playerPosition);
         float range = std::hypot(d.x, d.y);
@@ -1860,7 +1861,7 @@ void HospitalRecovery::Begin()
     Dialogue::Interrupt();
     civic.recovery = RecoveryPhase::FadeOut;
     civic.recoverySeconds = 0;
-    world.mouseFiring = false;
+    world.mouseFiring = world.mouseAiming = false;
     world.mapVisible = false;
     world.isPaused = false;
     world.bikeSpeed = 0;

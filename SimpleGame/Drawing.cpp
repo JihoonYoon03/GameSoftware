@@ -453,11 +453,6 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
                       ? game::GameLevels::Chapter().GetState().meleeSeconds
                   : CivicJustice::IsExterior() ? CivicJustice::State().meleeSeconds
                                                : 0;
-    if (isPlayer && (armed || melee > 0))
-    {
-        auto dir = game::GameLevels::Mine().GetAimDirection(game::GameLevels::AimAngle());
-        yaw = std::atan2(dir.y, dir.x);
-    }
     float flash = isPlayer ? (CivicCombat::Available() ? CivicJustice::State().muzzleFlash
                                                        : game::GameLevels::MuzzleFlash())
                            : npcFlash;
@@ -471,6 +466,10 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
                                        armed ? flash / .055f : 0, false, gender);
     pose.meleeSeconds = melee;
     pose.locomotionSpeed = isPlayer ? world.movementSpeed : locomotionSpeed;
+    if (isPlayer)
+    {
+        pose = Game::Get().PlayerPose(armed ? flash / .055f : 0);
+    }
     models::Palette palette;
     palette.body = {coat.r, coat.g, coat.b, coat.a};
     models::Transform3D rotation;

@@ -185,6 +185,10 @@ struct CharacterPose
     bool walking = false, riding = false;
     float animationPhase = 0, recoil = 0, locomotionSpeed = 2.1f;
     float meleeSeconds = 0;
+    // Explicit graph inputs; legacy NPC callers retain their armed/forward locomotion defaults.
+    bool blended = false;
+    Gender gender = Gender::Male;
+    float locomotionPhase = 0, moveLeft = 0, moveForward = 0, aimWeight = 0, fireSeconds = 0;
     Point Apply(Point point, Joint joint) const;
 };
 // ============================================================================
