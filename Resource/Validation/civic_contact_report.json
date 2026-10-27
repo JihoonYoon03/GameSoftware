@@ -31,15 +31,15 @@
       ]
     }
   },
-  "weapon_grip_max_matrix_error": 7.450580596923828e-07,
+  "weapon_grip_max_matrix_error": 8.642673492431641e-07,
   "masked_hit_lower_body_max_matrix_error": 0,
   "rider": {
-    "max_contact_drift_m": 5.204751848153168e-07,
-    "max_anchor_alignment_error_m": 0.000361791267709115,
+    "max_contact_drift_m": 4.248791166956202e-07,
+    "max_anchor_alignment_error_m": 0.00036161057315602514,
     "anchors_vehicle_m": {
       "hand.L": [
-        0.3000984191894531,
-        0.20900015532970428,
+        0.3000982999801636,
+        0.2089998871088028,
         0.8943476676940918
       ],
       "foot.L": [
@@ -48,8 +48,8 @@
         0.44249996542930603
       ],
       "hand.R": [
-        0.30009835958480835,
-        -0.20900021493434906,
+        0.3000982403755188,
+        -0.20899994671344757,
         0.8943476676940918
       ],
       "foot.R": [
@@ -64,6 +64,6 @@
       ]
     }
   },
-  "getup_left_hand_min_z_at_support_m": 0.006603718269616365,
+  "getup_left_hand_min_z_at_support_m": 0.006599897518754005,
   "all_checks_passed": true
 }

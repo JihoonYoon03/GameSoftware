@@ -93,9 +93,9 @@ def feet(p,targets=None,deltas=None,poles=None):
 
 def arms(p,targets=None,deltas=None,poles=None):
     for suffix,s in [('L',1),('R',-1)]:
-        target=targets[suffix] if targets else (s*.30,.025,.97)
+        target=targets[suffix] if targets else (s*.27,.005,.94)
         p.chain('upper_arm.'+suffix,'forearm.'+suffix,'hand.'+suffix,target,
-                poles[suffix] if poles else (s,-.1,-.2),
+                poles[suffix] if poles else (s*.06,1,-.15),
                 deltas[suffix] if deltas else rz(-s*.15))
 
 def standing(rig,t=0,breath=True):
@@ -106,13 +106,14 @@ def standing(rig,t=0,breath=True):
     arms(p);feet(p)
     return p
 
-def aim(p,recoil=0,torso=0):
+def aim(p,recoil=0,torso=0,offset=(0,0,0)):
     p.relative('spine',rx(.025+torso));p.relative('chest',rx(-.018-.035*recoil))
     # Both wrist targets follow a single rigid weapon transform, maintaining grip.
     weapon=rx(-PI/2-.10*recoil)
-    right=Vector((-.11,-.465+.027*recoil,1.325+.014*recoil))
+    right=Vector((-.075,-.36+.027*recoil,1.40+.014*recoil))+Vector(offset)
     left=right+weapon@Vector((.030,-.020,.065))
-    arms(p,{'R':right,'L':left},{'R':weapon,'L':weapon@rz(-.32)})
+    arms(p,{'R':right,'L':left},{'R':weapon,'L':weapon@rz(-.32)},
+         {'R':(-.15,.1,-1),'L':(.15,.1,-1)})
 
 def locomotion(rig,cycle,fast=0,flee=False):
     p=Pose(rig);q=TAU*cycle
@@ -155,8 +156,47 @@ def locomotion(rig,cycle,fast=0,flee=False):
     for suffix,phase,s in [('L',0,1),('R',PI,-1)]:
         a=q+phase;swing=math.cos(a)
         # Relaxed shoulders; elbows fold more during fast recovery, not locked A-pose.
-        wrist=(s*(.29+.025*fast),(.16+.17*fast)*swing,.97+.15*fast+.035*math.sin(a))
-        p.chain('upper_arm.'+suffix,'forearm.'+suffix,'hand.'+suffix,wrist,(s,.15,-.25),rx(-.15-.50*fast)@rz(-s*.12))
+        wrist=p.point('chest',(s*.27,0,.965+.17*fast))
+        wrist.y+=(.13+.12*fast)*swing;wrist.z+=.018*math.sin(a-.3)
+        p.chain('upper_arm.'+suffix,'forearm.'+suffix,'hand.'+suffix,wrist,(s*.08,1,-.12),rx(-.10-.35*fast)@rz(-s*.08))
+    return p
+
+DIRECTION_ANGLES={'Forward':0,'ForwardLeft':45,'Left':90,'BackLeft':135,'Back':180,
+                  'BackRight':-135,'Right':-90,'ForwardRight':-45}
+
+def aim_speed(direction,fast=False):
+    a=abs(DIRECTION_ANGLES[direction])
+    return ({0:1.8,45:1.5,90:1.25,135:1.2,180:1.2} if fast else
+            {0:.90,45:.75,90:.65,135:.65,180:.65})[a]
+
+def aim_locomotion(rig,cycle,direction,fast=False):
+    """Fixed facing, synchronized feet, uncrossed sidesteps, common rigid grip."""
+    p=Pose(rig);q=TAU*cycle;angle=math.radians(DIRECTION_ANGLES[direction])
+    travel=Vector((math.sin(angle),-math.cos(angle),0));side=abs(travel.x)
+    stance=.4 if fast else .6;period=2/3 if fast else 1.;stride=aim_speed(direction,fast)*period
+    half=stride*stance*.5;width=.16+.10*side
+    bob=-.07-(.012 if fast else .008)*math.sin(2*q)
+    p.translate('pelvis',(.006*math.sin(q),0,bob))
+    p.relative('pelvis',ry(.008*math.sin(q)))
+    targets={};deltas={}
+    for suffix,phase,s in [('L',0,1),('R',.5,-1)]:
+        f=(cycle+phase)%1
+        if f<stance:
+            along=half-stride*f;lift=0
+            roll=(-.09*(1-smooth(f/.10))+.18*smooth((f-(stance-.12))/.12))*math.cos(angle)
+        else:
+            u=(f-stance)/(1-stance);m=-stride*(1-stance)
+            along=(2*u**3-3*u*u+1)*(-half)+(u**3-2*u*u+u)*m+(-2*u**3+3*u*u)*half+(u**3-u*u)*m
+            lift=(.14 if fast else .085)*math.sin(PI*u)**1.4
+            roll=(.18*(1-smooth(u/.35))-.09*smooth((u-.62)/.38))*math.cos(angle)
+        rotation=rx(roll);center=Vector((s*width,0,.14))+travel*along
+        # For strafing the soles stay facing the target; no whole-clip yaw trick.
+        low=min((rotation@Vector((0,yy,-.14))).z for yy in [-.195,.065])
+        center.z=max(.14,lift-low)
+        targets[suffix]=center;deltas[suffix]=rotation
+    feet(p,targets,deltas)
+    aim(p,offset=(.0015*math.sin(q),0,.0015*math.sin(2*q)))
+    p.relative('neck',rx(.025));p.relative('head',ry(-.006*math.sin(q)))
     return p
 
 def side_down(rig,breath=0,dead=False):
@@ -277,6 +317,8 @@ def knock(rig,t,direction,death=False):
 def human_pose(rig,clip,t):
     if clip in ['Reference_A','Turn_Base']:return Pose(rig)
     if clip=='Idle':return standing(rig,t)
+    if clip.startswith(('Aim_Walk_','Aim_Run_')):
+        return aim_locomotion(rig,t,clip.split('_',2)[2],clip.startswith('Aim_Run_'))
     if clip in ['Walk','Run','Walk_To_Run','Flee_Run']:
         cycle=.8*t+.2*t*t if clip=='Walk_To_Run' else t
         fast=0 if clip=='Walk' else smooth(t) if clip=='Walk_To_Run' else 1
@@ -347,6 +389,8 @@ NEW_HUMAN=[*(('Hit_'+d,9,False) for d in ['Front','Back','Left','Right']),
            ('Medical_GetUp',42,False),('Ride_Base',1,False),('Rider_Brace',15,False)]
 NEW_HUMAN += [('Downed_'+d+'_Loop',60,True) for d in ['Back','Left','Right']]
 NEW_HUMAN += [('GetUp_'+d,42,False) for d in ['Left','Right']]
+NEW_HUMAN += [('Aim_'+speed+'_'+d,30 if speed=='Walk' else 20,True)
+              for speed in ['Walk','Run'] for d in DIRECTION_ANGLES]
 
 def vehicle_pose(rig,clip,t):
     p=Pose(rig)

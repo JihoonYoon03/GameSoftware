@@ -1,0 +1,23 @@
+{
+  "projects": {
+    "Erma_Resource_Library.blend": {
+      "unique_parts": 2293,
+      "mesh_instances": 12351,
+      "max_triangles": 196,
+      "default_scene": "16_Transit_Connected_Example"
+    },
+    "Civic_Animations.blend": {
+      "unique_parts": 180,
+      "mesh_instances": 545,
+      "max_triangles": 188,
+      "default_scene": "37_Civic_Animation_Review"
+    },
+    "RoadPlan_Modules.blend": {
+      "unique_parts": 428,
+      "mesh_instances": 1545,
+      "max_triangles": 192,
+      "default_scene": "29_RoadPlan_Ground_Connections"
+    }
+  },
+  "all_checks_passed": true
+}

@@ -1,14 +1,15 @@
 """Blender authoring: retain a detailed source, then perform lossless mesh cleanup.
 
-The 500-triangle budget is a delivery ceiling, never a shape-generation target.
-No collapse decimation or ratio-driven simplification is performed. Over-budget
-parts fail for an explicit functional split or authored topology correction.
+This stage retains the detailed source and removes redundant geometry. Final
+delivery uses a size-aware cap of at most 200 triangles. Never split a part to
+meet its budget: simplify low-priority relief and retopologize instead.
 """
 import math
 import bpy
 import bmesh
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
+from part_budget_policy import triangle_budget,REFERENCE_DIAGONAL_M
 
 
 class DetailGeometry:
@@ -296,8 +297,10 @@ class DetailPipeline:
         visible_reference.free()
         bm.free()
         assert count>0,name
+        diagonal=(Vector(tuple(max(v.co[k] for v in mesh.vertices) for k in range(3)))-Vector(tuple(min(v.co[k] for v in mesh.vertices) for k in range(3)))).length
+        cap=triangle_budget(diagonal,REFERENCE_DIAGONAL_M)
         if not self.allow_draft_over_budget:
-            assert count<=500,(name,'detail-preserving result exceeds part limit; split a functional module',count)
+            assert count<=cap,(name,'retopologize this same part; reduce cosmetic detail if necessary; do not split',count,cap)
         obj=bpy.data.objects.new(name,mesh)
         collection.objects.link(obj)
         if rig:
@@ -309,7 +312,8 @@ class DetailPipeline:
         obj['slot']=slot
         obj['family']=family
         obj['triangle_count']=count
-        obj['max_triangles']=500
+        obj['max_triangles']=cap
+        obj['budget_pending']=count>cap
         obj['units']='meters'
         obj['detail_source']=source.name
         obj['pipeline']='detail_first_lossless_cleanup_v1'

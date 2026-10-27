@@ -10,7 +10,7 @@ fittings=json.loads((ROOT/'Documentation/accessory_fitting_offsets.json').read_t
 meta=json.loads((ROOT/'Documentation/animation_clips.json').read_text(encoding='utf-8'))
 vehicles=json.loads((ROOT/'Documentation/vehicle_assemblies.json').read_text(encoding='utf-8'))
 MATS={m.name:m for m in bpy.data.materials}
-PROTOTYPES={a['id']:bpy.data.objects.get(a['id']) for a in catalog['assets'] if a.get('skeleton')=='HUMAN_7H' or a.get('family','').startswith('vehicle')}
+PROTOTYPES={a['id']:bpy.data.objects.get(a.get('blender_object',a['id'])) for a in catalog['assets'] if a.get('skeleton')=='HUMAN_7H' or a.get('family','').startswith('vehicle')}
 human=bpy.data.objects['HUMAN_7H']
 tree=ast.parse((ROOT/'Tools/build_resource_pack.py').read_text(encoding='utf-8'))
 names={'clone_actor','studio','ground','text_label'}
@@ -20,6 +20,7 @@ bpy.context.preferences.filepaths.save_version=0
 def bind(rig,action):
     rig.animation_data_create();rig.animation_data.action=action
     rig.animation_data.action_slot=action.slots[0];rig.animation_data.use_nla=False
+    rig.update_tag()
 
 def newscene(name,eye,target,scale,res):
     if bpy.data.scenes.get(name):
@@ -36,7 +37,7 @@ def actor(name,col,offset=(0,0,0),info=None):
     return clone_actor(name,human,info['parts'],col,offset,info.get('skin'),info.get('offsets'))
 
 s,c=newscene('38_Motion_Before_After',(3.5,-7,2.9),(0,0,.9),4.7,(1100,760))
-for name,x,prefix in [('Before',-.9,'Baseline__'),('After',.9,'')]:
+for name,x,prefix in [('Before',-.9,'UpperBodyV1__'),('After',.9,'')]:
     rig,obs=actor('Civic_'+name,c,(x,0,0));bind(rig,bpy.data.actions[prefix+'HUMAN_7H__Walk'])
     text_label(c,name.upper(),(x,-.48,-.02),.15)
 s.frame_set(7);s['instructions']='Both actors play Walk. Before retains the original action; After is the revised gait.'
@@ -68,12 +69,20 @@ for i,kind in enumerate(vehicles['types']):
     text_label(c,kind,((i%3-1)*5,(i//3)*3.8-1.4,.02),.2)
 s.frame_end=15;s.frame_set(4)
 
+s,c=newscene('42_Aim_Directional_Review',(6,-12,9),(0,1.7,1),13,(1600,1000))
+for i,direction in enumerate(['Forward','ForwardLeft','Left','BackLeft','Back','BackRight','Right','ForwardRight']):
+    xy=((i%4-1.5)*2.6,(i//4)*3.3,0)
+    rig,obs=actor('Directional_'+direction,c,xy)
+    bind(rig,bpy.data.actions['HUMAN_7H__Aim_Walk_'+direction])
+    text_label(c,direction,(xy[0],xy[1]-.7,.01),.16)
+s.frame_end=30;s.frame_set(7);s['instructions']='All actors face -Y. Aim_Walk/Aim_Run directional clips share phase zero = left contact. Scene 30 fps; movement and yaw belong to the game.'
+
 # Actual muzzle positions, sampled from the baked rig at 60 Hz. No runtime VFX
 # geometry is created; the consumer can attach the existing 2D billboard here.
 scene=bpy.data.scenes.new('Civic_Socket_Track_Evaluation');scene.render.fps=30
 scene.collection.objects.link(human);bpy.context.window.scene=scene
 tracks={}
-for clip in ['Aim_Base','Attack_Fire','Security_StunFire','Hit_Front','Hit_Back','Hit_Left','Hit_Right']:
+for clip in ['Aim_Base','Attack_Fire','Security_StunFire','Hit_Front','Hit_Back','Hit_Left','Hit_Right']+[c['clip'] for c in meta['HUMAN_7H'] if c['clip'].startswith(('Aim_Walk_','Aim_Run_'))]:
     action=bpy.data.actions['HUMAN_7H__'+clip];bind(human,action)
     end=action.frame_range[1];rows=[]
     for i in range(round(end*2)+1):
@@ -91,7 +100,7 @@ bpy.data.scenes.remove(scene)
 bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/'Source/Erma_Resource_Library.blend'),compress=True)
 
 # Prune only in memory after saving the master, then save a normal project.
-owned=[s for s in bpy.data.scenes if s.name.startswith(('37_','38_','39_','40_','41_')) and ('Civic' in s.name or s.name.startswith(('38_','40_','41_')))]
+owned=[s for s in bpy.data.scenes if s.name.startswith(('37_','38_','39_','40_','41_','42_'))]
 bpy.context.window.scene=bpy.data.scenes['37_Civic_Animation_Review']
 for s in list(bpy.data.scenes):
     if s not in owned:bpy.data.scenes.remove(s)

@@ -27,6 +27,7 @@ def accessor(doc,binary,index):
 
 def verify():
     catalog=json.loads((ROOT/'Documentation/asset_catalog.json').read_text(encoding='utf-8'))
+    assets={a['id']:a for a in catalog['assets']}
     report={'files_checked':0,'meshes_checked':0,'skinned_mesh_nodes':0,'animated_exports':0,
       'max_triangles_per_mesh':0,'animation_counts':{},'errors':[],'warnings':[]}
     for entry in catalog['exports']:
@@ -36,7 +37,7 @@ def verify():
             assert not doc.get('extensionsRequired'), 'unexpected required extension'
             assert doc.get('scenes') and all(s.get('nodes') for s in doc['scenes']),'empty exported scene'
             assert 0<=doc.get('scene',0)<len(doc['scenes']),'invalid default scene'
-            for mesh in doc.get('meshes',[]):
+            for mi,mesh in enumerate(doc.get('meshes',[])):
                 report['meshes_checked']+=1;triangles=0
                 for prim in mesh['primitives']:
                     assert prim.get('mode',4)==4,'non-triangle topology'
@@ -52,7 +53,10 @@ def verify():
                         weights=accessor(doc,binary,attrs['WEIGHTS_0'])
                         divisor=65535 if wa.get('normalized') and wa['componentType']==5123 else 255 if wa.get('normalized') and wa['componentType']==5121 else 1
                         assert all(abs(sum(w)/divisor-1)<.002 for w in weights),'invalid skin weights'
-                assert 0<triangles<=500,f'{mesh.get("name")}: {triangles} triangles'
+                ids={n.get('extras',{}).get('asset_id') for n in doc['nodes'] if n.get('mesh')==mi}
+                assert ids and None not in ids, 'mesh identity missing'
+                cap=min(assets[pid]['triangle_budget'] for pid in ids)
+                assert 0<triangles<=cap<=200,f'{mesh.get("name")}: {triangles} triangles, cap {cap}'
                 report['max_triangles_per_mesh']=max(report['max_triangles_per_mesh'],triangles)
             for node in doc.get('nodes',[]):
                 if 'skin' in node:

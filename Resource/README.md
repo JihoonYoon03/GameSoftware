@@ -2,13 +2,13 @@
 
 세계관에 맞춘 조립식 로우 폴리 그래픽 팩입니다. 모든 작업 파일은 이 Resource 폴더 안에 있습니다.
 
-**제작 원칙은 디테일 우선입니다.** 필요한 형상과 기능 디테일을 먼저 만든 뒤, 외부 표면을 보존하며 불필요한 면을 정리합니다. 500삼각형은 파트별 납품 상한이며 최소 폴리곤 제작 목표가 아닙니다. [제작 파이프라인](Documentation/MODELING_PIPELINE_ko.md) · [이전/상세 원본/최적화 비교](Preview/23_detail_pipeline_comparison.png)
+**제작 원칙은 디테일 우선입니다.** 필요한 형상과 기능 디테일을 먼저 만든 뒤, 불필요한 면을 정리합니다. 현재 파트별 상한은 최대 200삼각형이며 작은 파트는 더 낮게 배분합니다. 한도를 맞추려고 파트를 나누거나 모델 파일을 늘리지 않으며, 불가피하면 작은 디테일을 일부 줄입니다. [현재 예산·적용 결과](Documentation/POLYGON_BUDGET_ko.md). [제작 파이프라인](Documentation/MODELING_PIPELINE_ko.md) · [이전/상세 원본/최적화 비교](Preview/23_detail_pipeline_comparison.png)
 
 - **2,293개 독립 메시 파트**: 인체·의복·액세서리 854 / 몹 63 / 건축·환경 91 / 차량 133 / 비행체 90 / 도시·도로·야외 확장 137 / 통행로 확장 497 / 도로계획 428. 기존 인체·의복 호환 파트 199개를 포함합니다.
-- **파트당 최대 492삼각형**: 삼각형 변환 후에도 요청한 500개 이하
+- **파트당 실제 최대 196삼각형**: 크기별 상한 184~200, 파트·GLB 수 유지
 - **체형 6종**, 목적별 의복 **9종 × 6체형**, 독립 액세서리 **34개**
 - **인물 조립 예제 10개**, 몹 3계열·머리 교체형 포함 **6개**, 건물 예제 **10개**, 차량 5종의 A/B 예제 **10개**, 비행체 4종의 A/B 예제 **8개**, 도시·도로·야외 프롭 **34종**
-- 공통 인체 **43개 스켈레탈 클립**(기존 15개 유지·개선 + 새 동작 28개), 몹 리그별 15개, 압력문 개폐 2개, 차량 타입별 14~15개, 비행체 타입별 **12개**
+- 공통 인체 **59개 스켈레탈 클립**(기존 43개 유지·개선 + 조준 이동 16개), 몹 리그별 15개, 압력문 개폐 2개, 차량 타입별 14~15개, 비행체 타입별 **12개**
 - 512×512 반복 PBR 재질 **8세트·PNG 24개**
 - **GLB 2,575개**, Blender 편집 원본, 조립·본·클립·블렌딩·통행로 접속 JSON, 검증 결과와 렌더 미리보기
 
@@ -19,6 +19,12 @@
 [캐릭터 디테일 개선·조립 규칙](Documentation/CHARACTER_DETAIL_ko.md) · [체형·의복·액세서리 설계](Documentation/CHARACTER_DESIGN_ko.md) · [차량 조립 안내](Documentation/VEHICLES_ko.md)
 
 [비행체·도시·도로·야외 프롭 안내](Documentation/AIR_CITY_ko.md) · [비행체 조합](Documentation/aircraft_assemblies.json) · [배경 조합](Documentation/scenery_assemblies.json)
+
+## 실루엣·상체·조준 이동 갱신 — 2026-10-27
+
+추진장치 16파트는 작은 나사·홈을 제거하고 원래 외곽 곡면을 복원했습니다. 파트 분할 없이 각 188삼각형입니다. Mixamo 공개 미리보기를 참고해 걷기·달리기의 팔 벌어짐과 조준 그립을 수정했습니다. 기존 하체 동작을 유지하며 조준 걷기·달리기를 각각 8방향 추가했습니다.
+
+[조준 이동·360도 블렌딩 안내](Documentation/AIM_LOCOMOTION_ko.md) · [블렌딩 표본·연결 데이터](Documentation/aim_locomotion_blending.json) · [새 조준 옆걸음](Preview/Civic/Aim_Walk_Left.gif) · [상체 개선 전후](Preview/Civic/Before_After.gif) · [추진장치 비교](Preview/PolygonBudget/lift_field.png)
 
 ## 도시 반응·모션 개선 — 2026-10-23
 
@@ -56,22 +62,26 @@
 
 제작 당시에는 게임 코드 연결을 수행하지 않았습니다. `Tools`는 Blender 제작·검증용 원본 도구입니다.
 
-## 게임 연결 — 2026-10-21
+## 게임 연결 — 2026-10-27 갱신
 
-게임은 `Runtime/game-assets.bin`의 변환 캐시를 읽습니다. 원본 GLB와 Blender 파일은 유지합니다.
-변환 도구는 저장소 루트의 `tools/pack-resources.mjs`이며 외부 npm 패키지 없이 Node.js 18 이상에서 실행합니다.
+게임은 `Runtime/game-assets.bin`의 변환 캐시를 읽습니다. 이 폴더는 Git에서 제외되며 원본 GLB와 Blender 파일은 유지합니다.
+빌드 PC에 Node.js 18 이상을 설치하면 Visual Studio가 빌드 전에 `tools/ensure-resources.mjs`로 캐시를 자동 준비합니다. 외부 npm 패키지와 Blender는 필요 없습니다.
 
 ```text
-node tools/pack-resources.mjs
-node tools/pack-resources.mjs --check
+node tools/ensure-resources.mjs
+node tools/ensure-resources.mjs --check
 node tools/check-resource-pack.mjs
 ```
 
-첫 명령은 런타임 캐시와 원본 SHA-256·모델 매핑을 담은 `Runtime/manifest.json`을 생성합니다.
-두 번째는 캐시·원본 해시가 일치하는지 검사하며 파일을 변경하지 않습니다. 게임 빌드/실행은 아닙니다.
+첫 명령은 캐시 누락/변경/손상을 확인하고 필요한 경우 변환기를 실행해 `Runtime/manifest.json`과 바이너리를 생성합니다. 원본 GLB·조립 JSON·변환기와 바이너리 SHA-256을 함께 검사합니다.
+두 번째는 재생성 필요 여부만 검사하며 파일을 변경하지 않습니다. 전체 재변환은 `node tools/pack-resources.mjs`, 재변환 결과와 비교만 하려면 여기에 `--check`를 붙입니다. 게임 빌드/실행은 아닙니다.
+
+일반 빌드는 준비 완료 표식과 `Runtime/build-sources.list`의 실제 사용 원본을 먼저 확인합니다. 변경이 없으면 PowerShell/Node와 전체 해시 검사를 건너뜁니다. 목록은 이름 변경/누락도 추적하고, 변경이 감지됐을 때 SHA-256 확인과 필요한 재생성을 수행합니다. 강제 정밀 확인은 위 `ensure-resources.mjs --check` 또는 MSBuild `/p:ForceResourceValidation=true`를 사용합니다. 생성된 표식·목록도 Runtime과 함께 Git에서 제외됩니다.
 세 번째는 바이너리를 독립적으로 읽어 해시·정점·법선·가중치·소켓·지면·클립 경계를 검사합니다.
-Visual Studio 프로젝트는 빌드 후 두 파일을 실행 파일 옆 `Resource/Runtime`에 복사합니다.
+Visual Studio 프로젝트는 빌드 후 두 파일을 실행 파일 옆 `Resource/Runtime`에 복사합니다. 새 tools 파일도 모두 커밋·push한 뒤 다른 PC에서 pull해야 합니다. `prepare-resources.ps1`은 Visual Studio가 상속한 PATH뿐 아니라 최신 시스템/사용자 PATH, 일반 Node 설치 폴더, 버전 관리자와 설치된 Codex 런타임을 확인합니다. 사용 가능한 Node.js 18 이상이 없으면 설치 후 Visual Studio 재시작 안내를 출력합니다. 특정 실행 파일을 쓰려면 `NodeExecutable` 빌드 속성에 `node.exe` 전체 경로를 지정합니다. 전역 PATH는 변경하지 않습니다.
 게임 실행에 Node.js·Blender·GLB 파서가 필요한 것은 아닙니다.
+
+현재 `game_resource_pack_v2`는 최신 저폴리 원본의 216개 런타임 항목과 공유 애니메이션 뱅크 13개를 담습니다. 동일한 팔레트는 파일과 CPU 메모리에 한 번만 저장합니다. 인체는 원본 59클립과 게임용 합성 Ride를 보존하며 메시당 128클립까지 허용합니다. 구형 미사용 Transit 도로/보도·Trim 124개는 런타임에서 제외했고 RoadPlan과 실제 비행 안내를 유지합니다. 원본 제작 리소스를 삭제한 것은 아닙니다.
 
 인물·차량·몹의 스킨은 4개 가중치와 최대 32개 본으로 출력하고, 선택한 GLB 클립을 30Hz 팔레트로 캐싱합니다.
 인체는 23본을 유지하며 이동·상체 조준을 결합합니다. 바이크 자세는 Jump_Air 하체와 Aim_Base 상체를

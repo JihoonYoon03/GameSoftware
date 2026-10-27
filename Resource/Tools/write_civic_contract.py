@@ -40,9 +40,9 @@ vehicles['civic']={'impact':['Vehicle_Impact_Front','Vehicle_Impact_Rear','Vehic
                    'tow':'tow_cleanup_eligible_when_offscreen event; game decides delay and opacity fade; collision stays solid until removal'}
 write('vehicle_animation_blending.json',vehicles)
 contract={
- 'revision':'civic_motion_v1','request':'../CIVIC_ANIMATION_REQUEST.md','units':'meters','authoring_fps':30,'delivery_sampling_fps':60,
+ 'revision':'civic_motion_v2_directional','request':'../CIVIC_ANIMATION_REQUEST.md','units':'meters','authoring_fps':30,'delivery_sampling_fps':60,
  'humanoid_skeleton':'HUMAN_7H','bones':23,'original_clips_preserved':15,'humanoid_clips':len(clips['HUMAN_7H']),
- 'human_new_clips':28,'vehicle_new_actions':21,'human_forward':'-Y','human_left':'+X','human_up':'+Z','vehicle_forward':'+X','vehicle_left':'+Y',
+ 'human_new_clips':len(clips['HUMAN_7H'])-15,'vehicle_new_actions':21,'human_forward':'-Y','human_left':'+X','human_up':'+Z','vehicle_forward':'+X','vehicle_left':'+Y',
  'direction_selection':{'input':'world impulse velocity transformed into character local coordinates; velocity is the direction the body is pushed',
                         'dominant_y':'vy >= 0 -> Front, vy < 0 -> Back','dominant_x':'vx <= 0 -> Left, vx > 0 -> Right','zero_vector':'retain last valid impact direction or Front',
                         'world_units':'1 world unit = 2 meters; rotate vectors before selecting; magnitude does not change visual root travel'},

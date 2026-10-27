@@ -1,6 +1,6 @@
 {
-  "revision": "civic_motion_v1",
-  "geometry_before_sha256": "4da2e255a78ef12d271b1a564eb2f012e3364de82357b2fda46836c39377b8c7",
+  "revision": "civic_motion_v2_directional",
+  "geometry_before_sha256": "dd598d3c54a4345eaa2422a671b6d368ba939ddf4a07ee503340a33d36cf5ac0",
   "human": {
     "Reference_A": {
       "frames": 1,
@@ -208,7 +208,7 @@
       "frames": 24,
       "loop": false,
       "max_clearance_correction_m": 0.0005002807492009073,
-      "max_temporal_clearance_lift_m": 0.03652077955404265,
+      "max_temporal_clearance_lift_m": 0.035864598880104404,
       "clearance_limiting_part": "Boot_L",
       "worst_frame": 3.5,
       "min_source_vertex_z_m": 0.001
@@ -392,11 +392,171 @@
     "GetUp_Right": {
       "frames": 42,
       "loop": false,
-      "max_clearance_correction_m": 0.07502306821305693,
+      "max_clearance_correction_m": 0.07455702506792206,
       "max_temporal_clearance_lift_m": 0.007523587740164205,
       "clearance_limiting_part": "Outfit_HeavyCombat_Female_Heavy_Torso_OuterAssembly",
       "worst_frame": 7.5,
       "min_source_vertex_z_m": 0.001
+    },
+    "Aim_Walk_Forward": {
+      "frames": 30,
+      "loop": true,
+      "max_clearance_correction_m": 0.0005002637068308757,
+      "max_temporal_clearance_lift_m": 0.0003455767913696471,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 12.5,
+      "min_source_vertex_z_m": 0.001,
+      "loop_max_matrix_error": 1.4695761072969157e-18
+    },
+    "Aim_Walk_ForwardLeft": {
+      "frames": 30,
+      "loop": true,
+      "max_clearance_correction_m": 0.0005002055760036383,
+      "max_temporal_clearance_lift_m": 0.0008130314955044522,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 6.0,
+      "min_source_vertex_z_m": 0.001,
+      "loop_max_matrix_error": 1.4695761072969157e-18
+    },
+    "Aim_Walk_Left": {
+      "frames": 30,
+      "loop": true,
+      "max_clearance_correction_m": 0.0005002363049919367,
+      "max_temporal_clearance_lift_m": 0.001080209430749499,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 7.0,
+      "min_source_vertex_z_m": 0.001,
+      "loop_max_matrix_error": 1.4695761072969157e-18
+    },
+    "Aim_Walk_BackLeft": {
+      "frames": 30,
+      "loop": true,
+      "max_clearance_correction_m": 0.0005003688717764631,
+      "max_temporal_clearance_lift_m": 0.00020585608222890503,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 8.5,
+      "min_source_vertex_z_m": 0.001,
+      "loop_max_matrix_error": 1.4695761072969157e-18
+    },
+    "Aim_Walk_Back": {
+      "frames": 30,
+      "loop": true,
+      "max_clearance_correction_m": 0.0005002196203472109,
+      "max_temporal_clearance_lift_m": 0.0,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 7.0,
+      "min_source_vertex_z_m": 0.001,
+      "loop_max_matrix_error": 1.4695761072969157e-18
+    },
+    "Aim_Walk_BackRight": {
+      "frames": 30,
+      "loop": true,
+      "max_clearance_correction_m": 0.0005003688717764631,
+      "max_temporal_clearance_lift_m": 6.874309621846073e-05,
+      "clearance_limiting_part": "Boot_R",
+      "worst_frame": 23.5,
+      "min_source_vertex_z_m": 0.001,
+      "loop_max_matrix_error": 1.4695761072969157e-18
+    },
+    "Aim_Walk_Right": {
+      "frames": 30,
+      "loop": true,
+      "max_clearance_correction_m": 0.0005002363049919367,
+      "max_temporal_clearance_lift_m": 0.001080209430749499,
+      "clearance_limiting_part": "Boot_R",
+      "worst_frame": 22.0,
+      "min_source_vertex_z_m": 0.001,
+      "loop_max_matrix_error": 1.4695761072969157e-18
+    },
+    "Aim_Walk_ForwardRight": {
+      "frames": 30,
+      "loop": true,
+      "max_clearance_correction_m": 0.0005002055760036383,
+      "max_temporal_clearance_lift_m": 0.00027125442026319,
+      "clearance_limiting_part": "Boot_R",
+      "worst_frame": 21.0,
+      "min_source_vertex_z_m": 0.001,
+      "loop_max_matrix_error": 1.4695761072969157e-18
+    },
+    "Aim_Run_Forward": {
+      "frames": 20,
+      "loop": true,
+      "max_clearance_correction_m": 0.0005001607854140319,
+      "max_temporal_clearance_lift_m": 0.0010245779502303203,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 0.5,
+      "min_source_vertex_z_m": 0.001,
+      "loop_max_matrix_error": 1.4695761072969157e-18
+    },
+    "Aim_Run_ForwardLeft": {
+      "frames": 20,
+      "loop": true,
+      "max_clearance_correction_m": 0.0005001152480902725,
+      "max_temporal_clearance_lift_m": 0.0014881173821244958,
+      "clearance_limiting_part": "Boot_R",
+      "worst_frame": 10.5,
+      "min_source_vertex_z_m": 0.001,
+      "loop_max_matrix_error": 1.4695761072969157e-18
+    },
+    "Aim_Run_Left": {
+      "frames": 20,
+      "loop": true,
+      "max_clearance_correction_m": 0.0005002101907047901,
+      "max_temporal_clearance_lift_m": 0.002757668661273262,
+      "clearance_limiting_part": "Boot_R",
+      "worst_frame": 12.0,
+      "min_source_vertex_z_m": 0.001,
+      "loop_max_matrix_error": 1.4695761072969157e-18
+    },
+    "Aim_Run_BackLeft": {
+      "frames": 20,
+      "loop": true,
+      "max_clearance_correction_m": 0.0005002345215084047,
+      "max_temporal_clearance_lift_m": 0.0004885491702564838,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 4.5,
+      "min_source_vertex_z_m": 0.001,
+      "loop_max_matrix_error": 1.4695761072969157e-18
+    },
+    "Aim_Run_Back": {
+      "frames": 20,
+      "loop": true,
+      "max_clearance_correction_m": 0.0005001768704676083,
+      "max_temporal_clearance_lift_m": 0.00028479349644513693,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 0.0,
+      "min_source_vertex_z_m": 0.001,
+      "loop_max_matrix_error": 1.4695761072969157e-18
+    },
+    "Aim_Run_BackRight": {
+      "frames": 20,
+      "loop": true,
+      "max_clearance_correction_m": 0.0005002345215084047,
+      "max_temporal_clearance_lift_m": 0.00021913543573106112,
+      "clearance_limiting_part": "Boot_R",
+      "worst_frame": 14.5,
+      "min_source_vertex_z_m": 0.001,
+      "loop_max_matrix_error": 1.4695761072969157e-18
+    },
+    "Aim_Run_Right": {
+      "frames": 20,
+      "loop": true,
+      "max_clearance_correction_m": 0.0005002101907047901,
+      "max_temporal_clearance_lift_m": 0.0009208051492104884,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 2.0,
+      "min_source_vertex_z_m": 0.001,
+      "loop_max_matrix_error": 1.4695761072969157e-18
+    },
+    "Aim_Run_ForwardRight": {
+      "frames": 20,
+      "loop": true,
+      "max_clearance_correction_m": 0.0005001152480902725,
+      "max_temporal_clearance_lift_m": 0.0004968671336022116,
+      "clearance_limiting_part": "Boot_L",
+      "worst_frame": 0.5,
+      "min_source_vertex_z_m": 0.001,
+      "loop_max_matrix_error": 1.4695761072969157e-18
     }
   },
   "vehicles": {
@@ -600,7 +760,7 @@
       }
     }
   },
-  "clearance_vertices": 101628,
-  "geometry_after_sha256": "4da2e255a78ef12d271b1a564eb2f012e3364de82357b2fda46836c39377b8c7",
+  "clearance_vertices": 77829,
+  "geometry_after_sha256": "dd598d3c54a4345eaa2422a671b6d368ba939ddf4a07ee503340a33d36cf5ac0",
   "bind_poses_preserved": true
 }

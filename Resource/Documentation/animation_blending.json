@@ -169,7 +169,14 @@
     "legacy_nonhuman_stance_phase_range_per_foot": [
       0,
       0.5
-    ]
+    ],
+    "aim_directional": {
+      "contract": "aim_locomotion_blending.json",
+      "samples": 16,
+      "idle": "Aim_Base",
+      "facing": "fixed aim facing",
+      "phase_reset_on_direction_change": false
+    }
   },
   "transitions": [
     {

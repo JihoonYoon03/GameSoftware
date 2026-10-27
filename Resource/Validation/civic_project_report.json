@@ -2,18 +2,18 @@
   "projects": {
     "Erma_Resource_Library.blend": {
       "default_scene": "16_Transit_Connected_Example",
-      "human_actions": 43,
+      "human_actions": 59,
       "review_scenes": {
         "37_Civic_Animation_Review": {
           "rigs": 1,
           "skinned_parts": 25,
-          "actual_vertex_motion_m": 1.3665523852225447,
+          "actual_vertex_motion_m": 0.33036898864506337,
           "camera": "37_Civic_Animation_Review_Camera"
         },
         "38_Motion_Before_After": {
           "rigs": 2,
           "skinned_parts": 50,
-          "actual_vertex_motion_m": 0.5487899398043263,
+          "actual_vertex_motion_m": 0.539555710909202,
           "camera": "38_Motion_Before_After_Camera"
         },
         "39_Civic_Body_Profile_Review": {
@@ -33,23 +33,29 @@
           "skinned_parts": 83,
           "actual_vertex_motion_m": 0.012372845582490879,
           "camera": "41_Vehicle_Impact_Review_Camera"
+        },
+        "42_Aim_Directional_Review": {
+          "rigs": 8,
+          "skinned_parts": 200,
+          "actual_vertex_motion_m": 0.46472081428619916,
+          "camera": "42_Aim_Directional_Review_Camera"
         }
       }
     },
     "Civic_Animations.blend": {
       "default_scene": "37_Civic_Animation_Review",
-      "human_actions": 43,
+      "human_actions": 59,
       "review_scenes": {
         "37_Civic_Animation_Review": {
           "rigs": 1,
           "skinned_parts": 25,
-          "actual_vertex_motion_m": 1.3665523852225447,
+          "actual_vertex_motion_m": 0.33036898864506337,
           "camera": "37_Civic_Animation_Review_Camera"
         },
         "38_Motion_Before_After": {
           "rigs": 2,
           "skinned_parts": 50,
-          "actual_vertex_motion_m": 0.5487899398043263,
+          "actual_vertex_motion_m": 0.539555710909202,
           "camera": "38_Motion_Before_After_Camera"
         },
         "39_Civic_Body_Profile_Review": {
@@ -69,6 +75,12 @@
           "skinned_parts": 83,
           "actual_vertex_motion_m": 0.012372845582490879,
           "camera": "41_Vehicle_Impact_Review_Camera"
+        },
+        "42_Aim_Directional_Review": {
+          "rigs": 8,
+          "skinned_parts": 200,
+          "actual_vertex_motion_m": 0.46472081428619916,
+          "camera": "42_Aim_Directional_Review_Camera"
         }
       }
     }

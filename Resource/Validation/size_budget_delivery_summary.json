@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-27",
+  "revision": "silhouette_first_200_v3",
+  "parts": 2293,
+  "export_files": 2575,
+  "new_part_files": 0,
+  "max_triangles": 196,
+  "source_triangles": 311692,
+  "final_triangles": 247796,
+  "propulsion_parts_with_original_curves": 16,
+  "human_clips": 59,
+  "new_directional_clips": 16,
+  "preview_gifs": 45,
+  "lower_body_preserved": true,
+  "blend_floor_correction_m": 0.011976527817547322,
+  "checks": [
+    "size_budget_validation.json",
+    "size_budget_source_validation.json",
+    "export_report.json",
+    "road_plan_export_report.json",
+    "road_plan_roundtrip_report.json",
+    "civic_animation_roundtrip.json",
+    "civic_source_equipment.json",
+    "civic_project_report.json",
+    "directional_motion_report.json",
+    "silhouette_preservation_report.json",
+    "civic_contact_report.json",
+    "air_city_roundtrip_report.json"
+  ],
+  "all_checks_passed": true
+}
