@@ -286,15 +286,18 @@ std::vector<Vector2> EmergencyRoute(Vector2 start, Vector2 target)
     std::reverse(result.begin(), result.end());
     return result;
 }
-void AdvanceImpact(Vector2 &position, BodyImpact &body, float dt)
+void AdvanceImpact(Vector2 &position, BodyImpact &body, float dt, bool applyDisplacement = true)
 {
     body.invulnerability = (std::max)(0.f, body.invulnerability - dt);
     if (body.seconds > 0)
     {
-        auto next = Add(position, body.velocity, dt);
-        if (SegmentClear(position, next, .18f))
+        if (applyDisplacement)
         {
-            position = next;
+            auto next = Add(position, body.velocity, dt);
+            if (SegmentClear(position, next, .18f))
+            {
+                position = next;
+            }
         }
         body.velocity.x *= std::exp(-7 * dt);
         body.velocity.y *= std::exp(-7 * dt);
@@ -386,28 +389,39 @@ bool SweptCarContains(const TrafficVehicle &car, Vector2 p, float radius)
     }
     return false;
 }
-Vector2 PushFromCar(const TrafficVehicle &car, Vector2 p, float radius)
+Vector2 PushFromCar(const TrafficVehicle &car, Vector2 p, float radius, float altitude = 0)
 {
     auto &mesh =
         models::ResourceAssets::Get(models::ModelLibrary::Get().vehicles[size_t(car.id % 4)].body.resourceId);
-    Vector2 d = {std::cos(car.yaw), std::sin(car.yaw)}, n = {-d.y, d.x}, q = Sub(p, car.position);
+    Vector2 d = {std::cos(car.yaw), std::sin(car.yaw)}, n = {-d.y, d.x};
+    Vector2 center = Add(Add(car.position, d, (mesh.minimum.x + mesh.maximum.x) * .5f), n,
+                         (mesh.minimum.y + mesh.maximum.y) * .5f);
+    auto q = Sub(p, center);
     float x = q.x * d.x + q.y * d.y, y = q.x * n.x + q.y * n.y, hx = mesh.physicalSize.x * .5f,
           hy = mesh.physicalSize.y * .5f;
     Vector2 result = p;
     float best = 1.e9f;
     for (float side : {-1.f, 1.f})
     {
-        Vector2 candidates[] = {
-            Add(Add(car.position, d, Game::Clamp(x, -hx, hx)), n, side * (hy + radius + .04f)),
-            Add(Add(car.position, n, Game::Clamp(y, -hy, hy)), d, side * (hx + radius + .04f))};
+        Vector2 candidates[] = {Add(Add(center, d, Game::Clamp(x, -hx, hx)), n, side * (hy + radius + .04f)),
+                                Add(Add(center, n, Game::Clamp(y, -hy, hy)), d, side * (hx + radius + .04f))};
         for (auto candidate : candidates)
         {
-            if (Game::Distance(candidate, p) < best && SegmentClear(p, candidate, radius))
+            if (Game::Distance(candidate, p) < best && !CarContains(car, candidate, radius) &&
+                SegmentClear(p, candidate, radius))
             {
                 best = Game::Distance(candidate, p);
                 result = candidate;
             }
         }
+    }
+    if (best == 1.e9f)
+    {
+        // A car may already have pushed the body into a wall; the segment's starting point
+        // is then blocked, so a segment-only test can never find an exit.
+        result = BodyCollision::Slide(p, p, [&](Vector2 point) {
+            return CarContains(car, point, radius + .002f) || CivicJustice::Solid(point, radius, altitude);
+        });
     }
     return result;
 }
@@ -415,14 +429,38 @@ Vector2 Separate(Vector2 from, Vector2 to, float radius, int ignoreResident, boo
                  int ignoreOfficer = -1)
 {
     auto &world = Game::Get().GetState();
+    const auto &traffic = Overworld::Traffic();
+    std::array<const TrafficVehicle *, TrafficSystem::kVehicleLimit> nearby{};
+    size_t nearbyCount = 0;
+    const float searchRadius = 8 + Game::Distance(from, to);
+    for (size_t i = 0; i < traffic.Vehicles().size(); ++i)
+    {
+        const auto &car = traffic.Vehicles()[i];
+        if (Game::Distance(car.position, from) < searchRadius &&
+            std::fabs(traffic.RenderElevation(i) - (player ? PlayerHeight() : 0)) < .7f)
+        {
+            nearby[nearbyCount++] = &car;
+        }
+    }
+    auto blocked = [&](Vector2 p) {
+        if (player ? Game::Get().IsPositionBlocked(p) : CivicJustice::Solid(p, radius))
+        {
+            return true;
+        }
+        for (size_t i = 0; i < nearbyCount; ++i)
+        {
+            if (CarContains(*nearby[i], p, radius))
+            {
+                return true;
+            }
+        }
+        return false;
+    };
     Vector2 result = from;
     int steps = (std::max)(1, int(std::ceil(Game::Distance(from, to) / .12f)));
     for (int step = 1; step <= steps; ++step)
     {
-        Vector2 candidate =
-            BodyCollision::Slide(result, Add(result, Sub(to, from), 1.f / steps), [&](Vector2 p) {
-                return player ? Game::Get().IsPositionBlocked(p) : CivicJustice::Solid(p, radius);
-            });
+        Vector2 candidate = BodyCollision::Slide(result, Add(result, Sub(to, from), 1.f / steps), blocked);
         if (PlayerHeight() < .7f || !player)
         {
             auto separate = [&](Vector2 other, float otherRadius) {
@@ -463,20 +501,12 @@ Vector2 Separate(Vector2 from, Vector2 to, float radius, int ignoreResident, boo
                 separate(world.playerPosition, .18f);
             }
         }
-        const auto &traffic = Overworld::Traffic();
-        for (size_t i = 0; i < traffic.Vehicles().size(); ++i)
+        // Crowd separation must not leave the character inside a wall or another vehicle.
+        if (blocked(candidate))
         {
-            const auto &car = traffic.Vehicles()[i];
-            if (std::fabs(traffic.RenderElevation(i) - (player ? PlayerHeight() : 0)) < .7f &&
-                CarContains(car, candidate, radius))
-            {
-                candidate = BodyCollision::Slide(result, candidate, [&](Vector2 p) {
-                    return CarContains(car, p, radius) ||
-                           (player ? Game::Get().IsPositionBlocked(p) : CivicJustice::Solid(p, radius));
-                });
-            }
+            candidate = BodyCollision::Slide(candidate, candidate, blocked);
         }
-        if ((player ? Game::Get().IsPositionBlocked(candidate) : CivicJustice::Solid(candidate, radius)))
+        if (blocked(candidate))
         {
             break;
         }
@@ -997,8 +1027,8 @@ bool CivicCombat::Available()
 {
     const auto &world = Game::Get().GetState();
     return CivicJustice::IsExterior() && !world.isBikeMounted && !HospitalRecovery::Active() &&
-           !world.isPaused && !world.mapVisible && !world.journalVisible && !world.dialogueHistoryVisible &&
-           !Dialogue::LocksWorld();
+           !world.isPaused && !world.mapVisible && !world.weaponWheel.visible && !world.journalVisible &&
+           !world.dialogueHistoryVisible && !Dialogue::LocksWorld();
 }
 void CivicCombat::DamagePlayer(int damage, Vector2 impulse)
 {
@@ -1220,6 +1250,11 @@ void CivicCombat::Fire()
     }
     auto &world = Game::Get().GetState();
     auto &mine = game::GameLevels::Mine();
+    if (!mine.GetState().loadout.IsPistolEquipped())
+    {
+        Melee();
+        return;
+    }
     combat::Shot shot;
     if (civic.bullets.size() + civic.airBullets.size() >= 96 ||
         !mine.GetState().pistol.TryFire(mine.GetAimAngle(), shot))
@@ -1420,19 +1455,25 @@ Vector2 BodyCollision::Slide(Vector2 from, Vector2 desired, const std::function<
     Vector2 result = from;
     if (blocked(result))
     {
-        // Correct small overlaps left by a moving body/rotation before applying new input.
+        // Moving traffic and a changed bike yaw can cause deeper overlaps than a body radius.
+        // Resolve the nearest free surface, preferring the requested escape direction on ties.
         bool freed = false;
-        for (int ring = 1; ring <= 20 && !freed; ++ring)
+        auto escape = Unit(Sub(desired, from));
+        for (int ring = 1; ring <= 55 && !freed; ++ring)
         {
-            for (int i = 0; i < 32; ++i)
+            float radius = ring <= 20 ? ring * .025f : .5f + (ring - 20) * .1f;
+            float best = -2;
+            for (int i = 0; i < 64; ++i)
             {
-                float angle = i * kPi / 16;
-                auto p = Add(from, {std::cos(angle), std::sin(angle)}, ring * .025f);
-                if (!blocked(p))
+                float angle = i * kPi / 32;
+                Vector2 direction = {std::cos(angle), std::sin(angle)};
+                auto p = Add(from, direction, radius);
+                float score = direction.x * escape.x + direction.y * escape.y;
+                if (score > best && !blocked(p))
                 {
                     result = p;
                     freed = true;
-                    break;
+                    best = score;
                 }
             }
         }
@@ -1442,7 +1483,8 @@ Vector2 BodyCollision::Slide(Vector2 from, Vector2 desired, const std::function<
         }
     }
     auto displacement = Sub(desired, from);
-    int steps = (std::max)(1, int(std::ceil(std::hypot(displacement.x, displacement.y) / .08f)));
+    // Smaller than the narrowest bike contact probe: a fast step cannot skip a thin fence/edge.
+    int steps = (std::max)(1, int(std::ceil(std::hypot(displacement.x, displacement.y) / .02f)));
     auto increment = Add({}, displacement, 1.f / steps);
     for (int step = 0; step < steps; ++step)
     {
@@ -1492,6 +1534,86 @@ Vector2 BodyCollision::Slide(Vector2 from, Vector2 desired, const std::function<
     }
     return result;
 }
+bool BodyCollision::BikeBlocked(Vector2 position, float yaw, float elevation, bool includeVehicles)
+{
+    const auto &mesh = models::ResourceAssets::Get(
+        models::ModelLibrary::Get().vehicles[size_t(models::VehicleType::JetBike)].body.resourceId);
+    Vector2 d = {std::cos(yaw), std::sin(yaw)}, n = {-d.y, d.x};
+    const auto &traffic = Overworld::Traffic();
+    std::array<const TrafficVehicle *, TrafficSystem::kVehicleLimit> nearby{};
+    size_t nearbyCount = 0;
+    if (includeVehicles)
+    {
+        for (size_t i = 0; i < traffic.Vehicles().size(); ++i)
+        {
+            const auto &car = traffic.Vehicles()[i];
+            if (Game::Distance(car.position, position) < 8 &&
+                std::fabs(traffic.RenderElevation(i) - elevation) < .7f)
+            {
+                nearby[nearbyCount++] = &car;
+            }
+        }
+    }
+    for (int sample = 0; sample <= 4; ++sample)
+    {
+        float along = mesh.minimum.x + .035f + (mesh.physicalSize.x - .07f) * sample / 4;
+        for (float across : {mesh.minimum.y + .035f, mesh.maximum.y - .035f})
+        {
+            Vector2 q = Add(Add(position, d, along), n, across);
+            if (q.x < kWorldMinX || q.x > kWorldMaxX || q.y < kWorldMinY || q.y > kWorldMaxY ||
+                TransitLayout::IsBlocked(q, .035f, elevation, true) ||
+                (elevation <= 1 && CivicJustice::Solid(q, .035f, elevation, true)))
+            {
+                return true;
+            }
+            for (size_t i = 0; i < nearbyCount; ++i)
+            {
+                if (CarContains(*nearby[i], q, .035f))
+                {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+void BodyCollision::RecoverBike()
+{
+    auto &w = Game::Get().GetState();
+    if (!w.isBikeMounted || !CivicJustice::IsExterior())
+    {
+        return;
+    }
+    if (BikeBlocked(w.bikePosition, w.bikeYaw, w.bikeElevation))
+    {
+        if (w.bikeSafePoseValid && Game::Distance(w.bikePosition, w.bikeSafePosition) < 4 &&
+            std::fabs(w.bikeSafeElevation - w.bikeElevation) < .6f &&
+            !BikeBlocked(w.bikeSafePosition, w.bikeSafeYaw, w.bikeSafeElevation))
+        {
+            w.bikePosition = w.bikeSafePosition;
+            w.bikeYaw = w.bikeSafeYaw;
+            w.bikeElevation = w.bikeSafeElevation;
+        }
+        else
+        {
+            w.bikePosition = Slide(w.bikePosition, w.bikePosition, [&](Vector2 p) {
+                float height = RoadNetwork::Get().DriveElevation(p, w.bikeElevation);
+                return std::fabs(height - w.bikeElevation) > .6f || BikeBlocked(p, w.bikeYaw, height);
+            });
+            w.bikeElevation = RoadNetwork::Get().DriveElevation(w.bikePosition, w.bikeElevation);
+        }
+        w.playerPosition = w.bikePosition;
+        w.facingYaw = w.bikeYaw;
+        w.bikeSpeed = w.movementAmount = w.movementSpeed = 0;
+    }
+    if (!BikeBlocked(w.bikePosition, w.bikeYaw, w.bikeElevation))
+    {
+        w.bikeSafePoseValid = true;
+        w.bikeSafePosition = w.bikePosition;
+        w.bikeSafeYaw = w.bikeYaw;
+        w.bikeSafeElevation = w.bikeElevation;
+    }
+}
 Vector2 BodyCollision::MovePlayer(Vector2 from, Vector2 desired)
 {
     if (!CivicJustice::IsExterior())
@@ -1519,7 +1641,9 @@ void BodyCollision::Update(float dt)
     }
     else
     {
-        civic.playerImpact.invulnerability = (std::max)(0.f, civic.playerImpact.invulnerability - dt);
+        // Rider reaction/recovery still advances while mounted. Only pedestrian displacement
+        // is skipped; applying it here would separate the rider from the bike's transform.
+        AdvanceImpact(world.playerPosition, civic.playerImpact, dt, false);
     }
     for (auto &resident : world.residents)
     {
@@ -1580,7 +1704,8 @@ void BodyCollision::VehicleContacts(float)
             if (world.isBikeMounted ? bikeHitsCar(false) : CarContains(car, world.playerPosition, .18f))
             {
                 auto contact = world.isBikeMounted ? BikeClosest(car.position) : world.playerPosition;
-                auto corrected = PushFromCar(car, contact, world.isBikeMounted ? .22271f : .18f);
+                auto corrected =
+                    PushFromCar(car, contact, world.isBikeMounted ? .22271f : .18f, PlayerHeight());
                 world.playerPosition = Add(world.playerPosition, Sub(corrected, contact));
                 DeflectBike(Sub(contact, car.position));
                 if (world.isBikeMounted)
@@ -1703,6 +1828,7 @@ void BodyCollision::VehicleContacts(float)
             }
         }
     }
+    RecoverBike();
 }
 
 bool HospitalRecovery::Active()
@@ -1715,6 +1841,7 @@ void HospitalRecovery::Begin()
     {
         return;
     }
+    WeaponWheel::Close();
     auto &world = Game::Get().GetState();
     auto source = game::GameLevels::Mine().IsActive()      ? Overworld::kMineEntrance
                   : game::GameLevels::Chapter().IsActive() ? kCityReceiverPosition

@@ -89,6 +89,30 @@ void TestModelsAndRig()
     auto muzzle = ModelRig::Muzzle(aim);
     assert(muzzle.x > .4f && muzzle.z > .8f);
     assert(std::fabs(muzzle.z * WorldScale::characterScale * 44 - WorldScale::aimHeightPixels) < .01f);
+    // An unarmed strike must animate both body types and their attached hair, while walking
+    // retains its pelvis/leg track. The previous armed-only gate silently sampled idle instead.
+    for (Gender gender : {Gender::Male, Gender::Female})
+    {
+        for (bool walking : {false, true})
+        {
+            auto idle = ModelRig::Pose(2.1f, walking, false, 0, false, gender);
+            auto strike = idle;
+            strike.meleeSeconds = .325f;
+            for (const Model *model : {&ModelLibrary::Character(CharacterType::Explorer, gender),
+                                       &ModelLibrary::Hair(HairStyle::SidePart, false)})
+            {
+                SkinMatrices base, melee, early;
+                ResourceAssets::Sample(model->resourceId, &idle, base);
+                ResourceAssets::Sample(model->resourceId, &strike, melee);
+                assert(base != melee && !strike.armed);
+                assert(std::equal(base.begin() + 17 * 16, base.begin() + 23 * 16, melee.begin() + 17 * 16));
+                strike.meleeSeconds = .64f;
+                ResourceAssets::Sample(model->resourceId, &strike, early);
+                assert(early != melee);
+                strike.meleeSeconds = .325f;
+            }
+        }
+    }
 }
 void TestHairAndBodyShape()
 {
@@ -1278,6 +1302,8 @@ void CaptureDeliveredUi(const std::filesystem::path &output)
     g.Reset();
     Hud::OpenMenu(UiScreen::Title);
     draw("ui-title.bmp");
+    Hud::OpenMenu(UiScreen::Stages);
+    draw("ui-stages.bmp");
     Hud::OpenMenu(UiScreen::Pause);
     draw("ui-pause.bmp");
     Hud::OpenMenu(UiScreen::Options);
@@ -1297,6 +1323,17 @@ void CaptureDeliveredUi(const std::filesystem::path &output)
     law.infamy = 80;
     auto &mine = game::GameLevels::Mine().GetState();
     mine.player.health = 18;
+    draw("ui-city-unarmed.bmp");
+    assert(WeaponWheel::Open());
+    draw("ui-weapon-wheel-empty.bmp");
+    WeaponWheel::Close();
+    mine.loadout.GrantPistol();
+    mine.loadout.Select(combat::WeaponSlot::Secondary);
+    g.MouseMotion(640, 400);
+    assert(WeaponWheel::Open());
+    g.MouseMotion(780, 470);
+    draw("ui-weapon-wheel-pistol.bmp");
+    WeaponWheel::Close();
     combat::Shot shot{};
     mine.pistol.TryFire(0, shot);
     mine.pistol.Reload();

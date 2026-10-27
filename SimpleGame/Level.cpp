@@ -594,8 +594,16 @@ void MineCombat::UpdateBullets(float deltaSeconds)
 void MineCombat::Attack()
 {
     auto &world = tutorial::Game::Get().GetState();
-    if (tutorial::Dialogue::LocksWorld() || state.meleeSeconds > 0 || state.bullets.size() >= 128)
+    if (!state.active || world.isPaused || world.mapVisible || world.weaponWheel.visible ||
+        world.journalVisible || world.dialogueHistoryVisible || state.player.health <= 0 ||
+        tutorial::HospitalRecovery::Active() || tutorial::Dialogue::LocksWorld() || state.meleeSeconds > 0 ||
+        state.bullets.size() >= 128)
     {
+        return;
+    }
+    if (!state.loadout.IsPistolEquipped())
+    {
+        Melee();
         return;
     }
     combat::Shot shot;
@@ -623,9 +631,10 @@ void MineCombat::Attack()
 void MineCombat::Melee()
 {
     auto &world = tutorial::Game::Get().GetState();
-    if (!state.active || world.isPaused || world.mapVisible || state.player.health <= 0 ||
-        tutorial::HospitalRecovery::Active() || tutorial::Dialogue::LocksWorld() || world.journalVisible ||
-        world.dialogueHistoryVisible || state.meleeSeconds > 0)
+    if (!state.active || world.isPaused || world.mapVisible || world.weaponWheel.visible ||
+        state.player.health <= 0 || tutorial::HospitalRecovery::Active() ||
+        tutorial::Dialogue::LocksWorld() || world.journalVisible || world.dialogueHistoryVisible ||
+        state.meleeSeconds > 0)
     {
         return;
     }
@@ -654,7 +663,10 @@ void MineCombat::Melee()
 
 void MineCombat::Reload()
 {
-    if (state.pistol.Reload())
+    const auto &world = tutorial::Game::Get().GetState();
+    if (state.loadout.IsPistolEquipped() && !world.weaponWheel.visible && !world.isPaused &&
+        !world.mapVisible && !world.journalVisible && !world.dialogueHistoryVisible &&
+        !tutorial::Dialogue::LocksWorld() && !tutorial::HospitalRecovery::Active() && state.pistol.Reload())
     {
         tutorial::Game::Get().ShowNotice("권총 / 재장전 중. 예비 탄창은 제한 없이 보급됩니다.");
     }
@@ -1287,6 +1299,7 @@ tutorial::Vector2 MineLevel::Project(tutorial::Vector2 p, float height)
 void MineLevel::ClearInput()
 {
     auto &world = tutorial::Game::Get().GetState();
+    tutorial::WeaponWheel::Close();
     world.mapVisible = false;
     std::fill(world.pressedKeys, world.pressedKeys + 256, false);
     world.mouseFiring = false;
@@ -1332,6 +1345,10 @@ void MineLevel::AddExperience(int amount)
 void MineLevel::Enter(bool debugEntry)
 {
     auto &world = tutorial::Game::Get().GetState();
+    if (debugEntry)
+    {
+        GameLevels::PrepareTestEntry(tutorial::TestStage::Mine);
+    }
     if (debugEntry && state.quest.GetStage() < MineQuestStage::TravelToMine)
     {
         state.quest.Advance(MineQuestStage::ShowRecord);
@@ -1620,6 +1637,10 @@ void ChapterOneLevel::Attack()
 {
     combat.Attack();
 }
+void ChapterOneLevel::Melee()
+{
+    combat.Melee();
+}
 ChapterOneState &ChapterOneLevel::GetState()
 {
     return state;
@@ -1812,10 +1833,11 @@ bool FrontierParty::Move(FrontierPerson &person, float amount)
 }
 void ChapterOneLevel::Enter(bool debugEntry)
 {
+    tutorial::WeaponWheel::Close();
     tutorial::Game::Get().GetState().mapVisible = false;
     if (debugEntry)
     {
-        state.unlocked = true;
+        GameLevels::PrepareTestEntry(tutorial::TestStage::ChapterOne);
     }
     if (!Unlock())
     {
@@ -1852,6 +1874,7 @@ void ChapterOneLevel::Enter(bool debugEntry)
 }
 void ChapterOneLevel::Leave()
 {
+    tutorial::WeaponWheel::Close();
     tutorial::Game::Get().GetState().mapVisible = false;
     state.active = false;
     state.bullets.clear();
@@ -2175,7 +2198,10 @@ float ChapterOneLevel::GetAimAngle() const
 }
 void FrontierCombat::Attack()
 {
-    if (tutorial::Dialogue::LocksWorld())
+    auto &world = tutorial::Game::Get().GetState();
+    if (tutorial::Dialogue::LocksWorld() || world.isPaused || world.mapVisible || world.weaponWheel.visible ||
+        world.journalVisible || world.dialogueHistoryVisible || tutorial::HospitalRecovery::Active() ||
+        GameLevels::Mine().GetState().player.health <= 0 || state.meleeSeconds > 0)
     {
         return;
     }
@@ -2184,6 +2210,11 @@ void FrontierCombat::Attack()
         return;
     }
     auto &mine = GameLevels::Mine().GetState();
+    if (!mine.loadout.IsPistolEquipped())
+    {
+        Melee();
+        return;
+    }
     combat::Shot shot;
     if (!mine.pistol.TryFire(level.GetAimAngle(), shot))
     {
@@ -2200,6 +2231,48 @@ void FrontierCombat::Attack()
         state.bullets.push_back(projectile);
     }
     state.muzzleFlash = .055f;
+}
+void FrontierCombat::Melee()
+{
+    const auto &world = tutorial::Game::Get().GetState();
+    if (!state.active || world.isPaused || world.mapVisible || world.weaponWheel.visible ||
+        world.journalVisible || world.dialogueHistoryVisible || tutorial::Dialogue::LocksWorld() ||
+        tutorial::HospitalRecovery::Active() || GameLevels::Mine().GetState().player.health <= 0 ||
+        state.meleeSeconds > 0)
+    {
+        return;
+    }
+    state.meleeSeconds = .65f;
+    if (state.negotiated)
+    {
+        return;
+    }
+    auto aim = MineLevel::GetAimDirection(level.GetAimAngle());
+    FrontierPerson *closest = nullptr;
+    float best = .85f;
+    for (auto &person : state.scrappers)
+    {
+        float dx = person.position.x - world.playerPosition.x,
+              dy = person.position.y - world.playerPosition.y;
+        float distance = std::hypot(dx, dy);
+        if (person.combat.health > 0 && distance < best &&
+            (distance < .35f || dx * aim.x + dy * aim.y > distance * .5f) &&
+            level.HasLineOfSight(world.playerPosition, person.position))
+        {
+            closest = &person;
+            best = distance;
+        }
+    }
+    if (closest)
+    {
+        state.hostile = true;
+        auto &stats = GameLevels::Mine().GetState().player;
+        closest->combat.health = (std::max)(0, closest->combat.health - 30 - (stats.level - 1) * 4);
+        if (closest->combat.health == 0)
+        {
+            GameLevels::Mine().AddExperience(kExperiencePerKill);
+        }
+    }
 }
 void FrontierCombat::Fire(FrontierPerson &person, tutorial::Vector2 target, ChapterTeam team)
 {
@@ -2306,6 +2379,7 @@ void FrontierCombat::Update(float deltaSeconds)
     auto &world = tutorial::Game::Get().GetState();
     auto &mine = GameLevels::Mine().GetState();
     mine.pistol.Update(deltaSeconds);
+    state.meleeSeconds = (std::max)(0.f, state.meleeSeconds - deltaSeconds);
     state.invulnerability = (std::max)(0.f, state.invulnerability - deltaSeconds);
     state.muzzleFlash = (std::max)(0.f, state.muzzleFlash - deltaSeconds);
     for (auto &tracer : state.tracers)
@@ -2564,6 +2638,42 @@ void GameLevels::Reset()
     for (Level *level : {static_cast<Level *>(&Mine()), static_cast<Level *>(&Chapter())})
     {
         level->Reset();
+    }
+}
+void GameLevels::PrepareTestEntry(tutorial::TestStage stage)
+{
+    auto &w = tutorial::Game::Get().GetState();
+    auto &mine = Mine().GetState();
+    if (stage >= tutorial::TestStage::Observatory)
+    {
+        w.mainQuestStage = tutorial::MainQuestStage::ReadGateSignal;
+    }
+    if (stage >= tutorial::TestStage::BikeUnlocked)
+    {
+        w.gateSignalHeard = w.hasDescendedObservatory = true;
+        w.mainQuestStage = tutorial::MainQuestStage::MountJetBike;
+        w.dialogue.scenes["MQ00/observatory"].phase = tutorial::DialoguePhase::Completed;
+        w.dialogue.events.insert("MQ00/observatory/complete");
+        mine.quest.Advance(MineQuestStage::ShowRecord);
+        mine.quest.Advance(MineQuestStage::CheckCityRelay);
+        mine.quest.BeginJourney();
+    }
+    if (stage >= tutorial::TestStage::WeaponUnlocked)
+    {
+        mine.loadout.GrantPistol();
+        w.dialogue.scenes["MQ00/mine-weapon"].phase = tutorial::DialoguePhase::Completed;
+        w.dialogue.events.insert("MQ00/mine-weapon/complete");
+        mine.quest.BeginJourney();
+    }
+    if (stage >= tutorial::TestStage::ChapterOne)
+    {
+        while (mine.quest.GetStage() != MineQuestStage::Complete)
+        {
+            mine.quest.Advance(mine.quest.GetStage());
+        }
+        w.isComplete = true;
+        w.mainQuestStage = tutorial::MainQuestStage::Complete;
+        Chapter().Unlock();
     }
 }
 } // namespace game

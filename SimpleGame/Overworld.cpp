@@ -1928,6 +1928,7 @@ void Overworld::Populate(GameState &state)
 
 void Overworld::UpdateBike(GameState &state, float deltaSeconds)
 {
+    BodyCollision::RecoverBike();
     Vector2 previous = state.playerPosition;
     float oldYaw = state.bikeYaw;
     float steering = float(state.pressedKeys['d']) - float(state.pressedKeys['a']);
@@ -1943,30 +1944,13 @@ void Overworld::UpdateBike(GameState &state, float deltaSeconds)
     float acceleration = braking ? 24.f : reverse ? 4.f : 18.f;
     state.bikeSpeed +=
         Game::Clamp(targetSpeed - state.bikeSpeed, -acceleration * deltaSeconds, acceleration * deltaSeconds);
-    const auto &mesh = models::ResourceAssets::Get(
-        models::ModelLibrary::Get().vehicles[size_t(models::VehicleType::JetBike)].body.resourceId);
     auto blocked = [&](Vector2 p) {
         float h = RoadNetwork::Get().DriveElevation(p, state.bikeElevation);
         if (state.bikeElevation > .5f && h < state.bikeElevation - .6f)
         {
             return true;
         }
-        Vector2 d = {std::cos(state.bikeYaw), std::sin(state.bikeYaw)}, n = {-d.y, d.x};
-        for (int sample = 0; sample <= 4; ++sample)
-        {
-            float along = mesh.minimum.x + .035f + (mesh.physicalSize.x - .07f) * sample / 4;
-            for (float across : {mesh.minimum.y + .035f, mesh.maximum.y - .035f})
-            {
-                Vector2 q = {p.x + d.x * along + n.x * across, p.y + d.y * along + n.y * across};
-                if (q.x < kWorldMinX || q.x > kWorldMaxX || q.y < kWorldMinY || q.y > kWorldMaxY ||
-                    TransitLayout::IsBlocked(q, .035f, h, true) ||
-                    (h <= 1 && CivicJustice::Solid(q, .035f, h, true)))
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return BodyCollision::BikeBlocked(p, state.bikeYaw, h, false);
     };
     if (blocked(previous))
     {

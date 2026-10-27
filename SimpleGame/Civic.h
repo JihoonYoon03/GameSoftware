@@ -124,6 +124,8 @@ class BodyCollision
 {
   public:
     static Vector2 Slide(Vector2 from, Vector2 desired, const std::function<bool(Vector2)> &blocked);
+    static bool BikeBlocked(Vector2 position, float yaw, float elevation, bool includeVehicles = true);
+    static void RecoverBike();
     static Vector2 MovePlayer(Vector2 from, Vector2 desired);
     static Vector2 MoveResident(size_t index, Vector2 from, Vector2 desired);
     static void Update(float deltaSeconds);

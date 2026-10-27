@@ -35,6 +35,7 @@ class Hud
     static void DrawNoticePanel();
     static void DrawDialogue();
     static void DrawVitals();
+    static void DrawWeaponWheel();
     static void DrawObjective(const std::string &objective, const std::string &context);
     static void DrawInteraction(const std::string &label);
     static void DrawMenu();

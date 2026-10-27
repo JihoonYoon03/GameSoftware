@@ -5,6 +5,30 @@ namespace combat
 {
 
 // ============================================================================
+// PlayerLoadout — ownership and equipment; an empty slot cannot equip a weapon.
+// ============================================================================
+enum class WeaponSlot
+{
+    Unarmed,
+    Primary,
+    Secondary
+};
+class PlayerLoadout
+{
+  public:
+    bool GrantPistol();
+    bool HasPistol() const;
+    bool IsAvailable(WeaponSlot slot) const;
+    bool Select(WeaponSlot slot);
+    WeaponSlot Selected() const;
+    bool IsPistolEquipped() const;
+
+  private:
+    bool pistolOwned = false;
+    WeaponSlot selected = WeaponSlot::Unarmed;
+};
+
+// ============================================================================
 // Weapon — shared interface
 // ============================================================================
 struct Shot

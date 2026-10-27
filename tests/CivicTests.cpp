@@ -23,6 +23,9 @@ game::PlayerStats &Stats()
 void Exterior()
 {
     Game::Get().Reset();
+    auto &loadout = game::GameLevels::Mine().GetState().loadout;
+    loadout.GrantPistol();
+    loadout.Select(combat::WeaponSlot::Secondary);
     World().isInsideHome = false;
     World().residents.clear();
     World().playerPosition = World().cameraPosition = {2, 0};
@@ -276,6 +279,97 @@ void TestPolice()
     assert(CivicCombat::DamageOfficer(0, 999, {1, 0}));
     assert(law.infamy >= infamy);
 }
+void TestHighSpeedOverlapRecovery()
+{
+    auto block = [](Vector2 p) { return std::fabs(p.x) < 1.1f && std::fabs(p.y) < 2.5f; };
+    auto freed = BodyCollision::Slide({0, 0}, {0, 0}, block);
+    assert(!block(freed) && Game::Distance({0, 0}, freed) < 1.3f);
+    auto wall = [](Vector2 p) { return p.x > 0 && p.x < .025f; };
+    auto stopped = BodyCollision::Slide({-4, 0}, {4, 1}, wall);
+    assert(stopped.x <= 0 && stopped.y > .8f); // Sweep a thin obstacle, even for a large displacement.
+    for (int orientation = 0; orientation < 3; ++orientation)
+    {
+        Exterior();
+        auto center = Open(0);
+        World().playerPosition = World().cameraPosition = center;
+        auto &traffic = Overworld::Traffic();
+        for (int i = 0; i < 120; ++i)
+        {
+            traffic.Update(World(), 1.f / 60);
+        }
+        auto found =
+            std::find_if(traffic.Vehicles().begin(), traffic.Vehicles().end(), [&](const TrafficVehicle &c) {
+                return traffic.RenderElevation(size_t(&c - traffic.Vehicles().data())) < .1f;
+            });
+        assert(found != traffic.Vehicles().end());
+        auto car = *found;
+        // Keep production mesh/ground lane data, but control the collision pose and velocity.
+        auto &cars = const_cast<std::vector<TrafficVehicle> &>(traffic.Vehicles());
+        cars.assign(1, car);
+        cars[0].position = center;
+        cars[0].previousPosition = {center.x - 4, center.y};
+        cars[0].yaw = cars[0].previousYaw = orientation * tutorial::kPi / 4;
+        cars[0].speed = 12;
+        World().residents.clear();
+        auto separated = BodyCollision::MovePlayer(center, center);
+        assert(Game::Distance(center, separated) > .5f && !CivicJustice::Solid(separated, .18f));
+        auto &w = World();
+        w.isBikeMounted = true;
+        w.bikeYaw = cars[0].yaw + .7f;
+        w.bikeElevation = 0;
+        w.bikeSafePoseValid = false;
+        bool parked = false;
+        for (int ring = 1; ring <= 12 && !parked; ++ring)
+        {
+            for (int i = 0; i < 32; ++i)
+            {
+                float a = i * tutorial::kPi / 16;
+                Vector2 p = {center.x + std::cos(a) * ring * .25f, center.y + std::sin(a) * ring * .25f};
+                if (!BodyCollision::BikeBlocked(p, w.bikeYaw, 0))
+                {
+                    w.playerPosition = w.bikePosition = p;
+                    BodyCollision::RecoverBike();
+                    parked = true;
+                    break;
+                }
+            }
+        }
+        assert(parked && w.bikeSafePoseValid);
+        // Fast contact first embeds and rotates the chassis; the post-contact pass must validate
+        // its entire footprint, restore an unoccupied pose and still allow the next escape input.
+        w.playerPosition = w.bikePosition = center;
+        w.bikeYaw += .6f;
+        w.bikeSpeed = Overworld::kBikeBoostSpeed;
+        CivicJustice::State().playerImpact.invulnerability = 1000;
+        assert(BodyCollision::BikeBlocked(w.bikePosition, w.bikeYaw, 0));
+        BodyCollision::VehicleContacts(.05f);
+        assert(!BodyCollision::BikeBlocked(w.bikePosition, w.bikeYaw, w.bikeElevation));
+        assert(Game::Distance(w.playerPosition, w.bikePosition) < .001f);
+        // With no history (for example, a moving car reaches a newly mounted bike), radial
+        // recovery must also escape a full vehicle-width overlap rather than remain pinned.
+        w.bikeSafePoseValid = false;
+        w.playerPosition = w.bikePosition = center;
+        BodyCollision::RecoverBike();
+        assert(!BodyCollision::BikeBlocked(w.bikePosition, w.bikeYaw, w.bikeElevation));
+        w.pressedKeys['s'] = true;
+        auto before = w.playerPosition;
+        for (int i = 0; i < 30; ++i)
+        {
+            Overworld::UpdateBike(w, 1.f / 60);
+        }
+        if (Game::Distance(before, w.playerPosition) < .1f)
+        {
+            w.pressedKeys['s'] = false;
+            w.pressedKeys['w'] = true;
+            for (int i = 0; i < 30; ++i)
+            {
+                Overworld::UpdateBike(w, 1.f / 60);
+            }
+        }
+        assert(Game::Distance(before, w.playerPosition) > .1f);
+    }
+    Game::Get().Reset();
+}
 void TestSecuritySpreadAndEvasion()
 {
     combat::SecurityCarbine carbine(1, 4253), elite(5, 4254);
@@ -317,6 +411,104 @@ void TestSecuritySpreadAndEvasion()
     law.bullets.push_back({point, {1, 0}, 32, 20, 100, false});
     CivicCombat::Update(.2f);
     assert(law.bullets.empty() && Stats().health == health);
+}
+void TestMountedImpactControls()
+{
+    Exterior();
+    auto &g = Game::Get();
+    auto &w = World();
+    auto &impact = CivicJustice::State().playerImpact;
+    const auto center = Open(0);
+    w.playerPosition = w.cameraPosition = center;
+    auto &traffic = Overworld::Traffic();
+    for (int i = 0; i < 120; ++i)
+    {
+        traffic.Update(w, 1.f / 60);
+    }
+    auto found =
+        std::find_if(traffic.Vehicles().begin(), traffic.Vehicles().end(), [&](const TrafficVehicle &c) {
+            return traffic.RenderElevation(size_t(&c - traffic.Vehicles().data())) < .1f;
+        });
+    assert(found != traffic.Vehicles().end());
+    auto car = *found;
+    auto &cars = const_cast<std::vector<TrafficVehicle> &>(traffic.Vehicles());
+    cars.assign(1, car);
+    cars[0].position = cars[0].previousPosition = center;
+    cars[0].speed = Overworld::kBikeBoostSpeed;
+    w.isBikeMounted = true;
+    w.bikePosition = center;
+    w.bikeSpeed = Overworld::kBikeBoostSpeed;
+    w.bikeSafePoseValid = false;
+    CivicJustice::State().playerGrace = 0;
+    impact = {};
+    BodyCollision::VehicleContacts(1.f / 60);
+    assert(w.isBikeMounted && Stats().health > 0 && Stats().health < Stats().maxHealth);
+    assert(impact.response == BodyResponse::Knockdown && impact.seconds > 0);
+
+    // Isolate the rider reaction from geometric separation, then run the actual game update
+    // (not UpdateBike directly). The former check skipped this input gate and disabled damage.
+    cars.clear();
+    w.playerPosition = w.bikePosition = center;
+    w.bikeYaw = 0;
+    w.bikeSpeed = 0;
+    w.bikeSafePoseValid = false;
+    float seconds = impact.seconds;
+    g.KeyDown('d', 0, 0);
+    g.Update(1.f / 60);
+    g.KeyUp('d', 0, 0);
+    assert(w.bikeYaw > .01f); // Steering remains available during the rider's impact reaction.
+    assert(impact.seconds < seconds && impact.seconds > 0);
+    assert(Game::Distance(w.playerPosition, w.bikePosition) < .001f);
+    g.KeyDown('s', 0, 0);
+    auto before = w.playerPosition;
+    for (int i = 0; i < 10; ++i)
+    {
+        g.Update(1.f / 60);
+    }
+    assert(w.bikeSpeed < 0 && Game::Distance(before, w.playerPosition) > .01f);
+    for (int i = 0; i < 40; ++i)
+    {
+        g.Update(1.f / 60);
+    }
+    assert(impact.seconds == 0 && impact.response == BodyResponse::None);
+    assert(Game::Distance(w.playerPosition, w.bikePosition) < .001f);
+    g.KeyUp('s', 0, 0);
+    g.KeyDown('w', 0, 0);
+    for (int i = 0; i < 10; ++i)
+    {
+        g.Update(1.f / 60);
+    }
+    assert(w.bikeSpeed > 0);
+    g.KeyUp('w', 0, 0);
+    for (int i = 0; i < 30; ++i)
+    {
+        g.Update(1.f / 60);
+    }
+    Overworld::ToggleBike(w);
+    assert(!w.isBikeMounted);
+    before = w.playerPosition;
+    g.KeyDown('w', 0, 0);
+    for (int i = 0; i < 5; ++i)
+    {
+        g.Update(1.f / 60);
+    }
+    assert(Game::Distance(before, w.playerPosition) > .01f);
+    g.KeyUp('w', 0, 0);
+    // Pedestrians still experience the existing short knockdown and displacement.
+    CivicJustice::State().playerGrace = 0;
+    impact = {};
+    CivicCombat::DamagePlayer(5, {4, 0});
+    assert(impact.response == BodyResponse::Knockdown);
+    g.KeyDown('w', 0, 0);
+    g.Update(1.f / 60);
+    assert(w.movementAmount == 0 && impact.seconds > 0);
+    for (int i = 0; i < 42; ++i)
+    {
+        g.Update(1.f / 60);
+    }
+    assert(impact.response == BodyResponse::None && w.movementAmount > 0);
+    g.KeyUp('w', 0, 0);
+    g.Reset();
 }
 void TestUnidentifiedEscapeAndVision()
 {
@@ -548,6 +740,8 @@ int main()
     TestSeverityAndMemory();
     TestFireMeleeAndWalls();
     TestBodiesAndVehicles();
+    TestHighSpeedOverlapRecovery();
+    TestMountedImpactControls();
     TestPolice();
     TestSecuritySpreadAndEvasion();
     TestUnidentifiedEscapeAndVision();

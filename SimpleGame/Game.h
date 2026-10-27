@@ -1,5 +1,6 @@
 #pragma once
 #include "ModelLibrary.h"
+#include "Weapon.h"
 #include <string>
 #include <functional>
 #include <map>
@@ -241,6 +242,7 @@ enum class UiScreen
     None,
     Title,
     Pause,
+    Stages,
     Options,
     Summary,
     Help,
@@ -252,6 +254,8 @@ enum class UiAction
 {
     Continue,
     Start,
+    Stages,
+    EnterStage,
     Options,
     Summary,
     Help,
@@ -282,6 +286,33 @@ struct UiState
     UiAction confirmation = UiAction::Restart;
     int focus = 0, pressed = -1;
 };
+enum class TestStage
+{
+    Prologue,
+    Observatory,
+    BikeUnlocked,
+    WeaponUnlocked,
+    Mine,
+    ChapterOne,
+    Count
+};
+struct WeaponWheelState
+{
+    bool visible = false, qHeld = false;
+    Vector2 origin = {}, offset = {};
+    combat::WeaponSlot hovered = combat::WeaponSlot::Unarmed;
+};
+// ============================================================================
+// WeaponWheel — hold/release selection, independent of the equipped weapon.
+// ============================================================================
+class WeaponWheel
+{
+  public:
+    static bool Open();
+    static void Motion();
+    static void Close(bool commit = false);
+    static void RefreshCursorCapture();
+};
 // State owned by Game. Renderers read it without changing gameplay.
 struct GameState
 {
@@ -303,6 +334,9 @@ struct GameState
     float bikeElevation = 0;
     float bikeYaw = kJetBikeYaw;
     Vector2 bikePosition = kJetBikePosition;
+    bool bikeSafePoseValid = false;
+    Vector2 bikeSafePosition = kJetBikePosition;
+    float bikeSafeYaw = kJetBikeYaw, bikeSafeElevation = 0;
     Vector2 mineReturnPosition = {128, 18};
     bool gateSignalHeard = false;
     bool hasDescendedObservatory = false;
@@ -312,6 +346,7 @@ struct GameState
     DialogueState dialogue;
     UiPreferences uiPreferences;
     UiState ui;
+    WeaponWheelState weaponWheel;
     std::array<MapDestination, size_t(MapRegion::Count)> mapDestinations = {};
     bool isComplete = false;
     bool isSideQuestAccepted = false;
@@ -362,6 +397,8 @@ class Game
     static Game &Get();
     GameState &GetState();
     void Reset();
+    bool EnterTestStage(TestStage stage);
+    static const char *StageName(TestStage stage);
     void Resize(int width, int height);
     void KeyDown(unsigned char key, int x, int y);
     void KeyUp(unsigned char key, int x, int y);
@@ -369,6 +406,8 @@ class Game
     void MouseMotion(int x, int y);
     void MouseButton(int button, int state, int x, int y);
     void MouseEntry(int state);
+    // Deterministic simulation step, also used by the window timer.
+    void Update(float deltaSeconds);
     void Tick(int timer);
     static float Clamp(float value, float minimum, float maximum);
     static float Distance(Vector2 first, Vector2 second);

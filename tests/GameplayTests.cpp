@@ -45,6 +45,8 @@ void ReadDialogue()
 void ReadyMine(unsigned int seed = 13)
 {
     GameLevels::Mine().Reset();
+    mineState.loadout.GrantPistol();
+    mineState.loadout.Select(combat::WeaponSlot::Secondary);
     assert(mineState.quest.Advance(MineQuestStage::ShowRecord));
     assert(mineState.quest.Advance(MineQuestStage::CheckCityRelay));
     assert(mineState.quest.BeginJourney());
@@ -54,6 +56,156 @@ void ReadyMine(unsigned int seed = 13)
     GameLevels::Mine().Map().Generate(seed);
     mineState.active = true;
     mineState.invulnerability = 1000;
+}
+void TestStageSelectionAndLoadout()
+{
+    using namespace tutorial;
+    using combat::WeaponSlot;
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    auto press = [&](unsigned char key) {
+        g.KeyDown(key, 0, 0);
+        g.KeyUp(key, 0, 0);
+    };
+    g.Reset();
+    g.Resize(1280, 800);
+    assert(!mineState.loadout.HasPistol() && mineState.loadout.Selected() == WeaponSlot::Unarmed);
+    assert(!mineState.loadout.Select(WeaponSlot::Primary));
+    assert(!mineState.loadout.Select(WeaponSlot::Secondary));
+    for (int i = 0; i < int(TestStage::Count); ++i)
+    {
+        Hud::OpenMenu(i % 2 ? UiScreen::Pause : UiScreen::Title);
+        press('s');
+        press(13);
+        assert(w.ui.screen == UiScreen::Stages);
+        auto controls = Hud::Controls();
+        assert(controls.size() == size_t(TestStage::Count) + 1);
+        for (int j = 0; j < i; ++j)
+        {
+            press('s');
+        }
+        press(13);
+        assert(w.ui.screen == UiScreen::None && !w.isPaused && !w.weaponWheel.visible);
+        assert(mineState.loadout.Selected() == WeaponSlot::Unarmed);
+        assert(mineState.loadout.HasPistol() == (i >= int(TestStage::WeaponUnlocked)));
+        assert(mineState.active == (i == int(TestStage::Mine)));
+        assert(GameLevels::Chapter().IsActive() == (i == int(TestStage::ChapterOne)));
+        if (i == int(TestStage::Prologue))
+        {
+            assert(w.isInsideHome && w.mainQuestStage == MainQuestStage::ReadHomeTerminal);
+        }
+        if (i == int(TestStage::Observatory))
+        {
+            assert(w.isInObservatory && !w.gateSignalHeard);
+        }
+        if (i >= int(TestStage::BikeUnlocked))
+        {
+            assert(w.gateSignalHeard && w.hasDescendedObservatory);
+        }
+        if (i == int(TestStage::BikeUnlocked))
+        {
+            assert(mineState.quest.GetStage() == MineQuestStage::TravelToMine &&
+                   mineState.quest.IsRiaJoined() && w.isBikeMounted &&
+                   !BodyCollision::BikeBlocked(w.bikePosition, w.bikeYaw, w.bikeElevation));
+        }
+        if (i == int(TestStage::WeaponUnlocked))
+        {
+            assert(!w.isBikeMounted && !mineState.active &&
+                   mineState.quest.GetStage() == MineQuestStage::TravelToMine &&
+                   Game::Distance(w.playerPosition, Overworld::kMineEntrance) < 2 &&
+                   !g.IsPositionBlocked(w.playerPosition));
+        }
+        if (i == int(TestStage::Mine))
+        {
+            assert(mineState.quest.IsRiaJoined() &&
+                   mineState.quest.GetStage() == MineQuestStage::BypassPower);
+        }
+        if (i == int(TestStage::ChapterOne))
+        {
+            assert(mineState.quest.GetStage() == MineQuestStage::Complete && w.isComplete &&
+                   GameLevels::Chapter().IsAvailable());
+        }
+    }
+    assert(!g.EnterTestStage(TestStage::Count) && GameLevels::Chapter().IsActive());
+    // The normal narrative gives the pistol once, only after reading Ria's entrance handover.
+    assert(g.EnterTestStage(TestStage::BikeUnlocked));
+    w.isBikeMounted = false;
+    w.playerPosition = Overworld::kMineEntrance;
+    press('e');
+    assert(Dialogue::Active() && !mineState.loadout.HasPistol() && !mineState.active);
+    ReadDialogue();
+    assert(mineState.active && mineState.loadout.HasPistol() && !mineState.loadout.IsPistolEquipped());
+    assert(!mineState.loadout.GrantPistol());
+    auto choose = [&](Vector2 offset) {
+        g.MouseMotion(640, 400);
+        g.KeyDown('q', 0, 0);
+        assert(w.weaponWheel.visible && !w.mouseFiring);
+        g.MouseMotion(int(640 + offset.x), int(400 + offset.y));
+        g.KeyUp('q', 0, 0);
+        assert(!w.weaponWheel.visible && !w.mouseFiring);
+    };
+    int kits = mineState.player.recoveryKits;
+    mineState.player.health = 20;
+    choose({140, 70});
+    assert(mineState.loadout.IsPistolEquipped() && mineState.player.recoveryKits == kits);
+    int rounds = mineState.pistol.GetRounds();
+    GameLevels::Mine().Combat().Attack();
+    assert(mineState.pistol.GetRounds() == rounds - 1);
+    choose({-140, 70});
+    assert(mineState.loadout.Selected() == WeaponSlot::Unarmed);
+    GameLevels::Mine().Combat().Reload();
+    assert(!mineState.pistol.IsReloading());
+    GameLevels::Mine().Combat().Attack();
+    assert(mineState.pistol.GetRounds() == rounds - 1 && mineState.meleeSeconds > 0);
+    choose({0, -150}); // Empty primary cannot replace the currently selected hands.
+    assert(mineState.loadout.Selected() == WeaponSlot::Unarmed);
+    g.MouseMotion(640, 400);
+    g.KeyDown('q', 0, 0);
+    g.KeyDown('q', 0, 0); // Auto-repeat cannot consume a kit or reopen the wheel.
+    g.MouseMotion(780, 470);
+    GameLevels::Mine().Combat().Attack();
+    g.MouseButton(GLUT_LEFT_BUTTON, GLUT_DOWN, 780, 470);
+    assert(!w.mouseFiring && mineState.pistol.GetRounds() == rounds - 1);
+    press(27); // Cancel preserves the prior weapon; Q auto-repeat cannot reopen it.
+    g.KeyDown('q', 0, 0);
+    assert(!w.weaponWheel.visible);
+    g.KeyUp('q', 0, 0);
+    assert(!w.weaponWheel.visible && !mineState.loadout.IsPistolEquipped());
+    choose({140, 70});
+    g.MouseMotion(640, 400);
+    g.KeyDown('q', 0, 0);
+    g.MouseMotion(500, 470);
+    g.MouseEntry(GLUT_LEFT);
+    g.KeyUp('q', 0, 0);
+    assert(mineState.loadout.IsPistolEquipped());
+    Hud::OpenMenu(UiScreen::Pause);
+    assert(!WeaponWheel::Open());
+    press('q');
+    assert(w.ui.screen == UiScreen::Pause);
+    Hud::CloseMenu();
+    w.mapVisible = true;
+    assert(!WeaponWheel::Open());
+    w.mapVisible = false;
+    press('g');
+    assert(mineState.player.recoveryKits == kits - 1 && mineState.player.health > 20);
+    GameLevels::Mine().Leave();
+    w.playerPosition = Overworld::kMineEntrance;
+    press('e');
+    assert(mineState.active && !Dialogue::Active() && mineState.pistol.GetRounds() == rounds - 1);
+    // Mouse deltas and release also work through the window's letterbox transform.
+    g.Resize(1920, 1080);
+    g.MouseMotion(960, 540);
+    g.KeyDown('q', 0, 0);
+    g.MouseMotion(771, 634);
+    g.KeyUp('q', 0, 0);
+    assert(mineState.loadout.Selected() == WeaponSlot::Unarmed);
+    g.Resize(1280, 800);
+    g.Reset();
+    w.isInsideHome = false;
+    CivicCombat::Fire();
+    assert(!mineState.loadout.HasPistol() && mineState.pistol.GetRounds() == 12 &&
+           CivicJustice::State().meleeSeconds > 0);
+    g.Reset();
 }
 void TestUiMenusAndTransactions()
 {
@@ -68,7 +220,7 @@ void TestUiMenusAndTransactions()
     Hud::OpenMenu(UiScreen::Title);
     assert(w.isPaused && !w.mouseFiring);
     auto title = Hud::Controls();
-    assert(title.front().action == UiAction::Start && title.size() == 4);
+    assert(title.front().action == UiAction::Start && title.size() == 5);
     Hud::OpenMenu(UiScreen::Options);
     auto slider = Hud::Controls().front();
     // Fit a 1280x800 canvas into a 1920x1080 window; input must share the same inverse transform.
@@ -1419,6 +1571,7 @@ void CompleteChapterSite(int site, bool peaceful = true)
         else
         {
             auto &world = tutorial::Game::Get().GetState();
+            mineState.loadout.Select(combat::WeaponSlot::Secondary);
             s.invulnerability = 1000;
             for (size_t i = 0; i < s.scrappers.size(); ++i)
             {
@@ -1764,6 +1917,7 @@ int main(int argc, char **argv)
         std::cout << "Urban traffic, crossing and resident checks passed.\n";
         return 0;
     }
+    TestStageSelectionAndLoadout();
     TestUiMenusAndTransactions();
     TestDialogueProgress();
     TestExplorationAndMelee();

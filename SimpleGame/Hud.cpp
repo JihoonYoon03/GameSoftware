@@ -678,7 +678,8 @@ void DrawSchematic(const SchematicView &view, bool full)
     DrawDestination(view, full);
     const auto &world = Game::Get().GetState();
     float heading = world.isBikeMounted ? world.bikeYaw : world.facingYaw;
-    if (game::GameLevels::IsCombatActive() || CivicCombat::Available())
+    if (game::GameLevels::Mine().GetState().loadout.IsPistolEquipped() &&
+        (game::GameLevels::IsCombatActive() || CivicCombat::Available()))
     {
         float angle = game::GameLevels::Chapter().IsActive() ? game::GameLevels::Chapter().GetAimAngle()
                                                              : game::GameLevels::Mine().GetAimAngle();
@@ -1237,7 +1238,7 @@ void Hud::DrawVitals()
     {
         UiText(32, 690,
                game::GameLevels::IsCombatActive()
-                   ? (stats.recoveryKits > 0 ? "위험 · Q 회복" : "위험 · 회복 키트 없음")
+                   ? (stats.recoveryKits > 0 ? "위험 · G 회복" : "위험 · 회복 키트 없음")
                    : "위험 · 의료 지원 필요",
                16, {1, .61f, .46f}, true);
     }
@@ -1260,7 +1261,7 @@ void Hud::DrawVitals()
             UiText(1248, 695, "부스트", 17, {.55f, .95f, .88f}, true, true);
         }
     }
-    else if (combat)
+    else if (combat && mine.loadout.IsPistolEquipped())
     {
         const auto &gun = mine.pistol;
         Icon("pistol", 1040, 723, 28, true);
@@ -1288,7 +1289,7 @@ void Hud::DrawVitals()
                 UiText(1248, 705, "R 재장전", 17, {1, .77f, .4f}, true, true);
             }
         }
-        if (w.cursorInsideViewport)
+        if (w.cursorInsideViewport && !w.weaponWheel.visible)
         {
             auto c = w.cursorPosition;
             float gap = 6 + gun.GetSpread() * 120;
@@ -1309,6 +1310,17 @@ void Hud::DrawVitals()
                 Drawing::DrawLine({c.x - 3, c.y - 3}, {c.x + 3, c.y + 3}, ink, 2);
                 Drawing::DrawLine({c.x + 3, c.y - 3}, {c.x - 3, c.y + 3}, ink, 2);
             }
+        }
+    }
+    if (!w.isBikeMounted && combat && !mine.loadout.IsPistolEquipped())
+    {
+        UiText(1248, 736, "맨손", 25, kUiInk, true, true);
+        UiText(1248, 764, "좌클릭 근접 · Q 홀드 무기 선택", 15, kUiInk, true, true);
+        if (w.cursorInsideViewport && !w.weaponWheel.visible)
+        {
+            auto p = w.cursorPosition;
+            Drawing::DrawEllipse(p.x, p.y, 5, 5, {.02f, .05f, .06f, .8f});
+            Drawing::DrawEllipse(p.x, p.y, 2, 2, {.75f, .96f, .9f});
         }
     }
     const auto &law = CivicJustice::State();
@@ -1368,6 +1380,7 @@ void Hud::OpenMenu(UiScreen screen)
     {
         return;
     }
+    WeaponWheel::Close();
     w.ui.screen = screen;
     w.ui.focus = 0;
     w.ui.pressed = -1;
@@ -1397,12 +1410,14 @@ std::vector<UiControl> Hud::Controls()
     {
     case UiScreen::Title:
         row(UiAction::Start, "시작하기");
+        row(UiAction::Stages, "스테이지 목록 · 테스트");
         row(UiAction::Options, "옵션");
         row(UiAction::Help, "조작 안내");
         row(UiAction::Quit, "종료");
         break;
     case UiScreen::Pause:
         row(UiAction::Continue, "계속하기");
+        row(UiAction::Stages, "스테이지 목록 · 테스트");
         row(UiAction::Options, "옵션");
         row(UiAction::Summary, "보유 · 성장 정보");
         row(UiAction::Help, "조작 안내");
@@ -1410,6 +1425,18 @@ std::vector<UiControl> Hud::Controls()
                                : game::GameLevels::Mine().IsActive()  ? "광산 재시작"
                                                                       : "새 게임 · 진행 초기화");
         row(UiAction::Quit, "종료");
+        break;
+    case UiScreen::Stages:
+        for (int i = 0; i < int(TestStage::Count); ++i)
+        {
+            controls.push_back({UiAction::EnterStage,
+                                {336, 222 + i * 55.f},
+                                {608, 44},
+                                Game::StageName(TestStage(i)),
+                                true,
+                                i});
+        }
+        controls.push_back({UiAction::Back, {336, 566}, {608, 44}, "뒤로"});
         break;
     case UiScreen::Options:
         row(UiAction::Background, "배경 불투명도");
@@ -1486,11 +1513,16 @@ void Hud::Activate(const UiControl &control, int direction)
     case UiAction::Start:
         g.Reset();
         break;
+    case UiAction::EnterStage:
+        g.EnterTestStage(TestStage(control.choice));
+        break;
+    case UiAction::Stages:
     case UiAction::Options:
     case UiAction::Summary:
     case UiAction::Help: {
         auto parent = w.ui.screen == UiScreen::Title ? UiScreen::Title : UiScreen::Pause;
-        OpenMenu(control.action == UiAction::Options   ? UiScreen::Options
+        OpenMenu(control.action == UiAction::Stages    ? UiScreen::Stages
+                 : control.action == UiAction::Options ? UiScreen::Options
                  : control.action == UiAction::Summary ? UiScreen::Summary
                                                        : UiScreen::Help);
         w.ui.returnTo = parent;
@@ -1651,9 +1683,9 @@ bool Hud::HandleKey(unsigned char key)
     {
         Activate(controls[size_t(w.ui.focus)], key == 'a' ? -1 : 1);
     }
-    if ((w.ui.screen == UiScreen::Pause || w.ui.screen == UiScreen::None) && (key == 'r' || key == 'q'))
+    if ((w.ui.screen == UiScreen::Pause || w.ui.screen == UiScreen::None) && key == 'r')
     {
-        Activate({key == 'r' ? UiAction::Restart : UiAction::Quit, {}, {}, ""});
+        Activate({UiAction::Restart, {}, {}, ""});
     }
     return true;
 }
@@ -1826,6 +1858,7 @@ void Hud::DrawMenu()
     float x = narrow ? 440.f : 336.f;
     const char *title = screen == UiScreen::Title     ? "침묵하는 관문"
                         : screen == UiScreen::Pause   ? "일시정지"
+                        : screen == UiScreen::Stages  ? "스테이지 목록 · 테스트 진입"
                         : screen == UiScreen::Options ? "옵션"
                         : screen == UiScreen::Summary ? "보유 · 성장 정보"
                         : screen == UiScreen::Help    ? "조작 안내"
@@ -1874,6 +1907,11 @@ void Hud::DrawMenu()
         UiText(440, 638, "현재 진행은 실행 세션에만 유지됩니다.", 15, {.95f, .77f, .4f});
         UiText(440, 666, "W/S · 방향 키 선택 / Enter 확인", 14, {.59f, .75f, .75f});
     }
+    if (screen == UiScreen::Stages)
+    {
+        UiText(336, 198, "선택 시 현재 진행 초기화 · 이전 필수 스토리 완료 처리", 16, {1, .78f, .4f});
+        UiText(336, 648, "선택한 구간의 시작 지점으로 바로 이동합니다.", 16);
+    }
     if (screen == UiScreen::Summary)
     {
         Icon("level", 336, 191, 30);
@@ -1901,9 +1939,9 @@ void Hud::DrawMenu()
     }
     if (screen == UiScreen::Help)
     {
-        const char *rows[] = {"WASD 이동 · 마우스 조준 · 좌클릭 사격",
-                              "V 근접 (도시·광산) · R 재장전",
-                              "E 조사·대화·승하차 · Q 회복 (광산·1장)",
+        const char *rows[] = {"WASD 이동 · 마우스 조준 · 좌클릭 장착 무기 공격",
+                              "Q 홀드 + 마우스 무기 선택 · V 근접 · R 재장전",
+                              "E 조사·대화·승하차 · G 회복 (광산·1장)",
                               "바이크 W 가속 / S 제동·후진 / AD 조향 / Space 부스트",
                               "F 광산 스캔 · M 지도 · 좌클릭 목적지 / 우클릭 해제",
                               "대화 E/Enter 다음 · 숫자 선택 후 E/Enter 확정",
@@ -2010,7 +2048,96 @@ void Hud::Render()
     MapHud::DrawFullMap();
     ChapterHud::DrawJournal();
     DrawMenu();
+    DrawWeaponWheel();
     renderqueue::Opacity(1);
     DrawMedicalFade();
+}
+void Hud::DrawWeaponWheel()
+{
+    const auto &w = Game::Get().GetState();
+    const auto &wheel = w.weaponWheel;
+    if (!wheel.visible)
+    {
+        return;
+    }
+    const auto &loadout = game::GameLevels::Mine().GetState().loadout;
+    constexpr Vector2 center = {640, 390};
+    constexpr float inner = 86, outer = 224;
+    Drawing::DrawRectangle(0, 0, kCanvasWidth, kCanvasHeight, {.01f, .025f, .035f, .56f});
+    struct Sector
+    {
+        combat::WeaponSlot slot;
+        float angle;
+        Vector2 label;
+        const char *title;
+    };
+    const Sector sectors[] = {{combat::WeaponSlot::Primary, -kPi / 2, {640, 232}, "주 무장"},
+                              {combat::WeaponSlot::Secondary, kPi / 6, {782, 454}, "보조 무장"},
+                              {combat::WeaponSlot::Unarmed, 5 * kPi / 6, {498, 454}, "맨손"}};
+    for (const auto &sector : sectors)
+    {
+        const bool available = loadout.IsAvailable(sector.slot);
+        const bool hover = wheel.hovered == sector.slot;
+        ColorRGBA fill =
+            hover ? (available ? ColorRGBA(.10f, .46f, .46f, .94f) : ColorRGBA(.26f, .24f, .23f, .96f))
+                  : ColorRGBA(.035f, .085f, .11f, .95f);
+        auto point = [&](float a, float r) {
+            return Vector2{center.x + std::cos(a) * r, center.y + std::sin(a) * r};
+        };
+        for (int i = 0; i < 48; ++i)
+        {
+            float a = sector.angle - kPi / 3 + .015f + (2 * kPi / 3 - .03f) * i / 48;
+            float b = sector.angle - kPi / 3 + .015f + (2 * kPi / 3 - .03f) * (i + 1) / 48;
+            Drawing::DrawPolygon({point(a, inner), point(a, outer), point(b, outer), point(b, inner)}, fill);
+            Drawing::DrawLine(point(a, outer), point(b, outer),
+                              hover ? ColorRGBA(.4f, .95f, .87f) : ColorRGBA(.2f, .36f, .4f),
+                              hover ? 3.f : 1.f);
+        }
+        auto label = sector.label;
+        ColorRGBA ink = available ? kUiInk : ColorRGBA(.53f, .6f, .62f);
+        auto centeredText = [&](const std::string &text, float y, int size, ColorRGBA color) {
+            UiText(label.x - RenderAssets::MeasureUtf8(text, size) * .5f, y, text, size, color, true);
+        };
+        centeredText(sector.title, label.y, 20, ink);
+        if (sector.slot == combat::WeaponSlot::Secondary && loadout.HasPistol())
+        {
+            Icon("pistol", label.x - 18, label.y + 10, 36, false, ink);
+            centeredText("개척자 권총", label.y + 69, 16, ink);
+        }
+        else
+        {
+            if (sector.slot == combat::WeaponSlot::Unarmed)
+            {
+                // A closed hand, rather than a weapon icon, for the unarmed slot.
+                Drawing::DrawRectangle(label.x - 13, label.y + 24, 26, 20, ink);
+                Drawing::DrawRectangle(label.x - 8, label.y + 44, 16, 6, ink);
+                for (int finger = 0; finger < 4; ++finger)
+                {
+                    Drawing::DrawEllipse(label.x - 9 + finger * 6, label.y + 23, 4, 5, ink);
+                }
+                Drawing::DrawLine({label.x - 10, label.y + 32}, {label.x + 6, label.y + 32}, fill, 2);
+                Drawing::DrawLine({label.x + 6, label.y + 32}, {label.x + 9, label.y + 39}, fill, 2);
+            }
+            else
+            {
+                Icon("empty", label.x - 16, label.y + 12, 32, false, ink);
+            }
+            centeredText(available ? "근접 공격" : "비어 있음", label.y + 69, 16, ink);
+        }
+    }
+    const char *name = wheel.hovered == combat::WeaponSlot::Unarmed ? "맨손"
+                       : loadout.IsAvailable(wheel.hovered)         ? "권총"
+                                                                    : "빈 슬롯";
+    UiText(center.x - RenderAssets::MeasureUtf8(name, 26) * .5f, center.y, name, 26, kUiInk, true);
+    const char *status = loadout.IsAvailable(wheel.hovered) ? "Q 놓아서 선택" : "장착할 무기 없음";
+    UiText(center.x - RenderAssets::MeasureUtf8(status, 14) * .5f, center.y + 29, status, 14, kUiInk);
+    float length = std::hypot(wheel.offset.x, wheel.offset.y);
+    if (length >= 24)
+    {
+        float r = (std::min)(length, outer - 10);
+        Drawing::DrawEllipse(center.x + wheel.offset.x / length * r, center.y + wheel.offset.y / length * r,
+                             5, 5, {.58f, 1, .93f});
+    }
+    UiText(480, 660, "Q 홀드 + 마우스 이동 · Esc 취소", 18, kUiInk, true);
 }
 } // namespace tutorial

@@ -286,6 +286,11 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     player.Number("salvage", level.player.salvage);
     player.Number("credits", level.player.credits);
     player.Number("kills", level.kills);
+    player.Bool("pistol_owned", level.loadout.HasPistol());
+    player.Text("equipped_slot", level.loadout.Selected() == combat::WeaponSlot::Unarmed   ? "unarmed"
+                                 : level.loadout.Selected() == combat::WeaponSlot::Primary ? "primary"
+                                                                                           : "secondary");
+    player.Bool("weapon_wheel_open", world.weaponWheel.visible);
     player.Number("magazine_rounds", level.pistol.GetRounds());
     player.Number("magazine_capacity", level.pistol.GetMagazineSize());
     player.Bool("reloading", level.pistol.IsReloading());

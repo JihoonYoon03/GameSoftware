@@ -437,14 +437,23 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
     {
         DrawEllipse(screen.x, screen.y, 16, 6, {.25f, .95f, .9f, .17f});
     }
-    bool armed = (isPlayer && (game::GameLevels::IsCombatActive() || CivicCombat::Available())) || npcArmed;
+    bool armed =
+        (isPlayer && game::GameLevels::Mine().GetState().loadout.IsPistolEquipped() &&
+         (game::GameLevels::IsCombatActive() || CivicJustice::IsExterior()) && !world.isBikeMounted) ||
+        npcArmed;
     float yaw = isPlayer ? world.facingYaw : facingYaw;
     if (isPlayer)
     {
         gender = world.playerGender;
         hair = world.playerHair;
     }
-    if (armed && isPlayer)
+    float melee = !isPlayer                             ? 0
+                  : game::GameLevels::Mine().IsActive() ? game::GameLevels::Mine().GetState().meleeSeconds
+                  : game::GameLevels::Chapter().IsActive()
+                      ? game::GameLevels::Chapter().GetState().meleeSeconds
+                  : CivicJustice::IsExterior() ? CivicJustice::State().meleeSeconds
+                                               : 0;
+    if (isPlayer && (armed || melee > 0))
     {
         auto dir = game::GameLevels::Mine().GetAimDirection(game::GameLevels::AimAngle());
         yaw = std::atan2(dir.y, dir.x);
@@ -460,15 +469,8 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
     auto pose = models::ModelRig::Pose(world.animationTimeSeconds * 10,
                                        (isPlayer && world.movementAmount > 0) || walking, armed,
                                        armed ? flash / .055f : 0, false, gender);
-    if (isPlayer && game::GameLevels::Mine().IsActive())
-    {
-        pose.meleeSeconds = game::GameLevels::Mine().GetState().meleeSeconds;
-    }
+    pose.meleeSeconds = melee;
     pose.locomotionSpeed = isPlayer ? world.movementSpeed : locomotionSpeed;
-    if (isPlayer && CivicJustice::IsExterior())
-    {
-        pose.meleeSeconds = CivicJustice::State().meleeSeconds;
-    }
     models::Palette palette;
     palette.body = {coat.r, coat.g, coat.b, coat.a};
     models::Transform3D rotation;

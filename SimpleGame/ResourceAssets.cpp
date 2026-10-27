@@ -246,7 +246,7 @@ Selection Select(const ResourceMesh &mesh, const CharacterPose *pose, bool upper
         {
             name = "Ride";
         }
-        else if (upper && pose->armed)
+        else if (upper && (pose->armed || pose->meleeSeconds > 0))
         {
             name = pose->meleeSeconds > 0 ? "Attack_Melee" : pose->recoil > 0 ? "Attack_Fire" : "Aim_Base";
             time = pose->meleeSeconds > 0 ? (1 - std::clamp(pose->meleeSeconds / .65f, 0.f, 1.f)) * .65f
@@ -271,6 +271,11 @@ Selection Select(const ResourceMesh &mesh, const CharacterPose *pose, bool upper
         {
             const bool looping =
                 name == "Run" || name == "Walk" || name == "Idle" || name == "Cruise" || name == "Hover_Idle";
+            // Play the whole strike/recovery within the gameplay cooldown, for every clip duration.
+            if (name == "Attack_Melee" && pose)
+            {
+                time = (1 - std::clamp(pose->meleeSeconds / .65f, 0.f, 1.f)) * clip.duration;
+            }
             float t = looping ? std::fmod((std::max)(0.f, time), clip.duration)
                               : std::clamp(time, 0.f, clip.duration);
             return {&clip,
@@ -356,7 +361,7 @@ void ResourceAssets::Sample(unsigned int id, const CharacterPose *pose, SkinMatr
     const size_t size = mesh.boneCount * 16;
     std::copy_n(base.clip->matrices.data() + size * base.frame, size, matrices.begin());
     // HUMAN_7H skin order: root, pelvis, spine/chest/arms/sockets, then six leg bones.
-    if (pose && pose->armed && !pose->riding && mesh.boneCount == 23)
+    if (pose && (pose->armed || pose->meleeSeconds > 0) && !pose->riding && mesh.boneCount == 23)
     {
         auto upper = Select(mesh, pose, true);
         if (upper.clip)
