@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "Civic.h"
+#include "Profiler.h"
 #include "Drawing.h"
+#include "Hud.h"
 #include "Overworld.h"
 #include "ResidentAI.h"
 #include "ResourceAssets.h"
@@ -9,12 +11,14 @@
 #include <cmath>
 #include <limits>
 #include <queue>
+#include <tuple>
 
 namespace tutorial
 {
 namespace
 {
 CivicState civic;
+void ClearPursuit();
 struct Footprint
 {
     std::vector<Vector2> polygon;
@@ -23,6 +27,7 @@ struct Footprint
 struct Obstacle
 {
     Vector2 minimum, maximum;
+    Vector2 origin;
     std::shared_ptr<std::vector<Footprint>> surfaces;
 };
 std::map<std::pair<int, int>, std::vector<Obstacle>> obstacleCells;
@@ -55,69 +60,98 @@ bool Touches(const Footprint &shape, Vector2 p, float radius)
     }
     return std::fabs(area) > .000001f && !(positive && negative);
 }
+Obstacle ClipObstacle(const models::ResourceMesh &mesh, models::Point scale, float yaw)
+{
+    Obstacle obstacle{{1.e9f, 1.e9f}, {-1.e9f, -1.e9f}, {}, std::make_shared<std::vector<Footprint>>()};
+    float c = std::cos(yaw), s = std::sin(yaw);
+    for (size_t i = 0; i < mesh.vertices.size(); i += 3)
+    {
+        float z0 = mesh.vertices[i].z * scale.z, z1 = mesh.vertices[i + 1].z * scale.z,
+              z2 = mesh.vertices[i + 2].z * scale.z;
+        if ((std::max)({z0, z1, z2}) < .04f || (std::min)({z0, z1, z2}) > 1.f)
+        {
+            continue;
+        }
+        std::array<models::Point, 8> polygon, clipped;
+        size_t count = 3;
+        for (size_t k = 0; k < count; ++k)
+        {
+            const auto &v = mesh.vertices[i + k];
+            polygon[k] = {v.x * scale.x * c - v.y * scale.y * s, v.x * scale.x * s + v.y * scale.y * c,
+                          v.z * scale.z};
+        }
+        // A triangle clipped to the body's height band needs at most five points; no per-plane allocations.
+        for (int plane = 0; plane < 2 && count; ++plane)
+        {
+            float boundary = plane == 0 ? .04f : 1.f;
+            size_t out = 0;
+            auto previous = polygon[count - 1];
+            for (size_t k = 0; k < count; ++k)
+            {
+                auto current = polygon[k];
+                bool a = plane == 0 ? previous.z >= boundary : previous.z <= boundary;
+                bool b = plane == 0 ? current.z >= boundary : current.z <= boundary;
+                if (a != b)
+                {
+                    float t = (boundary - previous.z) / (current.z - previous.z);
+                    clipped[out++] = {previous.x + (current.x - previous.x) * t,
+                                      previous.y + (current.y - previous.y) * t, boundary};
+                }
+                if (b)
+                {
+                    clipped[out++] = current;
+                }
+                previous = current;
+            }
+            count = out;
+            std::copy_n(clipped.begin(), count, polygon.begin());
+        }
+        if (!count)
+        {
+            continue;
+        }
+        Footprint shape{{}, {1.e9f, 1.e9f}, {-1.e9f, -1.e9f}};
+        shape.polygon.reserve(count);
+        for (size_t k = 0; k < count; ++k)
+        {
+            const auto &v = polygon[k];
+            shape.polygon.push_back({v.x, v.y});
+            shape.minimum.x = (std::min)(shape.minimum.x, v.x);
+            shape.minimum.y = (std::min)(shape.minimum.y, v.y);
+            shape.maximum.x = (std::max)(shape.maximum.x, v.x);
+            shape.maximum.y = (std::max)(shape.maximum.y, v.y);
+        }
+        obstacle.minimum.x = (std::min)(obstacle.minimum.x, shape.minimum.x);
+        obstacle.minimum.y = (std::min)(obstacle.minimum.y, shape.minimum.y);
+        obstacle.maximum.x = (std::max)(obstacle.maximum.x, shape.maximum.x);
+        obstacle.maximum.y = (std::max)(obstacle.maximum.y, shape.maximum.y);
+        obstacle.surfaces->push_back(std::move(shape));
+    }
+    return obstacle;
+}
 void BuildObstacles(const GameState &world)
 {
+    profiling::Scope startupTimer(profiling::Timer::MeshBuild);
     obstacleCells.clear();
-    auto insert = [](const models::ResourceMesh &mesh, Vector2 position, models::Point scale, float yaw) {
-        Obstacle obstacle{{1.e9f, 1.e9f}, {-1.e9f, -1.e9f}, std::make_shared<std::vector<Footprint>>()};
-        float c = std::cos(yaw), s = std::sin(yaw);
-        for (size_t i = 0; i < mesh.vertices.size(); i += 3)
+    std::map<std::tuple<unsigned, float, float, float, float>, Obstacle> shapes;
+    auto insert = [&](unsigned id, Vector2 position, models::Point scale, float yaw) {
+        auto key = std::make_tuple(id, scale.x, scale.y, scale.z, yaw);
+        auto found = shapes.find(key);
+        if (found == shapes.end())
         {
-            std::vector<models::Point> polygon;
-            for (size_t k = 0; k < 3; ++k)
-            {
-                const auto &v = mesh.vertices[i + k];
-                polygon.push_back({position.x + v.x * scale.x * c - v.y * scale.y * s,
-                                   position.y + v.x * scale.x * s + v.y * scale.y * c, v.z * scale.z});
-            }
-            // Cut the actual triangles to the body's vertical span. Roofs, canopies and
-            // antennas do not inflate ground collision, and open courtyards stay open.
-            for (int plane = 0; plane < 2 && !polygon.empty(); ++plane)
-            {
-                float boundary = plane == 0 ? .04f : 1.f;
-                std::vector<models::Point> clipped;
-                auto previous = polygon.back();
-                for (auto current : polygon)
-                {
-                    bool a = plane == 0 ? previous.z >= boundary : previous.z <= boundary;
-                    bool b = plane == 0 ? current.z >= boundary : current.z <= boundary;
-                    if (a != b)
-                    {
-                        float t = (boundary - previous.z) / (current.z - previous.z);
-                        clipped.push_back({previous.x + (current.x - previous.x) * t,
-                                           previous.y + (current.y - previous.y) * t, boundary});
-                    }
-                    if (b)
-                    {
-                        clipped.push_back(current);
-                    }
-                    previous = current;
-                }
-                polygon = std::move(clipped);
-            }
-            if (polygon.empty())
-            {
-                continue;
-            }
-            Footprint shape{{}, {1.e9f, 1.e9f}, {-1.e9f, -1.e9f}};
-            for (auto v : polygon)
-            {
-                shape.polygon.push_back({v.x, v.y});
-                shape.minimum.x = (std::min)(shape.minimum.x, v.x);
-                shape.minimum.y = (std::min)(shape.minimum.y, v.y);
-                shape.maximum.x = (std::max)(shape.maximum.x, v.x);
-                shape.maximum.y = (std::max)(shape.maximum.y, v.y);
-            }
-            obstacle.minimum.x = (std::min)(obstacle.minimum.x, shape.minimum.x);
-            obstacle.minimum.y = (std::min)(obstacle.minimum.y, shape.minimum.y);
-            obstacle.maximum.x = (std::max)(obstacle.maximum.x, shape.maximum.x);
-            obstacle.maximum.y = (std::max)(obstacle.maximum.y, shape.maximum.y);
-            obstacle.surfaces->push_back(std::move(shape));
+            found = shapes.emplace(key, ClipObstacle(models::ResourceAssets::Get(id), scale, yaw)).first;
         }
+        auto obstacle = found->second;
         if (obstacle.surfaces->empty())
         {
             return;
         }
+        // Instances share local collision geometry, exactly as they share their render mesh.
+        obstacle.origin = position;
+        obstacle.minimum.x += position.x;
+        obstacle.minimum.y += position.y;
+        obstacle.maximum.x += position.x;
+        obstacle.maximum.y += position.y;
         for (int x = int(std::floor(obstacle.minimum.x / 8)); x <= int(std::floor(obstacle.maximum.x / 8));
              ++x)
         {
@@ -131,14 +165,13 @@ void BuildObstacles(const GameState &world)
     for (const auto &b : world.buildings)
     {
         const auto &model = models::ModelLibrary::Get().buildings[size_t(b.type)];
-        insert(models::ResourceAssets::Get(model.resourceId), {b.x, b.y}, {b.width, b.depth, b.height / 44},
-               0);
+        insert(model.resourceId, {b.x, b.y}, {b.width, b.depth, b.height / 44}, 0);
     }
     for (const auto &p : Overworld::Scenery().Props())
     {
         if (p.solid && p.model->resourceId)
         {
-            insert(models::ResourceAssets::Get(p.model->resourceId), p.position, {1, 1, 1}, p.yaw);
+            insert(p.model->resourceId, p.position, {1, 1, 1}, p.yaw);
         }
     }
 }
@@ -496,10 +529,12 @@ void TransferToHospital()
     }
     std::fill(std::begin(world.pressedKeys), std::end(world.pressedKeys), false);
     civic.heat = 0;
-    civic.wanted = 0;
+    ClearPursuit();
     civic.officers.clear();
     civic.bullets.clear();
     civic.tracers.clear();
+    civic.airBullets.clear();
+    civic.airTracers.clear();
     civic.playerImpact = {};
     civic.playerGrace = 5;
     mine.invulnerability = 5;
@@ -549,7 +584,7 @@ bool CivicJustice::Solid(Vector2 p, float radius, float altitude, bool driving)
                 {
                     for (const auto &shape : *b.surfaces)
                     {
-                        if (Touches(shape, p, radius))
+                        if (Touches(shape, {p.x - b.origin.x, p.y - b.origin.y}, radius))
                         {
                             return true;
                         }
@@ -608,7 +643,7 @@ void CivicJustice::Reset(GameState &world)
 }
 int CivicJustice::WantedForHeat(float heat)
 {
-    constexpr float thresholds[] = {20, 80, 180, 360, 650};
+    constexpr float thresholds[] = {20, 180, 400, 650, 900};
     int result = 0;
     for (float threshold : thresholds)
     {
@@ -645,27 +680,87 @@ int CivicJustice::LivingPopulation(int city)
     }
     return count;
 }
+namespace
+{
+void ClearPursuit()
+{
+    civic.heat = 0;
+    civic.wanted = 0;
+    civic.pendingInfamy = civic.pursuitSeconds = civic.initialUnseenSeconds = 0;
+    civic.responseStarted = civic.identified = false;
+}
+} // namespace
+float CivicJustice::SightDistance(const SecurityOfficer &officer, float angle)
+{
+    Vector2 direction{std::cos(angle), std::sin(angle)};
+    float previous = 0;
+    for (float distance = .5f; distance <= kSightRange; distance += .5f)
+    {
+        if (Solid(Add(officer.position, direction, distance), .05f))
+        {
+            return previous;
+        }
+        previous = distance;
+    }
+    return kSightRange;
+}
+bool CivicJustice::CanSee(const SecurityOfficer &officer, Vector2 target, float altitude)
+{
+    if (officer.health <= 0 || altitude >= .8f ||
+        (officer.impact.response == BodyResponse::Knockdown && officer.impact.seconds > 0))
+    {
+        return false;
+    }
+    auto delta = Sub(target, officer.position);
+    float distance = std::hypot(delta.x, delta.y);
+    if (distance > kSightRange)
+    {
+        return false;
+    }
+    if (distance > .001f && (delta.x * std::cos(officer.facing.yaw) +
+                             delta.y * std::sin(officer.facing.yaw)) < distance * std::cos(kSightHalfAngle))
+    {
+        return false;
+    }
+    return ClearLine(officer.position, target);
+}
 void CivicJustice::Report(Offense offense, Vector2 position)
 {
     if (HospitalRecovery::Active())
     {
         return;
     }
-    constexpr float heat[] = {12, 35, 140, 15, 65, 60, 180, 30, 80};
-    constexpr float infamy[] = {.3f, 3, 14, 1, 6, 5, 18, 2, 8};
-    if (offense == Offense::Discharge && civic.dischargeCooldown > 0)
+    // Only weapon injuries/deaths and occupied-vehicle destruction are criminal events.
+    // Discharge, incidental contact and nonlethal property damage intentionally do nothing.
+    constexpr float heat[] = {0, 20, 70, 0, 50, 30, 90, 0, 45};
+    constexpr float infamy[] = {0, 2, 10, 0, 5, 3, 14, 0, 6};
+    size_t index = size_t(offense);
+    if (index >= std::size(heat) || heat[index] <= 0)
     {
         return;
     }
-    if (offense == Offense::Discharge)
+    if (civic.wanted == 0)
     {
-        civic.dischargeCooldown = .75f;
+        ClearPursuit();
+        civic.spawnSeconds = 0;
     }
-    civic.heat = Game::Clamp(civic.heat + heat[size_t(offense)], 0, 1000);
-    civic.infamy = Game::Clamp(civic.infamy + infamy[size_t(offense)], 0, 100);
+    civic.heat = Game::Clamp(civic.heat + heat[index], 0, kMaximumHeat);
     civic.sinceCrime = civic.unseenSeconds = 0;
     civic.lastCrime = position;
-    civic.wanted = WantedForHeat(civic.heat);
+    if (civic.identified)
+    {
+        civic.infamy = Game::Clamp(civic.infamy + infamy[index], 0, 100);
+    }
+    else
+    {
+        civic.pendingInfamy = Game::Clamp(civic.pendingInfamy + infamy[index], 0, 100);
+    }
+    constexpr float escalationTime[] = {0, 0, 25, 60, 105, 165};
+    int next = (std::min)(5, civic.wanted + 1);
+    if (WantedForHeat(civic.heat) >= next && civic.pursuitSeconds >= escalationTime[next])
+    {
+        civic.wanted = next;
+    }
     auto &world = Game::Get().GetState();
     for (auto &person : world.residents)
     {
@@ -675,7 +770,13 @@ void CivicJustice::Report(Offense offense, Vector2 position)
             person.fearSeconds = (std::max)(person.fearSeconds, 8.f);
         }
     }
-
+    for (auto &officer : civic.officers)
+    {
+        if (officer.health > 0)
+        {
+            officer.lastKnown = position;
+        }
+    }
     if (civic.wanted)
     {
         civic.spawnSeconds = (std::min)(civic.spawnSeconds, 2.f);
@@ -687,7 +788,12 @@ void CivicJustice::Update(float dt)
     {
         return;
     }
+    bool unconfirmedAtStart = civic.wanted > 0 && !civic.identified;
     civic.sinceCrime += dt;
+    if (civic.wanted > 0)
+    {
+        civic.pursuitSeconds += dt;
+    }
     civic.dischargeCooldown = (std::max)(0.f, civic.dischargeCooldown - dt);
     civic.playerGrace = (std::max)(0.f, civic.playerGrace - dt);
     for (size_t i = 0; i < civic.landmarkHealth.size(); ++i)
@@ -725,8 +831,7 @@ void CivicJustice::Update(float dt)
         }
         auto delta = Sub(world.playerPosition, officer.position);
         float distance = std::hypot(delta.x, delta.y);
-        bool sees =
-            PlayerHeight() < .8f && distance < 26 && ClearLine(officer.position, world.playerPosition);
+        bool sees = CanSee(officer, world.playerPosition, PlayerHeight());
         visible |= sees;
         if (sees)
         {
@@ -761,6 +866,12 @@ void CivicJustice::Update(float dt)
             }
         }
         officer.facing.Update(previous, officer.position);
+        if (!sees && !officer.facing.walking && Game::Distance(officer.position, officer.lastKnown) < 1)
+        {
+            officer.facing.yaw += dt * .8f;
+        }
+        sees = CanSee(officer, world.playerPosition, PlayerHeight());
+        visible |= sees;
         if (sees)
         {
             officer.facing.yaw = std::atan2(delta.y, delta.x);
@@ -784,16 +895,44 @@ void CivicJustice::Update(float dt)
             }
         }
     }
-    civic.unseenSeconds = visible ? 0 : civic.unseenSeconds + dt;
-    if (civic.sinceCrime > 20 && civic.unseenSeconds > 15)
+    if (civic.wanted > 0)
     {
-        civic.heat = (std::max)(0.f, civic.heat - 8 * dt);
-        civic.wanted = WantedForHeat(civic.heat);
+        bool responders = std::any_of(civic.officers.begin(), civic.officers.end(),
+                                      [](const SecurityOfficer &o) { return o.health > 0; });
+        bool justStarted = !civic.responseStarted && responders;
+        if (justStarted)
+        {
+            civic.responseStarted = true;
+            civic.initialUnseenSeconds = 0;
+        }
+        if (visible && !civic.identified)
+        {
+            civic.identified = true;
+            civic.infamy = Game::Clamp(civic.infamy + civic.pendingInfamy, 0, 100);
+            civic.pendingInfamy = 0;
+        }
+        civic.unseenSeconds = visible ? 0 : civic.unseenSeconds + dt;
+        if (civic.responseStarted && !civic.identified && !justStarted)
+        {
+            civic.initialUnseenSeconds += dt;
+            if (civic.initialUnseenSeconds >= kUnidentifiedEscapeSeconds)
+            {
+                ClearPursuit();
+                Game::Get().ShowNotice(
+                    "수배 해제 / 보안대에 식별되지 않았습니다. 이번 사건은 악명에 반영되지 않습니다.");
+            }
+        }
+        else if (civic.identified && civic.unseenSeconds >= 20)
+        {
+            ClearPursuit();
+            Game::Get().ShowNotice("수배 해제 / 보안대의 추적을 벗어났습니다. 기존 악명은 유지됩니다.");
+        }
     }
-    if (civic.sinceCrime > 90)
+    if (!unconfirmedAtStart && civic.sinceCrime > 90)
     {
         civic.infamy = (std::max)(0.f, civic.infamy - .005f * dt);
     }
+    // New reputation-relief activities remain a design-only follow-up.
     civic.officers.erase(
         std::remove_if(civic.officers.begin(), civic.officers.end(),
                        [&](const SecurityOfficer &o) {
@@ -828,7 +967,7 @@ void CivicJustice::Update(float dt)
             {
                 continue;
             }
-            auto route = EmergencyRoute(p, world.playerPosition);
+            auto route = EmergencyRoute(p, civic.lastCrime);
             if (route.empty())
             {
                 continue;
@@ -836,13 +975,19 @@ void CivicJustice::Update(float dt)
             SecurityOfficer officer;
             officer.id = civic.nextOfficer++;
             officer.position = p;
-            officer.lastKnown = world.playerPosition;
+            officer.lastKnown = civic.lastCrime;
+            officer.facing.yaw = std::atan2(civic.lastCrime.y - p.y, civic.lastCrime.x - p.x);
             officer.tier = civic.wanted;
             officer.health =
                 60 + 40 * civic.wanted + 8 * (game::GameLevels::Mine().GetState().player.level - 1);
             officer.route = std::move(route);
             officer.navigationSeconds = 1;
             civic.officers.push_back(std::move(officer));
+            if (!civic.responseStarted)
+            {
+                civic.responseStarted = true;
+                civic.initialUnseenSeconds = 0;
+            }
             break;
         }
     }
@@ -913,7 +1058,7 @@ bool CivicCombat::DamageOfficer(size_t index, int damage, Vector2 impulse, bool 
     }
     return true;
 }
-bool CivicCombat::DamageLandmark(size_t index, int damage)
+bool CivicCombat::DamageLandmark(size_t index, int damage, bool weaponOwned)
 {
     if (index >= civic.landmarkHealth.size() ||
         (index == 2 && !game::GameLevels::Chapter().GetState().kainJoined) ||
@@ -923,8 +1068,11 @@ bool CivicCombat::DamageLandmark(size_t index, int damage)
     }
     civic.landmarkHealth[index] = (std::max)(0, civic.landmarkHealth[index] - damage);
     civic.landmarkRecovery[index] = 60;
-    CivicJustice::Report(civic.landmarkHealth[index] ? Offense::Assault : Offense::AggravatedAssault,
-                         kPeople[index]);
+    if (weaponOwned)
+    {
+        CivicJustice::Report(civic.landmarkHealth[index] ? Offense::Assault : Offense::AggravatedAssault,
+                             kPeople[index]);
+    }
     return true;
 }
 bool CivicCombat::LandmarkDown(Vector2 position)
@@ -938,6 +1086,132 @@ bool CivicCombat::LandmarkDown(Vector2 position)
     }
     return false;
 }
+namespace
+{
+bool AimAtAirTraffic(float shotAngle, models::Point &target)
+{
+    const auto &w = Game::Get().GetState();
+    float best = 1.e20f;
+    bool found = false;
+    auto muzzle = WorldCamera::ToViewport(
+        Drawing::WorldToScreen(w.playerPosition.x, w.playerPosition.y, models::WorldScale::aimHeightPixels));
+    float radius = Game::Distance(w.cursorPosition, muzzle);
+    auto cursor = WorldCamera::FromViewport(
+        {muzzle.x + std::cos(shotAngle) * radius, muzzle.y + std::sin(shotAngle) * radius});
+    for (const auto &craft : Overworld::Flights().Aircraft())
+    {
+        if (craft.health <= 0)
+        {
+            continue;
+        }
+        const auto &mesh = models::ResourceAssets::Get(
+            models::ModelLibrary::Aircraft(craft.type, craft.alternate).resourceId);
+        models::Transform3D transform;
+        transform.yaw = craft.yaw;
+        transform.roll = craft.bank;
+        transform.position.z = craft.altitude;
+        Vector2 lo{1.e20f, 1.e20f}, hi{-1.e20f, -1.e20f};
+        for (int i = 0; i < 8; ++i)
+        {
+            auto p = transform.Apply({i & 1 ? mesh.maximum.x : mesh.minimum.x,
+                                      i & 2 ? mesh.maximum.y : mesh.minimum.y,
+                                      i & 4 ? mesh.maximum.z : mesh.minimum.z});
+            auto screen = WorldCamera::ToViewport(
+                Drawing::WorldToScreen(craft.position.x + p.x, craft.position.y + p.y, p.z * 44));
+            lo.x = (std::min)(lo.x, screen.x);
+            lo.y = (std::min)(lo.y, screen.y);
+            hi.x = (std::max)(hi.x, screen.x);
+            hi.y = (std::max)(hi.y, screen.y);
+        }
+        if (w.cursorPosition.x < lo.x || w.cursorPosition.x > hi.x || w.cursorPosition.y < lo.y ||
+            w.cursorPosition.y > hi.y)
+        {
+            continue;
+        }
+        float z = craft.altitude + (mesh.minimum.z + mesh.maximum.z) * .5f;
+        float sx = (cursor.x - kCanvasWidth * .5f) / 36, sy = (cursor.y - kCanvasHeight * .57f + z * 44) / 18;
+        models::Point p{w.cameraPosition.x + (sx + sy) * .5f, w.cameraPosition.y + (sy - sx) * .5f, z};
+        float range = std::hypot(Game::Distance({p.x, p.y}, w.playerPosition), z);
+        if (range < best)
+        {
+            target = p;
+            best = range;
+            found = true;
+        }
+    }
+    return found;
+}
+bool AirShotBlocked(models::Point p)
+{
+    if (p.z < 1 && CivicJustice::Solid({p.x, p.y}, .03f))
+    {
+        return true;
+    }
+    for (const auto &b : Game::Get().GetState().buildings)
+    {
+        if (p.z < b.height / 44 && p.x > b.x && p.x < b.x + b.width && p.y > b.y && p.y < b.y + b.depth)
+        {
+            return true;
+        }
+    }
+    for (const auto &prop : Overworld::Scenery().Props())
+    {
+        if (prop.solid && p.x > prop.minimum.x && p.x < prop.maximum.x && p.y > prop.minimum.y &&
+            p.y < prop.maximum.y &&
+            p.z < prop.elevation + models::ResourceAssets::Get(prop.model->resourceId).maximum.z)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+void UpdateAirProjectiles(float dt)
+{
+    for (auto &t : civic.airTracers)
+    {
+        t.remaining -= dt;
+    }
+    civic.airTracers.erase(std::remove_if(civic.airTracers.begin(), civic.airTracers.end(),
+                                          [](const AirTracer &t) { return t.remaining <= 0; }),
+                           civic.airTracers.end());
+    for (auto &bullet : civic.airBullets)
+    {
+        auto start = bullet.position;
+        float movement = (std::min)(bullet.remaining, bullet.speed * dt);
+        int steps = (std::max)(1, int(std::ceil(movement / .08f)));
+        for (int i = 0; i < steps && bullet.remaining > 0; ++i)
+        {
+            float step = movement / steps;
+            bullet.position.x += bullet.direction.x * step;
+            bullet.position.y += bullet.direction.y * step;
+            bullet.position.z += bullet.direction.z * step;
+            bullet.remaining = (std::max)(0.f, bullet.remaining - step);
+            if (AirShotBlocked(bullet.position))
+            {
+                bullet.remaining = 0;
+                break;
+            }
+            for (const auto &craft : Overworld::Flights().Aircraft())
+            {
+                if (craft.health > 0 && AirTraffic::Contains(craft, bullet.position))
+                {
+                    Overworld::Flights().DamageAircraft(craft.id, bullet.damage);
+                    bullet.remaining = 0;
+                    break;
+                }
+            }
+        }
+        civic.airTracers.push_back({start, bullet.position, .12f});
+    }
+    civic.airBullets.erase(std::remove_if(civic.airBullets.begin(), civic.airBullets.end(),
+                                          [](const AirProjectile &b) { return b.remaining <= 0; }),
+                           civic.airBullets.end());
+    if (civic.airTracers.size() > 96)
+    {
+        civic.airTracers.erase(civic.airTracers.begin(), civic.airTracers.end() - 96);
+    }
+}
+} // namespace
 void CivicCombat::Fire()
 {
     if (!Available() || civic.meleeSeconds > 0)
@@ -947,14 +1221,32 @@ void CivicCombat::Fire()
     auto &world = Game::Get().GetState();
     auto &mine = game::GameLevels::Mine();
     combat::Shot shot;
-    if (civic.bullets.size() >= 96 || !mine.GetState().pistol.TryFire(mine.GetAimAngle(), shot))
+    if (civic.bullets.size() + civic.airBullets.size() >= 96 ||
+        !mine.GetState().pistol.TryFire(mine.GetAimAngle(), shot))
     {
+        return;
+    }
+    models::Point target{};
+    if (AimAtAirTraffic(shot.angle, target))
+    {
+        models::Point origin{world.playerPosition.x, world.playerPosition.y,
+                             models::WorldScale::aimHeightPixels / 44};
+        models::Point d{target.x - origin.x, target.y - origin.y, target.z - origin.z};
+        float length = std::sqrt(d.x * d.x + d.y * d.y + d.z * d.z);
+        if (length > .001f)
+        {
+            civic.airBullets.push_back({origin,
+                                        {d.x / length, d.y / length, d.z / length},
+                                        shot.speed,
+                                        shot.range,
+                                        shot.damage + (mine.GetState().player.level - 1) * 4});
+        }
+        civic.muzzleFlash = .06f;
         return;
     }
     civic.bullets.push_back({world.playerPosition, game::MineLevel::GetAimDirection(shot.angle), shot.speed,
                              shot.range, shot.damage + (mine.GetState().player.level - 1) * 4, true});
     civic.muzzleFlash = .06f;
-    CivicJustice::Report(Offense::Discharge, world.playerPosition);
 }
 void CivicCombat::Melee()
 {
@@ -1024,9 +1316,12 @@ void CivicCombat::Update(float dt)
     if (!CivicJustice::IsExterior())
     {
         civic.bullets.clear();
+        civic.airBullets.clear();
+        civic.airTracers.clear();
         civic.tracers.clear();
         return;
     }
+    UpdateAirProjectiles(dt);
     auto &world = Game::Get().GetState();
     auto &traffic = Overworld::Traffic();
     for (auto &bullet : civic.bullets)
@@ -1279,7 +1574,6 @@ void BodyCollision::VehicleContacts(float)
                 if (reckless)
                 {
                     Overworld::Traffic().DamageVehicle(car.id, int(speed * 8));
-                    CivicJustice::Report(Offense::RecklessDriving, world.playerPosition);
                 }
                 DeflectBike(Sub(world.playerPosition, car.position));
             }
@@ -1378,7 +1672,7 @@ void BodyCollision::VehicleContacts(float)
             {
                 CivicCombat::DamageResident(i, int(world.bikeSpeed * 9),
                                             Add({}, Unit(Sub(resident.position, world.bikePosition)), 5),
-                                            true);
+                                            false);
             }
             SeparateBikeFromPerson(resident.position);
         }
@@ -1390,7 +1684,7 @@ void BodyCollision::VehicleContacts(float)
                 {
                     CivicCombat::DamageOfficer(
                         i, int(world.bikeSpeed * 9),
-                        Add({}, Unit(Sub(civic.officers[i].position, world.bikePosition)), 5));
+                        Add({}, Unit(Sub(civic.officers[i].position, world.bikePosition)), 5), false);
                 }
                 SeparateBikeFromPerson(civic.officers[i].position);
             }
@@ -1403,7 +1697,7 @@ void BodyCollision::VehicleContacts(float)
             {
                 if (world.bikeSpeed > 2)
                 {
-                    CivicCombat::DamageLandmark(i, int(world.bikeSpeed * 9));
+                    CivicCombat::DamageLandmark(i, int(world.bikeSpeed * 9), false);
                 }
                 SeparateBikeFromPerson(kPeople[i]);
             }
@@ -1471,6 +1765,7 @@ void HospitalRecovery::Update(float dt)
     if (civic.recovery == RecoveryPhase::FadeIn && civic.recoverySeconds >= 1.1f)
     {
         civic.recovery = RecoveryPhase::None;
+        Hud::OpenMenu(UiScreen::Medical);
         civic.recoverySeconds = 0;
     }
 }
@@ -1492,15 +1787,7 @@ float HospitalRecovery::Opacity()
 }
 void CivicPresentation::DrawRecovery()
 {
-    if (!HospitalRecovery::Active())
-    {
-        return;
-    }
-    Drawing::DrawRectangle(0, 0, kCanvasWidth, kCanvasHeight, {0, 0, 0, HospitalRecovery::Opacity()});
-    if (HospitalRecovery::Opacity() > .75f)
-    {
-        Drawing::DrawLabel(500, 400, "의료 이송 / 생체 신호 안정화", {.5f, .9f, .85f});
-    }
+    Hud::DrawMedicalFade();
 }
 void CivicPresentation::DrawWorld()
 {
@@ -1545,34 +1832,16 @@ void CivicPresentation::DrawWorld()
                                           : ColorRGBA(1, .83f, .38f, tracer.remaining / .12f),
                           2);
     }
+    for (const auto &t : civic.airTracers)
+    {
+        Drawing::DrawLine(Drawing::WorldToScreen(t.start.x, t.start.y, t.start.z * 44),
+                          Drawing::WorldToScreen(t.end.x, t.end.y, t.end.z * 44),
+                          {1, .83f, .38f, t.remaining / .12f}, 2);
+    }
 }
 void CivicPresentation::DrawHud()
 {
-    auto &world = Game::Get().GetState();
-    if (CivicJustice::IsExterior() && !world.mapVisible)
-    {
-        const auto &stats = game::GameLevels::Mine().GetState().player;
-        const auto &pistol = game::GameLevels::Mine().GetState().pistol;
-        std::string stars;
-        for (int i = 0; i < 5; ++i)
-        {
-            stars += i < civic.wanted ? "★" : "☆";
-        }
-        Drawing::DrawRectangle(22, 300, 370, 95, {.02f, .04f, .055f, .88f});
-        Drawing::DrawLabel(38, 322, "개척지 보안망  " + stars, {1, .65f, .35f});
-        Drawing::DrawRectangle(38, 334, 330, 5, {.15f, .2f, .22f});
-        Drawing::DrawRectangle(38, 334, 330 * civic.heat / 1000, 5, {1, .38f, .16f});
-        char line[180];
-        std::snprintf(line, sizeof(line), "악명 %.0f / 거래 할증 +%.0f%% · %d 크레딧", civic.infamy,
-                      (CivicJustice::PriceMultiplier() - 1) * 100, stats.credits);
-        Drawing::DrawLabel(38, 357, line, {.8f, .86f, .82f});
-        std::snprintf(line, sizeof(line), "권총 %d/%d · R 재장전 · V 근접 공격", pistol.GetRounds(),
-                      pistol.GetMagazineSize());
-        Drawing::DrawLabel(38, 382, line, {.9f, .83f, .56f});
-        auto cursor = world.cursorPosition;
-        Drawing::DrawLine({cursor.x - 8, cursor.y}, {cursor.x + 8, cursor.y}, {.7f, 1, 1}, 1);
-        Drawing::DrawLine({cursor.x, cursor.y - 8}, {cursor.x, cursor.y + 8}, {.7f, 1, 1}, 1);
-    }
-    DrawRecovery();
+    // Runtime HUD lives in Hud; retain the existing public entry for the medical overlay.
+    Hud::DrawMedicalFade();
 }
 } // namespace tutorial

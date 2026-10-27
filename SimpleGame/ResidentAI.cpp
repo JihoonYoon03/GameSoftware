@@ -45,6 +45,21 @@ bool Clear(const GameState &world, Vector2 p)
     }
     return true;
 }
+bool WalkSegment(const GameState &world, Vector2 from, Vector2 to, bool checkEndpoints)
+{
+    const int steps = (std::max)(1, int(std::ceil(Game::Distance(from, to) / .25f)));
+    const int first = checkEndpoints ? 0 : 1;
+    const int last = from.x == to.x && from.y == to.y ? 0 : checkEndpoints ? steps : steps - 1;
+    for (int i = first; i <= last; ++i)
+    {
+        Vector2 p = {from.x + (to.x - from.x) * i / steps, from.y + (to.y - from.y) * i / steps};
+        if (!Clear(world, p) || RoadNetwork::Get().Contains(p, .32f))
+        {
+            return false;
+        }
+    }
+    return true;
+}
 bool Suitable(ResidentProfession profession, models::SceneryType type)
 {
     using P = ResidentProfession;
@@ -82,23 +97,40 @@ size_t CityResidents::NavigationNodeCount() const
 {
     return nodes.size();
 }
-bool CityResidents::CanWalkSegment(const GameState &world, Vector2 from, Vector2 to)
+std::uint64_t CityResidents::NavigationFingerprint() const
 {
-    const int steps = (std::max)(1, int(std::ceil(Game::Distance(from, to) / .25f)));
-    for (int i = 0; i <= steps; ++i)
+    std::uint64_t hash = 1469598103934665603ull;
+    auto mix = [&hash](std::uint64_t value) { hash = (hash ^ value) * 1099511628211ull; };
+    for (const auto &node : nodes)
     {
-        Vector2 p = {from.x + (to.x - from.x) * i / steps, from.y + (to.y - from.y) * i / steps};
-        if (!Clear(world, p) || RoadNetwork::Get().Contains(p, .32f))
+        mix(std::hash<float>{}(node.position.x));
+        mix(std::hash<float>{}(node.position.y));
+        mix(node.city);
+        mix(node.component);
+        mix(node.sidewalk);
+        mix(node.links.size());
+        for (const auto &link : node.links)
         {
-            return false;
+            mix(link.to);
+            mix(link.crossing);
         }
     }
-    return true;
+    return hash;
+}
+bool CityResidents::CanWalkSegment(const GameState &world, Vector2 from, Vector2 to)
+{
+    return WalkSegment(world, from, to, true);
 }
 void CityResidents::Build(const GameState &world)
 {
     profiling::Scope timer(profiling::Timer::NpcNavigation);
     nodes.clear();
+    nodeCells.clear();
+    auto addNode = [&](Node node) {
+        nodeCells[{int(std::floor(node.position.x / 4)), int(std::floor(node.position.y / 4))}].push_back(
+            int(nodes.size()));
+        nodes.push_back(std::move(node));
+    };
     const auto &net = RoadNetwork::Get();
     constexpr int width = 87, height = 79;
     for (int city = 0; city < Overworld::kCityCount; ++city)
@@ -113,7 +145,7 @@ void CityResidents::Build(const GameState &world)
                 if (CanWalkSegment(world, p, p))
                 {
                     grid[y * width + x] = int(nodes.size());
-                    nodes.push_back({p, city, -1, {}});
+                    addNode({p, city, -1, {}});
                     nodes.back().sidewalk = net.Contains(p, 1.5f) || CityPlan::IsWalkway(p);
                 }
             }
@@ -135,7 +167,8 @@ void CityResidents::Build(const GameState &world)
                         continue;
                     }
                     int b = grid[ny * width + nx];
-                    if (b >= 0 && CanWalkSegment(world, nodes[a].position, nodes[b].position))
+                    // Both endpoints were validated while filling the grid; preserve every interior sample.
+                    if (b >= 0 && WalkSegment(world, nodes[a].position, nodes[b].position, false))
                     {
                         nodes[a].links.push_back({b, -1});
                         nodes[b].links.push_back({a, -1});
@@ -185,8 +218,8 @@ void CityResidents::Build(const GameState &world)
                         continue;
                     }
                     const int a = int(nodes.size()), b = a + 1;
-                    nodes.push_back({ends[0], city, -1, {{anchors[0], -1}, {b, int(j)}}, true});
-                    nodes.push_back({ends[1], city, -1, {{anchors[1], -1}}, true});
+                    addNode({ends[0], city, -1, {{anchors[0], -1}, {b, int(j)}}, true});
+                    addNode({ends[1], city, -1, {{anchors[1], -1}}, true});
                     nodes[anchors[0]].links.push_back({a, -1});
                     nodes[anchors[1]].links.push_back({b, -1});
                 }
@@ -246,17 +279,34 @@ void CityResidents::Build(const GameState &world)
 int CityResidents::Nearest(const GameState &world, Vector2 position, int city, float limit) const
 {
     int nearest = -1;
-    for (size_t i = 0; i < nodes.size(); ++i)
+    const int minX = int(std::floor((position.x - limit) / 4)),
+              maxX = int(std::floor((position.x + limit) / 4));
+    const int minY = int(std::floor((position.y - limit) / 4)),
+              maxY = int(std::floor((position.y + limit) / 4));
+    for (int x = minX; x <= maxX; ++x)
     {
-        if (nodes[i].city != city)
+        for (int y = minY; y <= maxY; ++y)
         {
-            continue;
-        }
-        float distance = Game::Distance(position, nodes[i].position);
-        if (distance < limit && CanWalkSegment(world, position, nodes[i].position))
-        {
-            nearest = int(i);
-            limit = distance;
+            const auto cell = nodeCells.find({x, y});
+            if (cell == nodeCells.end())
+            {
+                continue;
+            }
+            for (int i : cell->second)
+            {
+                if (nodes[i].city != city)
+                {
+                    continue;
+                }
+                float distance = Game::Distance(position, nodes[i].position);
+                // Preserve the original lowest-node-index choice for equal-distance anchors.
+                if ((distance < limit || (nearest >= 0 && distance == limit && i < nearest)) &&
+                    CanWalkSegment(world, position, nodes[i].position))
+                {
+                    nearest = i;
+                    limit = distance;
+                }
+            }
         }
     }
     return nearest;

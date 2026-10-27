@@ -481,7 +481,8 @@ void CityScene::DrawImportedScenery(game::Scene &scene)
                                           (craft.altitude + resource.maximum.z + 3) * 44 + 24),
                               3, p.x + p.y, [craft]() {
                                   Drawing::DrawWorldAircraft(craft.position, craft.altitude, craft.type,
-                                                             craft.alternate, craft.yaw, craft.bank);
+                                                             craft.alternate, craft.yaw, craft.bank,
+                                                             craft.health <= 0);
                               });
     }
 }

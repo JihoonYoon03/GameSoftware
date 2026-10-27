@@ -27,9 +27,11 @@ class Reader
   public:
     explicit Reader(const std::filesystem::path &path) : file(path, std::ios::binary | std::ios::ate)
     {
-        if (!file || file.tellg() < 12 || file.tellg() > 128 * 1024 * 1024)
+        // Detailed meshes plus all authored human clips can exceed the old 128 MiB cache limit.
+        if (!file || file.tellg() < 12 || file.tellg() > 512 * 1024 * 1024)
         {
-            throw std::runtime_error("Resource pack missing/invalid: run tools/pack-resources.mjs");
+            throw std::runtime_error("Resource pack missing/invalid at " + path.u8string() +
+                                     "; rebuild or run node tools/ensure-resources.mjs");
         }
         remaining = static_cast<size_t>(file.tellg());
         file.seekg(0);
@@ -101,15 +103,53 @@ struct Store
     Store()
     {
         profiling::Scope timer(profiling::Timer::DiskCacheRead);
-        Reader reader(FindPack());
+        const auto packPath = FindPack();
+        Reader reader(packPath);
         unsigned int magic, version;
         reader.Read(&magic);
         reader.Read(&version);
-        if (magic != 0x41524d45 || version != 1)
+        if (magic != 0x41524d45 || version != 2)
         {
-            throw std::runtime_error("Unsupported resource pack version");
+            throw std::runtime_error(
+                "Unsupported resource pack version: rebuild or run node tools/ensure-resources.mjs");
         }
         const auto count = reader.Count(512);
+        const auto bankCount = reader.Count(512);
+        std::vector<std::pair<unsigned, std::shared_ptr<const std::vector<ResourceClip>>>> banks;
+        size_t animationClips = 0;
+        for (unsigned bank = 0; bank < bankCount; ++bank)
+        {
+            unsigned bones = reader.Count(31), clipCount = reader.Count(128);
+            if (!bones || !clipCount)
+            {
+                throw std::runtime_error("Invalid resource animation bank");
+            }
+            auto clips = std::make_shared<std::vector<ResourceClip>>();
+            clips->reserve(clipCount);
+            for (unsigned index = 0; index < clipCount; ++index)
+            {
+                ResourceClip clip;
+                clip.name = reader.String();
+                clip.frames = reader.Count(10000);
+                reader.Read(&clip.duration);
+                if (clip.frames < 2 || !std::isfinite(clip.duration) || clip.duration <= 0)
+                {
+                    throw std::runtime_error("Invalid resource animation");
+                }
+                clip.matrices.resize(size_t(clip.frames) * bones * 16);
+                reader.Read(clip.matrices.data(), clip.matrices.size());
+                clip.muzzles.resize(clip.frames);
+                reader.Read(clip.muzzles.data(), clip.muzzles.size());
+                if (std::any_of(clip.matrices.begin(), clip.matrices.end(),
+                                [](float v) { return !std::isfinite(v); }))
+                {
+                    throw std::runtime_error("Invalid resource skin palette");
+                }
+                clips->push_back(std::move(clip));
+                ++animationClips;
+            }
+            banks.emplace_back(bones, std::move(clips));
+        }
         meshes.reserve(count);
         size_t vertices = 0;
         for (unsigned int index = 0; index < count; ++index)
@@ -124,7 +164,15 @@ struct Store
             }
             auto vertexCount = reader.Count(2000000);
             mesh.boneCount = reader.Count(31);
-            auto clipCount = reader.Count(32);
+            auto bank = reader.Count(bankCount);
+            if (bank)
+            {
+                if (banks[bank - 1].first != mesh.boneCount)
+                {
+                    throw std::runtime_error("Animation bank skeleton mismatch");
+                }
+                mesh.animations = banks[bank - 1].second;
+            }
             reader.Read(&mesh.minimum);
             reader.Read(&mesh.maximum);
             reader.Read(&mesh.physicalSize);
@@ -159,27 +207,6 @@ struct Store
                     throw std::runtime_error("Unnormalized resource skin");
                 }
             }
-            for (unsigned int clipIndex = 0; clipIndex < clipCount; ++clipIndex)
-            {
-                ResourceClip clip;
-                clip.name = reader.String();
-                clip.frames = reader.Count(10000);
-                reader.Read(&clip.duration);
-                if (clip.frames < 2 || !std::isfinite(clip.duration) || clip.duration <= 0 || !mesh.boneCount)
-                {
-                    throw std::runtime_error("Invalid resource animation");
-                }
-                clip.matrices.resize(size_t(clip.frames) * mesh.boneCount * 16);
-                reader.Read(clip.matrices.data(), clip.matrices.size());
-                clip.muzzles.resize(clip.frames);
-                reader.Read(clip.muzzles.data(), clip.muzzles.size());
-                if (std::any_of(clip.matrices.begin(), clip.matrices.end(),
-                                [](float v) { return !std::isfinite(v); }))
-                {
-                    throw std::runtime_error("Invalid resource skin palette");
-                }
-                mesh.clips.push_back(std::move(clip));
-            }
             vertices += vertexCount;
         }
         if (reader.remaining)
@@ -188,8 +215,8 @@ struct Store
         }
         profiling::Count(profiling::Counter::DiskCacheHits);
         std::printf("{\"event\":\"resource_pack_loaded\",\"asset_count\":%zu,\"triangles\":%zu,\"skin_"
-                    "palette_limit\":32}\n",
-                    meshes.size(), vertices / 3);
+                    "palette_limit\":32,\"animation_clips\":%zu,\"pack_path\":\"%s\"}\n",
+                    meshes.size(), vertices / 3, animationClips, packPath.generic_u8string().c_str());
     }
 };
 Store &Assets()
@@ -238,7 +265,7 @@ Selection Select(const ResourceMesh &mesh, const CharacterPose *pose, bool upper
             time *= pose->locomotionSpeed * WorldScale::metersPerUnit / referenceSpeed;
         }
     }
-    for (const auto &clip : mesh.clips)
+    for (const auto &clip : mesh.Clips())
     {
         if (clip.name == name)
         {
@@ -282,7 +309,7 @@ unsigned int ResourceAssets::RegisterStatic(ResourceMesh mesh)
         return found->second;
     }
     mesh.boneCount = 0;
-    mesh.clips.clear();
+    mesh.animations.reset();
     mesh.minimum = {1.e9f, 1.e9f, 1.e9f};
     mesh.maximum = {-1.e9f, -1.e9f, -1.e9f};
     for (auto &v : mesh.vertices)

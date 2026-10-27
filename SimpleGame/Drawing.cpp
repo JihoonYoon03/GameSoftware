@@ -145,6 +145,7 @@ void Drawing::DrawGroundStrip(Vector2 start, Vector2 end, float width, ColorRGBA
         model->space = models::CoordinateSpace::World;
         model->ground = true;
         model->count = 1;
+        model->parts.resize(1);
         auto &part = model->parts[0];
         part.count = 4;
         part.points[0] = {0, 0, 0};
@@ -181,6 +182,7 @@ void Drawing::DrawScannerPulse(Vector2 origin, float radius, float opacity)
         model->space = models::CoordinateSpace::World;
         model->ground = true;
         constexpr int segments = 128;
+        model->parts.resize(segments * 2);
         for (int layer = 0; layer < 2; ++layer)
         {
             const float width = layer ? .006f : .024f;
@@ -707,7 +709,7 @@ void Drawing::DrawProp(const models::Model &model, Vector2 position, models::Poi
                 (position.x + position.y) * 36, visiblePalette);
 }
 void Drawing::DrawWorldAircraft(Vector2 position, float altitude, models::AircraftType type, bool alternate,
-                                float yaw, float bank)
+                                float yaw, float bank, bool destroyed)
 {
     models::Transform3D transform;
     transform.yaw = yaw;
@@ -731,8 +733,17 @@ void Drawing::DrawWorldAircraft(Vector2 position, float altitude, models::Aircra
         exhausts[side] = models::ResourceAssets::SkinPoint(attachment, matrices);
     }
     auto palette = OcclusionPalette(model, position, altitude, yaw, bank, {});
-    VehicleEffects(exhausts, {}, WorldToScreen(position.x, position.y), 1, transform, palette, .65f,
-                   (position.x + position.y) * 36);
+    if (destroyed)
+    {
+        palette.body = {.12f, .13f, .14f, palette.body[3]};
+        palette.accent = {.15f, .16f, .17f, palette.accent[3]};
+        palette.emission = {0, 0, 0, palette.emission[3]};
+    }
+    if (!destroyed)
+    {
+        VehicleEffects(exhausts, {}, WorldToScreen(position.x, position.y), 1, transform, palette, .65f,
+                       (position.x + position.y) * 36);
+    }
     Drawing::DrawModel3D(model, WorldToScreen(position.x, position.y), {1, 1, 1}, transform,
                          (position.x + position.y) * 36, palette, &pose);
 }

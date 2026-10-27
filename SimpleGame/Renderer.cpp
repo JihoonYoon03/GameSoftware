@@ -230,12 +230,14 @@ varying float surface,coverage,holographic;
 void main() {
  if(shadowPass!=0) {gl_FragColor=vec4(0.,0.,0.,.30*tint.a);return;}
  // Stable ordered coverage preserves depth for the player, regardless of batch order.
- if(coverage<.99){
+ // Faded glass also uses depth coverage: blending it while writing depth depended on batch order.
+ float depthCoverage=coverage<.5?min(coverage,tint.a):coverage;
+ if(depthCoverage<.99){
    vec2 cell=mod(floor(gl_FragCoord.xy),4.);
    float rank=mod(cell.x,2.)*8.+mod(cell.y,2.)*12.;
    rank=mod(rank,16.)+mod(floor(cell.x/2.)*2.+floor(cell.y/2.)*3.,4.);
    rank=mod(rank,16.);
-   if((rank+.5)/16.>coverage)discard;
+   if((rank+.5)/16.>depthCoverage)discard;
  }
  if(holographic>.5){gl_FragColor=vec4(tint.rgb,1.);return;}
  vec3 n=normalize(normal),l=normalize(vec3(-.35,-.45,.82)),v=normalize(vec3(1.,1.,.818));
@@ -252,7 +254,7 @@ void main() {
  float rim=pow(1.-max(0.,dot(n,v)),3.)*.08;
  vec3 color=tint.rgb*light+mix(vec3(.7,.83,.9),tint.rgb,metal)*spec+vec3(.2,.4,.48)*rim;
  if(surface>3.5 && surface<4.5)color=tint.rgb*(1.+finish.z*.25);
- gl_FragColor=vec4(color,coverage<.5?tint.a/max(.01,coverage):tint.a);
+ gl_FragColor=vec4(color,coverage<.5?1.:tint.a);
 }
 )GLSL";
 models::Point Cross(models::Point a, models::Point b)
@@ -1383,6 +1385,20 @@ void Renderer::DrawUtf8Text(float x, float y, const std::string &text, int size)
 {
     m_assets->DrawUtf8Text(x, y, text, size);
 }
+void Renderer::DrawUiText(float x, float y, const std::string &text, int size, bool outlined)
+{
+    m_assets->DrawUtf8Text(x, y, text, size, outlined);
+}
+bool Renderer::DrawUiSprite(const std::string &name, float x, float y, float width, float height,
+                            float fraction, bool nineSlice)
+{
+    return m_assets->DrawUiSprite(name, x, y, width, height, fraction, nineSlice);
+}
+size_t Renderer::UiSpriteCount() const
+{
+    return m_assets->UiSpriteCount();
+}
+
 void Renderer::DrawSolidRect(float x, float y, float z, float size, float r, float g, float b, float a)
 {
     // Preserve the old centered pixel-coordinate API.

@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "Level.h"
 #include "Civic.h"
+#include "Hud.h"
 #include "Profiler.h"
 #include "ResourceAssets.h"
 #include <algorithm>
@@ -1549,8 +1550,9 @@ void MineLevel::UseRecoveryKit()
     if (stats.recoveryKits > 0 && stats.health < stats.maxHealth)
     {
         --stats.recoveryKits;
+        int before = stats.health;
         stats.health = (std::min)(stats.maxHealth, stats.health + 45);
-        tutorial::Game::Get().ShowNotice("회복 키트 / 체력이 45 회복되었습니다.");
+        tutorial::Game::Get().ShowNotice("회복 키트 / 체력 +" + std::to_string(stats.health - before));
     }
 }
 
@@ -2087,26 +2089,16 @@ void ChapterOneLevel::Interact()
         tell("기본 장부 확보 / 발주처 이름은 지워졌습니다. 설비 N-0/17의 좌표·전력 사용 주기·교신 "
              "시각이 남아 있습니다. 다른 현장 기록도 모아 헤일로 수신망에서 대조하세요.");
         break;
-    case ChapterAction::ConvoySupply: {
-        auto &stats = GameLevels::Mine().GetState().player;
-        int price = tutorial::CivicJustice::ShopPrice(2);
-        if (stats.salvage >= price && stats.recoveryKits < 999)
+    case ChapterAction::ConvoySupply:
+        if (tutorial::Dialogue::Danger())
         {
-            stats.salvage -= price;
-            ++stats.recoveryKits;
-            game.ShowNotice("보급품 교환 완료 / 부품 " + std::to_string(price) +
-                            "개를 건네고 회복 키트 1개를 받았습니다.");
+            game.ShowNotice("보급 교환 / 안전을 확보한 뒤 이용하세요.");
         }
         else
         {
-            game.ShowNotice(stats.recoveryKits >= 999
-                                ? "보급품 교환 / 회복 키트를 더 소지할 수 없습니다."
-                                : "운송대 보급상 / 회복 키트 하나에 부품 " + std::to_string(price) +
-                                      "개가 필요해요. 지금은 부품이 모자라네요. [거래 안내] 악명이 높으면 "
-                                      "가격이 오릅니다.");
+            tutorial::Hud::OpenMenu(tutorial::UiScreen::Supply);
         }
         break;
-    }
     case ChapterAction::DetailLedger:
         state.detailLedgerFound = true;
         tell("상세 장부 확보 / 구매자 추적 단서를 보관합니다. 삭제된 발주처의 정체는 아직 "

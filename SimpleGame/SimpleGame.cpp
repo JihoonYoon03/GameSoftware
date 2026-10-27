@@ -10,6 +10,7 @@ but WITHOUT ANY WARRANTY.
 
 #include "stdafx.h"
 #include "Game.h"
+#include "Hud.h"
 #include "Renderer.h"
 #include "Profiler.h"
 #include "Monitoring/Monitor.h"
@@ -32,10 +33,13 @@ int main(int argc, char **argv)
     {
         tutorial::GameRenderer::Get().Initialize();
         tutorial::Game::Get().Reset();
+        tutorial::Hud::OpenMenu(tutorial::UiScreen::Title);
     }
     catch (const std::exception &error)
     {
-        std::fprintf(stderr, "게임 리소스 초기화 실패: %s\nResource/Runtime 캐시와 배포 경로를 확인하세요.\n",
+        std::fprintf(stderr,
+                     "게임 리소스 초기화 실패: %s\nResource/Runtime 캐시 및 Resource/UI/Export 배포 경로를 "
+                     "확인하세요.\n",
                      error.what());
         tutorial::GameRenderer::Get().Shutdown();
         glutDestroyWindow(glutGetWindow());

@@ -296,6 +296,11 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     security.Number("wanted_stars", law.wanted);
     security.Number("heat", law.heat);
     security.Number("infamy", law.infamy);
+    security.Number("pending_infamy", law.pendingInfamy);
+    security.Bool("identified", law.identified);
+    security.Bool("response_started", law.responseStarted);
+    security.Seconds("pursuit_seconds", law.pursuitSeconds);
+    security.Seconds("initial_unseen_seconds", law.initialUnseenSeconds);
     security.Number("price_multiplier", tutorial::CivicJustice::PriceMultiplier());
     security.Number("officers", law.officers.size());
     security.Number("hospital_transfers", law.deaths);

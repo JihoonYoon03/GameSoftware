@@ -91,6 +91,10 @@ class Renderer
     void DrawGlow(float x, float y, float size);
     void DrawEffect(const RenderPoint (&vertices)[4], SurfaceEffect effect, float seconds);
     void DrawUtf8Text(float x, float baselineY, const std::string &utf8, int fontSize);
+    void DrawUiText(float x, float baselineY, const std::string &text, int size, bool outlined = false);
+    bool DrawUiSprite(const std::string &name, float x, float y, float width, float height,
+                      float fraction = 1, bool nineSlice = false);
+    size_t UiSpriteCount() const;
     void DrawSolidRect(float x, float y, float z, float size, float r, float g, float b, float a);
     bool SubmitModel(const models::Model &model, RenderPoint screen, models::Point scale,
                      const models::Transform3D &transform, float depth, const models::Palette &palette,

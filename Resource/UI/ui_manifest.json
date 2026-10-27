@@ -1,0 +1,1456 @@
+{
+  "version": "1.1.0",
+  "title": "ERMA / FIELD INTERFACE",
+  "date": "2026-10-26",
+  "canvas": {
+    "width": 1280,
+    "height": 800,
+    "safe_margin": 32,
+    "scale": "uniform_min_viewport_fit",
+    "letterbox": true
+  },
+  "font": {
+    "family": "Malgun Gothic",
+    "windows_path": "C:/Windows/Fonts/malgun.ttf",
+    "redistributed": false,
+    "text_in_assets": false,
+    "encoding": "UTF-8",
+    "body_px": 20,
+    "metadata_px": 14,
+    "line_height": 32
+  },
+  "palette": {
+    "bg": "#07131c",
+    "panel": "#10242d",
+    "edge": "#79929b",
+    "ink": "#ffffff",
+    "muted": "#d0dfe3",
+    "accent": "#9df4d6",
+    "amber": "#ffdf9c",
+    "danger": "#ffc0b6",
+    "blue": "#b6d9ff",
+    "disabled": "#9caeb5"
+  },
+  "opacity": {
+    "parameter": "opacity_is_alpha_not_transparency",
+    "background": {
+      "default": 0.94,
+      "min": 0.8,
+      "max": 1
+    },
+    "border": {
+      "default": 1,
+      "min": 0.8,
+      "max": 1
+    },
+    "content": {
+      "default": 1,
+      "min": 0.85,
+      "max": 1
+    },
+    "formula": "output_alpha = asset_alpha * layer_opacity",
+    "note": "Proposed integration range; review viewer exposes stress values down to 0.3. No game setting implemented."
+  },
+  "alpha": {
+    "export": "straight RGBA",
+    "color_space": "sRGB",
+    "blend": "SRC_ALPHA, ONE_MINUS_SRC_ALPHA",
+    "tint": "white icons are tintable; preserve full alpha, convert if using a premultiplied renderer"
+  },
+  "icons": {
+    "health": {
+      "svg": "Source/Icons/health.svg",
+      "png": "Export/Icons/health.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "heal": {
+      "svg": "Source/Icons/heal.svg",
+      "png": "Export/Icons/heal.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "pistol": {
+      "svg": "Source/Icons/pistol.svg",
+      "png": "Export/Icons/pistol.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "magazine": {
+      "svg": "Source/Icons/magazine.svg",
+      "png": "Export/Icons/magazine.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "reload": {
+      "svg": "Source/Icons/reload.svg",
+      "png": "Export/Icons/reload.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "infinite": {
+      "svg": "Source/Icons/infinite.svg",
+      "png": "Export/Icons/infinite.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "objective": {
+      "svg": "Source/Icons/objective.svg",
+      "png": "Export/Icons/objective.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "investigate": {
+      "svg": "Source/Icons/investigate.svg",
+      "png": "Export/Icons/investigate.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "dialogue": {
+      "svg": "Source/Icons/dialogue.svg",
+      "png": "Export/Icons/dialogue.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "radio": {
+      "svg": "Source/Icons/radio.svg",
+      "png": "Export/Icons/radio.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "terminal": {
+      "svg": "Source/Icons/terminal.svg",
+      "png": "Export/Icons/terminal.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "record": {
+      "svg": "Source/Icons/record.svg",
+      "png": "Export/Icons/record.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "history": {
+      "svg": "Source/Icons/history.svg",
+      "png": "Export/Icons/history.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "scan": {
+      "svg": "Source/Icons/scan.svg",
+      "png": "Export/Icons/scan.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "signal": {
+      "svg": "Source/Icons/signal.svg",
+      "png": "Export/Icons/signal.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "rescue": {
+      "svg": "Source/Icons/rescue.svg",
+      "png": "Export/Icons/rescue.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "companion": {
+      "svg": "Source/Icons/companion.svg",
+      "png": "Export/Icons/companion.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "injured": {
+      "svg": "Source/Icons/injured.svg",
+      "png": "Export/Icons/injured.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "medical": {
+      "svg": "Source/Icons/medical.svg",
+      "png": "Export/Icons/medical.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "wanted": {
+      "svg": "Source/Icons/wanted.svg",
+      "png": "Export/Icons/wanted.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "reputation": {
+      "svg": "Source/Icons/reputation.svg",
+      "png": "Export/Icons/reputation.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "credit": {
+      "svg": "Source/Icons/credit.svg",
+      "png": "Export/Icons/credit.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "parts": {
+      "svg": "Source/Icons/parts.svg",
+      "png": "Export/Icons/parts.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "bike": {
+      "svg": "Source/Icons/bike.svg",
+      "png": "Export/Icons/bike.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "boost": {
+      "svg": "Source/Icons/boost.svg",
+      "png": "Export/Icons/boost.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "reverse": {
+      "svg": "Source/Icons/reverse.svg",
+      "png": "Export/Icons/reverse.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "speed": {
+      "svg": "Source/Icons/speed.svg",
+      "png": "Export/Icons/speed.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "walk": {
+      "svg": "Source/Icons/walk.svg",
+      "png": "Export/Icons/walk.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "stop": {
+      "svg": "Source/Icons/stop.svg",
+      "png": "Export/Icons/stop.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "warning": {
+      "svg": "Source/Icons/warning.svg",
+      "png": "Export/Icons/warning.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "check": {
+      "svg": "Source/Icons/check.svg",
+      "png": "Export/Icons/check.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "close": {
+      "svg": "Source/Icons/close.svg",
+      "png": "Export/Icons/close.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "lock": {
+      "svg": "Source/Icons/lock.svg",
+      "png": "Export/Icons/lock.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "arrow": {
+      "svg": "Source/Icons/arrow.svg",
+      "png": "Export/Icons/arrow.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "chevron": {
+      "svg": "Source/Icons/chevron.svg",
+      "png": "Export/Icons/chevron.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "destination": {
+      "svg": "Source/Icons/destination.svg",
+      "png": "Export/Icons/destination.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "player": {
+      "svg": "Source/Icons/player.svg",
+      "png": "Export/Icons/player.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "home": {
+      "svg": "Source/Icons/home.svg",
+      "png": "Export/Icons/home.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "gate": {
+      "svg": "Source/Icons/gate.svg",
+      "png": "Export/Icons/gate.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "power": {
+      "svg": "Source/Icons/power.svg",
+      "png": "Export/Icons/power.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "supply": {
+      "svg": "Source/Icons/supply.svg",
+      "png": "Export/Icons/supply.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "exit": {
+      "svg": "Source/Icons/exit.svg",
+      "png": "Export/Icons/exit.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "pause": {
+      "svg": "Source/Icons/pause.svg",
+      "png": "Export/Icons/pause.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "settings": {
+      "svg": "Source/Icons/settings.svg",
+      "png": "Export/Icons/settings.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "mouse": {
+      "svg": "Source/Icons/mouse.svg",
+      "png": "Export/Icons/mouse.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "keyboard": {
+      "svg": "Source/Icons/keyboard.svg",
+      "png": "Export/Icons/keyboard.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "transport": {
+      "svg": "Source/Icons/transport.svg",
+      "png": "Export/Icons/transport.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "investigation_site": {
+      "svg": "Source/Icons/investigation_site.svg",
+      "png": "Export/Icons/investigation_site.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "unknown_signal": {
+      "svg": "Source/Icons/unknown_signal.svg",
+      "png": "Export/Icons/unknown_signal.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "level": {
+      "svg": "Source/Icons/level.svg",
+      "png": "Export/Icons/level.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "attack": {
+      "svg": "Source/Icons/attack.svg",
+      "png": "Export/Icons/attack.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "defense": {
+      "svg": "Source/Icons/defense.svg",
+      "png": "Export/Icons/defense.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "empty": {
+      "svg": "Source/Icons/empty.svg",
+      "png": "Export/Icons/empty.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    }
+  },
+  "components": {
+    "panel_fill": {
+      "svg": "Source/Components/panel_fill.svg",
+      "png": "Export/Components/panel_fill.png",
+      "width": 96,
+      "height": 96,
+      "role": "background",
+      "nine_slice_ltrb": [
+        12,
+        12,
+        12,
+        12
+      ]
+    },
+    "panel_border": {
+      "svg": "Source/Components/panel_border.svg",
+      "png": "Export/Components/panel_border.png",
+      "width": 96,
+      "height": 96,
+      "role": "border",
+      "nine_slice_ltrb": [
+        12,
+        12,
+        12,
+        12
+      ]
+    },
+    "panel_accent": {
+      "svg": "Source/Components/panel_accent.svg",
+      "png": "Export/Components/panel_accent.png",
+      "width": 32,
+      "height": 4,
+      "role": "decoration"
+    },
+    "button_default": {
+      "svg": "Source/Components/button_default.svg",
+      "png": "Export/Components/button_default.png",
+      "width": 160,
+      "height": 48,
+      "role": "state",
+      "nine_slice_ltrb": [
+        12,
+        12,
+        12,
+        12
+      ]
+    },
+    "button_hover": {
+      "svg": "Source/Components/button_hover.svg",
+      "png": "Export/Components/button_hover.png",
+      "width": 160,
+      "height": 48,
+      "role": "state",
+      "nine_slice_ltrb": [
+        12,
+        12,
+        12,
+        12
+      ]
+    },
+    "button_pressed": {
+      "svg": "Source/Components/button_pressed.svg",
+      "png": "Export/Components/button_pressed.png",
+      "width": 160,
+      "height": 48,
+      "role": "state",
+      "nine_slice_ltrb": [
+        12,
+        12,
+        12,
+        12
+      ]
+    },
+    "button_selected": {
+      "svg": "Source/Components/button_selected.svg",
+      "png": "Export/Components/button_selected.png",
+      "width": 160,
+      "height": 48,
+      "role": "state",
+      "nine_slice_ltrb": [
+        12,
+        12,
+        12,
+        12
+      ]
+    },
+    "button_disabled": {
+      "svg": "Source/Components/button_disabled.svg",
+      "png": "Export/Components/button_disabled.png",
+      "width": 160,
+      "height": 48,
+      "role": "state"
+    },
+    "button_warning": {
+      "svg": "Source/Components/button_warning.svg",
+      "png": "Export/Components/button_warning.png",
+      "width": 160,
+      "height": 48,
+      "role": "state"
+    },
+    "gauge_track": {
+      "svg": "Source/Components/gauge_track.svg",
+      "png": "Export/Components/gauge_track.png",
+      "width": 128,
+      "height": 8,
+      "role": "component",
+      "nine_slice_ltrb": [
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    "gauge_health": {
+      "svg": "Source/Components/gauge_health.svg",
+      "png": "Export/Components/gauge_health.png",
+      "width": 128,
+      "height": 8,
+      "role": "fill_crop_horizontal",
+      "nine_slice_ltrb": [
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    "gauge_critical": {
+      "svg": "Source/Components/gauge_critical.svg",
+      "png": "Export/Components/gauge_critical.png",
+      "width": 128,
+      "height": 8,
+      "role": "fill_crop_horizontal",
+      "nine_slice_ltrb": [
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    "gauge_reload": {
+      "svg": "Source/Components/gauge_reload.svg",
+      "png": "Export/Components/gauge_reload.png",
+      "width": 128,
+      "height": 8,
+      "role": "fill_crop_horizontal",
+      "nine_slice_ltrb": [
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    "gauge_heat": {
+      "svg": "Source/Components/gauge_heat.svg",
+      "png": "Export/Components/gauge_heat.png",
+      "width": 128,
+      "height": 8,
+      "role": "fill_crop_horizontal",
+      "nine_slice_ltrb": [
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    "gauge_scan": {
+      "svg": "Source/Components/gauge_scan.svg",
+      "png": "Export/Components/gauge_scan.png",
+      "width": 128,
+      "height": 8,
+      "role": "fill_crop_horizontal",
+      "nine_slice_ltrb": [
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    "gauge_experience": {
+      "svg": "Source/Components/gauge_experience.svg",
+      "png": "Export/Components/gauge_experience.png",
+      "width": 128,
+      "height": 8,
+      "role": "fill_crop_horizontal",
+      "nine_slice_ltrb": [
+        4,
+        4,
+        4,
+        4
+      ]
+    },
+    "keycap": {
+      "svg": "Source/Components/keycap.svg",
+      "png": "Export/Components/keycap.png",
+      "width": 48,
+      "height": 32,
+      "role": "component",
+      "nine_slice_ltrb": [
+        6,
+        6,
+        6,
+        6
+      ]
+    },
+    "divider": {
+      "svg": "Source/Components/divider.svg",
+      "png": "Export/Components/divider.png",
+      "width": 128,
+      "height": 1,
+      "role": "component"
+    },
+    "minimap_ring": {
+      "svg": "Source/Components/minimap_ring.svg",
+      "png": "Export/Components/minimap_ring.png",
+      "width": 192,
+      "height": 192,
+      "role": "fixed_aspect"
+    },
+    "minimap_mask": {
+      "svg": "Source/Components/minimap_mask.svg",
+      "png": "Export/Components/minimap_mask.png",
+      "width": 192,
+      "height": 192,
+      "role": "alpha_mask"
+    },
+    "reticle_ready": {
+      "svg": "Source/Components/reticle_ready.svg",
+      "png": "Export/Components/reticle_ready.png",
+      "width": 64,
+      "height": 64,
+      "role": "reticle"
+    },
+    "reticle_spread": {
+      "svg": "Source/Components/reticle_spread.svg",
+      "png": "Export/Components/reticle_spread.png",
+      "width": 64,
+      "height": 64,
+      "role": "reticle"
+    },
+    "reticle_recovering": {
+      "svg": "Source/Components/reticle_recovering.svg",
+      "png": "Export/Components/reticle_recovering.png",
+      "width": 64,
+      "height": 64,
+      "role": "reticle"
+    },
+    "reticle_blocked": {
+      "svg": "Source/Components/reticle_blocked.svg",
+      "png": "Export/Components/reticle_blocked.png",
+      "width": 64,
+      "height": 64,
+      "role": "reticle"
+    },
+    "cursor_menu": {
+      "svg": "Source/Components/cursor_menu.svg",
+      "png": "Export/Components/cursor_menu.png",
+      "width": 40,
+      "height": 40,
+      "role": "component"
+    },
+    "signal_edge": {
+      "svg": "Source/Components/signal_edge.svg",
+      "png": "Export/Components/signal_edge.png",
+      "width": 48,
+      "height": 40,
+      "role": "rotate_toward_approximate_signal"
+    },
+    "destination_edge": {
+      "svg": "Source/Components/destination_edge.svg",
+      "png": "Export/Components/destination_edge.png",
+      "width": 40,
+      "height": 40,
+      "role": "rotate_toward_exact_destination"
+    },
+    "fade_overlay": {
+      "svg": "Source/Components/fade_overlay.svg",
+      "png": "Export/Components/fade_overlay.png",
+      "width": 16,
+      "height": 16,
+      "role": "stretch_full_canvas_animate_alpha"
+    },
+    "hud_health_track": {
+      "svg": "Source/Components/hud_health_track.svg",
+      "png": "Export/Components/hud_health_track.png",
+      "width": 224,
+      "height": 16,
+      "role": "hud_track_no_panel"
+    },
+    "hud_health_fill": {
+      "svg": "Source/Components/hud_health_fill.svg",
+      "png": "Export/Components/hud_health_fill.png",
+      "width": 220,
+      "height": 12,
+      "role": "hud_crop_and_tint"
+    },
+    "hud_ammo_pip": {
+      "svg": "Source/Components/hud_ammo_pip.svg",
+      "png": "Export/Components/hud_ammo_pip.png",
+      "width": 11,
+      "height": 12,
+      "role": "hud_ammo_one_round"
+    },
+    "hud_ammo_pip_empty": {
+      "svg": "Source/Components/hud_ammo_pip_empty.svg",
+      "png": "Export/Components/hud_ammo_pip_empty.png",
+      "width": 11,
+      "height": 12,
+      "role": "hud_ammo_empty_round"
+    },
+    "hud_reload_track": {
+      "svg": "Source/Components/hud_reload_track.svg",
+      "png": "Export/Components/hud_reload_track.png",
+      "width": 156,
+      "height": 14,
+      "role": "hud_reload_progress"
+    },
+    "hud_reload_fill": {
+      "svg": "Source/Components/hud_reload_fill.svg",
+      "png": "Export/Components/hud_reload_fill.png",
+      "width": 152,
+      "height": 10,
+      "role": "hud_crop_and_tint"
+    },
+    "hud_heat_track": {
+      "svg": "Source/Components/hud_heat_track.svg",
+      "png": "Export/Components/hud_heat_track.png",
+      "width": 169,
+      "height": 10,
+      "role": "hud_heat_progress"
+    },
+    "hud_heat_fill": {
+      "svg": "Source/Components/hud_heat_fill.svg",
+      "png": "Export/Components/hud_heat_fill.png",
+      "width": 165,
+      "height": 6,
+      "role": "hud_crop_and_tint"
+    },
+    "hud_scan_track": {
+      "svg": "Source/Components/hud_scan_track.svg",
+      "png": "Export/Components/hud_scan_track.png",
+      "width": 48,
+      "height": 48,
+      "role": "hud_scan_radial_track"
+    },
+    "hud_scan_arc": {
+      "svg": "Source/Components/hud_scan_arc.svg",
+      "png": "Export/Components/hud_scan_arc.png",
+      "width": 48,
+      "height": 48,
+      "role": "hud_radial_arc_dynamic_mesh_preferred"
+    },
+    "hud_reticle_arm": {
+      "svg": "Source/Components/hud_reticle_arm.svg",
+      "png": "Export/Components/hud_reticle_arm.png",
+      "width": 14,
+      "height": 6,
+      "role": "hud_four_independently_positioned_arms"
+    }
+  },
+  "hud_icons": {
+    "health": {
+      "svg": "Source/HUDIcons/health.svg",
+      "png": "Export/HUDIcons/health.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "pistol": {
+      "svg": "Source/HUDIcons/pistol.svg",
+      "png": "Export/HUDIcons/pistol.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "infinite": {
+      "svg": "Source/HUDIcons/infinite.svg",
+      "png": "Export/HUDIcons/infinite.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "reload": {
+      "svg": "Source/HUDIcons/reload.svg",
+      "png": "Export/HUDIcons/reload.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "objective": {
+      "svg": "Source/HUDIcons/objective.svg",
+      "png": "Export/HUDIcons/objective.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "wanted": {
+      "svg": "Source/HUDIcons/wanted.svg",
+      "png": "Export/HUDIcons/wanted.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "scan": {
+      "svg": "Source/HUDIcons/scan.svg",
+      "png": "Export/HUDIcons/scan.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "signal": {
+      "svg": "Source/HUDIcons/signal.svg",
+      "png": "Export/HUDIcons/signal.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "unknown_signal": {
+      "svg": "Source/HUDIcons/unknown_signal.svg",
+      "png": "Export/HUDIcons/unknown_signal.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "bike": {
+      "svg": "Source/HUDIcons/bike.svg",
+      "png": "Export/HUDIcons/bike.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "boost": {
+      "svg": "Source/HUDIcons/boost.svg",
+      "png": "Export/HUDIcons/boost.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "reverse": {
+      "svg": "Source/HUDIcons/reverse.svg",
+      "png": "Export/HUDIcons/reverse.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "speed": {
+      "svg": "Source/HUDIcons/speed.svg",
+      "png": "Export/HUDIcons/speed.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "injured": {
+      "svg": "Source/HUDIcons/injured.svg",
+      "png": "Export/HUDIcons/injured.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "rescue": {
+      "svg": "Source/HUDIcons/rescue.svg",
+      "png": "Export/HUDIcons/rescue.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "check": {
+      "svg": "Source/HUDIcons/check.svg",
+      "png": "Export/HUDIcons/check.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "warning": {
+      "svg": "Source/HUDIcons/warning.svg",
+      "png": "Export/HUDIcons/warning.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "companion": {
+      "svg": "Source/HUDIcons/companion.svg",
+      "png": "Export/HUDIcons/companion.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "destination": {
+      "svg": "Source/HUDIcons/destination.svg",
+      "png": "Export/HUDIcons/destination.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "player": {
+      "svg": "Source/HUDIcons/player.svg",
+      "png": "Export/HUDIcons/player.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    }
+  },
+  "hud": {
+    "implementation": "HUD_IMPLEMENTATION_ko.md",
+    "uses_full_panel": false,
+    "health": "icon + current/max + 220x12 clipped gauge",
+    "ammo": "icon + 38px current + max + 12 pips",
+    "runtime_primitives": [
+      "health",
+      "ammo_pips",
+      "reload",
+      "heat",
+      "scan_arc",
+      "reticle_arms",
+      "speed"
+    ],
+    "render_text": "runtime only; black 4px outside outline; independent content opacity"
+  },
+  "atlas": {
+    "png": "Export/Atlases/icons.png",
+    "metadata": "Export/Atlases/icons.json",
+    "padding": 4
+  },
+  "screens": {
+    "01_city": {
+      "label": "밝은 도시 / 기본 HUD",
+      "requirements": [
+        "UI-01",
+        "UI-02",
+        "UI-04",
+        "UI-05",
+        "UI-07",
+        "UI-14"
+      ],
+      "svg": "Source/Screens/01_city.svg",
+      "png": "Preview/01_city.png"
+    },
+    "02_combat": {
+      "label": "전투 HUD / 저체력 · 재장전",
+      "requirements": [
+        "UI-01",
+        "UI-02",
+        "UI-03",
+        "UI-12",
+        "UI-15"
+      ],
+      "svg": "Source/Screens/02_combat.svg",
+      "png": "Preview/02_combat.png"
+    },
+    "03_bike": {
+      "label": "주행 HUD / 속도 · 부스트",
+      "requirements": [
+        "UI-05",
+        "UI-13"
+      ],
+      "svg": "Source/Screens/03_bike.svg",
+      "png": "Preview/03_bike.png"
+    },
+    "04_mine": {
+      "label": "광산 HUD / 스캔 · 구조",
+      "requirements": [
+        "UI-05",
+        "UI-10",
+        "UI-11"
+      ],
+      "svg": "Source/Screens/04_mine.svg",
+      "png": "Preview/04_mine.png"
+    },
+    "05_dialogue": {
+      "label": "긴 한글 대화 / 선택",
+      "requirements": [
+        "UI-08",
+        "UI-15"
+      ],
+      "svg": "Source/Screens/05_dialogue.svg",
+      "png": "Preview/05_dialogue.png"
+    },
+    "06_journal": {
+      "label": "조사 기록 / 알려진 사실",
+      "requirements": [
+        "UI-09"
+      ],
+      "svg": "Source/Screens/06_journal.svg",
+      "png": "Preview/06_journal.png"
+    },
+    "07_chapter": {
+      "label": "1장 HUD / 조사 · 철수",
+      "requirements": [
+        "UI-04",
+        "UI-07",
+        "UI-11",
+        "UI-15"
+      ],
+      "svg": "Source/Screens/07_chapter.svg",
+      "png": "Preview/07_chapter.png"
+    },
+    "08_medical": {
+      "label": "의료 이송 / 실제 손실",
+      "requirements": [
+        "UI-16"
+      ],
+      "svg": "Source/Screens/08_medical.svg",
+      "png": "Preview/08_medical.png"
+    },
+    "09_pause": {
+      "label": "일시정지 / 지역별 복귀",
+      "requirements": [
+        "UI-17"
+      ],
+      "svg": "Source/Screens/09_pause.svg",
+      "png": "Preview/09_pause.png"
+    },
+    "10_city_map": {
+      "label": "전체 지도 / 도시",
+      "requirements": [
+        "UI-06"
+      ],
+      "svg": "Source/Screens/10_city_map.svg",
+      "png": "Preview/10_city_map.png"
+    },
+    "11_mine_map": {
+      "label": "전체 지도 / 광산 비공개 영역",
+      "requirements": [
+        "UI-06"
+      ],
+      "svg": "Source/Screens/11_mine_map.svg",
+      "png": "Preview/11_mine_map.png"
+    },
+    "12_chapter_map": {
+      "label": "전체 지도 / 1장 현장",
+      "requirements": [
+        "UI-06"
+      ],
+      "svg": "Source/Screens/12_chapter_map.svg",
+      "png": "Preview/12_chapter_map.png"
+    },
+    "13_history": {
+      "label": "대사 이력 / 전달 방식",
+      "requirements": [
+        "UI-09"
+      ],
+      "svg": "Source/Screens/13_history.svg",
+      "png": "Preview/13_history.png"
+    },
+    "14_empty": {
+      "label": "조사 기록 / 내용 없음",
+      "requirements": [
+        "UI-09"
+      ],
+      "svg": "Source/Screens/14_empty.svg",
+      "png": "Preview/14_empty.png"
+    },
+    "15_title": {
+      "label": "타이틀 / 후속 연결용",
+      "requirements": [
+        "UI-18"
+      ],
+      "svg": "Source/Screens/15_title.svg",
+      "png": "Preview/15_title.png"
+    },
+    "16_options": {
+      "label": "옵션 / 투명도 / 후속 연결용",
+      "requirements": [
+        "UI-19"
+      ],
+      "svg": "Source/Screens/16_options.svg",
+      "png": "Preview/16_options.png"
+    },
+    "17_summary": {
+      "label": "보유 / 성장 요약 / 후속 연결용",
+      "requirements": [
+        "UI-20"
+      ],
+      "svg": "Source/Screens/17_summary.svg",
+      "png": "Preview/17_summary.png"
+    },
+    "18_supply": {
+      "label": "보급 교환 / 후속 연결용",
+      "requirements": [
+        "UI-21"
+      ],
+      "svg": "Source/Screens/18_supply.svg",
+      "png": "Preview/18_supply.png"
+    },
+    "19_confirm": {
+      "label": "중요 행동 확인 / 후속 연결용",
+      "requirements": [
+        "UI-22"
+      ],
+      "svg": "Source/Screens/19_confirm.svg",
+      "png": "Preview/19_confirm.png"
+    },
+    "20_help": {
+      "label": "맥락별 조작 / 후속 연결용",
+      "requirements": [
+        "UI-23"
+      ],
+      "svg": "Source/Screens/20_help.svg",
+      "png": "Preview/20_help.png"
+    },
+    "21_components": {
+      "label": "공통 부품 / 버튼 / 게이지",
+      "requirements": [
+        "COMMON"
+      ],
+      "svg": "Source/Screens/21_components.svg",
+      "png": "Preview/21_components.png"
+    },
+    "22_states": {
+      "label": "상태 목록 / 기능 맥락",
+      "requirements": [
+        "COMMON"
+      ],
+      "svg": "Source/Screens/22_states.svg",
+      "png": "Preview/22_states.png"
+    },
+    "23_icons": {
+      "label": "아이콘 라이브러리",
+      "requirements": [
+        "COMMON"
+      ],
+      "svg": "Source/Screens/23_icons.svg",
+      "png": "Preview/23_icons.png"
+    },
+    "24_local_dialogue": {
+      "label": "현장 대화 / 진행 일시정지",
+      "requirements": [
+        "UI-08"
+      ],
+      "svg": "Source/Screens/24_local_dialogue.svg",
+      "png": "Preview/24_local_dialogue.png"
+    },
+    "25_interactions": {
+      "label": "상호작용 / 월드 표식",
+      "requirements": [
+        "UI-07"
+      ],
+      "svg": "Source/Screens/25_interactions.svg",
+      "png": "Preview/25_interactions.png"
+    },
+    "26_notifications": {
+      "label": "획득 / 회복 / 거래 / 피격 알림",
+      "requirements": [
+        "UI-01",
+        "UI-14",
+        "UI-15"
+      ],
+      "svg": "Source/Screens/26_notifications.svg",
+      "png": "Preview/26_notifications.png"
+    },
+    "27_transfer": {
+      "label": "의료 이송 중 / 입력 잠금",
+      "requirements": [
+        "UI-16"
+      ],
+      "svg": "Source/Screens/27_transfer.svg",
+      "png": "Preview/27_transfer.png"
+    },
+    "28_pause_mine": {
+      "label": "광산 일시정지 / 재시작",
+      "requirements": [
+        "UI-17"
+      ],
+      "svg": "Source/Screens/28_pause_mine.svg",
+      "png": "Preview/28_pause_mine.png"
+    },
+    "29_pause_city": {
+      "label": "도시 일시정지 / 다시 시작",
+      "requirements": [
+        "UI-17"
+      ],
+      "svg": "Source/Screens/29_pause_city.svg",
+      "png": "Preview/29_pause_city.png"
+    },
+    "30_text_stress": {
+      "label": "긴 한글 / 큰 수치 검토",
+      "requirements": [
+        "COMMON"
+      ],
+      "svg": "Source/Screens/30_text_stress.svg",
+      "png": "Preview/30_text_stress.png"
+    },
+    "31_dialogue_page": {
+      "label": "대화 / 다음 페이지",
+      "requirements": [
+        "UI-08"
+      ],
+      "svg": "Source/Screens/31_dialogue_page.svg",
+      "png": "Preview/31_dialogue_page.png"
+    },
+    "32_hud_parts": {
+      "label": "HUD 부품 / 게이지·아이콘 구성",
+      "requirements": [
+        "COMMON"
+      ],
+      "svg": "Source/Screens/32_hud_parts.svg",
+      "png": "Preview/32_hud_parts.png"
+    },
+    "33_exploration": {
+      "label": "탐험 HUD / 불필요한 전투 정보 숨김",
+      "requirements": [
+        "UI-01",
+        "UI-04",
+        "UI-05"
+      ],
+      "svg": "Source/Screens/33_exploration.svg",
+      "png": "Preview/33_exploration.png"
+    },
+    "34_low_health": {
+      "label": "저체력 HUD / 위험 기호와 회복 키",
+      "requirements": [
+        "UI-01",
+        "UI-02",
+        "UI-03"
+      ],
+      "svg": "Source/Screens/34_low_health.svg",
+      "png": "Preview/34_low_health.png"
+    }
+  },
+  "constraints": [
+    "No automatic route polyline",
+    "Map north is fixed northeast; rotate actor only",
+    "Mine geometry/targets only in explored and eligible state",
+    "Approximate signal is not an exact map pin",
+    "Unlimited spare magazines; no spare ammunition count",
+    "No bike fuel or energy resource",
+    "No persistent save/load UI",
+    "No unrevealed facts or unjoined companions",
+    "No interaction during medical transfer",
+    "Dialogue input must be consumed before world input"
+  ]
+}

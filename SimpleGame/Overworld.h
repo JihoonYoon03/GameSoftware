@@ -120,6 +120,7 @@ struct TrafficVehicle
     bool yieldingRight = false;
     int reservedFrom = -1, reservedTo = -1;
     int health = 140;
+    bool occupied = true;
     float wreckSeconds = 0, impactCooldown = 0, hitFlash = 0;
 };
 class TrafficSystem
@@ -177,6 +178,9 @@ struct AircraftActor
     bool alternate = false;
     float parameter = 0, speed = 20, altitude = 12, yaw = 0, bank = 0;
     Vector2 position = {};
+    int health = 180;
+    bool occupied = true;
+    float wreckSeconds = 0, fallSpeed = 0;
 };
 class AirTraffic
 {
@@ -188,6 +192,8 @@ class AirTraffic
     {
         return aircraft;
     }
+    bool DamageAircraft(std::uint64_t id, int damage, bool playerOwned = true);
+    static bool Contains(const AircraftActor &craft, models::Point point);
     static Vector2 Position(int route, float parameter);
     static Vector2 Tangent(int route, float parameter);
     // Includes both the banked hull and the renderer's projected, blurred ground shadow.
@@ -225,6 +231,7 @@ class WorldScenery
     bool Place(const GameState &world, const models::Model &model, models::SceneryType type, Vector2 position,
                float yaw = 0, bool solid = true);
     std::vector<SceneryProp> props;
+    std::map<std::pair<int, int>, std::vector<size_t>> solidCells;
 };
 
 // Connected outdoor world. Bike travel never changes the active scene or map.

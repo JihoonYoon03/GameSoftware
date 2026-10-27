@@ -63,7 +63,7 @@ class Drawing
                                  const models::Palette &palette, float throttle, float yaw);
     static void DrawWorldBike(Vector2 position, float yaw, float throttle, bool mounted);
     static void DrawWorldAircraft(Vector2 position, float altitude, models::AircraftType type, bool alternate,
-                                  float yaw, float bank);
+                                  float yaw, float bank, bool destroyed = false);
     static void DrawProp(const models::Model &model, Vector2 position, models::Point scale = {1, 1, 1},
                          const models::Palette &palette = {}, float yaw = 0, float elevation = 0);
     static void DrawModel3D(const models::Model &model, Vector2 screen, models::Point scale,

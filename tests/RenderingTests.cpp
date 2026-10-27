@@ -38,7 +38,7 @@ void TestModelsAndRig()
     {
         assert(model.resourceId && ModelFactory::ValidateModel(model));
         const auto &resource = ResourceAssets::Get(model.resourceId);
-        assert(resource.boneCount == 17 && resource.clips.size() == 12);
+        assert(resource.boneCount == 17 && resource.Clips().size() == 12);
         assert(resource.sockets[0].x < 0 && resource.sockets[1].x < 0);
         assert(resource.sockets[0].y > 0 && resource.sockets[1].y < 0);
         assert(resource.sockets[5].x >= 0 && resource.sockets[5].x < resource.boneCount);
@@ -251,20 +251,20 @@ void Begin()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
-std::vector<unsigned char> Pixels()
+std::vector<unsigned char> Pixels(int width = kCanvasWidth, int height = kCanvasHeight)
 {
     renderqueue::Flush();
     GameRenderer::Get().Backend().ResolveScene();
     glFinish();
     assert(glGetError() == GL_NO_ERROR);
-    std::vector<unsigned char> pixels(kCanvasWidth * kCanvasHeight * 4);
-    glReadPixels(0, 0, kCanvasWidth, kCanvasHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+    std::vector<unsigned char> pixels(size_t(width) * height * 4);
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
     assert(glGetError() == GL_NO_ERROR);
     return pixels;
 }
-void Save(const std::filesystem::path &path)
+void Save(const std::filesystem::path &path, int width = kCanvasWidth, int height = kCanvasHeight)
 {
-    auto pixels = Pixels();
+    auto pixels = Pixels(width, height);
     for (size_t i = 0; i < pixels.size(); i += 4)
     {
         std::swap(pixels[i], pixels[i + 2]);
@@ -275,8 +275,8 @@ void Save(const std::filesystem::path &path)
     header.bfSize = header.bfOffBits + DWORD(pixels.size());
     BITMAPINFOHEADER info = {};
     info.biSize = sizeof(info);
-    info.biWidth = kCanvasWidth;
-    info.biHeight = kCanvasHeight;
+    info.biWidth = width;
+    info.biHeight = height;
     info.biPlanes = 1;
     info.biBitCount = 32;
     std::ofstream output(path, std::ios::binary);
@@ -659,6 +659,7 @@ void TestTrafficOcclusion(const std::filesystem::path &output)
         auto marker = std::make_unique<Model>();
         marker->space = CoordinateSpace::World;
         marker->count = 1;
+        marker->parts.resize(1);
         auto &part = marker->parts[0];
         part.count = 4;
         part.points[0] = {-.25f, .25f, 0};
@@ -1009,12 +1010,19 @@ void CaptureMapNavigation(const std::filesystem::path &output)
     world.cursorPosition = {world.cursorPosition.x - 400, world.cursorPosition.y + 250};
     auto rotated = mapPixels();
     auto pixelIndex = [](int x, int y) { return size_t((kCanvasHeight - y - 1) * kCanvasWidth + x) * 4; };
+    auto mapCenter = MapHud::WorldToMap(world.playerPosition, false);
+    float mapRadius = 0;
+    while (MapHud::Contains({mapCenter.x + mapRadius, mapCenter.y}, false))
+    {
+        ++mapRadius;
+    }
+    --mapRadius;
     // Rotating the player cannot rotate any road/building outside the arrow itself.
     for (int y = 34; y < 253; ++y)
     {
         for (int x = 1025; x < 1247; ++x)
         {
-            if ((x - 1136) * (x - 1136) + (y - 144) * (y - 144) > 18 * 18)
+            if ((x - mapCenter.x) * (x - mapCenter.x) + (y - mapCenter.y) * (y - mapCenter.y) > 18 * 18)
             {
                 size_t index = pixelIndex(x, y);
                 assert(std::equal(baseline.begin() + index, baseline.begin() + index + 4,
@@ -1030,7 +1038,8 @@ void CaptureMapNavigation(const std::filesystem::path &output)
         for (int x = 1015; x < 1256; ++x)
         {
             // A huge building crosses the entire rim; no fragment may escape the clipped map.
-            if ((x - 1136) * (x - 1136) + (y - 144) * (y - 144) > 104 * 104)
+            if ((x - mapCenter.x) * (x - mapCenter.x) + (y - mapCenter.y) * (y - mapCenter.y) >
+                (mapRadius + 2) * (mapRadius + 2))
             {
                 size_t index = pixelIndex(x, y);
                 assert(std::equal(rotated.begin() + index, rotated.begin() + index + 4,
@@ -1045,8 +1054,9 @@ void CaptureMapNavigation(const std::filesystem::path &output)
     auto waypoint = mapPixels();
     int blueArrowPixels = 0;
     auto projected = MapHud::WorldToMap({200, 0}, false);
-    float bearing = std::atan2(projected.y - 144, projected.x - 1136);
-    int tipX = int(1136 + std::cos(bearing) * 91), tipY = int(144 + std::sin(bearing) * 91);
+    float bearing = std::atan2(projected.y - mapCenter.y, projected.x - mapCenter.x);
+    int tipX = int(mapCenter.x + std::cos(bearing) * (mapRadius - 11)),
+        tipY = int(mapCenter.y + std::sin(bearing) * (mapRadius - 11));
     for (int y = tipY - 13; y < tipY + 14; ++y)
     {
         for (int x = tipX - 13; x < tipX + 14; ++x)
@@ -1116,10 +1126,10 @@ void CaptureCivicSystems(const std::filesystem::path &output)
     world.isInsideHome = false;
     world.playerPosition = world.cameraPosition = {2, 0};
     auto &law = CivicJustice::State();
-    for (int i = 0; i < 6; ++i)
-    {
-        CivicJustice::Report(Offense::Homicide, world.playerPosition);
-    }
+    law.wanted = 5;
+    law.heat = 1000;
+    law.identified = true;
+    law.infamy = 75;
     SecurityOfficer officer;
     officer.position = {4, 2};
     officer.lastKnown = world.playerPosition;
@@ -1139,6 +1149,33 @@ void CaptureCivicSystems(const std::filesystem::path &output)
         Save(output / name);
     };
     draw("civic-wanted.bmp");
+    auto wanted = Pixels();
+    auto mapDifference = [](const std::vector<unsigned char> &a, const std::vector<unsigned char> &b) {
+        size_t changed = 0;
+        for (int y = 60; y < 220; ++y)
+        {
+            for (int x = 1065; x < 1224; ++x)
+            {
+                size_t at = (size_t(kCanvasHeight - 1 - y) * kCanvasWidth + x) * 4;
+                changed += a[at] != b[at] || a[at + 1] != b[at + 1] || a[at + 2] != b[at + 2];
+            }
+        }
+        return changed;
+    };
+    law.wanted = 0;
+    draw("civic-no-search-markers.bmp");
+    assert(mapDifference(wanted, Pixels()) > 10); // Search markers only appear while wanted.
+    law.wanted = 5;
+    law.officers.front().facing.yaw += kPi;
+    draw("civic-security-turned.bmp");
+    assert(mapDifference(wanted, Pixels()) > 10); // The map cone follows actual heading.
+    law.officers.front().facing.yaw -= kPi;
+    law.identified = false;
+    law.responseStarted = true;
+    law.initialUnseenSeconds = 8;
+    draw("civic-unidentified-search.bmp");
+    assert(mapDifference(wanted, Pixels()) > 10); // Search and identified pursuit have different colors.
+    law.identified = true;
     game::GameLevels::Mine().GetState().player.health = 0;
     HospitalRecovery::Begin();
     HospitalRecovery::Update(.84f);
@@ -1217,6 +1254,146 @@ void CaptureDialogue(const std::filesystem::path &output)
     world.dialogueHistoryVisible = true;
     capture("dialogue-history.bmp");
     game.Reset();
+}
+
+void CaptureDeliveredUi(const std::filesystem::path &output)
+{
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    auto &renderer = GameRenderer::Get().Backend();
+    assert(renderer.UiSpriteCount() >= 112);
+    auto draw = [&](const char *name) {
+        Begin();
+        game::SceneManager::Get(game::SceneManager::Current()).Draw();
+        renderer.EndScene(w.animationTimeSeconds);
+        if (game::GameLevels::Mine().IsActive())
+        {
+            static_cast<game::MineScene &>(game::SceneManager::Get(game::SceneKind::Mine)).DrawDarkness();
+        }
+        game::SceneManager::Get(game::SceneKind::Hud).Draw();
+        renderqueue::Flush();
+        assert(glGetError() == GL_NO_ERROR);
+        Save(output / name);
+    };
+    g.Reset();
+    Hud::OpenMenu(UiScreen::Title);
+    draw("ui-title.bmp");
+    Hud::OpenMenu(UiScreen::Pause);
+    draw("ui-pause.bmp");
+    Hud::OpenMenu(UiScreen::Options);
+    draw("ui-options.bmp");
+    Hud::OpenMenu(UiScreen::Summary);
+    draw("ui-summary.bmp");
+    Hud::OpenMenu(UiScreen::Help);
+    draw("ui-help.bmp");
+    Hud::OpenMenu(UiScreen::Confirm);
+    draw("ui-confirm.bmp");
+    Hud::CloseMenu();
+    w.isInsideHome = false;
+    w.playerPosition = w.cameraPosition = kCityReceiverPosition;
+    auto &law = CivicJustice::State();
+    law.wanted = 5;
+    law.heat = 900;
+    law.infamy = 80;
+    auto &mine = game::GameLevels::Mine().GetState();
+    mine.player.health = 18;
+    combat::Shot shot{};
+    mine.pistol.TryFire(0, shot);
+    mine.pistol.Reload();
+    draw("ui-city-combat.bmp");
+    w.isBikeMounted = true;
+    w.bikeSpeed = -.65f;
+    draw("ui-bike-reverse.bmp");
+    w.bikeSpeed = 12.8f;
+    w.pressedKeys[' '] = true;
+    draw("ui-bike-boost.bmp");
+    g.Reset();
+    auto &chapter = game::GameLevels::Chapter();
+    chapter.Enter(true);
+    chapter.GetState().convoyRescued = true;
+    w.playerPosition = w.cameraPosition = {24.5f, 20.5f};
+    mine.player.salvage = 10;
+    Hud::OpenMenu(UiScreen::Supply);
+    draw("ui-supply.bmp");
+    Hud::CloseMenu();
+    mine.player.health = 0;
+    HospitalRecovery::Begin();
+    HospitalRecovery::Update(.7f);
+    draw("ui-medical-transfer.bmp");
+    HospitalRecovery::Update(3);
+    HospitalRecovery::Update(3);
+    assert(w.ui.screen == UiScreen::Medical);
+    draw("ui-medical-result.bmp");
+    g.Reset();
+    game::GameLevels::Mine().Enter(true);
+    mine.enemies.clear();
+    w.playerPosition = w.cameraPosition = mine.entry;
+    game::GameLevels::Mine().Rescue().Scan();
+    game::GameLevels::Mine().Rescue().Update(.6f);
+    draw("ui-mine-scan.bmp");
+    Dialogue::Start(
+        "ui/radio",
+        {{"radio", "리아", "무전", "빛을 따라 이동해. 구조 신호는 가까워지면 다시 스캔하자.", {}}});
+    w.dialogue.blocking = false;
+    draw("ui-mine-radio.bmp");
+    ReadDialogue();
+    auto style = renderer.GetStyle();
+    style.resolution = WorldResolution::Quarter;
+    renderer.SetStyle(style);
+    draw("ui-pixel-world.bmp");
+    style.resolution = WorldResolution::Native;
+    renderer.SetStyle(style);
+    Hud::OpenMenu(UiScreen::Options);
+    w.uiPreferences.background = .8f;
+    w.uiPreferences.border = .8f;
+    w.uiPreferences.content = .85f;
+    draw("ui-opacity-minimum.bmp");
+    Hud::CloseMenu();
+    game::GameLevels::Mine().Leave();
+    w.playerPosition = w.cameraPosition = kCityReceiverPosition;
+    Hud::OpenMenu(UiScreen::Summary);
+    draw("ui-opacity-minimum-city.bmp");
+    w.uiPreferences = {};
+    g.Reset();
+    w.isInsideHome = false;
+    w.playerPosition = w.cameraPosition = kCityReceiverPosition;
+    Dialogue::Start("ui/high-resolution",
+                    {{"text",
+                      "헤일로 N-0 외곽 설비 통신 기록 관리 담당자 · 현장 연결",
+                      "수신 기록",
+                      "긴 한글과 English 123 문구를 실제 화면에서 확인합니다. 화면 크기가 달라도 필수 대사는 "
+                      "빠지지 않고, 선택지와 조작 안내가 서로 겹치지 않아야 합니다.",
+                      {{"one", "현재 조사 기록을 보관하고 현장으로 출발한다"},
+                       {"two", "아직 준비한다. 보급품과 지금까지 확인한 내용을 다시 점검한다"},
+                       {"three", "헤일로에 남아 다른 조사 현장의 기록을 먼저 확인한다"}}}});
+    HWND surface = WindowFromDC(wglGetCurrentDC());
+    for (auto size : {std::pair<int, int>{1920, 1080}, {2560, 1440}})
+    {
+        assert(SetWindowPos(surface, nullptr, 0, 0, size.first, size.second,
+                            SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE));
+        g.Resize(size.first, size.second);
+        renderqueue::BeginFrame();
+        renderer.BeginScene(size.first, size.second);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, kCanvasWidth, kCanvasHeight, 0, -65536, 65536);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        game::SceneManager::Get(game::SceneManager::Current()).Draw();
+        renderer.EndScene(0);
+        Hud::Render();
+        renderqueue::Flush();
+        assert(glGetError() == GL_NO_ERROR);
+        Save(output /
+                 ("ui-dialogue-" + std::to_string(size.first) + "x" + std::to_string(size.second) + ".bmp"),
+             size.first, size.second);
+    }
+    assert(SetWindowPos(surface, nullptr, 0, 0, kCanvasWidth, kCanvasHeight,
+                        SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE));
+    g.Resize(kCanvasWidth, kCanvasHeight);
+    g.Reset();
 }
 
 void CaptureChapter(const std::filesystem::path &output)
@@ -1539,6 +1716,17 @@ void BenchmarkQuality(const std::filesystem::path &output)
 int main(int argc, char **argv)
 {
     glutInit(&argc, argv);
+    if (argc > 1 && std::string(argv[1]) == "--civic-only")
+    {
+        OffscreenContext context;
+        GameRenderer::Get().Initialize();
+        std::filesystem::path output = argc > 2 ? argv[2] : "x64/RevisionChecks/civic-renders";
+        std::filesystem::create_directories(output);
+        CaptureCivicSystems(output);
+        GameRenderer::Get().Shutdown();
+        std::cout << "Civic minimap and medical visual checks passed.\n";
+        return 0;
+    }
     if (argc > 1 && std::string(argv[1]) == "--dialogue-only")
     {
         OffscreenContext context;
@@ -1547,6 +1735,7 @@ int main(int argc, char **argv)
         std::filesystem::create_directories(output);
         CaptureDialogue(output);
         CaptureChapter(output);
+        CaptureDeliveredUi(output);
         GameRenderer::Get().Shutdown();
         std::cout << "Dialogue visual checks passed.\n";
         return 0;
@@ -1589,9 +1778,11 @@ int main(int argc, char **argv)
     TestScrolling();
     OffscreenContext context;
     GameRenderer::Get().Initialize();
+    std::cout << "Checking antialiasing, depth and effect occlusion.\n" << std::flush;
     TestAntialiasing();
     TestDepth();
     TestEffectDepth();
+    std::cout << "Checking quest resources and city coverage.\n" << std::flush;
     TestQuestAndResources();
     std::filesystem::path output = argc > 1 ? argv[1] : "x64/ModelChecks/renders";
     std::filesystem::create_directories(output);
@@ -1607,6 +1798,7 @@ int main(int argc, char **argv)
     CaptureHairAndCombat(output);
     CaptureDialogue(output);
     CaptureChapter(output);
+    CaptureDeliveredUi(output);
     CaptureMapNavigation(output);
     CaptureCivicSystems(output);
     BenchmarkQuality(output);

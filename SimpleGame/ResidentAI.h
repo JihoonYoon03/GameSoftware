@@ -1,5 +1,6 @@
 #pragma once
 #include "Game.h"
+#include <map>
 
 namespace tutorial
 {
@@ -15,6 +16,7 @@ class CityResidents
     static const char *ActivityLabel(const Resident &resident);
     static bool CanWalkSegment(const GameState &world, Vector2 from, Vector2 to);
     size_t NavigationNodeCount() const;
+    std::uint64_t NavigationFingerprint() const;
 
   private:
     struct Link
@@ -33,6 +35,7 @@ class CityResidents
     bool Plan(GameState &world, Resident &resident);
     bool FindRoute(int from, int to, Resident &resident) const;
     std::vector<Node> nodes;
+    std::map<std::pair<int, int>, std::vector<int>> nodeCells;
     std::vector<std::vector<int>> workplaces;
     size_t decisionCursor = 0;
     size_t layoutSignature = 0;

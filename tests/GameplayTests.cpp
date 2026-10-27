@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Level.h"
+#include "Hud.h"
 #include "Civic.h"
 #include "Drawing.h"
 #include "Monitoring/LocalMonitorServer.h"
@@ -53,6 +54,85 @@ void ReadyMine(unsigned int seed = 13)
     GameLevels::Mine().Map().Generate(seed);
     mineState.active = true;
     mineState.invulnerability = 1000;
+}
+void TestUiMenusAndTransactions()
+{
+    using namespace tutorial;
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    g.Reset();
+    auto press = [&](unsigned char key) {
+        g.KeyDown(key, 0, 0);
+        g.KeyUp(key, 0, 0);
+    };
+    Hud::OpenMenu(UiScreen::Title);
+    assert(w.isPaused && !w.mouseFiring);
+    auto title = Hud::Controls();
+    assert(title.front().action == UiAction::Start && title.size() == 4);
+    Hud::OpenMenu(UiScreen::Options);
+    auto slider = Hud::Controls().front();
+    // Fit a 1280x800 canvas into a 1920x1080 window; input must share the same inverse transform.
+    g.Resize(1920, 1080);
+    auto click = [&](Vector2 p) {
+        float scale = 1.35f;
+        int x = int(96 + p.x * scale), y = int(p.y * scale);
+        g.MouseButton(GLUT_LEFT_BUTTON, GLUT_DOWN, x, y);
+        g.MouseButton(GLUT_LEFT_BUTTON, GLUT_UP, x, y);
+    };
+    click({620, slider.position.y + 24});
+    assert(std::fabs(w.uiPreferences.background - .8f) < .001f && !w.mouseFiring);
+    click({848, slider.position.y + 24});
+    assert(std::fabs(w.uiPreferences.background - 1) < .001f);
+    for (int i = 0; i < 30; ++i)
+    {
+        press('a');
+    }
+    assert(std::fabs(w.uiPreferences.background - .8f) < .001f);
+    press('s');
+    press('s'); // Content layer has a separate readability floor.
+    for (int i = 0; i < 30; ++i)
+    {
+        press('a');
+    }
+    assert(std::fabs(w.uiPreferences.content - .85f) < .001f);
+    g.Reset();
+    assert(w.ui.screen == UiScreen::None && !w.isPaused && w.uiPreferences.content == .85f);
+    w.uiPreferences = {};
+    g.Resize(1280, 800);
+    // Cancel a destructive action; entering the confirmation is not a reset.
+    w.isSideQuestAccepted = true;
+    Hud::OpenMenu(UiScreen::Pause);
+    press('r');
+    assert(w.ui.screen == UiScreen::Confirm && w.isSideQuestAccepted);
+    press('s');
+    press(13);
+    assert(w.ui.screen == UiScreen::Pause && w.isSideQuestAccepted);
+    press(27);
+    assert(!w.isPaused && w.ui.screen == UiScreen::None);
+    // A cancelled/disabled exchange consumes no goods, and valid purchases use live reputation pricing.
+    auto &level = game::GameLevels::Chapter();
+    level.Enter(true);
+    level.GetState().convoyRescued = true;
+    w.playerPosition = {24.5f, 20.5f};
+    auto &stats = game::GameLevels::Mine().GetState().player;
+    CivicJustice::State().infamy = 80;
+    stats.salvage = 0;
+    stats.recoveryKits = 1;
+    Hud::OpenMenu(UiScreen::Supply);
+    assert(!Hud::Controls().front().enabled);
+    press(13);
+    assert(stats.salvage == 0 && stats.recoveryKits == 1);
+    stats.salvage = 100;
+    int price = CivicJustice::ShopPrice(2);
+    press('e');
+    assert(stats.salvage == 100 - price && stats.recoveryKits == 2);
+    g.KeyDown('e', 0, 0); // A fresh press buys once; OS repeat cannot buy again.
+    g.KeyDown('e', 0, 0);
+    assert(stats.salvage == 100 - price * 2 && stats.recoveryKits == 3);
+    g.KeyUp('e', 0, 0);
+    press(27);
+    assert(w.ui.screen == UiScreen::None);
+    g.Reset();
 }
 void TestDialogueProgress()
 {
@@ -124,6 +204,9 @@ void TestDialogueProgress()
         HospitalRecovery::Update(.05f);
     }
     assert(!HospitalRecovery::Active());
+    assert(world.ui.screen == UiScreen::Medical);
+    game.KeyDown(13, 0, 0);
+    game.KeyUp(13, 0, 0);
     game.KeyDown('j', 0, 0);
     game.KeyUp('j', 0, 0);
     game.KeyDown(13, 0, 0);
@@ -1277,6 +1360,12 @@ void ChapterInteract(game::ChapterAction action)
     assert(found);
     ReadDialogue();
     level.Interact();
+    if (action == game::ChapterAction::ConvoySupply)
+    {
+        assert(tutorial::Game::Get().GetState().ui.screen == tutorial::UiScreen::Supply);
+        tutorial::Hud::ExchangeSupply();
+        tutorial::Hud::CloseMenu();
+    }
     ReadDialogue();
 }
 void CompleteChapterSite(int site, bool peaceful = true)
@@ -1675,6 +1764,7 @@ int main(int argc, char **argv)
         std::cout << "Urban traffic, crossing and resident checks passed.\n";
         return 0;
     }
+    TestUiMenusAndTransactions();
     TestDialogueProgress();
     TestExplorationAndMelee();
     TestBikeSpeedsAndSliding();

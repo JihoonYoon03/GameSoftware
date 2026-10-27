@@ -182,7 +182,9 @@ void Game::Reset()
     // Keep the current window size when restarting the play session.
     const int viewportWidth = state.viewportWidth;
     const int viewportHeight = state.viewportHeight;
+    const UiPreferences preferences = state.uiPreferences;
     state = GameState{};
+    state.uiPreferences = preferences;
     state.viewportWidth = viewportWidth;
     state.viewportHeight = viewportHeight;
     state.lastUpdateMilliseconds = glutGet(GLUT_ELAPSED_TIME);
@@ -219,6 +221,26 @@ void Game::KeyDown(unsigned char key, int, int)
         return;
     }
     key = NormalizeKey(key);
+    if (key == 13)
+    {
+        if (state.dialogueEnterHeld)
+        {
+            return;
+        }
+        state.dialogueEnterHeld = true;
+    }
+    if (key == 'e' && state.interactionHeld)
+    {
+        return;
+    }
+    if (Hud::HandleKey(key))
+    {
+        if (key == 'e')
+        {
+            state.interactionHeld = true;
+        }
+        return;
+    }
     if (key == 27) // Escape
     {
         if (state.journalVisible || state.dialogueHistoryVisible)
@@ -236,41 +258,7 @@ void Game::KeyDown(unsigned char key, int, int)
         std::fill(state.pressedKeys, state.pressedKeys + 256, false);
         return;
     }
-    if (state.isPaused)
-    {
-        if (key == 'r')
-        {
-            if (game::GameLevels::Chapter().IsActive())
-            {
-                game::GameLevels::Chapter().Leave();
-                state.isPaused = false;
-            }
-            else if (game::GameLevels::Mine().IsActive())
-            {
-                game::GameLevels::Mine().Restart();
-                state.isPaused = false;
-            }
-            else
-            {
-                Reset();
-            }
-        }
-        if (key == 'q')
-        {
-            glutLeaveMainLoop();
-        }
-        return;
-    }
-
     bool repeated = state.pressedKeys[key];
-    if (key == 13)
-    {
-        if (state.dialogueEnterHeld)
-        {
-            return;
-        }
-        state.dialogueEnterHeld = true;
-    }
     if (key == 'e' && state.interactionHeld)
     {
         return;
@@ -420,6 +408,10 @@ void Game::SpecialKeyDown(int key, int, int)
     {
         return;
     }
+    if (Hud::HandleSpecialKey(key))
+    {
+        return;
+    }
     if (state.journalVisible || state.dialogueHistoryVisible)
     {
         auto &offset = state.dialogue.historyOffset;
@@ -484,11 +476,17 @@ void Game::MouseMotion(int x, int y)
     {
         state.mouseFiring = false;
     }
+    Hud::HandleMotion();
 }
 void Game::MouseButton(int button, int buttonState, int x, int y)
 {
     MouseMotion(x, y);
     if (HospitalRecovery::Active())
+    {
+        state.mouseFiring = false;
+        return;
+    }
+    if (Hud::HandlePointer(button, buttonState == GLUT_DOWN))
     {
         state.mouseFiring = false;
         return;
@@ -517,6 +515,7 @@ void Game::MouseEntry(int pointerState)
 {
     if (pointerState == GLUT_LEFT)
     {
+        state.ui.pressed = -1;
         state.mouseFiring = false;
     }
 }
@@ -535,12 +534,16 @@ void Game::Tick(int)
     }
     if (!state.isPaused && !state.mapVisible && !HospitalRecovery::Active() && !Dialogue::LocksWorld())
     {
+        int healthBefore = game::GameLevels::Mine().GetState().player.health;
         state.animationTimeSeconds += deltaSeconds;
         if (!state.isComplete)
         {
             state.playTimeSeconds += deltaSeconds;
         }
-        state.noticeSecondsRemaining -= deltaSeconds;
+        if (!Dialogue::Active())
+        {
+            state.noticeSecondsRemaining -= deltaSeconds;
+        }
         game::Level *activeLevel = game::GameLevels::Active();
         if (!activeLevel || activeLevel->UsesWalkingControls())
         {
@@ -567,14 +570,19 @@ void Game::Tick(int)
             game::GameLevels::Chapter().Update(deltaSeconds);
         }
         HospitalRecovery::Update(0);
+        int healthAfter = game::GameLevels::Mine().GetState().player.health;
+        if (healthAfter < healthBefore && !HospitalRecovery::Active())
+        {
+            ShowNotice("피해 / 체력 -" + std::to_string(healthBefore - healthAfter));
+        }
         UpdateCamera(deltaSeconds);
         game::SceneManager::Update(deltaSeconds);
     }
 
     monitoring::GameMonitor::Get().Update();
     glutSetCursor((game::GameLevels::IsCombatActive() || CivicCombat::Available()) && !state.mapVisible &&
-                          !state.isPaused && !Dialogue::LocksWorld() && !state.journalVisible &&
-                          !state.dialogueHistoryVisible
+                          !state.isPaused && state.ui.screen == UiScreen::None && !Dialogue::LocksWorld() &&
+                          !state.journalVisible && !state.dialogueHistoryVisible
                       ? GLUT_CURSOR_NONE
                       : GLUT_CURSOR_INHERIT);
     glutPostRedisplay();
@@ -748,7 +756,7 @@ bool Dialogue::Start(const std::string &id, std::vector<DialogueLine> lines,
     d.pages.clear();
     for (size_t index = 0; index < lines.size(); ++index)
     {
-        auto rows = Wrap(lines[index].text, 896, 19);
+        auto rows = Wrap(lines[index].text, 816, 20);
         constexpr size_t pageLines = 3;
         for (size_t row = 0; row < rows.size(); row += pageLines)
         {
@@ -826,6 +834,7 @@ bool Dialogue::Advance()
     {
         d.scenes[d.sceneId].pendingChoice = options[size_t(d.selection)].id;
     }
+    Game::Get().GetState().ui.pressed = -1;
     if (++d.page < d.pages.size())
     {
         d.selection = -1;
@@ -1019,7 +1028,7 @@ std::vector<std::string> Dialogue::Journal()
 void Game::ShowNotice(const std::string &message)
 {
     state.noticeText = message;
-    state.noticeSecondsRemaining = 12;
+    state.noticeSecondsRemaining = 4;
 }
 bool Game::IsPositionBlocked(Vector2 position)
 {

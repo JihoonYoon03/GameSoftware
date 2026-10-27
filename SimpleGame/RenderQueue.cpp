@@ -51,7 +51,7 @@ std::vector<VertexData> primitive;
 std::vector<Transform> transforms(1);
 State state;
 std::array<float, 4> color = {1, 1, 1, 1};
-float u = 0, v = 0, lineWidth = 1, solidU = .5f, solidV = .5f;
+float u = 0, v = 0, lineWidth = 1, solidU = .5f, solidV = .5f, opacity = 1;
 GLuint solidTexture = 0, streamBuffer = 0;
 GLenum mode = GL_TRIANGLES;
 constexpr size_t kMaximumBatchVertices = 65536;
@@ -354,6 +354,7 @@ void BeginFrame()
     transforms.assign(1, {});
     state = {};
     color = {1, 1, 1, 1};
+    opacity = 1;
 }
 void Shutdown()
 {
@@ -422,7 +423,7 @@ void Vertex(float x, float y, float z)
     const auto &t = transforms.back();
     bool solid = !state.texture && !state.program;
     primitive.push_back({x * t.sx + t.x, y * t.sy + t.y, z * t.sz + t.z, color[0], color[1], color[2],
-                         color[3], solid ? solidU : u, solid ? solidV : v});
+                         color[3] * opacity, solid ? solidU : u, solid ? solidV : v});
 }
 void End()
 {
@@ -465,6 +466,10 @@ void End()
     {
         throw std::logic_error("Unsupported batch primitive");
     }
+}
+void Opacity(float alpha)
+{
+    opacity = alpha;
 }
 void Color(float r, float g, float b, float a)
 {

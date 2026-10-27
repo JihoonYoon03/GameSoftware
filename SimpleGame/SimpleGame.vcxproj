@@ -232,6 +232,35 @@
     </ClCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <PropertyGroup>
+    <NodeExecutable Condition="'$(NodeExecutable)'==''">node</NodeExecutable>
+  </PropertyGroup>
+  <Target Name="TrackGameResourceInputs">
+    <ReadLinesFromFile File="$(ProjectDir)..\Resource\Runtime\build-sources.list" Condition="Exists('$(ProjectDir)..\Resource\Runtime\build-sources.list')">
+      <Output TaskParameter="Lines" ItemName="GameResourceRelativeInput" />
+    </ReadLinesFromFile>
+    <ItemGroup>
+      <GameResourceInput Include="@(GameResourceRelativeInput->'$(ProjectDir)..\%(Identity)')" Condition="Exists('$(ProjectDir)..\Resource\Runtime\build-sources.list')" />
+      <GameResourceInput Include="$(ProjectDir)..\Resource\Export\**\*.glb;$(ProjectDir)..\Resource\Documentation\*.json;$(ProjectDir)..\tools\*.mjs;$(ProjectDir)RoadPlanCatalog.h" Condition="!Exists('$(ProjectDir)..\Resource\Runtime\build-sources.list')" />
+      <GameResourceInput Include="$(ProjectDir)..\tools\prepare-resources.ps1;$(ProjectDir)..\tools\ensure-resources.mjs;$(MSBuildProjectFullPath)" />
+    </ItemGroup>
+    <MakeDir Directories="$(ProjectDir)..\Resource\Runtime" />
+    <!-- Inventory changes also invalidate the stamp when an input is removed or renamed. -->
+    <WriteLinesToFile File="$(ProjectDir)..\Resource\Runtime\build-inputs.list" Lines="@(GameResourceInput->'%(FullPath)|%(ModifiedTime)')" Overwrite="true" WriteOnlyWhenDifferent="true" Encoding="UTF-8" />
+    <Delete Files="$(ProjectDir)..\Resource\Runtime\prepare.stamp" Condition="'$(ForceResourceValidation)'=='true'" />
+  </Target>
+  <Target Name="PrepareGameResources" BeforeTargets="PrepareForBuild" DependsOnTargets="TrackGameResourceInputs" Inputs="$(ProjectDir)..\Resource\Runtime\build-inputs.list;$(ProjectDir)..\Resource\Runtime\build-sources.list;@(GameResourceInput);$(ProjectDir)..\Resource\Runtime\game-assets.bin;$(ProjectDir)..\Resource\Runtime\manifest.json" Outputs="$(ProjectDir)..\Resource\Runtime\prepare.stamp">
+    <Exec Command="&quot;$(SystemRoot)\System32\WindowsPowerShell\v1.0\powershell.exe&quot; -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(ProjectDir)..\tools\prepare-resources.ps1&quot; -NodeExecutable &quot;$(NodeExecutable)&quot;" WorkingDirectory="$(ProjectDir)..\" />
+    <!-- Refresh the inventory after first generation so the next build is already incremental. -->
+    <ReadLinesFromFile File="$(ProjectDir)..\Resource\Runtime\build-sources.list">
+      <Output TaskParameter="Lines" ItemName="UpdatedGameResourceRelativeInput" />
+    </ReadLinesFromFile>
+    <ItemGroup>
+      <UpdatedGameResourceInput Include="@(UpdatedGameResourceRelativeInput->'$(ProjectDir)..\%(Identity)');$(ProjectDir)..\tools\prepare-resources.ps1;$(ProjectDir)..\tools\ensure-resources.mjs;$(MSBuildProjectFullPath)" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(ProjectDir)..\Resource\Runtime\build-inputs.list" Lines="@(UpdatedGameResourceInput->'%(FullPath)|%(ModifiedTime)')" Overwrite="true" WriteOnlyWhenDifferent="true" Encoding="UTF-8" />
+    <Touch Files="$(ProjectDir)..\Resource\Runtime\prepare.stamp" AlwaysCreate="true" />
+  </Target>
   <Target Name="CopyGraphicsRuntimeLibraries" AfterTargets="Build">
     <ItemGroup>
       <GraphicsRuntimeLibrary Include="$(ProjectDir)Dependencies\$(Platform)\freeglut.dll" />
@@ -245,12 +274,20 @@
     </ItemGroup>
     <Copy SourceFiles="@(MonitorAsset)" DestinationFolder="$(OutDir)Monitor\" SkipUnchangedFiles="true" />
   </Target>
-  <Target Name="CopyGameResourcePack" AfterTargets="Build">
+  <Target Name="CopyGameResourcePack" AfterTargets="Build" DependsOnTargets="PrepareGameResources">
     <ItemGroup>
       <GameResourcePack Include="$(ProjectDir)..\Resource\Runtime\game-assets.bin;$(ProjectDir)..\Resource\Runtime\manifest.json" />
     </ItemGroup>
     <Error Condition="!Exists('$(ProjectDir)..\Resource\Runtime\game-assets.bin')" Text="게임용 리소스 캐시가 없습니다. node tools/pack-resources.mjs 로 생성하세요." />
     <Copy SourceFiles="@(GameResourcePack)" DestinationFolder="$(OutDir)Resource\Runtime\" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CopyGameUiResources" AfterTargets="Build">
+    <ItemGroup>
+      <GameUiAsset Include="$(ProjectDir)..\Resource\UI\Export\**\*.png" />
+      <GameUiContract Include="$(ProjectDir)..\Resource\UI\ui_manifest.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(GameUiAsset)" DestinationFiles="@(GameUiAsset->'$(OutDir)Resource\UI\Export\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(GameUiContract)" DestinationFolder="$(OutDir)Resource\UI\" SkipUnchangedFiles="true" />
   </Target>
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

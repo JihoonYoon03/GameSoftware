@@ -236,6 +236,52 @@ class Dialogue
     static std::vector<std::string> Journal();
 };
 
+enum class UiScreen
+{
+    None,
+    Title,
+    Pause,
+    Options,
+    Summary,
+    Help,
+    Supply,
+    Confirm,
+    Medical
+};
+enum class UiAction
+{
+    Continue,
+    Start,
+    Options,
+    Summary,
+    Help,
+    Restart,
+    Quit,
+    Back,
+    Background,
+    Border,
+    Content,
+    Cartoon,
+    Resolution,
+    Antialiasing,
+    Exchange,
+    Choice,
+    Advance,
+    Journal,
+    History,
+    Previous,
+    Next
+};
+struct UiPreferences
+{
+    float background = .94f, border = 1, content = 1;
+};
+struct UiState
+{
+    UiScreen screen = UiScreen::None, returnTo = UiScreen::Pause;
+    UiAction confirmation = UiAction::Restart;
+    int focus = 0, pressed = -1;
+};
 // State owned by Game. Renderers read it without changing gameplay.
 struct GameState
 {
@@ -264,6 +310,8 @@ struct GameState
     bool mapVisible = false;
     bool journalVisible = false, dialogueHistoryVisible = false;
     DialogueState dialogue;
+    UiPreferences uiPreferences;
+    UiState ui;
     std::array<MapDestination, size_t(MapRegion::Count)> mapDestinations = {};
     bool isComplete = false;
     bool isSideQuestAccepted = false;

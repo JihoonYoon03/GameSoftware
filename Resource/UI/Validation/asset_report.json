@@ -1,0 +1,799 @@
+{
+  "status": "PASS",
+  "issues": [],
+  "icon_count": 53,
+  "hud_icon_count": 20,
+  "component_count": 39,
+  "screen_count": 34,
+  "requirement_count": 23,
+  "state_count": 139,
+  "glyphs": {
+    "font": "Malgun Gothic",
+    "unique_characters": 404,
+    "missing": [],
+    "gdi_result": 404
+  },
+  "geometry": {
+    "overflow": 0,
+    "text_overlaps": 0,
+    "page_errors": []
+  },
+  "contrast": {
+    "target": 4.5,
+    "colors": "Active informational text only; disabled UI is excluded.",
+    "content_alpha": 0.85,
+    "panel_min": 0.8,
+    "results": [
+      {
+        "panel_alpha": 0.6,
+        "content_alpha": 0.85,
+        "underlying": "#ffffff",
+        "color": "ink",
+        "ratio": 4.082,
+        "passes": false
+      },
+      {
+        "panel_alpha": 0.6,
+        "content_alpha": 0.85,
+        "underlying": "#ffffff",
+        "color": "muted",
+        "ratio": 3.07,
+        "passes": false
+      },
+      {
+        "panel_alpha": 0.6,
+        "content_alpha": 0.85,
+        "underlying": "#ffffff",
+        "color": "accent",
+        "ratio": 3.244,
+        "passes": false
+      },
+      {
+        "panel_alpha": 0.6,
+        "content_alpha": 0.85,
+        "underlying": "#ffffff",
+        "color": "amber",
+        "ratio": 3.234,
+        "passes": false
+      },
+      {
+        "panel_alpha": 0.6,
+        "content_alpha": 0.85,
+        "underlying": "#ffffff",
+        "color": "danger",
+        "ratio": 2.722,
+        "passes": false
+      },
+      {
+        "panel_alpha": 0.6,
+        "content_alpha": 0.85,
+        "underlying": "#ffffff",
+        "color": "blue",
+        "ratio": 2.891,
+        "passes": false
+      },
+      {
+        "panel_alpha": 0.6,
+        "content_alpha": 0.85,
+        "underlying": "#000000",
+        "color": "ink",
+        "ratio": 14.17,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.6,
+        "content_alpha": 0.85,
+        "underlying": "#000000",
+        "color": "muted",
+        "ratio": 10.485,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.6,
+        "content_alpha": 0.85,
+        "underlying": "#000000",
+        "color": "accent",
+        "ratio": 11.139,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.6,
+        "content_alpha": 0.85,
+        "underlying": "#000000",
+        "color": "amber",
+        "ratio": 11.088,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.6,
+        "content_alpha": 0.85,
+        "underlying": "#000000",
+        "color": "danger",
+        "ratio": 9.243,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.6,
+        "content_alpha": 0.85,
+        "underlying": "#000000",
+        "color": "blue",
+        "ratio": 9.842,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.6,
+        "content_alpha": 0.85,
+        "underlying": "#83958e",
+        "color": "ink",
+        "ratio": 7.536,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.6,
+        "content_alpha": 0.85,
+        "underlying": "#83958e",
+        "color": "muted",
+        "ratio": 5.63,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.6,
+        "content_alpha": 0.85,
+        "underlying": "#83958e",
+        "color": "accent",
+        "ratio": 5.967,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.6,
+        "content_alpha": 0.85,
+        "underlying": "#83958e",
+        "color": "amber",
+        "ratio": 5.938,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.6,
+        "content_alpha": 0.85,
+        "underlying": "#83958e",
+        "color": "danger",
+        "ratio": 4.976,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.6,
+        "content_alpha": 0.85,
+        "underlying": "#83958e",
+        "color": "blue",
+        "ratio": 5.295,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.6,
+        "content_alpha": 0.85,
+        "underlying": "#080e14",
+        "color": "ink",
+        "ratio": 13.754,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.6,
+        "content_alpha": 0.85,
+        "underlying": "#080e14",
+        "color": "muted",
+        "ratio": 10.187,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.6,
+        "content_alpha": 0.85,
+        "underlying": "#080e14",
+        "color": "accent",
+        "ratio": 10.821,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.6,
+        "content_alpha": 0.85,
+        "underlying": "#080e14",
+        "color": "amber",
+        "ratio": 10.767,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.6,
+        "content_alpha": 0.85,
+        "underlying": "#080e14",
+        "color": "danger",
+        "ratio": 8.979,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.6,
+        "content_alpha": 0.85,
+        "underlying": "#080e14",
+        "color": "blue",
+        "ratio": 9.565,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.8,
+        "content_alpha": 0.85,
+        "underlying": "#ffffff",
+        "color": "ink",
+        "ratio": 7.93,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.8,
+        "content_alpha": 0.85,
+        "underlying": "#ffffff",
+        "color": "muted",
+        "ratio": 5.921,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.8,
+        "content_alpha": 0.85,
+        "underlying": "#ffffff",
+        "color": "accent",
+        "ratio": 6.273,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.8,
+        "content_alpha": 0.85,
+        "underlying": "#ffffff",
+        "color": "amber",
+        "ratio": 6.246,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.8,
+        "content_alpha": 0.85,
+        "underlying": "#ffffff",
+        "color": "danger",
+        "ratio": 5.234,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.8,
+        "content_alpha": 0.85,
+        "underlying": "#ffffff",
+        "color": "blue",
+        "ratio": 5.568,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.8,
+        "content_alpha": 0.85,
+        "underlying": "#000000",
+        "color": "ink",
+        "ratio": 13.907,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.8,
+        "content_alpha": 0.85,
+        "underlying": "#000000",
+        "color": "muted",
+        "ratio": 10.297,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.8,
+        "content_alpha": 0.85,
+        "underlying": "#000000",
+        "color": "accent",
+        "ratio": 10.939,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.8,
+        "content_alpha": 0.85,
+        "underlying": "#000000",
+        "color": "amber",
+        "ratio": 10.884,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.8,
+        "content_alpha": 0.85,
+        "underlying": "#000000",
+        "color": "danger",
+        "ratio": 9.075,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.8,
+        "content_alpha": 0.85,
+        "underlying": "#000000",
+        "color": "blue",
+        "ratio": 9.668,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.8,
+        "content_alpha": 0.85,
+        "underlying": "#83958e",
+        "color": "ink",
+        "ratio": 10.636,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.8,
+        "content_alpha": 0.85,
+        "underlying": "#83958e",
+        "color": "muted",
+        "ratio": 7.914,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.8,
+        "content_alpha": 0.85,
+        "underlying": "#83958e",
+        "color": "accent",
+        "ratio": 8.397,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.8,
+        "content_alpha": 0.85,
+        "underlying": "#83958e",
+        "color": "amber",
+        "ratio": 8.354,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.8,
+        "content_alpha": 0.85,
+        "underlying": "#83958e",
+        "color": "danger",
+        "ratio": 6.984,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.8,
+        "content_alpha": 0.85,
+        "underlying": "#83958e",
+        "color": "blue",
+        "ratio": 7.437,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.8,
+        "content_alpha": 0.85,
+        "underlying": "#080e14",
+        "color": "ink",
+        "ratio": 13.677,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.8,
+        "content_alpha": 0.85,
+        "underlying": "#080e14",
+        "color": "muted",
+        "ratio": 10.132,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.8,
+        "content_alpha": 0.85,
+        "underlying": "#080e14",
+        "color": "accent",
+        "ratio": 10.763,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.8,
+        "content_alpha": 0.85,
+        "underlying": "#080e14",
+        "color": "amber",
+        "ratio": 10.707,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.8,
+        "content_alpha": 0.85,
+        "underlying": "#080e14",
+        "color": "danger",
+        "ratio": 8.929,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.8,
+        "content_alpha": 0.85,
+        "underlying": "#080e14",
+        "color": "blue",
+        "ratio": 9.514,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.94,
+        "content_alpha": 0.85,
+        "underlying": "#ffffff",
+        "color": "ink",
+        "ratio": 12.075,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.94,
+        "content_alpha": 0.85,
+        "underlying": "#ffffff",
+        "color": "muted",
+        "ratio": 8.967,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.94,
+        "content_alpha": 0.85,
+        "underlying": "#ffffff",
+        "color": "accent",
+        "ratio": 9.519,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.94,
+        "content_alpha": 0.85,
+        "underlying": "#ffffff",
+        "color": "amber",
+        "ratio": 9.47,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.94,
+        "content_alpha": 0.85,
+        "underlying": "#ffffff",
+        "color": "danger",
+        "ratio": 7.91,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.94,
+        "content_alpha": 0.85,
+        "underlying": "#ffffff",
+        "color": "blue",
+        "ratio": 8.425,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.94,
+        "content_alpha": 0.85,
+        "underlying": "#000000",
+        "color": "ink",
+        "ratio": 13.694,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.94,
+        "content_alpha": 0.85,
+        "underlying": "#000000",
+        "color": "muted",
+        "ratio": 10.144,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.94,
+        "content_alpha": 0.85,
+        "underlying": "#000000",
+        "color": "accent",
+        "ratio": 10.777,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.94,
+        "content_alpha": 0.85,
+        "underlying": "#000000",
+        "color": "amber",
+        "ratio": 10.72,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.94,
+        "content_alpha": 0.85,
+        "underlying": "#000000",
+        "color": "danger",
+        "ratio": 8.94,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.94,
+        "content_alpha": 0.85,
+        "underlying": "#000000",
+        "color": "blue",
+        "ratio": 9.526,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.94,
+        "content_alpha": 0.85,
+        "underlying": "#83958e",
+        "color": "ink",
+        "ratio": 12.836,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.94,
+        "content_alpha": 0.85,
+        "underlying": "#83958e",
+        "color": "muted",
+        "ratio": 9.522,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.94,
+        "content_alpha": 0.85,
+        "underlying": "#83958e",
+        "color": "accent",
+        "ratio": 10.112,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.94,
+        "content_alpha": 0.85,
+        "underlying": "#83958e",
+        "color": "amber",
+        "ratio": 10.058,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.94,
+        "content_alpha": 0.85,
+        "underlying": "#83958e",
+        "color": "danger",
+        "ratio": 8.395,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.94,
+        "content_alpha": 0.85,
+        "underlying": "#83958e",
+        "color": "blue",
+        "ratio": 8.944,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.94,
+        "content_alpha": 0.85,
+        "underlying": "#080e14",
+        "color": "ink",
+        "ratio": 13.621,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.94,
+        "content_alpha": 0.85,
+        "underlying": "#080e14",
+        "color": "muted",
+        "ratio": 10.091,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.94,
+        "content_alpha": 0.85,
+        "underlying": "#080e14",
+        "color": "accent",
+        "ratio": 10.721,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.94,
+        "content_alpha": 0.85,
+        "underlying": "#080e14",
+        "color": "amber",
+        "ratio": 10.663,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.94,
+        "content_alpha": 0.85,
+        "underlying": "#080e14",
+        "color": "danger",
+        "ratio": 8.893,
+        "passes": true
+      },
+      {
+        "panel_alpha": 0.94,
+        "content_alpha": 0.85,
+        "underlying": "#080e14",
+        "color": "blue",
+        "ratio": 9.477,
+        "passes": true
+      },
+      {
+        "panel_alpha": 1,
+        "content_alpha": 0.85,
+        "underlying": "#ffffff",
+        "color": "ink",
+        "ratio": 13.596,
+        "passes": true
+      },
+      {
+        "panel_alpha": 1,
+        "content_alpha": 0.85,
+        "underlying": "#ffffff",
+        "color": "muted",
+        "ratio": 10.074,
+        "passes": true
+      },
+      {
+        "panel_alpha": 1,
+        "content_alpha": 0.85,
+        "underlying": "#ffffff",
+        "color": "accent",
+        "ratio": 10.702,
+        "passes": true
+      },
+      {
+        "panel_alpha": 1,
+        "content_alpha": 0.85,
+        "underlying": "#ffffff",
+        "color": "amber",
+        "ratio": 10.644,
+        "passes": true
+      },
+      {
+        "panel_alpha": 1,
+        "content_alpha": 0.85,
+        "underlying": "#ffffff",
+        "color": "danger",
+        "ratio": 8.877,
+        "passes": true
+      },
+      {
+        "panel_alpha": 1,
+        "content_alpha": 0.85,
+        "underlying": "#ffffff",
+        "color": "blue",
+        "ratio": 9.46,
+        "passes": true
+      },
+      {
+        "panel_alpha": 1,
+        "content_alpha": 0.85,
+        "underlying": "#000000",
+        "color": "ink",
+        "ratio": 13.596,
+        "passes": true
+      },
+      {
+        "panel_alpha": 1,
+        "content_alpha": 0.85,
+        "underlying": "#000000",
+        "color": "muted",
+        "ratio": 10.074,
+        "passes": true
+      },
+      {
+        "panel_alpha": 1,
+        "content_alpha": 0.85,
+        "underlying": "#000000",
+        "color": "accent",
+        "ratio": 10.702,
+        "passes": true
+      },
+      {
+        "panel_alpha": 1,
+        "content_alpha": 0.85,
+        "underlying": "#000000",
+        "color": "amber",
+        "ratio": 10.644,
+        "passes": true
+      },
+      {
+        "panel_alpha": 1,
+        "content_alpha": 0.85,
+        "underlying": "#000000",
+        "color": "danger",
+        "ratio": 8.877,
+        "passes": true
+      },
+      {
+        "panel_alpha": 1,
+        "content_alpha": 0.85,
+        "underlying": "#000000",
+        "color": "blue",
+        "ratio": 9.46,
+        "passes": true
+      },
+      {
+        "panel_alpha": 1,
+        "content_alpha": 0.85,
+        "underlying": "#83958e",
+        "color": "ink",
+        "ratio": 13.596,
+        "passes": true
+      },
+      {
+        "panel_alpha": 1,
+        "content_alpha": 0.85,
+        "underlying": "#83958e",
+        "color": "muted",
+        "ratio": 10.074,
+        "passes": true
+      },
+      {
+        "panel_alpha": 1,
+        "content_alpha": 0.85,
+        "underlying": "#83958e",
+        "color": "accent",
+        "ratio": 10.702,
+        "passes": true
+      },
+      {
+        "panel_alpha": 1,
+        "content_alpha": 0.85,
+        "underlying": "#83958e",
+        "color": "amber",
+        "ratio": 10.644,
+        "passes": true
+      },
+      {
+        "panel_alpha": 1,
+        "content_alpha": 0.85,
+        "underlying": "#83958e",
+        "color": "danger",
+        "ratio": 8.877,
+        "passes": true
+      },
+      {
+        "panel_alpha": 1,
+        "content_alpha": 0.85,
+        "underlying": "#83958e",
+        "color": "blue",
+        "ratio": 9.46,
+        "passes": true
+      },
+      {
+        "panel_alpha": 1,
+        "content_alpha": 0.85,
+        "underlying": "#080e14",
+        "color": "ink",
+        "ratio": 13.596,
+        "passes": true
+      },
+      {
+        "panel_alpha": 1,
+        "content_alpha": 0.85,
+        "underlying": "#080e14",
+        "color": "muted",
+        "ratio": 10.074,
+        "passes": true
+      },
+      {
+        "panel_alpha": 1,
+        "content_alpha": 0.85,
+        "underlying": "#080e14",
+        "color": "accent",
+        "ratio": 10.702,
+        "passes": true
+      },
+      {
+        "panel_alpha": 1,
+        "content_alpha": 0.85,
+        "underlying": "#080e14",
+        "color": "amber",
+        "ratio": 10.644,
+        "passes": true
+      },
+      {
+        "panel_alpha": 1,
+        "content_alpha": 0.85,
+        "underlying": "#080e14",
+        "color": "danger",
+        "ratio": 8.877,
+        "passes": true
+      },
+      {
+        "panel_alpha": 1,
+        "content_alpha": 0.85,
+        "underlying": "#080e14",
+        "color": "blue",
+        "ratio": 9.46,
+        "passes": true
+      }
+    ],
+    "note": "Solid-color compositing estimate; anti-aliasing edges, patterned game backgrounds, live renderer and color vision are not certified."
+  },
+  "scope": "UI resources and browser previews only; no game executable or Runtime changes."
+}

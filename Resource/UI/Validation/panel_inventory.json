@@ -1,0 +1,275 @@
+[
+  {
+    "screen": "05_dialogue",
+    "x": 208,
+    "y": 390,
+    "w": 864,
+    "h": 310
+  },
+  {
+    "screen": "06_journal",
+    "x": 176,
+    "y": 72,
+    "w": 928,
+    "h": 656
+  },
+  {
+    "screen": "06_journal",
+    "x": 510,
+    "y": 464,
+    "w": 566,
+    "h": 118
+  },
+  {
+    "screen": "08_medical",
+    "x": 312,
+    "y": 130,
+    "w": 656,
+    "h": 540
+  },
+  {
+    "screen": "09_pause",
+    "x": 416,
+    "y": 112,
+    "w": 448,
+    "h": 576
+  },
+  {
+    "screen": "10_city_map",
+    "x": 56,
+    "y": 40,
+    "w": 1168,
+    "h": 720
+  },
+  {
+    "screen": "11_mine_map",
+    "x": 56,
+    "y": 40,
+    "w": 1168,
+    "h": 720
+  },
+  {
+    "screen": "12_chapter_map",
+    "x": 56,
+    "y": 40,
+    "w": 1168,
+    "h": 720
+  },
+  {
+    "screen": "13_history",
+    "x": 224,
+    "y": 80,
+    "w": 832,
+    "h": 640
+  },
+  {
+    "screen": "14_empty",
+    "x": 224,
+    "y": 120,
+    "w": 832,
+    "h": 560
+  },
+  {
+    "screen": "16_options",
+    "x": 224,
+    "y": 72,
+    "w": 832,
+    "h": 656
+  },
+  {
+    "screen": "17_summary",
+    "x": 224,
+    "y": 96,
+    "w": 832,
+    "h": 608
+  },
+  {
+    "screen": "18_supply",
+    "x": 280,
+    "y": 112,
+    "w": 720,
+    "h": 576
+  },
+  {
+    "screen": "19_confirm",
+    "x": 360,
+    "y": 224,
+    "w": 560,
+    "h": 352
+  },
+  {
+    "screen": "20_help",
+    "x": 208,
+    "y": 64,
+    "w": 864,
+    "h": 672
+  },
+  {
+    "screen": "24_local_dialogue",
+    "x": 208,
+    "y": 390,
+    "w": 864,
+    "h": 310
+  },
+  {
+    "screen": "25_interactions",
+    "x": 64,
+    "y": 228,
+    "w": 372,
+    "h": 118
+  },
+  {
+    "screen": "25_interactions",
+    "x": 454,
+    "y": 228,
+    "w": 372,
+    "h": 118
+  },
+  {
+    "screen": "25_interactions",
+    "x": 844,
+    "y": 228,
+    "w": 372,
+    "h": 118
+  },
+  {
+    "screen": "25_interactions",
+    "x": 64,
+    "y": 382,
+    "w": 372,
+    "h": 118
+  },
+  {
+    "screen": "25_interactions",
+    "x": 454,
+    "y": 382,
+    "w": 372,
+    "h": 118
+  },
+  {
+    "screen": "25_interactions",
+    "x": 844,
+    "y": 382,
+    "w": 372,
+    "h": 118
+  },
+  {
+    "screen": "25_interactions",
+    "x": 64,
+    "y": 536,
+    "w": 372,
+    "h": 118
+  },
+  {
+    "screen": "25_interactions",
+    "x": 454,
+    "y": 536,
+    "w": 372,
+    "h": 118
+  },
+  {
+    "screen": "25_interactions",
+    "x": 844,
+    "y": 536,
+    "w": 372,
+    "h": 118
+  },
+  {
+    "screen": "26_notifications",
+    "x": 64,
+    "y": 228,
+    "w": 372,
+    "h": 118
+  },
+  {
+    "screen": "26_notifications",
+    "x": 454,
+    "y": 228,
+    "w": 372,
+    "h": 118
+  },
+  {
+    "screen": "26_notifications",
+    "x": 844,
+    "y": 228,
+    "w": 372,
+    "h": 118
+  },
+  {
+    "screen": "26_notifications",
+    "x": 64,
+    "y": 382,
+    "w": 372,
+    "h": 118
+  },
+  {
+    "screen": "26_notifications",
+    "x": 454,
+    "y": 382,
+    "w": 372,
+    "h": 118
+  },
+  {
+    "screen": "26_notifications",
+    "x": 844,
+    "y": 382,
+    "w": 372,
+    "h": 118
+  },
+  {
+    "screen": "26_notifications",
+    "x": 64,
+    "y": 536,
+    "w": 372,
+    "h": 118
+  },
+  {
+    "screen": "26_notifications",
+    "x": 454,
+    "y": 536,
+    "w": 372,
+    "h": 118
+  },
+  {
+    "screen": "26_notifications",
+    "x": 844,
+    "y": 536,
+    "w": 372,
+    "h": 118
+  },
+  {
+    "screen": "28_pause_mine",
+    "x": 416,
+    "y": 144,
+    "w": 448,
+    "h": 512
+  },
+  {
+    "screen": "29_pause_city",
+    "x": 416,
+    "y": 144,
+    "w": 448,
+    "h": 512
+  },
+  {
+    "screen": "30_text_stress",
+    "x": 64,
+    "y": 214,
+    "w": 1152,
+    "h": 336
+  },
+  {
+    "screen": "30_text_stress",
+    "x": 64,
+    "y": 582,
+    "w": 1152,
+    "h": 148
+  },
+  {
+    "screen": "31_dialogue_page",
+    "x": 208,
+    "y": 390,
+    "w": 864,
+    "h": 310
+  }
+]

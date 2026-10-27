@@ -1,0 +1,859 @@
+{
+  "UI-01": {
+    "name": "플레이어 상태",
+    "states": [
+      "normal",
+      "critical",
+      "healing",
+      "growth_summary"
+    ],
+    "bindings": [
+      "health",
+      "max_health",
+      "healing_applied",
+      "level",
+      "experience"
+    ],
+    "icons": [
+      "health",
+      "heal",
+      "level"
+    ],
+    "rules": [
+      "Show current then maximum. Never reverse their positions.",
+      "Show actual applied healing, not the requested amount."
+    ],
+    "presentation": "hud_primitives",
+    "dedicated_status_panel": false,
+    "implementation_document": "HUD_IMPLEMENTATION_ko.md",
+    "priority": "current_play",
+    "preview_screens": [
+      "01_city",
+      "02_combat",
+      "26_notifications",
+      "33_exploration",
+      "34_low_health"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-02": {
+    "name": "무기 · 전투",
+    "states": [
+      "loaded",
+      "empty",
+      "reloading",
+      "reload_complete"
+    ],
+    "bindings": [
+      "weapon_name",
+      "rounds",
+      "magazine_size",
+      "reload_progress",
+      "reload_remaining"
+    ],
+    "icons": [
+      "pistol",
+      "magazine",
+      "reload",
+      "infinite"
+    ],
+    "rules": [
+      "Spare magazines are unlimited. No finite reserve counter.",
+      "Reload remaining must come from game data, not a preview timer."
+    ],
+    "presentation": "hud_primitives",
+    "dedicated_status_panel": false,
+    "implementation_document": "HUD_IMPLEMENTATION_ko.md",
+    "priority": "current_play",
+    "preview_screens": [
+      "01_city",
+      "02_combat",
+      "34_low_health"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-03": {
+    "name": "조준",
+    "states": [
+      "ready",
+      "spread_increasing",
+      "spread_recovering",
+      "fire_blocked",
+      "menu_cursor"
+    ],
+    "bindings": [
+      "cursor_canvas_position",
+      "aim_angle",
+      "spread",
+      "can_fire"
+    ],
+    "icons": [
+      "pistol",
+      "lock"
+    ],
+    "rules": [
+      "Expand four arms by current angular spread projected into screen space.",
+      "Hide the aiming reticle while menu cursor has focus."
+    ],
+    "presentation": "hud_primitives",
+    "dedicated_status_panel": false,
+    "implementation_document": "HUD_IMPLEMENTATION_ko.md",
+    "priority": "current_play",
+    "preview_screens": [
+      "02_combat",
+      "34_low_health"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-04": {
+    "name": "목표 추적",
+    "states": [
+      "main_active",
+      "optional_active",
+      "optional_complete",
+      "site_unvisited",
+      "site_investigated",
+      "report_pending",
+      "comparison_pending",
+      "chapter_confirmed"
+    ],
+    "bindings": [
+      "main_objective",
+      "next_action",
+      "accepted_optional_objectives",
+      "generator_state",
+      "convoy_state",
+      "facility_state",
+      "report_state",
+      "comparison_state"
+    ],
+    "icons": [
+      "objective",
+      "investigate",
+      "check"
+    ],
+    "rules": [
+      "Never show optional kill count as a mandatory rescue goal.",
+      "Chapter conclusion is confirmed only after final dialogue has been read."
+    ],
+    "presentation": "hud_primitives",
+    "dedicated_status_panel": false,
+    "implementation_document": "HUD_IMPLEMENTATION_ko.md",
+    "priority": "current_play",
+    "preview_screens": [
+      "01_city",
+      "07_chapter",
+      "33_exploration"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-05": {
+    "name": "미니맵 · 목적지",
+    "states": [
+      "city",
+      "mine",
+      "chapter",
+      "destination_inside",
+      "destination_outside",
+      "no_destination"
+    ],
+    "bindings": [
+      "map_context",
+      "explored_geometry",
+      "player_position",
+      "player_yaw",
+      "eligible_objectives",
+      "destination",
+      "distance"
+    ],
+    "icons": [
+      "player",
+      "destination",
+      "objective",
+      "unknown_signal"
+    ],
+    "rules": [
+      "Map rotation is fixed 45 degrees clockwise: north northeast.",
+      "Rotate only player/bike. Clip every map primitive and icon to circle.",
+      "Exact destination arrow differs from the approximate rescue triangle."
+    ],
+    "presentation": "hud_primitives",
+    "dedicated_status_panel": false,
+    "implementation_document": "HUD_IMPLEMENTATION_ko.md",
+    "priority": "current_play",
+    "preview_screens": [
+      "01_city",
+      "03_bike",
+      "04_mine",
+      "33_exploration"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-06": {
+    "name": "전체 지도",
+    "states": [
+      "city",
+      "mine",
+      "chapter",
+      "destination_set",
+      "destination_clear",
+      "unexplored"
+    ],
+    "bindings": [
+      "map_context",
+      "explored_geometry",
+      "eligible_facilities",
+      "eligible_objectives",
+      "destination"
+    ],
+    "icons": [
+      "home",
+      "medical",
+      "power",
+      "transport",
+      "investigation_site",
+      "gate",
+      "exit"
+    ],
+    "rules": [
+      "Left click sets destination in eligible explored space. Right click clears it. M/Esc closes.",
+      "No auto-route line. Do not reveal unexplored terrain or targets."
+    ],
+    "presentation": "screen_or_modal",
+    "dedicated_status_panel": null,
+    "priority": "current_play",
+    "preview_screens": [
+      "10_city_map",
+      "11_mine_map",
+      "12_chapter_map"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-07": {
+    "name": "상호작용 · 월드 표식",
+    "states": [
+      "dialogue",
+      "investigate",
+      "power",
+      "collect",
+      "rescue",
+      "mount",
+      "dismount",
+      "enter",
+      "exit",
+      "supply",
+      "unavailable"
+    ],
+    "bindings": [
+      "target_name",
+      "available_action",
+      "interaction_key",
+      "disabled_reason",
+      "target_screen_position"
+    ],
+    "icons": [
+      "dialogue",
+      "investigate",
+      "power",
+      "parts",
+      "rescue",
+      "bike",
+      "exit",
+      "supply",
+      "injured"
+    ],
+    "rules": [
+      "Show one highest-priority currently available action.",
+      "Do not show normal dialogue for an injured NPC.",
+      "World marker must respect visibility/quest eligibility."
+    ],
+    "presentation": "hud_primitives",
+    "dedicated_status_panel": false,
+    "implementation_document": "HUD_IMPLEMENTATION_ko.md",
+    "priority": "current_play",
+    "preview_screens": [
+      "01_city",
+      "07_chapter",
+      "25_interactions"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-08": {
+    "name": "대화 · 수신 · 무전",
+    "states": [
+      "local_safe",
+      "radio_danger",
+      "terminal",
+      "received_record",
+      "page_next",
+      "choice_default",
+      "choice_selected",
+      "choice_disabled",
+      "selection_blocked",
+      "medical_input_blocked"
+    ],
+    "bindings": [
+      "speaker",
+      "channel",
+      "body_pages",
+      "page_index",
+      "page_count",
+      "choices",
+      "selected_choice",
+      "can_confirm"
+    ],
+    "icons": [
+      "dialogue",
+      "radio",
+      "terminal",
+      "record",
+      "lock"
+    ],
+    "rules": [
+      "Important dialogue never expires automatically.",
+      "E/Enter advances once per press; numbers select; E/Enter confirms.",
+      "Consume input before world interactions and shooting.",
+      "Local safe dialogue locks progression; danger radio does not stop combat time."
+    ],
+    "presentation": "screen_or_modal",
+    "dedicated_status_panel": null,
+    "priority": "current_play",
+    "preview_screens": [
+      "05_dialogue",
+      "24_local_dialogue",
+      "31_dialogue_page"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-09": {
+    "name": "조사 기록 · 이력",
+    "states": [
+      "journal",
+      "history",
+      "empty",
+      "multiple_pages",
+      "interrupted_dialogue"
+    ],
+    "bindings": [
+      "known_facts",
+      "next_tasks",
+      "read_lines",
+      "speaker",
+      "channel",
+      "page_index",
+      "page_count",
+      "interruption_hint"
+    ],
+    "icons": [
+      "record",
+      "history",
+      "empty"
+    ],
+    "rules": [
+      "Only known facts and read dialogue. Do not reveal unjoined companions.",
+      "N-0 gate and N-0/17 facility are distinct.",
+      "J/H toggles; PageUp/PageDown pages; Esc closes."
+    ],
+    "presentation": "screen_or_modal",
+    "dedicated_status_panel": null,
+    "priority": "current_play",
+    "preview_screens": [
+      "06_journal",
+      "13_history",
+      "14_empty"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-10": {
+    "name": "스캐너",
+    "states": [
+      "ready",
+      "scanning",
+      "cooldown",
+      "signal_found",
+      "no_signal"
+    ],
+    "bindings": [
+      "cooldown_seconds",
+      "scan_progress",
+      "signal_direction_approx",
+      "signal_distance_band",
+      "signal_lifetime"
+    ],
+    "icons": [
+      "scan",
+      "signal",
+      "unknown_signal"
+    ],
+    "rules": [
+      "Approximate direction and distance only. No exact hidden map point.",
+      "Scan does not reveal terrain. Signal edge marker is triangular."
+    ],
+    "presentation": "hud_primitives",
+    "dedicated_status_panel": false,
+    "implementation_document": "HUD_IMPLEMENTATION_ko.md",
+    "priority": "current_play",
+    "preview_screens": [
+      "04_mine"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-11": {
+    "name": "동료 · 구조",
+    "states": [
+      "joined",
+      "injured",
+      "treating",
+      "recovered",
+      "rescue_confirmed",
+      "withdrawing",
+      "safe_arrival"
+    ],
+    "bindings": [
+      "joined_companions",
+      "companion_condition",
+      "treatment_progress",
+      "rescue_context",
+      "confirmed_count",
+      "withdrawing_count",
+      "arrived_count"
+    ],
+    "icons": [
+      "companion",
+      "injured",
+      "rescue",
+      "medical"
+    ],
+    "rules": [
+      "Separate repeatable mine rescues from fixed five convoy survivors.",
+      "Show only actually joined companions."
+    ],
+    "presentation": "hud_primitives",
+    "dedicated_status_panel": false,
+    "implementation_document": "HUD_IMPLEMENTATION_ko.md",
+    "priority": "current_play",
+    "preview_screens": [
+      "04_mine",
+      "07_chapter"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-12": {
+    "name": "수배 · 악명",
+    "states": [
+      "wanted_0",
+      "wanted_1",
+      "wanted_2",
+      "wanted_3",
+      "wanted_4",
+      "wanted_5",
+      "heat_increasing",
+      "heat_cooling",
+      "notoriety",
+      "trade_surcharge"
+    ],
+    "bindings": [
+      "wanted_stars",
+      "heat",
+      "heat_max",
+      "notoriety",
+      "reputation",
+      "effective_price"
+    ],
+    "icons": [
+      "wanted",
+      "reputation"
+    ],
+    "rules": [
+      "Wanted is current pursuit; notoriety persists between cities in the current session.",
+      "Do not imply persistent disk saving.",
+      "Filled/outline stars plus numeric level; heat threshold data supplied by game."
+    ],
+    "presentation": "hud_primitives",
+    "dedicated_status_panel": false,
+    "implementation_document": "HUD_IMPLEMENTATION_ko.md",
+    "priority": "current_play",
+    "preview_screens": [
+      "02_combat"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-13": {
+    "name": "바이크",
+    "states": [
+      "mounted",
+      "cruise",
+      "boost",
+      "reverse",
+      "stopped",
+      "dismount_allowed",
+      "dismount_blocked"
+    ],
+    "bindings": [
+      "mounted",
+      "speed_world_units",
+      "meters_per_world_unit",
+      "boosting",
+      "reversing",
+      "dismount_reason"
+    ],
+    "icons": [
+      "bike",
+      "speed",
+      "boost",
+      "reverse"
+    ],
+    "rules": [
+      "speed_kmh = abs(speed_world_units) * meters_per_world_unit * 3.6",
+      "Do not add fuel, battery or boost energy.",
+      "Reverse is labelled separately; very low speeds must not disappear when rounded."
+    ],
+    "presentation": "hud_primitives",
+    "dedicated_status_panel": false,
+    "implementation_document": "HUD_IMPLEMENTATION_ko.md",
+    "priority": "current_play",
+    "preview_screens": [
+      "03_bike"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-14": {
+    "name": "교통",
+    "states": [
+      "walk",
+      "wait",
+      "collision_risk",
+      "collision_hit"
+    ],
+    "bindings": [
+      "nearby_crossing",
+      "actual_pedestrian_signal",
+      "vehicle_risk",
+      "applied_damage"
+    ],
+    "icons": [
+      "walk",
+      "stop",
+      "warning"
+    ],
+    "rules": [
+      "Use the same actual signal state as world traffic.",
+      "Collision result reports actual applied health loss."
+    ],
+    "presentation": "hud_primitives",
+    "dedicated_status_panel": false,
+    "implementation_document": "HUD_IMPLEMENTATION_ko.md",
+    "priority": "current_play",
+    "preview_screens": [
+      "01_city",
+      "26_notifications"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-15": {
+    "name": "공통 알림",
+    "states": [
+      "acquired",
+      "healed",
+      "rewarded",
+      "trade_success",
+      "insufficient",
+      "objective_updated",
+      "region_entered",
+      "returned"
+    ],
+    "bindings": [
+      "notice_type",
+      "notice_text",
+      "applied_amount",
+      "priority",
+      "coalesce_key"
+    ],
+    "icons": [
+      "parts",
+      "heal",
+      "credit",
+      "supply",
+      "warning",
+      "objective",
+      "gate",
+      "home"
+    ],
+    "rules": [
+      "Coalesce repeated battle notices into a single slot.",
+      "Do not overlay dialogue or important objective. Keep narrative dialogue indefinite."
+    ],
+    "presentation": "hud_primitives",
+    "dedicated_status_panel": false,
+    "implementation_document": "HUD_IMPLEMENTATION_ko.md",
+    "priority": "current_play",
+    "preview_screens": [
+      "02_combat",
+      "05_dialogue",
+      "07_chapter",
+      "26_notifications"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-16": {
+    "name": "의료 이송",
+    "states": [
+      "fading_out",
+      "in_transfer",
+      "arrived",
+      "actual_losses",
+      "resume_hint"
+    ],
+    "bindings": [
+      "hospital_name",
+      "transfer_progress",
+      "lost_levels",
+      "lost_credits",
+      "lost_parts",
+      "journal_retained",
+      "interrupted_dialogue"
+    ],
+    "icons": [
+      "medical",
+      "level",
+      "credit",
+      "parts"
+    ],
+    "rules": [
+      "Common flow regardless of defeat cause. No game-over or load-save screen.",
+      "Losses are actual clamped values after application.",
+      "Block all gameplay input until transfer ends."
+    ],
+    "presentation": "screen_or_modal",
+    "dedicated_status_panel": null,
+    "priority": "current_play",
+    "preview_screens": [
+      "08_medical",
+      "27_transfer"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-17": {
+    "name": "일시정지",
+    "states": [
+      "resume",
+      "city_restart",
+      "mine_restart",
+      "chapter_return",
+      "help",
+      "exit"
+    ],
+    "bindings": [
+      "current_region",
+      "restart_action",
+      "session_is_unsaved"
+    ],
+    "icons": [
+      "pause",
+      "keyboard",
+      "exit"
+    ],
+    "rules": [
+      "Esc resumes. R means reset in city, mine restart in mine, return to Halo in chapter.",
+      "Do not expose developer region shortcuts 1/2."
+    ],
+    "presentation": "screen_or_modal",
+    "dedicated_status_panel": null,
+    "priority": "current_play",
+    "preview_screens": [
+      "09_pause",
+      "28_pause_mine",
+      "29_pause_city"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-18": {
+    "name": "타이틀",
+    "states": [
+      "new_game",
+      "options",
+      "controls",
+      "exit"
+    ],
+    "bindings": [
+      "session_state"
+    ],
+    "icons": [
+      "gate",
+      "settings",
+      "keyboard",
+      "exit"
+    ],
+    "rules": [
+      "Design candidate only; no Continue or Load without permanent saves."
+    ],
+    "presentation": "screen_or_modal",
+    "dedicated_status_panel": null,
+    "priority": "requires_menu_wiring",
+    "preview_screens": [
+      "15_title"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-19": {
+    "name": "옵션",
+    "states": [
+      "panel_alpha",
+      "border_alpha",
+      "content_alpha",
+      "cartoon",
+      "render_scale",
+      "antialiasing"
+    ],
+    "bindings": [
+      "ui_panel_alpha",
+      "ui_border_alpha",
+      "ui_content_alpha",
+      "cartoon_shading",
+      "render_scale",
+      "msaa"
+    ],
+    "icons": [
+      "settings"
+    ],
+    "rules": [
+      "Opacity is alpha, transparency is 1-alpha. Keep independent layers.",
+      "Text size/UI scale are proposals, not currently supported game features."
+    ],
+    "presentation": "screen_or_modal",
+    "dedicated_status_panel": null,
+    "priority": "requires_menu_wiring",
+    "preview_screens": [
+      "16_options"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-20": {
+    "name": "보유 · 성장 요약",
+    "states": [
+      "summary"
+    ],
+    "bindings": [
+      "level",
+      "experience",
+      "attack",
+      "defense",
+      "credits",
+      "parts",
+      "healing_kits"
+    ],
+    "icons": [
+      "level",
+      "attack",
+      "defense",
+      "credit",
+      "parts",
+      "heal"
+    ],
+    "rules": [
+      "Summary only. No inventory grid, equipment slots or weapon switching."
+    ],
+    "presentation": "screen_or_modal",
+    "dedicated_status_panel": null,
+    "priority": "requires_menu_wiring",
+    "preview_screens": [
+      "17_summary"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-21": {
+    "name": "보급 교환",
+    "states": [
+      "available",
+      "insufficient_parts",
+      "at_capacity",
+      "trade_complete",
+      "surcharge"
+    ],
+    "bindings": [
+      "effective_price",
+      "parts_owned",
+      "kits_owned",
+      "kit_capacity",
+      "trade_result"
+    ],
+    "icons": [
+      "supply",
+      "parts",
+      "heal",
+      "reputation"
+    ],
+    "rules": [
+      "Current action is instant E exchange. New menu/confirmation needs separate wiring.",
+      "Compute and show actual reputation-adjusted price; never hardcode preview cost."
+    ],
+    "presentation": "screen_or_modal",
+    "dedicated_status_panel": null,
+    "priority": "requires_menu_wiring",
+    "preview_screens": [
+      "18_supply"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-22": {
+    "name": "중요 행동 확인",
+    "states": [
+      "new_game",
+      "reset_progress",
+      "exit_session",
+      "chapter_departure",
+      "cancel",
+      "confirm"
+    ],
+    "bindings": [
+      "action_label",
+      "consequences",
+      "can_confirm"
+    ],
+    "icons": [
+      "warning",
+      "exit",
+      "check"
+    ],
+    "rules": [
+      "Default focus is cancel. No irreversible action on initial focus.",
+      "Explicitly explain that this session is not permanently saved."
+    ],
+    "presentation": "screen_or_modal",
+    "dedicated_status_panel": null,
+    "priority": "requires_menu_wiring",
+    "preview_screens": [
+      "19_confirm"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-23": {
+    "name": "맥락별 도움말",
+    "states": [
+      "walk",
+      "combat",
+      "bike",
+      "mine_scan",
+      "map",
+      "dialogue"
+    ],
+    "bindings": [
+      "available_actions",
+      "context"
+    ],
+    "icons": [
+      "keyboard",
+      "mouse"
+    ],
+    "rules": [
+      "Only supported bindings for current context. No developer teleport shortcuts."
+    ],
+    "presentation": "screen_or_modal",
+    "dedicated_status_panel": null,
+    "priority": "requires_menu_wiring",
+    "preview_screens": [
+      "20_help"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  }
+}

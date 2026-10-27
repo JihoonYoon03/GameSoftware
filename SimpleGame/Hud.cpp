@@ -6,6 +6,7 @@
 #include "Overworld.h"
 #include "RenderQueue.h"
 #include "TransitLayout.h"
+#include "RenderAssets.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -18,11 +19,129 @@ namespace tutorial
 // ============================================================================
 namespace
 {
-constexpr Vector2 kMinimapCenter = {1136, 144};
-constexpr float kMinimapRadius = 102;
+constexpr Vector2 kMinimapCenter = {1144, 139};
+constexpr float kMinimapRadius = 82;
 constexpr float kMinimapRange = 34;
-constexpr Vector2 kMapMinimum = {84, 112}, kMapMaximum = {1196, 684};
+constexpr Vector2 kMapMinimum = {80, 126}, kMapMaximum = {898, 674};
 
+const ColorRGBA kUiInk = {.87f, .94f, .94f, 1};
+void UiText(float x, float y, const std::string &text, int size = 16, ColorRGBA color = {.87f, .94f, .94f},
+            bool outline = false, bool right = false)
+{
+    if (right)
+    {
+        x -= RenderAssets::MeasureUtf8(text, size);
+    }
+    Drawing::SetColor(color);
+    GameRenderer::Get().Backend().DrawUiText(x, y, text, size, outline);
+}
+void Sprite(const std::string &name, float x, float y, float w, float h, ColorRGBA color = {1, 1, 1},
+            float fraction = 1, bool nine = false)
+{
+    Drawing::SetColor(color);
+    GameRenderer::Get().Backend().DrawUiSprite(name, x, y, w, h, fraction, nine);
+}
+void Icon(const std::string &name, float x, float y, float size = 24, bool hud = false,
+          ColorRGBA color = {1, 1, 1})
+{
+    float margin = hud ? size / 6 : 0;
+    Sprite(std::string(hud ? "HUDIcons/" : "Icons/") + name, x - margin, y - margin, size + margin * 2,
+           size + margin * 2, color);
+}
+void Panel(float x, float y, float w, float h)
+{
+    const auto &alpha = Game::Get().GetState().uiPreferences;
+    renderqueue::Opacity(alpha.background);
+    Sprite("Components/panel_fill", x, y, w, h, {1, 1, 1}, 1, true);
+    renderqueue::Opacity(alpha.border);
+    Sprite("Components/panel_border", x, y, w, h, {1, 1, 1}, 1, true);
+    renderqueue::Opacity(alpha.content);
+}
+void Button(const UiControl &control, int index)
+{
+    const auto &world = Game::Get().GetState();
+    const auto cursor = world.cursorPosition;
+    bool hover = world.cursorInsideViewport && cursor.x >= control.position.x &&
+                 cursor.y >= control.position.y && cursor.x <= control.position.x + control.size.x &&
+                 cursor.y <= control.position.y + control.size.y;
+    bool selected = index == world.ui.focus;
+    if (control.action == UiAction::Choice)
+    {
+        selected = world.dialogue.selection == control.choice;
+    }
+    std::string state = !control.enabled            ? "disabled"
+                        : world.ui.pressed == index ? "pressed"
+                        : hover                     ? "hover"
+                        : selected                  ? "selected"
+                                                    : "default";
+    // Disabled/warning PNGs contain symbols; use the stretchable base and separate symbols.
+    if (!control.enabled)
+    {
+        state = "default";
+    }
+    renderqueue::Opacity(world.uiPreferences.background);
+    Sprite("Components/button_" + state, control.position.x, control.position.y, control.size.x,
+           control.size.y, control.enabled ? ColorRGBA(1, 1, 1) : ColorRGBA(.55f, .6f, .62f), 1, true);
+    renderqueue::Opacity(world.uiPreferences.content);
+    Icon(control.enabled ? "chevron" : "lock", control.position.x + 12, control.position.y + 14, 18);
+    auto rows = Dialogue::Wrap(control.label, control.size.x - 58, 17);
+    for (size_t row = 0; row < rows.size(); ++row)
+    {
+        UiText(control.position.x + 40, control.position.y + 29 + row * 24, rows[row], 17,
+               control.enabled ? ColorRGBA(.87f, .95f, .94f) : ColorRGBA(.54f, .62f, .65f));
+    }
+}
+struct DialogueLayout
+{
+    float top, height, bodyTop;
+    std::vector<std::string> header, body;
+    std::vector<UiControl> controls;
+};
+DialogueLayout LayoutDialogue()
+{
+    const auto &w = Game::Get().GetState();
+    const auto &page = w.dialogue.pages[w.dialogue.page];
+    DialogueLayout d;
+    d.header = Dialogue::Wrap(page.speaker + " / " + page.channel, 640, 18);
+    d.body = Dialogue::Wrap(page.text, 816, 20);
+    float choicesHeight = 0;
+    for (size_t i = 0; i < page.choices.size(); ++i)
+    {
+        auto label = std::to_string(i + 1) + "  " + page.choices[i].text;
+        choicesHeight += (std::max)(46.f, 20.f + 24.f * Dialogue::Wrap(label, 758, 17).size()) + 10;
+    }
+    d.height = (std::max)(274.f, 94.f + float(d.header.size() - 1) * 24 + float(d.body.size()) * 32 +
+                                     choicesHeight + 62);
+    d.top = 700 - d.height;
+    d.bodyTop = d.top + 82 + float(d.header.size() - 1) * 24;
+    float y = d.bodyTop + float(d.body.size()) * 32 + 8;
+    for (size_t i = 0; i < page.choices.size(); ++i)
+    {
+        float height = (std::max)(
+            46.f,
+            20.f +
+                24.f * Dialogue::Wrap(std::to_string(i + 1) + "  " + page.choices[i].text, 758, 17).size());
+        d.controls.push_back({UiAction::Choice,
+                              {232, y},
+                              {816, height},
+                              std::to_string(i + 1) + "  " + page.choices[i].text,
+                              !Dialogue::Danger(),
+                              int(i)});
+        y += height + 10;
+    }
+    bool canAdvance = page.choices.empty() || (w.dialogue.selection >= 0 && !Dialogue::Danger());
+    d.controls.push_back({UiAction::Advance,
+                          {840, 654},
+                          {208, 34},
+                          page.choices.empty() ? "E / Enter 다음" : "E / Enter 확정",
+                          canAdvance});
+    return d;
+}
+bool Inside(const UiControl &control, Vector2 p)
+{
+    return p.x >= control.position.x && p.y >= control.position.y &&
+           p.x <= control.position.x + control.size.x && p.y <= control.position.y + control.size.y;
+}
 Vector2 PlayerMapPosition()
 {
     const auto &world = Game::Get().GetState();
@@ -511,12 +630,46 @@ void DrawDestination(const SchematicView &view, bool full)
                        angle, 8, {.4f, .87f, 1});
     }
 }
+void DrawSecurityVision(const SchematicView &view)
+{
+    const auto &law = CivicJustice::State();
+    if (law.wanted <= 0)
+    {
+        return;
+    }
+    for (const auto &officer : law.officers)
+    {
+        auto center = view.Project(officer.position);
+        if (officer.health <= 0 || !view.Inside(center, 7))
+        {
+            continue;
+        }
+        std::vector<Vector2> cone = {center};
+        constexpr int segments = 12;
+        for (int i = 0; i <= segments; ++i)
+        {
+            float angle = officer.facing.yaw - CivicJustice::kSightHalfAngle +
+                          2 * CivicJustice::kSightHalfAngle * i / segments;
+            float range = CivicJustice::SightDistance(officer, angle);
+            cone.push_back(view.Project({officer.position.x + std::cos(angle) * range,
+                                         officer.position.y + std::sin(angle) * range}));
+        }
+        MapPolygon(view, std::move(cone),
+                   law.identified ? ColorRGBA(1, .35f, .2f, .15f) : ColorRGBA(1, .75f, .3f, .14f));
+        DirectionArrow(center, officer.facing.yaw + kPi * .25f, 5,
+                       law.identified ? ColorRGBA(1, .4f, .24f) : ColorRGBA(1, .8f, .35f));
+    }
+}
 void DrawSchematic(const SchematicView &view, bool full)
 {
     mapLabels.clear();
     if (MapHud::Region() == MapRegion::City)
     {
         DrawCitySchematic(view, full);
+        if (!full)
+        {
+            DrawSecurityVision(view);
+        }
     }
     else
     {
@@ -592,28 +745,19 @@ bool MapHud::HandleClick(Vector2 point, bool clear)
 void MapHud::DrawMinimap()
 {
     const auto view = MapView(false);
-    Drawing::DrawEllipse(view.center.x, view.center.y, view.radius + 9, view.radius + 9,
-                         {.015f, .06f, .075f, .97f});
-    Drawing::DrawEllipse(view.center.x, view.center.y, view.radius + 3, view.radius + 3, {.46f, .66f, .61f});
-    Drawing::DrawEllipse(view.center.x, view.center.y, view.radius, view.radius,
-                         Region() == MapRegion::Mine ? ColorRGBA(.015f, .025f, .035f)
-                                                     : ColorRGBA(.18f, .28f, .22f));
+    Drawing::DrawEllipse(view.center.x, view.center.y, view.radius, view.radius, {.025f, .07f, .08f, .92f});
     DrawSchematic(view, false);
-    Drawing::DrawLabel(view.center.x + (view.radius - 15) * .70710678f - 5,
-                       view.center.y - (view.radius - 15) * .70710678f + 6, "N", {.94f, .97f, .84f},
-                       GLUT_BITMAP_HELVETICA_18);
-    const auto &destination = Game::Get().GetState().mapDestinations[size_t(Region())];
-    Drawing::DrawRectangle(view.center.x - 110, view.center.y + view.radius + 12, 220,
-                           destination.active ? 49.f : 27.f, {.015f, .055f, .065f, .9f});
-    Drawing::DrawLabel(view.center.x - 65, view.center.y + view.radius + 29, "M 전체 지도 · 방향 고정",
-                       {.66f, .84f, .8f});
-    if (destination.active)
+    Sprite("Components/minimap_ring", view.center.x - 91, view.center.y - 91, 182, 182);
+    UiText(1207, 69, "N ↗", 14, {.77f, .9f, .86f}, true);
+    UiText(1096, 244, "M 전체 지도", 14, {.77f, .9f, .86f}, true);
+    const auto &dest = Game::Get().GetState().mapDestinations[size_t(Region())];
+    if (dest.active)
     {
-        char text[80];
-        std::snprintf(text, sizeof(text), "목적지 %.0f m",
-                      Game::Distance(PlayerMapPosition(), destination.position) *
-                          models::WorldScale::metersPerUnit);
-        Drawing::DrawLabel(view.center.x - 45, view.center.y + view.radius + 51, text, {.45f, .87f, 1});
+        Icon("destination", 1085, 255, 16, true);
+        char distance[64];
+        std::snprintf(distance, sizeof(distance), "%.0f m",
+                      Game::Distance(PlayerMapPosition(), dest.position) * models::WorldScale::metersPerUnit);
+        UiText(1109, 270, distance, 15, {.62f, .88f, .96f}, true);
     }
 }
 void MapHud::DrawFullMap()
@@ -622,22 +766,35 @@ void MapHud::DrawFullMap()
     {
         return;
     }
-    Drawing::DrawRectangle(0, 0, float(kCanvasWidth), float(kCanvasHeight), {.005f, .025f, .035f, .97f});
-    Drawing::DrawRectangle(64, 40, 1152, 720, {.025f, .08f, .09f, .99f});
-    Drawing::DrawRectangle(
-        kMapMinimum.x, kMapMinimum.y, kMapMaximum.x - kMapMinimum.x, kMapMaximum.y - kMapMinimum.y,
-        Region() == MapRegion::Mine ? ColorRGBA(.015f, .025f, .035f) : ColorRGBA(.16f, .26f, .21f));
-    const char *title = Region() == MapRegion::City   ? "헤일로 주변 / 전체 도시 약도"
-                        : Region() == MapRegion::Mine ? "광산 / 구조 신호 조사 약도"
-                                                      : "개척지 / 조사 구역 약도";
-    Drawing::DrawLabel(86, 80, title, {.8f, .94f, .86f}, GLUT_BITMAP_HELVETICA_18);
-    Drawing::DrawLabel(848, 80, "북쪽 ↗  /  M 또는 Esc 닫기", {.58f, .79f, .75f});
+    Drawing::DrawRectangle(0, 0, kCanvasWidth, kCanvasHeight, {.01f, .025f, .03f, .5f});
+    Panel(56, 40, 1168, 720);
+    Drawing::DrawRectangle(80, 126, 818, 548,
+                           Region() == MapRegion::Mine ? ColorRGBA(.015f, .025f, .035f)
+                                                       : ColorRGBA(.1f, .2f, .22f));
+    Icon("record", 80, 68);
+    UiText(116, 90, "지역 약도", 24);
+    UiText(80, 113,
+           Region() == MapRegion::City   ? "헤일로 주변 / 도시 연결망"
+           : Region() == MapRegion::Mine ? "광산 / 탐험한 구간만 표시"
+                                         : "1장 / 조사 구역",
+           15);
     DrawSchematic(MapView(true), true);
-    Drawing::DrawLabel(86, 717, "좌클릭 목적지 설정 / 우클릭 목적지 해제 / 지도를 보는 동안 일시정지",
-                       {.7f, .87f, .81f});
-    Drawing::DrawLabel(86, 743,
-                       "청록: 내 위치 · 파랑: 설정한 목적지 · 노랑: 현재 목표 · 밝은 청록 도로: 고가 구간",
-                       {.51f, .72f, .7f});
+    UiText(844, 151, "N ↗", 16, {.64f, .88f, .82f}, true, true);
+    UiText(938, 149, "범례", 22);
+    const char *icons[] = {"player", "destination", "objective", "gate", "medical", "bike", "unknown_signal"};
+    const char *labels[] = {"나의 위치 / 방향", "설정한 목적지", "현재 목표",     "관문 / 지역 출입",
+                            "의료소",           "주차된 바이크", "근사 구조 신호"};
+    for (int i = 0; i < 7; ++i)
+    {
+        Icon(icons[i], 938, 177 + i * 42, 22);
+        UiText(974, 196 + i * 42, labels[i], 16);
+    }
+    UiText(938, 522, "미탐험 구간과 미확인", 15);
+    UiText(938, 548, "목표는 표시되지 않습니다.", 15);
+    UiText(80, 714, "좌클릭 목적지 설정     우클릭 해제", 16);
+    UiText(1190, 714, "M / Esc 닫기", 16, kUiInk, false, true);
+    UiText(80, 741, "방향 고정 · 지도 열람 중 일시정지 · 자동 길찾기 경로는 제공하지 않음", 14,
+           {.55f, .72f, .72f});
 }
 
 // ============================================================================
@@ -645,15 +802,66 @@ void MapHud::DrawFullMap()
 // ============================================================================
 void CityHud::DrawInteractionPrompt()
 {
-    if (!Dialogue::Active() && !Game::Get().GetState().journalVisible &&
-        !Game::Get().GetState().dialogueHistoryVisible &&
-        Game::Get().FindNearbyInteraction() != InteractionTarget::None)
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    if (Dialogue::Active() || w.journalVisible || w.dialogueHistoryVisible || w.ui.screen != UiScreen::None)
     {
-        Drawing::DrawRectangle(kCanvasWidth * .5f - 95, kCanvasHeight * .69f, 190, 30,
-                               ColorRGBA(.02f, .08f, .11f, .9f));
-        Drawing::DrawLabel(kCanvasWidth * .5f - 76, kCanvasHeight * .69f + 20, "[ E ]  상호작용",
-                           ColorRGBA(.5f, 1, .94f), GLUT_BITMAP_HELVETICA_18);
+        return;
     }
+    auto target = g.FindNearbyInteraction();
+    if (target == InteractionTarget::None)
+    {
+        return;
+    }
+    const char *label = "가까운 대상 / 조사";
+    switch (target)
+    {
+    case InteractionTarget::HomeTerminal:
+        label = "집 단말 / 메시지 확인";
+        break;
+    case InteractionTarget::Lia:
+        label = "리아 / 대화";
+        break;
+    case InteractionTarget::Mara:
+        label = "마라 / 대화";
+        break;
+    case InteractionTarget::Kain:
+        label = "카인 / 대화";
+        break;
+    case InteractionTarget::Resident:
+        label = "주민 / 대화";
+        break;
+    case InteractionTarget::JetBike:
+        label = w.isBikeMounted ? "바이크 / 하차" : "바이크 / 탑승";
+        break;
+    case InteractionTarget::CityReceiver:
+        label = "도시 수신망 / 조사·출발";
+        break;
+    case InteractionTarget::MineEntrance:
+        label = "광산 / 입장";
+        break;
+    case InteractionTarget::ObservatorySignal:
+        label = "신호 콘솔 / 기록 수신";
+        break;
+    case InteractionTarget::ObservatoryExit:
+        label = "승강기 / 도시로 내려가기";
+        break;
+    case InteractionTarget::GateBeacon:
+        label = "전망대 / 올라가기";
+        break;
+    case InteractionTarget::ApartmentExit:
+        label = "현관 / 나가기";
+        break;
+    case InteractionTarget::HomeEntrance:
+        label = "집 / 들어가기";
+        break;
+    case InteractionTarget::PowerRelay:
+        label = "전력 장치 / 확인";
+        break;
+    default:
+        break;
+    }
+    Hud::DrawInteraction(label);
 }
 
 // ============================================================================
@@ -661,214 +869,171 @@ void CityHud::DrawInteractionPrompt()
 // ============================================================================
 void Hud::DrawNoticePanel()
 {
-    const auto &world = Game::Get().GetState();
-    if (world.noticeSecondsRemaining <= 0 || world.journalVisible || world.dialogueHistoryVisible)
+    const auto &w = Game::Get().GetState();
+    if (w.noticeSecondsRemaining <= 0 || Dialogue::Active() || w.journalVisible || w.dialogueHistoryVisible ||
+        w.ui.screen != UiScreen::None)
     {
         return;
     }
-    constexpr float panelWidth = 940;
-    float x = (kCanvasWidth - panelWidth) / 2;
-    float y = Dialogue::Active() ? 216.f : kCanvasHeight - 132.f;
-    Drawing::DrawRectangle(x, y, panelWidth, 80, {.02f, .055f, .085f, .96f});
-    Drawing::DrawRectangle(x, y, 3, 80, {.32f, .75f, .78f});
-    auto rows = Dialogue::Wrap(world.noticeText, panelWidth - 32, 15);
-    for (size_t i = 0; i < (std::min)(size_t(3), rows.size()); ++i)
+    Icon("check", 918, 322, 22, true);
+    auto rows = Dialogue::Wrap(w.noticeText, 294, 16);
+    for (size_t i = 0; i < (std::min)(size_t(2), rows.size()); ++i)
     {
-        Drawing::DrawLabel(x + 16, y + 25 + float(i) * 23, rows[i], {.82f, .9f, .91f});
+        UiText(954, 342 + float(i) * 24, rows[i] + (i == 1 && rows.size() > 2 ? "…" : ""), 16, kUiInk, true);
     }
 }
+
 void Hud::DrawDialogue()
 {
-    const auto &world = Game::Get().GetState();
-    const auto &d = world.dialogue;
-    if (!d.active || world.journalVisible || world.dialogueHistoryVisible || HospitalRecovery::Active())
+    const auto &w = Game::Get().GetState();
+    const auto &d = w.dialogue;
+    if (!d.active || w.journalVisible || w.dialogueHistoryVisible || w.ui.screen != UiScreen::None ||
+        HospitalRecovery::Active())
     {
         return;
     }
-    const auto &page = d.pages[d.page];
-    auto header = Dialogue::Wrap(page.speaker + "  ·  " + page.channel, 800, 19);
-    auto body = Dialogue::Wrap(page.text, 896, 19);
-    std::vector<std::vector<std::string>> choices;
-    size_t choiceRows = 0;
-    for (size_t i = 0; i < page.choices.size(); ++i)
+    auto layout = LayoutDialogue();
+    Panel(208, layout.top, 864, layout.height);
+    Icon(d.pages[d.page].channel == "무전" ? "radio" : "dialogue", 232, layout.top + 25, 24);
+    for (size_t i = 0; i < layout.header.size(); ++i)
     {
-        choices.push_back(Dialogue::Wrap(std::to_string(i + 1) + ". " + page.choices[i].text, 866, 15));
-        choiceRows += choices.back().size() + 1;
+        UiText(270, layout.top + 45 + i * 24, layout.header[i], 18, {.57f, .91f, .86f});
     }
-    float height = 88.f + float(header.size() + body.size()) * 25 + float(choiceRows) * 22;
-    float y = kCanvasHeight - 54.f - height;
-    Drawing::DrawRectangle(160, y, 960, height, {.015f, .04f, .065f, .98f});
-    Drawing::DrawRectangle(160, y, 4, height, {.28f, .86f, .88f});
-    float rowY = y + 29;
-    for (const auto &row : header)
+    UiText(1048, layout.top + 43, std::to_string(d.page + 1) + " / " + std::to_string(d.pages.size()), 14,
+           kUiInk, false, true);
+    for (size_t i = 0; i < layout.body.size(); ++i)
     {
-        Drawing::DrawLabel(188, rowY, row, {.45f, .94f, .93f}, GLUT_BITMAP_HELVETICA_18);
-        rowY += 25;
+        UiText(232, layout.bodyTop + i * 32, layout.body[i], 20);
     }
-    rowY += 10;
-    for (const auto &row : body)
+    for (size_t i = 0; i < layout.controls.size(); ++i)
     {
-        Drawing::DrawLabel(188, rowY, row, {.9f, .94f, .95f}, GLUT_BITMAP_HELVETICA_18);
-        rowY += 25;
+        Button(layout.controls[i], int(i));
     }
-    rowY += 10;
-    for (size_t i = 0; i < choices.size(); ++i)
-    {
-        if (d.selection == int(i))
-        {
-            Drawing::DrawRectangle(184, rowY - 17, 900, float(choices[i].size()) * 22 + 5,
-                                   {.08f, .22f, .27f});
-        }
-        for (const auto &row : choices[i])
-        {
-            Drawing::DrawLabel(198, rowY, row,
-                               d.selection == int(i) ? ColorRGBA(.6f, 1, .9f) : ColorRGBA(.72f, .8f, .83f));
-            rowY += 22;
-        }
-        rowY += 22;
-    }
-    std::string controls = page.choices.empty() ? "E / Enter 다음"
-                           : Dialogue::Danger() ? "안전한 곳에서 선택할 수 있습니다"
-                                                : "숫자 키 선택 · E / Enter 확정";
-    Drawing::DrawLabel(188, kCanvasHeight - 75.f, controls + "   ·   H 대사 이력   ·   J 조사 기록",
-                       {.65f, .78f, .82f});
-    Drawing::DrawLabel(1000, y + 29, std::to_string(d.page + 1) + "/" + std::to_string(d.pages.size()),
-                       {.65f, .78f, .82f});
+    UiText(232, 677,
+           Dialogue::Danger() ? "무전 · 전투 계속 / 안전한 곳에서 선택" : "H 대사 이력 · J 조사 기록", 14,
+           {.58f, .75f, .75f});
 }
 
-// ============================================================================
-// Hud
-// ============================================================================
-void Hud::DrawPauseOverlay()
+void Hud::DrawInteraction(const std::string &label)
 {
-    auto &world = Game::Get().GetState();
-    if (world.isPaused)
+    const auto &w = Game::Get().GetState();
+    if (Dialogue::Active() || w.mapVisible || w.journalVisible || w.dialogueHistoryVisible ||
+        w.ui.screen != UiScreen::None)
     {
-        Drawing::DrawRectangle(0, 0, (float)kCanvasWidth, (float)kCanvasHeight,
-                               ColorRGBA(0, .02f, .04f, .8f));
-        Drawing::DrawLabel(kCanvasWidth * .5f - 90, kCanvasHeight * .5f, "일시정지",
-                           ColorRGBA(.7f, .95f, .95f), GLUT_BITMAP_HELVETICA_18);
-        Drawing::DrawLabel(kCanvasWidth * .5f - 90, kCanvasHeight * .5f + 30,
-                           game::GameLevels::Chapter().IsActive()
-                               ? "Esc 계속 / R 헤일로 귀환(기록 유지) / Q 종료"
-                               : "Esc 계속 / R 다시 시작 / Q 종료");
+        return;
     }
+    auto rows = Dialogue::Wrap(label, 286, 17);
+    float h = (std::max)(48.f, 24.f + float(rows.size()) * 22);
+    Panel(450, 514, 380, h);
+    for (size_t i = 0; i < rows.size(); ++i)
+    {
+        UiText(468, 545 + float(i) * 22, rows[i], 17);
+    }
+    Sprite("Components/keycap", 788, 526, 28, 28);
+    UiText(797, 546, "E", 17);
+}
+void Hud::DrawObjective(const std::string &objective, const std::string &context)
+{
+    Icon("objective", 32, 36, 24, true);
+    auto rows = Dialogue::Wrap(objective, 420, 18);
+    for (size_t i = 0; i < (std::min)(size_t(2), rows.size()); ++i)
+    {
+        UiText(68, 57 + i * 26, rows[i], 18, kUiInk, true);
+    }
+    UiText(68, 58 + float((std::min)(size_t(2), rows.size())) * 26, context, 14, {.68f, .83f, .83f}, true);
 }
 
-// ============================================================================
-// CityHud
-// ============================================================================
 void CityHud::Draw()
 {
-    auto &world = Game::Get().GetState();
-    Drawing::DrawRectangle(22, 20, 650, 111, ColorRGBA(.025f, .06f, .09f, .92f));
-    Drawing::DrawRectangle(22, 20, 3, 111, ColorRGBA(.27f, .86f, .83f));
-    int cityIndex = Overworld::CityAt(world.playerPosition);
-    const char *area = cityIndex >= 0 ? Overworld::Cities()[cityIndex].name : "도시 간 연결 도로";
-    Drawing::DrawLabel(40, 45, world.isInObservatory ? "헤일로 / N-0 전망대" : area,
-                       ColorRGBA(.67f, .9f, .91f), GLUT_BITMAP_HELVETICA_18);
-    Drawing::DrawLabel(40, 68,
-                       world.isInsideHome                          ? "플레이어의 집 / 06:14"
-                       : world.isInObservatory                     ? "상층 관측 데크 / 고도 180 m"
-                       : game::GameLevels::Chapter().IsAvailable() ? "광산 보고 다음 날 / 오전 작업 시간"
-                                                                   : "관문 인접 주거 구역 / 06:14",
-                       ColorRGBA(.4f, .66f, .73f));
-    Drawing::DrawLabel(
-        40, 94,
-        game::GameLevels::Chapter().IsAvailable() ? game::GameLevels::Chapter().Objective()
-        : world.gateSignalHeard && world.hasDescendedObservatory
-            ? game::GameLevels::Mine().GetState().quest.GetObjective()
-        : world.mainQuestStage == MainQuestStage::ReadHomeTerminal   ? "01  집 단말 확인 [E]"
-        : world.mainQuestStage == MainQuestStage::MeetLia            ? "02  밖에서 리아와 대화 [E]"
-        : world.mainQuestStage == MainQuestStage::EnterObservatory   ? "03  전망대 승강기로 올라가기 [E]"
-        : world.mainQuestStage == MainQuestStage::ReadGateSignal     ? "04  상층 콘솔에서 관문 신호 측정 [E]"
-        : world.mainQuestStage == MainQuestStage::DescendObservatory ? "05  승강기로 도시에 내려가기 [E]"
-        : world.mainQuestStage == MainQuestStage::MountJetBike       ? "06  개인용 제트 바이크 탑승 [E]"
-                                                                     : "광장 수신망에서 조사 경로 확인 [E]",
-        ColorRGBA(.91f, .89f, .75f));
-    char timer[80];
-    std::snprintf(timer, sizeof(timer), "%02d:%02d / 짧은 서막", (int)world.playTimeSeconds / 60,
-                  (int)world.playTimeSeconds % 60);
-    Drawing::DrawLabel(
-        40, 116, game::GameLevels::Chapter().IsAvailable() ? "1장 / 빛나는 개척지 · J 조사 기록" : timer,
-        ColorRGBA(.4f, .6f, .66f));
-    MapHud::DrawMinimap();
-    if (!world.isInsideHome && !world.isInObservatory)
+    const auto &w = Game::Get().GetState();
+    std::string objective;
+    auto &chapter = game::GameLevels::Chapter();
+    if (chapter.IsAvailable())
     {
-        char bike[160];
-        if (world.isBikeMounted)
-        {
-            std::snprintf(bike, sizeof(bike), "개인 바이크 / %.0f km/h · W 가속 S 제동 A/D 조향 · E 하차",
-                          std::fabs(world.bikeSpeed) * models::WorldScale::metersPerUnit * 3.6f);
-        }
-        else
-        {
-            std::snprintf(bike, sizeof(bike), "도시 5곳 · 주민 %d명 / 주황: 바이크 · E 탑승",
-                          CivicJustice::LivingPopulation());
-        }
-        Drawing::DrawLabel(26, float(kCanvasHeight) - 46, bike, {.6f, .9f, .9f});
-        const auto &player = game::GameLevels::Mine().GetState().player;
-        Drawing::DrawLabel(26, float(kCanvasHeight) - 69,
-                           "체력 " + std::to_string(player.health) + "/" + std::to_string(player.maxHealth),
-                           {.9f, .78f, .67f});
-        int crossing = Overworld::Traffic().NearbyCrossing(world.playerPosition);
-        if (crossing >= 0)
-        {
-            bool walk = Overworld::Traffic().PedestrianGreen(
-                crossing, Overworld::Traffic().CrossingRoad(crossing, world.playerPosition));
-            Drawing::DrawRectangle(425, 143, 420, 32, {.02f, .055f, .08f, .92f});
-            Drawing::DrawLabel(438, 165, walk ? "보행 신호 / 횡단 가능" : "보행 신호 / 대기 · 자동 전환",
-                               walk ? ColorRGBA(.2f, 1, .8f) : ColorRGBA(1, .43f, .37f));
-        }
+        objective = chapter.Objective();
     }
-    Drawing::DrawRectangle(22, 143, 365, 64, ColorRGBA(.025f, .06f, .09f, .88f));
-    Drawing::DrawLabel(40, 165, "선택 목표 / 남겨 둔 불빛", ColorRGBA(.96f, .72f, .4f));
-    Drawing::DrawLabel(40, 188,
-                       world.isSideQuestComplete   ? "완료: 마라의 집에 불빛이 돌아왔습니다."
-                       : world.isPowerRestored     ? "광장의 마라에게 돌아가세요."
-                       : world.isSideQuestAccepted ? "마라 동쪽의 전력 장치를 복구하세요."
-                                                   : "주거 광장의 마라와 대화하세요.");
-    Drawing::DrawLabel(26, (float)kCanvasHeight - 22,
-                       "WASD 이동 / 바이크 W 가속·S 후진·AD 조향·Space 부스트 / E 승하차 / M 지도 / J 기록 / "
-                       "H 이력 / Esc 휴식",
-                       ColorRGBA(.63f, .78f, .81f));
-    DrawInteractionPrompt();
-}
-
-// ============================================================================
-// MineHud
-// ============================================================================
-void MineHud::DrawScanner()
-{
-    const auto &mine = game::GameLevels::Mine().GetState();
-    char message[100];
-    if (mine.scannerSeconds > 0)
+    else if (w.gateSignalHeard && w.hasDescendedObservatory)
     {
-        std::snprintf(message, sizeof(message), "구조 스캔 %.0f / %.0f m",
-                      mine.scannerRadius * models::WorldScale::metersPerUnit,
-                      game::kScannerRange * models::WorldScale::metersPerUnit);
-        const auto view = MapView(false);
-        for (int i = 0; i < 80; ++i)
-        {
-            float a = i * kPi * 2 / 80, b = (i + 1) * kPi * 2 / 80;
-            MapLine(view,
-                    {mine.scannerOrigin.x + std::cos(a) * mine.scannerRadius,
-                     mine.scannerOrigin.y + std::sin(a) * mine.scannerRadius},
-                    {mine.scannerOrigin.x + std::cos(b) * mine.scannerRadius,
-                     mine.scannerOrigin.y + std::sin(b) * mine.scannerRadius},
-                    {.4f, 1, .76f, .8f}, 1.5f);
-        }
-    }
-    else if (mine.scannerCooldown > 0)
-    {
-        std::snprintf(message, sizeof(message), "F 스캐너 충전 %.1f초", mine.scannerCooldown);
+        objective = game::GameLevels::Mine().GetState().quest.GetObjective();
     }
     else
     {
-        std::snprintf(message, sizeof(message), "F 구조 신호 스캔");
+        switch (w.mainQuestStage)
+        {
+        case MainQuestStage::ReadHomeTerminal:
+            objective = "집 단말에서 리아의 메시지 확인";
+            break;
+        case MainQuestStage::MeetLia:
+            objective = "집 밖에서 리아와 대화";
+            break;
+        case MainQuestStage::EnterObservatory:
+            objective = "전망대 승강기로 올라가기";
+            break;
+        case MainQuestStage::ReadGateSignal:
+            objective = "상층 콘솔에서 신호 측정";
+            break;
+        case MainQuestStage::DescendObservatory:
+            objective = "승강기로 도시에 내려가기";
+            break;
+        default:
+            objective = "광장 수신망에서 조사 경로 확인";
+            break;
+        }
     }
-    Drawing::DrawRectangle(1026, 302, 220, 25, {.015f, .055f, .065f, .9f});
-    Drawing::DrawLabel(1034, 319, message, {.47f, .88f, .77f});
+    int city = Overworld::CityAt(w.playerPosition);
+    std::string area = w.isInsideHome      ? "헤일로 / 집"
+                       : w.isInObservatory ? "헤일로 / 전망대"
+                       : city >= 0         ? Overworld::Cities()[city].name
+                                           : "도시 연결 구역";
+    Hud::DrawObjective(objective, area + " · J 조사 기록");
+    if (w.isSideQuestAccepted && !w.isSideQuestComplete)
+    {
+        Icon("objective", 36, 139, 16, true);
+        UiText(68, 153, w.isPowerRestored ? "마라에게 전력 복구 보고" : "선택 · 마라의 전력 장치 복구", 15,
+               {.94f, .77f, .44f}, true);
+    }
+    MapHud::DrawMinimap();
+    DrawInteractionPrompt();
+    if (!w.isInsideHome && !w.isInObservatory && !w.isBikeMounted)
+    {
+        int crossing = Overworld::Traffic().NearbyCrossing(w.playerPosition);
+        if (crossing >= 0)
+        {
+            bool walk = Overworld::Traffic().PedestrianGreen(
+                crossing, Overworld::Traffic().CrossingRoad(crossing, w.playerPosition));
+            Icon(walk ? "walk" : "stop", 348, 711, 22);
+            UiText(380, 732, walk ? "횡단 가능" : "보행 신호 대기", 16,
+                   walk ? ColorRGBA(.59f, .95f, .8f) : ColorRGBA(1, .74f, .39f), true);
+        }
+    }
+}
+
+void MineHud::DrawScanner()
+{
+    const auto &mine = game::GameLevels::Mine().GetState();
+    float progress = mine.scannerSeconds > 0    ? mine.scannerRadius / 42.f
+                     : mine.scannerCooldown > 0 ? 1 - mine.scannerCooldown / 6.f
+                                                : 1;
+    progress = Game::Clamp(progress, 0, 1);
+    Drawing::DrawEllipse(976, 656, 24, 24, {.015f, .03f, .035f, .8f});
+    for (int i = 0; i < 60; ++i)
+    {
+        float a = -kPi * .5f + i * kPi / 30, b = a + kPi / 30;
+        ColorRGBA color = i < progress * 60 ? ColorRGBA(.63f, .85f, .97f) : ColorRGBA(.15f, .22f, .27f);
+        Drawing::DrawLine({976 + std::cos(a) * 21, 656 + std::sin(a) * 21},
+                          {976 + std::cos(b) * 21, 656 + std::sin(b) * 21}, {0, 0, 0, .9f}, 7);
+        Drawing::DrawLine({976 + std::cos(a) * 21, 656 + std::sin(a) * 21},
+                          {976 + std::cos(b) * 21, 656 + std::sin(b) * 21}, color, 4);
+    }
+    UiText(971, 663, "F", 17, kUiInk, true);
+    std::string status = mine.scannerSeconds > 0    ? "구조 신호 스캔 중"
+                         : mine.scannerCooldown > 0 ? "스캐너 충전 중"
+                                                    : "구조 신호 스캔";
+    UiText(1010, 652, status, 15, {.68f, .87f, .98f}, true);
+    if (!mine.scannerContacts.empty())
+    {
+        UiText(1010, 682, "근사 신호 감지", 14, {.68f, .87f, .98f}, true);
+    }
     const auto &world = Game::Get().GetState();
     Vector2 player =
         WorldCamera::ToViewport(Drawing::WorldToScreen(world.playerPosition.x, world.playerPosition.y, 20));
@@ -914,123 +1079,72 @@ void MineHud::DrawScanner()
 // ============================================================================
 void MineHud::Draw()
 {
-    auto &world = Game::Get().GetState();
-    const auto &stats = game::GameLevels::Mine().GetState().player;
-    Drawing::DrawRectangle(22, 20, 650, 183, {.02f, .04f, .055f, .94f});
-    Drawing::DrawLabel(40, 47, "낙하한 신호 / 광산 구조 신호 조사", {.85f, .85f, .68f},
-                       GLUT_BITMAP_HELVETICA_18);
-    Drawing::DrawLabel(40, 77, game::GameLevels::Mine().GetState().quest.GetObjective(), {.6f, .95f, .87f});
-    char text[180];
-    std::snprintf(text, sizeof(text), "체력 %d / %d  ·  레벨 %d  ·  경험치 %d  ·  처치 %d", stats.health,
-                  stats.maxHealth, stats.level, stats.experience, game::GameLevels::Mine().GetState().kills);
-    Drawing::DrawLabel(40, 105, text);
-    Drawing::DrawRectangle(40, 116, 440, 7, {.2f, .07f, .07f});
-    Drawing::DrawRectangle(40, 116, 440.f * stats.health / stats.maxHealth, 7, {.8f, .28f, .2f});
-    std::snprintf(text, sizeof(text), "%s  %d / %d  ·  %s",
-                  game::GameLevels::Mine().GetState().pistol.GetName(),
-                  game::GameLevels::Mine().GetState().pistol.GetRounds(),
-                  game::GameLevels::Mine().GetState().pistol.GetMagazineSize(),
-                  game::GameLevels::Mine().GetState().pistol.IsReloading() ? "재장전 중"
-                                                                           : "R 재장전 / 예비 탄창 무제한");
-    Drawing::DrawLabel(40, 148, text, {.95f, .8f, .47f});
-    if (game::GameLevels::Mine().GetState().pistol.IsReloading())
-    {
-        Drawing::DrawRectangle(40, 156, 440 * game::GameLevels::Mine().GetState().pistol.GetReloadProgress(),
-                               4, {.95f, .75f, .3f});
-    }
-    std::snprintf(text, sizeof(text), "구조 %d / 12명 · 회복 키트 %d · 부품 %d · 리아 동행",
-                  game::GameLevels::Mine().GetState().rescuedPeople, stats.recoveryKits, stats.salvage);
-    Drawing::DrawLabel(40, 185, text, {.55f, .75f, .75f});
+    auto &level = game::GameLevels::Mine();
+    const auto &s = level.GetState();
+    Hud::DrawObjective(s.quest.GetObjective(), "광산 / 구조 신호 조사 · J 기록");
     MapHud::DrawMinimap();
     DrawScanner();
-    const auto cursor = world.cursorPosition;
-    float gap = 6 + game::GameLevels::Mine().GetState().pistol.GetSpread() * 120;
-    ColorRGBA crosshair = game::GameLevels::Mine().GetState().pistol.IsReloading() ? ColorRGBA(1, .65f, .3f)
-                                                                                   : ColorRGBA(.75f, 1, .92f);
-    Drawing::DrawLine({cursor.x - gap - 9, cursor.y}, {cursor.x - gap, cursor.y}, crosshair, 2);
-    Drawing::DrawLine({cursor.x + gap, cursor.y}, {cursor.x + gap + 9, cursor.y}, crosshair, 2);
-    Drawing::DrawLine({cursor.x, cursor.y - gap - 9}, {cursor.x, cursor.y - gap}, crosshair, 2);
-    Drawing::DrawLine({cursor.x, cursor.y + gap}, {cursor.x, cursor.y + gap + 9}, crosshair, 2);
-    Drawing::DrawEllipse(cursor.x, cursor.y, 1.5f, 1.5f, crosshair);
-    Drawing::DrawLabel(
-        26, kCanvasHeight - 22.f,
-        "WASD 이동 / 마우스 조준·좌클릭 사격·V 근접 / R 재장전 / F 스캔 / E 조사·구조·회수 / Q 회복 "
-        "/ M 지도 / Esc 정지");
+    if (!Dialogue::Active())
+    {
+        std::string hint;
+        if (level.IsNear(s.riaPosition))
+        {
+            hint = "리아 / 대화·응급 처치";
+        }
+        for (const auto &group : s.rescueGroups)
+        {
+            if (!group.rescued && level.IsNear(group.position))
+            {
+                hint = "구조 대상 / 확인";
+            }
+        }
+        for (auto p :
+             {game::kPowerBypass, game::kRuinSignal, game::kObserverGlyph, game::kCoordinateTerminal})
+        {
+            if (level.IsNear(p))
+            {
+                hint = "조사 지점 / 확인";
+            }
+        }
+        if (level.IsNear(s.entry))
+        {
+            hint = "광산 입구 / 나가기";
+        }
+        for (const auto &drop : s.drops)
+        {
+            if (level.IsNear(drop.position))
+            {
+                hint = "물자 / 회수";
+            }
+        }
+        if (!hint.empty())
+        {
+            Hud::DrawInteraction(hint);
+        }
+    }
 }
 
-// ============================================================================
-// ChapterHud : Hud
-// ============================================================================
 void ChapterHud::Draw()
 {
     auto &level = game::GameLevels::Chapter();
-    const auto &state = level.GetState();
-    const auto &mine = game::GameLevels::Mine().GetState();
-    const auto &world = Game::Get().GetState();
-    Drawing::DrawRectangle(22, 20, 750, 190, {.025f, .06f, .075f, .94f});
-    Drawing::DrawLabel(40, 48, "1장 / 빛나는 개척지", {.85f, .94f, .84f}, GLUT_BITMAP_HELVETICA_18);
-    Drawing::DrawLabel(40, 74, level.Objective(), {.9f, .85f, .6f});
-    Drawing::DrawLabel(40, 100,
-                       state.generatorRestored    ? "[완료] 발전기 / 폐쇄 선로 분리·도시 전력 안정"
-                       : state.generatorInspected ? "[진행] 발전기 / 전력 유출 선로 차단"
-                                                  : "[조사] 발전기 / 정전 원인 확인",
-                       {.6f, .85f, .75f});
-    Drawing::DrawLabel(40, 124,
-                       state.convoyRescued   ? "[완료] 운송대 5명 구조 / 카인 합류"
-                       : state.escortStarted ? "[진행] 운송대 5명 안전 지점 이동 중"
-                                             : "[조사] 운송대 / 카인과 점호·측량 우회로 확보",
-                       {.6f, .85f, .75f});
-    Drawing::DrawLabel(40, 148,
-                       state.ledgerFound       ? "[완료] 폐설비 / 기본 장부 확보"
-                       : state.tradeProofFound ? "[조사] 폐설비 / 거래 기록 제시 또는 전투"
-                                               : "[조사] 폐설비 / 입구 거래 기록·점거자와 대화",
-                       {.6f, .85f, .75f});
-    char text[180];
-    std::snprintf(text, sizeof(text), "체력 %d/%d · 권총 %d/%d · %s · 동행: 리아%s", mine.player.health,
-                  mine.player.maxHealth, mine.pistol.GetRounds(), mine.pistol.GetMagazineSize(),
-                  mine.pistol.IsReloading() ? "재장전 중" : "R 재장전", state.kainJoined ? " · 카인" : "");
-    Drawing::DrawLabel(40, 184, text, {.82f, .85f, .86f});
+    Hud::DrawObjective(level.Objective(), "1장 / 빛나는 개척지 · J 조사 기록");
+    UiText(68, 113, "현장 조사 " + std::to_string(level.CompletedSites()) + " / 3", 15, {.67f, .83f, .8f},
+           true);
     MapHud::DrawMinimap();
     game::ChapterInteraction point{};
     if (level.NearestInteraction(point))
     {
-        Drawing::DrawRectangle(350, 548, 580, 34, {.02f, .07f, .09f, .92f});
-        std::string label =
-            point.action == game::ChapterAction::ConvoySupply
-                ? "운송대 보급 / 부품 " + std::to_string(CivicJustice::ShopPrice(2)) + " → 회복 키트 1 [E]"
-                : point.label;
-        Drawing::DrawLabel(368, 571, label, {.9f, .95f, .8f}, GLUT_BITMAP_HELVETICA_18);
+        Hud::DrawInteraction(point.action == game::ChapterAction::ConvoySupply ? "운송대 보급 / 교환"
+                                                                               : point.label);
     }
-    auto cursor = world.cursorPosition;
-    float gap = 6 + mine.pistol.GetSpread() * 120;
-    ColorRGBA cross = mine.pistol.IsReloading() ? ColorRGBA(1, .65f, .3f) : ColorRGBA(.7f, 1, .9f);
-    Drawing::DrawLine({cursor.x - gap - 8, cursor.y}, {cursor.x - gap, cursor.y}, cross, 2);
-    Drawing::DrawLine({cursor.x + gap, cursor.y}, {cursor.x + gap + 8, cursor.y}, cross, 2);
-    Drawing::DrawLine({cursor.x, cursor.y - gap - 8}, {cursor.x, cursor.y - gap}, cross, 2);
-    Drawing::DrawLine({cursor.x, cursor.y + gap}, {cursor.x, cursor.y + gap + 8}, cross, 2);
-    Drawing::DrawLabel(
-        26, kCanvasHeight - 22.f,
-        "WASD 이동 / E 조사·대화 / 좌클릭 사격 / R 재장전 / Q 회복 / M 지도 / J 기록 / Esc 일시정지");
 }
+
 void ChapterHud::DrawJournal()
 {
     const auto &world = Game::Get().GetState();
-    const auto &s = game::GameLevels::Chapter().GetState();
     if (HospitalRecovery::Active())
     {
         return;
-    }
-    if (s.comparisonStarted && s.comparisonSeconds < 12 && !world.journalVisible &&
-        !world.dialogueHistoryVisible)
-    {
-        Drawing::DrawRectangle(408, 272, 565, 70, {.02f, .055f, .085f, .96f});
-        Drawing::DrawLabel(426, 295, "원격 관측 / N-0 외곽 설비 순차 점등");
-        int lamps = int(Game::Clamp(s.comparisonSeconds - 1, 0, 6) * 8 / 6);
-        for (int i = 0; i < 8; ++i)
-        {
-            Drawing::DrawRectangle(430.f + i * 62, 312, 44, 12,
-                                   i < lamps ? ColorRGBA(.5f, .95f, .9f) : ColorRGBA(.1f, .2f, .23f));
-        }
     }
     if (!world.journalVisible && !world.dialogueHistoryVisible)
     {
@@ -1041,7 +1155,7 @@ void ChapterHud::DrawJournal()
     {
         for (const auto &entry : Dialogue::Journal())
         {
-            auto wrapped = Dialogue::Wrap(entry, 960, 19);
+            auto wrapped = Dialogue::Wrap(entry, 526, 18);
             rows.insert(rows.end(), wrapped.begin(), wrapped.end());
             rows.push_back("");
         }
@@ -1050,8 +1164,9 @@ void ChapterHud::DrawJournal()
     {
         for (const auto &entry : world.dialogue.history)
         {
-            rows.push_back(entry.speaker + " · " + entry.channel);
-            auto wrapped = Dialogue::Wrap(entry.text, 960, 19);
+            auto header = Dialogue::Wrap(entry.speaker + " · " + entry.channel, 526, 18);
+            rows.insert(rows.end(), header.begin(), header.end());
+            auto wrapped = Dialogue::Wrap(entry.text, 526, 18);
             rows.insert(rows.end(), wrapped.begin(), wrapped.end());
             rows.push_back("");
         }
@@ -1060,42 +1175,842 @@ void ChapterHud::DrawJournal()
             rows.push_back("아직 읽은 대사가 없습니다.");
         }
     }
-    constexpr size_t perPage = 16;
+    constexpr size_t perPage = 17;
     size_t pages = (std::max)(size_t(1), (rows.size() + perPage - 1) / perPage);
     size_t offset = (std::min)(world.dialogue.historyOffset, pages - 1);
     size_t page = world.dialogueHistoryVisible ? pages - 1 - offset : offset;
-    Drawing::DrawRectangle(110, 140, 1060, 574, {.015f, .035f, .055f, .98f});
-    Drawing::DrawLabel(138, 174,
-                       world.journalVisible ? "조사 기록 / J 닫기 · H 대사 이력"
-                                            : "대사 이력 / H 닫기 · J 조사 기록",
-                       {.5f, .95f, .92f}, GLUT_BITMAP_HELVETICA_18);
+    Panel(176, 72, 928, 656);
+    Icon(world.journalVisible ? "record" : "history", 200, 100, 26);
+    UiText(240, 125, world.journalVisible ? "조사 기록" : "대사 이력", 24);
+    UiText(510, 161, world.journalVisible ? "확인한 사실과 다음 행동" : "읽은 대사 / 전달 기록", 18,
+           {.61f, .88f, .83f});
+    UiText(200, 326, "현재 실행의 기록", 17, {.95f, .78f, .4f});
+    UiText(200, 356, "게임 종료 후 복원하는", 15);
+    UiText(200, 380, "저장 기능은 아직 없습니다.", 15);
+    if (Dialogue::Danger())
+    {
+        Icon("warning", 200, 426, 22);
+        UiText(234, 445, "교전 중", 17, {1, .78f, .4f});
+        UiText(200, 479, "기록을 보는 동안에도", 15);
+        UiText(200, 503, "시간이 계속 흐릅니다.", 15);
+    }
     for (size_t i = 0; i < perPage && page * perPage + i < rows.size(); ++i)
     {
-        Drawing::DrawLabel(138, 214 + float(i) * 27, rows[page * perPage + i], {.85f, .91f, .93f},
-                           GLUT_BITMAP_HELVETICA_18);
+        UiText(510, 194 + float(i) * 25, rows[page * perPage + i], 18);
     }
-    Drawing::DrawLabel(138, 686,
-                       "PageUp / PageDown 페이지   " + std::to_string(page + 1) + "/" +
-                           std::to_string(pages) +
-                           (world.dialogue.suspended ? "   ·   Enter 중단한 대화 재개 (안전한 곳)"
-                            : Dialogue::Danger()     ? "   ·   교전 중에는 시간이 계속 흐릅니다"
-                                                     : ""));
+    UiText(510, 650, std::to_string(page + 1) + " / " + std::to_string(pages), 14, {.59f, .75f, .76f});
+    UiText(200, 701,
+           world.dialogue.suspended ? "Enter 중단 대화 재개 · 안전한 곳에서 가능"
+                                    : "PageUp / PageDown 페이지",
+           14);
+    auto controls = Hud::Controls();
+    for (size_t i = 0; i < controls.size(); ++i)
+    {
+        Button(controls[i], int(i));
+    }
+}
+
+// ============================================================================
+// Hud — live values, menus and shared pointer/keyboard hit regions
+// ============================================================================
+void Hud::DrawVitals()
+{
+    const auto &w = Game::Get().GetState();
+    auto &mine = game::GameLevels::Mine().GetState();
+    const auto &chapter = game::GameLevels::Chapter().GetState();
+    if (Dialogue::Active() && Dialogue::LocksWorld())
+    {
+        return;
+    }
+    const auto &stats = mine.player;
+    const bool critical = stats.health <= stats.maxHealth * .25f;
+    Icon("health", 32, 736, 24, true);
+    UiText(66, 735, std::to_string(stats.health), 28, critical ? ColorRGBA(1, .56f, .44f) : kUiInk, true);
+    float maximumX = 76.f + RenderAssets::MeasureUtf8(std::to_string(stats.health), 28);
+    UiText(maximumX, 734, "/ " + std::to_string(stats.maxHealth), 18, kUiInk, true);
+    Sprite("Components/hud_health_track", 64, 746, 224, 16);
+    Sprite("Components/hud_health_fill", 66, 748, 220, 12,
+           critical ? ColorRGBA(1, .52f, .43f) : ColorRGBA(.65f, .92f, .86f),
+           Game::Clamp(float(stats.health) / (std::max)(1, stats.maxHealth), 0, 1));
+    bool combat = game::GameLevels::IsCombatActive() || CivicCombat::Available();
+    if (critical)
+    {
+        UiText(32, 690,
+               game::GameLevels::IsCombatActive()
+                   ? (stats.recoveryKits > 0 ? "위험 · Q 회복" : "위험 · 회복 키트 없음")
+                   : "위험 · 의료 지원 필요",
+               16, {1, .61f, .46f}, true);
+    }
+    if (w.isBikeMounted)
+    {
+        float speed = std::fabs(w.bikeSpeed) * models::WorldScale::metersPerUnit * 3.6f;
+        char value[48];
+        std::snprintf(value, sizeof(value), speed < 10 ? "%.1f" : "%.0f", speed);
+        Icon("bike", 1044, 724, 25, true);
+        UiText(1176, 749, value, 44, kUiInk, true, true);
+        UiText(1248, 748, "km/h", 18, kUiInk, true, true);
+        if (w.bikeSpeed < -.01f)
+        {
+            Icon("reverse", 1090, 675, 20, true);
+            UiText(1248, 695, "후진", 17, kUiInk, true, true);
+        }
+        else if (w.pressedKeys[' '] && w.bikeSpeed > 0)
+        {
+            Icon("boost", 1090, 675, 20, true);
+            UiText(1248, 695, "부스트", 17, {.55f, .95f, .88f}, true, true);
+        }
+    }
+    else if (combat)
+    {
+        const auto &gun = mine.pistol;
+        Icon("pistol", 1040, 723, 28, true);
+        Icon("infinite", 1064, 754, 15, true);
+        char count[32];
+        std::snprintf(count, sizeof(count), "%02d", gun.GetRounds());
+        UiText(1182, 746, count, 38, gun.GetRounds() ? kUiInk : ColorRGBA(1, .78f, .4f), true, true);
+        UiText(1248, 745, "/ " + std::to_string(gun.GetMagazineSize()), 22, kUiInk, true, true);
+        if (gun.IsReloading())
+        {
+            Sprite("Components/hud_reload_track", 1088, 755, 156, 14);
+            Sprite("Components/hud_reload_fill", 1090, 757, 152, 10, {1, .78f, .4f}, gun.GetReloadProgress());
+            UiText(1248, 705, "재장전", 17, {1, .77f, .4f}, true, true);
+        }
+        else
+        {
+            float stride = (std::min)(13.f, 152.f / (std::max)(1, gun.GetMagazineSize()));
+            for (int i = 0; i < gun.GetMagazineSize(); ++i)
+            {
+                Sprite(i < gun.GetRounds() ? "Components/hud_ammo_pip" : "Components/hud_ammo_pip_empty",
+                       1090 + i * stride, 757, (std::min)(9.f, stride - 2), 10);
+            }
+            if (!gun.GetRounds())
+            {
+                UiText(1248, 705, "R 재장전", 17, {1, .77f, .4f}, true, true);
+            }
+        }
+        if (w.cursorInsideViewport)
+        {
+            auto c = w.cursorPosition;
+            float gap = 6 + gun.GetSpread() * 120;
+            const bool blocked = gun.IsReloading();
+            ColorRGBA ink = blocked ? ColorRGBA(1, .75f, .4f) : ColorRGBA(.9f, 1, .98f);
+            for (int i = 0; i < 4; ++i)
+            {
+                float angle = i * kPi / 2;
+                Vector2 begin = {c.x + std::cos(angle) * gap, c.y + std::sin(angle) * gap};
+                Vector2 end = {c.x + std::cos(angle) * (gap + 8), c.y + std::sin(angle) * (gap + 8)};
+                Drawing::DrawLine(begin, end, {0, 0, 0}, 5);
+                Drawing::DrawLine(begin, end, ink, 2);
+            }
+            Drawing::DrawEllipse(c.x, c.y, 2.5f, 2.5f, {0, 0, 0});
+            Drawing::DrawEllipse(c.x, c.y, 1, 1, ink);
+            if (blocked)
+            {
+                Drawing::DrawLine({c.x - 3, c.y - 3}, {c.x + 3, c.y + 3}, ink, 2);
+                Drawing::DrawLine({c.x + 3, c.y - 3}, {c.x - 3, c.y + 3}, ink, 2);
+            }
+        }
+    }
+    const auto &law = CivicJustice::State();
+    if (CivicJustice::IsExterior() && law.wanted > 0)
+    {
+        for (int i = 0; i < 5; ++i)
+        {
+            UiText(558 + i * 35, 60, i < law.wanted ? "★" : "☆", 25, {1, .78f, .4f}, true);
+        }
+        Sprite("Components/hud_heat_track", 556, 71, 169, 10);
+        Sprite("Components/hud_heat_fill", 558, 73, 165, 6, {1, .78f, .4f},
+               Game::Clamp(law.heat / CivicJustice::kMaximumHeat, 0, 1));
+        UiText(570, 106, law.identified ? "보안망 추적 중" : "수색 중 · 미식별", 15, {1, .78f, .4f}, true);
+        if (law.responseStarted && !law.identified)
+        {
+            int remaining = int(std::ceil(
+                (std::max)(0.f, CivicJustice::kUnidentifiedEscapeSeconds - law.initialUnseenSeconds)));
+            UiText(570, 128, "미발각 해제까지 " + std::to_string(remaining) + "초", 14, {.87f, .88f, .76f},
+                   true);
+        }
+    }
+    if (game::GameLevels::Mine().IsActive() && mine.quest.IsRiaJoined())
+    {
+        Icon(mine.riaCombat.health > 0 ? "companion" : "injured", 32, 115, 18, true);
+        UiText(62, 132,
+               mine.riaCombat.health <= 0 ? "리아 · 회복 중"
+               : mine.riaCombat.engaged   ? "리아 · 엄호 중"
+                                          : "리아 · 동행",
+               15, {.83f, .86f, .71f}, true);
+        Icon("rescue", 32, 148, 18, true);
+        UiText(62, 165, "광산 구조 " + std::to_string(mine.rescuedPeople) + " / 12명", 15, kUiInk, true);
+    }
+    if (game::GameLevels::Chapter().IsActive())
+    {
+        Icon(chapter.ria.combat.health > 0 ? "companion" : "injured", 32, 139, 18, true);
+        std::string names = chapter.ria.combat.health > 0 ? "리아 · 동행" : "리아 · 회복 중";
+        if (chapter.kainJoined)
+        {
+            names += chapter.kain.combat.health > 0 ? " / 카인 동행" : " / 카인 회복 중";
+        }
+        UiText(62, 156, names, 15, kUiInk, true);
+        if (chapter.escortStarted)
+        {
+            size_t arrived = std::count_if(chapter.survivors.begin(), chapter.survivors.end(),
+                                           [](const game::FrontierPerson &p) { return p.arrived; });
+            UiText(62, 183,
+                   chapter.convoyRescued ? "운송대 5명 · 인수 완료"
+                                         : "운송대 안전 지점 도착 " + std::to_string(arrived) + " / 5",
+                   15, kUiInk, true);
+        }
+    }
+}
+void Hud::OpenMenu(UiScreen screen)
+{
+    auto &w = Game::Get().GetState();
+    if (HospitalRecovery::Active())
+    {
+        return;
+    }
+    w.ui.screen = screen;
+    w.ui.focus = 0;
+    w.ui.pressed = -1;
+    w.isPaused = screen != UiScreen::None;
+    w.mapVisible = w.journalVisible = w.dialogueHistoryVisible = false;
+    w.mouseFiring = false;
+    w.movementAmount = w.movementSpeed = 0;
+    std::fill(std::begin(w.pressedKeys), std::end(w.pressedKeys), false);
+}
+void Hud::CloseMenu()
+{
+    OpenMenu(UiScreen::None);
+}
+std::vector<UiControl> Hud::Controls()
+{
+    const auto &w = Game::Get().GetState();
+    auto screen = w.ui.screen;
+    if (screen == UiScreen::None && w.isPaused)
+    {
+        screen = UiScreen::Pause;
+    }
+    std::vector<UiControl> controls;
+    auto row = [&](UiAction action, const std::string &label, bool enabled = true) {
+        controls.push_back({action, {440, 220 + float(controls.size()) * 58}, {400, 46}, label, enabled});
+    };
+    switch (screen)
+    {
+    case UiScreen::Title:
+        row(UiAction::Start, "시작하기");
+        row(UiAction::Options, "옵션");
+        row(UiAction::Help, "조작 안내");
+        row(UiAction::Quit, "종료");
+        break;
+    case UiScreen::Pause:
+        row(UiAction::Continue, "계속하기");
+        row(UiAction::Options, "옵션");
+        row(UiAction::Summary, "보유 · 성장 정보");
+        row(UiAction::Help, "조작 안내");
+        row(UiAction::Restart, game::GameLevels::Chapter().IsActive() ? "헤일로 귀환 · 기록 유지"
+                               : game::GameLevels::Mine().IsActive()  ? "광산 재시작"
+                                                                      : "새 게임 · 진행 초기화");
+        row(UiAction::Quit, "종료");
+        break;
+    case UiScreen::Options:
+        row(UiAction::Background, "배경 불투명도");
+        row(UiAction::Border, "테두리 불투명도");
+        row(UiAction::Content, "내용 불투명도");
+        row(UiAction::Cartoon, "카툰 명암");
+        row(UiAction::Resolution, "월드 렌더 해상도");
+        row(UiAction::Antialiasing, "안티앨리어싱");
+        row(UiAction::Back, "뒤로");
+        for (size_t i = 0; i < controls.size(); ++i)
+        {
+            controls[i].position = {336, 190 + float(i) * 58};
+            controls[i].size = {608, 46};
+        }
+        break;
+    case UiScreen::Summary:
+    case UiScreen::Help:
+        controls.push_back({UiAction::Back, {640, 594}, {280, 46}, "뒤로"});
+        break;
+    case UiScreen::Supply: {
+        const auto &stats = game::GameLevels::Mine().GetState().player;
+        controls.push_back(
+            {UiAction::Exchange,
+             {336, 494},
+             {608, 46},
+             "교환하기",
+             stats.salvage >= CivicJustice::ShopPrice(2) && stats.recoveryKits < 999 && !Dialogue::Danger()});
+        controls.push_back({UiAction::Continue, {336, 552}, {608, 46}, "닫기"});
+        break;
+    }
+    case UiScreen::Confirm:
+        controls.push_back({w.ui.confirmation,
+                            {336, 476},
+                            {296, 46},
+                            w.ui.confirmation == UiAction::Quit ? "종료한다" : "실행한다"});
+        controls.push_back({UiAction::Back, {648, 476}, {296, 46}, "취소"});
+        break;
+    case UiScreen::Medical:
+        controls.push_back({UiAction::Continue, {336, 552}, {608, 46}, "계속하기"});
+        break;
+    default:
+        if (w.journalVisible || w.dialogueHistoryVisible)
+        {
+            controls.push_back({UiAction::Journal, {200, 170}, {270, 46}, "조사 기록"});
+            controls.push_back({UiAction::History, {200, 228}, {270, 46}, "대사 이력"});
+            controls.push_back({UiAction::Previous, {510, 668}, {155, 38}, "이전 페이지"});
+            controls.push_back({UiAction::Next, {680, 668}, {155, 38}, "다음 페이지"});
+            controls.push_back({UiAction::Continue, {850, 668}, {226, 38}, "닫기"});
+        }
+        else if (Dialogue::Active())
+        {
+            controls = LayoutDialogue().controls;
+        }
+        break;
+    }
+    return controls;
+}
+void Hud::Activate(const UiControl &control, int direction)
+{
+    if (!control.enabled)
+    {
+        return;
+    }
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    auto &prefs = w.uiPreferences;
+    auto adjust = [&](float &value, float low) { value = Game::Clamp(value + .01f * direction, low, 1); };
+    switch (control.action)
+    {
+    case UiAction::Continue:
+        w.journalVisible = w.dialogueHistoryVisible = false;
+        CloseMenu();
+        break;
+    case UiAction::Start:
+        g.Reset();
+        break;
+    case UiAction::Options:
+    case UiAction::Summary:
+    case UiAction::Help: {
+        auto parent = w.ui.screen == UiScreen::Title ? UiScreen::Title : UiScreen::Pause;
+        OpenMenu(control.action == UiAction::Options   ? UiScreen::Options
+                 : control.action == UiAction::Summary ? UiScreen::Summary
+                                                       : UiScreen::Help);
+        w.ui.returnTo = parent;
+        break;
+    }
+    case UiAction::Back: {
+        auto parent = w.ui.returnTo;
+        OpenMenu(parent);
+        break;
+    }
+    case UiAction::Restart:
+    case UiAction::Quit:
+        if (w.ui.screen == UiScreen::Confirm)
+        {
+            if (control.action == UiAction::Quit)
+            {
+                glutLeaveMainLoop();
+                break;
+            }
+            CloseMenu();
+            if (game::GameLevels::Chapter().IsActive())
+            {
+                game::GameLevels::Chapter().Leave();
+            }
+            else if (game::GameLevels::Mine().IsActive())
+            {
+                game::GameLevels::Mine().Restart();
+            }
+            else
+            {
+                g.Reset();
+            }
+        }
+        else
+        {
+            auto parent = w.ui.screen;
+            OpenMenu(UiScreen::Confirm);
+            w.ui.returnTo = parent;
+            w.ui.confirmation = control.action;
+        }
+        break;
+    case UiAction::Background:
+        adjust(prefs.background, .8f);
+        break;
+    case UiAction::Border:
+        adjust(prefs.border, .8f);
+        break;
+    case UiAction::Content:
+        adjust(prefs.content, .85f);
+        break;
+    case UiAction::Cartoon:
+    case UiAction::Resolution:
+    case UiAction::Antialiasing: {
+        auto &r = GameRenderer::Get().Backend();
+        auto style = r.GetStyle();
+        if (control.action == UiAction::Cartoon)
+        {
+            style.cartoon = !style.cartoon;
+        }
+        if (control.action == UiAction::Antialiasing)
+        {
+            style.antialiasing = !style.antialiasing;
+        }
+        if (control.action == UiAction::Resolution)
+        {
+            style.resolution = style.resolution == WorldResolution::Native ? WorldResolution::Half
+                               : style.resolution == WorldResolution::Half ? WorldResolution::Quarter
+                                                                           : WorldResolution::Native;
+        }
+        r.SetStyle(style);
+        break;
+    }
+    case UiAction::Exchange:
+        ExchangeSupply();
+        break;
+    case UiAction::Choice:
+        Dialogue::Select(size_t(control.choice));
+        break;
+    case UiAction::Advance:
+        Dialogue::Advance();
+        break;
+    case UiAction::Journal:
+        w.journalVisible = true;
+        w.dialogueHistoryVisible = false;
+        w.dialogue.historyOffset = 0;
+        break;
+    case UiAction::History:
+        w.journalVisible = false;
+        w.dialogueHistoryVisible = true;
+        w.dialogue.historyOffset = 0;
+        break;
+    case UiAction::Previous:
+        if (w.dialogue.historyOffset)
+        {
+            --w.dialogue.historyOffset;
+        }
+        break;
+    case UiAction::Next:
+        w.dialogue.historyOffset = (std::min)(w.dialogue.historyOffset + 1, size_t(4096));
+        break;
+    }
+}
+bool Hud::HandleKey(unsigned char key)
+{
+    auto &w = Game::Get().GetState();
+    if (w.ui.screen == UiScreen::None && !w.isPaused)
+    {
+        if (key == 27 && !w.mapVisible && !w.journalVisible && !w.dialogueHistoryVisible)
+        {
+            OpenMenu(UiScreen::Pause);
+            return true;
+        }
+        if (!Dialogue::Active() && !w.mapVisible && !w.journalVisible && !w.dialogueHistoryVisible &&
+            (key == 'i' || key == '?'))
+        {
+            OpenMenu(key == 'i' ? UiScreen::Summary : UiScreen::Help);
+            w.ui.returnTo = UiScreen::Pause;
+            return true;
+        }
+        return false;
+    }
+    if (key == 27)
+    {
+        if (w.ui.screen == UiScreen::Title)
+        {
+            return true;
+        }
+        if (w.ui.screen == UiScreen::Pause || w.ui.screen == UiScreen::Medical ||
+            w.ui.screen == UiScreen::Supply || w.ui.screen == UiScreen::None)
+        {
+            CloseMenu();
+        }
+        else
+        {
+            OpenMenu(w.ui.returnTo);
+        }
+        return true;
+    }
+    auto controls = Controls();
+    if (controls.empty())
+    {
+        return true;
+    }
+    if (key == 'w')
+    {
+        w.ui.focus = (w.ui.focus + int(controls.size()) - 1) % int(controls.size());
+    }
+    if (key == 's' || key == 9)
+    {
+        w.ui.focus = (w.ui.focus + 1) % int(controls.size());
+    }
+    w.ui.focus = (std::min)(w.ui.focus, int(controls.size()) - 1);
+    if (key == 13 || key == 'e')
+    {
+        Activate(controls[size_t(w.ui.focus)]);
+    }
+    if (w.ui.screen == UiScreen::Options && (key == 'a' || key == 'd'))
+    {
+        Activate(controls[size_t(w.ui.focus)], key == 'a' ? -1 : 1);
+    }
+    if ((w.ui.screen == UiScreen::Pause || w.ui.screen == UiScreen::None) && (key == 'r' || key == 'q'))
+    {
+        Activate({key == 'r' ? UiAction::Restart : UiAction::Quit, {}, {}, ""});
+    }
+    return true;
+}
+bool Hud::HandleSpecialKey(int key)
+{
+    const auto &w = Game::Get().GetState();
+    if (w.ui.screen == UiScreen::None && !w.isPaused)
+    {
+        return false;
+    }
+    if (key == GLUT_KEY_UP)
+    {
+        return HandleKey('w');
+    }
+    if (key == GLUT_KEY_DOWN)
+    {
+        return HandleKey('s');
+    }
+    if (key == GLUT_KEY_LEFT)
+    {
+        return HandleKey('a');
+    }
+    if (key == GLUT_KEY_RIGHT)
+    {
+        return HandleKey('d');
+    }
+    return key != GLUT_KEY_F7 && key != GLUT_KEY_F8;
+}
+void Hud::HandleMotion()
+{
+    auto &w = Game::Get().GetState();
+    if (w.ui.screen != UiScreen::Options || w.ui.pressed < 0 || !w.cursorInsideViewport)
+    {
+        return;
+    }
+    auto controls = Controls();
+    if (size_t(w.ui.pressed) >= controls.size())
+    {
+        return;
+    }
+    auto action = controls[size_t(w.ui.pressed)].action;
+    if (action != UiAction::Background && action != UiAction::Border && action != UiAction::Content)
+    {
+        return;
+    }
+    float minimum = action == UiAction::Content ? .85f : .8f;
+    float ratio = Game::Clamp((w.cursorPosition.x - 620) / 228, 0, 1);
+    float value = std::round((minimum + ratio * (1 - minimum)) * 100) / 100;
+    if (action == UiAction::Background)
+    {
+        w.uiPreferences.background = value;
+    }
+    if (action == UiAction::Border)
+    {
+        w.uiPreferences.border = value;
+    }
+    if (action == UiAction::Content)
+    {
+        w.uiPreferences.content = value;
+    }
+}
+bool Hud::HandlePointer(int button, bool down)
+{
+    auto &w = Game::Get().GetState();
+    auto controls = Controls();
+    bool modal = w.ui.screen != UiScreen::None || w.isPaused || w.journalVisible || w.dialogueHistoryVisible;
+    if (!modal && !Dialogue::Active())
+    {
+        return false;
+    }
+    int hit = -1;
+    if (w.cursorInsideViewport)
+    {
+        for (size_t i = 0; i < controls.size(); ++i)
+        {
+            if (Inside(controls[i], w.cursorPosition))
+            {
+                hit = int(i);
+                break;
+            }
+        }
+    }
+    if (button != GLUT_LEFT_BUTTON)
+    {
+        return modal;
+    }
+    if (down)
+    {
+        w.ui.pressed = hit;
+        if (hit >= 0)
+        {
+            w.ui.focus = hit;
+            HandleMotion();
+        }
+    }
+    else
+    {
+        int pressed = w.ui.pressed;
+        w.ui.pressed = -1;
+        if (hit >= 0 && hit == pressed)
+        {
+            auto action = controls[size_t(hit)].action;
+            bool slider =
+                w.ui.screen == UiScreen::Options &&
+                (action == UiAction::Background || action == UiAction::Border || action == UiAction::Content);
+            if (!slider)
+            {
+                Activate(controls[size_t(hit)]);
+            }
+        }
+    }
+    return modal || hit >= 0;
+}
+void Hud::ExchangeSupply()
+{
+    auto &level = game::GameLevels::Chapter();
+    const auto &w = Game::Get().GetState();
+    if (!level.IsActive() || !level.GetState().convoyRescued ||
+        Game::Distance(w.playerPosition, {24.5f, 20.5f}) >= 1.5f || Dialogue::Danger())
+    {
+        return;
+    }
+    auto &stats = game::GameLevels::Mine().GetState().player;
+    int price = CivicJustice::ShopPrice(2);
+    if (stats.salvage < price || stats.recoveryKits >= 999)
+    {
+        return;
+    }
+    stats.salvage -= price;
+    ++stats.recoveryKits;
+    Game::Get().ShowNotice("보급 교환 / 부품 -" + std::to_string(price) + " · 회복 키트 +1");
+}
+void Hud::DrawMedicalFade()
+{
+    if (!HospitalRecovery::Active())
+    {
+        return;
+    }
+    Drawing::DrawRectangle(0, 0, kCanvasWidth, kCanvasHeight, {0, 0, 0, HospitalRecovery::Opacity()});
+    if (HospitalRecovery::Opacity() > .75f)
+    {
+        Icon("medical", 602, 328, 64);
+        UiText(640 - RenderAssets::MeasureUtf8("의료 이송 중", 26) * .5f, 435, "의료 이송 중", 26);
+        UiText(478, 474, "생체 신호 안정화 · 입력할 수 없습니다", 17);
+    }
+}
+void Hud::DrawMenu()
+{
+    const auto &w = Game::Get().GetState();
+    UiScreen screen = w.ui.screen;
+    if (screen == UiScreen::None && w.isPaused)
+    {
+        screen = UiScreen::Pause;
+    }
+    if (screen == UiScreen::None || HospitalRecovery::Active())
+    {
+        return;
+    }
+    Drawing::DrawRectangle(0, 0, kCanvasWidth, kCanvasHeight, {.01f, .025f, .03f, .55f});
+    auto &stats = game::GameLevels::Mine().GetState().player;
+    bool narrow = screen == UiScreen::Title || screen == UiScreen::Pause;
+    if (narrow)
+    {
+        Panel(416, 112, 448, 576);
+    }
+    else
+    {
+        Panel(312, 90, 656, 600);
+    }
+    float x = narrow ? 440.f : 336.f;
+    const char *title = screen == UiScreen::Title     ? "침묵하는 관문"
+                        : screen == UiScreen::Pause   ? "일시정지"
+                        : screen == UiScreen::Options ? "옵션"
+                        : screen == UiScreen::Summary ? "보유 · 성장 정보"
+                        : screen == UiScreen::Help    ? "조작 안내"
+                        : screen == UiScreen::Supply  ? "운송대 보급 교환"
+                        : screen == UiScreen::Medical ? "의료소 복귀"
+                                                      : "진행 확인";
+    UiText(x, 159, title, 28, {.83f, .95f, .91f});
+    auto controls = Controls();
+    for (size_t i = 0; i < controls.size(); ++i)
+    {
+        Button(controls[i], int(i));
+    }
+    if (screen == UiScreen::Options)
+    {
+        const auto &p = w.uiPreferences;
+        for (int i = 0; i < 3; ++i)
+        {
+            float alpha = i == 0 ? p.background : i == 1 ? p.border : p.content;
+            UiText(920, 219 + i * 58, std::to_string(int(std::round(alpha * 100))) + "%", 17, kUiInk, false,
+                   true);
+            Sprite("Components/gauge_track", 620, 223 + i * 58, 228, 5);
+            Sprite("Components/gauge_scan", 620, 223 + i * 58, 228, 5, {1, 1, 1},
+                   (alpha - (i == 2 ? .85f : .8f)) / (i == 2 ? .15f : .2f));
+        }
+        const auto &style = GameRenderer::Get().Backend().GetStyle();
+        UiText(920, 393, style.cartoon ? "켜짐" : "꺼짐", 17, kUiInk, false, true);
+        UiText(920, 451,
+               style.resolution == WorldResolution::Native ? "기본"
+               : style.resolution == WorldResolution::Half ? "1/2"
+                                                           : "1/4",
+               17, kUiInk, false, true);
+        int samples = GameRenderer::Get().Backend().GetAntialiasingSamples();
+        UiText(920, 509,
+               !style.antialiasing                           ? "꺼짐"
+               : style.resolution != WorldResolution::Native ? "픽셀 모드에서 미적용"
+               : samples <= 1                                ? "지원되지 않음"
+                                                             : std::to_string(samples) + "×",
+               17, kUiInk, false, true);
+        UiText(336, 637, "선택 후 A/D 또는 ←/→ 조절 · Enter 전환", 15);
+        UiText(336, 661, "UI는 네이티브 해상도 유지 · 설정은 새 게임에도 유지", 14, {.59f, .75f, .75f});
+    }
+    if (screen == UiScreen::Title || screen == UiScreen::Pause)
+    {
+        UiText(440, 184, screen == UiScreen::Title ? "에르마 / 개척지 기록" : "플레이를 잠시 멈췄습니다", 15,
+               {.59f, .79f, .77f});
+        UiText(440, 638, "현재 진행은 실행 세션에만 유지됩니다.", 15, {.95f, .77f, .4f});
+        UiText(440, 666, "W/S · 방향 키 선택 / Enter 확인", 14, {.59f, .75f, .75f});
+    }
+    if (screen == UiScreen::Summary)
+    {
+        Icon("level", 336, 191, 30);
+        UiText(386, 219, "레벨 " + std::to_string(stats.level), 25);
+        int floor = game::MineLevel::ExperienceForLevel(stats.level),
+            next = game::MineLevel::ExperienceForLevel((std::min)(100, stats.level + 1));
+        UiText(336, 262, "경험치 " + std::to_string(stats.experience) + " / " + std::to_string(next), 18);
+        Sprite("Components/gauge_track", 336, 280, 608, 8);
+        Sprite("Components/gauge_experience", 336, 280, 608, 8, {1, 1, 1},
+               Game::Clamp(stats.level >= 100 ? 1.f
+                                              : float(stats.experience - floor) / (std::max)(1, next - floor),
+                           0, 1));
+        const std::string rows[] = {
+            "크레딧  " + std::to_string(stats.credits), "거래 부품  " + std::to_string(stats.salvage),
+            "회복 키트  " + std::to_string(stats.recoveryKits),
+            "공격  " + std::to_string(stats.attack) + " / 방어  " + std::to_string(stats.defense),
+            "악명  " + std::to_string(int(CivicJustice::State().infamy)) + " / 거래 할증 +" +
+                std::to_string(int(std::round((CivicJustice::PriceMultiplier() - 1) * 100))) + "%"};
+        const char *icons[] = {"credit", "parts", "heal", "defense", "reputation"};
+        for (int i = 0; i < 5; ++i)
+        {
+            Icon(icons[i], 336, 310 + i * 48, 22);
+            UiText(374, 331 + i * 48, rows[i], 18);
+        }
+    }
+    if (screen == UiScreen::Help)
+    {
+        const char *rows[] = {"WASD 이동 · 마우스 조준 · 좌클릭 사격",
+                              "V 근접 (도시·광산) · R 재장전",
+                              "E 조사·대화·승하차 · Q 회복 (광산·1장)",
+                              "바이크 W 가속 / S 제동·후진 / AD 조향 / Space 부스트",
+                              "F 광산 스캔 · M 지도 · 좌클릭 목적지 / 우클릭 해제",
+                              "대화 E/Enter 다음 · 숫자 선택 후 E/Enter 확정",
+                              "J 조사 기록 · H 대사 이력 · PageUp/Down 기록 페이지",
+                              "I 보유 정보 · ? 조작 안내 · Esc 일시정지",
+                              "예비 탄창 무제한 · 저장/불러오기는 아직 지원하지 않음"};
+        for (int i = 0; i < 9; ++i)
+        {
+            UiText(336, 215 + i * 39, rows[i], 16);
+        }
+    }
+    if (screen == UiScreen::Supply)
+    {
+        Icon("parts", 365, 236, 40);
+        Icon("heal", 835, 236, 40);
+        UiText(594, 269, "→", 32);
+        int price = CivicJustice::ShopPrice(2);
+        UiText(336, 326, "부품 " + std::to_string(price) + "개 → 회복 키트 1개", 24);
+        UiText(336, 369,
+               "보유 부품 " + std::to_string(stats.salvage) + " / 회복 키트 " +
+                   std::to_string(stats.recoveryKits),
+               18);
+        UiText(336, 410,
+               "평판 거래 할증 +" +
+                   std::to_string(int(std::round((CivicJustice::PriceMultiplier() - 1) * 100))) + "%",
+               17, {1, .78f, .4f});
+        UiText(336, 451,
+               stats.recoveryKits >= 999 ? "회복 키트 보유 상한에 도달했습니다"
+               : stats.salvage < price   ? "교환할 부품이 부족합니다"
+                                         : "교환할 수 있습니다",
+               17);
+        if (w.noticeSecondsRemaining > 0 && w.noticeText.rfind("보급 교환 /", 0) == 0)
+        {
+            auto result = Dialogue::Wrap(w.noticeText, 600, 16);
+            for (size_t i = 0; i < result.size(); ++i)
+            {
+                UiText(336, 625 + i * 24, result[i], 16, {.57f, .91f, .84f});
+            }
+        }
+    }
+    if (screen == UiScreen::Confirm)
+    {
+        auto rows = Dialogue::Wrap(w.ui.confirmation == UiAction::Quit
+                                       ? "게임을 종료할까요? 현재 세션의 진행은 파일로 저장되지 않습니다."
+                                   : game::GameLevels::Chapter().IsActive()
+                                       ? "조사 기록을 유지하고 헤일로로 귀환할까요?"
+                                   : game::GameLevels::Mine().IsActive()
+                                       ? "광산 현장을 다시 생성할까요? 성장·보유품·조사 진행은 유지됩니다."
+                                       : "새 게임을 시작할까요? 현재 세션의 진행은 초기화됩니다.",
+                                   592, 20);
+        Icon("warning", 336, 202, 32);
+        for (size_t i = 0; i < rows.size(); ++i)
+        {
+            UiText(336, 281 + i * 32, rows[i], 20);
+        }
+    }
+    if (screen == UiScreen::Medical)
+    {
+        const auto &law = CivicJustice::State();
+        Icon("medical", 604, 194, 56);
+        std::string city = law.hospitals.empty()
+                               ? "의료소"
+                               : Overworld::Cities()[law.hospitals[size_t(law.hospital)].city].name;
+        UiText(336, 302, city + " 의료소에서 회복했습니다", 24);
+        UiText(336, 355,
+               "레벨 -" + std::to_string(law.lostLevels) + " · 크레딧 -" + std::to_string(law.lostCredits) +
+                   " · 부품 -" + std::to_string(law.lostSalvage),
+               18, {1, .78f, .4f});
+        UiText(336, 404, "조사 기록은 유지되며, 도시 간 악명은 남습니다.", 18);
+        if (w.dialogue.suspended)
+        {
+            UiText(336, 451, "중단한 대화가 있습니다.", 18);
+            UiText(336, 483, "계속한 뒤 J 기록에서 Enter로 재개할 수 있습니다.", 16);
+        }
+    }
 }
 
 void Hud::Render()
 {
-    static ChapterHud chapter;
-    static CityHud city;
-    static MineHud mine;
-    Hud &current = game::GameLevels::Chapter().IsActive() ? static_cast<Hud &>(chapter)
-                   : game::GameLevels::Mine().IsActive()  ? static_cast<Hud &>(mine)
-                                                          : static_cast<Hud &>(city);
-    current.Draw();
-    DrawNoticePanel();
-    CivicPresentation::DrawHud();
+    const auto &w = Game::Get().GetState();
+    renderqueue::Opacity(w.uiPreferences.content);
+    if (w.ui.screen == UiScreen::None && !w.mapVisible && !w.journalVisible && !w.dialogueHistoryVisible &&
+        !HospitalRecovery::Active())
+    {
+        static CityHud city;
+        static MineHud mine;
+        static ChapterHud chapter;
+        if (game::GameLevels::Chapter().IsActive())
+        {
+            chapter.Draw();
+        }
+        else if (game::GameLevels::Mine().IsActive())
+        {
+            mine.Draw();
+        }
+        else
+        {
+            city.Draw();
+        }
+        DrawVitals();
+        DrawNoticePanel();
+        DrawDialogue();
+    }
     MapHud::DrawFullMap();
-    DrawDialogue();
     ChapterHud::DrawJournal();
-    DrawPauseOverlay();
+    DrawMenu();
+    renderqueue::Opacity(1);
+    DrawMedicalFade();
 }
 } // namespace tutorial

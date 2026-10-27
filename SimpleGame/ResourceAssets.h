@@ -1,6 +1,7 @@
 #pragma once
 #include "ModelLibrary.h"
 #include <array>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -29,7 +30,12 @@ struct ResourceMesh
     Point minimum, maximum, physicalSize;
     std::array<Point, 6> sockets;
     std::vector<ResourceVertex> vertices;
-    std::vector<ResourceClip> clips;
+    std::shared_ptr<const std::vector<ResourceClip>> animations;
+    const std::vector<ResourceClip> &Clips() const
+    {
+        static const std::vector<ResourceClip> empty;
+        return animations ? *animations : empty;
+    }
 };
 
 class ResourceAssets
