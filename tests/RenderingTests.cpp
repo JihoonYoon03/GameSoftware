@@ -1056,6 +1056,43 @@ void CaptureAircraftThrusters(const std::filesystem::path &output)
     renderer.EndScene(.4f);
     Save(output / "aircraft-thrusters.bmp");
 }
+void TestForwardFlashlightMask()
+{
+    auto &g = Game::Get();
+    g.EnterTestStage(TestStage::Mine);
+    auto &w = g.GetState();
+    auto &mine = game::GameLevels::Mine().GetState();
+    std::fill(mine.tiles.begin(), mine.tiles.end(), game::Tile::Floor);
+    ++mine.mapRevision;
+    mine.lights.clear();
+    mine.survivors.clear();
+    mine.tracers.clear();
+    mine.scannerSeconds = mine.muzzleFlash = mine.riaCombat.muzzleFlash = 0;
+    w.playerPosition = w.cameraPosition = {32.5f, 32.5f};
+    // Isolate the GPU mask on a white ground plane. Cursor stays opposite to the actor.
+    for (int i = 0; i < 8; ++i)
+    {
+        w.facingYaw = i * kPi / 4;
+        Vector2 front = {w.playerPosition.x + std::cos(w.facingYaw) * 5,
+                         w.playerPosition.y + std::sin(w.facingYaw) * 5};
+        Vector2 back = {2 * w.playerPosition.x - front.x, 2 * w.playerPosition.y - front.y};
+        w.cursorPosition = Drawing::WorldToScreen(back.x, back.y, WorldScale::aimHeightPixels);
+        Begin();
+        auto &renderer = GameRenderer::Get().Backend();
+        renderer.EndScene(0);
+        Drawing::DrawRectangle(0, 0, kCanvasWidth, kCanvasHeight, {1, 1, 1});
+        assert(renderer.DrawMineDarkness());
+        auto pixels = Pixels();
+        auto brightness = [&](Vector2 position) {
+            auto p = Drawing::WorldToScreen(position.x, position.y);
+            auto index =
+                size_t((kCanvasHeight - int(std::round(p.y)) - 1) * kCanvasWidth + int(std::round(p.x))) * 4;
+            return int(pixels[index]) + pixels[index + 1] + pixels[index + 2];
+        };
+        assert(brightness(front) > 500 && brightness(back) < 20);
+    }
+    g.Reset();
+}
 void QualityCaptures(const std::filesystem::path &output)
 {
     auto &world = Game::Get().GetState();
@@ -2144,6 +2181,7 @@ int main(int argc, char **argv)
     TestBatchReuse();
     TestDepth();
     TestEffectDepth();
+    TestForwardFlashlightMask();
     std::cout << "Checking quest resources and city coverage.\n" << std::flush;
     TestQuestAndResources();
     std::filesystem::path output = argc > 1 ? argv[1] : "x64/ModelChecks/renders";

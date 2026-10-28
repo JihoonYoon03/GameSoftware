@@ -678,7 +678,7 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     investigation.Number("map_seed", level.seed);
     investigation.Number("generation_revision", level.mapRevision);
     investigation.Number("walkable_cells", level.reachableCells.size());
-    investigation.Seconds("flashlight_angle", game::GameLevels::Mine().GetAimAngle());
+    investigation.Seconds("flashlight_angle", game::GameLevels::Mine().Lighting().FlashlightAngle());
     investigation.Raw("rescue_groups", "[" + groups + "]");
     result.Raw("mine", investigation.Finish());
     JsonObject field;

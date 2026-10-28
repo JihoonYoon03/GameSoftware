@@ -1534,6 +1534,65 @@ void TestNpcCombat()
     mineState.riaCombat.muzzleFlash = .05f;
     assert(level.Lighting().At(mineState.riaPosition) > .99f);
 }
+void TestForwardFlashlight()
+{
+    using namespace tutorial;
+    auto &g = Game::Get();
+    g.EnterTestStage(TestStage::Mine);
+    g.Resize(1280, 800);
+    auto &w = g.GetState();
+    auto &lighting = GameLevels::Mine().Lighting();
+    std::fill(mineState.tiles.begin(), mineState.tiles.end(), Tile::Floor);
+    mineState.lights.clear();
+    mineState.tracers.clear();
+    mineState.enemies.clear();
+    mineState.survivors.clear();
+    mineState.muzzleFlash = mineState.riaCombat.muzzleFlash = mineState.scannerSeconds = 0;
+    w.playerPosition = w.cameraPosition = {32.5f, 32.5f};
+    auto checkForward = [&]() {
+        Vector2 forward = {std::cos(w.facingYaw), std::sin(w.facingYaw)};
+        auto direction = MineLevel::GetAimDirection(lighting.FlashlightAngle());
+        assert(direction.x * forward.x + direction.y * forward.y > .9999f);
+        assert(lighting.At({w.playerPosition.x + forward.x * 6, w.playerPosition.y + forward.y * 6}) > .7f);
+        assert(lighting.At({w.playerPosition.x - forward.x * 6, w.playerPosition.y - forward.y * 6}) < .01f);
+    };
+    // Free cursor motion cannot turn the unarmed actor or its beam.
+    w.facingYaw = .4f;
+    for (auto cursor : {Vector2{100, 100}, {1180, 700}})
+    {
+        g.MouseMotion(int(cursor.x), int(cursor.y));
+        g.Update(1.f / 60);
+        assert(w.facingYaw == .4f && !g.IsAiming());
+        checkForward();
+    }
+    g.KeyDown('a', 0, 0);
+    g.Update(1.f / 60);
+    g.KeyUp('a', 0, 0);
+    assert(std::fabs(std::remainder(w.facingYaw - .4f, 2 * kPi)) > .1f);
+    checkForward();
+    mineState.loadout.Select(combat::WeaponSlot::Secondary);
+    g.MouseButton(GLUT_RIGHT_BUTTON, GLUT_DOWN, 640, 300);
+    for (int i = 0; i < 16; ++i)
+    {
+        float angle = i * 2 * kPi / 16;
+        Vector2 target = {w.playerPosition.x + std::cos(angle) * 4, w.playerPosition.y + std::sin(angle) * 4};
+        auto cursor = WorldCamera::ToViewport(
+            {kCanvasWidth * .5f + (target.x - target.y - w.cameraPosition.x + w.cameraPosition.y) * 36,
+             kCanvasHeight * .57f + (target.x + target.y - w.cameraPosition.x - w.cameraPosition.y) * 18 -
+                 models::WorldScale::aimHeightPixels});
+        g.MouseMotion(int(std::round(cursor.x)), int(std::round(cursor.y)));
+        g.Update(1.f / 60);
+        assert(g.IsAiming() && std::cos(w.facingYaw - angle) > .999f);
+        checkForward();
+    }
+    g.MouseButton(GLUT_RIGHT_BUTTON, GLUT_UP, 640, 300);
+    float facing = w.facingYaw;
+    g.MouseMotion(100, 100);
+    g.Update(1.f / 60);
+    assert(w.facingYaw == facing && !g.IsAiming());
+    checkForward();
+    g.Reset();
+}
 void TestWorldCamera()
 {
     using tutorial::WorldCamera;
@@ -2072,6 +2131,7 @@ int main(int argc, char **argv)
         return 0;
     }
     TestAimMovementAndLayers();
+    TestForwardFlashlight();
     TestStageSelectionAndLoadout();
     TestUiMenusAndTransactions();
     TestDialogueProgress();

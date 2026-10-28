@@ -993,7 +993,7 @@ bool Renderer::DrawMineDarkness()
     glUniform4f(glGetUniformLocation(d.darkProgram, "scanner"), state.scannerOrigin.x, state.scannerOrigin.y,
                 state.scannerRadius,
                 state.scannerSeconds > 0 ? (std::min)(1.f, state.scannerSeconds / .3f) : 0);
-    float angle = mine.GetAimAngle();
+    float angle = mine.Lighting().FlashlightAngle();
     glUniform2f(glGetUniformLocation(d.darkProgram, "aim"), std::cos(angle), std::sin(angle));
     glUniform1i(glGetUniformLocation(d.darkProgram, "lightCount"), GLint(lights.size()));
     glUniform4fv(glGetUniformLocation(d.darkProgram, "lights[0]"), GLsizei(lights.size()),

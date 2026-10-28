@@ -1194,6 +1194,13 @@ bool MineRescue::TryInteract()
 MineLighting::MineLighting(MineLevel &owner) : level(owner), state(owner.GetState())
 {
 }
+float MineLighting::FlashlightAngle() const
+{
+    // Project the actor's forward axis into the same isometric space as the light cone.
+    float yaw = tutorial::Game::Get().GetState().facingYaw;
+    float x = std::cos(yaw), y = std::sin(yaw);
+    return std::atan2((x + y) * .5f, x - y);
+}
 bool MineLighting::LightPath(tutorial::Vector2 from, tutorial::Vector2 to)
 {
     float distance = tutorial::Game::Distance(from, to);
@@ -1240,7 +1247,7 @@ float MineLighting::At(tutorial::Vector2 position)
         float sx = (position.x - player.x) - (position.y - player.y);
         float sy = ((position.x - player.x) + (position.y - player.y)) * .5f;
         float length = std::sqrt(sx * sx + sy * sy);
-        float angle = level.GetAimAngle();
+        float angle = FlashlightAngle();
         float alignment = length > .001f ? (sx * std::cos(angle) + sy * std::sin(angle)) / length : 1;
         float cone = tutorial::Game::Clamp((alignment - .86f) / .1f, 0, 1);
         if (cone > 0 && LightPath(player, position))

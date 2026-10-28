@@ -299,6 +299,7 @@ class MineLighting
 {
   public:
     explicit MineLighting(MineLevel &level);
+    float FlashlightAngle() const;
     float At(tutorial::Vector2 position);
 
   private:
