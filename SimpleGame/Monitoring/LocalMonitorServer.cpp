@@ -48,6 +48,7 @@ Asset assets[] = {{"/", "text/html; charset=utf-8", {}},
                   {"/models.css", "text/css; charset=utf-8", {}}};
 std::atomic<bool> running{false};
 std::atomic<std::uint64_t> requestCount{0};
+std::atomic<bool> modelsRequested{false};
 std::thread serverThread;
 SOCKET listener = INVALID_SOCKET;
 bool winsockInitialized = false;
@@ -127,6 +128,10 @@ std::string Route(const std::string &request)
     path = path.substr(0, path.find('?'));
     if (path == "/api/state" || path == "/api/models")
     {
+        if (path == "/api/models")
+        {
+            modelsRequested = true;
+        }
         std::shared_ptr<const std::string> snapshot;
         {
             std::lock_guard<std::mutex> lock(snapshotMutex);
@@ -303,6 +308,7 @@ bool Start(const std::filesystem::path &assetDirectory, unsigned short port)
         return false;
     }
     requestCount = 0;
+    modelsRequested = false;
     running = true;
     try
     {
@@ -354,5 +360,9 @@ void PublishModels(std::string catalog)
 std::uint64_t ReadRequestCount()
 {
     return requestCount.load();
+}
+bool ModelCatalogRequested()
+{
+    return modelsRequested.load();
 }
 } // namespace monitoring::transport

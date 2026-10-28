@@ -221,6 +221,7 @@ class WorldScenery
 {
   public:
     void Generate(const GameState &world);
+    std::uint64_t Revision() const;
     const std::vector<SceneryProp> &Props() const
     {
         return props;
@@ -232,6 +233,7 @@ class WorldScenery
                float yaw = 0, bool solid = true);
     std::vector<SceneryProp> props;
     std::map<std::pair<int, int>, std::vector<size_t>> solidCells;
+    std::uint64_t revision = 0;
 };
 
 // Connected outdoor world. Bike travel never changes the active scene or map.

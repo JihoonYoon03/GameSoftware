@@ -1649,8 +1649,13 @@ bool WorldScenery::Place(const GameState &world, const models::Model &model, mod
     }
     return true;
 }
+std::uint64_t WorldScenery::Revision() const
+{
+    return revision;
+}
 void WorldScenery::Generate(const GameState &world)
 {
+    ++revision;
     profiling::Scope startupTimer(profiling::Timer::ResourceInitialize);
     using S = models::SceneryType;
     props.clear();

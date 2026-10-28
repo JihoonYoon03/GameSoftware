@@ -11,4 +11,5 @@ void Publish(std::string snapshot);
 void PublishModels(std::string catalog);
 void Stop();
 std::uint64_t ReadRequestCount();
+bool ModelCatalogRequested();
 } // namespace monitoring::transport

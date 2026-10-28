@@ -98,6 +98,17 @@ void Scene::EndPlacement()
         }
     }
 }
+bool Scene::ReusePlacement(const std::string &name)
+{
+    auto found = placements.find(name);
+    if (found == placements.end() || !graph.Find(name))
+    {
+        return false;
+    }
+    found->second = placementGeneration;
+    profiling::Count(profiling::Counter::ScenePlacements);
+    return true;
+}
 SceneGraph &Scene::GetGraph()
 {
     return graph;
@@ -280,12 +291,17 @@ void CityScene::DrawTrafficInfrastructure(game::Scene &scene)
         {
             continue;
         }
+        const auto name = "transit/" + std::to_string(i);
+        if (scene.ReusePlacement(name))
+        {
+            continue; // TransitLayout's published placements are immutable.
+        }
         const float r = module.radius;
         const auto &surface =
             models::ResourceAssets::Get(models::ModelLibrary::Transit(module.asset).resourceId);
         const float top = module.altitude + surface.maximum.z;
         scene.PlaceWorldActor(
-            "transit/" + std::to_string(i), module.position.x, module.position.y,
+            name, module.position.x, module.position.y,
             WorldBounds(module.position.x - r, module.position.y - r, r * 2, r * 2, (top + 2) * 44, 24), 1, 0,
             [module]() {
                 Drawing::DrawProp(models::ModelLibrary::Transit(module.asset), module.position, {1, 1, 1}, {},
@@ -467,18 +483,26 @@ void CityScene::DrawStreetFurniture(game::Scene &scene)
 
 void CityScene::DrawImportedScenery(game::Scene &scene)
 {
-    for (size_t i = 0; i < Overworld::Scenery().Props().size(); ++i)
+    const auto &scenery = Overworld::Scenery();
+    const bool unchanged = sceneryRevision == scenery.Revision();
+    for (size_t i = 0; i < scenery.Props().size(); ++i)
     {
-        const auto &prop = Overworld::Scenery().Props()[i];
+        const auto name = "scenery/" + std::to_string(i);
+        if (unchanged && scene.ReusePlacement(name))
+        {
+            continue;
+        }
+        const auto &prop = scenery.Props()[i];
         const auto &resource = models::ResourceAssets::Get(prop.model->resourceId);
         scene.PlaceWorldActor(
-            "scenery/" + std::to_string(i), prop.position.x, prop.position.y,
+            name, prop.position.x, prop.position.y,
             WorldBounds(prop.minimum.x, prop.minimum.y, prop.maximum.x - prop.minimum.x,
                         prop.maximum.y - prop.minimum.y, (resource.maximum.z + prop.elevation) * 44 + 8),
             prop.model->ground ? 1 : 3, prop.position.x + prop.position.y, [prop]() {
                 Drawing::DrawProp(*prop.model, prop.position, {1, 1, 1}, {}, prop.yaw, prop.elevation);
             });
     }
+    sceneryRevision = scenery.Revision();
     for (const auto &craft : Overworld::Flights().Aircraft())
     {
         const auto &model = models::ModelLibrary::Aircraft(craft.type, craft.alternate);

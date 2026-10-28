@@ -102,6 +102,38 @@ void TestPlacementAndOrder()
     scene.EndPlacement();
     assert(scene.GetGraph().CollectVisible(bounds).empty());
 }
+void TestUnchangedPlacement()
+{
+    game::Scene scene;
+    const game::Bounds bounds = {0, 0, 20, 20};
+    int draws = 0;
+    scene.BeginPlacement();
+    assert(!scene.ReusePlacement("static"));
+    auto *actor = &scene.Place("static", "region", bounds, 0, 0, [&](const game::Actor &) { ++draws; });
+    scene.EndPlacement();
+    for (int frame = 0; frame < 100; ++frame)
+    {
+        scene.BeginPlacement();
+        assert(scene.ReusePlacement("static"));
+        scene.EndPlacement();
+        const auto &visible = scene.GetGraph().CollectVisible(bounds);
+        assert(visible.size() == 1 && visible.front() == actor);
+        actor->Draw();
+    }
+    assert(draws == 100);
+    assert(scene.GetGraph().Remove("static"));
+    scene.BeginPlacement();
+    assert(!scene.ReusePlacement("static"));
+    scene.Place("static", "region", bounds, 0, 0, [&](const game::Actor &) { draws += 10; });
+    scene.EndPlacement();
+    scene.GetGraph().Find("static")->Draw();
+    assert(draws == 110);
+    scene.GetGraph().Clear();
+    scene.BeginPlacement();
+    assert(!scene.ReusePlacement("static"));
+    scene.EndPlacement();
+    assert(scene.GetGraph().CollectVisible(bounds).empty());
+}
 } // namespace
 
 int main()
@@ -109,4 +141,5 @@ int main()
     TestHierarchy();
     TestUpdateAndLifetime();
     TestPlacementAndOrder();
+    TestUnchangedPlacement();
 }

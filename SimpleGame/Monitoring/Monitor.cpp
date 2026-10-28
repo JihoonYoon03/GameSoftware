@@ -719,17 +719,47 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
 // ============================================================================
 namespace
 {
+struct CatalogResource
+{
+    // ResourceAssets keeps base meshes in its fixed vector and assemblies in stable unique_ptrs.
+    // Registration may extend the registry, but never modifies an existing mesh.
+    const models::ResourceMesh *mesh = nullptr;
+    models::SkinMatrices matrices = {};
+};
+struct CatalogEntry
+{
+    models::Model model;
+    std::string category, name, gender;
+    size_t type = 0;
+    bool validated = false, vehicle = false;
+    std::vector<CatalogResource> resources;
+    std::array<models::Point, 2> exhausts = {}, headlights = {};
+};
+struct CatalogCancelled
+{
+};
+void CheckCatalogCancellation(const std::shared_ptr<std::atomic<bool>> &cancel)
+{
+    if (cancel && cancel->load(std::memory_order_relaxed))
+    {
+        throw CatalogCancelled{};
+    }
+}
 void PointJson(std::ostream &out, models::Point point)
 {
     out << '[' << point.x << ',' << point.y << ',' << point.z << ']';
 }
-void ModelJson(std::ostream &out, const models::Model &model, const char *category, const char *name,
-               size_t type, const models::VehicleModel *vehicle = nullptr, const char *gender = nullptr)
+void ModelJson(std::ostream &out, const CatalogEntry &entry, const std::shared_ptr<std::atomic<bool>> &cancel)
 {
+    CheckCatalogCancellation(cancel);
+    const auto &model = entry.model;
+    const char *category = entry.category.c_str(), *name = entry.name.c_str();
+    const char *gender = entry.gender.empty() ? nullptr : entry.gender.c_str();
+    const auto *vehicle = entry.vehicle ? &entry : nullptr;
+    const auto type = entry.type;
     out << "{\"category\":\"" << category << "\",\"name\":\"" << name << "\",\"type\":" << type
         << ",\"space\":\"" << (model.space == models::CoordinateSpace::World ? "world" : "screen")
-        << "\",\"validated\":" << (models::ModelFactory::ValidateModel(model) ? "true" : "false")
-        << ",\"parts\":[";
+        << "\",\"validated\":" << (entry.validated ? "true" : "false") << ",\"parts\":[";
     bool character = std::string(category) == "character";
     const auto bindPose = models::ModelRig::Pose(
         0, false, false, 0, false,
@@ -737,12 +767,15 @@ void ModelJson(std::ostream &out, const models::Model &model, const char *catego
     bool firstPart = true;
     if (model.resourceId)
     {
-        auto appendResource = [&](unsigned int resourceId) {
-            const auto &resource = models::ResourceAssets::Get(resourceId);
-            models::SkinMatrices matrices;
-            models::ResourceAssets::Sample(resourceId, nullptr, matrices);
+        auto appendResource = [&](const CatalogResource &input) {
+            const auto &resource = *input.mesh;
+            const auto &matrices = input.matrices;
             for (size_t triangle = 0; triangle < resource.vertices.size(); triangle += 3)
             {
+                if (triangle % (256 * 3) == 0)
+                {
+                    CheckCatalogCancellation(cancel);
+                }
                 const auto &v = resource.vertices[triangle];
                 if (v.visibility == 1)
                 {
@@ -761,18 +794,14 @@ void ModelJson(std::ostream &out, const models::Model &model, const char *catego
                 firstPart = false;
             }
         };
-        appendResource(model.resourceId);
-        if (character &&
-            type % size_t(models::CharacterType::Count) != size_t(models::CharacterType::HeavyCombat))
+        for (const auto &resource : entry.resources)
         {
-            constexpr const char *hairs[] = {"SidePart", "Ponytail", "Buzz",     "Bun",  "Bob",
-                                             "Buzz",     "Buzz",     "SidePart", "Curls"};
-            appendResource(models::ResourceAssets::Find(std::string("hair/") +
-                                                        hairs[type % size_t(models::CharacterType::Count)]));
+            appendResource(resource);
         }
     }
     for (size_t i = 0; i < model.count; ++i)
     {
+        CheckCatalogCancellation(cancel);
         const auto &part = model.parts[i];
         if (character && part.joint == models::Joint::Weapon)
         {
@@ -799,7 +828,7 @@ void ModelJson(std::ostream &out, const models::Model &model, const char *catego
     out << ']';
     if (model.resourceId)
     {
-        const auto &resource = models::ResourceAssets::Get(model.resourceId);
+        const auto &resource = *entry.resources.front().mesh;
         out << ",\"source\":" << Quote(resource.source + ".glb")
             << ",\"triangles\":" << resource.vertices.size() / 3;
         models::Point previewScale = {1, 1, 1};
@@ -845,7 +874,7 @@ void ModelJson(std::ostream &out, const models::Model &model, const char *catego
     out << '}';
 }
 } // namespace
-std::string ModelCatalog::Build()
+std::function<std::string()> ModelCatalog::Capture(std::shared_ptr<std::atomic<bool>> cancel)
 {
     const auto &library = models::ModelLibrary::Get();
     constexpr const char *kVehicleNames[] = {"쿠페", "여객 셔틀", "화물 수송차", "순찰차",
@@ -856,44 +885,66 @@ std::string ModelCatalog::Build()
         "압력 주거 모듈", "적층 거주 포드", "자기장 정비 격납고", "리브 돔",       "전망대",
         "나선 첨탑",      "연결 교량 타워", "테라스 아콜로지",    "환승 아트리움", "중정 주거동"};
     static_assert(std::size(kBuildingNames) == size_t(models::BuildingType::Count));
-    std::ostringstream out;
-    out.imbue(std::locale::classic());
-    out << std::fixed << std::setprecision(5) << "{\"schema\":\"game_models_v1\",\"models\":[";
-    bool first = true;
+    std::vector<CatalogEntry> entries;
+    auto add = [&](const models::Model &model, const char *category, const char *name, size_t type,
+                   const models::VehicleModel *vehicle = nullptr, const char *gender = nullptr) {
+        CatalogEntry entry;
+        entry.model = model;
+        entry.category = category;
+        entry.name = name;
+        entry.type = type;
+        entry.gender = gender ? gender : "";
+        entry.validated = models::ModelFactory::ValidateModel(model);
+        entry.vehicle = vehicle != nullptr;
+        if (vehicle)
+        {
+            entry.exhausts = vehicle->exhausts;
+            entry.headlights = vehicle->headlights;
+        }
+        auto resource = [&](unsigned int id) {
+            CatalogResource input;
+            input.mesh = &models::ResourceAssets::Get(id);
+            models::ResourceAssets::Sample(id, nullptr, input.matrices);
+            entry.resources.push_back(std::move(input));
+        };
+        if (model.resourceId)
+        {
+            resource(model.resourceId);
+            if (entry.category == "character" &&
+                type % size_t(models::CharacterType::Count) != size_t(models::CharacterType::HeavyCombat))
+            {
+                constexpr const char *hairs[] = {"SidePart", "Ponytail", "Buzz",     "Bun",  "Bob",
+                                                 "Buzz",     "Buzz",     "SidePart", "Curls"};
+                resource(models::ResourceAssets::Find(std::string("hair/") +
+                                                      hairs[type % size_t(models::CharacterType::Count)]));
+            }
+        }
+        entries.push_back(std::move(entry));
+    };
     for (size_t i = 0; i < library.vehicles.size(); ++i)
     {
-        if (!first)
-        {
-            out << ',';
-        }
-        first = false;
-        ModelJson(out, library.vehicles[i].body, "vehicle", kVehicleNames[i], i, &library.vehicles[i]);
+        add(library.vehicles[i].body, "vehicle", kVehicleNames[i], i, &library.vehicles[i]);
     }
     for (size_t i = 0; i < library.characters.size(); ++i)
     {
-        out << ',';
-        ModelJson(out, library.characters[i], "character", kCharacterNames[i], i, nullptr, "male");
-        out << ',';
-        ModelJson(out, library.femaleCharacters[i], "character", kCharacterNames[i],
-                  i + library.characters.size(), nullptr, "female");
+        add(library.characters[i], "character", kCharacterNames[i], i, nullptr, "male");
+        add(library.femaleCharacters[i], "character", kCharacterNames[i], i + library.characters.size(),
+            nullptr, "female");
     }
     for (size_t i = 0; i < library.buildings.size(); ++i)
     {
-        out << ',';
-        ModelJson(out, library.buildings[i], "building", kBuildingNames[i], i);
+        add(library.buildings[i], "building", kBuildingNames[i], i);
     }
     constexpr const char *aircraftNames[] = {"운송기", "에어택시", "화물 인양기", "탐사기"};
     for (size_t i = 0; i < library.aircraft.size(); ++i)
     {
-        out << ',';
         auto name = std::string(aircraftNames[i / 2]) + (i % 2 ? " / 대체 모듈" : " / 기본 모듈");
-        ModelJson(out, library.aircraft[i], "aircraft", name.c_str(), i);
+        add(library.aircraft[i], "aircraft", name.c_str(), i);
     }
     for (size_t i = 0; i < library.scenery.size(); ++i)
     {
-        out << ',';
-        ModelJson(out, library.scenery[i], "scenery",
-                  models::ModelLibrary::SceneryName(static_cast<models::SceneryType>(i)), i);
+        add(library.scenery[i], "scenery",
+            models::ModelLibrary::SceneryName(static_cast<models::SceneryType>(i)), i);
     }
     std::set<std::string> transitNames;
     for (const auto &module : tutorial::TransitLayout::Get())
@@ -903,11 +954,35 @@ std::string ModelCatalog::Build()
     size_t transitType = 0;
     for (const auto &name : transitNames)
     {
-        out << ',';
-        ModelJson(out, models::ModelLibrary::Transit(name), "transit", name.c_str(), transitType++);
+        add(models::ModelLibrary::Transit(name), "transit", name.c_str(), transitType++);
     }
-    out << "],\"character_base\":null}";
-    return out.str();
+    return [entries = std::move(entries), cancel = std::move(cancel)]() {
+        try
+        {
+            std::ostringstream out;
+            out.imbue(std::locale::classic());
+            out << std::fixed << std::setprecision(5) << "{\"schema\":\"game_models_v1\",\"models\":[";
+            for (size_t i = 0; i < entries.size(); ++i)
+            {
+                if (i)
+                {
+                    out << ',';
+                }
+                ModelJson(out, entries[i], cancel);
+            }
+            out << "],\"character_base\":null}";
+            CheckCatalogCancellation(cancel);
+            return out.str();
+        }
+        catch (const CatalogCancelled &)
+        {
+            return std::string{};
+        }
+    };
+}
+std::string ModelCatalog::Build()
+{
+    return Capture()();
 }
 // ============================================================================
 // GameMonitor
@@ -933,6 +1008,9 @@ void GameMonitor::Initialize()
         return;
     }
     sessionId = std::to_string(GetCurrentProcessId()) + "-" + std::to_string(GetTickCount64());
+    catalogRequested = false;
+    catalogCancel = std::make_shared<std::atomic<bool>>(false);
+    transport::PublishModels("{\"schema\":\"game_models_v1\",\"ready\":false,\"models\":[]}");
     sequence = 0;
     lastRequestCount = 0;
     transport::Publish(WorldSnapshot::Build(++sequence, sessionId));
@@ -950,7 +1028,6 @@ void GameMonitor::Initialize()
     }
     if (enabled)
     {
-        transport::PublishModels(ModelCatalog::Build());
         nextPublish = Clock::now() + kPublishInterval;
         std::printf("\n[Monitor] Open browser: http://127.0.0.1:%u/\n[Monitor] JSON: /api/state (500 ms)\n\n",
                     unsigned(kPort));
@@ -958,7 +1035,12 @@ void GameMonitor::Initialize()
 }
 void GameMonitor::Update()
 {
-    if (!enabled || Clock::now() < nextPublish)
+    if (!enabled)
+    {
+        return;
+    }
+    UpdateCatalog();
+    if (Clock::now() < nextPublish)
     {
         return;
     }
@@ -976,8 +1058,56 @@ void GameMonitor::Update()
 }
 void GameMonitor::Shutdown()
 {
+    if (catalogCancel)
+    {
+        catalogCancel->store(true, std::memory_order_relaxed);
+    }
     transport::Stop();
+    if (catalogBuild.valid())
+    {
+        try
+        {
+            catalogBuild.get(); // Join before immutable ResourceAssets can be destroyed.
+        }
+        catch (const std::exception &error)
+        {
+            std::fprintf(stderr, "[Monitor] catalog shutdown: %s\n", error.what());
+        }
+    }
+    catalogCancel.reset();
+    catalogRequested = false;
     enabled = false;
+}
+GameMonitor::~GameMonitor()
+{
+    Shutdown();
+}
+void GameMonitor::UpdateCatalog()
+{
+    try
+    {
+        if (!catalogRequested && transport::ModelCatalogRequested())
+        {
+            catalogRequested = true;
+            auto job = ModelCatalog::Capture(catalogCancel); // Resolve all registries on this thread.
+            catalogBuild = std::async(std::launch::async, std::move(job));
+        }
+        if (catalogBuild.valid() &&
+            catalogBuild.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready)
+        {
+            auto result = catalogBuild.get();
+            if (!result.empty())
+            {
+                transport::PublishModels(std::move(result));
+            }
+        }
+    }
+    catch (const std::exception &error)
+    {
+        std::fprintf(stderr, "[Monitor] catalog build failed: %s\n", error.what());
+        transport::PublishModels(
+            "{\"schema\":\"game_models_v1\",\"ready\":false,\"error\":true,\"models\":[]}");
+    }
 }
 GameMonitor &GameMonitor::Get()
 {

@@ -30,6 +30,8 @@ class Scene
     Actor &Place(const std::string &name, const std::string &group, Bounds bounds, int layer, float depth,
                  Actor::DrawCallback callback);
     void EndPlacement();
+    // Retain an unchanged placement, including its callback/resources. Returns false after removal/reset.
+    bool ReusePlacement(const std::string &name);
     SceneGraph &GetGraph();
     static Bounds WorldBounds(float x, float y, float width, float depth, float height, float margin = 40);
     void PlaceWorldActor(const std::string &name, float x, float y, Bounds bounds, int layer, float depth,
@@ -93,6 +95,7 @@ class CityScene final : public Scene
     void DrawDepthSortedObjects(game::Scene &scene);
     void DrawUtilityDevices(game::Scene &scene);
     void DrawQuestMarkers(game::Scene &scene);
+    std::uint64_t sceneryRevision = 0;
 };
 
 // ============================================================================

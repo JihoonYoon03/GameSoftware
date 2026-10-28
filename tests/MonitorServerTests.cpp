@@ -2,6 +2,7 @@
 #include "Game.h"
 #include "Monitoring/LocalMonitorServer.h"
 #include "Monitoring/Monitor.h"
+#include "Overworld.h"
 #include <cassert>
 #include <chrono>
 #include <fstream>
@@ -46,6 +47,18 @@ std::string Get(unsigned short port, const std::string &path, const std::string 
 int main()
 {
     tutorial::Game::Get().Reset();
+    auto revision = tutorial::Overworld::Scenery().Revision();
+    auto catalogJob = monitoring::ModelCatalog::Capture();
+    auto expectedCatalog = monitoring::ModelCatalog::Build();
+    auto catalogFuture = std::async(std::launch::async, std::move(catalogJob));
+    tutorial::Game::Get().Reset(); // Main-thread world reset must not invalidate the captured geometry.
+    assert(tutorial::Overworld::Scenery().Revision() != revision);
+    assert(catalogFuture.get() == expectedCatalog);
+    expectedCatalog.clear();
+    auto cancel = std::make_shared<std::atomic<bool>>(false);
+    auto cancelledJob = monitoring::ModelCatalog::Capture(cancel);
+    cancel->store(true);
+    assert(std::async(std::launch::async, std::move(cancelledJob)).get().empty());
     auto begin = std::chrono::steady_clock::now();
     std::string snapshot;
     for (int sample = 0; sample < 100; ++sample)
@@ -62,6 +75,10 @@ int main()
     assert(state.substr(state.find("\r\n\r\n") + 4) == snapshot);
     assert(Get(port, "/").find("200 OK") != std::string::npos);
     assert(Get(port, "/app.js?v=2").find("200 OK") != std::string::npos);
+    assert(!monitoring::transport::ModelCatalogRequested());
+    monitoring::transport::PublishModels("{\"schema\":\"game_models_v1\",\"ready\":false,\"models\":[]}");
+    assert(Get(port, "/api/models?fresh=1").find("\"ready\":false") != std::string::npos);
+    assert(monitoring::transport::ModelCatalogRequested());
     assert(Get(port, "/api/state", "https://example.com").find("Access-Control-Allow-Origin") ==
            std::string::npos);
     assert(Get(port, "/api/state", "http://localhost.evil.test:5500").find("Access-Control-Allow-Origin") ==
@@ -88,6 +105,7 @@ int main()
     monitoring::transport::Stop();
     assert(monitoring::transport::Start("monitor", port));
     assert(Get(port, "/api/state").find("200 OK") != std::string::npos);
+    assert(!monitoring::transport::ModelCatalogRequested());
     monitoring::transport::Stop();
     std::cout << "Monitor HTTP, source assets, local-origin policy, query routes, 6 MiB catalog and restart "
                  "passed; snapshot "

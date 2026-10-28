@@ -91,6 +91,15 @@ async function load() {
     if (!response.ok) throw new Error("HTTP "+response.status);
     const data = await response.json();
     if (data.schema !== "game_models_v1" || !Array.isArray(data.models)) throw new Error("모델 스키마 불일치");
+    if (data.error) {
+      status.textContent = "모델 도감을 준비하지 못했습니다. 게임 콘솔을 확인한 뒤 게임을 다시 실행하세요.";
+      return;
+    }
+    if (data.ready === false) {
+      status.textContent = "모델 도감을 준비하고 있습니다. 준비가 끝나면 자동으로 표시합니다.";
+      setTimeout(load,500);
+      return;
+    }
     catalog = data; render();
     status.textContent = data.models.length + "종 실제 캐시 모델을 불러왔습니다. 형태별 색상을 변경해 비교하세요.";
   } catch(error) {
