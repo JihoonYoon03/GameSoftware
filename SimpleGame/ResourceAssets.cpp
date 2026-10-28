@@ -520,10 +520,11 @@ void ResourcePoseSampler::Sample(unsigned int id, const CharacterPose &pose, Ski
         ResourceAssets::Sample(id, &pose, matrices);
         return;
     }
-    const std::array<float, 11> nextInputs = {pose.animationPhase, pose.recoil,          pose.locomotionSpeed,
-                                              pose.meleeSeconds,   pose.locomotionPhase, pose.moveLeft,
-                                              pose.moveForward,    pose.aimWeight,       pose.fireSeconds,
-                                              pose.reloadProgress, float(pose.gender)};
+    const std::array<float, 13> nextInputs = {
+        pose.animationPhase,  pose.recoil,         pose.locomotionSpeed, pose.meleeSeconds,
+        pose.locomotionPhase, pose.moveLeft,       pose.moveForward,     pose.aimWeight,
+        pose.fireSeconds,     pose.reloadProgress, float(pose.gender),   pose.motionForwardLean,
+        pose.motionSideLean};
     const unsigned int nextFlags =
         unsigned(pose.armed) | (unsigned(pose.walking) << 1) | (unsigned(pose.blended) << 2);
     if (rig != mesh.rig.get() || animations != mesh.animations.get() || flags != nextFlags ||

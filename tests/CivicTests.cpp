@@ -453,13 +453,14 @@ void TestMountedImpactControls()
     cars.clear();
     w.playerPosition = w.bikePosition = center;
     w.bikeYaw = 0;
-    w.bikeSpeed = 0;
+    w.StopMotion();
     w.bikeSafePoseValid = false;
     float seconds = impact.seconds;
     g.KeyDown('d', 0, 0);
     g.Update(1.f / 60);
     g.KeyUp('d', 0, 0);
-    assert(w.bikeYaw > .01f); // Steering remains available during the rider's impact reaction.
+    // Angular acceleration still responds immediately, without an instant full-rate turn.
+    assert(w.bikeYaw > .001f && w.bikeYaw < .01f && w.bikeYawSpeed > .1f);
     assert(impact.seconds < seconds && impact.seconds > 0);
     assert(Game::Distance(w.playerPosition, w.bikePosition) < .001f);
     g.KeyDown('s', 0, 0);

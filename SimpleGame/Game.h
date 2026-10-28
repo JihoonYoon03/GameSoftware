@@ -15,6 +15,24 @@ struct Vector2
     float x, y;
 };
 // ============================================================================
+// MotionMath / PlayerMotion — bounded acceleration, braking and heading changes
+// ============================================================================
+class MotionMath
+{
+  public:
+    static constexpr float kResponse = 1.3f;
+    static Vector2 Approach(Vector2 velocity, Vector2 target, float maximumChange);
+    static float Turn(float yaw, float target, float maximumChange);
+    static Vector2 ContactVelocity(Vector2 velocity, Vector2 requested, Vector2 actual);
+};
+struct PlayerMotion
+{
+    Vector2 velocity = {};
+    float forwardLean = 0, sideLean = 0;
+    bool pivoting = false;
+    void Update(Vector2 target, float &yaw, bool aiming, float deltaSeconds);
+};
+// ============================================================================
 // WorldCamera — world view magnification; HUD/cursor stay in viewport coordinates
 // ============================================================================
 struct WorldCamera
@@ -334,6 +352,8 @@ struct GameState
     bool isInObservatory = false;
     bool isBikeMounted = false;
     float bikeSpeed = 0;
+    Vector2 bikeVelocity = {};
+    float bikeYawSpeed = 0;
     float bikeElevation = 0;
     float bikeYaw = kJetBikeYaw;
     Vector2 bikePosition = kJetBikePosition;
@@ -361,6 +381,7 @@ struct GameState
     float noticeDurationSeconds = 0;
     float movementAmount = 0;
     float movementSpeed = 0;
+    PlayerMotion playerMotion;
     int facingDirection = 0;
     float facingYaw = .78539816f;
     Vector2 playerPosition = {0, 0};
@@ -370,6 +391,7 @@ struct GameState
     std::string noticeText;
     std::vector<Building> buildings;
     std::vector<Resident> residents;
+    void StopMotion();
 };
 // ============================================================================
 // CityLayout — road footprints and reserved quest/parking access

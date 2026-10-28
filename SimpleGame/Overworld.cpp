@@ -1219,6 +1219,10 @@ void TrafficSystem::Step(GameState &world, float dt)
             car.reservedTo = car.nextLane;
             car.yieldingRight = permissiveRight;
         }
+        if (car.turn != TrafficTurn::Straight && (car.turnDistance >= 0 || car.distance > lane.length - 7))
+        {
+            target = (std::min)(target, 4.5f);
+        }
         car.speed += Game::Clamp(target - car.speed, -7.f * dt, 3.f * dt);
         float travel = car.speed * dt;
         if (car.turnDistance < 0)
@@ -1248,7 +1252,7 @@ void TrafficSystem::Step(GameState &world, float dt)
             car.position = TurnPoint(car, t);
             auto tangent =
                 Sub(TurnPoint(car, (std::min)(1.f, t + .005f)), TurnPoint(car, (std::max)(0.f, t - .005f)));
-            car.yaw = std::atan2(tangent.y, tangent.x);
+            car.yaw = MotionMath::Turn(car.yaw, std::atan2(tangent.y, tangent.x), 2.8f * dt);
             if (t >= 1)
             {
                 car.lane = car.nextLane;
@@ -1261,7 +1265,7 @@ void TrafficSystem::Step(GameState &world, float dt)
         }
         else
         {
-            car.yaw = std::atan2(lane.direction.y, lane.direction.x);
+            car.yaw = MotionMath::Turn(car.yaw, std::atan2(lane.direction.y, lane.direction.x), 2.8f * dt);
         }
     }
     // Oriented hulls are a final physical constraint even when routing normally avoids contact.
@@ -1936,9 +1940,16 @@ void Overworld::UpdateBike(GameState &state, float deltaSeconds)
     BodyCollision::RecoverBike();
     Vector2 previous = state.playerPosition;
     float oldYaw = state.bikeYaw;
+    constexpr float response = MotionMath::kResponse;
+    if (std::hypot(state.bikeVelocity.x, state.bikeVelocity.y) < .001f && std::fabs(state.bikeSpeed) > .01f)
+    {
+        state.bikeVelocity = {std::cos(oldYaw) * state.bikeSpeed, std::sin(oldYaw) * state.bikeSpeed};
+    }
     float steering = float(state.pressedKeys['d']) - float(state.pressedKeys['a']);
-    state.bikeYaw = std::remainder(
-        state.bikeYaw + steering * (state.bikeSpeed < -.05f ? -1 : 1) * 1.8f * deltaSeconds, 2 * kPi);
+    float targetYawSpeed = steering * (state.bikeSpeed < -.05f ? -1 : 1) * 1.8f;
+    state.bikeYawSpeed += Game::Clamp(targetYawSpeed - state.bikeYawSpeed, -9.f * response * deltaSeconds,
+                                      9.f * response * deltaSeconds);
+    state.bikeYaw = std::remainder(state.bikeYaw + state.bikeYawSpeed * deltaSeconds, 2 * kPi);
     bool forward = state.pressedKeys['w'] && !state.pressedKeys['s'];
     bool reverse = state.pressedKeys['s'] && !state.pressedKeys['w'];
     float targetSpeed = forward   ? (state.pressedKeys[' '] ? kBikeBoostSpeed : kBikeCruiseSpeed)
@@ -1947,8 +1958,6 @@ void Overworld::UpdateBike(GameState &state, float deltaSeconds)
     bool braking =
         state.bikeSpeed * targetSpeed < 0 || (targetSpeed == 0 && std::fabs(state.bikeSpeed) > .01f);
     float acceleration = braking ? 24.f : reverse ? 4.f : 18.f;
-    state.bikeSpeed +=
-        Game::Clamp(targetSpeed - state.bikeSpeed, -acceleration * deltaSeconds, acceleration * deltaSeconds);
     auto blocked = [&](Vector2 p) {
         float h = RoadNetwork::Get().DriveElevation(p, state.bikeElevation);
         if (state.bikeElevation > .5f && h < state.bikeElevation - .6f)
@@ -1965,16 +1974,34 @@ void Overworld::UpdateBike(GameState &state, float deltaSeconds)
         {
             state.bikeYaw = proposedYaw;
         }
+        state.bikeYawSpeed = 0;
     }
-    Vector2 desired = {previous.x + std::cos(state.bikeYaw) * state.bikeSpeed * deltaSeconds,
-                       previous.y + std::sin(state.bikeYaw) * state.bikeSpeed * deltaSeconds};
-    state.playerPosition = BodyCollision::Slide(previous, desired, blocked);
-    float requested = Game::Distance(previous, desired),
-          actual = Game::Distance(previous, state.playerPosition);
-    if (requested > .0001f && actual < requested * .99f)
+    Vector2 forwardAxis = {std::cos(state.bikeYaw), std::sin(state.bikeYaw)};
+    Vector2 sideAxis = {-forwardAxis.y, forwardAxis.x};
+    float longitudinal = state.bikeVelocity.x * forwardAxis.x + state.bikeVelocity.y * forwardAxis.y;
+    float lateral = state.bikeVelocity.x * sideAxis.x + state.bikeVelocity.y * sideAxis.y;
+    longitudinal += Game::Clamp(targetSpeed - longitudinal, -acceleration * response * deltaSeconds,
+                                acceleration * response * deltaSeconds);
+    // Retain a short lateral drift after steering, then regain traction automatically.
+    lateral *= std::exp(-(braking ? 10.f : 5.5f) * response * deltaSeconds);
+    state.bikeVelocity = {forwardAxis.x * longitudinal + sideAxis.x * lateral,
+                          forwardAxis.y * longitudinal + sideAxis.y * lateral};
+    float speed = std::hypot(state.bikeVelocity.x, state.bikeVelocity.y);
+    float limit = (std::max)(std::fabs(state.bikeSpeed), std::fabs(targetSpeed));
+    if (speed > limit && speed > .001f)
     {
-        state.bikeSpeed *= Game::Clamp(actual / requested, 0, 1);
+        state.bikeVelocity.x *= limit / speed;
+        state.bikeVelocity.y *= limit / speed;
     }
+    Vector2 requestedDelta = {state.bikeVelocity.x * deltaSeconds, state.bikeVelocity.y * deltaSeconds};
+    Vector2 desired = {previous.x + requestedDelta.x, previous.y + requestedDelta.y};
+    state.playerPosition = BodyCollision::Slide(previous, desired, blocked);
+    float actual = Game::Distance(previous, state.playerPosition);
+    state.bikeVelocity = MotionMath::ContactVelocity(
+        state.bikeVelocity, requestedDelta,
+        {state.playerPosition.x - previous.x, state.playerPosition.y - previous.y});
+    speed = std::hypot(state.bikeVelocity.x, state.bikeVelocity.y);
+    state.bikeSpeed = (longitudinal < -.001f ? -1.f : 1.f) * speed;
     state.bikeElevation = RoadNetwork::Get().DriveElevation(state.playerPosition, state.bikeElevation);
     state.bikePosition = state.playerPosition;
     state.facingYaw = state.bikeYaw;
@@ -2009,7 +2036,7 @@ void Overworld::ToggleBike(GameState &state)
                 state.playerPosition = position;
                 state.isBikeMounted = false;
                 state.mouseFiring = state.mouseAiming = false;
-                state.bikeSpeed = 0;
+                state.StopMotion();
                 Game::Get().ShowNotice("바이크 / 하차했습니다. 주차 위치는 유지됩니다.");
                 return;
             }
@@ -2020,7 +2047,7 @@ void Overworld::ToggleBike(GameState &state)
     state.isBikeMounted = true;
     state.mouseFiring = state.mouseAiming = false;
     state.playerPosition = state.bikePosition;
-    state.bikeSpeed = 0;
+    state.StopMotion();
     Game::Get().ShowNotice(
         "바이크 / W 가속 · S 제동 · A/D 조향 · 정차 후 E 하차. 교차로의 홀로그램 신호를 확인하세요.");
 }

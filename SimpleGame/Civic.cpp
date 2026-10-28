@@ -340,13 +340,18 @@ void DeflectBike(Vector2 normal)
         return;
     }
     normal = Unit(normal);
-    Vector2 velocity = {std::cos(world.bikeYaw) * world.bikeSpeed, std::sin(world.bikeYaw) * world.bikeSpeed};
+    Vector2 velocity = world.bikeVelocity;
+    if (std::hypot(velocity.x, velocity.y) < .001f)
+    {
+        velocity = {std::cos(world.bikeYaw) * world.bikeSpeed, std::sin(world.bikeYaw) * world.bikeSpeed};
+    }
     float inward = velocity.x * normal.x + velocity.y * normal.y;
     if (inward >= 0)
     {
         return;
     }
     velocity = Add(velocity, normal, -inward);
+    world.bikeVelocity = velocity;
     float speed = std::hypot(velocity.x, velocity.y), sign = world.bikeSpeed < 0 ? -1.f : 1.f;
     world.bikeSpeed = sign * speed;
     if (speed > .05f)
@@ -547,7 +552,8 @@ void TransferToHospital()
     world.isInsideHome = world.isInObservatory = world.isBikeMounted = world.mapVisible = world.mouseFiring =
         world.mouseAiming = false;
     world.playerPosition = world.cameraPosition = hospital.position;
-    world.bikeSpeed = world.bikeElevation = 0;
+    world.StopMotion();
+    world.bikeElevation = 0;
     world.bikePosition = hospital.position;
     for (Vector2 offset : {Vector2{1.5f, 0}, {-1.5f, 0}, {0, 1.5f}, {0, -1.5f}})
     {
@@ -1605,7 +1611,7 @@ void BodyCollision::RecoverBike()
         }
         w.playerPosition = w.bikePosition;
         w.facingYaw = w.bikeYaw;
-        w.bikeSpeed = w.movementAmount = w.movementSpeed = 0;
+        w.StopMotion();
     }
     if (!BikeBlocked(w.bikePosition, w.bikeYaw, w.bikeElevation))
     {
@@ -1864,7 +1870,7 @@ void HospitalRecovery::Begin()
     world.mouseFiring = world.mouseAiming = false;
     world.mapVisible = false;
     world.isPaused = false;
-    world.bikeSpeed = 0;
+    world.StopMotion();
     std::fill(std::begin(world.pressedKeys), std::end(world.pressedKeys), false);
 }
 void HospitalRecovery::Update(float dt)

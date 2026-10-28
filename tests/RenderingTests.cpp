@@ -272,6 +272,27 @@ void TestAnimationBlending()
         }
     }
     CharacterAnimation state;
+    ResourcePoseSampler sampler;
+    auto balanced = ModelRig::Pose(1, true, true);
+    balanced.blended = true;
+    balanced.aimWeight = 0;
+    SkinMatrices beforeLean, afterLean, directLean;
+    sampler.Sample(id, balanced, beforeLean);
+    balanced.motionForwardLean = .07f;
+    balanced.motionSideLean = -.04f;
+    sampler.Sample(id, balanced, afterLean);
+    ResourceAssets::Sample(id, &balanced, directLean);
+    assert(afterLean == directLean && beforeLean != afterLean);
+    for (size_t bone = 0; bone < mesh.boneCount; ++bone)
+    {
+        if (bone < 2 || bone >= 17)
+        {
+            for (size_t c = 0; c < 16; ++c)
+            {
+                assert(std::fabs(beforeLean[bone * 16 + c] - afterLean[bone * 16 + c]) < .0001f);
+            }
+        }
+    }
     auto front = ModelRig::Pose(0, true, true);
     front.blended = true;
     front.aimWeight = 1;
@@ -1788,6 +1809,69 @@ void CaptureAnimationBlends(const std::filesystem::path &output)
     }
 }
 
+void CapturePlayerMomentum(const std::filesystem::path &output)
+{
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    auto &renderer = GameRenderer::Get().Backend();
+    for (auto gender : {Gender::Male, Gender::Female})
+    {
+        g.EnterTestStage(TestStage::Mine);
+        auto &mine = game::GameLevels::Mine().GetState();
+        std::fill(mine.tiles.begin(), mine.tiles.end(), game::Tile::Floor);
+        mine.enemies.clear();
+        w.playerPosition = w.cameraPosition = {20.5f, 20.5f};
+        w.playerGender = gender;
+        w.facingYaw = -kPi / 4;
+        struct Moment
+        {
+            CharacterPose pose;
+            float yaw;
+            std::string label;
+        };
+        std::vector<Moment> moments;
+        auto step = [&](int frames, const char *label) {
+            for (int i = 0; i < frames; ++i)
+            {
+                g.Update(1.f / 60);
+            }
+            auto pose = g.PlayerPose();
+            assert(std::isfinite(pose.motionForwardLean) && std::fabs(pose.motionForwardLean) <= .091f);
+            moments.push_back({pose, w.facingYaw, label});
+        };
+        g.KeyDown('d', 0, 0);
+        step(2, "출발 · 체중 이동");
+        step(14, "가속 · 보행 연결");
+        for (int i = 0; i < 30; ++i)
+        {
+            g.Update(1.f / 60);
+        }
+        g.KeyUp('d', 0, 0);
+        g.KeyDown('a', 0, 0);
+        step(1, "반대 입력 · 제동");
+        step(7, "속도 회수 · 회전");
+        step(9, "반전 · 밀어내기");
+        step(15, "반대 방향 재가속");
+        Begin();
+        renderer.BeginModels();
+        for (size_t i = 0; i < moments.size(); ++i)
+        {
+            auto &moment = moments[i];
+            Transform3D transform;
+            transform.yaw = moment.yaw;
+            Vector2 screen = {240.f + (i % 3) * 400, 300.f + (i / 3) * 350};
+            Drawing::DrawModel3D(ModelLibrary::Character(CharacterType::Explorer, gender), screen, {3, 3, 3},
+                                 transform, 0, {}, &moment.pose);
+            Drawing::DrawHair(screen, {3, 3, 3}, transform, 0, moment.pose, CharacterType::Explorer, gender,
+                              HairStyle::SidePart);
+            Drawing::DrawLabel(screen.x - 90, screen.y + 40, moment.label);
+        }
+        renderer.EndModels();
+        renderer.EndScene(0);
+        Save(output / (gender == Gender::Male ? "motion-player-male.bmp" : "motion-player-female.bmp"));
+    }
+    g.Reset();
+}
 void CaptureChapter(const std::filesystem::path &output)
 {
     auto &game = Game::Get();
@@ -2201,6 +2285,7 @@ int main(int argc, char **argv)
     CaptureDeliveredUi(output);
     CaptureMapNavigation(output);
     CaptureAnimationBlends(output);
+    CapturePlayerMomentum(output);
     CaptureCivicSystems(output);
     BenchmarkQuality(output);
     GameRenderer::Get().Shutdown();

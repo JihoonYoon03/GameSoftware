@@ -445,6 +445,14 @@ void LayeredAnimation::Sample(const ResourceMesh &mesh, const CharacterPose &pos
         ClipPose(mesh, rig.melee, t, false, other);
         UpperLayer(mesh, base, other, Smooth(t / .08f) * Smooth((1 - t) / .18f));
     }
+    // Small spine counterbalance while start/stop/pivot clips are being authored.
+    // Keep root/legs and precise aimed upper-body poses intact.
+    float leanWeight = pose.blended ? 1 - aim : 0;
+    AnimationRotation pitch = {0, std::sin(pose.motionForwardLean * leanWeight * .5f), 0,
+                               std::cos(pose.motionForwardLean * leanWeight * .5f)};
+    AnimationRotation roll = {std::sin(pose.motionSideLean * leanWeight * .5f), 0, 0,
+                              std::cos(pose.motionSideLean * leanWeight * .5f)};
+    base[2].rotation = Product(base[2].rotation, Product(pitch, roll));
     std::array<AnimationMatrix, 32> world{};
     Globals(rig, base, world);
     for (size_t j = 0; j < mesh.boneCount; ++j)

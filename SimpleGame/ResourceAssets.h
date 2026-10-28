@@ -64,7 +64,7 @@ class ResourcePoseSampler
   private:
     const AnimationRig *rig = nullptr;
     const std::vector<ResourceClip> *animations = nullptr;
-    std::array<float, 11> inputs = {};
+    std::array<float, 13> inputs = {};
     unsigned int flags = 0;
     SkinMatrices cached = {};
 };

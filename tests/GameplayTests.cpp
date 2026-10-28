@@ -2038,7 +2038,10 @@ void TestAimMovementAndLayers()
         g.MouseMotion(100, 300);
         auto before = w.playerPosition;
         g.KeyDown('d', 0, 0);
-        g.Update(1.f / 60);
+        for (int frame = 0; frame < 30; ++frame)
+        {
+            g.Update(1.f / 60);
+        }
         g.KeyUp('d', 0, 0);
         auto delta = Vector2{w.playerPosition.x - before.x, w.playerPosition.y - before.y};
         assert(std::fabs(std::remainder(w.facingYaw - std::atan2(delta.y, delta.x), 2 * kPi)) < .001f);
@@ -2065,8 +2068,15 @@ void TestAimMovementAndLayers()
     auto pose = g.PlayerPose();
     assert(pose.blended && pose.moveForward < 0 && pose.aimWeight > .99f);
     g.MouseButton(GLUT_RIGHT_BUTTON, GLUT_UP, 100, 300);
+    float beforeTurn = w.facingYaw;
     g.Update(1.f / 60);
-    assert(!g.IsAiming() && std::fabs(w.facingYaw + kPi / 4) < .001f);
+    assert(!g.IsAiming() && std::fabs(std::remainder(w.facingYaw - beforeTurn, 2 * kPi)) <=
+                                12.f * MotionMath::kResponse / 60 + .001f);
+    for (int frame = 0; frame < 30; ++frame)
+    {
+        g.Update(1.f / 60);
+    }
+    assert(std::fabs(w.facingYaw + kPi / 4) < .001f);
     g.KeyUp('d', 0, 0);
     g.MouseButton(GLUT_RIGHT_BUTTON, GLUT_DOWN, 100, 300);
     Hud::OpenMenu(UiScreen::Pause);

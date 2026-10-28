@@ -1311,6 +1311,7 @@ void MineLevel::ClearInput()
     world.mapVisible = false;
     std::fill(world.pressedKeys, world.pressedKeys + 256, false);
     world.mouseFiring = world.mouseAiming = false;
+    world.StopMotion();
 }
 
 bool MineLevel::IsNear(tutorial::Vector2 position)
@@ -1375,7 +1376,7 @@ void MineLevel::Enter(bool debugEntry)
     world.isInsideHome = false;
     world.isInObservatory = false;
     world.isBikeMounted = false;
-    world.bikeSpeed = 0;
+    world.StopMotion();
     world.playerPosition = state.entry;
     world.cameraPosition = state.entry;
     state.riaPosition = {state.entry.x + 1, state.entry.y + 1};
@@ -1863,7 +1864,7 @@ void ChapterOneLevel::Enter(bool debugEntry)
     state.tracers.clear();
     auto &world = tutorial::Game::Get().GetState();
     world.isBikeMounted = false;
-    world.bikeSpeed = 0;
+    world.StopMotion();
     world.isInsideHome = world.isInObservatory = world.mouseFiring = world.mouseAiming = false;
     std::fill(std::begin(world.pressedKeys), std::end(world.pressedKeys), false);
     world.playerPosition = world.cameraPosition = kFrontierEntry;
@@ -1891,6 +1892,7 @@ void ChapterOneLevel::Leave()
     world.mouseFiring = world.mouseAiming = false;
     std::fill(std::begin(world.pressedKeys), std::end(world.pressedKeys), false);
     world.playerPosition = world.cameraPosition = tutorial::kCityReceiverPosition;
+    world.StopMotion();
     tutorial::Game::Get().ShowNotice(
         CompletedSites() == 3 && !state.recordsCompared
             ? "헤일로 / 세 현장의 기록이 모였습니다. 도시 수신망 단말에서 대조하세요. [E]"

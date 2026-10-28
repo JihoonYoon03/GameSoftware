@@ -140,6 +140,91 @@ void MovementFacing::Update(Vector2 from, Vector2 to)
         yaw = std::atan2(dy, dx);
     }
 }
+Vector2 MotionMath::Approach(Vector2 velocity, Vector2 target, float maximumChange)
+{
+    float dx = target.x - velocity.x, dy = target.y - velocity.y;
+    float distance = std::hypot(dx, dy);
+    float t = distance > 0 ? (std::min)(1.f, (std::max)(0.f, maximumChange) / distance) : 0;
+    return {velocity.x + dx * t, velocity.y + dy * t};
+}
+float MotionMath::Turn(float yaw, float target, float maximumChange)
+{
+    return std::remainder(
+        yaw + Game::Clamp(std::remainder(target - yaw, 2 * kPi), -maximumChange, maximumChange), 2 * kPi);
+}
+Vector2 MotionMath::ContactVelocity(Vector2 velocity, Vector2 requested, Vector2 actual)
+{
+    Vector2 normal = {requested.x - actual.x, requested.y - actual.y};
+    float length = std::hypot(normal.x, normal.y);
+    // Substepped world coordinates accumulate float rounding; that is not a wall contact.
+    float tolerance = .0002f + std::hypot(requested.x, requested.y) * .002f;
+    if (length > tolerance)
+    {
+        normal.x /= length;
+        normal.y /= length;
+        float inward = (std::max)(0.f, velocity.x * normal.x + velocity.y * normal.y);
+        velocity.x -= normal.x * inward;
+        velocity.y -= normal.y * inward;
+    }
+    return velocity;
+}
+void PlayerMotion::Update(Vector2 target, float &yaw, bool aiming, float dt)
+{
+    if (dt <= 0)
+    {
+        return;
+    }
+    constexpr float response = MotionMath::kResponse;
+    auto before = velocity;
+    float speed = std::hypot(velocity.x, velocity.y), goal = std::hypot(target.x, target.y);
+    float alignment =
+        speed > .01f && goal > .01f ? (velocity.x * target.x + velocity.y * target.y) / (speed * goal) : 1;
+    if (!aiming && speed > 1.2f && goal > .01f && alignment < -.55f)
+    {
+        pivoting = true;
+    }
+    if (aiming || goal < .01f || (speed > .4f && alignment > .5f))
+    {
+        pivoting = false;
+    }
+    if (goal > .01f && !aiming)
+    {
+        float heading = std::atan2(target.y, target.x);
+        // Plant/brake first during a reversal; finish the turn before pushing off.
+        float rate = pivoting && speed > .7f ? 5.f : 12.f;
+        yaw = MotionMath::Turn(yaw, heading, rate * response * dt);
+        float facing = std::cos(std::remainder(heading - yaw, 2 * kPi));
+        if (pivoting && speed < .4f && facing > .85f)
+        {
+            pivoting = false;
+        }
+        float scale = pivoting ? 0.f : .2f + .8f * (std::max)(0.f, facing);
+        target.x *= scale;
+        target.y *= scale;
+    }
+    if (pivoting)
+    {
+        target = {};
+    }
+    bool braking = goal < .01f || pivoting || alignment < .25f || goal < speed;
+    velocity = MotionMath::Approach(velocity, target, (braking ? 22.f : 14.f) * response * dt);
+    if (std::hypot(velocity.x, velocity.y) < .008f && goal < .01f)
+    {
+        velocity = {};
+    }
+    Vector2 acceleration = {(velocity.x - before.x) / dt, (velocity.y - before.y) / dt};
+    float cy = std::cos(yaw), sy = std::sin(yaw), blend = 1 - std::exp(-18 * dt);
+    float forward = Game::Clamp((cy * acceleration.x + sy * acceleration.y) * .004f, -.09f, .07f);
+    float side = Game::Clamp((-sy * acceleration.x + cy * acceleration.y) * -.003f, -.07f, .07f);
+    forwardLean += (forward - forwardLean) * blend;
+    sideLean += (side - sideLean) * blend;
+}
+void GameState::StopMotion()
+{
+    playerMotion = {};
+    bikeVelocity = {};
+    bikeYawSpeed = bikeSpeed = movementAmount = movementSpeed = 0;
+}
 bool CityLayout::IsRoadTile(int x, int y)
 {
     return Overworld::IsRoad(x, y);
@@ -217,7 +302,7 @@ void Game::UpdatePlayerMovement(float deltaSeconds)
         CivicJustice::State().playerImpact.seconds > 0 &&
         CivicJustice::State().playerImpact.response == BodyResponse::Knockdown)
     {
-        state.movementAmount = state.movementSpeed = 0;
+        state.StopMotion();
         return;
     }
     state.movementSpeed = 0;
@@ -229,36 +314,39 @@ void Game::UpdatePlayerMovement(float deltaSeconds)
     float screenX = (state.pressedKeys['d'] ? 1.f : 0) - (state.pressedKeys['a'] ? 1.f : 0);
     float screenY = (state.pressedKeys['s'] ? 1.f : 0) - (state.pressedKeys['w'] ? 1.f : 0);
     float inputLength = std::sqrt(screenX * screenX + screenY * screenY);
-    state.movementAmount = inputLength;
-    if (inputLength <= 0)
+    if (inputLength > 0)
     {
-        return;
+        screenX /= inputLength;
+        screenY /= inputLength;
     }
-
-    screenX /= inputLength;
-    screenY /= inputLength;
-    if (std::fabs(screenX) > std::fabs(screenY))
+    if (inputLength > 0 && std::fabs(screenX) > std::fabs(screenY))
     {
         state.facingDirection = screenX < 0 ? 1 : 2;
     }
-    else
+    else if (inputLength > 0)
     {
         state.facingDirection = screenY < 0 ? 3 : 0;
     }
     // Invert the 2:1 isometric projection so WASD follows screen directions.
-    float worldDeltaX = (screenX * .5f + screenY) * kMovementSpeed * deltaSeconds;
-    float worldDeltaY = (screenY - screenX * .5f) * kMovementSpeed * deltaSeconds;
-    if (!IsAiming())
+    Vector2 target = {screenX * .5f + screenY, screenY - screenX * .5f};
+    float length = std::hypot(target.x, target.y);
+    if (length > 0)
     {
-        state.facingYaw = std::atan2(worldDeltaY, worldDeltaX);
+        target.x *= kMovementSpeed / length;
+        target.y *= kMovementSpeed / length;
     }
-
-    Vector2 candidate = {previous.x + worldDeltaX, previous.y + worldDeltaY};
+    state.playerMotion.Update(target, state.facingYaw, IsAiming(), deltaSeconds);
+    Vector2 requested = {state.playerMotion.velocity.x * deltaSeconds,
+                         state.playerMotion.velocity.y * deltaSeconds};
+    Vector2 candidate = {previous.x + requested.x, previous.y + requested.y};
     state.playerPosition =
         BodyCollision::Slide(previous, candidate, [this](Vector2 p) { return IsPositionBlocked(p); });
     state.playerPosition = BodyCollision::MovePlayer(previous, state.playerPosition);
+    state.playerMotion.velocity = MotionMath::ContactVelocity(
+        state.playerMotion.velocity, requested,
+        {state.playerPosition.x - previous.x, state.playerPosition.y - previous.y});
     state.movementSpeed = deltaSeconds > 0 ? Distance(previous, state.playerPosition) / deltaSeconds : 0;
-    state.movementAmount = state.movementSpeed > .001f ? inputLength : 0;
+    state.movementAmount = Game::Clamp(state.movementSpeed / kMovementSpeed, 0, 1);
 }
 void Game::UpdateCamera(float deltaSeconds)
 {
@@ -390,7 +478,7 @@ bool WeaponWheel::Open()
     wheel.offset = {};
     wheel.hovered = game::GameLevels::Mine().GetState().loadout.Selected();
     w.mouseFiring = w.mouseAiming = false;
-    w.movementAmount = w.movementSpeed = 0;
+    w.StopMotion();
     std::fill(std::begin(w.pressedKeys), std::end(w.pressedKeys), false);
     w.pressedKeys['q'] = true;
     RefreshCursorCapture();
@@ -497,6 +585,7 @@ void Game::KeyDown(unsigned char key, int, int)
             return;
         }
         state.isPaused = !state.isPaused;
+        state.StopMotion();
         state.mouseFiring = state.mouseAiming = false;
         std::fill(state.pressedKeys, state.pressedKeys + 256, false);
         return;
@@ -521,6 +610,7 @@ void Game::KeyDown(unsigned char key, int, int)
         state.journalVisible = key == 'j' && opening;
         state.dialogueHistoryVisible = key == 'h' && opening;
         state.dialogue.historyOffset = 0;
+        state.StopMotion();
         state.mapVisible = false;
         state.mouseFiring = state.mouseAiming = false;
         std::fill(std::begin(state.pressedKeys), std::end(state.pressedKeys), false);
@@ -565,6 +655,7 @@ void Game::KeyDown(unsigned char key, int, int)
     if (key == 'm')
     {
         state.mapVisible = !state.mapVisible;
+        state.StopMotion();
         state.mouseFiring = state.mouseAiming = false;
         std::fill(std::begin(state.pressedKeys), std::end(state.pressedKeys), false);
         state.pressedKeys['m'] = true;
@@ -813,6 +904,11 @@ models::CharacterPose Game::PlayerPose(float recoil) const
                         : CivicJustice::IsExterior() ? CivicJustice::State().meleeSeconds
                                                      : 0;
     state.playerAnimation.Apply(pose);
+    if (!state.isBikeMounted)
+    {
+        pose.motionForwardLean = state.playerMotion.forwardLean;
+        pose.motionSideLean = state.playerMotion.sideLean;
+    }
     const auto &gun = game::GameLevels::Mine().GetState().pistol;
     pose.reloadProgress = armed && gun.IsReloading() ? gun.GetReloadProgress() : -1;
     if (!armed)
@@ -1113,8 +1209,7 @@ bool Dialogue::Start(const std::string &id, std::vector<DialogueLine> lines,
     {
         std::fill(std::begin(world.pressedKeys), std::end(world.pressedKeys), false);
         world.mouseFiring = world.mouseAiming = false;
-        world.movementAmount = world.movementSpeed = 0;
-        world.bikeSpeed = 0;
+        world.StopMotion();
     }
     RememberDialoguePage();
     return true;
@@ -1665,6 +1760,7 @@ void Game::InteractWithNearbyTarget()
         }
         state.isInsideHome = false;
         state.playerPosition = kHomeDoor;
+        state.StopMotion();
         state.cameraPosition = state.playerPosition;
         ShowNotice(
             "헤일로 / 주거 구역 07. 머리 위로 자기부상 차량이 지나갑니다. 새벽부터 관문이 낮게 울립니다.");
@@ -1673,6 +1769,7 @@ void Game::InteractWithNearbyTarget()
     {
         state.isInsideHome = true;
         state.playerPosition = {2, 2};
+        state.StopMotion();
         state.cameraPosition = {0, 0};
         ShowNotice("집 / 문이 닫히자 도시의 웅성거림이 멀어집니다.");
     }
@@ -1804,6 +1901,7 @@ void Game::InteractWithNearbyTarget()
         state.isInObservatory = true;
         state.isInsideHome = false;
         state.playerPosition = kObservatoryStairs;
+        state.StopMotion();
         state.cameraPosition = {0, 0};
         std::fill(state.pressedKeys, state.pressedKeys + 256, false);
         if (!state.gateSignalHeard)
@@ -1831,6 +1929,7 @@ void Game::InteractWithNearbyTarget()
         state.isInObservatory = false;
         state.hasDescendedObservatory = true;
         state.playerPosition = kBeaconPosition;
+        state.StopMotion();
         state.cameraPosition = kBeaconPosition;
         std::fill(state.pressedKeys, state.pressedKeys + 256, false);
         state.mainQuestStage = (std::max)(state.mainQuestStage, MainQuestStage::MountJetBike);

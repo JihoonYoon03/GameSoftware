@@ -1419,7 +1419,7 @@ void Hud::OpenMenu(UiScreen screen)
     w.isPaused = screen != UiScreen::None;
     w.mapVisible = w.journalVisible = w.dialogueHistoryVisible = false;
     w.mouseFiring = w.mouseAiming = false;
-    w.movementAmount = w.movementSpeed = 0;
+    w.StopMotion();
     std::fill(std::begin(w.pressedKeys), std::end(w.pressedKeys), false);
 }
 void Hud::CloseMenu()
