@@ -1,0 +1,553 @@
+{
+  "schema": "erma_modular_vehicles_v1",
+  "units": "meters",
+  "authoring_forward": "+X",
+  "gltf_forward": "+X",
+  "authoring_up": "+Z",
+  "gltf_up": "+Y",
+  "hover_clearance_m": 0.18,
+  "types": {
+    "Coupe": {
+      "parameters": {
+        "length": 4.3,
+        "width": 1.7,
+        "height": 1.35,
+        "paint": "Vehicle_Teal",
+        "purpose": "civilian two-seat hover coupe"
+      },
+      "skeleton": "VEHICLE_Coupe",
+      "slots": {
+        "chassis": [
+          "Vehicle_Coupe_Chassis"
+        ],
+        "nose": [
+          "Vehicle_Coupe_Nose_Sport",
+          "Vehicle_Coupe_Nose_Utility"
+        ],
+        "canopy": [
+          "Vehicle_Coupe_Canopy_Panoramic",
+          "Vehicle_Coupe_Canopy_Armored"
+        ],
+        "seats": [
+          "Vehicle_Coupe_Seat_Cockpit"
+        ],
+        "pod.front.L": [
+          "Vehicle_Coupe_Pod_Front_Standard_L",
+          "Vehicle_Coupe_Pod_Front_Rugged_L"
+        ],
+        "pod.rear.L": [
+          "Vehicle_Coupe_Pod_Rear_Standard_L",
+          "Vehicle_Coupe_Pod_Rear_Rugged_L"
+        ],
+        "engine.L": [
+          "Vehicle_Coupe_Engine_Efficient_L",
+          "Vehicle_Coupe_Engine_Boost_L"
+        ],
+        "pod.front.R": [
+          "Vehicle_Coupe_Pod_Front_Standard_R",
+          "Vehicle_Coupe_Pod_Front_Rugged_R"
+        ],
+        "pod.rear.R": [
+          "Vehicle_Coupe_Pod_Rear_Standard_R",
+          "Vehicle_Coupe_Pod_Rear_Rugged_R"
+        ],
+        "engine.R": [
+          "Vehicle_Coupe_Engine_Efficient_R",
+          "Vehicle_Coupe_Engine_Boost_R"
+        ],
+        "payload": [
+          "Vehicle_Coupe_Payload_RearDeck",
+          "Vehicle_Coupe_Payload_UtilityBox"
+        ],
+        "service_hatch": [
+          "Vehicle_Coupe_Service_Hatch"
+        ],
+        "rail.L": [
+          "Vehicle_Coupe_Rail_L"
+        ],
+        "rail.R": [
+          "Vehicle_Coupe_Rail_R"
+        ],
+        "underbody": [
+          "Vehicle_Coupe_Underbody_FieldCoil"
+        ]
+      },
+      "default_parts": [
+        "Vehicle_Coupe_Chassis",
+        "Vehicle_Coupe_Nose_Sport",
+        "Vehicle_Coupe_Canopy_Panoramic",
+        "Vehicle_Coupe_Canopy_Panoramic_Glazing",
+        "Vehicle_Coupe_Seat_Cockpit",
+        "Vehicle_Coupe_Pod_Front_Standard_L",
+        "Vehicle_Coupe_Pod_Rear_Standard_L",
+        "Vehicle_Coupe_Engine_Efficient_L",
+        "Vehicle_Coupe_Pod_Front_Standard_R",
+        "Vehicle_Coupe_Pod_Rear_Standard_R",
+        "Vehicle_Coupe_Engine_Efficient_R",
+        "Vehicle_Coupe_Payload_RearDeck",
+        "Vehicle_Coupe_Service_Hatch",
+        "Vehicle_Coupe_Rail_L",
+        "Vehicle_Coupe_Rail_R",
+        "Vehicle_Coupe_Underbody_FieldCoil"
+      ],
+      "alternate_parts": [
+        "Vehicle_Coupe_Chassis",
+        "Vehicle_Coupe_Nose_Utility",
+        "Vehicle_Coupe_Canopy_Armored",
+        "Vehicle_Coupe_Canopy_Armored_Glazing",
+        "Vehicle_Coupe_Seat_Cockpit",
+        "Vehicle_Coupe_Pod_Front_Rugged_L",
+        "Vehicle_Coupe_Pod_Rear_Rugged_L",
+        "Vehicle_Coupe_Engine_Boost_L",
+        "Vehicle_Coupe_Pod_Front_Rugged_R",
+        "Vehicle_Coupe_Pod_Rear_Rugged_R",
+        "Vehicle_Coupe_Engine_Boost_R",
+        "Vehicle_Coupe_Payload_UtilityBox",
+        "Vehicle_Coupe_Service_Hatch",
+        "Vehicle_Coupe_Rail_L",
+        "Vehicle_Coupe_Rail_R",
+        "Vehicle_Coupe_Underbody_FieldCoil"
+      ],
+      "glazing_companions": {
+        "Vehicle_Coupe_Canopy_Panoramic": "Vehicle_Coupe_Canopy_Panoramic_Glazing",
+        "Vehicle_Coupe_Canopy_Armored": "Vehicle_Coupe_Canopy_Armored_Glazing"
+      }
+    },
+    "Shuttle": {
+      "parameters": {
+        "length": 5.6,
+        "width": 1.85,
+        "height": 2.1,
+        "paint": "Vehicle_Ivory",
+        "purpose": "enclosed passenger / medical shuttle"
+      },
+      "skeleton": "VEHICLE_Shuttle",
+      "slots": {
+        "chassis": [
+          "Vehicle_Shuttle_Chassis"
+        ],
+        "nose": [
+          "Vehicle_Shuttle_Nose_Sport",
+          "Vehicle_Shuttle_Nose_Utility"
+        ],
+        "canopy": [
+          "Vehicle_Shuttle_Canopy_Panoramic",
+          "Vehicle_Shuttle_Canopy_Armored"
+        ],
+        "seats": [
+          "Vehicle_Shuttle_Seat_Cockpit"
+        ],
+        "pod.front.L": [
+          "Vehicle_Shuttle_Pod_Front_Standard_L",
+          "Vehicle_Shuttle_Pod_Front_Rugged_L"
+        ],
+        "pod.rear.L": [
+          "Vehicle_Shuttle_Pod_Rear_Standard_L",
+          "Vehicle_Shuttle_Pod_Rear_Rugged_L"
+        ],
+        "engine.L": [
+          "Vehicle_Shuttle_Engine_Efficient_L",
+          "Vehicle_Shuttle_Engine_Boost_L"
+        ],
+        "pod.front.R": [
+          "Vehicle_Shuttle_Pod_Front_Standard_R",
+          "Vehicle_Shuttle_Pod_Front_Rugged_R"
+        ],
+        "pod.rear.R": [
+          "Vehicle_Shuttle_Pod_Rear_Standard_R",
+          "Vehicle_Shuttle_Pod_Rear_Rugged_R"
+        ],
+        "engine.R": [
+          "Vehicle_Shuttle_Engine_Efficient_R",
+          "Vehicle_Shuttle_Engine_Boost_R"
+        ],
+        "payload": [
+          "Vehicle_Shuttle_Payload_Passenger",
+          "Vehicle_Shuttle_Payload_Ambulance"
+        ],
+        "service_hatch": [
+          "Vehicle_Shuttle_Service_Hatch"
+        ],
+        "rail.L": [
+          "Vehicle_Shuttle_Rail_L"
+        ],
+        "rail.R": [
+          "Vehicle_Shuttle_Rail_R"
+        ],
+        "underbody": [
+          "Vehicle_Shuttle_Underbody_FieldCoil"
+        ]
+      },
+      "default_parts": [
+        "Vehicle_Shuttle_Chassis",
+        "Vehicle_Shuttle_Nose_Sport",
+        "Vehicle_Shuttle_Canopy_Panoramic",
+        "Vehicle_Shuttle_Canopy_Panoramic_Glazing",
+        "Vehicle_Shuttle_Seat_Cockpit",
+        "Vehicle_Shuttle_Pod_Front_Standard_L",
+        "Vehicle_Shuttle_Pod_Rear_Standard_L",
+        "Vehicle_Shuttle_Engine_Efficient_L",
+        "Vehicle_Shuttle_Pod_Front_Standard_R",
+        "Vehicle_Shuttle_Pod_Rear_Standard_R",
+        "Vehicle_Shuttle_Engine_Efficient_R",
+        "Vehicle_Shuttle_Payload_Passenger",
+        "Vehicle_Shuttle_Payload_Passenger_Glazing",
+        "Vehicle_Shuttle_Service_Hatch",
+        "Vehicle_Shuttle_Rail_L",
+        "Vehicle_Shuttle_Rail_R",
+        "Vehicle_Shuttle_Underbody_FieldCoil"
+      ],
+      "alternate_parts": [
+        "Vehicle_Shuttle_Chassis",
+        "Vehicle_Shuttle_Nose_Utility",
+        "Vehicle_Shuttle_Canopy_Armored",
+        "Vehicle_Shuttle_Canopy_Armored_Glazing",
+        "Vehicle_Shuttle_Seat_Cockpit",
+        "Vehicle_Shuttle_Pod_Front_Rugged_L",
+        "Vehicle_Shuttle_Pod_Rear_Rugged_L",
+        "Vehicle_Shuttle_Engine_Boost_L",
+        "Vehicle_Shuttle_Pod_Front_Rugged_R",
+        "Vehicle_Shuttle_Pod_Rear_Rugged_R",
+        "Vehicle_Shuttle_Engine_Boost_R",
+        "Vehicle_Shuttle_Payload_Ambulance",
+        "Vehicle_Shuttle_Service_Hatch",
+        "Vehicle_Shuttle_Rail_L",
+        "Vehicle_Shuttle_Rail_R",
+        "Vehicle_Shuttle_Underbody_FieldCoil"
+      ],
+      "glazing_companions": {
+        "Vehicle_Shuttle_Canopy_Panoramic": "Vehicle_Shuttle_Canopy_Panoramic_Glazing",
+        "Vehicle_Shuttle_Canopy_Armored": "Vehicle_Shuttle_Canopy_Armored_Glazing",
+        "Vehicle_Shuttle_Payload_Passenger": "Vehicle_Shuttle_Payload_Passenger_Glazing"
+      }
+    },
+    "Hauler": {
+      "parameters": {
+        "length": 5.2,
+        "width": 1.9,
+        "height": 2.0,
+        "paint": "Vehicle_Utility",
+        "purpose": "industrial freight / field service hauler"
+      },
+      "skeleton": "VEHICLE_Hauler",
+      "slots": {
+        "chassis": [
+          "Vehicle_Hauler_Chassis"
+        ],
+        "nose": [
+          "Vehicle_Hauler_Nose_Sport",
+          "Vehicle_Hauler_Nose_Utility"
+        ],
+        "canopy": [
+          "Vehicle_Hauler_Canopy_Panoramic",
+          "Vehicle_Hauler_Canopy_Armored"
+        ],
+        "seats": [
+          "Vehicle_Hauler_Seat_Cockpit"
+        ],
+        "pod.front.L": [
+          "Vehicle_Hauler_Pod_Front_Standard_L",
+          "Vehicle_Hauler_Pod_Front_Rugged_L"
+        ],
+        "pod.rear.L": [
+          "Vehicle_Hauler_Pod_Rear_Standard_L",
+          "Vehicle_Hauler_Pod_Rear_Rugged_L"
+        ],
+        "engine.L": [
+          "Vehicle_Hauler_Engine_Efficient_L",
+          "Vehicle_Hauler_Engine_Boost_L"
+        ],
+        "pod.front.R": [
+          "Vehicle_Hauler_Pod_Front_Standard_R",
+          "Vehicle_Hauler_Pod_Front_Rugged_R"
+        ],
+        "pod.rear.R": [
+          "Vehicle_Hauler_Pod_Rear_Standard_R",
+          "Vehicle_Hauler_Pod_Rear_Rugged_R"
+        ],
+        "engine.R": [
+          "Vehicle_Hauler_Engine_Efficient_R",
+          "Vehicle_Hauler_Engine_Boost_R"
+        ],
+        "payload": [
+          "Vehicle_Hauler_Payload_Container",
+          "Vehicle_Hauler_Payload_Flatbed"
+        ],
+        "service_hatch": [
+          "Vehicle_Hauler_Service_Hatch"
+        ],
+        "rail.L": [
+          "Vehicle_Hauler_Rail_L"
+        ],
+        "rail.R": [
+          "Vehicle_Hauler_Rail_R"
+        ],
+        "underbody": [
+          "Vehicle_Hauler_Underbody_FieldCoil"
+        ]
+      },
+      "default_parts": [
+        "Vehicle_Hauler_Chassis",
+        "Vehicle_Hauler_Nose_Sport",
+        "Vehicle_Hauler_Canopy_Panoramic",
+        "Vehicle_Hauler_Canopy_Panoramic_Glazing",
+        "Vehicle_Hauler_Seat_Cockpit",
+        "Vehicle_Hauler_Pod_Front_Standard_L",
+        "Vehicle_Hauler_Pod_Rear_Standard_L",
+        "Vehicle_Hauler_Engine_Efficient_L",
+        "Vehicle_Hauler_Pod_Front_Standard_R",
+        "Vehicle_Hauler_Pod_Rear_Standard_R",
+        "Vehicle_Hauler_Engine_Efficient_R",
+        "Vehicle_Hauler_Payload_Container",
+        "Vehicle_Hauler_Service_Hatch",
+        "Vehicle_Hauler_Rail_L",
+        "Vehicle_Hauler_Rail_R",
+        "Vehicle_Hauler_Underbody_FieldCoil"
+      ],
+      "alternate_parts": [
+        "Vehicle_Hauler_Chassis",
+        "Vehicle_Hauler_Nose_Utility",
+        "Vehicle_Hauler_Canopy_Armored",
+        "Vehicle_Hauler_Canopy_Armored_Glazing",
+        "Vehicle_Hauler_Seat_Cockpit",
+        "Vehicle_Hauler_Pod_Front_Rugged_L",
+        "Vehicle_Hauler_Pod_Rear_Rugged_L",
+        "Vehicle_Hauler_Engine_Boost_L",
+        "Vehicle_Hauler_Pod_Front_Rugged_R",
+        "Vehicle_Hauler_Pod_Rear_Rugged_R",
+        "Vehicle_Hauler_Engine_Boost_R",
+        "Vehicle_Hauler_Payload_Flatbed",
+        "Vehicle_Hauler_Service_Hatch",
+        "Vehicle_Hauler_Rail_L",
+        "Vehicle_Hauler_Rail_R",
+        "Vehicle_Hauler_Underbody_FieldCoil"
+      ],
+      "glazing_companions": {
+        "Vehicle_Hauler_Canopy_Panoramic": "Vehicle_Hauler_Canopy_Panoramic_Glazing",
+        "Vehicle_Hauler_Canopy_Armored": "Vehicle_Hauler_Canopy_Armored_Glazing"
+      }
+    },
+    "Patrol": {
+      "parameters": {
+        "length": 4.6,
+        "width": 1.75,
+        "height": 1.55,
+        "paint": "Vehicle_Patrol",
+        "purpose": "armored district security / survey patrol"
+      },
+      "skeleton": "VEHICLE_Patrol",
+      "slots": {
+        "chassis": [
+          "Vehicle_Patrol_Chassis"
+        ],
+        "nose": [
+          "Vehicle_Patrol_Nose_Sport",
+          "Vehicle_Patrol_Nose_Utility"
+        ],
+        "canopy": [
+          "Vehicle_Patrol_Canopy_Panoramic",
+          "Vehicle_Patrol_Canopy_Armored"
+        ],
+        "seats": [
+          "Vehicle_Patrol_Seat_Cockpit"
+        ],
+        "pod.front.L": [
+          "Vehicle_Patrol_Pod_Front_Standard_L",
+          "Vehicle_Patrol_Pod_Front_Rugged_L"
+        ],
+        "pod.rear.L": [
+          "Vehicle_Patrol_Pod_Rear_Standard_L",
+          "Vehicle_Patrol_Pod_Rear_Rugged_L"
+        ],
+        "engine.L": [
+          "Vehicle_Patrol_Engine_Efficient_L",
+          "Vehicle_Patrol_Engine_Boost_L"
+        ],
+        "pod.front.R": [
+          "Vehicle_Patrol_Pod_Front_Standard_R",
+          "Vehicle_Patrol_Pod_Front_Rugged_R"
+        ],
+        "pod.rear.R": [
+          "Vehicle_Patrol_Pod_Rear_Standard_R",
+          "Vehicle_Patrol_Pod_Rear_Rugged_R"
+        ],
+        "engine.R": [
+          "Vehicle_Patrol_Engine_Efficient_R",
+          "Vehicle_Patrol_Engine_Boost_R"
+        ],
+        "payload": [
+          "Vehicle_Patrol_Payload_Lightbar",
+          "Vehicle_Patrol_Payload_CoilTurret"
+        ],
+        "service_hatch": [
+          "Vehicle_Patrol_Service_Hatch"
+        ],
+        "rail.L": [
+          "Vehicle_Patrol_Rail_L"
+        ],
+        "rail.R": [
+          "Vehicle_Patrol_Rail_R"
+        ],
+        "underbody": [
+          "Vehicle_Patrol_Underbody_FieldCoil"
+        ]
+      },
+      "default_parts": [
+        "Vehicle_Patrol_Chassis",
+        "Vehicle_Patrol_Nose_Sport",
+        "Vehicle_Patrol_Canopy_Panoramic",
+        "Vehicle_Patrol_Canopy_Panoramic_Glazing",
+        "Vehicle_Patrol_Seat_Cockpit",
+        "Vehicle_Patrol_Pod_Front_Standard_L",
+        "Vehicle_Patrol_Pod_Rear_Standard_L",
+        "Vehicle_Patrol_Engine_Efficient_L",
+        "Vehicle_Patrol_Pod_Front_Standard_R",
+        "Vehicle_Patrol_Pod_Rear_Standard_R",
+        "Vehicle_Patrol_Engine_Efficient_R",
+        "Vehicle_Patrol_Payload_Lightbar",
+        "Vehicle_Patrol_Service_Hatch",
+        "Vehicle_Patrol_Rail_L",
+        "Vehicle_Patrol_Rail_R",
+        "Vehicle_Patrol_Underbody_FieldCoil"
+      ],
+      "alternate_parts": [
+        "Vehicle_Patrol_Chassis",
+        "Vehicle_Patrol_Nose_Utility",
+        "Vehicle_Patrol_Canopy_Armored",
+        "Vehicle_Patrol_Canopy_Armored_Glazing",
+        "Vehicle_Patrol_Seat_Cockpit",
+        "Vehicle_Patrol_Pod_Front_Rugged_L",
+        "Vehicle_Patrol_Pod_Rear_Rugged_L",
+        "Vehicle_Patrol_Engine_Boost_L",
+        "Vehicle_Patrol_Pod_Front_Rugged_R",
+        "Vehicle_Patrol_Pod_Rear_Rugged_R",
+        "Vehicle_Patrol_Engine_Boost_R",
+        "Vehicle_Patrol_Payload_CoilTurret",
+        "Vehicle_Patrol_Service_Hatch",
+        "Vehicle_Patrol_Rail_L",
+        "Vehicle_Patrol_Rail_R",
+        "Vehicle_Patrol_Underbody_FieldCoil"
+      ],
+      "glazing_companions": {
+        "Vehicle_Patrol_Canopy_Panoramic": "Vehicle_Patrol_Canopy_Panoramic_Glazing",
+        "Vehicle_Patrol_Canopy_Armored": "Vehicle_Patrol_Canopy_Armored_Glazing"
+      }
+    },
+    "JetBike": {
+      "parameters": {
+        "length": 2.5,
+        "width": 0.95,
+        "height": 1.05,
+        "paint": "Vehicle_Burgundy",
+        "purpose": "open tandem-seat hover bike"
+      },
+      "skeleton": "VEHICLE_JetBike",
+      "slots": {
+        "chassis": [
+          "Vehicle_JetBike_Chassis"
+        ],
+        "nose": [
+          "Vehicle_JetBike_Nose_Sport",
+          "Vehicle_JetBike_Nose_Utility"
+        ],
+        "canopy": [
+          "Vehicle_JetBike_Canopy_Windscreen",
+          "Vehicle_JetBike_Canopy_RallyScreen"
+        ],
+        "seats": [
+          "Vehicle_JetBike_Seat_Tandem"
+        ],
+        "pod.front.L": [
+          "Vehicle_JetBike_Pod_Front_Standard_L",
+          "Vehicle_JetBike_Pod_Front_Rugged_L"
+        ],
+        "pod.rear.L": [
+          "Vehicle_JetBike_Pod_Rear_Standard_L",
+          "Vehicle_JetBike_Pod_Rear_Rugged_L"
+        ],
+        "engine.L": [
+          "Vehicle_JetBike_Engine_Efficient_L",
+          "Vehicle_JetBike_Engine_Boost_L"
+        ],
+        "pod.front.R": [
+          "Vehicle_JetBike_Pod_Front_Standard_R",
+          "Vehicle_JetBike_Pod_Front_Rugged_R"
+        ],
+        "pod.rear.R": [
+          "Vehicle_JetBike_Pod_Rear_Standard_R",
+          "Vehicle_JetBike_Pod_Rear_Rugged_R"
+        ],
+        "engine.R": [
+          "Vehicle_JetBike_Engine_Efficient_R",
+          "Vehicle_JetBike_Engine_Boost_R"
+        ],
+        "payload": [
+          "Vehicle_JetBike_Payload_StowBox",
+          "Vehicle_JetBike_Payload_Panniers"
+        ],
+        "footrest.L": [
+          "Vehicle_JetBike_Footrest_L"
+        ],
+        "footrest.R": [
+          "Vehicle_JetBike_Footrest_R"
+        ],
+        "service_hatch": [
+          "Vehicle_JetBike_Service_Hatch"
+        ],
+        "rail.L": [
+          "Vehicle_JetBike_Rail_L"
+        ],
+        "rail.R": [
+          "Vehicle_JetBike_Rail_R"
+        ],
+        "underbody": [
+          "Vehicle_JetBike_Underbody_FieldCoil"
+        ]
+      },
+      "default_parts": [
+        "Vehicle_JetBike_Chassis",
+        "Vehicle_JetBike_Nose_Sport",
+        "Vehicle_JetBike_Canopy_Windscreen",
+        "Vehicle_JetBike_Canopy_Windscreen_Glazing",
+        "Vehicle_JetBike_Seat_Tandem",
+        "Vehicle_JetBike_Pod_Front_Standard_L",
+        "Vehicle_JetBike_Pod_Rear_Standard_L",
+        "Vehicle_JetBike_Engine_Efficient_L",
+        "Vehicle_JetBike_Pod_Front_Standard_R",
+        "Vehicle_JetBike_Pod_Rear_Standard_R",
+        "Vehicle_JetBike_Engine_Efficient_R",
+        "Vehicle_JetBike_Payload_StowBox",
+        "Vehicle_JetBike_Footrest_L",
+        "Vehicle_JetBike_Footrest_R",
+        "Vehicle_JetBike_Service_Hatch",
+        "Vehicle_JetBike_Rail_L",
+        "Vehicle_JetBike_Rail_R",
+        "Vehicle_JetBike_Underbody_FieldCoil"
+      ],
+      "alternate_parts": [
+        "Vehicle_JetBike_Chassis",
+        "Vehicle_JetBike_Nose_Utility",
+        "Vehicle_JetBike_Canopy_RallyScreen",
+        "Vehicle_JetBike_Canopy_RallyScreen_Glazing",
+        "Vehicle_JetBike_Seat_Tandem",
+        "Vehicle_JetBike_Pod_Front_Rugged_L",
+        "Vehicle_JetBike_Pod_Rear_Rugged_L",
+        "Vehicle_JetBike_Engine_Boost_L",
+        "Vehicle_JetBike_Pod_Front_Rugged_R",
+        "Vehicle_JetBike_Pod_Rear_Rugged_R",
+        "Vehicle_JetBike_Engine_Boost_R",
+        "Vehicle_JetBike_Payload_Panniers",
+        "Vehicle_JetBike_Footrest_L",
+        "Vehicle_JetBike_Footrest_R",
+        "Vehicle_JetBike_Service_Hatch",
+        "Vehicle_JetBike_Rail_L",
+        "Vehicle_JetBike_Rail_R",
+        "Vehicle_JetBike_Underbody_FieldCoil"
+      ],
+      "glazing_companions": {
+        "Vehicle_JetBike_Canopy_Windscreen": "Vehicle_JetBike_Canopy_Windscreen_Glazing",
+        "Vehicle_JetBike_Canopy_RallyScreen": "Vehicle_JetBike_Canopy_RallyScreen_Glazing"
+      }
+    }
+  }
+}

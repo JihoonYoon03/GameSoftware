@@ -1,0 +1,59 @@
+{
+  "source": "Export/Characters/Player_Explorer.glb",
+  "characters": {
+    "Kain_Guard": {
+      "clips": 43,
+      "geometry_and_skin_unchanged": true,
+      "previous_binary_prefix_sha256": "7e18b2883b1fb8f4f827b44720c29497c416e559793cff55183d596f9c41fd2a",
+      "animation_accessors_copied": 1507
+    },
+    "Mara_Medic": {
+      "clips": 43,
+      "geometry_and_skin_unchanged": true,
+      "previous_binary_prefix_sha256": "e82f1f6119331811d59103904c177cf939f1f922d7f8e3ef2bc6d8aabc84b3d8",
+      "animation_accessors_copied": 1507
+    },
+    "NPC_Civilian": {
+      "clips": 43,
+      "geometry_and_skin_unchanged": true,
+      "previous_binary_prefix_sha256": "af6f043bd52dbf6f877ebf5497a94ed436d318fc34cfca92a99607ecda5ee933",
+      "animation_accessors_copied": 1507
+    },
+    "NPC_Guard_Helmet": {
+      "clips": 43,
+      "geometry_and_skin_unchanged": true,
+      "previous_binary_prefix_sha256": "200f25ef75c455e2955f42ea53383cee84616330f53c4e6067ab9358161e6db8",
+      "animation_accessors_copied": 1507
+    },
+    "NPC_HeavyCombat": {
+      "clips": 43,
+      "geometry_and_skin_unchanged": true,
+      "previous_binary_prefix_sha256": "54f61f8d59975b37adecd241f5f8eacba3021a9143d8008d4202b62f93f2f808",
+      "animation_accessors_copied": 1507
+    },
+    "NPC_Miner": {
+      "clips": 43,
+      "geometry_and_skin_unchanged": true,
+      "previous_binary_prefix_sha256": "aa70918e07a5e278b35dc40d49ad746b52e40182f513711e111e4f83300f5b37",
+      "animation_accessors_copied": 1507
+    },
+    "NPC_Pilot": {
+      "clips": 43,
+      "geometry_and_skin_unchanged": true,
+      "previous_binary_prefix_sha256": "7f19076001aba9a93e07b3d64772dd1638cc96c130fbcc2bb533f4b134078f78",
+      "animation_accessors_copied": 1507
+    },
+    "NPC_Researcher": {
+      "clips": 43,
+      "geometry_and_skin_unchanged": true,
+      "previous_binary_prefix_sha256": "4a19592436b2fdfd745658f0f70fd76b2617828346f54b86a744bafb45831e44",
+      "animation_accessors_copied": 1507
+    },
+    "Ria_Engineer": {
+      "clips": 43,
+      "geometry_and_skin_unchanged": true,
+      "previous_binary_prefix_sha256": "911e1001195a20c09d51f5b64ea1c16571295cf694b0b8dbda4d19619616a04e",
+      "animation_accessors_copied": 1507
+    }
+  }
+}

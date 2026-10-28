@@ -1,0 +1,462 @@
+{
+  "schema": "human_accessories_v2",
+  "skeleton": "HUMAN_7H",
+  "mesh_space": "shared bind pose; full-rig coordinates",
+  "sockets": {
+    "chest": {
+      "bone": "chest",
+      "position": [
+        0,
+        -0.16,
+        1.33
+      ],
+      "normal": [
+        0,
+        -1,
+        0
+      ]
+    },
+    "back": {
+      "bone": "back_socket",
+      "position": [
+        0,
+        0.18,
+        1.3
+      ],
+      "normal": [
+        0,
+        1,
+        0
+      ]
+    },
+    "waist_front": {
+      "bone": "pelvis",
+      "position": [
+        0,
+        -0.15,
+        1.01
+      ],
+      "normal": [
+        0,
+        -1,
+        0
+      ]
+    },
+    "hip_L": {
+      "bone": "pelvis",
+      "position": [
+        0.2,
+        0,
+        0.98
+      ],
+      "normal": [
+        1,
+        0,
+        0
+      ]
+    },
+    "hip_R": {
+      "bone": "pelvis",
+      "position": [
+        -0.2,
+        0,
+        0.98
+      ],
+      "normal": [
+        -1,
+        0,
+        0
+      ]
+    },
+    "shoulder_L": {
+      "bone": "upper_arm.L",
+      "position": [
+        0.24,
+        0,
+        1.42
+      ],
+      "normal": [
+        1,
+        0,
+        0
+      ]
+    },
+    "shoulder_R": {
+      "bone": "upper_arm.R",
+      "position": [
+        -0.24,
+        0,
+        1.42
+      ],
+      "normal": [
+        -1,
+        0,
+        0
+      ]
+    },
+    "forearm_L": {
+      "bone": "forearm.L",
+      "position": [
+        0.39,
+        -0.075,
+        1.07
+      ],
+      "normal": [
+        0,
+        -1,
+        0
+      ]
+    },
+    "forearm_R": {
+      "bone": "forearm.R",
+      "position": [
+        -0.39,
+        -0.075,
+        1.07
+      ],
+      "normal": [
+        0,
+        -1,
+        0
+      ]
+    },
+    "head": {
+      "bone": "head",
+      "position": [
+        0,
+        0,
+        1.74
+      ],
+      "normal": [
+        0,
+        -1,
+        0
+      ]
+    },
+    "hand_R": {
+      "bone": "hand.R",
+      "position": [
+        -0.465,
+        -0.03,
+        0.87
+      ],
+      "normal": [
+        0,
+        0,
+        -1
+      ]
+    }
+  },
+  "accessories": {
+    "Accessory_LifeSupport_TwinTank": {
+      "slot": "back",
+      "bone": "back_socket",
+      "description": "paired breathable-gas cylinders / EVA and mining"
+    },
+    "Accessory_Mining_PowerRig": {
+      "slot": "back",
+      "bone": "back_socket",
+      "description": "external load-bearing industrial power rig"
+    },
+    "Accessory_Combat_Reactor": {
+      "slot": "back",
+      "bone": "back_socket",
+      "description": "armored reactor and heat-exchange fins"
+    },
+    "Accessory_Medic_RescuePack": {
+      "slot": "back",
+      "bone": "back_socket",
+      "description": "oxygen / sterile supply / diagnostic cells"
+    },
+    "Accessory_Research_SampleRack": {
+      "slot": "back",
+      "bone": "back_socket",
+      "description": "sealed sample cylinders and relay aerial"
+    },
+    "Accessory_Pilot_CompactPack": {
+      "slot": "back",
+      "bone": "back_socket",
+      "description": "low-profile flight life-support module"
+    },
+    "Accessory_Civilian_Rucksack": {
+      "slot": "back",
+      "bone": "back_socket",
+      "description": "soft utility backpack"
+    },
+    "Accessory_Navigation_Console": {
+      "slot": "chest",
+      "bone": "chest",
+      "description": "detachable chest navigation display"
+    },
+    "Accessory_Medic_CartridgeRack": {
+      "slot": "chest",
+      "bone": "chest",
+      "description": "independent sterile injection cartridge tray"
+    },
+    "Accessory_Mining_Respirator": {
+      "slot": "chest",
+      "bone": "chest",
+      "description": "external industrial breathing filter"
+    },
+    "Accessory_Ablative_RibPlate": {
+      "slot": "chest",
+      "bone": "chest",
+      "description": "detachable layered impact breastplate"
+    },
+    "Accessory_Shoulder_Tactical_L": {
+      "slot": "shoulder_L",
+      "bone": "upper_arm.L",
+      "description": "independent tactical shoulder cap"
+    },
+    "Accessory_Shoulder_Heavy_L": {
+      "slot": "shoulder_L",
+      "bone": "upper_arm.L",
+      "description": "oversized layered powered-armor shoulder cap"
+    },
+    "Accessory_Work_Lamp_L": {
+      "slot": "shoulder_L",
+      "bone": "upper_arm.L",
+      "description": "independent shoulder lamp"
+    },
+    "Accessory_Wrist_Scanner_L": {
+      "slot": "forearm_L",
+      "bone": "forearm.L",
+      "description": "detachable navigation and material scanner"
+    },
+    "Accessory_Medical_Injector_L": {
+      "slot": "forearm_L",
+      "bone": "forearm.L",
+      "description": "forearm treatment tool"
+    },
+    "Accessory_Utility_Pouch_L": {
+      "slot": "hip_L",
+      "bone": "pelvis",
+      "description": "belt utility pouch"
+    },
+    "Accessory_Medic_Pouch_L": {
+      "slot": "hip_L",
+      "bone": "pelvis",
+      "description": "sterile emergency pouch"
+    },
+    "Accessory_Tool_Roll_L": {
+      "slot": "hip_L",
+      "bone": "pelvis",
+      "description": "visible spanners and repair tool roll"
+    },
+    "Accessory_Shoulder_Tactical_R": {
+      "slot": "shoulder_R",
+      "bone": "upper_arm.R",
+      "description": "independent tactical shoulder cap"
+    },
+    "Accessory_Shoulder_Heavy_R": {
+      "slot": "shoulder_R",
+      "bone": "upper_arm.R",
+      "description": "oversized layered powered-armor shoulder cap"
+    },
+    "Accessory_Work_Lamp_R": {
+      "slot": "shoulder_R",
+      "bone": "upper_arm.R",
+      "description": "independent shoulder lamp"
+    },
+    "Accessory_Wrist_Scanner_R": {
+      "slot": "forearm_R",
+      "bone": "forearm.R",
+      "description": "detachable navigation and material scanner"
+    },
+    "Accessory_Medical_Injector_R": {
+      "slot": "forearm_R",
+      "bone": "forearm.R",
+      "description": "forearm treatment tool"
+    },
+    "Accessory_Utility_Pouch_R": {
+      "slot": "hip_R",
+      "bone": "pelvis",
+      "description": "belt utility pouch"
+    },
+    "Accessory_Medic_Pouch_R": {
+      "slot": "hip_R",
+      "bone": "pelvis",
+      "description": "sterile emergency pouch"
+    },
+    "Accessory_Tool_Roll_R": {
+      "slot": "hip_R",
+      "bone": "pelvis",
+      "description": "visible spanners and repair tool roll"
+    },
+    "Accessory_Belt_LifeSupport": {
+      "slot": "waist_front",
+      "bone": "pelvis",
+      "description": "independent pressure-suit belt console"
+    },
+    "Accessory_Goggles": {
+      "slot": "head",
+      "bone": "head",
+      "description": "separate protective goggles"
+    },
+    "Accessory_Mining_Hardhat": {
+      "slot": "head",
+      "bone": "head",
+      "description": "reinforced mining helmet with work light"
+    },
+    "Accessory_EVA_Helmet": {
+      "slot": "head",
+      "bone": "head",
+      "description": "sealed rounded pressure helmet / hides hair"
+    },
+    "Accessory_Combat_Helmet": {
+      "slot": "head",
+      "bone": "head",
+      "description": "compact tactical visor and armored jaw"
+    },
+    "Accessory_Heavy_Helmet": {
+      "slot": "head",
+      "bone": "head",
+      "description": "wide armored helmet for the powered suit"
+    },
+    "Accessory_Research_Visor": {
+      "slot": "head",
+      "bone": "head",
+      "description": "detachable panoramic research face shield"
+    }
+  },
+  "default_sets": {
+    "Explorer": [
+      "LifeSupport_TwinTank",
+      "Navigation_Console",
+      "Belt_LifeSupport",
+      "Wrist_Scanner_L",
+      "Utility_Pouch_R"
+    ],
+    "Engineer": [
+      "Mining_PowerRig",
+      "Tool_Roll_L",
+      "Utility_Pouch_R",
+      "Work_Lamp_L",
+      "Goggles"
+    ],
+    "Guard": [
+      "Combat_Reactor",
+      "Ablative_RibPlate",
+      "Shoulder_Tactical_L",
+      "Shoulder_Tactical_R",
+      "Utility_Pouch_R"
+    ],
+    "Medic": [
+      "Medic_RescuePack",
+      "Medic_CartridgeRack",
+      "Medical_Injector_L",
+      "Medic_Pouch_L",
+      "Medic_Pouch_R"
+    ],
+    "Researcher": [
+      "Research_SampleRack",
+      "Research_Visor",
+      "Wrist_Scanner_R",
+      "Utility_Pouch_L"
+    ],
+    "Miner": [
+      "Mining_PowerRig",
+      "Mining_Respirator",
+      "Mining_Hardhat",
+      "Work_Lamp_R",
+      "Tool_Roll_L"
+    ],
+    "HeavyCombat": [
+      "Combat_Reactor",
+      "Shoulder_Heavy_L",
+      "Shoulder_Heavy_R",
+      "Heavy_Helmet",
+      "Utility_Pouch_L"
+    ],
+    "Pilot": [
+      "Pilot_CompactPack",
+      "EVA_Helmet",
+      "Belt_LifeSupport",
+      "Wrist_Scanner_L"
+    ],
+    "Civilian": [
+      "Civilian_Rucksack",
+      "Utility_Pouch_L"
+    ]
+  },
+  "profiles": {
+    "Male_Lean": {
+      "sex": "male",
+      "mass": "lean",
+      "shoulder": 0.193,
+      "rib": 0.174,
+      "waist": 0.108,
+      "hip": 0.143,
+      "front": 0.093,
+      "back": 0.077,
+      "belly": 0.091,
+      "limb": 0.84,
+      "bust": 0
+    },
+    "Male_Normal": {
+      "sex": "male",
+      "mass": "normal",
+      "shoulder": 0.226,
+      "rib": 0.204,
+      "waist": 0.139,
+      "hip": 0.165,
+      "front": 0.119,
+      "back": 0.1,
+      "belly": 0.111,
+      "limb": 1.07,
+      "bust": 0
+    },
+    "Male_Heavy": {
+      "sex": "male",
+      "mass": "heavy",
+      "shoulder": 0.249,
+      "rib": 0.241,
+      "waist": 0.213,
+      "hip": 0.208,
+      "front": 0.156,
+      "back": 0.122,
+      "belly": 0.209,
+      "limb": 1.32,
+      "bust": 0
+    },
+    "Female_Lean": {
+      "sex": "female",
+      "mass": "lean",
+      "shoulder": 0.164,
+      "rib": 0.147,
+      "waist": 0.083,
+      "hip": 0.165,
+      "front": 0.094,
+      "back": 0.073,
+      "belly": 0.083,
+      "limb": 0.77,
+      "bust": 0.037
+    },
+    "Female_Normal": {
+      "sex": "female",
+      "mass": "normal",
+      "shoulder": 0.183,
+      "rib": 0.164,
+      "waist": 0.105,
+      "hip": 0.191,
+      "front": 0.112,
+      "back": 0.087,
+      "belly": 0.1,
+      "limb": 0.91,
+      "bust": 0.052
+    },
+    "Female_Heavy": {
+      "sex": "female",
+      "mass": "heavy",
+      "shoulder": 0.209,
+      "rib": 0.2,
+      "waist": 0.184,
+      "hip": 0.238,
+      "front": 0.148,
+      "back": 0.113,
+      "belly": 0.193,
+      "limb": 1.22,
+      "bust": 0.064
+    }
+  }
+}

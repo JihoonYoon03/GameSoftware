@@ -1,0 +1,224 @@
+{
+  "revision": "pistol_layers_v1",
+  "date": "2026-10-28",
+  "request": "../ANIMATION_BLEND_REQUEST.md",
+  "skeleton": "HUMAN_7H",
+  "bones": 23,
+  "total_human_clips": 63,
+  "previous_clips_preserved": 59,
+  "new_clips": [
+    "Pistol_Carry_Idle",
+    "Pistol_Carry_Walk",
+    "Pistol_Carry_Run",
+    "Reload_Pistol"
+  ],
+  "upper_body_mask": [
+    "spine",
+    "chest",
+    "neck",
+    "head",
+    "clavicle.L",
+    "upper_arm.L",
+    "forearm.L",
+    "hand.L",
+    "clavicle.R",
+    "upper_arm.R",
+    "forearm.R",
+    "hand.R",
+    "weapon_socket",
+    "back_socket",
+    "muzzle"
+  ],
+  "excluded_bones": [
+    "root",
+    "pelvis",
+    "thigh.L",
+    "shin.L",
+    "foot.L",
+    "thigh.R",
+    "shin.R",
+    "foot.R"
+  ],
+  "clips": {
+    "Pistol_Carry_Idle": {
+      "clip": "Pistol_Carry_Idle",
+      "action": "HUMAN_7H__Pistol_Carry_Idle",
+      "fps": 30,
+      "start": 0,
+      "end": 60,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "human_upper_body",
+      "mask": "human_upper_body",
+      "blend_mode": "masked_override",
+      "reference": "Idle",
+      "phase_sync_group": "human_locomotion",
+      "matched_locomotion": "Idle",
+      "blend_in_seconds": 0.15,
+      "blend_out_seconds": 0.15,
+      "events": [],
+      "revision": "pistol_layers_v1",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "support": "lower body supplied by the existing movement layer; right hand owns the weapon grip",
+      "entry_pose": "Pistol_Carry_Idle:0",
+      "exit_pose": "Pistol_Carry_Idle:0"
+    },
+    "Pistol_Carry_Walk": {
+      "clip": "Pistol_Carry_Walk",
+      "action": "HUMAN_7H__Pistol_Carry_Walk",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "human_upper_body",
+      "mask": "human_upper_body",
+      "blend_mode": "masked_override",
+      "reference": "Walk",
+      "phase_sync_group": "human_locomotion",
+      "matched_locomotion": "Walk",
+      "blend_in_seconds": 0.15,
+      "blend_out_seconds": 0.15,
+      "events": [],
+      "revision": "pistol_layers_v1",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "support": "lower body supplied by the existing movement layer; right hand owns the weapon grip",
+      "entry_pose": "Pistol_Carry_Walk:0",
+      "exit_pose": "Pistol_Carry_Walk:0"
+    },
+    "Pistol_Carry_Run": {
+      "clip": "Pistol_Carry_Run",
+      "action": "HUMAN_7H__Pistol_Carry_Run",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "human_upper_body",
+      "mask": "human_upper_body",
+      "blend_mode": "masked_override",
+      "reference": "Run",
+      "phase_sync_group": "human_locomotion",
+      "matched_locomotion": "Run",
+      "blend_in_seconds": 0.15,
+      "blend_out_seconds": 0.15,
+      "events": [],
+      "revision": "pistol_layers_v1",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "support": "lower body supplied by the existing movement layer; right hand owns the weapon grip",
+      "entry_pose": "Pistol_Carry_Run:0",
+      "exit_pose": "Pistol_Carry_Run:0"
+    },
+    "Reload_Pistol": {
+      "clip": "Reload_Pistol",
+      "action": "HUMAN_7H__Reload_Pistol",
+      "fps": 30,
+      "start": 0,
+      "end": 42,
+      "duration_seconds": 1.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "human_upper_body",
+      "mask": "human_upper_body",
+      "blend_mode": "masked_override",
+      "reference": "Idle",
+      "phase_sync_group": "reload",
+      "matched_locomotion": null,
+      "blend_in_seconds": 0.15,
+      "blend_out_seconds": 0.15,
+      "events": [
+        {
+          "phase": 0.3,
+          "seconds": 0.42,
+          "event": "reload_magazine_release_visual",
+          "visual_only": true,
+          "changes_ammo": false
+        },
+        {
+          "phase": 0.67,
+          "seconds": 0.938,
+          "event": "reload_magazine_seat_visual",
+          "visual_only": true,
+          "changes_ammo": false
+        },
+        {
+          "phase": 0.8,
+          "seconds": 1.12,
+          "event": "reload_slide_release_visual",
+          "visual_only": true,
+          "changes_ammo": false
+        },
+        {
+          "phase": 1,
+          "seconds": 1.4,
+          "event": "reload_pose_recovered",
+          "visual_only": true,
+          "changes_ammo": false
+        }
+      ],
+      "revision": "pistol_layers_v1",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "support": "lower body supplied by the existing movement layer; right hand owns the weapon grip",
+      "entry_pose": "Pistol_Carry_Idle:0",
+      "exit_pose": "Pistol_Carry_Idle:0"
+    }
+  },
+  "aim_transition_seconds": [
+    0.1,
+    0.2
+  ],
+  "recommended_aim_transition_seconds": 0.15,
+  "movement_phase": {
+    "left_contact": 0,
+    "right_contact": 0.5,
+    "walk_seconds": 1,
+    "run_seconds": 0.6666666666666666,
+    "reset_on_mode_switch": false
+  },
+  "reload": {
+    "ammo_authority": "game code only",
+    "visual_events_change_ammo": false,
+    "separate_magazine_mesh_added": false,
+    "gesture": "right hand holds the grip; left hand visits magazine well and slide; existing rigid pistol reused",
+    "entry_exit": "Pistol_Carry_Idle at phase 0"
+  },
+  "future_speed_extension": "No sprint or faster aim sample added; request marks this as future work after target actor speeds are settled.",
+  "runtime_cache_edited": false,
+  "references": {
+    "default_provider": "Mixamo",
+    "policy": "view the relevant public motion before authoring; record actual title, date and observed features; do not claim a downloaded retarget when hand-authoring",
+    "checked_on": "2026-10-28",
+    "method": "public 3D preview observed; hand-authored on the existing rig, no motion data imported",
+    "motions": [
+      {
+        "title": "Pistol Run",
+        "description": "Running With A Pistol",
+        "url": "https://www.mixamo.com/#/?page=1&query=pistol&type=Motion%2CMotionPack",
+        "use": "weapon arm damping and bent-elbow carry timing; adapted to one-handed lowered carry"
+      },
+      {
+        "title": "Pistol Aim",
+        "description": "Pistol Aim To Holster Idle",
+        "url": "https://www.mixamo.com/#/?page=1&query=pistol&type=Motion%2CMotionPack",
+        "use": "lowering and recovery trajectory between carry and aiming"
+      },
+      {
+        "title": "Reloading",
+        "description": "Gun Reload While Walking",
+        "url": "https://www.mixamo.com/#/?page=1&query=reload&type=Motion%2CMotionPack",
+        "use": "stable weapon hand, separate magazine and slide hand beats; compressed to the requested 1.4 seconds"
+      }
+    ]
+  }
+}

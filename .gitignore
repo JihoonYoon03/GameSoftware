@@ -368,3 +368,9 @@ Cache/
 # Checked-in graphics dependencies are not build output.
 !SimpleGame/Dependencies/x64/
 !SimpleGame/Dependencies/Win32/
+
+# Generated from tracked GLB/JSON by tools/ensure-resources.mjs before the game build.
+/Resource/Runtime/
+
+# Local comparison/recovery archives are not game inputs and can exceed GitHub's file limit.
+/Resource/Source/Archives/

@@ -1,0 +1,9302 @@
+{
+  "Male_Lean": {
+    "Explorer": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        -0.006000000000000005,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        -0.006000000000000005,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        -0.006000000000000005,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        -0.006000000000000005,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        -0.006000000000000005,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        -0.006000000000000005,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        -0.006000000000000005,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        0.015,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        0.015,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        0.015,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        0.015,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Engineer": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        -0.008000000000000007,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        -0.008000000000000007,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        -0.008000000000000007,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        -0.008000000000000007,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        -0.008000000000000007,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        -0.008000000000000007,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        -0.008000000000000007,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        0.017,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        0.017,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        0.017,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        0.017,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Guard": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.001999999999999995,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.001999999999999995,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.001999999999999995,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.001999999999999995,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.001999999999999995,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.001999999999999995,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.001999999999999995,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        0.007000000000000006,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        0.007000000000000006,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        0.007000000000000006,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        0.007000000000000006,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Medic": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        -0.0020000000000000052,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        -0.0020000000000000052,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        -0.0020000000000000052,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        -0.0020000000000000052,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        -0.0020000000000000052,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        -0.0020000000000000052,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        -0.0020000000000000052,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        0.010999999999999996,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        0.010999999999999996,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        0.010999999999999996,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        0.010999999999999996,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Researcher": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        -6.938893903907228e-18,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        -6.938893903907228e-18,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        -6.938893903907228e-18,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        -6.938893903907228e-18,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        -6.938893903907228e-18,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        -6.938893903907228e-18,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        -6.938893903907228e-18,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        0.009000000000000008,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        0.009000000000000008,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        0.009000000000000008,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        0.009000000000000008,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Miner": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.0029999999999999923,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.0029999999999999923,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.0029999999999999923,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.0029999999999999923,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.0029999999999999923,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.0029999999999999923,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.0029999999999999923,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        0.006000000000000005,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        0.006000000000000005,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        0.006000000000000005,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        0.006000000000000005,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "HeavyCombat": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.01999999999999999,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.01999999999999999,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.01999999999999999,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.01999999999999999,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.01999999999999999,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.01999999999999999,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.01999999999999999,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.01100000000000001,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.01100000000000001,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.01100000000000001,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.01100000000000001,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Pilot": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        -0.014000000000000007,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        -0.014000000000000007,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        -0.014000000000000007,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        -0.014000000000000007,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        -0.014000000000000007,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        -0.014000000000000007,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        -0.014000000000000007,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        0.023000000000000007,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        0.023000000000000007,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        0.023000000000000007,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        0.023000000000000007,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Civilian": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        -0.007000000000000006,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        -0.007000000000000006,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        -0.007000000000000006,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        -0.007000000000000006,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        -0.007000000000000006,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        -0.007000000000000006,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        -0.007000000000000006,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        0.016,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        0.016,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        0.016,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        0.016,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "Male_Normal": {
+    "Explorer": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.017,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.017,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.017,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.017,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.017,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.017,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.017,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.01100000000000001,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.01100000000000001,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.01100000000000001,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.01100000000000001,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.0010000000000000009,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Engineer": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.015,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.015,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.015,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.015,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.015,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.015,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.015,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.009000000000000008,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.009000000000000008,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.009000000000000008,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.009000000000000008,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.0010000000000000009,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Guard": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.025,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.025,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.025,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.025,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.025,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.025,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.025,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.01899999999999999,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.01899999999999999,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.01899999999999999,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.01899999999999999,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.0010000000000000009,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Medic": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.021,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.021,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.021,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.021,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.021,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.021,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.021,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.014999999999999986,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.014999999999999986,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.014999999999999986,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.014999999999999986,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.0010000000000000009,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Researcher": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.023,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.023,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.023,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.023,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.023,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.023,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.023,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.016999999999999987,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.016999999999999987,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.016999999999999987,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.016999999999999987,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.0010000000000000009,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Miner": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.026,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.026,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.026,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.026,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.026,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.026,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.026,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.01999999999999999,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.01999999999999999,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.01999999999999999,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.01999999999999999,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.0010000000000000009,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "HeavyCombat": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.043,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.043,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.043,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.043,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.043,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.043,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.043,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.03699999999999998,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.03699999999999998,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.03699999999999998,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.03699999999999998,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.0010000000000000009,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Pilot": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.009,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.009,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.009,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.009,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.009,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.009,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.009,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.0030000000000000027,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.0030000000000000027,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.0030000000000000027,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.0030000000000000027,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.0010000000000000009,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Civilian": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.016,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.016,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.016,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.016,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.016,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.016,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.016,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.010000000000000009,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.010000000000000009,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.010000000000000009,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.010000000000000009,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.004620000000000004,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.003500000000000003,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.0010000000000000009,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "Male_Heavy": {
+    "Explorer": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.03899999999999999,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.03899999999999999,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.03899999999999999,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.03899999999999999,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.03899999999999999,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.03899999999999999,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.03899999999999999,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.04799999999999999,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.04799999999999999,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.04799999999999999,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.04799999999999999,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.09899999999999999,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Engineer": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.03699999999999999,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.03699999999999999,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.03699999999999999,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.03699999999999999,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.03699999999999999,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.03699999999999999,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.03699999999999999,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.045999999999999985,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.045999999999999985,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.045999999999999985,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.045999999999999985,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.09899999999999999,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Guard": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.04699999999999999,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.04699999999999999,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.04699999999999999,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.04699999999999999,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.04699999999999999,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.04699999999999999,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.04699999999999999,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.055999999999999994,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.055999999999999994,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.055999999999999994,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.055999999999999994,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.09899999999999999,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Medic": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.043,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.043,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.043,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.043,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.043,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.043,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.043,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.05199999999999999,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.05199999999999999,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.05199999999999999,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.05199999999999999,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.09899999999999999,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Researcher": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.04499999999999999,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.04499999999999999,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.04499999999999999,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.04499999999999999,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.04499999999999999,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.04499999999999999,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.04499999999999999,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.05399999999999999,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.05399999999999999,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.05399999999999999,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.05399999999999999,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.09899999999999999,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Miner": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.04799999999999999,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.04799999999999999,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.04799999999999999,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.04799999999999999,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.04799999999999999,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.04799999999999999,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.04799999999999999,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.056999999999999995,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.056999999999999995,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.056999999999999995,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.056999999999999995,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.09899999999999999,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "HeavyCombat": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.06499999999999999,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.06499999999999999,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.06499999999999999,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.06499999999999999,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.06499999999999999,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.06499999999999999,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.06499999999999999,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.07400000000000001,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.07400000000000001,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.07400000000000001,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.07400000000000001,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.09899999999999999,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Pilot": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.030999999999999993,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.030999999999999993,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.030999999999999993,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.030999999999999993,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.030999999999999993,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.030999999999999993,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.030999999999999993,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.04000000000000001,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.04000000000000001,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.04000000000000001,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.04000000000000001,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.09899999999999999,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Civilian": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.03799999999999999,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.03799999999999999,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.03799999999999999,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.03799999999999999,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.03799999999999999,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.03799999999999999,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.03799999999999999,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.046999999999999986,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.046999999999999986,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.046999999999999986,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.046999999999999986,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.021120000000000007,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.016000000000000004,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.04299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.09899999999999999,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "Female_Lean": {
+    "Explorer": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        -0.010000000000000009,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        -0.010000000000000009,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        -0.010000000000000009,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        -0.010000000000000009,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        -0.010000000000000009,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        -0.010000000000000009,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        -0.010000000000000009,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -6.0000000000004494e-05,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -6.0000000000004494e-05,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -6.0000000000004494e-05,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -6.0000000000004494e-05,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Engineer": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        -0.01200000000000001,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        -0.01200000000000001,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        -0.01200000000000001,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        -0.01200000000000001,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        -0.01200000000000001,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        -0.01200000000000001,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        -0.01200000000000001,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        0.0019399999999999973,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        0.0019399999999999973,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        0.0019399999999999973,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        0.0019399999999999973,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Guard": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        -0.0020000000000000087,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        -0.0020000000000000087,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        -0.0020000000000000087,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        -0.0020000000000000087,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        -0.0020000000000000087,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        -0.0020000000000000087,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        -0.0020000000000000087,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.008060000000000012,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.008060000000000012,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.008060000000000012,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.008060000000000012,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Medic": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        -0.006000000000000009,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        -0.006000000000000009,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        -0.006000000000000009,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        -0.006000000000000009,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        -0.006000000000000009,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        -0.006000000000000009,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        -0.006000000000000009,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.004060000000000008,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.004060000000000008,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.004060000000000008,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.004060000000000008,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Researcher": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        -0.0040000000000000105,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        -0.0040000000000000105,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        -0.0040000000000000105,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        -0.0040000000000000105,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        -0.0040000000000000105,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        -0.0040000000000000105,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        -0.0040000000000000105,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.00606000000000001,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.00606000000000001,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.00606000000000001,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.00606000000000001,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Miner": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        -0.0010000000000000113,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        -0.0010000000000000113,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        -0.0010000000000000113,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        -0.0010000000000000113,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        -0.0010000000000000113,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        -0.0010000000000000113,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        -0.0010000000000000113,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.009060000000000012,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.009060000000000012,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.009060000000000012,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.009060000000000012,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "HeavyCombat": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.015999999999999986,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.015999999999999986,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.015999999999999986,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.015999999999999986,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.015999999999999986,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.015999999999999986,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.015999999999999986,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.02606,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.02606,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.02606,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.02606,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Pilot": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        -0.01800000000000001,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        -0.01800000000000001,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        -0.01800000000000001,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        -0.01800000000000001,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        -0.01800000000000001,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        -0.01800000000000001,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        -0.01800000000000001,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        0.007940000000000003,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        0.007940000000000003,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        0.007940000000000003,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        0.007940000000000003,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Civilian": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        -0.01100000000000001,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        -0.01100000000000001,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        -0.01100000000000001,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        -0.01100000000000001,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        -0.01100000000000001,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        -0.01100000000000001,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        -0.01100000000000001,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        0.0009399999999999964,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        0.0009399999999999964,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        0.0009399999999999964,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        0.0009399999999999964,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "Female_Normal": {
+    "Explorer": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.00399999999999999,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.00399999999999999,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.00399999999999999,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.00399999999999999,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.00399999999999999,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.00399999999999999,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.00399999999999999,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.023760000000000003,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.023760000000000003,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.023760000000000003,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.023760000000000003,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Engineer": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.001999999999999988,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.001999999999999988,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.001999999999999988,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.001999999999999988,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.001999999999999988,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.001999999999999988,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.001999999999999988,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.02176,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.02176,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.02176,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.02176,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Guard": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.01199999999999999,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.01199999999999999,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.01199999999999999,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.01199999999999999,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.01199999999999999,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.01199999999999999,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.01199999999999999,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.03175999999999998,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.03175999999999998,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.03175999999999998,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.03175999999999998,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Medic": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.00799999999999999,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.00799999999999999,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.00799999999999999,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.00799999999999999,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.00799999999999999,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.00799999999999999,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.00799999999999999,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.02775999999999998,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.02775999999999998,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.02775999999999998,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.02775999999999998,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Researcher": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.009999999999999988,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.009999999999999988,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.009999999999999988,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.009999999999999988,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.009999999999999988,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.009999999999999988,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.009999999999999988,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.02975999999999998,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.02975999999999998,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.02975999999999998,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.02975999999999998,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Miner": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.012999999999999987,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.012999999999999987,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.012999999999999987,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.012999999999999987,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.012999999999999987,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.012999999999999987,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.012999999999999987,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.032759999999999984,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.032759999999999984,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.032759999999999984,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.032759999999999984,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "HeavyCombat": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.029999999999999985,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.029999999999999985,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.029999999999999985,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.029999999999999985,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.029999999999999985,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.029999999999999985,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.029999999999999985,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.04975999999999997,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.04975999999999997,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.04975999999999997,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.04975999999999997,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Pilot": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        -0.004000000000000012,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        -0.004000000000000012,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        -0.004000000000000012,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        -0.004000000000000012,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        -0.004000000000000012,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        -0.004000000000000012,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        -0.004000000000000012,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.015759999999999996,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.015759999999999996,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.015759999999999996,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.015759999999999996,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Civilian": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.002999999999999989,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.002999999999999989,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.002999999999999989,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.002999999999999989,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.002999999999999989,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.002999999999999989,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.002999999999999989,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.022760000000000002,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.022760000000000002,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.022760000000000002,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.022760000000000002,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.025999999999999995,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "Female_Heavy": {
+    "Explorer": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.03,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.03,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.03,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.03,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.03,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.03,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.03,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.06431999999999999,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.06431999999999999,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.06431999999999999,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.06431999999999999,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.083,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Engineer": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.027999999999999997,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.027999999999999997,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.027999999999999997,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.027999999999999997,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.027999999999999997,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.027999999999999997,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.027999999999999997,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.062319999999999987,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.062319999999999987,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.062319999999999987,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.062319999999999987,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.083,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Guard": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.038,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.038,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.038,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.038,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.038,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.038,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.038,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.07232,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.07232,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.07232,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.07232,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.083,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Medic": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.034,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.034,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.034,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.034,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.034,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.034,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.034,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.06831999999999999,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.06831999999999999,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.06831999999999999,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.06831999999999999,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.083,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Researcher": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.036,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.036,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.036,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.036,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.036,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.036,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.036,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.07032,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.07032,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.07032,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.07032,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.083,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Miner": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.03899999999999999,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.03899999999999999,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.03899999999999999,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.03899999999999999,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.03899999999999999,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.03899999999999999,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.03899999999999999,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.07332,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.07332,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.07332,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.07332,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.083,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "HeavyCombat": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.055999999999999994,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.055999999999999994,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.055999999999999994,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.055999999999999994,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.055999999999999994,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.055999999999999994,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.055999999999999994,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.09032000000000001,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.09032000000000001,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.09032000000000001,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.09032000000000001,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.083,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Pilot": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.022,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.022,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.022,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.022,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.022,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.022,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.022,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.05632000000000001,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.05632000000000001,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.05632000000000001,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.05632000000000001,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.083,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    },
+    "Civilian": {
+      "Accessory_LifeSupport_TwinTank": [
+        0,
+        0.028999999999999998,
+        0
+      ],
+      "Accessory_Mining_PowerRig": [
+        0,
+        0.028999999999999998,
+        0
+      ],
+      "Accessory_Combat_Reactor": [
+        0,
+        0.028999999999999998,
+        0
+      ],
+      "Accessory_Medic_RescuePack": [
+        0,
+        0.028999999999999998,
+        0
+      ],
+      "Accessory_Research_SampleRack": [
+        0,
+        0.028999999999999998,
+        0
+      ],
+      "Accessory_Pilot_CompactPack": [
+        0,
+        0.028999999999999998,
+        0
+      ],
+      "Accessory_Civilian_Rucksack": [
+        0,
+        0.028999999999999998,
+        0
+      ],
+      "Accessory_Navigation_Console": [
+        0,
+        -0.06331999999999999,
+        0
+      ],
+      "Accessory_Medic_CartridgeRack": [
+        0,
+        -0.06331999999999999,
+        0
+      ],
+      "Accessory_Mining_Respirator": [
+        0,
+        -0.06331999999999999,
+        0
+      ],
+      "Accessory_Ablative_RibPlate": [
+        0,
+        -0.06331999999999999,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_L": [
+        0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_L": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Medical_Injector_L": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Utility_Pouch_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_L": [
+        0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Tactical_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Shoulder_Heavy_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Work_Lamp_R": [
+        -0.014519999999999998,
+        0,
+        0
+      ],
+      "Accessory_Wrist_Scanner_R": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Medical_Injector_R": [
+        0,
+        -0.011,
+        0
+      ],
+      "Accessory_Utility_Pouch_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Medic_Pouch_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Tool_Roll_R": [
+        -0.07299999999999998,
+        0,
+        0
+      ],
+      "Accessory_Belt_LifeSupport": [
+        0,
+        -0.083,
+        0
+      ],
+      "Accessory_Goggles": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Mining_Hardhat": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_EVA_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Combat_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Heavy_Helmet": [
+        0,
+        0,
+        0
+      ],
+      "Accessory_Research_Visor": [
+        0,
+        0,
+        0
+      ]
+    }
+  }
+}

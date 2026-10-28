@@ -1,0 +1,11 @@
+{
+  "source_pairs": 428,
+  "reimported_assemblies": 88,
+  "reimported_mesh_nodes": 428,
+  "max_reimport_bounds_error_m": 0,
+  "errors": [],
+  "existing_part_ids_preserved": true,
+  "geometry_revision": "silhouette_first_200_v3",
+  "standalone_blend_owned_content_only": true,
+  "all_checks_passed": true
+}

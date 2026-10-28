@@ -1,0 +1,4716 @@
+{
+  "HUMAN_7H": [
+    {
+      "clip": "Reference_A",
+      "action": "HUMAN_7H__Reference_A",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [],
+      "revision": "civic_motion_v2_directional",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Turn_Base",
+      "action": "HUMAN_7H__Turn_Base",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [],
+      "revision": "civic_motion_v2_directional",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Idle",
+      "action": "HUMAN_7H__Idle",
+      "fps": 30,
+      "start": 0,
+      "end": 60,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [],
+      "revision": "civic_motion_v2_directional",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "entry_pose": "Idle:0",
+      "exit_pose": "Idle:0",
+      "support": "both feet"
+    },
+    {
+      "clip": "Walk",
+      "action": "HUMAN_7H__Walk",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0,
+          "event": "left_heel_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.5,
+          "event": "right_heel_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.6
+          ]
+        ],
+        "right": [
+          [
+            0,
+            0.1
+          ],
+          [
+            0.5,
+            1
+          ]
+        ],
+        "flight": [],
+        "heel_loading": [
+          0,
+          0.11
+        ],
+        "heel_rise": [
+          0.44,
+          0.6
+        ]
+      },
+      "entry_pose": "Walk:0",
+      "exit_pose": "Walk:0"
+    },
+    {
+      "clip": "Run",
+      "action": "HUMAN_7H__Run",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0,
+          "event": "left_heel_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.333333,
+          "event": "right_heel_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.4
+          ]
+        ],
+        "right": [
+          [
+            0.5,
+            0.9
+          ]
+        ],
+        "flight": [
+          [
+            0.4,
+            0.5
+          ],
+          [
+            0.9,
+            1
+          ]
+        ]
+      },
+      "entry_pose": "Run:0",
+      "exit_pose": "Run:0"
+    },
+    {
+      "clip": "Turn_Left_90",
+      "action": "HUMAN_7H__Turn_Left_90",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 90,
+      "events": [],
+      "revision": "civic_motion_v2_directional",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Turn_Right_90",
+      "action": "HUMAN_7H__Turn_Right_90",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": -90,
+      "events": [],
+      "revision": "civic_motion_v2_directional",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Attack_Melee",
+      "action": "HUMAN_7H__Attack_Melee",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0.46,
+          "event": "melee_hit_window_start"
+        },
+        {
+          "phase": 0.6,
+          "event": "melee_hit_window_end"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Aim_Base",
+      "action": "HUMAN_7H__Aim_Base",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [],
+      "revision": "civic_motion_v2_directional",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Attack_Fire",
+      "action": "HUMAN_7H__Attack_Fire",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0.08,
+          "event": "projectile_or_emitter_trigger"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Jump_Start",
+      "action": "HUMAN_7H__Jump_Start",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0.55,
+          "seconds": 0.22,
+          "event": "push_off_visual"
+        },
+        {
+          "phase": 1,
+          "seconds": 0.4,
+          "event": "jump_air_ready"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Jump_Air",
+      "action": "HUMAN_7H__Jump_Air",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [],
+      "revision": "civic_motion_v2_directional",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Jump_Land",
+      "action": "HUMAN_7H__Jump_Land",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0.32,
+          "seconds": 0.128,
+          "event": "landing_compression"
+        },
+        {
+          "phase": 1,
+          "seconds": 0.4,
+          "event": "landing_recovered"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Jump_Full",
+      "action": "HUMAN_7H__Jump_Full",
+      "fps": 30,
+      "start": 0,
+      "end": 36,
+      "duration_seconds": 1.2,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [],
+      "revision": "civic_motion_v2_directional",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Walk_To_Run",
+      "action": "HUMAN_7H__Walk_To_Run",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [],
+      "revision": "civic_motion_v2_directional",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Hit_Front",
+      "action": "HUMAN_7H__Hit_Front",
+      "fps": 30,
+      "start": 0,
+      "end": 9,
+      "duration_seconds": 0.3,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.04,
+      "blend_out_seconds": 0.06,
+      "support": "preserve base animation lower body; both hands retain the common grip transform",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "impact_visual_only"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "layer": "human_upper_body",
+      "reference": "Aim_Base",
+      "blend_mode": "masked_override",
+      "entry_pose": "Aim_Base",
+      "exit_pose": "Aim_Base",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Hit_Back",
+      "action": "HUMAN_7H__Hit_Back",
+      "fps": 30,
+      "start": 0,
+      "end": 9,
+      "duration_seconds": 0.3,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.04,
+      "blend_out_seconds": 0.06,
+      "support": "preserve base animation lower body; both hands retain the common grip transform",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "impact_visual_only"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "layer": "human_upper_body",
+      "reference": "Aim_Base",
+      "blend_mode": "masked_override",
+      "entry_pose": "Aim_Base",
+      "exit_pose": "Aim_Base",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Hit_Left",
+      "action": "HUMAN_7H__Hit_Left",
+      "fps": 30,
+      "start": 0,
+      "end": 9,
+      "duration_seconds": 0.3,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.04,
+      "blend_out_seconds": 0.06,
+      "support": "preserve base animation lower body; both hands retain the common grip transform",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "impact_visual_only"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "layer": "human_upper_body",
+      "reference": "Aim_Base",
+      "blend_mode": "masked_override",
+      "entry_pose": "Aim_Base",
+      "exit_pose": "Aim_Base",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Hit_Right",
+      "action": "HUMAN_7H__Hit_Right",
+      "fps": 30,
+      "start": 0,
+      "end": 9,
+      "duration_seconds": 0.3,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.04,
+      "blend_out_seconds": 0.06,
+      "support": "preserve base animation lower body; both hands retain the common grip transform",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "impact_visual_only"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "layer": "human_upper_body",
+      "reference": "Aim_Base",
+      "blend_mode": "masked_override",
+      "entry_pose": "Aim_Base",
+      "exit_pose": "Aim_Base",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Knockdown_Front",
+      "action": "HUMAN_7H__Knockdown_Front",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "see civic_animation_contract.json",
+      "events": [
+        {
+          "phase": 0.66,
+          "seconds": 0.528,
+          "event": "body_contact_visual_only"
+        },
+        {
+          "phase": 1,
+          "seconds": 0.8,
+          "event": "downed_pose_ready"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "layer": "full_body",
+      "entry_pose": "Idle:0",
+      "exit_pose": "Downed_Loop:0",
+      "hold_last_frame": true,
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Knockdown_Back",
+      "action": "HUMAN_7H__Knockdown_Back",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "see civic_animation_contract.json",
+      "events": [
+        {
+          "phase": 0.66,
+          "seconds": 0.528,
+          "event": "body_contact_visual_only"
+        },
+        {
+          "phase": 1,
+          "seconds": 0.8,
+          "event": "downed_pose_ready"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "layer": "full_body",
+      "entry_pose": "Idle:0",
+      "exit_pose": "Downed_Back_Loop:0",
+      "hold_last_frame": true,
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Knockdown_Left",
+      "action": "HUMAN_7H__Knockdown_Left",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "see civic_animation_contract.json",
+      "events": [
+        {
+          "phase": 0.66,
+          "seconds": 0.528,
+          "event": "body_contact_visual_only"
+        },
+        {
+          "phase": 1,
+          "seconds": 0.8,
+          "event": "downed_pose_ready"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "layer": "full_body",
+      "entry_pose": "Idle:0",
+      "exit_pose": "Downed_Left_Loop:0",
+      "hold_last_frame": true,
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Knockdown_Right",
+      "action": "HUMAN_7H__Knockdown_Right",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "see civic_animation_contract.json",
+      "events": [
+        {
+          "phase": 0.66,
+          "seconds": 0.528,
+          "event": "body_contact_visual_only"
+        },
+        {
+          "phase": 1,
+          "seconds": 0.8,
+          "event": "downed_pose_ready"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "layer": "full_body",
+      "entry_pose": "Idle:0",
+      "exit_pose": "Downed_Right_Loop:0",
+      "hold_last_frame": true,
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Downed_Loop",
+      "action": "HUMAN_7H__Downed_Loop",
+      "fps": 30,
+      "start": 0,
+      "end": 60,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "side torso, hip, bent legs; weapon clear of floor",
+      "events": [],
+      "revision": "civic_motion_v2_directional",
+      "entry_pose": "Downed_Loop:0",
+      "exit_pose": "Downed_Loop:0",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "GetUp_Front",
+      "action": "HUMAN_7H__GetUp_Front",
+      "fps": 30,
+      "start": 0,
+      "end": 42,
+      "duration_seconds": 1.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "see civic_animation_contract.json",
+      "events": [
+        {
+          "phase": 0.26,
+          "seconds": 0.364,
+          "event": "left_hand_support"
+        },
+        {
+          "phase": 0.53,
+          "seconds": 0.742,
+          "event": "left_foot_planted"
+        },
+        {
+          "phase": 0.78,
+          "seconds": 1.092,
+          "event": "knee_support_released"
+        },
+        {
+          "phase": 1,
+          "seconds": 1.4,
+          "event": "fully_upright"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "entry_pose": "Downed_Loop:0",
+      "exit_pose": "Idle:0",
+      "input_lock_until_event": "fully_upright",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "contacts": {
+        "side_support": [
+          0,
+          0.18
+        ],
+        "left_hand": [
+          0.2,
+          0.31
+        ],
+        "right_knee": [
+          0.26,
+          0.64
+        ],
+        "left_foot": [
+          0.49,
+          1
+        ],
+        "both_feet": [
+          0.86,
+          1
+        ]
+      }
+    },
+    {
+      "clip": "GetUp_Back",
+      "action": "HUMAN_7H__GetUp_Back",
+      "fps": 30,
+      "start": 0,
+      "end": 42,
+      "duration_seconds": 1.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "see civic_animation_contract.json",
+      "events": [
+        {
+          "phase": 0.26,
+          "seconds": 0.364,
+          "event": "left_hand_support"
+        },
+        {
+          "phase": 0.53,
+          "seconds": 0.742,
+          "event": "left_foot_planted"
+        },
+        {
+          "phase": 0.78,
+          "seconds": 1.092,
+          "event": "knee_support_released"
+        },
+        {
+          "phase": 1,
+          "seconds": 1.4,
+          "event": "fully_upright"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "entry_pose": "Downed_Back_Loop:0",
+      "exit_pose": "Idle:0",
+      "input_lock_until_event": "fully_upright",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "contacts": {
+        "side_support": [
+          0,
+          0.18
+        ],
+        "left_hand": [
+          0.2,
+          0.31
+        ],
+        "right_knee": [
+          0.26,
+          0.64
+        ],
+        "left_foot": [
+          0.49,
+          1
+        ],
+        "both_feet": [
+          0.86,
+          1
+        ]
+      }
+    },
+    {
+      "clip": "Death_Front",
+      "action": "HUMAN_7H__Death_Front",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "see civic_animation_contract.json",
+      "events": [
+        {
+          "phase": 0.66,
+          "seconds": 0.66,
+          "event": "body_contact_visual_only"
+        },
+        {
+          "phase": 1,
+          "seconds": 1.0,
+          "event": "death_pose_hold",
+          "auto_getup": false
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "layer": "full_body",
+      "entry_pose": "Idle:0",
+      "exit_pose": "Death_Front_Pose",
+      "hold_last_frame": true,
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Death_Back",
+      "action": "HUMAN_7H__Death_Back",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "see civic_animation_contract.json",
+      "events": [
+        {
+          "phase": 0.66,
+          "seconds": 0.66,
+          "event": "body_contact_visual_only"
+        },
+        {
+          "phase": 1,
+          "seconds": 1.0,
+          "event": "death_pose_hold",
+          "auto_getup": false
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "layer": "full_body",
+      "entry_pose": "Idle:0",
+      "exit_pose": "Death_Back_Pose",
+      "hold_last_frame": true,
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Death_Front_Pose",
+      "action": "HUMAN_7H__Death_Front_Pose",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "see civic_animation_contract.json",
+      "events": [],
+      "revision": "civic_motion_v2_directional",
+      "entry_pose": "Death_Front:1",
+      "hold_last_frame": true,
+      "auto_getup": false,
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Death_Back_Pose",
+      "action": "HUMAN_7H__Death_Back_Pose",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "see civic_animation_contract.json",
+      "events": [],
+      "revision": "civic_motion_v2_directional",
+      "entry_pose": "Death_Back:1",
+      "hold_last_frame": true,
+      "auto_getup": false,
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Flee_Start",
+      "action": "HUMAN_7H__Flee_Start",
+      "fps": 30,
+      "start": 0,
+      "end": 6,
+      "duration_seconds": 0.2,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "left lead contact at exit; short head check then gaze on actor-supplied escape heading",
+      "events": [],
+      "revision": "civic_motion_v2_directional",
+      "entry_pose": "Idle:0",
+      "exit_pose": "Flee_Run:0",
+      "heading": "actor supplied escape heading, gaze forward",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Flee_Run",
+      "action": "HUMAN_7H__Flee_Run",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "left 0-.4, right .5-.9, flight .4-.5/.9-1",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0,
+          "event": "left_heel_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.333333,
+          "event": "right_heel_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "entry_pose": "Flee_Run:0",
+      "exit_pose": "Flee_Run:0",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.4
+          ]
+        ],
+        "right": [
+          [
+            0.5,
+            0.9
+          ]
+        ],
+        "flight": [
+          [
+            0.4,
+            0.5
+          ],
+          [
+            0.9,
+            1
+          ]
+        ]
+      }
+    },
+    {
+      "clip": "Flee_Stop",
+      "action": "HUMAN_7H__Flee_Stop",
+      "fps": 30,
+      "start": 0,
+      "end": 6,
+      "duration_seconds": 0.2,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "enter at left contact; decelerate actor over 0.2 seconds; both feet at exit",
+      "events": [],
+      "revision": "civic_motion_v2_directional",
+      "entry_pose": "Flee_Run:0",
+      "exit_pose": "Idle:0",
+      "entry_phase": 0,
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Security_StunFire",
+      "action": "HUMAN_7H__Security_StunFire",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "preserve base animation lower body; both hands retain the common grip transform",
+      "events": [
+        {
+          "phase": 0.08,
+          "seconds": 0.032,
+          "event": "stun_projectile_trigger",
+          "socket": "muzzle",
+          "attachment": "Weapon_CoilPistol_35cm"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "layer": "human_upper_body",
+      "reference": "Aim_Base",
+      "blend_mode": "masked_override",
+      "entry_pose": "Aim_Base",
+      "exit_pose": "Aim_Base",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Medical_Stabilized",
+      "action": "HUMAN_7H__Medical_Stabilized",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "see civic_animation_contract.json",
+      "events": [],
+      "revision": "civic_motion_v2_directional",
+      "entry_pose": "Downed_Loop:0",
+      "exit_pose": "Downed_Loop:0",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Medical_GetUp",
+      "action": "HUMAN_7H__Medical_GetUp",
+      "fps": 30,
+      "start": 0,
+      "end": 42,
+      "duration_seconds": 1.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "see civic_animation_contract.json",
+      "events": [
+        {
+          "phase": 0.26,
+          "seconds": 0.364,
+          "event": "left_hand_support"
+        },
+        {
+          "phase": 0.53,
+          "seconds": 0.742,
+          "event": "left_foot_planted"
+        },
+        {
+          "phase": 0.78,
+          "seconds": 1.092,
+          "event": "knee_support_released"
+        },
+        {
+          "phase": 1,
+          "seconds": 1.4,
+          "event": "fully_upright"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "entry_pose": "Downed_Loop:0",
+      "exit_pose": "Idle:0",
+      "input_lock_until_event": "fully_upright",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "contacts": {
+        "side_support": [
+          0,
+          0.18
+        ],
+        "left_hand": [
+          0.2,
+          0.31
+        ],
+        "right_knee": [
+          0.26,
+          0.64
+        ],
+        "left_foot": [
+          0.49,
+          1
+        ],
+        "both_feet": [
+          0.86,
+          1
+        ]
+      }
+    },
+    {
+      "clip": "Ride_Base",
+      "action": "HUMAN_7H__Ride_Base",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "fixed pelvis, both palms at bars, both boot soles on pegs",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "riding_weapon_visibility",
+          "visible": false,
+          "reason": "both hands on handlebars; holster in game"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "entry_pose": "Ride_Base",
+      "exit_pose": "Ride_Base",
+      "layer": "full_body",
+      "legacy_game_Ride": "preserved outside source; no Runtime edits",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Rider_Brace",
+      "action": "HUMAN_7H__Rider_Brace",
+      "fps": 30,
+      "start": 0,
+      "end": 15,
+      "duration_seconds": 0.5,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "same five contacts as Ride_Base throughout the 0.5 second reaction",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "riding_weapon_visibility",
+          "visible": false,
+          "reason": "both hands on handlebars; holster in game"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "entry_pose": "Ride_Base",
+      "exit_pose": "Ride_Base",
+      "layer": "full_body",
+      "legacy_game_Ride": "preserved outside source; no Runtime edits",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Downed_Back_Loop",
+      "action": "HUMAN_7H__Downed_Back_Loop",
+      "fps": 30,
+      "start": 0,
+      "end": 60,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "side torso, hip, bent legs; weapon clear of floor",
+      "events": [],
+      "revision": "civic_motion_v2_directional",
+      "entry_pose": "Downed_Back_Loop:0",
+      "exit_pose": "Downed_Back_Loop:0",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Downed_Left_Loop",
+      "action": "HUMAN_7H__Downed_Left_Loop",
+      "fps": 30,
+      "start": 0,
+      "end": 60,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "side torso, hip, bent legs; weapon clear of floor",
+      "events": [],
+      "revision": "civic_motion_v2_directional",
+      "entry_pose": "Downed_Left_Loop:0",
+      "exit_pose": "Downed_Left_Loop:0",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "Downed_Right_Loop",
+      "action": "HUMAN_7H__Downed_Right_Loop",
+      "fps": 30,
+      "start": 0,
+      "end": 60,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "side torso, hip, bent legs; weapon clear of floor",
+      "events": [],
+      "revision": "civic_motion_v2_directional",
+      "entry_pose": "Downed_Right_Loop:0",
+      "exit_pose": "Downed_Right_Loop:0",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60
+    },
+    {
+      "clip": "GetUp_Left",
+      "action": "HUMAN_7H__GetUp_Left",
+      "fps": 30,
+      "start": 0,
+      "end": 42,
+      "duration_seconds": 1.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "see civic_animation_contract.json",
+      "events": [
+        {
+          "phase": 0.26,
+          "seconds": 0.364,
+          "event": "left_hand_support"
+        },
+        {
+          "phase": 0.53,
+          "seconds": 0.742,
+          "event": "left_foot_planted"
+        },
+        {
+          "phase": 0.78,
+          "seconds": 1.092,
+          "event": "knee_support_released"
+        },
+        {
+          "phase": 1,
+          "seconds": 1.4,
+          "event": "fully_upright"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "entry_pose": "Downed_Left_Loop:0",
+      "exit_pose": "Idle:0",
+      "input_lock_until_event": "fully_upright",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "contacts": {
+        "side_support": [
+          0,
+          0.18
+        ],
+        "left_hand": [
+          0.2,
+          0.31
+        ],
+        "right_knee": [
+          0.26,
+          0.64
+        ],
+        "left_foot": [
+          0.49,
+          1
+        ],
+        "both_feet": [
+          0.86,
+          1
+        ]
+      }
+    },
+    {
+      "clip": "GetUp_Right",
+      "action": "HUMAN_7H__GetUp_Right",
+      "fps": 30,
+      "start": 0,
+      "end": 42,
+      "duration_seconds": 1.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "see civic_animation_contract.json",
+      "events": [
+        {
+          "phase": 0.26,
+          "seconds": 0.364,
+          "event": "left_hand_support"
+        },
+        {
+          "phase": 0.53,
+          "seconds": 0.742,
+          "event": "left_foot_planted"
+        },
+        {
+          "phase": 0.78,
+          "seconds": 1.092,
+          "event": "knee_support_released"
+        },
+        {
+          "phase": 1,
+          "seconds": 1.4,
+          "event": "fully_upright"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "entry_pose": "Downed_Right_Loop:0",
+      "exit_pose": "Idle:0",
+      "input_lock_until_event": "fully_upright",
+      "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "contacts": {
+        "side_support": [
+          0,
+          0.18
+        ],
+        "left_hand": [
+          0.2,
+          0.31
+        ],
+        "right_knee": [
+          0.26,
+          0.64
+        ],
+        "left_foot": [
+          0.49,
+          1
+        ],
+        "both_feet": [
+          0.86,
+          1
+        ]
+      }
+    },
+    {
+      "clip": "Aim_Walk_Forward",
+      "action": "HUMAN_7H__Aim_Walk_Forward",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.5,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Walk_Forward:0",
+      "exit_pose": "Aim_Walk_Forward:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        0.0,
+        -1.0,
+        0
+      ],
+      "direction_degrees": 0,
+      "speed_mps": 0.9,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.6
+          ]
+        ],
+        "right": [
+          [
+            0,
+            0.1
+          ],
+          [
+            0.5,
+            1
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Walk_ForwardLeft",
+      "action": "HUMAN_7H__Aim_Walk_ForwardLeft",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.5,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Walk_ForwardLeft:0",
+      "exit_pose": "Aim_Walk_ForwardLeft:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        0.70710678,
+        -0.70710678,
+        0
+      ],
+      "direction_degrees": 45,
+      "speed_mps": 0.75,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.6
+          ]
+        ],
+        "right": [
+          [
+            0,
+            0.1
+          ],
+          [
+            0.5,
+            1
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Walk_Left",
+      "action": "HUMAN_7H__Aim_Walk_Left",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.5,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Walk_Left:0",
+      "exit_pose": "Aim_Walk_Left:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        1.0,
+        -0.0,
+        0
+      ],
+      "direction_degrees": 90,
+      "speed_mps": 0.65,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.6
+          ]
+        ],
+        "right": [
+          [
+            0,
+            0.1
+          ],
+          [
+            0.5,
+            1
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Walk_BackLeft",
+      "action": "HUMAN_7H__Aim_Walk_BackLeft",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.5,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Walk_BackLeft:0",
+      "exit_pose": "Aim_Walk_BackLeft:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        0.70710678,
+        0.70710678,
+        0
+      ],
+      "direction_degrees": 135,
+      "speed_mps": 0.65,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.6
+          ]
+        ],
+        "right": [
+          [
+            0,
+            0.1
+          ],
+          [
+            0.5,
+            1
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Walk_Back",
+      "action": "HUMAN_7H__Aim_Walk_Back",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.5,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Walk_Back:0",
+      "exit_pose": "Aim_Walk_Back:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        0.0,
+        1.0,
+        0
+      ],
+      "direction_degrees": 180,
+      "speed_mps": 0.65,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.6
+          ]
+        ],
+        "right": [
+          [
+            0,
+            0.1
+          ],
+          [
+            0.5,
+            1
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Walk_BackRight",
+      "action": "HUMAN_7H__Aim_Walk_BackRight",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.5,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Walk_BackRight:0",
+      "exit_pose": "Aim_Walk_BackRight:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        -0.70710678,
+        0.70710678,
+        0
+      ],
+      "direction_degrees": -135,
+      "speed_mps": 0.65,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.6
+          ]
+        ],
+        "right": [
+          [
+            0,
+            0.1
+          ],
+          [
+            0.5,
+            1
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Walk_Right",
+      "action": "HUMAN_7H__Aim_Walk_Right",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.5,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Walk_Right:0",
+      "exit_pose": "Aim_Walk_Right:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        -1.0,
+        -0.0,
+        0
+      ],
+      "direction_degrees": -90,
+      "speed_mps": 0.65,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.6
+          ]
+        ],
+        "right": [
+          [
+            0,
+            0.1
+          ],
+          [
+            0.5,
+            1
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Walk_ForwardRight",
+      "action": "HUMAN_7H__Aim_Walk_ForwardRight",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.5,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Walk_ForwardRight:0",
+      "exit_pose": "Aim_Walk_ForwardRight:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        -0.70710678,
+        -0.70710678,
+        0
+      ],
+      "direction_degrees": -45,
+      "speed_mps": 0.75,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.6
+          ]
+        ],
+        "right": [
+          [
+            0,
+            0.1
+          ],
+          [
+            0.5,
+            1
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Run_Forward",
+      "action": "HUMAN_7H__Aim_Run_Forward",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.333333,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Run_Forward:0",
+      "exit_pose": "Aim_Run_Forward:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        0.0,
+        -1.0,
+        0
+      ],
+      "direction_degrees": 0,
+      "speed_mps": 1.8,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.4
+          ]
+        ],
+        "right": [
+          [
+            0.5,
+            0.9
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Run_ForwardLeft",
+      "action": "HUMAN_7H__Aim_Run_ForwardLeft",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.333333,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Run_ForwardLeft:0",
+      "exit_pose": "Aim_Run_ForwardLeft:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        0.70710678,
+        -0.70710678,
+        0
+      ],
+      "direction_degrees": 45,
+      "speed_mps": 1.5,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.4
+          ]
+        ],
+        "right": [
+          [
+            0.5,
+            0.9
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Run_Left",
+      "action": "HUMAN_7H__Aim_Run_Left",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.333333,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Run_Left:0",
+      "exit_pose": "Aim_Run_Left:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        1.0,
+        -0.0,
+        0
+      ],
+      "direction_degrees": 90,
+      "speed_mps": 1.25,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.4
+          ]
+        ],
+        "right": [
+          [
+            0.5,
+            0.9
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Run_BackLeft",
+      "action": "HUMAN_7H__Aim_Run_BackLeft",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.333333,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Run_BackLeft:0",
+      "exit_pose": "Aim_Run_BackLeft:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        0.70710678,
+        0.70710678,
+        0
+      ],
+      "direction_degrees": 135,
+      "speed_mps": 1.2,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.4
+          ]
+        ],
+        "right": [
+          [
+            0.5,
+            0.9
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Run_Back",
+      "action": "HUMAN_7H__Aim_Run_Back",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.333333,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Run_Back:0",
+      "exit_pose": "Aim_Run_Back:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        0.0,
+        1.0,
+        0
+      ],
+      "direction_degrees": 180,
+      "speed_mps": 1.2,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.4
+          ]
+        ],
+        "right": [
+          [
+            0.5,
+            0.9
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Run_BackRight",
+      "action": "HUMAN_7H__Aim_Run_BackRight",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.333333,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Run_BackRight:0",
+      "exit_pose": "Aim_Run_BackRight:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        -0.70710678,
+        0.70710678,
+        0
+      ],
+      "direction_degrees": -135,
+      "speed_mps": 1.2,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.4
+          ]
+        ],
+        "right": [
+          [
+            0.5,
+            0.9
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Run_Right",
+      "action": "HUMAN_7H__Aim_Run_Right",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.333333,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Run_Right:0",
+      "exit_pose": "Aim_Run_Right:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        -1.0,
+        -0.0,
+        0
+      ],
+      "direction_degrees": -90,
+      "speed_mps": 1.25,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.4
+          ]
+        ],
+        "right": [
+          [
+            0.5,
+            0.9
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Run_ForwardRight",
+      "action": "HUMAN_7H__Aim_Run_ForwardRight",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.333333,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Run_ForwardRight:0",
+      "exit_pose": "Aim_Run_ForwardRight:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        -0.70710678,
+        -0.70710678,
+        0
+      ],
+      "direction_degrees": -45,
+      "speed_mps": 1.5,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.4
+          ]
+        ],
+        "right": [
+          [
+            0.5,
+            0.9
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Pistol_Carry_Idle",
+      "action": "HUMAN_7H__Pistol_Carry_Idle",
+      "fps": 30,
+      "start": 0,
+      "end": 60,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "human_upper_body",
+      "mask": "human_upper_body",
+      "blend_mode": "masked_override",
+      "reference": "Idle",
+      "phase_sync_group": "human_locomotion",
+      "matched_locomotion": "Idle",
+      "blend_in_seconds": 0.15,
+      "blend_out_seconds": 0.15,
+      "events": [],
+      "revision": "pistol_layers_v1",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "support": "lower body supplied by the existing movement layer; right hand owns the weapon grip",
+      "entry_pose": "Pistol_Carry_Idle:0",
+      "exit_pose": "Pistol_Carry_Idle:0"
+    },
+    {
+      "clip": "Pistol_Carry_Walk",
+      "action": "HUMAN_7H__Pistol_Carry_Walk",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "human_upper_body",
+      "mask": "human_upper_body",
+      "blend_mode": "masked_override",
+      "reference": "Walk",
+      "phase_sync_group": "human_locomotion",
+      "matched_locomotion": "Walk",
+      "blend_in_seconds": 0.15,
+      "blend_out_seconds": 0.15,
+      "events": [],
+      "revision": "pistol_layers_v1",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "support": "lower body supplied by the existing movement layer; right hand owns the weapon grip",
+      "entry_pose": "Pistol_Carry_Walk:0",
+      "exit_pose": "Pistol_Carry_Walk:0"
+    },
+    {
+      "clip": "Pistol_Carry_Run",
+      "action": "HUMAN_7H__Pistol_Carry_Run",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "human_upper_body",
+      "mask": "human_upper_body",
+      "blend_mode": "masked_override",
+      "reference": "Run",
+      "phase_sync_group": "human_locomotion",
+      "matched_locomotion": "Run",
+      "blend_in_seconds": 0.15,
+      "blend_out_seconds": 0.15,
+      "events": [],
+      "revision": "pistol_layers_v1",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "support": "lower body supplied by the existing movement layer; right hand owns the weapon grip",
+      "entry_pose": "Pistol_Carry_Run:0",
+      "exit_pose": "Pistol_Carry_Run:0"
+    },
+    {
+      "clip": "Reload_Pistol",
+      "action": "HUMAN_7H__Reload_Pistol",
+      "fps": 30,
+      "start": 0,
+      "end": 42,
+      "duration_seconds": 1.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "human_upper_body",
+      "mask": "human_upper_body",
+      "blend_mode": "masked_override",
+      "reference": "Idle",
+      "phase_sync_group": "reload",
+      "matched_locomotion": null,
+      "blend_in_seconds": 0.15,
+      "blend_out_seconds": 0.15,
+      "events": [
+        {
+          "phase": 0.3,
+          "seconds": 0.42,
+          "event": "reload_magazine_release_visual",
+          "visual_only": true,
+          "changes_ammo": false
+        },
+        {
+          "phase": 0.67,
+          "seconds": 0.938,
+          "event": "reload_magazine_seat_visual",
+          "visual_only": true,
+          "changes_ammo": false
+        },
+        {
+          "phase": 0.8,
+          "seconds": 1.12,
+          "event": "reload_slide_release_visual",
+          "visual_only": true,
+          "changes_ammo": false
+        },
+        {
+          "phase": 1,
+          "seconds": 1.4,
+          "event": "reload_pose_recovered",
+          "visual_only": true,
+          "changes_ammo": false
+        }
+      ],
+      "revision": "pistol_layers_v1",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "support": "lower body supplied by the existing movement layer; right hand owns the weapon grip",
+      "entry_pose": "Pistol_Carry_Idle:0",
+      "exit_pose": "Pistol_Carry_Idle:0"
+    }
+  ],
+  "RiftGrazer": [
+    {
+      "clip": "Reference_A",
+      "action": "RiftGrazer__Reference_A",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Turn_Base",
+      "action": "RiftGrazer__Turn_Base",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Idle",
+      "action": "RiftGrazer__Idle",
+      "fps": 30,
+      "start": 0,
+      "end": 60,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Walk",
+      "action": "RiftGrazer__Walk",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0,
+          "event": "left_contact_or_tripod_A"
+        },
+        {
+          "phase": 0.5,
+          "event": "right_contact_or_tripod_B"
+        }
+      ]
+    },
+    {
+      "clip": "Run",
+      "action": "RiftGrazer__Run",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0,
+          "event": "left_contact_or_tripod_A"
+        },
+        {
+          "phase": 0.5,
+          "event": "right_contact_or_tripod_B"
+        }
+      ]
+    },
+    {
+      "clip": "Turn_Left_90",
+      "action": "RiftGrazer__Turn_Left_90",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 90,
+      "events": []
+    },
+    {
+      "clip": "Turn_Right_90",
+      "action": "RiftGrazer__Turn_Right_90",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": -90,
+      "events": []
+    },
+    {
+      "clip": "Attack_Melee",
+      "action": "RiftGrazer__Attack_Melee",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0.46,
+          "event": "melee_hit_window_start"
+        },
+        {
+          "phase": 0.6,
+          "event": "melee_hit_window_end"
+        }
+      ]
+    },
+    {
+      "clip": "Aim_Base",
+      "action": "RiftGrazer__Aim_Base",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Attack_Fire",
+      "action": "RiftGrazer__Attack_Fire",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0.08,
+          "event": "projectile_or_emitter_trigger"
+        }
+      ]
+    },
+    {
+      "clip": "Jump_Start",
+      "action": "RiftGrazer__Jump_Start",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Jump_Air",
+      "action": "RiftGrazer__Jump_Air",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Jump_Land",
+      "action": "RiftGrazer__Jump_Land",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Jump_Full",
+      "action": "RiftGrazer__Jump_Full",
+      "fps": 30,
+      "start": 0,
+      "end": 36,
+      "duration_seconds": 1.2,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Walk_To_Run",
+      "action": "RiftGrazer__Walk_To_Run",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    }
+  ],
+  "VeilWalker": [
+    {
+      "clip": "Reference_A",
+      "action": "VeilWalker__Reference_A",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Turn_Base",
+      "action": "VeilWalker__Turn_Base",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Idle",
+      "action": "VeilWalker__Idle",
+      "fps": 30,
+      "start": 0,
+      "end": 60,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Walk",
+      "action": "VeilWalker__Walk",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0,
+          "event": "left_contact_or_tripod_A"
+        },
+        {
+          "phase": 0.5,
+          "event": "right_contact_or_tripod_B"
+        }
+      ]
+    },
+    {
+      "clip": "Run",
+      "action": "VeilWalker__Run",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0,
+          "event": "left_contact_or_tripod_A"
+        },
+        {
+          "phase": 0.5,
+          "event": "right_contact_or_tripod_B"
+        }
+      ]
+    },
+    {
+      "clip": "Turn_Left_90",
+      "action": "VeilWalker__Turn_Left_90",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 90,
+      "events": []
+    },
+    {
+      "clip": "Turn_Right_90",
+      "action": "VeilWalker__Turn_Right_90",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": -90,
+      "events": []
+    },
+    {
+      "clip": "Attack_Melee",
+      "action": "VeilWalker__Attack_Melee",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0.46,
+          "event": "melee_hit_window_start"
+        },
+        {
+          "phase": 0.6,
+          "event": "melee_hit_window_end"
+        }
+      ]
+    },
+    {
+      "clip": "Aim_Base",
+      "action": "VeilWalker__Aim_Base",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Attack_Fire",
+      "action": "VeilWalker__Attack_Fire",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0.08,
+          "event": "projectile_or_emitter_trigger"
+        }
+      ]
+    },
+    {
+      "clip": "Jump_Start",
+      "action": "VeilWalker__Jump_Start",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Jump_Air",
+      "action": "VeilWalker__Jump_Air",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Jump_Land",
+      "action": "VeilWalker__Jump_Land",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Jump_Full",
+      "action": "VeilWalker__Jump_Full",
+      "fps": 30,
+      "start": 0,
+      "end": 36,
+      "duration_seconds": 1.2,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Walk_To_Run",
+      "action": "VeilWalker__Walk_To_Run",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    }
+  ],
+  "RelaySentinel": [
+    {
+      "clip": "Reference_A",
+      "action": "RelaySentinel__Reference_A",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Turn_Base",
+      "action": "RelaySentinel__Turn_Base",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Idle",
+      "action": "RelaySentinel__Idle",
+      "fps": 30,
+      "start": 0,
+      "end": 60,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Walk",
+      "action": "RelaySentinel__Walk",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0,
+          "event": "left_contact_or_tripod_A"
+        },
+        {
+          "phase": 0.5,
+          "event": "right_contact_or_tripod_B"
+        }
+      ]
+    },
+    {
+      "clip": "Run",
+      "action": "RelaySentinel__Run",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0,
+          "event": "left_contact_or_tripod_A"
+        },
+        {
+          "phase": 0.5,
+          "event": "right_contact_or_tripod_B"
+        }
+      ]
+    },
+    {
+      "clip": "Turn_Left_90",
+      "action": "RelaySentinel__Turn_Left_90",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 90,
+      "events": []
+    },
+    {
+      "clip": "Turn_Right_90",
+      "action": "RelaySentinel__Turn_Right_90",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": -90,
+      "events": []
+    },
+    {
+      "clip": "Attack_Melee",
+      "action": "RelaySentinel__Attack_Melee",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0.46,
+          "event": "melee_hit_window_start"
+        },
+        {
+          "phase": 0.6,
+          "event": "melee_hit_window_end"
+        }
+      ]
+    },
+    {
+      "clip": "Aim_Base",
+      "action": "RelaySentinel__Aim_Base",
+      "fps": 30,
+      "start": 0,
+      "end": 1,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Attack_Fire",
+      "action": "RelaySentinel__Attack_Fire",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": [
+        {
+          "phase": 0.08,
+          "event": "projectile_or_emitter_trigger"
+        }
+      ]
+    },
+    {
+      "clip": "Jump_Start",
+      "action": "RelaySentinel__Jump_Start",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Jump_Air",
+      "action": "RelaySentinel__Jump_Air",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Jump_Land",
+      "action": "RelaySentinel__Jump_Land",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Jump_Full",
+      "action": "RelaySentinel__Jump_Full",
+      "fps": 30,
+      "start": 0,
+      "end": 36,
+      "duration_seconds": 1.2,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    },
+    {
+      "clip": "Walk_To_Run",
+      "action": "RelaySentinel__Walk_To_Run",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "events": []
+    }
+  ],
+  "PressureDoor_Rig": [
+    {
+      "clip": "Door_Open",
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1,
+      "loop": false
+    },
+    {
+      "clip": "Door_Close",
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1,
+      "loop": false
+    }
+  ],
+  "VEHICLE_Coupe": [
+    {
+      "clip": "Vehicle_Reference",
+      "start": 0,
+      "end": 1,
+      "fps": 30,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Hover_Idle",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cruise",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Boost",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Steer_Left",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Steer_Right",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Canopy_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Canopy_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cargo_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cargo_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Vehicle_Impact_Front",
+      "action": "VEHICLE_Coupe__Vehicle_Impact_Front",
+      "fps": 30,
+      "start": 0,
+      "end": 15,
+      "duration_seconds": 0.5,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "fixed chassis, driver/passenger sockets and collision hull",
+      "events": [
+        {
+          "phase": 0.2,
+          "seconds": 0.1,
+          "event": "impact_spark_billboard",
+          "socket": "frontpod.L"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "field_suspension",
+      "entry_pose": "Vehicle_Reference",
+      "exit_pose": "Vehicle_Reference"
+    },
+    {
+      "clip": "Vehicle_Impact_Rear",
+      "action": "VEHICLE_Coupe__Vehicle_Impact_Rear",
+      "fps": 30,
+      "start": 0,
+      "end": 15,
+      "duration_seconds": 0.5,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "fixed chassis, driver/passenger sockets and collision hull",
+      "events": [
+        {
+          "phase": 0.2,
+          "seconds": 0.1,
+          "event": "impact_spark_billboard",
+          "socket": "frontpod.L"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "field_suspension",
+      "entry_pose": "Vehicle_Reference",
+      "exit_pose": "Vehicle_Reference"
+    },
+    {
+      "clip": "Vehicle_Impact_Side",
+      "action": "VEHICLE_Coupe__Vehicle_Impact_Side",
+      "fps": 30,
+      "start": 0,
+      "end": 15,
+      "duration_seconds": 0.5,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "fixed chassis, driver/passenger sockets and collision hull",
+      "events": [
+        {
+          "phase": 0.2,
+          "seconds": 0.1,
+          "event": "impact_spark_billboard",
+          "socket": "frontpod.L"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "field_suspension",
+      "entry_pose": "Vehicle_Reference",
+      "exit_pose": "Vehicle_Reference"
+    },
+    {
+      "clip": "Vehicle_Disabled",
+      "action": "VEHICLE_Coupe__Vehicle_Disabled",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "fixed chassis, driver/passenger sockets and collision hull",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0,
+          "event": "power_cut",
+          "emission_multiplier": 0.12
+        },
+        {
+          "phase": 0.15,
+          "seconds": 0.12,
+          "event": "spark_billboard",
+          "socket": "engine.L"
+        },
+        {
+          "phase": 1,
+          "seconds": 0.8,
+          "event": "wreck_hold",
+          "collision_remains_solid": true
+        },
+        {
+          "phase": 1,
+          "seconds": 0.8,
+          "event": "tow_cleanup_eligible_when_offscreen",
+          "policy": "game decides delay; opacity fade only"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "field_suspension",
+      "entry_pose": "Vehicle_Reference",
+      "exit_pose": "Vehicle_Disabled:1",
+      "hold_last_frame": true
+    }
+  ],
+  "VEHICLE_Shuttle": [
+    {
+      "clip": "Vehicle_Reference",
+      "start": 0,
+      "end": 1,
+      "fps": 30,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Hover_Idle",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cruise",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Boost",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Steer_Left",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Steer_Right",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Canopy_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Canopy_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cargo_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cargo_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Vehicle_Impact_Front",
+      "action": "VEHICLE_Shuttle__Vehicle_Impact_Front",
+      "fps": 30,
+      "start": 0,
+      "end": 15,
+      "duration_seconds": 0.5,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "fixed chassis, driver/passenger sockets and collision hull",
+      "events": [
+        {
+          "phase": 0.2,
+          "seconds": 0.1,
+          "event": "impact_spark_billboard",
+          "socket": "frontpod.L"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "field_suspension",
+      "entry_pose": "Vehicle_Reference",
+      "exit_pose": "Vehicle_Reference"
+    },
+    {
+      "clip": "Vehicle_Impact_Rear",
+      "action": "VEHICLE_Shuttle__Vehicle_Impact_Rear",
+      "fps": 30,
+      "start": 0,
+      "end": 15,
+      "duration_seconds": 0.5,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "fixed chassis, driver/passenger sockets and collision hull",
+      "events": [
+        {
+          "phase": 0.2,
+          "seconds": 0.1,
+          "event": "impact_spark_billboard",
+          "socket": "frontpod.L"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "field_suspension",
+      "entry_pose": "Vehicle_Reference",
+      "exit_pose": "Vehicle_Reference"
+    },
+    {
+      "clip": "Vehicle_Impact_Side",
+      "action": "VEHICLE_Shuttle__Vehicle_Impact_Side",
+      "fps": 30,
+      "start": 0,
+      "end": 15,
+      "duration_seconds": 0.5,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "fixed chassis, driver/passenger sockets and collision hull",
+      "events": [
+        {
+          "phase": 0.2,
+          "seconds": 0.1,
+          "event": "impact_spark_billboard",
+          "socket": "frontpod.L"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "field_suspension",
+      "entry_pose": "Vehicle_Reference",
+      "exit_pose": "Vehicle_Reference"
+    },
+    {
+      "clip": "Vehicle_Disabled",
+      "action": "VEHICLE_Shuttle__Vehicle_Disabled",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "fixed chassis, driver/passenger sockets and collision hull",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0,
+          "event": "power_cut",
+          "emission_multiplier": 0.12
+        },
+        {
+          "phase": 0.15,
+          "seconds": 0.12,
+          "event": "spark_billboard",
+          "socket": "engine.L"
+        },
+        {
+          "phase": 1,
+          "seconds": 0.8,
+          "event": "wreck_hold",
+          "collision_remains_solid": true
+        },
+        {
+          "phase": 1,
+          "seconds": 0.8,
+          "event": "tow_cleanup_eligible_when_offscreen",
+          "policy": "game decides delay; opacity fade only"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "field_suspension",
+      "entry_pose": "Vehicle_Reference",
+      "exit_pose": "Vehicle_Disabled:1",
+      "hold_last_frame": true
+    }
+  ],
+  "VEHICLE_Hauler": [
+    {
+      "clip": "Vehicle_Reference",
+      "start": 0,
+      "end": 1,
+      "fps": 30,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Hover_Idle",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cruise",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Boost",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Steer_Left",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Steer_Right",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Canopy_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Canopy_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cargo_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cargo_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Vehicle_Impact_Front",
+      "action": "VEHICLE_Hauler__Vehicle_Impact_Front",
+      "fps": 30,
+      "start": 0,
+      "end": 15,
+      "duration_seconds": 0.5,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "fixed chassis, driver/passenger sockets and collision hull",
+      "events": [
+        {
+          "phase": 0.2,
+          "seconds": 0.1,
+          "event": "impact_spark_billboard",
+          "socket": "frontpod.L"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "field_suspension",
+      "entry_pose": "Vehicle_Reference",
+      "exit_pose": "Vehicle_Reference"
+    },
+    {
+      "clip": "Vehicle_Impact_Rear",
+      "action": "VEHICLE_Hauler__Vehicle_Impact_Rear",
+      "fps": 30,
+      "start": 0,
+      "end": 15,
+      "duration_seconds": 0.5,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "fixed chassis, driver/passenger sockets and collision hull",
+      "events": [
+        {
+          "phase": 0.2,
+          "seconds": 0.1,
+          "event": "impact_spark_billboard",
+          "socket": "frontpod.L"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "field_suspension",
+      "entry_pose": "Vehicle_Reference",
+      "exit_pose": "Vehicle_Reference"
+    },
+    {
+      "clip": "Vehicle_Impact_Side",
+      "action": "VEHICLE_Hauler__Vehicle_Impact_Side",
+      "fps": 30,
+      "start": 0,
+      "end": 15,
+      "duration_seconds": 0.5,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "fixed chassis, driver/passenger sockets and collision hull",
+      "events": [
+        {
+          "phase": 0.2,
+          "seconds": 0.1,
+          "event": "impact_spark_billboard",
+          "socket": "frontpod.L"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "field_suspension",
+      "entry_pose": "Vehicle_Reference",
+      "exit_pose": "Vehicle_Reference"
+    },
+    {
+      "clip": "Vehicle_Disabled",
+      "action": "VEHICLE_Hauler__Vehicle_Disabled",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "fixed chassis, driver/passenger sockets and collision hull",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0,
+          "event": "power_cut",
+          "emission_multiplier": 0.12
+        },
+        {
+          "phase": 0.15,
+          "seconds": 0.12,
+          "event": "spark_billboard",
+          "socket": "engine.L"
+        },
+        {
+          "phase": 1,
+          "seconds": 0.8,
+          "event": "wreck_hold",
+          "collision_remains_solid": true
+        },
+        {
+          "phase": 1,
+          "seconds": 0.8,
+          "event": "tow_cleanup_eligible_when_offscreen",
+          "policy": "game decides delay; opacity fade only"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "field_suspension",
+      "entry_pose": "Vehicle_Reference",
+      "exit_pose": "Vehicle_Disabled:1",
+      "hold_last_frame": true
+    }
+  ],
+  "VEHICLE_Patrol": [
+    {
+      "clip": "Vehicle_Reference",
+      "start": 0,
+      "end": 1,
+      "fps": 30,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Hover_Idle",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cruise",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Boost",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Steer_Left",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Steer_Right",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Canopy_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Canopy_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cargo_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cargo_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Vehicle_Fire",
+      "start": 0,
+      "end": 12,
+      "fps": 30,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Vehicle_Impact_Front",
+      "action": "VEHICLE_Patrol__Vehicle_Impact_Front",
+      "fps": 30,
+      "start": 0,
+      "end": 15,
+      "duration_seconds": 0.5,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "fixed chassis, driver/passenger sockets and collision hull",
+      "events": [
+        {
+          "phase": 0.2,
+          "seconds": 0.1,
+          "event": "impact_spark_billboard",
+          "socket": "frontpod.L"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "field_suspension",
+      "entry_pose": "Vehicle_Reference",
+      "exit_pose": "Vehicle_Reference"
+    },
+    {
+      "clip": "Vehicle_Impact_Rear",
+      "action": "VEHICLE_Patrol__Vehicle_Impact_Rear",
+      "fps": 30,
+      "start": 0,
+      "end": 15,
+      "duration_seconds": 0.5,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "fixed chassis, driver/passenger sockets and collision hull",
+      "events": [
+        {
+          "phase": 0.2,
+          "seconds": 0.1,
+          "event": "impact_spark_billboard",
+          "socket": "frontpod.L"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "field_suspension",
+      "entry_pose": "Vehicle_Reference",
+      "exit_pose": "Vehicle_Reference"
+    },
+    {
+      "clip": "Vehicle_Impact_Side",
+      "action": "VEHICLE_Patrol__Vehicle_Impact_Side",
+      "fps": 30,
+      "start": 0,
+      "end": 15,
+      "duration_seconds": 0.5,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "fixed chassis, driver/passenger sockets and collision hull",
+      "events": [
+        {
+          "phase": 0.2,
+          "seconds": 0.1,
+          "event": "impact_spark_billboard",
+          "socket": "frontpod.L"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "field_suspension",
+      "entry_pose": "Vehicle_Reference",
+      "exit_pose": "Vehicle_Reference"
+    },
+    {
+      "clip": "Vehicle_Disabled",
+      "action": "VEHICLE_Patrol__Vehicle_Disabled",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "fixed chassis, driver/passenger sockets and collision hull",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0,
+          "event": "power_cut",
+          "emission_multiplier": 0.12
+        },
+        {
+          "phase": 0.15,
+          "seconds": 0.12,
+          "event": "spark_billboard",
+          "socket": "engine.L"
+        },
+        {
+          "phase": 1,
+          "seconds": 0.8,
+          "event": "wreck_hold",
+          "collision_remains_solid": true
+        },
+        {
+          "phase": 1,
+          "seconds": 0.8,
+          "event": "tow_cleanup_eligible_when_offscreen",
+          "policy": "game decides delay; opacity fade only"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "field_suspension",
+      "entry_pose": "Vehicle_Reference",
+      "exit_pose": "Vehicle_Disabled:1",
+      "hold_last_frame": true
+    }
+  ],
+  "VEHICLE_JetBike": [
+    {
+      "clip": "Vehicle_Reference",
+      "start": 0,
+      "end": 1,
+      "fps": 30,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Hover_Idle",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cruise",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Boost",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Steer_Left",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Steer_Right",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Canopy_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Canopy_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cargo_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Cargo_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place",
+      "purpose": "skeletal vehicle mechanism"
+    },
+    {
+      "clip": "Vehicle_Impact_Front",
+      "action": "VEHICLE_JetBike__Vehicle_Impact_Front",
+      "fps": 30,
+      "start": 0,
+      "end": 15,
+      "duration_seconds": 0.5,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "fixed chassis, driver/passenger sockets and collision hull",
+      "events": [
+        {
+          "phase": 0.2,
+          "seconds": 0.1,
+          "event": "impact_spark_billboard",
+          "socket": "frontpod.L"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "field_suspension",
+      "entry_pose": "Vehicle_Reference",
+      "exit_pose": "Vehicle_Reference"
+    },
+    {
+      "clip": "Vehicle_Impact_Rear",
+      "action": "VEHICLE_JetBike__Vehicle_Impact_Rear",
+      "fps": 30,
+      "start": 0,
+      "end": 15,
+      "duration_seconds": 0.5,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "fixed chassis, driver/passenger sockets and collision hull",
+      "events": [
+        {
+          "phase": 0.2,
+          "seconds": 0.1,
+          "event": "impact_spark_billboard",
+          "socket": "frontpod.L"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "field_suspension",
+      "entry_pose": "Vehicle_Reference",
+      "exit_pose": "Vehicle_Reference"
+    },
+    {
+      "clip": "Vehicle_Impact_Side",
+      "action": "VEHICLE_JetBike__Vehicle_Impact_Side",
+      "fps": 30,
+      "start": 0,
+      "end": 15,
+      "duration_seconds": 0.5,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "fixed chassis, driver/passenger sockets and collision hull",
+      "events": [
+        {
+          "phase": 0.2,
+          "seconds": 0.1,
+          "event": "impact_spark_billboard",
+          "socket": "frontpod.L"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "field_suspension",
+      "entry_pose": "Vehicle_Reference",
+      "exit_pose": "Vehicle_Reference"
+    },
+    {
+      "clip": "Vehicle_Disabled",
+      "action": "VEHICLE_JetBike__Vehicle_Disabled",
+      "fps": 30,
+      "start": 0,
+      "end": 24,
+      "duration_seconds": 0.8,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "fixed chassis, driver/passenger sockets and collision hull",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0,
+          "event": "power_cut",
+          "emission_multiplier": 0.12
+        },
+        {
+          "phase": 0.15,
+          "seconds": 0.12,
+          "event": "spark_billboard",
+          "socket": "engine.L"
+        },
+        {
+          "phase": 1,
+          "seconds": 0.8,
+          "event": "wreck_hold",
+          "collision_remains_solid": true
+        },
+        {
+          "phase": 1,
+          "seconds": 0.8,
+          "event": "tow_cleanup_eligible_when_offscreen",
+          "policy": "game decides delay; opacity fade only"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "field_suspension",
+      "entry_pose": "Vehicle_Reference",
+      "exit_pose": "Vehicle_Disabled:1",
+      "hold_last_frame": true
+    },
+    {
+      "clip": "Bike_Impact",
+      "action": "VEHICLE_JetBike__Bike_Impact",
+      "fps": 30,
+      "start": 0,
+      "end": 15,
+      "duration_seconds": 0.5,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "fixed chassis, driver/passenger sockets and collision hull",
+      "events": [
+        {
+          "phase": 0.2,
+          "seconds": 0.1,
+          "event": "impact_spark_billboard",
+          "socket": "frontpod.L"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "field_suspension",
+      "entry_pose": "Vehicle_Reference",
+      "exit_pose": "Vehicle_Reference"
+    }
+  ],
+  "AIRCRAFT_Kite_Courier": [
+    {
+      "clip": "Aircraft_Reference",
+      "start": 0,
+      "end": 1,
+      "fps": 30,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Flight_Idle",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Cruise",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Boost",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Bank_Left",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Bank_Right",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "LandingGear_Deploy",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "LandingGear_Retract",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Canopy_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Canopy_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Cargo_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Cargo_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    }
+  ],
+  "AIRCRAFT_Manta_AirTaxi": [
+    {
+      "clip": "Aircraft_Reference",
+      "start": 0,
+      "end": 1,
+      "fps": 30,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Flight_Idle",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Cruise",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Boost",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Bank_Left",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Bank_Right",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "LandingGear_Deploy",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "LandingGear_Retract",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Canopy_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Canopy_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Cargo_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Cargo_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    }
+  ],
+  "AIRCRAFT_Mule_Skycrane": [
+    {
+      "clip": "Aircraft_Reference",
+      "start": 0,
+      "end": 1,
+      "fps": 30,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Flight_Idle",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Cruise",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Boost",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Bank_Left",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Bank_Right",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "LandingGear_Deploy",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "LandingGear_Retract",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Canopy_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Canopy_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Cargo_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Cargo_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    }
+  ],
+  "AIRCRAFT_Warden_Survey": [
+    {
+      "clip": "Aircraft_Reference",
+      "start": 0,
+      "end": 1,
+      "fps": 30,
+      "duration_seconds": 0.03333333333333333,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Flight_Idle",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Cruise",
+      "start": 0,
+      "end": 60,
+      "fps": 30,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Boost",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Bank_Left",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Bank_Right",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "LandingGear_Deploy",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "LandingGear_Retract",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Canopy_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Canopy_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Cargo_Open",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    },
+    {
+      "clip": "Cargo_Close",
+      "start": 0,
+      "end": 30,
+      "fps": 30,
+      "duration_seconds": 1.0,
+      "loop": false,
+      "root_translation": "in_place"
+    }
+  ]
+}

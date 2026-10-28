@@ -1,0 +1,419 @@
+{
+  "canvas": [
+    1280,
+    800
+  ],
+  "coordinates": "top-left; text coordinates are baselines",
+  "layouts": {
+    "health_hud": {
+      "panel": false,
+      "icon": [
+        32,
+        736,
+        24,
+        24
+      ],
+      "current": [
+        66,
+        735
+      ],
+      "maximum": [
+        118,
+        734
+      ],
+      "gauge": [
+        66,
+        748,
+        220,
+        12
+      ],
+      "critical_prompt": [
+        32,
+        690
+      ],
+      "critical_key": "G",
+      "critical_condition": "health/max_health <= 0.25",
+      "current_px": 28,
+      "draw_order": "track,clipped_fill,icon,current,max,optional_critical",
+      "anchor": "bottom_left"
+    },
+    "ammo_hud": {
+      "panel": false,
+      "icon": [
+        1040,
+        723,
+        28,
+        28
+      ],
+      "current": [
+        1182,
+        746
+      ],
+      "maximum": [
+        1248,
+        745
+      ],
+      "current_px": 38,
+      "pips": {
+        "origin": [
+          1090,
+          757
+        ],
+        "size": [
+          9,
+          10
+        ],
+        "stride": 13,
+        "count": 12
+      },
+      "reload": [
+        1090,
+        757,
+        152,
+        10
+      ],
+      "reserve": "infinity icon at [1064,754], unlimited",
+      "reload_prompt": [
+        1248,
+        705
+      ],
+      "anchor": "bottom_right",
+      "hide_when": "weapon unavailable, bike mounted, safe dialogue, modal menu"
+    },
+    "scanner_hud": {
+      "panel": false,
+      "center": [
+        976,
+        656
+      ],
+      "radius": 21,
+      "stroke": 4,
+      "key": "F",
+      "label": [
+        1010,
+        652
+      ],
+      "approximate_signal": [
+        1010,
+        682
+      ],
+      "arc": "start at -90 degrees; sweep 360*progress",
+      "anchor": "bottom_right_above_ammo"
+    },
+    "wanted_hud": {
+      "panel": false,
+      "stars_origin": [
+        558,
+        35
+      ],
+      "star_stride": 35,
+      "star_size": 25,
+      "heat": [
+        558,
+        73,
+        165,
+        6
+      ],
+      "label": [
+        640,
+        106
+      ],
+      "anchor": "top_center",
+      "visibility": "wanted > 0 or active cooling notice"
+    },
+    "speed_hud": {
+      "panel": false,
+      "value": [
+        1176,
+        749
+      ],
+      "unit": [
+        1248,
+        748
+      ],
+      "value_px": 44,
+      "boost": [
+        1115,
+        695
+      ],
+      "anchor": "bottom_right_replace_ammo",
+      "resource_gauge": false
+    },
+    "objective": {
+      "panel": false,
+      "title": [
+        68,
+        58
+      ],
+      "context": [
+        68,
+        85
+      ],
+      "chapter_detail": [
+        68,
+        112
+      ],
+      "max_text_width": 395,
+      "max_primary_lines": 1,
+      "details": "J record; do not add a permanent card"
+    },
+    "minimap": {
+      "rect": [
+        1040,
+        32,
+        208,
+        264
+      ],
+      "center": [
+        1144,
+        139
+      ],
+      "clip_radius": 82,
+      "north_degrees_clockwise": 45,
+      "actor_heading_only": true,
+      "marker_inset": 12,
+      "max_text_width": 168
+    },
+    "interaction": {
+      "rect": [
+        450,
+        514,
+        380,
+        48
+      ],
+      "target_and_action": [
+        500,
+        545
+      ],
+      "key": [
+        788,
+        526
+      ],
+      "max_text_width": 273,
+      "visible_only": "nearby actionable target"
+    },
+    "notice": {
+      "panel": false,
+      "icon": [
+        918,
+        321,
+        24,
+        24
+      ],
+      "body": [
+        954,
+        342
+      ],
+      "max_text_width": 294,
+      "details": "actual amount in one short event line; coalesce duplicates"
+    },
+    "dialogue": {
+      "rect": [
+        208,
+        390,
+        864,
+        310
+      ],
+      "speaker": [
+        270,
+        462
+      ],
+      "body_top_left": [
+        232,
+        482
+      ],
+      "body_baselines": [
+        502,
+        534,
+        566
+      ],
+      "body_width": 816,
+      "body_font_size": 20,
+      "line_height": 32,
+      "max_body_lines": 3,
+      "choice": [
+        232,
+        582,
+        816,
+        46
+      ],
+      "choice_secondary_baseline": 654,
+      "page": [
+        232,
+        682
+      ],
+      "controls_y": 662,
+      "speaker_max_width": 575
+    },
+    "journal": {
+      "rect": [
+        176,
+        72,
+        928,
+        656
+      ],
+      "list_rect": [
+        200,
+        160,
+        270,
+        450
+      ],
+      "body_rect": [
+        510,
+        160,
+        566,
+        460
+      ],
+      "max_text_width": 526,
+      "controls_y": 674
+    },
+    "full_map": {
+      "rect": [
+        56,
+        40,
+        1168,
+        720
+      ],
+      "map_rect": [
+        80,
+        126,
+        818,
+        548
+      ],
+      "legend_rect": [
+        930,
+        160,
+        260,
+        420
+      ],
+      "controls_y": 705
+    },
+    "pause": {
+      "rect": [
+        416,
+        112,
+        448,
+        576
+      ],
+      "row_rect": [
+        440,
+        220,
+        400,
+        46
+      ],
+      "row_spacing": 58
+    },
+    "modal": {
+      "rect": [
+        312,
+        130,
+        656,
+        540
+      ],
+      "body_width": 600,
+      "row_height": 46
+    },
+    "weapon_wheel": {
+      "center": [
+        640,
+        390
+      ],
+      "inner_radius": 87,
+      "outer_radius": 224,
+      "sector_span_degrees": 114,
+      "sector_centers_degrees": {
+        "primary": -90,
+        "secondary": 30,
+        "unarmed": 150
+      },
+      "labels": "separate runtime text, no baked labels",
+      "input": "Q hold + mouse; release commit; Esc cancel",
+      "layer_order": [
+        "dim",
+        "sectors",
+        "equipped_marker",
+        "hover_outline",
+        "icons",
+        "labels",
+        "instructions"
+      ]
+    },
+    "stages": {
+      "rect": [
+        64,
+        48,
+        1152,
+        704
+      ],
+      "rows_origin": [
+        96,
+        211
+      ],
+      "row_size": [
+        652,
+        52
+      ],
+      "row_stride": 62,
+      "description_rect": [
+        824,
+        214,
+        328,
+        350
+      ],
+      "warning": [
+        96,
+        636
+      ],
+      "back": [
+        96,
+        678,
+        170,
+        52
+      ]
+    },
+    "text_flow": {
+      "source": "Source/text_flows.json",
+      "wrap": "actual Malgun Gothic glyph advances",
+      "overflow": "expand or retain every line across numbered pages",
+      "ellipsis": false,
+      "notice_lines_per_page": 4,
+      "notice_seconds_per_page": 6,
+      "short_notice_seconds": 4,
+      "objective_lines_per_page": 2,
+      "objective_seconds_per_page": 5
+    }
+  },
+  "transform": "scale=min(viewport_w/1280,viewport_h/800); offset=(viewport-canvas*scale)/2; apply to drawing and inverse to input",
+  "text_policy": {
+    "font": "Malgun Gothic",
+    "body_px": 20,
+    "metadata_min_px": 14,
+    "line_height": 32,
+    "paragraph_lines": 3,
+    "wrap": "measure actual glyph advances; break by Korean syllable or word; retain punctuation",
+    "overflow": "paginate body and choice lists without losing characters; wrap long speaker to two lines and reflow header; wrap large numeric summary instead of shrinking below 13px",
+    "panel_expansion": "Grow or paginate when translated text exceeds slot. Do not truncate mandatory dialogue."
+  },
+  "visibility": {
+    "radio": "keep health and ammunition at stable bottom anchors; dialogue ends at y=700",
+    "local_dialogue": "suppress combat HUD during safe dialogue",
+    "notice_with_dialogue": "queue notice until dialogue closes; urgent warning moves to free top slot",
+    "layer_order": [
+      "world_markers",
+      "aim",
+      "panel_background",
+      "panel_border",
+      "icon",
+      "text",
+      "modal",
+      "medical_fade"
+    ]
+  },
+  "timing": {
+    "narrative": "user_advanced_no_expiry",
+    "notice_seconds": 4,
+    "coalesce_same_type_seconds": 1.5,
+    "reduced_motion": "steady critical indicator; no blinking text",
+    "note": "Proposed UI timing only; game integration is separate."
+  }
+}

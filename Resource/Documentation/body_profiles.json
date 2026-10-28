@@ -1,0 +1,80 @@
+{
+  "Male_Lean": {
+    "sex": "male",
+    "mass": "lean",
+    "shoulder": 0.193,
+    "rib": 0.174,
+    "waist": 0.108,
+    "hip": 0.143,
+    "front": 0.093,
+    "back": 0.077,
+    "belly": 0.091,
+    "limb": 0.84,
+    "bust": 0
+  },
+  "Male_Normal": {
+    "sex": "male",
+    "mass": "normal",
+    "shoulder": 0.226,
+    "rib": 0.204,
+    "waist": 0.139,
+    "hip": 0.165,
+    "front": 0.119,
+    "back": 0.1,
+    "belly": 0.111,
+    "limb": 1.07,
+    "bust": 0
+  },
+  "Male_Heavy": {
+    "sex": "male",
+    "mass": "heavy",
+    "shoulder": 0.249,
+    "rib": 0.241,
+    "waist": 0.213,
+    "hip": 0.208,
+    "front": 0.156,
+    "back": 0.122,
+    "belly": 0.209,
+    "limb": 1.32,
+    "bust": 0
+  },
+  "Female_Lean": {
+    "sex": "female",
+    "mass": "lean",
+    "shoulder": 0.164,
+    "rib": 0.147,
+    "waist": 0.083,
+    "hip": 0.165,
+    "front": 0.094,
+    "back": 0.073,
+    "belly": 0.083,
+    "limb": 0.77,
+    "bust": 0.037
+  },
+  "Female_Normal": {
+    "sex": "female",
+    "mass": "normal",
+    "shoulder": 0.183,
+    "rib": 0.164,
+    "waist": 0.105,
+    "hip": 0.191,
+    "front": 0.112,
+    "back": 0.087,
+    "belly": 0.1,
+    "limb": 0.91,
+    "bust": 0.052
+  },
+  "Female_Heavy": {
+    "sex": "female",
+    "mass": "heavy",
+    "shoulder": 0.209,
+    "rib": 0.2,
+    "waist": 0.184,
+    "hip": 0.238,
+    "front": 0.148,
+    "back": 0.113,
+    "belly": 0.193,
+    "limb": 1.22,
+    "bust": 0.064
+  }
+}

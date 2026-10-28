@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<?xml version='1.0' encoding='utf-8'?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build" ToolsVersion="15.0">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -156,33 +156,76 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Renderer.h" />
+    <None Include="Shaders\SolidRect.fs" />
+    <None Include="Shaders\SolidRect.vs" />
+    <None Include="..\monitor\index.html" />
+    <None Include="..\monitor\app.js" />
+    <None Include="..\monitor\style.css" />
+    <None Include="..\monitor\models.html" />
+    <None Include="..\monitor\models.js" />
+    <None Include="..\monitor\models.css" />
+  </ItemGroup>
+  <ItemDefinitionGroup>
+    <Link>
+      <AdditionalLibraryDirectories>$(ProjectDir)Dependencies\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="Actor\Actor.h" />
     <ClInclude Include="AssetCache.h" />
+    <ClInclude Include="Animation.h" />
+    <ClInclude Include="Drawing.h" />
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="Civic.h" />
+    <ClInclude Include="Hud.h" />
+    <ClInclude Include="Level.h" />
     <ClInclude Include="ModelLibrary.h" />
-    <ClInclude Include="LevelOne.h" />
+    <ClInclude Include="Overworld.h" />
+    <ClInclude Include="ResidentAI.h" />
+    <ClInclude Include="TransitLayout.h" />
+    <ClInclude Include="RoadPlanCatalog.h" />
+    <ClInclude Include="ResourceAssets.h" />
+    <ClInclude Include="Monitoring\LocalMonitorServer.h" />
+    <ClInclude Include="Monitoring\Monitor.h" />
+    <ClInclude Include="Profiler.h" />
     <ClInclude Include="RenderAssets.h" />
-    <ClInclude Include="TutorialGraphics.h" />
-    <ClInclude Include="Tutorial.h" />
-    <ClInclude Include="TutorialState.h" />
-    <ClInclude Include="TutorialDrawing.h" />
+    <ClInclude Include="RenderCache.h" />
+    <ClInclude Include="RenderQueue.h" />
+    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="Scene.h" />
+    <ClInclude Include="Scene\SceneGraph.h" />
+    <ClInclude Include="Weapon.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="Actor\Actor.cpp" />
     <ClCompile Include="AssetCache.cpp" />
+    <ClCompile Include="Animation.cpp" />
+    <ClCompile Include="Drawing.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="Civic.cpp" />
+    <ClCompile Include="Hud.cpp" />
+    <ClCompile Include="Level.cpp" />
     <ClCompile Include="ModelLibrary.cpp" />
-    <ClCompile Include="LevelOne.cpp" />
-    <ClCompile Include="LevelOneMap.cpp" />
-    <ClCompile Include="LevelOneRenderer.cpp" />
+    <ClCompile Include="Overworld.cpp" />
+    <ClCompile Include="ResidentAI.cpp" />
+    <ClCompile Include="TransitLayout.cpp" />
+    <ClCompile Include="ResourceAssets.cpp" />
+    <ClCompile Include="Monitoring\LocalMonitorServer.cpp" />
+    <ClCompile Include="Monitoring\Monitor.cpp" />
+    <ClCompile Include="Profiler.cpp" />
     <ClCompile Include="RenderAssets.cpp" />
+    <ClCompile Include="RenderCache.cpp" />
+    <ClCompile Include="RenderQueue.cpp" />
+    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="Scene\SceneGraph.cpp" />
     <ClCompile Include="SimpleGame.cpp" />
-    <ClCompile Include="Tutorial.cpp" />
-    <ClCompile Include="TutorialGameplay.cpp" />
-    <ClCompile Include="TutorialDrawing.cpp" />
-    <ClCompile Include="TutorialWorldRenderer.cpp" />
-    <ClCompile Include="TutorialHud.cpp" />
-    <ClCompile Include="TutorialRenderer.cpp" />
+    <ClCompile Include="Weapon.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -190,26 +233,62 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="Shaders\SolidRect.fs" />
-    <None Include="Shaders\SolidRect.vs" />
-  </ItemGroup>
-  <ItemDefinitionGroup>
-    <Link>
-      <AdditionalLibraryDirectories>$(ProjectDir)Dependencies\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-    </Link>
-    <ClCompile>
-      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-    </ClCompile>
-  </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <PropertyGroup>
+    <NodeExecutable Condition="'$(NodeExecutable)'==''">node</NodeExecutable>
+  </PropertyGroup>
+  <Target Name="TrackGameResourceInputs">
+    <ReadLinesFromFile File="$(ProjectDir)..\Resource\Runtime\build-sources.list" Condition="Exists('$(ProjectDir)..\Resource\Runtime\build-sources.list')">
+      <Output TaskParameter="Lines" ItemName="GameResourceRelativeInput" />
+    </ReadLinesFromFile>
+    <ItemGroup>
+      <GameResourceInput Include="@(GameResourceRelativeInput->'$(ProjectDir)..\%(Identity)')" Condition="Exists('$(ProjectDir)..\Resource\Runtime\build-sources.list')" />
+      <GameResourceInput Include="$(ProjectDir)..\Resource\Export\**\*.glb;$(ProjectDir)..\Resource\Documentation\*.json;$(ProjectDir)..\tools\*.mjs;$(ProjectDir)RoadPlanCatalog.h" Condition="!Exists('$(ProjectDir)..\Resource\Runtime\build-sources.list')" />
+      <GameResourceInput Include="$(ProjectDir)..\tools\prepare-resources.ps1;$(ProjectDir)..\tools\ensure-resources.mjs;$(MSBuildProjectFullPath)" />
+    </ItemGroup>
+    <MakeDir Directories="$(ProjectDir)..\Resource\Runtime" />
+    <!-- Inventory changes also invalidate the stamp when an input is removed or renamed. -->
+    <WriteLinesToFile File="$(ProjectDir)..\Resource\Runtime\build-inputs.list" Lines="@(GameResourceInput->'%(FullPath)|%(ModifiedTime)')" Overwrite="true" WriteOnlyWhenDifferent="true" Encoding="UTF-8" />
+    <Delete Files="$(ProjectDir)..\Resource\Runtime\prepare.stamp" Condition="'$(ForceResourceValidation)'=='true'" />
+  </Target>
+  <Target Name="PrepareGameResources" BeforeTargets="PrepareForBuild" DependsOnTargets="TrackGameResourceInputs" Inputs="$(ProjectDir)..\Resource\Runtime\build-inputs.list;$(ProjectDir)..\Resource\Runtime\build-sources.list;@(GameResourceInput);$(ProjectDir)..\Resource\Runtime\game-assets.bin;$(ProjectDir)..\Resource\Runtime\manifest.json" Outputs="$(ProjectDir)..\Resource\Runtime\prepare.stamp">
+    <Exec Command="&quot;$(SystemRoot)\System32\WindowsPowerShell\v1.0\powershell.exe&quot; -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(ProjectDir)..\tools\prepare-resources.ps1&quot; -NodeExecutable &quot;$(NodeExecutable)&quot;" WorkingDirectory="$(ProjectDir)..\" />
+    <!-- Refresh the inventory after first generation so the next build is already incremental. -->
+    <ReadLinesFromFile File="$(ProjectDir)..\Resource\Runtime\build-sources.list">
+      <Output TaskParameter="Lines" ItemName="UpdatedGameResourceRelativeInput" />
+    </ReadLinesFromFile>
+    <ItemGroup>
+      <UpdatedGameResourceInput Include="@(UpdatedGameResourceRelativeInput->'$(ProjectDir)..\%(Identity)');$(ProjectDir)..\tools\prepare-resources.ps1;$(ProjectDir)..\tools\ensure-resources.mjs;$(MSBuildProjectFullPath)" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(ProjectDir)..\Resource\Runtime\build-inputs.list" Lines="@(UpdatedGameResourceInput->'%(FullPath)|%(ModifiedTime)')" Overwrite="true" WriteOnlyWhenDifferent="true" Encoding="UTF-8" />
+    <Touch Files="$(ProjectDir)..\Resource\Runtime\prepare.stamp" AlwaysCreate="true" />
+  </Target>
   <Target Name="CopyGraphicsRuntimeLibraries" AfterTargets="Build">
     <ItemGroup>
       <GraphicsRuntimeLibrary Include="$(ProjectDir)Dependencies\$(Platform)\freeglut.dll" />
       <GraphicsRuntimeLibrary Include="$(ProjectDir)Dependencies\$(Platform)\glew32.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(GraphicsRuntimeLibrary)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CopyMonitorDashboard" AfterTargets="Build">
+    <ItemGroup>
+      <MonitorAsset Include="$(ProjectDir)..\monitor\index.html;$(ProjectDir)..\monitor\app.js;$(ProjectDir)..\monitor\style.css;$(ProjectDir)..\monitor\models.html;$(ProjectDir)..\monitor\models.js;$(ProjectDir)..\monitor\models.css" />
+    </ItemGroup>
+    <Copy SourceFiles="@(MonitorAsset)" DestinationFolder="$(OutDir)Monitor\" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CopyGameResourcePack" AfterTargets="Build" DependsOnTargets="PrepareGameResources">
+    <ItemGroup>
+      <GameResourcePack Include="$(ProjectDir)..\Resource\Runtime\game-assets.bin;$(ProjectDir)..\Resource\Runtime\manifest.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(GameResourcePack)" DestinationFolder="$(OutDir)Resource\Runtime\" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="CopyGameUiResources" AfterTargets="Build">
+    <ItemGroup>
+      <GameUiAsset Include="$(ProjectDir)..\Resource\UI\Export\**\*.png" />
+      <GameUiContract Include="$(ProjectDir)..\Resource\UI\ui_manifest.json" />
+    </ItemGroup>
+    <Copy SourceFiles="@(GameUiAsset)" DestinationFiles="@(GameUiAsset->'$(OutDir)Resource\UI\Export\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(GameUiContract)" DestinationFolder="$(OutDir)Resource\UI\" SkipUnchangedFiles="true" />
   </Target>
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

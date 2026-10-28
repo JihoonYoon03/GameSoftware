@@ -1,0 +1,66 @@
+{
+  "mesh_parts": 2293,
+  "max_triangles": 492,
+  "all_parts_under_500": true,
+  "rigs": {
+    "HUMAN_7H": {
+      "bone_count": 23,
+      "clips": 15
+    },
+    "RiftGrazer": {
+      "bone_count": 20,
+      "clips": 15
+    },
+    "VeilWalker": {
+      "bone_count": 27,
+      "clips": 15
+    },
+    "RelaySentinel": {
+      "bone_count": 12,
+      "clips": 15
+    },
+    "PressureDoor_Rig": {
+      "bone_count": 2,
+      "clips": 2
+    },
+    "VEHICLE_Coupe": {
+      "bone_count": 16,
+      "clips": 10
+    },
+    "VEHICLE_Shuttle": {
+      "bone_count": 16,
+      "clips": 10
+    },
+    "VEHICLE_Hauler": {
+      "bone_count": 16,
+      "clips": 10
+    },
+    "VEHICLE_Patrol": {
+      "bone_count": 16,
+      "clips": 11
+    },
+    "VEHICLE_JetBike": {
+      "bone_count": 16,
+      "clips": 10
+    },
+    "AIRCRAFT_Kite_Courier": {
+      "bone_count": 17,
+      "clips": 12
+    },
+    "AIRCRAFT_Manta_AirTaxi": {
+      "bone_count": 17,
+      "clips": 12
+    },
+    "AIRCRAFT_Mule_Skycrane": {
+      "bone_count": 17,
+      "clips": 12
+    },
+    "AIRCRAFT_Warden_Survey": {
+      "bone_count": 17,
+      "clips": 12
+    }
+  },
+  "issues": [],
+  "expansion_report": "air_city_source_report.json",
+  "transit_expansion_report": "transit_source_report.json"
+}

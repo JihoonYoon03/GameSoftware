@@ -1,0 +1,1108 @@
+{
+  "expansion": "air_city_v1",
+  "design_revision": "sf_detail_first_v3",
+  "retired_exports": [],
+  "mesh_parts": 219,
+  "max_triangles": 464,
+  "all_parts_under_500": true,
+  "aircraft_types": 4,
+  "scenery_assemblies": 34,
+  "issues": [],
+  "parts": [
+    {
+      "id": "Aircraft_Kite_Courier_PressureHull",
+      "polygons": 283,
+      "triangles": 288
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Canopy_Glass",
+      "polygons": 254,
+      "triangles": 276
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Canopy_Reinforced",
+      "polygons": 262,
+      "triangles": 276
+    },
+    {
+      "id": "Aircraft_Kite_Courier_CabinSeats",
+      "polygons": 140,
+      "triangles": 148
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Wing_L",
+      "polygons": 98,
+      "triangles": 100
+    },
+    {
+      "id": "Aircraft_Kite_Courier_LiftField_Front_L",
+      "polygons": 429,
+      "triangles": 464
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Engine_Efficient_L",
+      "polygons": 166,
+      "triangles": 170
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Engine_Boost_L",
+      "polygons": 92,
+      "triangles": 96
+    },
+    {
+      "id": "Aircraft_Kite_Courier_LandingSkid_L",
+      "polygons": 111,
+      "triangles": 121
+    },
+    {
+      "id": "Aircraft_Kite_Courier_TailFin_L",
+      "polygons": 29,
+      "triangles": 32
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Wing_R",
+      "polygons": 98,
+      "triangles": 100
+    },
+    {
+      "id": "Aircraft_Kite_Courier_LiftField_Front_R",
+      "polygons": 429,
+      "triangles": 464
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Engine_Efficient_R",
+      "polygons": 166,
+      "triangles": 170
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Engine_Boost_R",
+      "polygons": 92,
+      "triangles": 96
+    },
+    {
+      "id": "Aircraft_Kite_Courier_LandingSkid_R",
+      "polygons": 111,
+      "triangles": 120
+    },
+    {
+      "id": "Aircraft_Kite_Courier_TailFin_R",
+      "polygons": 30,
+      "triangles": 32
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Payload_Standard",
+      "polygons": 72,
+      "triangles": 72
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Payload_Alternate",
+      "polygons": 72,
+      "triangles": 72
+    },
+    {
+      "id": "Aircraft_Kite_Courier_ServiceHatch",
+      "polygons": 108,
+      "triangles": 112
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_PressureHull",
+      "polygons": 286,
+      "triangles": 288
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Canopy_Glass",
+      "polygons": 254,
+      "triangles": 276
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Canopy_Reinforced",
+      "polygons": 265,
+      "triangles": 276
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_CabinSeats",
+      "polygons": 436,
+      "triangles": 452
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Wing_L",
+      "polygons": 99,
+      "triangles": 100
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_LiftField_Front_L",
+      "polygons": 445,
+      "triangles": 464
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_LiftField_Rear_L",
+      "polygons": 437,
+      "triangles": 464
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Engine_Efficient_L",
+      "polygons": 176,
+      "triangles": 176
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Engine_Boost_L",
+      "polygons": 92,
+      "triangles": 96
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_LandingSkid_L",
+      "polygons": 116,
+      "triangles": 122
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_TailFin_L",
+      "polygons": 31,
+      "triangles": 32
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Wing_R",
+      "polygons": 99,
+      "triangles": 100
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_LiftField_Front_R",
+      "polygons": 443,
+      "triangles": 464
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_LiftField_Rear_R",
+      "polygons": 438,
+      "triangles": 464
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Engine_Efficient_R",
+      "polygons": 178,
+      "triangles": 178
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Engine_Boost_R",
+      "polygons": 92,
+      "triangles": 96
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_LandingSkid_R",
+      "polygons": 118,
+      "triangles": 125
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_TailFin_R",
+      "polygons": 31,
+      "triangles": 32
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Payload_Standard",
+      "polygons": 84,
+      "triangles": 84
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Payload_Alternate",
+      "polygons": 132,
+      "triangles": 132
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_ServiceHatch",
+      "polygons": 100,
+      "triangles": 112
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_PressureHull",
+      "polygons": 283,
+      "triangles": 288
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Canopy_Glass",
+      "polygons": 252,
+      "triangles": 276
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Canopy_Reinforced",
+      "polygons": 248,
+      "triangles": 276
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_CabinSeats",
+      "polygons": 424,
+      "triangles": 452
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Wing_L",
+      "polygons": 92,
+      "triangles": 100
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_LiftField_Front_L",
+      "polygons": 448,
+      "triangles": 464
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_LiftField_Rear_L",
+      "polygons": 442,
+      "triangles": 464
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Engine_Efficient_L",
+      "polygons": 178,
+      "triangles": 180
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Engine_Boost_L",
+      "polygons": 96,
+      "triangles": 96
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_LandingSkid_L",
+      "polygons": 118,
+      "triangles": 124
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_TailFin_L",
+      "polygons": 30,
+      "triangles": 32
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Wing_R",
+      "polygons": 93,
+      "triangles": 100
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_LiftField_Front_R",
+      "polygons": 448,
+      "triangles": 464
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_LiftField_Rear_R",
+      "polygons": 442,
+      "triangles": 464
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Engine_Efficient_R",
+      "polygons": 180,
+      "triangles": 182
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Engine_Boost_R",
+      "polygons": 96,
+      "triangles": 96
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_LandingSkid_R",
+      "polygons": 115,
+      "triangles": 120
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_TailFin_R",
+      "polygons": 29,
+      "triangles": 32
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_OutboardBoom_L",
+      "polygons": 44,
+      "triangles": 44
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_OutboardBoom_R",
+      "polygons": 44,
+      "triangles": 44
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Payload_Standard",
+      "polygons": 376,
+      "triangles": 412
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Payload_Alternate",
+      "polygons": 220,
+      "triangles": 236
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_ServiceHatch",
+      "polygons": 104,
+      "triangles": 112
+    },
+    {
+      "id": "Aircraft_Warden_Survey_PressureHull",
+      "polygons": 287,
+      "triangles": 288
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Canopy_Glass",
+      "polygons": 245,
+      "triangles": 276
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Canopy_Reinforced",
+      "polygons": 256,
+      "triangles": 276
+    },
+    {
+      "id": "Aircraft_Warden_Survey_CabinSeats",
+      "polygons": 142,
+      "triangles": 152
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Wing_L",
+      "polygons": 90,
+      "triangles": 100
+    },
+    {
+      "id": "Aircraft_Warden_Survey_LiftField_Front_L",
+      "polygons": 437,
+      "triangles": 464
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Engine_Efficient_L",
+      "polygons": 167,
+      "triangles": 169
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Engine_Boost_L",
+      "polygons": 89,
+      "triangles": 96
+    },
+    {
+      "id": "Aircraft_Warden_Survey_LandingSkid_L",
+      "polygons": 108,
+      "triangles": 122
+    },
+    {
+      "id": "Aircraft_Warden_Survey_TailFin_L",
+      "polygons": 31,
+      "triangles": 32
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Wing_R",
+      "polygons": 93,
+      "triangles": 100
+    },
+    {
+      "id": "Aircraft_Warden_Survey_LiftField_Front_R",
+      "polygons": 435,
+      "triangles": 464
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Engine_Efficient_R",
+      "polygons": 166,
+      "triangles": 168
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Engine_Boost_R",
+      "polygons": 89,
+      "triangles": 96
+    },
+    {
+      "id": "Aircraft_Warden_Survey_LandingSkid_R",
+      "polygons": 109,
+      "triangles": 122
+    },
+    {
+      "id": "Aircraft_Warden_Survey_TailFin_R",
+      "polygons": 30,
+      "triangles": 32
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Payload_Standard",
+      "polygons": 87,
+      "triangles": 88
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Payload_Alternate",
+      "polygons": 97,
+      "triangles": 102
+    },
+    {
+      "id": "Aircraft_Warden_Survey_ServiceHatch",
+      "polygons": 112,
+      "triangles": 112
+    },
+    {
+      "id": "Road_2Lane_4m_Lane_01",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Road_2Lane_4m_Lane_02",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Road_2Lane_4m_LaneMarkings",
+      "polygons": 24,
+      "triangles": 24
+    },
+    {
+      "id": "Road_2Lane_4m_EdgeMarkings",
+      "polygons": 24,
+      "triangles": 24
+    },
+    {
+      "id": "Road_4Lane_4m_Lane_01",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Road_4Lane_4m_Lane_02",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Road_4Lane_4m_Lane_03",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Road_4Lane_4m_Lane_04",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Road_4Lane_4m_LaneMarkings",
+      "polygons": 48,
+      "triangles": 48
+    },
+    {
+      "id": "Road_4Lane_4m_EdgeMarkings",
+      "polygons": 24,
+      "triangles": 24
+    },
+    {
+      "id": "Road_6Lane_4m_Lane_01",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Road_6Lane_4m_Lane_02",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Road_6Lane_4m_Lane_03",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Road_6Lane_4m_Lane_04",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Road_6Lane_4m_Lane_05",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Road_6Lane_4m_Lane_06",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Road_6Lane_4m_LaneMarkings",
+      "polygons": 72,
+      "triangles": 72
+    },
+    {
+      "id": "Road_6Lane_4m_EdgeMarkings",
+      "polygons": 24,
+      "triangles": 24
+    },
+    {
+      "id": "Road_Crossroad_12m_Surface",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Road_Crossroad_12m_Crosswalk_0_-1",
+      "polygons": 96,
+      "triangles": 96
+    },
+    {
+      "id": "Road_Crossroad_12m_Crosswalk_0_1",
+      "polygons": 96,
+      "triangles": 96
+    },
+    {
+      "id": "Road_Crossroad_12m_Crosswalk_1_-1",
+      "polygons": 96,
+      "triangles": 96
+    },
+    {
+      "id": "Road_Crossroad_12m_Crosswalk_1_1",
+      "polygons": 96,
+      "triangles": 96
+    },
+    {
+      "id": "Road_TJunction_12m_Surface",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Road_TJunction_12m_Crosswalk_0_-1",
+      "polygons": 96,
+      "triangles": 96
+    },
+    {
+      "id": "Road_TJunction_12m_Crosswalk_0_1",
+      "polygons": 96,
+      "triangles": 96
+    },
+    {
+      "id": "Road_TJunction_12m_Crosswalk_1_-1",
+      "polygons": 96,
+      "triangles": 96
+    },
+    {
+      "id": "Road_TJunction_12m_ClosedEdge",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Road_Curve90_R9m_ArcSurface",
+      "polygons": 124,
+      "triangles": 144
+    },
+    {
+      "id": "Road_Curve90_R9m_CenterMarkings",
+      "polygons": 132,
+      "triangles": 144
+    },
+    {
+      "id": "City_Sidewalk_2x4m_Slab",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "City_Sidewalk_2x4m_Curb",
+      "polygons": 42,
+      "triangles": 44
+    },
+    {
+      "id": "City_Sidewalk_2x4m_ServiceStrip",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Road_SpeedTable_4m_Ramp",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Road_SpeedTable_4m_WarningBars",
+      "polygons": 72,
+      "triangles": 72
+    },
+    {
+      "id": "City_Streetlight_4m_Foundation",
+      "polygons": 28,
+      "triangles": 28
+    },
+    {
+      "id": "City_Streetlight_4m_Mast",
+      "polygons": 40,
+      "triangles": 40
+    },
+    {
+      "id": "City_Streetlight_4m_Luminaire",
+      "polygons": 78,
+      "triangles": 80
+    },
+    {
+      "id": "City_TrafficSignal_HoverHousing",
+      "polygons": 114,
+      "triangles": 118
+    },
+    {
+      "id": "City_TrafficSignal_FieldStabilizer_L",
+      "polygons": 277,
+      "triangles": 296
+    },
+    {
+      "id": "City_TrafficSignal_FieldStabilizer_R",
+      "polygons": 278,
+      "triangles": 296
+    },
+    {
+      "id": "City_TrafficSignal_StopGlyph",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "City_TrafficSignal_WaitGlyph",
+      "polygons": 10,
+      "triangles": 12
+    },
+    {
+      "id": "City_TrafficSignal_GoGlyph",
+      "polygons": 8,
+      "triangles": 8
+    },
+    {
+      "id": "City_PedestrianHologram_6m_Projectors",
+      "polygons": 264,
+      "triangles": 288
+    },
+    {
+      "id": "City_PedestrianHologram_6m_WalkGrid",
+      "polygons": 96,
+      "triangles": 96
+    },
+    {
+      "id": "City_PedestrianHologram_6m_Guidance",
+      "polygons": 24,
+      "triangles": 24
+    },
+    {
+      "id": "City_Bollard_Base",
+      "polygons": 36,
+      "triangles": 44
+    },
+    {
+      "id": "City_Bollard_Post",
+      "polygons": 88,
+      "triangles": 88
+    },
+    {
+      "id": "Road_CrashBarrier_4m_Feet",
+      "polygons": 120,
+      "triangles": 120
+    },
+    {
+      "id": "Road_CrashBarrier_4m_Rail",
+      "polygons": 26,
+      "triangles": 28
+    },
+    {
+      "id": "Road_CrashBarrier_4m_Reflectors",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "City_Bench_Legs",
+      "polygons": 80,
+      "triangles": 88
+    },
+    {
+      "id": "City_Bench_Seat",
+      "polygons": 26,
+      "triangles": 28
+    },
+    {
+      "id": "City_Bench_Back",
+      "polygons": 40,
+      "triangles": 40
+    },
+    {
+      "id": "City_Planter_Vessel",
+      "polygons": 56,
+      "triangles": 60
+    },
+    {
+      "id": "City_Planter_Soil",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "City_Planter_AlienFoliage",
+      "polygons": 140,
+      "triangles": 144
+    },
+    {
+      "id": "City_TransitShelter_Frame",
+      "polygons": 112,
+      "triangles": 112
+    },
+    {
+      "id": "City_TransitShelter_Roof",
+      "polygons": 36,
+      "triangles": 36
+    },
+    {
+      "id": "City_TransitShelter_BackPanel",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "City_TransitShelter_Seat",
+      "polygons": 24,
+      "triangles": 28
+    },
+    {
+      "id": "City_TransitShelter_RouteDisplay",
+      "polygons": 64,
+      "triangles": 64
+    },
+    {
+      "id": "City_Wayfinding_Mast",
+      "polygons": 40,
+      "triangles": 40
+    },
+    {
+      "id": "City_Wayfinding_SignBoards",
+      "polygons": 38,
+      "triangles": 40
+    },
+    {
+      "id": "City_Wayfinding_Arrows",
+      "polygons": 8,
+      "triangles": 8
+    },
+    {
+      "id": "City_ChargePost_Pedestal",
+      "polygons": 72,
+      "triangles": 74
+    },
+    {
+      "id": "City_ChargePost_Display",
+      "polygons": 22,
+      "triangles": 22
+    },
+    {
+      "id": "City_ChargePost_InductionHalo",
+      "polygons": 435,
+      "triangles": 464
+    },
+    {
+      "id": "Utility_Transformer_Cabinet",
+      "polygons": 90,
+      "triangles": 90
+    },
+    {
+      "id": "Utility_Transformer_CoolingFins",
+      "polygons": 84,
+      "triangles": 84
+    },
+    {
+      "id": "Utility_Transformer_FieldCapacitors",
+      "polygons": 421,
+      "triangles": 464
+    },
+    {
+      "id": "Utility_Transformer_Status",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Utility_CargoContainer_6m_Shell",
+      "polygons": 136,
+      "triangles": 136
+    },
+    {
+      "id": "Utility_CargoContainer_6m_RoofRibs",
+      "polygons": 352,
+      "triangles": 352
+    },
+    {
+      "id": "Utility_CargoContainer_6m_Door_L",
+      "polygons": 48,
+      "triangles": 48
+    },
+    {
+      "id": "Utility_CargoContainer_6m_Door_R",
+      "polygons": 48,
+      "triangles": 48
+    },
+    {
+      "id": "Utility_CargoContainer_6m_SealEmitters",
+      "polygons": 24,
+      "triangles": 24
+    },
+    {
+      "id": "Utility_HVAC_Housing",
+      "polygons": 28,
+      "triangles": 28
+    },
+    {
+      "id": "Utility_HVAC_Grille",
+      "polygons": 72,
+      "triangles": 72
+    },
+    {
+      "id": "Utility_HVAC_Exhaust",
+      "polygons": 345,
+      "triangles": 368
+    },
+    {
+      "id": "Utility_PipeRack_4m_Supports",
+      "polygons": 76,
+      "triangles": 88
+    },
+    {
+      "id": "Utility_PipeRack_4m_Pipe_0",
+      "polygons": 40,
+      "triangles": 44
+    },
+    {
+      "id": "Utility_PipeRack_4m_Pipe_1",
+      "polygons": 44,
+      "triangles": 44
+    },
+    {
+      "id": "Utility_PipeRack_4m_Pipe_2",
+      "polygons": 40,
+      "triangles": 44
+    },
+    {
+      "id": "Utility_CommRelay_Mast",
+      "polygons": 40,
+      "triangles": 40
+    },
+    {
+      "id": "Utility_CommRelay_Panel_L",
+      "polygons": 46,
+      "triangles": 52
+    },
+    {
+      "id": "Utility_CommRelay_Panel_R",
+      "polygons": 46,
+      "triangles": 52
+    },
+    {
+      "id": "Utility_CommRelay_Beacon",
+      "polygons": 32,
+      "triangles": 32
+    },
+    {
+      "id": "Utility_SolarArray_Stand",
+      "polygons": 88,
+      "triangles": 88
+    },
+    {
+      "id": "Utility_SolarArray_Panel",
+      "polygons": 186,
+      "triangles": 192
+    },
+    {
+      "id": "Utility_SolarArray_Rails",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Utility_WaterTank_Legs",
+      "polygons": 144,
+      "triangles": 176
+    },
+    {
+      "id": "Utility_WaterTank_Tank",
+      "polygons": 120,
+      "triangles": 124
+    },
+    {
+      "id": "Utility_WaterTank_Pipe",
+      "polygons": 44,
+      "triangles": 44
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_0_0",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_0_1",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_0_2",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_0_3",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_1_0",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_1_1",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_1_2",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_1_3",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_2_0",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_2_1",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_2_2",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_2_3",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_3_0",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_3_1",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_3_2",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_3_3",
+      "polygons": 12,
+      "triangles": 12
+    },
+    {
+      "id": "Airfield_LandingPad_16m_GuidanceReticle",
+      "polygons": 189,
+      "triangles": 192
+    },
+    {
+      "id": "Airfield_LandingPad_16m_CornerLights",
+      "polygons": 176,
+      "triangles": 176
+    },
+    {
+      "id": "Airfield_Beacon_Base",
+      "polygons": 44,
+      "triangles": 44
+    },
+    {
+      "id": "Airfield_Beacon_Light",
+      "polygons": 44,
+      "triangles": 44
+    },
+    {
+      "id": "Airfield_Beacon_Guard",
+      "polygons": 32,
+      "triangles": 44
+    },
+    {
+      "id": "Frontier_SurveyTripod_Tripod",
+      "polygons": 74,
+      "triangles": 81
+    },
+    {
+      "id": "Frontier_SurveyTripod_Scanner",
+      "polygons": 128,
+      "triangles": 128
+    },
+    {
+      "id": "Frontier_SurveyTripod_Lens",
+      "polygons": 346,
+      "triangles": 368
+    },
+    {
+      "id": "Frontier_FieldShelter_Frame",
+      "polygons": 84,
+      "triangles": 88
+    },
+    {
+      "id": "Frontier_FieldShelter_Canopy",
+      "polygons": 24,
+      "triangles": 24
+    },
+    {
+      "id": "Frontier_FieldShelter_SupplyBox",
+      "polygons": 60,
+      "triangles": 60
+    },
+    {
+      "id": "Frontier_MiningConveyor_Frame",
+      "polygons": 40,
+      "triangles": 44
+    },
+    {
+      "id": "Frontier_MiningConveyor_Belt",
+      "polygons": 52,
+      "triangles": 52
+    },
+    {
+      "id": "Frontier_MiningConveyor_Legs",
+      "polygons": 76,
+      "triangles": 88
+    },
+    {
+      "id": "Frontier_MiningConveyor_Motor",
+      "polygons": 44,
+      "triangles": 44
+    },
+    {
+      "id": "Ruin_ObserverMonolith_Foot",
+      "polygons": 20,
+      "triangles": 20
+    },
+    {
+      "id": "Ruin_ObserverMonolith_Shaft",
+      "polygons": 32,
+      "triangles": 32
+    },
+    {
+      "id": "Ruin_ObserverMonolith_Inlay",
+      "polygons": 24,
+      "triangles": 24
+    },
+    {
+      "id": "Ruin_FracturedArch_Pier_L",
+      "polygons": 38,
+      "triangles": 40
+    },
+    {
+      "id": "Ruin_FracturedArch_Pier_R",
+      "polygons": 37,
+      "triangles": 40
+    },
+    {
+      "id": "Ruin_FracturedArch_SuspendedShard",
+      "polygons": 18,
+      "triangles": 20
+    },
+    {
+      "id": "Nature_PrismBloom_RockBed",
+      "polygons": 58,
+      "triangles": 60
+    },
+    {
+      "id": "Nature_PrismBloom_Crystals",
+      "polygons": 124,
+      "triangles": 130
+    },
+    {
+      "id": "Nature_SailTree_Trunk",
+      "polygons": 42,
+      "triangles": 44
+    },
+    {
+      "id": "Nature_SailTree_Canopy",
+      "polygons": 155,
+      "triangles": 156
+    },
+    {
+      "id": "Nature_SailTree_GlowSeedpods",
+      "polygons": 174,
+      "triangles": 184
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "original_parts_replaced": 785,
+  "parts": 854,
+  "companion_modules": 69,
+  "source_triangles": 181880,
+  "optimized_triangles": 174980,
+  "removed_triangles": 6900,
+  "max_triangles": 448,
+  "max_surface_error_m": 5.995465121185014e-08,
+  "over_budget": []
+}

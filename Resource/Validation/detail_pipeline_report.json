@@ -1,0 +1,3306 @@
+{
+  "schema": "detail_first_lossless_cleanup_v1",
+  "scope": "air_city_v1",
+  "triangle_limit": 500,
+  "source_scene": "17_Detail_Sources",
+  "comparison_scene": "18_Detail_Comparison",
+  "simplification_policy": "preserve external geometry, materials and rigid joint assignments; no ratio decimation",
+  "summary": {
+    "parts": 219,
+    "over_budget": [],
+    "source_triangles": 27146,
+    "optimized_triangles": 25606,
+    "max_surface_error_m": 7.049083153671118e-08,
+    "max_source_triangles": 464,
+    "max_optimized_triangles": 464,
+    "removed_triangles": 1540,
+    "max_triangles": 464
+  },
+  "parts": [
+    {
+      "id": "Aircraft_Kite_Courier_PressureHull",
+      "source_triangles": 288,
+      "optimized_triangles": 288,
+      "removed_triangles": 0,
+      "max_surface_error_m": 7.143203378585221e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Kite_Courier_PressureHull",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Canopy_Glass",
+      "source_triangles": 276,
+      "optimized_triangles": 276,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.3736072540703933e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Aircraft_Kite_Courier_Canopy_Glass",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Canopy_Reinforced",
+      "source_triangles": 276,
+      "optimized_triangles": 276,
+      "removed_triangles": 0,
+      "max_surface_error_m": 4.104541995691245e-09,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Aircraft_Kite_Courier_Canopy_Reinforced",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Kite_Courier_CabinSeats",
+      "source_triangles": 152,
+      "optimized_triangles": 148,
+      "removed_triangles": 4,
+      "max_surface_error_m": 7.851332287632868e-17,
+      "occluded_internal_triangles_removed": 4,
+      "source_object": "Detail__Aircraft_Kite_Courier_CabinSeats",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Wing_L",
+      "source_triangles": 100,
+      "optimized_triangles": 100,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.0636131931778165e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Kite_Courier_Wing_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Kite_Courier_LiftField_Front_L",
+      "source_triangles": 464,
+      "optimized_triangles": 464,
+      "removed_triangles": 0,
+      "max_surface_error_m": 8.320028275623372e-10,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Kite_Courier_LiftField_Front_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Engine_Efficient_L",
+      "source_triangles": 236,
+      "optimized_triangles": 170,
+      "removed_triangles": 66,
+      "max_surface_error_m": 1.0660621147866966e-16,
+      "occluded_internal_triangles_removed": 66,
+      "source_object": "Detail__Aircraft_Kite_Courier_Engine_Efficient_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Engine_Boost_L",
+      "source_triangles": 188,
+      "optimized_triangles": 96,
+      "removed_triangles": 92,
+      "max_surface_error_m": 1.4047909227111507e-16,
+      "occluded_internal_triangles_removed": 92,
+      "source_object": "Detail__Aircraft_Kite_Courier_Engine_Boost_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Kite_Courier_LandingSkid_L",
+      "source_triangles": 132,
+      "optimized_triangles": 121,
+      "removed_triangles": 11,
+      "max_surface_error_m": 1.7439726527883656e-08,
+      "occluded_internal_triangles_removed": 11,
+      "source_object": "Detail__Aircraft_Kite_Courier_LandingSkid_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Kite_Courier_TailFin_L",
+      "source_triangles": 32,
+      "optimized_triangles": 32,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.694875693296828e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Kite_Courier_TailFin_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Wing_R",
+      "source_triangles": 100,
+      "optimized_triangles": 100,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.0636131931778165e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Kite_Courier_Wing_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Kite_Courier_LiftField_Front_R",
+      "source_triangles": 464,
+      "optimized_triangles": 464,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.584048320910343e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Kite_Courier_LiftField_Front_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Engine_Efficient_R",
+      "source_triangles": 236,
+      "optimized_triangles": 170,
+      "removed_triangles": 66,
+      "max_surface_error_m": 1.0660621147866966e-16,
+      "occluded_internal_triangles_removed": 66,
+      "source_object": "Detail__Aircraft_Kite_Courier_Engine_Efficient_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Engine_Boost_R",
+      "source_triangles": 188,
+      "optimized_triangles": 96,
+      "removed_triangles": 92,
+      "max_surface_error_m": 2.4835268619405326e-08,
+      "occluded_internal_triangles_removed": 92,
+      "source_object": "Detail__Aircraft_Kite_Courier_Engine_Boost_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Kite_Courier_LandingSkid_R",
+      "source_triangles": 132,
+      "optimized_triangles": 120,
+      "removed_triangles": 12,
+      "max_surface_error_m": 1.2110294018660417e-08,
+      "occluded_internal_triangles_removed": 12,
+      "source_object": "Detail__Aircraft_Kite_Courier_LandingSkid_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Kite_Courier_TailFin_R",
+      "source_triangles": 32,
+      "optimized_triangles": 32,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.664165714571505e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Kite_Courier_TailFin_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Payload_Standard",
+      "source_triangles": 72,
+      "optimized_triangles": 72,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.7007389820530376e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Kite_Courier_Payload_Standard",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Kite_Courier_Payload_Alternate",
+      "source_triangles": 72,
+      "optimized_triangles": 72,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.7007389820530376e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Kite_Courier_Payload_Alternate",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Kite_Courier_ServiceHatch",
+      "source_triangles": 112,
+      "optimized_triangles": 112,
+      "removed_triangles": 0,
+      "max_surface_error_m": 5.34637706362094e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Kite_Courier_ServiceHatch",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_PressureHull",
+      "source_triangles": 288,
+      "optimized_triangles": 288,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.3060029462465795e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Manta_AirTaxi_PressureHull",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Canopy_Glass",
+      "source_triangles": 276,
+      "optimized_triangles": 276,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.9705507162934225e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Aircraft_Manta_AirTaxi_Canopy_Glass",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Canopy_Reinforced",
+      "source_triangles": 276,
+      "optimized_triangles": 276,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.2566779814972696e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Aircraft_Manta_AirTaxi_Canopy_Reinforced",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_CabinSeats",
+      "source_triangles": 452,
+      "optimized_triangles": 452,
+      "removed_triangles": 0,
+      "max_surface_error_m": 7.90274356938413e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Manta_AirTaxi_CabinSeats",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Wing_L",
+      "source_triangles": 100,
+      "optimized_triangles": 100,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.6953912926689662e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Manta_AirTaxi_Wing_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_LiftField_Front_L",
+      "source_triangles": 464,
+      "optimized_triangles": 464,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.038600219636565e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Manta_AirTaxi_LiftField_Front_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_LiftField_Rear_L",
+      "source_triangles": 464,
+      "optimized_triangles": 464,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.0745861717802425e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Manta_AirTaxi_LiftField_Rear_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Engine_Efficient_L",
+      "source_triangles": 236,
+      "optimized_triangles": 176,
+      "removed_triangles": 60,
+      "max_surface_error_m": 1.9868214962137642e-08,
+      "occluded_internal_triangles_removed": 60,
+      "source_object": "Detail__Aircraft_Manta_AirTaxi_Engine_Efficient_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Engine_Boost_L",
+      "source_triangles": 188,
+      "optimized_triangles": 96,
+      "removed_triangles": 92,
+      "max_surface_error_m": 1.9868214962137642e-08,
+      "occluded_internal_triangles_removed": 92,
+      "source_object": "Detail__Aircraft_Manta_AirTaxi_Engine_Boost_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_LandingSkid_L",
+      "source_triangles": 132,
+      "optimized_triangles": 122,
+      "removed_triangles": 10,
+      "max_surface_error_m": 3.182263764580716e-08,
+      "occluded_internal_triangles_removed": 10,
+      "source_object": "Detail__Aircraft_Manta_AirTaxi_LandingSkid_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_TailFin_L",
+      "source_triangles": 32,
+      "optimized_triangles": 32,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.2787769349731867e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Manta_AirTaxi_TailFin_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Wing_R",
+      "source_triangles": 100,
+      "optimized_triangles": 100,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.6953912926689662e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Manta_AirTaxi_Wing_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_LiftField_Front_R",
+      "source_triangles": 464,
+      "optimized_triangles": 464,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.969836201990676e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Manta_AirTaxi_LiftField_Front_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_LiftField_Rear_R",
+      "source_triangles": 464,
+      "optimized_triangles": 464,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.960466365003014e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Manta_AirTaxi_LiftField_Rear_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Engine_Efficient_R",
+      "source_triangles": 236,
+      "optimized_triangles": 178,
+      "removed_triangles": 58,
+      "max_surface_error_m": 1.601305762495106e-16,
+      "occluded_internal_triangles_removed": 58,
+      "source_object": "Detail__Aircraft_Manta_AirTaxi_Engine_Efficient_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Engine_Boost_R",
+      "source_triangles": 188,
+      "optimized_triangles": 96,
+      "removed_triangles": 92,
+      "max_surface_error_m": 3.9736429924275285e-08,
+      "occluded_internal_triangles_removed": 92,
+      "source_object": "Detail__Aircraft_Manta_AirTaxi_Engine_Boost_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_LandingSkid_R",
+      "source_triangles": 132,
+      "optimized_triangles": 125,
+      "removed_triangles": 7,
+      "max_surface_error_m": 2.1137870323202185e-08,
+      "occluded_internal_triangles_removed": 7,
+      "source_object": "Detail__Aircraft_Manta_AirTaxi_LandingSkid_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_TailFin_R",
+      "source_triangles": 32,
+      "optimized_triangles": 32,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.2787769349731867e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Manta_AirTaxi_TailFin_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Payload_Standard",
+      "source_triangles": 84,
+      "optimized_triangles": 84,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.700761179496728e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Manta_AirTaxi_Payload_Standard",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_Payload_Alternate",
+      "source_triangles": 132,
+      "optimized_triangles": 132,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.700761179496728e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Manta_AirTaxi_Payload_Alternate",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Manta_AirTaxi_ServiceHatch",
+      "source_triangles": 112,
+      "optimized_triangles": 112,
+      "removed_triangles": 0,
+      "max_surface_error_m": 7.84135105117953e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Manta_AirTaxi_ServiceHatch",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_PressureHull",
+      "source_triangles": 288,
+      "optimized_triangles": 288,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.1048295545393734e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Mule_Skycrane_PressureHull",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Canopy_Glass",
+      "source_triangles": 276,
+      "optimized_triangles": 276,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.2700580944689918e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Aircraft_Mule_Skycrane_Canopy_Glass",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Canopy_Reinforced",
+      "source_triangles": 276,
+      "optimized_triangles": 276,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.973336704385073e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Aircraft_Mule_Skycrane_Canopy_Reinforced",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_CabinSeats",
+      "source_triangles": 452,
+      "optimized_triangles": 452,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.043908721051292e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Mule_Skycrane_CabinSeats",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Wing_L",
+      "source_triangles": 100,
+      "optimized_triangles": 100,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.00113456970478e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Mule_Skycrane_Wing_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_LiftField_Front_L",
+      "source_triangles": 464,
+      "optimized_triangles": 464,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.1390802997525616e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Mule_Skycrane_LiftField_Front_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_LiftField_Rear_L",
+      "source_triangles": 464,
+      "optimized_triangles": 464,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.2227876972207336e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Mule_Skycrane_LiftField_Rear_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Engine_Efficient_L",
+      "source_triangles": 236,
+      "optimized_triangles": 180,
+      "removed_triangles": 56,
+      "max_surface_error_m": 1.0918001482976039e-16,
+      "occluded_internal_triangles_removed": 56,
+      "source_object": "Detail__Aircraft_Mule_Skycrane_Engine_Efficient_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Engine_Boost_L",
+      "source_triangles": 188,
+      "optimized_triangles": 96,
+      "removed_triangles": 92,
+      "max_surface_error_m": 9.266872165443657e-17,
+      "occluded_internal_triangles_removed": 92,
+      "source_object": "Detail__Aircraft_Mule_Skycrane_Engine_Boost_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_LandingSkid_L",
+      "source_triangles": 132,
+      "optimized_triangles": 124,
+      "removed_triangles": 8,
+      "max_surface_error_m": 1.587160651157596e-16,
+      "occluded_internal_triangles_removed": 8,
+      "source_object": "Detail__Aircraft_Mule_Skycrane_LandingSkid_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_TailFin_L",
+      "source_triangles": 32,
+      "optimized_triangles": 32,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.082484834308854e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Mule_Skycrane_TailFin_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Wing_R",
+      "source_triangles": 100,
+      "optimized_triangles": 100,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.6631581026355544e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Mule_Skycrane_Wing_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_LiftField_Front_R",
+      "source_triangles": 464,
+      "optimized_triangles": 464,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.33021247312475e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Mule_Skycrane_LiftField_Front_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_LiftField_Rear_R",
+      "source_triangles": 464,
+      "optimized_triangles": 464,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.3007338840873156e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Mule_Skycrane_LiftField_Rear_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Engine_Efficient_R",
+      "source_triangles": 236,
+      "optimized_triangles": 182,
+      "removed_triangles": 54,
+      "max_surface_error_m": 1.0918001482976039e-16,
+      "occluded_internal_triangles_removed": 54,
+      "source_object": "Detail__Aircraft_Mule_Skycrane_Engine_Efficient_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Engine_Boost_R",
+      "source_triangles": 188,
+      "optimized_triangles": 96,
+      "removed_triangles": 92,
+      "max_surface_error_m": 9.266872165443657e-17,
+      "occluded_internal_triangles_removed": 92,
+      "source_object": "Detail__Aircraft_Mule_Skycrane_Engine_Boost_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_LandingSkid_R",
+      "source_triangles": 132,
+      "optimized_triangles": 120,
+      "removed_triangles": 12,
+      "max_surface_error_m": 2.9734809072970988e-08,
+      "occluded_internal_triangles_removed": 12,
+      "source_object": "Detail__Aircraft_Mule_Skycrane_LandingSkid_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_TailFin_R",
+      "source_triangles": 32,
+      "optimized_triangles": 32,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.082484834308854e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Mule_Skycrane_TailFin_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_OutboardBoom_L",
+      "source_triangles": 44,
+      "optimized_triangles": 44,
+      "removed_triangles": 0,
+      "max_surface_error_m": 6.354897971943532e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Mule_Skycrane_OutboardBoom_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_OutboardBoom_R",
+      "source_triangles": 44,
+      "optimized_triangles": 44,
+      "removed_triangles": 0,
+      "max_surface_error_m": 6.354897971943532e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Mule_Skycrane_OutboardBoom_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Payload_Standard",
+      "source_triangles": 412,
+      "optimized_triangles": 412,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.5698730523200903e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Mule_Skycrane_Payload_Standard",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_Payload_Alternate",
+      "source_triangles": 236,
+      "optimized_triangles": 236,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.4802973256593488e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Mule_Skycrane_Payload_Alternate",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Mule_Skycrane_ServiceHatch",
+      "source_triangles": 112,
+      "optimized_triangles": 112,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.6034590576941e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Mule_Skycrane_ServiceHatch",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Warden_Survey_PressureHull",
+      "source_triangles": 288,
+      "optimized_triangles": 288,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.1750058931794354e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Warden_Survey_PressureHull",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Canopy_Glass",
+      "source_triangles": 276,
+      "optimized_triangles": 276,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.4458802277793095e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Aircraft_Warden_Survey_Canopy_Glass",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Canopy_Reinforced",
+      "source_triangles": 276,
+      "optimized_triangles": 276,
+      "removed_triangles": 0,
+      "max_surface_error_m": 4.094093101436209e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "RefinedDetail__Aircraft_Warden_Survey_Canopy_Reinforced",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Warden_Survey_CabinSeats",
+      "source_triangles": 152,
+      "optimized_triangles": 152,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.0487084608285775e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Warden_Survey_CabinSeats",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Wing_L",
+      "source_triangles": 100,
+      "optimized_triangles": 100,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.9125566331046916e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Warden_Survey_Wing_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Warden_Survey_LiftField_Front_L",
+      "source_triangles": 464,
+      "optimized_triangles": 464,
+      "removed_triangles": 0,
+      "max_surface_error_m": 6.327935278766141e-09,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Warden_Survey_LiftField_Front_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Engine_Efficient_L",
+      "source_triangles": 236,
+      "optimized_triangles": 169,
+      "removed_triangles": 67,
+      "max_surface_error_m": 5.610849894733648e-17,
+      "occluded_internal_triangles_removed": 67,
+      "source_object": "Detail__Aircraft_Warden_Survey_Engine_Efficient_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Engine_Boost_L",
+      "source_triangles": 188,
+      "optimized_triangles": 96,
+      "removed_triangles": 92,
+      "max_surface_error_m": 8.19460970717851e-17,
+      "occluded_internal_triangles_removed": 92,
+      "source_object": "Detail__Aircraft_Warden_Survey_Engine_Boost_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Warden_Survey_LandingSkid_L",
+      "source_triangles": 132,
+      "optimized_triangles": 122,
+      "removed_triangles": 10,
+      "max_surface_error_m": 2.487656852089763e-08,
+      "occluded_internal_triangles_removed": 10,
+      "source_object": "Detail__Aircraft_Warden_Survey_LandingSkid_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Warden_Survey_TailFin_L",
+      "source_triangles": 32,
+      "optimized_triangles": 32,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.8065069588286382e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Warden_Survey_TailFin_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Wing_R",
+      "source_triangles": 100,
+      "optimized_triangles": 100,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.314019373402684e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Warden_Survey_Wing_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Warden_Survey_LiftField_Front_R",
+      "source_triangles": 464,
+      "optimized_triangles": 464,
+      "removed_triangles": 0,
+      "max_surface_error_m": 6.327935278766141e-09,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Warden_Survey_LiftField_Front_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Engine_Efficient_R",
+      "source_triangles": 236,
+      "optimized_triangles": 168,
+      "removed_triangles": 68,
+      "max_surface_error_m": 9.93410742555767e-09,
+      "occluded_internal_triangles_removed": 68,
+      "source_object": "Detail__Aircraft_Warden_Survey_Engine_Efficient_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Engine_Boost_R",
+      "source_triangles": 188,
+      "optimized_triangles": 96,
+      "removed_triangles": 92,
+      "max_surface_error_m": 8.19460970717851e-17,
+      "occluded_internal_triangles_removed": 92,
+      "source_object": "Detail__Aircraft_Warden_Survey_Engine_Boost_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Warden_Survey_LandingSkid_R",
+      "source_triangles": 132,
+      "optimized_triangles": 122,
+      "removed_triangles": 10,
+      "max_surface_error_m": 2.5866218868799412e-08,
+      "occluded_internal_triangles_removed": 10,
+      "source_object": "Detail__Aircraft_Warden_Survey_LandingSkid_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Warden_Survey_TailFin_R",
+      "source_triangles": 32,
+      "optimized_triangles": 32,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.207000285277011e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Warden_Survey_TailFin_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Payload_Standard",
+      "source_triangles": 88,
+      "optimized_triangles": 88,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.800571636996442e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Warden_Survey_Payload_Standard",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Warden_Survey_Payload_Alternate",
+      "source_triangles": 104,
+      "optimized_triangles": 102,
+      "removed_triangles": 2,
+      "max_surface_error_m": 1.800571636996442e-08,
+      "occluded_internal_triangles_removed": 2,
+      "source_object": "Detail__Aircraft_Warden_Survey_Payload_Alternate",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Aircraft_Warden_Survey_ServiceHatch",
+      "source_triangles": 112,
+      "optimized_triangles": 112,
+      "removed_triangles": 0,
+      "max_surface_error_m": 5.2641229225784184e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Aircraft_Warden_Survey_ServiceHatch",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_2Lane_4m_Lane_01",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_2Lane_4m_Lane_01",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_2Lane_4m_Lane_02",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_2Lane_4m_Lane_02",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_2Lane_4m_LaneMarkings",
+      "source_triangles": 24,
+      "optimized_triangles": 24,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_2Lane_4m_LaneMarkings",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_2Lane_4m_EdgeMarkings",
+      "source_triangles": 24,
+      "optimized_triangles": 24,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_2Lane_4m_EdgeMarkings",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_4Lane_4m_Lane_01",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_4Lane_4m_Lane_01",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_4Lane_4m_Lane_02",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_4Lane_4m_Lane_02",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_4Lane_4m_Lane_03",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_4Lane_4m_Lane_03",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_4Lane_4m_Lane_04",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_4Lane_4m_Lane_04",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_4Lane_4m_LaneMarkings",
+      "source_triangles": 48,
+      "optimized_triangles": 48,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_4Lane_4m_LaneMarkings",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_4Lane_4m_EdgeMarkings",
+      "source_triangles": 24,
+      "optimized_triangles": 24,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_4Lane_4m_EdgeMarkings",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_6Lane_4m_Lane_01",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_6Lane_4m_Lane_01",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_6Lane_4m_Lane_02",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_6Lane_4m_Lane_02",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_6Lane_4m_Lane_03",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_6Lane_4m_Lane_03",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_6Lane_4m_Lane_04",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_6Lane_4m_Lane_04",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_6Lane_4m_Lane_05",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_6Lane_4m_Lane_05",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_6Lane_4m_Lane_06",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_6Lane_4m_Lane_06",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_6Lane_4m_LaneMarkings",
+      "source_triangles": 72,
+      "optimized_triangles": 72,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_6Lane_4m_LaneMarkings",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_6Lane_4m_EdgeMarkings",
+      "source_triangles": 24,
+      "optimized_triangles": 24,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_6Lane_4m_EdgeMarkings",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_Crossroad_12m_Surface",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_Crossroad_12m_Surface",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_Crossroad_12m_Crosswalk_0_-1",
+      "source_triangles": 96,
+      "optimized_triangles": 96,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_Crossroad_12m_Crosswalk_0_-1",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_Crossroad_12m_Crosswalk_0_1",
+      "source_triangles": 96,
+      "optimized_triangles": 96,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_Crossroad_12m_Crosswalk_0_1",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_Crossroad_12m_Crosswalk_1_-1",
+      "source_triangles": 96,
+      "optimized_triangles": 96,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_Crossroad_12m_Crosswalk_1_-1",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_Crossroad_12m_Crosswalk_1_1",
+      "source_triangles": 96,
+      "optimized_triangles": 96,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_Crossroad_12m_Crosswalk_1_1",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_TJunction_12m_Surface",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_TJunction_12m_Surface",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_TJunction_12m_Crosswalk_0_-1",
+      "source_triangles": 96,
+      "optimized_triangles": 96,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_TJunction_12m_Crosswalk_0_-1",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_TJunction_12m_Crosswalk_0_1",
+      "source_triangles": 96,
+      "optimized_triangles": 96,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_TJunction_12m_Crosswalk_0_1",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_TJunction_12m_Crosswalk_1_-1",
+      "source_triangles": 96,
+      "optimized_triangles": 96,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_TJunction_12m_Crosswalk_1_-1",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_TJunction_12m_ClosedEdge",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_TJunction_12m_ClosedEdge",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_Curve90_R9m_ArcSurface",
+      "source_triangles": 144,
+      "optimized_triangles": 144,
+      "removed_triangles": 0,
+      "max_surface_error_m": 8.841185950487508e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_Curve90_R9m_ArcSurface",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_Curve90_R9m_CenterMarkings",
+      "source_triangles": 144,
+      "optimized_triangles": 144,
+      "removed_triangles": 0,
+      "max_surface_error_m": 6.814984158363308e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_Curve90_R9m_CenterMarkings",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_Sidewalk_2x4m_Slab",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_Sidewalk_2x4m_Slab",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_Sidewalk_2x4m_Curb",
+      "source_triangles": 44,
+      "optimized_triangles": 44,
+      "removed_triangles": 0,
+      "max_surface_error_m": 6.470061029640802e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_Sidewalk_2x4m_Curb",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_Sidewalk_2x4m_ServiceStrip",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_Sidewalk_2x4m_ServiceStrip",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_SpeedTable_4m_Ramp",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_SpeedTable_4m_Ramp",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_SpeedTable_4m_WarningBars",
+      "source_triangles": 72,
+      "optimized_triangles": 72,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_SpeedTable_4m_WarningBars",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_Streetlight_4m_Foundation",
+      "source_triangles": 28,
+      "optimized_triangles": 28,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.826347278088419e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_Streetlight_4m_Foundation",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_Streetlight_4m_Mast",
+      "source_triangles": 40,
+      "optimized_triangles": 40,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.829404484050694e-18,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_Streetlight_4m_Mast",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_Streetlight_4m_Luminaire",
+      "source_triangles": 80,
+      "optimized_triangles": 80,
+      "removed_triangles": 0,
+      "max_surface_error_m": 4.76987124532965e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_Streetlight_4m_Luminaire",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_TrafficSignal_HoverHousing",
+      "source_triangles": 124,
+      "optimized_triangles": 118,
+      "removed_triangles": 6,
+      "max_surface_error_m": 2.6631255563627683e-16,
+      "occluded_internal_triangles_removed": 6,
+      "source_object": "Detail__City_TrafficSignal_HoverHousing",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_TrafficSignal_FieldStabilizer_L",
+      "source_triangles": 296,
+      "optimized_triangles": 296,
+      "removed_triangles": 0,
+      "max_surface_error_m": 8.991872891669508e-09,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_TrafficSignal_FieldStabilizer_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_TrafficSignal_FieldStabilizer_R",
+      "source_triangles": 296,
+      "optimized_triangles": 296,
+      "removed_triangles": 0,
+      "max_surface_error_m": 8.991872891669508e-09,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_TrafficSignal_FieldStabilizer_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_TrafficSignal_StopGlyph",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_TrafficSignal_StopGlyph",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_TrafficSignal_WaitGlyph",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.7209561284363218e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_TrafficSignal_WaitGlyph",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_TrafficSignal_GoGlyph",
+      "source_triangles": 8,
+      "optimized_triangles": 8,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.9154203467320352e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_TrafficSignal_GoGlyph",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_PedestrianHologram_6m_Projectors",
+      "source_triangles": 288,
+      "optimized_triangles": 288,
+      "removed_triangles": 0,
+      "max_surface_error_m": 7.049083153671118e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_PedestrianHologram_6m_Projectors",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_PedestrianHologram_6m_WalkGrid",
+      "source_triangles": 96,
+      "optimized_triangles": 96,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_PedestrianHologram_6m_WalkGrid",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_PedestrianHologram_6m_Guidance",
+      "source_triangles": 24,
+      "optimized_triangles": 24,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_PedestrianHologram_6m_Guidance",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_Bollard_Base",
+      "source_triangles": 44,
+      "optimized_triangles": 44,
+      "removed_triangles": 0,
+      "max_surface_error_m": 8.727157397704235e-18,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_Bollard_Base",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_Bollard_Post",
+      "source_triangles": 88,
+      "optimized_triangles": 88,
+      "removed_triangles": 0,
+      "max_surface_error_m": 5.7531772863424955e-18,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_Bollard_Post",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_CrashBarrier_4m_Feet",
+      "source_triangles": 120,
+      "optimized_triangles": 120,
+      "removed_triangles": 0,
+      "max_surface_error_m": 7.401487238990109e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_CrashBarrier_4m_Feet",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_CrashBarrier_4m_Rail",
+      "source_triangles": 28,
+      "optimized_triangles": 28,
+      "removed_triangles": 0,
+      "max_surface_error_m": 7.757735033111622e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_CrashBarrier_4m_Rail",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Road_CrashBarrier_4m_Reflectors",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Road_CrashBarrier_4m_Reflectors",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_Bench_Legs",
+      "source_triangles": 88,
+      "optimized_triangles": 88,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.08283476737751e-18,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_Bench_Legs",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_Bench_Seat",
+      "source_triangles": 28,
+      "optimized_triangles": 28,
+      "removed_triangles": 0,
+      "max_surface_error_m": 6.519105439906635e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_Bench_Seat",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_Bench_Back",
+      "source_triangles": 40,
+      "optimized_triangles": 40,
+      "removed_triangles": 0,
+      "max_surface_error_m": 5.3951202622288114e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_Bench_Back",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_Planter_Vessel",
+      "source_triangles": 60,
+      "optimized_triangles": 60,
+      "removed_triangles": 0,
+      "max_surface_error_m": 4.653660592680111e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_Planter_Vessel",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_Planter_Soil",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_Planter_Soil",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_Planter_AlienFoliage",
+      "source_triangles": 212,
+      "optimized_triangles": 144,
+      "removed_triangles": 68,
+      "max_surface_error_m": 6.397080252827881e-16,
+      "occluded_internal_triangles_removed": 68,
+      "source_object": "Detail__City_Planter_AlienFoliage",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_TransitShelter_Frame",
+      "source_triangles": 112,
+      "optimized_triangles": 112,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.2820128544830626e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_TransitShelter_Frame",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_TransitShelter_Roof",
+      "source_triangles": 36,
+      "optimized_triangles": 36,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.7135525183827799e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_TransitShelter_Roof",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_TransitShelter_BackPanel",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_TransitShelter_BackPanel",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_TransitShelter_Seat",
+      "source_triangles": 28,
+      "optimized_triangles": 28,
+      "removed_triangles": 0,
+      "max_surface_error_m": 5.3101051301594706e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_TransitShelter_Seat",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_TransitShelter_RouteDisplay",
+      "source_triangles": 64,
+      "optimized_triangles": 64,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.6958996158214435e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_TransitShelter_RouteDisplay",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_Wayfinding_Mast",
+      "source_triangles": 40,
+      "optimized_triangles": 40,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_Wayfinding_Mast",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_Wayfinding_SignBoards",
+      "source_triangles": 40,
+      "optimized_triangles": 40,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.5718295079899058e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_Wayfinding_SignBoards",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_Wayfinding_Arrows",
+      "source_triangles": 8,
+      "optimized_triangles": 8,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.2543493755948117e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_Wayfinding_Arrows",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_ChargePost_Pedestal",
+      "source_triangles": 76,
+      "optimized_triangles": 74,
+      "removed_triangles": 2,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 2,
+      "source_object": "Detail__City_ChargePost_Pedestal",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_ChargePost_Display",
+      "source_triangles": 24,
+      "optimized_triangles": 22,
+      "removed_triangles": 2,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 2,
+      "source_object": "Detail__City_ChargePost_Display",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "City_ChargePost_InductionHalo",
+      "source_triangles": 464,
+      "optimized_triangles": 464,
+      "removed_triangles": 0,
+      "max_surface_error_m": 7.443948326662333e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__City_ChargePost_InductionHalo",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_Transformer_Cabinet",
+      "source_triangles": 100,
+      "optimized_triangles": 90,
+      "removed_triangles": 10,
+      "max_surface_error_m": 3.186064159838272e-17,
+      "occluded_internal_triangles_removed": 10,
+      "source_object": "Detail__Utility_Transformer_Cabinet",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_Transformer_CoolingFins",
+      "source_triangles": 84,
+      "optimized_triangles": 84,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Utility_Transformer_CoolingFins",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_Transformer_FieldCapacitors",
+      "source_triangles": 464,
+      "optimized_triangles": 464,
+      "removed_triangles": 0,
+      "max_surface_error_m": 8.7619234384574e-10,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Utility_Transformer_FieldCapacitors",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_Transformer_Status",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Utility_Transformer_Status",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_CargoContainer_6m_Shell",
+      "source_triangles": 148,
+      "optimized_triangles": 136,
+      "removed_triangles": 12,
+      "max_surface_error_m": 1.1214945687813635e-16,
+      "occluded_internal_triangles_removed": 12,
+      "source_object": "Detail__Utility_CargoContainer_6m_Shell",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_CargoContainer_6m_RoofRibs",
+      "source_triangles": 352,
+      "optimized_triangles": 352,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.3353470025326296e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Utility_CargoContainer_6m_RoofRibs",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_CargoContainer_6m_Door_L",
+      "source_triangles": 48,
+      "optimized_triangles": 48,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Utility_CargoContainer_6m_Door_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_CargoContainer_6m_Door_R",
+      "source_triangles": 48,
+      "optimized_triangles": 48,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Utility_CargoContainer_6m_Door_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_CargoContainer_6m_SealEmitters",
+      "source_triangles": 24,
+      "optimized_triangles": 24,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Utility_CargoContainer_6m_SealEmitters",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_HVAC_Housing",
+      "source_triangles": 28,
+      "optimized_triangles": 28,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Utility_HVAC_Housing",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_HVAC_Grille",
+      "source_triangles": 72,
+      "optimized_triangles": 72,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Utility_HVAC_Grille",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_HVAC_Exhaust",
+      "source_triangles": 368,
+      "optimized_triangles": 368,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.260775758654748e-09,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Utility_HVAC_Exhaust",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_PipeRack_4m_Supports",
+      "source_triangles": 88,
+      "optimized_triangles": 88,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.6356541815746678e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Utility_PipeRack_4m_Supports",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_PipeRack_4m_Pipe_0",
+      "source_triangles": 44,
+      "optimized_triangles": 44,
+      "removed_triangles": 0,
+      "max_surface_error_m": 6.433163063762306e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Utility_PipeRack_4m_Pipe_0",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_PipeRack_4m_Pipe_1",
+      "source_triangles": 44,
+      "optimized_triangles": 44,
+      "removed_triangles": 0,
+      "max_surface_error_m": 6.582772093210792e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Utility_PipeRack_4m_Pipe_1",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_PipeRack_4m_Pipe_2",
+      "source_triangles": 44,
+      "optimized_triangles": 44,
+      "removed_triangles": 0,
+      "max_surface_error_m": 6.433163063762306e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Utility_PipeRack_4m_Pipe_2",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_CommRelay_Mast",
+      "source_triangles": 40,
+      "optimized_triangles": 40,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.0430573657446956e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Utility_CommRelay_Mast",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_CommRelay_Panel_L",
+      "source_triangles": 52,
+      "optimized_triangles": 52,
+      "removed_triangles": 0,
+      "max_surface_error_m": 8.935278019455471e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Utility_CommRelay_Panel_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_CommRelay_Panel_R",
+      "source_triangles": 52,
+      "optimized_triangles": 52,
+      "removed_triangles": 0,
+      "max_surface_error_m": 8.935278019455471e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Utility_CommRelay_Panel_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_CommRelay_Beacon",
+      "source_triangles": 32,
+      "optimized_triangles": 32,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.262750446426105e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Utility_CommRelay_Beacon",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_SolarArray_Stand",
+      "source_triangles": 88,
+      "optimized_triangles": 88,
+      "removed_triangles": 0,
+      "max_surface_error_m": 3.250113837848061e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Utility_SolarArray_Stand",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_SolarArray_Panel",
+      "source_triangles": 192,
+      "optimized_triangles": 192,
+      "removed_triangles": 0,
+      "max_surface_error_m": 9.410696893808282e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Utility_SolarArray_Panel",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_SolarArray_Rails",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Utility_SolarArray_Rails",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_WaterTank_Legs",
+      "source_triangles": 176,
+      "optimized_triangles": 176,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.4960834646515534e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Utility_WaterTank_Legs",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_WaterTank_Tank",
+      "source_triangles": 124,
+      "optimized_triangles": 124,
+      "removed_triangles": 0,
+      "max_surface_error_m": 9.849917861914524e-09,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Utility_WaterTank_Tank",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Utility_WaterTank_Pipe",
+      "source_triangles": 44,
+      "optimized_triangles": 44,
+      "removed_triangles": 0,
+      "max_surface_error_m": 6.522721488272482e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Utility_WaterTank_Pipe",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_0_0",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Airfield_LandingPad_16m_Deck_0_0",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_0_1",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Airfield_LandingPad_16m_Deck_0_1",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_0_2",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Airfield_LandingPad_16m_Deck_0_2",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_0_3",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Airfield_LandingPad_16m_Deck_0_3",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_1_0",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Airfield_LandingPad_16m_Deck_1_0",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_1_1",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Airfield_LandingPad_16m_Deck_1_1",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_1_2",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Airfield_LandingPad_16m_Deck_1_2",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_1_3",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Airfield_LandingPad_16m_Deck_1_3",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_2_0",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Airfield_LandingPad_16m_Deck_2_0",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_2_1",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Airfield_LandingPad_16m_Deck_2_1",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_2_2",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Airfield_LandingPad_16m_Deck_2_2",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_2_3",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Airfield_LandingPad_16m_Deck_2_3",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_3_0",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Airfield_LandingPad_16m_Deck_3_0",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_3_1",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Airfield_LandingPad_16m_Deck_3_1",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_3_2",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Airfield_LandingPad_16m_Deck_3_2",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Airfield_LandingPad_16m_Deck_3_3",
+      "source_triangles": 12,
+      "optimized_triangles": 12,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Airfield_LandingPad_16m_Deck_3_3",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Airfield_LandingPad_16m_GuidanceReticle",
+      "source_triangles": 192,
+      "optimized_triangles": 192,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.158258718803277e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Airfield_LandingPad_16m_GuidanceReticle",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Airfield_LandingPad_16m_CornerLights",
+      "source_triangles": 176,
+      "optimized_triangles": 176,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.501066069116947e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Airfield_LandingPad_16m_CornerLights",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Airfield_Beacon_Base",
+      "source_triangles": 44,
+      "optimized_triangles": 44,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.2074494028680425e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Airfield_Beacon_Base",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Airfield_Beacon_Light",
+      "source_triangles": 44,
+      "optimized_triangles": 44,
+      "removed_triangles": 0,
+      "max_surface_error_m": 5.754169123767301e-18,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Airfield_Beacon_Light",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Airfield_Beacon_Guard",
+      "source_triangles": 44,
+      "optimized_triangles": 44,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.6327125145959883e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Airfield_Beacon_Guard",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Frontier_SurveyTripod_Tripod",
+      "source_triangles": 84,
+      "optimized_triangles": 81,
+      "removed_triangles": 3,
+      "max_surface_error_m": 1.5060140599361763e-08,
+      "occluded_internal_triangles_removed": 3,
+      "source_object": "Detail__Frontier_SurveyTripod_Tripod",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Frontier_SurveyTripod_Scanner",
+      "source_triangles": 128,
+      "optimized_triangles": 128,
+      "removed_triangles": 0,
+      "max_surface_error_m": 7.401486830750232e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Frontier_SurveyTripod_Scanner",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Frontier_SurveyTripod_Lens",
+      "source_triangles": 368,
+      "optimized_triangles": 368,
+      "removed_triangles": 0,
+      "max_surface_error_m": 5.2136543468766244e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Frontier_SurveyTripod_Lens",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Frontier_FieldShelter_Frame",
+      "source_triangles": 88,
+      "optimized_triangles": 88,
+      "removed_triangles": 0,
+      "max_surface_error_m": 7.451444533824477e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Frontier_FieldShelter_Frame",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Frontier_FieldShelter_Canopy",
+      "source_triangles": 24,
+      "optimized_triangles": 24,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.8136787292008026e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Frontier_FieldShelter_Canopy",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Frontier_FieldShelter_SupplyBox",
+      "source_triangles": 60,
+      "optimized_triangles": 60,
+      "removed_triangles": 0,
+      "max_surface_error_m": 7.40148708809547e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Frontier_FieldShelter_SupplyBox",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Frontier_MiningConveyor_Frame",
+      "source_triangles": 44,
+      "optimized_triangles": 44,
+      "removed_triangles": 0,
+      "max_surface_error_m": 7.842308791321524e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Frontier_MiningConveyor_Frame",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Frontier_MiningConveyor_Belt",
+      "source_triangles": 52,
+      "optimized_triangles": 52,
+      "removed_triangles": 0,
+      "max_surface_error_m": 7.871808395989952e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Frontier_MiningConveyor_Belt",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Frontier_MiningConveyor_Legs",
+      "source_triangles": 88,
+      "optimized_triangles": 88,
+      "removed_triangles": 0,
+      "max_surface_error_m": 7.907785263625856e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Frontier_MiningConveyor_Legs",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Frontier_MiningConveyor_Motor",
+      "source_triangles": 44,
+      "optimized_triangles": 44,
+      "removed_triangles": 0,
+      "max_surface_error_m": 8.326032496351119e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Frontier_MiningConveyor_Motor",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Ruin_ObserverMonolith_Foot",
+      "source_triangles": 20,
+      "optimized_triangles": 20,
+      "removed_triangles": 0,
+      "max_surface_error_m": 6.46134039610481e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Ruin_ObserverMonolith_Foot",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Ruin_ObserverMonolith_Shaft",
+      "source_triangles": 32,
+      "optimized_triangles": 32,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.6285022722901756e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Ruin_ObserverMonolith_Shaft",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Ruin_ObserverMonolith_Inlay",
+      "source_triangles": 24,
+      "optimized_triangles": 24,
+      "removed_triangles": 0,
+      "max_surface_error_m": 0,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Ruin_ObserverMonolith_Inlay",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Ruin_FracturedArch_Pier_L",
+      "source_triangles": 40,
+      "optimized_triangles": 40,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.835447633064544e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Ruin_FracturedArch_Pier_L",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Ruin_FracturedArch_Pier_R",
+      "source_triangles": 40,
+      "optimized_triangles": 40,
+      "removed_triangles": 0,
+      "max_surface_error_m": 4.496720953134731e-09,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Ruin_FracturedArch_Pier_R",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Ruin_FracturedArch_SuspendedShard",
+      "source_triangles": 20,
+      "optimized_triangles": 20,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.7355568410126945e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Ruin_FracturedArch_SuspendedShard",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Nature_PrismBloom_RockBed",
+      "source_triangles": 60,
+      "optimized_triangles": 60,
+      "removed_triangles": 0,
+      "max_surface_error_m": 1.799980417222896e-16,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Nature_PrismBloom_RockBed",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Nature_PrismBloom_Crystals",
+      "source_triangles": 130,
+      "optimized_triangles": 130,
+      "removed_triangles": 0,
+      "max_surface_error_m": 6.152226183476615e-17,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Nature_PrismBloom_Crystals",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Nature_SailTree_Trunk",
+      "source_triangles": 44,
+      "optimized_triangles": 44,
+      "removed_triangles": 0,
+      "max_surface_error_m": 5.273046232050217e-08,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Nature_SailTree_Trunk",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Nature_SailTree_Canopy",
+      "source_triangles": 276,
+      "optimized_triangles": 156,
+      "removed_triangles": 120,
+      "max_surface_error_m": 3.3816778759159704e-16,
+      "occluded_internal_triangles_removed": 120,
+      "source_object": "Detail__Nature_SailTree_Canopy",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    },
+    {
+      "id": "Nature_SailTree_GlowSeedpods",
+      "source_triangles": 184,
+      "optimized_triangles": 184,
+      "removed_triangles": 0,
+      "max_surface_error_m": 2.436953004740686e-09,
+      "occluded_internal_triangles_removed": 0,
+      "source_object": "Detail__Nature_SailTree_GlowSeedpods",
+      "operations": [
+        "weld_same_bone_1e-7m",
+        "degenerate_cleanup",
+        "coplanar_dissolve_0.002deg_preserve_material_and_joint_seams"
+      ],
+      "kept_detail_topology": false
+    }
+  ]
+}

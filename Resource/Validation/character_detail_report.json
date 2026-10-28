@@ -1,0 +1,871 @@
+{
+  "source_pairs": 854,
+  "max_weight_error": 0,
+  "updated_actor_parts": 1643,
+  "body_profiles": {
+    "Male_Lean": {
+      "hip_width_m": 0.2762547731399536,
+      "hip_depth_m": 0.1835259050130844,
+      "waist_width_m": 0.2086399793624878,
+      "waist_depth_m": 0.1622755378484726,
+      "chest_width_m": 0.37284737825393677,
+      "chest_depth_m": 0.16420738399028778
+    },
+    "Male_Normal": {
+      "hip_width_m": 0.31875553727149963,
+      "hip_depth_m": 0.22795850038528442,
+      "waist_width_m": 0.26852738857269287,
+      "waist_depth_m": 0.20381034910678864,
+      "chest_width_m": 0.4365984797477722,
+      "chest_depth_m": 0.21153774857521057
+    },
+    "Male_Heavy": {
+      "hip_width_m": 0.42794376611709595,
+      "hip_depth_m": 0.42005036771297455,
+      "waist_width_m": 0.41148439049720764,
+      "waist_depth_m": 0.3197214677929878,
+      "chest_width_m": 0.48103106021881104,
+      "chest_depth_m": 0.26852738857269287
+    },
+    "Female_Lean": {
+      "hip_width_m": 0.31875553727149963,
+      "hip_depth_m": 0.17579850554466248,
+      "waist_width_m": 0.1603436917066574,
+      "waist_depth_m": 0.1506844311952591,
+      "chest_width_m": 0.31682366132736206,
+      "chest_depth_m": 0.1784340664744377
+    },
+    "Female_Normal": {
+      "hip_width_m": 0.368983656167984,
+      "hip_depth_m": 0.20284442603588104,
+      "waist_width_m": 0.20284442603588104,
+      "waist_depth_m": 0.18062813580036163,
+      "chest_width_m": 0.35352885723114014,
+      "chest_depth_m": 0.22025775909423828
+    },
+    "Female_Heavy": {
+      "hip_width_m": 0.4597806930541992,
+      "hip_depth_m": 0.387340784072876,
+      "waist_width_m": 0.3554607033729553,
+      "waist_depth_m": 0.29557328671216965,
+      "chest_width_m": 0.4037570059299469,
+      "chest_depth_m": 0.28555257618427277
+    }
+  },
+  "characters": {
+    "Player_Explorer": {
+      "mesh_parts": 25,
+      "bones": 23,
+      "clips": {
+        "Aim_Base": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Attack_Fire": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0.03943043565207129,
+          "loop_seam_m": null
+        },
+        "Attack_Melee": {
+          "min_z_m": -0.002171562984585762,
+          "max_vertex_motion_m": 1.3860047013108345,
+          "loop_seam_m": null
+        },
+        "Idle": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0.009220322102544556,
+          "loop_seam_m": 0.0
+        },
+        "Jump_Air": {
+          "min_z_m": 0.1562497466802597,
+          "max_vertex_motion_m": 0.4466760405878227,
+          "loop_seam_m": 0.0
+        },
+        "Jump_Full": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.7536248783940976,
+          "loop_seam_m": null
+        },
+        "Jump_Land": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.4459595747351272,
+          "loop_seam_m": null
+        },
+        "Jump_Start": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.4318668694397596,
+          "loop_seam_m": null
+        },
+        "Reference_A": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Run": {
+          "min_z_m": -0.0011684137862175703,
+          "max_vertex_motion_m": 0.8329769531544245,
+          "loop_seam_m": 0.0
+        },
+        "Turn_Base": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Turn_Left_90": {
+          "min_z_m": -1.4768147593713365e-07,
+          "max_vertex_motion_m": 0.7139566263720951,
+          "loop_seam_m": null
+        },
+        "Turn_Right_90": {
+          "min_z_m": -1.4669132042399724e-07,
+          "max_vertex_motion_m": 0.7139565950652197,
+          "loop_seam_m": null
+        },
+        "Walk": {
+          "min_z_m": -0.00021116554853506386,
+          "max_vertex_motion_m": 0.5487899393478609,
+          "loop_seam_m": 0.0
+        },
+        "Walk_To_Run": {
+          "min_z_m": -2.251209423320688e-07,
+          "max_vertex_motion_m": 0.6025978163029057,
+          "loop_seam_m": null
+        }
+      }
+    },
+    "Ria_Engineer": {
+      "mesh_parts": 25,
+      "bones": 23,
+      "clips": {
+        "Aim_Base": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Attack_Fire": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0.03943043565207129,
+          "loop_seam_m": null
+        },
+        "Attack_Melee": {
+          "min_z_m": -0.002171562984585762,
+          "max_vertex_motion_m": 1.3860047013108345,
+          "loop_seam_m": null
+        },
+        "Idle": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0.010738009009733283,
+          "loop_seam_m": 0.0
+        },
+        "Jump_Air": {
+          "min_z_m": 0.1562497466802597,
+          "max_vertex_motion_m": 0.4466760405878227,
+          "loop_seam_m": 0.0
+        },
+        "Jump_Full": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.7536248783940976,
+          "loop_seam_m": null
+        },
+        "Jump_Land": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.4459595747351272,
+          "loop_seam_m": null
+        },
+        "Jump_Start": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.4318668694397596,
+          "loop_seam_m": null
+        },
+        "Reference_A": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Run": {
+          "min_z_m": -0.0011684137862175703,
+          "max_vertex_motion_m": 0.831149985981354,
+          "loop_seam_m": 0.0
+        },
+        "Turn_Base": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Turn_Left_90": {
+          "min_z_m": -1.4768147593713365e-07,
+          "max_vertex_motion_m": 0.7139566263720951,
+          "loop_seam_m": null
+        },
+        "Turn_Right_90": {
+          "min_z_m": -1.4669132042399724e-07,
+          "max_vertex_motion_m": 0.7139565950652197,
+          "loop_seam_m": null
+        },
+        "Walk": {
+          "min_z_m": -0.00021116554853506386,
+          "max_vertex_motion_m": 0.5475550914598136,
+          "loop_seam_m": 0.0
+        },
+        "Walk_To_Run": {
+          "min_z_m": -2.251209423320688e-07,
+          "max_vertex_motion_m": 0.601174185303986,
+          "loop_seam_m": null
+        }
+      }
+    },
+    "Kain_Guard": {
+      "mesh_parts": 25,
+      "bones": 23,
+      "clips": {
+        "Aim_Base": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Attack_Fire": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0.03943043565207129,
+          "loop_seam_m": null
+        },
+        "Attack_Melee": {
+          "min_z_m": -0.002171562984585762,
+          "max_vertex_motion_m": 1.3860047013108345,
+          "loop_seam_m": null
+        },
+        "Idle": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0.00917048438187115,
+          "loop_seam_m": 0.0
+        },
+        "Jump_Air": {
+          "min_z_m": 0.1562497466802597,
+          "max_vertex_motion_m": 0.4466760405878227,
+          "loop_seam_m": 0.0
+        },
+        "Jump_Full": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.7536248783940976,
+          "loop_seam_m": null
+        },
+        "Jump_Land": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.4459595747351272,
+          "loop_seam_m": null
+        },
+        "Jump_Start": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.4318668694397596,
+          "loop_seam_m": null
+        },
+        "Reference_A": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Run": {
+          "min_z_m": -0.0011684137862175703,
+          "max_vertex_motion_m": 0.8329769531544245,
+          "loop_seam_m": 0.0
+        },
+        "Turn_Base": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Turn_Left_90": {
+          "min_z_m": -1.4768147593713365e-07,
+          "max_vertex_motion_m": 0.7139566263720951,
+          "loop_seam_m": null
+        },
+        "Turn_Right_90": {
+          "min_z_m": -1.4669132042399724e-07,
+          "max_vertex_motion_m": 0.7139565950652197,
+          "loop_seam_m": null
+        },
+        "Walk": {
+          "min_z_m": -0.00021116554853506386,
+          "max_vertex_motion_m": 0.5487899393478609,
+          "loop_seam_m": 0.0
+        },
+        "Walk_To_Run": {
+          "min_z_m": -2.251209423320688e-07,
+          "max_vertex_motion_m": 0.6025978163029057,
+          "loop_seam_m": null
+        }
+      }
+    },
+    "Mara_Medic": {
+      "mesh_parts": 24,
+      "bones": 23,
+      "clips": {
+        "Aim_Base": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Attack_Fire": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0.021754096366166688,
+          "loop_seam_m": null
+        },
+        "Attack_Melee": {
+          "min_z_m": -0.002171562984585762,
+          "max_vertex_motion_m": 0.884448566216105,
+          "loop_seam_m": null
+        },
+        "Idle": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0.009940775157437264,
+          "loop_seam_m": 0.0
+        },
+        "Jump_Air": {
+          "min_z_m": 0.1562497466802597,
+          "max_vertex_motion_m": 0.30665752643731026,
+          "loop_seam_m": 0.0
+        },
+        "Jump_Full": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.6469067752331666,
+          "loop_seam_m": null
+        },
+        "Jump_Land": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.32930434117841334,
+          "loop_seam_m": null
+        },
+        "Jump_Start": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.3239877001458433,
+          "loop_seam_m": null
+        },
+        "Reference_A": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Run": {
+          "min_z_m": -0.0011684137862175703,
+          "max_vertex_motion_m": 0.831149985981354,
+          "loop_seam_m": 0.0
+        },
+        "Turn_Base": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Turn_Left_90": {
+          "min_z_m": -1.4768147593713365e-07,
+          "max_vertex_motion_m": 0.6952879290579091,
+          "loop_seam_m": null
+        },
+        "Turn_Right_90": {
+          "min_z_m": -1.4669132042399724e-07,
+          "max_vertex_motion_m": 0.6952879290579091,
+          "loop_seam_m": null
+        },
+        "Walk": {
+          "min_z_m": -0.00021116554853506386,
+          "max_vertex_motion_m": 0.5475550914598136,
+          "loop_seam_m": 0.0
+        },
+        "Walk_To_Run": {
+          "min_z_m": -2.251209423320688e-07,
+          "max_vertex_motion_m": 0.601174185303986,
+          "loop_seam_m": null
+        }
+      }
+    },
+    "NPC_Researcher": {
+      "mesh_parts": 23,
+      "bones": 23,
+      "clips": {
+        "Aim_Base": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Attack_Fire": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0.021754096366166688,
+          "loop_seam_m": null
+        },
+        "Attack_Melee": {
+          "min_z_m": -0.002171562984585762,
+          "max_vertex_motion_m": 0.884448566216105,
+          "loop_seam_m": null
+        },
+        "Idle": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0.010261515082016094,
+          "loop_seam_m": 0.0
+        },
+        "Jump_Air": {
+          "min_z_m": 0.1562497466802597,
+          "max_vertex_motion_m": 0.30665752643731026,
+          "loop_seam_m": 0.0
+        },
+        "Jump_Full": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.6469067752331666,
+          "loop_seam_m": null
+        },
+        "Jump_Land": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.32930434117841334,
+          "loop_seam_m": null
+        },
+        "Jump_Start": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.3286902824807167,
+          "loop_seam_m": null
+        },
+        "Reference_A": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Run": {
+          "min_z_m": -0.0011684137862175703,
+          "max_vertex_motion_m": 0.8329769531544245,
+          "loop_seam_m": 0.0
+        },
+        "Turn_Base": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Turn_Left_90": {
+          "min_z_m": -1.4768147593713365e-07,
+          "max_vertex_motion_m": 0.6952879290579091,
+          "loop_seam_m": null
+        },
+        "Turn_Right_90": {
+          "min_z_m": -1.4669132042399724e-07,
+          "max_vertex_motion_m": 0.6952879290579091,
+          "loop_seam_m": null
+        },
+        "Walk": {
+          "min_z_m": -0.00021116554853506386,
+          "max_vertex_motion_m": 0.5487899393478609,
+          "loop_seam_m": 0.0
+        },
+        "Walk_To_Run": {
+          "min_z_m": -2.251209423320688e-07,
+          "max_vertex_motion_m": 0.6025978163029057,
+          "loop_seam_m": null
+        }
+      }
+    },
+    "NPC_Miner": {
+      "mesh_parts": 25,
+      "bones": 23,
+      "clips": {
+        "Aim_Base": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Attack_Fire": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0.03943043565207129,
+          "loop_seam_m": null
+        },
+        "Attack_Melee": {
+          "min_z_m": -0.002171562984585762,
+          "max_vertex_motion_m": 1.3860047013108345,
+          "loop_seam_m": null
+        },
+        "Idle": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0.010642904662267643,
+          "loop_seam_m": 0.0
+        },
+        "Jump_Air": {
+          "min_z_m": 0.1562497466802597,
+          "max_vertex_motion_m": 0.4466760405878227,
+          "loop_seam_m": 0.0
+        },
+        "Jump_Full": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.7536248783940976,
+          "loop_seam_m": null
+        },
+        "Jump_Land": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.4459595747351272,
+          "loop_seam_m": null
+        },
+        "Jump_Start": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.4318668694397596,
+          "loop_seam_m": null
+        },
+        "Reference_A": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Run": {
+          "min_z_m": -0.0011684137862175703,
+          "max_vertex_motion_m": 0.8359114655494547,
+          "loop_seam_m": 0.0
+        },
+        "Turn_Base": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Turn_Left_90": {
+          "min_z_m": -1.4768147593713365e-07,
+          "max_vertex_motion_m": 0.7240023885445256,
+          "loop_seam_m": null
+        },
+        "Turn_Right_90": {
+          "min_z_m": -1.4669132042399724e-07,
+          "max_vertex_motion_m": 0.7240023885446042,
+          "loop_seam_m": null
+        },
+        "Walk": {
+          "min_z_m": -0.00021116554853506386,
+          "max_vertex_motion_m": 0.5507719996931737,
+          "loop_seam_m": 0.0
+        },
+        "Walk_To_Run": {
+          "min_z_m": -2.251209423320688e-07,
+          "max_vertex_motion_m": 0.6048602027141704,
+          "loop_seam_m": null
+        }
+      }
+    },
+    "NPC_Guard_Helmet": {
+      "mesh_parts": 25,
+      "bones": 23,
+      "clips": {
+        "Aim_Base": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Attack_Fire": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0.03943043565207129,
+          "loop_seam_m": null
+        },
+        "Attack_Melee": {
+          "min_z_m": -0.002171562984585762,
+          "max_vertex_motion_m": 1.3860047013108345,
+          "loop_seam_m": null
+        },
+        "Idle": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0.010217474892380212,
+          "loop_seam_m": 0.0
+        },
+        "Jump_Air": {
+          "min_z_m": 0.1562497466802597,
+          "max_vertex_motion_m": 0.4466760405878227,
+          "loop_seam_m": 0.0
+        },
+        "Jump_Full": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.7536248783940976,
+          "loop_seam_m": null
+        },
+        "Jump_Land": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.4459595747351272,
+          "loop_seam_m": null
+        },
+        "Jump_Start": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.4318668694397596,
+          "loop_seam_m": null
+        },
+        "Reference_A": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Run": {
+          "min_z_m": -0.0011684137862175703,
+          "max_vertex_motion_m": 0.8329769531544245,
+          "loop_seam_m": 0.0
+        },
+        "Turn_Base": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Turn_Left_90": {
+          "min_z_m": -1.4768147593713365e-07,
+          "max_vertex_motion_m": 0.7139566263720951,
+          "loop_seam_m": null
+        },
+        "Turn_Right_90": {
+          "min_z_m": -1.4669132042399724e-07,
+          "max_vertex_motion_m": 0.7139565950652197,
+          "loop_seam_m": null
+        },
+        "Walk": {
+          "min_z_m": -0.00021116554853506386,
+          "max_vertex_motion_m": 0.5487899393478609,
+          "loop_seam_m": 0.0
+        },
+        "Walk_To_Run": {
+          "min_z_m": -2.251209423320688e-07,
+          "max_vertex_motion_m": 0.6025978163029057,
+          "loop_seam_m": null
+        }
+      }
+    },
+    "NPC_HeavyCombat": {
+      "mesh_parts": 24,
+      "bones": 23,
+      "clips": {
+        "Aim_Base": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Attack_Fire": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0.03943043565207129,
+          "loop_seam_m": null
+        },
+        "Attack_Melee": {
+          "min_z_m": -0.002171562984585762,
+          "max_vertex_motion_m": 1.3860047013108345,
+          "loop_seam_m": null
+        },
+        "Idle": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0.010584899160770562,
+          "loop_seam_m": 0.0
+        },
+        "Jump_Air": {
+          "min_z_m": 0.1562497466802597,
+          "max_vertex_motion_m": 0.4466760405878227,
+          "loop_seam_m": 0.0
+        },
+        "Jump_Full": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.7536248783940976,
+          "loop_seam_m": null
+        },
+        "Jump_Land": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.4459595747351272,
+          "loop_seam_m": null
+        },
+        "Jump_Start": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.4318668694397596,
+          "loop_seam_m": null
+        },
+        "Reference_A": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Run": {
+          "min_z_m": -0.0011684137862175703,
+          "max_vertex_motion_m": 0.8359114655494547,
+          "loop_seam_m": 0.0
+        },
+        "Turn_Base": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Turn_Left_90": {
+          "min_z_m": -1.4768147593713365e-07,
+          "max_vertex_motion_m": 0.7240023885445256,
+          "loop_seam_m": null
+        },
+        "Turn_Right_90": {
+          "min_z_m": -1.4669132042399724e-07,
+          "max_vertex_motion_m": 0.7240023885446042,
+          "loop_seam_m": null
+        },
+        "Walk": {
+          "min_z_m": -0.00021116554853506386,
+          "max_vertex_motion_m": 0.5507719996931737,
+          "loop_seam_m": 0.0
+        },
+        "Walk_To_Run": {
+          "min_z_m": -2.251209423320688e-07,
+          "max_vertex_motion_m": 0.6048602027141704,
+          "loop_seam_m": null
+        }
+      }
+    },
+    "NPC_Pilot": {
+      "mesh_parts": 23,
+      "bones": 23,
+      "clips": {
+        "Aim_Base": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Attack_Fire": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0.03943043565207129,
+          "loop_seam_m": null
+        },
+        "Attack_Melee": {
+          "min_z_m": -0.002171562984585762,
+          "max_vertex_motion_m": 1.3860047013108345,
+          "loop_seam_m": null
+        },
+        "Idle": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0.010415342324240039,
+          "loop_seam_m": 0.0
+        },
+        "Jump_Air": {
+          "min_z_m": 0.1562497466802597,
+          "max_vertex_motion_m": 0.4466760405878227,
+          "loop_seam_m": 0.0
+        },
+        "Jump_Full": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.7536248783940976,
+          "loop_seam_m": null
+        },
+        "Jump_Land": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.4459595747351272,
+          "loop_seam_m": null
+        },
+        "Jump_Start": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.4318668694397596,
+          "loop_seam_m": null
+        },
+        "Reference_A": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Run": {
+          "min_z_m": -0.0011684137862175703,
+          "max_vertex_motion_m": 0.8291678712349971,
+          "loop_seam_m": 0.0
+        },
+        "Turn_Base": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Turn_Left_90": {
+          "min_z_m": -1.4768147593713365e-07,
+          "max_vertex_motion_m": 0.7139566263720951,
+          "loop_seam_m": null
+        },
+        "Turn_Right_90": {
+          "min_z_m": -1.4669132042399724e-07,
+          "max_vertex_motion_m": 0.7139565950652197,
+          "loop_seam_m": null
+        },
+        "Walk": {
+          "min_z_m": -0.00021116554853506386,
+          "max_vertex_motion_m": 0.5462132308620794,
+          "loop_seam_m": 0.0
+        },
+        "Walk_To_Run": {
+          "min_z_m": -2.251209423320688e-07,
+          "max_vertex_motion_m": 0.5996076998547918,
+          "loop_seam_m": null
+        }
+      }
+    },
+    "NPC_Civilian": {
+      "mesh_parts": 21,
+      "bones": 23,
+      "clips": {
+        "Aim_Base": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Attack_Fire": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0.021754096366166688,
+          "loop_seam_m": null
+        },
+        "Attack_Melee": {
+          "min_z_m": -0.002171562984585762,
+          "max_vertex_motion_m": 0.884448566216105,
+          "loop_seam_m": null
+        },
+        "Idle": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0.009239361225452023,
+          "loop_seam_m": 0.0
+        },
+        "Jump_Air": {
+          "min_z_m": 0.1562497466802597,
+          "max_vertex_motion_m": 0.30665752643731026,
+          "loop_seam_m": 0.0
+        },
+        "Jump_Full": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.6469067752331666,
+          "loop_seam_m": null
+        },
+        "Jump_Land": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.32930434117841334,
+          "loop_seam_m": null
+        },
+        "Jump_Start": {
+          "min_z_m": -1.4637763001701387e-07,
+          "max_vertex_motion_m": 0.3331844476162943,
+          "loop_seam_m": null
+        },
+        "Reference_A": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Run": {
+          "min_z_m": -0.0011684137862175703,
+          "max_vertex_motion_m": 0.8347260097387433,
+          "loop_seam_m": 0.0
+        },
+        "Turn_Base": {
+          "min_z_m": 1.1907754071671661e-07,
+          "max_vertex_motion_m": 0,
+          "loop_seam_m": null
+        },
+        "Turn_Left_90": {
+          "min_z_m": -1.4768147593713365e-07,
+          "max_vertex_motion_m": 0.6952879290579091,
+          "loop_seam_m": null
+        },
+        "Turn_Right_90": {
+          "min_z_m": -1.4669132042399724e-07,
+          "max_vertex_motion_m": 0.6952879290579091,
+          "loop_seam_m": null
+        },
+        "Walk": {
+          "min_z_m": -0.00021116554853506386,
+          "max_vertex_motion_m": 0.5499714919900868,
+          "loop_seam_m": 0.0
+        },
+        "Walk_To_Run": {
+          "min_z_m": -2.251209423320688e-07,
+          "max_vertex_motion_m": 0.6039496719615278,
+          "loop_seam_m": null
+        }
+      }
+    }
+  },
+  "errors": [],
+  "max_eye_surface_gap_m": 0.015055074356496334,
+  "other_expansions_preserved": true,
+  "all_checks_passed": true
+}

@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "Profiler.h"
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -52,19 +53,23 @@ std::uint32_t Checksum(const unsigned char *bytes, std::size_t size)
 bool Load(const std::string &name, std::uint32_t version, std::size_t expectedBytes,
           std::vector<unsigned char> &bytes)
 {
+    profiling::Scope timer(profiling::Timer::DiskCacheRead);
     bytes.clear();
     if (expectedBytes == 0 || expectedBytes > kMaximumBytes)
     {
+        profiling::Count(profiling::Counter::DiskCacheMisses);
         return false;
     }
     auto path = CachePath(name);
     if (path.empty())
     {
+        profiling::Count(profiling::Counter::DiskCacheMisses);
         return false;
     }
     std::ifstream file(path, std::ios::binary | std::ios::ate);
     if (!file || file.tellg() != std::streamoff(sizeof(Header) + expectedBytes))
     {
+        profiling::Count(profiling::Counter::DiskCacheMisses);
         return false;
     }
     file.seekg(0);
@@ -72,6 +77,7 @@ bool Load(const std::string &name, std::uint32_t version, std::size_t expectedBy
     file.read(reinterpret_cast<char *>(&header), sizeof(header));
     if (!file || header.magic != kMagic || header.version != version || header.byteCount != expectedBytes)
     {
+        profiling::Count(profiling::Counter::DiskCacheMisses);
         return false;
     }
     bytes.resize(expectedBytes);
@@ -79,14 +85,17 @@ bool Load(const std::string &name, std::uint32_t version, std::size_t expectedBy
     if (!file || Checksum(bytes.data(), bytes.size()) != header.checksum)
     {
         bytes.clear();
+        profiling::Count(profiling::Counter::DiskCacheMisses);
         return false;
     }
     std::fprintf(stdout, "캐시 불러오기: %s\n", name.c_str());
+    profiling::Count(profiling::Counter::DiskCacheHits);
     return true;
 }
 
 bool Save(const std::string &name, std::uint32_t version, const void *data, std::size_t byteCount)
 {
+    profiling::Scope timer(profiling::Timer::DiskCacheWrite);
     if (!data || byteCount == 0 || byteCount > kMaximumBytes)
     {
         return false;

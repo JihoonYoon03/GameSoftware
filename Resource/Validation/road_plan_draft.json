@@ -1,0 +1,9 @@
+{
+  "modules": 88,
+  "parts": 428,
+  "source_triangles": 43680,
+  "optimized_triangles": 40571,
+  "removed_triangles": 3109,
+  "max_triangles": 492,
+  "over_budget": []
+}
