@@ -53,4 +53,19 @@ class ResourceAssets
     static Point Muzzle(const CharacterPose &pose);
     static Point SkinPoint(const ResourceVertex &vertex, const SkinMatrices &matrices);
 };
+
+// One-entry, owner-local cache for adjacent body/hair submissions sharing an immutable bank.
+// Gameplay sampling stays stateless. No quantization, cross-thread state or lazy clip preparation.
+class ResourcePoseSampler
+{
+  public:
+    void Sample(unsigned int id, const CharacterPose &pose, SkinMatrices &matrices);
+
+  private:
+    const AnimationRig *rig = nullptr;
+    const std::vector<ResourceClip> *animations = nullptr;
+    std::array<float, 11> inputs = {};
+    unsigned int flags = 0;
+    SkinMatrices cached = {};
+};
 } // namespace models

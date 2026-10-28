@@ -1,6 +1,7 @@
 #pragma once
 #include "Game.h"
 #include <map>
+#include <utility>
 
 namespace tutorial
 {
@@ -33,7 +34,17 @@ class CityResidents
     void Build(const GameState &world);
     int Nearest(const GameState &world, Vector2 position, int city, float limit) const;
     bool Plan(GameState &world, Resident &resident);
-    bool FindRoute(int from, int to, Resident &resident) const;
+    bool FindRoute(int from, int to, Resident &resident);
+    // Game-thread-only scratch, reused across requests. Only touched nodes need initialization.
+    struct SearchNode
+    {
+        float cost = 0;
+        int previous = -1, crossing = -1;
+        std::uint64_t generation = 0;
+    };
+    std::vector<SearchNode> searchNodes;
+    std::vector<std::pair<float, int>> searchOpen;
+    std::uint64_t searchGeneration = 0;
     std::vector<Node> nodes;
     std::map<std::pair<int, int>, std::vector<int>> nodeCells;
     std::vector<std::vector<int>> workplaces;

@@ -19,6 +19,8 @@
 #include <cstring>
 #include <map>
 #include <sstream>
+#include <string_view>
+#include <unordered_map>
 #pragma comment(lib, "opengl32.lib")
 
 namespace
@@ -63,13 +65,9 @@ namespace rendering
 {
 struct Mesh::Data
 {
-    struct Vertex
-    {
-        float x, y, z, nx, ny, nz, r, g, b, a, palette, joint, surface;
-        std::array<float, 4> joints, weights;
-    };
+    using Vertex = models::ResourceVertex;
     unsigned int buffer = 0;
-    std::vector<Vertex> vertices;
+    size_t vertexCount = 0;
     float roughness = .7f, metallic = .2f;
     bool ground = false;
     bool imported = false;
@@ -98,13 +96,38 @@ struct Renderer::MeshData
         std::shared_ptr<rendering::Mesh> mesh;
         models::SkinMatrices bones;
         bool armed = false;
+        bool posed = false;
         std::vector<Instance> instances;
         size_t instanceOffset = 0;
     };
     std::map<const models::Model *, std::shared_ptr<rendering::Mesh>> meshes;
-    std::map<std::string, std::shared_ptr<rendering::Material>> materials;
-    std::map<std::string, size_t> batchKeys;
+    struct MaterialEntry
+    {
+        std::shared_ptr<rendering::Material> value;
+        std::uint64_t lastUse = 0;
+    };
+    std::map<std::string, MaterialEntry> materials;
+    std::uint64_t materialClock = 0;
+    // Hashes only select candidates; exact mesh/pose comparison handles collisions.
+    std::unordered_multimap<size_t, size_t> batchKeys;
     std::vector<Batch> batches;
+    size_t batchCount = 0;
+    models::ResourcePoseSampler poses;
+    struct ModelUniforms
+    {
+        GLint cartoon = -1, shadowPass = -1, shadowJitter = -1, hologramTime = -1;
+        GLint bones = -1, armed = -1, imported = -1;
+        void Initialize(GLuint program)
+        {
+            cartoon = glGetUniformLocation(program, "cartoon");
+            shadowPass = glGetUniformLocation(program, "shadowPass");
+            shadowJitter = glGetUniformLocation(program, "shadowJitter");
+            hologramTime = glGetUniformLocation(program, "hologramTime");
+            bones = glGetUniformLocation(program, "bones[0]");
+            armed = glGetUniformLocation(program, "armed");
+            imported = glGetUniformLocation(program, "imported");
+        }
+    } uniforms;
     std::vector<Instance> instanceStream;
     std::vector<std::function<void()>> overlays;
     std::vector<rendering::RenderObject> *owner = nullptr;
@@ -285,6 +308,7 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
     {
         mesh = std::make_shared<rendering::Mesh>();
         auto &geometry = *mesh->data;
+        std::vector<rendering::Mesh::Data::Vertex> vertices;
         geometry.ground = model.ground;
         const auto &library = models::ModelLibrary::Get();
         geometry.imported = model.resourceId != 0;
@@ -304,11 +328,9 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
             const auto &resource = models::ResourceAssets::Get(model.resourceId);
             geometry.ground = geometry.ground || resource.name.find("ground/") == 0;
             geometry.holographic = resource.name.find("Transit_AirGuide_") != std::string::npos;
-            geometry.vertices.reserve(resource.vertices.size());
-            for (const auto &v : resource.vertices)
+            if (model.count)
             {
-                geometry.vertices.push_back({v.x, v.y, v.z, v.nx, v.ny, v.nz, v.r, v.g, v.b, v.a, v.palette,
-                                             v.visibility, v.surface, v.joints, v.weights});
+                vertices = resource.vertices;
             }
         }
         for (const auto &m : library.grounds)
@@ -344,21 +366,21 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
             {
                 surface = models::Surface::Glass;
             }
-            geometry.vertices.push_back({p.x,
-                                         p.y,
-                                         p.z,
-                                         n.x,
-                                         n.y,
-                                         n.z,
-                                         part.color[0],
-                                         part.color[1],
-                                         part.color[2],
-                                         part.color[3],
-                                         float(part.palette),
-                                         float(part.joint),
-                                         float(surface),
-                                         {float(part.joint), 31, 31, 31},
-                                         {1, 0, 0, 0}});
+            vertices.push_back({p.x,
+                                p.y,
+                                p.z,
+                                n.x,
+                                n.y,
+                                n.z,
+                                part.color[0],
+                                part.color[1],
+                                part.color[2],
+                                part.color[3],
+                                float(part.palette),
+                                float(part.joint),
+                                float(surface),
+                                {float(part.joint), 31, 31, 31},
+                                {1, 0, 0, 0}});
         };
         for (size_t i = 0; i < model.count; ++i)
         {
@@ -410,16 +432,37 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
         }
         glGenBuffers(1, &geometry.buffer);
         glBindBuffer(GL_ARRAY_BUFFER, geometry.buffer);
-        glBufferData(GL_ARRAY_BUFFER, geometry.vertices.size() * sizeof(rendering::Mesh::Data::Vertex),
-                     geometry.vertices.data(), GL_STATIC_DRAW);
+        // Imported vertices already have the GPU layout. Keep one authoritative CPU copy
+        // in ResourceAssets for collision/fallback rendering, not another copy in each VBO owner.
+        const auto &upload = model.resourceId && !model.count
+                                 ? models::ResourceAssets::Get(model.resourceId).vertices
+                                 : vertices;
+        geometry.vertexCount = upload.size();
+        glBufferData(GL_ARRAY_BUFFER, upload.size() * sizeof(rendering::Mesh::Data::Vertex), upload.data(),
+                     GL_STATIC_DRAW);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         profiling::Count(profiling::Counter::MeshUploadBytes,
-                         geometry.vertices.size() * sizeof(rendering::Mesh::Data::Vertex));
+                         upload.size() * sizeof(rendering::Mesh::Data::Vertex));
     }
     std::string materialKey(reinterpret_cast<const char *>(&palette), sizeof(palette));
-    materialKey.append(reinterpret_cast<const char *>(&mesh->data->roughness), sizeof(float) * 2);
+    materialKey.append(reinterpret_cast<const char *>(&mesh->data->roughness), sizeof(float));
+    materialKey.append(reinterpret_cast<const char *>(&mesh->data->metallic), sizeof(float));
     materialKey.push_back(mesh->data->ground ? 1 : 0);
-    auto &material = data.materials[materialKey];
+    // Animated tints must not grow the renderer's material registry indefinitely.
+    // Actors keep shared ownership of an evicted entry until their next submission.
+    constexpr size_t kMaterialCacheLimit = 512;
+    if (data.materials.size() >= kMaterialCacheLimit &&
+        data.materials.find(materialKey) == data.materials.end())
+    {
+        auto oldest =
+            std::min_element(data.materials.begin(), data.materials.end(), [](const auto &a, const auto &b) {
+                return a.second.lastUse < b.second.lastUse;
+            });
+        data.materials.erase(oldest);
+    }
+    auto &materialEntry = data.materials[materialKey];
+    materialEntry.lastUse = ++data.materialClock;
+    auto &material = materialEntry.value;
     if (!material)
     {
         material = std::make_shared<rendering::Material>();
@@ -450,23 +493,40 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
     }
     if (model.resourceId && pose)
     {
-        models::ResourceAssets::Sample(model.resourceId, pose, bones);
+        data.poses.Sample(model.resourceId, *pose, bones);
     }
     bool armed = pose && pose->armed;
-    std::string key; // identity + pose; palette is per instance
-    auto identity = reinterpret_cast<std::uintptr_t>(&model);
-    key.assign(reinterpret_cast<char *>(&identity), sizeof(identity));
+    size_t key = std::hash<const models::Model *>{}(&model);
     if (pose)
     {
-        key.append(reinterpret_cast<char *>(bones.data()), sizeof(bones));
+        key ^= std::hash<std::string_view>{}(
+            std::string_view(reinterpret_cast<const char *>(bones.data()), sizeof(bones)));
     }
-    key.push_back(armed ? '1' : '0');
-    auto found = data.batchKeys.find(key);
-    if (found == data.batchKeys.end())
+    size_t batchIndex = data.batchCount;
+    const auto candidates = data.batchKeys.equal_range(key);
+    for (auto it = candidates.first; it != candidates.second; ++it)
     {
-        data.batchKeys[key] = data.batches.size();
-        data.batches.push_back({mesh, bones, armed, {}});
-        found = data.batchKeys.find(key);
+        const auto &batch = data.batches[it->second];
+        if (batch.mesh == mesh && batch.armed == armed && batch.posed == bool(pose) &&
+            (!pose || std::memcmp(batch.bones.data(), bones.data(), sizeof(bones)) == 0))
+        {
+            batchIndex = it->second;
+            break;
+        }
+    }
+    if (batchIndex == data.batchCount)
+    {
+        if (data.batchCount == data.batches.size())
+        {
+            data.batches.emplace_back();
+        }
+        auto &batch = data.batches[data.batchCount++];
+        batch.mesh = mesh;
+        batch.bones = bones;
+        batch.armed = armed;
+        batch.posed = pose != nullptr;
+        batch.instances.clear();
+        data.batchKeys.emplace(key, batchIndex);
     }
     MeshData::Instance instance = {
         {screen.x, screen.y, depth, mesh->data->holographic ? 1.f : 0.f},
@@ -480,9 +540,9 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
     std::copy(palette.body.begin(), palette.body.end(), instance.body);
     std::copy(palette.accent.begin(), palette.accent.end(), instance.accent);
     std::copy(palette.emission.begin(), palette.emission.end(), instance.emission);
-    data.batches[found->second].instances.push_back(instance);
+    data.batches[batchIndex].instances.push_back(instance);
     ++data.statistics.objects;
-    data.statistics.triangles += unsigned(mesh->data->vertices.size() / 3);
+    data.statistics.triangles += unsigned(mesh->data->vertexCount / 3);
     if (!data.collecting)
     {
         DrawModels();
@@ -525,12 +585,11 @@ void Renderer::EndModels()
     DrawModels();
     renderqueue::Flush();
     m_meshes->collecting = false;
-    auto overlays = std::move(m_meshes->overlays);
-    m_meshes->overlays.clear();
-    for (auto &draw : overlays)
+    for (auto &draw : m_meshes->overlays)
     {
         draw();
     }
+    m_meshes->overlays.clear();
     renderqueue::Flush();
 }
 const rendering::FrameStatistics &Renderer::GetFrameStatistics() const
@@ -540,7 +599,7 @@ const rendering::FrameStatistics &Renderer::GetFrameStatistics() const
 void Renderer::DrawModels()
 {
     auto &data = *m_meshes;
-    if (data.batches.empty())
+    if (!data.batchCount)
     {
         return;
     }
@@ -564,10 +623,10 @@ void Renderer::DrawModels()
         glUseProgram(data.program);
         attributes(true);
         glDisable(GL_TEXTURE_2D);
-        glUniform1i(glGetUniformLocation(data.program, "cartoon"), m_style.cartoon ? 1 : 0);
-        glUniform1i(glGetUniformLocation(data.program, "shadowPass"), shadow);
-        glUniform2f(glGetUniformLocation(data.program, "shadowJitter"), 0, 0);
-        glUniform1f(glGetUniformLocation(data.program, "hologramTime"),
+        glUniform1i(data.uniforms.cartoon, m_style.cartoon ? 1 : 0);
+        glUniform1i(data.uniforms.shadowPass, shadow);
+        glUniform2f(data.uniforms.shadowJitter, 0, 0);
+        glUniform1f(data.uniforms.hologramTime,
                     float(std::fmod(double(GetTickCount64()) * .0018, 6.283185307179586)));
     };
     if (!data.instancesBuffer)
@@ -576,8 +635,9 @@ void Renderer::DrawModels()
     }
     // One upload is reused by ground, shadow and surface passes.
     data.instanceStream.clear();
-    for (auto &batch : data.batches)
+    for (size_t index = 0; index < data.batchCount; ++index)
     {
+        auto &batch = data.batches[index];
         batch.instanceOffset = data.instanceStream.size() * sizeof(MeshData::Instance);
         data.instanceStream.insert(data.instanceStream.end(), batch.instances.begin(), batch.instances.end());
     }
@@ -587,8 +647,9 @@ void Renderer::DrawModels()
     profiling::Count(profiling::Counter::StreamUploadBytes,
                      data.instanceStream.size() * sizeof(MeshData::Instance));
     auto draw = [&](int pass) {
-        for (auto &batch : data.batches)
+        for (size_t index = 0; index < data.batchCount; ++index)
         {
+            auto &batch = data.batches[index];
             auto &mesh = *batch.mesh->data;
             if (mesh.ground != (pass == 0))
             {
@@ -615,16 +676,15 @@ void Renderer::DrawModels()
                                       reinterpret_cast<void *>(batch.instanceOffset + size_t(a - 4) * 16));
                 glVertexAttribDivisor(a, 1);
             }
-            glUniformMatrix4fv(glGetUniformLocation(data.program, "bones[0]"), 32, GL_FALSE,
-                               batch.bones.data());
-            glUniform1i(glGetUniformLocation(data.program, "armed"), batch.armed ? 1 : 0);
-            glUniform1i(glGetUniformLocation(data.program, "imported"), mesh.imported ? 1 : 0);
-            glDrawArraysInstanced(GL_TRIANGLES, 0, GLsizei(mesh.vertices.size()),
+            glUniformMatrix4fv(data.uniforms.bones, 32, GL_FALSE, batch.bones.data());
+            glUniform1i(data.uniforms.armed, batch.armed ? 1 : 0);
+            glUniform1i(data.uniforms.imported, mesh.imported ? 1 : 0);
+            glDrawArraysInstanced(GL_TRIANGLES, 0, GLsizei(mesh.vertexCount),
                                   GLsizei(batch.instances.size()));
             profiling::Count(profiling::Counter::DrawCalls);
             profiling::Count(profiling::Counter::RenderedInstances, batch.instances.size());
             profiling::Count(profiling::Counter::SubmittedVertices,
-                             mesh.vertices.size() * batch.instances.size());
+                             mesh.vertexCount * batch.instances.size());
             ++data.statistics.drawCalls;
             if (pass == 1)
             {
@@ -720,7 +780,12 @@ void Renderer::DrawModels()
     glUseProgram(0);
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
-    data.batches.clear();
+    for (size_t index = 0; index < data.batchCount; ++index)
+    {
+        data.batches[index].instances.clear();
+        data.batches[index].mesh.reset();
+    }
+    data.batchCount = 0;
     data.batchKeys.clear();
 }
 
@@ -961,6 +1026,10 @@ Renderer::Renderer(int width, int height)
     if (GLEW_VERSION_3_3)
     {
         m_meshes->program = CompileProgram(kMeshVertex, kMeshFragment);
+        if (m_meshes->program)
+        {
+            m_meshes->uniforms.Initialize(m_meshes->program);
+        }
         m_meshes->darkProgram = CompileProgram(kVertex, kDarkFragment);
         m_meshes->maskProgram = CompileProgram(kVertex, kMaskComposite);
         m_meshes->shadowComposite = CompileProgram(kVertex, kSoftShadow);

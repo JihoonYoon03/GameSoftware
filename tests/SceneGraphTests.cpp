@@ -86,6 +86,21 @@ void TestPlacementAndOrder()
     scene.EndPlacement();
     assert(!scene.GetGraph().Find("second"));
     assert(scene.GetGraph().CollectVisible(bounds).size() == 1);
+    for (int frame = 0; frame < 200; ++frame)
+    {
+        scene.BeginPlacement();
+        assert(&scene.Place("first", "other-region", bounds, 0, 2, draw) == first);
+        scene.Place("transient/" + std::to_string(frame), "region", bounds, 1, 0, draw);
+        scene.EndPlacement();
+        assert(scene.GetGraph().CollectVisible(bounds).size() == 2);
+        if (frame)
+        {
+            assert(!scene.GetGraph().Find("transient/" + std::to_string(frame - 1)));
+        }
+    }
+    scene.BeginPlacement();
+    scene.EndPlacement();
+    assert(scene.GetGraph().CollectVisible(bounds).empty());
 }
 } // namespace
 

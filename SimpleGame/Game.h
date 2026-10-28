@@ -393,6 +393,17 @@ class CityLayout
 // Game — state, input, city progression
 // ============================================================================
 
+// Absolute 60 Hz deadlines exclude work already spent in the update callback.
+// Late frames are rebased, never replayed as an unbounded catch-up loop.
+class FrameSchedule
+{
+  public:
+    unsigned int NextDelay(double startedMilliseconds, double finishedMilliseconds);
+
+  private:
+    double nextMilliseconds = -1;
+};
+
 class Game
 {
   public:
@@ -426,6 +437,7 @@ class Game
   private:
     Game() = default;
     GameState state;
+    FrameSchedule frameSchedule;
     static unsigned char NormalizeKey(unsigned char key);
     void UpdatePlayerMovement(float deltaSeconds);
     void UpdateCamera(float deltaSeconds);

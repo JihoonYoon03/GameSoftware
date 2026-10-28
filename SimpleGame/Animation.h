@@ -73,6 +73,8 @@ class LayeredAnimation
 {
   public:
     static void Prepare(ResourceClip &clip, const AnimationRig &rig);
+    // Prepare only graph-referenced clips; keep every authored matrix clip available.
+    static void PrepareGraph(std::vector<ResourceClip> &clips, const AnimationRig &rig);
     static void Sample(const ResourceMesh &mesh, const CharacterPose &pose, std::array<float, 512> &skin);
 };
 // ============================================================================

@@ -49,7 +49,14 @@ class WorldView
 // ============================================================================
 void Scene::BeginPlacement()
 {
-    placed.clear();
+    if (++placementGeneration == 0)
+    {
+        for (auto &entry : placements)
+        {
+            entry.second = 0;
+        }
+        placementGeneration = 1;
+    }
 }
 Actor &Scene::Place(const std::string &name, const std::string &group, Bounds bounds, int layer, float depth,
                     Actor::DrawCallback callback)
@@ -73,19 +80,23 @@ Actor &Scene::Place(const std::string &name, const std::string &group, Bounds bo
     actor->SetBounds(bounds);
     actor->SetDrawOrder(layer, depth);
     actor->SetDrawCallback(std::move(callback));
-    placed.insert(name);
+    placements[name] = placementGeneration;
     return *actor;
 }
 void Scene::EndPlacement()
 {
-    for (const auto &name : previous)
+    for (auto it = placements.begin(); it != placements.end();)
     {
-        if (placed.find(name) == placed.end())
+        if (it->second != placementGeneration)
         {
-            graph.Remove(name);
+            graph.Remove(it->first);
+            it = placements.erase(it);
+        }
+        else
+        {
+            ++it;
         }
     }
-    previous = placed;
 }
 SceneGraph &Scene::GetGraph()
 {

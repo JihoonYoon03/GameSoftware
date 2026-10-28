@@ -493,6 +493,29 @@ void Save(const std::filesystem::path &path, int width = kCanvasWidth, int heigh
     output.write(reinterpret_cast<char *>(pixels.data()), pixels.size());
     assert(output.good());
 }
+void TestBatchReuse()
+{
+    auto &renderer = GameRenderer::Get().Backend();
+    auto draw = [&](int count, float tint) {
+        Begin();
+        renderer.BeginModels();
+        Palette palette;
+        palette.body = {tint, .5f, .7f, 1};
+        for (int i = 0; i < count; ++i)
+        {
+            Drawing::DrawModel3D(ModelLibrary::Get().box, {640.f + i * 20, 400}, {1, 1, 1}, {}, 0, palette);
+        }
+        renderer.EndModels();
+        assert(renderer.GetFrameStatistics().objects == unsigned(count));
+        return Pixels();
+    };
+    auto baseline = draw(1, .3f);
+    draw(64, .7f);
+    assert(draw(1, .3f) == baseline); // Reused slots must not retain previous instances or palettes.
+    draw(0, .2f);
+    assert(draw(1, .3f) == baseline);
+}
+
 void TestAntialiasing()
 {
     auto &renderer = GameRenderer::Get().Backend();
@@ -2032,14 +2055,19 @@ void BenchmarkQuality(const std::filesystem::path &output)
         {
             sum += n;
         }
-        double average = sum / samples.size(), p95 = samples[size_t(samples.size() * .95)];
+        double average = sum / samples.size(), p95 = samples[size_t(samples.size() * .95)],
+               p99 = samples[size_t(samples.size() * .99)];
+        const auto overBudget =
+            std::count_if(samples.begin(), samples.end(), [](double ms) { return ms > 1000.0 / 60.0; });
         report << (scenario ? "," : "") << "{\"name\":\"" << names[scenario]
-               << "\",\"average_ms\":" << average << ",\"p95_ms\":" << p95 << ",\"max_ms\":" << samples.back()
-               << ",\"draw_calls\":" << draws / samples.size()
+               << "\",\"average_ms\":" << average << ",\"p95_ms\":" << p95 << ",\"p99_ms\":" << p99
+               << ",\"max_ms\":" << samples.back() << ",\"over_budget_frames\":" << overBudget
+               << ",\"sample_frames\":" << samples.size() << ",\"draw_calls\":" << draws / samples.size()
                << ",\"instanced_draws\":" << instanced / samples.size()
                << ",\"triangles\":" << triangles / samples.size() << "}";
         std::cout << names[scenario] << ": average " << average << " ms; p95 " << p95 << " ms (" << 1000 / p95
-                  << " fps)" << std::endl;
+                  << " fps); p99 " << p99 << " ms; over 16.67 ms " << overBudget << "/" << samples.size()
+                  << std::endl;
     }
     report << "]}";
 }
@@ -2113,6 +2141,7 @@ int main(int argc, char **argv)
     GameRenderer::Get().Initialize();
     std::cout << "Checking antialiasing, depth and effect occlusion.\n" << std::flush;
     TestAntialiasing();
+    TestBatchReuse();
     TestDepth();
     TestEffectDepth();
     std::cout << "Checking quest resources and city coverage.\n" << std::flush;

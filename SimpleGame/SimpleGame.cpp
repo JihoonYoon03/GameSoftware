@@ -19,21 +19,32 @@ but WITHOUT ANY WARRANTY.
 #include <windows.h>
 #include <cstdio>
 #include <exception>
+#include <chrono>
 
 int main(int argc, char **argv)
 {
     profiling::InitializeConsoleOutput();
+    using Clock = std::chrono::steady_clock;
+    const auto started = Clock::now();
+    const auto milliseconds = [](auto from, auto to) {
+        return std::chrono::duration<double, std::milli>(to - from).count();
+    };
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
     glutInitWindowSize(1280, 800);
     glutCreateWindow("헤일로 / 관문 인접 주거 구역 07");
     SetWindowTextW(GetActiveWindow(), L"헤일로 / 관문 인접 주거 구역 07");
     glewInit();
+    const auto contextReady = Clock::now();
+    double renderResourcesMs = 0, worldMs = 0;
     try
     {
         tutorial::GameRenderer::Get().Initialize();
+        const auto resourcesReady = Clock::now();
+        renderResourcesMs = milliseconds(contextReady, resourcesReady);
         tutorial::Game::Get().Reset();
         tutorial::Hud::OpenMenu(tutorial::UiScreen::Title);
+        worldMs = milliseconds(resourcesReady, Clock::now());
     }
     catch (const std::exception &error)
     {
@@ -48,7 +59,13 @@ int main(int argc, char **argv)
     glutCloseFunc(tutorial::GameCallbacks::Shutdown);
     glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
     glutIgnoreKeyRepeat(1);
+    const auto monitorStarted = Clock::now();
     monitoring::GameMonitor::Get().Initialize();
+    const auto ready = Clock::now();
+    std::printf("{\"event\":\"startup_ready\",\"window_context_ms\":%.3f,\"render_resources_ms\":%.3f,"
+                "\"world_ms\":%.3f,\"monitor_ms\":%.3f,\"total_ms\":%.3f}\n",
+                milliseconds(started, contextReady), renderResourcesMs, worldMs,
+                milliseconds(monitorStarted, ready), milliseconds(started, ready));
     glutDisplayFunc(tutorial::GameCallbacks::Draw);
     glutReshapeFunc(tutorial::GameCallbacks::Resize);
     glutKeyboardFunc(tutorial::GameCallbacks::KeyDown);

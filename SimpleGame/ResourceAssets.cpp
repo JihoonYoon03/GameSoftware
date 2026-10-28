@@ -259,10 +259,6 @@ struct Store
                         sample.clipIndex = clipIndex;
                     }
                 }
-                if (bones == 23)
-                {
-                    LayeredAnimation::Prepare(clips->back(), *rig);
-                }
                 ++animationClips;
             }
             for (const auto &sample : rig->samples)
@@ -276,6 +272,10 @@ struct Store
                                 rig->fire < 0 || rig->melee < 0 || rig->muzzle < 0))
             {
                 throw std::runtime_error("Missing required character animation");
+            }
+            if (bones == 23)
+            {
+                LayeredAnimation::PrepareGraph(*clips, *rig);
             }
             banks.push_back({bones, std::move(clips), std::move(rig)});
         }
@@ -512,6 +512,32 @@ Point ResourceAssets::Muzzle(const CharacterPose &pose)
     auto selection = Select(Get(id), &pose, true);
     return selection.clip ? selection.clip->muzzles[selection.frame] : Point{.5f, 0, .8f};
 }
+void ResourcePoseSampler::Sample(unsigned int id, const CharacterPose &pose, SkinMatrices &matrices)
+{
+    const auto &mesh = ResourceAssets::Get(id);
+    if (mesh.boneCount != 23 || !mesh.rig || pose.riding)
+    {
+        ResourceAssets::Sample(id, &pose, matrices);
+        return;
+    }
+    const std::array<float, 11> nextInputs = {pose.animationPhase, pose.recoil,          pose.locomotionSpeed,
+                                              pose.meleeSeconds,   pose.locomotionPhase, pose.moveLeft,
+                                              pose.moveForward,    pose.aimWeight,       pose.fireSeconds,
+                                              pose.reloadProgress, float(pose.gender)};
+    const unsigned int nextFlags =
+        unsigned(pose.armed) | (unsigned(pose.walking) << 1) | (unsigned(pose.blended) << 2);
+    if (rig != mesh.rig.get() || animations != mesh.animations.get() || flags != nextFlags ||
+        inputs != nextInputs)
+    {
+        ResourceAssets::Sample(id, &pose, cached);
+        rig = mesh.rig.get();
+        animations = mesh.animations.get();
+        flags = nextFlags;
+        inputs = nextInputs;
+    }
+    matrices = cached;
+}
+
 Point ResourceAssets::SkinPoint(const ResourceVertex &vertex, const SkinMatrices &matrices)
 {
     Point result = {};

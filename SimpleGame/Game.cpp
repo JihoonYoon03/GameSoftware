@@ -19,6 +19,7 @@
 #include <windows.h>
 #include <algorithm>
 #include <cmath>
+#include <chrono>
 
 namespace tutorial
 {
@@ -27,7 +28,6 @@ namespace
 constexpr float kMovementSpeed = 3.2f;
 constexpr float kMaximumDeltaSeconds = 0.05f;
 constexpr float kCameraFollowRate = 5.0f;
-constexpr int kUpdateIntervalMilliseconds = 16;
 
 // ============================================================================
 // WeaponCursorCapture — confine the native cursor to the game's letterboxed canvas.
@@ -277,6 +277,7 @@ void Game::Reset()
     const int viewportHeight = state.viewportHeight;
     const UiPreferences preferences = state.uiPreferences;
     state = GameState{};
+    frameSchedule = {};
     state.uiPreferences = preferences;
     state.viewportWidth = viewportWidth;
     state.viewportHeight = viewportHeight;
@@ -901,9 +902,26 @@ void Game::Update(float deltaSeconds)
         game::SceneManager::Update(deltaSeconds);
     }
 }
+unsigned int FrameSchedule::NextDelay(double startedMilliseconds, double finishedMilliseconds)
+{
+    constexpr double kFrameMilliseconds = 1000.0 / 60.0;
+    if (nextMilliseconds < 0 || startedMilliseconds > nextMilliseconds + kFrameMilliseconds)
+    {
+        nextMilliseconds = startedMilliseconds;
+    }
+    nextMilliseconds += kFrameMilliseconds;
+    nextMilliseconds = (std::max)(nextMilliseconds, finishedMilliseconds);
+    return static_cast<unsigned int>((std::max)(1.0, std::ceil(nextMilliseconds - finishedMilliseconds)));
+}
+
 void Game::Tick(int)
 {
     profiling::Scope profileTimer(profiling::Timer::Update);
+    const auto milliseconds = []() {
+        return std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now().time_since_epoch())
+            .count();
+    };
+    const double startedMilliseconds = milliseconds();
     WeaponWheel::RefreshCursorCapture();
     HWND activeWindow = GetActiveWindow();
     if (activeWindow && IsWindowVisible(activeWindow) && GetForegroundWindow() != activeWindow)
@@ -924,7 +942,7 @@ void Game::Tick(int)
             ? GLUT_CURSOR_NONE
             : GLUT_CURSOR_INHERIT);
     glutPostRedisplay();
-    glutTimerFunc(kUpdateIntervalMilliseconds, GameCallbacks::Tick, 0);
+    glutTimerFunc(frameSchedule.NextDelay(startedMilliseconds, milliseconds()), GameCallbacks::Tick, 0);
 }
 float Game::Clamp(float value, float minimum, float maximum)
 {
@@ -954,54 +972,9 @@ void RememberDialoguePage()
 } // namespace
 std::vector<std::string> Dialogue::Wrap(const std::string &text, float width, int fontSize)
 {
-    std::vector<std::string> result;
-    for (size_t start = 0; start < text.size();)
-    {
-        size_t end = start, lastSpace = start;
-        while (end < text.size() && text[end] != '\n')
-        {
-            unsigned char lead = static_cast<unsigned char>(text[end]);
-            size_t bytes = lead < 0x80 ? 1 : lead < 0xe0 ? 2 : lead < 0xf0 ? 3 : 4;
-            if (end + bytes > text.size())
-            {
-                break;
-            }
-            if (RenderAssets::MeasureUtf8(text.substr(start, end + bytes - start), fontSize) > width &&
-                end > start)
-            {
-                break;
-            }
-            if (text[end] == ' ')
-            {
-                lastSpace = end;
-            }
-            end += bytes;
-        }
-        if (end == start && end < text.size() && text[end] != '\n')
-        {
-            ++end;
-        }
-        if (end < text.size() && text[end] != '\n' && lastSpace > start)
-        {
-            end = lastSpace;
-        }
-        result.push_back(text.substr(start, end - start));
-        start = end;
-        if (start < text.size() && text[start] == '\n')
-        {
-            ++start;
-        }
-        while (start < text.size() && text[start] == ' ')
-        {
-            ++start;
-        }
-    }
-    if (result.empty())
-    {
-        result.push_back("");
-    }
-    return result;
+    return RenderAssets::WrapUtf8(text, width, fontSize);
 }
+
 bool Dialogue::Danger()
 {
     const auto &world = Game::Get().GetState();

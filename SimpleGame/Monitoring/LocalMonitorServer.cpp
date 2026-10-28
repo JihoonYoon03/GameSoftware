@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iterator>
 #include <mutex>
+#include <memory>
 #include <sstream>
 #include <thread>
 #include <utility>
@@ -51,8 +52,10 @@ std::thread serverThread;
 SOCKET listener = INVALID_SOCKET;
 bool winsockInitialized = false;
 std::mutex snapshotMutex;
-std::string latestSnapshot = "{\"schema\":\"game_monitor_v1\",\"ready\":false}";
-std::string modelCatalog = "{\"schema\":\"game_models_v1\",\"models\":[]}";
+std::shared_ptr<const std::string> latestSnapshot =
+    std::make_shared<const std::string>("{\"schema\":\"game_monitor_v1\",\"ready\":false}");
+std::shared_ptr<const std::string> modelCatalog =
+    std::make_shared<const std::string>("{\"schema\":\"game_models_v1\",\"models\":[]}");
 
 bool SetNonblocking(SOCKET socket)
 {
@@ -124,12 +127,12 @@ std::string Route(const std::string &request)
     path = path.substr(0, path.find('?'));
     if (path == "/api/state" || path == "/api/models")
     {
-        std::string snapshot;
+        std::shared_ptr<const std::string> snapshot;
         {
             std::lock_guard<std::mutex> lock(snapshotMutex);
             snapshot = path == "/api/models" ? modelCatalog : latestSnapshot;
         }
-        return respond("200 OK", "application/json; charset=utf-8", snapshot);
+        return respond("200 OK", "application/json; charset=utf-8", *snapshot);
     }
     if (path == "/index.html")
     {
@@ -315,8 +318,12 @@ bool Start(const std::filesystem::path &assetDirectory, unsigned short port)
 }
 void Publish(std::string snapshot)
 {
-    std::lock_guard<std::mutex> lock(snapshotMutex);
-    latestSnapshot = std::move(snapshot);
+    auto next = std::make_shared<const std::string>(std::move(snapshot));
+    {
+        std::lock_guard<std::mutex> lock(snapshotMutex);
+        latestSnapshot.swap(next);
+    }
+    // Large response allocation/copy/destruction never holds the game-thread publication lock.
 }
 void Stop()
 {
@@ -338,8 +345,11 @@ void Stop()
 }
 void PublishModels(std::string catalog)
 {
-    std::lock_guard<std::mutex> lock(snapshotMutex);
-    modelCatalog = std::move(catalog);
+    auto next = std::make_shared<const std::string>(std::move(catalog));
+    {
+        std::lock_guard<std::mutex> lock(snapshotMutex);
+        modelCatalog.swap(next);
+    }
 }
 std::uint64_t ReadRequestCount()
 {

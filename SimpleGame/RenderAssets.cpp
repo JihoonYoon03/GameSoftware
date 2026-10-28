@@ -13,6 +13,7 @@
 #include <iterator>
 #include <filesystem>
 #include <tuple>
+#include <list>
 #include <stdexcept>
 #include <wincodec.h>
 #include <wrl/client.h>
@@ -23,7 +24,44 @@
 
 namespace
 {
-GLuint Upload(int width, int height, const std::vector<unsigned char> &pixels, bool repeat = false)
+// CPU layout caches are bounded and independent of GL/context lifetime. They are used
+// only on the game thread, including CPU-only dialogue tests.
+template <typename Key, typename Value> class LayoutCache
+{
+  public:
+    const Value *Find(const Key &key)
+    {
+        auto found = entries.find(key);
+        if (found == entries.end())
+        {
+            return nullptr;
+        }
+        recent.splice(recent.end(), recent, found->second.position);
+        return &found->second.value;
+    }
+    void Insert(const Key &key, Value value)
+    {
+        constexpr size_t kLimit = 256;
+        if (entries.size() == kLimit)
+        {
+            entries.erase(recent.front());
+            recent.pop_front();
+        }
+        recent.push_back(key);
+        entries.emplace(key, Entry{std::move(value), std::prev(recent.end())});
+    }
+
+  private:
+    struct Entry
+    {
+        Value value;
+        typename std::list<Key>::iterator position;
+    };
+    std::list<Key> recent;
+    std::map<Key, Entry> entries;
+};
+
+GLuint Upload(int width, int height, const std::vector<unsigned char> &pixels)
 {
     profiling::Scope timer(profiling::Timer::TextureUpload);
     profiling::Count(profiling::Counter::TextureUploadBytes, pixels.size());
@@ -33,8 +71,8 @@ GLuint Upload(int width, int height, const std::vector<unsigned char> &pixels, b
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, repeat ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_2D, 0);
     return texture;
 }
@@ -56,14 +94,14 @@ void Quad(GLuint texture, float x, float y, float width, float height, float u0 
     renderqueue::Texture(0);
 }
 
-GLuint CreateMaterial(int type)
+std::vector<unsigned char> CreateMaterialPixels(int type)
 {
     constexpr int size = 64;
     std::vector<unsigned char> pixels;
     const std::string cacheName = "material-" + std::to_string(type) + ".rgba";
     if (assetcache::Load(cacheName, 2, size * size * 4, pixels))
     {
-        return Upload(size, size, pixels, true);
+        return pixels;
     }
     pixels.resize(size * size * 4);
     for (int y = 0; y < size; ++y)
@@ -96,7 +134,7 @@ GLuint CreateMaterial(int type)
         }
     }
     assetcache::Save(cacheName, 2, pixels.data(), pixels.size());
-    return Upload(size, size, pixels, true);
+    return pixels;
 }
 
 } // namespace
@@ -116,18 +154,22 @@ struct RenderAssets::Data
     GLuint uiAtlas = 0;
     int uiWidth = 2048, uiHeight = 0;
     std::map<std::string, Sprite> sprites;
-    GLuint materials[4] = {};
     GLuint atlas = 0;
     std::map<std::tuple<int, bool, std::string>, TextTexture> texts;
     unsigned long long clock = 0;
+    ~Data()
+    {
+        glDeleteTextures(1, &atlas);
+        glDeleteTextures(1, &uiAtlas);
+        for (const auto &entry : texts)
+        {
+            glDeleteTextures(1, &entry.second.texture);
+        }
+    }
 };
 
 RenderAssets::RenderAssets() : m_data(new Data())
 {
-    for (int i = 0; i < 4; ++i)
-    {
-        m_data->materials[i] = CreateMaterial(i);
-    }
     namespace fs = std::filesystem;
     wchar_t module[32768]{};
     GetModuleFileNameW(nullptr, module, 32768);
@@ -171,13 +213,11 @@ RenderAssets::RenderAssets() : m_data(new Data())
         {
             throw std::runtime_error("UI PNG decoder initialization failed.");
         }
-        struct Image
-        {
-            std::string id;
-            int w, h, x, y;
-            std::vector<unsigned char> pixels;
-        };
-        std::vector<Image> images;
+        // Decode straight into the final padded atlas, without retaining every PNG's pixels.
+        std::vector<unsigned char> pixels;
+        m_data->uiHeight = 1;
+        GLint maximumTextureSize = 0;
+        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maximumTextureSize);
         int x = 2, y = 2, row = 0;
         for (const auto &group : {"Icons", "HUDIcons", "Components"})
         {
@@ -212,33 +252,33 @@ RenderAssets::RenderAssets() : m_data(new Data())
                     y += row + 4;
                     row = 0;
                 }
-                Image image{std::string(group) + "/" + path.stem().string(), int(w), int(h), x, y, {}};
-                image.pixels.resize(size_t(w) * h * 4);
-                if (FAILED(converter->CopyPixels(nullptr, w * 4, UINT(image.pixels.size()),
-                                                 image.pixels.data())))
+                while (m_data->uiHeight < y + int(h) + 2)
+                {
+                    m_data->uiHeight *= 2;
+                }
+                if (m_data->uiWidth > maximumTextureSize || m_data->uiHeight > maximumTextureSize)
+                {
+                    throw std::runtime_error("UI atlas exceeds the graphics device texture limit.");
+                }
+                pixels.resize(size_t(m_data->uiWidth) * m_data->uiHeight * 4, 0);
+                const UINT stride = UINT(m_data->uiWidth) * 4;
+                const UINT bytes = (h - 1) * stride + w * 4;
+                auto *destination = pixels.data() + (size_t(y) * m_data->uiWidth + x) * 4;
+                if (FAILED(converter->CopyPixels(nullptr, stride, bytes, destination)))
                 {
                     throw std::runtime_error("UI PNG pixel conversion failed.");
                 }
+                m_data->sprites.emplace(std::string(group) + "/" + path.stem().string(),
+                                        Data::Sprite{x, y, int(w), int(h)});
                 x += int(w) + 4;
                 row = (std::max)(row, int(h));
-                images.push_back(std::move(image));
             }
         }
-        m_data->uiHeight = 1;
         while (m_data->uiHeight < y + row + 2)
         {
             m_data->uiHeight *= 2;
         }
-        std::vector<unsigned char> pixels(size_t(m_data->uiWidth) * m_data->uiHeight * 4, 0);
-        for (const auto &entry : images)
-        {
-            for (int yy = 0; yy < entry.h; ++yy)
-            {
-                std::memcpy(&pixels[((entry.y + yy) * m_data->uiWidth + entry.x) * 4],
-                            &entry.pixels[size_t(yy) * entry.w * 4], size_t(entry.w) * 4);
-            }
-            m_data->sprites.emplace(entry.id, Data::Sprite{entry.x, entry.y, entry.w, entry.h});
-        }
+        pixels.resize(size_t(m_data->uiWidth) * m_data->uiHeight * 4, 0);
         m_data->uiAtlas = Upload(m_data->uiWidth, m_data->uiHeight, pixels);
     }
     // Four materials, a white cell, and a radial glow share a padded atlas.
@@ -249,8 +289,7 @@ RenderAssets::RenderAssets() : m_data(new Data())
         std::vector<unsigned char> pixels(64 * 64 * 4, 255);
         if (type < 4)
         {
-            glBindTexture(GL_TEXTURE_2D, m_data->materials[type]);
-            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+            pixels = CreateMaterialPixels(type);
         }
         if (type == 5)
         {
@@ -283,21 +322,12 @@ RenderAssets::RenderAssets() : m_data(new Data())
             }
         }
     }
-    glDeleteTextures(4, m_data->materials);
-    std::fill(std::begin(m_data->materials), std::end(m_data->materials), 0);
     m_data->atlas = Upload(atlasWidth, cell, atlas);
     renderqueue::SolidSample(m_data->atlas, (4 * cell + 32.f) / atlasWidth, .5f);
 }
 RenderAssets::~RenderAssets()
 {
     renderqueue::Flush();
-    glDeleteTextures(1, &m_data->atlas);
-    glDeleteTextures(1, &m_data->uiAtlas);
-    glDeleteTextures(4, m_data->materials);
-    for (const auto &entry : m_data->texts)
-    {
-        glDeleteTextures(1, &entry.second.texture);
-    }
 }
 void RenderAssets::DrawMaterial(const RenderPoint (&points)[4], SurfaceMaterial material)
 {
@@ -325,6 +355,16 @@ void RenderAssets::DrawGlow(float x, float y, float size)
 
 int RenderAssets::MeasureUtf8(const std::string &utf8, int fontSize)
 {
+    static LayoutCache<std::pair<int, std::string>, int> widths;
+    const auto key = std::make_pair(fontSize, utf8);
+    const bool cacheable = utf8.size() <= 4096;
+    if (cacheable)
+    {
+        if (const auto *cached = widths.Find(key))
+        {
+            return *cached;
+        }
+    }
     struct Metrics
     {
         HDC dc = CreateCompatibleDC(nullptr);
@@ -367,7 +407,79 @@ int RenderAssets::MeasureUtf8(const std::string &utf8, int fontSize)
     std::wstring text(count, L' ');
     MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, utf8.data(), int(utf8.size()), &text[0], count);
     SIZE extent{};
-    return GetTextExtentPoint32W(metrics->dc, text.data(), count, &extent) ? int(extent.cx) : 0;
+    if (!GetTextExtentPoint32W(metrics->dc, text.data(), count, &extent))
+    {
+        return 0;
+    }
+    if (cacheable)
+    {
+        widths.Insert(key, int(extent.cx));
+    }
+    return int(extent.cx);
+}
+std::vector<std::string> RenderAssets::WrapUtf8(const std::string &text, float width, int fontSize)
+{
+    static LayoutCache<std::tuple<int, float, std::string>, std::vector<std::string>> layouts;
+    const bool cacheable = text.size() <= 4096 && std::isfinite(width) && width > 0;
+    const auto key = std::make_tuple(fontSize, width, text);
+    if (cacheable)
+    {
+        if (const auto *cached = layouts.Find(key))
+        {
+            return *cached;
+        }
+    }
+    std::vector<std::string> result;
+    for (size_t start = 0; start < text.size();)
+    {
+        size_t end = start, lastSpace = start;
+        while (end < text.size() && text[end] != '\n')
+        {
+            unsigned char lead = static_cast<unsigned char>(text[end]);
+            size_t bytes = lead < 0x80 ? 1 : lead < 0xe0 ? 2 : lead < 0xf0 ? 3 : 4;
+            if (end + bytes > text.size())
+            {
+                break;
+            }
+            if (RenderAssets::MeasureUtf8(text.substr(start, end + bytes - start), fontSize) > width &&
+                end > start)
+            {
+                break;
+            }
+            if (text[end] == ' ')
+            {
+                lastSpace = end;
+            }
+            end += bytes;
+        }
+        if (end == start && end < text.size() && text[end] != '\n')
+        {
+            ++end;
+        }
+        if (end < text.size() && text[end] != '\n' && lastSpace > start)
+        {
+            end = lastSpace;
+        }
+        result.push_back(text.substr(start, end - start));
+        start = end;
+        if (start < text.size() && text[start] == '\n')
+        {
+            ++start;
+        }
+        while (start < text.size() && text[start] == ' ')
+        {
+            ++start;
+        }
+    }
+    if (result.empty())
+    {
+        result.push_back("");
+    }
+    if (cacheable)
+    {
+        layouts.Insert(key, result);
+    }
+    return result;
 }
 void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf8, int fontSize,
                                 bool outlined)

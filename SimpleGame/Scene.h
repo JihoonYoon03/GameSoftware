@@ -3,7 +3,7 @@
 #include "Game.h"
 #include "Level.h"
 #include <functional>
-#include <unordered_set>
+#include <unordered_map>
 namespace tutorial
 {
 struct ColorRGBA;
@@ -38,8 +38,9 @@ class Scene
 
   private:
     SceneGraph graph;
-    std::unordered_set<std::string> placed;
-    std::unordered_set<std::string> previous;
+    // Retain names and map nodes across frames; a stamp replaces two rebuilt string sets.
+    std::unordered_map<std::string, std::uint64_t> placements;
+    std::uint64_t placementGeneration = 0;
 };
 
 enum class SceneKind

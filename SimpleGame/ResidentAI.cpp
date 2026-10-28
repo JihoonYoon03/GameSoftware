@@ -9,7 +9,6 @@
 #include <cmath>
 #include <functional>
 #include <limits>
-#include <queue>
 #include <utility>
 
 namespace tutorial
@@ -365,21 +364,39 @@ void CityResidents::Reset(GameState &world)
         resident.facing.walking = false;
     }
 }
-bool CityResidents::FindRoute(int from, int to, Resident &resident) const
+bool CityResidents::FindRoute(int from, int to, Resident &resident)
 {
     profiling::Scope timer(profiling::Timer::NpcNavigation);
     profiling::Count(profiling::Counter::NpcPathRequests);
-    std::vector<float> costs(nodes.size(), (std::numeric_limits<float>::max)());
-    std::vector<int> previous(nodes.size(), -1), crossings(nodes.size(), -1);
-    using Candidate = std::pair<float, int>;
-    std::priority_queue<Candidate, std::vector<Candidate>, std::greater<Candidate>> open;
-    costs[from] = 0;
-    open.push({Game::Distance(nodes[from].position, nodes[to].position), from});
-    while (!open.empty())
+    searchNodes.resize(nodes.size());
+    if (++searchGeneration == 0)
     {
-        auto [priority, current] = open.top();
-        open.pop();
-        if (priority > costs[current] + Game::Distance(nodes[current].position, nodes[to].position) + .001f)
+        std::fill(searchNodes.begin(), searchNodes.end(), SearchNode{});
+        searchGeneration = 1;
+    }
+    auto visit = [&](int index) -> SearchNode & {
+        auto &node = searchNodes[index];
+        if (node.generation != searchGeneration)
+        {
+            node = {(std::numeric_limits<float>::max)(), -1, -1, searchGeneration};
+        }
+        return node;
+    };
+    using Candidate = std::pair<float, int>;
+    searchOpen.clear();
+    auto push = [&](Candidate candidate) {
+        searchOpen.push_back(candidate);
+        std::push_heap(searchOpen.begin(), searchOpen.end(), std::greater<Candidate>{});
+    };
+    visit(from).cost = 0;
+    push({Game::Distance(nodes[from].position, nodes[to].position), from});
+    while (!searchOpen.empty())
+    {
+        std::pop_heap(searchOpen.begin(), searchOpen.end(), std::greater<Candidate>{});
+        auto [priority, current] = searchOpen.back();
+        searchOpen.pop_back();
+        if (priority >
+            visit(current).cost + Game::Distance(nodes[current].position, nodes[to].position) + .001f)
         {
             continue;
         }
@@ -390,27 +407,28 @@ bool CityResidents::FindRoute(int from, int to, Resident &resident) const
         }
         for (const auto &link : nodes[current].links)
         {
-            const float cost = costs[current] +
+            const float cost = visit(current).cost +
                                Game::Distance(nodes[current].position, nodes[link.to].position) *
                                    (nodes[link.to].sidewalk ? 1.f : 1.35f) +
                                (link.crossing >= 0 ? 3.f : 0.f);
-            if (cost < costs[link.to])
+            auto &next = visit(link.to);
+            if (cost < next.cost)
             {
-                costs[link.to] = cost;
-                previous[link.to] = current;
-                crossings[link.to] = link.crossing;
-                open.push({cost + Game::Distance(nodes[link.to].position, nodes[to].position), link.to});
+                next.cost = cost;
+                next.previous = current;
+                next.crossing = link.crossing;
+                push({cost + Game::Distance(nodes[link.to].position, nodes[to].position), link.to});
             }
         }
     }
-    if (previous[to] < 0)
+    if (visit(to).previous < 0)
     {
         return false;
     }
     resident.route.clear();
-    for (int step = to; step != from; step = previous[step])
+    for (int step = to; step != from; step = searchNodes[step].previous)
     {
-        resident.route.push_back({nodes[step].position, crossings[step]});
+        resident.route.push_back({nodes[step].position, searchNodes[step].crossing});
     }
     resident.route.push_back({nodes[from].position, -1});
     std::reverse(resident.route.begin(), resident.route.end());

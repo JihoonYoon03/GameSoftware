@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <thread>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
@@ -69,6 +70,21 @@ int main()
     monitoring::transport::PublishModels(catalog);
     auto models = Get(port, "/api/models");
     assert(models.substr(models.find("\r\n\r\n") + 4) == catalog);
+    const std::string replacement = "{\"models\":\"" + std::string(6 * 1024 * 1024, 'y') + "\"}";
+    std::thread reader([&]() {
+        for (int i = 0; i < 4; ++i)
+        {
+            auto response = Get(port, "/api/models");
+            const auto body = response.substr(response.find("\r\n\r\n") + 4);
+            assert(body == catalog || body == replacement);
+        }
+    });
+    for (int i = 0; i < 8; ++i)
+    {
+        monitoring::transport::PublishModels(i % 2 ? catalog : replacement);
+        monitoring::transport::Publish(snapshot);
+    }
+    reader.join();
     monitoring::transport::Stop();
     assert(monitoring::transport::Start("monitor", port));
     assert(Get(port, "/api/state").find("200 OK") != std::string::npos);

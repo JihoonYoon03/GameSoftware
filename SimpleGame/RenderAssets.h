@@ -1,12 +1,14 @@
 ﻿#pragma once
 #include "Renderer.h"
 #include <memory>
+#include <vector>
 
 // Generated materials and bounded Korean text texture cache.
 class RenderAssets
 {
   public:
     static int MeasureUtf8(const std::string &text, int fontSize);
+    static std::vector<std::string> WrapUtf8(const std::string &text, float width, int fontSize);
     RenderAssets();
     ~RenderAssets();
     void DrawMaterial(const RenderPoint (&vertices)[4], SurfaceMaterial material);

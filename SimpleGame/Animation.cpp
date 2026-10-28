@@ -308,6 +308,33 @@ AnimationWeights AnimationBlendSpace::Evaluate(const AnimationRig &rig, float le
 // ============================================================================
 // LayeredAnimation
 // ============================================================================
+void LayeredAnimation::PrepareGraph(std::vector<ResourceClip> &clips, const AnimationRig &rig)
+{
+    std::vector<bool> required(clips.size(), false);
+    auto require = [&](int index) {
+        if (index >= 0 && size_t(index) < required.size())
+        {
+            required[size_t(index)] = true;
+        }
+    };
+    for (int index : {rig.idle, rig.walk, rig.run, rig.aim, rig.fire, rig.melee, rig.carryIdle, rig.carryWalk,
+                      rig.carryRun, rig.reload})
+    {
+        require(index);
+    }
+    for (const auto &sample : rig.samples)
+    {
+        require(sample.clipIndex);
+    }
+    for (size_t index = 0; index < clips.size(); ++index)
+    {
+        if (required[index])
+        {
+            Prepare(clips[index], rig);
+        }
+    }
+}
+
 void LayeredAnimation::Prepare(ResourceClip &clip, const AnimationRig &rig)
 {
     size_t bones = rig.parents.size();

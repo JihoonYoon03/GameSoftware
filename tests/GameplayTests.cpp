@@ -28,6 +28,34 @@ namespace
 using namespace game;
 MineState &mineState = GameLevels::Mine().GetState();
 using tutorial::Vector2;
+void TestFrameScheduleAndTextCache()
+{
+    tutorial::FrameSchedule schedule;
+    double now = 0;
+    for (int frame = 0; frame < 6000; ++frame)
+    {
+        const double end = now + 4;
+        auto delay = schedule.NextDelay(now, end);
+        assert(delay >= 1 && delay <= 17);
+        now = end + delay;
+    }
+    assert(std::fabs(now - 100000) <= 1); // Update work must not accumulate on top of 60 Hz.
+    auto late = schedule.NextDelay(now + 500, now + 504);
+    assert(late >= 12 && late <= 13);
+    assert(schedule.NextDelay(now + 517, now + 550) == 1);
+
+    const std::string original = "한글 안내 ABC 123 · 긴 대사도 보존합니다.\n두 번째 줄입니다.";
+    auto expected = tutorial::Dialogue::Wrap(original, 135, 19);
+    const int width = RenderAssets::MeasureUtf8(original, 19);
+    for (int i = 0; i < 600; ++i)
+    {
+        tutorial::Dialogue::Wrap(original + std::to_string(i), 80 + i % 10, 16);
+    }
+    assert(tutorial::Dialogue::Wrap(original, 135, 19) == expected);
+    assert(RenderAssets::MeasureUtf8(original, 19) == width);
+    assert(tutorial::Dialogue::Wrap("", 135, 19) == std::vector<std::string>{""});
+}
+
 void ReadDialogue()
 {
     auto &d = tutorial::Game::Get().GetState().dialogue;
@@ -2029,6 +2057,7 @@ void TestAimMovementAndLayers()
 } // namespace
 int main(int argc, char **argv)
 {
+    TestFrameScheduleAndTextCache();
     static_assert(std::is_base_of<game::Level, game::MineLevel>::value);
     static_assert(!std::is_copy_constructible<game::MineLevel>::value);
     static_assert(std::is_base_of<game::Scene, game::MineScene>::value);
