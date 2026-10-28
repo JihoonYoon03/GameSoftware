@@ -70,7 +70,10 @@ node tools/check-resource-pack.mjs
 첫 명령은 런타임 캐시와 원본 SHA-256·모델 매핑을 담은 `Runtime/manifest.json`을 생성합니다.
 두 번째는 캐시·원본 해시가 일치하는지 검사하며 파일을 변경하지 않습니다. 게임 빌드/실행은 아닙니다.
 세 번째는 바이너리를 독립적으로 읽어 해시·정점·법선·가중치·소켓·지면·클립 경계를 검사합니다.
-Visual Studio 프로젝트는 빌드 후 두 파일을 실행 파일 옆 `Resource/Runtime`에 복사합니다.
+Visual Studio 프로젝트는 두 캐시 파일 중 하나라도 없으면 빌드 시작 시 자동 생성한 뒤,
+빌드 후 두 파일을 실행 파일 옆 `Resource/Runtime`에 복사합니다. 최초 생성에는 Node.js 18 이상이 필요합니다.
+Node.js가 PATH에 없다면 MSBuild의 `ResourcePackNodeExe` 속성에 `node.exe`의 전체 경로를 지정할 수 있습니다.
+런타임은 최대 512MiB 팩과 모델당 128개 애니메이션 클립을 허용하며, GPU 스킨 팔레트의 32본 제한은 유지합니다.
 게임 실행에 Node.js·Blender·GLB 파서가 필요한 것은 아닙니다.
 
 인물·차량·몹의 스킨은 4개 가중치와 최대 32개 본으로 출력하고, 선택한 GLB 클립을 30Hz 팔레트로 캐싱합니다.

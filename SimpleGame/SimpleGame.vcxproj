@@ -245,11 +245,18 @@
     </ItemGroup>
     <Copy SourceFiles="@(MonitorAsset)" DestinationFolder="$(OutDir)Monitor\" SkipUnchangedFiles="true" />
   </Target>
-  <Target Name="CopyGameResourcePack" AfterTargets="Build">
+  <Target Name="GenerateGameResourcePack" BeforeTargets="PrepareForBuild" Condition="!Exists('$(ProjectDir)..\Resource\Runtime\game-assets.bin') Or !Exists('$(ProjectDir)..\Resource\Runtime\manifest.json')">
+    <PropertyGroup>
+      <ResourcePackNodeExe Condition="'$(ResourcePackNodeExe)' == ''">node</ResourcePackNodeExe>
+    </PropertyGroup>
+    <Message Importance="high" Text="게임용 리소스 캐시를 생성합니다. 최초 빌드에는 시간이 걸릴 수 있습니다." />
+    <Exec Command="&quot;$(ResourcePackNodeExe)&quot; &quot;$(ProjectDir)..\tools\pack-resources.mjs&quot;" WorkingDirectory="$(ProjectDir)..\" />
+    <Error Condition="!Exists('$(ProjectDir)..\Resource\Runtime\game-assets.bin') Or !Exists('$(ProjectDir)..\Resource\Runtime\manifest.json')" Text="게임용 리소스 캐시 생성에 실패했습니다. Node.js 18 이상과 Resource/Export 원본을 확인하세요." />
+  </Target>
+  <Target Name="CopyGameResourcePack" AfterTargets="Build" DependsOnTargets="GenerateGameResourcePack">
     <ItemGroup>
       <GameResourcePack Include="$(ProjectDir)..\Resource\Runtime\game-assets.bin;$(ProjectDir)..\Resource\Runtime\manifest.json" />
     </ItemGroup>
-    <Error Condition="!Exists('$(ProjectDir)..\Resource\Runtime\game-assets.bin')" Text="게임용 리소스 캐시가 없습니다. node tools/pack-resources.mjs 로 생성하세요." />
     <Copy SourceFiles="@(GameResourcePack)" DestinationFolder="$(OutDir)Resource\Runtime\" SkipUnchangedFiles="true" />
   </Target>
   <ImportGroup Label="ExtensionTargets">

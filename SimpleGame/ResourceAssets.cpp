@@ -27,9 +27,15 @@ class Reader
   public:
     explicit Reader(const std::filesystem::path &path) : file(path, std::ios::binary | std::ios::ate)
     {
-        if (!file || file.tellg() < 12 || file.tellg() > 128 * 1024 * 1024)
+        if (!file)
         {
-            throw std::runtime_error("Resource pack missing/invalid: run tools/pack-resources.mjs");
+            throw std::runtime_error("Cannot open resource pack: " + path.u8string() +
+                                     ". Rebuild the game to generate and deploy Resource/Runtime.");
+        }
+        // Detailed geometry and the expanded human animation set exceed the old 128 MiB limit.
+        if (file.tellg() < 12 || file.tellg() > 512LL * 1024 * 1024)
+        {
+            throw std::runtime_error("Resource pack size outside 12 bytes to 512 MiB: " + path.u8string());
         }
         remaining = static_cast<size_t>(file.tellg());
         file.seekg(0);
@@ -124,7 +130,8 @@ struct Store
             }
             auto vertexCount = reader.Count(2000000);
             mesh.boneCount = reader.Count(31);
-            auto clipCount = reader.Count(32);
+            // Clip count is independent of the 32-joint GPU skin palette.
+            auto clipCount = reader.Count(128);
             reader.Read(&mesh.minimum);
             reader.Read(&mesh.maximum);
             reader.Read(&mesh.physicalSize);

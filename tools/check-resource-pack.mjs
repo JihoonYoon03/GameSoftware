@@ -33,6 +33,7 @@ function sourceTriangles(relative) {
 }
 assert.equal(manifest.schema, 'game_resource_pack_v1');
 assert.equal(data.length, manifest.bytes);
+assert.ok(data.length >= 12 && data.length <= 512 * 1024 * 1024, 'Resource pack exceeds runtime size limit');
 assert.equal(crypto.createHash('sha256').update(data).digest('hex'), manifest.sha256);
 let offset = 0, vertices = 0, animationFrames = 0;
 function u32() { const value = data.readUInt32LE(offset); offset += 4; return value; }
@@ -56,6 +57,7 @@ assert.equal(u32(), 1);
 const count = u32(), names = new Set();
 const signalDigests = new Set();
 assert.equal(count, manifest.assets.length);
+assert.ok(count <= 512, 'Resource pack exceeds runtime asset limit');
 for (let asset = 0; asset < count; ++asset) {
     const name = text(), source = text(), vertexCount = u32(), bones = u32(), clips = u32();
     const report = manifest.assets[asset];
@@ -65,7 +67,7 @@ for (let asset = 0; asset < count; ++asset) {
     assert.ok(!names.has(name)); names.add(name);
     assert.equal(name, report.name); assert.equal(source, report.source);
     assert.equal(vertexCount, report.triangles * 3); assert.equal(bones, report.bones);
-    assert.ok(vertexCount > 0 && vertexCount % 3 === 0 && bones < 32 && clips <= 32);
+    assert.ok(vertexCount > 0 && vertexCount <= 2000000 && vertexCount % 3 === 0 && bones < 32 && clips <= 128);
     const bounds = floats(6), physical = floats(3), sockets = floats(18);
     for (let axis = 0; axis < 3; ++axis) {
         assert.ok(bounds[axis] <= bounds[axis + 3]);
@@ -121,7 +123,6 @@ for (let asset = 0; asset < count; ++asset) {
     if (name.startsWith('character/')) for (const clip of ['Idle', 'Run', 'Aim_Base', 'Attack_Fire', 'Ride']) assert.ok(clipNames.includes(clip));
     if (recipe) {
         const sourceClips = glbDocument(source).animations.map(clip => clip.name);
-        assert.equal(sourceClips.length, 15, 'HUMAN_7H source animation set changed');
         assert.deepEqual(clipNames, [...sourceClips, 'Ride'], 'Human source animations must all survive conversion');
     }
     if (name.startsWith('vehicle/')) for (const clip of ['Hover_Idle', 'Cruise']) assert.ok(clipNames.includes(clip));
