@@ -11,11 +11,12 @@ for file,entry in [('Erma_Resource_Library.blend','16_Transit_Connected_Example'
     bpy.ops.wm.open_mainfile(filepath=str(ROOT/'Source'/file))
     assert bpy.context.scene.name==entry,(file,bpy.context.scene.name)
     assert expected<={a.name for a in bpy.data.actions},(file,'missing actions')
-    scenes=[s for s in bpy.data.scenes if s.name.startswith(('37_','38_','39_','40_','41_','42_'))]
-    assert len(scenes)==6
+    scenes=[s for s in bpy.data.scenes if s.name.startswith(('37_','38_','39_','40_','41_','42_','43_'))]
+    scene_count=7 if any(n.endswith('__Reload_Pistol') for n in expected) else 6
+    assert len(scenes)==scene_count
     result={'default_scene':entry,'human_actions':len(expected),'review_scenes':{}}
     if file=='Erma_Resource_Library.blend':assert len(bpy.data.objects['HUMAN_7H'].data.bones)==23
-    else:assert len(bpy.data.scenes)==6
+    else:assert len(bpy.data.scenes)==scene_count
     for scene in scenes:
         bpy.context.window.scene=scene
         assert scene.camera and scene.camera.name in scene.objects

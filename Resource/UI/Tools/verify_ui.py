@@ -23,7 +23,11 @@ for group in ['icons','hud_icons','components']:
         tree=ET.fromstring(source.read_text(encoding='utf8'))
         if tree.findall('.//{http://www.w3.org/2000/svg}text'): issues.append('Text baked in asset: '+name)
         files.extend([asset['svg'],asset['png']])
-if set(catalog)!={f'UI-{i:02d}' for i in range(1,24)}: issues.append('Incomplete UI coverage')
+if set(catalog)!={f'UI-{i:02d}' for i in range(1,26)}: issues.append('Incomplete UI coverage')
+text_flows=read('Source/text_flows.json')['flows']
+if any(not f['lossless'] or ''.join(f['lines'])!=f['source'].replace('\n','') for f in text_flows): issues.append('Text flow dropped source characters')
+locked=ET.fromstring((ROOT/'Source/Screens/35_weapon_wheel_locked.svg').read_text(encoding='utf8'))
+if any('권총' in ''.join(e.itertext()) for e in locked.findall('.//{http://www.w3.org/2000/svg}text')): issues.append('Unowned weapon revealed in locked wheel')
 for id,entry in catalog.items():
     if not entry['preview_screens']: issues.append('No preview for '+id)
     if not set(entry['icons']).issubset(manifest['icons']): issues.append('Unknown icon in '+id)
@@ -75,27 +79,28 @@ summary=dict(status='PASS' if not issues else 'FAIL',issues=issues,
     contrast=dict(target=4.5,colors='Active informational text only; disabled UI is excluded.',
                   content_alpha=.85,panel_min=manifest['opacity']['background']['min'],results=contrast_results,
                   note='Solid-color compositing estimate; anti-aliasing edges, patterned game backgrounds, live renderer and color vision are not certified.'),
-    scope='UI resources and browser previews only; no game executable or Runtime changes.')
+    text_flow_count=len(text_flows),text_lossless=all(f['lossless'] for f in text_flows),
+    scope='Resource/browser checks. Game-source checks are recorded separately in INTEGRATION_ko.md; user executable and model Runtime pack unchanged.')
 save('Validation/asset_report.json',summary)
 supported=[r['ratio'] for r in contrast_results if r['panel_alpha']>=manifest['opacity']['background']['min']]
-review=['# UI 가시성·HUD 개선 검수 기록', '', '2026-10-26 / ERMA FIELD INTERFACE v1.1', '',
-        '이번 기록은 v1.0의 카드 중심 레이아웃 검수를 대체한다. 실제 게임 연결은 검수 범위에 포함하지 않았다.', '',
+review=['# UI 디자인·원문 보존 검수 기록', '', '2026-10-28 / ERMA FIELD INTERFACE v1.2', '',
+        '기존 UI와 UI-24/25를 함께 검토했다. 제작 검수와 실제 게임 코드 검수의 범위는 구분한다.', '',
         '## 결과', '', f'**{summary["status"]}** — 한글 글리프 누락 {len(missing)}, 화면/지정 폭 이탈 {report["overflowCount"]}, 텍스트 겹침 {report["overlapCount"]}, 브라우저 오류 {len(report["pageErrors"])}.', '',
         f'- 일반 아이콘 {len(manifest["icons"])}종, 외곽선 포함 HUD 아이콘 {len(manifest["hud_icons"])}종, 공통 부품 {len(manifest["components"])}종, 대표 화면 {len(manifest["screens"])}개.',
         f'- Windows GDI로 맑은 고딕의 고유 문자 {len(characters)}종을 직접 검사했다. 대체 글꼴에 의존하는 누락 기호가 없다.',
-        '- 34개 화면의 실제 글자 폭과 텍스트끼리의 교차를 브라우저에서 측정했다. 한글 키 안내의 폭과 저체력 경고의 간격을 수정했다.',
-        '- 112개 개별 PNG의 알파 채널, 원본 SVG의 텍스트 분리, 23개 요구사항·139개 상태 계약을 검사했다.',
+        f'- {len(manifest["screens"])}개 화면의 실제 글자 폭·겹침과 {len(text_flows)}개 원문 줄바꿈 데이터의 글자 보존을 검사했다. 줄바꿈에는 단어 경계와 글꼴 측정 오차 여유를 적용했다.',
+        f'- 개별 PNG {len(report["assets"])}개의 알파 채널과 {len(catalog)}개 UI·{summary["state_count"]}개 상태 계약, 무기 미보유 화면의 권총 정보 비공개를 검사했다.',
         '- 대화는 1280×800 / 1920×1080 / 2560×1440에서 비율 유지 렌더와 캡처를 확인했다.',
         '- 도시·교전·광산·대화를 불투명도 60/80/94/100%에서 캡처했다. 80% 미만은 권장 범위 아래 스트레스 조건이다.',
         f'- 배경 80~100% / 내용 85%의 단색 패널 합성 대비는 최저 {min(supported):.3f}:1이다. 배경 없는 HUD는 별도의 검정 외곽선으로 윤곽을 보호하며 해당 패널 수치로 HUD 전체를 인증하지 않는다.', '',
         '## 전후 시야 점유', '', '| 상황 | 이전 UI 픽셀 비율 | 개선 후 | 점유 감소 |', '|---|---:|---:|---:|']
 for c in report.get('coverage',[]):
     review.append(f'| {c["scene"]} | {c["beforePercent"]:.2f}% | {c["afterPercent"]:.2f}% | {c["reductionPercent"]:.1f}% |')
-review += ['', '배경 도형을 제거한 투명 렌더에서 알파 0.1 이상의 픽셀 수를 비교했다. 미니맵·텍스트·게이지·표식을 포함하며 실제 게임 장면이나 플레이 성능의 측정은 아니다. [전후 비교](../Preview/HUD_before_after.png)와 [상세 수치](browser_report.json)를 확인할 수 있다.', '',
+review += ['', '배경 도형을 제거한 투명 렌더에서 알파 0.1 이상의 픽셀 수를 비교했다. 미니맵·텍스트·게이지·표식을 포함하며 실제 게임 장면이나 플레이 성능의 측정은 아니다. [전후 비교](../Preview/HUD_before_after_20261028.png)와 [상세 수치](browser_report.json)를 확인할 수 있다.', '',
            '## 육안 검토', '',
            '도시·광산·교전·무전 대화를 원래 크기로 검토하고 전체 화면 모음에서 메뉴와 정보 위계를 확인했다. 큰 체력·탄약 카드와 스캐너·수배·바이크 카드를 제거했다. 체력과 탄약의 앵커를 분리하고, 무전 중에도 위치를 유지한다. 체력 게이지는 12px, 핵심 수치는 28/38/44px, 대화 본문은 20px로 보강했다. 밝은 배경에는 글자와 아이콘의 검정 외곽선을 사용한다. 수배는 채운/빈 별로도 구분한다.', '',
            '## 남은 게임 통합', '',
-           '검토 배경은 약식 도형이다. 게임 소스·실행 파일·Runtime 캐시는 변경하지 않았다. 게임의 실제 장면·후처리·글꼴 렌더러·입력·옵션·동적 페이지 분리·데이터 공개 조건은 별도 연결 검증이 필요하다. [HUD 구현 명세](../HUD_IMPLEMENTATION_ko.md)를 따른다. UI-18~23은 후속 메뉴 디자인이며 연결 완료 기능으로 간주하지 않는다.', '',
+           '제작 배경은 약식 도형이다. 게임 코드에서는 알림·목표의 내용 보존, 타이틀·일시정지·무기 선택·스테이지 배치와 도움말 표시를 수정했다. 별도 GameplayTests와 숨겨진 WGL RenderingTests로 실제 게임 화면을 검토하고 `Validation/Game_20261028_Final`에 캡처했다. 사용자 실행 파일과 모델 Runtime 팩은 교체하지 않았다. 모든 제작 레이아웃의 게임 연결을 완료했다는 뜻은 아니다. 상세 범위는 `INTEGRATION_ko.md`를 따른다.', '',
            '대비 계산은 단색 sRGB 합성이며 모든 게임 패턴 배경·안티앨리어싱·색각 특성에 대한 인증이 아니다. 일반 상태 설명·악명 상세는 상시 노출하지 않으며, 실제 값과 노출 조건은 게임에서 받아야 한다.', '',
            '[브라우저 검사](browser_report.json) · [글리프·리소스·대비 검사](asset_report.json) · [파일 해시](sha256.json)']
 (ROOT/'Validation/REVIEW_ko.md').write_text('\n'.join(review)+'\n',encoding='utf-8')

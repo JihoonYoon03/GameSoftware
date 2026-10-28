@@ -189,6 +189,7 @@ struct CharacterPose
     bool blended = false;
     Gender gender = Gender::Male;
     float locomotionPhase = 0, moveLeft = 0, moveForward = 0, aimWeight = 0, fireSeconds = 0;
+    float reloadProgress = -1;
     Point Apply(Point point, Joint joint) const;
 };
 // ============================================================================

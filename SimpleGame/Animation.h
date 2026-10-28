@@ -49,6 +49,7 @@ struct AnimationRig
     std::vector<std::array<unsigned int, 3>> triangles;
     std::vector<SolePoint> soles;
     int idle = -1, walk = -1, run = -1, aim = -1, fire = -1, melee = -1, muzzle = -1;
+    int carryIdle = -1, carryWalk = -1, carryRun = -1, reload = -1;
 };
 struct AnimationWeights
 {

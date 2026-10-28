@@ -72,7 +72,8 @@ void Mix(PoseBuffer &a, const PoseBuffer &b, float weight, size_t bones)
         a[j] = AnimationMath::Blend(a[j], b[j], weight);
     }
 }
-void UpperLayer(const ResourceMesh &mesh, PoseBuffer &base, const PoseBuffer &layer, float alpha)
+void UpperLayer(const ResourceMesh &mesh, PoseBuffer &base, const PoseBuffer &layer, float alpha,
+                bool fullMask = false)
 {
     if (alpha <= 0)
     {
@@ -90,7 +91,7 @@ void UpperLayer(const ResourceMesh &mesh, PoseBuffer &base, const PoseBuffer &la
     for (size_t j = 0; j < rig.parents.size(); ++j)
     {
         // HUMAN_7H spine through muzzle: branch mask leaves root, pelvis and six leg bones intact.
-        float mask = j < 2 || j >= 17 ? 0.f : j == 2 ? .35f : j == 3 ? .75f : 1.f;
+        float mask = j < 2 || j >= 17 ? 0.f : fullMask ? 1.f : j == 2 ? .35f : j == 3 ? .75f : 1.f;
         float w = std::clamp(alpha * mask, 0.f, 1.f);
         BonePose local = AnimationMath::Blend(base[j], layer[j], w);
         if (w > 0)
@@ -373,6 +374,28 @@ void LayeredAnimation::Sample(const ResourceMesh &mesh, const CharacterPose &pos
             total += w;
         }
         Mix(base, aimPose, aim, mesh.boneCount);
+    }
+    if (pose.armed && rig.carryIdle >= 0 && rig.carryWalk >= 0 && rig.carryRun >= 0)
+    {
+        PoseBuffer carry{}, moving{};
+        if (speed <= 1.08f)
+        {
+            ClipPose(mesh, rig.carryIdle, pose.animationPhase / 10 / 2, true, carry);
+            ClipPose(mesh, rig.carryWalk, phase, true, moving);
+            Mix(carry, moving, std::clamp(speed / 1.08f, 0.f, 1.f), mesh.boneCount);
+        }
+        else
+        {
+            ClipPose(mesh, rig.carryWalk, phase, true, carry);
+            ClipPose(mesh, rig.carryRun, phase, true, moving);
+            Mix(carry, moving, std::clamp((speed - 1.08f) / (2.46f - 1.08f), 0.f, 1.f), mesh.boneCount);
+        }
+        ClipPose(mesh, rig.aim, 0, false, other);
+        Mix(carry, other, aim, mesh.boneCount);
+        UpperLayer(mesh, base, carry, 1, true);
+    }
+    else if (aim > 0)
+    {
         ClipPose(mesh, rig.aim, 0, false, other);
         UpperLayer(mesh, base, other, aim);
     }
@@ -381,6 +404,13 @@ void LayeredAnimation::Sample(const ResourceMesh &mesh, const CharacterPose &pos
     {
         ClipPose(mesh, rig.fire, 1 - std::clamp(fire / .4f, 0.f, 1.f), false, other);
         UpperLayer(mesh, base, other, Smooth(fire / .1f));
+    }
+    if (pose.armed && rig.reload >= 0 && pose.reloadProgress >= 0)
+    {
+        float progress = std::clamp(pose.reloadProgress, 0.f, 1.f);
+        ClipPose(mesh, rig.reload, progress, false, other);
+        float alpha = Smooth(progress * 1.4f / .15f) * Smooth((1 - progress) * 1.4f / .15f);
+        UpperLayer(mesh, base, other, alpha, true);
     }
     if (pose.meleeSeconds > 0)
     {

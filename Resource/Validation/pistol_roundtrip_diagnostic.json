@@ -1,0 +1,288 @@
+{
+  "characters": {
+    "Player_Explorer": {
+      "Pistol_Carry_Idle": {
+        "duration_seconds": 2.0,
+        "min_z_m": 0.0010001239133998752,
+        "root_error": 0,
+        "loop_error": 1.469575875346566e-18
+      },
+      "Pistol_Carry_Walk": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.0010003559291362762,
+        "root_error": 0,
+        "loop_error": 4.4087303898422784e-18
+      },
+      "Pistol_Carry_Run": {
+        "duration_seconds": 0.6666666666666666,
+        "min_z_m": 0.0010000821202993393,
+        "root_error": 0,
+        "loop_error": 4.408727308062489e-18
+      },
+      "Reload_Pistol": {
+        "duration_seconds": 1.4,
+        "min_z_m": 0.001000123331323266,
+        "root_error": 0,
+        "loop_error": null
+      }
+    },
+    "Ria_Engineer": {
+      "Pistol_Carry_Idle": {
+        "duration_seconds": 2.0,
+        "min_z_m": 0.0010001239133998752,
+        "root_error": 0,
+        "loop_error": 1.469575875346566e-18
+      },
+      "Pistol_Carry_Walk": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.0010003559291362762,
+        "root_error": 0,
+        "loop_error": 4.4087303898422784e-18
+      },
+      "Pistol_Carry_Run": {
+        "duration_seconds": 0.6666666666666666,
+        "min_z_m": 0.0010000821202993393,
+        "root_error": 0,
+        "loop_error": 4.408727308062489e-18
+      },
+      "Reload_Pistol": {
+        "duration_seconds": 1.4,
+        "min_z_m": 0.001000123331323266,
+        "root_error": 0,
+        "loop_error": null
+      }
+    },
+    "Kain_Guard": {
+      "Pistol_Carry_Idle": {
+        "duration_seconds": 2.0,
+        "min_z_m": 0.0010001239133998752,
+        "root_error": 0,
+        "loop_error": 1.469575875346566e-18
+      },
+      "Pistol_Carry_Walk": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.0010003559291362762,
+        "root_error": 0,
+        "loop_error": 4.4087303898422784e-18
+      },
+      "Pistol_Carry_Run": {
+        "duration_seconds": 0.6666666666666666,
+        "min_z_m": 0.0010000821202993393,
+        "root_error": 0,
+        "loop_error": 4.408727308062489e-18
+      },
+      "Reload_Pistol": {
+        "duration_seconds": 1.4,
+        "min_z_m": 0.001000123331323266,
+        "root_error": 0,
+        "loop_error": null
+      }
+    },
+    "Mara_Medic": {
+      "Pistol_Carry_Idle": {
+        "duration_seconds": 2.0,
+        "min_z_m": 0.0010001239133998752,
+        "root_error": 0,
+        "loop_error": 1.469575875346566e-18
+      },
+      "Pistol_Carry_Walk": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.0010003559291362762,
+        "root_error": 0,
+        "loop_error": 4.4087303898422784e-18
+      },
+      "Pistol_Carry_Run": {
+        "duration_seconds": 0.6666666666666666,
+        "min_z_m": 0.0010000821202993393,
+        "root_error": 0,
+        "loop_error": 4.408727308062489e-18
+      },
+      "Reload_Pistol": {
+        "duration_seconds": 1.4,
+        "min_z_m": 0.001000123331323266,
+        "root_error": 0,
+        "loop_error": null
+      }
+    },
+    "NPC_Researcher": {
+      "Pistol_Carry_Idle": {
+        "duration_seconds": 2.0,
+        "min_z_m": 0.0010001239133998752,
+        "root_error": 0,
+        "loop_error": 1.469575875346566e-18
+      },
+      "Pistol_Carry_Walk": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.0010003559291362762,
+        "root_error": 0,
+        "loop_error": 4.4087303898422784e-18
+      },
+      "Pistol_Carry_Run": {
+        "duration_seconds": 0.6666666666666666,
+        "min_z_m": 0.0010000821202993393,
+        "root_error": 0,
+        "loop_error": 4.408727308062489e-18
+      },
+      "Reload_Pistol": {
+        "duration_seconds": 1.4,
+        "min_z_m": 0.001000123331323266,
+        "root_error": 0,
+        "loop_error": null
+      }
+    },
+    "NPC_Miner": {
+      "Pistol_Carry_Idle": {
+        "duration_seconds": 2.0,
+        "min_z_m": 0.0010001239133998752,
+        "root_error": 0,
+        "loop_error": 1.469575875346566e-18
+      },
+      "Pistol_Carry_Walk": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.0010003559291362762,
+        "root_error": 0,
+        "loop_error": 4.4087303898422784e-18
+      },
+      "Pistol_Carry_Run": {
+        "duration_seconds": 0.6666666666666666,
+        "min_z_m": 0.0010000821202993393,
+        "root_error": 0,
+        "loop_error": 4.408727308062489e-18
+      },
+      "Reload_Pistol": {
+        "duration_seconds": 1.4,
+        "min_z_m": 0.001000123331323266,
+        "root_error": 0,
+        "loop_error": null
+      }
+    },
+    "NPC_Guard_Helmet": {
+      "Pistol_Carry_Idle": {
+        "duration_seconds": 2.0,
+        "min_z_m": 0.0010001239133998752,
+        "root_error": 0,
+        "loop_error": 1.469575875346566e-18
+      },
+      "Pistol_Carry_Walk": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.0010003559291362762,
+        "root_error": 0,
+        "loop_error": 4.4087303898422784e-18
+      },
+      "Pistol_Carry_Run": {
+        "duration_seconds": 0.6666666666666666,
+        "min_z_m": 0.0010000821202993393,
+        "root_error": 0,
+        "loop_error": 4.408727308062489e-18
+      },
+      "Reload_Pistol": {
+        "duration_seconds": 1.4,
+        "min_z_m": 0.001000123331323266,
+        "root_error": 0,
+        "loop_error": null
+      }
+    },
+    "NPC_HeavyCombat": {
+      "Pistol_Carry_Idle": {
+        "duration_seconds": 2.0,
+        "min_z_m": 0.0010001239133998752,
+        "root_error": 0,
+        "loop_error": 1.469575875346566e-18
+      },
+      "Pistol_Carry_Walk": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.0010003559291362762,
+        "root_error": 0,
+        "loop_error": 4.4087303898422784e-18
+      },
+      "Pistol_Carry_Run": {
+        "duration_seconds": 0.6666666666666666,
+        "min_z_m": 0.0010000821202993393,
+        "root_error": 0,
+        "loop_error": 4.408727308062489e-18
+      },
+      "Reload_Pistol": {
+        "duration_seconds": 1.4,
+        "min_z_m": 0.001000123331323266,
+        "root_error": 0,
+        "loop_error": null
+      }
+    },
+    "NPC_Pilot": {
+      "Pistol_Carry_Idle": {
+        "duration_seconds": 2.0,
+        "min_z_m": 0.0010001239133998752,
+        "root_error": 0,
+        "loop_error": 1.469575875346566e-18
+      },
+      "Pistol_Carry_Walk": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.0010003559291362762,
+        "root_error": 0,
+        "loop_error": 4.4087303898422784e-18
+      },
+      "Pistol_Carry_Run": {
+        "duration_seconds": 0.6666666666666666,
+        "min_z_m": 0.0010000821202993393,
+        "root_error": 0,
+        "loop_error": 4.408727308062489e-18
+      },
+      "Reload_Pistol": {
+        "duration_seconds": 1.4,
+        "min_z_m": 0.001000123331323266,
+        "root_error": 0,
+        "loop_error": null
+      }
+    },
+    "NPC_Civilian": {
+      "Pistol_Carry_Idle": {
+        "duration_seconds": 2.0,
+        "min_z_m": 0.0010001239133998752,
+        "root_error": 0,
+        "loop_error": 1.469575875346566e-18
+      },
+      "Pistol_Carry_Walk": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.0010003559291362762,
+        "root_error": 0,
+        "loop_error": 4.4087303898422784e-18
+      },
+      "Pistol_Carry_Run": {
+        "duration_seconds": 0.6666666666666666,
+        "min_z_m": 0.0010000821202993393,
+        "root_error": 0,
+        "loop_error": 4.408727308062489e-18
+      },
+      "Reload_Pistol": {
+        "duration_seconds": 1.4,
+        "min_z_m": 0.001000123331323266,
+        "root_error": 0,
+        "loop_error": null
+      }
+    }
+  },
+  "geometry_reference": "unchanged delivered GLB bind vertices driven by the authoring rig",
+  "max_source_reimport_bounds_error_m": 9.5367431640625e-07,
+  "all_checks_passed": false,
+  "worst_source_bounds_sample": {
+    "clip": "Pistol_Carry_Idle",
+    "phase": 0.875,
+    "part": "Weapon_CoilPistol_35cm",
+    "source": [
+      -0.45628705620765686,
+      -0.42186376452445984,
+      0.7108733654022217,
+      -0.37742021679878235,
+      -0.18024273216724396,
+      1.0752687454223633
+    ],
+    "actual": [
+      -0.45628663897514343,
+      -0.4218636751174927,
+      0.7108724117279053,
+      -0.3774198293685913,
+      -0.18024268746376038,
+      1.0752677917480469
+    ]
+  }
+}

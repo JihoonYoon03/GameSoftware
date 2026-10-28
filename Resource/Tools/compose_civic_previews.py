@@ -30,7 +30,7 @@ for clip in clips:
     for im in (images[:-1] if loops.get(clip,True) else images):
         frame=im.copy();ImageDraw.Draw(frame).text((15,15),clip,font=font(20),fill=(239,245,239));gif.append(frame.quantize(colors=192))
     duration=lengths.get(clip,1.4 if clip.startswith('GetUp') else .8)
-    options={} if clip.startswith('Death_') else {'loop':0}
+    options={} if clip.startswith('Death_') or clip=='Reload_Pistol' else {'loop':0}
     # GIF delays use 10 ms ticks; distribute the rounding error so a 1 s walk
     # does not silently play in 0.9 s after integer-delay quantization.
     ticks=round(duration*100)

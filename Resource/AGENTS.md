@@ -15,6 +15,9 @@
 
 ## 도구·저장
 
+- 애니메이션 제작의 기본 레퍼런스는 Mixamo의 공개 동작 미리보기(`https://www.mixamo.com/`)이다. 제작 전 해당 동작을 실제로 확인하고 클립 이름·확인 날짜·참고한 자세/타이밍을 납품 문서에 기록한다. 기존 리그에 직접 키를 제작하는 경우와 파일을 가져와 리타기팅하는 경우를 구분해 적는다. 레퍼런스를 확인할 수 없으면 확인했다고 주장하지 않는다.
+- 추가 모션은 최신 요청서 `ANIMATION_BLEND_REQUEST.md`와 납품 목록을 대조해 선정한다. 이미 있는 후진/스트레이프를 중복 제작하지 않는다. 새 상체 레이어는 기존 하체와 59개 선행 클립, 23본·바인드·스킨·부품을 보존한다. 이후 추가된 클립도 같은 보존 원칙을 적용한다.
+
 - 재사용 제작 모듈: `Tools/detail_mesh_pipeline.py`. `build_air_city_expansion.py`, `build_refined_city_assets.py`, `build_character_detail_expansion.py`에 적용되어 있다. 지상 차량 5종·비행체·도시 프롭·선별한 기존 건축/가구·새 건축 5종과 인체 관련 기존 785개 파트를 갱신했다. 생물·통행로 전체를 다시 제작한 상태는 아니다.
 - 상세 원칙·현재 적용 범위: `Documentation/MODELING_PIPELINE_ko.md`.
 - Blender의 `17_Detail_Sources`에 개별 원본, `18_Detail_Comparison`에 이전/원본/최적화 비교가 있다.
@@ -26,7 +29,7 @@
 - RoadPlan 독립 파일은 append 전용 데이터 라이브러리가 아니라 바로 열리는 일반 프로젝트로 저장한다. `road_plan_source.write_project`의 인메모리 정리는 마스터 저장 후 독립 도로 프로젝트에만 저장한다. 메인 원본의 기존 자산과 기본 장면은 보존한다.
 - 재제작 순서: 공통 원본 → air/city → transit → refined city → character detail. 앞 단계 제작 도구는 뒤 단계의 조립체를 자동 갱신하지 않으므로 뒤 단계를 다시 실행하고 검증한다.
 - 기존 라이브러리를 열어 해당 제작 도구가 소유한 데이터만 갱신한다. 다른 확장·본·재질·조립 데이터·기본 진입 장면을 보존한다.
-- 도시 반응 애니메이션은 `Tools/civic_motion.py`, `build_civic_animations.py`가 소유한다. 인체는 기존 43개에 조준 이동 16개를 더한 59개 클립이며, 차량 반응 액션 21개를 유지한다. 방향별 이동은 `Documentation/aim_locomotion_blending.json`을 따르며 몸의 조준 방향을 고정하고 위상을 공유한다. `Documentation/civic_animation_contract.json`과 `CIVIC_ANIMATION_GUIDE_ko.md`를 따른다. 30fps 편집 타임라인에 반 프레임 키를 두고 GLB는 60Hz로 샘플링한다. 원래 본/바인드/메시/스킨/장비 오프셋과 메인 진입 장면은 보존한다. `Source/Civic_Animations.blend`는 직접 열어 재생하는 별도 검토 프로젝트다. 게임이 합성하는 Ride와 이름이 겹치지 않도록 새 기준은 Ride_Base이며 자동 연결하지 않는다. 새 반응의 루트 이동·yaw, 차량 차체/좌석 이동을 만들지 않는다.
+- 도시 반응 애니메이션은 `Tools/civic_motion.py`, `build_civic_animations.py`가 소유한다. 인체는 기존 43개 + 조준 이동 16개 + 권총 운반/재장전 4개의 총 63클립이며, 차량 반응 액션 21개를 유지한다. 권총 확장은 `Tools/pistol_layer_motion.py`, `build_pistol_layers.py`, `publish_pistol_layers.py`, `append_pistol_animations.py`가 소유하며 `Documentation/PISTOL_LAYERS_ko.md`를 따른다. 방향별 이동은 `Documentation/aim_locomotion_blending.json`을 따르며 몸의 조준 방향을 고정하고 위상을 공유한다. `Documentation/civic_animation_contract.json`과 `CIVIC_ANIMATION_GUIDE_ko.md`를 따른다. 30fps 편집 타임라인에 반 프레임 키를 두고 GLB는 60Hz로 샘플링한다. 원래 본/바인드/메시/스킨/장비 오프셋과 메인 진입 장면은 보존한다. `Source/Civic_Animations.blend`는 직접 열어 재생하는 별도 검토 프로젝트다. 게임이 합성하는 Ride와 이름이 겹치지 않도록 새 기준은 Ride_Base이며 자동 연결하지 않는다. 새 반응의 루트 이동·yaw, 차량 차체/좌석 이동을 만들지 않는다.
 - 파트 공통 원점·미터 단위·축·본 이름과 통행로 접속 좌표를 지킨다. 원점 재중앙화와 임의 비율 변경을 하지 않는다.
 
 ## 확정된 아트 방향

@@ -1,0 +1,792 @@
+{
+  "version": "1.2.0",
+  "font": "Malgun Gothic",
+  "flows": [
+    {
+      "role": "selection_row",
+      "source": "서장 · 헤일로 시작",
+      "lines": [
+        "서장 · 헤일로 시작"
+      ],
+      "width": 474,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "전망대 · 스테이지 시작",
+      "lines": [
+        "전망대 · 스테이지 시작"
+      ],
+      "width": 474,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "바이크 해금 · 광산 출발",
+      "lines": [
+        "바이크 해금 · 광산 출발"
+      ],
+      "width": 474,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "권총 해금 · 광산 입구",
+      "lines": [
+        "권총 해금 · 광산 입구"
+      ],
+      "width": 474,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "광산 · 스테이지 시작",
+      "lines": [
+        "광산 · 스테이지 시작"
+      ],
+      "width": 474,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "1장 · 빛나는 개척지 시작",
+      "lines": [
+        "1장 · 빛나는 개척지 시작"
+      ],
+      "width": 474,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "stage_detail",
+      "source": "권총 해금 · 광산 입구",
+      "lines": [
+        "권총 해금 · 광산 입구"
+      ],
+      "width": 328,
+      "size": 24,
+      "weight": 700,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "stage_description",
+      "source": "광산 입구 야외에서 시작합니다. 권총을 보유하지만 기본 장착은 맨손입니다.",
+      "lines": [
+        "광산 입구 야외에서 시작합니다. 권총을 ",
+        "보유하지만 기본 장착은 맨손입니다."
+      ],
+      "width": 328,
+      "size": 16,
+      "weight": 400,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "stage_warning",
+      "source": "선택 시 현재 진행이 초기화됩니다. 이전 필수 스토리는 완료 처리됩니다.",
+      "lines": [
+        "선택 시 현재 진행이 초기화됩니다. 이전 필수 스토리는 완료 처리됩니다."
+      ],
+      "width": 1088,
+      "size": 16,
+      "weight": 400,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "뒤로",
+      "lines": [
+        "뒤로"
+      ],
+      "width": 92,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "새 게임",
+      "lines": [
+        "새 게임"
+      ],
+      "width": 352,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "스테이지 목록 · 테스트",
+      "lines": [
+        "스테이지 목록 · 테스트"
+      ],
+      "width": 352,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "옵션",
+      "lines": [
+        "옵션"
+      ],
+      "width": 352,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "조작 안내",
+      "lines": [
+        "조작 안내"
+      ],
+      "width": 352,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "종료",
+      "lines": [
+        "종료"
+      ],
+      "width": 352,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "help_action",
+      "source": "이동 · 이동 방향 회전",
+      "lines": [
+        "이동 · 이동 방향 회전"
+      ],
+      "width": 500,
+      "size": 16,
+      "weight": 400,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "help_action",
+      "source": "커서 조준",
+      "lines": [
+        "커서 조준"
+      ],
+      "width": 500,
+      "size": 16,
+      "weight": 400,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "help_action",
+      "source": "장착 무기 공격",
+      "lines": [
+        "장착 무기 공격"
+      ],
+      "width": 500,
+      "size": 16,
+      "weight": 400,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "help_action",
+      "source": "무기 선택 · Q 해제로 장착",
+      "lines": [
+        "무기 선택 · Q 해제로 장착"
+      ],
+      "width": 500,
+      "size": 16,
+      "weight": 400,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "help_action",
+      "source": "근접 공격 / 재장전",
+      "lines": [
+        "근접 공격 / 재장전"
+      ],
+      "width": 500,
+      "size": 16,
+      "weight": 400,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "help_action",
+      "source": "회복 · 광산과 1장",
+      "lines": [
+        "회복 · 광산과 1장"
+      ],
+      "width": 500,
+      "size": 16,
+      "weight": 400,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "help_action",
+      "source": "대화 · 조사 · 승하차",
+      "lines": [
+        "대화 · 조사 · 승하차"
+      ],
+      "width": 500,
+      "size": 16,
+      "weight": 400,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "help_action",
+      "source": "광산 스캔 / 전체 지도",
+      "lines": [
+        "광산 스캔 / 전체 지도"
+      ],
+      "width": 500,
+      "size": 16,
+      "weight": 400,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "help_action",
+      "source": "조사 기록 / 대사 이력",
+      "lines": [
+        "조사 기록 / 대사 이력"
+      ],
+      "width": 500,
+      "size": 16,
+      "weight": 400,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "help_action",
+      "source": "일시정지 · 닫기",
+      "lines": [
+        "일시정지 · 닫기"
+      ],
+      "width": 500,
+      "size": 16,
+      "weight": 400,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "help_note",
+      "source": "Q는 무기 선택, G는 회복입니다. 대화는 E/Enter로 다음 페이지를 읽고, 숫자로 선택한 뒤 확정합니다.",
+      "lines": [
+        "Q는 무기 선택, G는 회복입니다. 대화는 E/Enter로 다음 페이지를 읽고, 숫자로 선택한 뒤 확정합니다."
+      ],
+      "width": 1088,
+      "size": 16,
+      "weight": 400,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "dialogue_body_full",
+      "source": "관문 N-0의 신호와 외곽 설비 N-0/17의 기록은 서로 달라. 둘을 같은 장소로 보고 조사하면 안 돼. 먼저 발전기의 수신 기록을 확인하자. 확인하지 못한 내용은 조사 기록에 추정으로 남겨 둘게. 현장에서 확인한 사실과 다음 행동을 빠짐없이 기록한 뒤, 안전한 곳에서 나머지 기록도 다시 읽어 보자.",
+      "lines": [
+        "관문 N-0의 신호와 외곽 설비 N-0/17의 기록은 서로 달라. 둘을 같은 장소로 보고 ",
+        "조사하면 안 돼. 먼저 발전기의 수신 기록을 확인하자. 확인하지 못한 내용은 조사 ",
+        "기록에 추정으로 남겨 둘게. 현장에서 확인한 사실과 다음 행동을 빠짐없이 기록한 뒤, ",
+        "안전한 곳에서 나머지 기록도 다시 읽어 보자."
+      ],
+      "width": 800,
+      "size": 20,
+      "weight": 400,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "long_choice_full",
+      "source": "조사 기록을 끝까지 확인한 뒤, 세 현장의 발전기·운송대·폐설비에서 수집한 내용을 대조하고 헤일로 수신망에서 리아에게 보고한다.",
+      "lines": [
+        "조사 기록을 끝까지 확인한 뒤, 세 현장의 발전기·운송대·폐설비에서 수집한 내용을 ",
+        "대조하고 헤일로 수신망에서 리아에게 보고한다."
+      ],
+      "width": 754,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false,
+      "pages_note": "Every body line and choice line is rendered across named review screens; no tail is discarded."
+    },
+    {
+      "role": "selection_row",
+      "source": "관문 N-0의 수신 기록",
+      "lines": [
+        "관문 N-0의 수신 기록"
+      ],
+      "width": 212,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "발전기 조사",
+      "lines": [
+        "발전기 조사"
+      ],
+      "width": 212,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "운송대 구조",
+      "lines": [
+        "운송대 구조"
+      ],
+      "width": 212,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "journal_fact",
+      "source": "N-0은 관문을 가리키고 N-0/17은 외곽 설비의 식별 번호다. 아직 조사하지 않은 내용과 추정은 확인한 사실로 기록하지 않는다.",
+      "lines": [
+        "N-0은 관문을 가리키고 N-0/17은 외곽 설비의 식별 번호다. 아직 조사하지 ",
+        "않은 내용과 추정은 확인한 사실로 기록하지 않는다."
+      ],
+      "width": 698,
+      "size": 20,
+      "weight": 400,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "journal_next_action",
+      "source": "세 현장의 기록을 대조하고, 헤일로 수신망에서 리아에게 조사 결과를 보고한다.",
+      "lines": [
+        "세 현장의 기록을 대조하고, 헤일로 수신망에서 리아에게 조사 결과를 ",
+        "보고한다."
+      ],
+      "width": 698,
+      "size": 20,
+      "weight": 400,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "켜짐",
+      "lines": [
+        "켜짐"
+      ],
+      "width": 404,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "기본",
+      "lines": [
+        "기본"
+      ],
+      "width": 404,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "켜짐",
+      "lines": [
+        "켜짐"
+      ],
+      "width": 404,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "뒤로",
+      "lines": [
+        "뒤로"
+      ],
+      "width": 92,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "뒤로",
+      "lines": [
+        "뒤로"
+      ],
+      "width": 92,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "계속하기",
+      "lines": [
+        "계속하기"
+      ],
+      "width": 420,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "스테이지 목록 · 테스트",
+      "lines": [
+        "스테이지 목록 · 테스트"
+      ],
+      "width": 420,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "옵션",
+      "lines": [
+        "옵션"
+      ],
+      "width": 420,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "보유 · 성장 정보",
+      "lines": [
+        "보유 · 성장 정보"
+      ],
+      "width": 420,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "조작 안내",
+      "lines": [
+        "조작 안내"
+      ],
+      "width": 420,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "헤일로 귀환 · 기록 유지",
+      "lines": [
+        "헤일로 귀환 · 기록 유지"
+      ],
+      "width": 420,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "종료",
+      "lines": [
+        "종료"
+      ],
+      "width": 420,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "계속하기",
+      "lines": [
+        "계속하기"
+      ],
+      "width": 420,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "스테이지 목록 · 테스트",
+      "lines": [
+        "스테이지 목록 · 테스트"
+      ],
+      "width": 420,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "옵션",
+      "lines": [
+        "옵션"
+      ],
+      "width": 420,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "보유 · 성장 정보",
+      "lines": [
+        "보유 · 성장 정보"
+      ],
+      "width": 420,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "조작 안내",
+      "lines": [
+        "조작 안내"
+      ],
+      "width": 420,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "광산 재시작",
+      "lines": [
+        "광산 재시작"
+      ],
+      "width": 420,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "종료",
+      "lines": [
+        "종료"
+      ],
+      "width": 420,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "계속하기",
+      "lines": [
+        "계속하기"
+      ],
+      "width": 420,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "스테이지 목록 · 테스트",
+      "lines": [
+        "스테이지 목록 · 테스트"
+      ],
+      "width": 420,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "옵션",
+      "lines": [
+        "옵션"
+      ],
+      "width": 420,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "보유 · 성장 정보",
+      "lines": [
+        "보유 · 성장 정보"
+      ],
+      "width": 420,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "조작 안내",
+      "lines": [
+        "조작 안내"
+      ],
+      "width": 420,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "다시 시작 · 진행 초기화",
+      "lines": [
+        "다시 시작 · 진행 초기화"
+      ],
+      "width": 420,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "selection_row",
+      "source": "종료",
+      "lines": [
+        "종료"
+      ],
+      "width": 420,
+      "size": 16,
+      "weight": 600,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "history_full",
+      "source": "수신 기록은 확인했어. 다음은 발전기야.",
+      "lines": [
+        "수신 기록은 확인했어. 다음은 발전기야."
+      ],
+      "width": 906,
+      "size": 20,
+      "weight": 400,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "history_full",
+      "source": "보조 전력 복구를 확인했습니다.",
+      "lines": [
+        "보조 전력 복구를 확인했습니다."
+      ],
+      "width": 906,
+      "size": 20,
+      "weight": 400,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "history_full",
+      "source": "아직은 결론을 내리지 말자. 세 현장의 기록을 더 대조해야 해.",
+      "lines": [
+        "아직은 결론을 내리지 말자. 세 현장의 기록을 더 대조해야 해."
+      ],
+      "width": 906,
+      "size": 20,
+      "weight": 400,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "unlock_notice_full",
+      "source": "권총을 받았습니다. Q를 누른 채 마우스로 보조 무장을 가리키고, Q를 놓으면 장착됩니다.",
+      "lines": [
+        "권총을 받았습니다. Q를 누른 채 ",
+        "마우스로 보조 무장을 가리키고, ",
+        "Q를 놓으면 장착됩니다."
+      ],
+      "width": 290,
+      "size": 16,
+      "weight": 400,
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "role": "notice_all_pages",
+      "source": "헤일로 수신망에 조사 기록을 전달했습니다. 발전기·운송대·폐설비의 현장 기록을 모두 확인한 다음 리아에게 보고하세요. 확인한 기록은 의료 이송 뒤에도 유지됩니다. 아직 읽지 않은 중요한 대화는 안전한 곳에서 이어 읽을 수 있습니다.",
+      "lines": [
+        "헤일로 수신망에 조사 기록을 ",
+        "전달했습니다. ",
+        "발전기·운송대·폐설비의 현장 ",
+        "기록을 모두 확인한 다음 리아에게 ",
+        "보고하세요. 확인한 기록은 의료 ",
+        "이송 뒤에도 유지됩니다. 아직 읽지 ",
+        "않은 중요한 대화는 안전한 곳에서 ",
+        "이어 읽을 수 있습니다."
+      ],
+      "width": 294,
+      "size": 16,
+      "weight": 400,
+      "lossless": true,
+      "ellipsis": false
+    }
+  ],
+  "policy": "Lossless wrap/expand/paginate; never ellipsize required information"
+}

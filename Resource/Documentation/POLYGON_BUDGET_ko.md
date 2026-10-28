@@ -26,7 +26,7 @@
 
 ## 원본과 납품본
 
-`Source/Erma_Resource_Library.blend`의 `asset_id`가 있는 납품 파트와 모든 조립 예제, `Source/Civic_Animations.blend`, `Source/RoadPlan_Modules.blend`, 모든 Export GLB에 같은 형상을 반영했습니다. 조립 레시피·본·오프셋은 유지합니다. 인물 GLB 10개에는 상체 개선과 16개 방향별 조준 이동을 별도로 반영해 각 59클립이며, 나머지 애니메이션 GLB 25개의 클립 표본은 변경 전과 같습니다.
+`Source/Erma_Resource_Library.blend`의 `asset_id`가 있는 납품 파트와 모든 조립 예제, `Source/Civic_Animations.blend`, `Source/RoadPlan_Modules.blend`, 모든 Export GLB에 같은 형상을 반영했습니다. 조립 레시피·본·오프셋은 유지합니다. 인물 GLB 10개는 상체 개선·16개 방향별 조준 이동을 포함한 59클립에 2026-10-28 권총 운반/재장전 4개를 더해 각 63클립입니다. 이번 추가는 메시·스킨·바인드를 보존합니다. 나머지 애니메이션 GLB 25개의 클립 표본은 변경 전과 같습니다.
 
 편집용 상세 원본 장면(17/24/25/36)과 로컬 `Source/Archives/Pre200Delivery_20261026.zip`은 비교·복구용입니다. 대용량 백업 ZIP은 Git에서 제외하며 필요할 때 별도로 전달합니다. 게임 빌드에는 필요하지 않습니다. 상세 원본에는 200 상한을 강제하지 않으며 납품 파트로 내보내지 않습니다. 이것을 더 가벼운 납품본 대신 사용하지 마십시오.
 

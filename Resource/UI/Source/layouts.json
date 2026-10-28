@@ -31,6 +31,7 @@
         32,
         690
       ],
+      "critical_key": "G",
       "critical_condition": "health/max_health <= 0.25",
       "current_px": 28,
       "draw_order": "track,clipped_fill,icon,current,max,optional_critical",
@@ -311,6 +312,75 @@
       ],
       "body_width": 600,
       "row_height": 46
+    },
+    "weapon_wheel": {
+      "center": [
+        640,
+        390
+      ],
+      "inner_radius": 87,
+      "outer_radius": 224,
+      "sector_span_degrees": 114,
+      "sector_centers_degrees": {
+        "primary": -90,
+        "secondary": 30,
+        "unarmed": 150
+      },
+      "labels": "separate runtime text, no baked labels",
+      "input": "Q hold + mouse; release commit; Esc cancel",
+      "layer_order": [
+        "dim",
+        "sectors",
+        "equipped_marker",
+        "hover_outline",
+        "icons",
+        "labels",
+        "instructions"
+      ]
+    },
+    "stages": {
+      "rect": [
+        64,
+        48,
+        1152,
+        704
+      ],
+      "rows_origin": [
+        96,
+        211
+      ],
+      "row_size": [
+        652,
+        52
+      ],
+      "row_stride": 62,
+      "description_rect": [
+        824,
+        214,
+        328,
+        350
+      ],
+      "warning": [
+        96,
+        636
+      ],
+      "back": [
+        96,
+        678,
+        170,
+        52
+      ]
+    },
+    "text_flow": {
+      "source": "Source/text_flows.json",
+      "wrap": "actual Malgun Gothic glyph advances",
+      "overflow": "expand or retain every line across numbered pages",
+      "ellipsis": false,
+      "notice_lines_per_page": 4,
+      "notice_seconds_per_page": 6,
+      "short_notice_seconds": 4,
+      "objective_lines_per_page": 2,
+      "objective_seconds_per_page": 5
     }
   },
   "transform": "scale=min(viewport_w/1280,viewport_h/800); offset=(viewport-canvas*scale)/2; apply to drawing and inverse to input",

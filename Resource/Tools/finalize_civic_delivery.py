@@ -77,12 +77,21 @@ for i,direction in enumerate(['Forward','ForwardLeft','Left','BackLeft','Back','
     text_label(c,direction,(xy[0],xy[1]-.7,.01),.16)
 s.frame_end=30;s.frame_set(7);s['instructions']='All actors face -Y. Aim_Walk/Aim_Run directional clips share phase zero = left contact. Scene 30 fps; movement and yaw belong to the game.'
 
+if bpy.data.actions.get('HUMAN_7H__Reload_Pistol'):
+    s,c=newscene('43_Pistol_Carry_Reload_Review',(3.5,-7,3.0),(0,0,1),5.2,(1200,850))
+    for name,x,info in [('Player',-1.0,recipes['Player_Explorer']),('Heavy',1.0,recipes['NPC_HeavyCombat'])]:
+        rig,obs=actor('Pistol_Review_'+name,c,(x,0,0),info)
+        bind(rig,bpy.data.actions['HUMAN_7H__Reload_Pistol'])
+        text_label(c,name+' / RELOAD',(x,-.62,.01),.16)
+    s.frame_end=42;s.frame_set(20)
+    s['instructions']='Reload_Pistol: 42 frames. Select Pistol_Carry_Idle/Walk/Run for 60/30/20-frame loops. Upper-body mask excludes root/pelvis/legs. Ammo remains game-owned.'
+
 # Actual muzzle positions, sampled from the baked rig at 60 Hz. No runtime VFX
 # geometry is created; the consumer can attach the existing 2D billboard here.
 scene=bpy.data.scenes.new('Civic_Socket_Track_Evaluation');scene.render.fps=30
 scene.collection.objects.link(human);bpy.context.window.scene=scene
 tracks={}
-for clip in ['Aim_Base','Attack_Fire','Security_StunFire','Hit_Front','Hit_Back','Hit_Left','Hit_Right']+[c['clip'] for c in meta['HUMAN_7H'] if c['clip'].startswith(('Aim_Walk_','Aim_Run_'))]:
+for clip in ['Aim_Base','Attack_Fire','Security_StunFire','Hit_Front','Hit_Back','Hit_Left','Hit_Right']+[c['clip'] for c in meta['HUMAN_7H'] if c['clip'].startswith(('Aim_Walk_','Aim_Run_','Pistol_Carry_')) or c['clip']=='Reload_Pistol']:
     action=bpy.data.actions['HUMAN_7H__'+clip];bind(human,action)
     end=action.frame_range[1];rows=[]
     for i in range(round(end*2)+1):
@@ -100,7 +109,7 @@ bpy.data.scenes.remove(scene)
 bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/'Source/Erma_Resource_Library.blend'),compress=True)
 
 # Prune only in memory after saving the master, then save a normal project.
-owned=[s for s in bpy.data.scenes if s.name.startswith(('37_','38_','39_','40_','41_','42_'))]
+owned=[s for s in bpy.data.scenes if s.name.startswith(('37_','38_','39_','40_','41_','42_','43_'))]
 bpy.context.window.scene=bpy.data.scenes['37_Civic_Animation_Review']
 for s in list(bpy.data.scenes):
     if s not in owned:bpy.data.scenes.remove(s)

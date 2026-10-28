@@ -1932,12 +1932,12 @@ void CivicPresentation::DrawWorld()
         {
             continue;
         }
-        Drawing::DrawPerson(officer.position, {.18f, .36f, .48f}, false,
-                            officer.tier >= 3 ? models::CharacterType::HeavyCombat
-                                              : models::CharacterType::Guard,
-                            officer.facing.walking, officer.facing.yaw, models::Gender::Male,
-                            models::HairStyle::Buzz, true, officer.muzzleFlash,
-                            officer.health <= 0 || officer.impact.response == BodyResponse::Knockdown, 2.5f);
+        Drawing::DrawPerson(
+            officer.position, {.18f, .36f, .48f}, false,
+            officer.tier >= 3 ? models::CharacterType::HeavyCombat : models::CharacterType::Guard,
+            officer.facing.walking, officer.facing.yaw, models::Gender::Male, models::HairStyle::Buzz, true,
+            officer.muzzleFlash, officer.health <= 0 || officer.impact.response == BodyResponse::Knockdown,
+            2.5f, officer.weapon.IsReloading() ? officer.weapon.GetReloadProgress() : -1);
     }
     renderer.EndModels();
     for (const auto &hospital : civic.hospitals)

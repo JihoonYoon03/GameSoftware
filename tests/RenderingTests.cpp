@@ -138,6 +138,70 @@ void TestAnimationBlending()
     const auto &mesh = ResourceAssets::Get(id);
     assert(mesh.rig && mesh.rig->samples.size() == 17 && mesh.rig->triangles.size() == 24);
     const auto &rig = *mesh.rig;
+    assert(rig.carryIdle >= 0 && rig.carryWalk >= 0 && rig.carryRun >= 0 && rig.reload >= 0);
+    // Delivered carry/reload layers must leave the simulated lower body untouched.
+    for (auto gender : {Gender::Male, Gender::Female})
+    {
+        auto character = ModelLibrary::Character(CharacterType::Explorer, gender).resourceId;
+        for (float speed : {0.f, .6f, 1.08f, 1.8f, 2.46f})
+        {
+            auto carry = ModelRig::Pose(2, true, true, 0, false, gender);
+            carry.blended = true;
+            carry.moveForward = speed;
+            carry.locomotionPhase = .31f;
+            carry.aimWeight = 0;
+            SkinMatrices carrying, unarmed, reloading;
+            ResourceAssets::Sample(character, &carry, carrying);
+            auto empty = carry;
+            empty.armed = false;
+            ResourceAssets::Sample(character, &empty, unarmed);
+            float upperDifference = 0;
+            for (size_t j = 2 * 16; j < 17 * 16; ++j)
+            {
+                upperDifference += std::fabs(carrying[j] - unarmed[j]);
+            }
+            assert(upperDifference > .05f);
+            for (size_t bone = 0; bone < mesh.boneCount; ++bone)
+            {
+                if (bone < 2 || bone >= 17)
+                {
+                    for (size_t c = 0; c < 16; ++c)
+                    {
+                        assert(std::fabs(carrying[bone * 16 + c] - unarmed[bone * 16 + c]) < .0001f);
+                    }
+                }
+            }
+            for (float aim : {0.f, .5f, 1.f})
+            {
+                carry.aimWeight = aim;
+                ResourceAssets::Sample(character, &carry, carrying);
+                for (float progress : {0.f, .3f, .67f, .8f, 1.f})
+                {
+                    auto reload = carry;
+                    reload.reloadProgress = progress;
+                    ResourceAssets::Sample(character, &reload, reloading);
+                    float difference = 0;
+                    for (size_t bone = 0; bone < mesh.boneCount; ++bone)
+                    {
+                        for (size_t c = 0; c < 16; ++c)
+                        {
+                            float d = std::fabs(carrying[bone * 16 + c] - reloading[bone * 16 + c]);
+                            assert(std::isfinite(reloading[bone * 16 + c]));
+                            if (bone < 2 || bone >= 17 || progress == 0 || progress == 1)
+                            {
+                                assert(d < .0001f);
+                            }
+                            difference += d;
+                        }
+                    }
+                    if (progress > 0 && progress < 1)
+                    {
+                        assert(difference > .05f);
+                    }
+                }
+            }
+        }
+    }
     auto reference = ModelRig::Pose(0, false, true);
     SkinMatrices referenceSkin;
     ResourceAssets::Sample(id, &reference, referenceSkin);
@@ -1405,7 +1469,7 @@ void CaptureDeliveredUi(const std::filesystem::path &output)
     auto &g = Game::Get();
     auto &w = g.GetState();
     auto &renderer = GameRenderer::Get().Backend();
-    assert(renderer.UiSpriteCount() >= 112);
+    assert(renderer.UiSpriteCount() >= 127);
     auto draw = [&](const char *name) {
         Begin();
         game::SceneManager::Get(game::SceneManager::Current()).Draw();
@@ -1424,6 +1488,8 @@ void CaptureDeliveredUi(const std::filesystem::path &output)
     draw("ui-title.bmp");
     Hud::OpenMenu(UiScreen::Stages);
     draw("ui-stages.bmp");
+    w.ui.focus = int(TestStage::WeaponUnlocked);
+    draw("ui-stages-weapon-unlocked.bmp");
     Hud::OpenMenu(UiScreen::Pause);
     draw("ui-pause.bmp");
     Hud::OpenMenu(UiScreen::Options);
@@ -1453,11 +1519,31 @@ void CaptureDeliveredUi(const std::filesystem::path &output)
     assert(WeaponWheel::Open());
     g.MouseMotion(780, 470);
     draw("ui-weapon-wheel-pistol.bmp");
+    const auto savedWheelPreferences = w.uiPreferences;
+    w.uiPreferences.background = .8f;
+    w.uiPreferences.border = .8f;
+    w.uiPreferences.content = .85f;
+    draw("ui-weapon-wheel-minimum-opacity.bmp");
+    w.uiPreferences = savedWheelPreferences;
     WeaponWheel::Close();
     combat::Shot shot{};
     mine.pistol.TryFire(0, shot);
     mine.pistol.Reload();
     draw("ui-city-combat.bmp");
+    const std::string fullNotice =
+        "헤일로 수신망에 조사 기록을 전달했습니다. 발전기·운송대·폐설비의 기록을 확인한 다음 "
+        "리아에게 보고하세요. 확인한 기록은 의료 이송 뒤에도 유지됩니다. 아직 읽지 않은 중요한 "
+        "대화는 안전한 곳에서 이어 읽을 수 있습니다. 마지막 문장도 생략 없이 표시합니다.";
+    const auto noticePages = Hud::TextPages(fullNotice, 294, 16, 4);
+    assert(noticePages.size() > 1);
+    g.ShowNotice(fullNotice);
+    for (size_t page = 0; page < noticePages.size(); ++page)
+    {
+        w.noticeSecondsRemaining = w.noticeDurationSeconds - float(page) * 6;
+        const auto name = "ui-notice-complete-page-" + std::to_string(page + 1) + ".bmp";
+        draw(name.c_str());
+    }
+    w.noticeSecondsRemaining = 0;
     w.isBikeMounted = true;
     w.bikeSpeed = -.65f;
     draw("ui-bike-reverse.bmp");
@@ -1611,6 +1697,35 @@ void CaptureAnimationBlends(const std::filesystem::path &output)
     renderer.EndModels();
     renderer.EndScene(0);
     Save(output / "animation-layers.bmp");
+    for (bool reload : {false, true})
+    {
+        Begin();
+        renderer.BeginModels();
+        for (int i = 0; i < 8; ++i)
+        {
+            auto gender = Gender(i / 4);
+            auto type = i % 2 ? CharacterType::Engineer : CharacterType::Explorer;
+            auto pose = ModelRig::Pose(2, true, true, 0, false, gender);
+            pose.blended = true;
+            pose.moveForward = i % 4 == 0 ? 0.f : i % 4 == 1 ? 1.08f : 2.46f;
+            pose.locomotionPhase = .31f;
+            pose.aimWeight = i % 4 == 3 ? 1.f : 0.f;
+            pose.reloadProgress = reload ? .22f + .19f * (i % 4) : -1.f;
+            Transform3D transform;
+            transform.yaw = -.3f;
+            Palette palette;
+            palette.body = {.55f, .72f, .78f, 1};
+            Vector2 screen = {180.f + i % 4 * 300, 300.f + i / 4 * 350};
+            Drawing::DrawModel3D(ModelLibrary::Character(type, gender), screen, {3, 3, 3}, transform, 0,
+                                 palette, &pose);
+            Drawing::DrawHair(screen, {3, 3, 3}, transform, 0, pose, type, gender, HairStyle::SidePart);
+            Drawing::DrawLabel(screen.x - 90, screen.y + 40,
+                               reload ? "재장전 / 하체 이동 유지" : "운반 / 정지·걷기·달리기·조준");
+        }
+        renderer.EndModels();
+        renderer.EndScene(0);
+        Save(output / (reload ? "animation-pistol-reload.bmp" : "animation-pistol-carry.bmp"));
+    }
 }
 
 void CaptureChapter(const std::filesystem::path &output)

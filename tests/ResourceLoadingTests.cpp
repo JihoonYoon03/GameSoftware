@@ -10,8 +10,9 @@ int main()
     {
         const auto &mesh = models::ResourceAssets::Get(models::ResourceAssets::Find(name));
         assert(mesh.boneCount == 23 && mesh.Clips().size() > 32);
-        for (const auto &required : {"Idle", "Walk", "Run", "Aim_Base", "Attack_Fire", "Ride", "Hit_Front",
-                                     "Aim_Walk_Left", "Aim_Run_Back"})
+        for (const auto &required :
+             {"Idle", "Walk", "Run", "Aim_Base", "Attack_Fire", "Ride", "Hit_Front", "Aim_Walk_Left",
+              "Aim_Run_Back", "Pistol_Carry_Idle", "Pistol_Carry_Walk", "Pistol_Carry_Run", "Reload_Pistol"})
         {
             auto clip = std::find_if(mesh.Clips().begin(), mesh.Clips().end(),
                                      [&](const models::ResourceClip &c) { return c.name == required; });

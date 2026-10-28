@@ -2,7 +2,7 @@
   "projects": {
     "Erma_Resource_Library.blend": {
       "default_scene": "16_Transit_Connected_Example",
-      "human_actions": 59,
+      "human_actions": 63,
       "review_scenes": {
         "37_Civic_Animation_Review": {
           "rigs": 1,
@@ -39,12 +39,18 @@
           "skinned_parts": 200,
           "actual_vertex_motion_m": 0.46472081428619916,
           "camera": "42_Aim_Directional_Review_Camera"
+        },
+        "43_Pistol_Carry_Reload_Review": {
+          "rigs": 2,
+          "skinned_parts": 49,
+          "actual_vertex_motion_m": 0.7099568027129316,
+          "camera": "43_Pistol_Carry_Reload_Review_Camera"
         }
       }
     },
     "Civic_Animations.blend": {
       "default_scene": "37_Civic_Animation_Review",
-      "human_actions": 59,
+      "human_actions": 63,
       "review_scenes": {
         "37_Civic_Animation_Review": {
           "rigs": 1,
@@ -81,6 +87,12 @@
           "skinned_parts": 200,
           "actual_vertex_motion_m": 0.46472081428619916,
           "camera": "42_Aim_Directional_Review_Camera"
+        },
+        "43_Pistol_Carry_Reload_Review": {
+          "rigs": 2,
+          "skinned_parts": 49,
+          "actual_vertex_motion_m": 0.7099568027129316,
+          "camera": "43_Pistol_Carry_Reload_Review_Camera"
         }
       }
     }

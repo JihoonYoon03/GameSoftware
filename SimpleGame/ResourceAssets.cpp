@@ -236,6 +236,22 @@ struct Store
                 {
                     rig->melee = clipIndex;
                 }
+                if (name == "Pistol_Carry_Idle")
+                {
+                    rig->carryIdle = clipIndex;
+                }
+                if (name == "Pistol_Carry_Walk")
+                {
+                    rig->carryWalk = clipIndex;
+                }
+                if (name == "Pistol_Carry_Run")
+                {
+                    rig->carryRun = clipIndex;
+                }
+                if (name == "Reload_Pistol")
+                {
+                    rig->reload = clipIndex;
+                }
                 for (auto &sample : rig->samples)
                 {
                     if (sample.clip == name)

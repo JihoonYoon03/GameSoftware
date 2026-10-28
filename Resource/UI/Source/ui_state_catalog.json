@@ -42,7 +42,10 @@
       "loaded",
       "empty",
       "reloading",
-      "reload_complete"
+      "reload_complete",
+      "unarmed",
+      "pistol_hip",
+      "pistol_aim"
     ],
     "bindings": [
       "weapon_name",
@@ -68,7 +71,11 @@
     "preview_screens": [
       "01_city",
       "02_combat",
-      "34_low_health"
+      "34_low_health",
+      "41_unarmed",
+      "42_pistol_hip",
+      "43_pistol_aim",
+      "44_pistol_reload"
     ],
     "delivery": "shared text-free assets + named state specification + composed editable review screen"
   },
@@ -93,7 +100,9 @@
     ],
     "rules": [
       "Expand four arms by current angular spread projected into screen space.",
-      "Hide the aiming reticle while menu cursor has focus."
+      "Hide the aiming reticle while menu cursor has focus.",
+      "Aim only while RMB held with a pistol. Hip fire follows actor facing.",
+      "No aim-charge or animation-weight resource."
     ],
     "presentation": "hud_primitives",
     "dedicated_status_panel": false,
@@ -101,7 +110,11 @@
     "priority": "current_play",
     "preview_screens": [
       "02_combat",
-      "34_low_health"
+      "34_low_health",
+      "41_unarmed",
+      "42_pistol_hip",
+      "43_pistol_aim",
+      "44_pistol_reload"
     ],
     "delivery": "shared text-free assets + named state specification + composed editable review screen"
   },
@@ -321,7 +334,8 @@
     "preview_screens": [
       "05_dialogue",
       "24_local_dialogue",
-      "31_dialogue_page"
+      "31_dialogue_page",
+      "45_dialogue_page_02"
     ],
     "delivery": "shared text-free assets + named state specification + composed editable review screen"
   },
@@ -589,9 +603,11 @@
     "priority": "current_play",
     "preview_screens": [
       "02_combat",
-      "05_dialogue",
       "07_chapter",
-      "26_notifications"
+      "26_notifications",
+      "46_unlock_notice",
+      "47_notice_page_01",
+      "47_notice_page_02"
     ],
     "delivery": "shared text-free assets + named state specification + composed editable review screen"
   },
@@ -689,7 +705,7 @@
     ],
     "presentation": "screen_or_modal",
     "dedicated_status_panel": null,
-    "priority": "requires_menu_wiring",
+    "priority": "existing_menu",
     "preview_screens": [
       "15_title"
     ],
@@ -722,7 +738,7 @@
     ],
     "presentation": "screen_or_modal",
     "dedicated_status_panel": null,
-    "priority": "requires_menu_wiring",
+    "priority": "existing_menu",
     "preview_screens": [
       "16_options"
     ],
@@ -755,7 +771,7 @@
     ],
     "presentation": "screen_or_modal",
     "dedicated_status_panel": null,
-    "priority": "requires_menu_wiring",
+    "priority": "existing_menu",
     "preview_screens": [
       "17_summary"
     ],
@@ -789,7 +805,7 @@
     ],
     "presentation": "screen_or_modal",
     "dedicated_status_panel": null,
-    "priority": "requires_menu_wiring",
+    "priority": "existing_menu",
     "preview_screens": [
       "18_supply"
     ],
@@ -821,7 +837,7 @@
     ],
     "presentation": "screen_or_modal",
     "dedicated_status_panel": null,
-    "priority": "requires_menu_wiring",
+    "priority": "existing_menu",
     "preview_screens": [
       "19_confirm"
     ],
@@ -846,13 +862,93 @@
       "mouse"
     ],
     "rules": [
-      "Only supported bindings for current context. No developer teleport shortcuts."
+      "Only supported bindings for current context. No developer teleport shortcuts.",
+      "Q hold/release selects weapons; G heals. Retire old Q-heal/Q-quit labels."
     ],
     "presentation": "screen_or_modal",
     "dedicated_status_panel": null,
-    "priority": "requires_menu_wiring",
+    "priority": "existing_menu",
     "preview_screens": [
-      "20_help"
+      "20_help",
+      "46_unlock_notice"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-24": {
+    "name": "원형 무기 선택",
+    "states": [
+      "unarmed_equipped",
+      "pistol_owned",
+      "pistol_unowned",
+      "primary_empty",
+      "hover_available",
+      "hover_unavailable",
+      "release_commit",
+      "cancel_keep_equipped"
+    ],
+    "bindings": [
+      "equipped_slot",
+      "hovered_slot",
+      "pistol_owned",
+      "wheel_visible",
+      "pointer_offset"
+    ],
+    "icons": [
+      "unarmed",
+      "pistol",
+      "slot_empty",
+      "key_release",
+      "mouse_right"
+    ],
+    "rules": [
+      "Q hold opens and pauses; release commits available candidate; Esc cancels.",
+      "Unowned secondary never shows a pistol icon or future item name.",
+      "No click confirmation; invalid candidate keeps the equipped slot."
+    ],
+    "presentation": "screen_or_modal",
+    "dedicated_status_panel": null,
+    "priority": "new_design_for_existing_feature",
+    "preview_screens": [
+      "35_weapon_wheel_locked",
+      "36_weapon_wheel_pistol",
+      "37_weapon_wheel_empty",
+      "38_weapon_wheel_equipped",
+      "39_weapon_wheel_unowned"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-25": {
+    "name": "스테이지 시험 진입",
+    "states": [
+      "default",
+      "keyboard_focus",
+      "mouse_hover",
+      "pressed",
+      "back"
+    ],
+    "bindings": [
+      "test_stage",
+      "focus",
+      "hover",
+      "pressed",
+      "return_screen"
+    ],
+    "icons": [
+      "stage",
+      "gate",
+      "pistol",
+      "bike"
+    ],
+    "rules": [
+      "Six stage/unlock checkpoints only.",
+      "Show progress reset and mandatory-story completion before selection.",
+      "No extra confirmation, save slots, continue or future chapters."
+    ],
+    "presentation": "screen_or_modal",
+    "dedicated_status_panel": null,
+    "priority": "new_design_for_existing_feature",
+    "preview_screens": [
+      "40_stages"
     ],
     "delivery": "shared text-free assets + named state specification + composed editable review screen"
   }

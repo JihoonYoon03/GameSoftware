@@ -1,6 +1,7 @@
 // Rasterize text-free assets; render and inspect Korean SVG screens in Chromium.
 const fs = require('node:fs');
 const path = require('node:path');
+const crypto=require('node:crypto');
 const {pathToFileURL} = require('node:url');
 const bundle = process.env.UI_NODE_MODULES || 'C:/Users/wlgns/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules';
 const sharp = require(require.resolve('sharp', {paths:[bundle]}));
@@ -11,8 +12,11 @@ const save = (p,v) => fs.writeFileSync(path.join(root,p),JSON.stringify(v,null,2
 
 (async()=>{
   const manifest=read('ui_manifest.json');
+  const priorHashes=fs.existsSync(path.join(root,'Validation/sha256.json'))?read('Validation/sha256.json'):{};
+  const unchanged=p=>fs.existsSync(path.join(root,p))&&priorHashes[p]===crypto.createHash('sha256').update(fs.readFileSync(path.join(root,p))).digest('hex');
   const productionAssets=[...Object.values(manifest.icons),...Object.values(manifest.hud_icons||{}),...Object.values(manifest.components)];
   for(const asset of productionAssets){
+    if(unchanged(asset.svg)&&unchanged(asset.png))continue;
     await sharp(path.join(root,asset.svg)).resize(asset.width,asset.height).png().toFile(path.join(root,asset.png));
   }
   // 4px gutters make linear-filter sampling safe; pixel rectangles exclude gutters.
@@ -24,7 +28,8 @@ const save = (p,v) => fs.writeFileSync(path.join(root,p),JSON.stringify(v,null,2
     composites.push({input:path.join(root,manifest.icons[name].png),left:x,top:y});
     atlas.entries[name]={x,y,width:48,height:48,uv:[x/atlas.width,y/atlas.height,(x+48)/atlas.width,(y+48)/atlas.height]};
   });
-  await sharp({create:{width:atlas.width,height:atlas.height,channels:4,background:'#00000000'}}).composite(composites).png().toFile(path.join(root,'Export/Atlases/icons.png'));
+  if(!Object.values(manifest.icons).every(a=>unchanged(a.svg)&&unchanged(a.png))||!fs.existsSync(path.join(root,'Export/Atlases/icons.png')))
+    await sharp({create:{width:atlas.width,height:atlas.height,channels:4,background:'#00000000'}}).composite(composites).png().toFile(path.join(root,'Export/Atlases/icons.png'));
   save('Export/Atlases/icons.json',atlas);
   const assetChecks=[];
   for(const asset of productionAssets){
@@ -60,7 +65,7 @@ const save = (p,v) => fs.writeFileSync(path.join(root,p),JSON.stringify(v,null,2
       }
       return {textCount:texts.length,overflow:texts.filter(t=>t.x<-.5||t.y<-.5||t.x+t.w>1280.5||t.y+t.h>800.5||(t.maxWidth&&t.w>t.maxWidth+.5)),overlaps,texts};
     });
-    await tab.screenshot({path:path.join(root,s.png)});
+    if(!unchanged(s.svg)||!fs.existsSync(path.join(root,s.png)))fs.writeFileSync(path.join(root,s.png),await tab.screenshot());
     scenes.push({name,...inspection});
     await tab.close();
   }
@@ -82,8 +87,8 @@ const save = (p,v) => fs.writeFileSync(path.join(root,p),JSON.stringify(v,null,2
     const scene=await page.evaluate(()=>window.uiScenes['05_dialogue'].svg);
     await tab.setContent(`<style>html,body{margin:0;background:#071016}body{display:flex;align-items:center;justify-content:center;width:100vw;height:100vh}svg{display:block;width:${1280*scale}px;height:${800*scale}px}</style>`+scene);
     await tab.evaluate(()=>document.fonts.ready);
-    const file=`Validation/dialogue_${width}x${height}.png`;
-    await tab.screenshot({path:path.join(root,file)});await tab.close();
+    const file=`Validation/v1_2_r2_dialogue_${width}x${height}.png`;
+    fs.writeFileSync(path.join(root,file),await tab.screenshot());await tab.close();
     resolutions.push({width,height,uniformScale:scale,offsetX:(width-1280*scale)/2,offsetY:(height-800*scale)/2,file,
       note:'Browser-rendered uniform canvas-fit design preview. Live-game integration untested.'});
   }
@@ -95,8 +100,8 @@ const save = (p,v) => fs.writeFileSync(path.join(root,p),JSON.stringify(v,null,2
       const scene=await page.evaluate(n=>window.uiScenes[n].svg,name);
       await tab.setContent(`<style>html,body{margin:0}svg{display:block;--panel-opacity:${alpha}}</style>`+scene);
       await tab.evaluate(()=>document.fonts.ready);
-      const filename=`Validation/${name}_alpha_${Math.round(alpha*100)}.png`;
-      await tab.screenshot({path:path.join(root,filename)});await tab.close();
+      const filename=`Validation/v1_2_${name}_alpha_${Math.round(alpha*100)}${name==='05_dialogue'?'_r2':''}.png`;
+      if(!unchanged(manifest.screens[name].svg)||!fs.existsSync(path.join(root,filename)))fs.writeFileSync(path.join(root,filename),await tab.screenshot());await tab.close();
       opacity.push({scene:name,backgroundAlpha:alpha,file:filename});
     }
   }
@@ -133,7 +138,8 @@ const save = (p,v) => fs.writeFileSync(path.join(root,p),JSON.stringify(v,null,2
       comparisons.push({input:await sharp(Buffer.from(`<svg width="800" height="30"><rect width="800" height="30" fill="#07131c"/><text x="16" y="21" fill="white" font-family="sans-serif" font-size="15">${label}</text></svg>`)).png().toBuffer(),left:j*800,top:i*530+500});
     }
   }
-  await sharp({create:{width:1600,height:1590,channels:4,background:'#07131c'}}).composite(comparisons).png().toFile(path.join(root,'Preview/HUD_before_after.png'));
+  if(!fs.existsSync(path.join(root,'Preview/HUD_before_after_20261028.png'))||coverage.some(c=>!unchanged(manifest.screens[c.scene].svg)))
+    await sharp({create:{width:1600,height:1590,channels:4,background:'#07131c'}}).composite(comparisons).png().toFile(path.join(root,'Preview/HUD_before_after_20261028.png'));
   // Contact sheet uses rasterized SVG review screens, not live-game images.
   const thumbs=[];const sheetW=1600,tileW=400,tileH=280;
   for(let i=0;i<scenes.length;i++){
@@ -143,11 +149,11 @@ const save = (p,v) => fs.writeFileSync(path.join(root,p),JSON.stringify(v,null,2
     const caption=Buffer.from(`<svg width="400" height="30"><rect width="400" height="30" fill="#10242d"/><text x="12" y="20" fill="#eef5ef" font-size="12" font-family="Malgun Gothic">${n} · ${manifest.screens[n].requirements.join(' / ')}</text></svg>`);
     thumbs.push({input:await sharp(caption).png().toBuffer(),left:(i%4)*tileW,top:Math.floor(i/4)*tileH+250});
   }
-  await sharp({create:{width:sheetW,height:Math.ceil(scenes.length/4)*tileH,channels:4,background:'#071016'}}).composite(thumbs).png().toFile(path.join(root,'Preview/contact_sheet.png'));
+  await sharp({create:{width:sheetW,height:Math.ceil(scenes.length/4)*tileH,channels:4,background:'#071016'}}).composite(thumbs).png().toFile(path.join(root,'Preview/contact_sheet_20261028_r2.png'));
   const report={generated:new Date().toISOString(),font,screenCount:scenes.length,assetCount:assetChecks.length,
     pageErrors:errors,overflowCount:scenes.reduce((n,s)=>n+s.overflow.length,0),overlapCount:scenes.reduce((n,s)=>n+s.overlaps.length,0),controlCheck,coverage,scenes,assets:assetChecks,stress,resolutions,opacity,
     scope:'Production raster asset checks and browser-rendered design previews. No game code, Runtime cache, gameplay or menu behavior tested.'};
   save('Validation/browser_report.json',report);
   console.log(JSON.stringify({screens:scenes.length,assets:assetChecks.length,font,errors,overflowCount:report.overflowCount,overlapCount:report.overlapCount,issues:scenes.filter(s=>s.overflow.length||s.overlaps.length).map(s=>({name:s.name,overflow:s.overflow,overlaps:s.overlaps})),controlCheck},null,2));
   if(errors.length||report.overflowCount||report.overlapCount||!controlCheck.backgroundHidden)process.exitCode=1;
-})().catch(e=>{console.error(e);process.exitCode=1});
+})().catch(e=>{console.error(e);process.exit(1)});

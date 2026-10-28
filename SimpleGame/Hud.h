@@ -30,6 +30,9 @@ class Hud
     static std::vector<UiControl> Controls();
     static void ExchangeSupply();
     static void DrawMedicalFade();
+    // Every wrapped line belongs to a page; no content is replaced by an ellipsis.
+    static std::vector<std::vector<std::string>> TextPages(const std::string &text, float width, int fontSize,
+                                                           size_t linesPerPage);
 
   private:
     static void DrawNoticePanel();

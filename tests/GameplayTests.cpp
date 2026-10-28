@@ -231,9 +231,9 @@ void TestUiMenusAndTransactions()
         g.MouseButton(GLUT_LEFT_BUTTON, GLUT_DOWN, x, y);
         g.MouseButton(GLUT_LEFT_BUTTON, GLUT_UP, x, y);
     };
-    click({620, slider.position.y + 24});
+    click({slider.position.x + 16, slider.position.y + 60});
     assert(std::fabs(w.uiPreferences.background - .8f) < .001f && !w.mouseFiring);
-    click({848, slider.position.y + 24});
+    click({slider.position.x + slider.size.x - 16, slider.position.y + 60});
     assert(std::fabs(w.uiPreferences.background - 1) < .001f);
     for (int i = 0; i < 30; ++i)
     {
@@ -315,6 +315,35 @@ void TestDialogueProgress()
         return text;
     };
     assert(compact(joined) == compact(korean));
+    const std::string completeNotice =
+        korean + korean + korean + korean + " 마지막 문장도 누락 없이 표시한다. 원문 문장부호 … 는 유지한다.";
+    const auto noticePages = Hud::TextPages(completeNotice, 294, 16, 4);
+    assert(noticePages.size() > 1);
+    std::string restored;
+    for (const auto &noticePage : noticePages)
+    {
+        assert(!noticePage.empty() && noticePage.size() <= 4);
+        for (const auto &line : noticePage)
+        {
+            assert(RenderAssets::MeasureUtf8(line, 16) <= 294);
+            restored += line;
+        }
+    }
+    assert(compact(restored) == compact(completeNotice));
+    const auto objectivePages = Hud::TextPages(completeNotice, 420, 18, 2);
+    restored.clear();
+    for (const auto &objectivePage : objectivePages)
+    {
+        assert(objectivePage.size() <= 2);
+        for (const auto &line : objectivePage)
+        {
+            restored += line;
+        }
+    }
+    assert(compact(restored) == compact(completeNotice));
+    game.ShowNotice(completeNotice);
+    assert(world.noticeDurationSeconds == 6.f * noticePages.size());
+    assert(world.noticeSecondsRemaining == world.noticeDurationSeconds);
     int completions = 0;
     auto scene = [&]() {
         return Dialogue::Start("test/choice",
@@ -1975,6 +2004,20 @@ void TestAimMovementAndLayers()
     auto direction = mineState.bullets.front().direction;
     assert(direction.x * std::cos(.4f) + direction.y * std::sin(.4f) > .99f);
     assert(g.PlayerPose().fireSeconds > 0);
+    assert(mineState.pistol.Reload());
+    mineState.pistol.Update(.42f);
+    assert(std::fabs(g.PlayerPose().reloadProgress - .3f) < .0001f);
+    int reloadRounds = mineState.pistol.GetRounds();
+    for (int i = 0; i < 30; ++i)
+    {
+        g.PlayerPose();
+    }
+    assert(mineState.pistol.GetRounds() == reloadRounds && mineState.pistol.IsReloading());
+    mineState.loadout.Select(combat::WeaponSlot::Unarmed);
+    assert(g.PlayerPose().reloadProgress < 0);
+    mineState.loadout.Select(combat::WeaponSlot::Secondary);
+    mineState.pistol.Update(1.f);
+    assert(!mineState.pistol.IsReloading() && g.PlayerPose().reloadProgress < 0);
     g.MouseButton(GLUT_RIGHT_BUTTON, GLUT_DOWN, 100, 300);
     GameLevels::Mine().Leave();
     assert(!w.mouseAiming);

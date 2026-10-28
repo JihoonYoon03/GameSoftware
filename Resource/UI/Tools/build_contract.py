@@ -33,7 +33,7 @@ UI={
 'UI-23':entry('맥락별 도움말','walk|combat|bike|mine_scan|map|dialogue','available_actions|context','keyboard|mouse',['Only supported bindings for current context. No developer teleport shortcuts.'])}
 
 layouts={
- 'health_hud':dict(panel=False,icon=[32,736,24,24],current=[66,735],maximum=[118,734],gauge=[66,748,220,12],critical_prompt=[32,690],critical_condition='health/max_health <= 0.25',current_px=28,draw_order='track,clipped_fill,icon,current,max,optional_critical',anchor='bottom_left'),
+ 'health_hud':dict(panel=False,icon=[32,736,24,24],current=[66,735],maximum=[118,734],gauge=[66,748,220,12],critical_prompt=[32,690],critical_key='G',critical_condition='health/max_health <= 0.25',current_px=28,draw_order='track,clipped_fill,icon,current,max,optional_critical',anchor='bottom_left'),
  'ammo_hud':dict(panel=False,icon=[1040,723,28,28],current=[1182,746],maximum=[1248,745],current_px=38,pips=dict(origin=[1090,757],size=[9,10],stride=13,count=12),reload=[1090,757,152,10],reserve='infinity icon at [1064,754], unlimited',reload_prompt=[1248,705],anchor='bottom_right',hide_when='weapon unavailable, bike mounted, safe dialogue, modal menu'),
  'scanner_hud':dict(panel=False,center=[976,656],radius=21,stroke=4,key='F',label=[1010,652],approximate_signal=[1010,682],arc='start at -90 degrees; sweep 360*progress',anchor='bottom_right_above_ammo'),
  'wanted_hud':dict(panel=False,stars_origin=[558,35],star_stride=35,star_size=25,heat=[558,73,165,6],label=[640,106],anchor='top_center',visibility='wanted > 0 or active cooling notice'),
@@ -58,19 +58,31 @@ save('Source/layouts.json',dict(canvas=[1280,800],coordinates='top-left; text co
                     layer_order=['world_markers','aim','panel_background','panel_border','icon','text','modal','medical_fade']),
     timing=dict(narrative='user_advanced_no_expiry',notice_seconds=4,coalesce_same_type_seconds=1.5,
                 reduced_motion='steady critical indicator; no blinking text',note='Proposed UI timing only; game integration is separate.')))
+UI['UI-24']=entry('원형 무기 선택','unarmed_equipped|pistol_owned|pistol_unowned|primary_empty|hover_available|hover_unavailable|release_commit|cancel_keep_equipped','equipped_slot|hovered_slot|pistol_owned|wheel_visible|pointer_offset','unarmed|pistol|slot_empty|key_release|mouse_right', ['Q hold opens and pauses; release commits available candidate; Esc cancels.','Unowned secondary never shows a pistol icon or future item name.','No click confirmation; invalid candidate keeps the equipped slot.'])
+UI['UI-25']=entry('스테이지 시험 진입','default|keyboard_focus|mouse_hover|pressed|back','test_stage|focus|hover|pressed|return_screen','stage|gate|pistol|bike', ['Six stage/unlock checkpoints only.','Show progress reset and mandatory-story completion before selection.','No extra confirmation, save slots, continue or future chapters.'])
+UI['UI-02']['states']+='|unarmed|pistol_hip|pistol_aim'.split('|')[1:]
+UI['UI-03']['rules']+=['Aim only while RMB held with a pistol. Hip fire follows actor facing.','No aim-charge or animation-weight resource.']
+UI['UI-23']['rules']+=['Q hold/release selects weapons; G heals. Retire old Q-heal/Q-quit labels.']
+layouts['weapon_wheel']=dict(center=[640,390],inner_radius=87,outer_radius=224,sector_span_degrees=114,sector_centers_degrees=dict(primary=-90,secondary=30,unarmed=150),labels='separate runtime text, no baked labels',input='Q hold + mouse; release commit; Esc cancel',layer_order=['dim','sectors','equipped_marker','hover_outline','icons','labels','instructions'])
+layouts['stages']=dict(rect=[64,48,1152,704],rows_origin=[96,211],row_size=[652,52],row_stride=62,description_rect=[824,214,328,350],warning=[96,636],back=[96,678,170,52])
+layouts['text_flow']=dict(source='Source/text_flows.json',wrap='actual Malgun Gothic glyph advances',overflow='expand or retain every line across numbered pages',ellipsis=False,notice_lines_per_page=4,notice_seconds_per_page=6,short_notice_seconds=4,objective_lines_per_page=2,objective_seconds_per_page=5)
+# Persist the new layout entries as well as the existing template contract.
+layout_document=json.loads((ROOT/'Source/layouts.json').read_text(encoding='utf8'))
+layout_document['layouts']=layouts
+save('Source/layouts.json',layout_document)
 manifest=json.loads((ROOT/'ui_manifest.json').read_text(encoding='utf8'))
 for id,data in UI.items():
     data['presentation']='hud_primitives' if id in ['UI-01','UI-02','UI-03','UI-04','UI-05','UI-07','UI-10','UI-11','UI-12','UI-13','UI-14','UI-15'] else 'screen_or_modal'
     data['dedicated_status_panel']=False if data['presentation']=='hud_primitives' else None
     if data['presentation']=='hud_primitives': data['implementation_document']='HUD_IMPLEMENTATION_ko.md'
-    data['priority']='current_play' if int(id[-2:])<=17 else 'requires_menu_wiring'
+    data['priority']='current_play' if int(id[-2:])<=17 else 'existing_menu' if int(id[-2:])<=23 else 'new_design_for_existing_feature'
     data['preview_screens']=[n for n,s in manifest['screens'].items() if id in s['requirements']]
     data['delivery']='shared text-free assets + named state specification + composed editable review screen'
 save('Source/ui_state_catalog.json',UI)
-lines=['# UI 요구사항 제작 대응표','','상태별 배경·기호·게이지는 공통 부품으로 재사용하고 문구·수치는 게임 데이터로 채웁니다. 아래 상태 명세는 `Source/ui_state_catalog.json`, 좌표 계약은 `Source/layouts.json`에 있습니다.','','| ID | UI | 상태 수 | 대표 화면 | 연결 상태 |','|---|---|---:|---|---|']
+lines=['# UI 요구사항 제작 대응표','','2026-10-28 디자인 v1.2. 기존 UI-01~23의 게임 연결 기록은 `INTEGRATION_ko.md`를 보존합니다. 이번 새 디자인이 모든 게임 화면에 다시 연결되었다는 뜻은 아닙니다. UI-24/25는 기존 임시 기능에 사용할 전용 디자인을 납품합니다.','','상태·데이터·노출 조건은 `Source/ui_state_catalog.json`, 좌표는 `Source/layouts.json`, 원문 보존 검토는 `Source/text_flows.json`을 확인합니다.','','| ID | UI | 상태 수 | 대표 화면 | 제작/연결 구분 |','|---|---|---:|---|---|']
 for id,d in UI.items():
-    p=', '.join(f'[{n}](Preview/{n}.png)' for n in d['preview_screens'])
-    lines.append(f'| {id} | {d["name"]} | {len(d["states"])} | {p} | '+('현재 플레이용 리소스 / 게임 미연결' if d['priority']=='current_play' else '후속 메뉴 디자인 / 별도 연결 필요')+' |')
+    p=', '.join(f'[{n}]({manifest["screens"][n]["png"]})' for n in d['preview_screens'])
+    lines.append(f'| {id} | {d["name"]} | {len(d["states"])} | {p} | '+('기존 게임 연결 유지 / 디자인 갱신' if int(id[-2:])<=23 else '전용 디자인 납품 / 임시 게임 표현 교체용')+' |')
 lines+=['','','모든 상태를 별도의 완성 화면으로 만든 것은 아닙니다. 반복되는 상태는 동일 부품·라벨·아이콘 교체로 구성하며, 기본/포커스/눌림/선택/비활성/경고, 스캔·교환·주행·동료·전달 방식 등은 21·22·25·26번 갤러리에 모았습니다.','제작 검토 화면의 수치와 문구는 예시이며, 실제 적용 결과·화자·공개 조건·가격은 게임에서 전달해야 합니다.']
 (ROOT/'COVERAGE_ko.md').write_text('\n'.join(lines)+'\n',encoding='utf8')
 print(f'Wrote {len(UI)} UI contracts and {len(layouts)} layout templates')

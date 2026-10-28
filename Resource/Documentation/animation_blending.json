@@ -355,5 +355,18 @@
       }
     },
     "death": "hold Death_Front/Back final frame or explicit *_Pose; never loop or auto get up"
+  },
+  "pistol_layers": {
+    "contract": "pistol_layer_contract.json",
+    "carry_samples": [
+      "Pistol_Carry_Idle",
+      "Pistol_Carry_Walk",
+      "Pistol_Carry_Run"
+    ],
+    "reload": "Reload_Pistol",
+    "mask": "human_upper_body",
+    "keep_locomotion_phase": true,
+    "aim_crossfade_seconds": 0.15,
+    "ammo_changes_from_events": false
   }
 }

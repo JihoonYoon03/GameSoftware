@@ -7,8 +7,8 @@
   "humanoid_skeleton": "HUMAN_7H",
   "bones": 23,
   "original_clips_preserved": 15,
-  "humanoid_clips": 59,
-  "human_new_clips": 44,
+  "humanoid_clips": 63,
+  "human_new_clips": 48,
   "vehicle_new_actions": 21,
   "human_forward": "-Y",
   "human_left": "+X",
@@ -319,5 +319,10 @@
     ],
     "source_scene": "42_Aim_Directional_Review",
     "runtime_implementation_included": false
+  },
+  "pistol_layers": {
+    "contract": "pistol_layer_contract.json",
+    "new_clips": 4,
+    "existing_59_preserved": true
   }
 }

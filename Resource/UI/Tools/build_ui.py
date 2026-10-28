@@ -11,8 +11,8 @@ for folder in ('Source/Icons', 'Source/HUDIcons', 'Source/Components', 'Source/S
                'Export/HUDIcons', 'Export/Components', 'Export/Atlases', 'Preview', 'Validation'):
     (ROOT / folder).mkdir(parents=True, exist_ok=True)
 
-C = dict(bg='#07131c', panel='#10242d', edge='#79929b', ink='#ffffff', muted='#d0dfe3',
-         accent='#9df4d6', amber='#ffdf9c', danger='#ffc0b6', blue='#b6d9ff', disabled='#9caeb5')
+C = dict(bg='#0a1821', panel='#142b34', edge='#65818c', ink='#f4f6f1', muted='#d4e1e4',
+         accent='#a6e6cf', amber='#ffe1a6', danger='#ffc3ba', blue='#bcddff', disabled='#a3b6bf')
 ICONS = {
     'health': '<path d="M12 5v14M5 12h14"/>',
     'heal': '<path d="M5 4h14v16H5zM9 2h6M12 8v8M8 12h8"/>',
@@ -96,9 +96,9 @@ def text(s,x,y,size=16,color=None,weight=400,anchor='start',width=None):
 def panel(x,y,w,h,title=None,subtitle=None,accent=None):
     a=accent or C['accent']
     PANEL_AUDIT.append(dict(screen=SCREEN,x=x,y=y,w=w,h=h))
-    p=f'<g class="panel-fill">{rect(x,y,w,h,C["bg"],8)}</g>'
-    border=rect(x+.5,y+.5,w-1,h-1,'none',8,extra='stroke="'+C['edge']+'"')
-    p+=f'<g class="panel-border">{border}{line(x+16,y+1,x+46,y+1,a,3)}</g>'
+    p=f'<g class="panel-fill">{rect(x,y,w,h,C["bg"],10)}</g>'
+    border=rect(x+.5,y+.5,w-1,h-1,'none',10,extra='stroke="'+C['edge']+'" stroke-opacity=".65"')
+    p+=f'<g class="panel-border">{border}{line(x+20,y+1,x+56,y+1,a,2)}</g>'
     if title:
         p+=text(title,x+20,y+33,17,a,700,width=w-40)
     if subtitle:
@@ -117,7 +117,7 @@ def bar(x,y,w,ratio,color=None,h=6):
     return rect(x,y,w,h,'#354b54',h/2)+rect(x,y,max(0,min(1,ratio))*w,h,color or C['accent'],h/2)
 
 def hud_text(s,x,y,size=20,color=None,weight=700,anchor='start',width=None):
-    return '<g class="hud-text" paint-order="stroke fill" stroke="#02080d" stroke-width="4" stroke-linejoin="round">'+text(s,x,y,size,color,weight,anchor,width)+'</g>'
+    return '<g class="hud-text" paint-order="stroke fill" stroke="#02080d" stroke-width="3" stroke-linejoin="round">'+text(s,x,y,size,color,weight,anchor,width)+'</g>'
 
 def hud_icon(name,x,y,size=24,color=None,filled=False):
     # A black silhouette beneath each tintable icon preserves its edge on bright scenery.
@@ -169,7 +169,7 @@ def vitals(hp=86,ammo=8,reloading=False,show_ammo=True):
     b='<g data-hud="health">'+hud_icon('health',32,736,24,col)
     b+=hud_text(hp,66,735,28,col)+hud_text('/ 100',118,734,16,C['ink'],width=110)
     b+=hud_bar(66,748,220,hp/100,col,12)
-    if hp<=25: b+=hud_text('위험 · Q 회복',32,690,16,C['danger'],width=242)
+    if hp<=25: b+=hud_text('위험 · G 회복',32,690,16,C['danger'],width=242)
     b+='</g>'
     if not show_ammo: return b
     b+='<g data-hud="ammo">'+hud_icon('pistol',1040,723,28)
@@ -457,6 +457,9 @@ scene('32_hud_parts','HUD 부품 / 게이지·아이콘 구성',['COMMON'],hud_p
 scene('33_exploration','탐험 HUD / 불필요한 전투 정보 숨김',['UI-01','UI-04','UI-05'],lambda:backdrop('bright')+objective()+minimap()+vitals(show_ammo=False))
 scene('34_low_health','저체력 HUD / 위험 기호와 회복 키',['UI-01','UI-02','UI-03'],lambda:common('bright',hp=18,ammo=1)+reticle('ready',20))
 
+from design_20261028 import apply_design
+apply_design(globals())
+
 # Text-free independent assets. All state colors can be supplied as draw-time tint.
 COMPONENTS={}
 def component(name,body,w,h,slice_=None,role='component'):
@@ -506,15 +509,16 @@ component('hud_heat_fill',rect(0,0,165,6,'#ffffff',3),165,6,role='hud_crop_and_t
 component('hud_scan_track','<circle cx="24" cy="24" r="21" fill="#07131c" stroke="#02080d" stroke-width="5"/>',48,48,role='hud_scan_radial_track')
 component('hud_scan_arc','<circle cx="24" cy="24" r="21" fill="none" stroke="white" stroke-width="4" stroke-dasharray="79 132" transform="rotate(-90 24 24)"/>',48,48,role='hud_radial_arc_dynamic_mesh_preferred')
 component('hud_reticle_arm','<path d="M3 3h8" stroke="#02080d" stroke-width="6"/><path d="M3 3h8" stroke="white" stroke-width="2.5"/>',14,6,role='hud_four_independently_positioned_arms')
+for name,body,w,h,role in EXTRA_COMPONENTS: component(name,body,w,h,role=role)
 for name in ICONS:
     write(f'Source/Icons/{name}.svg',svg(icon(name,0,0,24,'#ffffff'),24,24))
-HUD_ICON_NAMES='health pistol infinite reload objective wanted scan signal unknown_signal bike boost reverse speed injured rescue check warning companion destination player'.split()
+HUD_ICON_NAMES='health pistol infinite reload objective wanted scan signal unknown_signal bike boost reverse speed injured rescue check warning companion destination player unarmed slot_empty mouse_right key_release'.split()
 for name in HUD_ICON_NAMES:
     write(f'Source/HUDIcons/{name}.svg',svg(hud_icon(name,4,4,24,'#ffffff'),32,32))
 
 for name,entry in SCENES.items(): write(f'Source/Screens/{name}.svg',entry['svg'])
 
-manifest=dict(version='1.1.0',title='ERMA / FIELD INTERFACE',date='2026-10-26',
+manifest=dict(version='1.2.0',title='ERMA / FIELD INTERFACE',date='2026-10-28',
     canvas=dict(width=1280,height=800,safe_margin=32,scale='uniform_min_viewport_fit',letterbox=True),
     font=dict(family='Malgun Gothic',windows_path='C:/Windows/Fonts/malgun.ttf',redistributed=False,
               text_in_assets=False,encoding='UTF-8',body_px=20,metadata_px=14,line_height=32),
@@ -522,7 +526,7 @@ manifest=dict(version='1.1.0',title='ERMA / FIELD INTERFACE',date='2026-10-26',
     opacity=dict(parameter='opacity_is_alpha_not_transparency',background=dict(default=.94,min=.8,max=1),
                  border=dict(default=1,min=.8,max=1),content=dict(default=1,min=.85,max=1),
                  formula='output_alpha = asset_alpha * layer_opacity',
-                 note='Proposed integration range; review viewer exposes stress values down to 0.3. No game setting implemented.'),
+                 note='Existing game options use these ranges. New designs must keep independent layers; review exposes stress values down to 0.3.'),
     alpha=dict(export='straight RGBA',color_space='sRGB',blend='SRC_ALPHA, ONE_MINUS_SRC_ALPHA',
                tint='white icons are tintable; preserve full alpha, convert if using a premultiplied renderer'),
     icons={n:dict(svg=f'Source/Icons/{n}.svg',png=f'Export/Icons/{n}.png',width=48,height=48,
@@ -534,7 +538,7 @@ manifest=dict(version='1.1.0',title='ERMA / FIELD INTERFACE',date='2026-10-26',
              runtime_primitives=['health','ammo_pips','reload','heat','scan_arc','reticle_arms','speed'],
              render_text='runtime only; black 4px outside outline; independent content opacity'),
     atlas=dict(png='Export/Atlases/icons.png',metadata='Export/Atlases/icons.json',padding=4),
-    screens={n:dict(label=v['label'],requirements=v['ids'],svg=f'Source/Screens/{n}.svg',png=f'Preview/{n}.png') for n,v in SCENES.items()},
+    screens={n:dict(label=v['label'],requirements=v['ids'],svg=f'Source/Screens/{n}.svg',png=f'Preview/{n}_20261028'+('_r2' if n=='05_dialogue' or n.startswith('45_dialogue_page_') else '')+'.png') for n,v in SCENES.items()},
     constraints=['No automatic route polyline','Map north is fixed northeast; rotate actor only',
                  'Mine geometry/targets only in explored and eligible state','Approximate signal is not an exact map pin',
                  'Unlimited spare magazines; no spare ammunition count','No bike fuel or energy resource',
@@ -556,5 +560,13 @@ function update(){stage.innerHTML=scenes[select.value].svg;stage.style.setProper
 select.onchange=update;opacity.oninput=update;content.oninput=update;document.querySelector('#background').onclick=()=>{backgroundVisible=!backgroundVisible;update()};
 const requested=new URLSearchParams(location.search).get('scene');if(scenes[requested])select.value=requested;update();window.uiScenes=scenes;
 </script></html>'''.replace('SCENE_DATA',json.dumps(SCENES,ensure_ascii=False).replace('</','<\\/'))
+viewer=viewer.replace('<main>','<main><nav id="flowNav" hidden style="margin-bottom:12px;display:flex;gap:12px"><button id="flowPrev">이전 내용</button><button id="flowNext">다음 내용</button></nav>')
+viewer=viewer.replace('</script>', '''
+const flowNav=document.querySelector('#flowNav'),flowPrev=document.querySelector('#flowPrev'),flowNext=document.querySelector('#flowNext');
+const originalUpdate=update;update=function(){originalUpdate();const p=scenes[select.value].pagination;flowNav.style.display=p?'flex':'none';flowPrev.disabled=!p?.previous;flowNext.disabled=!p?.next};
+function turnPage(dir){const p=scenes[select.value].pagination;if(p?.[dir]){select.value=p[dir];update()}}
+flowPrev.onclick=()=>turnPage('previous');flowNext.onclick=()=>turnPage('next');select.onchange=update;
+document.addEventListener('keydown',e=>{if(e.target.tagName==='SELECT')return;if(e.key==='PageDown'||e.key==='Enter'){turnPage('next');e.preventDefault()}if(e.key==='PageUp'){turnPage('previous');e.preventDefault()}});update();
+</script>''')
 write('preview.html',viewer)
 print(f'Built {len(ICONS)} icons, {len(COMPONENTS)} components, {len(SCENES)} screens in {ROOT}')

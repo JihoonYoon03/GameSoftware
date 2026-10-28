@@ -106,7 +106,7 @@
   },
   {
     "screen": "02_combat",
-    "text": "위험 · Q 회복",
+    "text": "위험 · G 회복",
     "size": 18
   },
   {
@@ -275,201 +275,6 @@
     "size": 16
   },
   {
-    "screen": "05_dialogue",
-    "text": "미탐험",
-    "size": 14
-  },
-  {
-    "screen": "05_dialogue",
-    "text": "N ↗",
-    "size": 14
-  },
-  {
-    "screen": "05_dialogue",
-    "text": "광산 · 탐험 구간",
-    "size": 16
-  },
-  {
-    "screen": "05_dialogue",
-    "text": "M 지도",
-    "size": 16
-  },
-  {
-    "screen": "05_dialogue",
-    "text": "86",
-    "size": 28
-  },
-  {
-    "screen": "05_dialogue",
-    "text": "/ 100",
-    "size": 18
-  },
-  {
-    "screen": "05_dialogue",
-    "text": "08",
-    "size": 38
-  },
-  {
-    "screen": "05_dialogue",
-    "text": "/ 12",
-    "size": 22
-  },
-  {
-    "screen": "05_dialogue",
-    "text": "수신 기록 / 안전한 곳에서 계속 읽을 수 있습니다.",
-    "size": 18
-  },
-  {
-    "screen": "05_dialogue",
-    "text": "헤일로 외곽 수신망 담당자 · 리아",
-    "size": 20
-  },
-  {
-    "screen": "05_dialogue",
-    "text": "무전 · 전투 계속",
-    "size": 14
-  },
-  {
-    "screen": "05_dialogue",
-    "text": "관문 N-0의 신호와 외곽 설비 N-0/17의 기록은 서로 달라.",
-    "size": 20
-  },
-  {
-    "screen": "05_dialogue",
-    "text": "같은 장소로 보고 조사하면 안 돼. 먼저 발전기의 기록을 확인하자.",
-    "size": 20
-  },
-  {
-    "screen": "05_dialogue",
-    "text": "확인하지 못한 내용은 조사 기록에 추정으로 남겨 둘게.",
-    "size": 20
-  },
-  {
-    "screen": "05_dialogue",
-    "text": "기록을 먼저 확인한다",
-    "size": 16
-  },
-  {
-    "screen": "05_dialogue",
-    "text": "1",
-    "size": 14
-  },
-  {
-    "screen": "05_dialogue",
-    "text": "2  선택 불가 · 안전한 곳에서 선택",
-    "size": 16
-  },
-  {
-    "screen": "05_dialogue",
-    "text": "04 / 04",
-    "size": 14
-  },
-  {
-    "screen": "05_dialogue",
-    "text": "1–2",
-    "size": 14
-  },
-  {
-    "screen": "05_dialogue",
-    "text": "선택",
-    "size": 14
-  },
-  {
-    "screen": "05_dialogue",
-    "text": "E / Enter",
-    "size": 14
-  },
-  {
-    "screen": "05_dialogue",
-    "text": "확정",
-    "size": 14
-  },
-  {
-    "screen": "06_journal",
-    "text": "조사 기록",
-    "size": 18
-  },
-  {
-    "screen": "06_journal",
-    "text": "확인한 사실과 다음 행동 / J",
-    "size": 14
-  },
-  {
-    "screen": "06_journal",
-    "text": "관문 N-0의 수신 기록",
-    "size": 16
-  },
-  {
-    "screen": "06_journal",
-    "text": "발전기 조사",
-    "size": 16
-  },
-  {
-    "screen": "06_journal",
-    "text": "운송대 구조",
-    "size": 16
-  },
-  {
-    "screen": "06_journal",
-    "text": "관문과 외곽 설비는 다른 대상이다.",
-    "size": 21
-  },
-  {
-    "screen": "06_journal",
-    "text": "확인한 사실",
-    "size": 16
-  },
-  {
-    "screen": "06_journal",
-    "text": "N-0/17은 외곽 설비의 식별 번호다.",
-    "size": 18
-  },
-  {
-    "screen": "06_journal",
-    "text": "현재 할 일",
-    "size": 16
-  },
-  {
-    "screen": "06_journal",
-    "text": "리아에게 조사 결과를 보고하고 기록을 대조한다.",
-    "size": 18
-  },
-  {
-    "screen": "06_journal",
-    "text": "중단한 대화가 있습니다.",
-    "size": 18
-  },
-  {
-    "screen": "06_journal",
-    "text": "안전한 곳에서 상대에게 다시 말을 걸어 이어 읽으세요.",
-    "size": 16
-  },
-  {
-    "screen": "06_journal",
-    "text": "PageUp / PageDown",
-    "size": 14
-  },
-  {
-    "screen": "06_journal",
-    "text": "페이지",
-    "size": 14
-  },
-  {
-    "screen": "06_journal",
-    "text": "J / Esc",
-    "size": 14
-  },
-  {
-    "screen": "06_journal",
-    "text": "닫기",
-    "size": 14
-  },
-  {
-    "screen": "06_journal",
-    "text": "01 / 03",
-    "size": 14
-  },
-  {
     "screen": "07_chapter",
     "text": "세 현장을 조사하고 리아에게 보고",
     "size": 20
@@ -577,61 +382,6 @@
   {
     "screen": "08_medical",
     "text": "Enter",
-    "size": 14
-  },
-  {
-    "screen": "09_pause",
-    "text": "일시정지",
-    "size": 18
-  },
-  {
-    "screen": "09_pause",
-    "text": "1장 / 빛나는 개척지",
-    "size": 14
-  },
-  {
-    "screen": "09_pause",
-    "text": "계속하기",
-    "size": 16
-  },
-  {
-    "screen": "09_pause",
-    "text": "Esc",
-    "size": 14
-  },
-  {
-    "screen": "09_pause",
-    "text": "헤일로로 귀환",
-    "size": 16
-  },
-  {
-    "screen": "09_pause",
-    "text": "R",
-    "size": 14
-  },
-  {
-    "screen": "09_pause",
-    "text": "조작 도움말",
-    "size": 16
-  },
-  {
-    "screen": "09_pause",
-    "text": "종료",
-    "size": 16
-  },
-  {
-    "screen": "09_pause",
-    "text": "현재 지역에서는 R로 헤일로에 귀환합니다.",
-    "size": 16
-  },
-  {
-    "screen": "09_pause",
-    "text": "세션의 진행은 영구 저장되지 않습니다.",
-    "size": 16
-  },
-  {
-    "screen": "09_pause",
-    "text": "광산에서는 R의 기능이 광산 재시작으로 바뀝니다.",
     "size": 14
   },
   {
@@ -955,86 +705,6 @@
     "size": 16
   },
   {
-    "screen": "13_history",
-    "text": "대사 이력",
-    "size": 18
-  },
-  {
-    "screen": "13_history",
-    "text": "읽은 내용만 표시 / H",
-    "size": 14
-  },
-  {
-    "screen": "13_history",
-    "text": "무전",
-    "size": 14
-  },
-  {
-    "screen": "13_history",
-    "text": "리아",
-    "size": 18
-  },
-  {
-    "screen": "13_history",
-    "text": "수신 기록은 확인했어. 다음은 발전기야.",
-    "size": 20
-  },
-  {
-    "screen": "13_history",
-    "text": "단말",
-    "size": 14
-  },
-  {
-    "screen": "13_history",
-    "text": "발전기 제어 단말",
-    "size": 18
-  },
-  {
-    "screen": "13_history",
-    "text": "보조 전력 복구를 확인했습니다.",
-    "size": 20
-  },
-  {
-    "screen": "13_history",
-    "text": "현장 대화",
-    "size": 14
-  },
-  {
-    "screen": "13_history",
-    "text": "리아",
-    "size": 18
-  },
-  {
-    "screen": "13_history",
-    "text": "아직은 결론을 내리지 말자. 기록을 더 대조해야 해.",
-    "size": 20
-  },
-  {
-    "screen": "13_history",
-    "text": "PageUp / PageDown",
-    "size": 14
-  },
-  {
-    "screen": "13_history",
-    "text": "페이지",
-    "size": 14
-  },
-  {
-    "screen": "13_history",
-    "text": "H / Esc",
-    "size": 14
-  },
-  {
-    "screen": "13_history",
-    "text": "닫기",
-    "size": 14
-  },
-  {
-    "screen": "13_history",
-    "text": "02 / 05",
-    "size": 14
-  },
-  {
     "screen": "14_empty",
     "text": "조사 기록",
     "size": 18
@@ -1063,196 +733,6 @@
     "screen": "14_empty",
     "text": "닫기",
     "size": 14
-  },
-  {
-    "screen": "15_title",
-    "text": "에르마 · 헤일로",
-    "size": 18
-  },
-  {
-    "screen": "15_title",
-    "text": "침묵하는 관문",
-    "size": 58
-  },
-  {
-    "screen": "15_title",
-    "text": "신호가 닿은 곳에서, 이야기가 시작된다.",
-    "size": 20
-  },
-  {
-    "screen": "15_title",
-    "text": "새 게임",
-    "size": 16
-  },
-  {
-    "screen": "15_title",
-    "text": "옵션",
-    "size": 16
-  },
-  {
-    "screen": "15_title",
-    "text": "조작 안내",
-    "size": 16
-  },
-  {
-    "screen": "15_title",
-    "text": "종료",
-    "size": 16
-  },
-  {
-    "screen": "15_title",
-    "text": "이어하기 / 불러오기는 제공하지 않습니다.",
-    "size": 16
-  },
-  {
-    "screen": "16_options",
-    "text": "옵션",
-    "size": 18
-  },
-  {
-    "screen": "16_options",
-    "text": "UI 투명도는 필수 연결 항목입니다.",
-    "size": 14
-  },
-  {
-    "screen": "16_options",
-    "text": "패널 불투명도",
-    "size": 20
-  },
-  {
-    "screen": "16_options",
-    "text": "94%",
-    "size": 21
-  },
-  {
-    "screen": "16_options",
-    "text": "지원 제안 80–100% · 기본 94% / 글자·아이콘 별도",
-    "size": 16
-  },
-  {
-    "screen": "16_options",
-    "text": "테두리 불투명도",
-    "size": 20
-  },
-  {
-    "screen": "16_options",
-    "text": "100%",
-    "size": 21
-  },
-  {
-    "screen": "16_options",
-    "text": "콘텐츠 불투명도",
-    "size": 20
-  },
-  {
-    "screen": "16_options",
-    "text": "100%",
-    "size": 21
-  },
-  {
-    "screen": "16_options",
-    "text": "지원 제안 85–100% · 본문 가독성 유지",
-    "size": 16
-  },
-  {
-    "screen": "16_options",
-    "text": "카툰 명암",
-    "size": 16
-  },
-  {
-    "screen": "16_options",
-    "text": "켜짐",
-    "size": 14
-  },
-  {
-    "screen": "16_options",
-    "text": "렌더 해상도",
-    "size": 16
-  },
-  {
-    "screen": "16_options",
-    "text": "기본 / ½ / ¼",
-    "size": 14
-  },
-  {
-    "screen": "16_options",
-    "text": "안티앨리어싱",
-    "size": 16
-  },
-  {
-    "screen": "16_options",
-    "text": "켜짐",
-    "size": 14
-  },
-  {
-    "screen": "16_options",
-    "text": "글자 크기와 UI 배율은 별도 구현 검토 항목입니다.",
-    "size": 16
-  },
-  {
-    "screen": "17_summary",
-    "text": "보유 · 성장 정보",
-    "size": 18
-  },
-  {
-    "screen": "17_summary",
-    "text": "현재 데이터 요약",
-    "size": 14
-  },
-  {
-    "screen": "17_summary",
-    "text": "레벨 7",
-    "size": 27
-  },
-  {
-    "screen": "17_summary",
-    "text": "경험치 420 / 800",
-    "size": 18
-  },
-  {
-    "screen": "17_summary",
-    "text": "공격 / 방어",
-    "size": 16
-  },
-  {
-    "screen": "17_summary",
-    "text": "24 / 12",
-    "size": 14
-  },
-  {
-    "screen": "17_summary",
-    "text": "크레딧",
-    "size": 16
-  },
-  {
-    "screen": "17_summary",
-    "text": "12,480",
-    "size": 14
-  },
-  {
-    "screen": "17_summary",
-    "text": "거래 부품",
-    "size": 16
-  },
-  {
-    "screen": "17_summary",
-    "text": "18",
-    "size": 14
-  },
-  {
-    "screen": "17_summary",
-    "text": "회복 키트",
-    "size": 16
-  },
-  {
-    "screen": "17_summary",
-    "text": "3",
-    "size": 14
-  },
-  {
-    "screen": "17_summary",
-    "text": "장비 슬롯과 아이템 격자는 현재 기능에 포함되지 않습니다.",
-    "size": 16
   },
   {
     "screen": "18_supply",
@@ -1328,146 +808,6 @@
     "screen": "19_confirm",
     "text": "종료",
     "size": 16
-  },
-  {
-    "screen": "20_help",
-    "text": "조작 도움말",
-    "size": 18
-  },
-  {
-    "screen": "20_help",
-    "text": "현재 가능한 행동만 표시합니다.",
-    "size": 14
-  },
-  {
-    "screen": "20_help",
-    "text": "도보 · 전투",
-    "size": 16
-  },
-  {
-    "screen": "20_help",
-    "text": "WASD",
-    "size": 14
-  },
-  {
-    "screen": "20_help",
-    "text": "이동",
-    "size": 14
-  },
-  {
-    "screen": "20_help",
-    "text": "좌클릭",
-    "size": 14
-  },
-  {
-    "screen": "20_help",
-    "text": "사격",
-    "size": 14
-  },
-  {
-    "screen": "20_help",
-    "text": "V",
-    "size": 14
-  },
-  {
-    "screen": "20_help",
-    "text": "근접 공격",
-    "size": 14
-  },
-  {
-    "screen": "20_help",
-    "text": "R",
-    "size": 14
-  },
-  {
-    "screen": "20_help",
-    "text": "재장전",
-    "size": 14
-  },
-  {
-    "screen": "20_help",
-    "text": "Q",
-    "size": 14
-  },
-  {
-    "screen": "20_help",
-    "text": "회복",
-    "size": 14
-  },
-  {
-    "screen": "20_help",
-    "text": "E",
-    "size": 14
-  },
-  {
-    "screen": "20_help",
-    "text": "조사 · 대화 · 회수",
-    "size": 14
-  },
-  {
-    "screen": "20_help",
-    "text": "F",
-    "size": 14
-  },
-  {
-    "screen": "20_help",
-    "text": "광산 스캔",
-    "size": 14
-  },
-  {
-    "screen": "20_help",
-    "text": "M",
-    "size": 14
-  },
-  {
-    "screen": "20_help",
-    "text": "전체 지도",
-    "size": 14
-  },
-  {
-    "screen": "20_help",
-    "text": "J",
-    "size": 14
-  },
-  {
-    "screen": "20_help",
-    "text": "조사 기록",
-    "size": 14
-  },
-  {
-    "screen": "20_help",
-    "text": "H",
-    "size": 14
-  },
-  {
-    "screen": "20_help",
-    "text": "대사 이력",
-    "size": 14
-  },
-  {
-    "screen": "20_help",
-    "text": "바이크: W 가속 · S 제동/후진 · A/D 조향 · Space 부스트",
-    "size": 18
-  },
-  {
-    "screen": "20_help",
-    "text": "대화: E/Enter 다음 · 숫자로 선택 후 Enter 확정",
-    "size": 18
-  },
-  {
-    "screen": "20_help",
-    "text": "지도: 좌클릭 목적지 설정 · 우클릭 해제 · M/Esc 닫기",
-    "size": 18
-  },
-  {
-    "screen": "20_help",
-    "text": "Esc",
-    "size": 14
-  },
-  {
-    "screen": "20_help",
-    "text": "닫기",
-    "size": 14
   },
   {
     "screen": "21_components",
@@ -1773,286 +1113,6 @@
     "screen": "22_states",
     "text": "수배 0–5단계 · 현재 추격은 열도 / 도시 간 남는 기록은 악명으로 구분",
     "size": 14
-  },
-  {
-    "screen": "23_icons",
-    "text": "SYMBOL LIBRARY / 03",
-    "size": 14
-  },
-  {
-    "screen": "23_icons",
-    "text": "작은 크기에서도 구분되는 기호",
-    "size": 32
-  },
-  {
-    "screen": "23_icons",
-    "text": "24px 기준 · 단일 색상 · 개별 SVG / 투명 PNG / 아틀라스 제공",
-    "size": 16
-  },
-  {
-    "screen": "23_icons",
-    "text": "health",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "heal",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "pistol",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "magazine",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "reload",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "infinite",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "objective",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "investigate",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "dialogue",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "radio",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "terminal",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "record",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "history",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "scan",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "signal",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "rescue",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "companion",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "injured",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "medical",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "wanted",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "reputation",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "credit",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "parts",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "bike",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "boost",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "reverse",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "speed",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "walk",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "stop",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "warning",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "check",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "close",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "lock",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "arrow",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "chevron",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "destination",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "player",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "home",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "gate",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "power",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "supply",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "exit",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "pause",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "settings",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "mouse",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "keyboard",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "transport",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "investigation_site",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "unknown_signal",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "level",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "attack",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "defense",
-    "size": 9
-  },
-  {
-    "screen": "23_icons",
-    "text": "empty",
-    "size": 9
   },
   {
     "screen": "24_local_dialogue",
@@ -2390,106 +1450,6 @@
     "size": 16
   },
   {
-    "screen": "28_pause_mine",
-    "text": "일시정지",
-    "size": 18
-  },
-  {
-    "screen": "28_pause_mine",
-    "text": "광산 / 반복 구조",
-    "size": 14
-  },
-  {
-    "screen": "28_pause_mine",
-    "text": "계속하기",
-    "size": 16
-  },
-  {
-    "screen": "28_pause_mine",
-    "text": "Esc",
-    "size": 14
-  },
-  {
-    "screen": "28_pause_mine",
-    "text": "광산 재시작",
-    "size": 16
-  },
-  {
-    "screen": "28_pause_mine",
-    "text": "R",
-    "size": 14
-  },
-  {
-    "screen": "28_pause_mine",
-    "text": "조작 도움말",
-    "size": 16
-  },
-  {
-    "screen": "28_pause_mine",
-    "text": "종료",
-    "size": 16
-  },
-  {
-    "screen": "28_pause_mine",
-    "text": "R: 현재 광산을 새로 시작합니다.",
-    "size": 16
-  },
-  {
-    "screen": "28_pause_mine",
-    "text": "탐험 기록과 반복 구조 대상이 초기화됩니다.",
-    "size": 16
-  },
-  {
-    "screen": "29_pause_city",
-    "text": "일시정지",
-    "size": 18
-  },
-  {
-    "screen": "29_pause_city",
-    "text": "도시 / 프롤로그",
-    "size": 14
-  },
-  {
-    "screen": "29_pause_city",
-    "text": "계속하기",
-    "size": 16
-  },
-  {
-    "screen": "29_pause_city",
-    "text": "Esc",
-    "size": 14
-  },
-  {
-    "screen": "29_pause_city",
-    "text": "다시 시작",
-    "size": 16
-  },
-  {
-    "screen": "29_pause_city",
-    "text": "R",
-    "size": 14
-  },
-  {
-    "screen": "29_pause_city",
-    "text": "조작 도움말",
-    "size": 16
-  },
-  {
-    "screen": "29_pause_city",
-    "text": "종료",
-    "size": 16
-  },
-  {
-    "screen": "29_pause_city",
-    "text": "R: 현재 세션을 처음부터 다시 시작합니다.",
-    "size": 16
-  },
-  {
-    "screen": "29_pause_city",
-    "text": "실행 전에 현재 진행을 잃는다는 확인이 필요합니다.",
-    "size": 16
-  },
-  {
     "screen": "30_text_stress",
     "text": "TYPE VALIDATION / 06",
     "size": 14
@@ -2751,7 +1711,7 @@
   },
   {
     "screen": "34_low_health",
-    "text": "위험 · Q 회복",
+    "text": "위험 · G 회복",
     "size": 18
   },
   {
@@ -2763,5 +1723,2125 @@
     "screen": "34_low_health",
     "text": "/ 12",
     "size": 22
+  },
+  {
+    "screen": "35_weapon_wheel_locked",
+    "text": "장비",
+    "size": 16
+  },
+  {
+    "screen": "35_weapon_wheel_locked",
+    "text": "무기 선택",
+    "size": 32
+  },
+  {
+    "screen": "35_weapon_wheel_locked",
+    "text": "가리킨 뒤 Q를 놓으면 장착됩니다.",
+    "size": 18
+  },
+  {
+    "screen": "35_weapon_wheel_locked",
+    "text": "주 무장",
+    "size": 18
+  },
+  {
+    "screen": "35_weapon_wheel_locked",
+    "text": "비어 있음",
+    "size": 16
+  },
+  {
+    "screen": "35_weapon_wheel_locked",
+    "text": "보조 무장",
+    "size": 18
+  },
+  {
+    "screen": "35_weapon_wheel_locked",
+    "text": "미보유",
+    "size": 16
+  },
+  {
+    "screen": "35_weapon_wheel_locked",
+    "text": "맨손",
+    "size": 18
+  },
+  {
+    "screen": "35_weapon_wheel_locked",
+    "text": "현재 장착",
+    "size": 16
+  },
+  {
+    "screen": "35_weapon_wheel_locked",
+    "text": "맨손",
+    "size": 24
+  },
+  {
+    "screen": "35_weapon_wheel_locked",
+    "text": "Q 놓아서 선택",
+    "size": 16
+  },
+  {
+    "screen": "35_weapon_wheel_locked",
+    "text": "Q 홀드",
+    "size": 14
+  },
+  {
+    "screen": "35_weapon_wheel_locked",
+    "text": "마우스로 가리키기",
+    "size": 14
+  },
+  {
+    "screen": "35_weapon_wheel_locked",
+    "text": "Q 해제",
+    "size": 14
+  },
+  {
+    "screen": "35_weapon_wheel_locked",
+    "text": "장착",
+    "size": 14
+  },
+  {
+    "screen": "35_weapon_wheel_locked",
+    "text": "Esc",
+    "size": 14
+  },
+  {
+    "screen": "35_weapon_wheel_locked",
+    "text": "취소",
+    "size": 14
+  },
+  {
+    "screen": "35_weapon_wheel_locked",
+    "text": "게임 일시정지 · 빈 슬롯과 취소는 기존 장착 유지",
+    "size": 16
+  },
+  {
+    "screen": "36_weapon_wheel_pistol",
+    "text": "장비",
+    "size": 16
+  },
+  {
+    "screen": "36_weapon_wheel_pistol",
+    "text": "무기 선택",
+    "size": 32
+  },
+  {
+    "screen": "36_weapon_wheel_pistol",
+    "text": "가리킨 뒤 Q를 놓으면 장착됩니다.",
+    "size": 18
+  },
+  {
+    "screen": "36_weapon_wheel_pistol",
+    "text": "주 무장",
+    "size": 18
+  },
+  {
+    "screen": "36_weapon_wheel_pistol",
+    "text": "비어 있음",
+    "size": 16
+  },
+  {
+    "screen": "36_weapon_wheel_pistol",
+    "text": "보조 무장",
+    "size": 18
+  },
+  {
+    "screen": "36_weapon_wheel_pistol",
+    "text": "권총",
+    "size": 16
+  },
+  {
+    "screen": "36_weapon_wheel_pistol",
+    "text": "맨손",
+    "size": 18
+  },
+  {
+    "screen": "36_weapon_wheel_pistol",
+    "text": "현재 장착",
+    "size": 16
+  },
+  {
+    "screen": "36_weapon_wheel_pistol",
+    "text": "권총",
+    "size": 24
+  },
+  {
+    "screen": "36_weapon_wheel_pistol",
+    "text": "Q 놓아서 선택",
+    "size": 16
+  },
+  {
+    "screen": "36_weapon_wheel_pistol",
+    "text": "Q 홀드",
+    "size": 14
+  },
+  {
+    "screen": "36_weapon_wheel_pistol",
+    "text": "마우스로 가리키기",
+    "size": 14
+  },
+  {
+    "screen": "36_weapon_wheel_pistol",
+    "text": "Q 해제",
+    "size": 14
+  },
+  {
+    "screen": "36_weapon_wheel_pistol",
+    "text": "장착",
+    "size": 14
+  },
+  {
+    "screen": "36_weapon_wheel_pistol",
+    "text": "Esc",
+    "size": 14
+  },
+  {
+    "screen": "36_weapon_wheel_pistol",
+    "text": "취소",
+    "size": 14
+  },
+  {
+    "screen": "36_weapon_wheel_pistol",
+    "text": "게임 일시정지 · 빈 슬롯과 취소는 기존 장착 유지",
+    "size": 16
+  },
+  {
+    "screen": "37_weapon_wheel_empty",
+    "text": "장비",
+    "size": 16
+  },
+  {
+    "screen": "37_weapon_wheel_empty",
+    "text": "무기 선택",
+    "size": 32
+  },
+  {
+    "screen": "37_weapon_wheel_empty",
+    "text": "가리킨 뒤 Q를 놓으면 장착됩니다.",
+    "size": 18
+  },
+  {
+    "screen": "37_weapon_wheel_empty",
+    "text": "주 무장",
+    "size": 18
+  },
+  {
+    "screen": "37_weapon_wheel_empty",
+    "text": "비어 있음",
+    "size": 16
+  },
+  {
+    "screen": "37_weapon_wheel_empty",
+    "text": "보조 무장",
+    "size": 18
+  },
+  {
+    "screen": "37_weapon_wheel_empty",
+    "text": "권총",
+    "size": 16
+  },
+  {
+    "screen": "37_weapon_wheel_empty",
+    "text": "맨손",
+    "size": 18
+  },
+  {
+    "screen": "37_weapon_wheel_empty",
+    "text": "현재 장착",
+    "size": 16
+  },
+  {
+    "screen": "37_weapon_wheel_empty",
+    "text": "선택 불가",
+    "size": 24
+  },
+  {
+    "screen": "37_weapon_wheel_empty",
+    "text": "현재 장착 유지",
+    "size": 16
+  },
+  {
+    "screen": "37_weapon_wheel_empty",
+    "text": "Q 홀드",
+    "size": 14
+  },
+  {
+    "screen": "37_weapon_wheel_empty",
+    "text": "마우스로 가리키기",
+    "size": 14
+  },
+  {
+    "screen": "37_weapon_wheel_empty",
+    "text": "Q 해제",
+    "size": 14
+  },
+  {
+    "screen": "37_weapon_wheel_empty",
+    "text": "장착",
+    "size": 14
+  },
+  {
+    "screen": "37_weapon_wheel_empty",
+    "text": "Esc",
+    "size": 14
+  },
+  {
+    "screen": "37_weapon_wheel_empty",
+    "text": "취소",
+    "size": 14
+  },
+  {
+    "screen": "37_weapon_wheel_empty",
+    "text": "게임 일시정지 · 빈 슬롯과 취소는 기존 장착 유지",
+    "size": 16
+  },
+  {
+    "screen": "38_weapon_wheel_equipped",
+    "text": "장비",
+    "size": 16
+  },
+  {
+    "screen": "38_weapon_wheel_equipped",
+    "text": "무기 선택",
+    "size": 32
+  },
+  {
+    "screen": "38_weapon_wheel_equipped",
+    "text": "가리킨 뒤 Q를 놓으면 장착됩니다.",
+    "size": 18
+  },
+  {
+    "screen": "38_weapon_wheel_equipped",
+    "text": "주 무장",
+    "size": 18
+  },
+  {
+    "screen": "38_weapon_wheel_equipped",
+    "text": "비어 있음",
+    "size": 16
+  },
+  {
+    "screen": "38_weapon_wheel_equipped",
+    "text": "보조 무장",
+    "size": 18
+  },
+  {
+    "screen": "38_weapon_wheel_equipped",
+    "text": "현재 장착",
+    "size": 16
+  },
+  {
+    "screen": "38_weapon_wheel_equipped",
+    "text": "맨손",
+    "size": 18
+  },
+  {
+    "screen": "38_weapon_wheel_equipped",
+    "text": "근접 공격",
+    "size": 16
+  },
+  {
+    "screen": "38_weapon_wheel_equipped",
+    "text": "맨손",
+    "size": 24
+  },
+  {
+    "screen": "38_weapon_wheel_equipped",
+    "text": "Q 놓아서 선택",
+    "size": 16
+  },
+  {
+    "screen": "38_weapon_wheel_equipped",
+    "text": "Q 홀드",
+    "size": 14
+  },
+  {
+    "screen": "38_weapon_wheel_equipped",
+    "text": "마우스로 가리키기",
+    "size": 14
+  },
+  {
+    "screen": "38_weapon_wheel_equipped",
+    "text": "Q 해제",
+    "size": 14
+  },
+  {
+    "screen": "38_weapon_wheel_equipped",
+    "text": "장착",
+    "size": 14
+  },
+  {
+    "screen": "38_weapon_wheel_equipped",
+    "text": "Esc",
+    "size": 14
+  },
+  {
+    "screen": "38_weapon_wheel_equipped",
+    "text": "취소",
+    "size": 14
+  },
+  {
+    "screen": "38_weapon_wheel_equipped",
+    "text": "게임 일시정지 · 빈 슬롯과 취소는 기존 장착 유지",
+    "size": 16
+  },
+  {
+    "screen": "39_weapon_wheel_unowned",
+    "text": "장비",
+    "size": 16
+  },
+  {
+    "screen": "39_weapon_wheel_unowned",
+    "text": "무기 선택",
+    "size": 32
+  },
+  {
+    "screen": "39_weapon_wheel_unowned",
+    "text": "가리킨 뒤 Q를 놓으면 장착됩니다.",
+    "size": 18
+  },
+  {
+    "screen": "39_weapon_wheel_unowned",
+    "text": "주 무장",
+    "size": 18
+  },
+  {
+    "screen": "39_weapon_wheel_unowned",
+    "text": "비어 있음",
+    "size": 16
+  },
+  {
+    "screen": "39_weapon_wheel_unowned",
+    "text": "보조 무장",
+    "size": 18
+  },
+  {
+    "screen": "39_weapon_wheel_unowned",
+    "text": "미보유",
+    "size": 16
+  },
+  {
+    "screen": "39_weapon_wheel_unowned",
+    "text": "맨손",
+    "size": 18
+  },
+  {
+    "screen": "39_weapon_wheel_unowned",
+    "text": "현재 장착",
+    "size": 16
+  },
+  {
+    "screen": "39_weapon_wheel_unowned",
+    "text": "선택 불가",
+    "size": 24
+  },
+  {
+    "screen": "39_weapon_wheel_unowned",
+    "text": "현재 장착 유지",
+    "size": 16
+  },
+  {
+    "screen": "39_weapon_wheel_unowned",
+    "text": "Q 홀드",
+    "size": 14
+  },
+  {
+    "screen": "39_weapon_wheel_unowned",
+    "text": "마우스로 가리키기",
+    "size": 14
+  },
+  {
+    "screen": "39_weapon_wheel_unowned",
+    "text": "Q 해제",
+    "size": 14
+  },
+  {
+    "screen": "39_weapon_wheel_unowned",
+    "text": "장착",
+    "size": 14
+  },
+  {
+    "screen": "39_weapon_wheel_unowned",
+    "text": "Esc",
+    "size": 14
+  },
+  {
+    "screen": "39_weapon_wheel_unowned",
+    "text": "취소",
+    "size": 14
+  },
+  {
+    "screen": "39_weapon_wheel_unowned",
+    "text": "게임 일시정지 · 빈 슬롯과 취소는 기존 장착 유지",
+    "size": 16
+  },
+  {
+    "screen": "40_stages",
+    "text": "테스트 진입",
+    "size": 16
+  },
+  {
+    "screen": "40_stages",
+    "text": "스테이지 시작",
+    "size": 32
+  },
+  {
+    "screen": "40_stages",
+    "text": "시작 지점과 기능 해금 지점만 모았습니다.",
+    "size": 18
+  },
+  {
+    "screen": "40_stages",
+    "text": "서장 · 헤일로 시작",
+    "size": 18
+  },
+  {
+    "screen": "40_stages",
+    "text": "01",
+    "size": 16
+  },
+  {
+    "screen": "40_stages",
+    "text": "전망대 · 스테이지 시작",
+    "size": 18
+  },
+  {
+    "screen": "40_stages",
+    "text": "02",
+    "size": 16
+  },
+  {
+    "screen": "40_stages",
+    "text": "바이크 해금 · 광산 출발",
+    "size": 18
+  },
+  {
+    "screen": "40_stages",
+    "text": "03",
+    "size": 16
+  },
+  {
+    "screen": "40_stages",
+    "text": "권총 해금 · 광산 입구",
+    "size": 18
+  },
+  {
+    "screen": "40_stages",
+    "text": "04",
+    "size": 16
+  },
+  {
+    "screen": "40_stages",
+    "text": "광산 · 스테이지 시작",
+    "size": 18
+  },
+  {
+    "screen": "40_stages",
+    "text": "05",
+    "size": 16
+  },
+  {
+    "screen": "40_stages",
+    "text": "1장 · 빛나는 개척지 시작",
+    "size": 18
+  },
+  {
+    "screen": "40_stages",
+    "text": "06",
+    "size": 16
+  },
+  {
+    "screen": "40_stages",
+    "text": "권총 해금 · 광산 입구",
+    "size": 24
+  },
+  {
+    "screen": "40_stages",
+    "text": "광산 입구 야외에서 시작합니다. 권총을 ",
+    "size": 18
+  },
+  {
+    "screen": "40_stages",
+    "text": "보유하지만 기본 장착은 맨손입니다.",
+    "size": 18
+  },
+  {
+    "screen": "40_stages",
+    "text": "선택 시 현재 진행이 초기화됩니다. 이전 필수 스토리는 완료 처리됩니다.",
+    "size": 18
+  },
+  {
+    "screen": "40_stages",
+    "text": "뒤로",
+    "size": 18
+  },
+  {
+    "screen": "40_stages",
+    "text": "W/S · 방향 키 이동   Enter 선택   Esc 뒤로",
+    "size": 16
+  },
+  {
+    "screen": "41_unarmed",
+    "text": "헤일로 수신망에서 리아와 대화",
+    "size": 20
+  },
+  {
+    "screen": "41_unarmed",
+    "text": "가까이 다가가 E 대화",
+    "size": 16
+  },
+  {
+    "screen": "41_unarmed",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "41_unarmed",
+    "text": "헤일로",
+    "size": 16
+  },
+  {
+    "screen": "41_unarmed",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "41_unarmed",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "41_unarmed",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "41_unarmed",
+    "text": "맨손",
+    "size": 24
+  },
+  {
+    "screen": "41_unarmed",
+    "text": "좌클릭 근접 · Q 무기 선택",
+    "size": 16
+  },
+  {
+    "screen": "42_pistol_hip",
+    "text": "헤일로 수신망에서 리아와 대화",
+    "size": 20
+  },
+  {
+    "screen": "42_pistol_hip",
+    "text": "가까이 다가가 E 대화",
+    "size": 16
+  },
+  {
+    "screen": "42_pistol_hip",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "42_pistol_hip",
+    "text": "헤일로",
+    "size": 16
+  },
+  {
+    "screen": "42_pistol_hip",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "42_pistol_hip",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "42_pistol_hip",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "42_pistol_hip",
+    "text": "08",
+    "size": 38
+  },
+  {
+    "screen": "42_pistol_hip",
+    "text": "/ 12",
+    "size": 22
+  },
+  {
+    "screen": "42_pistol_hip",
+    "text": "우클릭 홀드 · 조준",
+    "size": 16
+  },
+  {
+    "screen": "43_pistol_aim",
+    "text": "광산의 구조 신호를 조사",
+    "size": 20
+  },
+  {
+    "screen": "43_pistol_aim",
+    "text": "F 스캔 · 근사 신호 조사",
+    "size": 16
+  },
+  {
+    "screen": "43_pistol_aim",
+    "text": "미탐험",
+    "size": 14
+  },
+  {
+    "screen": "43_pistol_aim",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "43_pistol_aim",
+    "text": "광산 · 탐험 구간",
+    "size": 16
+  },
+  {
+    "screen": "43_pistol_aim",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "43_pistol_aim",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "43_pistol_aim",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "43_pistol_aim",
+    "text": "08",
+    "size": 38
+  },
+  {
+    "screen": "43_pistol_aim",
+    "text": "/ 12",
+    "size": 22
+  },
+  {
+    "screen": "44_pistol_reload",
+    "text": "광산의 구조 신호를 조사",
+    "size": 20
+  },
+  {
+    "screen": "44_pistol_reload",
+    "text": "F 스캔 · 근사 신호 조사",
+    "size": 16
+  },
+  {
+    "screen": "44_pistol_reload",
+    "text": "미탐험",
+    "size": 14
+  },
+  {
+    "screen": "44_pistol_reload",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "44_pistol_reload",
+    "text": "광산 · 탐험 구간",
+    "size": 16
+  },
+  {
+    "screen": "44_pistol_reload",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "44_pistol_reload",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "44_pistol_reload",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "44_pistol_reload",
+    "text": "00",
+    "size": 38
+  },
+  {
+    "screen": "44_pistol_reload",
+    "text": "/ 12",
+    "size": 22
+  },
+  {
+    "screen": "44_pistol_reload",
+    "text": "재장전",
+    "size": 18
+  },
+  {
+    "screen": "15_title",
+    "text": "에르마 · 헤일로",
+    "size": 18
+  },
+  {
+    "screen": "15_title",
+    "text": "침묵하는 관문",
+    "size": 54
+  },
+  {
+    "screen": "15_title",
+    "text": "신호가 닿은 곳에서, 이야기가 시작된다.",
+    "size": 20
+  },
+  {
+    "screen": "15_title",
+    "text": "새 게임",
+    "size": 18
+  },
+  {
+    "screen": "15_title",
+    "text": "스테이지 목록 · 테스트",
+    "size": 18
+  },
+  {
+    "screen": "15_title",
+    "text": "옵션",
+    "size": 18
+  },
+  {
+    "screen": "15_title",
+    "text": "조작 안내",
+    "size": 18
+  },
+  {
+    "screen": "15_title",
+    "text": "종료",
+    "size": 18
+  },
+  {
+    "screen": "15_title",
+    "text": "현재 진행은 실행 세션에만 유지됩니다.",
+    "size": 16
+  },
+  {
+    "screen": "20_help",
+    "text": "필드 가이드",
+    "size": 16
+  },
+  {
+    "screen": "20_help",
+    "text": "조작 안내",
+    "size": 32
+  },
+  {
+    "screen": "20_help",
+    "text": "현재 장면에서 사용할 수 있는 동작만 안내합니다.",
+    "size": 18
+  },
+  {
+    "screen": "20_help",
+    "text": "WASD",
+    "size": 18
+  },
+  {
+    "screen": "20_help",
+    "text": "이동 · 이동 방향 회전",
+    "size": 18
+  },
+  {
+    "screen": "20_help",
+    "text": "우클릭 홀드",
+    "size": 18
+  },
+  {
+    "screen": "20_help",
+    "text": "커서 조준",
+    "size": 18
+  },
+  {
+    "screen": "20_help",
+    "text": "좌클릭",
+    "size": 18
+  },
+  {
+    "screen": "20_help",
+    "text": "장착 무기 공격",
+    "size": 18
+  },
+  {
+    "screen": "20_help",
+    "text": "Q 홀드 + 마우스",
+    "size": 18
+  },
+  {
+    "screen": "20_help",
+    "text": "무기 선택 · Q 해제로 장착",
+    "size": 18
+  },
+  {
+    "screen": "20_help",
+    "text": "V / R",
+    "size": 18
+  },
+  {
+    "screen": "20_help",
+    "text": "근접 공격 / 재장전",
+    "size": 18
+  },
+  {
+    "screen": "20_help",
+    "text": "G",
+    "size": 18
+  },
+  {
+    "screen": "20_help",
+    "text": "회복 · 광산과 1장",
+    "size": 18
+  },
+  {
+    "screen": "20_help",
+    "text": "E",
+    "size": 18
+  },
+  {
+    "screen": "20_help",
+    "text": "대화 · 조사 · 승하차",
+    "size": 18
+  },
+  {
+    "screen": "20_help",
+    "text": "F / M",
+    "size": 18
+  },
+  {
+    "screen": "20_help",
+    "text": "광산 스캔 / 전체 지도",
+    "size": 18
+  },
+  {
+    "screen": "20_help",
+    "text": "J / H",
+    "size": 18
+  },
+  {
+    "screen": "20_help",
+    "text": "조사 기록 / 대사 이력",
+    "size": 18
+  },
+  {
+    "screen": "20_help",
+    "text": "Esc",
+    "size": 18
+  },
+  {
+    "screen": "20_help",
+    "text": "일시정지 · 닫기",
+    "size": 18
+  },
+  {
+    "screen": "20_help",
+    "text": "Q는 무기 선택, G는 회복입니다. 대화는 E/Enter로 다음 페이지를 읽고, 숫자로 선택한 뒤 확정합니다.",
+    "size": 18
+  },
+  {
+    "screen": "20_help",
+    "text": "Esc",
+    "size": 14
+  },
+  {
+    "screen": "20_help",
+    "text": "뒤로",
+    "size": 14
+  },
+  {
+    "screen": "05_dialogue",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "05_dialogue",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "05_dialogue",
+    "text": "08",
+    "size": 38
+  },
+  {
+    "screen": "05_dialogue",
+    "text": "/ 12",
+    "size": 22
+  },
+  {
+    "screen": "05_dialogue",
+    "text": "미탐험",
+    "size": 14
+  },
+  {
+    "screen": "05_dialogue",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "05_dialogue",
+    "text": "광산 · 탐험 구간",
+    "size": 16
+  },
+  {
+    "screen": "05_dialogue",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "05_dialogue",
+    "text": "리아",
+    "size": 20
+  },
+  {
+    "screen": "05_dialogue",
+    "text": "무전 · 전투 계속",
+    "size": 16
+  },
+  {
+    "screen": "05_dialogue",
+    "text": "관문 N-0의 신호와 외곽 설비 N-0/17의 기록은 서로 달라. 둘을 같은 장소로 보고 ",
+    "size": 20
+  },
+  {
+    "screen": "05_dialogue",
+    "text": "조사하면 안 돼. 먼저 발전기의 수신 기록을 확인하자. 확인하지 못한 내용은 조사 ",
+    "size": 20
+  },
+  {
+    "screen": "05_dialogue",
+    "text": "기록에 추정으로 남겨 둘게. 현장에서 확인한 사실과 다음 행동을 빠짐없이 기록한 뒤, ",
+    "size": 20
+  },
+  {
+    "screen": "05_dialogue",
+    "text": "01 / 02",
+    "size": 16
+  },
+  {
+    "screen": "05_dialogue",
+    "text": "E / Enter",
+    "size": 14
+  },
+  {
+    "screen": "05_dialogue",
+    "text": "다음 페이지",
+    "size": 14
+  },
+  {
+    "screen": "45_dialogue_page_02",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "45_dialogue_page_02",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "45_dialogue_page_02",
+    "text": "08",
+    "size": 38
+  },
+  {
+    "screen": "45_dialogue_page_02",
+    "text": "/ 12",
+    "size": 22
+  },
+  {
+    "screen": "45_dialogue_page_02",
+    "text": "미탐험",
+    "size": 14
+  },
+  {
+    "screen": "45_dialogue_page_02",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "45_dialogue_page_02",
+    "text": "광산 · 탐험 구간",
+    "size": 16
+  },
+  {
+    "screen": "45_dialogue_page_02",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "45_dialogue_page_02",
+    "text": "리아",
+    "size": 20
+  },
+  {
+    "screen": "45_dialogue_page_02",
+    "text": "무전 · 전투 계속",
+    "size": 16
+  },
+  {
+    "screen": "45_dialogue_page_02",
+    "text": "안전한 곳에서 나머지 기록도 다시 읽어 보자.",
+    "size": 20
+  },
+  {
+    "screen": "45_dialogue_page_02",
+    "text": "1",
+    "size": 18
+  },
+  {
+    "screen": "45_dialogue_page_02",
+    "text": "조사 기록을 끝까지 확인한 뒤, 세 현장의 발전기·운송대·폐설비에서 수집한 내용을 ",
+    "size": 18
+  },
+  {
+    "screen": "45_dialogue_page_02",
+    "text": "대조하고 헤일로 수신망에서 리아에게 보고한다.",
+    "size": 18
+  },
+  {
+    "screen": "45_dialogue_page_02",
+    "text": "02 / 02",
+    "size": 16
+  },
+  {
+    "screen": "45_dialogue_page_02",
+    "text": "E / Enter",
+    "size": 14
+  },
+  {
+    "screen": "45_dialogue_page_02",
+    "text": "확정",
+    "size": 14
+  },
+  {
+    "screen": "06_journal",
+    "text": "기록실",
+    "size": 16
+  },
+  {
+    "screen": "06_journal",
+    "text": "조사 기록",
+    "size": 32
+  },
+  {
+    "screen": "06_journal",
+    "text": "확인한 사실과 다음 행동을 구분합니다.",
+    "size": 18
+  },
+  {
+    "screen": "06_journal",
+    "text": "관문 N-0의 수신 기록",
+    "size": 18
+  },
+  {
+    "screen": "06_journal",
+    "text": "발전기 조사",
+    "size": 18
+  },
+  {
+    "screen": "06_journal",
+    "text": "운송대 구조",
+    "size": 18
+  },
+  {
+    "screen": "06_journal",
+    "text": "관문과 외곽 설비는 다른 대상이다.",
+    "size": 24
+  },
+  {
+    "screen": "06_journal",
+    "text": "확인한 사실",
+    "size": 16
+  },
+  {
+    "screen": "06_journal",
+    "text": "N-0은 관문을 가리키고 N-0/17은 외곽 설비의 식별 번호다. 아직 조사하지 ",
+    "size": 20
+  },
+  {
+    "screen": "06_journal",
+    "text": "않은 내용과 추정은 확인한 사실로 기록하지 않는다.",
+    "size": 20
+  },
+  {
+    "screen": "06_journal",
+    "text": "현재 할 일",
+    "size": 16
+  },
+  {
+    "screen": "06_journal",
+    "text": "세 현장의 기록을 대조하고, 헤일로 수신망에서 리아에게 조사 결과를 ",
+    "size": 20
+  },
+  {
+    "screen": "06_journal",
+    "text": "보고한다.",
+    "size": 20
+  },
+  {
+    "screen": "06_journal",
+    "text": "중단한 대화는 안전한 곳에서 다시 말을 걸어 재개할 수 있습니다.",
+    "size": 18
+  },
+  {
+    "screen": "06_journal",
+    "text": "PageUp / PageDown",
+    "size": 14
+  },
+  {
+    "screen": "06_journal",
+    "text": "페이지",
+    "size": 14
+  },
+  {
+    "screen": "06_journal",
+    "text": "J / Esc",
+    "size": 14
+  },
+  {
+    "screen": "06_journal",
+    "text": "닫기",
+    "size": 14
+  },
+  {
+    "screen": "16_options",
+    "text": "화면 설정",
+    "size": 16
+  },
+  {
+    "screen": "16_options",
+    "text": "옵션",
+    "size": 32
+  },
+  {
+    "screen": "16_options",
+    "text": "정보의 크기와 대비를 해치지 않는 범위에서 조절합니다.",
+    "size": 18
+  },
+  {
+    "screen": "16_options",
+    "text": "패널 배경",
+    "size": 20
+  },
+  {
+    "screen": "16_options",
+    "text": "94%",
+    "size": 20
+  },
+  {
+    "screen": "16_options",
+    "text": "테두리",
+    "size": 20
+  },
+  {
+    "screen": "16_options",
+    "text": "100%",
+    "size": 20
+  },
+  {
+    "screen": "16_options",
+    "text": "HUD · 글자 · 아이콘",
+    "size": 20
+  },
+  {
+    "screen": "16_options",
+    "text": "100%",
+    "size": 20
+  },
+  {
+    "screen": "16_options",
+    "text": "카툰 명암",
+    "size": 20
+  },
+  {
+    "screen": "16_options",
+    "text": "켜짐",
+    "size": 18
+  },
+  {
+    "screen": "16_options",
+    "text": "월드 렌더 해상도",
+    "size": 20
+  },
+  {
+    "screen": "16_options",
+    "text": "기본",
+    "size": 18
+  },
+  {
+    "screen": "16_options",
+    "text": "안티앨리어싱",
+    "size": 20
+  },
+  {
+    "screen": "16_options",
+    "text": "켜짐",
+    "size": 18
+  },
+  {
+    "screen": "16_options",
+    "text": "월드를 저해상도로 그려도 HUD 글자와 기호는 선명하게 유지됩니다.",
+    "size": 18
+  },
+  {
+    "screen": "16_options",
+    "text": "설정은 현재 실행 세션과 새 게임에 유지됩니다.",
+    "size": 18
+  },
+  {
+    "screen": "16_options",
+    "text": "뒤로",
+    "size": 18
+  },
+  {
+    "screen": "16_options",
+    "text": "A/D · 방향 키 조절",
+    "size": 16
+  },
+  {
+    "screen": "17_summary",
+    "text": "플레이어",
+    "size": 16
+  },
+  {
+    "screen": "17_summary",
+    "text": "보유 · 성장",
+    "size": 32
+  },
+  {
+    "screen": "17_summary",
+    "text": "현재 플레이어의 보유량과 성장 상태입니다.",
+    "size": 18
+  },
+  {
+    "screen": "17_summary",
+    "text": "레벨 7",
+    "size": 32
+  },
+  {
+    "screen": "17_summary",
+    "text": "경험치 420 / 800",
+    "size": 20
+  },
+  {
+    "screen": "17_summary",
+    "text": "크레딧",
+    "size": 20
+  },
+  {
+    "screen": "17_summary",
+    "text": "12,480",
+    "size": 24
+  },
+  {
+    "screen": "17_summary",
+    "text": "거래 부품",
+    "size": 20
+  },
+  {
+    "screen": "17_summary",
+    "text": "18",
+    "size": 24
+  },
+  {
+    "screen": "17_summary",
+    "text": "회복 키트",
+    "size": 20
+  },
+  {
+    "screen": "17_summary",
+    "text": "3",
+    "size": 24
+  },
+  {
+    "screen": "17_summary",
+    "text": "공격 / 방어",
+    "size": 20
+  },
+  {
+    "screen": "17_summary",
+    "text": "24 / 12",
+    "size": 24
+  },
+  {
+    "screen": "17_summary",
+    "text": "악명 / 거래 할증",
+    "size": 20
+  },
+  {
+    "screen": "17_summary",
+    "text": "42 / +50%",
+    "size": 24
+  },
+  {
+    "screen": "17_summary",
+    "text": "뒤로",
+    "size": 18
+  },
+  {
+    "screen": "09_pause",
+    "text": "1장",
+    "size": 16
+  },
+  {
+    "screen": "09_pause",
+    "text": "일시정지",
+    "size": 32
+  },
+  {
+    "screen": "09_pause",
+    "text": "계속하기",
+    "size": 18
+  },
+  {
+    "screen": "09_pause",
+    "text": "스테이지 목록 · 테스트",
+    "size": 18
+  },
+  {
+    "screen": "09_pause",
+    "text": "옵션",
+    "size": 18
+  },
+  {
+    "screen": "09_pause",
+    "text": "보유 · 성장 정보",
+    "size": 18
+  },
+  {
+    "screen": "09_pause",
+    "text": "조작 안내",
+    "size": 18
+  },
+  {
+    "screen": "09_pause",
+    "text": "헤일로 귀환 · 기록 유지",
+    "size": 18
+  },
+  {
+    "screen": "09_pause",
+    "text": "종료",
+    "size": 18
+  },
+  {
+    "screen": "09_pause",
+    "text": "현재 진행은 실행 세션에만 유지됩니다.",
+    "size": 16
+  },
+  {
+    "screen": "09_pause",
+    "text": "Esc 계속하기 · 방향 키 선택 · Enter 확인",
+    "size": 16
+  },
+  {
+    "screen": "28_pause_mine",
+    "text": "광산",
+    "size": 16
+  },
+  {
+    "screen": "28_pause_mine",
+    "text": "일시정지",
+    "size": 32
+  },
+  {
+    "screen": "28_pause_mine",
+    "text": "계속하기",
+    "size": 18
+  },
+  {
+    "screen": "28_pause_mine",
+    "text": "스테이지 목록 · 테스트",
+    "size": 18
+  },
+  {
+    "screen": "28_pause_mine",
+    "text": "옵션",
+    "size": 18
+  },
+  {
+    "screen": "28_pause_mine",
+    "text": "보유 · 성장 정보",
+    "size": 18
+  },
+  {
+    "screen": "28_pause_mine",
+    "text": "조작 안내",
+    "size": 18
+  },
+  {
+    "screen": "28_pause_mine",
+    "text": "광산 재시작",
+    "size": 18
+  },
+  {
+    "screen": "28_pause_mine",
+    "text": "종료",
+    "size": 18
+  },
+  {
+    "screen": "28_pause_mine",
+    "text": "현재 진행은 실행 세션에만 유지됩니다.",
+    "size": 16
+  },
+  {
+    "screen": "28_pause_mine",
+    "text": "Esc 계속하기 · 방향 키 선택 · Enter 확인",
+    "size": 16
+  },
+  {
+    "screen": "29_pause_city",
+    "text": "도시",
+    "size": 16
+  },
+  {
+    "screen": "29_pause_city",
+    "text": "일시정지",
+    "size": 32
+  },
+  {
+    "screen": "29_pause_city",
+    "text": "계속하기",
+    "size": 18
+  },
+  {
+    "screen": "29_pause_city",
+    "text": "스테이지 목록 · 테스트",
+    "size": 18
+  },
+  {
+    "screen": "29_pause_city",
+    "text": "옵션",
+    "size": 18
+  },
+  {
+    "screen": "29_pause_city",
+    "text": "보유 · 성장 정보",
+    "size": 18
+  },
+  {
+    "screen": "29_pause_city",
+    "text": "조작 안내",
+    "size": 18
+  },
+  {
+    "screen": "29_pause_city",
+    "text": "다시 시작 · 진행 초기화",
+    "size": 18
+  },
+  {
+    "screen": "29_pause_city",
+    "text": "종료",
+    "size": 18
+  },
+  {
+    "screen": "29_pause_city",
+    "text": "현재 진행은 실행 세션에만 유지됩니다.",
+    "size": 16
+  },
+  {
+    "screen": "29_pause_city",
+    "text": "Esc 계속하기 · 방향 키 선택 · Enter 확인",
+    "size": 16
+  },
+  {
+    "screen": "13_history",
+    "text": "기록실",
+    "size": 16
+  },
+  {
+    "screen": "13_history",
+    "text": "대사 이력",
+    "size": 32
+  },
+  {
+    "screen": "13_history",
+    "text": "이미 읽은 내용만 전달 방식과 함께 보관합니다.",
+    "size": 18
+  },
+  {
+    "screen": "13_history",
+    "text": "무전",
+    "size": 16
+  },
+  {
+    "screen": "13_history",
+    "text": "리아",
+    "size": 20
+  },
+  {
+    "screen": "13_history",
+    "text": "수신 기록은 확인했어. 다음은 발전기야.",
+    "size": 20
+  },
+  {
+    "screen": "13_history",
+    "text": "단말",
+    "size": 16
+  },
+  {
+    "screen": "13_history",
+    "text": "발전기 제어 단말",
+    "size": 20
+  },
+  {
+    "screen": "13_history",
+    "text": "보조 전력 복구를 확인했습니다.",
+    "size": 20
+  },
+  {
+    "screen": "13_history",
+    "text": "현장 대화",
+    "size": 16
+  },
+  {
+    "screen": "13_history",
+    "text": "리아",
+    "size": 20
+  },
+  {
+    "screen": "13_history",
+    "text": "아직은 결론을 내리지 말자. 세 현장의 기록을 더 대조해야 해.",
+    "size": 20
+  },
+  {
+    "screen": "13_history",
+    "text": "PageUp / PageDown",
+    "size": 14
+  },
+  {
+    "screen": "13_history",
+    "text": "페이지",
+    "size": 14
+  },
+  {
+    "screen": "13_history",
+    "text": "H / Esc",
+    "size": 14
+  },
+  {
+    "screen": "13_history",
+    "text": "닫기",
+    "size": 14
+  },
+  {
+    "screen": "46_unlock_notice",
+    "text": "헤일로 수신망에서 리아와 대화",
+    "size": 20
+  },
+  {
+    "screen": "46_unlock_notice",
+    "text": "가까이 다가가 E 대화",
+    "size": 16
+  },
+  {
+    "screen": "46_unlock_notice",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "46_unlock_notice",
+    "text": "헤일로",
+    "size": 16
+  },
+  {
+    "screen": "46_unlock_notice",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "46_unlock_notice",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "46_unlock_notice",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "46_unlock_notice",
+    "text": "맨손",
+    "size": 24
+  },
+  {
+    "screen": "46_unlock_notice",
+    "text": "좌클릭 근접 · Q 무기 선택",
+    "size": 16
+  },
+  {
+    "screen": "46_unlock_notice",
+    "text": "권총을 받았습니다. Q를 누른 채 ",
+    "size": 18
+  },
+  {
+    "screen": "46_unlock_notice",
+    "text": "마우스로 보조 무장을 가리키고, ",
+    "size": 18
+  },
+  {
+    "screen": "46_unlock_notice",
+    "text": "Q를 놓으면 장착됩니다.",
+    "size": 18
+  },
+  {
+    "screen": "47_notice_page_01",
+    "text": "헤일로 수신망에서 리아와 대화",
+    "size": 20
+  },
+  {
+    "screen": "47_notice_page_01",
+    "text": "가까이 다가가 E 대화",
+    "size": 16
+  },
+  {
+    "screen": "47_notice_page_01",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "47_notice_page_01",
+    "text": "헤일로",
+    "size": 16
+  },
+  {
+    "screen": "47_notice_page_01",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "47_notice_page_01",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "47_notice_page_01",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "47_notice_page_01",
+    "text": "08",
+    "size": 38
+  },
+  {
+    "screen": "47_notice_page_01",
+    "text": "/ 12",
+    "size": 22
+  },
+  {
+    "screen": "47_notice_page_01",
+    "text": "우클릭 홀드 · 조준",
+    "size": 16
+  },
+  {
+    "screen": "47_notice_page_01",
+    "text": "헤일로 수신망에 조사 기록을 ",
+    "size": 18
+  },
+  {
+    "screen": "47_notice_page_01",
+    "text": "전달했습니다. ",
+    "size": 18
+  },
+  {
+    "screen": "47_notice_page_01",
+    "text": "발전기·운송대·폐설비의 현장 ",
+    "size": 18
+  },
+  {
+    "screen": "47_notice_page_01",
+    "text": "기록을 모두 확인한 다음 리아에게 ",
+    "size": 18
+  },
+  {
+    "screen": "47_notice_page_01",
+    "text": "1 / 2 · 자동 다음",
+    "size": 16
+  },
+  {
+    "screen": "47_notice_page_02",
+    "text": "헤일로 수신망에서 리아와 대화",
+    "size": 20
+  },
+  {
+    "screen": "47_notice_page_02",
+    "text": "가까이 다가가 E 대화",
+    "size": 16
+  },
+  {
+    "screen": "47_notice_page_02",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "47_notice_page_02",
+    "text": "헤일로",
+    "size": 16
+  },
+  {
+    "screen": "47_notice_page_02",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "47_notice_page_02",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "47_notice_page_02",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "47_notice_page_02",
+    "text": "08",
+    "size": 38
+  },
+  {
+    "screen": "47_notice_page_02",
+    "text": "/ 12",
+    "size": 22
+  },
+  {
+    "screen": "47_notice_page_02",
+    "text": "우클릭 홀드 · 조준",
+    "size": 16
+  },
+  {
+    "screen": "47_notice_page_02",
+    "text": "보고하세요. 확인한 기록은 의료 ",
+    "size": 18
+  },
+  {
+    "screen": "47_notice_page_02",
+    "text": "이송 뒤에도 유지됩니다. 아직 읽지 ",
+    "size": 18
+  },
+  {
+    "screen": "47_notice_page_02",
+    "text": "않은 중요한 대화는 안전한 곳에서 ",
+    "size": 18
+  },
+  {
+    "screen": "47_notice_page_02",
+    "text": "이어 읽을 수 있습니다.",
+    "size": 18
+  },
+  {
+    "screen": "47_notice_page_02",
+    "text": "2 / 2 · 자동 다음",
+    "size": 16
+  },
+  {
+    "screen": "23_icons",
+    "text": "SYMBOL LIBRARY / 03",
+    "size": 14
+  },
+  {
+    "screen": "23_icons",
+    "text": "작은 크기에서도 구분되는 기호",
+    "size": 32
+  },
+  {
+    "screen": "23_icons",
+    "text": "24px 기준 · 단일 색상 · 개별 SVG / 투명 PNG / 아틀라스 제공",
+    "size": 16
+  },
+  {
+    "screen": "23_icons",
+    "text": "health",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "heal",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "pistol",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "magazine",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "reload",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "infinite",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "objective",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "investigate",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "dialogue",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "radio",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "terminal",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "record",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "history",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "scan",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "signal",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "rescue",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "companion",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "injured",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "medical",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "wanted",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "reputation",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "credit",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "parts",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "bike",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "boost",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "reverse",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "speed",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "walk",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "stop",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "warning",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "check",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "close",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "lock",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "arrow",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "chevron",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "destination",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "player",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "home",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "gate",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "power",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "supply",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "exit",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "pause",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "settings",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "mouse",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "keyboard",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "transport",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "investigation_site",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "unknown_signal",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "level",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "attack",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "defense",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "empty",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "unarmed",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "slot_empty",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "mouse_right",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "key_release",
+    "size": 9
+  },
+  {
+    "screen": "23_icons",
+    "text": "stage",
+    "size": 9
   }
 ]

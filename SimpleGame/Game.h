@@ -358,6 +358,7 @@ struct GameState
     float playTimeSeconds = 0;
     float animationTimeSeconds = 0;
     float noticeSecondsRemaining = 0;
+    float noticeDurationSeconds = 0;
     float movementAmount = 0;
     float movementSpeed = 0;
     int facingDirection = 0;

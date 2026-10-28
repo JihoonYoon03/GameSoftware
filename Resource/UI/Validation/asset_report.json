@@ -1,17 +1,17 @@
 {
   "status": "PASS",
   "issues": [],
-  "icon_count": 53,
-  "hud_icon_count": 20,
-  "component_count": 39,
-  "screen_count": 34,
-  "requirement_count": 23,
-  "state_count": 139,
+  "icon_count": 58,
+  "hud_icon_count": 24,
+  "component_count": 45,
+  "screen_count": 48,
+  "requirement_count": 25,
+  "state_count": 155,
   "glyphs": {
     "font": "Malgun Gothic",
-    "unique_characters": 404,
+    "unique_characters": 410,
     "missing": [],
-    "gdi_result": 404
+    "gdi_result": 410
   },
   "geometry": {
     "overflow": 0,
@@ -29,7 +29,7 @@
         "content_alpha": 0.85,
         "underlying": "#ffffff",
         "color": "ink",
-        "ratio": 4.082,
+        "ratio": 3.645,
         "passes": false
       },
       {
@@ -37,7 +37,7 @@
         "content_alpha": 0.85,
         "underlying": "#ffffff",
         "color": "muted",
-        "ratio": 3.07,
+        "ratio": 3.022,
         "passes": false
       },
       {
@@ -45,7 +45,7 @@
         "content_alpha": 0.85,
         "underlying": "#ffffff",
         "color": "accent",
-        "ratio": 3.244,
+        "ratio": 2.872,
         "passes": false
       },
       {
@@ -53,7 +53,7 @@
         "content_alpha": 0.85,
         "underlying": "#ffffff",
         "color": "amber",
-        "ratio": 3.234,
+        "ratio": 3.17,
         "passes": false
       },
       {
@@ -61,7 +61,7 @@
         "content_alpha": 0.85,
         "underlying": "#ffffff",
         "color": "danger",
-        "ratio": 2.722,
+        "ratio": 2.68,
         "passes": false
       },
       {
@@ -69,7 +69,7 @@
         "content_alpha": 0.85,
         "underlying": "#ffffff",
         "color": "blue",
-        "ratio": 2.891,
+        "ratio": 2.888,
         "passes": false
       },
       {
@@ -77,7 +77,7 @@
         "content_alpha": 0.85,
         "underlying": "#000000",
         "color": "ink",
-        "ratio": 14.17,
+        "ratio": 12.878,
         "passes": true
       },
       {
@@ -85,7 +85,7 @@
         "content_alpha": 0.85,
         "underlying": "#000000",
         "color": "muted",
-        "ratio": 10.485,
+        "ratio": 10.562,
         "passes": true
       },
       {
@@ -93,7 +93,7 @@
         "content_alpha": 0.85,
         "underlying": "#000000",
         "color": "accent",
-        "ratio": 11.139,
+        "ratio": 10.019,
         "passes": true
       },
       {
@@ -101,7 +101,7 @@
         "content_alpha": 0.85,
         "underlying": "#000000",
         "color": "amber",
-        "ratio": 11.088,
+        "ratio": 11.118,
         "passes": true
       },
       {
@@ -109,7 +109,7 @@
         "content_alpha": 0.85,
         "underlying": "#000000",
         "color": "danger",
-        "ratio": 9.243,
+        "ratio": 9.31,
         "passes": true
       },
       {
@@ -117,7 +117,7 @@
         "content_alpha": 0.85,
         "underlying": "#000000",
         "color": "blue",
-        "ratio": 9.842,
+        "ratio": 10.073,
         "passes": true
       },
       {
@@ -125,7 +125,7 @@
         "content_alpha": 0.85,
         "underlying": "#83958e",
         "color": "ink",
-        "ratio": 7.536,
+        "ratio": 6.693,
         "passes": true
       },
       {
@@ -133,7 +133,7 @@
         "content_alpha": 0.85,
         "underlying": "#83958e",
         "color": "muted",
-        "ratio": 5.63,
+        "ratio": 5.524,
         "passes": true
       },
       {
@@ -141,7 +141,7 @@
         "content_alpha": 0.85,
         "underlying": "#83958e",
         "color": "accent",
-        "ratio": 5.967,
+        "ratio": 5.248,
         "passes": true
       },
       {
@@ -149,7 +149,7 @@
         "content_alpha": 0.85,
         "underlying": "#83958e",
         "color": "amber",
-        "ratio": 5.938,
+        "ratio": 5.801,
         "passes": true
       },
       {
@@ -157,7 +157,7 @@
         "content_alpha": 0.85,
         "underlying": "#83958e",
         "color": "danger",
-        "ratio": 4.976,
+        "ratio": 4.882,
         "passes": true
       },
       {
@@ -165,7 +165,7 @@
         "content_alpha": 0.85,
         "underlying": "#83958e",
         "color": "blue",
-        "ratio": 5.295,
+        "ratio": 5.276,
         "passes": true
       },
       {
@@ -173,7 +173,7 @@
         "content_alpha": 0.85,
         "underlying": "#080e14",
         "color": "ink",
-        "ratio": 13.754,
+        "ratio": 12.453,
         "passes": true
       },
       {
@@ -181,7 +181,7 @@
         "content_alpha": 0.85,
         "underlying": "#080e14",
         "color": "muted",
-        "ratio": 10.187,
+        "ratio": 10.22,
         "passes": true
       },
       {
@@ -189,7 +189,7 @@
         "content_alpha": 0.85,
         "underlying": "#080e14",
         "color": "accent",
-        "ratio": 10.821,
+        "ratio": 9.696,
         "passes": true
       },
       {
@@ -197,7 +197,7 @@
         "content_alpha": 0.85,
         "underlying": "#080e14",
         "color": "amber",
-        "ratio": 10.767,
+        "ratio": 10.753,
         "passes": true
       },
       {
@@ -205,7 +205,7 @@
         "content_alpha": 0.85,
         "underlying": "#080e14",
         "color": "danger",
-        "ratio": 8.979,
+        "ratio": 9.008,
         "passes": true
       },
       {
@@ -213,7 +213,7 @@
         "content_alpha": 0.85,
         "underlying": "#080e14",
         "color": "blue",
-        "ratio": 9.565,
+        "ratio": 9.749,
         "passes": true
       },
       {
@@ -221,7 +221,7 @@
         "content_alpha": 0.85,
         "underlying": "#ffffff",
         "color": "ink",
-        "ratio": 7.93,
+        "ratio": 6.952,
         "passes": true
       },
       {
@@ -229,7 +229,7 @@
         "content_alpha": 0.85,
         "underlying": "#ffffff",
         "color": "muted",
-        "ratio": 5.921,
+        "ratio": 5.736,
         "passes": true
       },
       {
@@ -237,7 +237,7 @@
         "content_alpha": 0.85,
         "underlying": "#ffffff",
         "color": "accent",
-        "ratio": 6.273,
+        "ratio": 5.447,
         "passes": true
       },
       {
@@ -245,7 +245,7 @@
         "content_alpha": 0.85,
         "underlying": "#ffffff",
         "color": "amber",
-        "ratio": 6.246,
+        "ratio": 6.025,
         "passes": true
       },
       {
@@ -253,7 +253,7 @@
         "content_alpha": 0.85,
         "underlying": "#ffffff",
         "color": "danger",
-        "ratio": 5.234,
+        "ratio": 5.071,
         "passes": true
       },
       {
@@ -261,7 +261,7 @@
         "content_alpha": 0.85,
         "underlying": "#ffffff",
         "color": "blue",
-        "ratio": 5.568,
+        "ratio": 5.478,
         "passes": true
       },
       {
@@ -269,7 +269,7 @@
         "content_alpha": 0.85,
         "underlying": "#000000",
         "color": "ink",
-        "ratio": 13.907,
+        "ratio": 12.529,
         "passes": true
       },
       {
@@ -277,7 +277,7 @@
         "content_alpha": 0.85,
         "underlying": "#000000",
         "color": "muted",
-        "ratio": 10.297,
+        "ratio": 10.281,
         "passes": true
       },
       {
@@ -285,7 +285,7 @@
         "content_alpha": 0.85,
         "underlying": "#000000",
         "color": "accent",
-        "ratio": 10.939,
+        "ratio": 9.755,
         "passes": true
       },
       {
@@ -293,7 +293,7 @@
         "content_alpha": 0.85,
         "underlying": "#000000",
         "color": "amber",
-        "ratio": 10.884,
+        "ratio": 10.818,
         "passes": true
       },
       {
@@ -301,7 +301,7 @@
         "content_alpha": 0.85,
         "underlying": "#000000",
         "color": "danger",
-        "ratio": 9.075,
+        "ratio": 9.061,
         "passes": true
       },
       {
@@ -309,7 +309,7 @@
         "content_alpha": 0.85,
         "underlying": "#000000",
         "color": "blue",
-        "ratio": 9.668,
+        "ratio": 9.807,
         "passes": true
       },
       {
@@ -317,7 +317,7 @@
         "content_alpha": 0.85,
         "underlying": "#83958e",
         "color": "ink",
-        "ratio": 10.636,
+        "ratio": 9.371,
         "passes": true
       },
       {
@@ -325,7 +325,7 @@
         "content_alpha": 0.85,
         "underlying": "#83958e",
         "color": "muted",
-        "ratio": 7.914,
+        "ratio": 7.715,
         "passes": true
       },
       {
@@ -333,7 +333,7 @@
         "content_alpha": 0.85,
         "underlying": "#83958e",
         "color": "accent",
-        "ratio": 8.397,
+        "ratio": 7.325,
         "passes": true
       },
       {
@@ -341,7 +341,7 @@
         "content_alpha": 0.85,
         "underlying": "#83958e",
         "color": "amber",
-        "ratio": 8.354,
+        "ratio": 8.108,
         "passes": true
       },
       {
@@ -349,7 +349,7 @@
         "content_alpha": 0.85,
         "underlying": "#83958e",
         "color": "danger",
-        "ratio": 6.984,
+        "ratio": 6.808,
         "passes": true
       },
       {
@@ -357,7 +357,7 @@
         "content_alpha": 0.85,
         "underlying": "#83958e",
         "color": "blue",
-        "ratio": 7.437,
+        "ratio": 7.364,
         "passes": true
       },
       {
@@ -365,7 +365,7 @@
         "content_alpha": 0.85,
         "underlying": "#080e14",
         "color": "ink",
-        "ratio": 13.677,
+        "ratio": 12.29,
         "passes": true
       },
       {
@@ -373,7 +373,7 @@
         "content_alpha": 0.85,
         "underlying": "#080e14",
         "color": "muted",
-        "ratio": 10.132,
+        "ratio": 10.089,
         "passes": true
       },
       {
@@ -381,7 +381,7 @@
         "content_alpha": 0.85,
         "underlying": "#080e14",
         "color": "accent",
-        "ratio": 10.763,
+        "ratio": 9.573,
         "passes": true
       },
       {
@@ -389,7 +389,7 @@
         "content_alpha": 0.85,
         "underlying": "#080e14",
         "color": "amber",
-        "ratio": 10.707,
+        "ratio": 10.613,
         "passes": true
       },
       {
@@ -397,7 +397,7 @@
         "content_alpha": 0.85,
         "underlying": "#080e14",
         "color": "danger",
-        "ratio": 8.929,
+        "ratio": 8.891,
         "passes": true
       },
       {
@@ -405,7 +405,7 @@
         "content_alpha": 0.85,
         "underlying": "#080e14",
         "color": "blue",
-        "ratio": 9.514,
+        "ratio": 9.625,
         "passes": true
       },
       {
@@ -413,7 +413,7 @@
         "content_alpha": 0.85,
         "underlying": "#ffffff",
         "color": "ink",
-        "ratio": 12.075,
+        "ratio": 10.634,
         "passes": true
       },
       {
@@ -421,7 +421,7 @@
         "content_alpha": 0.85,
         "underlying": "#ffffff",
         "color": "muted",
-        "ratio": 8.967,
+        "ratio": 8.744,
         "passes": true
       },
       {
@@ -429,7 +429,7 @@
         "content_alpha": 0.85,
         "underlying": "#ffffff",
         "color": "accent",
-        "ratio": 9.519,
+        "ratio": 8.3,
         "passes": true
       },
       {
@@ -437,7 +437,7 @@
         "content_alpha": 0.85,
         "underlying": "#ffffff",
         "color": "amber",
-        "ratio": 9.47,
+        "ratio": 9.193,
         "passes": true
       },
       {
@@ -445,7 +445,7 @@
         "content_alpha": 0.85,
         "underlying": "#ffffff",
         "color": "danger",
-        "ratio": 7.91,
+        "ratio": 7.713,
         "passes": true
       },
       {
@@ -453,7 +453,7 @@
         "content_alpha": 0.85,
         "underlying": "#ffffff",
         "color": "blue",
-        "ratio": 8.425,
+        "ratio": 8.345,
         "passes": true
       },
       {
@@ -461,7 +461,7 @@
         "content_alpha": 0.85,
         "underlying": "#000000",
         "color": "ink",
-        "ratio": 13.694,
+        "ratio": 12.247,
         "passes": true
       },
       {
@@ -469,7 +469,7 @@
         "content_alpha": 0.85,
         "underlying": "#000000",
         "color": "muted",
-        "ratio": 10.144,
+        "ratio": 10.054,
         "passes": true
       },
       {
@@ -477,7 +477,7 @@
         "content_alpha": 0.85,
         "underlying": "#000000",
         "color": "accent",
-        "ratio": 10.777,
+        "ratio": 9.541,
         "passes": true
       },
       {
@@ -485,7 +485,7 @@
         "content_alpha": 0.85,
         "underlying": "#000000",
         "color": "amber",
-        "ratio": 10.72,
+        "ratio": 10.576,
         "passes": true
       },
       {
@@ -493,7 +493,7 @@
         "content_alpha": 0.85,
         "underlying": "#000000",
         "color": "danger",
-        "ratio": 8.94,
+        "ratio": 8.86,
         "passes": true
       },
       {
@@ -501,7 +501,7 @@
         "content_alpha": 0.85,
         "underlying": "#000000",
         "color": "blue",
-        "ratio": 9.526,
+        "ratio": 9.592,
         "passes": true
       },
       {
@@ -509,7 +509,7 @@
         "content_alpha": 0.85,
         "underlying": "#83958e",
         "color": "ink",
-        "ratio": 12.836,
+        "ratio": 11.373,
         "passes": true
       },
       {
@@ -517,7 +517,7 @@
         "content_alpha": 0.85,
         "underlying": "#83958e",
         "color": "muted",
-        "ratio": 9.522,
+        "ratio": 9.345,
         "passes": true
       },
       {
@@ -525,7 +525,7 @@
         "content_alpha": 0.85,
         "underlying": "#83958e",
         "color": "accent",
-        "ratio": 10.112,
+        "ratio": 8.87,
         "passes": true
       },
       {
@@ -533,7 +533,7 @@
         "content_alpha": 0.85,
         "underlying": "#83958e",
         "color": "amber",
-        "ratio": 10.058,
+        "ratio": 9.826,
         "passes": true
       },
       {
@@ -541,7 +541,7 @@
         "content_alpha": 0.85,
         "underlying": "#83958e",
         "color": "danger",
-        "ratio": 8.395,
+        "ratio": 8.239,
         "passes": true
       },
       {
@@ -549,7 +549,7 @@
         "content_alpha": 0.85,
         "underlying": "#83958e",
         "color": "blue",
-        "ratio": 8.944,
+        "ratio": 8.918,
         "passes": true
       },
       {
@@ -557,7 +557,7 @@
         "content_alpha": 0.85,
         "underlying": "#080e14",
         "color": "ink",
-        "ratio": 13.621,
+        "ratio": 12.171,
         "passes": true
       },
       {
@@ -565,7 +565,7 @@
         "content_alpha": 0.85,
         "underlying": "#080e14",
         "color": "muted",
-        "ratio": 10.091,
+        "ratio": 9.992,
         "passes": true
       },
       {
@@ -573,7 +573,7 @@
         "content_alpha": 0.85,
         "underlying": "#080e14",
         "color": "accent",
-        "ratio": 10.721,
+        "ratio": 9.483,
         "passes": true
       },
       {
@@ -581,7 +581,7 @@
         "content_alpha": 0.85,
         "underlying": "#080e14",
         "color": "amber",
-        "ratio": 10.663,
+        "ratio": 10.51,
         "passes": true
       },
       {
@@ -589,7 +589,7 @@
         "content_alpha": 0.85,
         "underlying": "#080e14",
         "color": "danger",
-        "ratio": 8.893,
+        "ratio": 8.806,
         "passes": true
       },
       {
@@ -597,7 +597,7 @@
         "content_alpha": 0.85,
         "underlying": "#080e14",
         "color": "blue",
-        "ratio": 9.477,
+        "ratio": 9.534,
         "passes": true
       },
       {
@@ -605,7 +605,7 @@
         "content_alpha": 0.85,
         "underlying": "#ffffff",
         "color": "ink",
-        "ratio": 13.596,
+        "ratio": 12.118,
         "passes": true
       },
       {
@@ -613,7 +613,7 @@
         "content_alpha": 0.85,
         "underlying": "#ffffff",
         "color": "muted",
-        "ratio": 10.074,
+        "ratio": 9.95,
         "passes": true
       },
       {
@@ -621,7 +621,7 @@
         "content_alpha": 0.85,
         "underlying": "#ffffff",
         "color": "accent",
-        "ratio": 10.702,
+        "ratio": 9.443,
         "passes": true
       },
       {
@@ -629,7 +629,7 @@
         "content_alpha": 0.85,
         "underlying": "#ffffff",
         "color": "amber",
-        "ratio": 10.644,
+        "ratio": 10.465,
         "passes": true
       },
       {
@@ -637,7 +637,7 @@
         "content_alpha": 0.85,
         "underlying": "#ffffff",
         "color": "danger",
-        "ratio": 8.877,
+        "ratio": 8.768,
         "passes": true
       },
       {
@@ -645,7 +645,7 @@
         "content_alpha": 0.85,
         "underlying": "#ffffff",
         "color": "blue",
-        "ratio": 9.46,
+        "ratio": 9.493,
         "passes": true
       },
       {
@@ -653,7 +653,7 @@
         "content_alpha": 0.85,
         "underlying": "#000000",
         "color": "ink",
-        "ratio": 13.596,
+        "ratio": 12.118,
         "passes": true
       },
       {
@@ -661,7 +661,7 @@
         "content_alpha": 0.85,
         "underlying": "#000000",
         "color": "muted",
-        "ratio": 10.074,
+        "ratio": 9.95,
         "passes": true
       },
       {
@@ -669,7 +669,7 @@
         "content_alpha": 0.85,
         "underlying": "#000000",
         "color": "accent",
-        "ratio": 10.702,
+        "ratio": 9.443,
         "passes": true
       },
       {
@@ -677,7 +677,7 @@
         "content_alpha": 0.85,
         "underlying": "#000000",
         "color": "amber",
-        "ratio": 10.644,
+        "ratio": 10.465,
         "passes": true
       },
       {
@@ -685,7 +685,7 @@
         "content_alpha": 0.85,
         "underlying": "#000000",
         "color": "danger",
-        "ratio": 8.877,
+        "ratio": 8.768,
         "passes": true
       },
       {
@@ -693,7 +693,7 @@
         "content_alpha": 0.85,
         "underlying": "#000000",
         "color": "blue",
-        "ratio": 9.46,
+        "ratio": 9.493,
         "passes": true
       },
       {
@@ -701,7 +701,7 @@
         "content_alpha": 0.85,
         "underlying": "#83958e",
         "color": "ink",
-        "ratio": 13.596,
+        "ratio": 12.118,
         "passes": true
       },
       {
@@ -709,7 +709,7 @@
         "content_alpha": 0.85,
         "underlying": "#83958e",
         "color": "muted",
-        "ratio": 10.074,
+        "ratio": 9.95,
         "passes": true
       },
       {
@@ -717,7 +717,7 @@
         "content_alpha": 0.85,
         "underlying": "#83958e",
         "color": "accent",
-        "ratio": 10.702,
+        "ratio": 9.443,
         "passes": true
       },
       {
@@ -725,7 +725,7 @@
         "content_alpha": 0.85,
         "underlying": "#83958e",
         "color": "amber",
-        "ratio": 10.644,
+        "ratio": 10.465,
         "passes": true
       },
       {
@@ -733,7 +733,7 @@
         "content_alpha": 0.85,
         "underlying": "#83958e",
         "color": "danger",
-        "ratio": 8.877,
+        "ratio": 8.768,
         "passes": true
       },
       {
@@ -741,7 +741,7 @@
         "content_alpha": 0.85,
         "underlying": "#83958e",
         "color": "blue",
-        "ratio": 9.46,
+        "ratio": 9.493,
         "passes": true
       },
       {
@@ -749,7 +749,7 @@
         "content_alpha": 0.85,
         "underlying": "#080e14",
         "color": "ink",
-        "ratio": 13.596,
+        "ratio": 12.118,
         "passes": true
       },
       {
@@ -757,7 +757,7 @@
         "content_alpha": 0.85,
         "underlying": "#080e14",
         "color": "muted",
-        "ratio": 10.074,
+        "ratio": 9.95,
         "passes": true
       },
       {
@@ -765,7 +765,7 @@
         "content_alpha": 0.85,
         "underlying": "#080e14",
         "color": "accent",
-        "ratio": 10.702,
+        "ratio": 9.443,
         "passes": true
       },
       {
@@ -773,7 +773,7 @@
         "content_alpha": 0.85,
         "underlying": "#080e14",
         "color": "amber",
-        "ratio": 10.644,
+        "ratio": 10.465,
         "passes": true
       },
       {
@@ -781,7 +781,7 @@
         "content_alpha": 0.85,
         "underlying": "#080e14",
         "color": "danger",
-        "ratio": 8.877,
+        "ratio": 8.768,
         "passes": true
       },
       {
@@ -789,11 +789,13 @@
         "content_alpha": 0.85,
         "underlying": "#080e14",
         "color": "blue",
-        "ratio": 9.46,
+        "ratio": 9.493,
         "passes": true
       }
     ],
     "note": "Solid-color compositing estimate; anti-aliasing edges, patterned game backgrounds, live renderer and color vision are not certified."
   },
-  "scope": "UI resources and browser previews only; no game executable or Runtime changes."
+  "text_flow_count": 64,
+  "text_lossless": true,
+  "scope": "Resource/browser checks. Game-source checks are recorded separately in INTEGRATION_ko.md; user executable and model Runtime pack unchanged."
 }

@@ -1,7 +1,7 @@
 # SimpleGame 게임 개발 통합 문서
 
 통합일: 2026-10-14  
-최종 진행 정리: 2026-10-27 · 이동/조준 블렌드 스페이스·상체 레이어·우클릭 조준·v3 본 계층 캐시 적용 · 바이크 충돌 수정 유지
+최종 진행 정리: 2026-10-28 · 신규 UI 리소스·설정/기록/도움말 레이아웃 및 권총 운반·재장전 상체 모션 연결
 
 기준 브랜치: `iss01_actor_scene_render` · 범죄 시스템 변경 기준: `62b00b5` · 이전 도로 성능 비교 기준: `592ec4c` · 초기 기반: `41316a5`
 
@@ -12,7 +12,7 @@
 
 - **애니메이션 블렌딩:** `Animation.h/.cpp`의 AnimationMath, AnimationBlendSpace, LayeredAnimation, CharacterAnimation으로 공통 처리한다. 기본 Idle/Walk/Run은 속도 1D 블렌드, 조준 이동은 납품된 17개 속도 표본(정지+8방향 걷기+8방향 달리기)·24개 삼각형의 2D 블렌드다. 프레임 사이와 클립 사이를 본 로컬 이동/크기 선형 보간·최단 경로 쿼터니언 보간으로 섞고 FK 뒤 스키닝한다. 방향이나 속도 전환 때 위상을 재시작하지 않고 정지하면 마지막 보행 위상을 보관한다. Aim_Base/사격/근접은 본별 상체 마스크로 얹고 root·pelvis·하체의 이동을 보존한다. 상체 회전은 컴포넌트 공간에서 섞어 골반 흔들림이 총구 방향을 바꾸지 않게 하며, 발바닥 접지는 충돌/배우 루트를 움직이지 않는 시각 보정이다.
 - **이동과 조준:** 맨손·무장 모두 기본은 WASD 입력 방향으로 회전한다. 무장 상태에서 우클릭을 유지할 때 커서 방향으로 배우를 회전시키고 WASD의 화면 기준 이동은 유지한다. 이때 바라보는 방향에 대한 전·후·좌우·대각선 속도로 하체 모션을 고른다. 우클릭 해제 후 움직이면 이동 방향 회전으로 돌아간다. 비조준 사격은 배우가 바라보는 방향, 조준 사격은 커서 방향이며 도시·광산·1장에 동일하게 적용한다. 메뉴·지도·Q 선택창·대화·지역 전환·창 이탈·의료 이송은 조준 입력을 해제한다. 미니맵 화살표는 실제 배우 방향을 따른다.
-- **리소스/추가 모션:** Runtime은 v3이며 기존 정점·메시·클립을 유지하고 공유 애니메이션 뱅크에 본 이름/부모/바인드·블렌드 표본·발 접지점을 추가했다. 로컬 본 표본은 뱅크마다 한 번 계산하여 성별·의복·헤어가 공유한다. 변경된 변환기/블렌딩 JSON은 증분 준비 입력에 포함되어 다른 PC에서도 자동 재생성된다. 기존 실행 파일은 v3를 읽을 수 없으므로 게임을 재빌드해야 한다. 후진·옆걸음 클립은 이미 있어 연결했고, 별도 권총 운반/재장전 모션의 부족은 [추가 모션 요청서](Resource/ANIMATION_BLEND_REQUEST.md)에 기록했다. 현재 보유 무기·재장전 게임 규칙은 유지한다.
+- **리소스/추가 모션:** Runtime은 v3이며 기존 정점·메시·클립을 유지하고 공유 애니메이션 뱅크에 본 이름/부모/바인드·블렌드 표본·발 접지점을 추가했다. 로컬 본 표본은 뱅크마다 한 번 계산하여 성별·의복·헤어가 공유한다. 변경된 변환기/블렌딩 JSON은 증분 준비 입력에 포함되어 다른 PC에서도 자동 재생성된다. 기존 실행 파일은 v3를 읽을 수 없으므로 게임을 재빌드해야 한다. 후진·옆걸음 클립은 이미 있어 연결했고, 권총 운반 3종과 Reload_Pistol의 총 4개 신규 클립도 연결했다. 운반은 속도·보행 위상을 공유하고 조준 가중치로 전환하며, 재장전은 실제 무기 진행률과 0.15초 진입/복귀 블렌드를 사용한다. root·pelvis·하체와 탄약 판정은 유지한다. [모션 연결 기록](Resource/ANIMATION_BLEND_REQUEST.md)에 납품 완료 상태와 향후 빠른 이동 표본 범위를 정리했다.
 - **참고 구조:** Epic의 [Blend Spaces](https://dev.epicgames.com/documentation/unreal-engine/blend-spaces-in-unreal-engine)와 [Layered Blend Per Bone](https://dev.epicgames.com/documentation/unreal-engine/animation-blueprint-blend-nodes-in-unreal-engine)의 속도 표본·본 마스크 개념을 참고한 자체 C++ 구현이다. 언리얼 런타임이나 블루프린트 에디터를 추가한 것은 아니다.
 - **블렌딩 검증:** 최적화 코어와 별도 게임 실행 파일 빌드·링크, GameplayTests/CivicTests/SceneGraphTests/MapHudTests/RoadPlanTests/ConsoleOutputTests/MonitorServerTests, ResourceLoadingTests/StartupTests, 리소스 무결성·자동 재생성 입력 검사와 실제 WGL GPU RenderingTests를 통과했다. 이동 방향 회전·우클릭 유지/해제·후진 이동·비조준 사격·지역/메뉴/Q/창 이탈/바이크 탑승 시 입력 해제, 표본 가중치·최단 회전·프레임 연속성·실제 후진 하체 차이·총구 방향 고정·발바닥 접지를 검사했다. GPU 캡처는 `x64/RevisionChecks/animation-renders`의 `animation-aim-male.bmp`, `animation-aim-female.bmp`, `animation-layers.bmp`다. 같은 검사 PC의 CPU 준비 1회는 약 298ms/개인 메모리 약 112.5MiB였다. 실제 배포 실행 파일 교체와 사용자 PC 수동 플레이를 실행한 결과는 아니다.
 

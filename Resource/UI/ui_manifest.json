@@ -1,7 +1,7 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "title": "ERMA / FIELD INTERFACE",
-  "date": "2026-10-26",
+  "date": "2026-10-28",
   "canvas": {
     "width": 1280,
     "height": 800,
@@ -20,16 +20,16 @@
     "line_height": 32
   },
   "palette": {
-    "bg": "#07131c",
-    "panel": "#10242d",
-    "edge": "#79929b",
-    "ink": "#ffffff",
-    "muted": "#d0dfe3",
-    "accent": "#9df4d6",
-    "amber": "#ffdf9c",
-    "danger": "#ffc0b6",
-    "blue": "#b6d9ff",
-    "disabled": "#9caeb5"
+    "bg": "#0a1821",
+    "panel": "#142b34",
+    "edge": "#65818c",
+    "ink": "#f4f6f1",
+    "muted": "#d4e1e4",
+    "accent": "#a6e6cf",
+    "amber": "#ffe1a6",
+    "danger": "#ffc3ba",
+    "blue": "#bcddff",
+    "disabled": "#a3b6bf"
   },
   "opacity": {
     "parameter": "opacity_is_alpha_not_transparency",
@@ -49,7 +49,7 @@
       "max": 1
     },
     "formula": "output_alpha = asset_alpha * layer_opacity",
-    "note": "Proposed integration range; review viewer exposes stress values down to 0.3. No game setting implemented."
+    "note": "Existing game options use these ranges. New designs must keep independent layers; review exposes stress values down to 0.3."
   },
   "alpha": {
     "export": "straight RGBA",
@@ -481,6 +481,46 @@
       "height": 48,
       "logical_size": 24,
       "stroke": 2.1
+    },
+    "unarmed": {
+      "svg": "Source/Icons/unarmed.svg",
+      "png": "Export/Icons/unarmed.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "slot_empty": {
+      "svg": "Source/Icons/slot_empty.svg",
+      "png": "Export/Icons/slot_empty.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "mouse_right": {
+      "svg": "Source/Icons/mouse_right.svg",
+      "png": "Export/Icons/mouse_right.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "key_release": {
+      "svg": "Source/Icons/key_release.svg",
+      "png": "Export/Icons/key_release.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "stage": {
+      "svg": "Source/Icons/stage.svg",
+      "png": "Export/Icons/stage.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
     }
   },
   "components": {
@@ -840,6 +880,48 @@
       "width": 14,
       "height": 6,
       "role": "hud_four_independently_positioned_arms"
+    },
+    "wheel_sector_default": {
+      "svg": "Source/Components/wheel_sector_default.svg",
+      "png": "Export/Components/wheel_sector_default.png",
+      "width": 464,
+      "height": 464,
+      "role": "radial_runtime_geometry_reference"
+    },
+    "wheel_sector_hover": {
+      "svg": "Source/Components/wheel_sector_hover.svg",
+      "png": "Export/Components/wheel_sector_hover.png",
+      "width": 464,
+      "height": 464,
+      "role": "radial_runtime_geometry_reference"
+    },
+    "wheel_sector_equipped": {
+      "svg": "Source/Components/wheel_sector_equipped.svg",
+      "png": "Export/Components/wheel_sector_equipped.png",
+      "width": 464,
+      "height": 464,
+      "role": "radial_runtime_geometry_reference"
+    },
+    "wheel_sector_unavailable": {
+      "svg": "Source/Components/wheel_sector_unavailable.svg",
+      "png": "Export/Components/wheel_sector_unavailable.png",
+      "width": 464,
+      "height": 464,
+      "role": "radial_runtime_geometry_reference"
+    },
+    "cursor_unarmed": {
+      "svg": "Source/Components/cursor_unarmed.svg",
+      "png": "Export/Components/cursor_unarmed.png",
+      "width": 32,
+      "height": 32,
+      "role": "pointer_no_spread"
+    },
+    "cursor_hip": {
+      "svg": "Source/Components/cursor_hip.svg",
+      "png": "Export/Components/cursor_hip.png",
+      "width": 32,
+      "height": 32,
+      "role": "pointer_no_aim_ring"
     }
   },
   "hud_icons": {
@@ -1122,6 +1204,62 @@
         24
       ],
       "black_outline_baked": true
+    },
+    "unarmed": {
+      "svg": "Source/HUDIcons/unarmed.svg",
+      "png": "Export/HUDIcons/unarmed.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "slot_empty": {
+      "svg": "Source/HUDIcons/slot_empty.svg",
+      "png": "Export/HUDIcons/slot_empty.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "mouse_right": {
+      "svg": "Source/HUDIcons/mouse_right.svg",
+      "png": "Export/HUDIcons/mouse_right.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "key_release": {
+      "svg": "Source/HUDIcons/key_release.svg",
+      "png": "Export/HUDIcons/key_release.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
     }
   },
   "hud": {
@@ -1157,7 +1295,7 @@
         "UI-14"
       ],
       "svg": "Source/Screens/01_city.svg",
-      "png": "Preview/01_city.png"
+      "png": "Preview/01_city_20261028.png"
     },
     "02_combat": {
       "label": "전투 HUD / 저체력 · 재장전",
@@ -1169,7 +1307,7 @@
         "UI-15"
       ],
       "svg": "Source/Screens/02_combat.svg",
-      "png": "Preview/02_combat.png"
+      "png": "Preview/02_combat_20261028.png"
     },
     "03_bike": {
       "label": "주행 HUD / 속도 · 부스트",
@@ -1178,7 +1316,7 @@
         "UI-13"
       ],
       "svg": "Source/Screens/03_bike.svg",
-      "png": "Preview/03_bike.png"
+      "png": "Preview/03_bike_20261028.png"
     },
     "04_mine": {
       "label": "광산 HUD / 스캔 · 구조",
@@ -1188,24 +1326,23 @@
         "UI-11"
       ],
       "svg": "Source/Screens/04_mine.svg",
-      "png": "Preview/04_mine.png"
+      "png": "Preview/04_mine_20261028.png"
     },
     "05_dialogue": {
-      "label": "긴 한글 대화 / 선택",
+      "label": "긴 대화 / 1페이지 · 본문 보존",
       "requirements": [
-        "UI-08",
-        "UI-15"
+        "UI-08"
       ],
       "svg": "Source/Screens/05_dialogue.svg",
-      "png": "Preview/05_dialogue.png"
+      "png": "Preview/05_dialogue_20261028_r2.png"
     },
     "06_journal": {
-      "label": "조사 기록 / 알려진 사실",
+      "label": "조사 기록 / 문단과 여백 재설계",
       "requirements": [
         "UI-09"
       ],
       "svg": "Source/Screens/06_journal.svg",
-      "png": "Preview/06_journal.png"
+      "png": "Preview/06_journal_20261028.png"
     },
     "07_chapter": {
       "label": "1장 HUD / 조사 · 철수",
@@ -1216,7 +1353,7 @@
         "UI-15"
       ],
       "svg": "Source/Screens/07_chapter.svg",
-      "png": "Preview/07_chapter.png"
+      "png": "Preview/07_chapter_20261028.png"
     },
     "08_medical": {
       "label": "의료 이송 / 실제 손실",
@@ -1224,15 +1361,15 @@
         "UI-16"
       ],
       "svg": "Source/Screens/08_medical.svg",
-      "png": "Preview/08_medical.png"
+      "png": "Preview/08_medical_20261028.png"
     },
     "09_pause": {
-      "label": "일시정지 / 지역별 복귀",
+      "label": "일시정지 / 1장 귀환",
       "requirements": [
         "UI-17"
       ],
       "svg": "Source/Screens/09_pause.svg",
-      "png": "Preview/09_pause.png"
+      "png": "Preview/09_pause_20261028.png"
     },
     "10_city_map": {
       "label": "전체 지도 / 도시",
@@ -1240,7 +1377,7 @@
         "UI-06"
       ],
       "svg": "Source/Screens/10_city_map.svg",
-      "png": "Preview/10_city_map.png"
+      "png": "Preview/10_city_map_20261028.png"
     },
     "11_mine_map": {
       "label": "전체 지도 / 광산 비공개 영역",
@@ -1248,7 +1385,7 @@
         "UI-06"
       ],
       "svg": "Source/Screens/11_mine_map.svg",
-      "png": "Preview/11_mine_map.png"
+      "png": "Preview/11_mine_map_20261028.png"
     },
     "12_chapter_map": {
       "label": "전체 지도 / 1장 현장",
@@ -1256,15 +1393,15 @@
         "UI-06"
       ],
       "svg": "Source/Screens/12_chapter_map.svg",
-      "png": "Preview/12_chapter_map.png"
+      "png": "Preview/12_chapter_map_20261028.png"
     },
     "13_history": {
-      "label": "대사 이력 / 전달 방식",
+      "label": "대사 이력 / 전달 방식과 본문 분리",
       "requirements": [
         "UI-09"
       ],
       "svg": "Source/Screens/13_history.svg",
-      "png": "Preview/13_history.png"
+      "png": "Preview/13_history_20261028.png"
     },
     "14_empty": {
       "label": "조사 기록 / 내용 없음",
@@ -1272,31 +1409,31 @@
         "UI-09"
       ],
       "svg": "Source/Screens/14_empty.svg",
-      "png": "Preview/14_empty.png"
+      "png": "Preview/14_empty_20261028.png"
     },
     "15_title": {
-      "label": "타이틀 / 후속 연결용",
+      "label": "타이틀 / 여백과 정보 위계",
       "requirements": [
         "UI-18"
       ],
       "svg": "Source/Screens/15_title.svg",
-      "png": "Preview/15_title.png"
+      "png": "Preview/15_title_20261028.png"
     },
     "16_options": {
-      "label": "옵션 / 투명도 / 후속 연결용",
+      "label": "옵션 / 조절 항목과 그래픽 분리",
       "requirements": [
         "UI-19"
       ],
       "svg": "Source/Screens/16_options.svg",
-      "png": "Preview/16_options.png"
+      "png": "Preview/16_options_20261028.png"
     },
     "17_summary": {
-      "label": "보유 / 성장 요약 / 후속 연결용",
+      "label": "보유·성장 / 항목과 수치 정렬",
       "requirements": [
         "UI-20"
       ],
       "svg": "Source/Screens/17_summary.svg",
-      "png": "Preview/17_summary.png"
+      "png": "Preview/17_summary_20261028.png"
     },
     "18_supply": {
       "label": "보급 교환 / 후속 연결용",
@@ -1304,7 +1441,7 @@
         "UI-21"
       ],
       "svg": "Source/Screens/18_supply.svg",
-      "png": "Preview/18_supply.png"
+      "png": "Preview/18_supply_20261028.png"
     },
     "19_confirm": {
       "label": "중요 행동 확인 / 후속 연결용",
@@ -1312,15 +1449,15 @@
         "UI-22"
       ],
       "svg": "Source/Screens/19_confirm.svg",
-      "png": "Preview/19_confirm.png"
+      "png": "Preview/19_confirm_20261028.png"
     },
     "20_help": {
-      "label": "맥락별 조작 / 후속 연결용",
+      "label": "조작 도움말 / 최신 Q·G 입력",
       "requirements": [
         "UI-23"
       ],
       "svg": "Source/Screens/20_help.svg",
-      "png": "Preview/20_help.png"
+      "png": "Preview/20_help_20261028.png"
     },
     "21_components": {
       "label": "공통 부품 / 버튼 / 게이지",
@@ -1328,7 +1465,7 @@
         "COMMON"
       ],
       "svg": "Source/Screens/21_components.svg",
-      "png": "Preview/21_components.png"
+      "png": "Preview/21_components_20261028.png"
     },
     "22_states": {
       "label": "상태 목록 / 기능 맥락",
@@ -1336,15 +1473,15 @@
         "COMMON"
       ],
       "svg": "Source/Screens/22_states.svg",
-      "png": "Preview/22_states.png"
+      "png": "Preview/22_states_20261028.png"
     },
     "23_icons": {
-      "label": "아이콘 라이브러리",
+      "label": "아이콘 라이브러리 / 신규 조작 포함",
       "requirements": [
         "COMMON"
       ],
       "svg": "Source/Screens/23_icons.svg",
-      "png": "Preview/23_icons.png"
+      "png": "Preview/23_icons_20261028.png"
     },
     "24_local_dialogue": {
       "label": "현장 대화 / 진행 일시정지",
@@ -1352,7 +1489,7 @@
         "UI-08"
       ],
       "svg": "Source/Screens/24_local_dialogue.svg",
-      "png": "Preview/24_local_dialogue.png"
+      "png": "Preview/24_local_dialogue_20261028.png"
     },
     "25_interactions": {
       "label": "상호작용 / 월드 표식",
@@ -1360,7 +1497,7 @@
         "UI-07"
       ],
       "svg": "Source/Screens/25_interactions.svg",
-      "png": "Preview/25_interactions.png"
+      "png": "Preview/25_interactions_20261028.png"
     },
     "26_notifications": {
       "label": "획득 / 회복 / 거래 / 피격 알림",
@@ -1370,7 +1507,7 @@
         "UI-15"
       ],
       "svg": "Source/Screens/26_notifications.svg",
-      "png": "Preview/26_notifications.png"
+      "png": "Preview/26_notifications_20261028.png"
     },
     "27_transfer": {
       "label": "의료 이송 중 / 입력 잠금",
@@ -1378,23 +1515,23 @@
         "UI-16"
       ],
       "svg": "Source/Screens/27_transfer.svg",
-      "png": "Preview/27_transfer.png"
+      "png": "Preview/27_transfer_20261028.png"
     },
     "28_pause_mine": {
-      "label": "광산 일시정지 / 재시작",
+      "label": "일시정지 / 광산 재시작",
       "requirements": [
         "UI-17"
       ],
       "svg": "Source/Screens/28_pause_mine.svg",
-      "png": "Preview/28_pause_mine.png"
+      "png": "Preview/28_pause_mine_20261028.png"
     },
     "29_pause_city": {
-      "label": "도시 일시정지 / 다시 시작",
+      "label": "일시정지 / 도시 다시 시작",
       "requirements": [
         "UI-17"
       ],
       "svg": "Source/Screens/29_pause_city.svg",
-      "png": "Preview/29_pause_city.png"
+      "png": "Preview/29_pause_city_20261028.png"
     },
     "30_text_stress": {
       "label": "긴 한글 / 큰 수치 검토",
@@ -1402,7 +1539,7 @@
         "COMMON"
       ],
       "svg": "Source/Screens/30_text_stress.svg",
-      "png": "Preview/30_text_stress.png"
+      "png": "Preview/30_text_stress_20261028.png"
     },
     "31_dialogue_page": {
       "label": "대화 / 다음 페이지",
@@ -1410,7 +1547,7 @@
         "UI-08"
       ],
       "svg": "Source/Screens/31_dialogue_page.svg",
-      "png": "Preview/31_dialogue_page.png"
+      "png": "Preview/31_dialogue_page_20261028.png"
     },
     "32_hud_parts": {
       "label": "HUD 부품 / 게이지·아이콘 구성",
@@ -1418,7 +1555,7 @@
         "COMMON"
       ],
       "svg": "Source/Screens/32_hud_parts.svg",
-      "png": "Preview/32_hud_parts.png"
+      "png": "Preview/32_hud_parts_20261028.png"
     },
     "33_exploration": {
       "label": "탐험 HUD / 불필요한 전투 정보 숨김",
@@ -1428,7 +1565,7 @@
         "UI-05"
       ],
       "svg": "Source/Screens/33_exploration.svg",
-      "png": "Preview/33_exploration.png"
+      "png": "Preview/33_exploration_20261028.png"
     },
     "34_low_health": {
       "label": "저체력 HUD / 위험 기호와 회복 키",
@@ -1438,7 +1575,124 @@
         "UI-03"
       ],
       "svg": "Source/Screens/34_low_health.svg",
-      "png": "Preview/34_low_health.png"
+      "png": "Preview/34_low_health_20261028.png"
+    },
+    "35_weapon_wheel_locked": {
+      "label": "무기 선택 / 해금 전",
+      "requirements": [
+        "UI-24"
+      ],
+      "svg": "Source/Screens/35_weapon_wheel_locked.svg",
+      "png": "Preview/35_weapon_wheel_locked_20261028.png"
+    },
+    "36_weapon_wheel_pistol": {
+      "label": "무기 선택 / 권총 가리킴",
+      "requirements": [
+        "UI-24"
+      ],
+      "svg": "Source/Screens/36_weapon_wheel_pistol.svg",
+      "png": "Preview/36_weapon_wheel_pistol_20261028.png"
+    },
+    "37_weapon_wheel_empty": {
+      "label": "무기 선택 / 빈 슬롯 유지",
+      "requirements": [
+        "UI-24"
+      ],
+      "svg": "Source/Screens/37_weapon_wheel_empty.svg",
+      "png": "Preview/37_weapon_wheel_empty_20261028.png"
+    },
+    "38_weapon_wheel_equipped": {
+      "label": "무기 선택 / 권총 장착 중",
+      "requirements": [
+        "UI-24"
+      ],
+      "svg": "Source/Screens/38_weapon_wheel_equipped.svg",
+      "png": "Preview/38_weapon_wheel_equipped_20261028.png"
+    },
+    "39_weapon_wheel_unowned": {
+      "label": "무기 선택 / 미보유 슬롯",
+      "requirements": [
+        "UI-24"
+      ],
+      "svg": "Source/Screens/39_weapon_wheel_unowned.svg",
+      "png": "Preview/39_weapon_wheel_unowned_20261028.png"
+    },
+    "40_stages": {
+      "label": "스테이지 시험 진입 / 6개 지점",
+      "requirements": [
+        "UI-25"
+      ],
+      "svg": "Source/Screens/40_stages.svg",
+      "png": "Preview/40_stages_20261028.png"
+    },
+    "41_unarmed": {
+      "label": "맨손 HUD / 탄약 숨김",
+      "requirements": [
+        "UI-02",
+        "UI-03"
+      ],
+      "svg": "Source/Screens/41_unarmed.svg",
+      "png": "Preview/41_unarmed_20261028.png"
+    },
+    "42_pistol_hip": {
+      "label": "권총 비조준 / 기본 포인터",
+      "requirements": [
+        "UI-02",
+        "UI-03"
+      ],
+      "svg": "Source/Screens/42_pistol_hip.svg",
+      "png": "Preview/42_pistol_hip_20261028.png"
+    },
+    "43_pistol_aim": {
+      "label": "우클릭 조준 / 실제 탄퍼짐",
+      "requirements": [
+        "UI-02",
+        "UI-03"
+      ],
+      "svg": "Source/Screens/43_pistol_aim.svg",
+      "png": "Preview/43_pistol_aim_20261028.png"
+    },
+    "44_pistol_reload": {
+      "label": "재장전 / 사격 불가",
+      "requirements": [
+        "UI-02",
+        "UI-03"
+      ],
+      "svg": "Source/Screens/44_pistol_reload.svg",
+      "png": "Preview/44_pistol_reload_20261028.png"
+    },
+    "45_dialogue_page_02": {
+      "label": "긴 대화 / 2페이지 · 본문 보존",
+      "requirements": [
+        "UI-08"
+      ],
+      "svg": "Source/Screens/45_dialogue_page_02.svg",
+      "png": "Preview/45_dialogue_page_02_20261028_r2.png"
+    },
+    "46_unlock_notice": {
+      "label": "해금 알림 / 전체 안내 보존",
+      "requirements": [
+        "UI-15",
+        "UI-23"
+      ],
+      "svg": "Source/Screens/46_unlock_notice.svg",
+      "png": "Preview/46_unlock_notice_20261028.png"
+    },
+    "47_notice_page_01": {
+      "label": "긴 알림 / 1페이지 · 생략 없음",
+      "requirements": [
+        "UI-15"
+      ],
+      "svg": "Source/Screens/47_notice_page_01.svg",
+      "png": "Preview/47_notice_page_01_20261028.png"
+    },
+    "47_notice_page_02": {
+      "label": "긴 알림 / 2페이지 · 생략 없음",
+      "requirements": [
+        "UI-15"
+      ],
+      "svg": "Source/Screens/47_notice_page_02.svg",
+      "png": "Preview/47_notice_page_02_20261028.png"
     }
   },
   "constraints": [

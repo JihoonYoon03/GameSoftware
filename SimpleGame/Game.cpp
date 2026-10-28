@@ -812,6 +812,8 @@ models::CharacterPose Game::PlayerPose(float recoil) const
                         : CivicJustice::IsExterior() ? CivicJustice::State().meleeSeconds
                                                      : 0;
     state.playerAnimation.Apply(pose);
+    const auto &gun = game::GameLevels::Mine().GetState().pistol;
+    pose.reloadProgress = armed && gun.IsReloading() ? gun.GetReloadProgress() : -1;
     if (!armed)
     {
         pose.aimWeight = pose.fireSeconds = 0;
@@ -1365,7 +1367,10 @@ std::vector<std::string> Dialogue::Journal()
 void Game::ShowNotice(const std::string &message)
 {
     state.noticeText = message;
-    state.noticeSecondsRemaining = 4;
+    // Long notices keep every page visible long enough to read; short events stay brief.
+    const auto pages = Hud::TextPages(message, 294, 16, 4).size();
+    state.noticeDurationSeconds = pages > 1 ? 6.f * pages : 4.f;
+    state.noticeSecondsRemaining = state.noticeDurationSeconds;
 }
 bool Game::IsPositionBlocked(Vector2 position)
 {
@@ -1616,16 +1621,24 @@ void Game::InteractWithNearbyTarget()
         auto &mine = game::GameLevels::Mine().GetState();
         if (!mine.loadout.HasPistol())
         {
-            Dialogue::Start("MQ00/mine-weapon",
-                            {{"safety", "리아", "광산 입구",
-                              "안쪽 통신이 끊겼어. 구조 신호를 보낸 사람들을 찾으려면 직접 들어가야 해."},
-                             {"pistol", "리아", "장비 인계",
-                              "이 코일 권총을 가져가. 위험할 때만 써. Q를 누른 채 마우스를 오른쪽으로 "
-                              "움직이면 보조 무장을 고를 수 있어. 재장전은 R이야."}},
-                            [](const std::string &) {
-                                game::GameLevels::Mine().GetState().loadout.GrantPistol();
-                                game::GameLevels::Mine().Enter();
-                            });
+            Dialogue::Start(
+                "MQ00/mine-weapon",
+                {{"safety", "리아", "광산 입구",
+                  "안쪽 통신이 끊겼어. 구조 신호를 보낸 사람들을 찾으려면 직접 들어가야 해."},
+                 {"pistol", "리아", "장비 인계",
+                  "이 코일 권총을 가져가. 위험할 때만 써. Q를 누른 채 마우스를 오른쪽으로 "
+                  "움직이면 보조 무장을 고를 수 있어. 재장전은 R이야."}},
+                [](const std::string &) {
+                    bool granted = game::GameLevels::Mine().GetState().loadout.GrantPistol();
+                    game::GameLevels::Mine().Enter();
+                    if (granted)
+                    {
+                        auto &g = Game::Get();
+                        g.ShowNotice(
+                            "장비 획득 / 개척자 권총 · 보조 무장 사용 가능. Q 홀드 + 마우스로 선택하세요.\n" +
+                            g.GetState().noticeText);
+                    }
+                });
             return;
         }
         game::GameLevels::Mine().Enter();

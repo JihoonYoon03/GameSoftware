@@ -12,6 +12,7 @@ from mathutils import Matrix,Quaternion,Vector
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'Tools'))
 from civic_motion import *
+from pistol_layer_motion import SPECS as PISTOL_SPECS
 TAG='civic_motion_v2_directional'
 DRAFT='--draft' in sys.argv
 bpy.context.preferences.filepaths.save_version=0
@@ -120,7 +121,8 @@ class Clearance:
 
 clearance=Clearance();print('CLEARANCE_VERTICES',clearance.vertices,flush=True)
 report={'revision':TAG,'geometry_before_sha256':original_geometry,'human':{},'vehicles':{},'clearance_vertices':clearance.vertices}
-old_human=[(c['clip'],c['end'],c['loop']) for c in clips['HUMAN_7H'] if c['clip'] not in {n for n,f,l in NEW_HUMAN}]
+extension_meta=[c for c in clips['HUMAN_7H'] if c['clip'] in PISTOL_SPECS]
+old_human=[(c['clip'],c['end'],c['loop']) for c in clips['HUMAN_7H'] if c['clip'] not in {n for n,f,l in NEW_HUMAN} and c['clip'] not in PISTOL_SPECS]
 assert len(old_human)==15,'preserve all original clips'
 human_specs=old_human+NEW_HUMAN
 
@@ -276,6 +278,7 @@ for n,f,l in human_specs:
         e['motion_refinement']='weight transfer, parent-aware IK, relaxed arms, matched transitions'
         e['authoring_fps']=30;e['delivery_sampling_fps']=60
     clips['HUMAN_7H'].append(e)
+clips['HUMAN_7H'].extend(extension_meta)
 for kind,info in vehicles['types'].items():
     name=info['skeleton'];old=[c for c in clips[name] if c['clip'] not in report['vehicles'][kind]]
     for n,r in report['vehicles'][kind].items():
@@ -325,7 +328,7 @@ if not DRAFT:
             for original in human.animation_data.nla_tracks:
                 tr=rig.animation_data.nla_tracks.new();tr.name=original.name
                 st=tr.strips.new(tr.name,0,original.strips[0].action);st.name=tr.name;tr.mute=True
-            export(file,objects,rig);e['clips']=len(human_specs)
+            export(file,objects,rig);e['clips']=len(clips['HUMAN_7H'])
             for o in objects+[rig]:bpy.data.objects.remove(o,do_unlink=True)
             bpy.data.collections.remove(col)
         elif file.startswith('Export/Vehicles/') and '/Parts/' not in file:

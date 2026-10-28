@@ -64,7 +64,11 @@
       "Aim_Run_Back",
       "Aim_Run_BackRight",
       "Aim_Run_Right",
-      "Aim_Run_ForwardRight"
+      "Aim_Run_ForwardRight",
+      "Pistol_Carry_Idle",
+      "Pistol_Carry_Walk",
+      "Pistol_Carry_Run",
+      "Reload_Pistol"
     ],
     "Export/Characters/Ria_Engineer.glb": [
       "Reference_A",
@@ -125,7 +129,11 @@
       "Aim_Run_Back",
       "Aim_Run_BackRight",
       "Aim_Run_Right",
-      "Aim_Run_ForwardRight"
+      "Aim_Run_ForwardRight",
+      "Pistol_Carry_Idle",
+      "Pistol_Carry_Walk",
+      "Pistol_Carry_Run",
+      "Reload_Pistol"
     ],
     "Export/Characters/Kain_Guard.glb": [
       "Reference_A",
@@ -186,7 +194,11 @@
       "Aim_Run_Back",
       "Aim_Run_BackRight",
       "Aim_Run_Right",
-      "Aim_Run_ForwardRight"
+      "Aim_Run_ForwardRight",
+      "Pistol_Carry_Idle",
+      "Pistol_Carry_Walk",
+      "Pistol_Carry_Run",
+      "Reload_Pistol"
     ],
     "Export/Characters/Mara_Medic.glb": [
       "Reference_A",
@@ -247,7 +259,11 @@
       "Aim_Run_Back",
       "Aim_Run_BackRight",
       "Aim_Run_Right",
-      "Aim_Run_ForwardRight"
+      "Aim_Run_ForwardRight",
+      "Pistol_Carry_Idle",
+      "Pistol_Carry_Walk",
+      "Pistol_Carry_Run",
+      "Reload_Pistol"
     ],
     "Export/Characters/NPC_Researcher.glb": [
       "Reference_A",
@@ -308,7 +324,11 @@
       "Aim_Run_Back",
       "Aim_Run_BackRight",
       "Aim_Run_Right",
-      "Aim_Run_ForwardRight"
+      "Aim_Run_ForwardRight",
+      "Pistol_Carry_Idle",
+      "Pistol_Carry_Walk",
+      "Pistol_Carry_Run",
+      "Reload_Pistol"
     ],
     "Export/Characters/NPC_Miner.glb": [
       "Reference_A",
@@ -369,7 +389,11 @@
       "Aim_Run_Back",
       "Aim_Run_BackRight",
       "Aim_Run_Right",
-      "Aim_Run_ForwardRight"
+      "Aim_Run_ForwardRight",
+      "Pistol_Carry_Idle",
+      "Pistol_Carry_Walk",
+      "Pistol_Carry_Run",
+      "Reload_Pistol"
     ],
     "Export/Characters/NPC_Guard_Helmet.glb": [
       "Reference_A",
@@ -430,7 +454,11 @@
       "Aim_Run_Back",
       "Aim_Run_BackRight",
       "Aim_Run_Right",
-      "Aim_Run_ForwardRight"
+      "Aim_Run_ForwardRight",
+      "Pistol_Carry_Idle",
+      "Pistol_Carry_Walk",
+      "Pistol_Carry_Run",
+      "Reload_Pistol"
     ],
     "Export/Characters/NPC_HeavyCombat.glb": [
       "Reference_A",
@@ -491,7 +519,11 @@
       "Aim_Run_Back",
       "Aim_Run_BackRight",
       "Aim_Run_Right",
-      "Aim_Run_ForwardRight"
+      "Aim_Run_ForwardRight",
+      "Pistol_Carry_Idle",
+      "Pistol_Carry_Walk",
+      "Pistol_Carry_Run",
+      "Reload_Pistol"
     ],
     "Export/Characters/NPC_Pilot.glb": [
       "Reference_A",
@@ -552,7 +584,11 @@
       "Aim_Run_Back",
       "Aim_Run_BackRight",
       "Aim_Run_Right",
-      "Aim_Run_ForwardRight"
+      "Aim_Run_ForwardRight",
+      "Pistol_Carry_Idle",
+      "Pistol_Carry_Walk",
+      "Pistol_Carry_Run",
+      "Reload_Pistol"
     ],
     "Export/Characters/NPC_Civilian.glb": [
       "Reference_A",
@@ -613,7 +649,11 @@
       "Aim_Run_Back",
       "Aim_Run_BackRight",
       "Aim_Run_Right",
-      "Aim_Run_ForwardRight"
+      "Aim_Run_ForwardRight",
+      "Pistol_Carry_Idle",
+      "Pistol_Carry_Walk",
+      "Pistol_Carry_Run",
+      "Reload_Pistol"
     ],
     "Export/Creatures/RiftGrazer.glb": [
       "Reference_A",

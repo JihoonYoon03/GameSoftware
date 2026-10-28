@@ -860,19 +860,43 @@ void CityHud::DrawInteractionPrompt()
 // ============================================================================
 // Hud
 // ============================================================================
+std::vector<std::vector<std::string>> Hud::TextPages(const std::string &text, float width, int fontSize,
+                                                     size_t linesPerPage)
+{
+    const auto rows = Dialogue::Wrap(text, width, fontSize);
+    linesPerPage = (std::max)(size_t(1), linesPerPage);
+    std::vector<std::vector<std::string>> pages;
+    for (size_t start = 0; start < rows.size(); start += linesPerPage)
+    {
+        const auto end = (std::min)(rows.size(), start + linesPerPage);
+        pages.emplace_back(rows.begin() + start, rows.begin() + end);
+    }
+    return pages;
+}
 void Hud::DrawNoticePanel()
 {
     const auto &w = Game::Get().GetState();
-    if (w.noticeSecondsRemaining <= 0 || Dialogue::Active() || w.journalVisible || w.dialogueHistoryVisible ||
-        w.ui.screen != UiScreen::None)
+    if (w.noticeSecondsRemaining <= 0 || w.weaponWheel.visible || Dialogue::Active() || w.journalVisible ||
+        w.dialogueHistoryVisible || w.ui.screen != UiScreen::None)
     {
         return;
     }
     Icon("check", 918, 322, 22, true);
-    auto rows = Dialogue::Wrap(w.noticeText, 294, 16);
-    for (size_t i = 0; i < (std::min)(size_t(2), rows.size()); ++i)
+    const auto pages = TextPages(w.noticeText, 294, 16, 4);
+    const float secondsPerPage = (std::max)(1.f, w.noticeDurationSeconds / pages.size());
+    const auto page = (std::min)(
+        pages.size() - 1,
+        size_t((std::max)(0.f, w.noticeDurationSeconds - w.noticeSecondsRemaining) / secondsPerPage));
+    const auto &rows = pages[page];
+    for (size_t i = 0; i < rows.size(); ++i)
     {
-        UiText(954, 342 + float(i) * 24, rows[i] + (i == 1 && rows.size() > 2 ? "…" : ""), 16, kUiInk, true);
+        UiText(954, 342 + float(i) * 24, rows[i], 16, kUiInk, true);
+    }
+    if (pages.size() > 1)
+    {
+        UiText(954, 366 + float(rows.size()) * 24,
+               std::to_string(page + 1) + " / " + std::to_string(pages.size()) + " · 자동 다음", 14, kUiInk,
+               true);
     }
 }
 
@@ -928,12 +952,21 @@ void Hud::DrawInteraction(const std::string &label)
 void Hud::DrawObjective(const std::string &objective, const std::string &context)
 {
     Icon("objective", 32, 36, 24, true);
-    auto rows = Dialogue::Wrap(objective, 420, 18);
-    for (size_t i = 0; i < (std::min)(size_t(2), rows.size()); ++i)
+    const auto pages = TextPages(objective, 420, 18, 2);
+    const auto page = size_t((std::max)(0.f, Game::Get().GetState().playTimeSeconds) / 5) % pages.size();
+    const auto &rows = pages[page];
+    for (size_t i = 0; i < rows.size(); ++i)
     {
         UiText(68, 57 + i * 26, rows[i], 18, kUiInk, true);
     }
-    UiText(68, 58 + float((std::min)(size_t(2), rows.size())) * 26, context, 14, {.68f, .83f, .83f}, true);
+    const auto detail = context + (pages.size() > 1 ? " · " + std::to_string(page + 1) + "/" +
+                                                          std::to_string(pages.size()) + " · J 전체 목표"
+                                                    : "");
+    auto detailRows = Dialogue::Wrap(detail, 420, 14);
+    for (size_t i = 0; i < detailRows.size(); ++i)
+    {
+        UiText(68, 58 + float(rows.size()) * 26 + float(i) * 21, detailRows[i], 14, {.68f, .83f, .83f}, true);
+    }
 }
 
 void CityHud::Draw()
@@ -1148,7 +1181,7 @@ void ChapterHud::DrawJournal()
     {
         for (const auto &entry : Dialogue::Journal())
         {
-            auto wrapped = Dialogue::Wrap(entry, 526, 18);
+            auto wrapped = Dialogue::Wrap(entry, 714, 18);
             rows.insert(rows.end(), wrapped.begin(), wrapped.end());
             rows.push_back("");
         }
@@ -1157,9 +1190,9 @@ void ChapterHud::DrawJournal()
     {
         for (const auto &entry : world.dialogue.history)
         {
-            auto header = Dialogue::Wrap(entry.speaker + " · " + entry.channel, 526, 18);
+            auto header = Dialogue::Wrap(entry.speaker + " · " + entry.channel, 714, 18);
             rows.insert(rows.end(), header.begin(), header.end());
-            auto wrapped = Dialogue::Wrap(entry.text, 526, 18);
+            auto wrapped = Dialogue::Wrap(entry.text, 714, 18);
             rows.insert(rows.end(), wrapped.begin(), wrapped.end());
             rows.push_back("");
         }
@@ -1168,31 +1201,32 @@ void ChapterHud::DrawJournal()
             rows.push_back("아직 읽은 대사가 없습니다.");
         }
     }
-    constexpr size_t perPage = 17;
+    constexpr size_t perPage = 15;
     size_t pages = (std::max)(size_t(1), (rows.size() + perPage - 1) / perPage);
     size_t offset = (std::min)(world.dialogue.historyOffset, pages - 1);
     size_t page = world.dialogueHistoryVisible ? pages - 1 - offset : offset;
-    Panel(176, 72, 928, 656);
-    Icon(world.journalVisible ? "record" : "history", 200, 100, 26);
-    UiText(240, 125, world.journalVisible ? "조사 기록" : "대사 이력", 24);
-    UiText(510, 161, world.journalVisible ? "확인한 사실과 다음 행동" : "읽은 대사 / 전달 기록", 18,
+    Panel(64, 48, 1152, 704);
+    Icon(world.journalVisible ? "record" : "history", 96, 104, 26);
+    UiText(136, 132, world.journalVisible ? "조사 기록" : "대사 이력", 28);
+    UiText(96, 164, "현재 실행에서 확인한 기록입니다.", 18);
+    UiText(454, 218, world.journalVisible ? "확인한 사실과 다음 행동" : "읽은 대사 / 전달 기록", 18,
            {.61f, .88f, .83f});
-    UiText(200, 326, "현재 실행의 기록", 17, {.95f, .78f, .4f});
-    UiText(200, 356, "게임 종료 후 복원하는", 15);
-    UiText(200, 380, "저장 기능은 아직 없습니다.", 15);
+    UiText(96, 366, "현재 실행의 기록", 17, {.95f, .78f, .4f});
+    UiText(96, 400, "게임 종료 후 복원하는", 15);
+    UiText(96, 426, "저장 기능은 아직 없습니다.", 15);
     if (Dialogue::Danger())
     {
-        Icon("warning", 200, 426, 22);
-        UiText(234, 445, "교전 중", 17, {1, .78f, .4f});
-        UiText(200, 479, "기록을 보는 동안에도", 15);
-        UiText(200, 503, "시간이 계속 흐릅니다.", 15);
+        Icon("warning", 96, 466, 22);
+        UiText(130, 485, "교전 중", 17, {1, .78f, .4f});
+        UiText(96, 519, "기록을 보는 동안에도", 15);
+        UiText(96, 545, "시간이 계속 흐릅니다.", 15);
     }
     for (size_t i = 0; i < perPage && page * perPage + i < rows.size(); ++i)
     {
-        UiText(510, 194 + float(i) * 25, rows[page * perPage + i], 18);
+        UiText(454, 251 + float(i) * 25, rows[page * perPage + i], 18);
     }
-    UiText(510, 650, std::to_string(page + 1) + " / " + std::to_string(pages), 14, {.59f, .75f, .76f});
-    UiText(200, 701,
+    UiText(454, 650, std::to_string(page + 1) + " / " + std::to_string(pages), 14, {.59f, .75f, .76f});
+    UiText(96, 650,
            world.dialogue.suspended ? "Enter 중단 대화 재개 · 안전한 곳에서 가능"
                                     : "PageUp / PageDown 페이지",
            14);
@@ -1306,16 +1340,18 @@ void Hud::DrawVitals()
     }
     if (!w.isBikeMounted && combat && !mine.loadout.IsPistolEquipped())
     {
+        Icon("unarmed", 1040, 723, 28, true);
         UiText(1248, 736, "맨손", 25, kUiInk, true, true);
         UiText(1248, 764, "좌클릭 근접 · Q 홀드 무기 선택", 15, kUiInk, true, true);
     }
     if (combat && !Game::Get().IsAiming() && w.cursorInsideViewport && !w.weaponWheel.visible)
     {
         auto p = w.cursorPosition;
-        Drawing::DrawEllipse(p.x, p.y, 5, 5, {.02f, .05f, .06f, .8f});
-        Drawing::DrawEllipse(p.x, p.y, 2, 2, {.75f, .96f, .9f});
+        Sprite(mine.loadout.IsPistolEquipped() ? "Components/cursor_hip" : "Components/cursor_unarmed",
+               p.x - 16, p.y - 16, 32, 32);
         if (mine.loadout.IsPistolEquipped())
         {
+            Icon("mouse_right", 1034, 666, 20, true);
             UiText(1248, 683, "우클릭 홀드 · 조준", 15, kUiInk, true, true);
         }
     }
@@ -1400,7 +1436,14 @@ std::vector<UiControl> Hud::Controls()
     }
     std::vector<UiControl> controls;
     auto row = [&](UiAction action, const std::string &label, bool enabled = true) {
-        controls.push_back({action, {440, 220 + float(controls.size()) * 58}, {400, 46}, label, enabled});
+        const bool title = screen == UiScreen::Title, pause = screen == UiScreen::Pause;
+        const Vector2 origin = title ? Vector2{96, 366} : pause ? Vector2{408, 178} : Vector2{440, 220};
+        const Vector2 size = title ? Vector2{430, 52} : pause ? Vector2{464, 52} : Vector2{400, 46};
+        controls.push_back({action,
+                            {origin.x, origin.y + float(controls.size()) * (pause ? 64 : 58)},
+                            size,
+                            label,
+                            enabled});
     };
     switch (screen)
     {
@@ -1426,13 +1469,13 @@ std::vector<UiControl> Hud::Controls()
         for (int i = 0; i < int(TestStage::Count); ++i)
         {
             controls.push_back({UiAction::EnterStage,
-                                {336, 222 + i * 55.f},
-                                {608, 44},
+                                {96, 211 + i * 62.f},
+                                {652, 52},
                                 Game::StageName(TestStage(i)),
                                 true,
                                 i});
         }
-        controls.push_back({UiAction::Back, {336, 566}, {608, 44}, "뒤로"});
+        controls.push_back({UiAction::Back, {96, 678}, {170, 52}, "뒤로"});
         break;
     case UiScreen::Options:
         row(UiAction::Background, "배경 불투명도");
@@ -1444,13 +1487,15 @@ std::vector<UiControl> Hud::Controls()
         row(UiAction::Back, "뒤로");
         for (size_t i = 0; i < controls.size(); ++i)
         {
-            controls[i].position = {336, 190 + float(i) * 58};
-            controls[i].size = {608, 46};
+            controls[i].position = i < 3   ? Vector2{96, 212 + float(i) * 104}
+                                   : i < 6 ? Vector2{688, 212 + float(i - 3) * 104}
+                                           : Vector2{96, 672};
+            controls[i].size = i < 6 ? Vector2{i < 3 ? 548.f : 480.f, 88} : Vector2{224, 48};
         }
         break;
     case UiScreen::Summary:
     case UiScreen::Help:
-        controls.push_back({UiAction::Back, {640, 594}, {280, 46}, "뒤로"});
+        controls.push_back({UiAction::Back, {96, 672}, {224, 48}, "뒤로"});
         break;
     case UiScreen::Supply: {
         const auto &stats = game::GameLevels::Mine().GetState().player;
@@ -1476,11 +1521,11 @@ std::vector<UiControl> Hud::Controls()
     default:
         if (w.journalVisible || w.dialogueHistoryVisible)
         {
-            controls.push_back({UiAction::Journal, {200, 170}, {270, 46}, "조사 기록"});
-            controls.push_back({UiAction::History, {200, 228}, {270, 46}, "대사 이력"});
-            controls.push_back({UiAction::Previous, {510, 668}, {155, 38}, "이전 페이지"});
-            controls.push_back({UiAction::Next, {680, 668}, {155, 38}, "다음 페이지"});
-            controls.push_back({UiAction::Continue, {850, 668}, {226, 38}, "닫기"});
+            controls.push_back({UiAction::Journal, {96, 212}, {296, 48}, "조사 기록"});
+            controls.push_back({UiAction::History, {96, 274}, {296, 48}, "대사 이력"});
+            controls.push_back({UiAction::Previous, {454, 676}, {176, 44}, "이전 페이지"});
+            controls.push_back({UiAction::Next, {648, 676}, {176, 44}, "다음 페이지"});
+            controls.push_back({UiAction::Continue, {848, 676}, {320, 44}, "닫기"});
         }
         else if (Dialogue::Active())
         {
@@ -1728,7 +1773,8 @@ void Hud::HandleMotion()
         return;
     }
     float minimum = action == UiAction::Content ? .85f : .8f;
-    float ratio = Game::Clamp((w.cursorPosition.x - 620) / 228, 0, 1);
+    const auto &control = controls[size_t(w.ui.pressed)];
+    float ratio = Game::Clamp((w.cursorPosition.x - control.position.x - 16) / (control.size.x - 32), 0, 1);
     float value = std::round((minimum + ratio * (1 - minimum)) * 100) / 100;
     if (action == UiAction::Background)
     {
@@ -1843,15 +1889,30 @@ void Hud::DrawMenu()
     Drawing::DrawRectangle(0, 0, kCanvasWidth, kCanvasHeight, {.01f, .025f, .03f, .55f});
     auto &stats = game::GameLevels::Mine().GetState().player;
     bool narrow = screen == UiScreen::Title || screen == UiScreen::Pause;
-    if (narrow)
+    if (screen == UiScreen::Title)
     {
-        Panel(416, 112, 448, 576);
+        Drawing::DrawLine({96, 120}, {162, 120}, {.65f, .9f, .81f}, 3);
+    }
+    else if (screen == UiScreen::Pause)
+    {
+        Panel(376, 56, 528, 688);
+    }
+    else if (screen == UiScreen::Stages)
+    {
+        Panel(64, 48, 1152, 704);
+    }
+    else if (screen == UiScreen::Help || screen == UiScreen::Options || screen == UiScreen::Summary)
+    {
+        Panel(64, 48, 1152, 704);
     }
     else
     {
         Panel(312, 90, 656, 600);
     }
-    float x = narrow ? 440.f : 336.f;
+    float x = screen == UiScreen::Title || screen == UiScreen::Stages                                  ? 96.f
+              : screen == UiScreen::Help || screen == UiScreen::Options || screen == UiScreen::Summary ? 96.f
+              : narrow                                                                                 ? 408.f
+                       : 336.f;
     const char *title = screen == UiScreen::Title     ? "침묵하는 관문"
                         : screen == UiScreen::Pause   ? "일시정지"
                         : screen == UiScreen::Stages  ? "스테이지 목록 · 테스트 진입"
@@ -1861,7 +1922,18 @@ void Hud::DrawMenu()
                         : screen == UiScreen::Supply  ? "운송대 보급 교환"
                         : screen == UiScreen::Medical ? "의료소 복귀"
                                                       : "진행 확인";
-    UiText(x, 159, title, 28, {.83f, .95f, .91f});
+    UiText(x,
+           screen == UiScreen::Title   ? 253
+           : screen == UiScreen::Pause ? 144
+           : screen == UiScreen::Stages || screen == UiScreen::Help || screen == UiScreen::Options ||
+                   screen == UiScreen::Summary
+               ? 132
+               : 159,
+           title,
+           screen == UiScreen::Title   ? 54
+           : screen == UiScreen::Pause ? 32
+                                       : 28,
+           {.83f, .95f, .91f});
     auto controls = Controls();
     for (size_t i = 0; i < controls.size(); ++i)
     {
@@ -1869,84 +1941,137 @@ void Hud::DrawMenu()
     }
     if (screen == UiScreen::Options)
     {
+        UiText(96, 86, "화면 설정", 14, {.65f, .9f, .81f});
+        UiText(96, 164, "정보의 크기와 대비를 해치지 않는 범위에서 조절합니다.", 18);
         const auto &p = w.uiPreferences;
         for (int i = 0; i < 3; ++i)
         {
             float alpha = i == 0 ? p.background : i == 1 ? p.border : p.content;
-            UiText(920, 219 + i * 58, std::to_string(int(std::round(alpha * 100))) + "%", 17, kUiInk, false,
+            UiText(624, 241 + i * 104, std::to_string(int(std::round(alpha * 100))) + "%", 17, kUiInk, false,
                    true);
-            Sprite("Components/gauge_track", 620, 223 + i * 58, 228, 5);
-            Sprite("Components/gauge_scan", 620, 223 + i * 58, 228, 5, {1, 1, 1},
+            Sprite("Components/gauge_track", 112, 270 + i * 104, 516, 5);
+            Sprite("Components/gauge_scan", 112, 270 + i * 104, 516, 5, {1, 1, 1},
                    (alpha - (i == 2 ? .85f : .8f)) / (i == 2 ? .15f : .2f));
         }
         const auto &style = GameRenderer::Get().Backend().GetStyle();
-        UiText(920, 393, style.cartoon ? "켜짐" : "꺼짐", 17, kUiInk, false, true);
-        UiText(920, 451,
+        UiText(728, 273, style.cartoon ? "켜짐" : "꺼짐", 17, kUiInk);
+        UiText(728, 377,
                style.resolution == WorldResolution::Native ? "기본"
                : style.resolution == WorldResolution::Half ? "1/2"
                                                            : "1/4",
-               17, kUiInk, false, true);
+               17, kUiInk);
         int samples = GameRenderer::Get().Backend().GetAntialiasingSamples();
-        UiText(920, 509,
+        UiText(728, 481,
                !style.antialiasing                           ? "꺼짐"
                : style.resolution != WorldResolution::Native ? "픽셀 모드에서 미적용"
                : samples <= 1                                ? "지원되지 않음"
                                                              : std::to_string(samples) + "×",
-               17, kUiInk, false, true);
+               17, kUiInk);
         UiText(336, 637, "선택 후 A/D 또는 ←/→ 조절 · Enter 전환", 15);
         UiText(336, 661, "UI는 네이티브 해상도 유지 · 설정은 새 게임에도 유지", 14, {.59f, .75f, .75f});
     }
     if (screen == UiScreen::Title || screen == UiScreen::Pause)
     {
-        UiText(440, 184, screen == UiScreen::Title ? "에르마 / 개척지 기록" : "플레이를 잠시 멈췄습니다", 15,
+        const bool titleScreen = screen == UiScreen::Title;
+        UiText(x, titleScreen ? 166 : 98, titleScreen ? "에르마 · 헤일로" : "플레이를 잠시 멈췄습니다", 15,
                {.59f, .79f, .77f});
-        UiText(440, 638, "현재 진행은 실행 세션에만 유지됩니다.", 15, {.95f, .77f, .4f});
-        UiText(440, 666, "W/S · 방향 키 선택 / Enter 확인", 14, {.59f, .75f, .75f});
+        if (titleScreen)
+        {
+            UiText(96, 299, "신호가 닿은 곳에서, 이야기가 시작된다.", 20);
+        }
+        UiText(x, titleScreen ? 727 : 687, "현재 진행은 실행 세션에만 유지됩니다.", 15, {.95f, .77f, .4f});
+        if (!titleScreen)
+        {
+            UiText(x, 717, "W/S · 방향 키 선택 / Enter 확인", 14, {.59f, .75f, .75f});
+        }
     }
     if (screen == UiScreen::Stages)
     {
-        UiText(336, 198, "선택 시 현재 진행 초기화 · 이전 필수 스토리 완료 처리", 16, {1, .78f, .4f});
-        UiText(336, 648, "선택한 구간의 시작 지점으로 바로 이동합니다.", 16);
+        UiText(96, 86, "테스트 진입", 14, {.65f, .9f, .81f});
+        UiText(96, 164, "시작 지점과 기능 해금 지점만 모았습니다.", 18);
+        UiText(96, 636, "선택 시 현재 진행이 초기화됩니다. 이전 필수 스토리는 완료 처리됩니다.", 18,
+               {1, .88f, .65f});
+        UiText(1176, 711, "방향 키 이동 · Enter 선택 · Esc 뒤로", 14, kUiInk, false, true);
+        Drawing::DrawLine({780, 211}, {780, 567}, {.18f, .28f, .32f});
+        int stage = (std::min)(int(TestStage::Count) - 1, (std::max)(0, w.ui.focus));
+        const char *descriptions[] = {
+            "헤일로의 집에서 서장을 시작합니다. 기본 장착은 맨손입니다.",
+            "전망대의 시작 지점으로 이동합니다. 이전 필수 스토리는 완료 처리됩니다.",
+            "바이크에 탑승한 상태로 광산 출발 지점에서 시작합니다.",
+            "광산 입구 야외에서 시작합니다. 권총을 보유하지만 기본 장착은 맨손입니다.",
+            "광산 탐험의 시작 지점으로 이동합니다. 구조와 스캔을 확인할 수 있습니다.",
+            "1장 빛나는 개척지의 시작 지점으로 이동합니다."};
+        Icon("stage", 824, 222, 36);
+        auto heading = Dialogue::Wrap(Game::StageName(TestStage(stage)), 328, 24);
+        for (size_t i = 0; i < heading.size(); ++i)
+        {
+            UiText(824, 306 + float(i) * 34, heading[i], 24);
+        }
+        auto description = Dialogue::Wrap(descriptions[stage], 328, 18);
+        for (size_t i = 0; i < description.size(); ++i)
+        {
+            UiText(824, 326 + float(heading.size()) * 34 + float(i) * 28, description[i], 18);
+        }
     }
     if (screen == UiScreen::Summary)
     {
-        Icon("level", 336, 191, 30);
-        UiText(386, 219, "레벨 " + std::to_string(stats.level), 25);
+        UiText(96, 86, "플레이어", 14, {.65f, .9f, .81f});
+        UiText(96, 164, "현재 플레이어의 보유량과 성장 상태입니다.", 18);
+        Icon("level", 96, 221, 30);
+        UiText(150, 252, "레벨 " + std::to_string(stats.level), 25);
         int floor = game::MineLevel::ExperienceForLevel(stats.level),
             next = game::MineLevel::ExperienceForLevel((std::min)(100, stats.level + 1));
-        UiText(336, 262, "경험치 " + std::to_string(stats.experience) + " / " + std::to_string(next), 18);
-        Sprite("Components/gauge_track", 336, 280, 608, 8);
-        Sprite("Components/gauge_experience", 336, 280, 608, 8, {1, 1, 1},
+        UiText(96, 297, "경험치 " + std::to_string(stats.experience) + " / " + std::to_string(next), 18);
+        Sprite("Components/gauge_track", 96, 314, 1072, 8);
+        Sprite("Components/gauge_experience", 96, 314, 1072, 8, {1, 1, 1},
                Game::Clamp(stats.level >= 100 ? 1.f
                                               : float(stats.experience - floor) / (std::max)(1, next - floor),
                            0, 1));
         const std::string rows[] = {
-            "크레딧  " + std::to_string(stats.credits), "거래 부품  " + std::to_string(stats.salvage),
-            "회복 키트  " + std::to_string(stats.recoveryKits),
-            "공격  " + std::to_string(stats.attack) + " / 방어  " + std::to_string(stats.defense),
-            "악명  " + std::to_string(int(CivicJustice::State().infamy)) + " / 거래 할증 +" +
+            std::to_string(stats.credits), std::to_string(stats.salvage), std::to_string(stats.recoveryKits),
+            std::to_string(stats.attack) + " / " + std::to_string(stats.defense),
+            std::to_string(int(CivicJustice::State().infamy)) + " / 거래 할증 +" +
                 std::to_string(int(std::round((CivicJustice::PriceMultiplier() - 1) * 100))) + "%"};
         const char *icons[] = {"credit", "parts", "heal", "defense", "reputation"};
+        const char *labels[] = {"크레딧", "거래 부품", "회복 키트", "공격 / 방어", "악명 / 거래 할증"};
         for (int i = 0; i < 5; ++i)
         {
-            Icon(icons[i], 336, 310 + i * 48, 22);
-            UiText(374, 331 + i * 48, rows[i], 18);
+            Icon(icons[i], 96, 358 + i * 52, 22);
+            UiText(136, 379 + i * 52, labels[i], 18);
+            UiText(1152, 379 + i * 52, rows[i], 20, kUiInk, false, true);
         }
     }
     if (screen == UiScreen::Help)
     {
-        const char *rows[] = {"WASD 이동·회전 · 우클릭 홀드 마우스 조준 · 좌클릭 공격",
-                              "Q 홀드 + 마우스 무기 선택 · V 근접 · R 재장전",
-                              "E 조사·대화·승하차 · G 회복 (광산·1장)",
-                              "바이크 W 가속 / S 제동·후진 / AD 조향 / Space 부스트",
-                              "F 광산 스캔 · M 지도 · 좌클릭 목적지 / 우클릭 해제",
-                              "대화 E/Enter 다음 · 숫자 선택 후 E/Enter 확정",
-                              "J 조사 기록 · H 대사 이력 · PageUp/Down 기록 페이지",
-                              "I 보유 정보 · ? 조작 안내 · Esc 일시정지",
-                              "예비 탄창 무제한 · 저장/불러오기는 아직 지원하지 않음"};
-        for (int i = 0; i < 9; ++i)
+        UiText(96, 86, "필드 가이드", 14, {.65f, .9f, .81f});
+        UiText(96, 164, "도보·전투·탐험에서 사용하는 조작입니다.", 18);
+        const char *keys[] = {"WASD",  "우클릭 홀드", "좌클릭 / V",     "Q 홀드 + 마우스",      "R / G", "E",
+                              "F / M", "J / H",       "E·Enter / 숫자", "바이크 W·S·AD / Space"};
+        const char *rows[] = {"이동 · 이동 방향 회전",
+                              "권총 장착 시 커서 방향 조준",
+                              "장착 무기 공격 / 근접 공격",
+                              "무기 선택 · Q 해제로 확정",
+                              "재장전 / 광산·1장 회복 키트",
+                              "조사·대화·승하차·출입",
+                              "광산 스캔 / 지도 (클릭 지정·우클릭 해제)",
+                              "조사 기록 / 대사 이력 · PageUp/Down 페이지",
+                              "대화 진행 / 선택지 선택 후 확정",
+                              "가속·제동/후진·조향 / 부스트"};
+        for (int i = 0; i < 10; ++i)
         {
-            UiText(336, 215 + i * 39, rows[i], 16);
+            float column = i % 2 ? 660.f : 96.f, y = 219.f + (i / 2) * 84;
+            UiText(column, y, keys[i], 20, {.65f, .9f, .81f});
+            auto wrapped = Dialogue::Wrap(rows[i], 508, 18);
+            for (size_t row = 0; row < wrapped.size(); ++row)
+            {
+                UiText(column, y + 29 + float(row) * 24, wrapped[row], 18);
+            }
+        }
+        auto footer = Dialogue::Wrap(
+            "I 보유 정보 · ? 도움말 · Esc 일시정지 · 예비 탄창 무제한 · 저장/불러오기 미지원", 1072, 16);
+        for (size_t line = 0; line < footer.size(); ++line)
+        {
+            UiText(96, 620 + float(line) * 24, footer[line], 16);
         }
     }
     if (screen == UiScreen::Supply)
@@ -2019,8 +2144,8 @@ void Hud::Render()
 {
     const auto &w = Game::Get().GetState();
     renderqueue::Opacity(w.uiPreferences.content);
-    if (w.ui.screen == UiScreen::None && !w.mapVisible && !w.journalVisible && !w.dialogueHistoryVisible &&
-        !HospitalRecovery::Active())
+    if (w.ui.screen == UiScreen::None && !w.weaponWheel.visible && !w.mapVisible && !w.journalVisible &&
+        !w.dialogueHistoryVisible && !HospitalRecovery::Active())
     {
         static CityHud city;
         static MineHud mine;
@@ -2058,8 +2183,12 @@ void Hud::DrawWeaponWheel()
     }
     const auto &loadout = game::GameLevels::Mine().GetState().loadout;
     constexpr Vector2 center = {640, 390};
-    constexpr float inner = 86, outer = 224;
-    Drawing::DrawRectangle(0, 0, kCanvasWidth, kCanvasHeight, {.01f, .025f, .035f, .56f});
+    constexpr float inner = 87, outer = 224;
+    Drawing::DrawRectangle(0, 0, kCanvasWidth, kCanvasHeight, {.01f, .025f, .035f, .75f});
+    UiText(624, 79, "장비", 14, {.65f, .9f, .81f});
+    UiText(640 - RenderAssets::MeasureUtf8("무기 선택", 32) * .5f, 125, "무기 선택", 32);
+    UiText(640 - RenderAssets::MeasureUtf8("가리킨 뒤 Q를 놓으면 장착됩니다.", 18) * .5f, 157,
+           "가리킨 뒤 Q를 놓으면 장착됩니다.", 18);
     struct Sector
     {
         combat::WeaponSlot slot;
@@ -2067,23 +2196,23 @@ void Hud::DrawWeaponWheel()
         Vector2 label;
         const char *title;
     };
-    const Sector sectors[] = {{combat::WeaponSlot::Primary, -kPi / 2, {640, 232}, "주 무장"},
-                              {combat::WeaponSlot::Secondary, kPi / 6, {782, 454}, "보조 무장"},
-                              {combat::WeaponSlot::Unarmed, 5 * kPi / 6, {498, 454}, "맨손"}};
+    const Sector sectors[] = {{combat::WeaponSlot::Primary, -kPi / 2, {640, 236}, "주 무장"},
+                              {combat::WeaponSlot::Secondary, kPi / 6, {780, 466}, "보조 무장"},
+                              {combat::WeaponSlot::Unarmed, 5 * kPi / 6, {500, 466}, "맨손"}};
     for (const auto &sector : sectors)
     {
         const bool available = loadout.IsAvailable(sector.slot);
         const bool hover = wheel.hovered == sector.slot;
         ColorRGBA fill =
-            hover ? (available ? ColorRGBA(.10f, .46f, .46f, .94f) : ColorRGBA(.26f, .24f, .23f, .96f))
-                  : ColorRGBA(.035f, .085f, .11f, .95f);
+            hover ? (available ? ColorRGBA(.14f, .30f, .31f, .94f) : ColorRGBA(.16f, .19f, .20f, .96f))
+                  : ColorRGBA(.067f, .15f, .19f, .95f);
         auto point = [&](float a, float r) {
             return Vector2{center.x + std::cos(a) * r, center.y + std::sin(a) * r};
         };
         for (int i = 0; i < 48; ++i)
         {
-            float a = sector.angle - kPi / 3 + .015f + (2 * kPi / 3 - .03f) * i / 48;
-            float b = sector.angle - kPi / 3 + .015f + (2 * kPi / 3 - .03f) * (i + 1) / 48;
+            float a = sector.angle - kPi / 3 + .05236f + (2 * kPi / 3 - .10472f) * i / 48;
+            float b = sector.angle - kPi / 3 + .05236f + (2 * kPi / 3 - .10472f) * (i + 1) / 48;
             Drawing::DrawPolygon({point(a, inner), point(a, outer), point(b, outer), point(b, inner)}, fill);
             Drawing::DrawLine(point(a, outer), point(b, outer),
                               hover ? ColorRGBA(.4f, .95f, .87f) : ColorRGBA(.2f, .36f, .4f),
@@ -2092,40 +2221,41 @@ void Hud::DrawWeaponWheel()
         auto label = sector.label;
         ColorRGBA ink = available ? kUiInk : ColorRGBA(.53f, .6f, .62f);
         auto centeredText = [&](const std::string &text, float y, int size, ColorRGBA color) {
-            UiText(label.x - RenderAssets::MeasureUtf8(text, size) * .5f, y, text, size, color, true);
+            UiText(label.x - RenderAssets::MeasureUtf8(text, size) * .5f, y, text, size, color, false);
         };
-        centeredText(sector.title, label.y, 20, ink);
+        centeredText(sector.title, label.y + 23, 18, ink);
         if (sector.slot == combat::WeaponSlot::Secondary && loadout.HasPistol())
         {
-            Icon("pistol", label.x - 18, label.y + 10, 36, false, ink);
-            centeredText("개척자 권총", label.y + 69, 16, ink);
+            Icon("pistol", label.x - 18, label.y - 37, 36, false, ink);
         }
         else
         {
             if (sector.slot == combat::WeaponSlot::Unarmed)
             {
-                // A closed hand, rather than a weapon icon, for the unarmed slot.
-                Drawing::DrawRectangle(label.x - 13, label.y + 24, 26, 20, ink);
-                Drawing::DrawRectangle(label.x - 8, label.y + 44, 16, 6, ink);
-                for (int finger = 0; finger < 4; ++finger)
-                {
-                    Drawing::DrawEllipse(label.x - 9 + finger * 6, label.y + 23, 4, 5, ink);
-                }
-                Drawing::DrawLine({label.x - 10, label.y + 32}, {label.x + 6, label.y + 32}, fill, 2);
-                Drawing::DrawLine({label.x + 6, label.y + 32}, {label.x + 9, label.y + 39}, fill, 2);
+                Icon("unarmed", label.x - 18, label.y - 37, 36, false, ink);
             }
             else
             {
-                Icon("empty", label.x - 16, label.y + 12, 32, false, ink);
+                Icon("slot_empty", label.x - 18, label.y - 37, 36, false, ink);
             }
-            centeredText(available ? "근접 공격" : "비어 있음", label.y + 69, 16, ink);
+        }
+        const bool equipped = loadout.Selected() == sector.slot;
+        centeredText(equipped                                       ? "현재 장착"
+                     : sector.slot == combat::WeaponSlot::Unarmed   ? "근접 공격"
+                     : available                                    ? "권총"
+                     : sector.slot == combat::WeaponSlot::Secondary ? "미보유"
+                                                                    : "비어 있음",
+                     label.y + 49, 16, equipped ? ColorRGBA(.65f, .9f, .81f) : ink);
+        if (equipped)
+        {
+            Icon("check", label.x + 42, label.y - 43, 18, false, {.65f, .9f, .81f});
         }
     }
     const char *name = wheel.hovered == combat::WeaponSlot::Unarmed ? "맨손"
                        : loadout.IsAvailable(wheel.hovered)         ? "권총"
                                                                     : "빈 슬롯";
-    UiText(center.x - RenderAssets::MeasureUtf8(name, 26) * .5f, center.y, name, 26, kUiInk, true);
-    const char *status = loadout.IsAvailable(wheel.hovered) ? "Q 놓아서 선택" : "장착할 무기 없음";
+    UiText(center.x - RenderAssets::MeasureUtf8(name, 26) * .5f, center.y, name, 26, kUiInk, false);
+    const char *status = loadout.IsAvailable(wheel.hovered) ? "Q 놓아서 선택" : "현재 장착 유지";
     UiText(center.x - RenderAssets::MeasureUtf8(status, 14) * .5f, center.y + 29, status, 14, kUiInk);
     float length = std::hypot(wheel.offset.x, wheel.offset.y);
     if (length >= 24)
@@ -2134,6 +2264,7 @@ void Hud::DrawWeaponWheel()
         Drawing::DrawEllipse(center.x + wheel.offset.x / length * r, center.y + wheel.offset.y / length * r,
                              5, 5, {.58f, 1, .93f});
     }
-    UiText(480, 660, "Q 홀드 + 마우스 이동 · Esc 취소", 18, kUiInk, true);
+    const std::string instructions = "Q 홀드 + 마우스 이동 · Q 해제 장착 · Esc 취소";
+    UiText(640 - RenderAssets::MeasureUtf8(instructions, 18) * .5f, 696, instructions, 18, kUiInk, false);
 }
 } // namespace tutorial
