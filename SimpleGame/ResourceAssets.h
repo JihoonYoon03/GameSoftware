@@ -1,6 +1,8 @@
 #pragma once
 #include "ModelLibrary.h"
+#include "Animation.h"
 #include <array>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -21,6 +23,7 @@ struct ResourceClip
     float duration = 0;
     std::vector<float> matrices;
     std::vector<Point> muzzles;
+    std::vector<BonePose> localFrames;
 };
 struct ResourceMesh
 {
@@ -29,7 +32,13 @@ struct ResourceMesh
     Point minimum, maximum, physicalSize;
     std::array<Point, 6> sockets;
     std::vector<ResourceVertex> vertices;
-    std::vector<ResourceClip> clips;
+    std::shared_ptr<const std::vector<ResourceClip>> animations;
+    std::shared_ptr<const AnimationRig> rig;
+    const std::vector<ResourceClip> &Clips() const
+    {
+        static const std::vector<ResourceClip> empty;
+        return animations ? *animations : empty;
+    }
 };
 
 class ResourceAssets

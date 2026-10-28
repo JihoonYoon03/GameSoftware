@@ -1,6 +1,7 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include "Level.h"
 #include "Civic.h"
+#include "Hud.h"
 #include "Profiler.h"
 #include "ResourceAssets.h"
 #include <algorithm>
@@ -593,17 +594,26 @@ void MineCombat::UpdateBullets(float deltaSeconds)
 void MineCombat::Attack()
 {
     auto &world = tutorial::Game::Get().GetState();
-    if (tutorial::Dialogue::LocksWorld() || state.meleeSeconds > 0 || state.bullets.size() >= 128)
+    if (!state.active || world.isPaused || world.mapVisible || world.weaponWheel.visible ||
+        world.journalVisible || world.dialogueHistoryVisible || state.player.health <= 0 ||
+        tutorial::HospitalRecovery::Active() || tutorial::Dialogue::LocksWorld() || state.meleeSeconds > 0 ||
+        state.bullets.size() >= 128)
     {
+        return;
+    }
+    if (!state.loadout.IsPistolEquipped())
+    {
+        Melee();
         return;
     }
     combat::Shot shot;
-    if (!state.pistol.TryFire(level.GetAimAngle(), shot))
+    if (!state.pistol.TryFire(GameLevels::FireAngle(), shot))
     {
         return;
     }
-    auto aim = level.GetAimDirection(level.GetAimAngle());
-    auto pose = models::ModelRig::Pose(0, false, true, 1);
+    auto aim = level.GetAimDirection(GameLevels::FireAngle());
+    world.playerAnimation.Fire();
+    auto pose = tutorial::Game::Get().PlayerPose(1);
     auto muzzle = models::ModelRig::Muzzle(pose);
     float muzzleDistance =
         std::sqrt(muzzle.x * muzzle.x + muzzle.y * muzzle.y) * models::WorldScale::characterScale;
@@ -622,14 +632,15 @@ void MineCombat::Attack()
 void MineCombat::Melee()
 {
     auto &world = tutorial::Game::Get().GetState();
-    if (!state.active || world.isPaused || world.mapVisible || state.player.health <= 0 ||
-        tutorial::HospitalRecovery::Active() || tutorial::Dialogue::LocksWorld() || world.journalVisible ||
-        world.dialogueHistoryVisible || state.meleeSeconds > 0)
+    if (!state.active || world.isPaused || world.mapVisible || world.weaponWheel.visible ||
+        state.player.health <= 0 || tutorial::HospitalRecovery::Active() ||
+        tutorial::Dialogue::LocksWorld() || world.journalVisible || world.dialogueHistoryVisible ||
+        state.meleeSeconds > 0)
     {
         return;
     }
     state.meleeSeconds = .65f;
-    auto aim = level.GetAimDirection(level.GetAimAngle());
+    auto aim = level.GetAimDirection(GameLevels::FireAngle());
     size_t closest = state.enemies.size();
     float best = .85f;
     for (size_t i = 0; i < state.enemies.size(); ++i)
@@ -653,7 +664,10 @@ void MineCombat::Melee()
 
 void MineCombat::Reload()
 {
-    if (state.pistol.Reload())
+    const auto &world = tutorial::Game::Get().GetState();
+    if (state.loadout.IsPistolEquipped() && !world.weaponWheel.visible && !world.isPaused &&
+        !world.mapVisible && !world.journalVisible && !world.dialogueHistoryVisible &&
+        !tutorial::Dialogue::LocksWorld() && !tutorial::HospitalRecovery::Active() && state.pistol.Reload())
     {
         tutorial::Game::Get().ShowNotice("권총 / 재장전 중. 예비 탄창은 제한 없이 보급됩니다.");
     }
@@ -1286,9 +1300,10 @@ tutorial::Vector2 MineLevel::Project(tutorial::Vector2 p, float height)
 void MineLevel::ClearInput()
 {
     auto &world = tutorial::Game::Get().GetState();
+    tutorial::WeaponWheel::Close();
     world.mapVisible = false;
     std::fill(world.pressedKeys, world.pressedKeys + 256, false);
-    world.mouseFiring = false;
+    world.mouseFiring = world.mouseAiming = false;
 }
 
 bool MineLevel::IsNear(tutorial::Vector2 position)
@@ -1331,6 +1346,10 @@ void MineLevel::AddExperience(int amount)
 void MineLevel::Enter(bool debugEntry)
 {
     auto &world = tutorial::Game::Get().GetState();
+    if (debugEntry)
+    {
+        GameLevels::PrepareTestEntry(tutorial::TestStage::Mine);
+    }
     if (debugEntry && state.quest.GetStage() < MineQuestStage::TravelToMine)
     {
         state.quest.Advance(MineQuestStage::ShowRecord);
@@ -1396,7 +1415,7 @@ void MineLevel::Reset()
 {
     auto &world = tutorial::Game::Get().GetState();
     state = MineState{};
-    world.mouseFiring = false;
+    world.mouseFiring = world.mouseAiming = false;
 }
 
 void MineLevel::Restart()
@@ -1549,8 +1568,9 @@ void MineLevel::UseRecoveryKit()
     if (stats.recoveryKits > 0 && stats.health < stats.maxHealth)
     {
         --stats.recoveryKits;
+        int before = stats.health;
         stats.health = (std::min)(stats.maxHealth, stats.health + 45);
-        tutorial::Game::Get().ShowNotice("회복 키트 / 체력이 45 회복되었습니다.");
+        tutorial::Game::Get().ShowNotice("회복 키트 / 체력 +" + std::to_string(stats.health - before));
     }
 }
 
@@ -1617,6 +1637,10 @@ std::vector<tutorial::Vector2> ChapterOneLevel::FindRoute(tutorial::Vector2 from
 void ChapterOneLevel::Attack()
 {
     combat.Attack();
+}
+void ChapterOneLevel::Melee()
+{
+    combat.Melee();
 }
 ChapterOneState &ChapterOneLevel::GetState()
 {
@@ -1810,10 +1834,11 @@ bool FrontierParty::Move(FrontierPerson &person, float amount)
 }
 void ChapterOneLevel::Enter(bool debugEntry)
 {
+    tutorial::WeaponWheel::Close();
     tutorial::Game::Get().GetState().mapVisible = false;
     if (debugEntry)
     {
-        state.unlocked = true;
+        GameLevels::PrepareTestEntry(tutorial::TestStage::ChapterOne);
     }
     if (!Unlock())
     {
@@ -1832,7 +1857,7 @@ void ChapterOneLevel::Enter(bool debugEntry)
     auto &world = tutorial::Game::Get().GetState();
     world.isBikeMounted = false;
     world.bikeSpeed = 0;
-    world.isInsideHome = world.isInObservatory = world.mouseFiring = false;
+    world.isInsideHome = world.isInObservatory = world.mouseFiring = world.mouseAiming = false;
     std::fill(std::begin(world.pressedKeys), std::end(world.pressedKeys), false);
     world.playerPosition = world.cameraPosition = kFrontierEntry;
     state.ria.position = {6.5f, 6.5f};
@@ -1850,12 +1875,13 @@ void ChapterOneLevel::Enter(bool debugEntry)
 }
 void ChapterOneLevel::Leave()
 {
+    tutorial::WeaponWheel::Close();
     tutorial::Game::Get().GetState().mapVisible = false;
     state.active = false;
     state.bullets.clear();
     state.tracers.clear();
     auto &world = tutorial::Game::Get().GetState();
-    world.mouseFiring = false;
+    world.mouseFiring = world.mouseAiming = false;
     std::fill(std::begin(world.pressedKeys), std::end(world.pressedKeys), false);
     world.playerPosition = world.cameraPosition = tutorial::kCityReceiverPosition;
     tutorial::Game::Get().ShowNotice(
@@ -2087,26 +2113,16 @@ void ChapterOneLevel::Interact()
         tell("기본 장부 확보 / 발주처 이름은 지워졌습니다. 설비 N-0/17의 좌표·전력 사용 주기·교신 "
              "시각이 남아 있습니다. 다른 현장 기록도 모아 헤일로 수신망에서 대조하세요.");
         break;
-    case ChapterAction::ConvoySupply: {
-        auto &stats = GameLevels::Mine().GetState().player;
-        int price = tutorial::CivicJustice::ShopPrice(2);
-        if (stats.salvage >= price && stats.recoveryKits < 999)
+    case ChapterAction::ConvoySupply:
+        if (tutorial::Dialogue::Danger())
         {
-            stats.salvage -= price;
-            ++stats.recoveryKits;
-            game.ShowNotice("보급품 교환 완료 / 부품 " + std::to_string(price) +
-                            "개를 건네고 회복 키트 1개를 받았습니다.");
+            game.ShowNotice("보급 교환 / 안전을 확보한 뒤 이용하세요.");
         }
         else
         {
-            game.ShowNotice(stats.recoveryKits >= 999
-                                ? "보급품 교환 / 회복 키트를 더 소지할 수 없습니다."
-                                : "운송대 보급상 / 회복 키트 하나에 부품 " + std::to_string(price) +
-                                      "개가 필요해요. 지금은 부품이 모자라네요. [거래 안내] 악명이 높으면 "
-                                      "가격이 오릅니다.");
+            tutorial::Hud::OpenMenu(tutorial::UiScreen::Supply);
         }
         break;
-    }
     case ChapterAction::DetailLedger:
         state.detailLedgerFound = true;
         tell("상세 장부 확보 / 구매자 추적 단서를 보관합니다. 삭제된 발주처의 정체는 아직 "
@@ -2183,7 +2199,10 @@ float ChapterOneLevel::GetAimAngle() const
 }
 void FrontierCombat::Attack()
 {
-    if (tutorial::Dialogue::LocksWorld())
+    auto &world = tutorial::Game::Get().GetState();
+    if (tutorial::Dialogue::LocksWorld() || world.isPaused || world.mapVisible || world.weaponWheel.visible ||
+        world.journalVisible || world.dialogueHistoryVisible || tutorial::HospitalRecovery::Active() ||
+        GameLevels::Mine().GetState().player.health <= 0 || state.meleeSeconds > 0)
     {
         return;
     }
@@ -2192,8 +2211,13 @@ void FrontierCombat::Attack()
         return;
     }
     auto &mine = GameLevels::Mine().GetState();
+    if (!mine.loadout.IsPistolEquipped())
+    {
+        Melee();
+        return;
+    }
     combat::Shot shot;
-    if (!mine.pistol.TryFire(level.GetAimAngle(), shot))
+    if (!mine.pistol.TryFire(GameLevels::FireAngle(), shot))
     {
         return;
     }
@@ -2201,13 +2225,56 @@ void FrontierCombat::Attack()
                                   MineLevel::GetAimDirection(shot.angle), shot.speed, shot.range,
                                   shot.damage + (mine.player.level - 1) * 4, true},
                                  ChapterTeam::Player};
-    auto muzzle = models::ModelRig::Muzzle(models::ModelRig::Pose(0, false, true, 1));
-    Advance(projectile, muzzle.x * models::WorldScale::characterScale);
+    tutorial::Game::Get().GetState().playerAnimation.Fire();
+    auto muzzle = models::ModelRig::Muzzle(tutorial::Game::Get().PlayerPose(1));
+    Advance(projectile, std::hypot(muzzle.x, muzzle.y) * models::WorldScale::characterScale);
     if (projectile.shot.remaining > 0)
     {
         state.bullets.push_back(projectile);
     }
     state.muzzleFlash = .055f;
+}
+void FrontierCombat::Melee()
+{
+    const auto &world = tutorial::Game::Get().GetState();
+    if (!state.active || world.isPaused || world.mapVisible || world.weaponWheel.visible ||
+        world.journalVisible || world.dialogueHistoryVisible || tutorial::Dialogue::LocksWorld() ||
+        tutorial::HospitalRecovery::Active() || GameLevels::Mine().GetState().player.health <= 0 ||
+        state.meleeSeconds > 0)
+    {
+        return;
+    }
+    state.meleeSeconds = .65f;
+    if (state.negotiated)
+    {
+        return;
+    }
+    auto aim = MineLevel::GetAimDirection(GameLevels::FireAngle());
+    FrontierPerson *closest = nullptr;
+    float best = .85f;
+    for (auto &person : state.scrappers)
+    {
+        float dx = person.position.x - world.playerPosition.x,
+              dy = person.position.y - world.playerPosition.y;
+        float distance = std::hypot(dx, dy);
+        if (person.combat.health > 0 && distance < best &&
+            (distance < .35f || dx * aim.x + dy * aim.y > distance * .5f) &&
+            level.HasLineOfSight(world.playerPosition, person.position))
+        {
+            closest = &person;
+            best = distance;
+        }
+    }
+    if (closest)
+    {
+        state.hostile = true;
+        auto &stats = GameLevels::Mine().GetState().player;
+        closest->combat.health = (std::max)(0, closest->combat.health - 30 - (stats.level - 1) * 4);
+        if (closest->combat.health == 0)
+        {
+            GameLevels::Mine().AddExperience(kExperiencePerKill);
+        }
+    }
 }
 void FrontierCombat::Fire(FrontierPerson &person, tutorial::Vector2 target, ChapterTeam team)
 {
@@ -2314,6 +2381,7 @@ void FrontierCombat::Update(float deltaSeconds)
     auto &world = tutorial::Game::Get().GetState();
     auto &mine = GameLevels::Mine().GetState();
     mine.pistol.Update(deltaSeconds);
+    state.meleeSeconds = (std::max)(0.f, state.meleeSeconds - deltaSeconds);
     state.invulnerability = (std::max)(0.f, state.invulnerability - deltaSeconds);
     state.muzzleFlash = (std::max)(0.f, state.muzzleFlash - deltaSeconds);
     for (auto &tracer : state.tracers)
@@ -2551,6 +2619,17 @@ float GameLevels::AimAngle()
 {
     return Chapter().IsActive() ? Chapter().GetAimAngle() : Mine().GetAimAngle();
 }
+float GameLevels::FireAngle()
+{
+    auto &game = tutorial::Game::Get();
+    if (game.IsAiming())
+    {
+        return AimAngle();
+    }
+    float yaw = game.GetState().facingYaw;
+    float x = std::cos(yaw), y = std::sin(yaw);
+    return std::atan2((x + y) * .5f, x - y);
+}
 float GameLevels::MuzzleFlash()
 {
     return Chapter().IsActive() ? Chapter().GetState().muzzleFlash : Mine().GetState().muzzleFlash;
@@ -2572,6 +2651,42 @@ void GameLevels::Reset()
     for (Level *level : {static_cast<Level *>(&Mine()), static_cast<Level *>(&Chapter())})
     {
         level->Reset();
+    }
+}
+void GameLevels::PrepareTestEntry(tutorial::TestStage stage)
+{
+    auto &w = tutorial::Game::Get().GetState();
+    auto &mine = Mine().GetState();
+    if (stage >= tutorial::TestStage::Observatory)
+    {
+        w.mainQuestStage = tutorial::MainQuestStage::ReadGateSignal;
+    }
+    if (stage >= tutorial::TestStage::BikeUnlocked)
+    {
+        w.gateSignalHeard = w.hasDescendedObservatory = true;
+        w.mainQuestStage = tutorial::MainQuestStage::MountJetBike;
+        w.dialogue.scenes["MQ00/observatory"].phase = tutorial::DialoguePhase::Completed;
+        w.dialogue.events.insert("MQ00/observatory/complete");
+        mine.quest.Advance(MineQuestStage::ShowRecord);
+        mine.quest.Advance(MineQuestStage::CheckCityRelay);
+        mine.quest.BeginJourney();
+    }
+    if (stage >= tutorial::TestStage::WeaponUnlocked)
+    {
+        mine.loadout.GrantPistol();
+        w.dialogue.scenes["MQ00/mine-weapon"].phase = tutorial::DialoguePhase::Completed;
+        w.dialogue.events.insert("MQ00/mine-weapon/complete");
+        mine.quest.BeginJourney();
+    }
+    if (stage >= tutorial::TestStage::ChapterOne)
+    {
+        while (mine.quest.GetStage() != MineQuestStage::Complete)
+        {
+            mine.quest.Advance(mine.quest.GetStage());
+        }
+        w.isComplete = true;
+        w.mainQuestStage = tutorial::MainQuestStage::Complete;
+        Chapter().Unlock();
     }
 }
 } // namespace game

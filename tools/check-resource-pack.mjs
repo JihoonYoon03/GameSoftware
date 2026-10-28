@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { maxAnimationClips, maxPackBytes, resourcePackStatus } from './resource-pack-inputs.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const folder = path.join(root, 'Resource', 'Runtime');
@@ -31,7 +32,8 @@ function sourceTriangles(relative) {
     source.scenes[source.scene ?? 0].nodes.forEach(visit);
     return triangles;
 }
-assert.equal(manifest.schema, 'game_resource_pack_v1');
+assert.equal(manifest.schema, 'game_resource_pack_v3');
+assert.ok(data.length <= maxPackBytes);
 assert.equal(data.length, manifest.bytes);
 assert.ok(data.length >= 12 && data.length <= 512 * 1024 * 1024, 'Resource pack exceeds runtime size limit');
 assert.equal(crypto.createHash('sha256').update(data).digest('hex'), manifest.sha256);
@@ -53,13 +55,47 @@ function text() {
     return result;
 }
 assert.equal(u32(), 0x41524d45);
-assert.equal(u32(), 1);
+assert.equal(u32(), 3);
 const count = u32(), names = new Set();
+const bankCount = u32(), banks = [];
+assert.equal(bankCount, manifest.animationBanks);
+assert.ok(bankCount > 0 && bankCount <= 512);
+for (let bank = 0; bank < bankCount; ++bank) {
+    const bones = u32(), clips = u32(), clipNames = [], gear = new Map();
+    assert.ok(bones > 0 && bones < 32 && clips > 0 && clips <= maxAnimationClips);
+    const boneNames = [];
+    for (let j = 0; j < bones; ++j) {
+        boneNames.push(text()); const parent = u32() - 1; floats(16);
+        assert.ok(parent >= -1 && parent < bones && parent !== j);
+    }
+    const sampleCount = u32(), samples = [];
+    for (let j = 0; j < sampleCount; ++j) { samples.push(text()); floats(2); }
+    const triangleCount = u32();
+    for (let j = 0; j < triangleCount * 3; ++j) assert.ok(u32() < sampleCount);
+    const soleCount = u32();
+    for (let j = 0; j < soleCount; ++j) { assert.ok(u32() < bones); floats(3); }
+    if (bones === 23) { assert.equal(sampleCount, 17); assert.equal(triangleCount, 24); assert.equal(soleCount, 4); }
+    for (let clip = 0; clip < clips; ++clip) {
+        const name = text(); clipNames.push(name);
+        const frames = u32(), [duration] = floats(1);
+        assert.ok(frames >= 2 && frames <= 10000 && duration > 0);
+        const matrices = floats(frames * bones * 16); floats(frames * 3);
+        if (bones === 17 && ['Aircraft_Reference', 'Cruise'].includes(name))
+            gear.set(name, [...matrices.slice(11 * 16, 12 * 16), ...matrices.slice(16 * 16, 17 * 16)]);
+        animationFrames += frames;
+    }
+    assert.equal(new Set(clipNames).size, clips);
+    for (const sample of samples) assert.ok(clipNames.includes(sample));
+    banks.push({ bones, clipNames, gear });
+}
 const signalDigests = new Set();
 assert.equal(count, manifest.assets.length);
 assert.ok(count <= 512, 'Resource pack exceeds runtime asset limit');
 for (let asset = 0; asset < count; ++asset) {
-    const name = text(), source = text(), vertexCount = u32(), bones = u32(), clips = u32();
+    const name = text(), source = text(), vertexCount = u32(), bones = u32(), bank = u32();
+    assert.ok(bank <= bankCount);
+    const { clipNames, gear } = bank ? banks[bank - 1] : { clipNames: [], gear: new Map() };
+    if (bank) assert.equal(bones, banks[bank - 1].bones);
     const report = manifest.assets[asset];
     const recipe = name.startsWith('character/') ? recipes[path.basename(source)] : undefined;
     const skinColor = recipe?.skin ? glbDocument(source).materials.find(material => material.name === recipe.skin)
@@ -67,11 +103,14 @@ for (let asset = 0; asset < count; ++asset) {
     assert.ok(!names.has(name)); names.add(name);
     assert.equal(name, report.name); assert.equal(source, report.source);
     assert.equal(vertexCount, report.triangles * 3); assert.equal(bones, report.bones);
-    assert.ok(vertexCount > 0 && vertexCount <= 2000000 && vertexCount % 3 === 0 && bones < 32 && clips <= 128);
+    assert.ok(vertexCount > 0 && vertexCount % 3 === 0 && bones < 32);
+    assert.equal(bank, report.animationBank);
     const bounds = floats(6), physical = floats(3), sockets = floats(18);
     for (let axis = 0; axis < 3; ++axis) {
         assert.ok(bounds[axis] <= bounds[axis + 3]);
-        assert.ok(physical[axis] > 0);
+        const flatRoadSurface = name.startsWith('transit/') && axis === 2 &&
+            Math.abs(bounds[5] - bounds[2]) < 1e-6;
+        assert.ok(physical[axis] > 0 || (flatRoadSurface && physical[axis] === 0));
     }
     if (name.startsWith('vehicle/')) {
         assert.equal(bones, 16);
@@ -108,21 +147,12 @@ for (let asset = 0; asset < count; ++asset) {
     }
     if (name.startsWith('scenery/City_TrafficSignal'))
         signalDigests.add(crypto.createHash('sha256').update(data.subarray(vertexStart, offset)).digest('hex'));
-    const clipNames = [];
-    const gear = new Map();
-    for (let clip = 0; clip < clips; ++clip) {
-        clipNames.push(text());
-        const frames = u32(), [duration] = floats(1);
-        assert.ok(bones > 0 && frames >= 2 && frames <= 10000 && duration > 0);
-        const matrices = floats(frames * bones * 16); floats(frames * 3);
-        if (name.startsWith('aircraft/') && ['Aircraft_Reference', 'Cruise'].includes(clipNames.at(-1)))
-            gear.set(clipNames.at(-1), [...matrices.slice(11 * 16, 12 * 16), ...matrices.slice(16 * 16, 17 * 16)]);
-        animationFrames += frames;
-    }
     assert.deepEqual(clipNames, report.clips);
     if (name.startsWith('character/')) for (const clip of ['Idle', 'Run', 'Aim_Base', 'Attack_Fire', 'Ride']) assert.ok(clipNames.includes(clip));
     if (recipe) {
         const sourceClips = glbDocument(source).animations.map(clip => clip.name);
+        for (const clip of ['Idle', 'Walk', 'Run', 'Aim_Base', 'Attack_Fire', 'Attack_Melee', 'Jump_Air'])
+            assert.ok(sourceClips.includes(clip), 'Required HUMAN_7H source clip missing: ' + clip);
         assert.deepEqual(clipNames, [...sourceClips, 'Ride'], 'Human source animations must all survive conversion');
     }
     if (name.startsWith('vehicle/')) for (const clip of ['Hover_Idle', 'Cruise']) assert.ok(clipNames.includes(clip));
@@ -131,6 +161,7 @@ for (let asset = 0; asset < count; ++asset) {
     vertices += vertexCount;
 }
 assert.equal(offset, data.length, 'Unexpected trailing data');
+assert.ok(resourcePackStatus(root).current, 'Runtime pack must match current sources and converter');
 assert.equal([...names].filter(n => n.startsWith('aircraft/')).length, 8);
 assert.equal([...names].filter(n => n.startsWith('scenery/')).length, 36);
 assert.equal(signalDigests.size, 3, 'Red/amber/green traffic heads must differ');
@@ -170,8 +201,12 @@ for (const [name, module] of Object.entries(roadPlan.modules)) {
     assert.ok(report, 'Road-plan module missing: ' + name);
     assert.equal(report.triangles, sourceTriangles('RoadPlan/' + name), 'Road detail was lost: ' + name);
     for (let axis = 0; axis < 3; ++axis) {
-        assert.ok(Math.abs(report.bounds[0][axis] - module.bounds.min[axis] * .5) < .00001);
-        assert.ok(Math.abs(report.bounds[1][axis] - module.bounds.max[axis] * .5) < .00001);
+        // Optimized visible surfaces may omit buried faces; the collision/port envelope stays unchanged.
+        const visible = Object.values(module.render_bounds ?? { original: module.bounds });
+        const minimum = Math.min(...visible.map(b => b.min[axis])) * .5;
+        const maximum = Math.max(...visible.map(b => b.max[axis])) * .5;
+        assert.ok(Math.abs(report.bounds[0][axis] - minimum) < .00001, 'Road render minimum: ' + name);
+        assert.ok(Math.abs(report.bounds[1][axis] - maximum) < .00001, 'Road render maximum: ' + name);
     }
 }
 console.log(JSON.stringify({ event: 'resource_pack_validated', assets: count, vertices, animation_frames: animationFrames, bytes: data.length }));

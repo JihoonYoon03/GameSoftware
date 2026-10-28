@@ -19,6 +19,6 @@ export function roadPlanCatalog(root, checking) {
     if (checking) {
         if (!fs.existsSync(filename) || fs.readFileSync(filename, 'utf8') !== source)
             throw Error('RoadPlanCatalog.h is stale; run node tools/pack-resources.mjs');
-    } else fs.writeFileSync(filename, source);
+    } else if (!fs.existsSync(filename) || fs.readFileSync(filename, 'utf8') !== source) fs.writeFileSync(filename, source);
     return data;
 }

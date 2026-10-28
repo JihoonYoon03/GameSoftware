@@ -1,6 +1,7 @@
 """Re-import every road-plan assembly and inspect both editable blend deliveries."""
 import hashlib
 import json
+import zipfile
 from pathlib import Path
 import bpy
 
@@ -8,6 +9,7 @@ ROOT=Path(__file__).resolve().parents[1]
 pipeline=json.loads((ROOT/'Validation/road_plan_pipeline_report.json').read_text(encoding='utf-8'))
 kit=json.loads((ROOT/'Documentation/road_plan_modules.json').read_text(encoding='utf-8'))
 catalog=json.loads((ROOT/'Documentation/asset_catalog.json').read_text(encoding='utf-8'))
+assets={a['id']:a for a in catalog['assets']}
 report=dict(source_pairs=0,reimported_assemblies=0,reimported_mesh_nodes=0,max_reimport_bounds_error_m=0,errors=[])
 bpy.ops.wm.open_mainfile(filepath=str(ROOT/'Source/Erma_Resource_Library.blend'))
 assert bpy.context.scene.name=='16_Transit_Connected_Example'
@@ -18,19 +20,15 @@ for row in pipeline['parts']:
     assert raw.data is not final.data and raw.data.uv_layers and final.data.uv_layers
     raw.data.calc_loop_triangles();final.data.calc_loop_triangles()
     assert len(raw.data.loop_triangles)==row['source_triangles']
-    assert len(final.data.loop_triangles)==row['optimized_triangles']<=500
+    assert len(final.data.loop_triangles)==assets[row['id']]['triangles']<=assets[row['id']]['triangle_budget']<=200
     assert row['max_surface_error_m']<5e-5
     assert tuple(final.location)==(0,0,0) and tuple(final.scale)==(1,1,1)
     assert final.parent is None
     report['source_pairs']+=1
-digest=hashlib.sha256()
-for a in sorted(catalog['assets'],key=lambda a:a['id']):
-    if a.get('expansion')=='road_plan_v1':continue
-    o=bpy.data.objects[a['id']];digest.update(a['id'].encode())
-    digest.update(json.dumps([[tuple(v.co) for v in o.data.vertices],[tuple(p.vertices) for p in o.data.polygons],
-                              [m.name for m in o.data.materials]],separators=(',',':')).encode())
-assert digest.hexdigest()==pipeline['protected_previous_geometry_sha256']
-report['existing_geometry_preserved']=True
+baseline=json.loads(zipfile.ZipFile(ROOT/'Source/Archives/Pre200Delivery_20261026.zip').read('Documentation/asset_catalog.json'))
+assert assets.keys()=={a['id'] for a in baseline['assets']}
+report['existing_part_ids_preserved']=True
+report['geometry_revision']=catalog['part_budget_revision']
 
 for name,info in kit['modules'].items():
     try:
@@ -42,11 +40,12 @@ for name,info in kit['modules'].items():
         points=[]
         for o in objects:
             assert o.data.uv_layers and o.data.materials and o.get('collision_role')
-            o.data.calc_loop_triangles();assert len(o.data.loop_triangles)<=500
+            o.data.calc_loop_triangles();assert len(o.data.loop_triangles)==assets[o['asset_id']]['triangles']<=assets[o['asset_id']]['triangle_budget']<=200
             assert all(s>0 for s in o.scale)
             points.extend(o.matrix_world@v.co for v in o.data.vertices)
         actual=dict(min=[min(p[k] for p in points) for k in range(3)],max=[max(p[k] for p in points) for k in range(3)])
-        err=max(abs(actual[b][k]-info['bounds'][b][k]) for b in ['min','max'] for k in range(3))
+        expected={b:[(min if b=='min' else max)(bounds[b][k] for bounds in info['render_bounds'].values()) for k in range(3)] for b in ['min','max']}
+        err=max(abs(actual[b][k]-expected[b][k]) for b in ['min','max'] for k in range(3))
         report['max_reimport_bounds_error_m']=max(report['max_reimport_bounds_error_m'],err)
         assert err<.001,(name,'units or axes changed',err)
         report['reimported_assemblies']+=1;report['reimported_mesh_nodes']+=len(objects)

@@ -3,11 +3,11 @@
   "standalone_parts_checked": 428,
   "physical_ports_checked": 113,
   "connections_checked": 22,
-  "max_triangles": 492,
+  "max_triangles": 192,
   "max_port_position_error_m": 9.368994121895078e-07,
   "max_port_tangent_error_degrees": 0.07999843878903147,
-  "max_normal_tangent_dot": 8.371552380026515e-05,
-  "min_triangle_area_m2": 1.2560368910413509e-06,
+  "max_normal_tangent_dot": 9.266993188106198e-05,
+  "min_triangle_area_m2": 4.615799629409086e-06,
   "min_piecewise_linear_walk_width_m": 1.9990880217834757,
   "ramps": {
     "RoadPlan_Ramp_2L_Rise8_L110": {

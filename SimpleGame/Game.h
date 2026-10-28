@@ -1,5 +1,7 @@
 #pragma once
 #include "ModelLibrary.h"
+#include "Weapon.h"
+#include "Animation.h"
 #include <string>
 #include <functional>
 #include <map>
@@ -236,6 +238,82 @@ class Dialogue
     static std::vector<std::string> Journal();
 };
 
+enum class UiScreen
+{
+    None,
+    Title,
+    Pause,
+    Stages,
+    Options,
+    Summary,
+    Help,
+    Supply,
+    Confirm,
+    Medical
+};
+enum class UiAction
+{
+    Continue,
+    Start,
+    Stages,
+    EnterStage,
+    Options,
+    Summary,
+    Help,
+    Restart,
+    Quit,
+    Back,
+    Background,
+    Border,
+    Content,
+    Cartoon,
+    Resolution,
+    Antialiasing,
+    Exchange,
+    Choice,
+    Advance,
+    Journal,
+    History,
+    Previous,
+    Next
+};
+struct UiPreferences
+{
+    float background = .94f, border = 1, content = 1;
+};
+struct UiState
+{
+    UiScreen screen = UiScreen::None, returnTo = UiScreen::Pause;
+    UiAction confirmation = UiAction::Restart;
+    int focus = 0, pressed = -1;
+};
+enum class TestStage
+{
+    Prologue,
+    Observatory,
+    BikeUnlocked,
+    WeaponUnlocked,
+    Mine,
+    ChapterOne,
+    Count
+};
+struct WeaponWheelState
+{
+    bool visible = false, qHeld = false;
+    Vector2 origin = {}, offset = {};
+    combat::WeaponSlot hovered = combat::WeaponSlot::Unarmed;
+};
+// ============================================================================
+// WeaponWheel — hold/release selection, independent of the equipped weapon.
+// ============================================================================
+class WeaponWheel
+{
+  public:
+    static bool Open();
+    static void Motion();
+    static void Close(bool commit = false);
+    static void RefreshCursorCapture();
+};
 // State owned by Game. Renderers read it without changing gameplay.
 struct GameState
 {
@@ -248,6 +326,8 @@ struct GameState
     Vector2 cursorWindowPosition = {900, 400};
     bool cursorInsideViewport = true;
     bool mouseFiring = false;
+    bool mouseAiming = false;
+    models::CharacterAnimation playerAnimation;
     bool interactionHeld = false;
     bool dialogueEnterHeld = false;
     bool isInsideHome = true;
@@ -257,6 +337,9 @@ struct GameState
     float bikeElevation = 0;
     float bikeYaw = kJetBikeYaw;
     Vector2 bikePosition = kJetBikePosition;
+    bool bikeSafePoseValid = false;
+    Vector2 bikeSafePosition = kJetBikePosition;
+    float bikeSafeYaw = kJetBikeYaw, bikeSafeElevation = 0;
     Vector2 mineReturnPosition = {128, 18};
     bool gateSignalHeard = false;
     bool hasDescendedObservatory = false;
@@ -264,6 +347,9 @@ struct GameState
     bool mapVisible = false;
     bool journalVisible = false, dialogueHistoryVisible = false;
     DialogueState dialogue;
+    UiPreferences uiPreferences;
+    UiState ui;
+    WeaponWheelState weaponWheel;
     std::array<MapDestination, size_t(MapRegion::Count)> mapDestinations = {};
     bool isComplete = false;
     bool isSideQuestAccepted = false;
@@ -272,6 +358,7 @@ struct GameState
     float playTimeSeconds = 0;
     float animationTimeSeconds = 0;
     float noticeSecondsRemaining = 0;
+    float noticeDurationSeconds = 0;
     float movementAmount = 0;
     float movementSpeed = 0;
     int facingDirection = 0;
@@ -314,6 +401,8 @@ class Game
     static Game &Get();
     GameState &GetState();
     void Reset();
+    bool EnterTestStage(TestStage stage);
+    static const char *StageName(TestStage stage);
     void Resize(int width, int height);
     void KeyDown(unsigned char key, int x, int y);
     void KeyUp(unsigned char key, int x, int y);
@@ -321,6 +410,10 @@ class Game
     void MouseMotion(int x, int y);
     void MouseButton(int button, int state, int x, int y);
     void MouseEntry(int state);
+    // Deterministic simulation step, also used by the window timer.
+    void Update(float deltaSeconds);
+    bool IsAiming() const;
+    models::CharacterPose PlayerPose(float recoil = 0) const;
     void Tick(int timer);
     static float Clamp(float value, float minimum, float maximum);
     static float Distance(Vector2 first, Vector2 second);

@@ -11,6 +11,13 @@
 #include <map>
 #include <vector>
 #include <iterator>
+#include <filesystem>
+#include <tuple>
+#include <stdexcept>
+#include <wincodec.h>
+#include <wrl/client.h>
+#pragma comment(lib, "windowscodecs.lib")
+#pragma comment(lib, "ole32.lib")
 
 #pragma comment(lib, "gdi32.lib")
 
@@ -102,9 +109,16 @@ struct RenderAssets::Data
         int width, height;
         unsigned long long lastUse;
     };
+    struct Sprite
+    {
+        int x, y, width, height;
+    };
+    GLuint uiAtlas = 0;
+    int uiWidth = 2048, uiHeight = 0;
+    std::map<std::string, Sprite> sprites;
     GLuint materials[4] = {};
     GLuint atlas = 0;
-    std::map<std::pair<int, std::string>, TextTexture> texts;
+    std::map<std::tuple<int, bool, std::string>, TextTexture> texts;
     unsigned long long clock = 0;
 };
 
@@ -113,6 +127,119 @@ RenderAssets::RenderAssets() : m_data(new Data())
     for (int i = 0; i < 4; ++i)
     {
         m_data->materials[i] = CreateMaterial(i);
+    }
+    namespace fs = std::filesystem;
+    wchar_t module[32768]{};
+    GetModuleFileNameW(nullptr, module, 32768);
+    fs::path uiRoot;
+    auto directory = fs::path(module).parent_path();
+    for (int level = 0; level < 7 && !directory.empty(); ++level)
+    {
+        auto candidate = directory / L"Resource" / L"UI" / L"Export";
+        if (fs::is_directory(candidate))
+        {
+            uiRoot = candidate;
+            break;
+        }
+        auto parent = directory.parent_path();
+        if (parent == directory)
+        {
+            break;
+        }
+        directory = parent;
+    }
+    if (uiRoot.empty())
+    {
+        throw std::runtime_error("UI assets missing: deploy Resource/UI/Export beside the game.");
+    }
+    struct ComScope
+    {
+        HRESULT initialized = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+        ~ComScope()
+        {
+            if (SUCCEEDED(initialized))
+            {
+                CoUninitialize();
+            }
+        }
+    } apartment;
+    {
+        using Microsoft::WRL::ComPtr;
+        ComPtr<IWICImagingFactory> factory;
+        if (FAILED(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
+                                    IID_PPV_ARGS(factory.GetAddressOf()))))
+        {
+            throw std::runtime_error("UI PNG decoder initialization failed.");
+        }
+        struct Image
+        {
+            std::string id;
+            int w, h, x, y;
+            std::vector<unsigned char> pixels;
+        };
+        std::vector<Image> images;
+        int x = 2, y = 2, row = 0;
+        for (const auto &group : {"Icons", "HUDIcons", "Components"})
+        {
+            std::vector<fs::path> paths;
+            for (const auto &entry : fs::directory_iterator(uiRoot / group))
+            {
+                if (entry.path().extension() == L".png")
+                {
+                    paths.push_back(entry.path());
+                }
+            }
+            std::sort(paths.begin(), paths.end());
+            for (const auto &path : paths)
+            {
+                ComPtr<IWICBitmapDecoder> decoder;
+                ComPtr<IWICBitmapFrameDecode> frame;
+                ComPtr<IWICFormatConverter> converter;
+                UINT w = 0, h = 0;
+                if (FAILED(factory->CreateDecoderFromFilename(path.c_str(), nullptr, GENERIC_READ,
+                                                              WICDecodeMetadataCacheOnLoad, &decoder)) ||
+                    FAILED(decoder->GetFrame(0, &frame)) || FAILED(frame->GetSize(&w, &h)) || !w || !h ||
+                    w > 2044 || h > 2044 || FAILED(factory->CreateFormatConverter(&converter)) ||
+                    FAILED(converter->Initialize(frame.Get(), GUID_WICPixelFormat32bppRGBA,
+                                                 WICBitmapDitherTypeNone, nullptr, 0,
+                                                 WICBitmapPaletteTypeCustom)))
+                {
+                    throw std::runtime_error("Invalid UI PNG: " + path.filename().string());
+                }
+                if (x + int(w) + 2 > m_data->uiWidth)
+                {
+                    x = 2;
+                    y += row + 4;
+                    row = 0;
+                }
+                Image image{std::string(group) + "/" + path.stem().string(), int(w), int(h), x, y, {}};
+                image.pixels.resize(size_t(w) * h * 4);
+                if (FAILED(converter->CopyPixels(nullptr, w * 4, UINT(image.pixels.size()),
+                                                 image.pixels.data())))
+                {
+                    throw std::runtime_error("UI PNG pixel conversion failed.");
+                }
+                x += int(w) + 4;
+                row = (std::max)(row, int(h));
+                images.push_back(std::move(image));
+            }
+        }
+        m_data->uiHeight = 1;
+        while (m_data->uiHeight < y + row + 2)
+        {
+            m_data->uiHeight *= 2;
+        }
+        std::vector<unsigned char> pixels(size_t(m_data->uiWidth) * m_data->uiHeight * 4, 0);
+        for (const auto &entry : images)
+        {
+            for (int yy = 0; yy < entry.h; ++yy)
+            {
+                std::memcpy(&pixels[((entry.y + yy) * m_data->uiWidth + entry.x) * 4],
+                            &entry.pixels[size_t(yy) * entry.w * 4], size_t(entry.w) * 4);
+            }
+            m_data->sprites.emplace(entry.id, Data::Sprite{entry.x, entry.y, entry.w, entry.h});
+        }
+        m_data->uiAtlas = Upload(m_data->uiWidth, m_data->uiHeight, pixels);
     }
     // Four materials, a white cell, and a radial glow share a padded atlas.
     constexpr int cell = 66, atlasWidth = cell * 6;
@@ -165,6 +292,7 @@ RenderAssets::~RenderAssets()
 {
     renderqueue::Flush();
     glDeleteTextures(1, &m_data->atlas);
+    glDeleteTextures(1, &m_data->uiAtlas);
     glDeleteTextures(4, m_data->materials);
     for (const auto &entry : m_data->texts)
     {
@@ -241,13 +369,14 @@ int RenderAssets::MeasureUtf8(const std::string &utf8, int fontSize)
     SIZE extent{};
     return GetTextExtentPoint32W(metrics->dc, text.data(), count, &extent) ? int(extent.cx) : 0;
 }
-void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf8, int fontSize)
+void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf8, int fontSize,
+                                bool outlined)
 {
     if (utf8.empty())
     {
         return;
     }
-    const auto key = std::make_pair(fontSize, utf8);
+    const auto key = std::make_tuple(fontSize, outlined, utf8);
     auto found = m_data->texts.find(key);
     if (found == m_data->texts.end())
     {
@@ -277,7 +406,9 @@ void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf
         HGDIOBJ previousFont = SelectObject(dc, font);
         SIZE extent = {};
         GetTextExtentPoint32W(dc, text.data(), count, &extent);
-        int width = (std::max)(1, int(extent.cx) + 4), height = (std::max)(1, int(extent.cy) + 4);
+        int padding = outlined ? 3 : 1;
+        int width = (std::max)(1, int(extent.cx) + padding * 2 + 2),
+            height = (std::max)(1, int(extent.cy) + padding * 2 + 2);
         BITMAPINFO info = {};
         info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
         info.bmiHeader.biWidth = width;
@@ -298,7 +429,7 @@ void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf
         std::memset(memory, 0, width * height * 4);
         SetBkMode(dc, TRANSPARENT);
         SetTextColor(dc, RGB(255, 255, 255));
-        TextOutW(dc, 1, 1, text.data(), count);
+        TextOutW(dc, padding, padding, text.data(), count);
         GdiFlush();
         const auto *source = static_cast<unsigned char *>(memory);
         std::vector<unsigned char> pixels(width * height * 4);
@@ -307,6 +438,33 @@ void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf
             pixels[i * 4] = pixels[i * 4 + 1] = pixels[i * 4 + 2] = 255;
             pixels[i * 4 + 3] = (std::max)(source[i * 4], (std::max)(source[i * 4 + 1], source[i * 4 + 2]));
         }
+        if (outlined)
+        {
+            auto mask = pixels;
+            for (int yy = 0; yy < height; ++yy)
+            {
+                for (int xx = 0; xx < width; ++xx)
+                {
+                    int alpha = 0;
+                    for (int oy = -2; oy <= 2; ++oy)
+                    {
+                        for (int ox = -2; ox <= 2; ++ox)
+                        {
+                            if (ox * ox + oy * oy <= 5 && xx + ox >= 0 && xx + ox < width && yy + oy >= 0 &&
+                                yy + oy < height)
+                            {
+                                alpha = (std::max)(alpha, int(mask[((yy + oy) * width + xx + ox) * 4 + 3]));
+                            }
+                        }
+                    }
+                    size_t i = size_t(yy * width + xx) * 4;
+                    auto inside = mask[i + 3];
+                    pixels[i] = pixels[i + 1] = pixels[i + 2] =
+                        alpha ? static_cast<unsigned char>(255 * int(inside) / alpha) : 0;
+                    pixels[i + 3] = static_cast<unsigned char>(alpha);
+                }
+            }
+        }
         GLuint texture = Upload(width, height, pixels);
         SelectObject(dc, previousBitmap);
         SelectObject(dc, previousFont);
@@ -314,7 +472,7 @@ void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf
         DeleteObject(font);
         DeleteDC(dc);
         // Bound transient timer/NPC label textures. Evict the least recently drawn entry.
-        if (m_data->texts.size() >= 128)
+        if (m_data->texts.size() >= 512)
         {
             auto oldest = std::min_element(
                 m_data->texts.begin(), m_data->texts.end(),
@@ -332,5 +490,48 @@ void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf
     }
     found->second.lastUse = ++m_data->clock;
     const auto &texture = found->second;
-    Quad(texture.texture, x, baselineY - fontSize, (float)texture.width, (float)texture.height);
+    Quad(texture.texture, x - (outlined ? 2 : 0), baselineY - fontSize - (outlined ? 2 : 0),
+         (float)texture.width, (float)texture.height);
+}
+
+size_t RenderAssets::UiSpriteCount() const
+{
+    return m_data->sprites.size();
+}
+bool RenderAssets::DrawUiSprite(const std::string &name, float x, float y, float width, float height,
+                                float fraction, bool nineSlice)
+{
+    auto found = m_data->sprites.find(name);
+    if (found == m_data->sprites.end() || width <= 0 || height <= 0)
+    {
+        return false;
+    }
+    const auto &s = found->second;
+    auto draw = [&](float dx, float dy, float dw, float dh, float sx, float sy, float sw, float sh) {
+        Quad(m_data->uiAtlas, dx, dy, dw, dh, (s.x + sx) / m_data->uiWidth, (s.y + sy) / m_data->uiHeight,
+             (s.x + sx + sw) / m_data->uiWidth, (s.y + sy + sh) / m_data->uiHeight);
+    };
+    if (!nineSlice)
+    {
+        fraction = (std::max)(0.f, (std::min)(1.f, fraction));
+        if (fraction > 0)
+        {
+            draw(x, y, width * fraction, height, .5f, .5f, (s.width - 1.f) * fraction, s.height - 1.f);
+        }
+        return true;
+    }
+    float corner = (std::min)(12.f, (std::min)(width, height) * .5f);
+    const float dx[] = {x, x + corner, x + width - corner, x + width};
+    const float dy[] = {y, y + corner, y + height - corner, y + height};
+    const float sx[] = {.5f, 12.f, s.width - 12.f, s.width - .5f};
+    const float sy[] = {.5f, 12.f, s.height - 12.f, s.height - .5f};
+    for (int yy = 0; yy < 3; ++yy)
+    {
+        for (int xx = 0; xx < 3; ++xx)
+        {
+            draw(dx[xx], dy[yy], dx[xx + 1] - dx[xx], dy[yy + 1] - dy[yy], sx[xx], sy[yy],
+                 sx[xx + 1] - sx[xx], sy[yy + 1] - sy[yy]);
+        }
+    }
+    return true;
 }

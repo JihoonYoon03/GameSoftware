@@ -42,21 +42,21 @@
         "Turn_Left_90": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010000283364206553,
-          "max_vertex_motion_m": 0.6560045882389962,
+          "max_vertex_motion_m": 0.48672105453487924,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Turn_Right_90": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010001069167628884,
-          "max_vertex_motion_m": 0.6560045768814832,
+          "max_vertex_motion_m": 0.48672112157655034,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Attack_Melee": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010000475449487567,
-          "max_vertex_motion_m": 1.198330167138019,
+          "max_vertex_motion_m": 1.1992864651775217,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -70,7 +70,7 @@
         "Attack_Fire": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.06462057354493947,
+          "max_vertex_motion_m": 0.06462041501078493,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -84,14 +84,14 @@
         "Jump_Air": {
           "duration_seconds": 0.6666666666666666,
           "min_z_m": 0.15799996256828308,
-          "max_vertex_motion_m": 0.010928850270780378,
+          "max_vertex_motion_m": 0.01092875619060173,
           "root_translation_error_m": 0,
           "loop_seam": 0.0
         },
         "Jump_Land": {
           "duration_seconds": 0.4,
           "min_z_m": 0.000971368164755404,
-          "max_vertex_motion_m": 0.3342531721426157,
+          "max_vertex_motion_m": 0.34184649853362836,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -112,14 +112,14 @@
         "Hit_Front": {
           "duration_seconds": 0.3,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.1901538281317853,
+          "max_vertex_motion_m": 0.1743823135224084,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Hit_Back": {
           "duration_seconds": 0.3,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.18795799469658772,
+          "max_vertex_motion_m": 0.17228294383355194,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -168,7 +168,7 @@
         "Downed_Loop": {
           "duration_seconds": 2.0,
           "min_z_m": 0.03940474987030029,
-          "max_vertex_motion_m": 0.01172568226704647,
+          "max_vertex_motion_m": 0.011725525906007976,
           "root_translation_error_m": 0,
           "loop_seam": 0.0
         },
@@ -217,7 +217,7 @@
         "Flee_Start": {
           "duration_seconds": 0.2,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.6492042824269162,
+          "max_vertex_motion_m": 0.4607019770516815,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -231,21 +231,21 @@
         "Flee_Stop": {
           "duration_seconds": 0.2,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.6492042824269162,
+          "max_vertex_motion_m": 0.4607019770516815,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Security_StunFire": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.038592607681480075,
+          "max_vertex_motion_m": 0.03859303715658128,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Medical_Stabilized": {
           "duration_seconds": 1.0,
           "min_z_m": 0.04585695266723633,
-          "max_vertex_motion_m": 0.007031387452854388,
+          "max_vertex_motion_m": 0.007031252969236831,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -273,21 +273,21 @@
         "Downed_Back_Loop": {
           "duration_seconds": 2.0,
           "min_z_m": 0.03940463066101074,
-          "max_vertex_motion_m": 0.011725430551274537,
+          "max_vertex_motion_m": 0.011725281670883398,
           "root_translation_error_m": 0,
           "loop_seam": 0.0
         },
         "Downed_Left_Loop": {
           "duration_seconds": 2.0,
           "min_z_m": 0.03940451145172119,
-          "max_vertex_motion_m": 0.011725560240902991,
+          "max_vertex_motion_m": 0.011725411884517901,
           "root_translation_error_m": 0,
           "loop_seam": 0.0
         },
         "Downed_Right_Loop": {
           "duration_seconds": 2.0,
           "min_z_m": 0.03940474987030029,
-          "max_vertex_motion_m": 0.011725067295603617,
+          "max_vertex_motion_m": 0.011724918262733298,
           "root_translation_error_m": 0,
           "loop_seam": 0.0
         },
@@ -304,6 +304,118 @@
           "max_vertex_motion_m": 1.847723250958641,
           "root_translation_error_m": 0,
           "loop_seam": null
+        },
+        "Aim_Walk_Forward": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997201850637794,
+          "max_vertex_motion_m": 0.5882013003401059,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_ForwardLeft": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997283341363072,
+          "max_vertex_motion_m": 0.47915756947539045,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Walk_Left": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999420726671815,
+          "max_vertex_motion_m": 0.4009797472764405,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_BackLeft": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999582543969154,
+          "max_vertex_motion_m": 0.41771658695171315,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240138092e-18
+        },
+        "Aim_Walk_Back": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009998800233006477,
+          "max_vertex_motion_m": 0.4345966687407375,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Walk_BackRight": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999254252761602,
+          "max_vertex_motion_m": 0.4177165030646555,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_Right": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.000999836134724319,
+          "max_vertex_motion_m": 0.40466668050696103,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_ForwardRight": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997636079788208,
+          "max_vertex_motion_m": 0.479157945088818,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Forward": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0009999675676226616,
+          "max_vertex_motion_m": 0.5747963397187614,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_ForwardLeft": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010001123882830143,
+          "max_vertex_motion_m": 0.47131669103419915,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Left": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0009999567409977317,
+          "max_vertex_motion_m": 0.39020520347406845,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_BackLeft": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003028437495232,
+          "max_vertex_motion_m": 0.38067475759436253,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_Back": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003149509429932,
+          "max_vertex_motion_m": 0.393437181955832,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240138092e-18
+        },
+        "Aim_Run_BackRight": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.001000397838652134,
+          "max_vertex_motion_m": 0.38067479796168757,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Right": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010001036571338773,
+          "max_vertex_motion_m": 0.3884943589265547,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_ForwardRight": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003270581364632,
+          "max_vertex_motion_m": 0.47131663817615116,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
         }
       },
       "equipment_head_intersections": []
@@ -350,21 +462,21 @@
         "Turn_Left_90": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010000283364206553,
-          "max_vertex_motion_m": 0.6455587114173358,
+          "max_vertex_motion_m": 0.5306302574442183,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Turn_Right_90": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010001069167628884,
-          "max_vertex_motion_m": 0.6455586767934635,
+          "max_vertex_motion_m": 0.5306302574442183,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Attack_Melee": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010000475449487567,
-          "max_vertex_motion_m": 1.198330167138019,
+          "max_vertex_motion_m": 1.1992864651775217,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -378,35 +490,35 @@
         "Attack_Fire": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.06462057354493947,
+          "max_vertex_motion_m": 0.06462041501078493,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Jump_Start": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0009951683459803462,
-          "max_vertex_motion_m": 0.24982746056720737,
+          "max_vertex_motion_m": 0.32669589284819806,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Jump_Air": {
           "duration_seconds": 0.6666666666666666,
           "min_z_m": 0.15799996256828308,
-          "max_vertex_motion_m": 0.010928850270780378,
+          "max_vertex_motion_m": 0.01092875619060173,
           "root_translation_error_m": 0,
           "loop_seam": 0.0
         },
         "Jump_Land": {
           "duration_seconds": 0.4,
           "min_z_m": 0.000971368164755404,
-          "max_vertex_motion_m": 0.3413052602650863,
+          "max_vertex_motion_m": 0.40118105139611265,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Jump_Full": {
           "duration_seconds": 1.2,
           "min_z_m": 0.0009998800233006477,
-          "max_vertex_motion_m": 0.5377979637808563,
+          "max_vertex_motion_m": 0.622346987343645,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -420,14 +532,14 @@
         "Hit_Front": {
           "duration_seconds": 0.3,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.1901538281317853,
+          "max_vertex_motion_m": 0.1743823135224084,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Hit_Back": {
           "duration_seconds": 0.3,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.18795799469658772,
+          "max_vertex_motion_m": 0.17228294383355194,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -525,7 +637,7 @@
         "Flee_Start": {
           "duration_seconds": 0.2,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.6492042824269162,
+          "max_vertex_motion_m": 0.4607019770516815,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -539,14 +651,14 @@
         "Flee_Stop": {
           "duration_seconds": 0.2,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.6492042824269162,
+          "max_vertex_motion_m": 0.4607019770516815,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Security_StunFire": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.038592607681480075,
+          "max_vertex_motion_m": 0.03859303715658128,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -612,6 +724,118 @@
           "max_vertex_motion_m": 1.785054318712847,
           "root_translation_error_m": 0,
           "loop_seam": null
+        },
+        "Aim_Walk_Forward": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997201850637794,
+          "max_vertex_motion_m": 0.5882013003401059,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_ForwardLeft": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997283341363072,
+          "max_vertex_motion_m": 0.47915756947539045,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Walk_Left": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999420726671815,
+          "max_vertex_motion_m": 0.40023304252853314,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_BackLeft": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999582543969154,
+          "max_vertex_motion_m": 0.41771658695171315,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240138092e-18
+        },
+        "Aim_Walk_Back": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009998800233006477,
+          "max_vertex_motion_m": 0.4345966687407375,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Walk_BackRight": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999254252761602,
+          "max_vertex_motion_m": 0.4177165030646555,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_Right": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.000999836134724319,
+          "max_vertex_motion_m": 0.40393017241225715,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_ForwardRight": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997636079788208,
+          "max_vertex_motion_m": 0.479157945088818,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Forward": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0009999675676226616,
+          "max_vertex_motion_m": 0.5747963397187614,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_ForwardLeft": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010001123882830143,
+          "max_vertex_motion_m": 0.47131669103419915,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Left": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0009999567409977317,
+          "max_vertex_motion_m": 0.3890820132207002,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_BackLeft": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003028437495232,
+          "max_vertex_motion_m": 0.38067475759436253,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_Back": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003149509429932,
+          "max_vertex_motion_m": 0.393437181955832,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240138092e-18
+        },
+        "Aim_Run_BackRight": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.001000397838652134,
+          "max_vertex_motion_m": 0.38067479796168757,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Right": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010001036571338773,
+          "max_vertex_motion_m": 0.38755804500894653,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_ForwardRight": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003270581364632,
+          "max_vertex_motion_m": 0.47131663817615116,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
         }
       },
       "equipment_head_intersections": []
@@ -658,21 +882,21 @@
         "Turn_Left_90": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010000283364206553,
-          "max_vertex_motion_m": 0.6560045882389962,
+          "max_vertex_motion_m": 0.5787706675515683,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Turn_Right_90": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010001069167628884,
-          "max_vertex_motion_m": 0.6560045768814832,
+          "max_vertex_motion_m": 0.5787706675515683,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Attack_Melee": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010000475449487567,
-          "max_vertex_motion_m": 1.198330167138019,
+          "max_vertex_motion_m": 1.1992864651775217,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -686,35 +910,35 @@
         "Attack_Fire": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.06462057354493947,
+          "max_vertex_motion_m": 0.06462041501078493,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Jump_Start": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0009951683459803462,
-          "max_vertex_motion_m": 0.2486354984157555,
+          "max_vertex_motion_m": 0.29189444543844256,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Jump_Air": {
           "duration_seconds": 0.6666666666666666,
           "min_z_m": 0.15799996256828308,
-          "max_vertex_motion_m": 0.010928850270780378,
+          "max_vertex_motion_m": 0.01092875619060173,
           "root_translation_error_m": 0,
           "loop_seam": 0.0
         },
         "Jump_Land": {
           "duration_seconds": 0.4,
           "min_z_m": 0.000971368164755404,
-          "max_vertex_motion_m": 0.3540466587583797,
+          "max_vertex_motion_m": 0.36458844732720463,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Jump_Full": {
           "duration_seconds": 1.2,
           "min_z_m": 0.0009998800233006477,
-          "max_vertex_motion_m": 0.5388672518232024,
+          "max_vertex_motion_m": 0.547350488965403,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -728,14 +952,14 @@
         "Hit_Front": {
           "duration_seconds": 0.3,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.1901538281317853,
+          "max_vertex_motion_m": 0.1743823135224084,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Hit_Back": {
           "duration_seconds": 0.3,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.18795799469658772,
+          "max_vertex_motion_m": 0.17228294383355194,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -833,7 +1057,7 @@
         "Flee_Start": {
           "duration_seconds": 0.2,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.6492042824269162,
+          "max_vertex_motion_m": 0.4607019770516815,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -847,14 +1071,14 @@
         "Flee_Stop": {
           "duration_seconds": 0.2,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.6492042824269162,
+          "max_vertex_motion_m": 0.4607019770516815,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Security_StunFire": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.038592607681480075,
+          "max_vertex_motion_m": 0.03859303715658128,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -920,6 +1144,118 @@
           "max_vertex_motion_m": 1.7846965790110878,
           "root_translation_error_m": 0,
           "loop_seam": null
+        },
+        "Aim_Walk_Forward": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997201850637794,
+          "max_vertex_motion_m": 0.5882013003401059,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_ForwardLeft": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997283341363072,
+          "max_vertex_motion_m": 0.47915756947539045,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Walk_Left": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999420726671815,
+          "max_vertex_motion_m": 0.4009797472764405,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_BackLeft": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999582543969154,
+          "max_vertex_motion_m": 0.41771658695171315,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240138092e-18
+        },
+        "Aim_Walk_Back": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009998800233006477,
+          "max_vertex_motion_m": 0.4345966687407375,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Walk_BackRight": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999254252761602,
+          "max_vertex_motion_m": 0.4177165030646555,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_Right": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.000999836134724319,
+          "max_vertex_motion_m": 0.40466668050696103,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_ForwardRight": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997636079788208,
+          "max_vertex_motion_m": 0.479157945088818,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Forward": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0009999675676226616,
+          "max_vertex_motion_m": 0.5747963397187614,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_ForwardLeft": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010001123882830143,
+          "max_vertex_motion_m": 0.47131669103419915,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Left": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0009999567409977317,
+          "max_vertex_motion_m": 0.39020520347406845,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_BackLeft": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003028437495232,
+          "max_vertex_motion_m": 0.38067475759436253,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_Back": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003149509429932,
+          "max_vertex_motion_m": 0.393437181955832,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240138092e-18
+        },
+        "Aim_Run_BackRight": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.001000397838652134,
+          "max_vertex_motion_m": 0.38067479796168757,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Right": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010001036571338773,
+          "max_vertex_motion_m": 0.3884943589265547,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_ForwardRight": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003270581364632,
+          "max_vertex_motion_m": 0.47131663817615116,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
         }
       },
       "equipment_head_intersections": []
@@ -966,21 +1302,21 @@
         "Turn_Left_90": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010000283364206553,
-          "max_vertex_motion_m": 0.6549424812678112,
+          "max_vertex_motion_m": 0.5062942416020736,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Turn_Right_90": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010001069167628884,
-          "max_vertex_motion_m": 0.6549423333423599,
+          "max_vertex_motion_m": 0.5062942416020736,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Attack_Melee": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010000475449487567,
-          "max_vertex_motion_m": 0.7910160606288887,
+          "max_vertex_motion_m": 0.7889627957851623,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -994,14 +1330,14 @@
         "Attack_Fire": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.04067682439003931,
+          "max_vertex_motion_m": 0.04067668916181187,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Jump_Start": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0009951683459803462,
-          "max_vertex_motion_m": 0.24528557393205977,
+          "max_vertex_motion_m": 0.24503680959881807,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -1015,7 +1351,7 @@
         "Jump_Land": {
           "duration_seconds": 0.4,
           "min_z_m": 0.000971368164755404,
-          "max_vertex_motion_m": 0.33588635470179634,
+          "max_vertex_motion_m": 0.3346958036216261,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -1036,14 +1372,14 @@
         "Hit_Front": {
           "duration_seconds": 0.3,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.13246703271108184,
+          "max_vertex_motion_m": 0.11928436527538977,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Hit_Back": {
           "duration_seconds": 0.3,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.13033441811717916,
+          "max_vertex_motion_m": 0.11734845611536485,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -1057,7 +1393,7 @@
         "Hit_Right": {
           "duration_seconds": 0.3,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.11346509629431618,
+          "max_vertex_motion_m": 0.11346484114106724,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -1092,14 +1428,14 @@
         "Downed_Loop": {
           "duration_seconds": 2.0,
           "min_z_m": 0.04711759090423584,
-          "max_vertex_motion_m": 0.011924265407866815,
+          "max_vertex_motion_m": 0.011924056327349842,
           "root_translation_error_m": 0,
           "loop_seam": 0.0
         },
         "GetUp_Front": {
           "duration_seconds": 1.4,
           "min_z_m": 0.0009652037988416851,
-          "max_vertex_motion_m": 1.8022213296989784,
+          "max_vertex_motion_m": 1.8021929262039713,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -1141,7 +1477,7 @@
         "Flee_Start": {
           "duration_seconds": 0.2,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.4683055690273219,
+          "max_vertex_motion_m": 0.3921991863257379,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -1155,28 +1491,28 @@
         "Flee_Stop": {
           "duration_seconds": 0.2,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.4683055690273219,
+          "max_vertex_motion_m": 0.3921991863257379,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Security_StunFire": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.024322075403472927,
+          "max_vertex_motion_m": 0.024322388911194058,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Medical_Stabilized": {
           "duration_seconds": 1.0,
           "min_z_m": 0.0488206148147583,
-          "max_vertex_motion_m": 0.0071539291059877115,
+          "max_vertex_motion_m": 0.00715373910042791,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Medical_GetUp": {
           "duration_seconds": 1.4,
           "min_z_m": 0.0009999090107157826,
-          "max_vertex_motion_m": 1.8022213296989784,
+          "max_vertex_motion_m": 1.8021929262039713,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -1197,21 +1533,21 @@
         "Downed_Back_Loop": {
           "duration_seconds": 2.0,
           "min_z_m": 0.04711747169494629,
-          "max_vertex_motion_m": 0.011924244977965796,
+          "max_vertex_motion_m": 0.011924035089658074,
           "root_translation_error_m": 0,
           "loop_seam": 0.0
         },
         "Downed_Left_Loop": {
           "duration_seconds": 2.0,
           "min_z_m": 0.04711735248565674,
-          "max_vertex_motion_m": 0.011924299738828805,
+          "max_vertex_motion_m": 0.011924094458297663,
           "root_translation_error_m": 0,
           "loop_seam": 0.0
         },
         "Downed_Right_Loop": {
           "duration_seconds": 2.0,
           "min_z_m": 0.04711759090423584,
-          "max_vertex_motion_m": 0.011924904232606053,
+          "max_vertex_motion_m": 0.011924693962635525,
           "root_translation_error_m": 0,
           "loop_seam": 0.0
         },
@@ -1228,6 +1564,118 @@
           "max_vertex_motion_m": 1.7846965790110878,
           "root_translation_error_m": 0,
           "loop_seam": null
+        },
+        "Aim_Walk_Forward": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997201850637794,
+          "max_vertex_motion_m": 0.5882013003401059,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_ForwardLeft": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997283341363072,
+          "max_vertex_motion_m": 0.47915756947539045,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Walk_Left": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999420726671815,
+          "max_vertex_motion_m": 0.40023304252853314,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_BackLeft": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999582543969154,
+          "max_vertex_motion_m": 0.41771658695171315,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240138092e-18
+        },
+        "Aim_Walk_Back": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009998800233006477,
+          "max_vertex_motion_m": 0.4345966687407375,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Walk_BackRight": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999254252761602,
+          "max_vertex_motion_m": 0.4177165030646555,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_Right": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.000999836134724319,
+          "max_vertex_motion_m": 0.40393017241225715,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_ForwardRight": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997636079788208,
+          "max_vertex_motion_m": 0.479157945088818,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Forward": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0009999675676226616,
+          "max_vertex_motion_m": 0.5747963397187614,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_ForwardLeft": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010001123882830143,
+          "max_vertex_motion_m": 0.47131669103419915,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Left": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0009999567409977317,
+          "max_vertex_motion_m": 0.3890820132207002,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_BackLeft": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003028437495232,
+          "max_vertex_motion_m": 0.38067475759436253,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_Back": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003149509429932,
+          "max_vertex_motion_m": 0.393437181955832,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240138092e-18
+        },
+        "Aim_Run_BackRight": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.001000397838652134,
+          "max_vertex_motion_m": 0.38067479796168757,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Right": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010001036571338773,
+          "max_vertex_motion_m": 0.38755804500894653,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_ForwardRight": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003270581364632,
+          "max_vertex_motion_m": 0.47131663817615116,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
         }
       },
       "equipment_head_intersections": []
@@ -1274,21 +1722,21 @@
         "Turn_Left_90": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010000283364206553,
-          "max_vertex_motion_m": 0.6560045882389962,
+          "max_vertex_motion_m": 0.49721776858688216,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Turn_Right_90": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010001069167628884,
-          "max_vertex_motion_m": 0.6560045768814832,
+          "max_vertex_motion_m": 0.49721776858688216,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Attack_Melee": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010000475449487567,
-          "max_vertex_motion_m": 0.7910160606288887,
+          "max_vertex_motion_m": 0.7889627957851623,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -1302,7 +1750,7 @@
         "Attack_Fire": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.04067682439003931,
+          "max_vertex_motion_m": 0.04067668916181187,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -1323,7 +1771,7 @@
         "Jump_Land": {
           "duration_seconds": 0.4,
           "min_z_m": 0.000971368164755404,
-          "max_vertex_motion_m": 0.3362963440256088,
+          "max_vertex_motion_m": 0.341213845688468,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -1344,14 +1792,14 @@
         "Hit_Front": {
           "duration_seconds": 0.3,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.13246703271108184,
+          "max_vertex_motion_m": 0.11928436527538977,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Hit_Back": {
           "duration_seconds": 0.3,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.13033441811717916,
+          "max_vertex_motion_m": 0.11734845611536485,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -1449,7 +1897,7 @@
         "Flee_Start": {
           "duration_seconds": 0.2,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.4683055690273219,
+          "max_vertex_motion_m": 0.3921991863257379,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -1463,14 +1911,14 @@
         "Flee_Stop": {
           "duration_seconds": 0.2,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.4683055690273219,
+          "max_vertex_motion_m": 0.3921991863257379,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Security_StunFire": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.024322075403472927,
+          "max_vertex_motion_m": 0.024322388911194058,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -1536,6 +1984,118 @@
           "max_vertex_motion_m": 1.8114310289858384,
           "root_translation_error_m": 0,
           "loop_seam": null
+        },
+        "Aim_Walk_Forward": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997201850637794,
+          "max_vertex_motion_m": 0.5882013003401059,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_ForwardLeft": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997283341363072,
+          "max_vertex_motion_m": 0.47915756947539045,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Walk_Left": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999420726671815,
+          "max_vertex_motion_m": 0.4009797472764405,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_BackLeft": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999582543969154,
+          "max_vertex_motion_m": 0.41771658695171315,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240138092e-18
+        },
+        "Aim_Walk_Back": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009998800233006477,
+          "max_vertex_motion_m": 0.4345966687407375,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Walk_BackRight": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999254252761602,
+          "max_vertex_motion_m": 0.4177165030646555,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_Right": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.000999836134724319,
+          "max_vertex_motion_m": 0.40466668050696103,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_ForwardRight": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997636079788208,
+          "max_vertex_motion_m": 0.479157945088818,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Forward": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0009999675676226616,
+          "max_vertex_motion_m": 0.5747963397187614,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_ForwardLeft": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010001123882830143,
+          "max_vertex_motion_m": 0.47131669103419915,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Left": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0009999567409977317,
+          "max_vertex_motion_m": 0.39020520347406845,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_BackLeft": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003028437495232,
+          "max_vertex_motion_m": 0.38067475759436253,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_Back": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003149509429932,
+          "max_vertex_motion_m": 0.393437181955832,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240138092e-18
+        },
+        "Aim_Run_BackRight": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.001000397838652134,
+          "max_vertex_motion_m": 0.38067479796168757,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Right": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010001036571338773,
+          "max_vertex_motion_m": 0.3884943589265547,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_ForwardRight": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003270581364632,
+          "max_vertex_motion_m": 0.47131663817615116,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
         }
       },
       "equipment_head_intersections": []
@@ -1582,21 +2142,21 @@
         "Turn_Left_90": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010000283364206553,
-          "max_vertex_motion_m": 0.6804228270451924,
+          "max_vertex_motion_m": 0.5850228296773232,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Turn_Right_90": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010001069167628884,
-          "max_vertex_motion_m": 0.680422739445767,
+          "max_vertex_motion_m": 0.5850228296773232,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Attack_Melee": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010000475449487567,
-          "max_vertex_motion_m": 1.198330167138019,
+          "max_vertex_motion_m": 1.1992864651775217,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -1610,35 +2170,35 @@
         "Attack_Fire": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.06462057354493947,
+          "max_vertex_motion_m": 0.06462041501078493,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Jump_Start": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0009951683459803462,
-          "max_vertex_motion_m": 0.25903717472450016,
+          "max_vertex_motion_m": 0.317319846876538,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Jump_Air": {
           "duration_seconds": 0.6666666666666666,
           "min_z_m": 0.15799996256828308,
-          "max_vertex_motion_m": 0.010928850270780378,
+          "max_vertex_motion_m": 0.01092875619060173,
           "root_translation_error_m": 0,
           "loop_seam": 0.0
         },
         "Jump_Land": {
           "duration_seconds": 0.4,
           "min_z_m": 0.000971368164755404,
-          "max_vertex_motion_m": 0.34617049960482177,
+          "max_vertex_motion_m": 0.3940545128446903,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Jump_Full": {
           "duration_seconds": 1.2,
           "min_z_m": 0.0009998800233006477,
-          "max_vertex_motion_m": 0.5405382312800007,
+          "max_vertex_motion_m": 0.6186600083917515,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -1652,14 +2212,14 @@
         "Hit_Front": {
           "duration_seconds": 0.3,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.1901538281317853,
+          "max_vertex_motion_m": 0.1743823135224084,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Hit_Back": {
           "duration_seconds": 0.3,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.18795799469658772,
+          "max_vertex_motion_m": 0.17228294383355194,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -1700,7 +2260,7 @@
         },
         "Knockdown_Right": {
           "duration_seconds": 0.8,
-          "min_z_m": 0.0009860396385192871,
+          "min_z_m": 0.0009859204292297363,
           "max_vertex_motion_m": 1.8829398369367696,
           "root_translation_error_m": 0,
           "loop_seam": null
@@ -1757,7 +2317,7 @@
         "Flee_Start": {
           "duration_seconds": 0.2,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.6492042824269162,
+          "max_vertex_motion_m": 0.4607019770516815,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -1771,14 +2331,14 @@
         "Flee_Stop": {
           "duration_seconds": 0.2,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.6492042824269162,
+          "max_vertex_motion_m": 0.4607019770516815,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Security_StunFire": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.038592607681480075,
+          "max_vertex_motion_m": 0.03859303715658128,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -1844,6 +2404,118 @@
           "max_vertex_motion_m": 1.8802199896101532,
           "root_translation_error_m": 0,
           "loop_seam": null
+        },
+        "Aim_Walk_Forward": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997201850637794,
+          "max_vertex_motion_m": 0.5882013003401059,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_ForwardLeft": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997283341363072,
+          "max_vertex_motion_m": 0.47915756947539045,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Walk_Left": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999420726671815,
+          "max_vertex_motion_m": 0.40224784315039974,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_BackLeft": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999582543969154,
+          "max_vertex_motion_m": 0.41771658695171315,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240138092e-18
+        },
+        "Aim_Walk_Back": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009998800233006477,
+          "max_vertex_motion_m": 0.4345966687407375,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Walk_BackRight": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999254252761602,
+          "max_vertex_motion_m": 0.4177165030646555,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_Right": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.000999836134724319,
+          "max_vertex_motion_m": 0.40582165917479673,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_ForwardRight": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997636079788208,
+          "max_vertex_motion_m": 0.479157945088818,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Forward": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0009999675676226616,
+          "max_vertex_motion_m": 0.5747963397187614,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_ForwardLeft": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010001123882830143,
+          "max_vertex_motion_m": 0.4721937890288507,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Left": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0009999567409977317,
+          "max_vertex_motion_m": 0.3919606427447077,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_BackLeft": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003028437495232,
+          "max_vertex_motion_m": 0.38067475759436253,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_Back": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003149509429932,
+          "max_vertex_motion_m": 0.393437181955832,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240138092e-18
+        },
+        "Aim_Run_BackRight": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.001000397838652134,
+          "max_vertex_motion_m": 0.38067479796168757,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Right": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010001036571338773,
+          "max_vertex_motion_m": 0.3899788021547833,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_ForwardRight": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003270581364632,
+          "max_vertex_motion_m": 0.47131663817615116,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
         }
       },
       "equipment_head_intersections": []
@@ -1890,21 +2562,21 @@
         "Turn_Left_90": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010000283364206553,
-          "max_vertex_motion_m": 0.6560045882389962,
+          "max_vertex_motion_m": 0.5787706675515683,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Turn_Right_90": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010001069167628884,
-          "max_vertex_motion_m": 0.6560045768814832,
+          "max_vertex_motion_m": 0.5787706675515683,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Attack_Melee": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010000475449487567,
-          "max_vertex_motion_m": 1.198330167138019,
+          "max_vertex_motion_m": 1.1992864651775217,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -1918,35 +2590,35 @@
         "Attack_Fire": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.06462057354493947,
+          "max_vertex_motion_m": 0.06462041501078493,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Jump_Start": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0009951683459803462,
-          "max_vertex_motion_m": 0.2486354984157555,
+          "max_vertex_motion_m": 0.29189444543844256,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Jump_Air": {
           "duration_seconds": 0.6666666666666666,
           "min_z_m": 0.15799996256828308,
-          "max_vertex_motion_m": 0.010928850270780378,
+          "max_vertex_motion_m": 0.01092875619060173,
           "root_translation_error_m": 0,
           "loop_seam": 0.0
         },
         "Jump_Land": {
           "duration_seconds": 0.4,
           "min_z_m": 0.000971368164755404,
-          "max_vertex_motion_m": 0.3540466587583797,
+          "max_vertex_motion_m": 0.36458844732720463,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Jump_Full": {
           "duration_seconds": 1.2,
           "min_z_m": 0.0009998800233006477,
-          "max_vertex_motion_m": 0.5388672518232024,
+          "max_vertex_motion_m": 0.547350488965403,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -1960,14 +2632,14 @@
         "Hit_Front": {
           "duration_seconds": 0.3,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.1901538281317853,
+          "max_vertex_motion_m": 0.1743823135224084,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Hit_Back": {
           "duration_seconds": 0.3,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.18795799469658772,
+          "max_vertex_motion_m": 0.17228294383355194,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -2065,7 +2737,7 @@
         "Flee_Start": {
           "duration_seconds": 0.2,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.6492042824269162,
+          "max_vertex_motion_m": 0.4607019770516815,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -2079,14 +2751,14 @@
         "Flee_Stop": {
           "duration_seconds": 0.2,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.6492042824269162,
+          "max_vertex_motion_m": 0.4607019770516815,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Security_StunFire": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.038592607681480075,
+          "max_vertex_motion_m": 0.03859303715658128,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -2152,6 +2824,118 @@
           "max_vertex_motion_m": 1.8544659770903191,
           "root_translation_error_m": 0,
           "loop_seam": null
+        },
+        "Aim_Walk_Forward": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997201850637794,
+          "max_vertex_motion_m": 0.5882013003401059,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_ForwardLeft": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997283341363072,
+          "max_vertex_motion_m": 0.47915756947539045,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Walk_Left": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999420726671815,
+          "max_vertex_motion_m": 0.4009797472764405,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_BackLeft": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999582543969154,
+          "max_vertex_motion_m": 0.41771658695171315,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240138092e-18
+        },
+        "Aim_Walk_Back": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009998800233006477,
+          "max_vertex_motion_m": 0.4345966687407375,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Walk_BackRight": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999254252761602,
+          "max_vertex_motion_m": 0.4177165030646555,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_Right": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.000999836134724319,
+          "max_vertex_motion_m": 0.40466668050696103,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_ForwardRight": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997636079788208,
+          "max_vertex_motion_m": 0.479157945088818,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Forward": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0009999675676226616,
+          "max_vertex_motion_m": 0.5747963397187614,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_ForwardLeft": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010001123882830143,
+          "max_vertex_motion_m": 0.47131669103419915,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Left": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0009999567409977317,
+          "max_vertex_motion_m": 0.39020520347406845,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_BackLeft": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003028437495232,
+          "max_vertex_motion_m": 0.38067475759436253,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_Back": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003149509429932,
+          "max_vertex_motion_m": 0.393437181955832,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240138092e-18
+        },
+        "Aim_Run_BackRight": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.001000397838652134,
+          "max_vertex_motion_m": 0.38067479796168757,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Right": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010001036571338773,
+          "max_vertex_motion_m": 0.3884943589265547,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_ForwardRight": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003270581364632,
+          "max_vertex_motion_m": 0.47131663817615116,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
         }
       },
       "equipment_head_intersections": []
@@ -2198,21 +2982,21 @@
         "Turn_Left_90": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010000283364206553,
-          "max_vertex_motion_m": 0.6804228270451924,
+          "max_vertex_motion_m": 0.638406334044371,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Turn_Right_90": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010001069167628884,
-          "max_vertex_motion_m": 0.680422739445767,
+          "max_vertex_motion_m": 0.6384065090653025,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Attack_Melee": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010000475449487567,
-          "max_vertex_motion_m": 1.198330167138019,
+          "max_vertex_motion_m": 1.1992864651775217,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -2226,35 +3010,35 @@
         "Attack_Fire": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.06462057354493947,
+          "max_vertex_motion_m": 0.06462041501078493,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Jump_Start": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0009951683459803462,
-          "max_vertex_motion_m": 0.25903717472450016,
+          "max_vertex_motion_m": 0.2941084968009333,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Jump_Air": {
           "duration_seconds": 0.6666666666666666,
           "min_z_m": 0.15799996256828308,
-          "max_vertex_motion_m": 0.010928850270780378,
+          "max_vertex_motion_m": 0.01092875619060173,
           "root_translation_error_m": 0,
           "loop_seam": 0.0
         },
         "Jump_Land": {
           "duration_seconds": 0.4,
           "min_z_m": 0.000971368164755404,
-          "max_vertex_motion_m": 0.35491074042403864,
+          "max_vertex_motion_m": 0.3694527513677991,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Jump_Full": {
           "duration_seconds": 1.2,
           "min_z_m": 0.0009998800233006477,
-          "max_vertex_motion_m": 0.5405382312800007,
+          "max_vertex_motion_m": 0.5705235650182993,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -2268,14 +3052,14 @@
         "Hit_Front": {
           "duration_seconds": 0.3,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.1901538281317853,
+          "max_vertex_motion_m": 0.1743823135224084,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Hit_Back": {
           "duration_seconds": 0.3,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.18795799469658772,
+          "max_vertex_motion_m": 0.17228294383355194,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -2316,7 +3100,7 @@
         },
         "Knockdown_Right": {
           "duration_seconds": 0.8,
-          "min_z_m": 0.0009860396385192871,
+          "min_z_m": 0.0009859204292297363,
           "max_vertex_motion_m": 1.8496364749627066,
           "root_translation_error_m": 0,
           "loop_seam": null
@@ -2373,7 +3157,7 @@
         "Flee_Start": {
           "duration_seconds": 0.2,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.6492042824269162,
+          "max_vertex_motion_m": 0.4607019770516815,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -2387,14 +3171,14 @@
         "Flee_Stop": {
           "duration_seconds": 0.2,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.6492042824269162,
+          "max_vertex_motion_m": 0.4607019770516815,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Security_StunFire": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.038592607681480075,
+          "max_vertex_motion_m": 0.03859303715658128,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -2460,6 +3244,118 @@
           "max_vertex_motion_m": 1.8496363571398304,
           "root_translation_error_m": 0,
           "loop_seam": null
+        },
+        "Aim_Walk_Forward": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997201850637794,
+          "max_vertex_motion_m": 0.5882013003401059,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_ForwardLeft": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997283341363072,
+          "max_vertex_motion_m": 0.47915756947539045,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Walk_Left": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999420726671815,
+          "max_vertex_motion_m": 0.40224784315039974,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_BackLeft": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999582543969154,
+          "max_vertex_motion_m": 0.41771658695171315,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240138092e-18
+        },
+        "Aim_Walk_Back": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009998800233006477,
+          "max_vertex_motion_m": 0.4345966687407375,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Walk_BackRight": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999254252761602,
+          "max_vertex_motion_m": 0.4177165030646555,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_Right": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.000999836134724319,
+          "max_vertex_motion_m": 0.40582165917479673,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_ForwardRight": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997636079788208,
+          "max_vertex_motion_m": 0.479157945088818,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Forward": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0009999675676226616,
+          "max_vertex_motion_m": 0.5747963397187614,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_ForwardLeft": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010001123882830143,
+          "max_vertex_motion_m": 0.4721937890288507,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Left": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0009999567409977317,
+          "max_vertex_motion_m": 0.3919606427447077,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_BackLeft": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003028437495232,
+          "max_vertex_motion_m": 0.38067475759436253,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_Back": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003149509429932,
+          "max_vertex_motion_m": 0.393437181955832,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240138092e-18
+        },
+        "Aim_Run_BackRight": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.001000397838652134,
+          "max_vertex_motion_m": 0.38067479796168757,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Right": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010001036571338773,
+          "max_vertex_motion_m": 0.3899788021547833,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_ForwardRight": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003270581364632,
+          "max_vertex_motion_m": 0.47131663817615116,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
         }
       },
       "equipment_head_intersections": []
@@ -2506,21 +3402,21 @@
         "Turn_Left_90": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010000283364206553,
-          "max_vertex_motion_m": 0.6383185070557634,
+          "max_vertex_motion_m": 0.48252229205841296,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Turn_Right_90": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010001069167628884,
-          "max_vertex_motion_m": 0.6383451072146032,
+          "max_vertex_motion_m": 0.4826843862812318,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Attack_Melee": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010000475449487567,
-          "max_vertex_motion_m": 1.198330167138019,
+          "max_vertex_motion_m": 1.1992864651775217,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -2534,7 +3430,7 @@
         "Attack_Fire": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.06462057354493947,
+          "max_vertex_motion_m": 0.06462041501078493,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -2548,14 +3444,14 @@
         "Jump_Air": {
           "duration_seconds": 0.6666666666666666,
           "min_z_m": 0.15799996256828308,
-          "max_vertex_motion_m": 0.010928850270780378,
+          "max_vertex_motion_m": 0.01092875619060173,
           "root_translation_error_m": 0,
           "loop_seam": 0.0
         },
         "Jump_Land": {
           "duration_seconds": 0.4,
           "min_z_m": 0.000971368164755404,
-          "max_vertex_motion_m": 0.32180584363815823,
+          "max_vertex_motion_m": 0.3258390431869316,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -2576,14 +3472,14 @@
         "Hit_Front": {
           "duration_seconds": 0.3,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.1901538281317853,
+          "max_vertex_motion_m": 0.1743823135224084,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Hit_Back": {
           "duration_seconds": 0.3,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.18795799469658772,
+          "max_vertex_motion_m": 0.17228294383355194,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -2681,7 +3577,7 @@
         "Flee_Start": {
           "duration_seconds": 0.2,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.6492042824269162,
+          "max_vertex_motion_m": 0.4607019770516815,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -2695,14 +3591,14 @@
         "Flee_Stop": {
           "duration_seconds": 0.2,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.6492042824269162,
+          "max_vertex_motion_m": 0.4607019770516815,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Security_StunFire": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.038592607681480075,
+          "max_vertex_motion_m": 0.03859303715658128,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -2768,6 +3664,118 @@
           "max_vertex_motion_m": 1.8612527701944575,
           "root_translation_error_m": 0,
           "loop_seam": null
+        },
+        "Aim_Walk_Forward": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997201850637794,
+          "max_vertex_motion_m": 0.5882013003401059,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_ForwardLeft": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997283341363072,
+          "max_vertex_motion_m": 0.47915756947539045,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Walk_Left": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999420726671815,
+          "max_vertex_motion_m": 0.39950725723543806,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_BackLeft": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999582543969154,
+          "max_vertex_motion_m": 0.41771658695171315,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240138092e-18
+        },
+        "Aim_Walk_Back": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009998800233006477,
+          "max_vertex_motion_m": 0.4345966687407375,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Walk_BackRight": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999254252761602,
+          "max_vertex_motion_m": 0.4177165030646555,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_Right": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.000999836134724319,
+          "max_vertex_motion_m": 0.40320085145371876,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_ForwardRight": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997636079788208,
+          "max_vertex_motion_m": 0.479157945088818,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Forward": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0009999675676226616,
+          "max_vertex_motion_m": 0.5747963397187614,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_ForwardLeft": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010001123882830143,
+          "max_vertex_motion_m": 0.47131669103419915,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Left": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0009999567409977317,
+          "max_vertex_motion_m": 0.3881074339643267,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_BackLeft": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003028437495232,
+          "max_vertex_motion_m": 0.38067475759436253,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_Back": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003149509429932,
+          "max_vertex_motion_m": 0.393437181955832,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240138092e-18
+        },
+        "Aim_Run_BackRight": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.001000397838652134,
+          "max_vertex_motion_m": 0.38067479796168757,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Right": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010001036571338773,
+          "max_vertex_motion_m": 0.3866509731262409,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_ForwardRight": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003270581364632,
+          "max_vertex_motion_m": 0.47131663817615116,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
         }
       },
       "equipment_head_intersections": []
@@ -2793,7 +3801,7 @@
         "Idle": {
           "duration_seconds": 2.0,
           "min_z_m": 0.0010000088950619102,
-          "max_vertex_motion_m": 0.013544481544492004,
+          "max_vertex_motion_m": 0.013397032414951066,
           "root_translation_error_m": 0,
           "loop_seam": 1.469575875346566e-18
         },
@@ -2814,21 +3822,21 @@
         "Turn_Left_90": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010000283364206553,
-          "max_vertex_motion_m": 0.665892896479256,
+          "max_vertex_motion_m": 0.49752312335664745,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Turn_Right_90": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010001069167628884,
-          "max_vertex_motion_m": 0.665892874101541,
+          "max_vertex_motion_m": 0.49752313653068275,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Attack_Melee": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0010000475449487567,
-          "max_vertex_motion_m": 0.7910160606288887,
+          "max_vertex_motion_m": 0.7889627957851623,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -2842,7 +3850,7 @@
         "Attack_Fire": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.04067682439003931,
+          "max_vertex_motion_m": 0.04067668916181187,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -2856,21 +3864,21 @@
         "Jump_Air": {
           "duration_seconds": 0.6666666666666666,
           "min_z_m": 0.15799996256828308,
-          "max_vertex_motion_m": 0.00811043759584571,
+          "max_vertex_motion_m": 0.008110096003368523,
           "root_translation_error_m": 0,
           "loop_seam": 0.0
         },
         "Jump_Land": {
           "duration_seconds": 0.4,
           "min_z_m": 0.000971368164755404,
-          "max_vertex_motion_m": 0.33912465870569747,
+          "max_vertex_motion_m": 0.34417199672264953,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Jump_Full": {
           "duration_seconds": 1.2,
           "min_z_m": 0.0009998800233006477,
-          "max_vertex_motion_m": 0.5414917732157268,
+          "max_vertex_motion_m": 0.5408042348453463,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -2884,42 +3892,42 @@
         "Hit_Front": {
           "duration_seconds": 0.3,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.13246703271108184,
+          "max_vertex_motion_m": 0.11928436527538977,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Hit_Back": {
           "duration_seconds": 0.3,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.13033441811717916,
+          "max_vertex_motion_m": 0.11734845611536485,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Hit_Left": {
           "duration_seconds": 0.3,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.1130576425780511,
+          "max_vertex_motion_m": 0.1130533227283696,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Hit_Right": {
           "duration_seconds": 0.3,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.11305764259399875,
+          "max_vertex_motion_m": 0.11305433410918428,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Knockdown_Front": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0009892508387565613,
-          "max_vertex_motion_m": 1.7666788370621944,
+          "max_vertex_motion_m": 1.76349923116851,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Knockdown_Back": {
           "duration_seconds": 0.8,
           "min_z_m": 0.0009916424751281738,
-          "max_vertex_motion_m": 1.767506749730057,
+          "max_vertex_motion_m": 1.7617890508881529,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -2933,7 +3941,7 @@
         "Knockdown_Right": {
           "duration_seconds": 0.8,
           "min_z_m": 0.000994715839624405,
-          "max_vertex_motion_m": 1.816893251824076,
+          "max_vertex_motion_m": 1.8161363735752352,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -2947,28 +3955,28 @@
         "GetUp_Front": {
           "duration_seconds": 1.4,
           "min_z_m": 0.0009652037988416851,
-          "max_vertex_motion_m": 1.7926905313962371,
+          "max_vertex_motion_m": 1.792632908899922,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "GetUp_Back": {
           "duration_seconds": 1.4,
           "min_z_m": 0.0009651713189668953,
-          "max_vertex_motion_m": 1.7675065895484479,
+          "max_vertex_motion_m": 1.7617887538018866,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Death_Front": {
           "duration_seconds": 1.0,
           "min_z_m": 0.0009830668568611145,
-          "max_vertex_motion_m": 1.7666787021092063,
+          "max_vertex_motion_m": 1.7634991635703565,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Death_Back": {
           "duration_seconds": 1.0,
           "min_z_m": 0.0009890943765640259,
-          "max_vertex_motion_m": 1.7675067386648806,
+          "max_vertex_motion_m": 1.7617889092171282,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -2989,7 +3997,7 @@
         "Flee_Start": {
           "duration_seconds": 0.2,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.4683055690273219,
+          "max_vertex_motion_m": 0.3921991863257379,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -3003,14 +4011,14 @@
         "Flee_Stop": {
           "duration_seconds": 0.2,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.4683055690273219,
+          "max_vertex_motion_m": 0.3921991863257379,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
         "Security_StunFire": {
           "duration_seconds": 0.4,
           "min_z_m": 0.0010001229820773005,
-          "max_vertex_motion_m": 0.024322075403472927,
+          "max_vertex_motion_m": 0.024322388911194058,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -3024,7 +4032,7 @@
         "Medical_GetUp": {
           "duration_seconds": 1.4,
           "min_z_m": 0.0009999090107157826,
-          "max_vertex_motion_m": 1.7926905313962371,
+          "max_vertex_motion_m": 1.792632908899922,
           "root_translation_error_m": 0,
           "loop_seam": null
         },
@@ -3073,9 +4081,121 @@
         "GetUp_Right": {
           "duration_seconds": 1.4,
           "min_z_m": 0.0009652503649704158,
-          "max_vertex_motion_m": 1.816893251824076,
+          "max_vertex_motion_m": 1.8161363138335311,
           "root_translation_error_m": 0,
           "loop_seam": null
+        },
+        "Aim_Walk_Forward": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997201850637794,
+          "max_vertex_motion_m": 0.5882013003401059,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_ForwardLeft": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997283341363072,
+          "max_vertex_motion_m": 0.47915756947539045,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Walk_Left": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999420726671815,
+          "max_vertex_motion_m": 0.4017317482516286,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_BackLeft": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999582543969154,
+          "max_vertex_motion_m": 0.41771658695171315,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240138092e-18
+        },
+        "Aim_Walk_Back": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009998800233006477,
+          "max_vertex_motion_m": 0.4345966687407375,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Walk_BackRight": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009999254252761602,
+          "max_vertex_motion_m": 0.4177165030646555,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_Right": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.000999836134724319,
+          "max_vertex_motion_m": 0.40535907082799116,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Walk_ForwardRight": {
+          "duration_seconds": 1.0,
+          "min_z_m": 0.0009997636079788208,
+          "max_vertex_motion_m": 0.479157945088818,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Forward": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0009999675676226616,
+          "max_vertex_motion_m": 0.5747963397187614,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_ForwardLeft": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010001123882830143,
+          "max_vertex_motion_m": 0.47131669103419915,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Left": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0009999567409977317,
+          "max_vertex_motion_m": 0.3912584468559949,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_BackLeft": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003028437495232,
+          "max_vertex_motion_m": 0.38067475759436253,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_Back": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003149509429932,
+          "max_vertex_motion_m": 0.393437181955832,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240138092e-18
+        },
+        "Aim_Run_BackRight": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.001000397838652134,
+          "max_vertex_motion_m": 0.38067479796168757,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.4695758240232755e-18
+        },
+        "Aim_Run_Right": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010001036571338773,
+          "max_vertex_motion_m": 0.3893818767931901,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
+        },
+        "Aim_Run_ForwardRight": {
+          "duration_seconds": 0.6666666666666666,
+          "min_z_m": 0.0010003270581364632,
+          "max_vertex_motion_m": 0.47131663817615116,
+          "root_translation_error_m": 0,
+          "loop_seam": 1.469575824026431e-18
         }
       },
       "equipment_head_intersections": []

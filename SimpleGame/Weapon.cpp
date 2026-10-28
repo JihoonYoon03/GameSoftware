@@ -7,6 +7,44 @@ namespace combat
 {
 
 // ============================================================================
+// PlayerLoadout
+// ============================================================================
+bool PlayerLoadout::GrantPistol()
+{
+    if (pistolOwned)
+    {
+        return false;
+    }
+    pistolOwned = true;
+    return true;
+}
+bool PlayerLoadout::HasPistol() const
+{
+    return pistolOwned;
+}
+bool PlayerLoadout::IsAvailable(WeaponSlot slot) const
+{
+    return slot == WeaponSlot::Unarmed || (slot == WeaponSlot::Secondary && pistolOwned);
+}
+bool PlayerLoadout::Select(WeaponSlot slot)
+{
+    if (!IsAvailable(slot))
+    {
+        return false;
+    }
+    selected = slot;
+    return true;
+}
+WeaponSlot PlayerLoadout::Selected() const
+{
+    return selected;
+}
+bool PlayerLoadout::IsPistolEquipped() const
+{
+    return selected == WeaponSlot::Secondary && pistolOwned;
+}
+
+// ============================================================================
 // Firearm
 // ============================================================================
 Firearm::Firearm(FirearmSettings settings) : settings(settings)

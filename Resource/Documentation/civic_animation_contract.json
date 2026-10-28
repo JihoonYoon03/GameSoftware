@@ -1,5 +1,5 @@
 {
-  "revision": "civic_motion_v1",
+  "revision": "civic_motion_v2_directional",
   "request": "../CIVIC_ANIMATION_REQUEST.md",
   "units": "meters",
   "authoring_fps": 30,
@@ -7,8 +7,8 @@
   "humanoid_skeleton": "HUMAN_7H",
   "bones": 23,
   "original_clips_preserved": 15,
-  "humanoid_clips": 43,
-  "human_new_clips": 28,
+  "humanoid_clips": 63,
+  "human_new_clips": 48,
   "vehicle_new_actions": 21,
   "human_forward": "-Y",
   "human_left": "+X",
@@ -230,6 +230,50 @@
     {
       "url": "https://www.guysandstthomas.nhs.uk/health-information/falls/what-do-if-you-fall",
       "application": "side roll, arm/knee support, staged rise; game choreography, not medical instruction"
+    },
+    {
+      "url": "https://www.mixamo.com/#/?page=1&query=walking&type=Motion%2CMotionPack",
+      "observed": [
+        "Walking — Walking While Aiming Rifle",
+        "Walking Backwards — Walking Backwards While Aiming Rifle"
+      ],
+      "used_for": "stable sight line, shoulder/pelvis separation, cautious backward steps"
+    },
+    {
+      "url": "https://www.mixamo.com/#/?page=1&query=strafe&type=Motion%2CMotionPack",
+      "observed": [
+        "Pistol Strafe — Strafe Left With An Aimed Pistol"
+      ],
+      "used_for": "elbows below wrists, torso facing the target, uncrossed lateral steps"
+    },
+    {
+      "url": "https://www.mixamo.com/#/?page=1&query=running&type=Motion%2CMotionPack",
+      "observed": [
+        "Unarmed Run Forward"
+      ],
+      "used_for": "sagittal arm swing, bent elbows and contralateral timing"
+    },
+    {
+      "url": "https://www.mixamo.com/#/?page=1&query=walking&type=Motion%2CMotionPack",
+      "observed": [
+        "Walking — Walking While Aiming Rifle",
+        "Walking Backwards — Walking Backwards While Aiming Rifle"
+      ],
+      "used_for": "stable sight line, shoulder/pelvis separation, cautious backward steps"
+    },
+    {
+      "url": "https://www.mixamo.com/#/?page=1&query=strafe&type=Motion%2CMotionPack",
+      "observed": [
+        "Pistol Strafe — Strafe Left With An Aimed Pistol"
+      ],
+      "used_for": "elbows below wrists, torso facing the target, uncrossed lateral steps"
+    },
+    {
+      "url": "https://www.mixamo.com/#/?page=1&query=running&type=Motion%2CMotionPack",
+      "observed": [
+        "Unarmed Run Forward"
+      ],
+      "used_for": "sagittal arm swing, bent elbows and contralateral timing"
     }
   ],
   "authoring_method": "procedural hand-authored poses and analytic IK informed by movement references; no motion-capture recording imported",
@@ -249,5 +293,36 @@
     "clips": "animation_clips.json",
     "muzzle_tracks": "civic_muzzle_tracks.json",
     "roundtrip_report": "../Validation/civic_animation_roundtrip.json"
+  },
+  "aim_directional": {
+    "contract": "aim_locomotion_blending.json",
+    "new_clips": 16,
+    "walk_directions": [
+      "Forward",
+      "ForwardLeft",
+      "Left",
+      "BackLeft",
+      "Back",
+      "BackRight",
+      "Right",
+      "ForwardRight"
+    ],
+    "run_directions": [
+      "Forward",
+      "ForwardLeft",
+      "Left",
+      "BackLeft",
+      "Back",
+      "BackRight",
+      "Right",
+      "ForwardRight"
+    ],
+    "source_scene": "42_Aim_Directional_Review",
+    "runtime_implementation_included": false
+  },
+  "pistol_layers": {
+    "contract": "pistol_layer_contract.json",
+    "new_clips": 4,
+    "existing_59_preserved": true
   }
 }

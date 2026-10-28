@@ -2,322 +2,322 @@
   "characters": {
     "Player_Explorer": {
       "body": "Male_Normal",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Ria_Engineer": {
       "body": "Female_Normal",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Kain_Guard": {
       "body": "Male_Normal",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Mara_Medic": {
       "body": "Female_Normal",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "NPC_Researcher": {
       "body": "Male_Normal",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "NPC_Miner": {
       "body": "Male_Heavy",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "NPC_Guard_Helmet": {
       "body": "Male_Normal",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "NPC_HeavyCombat": {
       "body": "Male_Heavy",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "NPC_Pilot": {
       "body": "Female_Lean",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "NPC_Civilian": {
       "body": "Female_Heavy",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Lean_Explorer": {
       "body": "Male_Lean",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Lean_Engineer": {
       "body": "Male_Lean",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Lean_Guard": {
       "body": "Male_Lean",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Lean_Medic": {
       "body": "Male_Lean",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Lean_Researcher": {
       "body": "Male_Lean",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Lean_Miner": {
       "body": "Male_Lean",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Lean_HeavyCombat": {
       "body": "Male_Lean",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Lean_Pilot": {
       "body": "Male_Lean",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Lean_Civilian": {
       "body": "Male_Lean",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Normal_Explorer": {
       "body": "Male_Normal",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Normal_Engineer": {
       "body": "Male_Normal",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Normal_Guard": {
       "body": "Male_Normal",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Normal_Medic": {
       "body": "Male_Normal",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Normal_Researcher": {
       "body": "Male_Normal",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Normal_Miner": {
       "body": "Male_Normal",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Normal_HeavyCombat": {
       "body": "Male_Normal",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Normal_Pilot": {
       "body": "Male_Normal",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Normal_Civilian": {
       "body": "Male_Normal",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Heavy_Explorer": {
       "body": "Male_Heavy",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Heavy_Engineer": {
       "body": "Male_Heavy",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Heavy_Guard": {
       "body": "Male_Heavy",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Heavy_Medic": {
       "body": "Male_Heavy",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Heavy_Researcher": {
       "body": "Male_Heavy",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Heavy_Miner": {
       "body": "Male_Heavy",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Heavy_HeavyCombat": {
       "body": "Male_Heavy",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Heavy_Pilot": {
       "body": "Male_Heavy",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Male_Heavy_Civilian": {
       "body": "Male_Heavy",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Lean_Explorer": {
       "body": "Female_Lean",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Lean_Engineer": {
       "body": "Female_Lean",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Lean_Guard": {
       "body": "Female_Lean",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Lean_Medic": {
       "body": "Female_Lean",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Lean_Researcher": {
       "body": "Female_Lean",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Lean_Miner": {
       "body": "Female_Lean",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Lean_HeavyCombat": {
       "body": "Female_Lean",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Lean_Pilot": {
       "body": "Female_Lean",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Lean_Civilian": {
       "body": "Female_Lean",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Normal_Explorer": {
       "body": "Female_Normal",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Normal_Engineer": {
       "body": "Female_Normal",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Normal_Guard": {
       "body": "Female_Normal",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Normal_Medic": {
       "body": "Female_Normal",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Normal_Researcher": {
       "body": "Female_Normal",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Normal_Miner": {
       "body": "Female_Normal",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Normal_HeavyCombat": {
       "body": "Female_Normal",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Normal_Pilot": {
       "body": "Female_Normal",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Normal_Civilian": {
       "body": "Female_Normal",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Heavy_Explorer": {
       "body": "Female_Heavy",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Heavy_Engineer": {
       "body": "Female_Heavy",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Heavy_Guard": {
       "body": "Female_Heavy",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Heavy_Medic": {
       "body": "Female_Heavy",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Heavy_Researcher": {
       "body": "Female_Heavy",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Heavy_Miner": {
       "body": "Female_Heavy",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Heavy_HeavyCombat": {
       "body": "Female_Heavy",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Heavy_Pilot": {
       "body": "Female_Heavy",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     },
     "Fit_Female_Heavy_Civilian": {
       "body": "Female_Heavy",
-      "clips": 17,
+      "clips": 33,
       "phases_per_clip": 9
     }
   },

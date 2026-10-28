@@ -1,0 +1,166 @@
+{
+  "clips": {
+    "Aim_Walk_Forward": {
+      "loop_matrix_error": 1.4695761072969157e-18,
+      "root_error": 0.0,
+      "grip_error_m": 1.178611439872702e-06,
+      "muzzle_angle_degrees": 0.0,
+      "min_sole_z_m": 0.0009611392742954195,
+      "min_foot_separation_m": 0.31999996304512024,
+      "stance_drift_m": 4.244990117167406e-05
+    },
+    "Aim_Walk_ForwardLeft": {
+      "loop_matrix_error": 1.4695761072969157e-18,
+      "root_error": 0.0,
+      "grip_error_m": 1.178611439872702e-06,
+      "muzzle_angle_degrees": 0.0,
+      "min_sole_z_m": 0.000965181621722877,
+      "min_foot_separation_m": 0.19624647498130798,
+      "stance_drift_m": 3.7745233257268134e-05
+    },
+    "Aim_Walk_Left": {
+      "loop_matrix_error": 1.4695761072969157e-18,
+      "root_error": 0.0,
+      "grip_error_m": 1.178611439872702e-06,
+      "muzzle_angle_degrees": 0.0,
+      "min_sole_z_m": 0.0009651246364228427,
+      "min_foot_separation_m": 0.195000059902668,
+      "stance_drift_m": 3.722514352019088e-05
+    },
+    "Aim_Walk_BackLeft": {
+      "loop_matrix_error": 1.4695761072969157e-18,
+      "root_error": 0.0,
+      "grip_error_m": 1.178611439872702e-06,
+      "muzzle_angle_degrees": 0.0,
+      "min_sole_z_m": 0.0009609313565306365,
+      "min_foot_separation_m": 0.23160718381404877,
+      "stance_drift_m": 2.6741358544160348e-05
+    },
+    "Aim_Walk_Back": {
+      "loop_matrix_error": 1.4695761072969157e-18,
+      "root_error": 0.0,
+      "grip_error_m": 1.178611439872702e-06,
+      "muzzle_angle_degrees": 0.0,
+      "min_sole_z_m": 0.0009694725158624351,
+      "min_foot_separation_m": 0.3199999928474426,
+      "stance_drift_m": 2.0315628055036527e-05
+    },
+    "Aim_Walk_BackRight": {
+      "loop_matrix_error": 1.4695761072969157e-18,
+      "root_error": 0.0,
+      "grip_error_m": 1.178611439872702e-06,
+      "muzzle_angle_degrees": 0.0,
+      "min_sole_z_m": 0.0009609313565306365,
+      "min_foot_separation_m": 0.23160718381404877,
+      "stance_drift_m": 1.776674016383394e-05
+    },
+    "Aim_Walk_Right": {
+      "loop_matrix_error": 1.4695761072969157e-18,
+      "root_error": 0.0,
+      "grip_error_m": 1.178611439872702e-06,
+      "muzzle_angle_degrees": 0.0,
+      "min_sole_z_m": 0.0009651246364228427,
+      "min_foot_separation_m": 0.195000059902668,
+      "stance_drift_m": 1.8430438066921504e-05
+    },
+    "Aim_Walk_ForwardRight": {
+      "loop_matrix_error": 1.4695761072969157e-18,
+      "root_error": 0.0,
+      "grip_error_m": 1.178611439872702e-06,
+      "muzzle_angle_degrees": 0.0,
+      "min_sole_z_m": 0.000965181621722877,
+      "min_foot_separation_m": 0.19624647498130798,
+      "stance_drift_m": 2.393076035728143e-05
+    },
+    "Aim_Run_Forward": {
+      "loop_matrix_error": 1.4695761072969157e-18,
+      "root_error": 0.0,
+      "grip_error_m": 5.859245724209639e-06,
+      "muzzle_angle_degrees": 0.0,
+      "min_sole_z_m": 0.0010002251947298646,
+      "min_foot_separation_m": 0.3200000375509262,
+      "stance_drift_m": 3.934819991907686e-05
+    },
+    "Aim_Run_ForwardLeft": {
+      "loop_matrix_error": 1.4695761072969157e-18,
+      "root_error": 0.0,
+      "grip_error_m": 5.859245724209639e-06,
+      "muzzle_angle_degrees": 0.0,
+      "min_sole_z_m": 0.0009984035277739167,
+      "min_foot_separation_m": 0.13871586322784424,
+      "stance_drift_m": 3.067967885907968e-05
+    },
+    "Aim_Run_Left": {
+      "loop_matrix_error": 1.4695761072969157e-18,
+      "root_error": 0.0,
+      "grip_error_m": 5.859245724209639e-06,
+      "muzzle_angle_degrees": 0.0,
+      "min_sole_z_m": 0.0010002253111451864,
+      "min_foot_separation_m": 0.13968167454004288,
+      "stance_drift_m": 3.235221142994871e-05
+    },
+    "Aim_Run_BackLeft": {
+      "loop_matrix_error": 1.4695761072969157e-18,
+      "root_error": 0.0,
+      "grip_error_m": 5.859245724209639e-06,
+      "muzzle_angle_degrees": 0.0,
+      "min_sole_z_m": 0.0010002024937421083,
+      "min_foot_separation_m": 0.20327386260032654,
+      "stance_drift_m": 2.099772161591158e-05
+    },
+    "Aim_Run_Back": {
+      "loop_matrix_error": 1.4695761072969157e-18,
+      "root_error": 0.0,
+      "grip_error_m": 5.859245724209639e-06,
+      "muzzle_angle_degrees": 0.0,
+      "min_sole_z_m": 0.0010002105263993144,
+      "min_foot_separation_m": 0.320000022649765,
+      "stance_drift_m": 2.2284412553729374e-05
+    },
+    "Aim_Run_BackRight": {
+      "loop_matrix_error": 1.4695761072969157e-18,
+      "root_error": 0.0,
+      "grip_error_m": 5.859245724209639e-06,
+      "muzzle_angle_degrees": 0.0,
+      "min_sole_z_m": 0.0010002964409068227,
+      "min_foot_separation_m": 0.20327386260032654,
+      "stance_drift_m": 2.669365439056253e-05
+    },
+    "Aim_Run_Right": {
+      "loop_matrix_error": 1.4695761072969157e-18,
+      "root_error": 0.0,
+      "grip_error_m": 5.859245724209639e-06,
+      "muzzle_angle_degrees": 0.0,
+      "min_sole_z_m": 0.0010001043556258082,
+      "min_foot_separation_m": 0.13968167454004288,
+      "stance_drift_m": 3.901277124838477e-05
+    },
+    "Aim_Run_ForwardRight": {
+      "loop_matrix_error": 1.4695761072969157e-18,
+      "root_error": 0.0,
+      "grip_error_m": 5.859245724209639e-06,
+      "muzzle_angle_degrees": 0.0,
+      "min_sole_z_m": 0.0009984035277739167,
+      "min_foot_separation_m": 0.13871586322784424,
+      "stance_drift_m": 3.979703477467583e-05
+    }
+  },
+  "upper_body": {
+    "Walk": {
+      "previous_elbow_lateral_excursion_m": 0.23118796944618225,
+      "current_elbow_lateral_excursion_m": 0.04591360688209534,
+      "lower_body_matrix_error": 0
+    },
+    "Run": {
+      "previous_elbow_lateral_excursion_m": 0.2897317409515381,
+      "current_elbow_lateral_excursion_m": 0.06881716847419739,
+      "lower_body_matrix_error": 0
+    }
+  },
+  "blend_samples": 384,
+  "max_blended_sole_penetration_m": 0.010976527817547321,
+  "max_blend_contact_correction_m": 0.011976527817547322,
+  "max_corrected_sole_penetration_m": 0,
+  "max_blended_grip_error_m": 6.957821138027331e-07,
+  "all_checks_passed": true
+}

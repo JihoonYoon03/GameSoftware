@@ -1,0 +1,12 @@
+{
+  "revision": "silhouette_first_200_v3",
+  "parts": 2293,
+  "files": 2575,
+  "new_part_files": 0,
+  "animated_files": 35,
+  "refined_character_files": 10,
+  "mesh_nodes": 7110,
+  "max_triangles": 196,
+  "errors": [],
+  "all_checks_passed": true
+}

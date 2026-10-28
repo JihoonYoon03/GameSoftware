@@ -2,6 +2,7 @@
 #include "TransitLayout.h"
 #include "Overworld.h"
 #include "ResourceAssets.h"
+#include "Profiler.h"
 #include <algorithm>
 #include <cmath>
 #include <map>
@@ -619,14 +620,61 @@ const std::vector<TransitPlacement> &TransitLayout::Get()
 bool TransitLayout::IsBlocked(Vector2 position, float radius, float altitude, bool driving)
 {
     Get(); // Builds the support stations once, before any collision query.
+    struct SupportBounds
+    {
+        Vector2 position, forward;
+    };
+    struct RampBounds
+    {
+        Vector2 start, direction, minimum, maximum;
+        float span, half;
+        int road;
+    };
+    // The road graph/support stations are immutable. Do not recompute trig/lengths or scan ground roads per
+    // sample.
+    static const auto supportBounds = [] {
+        std::vector<SupportBounds> result;
+        for (const auto &s : supports)
+        {
+            result.push_back({s.position, {std::cos(s.yaw), std::sin(s.yaw)}});
+        }
+        return result;
+    }();
+    static const auto rampBounds = [] {
+        std::vector<RampBounds> result;
+        const auto &net = RoadNetwork::Get();
+        for (size_t i = 0; i < net.roads.size(); ++i)
+        {
+            const auto &r = net.roads[i];
+            const auto &a = net.junctions[r.from], &b = net.junctions[r.to];
+            if (a.altitude < .1f && b.altitude < .1f)
+            {
+                continue;
+            }
+            auto d = Unit(Sub(b.position, a.position)), start = Add(a.position, d, a.radius);
+            float span = Game::Distance(a.position, b.position) - a.radius - b.radius;
+            auto end = Add(start, d, span);
+            result.push_back({start,
+                              d,
+                              {(std::min)(start.x, end.x), (std::min)(start.y, end.y)},
+                              {(std::max)(start.x, end.x), (std::max)(start.y, end.y)},
+                              span,
+                              r.lanes * .75f,
+                              int(i)});
+        }
+        return result;
+    }();
     if (altitude < 3.8f)
     {
         // Two independent legs; the overhead crosshead never blocks the underpass.
-        for (const auto &support : supports)
+        for (const auto &support : supportBounds)
         {
             auto delta = Sub(position, support.position);
-            Vector2 p = {Dot(delta, {std::cos(support.yaw), std::sin(support.yaw)}),
-                         Dot(delta, {-std::sin(support.yaw), std::cos(support.yaw)})};
+            if (std::fabs(delta.x) > 1.6f + 2 * radius || std::fabs(delta.y) > 1.6f + 2 * radius)
+            {
+                continue;
+            }
+            Vector2 p = {Dot(delta, support.forward), Dot(delta, {-support.forward.y, support.forward.x})};
             if (std::fabs(p.x) < .35f + radius && std::fabs(p.y) > .57815f - radius &&
                 std::fabs(p.y) < 1.25f + radius)
             {
@@ -634,23 +682,21 @@ bool TransitLayout::IsBlocked(Vector2 position, float radius, float altitude, bo
             }
         }
     }
-    for (size_t i = 0; i < RoadNetwork::Get().roads.size(); ++i)
+    for (const auto &r : rampBounds)
     {
-        const auto &net = RoadNetwork::Get();
-        const auto &r = net.roads[i];
-        const auto &a = net.junctions[r.from], &b = net.junctions[r.to];
-        if (a.altitude < .1f && b.altitude < .1f)
+        float padding = r.half + .35f + radius;
+        if (position.x < r.minimum.x - padding || position.x > r.maximum.x + padding ||
+            position.y < r.minimum.y - padding || position.y > r.maximum.y + padding)
         {
             continue;
         }
-        auto d = Unit(Sub(b.position, a.position)), start = Add(a.position, d, a.radius);
-        float span = Game::Distance(a.position, b.position) - a.radius - b.radius;
-        float along = Dot(Sub(position, start), d), across = std::fabs(Cross(Sub(position, start), d));
-        if (along < 0 || along > span)
+        float along = Dot(Sub(position, r.start), r.direction),
+              across = std::fabs(Cross(Sub(position, r.start), r.direction));
+        if (along < 0 || along > r.span)
         {
             continue;
         }
-        float top = net.RoadElevation(int(i), along / span), half = r.lanes * .75f;
+        float top = RoadNetwork::Get().RoadElevation(r.road, along / r.span), half = r.half;
         if (!driving && altitude < .1f && top > .08f && top < 1.3f && across < half + .2f + radius)
         {
             return true; // Low ramp undersides are not traversable pedestrian tunnels.
@@ -756,6 +802,7 @@ bool ClearFrontageSegment(const GameState &world, Vector2 a, Vector2 b)
 } // namespace
 void CityPlan::Rebuild(GameState &world)
 {
+    profiling::Scope startupTimer(profiling::Timer::MapGeneration);
     size_t signature = world.buildings.size();
     for (const auto &b : world.buildings)
     {

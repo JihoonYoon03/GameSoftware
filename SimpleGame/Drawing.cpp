@@ -145,6 +145,7 @@ void Drawing::DrawGroundStrip(Vector2 start, Vector2 end, float width, ColorRGBA
         model->space = models::CoordinateSpace::World;
         model->ground = true;
         model->count = 1;
+        model->parts.resize(1);
         auto &part = model->parts[0];
         part.count = 4;
         part.points[0] = {0, 0, 0};
@@ -181,6 +182,7 @@ void Drawing::DrawScannerPulse(Vector2 origin, float radius, float opacity)
         model->space = models::CoordinateSpace::World;
         model->ground = true;
         constexpr int segments = 128;
+        model->parts.resize(segments * 2);
         for (int layer = 0; layer < 2; ++layer)
         {
             const float width = layer ? .006f : .024f;
@@ -426,7 +428,8 @@ void Drawing::DrawModel3D(const models::Model &model, Vector2 screen, models::Po
 }
 void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models::CharacterType type,
                          bool walking, float facingYaw, models::Gender gender, models::HairStyle hair,
-                         bool npcArmed, float npcFlash, bool downed, float locomotionSpeed)
+                         bool npcArmed, float npcFlash, bool downed, float locomotionSpeed,
+                         float reloadProgress)
 {
     auto &world = Game::Get().GetState();
     Vector2 screen = WorldToScreen(position.x, position.y);
@@ -435,18 +438,22 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
     {
         DrawEllipse(screen.x, screen.y, 16, 6, {.25f, .95f, .9f, .17f});
     }
-    bool armed = (isPlayer && (game::GameLevels::IsCombatActive() || CivicCombat::Available())) || npcArmed;
+    bool armed =
+        (isPlayer && game::GameLevels::Mine().GetState().loadout.IsPistolEquipped() &&
+         (game::GameLevels::IsCombatActive() || CivicJustice::IsExterior()) && !world.isBikeMounted) ||
+        npcArmed;
     float yaw = isPlayer ? world.facingYaw : facingYaw;
     if (isPlayer)
     {
         gender = world.playerGender;
         hair = world.playerHair;
     }
-    if (armed && isPlayer)
-    {
-        auto dir = game::GameLevels::Mine().GetAimDirection(game::GameLevels::AimAngle());
-        yaw = std::atan2(dir.y, dir.x);
-    }
+    float melee = !isPlayer                             ? 0
+                  : game::GameLevels::Mine().IsActive() ? game::GameLevels::Mine().GetState().meleeSeconds
+                  : game::GameLevels::Chapter().IsActive()
+                      ? game::GameLevels::Chapter().GetState().meleeSeconds
+                  : CivicJustice::IsExterior() ? CivicJustice::State().meleeSeconds
+                                               : 0;
     float flash = isPlayer ? (CivicCombat::Available() ? CivicJustice::State().muzzleFlash
                                                        : game::GameLevels::MuzzleFlash())
                            : npcFlash;
@@ -458,14 +465,12 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
     auto pose = models::ModelRig::Pose(world.animationTimeSeconds * 10,
                                        (isPlayer && world.movementAmount > 0) || walking, armed,
                                        armed ? flash / .055f : 0, false, gender);
-    if (isPlayer && game::GameLevels::Mine().IsActive())
-    {
-        pose.meleeSeconds = game::GameLevels::Mine().GetState().meleeSeconds;
-    }
+    pose.meleeSeconds = melee;
     pose.locomotionSpeed = isPlayer ? world.movementSpeed : locomotionSpeed;
-    if (isPlayer && CivicJustice::IsExterior())
+    pose.reloadProgress = reloadProgress;
+    if (isPlayer)
     {
-        pose.meleeSeconds = CivicJustice::State().meleeSeconds;
+        pose = Game::Get().PlayerPose(armed ? flash / .055f : 0);
     }
     models::Palette palette;
     palette.body = {coat.r, coat.g, coat.b, coat.a};
@@ -707,7 +712,7 @@ void Drawing::DrawProp(const models::Model &model, Vector2 position, models::Poi
                 (position.x + position.y) * 36, visiblePalette);
 }
 void Drawing::DrawWorldAircraft(Vector2 position, float altitude, models::AircraftType type, bool alternate,
-                                float yaw, float bank)
+                                float yaw, float bank, bool destroyed)
 {
     models::Transform3D transform;
     transform.yaw = yaw;
@@ -731,8 +736,17 @@ void Drawing::DrawWorldAircraft(Vector2 position, float altitude, models::Aircra
         exhausts[side] = models::ResourceAssets::SkinPoint(attachment, matrices);
     }
     auto palette = OcclusionPalette(model, position, altitude, yaw, bank, {});
-    VehicleEffects(exhausts, {}, WorldToScreen(position.x, position.y), 1, transform, palette, .65f,
-                   (position.x + position.y) * 36);
+    if (destroyed)
+    {
+        palette.body = {.12f, .13f, .14f, palette.body[3]};
+        palette.accent = {.15f, .16f, .17f, palette.accent[3]};
+        palette.emission = {0, 0, 0, palette.emission[3]};
+    }
+    if (!destroyed)
+    {
+        VehicleEffects(exhausts, {}, WorldToScreen(position.x, position.y), 1, transform, palette, .65f,
+                       (position.x + position.y) * 36);
+    }
     Drawing::DrawModel3D(model, WorldToScreen(position.x, position.y), {1, 1, 1}, transform,
                          (position.x + position.y) * 36, palette, &pose);
 }

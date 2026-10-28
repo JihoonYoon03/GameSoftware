@@ -1,0 +1,57 @@
+{
+  "date": "2026-10-28",
+  "request": "ANIMATION_BLEND_REQUEST.md",
+  "new_clips": [
+    "Pistol_Carry_Idle",
+    "Pistol_Carry_Walk",
+    "Pistol_Carry_Run",
+    "Reload_Pistol"
+  ],
+  "total_human_clips": 63,
+  "existing_clips_preserved": 59,
+  "character_glbs": 10,
+  "human_bones": 23,
+  "fit_and_blend_test_actors": 64,
+  "default_animation_reference": "Mixamo actual motion previews",
+  "reference_method": "observed public previews; hand-authored on existing rig, no imported motion file",
+  "mesh_skin_bind_materials_unchanged": true,
+  "source_review_scenes": 7,
+  "parts": 2293,
+  "export_glbs": 2575,
+  "maximum_part_triangles": 196,
+  "preview": {
+    "Pistol_Carry_Idle": {
+      "frames": 18,
+      "duration_ms": 2000,
+      "loop": 0
+    },
+    "Pistol_Carry_Walk": {
+      "frames": 18,
+      "duration_ms": 1000,
+      "loop": 0
+    },
+    "Pistol_Carry_Run": {
+      "frames": 18,
+      "duration_ms": 670,
+      "loop": 0
+    },
+    "Reload_Pistol": {
+      "frames": 18,
+      "duration_ms": 1480,
+      "loop": null
+    }
+  },
+  "validation_reports": [
+    "pistol_layer_validation.json",
+    "pistol_glb_preservation.json",
+    "pistol_roundtrip_report.json",
+    "civic_project_report.json",
+    "size_budget_validation.json",
+    "size_budget_source_validation.json",
+    "export_report.json",
+    "pistol_layer_authoring.json"
+  ],
+  "new_motion_roundtrip_max_bounds_error_m": 9.5367431640625e-07,
+  "game_runtime_changed": false,
+  "all_checks_passed": true
+}

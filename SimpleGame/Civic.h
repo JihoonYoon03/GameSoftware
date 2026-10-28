@@ -43,6 +43,17 @@ enum class RecoveryPhase
     Transfer,
     FadeIn
 };
+struct AirProjectile
+{
+    models::Point position, direction;
+    float speed = 0, remaining = 0;
+    int damage = 0;
+};
+struct AirTracer
+{
+    models::Point start, end;
+    float remaining = .12f;
+};
 struct CivicState
 {
     float heat = 0, infamy = 0, sinceCrime = 1000, unseenSeconds = 0, spawnSeconds = 0;
@@ -54,12 +65,16 @@ struct CivicState
     std::vector<SecurityOfficer> officers;
     std::vector<game::Bullet> bullets;
     std::vector<game::Tracer> tracers;
+    std::vector<AirProjectile> airBullets;
+    std::vector<AirTracer> airTracers;
     std::vector<HospitalSite> hospitals;
     std::uint64_t nextOfficer = 1;
     BodyImpact playerImpact;
     RecoveryPhase recovery = RecoveryPhase::None;
     float recoverySeconds = 0;
     int hospital = 0, deaths = 0, lostLevels = 0, lostCredits = 0, lostSalvage = 0;
+    float pursuitSeconds = 0, initialUnseenSeconds = 0, pendingInfamy = 0;
+    bool responseStarted = false, identified = false;
     unsigned randomState = 0x39ab17u;
 };
 // ============================================================================
@@ -68,6 +83,10 @@ struct CivicState
 class CivicJustice
 {
   public:
+    static constexpr float kMaximumHeat = 1000;
+    static constexpr float kUnidentifiedEscapeSeconds = 20;
+    static constexpr float kSightRange = 26;
+    static constexpr float kSightHalfAngle = .95993109f; // 55 degrees; total field of view is 110 degrees.
     static CivicState &State();
     static void Reset(GameState &world);
     static void Report(Offense offense, Vector2 position);
@@ -79,6 +98,8 @@ class CivicJustice
     static bool ClearLine(Vector2 from, Vector2 to);
     static bool Solid(Vector2 position, float radius = .3f, float altitude = 0, bool driving = false);
     static void Update(float deltaSeconds);
+    static bool CanSee(const SecurityOfficer &officer, Vector2 position, float altitude = 0);
+    static float SightDistance(const SecurityOfficer &officer, float angle);
 };
 // ============================================================================
 // CivicCombat — city firearm/melee damage and bounded security response
@@ -92,7 +113,7 @@ class CivicCombat
     static void Melee();
     static bool DamageResident(size_t index, int damage, Vector2 impulse, bool playerOwned);
     static bool DamageOfficer(size_t index, int damage, Vector2 impulse, bool playerOwned = true);
-    static bool DamageLandmark(size_t index, int damage);
+    static bool DamageLandmark(size_t index, int damage, bool weaponOwned = true);
     static void DamagePlayer(int damage, Vector2 impulse = {});
     static bool LandmarkDown(Vector2 position);
 };
@@ -103,6 +124,8 @@ class BodyCollision
 {
   public:
     static Vector2 Slide(Vector2 from, Vector2 desired, const std::function<bool(Vector2)> &blocked);
+    static bool BikeBlocked(Vector2 position, float yaw, float elevation, bool includeVehicles = true);
+    static void RecoverBike();
     static Vector2 MovePlayer(Vector2 from, Vector2 desired);
     static Vector2 MoveResident(size_t index, Vector2 from, Vector2 desired);
     static void Update(float deltaSeconds);

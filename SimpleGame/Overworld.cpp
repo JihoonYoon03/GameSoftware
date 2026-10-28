@@ -5,6 +5,7 @@
 #include "ResidentAI.h"
 #include "ResourceAssets.h"
 #include "TransitLayout.h"
+#include "Profiler.h"
 #include <algorithm>
 #include <cmath>
 #include <iterator>
@@ -576,10 +577,9 @@ bool TrafficSystem::DamageVehicle(std::uint64_t id, int damage, bool playerOwned
     }
     car->health = (std::max)(0, car->health - damage);
     car->hitFlash = .15f;
-    if (playerOwned)
+    if (playerOwned && car->occupied && car->health == 0)
     {
-        CivicJustice::Report(car->health ? Offense::VehicleDamage : Offense::VehicleDestruction,
-                             car->position);
+        CivicJustice::Report(Offense::VehicleDestruction, car->position);
     }
     if (car->health <= 0)
     {
@@ -1407,11 +1407,50 @@ bool AirTraffic::OutsideVisibleFootprint(const AircraftActor &craft, Vector2 cam
     return maxX < -padding || minX > kCanvasWidth + padding || maxY < -padding ||
            minY > kCanvasHeight + padding;
 }
+bool AirTraffic::Contains(const AircraftActor &craft, models::Point p)
+{
+    const auto &mesh =
+        models::ResourceAssets::Get(models::ModelLibrary::Aircraft(craft.type, craft.alternate).resourceId);
+    float x = p.x - craft.position.x, y = p.y - craft.position.y, z = p.z - craft.altitude;
+    float localX = x * std::cos(craft.yaw) + y * std::sin(craft.yaw);
+    float localY = -x * std::sin(craft.yaw) + y * std::cos(craft.yaw);
+    float unbankedY = localY * std::cos(craft.bank) + z * std::sin(craft.bank);
+    float unbankedZ = -localY * std::sin(craft.bank) + z * std::cos(craft.bank);
+    return localX >= mesh.minimum.x - .04f && localX <= mesh.maximum.x + .04f &&
+           unbankedY >= mesh.minimum.y - .04f && unbankedY <= mesh.maximum.y + .04f &&
+           unbankedZ >= mesh.minimum.z - .04f && unbankedZ <= mesh.maximum.z + .04f;
+}
+bool AirTraffic::DamageAircraft(std::uint64_t id, int damage, bool playerOwned)
+{
+    auto found =
+        std::find_if(aircraft.begin(), aircraft.end(), [=](const AircraftActor &c) { return c.id == id; });
+    if (found == aircraft.end() || found->health <= 0 || damage <= 0)
+    {
+        return false;
+    }
+    found->health = (std::max)(0, found->health - damage);
+    if (found->health == 0)
+    {
+        found->speed = 0;
+        if (playerOwned && found->occupied)
+        {
+            CivicJustice::Report(Offense::VehicleDestruction, found->position);
+        }
+    }
+    return true;
+}
 void AirTraffic::Update(const GameState &world, float dt)
 {
     dt = Game::Clamp(dt, 0, .05f);
     for (auto &craft : aircraft)
     {
+        if (craft.health <= 0)
+        {
+            craft.wreckSeconds += dt;
+            craft.fallSpeed += 4.9f * dt;
+            craft.altitude = (std::max)(.2f, craft.altitude - craft.fallSpeed * dt);
+            continue;
+        }
         auto oldDirection = Unit(Mul(Tangent(craft.route, craft.parameter), float(craft.direction)));
         auto tangent = Tangent(craft.route, craft.parameter);
         craft.parameter +=
@@ -1424,6 +1463,11 @@ void AirTraffic::Update(const GameState &world, float dt)
     }
     aircraft.erase(std::remove_if(aircraft.begin(), aircraft.end(),
                                   [&](const AircraftActor &craft) {
+                                      if (craft.health <= 0 && craft.wreckSeconds > 20 &&
+                                          OutsideVisibleFootprint(craft, world.cameraPosition, 80))
+                                      {
+                                          return true;
+                                      }
                                       return Game::Distance(craft.position, world.playerPosition) > 180 &&
                                              Game::Distance(craft.position, world.cameraPosition) > 180 &&
                                              OutsideVisibleFootprint(craft, world.cameraPosition, 340) &&
@@ -1490,10 +1534,28 @@ WorldScenery &Overworld::Scenery()
 }
 bool WorldScenery::IsBlocked(Vector2 p, float clearance) const
 {
-    return std::any_of(props.begin(), props.end(), [&](const SceneryProp &prop) {
-        return prop.solid && p.x > prop.minimum.x - clearance && p.x < prop.maximum.x + clearance &&
-               p.y > prop.minimum.y - clearance && p.y < prop.maximum.y + clearance;
-    });
+    const float padding = (std::max)(0.f, clearance);
+    for (int x = int(std::floor((p.x - padding) / 8)); x <= int(std::floor((p.x + padding) / 8)); ++x)
+    {
+        for (int y = int(std::floor((p.y - padding) / 8)); y <= int(std::floor((p.y + padding) / 8)); ++y)
+        {
+            auto cell = solidCells.find({x, y});
+            if (cell == solidCells.end())
+            {
+                continue;
+            }
+            for (auto index : cell->second)
+            {
+                const auto &prop = props[index];
+                if (p.x > prop.minimum.x - clearance && p.x < prop.maximum.x + clearance &&
+                    p.y > prop.minimum.y - clearance && p.y < prop.maximum.y + clearance)
+                {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
 bool WorldScenery::Place(const GameState &world, const models::Model &model, models::SceneryType type,
                          Vector2 position, float yaw, bool solid)
@@ -1575,12 +1637,24 @@ bool WorldScenery::Place(const GameState &world, const models::Model &model, mod
         prop.elevation = .03f - mesh.maximum.z;
     }
     props.push_back(prop);
+    if (prop.solid)
+    {
+        for (int x = int(std::floor(prop.minimum.x / 8)); x <= int(std::floor(prop.maximum.x / 8)); ++x)
+        {
+            for (int y = int(std::floor(prop.minimum.y / 8)); y <= int(std::floor(prop.maximum.y / 8)); ++y)
+            {
+                solidCells[{x, y}].push_back(props.size() - 1);
+            }
+        }
+    }
     return true;
 }
 void WorldScenery::Generate(const GameState &world)
 {
+    profiling::Scope startupTimer(profiling::Timer::ResourceInitialize);
     using S = models::SceneryType;
     props.clear();
+    solidCells.clear();
     auto place = [&](S type, Vector2 p, float yaw = 0) {
         return Place(world, models::ModelLibrary::Scenery(type), type, p, yaw,
                      type != S::LandingPad && type != S::Sidewalk);
@@ -1655,11 +1729,31 @@ const std::array<CityInfo, Overworld::kCityCount> &Overworld::Cities()
 {
     static const std::array<CityInfo, kCityCount> cities = [] {
         std::array<CityInfo, kCityCount> result = {
-            {{"halo_07", "헤일로", {0, 0}, "익숙한 일상 속 불안", "요즘 관문 쪽 수신기에 잡음이 많대요. 정비가 밀렸나 봐요."},
-             {"cinder", "신더", {0, 0}, "분주한 공업 도시", "광산 교대조가 아직 안 돌아왔대요. 길이 막힌 건 아닌지 모르겠네요."},
-             {"veil", "베일", {0, 0}, "고요한 관측 도시", "관측소에서 별자리 기록을 다시 맞춘다더군요. 어제 것과 안 맞는대요."},
-             {"lumen", "루멘", {0, 0}, "빛으로 버티는 피난 도시", "밤길엔 불 켜진 길로 다니세요. 저도 요즘은 돌아가요."},
-             {"echo", "에코", {0, 0}, "끊어진 통신을 기다리는 도시", "수신기가 지난 교신을 자꾸 되풀이해요. 새 연락인 줄 알고 매번 들여다보게 되네요."}}};
+            {{"halo_07",
+              "헤일로",
+              {0, 0},
+              "익숙한 일상 속 불안",
+              "요즘 관문 쪽 수신기에 잡음이 많대요. 정비가 밀렸나 봐요."},
+             {"cinder",
+              "신더",
+              {0, 0},
+              "분주한 공업 도시",
+              "광산 교대조가 아직 안 돌아왔대요. 길이 막힌 건 아닌지 모르겠네요."},
+             {"veil",
+              "베일",
+              {0, 0},
+              "고요한 관측 도시",
+              "관측소에서 별자리 기록을 다시 맞춘다더군요. 어제 것과 안 맞는대요."},
+             {"lumen",
+              "루멘",
+              {0, 0},
+              "빛으로 버티는 피난 도시",
+              "밤길엔 불 켜진 길로 다니세요. 저도 요즘은 돌아가요."},
+             {"echo",
+              "에코",
+              {0, 0},
+              "끊어진 통신을 기다리는 도시",
+              "수신기가 지난 교신을 자꾸 되풀이해요. 새 연락인 줄 알고 매번 들여다보게 되네요."}}};
         unsigned int seed = 0x458a91u;
         for (int i = 1; i < kCityCount; ++i)
         {
@@ -1834,6 +1928,7 @@ void Overworld::Populate(GameState &state)
 
 void Overworld::UpdateBike(GameState &state, float deltaSeconds)
 {
+    BodyCollision::RecoverBike();
     Vector2 previous = state.playerPosition;
     float oldYaw = state.bikeYaw;
     float steering = float(state.pressedKeys['d']) - float(state.pressedKeys['a']);
@@ -1849,30 +1944,13 @@ void Overworld::UpdateBike(GameState &state, float deltaSeconds)
     float acceleration = braking ? 24.f : reverse ? 4.f : 18.f;
     state.bikeSpeed +=
         Game::Clamp(targetSpeed - state.bikeSpeed, -acceleration * deltaSeconds, acceleration * deltaSeconds);
-    const auto &mesh = models::ResourceAssets::Get(
-        models::ModelLibrary::Get().vehicles[size_t(models::VehicleType::JetBike)].body.resourceId);
     auto blocked = [&](Vector2 p) {
         float h = RoadNetwork::Get().DriveElevation(p, state.bikeElevation);
         if (state.bikeElevation > .5f && h < state.bikeElevation - .6f)
         {
             return true;
         }
-        Vector2 d = {std::cos(state.bikeYaw), std::sin(state.bikeYaw)}, n = {-d.y, d.x};
-        for (int sample = 0; sample <= 4; ++sample)
-        {
-            float along = mesh.minimum.x + .035f + (mesh.physicalSize.x - .07f) * sample / 4;
-            for (float across : {mesh.minimum.y + .035f, mesh.maximum.y - .035f})
-            {
-                Vector2 q = {p.x + d.x * along + n.x * across, p.y + d.y * along + n.y * across};
-                if (q.x < kWorldMinX || q.x > kWorldMaxX || q.y < kWorldMinY || q.y > kWorldMaxY ||
-                    TransitLayout::IsBlocked(q, .035f, h, true) ||
-                    (h <= 1 && CivicJustice::Solid(q, .035f, h, true)))
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return BodyCollision::BikeBlocked(p, state.bikeYaw, h, false);
     };
     if (blocked(previous))
     {
@@ -1925,6 +2003,7 @@ void Overworld::ToggleBike(GameState &state)
             {
                 state.playerPosition = position;
                 state.isBikeMounted = false;
+                state.mouseFiring = state.mouseAiming = false;
                 state.bikeSpeed = 0;
                 Game::Get().ShowNotice("바이크 / 하차했습니다. 주차 위치는 유지됩니다.");
                 return;
@@ -1934,6 +2013,7 @@ void Overworld::ToggleBike(GameState &state)
         return;
     }
     state.isBikeMounted = true;
+    state.mouseFiring = state.mouseAiming = false;
     state.playerPosition = state.bikePosition;
     state.bikeSpeed = 0;
     Game::Get().ShowNotice(

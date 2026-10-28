@@ -286,6 +286,14 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     player.Number("salvage", level.player.salvage);
     player.Number("credits", level.player.credits);
     player.Number("kills", level.kills);
+    player.Bool("pistol_owned", level.loadout.HasPistol());
+    player.Text("equipped_slot", level.loadout.Selected() == combat::WeaponSlot::Unarmed   ? "unarmed"
+                                 : level.loadout.Selected() == combat::WeaponSlot::Primary ? "primary"
+                                                                                           : "secondary");
+    player.Bool("weapon_wheel_open", world.weaponWheel.visible);
+    player.Bool("aiming", tutorial::Game::Get().IsAiming());
+    player.Seconds("animation_phase", world.playerAnimation.Phase());
+    player.Seconds("aim_layer_weight", world.playerAnimation.AimWeight());
     player.Number("magazine_rounds", level.pistol.GetRounds());
     player.Number("magazine_capacity", level.pistol.GetMagazineSize());
     player.Bool("reloading", level.pistol.IsReloading());
@@ -296,6 +304,11 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     security.Number("wanted_stars", law.wanted);
     security.Number("heat", law.heat);
     security.Number("infamy", law.infamy);
+    security.Number("pending_infamy", law.pendingInfamy);
+    security.Bool("identified", law.identified);
+    security.Bool("response_started", law.responseStarted);
+    security.Seconds("pursuit_seconds", law.pursuitSeconds);
+    security.Seconds("initial_unseen_seconds", law.initialUnseenSeconds);
     security.Number("price_multiplier", tutorial::CivicJustice::PriceMultiplier());
     security.Number("officers", law.officers.size());
     security.Number("hospital_transfers", law.deaths);

@@ -166,6 +166,7 @@ struct MineState
     std::uint32_t seed = 0;
     MineQuest quest;
     PlayerStats player;
+    combat::PlayerLoadout loadout;
     combat::Pistol pistol;
     std::vector<Tile> tiles;
     std::vector<std::uint8_t> explored;
@@ -415,7 +416,7 @@ struct ChapterOneState
     bool kainJoined = false, vehicleRepaired = false, tradeProofFound = false;
     bool hostile = false, negotiated = false, ledgerFound = false, detailLedgerFound = false;
     bool comparisonStarted = false, recordsCompared = false, waterwayUnlocked = false;
-    float comparisonSeconds = 0, invulnerability = 0, muzzleFlash = 0;
+    float comparisonSeconds = 0, invulnerability = 0, muzzleFlash = 0, meleeSeconds = 0;
     bool mapVisible = true;
     std::vector<FrontierTile> tiles;
     std::vector<tutorial::Building> structures;
@@ -449,6 +450,7 @@ class FrontierCombat
   public:
     explicit FrontierCombat(ChapterOneLevel &owner);
     void Attack();
+    void Melee();
     void Update(float deltaSeconds);
 
   private:
@@ -497,6 +499,7 @@ class ChapterOneLevel final : public Level
     const char *Objective() const;
     float GetAimAngle() const;
     void Attack();
+    void Melee();
 
   private:
     ChapterOneState state;
@@ -516,9 +519,11 @@ class GameLevels
     static ChapterOneLevel &Chapter();
     static bool IsCombatActive();
     static float AimAngle();
+    static float FireAngle();
     static float MuzzleFlash();
     static Level *Active();
     static void Reset();
+    static void PrepareTestEntry(tutorial::TestStage stage);
 
   private:
     static GameLevels &Get();

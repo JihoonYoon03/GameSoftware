@@ -29,6 +29,7 @@
     <ClInclude Include="AssetCache.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="Animation.h"><Filter>헤더 파일</Filter></ClInclude>
     <ClInclude Include="Drawing.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -102,6 +103,7 @@
     <ClCompile Include="AssetCache.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Animation.cpp"><Filter>소스 파일</Filter></ClCompile>
     <ClCompile Include="Drawing.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <string>
+#include <vector>
 
 namespace models
 {
@@ -102,7 +103,8 @@ struct WorldScale
     static constexpr float pixelsPerMeter = 22;
     static constexpr float humanHeightMeters = 1.8f;
     static constexpr float characterScale = humanHeightMeters / (metersPerUnit * 1.26f);
-    static constexpr float aimHeightPixels = .9464f * 44 * characterScale;
+    // Neutral Aim_Base muzzle height in the current HUMAN_7H delivery.
+    static constexpr float aimHeightPixels = 1.00275f * 44 * characterScale;
 };
 enum class BuildingType : std::uint32_t
 {
@@ -183,6 +185,11 @@ struct CharacterPose
     bool walking = false, riding = false;
     float animationPhase = 0, recoil = 0, locomotionSpeed = 2.1f;
     float meleeSeconds = 0;
+    // Explicit graph inputs; legacy NPC callers retain their armed/forward locomotion defaults.
+    bool blended = false;
+    Gender gender = Gender::Male;
+    float locomotionPhase = 0, moveLeft = 0, moveForward = 0, aimWeight = 0, fireSeconds = 0;
+    float reloadProgress = -1;
     Point Apply(Point point, Joint joint) const;
 };
 // ============================================================================
@@ -214,7 +221,7 @@ struct Model
     bool ground = false;
     CoordinateSpace space = CoordinateSpace::Screen;
     std::uint32_t count = 0;
-    std::array<Part, 1024> parts = {};
+    std::vector<Part> parts;
 };
 struct VehicleModel
 {
@@ -270,14 +277,11 @@ class ModelLibrary
 };
 
 // ============================================================================
-// ModelFactory — vehicle, character, building variants
+// ModelFactory — imported meshes and small procedural effect geometry validation
 // ============================================================================
 class ModelFactory
 {
   public:
-    static void GenerateVehicle(VehicleModel &result, VehicleType type);
-    static void GenerateCharacter(Model &result, CharacterType type, Gender gender = Gender::Male);
-    static void GenerateBuilding(Model &result, BuildingType type);
     static bool ValidateModel(const Model &model);
 };
 } // namespace models

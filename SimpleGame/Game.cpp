@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include "Game.h"
 #include "Civic.h"
 #include "Hud.h"
@@ -13,6 +13,10 @@
 #include "Monitoring/Monitor.h"
 #include "Dependencies/glew.h"
 #include "Dependencies/freeglut.h"
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
 #include <algorithm>
 #include <cmath>
 
@@ -24,6 +28,89 @@ constexpr float kMovementSpeed = 3.2f;
 constexpr float kMaximumDeltaSeconds = 0.05f;
 constexpr float kCameraFollowRate = 5.0f;
 constexpr int kUpdateIntervalMilliseconds = 16;
+
+// ============================================================================
+// WeaponCursorCapture — confine the native cursor to the game's letterboxed canvas.
+// ============================================================================
+class WeaponCursorCapture
+{
+  public:
+    ~WeaponCursorCapture()
+    {
+        Release();
+    }
+    bool Refresh()
+    {
+        if (window && (!IsWindow(window) || IsIconic(window) || GetForegroundWindow() != window))
+        {
+            Release();
+            return false;
+        }
+        if (!window)
+        {
+            HWND candidate = GetActiveWindow();
+            DWORD process = 0;
+            GetWindowThreadProcessId(candidate, &process);
+            // CPU/hidden rendering checks have no visible game window; never capture another app.
+            if (!candidate || process != GetCurrentProcessId() || !IsWindowVisible(candidate) ||
+                GetForegroundWindow() != candidate)
+            {
+                return true;
+            }
+            window = candidate;
+            if (!GetClipCursor(&previous))
+            {
+                window = nullptr;
+                return false;
+            }
+        }
+        RECT client{};
+        POINT origin{};
+        if (!GetClientRect(window, &client) || !ClientToScreen(window, &origin))
+        {
+            Release();
+            return false;
+        }
+        float scale = (std::min)(client.right / float(kCanvasWidth), client.bottom / float(kCanvasHeight));
+        int width = (std::max)(1, int(kCanvasWidth * scale));
+        int height = (std::max)(1, int(kCanvasHeight * scale));
+        RECT next = {origin.x + (client.right - width) / 2, origin.y + (client.bottom - height) / 2, 0, 0};
+        next.right = next.left + width;
+        next.bottom = next.top + height;
+        if (width > 2 && height > 2)
+        {
+            InflateRect(&next, -1, -1);
+        }
+        RECT current{};
+        if ((!active || !EqualRect(&next, &bounds) || !GetClipCursor(&current) ||
+             !EqualRect(&next, &current)) &&
+            !ClipCursor(&next))
+        {
+            Release();
+            return false;
+        }
+        bounds = next;
+        active = true;
+        return true;
+    }
+    void Release()
+    {
+        RECT current{};
+        if (active && GetClipCursor(&current) && EqualRect(&current, &bounds))
+        {
+            // Preserve an earlier restriction, but never replace a different app's new capture.
+            ClipCursor(&previous);
+        }
+        active = false;
+        window = nullptr;
+    }
+
+  private:
+    HWND window = nullptr;
+    bool active = false;
+    RECT previous{}, bounds{};
+};
+WeaponCursorCapture weaponCursorCapture;
 } // namespace
 Game &Game::Get()
 {
@@ -125,7 +212,9 @@ void Game::UpdatePlayerMovement(float deltaSeconds)
 {
     profiling::Scope profileTimer(profiling::Timer::Movement);
     const Vector2 previous = state.playerPosition;
-    if (CivicJustice::IsExterior() && CivicJustice::State().playerImpact.seconds > 0 &&
+    // A mounted rider's body reaction must not disable the vehicle's controls.
+    if (!state.isBikeMounted && CivicJustice::IsExterior() &&
+        CivicJustice::State().playerImpact.seconds > 0 &&
         CivicJustice::State().playerImpact.response == BodyResponse::Knockdown)
     {
         state.movementAmount = state.movementSpeed = 0;
@@ -159,7 +248,10 @@ void Game::UpdatePlayerMovement(float deltaSeconds)
     // Invert the 2:1 isometric projection so WASD follows screen directions.
     float worldDeltaX = (screenX * .5f + screenY) * kMovementSpeed * deltaSeconds;
     float worldDeltaY = (screenY - screenX * .5f) * kMovementSpeed * deltaSeconds;
-    state.facingYaw = std::atan2(worldDeltaY, worldDeltaX);
+    if (!IsAiming())
+    {
+        state.facingYaw = std::atan2(worldDeltaY, worldDeltaX);
+    }
 
     Vector2 candidate = {previous.x + worldDeltaX, previous.y + worldDeltaY};
     state.playerPosition =
@@ -177,12 +269,15 @@ void Game::UpdateCamera(float deltaSeconds)
 }
 void Game::Reset()
 {
+    WeaponWheel::Close();
     game::SceneManager::Reset();
     game::GameLevels::Reset();
     // Keep the current window size when restarting the play session.
     const int viewportWidth = state.viewportWidth;
     const int viewportHeight = state.viewportHeight;
+    const UiPreferences preferences = state.uiPreferences;
     state = GameState{};
+    state.uiPreferences = preferences;
     state.viewportWidth = viewportWidth;
     state.viewportHeight = viewportHeight;
     state.lastUpdateMilliseconds = glutGet(GLUT_ELAPSED_TIME);
@@ -210,7 +305,140 @@ void Game::Resize(int width, int height)
 {
     state.viewportWidth = (std::max)(width, 1);
     state.viewportHeight = (std::max)(height, 1);
+    WeaponWheel::RefreshCursorCapture();
     MouseMotion(int(state.cursorWindowPosition.x), int(state.cursorWindowPosition.y));
+}
+const char *Game::StageName(TestStage stage)
+{
+    switch (stage)
+    {
+    case TestStage::Prologue:
+        return "서장 · 헤일로 시작";
+    case TestStage::Observatory:
+        return "전망대 · 스테이지 시작";
+    case TestStage::BikeUnlocked:
+        return "바이크 해금 · 광산 출발";
+    case TestStage::WeaponUnlocked:
+        return "권총 해금 · 광산 입구";
+    case TestStage::Mine:
+        return "광산 · 스테이지 시작";
+    case TestStage::ChapterOne:
+        return "1장 · 빛나는 개척지 시작";
+    default:
+        return "";
+    }
+}
+bool Game::EnterTestStage(TestStage stage)
+{
+    if (stage < TestStage::Prologue || stage >= TestStage::Count)
+    {
+        return false;
+    }
+    Reset();
+    game::GameLevels::PrepareTestEntry(stage);
+    if (stage == TestStage::Observatory)
+    {
+        state.isInsideHome = false;
+        state.isInObservatory = true;
+        state.playerPosition = {0, 2};
+    }
+    else if (stage == TestStage::BikeUnlocked)
+    {
+        state.isInsideHome = false;
+        state.isBikeMounted = true;
+        state.playerPosition = state.bikePosition;
+    }
+    else if (stage == TestStage::WeaponUnlocked || stage == TestStage::Mine)
+    {
+        state.isInsideHome = false;
+        state.mineReturnPosition = {Overworld::kMineEntrance.x - 1, Overworld::kMineEntrance.y};
+        state.playerPosition = state.mineReturnPosition;
+        state.bikePosition = {Overworld::kMineEntrance.x - 3, Overworld::kMineEntrance.y};
+        if (stage == TestStage::Mine)
+        {
+            game::GameLevels::Mine().Enter();
+        }
+    }
+    else if (stage == TestStage::ChapterOne)
+    {
+        game::GameLevels::Chapter().Enter();
+    }
+    state.cameraPosition = state.playerPosition;
+    ShowNotice(std::string("테스트 진입 / ") + StageName(stage) + " · 이전 필수 진행 완료 / 기본 무장: 맨손");
+    return true;
+}
+
+// ============================================================================
+// WeaponWheel
+// ============================================================================
+bool WeaponWheel::Open()
+{
+    auto &w = Game::Get().GetState();
+    if (w.weaponWheel.visible || w.isPaused || w.mapVisible || w.journalVisible || w.dialogueHistoryVisible ||
+        Dialogue::Active() || w.dialogue.suspended || HospitalRecovery::Active() || w.isBikeMounted ||
+        !w.cursorInsideViewport)
+    {
+        return false;
+    }
+    auto &wheel = w.weaponWheel;
+    wheel.visible = true;
+    wheel.qHeld = true;
+    // Keep room to point in every direction, even when Q is pressed at a window edge.
+    wheel.origin = {Game::Clamp(w.cursorPosition.x, 96, kCanvasWidth - 96),
+                    Game::Clamp(w.cursorPosition.y, 96, kCanvasHeight - 96)};
+    wheel.offset = {};
+    wheel.hovered = game::GameLevels::Mine().GetState().loadout.Selected();
+    w.mouseFiring = w.mouseAiming = false;
+    w.movementAmount = w.movementSpeed = 0;
+    std::fill(std::begin(w.pressedKeys), std::end(w.pressedKeys), false);
+    w.pressedKeys['q'] = true;
+    RefreshCursorCapture();
+    return wheel.visible;
+}
+void WeaponWheel::RefreshCursorCapture()
+{
+    auto &w = Game::Get().GetState();
+    if (w.weaponWheel.visible && !weaponCursorCapture.Refresh())
+    {
+        Close();
+        w.weaponWheel.qHeld = false;
+    }
+}
+void WeaponWheel::Motion()
+{
+    auto &w = Game::Get().GetState();
+    auto &wheel = w.weaponWheel;
+    if (!wheel.visible)
+    {
+        return;
+    }
+    wheel.offset = {w.cursorPosition.x - wheel.origin.x, w.cursorPosition.y - wheel.origin.y};
+    if (std::hypot(wheel.offset.x, wheel.offset.y) < 24)
+    {
+        wheel.hovered = game::GameLevels::Mine().GetState().loadout.Selected();
+        return;
+    }
+    // Three equal sectors: up = primary, lower-left = hands, lower-right = secondary.
+    float angle = std::atan2(wheel.offset.y, wheel.offset.x);
+    wheel.hovered = angle >= -5 * kPi / 6 && angle < -kPi / 6 ? combat::WeaponSlot::Primary
+                    : wheel.offset.x < 0                      ? combat::WeaponSlot::Unarmed
+                                                              : combat::WeaponSlot::Secondary;
+}
+void WeaponWheel::Close(bool commit)
+{
+    weaponCursorCapture.Release();
+    auto &w = Game::Get().GetState();
+    if (!w.weaponWheel.visible)
+    {
+        return;
+    }
+    if (commit)
+    {
+        game::GameLevels::Mine().GetState().loadout.Select(w.weaponWheel.hovered);
+    }
+    w.weaponWheel.visible = false;
+    w.mouseFiring = w.mouseAiming = false;
+    std::fill(std::begin(w.pressedKeys), std::end(w.pressedKeys), false);
 }
 void Game::KeyDown(unsigned char key, int, int)
 {
@@ -219,6 +447,42 @@ void Game::KeyDown(unsigned char key, int, int)
         return;
     }
     key = NormalizeKey(key);
+    if (key == 'q')
+    {
+        if (state.weaponWheel.qHeld)
+        {
+            return;
+        }
+        state.weaponWheel.qHeld = true;
+    }
+    if (state.weaponWheel.visible)
+    {
+        if (key == 27)
+        {
+            WeaponWheel::Close();
+        }
+        return;
+    }
+    if (key == 13)
+    {
+        if (state.dialogueEnterHeld)
+        {
+            return;
+        }
+        state.dialogueEnterHeld = true;
+    }
+    if (key == 'e' && state.interactionHeld)
+    {
+        return;
+    }
+    if (Hud::HandleKey(key))
+    {
+        if (key == 'e')
+        {
+            state.interactionHeld = true;
+        }
+        return;
+    }
     if (key == 27) // Escape
     {
         if (state.journalVisible || state.dialogueHistoryVisible)
@@ -232,45 +496,11 @@ void Game::KeyDown(unsigned char key, int, int)
             return;
         }
         state.isPaused = !state.isPaused;
-        state.mouseFiring = false;
+        state.mouseFiring = state.mouseAiming = false;
         std::fill(state.pressedKeys, state.pressedKeys + 256, false);
         return;
     }
-    if (state.isPaused)
-    {
-        if (key == 'r')
-        {
-            if (game::GameLevels::Chapter().IsActive())
-            {
-                game::GameLevels::Chapter().Leave();
-                state.isPaused = false;
-            }
-            else if (game::GameLevels::Mine().IsActive())
-            {
-                game::GameLevels::Mine().Restart();
-                state.isPaused = false;
-            }
-            else
-            {
-                Reset();
-            }
-        }
-        if (key == 'q')
-        {
-            glutLeaveMainLoop();
-        }
-        return;
-    }
-
     bool repeated = state.pressedKeys[key];
-    if (key == 13)
-    {
-        if (state.dialogueEnterHeld)
-        {
-            return;
-        }
-        state.dialogueEnterHeld = true;
-    }
     if (key == 'e' && state.interactionHeld)
     {
         return;
@@ -291,7 +521,7 @@ void Game::KeyDown(unsigned char key, int, int)
         state.dialogueHistoryVisible = key == 'h' && opening;
         state.dialogue.historyOffset = 0;
         state.mapVisible = false;
-        state.mouseFiring = false;
+        state.mouseFiring = state.mouseAiming = false;
         std::fill(std::begin(state.pressedKeys), std::end(state.pressedKeys), false);
         state.pressedKeys[key] = true;
         return;
@@ -334,7 +564,7 @@ void Game::KeyDown(unsigned char key, int, int)
     if (key == 'm')
     {
         state.mapVisible = !state.mapVisible;
-        state.mouseFiring = false;
+        state.mouseFiring = state.mouseAiming = false;
         std::fill(std::begin(state.pressedKeys), std::end(state.pressedKeys), false);
         state.pressedKeys['m'] = true;
         return;
@@ -343,11 +573,23 @@ void Game::KeyDown(unsigned char key, int, int)
     {
         return;
     }
+    if (key == 'q')
+    {
+        if (!repeated)
+        {
+            WeaponWheel::Open();
+        }
+        return;
+    }
     if (key == 'v' && !repeated)
     {
         if (game::GameLevels::Mine().IsActive())
         {
             game::GameLevels::Mine().Combat().Melee();
+        }
+        else if (game::GameLevels::Chapter().IsActive())
+        {
+            game::GameLevels::Chapter().Melee();
         }
         else
         {
@@ -371,7 +613,7 @@ void Game::KeyDown(unsigned char key, int, int)
         {
             game::GameLevels::Mine().Combat().Reload();
         }
-        if (key == 'q')
+        if (key == 'g' && !repeated)
         {
             game::GameLevels::Mine().UseRecoveryKit();
         }
@@ -383,7 +625,7 @@ void Game::KeyDown(unsigned char key, int, int)
         {
             game::GameLevels::Mine().Interact();
         }
-        if (key == 'q')
+        if (key == 'g' && !repeated)
         {
             game::GameLevels::Mine().UseRecoveryKit();
         }
@@ -399,14 +641,13 @@ void Game::KeyDown(unsigned char key, int, int)
     }
     if (key == '2')
     {
-        chapter.Enter(true);
+        EnterTestStage(TestStage::ChapterOne);
         return;
     }
     // Direct access for first-level iteration without replaying the tutorial.
     if (key == '1')
     {
-        state.isInObservatory = false;
-        game::GameLevels::Mine().Enter(true);
+        EnterTestStage(TestStage::Mine);
         return;
     }
     if (key == 'e')
@@ -417,6 +658,10 @@ void Game::KeyDown(unsigned char key, int, int)
 void Game::SpecialKeyDown(int key, int, int)
 {
     if (HospitalRecovery::Active())
+    {
+        return;
+    }
+    if (Hud::HandleSpecialKey(key))
     {
         return;
     }
@@ -459,6 +704,11 @@ void Game::SpecialKeyDown(int key, int, int)
 }
 void Game::KeyUp(unsigned char key, int, int)
 {
+    if (NormalizeKey(key) == 'q')
+    {
+        WeaponWheel::Close(true);
+        state.weaponWheel.qHeld = false;
+    }
     if (key == 13)
     {
         state.dialogueEnterHeld = false;
@@ -482,20 +732,40 @@ void Game::MouseMotion(int x, int y)
                             Clamp((y - top) * float(kCanvasHeight) / height, 0, float(kCanvasHeight))};
     if (!state.cursorInsideViewport)
     {
-        state.mouseFiring = false;
+        state.mouseFiring = state.mouseAiming = false;
+        if (state.weaponWheel.visible)
+        {
+            WeaponWheel::Close();
+        }
     }
+    WeaponWheel::Motion();
+    Hud::HandleMotion();
 }
 void Game::MouseButton(int button, int buttonState, int x, int y)
 {
     MouseMotion(x, y);
+    if (button == GLUT_RIGHT_BUTTON && buttonState == GLUT_UP)
+    {
+        state.mouseAiming = false;
+    }
+    if (state.weaponWheel.visible)
+    {
+        state.mouseFiring = state.mouseAiming = false;
+        return;
+    }
     if (HospitalRecovery::Active())
     {
-        state.mouseFiring = false;
+        state.mouseFiring = state.mouseAiming = false;
+        return;
+    }
+    if (Hud::HandlePointer(button, buttonState == GLUT_DOWN))
+    {
+        state.mouseFiring = state.mouseAiming = false;
         return;
     }
     if (state.mapVisible)
     {
-        state.mouseFiring = false;
+        state.mouseFiring = state.mouseAiming = false;
         if (buttonState == GLUT_DOWN && state.cursorInsideViewport && !state.isPaused)
         {
             if (button == GLUT_LEFT_BUTTON || button == GLUT_RIGHT_BUTTON)
@@ -512,40 +782,95 @@ void Game::MouseButton(int button, int buttonState, int x, int y)
                             !state.isPaused && state.cursorInsideViewport && !Dialogue::LocksWorld() &&
                             !state.journalVisible && !state.dialogueHistoryVisible;
     }
+    if (button == GLUT_RIGHT_BUTTON)
+    {
+        state.mouseAiming = buttonState == GLUT_DOWN && state.cursorInsideViewport && !state.isPaused &&
+                            !state.journalVisible && !state.dialogueHistoryVisible &&
+                            !Dialogue::LocksWorld() && !state.isBikeMounted &&
+                            game::GameLevels::Mine().GetState().loadout.IsPistolEquipped() &&
+                            (game::GameLevels::IsCombatActive() || CivicCombat::Available());
+    }
+}
+bool Game::IsAiming() const
+{
+    return state.mouseAiming && !state.isBikeMounted && !state.isPaused && !state.mapVisible &&
+           !state.weaponWheel.visible && !state.journalVisible && !state.dialogueHistoryVisible &&
+           !HospitalRecovery::Active() && !Dialogue::LocksWorld() &&
+           game::GameLevels::Mine().GetState().loadout.IsPistolEquipped() &&
+           (game::GameLevels::IsCombatActive() || CivicJustice::IsExterior());
+}
+models::CharacterPose Game::PlayerPose(float recoil) const
+{
+    bool armed = game::GameLevels::Mine().GetState().loadout.IsPistolEquipped() && !state.isBikeMounted &&
+                 (game::GameLevels::IsCombatActive() || CivicJustice::IsExterior());
+    auto pose = models::ModelRig::Pose(state.animationTimeSeconds * 10, state.movementAmount > 0, armed,
+                                       recoil, state.isBikeMounted, state.playerGender);
+    pose.locomotionSpeed = state.movementSpeed;
+    pose.meleeSeconds = game::GameLevels::Mine().IsActive() ? game::GameLevels::Mine().GetState().meleeSeconds
+                        : game::GameLevels::Chapter().IsActive()
+                            ? game::GameLevels::Chapter().GetState().meleeSeconds
+                        : CivicJustice::IsExterior() ? CivicJustice::State().meleeSeconds
+                                                     : 0;
+    state.playerAnimation.Apply(pose);
+    const auto &gun = game::GameLevels::Mine().GetState().pistol;
+    pose.reloadProgress = armed && gun.IsReloading() ? gun.GetReloadProgress() : -1;
+    if (!armed)
+    {
+        pose.aimWeight = pose.fireSeconds = 0;
+    }
+    return pose;
 }
 void Game::MouseEntry(int pointerState)
 {
     if (pointerState == GLUT_LEFT)
     {
-        state.mouseFiring = false;
+        if (state.weaponWheel.visible)
+        {
+            WeaponWheel::Close();
+        }
+        state.ui.pressed = -1;
+        state.mouseFiring = state.mouseAiming = false;
     }
 }
-void Game::Tick(int)
+void Game::Update(float deltaSeconds)
 {
-    profiling::Scope profileTimer(profiling::Timer::Update);
-    const int nowMilliseconds = glutGet(GLUT_ELAPSED_TIME);
-    float deltaSeconds =
-        Clamp((nowMilliseconds - state.lastUpdateMilliseconds) / 1000.f, 0, kMaximumDeltaSeconds);
-    state.lastUpdateMilliseconds = nowMilliseconds;
-
+    deltaSeconds = Clamp(deltaSeconds, 0, kMaximumDeltaSeconds);
     HospitalRecovery::Update(deltaSeconds);
-    if (!state.isPaused && !state.mapVisible && !HospitalRecovery::Active() && Dialogue::LocksWorld())
+    if (!state.weaponWheel.visible && !state.isPaused && !state.mapVisible && !HospitalRecovery::Active() &&
+        Dialogue::LocksWorld())
     {
         game::GameLevels::Chapter().Update(deltaSeconds);
     }
-    if (!state.isPaused && !state.mapVisible && !HospitalRecovery::Active() && !Dialogue::LocksWorld())
+    if (!state.weaponWheel.visible && !state.isPaused && !state.mapVisible && !HospitalRecovery::Active() &&
+        !Dialogue::LocksWorld())
     {
+        int healthBefore = game::GameLevels::Mine().GetState().player.health;
         state.animationTimeSeconds += deltaSeconds;
         if (!state.isComplete)
         {
             state.playTimeSeconds += deltaSeconds;
         }
-        state.noticeSecondsRemaining -= deltaSeconds;
+        if (!Dialogue::Active())
+        {
+            state.noticeSecondsRemaining -= deltaSeconds;
+        }
         game::Level *activeLevel = game::GameLevels::Active();
+        auto previous = state.playerPosition;
         if (!activeLevel || activeLevel->UsesWalkingControls())
         {
             UpdatePlayerMovement(deltaSeconds);
         }
+        if (IsAiming())
+        {
+            auto direction = game::MineLevel::GetAimDirection(game::GameLevels::AimAngle());
+            state.facingYaw = std::atan2(direction.y, direction.x);
+        }
+        models::Point velocity = deltaSeconds > 0
+                                     ? models::Point{(state.playerPosition.x - previous.x) / deltaSeconds,
+                                                     (state.playerPosition.y - previous.y) / deltaSeconds, 0}
+                                     : models::Point{};
+        state.playerAnimation.Update(deltaSeconds, velocity, state.facingYaw, IsAiming(),
+                                     state.isBikeMounted);
         if (activeLevel)
         {
             activeLevel->Update(deltaSeconds);
@@ -567,16 +892,37 @@ void Game::Tick(int)
             game::GameLevels::Chapter().Update(deltaSeconds);
         }
         HospitalRecovery::Update(0);
+        int healthAfter = game::GameLevels::Mine().GetState().player.health;
+        if (healthAfter < healthBefore && !HospitalRecovery::Active())
+        {
+            ShowNotice("피해 / 체력 -" + std::to_string(healthBefore - healthAfter));
+        }
         UpdateCamera(deltaSeconds);
         game::SceneManager::Update(deltaSeconds);
     }
-
+}
+void Game::Tick(int)
+{
+    profiling::Scope profileTimer(profiling::Timer::Update);
+    WeaponWheel::RefreshCursorCapture();
+    HWND activeWindow = GetActiveWindow();
+    if (activeWindow && IsWindowVisible(activeWindow) && GetForegroundWindow() != activeWindow)
+    {
+        state.mouseFiring = state.mouseAiming = false;
+        std::fill(std::begin(state.pressedKeys), std::end(state.pressedKeys), false);
+    }
+    const int nowMilliseconds = glutGet(GLUT_ELAPSED_TIME);
+    float deltaSeconds =
+        Clamp((nowMilliseconds - state.lastUpdateMilliseconds) / 1000.f, 0, kMaximumDeltaSeconds);
+    state.lastUpdateMilliseconds = nowMilliseconds;
+    Update(deltaSeconds);
     monitoring::GameMonitor::Get().Update();
-    glutSetCursor((game::GameLevels::IsCombatActive() || CivicCombat::Available()) && !state.mapVisible &&
-                          !state.isPaused && !Dialogue::LocksWorld() && !state.journalVisible &&
-                          !state.dialogueHistoryVisible
-                      ? GLUT_CURSOR_NONE
-                      : GLUT_CURSOR_INHERIT);
+    glutSetCursor(
+        (state.weaponWheel.visible || game::GameLevels::IsCombatActive() || CivicCombat::Available()) &&
+                !state.mapVisible && !state.isPaused && state.ui.screen == UiScreen::None &&
+                !Dialogue::LocksWorld() && !state.journalVisible && !state.dialogueHistoryVisible
+            ? GLUT_CURSOR_NONE
+            : GLUT_CURSOR_INHERIT);
     glutPostRedisplay();
     glutTimerFunc(kUpdateIntervalMilliseconds, GameCallbacks::Tick, 0);
 }
@@ -721,6 +1067,7 @@ bool Dialogue::Start(const std::string &id, std::vector<DialogueLine> lines,
     {
         return false;
     }
+    WeaponWheel::Close();
     if (d.suspended && d.sceneId == id)
     {
         return Resume();
@@ -748,7 +1095,7 @@ bool Dialogue::Start(const std::string &id, std::vector<DialogueLine> lines,
     d.pages.clear();
     for (size_t index = 0; index < lines.size(); ++index)
     {
-        auto rows = Wrap(lines[index].text, 896, 19);
+        auto rows = Wrap(lines[index].text, 816, 20);
         constexpr size_t pageLines = 3;
         for (size_t row = 0; row < rows.size(); row += pageLines)
         {
@@ -792,7 +1139,7 @@ bool Dialogue::Start(const std::string &id, std::vector<DialogueLine> lines,
     if (d.blocking)
     {
         std::fill(std::begin(world.pressedKeys), std::end(world.pressedKeys), false);
-        world.mouseFiring = false;
+        world.mouseFiring = world.mouseAiming = false;
         world.movementAmount = world.movementSpeed = 0;
         world.bikeSpeed = 0;
     }
@@ -826,6 +1173,7 @@ bool Dialogue::Advance()
     {
         d.scenes[d.sceneId].pendingChoice = options[size_t(d.selection)].id;
     }
+    Game::Get().GetState().ui.pressed = -1;
     if (++d.page < d.pages.size())
     {
         d.selection = -1;
@@ -836,7 +1184,7 @@ bool Dialogue::Advance()
     {
         auto &world = Game::Get().GetState();
         std::fill(std::begin(world.pressedKeys), std::end(world.pressedKeys), false);
-        world.mouseFiring = false;
+        world.mouseFiring = world.mouseAiming = false;
     }
     auto id = d.sceneId;
     auto &record = d.scenes[id];
@@ -880,7 +1228,7 @@ bool Dialogue::Resume()
     d.active = d.blocking = true;
     d.suspended = false;
     w.journalVisible = w.dialogueHistoryVisible = false;
-    w.mouseFiring = false;
+    w.mouseFiring = w.mouseAiming = false;
     std::fill(std::begin(w.pressedKeys), std::end(w.pressedKeys), false);
     return true;
 }
@@ -1019,7 +1367,10 @@ std::vector<std::string> Dialogue::Journal()
 void Game::ShowNotice(const std::string &message)
 {
     state.noticeText = message;
-    state.noticeSecondsRemaining = 12;
+    // Long notices keep every page visible long enough to read; short events stay brief.
+    const auto pages = Hud::TextPages(message, 294, 16, 4).size();
+    state.noticeDurationSeconds = pages > 1 ? 6.f * pages : 4.f;
+    state.noticeSecondsRemaining = state.noticeDurationSeconds;
 }
 bool Game::IsPositionBlocked(Vector2 position)
 {
@@ -1267,6 +1618,29 @@ void Game::InteractWithNearbyTarget()
             return;
         }
         state.mineReturnPosition = state.playerPosition;
+        auto &mine = game::GameLevels::Mine().GetState();
+        if (!mine.loadout.HasPistol())
+        {
+            Dialogue::Start(
+                "MQ00/mine-weapon",
+                {{"safety", "리아", "광산 입구",
+                  "안쪽 통신이 끊겼어. 구조 신호를 보낸 사람들을 찾으려면 직접 들어가야 해."},
+                 {"pistol", "리아", "장비 인계",
+                  "이 코일 권총을 가져가. 위험할 때만 써. Q를 누른 채 마우스를 오른쪽으로 "
+                  "움직이면 보조 무장을 고를 수 있어. 재장전은 R이야."}},
+                [](const std::string &) {
+                    bool granted = game::GameLevels::Mine().GetState().loadout.GrantPistol();
+                    game::GameLevels::Mine().Enter();
+                    if (granted)
+                    {
+                        auto &g = Game::Get();
+                        g.ShowNotice(
+                            "장비 획득 / 개척자 권총 · 보조 무장 사용 가능. Q 홀드 + 마우스로 선택하세요.\n" +
+                            g.GetState().noticeText);
+                    }
+                });
+            return;
+        }
         game::GameLevels::Mine().Enter();
         return;
     }
@@ -1548,6 +1922,7 @@ void GameCallbacks::Tick(int timer)
 }
 void GameCallbacks::Shutdown()
 {
+    WeaponWheel::Close();
     GameRenderer::Get().Shutdown();
 }
 } // namespace tutorial

@@ -1,0 +1,359 @@
+{
+  "revision": "aim_directional_v1",
+  "date": "2026-10-27",
+  "skeleton": "HUMAN_7H",
+  "bones": 23,
+  "clip_count": 16,
+  "root_translation": "in_place",
+  "root_yaw_degrees": 0,
+  "axes": {
+    "blend_x": "character local +X = left",
+    "blend_y": "character local -Y = forward",
+    "input": "world velocity rotated into the fixed aim-facing actor frame; meters/second"
+  },
+  "samples": [
+    {
+      "clip": "Aim_Base",
+      "velocity_mps": [
+        0,
+        0
+      ],
+      "phase": "constant"
+    },
+    {
+      "clip": "Aim_Walk_Forward",
+      "velocity_mps": [
+        0.0,
+        0.9
+      ],
+      "cycle_seconds": 1.0,
+      "phase_zero": "left contact"
+    },
+    {
+      "clip": "Aim_Walk_ForwardLeft",
+      "velocity_mps": [
+        0.53033009,
+        0.53033009
+      ],
+      "cycle_seconds": 1.0,
+      "phase_zero": "left contact"
+    },
+    {
+      "clip": "Aim_Walk_Left",
+      "velocity_mps": [
+        0.65,
+        0.0
+      ],
+      "cycle_seconds": 1.0,
+      "phase_zero": "left contact"
+    },
+    {
+      "clip": "Aim_Walk_BackLeft",
+      "velocity_mps": [
+        0.45961941,
+        -0.45961941
+      ],
+      "cycle_seconds": 1.0,
+      "phase_zero": "left contact"
+    },
+    {
+      "clip": "Aim_Walk_Back",
+      "velocity_mps": [
+        0.0,
+        -0.65
+      ],
+      "cycle_seconds": 1.0,
+      "phase_zero": "left contact"
+    },
+    {
+      "clip": "Aim_Walk_BackRight",
+      "velocity_mps": [
+        -0.45961941,
+        -0.45961941
+      ],
+      "cycle_seconds": 1.0,
+      "phase_zero": "left contact"
+    },
+    {
+      "clip": "Aim_Walk_Right",
+      "velocity_mps": [
+        -0.65,
+        0.0
+      ],
+      "cycle_seconds": 1.0,
+      "phase_zero": "left contact"
+    },
+    {
+      "clip": "Aim_Walk_ForwardRight",
+      "velocity_mps": [
+        -0.53033009,
+        0.53033009
+      ],
+      "cycle_seconds": 1.0,
+      "phase_zero": "left contact"
+    },
+    {
+      "clip": "Aim_Run_Forward",
+      "velocity_mps": [
+        0.0,
+        1.8
+      ],
+      "cycle_seconds": 0.6666666666666666,
+      "phase_zero": "left contact"
+    },
+    {
+      "clip": "Aim_Run_ForwardLeft",
+      "velocity_mps": [
+        1.06066017,
+        1.06066017
+      ],
+      "cycle_seconds": 0.6666666666666666,
+      "phase_zero": "left contact"
+    },
+    {
+      "clip": "Aim_Run_Left",
+      "velocity_mps": [
+        1.25,
+        0.0
+      ],
+      "cycle_seconds": 0.6666666666666666,
+      "phase_zero": "left contact"
+    },
+    {
+      "clip": "Aim_Run_BackLeft",
+      "velocity_mps": [
+        0.84852814,
+        -0.84852814
+      ],
+      "cycle_seconds": 0.6666666666666666,
+      "phase_zero": "left contact"
+    },
+    {
+      "clip": "Aim_Run_Back",
+      "velocity_mps": [
+        0.0,
+        -1.2
+      ],
+      "cycle_seconds": 0.6666666666666666,
+      "phase_zero": "left contact"
+    },
+    {
+      "clip": "Aim_Run_BackRight",
+      "velocity_mps": [
+        -0.84852814,
+        -0.84852814
+      ],
+      "cycle_seconds": 0.6666666666666666,
+      "phase_zero": "left contact"
+    },
+    {
+      "clip": "Aim_Run_Right",
+      "velocity_mps": [
+        -1.25,
+        0.0
+      ],
+      "cycle_seconds": 0.6666666666666666,
+      "phase_zero": "left contact"
+    },
+    {
+      "clip": "Aim_Run_ForwardRight",
+      "velocity_mps": [
+        -1.06066017,
+        1.06066017
+      ],
+      "cycle_seconds": 0.6666666666666666,
+      "phase_zero": "left contact"
+    }
+  ],
+  "triangles": [
+    [
+      0,
+      1,
+      2
+    ],
+    [
+      1,
+      9,
+      10
+    ],
+    [
+      1,
+      10,
+      2
+    ],
+    [
+      0,
+      2,
+      3
+    ],
+    [
+      2,
+      10,
+      11
+    ],
+    [
+      2,
+      11,
+      3
+    ],
+    [
+      0,
+      3,
+      4
+    ],
+    [
+      3,
+      11,
+      12
+    ],
+    [
+      3,
+      12,
+      4
+    ],
+    [
+      0,
+      4,
+      5
+    ],
+    [
+      4,
+      12,
+      13
+    ],
+    [
+      4,
+      13,
+      5
+    ],
+    [
+      0,
+      5,
+      6
+    ],
+    [
+      5,
+      13,
+      14
+    ],
+    [
+      5,
+      14,
+      6
+    ],
+    [
+      0,
+      6,
+      7
+    ],
+    [
+      6,
+      14,
+      15
+    ],
+    [
+      6,
+      15,
+      7
+    ],
+    [
+      0,
+      7,
+      8
+    ],
+    [
+      7,
+      15,
+      16
+    ],
+    [
+      7,
+      16,
+      8
+    ],
+    [
+      0,
+      8,
+      1
+    ],
+    [
+      8,
+      16,
+      9
+    ],
+    [
+      8,
+      9,
+      1
+    ]
+  ],
+  "evaluation": [
+    "Locate the velocity in a blend triangle; use non-negative barycentric weights summing to one.",
+    "Evaluate all moving clips at the same normalized phase; never reset phase when direction or speed changes.",
+    "Blend bone-local translations linearly and rotations by hemisphere-correct quaternion interpolation.",
+    "Advance phase by dt times the weighted cycle frequency, normalized over moving samples; hold the last phase at zero speed.",
+    "Keep actor facing on the aim target; apply translation through game physics. Clamp speeds outside the outer run polygon or scale playback deliberately."
+  ],
+  "locomotion_mask_reference": "animation_blending.json:masks.human_lower_body",
+  "aim_mask_reference": "animation_blending.json:masks.human_upper_body",
+  "source_reference": "Aim_Base",
+  "loop": true,
+  "game_integration_included": false,
+  "blend_floor_correction": {
+    "stage": "after local-transform blending, before skinning",
+    "sole_bind_points": {
+      "L": [
+        [
+          0.115,
+          -0.195,
+          0
+        ],
+        [
+          0.115,
+          0.065,
+          0
+        ]
+      ],
+      "R": [
+        [
+          -0.115,
+          -0.195,
+          0
+        ],
+        [
+          -0.115,
+          0.065,
+          0
+        ]
+      ]
+    },
+    "formula": "correction_z = max(0, ground_z + 0.001m - min(transformed_sole_points.z)); add to local pelvis translation, leave actor/root/collision unchanged",
+    "reason": "FK rotation interpolation can lower the sole even when each source clip has planted feet",
+    "measured_report": "../Validation/directional_motion_report.json"
+  },
+  "reference_method": "Hand-authored on the original rig after viewing Mixamo public previews; no downloaded motion data or character meshes imported.",
+  "references": [
+    {
+      "url": "https://www.mixamo.com/#/?page=1&query=walking&type=Motion%2CMotionPack",
+      "observed": [
+        "Walking — Walking While Aiming Rifle",
+        "Walking Backwards — Walking Backwards While Aiming Rifle"
+      ],
+      "used_for": "stable sight line, shoulder/pelvis separation, cautious backward steps"
+    },
+    {
+      "url": "https://www.mixamo.com/#/?page=1&query=strafe&type=Motion%2CMotionPack",
+      "observed": [
+        "Pistol Strafe — Strafe Left With An Aimed Pistol"
+      ],
+      "used_for": "elbows below wrists, torso facing the target, uncrossed lateral steps"
+    },
+    {
+      "url": "https://www.mixamo.com/#/?page=1&query=running&type=Motion%2CMotionPack",
+      "observed": [
+        "Unarmed Run Forward"
+      ],
+      "used_for": "sagittal arm swing, bent elbows and contralateral timing"
+    }
+  ]
+}

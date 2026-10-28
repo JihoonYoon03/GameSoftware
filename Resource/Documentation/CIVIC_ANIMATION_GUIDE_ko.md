@@ -1,8 +1,17 @@
 # 도시 충돌·치안 대응 애니메이션 납품
 
-`CIVIC_ANIMATION_REQUEST.md`의 인체 P0/P1/P2와 차량 반응을 제작했다. HUMAN_7H는 기존 15개를 유지하고 28개를 더한 43개 클립이다. 차량 5종에는 총 21개 액션을 추가했다. 기존 메시·스킨·재질·23본·바인드·부품 원점은 변경하지 않았다.
+> 2026-10-28 갱신: 인체는 기존 59개에 [권총 운반·재장전 4개](PISTOL_LAYERS_ko.md)를 더한 총 63클립입니다. 검토 장면은 37~43의 7개입니다. 편집 원본과 GLB는 [실루엣 우선·최대 200삼각형 정책](POLYGON_BUDGET_ko.md)을 적용했습니다. [상체·방향별 이동 안내](AIM_LOCOMOTION_ko.md)를 함께 확인합니다.
+
+
+
+
+`CIVIC_ANIMATION_REQUEST.md`의 인체 P0/P1/P2와 차량 반응을 제작했다. HUMAN_7H는 기존 43개, 조준 걷기·달리기 16개, 최신 `ANIMATION_BLEND_REQUEST.md`의 운반/재장전 4개를 더한 63개 클립이다. 차량 5종에는 총 21개 액션을 추가했다. 기존 메시·스킨·재질·23본·바인드·부품 원점은 변경하지 않았다.
 
 `Source/Civic_Animations.blend`를 열면 실제 스킨이 연결된 편집/재생 장면이 보인다. 원본 전체는 `Source/Erma_Resource_Library.blend`에도 들어 있다. 기존 캐릭터 10종과 차량 5종의 기본/교체 조립체 GLB를 각각 갱신했다. 파트 GLB와 다른 확장은 유지한다.
+
+## 조준 상태의 방향별 이동
+
+`Aim_Walk_*` 8개와 `Aim_Run_*` 8개는 몸의 조준 방향을 유지하는 전진·후진·좌우·대각선 루프이다. 발 디딤 위상을 공유하며 [별도 연결 안내](AIM_LOCOMOTION_ko.md)와 `aim_locomotion_blending.json`의 속도 표본·접지 보정식을 따른다.
 
 ## 클립과 연결
 
@@ -59,13 +68,14 @@ Vehicle_Disabled의 시작 이벤트로 발광을 0.12배로 줄이고 기존 �
 
 [주요 결과 요약](../Preview/Civic/delivery_overview.jpg) · [보행 개선 전/후](../Preview/Civic/Before_After.gif) · [기립 동작](../Preview/Civic/GetUp_Back.gif) · [바이크 접점](../Preview/Civic/Bike_Contact.gif)
 
-2026-10-26 최신 렌더로 GIF/접촉 시트 28개씩을 갱신했다. 두 Blender 원본의 기본 장면·카메라·43개 인체 액션과 검토 장면 5개의 실제 스킨 재생도 확인했다(`civic_project_report.json`).
+2026-10-27 렌더에 상체 개선과 16개 방향별 이동을 반영했다. 두 Blender 원본에서 59개 인체 액션과 6개 검토 장면의 실제 스킨 재생을 확인한다(`civic_project_report.json`).
 
 - `37_Civic_Animation_Review`: 개별 인체 모션을 Action Editor에서 선택해 재생.
 - `38_Motion_Before_After`: 보존한 기존 Walk와 개선 Walk 비교.
 - `39_Civic_Body_Profile_Review`: 남녀 Lean/Normal/Heavy와 두꺼운 전투복·장비.
 - `40_Bike_Rider_Contact_Review`: 바이크와 탑승자 동시 반응.
 - `41_Vehicle_Impact_Review`: 차량 5종 반동.
+- `42_Aim_Directional_Review`: 조준 방향을 유지하는 8방향 걷기 비교. `Aim_Run_*`으로 달리기 비교 가능.
 
 `Validation/civic_animation_authoring.json`은 메시·스킨 해시와 바인드 보존, 실제 부품 정점의 바닥 보정을 기록한다. `civic_animation_roundtrip.json`은 캐릭터 10종·차량 기본/교체 조립체 10개를 다시 가져와 클립 길이·스킨 변화·바닥·루프·접속 경계·장비/머리 간섭·고정 차체를 검사한 결과다. `civic_contact_report.json`은 접지·그립·탑승 접점 검사다. `Preview/Civic`에는 실제 Blender 렌더, 접촉 시트, GIF가 있다.
 

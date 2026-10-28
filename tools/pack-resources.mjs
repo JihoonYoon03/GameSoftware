@@ -6,6 +6,7 @@ import crypto from 'node:crypto';
 import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { roadPlanCatalog } from './road-plan-catalog.mjs';
+import { buildInputHashes, maxAnimationClips, maxPackBytes, writeBuildSourceList } from './resource-pack-inputs.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const resources = path.join(root, 'Resource');
@@ -176,6 +177,9 @@ function bounds(vertices) {
     return [0, 1].map(which => [0, 1, 2].map(axis => vertices.reduce((v, p) => which ? Math.max(v, p[axis]) : Math.min(v, p[axis]), which ? -Infinity : Infinity)));
 }
 const assets = [];
+const animationSamples = new Map();
+const animationRigs = new Map();
+const aimBlendSpace = JSON.parse(fs.readFileSync(path.join(resources, 'Documentation/aim_locomotion_blending.json')));
 function convert(name, relative, kind = 'prop', options = {}) {
     const template = load(relative), skin = template.json.skins?.[0], jointNames = skin?.joints.map(i => template.json.nodes[i].name) ?? ['root'];
     if (jointNames.length >= 32) throw Error('Skin palette exceeds 31 joints: ' + relative);
@@ -218,16 +222,16 @@ function convert(name, relative, kind = 'prop', options = {}) {
                 const surface = palette === 3 ? 4 : /Skin/.test(materialName) ? 7 : /Glass/.test(materialName) ? 3
                     : /Cloth|Fabric|Hair/.test(materialName) ? 1 : /Rubber/.test(materialName) ? 5 : /Rock|Soil|Grass|Sand|Mine/.test(materialName) ? 6 : 2;
                 const visibility = /Weapon_CoilPistol/.test(nodeName) ? 1 : /Hair/.test(nodeName) ? 2 : 0;
+                const transform = nodeSkin ? identity() : world[i];
+                const normalMatrix = inverse(multiply(c, transform));
+                const slot = /Engine_.*_L$/.test(nodeName) ? 'engine.L' : /Engine_.*_R$/.test(nodeName) ? 'engine.R' : /Nose_/.test(nodeName) ? 'nose' : null;
                 for (const [index] of accessor(data, primitive.indices)) {
-                    const transform = nodeSkin ? identity() : world[i];
                     const source = point(transform, positions[index]);
                     const pos = point(c, source.map((v, axis) => v + offset[axis]));
                     if (kind === 'vehicle' || kind === 'aircraft') {
-                        const slot = /Engine_.*_L$/.test(nodeName) ? 'engine.L' : /Engine_.*_R$/.test(nodeName) ? 'engine.R' : /Nose_/.test(nodeName) ? 'nose' : null;
                         if (slot && palette === 3) attachments[slot].push(pos);
                         if (slot && slot !== 'nose') engineSurfaces[slot].push(pos);
                     }
-                    const normalMatrix = inverse(multiply(c, transform));
                     const n = [0, 1, 2].map(r => normals[index].reduce((sum, v, axis) => sum + normalMatrix[r * 4 + axis] * v, 0));
                     const length = Math.hypot(...n); if (length < 1e-10) throw Error('Zero normal');
                     let color = base;
@@ -321,45 +325,70 @@ function convert(name, relative, kind = 'prop', options = {}) {
         sockets[4] = socket('driver_socket');
         if (kind === 'aircraft') sockets[5] = ['engine.L', 'engine.R'].map(n => jointNames.indexOf(n)).concat(0);
     }
-    const clips = [];
-    if (skin) {
+    // The same source rig is used by both body profiles and all hair variants.
+    // Geometry fitting never changes these palettes; sample a source/basis only once.
+    const animationKey = JSON.stringify([relative, kind, c]);
+    if (skin && !animationRigs.has(animationKey)) {
+        const nodeParents = new Map();
+        template.json.nodes.forEach((n, i) => (n.children ?? []).forEach(child => nodeParents.set(child, i)));
         const inverseBinds = accessor(template, skin.inverseBindMatrices);
-        const sourceClips = template.json.animations ?? [];
-        const selected = kind === 'human' ? [...sourceClips] : sourceClips.filter(a => ['Reference_A', 'Idle', 'Walk', 'Run', 'Aim_Base', 'Attack_Fire', 'Attack_Melee', 'Jump_Air',
-            'Vehicle_Reference', 'Hover_Idle', 'Cruise', 'Boost', 'Steer_Left', 'Steer_Right',
-            'Aircraft_Reference', 'Flight_Idle', 'Bank_Left', 'Bank_Right', 'LandingGear_Deploy',
-            'LandingGear_Retract', 'Canopy_Open', 'Canopy_Close', 'Cargo_Open', 'Cargo_Close'].includes(a.name));
-        if (kind === 'human') selected.push({ name: 'Ride' });
-        for (const clip of selected) {
-            let duration = Math.max(1 / 30, ...((clip.samplers ?? []).map(s => accessor(template, s.input).at(-1)[0])));
-            if (clip.name === 'Ride') duration = 1 / 30;
-            const frames = Math.max(2, Math.round(duration * 30) + 1), matrices = [], muzzles = [];
-            for (let frame = 0; frame < frames; ++frame) {
-                let overrides = sampleOverrides(template, clip, Math.min(duration, frame / 30));
-                if (kind === 'aircraft' && ['Cruise', 'Boost', 'Flight_Idle'].includes(clip.name)) {
-                    const gear = sourceClips.find(a => a.name === 'LandingGear_Retract');
-                    for (const [node, transform] of sampleOverrides(template, gear, 1))
-                        if (/gear/i.test(template.json.nodes[node].name)) overrides.set(node, transform);
+        const parents = skin.joints.map(node => {
+            let parent = nodeParents.get(node);
+            while (parent !== undefined && !skin.joints.includes(parent)) parent = nodeParents.get(parent);
+            return parent === undefined ? -1 : skin.joints.indexOf(parent);
+        });
+        const bind = inverseBinds.map(m => multiply(c, multiply(inverse(m), invC)));
+        const human = kind === 'human';
+        const soles = human ? Object.entries(aimBlendSpace.blend_floor_correction.sole_bind_points).flatMap(([side, points]) =>
+            points.map(p => ({ bone: jointNames.indexOf('foot.' + side), point: point(c, [p[0], p[2], -p[1]]) }))) : [];
+        animationRigs.set(animationKey, { parents, bind, names: jointNames,
+            samples: human ? aimBlendSpace.samples : [], triangles: human ? aimBlendSpace.triangles : [], soles });
+    }
+    let clips = animationSamples.get(animationKey);
+    if (!clips) {
+        clips = [];
+        if (skin) {
+            const inverseBinds = accessor(template, skin.inverseBindMatrices);
+            const sourceClips = template.json.animations ?? [];
+            const selected = kind === 'human' ? [...sourceClips] : sourceClips.filter(a => ['Reference_A', 'Idle', 'Walk', 'Run', 'Aim_Base', 'Attack_Fire', 'Attack_Melee', 'Jump_Air',
+                'Vehicle_Reference', 'Hover_Idle', 'Cruise', 'Boost', 'Steer_Left', 'Steer_Right',
+                'Aircraft_Reference', 'Flight_Idle', 'Bank_Left', 'Bank_Right', 'LandingGear_Deploy',
+                'LandingGear_Retract', 'Canopy_Open', 'Canopy_Close', 'Cargo_Open', 'Cargo_Close'].includes(a.name));
+            if (kind === 'human') selected.push({ name: 'Ride' });
+            for (const clip of selected) {
+                let duration = Math.max(1 / 30, ...((clip.samplers ?? []).map(s => accessor(template, s.input).at(-1)[0])));
+                if (clip.name === 'Ride') duration = 1 / 30;
+                const frames = Math.max(2, Math.round(duration * 30) + 1), matrices = [], muzzles = [];
+                for (let frame = 0; frame < frames; ++frame) {
+                    let overrides = sampleOverrides(template, clip, Math.min(duration, frame / 30));
+                    if (kind === 'aircraft' && ['Cruise', 'Boost', 'Flight_Idle'].includes(clip.name)) {
+                        const gear = sourceClips.find(a => a.name === 'LandingGear_Retract');
+                        for (const [node, transform] of sampleOverrides(template, gear, 1))
+                            if (/gear/i.test(template.json.nodes[node].name)) overrides.set(node, transform);
+                    }
+                    if (clip.name === 'Ride') {
+                        overrides = sampleOverrides(template, sourceClips.find(a => a.name === 'Jump_Air'), .22);
+                        const aim = sampleOverrides(template, sourceClips.find(a => a.name === 'Aim_Base'), 0);
+                        for (const [node, pose] of aim) if (/spine|chest|neck|head|clavicle|arm|hand|weapon|muzzle/.test(template.json.nodes[node].name)) overrides.set(node, pose);
+                    }
+                    const world = globals(template, overrides);
+                    const pelvis = socket('pelvis', world);
+                    for (let j = 0; j < skin.joints.length; ++j) {
+                        let m = multiply(c, multiply(world[skin.joints[j]], multiply(inverseBinds[j], invC)));
+                        if (clip.name === 'Ride') m[14] -= pelvis[2] - .17;
+                        matrices.push(...m);
+                    }
+                    muzzles.push(...socket('muzzle', world));
                 }
-                if (clip.name === 'Ride') {
-                    overrides = sampleOverrides(template, sourceClips.find(a => a.name === 'Jump_Air'), .22);
-                    const aim = sampleOverrides(template, sourceClips.find(a => a.name === 'Aim_Base'), 0);
-                    for (const [node, pose] of aim) if (/spine|chest|neck|head|clavicle|arm|hand|weapon|muzzle/.test(template.json.nodes[node].name)) overrides.set(node, pose);
-                }
-                const world = globals(template, overrides);
-                const pelvis = socket('pelvis', world);
-                for (let j = 0; j < skin.joints.length; ++j) {
-                    let m = multiply(c, multiply(world[skin.joints[j]], multiply(inverseBinds[j], invC)));
-                    if (clip.name === 'Ride') m[14] -= pelvis[2] - .17;
-                    matrices.push(...m);
-                }
-                muzzles.push(...socket('muzzle', world));
+                clips.push({ name: clip.name, duration, frames, matrices, muzzles });
             }
-            clips.push({ name: clip.name, duration, frames, matrices, muzzles });
         }
+        animationSamples.set(animationKey, clips);
     }
     if (!vertices.length || vertices.length % 3 || vertices.some(v => v.length !== 21 || v.some(n => !Number.isFinite(n)))) throw Error('Invalid converted mesh: ' + name);
-    assets.push({ name, relative, vertices, boneCount: skin?.joints.length ?? 0, clips, lo, hi, physical, sockets });
+    if (clips.length > maxAnimationClips) throw Error('Animation clip limit exceeded: ' + name);
+    assets.push({ name, relative, vertices, boneCount: skin?.joints.length ?? 0, clips,
+        rig: animationRigs.get(animationKey), lo, hi, physical, sockets });
 }
 
 const recipes = JSON.parse(fs.readFileSync(path.join(resources, 'Documentation/assembly_recipes.json')));
@@ -444,11 +473,8 @@ for (const name of Object.keys(scenery.assemblies)) {
 for (const [state, index] of [['Amber', 1], ['Green', 2]])
     convert('scenery/City_TrafficSignal_' + state, 'Scenery/City_TrafficSignal', 'prop', { signalState: index });
 
-const transit = JSON.parse(fs.readFileSync(path.join(resources, 'Documentation/transit_modules.json')));
-for (const name of Object.keys(transit.modules)) convert('transit/' + name, 'Transit/' + name, 'prop');
-for (const lanes of [2, 4, 6]) for (const length of [.5, 1, 1.5])
-    convert(`transit/Trim_Road_${lanes}L_${length}`, `Transit/Transit_Road_${lanes}L_Straight_4m`, 'prop', { trimLength: length });
-convert('transit/Trim_Walk_W2_0.5', 'Transit/Transit_Walk_W2_Straight_2m', 'prop', { trimLength: .5 });
+// RoadPlan replaced the old road/walk kit. Only its independent aerial guide is still placed.
+convert('transit/Transit_AirGuide_Straight_16m', 'Transit/Transit_AirGuide_Straight_16m', 'prop');
 
 const roadPlan = roadPlanCatalog(root, checking);
 for (const name of Object.keys(roadPlan.modules)) convert('transit/' + name, 'RoadPlan/' + name, 'prop');
@@ -457,23 +483,56 @@ const chunks = [];
 function u32(value) { const b = Buffer.alloc(4); b.writeUInt32LE(value); chunks.push(b); }
 function f32(values) { const b = Buffer.alloc(values.length * 4); values.forEach((v, i) => b.writeFloatLE(v, i * 4)); chunks.push(b); }
 function text(value) { const b = Buffer.from(value, 'utf8'); u32(b.length); chunks.push(b); }
-u32(0x41524d45); u32(1); u32(assets.length);
+const banks = [], bankIndices = new Map();
+const sampledBankIndices = new Map();
 for (const asset of assets) {
-    text(asset.name); text(asset.relative); u32(asset.vertices.length); u32(asset.boneCount); u32(asset.clips.length);
+    asset.bank = 0;
+    if (!asset.clips.length) continue;
+    if (sampledBankIndices.has(asset.clips)) { asset.bank = sampledBankIndices.get(asset.clips); continue; }
+    const start = chunks.length;
+    u32(asset.boneCount); u32(asset.clips.length);
+    for (let j = 0; j < asset.boneCount; ++j) {
+        text(asset.rig.names[j]); u32(asset.rig.parents[j] + 1); f32(asset.rig.bind[j]);
+    }
+    u32(asset.rig.samples.length);
+    for (const sample of asset.rig.samples) {
+        if (!asset.clips.some(c => c.name === sample.clip)) throw Error('Missing blend-space clip: ' + sample.clip);
+        text(sample.clip); f32(sample.velocity_mps);
+    }
+    u32(asset.rig.triangles.length);
+    for (const triangle of asset.rig.triangles) for (const index of triangle) u32(index);
+    u32(asset.rig.soles.length);
+    for (const sole of asset.rig.soles) { u32(sole.bone); f32(sole.point); }
+    for (const clip of asset.clips) { text(clip.name); u32(clip.frames); f32([clip.duration]); f32(clip.matrices); f32(clip.muzzles); }
+    const bytes = Buffer.concat(chunks.splice(start));
+    const hash = crypto.createHash('sha256').update(bytes).digest('hex');
+    if (!bankIndices.has(hash)) { banks.push(bytes); bankIndices.set(hash, banks.length); }
+    asset.bank = bankIndices.get(hash);
+    sampledBankIndices.set(asset.clips, asset.bank);
+}
+u32(0x41524d45); u32(3); u32(assets.length); u32(banks.length);
+chunks.push(...banks);
+for (const asset of assets) {
+    text(asset.name); text(asset.relative); u32(asset.vertices.length); u32(asset.boneCount); u32(asset.bank);
     f32([...asset.lo, ...asset.hi, ...asset.physical, ...asset.sockets.flat()]);
     f32(asset.vertices.flat());
-    for (const clip of asset.clips) { text(clip.name); u32(clip.frames); f32([clip.duration]); f32(clip.matrices); f32(clip.muzzles); }
 }
 const binary = Buffer.concat(chunks), digest = crypto.createHash('sha256').update(binary).digest('hex');
-const report = { schema: 'game_resource_pack_v1', converter: 'tools/pack-resources.mjs', bytes: binary.length, sha256: digest,
+if (binary.length > maxPackBytes) throw Error('Resource pack exceeds the runtime size limit');
+const report = { schema: 'game_resource_pack_v3', converter: 'tools/pack-resources.mjs', bytes: binary.length, sha256: digest,
+    animationBanks: banks.length,
+    buildInputs: buildInputHashes(root),
     sources: Object.fromEntries([...inputs].sort()), assets: assets.map(a => ({ name: a.name, source: a.relative, triangles: a.vertices.length / 3,
-        bones: a.boneCount, physical_world_units: a.physical, bounds: [a.lo, a.hi], clips: a.clips.map(c => c.name) })) };
+        bones: a.boneCount, animationBank: a.bank, physical_world_units: a.physical, bounds: [a.lo, a.hi], clips: a.clips.map(c => c.name) })) };
 if (checking) {
     if (!fs.existsSync(path.join(output, 'game-assets.bin')) || !fs.readFileSync(path.join(output, 'game-assets.bin')).equals(binary)) throw Error('Resource pack is stale; regenerate it.');
-    if (JSON.stringify(JSON.parse(fs.readFileSync(path.join(output, 'manifest.json'))).sources) !== JSON.stringify(report.sources)) throw Error('Resource source hashes changed');
+    const previous = JSON.parse(fs.readFileSync(path.join(output, 'manifest.json')));
+    if (JSON.stringify(previous.sources) !== JSON.stringify(report.sources)) throw Error('Resource source hashes changed');
+    if (JSON.stringify(previous.buildInputs) !== JSON.stringify(report.buildInputs)) throw Error('Resource build inputs changed');
 } else {
     fs.mkdirSync(output, { recursive: true });
     fs.writeFileSync(path.join(output, 'game-assets.bin'), binary);
     fs.writeFileSync(path.join(output, 'manifest.json'), JSON.stringify(report, null, 2) + '\n');
+    writeBuildSourceList(root, report);
 }
 console.log(JSON.stringify({ mode: checking ? 'check' : 'convert', assets: assets.length, bytes: binary.length, sha256: digest }));

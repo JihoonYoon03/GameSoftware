@@ -3,6 +3,7 @@
 #include "Drawing.h"
 #include "Overworld.h"
 #include "ResidentAI.h"
+#include "ResourceAssets.h"
 #include <algorithm>
 #include <cassert>
 #include <chrono>
@@ -22,6 +23,9 @@ game::PlayerStats &Stats()
 void Exterior()
 {
     Game::Get().Reset();
+    auto &loadout = game::GameLevels::Mine().GetState().loadout;
+    loadout.GrantPistol();
+    loadout.Select(combat::WeaponSlot::Secondary);
     World().isInsideHome = false;
     World().residents.clear();
     World().playerPosition = World().cameraPosition = {2, 0};
@@ -31,6 +35,9 @@ void Aim(Vector2 target)
     World().cursorPosition = WorldCamera::ToViewport(
         Drawing::WorldToScreen(target.x, target.y, models::WorldScale::aimHeightPixels));
     World().cursorInsideViewport = true;
+    World().mouseAiming = true;
+    auto direction = game::MineLevel::GetAimDirection(game::GameLevels::AimAngle());
+    World().facingYaw = std::atan2(direction.y, direction.x);
 }
 Resident Person(Vector2 position)
 {
@@ -61,20 +68,39 @@ void TestSeverityAndMemory()
 {
     Exterior();
     auto &law = CivicJustice::State();
-    CivicJustice::Report(Offense::Discharge, World().playerPosition);
-    assert(law.heat == 12 && law.wanted == 0);
-    CivicJustice::Report(Offense::Discharge, World().playerPosition);
-    assert(law.heat == 12); // burst debounce
+    for (auto offense : {Offense::Discharge, Offense::VehicleDamage, Offense::RecklessDriving})
+    {
+        CivicJustice::Report(offense, World().playerPosition);
+    }
+    assert(law.heat == 0 && law.wanted == 0 && law.infamy == 0 && law.pendingInfamy == 0);
     CivicJustice::Report(Offense::Assault, World().playerPosition);
-    assert(law.wanted == 1);
-    float assault = law.heat;
-    CivicJustice::Report(Offense::Homicide, World().playerPosition);
-    assert(law.heat - assault > 100 && law.wanted >= 3);
-    for (int i = 0; i < 10; ++i)
+    assert(law.wanted == 1 && law.infamy == 0 && law.pendingInfamy > 0);
+    for (int i = 0; i < 30; ++i)
     {
         CivicJustice::Report(Offense::OfficerKilled, World().playerPosition);
     }
-    assert(law.wanted == 5 && law.heat <= 1000 && law.infamy == 100);
+    assert(law.wanted == 1 && law.heat == 1000 && law.infamy == 0);
+    // Both elapsed case time and a new qualified offense are required for each escalation.
+    for (float gate : {25.f, 60.f, 105.f, 165.f})
+    {
+        int previous = law.wanted;
+        World().isInsideHome = true;
+        CivicJustice::Update(gate - law.pursuitSeconds - .1f);
+        CivicJustice::Report(Offense::Assault, World().playerPosition);
+        assert(law.wanted == previous);
+        CivicJustice::Update(.11f);
+        assert(law.wanted == previous); // Waiting alone never adds another star.
+        CivicJustice::Report(Offense::Assault, World().playerPosition);
+        assert(law.wanted == previous + 1);
+    }
+    World().isInsideHome = false;
+    SecurityOfficer witness;
+    witness.position = {World().playerPosition.x - 1, World().playerPosition.y};
+    witness.facing.yaw = 0;
+    witness.lastKnown = World().playerPosition;
+    law.officers.push_back(witness);
+    CivicJustice::Update(.01f);
+    assert(law.wanted == 5 && law.identified && law.infamy == 100 && law.pendingInfamy == 0);
     assert(CivicJustice::ShopPrice(100) == 175 && CivicJustice::ShopPrice(-10) == 0);
     World().isInsideHome = true;
     CivicJustice::Update(150);
@@ -199,11 +225,12 @@ void TestPolice()
     World().playerPosition = World().cameraPosition = Open(1);
     auto &law = CivicJustice::State();
     law.playerGrace = 10000;
-    for (int i = 0; i < 6; ++i)
-    {
-        CivicJustice::Report(Offense::Homicide, World().playerPosition);
-    }
-    assert(law.wanted == 5);
+    law.wanted = 5;
+    law.heat = 1000;
+    law.identified = true;
+    law.infamy = 80;
+    law.sinceCrime = 0;
+    law.lastCrime = World().playerPosition;
     size_t seen = 0;
     auto started = std::chrono::steady_clock::now();
     for (int i = 0; i < 1000; ++i)
@@ -236,6 +263,7 @@ void TestPolice()
     officer.lastKnown = World().playerPosition;
     officer.tier = 1;
     officer.health = 100;
+    officer.facing.yaw = 3.14159265f;
     law.officers.push_back(officer);
     law.playerGrace = 0;
     law.playerImpact = {};
@@ -253,6 +281,97 @@ void TestPolice()
     auto infamy = law.infamy;
     assert(CivicCombat::DamageOfficer(0, 999, {1, 0}));
     assert(law.infamy >= infamy);
+}
+void TestHighSpeedOverlapRecovery()
+{
+    auto block = [](Vector2 p) { return std::fabs(p.x) < 1.1f && std::fabs(p.y) < 2.5f; };
+    auto freed = BodyCollision::Slide({0, 0}, {0, 0}, block);
+    assert(!block(freed) && Game::Distance({0, 0}, freed) < 1.3f);
+    auto wall = [](Vector2 p) { return p.x > 0 && p.x < .025f; };
+    auto stopped = BodyCollision::Slide({-4, 0}, {4, 1}, wall);
+    assert(stopped.x <= 0 && stopped.y > .8f); // Sweep a thin obstacle, even for a large displacement.
+    for (int orientation = 0; orientation < 3; ++orientation)
+    {
+        Exterior();
+        auto center = Open(0);
+        World().playerPosition = World().cameraPosition = center;
+        auto &traffic = Overworld::Traffic();
+        for (int i = 0; i < 120; ++i)
+        {
+            traffic.Update(World(), 1.f / 60);
+        }
+        auto found =
+            std::find_if(traffic.Vehicles().begin(), traffic.Vehicles().end(), [&](const TrafficVehicle &c) {
+                return traffic.RenderElevation(size_t(&c - traffic.Vehicles().data())) < .1f;
+            });
+        assert(found != traffic.Vehicles().end());
+        auto car = *found;
+        // Keep production mesh/ground lane data, but control the collision pose and velocity.
+        auto &cars = const_cast<std::vector<TrafficVehicle> &>(traffic.Vehicles());
+        cars.assign(1, car);
+        cars[0].position = center;
+        cars[0].previousPosition = {center.x - 4, center.y};
+        cars[0].yaw = cars[0].previousYaw = orientation * tutorial::kPi / 4;
+        cars[0].speed = 12;
+        World().residents.clear();
+        auto separated = BodyCollision::MovePlayer(center, center);
+        assert(Game::Distance(center, separated) > .5f && !CivicJustice::Solid(separated, .18f));
+        auto &w = World();
+        w.isBikeMounted = true;
+        w.bikeYaw = cars[0].yaw + .7f;
+        w.bikeElevation = 0;
+        w.bikeSafePoseValid = false;
+        bool parked = false;
+        for (int ring = 1; ring <= 12 && !parked; ++ring)
+        {
+            for (int i = 0; i < 32; ++i)
+            {
+                float a = i * tutorial::kPi / 16;
+                Vector2 p = {center.x + std::cos(a) * ring * .25f, center.y + std::sin(a) * ring * .25f};
+                if (!BodyCollision::BikeBlocked(p, w.bikeYaw, 0))
+                {
+                    w.playerPosition = w.bikePosition = p;
+                    BodyCollision::RecoverBike();
+                    parked = true;
+                    break;
+                }
+            }
+        }
+        assert(parked && w.bikeSafePoseValid);
+        // Fast contact first embeds and rotates the chassis; the post-contact pass must validate
+        // its entire footprint, restore an unoccupied pose and still allow the next escape input.
+        w.playerPosition = w.bikePosition = center;
+        w.bikeYaw += .6f;
+        w.bikeSpeed = Overworld::kBikeBoostSpeed;
+        CivicJustice::State().playerImpact.invulnerability = 1000;
+        assert(BodyCollision::BikeBlocked(w.bikePosition, w.bikeYaw, 0));
+        BodyCollision::VehicleContacts(.05f);
+        assert(!BodyCollision::BikeBlocked(w.bikePosition, w.bikeYaw, w.bikeElevation));
+        assert(Game::Distance(w.playerPosition, w.bikePosition) < .001f);
+        // With no history (for example, a moving car reaches a newly mounted bike), radial
+        // recovery must also escape a full vehicle-width overlap rather than remain pinned.
+        w.bikeSafePoseValid = false;
+        w.playerPosition = w.bikePosition = center;
+        BodyCollision::RecoverBike();
+        assert(!BodyCollision::BikeBlocked(w.bikePosition, w.bikeYaw, w.bikeElevation));
+        w.pressedKeys['s'] = true;
+        auto before = w.playerPosition;
+        for (int i = 0; i < 30; ++i)
+        {
+            Overworld::UpdateBike(w, 1.f / 60);
+        }
+        if (Game::Distance(before, w.playerPosition) < .1f)
+        {
+            w.pressedKeys['s'] = false;
+            w.pressedKeys['w'] = true;
+            for (int i = 0; i < 30; ++i)
+            {
+                Overworld::UpdateBike(w, 1.f / 60);
+            }
+        }
+        assert(Game::Distance(before, w.playerPosition) > .1f);
+    }
+    Game::Get().Reset();
 }
 void TestSecuritySpreadAndEvasion()
 {
@@ -295,6 +414,284 @@ void TestSecuritySpreadAndEvasion()
     law.bullets.push_back({point, {1, 0}, 32, 20, 100, false});
     CivicCombat::Update(.2f);
     assert(law.bullets.empty() && Stats().health == health);
+}
+void TestMountedImpactControls()
+{
+    Exterior();
+    auto &g = Game::Get();
+    auto &w = World();
+    auto &impact = CivicJustice::State().playerImpact;
+    const auto center = Open(0);
+    w.playerPosition = w.cameraPosition = center;
+    auto &traffic = Overworld::Traffic();
+    for (int i = 0; i < 120; ++i)
+    {
+        traffic.Update(w, 1.f / 60);
+    }
+    auto found =
+        std::find_if(traffic.Vehicles().begin(), traffic.Vehicles().end(), [&](const TrafficVehicle &c) {
+            return traffic.RenderElevation(size_t(&c - traffic.Vehicles().data())) < .1f;
+        });
+    assert(found != traffic.Vehicles().end());
+    auto car = *found;
+    auto &cars = const_cast<std::vector<TrafficVehicle> &>(traffic.Vehicles());
+    cars.assign(1, car);
+    cars[0].position = cars[0].previousPosition = center;
+    cars[0].speed = Overworld::kBikeBoostSpeed;
+    w.isBikeMounted = true;
+    w.bikePosition = center;
+    w.bikeSpeed = Overworld::kBikeBoostSpeed;
+    w.bikeSafePoseValid = false;
+    CivicJustice::State().playerGrace = 0;
+    impact = {};
+    BodyCollision::VehicleContacts(1.f / 60);
+    assert(w.isBikeMounted && Stats().health > 0 && Stats().health < Stats().maxHealth);
+    assert(impact.response == BodyResponse::Knockdown && impact.seconds > 0);
+
+    // Isolate the rider reaction from geometric separation, then run the actual game update
+    // (not UpdateBike directly). The former check skipped this input gate and disabled damage.
+    cars.clear();
+    w.playerPosition = w.bikePosition = center;
+    w.bikeYaw = 0;
+    w.bikeSpeed = 0;
+    w.bikeSafePoseValid = false;
+    float seconds = impact.seconds;
+    g.KeyDown('d', 0, 0);
+    g.Update(1.f / 60);
+    g.KeyUp('d', 0, 0);
+    assert(w.bikeYaw > .01f); // Steering remains available during the rider's impact reaction.
+    assert(impact.seconds < seconds && impact.seconds > 0);
+    assert(Game::Distance(w.playerPosition, w.bikePosition) < .001f);
+    g.KeyDown('s', 0, 0);
+    auto before = w.playerPosition;
+    for (int i = 0; i < 10; ++i)
+    {
+        g.Update(1.f / 60);
+    }
+    assert(w.bikeSpeed < 0 && Game::Distance(before, w.playerPosition) > .01f);
+    for (int i = 0; i < 40; ++i)
+    {
+        g.Update(1.f / 60);
+    }
+    assert(impact.seconds == 0 && impact.response == BodyResponse::None);
+    assert(Game::Distance(w.playerPosition, w.bikePosition) < .001f);
+    g.KeyUp('s', 0, 0);
+    g.KeyDown('w', 0, 0);
+    for (int i = 0; i < 10; ++i)
+    {
+        g.Update(1.f / 60);
+    }
+    assert(w.bikeSpeed > 0);
+    g.KeyUp('w', 0, 0);
+    for (int i = 0; i < 30; ++i)
+    {
+        g.Update(1.f / 60);
+    }
+    Overworld::ToggleBike(w);
+    assert(!w.isBikeMounted);
+    before = w.playerPosition;
+    g.KeyDown('w', 0, 0);
+    for (int i = 0; i < 5; ++i)
+    {
+        g.Update(1.f / 60);
+    }
+    assert(Game::Distance(before, w.playerPosition) > .01f);
+    g.KeyUp('w', 0, 0);
+    // Pedestrians still experience the existing short knockdown and displacement.
+    CivicJustice::State().playerGrace = 0;
+    impact = {};
+    CivicCombat::DamagePlayer(5, {4, 0});
+    assert(impact.response == BodyResponse::Knockdown);
+    g.KeyDown('w', 0, 0);
+    g.Update(1.f / 60);
+    assert(w.movementAmount == 0 && impact.seconds > 0);
+    for (int i = 0; i < 42; ++i)
+    {
+        g.Update(1.f / 60);
+    }
+    assert(impact.response == BodyResponse::None && w.movementAmount > 0);
+    g.KeyUp('w', 0, 0);
+    g.Reset();
+}
+void TestUnidentifiedEscapeAndVision()
+{
+    Exterior();
+    auto &law = CivicJustice::State();
+    World().playerPosition = World().cameraPosition = Open(0);
+    law.infamy = 35;
+    CivicJustice::Report(Offense::Assault, World().playerPosition);
+    law.spawnSeconds = 1000;
+    CivicJustice::Update(30);
+    assert(law.wanted == 1 && !law.responseStarted && law.initialUnseenSeconds == 0 && law.infamy == 35);
+    SecurityOfficer officer;
+    officer.position = World().playerPosition;
+    officer.position.x -= 1;
+    officer.lastKnown = officer.position;
+    officer.facing.yaw = 3.14159265f;
+    officer.navigationSeconds = 1000;
+    assert(!CivicJustice::CanSee(officer, World().playerPosition));
+    law.officers.push_back(officer);
+    CivicJustice::Update(.01f);
+    assert(law.responseStarted && !law.identified && law.initialUnseenSeconds == 0);
+    CivicJustice::Report(Offense::Assault, World().playerPosition);
+    assert(law.responseStarted && law.initialUnseenSeconds == 0);
+    // Stay indoors while responders search the last reported location. Only simulation time counts.
+    World().isInsideHome = true;
+    CivicJustice::Update(19.9f);
+    assert(law.wanted == 1 && law.infamy == 35 && law.pendingInfamy > 0);
+    CivicJustice::Report(Offense::Assault, World().playerPosition);
+    assert(law.initialUnseenSeconds == 19.9f); // Another crime does not restart the first-response clock.
+    CivicJustice::Update(.11f);
+    assert(law.wanted == 0 && law.heat == 0 && law.infamy == 35 && law.pendingInfamy == 0);
+    Exterior();
+    World().playerPosition = Open(0);
+    CivicJustice::Report(Offense::Assault, World().playerPosition);
+    officer.position = {World().playerPosition.x - 1, World().playerPosition.y};
+    officer.lastKnown = World().playerPosition;
+    officer.facing.yaw = 0;
+    assert(CivicJustice::CanSee(officer, World().playerPosition));
+    assert(!CivicJustice::CanSee(officer, {officer.position.x, officer.position.y + 2}));
+    assert(!CivicJustice::CanSee(officer, {officer.position.x + 27, officer.position.y}));
+    assert(!CivicJustice::CanSee(officer, World().playerPosition, 1));
+    law.officers.push_back(officer);
+    CivicJustice::Update(.01f);
+    assert(law.identified && law.infamy > 0 && law.pendingInfamy == 0);
+    float established = law.infamy;
+    World().isInsideHome = true;
+    law.wanted = 5;
+    law.heat = 1000;
+    CivicJustice::Update(19.9f);
+    assert(law.wanted == 5 && law.heat == 1000 && law.infamy == established);
+    // Being seen again restarts the continuous twenty-second escape window.
+    World().isInsideHome = false;
+    law.officers.front().facing.yaw = 0;
+    law.officers.front().route.clear();
+    CivicJustice::Update(.01f);
+    assert(law.unseenSeconds == 0 && law.wanted == 5);
+    World().isInsideHome = true;
+    CivicJustice::Update(19.9f);
+    assert(law.wanted == 5 && law.heat == 1000);
+    CivicJustice::Report(Offense::Assault, World().playerPosition);
+    established = law.infamy;
+    CivicJustice::Update(.1f);
+    assert(law.wanted == 5 && law.heat == 1000); // A new qualifying crime also restarts the window.
+    CivicJustice::Update(19.9f);
+    assert(law.wanted == 0 && law.heat == 0 && law.infamy == established);
+    // Lower levels also clear in one step, with no gradual heat decay beforehand.
+    for (int level = 1; level < 5; ++level)
+    {
+        law.wanted = level;
+        law.heat = level * 180.f;
+        law.identified = law.responseStarted = true;
+        law.sinceCrime = law.unseenSeconds = 0;
+        CivicJustice::Update(19.9f);
+        assert(law.wanted == level && law.heat == level * 180.f);
+        CivicJustice::Update(.1f);
+        assert(law.wanted == 0 && law.heat == 0 && law.infamy == established);
+    }
+    // A wall blocks the same rays used by the minimap cone and by detection.
+    Exterior();
+    auto p = Open(0);
+    World().buildings = {{p.x + 1, p.y - 1, 2, 2, 100}};
+    CivicJustice::Reset(World());
+    officer.position = p;
+    officer.facing.yaw = 0;
+    assert(!CivicJustice::CanSee(officer, {p.x + 4, p.y}));
+    assert(CivicJustice::SightDistance(officer, 0) < 4);
+}
+void TestQualifyingDamageAndAircraft()
+{
+    Exterior();
+    auto &law = CivicJustice::State();
+    Aim({World().playerPosition.x + 3, World().playerPosition.y});
+    CivicCombat::Fire();
+    CivicCombat::Update(.05f);
+    assert(law.heat == 0 && law.pendingInfamy == 0);
+    auto &traffic = Overworld::Traffic();
+    for (int i = 0; i < 240; ++i)
+    {
+        traffic.Update(World(), 1.f / 60);
+    }
+    assert(traffic.Vehicles().size() > 1);
+    auto id = traffic.Vehicles()[0].id;
+    assert(traffic.DamageVehicle(id, 1) && law.heat == 0);
+    assert(traffic.DamageVehicle(id, 999) && law.wanted == 1 && law.pendingInfamy > 0);
+    float heat = law.heat;
+    assert(!traffic.DamageVehicle(id, 999) && law.heat == heat);
+    auto &empty = const_cast<TrafficVehicle &>(traffic.Vehicles()[1]);
+    empty.occupied = false;
+    assert(traffic.DamageVehicle(empty.id, 999) && law.heat == heat);
+    World().residents = {Person({2, 0})};
+    assert(CivicCombat::DamageResident(0, 10, {1, 0}, false) && law.heat == heat);
+    assert(CivicCombat::DamageLandmark(0, 1, false) && law.heat == heat);
+    Exterior();
+    auto &air = Overworld::Flights();
+    for (int i = 0; i < 240; ++i)
+    {
+        air.Update(World(), .05f);
+    }
+    assert(air.Aircraft().size() > 1);
+    auto first = air.Aircraft()[0].id;
+    assert(air.DamageAircraft(first, 1) && law.heat == 0);
+    assert(air.DamageAircraft(first, 999) && law.wanted == 1);
+    heat = law.heat;
+    assert(!air.DamageAircraft(first, 999) && law.heat == heat);
+    auto &unmanned = const_cast<AircraftActor &>(air.Aircraft()[1]);
+    unmanned.occupied = false;
+    assert(air.DamageAircraft(unmanned.id, 999) && law.heat == heat);
+    // Real weapon input selects a visible aircraft's elevation and uses a travelling 3D projectile.
+    Exterior();
+    for (int i = 0; i < 200; ++i)
+    {
+        Overworld::Flights().Update(World(), .05f);
+    }
+    bool hit = false;
+    for (const auto &craft : Overworld::Flights().Aircraft())
+    {
+        const auto &mesh = models::ResourceAssets::Get(
+            models::ModelLibrary::Aircraft(craft.type, craft.alternate).resourceId);
+        models::Transform3D transform;
+        transform.yaw = craft.yaw;
+        transform.roll = craft.bank;
+        transform.position.z = craft.altitude;
+        auto center =
+            transform.Apply({(mesh.minimum.x + mesh.maximum.x) * .5f, (mesh.minimum.y + mesh.maximum.y) * .5f,
+                             (mesh.minimum.z + mesh.maximum.z) * .5f});
+        for (Vector2 offset : {Vector2{-8, 0}, {8, 0}, {0, -8}, {0, 8}})
+        {
+            Vector2 origin = {craft.position.x + offset.x, craft.position.y + offset.y};
+            if (CivicJustice::Solid(origin, .3f) || !CivicJustice::ClearLine(origin, craft.position))
+            {
+                continue;
+            }
+            World().playerPosition = World().cameraPosition = origin;
+            World().cursorPosition = WorldCamera::ToViewport(Drawing::WorldToScreen(
+                craft.position.x + center.x, craft.position.y + center.y, center.z * 44));
+            World().mouseAiming = true;
+            game::GameLevels::Mine().GetState().pistol.Reset();
+            law.airBullets.clear();
+            law.bullets.clear();
+            int before = craft.health;
+            CivicCombat::Fire();
+            if (law.airBullets.empty())
+            {
+                continue;
+            }
+            assert(craft.health == before);
+            CivicCombat::Update(.7f);
+            if (craft.health < before)
+            {
+                hit = true;
+                assert(law.heat == 0);
+                break;
+            }
+        }
+        if (hit)
+        {
+            break;
+        }
+    }
+    assert(hit);
 }
 void TestHospitalAllCauses()
 {
@@ -347,8 +744,12 @@ int main()
     TestSeverityAndMemory();
     TestFireMeleeAndWalls();
     TestBodiesAndVehicles();
+    TestHighSpeedOverlapRecovery();
+    TestMountedImpactControls();
     TestPolice();
     TestSecuritySpreadAndEvasion();
+    TestUnidentifiedEscapeAndVision();
+    TestQualifyingDamageAndAircraft();
     TestHospitalAllCauses();
     Game::Get().Reset();
     std::cout

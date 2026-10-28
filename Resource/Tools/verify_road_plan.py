@@ -1,6 +1,7 @@
 """Independent checks against delivered GLBs, not just the construction parameters."""
 import json
 import math
+import zipfile
 from collections import Counter,defaultdict
 from pathlib import Path
 from verify_resource_pack import read_glb,accessor
@@ -10,6 +11,10 @@ KIT=json.loads((ROOT/'Documentation/road_plan_modules.json').read_text(encoding=
 MODS=KIT['modules']
 CAT=json.loads((ROOT/'Documentation/asset_catalog.json').read_text(encoding='utf-8'))
 PARTS={a['id']:a for a in CAT['assets'] if a.get('expansion')=='road_plan_v1'}
+BASE=json.loads(zipfile.ZipFile(ROOT/'Source/Archives/Pre200Delivery_20261026.zip').read('Documentation/road_plan_modules.json'))['modules']
+for name,info in MODS.items():
+    assert info['collision_envelope']==BASE[name]['collision_envelope'],(name,'physical envelope changed')
+    assert info['ports']==BASE[name]['ports'],(name,'connection contract changed')
 REPORT=dict(modules_checked=0,standalone_parts_checked=0,physical_ports_checked=0,connections_checked=0,
             max_triangles=0,max_port_position_error_m=0,max_port_tangent_error_degrees=0,
             max_normal_tangent_dot=0,min_triangle_area_m2=999,min_piecewise_linear_walk_width_m=2,ramps={},clearance_checks=[],errors=[])
@@ -64,10 +69,10 @@ for name,info in MODS.items():
                     if n[2]>0 and n[2]/length(n)>.65:
                         geo['tops'][role].extend([p,q,r]);geo['triangles'][role].append((p,q,r,n))
                         for x,y in [(p,q),(q,r),(r,p)]:geo['boundary'][role][tuple(sorted([key(x),key(y)]))]+=1
-            assert count==PARTS[pid]['triangles']<=500,(pid,'part budget/count changed',count)
+            assert count==PARTS[pid]['triangles']<=PARTS[pid]['triangle_budget']<=200,(pid,'part budget/count changed',count)
             REPORT['max_triangles']=max(REPORT['max_triangles'],count)
             geo['vertices']+=vertices;geo['part_vertices'][pid]=vertices
-            expected=next((c['bounds'] for c in info['collision_envelope'] if c['part']==pid),None)
+            expected=info['render_bounds'][pid]
             if expected:
                 for k in range(3):assert abs(min(v[k] for v in vertices)-expected['min'][k])<1e-4 and abs(max(v[k] for v in vertices)-expected['max'][k])<1e-4
         assert len({p['id'] for p in info['ports']})==len(info['ports'])
@@ -115,7 +120,7 @@ for pid,a in PARTS.items():
     try:
         doc,buf=read_glb(ROOT/f'Export/RoadPlan/Parts/{pid}.glb')
         assert len(doc['meshes'])==1
-        assert sum(len(accessor(doc,buf,p['indices']))//3 for p in doc['meshes'][0]['primitives'])==a['triangles']<=500
+        assert sum(len(accessor(doc,buf,p['indices']))//3 for p in doc['meshes'][0]['primitives'])==a['triangles']<=a['triangle_budget']<=200
         REPORT['standalone_parts_checked']+=1
     except Exception as exc:REPORT['errors'].append(f'{pid}: {exc}')
 

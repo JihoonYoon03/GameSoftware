@@ -77,4 +77,4 @@ PressureDoor_Rig는 root와 leaf로 이루어진 2본 스킨입니다. Door_Open
 
 ## 도시 반응 추가 납품
 
-인체는 기존 15개에 28개를 추가한 43개 클립입니다. 인체 모션의 편집 타임라인은 30fps, GLB 샘플링은 60Hz이며 길이는 동일합니다. 방향별 피격·넘어짐·회복·사망, 도주, 제압 사격과 차량 충격은 `CIVIC_ANIMATION_GUIDE_ko.md`와 `civic_animation_contract.json`을 따릅니다. 게임용 합성 Ride는 별도이며, 새 Ride_Base를 자동 연결하지 않습니다. 기존 생물/문/비행체의 클립은 유지했습니다.
+인체는 기존 43개 + 조준 이동 16개 + 권총 운반/재장전 4개의 총 63클립입니다. [상체 개선·8방향 걷기/달리기](AIM_LOCOMOTION_ko.md), [권총 운반·재장전 레이어](PISTOL_LAYERS_ko.md)를 참고합니다. 앞으로 제작 시 Mixamo 동작 미리보기를 기본 레퍼런스로 사용합니다. 인체 모션의 편집 타임라인은 30fps, GLB 샘플링은 60Hz이며 길이는 동일합니다. 방향별 피격·넘어짐·회복·사망, 도주, 제압 사격과 차량 충격은 `CIVIC_ANIMATION_GUIDE_ko.md`와 `civic_animation_contract.json`을 따릅니다. 게임용 합성 Ride는 별도이며, 새 Ride_Base를 자동 연결하지 않습니다. 기존 생물/문/비행체의 클립은 유지했습니다.

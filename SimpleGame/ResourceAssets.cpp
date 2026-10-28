@@ -27,15 +27,11 @@ class Reader
   public:
     explicit Reader(const std::filesystem::path &path) : file(path, std::ios::binary | std::ios::ate)
     {
-        if (!file)
+        // Detailed meshes plus all authored human clips can exceed the old 128 MiB cache limit.
+        if (!file || file.tellg() < 12 || file.tellg() > 512 * 1024 * 1024)
         {
-            throw std::runtime_error("Cannot open resource pack: " + path.u8string() +
-                                     ". Rebuild the game to generate and deploy Resource/Runtime.");
-        }
-        // Detailed geometry and the expanded human animation set exceed the old 128 MiB limit.
-        if (file.tellg() < 12 || file.tellg() > 512LL * 1024 * 1024)
-        {
-            throw std::runtime_error("Resource pack size outside 12 bytes to 512 MiB: " + path.u8string());
+            throw std::runtime_error("Resource pack missing/invalid at " + path.u8string() +
+                                     "; rebuild or run node tools/ensure-resources.mjs");
         }
         remaining = static_cast<size_t>(file.tellg());
         file.seekg(0);
@@ -107,15 +103,182 @@ struct Store
     Store()
     {
         profiling::Scope timer(profiling::Timer::DiskCacheRead);
-        Reader reader(FindPack());
+        const auto packPath = FindPack();
+        Reader reader(packPath);
         unsigned int magic, version;
         reader.Read(&magic);
         reader.Read(&version);
-        if (magic != 0x41524d45 || version != 1)
+        if (magic != 0x41524d45 || version != 3)
         {
-            throw std::runtime_error("Unsupported resource pack version");
+            throw std::runtime_error(
+                "Unsupported resource pack version: rebuild or run node tools/ensure-resources.mjs");
         }
         const auto count = reader.Count(512);
+        const auto bankCount = reader.Count(512);
+        struct Bank
+        {
+            unsigned bones;
+            std::shared_ptr<const std::vector<ResourceClip>> clips;
+            std::shared_ptr<const AnimationRig> rig;
+        };
+        std::vector<Bank> banks;
+        size_t animationClips = 0;
+        for (unsigned bank = 0; bank < bankCount; ++bank)
+        {
+            unsigned bones = reader.Count(31), clipCount = reader.Count(128);
+            if (!bones || !clipCount)
+            {
+                throw std::runtime_error("Invalid resource animation bank");
+            }
+            auto rig = std::make_shared<AnimationRig>();
+            for (unsigned j = 0; j < bones; ++j)
+            {
+                rig->names.push_back(reader.String());
+                int parent = int(reader.Count(bones)) - 1;
+                if (parent == int(j) || (bones == 23 && parent >= int(j)))
+                {
+                    throw std::runtime_error("Invalid animation hierarchy");
+                }
+                rig->parents.push_back(parent);
+                AnimationMatrix bind{};
+                reader.Read(bind.data(), bind.size());
+                if (std::any_of(bind.begin(), bind.end(), [](float value) { return !std::isfinite(value); }))
+                {
+                    throw std::runtime_error("Invalid animation bind transform");
+                }
+                rig->bind.push_back(bind);
+                rig->inverseBind.push_back(AnimationMath::Inverse(bind));
+                if (rig->names.back() == "muzzle")
+                {
+                    rig->muzzle = int(j);
+                }
+            }
+            unsigned sampleCount = reader.Count(128);
+            for (unsigned j = 0; j < sampleCount; ++j)
+            {
+                AnimationSample sample;
+                sample.clip = reader.String();
+                reader.Read(&sample.left);
+                reader.Read(&sample.forward);
+                if (!std::isfinite(sample.left) || !std::isfinite(sample.forward))
+                {
+                    throw std::runtime_error("Invalid animation blend sample");
+                }
+                rig->samples.push_back(std::move(sample));
+            }
+            unsigned triangleCount = reader.Count(512);
+            for (unsigned j = 0; j < triangleCount; ++j)
+            {
+                std::array<unsigned, 3> triangle{};
+                for (auto &index : triangle)
+                {
+                    index = reader.Count(sampleCount);
+                    if (index >= sampleCount)
+                    {
+                        throw std::runtime_error("Invalid blend triangle");
+                    }
+                }
+                rig->triangles.push_back(triangle);
+            }
+            unsigned soleCount = reader.Count(16);
+            for (unsigned j = 0; j < soleCount; ++j)
+            {
+                SolePoint sole;
+                sole.bone = reader.Count(bones - 1);
+                reader.Read(&sole.position);
+                rig->soles.push_back(sole);
+            }
+            auto clips = std::make_shared<std::vector<ResourceClip>>();
+            clips->reserve(clipCount);
+            for (unsigned index = 0; index < clipCount; ++index)
+            {
+                ResourceClip clip;
+                clip.name = reader.String();
+                clip.frames = reader.Count(10000);
+                reader.Read(&clip.duration);
+                if (clip.frames < 2 || !std::isfinite(clip.duration) || clip.duration <= 0)
+                {
+                    throw std::runtime_error("Invalid resource animation");
+                }
+                clip.matrices.resize(size_t(clip.frames) * bones * 16);
+                reader.Read(clip.matrices.data(), clip.matrices.size());
+                clip.muzzles.resize(clip.frames);
+                reader.Read(clip.muzzles.data(), clip.muzzles.size());
+                if (std::any_of(clip.matrices.begin(), clip.matrices.end(),
+                                [](float v) { return !std::isfinite(v); }))
+                {
+                    throw std::runtime_error("Invalid resource skin palette");
+                }
+                clips->push_back(std::move(clip));
+                const auto &name = clips->back().name;
+                int clipIndex = int(index);
+                if (name == "Idle")
+                {
+                    rig->idle = clipIndex;
+                }
+                if (name == "Walk")
+                {
+                    rig->walk = clipIndex;
+                }
+                if (name == "Run")
+                {
+                    rig->run = clipIndex;
+                }
+                if (name == "Aim_Base")
+                {
+                    rig->aim = clipIndex;
+                }
+                if (name == "Attack_Fire")
+                {
+                    rig->fire = clipIndex;
+                }
+                if (name == "Attack_Melee")
+                {
+                    rig->melee = clipIndex;
+                }
+                if (name == "Pistol_Carry_Idle")
+                {
+                    rig->carryIdle = clipIndex;
+                }
+                if (name == "Pistol_Carry_Walk")
+                {
+                    rig->carryWalk = clipIndex;
+                }
+                if (name == "Pistol_Carry_Run")
+                {
+                    rig->carryRun = clipIndex;
+                }
+                if (name == "Reload_Pistol")
+                {
+                    rig->reload = clipIndex;
+                }
+                for (auto &sample : rig->samples)
+                {
+                    if (sample.clip == name)
+                    {
+                        sample.clipIndex = clipIndex;
+                    }
+                }
+                if (bones == 23)
+                {
+                    LayeredAnimation::Prepare(clips->back(), *rig);
+                }
+                ++animationClips;
+            }
+            for (const auto &sample : rig->samples)
+            {
+                if (sample.clipIndex < 0)
+                {
+                    throw std::runtime_error("Missing animation blend clip");
+                }
+            }
+            if (bones == 23 && (rig->idle < 0 || rig->walk < 0 || rig->run < 0 || rig->aim < 0 ||
+                                rig->fire < 0 || rig->melee < 0 || rig->muzzle < 0))
+            {
+                throw std::runtime_error("Missing required character animation");
+            }
+            banks.push_back({bones, std::move(clips), std::move(rig)});
+        }
         meshes.reserve(count);
         size_t vertices = 0;
         for (unsigned int index = 0; index < count; ++index)
@@ -130,8 +293,16 @@ struct Store
             }
             auto vertexCount = reader.Count(2000000);
             mesh.boneCount = reader.Count(31);
-            // Clip count is independent of the 32-joint GPU skin palette.
-            auto clipCount = reader.Count(128);
+            auto bank = reader.Count(bankCount);
+            if (bank)
+            {
+                if (banks[bank - 1].bones != mesh.boneCount)
+                {
+                    throw std::runtime_error("Animation bank skeleton mismatch");
+                }
+                mesh.animations = banks[bank - 1].clips;
+                mesh.rig = banks[bank - 1].rig;
+            }
             reader.Read(&mesh.minimum);
             reader.Read(&mesh.maximum);
             reader.Read(&mesh.physicalSize);
@@ -166,27 +337,6 @@ struct Store
                     throw std::runtime_error("Unnormalized resource skin");
                 }
             }
-            for (unsigned int clipIndex = 0; clipIndex < clipCount; ++clipIndex)
-            {
-                ResourceClip clip;
-                clip.name = reader.String();
-                clip.frames = reader.Count(10000);
-                reader.Read(&clip.duration);
-                if (clip.frames < 2 || !std::isfinite(clip.duration) || clip.duration <= 0 || !mesh.boneCount)
-                {
-                    throw std::runtime_error("Invalid resource animation");
-                }
-                clip.matrices.resize(size_t(clip.frames) * mesh.boneCount * 16);
-                reader.Read(clip.matrices.data(), clip.matrices.size());
-                clip.muzzles.resize(clip.frames);
-                reader.Read(clip.muzzles.data(), clip.muzzles.size());
-                if (std::any_of(clip.matrices.begin(), clip.matrices.end(),
-                                [](float v) { return !std::isfinite(v); }))
-                {
-                    throw std::runtime_error("Invalid resource skin palette");
-                }
-                mesh.clips.push_back(std::move(clip));
-            }
             vertices += vertexCount;
         }
         if (reader.remaining)
@@ -195,8 +345,8 @@ struct Store
         }
         profiling::Count(profiling::Counter::DiskCacheHits);
         std::printf("{\"event\":\"resource_pack_loaded\",\"asset_count\":%zu,\"triangles\":%zu,\"skin_"
-                    "palette_limit\":32}\n",
-                    meshes.size(), vertices / 3);
+                    "palette_limit\":32,\"animation_clips\":%zu,\"pack_path\":\"%s\"}\n",
+                    meshes.size(), vertices / 3, animationClips, packPath.generic_u8string().c_str());
     }
 };
 Store &Assets()
@@ -226,7 +376,7 @@ Selection Select(const ResourceMesh &mesh, const CharacterPose *pose, bool upper
         {
             name = "Ride";
         }
-        else if (upper && pose->armed)
+        else if (upper && (pose->armed || pose->meleeSeconds > 0))
         {
             name = pose->meleeSeconds > 0 ? "Attack_Melee" : pose->recoil > 0 ? "Attack_Fire" : "Aim_Base";
             time = pose->meleeSeconds > 0 ? (1 - std::clamp(pose->meleeSeconds / .65f, 0.f, 1.f)) * .65f
@@ -245,12 +395,17 @@ Selection Select(const ResourceMesh &mesh, const CharacterPose *pose, bool upper
             time *= pose->locomotionSpeed * WorldScale::metersPerUnit / referenceSpeed;
         }
     }
-    for (const auto &clip : mesh.clips)
+    for (const auto &clip : mesh.Clips())
     {
         if (clip.name == name)
         {
             const bool looping =
                 name == "Run" || name == "Walk" || name == "Idle" || name == "Cruise" || name == "Hover_Idle";
+            // Play the whole strike/recovery within the gameplay cooldown, for every clip duration.
+            if (name == "Attack_Melee" && pose)
+            {
+                time = (1 - std::clamp(pose->meleeSeconds / .65f, 0.f, 1.f)) * clip.duration;
+            }
             float t = looping ? std::fmod((std::max)(0.f, time), clip.duration)
                               : std::clamp(time, 0.f, clip.duration);
             return {&clip,
@@ -289,7 +444,7 @@ unsigned int ResourceAssets::RegisterStatic(ResourceMesh mesh)
         return found->second;
     }
     mesh.boneCount = 0;
-    mesh.clips.clear();
+    mesh.animations.reset();
     mesh.minimum = {1.e9f, 1.e9f, 1.e9f};
     mesh.maximum = {-1.e9f, -1.e9f, -1.e9f};
     for (auto &v : mesh.vertices)
@@ -328,6 +483,11 @@ void ResourceAssets::Sample(unsigned int id, const CharacterPose *pose, SkinMatr
         }
     }
     const auto &mesh = Get(id);
+    if (pose && mesh.boneCount == 23 && mesh.rig && !pose->riding)
+    {
+        LayeredAnimation::Sample(mesh, *pose, matrices);
+        return;
+    }
     auto base = Select(mesh, pose);
     if (!base.clip)
     {
@@ -335,52 +495,20 @@ void ResourceAssets::Sample(unsigned int id, const CharacterPose *pose, SkinMatr
     }
     const size_t size = mesh.boneCount * 16;
     std::copy_n(base.clip->matrices.data() + size * base.frame, size, matrices.begin());
-    // HUMAN_7H skin order: root, pelvis, spine/chest/arms/sockets, then six leg bones.
-    if (pose && pose->armed && !pose->riding && mesh.boneCount == 23)
-    {
-        auto upper = Select(mesh, pose, true);
-        if (upper.clip)
-        {
-            const float *source = upper.clip->matrices.data() + size * upper.frame;
-            // Rebase the upper-body override onto the moving pelvis instead of detaching the waist.
-            std::array<float, 16> inversePelvis = {}, correction = {};
-            inversePelvis[15] = 1;
-            for (size_t c = 0; c < 3; ++c)
-            {
-                for (size_t r = 0; r < 3; ++r)
-                {
-                    inversePelvis[c * 4 + r] = source[16 + r * 4 + c];
-                }
-            }
-            for (size_t r = 0; r < 3; ++r)
-            {
-                inversePelvis[12 + r] = -(inversePelvis[r] * source[28] + inversePelvis[4 + r] * source[29] +
-                                          inversePelvis[8 + r] * source[30]);
-            }
-            auto multiply = [](const float *a, const float *b, float *out) {
-                for (size_t c = 0; c < 4; ++c)
-                {
-                    for (size_t r = 0; r < 4; ++r)
-                    {
-                        out[c * 4 + r] = 0;
-                        for (size_t k = 0; k < 4; ++k)
-                        {
-                            out[c * 4 + r] += a[k * 4 + r] * b[c * 4 + k];
-                        }
-                    }
-                }
-            };
-            multiply(matrices.data() + 16, inversePelvis.data(), correction.data());
-            for (size_t joint = 2; joint < 17; ++joint)
-            {
-                multiply(correction.data(), source + joint * 16, matrices.data() + joint * 16);
-            }
-        }
-    }
 }
 Point ResourceAssets::Muzzle(const CharacterPose &pose)
 {
-    auto id = Find("character/Male/Explorer");
+    auto id = Find(pose.gender == Gender::Female ? "character/Female/Explorer" : "character/Male/Explorer");
+    const auto &mesh = Get(id);
+    if (mesh.rig && mesh.rig->muzzle >= 0 && !pose.riding)
+    {
+        SkinMatrices matrices;
+        Sample(id, &pose, matrices);
+        AnimationMatrix skin;
+        std::copy_n(matrices.begin() + mesh.rig->muzzle * 16, 16, skin.begin());
+        auto world = AnimationMath::Multiply(skin, mesh.rig->bind[size_t(mesh.rig->muzzle)]);
+        return {world[12], world[13], world[14]};
+    }
     auto selection = Select(Get(id), &pose, true);
     return selection.clip ? selection.clip->muzzles[selection.frame] : Point{.5f, 0, .8f};
 }

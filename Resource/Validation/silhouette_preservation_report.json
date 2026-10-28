@@ -1,0 +1,101 @@
+{
+  "parts": {
+    "Aircraft_Warden_Survey_LiftField_Front_L": {
+      "triangles": 188,
+      "original_curve_surfaces_exact": true,
+      "bolts_and_slots_removed": true,
+      "emission_on_existing_inner_walls": true
+    },
+    "Aircraft_Warden_Survey_LiftField_Front_R": {
+      "triangles": 188,
+      "original_curve_surfaces_exact": true,
+      "bolts_and_slots_removed": true,
+      "emission_on_existing_inner_walls": true
+    },
+    "Aircraft_Mule_Skycrane_LiftField_Front_R": {
+      "triangles": 188,
+      "original_curve_surfaces_exact": true,
+      "bolts_and_slots_removed": true,
+      "emission_on_existing_inner_walls": true
+    },
+    "Aircraft_Mule_Skycrane_LiftField_Rear_R": {
+      "triangles": 188,
+      "original_curve_surfaces_exact": true,
+      "bolts_and_slots_removed": true,
+      "emission_on_existing_inner_walls": true
+    },
+    "Aircraft_Mule_Skycrane_LiftField_Front_L": {
+      "triangles": 188,
+      "original_curve_surfaces_exact": true,
+      "bolts_and_slots_removed": true,
+      "emission_on_existing_inner_walls": true
+    },
+    "Aircraft_Mule_Skycrane_LiftField_Rear_L": {
+      "triangles": 188,
+      "original_curve_surfaces_exact": true,
+      "bolts_and_slots_removed": true,
+      "emission_on_existing_inner_walls": true
+    },
+    "Aircraft_Manta_AirTaxi_LiftField_Front_R": {
+      "triangles": 188,
+      "original_curve_surfaces_exact": true,
+      "bolts_and_slots_removed": true,
+      "emission_on_existing_inner_walls": true
+    },
+    "Aircraft_Manta_AirTaxi_LiftField_Rear_R": {
+      "triangles": 188,
+      "original_curve_surfaces_exact": true,
+      "bolts_and_slots_removed": true,
+      "emission_on_existing_inner_walls": true
+    },
+    "Aircraft_Manta_AirTaxi_LiftField_Front_L": {
+      "triangles": 188,
+      "original_curve_surfaces_exact": true,
+      "bolts_and_slots_removed": true,
+      "emission_on_existing_inner_walls": true
+    },
+    "Aircraft_Manta_AirTaxi_LiftField_Rear_L": {
+      "triangles": 188,
+      "original_curve_surfaces_exact": true,
+      "bolts_and_slots_removed": true,
+      "emission_on_existing_inner_walls": true
+    },
+    "Aircraft_Kite_Courier_LiftField_Front_L": {
+      "triangles": 188,
+      "original_curve_surfaces_exact": true,
+      "bolts_and_slots_removed": true,
+      "emission_on_existing_inner_walls": true
+    },
+    "Aircraft_Kite_Courier_LiftField_Front_R": {
+      "triangles": 188,
+      "original_curve_surfaces_exact": true,
+      "bolts_and_slots_removed": true,
+      "emission_on_existing_inner_walls": true
+    },
+    "Utility_Transformer_FieldCapacitors": {
+      "triangles": 188,
+      "original_curve_surfaces_exact": true,
+      "bolts_and_slots_removed": true,
+      "emission_on_existing_inner_walls": true
+    },
+    "City_ChargePost_InductionHalo": {
+      "triangles": 188,
+      "original_curve_surfaces_exact": true,
+      "bolts_and_slots_removed": true,
+      "emission_on_existing_inner_walls": true
+    },
+    "City_TrafficSignal_FieldStabilizer_L": {
+      "triangles": 116,
+      "original_curve_surfaces_exact": true,
+      "bolts_and_slots_removed": true,
+      "emission_on_existing_inner_walls": true
+    },
+    "City_TrafficSignal_FieldStabilizer_R": {
+      "triangles": 116,
+      "original_curve_surfaces_exact": true,
+      "bolts_and_slots_removed": true,
+      "emission_on_existing_inner_walls": true
+    }
+  },
+  "all_checks_passed": true
+}

@@ -3,6 +3,14 @@
 namespace tutorial
 {
 struct Building;
+struct UiControl
+{
+    UiAction action;
+    Vector2 position, size;
+    std::string label;
+    bool enabled = true;
+    int choice = -1;
+};
 
 // ============================================================================
 // Hud — shared display lifecycle
@@ -13,11 +21,31 @@ class Hud
     virtual ~Hud() = default;
     virtual void Draw() = 0;
     static void Render();
+    static void OpenMenu(UiScreen screen);
+    static void CloseMenu();
+    static bool HandleKey(unsigned char key);
+    static bool HandleSpecialKey(int key);
+    static bool HandlePointer(int button, bool down);
+    static void HandleMotion();
+    static std::vector<UiControl> Controls();
+    static void ExchangeSupply();
+    static void DrawMedicalFade();
+    // Every wrapped line belongs to a page; no content is replaced by an ellipsis.
+    static std::vector<std::vector<std::string>> TextPages(const std::string &text, float width, int fontSize,
+                                                           size_t linesPerPage);
 
   private:
     static void DrawNoticePanel();
     static void DrawDialogue();
-    static void DrawPauseOverlay();
+    static void DrawVitals();
+    static void DrawWeaponWheel();
+    static void DrawObjective(const std::string &objective, const std::string &context);
+    static void DrawInteraction(const std::string &label);
+    static void DrawMenu();
+    static void Activate(const UiControl &control, int direction = 1);
+    friend class CityHud;
+    friend class MineHud;
+    friend class ChapterHud;
 };
 
 // ============================================================================

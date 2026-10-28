@@ -481,7 +481,8 @@ void CityScene::DrawImportedScenery(game::Scene &scene)
                                           (craft.altitude + resource.maximum.z + 3) * 44 + 24),
                               3, p.x + p.y, [craft]() {
                                   Drawing::DrawWorldAircraft(craft.position, craft.altitude, craft.type,
-                                                             craft.alternate, craft.yaw, craft.bank);
+                                                             craft.alternate, craft.yaw, craft.bank,
+                                                             craft.health <= 0);
                               });
     }
 }
@@ -956,7 +957,8 @@ void MineScene::PlacePerson(game::Scene &scene, const std::string &id, Vector2 p
                                 combat.engaged ? combat.aimYaw : facingYaw, gender, hair,
                                 combat.engaged && !downed &&
                                     (type == models::CharacterType::Guard || id == "ria"),
-                                combat.muzzleFlash, downed);
+                                combat.muzzleFlash, downed, 2.1f,
+                                combat.pistol.IsReloading() ? combat.pistol.GetReloadProgress() : -1);
             if (Game::Distance(position, Game::Get().GetState().playerPosition) < 3 && !label.empty())
             {
                 auto screen = Drawing::WorldToScreen(position.x, position.y, 66);
@@ -1446,7 +1448,9 @@ void FrontierScene::Draw()
                 Drawing::DrawPerson(npc.position, color, false, role, npc.facing.walking,
                                     npc.combat.engaged ? npc.combat.aimYaw : npc.facing.yaw, gender, hair,
                                     armed && npc.combat.engaged && npc.combat.health > 0,
-                                    npc.combat.muzzleFlash, npc.combat.health <= 0);
+                                    npc.combat.muzzleFlash, npc.combat.health <= 0, 2.1f,
+                                    npc.combat.pistol.IsReloading() ? npc.combat.pistol.GetReloadProgress()
+                                                                    : -1);
                 if (Game::Distance(npc.position, Game::Get().GetState().playerPosition) < 4 && !label.empty())
                 {
                     auto screen = Drawing::WorldToScreen(npc.position.x, npc.position.y, 60);

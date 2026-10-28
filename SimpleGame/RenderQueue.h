@@ -15,6 +15,7 @@ void Begin(unsigned int mode);
 void End();
 void Vertex(float x, float y, float z = 0);
 void Color(float r, float g, float b, float a);
+void Opacity(float alpha);
 void TexCoord(float u, float v);
 void Texture(unsigned int texture);
 void SolidSample(unsigned int texture, float u, float v);

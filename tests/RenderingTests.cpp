@@ -38,7 +38,7 @@ void TestModelsAndRig()
     {
         assert(model.resourceId && ModelFactory::ValidateModel(model));
         const auto &resource = ResourceAssets::Get(model.resourceId);
-        assert(resource.boneCount == 17 && resource.clips.size() == 12);
+        assert(resource.boneCount == 17 && resource.Clips().size() == 12);
         assert(resource.sockets[0].x < 0 && resource.sockets[1].x < 0);
         assert(resource.sockets[0].y > 0 && resource.sockets[1].y < 0);
         assert(resource.sockets[5].x >= 0 && resource.sockets[5].x < resource.boneCount);
@@ -89,6 +89,30 @@ void TestModelsAndRig()
     auto muzzle = ModelRig::Muzzle(aim);
     assert(muzzle.x > .4f && muzzle.z > .8f);
     assert(std::fabs(muzzle.z * WorldScale::characterScale * 44 - WorldScale::aimHeightPixels) < .01f);
+    // An unarmed strike must animate both body types and their attached hair, while walking
+    // retains its pelvis/leg track. The previous armed-only gate silently sampled idle instead.
+    for (Gender gender : {Gender::Male, Gender::Female})
+    {
+        for (bool walking : {false, true})
+        {
+            auto idle = ModelRig::Pose(2.1f, walking, false, 0, false, gender);
+            auto strike = idle;
+            strike.meleeSeconds = .325f;
+            for (const Model *model : {&ModelLibrary::Character(CharacterType::Explorer, gender),
+                                       &ModelLibrary::Hair(HairStyle::SidePart, false)})
+            {
+                SkinMatrices base, melee, early;
+                ResourceAssets::Sample(model->resourceId, &idle, base);
+                ResourceAssets::Sample(model->resourceId, &strike, melee);
+                assert(base != melee && !strike.armed);
+                assert(std::equal(base.begin() + 17 * 16, base.begin() + 23 * 16, melee.begin() + 17 * 16));
+                strike.meleeSeconds = .64f;
+                ResourceAssets::Sample(model->resourceId, &strike, early);
+                assert(early != melee);
+                strike.meleeSeconds = .325f;
+            }
+        }
+    }
 }
 void TestHairAndBodyShape()
 {
@@ -107,6 +131,190 @@ void TestHairAndBodyShape()
                std::memcmp(male.vertices.data(), female.vertices.data(),
                            male.vertices.size() * sizeof(ResourceVertex)) != 0);
     }
+}
+void TestAnimationBlending()
+{
+    auto id = ModelLibrary::Character(CharacterType::Explorer, Gender::Male).resourceId;
+    const auto &mesh = ResourceAssets::Get(id);
+    assert(mesh.rig && mesh.rig->samples.size() == 17 && mesh.rig->triangles.size() == 24);
+    const auto &rig = *mesh.rig;
+    assert(rig.carryIdle >= 0 && rig.carryWalk >= 0 && rig.carryRun >= 0 && rig.reload >= 0);
+    // Delivered carry/reload layers must leave the simulated lower body untouched.
+    for (auto gender : {Gender::Male, Gender::Female})
+    {
+        auto character = ModelLibrary::Character(CharacterType::Explorer, gender).resourceId;
+        for (float speed : {0.f, .6f, 1.08f, 1.8f, 2.46f})
+        {
+            auto carry = ModelRig::Pose(2, true, true, 0, false, gender);
+            carry.blended = true;
+            carry.moveForward = speed;
+            carry.locomotionPhase = .31f;
+            carry.aimWeight = 0;
+            SkinMatrices carrying, unarmed, reloading;
+            ResourceAssets::Sample(character, &carry, carrying);
+            auto empty = carry;
+            empty.armed = false;
+            ResourceAssets::Sample(character, &empty, unarmed);
+            float upperDifference = 0;
+            for (size_t j = 2 * 16; j < 17 * 16; ++j)
+            {
+                upperDifference += std::fabs(carrying[j] - unarmed[j]);
+            }
+            assert(upperDifference > .05f);
+            for (size_t bone = 0; bone < mesh.boneCount; ++bone)
+            {
+                if (bone < 2 || bone >= 17)
+                {
+                    for (size_t c = 0; c < 16; ++c)
+                    {
+                        assert(std::fabs(carrying[bone * 16 + c] - unarmed[bone * 16 + c]) < .0001f);
+                    }
+                }
+            }
+            for (float aim : {0.f, .5f, 1.f})
+            {
+                carry.aimWeight = aim;
+                ResourceAssets::Sample(character, &carry, carrying);
+                for (float progress : {0.f, .3f, .67f, .8f, 1.f})
+                {
+                    auto reload = carry;
+                    reload.reloadProgress = progress;
+                    ResourceAssets::Sample(character, &reload, reloading);
+                    float difference = 0;
+                    for (size_t bone = 0; bone < mesh.boneCount; ++bone)
+                    {
+                        for (size_t c = 0; c < 16; ++c)
+                        {
+                            float d = std::fabs(carrying[bone * 16 + c] - reloading[bone * 16 + c]);
+                            assert(std::isfinite(reloading[bone * 16 + c]));
+                            if (bone < 2 || bone >= 17 || progress == 0 || progress == 1)
+                            {
+                                assert(d < .0001f);
+                            }
+                            difference += d;
+                        }
+                    }
+                    if (progress > 0 && progress < 1)
+                    {
+                        assert(difference > .05f);
+                    }
+                }
+            }
+        }
+    }
+    auto reference = ModelRig::Pose(0, false, true);
+    SkinMatrices referenceSkin;
+    ResourceAssets::Sample(id, &reference, referenceSkin);
+    AnimationMatrix referenceMuzzle;
+    std::copy_n(referenceSkin.begin() + rig.muzzle * 16, 16, referenceMuzzle.begin());
+    referenceMuzzle = AnimationMath::Multiply(referenceMuzzle, rig.bind[size_t(rig.muzzle)]);
+    auto q = AnimationMath::Slerp({0, 0, 0, 1}, {0, 0, 0, -1}, .5f);
+    assert(std::fabs(q.w - 1) < .00001f); // Antipodal representations must not take a 360-degree detour.
+    for (const auto &sample : rig.samples)
+    {
+        auto weights = AnimationBlendSpace::Evaluate(rig, sample.left, sample.forward);
+        float x = 0, y = 0, sum = 0;
+        for (size_t i = 0; i < 3; ++i)
+        {
+            assert(weights.weights[i] >= 0);
+            sum += weights.weights[i];
+            x += rig.samples[weights.samples[i]].left * weights.weights[i];
+            y += rig.samples[weights.samples[i]].forward * weights.weights[i];
+        }
+        assert(std::fabs(sum - 1) < .00001f && std::hypot(x - sample.left, y - sample.forward) < .0001f);
+    }
+    for (int angle = 0; angle < 32; ++angle)
+    {
+        float a = angle * 6.2831853f / 32;
+        for (float speed : {0.f, .45f, 1.2f, 2.f, 7.f})
+        {
+            auto weights = AnimationBlendSpace::Evaluate(rig, std::cos(a) * speed, std::sin(a) * speed);
+            assert(std::fabs(weights.weights[0] + weights.weights[1] + weights.weights[2] - 1) < .0001f);
+            auto pose = ModelRig::Pose(0, true, true);
+            pose.blended = true;
+            pose.aimWeight = 1;
+            pose.locomotionPhase = .37f;
+            pose.moveLeft = std::cos(a) * speed;
+            pose.moveForward = std::sin(a) * speed;
+            SkinMatrices palette, adjacent;
+            ResourceAssets::Sample(id, &pose, palette);
+            AnimationMatrix muzzle;
+            std::copy_n(palette.begin() + rig.muzzle * 16, 16, muzzle.begin());
+            muzzle = AnimationMath::Multiply(muzzle, rig.bind[size_t(rig.muzzle)]);
+            for (size_t c = 0; c < 3; ++c)
+            {
+                for (size_t r = 0; r < 3; ++r)
+                {
+                    assert(std::fabs(muzzle[c * 4 + r] - referenceMuzzle[c * 4 + r]) < .001f);
+                }
+            }
+            pose.locomotionPhase += .0001f;
+            ResourceAssets::Sample(id, &pose, adjacent);
+            for (const auto &sole : rig.soles)
+            {
+                const float *m = palette.data() + sole.bone * 16;
+                float height =
+                    m[2] * sole.position.x + m[6] * sole.position.y + m[10] * sole.position.z + m[14];
+                assert(height >= -.0001f);
+            }
+            for (unsigned j = 0; j < mesh.boneCount; ++j)
+            {
+                for (unsigned c = 0; c < 3; ++c)
+                {
+                    const float *m = palette.data() + j * 16 + c * 4;
+                    assert(std::fabs(m[0] * m[0] + m[1] * m[1] + m[2] * m[2] - 1) < .003f);
+                }
+                for (unsigned k = 0; k < 16; ++k)
+                {
+                    assert(std::fabs(palette[j * 16 + k] - adjacent[j * 16 + k]) < .03f);
+                }
+            }
+        }
+    }
+    CharacterAnimation state;
+    auto front = ModelRig::Pose(0, true, true);
+    front.blended = true;
+    front.aimWeight = 1;
+    front.moveForward = 1.2f;
+    front.locomotionPhase = .21f;
+    auto back = front;
+    back.moveForward = -1.2f;
+    SkinMatrices forwardBones, backBones;
+    ResourceAssets::Sample(id, &front, forwardBones);
+    ResourceAssets::Sample(id, &back, backBones);
+    float lowerDifference = 0;
+    for (size_t j = 17 * 16; j < 23 * 16; ++j)
+    {
+        lowerDifference += (std::fabs(forwardBones[j] - backBones[j]));
+    }
+    assert(lowerDifference > .05f); // Real backward leg motion, not an actor rotation or a renamed clip.
+    for (int frame = 0; frame < 60; ++frame)
+    {
+        state.Update(1.f / 60, {-.6f, 0, 0}, 0, true, false);
+    }
+    auto pose = ModelRig::Pose(0, true, true);
+    state.Apply(pose);
+    assert(pose.moveForward < -.9f && std::fabs(pose.moveLeft) < .0001f && pose.aimWeight > .99f);
+    auto weights = AnimationBlendSpace::Evaluate(rig, pose.moveLeft, pose.moveForward);
+    for (size_t i = 0; i < 3; ++i)
+    {
+        if (weights.weights[i] > .001f)
+        {
+            assert(rig.samples[weights.samples[i]].clip.find("Back") != std::string::npos);
+        }
+    }
+    float phase = state.Phase();
+    for (int frame = 0; frame < 60; ++frame)
+    {
+        state.Update(1.f / 60, {}, 0, false, false);
+    }
+    assert(state.Phase() == phase && state.AimWeight() < .001f);
+    state.Fire();
+    state.Apply(pose);
+    assert(pose.fireSeconds > 0);
+    state.Update(.05f, {}, 0, false, true);
+    state.Apply(pose);
+    assert(pose.fireSeconds == 0 && pose.aimWeight == 0);
 }
 void TestCityAndTravel()
 {
@@ -251,20 +459,20 @@ void Begin()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
-std::vector<unsigned char> Pixels()
+std::vector<unsigned char> Pixels(int width = kCanvasWidth, int height = kCanvasHeight)
 {
     renderqueue::Flush();
     GameRenderer::Get().Backend().ResolveScene();
     glFinish();
     assert(glGetError() == GL_NO_ERROR);
-    std::vector<unsigned char> pixels(kCanvasWidth * kCanvasHeight * 4);
-    glReadPixels(0, 0, kCanvasWidth, kCanvasHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+    std::vector<unsigned char> pixels(size_t(width) * height * 4);
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
     assert(glGetError() == GL_NO_ERROR);
     return pixels;
 }
-void Save(const std::filesystem::path &path)
+void Save(const std::filesystem::path &path, int width = kCanvasWidth, int height = kCanvasHeight)
 {
-    auto pixels = Pixels();
+    auto pixels = Pixels(width, height);
     for (size_t i = 0; i < pixels.size(); i += 4)
     {
         std::swap(pixels[i], pixels[i + 2]);
@@ -275,8 +483,8 @@ void Save(const std::filesystem::path &path)
     header.bfSize = header.bfOffBits + DWORD(pixels.size());
     BITMAPINFOHEADER info = {};
     info.biSize = sizeof(info);
-    info.biWidth = kCanvasWidth;
-    info.biHeight = kCanvasHeight;
+    info.biWidth = width;
+    info.biHeight = height;
     info.biPlanes = 1;
     info.biBitCount = 32;
     std::ofstream output(path, std::ios::binary);
@@ -659,6 +867,7 @@ void TestTrafficOcclusion(const std::filesystem::path &output)
         auto marker = std::make_unique<Model>();
         marker->space = CoordinateSpace::World;
         marker->count = 1;
+        marker->parts.resize(1);
         auto &part = marker->parts[0];
         part.count = 4;
         part.points[0] = {-.25f, .25f, 0};
@@ -1009,12 +1218,19 @@ void CaptureMapNavigation(const std::filesystem::path &output)
     world.cursorPosition = {world.cursorPosition.x - 400, world.cursorPosition.y + 250};
     auto rotated = mapPixels();
     auto pixelIndex = [](int x, int y) { return size_t((kCanvasHeight - y - 1) * kCanvasWidth + x) * 4; };
+    auto mapCenter = MapHud::WorldToMap(world.playerPosition, false);
+    float mapRadius = 0;
+    while (MapHud::Contains({mapCenter.x + mapRadius, mapCenter.y}, false))
+    {
+        ++mapRadius;
+    }
+    --mapRadius;
     // Rotating the player cannot rotate any road/building outside the arrow itself.
     for (int y = 34; y < 253; ++y)
     {
         for (int x = 1025; x < 1247; ++x)
         {
-            if ((x - 1136) * (x - 1136) + (y - 144) * (y - 144) > 18 * 18)
+            if ((x - mapCenter.x) * (x - mapCenter.x) + (y - mapCenter.y) * (y - mapCenter.y) > 18 * 18)
             {
                 size_t index = pixelIndex(x, y);
                 assert(std::equal(baseline.begin() + index, baseline.begin() + index + 4,
@@ -1030,7 +1246,8 @@ void CaptureMapNavigation(const std::filesystem::path &output)
         for (int x = 1015; x < 1256; ++x)
         {
             // A huge building crosses the entire rim; no fragment may escape the clipped map.
-            if ((x - 1136) * (x - 1136) + (y - 144) * (y - 144) > 104 * 104)
+            if ((x - mapCenter.x) * (x - mapCenter.x) + (y - mapCenter.y) * (y - mapCenter.y) >
+                (mapRadius + 2) * (mapRadius + 2))
             {
                 size_t index = pixelIndex(x, y);
                 assert(std::equal(rotated.begin() + index, rotated.begin() + index + 4,
@@ -1045,8 +1262,9 @@ void CaptureMapNavigation(const std::filesystem::path &output)
     auto waypoint = mapPixels();
     int blueArrowPixels = 0;
     auto projected = MapHud::WorldToMap({200, 0}, false);
-    float bearing = std::atan2(projected.y - 144, projected.x - 1136);
-    int tipX = int(1136 + std::cos(bearing) * 91), tipY = int(144 + std::sin(bearing) * 91);
+    float bearing = std::atan2(projected.y - mapCenter.y, projected.x - mapCenter.x);
+    int tipX = int(mapCenter.x + std::cos(bearing) * (mapRadius - 11)),
+        tipY = int(mapCenter.y + std::sin(bearing) * (mapRadius - 11));
     for (int y = tipY - 13; y < tipY + 14; ++y)
     {
         for (int x = tipX - 13; x < tipX + 14; ++x)
@@ -1116,10 +1334,10 @@ void CaptureCivicSystems(const std::filesystem::path &output)
     world.isInsideHome = false;
     world.playerPosition = world.cameraPosition = {2, 0};
     auto &law = CivicJustice::State();
-    for (int i = 0; i < 6; ++i)
-    {
-        CivicJustice::Report(Offense::Homicide, world.playerPosition);
-    }
+    law.wanted = 5;
+    law.heat = 1000;
+    law.identified = true;
+    law.infamy = 75;
     SecurityOfficer officer;
     officer.position = {4, 2};
     officer.lastKnown = world.playerPosition;
@@ -1139,6 +1357,33 @@ void CaptureCivicSystems(const std::filesystem::path &output)
         Save(output / name);
     };
     draw("civic-wanted.bmp");
+    auto wanted = Pixels();
+    auto mapDifference = [](const std::vector<unsigned char> &a, const std::vector<unsigned char> &b) {
+        size_t changed = 0;
+        for (int y = 60; y < 220; ++y)
+        {
+            for (int x = 1065; x < 1224; ++x)
+            {
+                size_t at = (size_t(kCanvasHeight - 1 - y) * kCanvasWidth + x) * 4;
+                changed += a[at] != b[at] || a[at + 1] != b[at + 1] || a[at + 2] != b[at + 2];
+            }
+        }
+        return changed;
+    };
+    law.wanted = 0;
+    draw("civic-no-search-markers.bmp");
+    assert(mapDifference(wanted, Pixels()) > 10); // Search markers only appear while wanted.
+    law.wanted = 5;
+    law.officers.front().facing.yaw += kPi;
+    draw("civic-security-turned.bmp");
+    assert(mapDifference(wanted, Pixels()) > 10); // The map cone follows actual heading.
+    law.officers.front().facing.yaw -= kPi;
+    law.identified = false;
+    law.responseStarted = true;
+    law.initialUnseenSeconds = 8;
+    draw("civic-unidentified-search.bmp");
+    assert(mapDifference(wanted, Pixels()) > 10); // Search and identified pursuit have different colors.
+    law.identified = true;
     game::GameLevels::Mine().GetState().player.health = 0;
     HospitalRecovery::Begin();
     HospitalRecovery::Update(.84f);
@@ -1217,6 +1462,270 @@ void CaptureDialogue(const std::filesystem::path &output)
     world.dialogueHistoryVisible = true;
     capture("dialogue-history.bmp");
     game.Reset();
+}
+
+void CaptureDeliveredUi(const std::filesystem::path &output)
+{
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    auto &renderer = GameRenderer::Get().Backend();
+    assert(renderer.UiSpriteCount() >= 127);
+    auto draw = [&](const char *name) {
+        Begin();
+        game::SceneManager::Get(game::SceneManager::Current()).Draw();
+        renderer.EndScene(w.animationTimeSeconds);
+        if (game::GameLevels::Mine().IsActive())
+        {
+            static_cast<game::MineScene &>(game::SceneManager::Get(game::SceneKind::Mine)).DrawDarkness();
+        }
+        game::SceneManager::Get(game::SceneKind::Hud).Draw();
+        renderqueue::Flush();
+        assert(glGetError() == GL_NO_ERROR);
+        Save(output / name);
+    };
+    g.Reset();
+    Hud::OpenMenu(UiScreen::Title);
+    draw("ui-title.bmp");
+    Hud::OpenMenu(UiScreen::Stages);
+    draw("ui-stages.bmp");
+    w.ui.focus = int(TestStage::WeaponUnlocked);
+    draw("ui-stages-weapon-unlocked.bmp");
+    Hud::OpenMenu(UiScreen::Pause);
+    draw("ui-pause.bmp");
+    Hud::OpenMenu(UiScreen::Options);
+    draw("ui-options.bmp");
+    Hud::OpenMenu(UiScreen::Summary);
+    draw("ui-summary.bmp");
+    Hud::OpenMenu(UiScreen::Help);
+    draw("ui-help.bmp");
+    Hud::OpenMenu(UiScreen::Confirm);
+    draw("ui-confirm.bmp");
+    Hud::CloseMenu();
+    w.isInsideHome = false;
+    w.playerPosition = w.cameraPosition = kCityReceiverPosition;
+    auto &law = CivicJustice::State();
+    law.wanted = 5;
+    law.heat = 900;
+    law.infamy = 80;
+    auto &mine = game::GameLevels::Mine().GetState();
+    mine.player.health = 18;
+    draw("ui-city-unarmed.bmp");
+    assert(WeaponWheel::Open());
+    draw("ui-weapon-wheel-empty.bmp");
+    WeaponWheel::Close();
+    mine.loadout.GrantPistol();
+    mine.loadout.Select(combat::WeaponSlot::Secondary);
+    g.MouseMotion(640, 400);
+    assert(WeaponWheel::Open());
+    g.MouseMotion(780, 470);
+    draw("ui-weapon-wheel-pistol.bmp");
+    const auto savedWheelPreferences = w.uiPreferences;
+    w.uiPreferences.background = .8f;
+    w.uiPreferences.border = .8f;
+    w.uiPreferences.content = .85f;
+    draw("ui-weapon-wheel-minimum-opacity.bmp");
+    w.uiPreferences = savedWheelPreferences;
+    WeaponWheel::Close();
+    combat::Shot shot{};
+    mine.pistol.TryFire(0, shot);
+    mine.pistol.Reload();
+    draw("ui-city-combat.bmp");
+    const std::string fullNotice =
+        "헤일로 수신망에 조사 기록을 전달했습니다. 발전기·운송대·폐설비의 기록을 확인한 다음 "
+        "리아에게 보고하세요. 확인한 기록은 의료 이송 뒤에도 유지됩니다. 아직 읽지 않은 중요한 "
+        "대화는 안전한 곳에서 이어 읽을 수 있습니다. 마지막 문장도 생략 없이 표시합니다.";
+    const auto noticePages = Hud::TextPages(fullNotice, 294, 16, 4);
+    assert(noticePages.size() > 1);
+    g.ShowNotice(fullNotice);
+    for (size_t page = 0; page < noticePages.size(); ++page)
+    {
+        w.noticeSecondsRemaining = w.noticeDurationSeconds - float(page) * 6;
+        const auto name = "ui-notice-complete-page-" + std::to_string(page + 1) + ".bmp";
+        draw(name.c_str());
+    }
+    w.noticeSecondsRemaining = 0;
+    w.isBikeMounted = true;
+    w.bikeSpeed = -.65f;
+    draw("ui-bike-reverse.bmp");
+    w.bikeSpeed = 12.8f;
+    w.pressedKeys[' '] = true;
+    draw("ui-bike-boost.bmp");
+    g.Reset();
+    auto &chapter = game::GameLevels::Chapter();
+    chapter.Enter(true);
+    chapter.GetState().convoyRescued = true;
+    w.playerPosition = w.cameraPosition = {24.5f, 20.5f};
+    mine.player.salvage = 10;
+    Hud::OpenMenu(UiScreen::Supply);
+    draw("ui-supply.bmp");
+    Hud::CloseMenu();
+    mine.player.health = 0;
+    HospitalRecovery::Begin();
+    HospitalRecovery::Update(.7f);
+    draw("ui-medical-transfer.bmp");
+    HospitalRecovery::Update(3);
+    HospitalRecovery::Update(3);
+    assert(w.ui.screen == UiScreen::Medical);
+    draw("ui-medical-result.bmp");
+    g.Reset();
+    game::GameLevels::Mine().Enter(true);
+    mine.enemies.clear();
+    w.playerPosition = w.cameraPosition = mine.entry;
+    game::GameLevels::Mine().Rescue().Scan();
+    game::GameLevels::Mine().Rescue().Update(.6f);
+    draw("ui-mine-scan.bmp");
+    Dialogue::Start(
+        "ui/radio",
+        {{"radio", "리아", "무전", "빛을 따라 이동해. 구조 신호는 가까워지면 다시 스캔하자.", {}}});
+    w.dialogue.blocking = false;
+    draw("ui-mine-radio.bmp");
+    ReadDialogue();
+    auto style = renderer.GetStyle();
+    style.resolution = WorldResolution::Quarter;
+    renderer.SetStyle(style);
+    draw("ui-pixel-world.bmp");
+    style.resolution = WorldResolution::Native;
+    renderer.SetStyle(style);
+    Hud::OpenMenu(UiScreen::Options);
+    w.uiPreferences.background = .8f;
+    w.uiPreferences.border = .8f;
+    w.uiPreferences.content = .85f;
+    draw("ui-opacity-minimum.bmp");
+    Hud::CloseMenu();
+    game::GameLevels::Mine().Leave();
+    w.playerPosition = w.cameraPosition = kCityReceiverPosition;
+    Hud::OpenMenu(UiScreen::Summary);
+    draw("ui-opacity-minimum-city.bmp");
+    w.uiPreferences = {};
+    g.Reset();
+    w.isInsideHome = false;
+    w.playerPosition = w.cameraPosition = kCityReceiverPosition;
+    Dialogue::Start("ui/high-resolution",
+                    {{"text",
+                      "헤일로 N-0 외곽 설비 통신 기록 관리 담당자 · 현장 연결",
+                      "수신 기록",
+                      "긴 한글과 English 123 문구를 실제 화면에서 확인합니다. 화면 크기가 달라도 필수 대사는 "
+                      "빠지지 않고, 선택지와 조작 안내가 서로 겹치지 않아야 합니다.",
+                      {{"one", "현재 조사 기록을 보관하고 현장으로 출발한다"},
+                       {"two", "아직 준비한다. 보급품과 지금까지 확인한 내용을 다시 점검한다"},
+                       {"three", "헤일로에 남아 다른 조사 현장의 기록을 먼저 확인한다"}}}});
+    HWND surface = WindowFromDC(wglGetCurrentDC());
+    for (auto size : {std::pair<int, int>{1920, 1080}, {2560, 1440}})
+    {
+        assert(SetWindowPos(surface, nullptr, 0, 0, size.first, size.second,
+                            SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE));
+        g.Resize(size.first, size.second);
+        renderqueue::BeginFrame();
+        renderer.BeginScene(size.first, size.second);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, kCanvasWidth, kCanvasHeight, 0, -65536, 65536);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        game::SceneManager::Get(game::SceneManager::Current()).Draw();
+        renderer.EndScene(0);
+        Hud::Render();
+        renderqueue::Flush();
+        assert(glGetError() == GL_NO_ERROR);
+        Save(output /
+                 ("ui-dialogue-" + std::to_string(size.first) + "x" + std::to_string(size.second) + ".bmp"),
+             size.first, size.second);
+    }
+    assert(SetWindowPos(surface, nullptr, 0, 0, kCanvasWidth, kCanvasHeight,
+                        SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE));
+    g.Resize(kCanvasWidth, kCanvasHeight);
+    g.Reset();
+}
+void CaptureAnimationBlends(const std::filesystem::path &output)
+{
+    auto &renderer = GameRenderer::Get().Backend();
+    const char *labels[] = {"전진", "전진·왼쪽",   "왼쪽",   "후진·왼쪽",
+                            "후진", "후진·오른쪽", "오른쪽", "전진·오른쪽"};
+    for (int gender = 0; gender < 2; ++gender)
+    {
+        Begin();
+        renderer.BeginModels();
+        for (int direction = 0; direction < 8; ++direction)
+        {
+            auto pose = ModelRig::Pose(2, true, true, 0, false, Gender(gender));
+            pose.blended = true;
+            pose.aimWeight = 1;
+            pose.locomotionPhase = .21f;
+            float angle = direction * 6.2831853f / 8;
+            pose.moveLeft = std::sin(angle) * 1.25f;
+            pose.moveForward = std::cos(angle) * 1.25f;
+            Transform3D transform;
+            transform.yaw = -.3f;
+            Palette palette;
+            palette.body = {.55f, .72f, .78f, 1};
+            Vector2 screen = {180.f + (direction % 4) * 300, 300.f + (direction / 4) * 350};
+            Drawing::DrawModel3D(ModelLibrary::Character(CharacterType::Explorer, Gender(gender)), screen,
+                                 {3, 3, 3}, transform, 0, palette, &pose);
+            Drawing::DrawHair(screen, {3, 3, 3}, transform, 0, pose, CharacterType::Explorer, Gender(gender),
+                              HairStyle::SidePart);
+            Drawing::DrawLabel(screen.x - 65, screen.y + 35, labels[direction]);
+        }
+        renderer.EndModels();
+        renderer.EndScene(0);
+        Save(output / (gender ? "animation-aim-female.bmp" : "animation-aim-male.bmp"));
+    }
+    Begin();
+    renderer.BeginModels();
+    for (int state = 0; state < 4; ++state)
+    {
+        auto pose = ModelRig::Pose(2, true, state != 0);
+        pose.blended = true;
+        pose.moveForward = 1.8f;
+        pose.locomotionPhase = .23f;
+        pose.aimWeight = state >= 2 ? 1.f : 0;
+        if (state == 3)
+        {
+            pose.fireSeconds = .25f;
+        }
+        Transform3D transform;
+        transform.yaw = -.3f;
+        Palette palette;
+        palette.body = {.55f, .72f, .78f, 1};
+        Vector2 screen = {180.f + state * 300, 520};
+        Drawing::DrawModel3D(ModelLibrary::Character(CharacterType::Explorer, Gender::Male), screen,
+                             {4, 4, 4}, transform, 0, palette, &pose);
+        const char *names[] = {"맨손 이동", "무장 이동", "조준 이동", "사격 상체 레이어"};
+        Drawing::DrawLabel(screen.x - 80, screen.y + 45, names[state]);
+    }
+    renderer.EndModels();
+    renderer.EndScene(0);
+    Save(output / "animation-layers.bmp");
+    for (bool reload : {false, true})
+    {
+        Begin();
+        renderer.BeginModels();
+        for (int i = 0; i < 8; ++i)
+        {
+            auto gender = Gender(i / 4);
+            auto type = i % 2 ? CharacterType::Engineer : CharacterType::Explorer;
+            auto pose = ModelRig::Pose(2, true, true, 0, false, gender);
+            pose.blended = true;
+            pose.moveForward = i % 4 == 0 ? 0.f : i % 4 == 1 ? 1.08f : 2.46f;
+            pose.locomotionPhase = .31f;
+            pose.aimWeight = i % 4 == 3 ? 1.f : 0.f;
+            pose.reloadProgress = reload ? .22f + .19f * (i % 4) : -1.f;
+            Transform3D transform;
+            transform.yaw = -.3f;
+            Palette palette;
+            palette.body = {.55f, .72f, .78f, 1};
+            Vector2 screen = {180.f + i % 4 * 300, 300.f + i / 4 * 350};
+            Drawing::DrawModel3D(ModelLibrary::Character(type, gender), screen, {3, 3, 3}, transform, 0,
+                                 palette, &pose);
+            Drawing::DrawHair(screen, {3, 3, 3}, transform, 0, pose, type, gender, HairStyle::SidePart);
+            Drawing::DrawLabel(screen.x - 90, screen.y + 40,
+                               reload ? "재장전 / 하체 이동 유지" : "운반 / 정지·걷기·달리기·조준");
+        }
+        renderer.EndModels();
+        renderer.EndScene(0);
+        Save(output / (reload ? "animation-pistol-reload.bmp" : "animation-pistol-carry.bmp"));
+    }
 }
 
 void CaptureChapter(const std::filesystem::path &output)
@@ -1539,6 +2048,17 @@ void BenchmarkQuality(const std::filesystem::path &output)
 int main(int argc, char **argv)
 {
     glutInit(&argc, argv);
+    if (argc > 1 && std::string(argv[1]) == "--civic-only")
+    {
+        OffscreenContext context;
+        GameRenderer::Get().Initialize();
+        std::filesystem::path output = argc > 2 ? argv[2] : "x64/RevisionChecks/civic-renders";
+        std::filesystem::create_directories(output);
+        CaptureCivicSystems(output);
+        GameRenderer::Get().Shutdown();
+        std::cout << "Civic minimap and medical visual checks passed.\n";
+        return 0;
+    }
     if (argc > 1 && std::string(argv[1]) == "--dialogue-only")
     {
         OffscreenContext context;
@@ -1547,6 +2067,7 @@ int main(int argc, char **argv)
         std::filesystem::create_directories(output);
         CaptureDialogue(output);
         CaptureChapter(output);
+        CaptureDeliveredUi(output);
         GameRenderer::Get().Shutdown();
         std::cout << "Dialogue visual checks passed.\n";
         return 0;
@@ -1583,15 +2104,18 @@ int main(int argc, char **argv)
         return 0;
     }
     TestModelsAndRig();
+    TestAnimationBlending();
     TestHairAndBodyShape();
     TestCityAndTravel();
     TestScaleGenderAndDistrict();
     TestScrolling();
     OffscreenContext context;
     GameRenderer::Get().Initialize();
+    std::cout << "Checking antialiasing, depth and effect occlusion.\n" << std::flush;
     TestAntialiasing();
     TestDepth();
     TestEffectDepth();
+    std::cout << "Checking quest resources and city coverage.\n" << std::flush;
     TestQuestAndResources();
     std::filesystem::path output = argc > 1 ? argv[1] : "x64/ModelChecks/renders";
     std::filesystem::create_directories(output);
@@ -1607,7 +2131,9 @@ int main(int argc, char **argv)
     CaptureHairAndCombat(output);
     CaptureDialogue(output);
     CaptureChapter(output);
+    CaptureDeliveredUi(output);
     CaptureMapNavigation(output);
+    CaptureAnimationBlends(output);
     CaptureCivicSystems(output);
     BenchmarkQuality(output);
     GameRenderer::Get().Shutdown();

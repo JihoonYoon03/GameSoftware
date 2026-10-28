@@ -238,7 +238,21 @@
         }
       ],
       "uv_policy": "continuous periodic path coordinates; integer endpoint phase; signed lateral / 2m",
-      "length_m": 4
+      "length_m": 4,
+      "render_bounds": {
+        "RoadPlan_Surface_2L_L4_Surface": {
+          "min": [
+            -2.0,
+            -3.0,
+            -0.20000000298023224
+          ],
+          "max": [
+            2.0,
+            3.0,
+            0.0
+          ]
+        }
+      }
     },
     "RoadPlan_Marking_2L_L4": {
       "parts": [
@@ -271,7 +285,45 @@
       "collision_envelope": [],
       "companions": [],
       "paint_only": true,
-      "road_companion": "RoadPlan_Surface_2L_L4"
+      "road_companion": "RoadPlan_Surface_2L_L4",
+      "render_bounds": {
+        "RoadPlan_Marking_2L_L4_Center": {
+          "min": [
+            -2.0,
+            -0.042500000447034836,
+            0.002300000051036477
+          ],
+          "max": [
+            2.0,
+            0.042500000447034836,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_Marking_2L_L4_EdgeRight": {
+          "min": [
+            -2.0,
+            -2.887500047683716,
+            0.002300000051036477
+          ],
+          "max": [
+            2.0,
+            -2.8125,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_Marking_2L_L4_EdgeLeft": {
+          "min": [
+            -2.0,
+            2.8125,
+            0.002300000051036477
+          ],
+          "max": [
+            2.0,
+            2.887500047683716,
+            0.003000000026077032
+          ]
+        }
+      }
     },
     "RoadPlan_Surface_2L_L8": {
       "parts": [
@@ -543,7 +595,21 @@
         }
       ],
       "uv_policy": "continuous periodic path coordinates; integer endpoint phase; signed lateral / 2m",
-      "length_m": 8
+      "length_m": 8,
+      "render_bounds": {
+        "RoadPlan_Surface_2L_L8_Surface": {
+          "min": [
+            -4.0,
+            -3.0,
+            -0.20000000298023224
+          ],
+          "max": [
+            4.0,
+            3.0,
+            0.0
+          ]
+        }
+      }
     },
     "RoadPlan_Marking_2L_L8": {
       "parts": [
@@ -576,7 +642,45 @@
       "collision_envelope": [],
       "companions": [],
       "paint_only": true,
-      "road_companion": "RoadPlan_Surface_2L_L8"
+      "road_companion": "RoadPlan_Surface_2L_L8",
+      "render_bounds": {
+        "RoadPlan_Marking_2L_L8_Center": {
+          "min": [
+            -4.0,
+            -0.042500000447034836,
+            0.002300000051036477
+          ],
+          "max": [
+            4.0,
+            0.042500000447034836,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_Marking_2L_L8_EdgeRight": {
+          "min": [
+            -4.0,
+            -2.887500047683716,
+            0.002300000051036477
+          ],
+          "max": [
+            4.0,
+            -2.8125,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_Marking_2L_L8_EdgeLeft": {
+          "min": [
+            -4.0,
+            2.8125,
+            0.002300000051036477
+          ],
+          "max": [
+            4.0,
+            2.887500047683716,
+            0.003000000026077032
+          ]
+        }
+      }
     },
     "RoadPlan_Surface_2L_L16": {
       "parts": [
@@ -992,7 +1096,21 @@
         }
       ],
       "uv_policy": "continuous periodic path coordinates; integer endpoint phase; signed lateral / 2m",
-      "length_m": 16
+      "length_m": 16,
+      "render_bounds": {
+        "RoadPlan_Surface_2L_L16_Surface": {
+          "min": [
+            -8.0,
+            -3.0,
+            -0.20000000298023224
+          ],
+          "max": [
+            8.0,
+            3.0,
+            0.0
+          ]
+        }
+      }
     },
     "RoadPlan_Marking_2L_L16": {
       "parts": [
@@ -1025,7 +1143,45 @@
       "collision_envelope": [],
       "companions": [],
       "paint_only": true,
-      "road_companion": "RoadPlan_Surface_2L_L16"
+      "road_companion": "RoadPlan_Surface_2L_L16",
+      "render_bounds": {
+        "RoadPlan_Marking_2L_L16_Center": {
+          "min": [
+            -8.0,
+            -0.042500000447034836,
+            0.002300000051036477
+          ],
+          "max": [
+            8.0,
+            0.042500000447034836,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_Marking_2L_L16_EdgeRight": {
+          "min": [
+            -8.0,
+            -2.887500047683716,
+            0.002300000051036477
+          ],
+          "max": [
+            8.0,
+            -2.8125,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_Marking_2L_L16_EdgeLeft": {
+          "min": [
+            -8.0,
+            2.8125,
+            0.002300000051036477
+          ],
+          "max": [
+            8.0,
+            2.887500047683716,
+            0.003000000026077032
+          ]
+        }
+      }
     },
     "RoadPlan_Surface_4L_L4": {
       "parts": [
@@ -1243,7 +1399,21 @@
         }
       ],
       "uv_policy": "continuous periodic path coordinates; integer endpoint phase; signed lateral / 2m",
-      "length_m": 4
+      "length_m": 4,
+      "render_bounds": {
+        "RoadPlan_Surface_4L_L4_Surface": {
+          "min": [
+            -2.0,
+            -6.0,
+            -0.20000000298023224
+          ],
+          "max": [
+            2.0,
+            6.0,
+            0.0
+          ]
+        }
+      }
     },
     "RoadPlan_Marking_4L_L4": {
       "parts": [
@@ -1278,7 +1448,69 @@
       "collision_envelope": [],
       "companions": [],
       "paint_only": true,
-      "road_companion": "RoadPlan_Surface_4L_L4"
+      "road_companion": "RoadPlan_Surface_4L_L4",
+      "render_bounds": {
+        "RoadPlan_Marking_4L_L4_Center": {
+          "min": [
+            -2.0,
+            -0.042500000447034836,
+            0.002300000051036477
+          ],
+          "max": [
+            2.0,
+            0.042500000447034836,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_Marking_4L_L4_EdgeRight": {
+          "min": [
+            -2.0,
+            -5.887499809265137,
+            0.002300000051036477
+          ],
+          "max": [
+            2.0,
+            -5.8125,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_Marking_4L_L4_EdgeLeft": {
+          "min": [
+            -2.0,
+            5.8125,
+            0.002300000051036477
+          ],
+          "max": [
+            2.0,
+            5.887499809265137,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_Marking_4L_L4_LaneRight": {
+          "min": [
+            -2.0,
+            -3.0374999046325684,
+            0.002300000051036477
+          ],
+          "max": [
+            0.0,
+            -2.9625000953674316,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_Marking_4L_L4_LaneLeft": {
+          "min": [
+            -2.0,
+            2.9625000953674316,
+            0.002300000051036477
+          ],
+          "max": [
+            0.0,
+            3.0374999046325684,
+            0.003000000026077032
+          ]
+        }
+      }
     },
     "RoadPlan_Surface_4L_L8": {
       "parts": [
@@ -1550,7 +1782,21 @@
         }
       ],
       "uv_policy": "continuous periodic path coordinates; integer endpoint phase; signed lateral / 2m",
-      "length_m": 8
+      "length_m": 8,
+      "render_bounds": {
+        "RoadPlan_Surface_4L_L8_Surface": {
+          "min": [
+            -4.0,
+            -6.0,
+            -0.20000000298023224
+          ],
+          "max": [
+            4.0,
+            6.0,
+            0.0
+          ]
+        }
+      }
     },
     "RoadPlan_Marking_4L_L8": {
       "parts": [
@@ -1585,7 +1831,69 @@
       "collision_envelope": [],
       "companions": [],
       "paint_only": true,
-      "road_companion": "RoadPlan_Surface_4L_L8"
+      "road_companion": "RoadPlan_Surface_4L_L8",
+      "render_bounds": {
+        "RoadPlan_Marking_4L_L8_Center": {
+          "min": [
+            -4.0,
+            -0.042500000447034836,
+            0.002300000051036477
+          ],
+          "max": [
+            4.0,
+            0.042500000447034836,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_Marking_4L_L8_EdgeRight": {
+          "min": [
+            -4.0,
+            -5.887499809265137,
+            0.002300000051036477
+          ],
+          "max": [
+            4.0,
+            -5.8125,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_Marking_4L_L8_EdgeLeft": {
+          "min": [
+            -4.0,
+            5.8125,
+            0.002300000051036477
+          ],
+          "max": [
+            4.0,
+            5.887499809265137,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_Marking_4L_L8_LaneRight": {
+          "min": [
+            -4.0,
+            -3.0374999046325684,
+            0.002300000051036477
+          ],
+          "max": [
+            2.0,
+            -2.9625000953674316,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_Marking_4L_L8_LaneLeft": {
+          "min": [
+            -4.0,
+            2.9625000953674316,
+            0.002300000051036477
+          ],
+          "max": [
+            2.0,
+            3.0374999046325684,
+            0.003000000026077032
+          ]
+        }
+      }
     },
     "RoadPlan_Surface_4L_L16": {
       "parts": [
@@ -2001,7 +2309,21 @@
         }
       ],
       "uv_policy": "continuous periodic path coordinates; integer endpoint phase; signed lateral / 2m",
-      "length_m": 16
+      "length_m": 16,
+      "render_bounds": {
+        "RoadPlan_Surface_4L_L16_Surface": {
+          "min": [
+            -8.0,
+            -6.0,
+            -0.20000000298023224
+          ],
+          "max": [
+            8.0,
+            6.0,
+            0.0
+          ]
+        }
+      }
     },
     "RoadPlan_Marking_4L_L16": {
       "parts": [
@@ -2036,7 +2358,69 @@
       "collision_envelope": [],
       "companions": [],
       "paint_only": true,
-      "road_companion": "RoadPlan_Surface_4L_L16"
+      "road_companion": "RoadPlan_Surface_4L_L16",
+      "render_bounds": {
+        "RoadPlan_Marking_4L_L16_Center": {
+          "min": [
+            -8.0,
+            -0.042500000447034836,
+            0.002300000051036477
+          ],
+          "max": [
+            8.0,
+            0.042500000447034836,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_Marking_4L_L16_EdgeRight": {
+          "min": [
+            -8.0,
+            -5.887499809265137,
+            0.002300000051036477
+          ],
+          "max": [
+            8.0,
+            -5.8125,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_Marking_4L_L16_EdgeLeft": {
+          "min": [
+            -8.0,
+            5.8125,
+            0.002300000051036477
+          ],
+          "max": [
+            8.0,
+            5.887499809265137,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_Marking_4L_L16_LaneRight": {
+          "min": [
+            -8.0,
+            -3.0374999046325684,
+            0.002300000051036477
+          ],
+          "max": [
+            6.0,
+            -2.9625000953674316,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_Marking_4L_L16_LaneLeft": {
+          "min": [
+            -8.0,
+            2.9625000953674316,
+            0.002300000051036477
+          ],
+          "max": [
+            6.0,
+            3.0374999046325684,
+            0.003000000026077032
+          ]
+        }
+      }
     },
     "RoadPlan_Walk_W2_L2": {
       "parts": [
@@ -2146,7 +2530,33 @@
           0.15
         ]
       ],
-      "edge_trim_is_flush": true
+      "edge_trim_is_flush": true,
+      "render_bounds": {
+        "RoadPlan_Walk_W2_L2_Paving": {
+          "min": [
+            -1.0,
+            -1.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            1.0,
+            1.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_Walk_W2_L2_PanelJoints": {
+          "min": [
+            -0.006000000052154064,
+            -0.9800000190734863,
+            0.15000000596046448
+          ],
+          "max": [
+            0.006000000052154064,
+            0.9800000190734863,
+            0.15160000324249268
+          ]
+        }
+      }
     },
     "RoadPlan_Walk_W2_L4": {
       "parts": [
@@ -2256,7 +2666,33 @@
           0.15
         ]
       ],
-      "edge_trim_is_flush": true
+      "edge_trim_is_flush": true,
+      "render_bounds": {
+        "RoadPlan_Walk_W2_L4_Paving": {
+          "min": [
+            -2.0,
+            -1.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            2.0,
+            1.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_Walk_W2_L4_PanelJoints": {
+          "min": [
+            -1.00600004196167,
+            -0.9800000190734863,
+            0.15000000596046448
+          ],
+          "max": [
+            1.00600004196167,
+            0.9800000190734863,
+            0.15160000324249268
+          ]
+        }
+      }
     },
     "RoadPlan_Walk_W2_L8": {
       "parts": [
@@ -2366,7 +2802,33 @@
           0.15
         ]
       ],
-      "edge_trim_is_flush": true
+      "edge_trim_is_flush": true,
+      "render_bounds": {
+        "RoadPlan_Walk_W2_L8_Paving": {
+          "min": [
+            -4.0,
+            -1.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            4.0,
+            1.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_Walk_W2_L8_PanelJoints": {
+          "min": [
+            -3.00600004196167,
+            -0.9800000190734863,
+            0.15000000596046448
+          ],
+          "max": [
+            3.00600004196167,
+            0.9800000190734863,
+            0.15160000324249268
+          ]
+        }
+      }
     },
     "RoadPlan_Walk_W2_EndCap_L1": {
       "parts": [
@@ -2475,7 +2937,33 @@
           0.15
         ]
       ],
-      "edge_trim_is_flush": true
+      "edge_trim_is_flush": true,
+      "render_bounds": {
+        "RoadPlan_Walk_W2_EndCap_L1_Paving": {
+          "min": [
+            -0.5,
+            -1.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            0.5,
+            1.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_Walk_W2_EndCap_L1_EndTrim": {
+          "min": [
+            0.4599999785423279,
+            -1.0,
+            -0.1599999964237213
+          ],
+          "max": [
+            0.5,
+            1.0,
+            0.15000000596046448
+          ]
+        }
+      }
     },
     "RoadPlan_WalkLanding_W4_L2": {
       "parts": [
@@ -2585,7 +3073,33 @@
           0.15
         ]
       ],
-      "edge_trim_is_flush": true
+      "edge_trim_is_flush": true,
+      "render_bounds": {
+        "RoadPlan_WalkLanding_W4_L2_Paving": {
+          "min": [
+            -1.0,
+            -2.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            1.0,
+            2.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkLanding_W4_L2_PanelJoints": {
+          "min": [
+            -0.006000000052154064,
+            -1.9800000190734863,
+            0.15000000596046448
+          ],
+          "max": [
+            0.006000000052154064,
+            1.9800000190734863,
+            0.15160000324249268
+          ]
+        }
+      }
     },
     "RoadPlan_Curve_2L_A90_R7": {
       "parts": [
@@ -3751,7 +4265,21 @@
       "radius_m": 7,
       "turn_degrees": 90,
       "path_length_m": 10.995574287564276,
-      "reverse_allowed": true
+      "reverse_allowed": true,
+      "render_bounds": {
+        "RoadPlan_Curve_2L_A90_R7_Surface": {
+          "min": [
+            0.0,
+            -3.0,
+            0.0
+          ],
+          "max": [
+            10.0,
+            7.0,
+            0.0
+          ]
+        }
+      }
     },
     "RoadPlan_CurveMarking_2L_A90_R7": {
       "parts": [
@@ -3784,7 +4312,45 @@
       "collision_envelope": [],
       "companions": [],
       "paint_only": true,
-      "road_companion": "RoadPlan_Curve_2L_A90_R7"
+      "road_companion": "RoadPlan_Curve_2L_A90_R7",
+      "render_bounds": {
+        "RoadPlan_CurveMarking_2L_A90_R7_Center": {
+          "min": [
+            0.0,
+            -0.042500000447034836,
+            0.003000000026077032
+          ],
+          "max": [
+            7.042500019073486,
+            7.0,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_CurveMarking_2L_A90_R7_EdgeRight": {
+          "min": [
+            0.0,
+            -2.887500047683716,
+            0.003000000026077032
+          ],
+          "max": [
+            9.887499809265137,
+            7.0,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_CurveMarking_2L_A90_R7_EdgeLeft": {
+          "min": [
+            0.0,
+            2.8125,
+            0.003000000026077032
+          ],
+          "max": [
+            4.1875,
+            7.0,
+            0.003000000026077032
+          ]
+        }
+      }
     },
     "RoadPlan_Curve_2L_A15_R18": {
       "parts": [
@@ -4140,7 +4706,21 @@
       "radius_m": 18,
       "turn_degrees": 15,
       "path_length_m": 4.71238898038469,
-      "reverse_allowed": true
+      "reverse_allowed": true,
+      "render_bounds": {
+        "RoadPlan_Curve_2L_A15_R18_Surface": {
+          "min": [
+            0.0,
+            -3.0,
+            -0.20000000298023224
+          ],
+          "max": [
+            5.435199737548828,
+            3.511112689971924,
+            0.0
+          ]
+        }
+      }
     },
     "RoadPlan_CurveMarking_2L_A15_R18": {
       "parts": [
@@ -4173,7 +4753,45 @@
       "collision_envelope": [],
       "companions": [],
       "paint_only": true,
-      "road_companion": "RoadPlan_Curve_2L_A15_R18"
+      "road_companion": "RoadPlan_Curve_2L_A15_R18",
+      "render_bounds": {
+        "RoadPlan_CurveMarking_2L_A15_R18_Center": {
+          "min": [
+            0.0,
+            -0.042500000447034836,
+            0.002300000051036477
+          ],
+          "max": [
+            4.669742584228516,
+            0.6543869972229004,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_CurveMarking_2L_A15_R18_EdgeRight": {
+          "min": [
+            0.0,
+            -2.887500047683716,
+            0.002300000051036477
+          ],
+          "max": [
+            5.406082630157471,
+            -2.1033313274383545,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_CurveMarking_2L_A15_R18_EdgeLeft": {
+          "min": [
+            0.0,
+            2.8125,
+            0.002300000051036477
+          ],
+          "max": [
+            3.930814266204834,
+            3.4024460315704346,
+            0.003000000026077032
+          ]
+        }
+      }
     },
     "RoadPlan_Curve_2L_A30_R18": {
       "parts": [
@@ -4691,7 +5309,21 @@
       "radius_m": 18,
       "turn_degrees": 30,
       "path_length_m": 9.42477796076938,
-      "reverse_allowed": true
+      "reverse_allowed": true,
+      "render_bounds": {
+        "RoadPlan_Curve_2L_A30_R18_Surface": {
+          "min": [
+            0.0,
+            -3.0,
+            -0.20000000298023224
+          ],
+          "max": [
+            10.5,
+            5.009618759155273,
+            0.0
+          ]
+        }
+      }
     },
     "RoadPlan_CurveMarking_2L_A30_R18": {
       "parts": [
@@ -4724,7 +5356,45 @@
       "collision_envelope": [],
       "companions": [],
       "paint_only": true,
-      "road_companion": "RoadPlan_Curve_2L_A30_R18"
+      "road_companion": "RoadPlan_Curve_2L_A30_R18",
+      "render_bounds": {
+        "RoadPlan_CurveMarking_2L_A30_R18_Center": {
+          "min": [
+            0.0,
+            -0.042500000447034836,
+            0.002300000051036477
+          ],
+          "max": [
+            9.021249771118164,
+            2.4483487606048584,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_CurveMarking_2L_A30_R18_EdgeRight": {
+          "min": [
+            0.0,
+            -2.887500047683716,
+            0.002300000051036477
+          ],
+          "max": [
+            10.443750381469727,
+            -0.02415371686220169,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_CurveMarking_2L_A30_R18_EdgeLeft": {
+          "min": [
+            0.0,
+            2.8125,
+            0.002300000051036477
+          ],
+          "max": [
+            7.59375,
+            4.912190914154053,
+            0.003000000026077032
+          ]
+        }
+      }
     },
     "RoadPlan_Curve_2L_A45_R18": {
       "parts": [
@@ -5404,7 +6074,21 @@
       "radius_m": 18,
       "turn_degrees": 45,
       "path_length_m": 14.137166941154069,
-      "reverse_allowed": true
+      "reverse_allowed": true,
+      "render_bounds": {
+        "RoadPlan_Curve_2L_A45_R18_Surface": {
+          "min": [
+            0.0,
+            -3.0,
+            -0.20000000298023224
+          ],
+          "max": [
+            14.849242210388184,
+            7.393398284912109,
+            0.0
+          ]
+        }
+      }
     },
     "RoadPlan_CurveMarking_2L_A45_R18": {
       "parts": [
@@ -5437,7 +6121,45 @@
       "collision_envelope": [],
       "companions": [],
       "paint_only": true,
-      "road_companion": "RoadPlan_Curve_2L_A45_R18"
+      "road_companion": "RoadPlan_Curve_2L_A45_R18",
+      "render_bounds": {
+        "RoadPlan_CurveMarking_2L_A45_R18_Center": {
+          "min": [
+            0.0,
+            -0.042500000447034836,
+            0.002300000051036477
+          ],
+          "max": [
+            12.757973670959473,
+            5.302129745483398,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_CurveMarking_2L_A45_R18_EdgeRight": {
+          "min": [
+            0.0,
+            -2.887500047683716,
+            0.002300000051036477
+          ],
+          "max": [
+            14.769692420959473,
+            3.2833402156829834,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_CurveMarking_2L_A45_R18_EdgeLeft": {
+          "min": [
+            0.0,
+            2.8125,
+            0.002300000051036477
+          ],
+          "max": [
+            10.739184379577637,
+            7.313848972320557,
+            0.003000000026077032
+          ]
+        }
+      }
     },
     "RoadPlan_Curve_2L_A15_R36": {
       "parts": [
@@ -5793,7 +6515,21 @@
       "radius_m": 36,
       "turn_degrees": 15,
       "path_length_m": 9.42477796076938,
-      "reverse_allowed": true
+      "reverse_allowed": true,
+      "render_bounds": {
+        "RoadPlan_Curve_2L_A15_R36_Surface": {
+          "min": [
+            0.0,
+            -3.0,
+            -0.20000000298023224
+          ],
+          "max": [
+            10.093942642211914,
+            4.124447822570801,
+            0.0
+          ]
+        }
+      }
     },
     "RoadPlan_CurveMarking_2L_A15_R36": {
       "parts": [
@@ -5826,7 +6562,45 @@
       "collision_envelope": [],
       "companions": [],
       "paint_only": true,
-      "road_companion": "RoadPlan_Curve_2L_A15_R36"
+      "road_companion": "RoadPlan_Curve_2L_A15_R36",
+      "render_bounds": {
+        "RoadPlan_CurveMarking_2L_A15_R36_Center": {
+          "min": [
+            0.0,
+            -0.042500000447034836,
+            0.002300000051036477
+          ],
+          "max": [
+            9.328485488891602,
+            1.2677221298217773,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_CurveMarking_2L_A15_R36_EdgeRight": {
+          "min": [
+            0.0,
+            -2.887500047683716,
+            0.002300000051036477
+          ],
+          "max": [
+            10.064826011657715,
+            -1.489996075630188,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_CurveMarking_2L_A15_R36_EdgeLeft": {
+          "min": [
+            0.0,
+            2.8125,
+            0.002300000051036477
+          ],
+          "max": [
+            8.589556694030762,
+            4.015780925750732,
+            0.003000000026077032
+          ]
+        }
+      }
     },
     "RoadPlan_Curve_2L_A30_R36": {
       "parts": [
@@ -6344,7 +7118,21 @@
       "radius_m": 36,
       "turn_degrees": 30,
       "path_length_m": 18.84955592153876,
-      "reverse_allowed": true
+      "reverse_allowed": true,
+      "render_bounds": {
+        "RoadPlan_Curve_2L_A30_R36_Surface": {
+          "min": [
+            0.0,
+            -3.0,
+            -0.20000000298023224
+          ],
+          "max": [
+            19.5,
+            7.421161651611328,
+            0.0
+          ]
+        }
+      }
     },
     "RoadPlan_CurveMarking_2L_A30_R36": {
       "parts": [
@@ -6377,7 +7165,45 @@
       "collision_envelope": [],
       "companions": [],
       "paint_only": true,
-      "road_companion": "RoadPlan_Curve_2L_A30_R36"
+      "road_companion": "RoadPlan_Curve_2L_A30_R36",
+      "render_bounds": {
+        "RoadPlan_CurveMarking_2L_A30_R36_Center": {
+          "min": [
+            0.0,
+            -0.042500000447034836,
+            0.002300000051036477
+          ],
+          "max": [
+            18.021249771118164,
+            4.859891414642334,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_CurveMarking_2L_A30_R36_EdgeRight": {
+          "min": [
+            0.0,
+            -2.887500047683716,
+            0.002300000051036477
+          ],
+          "max": [
+            19.443750381469727,
+            2.3873889446258545,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_CurveMarking_2L_A30_R36_EdgeLeft": {
+          "min": [
+            0.0,
+            2.8125,
+            0.002300000051036477
+          ],
+          "max": [
+            16.59375,
+            7.323733806610107,
+            0.003000000026077032
+          ]
+        }
+      }
     },
     "RoadPlan_Curve_2L_A45_R36": {
       "parts": [
@@ -7057,7 +7883,21 @@
       "radius_m": 36,
       "turn_degrees": 45,
       "path_length_m": 28.274333882308138,
-      "reverse_allowed": true
+      "reverse_allowed": true,
+      "render_bounds": {
+        "RoadPlan_Curve_2L_A45_R36_Surface": {
+          "min": [
+            0.0,
+            -3.0,
+            -0.20000000298023224
+          ],
+          "max": [
+            27.577163696289062,
+            12.665475845336914,
+            0.0
+          ]
+        }
+      }
     },
     "RoadPlan_CurveMarking_2L_A45_R36": {
       "parts": [
@@ -7090,7 +7930,45 @@
       "collision_envelope": [],
       "companions": [],
       "paint_only": true,
-      "road_companion": "RoadPlan_Curve_2L_A45_R36"
+      "road_companion": "RoadPlan_Curve_2L_A45_R36",
+      "render_bounds": {
+        "RoadPlan_CurveMarking_2L_A45_R36_Center": {
+          "min": [
+            0.0,
+            -0.042500000447034836,
+            0.002300000051036477
+          ],
+          "max": [
+            25.485897064208984,
+            10.57420825958252,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_CurveMarking_2L_A45_R36_EdgeRight": {
+          "min": [
+            0.0,
+            -2.887500047683716,
+            0.002300000051036477
+          ],
+          "max": [
+            27.497615814208984,
+            8.555418014526367,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_CurveMarking_2L_A45_R36_EdgeLeft": {
+          "min": [
+            0.0,
+            2.8125,
+            0.002300000051036477
+          ],
+          "max": [
+            23.467105865478516,
+            12.58592700958252,
+            0.003000000026077032
+          ]
+        }
+      }
     },
     "RoadPlan_WalkCurve_2L_A90_R7": {
       "parts": [
@@ -7664,7 +8542,57 @@
           3.0,
           0
         ]
-      ]
+      ],
+      "render_bounds": {
+        "RoadPlan_WalkCurve_2L_A90_R7_Paving_-1": {
+          "min": [
+            0.0,
+            -5.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            12.119999885559082,
+            7.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCurve_2L_A90_R7_Curb_-1": {
+          "min": [
+            0.0,
+            -3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            10.119999885559082,
+            7.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCurve_2L_A90_R7_Paving_1": {
+          "min": [
+            0.0,
+            3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            3.880000114440918,
+            7.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCurve_2L_A90_R7_Curb_1": {
+          "min": [
+            0.0,
+            3.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            4.0,
+            7.0,
+            0.15000000596046448
+          ]
+        }
+      }
     },
     "RoadPlan_WalkCurve_2L_A15_R18": {
       "parts": [
@@ -7938,7 +8866,57 @@
           3.0,
           0
         ]
-      ]
+      ],
+      "render_bounds": {
+        "RoadPlan_WalkCurve_2L_A15_R18_Paving_-1": {
+          "min": [
+            0.0,
+            -5.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            5.983896255493164,
+            -2.40035343170166,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCurve_2L_A15_R18_Curb_-1": {
+          "min": [
+            0.0,
+            -3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            5.4662580490112305,
+            -2.28444242477417,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCurve_2L_A15_R18_Paving_1": {
+          "min": [
+            0.0,
+            3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            3.851227283477783,
+            5.558875560760498,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCurve_2L_A15_R18_Curb_1": {
+          "min": [
+            0.0,
+            3.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            3.8822855949401855,
+            3.627023696899414,
+            0.15000000596046448
+          ]
+        }
+      }
     },
     "RoadPlan_WalkCurve_2L_A30_R18": {
       "parts": [
@@ -8272,7 +9250,57 @@
           3.0,
           0
         ]
-      ]
+      ],
+      "render_bounds": {
+        "RoadPlan_WalkCurve_2L_A30_R18_Paving_-1": {
+          "min": [
+            0.0,
+            -5.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            11.5600004196167,
+            -0.29045653343200684,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCurve_2L_A30_R18_Curb_-1": {
+          "min": [
+            0.0,
+            -3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            10.5600004196167,
+            -0.18653348088264465,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCurve_2L_A30_R18_Paving_1": {
+          "min": [
+            0.0,
+            3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            7.440000057220459,
+            6.845592975616455,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCurve_2L_A30_R18_Curb_1": {
+          "min": [
+            0.0,
+            3.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            7.5,
+            5.113542079925537,
+            0.15000000596046448
+          ]
+        }
+      }
     },
     "RoadPlan_WalkCurve_2L_A45_R18": {
       "parts": [
@@ -8666,7 +9694,57 @@
           3.0,
           0
         ]
-      ]
+      ],
+      "render_bounds": {
+        "RoadPlan_WalkCurve_2L_A45_R18_Paving_-1": {
+          "min": [
+            0.0,
+            -5.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            16.348308563232422,
+            3.0659048557281494,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCurve_2L_A45_R18_Curb_-1": {
+          "min": [
+            0.0,
+            -3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            14.93409538269043,
+            3.1507575511932373,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCurve_2L_A45_R18_Paving_1": {
+          "min": [
+            0.0,
+            3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            10.521748542785645,
+            8.892464637756348,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCurve_2L_A45_R18_Curb_1": {
+          "min": [
+            0.0,
+            3.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            10.60660171508789,
+            7.478250980377197,
+            0.15000000596046448
+          ]
+        }
+      }
     },
     "RoadPlan_WalkCurve_2L_A15_R36": {
       "parts": [
@@ -8940,7 +10018,57 @@
           3.0,
           0
         ]
-      ]
+      ],
+      "render_bounds": {
+        "RoadPlan_WalkCurve_2L_A15_R36_Paving_-1": {
+          "min": [
+            0.0,
+            -5.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            10.64263916015625,
+            -1.7870182991027832,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCurve_2L_A15_R36_Curb_-1": {
+          "min": [
+            0.0,
+            -3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            10.125000953674316,
+            -1.6711071729660034,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCurve_2L_A15_R36_Paving_1": {
+          "min": [
+            0.0,
+            3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            8.509970664978027,
+            6.172210693359375,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCurve_2L_A15_R36_Curb_1": {
+          "min": [
+            0.0,
+            3.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            8.541028022766113,
+            4.240358829498291,
+            0.15000000596046448
+          ]
+        }
+      }
     },
     "RoadPlan_WalkCurve_2L_A30_R36": {
       "parts": [
@@ -9274,7 +10402,57 @@
           3.0,
           0
         ]
-      ]
+      ],
+      "render_bounds": {
+        "RoadPlan_WalkCurve_2L_A30_R36_Paving_-1": {
+          "min": [
+            0.0,
+            -5.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            20.559999465942383,
+            2.1210861206054688,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCurve_2L_A30_R36_Curb_-1": {
+          "min": [
+            0.0,
+            -3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            19.559999465942383,
+            2.2250092029571533,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCurve_2L_A30_R36_Paving_1": {
+          "min": [
+            0.0,
+            3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            16.440000534057617,
+            9.257135391235352,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCurve_2L_A30_R36_Curb_1": {
+          "min": [
+            0.0,
+            3.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            16.5,
+            7.525084495544434,
+            0.15000000596046448
+          ]
+        }
+      }
     },
     "RoadPlan_WalkCurve_2L_A45_R36": {
       "parts": [
@@ -9668,7 +10846,57 @@
           3.0,
           0
         ]
-      ]
+      ],
+      "render_bounds": {
+        "RoadPlan_WalkCurve_2L_A45_R36_Paving_-1": {
+          "min": [
+            0.0,
+            -5.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            29.076231002807617,
+            8.337983131408691,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCurve_2L_A45_R36_Curb_-1": {
+          "min": [
+            0.0,
+            -3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            27.662017822265625,
+            8.422835350036621,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCurve_2L_A45_R36_Paving_1": {
+          "min": [
+            0.0,
+            3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            23.249670028686523,
+            14.164542198181152,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCurve_2L_A45_R36_Curb_1": {
+          "min": [
+            0.0,
+            3.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            23.334524154663086,
+            12.75032901763916,
+            0.15000000596046448
+          ]
+        }
+      }
     },
     "RoadPlan_T_4L_2L": {
       "parts": [
@@ -10122,7 +11350,21 @@
       "port_radius_m": 10,
       "corner_radius_m": 3,
       "surface_is_single_outline": true,
-      "arrows_baked": false
+      "arrows_baked": false,
+      "render_bounds": {
+        "RoadPlan_T_4L_2L_Surface": {
+          "min": [
+            -10.0,
+            -6.0,
+            0.0
+          ],
+          "max": [
+            10.0,
+            10.0,
+            0.0
+          ]
+        }
+      }
     },
     "RoadPlan_JunctionMarking_T_4L_2L": {
       "parts": [
@@ -10153,7 +11395,21 @@
       "collision_envelope": [],
       "companions": [],
       "paint_only": true,
-      "right_hand_traffic": true
+      "right_hand_traffic": true,
+      "render_bounds": {
+        "RoadPlan_JunctionMarking_T_4L_2L_StopBars": {
+          "min": [
+            -9.610000610351562,
+            -5.824999809265137,
+            0.0026500001549720764
+          ],
+          "max": [
+            9.610000610351562,
+            9.610000610351562,
+            0.0033499998971819878
+          ]
+        }
+      }
     },
     "RoadPlan_WalkCorner_T_4L_2L": {
       "parts": [
@@ -10553,7 +11809,177 @@
       "curb_width_m": 0.12,
       "minimum_piecewise_linear_walk_width_m": 1.9990875689790668,
       "width_tolerance_m": 0.001,
-      "crossing_access": "Continue these walk ports to an external four-metre crossing and separate accessible ramp; do not bake a crossing through the turn zone"
+      "crossing_access": "Continue these walk ports to an external four-metre crossing and separate accessible ramp; do not bake a crossing through the turn zone",
+      "render_bounds": {
+        "RoadPlan_WalkCorner_T_4L_2L_CornerPaving_0": {
+          "min": [
+            3.119999885559082,
+            6.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            6.0,
+            9.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_4L_2L_CornerCurb_0": {
+          "min": [
+            3.0,
+            6.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            6.0,
+            9.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_4L_2L_ApproachPaving_0_0": {
+          "min": [
+            6.0,
+            6.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            10.0,
+            8.119999885559082,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_4L_2L_ApproachCurb_0_0": {
+          "min": [
+            6.0,
+            6.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            10.0,
+            6.119999885559082,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_4L_2L_ApproachPaving_0_1": {
+          "min": [
+            3.119999885559082,
+            9.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            5.119999885559082,
+            10.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_4L_2L_ApproachCurb_0_1": {
+          "min": [
+            3.0,
+            9.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            3.119999885559082,
+            10.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_4L_2L_CornerPaving_1": {
+          "min": [
+            -6.0,
+            6.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            -3.119999885559082,
+            9.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_4L_2L_CornerCurb_1": {
+          "min": [
+            -6.0,
+            6.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            -3.0,
+            9.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_4L_2L_ApproachPaving_1_0": {
+          "min": [
+            -5.119999885559082,
+            9.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            -3.119999885559082,
+            10.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_4L_2L_ApproachCurb_1_0": {
+          "min": [
+            -3.119999885559082,
+            9.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            -3.0,
+            10.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_4L_2L_ApproachPaving_1_1": {
+          "min": [
+            -10.0,
+            6.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            -6.0,
+            8.119999885559082,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_4L_2L_ApproachCurb_1_1": {
+          "min": [
+            -10.0,
+            6.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            -6.0,
+            6.119999885559082,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_4L_2L_ClosedSidePaving": {
+          "min": [
+            -10.0,
+            -8.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            10.0,
+            -6.119999885559082,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_4L_2L_ClosedSideCurb": {
+          "min": [
+            -10.0,
+            -6.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            10.0,
+            -6.0,
+            0.15000000596046448
+          ]
+        }
+      }
     },
     "RoadPlan_T_2L": {
       "parts": [
@@ -11007,7 +12433,21 @@
       "port_radius_m": 7,
       "corner_radius_m": 3,
       "surface_is_single_outline": true,
-      "arrows_baked": false
+      "arrows_baked": false,
+      "render_bounds": {
+        "RoadPlan_T_2L_Surface": {
+          "min": [
+            -7.0,
+            -3.0,
+            0.0
+          ],
+          "max": [
+            7.0,
+            7.0,
+            0.0
+          ]
+        }
+      }
     },
     "RoadPlan_JunctionMarking_T_2L": {
       "parts": [
@@ -11038,7 +12478,21 @@
       "collision_envelope": [],
       "companions": [],
       "paint_only": true,
-      "right_hand_traffic": true
+      "right_hand_traffic": true,
+      "render_bounds": {
+        "RoadPlan_JunctionMarking_T_2L_StopBars": {
+          "min": [
+            -6.610000133514404,
+            -2.825000047683716,
+            0.0026500001549720764
+          ],
+          "max": [
+            6.610000133514404,
+            6.610000133514404,
+            0.0033499998971819878
+          ]
+        }
+      }
     },
     "RoadPlan_WalkCorner_T_2L": {
       "parts": [
@@ -11438,7 +12892,177 @@
       "curb_width_m": 0.12,
       "minimum_piecewise_linear_walk_width_m": 1.9990875689790668,
       "width_tolerance_m": 0.001,
-      "crossing_access": "Continue these walk ports to an external four-metre crossing and separate accessible ramp; do not bake a crossing through the turn zone"
+      "crossing_access": "Continue these walk ports to an external four-metre crossing and separate accessible ramp; do not bake a crossing through the turn zone",
+      "render_bounds": {
+        "RoadPlan_WalkCorner_T_2L_CornerPaving_0": {
+          "min": [
+            3.119999885559082,
+            3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            6.0,
+            6.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_2L_CornerCurb_0": {
+          "min": [
+            3.0,
+            3.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            6.0,
+            6.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_2L_ApproachPaving_0_0": {
+          "min": [
+            6.0,
+            3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            7.0,
+            5.119999885559082,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_2L_ApproachCurb_0_0": {
+          "min": [
+            6.0,
+            3.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            7.0,
+            3.119999885559082,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_2L_ApproachPaving_0_1": {
+          "min": [
+            3.119999885559082,
+            6.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            5.119999885559082,
+            7.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_2L_ApproachCurb_0_1": {
+          "min": [
+            3.0,
+            6.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            3.119999885559082,
+            7.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_2L_CornerPaving_1": {
+          "min": [
+            -6.0,
+            3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            -3.119999885559082,
+            6.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_2L_CornerCurb_1": {
+          "min": [
+            -6.0,
+            3.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            -3.0,
+            6.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_2L_ApproachPaving_1_0": {
+          "min": [
+            -5.119999885559082,
+            6.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            -3.119999885559082,
+            7.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_2L_ApproachCurb_1_0": {
+          "min": [
+            -3.119999885559082,
+            6.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            -3.0,
+            7.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_2L_ApproachPaving_1_1": {
+          "min": [
+            -7.0,
+            3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            -6.0,
+            5.119999885559082,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_2L_ApproachCurb_1_1": {
+          "min": [
+            -7.0,
+            3.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            -6.0,
+            3.119999885559082,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_2L_ClosedSidePaving": {
+          "min": [
+            -7.0,
+            -5.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            7.0,
+            -3.119999885559082,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_T_2L_ClosedSideCurb": {
+          "min": [
+            -7.0,
+            -3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            7.0,
+            -3.0,
+            0.15000000596046448
+          ]
+        }
+      }
     },
     "RoadPlan_X_2L": {
       "parts": [
@@ -12211,7 +13835,21 @@
       "port_radius_m": 7,
       "corner_radius_m": 3,
       "surface_is_single_outline": true,
-      "arrows_baked": false
+      "arrows_baked": false,
+      "render_bounds": {
+        "RoadPlan_X_2L_Surface": {
+          "min": [
+            -7.0,
+            -7.0,
+            0.0
+          ],
+          "max": [
+            7.0,
+            7.0,
+            0.0
+          ]
+        }
+      }
     },
     "RoadPlan_JunctionMarking_X_2L": {
       "parts": [
@@ -12242,7 +13880,21 @@
       "collision_envelope": [],
       "companions": [],
       "paint_only": true,
-      "right_hand_traffic": true
+      "right_hand_traffic": true,
+      "render_bounds": {
+        "RoadPlan_JunctionMarking_X_2L_StopBars": {
+          "min": [
+            -6.610000133514404,
+            -6.610000133514404,
+            0.0026500001549720764
+          ],
+          "max": [
+            6.610000133514404,
+            6.610000133514404,
+            0.0033499998971819878
+          ]
+        }
+      }
     },
     "RoadPlan_WalkCorner_X_2L": {
       "parts": [
@@ -12862,7 +14514,297 @@
       "curb_width_m": 0.12,
       "minimum_piecewise_linear_walk_width_m": 1.9990875689790668,
       "width_tolerance_m": 0.001,
-      "crossing_access": "Continue these walk ports to an external four-metre crossing and separate accessible ramp; do not bake a crossing through the turn zone"
+      "crossing_access": "Continue these walk ports to an external four-metre crossing and separate accessible ramp; do not bake a crossing through the turn zone",
+      "render_bounds": {
+        "RoadPlan_WalkCorner_X_2L_CornerPaving_0": {
+          "min": [
+            -6.0,
+            -6.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            -3.119999885559082,
+            -3.119999885559082,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_X_2L_CornerCurb_0": {
+          "min": [
+            -6.0,
+            -6.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            -3.0,
+            -3.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_X_2L_ApproachPaving_0_0": {
+          "min": [
+            -7.0,
+            -5.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            -6.0,
+            -3.119999885559082,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_X_2L_ApproachCurb_0_0": {
+          "min": [
+            -7.0,
+            -3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            -6.0,
+            -3.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_X_2L_ApproachPaving_0_1": {
+          "min": [
+            -5.119999885559082,
+            -7.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            -3.119999885559082,
+            -6.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_X_2L_ApproachCurb_0_1": {
+          "min": [
+            -3.119999885559082,
+            -7.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            -3.0,
+            -6.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_X_2L_CornerPaving_1": {
+          "min": [
+            3.119999885559082,
+            -6.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            6.0,
+            -3.119999885559082,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_X_2L_CornerCurb_1": {
+          "min": [
+            3.0,
+            -6.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            6.0,
+            -3.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_X_2L_ApproachPaving_1_0": {
+          "min": [
+            3.119999885559082,
+            -7.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            5.119999885559082,
+            -6.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_X_2L_ApproachCurb_1_0": {
+          "min": [
+            3.0,
+            -7.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            3.119999885559082,
+            -6.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_X_2L_ApproachPaving_1_1": {
+          "min": [
+            6.0,
+            -5.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            7.0,
+            -3.119999885559082,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_X_2L_ApproachCurb_1_1": {
+          "min": [
+            6.0,
+            -3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            7.0,
+            -3.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_X_2L_CornerPaving_2": {
+          "min": [
+            3.119999885559082,
+            3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            6.0,
+            6.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_X_2L_CornerCurb_2": {
+          "min": [
+            3.0,
+            3.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            6.0,
+            6.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_X_2L_ApproachPaving_2_0": {
+          "min": [
+            6.0,
+            3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            7.0,
+            5.119999885559082,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_X_2L_ApproachCurb_2_0": {
+          "min": [
+            6.0,
+            3.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            7.0,
+            3.119999885559082,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_X_2L_ApproachPaving_2_1": {
+          "min": [
+            3.119999885559082,
+            6.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            5.119999885559082,
+            7.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_X_2L_ApproachCurb_2_1": {
+          "min": [
+            3.0,
+            6.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            3.119999885559082,
+            7.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_X_2L_CornerPaving_3": {
+          "min": [
+            -6.0,
+            3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            -3.119999885559082,
+            6.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_X_2L_CornerCurb_3": {
+          "min": [
+            -6.0,
+            3.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            -3.0,
+            6.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_X_2L_ApproachPaving_3_0": {
+          "min": [
+            -5.119999885559082,
+            6.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            -3.119999885559082,
+            7.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_X_2L_ApproachCurb_3_0": {
+          "min": [
+            -3.119999885559082,
+            6.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            -3.0,
+            7.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_X_2L_ApproachPaving_3_1": {
+          "min": [
+            -7.0,
+            3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            -6.0,
+            5.119999885559082,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkCorner_X_2L_ApproachCurb_3_1": {
+          "min": [
+            -7.0,
+            3.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            -6.0,
+            3.119999885559082,
+            0.15000000596046448
+          ]
+        }
+      }
     },
     "RoadPlan_Transition_4L_2L": {
       "parts": [
@@ -13703,7 +15645,21 @@
           0
         ]
       ],
-      "integration_note": "Replace temporary linear taper and its port spacing together; final ports are 24m apart"
+      "integration_note": "Replace temporary linear taper and its port spacing together; final ports are 24m apart",
+      "render_bounds": {
+        "RoadPlan_Transition_4L_2L_Surface": {
+          "min": [
+            -12.0,
+            -6.0,
+            0.0
+          ],
+          "max": [
+            12.0,
+            6.0,
+            0.0
+          ]
+        }
+      }
     },
     "RoadPlan_TransitionMarking_4L_2L": {
       "parts": [
@@ -13738,7 +15694,69 @@
       "collision_envelope": [],
       "companions": [],
       "paint_only": true,
-      "arrows_baked": false
+      "arrows_baked": false,
+      "render_bounds": {
+        "RoadPlan_TransitionMarking_4L_2L_Center": {
+          "min": [
+            -12.0,
+            -0.042500000447034836,
+            0.003000000026077032
+          ],
+          "max": [
+            12.0,
+            0.042500000447034836,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_TransitionMarking_4L_2L_Edge_-1": {
+          "min": [
+            -12.0,
+            -5.887499809265137,
+            0.003000000026077032
+          ],
+          "max": [
+            12.0,
+            -2.8125,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_TransitionMarking_4L_2L_MergeDash_-1": {
+          "min": [
+            -10.699999809265137,
+            -2.9784722328186035,
+            0.0026500001549720764
+          ],
+          "max": [
+            10.699999809265137,
+            -0.02152777463197708,
+            0.0033499998971819878
+          ]
+        },
+        "RoadPlan_TransitionMarking_4L_2L_Edge_1": {
+          "min": [
+            -12.0,
+            2.8125,
+            0.003000000026077032
+          ],
+          "max": [
+            12.0,
+            5.887499809265137,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_TransitionMarking_4L_2L_MergeDash_1": {
+          "min": [
+            -10.699999809265137,
+            0.02152777463197708,
+            0.0026500001549720764
+          ],
+          "max": [
+            10.699999809265137,
+            2.9784722328186035,
+            0.0033499998971819878
+          ]
+        }
+      }
     },
     "RoadPlan_WalkTransition_4L_2L": {
       "parts": [
@@ -13915,7 +15933,57 @@
       "companions": [],
       "road_companion": "RoadPlan_Transition_4L_2L",
       "effective_walk_width_m": 2,
-      "curb_width_m": 0.12
+      "curb_width_m": 0.12,
+      "render_bounds": {
+        "RoadPlan_WalkTransition_4L_2L_Paving_-1": {
+          "min": [
+            -12.0,
+            -8.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            12.0,
+            -3.119999885559082,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkTransition_4L_2L_Curb_-1": {
+          "min": [
+            -12.0,
+            -6.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            12.0,
+            -3.0,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkTransition_4L_2L_Paving_1": {
+          "min": [
+            -12.0,
+            3.119999885559082,
+            -0.15000000596046448
+          ],
+          "max": [
+            12.0,
+            8.119999885559082,
+            0.15000000596046448
+          ]
+        },
+        "RoadPlan_WalkTransition_4L_2L_Curb_1": {
+          "min": [
+            -12.0,
+            3.0,
+            -0.15000000596046448
+          ],
+          "max": [
+            12.0,
+            6.119999885559082,
+            0.15000000596046448
+          ]
+        }
+      }
     },
     "RoadPlan_CrosswalkPaint_2L": {
       "parts": [
@@ -13952,7 +16020,21 @@
       ],
       "actual_stripe_length_m": 3.6,
       "lanes": 2,
-      "reuse_review": "Rebuilt Transit stripe rhythm at nominal 4m band, required shared material and 3mm offset; no pavement"
+      "reuse_review": "Rebuilt Transit stripe rhythm at nominal 4m band, required shared material and 3mm offset; no pavement",
+      "render_bounds": {
+        "RoadPlan_CrosswalkPaint_2L_Paint": {
+          "min": [
+            -1.7999999523162842,
+            -2.805000066757202,
+            0.0026500001549720764
+          ],
+          "max": [
+            1.7999999523162842,
+            2.805000066757202,
+            0.0033499998971819878
+          ]
+        }
+      }
     },
     "RoadPlan_PedestrianHolo_2L": {
       "parts": [
@@ -13984,7 +16066,21 @@
       "companions": [],
       "signal_binding": "external pedestrian signal state / material parameter",
       "collision_generated": false,
-      "no_poles": true
+      "no_poles": true,
+      "render_bounds": {
+        "RoadPlan_PedestrianHolo_2L_GroundBrackets": {
+          "min": [
+            -1.909999966621399,
+            -3.2699999809265137,
+            0.0035000001080334187
+          ],
+          "max": [
+            1.909999966621399,
+            3.2699999809265137,
+            0.004500000271946192
+          ]
+        }
+      }
     },
     "RoadPlan_CrosswalkPaint_4L": {
       "parts": [
@@ -14021,7 +16117,21 @@
       ],
       "actual_stripe_length_m": 3.6,
       "lanes": 4,
-      "reuse_review": "Rebuilt Transit stripe rhythm at nominal 4m band, required shared material and 3mm offset; no pavement"
+      "reuse_review": "Rebuilt Transit stripe rhythm at nominal 4m band, required shared material and 3mm offset; no pavement",
+      "render_bounds": {
+        "RoadPlan_CrosswalkPaint_4L_Paint": {
+          "min": [
+            -1.7999999523162842,
+            -5.804999828338623,
+            0.0026500001549720764
+          ],
+          "max": [
+            1.7999999523162842,
+            5.804999828338623,
+            0.0033499998971819878
+          ]
+        }
+      }
     },
     "RoadPlan_PedestrianHolo_4L": {
       "parts": [
@@ -14053,7 +16163,21 @@
       "companions": [],
       "signal_binding": "external pedestrian signal state / material parameter",
       "collision_generated": false,
-      "no_poles": true
+      "no_poles": true,
+      "render_bounds": {
+        "RoadPlan_PedestrianHolo_4L_GroundBrackets": {
+          "min": [
+            -1.909999966621399,
+            -6.269999980926514,
+            0.0035000001080334187
+          ],
+          "max": [
+            1.909999966621399,
+            6.269999980926514,
+            0.004500000271946192
+          ]
+        }
+      }
     },
     "RoadPlan_AccessibleRamp_W2": {
       "parts": [
@@ -14477,7 +16601,21 @@
           "slope": -0.0
         }
       ],
-      "profile": "cubic_smoothstep_with_flat_endpoint_tangents"
+      "profile": "cubic_smoothstep_with_flat_endpoint_tangents",
+      "render_bounds": {
+        "RoadPlan_AccessibleRamp_W2_Surface": {
+          "min": [
+            -2.0,
+            -1.0,
+            -0.20000000298023224
+          ],
+          "max": [
+            2.0,
+            1.0,
+            0.15000000596046448
+          ]
+        }
+      }
     },
     "RoadPlan_AccessibleTactile_W2": {
       "parts": [
@@ -14508,7 +16646,21 @@
       "collision_envelope": [],
       "companions": [],
       "paint_only": false,
-      "tactile_projection_m": 0.004
+      "tactile_projection_m": 0.004,
+      "render_bounds": {
+        "RoadPlan_AccessibleTactile_W2_TactileCassette_0": {
+          "min": [
+            -1.7203253507614136,
+            -0.740325391292572,
+            0.14850501716136932
+          ],
+          "max": [
+            -1.5196746587753296,
+            0.740325391292572,
+            0.1515953093767166
+          ]
+        }
+      }
     },
     "RoadPlan_AccessibleRamp_W4": {
       "parts": [
@@ -14932,7 +17084,21 @@
           "slope": -0.0
         }
       ],
-      "profile": "cubic_smoothstep_with_flat_endpoint_tangents"
+      "profile": "cubic_smoothstep_with_flat_endpoint_tangents",
+      "render_bounds": {
+        "RoadPlan_AccessibleRamp_W4_Surface": {
+          "min": [
+            -2.0,
+            -2.0,
+            -0.20000000298023224
+          ],
+          "max": [
+            2.0,
+            2.0,
+            0.15000000596046448
+          ]
+        }
+      }
     },
     "RoadPlan_AccessibleTactile_W4": {
       "parts": [
@@ -14964,7 +17130,33 @@
       "collision_envelope": [],
       "companions": [],
       "paint_only": false,
-      "tactile_projection_m": 0.004
+      "tactile_projection_m": 0.004,
+      "render_bounds": {
+        "RoadPlan_AccessibleTactile_W4_TactileCassette_0": {
+          "min": [
+            -1.7203253507614136,
+            -1.7403253316879272,
+            0.14850501716136932
+          ],
+          "max": [
+            -1.5196746587753296,
+            -0.25967463850975037,
+            0.1515953093767166
+          ]
+        },
+        "RoadPlan_AccessibleTactile_W4_TactileCassette_1": {
+          "min": [
+            -1.7203253507614136,
+            0.25967463850975037,
+            0.14850501716136932
+          ],
+          "max": [
+            -1.5196746587753296,
+            1.7403253316879272,
+            0.1515953093767166
+          ]
+        }
+      }
     },
     "RoadPlan_Parapet_L4": {
       "parts": [
@@ -15105,7 +17297,81 @@
       "nominal_length_m": 4,
       "road_surface_included": false,
       "inner_edge_offset_from_centerline_m": 3.04,
-      "required_lateral_placement_m": 3.16
+      "required_lateral_placement_m": 3.16,
+      "render_bounds": {
+        "RoadPlan_Parapet_L4_TopRail": {
+          "min": [
+            -2.0,
+            -0.054999999701976776,
+            1.0299999713897705
+          ],
+          "max": [
+            2.0,
+            0.054999999701976776,
+            1.100000023841858
+          ]
+        },
+        "RoadPlan_Parapet_L4_MidRail": {
+          "min": [
+            -2.0,
+            -0.03750000149011612,
+            0.5
+          ],
+          "max": [
+            2.0,
+            0.03750000149011612,
+            0.5600000023841858
+          ]
+        },
+        "RoadPlan_Parapet_L4_ToeRail": {
+          "min": [
+            -2.0,
+            -0.05999999865889549,
+            0.009999999776482582
+          ],
+          "max": [
+            2.0,
+            0.05999999865889549,
+            0.11999999731779099
+          ]
+        },
+        "RoadPlan_Parapet_L4_Upright_0": {
+          "min": [
+            -1.7699999809265137,
+            -0.11999999731779099,
+            0.0
+          ],
+          "max": [
+            -1.5299999713897705,
+            0.11999999731779099,
+            1.0950000286102295
+          ]
+        },
+        "RoadPlan_Parapet_L4_Upright_1": {
+          "min": [
+            -0.11999999731779099,
+            -0.11999999731779099,
+            0.0
+          ],
+          "max": [
+            0.11999999731779099,
+            0.11999999731779099,
+            1.0950000286102295
+          ]
+        },
+        "RoadPlan_Parapet_L4_Upright_2": {
+          "min": [
+            1.5299999713897705,
+            -0.11999999731779099,
+            0.0
+          ],
+          "max": [
+            1.7699999809265137,
+            0.11999999731779099,
+            1.0950000286102295
+          ]
+        }
+      }
     },
     "RoadPlan_Parapet_L8": {
       "parts": [
@@ -15282,7 +17548,105 @@
       "nominal_length_m": 8,
       "road_surface_included": false,
       "inner_edge_offset_from_centerline_m": 3.04,
-      "required_lateral_placement_m": 3.16
+      "required_lateral_placement_m": 3.16,
+      "render_bounds": {
+        "RoadPlan_Parapet_L8_TopRail": {
+          "min": [
+            -4.0,
+            -0.054999999701976776,
+            1.0299999713897705
+          ],
+          "max": [
+            4.0,
+            0.054999999701976776,
+            1.100000023841858
+          ]
+        },
+        "RoadPlan_Parapet_L8_MidRail": {
+          "min": [
+            -4.0,
+            -0.03750000149011612,
+            0.5
+          ],
+          "max": [
+            4.0,
+            0.03750000149011612,
+            0.5600000023841858
+          ]
+        },
+        "RoadPlan_Parapet_L8_ToeRail": {
+          "min": [
+            -4.0,
+            -0.05999999865889549,
+            0.009999999776482582
+          ],
+          "max": [
+            4.0,
+            0.05999999865889549,
+            0.11999999731779099
+          ]
+        },
+        "RoadPlan_Parapet_L8_Upright_0": {
+          "min": [
+            -3.7699999809265137,
+            -0.11999999731779099,
+            0.0
+          ],
+          "max": [
+            -3.5300002098083496,
+            0.11999999731779099,
+            1.0950000286102295
+          ]
+        },
+        "RoadPlan_Parapet_L8_Upright_1": {
+          "min": [
+            -1.9450000524520874,
+            -0.11999999731779099,
+            0.0
+          ],
+          "max": [
+            -1.7050000429153442,
+            0.11999999731779099,
+            1.0950000286102295
+          ]
+        },
+        "RoadPlan_Parapet_L8_Upright_2": {
+          "min": [
+            -0.11999999731779099,
+            -0.11999999731779099,
+            0.0
+          ],
+          "max": [
+            0.11999999731779099,
+            0.11999999731779099,
+            1.0950000286102295
+          ]
+        },
+        "RoadPlan_Parapet_L8_Upright_3": {
+          "min": [
+            1.7050000429153442,
+            -0.11999999731779099,
+            0.0
+          ],
+          "max": [
+            1.9450000524520874,
+            0.11999999731779099,
+            1.0950000286102295
+          ]
+        },
+        "RoadPlan_Parapet_L8_Upright_4": {
+          "min": [
+            3.5300002098083496,
+            -0.11999999731779099,
+            0.0
+          ],
+          "max": [
+            3.7699999809265137,
+            0.11999999731779099,
+            1.0950000286102295
+          ]
+        }
+      }
     },
     "RoadPlan_Parapet_L16": {
       "parts": [
@@ -15531,7 +17895,153 @@
       "nominal_length_m": 16,
       "road_surface_included": false,
       "inner_edge_offset_from_centerline_m": 3.04,
-      "required_lateral_placement_m": 3.16
+      "required_lateral_placement_m": 3.16,
+      "render_bounds": {
+        "RoadPlan_Parapet_L16_TopRail": {
+          "min": [
+            -8.0,
+            -0.054999999701976776,
+            1.0299999713897705
+          ],
+          "max": [
+            8.0,
+            0.054999999701976776,
+            1.100000023841858
+          ]
+        },
+        "RoadPlan_Parapet_L16_MidRail": {
+          "min": [
+            -8.0,
+            -0.03750000149011612,
+            0.5
+          ],
+          "max": [
+            8.0,
+            0.03750000149011612,
+            0.5600000023841858
+          ]
+        },
+        "RoadPlan_Parapet_L16_ToeRail": {
+          "min": [
+            -8.0,
+            -0.05999999865889549,
+            0.009999999776482582
+          ],
+          "max": [
+            8.0,
+            0.05999999865889549,
+            0.11999999731779099
+          ]
+        },
+        "RoadPlan_Parapet_L16_Upright_0": {
+          "min": [
+            -7.769999980926514,
+            -0.11999999731779099,
+            0.0
+          ],
+          "max": [
+            -7.53000020980835,
+            0.11999999731779099,
+            1.0950000286102295
+          ]
+        },
+        "RoadPlan_Parapet_L16_Upright_1": {
+          "min": [
+            -5.857500076293945,
+            -0.11999999731779099,
+            0.0
+          ],
+          "max": [
+            -5.617500305175781,
+            0.11999999731779099,
+            1.0950000286102295
+          ]
+        },
+        "RoadPlan_Parapet_L16_Upright_2": {
+          "min": [
+            -3.944999933242798,
+            -0.11999999731779099,
+            0.0
+          ],
+          "max": [
+            -3.705000162124634,
+            0.11999999731779099,
+            1.0950000286102295
+          ]
+        },
+        "RoadPlan_Parapet_L16_Upright_3": {
+          "min": [
+            -2.0325000286102295,
+            -0.11999999731779099,
+            0.0
+          ],
+          "max": [
+            -1.7925000190734863,
+            0.11999999731779099,
+            1.0950000286102295
+          ]
+        },
+        "RoadPlan_Parapet_L16_Upright_4": {
+          "min": [
+            -0.11999999731779099,
+            -0.11999999731779099,
+            0.0
+          ],
+          "max": [
+            0.11999999731779099,
+            0.11999999731779099,
+            1.0950000286102295
+          ]
+        },
+        "RoadPlan_Parapet_L16_Upright_5": {
+          "min": [
+            1.7925000190734863,
+            -0.11999999731779099,
+            0.0
+          ],
+          "max": [
+            2.0325000286102295,
+            0.11999999731779099,
+            1.0950000286102295
+          ]
+        },
+        "RoadPlan_Parapet_L16_Upright_6": {
+          "min": [
+            3.705000162124634,
+            -0.11999999731779099,
+            0.0
+          ],
+          "max": [
+            3.944999933242798,
+            0.11999999731779099,
+            1.0950000286102295
+          ]
+        },
+        "RoadPlan_Parapet_L16_Upright_7": {
+          "min": [
+            5.617500305175781,
+            -0.11999999731779099,
+            0.0
+          ],
+          "max": [
+            5.857500076293945,
+            0.11999999731779099,
+            1.0950000286102295
+          ]
+        },
+        "RoadPlan_Parapet_L16_Upright_8": {
+          "min": [
+            7.53000020980835,
+            -0.11999999731779099,
+            0.0
+          ],
+          "max": [
+            7.769999980926514,
+            0.11999999731779099,
+            1.0950000286102295
+          ]
+        }
+      }
     },
     "RoadPlan_Deck_2L_L4": {
       "parts": [
@@ -15719,7 +18229,21 @@
         "recommended_surface_elevation_m": 8.4,
         "clear_height_at_recommended_m": 8
       },
-      "levels_do_not_auto_connect": true
+      "levels_do_not_auto_connect": true,
+      "render_bounds": {
+        "RoadPlan_Deck_2L_L4_Surface": {
+          "min": [
+            -2.0,
+            -3.0,
+            -0.20000000298023224
+          ],
+          "max": [
+            2.0,
+            3.0,
+            0.0
+          ]
+        }
+      }
     },
     "RoadPlan_DeckMarking_2L_L4": {
       "parts": [
@@ -15752,7 +18276,45 @@
       "collision_envelope": [],
       "companions": [],
       "paint_only": true,
-      "road_companion": "RoadPlan_Deck_2L_L4"
+      "road_companion": "RoadPlan_Deck_2L_L4",
+      "render_bounds": {
+        "RoadPlan_DeckMarking_2L_L4_Center": {
+          "min": [
+            -2.0,
+            -0.042500000447034836,
+            0.002300000051036477
+          ],
+          "max": [
+            2.0,
+            0.042500000447034836,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_DeckMarking_2L_L4_EdgeRight": {
+          "min": [
+            -2.0,
+            -2.887500047683716,
+            0.002300000051036477
+          ],
+          "max": [
+            2.0,
+            -2.8125,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_DeckMarking_2L_L4_EdgeLeft": {
+          "min": [
+            -2.0,
+            2.8125,
+            0.002300000051036477
+          ],
+          "max": [
+            2.0,
+            2.887500047683716,
+            0.003000000026077032
+          ]
+        }
+      }
     },
     "RoadPlan_DeckStructure_L4": {
       "parts": [
@@ -15860,7 +18422,57 @@
         "required_under_clearance_m": 8,
         "required_deck_surface_world_z_m": 8.4
       },
-      "road_surface_included": false
+      "road_surface_included": false,
+      "render_bounds": {
+        "RoadPlan_DeckStructure_L4_Girder_-1": {
+          "min": [
+            -2.0,
+            -2.569999933242798,
+            -0.4000000059604645
+          ],
+          "max": [
+            2.0,
+            -2.129999876022339,
+            -0.18000000715255737
+          ]
+        },
+        "RoadPlan_DeckStructure_L4_Girder_1": {
+          "min": [
+            -2.0,
+            2.129999876022339,
+            -0.4000000059604645
+          ],
+          "max": [
+            2.0,
+            2.569999933242798,
+            -0.18000000715255737
+          ]
+        },
+        "RoadPlan_DeckStructure_L4_Crosshead_-1": {
+          "min": [
+            -1.9700000286102295,
+            -3.1500000953674316,
+            -0.4000000059604645
+          ],
+          "max": [
+            -1.7100000381469727,
+            3.1500000953674316,
+            -0.20000001788139343
+          ]
+        },
+        "RoadPlan_DeckStructure_L4_Crosshead_1": {
+          "min": [
+            1.7100000381469727,
+            -3.1500000953674316,
+            -0.4000000059604645
+          ],
+          "max": [
+            1.9700000286102295,
+            3.1500000953674316,
+            -0.20000001788139343
+          ]
+        }
+      }
     },
     "RoadPlan_Deck_2L_L8": {
       "parts": [
@@ -16048,7 +18660,21 @@
         "recommended_surface_elevation_m": 8.4,
         "clear_height_at_recommended_m": 8
       },
-      "levels_do_not_auto_connect": true
+      "levels_do_not_auto_connect": true,
+      "render_bounds": {
+        "RoadPlan_Deck_2L_L8_Surface": {
+          "min": [
+            -4.0,
+            -3.0,
+            -0.20000000298023224
+          ],
+          "max": [
+            4.0,
+            3.0,
+            0.0
+          ]
+        }
+      }
     },
     "RoadPlan_DeckMarking_2L_L8": {
       "parts": [
@@ -16081,7 +18707,45 @@
       "collision_envelope": [],
       "companions": [],
       "paint_only": true,
-      "road_companion": "RoadPlan_Deck_2L_L8"
+      "road_companion": "RoadPlan_Deck_2L_L8",
+      "render_bounds": {
+        "RoadPlan_DeckMarking_2L_L8_Center": {
+          "min": [
+            -4.0,
+            -0.042500000447034836,
+            0.002300000051036477
+          ],
+          "max": [
+            4.0,
+            0.042500000447034836,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_DeckMarking_2L_L8_EdgeRight": {
+          "min": [
+            -4.0,
+            -2.887500047683716,
+            0.002300000051036477
+          ],
+          "max": [
+            4.0,
+            -2.8125,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_DeckMarking_2L_L8_EdgeLeft": {
+          "min": [
+            -4.0,
+            2.8125,
+            0.002300000051036477
+          ],
+          "max": [
+            4.0,
+            2.887500047683716,
+            0.003000000026077032
+          ]
+        }
+      }
     },
     "RoadPlan_DeckStructure_L8": {
       "parts": [
@@ -16189,7 +18853,57 @@
         "required_under_clearance_m": 8,
         "required_deck_surface_world_z_m": 8.4
       },
-      "road_surface_included": false
+      "road_surface_included": false,
+      "render_bounds": {
+        "RoadPlan_DeckStructure_L8_Girder_-1": {
+          "min": [
+            -4.0,
+            -2.569999933242798,
+            -0.4000000059604645
+          ],
+          "max": [
+            4.0,
+            -2.129999876022339,
+            -0.18000000715255737
+          ]
+        },
+        "RoadPlan_DeckStructure_L8_Girder_1": {
+          "min": [
+            -4.0,
+            2.129999876022339,
+            -0.4000000059604645
+          ],
+          "max": [
+            4.0,
+            2.569999933242798,
+            -0.18000000715255737
+          ]
+        },
+        "RoadPlan_DeckStructure_L8_Crosshead_-1": {
+          "min": [
+            -3.9699997901916504,
+            -3.1500000953674316,
+            -0.4000000059604645
+          ],
+          "max": [
+            -3.7100000381469727,
+            3.1500000953674316,
+            -0.20000001788139343
+          ]
+        },
+        "RoadPlan_DeckStructure_L8_Crosshead_1": {
+          "min": [
+            3.7100000381469727,
+            -3.1500000953674316,
+            -0.4000000059604645
+          ],
+          "max": [
+            3.9699997901916504,
+            3.1500000953674316,
+            -0.20000001788139343
+          ]
+        }
+      }
     },
     "RoadPlan_Deck_2L_L16": {
       "parts": [
@@ -16377,7 +19091,21 @@
         "recommended_surface_elevation_m": 8.4,
         "clear_height_at_recommended_m": 8
       },
-      "levels_do_not_auto_connect": true
+      "levels_do_not_auto_connect": true,
+      "render_bounds": {
+        "RoadPlan_Deck_2L_L16_Surface": {
+          "min": [
+            -8.0,
+            -3.0,
+            -0.20000000298023224
+          ],
+          "max": [
+            8.0,
+            3.0,
+            0.0
+          ]
+        }
+      }
     },
     "RoadPlan_DeckMarking_2L_L16": {
       "parts": [
@@ -16410,7 +19138,45 @@
       "collision_envelope": [],
       "companions": [],
       "paint_only": true,
-      "road_companion": "RoadPlan_Deck_2L_L16"
+      "road_companion": "RoadPlan_Deck_2L_L16",
+      "render_bounds": {
+        "RoadPlan_DeckMarking_2L_L16_Center": {
+          "min": [
+            -8.0,
+            -0.042500000447034836,
+            0.002300000051036477
+          ],
+          "max": [
+            8.0,
+            0.042500000447034836,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_DeckMarking_2L_L16_EdgeRight": {
+          "min": [
+            -8.0,
+            -2.887500047683716,
+            0.002300000051036477
+          ],
+          "max": [
+            8.0,
+            -2.8125,
+            0.003000000026077032
+          ]
+        },
+        "RoadPlan_DeckMarking_2L_L16_EdgeLeft": {
+          "min": [
+            -8.0,
+            2.8125,
+            0.002300000051036477
+          ],
+          "max": [
+            8.0,
+            2.887500047683716,
+            0.003000000026077032
+          ]
+        }
+      }
     },
     "RoadPlan_DeckStructure_L16": {
       "parts": [
@@ -16518,7 +19284,57 @@
         "required_under_clearance_m": 8,
         "required_deck_surface_world_z_m": 8.4
       },
-      "road_surface_included": false
+      "road_surface_included": false,
+      "render_bounds": {
+        "RoadPlan_DeckStructure_L16_Girder_-1": {
+          "min": [
+            -8.0,
+            -2.569999933242798,
+            -0.4000000059604645
+          ],
+          "max": [
+            8.0,
+            -2.129999876022339,
+            -0.18000000715255737
+          ]
+        },
+        "RoadPlan_DeckStructure_L16_Girder_1": {
+          "min": [
+            -8.0,
+            2.129999876022339,
+            -0.4000000059604645
+          ],
+          "max": [
+            8.0,
+            2.569999933242798,
+            -0.18000000715255737
+          ]
+        },
+        "RoadPlan_DeckStructure_L16_Crosshead_-1": {
+          "min": [
+            -7.970000267028809,
+            -3.1500000953674316,
+            -0.4000000059604645
+          ],
+          "max": [
+            -7.710000038146973,
+            3.1500000953674316,
+            -0.20000001788139343
+          ]
+        },
+        "RoadPlan_DeckStructure_L16_Crosshead_1": {
+          "min": [
+            7.710000038146973,
+            -3.1500000953674316,
+            -0.4000000059604645
+          ],
+          "max": [
+            7.970000267028809,
+            3.1500000953674316,
+            -0.20000001788139343
+          ]
+        }
+      }
     },
     "RoadPlan_Pier_H7p6": {
       "parts": [
@@ -16608,7 +19424,45 @@
         6.5
       ],
       "placement_rule": "Separate support at a clear station; never auto-place at road crossing",
-      "recommended_road_surface_z_m": 8.0
+      "recommended_road_surface_z_m": 8.0,
+      "render_bounds": {
+        "RoadPlan_Pier_H7p6_LegFoundation_-1": {
+          "min": [
+            -0.699999988079071,
+            -2.5,
+            -0.1600000113248825
+          ],
+          "max": [
+            0.699999988079071,
+            -1.1563670635223389,
+            7.218822479248047
+          ]
+        },
+        "RoadPlan_Pier_H7p6_LegFoundation_1": {
+          "min": [
+            -0.699999988079071,
+            1.1563670635223389,
+            -0.1600000113248825
+          ],
+          "max": [
+            0.699999988079071,
+            2.5,
+            7.218822479248047
+          ]
+        },
+        "RoadPlan_Pier_H7p6_CapBeam": {
+          "min": [
+            -0.574999988079071,
+            -3.1500000953674316,
+            7.200000286102295
+          ],
+          "max": [
+            0.574999988079071,
+            3.1500000953674316,
+            7.599999904632568
+          ]
+        }
+      }
     },
     "RoadPlan_Pier_H8": {
       "parts": [
@@ -16698,7 +19552,45 @@
         6.5
       ],
       "placement_rule": "Separate support at a clear station; never auto-place at road crossing",
-      "recommended_road_surface_z_m": 8.4
+      "recommended_road_surface_z_m": 8.4,
+      "render_bounds": {
+        "RoadPlan_Pier_H8_LegFoundation_-1": {
+          "min": [
+            -0.699999988079071,
+            -2.5,
+            -0.1600000113248825
+          ],
+          "max": [
+            0.699999988079071,
+            -1.156304121017456,
+            7.617811679840088
+          ]
+        },
+        "RoadPlan_Pier_H8_LegFoundation_1": {
+          "min": [
+            -0.699999988079071,
+            1.156304121017456,
+            -0.1600000113248825
+          ],
+          "max": [
+            0.699999988079071,
+            2.5,
+            7.617811679840088
+          ]
+        },
+        "RoadPlan_Pier_H8_CapBeam": {
+          "min": [
+            -0.574999988079071,
+            -3.1500000953674316,
+            7.600000381469727
+          ],
+          "max": [
+            0.574999988079071,
+            3.1500000953674316,
+            8.0
+          ]
+        }
+      }
     },
     "RoadPlan_Abutment_W6": {
       "parts": [
@@ -16764,7 +19656,33 @@
         }
       ],
       "companions": [],
-      "placement_rule": "Place outside the live road mouth; reserve retaining-wall volume"
+      "placement_rule": "Place outside the live road mouth; reserve retaining-wall volume",
+      "render_bounds": {
+        "RoadPlan_Abutment_W6_Foundation": {
+          "min": [
+            -0.6499999761581421,
+            -3.25,
+            -0.5
+          ],
+          "max": [
+            0.6499999761581421,
+            3.25,
+            0.0
+          ]
+        },
+        "RoadPlan_Abutment_W6_BackWall": {
+          "min": [
+            -0.5499999523162842,
+            -3.1500000953674316,
+            0.0
+          ],
+          "max": [
+            -0.28999999165534973,
+            3.1500000953674316,
+            0.30000001192092896
+          ]
+        }
+      }
     },
     "RoadPlan_Barrier_EndProtection": {
       "parts": [
@@ -16813,7 +19731,33 @@
         }
       ],
       "companions": [],
-      "placement_rule": "Outside usable carriageway, at parapet ends"
+      "placement_rule": "Outside usable carriageway, at parapet ends",
+      "render_bounds": {
+        "RoadPlan_Barrier_EndProtection_CrashCushion": {
+          "min": [
+            -0.30000001192092896,
+            -0.1599999964237213,
+            0.0
+          ],
+          "max": [
+            0.30000001192092896,
+            0.1599999964237213,
+            0.8399999737739563
+          ]
+        },
+        "RoadPlan_Barrier_EndProtection_Reflector": {
+          "min": [
+            -0.3174999952316284,
+            -0.11999999731779099,
+            0.35999998450279236
+          ],
+          "max": [
+            -0.30250000953674316,
+            0.11999999731779099,
+            0.6799999475479126
+          ]
+        }
+      }
     },
     "RoadPlan_Ramp_2L_Rise8_L110": {
       "parts": [
@@ -19501,7 +22445,45 @@
         "satisfies_8m_at_upper": false,
         "low_under_ramp_space_reserved": true
       },
-      "integration_note": "Rise8 matches current graph; Rise8p4 requires graph altitude 4.2 world units and matching deck placement. No code changed."
+      "integration_note": "Rise8 matches current graph; Rise8p4 requires graph altitude 4.2 world units and matching deck placement. No code changed.",
+      "render_bounds": {
+        "RoadPlan_Ramp_2L_Rise8_L110_LowerVerticalCurve": {
+          "min": [
+            0.0,
+            -3.0,
+            -0.20000000298023224
+          ],
+          "max": [
+            16.0,
+            3.0,
+            0.6808510422706604
+          ]
+        },
+        "RoadPlan_Ramp_2L_Rise8_L110_ConstantGrade": {
+          "min": [
+            16.0,
+            -3.0,
+            0.48085105419158936
+          ],
+          "max": [
+            94.0,
+            3.0,
+            7.319149017333984
+          ]
+        },
+        "RoadPlan_Ramp_2L_Rise8_L110_UpperVerticalCurve": {
+          "min": [
+            94.0,
+            -3.0,
+            7.1191487312316895
+          ],
+          "max": [
+            110.0,
+            3.0,
+            8.0
+          ]
+        }
+      }
     },
     "RoadPlan_RampMarking_2L_Rise8_L110": {
       "parts": [
@@ -19539,7 +22521,117 @@
       ],
       "collision_envelope": [],
       "companions": [],
-      "paint_only": true
+      "paint_only": true,
+      "render_bounds": {
+        "RoadPlan_RampMarking_2L_Rise8_L110_LowerVerticalCurve_Center": {
+          "min": [
+            0.0,
+            -0.042500000447034836,
+            0.003000000026077032
+          ],
+          "max": [
+            16.0,
+            0.042500000447034836,
+            0.6838510632514954
+          ]
+        },
+        "RoadPlan_RampMarking_2L_Rise8_L110_LowerVerticalCurve_EdgeRight": {
+          "min": [
+            0.0,
+            -2.887500047683716,
+            0.003000000026077032
+          ],
+          "max": [
+            16.0,
+            -2.8125,
+            0.6838510632514954
+          ]
+        },
+        "RoadPlan_RampMarking_2L_Rise8_L110_LowerVerticalCurve_EdgeLeft": {
+          "min": [
+            0.0,
+            2.8125,
+            0.003000000026077032
+          ],
+          "max": [
+            16.0,
+            2.887500047683716,
+            0.6838510632514954
+          ]
+        },
+        "RoadPlan_RampMarking_2L_Rise8_L110_ConstantGrade_Center": {
+          "min": [
+            16.0,
+            -0.042500000447034836,
+            0.6831510663032532
+          ],
+          "max": [
+            94.0,
+            0.042500000447034836,
+            7.32214879989624
+          ]
+        },
+        "RoadPlan_RampMarking_2L_Rise8_L110_ConstantGrade_EdgeRight": {
+          "min": [
+            16.0,
+            -2.887500047683716,
+            0.6831510663032532
+          ],
+          "max": [
+            94.0,
+            -2.8125,
+            7.32214879989624
+          ]
+        },
+        "RoadPlan_RampMarking_2L_Rise8_L110_ConstantGrade_EdgeLeft": {
+          "min": [
+            16.0,
+            2.8125,
+            0.6831510663032532
+          ],
+          "max": [
+            94.0,
+            2.887500047683716,
+            7.32214879989624
+          ]
+        },
+        "RoadPlan_RampMarking_2L_Rise8_L110_UpperVerticalCurve_Center": {
+          "min": [
+            94.0,
+            -0.042500000447034836,
+            7.32214879989624
+          ],
+          "max": [
+            110.0,
+            0.042500000447034836,
+            8.003000259399414
+          ]
+        },
+        "RoadPlan_RampMarking_2L_Rise8_L110_UpperVerticalCurve_EdgeRight": {
+          "min": [
+            94.0,
+            -2.887500047683716,
+            7.32214879989624
+          ],
+          "max": [
+            110.0,
+            -2.8125,
+            8.003000259399414
+          ]
+        },
+        "RoadPlan_RampMarking_2L_Rise8_L110_UpperVerticalCurve_EdgeLeft": {
+          "min": [
+            94.0,
+            2.8125,
+            7.32214879989624
+          ],
+          "max": [
+            110.0,
+            2.887500047683716,
+            8.003000259399414
+          ]
+        }
+      }
     },
     "RoadPlan_RampParapet_2L_Rise8_L110": {
       "parts": [
@@ -20938,7 +24030,921 @@
       ],
       "companions": [],
       "road_surface_included": false,
-      "inner_edge_from_centerline_m": 3.04
+      "inner_edge_from_centerline_m": 3.04,
+      "render_bounds": {
+        "RoadPlan_RampParapet_2L_Rise8_L110_LowerVerticalCurve_TopRail_-1": {
+          "min": [
+            0.0,
+            -3.2149999141693115,
+            1.0299999713897705
+          ],
+          "max": [
+            16.0,
+            -3.1050000190734863,
+            1.7808510065078735
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_LowerVerticalCurve_MidRail_-1": {
+          "min": [
+            0.0,
+            -3.197499990463257,
+            0.5
+          ],
+          "max": [
+            16.0,
+            -3.122499942779541,
+            1.2408510446548462
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_LowerVerticalCurve_ToeRail_-1": {
+          "min": [
+            0.0,
+            -3.2200000286102295,
+            0.009999999776482582
+          ],
+          "max": [
+            16.0,
+            -3.0999999046325684,
+            0.800851047039032
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_LowerVerticalCurve_TopRail_1": {
+          "min": [
+            0.0,
+            3.1050000190734863,
+            1.0299999713897705
+          ],
+          "max": [
+            16.0,
+            3.2149999141693115,
+            1.7808510065078735
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_LowerVerticalCurve_MidRail_1": {
+          "min": [
+            0.0,
+            3.122499942779541,
+            0.5
+          ],
+          "max": [
+            16.0,
+            3.197499990463257,
+            1.2408510446548462
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_LowerVerticalCurve_ToeRail_1": {
+          "min": [
+            0.0,
+            3.0999999046325684,
+            0.009999999776482582
+          ],
+          "max": [
+            16.0,
+            3.2200000286102295,
+            0.800851047039032
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_ConstantGrade_TopRail_-1": {
+          "min": [
+            16.0,
+            -3.2149999141693115,
+            1.7108510732650757
+          ],
+          "max": [
+            94.0,
+            -3.1050000190734863,
+            8.419149398803711
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_ConstantGrade_MidRail_-1": {
+          "min": [
+            16.0,
+            -3.197499990463257,
+            1.1808511018753052
+          ],
+          "max": [
+            94.0,
+            -3.122499942779541,
+            7.879148960113525
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_ConstantGrade_ToeRail_-1": {
+          "min": [
+            16.0,
+            -3.2200000286102295,
+            0.690851092338562
+          ],
+          "max": [
+            94.0,
+            -3.0999999046325684,
+            7.439148902893066
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_ConstantGrade_TopRail_1": {
+          "min": [
+            16.0,
+            3.1050000190734863,
+            1.7108510732650757
+          ],
+          "max": [
+            94.0,
+            3.2149999141693115,
+            8.419149398803711
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_ConstantGrade_MidRail_1": {
+          "min": [
+            16.0,
+            3.122499942779541,
+            1.1808511018753052
+          ],
+          "max": [
+            94.0,
+            3.197499990463257,
+            7.879148960113525
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_ConstantGrade_ToeRail_1": {
+          "min": [
+            16.0,
+            3.0999999046325684,
+            0.690851092338562
+          ],
+          "max": [
+            94.0,
+            3.2200000286102295,
+            7.439148902893066
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_UpperVerticalCurve_TopRail_-1": {
+          "min": [
+            94.0,
+            -3.2149999141693115,
+            8.349148750305176
+          ],
+          "max": [
+            110.0,
+            -3.1050000190734863,
+            9.100000381469727
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_UpperVerticalCurve_MidRail_-1": {
+          "min": [
+            94.0,
+            -3.197499990463257,
+            7.819149017333984
+          ],
+          "max": [
+            110.0,
+            -3.122499942779541,
+            8.5600004196167
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_UpperVerticalCurve_ToeRail_-1": {
+          "min": [
+            94.0,
+            -3.2200000286102295,
+            7.329148769378662
+          ],
+          "max": [
+            110.0,
+            -3.0999999046325684,
+            8.119999885559082
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_UpperVerticalCurve_TopRail_1": {
+          "min": [
+            94.0,
+            3.1050000190734863,
+            8.349148750305176
+          ],
+          "max": [
+            110.0,
+            3.2149999141693115,
+            9.100000381469727
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_UpperVerticalCurve_MidRail_1": {
+          "min": [
+            94.0,
+            3.122499942779541,
+            7.819149017333984
+          ],
+          "max": [
+            110.0,
+            3.197499990463257,
+            8.5600004196167
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_UpperVerticalCurve_ToeRail_1": {
+          "min": [
+            94.0,
+            3.0999999046325684,
+            7.329148769378662
+          ],
+          "max": [
+            110.0,
+            3.2200000286102295,
+            8.119999885559082
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_0m_-1": {
+          "min": [
+            -0.11999999731779099,
+            -3.2799999713897705,
+            0.0
+          ],
+          "max": [
+            0.11999999731779099,
+            -3.0400002002716064,
+            1.0950000286102295
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_0m_1": {
+          "min": [
+            -0.11999999731779099,
+            3.0400002002716064,
+            0.0
+          ],
+          "max": [
+            0.11999999731779099,
+            3.2799999713897705,
+            1.0950000286102295
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_4m_-1": {
+          "min": [
+            3.8792827129364014,
+            -3.2799999713897705,
+            0.04000849649310112
+          ],
+          "max": [
+            4.120717525482178,
+            -3.0400002002716064,
+            1.1375532150268555
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_4m_1": {
+          "min": [
+            3.8792827129364014,
+            3.0400002002716064,
+            0.04000849649310112
+          ],
+          "max": [
+            4.120717525482178,
+            3.2799999713897705,
+            1.1375532150268555
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_8m_-1": {
+          "min": [
+            7.878620624542236,
+            -3.2799999713897705,
+            0.16514265537261963
+          ],
+          "max": [
+            8.121379852294922,
+            -3.0400002002716064,
+            1.2652127742767334
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_8m_1": {
+          "min": [
+            7.878620624542236,
+            3.0400002002716064,
+            0.16514265537261963
+          ],
+          "max": [
+            8.121379852294922,
+            3.2799999713897705,
+            1.2652127742767334
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_12m_-1": {
+          "min": [
+            11.87801456451416,
+            -3.2799999713897705,
+            0.37540578842163086
+          ],
+          "max": [
+            12.12198543548584,
+            -3.0400002002716064,
+            1.4779787063598633
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_12m_1": {
+          "min": [
+            11.87801456451416,
+            3.0400002002716064,
+            0.37540578842163086
+          ],
+          "max": [
+            12.12198543548584,
+            3.2799999713897705,
+            1.4779787063598633
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_16m_-1": {
+          "min": [
+            15.877464294433594,
+            -3.2799999713897705,
+            0.6708011627197266
+          ],
+          "max": [
+            16.122535705566406,
+            -3.0400002002716064,
+            1.7758510112762451
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_16m_1": {
+          "min": [
+            15.877464294433594,
+            3.0400002002716064,
+            0.6708011627197266
+          ],
+          "max": [
+            16.122535705566406,
+            3.2799999713897705,
+            1.7758510112762451
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_20m_-1": {
+          "min": [
+            19.877464294433594,
+            -3.2799999713897705,
+            1.0112266540527344
+          ],
+          "max": [
+            20.122535705566406,
+            -3.0400002002716064,
+            2.116276741027832
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_20m_1": {
+          "min": [
+            19.877464294433594,
+            3.0400002002716064,
+            1.0112266540527344
+          ],
+          "max": [
+            20.122535705566406,
+            3.2799999713897705,
+            2.116276741027832
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_24m_-1": {
+          "min": [
+            23.877464294433594,
+            -3.2799999713897705,
+            1.3516522645950317
+          ],
+          "max": [
+            24.122535705566406,
+            -3.0400002002716064,
+            2.45670223236084
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_24m_1": {
+          "min": [
+            23.877464294433594,
+            3.0400002002716064,
+            1.3516522645950317
+          ],
+          "max": [
+            24.122535705566406,
+            3.2799999713897705,
+            2.45670223236084
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_28m_-1": {
+          "min": [
+            27.877464294433594,
+            -3.2799999713897705,
+            1.6920777559280396
+          ],
+          "max": [
+            28.122535705566406,
+            -3.0400002002716064,
+            2.7971277236938477
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_28m_1": {
+          "min": [
+            27.877464294433594,
+            3.0400002002716064,
+            1.6920777559280396
+          ],
+          "max": [
+            28.122535705566406,
+            3.2799999713897705,
+            2.7971277236938477
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_32m_-1": {
+          "min": [
+            31.877464294433594,
+            -3.2799999713897705,
+            2.032503366470337
+          ],
+          "max": [
+            32.122535705566406,
+            -3.0400002002716064,
+            3.1375532150268555
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_32m_1": {
+          "min": [
+            31.877464294433594,
+            3.0400002002716064,
+            2.032503366470337
+          ],
+          "max": [
+            32.122535705566406,
+            3.2799999713897705,
+            3.1375532150268555
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_36m_-1": {
+          "min": [
+            35.877464294433594,
+            -3.2799999713897705,
+            2.3729288578033447
+          ],
+          "max": [
+            36.122535705566406,
+            -3.0400002002716064,
+            3.4779787063598633
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_36m_1": {
+          "min": [
+            35.877464294433594,
+            3.0400002002716064,
+            2.3729288578033447
+          ],
+          "max": [
+            36.122535705566406,
+            3.2799999713897705,
+            3.4779787063598633
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_40m_-1": {
+          "min": [
+            39.877464294433594,
+            -3.2799999713897705,
+            2.7133543491363525
+          ],
+          "max": [
+            40.122535705566406,
+            -3.0400002002716064,
+            3.818404197692871
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_40m_1": {
+          "min": [
+            39.877464294433594,
+            3.0400002002716064,
+            2.7133543491363525
+          ],
+          "max": [
+            40.122535705566406,
+            3.2799999713897705,
+            3.818404197692871
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_44m_-1": {
+          "min": [
+            43.877464294433594,
+            -3.2799999713897705,
+            3.0537798404693604
+          ],
+          "max": [
+            44.122535705566406,
+            -3.0400002002716064,
+            4.158829689025879
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_44m_1": {
+          "min": [
+            43.877464294433594,
+            3.0400002002716064,
+            3.0537798404693604
+          ],
+          "max": [
+            44.122535705566406,
+            3.2799999713897705,
+            4.158829689025879
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_48m_-1": {
+          "min": [
+            47.877464294433594,
+            -3.2799999713897705,
+            3.394205331802368
+          ],
+          "max": [
+            48.122535705566406,
+            -3.0400002002716064,
+            4.499255180358887
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_48m_1": {
+          "min": [
+            47.877464294433594,
+            3.0400002002716064,
+            3.394205331802368
+          ],
+          "max": [
+            48.122535705566406,
+            3.2799999713897705,
+            4.499255180358887
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_52m_-1": {
+          "min": [
+            51.877464294433594,
+            -3.2799999713897705,
+            3.734631061553955
+          ],
+          "max": [
+            52.122535705566406,
+            -3.0400002002716064,
+            4.839681148529053
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_52m_1": {
+          "min": [
+            51.877464294433594,
+            3.0400002002716064,
+            3.734631061553955
+          ],
+          "max": [
+            52.122535705566406,
+            3.2799999713897705,
+            4.839681148529053
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_56m_-1": {
+          "min": [
+            55.877464294433594,
+            -3.2799999713897705,
+            4.075056076049805
+          ],
+          "max": [
+            56.122535705566406,
+            -3.0400002002716064,
+            5.1801066398620605
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_56m_1": {
+          "min": [
+            55.877464294433594,
+            3.0400002002716064,
+            4.075056076049805
+          ],
+          "max": [
+            56.122535705566406,
+            3.2799999713897705,
+            5.1801066398620605
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_60m_-1": {
+          "min": [
+            59.877464294433594,
+            -3.2799999713897705,
+            4.4154815673828125
+          ],
+          "max": [
+            60.122535705566406,
+            -3.0400002002716064,
+            5.520532131195068
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_60m_1": {
+          "min": [
+            59.877464294433594,
+            3.0400002002716064,
+            4.4154815673828125
+          ],
+          "max": [
+            60.122535705566406,
+            3.2799999713897705,
+            5.520532131195068
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_64m_-1": {
+          "min": [
+            63.877464294433594,
+            -3.2799999713897705,
+            4.7559075355529785
+          ],
+          "max": [
+            64.1225357055664,
+            -3.0400002002716064,
+            5.860957622528076
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_64m_1": {
+          "min": [
+            63.877464294433594,
+            3.0400002002716064,
+            4.7559075355529785
+          ],
+          "max": [
+            64.1225357055664,
+            3.2799999713897705,
+            5.860957622528076
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_68m_-1": {
+          "min": [
+            67.8774642944336,
+            -3.2799999713897705,
+            5.096333026885986
+          ],
+          "max": [
+            68.1225357055664,
+            -3.0400002002716064,
+            6.201383113861084
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_68m_1": {
+          "min": [
+            67.8774642944336,
+            3.0400002002716064,
+            5.096333026885986
+          ],
+          "max": [
+            68.1225357055664,
+            3.2799999713897705,
+            6.201383113861084
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_72m_-1": {
+          "min": [
+            71.8774642944336,
+            -3.2799999713897705,
+            5.436758518218994
+          ],
+          "max": [
+            72.1225357055664,
+            -3.0400002002716064,
+            6.541808605194092
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_72m_1": {
+          "min": [
+            71.8774642944336,
+            3.0400002002716064,
+            5.436758518218994
+          ],
+          "max": [
+            72.1225357055664,
+            3.2799999713897705,
+            6.541808605194092
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_76m_-1": {
+          "min": [
+            75.8774642944336,
+            -3.2799999713897705,
+            5.777184009552002
+          ],
+          "max": [
+            76.1225357055664,
+            -3.0400002002716064,
+            6.8822340965271
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_76m_1": {
+          "min": [
+            75.8774642944336,
+            3.0400002002716064,
+            5.777184009552002
+          ],
+          "max": [
+            76.1225357055664,
+            3.2799999713897705,
+            6.8822340965271
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_80m_-1": {
+          "min": [
+            79.8774642944336,
+            -3.2799999713897705,
+            6.11760950088501
+          ],
+          "max": [
+            80.1225357055664,
+            -3.0400002002716064,
+            7.222659587860107
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_80m_1": {
+          "min": [
+            79.8774642944336,
+            3.0400002002716064,
+            6.11760950088501
+          ],
+          "max": [
+            80.1225357055664,
+            3.2799999713897705,
+            7.222659587860107
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_84m_-1": {
+          "min": [
+            83.8774642944336,
+            -3.2799999713897705,
+            6.458034992218018
+          ],
+          "max": [
+            84.1225357055664,
+            -3.0400002002716064,
+            7.563085079193115
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_84m_1": {
+          "min": [
+            83.8774642944336,
+            3.0400002002716064,
+            6.458034992218018
+          ],
+          "max": [
+            84.1225357055664,
+            3.2799999713897705,
+            7.563085079193115
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_88m_-1": {
+          "min": [
+            87.8774642944336,
+            -3.2799999713897705,
+            6.798460483551025
+          ],
+          "max": [
+            88.1225357055664,
+            -3.0400002002716064,
+            7.903510570526123
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_88m_1": {
+          "min": [
+            87.8774642944336,
+            3.0400002002716064,
+            6.798460483551025
+          ],
+          "max": [
+            88.1225357055664,
+            3.2799999713897705,
+            7.903510570526123
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_92m_-1": {
+          "min": [
+            91.8774642944336,
+            -3.2799999713897705,
+            7.138885974884033
+          ],
+          "max": [
+            92.1225357055664,
+            -3.0400002002716064,
+            8.243935585021973
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_92m_1": {
+          "min": [
+            91.8774642944336,
+            3.0400002002716064,
+            7.138885974884033
+          ],
+          "max": [
+            92.1225357055664,
+            3.2799999713897705,
+            8.243935585021973
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_96m_-1": {
+          "min": [
+            95.87773132324219,
+            -3.2799999713897705,
+            7.469908714294434
+          ],
+          "max": [
+            96.12226867675781,
+            -3.0400002002716064,
+            8.573722839355469
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_96m_1": {
+          "min": [
+            95.87773132324219,
+            3.0400002002716064,
+            7.469908714294434
+          ],
+          "max": [
+            96.12226867675781,
+            3.2799999713897705,
+            8.573722839355469
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_100m_-1": {
+          "min": [
+            99.87831115722656,
+            -3.2799999713897705,
+            7.727717876434326
+          ],
+          "max": [
+            100.12168884277344,
+            -3.0400002002716064,
+            8.829042434692383
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_100m_1": {
+          "min": [
+            99.87831115722656,
+            3.0400002002716064,
+            7.727717876434326
+          ],
+          "max": [
+            100.12168884277344,
+            3.2799999713897705,
+            8.829042434692383
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_104m_-1": {
+          "min": [
+            103.87894439697266,
+            -3.2799999713897705,
+            7.900444984436035
+          ],
+          "max": [
+            104.12105560302734,
+            -3.0400002002716064,
+            8.999255180358887
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_104m_1": {
+          "min": [
+            103.87894439697266,
+            3.0400002002716064,
+            7.900444984436035
+          ],
+          "max": [
+            104.12105560302734,
+            3.2799999713897705,
+            8.999255180358887
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_108m_-1": {
+          "min": [
+            107.87963104248047,
+            -3.2799999713897705,
+            7.988087177276611
+          ],
+          "max": [
+            108.12036895751953,
+            -3.0400002002716064,
+            9.08436107635498
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_108m_1": {
+          "min": [
+            107.87963104248047,
+            3.0400002002716064,
+            7.988087177276611
+          ],
+          "max": [
+            108.12036895751953,
+            3.2799999713897705,
+            9.08436107635498
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_110m_-1": {
+          "min": [
+            109.87999725341797,
+            -3.2799999713897705,
+            8.0
+          ],
+          "max": [
+            110.12000274658203,
+            -3.0400002002716064,
+            9.094999313354492
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8_L110_Upright_110m_1": {
+          "min": [
+            109.87999725341797,
+            3.0400002002716064,
+            8.0
+          ],
+          "max": [
+            110.12000274658203,
+            3.2799999713897705,
+            9.094999313354492
+          ]
+        }
+      }
     },
     "RoadPlan_RampStructure_2L_Rise8_L110": {
       "parts": [
@@ -21076,7 +25082,81 @@
         }
       ],
       "companions": [],
-      "local_structural_depth_m": 0.4
+      "local_structural_depth_m": 0.4,
+      "render_bounds": {
+        "RoadPlan_RampStructure_2L_Rise8_L110_LowerVerticalCurve_Girder_-1": {
+          "min": [
+            0.0,
+            -2.569999933242798,
+            -0.4000000059604645
+          ],
+          "max": [
+            16.0,
+            -2.130000114440918,
+            0.500851035118103
+          ]
+        },
+        "RoadPlan_RampStructure_2L_Rise8_L110_LowerVerticalCurve_Girder_1": {
+          "min": [
+            0.0,
+            2.130000114440918,
+            -0.4000000059604645
+          ],
+          "max": [
+            16.0,
+            2.569999933242798,
+            0.500851035118103
+          ]
+        },
+        "RoadPlan_RampStructure_2L_Rise8_L110_ConstantGrade_Girder_-1": {
+          "min": [
+            16.0,
+            -2.569999933242798,
+            0.2808510661125183
+          ],
+          "max": [
+            94.0,
+            -2.130000114440918,
+            7.139148712158203
+          ]
+        },
+        "RoadPlan_RampStructure_2L_Rise8_L110_ConstantGrade_Girder_1": {
+          "min": [
+            16.0,
+            2.130000114440918,
+            0.2808510661125183
+          ],
+          "max": [
+            94.0,
+            2.569999933242798,
+            7.139148712158203
+          ]
+        },
+        "RoadPlan_RampStructure_2L_Rise8_L110_UpperVerticalCurve_Girder_-1": {
+          "min": [
+            94.0,
+            -2.569999933242798,
+            6.919148921966553
+          ],
+          "max": [
+            110.0,
+            -2.130000114440918,
+            7.820000171661377
+          ]
+        },
+        "RoadPlan_RampStructure_2L_Rise8_L110_UpperVerticalCurve_Girder_1": {
+          "min": [
+            94.0,
+            2.130000114440918,
+            6.919148921966553
+          ],
+          "max": [
+            110.0,
+            2.569999933242798,
+            7.820000171661377
+          ]
+        }
+      }
     },
     "RoadPlan_Ramp_2L_Rise8p4_L110": {
       "parts": [
@@ -23764,7 +27844,45 @@
         "satisfies_8m_at_upper": true,
         "low_under_ramp_space_reserved": true
       },
-      "integration_note": "Rise8 matches current graph; Rise8p4 requires graph altitude 4.2 world units and matching deck placement. No code changed."
+      "integration_note": "Rise8 matches current graph; Rise8p4 requires graph altitude 4.2 world units and matching deck placement. No code changed.",
+      "render_bounds": {
+        "RoadPlan_Ramp_2L_Rise8p4_L110_LowerVerticalCurve": {
+          "min": [
+            0.0,
+            -3.0,
+            -0.20000000298023224
+          ],
+          "max": [
+            16.0,
+            3.0,
+            0.714893639087677
+          ]
+        },
+        "RoadPlan_Ramp_2L_Rise8p4_L110_ConstantGrade": {
+          "min": [
+            16.0,
+            -3.0,
+            0.5148935914039612
+          ],
+          "max": [
+            94.0,
+            3.0,
+            7.68510627746582
+          ]
+        },
+        "RoadPlan_Ramp_2L_Rise8p4_L110_UpperVerticalCurve": {
+          "min": [
+            94.0,
+            -3.0,
+            7.485106468200684
+          ],
+          "max": [
+            110.0,
+            3.0,
+            8.399999618530273
+          ]
+        }
+      }
     },
     "RoadPlan_RampMarking_2L_Rise8p4_L110": {
       "parts": [
@@ -23802,7 +27920,117 @@
       ],
       "collision_envelope": [],
       "companions": [],
-      "paint_only": true
+      "paint_only": true,
+      "render_bounds": {
+        "RoadPlan_RampMarking_2L_Rise8p4_L110_LowerVerticalCurve_Center": {
+          "min": [
+            0.0,
+            -0.042500000447034836,
+            0.003000000026077032
+          ],
+          "max": [
+            16.0,
+            0.042500000447034836,
+            0.7178936004638672
+          ]
+        },
+        "RoadPlan_RampMarking_2L_Rise8p4_L110_LowerVerticalCurve_EdgeRight": {
+          "min": [
+            0.0,
+            -2.887500047683716,
+            0.003000000026077032
+          ],
+          "max": [
+            16.0,
+            -2.8125,
+            0.7178936004638672
+          ]
+        },
+        "RoadPlan_RampMarking_2L_Rise8p4_L110_LowerVerticalCurve_EdgeLeft": {
+          "min": [
+            0.0,
+            2.8125,
+            0.003000000026077032
+          ],
+          "max": [
+            16.0,
+            2.887500047683716,
+            0.7178936004638672
+          ]
+        },
+        "RoadPlan_RampMarking_2L_Rise8p4_L110_ConstantGrade_Center": {
+          "min": [
+            16.0,
+            -0.042500000447034836,
+            0.717193603515625
+          ],
+          "max": [
+            94.0,
+            0.042500000447034836,
+            7.688106536865234
+          ]
+        },
+        "RoadPlan_RampMarking_2L_Rise8p4_L110_ConstantGrade_EdgeRight": {
+          "min": [
+            16.0,
+            -2.887500047683716,
+            0.717193603515625
+          ],
+          "max": [
+            94.0,
+            -2.8125,
+            7.688106536865234
+          ]
+        },
+        "RoadPlan_RampMarking_2L_Rise8p4_L110_ConstantGrade_EdgeLeft": {
+          "min": [
+            16.0,
+            2.8125,
+            0.717193603515625
+          ],
+          "max": [
+            94.0,
+            2.887500047683716,
+            7.688106536865234
+          ]
+        },
+        "RoadPlan_RampMarking_2L_Rise8p4_L110_UpperVerticalCurve_Center": {
+          "min": [
+            94.0,
+            -0.042500000447034836,
+            7.688106536865234
+          ],
+          "max": [
+            110.0,
+            0.042500000447034836,
+            8.402999877929688
+          ]
+        },
+        "RoadPlan_RampMarking_2L_Rise8p4_L110_UpperVerticalCurve_EdgeRight": {
+          "min": [
+            94.0,
+            -2.887500047683716,
+            7.688106536865234
+          ],
+          "max": [
+            110.0,
+            -2.8125,
+            8.402999877929688
+          ]
+        },
+        "RoadPlan_RampMarking_2L_Rise8p4_L110_UpperVerticalCurve_EdgeLeft": {
+          "min": [
+            94.0,
+            2.8125,
+            7.688106536865234
+          ],
+          "max": [
+            110.0,
+            2.887500047683716,
+            8.402999877929688
+          ]
+        }
+      }
     },
     "RoadPlan_RampParapet_2L_Rise8p4_L110": {
       "parts": [
@@ -25201,7 +29429,921 @@
       ],
       "companions": [],
       "road_surface_included": false,
-      "inner_edge_from_centerline_m": 3.04
+      "inner_edge_from_centerline_m": 3.04,
+      "render_bounds": {
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_LowerVerticalCurve_TopRail_-1": {
+          "min": [
+            0.0,
+            -3.2149999141693115,
+            1.0299999713897705
+          ],
+          "max": [
+            16.0,
+            -3.1050000190734863,
+            1.8148936033248901
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_LowerVerticalCurve_MidRail_-1": {
+          "min": [
+            0.0,
+            -3.197499990463257,
+            0.5
+          ],
+          "max": [
+            16.0,
+            -3.122499942779541,
+            1.2748936414718628
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_LowerVerticalCurve_ToeRail_-1": {
+          "min": [
+            0.0,
+            -3.2200000286102295,
+            0.009999999776482582
+          ],
+          "max": [
+            16.0,
+            -3.0999999046325684,
+            0.8348936438560486
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_LowerVerticalCurve_TopRail_1": {
+          "min": [
+            0.0,
+            3.1050000190734863,
+            1.0299999713897705
+          ],
+          "max": [
+            16.0,
+            3.2149999141693115,
+            1.8148936033248901
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_LowerVerticalCurve_MidRail_1": {
+          "min": [
+            0.0,
+            3.122499942779541,
+            0.5
+          ],
+          "max": [
+            16.0,
+            3.197499990463257,
+            1.2748936414718628
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_LowerVerticalCurve_ToeRail_1": {
+          "min": [
+            0.0,
+            3.0999999046325684,
+            0.009999999776482582
+          ],
+          "max": [
+            16.0,
+            3.2200000286102295,
+            0.8348936438560486
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_ConstantGrade_TopRail_-1": {
+          "min": [
+            16.0,
+            -3.2149999141693115,
+            1.7448936700820923
+          ],
+          "max": [
+            94.0,
+            -3.1050000190734863,
+            8.785106658935547
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_ConstantGrade_MidRail_-1": {
+          "min": [
+            16.0,
+            -3.197499990463257,
+            1.2148935794830322
+          ],
+          "max": [
+            94.0,
+            -3.122499942779541,
+            8.24510669708252
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_ConstantGrade_ToeRail_-1": {
+          "min": [
+            16.0,
+            -3.2200000286102295,
+            0.7248936295509338
+          ],
+          "max": [
+            94.0,
+            -3.0999999046325684,
+            7.805106163024902
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_ConstantGrade_TopRail_1": {
+          "min": [
+            16.0,
+            3.1050000190734863,
+            1.7448936700820923
+          ],
+          "max": [
+            94.0,
+            3.2149999141693115,
+            8.785106658935547
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_ConstantGrade_MidRail_1": {
+          "min": [
+            16.0,
+            3.122499942779541,
+            1.2148935794830322
+          ],
+          "max": [
+            94.0,
+            3.197499990463257,
+            8.24510669708252
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_ConstantGrade_ToeRail_1": {
+          "min": [
+            16.0,
+            3.0999999046325684,
+            0.7248936295509338
+          ],
+          "max": [
+            94.0,
+            3.2200000286102295,
+            7.805106163024902
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_UpperVerticalCurve_TopRail_-1": {
+          "min": [
+            94.0,
+            -3.2149999141693115,
+            8.715106010437012
+          ],
+          "max": [
+            110.0,
+            -3.1050000190734863,
+            9.5
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_UpperVerticalCurve_MidRail_-1": {
+          "min": [
+            94.0,
+            -3.197499990463257,
+            8.18510627746582
+          ],
+          "max": [
+            110.0,
+            -3.122499942779541,
+            8.960000038146973
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_UpperVerticalCurve_ToeRail_-1": {
+          "min": [
+            94.0,
+            -3.2200000286102295,
+            7.695106506347656
+          ],
+          "max": [
+            110.0,
+            -3.0999999046325684,
+            8.520000457763672
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_UpperVerticalCurve_TopRail_1": {
+          "min": [
+            94.0,
+            3.1050000190734863,
+            8.715106010437012
+          ],
+          "max": [
+            110.0,
+            3.2149999141693115,
+            9.5
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_UpperVerticalCurve_MidRail_1": {
+          "min": [
+            94.0,
+            3.122499942779541,
+            8.18510627746582
+          ],
+          "max": [
+            110.0,
+            3.197499990463257,
+            8.960000038146973
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_UpperVerticalCurve_ToeRail_1": {
+          "min": [
+            94.0,
+            3.0999999046325684,
+            7.695106506347656
+          ],
+          "max": [
+            110.0,
+            3.2200000286102295,
+            8.520000457763672
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_0m_-1": {
+          "min": [
+            -0.11999999731779099,
+            -3.2799999713897705,
+            0.0
+          ],
+          "max": [
+            0.11999999731779099,
+            -3.0400002002716064,
+            1.0950000286102295
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_0m_1": {
+          "min": [
+            -0.11999999731779099,
+            3.0400002002716064,
+            0.0
+          ],
+          "max": [
+            0.11999999731779099,
+            3.2799999713897705,
+            1.0950000286102295
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_4m_-1": {
+          "min": [
+            3.8792481422424316,
+            -3.2799999713897705,
+            0.04200940206646919
+          ],
+          "max": [
+            4.120751857757568,
+            -3.0400002002716064,
+            1.1396808624267578
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_4m_1": {
+          "min": [
+            3.8792481422424316,
+            3.0400002002716064,
+            0.04200940206646919
+          ],
+          "max": [
+            4.120751857757568,
+            3.2799999713897705,
+            1.1396808624267578
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_8m_-1": {
+          "min": [
+            7.878557205200195,
+            -3.2799999713897705,
+            0.17340192198753357
+          ],
+          "max": [
+            8.121442794799805,
+            -3.0400002002716064,
+            1.2737233638763428
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_8m_1": {
+          "min": [
+            7.878557205200195,
+            3.0400002002716064,
+            0.17340192198753357
+          ],
+          "max": [
+            8.121442794799805,
+            3.2799999713897705,
+            1.2737233638763428
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_12m_-1": {
+          "min": [
+            11.877927780151367,
+            -3.2799999713897705,
+            0.39418143033981323
+          ],
+          "max": [
+            12.122072219848633,
+            -3.0400002002716064,
+            1.497127652168274
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_12m_1": {
+          "min": [
+            11.877927780151367,
+            3.0400002002716064,
+            0.39418143033981323
+          ],
+          "max": [
+            12.122072219848633,
+            3.2799999713897705,
+            1.497127652168274
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_16m_-1": {
+          "min": [
+            15.877361297607422,
+            -3.2799999713897705,
+            0.7043516635894775
+          ],
+          "max": [
+            16.122638702392578,
+            -3.0400002002716064,
+            1.8098936080932617
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_16m_1": {
+          "min": [
+            15.877361297607422,
+            3.0400002002716064,
+            0.7043516635894775
+          ],
+          "max": [
+            16.122638702392578,
+            3.2799999713897705,
+            1.8098936080932617
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_20m_-1": {
+          "min": [
+            19.877361297607422,
+            -3.2799999713897705,
+            1.0617985725402832
+          ],
+          "max": [
+            20.122638702392578,
+            -3.0400002002716064,
+            2.1673402786254883
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_20m_1": {
+          "min": [
+            19.877361297607422,
+            3.0400002002716064,
+            1.0617985725402832
+          ],
+          "max": [
+            20.122638702392578,
+            3.2799999713897705,
+            2.1673402786254883
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_24m_-1": {
+          "min": [
+            23.877361297607422,
+            -3.2799999713897705,
+            1.4192453622817993
+          ],
+          "max": [
+            24.122638702392578,
+            -3.0400002002716064,
+            2.524787187576294
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_24m_1": {
+          "min": [
+            23.877361297607422,
+            3.0400002002716064,
+            1.4192453622817993
+          ],
+          "max": [
+            24.122638702392578,
+            3.2799999713897705,
+            2.524787187576294
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_28m_-1": {
+          "min": [
+            27.877361297607422,
+            -3.2799999713897705,
+            1.7766921520233154
+          ],
+          "max": [
+            28.122638702392578,
+            -3.0400002002716064,
+            2.8822340965270996
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_28m_1": {
+          "min": [
+            27.877361297607422,
+            3.0400002002716064,
+            1.7766921520233154
+          ],
+          "max": [
+            28.122638702392578,
+            3.2799999713897705,
+            2.8822340965270996
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_32m_-1": {
+          "min": [
+            31.877361297607422,
+            -3.2799999713897705,
+            2.134138822555542
+          ],
+          "max": [
+            32.12263870239258,
+            -3.0400002002716064,
+            3.239680767059326
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_32m_1": {
+          "min": [
+            31.877361297607422,
+            3.0400002002716064,
+            2.134138822555542
+          ],
+          "max": [
+            32.12263870239258,
+            3.2799999713897705,
+            3.239680767059326
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_36m_-1": {
+          "min": [
+            35.87736129760742,
+            -3.2799999713897705,
+            2.4915857315063477
+          ],
+          "max": [
+            36.12263870239258,
+            -3.0400002002716064,
+            3.5971274375915527
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_36m_1": {
+          "min": [
+            35.87736129760742,
+            3.0400002002716064,
+            2.4915857315063477
+          ],
+          "max": [
+            36.12263870239258,
+            3.2799999713897705,
+            3.5971274375915527
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_40m_-1": {
+          "min": [
+            39.87736129760742,
+            -3.2799999713897705,
+            2.849032402038574
+          ],
+          "max": [
+            40.12263870239258,
+            -3.0400002002716064,
+            3.9545745849609375
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_40m_1": {
+          "min": [
+            39.87736129760742,
+            3.0400002002716064,
+            2.849032402038574
+          ],
+          "max": [
+            40.12263870239258,
+            3.2799999713897705,
+            3.9545745849609375
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_44m_-1": {
+          "min": [
+            43.87736129760742,
+            -3.2799999713897705,
+            3.20647931098938
+          ],
+          "max": [
+            44.12263870239258,
+            -3.0400002002716064,
+            4.312021255493164
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_44m_1": {
+          "min": [
+            43.87736129760742,
+            3.0400002002716064,
+            3.20647931098938
+          ],
+          "max": [
+            44.12263870239258,
+            3.2799999713897705,
+            4.312021255493164
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_48m_-1": {
+          "min": [
+            47.87736129760742,
+            -3.2799999713897705,
+            3.5639259815216064
+          ],
+          "max": [
+            48.12263870239258,
+            -3.0400002002716064,
+            4.669468402862549
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_48m_1": {
+          "min": [
+            47.87736129760742,
+            3.0400002002716064,
+            3.5639259815216064
+          ],
+          "max": [
+            48.12263870239258,
+            3.2799999713897705,
+            4.669468402862549
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_52m_-1": {
+          "min": [
+            51.87736129760742,
+            -3.2799999713897705,
+            3.921372890472412
+          ],
+          "max": [
+            52.12263870239258,
+            -3.0400002002716064,
+            5.026915073394775
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_52m_1": {
+          "min": [
+            51.87736129760742,
+            3.0400002002716064,
+            3.921372890472412
+          ],
+          "max": [
+            52.12263870239258,
+            3.2799999713897705,
+            5.026915073394775
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_56m_-1": {
+          "min": [
+            55.87736129760742,
+            -3.2799999713897705,
+            4.278820037841797
+          ],
+          "max": [
+            56.12263870239258,
+            -3.0400002002716064,
+            5.384361743927002
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_56m_1": {
+          "min": [
+            55.87736129760742,
+            3.0400002002716064,
+            4.278820037841797
+          ],
+          "max": [
+            56.12263870239258,
+            3.2799999713897705,
+            5.384361743927002
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_60m_-1": {
+          "min": [
+            59.87736129760742,
+            -3.2799999713897705,
+            4.636266708374023
+          ],
+          "max": [
+            60.12263870239258,
+            -3.0400002002716064,
+            5.7418084144592285
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_60m_1": {
+          "min": [
+            59.87736129760742,
+            3.0400002002716064,
+            4.636266708374023
+          ],
+          "max": [
+            60.12263870239258,
+            3.2799999713897705,
+            5.7418084144592285
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_64m_-1": {
+          "min": [
+            63.87736129760742,
+            -3.2799999713897705,
+            4.99371337890625
+          ],
+          "max": [
+            64.12264251708984,
+            -3.0400002002716064,
+            6.099255561828613
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_64m_1": {
+          "min": [
+            63.87736129760742,
+            3.0400002002716064,
+            4.99371337890625
+          ],
+          "max": [
+            64.12264251708984,
+            3.2799999713897705,
+            6.099255561828613
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_68m_-1": {
+          "min": [
+            67.87735748291016,
+            -3.2799999713897705,
+            5.351160526275635
+          ],
+          "max": [
+            68.12264251708984,
+            -3.0400002002716064,
+            6.45670223236084
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_68m_1": {
+          "min": [
+            67.87735748291016,
+            3.0400002002716064,
+            5.351160526275635
+          ],
+          "max": [
+            68.12264251708984,
+            3.2799999713897705,
+            6.45670223236084
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_72m_-1": {
+          "min": [
+            71.87735748291016,
+            -3.2799999713897705,
+            5.708607196807861
+          ],
+          "max": [
+            72.12264251708984,
+            -3.0400002002716064,
+            6.814148902893066
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_72m_1": {
+          "min": [
+            71.87735748291016,
+            3.0400002002716064,
+            5.708607196807861
+          ],
+          "max": [
+            72.12264251708984,
+            3.2799999713897705,
+            6.814148902893066
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_76m_-1": {
+          "min": [
+            75.87735748291016,
+            -3.2799999713897705,
+            6.066053867340088
+          ],
+          "max": [
+            76.12264251708984,
+            -3.0400002002716064,
+            7.171596050262451
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_76m_1": {
+          "min": [
+            75.87735748291016,
+            3.0400002002716064,
+            6.066053867340088
+          ],
+          "max": [
+            76.12264251708984,
+            3.2799999713897705,
+            7.171596050262451
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_80m_-1": {
+          "min": [
+            79.87735748291016,
+            -3.2799999713897705,
+            6.423501014709473
+          ],
+          "max": [
+            80.12264251708984,
+            -3.0400002002716064,
+            7.529042720794678
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_80m_1": {
+          "min": [
+            79.87735748291016,
+            3.0400002002716064,
+            6.423501014709473
+          ],
+          "max": [
+            80.12264251708984,
+            3.2799999713897705,
+            7.529042720794678
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_84m_-1": {
+          "min": [
+            83.87735748291016,
+            -3.2799999713897705,
+            6.780947685241699
+          ],
+          "max": [
+            84.12264251708984,
+            -3.0400002002716064,
+            7.886489391326904
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_84m_1": {
+          "min": [
+            83.87735748291016,
+            3.0400002002716064,
+            6.780947685241699
+          ],
+          "max": [
+            84.12264251708984,
+            3.2799999713897705,
+            7.886489391326904
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_88m_-1": {
+          "min": [
+            87.87735748291016,
+            -3.2799999713897705,
+            7.138394355773926
+          ],
+          "max": [
+            88.12264251708984,
+            -3.0400002002716064,
+            8.243935585021973
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_88m_1": {
+          "min": [
+            87.87735748291016,
+            3.0400002002716064,
+            7.138394355773926
+          ],
+          "max": [
+            88.12264251708984,
+            3.2799999713897705,
+            8.243935585021973
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_92m_-1": {
+          "min": [
+            91.87735748291016,
+            -3.2799999713897705,
+            7.495841026306152
+          ],
+          "max": [
+            92.12264251708984,
+            -3.0400002002716064,
+            8.6013822555542
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_92m_1": {
+          "min": [
+            91.87735748291016,
+            3.0400002002716064,
+            7.495841026306152
+          ],
+          "max": [
+            92.12264251708984,
+            3.2799999713897705,
+            8.6013822555542
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_96m_-1": {
+          "min": [
+            95.87763977050781,
+            -3.2799999713897705,
+            7.843411445617676
+          ],
+          "max": [
+            96.12236022949219,
+            -3.0400002002716064,
+            8.947659492492676
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_96m_1": {
+          "min": [
+            95.87763977050781,
+            3.0400002002716064,
+            7.843411445617676
+          ],
+          "max": [
+            96.12236022949219,
+            3.2799999713897705,
+            8.947659492492676
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_100m_-1": {
+          "min": [
+            99.87823486328125,
+            -3.2799999713897705,
+            8.114107131958008
+          ],
+          "max": [
+            100.12176513671875,
+            -3.0400002002716064,
+            9.215744018554688
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_100m_1": {
+          "min": [
+            99.87823486328125,
+            3.0400002002716064,
+            8.114107131958008
+          ],
+          "max": [
+            100.12176513671875,
+            3.2799999713897705,
+            9.215744018554688
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_104m_-1": {
+          "min": [
+            103.87889862060547,
+            -3.2799999713897705,
+            8.2954683303833
+          ],
+          "max": [
+            104.12110137939453,
+            -3.0400002002716064,
+            9.3944673538208
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_104m_1": {
+          "min": [
+            103.87889862060547,
+            3.0400002002716064,
+            8.2954683303833
+          ],
+          "max": [
+            104.12110137939453,
+            3.2799999713897705,
+            9.3944673538208
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_108m_-1": {
+          "min": [
+            107.8796157836914,
+            -3.2799999713897705,
+            8.387492179870605
+          ],
+          "max": [
+            108.1203842163086,
+            -3.0400002002716064,
+            9.483829498291016
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_108m_1": {
+          "min": [
+            107.8796157836914,
+            3.0400002002716064,
+            8.387492179870605
+          ],
+          "max": [
+            108.1203842163086,
+            3.2799999713897705,
+            9.483829498291016
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_110m_-1": {
+          "min": [
+            109.87999725341797,
+            -3.2799999713897705,
+            8.40000057220459
+          ],
+          "max": [
+            110.12000274658203,
+            -3.0400002002716064,
+            9.494999885559082
+          ]
+        },
+        "RoadPlan_RampParapet_2L_Rise8p4_L110_Upright_110m_1": {
+          "min": [
+            109.87999725341797,
+            3.0400002002716064,
+            8.40000057220459
+          ],
+          "max": [
+            110.12000274658203,
+            3.2799999713897705,
+            9.494999885559082
+          ]
+        }
+      }
     },
     "RoadPlan_RampStructure_2L_Rise8p4_L110": {
       "parts": [
@@ -25339,7 +30481,81 @@
         }
       ],
       "companions": [],
-      "local_structural_depth_m": 0.4
+      "local_structural_depth_m": 0.4,
+      "render_bounds": {
+        "RoadPlan_RampStructure_2L_Rise8p4_L110_LowerVerticalCurve_Girder_-1": {
+          "min": [
+            0.0,
+            -2.569999933242798,
+            -0.4000000059604645
+          ],
+          "max": [
+            16.0,
+            -2.130000114440918,
+            0.5348936319351196
+          ]
+        },
+        "RoadPlan_RampStructure_2L_Rise8p4_L110_LowerVerticalCurve_Girder_1": {
+          "min": [
+            0.0,
+            2.130000114440918,
+            -0.4000000059604645
+          ],
+          "max": [
+            16.0,
+            2.569999933242798,
+            0.5348936319351196
+          ]
+        },
+        "RoadPlan_RampStructure_2L_Rise8p4_L110_ConstantGrade_Girder_-1": {
+          "min": [
+            16.0,
+            -2.569999933242798,
+            0.31489360332489014
+          ],
+          "max": [
+            94.0,
+            -2.130000114440918,
+            7.505106449127197
+          ]
+        },
+        "RoadPlan_RampStructure_2L_Rise8p4_L110_ConstantGrade_Girder_1": {
+          "min": [
+            16.0,
+            2.130000114440918,
+            0.31489360332489014
+          ],
+          "max": [
+            94.0,
+            2.569999933242798,
+            7.505106449127197
+          ]
+        },
+        "RoadPlan_RampStructure_2L_Rise8p4_L110_UpperVerticalCurve_Girder_-1": {
+          "min": [
+            94.0,
+            -2.569999933242798,
+            7.285106182098389
+          ],
+          "max": [
+            110.0,
+            -2.130000114440918,
+            8.220000267028809
+          ]
+        },
+        "RoadPlan_RampStructure_2L_Rise8p4_L110_UpperVerticalCurve_Girder_1": {
+          "min": [
+            94.0,
+            2.130000114440918,
+            7.285106182098389
+          ],
+          "max": [
+            110.0,
+            2.569999933242798,
+            8.220000267028809
+          ]
+        }
+      }
     },
     "RoadPlan_Curb_L2": {
       "parts": [
@@ -25389,7 +30605,21 @@
       "companions": [],
       "nominal_top_z_m": 0.15,
       "width_m": 0.12,
-      "road_surface_included": false
+      "road_surface_included": false,
+      "render_bounds": {
+        "RoadPlan_Curb_L2_ChamferedCurb": {
+          "min": [
+            -1.0,
+            -0.05999999865889549,
+            -0.15000000596046448
+          ],
+          "max": [
+            1.0,
+            0.05999999865889549,
+            0.15000000596046448
+          ]
+        }
+      }
     },
     "RoadPlan_Curb_L4": {
       "parts": [
@@ -25439,7 +30669,21 @@
       "companions": [],
       "nominal_top_z_m": 0.15,
       "width_m": 0.12,
-      "road_surface_included": false
+      "road_surface_included": false,
+      "render_bounds": {
+        "RoadPlan_Curb_L4_ChamferedCurb": {
+          "min": [
+            -2.0,
+            -0.05999999865889549,
+            -0.15000000596046448
+          ],
+          "max": [
+            2.0,
+            0.05999999865889549,
+            0.15000000596046448
+          ]
+        }
+      }
     },
     "RoadPlan_Curb_L8": {
       "parts": [
@@ -25489,7 +30733,21 @@
       "companions": [],
       "nominal_top_z_m": 0.15,
       "width_m": 0.12,
-      "road_surface_included": false
+      "road_surface_included": false,
+      "render_bounds": {
+        "RoadPlan_Curb_L8_ChamferedCurb": {
+          "min": [
+            -4.0,
+            -0.05999999865889549,
+            -0.15000000596046448
+          ],
+          "max": [
+            4.0,
+            0.05999999865889549,
+            0.15000000596046448
+          ]
+        }
+      }
     },
     "RoadPlan_Drain_L2": {
       "parts": [
@@ -25558,7 +30816,33 @@
       "top_z_m": 0,
       "width_m": 0.1,
       "road_surface_included": false,
-      "placement_rule": "Within the separate .12m edge reservation; grate flush at Z0"
+      "placement_rule": "Within the separate .12m edge reservation; grate flush at Z0",
+      "render_bounds": {
+        "RoadPlan_Drain_L2_RecessedChannel": {
+          "min": [
+            -1.0,
+            -0.05000000074505806,
+            -0.0754999965429306
+          ],
+          "max": [
+            1.0,
+            0.05000000074505806,
+            0.0
+          ]
+        },
+        "RoadPlan_Drain_L2_ReplaceableGrate": {
+          "min": [
+            -0.887499988079071,
+            -0.042500000447034836,
+            -0.014000000432133675
+          ],
+          "max": [
+            0.8924999833106995,
+            0.042500000447034836,
+            0.0
+          ]
+        }
+      }
     },
     "RoadPlan_EdgeCap_2L": {
       "parts": [
@@ -25608,7 +30892,21 @@
       "companions": [],
       "lanes": 2,
       "nominal_top_z_m": 0,
-      "road_surface_included": false
+      "road_surface_included": false,
+      "render_bounds": {
+        "RoadPlan_EdgeCap_2L_EndClosure": {
+          "min": [
+            -0.029999999329447746,
+            -3.0,
+            -0.20000000298023224
+          ],
+          "max": [
+            0.029999999329447746,
+            3.0,
+            0.0
+          ]
+        }
+      }
     },
     "RoadPlan_EdgeCap_4L": {
       "parts": [
@@ -25658,7 +30956,24 @@
       "companions": [],
       "lanes": 4,
       "nominal_top_z_m": 0,
-      "road_surface_included": false
+      "road_surface_included": false,
+      "render_bounds": {
+        "RoadPlan_EdgeCap_4L_EndClosure": {
+          "min": [
+            -0.029999999329447746,
+            -6.0,
+            -0.20000000298023224
+          ],
+          "max": [
+            0.029999999329447746,
+            6.0,
+            0.0
+          ]
+        }
+      }
     }
-  }
+  },
+  "part_budget_revision": "silhouette_first_200_v3",
+  "triangles_per_part_limit": 200,
+  "render_collision_bounds_policy": "Render bounds may omit ground-supported undersides; collision_envelope retains the original physical contract."
 }

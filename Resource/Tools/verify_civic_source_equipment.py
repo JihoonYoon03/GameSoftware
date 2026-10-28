@@ -21,6 +21,7 @@ report={'characters':{},'intersections':[]}
 selection=['Walk','Run','Aim_Base','Attack_Fire','Hit_Front','Hit_Back','Hit_Left','Hit_Right',
            'Knockdown_Front','Knockdown_Back','Knockdown_Left','Knockdown_Right',
            'Downed_Loop','GetUp_Front','GetUp_Back','GetUp_Left','GetUp_Right']
+selection += [c['clip'] for c in json.loads((ROOT/'Documentation/animation_clips.json').read_text(encoding='utf-8'))['HUMAN_7H'] if c['clip'].startswith(('Aim_Walk_','Aim_Run_'))]
 assemblies={n:info for n,info in recipes.items() if isinstance(info,dict) and 'body' in info}
 templates={}
 for info in assemblies.values():templates.setdefault(info['role'],info)

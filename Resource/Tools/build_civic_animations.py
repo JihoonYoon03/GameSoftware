@@ -12,7 +12,8 @@ from mathutils import Matrix,Quaternion,Vector
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'Tools'))
 from civic_motion import *
-TAG='civic_motion_v1'
+from pistol_layer_motion import SPECS as PISTOL_SPECS
+TAG='civic_motion_v2_directional'
 DRAFT='--draft' in sys.argv
 bpy.context.preferences.filepaths.save_version=0
 catalog=json.loads((ROOT/'Documentation/asset_catalog.json').read_text(encoding='utf-8'))
@@ -120,7 +121,8 @@ class Clearance:
 
 clearance=Clearance();print('CLEARANCE_VERTICES',clearance.vertices,flush=True)
 report={'revision':TAG,'geometry_before_sha256':original_geometry,'human':{},'vehicles':{},'clearance_vertices':clearance.vertices}
-old_human=[(c['clip'],c['end'],c['loop']) for c in clips['HUMAN_7H'] if c['clip'] not in {n for n,f,l in NEW_HUMAN}]
+extension_meta=[c for c in clips['HUMAN_7H'] if c['clip'] in PISTOL_SPECS]
+old_human=[(c['clip'],c['end'],c['loop']) for c in clips['HUMAN_7H'] if c['clip'] not in {n for n,f,l in NEW_HUMAN} and c['clip'] not in PISTOL_SPECS]
 assert len(old_human)==15,'preserve all original clips'
 human_specs=old_human+NEW_HUMAN
 
@@ -133,6 +135,9 @@ def bake(rig,name,frames,loop,function):
     action_name=rig.name+'__'+name
     old=bpy.data.actions.get(action_name)
     if old:
+        previous='UpperBodyV1__'+action_name
+        if not bpy.data.actions.get(previous):
+            saved=old.copy();saved.name=previous;saved.use_fake_user=True
         archive='Baseline__'+action_name
         if not bpy.data.actions.get(archive):
             saved=old.copy();saved.name=archive;saved.use_fake_user=True
@@ -230,6 +235,14 @@ def entry(name,frames,loop,human_clip=True):
     if name.startswith('Hit_'):
         d.update(layer='human_upper_body',reference='Aim_Base',blend_mode='masked_override',entry_pose='Aim_Base',exit_pose='Aim_Base')
         event(0,'impact_visual_only')
+    elif name.startswith(('Aim_Walk_','Aim_Run_')):
+        direction=name.split('_',2)[2];angle=math.radians(DIRECTION_ANGLES[direction]);fast=name.startswith('Aim_Run_')
+        d.update(layer='full_body',entry_pose=name+':0',exit_pose=name+':0',phase_sync_group='aim_locomotion',
+                 facing='fixed -Y; game owns actor yaw',travel_direction_local=[round(math.sin(angle),8),round(-math.cos(angle),8),0],
+                 direction_degrees=DIRECTION_ANGLES[direction],speed_mps=aim_speed(direction,fast),
+                 contacts={'left':[[0,.4 if fast else .6]],'right':[[.5,.9]] if fast else [[0,.1],[.5,1]]},
+                 upper_body_reference='Aim_Base',support='uncrossed feet; phase zero is left contact in all directions')
+        event(0,'left_foot_contact');event(.5,'right_foot_contact')
     elif name.startswith(('Knockdown_','Death_')) and not name.endswith('Pose'):
         direction=name.split('_')[1];down='Downed_Loop' if direction=='Front' else 'Downed_'+direction+'_Loop'
         d.update(layer='full_body',entry_pose='Idle:0',exit_pose=name+'_Pose' if name.startswith('Death') else down+':0',hold_last_frame=True)
@@ -265,6 +278,7 @@ for n,f,l in human_specs:
         e['motion_refinement']='weight transfer, parent-aware IK, relaxed arms, matched transitions'
         e['authoring_fps']=30;e['delivery_sampling_fps']=60
     clips['HUMAN_7H'].append(e)
+clips['HUMAN_7H'].extend(extension_meta)
 for kind,info in vehicles['types'].items():
     name=info['skeleton'];old=[c for c in clips[name] if c['clip'] not in report['vehicles'][kind]]
     for n,r in report['vehicles'][kind].items():
@@ -293,7 +307,7 @@ def export(file,objects,rig):
         export_force_sampling=True,export_frame_range=False,export_frame_step=1,
         export_skins=True,export_def_bones=False,export_yup=True,export_extras=True,
         export_cameras=False,export_lights=False,export_materials='EXPORT',export_apply=False,
-        export_texcoords=True,export_normals=True,export_anim_slide_to_zero=True,export_optimize_animation_size=True)
+        export_texcoords=True,export_normals=True,export_tangents=True,export_anim_slide_to_zero=True,export_optimize_animation_size=True)
     staged.replace(path)
     for track in rig.animation_data.nla_tracks:
         track.mute=True
@@ -314,7 +328,7 @@ if not DRAFT:
             for original in human.animation_data.nla_tracks:
                 tr=rig.animation_data.nla_tracks.new();tr.name=original.name
                 st=tr.strips.new(tr.name,0,original.strips[0].action);st.name=tr.name;tr.mute=True
-            export(file,objects,rig);e['clips']=len(human_specs)
+            export(file,objects,rig);e['clips']=len(clips['HUMAN_7H'])
             for o in objects+[rig]:bpy.data.objects.remove(o,do_unlink=True)
             bpy.data.collections.remove(col)
         elif file.startswith('Export/Vehicles/') and '/Parts/' not in file:
@@ -331,8 +345,8 @@ def review_scene():
     s,c=studio(name,(3.6,-6,3.2),(0,0,.85),3.1,(800,800));s.cycles.samples=10
     info=recipes['Player_Explorer']
     r,obs=clone_actor('Civic_Review',human,info['parts'],c,skin=info.get('skin'),part_offsets=info.get('offsets'))
-    r.animation_data.action=bpy.data.actions['HUMAN_7H__Knockdown_Front'];r.animation_data.action_slot=r.animation_data.action.slots[0];r.animation_data.use_nla=False
-    ground(c,size=8,z=-.008);s.frame_start=0;s.frame_end=24;s.frame_set(15)
+    r.animation_data.action=bpy.data.actions['HUMAN_7H__Aim_Walk_Left'];r.animation_data.action_slot=r.animation_data.action.slots[0];r.animation_data.use_nla=False
+    ground(c,size=8,z=-.008);s.frame_start=0;s.frame_end=30;s.frame_set(7)
     s['motion_revision']=TAG;s['instructions']='Select Civic_Review_Rig, Action Editor: HUMAN_7H__*; 30 fps; metadata in civic_animation_contract.json'
     for area in bpy.context.screen.areas:
         if area.type=='VIEW_3D':

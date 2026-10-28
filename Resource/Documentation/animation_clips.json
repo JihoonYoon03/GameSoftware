@@ -11,7 +11,7 @@
       "root_translation": "in_place",
       "root_yaw_degrees": 0,
       "events": [],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60
@@ -27,7 +27,7 @@
       "root_translation": "in_place",
       "root_yaw_degrees": 0,
       "events": [],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60
@@ -43,7 +43,7 @@
       "root_translation": "in_place",
       "root_yaw_degrees": 0,
       "events": [],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60,
@@ -73,7 +73,7 @@
           "event": "right_heel_contact"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60,
@@ -129,7 +129,7 @@
           "event": "right_heel_contact"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60,
@@ -171,7 +171,7 @@
       "root_translation": "in_place",
       "root_yaw_degrees": 90,
       "events": [],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60
@@ -187,7 +187,7 @@
       "root_translation": "in_place",
       "root_yaw_degrees": -90,
       "events": [],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60
@@ -212,7 +212,7 @@
           "event": "melee_hit_window_end"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60
@@ -228,7 +228,7 @@
       "root_translation": "in_place",
       "root_yaw_degrees": 0,
       "events": [],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60
@@ -249,7 +249,7 @@
           "event": "projectile_or_emitter_trigger"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60
@@ -276,7 +276,7 @@
           "event": "jump_air_ready"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60
@@ -292,7 +292,7 @@
       "root_translation": "in_place",
       "root_yaw_degrees": 0,
       "events": [],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60
@@ -319,7 +319,7 @@
           "event": "landing_recovered"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60
@@ -335,7 +335,7 @@
       "root_translation": "in_place",
       "root_yaw_degrees": 0,
       "events": [],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60
@@ -351,7 +351,7 @@
       "root_translation": "in_place",
       "root_yaw_degrees": 0,
       "events": [],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60
@@ -376,7 +376,7 @@
           "event": "impact_visual_only"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "layer": "human_upper_body",
       "reference": "Aim_Base",
       "blend_mode": "masked_override",
@@ -406,7 +406,7 @@
           "event": "impact_visual_only"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "layer": "human_upper_body",
       "reference": "Aim_Base",
       "blend_mode": "masked_override",
@@ -436,7 +436,7 @@
           "event": "impact_visual_only"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "layer": "human_upper_body",
       "reference": "Aim_Base",
       "blend_mode": "masked_override",
@@ -466,7 +466,7 @@
           "event": "impact_visual_only"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "layer": "human_upper_body",
       "reference": "Aim_Base",
       "blend_mode": "masked_override",
@@ -501,7 +501,7 @@
           "event": "downed_pose_ready"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "layer": "full_body",
       "entry_pose": "Idle:0",
       "exit_pose": "Downed_Loop:0",
@@ -535,7 +535,7 @@
           "event": "downed_pose_ready"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "layer": "full_body",
       "entry_pose": "Idle:0",
       "exit_pose": "Downed_Back_Loop:0",
@@ -569,7 +569,7 @@
           "event": "downed_pose_ready"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "layer": "full_body",
       "entry_pose": "Idle:0",
       "exit_pose": "Downed_Left_Loop:0",
@@ -603,7 +603,7 @@
           "event": "downed_pose_ready"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "layer": "full_body",
       "entry_pose": "Idle:0",
       "exit_pose": "Downed_Right_Loop:0",
@@ -626,7 +626,7 @@
       "blend_out_seconds": 0.12,
       "support": "side torso, hip, bent legs; weapon clear of floor",
       "events": [],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "entry_pose": "Downed_Loop:0",
       "exit_pose": "Downed_Loop:0",
       "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
@@ -668,7 +668,7 @@
           "event": "fully_upright"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "entry_pose": "Downed_Loop:0",
       "exit_pose": "Idle:0",
       "input_lock_until_event": "fully_upright",
@@ -733,7 +733,7 @@
           "event": "fully_upright"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "entry_pose": "Downed_Back_Loop:0",
       "exit_pose": "Idle:0",
       "input_lock_until_event": "fully_upright",
@@ -789,7 +789,7 @@
           "auto_getup": false
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "layer": "full_body",
       "entry_pose": "Idle:0",
       "exit_pose": "Death_Front_Pose",
@@ -824,7 +824,7 @@
           "auto_getup": false
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "layer": "full_body",
       "entry_pose": "Idle:0",
       "exit_pose": "Death_Back_Pose",
@@ -847,7 +847,7 @@
       "blend_out_seconds": 0.12,
       "support": "see civic_animation_contract.json",
       "events": [],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "entry_pose": "Death_Front:1",
       "hold_last_frame": true,
       "auto_getup": false,
@@ -869,7 +869,7 @@
       "blend_out_seconds": 0.12,
       "support": "see civic_animation_contract.json",
       "events": [],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "entry_pose": "Death_Back:1",
       "hold_last_frame": true,
       "auto_getup": false,
@@ -891,7 +891,7 @@
       "blend_out_seconds": 0.12,
       "support": "left lead contact at exit; short head check then gaze on actor-supplied escape heading",
       "events": [],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "entry_pose": "Idle:0",
       "exit_pose": "Flee_Run:0",
       "heading": "actor supplied escape heading, gaze forward",
@@ -924,7 +924,7 @@
           "event": "right_heel_contact"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "entry_pose": "Flee_Run:0",
       "exit_pose": "Flee_Run:0",
       "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
@@ -969,7 +969,7 @@
       "blend_out_seconds": 0.12,
       "support": "enter at left contact; decelerate actor over 0.2 seconds; both feet at exit",
       "events": [],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "entry_pose": "Flee_Run:0",
       "exit_pose": "Idle:0",
       "entry_phase": 0,
@@ -999,7 +999,7 @@
           "attachment": "Weapon_CoilPistol_35cm"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "layer": "human_upper_body",
       "reference": "Aim_Base",
       "blend_mode": "masked_override",
@@ -1023,7 +1023,7 @@
       "blend_out_seconds": 0.12,
       "support": "see civic_animation_contract.json",
       "events": [],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "entry_pose": "Downed_Loop:0",
       "exit_pose": "Downed_Loop:0",
       "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
@@ -1065,7 +1065,7 @@
           "event": "fully_upright"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "entry_pose": "Downed_Loop:0",
       "exit_pose": "Idle:0",
       "input_lock_until_event": "fully_upright",
@@ -1117,7 +1117,7 @@
           "reason": "both hands on handlebars; holster in game"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "entry_pose": "Ride_Base",
       "exit_pose": "Ride_Base",
       "layer": "full_body",
@@ -1148,7 +1148,7 @@
           "reason": "both hands on handlebars; holster in game"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "entry_pose": "Ride_Base",
       "exit_pose": "Ride_Base",
       "layer": "full_body",
@@ -1171,7 +1171,7 @@
       "blend_out_seconds": 0.12,
       "support": "side torso, hip, bent legs; weapon clear of floor",
       "events": [],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "entry_pose": "Downed_Back_Loop:0",
       "exit_pose": "Downed_Back_Loop:0",
       "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
@@ -1192,7 +1192,7 @@
       "blend_out_seconds": 0.12,
       "support": "side torso, hip, bent legs; weapon clear of floor",
       "events": [],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "entry_pose": "Downed_Left_Loop:0",
       "exit_pose": "Downed_Left_Loop:0",
       "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
@@ -1213,7 +1213,7 @@
       "blend_out_seconds": 0.12,
       "support": "side torso, hip, bent legs; weapon clear of floor",
       "events": [],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "entry_pose": "Downed_Right_Loop:0",
       "exit_pose": "Downed_Right_Loop:0",
       "motion_refinement": "weight transfer, parent-aware IK, relaxed arms, matched transitions",
@@ -1255,7 +1255,7 @@
           "event": "fully_upright"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "entry_pose": "Downed_Left_Loop:0",
       "exit_pose": "Idle:0",
       "input_lock_until_event": "fully_upright",
@@ -1320,7 +1320,7 @@
           "event": "fully_upright"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "entry_pose": "Downed_Right_Loop:0",
       "exit_pose": "Idle:0",
       "input_lock_until_event": "fully_upright",
@@ -1349,6 +1349,1067 @@
           1
         ]
       }
+    },
+    {
+      "clip": "Aim_Walk_Forward",
+      "action": "HUMAN_7H__Aim_Walk_Forward",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.5,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Walk_Forward:0",
+      "exit_pose": "Aim_Walk_Forward:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        0.0,
+        -1.0,
+        0
+      ],
+      "direction_degrees": 0,
+      "speed_mps": 0.9,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.6
+          ]
+        ],
+        "right": [
+          [
+            0,
+            0.1
+          ],
+          [
+            0.5,
+            1
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Walk_ForwardLeft",
+      "action": "HUMAN_7H__Aim_Walk_ForwardLeft",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.5,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Walk_ForwardLeft:0",
+      "exit_pose": "Aim_Walk_ForwardLeft:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        0.70710678,
+        -0.70710678,
+        0
+      ],
+      "direction_degrees": 45,
+      "speed_mps": 0.75,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.6
+          ]
+        ],
+        "right": [
+          [
+            0,
+            0.1
+          ],
+          [
+            0.5,
+            1
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Walk_Left",
+      "action": "HUMAN_7H__Aim_Walk_Left",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.5,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Walk_Left:0",
+      "exit_pose": "Aim_Walk_Left:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        1.0,
+        -0.0,
+        0
+      ],
+      "direction_degrees": 90,
+      "speed_mps": 0.65,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.6
+          ]
+        ],
+        "right": [
+          [
+            0,
+            0.1
+          ],
+          [
+            0.5,
+            1
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Walk_BackLeft",
+      "action": "HUMAN_7H__Aim_Walk_BackLeft",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.5,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Walk_BackLeft:0",
+      "exit_pose": "Aim_Walk_BackLeft:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        0.70710678,
+        0.70710678,
+        0
+      ],
+      "direction_degrees": 135,
+      "speed_mps": 0.65,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.6
+          ]
+        ],
+        "right": [
+          [
+            0,
+            0.1
+          ],
+          [
+            0.5,
+            1
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Walk_Back",
+      "action": "HUMAN_7H__Aim_Walk_Back",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.5,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Walk_Back:0",
+      "exit_pose": "Aim_Walk_Back:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        0.0,
+        1.0,
+        0
+      ],
+      "direction_degrees": 180,
+      "speed_mps": 0.65,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.6
+          ]
+        ],
+        "right": [
+          [
+            0,
+            0.1
+          ],
+          [
+            0.5,
+            1
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Walk_BackRight",
+      "action": "HUMAN_7H__Aim_Walk_BackRight",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.5,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Walk_BackRight:0",
+      "exit_pose": "Aim_Walk_BackRight:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        -0.70710678,
+        0.70710678,
+        0
+      ],
+      "direction_degrees": -135,
+      "speed_mps": 0.65,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.6
+          ]
+        ],
+        "right": [
+          [
+            0,
+            0.1
+          ],
+          [
+            0.5,
+            1
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Walk_Right",
+      "action": "HUMAN_7H__Aim_Walk_Right",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.5,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Walk_Right:0",
+      "exit_pose": "Aim_Walk_Right:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        -1.0,
+        -0.0,
+        0
+      ],
+      "direction_degrees": -90,
+      "speed_mps": 0.65,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.6
+          ]
+        ],
+        "right": [
+          [
+            0,
+            0.1
+          ],
+          [
+            0.5,
+            1
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Walk_ForwardRight",
+      "action": "HUMAN_7H__Aim_Walk_ForwardRight",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.5,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Walk_ForwardRight:0",
+      "exit_pose": "Aim_Walk_ForwardRight:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        -0.70710678,
+        -0.70710678,
+        0
+      ],
+      "direction_degrees": -45,
+      "speed_mps": 0.75,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.6
+          ]
+        ],
+        "right": [
+          [
+            0,
+            0.1
+          ],
+          [
+            0.5,
+            1
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Run_Forward",
+      "action": "HUMAN_7H__Aim_Run_Forward",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.333333,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Run_Forward:0",
+      "exit_pose": "Aim_Run_Forward:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        0.0,
+        -1.0,
+        0
+      ],
+      "direction_degrees": 0,
+      "speed_mps": 1.8,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.4
+          ]
+        ],
+        "right": [
+          [
+            0.5,
+            0.9
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Run_ForwardLeft",
+      "action": "HUMAN_7H__Aim_Run_ForwardLeft",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.333333,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Run_ForwardLeft:0",
+      "exit_pose": "Aim_Run_ForwardLeft:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        0.70710678,
+        -0.70710678,
+        0
+      ],
+      "direction_degrees": 45,
+      "speed_mps": 1.5,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.4
+          ]
+        ],
+        "right": [
+          [
+            0.5,
+            0.9
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Run_Left",
+      "action": "HUMAN_7H__Aim_Run_Left",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.333333,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Run_Left:0",
+      "exit_pose": "Aim_Run_Left:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        1.0,
+        -0.0,
+        0
+      ],
+      "direction_degrees": 90,
+      "speed_mps": 1.25,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.4
+          ]
+        ],
+        "right": [
+          [
+            0.5,
+            0.9
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Run_BackLeft",
+      "action": "HUMAN_7H__Aim_Run_BackLeft",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.333333,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Run_BackLeft:0",
+      "exit_pose": "Aim_Run_BackLeft:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        0.70710678,
+        0.70710678,
+        0
+      ],
+      "direction_degrees": 135,
+      "speed_mps": 1.2,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.4
+          ]
+        ],
+        "right": [
+          [
+            0.5,
+            0.9
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Run_Back",
+      "action": "HUMAN_7H__Aim_Run_Back",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.333333,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Run_Back:0",
+      "exit_pose": "Aim_Run_Back:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        0.0,
+        1.0,
+        0
+      ],
+      "direction_degrees": 180,
+      "speed_mps": 1.2,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.4
+          ]
+        ],
+        "right": [
+          [
+            0.5,
+            0.9
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Run_BackRight",
+      "action": "HUMAN_7H__Aim_Run_BackRight",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.333333,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Run_BackRight:0",
+      "exit_pose": "Aim_Run_BackRight:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        -0.70710678,
+        0.70710678,
+        0
+      ],
+      "direction_degrees": -135,
+      "speed_mps": 1.2,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.4
+          ]
+        ],
+        "right": [
+          [
+            0.5,
+            0.9
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Run_Right",
+      "action": "HUMAN_7H__Aim_Run_Right",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.333333,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Run_Right:0",
+      "exit_pose": "Aim_Run_Right:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        -1.0,
+        -0.0,
+        0
+      ],
+      "direction_degrees": -90,
+      "speed_mps": 1.25,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.4
+          ]
+        ],
+        "right": [
+          [
+            0.5,
+            0.9
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Aim_Run_ForwardRight",
+      "action": "HUMAN_7H__Aim_Run_ForwardRight",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "blend_in_seconds": 0.08,
+      "blend_out_seconds": 0.12,
+      "support": "uncrossed feet; phase zero is left contact in all directions",
+      "events": [
+        {
+          "phase": 0,
+          "seconds": 0.0,
+          "event": "left_foot_contact"
+        },
+        {
+          "phase": 0.5,
+          "seconds": 0.333333,
+          "event": "right_foot_contact"
+        }
+      ],
+      "revision": "civic_motion_v2_directional",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "layer": "full_body",
+      "entry_pose": "Aim_Run_ForwardRight:0",
+      "exit_pose": "Aim_Run_ForwardRight:0",
+      "phase_sync_group": "aim_locomotion",
+      "facing": "fixed -Y; game owns actor yaw",
+      "travel_direction_local": [
+        -0.70710678,
+        -0.70710678,
+        0
+      ],
+      "direction_degrees": -45,
+      "speed_mps": 1.5,
+      "contacts": {
+        "left": [
+          [
+            0,
+            0.4
+          ]
+        ],
+        "right": [
+          [
+            0.5,
+            0.9
+          ]
+        ]
+      },
+      "upper_body_reference": "Aim_Base"
+    },
+    {
+      "clip": "Pistol_Carry_Idle",
+      "action": "HUMAN_7H__Pistol_Carry_Idle",
+      "fps": 30,
+      "start": 0,
+      "end": 60,
+      "duration_seconds": 2.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "human_upper_body",
+      "mask": "human_upper_body",
+      "blend_mode": "masked_override",
+      "reference": "Idle",
+      "phase_sync_group": "human_locomotion",
+      "matched_locomotion": "Idle",
+      "blend_in_seconds": 0.15,
+      "blend_out_seconds": 0.15,
+      "events": [],
+      "revision": "pistol_layers_v1",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "support": "lower body supplied by the existing movement layer; right hand owns the weapon grip",
+      "entry_pose": "Pistol_Carry_Idle:0",
+      "exit_pose": "Pistol_Carry_Idle:0"
+    },
+    {
+      "clip": "Pistol_Carry_Walk",
+      "action": "HUMAN_7H__Pistol_Carry_Walk",
+      "fps": 30,
+      "start": 0,
+      "end": 30,
+      "duration_seconds": 1.0,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "human_upper_body",
+      "mask": "human_upper_body",
+      "blend_mode": "masked_override",
+      "reference": "Walk",
+      "phase_sync_group": "human_locomotion",
+      "matched_locomotion": "Walk",
+      "blend_in_seconds": 0.15,
+      "blend_out_seconds": 0.15,
+      "events": [],
+      "revision": "pistol_layers_v1",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "support": "lower body supplied by the existing movement layer; right hand owns the weapon grip",
+      "entry_pose": "Pistol_Carry_Walk:0",
+      "exit_pose": "Pistol_Carry_Walk:0"
+    },
+    {
+      "clip": "Pistol_Carry_Run",
+      "action": "HUMAN_7H__Pistol_Carry_Run",
+      "fps": 30,
+      "start": 0,
+      "end": 20,
+      "duration_seconds": 0.6666666666666666,
+      "loop": true,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "human_upper_body",
+      "mask": "human_upper_body",
+      "blend_mode": "masked_override",
+      "reference": "Run",
+      "phase_sync_group": "human_locomotion",
+      "matched_locomotion": "Run",
+      "blend_in_seconds": 0.15,
+      "blend_out_seconds": 0.15,
+      "events": [],
+      "revision": "pistol_layers_v1",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "support": "lower body supplied by the existing movement layer; right hand owns the weapon grip",
+      "entry_pose": "Pistol_Carry_Run:0",
+      "exit_pose": "Pistol_Carry_Run:0"
+    },
+    {
+      "clip": "Reload_Pistol",
+      "action": "HUMAN_7H__Reload_Pistol",
+      "fps": 30,
+      "start": 0,
+      "end": 42,
+      "duration_seconds": 1.4,
+      "loop": false,
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "human_upper_body",
+      "mask": "human_upper_body",
+      "blend_mode": "masked_override",
+      "reference": "Idle",
+      "phase_sync_group": "reload",
+      "matched_locomotion": null,
+      "blend_in_seconds": 0.15,
+      "blend_out_seconds": 0.15,
+      "events": [
+        {
+          "phase": 0.3,
+          "seconds": 0.42,
+          "event": "reload_magazine_release_visual",
+          "visual_only": true,
+          "changes_ammo": false
+        },
+        {
+          "phase": 0.67,
+          "seconds": 0.938,
+          "event": "reload_magazine_seat_visual",
+          "visual_only": true,
+          "changes_ammo": false
+        },
+        {
+          "phase": 0.8,
+          "seconds": 1.12,
+          "event": "reload_slide_release_visual",
+          "visual_only": true,
+          "changes_ammo": false
+        },
+        {
+          "phase": 1,
+          "seconds": 1.4,
+          "event": "reload_pose_recovered",
+          "visual_only": true,
+          "changes_ammo": false
+        }
+      ],
+      "revision": "pistol_layers_v1",
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "support": "lower body supplied by the existing movement layer; right hand owns the weapon grip",
+      "entry_pose": "Pistol_Carry_Idle:0",
+      "exit_pose": "Pistol_Carry_Idle:0"
     }
   ],
   "RiftGrazer": [
@@ -2131,7 +3192,7 @@
           "socket": "frontpod.L"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60,
       "layer": "field_suspension",
@@ -2159,7 +3220,7 @@
           "socket": "frontpod.L"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60,
       "layer": "field_suspension",
@@ -2187,7 +3248,7 @@
           "socket": "frontpod.L"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60,
       "layer": "field_suspension",
@@ -2233,7 +3294,7 @@
           "policy": "game decides delay; opacity fade only"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60,
       "layer": "field_suspension",
@@ -2364,7 +3425,7 @@
           "socket": "frontpod.L"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60,
       "layer": "field_suspension",
@@ -2392,7 +3453,7 @@
           "socket": "frontpod.L"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60,
       "layer": "field_suspension",
@@ -2420,7 +3481,7 @@
           "socket": "frontpod.L"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60,
       "layer": "field_suspension",
@@ -2466,7 +3527,7 @@
           "policy": "game decides delay; opacity fade only"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60,
       "layer": "field_suspension",
@@ -2597,7 +3658,7 @@
           "socket": "frontpod.L"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60,
       "layer": "field_suspension",
@@ -2625,7 +3686,7 @@
           "socket": "frontpod.L"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60,
       "layer": "field_suspension",
@@ -2653,7 +3714,7 @@
           "socket": "frontpod.L"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60,
       "layer": "field_suspension",
@@ -2699,7 +3760,7 @@
           "policy": "game decides delay; opacity fade only"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60,
       "layer": "field_suspension",
@@ -2840,7 +3901,7 @@
           "socket": "frontpod.L"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60,
       "layer": "field_suspension",
@@ -2868,7 +3929,7 @@
           "socket": "frontpod.L"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60,
       "layer": "field_suspension",
@@ -2896,7 +3957,7 @@
           "socket": "frontpod.L"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60,
       "layer": "field_suspension",
@@ -2942,7 +4003,7 @@
           "policy": "game decides delay; opacity fade only"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60,
       "layer": "field_suspension",
@@ -3073,7 +4134,7 @@
           "socket": "frontpod.L"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60,
       "layer": "field_suspension",
@@ -3101,7 +4162,7 @@
           "socket": "frontpod.L"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60,
       "layer": "field_suspension",
@@ -3129,7 +4190,7 @@
           "socket": "frontpod.L"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60,
       "layer": "field_suspension",
@@ -3175,7 +4236,7 @@
           "policy": "game decides delay; opacity fade only"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60,
       "layer": "field_suspension",
@@ -3204,7 +4265,7 @@
           "socket": "frontpod.L"
         }
       ],
-      "revision": "civic_motion_v1",
+      "revision": "civic_motion_v2_directional",
       "authoring_fps": 30,
       "delivery_sampling_fps": 60,
       "layer": "field_suspension",
