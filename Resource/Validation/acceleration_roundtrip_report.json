@@ -1,0 +1,1188 @@
+{
+  "characters": {
+    "Player_Explorer": {
+      "Walk_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Stop_L": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Stop_R": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009999782778322697,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010000416077673435,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Stop_L": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Stop_R": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009997785091400146,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Stop_L": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Stop_R": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Walk_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010000112233683467,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Walk_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009998938767239451,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Sprint_L": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00012059867003699765,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Sprint_R": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00012057295680278912,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_To_Run_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010002575581893325,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_To_Run_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000060117803514,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00018393248319625854,
+        "root_error": 0,
+        "loop_error": 0.0
+      }
+    },
+    "Ria_Engineer": {
+      "Walk_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Stop_L": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Stop_R": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009999782778322697,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010000416077673435,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Stop_L": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Stop_R": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009997785091400146,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Stop_L": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Stop_R": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Walk_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010000112233683467,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Walk_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009998938767239451,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Sprint_L": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00012059867003699765,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Sprint_R": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00012057295680278912,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_To_Run_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010002575581893325,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_To_Run_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000060117803514,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00018393248319625854,
+        "root_error": 0,
+        "loop_error": 0.0
+      }
+    },
+    "Kain_Guard": {
+      "Walk_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Stop_L": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Stop_R": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009999782778322697,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010000416077673435,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Stop_L": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Stop_R": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009997785091400146,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Stop_L": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Stop_R": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Walk_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010000112233683467,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Walk_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009998938767239451,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Sprint_L": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00012059867003699765,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Sprint_R": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00012057295680278912,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_To_Run_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010002575581893325,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_To_Run_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000060117803514,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00018393248319625854,
+        "root_error": 0,
+        "loop_error": 0.0
+      }
+    },
+    "Mara_Medic": {
+      "Walk_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Stop_L": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Stop_R": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009999782778322697,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010000416077673435,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Stop_L": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Stop_R": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009997785091400146,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Stop_L": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Stop_R": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Walk_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010000112233683467,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Walk_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009998938767239451,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Sprint_L": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00012059867003699765,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Sprint_R": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00012057295680278912,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_To_Run_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010002575581893325,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_To_Run_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000060117803514,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00018393248319625854,
+        "root_error": 0,
+        "loop_error": 0.0
+      }
+    },
+    "NPC_Researcher": {
+      "Walk_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Stop_L": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Stop_R": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009999782778322697,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010000416077673435,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Stop_L": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Stop_R": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009997785091400146,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Stop_L": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Stop_R": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Walk_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010000112233683467,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Walk_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009998938767239451,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Sprint_L": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00012059867003699765,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Sprint_R": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00012057295680278912,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_To_Run_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010002575581893325,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_To_Run_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000060117803514,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00018393248319625854,
+        "root_error": 0,
+        "loop_error": 0.0
+      }
+    },
+    "NPC_Miner": {
+      "Walk_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Stop_L": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Stop_R": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009999782778322697,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010000416077673435,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Stop_L": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Stop_R": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009997785091400146,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Stop_L": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Stop_R": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Walk_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010000112233683467,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Walk_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009998938767239451,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Sprint_L": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00012059867003699765,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Sprint_R": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00012057295680278912,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_To_Run_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010002575581893325,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_To_Run_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000060117803514,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00018393248319625854,
+        "root_error": 0,
+        "loop_error": 0.0
+      }
+    },
+    "NPC_Guard_Helmet": {
+      "Walk_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Stop_L": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Stop_R": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009999782778322697,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010000416077673435,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Stop_L": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Stop_R": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009997785091400146,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Stop_L": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Stop_R": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Walk_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010000112233683467,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Walk_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009998938767239451,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Sprint_L": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00012059867003699765,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Sprint_R": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00012057295680278912,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_To_Run_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010002575581893325,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_To_Run_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000060117803514,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00018393248319625854,
+        "root_error": 0,
+        "loop_error": 0.0
+      }
+    },
+    "NPC_HeavyCombat": {
+      "Walk_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Stop_L": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Stop_R": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009999782778322697,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010000416077673435,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Stop_L": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Stop_R": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009997785091400146,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Stop_L": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Stop_R": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Walk_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010000112233683467,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Walk_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009998938767239451,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Sprint_L": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00012059867003699765,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Sprint_R": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00012057295680278912,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_To_Run_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010002575581893325,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_To_Run_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000060117803514,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00018393248319625854,
+        "root_error": 0,
+        "loop_error": 0.0
+      }
+    },
+    "NPC_Pilot": {
+      "Walk_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Stop_L": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Stop_R": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009999782778322697,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010000416077673435,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Stop_L": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Stop_R": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009997785091400146,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Stop_L": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Stop_R": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Walk_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010000112233683467,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Walk_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009998938767239451,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Sprint_L": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00012059867003699765,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Sprint_R": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00012057295680278912,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_To_Run_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010002575581893325,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_To_Run_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000060117803514,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00018393248319625854,
+        "root_error": 0,
+        "loop_error": 0.0
+      }
+    },
+    "NPC_Civilian": {
+      "Walk_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Stop_L": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Walk_Stop_R": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009999782778322697,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010000416077673435,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Stop_L": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_Stop_R": {
+        "duration_seconds": 0.8,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Start_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009997785091400146,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Start_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Stop_L": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_Stop_R": {
+        "duration_seconds": 1.0,
+        "min_z_m": 0.001000075601041317,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Walk_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010000112233683467,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Walk_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0009998938767239451,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Sprint_L": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00012059867003699765,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Run_To_Sprint_R": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00012057295680278912,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_To_Run_L": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.0010002575581893325,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint_To_Run_R": {
+        "duration_seconds": 0.6,
+        "min_z_m": 0.001000060117803514,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Sprint": {
+        "duration_seconds": 0.5,
+        "min_z_m": 0.00018393248319625854,
+        "root_error": 0,
+        "loop_error": 0.0
+      }
+    }
+  },
+  "geometry_reference": "unchanged delivered GLB bind vertices driven by the authoring rig",
+  "max_source_reimport_bounds_error_m": 8.940696716308594e-07,
+  "all_checks_passed": true,
+  "worst_source_bounds_sample": {
+    "clip": "Run_To_Walk_R",
+    "phase": 0.5,
+    "part": "Weapon_CoilPistol_35cm",
+    "source": [
+      -0.3661915957927704,
+      -0.3554092049598694,
+      0.5920022130012512,
+      -0.28868231177330017,
+      -0.15283827483654022,
+      0.9708244800567627
+    ],
+    "actual": [
+      -0.3661918640136719,
+      -0.3554089665412903,
+      0.5920013189315796,
+      -0.2886824905872345,
+      -0.15283814072608948,
+      0.9708237051963806
+    ]
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "files": {
+    "Export/Characters/Player_Explorer.glb": {
+      "preserved_clips": 63,
+      "new_clips": 19,
+      "clips": 82,
+      "streams_written": 19,
+      "geometry_skin_materials_and_bind_unchanged": true,
+      "original_binary_prefix_sha256": "242643757c44fdd35080d14ecee8d39160e45a51efd10ffcf851b0dd11845c47"
+    },
+    "Export/Characters/Ria_Engineer.glb": {
+      "preserved_clips": 63,
+      "new_clips": 19,
+      "clips": 82,
+      "streams_written": 19,
+      "geometry_skin_materials_and_bind_unchanged": true,
+      "original_binary_prefix_sha256": "1ac2636486549e1210307476c4f4ec9dcd684a679346b62a891f22f62c142a9f"
+    },
+    "Export/Characters/Kain_Guard.glb": {
+      "preserved_clips": 63,
+      "new_clips": 19,
+      "clips": 82,
+      "streams_written": 19,
+      "geometry_skin_materials_and_bind_unchanged": true,
+      "original_binary_prefix_sha256": "0a4aeaa9c3e0ce23caecad6253a6001c130ec9dacf6799b3bd57d5e9b9d600d1"
+    },
+    "Export/Characters/Mara_Medic.glb": {
+      "preserved_clips": 63,
+      "new_clips": 19,
+      "clips": 82,
+      "streams_written": 19,
+      "geometry_skin_materials_and_bind_unchanged": true,
+      "original_binary_prefix_sha256": "47fe50ef5e846e62e1d3dee50503ddba483e9f4564dacd8e0f477fab1df6e044"
+    },
+    "Export/Characters/NPC_Researcher.glb": {
+      "preserved_clips": 63,
+      "new_clips": 19,
+      "clips": 82,
+      "streams_written": 19,
+      "geometry_skin_materials_and_bind_unchanged": true,
+      "original_binary_prefix_sha256": "8b318338450c8093a8a81619bef2aa245972e29dd01cf127c478724c3b3f6983"
+    },
+    "Export/Characters/NPC_Miner.glb": {
+      "preserved_clips": 63,
+      "new_clips": 19,
+      "clips": 82,
+      "streams_written": 19,
+      "geometry_skin_materials_and_bind_unchanged": true,
+      "original_binary_prefix_sha256": "0036c80757b872941bf7306f61c2a25e39888d48e311d2113e1dd00ab895c20e"
+    },
+    "Export/Characters/NPC_Guard_Helmet.glb": {
+      "preserved_clips": 63,
+      "new_clips": 19,
+      "clips": 82,
+      "streams_written": 19,
+      "geometry_skin_materials_and_bind_unchanged": true,
+      "original_binary_prefix_sha256": "ae32488258915da5206b3a00c97f6768f216f08fd5432acd686a4a502acdedd8"
+    },
+    "Export/Characters/NPC_HeavyCombat.glb": {
+      "preserved_clips": 63,
+      "new_clips": 19,
+      "clips": 82,
+      "streams_written": 19,
+      "geometry_skin_materials_and_bind_unchanged": true,
+      "original_binary_prefix_sha256": "b049603899c1405339f950095a1376c81351874f10e410aab315f1d751f49829"
+    },
+    "Export/Characters/NPC_Pilot.glb": {
+      "preserved_clips": 63,
+      "new_clips": 19,
+      "clips": 82,
+      "streams_written": 19,
+      "geometry_skin_materials_and_bind_unchanged": true,
+      "original_binary_prefix_sha256": "85ae90da859282850066324a21bea4f622e70a0412a0ad4accf96d0a18080e42"
+    },
+    "Export/Characters/NPC_Civilian.glb": {
+      "preserved_clips": 63,
+      "new_clips": 19,
+      "clips": 82,
+      "streams_written": 19,
+      "geometry_skin_materials_and_bind_unchanged": true,
+      "original_binary_prefix_sha256": "a525e1007e1339f138c8b3e393e433f78c18f57a4821284bf75e5658555290ff"
+    }
+  },
+  "all_checks_passed": true
+}

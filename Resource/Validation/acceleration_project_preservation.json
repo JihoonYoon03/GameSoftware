@@ -1,0 +1,31 @@
+{
+  "master_entry_scene": "16_Transit_Connected_Example",
+  "civic_entry_scene": "37_Civic_Animation_Review",
+  "master_old_actions_preserved": 358,
+  "civic_old_actions_preserved": 263,
+  "civic_old_scenes_preserved": [
+    "37_Civic_Animation_Review",
+    "38_Motion_Before_After",
+    "39_Civic_Body_Profile_Review",
+    "40_Bike_Rider_Contact_Review",
+    "41_Vehicle_Impact_Review",
+    "42_Aim_Directional_Review",
+    "43_Pistol_Carry_Reload_Review"
+  ],
+  "review_scene": "44_Acceleration_Review",
+  "all_checks_passed": true,
+  "reopened": {
+    "Erma_Resource_Library.blend": {
+      "entry_scene": "16_Transit_Connected_Example",
+      "human_clips": 82,
+      "review_actors": 3,
+      "review_joint_movement_m": 0.5188578310943831
+    },
+    "Civic_Animations.blend": {
+      "entry_scene": "37_Civic_Animation_Review",
+      "human_clips": 82,
+      "review_actors": 3,
+      "review_joint_movement_m": 0.5188578310943831
+    }
+  }
+}

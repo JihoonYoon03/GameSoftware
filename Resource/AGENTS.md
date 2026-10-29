@@ -29,7 +29,7 @@
 - RoadPlan 독립 파일은 append 전용 데이터 라이브러리가 아니라 바로 열리는 일반 프로젝트로 저장한다. `road_plan_source.write_project`의 인메모리 정리는 마스터 저장 후 독립 도로 프로젝트에만 저장한다. 메인 원본의 기존 자산과 기본 장면은 보존한다.
 - 재제작 순서: 공통 원본 → air/city → transit → refined city → character detail. 앞 단계 제작 도구는 뒤 단계의 조립체를 자동 갱신하지 않으므로 뒤 단계를 다시 실행하고 검증한다.
 - 기존 라이브러리를 열어 해당 제작 도구가 소유한 데이터만 갱신한다. 다른 확장·본·재질·조립 데이터·기본 진입 장면을 보존한다.
-- 도시 반응 애니메이션은 `Tools/civic_motion.py`, `build_civic_animations.py`가 소유한다. 인체는 기존 43개 + 조준 이동 16개 + 권총 운반/재장전 4개의 총 63클립이며, 차량 반응 액션 21개를 유지한다. 권총 확장은 `Tools/pistol_layer_motion.py`, `build_pistol_layers.py`, `publish_pistol_layers.py`, `append_pistol_animations.py`가 소유하며 `Documentation/PISTOL_LAYERS_ko.md`를 따른다. 방향별 이동은 `Documentation/aim_locomotion_blending.json`을 따르며 몸의 조준 방향을 고정하고 위상을 공유한다. `Documentation/civic_animation_contract.json`과 `CIVIC_ANIMATION_GUIDE_ko.md`를 따른다. 30fps 편집 타임라인에 반 프레임 키를 두고 GLB는 60Hz로 샘플링한다. 원래 본/바인드/메시/스킨/장비 오프셋과 메인 진입 장면은 보존한다. `Source/Civic_Animations.blend`는 직접 열어 재생하는 별도 검토 프로젝트다. 게임이 합성하는 Ride와 이름이 겹치지 않도록 새 기준은 Ride_Base이며 자동 연결하지 않는다. 새 반응의 루트 이동·yaw, 차량 차체/좌석 이동을 만들지 않는다.
+- 도시 반응 애니메이션은 `Tools/civic_motion.py`, `build_civic_animations.py`가 소유한다. 인체는 기존 43개 + 조준 이동 16개 + 권총 운반/재장전 4개의 총 82클립(기존 63 + 가감속 19)이며, 차량 반응 액션 21개를 유지한다. 권총 확장은 `Tools/pistol_layer_motion.py`, `build_pistol_layers.py`, `publish_pistol_layers.py`, `append_pistol_animations.py`가 소유하며 `Documentation/PISTOL_LAYERS_ko.md`를 따른다. 방향별 이동은 `Documentation/aim_locomotion_blending.json`을 따르며 몸의 조준 방향을 고정하고 위상을 공유한다. `Documentation/civic_animation_contract.json`과 `CIVIC_ANIMATION_GUIDE_ko.md`를 따른다. 30fps 편집 타임라인에 반 프레임 키를 두고 GLB는 60Hz로 샘플링한다. 원래 본/바인드/메시/스킨/장비 오프셋과 메인 진입 장면은 보존한다. `Source/Civic_Animations.blend`는 직접 열어 재생하는 별도 검토 프로젝트다. 게임이 합성하는 Ride와 이름이 겹치지 않도록 새 기준은 Ride_Base이며 자동 연결하지 않는다. 새 반응의 루트 이동·yaw, 차량 차체/좌석 이동을 만들지 않는다.
 - 파트 공통 원점·미터 단위·축·본 이름과 통행로 접속 좌표를 지킨다. 원점 재중앙화와 임의 비율 변경을 하지 않는다.
 
 ## 확정된 아트 방향
@@ -37,3 +37,5 @@
 - SF 개척지 스타일. 비행체는 분절된 부상 필드와 발광 코어를 사용하며, 현대적인 노출 로터·프로펠러를 다시 넣지 않는다.
 - 차량 신호기는 지지대 없이 공중에 뜬다. 보행자 신호는 도로 표면의 바닥 홀로그램으로 표현한다. 보행자 신호 헤드·기둥을 추가하지 않는다.
 - 사용자 요청 범위에 맞춰 제작하고, 다른 작업에서 변경 중인 게임 코드·Runtime 캐시를 모델링 작업에 함께 수정하지 않는다.
+
+- 2026-10-29 가감속 확장은 `Tools/acceleration_motion.py`, `build_acceleration_animations.py`, `publish_acceleration_animations.py`가 소유한다. 기존 63개를 보존해 총 82클립이다. `Documentation/ACCELERATION_ko.md`, `acceleration_blending.json`을 따른다. 전환 종료는 실제 저장된 타깃 루프의 위상과 일치시킨다. 무장 시 새 하체와 기존 권총 운반/조준 상체를 합성하며, 비무장 기본 모션에는 무기를 표시하지 않는다. 원본 두 파일에 44번 검토 장면을 추가하고 기존 진입 장면을 유지한다.

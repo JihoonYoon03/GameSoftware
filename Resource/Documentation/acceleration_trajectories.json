@@ -1,0 +1,5513 @@
+{
+  "units": "meters_seconds",
+  "reference_only": true,
+  "root_motion": false,
+  "actor_authority": "game code; these are synchronization reference curves, not forced movement",
+  "clips": {
+    "Sprint": [
+      {
+        "seconds": 0.0,
+        "normalized_phase": 0.0,
+        "locomotion_phase": 0.0,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 0.0
+      },
+      {
+        "seconds": 0.016666666666666666,
+        "normalized_phase": 0.03333333333333333,
+        "locomotion_phase": 0.03333333333333333,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 0.07
+      },
+      {
+        "seconds": 0.03333333333333333,
+        "normalized_phase": 0.06666666666666667,
+        "locomotion_phase": 0.06666666666666667,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 0.14
+      },
+      {
+        "seconds": 0.05,
+        "normalized_phase": 0.1,
+        "locomotion_phase": 0.1,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 0.21000000000000002
+      },
+      {
+        "seconds": 0.06666666666666667,
+        "normalized_phase": 0.13333333333333333,
+        "locomotion_phase": 0.13333333333333333,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 0.28
+      },
+      {
+        "seconds": 0.08333333333333333,
+        "normalized_phase": 0.16666666666666666,
+        "locomotion_phase": 0.16666666666666666,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 0.35
+      },
+      {
+        "seconds": 0.1,
+        "normalized_phase": 0.2,
+        "locomotion_phase": 0.2,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 0.42000000000000004
+      },
+      {
+        "seconds": 0.11666666666666667,
+        "normalized_phase": 0.23333333333333334,
+        "locomotion_phase": 0.23333333333333334,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 0.49000000000000005
+      },
+      {
+        "seconds": 0.13333333333333333,
+        "normalized_phase": 0.26666666666666666,
+        "locomotion_phase": 0.26666666666666666,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 0.56
+      },
+      {
+        "seconds": 0.15,
+        "normalized_phase": 0.3,
+        "locomotion_phase": 0.3,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 0.63
+      },
+      {
+        "seconds": 0.16666666666666666,
+        "normalized_phase": 0.3333333333333333,
+        "locomotion_phase": 0.3333333333333333,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 0.7
+      },
+      {
+        "seconds": 0.18333333333333332,
+        "normalized_phase": 0.36666666666666664,
+        "locomotion_phase": 0.36666666666666664,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 0.77
+      },
+      {
+        "seconds": 0.2,
+        "normalized_phase": 0.4,
+        "locomotion_phase": 0.4,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 0.8400000000000001
+      },
+      {
+        "seconds": 0.21666666666666667,
+        "normalized_phase": 0.43333333333333335,
+        "locomotion_phase": 0.43333333333333335,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 0.91
+      },
+      {
+        "seconds": 0.23333333333333334,
+        "normalized_phase": 0.4666666666666667,
+        "locomotion_phase": 0.4666666666666667,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 0.9800000000000001
+      },
+      {
+        "seconds": 0.25,
+        "normalized_phase": 0.5,
+        "locomotion_phase": 0.5,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 1.05
+      },
+      {
+        "seconds": 0.26666666666666666,
+        "normalized_phase": 0.5333333333333333,
+        "locomotion_phase": 0.5333333333333333,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 1.12
+      },
+      {
+        "seconds": 0.2833333333333333,
+        "normalized_phase": 0.5666666666666667,
+        "locomotion_phase": 0.5666666666666667,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 1.19
+      },
+      {
+        "seconds": 0.3,
+        "normalized_phase": 0.6,
+        "locomotion_phase": 0.6,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 1.26
+      },
+      {
+        "seconds": 0.31666666666666665,
+        "normalized_phase": 0.6333333333333333,
+        "locomotion_phase": 0.6333333333333333,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 1.33
+      },
+      {
+        "seconds": 0.3333333333333333,
+        "normalized_phase": 0.6666666666666666,
+        "locomotion_phase": 0.6666666666666666,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 1.4
+      },
+      {
+        "seconds": 0.35,
+        "normalized_phase": 0.7,
+        "locomotion_phase": 0.7,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 1.47
+      },
+      {
+        "seconds": 0.36666666666666664,
+        "normalized_phase": 0.7333333333333333,
+        "locomotion_phase": 0.7333333333333333,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 1.54
+      },
+      {
+        "seconds": 0.38333333333333336,
+        "normalized_phase": 0.7666666666666667,
+        "locomotion_phase": 0.7666666666666667,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 1.61
+      },
+      {
+        "seconds": 0.4,
+        "normalized_phase": 0.8,
+        "locomotion_phase": 0.8,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 1.6800000000000002
+      },
+      {
+        "seconds": 0.4166666666666667,
+        "normalized_phase": 0.8333333333333334,
+        "locomotion_phase": 0.8333333333333334,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 1.7500000000000002
+      },
+      {
+        "seconds": 0.43333333333333335,
+        "normalized_phase": 0.8666666666666667,
+        "locomotion_phase": 0.8666666666666667,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 1.82
+      },
+      {
+        "seconds": 0.45,
+        "normalized_phase": 0.9,
+        "locomotion_phase": 0.9,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 1.8900000000000001
+      },
+      {
+        "seconds": 0.4666666666666667,
+        "normalized_phase": 0.9333333333333333,
+        "locomotion_phase": 0.9333333333333333,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 1.9600000000000002
+      },
+      {
+        "seconds": 0.48333333333333334,
+        "normalized_phase": 0.9666666666666667,
+        "locomotion_phase": 0.9666666666666667,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 2.0300000000000002
+      },
+      {
+        "seconds": 0.5,
+        "normalized_phase": 1.0,
+        "locomotion_phase": 0.0,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 2.1
+      }
+    ],
+    "Walk_Start_L": [
+      {
+        "seconds": 0.0,
+        "normalized_phase": 0.0,
+        "locomotion_phase": 0.7,
+        "speed_mps": 0.0,
+        "reference_forward_distance_m": 0.0
+      },
+      {
+        "seconds": 0.016666666666666666,
+        "normalized_phase": 0.027777777777777776,
+        "locomotion_phase": 0.7000126814700502,
+        "speed_mps": 0.0024537037037037036,
+        "reference_forward_distance_m": 1.3695987654320985e-05
+      },
+      {
+        "seconds": 0.03333333333333333,
+        "normalized_phase": 0.05555555555555555,
+        "locomotion_phase": 0.7001000228623686,
+        "speed_mps": 0.00962962962962963,
+        "reference_forward_distance_m": 0.00010802469135802466
+      },
+      {
+        "seconds": 0.05,
+        "normalized_phase": 0.08333333333333333,
+        "locomotion_phase": 0.7003327546296296,
+        "speed_mps": 0.02125,
+        "reference_forward_distance_m": 0.0003593749999999999
+      },
+      {
+        "seconds": 0.06666666666666667,
+        "normalized_phase": 0.1111111111111111,
+        "locomotion_phase": 0.700777320530407,
+        "speed_mps": 0.03703703703703704,
+        "reference_forward_distance_m": 0.000839506172839506
+      },
+      {
+        "seconds": 0.08333333333333333,
+        "normalized_phase": 0.1388888888888889,
+        "locomotion_phase": 0.7014958776291724,
+        "speed_mps": 0.05671296296296298,
+        "reference_forward_distance_m": 0.001615547839506173
+      },
+      {
+        "seconds": 0.1,
+        "normalized_phase": 0.16666666666666666,
+        "locomotion_phase": 0.7025462962962963,
+        "speed_mps": 0.08,
+        "reference_forward_distance_m": 0.0027499999999999994
+      },
+      {
+        "seconds": 0.11666666666666667,
+        "normalized_phase": 0.19444444444444445,
+        "locomotion_phase": 0.7039821602080476,
+        "speed_mps": 0.1066203703703704,
+        "reference_forward_distance_m": 0.0043007330246913585
+      },
+      {
+        "seconds": 0.13333333333333333,
+        "normalized_phase": 0.2222222222222222,
+        "locomotion_phase": 0.7058527663465934,
+        "speed_mps": 0.1362962962962963,
+        "reference_forward_distance_m": 0.006320987654320987
+      },
+      {
+        "seconds": 0.15,
+        "normalized_phase": 0.25,
+        "locomotion_phase": 0.708203125,
+        "speed_mps": 0.16875,
+        "reference_forward_distance_m": 0.008859375000000001
+      },
+      {
+        "seconds": 0.16666666666666666,
+        "normalized_phase": 0.2777777777777778,
+        "locomotion_phase": 0.7110739597622313,
+        "speed_mps": 0.20370370370370375,
+        "reference_forward_distance_m": 0.01195987654320988
+      },
+      {
+        "seconds": 0.18333333333333332,
+        "normalized_phase": 0.3055555555555556,
+        "locomotion_phase": 0.7145017075331505,
+        "speed_mps": 0.24087962962962964,
+        "reference_forward_distance_m": 0.01566184413580247
+      },
+      {
+        "seconds": 0.2,
+        "normalized_phase": 0.3333333333333333,
+        "locomotion_phase": 0.7185185185185186,
+        "speed_mps": 0.28,
+        "reference_forward_distance_m": 0.019999999999999993
+      },
+      {
+        "seconds": 0.21666666666666667,
+        "normalized_phase": 0.3611111111111111,
+        "locomotion_phase": 0.7231522562299955,
+        "speed_mps": 0.32078703703703704,
+        "reference_forward_distance_m": 0.025004436728395064
+      },
+      {
+        "seconds": 0.23333333333333334,
+        "normalized_phase": 0.3888888888888889,
+        "locomotion_phase": 0.7284264974851395,
+        "speed_mps": 0.362962962962963,
+        "reference_forward_distance_m": 0.030700617283950623
+      },
+      {
+        "seconds": 0.25,
+        "normalized_phase": 0.4166666666666667,
+        "locomotion_phase": 0.7343605324074074,
+        "speed_mps": 0.40625000000000006,
+        "reference_forward_distance_m": 0.03710937500000001
+      },
+      {
+        "seconds": 0.26666666666666666,
+        "normalized_phase": 0.4444444444444444,
+        "locomotion_phase": 0.7409693644261546,
+        "speed_mps": 0.4503703703703704,
+        "reference_forward_distance_m": 0.044246913580246905
+      },
+      {
+        "seconds": 0.2833333333333333,
+        "normalized_phase": 0.4722222222222222,
+        "locomotion_phase": 0.7482637102766347,
+        "speed_mps": 0.4950462962962962,
+        "reference_forward_distance_m": 0.052124807098765435
+      },
+      {
+        "seconds": 0.3,
+        "normalized_phase": 0.5,
+        "locomotion_phase": 0.75625,
+        "speed_mps": 0.54,
+        "reference_forward_distance_m": 0.06075
+      },
+      {
+        "seconds": 0.31666666666666665,
+        "normalized_phase": 0.5277777777777778,
+        "locomotion_phase": 0.7649303769433013,
+        "speed_mps": 0.5849537037037037,
+        "reference_forward_distance_m": 0.07012480709876544
+      },
+      {
+        "seconds": 0.3333333333333333,
+        "normalized_phase": 0.5555555555555556,
+        "locomotion_phase": 0.7743026977594879,
+        "speed_mps": 0.6296296296296298,
+        "reference_forward_distance_m": 0.08024691358024692
+      },
+      {
+        "seconds": 0.35,
+        "normalized_phase": 0.5833333333333334,
+        "locomotion_phase": 0.7843605324074074,
+        "speed_mps": 0.6737500000000002,
+        "reference_forward_distance_m": 0.09110937500000003
+      },
+      {
+        "seconds": 0.36666666666666664,
+        "normalized_phase": 0.6111111111111112,
+        "locomotion_phase": 0.7950931641518062,
+        "speed_mps": 0.717037037037037,
+        "reference_forward_distance_m": 0.10270061728395065
+      },
+      {
+        "seconds": 0.38333333333333336,
+        "normalized_phase": 0.6388888888888888,
+        "locomotion_phase": 0.8064855895633287,
+        "speed_mps": 0.7592129629629628,
+        "reference_forward_distance_m": 0.11500443672839505
+      },
+      {
+        "seconds": 0.4,
+        "normalized_phase": 0.6666666666666666,
+        "locomotion_phase": 0.8185185185185184,
+        "speed_mps": 0.8000000000000002,
+        "reference_forward_distance_m": 0.12799999999999995
+      },
+      {
+        "seconds": 0.4166666666666667,
+        "normalized_phase": 0.6944444444444444,
+        "locomotion_phase": 0.831168374199817,
+        "speed_mps": 0.8391203703703702,
+        "reference_forward_distance_m": 0.14166184413580246
+      },
+      {
+        "seconds": 0.43333333333333335,
+        "normalized_phase": 0.7222222222222222,
+        "locomotion_phase": 0.8444072930955647,
+        "speed_mps": 0.8762962962962965,
+        "reference_forward_distance_m": 0.15595987654320992
+      },
+      {
+        "seconds": 0.45,
+        "normalized_phase": 0.75,
+        "locomotion_phase": 0.858203125,
+        "speed_mps": 0.9112500000000001,
+        "reference_forward_distance_m": 0.170859375
+      },
+      {
+        "seconds": 0.4666666666666667,
+        "normalized_phase": 0.7777777777777778,
+        "locomotion_phase": 0.8725194330132602,
+        "speed_mps": 0.9437037037037037,
+        "reference_forward_distance_m": 0.186320987654321
+      },
+      {
+        "seconds": 0.48333333333333334,
+        "normalized_phase": 0.8055555555555556,
+        "locomotion_phase": 0.887315493541381,
+        "speed_mps": 0.9733796296296299,
+        "reference_forward_distance_m": 0.20230073302469137
+      },
+      {
+        "seconds": 0.5,
+        "normalized_phase": 0.8333333333333334,
+        "locomotion_phase": 0.9025462962962963,
+        "speed_mps": 1.0,
+        "reference_forward_distance_m": 0.21875000000000006
+      },
+      {
+        "seconds": 0.5166666666666667,
+        "normalized_phase": 0.8611111111111112,
+        "locomotion_phase": 0.9181625442958391,
+        "speed_mps": 1.023287037037037,
+        "reference_forward_distance_m": 0.23561554783950622
+      },
+      {
+        "seconds": 0.5333333333333333,
+        "normalized_phase": 0.8888888888888888,
+        "locomotion_phase": 0.9341106538637403,
+        "speed_mps": 1.0429629629629633,
+        "reference_forward_distance_m": 0.2528395061728394
+      },
+      {
+        "seconds": 0.55,
+        "normalized_phase": 0.9166666666666666,
+        "locomotion_phase": 0.9503327546296296,
+        "speed_mps": 1.0587499999999999,
+        "reference_forward_distance_m": 0.27035937499999996
+      },
+      {
+        "seconds": 0.5666666666666667,
+        "normalized_phase": 0.9444444444444444,
+        "locomotion_phase": 0.9667666895290352,
+        "speed_mps": 1.0703703703703702,
+        "reference_forward_distance_m": 0.288108024691358
+      },
+      {
+        "seconds": 0.5833333333333334,
+        "normalized_phase": 0.9722222222222222,
+        "locomotion_phase": 0.9833460148033836,
+        "speed_mps": 1.0775462962962963,
+        "reference_forward_distance_m": 0.3060136959876543
+      },
+      {
+        "seconds": 0.6,
+        "normalized_phase": 1.0,
+        "locomotion_phase": 0.0,
+        "speed_mps": 1.08,
+        "reference_forward_distance_m": 0.324
+      }
+    ],
+    "Walk_Start_R": [
+      {
+        "seconds": 0.0,
+        "normalized_phase": 0.0,
+        "locomotion_phase": 0.2,
+        "speed_mps": 0.0,
+        "reference_forward_distance_m": 0.0
+      },
+      {
+        "seconds": 0.016666666666666666,
+        "normalized_phase": 0.027777777777777776,
+        "locomotion_phase": 0.2000126814700503,
+        "speed_mps": 0.0024537037037037036,
+        "reference_forward_distance_m": 1.3695987654320985e-05
+      },
+      {
+        "seconds": 0.03333333333333333,
+        "normalized_phase": 0.05555555555555555,
+        "locomotion_phase": 0.20010002286236855,
+        "speed_mps": 0.00962962962962963,
+        "reference_forward_distance_m": 0.00010802469135802466
+      },
+      {
+        "seconds": 0.05,
+        "normalized_phase": 0.08333333333333333,
+        "locomotion_phase": 0.20033275462962963,
+        "speed_mps": 0.02125,
+        "reference_forward_distance_m": 0.0003593749999999999
+      },
+      {
+        "seconds": 0.06666666666666667,
+        "normalized_phase": 0.1111111111111111,
+        "locomotion_phase": 0.20077732053040695,
+        "speed_mps": 0.03703703703703704,
+        "reference_forward_distance_m": 0.000839506172839506
+      },
+      {
+        "seconds": 0.08333333333333333,
+        "normalized_phase": 0.1388888888888889,
+        "locomotion_phase": 0.2014958776291724,
+        "speed_mps": 0.05671296296296298,
+        "reference_forward_distance_m": 0.001615547839506173
+      },
+      {
+        "seconds": 0.1,
+        "normalized_phase": 0.16666666666666666,
+        "locomotion_phase": 0.2025462962962963,
+        "speed_mps": 0.08,
+        "reference_forward_distance_m": 0.0027499999999999994
+      },
+      {
+        "seconds": 0.11666666666666667,
+        "normalized_phase": 0.19444444444444445,
+        "locomotion_phase": 0.20398216020804757,
+        "speed_mps": 0.1066203703703704,
+        "reference_forward_distance_m": 0.0043007330246913585
+      },
+      {
+        "seconds": 0.13333333333333333,
+        "normalized_phase": 0.2222222222222222,
+        "locomotion_phase": 0.20585276634659352,
+        "speed_mps": 0.1362962962962963,
+        "reference_forward_distance_m": 0.006320987654320987
+      },
+      {
+        "seconds": 0.15,
+        "normalized_phase": 0.25,
+        "locomotion_phase": 0.20820312500000002,
+        "speed_mps": 0.16875,
+        "reference_forward_distance_m": 0.008859375000000001
+      },
+      {
+        "seconds": 0.16666666666666666,
+        "normalized_phase": 0.2777777777777778,
+        "locomotion_phase": 0.21107395976223137,
+        "speed_mps": 0.20370370370370375,
+        "reference_forward_distance_m": 0.01195987654320988
+      },
+      {
+        "seconds": 0.18333333333333332,
+        "normalized_phase": 0.3055555555555556,
+        "locomotion_phase": 0.21450170753315045,
+        "speed_mps": 0.24087962962962964,
+        "reference_forward_distance_m": 0.01566184413580247
+      },
+      {
+        "seconds": 0.2,
+        "normalized_phase": 0.3333333333333333,
+        "locomotion_phase": 0.21851851851851853,
+        "speed_mps": 0.28,
+        "reference_forward_distance_m": 0.019999999999999993
+      },
+      {
+        "seconds": 0.21666666666666667,
+        "normalized_phase": 0.3611111111111111,
+        "locomotion_phase": 0.22315225622999543,
+        "speed_mps": 0.32078703703703704,
+        "reference_forward_distance_m": 0.025004436728395064
+      },
+      {
+        "seconds": 0.23333333333333334,
+        "normalized_phase": 0.3888888888888889,
+        "locomotion_phase": 0.2284264974851395,
+        "speed_mps": 0.362962962962963,
+        "reference_forward_distance_m": 0.030700617283950623
+      },
+      {
+        "seconds": 0.25,
+        "normalized_phase": 0.4166666666666667,
+        "locomotion_phase": 0.23436053240740742,
+        "speed_mps": 0.40625000000000006,
+        "reference_forward_distance_m": 0.03710937500000001
+      },
+      {
+        "seconds": 0.26666666666666666,
+        "normalized_phase": 0.4444444444444444,
+        "locomotion_phase": 0.24096936442615455,
+        "speed_mps": 0.4503703703703704,
+        "reference_forward_distance_m": 0.044246913580246905
+      },
+      {
+        "seconds": 0.2833333333333333,
+        "normalized_phase": 0.4722222222222222,
+        "locomotion_phase": 0.24826371027663466,
+        "speed_mps": 0.4950462962962962,
+        "reference_forward_distance_m": 0.052124807098765435
+      },
+      {
+        "seconds": 0.3,
+        "normalized_phase": 0.5,
+        "locomotion_phase": 0.25625,
+        "speed_mps": 0.54,
+        "reference_forward_distance_m": 0.06075
+      },
+      {
+        "seconds": 0.31666666666666665,
+        "normalized_phase": 0.5277777777777778,
+        "locomotion_phase": 0.26493037694330135,
+        "speed_mps": 0.5849537037037037,
+        "reference_forward_distance_m": 0.07012480709876544
+      },
+      {
+        "seconds": 0.3333333333333333,
+        "normalized_phase": 0.5555555555555556,
+        "locomotion_phase": 0.2743026977594879,
+        "speed_mps": 0.6296296296296298,
+        "reference_forward_distance_m": 0.08024691358024692
+      },
+      {
+        "seconds": 0.35,
+        "normalized_phase": 0.5833333333333334,
+        "locomotion_phase": 0.28436053240740744,
+        "speed_mps": 0.6737500000000002,
+        "reference_forward_distance_m": 0.09110937500000003
+      },
+      {
+        "seconds": 0.36666666666666664,
+        "normalized_phase": 0.6111111111111112,
+        "locomotion_phase": 0.29509316415180614,
+        "speed_mps": 0.717037037037037,
+        "reference_forward_distance_m": 0.10270061728395065
+      },
+      {
+        "seconds": 0.38333333333333336,
+        "normalized_phase": 0.6388888888888888,
+        "locomotion_phase": 0.3064855895633288,
+        "speed_mps": 0.7592129629629628,
+        "reference_forward_distance_m": 0.11500443672839505
+      },
+      {
+        "seconds": 0.4,
+        "normalized_phase": 0.6666666666666666,
+        "locomotion_phase": 0.3185185185185185,
+        "speed_mps": 0.8000000000000002,
+        "reference_forward_distance_m": 0.12799999999999995
+      },
+      {
+        "seconds": 0.4166666666666667,
+        "normalized_phase": 0.6944444444444444,
+        "locomotion_phase": 0.3311683741998171,
+        "speed_mps": 0.8391203703703702,
+        "reference_forward_distance_m": 0.14166184413580246
+      },
+      {
+        "seconds": 0.43333333333333335,
+        "normalized_phase": 0.7222222222222222,
+        "locomotion_phase": 0.3444072930955647,
+        "speed_mps": 0.8762962962962965,
+        "reference_forward_distance_m": 0.15595987654320992
+      },
+      {
+        "seconds": 0.45,
+        "normalized_phase": 0.75,
+        "locomotion_phase": 0.358203125,
+        "speed_mps": 0.9112500000000001,
+        "reference_forward_distance_m": 0.170859375
+      },
+      {
+        "seconds": 0.4666666666666667,
+        "normalized_phase": 0.7777777777777778,
+        "locomotion_phase": 0.3725194330132602,
+        "speed_mps": 0.9437037037037037,
+        "reference_forward_distance_m": 0.186320987654321
+      },
+      {
+        "seconds": 0.48333333333333334,
+        "normalized_phase": 0.8055555555555556,
+        "locomotion_phase": 0.3873154935413809,
+        "speed_mps": 0.9733796296296299,
+        "reference_forward_distance_m": 0.20230073302469137
+      },
+      {
+        "seconds": 0.5,
+        "normalized_phase": 0.8333333333333334,
+        "locomotion_phase": 0.40254629629629635,
+        "speed_mps": 1.0,
+        "reference_forward_distance_m": 0.21875000000000006
+      },
+      {
+        "seconds": 0.5166666666666667,
+        "normalized_phase": 0.8611111111111112,
+        "locomotion_phase": 0.4181625442958391,
+        "speed_mps": 1.023287037037037,
+        "reference_forward_distance_m": 0.23561554783950622
+      },
+      {
+        "seconds": 0.5333333333333333,
+        "normalized_phase": 0.8888888888888888,
+        "locomotion_phase": 0.4341106538637402,
+        "speed_mps": 1.0429629629629633,
+        "reference_forward_distance_m": 0.2528395061728394
+      },
+      {
+        "seconds": 0.55,
+        "normalized_phase": 0.9166666666666666,
+        "locomotion_phase": 0.45033275462962963,
+        "speed_mps": 1.0587499999999999,
+        "reference_forward_distance_m": 0.27035937499999996
+      },
+      {
+        "seconds": 0.5666666666666667,
+        "normalized_phase": 0.9444444444444444,
+        "locomotion_phase": 0.46676668952903516,
+        "speed_mps": 1.0703703703703702,
+        "reference_forward_distance_m": 0.288108024691358
+      },
+      {
+        "seconds": 0.5833333333333334,
+        "normalized_phase": 0.9722222222222222,
+        "locomotion_phase": 0.4833460148033836,
+        "speed_mps": 1.0775462962962963,
+        "reference_forward_distance_m": 0.3060136959876543
+      },
+      {
+        "seconds": 0.6,
+        "normalized_phase": 1.0,
+        "locomotion_phase": 0.5,
+        "speed_mps": 1.08,
+        "reference_forward_distance_m": 0.324
+      }
+    ],
+    "Walk_Stop_L": [
+      {
+        "seconds": 0.0,
+        "normalized_phase": 0.0,
+        "locomotion_phase": 0.0,
+        "speed_mps": 1.08,
+        "reference_forward_distance_m": 0.0
+      },
+      {
+        "seconds": 0.016666666666666666,
+        "normalized_phase": 0.020833333333333332,
+        "locomotion_phase": 0.016659508222415124,
+        "speed_mps": 1.07861328125,
+        "reference_forward_distance_m": 0.017992268880208332
+      },
+      {
+        "seconds": 0.03333333333333333,
+        "normalized_phase": 0.041666666666666664,
+        "locomotion_phase": 0.03327666859567901,
+        "speed_mps": 1.0745312500000002,
+        "reference_forward_distance_m": 0.03593880208333333
+      },
+      {
+        "seconds": 0.05,
+        "normalized_phase": 0.0625,
+        "locomotion_phase": 0.049810791015625,
+        "speed_mps": 1.06787109375,
+        "reference_forward_distance_m": 0.05379565429687501
+      },
+      {
+        "seconds": 0.06666666666666667,
+        "normalized_phase": 0.08333333333333333,
+        "locomotion_phase": 0.0662229938271605,
+        "speed_mps": 1.05875,
+        "reference_forward_distance_m": 0.07152083333333334
+      },
+      {
+        "seconds": 0.08333333333333333,
+        "normalized_phase": 0.10416666666666667,
+        "locomotion_phase": 0.08247620382426699,
+        "speed_mps": 1.04728515625,
+        "reference_forward_distance_m": 0.08907430013020835
+      },
+      {
+        "seconds": 0.1,
+        "normalized_phase": 0.125,
+        "locomotion_phase": 0.09853515625,
+        "speed_mps": 1.03359375,
+        "reference_forward_distance_m": 0.10641796875000001
+      },
+      {
+        "seconds": 0.11666666666666667,
+        "normalized_phase": 0.14583333333333334,
+        "locomotion_phase": 0.1143663947964892,
+        "speed_mps": 1.01779296875,
+        "reference_forward_distance_m": 0.12351570638020835
+      },
+      {
+        "seconds": 0.13333333333333333,
+        "normalized_phase": 0.16666666666666666,
+        "locomotion_phase": 0.1299382716049383,
+        "speed_mps": 1.0,
+        "reference_forward_distance_m": 0.14033333333333334
+      },
+      {
+        "seconds": 0.15,
+        "normalized_phase": 0.1875,
+        "locomotion_phase": 0.145220947265625,
+        "speed_mps": 0.9803320312500001,
+        "reference_forward_distance_m": 0.15683862304687501
+      },
+      {
+        "seconds": 0.16666666666666666,
+        "normalized_phase": 0.20833333333333334,
+        "locomotion_phase": 0.16018639081790126,
+        "speed_mps": 0.9589062500000001,
+        "reference_forward_distance_m": 0.17300130208333336
+      },
+      {
+        "seconds": 0.18333333333333332,
+        "normalized_phase": 0.22916666666666666,
+        "locomotion_phase": 0.17480837975019292,
+        "speed_mps": 0.9358398437500001,
+        "reference_forward_distance_m": 0.18879305013020833
+      },
+      {
+        "seconds": 0.2,
+        "normalized_phase": 0.25,
+        "locomotion_phase": 0.18906250000000002,
+        "speed_mps": 0.9112500000000001,
+        "reference_forward_distance_m": 0.20418750000000002
+      },
+      {
+        "seconds": 0.21666666666666667,
+        "normalized_phase": 0.2708333333333333,
+        "locomotion_phase": 0.2029261459538966,
+        "speed_mps": 0.88525390625,
+        "reference_forward_distance_m": 0.21916023763020834
+      },
+      {
+        "seconds": 0.23333333333333334,
+        "normalized_phase": 0.2916666666666667,
+        "locomotion_phase": 0.21637852044753086,
+        "speed_mps": 0.8579687500000001,
+        "reference_forward_distance_m": 0.2336888020833334
+      },
+      {
+        "seconds": 0.25,
+        "normalized_phase": 0.3125,
+        "locomotion_phase": 0.229400634765625,
+        "speed_mps": 0.8295117187500001,
+        "reference_forward_distance_m": 0.24775268554687502
+      },
+      {
+        "seconds": 0.26666666666666666,
+        "normalized_phase": 0.3333333333333333,
+        "locomotion_phase": 0.24197530864197533,
+        "speed_mps": 0.8,
+        "reference_forward_distance_m": 0.26133333333333336
+      },
+      {
+        "seconds": 0.2833333333333333,
+        "normalized_phase": 0.3541666666666667,
+        "locomotion_phase": 0.2540871702594522,
+        "speed_mps": 0.76955078125,
+        "reference_forward_distance_m": 0.2744141438802084
+      },
+      {
+        "seconds": 0.3,
+        "normalized_phase": 0.375,
+        "locomotion_phase": 0.26572265625,
+        "speed_mps": 0.73828125,
+        "reference_forward_distance_m": 0.28698046875000005
+      },
+      {
+        "seconds": 0.31666666666666665,
+        "normalized_phase": 0.3958333333333333,
+        "locomotion_phase": 0.2768700116946374,
+        "speed_mps": 0.7063085937500001,
+        "reference_forward_distance_m": 0.2990196126302084
+      },
+      {
+        "seconds": 0.3333333333333333,
+        "normalized_phase": 0.4166666666666667,
+        "locomotion_phase": 0.28751929012345684,
+        "speed_mps": 0.6737500000000001,
+        "reference_forward_distance_m": 0.31052083333333336
+      },
+      {
+        "seconds": 0.35,
+        "normalized_phase": 0.4375,
+        "locomotion_phase": 0.29766235351562503,
+        "speed_mps": 0.64072265625,
+        "reference_forward_distance_m": 0.32147534179687504
+      },
+      {
+        "seconds": 0.36666666666666664,
+        "normalized_phase": 0.4583333333333333,
+        "locomotion_phase": 0.30729287229938274,
+        "speed_mps": 0.6073437500000001,
+        "reference_forward_distance_m": 0.33187630208333335
+      },
+      {
+        "seconds": 0.38333333333333336,
+        "normalized_phase": 0.4791666666666667,
+        "locomotion_phase": 0.3164063253520448,
+        "speed_mps": 0.5737304687499999,
+        "reference_forward_distance_m": 0.3417188313802084
+      },
+      {
+        "seconds": 0.4,
+        "normalized_phase": 0.5,
+        "locomotion_phase": 0.325,
+        "speed_mps": 0.54,
+        "reference_forward_distance_m": 0.35100000000000003
+      },
+      {
+        "seconds": 0.4166666666666667,
+        "normalized_phase": 0.5208333333333334,
+        "locomotion_phase": 0.33307299201871143,
+        "speed_mps": 0.50626953125,
+        "reference_forward_distance_m": 0.35971883138020844
+      },
+      {
+        "seconds": 0.43333333333333335,
+        "normalized_phase": 0.5416666666666666,
+        "locomotion_phase": 0.34062620563271606,
+        "speed_mps": 0.47265625,
+        "reference_forward_distance_m": 0.36787630208333333
+      },
+      {
+        "seconds": 0.45,
+        "normalized_phase": 0.5625,
+        "locomotion_phase": 0.347662353515625,
+        "speed_mps": 0.43927734375000005,
+        "reference_forward_distance_m": 0.37547534179687503
+      },
+      {
+        "seconds": 0.4666666666666667,
+        "normalized_phase": 0.5833333333333334,
+        "locomotion_phase": 0.3541859567901235,
+        "speed_mps": 0.4062499999999999,
+        "reference_forward_distance_m": 0.3825208333333334
+      },
+      {
+        "seconds": 0.48333333333333334,
+        "normalized_phase": 0.6041666666666666,
+        "locomotion_phase": 0.3602033450279707,
+        "speed_mps": 0.3736914062500002,
+        "reference_forward_distance_m": 0.38901961263020834
+      },
+      {
+        "seconds": 0.5,
+        "normalized_phase": 0.625,
+        "locomotion_phase": 0.36572265625,
+        "speed_mps": 0.34171875000000007,
+        "reference_forward_distance_m": 0.39498046875000004
+      },
+      {
+        "seconds": 0.5166666666666667,
+        "normalized_phase": 0.6458333333333334,
+        "locomotion_phase": 0.37075383692611885,
+        "speed_mps": 0.31044921875,
+        "reference_forward_distance_m": 0.40041414388020846
+      },
+      {
+        "seconds": 0.5333333333333333,
+        "normalized_phase": 0.6666666666666666,
+        "locomotion_phase": 0.37530864197530867,
+        "speed_mps": 0.2799999999999999,
+        "reference_forward_distance_m": 0.4053333333333334
+      },
+      {
+        "seconds": 0.55,
+        "normalized_phase": 0.6875,
+        "locomotion_phase": 0.379400634765625,
+        "speed_mps": 0.25048828125,
+        "reference_forward_distance_m": 0.40975268554687505
+      },
+      {
+        "seconds": 0.5666666666666667,
+        "normalized_phase": 0.7083333333333334,
+        "locomotion_phase": 0.38304518711419755,
+        "speed_mps": 0.22203125,
+        "reference_forward_distance_m": 0.4136888020833334
+      },
+      {
+        "seconds": 0.5833333333333334,
+        "normalized_phase": 0.7291666666666666,
+        "locomotion_phase": 0.3862594792872299,
+        "speed_mps": 0.1947460937500003,
+        "reference_forward_distance_m": 0.4171602376302083
+      },
+      {
+        "seconds": 0.6,
+        "normalized_phase": 0.75,
+        "locomotion_phase": 0.38906250000000003,
+        "speed_mps": 0.16874999999999996,
+        "reference_forward_distance_m": 0.42018750000000005
+      },
+      {
+        "seconds": 0.6166666666666667,
+        "normalized_phase": 0.7708333333333334,
+        "locomotion_phase": 0.3914750464168596,
+        "speed_mps": 0.14416015625,
+        "reference_forward_distance_m": 0.4227930501302084
+      },
+      {
+        "seconds": 0.6333333333333333,
+        "normalized_phase": 0.7916666666666666,
+        "locomotion_phase": 0.3935197241512346,
+        "speed_mps": 0.12109375000000022,
+        "reference_forward_distance_m": 0.42500130208333337
+      },
+      {
+        "seconds": 0.65,
+        "normalized_phase": 0.8125,
+        "locomotion_phase": 0.395220947265625,
+        "speed_mps": 0.09966796875000006,
+        "reference_forward_distance_m": 0.42683862304687503
+      },
+      {
+        "seconds": 0.6666666666666666,
+        "normalized_phase": 0.8333333333333334,
+        "locomotion_phase": 0.3966049382716049,
+        "speed_mps": 0.08000000000000007,
+        "reference_forward_distance_m": 0.42833333333333334
+      },
+      {
+        "seconds": 0.6833333333333333,
+        "normalized_phase": 0.8541666666666666,
+        "locomotion_phase": 0.39769972812982257,
+        "speed_mps": 0.062207031250000044,
+        "reference_forward_distance_m": 0.42951570638020836
+      },
+      {
+        "seconds": 0.7,
+        "normalized_phase": 0.875,
+        "locomotion_phase": 0.39853515625,
+        "speed_mps": 0.04640624999999998,
+        "reference_forward_distance_m": 0.43041796875000005
+      },
+      {
+        "seconds": 0.7166666666666667,
+        "normalized_phase": 0.8958333333333334,
+        "locomotion_phase": 0.39914287049093367,
+        "speed_mps": 0.03271484375,
+        "reference_forward_distance_m": 0.4310743001302084
+      },
+      {
+        "seconds": 0.7333333333333333,
+        "normalized_phase": 0.9166666666666666,
+        "locomotion_phase": 0.39955632716049383,
+        "speed_mps": 0.021250000000000213,
+        "reference_forward_distance_m": 0.43152083333333335
+      },
+      {
+        "seconds": 0.75,
+        "normalized_phase": 0.9375,
+        "locomotion_phase": 0.399810791015625,
+        "speed_mps": 0.012128906250000071,
+        "reference_forward_distance_m": 0.43179565429687516
+      },
+      {
+        "seconds": 0.7666666666666667,
+        "normalized_phase": 0.9583333333333334,
+        "locomotion_phase": 0.3999433352623457,
+        "speed_mps": 0.005468749999999467,
+        "reference_forward_distance_m": 0.43193880208333346
+      },
+      {
+        "seconds": 0.7833333333333333,
+        "normalized_phase": 0.9791666666666666,
+        "locomotion_phase": 0.39999284155574844,
+        "speed_mps": 0.001386718750000293,
+        "reference_forward_distance_m": 0.4319922688802084
+      },
+      {
+        "seconds": 0.8,
+        "normalized_phase": 1.0,
+        "locomotion_phase": 0.4,
+        "speed_mps": 0.0,
+        "reference_forward_distance_m": 0.43200000000000005
+      }
+    ],
+    "Walk_Stop_R": [
+      {
+        "seconds": 0.0,
+        "normalized_phase": 0.0,
+        "locomotion_phase": 0.5,
+        "speed_mps": 1.08,
+        "reference_forward_distance_m": 0.0
+      },
+      {
+        "seconds": 0.016666666666666666,
+        "normalized_phase": 0.020833333333333332,
+        "locomotion_phase": 0.5166595082224151,
+        "speed_mps": 1.07861328125,
+        "reference_forward_distance_m": 0.017992268880208332
+      },
+      {
+        "seconds": 0.03333333333333333,
+        "normalized_phase": 0.041666666666666664,
+        "locomotion_phase": 0.533276668595679,
+        "speed_mps": 1.0745312500000002,
+        "reference_forward_distance_m": 0.03593880208333333
+      },
+      {
+        "seconds": 0.05,
+        "normalized_phase": 0.0625,
+        "locomotion_phase": 0.549810791015625,
+        "speed_mps": 1.06787109375,
+        "reference_forward_distance_m": 0.05379565429687501
+      },
+      {
+        "seconds": 0.06666666666666667,
+        "normalized_phase": 0.08333333333333333,
+        "locomotion_phase": 0.5662229938271605,
+        "speed_mps": 1.05875,
+        "reference_forward_distance_m": 0.07152083333333334
+      },
+      {
+        "seconds": 0.08333333333333333,
+        "normalized_phase": 0.10416666666666667,
+        "locomotion_phase": 0.582476203824267,
+        "speed_mps": 1.04728515625,
+        "reference_forward_distance_m": 0.08907430013020835
+      },
+      {
+        "seconds": 0.1,
+        "normalized_phase": 0.125,
+        "locomotion_phase": 0.59853515625,
+        "speed_mps": 1.03359375,
+        "reference_forward_distance_m": 0.10641796875000001
+      },
+      {
+        "seconds": 0.11666666666666667,
+        "normalized_phase": 0.14583333333333334,
+        "locomotion_phase": 0.6143663947964892,
+        "speed_mps": 1.01779296875,
+        "reference_forward_distance_m": 0.12351570638020835
+      },
+      {
+        "seconds": 0.13333333333333333,
+        "normalized_phase": 0.16666666666666666,
+        "locomotion_phase": 0.6299382716049383,
+        "speed_mps": 1.0,
+        "reference_forward_distance_m": 0.14033333333333334
+      },
+      {
+        "seconds": 0.15,
+        "normalized_phase": 0.1875,
+        "locomotion_phase": 0.645220947265625,
+        "speed_mps": 0.9803320312500001,
+        "reference_forward_distance_m": 0.15683862304687501
+      },
+      {
+        "seconds": 0.16666666666666666,
+        "normalized_phase": 0.20833333333333334,
+        "locomotion_phase": 0.6601863908179013,
+        "speed_mps": 0.9589062500000001,
+        "reference_forward_distance_m": 0.17300130208333336
+      },
+      {
+        "seconds": 0.18333333333333332,
+        "normalized_phase": 0.22916666666666666,
+        "locomotion_phase": 0.6748083797501929,
+        "speed_mps": 0.9358398437500001,
+        "reference_forward_distance_m": 0.18879305013020833
+      },
+      {
+        "seconds": 0.2,
+        "normalized_phase": 0.25,
+        "locomotion_phase": 0.6890625,
+        "speed_mps": 0.9112500000000001,
+        "reference_forward_distance_m": 0.20418750000000002
+      },
+      {
+        "seconds": 0.21666666666666667,
+        "normalized_phase": 0.2708333333333333,
+        "locomotion_phase": 0.7029261459538966,
+        "speed_mps": 0.88525390625,
+        "reference_forward_distance_m": 0.21916023763020834
+      },
+      {
+        "seconds": 0.23333333333333334,
+        "normalized_phase": 0.2916666666666667,
+        "locomotion_phase": 0.7163785204475308,
+        "speed_mps": 0.8579687500000001,
+        "reference_forward_distance_m": 0.2336888020833334
+      },
+      {
+        "seconds": 0.25,
+        "normalized_phase": 0.3125,
+        "locomotion_phase": 0.729400634765625,
+        "speed_mps": 0.8295117187500001,
+        "reference_forward_distance_m": 0.24775268554687502
+      },
+      {
+        "seconds": 0.26666666666666666,
+        "normalized_phase": 0.3333333333333333,
+        "locomotion_phase": 0.7419753086419754,
+        "speed_mps": 0.8,
+        "reference_forward_distance_m": 0.26133333333333336
+      },
+      {
+        "seconds": 0.2833333333333333,
+        "normalized_phase": 0.3541666666666667,
+        "locomotion_phase": 0.7540871702594523,
+        "speed_mps": 0.76955078125,
+        "reference_forward_distance_m": 0.2744141438802084
+      },
+      {
+        "seconds": 0.3,
+        "normalized_phase": 0.375,
+        "locomotion_phase": 0.76572265625,
+        "speed_mps": 0.73828125,
+        "reference_forward_distance_m": 0.28698046875000005
+      },
+      {
+        "seconds": 0.31666666666666665,
+        "normalized_phase": 0.3958333333333333,
+        "locomotion_phase": 0.7768700116946374,
+        "speed_mps": 0.7063085937500001,
+        "reference_forward_distance_m": 0.2990196126302084
+      },
+      {
+        "seconds": 0.3333333333333333,
+        "normalized_phase": 0.4166666666666667,
+        "locomotion_phase": 0.7875192901234569,
+        "speed_mps": 0.6737500000000001,
+        "reference_forward_distance_m": 0.31052083333333336
+      },
+      {
+        "seconds": 0.35,
+        "normalized_phase": 0.4375,
+        "locomotion_phase": 0.7976623535156251,
+        "speed_mps": 0.64072265625,
+        "reference_forward_distance_m": 0.32147534179687504
+      },
+      {
+        "seconds": 0.36666666666666664,
+        "normalized_phase": 0.4583333333333333,
+        "locomotion_phase": 0.8072928722993827,
+        "speed_mps": 0.6073437500000001,
+        "reference_forward_distance_m": 0.33187630208333335
+      },
+      {
+        "seconds": 0.38333333333333336,
+        "normalized_phase": 0.4791666666666667,
+        "locomotion_phase": 0.8164063253520448,
+        "speed_mps": 0.5737304687499999,
+        "reference_forward_distance_m": 0.3417188313802084
+      },
+      {
+        "seconds": 0.4,
+        "normalized_phase": 0.5,
+        "locomotion_phase": 0.825,
+        "speed_mps": 0.54,
+        "reference_forward_distance_m": 0.35100000000000003
+      },
+      {
+        "seconds": 0.4166666666666667,
+        "normalized_phase": 0.5208333333333334,
+        "locomotion_phase": 0.8330729920187114,
+        "speed_mps": 0.50626953125,
+        "reference_forward_distance_m": 0.35971883138020844
+      },
+      {
+        "seconds": 0.43333333333333335,
+        "normalized_phase": 0.5416666666666666,
+        "locomotion_phase": 0.8406262056327161,
+        "speed_mps": 0.47265625,
+        "reference_forward_distance_m": 0.36787630208333333
+      },
+      {
+        "seconds": 0.45,
+        "normalized_phase": 0.5625,
+        "locomotion_phase": 0.847662353515625,
+        "speed_mps": 0.43927734375000005,
+        "reference_forward_distance_m": 0.37547534179687503
+      },
+      {
+        "seconds": 0.4666666666666667,
+        "normalized_phase": 0.5833333333333334,
+        "locomotion_phase": 0.8541859567901235,
+        "speed_mps": 0.4062499999999999,
+        "reference_forward_distance_m": 0.3825208333333334
+      },
+      {
+        "seconds": 0.48333333333333334,
+        "normalized_phase": 0.6041666666666666,
+        "locomotion_phase": 0.8602033450279707,
+        "speed_mps": 0.3736914062500002,
+        "reference_forward_distance_m": 0.38901961263020834
+      },
+      {
+        "seconds": 0.5,
+        "normalized_phase": 0.625,
+        "locomotion_phase": 0.86572265625,
+        "speed_mps": 0.34171875000000007,
+        "reference_forward_distance_m": 0.39498046875000004
+      },
+      {
+        "seconds": 0.5166666666666667,
+        "normalized_phase": 0.6458333333333334,
+        "locomotion_phase": 0.8707538369261189,
+        "speed_mps": 0.31044921875,
+        "reference_forward_distance_m": 0.40041414388020846
+      },
+      {
+        "seconds": 0.5333333333333333,
+        "normalized_phase": 0.6666666666666666,
+        "locomotion_phase": 0.8753086419753087,
+        "speed_mps": 0.2799999999999999,
+        "reference_forward_distance_m": 0.4053333333333334
+      },
+      {
+        "seconds": 0.55,
+        "normalized_phase": 0.6875,
+        "locomotion_phase": 0.879400634765625,
+        "speed_mps": 0.25048828125,
+        "reference_forward_distance_m": 0.40975268554687505
+      },
+      {
+        "seconds": 0.5666666666666667,
+        "normalized_phase": 0.7083333333333334,
+        "locomotion_phase": 0.8830451871141975,
+        "speed_mps": 0.22203125,
+        "reference_forward_distance_m": 0.4136888020833334
+      },
+      {
+        "seconds": 0.5833333333333334,
+        "normalized_phase": 0.7291666666666666,
+        "locomotion_phase": 0.8862594792872299,
+        "speed_mps": 0.1947460937500003,
+        "reference_forward_distance_m": 0.4171602376302083
+      },
+      {
+        "seconds": 0.6,
+        "normalized_phase": 0.75,
+        "locomotion_phase": 0.8890625000000001,
+        "speed_mps": 0.16874999999999996,
+        "reference_forward_distance_m": 0.42018750000000005
+      },
+      {
+        "seconds": 0.6166666666666667,
+        "normalized_phase": 0.7708333333333334,
+        "locomotion_phase": 0.8914750464168596,
+        "speed_mps": 0.14416015625,
+        "reference_forward_distance_m": 0.4227930501302084
+      },
+      {
+        "seconds": 0.6333333333333333,
+        "normalized_phase": 0.7916666666666666,
+        "locomotion_phase": 0.8935197241512346,
+        "speed_mps": 0.12109375000000022,
+        "reference_forward_distance_m": 0.42500130208333337
+      },
+      {
+        "seconds": 0.65,
+        "normalized_phase": 0.8125,
+        "locomotion_phase": 0.895220947265625,
+        "speed_mps": 0.09966796875000006,
+        "reference_forward_distance_m": 0.42683862304687503
+      },
+      {
+        "seconds": 0.6666666666666666,
+        "normalized_phase": 0.8333333333333334,
+        "locomotion_phase": 0.8966049382716049,
+        "speed_mps": 0.08000000000000007,
+        "reference_forward_distance_m": 0.42833333333333334
+      },
+      {
+        "seconds": 0.6833333333333333,
+        "normalized_phase": 0.8541666666666666,
+        "locomotion_phase": 0.8976997281298226,
+        "speed_mps": 0.062207031250000044,
+        "reference_forward_distance_m": 0.42951570638020836
+      },
+      {
+        "seconds": 0.7,
+        "normalized_phase": 0.875,
+        "locomotion_phase": 0.89853515625,
+        "speed_mps": 0.04640624999999998,
+        "reference_forward_distance_m": 0.43041796875000005
+      },
+      {
+        "seconds": 0.7166666666666667,
+        "normalized_phase": 0.8958333333333334,
+        "locomotion_phase": 0.8991428704909337,
+        "speed_mps": 0.03271484375,
+        "reference_forward_distance_m": 0.4310743001302084
+      },
+      {
+        "seconds": 0.7333333333333333,
+        "normalized_phase": 0.9166666666666666,
+        "locomotion_phase": 0.8995563271604938,
+        "speed_mps": 0.021250000000000213,
+        "reference_forward_distance_m": 0.43152083333333335
+      },
+      {
+        "seconds": 0.75,
+        "normalized_phase": 0.9375,
+        "locomotion_phase": 0.899810791015625,
+        "speed_mps": 0.012128906250000071,
+        "reference_forward_distance_m": 0.43179565429687516
+      },
+      {
+        "seconds": 0.7666666666666667,
+        "normalized_phase": 0.9583333333333334,
+        "locomotion_phase": 0.8999433352623457,
+        "speed_mps": 0.005468749999999467,
+        "reference_forward_distance_m": 0.43193880208333346
+      },
+      {
+        "seconds": 0.7833333333333333,
+        "normalized_phase": 0.9791666666666666,
+        "locomotion_phase": 0.8999928415557484,
+        "speed_mps": 0.001386718750000293,
+        "reference_forward_distance_m": 0.4319922688802084
+      },
+      {
+        "seconds": 0.8,
+        "normalized_phase": 1.0,
+        "locomotion_phase": 0.9,
+        "speed_mps": 0.0,
+        "reference_forward_distance_m": 0.43200000000000005
+      }
+    ],
+    "Run_Start_L": [
+      {
+        "seconds": 0.0,
+        "normalized_phase": 0.0,
+        "locomotion_phase": 0.55,
+        "speed_mps": 0.0,
+        "reference_forward_distance_m": 0.0
+      },
+      {
+        "seconds": 0.016666666666666666,
+        "normalized_phase": 0.027777777777777776,
+        "locomotion_phase": 0.5500190222050755,
+        "speed_mps": 0.005588991769547325,
+        "reference_forward_distance_m": 3.119641632373113e-05
+      },
+      {
+        "seconds": 0.03333333333333333,
+        "normalized_phase": 0.05555555555555555,
+        "locomotion_phase": 0.5501500342935528,
+        "speed_mps": 0.021934156378600824,
+        "reference_forward_distance_m": 0.0002460562414266117
+      },
+      {
+        "seconds": 0.05,
+        "normalized_phase": 0.08333333333333333,
+        "locomotion_phase": 0.5504991319444446,
+        "speed_mps": 0.04840277777777778,
+        "reference_forward_distance_m": 0.0008185763888888887
+      },
+      {
+        "seconds": 0.06666666666666667,
+        "normalized_phase": 0.1111111111111111,
+        "locomotion_phase": 0.5511659807956104,
+        "speed_mps": 0.08436213991769548,
+        "reference_forward_distance_m": 0.001912208504801097
+      },
+      {
+        "seconds": 0.08333333333333333,
+        "normalized_phase": 0.1388888888888889,
+        "locomotion_phase": 0.5522438164437586,
+        "speed_mps": 0.1291795267489712,
+        "reference_forward_distance_m": 0.003679858967764061
+      },
+      {
+        "seconds": 0.1,
+        "normalized_phase": 0.16666666666666666,
+        "locomotion_phase": 0.5538194444444444,
+        "speed_mps": 0.1822222222222222,
+        "reference_forward_distance_m": 0.0062638888888888865
+      },
+      {
+        "seconds": 0.11666666666666667,
+        "normalized_phase": 0.19444444444444445,
+        "locomotion_phase": 0.5559732403120714,
+        "speed_mps": 0.24285751028806588,
+        "reference_forward_distance_m": 0.009796114111796981
+      },
+      {
+        "seconds": 0.13333333333333333,
+        "normalized_phase": 0.2222222222222222,
+        "locomotion_phase": 0.5587791495198904,
+        "speed_mps": 0.3104526748971193,
+        "reference_forward_distance_m": 0.014397805212620025
+      },
+      {
+        "seconds": 0.15,
+        "normalized_phase": 0.25,
+        "locomotion_phase": 0.5623046875000001,
+        "speed_mps": 0.384375,
+        "reference_forward_distance_m": 0.020179687499999998
+      },
+      {
+        "seconds": 0.16666666666666666,
+        "normalized_phase": 0.2777777777777778,
+        "locomotion_phase": 0.5666109396433471,
+        "speed_mps": 0.46399176954732513,
+        "reference_forward_distance_m": 0.02724194101508917
+      },
+      {
+        "seconds": 0.18333333333333332,
+        "normalized_phase": 0.3055555555555556,
+        "locomotion_phase": 0.5717525612997256,
+        "speed_mps": 0.5486702674897119,
+        "reference_forward_distance_m": 0.03567420053155007
+      },
+      {
+        "seconds": 0.2,
+        "normalized_phase": 0.3333333333333333,
+        "locomotion_phase": 0.5777777777777778,
+        "speed_mps": 0.6377777777777778,
+        "reference_forward_distance_m": 0.04555555555555554
+      },
+      {
+        "seconds": 0.21666666666666667,
+        "normalized_phase": 0.3611111111111111,
+        "locomotion_phase": 0.5847283843449932,
+        "speed_mps": 0.7306815843621399,
+        "reference_forward_distance_m": 0.05695455032578875
+      },
+      {
+        "seconds": 0.23333333333333334,
+        "normalized_phase": 0.3888888888888889,
+        "locomotion_phase": 0.5926397462277093,
+        "speed_mps": 0.8267489711934156,
+        "reference_forward_distance_m": 0.06992918381344308
+      },
+      {
+        "seconds": 0.25,
+        "normalized_phase": 0.4166666666666667,
+        "locomotion_phase": 0.6015407986111112,
+        "speed_mps": 0.9253472222222223,
+        "reference_forward_distance_m": 0.08452690972222224
+      },
+      {
+        "seconds": 0.26666666666666666,
+        "normalized_phase": 0.4444444444444444,
+        "locomotion_phase": 0.6114540466392319,
+        "speed_mps": 1.025843621399177,
+        "reference_forward_distance_m": 0.10078463648834017
+      },
+      {
+        "seconds": 0.2833333333333333,
+        "normalized_phase": 0.4722222222222222,
+        "locomotion_phase": 0.622395565414952,
+        "speed_mps": 1.1276054526748969,
+        "reference_forward_distance_m": 0.11872872728052125
+      },
+      {
+        "seconds": 0.3,
+        "normalized_phase": 0.5,
+        "locomotion_phase": 0.634375,
+        "speed_mps": 1.23,
+        "reference_forward_distance_m": 0.138375
+      },
+      {
+        "seconds": 0.31666666666666665,
+        "normalized_phase": 0.5277777777777778,
+        "locomotion_phase": 0.647395565414952,
+        "speed_mps": 1.3323945473251029,
+        "reference_forward_distance_m": 0.1597287272805213
+      },
+      {
+        "seconds": 0.3333333333333333,
+        "normalized_phase": 0.5555555555555556,
+        "locomotion_phase": 0.6614540466392319,
+        "speed_mps": 1.4341563786008231,
+        "reference_forward_distance_m": 0.1827846364883402
+      },
+      {
+        "seconds": 0.35,
+        "normalized_phase": 0.5833333333333334,
+        "locomotion_phase": 0.6765407986111112,
+        "speed_mps": 1.5346527777777779,
+        "reference_forward_distance_m": 0.2075269097222223
+      },
+      {
+        "seconds": 0.36666666666666664,
+        "normalized_phase": 0.6111111111111112,
+        "locomotion_phase": 0.6926397462277093,
+        "speed_mps": 1.6332510288065842,
+        "reference_forward_distance_m": 0.23392918381344313
+      },
+      {
+        "seconds": 0.38333333333333336,
+        "normalized_phase": 0.6388888888888888,
+        "locomotion_phase": 0.7097283843449932,
+        "speed_mps": 1.7293184156378596,
+        "reference_forward_distance_m": 0.26195455032578874
+      },
+      {
+        "seconds": 0.4,
+        "normalized_phase": 0.6666666666666666,
+        "locomotion_phase": 0.7277777777777777,
+        "speed_mps": 1.8222222222222224,
+        "reference_forward_distance_m": 0.29155555555555546
+      },
+      {
+        "seconds": 0.4166666666666667,
+        "normalized_phase": 0.6944444444444444,
+        "locomotion_phase": 0.7467525612997257,
+        "speed_mps": 1.9113297325102876,
+        "reference_forward_distance_m": 0.32267420053155
+      },
+      {
+        "seconds": 0.43333333333333335,
+        "normalized_phase": 0.7222222222222222,
+        "locomotion_phase": 0.7666109396433471,
+        "speed_mps": 1.996008230452675,
+        "reference_forward_distance_m": 0.35524194101508916
+      },
+      {
+        "seconds": 0.45,
+        "normalized_phase": 0.75,
+        "locomotion_phase": 0.7873046875,
+        "speed_mps": 2.075625,
+        "reference_forward_distance_m": 0.38917968750000004
+      },
+      {
+        "seconds": 0.4666666666666667,
+        "normalized_phase": 0.7777777777777778,
+        "locomotion_phase": 0.8087791495198904,
+        "speed_mps": 2.1495473251028807,
+        "reference_forward_distance_m": 0.42439780521262005
+      },
+      {
+        "seconds": 0.48333333333333334,
+        "normalized_phase": 0.8055555555555556,
+        "locomotion_phase": 0.8309732403120713,
+        "speed_mps": 2.2171424897119345,
+        "reference_forward_distance_m": 0.460796114111797
+      },
+      {
+        "seconds": 0.5,
+        "normalized_phase": 0.8333333333333334,
+        "locomotion_phase": 0.8538194444444446,
+        "speed_mps": 2.2777777777777777,
+        "reference_forward_distance_m": 0.49826388888888895
+      },
+      {
+        "seconds": 0.5166666666666667,
+        "normalized_phase": 0.8611111111111112,
+        "locomotion_phase": 0.8772438164437586,
+        "speed_mps": 2.3308204732510287,
+        "reference_forward_distance_m": 0.536679858967764
+      },
+      {
+        "seconds": 0.5333333333333333,
+        "normalized_phase": 0.8888888888888888,
+        "locomotion_phase": 0.9011659807956103,
+        "speed_mps": 2.375637860082305,
+        "reference_forward_distance_m": 0.5759122085048008
+      },
+      {
+        "seconds": 0.55,
+        "normalized_phase": 0.9166666666666666,
+        "locomotion_phase": 0.9254991319444443,
+        "speed_mps": 2.411597222222222,
+        "reference_forward_distance_m": 0.6158185763888888
+      },
+      {
+        "seconds": 0.5666666666666667,
+        "normalized_phase": 0.9444444444444444,
+        "locomotion_phase": 0.9501500342935527,
+        "speed_mps": 2.438065843621399,
+        "reference_forward_distance_m": 0.6562460562414265
+      },
+      {
+        "seconds": 0.5833333333333334,
+        "normalized_phase": 0.9722222222222222,
+        "locomotion_phase": 0.9750190222050754,
+        "speed_mps": 2.4544110082304527,
+        "reference_forward_distance_m": 0.6970311964163236
+      },
+      {
+        "seconds": 0.6,
+        "normalized_phase": 1.0,
+        "locomotion_phase": 0.0,
+        "speed_mps": 2.46,
+        "reference_forward_distance_m": 0.738
+      }
+    ],
+    "Run_Start_R": [
+      {
+        "seconds": 0.0,
+        "normalized_phase": 0.0,
+        "locomotion_phase": 0.050000000000000044,
+        "speed_mps": 0.0,
+        "reference_forward_distance_m": 0.0
+      },
+      {
+        "seconds": 0.016666666666666666,
+        "normalized_phase": 0.027777777777777776,
+        "locomotion_phase": 0.05001902220507549,
+        "speed_mps": 0.005588991769547325,
+        "reference_forward_distance_m": 3.119641632373113e-05
+      },
+      {
+        "seconds": 0.03333333333333333,
+        "normalized_phase": 0.05555555555555555,
+        "locomotion_phase": 0.05015003429355286,
+        "speed_mps": 0.021934156378600824,
+        "reference_forward_distance_m": 0.0002460562414266117
+      },
+      {
+        "seconds": 0.05,
+        "normalized_phase": 0.08333333333333333,
+        "locomotion_phase": 0.05049913194444449,
+        "speed_mps": 0.04840277777777778,
+        "reference_forward_distance_m": 0.0008185763888888887
+      },
+      {
+        "seconds": 0.06666666666666667,
+        "normalized_phase": 0.1111111111111111,
+        "locomotion_phase": 0.051165980795610466,
+        "speed_mps": 0.08436213991769548,
+        "reference_forward_distance_m": 0.001912208504801097
+      },
+      {
+        "seconds": 0.08333333333333333,
+        "normalized_phase": 0.1388888888888889,
+        "locomotion_phase": 0.05224381644375862,
+        "speed_mps": 0.1291795267489712,
+        "reference_forward_distance_m": 0.003679858967764061
+      },
+      {
+        "seconds": 0.1,
+        "normalized_phase": 0.16666666666666666,
+        "locomotion_phase": 0.05381944444444449,
+        "speed_mps": 0.1822222222222222,
+        "reference_forward_distance_m": 0.0062638888888888865
+      },
+      {
+        "seconds": 0.11666666666666667,
+        "normalized_phase": 0.19444444444444445,
+        "locomotion_phase": 0.055973240312071376,
+        "speed_mps": 0.24285751028806588,
+        "reference_forward_distance_m": 0.009796114111796981
+      },
+      {
+        "seconds": 0.13333333333333333,
+        "normalized_phase": 0.2222222222222222,
+        "locomotion_phase": 0.0587791495198903,
+        "speed_mps": 0.3104526748971193,
+        "reference_forward_distance_m": 0.014397805212620025
+      },
+      {
+        "seconds": 0.15,
+        "normalized_phase": 0.25,
+        "locomotion_phase": 0.062304687500000046,
+        "speed_mps": 0.384375,
+        "reference_forward_distance_m": 0.020179687499999998
+      },
+      {
+        "seconds": 0.16666666666666666,
+        "normalized_phase": 0.2777777777777778,
+        "locomotion_phase": 0.0666109396433471,
+        "speed_mps": 0.46399176954732513,
+        "reference_forward_distance_m": 0.02724194101508917
+      },
+      {
+        "seconds": 0.18333333333333332,
+        "normalized_phase": 0.3055555555555556,
+        "locomotion_phase": 0.0717525612997257,
+        "speed_mps": 0.5486702674897119,
+        "reference_forward_distance_m": 0.03567420053155007
+      },
+      {
+        "seconds": 0.2,
+        "normalized_phase": 0.3333333333333333,
+        "locomotion_phase": 0.0777777777777778,
+        "speed_mps": 0.6377777777777778,
+        "reference_forward_distance_m": 0.04555555555555554
+      },
+      {
+        "seconds": 0.21666666666666667,
+        "normalized_phase": 0.3611111111111111,
+        "locomotion_phase": 0.08472838434499319,
+        "speed_mps": 0.7306815843621399,
+        "reference_forward_distance_m": 0.05695455032578875
+      },
+      {
+        "seconds": 0.23333333333333334,
+        "normalized_phase": 0.3888888888888889,
+        "locomotion_phase": 0.09263974622770924,
+        "speed_mps": 0.8267489711934156,
+        "reference_forward_distance_m": 0.06992918381344308
+      },
+      {
+        "seconds": 0.25,
+        "normalized_phase": 0.4166666666666667,
+        "locomotion_phase": 0.10154079861111118,
+        "speed_mps": 0.9253472222222223,
+        "reference_forward_distance_m": 0.08452690972222224
+      },
+      {
+        "seconds": 0.26666666666666666,
+        "normalized_phase": 0.4444444444444444,
+        "locomotion_phase": 0.11145404663923186,
+        "speed_mps": 1.025843621399177,
+        "reference_forward_distance_m": 0.10078463648834017
+      },
+      {
+        "seconds": 0.2833333333333333,
+        "normalized_phase": 0.4722222222222222,
+        "locomotion_phase": 0.12239556541495203,
+        "speed_mps": 1.1276054526748969,
+        "reference_forward_distance_m": 0.11872872728052125
+      },
+      {
+        "seconds": 0.3,
+        "normalized_phase": 0.5,
+        "locomotion_phase": 0.13437500000000002,
+        "speed_mps": 1.23,
+        "reference_forward_distance_m": 0.138375
+      },
+      {
+        "seconds": 0.31666666666666665,
+        "normalized_phase": 0.5277777777777778,
+        "locomotion_phase": 0.14739556541495202,
+        "speed_mps": 1.3323945473251029,
+        "reference_forward_distance_m": 0.1597287272805213
+      },
+      {
+        "seconds": 0.3333333333333333,
+        "normalized_phase": 0.5555555555555556,
+        "locomotion_phase": 0.1614540466392319,
+        "speed_mps": 1.4341563786008231,
+        "reference_forward_distance_m": 0.1827846364883402
+      },
+      {
+        "seconds": 0.35,
+        "normalized_phase": 0.5833333333333334,
+        "locomotion_phase": 0.1765407986111112,
+        "speed_mps": 1.5346527777777779,
+        "reference_forward_distance_m": 0.2075269097222223
+      },
+      {
+        "seconds": 0.36666666666666664,
+        "normalized_phase": 0.6111111111111112,
+        "locomotion_phase": 0.19263974622770927,
+        "speed_mps": 1.6332510288065842,
+        "reference_forward_distance_m": 0.23392918381344313
+      },
+      {
+        "seconds": 0.38333333333333336,
+        "normalized_phase": 0.6388888888888888,
+        "locomotion_phase": 0.2097283843449932,
+        "speed_mps": 1.7293184156378596,
+        "reference_forward_distance_m": 0.26195455032578874
+      },
+      {
+        "seconds": 0.4,
+        "normalized_phase": 0.6666666666666666,
+        "locomotion_phase": 0.22777777777777775,
+        "speed_mps": 1.8222222222222224,
+        "reference_forward_distance_m": 0.29155555555555546
+      },
+      {
+        "seconds": 0.4166666666666667,
+        "normalized_phase": 0.6944444444444444,
+        "locomotion_phase": 0.24675256129972567,
+        "speed_mps": 1.9113297325102876,
+        "reference_forward_distance_m": 0.32267420053155
+      },
+      {
+        "seconds": 0.43333333333333335,
+        "normalized_phase": 0.7222222222222222,
+        "locomotion_phase": 0.2666109396433471,
+        "speed_mps": 1.996008230452675,
+        "reference_forward_distance_m": 0.35524194101508916
+      },
+      {
+        "seconds": 0.45,
+        "normalized_phase": 0.75,
+        "locomotion_phase": 0.28730468750000004,
+        "speed_mps": 2.075625,
+        "reference_forward_distance_m": 0.38917968750000004
+      },
+      {
+        "seconds": 0.4666666666666667,
+        "normalized_phase": 0.7777777777777778,
+        "locomotion_phase": 0.30877914951989033,
+        "speed_mps": 2.1495473251028807,
+        "reference_forward_distance_m": 0.42439780521262005
+      },
+      {
+        "seconds": 0.48333333333333334,
+        "normalized_phase": 0.8055555555555556,
+        "locomotion_phase": 0.33097324031207137,
+        "speed_mps": 2.2171424897119345,
+        "reference_forward_distance_m": 0.460796114111797
+      },
+      {
+        "seconds": 0.5,
+        "normalized_phase": 0.8333333333333334,
+        "locomotion_phase": 0.3538194444444446,
+        "speed_mps": 2.2777777777777777,
+        "reference_forward_distance_m": 0.49826388888888895
+      },
+      {
+        "seconds": 0.5166666666666667,
+        "normalized_phase": 0.8611111111111112,
+        "locomotion_phase": 0.37724381644375865,
+        "speed_mps": 2.3308204732510287,
+        "reference_forward_distance_m": 0.536679858967764
+      },
+      {
+        "seconds": 0.5333333333333333,
+        "normalized_phase": 0.8888888888888888,
+        "locomotion_phase": 0.40116598079561033,
+        "speed_mps": 2.375637860082305,
+        "reference_forward_distance_m": 0.5759122085048008
+      },
+      {
+        "seconds": 0.55,
+        "normalized_phase": 0.9166666666666666,
+        "locomotion_phase": 0.4254991319444444,
+        "speed_mps": 2.411597222222222,
+        "reference_forward_distance_m": 0.6158185763888888
+      },
+      {
+        "seconds": 0.5666666666666667,
+        "normalized_phase": 0.9444444444444444,
+        "locomotion_phase": 0.45015003429355277,
+        "speed_mps": 2.438065843621399,
+        "reference_forward_distance_m": 0.6562460562414265
+      },
+      {
+        "seconds": 0.5833333333333334,
+        "normalized_phase": 0.9722222222222222,
+        "locomotion_phase": 0.4750190222050754,
+        "speed_mps": 2.4544110082304527,
+        "reference_forward_distance_m": 0.6970311964163236
+      },
+      {
+        "seconds": 0.6,
+        "normalized_phase": 1.0,
+        "locomotion_phase": 0.5,
+        "speed_mps": 2.46,
+        "reference_forward_distance_m": 0.738
+      }
+    ],
+    "Run_Stop_L": [
+      {
+        "seconds": 0.0,
+        "normalized_phase": 0.0,
+        "locomotion_phase": 0.0,
+        "speed_mps": 2.46,
+        "reference_forward_distance_m": 0.0
+      },
+      {
+        "seconds": 0.016666666666666666,
+        "normalized_phase": 0.020833333333333332,
+        "locomotion_phase": 0.024989262333622687,
+        "speed_mps": 2.4568413628472223,
+        "reference_forward_distance_m": 0.0409823902271412
+      },
+      {
+        "seconds": 0.03333333333333333,
+        "normalized_phase": 0.041666666666666664,
+        "locomotion_phase": 0.04991500289351852,
+        "speed_mps": 2.447543402777778,
+        "reference_forward_distance_m": 0.08186060474537038
+      },
+      {
+        "seconds": 0.05,
+        "normalized_phase": 0.0625,
+        "locomotion_phase": 0.0747161865234375,
+        "speed_mps": 2.432373046875,
+        "reference_forward_distance_m": 0.12253454589843751
+      },
+      {
+        "seconds": 0.06666666666666667,
+        "normalized_phase": 0.08333333333333333,
+        "locomotion_phase": 0.09933449074074074,
+        "speed_mps": 2.4115972222222224,
+        "reference_forward_distance_m": 0.16290856481481483
+      },
+      {
+        "seconds": 0.08333333333333333,
+        "normalized_phase": 0.10416666666666667,
+        "locomotion_phase": 0.12371430573640047,
+        "speed_mps": 2.3854828559027776,
+        "reference_forward_distance_m": 0.2028914614076968
+      },
+      {
+        "seconds": 0.1,
+        "normalized_phase": 0.125,
+        "locomotion_phase": 0.147802734375,
+        "speed_mps": 2.354296875,
+        "reference_forward_distance_m": 0.242396484375
+      },
+      {
+        "seconds": 0.11666666666666667,
+        "normalized_phase": 0.14583333333333334,
+        "locomotion_phase": 0.1715495921947338,
+        "speed_mps": 2.318306206597222,
+        "reference_forward_distance_m": 0.28134133119936344
+      },
+      {
+        "seconds": 0.13333333333333333,
+        "normalized_phase": 0.16666666666666666,
+        "locomotion_phase": 0.19490740740740742,
+        "speed_mps": 2.2777777777777777,
+        "reference_forward_distance_m": 0.3196481481481481
+      },
+      {
+        "seconds": 0.15,
+        "normalized_phase": 0.1875,
+        "locomotion_phase": 0.21783142089843752,
+        "speed_mps": 2.232978515625,
+        "reference_forward_distance_m": 0.3572435302734375
+      },
+      {
+        "seconds": 0.16666666666666666,
+        "normalized_phase": 0.20833333333333334,
+        "locomotion_phase": 0.24027958622685186,
+        "speed_mps": 2.1841753472222223,
+        "reference_forward_distance_m": 0.3940585214120371
+      },
+      {
+        "seconds": 0.18333333333333332,
+        "normalized_phase": 0.22916666666666666,
+        "locomotion_phase": 0.2622125696252894,
+        "speed_mps": 2.131635199652778,
+        "reference_forward_distance_m": 0.43002861418547456
+      },
+      {
+        "seconds": 0.2,
+        "normalized_phase": 0.25,
+        "locomotion_phase": 0.28359375000000003,
+        "speed_mps": 2.075625,
+        "reference_forward_distance_m": 0.46509375
+      },
+      {
+        "seconds": 0.21666666666666667,
+        "normalized_phase": 0.2708333333333333,
+        "locomotion_phase": 0.3043892189308449,
+        "speed_mps": 2.0164116753472223,
+        "reference_forward_distance_m": 0.4991983190465856
+      },
+      {
+        "seconds": 0.23333333333333334,
+        "normalized_phase": 0.2916666666666667,
+        "locomotion_phase": 0.3245677806712963,
+        "speed_mps": 1.9542621527777777,
+        "reference_forward_distance_m": 0.532291160300926
+      },
+      {
+        "seconds": 0.25,
+        "normalized_phase": 0.3125,
+        "locomotion_phase": 0.3441009521484375,
+        "speed_mps": 1.889443359375,
+        "reference_forward_distance_m": 0.5643255615234376
+      },
+      {
+        "seconds": 0.26666666666666666,
+        "normalized_phase": 0.3333333333333333,
+        "locomotion_phase": 0.362962962962963,
+        "speed_mps": 1.8222222222222222,
+        "reference_forward_distance_m": 0.5952592592592593
+      },
+      {
+        "seconds": 0.2833333333333333,
+        "normalized_phase": 0.3541666666666667,
+        "locomotion_phase": 0.3811307553891783,
+        "speed_mps": 1.752865668402778,
+        "reference_forward_distance_m": 0.6250544388382524
+      },
+      {
+        "seconds": 0.3,
+        "normalized_phase": 0.375,
+        "locomotion_phase": 0.39858398437500003,
+        "speed_mps": 1.681640625,
+        "reference_forward_distance_m": 0.653677734375
+      },
+      {
+        "seconds": 0.31666666666666665,
+        "normalized_phase": 0.3958333333333333,
+        "locomotion_phase": 0.41530501754195603,
+        "speed_mps": 1.6088140190972222,
+        "reference_forward_distance_m": 0.6811002287688078
+      },
+      {
+        "seconds": 0.3333333333333333,
+        "normalized_phase": 0.4166666666666667,
+        "locomotion_phase": 0.4312789351851851,
+        "speed_mps": 1.5346527777777776,
+        "reference_forward_distance_m": 0.7072974537037038
+      },
+      {
+        "seconds": 0.35,
+        "normalized_phase": 0.4375,
+        "locomotion_phase": 0.4464935302734375,
+        "speed_mps": 1.459423828125,
+        "reference_forward_distance_m": 0.7322493896484374
+      },
+      {
+        "seconds": 0.36666666666666664,
+        "normalized_phase": 0.4583333333333333,
+        "locomotion_phase": 0.46093930844907405,
+        "speed_mps": 1.3833940972222223,
+        "reference_forward_distance_m": 0.7559404658564816
+      },
+      {
+        "seconds": 0.38333333333333336,
+        "normalized_phase": 0.4791666666666667,
+        "locomotion_phase": 0.47460948802806713,
+        "speed_mps": 1.3068305121527775,
+        "reference_forward_distance_m": 0.77835956036603
+      },
+      {
+        "seconds": 0.4,
+        "normalized_phase": 0.5,
+        "locomotion_phase": 0.48750000000000004,
+        "speed_mps": 1.23,
+        "reference_forward_distance_m": 0.7995000000000001
+      },
+      {
+        "seconds": 0.4166666666666667,
+        "normalized_phase": 0.5208333333333334,
+        "locomotion_phase": 0.4996094880280671,
+        "speed_mps": 1.153169487847222,
+        "reference_forward_distance_m": 0.8193595603660301
+      },
+      {
+        "seconds": 0.43333333333333335,
+        "normalized_phase": 0.5416666666666666,
+        "locomotion_phase": 0.5109393084490741,
+        "speed_mps": 1.0766059027777777,
+        "reference_forward_distance_m": 0.8379404658564815
+      },
+      {
+        "seconds": 0.45,
+        "normalized_phase": 0.5625,
+        "locomotion_phase": 0.5214935302734375,
+        "speed_mps": 1.000576171875,
+        "reference_forward_distance_m": 0.8552493896484376
+      },
+      {
+        "seconds": 0.4666666666666667,
+        "normalized_phase": 0.5833333333333334,
+        "locomotion_phase": 0.5312789351851851,
+        "speed_mps": 0.9253472222222221,
+        "reference_forward_distance_m": 0.8712974537037037
+      },
+      {
+        "seconds": 0.48333333333333334,
+        "normalized_phase": 0.6041666666666666,
+        "locomotion_phase": 0.5403050175419561,
+        "speed_mps": 0.8511859809027782,
+        "reference_forward_distance_m": 0.8861002287688079
+      },
+      {
+        "seconds": 0.5,
+        "normalized_phase": 0.625,
+        "locomotion_phase": 0.548583984375,
+        "speed_mps": 0.778359375,
+        "reference_forward_distance_m": 0.8996777343750001
+      },
+      {
+        "seconds": 0.5166666666666667,
+        "normalized_phase": 0.6458333333333334,
+        "locomotion_phase": 0.5561307553891782,
+        "speed_mps": 0.7071343315972223,
+        "reference_forward_distance_m": 0.9120544388382523
+      },
+      {
+        "seconds": 0.5333333333333333,
+        "normalized_phase": 0.6666666666666666,
+        "locomotion_phase": 0.5629629629629631,
+        "speed_mps": 0.6377777777777776,
+        "reference_forward_distance_m": 0.9232592592592592
+      },
+      {
+        "seconds": 0.55,
+        "normalized_phase": 0.6875,
+        "locomotion_phase": 0.5691009521484375,
+        "speed_mps": 0.570556640625,
+        "reference_forward_distance_m": 0.9333255615234375
+      },
+      {
+        "seconds": 0.5666666666666667,
+        "normalized_phase": 0.7083333333333334,
+        "locomotion_phase": 0.5745677806712963,
+        "speed_mps": 0.505737847222222,
+        "reference_forward_distance_m": 0.9422911603009262
+      },
+      {
+        "seconds": 0.5833333333333334,
+        "normalized_phase": 0.7291666666666666,
+        "locomotion_phase": 0.5793892189308449,
+        "speed_mps": 0.44358832465277853,
+        "reference_forward_distance_m": 0.9501983190465858
+      },
+      {
+        "seconds": 0.6,
+        "normalized_phase": 0.75,
+        "locomotion_phase": 0.58359375,
+        "speed_mps": 0.3843749999999999,
+        "reference_forward_distance_m": 0.95709375
+      },
+      {
+        "seconds": 0.6166666666666667,
+        "normalized_phase": 0.7708333333333334,
+        "locomotion_phase": 0.5872125696252893,
+        "speed_mps": 0.3283648003472224,
+        "reference_forward_distance_m": 0.9630286141854745
+      },
+      {
+        "seconds": 0.6333333333333333,
+        "normalized_phase": 0.7916666666666666,
+        "locomotion_phase": 0.590279586226852,
+        "speed_mps": 0.2758246527777781,
+        "reference_forward_distance_m": 0.9680585214120371
+      },
+      {
+        "seconds": 0.65,
+        "normalized_phase": 0.8125,
+        "locomotion_phase": 0.5928314208984375,
+        "speed_mps": 0.2270214843749998,
+        "reference_forward_distance_m": 0.9722435302734376
+      },
+      {
+        "seconds": 0.6666666666666666,
+        "normalized_phase": 0.8333333333333334,
+        "locomotion_phase": 0.5949074074074073,
+        "speed_mps": 0.18222222222222229,
+        "reference_forward_distance_m": 0.9756481481481484
+      },
+      {
+        "seconds": 0.6833333333333333,
+        "normalized_phase": 0.8541666666666666,
+        "locomotion_phase": 0.5965495921947339,
+        "speed_mps": 0.14169379340277777,
+        "reference_forward_distance_m": 0.9783413311993634
+      },
+      {
+        "seconds": 0.7,
+        "normalized_phase": 0.875,
+        "locomotion_phase": 0.597802734375,
+        "speed_mps": 0.10570312499999979,
+        "reference_forward_distance_m": 0.9803964843749999
+      },
+      {
+        "seconds": 0.7166666666666667,
+        "normalized_phase": 0.8958333333333334,
+        "locomotion_phase": 0.5987143057364005,
+        "speed_mps": 0.07451714409722232,
+        "reference_forward_distance_m": 0.9818914614076967
+      },
+      {
+        "seconds": 0.7333333333333333,
+        "normalized_phase": 0.9166666666666666,
+        "locomotion_phase": 0.5993344907407409,
+        "speed_mps": 0.04840277777777802,
+        "reference_forward_distance_m": 0.9829085648148148
+      },
+      {
+        "seconds": 0.75,
+        "normalized_phase": 0.9375,
+        "locomotion_phase": 0.5997161865234375,
+        "speed_mps": 0.027626953124999964,
+        "reference_forward_distance_m": 0.9835345458984375
+      },
+      {
+        "seconds": 0.7666666666666667,
+        "normalized_phase": 0.9583333333333334,
+        "locomotion_phase": 0.5999150028935185,
+        "speed_mps": 0.012456597222221255,
+        "reference_forward_distance_m": 0.9838606047453704
+      },
+      {
+        "seconds": 0.7833333333333333,
+        "normalized_phase": 0.9791666666666666,
+        "locomotion_phase": 0.5999892623336226,
+        "speed_mps": 0.0031586371527780877,
+        "reference_forward_distance_m": 0.9839823902271413
+      },
+      {
+        "seconds": 0.8,
+        "normalized_phase": 1.0,
+        "locomotion_phase": 0.6000000000000001,
+        "speed_mps": 0.0,
+        "reference_forward_distance_m": 0.984
+      }
+    ],
+    "Run_Stop_R": [
+      {
+        "seconds": 0.0,
+        "normalized_phase": 0.0,
+        "locomotion_phase": 0.5,
+        "speed_mps": 2.46,
+        "reference_forward_distance_m": 0.0
+      },
+      {
+        "seconds": 0.016666666666666666,
+        "normalized_phase": 0.020833333333333332,
+        "locomotion_phase": 0.5249892623336226,
+        "speed_mps": 2.4568413628472223,
+        "reference_forward_distance_m": 0.0409823902271412
+      },
+      {
+        "seconds": 0.03333333333333333,
+        "normalized_phase": 0.041666666666666664,
+        "locomotion_phase": 0.5499150028935185,
+        "speed_mps": 2.447543402777778,
+        "reference_forward_distance_m": 0.08186060474537038
+      },
+      {
+        "seconds": 0.05,
+        "normalized_phase": 0.0625,
+        "locomotion_phase": 0.5747161865234375,
+        "speed_mps": 2.432373046875,
+        "reference_forward_distance_m": 0.12253454589843751
+      },
+      {
+        "seconds": 0.06666666666666667,
+        "normalized_phase": 0.08333333333333333,
+        "locomotion_phase": 0.5993344907407407,
+        "speed_mps": 2.4115972222222224,
+        "reference_forward_distance_m": 0.16290856481481483
+      },
+      {
+        "seconds": 0.08333333333333333,
+        "normalized_phase": 0.10416666666666667,
+        "locomotion_phase": 0.6237143057364005,
+        "speed_mps": 2.3854828559027776,
+        "reference_forward_distance_m": 0.2028914614076968
+      },
+      {
+        "seconds": 0.1,
+        "normalized_phase": 0.125,
+        "locomotion_phase": 0.647802734375,
+        "speed_mps": 2.354296875,
+        "reference_forward_distance_m": 0.242396484375
+      },
+      {
+        "seconds": 0.11666666666666667,
+        "normalized_phase": 0.14583333333333334,
+        "locomotion_phase": 0.6715495921947339,
+        "speed_mps": 2.318306206597222,
+        "reference_forward_distance_m": 0.28134133119936344
+      },
+      {
+        "seconds": 0.13333333333333333,
+        "normalized_phase": 0.16666666666666666,
+        "locomotion_phase": 0.6949074074074074,
+        "speed_mps": 2.2777777777777777,
+        "reference_forward_distance_m": 0.3196481481481481
+      },
+      {
+        "seconds": 0.15,
+        "normalized_phase": 0.1875,
+        "locomotion_phase": 0.7178314208984375,
+        "speed_mps": 2.232978515625,
+        "reference_forward_distance_m": 0.3572435302734375
+      },
+      {
+        "seconds": 0.16666666666666666,
+        "normalized_phase": 0.20833333333333334,
+        "locomotion_phase": 0.7402795862268519,
+        "speed_mps": 2.1841753472222223,
+        "reference_forward_distance_m": 0.3940585214120371
+      },
+      {
+        "seconds": 0.18333333333333332,
+        "normalized_phase": 0.22916666666666666,
+        "locomotion_phase": 0.7622125696252894,
+        "speed_mps": 2.131635199652778,
+        "reference_forward_distance_m": 0.43002861418547456
+      },
+      {
+        "seconds": 0.2,
+        "normalized_phase": 0.25,
+        "locomotion_phase": 0.7835937500000001,
+        "speed_mps": 2.075625,
+        "reference_forward_distance_m": 0.46509375
+      },
+      {
+        "seconds": 0.21666666666666667,
+        "normalized_phase": 0.2708333333333333,
+        "locomotion_phase": 0.8043892189308449,
+        "speed_mps": 2.0164116753472223,
+        "reference_forward_distance_m": 0.4991983190465856
+      },
+      {
+        "seconds": 0.23333333333333334,
+        "normalized_phase": 0.2916666666666667,
+        "locomotion_phase": 0.8245677806712963,
+        "speed_mps": 1.9542621527777777,
+        "reference_forward_distance_m": 0.532291160300926
+      },
+      {
+        "seconds": 0.25,
+        "normalized_phase": 0.3125,
+        "locomotion_phase": 0.8441009521484375,
+        "speed_mps": 1.889443359375,
+        "reference_forward_distance_m": 0.5643255615234376
+      },
+      {
+        "seconds": 0.26666666666666666,
+        "normalized_phase": 0.3333333333333333,
+        "locomotion_phase": 0.8629629629629629,
+        "speed_mps": 1.8222222222222222,
+        "reference_forward_distance_m": 0.5952592592592593
+      },
+      {
+        "seconds": 0.2833333333333333,
+        "normalized_phase": 0.3541666666666667,
+        "locomotion_phase": 0.8811307553891783,
+        "speed_mps": 1.752865668402778,
+        "reference_forward_distance_m": 0.6250544388382524
+      },
+      {
+        "seconds": 0.3,
+        "normalized_phase": 0.375,
+        "locomotion_phase": 0.8985839843750001,
+        "speed_mps": 1.681640625,
+        "reference_forward_distance_m": 0.653677734375
+      },
+      {
+        "seconds": 0.31666666666666665,
+        "normalized_phase": 0.3958333333333333,
+        "locomotion_phase": 0.915305017541956,
+        "speed_mps": 1.6088140190972222,
+        "reference_forward_distance_m": 0.6811002287688078
+      },
+      {
+        "seconds": 0.3333333333333333,
+        "normalized_phase": 0.4166666666666667,
+        "locomotion_phase": 0.9312789351851851,
+        "speed_mps": 1.5346527777777776,
+        "reference_forward_distance_m": 0.7072974537037038
+      },
+      {
+        "seconds": 0.35,
+        "normalized_phase": 0.4375,
+        "locomotion_phase": 0.9464935302734375,
+        "speed_mps": 1.459423828125,
+        "reference_forward_distance_m": 0.7322493896484374
+      },
+      {
+        "seconds": 0.36666666666666664,
+        "normalized_phase": 0.4583333333333333,
+        "locomotion_phase": 0.960939308449074,
+        "speed_mps": 1.3833940972222223,
+        "reference_forward_distance_m": 0.7559404658564816
+      },
+      {
+        "seconds": 0.38333333333333336,
+        "normalized_phase": 0.4791666666666667,
+        "locomotion_phase": 0.9746094880280671,
+        "speed_mps": 1.3068305121527775,
+        "reference_forward_distance_m": 0.77835956036603
+      },
+      {
+        "seconds": 0.4,
+        "normalized_phase": 0.5,
+        "locomotion_phase": 0.9875,
+        "speed_mps": 1.23,
+        "reference_forward_distance_m": 0.7995000000000001
+      },
+      {
+        "seconds": 0.4166666666666667,
+        "normalized_phase": 0.5208333333333334,
+        "locomotion_phase": 0.999609488028067,
+        "speed_mps": 1.153169487847222,
+        "reference_forward_distance_m": 0.8193595603660301
+      },
+      {
+        "seconds": 0.43333333333333335,
+        "normalized_phase": 0.5416666666666666,
+        "locomotion_phase": 0.010939308449074092,
+        "speed_mps": 1.0766059027777777,
+        "reference_forward_distance_m": 0.8379404658564815
+      },
+      {
+        "seconds": 0.45,
+        "normalized_phase": 0.5625,
+        "locomotion_phase": 0.02149353027343759,
+        "speed_mps": 1.000576171875,
+        "reference_forward_distance_m": 0.8552493896484376
+      },
+      {
+        "seconds": 0.4666666666666667,
+        "normalized_phase": 0.5833333333333334,
+        "locomotion_phase": 0.03127893518518521,
+        "speed_mps": 0.9253472222222221,
+        "reference_forward_distance_m": 0.8712974537037037
+      },
+      {
+        "seconds": 0.48333333333333334,
+        "normalized_phase": 0.6041666666666666,
+        "locomotion_phase": 0.040305017541956145,
+        "speed_mps": 0.8511859809027782,
+        "reference_forward_distance_m": 0.8861002287688079
+      },
+      {
+        "seconds": 0.5,
+        "normalized_phase": 0.625,
+        "locomotion_phase": 0.048583984375,
+        "speed_mps": 0.778359375,
+        "reference_forward_distance_m": 0.8996777343750001
+      },
+      {
+        "seconds": 0.5166666666666667,
+        "normalized_phase": 0.6458333333333334,
+        "locomotion_phase": 0.05613075538917833,
+        "speed_mps": 0.7071343315972223,
+        "reference_forward_distance_m": 0.9120544388382523
+      },
+      {
+        "seconds": 0.5333333333333333,
+        "normalized_phase": 0.6666666666666666,
+        "locomotion_phase": 0.06296296296296311,
+        "speed_mps": 0.6377777777777776,
+        "reference_forward_distance_m": 0.9232592592592592
+      },
+      {
+        "seconds": 0.55,
+        "normalized_phase": 0.6875,
+        "locomotion_phase": 0.06910095214843759,
+        "speed_mps": 0.570556640625,
+        "reference_forward_distance_m": 0.9333255615234375
+      },
+      {
+        "seconds": 0.5666666666666667,
+        "normalized_phase": 0.7083333333333334,
+        "locomotion_phase": 0.07456778067129632,
+        "speed_mps": 0.505737847222222,
+        "reference_forward_distance_m": 0.9422911603009262
+      },
+      {
+        "seconds": 0.5833333333333334,
+        "normalized_phase": 0.7291666666666666,
+        "locomotion_phase": 0.07938921893084494,
+        "speed_mps": 0.44358832465277853,
+        "reference_forward_distance_m": 0.9501983190465858
+      },
+      {
+        "seconds": 0.6,
+        "normalized_phase": 0.75,
+        "locomotion_phase": 0.08359374999999991,
+        "speed_mps": 0.3843749999999999,
+        "reference_forward_distance_m": 0.95709375
+      },
+      {
+        "seconds": 0.6166666666666667,
+        "normalized_phase": 0.7708333333333334,
+        "locomotion_phase": 0.08721256962528923,
+        "speed_mps": 0.3283648003472224,
+        "reference_forward_distance_m": 0.9630286141854745
+      },
+      {
+        "seconds": 0.6333333333333333,
+        "normalized_phase": 0.7916666666666666,
+        "locomotion_phase": 0.09027958622685195,
+        "speed_mps": 0.2758246527777781,
+        "reference_forward_distance_m": 0.9680585214120371
+      },
+      {
+        "seconds": 0.65,
+        "normalized_phase": 0.8125,
+        "locomotion_phase": 0.09283142089843754,
+        "speed_mps": 0.2270214843749998,
+        "reference_forward_distance_m": 0.9722435302734376
+      },
+      {
+        "seconds": 0.6666666666666666,
+        "normalized_phase": 0.8333333333333334,
+        "locomotion_phase": 0.09490740740740744,
+        "speed_mps": 0.18222222222222229,
+        "reference_forward_distance_m": 0.9756481481481484
+      },
+      {
+        "seconds": 0.6833333333333333,
+        "normalized_phase": 0.8541666666666666,
+        "locomotion_phase": 0.09654959219473391,
+        "speed_mps": 0.14169379340277777,
+        "reference_forward_distance_m": 0.9783413311993634
+      },
+      {
+        "seconds": 0.7,
+        "normalized_phase": 0.875,
+        "locomotion_phase": 0.09780273437500009,
+        "speed_mps": 0.10570312499999979,
+        "reference_forward_distance_m": 0.9803964843749999
+      },
+      {
+        "seconds": 0.7166666666666667,
+        "normalized_phase": 0.8958333333333334,
+        "locomotion_phase": 0.09871430573640039,
+        "speed_mps": 0.07451714409722232,
+        "reference_forward_distance_m": 0.9818914614076967
+      },
+      {
+        "seconds": 0.7333333333333333,
+        "normalized_phase": 0.9166666666666666,
+        "locomotion_phase": 0.09933449074074074,
+        "speed_mps": 0.04840277777777802,
+        "reference_forward_distance_m": 0.9829085648148148
+      },
+      {
+        "seconds": 0.75,
+        "normalized_phase": 0.9375,
+        "locomotion_phase": 0.0997161865234375,
+        "speed_mps": 0.027626953124999964,
+        "reference_forward_distance_m": 0.9835345458984375
+      },
+      {
+        "seconds": 0.7666666666666667,
+        "normalized_phase": 0.9583333333333334,
+        "locomotion_phase": 0.09991500289351851,
+        "speed_mps": 0.012456597222221255,
+        "reference_forward_distance_m": 0.9838606047453704
+      },
+      {
+        "seconds": 0.7833333333333333,
+        "normalized_phase": 0.9791666666666666,
+        "locomotion_phase": 0.09998926233362271,
+        "speed_mps": 0.0031586371527780877,
+        "reference_forward_distance_m": 0.9839823902271413
+      },
+      {
+        "seconds": 0.8,
+        "normalized_phase": 1.0,
+        "locomotion_phase": 0.10000000000000009,
+        "speed_mps": 0.0,
+        "reference_forward_distance_m": 0.984
+      }
+    ],
+    "Sprint_Start_L": [
+      {
+        "seconds": 0.0,
+        "normalized_phase": 0.0,
+        "locomotion_phase": 0.4,
+        "speed_mps": 0.0,
+        "reference_forward_distance_m": 0.0
+      },
+      {
+        "seconds": 0.016666666666666666,
+        "normalized_phase": 0.027777777777777776,
+        "locomotion_phase": 0.4000253629401006,
+        "speed_mps": 0.009542181069958848,
+        "reference_forward_distance_m": 5.326217421124828e-05
+      },
+      {
+        "seconds": 0.03333333333333333,
+        "normalized_phase": 0.05555555555555555,
+        "locomotion_phase": 0.4002000457247371,
+        "speed_mps": 0.037448559670781895,
+        "reference_forward_distance_m": 0.00042009602194787365
+      },
+      {
+        "seconds": 0.05,
+        "normalized_phase": 0.08333333333333333,
+        "locomotion_phase": 0.40066550925925926,
+        "speed_mps": 0.0826388888888889,
+        "reference_forward_distance_m": 0.0013975694444444441
+      },
+      {
+        "seconds": 0.06666666666666667,
+        "normalized_phase": 0.1111111111111111,
+        "locomotion_phase": 0.40155464106081395,
+        "speed_mps": 0.1440329218106996,
+        "reference_forward_distance_m": 0.00326474622770919
+      },
+      {
+        "seconds": 0.08333333333333333,
+        "normalized_phase": 0.1388888888888889,
+        "locomotion_phase": 0.40299175525834474,
+        "speed_mps": 0.2205504115226338,
+        "reference_forward_distance_m": 0.006282686042524006
+      },
+      {
+        "seconds": 0.1,
+        "normalized_phase": 0.16666666666666666,
+        "locomotion_phase": 0.40509259259259256,
+        "speed_mps": 0.3111111111111111,
+        "reference_forward_distance_m": 0.01069444444444444
+      },
+      {
+        "seconds": 0.11666666666666667,
+        "normalized_phase": 0.19444444444444445,
+        "locomotion_phase": 0.4079643204160951,
+        "speed_mps": 0.4146347736625515,
+        "reference_forward_distance_m": 0.016725072873799728
+      },
+      {
+        "seconds": 0.13333333333333333,
+        "normalized_phase": 0.2222222222222222,
+        "locomotion_phase": 0.411705532693187,
+        "speed_mps": 0.5300411522633744,
+        "reference_forward_distance_m": 0.024581618655692725
+      },
+      {
+        "seconds": 0.15,
+        "normalized_phase": 0.25,
+        "locomotion_phase": 0.41640625,
+        "speed_mps": 0.65625,
+        "reference_forward_distance_m": 0.034453125
+      },
+      {
+        "seconds": 0.16666666666666666,
+        "normalized_phase": 0.2777777777777778,
+        "locomotion_phase": 0.42214791952446273,
+        "speed_mps": 0.7921810699588478,
+        "reference_forward_distance_m": 0.04651063100137176
+      },
+      {
+        "seconds": 0.18333333333333332,
+        "normalized_phase": 0.3055555555555556,
+        "locomotion_phase": 0.4290034150663009,
+        "speed_mps": 0.9367541152263376,
+        "reference_forward_distance_m": 0.06090717163923183
+      },
+      {
+        "seconds": 0.2,
+        "normalized_phase": 0.3333333333333333,
+        "locomotion_phase": 0.437037037037037,
+        "speed_mps": 1.0888888888888888,
+        "reference_forward_distance_m": 0.07777777777777775
+      },
+      {
+        "seconds": 0.21666666666666667,
+        "normalized_phase": 0.3611111111111111,
+        "locomotion_phase": 0.4463045124599909,
+        "speed_mps": 1.247505144032922,
+        "reference_forward_distance_m": 0.0972394761659808
+      },
+      {
+        "seconds": 0.23333333333333334,
+        "normalized_phase": 0.3888888888888889,
+        "locomotion_phase": 0.456852994970279,
+        "speed_mps": 1.411522633744856,
+        "reference_forward_distance_m": 0.11939128943758576
+      },
+      {
+        "seconds": 0.25,
+        "normalized_phase": 0.4166666666666667,
+        "locomotion_phase": 0.4687210648148148,
+        "speed_mps": 1.5798611111111114,
+        "reference_forward_distance_m": 0.14431423611111113
+      },
+      {
+        "seconds": 0.26666666666666666,
+        "normalized_phase": 0.4444444444444444,
+        "locomotion_phase": 0.48193872885230915,
+        "speed_mps": 1.751440329218107,
+        "reference_forward_distance_m": 0.17207133058984905
+      },
+      {
+        "seconds": 0.2833333333333333,
+        "normalized_phase": 0.4722222222222222,
+        "locomotion_phase": 0.49652742055326937,
+        "speed_mps": 1.925180041152263,
+        "reference_forward_distance_m": 0.20270758316186557
+      },
+      {
+        "seconds": 0.3,
+        "normalized_phase": 0.5,
+        "locomotion_phase": 0.5125,
+        "speed_mps": 2.1,
+        "reference_forward_distance_m": 0.23625000000000002
+      },
+      {
+        "seconds": 0.31666666666666665,
+        "normalized_phase": 0.5277777777777778,
+        "locomotion_phase": 0.5298607538866027,
+        "speed_mps": 2.2748199588477367,
+        "reference_forward_distance_m": 0.2727075831618656
+      },
+      {
+        "seconds": 0.3333333333333333,
+        "normalized_phase": 0.5555555555555556,
+        "locomotion_phase": 0.5486053955189758,
+        "speed_mps": 2.4485596707818935,
+        "reference_forward_distance_m": 0.31207133058984915
+      },
+      {
+        "seconds": 0.35,
+        "normalized_phase": 0.5833333333333334,
+        "locomotion_phase": 0.5687210648148149,
+        "speed_mps": 2.6201388888888895,
+        "reference_forward_distance_m": 0.35431423611111124
+      },
+      {
+        "seconds": 0.36666666666666664,
+        "normalized_phase": 0.6111111111111112,
+        "locomotion_phase": 0.5901863283036123,
+        "speed_mps": 2.788477366255144,
+        "reference_forward_distance_m": 0.3993912894375859
+      },
+      {
+        "seconds": 0.38333333333333336,
+        "normalized_phase": 0.6388888888888888,
+        "locomotion_phase": 0.6129711791266576,
+        "speed_mps": 2.9524948559670774,
+        "reference_forward_distance_m": 0.4472394761659808
+      },
+      {
+        "seconds": 0.4,
+        "normalized_phase": 0.6666666666666666,
+        "locomotion_phase": 0.637037037037037,
+        "speed_mps": 3.1111111111111116,
+        "reference_forward_distance_m": 0.4977777777777776
+      },
+      {
+        "seconds": 0.4166666666666667,
+        "normalized_phase": 0.6944444444444444,
+        "locomotion_phase": 0.6623367483996342,
+        "speed_mps": 3.2632458847736623,
+        "reference_forward_distance_m": 0.5509071716392318
+      },
+      {
+        "seconds": 0.43333333333333335,
+        "normalized_phase": 0.7222222222222222,
+        "locomotion_phase": 0.6888145861911295,
+        "speed_mps": 3.4078189300411528,
+        "reference_forward_distance_m": 0.6065106310013718
+      },
+      {
+        "seconds": 0.45,
+        "normalized_phase": 0.75,
+        "locomotion_phase": 0.71640625,
+        "speed_mps": 3.54375,
+        "reference_forward_distance_m": 0.664453125
+      },
+      {
+        "seconds": 0.4666666666666667,
+        "normalized_phase": 0.7777777777777778,
+        "locomotion_phase": 0.7450388660265204,
+        "speed_mps": 3.6699588477366256,
+        "reference_forward_distance_m": 0.7245816186556928
+      },
+      {
+        "seconds": 0.48333333333333334,
+        "normalized_phase": 0.8055555555555556,
+        "locomotion_phase": 0.7746309870827618,
+        "speed_mps": 3.7853652263374498,
+        "reference_forward_distance_m": 0.7867250728737998
+      },
+      {
+        "seconds": 0.5,
+        "normalized_phase": 0.8333333333333334,
+        "locomotion_phase": 0.8050925925925927,
+        "speed_mps": 3.8888888888888884,
+        "reference_forward_distance_m": 0.8506944444444446
+      },
+      {
+        "seconds": 0.5166666666666667,
+        "normalized_phase": 0.8611111111111112,
+        "locomotion_phase": 0.8363250885916782,
+        "speed_mps": 3.9794495884773666,
+        "reference_forward_distance_m": 0.916282686042524
+      },
+      {
+        "seconds": 0.5333333333333333,
+        "normalized_phase": 0.8888888888888888,
+        "locomotion_phase": 0.8682213077274804,
+        "speed_mps": 4.055967078189301,
+        "reference_forward_distance_m": 0.983264746227709
+      },
+      {
+        "seconds": 0.55,
+        "normalized_phase": 0.9166666666666666,
+        "locomotion_phase": 0.9006655092592593,
+        "speed_mps": 4.11736111111111,
+        "reference_forward_distance_m": 1.0513975694444444
+      },
+      {
+        "seconds": 0.5666666666666667,
+        "normalized_phase": 0.9444444444444444,
+        "locomotion_phase": 0.9335333790580703,
+        "speed_mps": 4.162551440329217,
+        "reference_forward_distance_m": 1.1204200960219477
+      },
+      {
+        "seconds": 0.5833333333333334,
+        "normalized_phase": 0.9722222222222222,
+        "locomotion_phase": 0.9666920296067671,
+        "speed_mps": 4.1904578189300405,
+        "reference_forward_distance_m": 1.190053262174211
+      },
+      {
+        "seconds": 0.6,
+        "normalized_phase": 1.0,
+        "locomotion_phase": 0.0,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 1.26
+      }
+    ],
+    "Sprint_Start_R": [
+      {
+        "seconds": 0.0,
+        "normalized_phase": 0.0,
+        "locomotion_phase": 0.9,
+        "speed_mps": 0.0,
+        "reference_forward_distance_m": 0.0
+      },
+      {
+        "seconds": 0.016666666666666666,
+        "normalized_phase": 0.027777777777777776,
+        "locomotion_phase": 0.9000253629401006,
+        "speed_mps": 0.009542181069958848,
+        "reference_forward_distance_m": 5.326217421124828e-05
+      },
+      {
+        "seconds": 0.03333333333333333,
+        "normalized_phase": 0.05555555555555555,
+        "locomotion_phase": 0.9002000457247371,
+        "speed_mps": 0.037448559670781895,
+        "reference_forward_distance_m": 0.00042009602194787365
+      },
+      {
+        "seconds": 0.05,
+        "normalized_phase": 0.08333333333333333,
+        "locomotion_phase": 0.9006655092592593,
+        "speed_mps": 0.0826388888888889,
+        "reference_forward_distance_m": 0.0013975694444444441
+      },
+      {
+        "seconds": 0.06666666666666667,
+        "normalized_phase": 0.1111111111111111,
+        "locomotion_phase": 0.901554641060814,
+        "speed_mps": 0.1440329218106996,
+        "reference_forward_distance_m": 0.00326474622770919
+      },
+      {
+        "seconds": 0.08333333333333333,
+        "normalized_phase": 0.1388888888888889,
+        "locomotion_phase": 0.9029917552583447,
+        "speed_mps": 0.2205504115226338,
+        "reference_forward_distance_m": 0.006282686042524006
+      },
+      {
+        "seconds": 0.1,
+        "normalized_phase": 0.16666666666666666,
+        "locomotion_phase": 0.9050925925925926,
+        "speed_mps": 0.3111111111111111,
+        "reference_forward_distance_m": 0.01069444444444444
+      },
+      {
+        "seconds": 0.11666666666666667,
+        "normalized_phase": 0.19444444444444445,
+        "locomotion_phase": 0.9079643204160951,
+        "speed_mps": 0.4146347736625515,
+        "reference_forward_distance_m": 0.016725072873799728
+      },
+      {
+        "seconds": 0.13333333333333333,
+        "normalized_phase": 0.2222222222222222,
+        "locomotion_phase": 0.911705532693187,
+        "speed_mps": 0.5300411522633744,
+        "reference_forward_distance_m": 0.024581618655692725
+      },
+      {
+        "seconds": 0.15,
+        "normalized_phase": 0.25,
+        "locomotion_phase": 0.91640625,
+        "speed_mps": 0.65625,
+        "reference_forward_distance_m": 0.034453125
+      },
+      {
+        "seconds": 0.16666666666666666,
+        "normalized_phase": 0.2777777777777778,
+        "locomotion_phase": 0.9221479195244627,
+        "speed_mps": 0.7921810699588478,
+        "reference_forward_distance_m": 0.04651063100137176
+      },
+      {
+        "seconds": 0.18333333333333332,
+        "normalized_phase": 0.3055555555555556,
+        "locomotion_phase": 0.9290034150663009,
+        "speed_mps": 0.9367541152263376,
+        "reference_forward_distance_m": 0.06090717163923183
+      },
+      {
+        "seconds": 0.2,
+        "normalized_phase": 0.3333333333333333,
+        "locomotion_phase": 0.9370370370370371,
+        "speed_mps": 1.0888888888888888,
+        "reference_forward_distance_m": 0.07777777777777775
+      },
+      {
+        "seconds": 0.21666666666666667,
+        "normalized_phase": 0.3611111111111111,
+        "locomotion_phase": 0.9463045124599909,
+        "speed_mps": 1.247505144032922,
+        "reference_forward_distance_m": 0.0972394761659808
+      },
+      {
+        "seconds": 0.23333333333333334,
+        "normalized_phase": 0.3888888888888889,
+        "locomotion_phase": 0.956852994970279,
+        "speed_mps": 1.411522633744856,
+        "reference_forward_distance_m": 0.11939128943758576
+      },
+      {
+        "seconds": 0.25,
+        "normalized_phase": 0.4166666666666667,
+        "locomotion_phase": 0.9687210648148148,
+        "speed_mps": 1.5798611111111114,
+        "reference_forward_distance_m": 0.14431423611111113
+      },
+      {
+        "seconds": 0.26666666666666666,
+        "normalized_phase": 0.4444444444444444,
+        "locomotion_phase": 0.9819387288523092,
+        "speed_mps": 1.751440329218107,
+        "reference_forward_distance_m": 0.17207133058984905
+      },
+      {
+        "seconds": 0.2833333333333333,
+        "normalized_phase": 0.4722222222222222,
+        "locomotion_phase": 0.9965274205532694,
+        "speed_mps": 1.925180041152263,
+        "reference_forward_distance_m": 0.20270758316186557
+      },
+      {
+        "seconds": 0.3,
+        "normalized_phase": 0.5,
+        "locomotion_phase": 0.012500000000000011,
+        "speed_mps": 2.1,
+        "reference_forward_distance_m": 0.23625000000000002
+      },
+      {
+        "seconds": 0.31666666666666665,
+        "normalized_phase": 0.5277777777777778,
+        "locomotion_phase": 0.02986075388660267,
+        "speed_mps": 2.2748199588477367,
+        "reference_forward_distance_m": 0.2727075831618656
+      },
+      {
+        "seconds": 0.3333333333333333,
+        "normalized_phase": 0.5555555555555556,
+        "locomotion_phase": 0.0486053955189758,
+        "speed_mps": 2.4485596707818935,
+        "reference_forward_distance_m": 0.31207133058984915
+      },
+      {
+        "seconds": 0.35,
+        "normalized_phase": 0.5833333333333334,
+        "locomotion_phase": 0.06872106481481488,
+        "speed_mps": 2.6201388888888895,
+        "reference_forward_distance_m": 0.35431423611111124
+      },
+      {
+        "seconds": 0.36666666666666664,
+        "normalized_phase": 0.6111111111111112,
+        "locomotion_phase": 0.09018632830361231,
+        "speed_mps": 2.788477366255144,
+        "reference_forward_distance_m": 0.3993912894375859
+      },
+      {
+        "seconds": 0.38333333333333336,
+        "normalized_phase": 0.6388888888888888,
+        "locomotion_phase": 0.11297117912665752,
+        "speed_mps": 2.9524948559670774,
+        "reference_forward_distance_m": 0.4472394761659808
+      },
+      {
+        "seconds": 0.4,
+        "normalized_phase": 0.6666666666666666,
+        "locomotion_phase": 0.13703703703703696,
+        "speed_mps": 3.1111111111111116,
+        "reference_forward_distance_m": 0.4977777777777776
+      },
+      {
+        "seconds": 0.4166666666666667,
+        "normalized_phase": 0.6944444444444444,
+        "locomotion_phase": 0.1623367483996342,
+        "speed_mps": 3.2632458847736623,
+        "reference_forward_distance_m": 0.5509071716392318
+      },
+      {
+        "seconds": 0.43333333333333335,
+        "normalized_phase": 0.7222222222222222,
+        "locomotion_phase": 0.18881458619112945,
+        "speed_mps": 3.4078189300411528,
+        "reference_forward_distance_m": 0.6065106310013718
+      },
+      {
+        "seconds": 0.45,
+        "normalized_phase": 0.75,
+        "locomotion_phase": 0.21640625000000002,
+        "speed_mps": 3.54375,
+        "reference_forward_distance_m": 0.664453125
+      },
+      {
+        "seconds": 0.4666666666666667,
+        "normalized_phase": 0.7777777777777778,
+        "locomotion_phase": 0.24503886602652042,
+        "speed_mps": 3.6699588477366256,
+        "reference_forward_distance_m": 0.7245816186556928
+      },
+      {
+        "seconds": 0.48333333333333334,
+        "normalized_phase": 0.8055555555555556,
+        "locomotion_phase": 0.2746309870827618,
+        "speed_mps": 3.7853652263374498,
+        "reference_forward_distance_m": 0.7867250728737998
+      },
+      {
+        "seconds": 0.5,
+        "normalized_phase": 0.8333333333333334,
+        "locomotion_phase": 0.3050925925925927,
+        "speed_mps": 3.8888888888888884,
+        "reference_forward_distance_m": 0.8506944444444446
+      },
+      {
+        "seconds": 0.5166666666666667,
+        "normalized_phase": 0.8611111111111112,
+        "locomotion_phase": 0.33632508859167815,
+        "speed_mps": 3.9794495884773666,
+        "reference_forward_distance_m": 0.916282686042524
+      },
+      {
+        "seconds": 0.5333333333333333,
+        "normalized_phase": 0.8888888888888888,
+        "locomotion_phase": 0.3682213077274804,
+        "speed_mps": 4.055967078189301,
+        "reference_forward_distance_m": 0.983264746227709
+      },
+      {
+        "seconds": 0.55,
+        "normalized_phase": 0.9166666666666666,
+        "locomotion_phase": 0.40066550925925926,
+        "speed_mps": 4.11736111111111,
+        "reference_forward_distance_m": 1.0513975694444444
+      },
+      {
+        "seconds": 0.5666666666666667,
+        "normalized_phase": 0.9444444444444444,
+        "locomotion_phase": 0.4335333790580703,
+        "speed_mps": 4.162551440329217,
+        "reference_forward_distance_m": 1.1204200960219477
+      },
+      {
+        "seconds": 0.5833333333333334,
+        "normalized_phase": 0.9722222222222222,
+        "locomotion_phase": 0.46669202960676714,
+        "speed_mps": 4.1904578189300405,
+        "reference_forward_distance_m": 1.190053262174211
+      },
+      {
+        "seconds": 0.6,
+        "normalized_phase": 1.0,
+        "locomotion_phase": 0.5,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 1.26
+      }
+    ],
+    "Sprint_Stop_L": [
+      {
+        "seconds": 0.0,
+        "normalized_phase": 0.0,
+        "locomotion_phase": 0.0,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 0.0
+      },
+      {
+        "seconds": 0.016666666666666666,
+        "normalized_phase": 0.016666666666666666,
+        "locomotion_phase": 0.0333241512345679,
+        "speed_mps": 4.196538888888889,
+        "reference_forward_distance_m": 0.0699807175925926
+      },
+      {
+        "seconds": 0.03333333333333333,
+        "normalized_phase": 0.03333333333333333,
+        "locomotion_phase": 0.06659382716049382,
+        "speed_mps": 4.186311111111111,
+        "reference_forward_distance_m": 0.13984703703703705
+      },
+      {
+        "seconds": 0.05,
+        "normalized_phase": 0.05,
+        "locomotion_phase": 0.09975625,
+        "speed_mps": 4.16955,
+        "reference_forward_distance_m": 0.20948812500000003
+      },
+      {
+        "seconds": 0.06666666666666667,
+        "normalized_phase": 0.06666666666666667,
+        "locomotion_phase": 0.1327604938271605,
+        "speed_mps": 4.146488888888889,
+        "reference_forward_distance_m": 0.27879703703703707
+      },
+      {
+        "seconds": 0.08333333333333333,
+        "normalized_phase": 0.08333333333333333,
+        "locomotion_phase": 0.16555748456790123,
+        "speed_mps": 4.117361111111111,
+        "reference_forward_distance_m": 0.34767071759259255
+      },
+      {
+        "seconds": 0.1,
+        "normalized_phase": 0.1,
+        "locomotion_phase": 0.1981,
+        "speed_mps": 4.0824,
+        "reference_forward_distance_m": 0.41601000000000005
+      },
+      {
+        "seconds": 0.11666666666666667,
+        "normalized_phase": 0.11666666666666667,
+        "locomotion_phase": 0.23034266975308643,
+        "speed_mps": 4.041838888888889,
+        "reference_forward_distance_m": 0.48371960648148155
+      },
+      {
+        "seconds": 0.13333333333333333,
+        "normalized_phase": 0.13333333333333333,
+        "locomotion_phase": 0.26224197530864196,
+        "speed_mps": 3.9959111111111114,
+        "reference_forward_distance_m": 0.5507081481481482
+      },
+      {
+        "seconds": 0.15,
+        "normalized_phase": 0.15,
+        "locomotion_phase": 0.29375625,
+        "speed_mps": 3.94485,
+        "reference_forward_distance_m": 0.616888125
+      },
+      {
+        "seconds": 0.16666666666666666,
+        "normalized_phase": 0.16666666666666666,
+        "locomotion_phase": 0.3248456790123457,
+        "speed_mps": 3.8888888888888893,
+        "reference_forward_distance_m": 0.6821759259259259
+      },
+      {
+        "seconds": 0.18333333333333332,
+        "normalized_phase": 0.18333333333333332,
+        "locomotion_phase": 0.355472299382716,
+        "speed_mps": 3.8282611111111113,
+        "reference_forward_distance_m": 0.7464918287037037
+      },
+      {
+        "seconds": 0.2,
+        "normalized_phase": 0.2,
+        "locomotion_phase": 0.3856,
+        "speed_mps": 3.7632,
+        "reference_forward_distance_m": 0.80976
+      },
+      {
+        "seconds": 0.21666666666666667,
+        "normalized_phase": 0.21666666666666667,
+        "locomotion_phase": 0.4151945216049383,
+        "speed_mps": 3.693938888888889,
+        "reference_forward_distance_m": 0.8719084953703704
+      },
+      {
+        "seconds": 0.23333333333333334,
+        "normalized_phase": 0.23333333333333334,
+        "locomotion_phase": 0.4442234567901235,
+        "speed_mps": 3.6207111111111114,
+        "reference_forward_distance_m": 0.9328692592592593
+      },
+      {
+        "seconds": 0.25,
+        "normalized_phase": 0.25,
+        "locomotion_phase": 0.47265625,
+        "speed_mps": 3.54375,
+        "reference_forward_distance_m": 0.9925781250000001
+      },
+      {
+        "seconds": 0.26666666666666666,
+        "normalized_phase": 0.26666666666666666,
+        "locomotion_phase": 0.5004641975308642,
+        "speed_mps": 3.463288888888889,
+        "reference_forward_distance_m": 1.0509748148148148
+      },
+      {
+        "seconds": 0.2833333333333333,
+        "normalized_phase": 0.2833333333333333,
+        "locomotion_phase": 0.5276204475308642,
+        "speed_mps": 3.3795611111111112,
+        "reference_forward_distance_m": 1.1080029398148148
+      },
+      {
+        "seconds": 0.3,
+        "normalized_phase": 0.3,
+        "locomotion_phase": 0.5541,
+        "speed_mps": 3.2928,
+        "reference_forward_distance_m": 1.16361
+      },
+      {
+        "seconds": 0.31666666666666665,
+        "normalized_phase": 0.31666666666666665,
+        "locomotion_phase": 0.5798797067901235,
+        "speed_mps": 3.2032388888888894,
+        "reference_forward_distance_m": 1.2177473842592594
+      },
+      {
+        "seconds": 0.3333333333333333,
+        "normalized_phase": 0.3333333333333333,
+        "locomotion_phase": 0.6049382716049383,
+        "speed_mps": 3.1111111111111116,
+        "reference_forward_distance_m": 1.2703703703703704
+      },
+      {
+        "seconds": 0.35,
+        "normalized_phase": 0.35,
+        "locomotion_phase": 0.62925625,
+        "speed_mps": 3.0166500000000003,
+        "reference_forward_distance_m": 1.321438125
+      },
+      {
+        "seconds": 0.36666666666666664,
+        "normalized_phase": 0.36666666666666664,
+        "locomotion_phase": 0.652816049382716,
+        "speed_mps": 2.9200888888888894,
+        "reference_forward_distance_m": 1.3709137037037038
+      },
+      {
+        "seconds": 0.38333333333333336,
+        "normalized_phase": 0.38333333333333336,
+        "locomotion_phase": 0.6756019290123457,
+        "speed_mps": 2.821661111111111,
+        "reference_forward_distance_m": 1.418764050925926
+      },
+      {
+        "seconds": 0.4,
+        "normalized_phase": 0.4,
+        "locomotion_phase": 0.6976,
+        "speed_mps": 2.7215999999999996,
+        "reference_forward_distance_m": 1.46496
+      },
+      {
+        "seconds": 0.4166666666666667,
+        "normalized_phase": 0.4166666666666667,
+        "locomotion_phase": 0.718798225308642,
+        "speed_mps": 2.6201388888888886,
+        "reference_forward_distance_m": 1.5094762731481484
+      },
+      {
+        "seconds": 0.43333333333333335,
+        "normalized_phase": 0.43333333333333335,
+        "locomotion_phase": 0.7391864197530864,
+        "speed_mps": 2.5175111111111113,
+        "reference_forward_distance_m": 1.5522914814814814
+      },
+      {
+        "seconds": 0.45,
+        "normalized_phase": 0.45,
+        "locomotion_phase": 0.75875625,
+        "speed_mps": 2.41395,
+        "reference_forward_distance_m": 1.5933881250000002
+      },
+      {
+        "seconds": 0.4666666666666667,
+        "normalized_phase": 0.4666666666666667,
+        "locomotion_phase": 0.7775012345679012,
+        "speed_mps": 2.309688888888889,
+        "reference_forward_distance_m": 1.6327525925925928
+      },
+      {
+        "seconds": 0.48333333333333334,
+        "normalized_phase": 0.48333333333333334,
+        "locomotion_phase": 0.7954167438271605,
+        "speed_mps": 2.2049611111111114,
+        "reference_forward_distance_m": 1.6703751620370373
+      },
+      {
+        "seconds": 0.5,
+        "normalized_phase": 0.5,
+        "locomotion_phase": 0.8125,
+        "speed_mps": 2.1,
+        "reference_forward_distance_m": 1.70625
+      },
+      {
+        "seconds": 0.5166666666666667,
+        "normalized_phase": 0.5166666666666667,
+        "locomotion_phase": 0.8287500771604939,
+        "speed_mps": 1.9950388888888888,
+        "reference_forward_distance_m": 1.7403751620370373
+      },
+      {
+        "seconds": 0.5333333333333333,
+        "normalized_phase": 0.5333333333333333,
+        "locomotion_phase": 0.8441679012345679,
+        "speed_mps": 1.890311111111111,
+        "reference_forward_distance_m": 1.7727525925925929
+      },
+      {
+        "seconds": 0.55,
+        "normalized_phase": 0.55,
+        "locomotion_phase": 0.85875625,
+        "speed_mps": 1.7860499999999995,
+        "reference_forward_distance_m": 1.8033881250000003
+      },
+      {
+        "seconds": 0.5666666666666667,
+        "normalized_phase": 0.5666666666666667,
+        "locomotion_phase": 0.8725197530864197,
+        "speed_mps": 1.6824888888888894,
+        "reference_forward_distance_m": 1.8322914814814815
+      },
+      {
+        "seconds": 0.5833333333333334,
+        "normalized_phase": 0.5833333333333334,
+        "locomotion_phase": 0.8854648919753086,
+        "speed_mps": 1.5798611111111107,
+        "reference_forward_distance_m": 1.859476273148148
+      },
+      {
+        "seconds": 0.6,
+        "normalized_phase": 0.6,
+        "locomotion_phase": 0.8976,
+        "speed_mps": 1.4783999999999997,
+        "reference_forward_distance_m": 1.88496
+      },
+      {
+        "seconds": 0.6166666666666667,
+        "normalized_phase": 0.6166666666666667,
+        "locomotion_phase": 0.908935262345679,
+        "speed_mps": 1.3783388888888886,
+        "reference_forward_distance_m": 1.908764050925926
+      },
+      {
+        "seconds": 0.6333333333333333,
+        "normalized_phase": 0.6333333333333333,
+        "locomotion_phase": 0.9194827160493827,
+        "speed_mps": 1.2799111111111117,
+        "reference_forward_distance_m": 1.9309137037037039
+      },
+      {
+        "seconds": 0.65,
+        "normalized_phase": 0.65,
+        "locomotion_phase": 0.9292562500000001,
+        "speed_mps": 1.18335,
+        "reference_forward_distance_m": 1.9514381250000006
+      },
+      {
+        "seconds": 0.6666666666666666,
+        "normalized_phase": 0.6666666666666666,
+        "locomotion_phase": 0.9382716049382717,
+        "speed_mps": 1.0888888888888886,
+        "reference_forward_distance_m": 1.9703703703703703
+      },
+      {
+        "seconds": 0.6833333333333333,
+        "normalized_phase": 0.6833333333333333,
+        "locomotion_phase": 0.9465463734567902,
+        "speed_mps": 0.9967611111111112,
+        "reference_forward_distance_m": 1.9877473842592592
+      },
+      {
+        "seconds": 0.7,
+        "normalized_phase": 0.7,
+        "locomotion_phase": 0.9541000000000001,
+        "speed_mps": 0.9072000000000005,
+        "reference_forward_distance_m": 2.00361
+      },
+      {
+        "seconds": 0.7166666666666667,
+        "normalized_phase": 0.7166666666666667,
+        "locomotion_phase": 0.9609537808641975,
+        "speed_mps": 0.8204388888888885,
+        "reference_forward_distance_m": 2.018002939814815
+      },
+      {
+        "seconds": 0.7333333333333333,
+        "normalized_phase": 0.7333333333333333,
+        "locomotion_phase": 0.9671308641975309,
+        "speed_mps": 0.7367111111111115,
+        "reference_forward_distance_m": 2.0309748148148152
+      },
+      {
+        "seconds": 0.75,
+        "normalized_phase": 0.75,
+        "locomotion_phase": 0.97265625,
+        "speed_mps": 0.65625,
+        "reference_forward_distance_m": 2.0425781250000004
+      },
+      {
+        "seconds": 0.7666666666666667,
+        "normalized_phase": 0.7666666666666667,
+        "locomotion_phase": 0.9775567901234568,
+        "speed_mps": 0.5792888888888883,
+        "reference_forward_distance_m": 2.052869259259259
+      },
+      {
+        "seconds": 0.7833333333333333,
+        "normalized_phase": 0.7833333333333333,
+        "locomotion_phase": 0.981861188271605,
+        "speed_mps": 0.5060611111111113,
+        "reference_forward_distance_m": 2.0619084953703704
+      },
+      {
+        "seconds": 0.8,
+        "normalized_phase": 0.8,
+        "locomotion_phase": 0.9855999999999999,
+        "speed_mps": 0.4367999999999994,
+        "reference_forward_distance_m": 2.0697599999999996
+      },
+      {
+        "seconds": 0.8166666666666667,
+        "normalized_phase": 0.8166666666666667,
+        "locomotion_phase": 0.9888056327160493,
+        "speed_mps": 0.3717388888888884,
+        "reference_forward_distance_m": 2.0764918287037037
+      },
+      {
+        "seconds": 0.8333333333333334,
+        "normalized_phase": 0.8333333333333334,
+        "locomotion_phase": 0.9915123456790123,
+        "speed_mps": 0.3111111111111118,
+        "reference_forward_distance_m": 2.082175925925926
+      },
+      {
+        "seconds": 0.85,
+        "normalized_phase": 0.85,
+        "locomotion_phase": 0.99375625,
+        "speed_mps": 0.2551500000000013,
+        "reference_forward_distance_m": 2.0868881249999998
+      },
+      {
+        "seconds": 0.8666666666666667,
+        "normalized_phase": 0.8666666666666667,
+        "locomotion_phase": 0.9955753086419752,
+        "speed_mps": 0.20408888888888965,
+        "reference_forward_distance_m": 2.0907081481481478
+      },
+      {
+        "seconds": 0.8833333333333333,
+        "normalized_phase": 0.8833333333333333,
+        "locomotion_phase": 0.9970093364197532,
+        "speed_mps": 0.1581611111111103,
+        "reference_forward_distance_m": 2.093719606481482
+      },
+      {
+        "seconds": 0.9,
+        "normalized_phase": 0.9,
+        "locomotion_phase": 0.9980999999999999,
+        "speed_mps": 0.11760000000000037,
+        "reference_forward_distance_m": 2.0960099999999997
+      },
+      {
+        "seconds": 0.9166666666666666,
+        "normalized_phase": 0.9166666666666666,
+        "locomotion_phase": 0.9988908179012346,
+        "speed_mps": 0.08263888888888982,
+        "reference_forward_distance_m": 2.097670717592593
+      },
+      {
+        "seconds": 0.9333333333333333,
+        "normalized_phase": 0.9333333333333333,
+        "locomotion_phase": 0.9994271604938271,
+        "speed_mps": 0.05351111111111173,
+        "reference_forward_distance_m": 2.098797037037037
+      },
+      {
+        "seconds": 0.95,
+        "normalized_phase": 0.95,
+        "locomotion_phase": 0.99975625,
+        "speed_mps": 0.0304499999999992,
+        "reference_forward_distance_m": 2.0994881249999997
+      },
+      {
+        "seconds": 0.9666666666666667,
+        "normalized_phase": 0.9666666666666667,
+        "locomotion_phase": 0.9999271604938272,
+        "speed_mps": 0.013688888888888862,
+        "reference_forward_distance_m": 2.099847037037038
+      },
+      {
+        "seconds": 0.9833333333333333,
+        "normalized_phase": 0.9833333333333333,
+        "locomotion_phase": 0.9999908179012346,
+        "speed_mps": 0.003461111111111137,
+        "reference_forward_distance_m": 2.0999807175925924
+      },
+      {
+        "seconds": 1.0,
+        "normalized_phase": 1.0,
+        "locomotion_phase": 0.0,
+        "speed_mps": 0.0,
+        "reference_forward_distance_m": 2.1
+      }
+    ],
+    "Sprint_Stop_R": [
+      {
+        "seconds": 0.0,
+        "normalized_phase": 0.0,
+        "locomotion_phase": 0.5,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 0.0
+      },
+      {
+        "seconds": 0.016666666666666666,
+        "normalized_phase": 0.016666666666666666,
+        "locomotion_phase": 0.5333241512345679,
+        "speed_mps": 4.196538888888889,
+        "reference_forward_distance_m": 0.0699807175925926
+      },
+      {
+        "seconds": 0.03333333333333333,
+        "normalized_phase": 0.03333333333333333,
+        "locomotion_phase": 0.5665938271604938,
+        "speed_mps": 4.186311111111111,
+        "reference_forward_distance_m": 0.13984703703703705
+      },
+      {
+        "seconds": 0.05,
+        "normalized_phase": 0.05,
+        "locomotion_phase": 0.59975625,
+        "speed_mps": 4.16955,
+        "reference_forward_distance_m": 0.20948812500000003
+      },
+      {
+        "seconds": 0.06666666666666667,
+        "normalized_phase": 0.06666666666666667,
+        "locomotion_phase": 0.6327604938271605,
+        "speed_mps": 4.146488888888889,
+        "reference_forward_distance_m": 0.27879703703703707
+      },
+      {
+        "seconds": 0.08333333333333333,
+        "normalized_phase": 0.08333333333333333,
+        "locomotion_phase": 0.6655574845679012,
+        "speed_mps": 4.117361111111111,
+        "reference_forward_distance_m": 0.34767071759259255
+      },
+      {
+        "seconds": 0.1,
+        "normalized_phase": 0.1,
+        "locomotion_phase": 0.6980999999999999,
+        "speed_mps": 4.0824,
+        "reference_forward_distance_m": 0.41601000000000005
+      },
+      {
+        "seconds": 0.11666666666666667,
+        "normalized_phase": 0.11666666666666667,
+        "locomotion_phase": 0.7303426697530864,
+        "speed_mps": 4.041838888888889,
+        "reference_forward_distance_m": 0.48371960648148155
+      },
+      {
+        "seconds": 0.13333333333333333,
+        "normalized_phase": 0.13333333333333333,
+        "locomotion_phase": 0.762241975308642,
+        "speed_mps": 3.9959111111111114,
+        "reference_forward_distance_m": 0.5507081481481482
+      },
+      {
+        "seconds": 0.15,
+        "normalized_phase": 0.15,
+        "locomotion_phase": 0.7937562499999999,
+        "speed_mps": 3.94485,
+        "reference_forward_distance_m": 0.616888125
+      },
+      {
+        "seconds": 0.16666666666666666,
+        "normalized_phase": 0.16666666666666666,
+        "locomotion_phase": 0.8248456790123457,
+        "speed_mps": 3.8888888888888893,
+        "reference_forward_distance_m": 0.6821759259259259
+      },
+      {
+        "seconds": 0.18333333333333332,
+        "normalized_phase": 0.18333333333333332,
+        "locomotion_phase": 0.855472299382716,
+        "speed_mps": 3.8282611111111113,
+        "reference_forward_distance_m": 0.7464918287037037
+      },
+      {
+        "seconds": 0.2,
+        "normalized_phase": 0.2,
+        "locomotion_phase": 0.8855999999999999,
+        "speed_mps": 3.7632,
+        "reference_forward_distance_m": 0.80976
+      },
+      {
+        "seconds": 0.21666666666666667,
+        "normalized_phase": 0.21666666666666667,
+        "locomotion_phase": 0.9151945216049383,
+        "speed_mps": 3.693938888888889,
+        "reference_forward_distance_m": 0.8719084953703704
+      },
+      {
+        "seconds": 0.23333333333333334,
+        "normalized_phase": 0.23333333333333334,
+        "locomotion_phase": 0.9442234567901235,
+        "speed_mps": 3.6207111111111114,
+        "reference_forward_distance_m": 0.9328692592592593
+      },
+      {
+        "seconds": 0.25,
+        "normalized_phase": 0.25,
+        "locomotion_phase": 0.97265625,
+        "speed_mps": 3.54375,
+        "reference_forward_distance_m": 0.9925781250000001
+      },
+      {
+        "seconds": 0.26666666666666666,
+        "normalized_phase": 0.26666666666666666,
+        "locomotion_phase": 0.00046419753086412996,
+        "speed_mps": 3.463288888888889,
+        "reference_forward_distance_m": 1.0509748148148148
+      },
+      {
+        "seconds": 0.2833333333333333,
+        "normalized_phase": 0.2833333333333333,
+        "locomotion_phase": 0.027620447530864123,
+        "speed_mps": 3.3795611111111112,
+        "reference_forward_distance_m": 1.1080029398148148
+      },
+      {
+        "seconds": 0.3,
+        "normalized_phase": 0.3,
+        "locomotion_phase": 0.05410000000000004,
+        "speed_mps": 3.2928,
+        "reference_forward_distance_m": 1.16361
+      },
+      {
+        "seconds": 0.31666666666666665,
+        "normalized_phase": 0.31666666666666665,
+        "locomotion_phase": 0.07987970679012335,
+        "speed_mps": 3.2032388888888894,
+        "reference_forward_distance_m": 1.2177473842592594
+      },
+      {
+        "seconds": 0.3333333333333333,
+        "normalized_phase": 0.3333333333333333,
+        "locomotion_phase": 0.1049382716049383,
+        "speed_mps": 3.1111111111111116,
+        "reference_forward_distance_m": 1.2703703703703704
+      },
+      {
+        "seconds": 0.35,
+        "normalized_phase": 0.35,
+        "locomotion_phase": 0.12925625000000007,
+        "speed_mps": 3.0166500000000003,
+        "reference_forward_distance_m": 1.321438125
+      },
+      {
+        "seconds": 0.36666666666666664,
+        "normalized_phase": 0.36666666666666664,
+        "locomotion_phase": 0.15281604938271598,
+        "speed_mps": 2.9200888888888894,
+        "reference_forward_distance_m": 1.3709137037037038
+      },
+      {
+        "seconds": 0.38333333333333336,
+        "normalized_phase": 0.38333333333333336,
+        "locomotion_phase": 0.17560192901234561,
+        "speed_mps": 2.821661111111111,
+        "reference_forward_distance_m": 1.418764050925926
+      },
+      {
+        "seconds": 0.4,
+        "normalized_phase": 0.4,
+        "locomotion_phase": 0.1976,
+        "speed_mps": 2.7215999999999996,
+        "reference_forward_distance_m": 1.46496
+      },
+      {
+        "seconds": 0.4166666666666667,
+        "normalized_phase": 0.4166666666666667,
+        "locomotion_phase": 0.218798225308642,
+        "speed_mps": 2.6201388888888886,
+        "reference_forward_distance_m": 1.5094762731481484
+      },
+      {
+        "seconds": 0.43333333333333335,
+        "normalized_phase": 0.43333333333333335,
+        "locomotion_phase": 0.2391864197530864,
+        "speed_mps": 2.5175111111111113,
+        "reference_forward_distance_m": 1.5522914814814814
+      },
+      {
+        "seconds": 0.45,
+        "normalized_phase": 0.45,
+        "locomotion_phase": 0.25875625,
+        "speed_mps": 2.41395,
+        "reference_forward_distance_m": 1.5933881250000002
+      },
+      {
+        "seconds": 0.4666666666666667,
+        "normalized_phase": 0.4666666666666667,
+        "locomotion_phase": 0.2775012345679011,
+        "speed_mps": 2.309688888888889,
+        "reference_forward_distance_m": 1.6327525925925928
+      },
+      {
+        "seconds": 0.48333333333333334,
+        "normalized_phase": 0.48333333333333334,
+        "locomotion_phase": 0.29541674382716065,
+        "speed_mps": 2.2049611111111114,
+        "reference_forward_distance_m": 1.6703751620370373
+      },
+      {
+        "seconds": 0.5,
+        "normalized_phase": 0.5,
+        "locomotion_phase": 0.3125,
+        "speed_mps": 2.1,
+        "reference_forward_distance_m": 1.70625
+      },
+      {
+        "seconds": 0.5166666666666667,
+        "normalized_phase": 0.5166666666666667,
+        "locomotion_phase": 0.32875007716049387,
+        "speed_mps": 1.9950388888888888,
+        "reference_forward_distance_m": 1.7403751620370373
+      },
+      {
+        "seconds": 0.5333333333333333,
+        "normalized_phase": 0.5333333333333333,
+        "locomotion_phase": 0.344167901234568,
+        "speed_mps": 1.890311111111111,
+        "reference_forward_distance_m": 1.7727525925925929
+      },
+      {
+        "seconds": 0.55,
+        "normalized_phase": 0.55,
+        "locomotion_phase": 0.3587562499999999,
+        "speed_mps": 1.7860499999999995,
+        "reference_forward_distance_m": 1.8033881250000003
+      },
+      {
+        "seconds": 0.5666666666666667,
+        "normalized_phase": 0.5666666666666667,
+        "locomotion_phase": 0.3725197530864197,
+        "speed_mps": 1.6824888888888894,
+        "reference_forward_distance_m": 1.8322914814814815
+      },
+      {
+        "seconds": 0.5833333333333334,
+        "normalized_phase": 0.5833333333333334,
+        "locomotion_phase": 0.38546489197530853,
+        "speed_mps": 1.5798611111111107,
+        "reference_forward_distance_m": 1.859476273148148
+      },
+      {
+        "seconds": 0.6,
+        "normalized_phase": 0.6,
+        "locomotion_phase": 0.39759999999999995,
+        "speed_mps": 1.4783999999999997,
+        "reference_forward_distance_m": 1.88496
+      },
+      {
+        "seconds": 0.6166666666666667,
+        "normalized_phase": 0.6166666666666667,
+        "locomotion_phase": 0.408935262345679,
+        "speed_mps": 1.3783388888888886,
+        "reference_forward_distance_m": 1.908764050925926
+      },
+      {
+        "seconds": 0.6333333333333333,
+        "normalized_phase": 0.6333333333333333,
+        "locomotion_phase": 0.4194827160493828,
+        "speed_mps": 1.2799111111111117,
+        "reference_forward_distance_m": 1.9309137037037039
+      },
+      {
+        "seconds": 0.65,
+        "normalized_phase": 0.65,
+        "locomotion_phase": 0.4292562500000001,
+        "speed_mps": 1.18335,
+        "reference_forward_distance_m": 1.9514381250000006
+      },
+      {
+        "seconds": 0.6666666666666666,
+        "normalized_phase": 0.6666666666666666,
+        "locomotion_phase": 0.4382716049382718,
+        "speed_mps": 1.0888888888888886,
+        "reference_forward_distance_m": 1.9703703703703703
+      },
+      {
+        "seconds": 0.6833333333333333,
+        "normalized_phase": 0.6833333333333333,
+        "locomotion_phase": 0.44654637345679005,
+        "speed_mps": 0.9967611111111112,
+        "reference_forward_distance_m": 1.9877473842592592
+      },
+      {
+        "seconds": 0.7,
+        "normalized_phase": 0.7,
+        "locomotion_phase": 0.45409999999999995,
+        "speed_mps": 0.9072000000000005,
+        "reference_forward_distance_m": 2.00361
+      },
+      {
+        "seconds": 0.7166666666666667,
+        "normalized_phase": 0.7166666666666667,
+        "locomotion_phase": 0.46095378086419747,
+        "speed_mps": 0.8204388888888885,
+        "reference_forward_distance_m": 2.018002939814815
+      },
+      {
+        "seconds": 0.7333333333333333,
+        "normalized_phase": 0.7333333333333333,
+        "locomotion_phase": 0.4671308641975309,
+        "speed_mps": 0.7367111111111115,
+        "reference_forward_distance_m": 2.0309748148148152
+      },
+      {
+        "seconds": 0.75,
+        "normalized_phase": 0.75,
+        "locomotion_phase": 0.47265625,
+        "speed_mps": 0.65625,
+        "reference_forward_distance_m": 2.0425781250000004
+      },
+      {
+        "seconds": 0.7666666666666667,
+        "normalized_phase": 0.7666666666666667,
+        "locomotion_phase": 0.47755679012345675,
+        "speed_mps": 0.5792888888888883,
+        "reference_forward_distance_m": 2.052869259259259
+      },
+      {
+        "seconds": 0.7833333333333333,
+        "normalized_phase": 0.7833333333333333,
+        "locomotion_phase": 0.48186118827160485,
+        "speed_mps": 0.5060611111111113,
+        "reference_forward_distance_m": 2.0619084953703704
+      },
+      {
+        "seconds": 0.8,
+        "normalized_phase": 0.8,
+        "locomotion_phase": 0.4855999999999998,
+        "speed_mps": 0.4367999999999994,
+        "reference_forward_distance_m": 2.0697599999999996
+      },
+      {
+        "seconds": 0.8166666666666667,
+        "normalized_phase": 0.8166666666666667,
+        "locomotion_phase": 0.48880563271604927,
+        "speed_mps": 0.3717388888888884,
+        "reference_forward_distance_m": 2.0764918287037037
+      },
+      {
+        "seconds": 0.8333333333333334,
+        "normalized_phase": 0.8333333333333334,
+        "locomotion_phase": 0.49151234567901225,
+        "speed_mps": 0.3111111111111118,
+        "reference_forward_distance_m": 2.082175925925926
+      },
+      {
+        "seconds": 0.85,
+        "normalized_phase": 0.85,
+        "locomotion_phase": 0.4937562500000001,
+        "speed_mps": 0.2551500000000013,
+        "reference_forward_distance_m": 2.0868881249999998
+      },
+      {
+        "seconds": 0.8666666666666667,
+        "normalized_phase": 0.8666666666666667,
+        "locomotion_phase": 0.4955753086419752,
+        "speed_mps": 0.20408888888888965,
+        "reference_forward_distance_m": 2.0907081481481478
+      },
+      {
+        "seconds": 0.8833333333333333,
+        "normalized_phase": 0.8833333333333333,
+        "locomotion_phase": 0.4970093364197532,
+        "speed_mps": 0.1581611111111103,
+        "reference_forward_distance_m": 2.093719606481482
+      },
+      {
+        "seconds": 0.9,
+        "normalized_phase": 0.9,
+        "locomotion_phase": 0.4981,
+        "speed_mps": 0.11760000000000037,
+        "reference_forward_distance_m": 2.0960099999999997
+      },
+      {
+        "seconds": 0.9166666666666666,
+        "normalized_phase": 0.9166666666666666,
+        "locomotion_phase": 0.4988908179012346,
+        "speed_mps": 0.08263888888888982,
+        "reference_forward_distance_m": 2.097670717592593
+      },
+      {
+        "seconds": 0.9333333333333333,
+        "normalized_phase": 0.9333333333333333,
+        "locomotion_phase": 0.49942716049382696,
+        "speed_mps": 0.05351111111111173,
+        "reference_forward_distance_m": 2.098797037037037
+      },
+      {
+        "seconds": 0.95,
+        "normalized_phase": 0.95,
+        "locomotion_phase": 0.4997562499999999,
+        "speed_mps": 0.0304499999999992,
+        "reference_forward_distance_m": 2.0994881249999997
+      },
+      {
+        "seconds": 0.9666666666666667,
+        "normalized_phase": 0.9666666666666667,
+        "locomotion_phase": 0.4999271604938271,
+        "speed_mps": 0.013688888888888862,
+        "reference_forward_distance_m": 2.099847037037038
+      },
+      {
+        "seconds": 0.9833333333333333,
+        "normalized_phase": 0.9833333333333333,
+        "locomotion_phase": 0.4999908179012347,
+        "speed_mps": 0.003461111111111137,
+        "reference_forward_distance_m": 2.0999807175925924
+      },
+      {
+        "seconds": 1.0,
+        "normalized_phase": 1.0,
+        "locomotion_phase": 0.5,
+        "speed_mps": 0.0,
+        "reference_forward_distance_m": 2.1
+      }
+    ],
+    "Run_To_Walk_L": [
+      {
+        "seconds": 0.0,
+        "normalized_phase": 0.0,
+        "locomotion_phase": 0.0,
+        "speed_mps": 2.46,
+        "reference_forward_distance_m": 0.0
+      },
+      {
+        "seconds": 0.016666666666666666,
+        "normalized_phase": 0.027777777777777776,
+        "locomotion_phase": 0.024993659264974852,
+        "speed_mps": 2.4568647119341565,
+        "reference_forward_distance_m": 0.04098249957133059
+      },
+      {
+        "seconds": 0.03333333333333333,
+        "normalized_phase": 0.05555555555555555,
+        "locomotion_phase": 0.049949988568815724,
+        "speed_mps": 2.447695473251029,
+        "reference_forward_distance_m": 0.08186196844993142
+      },
+      {
+        "seconds": 0.05,
+        "normalized_phase": 0.08333333333333333,
+        "locomotion_phase": 0.07483362268518519,
+        "speed_mps": 2.432847222222222,
+        "reference_forward_distance_m": 0.1225407986111111
+      },
+      {
+        "seconds": 0.06666666666666667,
+        "normalized_phase": 0.1111111111111111,
+        "locomotion_phase": 0.09961133973479652,
+        "speed_mps": 2.4126748971193415,
+        "reference_forward_distance_m": 0.1629272976680384
+      },
+      {
+        "seconds": 0.08333333333333333,
+        "normalized_phase": 0.1388888888888889,
+        "locomotion_phase": 0.12425206118541382,
+        "speed_mps": 2.3875334362139915,
+        "reference_forward_distance_m": 0.2029356888717421
+      },
+      {
+        "seconds": 0.1,
+        "normalized_phase": 0.16666666666666666,
+        "locomotion_phase": 0.14872685185185186,
+        "speed_mps": 2.3577777777777778,
+        "reference_forward_distance_m": 0.24248611111111107
+      },
+      {
+        "seconds": 0.11666666666666667,
+        "normalized_phase": 0.19444444444444445,
+        "locomotion_phase": 0.17300891989597625,
+        "speed_mps": 2.3237628600823044,
+        "reference_forward_distance_m": 0.28150461891289436
+      },
+      {
+        "seconds": 0.13333333333333333,
+        "normalized_phase": 0.2222222222222222,
+        "locomotion_phase": 0.19707361682670324,
+        "speed_mps": 2.285843621399177,
+        "reference_forward_distance_m": 0.319923182441701
+      },
+      {
+        "seconds": 0.15,
+        "normalized_phase": 0.25,
+        "locomotion_phase": 0.2208984375,
+        "speed_mps": 2.244375,
+        "reference_forward_distance_m": 0.35767968749999995
+      },
+      {
+        "seconds": 0.16666666666666666,
+        "normalized_phase": 0.2777777777777778,
+        "locomotion_phase": 0.24446302011888432,
+        "speed_mps": 2.1997119341563787,
+        "reference_forward_distance_m": 0.3947179355281207
+      },
+      {
+        "seconds": 0.18333333333333332,
+        "normalized_phase": 0.3055555555555556,
+        "locomotion_phase": 0.26774914623342483,
+        "speed_mps": 2.1522093621399176,
+        "reference_forward_distance_m": 0.4309876436042524
+      },
+      {
+        "seconds": 0.2,
+        "normalized_phase": 0.3333333333333333,
+        "locomotion_phase": 0.29074074074074074,
+        "speed_mps": 2.102222222222222,
+        "reference_forward_distance_m": 0.4664444444444444
+      },
+      {
+        "seconds": 0.21666666666666667,
+        "normalized_phase": 0.3611111111111111,
+        "locomotion_phase": 0.31342387188500226,
+        "speed_mps": 2.050105452674897,
+        "reference_forward_distance_m": 0.5010498864026063
+      },
+      {
+        "seconds": 0.23333333333333334,
+        "normalized_phase": 0.3888888888888889,
+        "locomotion_phase": 0.3357867512574303,
+        "speed_mps": 1.9962139917695474,
+        "reference_forward_distance_m": 0.5347714334705075
+      },
+      {
+        "seconds": 0.25,
+        "normalized_phase": 0.4166666666666667,
+        "locomotion_phase": 0.3578197337962963,
+        "speed_mps": 1.9409027777777776,
+        "reference_forward_distance_m": 0.5675824652777778
+      },
+      {
+        "seconds": 0.26666666666666666,
+        "normalized_phase": 0.4444444444444444,
+        "locomotion_phase": 0.3795153177869227,
+        "speed_mps": 1.8845267489711934,
+        "reference_forward_distance_m": 0.5994622770919067
+      },
+      {
+        "seconds": 0.2833333333333333,
+        "normalized_phase": 0.4722222222222222,
+        "locomotion_phase": 0.40086814486168265,
+        "speed_mps": 1.8274408436213994,
+        "reference_forward_distance_m": 0.6303960798182441
+      },
+      {
+        "seconds": 0.3,
+        "normalized_phase": 0.5,
+        "locomotion_phase": 0.421875,
+        "speed_mps": 1.77,
+        "reference_forward_distance_m": 0.6603749999999999
+      },
+      {
+        "seconds": 0.31666666666666665,
+        "normalized_phase": 0.5277777777777778,
+        "locomotion_phase": 0.44253481152834934,
+        "speed_mps": 1.712559156378601,
+        "reference_forward_distance_m": 0.6893960798182441
+      },
+      {
+        "seconds": 0.3333333333333333,
+        "normalized_phase": 0.5555555555555556,
+        "locomotion_phase": 0.4628486511202561,
+        "speed_mps": 1.6554732510288064,
+        "reference_forward_distance_m": 0.7174622770919067
+      },
+      {
+        "seconds": 0.35,
+        "normalized_phase": 0.5833333333333334,
+        "locomotion_phase": 0.4828197337962963,
+        "speed_mps": 1.5990972222222222,
+        "reference_forward_distance_m": 0.7445824652777778
+      },
+      {
+        "seconds": 0.36666666666666664,
+        "normalized_phase": 0.6111111111111112,
+        "locomotion_phase": 0.5024534179240969,
+        "speed_mps": 1.5437860082304526,
+        "reference_forward_distance_m": 0.7707714334705075
+      },
+      {
+        "seconds": 0.38333333333333336,
+        "normalized_phase": 0.6388888888888888,
+        "locomotion_phase": 0.5217572052183356,
+        "speed_mps": 1.489894547325103,
+        "reference_forward_distance_m": 0.7960498864026063
+      },
+      {
+        "seconds": 0.4,
+        "normalized_phase": 0.6666666666666666,
+        "locomotion_phase": 0.5407407407407407,
+        "speed_mps": 1.4377777777777778,
+        "reference_forward_distance_m": 0.8204444444444444
+      },
+      {
+        "seconds": 0.4166666666666667,
+        "normalized_phase": 0.6944444444444444,
+        "locomotion_phase": 0.5594158129000913,
+        "speed_mps": 1.3877906378600826,
+        "reference_forward_distance_m": 0.8439876436042524
+      },
+      {
+        "seconds": 0.43333333333333335,
+        "normalized_phase": 0.7222222222222222,
+        "locomotion_phase": 0.5777963534522176,
+        "speed_mps": 1.3402880658436214,
+        "reference_forward_distance_m": 0.8667179355281206
+      },
+      {
+        "seconds": 0.45,
+        "normalized_phase": 0.75,
+        "locomotion_phase": 0.5958984374999999,
+        "speed_mps": 1.295625,
+        "reference_forward_distance_m": 0.8886796875
+      },
+      {
+        "seconds": 0.4666666666666667,
+        "normalized_phase": 0.7777777777777778,
+        "locomotion_phase": 0.61374028349337,
+        "speed_mps": 1.2541563786008232,
+        "reference_forward_distance_m": 0.9099231824417009
+      },
+      {
+        "seconds": 0.48333333333333334,
+        "normalized_phase": 0.8055555555555556,
+        "locomotion_phase": 0.6313422532293097,
+        "speed_mps": 1.2162371399176952,
+        "reference_forward_distance_m": 0.9305046189128944
+      },
+      {
+        "seconds": 0.5,
+        "normalized_phase": 0.8333333333333334,
+        "locomotion_phase": 0.6487268518518519,
+        "speed_mps": 1.1822222222222225,
+        "reference_forward_distance_m": 0.9504861111111111
+      },
+      {
+        "seconds": 0.5166666666666667,
+        "normalized_phase": 0.8611111111111112,
+        "locomotion_phase": 0.6659187278520805,
+        "speed_mps": 1.1524665637860083,
+        "reference_forward_distance_m": 0.9699356888717423
+      },
+      {
+        "seconds": 0.5333333333333333,
+        "normalized_phase": 0.8888888888888888,
+        "locomotion_phase": 0.6829446730681298,
+        "speed_mps": 1.1273251028806583,
+        "reference_forward_distance_m": 0.9889272976680384
+      },
+      {
+        "seconds": 0.55,
+        "normalized_phase": 0.9166666666666666,
+        "locomotion_phase": 0.6998336226851851,
+        "speed_mps": 1.107152777777778,
+        "reference_forward_distance_m": 1.0075407986111111
+      },
+      {
+        "seconds": 0.5666666666666667,
+        "normalized_phase": 0.9444444444444444,
+        "locomotion_phase": 0.7166166552354823,
+        "speed_mps": 1.0923045267489715,
+        "reference_forward_distance_m": 1.0258619684499315
+      },
+      {
+        "seconds": 0.5833333333333334,
+        "normalized_phase": 0.9722222222222222,
+        "locomotion_phase": 0.733326992598308,
+        "speed_mps": 1.0831352880658438,
+        "reference_forward_distance_m": 1.0439824995713307
+      },
+      {
+        "seconds": 0.6,
+        "normalized_phase": 1.0,
+        "locomotion_phase": 0.75,
+        "speed_mps": 1.08,
+        "reference_forward_distance_m": 1.062
+      }
+    ],
+    "Run_To_Walk_R": [
+      {
+        "seconds": 0.0,
+        "normalized_phase": 0.0,
+        "locomotion_phase": 0.5,
+        "speed_mps": 2.46,
+        "reference_forward_distance_m": 0.0
+      },
+      {
+        "seconds": 0.016666666666666666,
+        "normalized_phase": 0.027777777777777776,
+        "locomotion_phase": 0.5249936592649749,
+        "speed_mps": 2.4568647119341565,
+        "reference_forward_distance_m": 0.04098249957133059
+      },
+      {
+        "seconds": 0.03333333333333333,
+        "normalized_phase": 0.05555555555555555,
+        "locomotion_phase": 0.5499499885688157,
+        "speed_mps": 2.447695473251029,
+        "reference_forward_distance_m": 0.08186196844993142
+      },
+      {
+        "seconds": 0.05,
+        "normalized_phase": 0.08333333333333333,
+        "locomotion_phase": 0.5748336226851852,
+        "speed_mps": 2.432847222222222,
+        "reference_forward_distance_m": 0.1225407986111111
+      },
+      {
+        "seconds": 0.06666666666666667,
+        "normalized_phase": 0.1111111111111111,
+        "locomotion_phase": 0.5996113397347965,
+        "speed_mps": 2.4126748971193415,
+        "reference_forward_distance_m": 0.1629272976680384
+      },
+      {
+        "seconds": 0.08333333333333333,
+        "normalized_phase": 0.1388888888888889,
+        "locomotion_phase": 0.6242520611854139,
+        "speed_mps": 2.3875334362139915,
+        "reference_forward_distance_m": 0.2029356888717421
+      },
+      {
+        "seconds": 0.1,
+        "normalized_phase": 0.16666666666666666,
+        "locomotion_phase": 0.6487268518518519,
+        "speed_mps": 2.3577777777777778,
+        "reference_forward_distance_m": 0.24248611111111107
+      },
+      {
+        "seconds": 0.11666666666666667,
+        "normalized_phase": 0.19444444444444445,
+        "locomotion_phase": 0.6730089198959762,
+        "speed_mps": 2.3237628600823044,
+        "reference_forward_distance_m": 0.28150461891289436
+      },
+      {
+        "seconds": 0.13333333333333333,
+        "normalized_phase": 0.2222222222222222,
+        "locomotion_phase": 0.6970736168267032,
+        "speed_mps": 2.285843621399177,
+        "reference_forward_distance_m": 0.319923182441701
+      },
+      {
+        "seconds": 0.15,
+        "normalized_phase": 0.25,
+        "locomotion_phase": 0.7208984375,
+        "speed_mps": 2.244375,
+        "reference_forward_distance_m": 0.35767968749999995
+      },
+      {
+        "seconds": 0.16666666666666666,
+        "normalized_phase": 0.2777777777777778,
+        "locomotion_phase": 0.7444630201188843,
+        "speed_mps": 2.1997119341563787,
+        "reference_forward_distance_m": 0.3947179355281207
+      },
+      {
+        "seconds": 0.18333333333333332,
+        "normalized_phase": 0.3055555555555556,
+        "locomotion_phase": 0.7677491462334248,
+        "speed_mps": 2.1522093621399176,
+        "reference_forward_distance_m": 0.4309876436042524
+      },
+      {
+        "seconds": 0.2,
+        "normalized_phase": 0.3333333333333333,
+        "locomotion_phase": 0.7907407407407407,
+        "speed_mps": 2.102222222222222,
+        "reference_forward_distance_m": 0.4664444444444444
+      },
+      {
+        "seconds": 0.21666666666666667,
+        "normalized_phase": 0.3611111111111111,
+        "locomotion_phase": 0.8134238718850022,
+        "speed_mps": 2.050105452674897,
+        "reference_forward_distance_m": 0.5010498864026063
+      },
+      {
+        "seconds": 0.23333333333333334,
+        "normalized_phase": 0.3888888888888889,
+        "locomotion_phase": 0.8357867512574303,
+        "speed_mps": 1.9962139917695474,
+        "reference_forward_distance_m": 0.5347714334705075
+      },
+      {
+        "seconds": 0.25,
+        "normalized_phase": 0.4166666666666667,
+        "locomotion_phase": 0.8578197337962963,
+        "speed_mps": 1.9409027777777776,
+        "reference_forward_distance_m": 0.5675824652777778
+      },
+      {
+        "seconds": 0.26666666666666666,
+        "normalized_phase": 0.4444444444444444,
+        "locomotion_phase": 0.8795153177869227,
+        "speed_mps": 1.8845267489711934,
+        "reference_forward_distance_m": 0.5994622770919067
+      },
+      {
+        "seconds": 0.2833333333333333,
+        "normalized_phase": 0.4722222222222222,
+        "locomotion_phase": 0.9008681448616827,
+        "speed_mps": 1.8274408436213994,
+        "reference_forward_distance_m": 0.6303960798182441
+      },
+      {
+        "seconds": 0.3,
+        "normalized_phase": 0.5,
+        "locomotion_phase": 0.921875,
+        "speed_mps": 1.77,
+        "reference_forward_distance_m": 0.6603749999999999
+      },
+      {
+        "seconds": 0.31666666666666665,
+        "normalized_phase": 0.5277777777777778,
+        "locomotion_phase": 0.9425348115283494,
+        "speed_mps": 1.712559156378601,
+        "reference_forward_distance_m": 0.6893960798182441
+      },
+      {
+        "seconds": 0.3333333333333333,
+        "normalized_phase": 0.5555555555555556,
+        "locomotion_phase": 0.9628486511202561,
+        "speed_mps": 1.6554732510288064,
+        "reference_forward_distance_m": 0.7174622770919067
+      },
+      {
+        "seconds": 0.35,
+        "normalized_phase": 0.5833333333333334,
+        "locomotion_phase": 0.9828197337962963,
+        "speed_mps": 1.5990972222222222,
+        "reference_forward_distance_m": 0.7445824652777778
+      },
+      {
+        "seconds": 0.36666666666666664,
+        "normalized_phase": 0.6111111111111112,
+        "locomotion_phase": 0.0024534179240969234,
+        "speed_mps": 1.5437860082304526,
+        "reference_forward_distance_m": 0.7707714334705075
+      },
+      {
+        "seconds": 0.38333333333333336,
+        "normalized_phase": 0.6388888888888888,
+        "locomotion_phase": 0.021757205218335685,
+        "speed_mps": 1.489894547325103,
+        "reference_forward_distance_m": 0.7960498864026063
+      },
+      {
+        "seconds": 0.4,
+        "normalized_phase": 0.6666666666666666,
+        "locomotion_phase": 0.040740740740740744,
+        "speed_mps": 1.4377777777777778,
+        "reference_forward_distance_m": 0.8204444444444444
+      },
+      {
+        "seconds": 0.4166666666666667,
+        "normalized_phase": 0.6944444444444444,
+        "locomotion_phase": 0.059415812900091236,
+        "speed_mps": 1.3877906378600826,
+        "reference_forward_distance_m": 0.8439876436042524
+      },
+      {
+        "seconds": 0.43333333333333335,
+        "normalized_phase": 0.7222222222222222,
+        "locomotion_phase": 0.07779635345221747,
+        "speed_mps": 1.3402880658436214,
+        "reference_forward_distance_m": 0.8667179355281206
+      },
+      {
+        "seconds": 0.45,
+        "normalized_phase": 0.75,
+        "locomotion_phase": 0.09589843749999982,
+        "speed_mps": 1.295625,
+        "reference_forward_distance_m": 0.8886796875
+      },
+      {
+        "seconds": 0.4666666666666667,
+        "normalized_phase": 0.7777777777777778,
+        "locomotion_phase": 0.11374028349337006,
+        "speed_mps": 1.2541563786008232,
+        "reference_forward_distance_m": 0.9099231824417009
+      },
+      {
+        "seconds": 0.48333333333333334,
+        "normalized_phase": 0.8055555555555556,
+        "locomotion_phase": 0.1313422532293096,
+        "speed_mps": 1.2162371399176952,
+        "reference_forward_distance_m": 0.9305046189128944
+      },
+      {
+        "seconds": 0.5,
+        "normalized_phase": 0.8333333333333334,
+        "locomotion_phase": 0.14872685185185186,
+        "speed_mps": 1.1822222222222225,
+        "reference_forward_distance_m": 0.9504861111111111
+      },
+      {
+        "seconds": 0.5166666666666667,
+        "normalized_phase": 0.8611111111111112,
+        "locomotion_phase": 0.1659187278520804,
+        "speed_mps": 1.1524665637860083,
+        "reference_forward_distance_m": 0.9699356888717423
+      },
+      {
+        "seconds": 0.5333333333333333,
+        "normalized_phase": 0.8888888888888888,
+        "locomotion_phase": 0.18294467306812967,
+        "speed_mps": 1.1273251028806583,
+        "reference_forward_distance_m": 0.9889272976680384
+      },
+      {
+        "seconds": 0.55,
+        "normalized_phase": 0.9166666666666666,
+        "locomotion_phase": 0.19983362268518512,
+        "speed_mps": 1.107152777777778,
+        "reference_forward_distance_m": 1.0075407986111111
+      },
+      {
+        "seconds": 0.5666666666666667,
+        "normalized_phase": 0.9444444444444444,
+        "locomotion_phase": 0.21661665523548246,
+        "speed_mps": 1.0923045267489715,
+        "reference_forward_distance_m": 1.0258619684499315
+      },
+      {
+        "seconds": 0.5833333333333334,
+        "normalized_phase": 0.9722222222222222,
+        "locomotion_phase": 0.23332699259830791,
+        "speed_mps": 1.0831352880658438,
+        "reference_forward_distance_m": 1.0439824995713307
+      },
+      {
+        "seconds": 0.6,
+        "normalized_phase": 1.0,
+        "locomotion_phase": 0.25,
+        "speed_mps": 1.08,
+        "reference_forward_distance_m": 1.062
+      }
+    ],
+    "Run_To_Sprint_L": [
+      {
+        "seconds": 0.0,
+        "normalized_phase": 0.0,
+        "locomotion_phase": 0.0,
+        "speed_mps": 2.46,
+        "reference_forward_distance_m": 0.0
+      },
+      {
+        "seconds": 0.016666666666666666,
+        "normalized_phase": 0.03333333333333333,
+        "locomotion_phase": 0.025009104938271607,
+        "speed_mps": 2.465671111111111,
+        "reference_forward_distance_m": 0.041031685185185185
+      },
+      {
+        "seconds": 0.03333333333333333,
+        "normalized_phase": 0.06666666666666667,
+        "locomotion_phase": 0.050071604938271605,
+        "speed_mps": 2.482168888888889,
+        "reference_forward_distance_m": 0.08224918518518519
+      },
+      {
+        "seconds": 0.05,
+        "normalized_phase": 0.1,
+        "locomotion_phase": 0.07523750000000001,
+        "speed_mps": 2.50872,
+        "reference_forward_distance_m": 0.12382649999999999
+      },
+      {
+        "seconds": 0.06666666666666667,
+        "normalized_phase": 0.13333333333333333,
+        "locomotion_phase": 0.1005530864197531,
+        "speed_mps": 2.544551111111111,
+        "reference_forward_distance_m": 0.16592474074074076
+      },
+      {
+        "seconds": 0.08333333333333333,
+        "normalized_phase": 0.16666666666666666,
+        "locomotion_phase": 0.12606095679012347,
+        "speed_mps": 2.588888888888889,
+        "reference_forward_distance_m": 0.20869212962962963
+      },
+      {
+        "seconds": 0.1,
+        "normalized_phase": 0.2,
+        "locomotion_phase": 0.15180000000000002,
+        "speed_mps": 2.64096,
+        "reference_forward_distance_m": 0.252264
+      },
+      {
+        "seconds": 0.11666666666666667,
+        "normalized_phase": 0.23333333333333334,
+        "locomotion_phase": 0.1778054012345679,
+        "speed_mps": 2.6999911111111112,
+        "reference_forward_distance_m": 0.29676279629629626
+      },
+      {
+        "seconds": 0.13333333333333333,
+        "normalized_phase": 0.26666666666666666,
+        "locomotion_phase": 0.20410864197530865,
+        "speed_mps": 2.765208888888889,
+        "reference_forward_distance_m": 0.3422980740740741
+      },
+      {
+        "seconds": 0.15,
+        "normalized_phase": 0.3,
+        "locomotion_phase": 0.23073749999999998,
+        "speed_mps": 2.83584,
+        "reference_forward_distance_m": 0.3889665
+      },
+      {
+        "seconds": 0.16666666666666666,
+        "normalized_phase": 0.3333333333333333,
+        "locomotion_phase": 0.25771604938271603,
+        "speed_mps": 2.911111111111111,
+        "reference_forward_distance_m": 0.4368518518518518
+      },
+      {
+        "seconds": 0.18333333333333332,
+        "normalized_phase": 0.36666666666666664,
+        "locomotion_phase": 0.2850646604938271,
+        "speed_mps": 2.990248888888889,
+        "reference_forward_distance_m": 0.4860250185185185
+      },
+      {
+        "seconds": 0.2,
+        "normalized_phase": 0.4,
+        "locomotion_phase": 0.3128,
+        "speed_mps": 3.07248,
+        "reference_forward_distance_m": 0.536544
+      },
+      {
+        "seconds": 0.21666666666666667,
+        "normalized_phase": 0.43333333333333335,
+        "locomotion_phase": 0.3409350308641975,
+        "speed_mps": 3.1570311111111113,
+        "reference_forward_distance_m": 0.5884539074074074
+      },
+      {
+        "seconds": 0.23333333333333334,
+        "normalized_phase": 0.4666666666666667,
+        "locomotion_phase": 0.369479012345679,
+        "speed_mps": 3.243128888888889,
+        "reference_forward_distance_m": 0.6417869629629629
+      },
+      {
+        "seconds": 0.25,
+        "normalized_phase": 0.5,
+        "locomotion_phase": 0.3984375,
+        "speed_mps": 3.33,
+        "reference_forward_distance_m": 0.6965625
+      },
+      {
+        "seconds": 0.26666666666666666,
+        "normalized_phase": 0.5333333333333333,
+        "locomotion_phase": 0.4278123456790124,
+        "speed_mps": 3.416871111111111,
+        "reference_forward_distance_m": 0.752786962962963
+      },
+      {
+        "seconds": 0.2833333333333333,
+        "normalized_phase": 0.5666666666666667,
+        "locomotion_phase": 0.45760169753086416,
+        "speed_mps": 3.502968888888889,
+        "reference_forward_distance_m": 0.8104539074074073
+      },
+      {
+        "seconds": 0.3,
+        "normalized_phase": 0.6,
+        "locomotion_phase": 0.48779999999999996,
+        "speed_mps": 3.5875200000000005,
+        "reference_forward_distance_m": 0.869544
+      },
+      {
+        "seconds": 0.31666666666666665,
+        "normalized_phase": 0.6333333333333333,
+        "locomotion_phase": 0.5183979938271605,
+        "speed_mps": 3.669751111111111,
+        "reference_forward_distance_m": 0.9300250185185184
+      },
+      {
+        "seconds": 0.3333333333333333,
+        "normalized_phase": 0.6666666666666666,
+        "locomotion_phase": 0.5493827160493827,
+        "speed_mps": 3.748888888888889,
+        "reference_forward_distance_m": 0.9918518518518518
+      },
+      {
+        "seconds": 0.35,
+        "normalized_phase": 0.7,
+        "locomotion_phase": 0.5807374999999999,
+        "speed_mps": 3.82416,
+        "reference_forward_distance_m": 1.0549665
+      },
+      {
+        "seconds": 0.36666666666666664,
+        "normalized_phase": 0.7333333333333333,
+        "locomotion_phase": 0.6124419753086419,
+        "speed_mps": 3.894791111111111,
+        "reference_forward_distance_m": 1.119298074074074
+      },
+      {
+        "seconds": 0.38333333333333336,
+        "normalized_phase": 0.7666666666666667,
+        "locomotion_phase": 0.6444720679012347,
+        "speed_mps": 3.9600088888888894,
+        "reference_forward_distance_m": 1.1847627962962965
+      },
+      {
+        "seconds": 0.4,
+        "normalized_phase": 0.8,
+        "locomotion_phase": 0.6768000000000001,
+        "speed_mps": 4.01904,
+        "reference_forward_distance_m": 1.2512640000000002
+      },
+      {
+        "seconds": 0.4166666666666667,
+        "normalized_phase": 0.8333333333333334,
+        "locomotion_phase": 0.7093942901234568,
+        "speed_mps": 4.071111111111112,
+        "reference_forward_distance_m": 1.31869212962963
+      },
+      {
+        "seconds": 0.43333333333333335,
+        "normalized_phase": 0.8666666666666667,
+        "locomotion_phase": 0.7422197530864199,
+        "speed_mps": 4.1154488888888885,
+        "reference_forward_distance_m": 1.3869247407407408
+      },
+      {
+        "seconds": 0.45,
+        "normalized_phase": 0.9,
+        "locomotion_phase": 0.7752375,
+        "speed_mps": 4.15128,
+        "reference_forward_distance_m": 1.4558265000000001
+      },
+      {
+        "seconds": 0.4666666666666667,
+        "normalized_phase": 0.9333333333333333,
+        "locomotion_phase": 0.8084049382716049,
+        "speed_mps": 4.177831111111111,
+        "reference_forward_distance_m": 1.5252491851851853
+      },
+      {
+        "seconds": 0.48333333333333334,
+        "normalized_phase": 0.9666666666666667,
+        "locomotion_phase": 0.8416757716049382,
+        "speed_mps": 4.194328888888889,
+        "reference_forward_distance_m": 1.5950316851851853
+      },
+      {
+        "seconds": 0.5,
+        "normalized_phase": 1.0,
+        "locomotion_phase": 0.875,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 1.665
+      }
+    ],
+    "Run_To_Sprint_R": [
+      {
+        "seconds": 0.0,
+        "normalized_phase": 0.0,
+        "locomotion_phase": 0.5,
+        "speed_mps": 2.46,
+        "reference_forward_distance_m": 0.0
+      },
+      {
+        "seconds": 0.016666666666666666,
+        "normalized_phase": 0.03333333333333333,
+        "locomotion_phase": 0.5250091049382716,
+        "speed_mps": 2.465671111111111,
+        "reference_forward_distance_m": 0.041031685185185185
+      },
+      {
+        "seconds": 0.03333333333333333,
+        "normalized_phase": 0.06666666666666667,
+        "locomotion_phase": 0.5500716049382716,
+        "speed_mps": 2.482168888888889,
+        "reference_forward_distance_m": 0.08224918518518519
+      },
+      {
+        "seconds": 0.05,
+        "normalized_phase": 0.1,
+        "locomotion_phase": 0.5752375000000001,
+        "speed_mps": 2.50872,
+        "reference_forward_distance_m": 0.12382649999999999
+      },
+      {
+        "seconds": 0.06666666666666667,
+        "normalized_phase": 0.13333333333333333,
+        "locomotion_phase": 0.6005530864197531,
+        "speed_mps": 2.544551111111111,
+        "reference_forward_distance_m": 0.16592474074074076
+      },
+      {
+        "seconds": 0.08333333333333333,
+        "normalized_phase": 0.16666666666666666,
+        "locomotion_phase": 0.6260609567901234,
+        "speed_mps": 2.588888888888889,
+        "reference_forward_distance_m": 0.20869212962962963
+      },
+      {
+        "seconds": 0.1,
+        "normalized_phase": 0.2,
+        "locomotion_phase": 0.6518,
+        "speed_mps": 2.64096,
+        "reference_forward_distance_m": 0.252264
+      },
+      {
+        "seconds": 0.11666666666666667,
+        "normalized_phase": 0.23333333333333334,
+        "locomotion_phase": 0.6778054012345679,
+        "speed_mps": 2.6999911111111112,
+        "reference_forward_distance_m": 0.29676279629629626
+      },
+      {
+        "seconds": 0.13333333333333333,
+        "normalized_phase": 0.26666666666666666,
+        "locomotion_phase": 0.7041086419753086,
+        "speed_mps": 2.765208888888889,
+        "reference_forward_distance_m": 0.3422980740740741
+      },
+      {
+        "seconds": 0.15,
+        "normalized_phase": 0.3,
+        "locomotion_phase": 0.7307375,
+        "speed_mps": 2.83584,
+        "reference_forward_distance_m": 0.3889665
+      },
+      {
+        "seconds": 0.16666666666666666,
+        "normalized_phase": 0.3333333333333333,
+        "locomotion_phase": 0.757716049382716,
+        "speed_mps": 2.911111111111111,
+        "reference_forward_distance_m": 0.4368518518518518
+      },
+      {
+        "seconds": 0.18333333333333332,
+        "normalized_phase": 0.36666666666666664,
+        "locomotion_phase": 0.7850646604938272,
+        "speed_mps": 2.990248888888889,
+        "reference_forward_distance_m": 0.4860250185185185
+      },
+      {
+        "seconds": 0.2,
+        "normalized_phase": 0.4,
+        "locomotion_phase": 0.8128,
+        "speed_mps": 3.07248,
+        "reference_forward_distance_m": 0.536544
+      },
+      {
+        "seconds": 0.21666666666666667,
+        "normalized_phase": 0.43333333333333335,
+        "locomotion_phase": 0.8409350308641975,
+        "speed_mps": 3.1570311111111113,
+        "reference_forward_distance_m": 0.5884539074074074
+      },
+      {
+        "seconds": 0.23333333333333334,
+        "normalized_phase": 0.4666666666666667,
+        "locomotion_phase": 0.869479012345679,
+        "speed_mps": 3.243128888888889,
+        "reference_forward_distance_m": 0.6417869629629629
+      },
+      {
+        "seconds": 0.25,
+        "normalized_phase": 0.5,
+        "locomotion_phase": 0.8984375,
+        "speed_mps": 3.33,
+        "reference_forward_distance_m": 0.6965625
+      },
+      {
+        "seconds": 0.26666666666666666,
+        "normalized_phase": 0.5333333333333333,
+        "locomotion_phase": 0.9278123456790124,
+        "speed_mps": 3.416871111111111,
+        "reference_forward_distance_m": 0.752786962962963
+      },
+      {
+        "seconds": 0.2833333333333333,
+        "normalized_phase": 0.5666666666666667,
+        "locomotion_phase": 0.9576016975308641,
+        "speed_mps": 3.502968888888889,
+        "reference_forward_distance_m": 0.8104539074074073
+      },
+      {
+        "seconds": 0.3,
+        "normalized_phase": 0.6,
+        "locomotion_phase": 0.9878,
+        "speed_mps": 3.5875200000000005,
+        "reference_forward_distance_m": 0.869544
+      },
+      {
+        "seconds": 0.31666666666666665,
+        "normalized_phase": 0.6333333333333333,
+        "locomotion_phase": 0.01839799382716034,
+        "speed_mps": 3.669751111111111,
+        "reference_forward_distance_m": 0.9300250185185184
+      },
+      {
+        "seconds": 0.3333333333333333,
+        "normalized_phase": 0.6666666666666666,
+        "locomotion_phase": 0.04938271604938271,
+        "speed_mps": 3.748888888888889,
+        "reference_forward_distance_m": 0.9918518518518518
+      },
+      {
+        "seconds": 0.35,
+        "normalized_phase": 0.7,
+        "locomotion_phase": 0.0807374999999999,
+        "speed_mps": 3.82416,
+        "reference_forward_distance_m": 1.0549665
+      },
+      {
+        "seconds": 0.36666666666666664,
+        "normalized_phase": 0.7333333333333333,
+        "locomotion_phase": 0.11244197530864186,
+        "speed_mps": 3.894791111111111,
+        "reference_forward_distance_m": 1.119298074074074
+      },
+      {
+        "seconds": 0.38333333333333336,
+        "normalized_phase": 0.7666666666666667,
+        "locomotion_phase": 0.1444720679012348,
+        "speed_mps": 3.9600088888888894,
+        "reference_forward_distance_m": 1.1847627962962965
+      },
+      {
+        "seconds": 0.4,
+        "normalized_phase": 0.8,
+        "locomotion_phase": 0.17680000000000007,
+        "speed_mps": 4.01904,
+        "reference_forward_distance_m": 1.2512640000000002
+      },
+      {
+        "seconds": 0.4166666666666667,
+        "normalized_phase": 0.8333333333333334,
+        "locomotion_phase": 0.2093942901234569,
+        "speed_mps": 4.071111111111112,
+        "reference_forward_distance_m": 1.31869212962963
+      },
+      {
+        "seconds": 0.43333333333333335,
+        "normalized_phase": 0.8666666666666667,
+        "locomotion_phase": 0.24221975308641985,
+        "speed_mps": 4.1154488888888885,
+        "reference_forward_distance_m": 1.3869247407407408
+      },
+      {
+        "seconds": 0.45,
+        "normalized_phase": 0.9,
+        "locomotion_phase": 0.2752375,
+        "speed_mps": 4.15128,
+        "reference_forward_distance_m": 1.4558265000000001
+      },
+      {
+        "seconds": 0.4666666666666667,
+        "normalized_phase": 0.9333333333333333,
+        "locomotion_phase": 0.30840493827160476,
+        "speed_mps": 4.177831111111111,
+        "reference_forward_distance_m": 1.5252491851851853
+      },
+      {
+        "seconds": 0.48333333333333334,
+        "normalized_phase": 0.9666666666666667,
+        "locomotion_phase": 0.3416757716049381,
+        "speed_mps": 4.194328888888889,
+        "reference_forward_distance_m": 1.5950316851851853
+      },
+      {
+        "seconds": 0.5,
+        "normalized_phase": 1.0,
+        "locomotion_phase": 0.375,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 1.665
+      }
+    ],
+    "Sprint_To_Run_L": [
+      {
+        "seconds": 0.0,
+        "normalized_phase": 0.0,
+        "locomotion_phase": 0.0,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 0.0
+      },
+      {
+        "seconds": 0.016666666666666666,
+        "normalized_phase": 0.027777777777777776,
+        "locomotion_phase": 0.03332699259830818,
+        "speed_mps": 4.196046810699588,
+        "reference_forward_distance_m": 0.06997793424211247
+      },
+      {
+        "seconds": 0.03333333333333333,
+        "normalized_phase": 0.05555555555555555,
+        "locomotion_phase": 0.0666166552354824,
+        "speed_mps": 4.184485596707819,
+        "reference_forward_distance_m": 0.13982596021947874
+      },
+      {
+        "seconds": 0.05,
+        "normalized_phase": 0.08333333333333333,
+        "locomotion_phase": 0.09983362268518518,
+        "speed_mps": 4.165763888888889,
+        "reference_forward_distance_m": 0.20942100694444443
+      },
+      {
+        "seconds": 0.06666666666666667,
+        "normalized_phase": 0.1111111111111111,
+        "locomotion_phase": 0.13294467306812985,
+        "speed_mps": 4.140329218106996,
+        "reference_forward_distance_m": 0.2786474622770919
+      },
+      {
+        "seconds": 0.08333333333333333,
+        "normalized_phase": 0.1388888888888889,
+        "locomotion_phase": 0.16591872785208048,
+        "speed_mps": 4.1086291152263374,
+        "reference_forward_distance_m": 0.3473971729252401
+      },
+      {
+        "seconds": 0.1,
+        "normalized_phase": 0.16666666666666666,
+        "locomotion_phase": 0.19872685185185182,
+        "speed_mps": 4.071111111111112,
+        "reference_forward_distance_m": 0.41556944444444444
+      },
+      {
+        "seconds": 0.11666666666666667,
+        "normalized_phase": 0.19444444444444445,
+        "locomotion_phase": 0.23134225322930957,
+        "speed_mps": 4.028222736625515,
+        "reference_forward_distance_m": 0.48307104123799727
+      },
+      {
+        "seconds": 0.13333333333333333,
+        "normalized_phase": 0.2222222222222222,
+        "locomotion_phase": 0.2637402834933699,
+        "speed_mps": 3.980411522633745,
+        "reference_forward_distance_m": 0.5498161865569272
+      },
+      {
+        "seconds": 0.15,
+        "normalized_phase": 0.25,
+        "locomotion_phase": 0.2958984375,
+        "speed_mps": 3.928125,
+        "reference_forward_distance_m": 0.6157265625
+      },
+      {
+        "seconds": 0.16666666666666666,
+        "normalized_phase": 0.2777777777777778,
+        "locomotion_phase": 0.32779635345221764,
+        "speed_mps": 3.8718106995884773,
+        "reference_forward_distance_m": 0.6807313100137174
+      },
+      {
+        "seconds": 0.18333333333333332,
+        "normalized_phase": 0.3055555555555556,
+        "locomotion_phase": 0.35941581290009145,
+        "speed_mps": 3.8119161522633744,
+        "reference_forward_distance_m": 0.7447670288923184
+      },
+      {
+        "seconds": 0.2,
+        "normalized_phase": 0.3333333333333333,
+        "locomotion_phase": 0.3907407407407407,
+        "speed_mps": 3.748888888888889,
+        "reference_forward_distance_m": 0.8077777777777776
+      },
+      {
+        "seconds": 0.21666666666666667,
+        "normalized_phase": 0.3611111111111111,
+        "locomotion_phase": 0.4217572052183356,
+        "speed_mps": 3.683176440329218,
+        "reference_forward_distance_m": 0.8697150741598079
+      },
+      {
+        "seconds": 0.23333333333333334,
+        "normalized_phase": 0.3888888888888889,
+        "locomotion_phase": 0.45245341792409693,
+        "speed_mps": 3.6152263374485596,
+        "reference_forward_distance_m": 0.9305378943758574
+      },
+      {
+        "seconds": 0.25,
+        "normalized_phase": 0.4166666666666667,
+        "locomotion_phase": 0.4828197337962963,
+        "speed_mps": 3.545486111111111,
+        "reference_forward_distance_m": 0.9902126736111111
+      },
+      {
+        "seconds": 0.26666666666666666,
+        "normalized_phase": 0.4444444444444444,
+        "locomotion_phase": 0.512848651120256,
+        "speed_mps": 3.47440329218107,
+        "reference_forward_distance_m": 1.0487133058984912
+      },
+      {
+        "seconds": 0.2833333333333333,
+        "normalized_phase": 0.4722222222222222,
+        "locomotion_phase": 0.5425348115283494,
+        "speed_mps": 3.402425411522634,
+        "reference_forward_distance_m": 1.1060211441186558
+      },
+      {
+        "seconds": 0.3,
+        "normalized_phase": 0.5,
+        "locomotion_phase": 0.571875,
+        "speed_mps": 3.33,
+        "reference_forward_distance_m": 1.162125
+      },
+      {
+        "seconds": 0.31666666666666665,
+        "normalized_phase": 0.5277777777777778,
+        "locomotion_phase": 0.6008681448616827,
+        "speed_mps": 3.2575745884773664,
+        "reference_forward_distance_m": 1.2170211441186556
+      },
+      {
+        "seconds": 0.3333333333333333,
+        "normalized_phase": 0.5555555555555556,
+        "locomotion_phase": 0.6295153177869227,
+        "speed_mps": 3.18559670781893,
+        "reference_forward_distance_m": 1.270713305898491
+      },
+      {
+        "seconds": 0.35,
+        "normalized_phase": 0.5833333333333334,
+        "locomotion_phase": 0.6578197337962962,
+        "speed_mps": 3.114513888888889,
+        "reference_forward_distance_m": 1.3232126736111112
+      },
+      {
+        "seconds": 0.36666666666666664,
+        "normalized_phase": 0.6111111111111112,
+        "locomotion_phase": 0.6857867512574303,
+        "speed_mps": 3.0447736625514406,
+        "reference_forward_distance_m": 1.3745378943758573
+      },
+      {
+        "seconds": 0.38333333333333336,
+        "normalized_phase": 0.6388888888888888,
+        "locomotion_phase": 0.7134238718850022,
+        "speed_mps": 2.976823559670782,
+        "reference_forward_distance_m": 1.4247150741598078
+      },
+      {
+        "seconds": 0.4,
+        "normalized_phase": 0.6666666666666666,
+        "locomotion_phase": 0.7407407407407407,
+        "speed_mps": 2.911111111111111,
+        "reference_forward_distance_m": 1.4737777777777776
+      },
+      {
+        "seconds": 0.4166666666666667,
+        "normalized_phase": 0.6944444444444444,
+        "locomotion_phase": 0.7677491462334248,
+        "speed_mps": 2.8480838477366257,
+        "reference_forward_distance_m": 1.521767028892318
+      },
+      {
+        "seconds": 0.43333333333333335,
+        "normalized_phase": 0.7222222222222222,
+        "locomotion_phase": 0.7944630201188844,
+        "speed_mps": 2.7881893004115224,
+        "reference_forward_distance_m": 1.5687313100137172
+      },
+      {
+        "seconds": 0.45,
+        "normalized_phase": 0.75,
+        "locomotion_phase": 0.8208984375,
+        "speed_mps": 2.731875,
+        "reference_forward_distance_m": 1.6147265625
+      },
+      {
+        "seconds": 0.4666666666666667,
+        "normalized_phase": 0.7777777777777778,
+        "locomotion_phase": 0.8470736168267032,
+        "speed_mps": 2.6795884773662553,
+        "reference_forward_distance_m": 1.6598161865569276
+      },
+      {
+        "seconds": 0.48333333333333334,
+        "normalized_phase": 0.8055555555555556,
+        "locomotion_phase": 0.8730089198959763,
+        "speed_mps": 2.6317772633744854,
+        "reference_forward_distance_m": 1.7040710412379976
+      },
+      {
+        "seconds": 0.5,
+        "normalized_phase": 0.8333333333333334,
+        "locomotion_phase": 0.8987268518518519,
+        "speed_mps": 2.588888888888889,
+        "reference_forward_distance_m": 1.7475694444444445
+      },
+      {
+        "seconds": 0.5166666666666667,
+        "normalized_phase": 0.8611111111111112,
+        "locomotion_phase": 0.9242520611854138,
+        "speed_mps": 2.5513708847736627,
+        "reference_forward_distance_m": 1.7903971729252401
+      },
+      {
+        "seconds": 0.5333333333333333,
+        "normalized_phase": 0.8888888888888888,
+        "locomotion_phase": 0.9496113397347965,
+        "speed_mps": 2.5196707818930038,
+        "reference_forward_distance_m": 1.8326474622770919
+      },
+      {
+        "seconds": 0.55,
+        "normalized_phase": 0.9166666666666666,
+        "locomotion_phase": 0.974833622685185,
+        "speed_mps": 2.4942361111111113,
+        "reference_forward_distance_m": 1.8744210069444445
+      },
+      {
+        "seconds": 0.5666666666666667,
+        "normalized_phase": 0.9444444444444444,
+        "locomotion_phase": 0.9999499885688157,
+        "speed_mps": 2.4755144032921814,
+        "reference_forward_distance_m": 1.915825960219479
+      },
+      {
+        "seconds": 0.5833333333333334,
+        "normalized_phase": 0.9722222222222222,
+        "locomotion_phase": 0.024993659264974655,
+        "speed_mps": 2.463953189300412,
+        "reference_forward_distance_m": 1.956977934242112
+      },
+      {
+        "seconds": 0.6,
+        "normalized_phase": 1.0,
+        "locomotion_phase": 0.050000000000000044,
+        "speed_mps": 2.46,
+        "reference_forward_distance_m": 1.998
+      }
+    ],
+    "Sprint_To_Run_R": [
+      {
+        "seconds": 0.0,
+        "normalized_phase": 0.0,
+        "locomotion_phase": 0.5,
+        "speed_mps": 4.2,
+        "reference_forward_distance_m": 0.0
+      },
+      {
+        "seconds": 0.016666666666666666,
+        "normalized_phase": 0.027777777777777776,
+        "locomotion_phase": 0.5333269925983082,
+        "speed_mps": 4.196046810699588,
+        "reference_forward_distance_m": 0.06997793424211247
+      },
+      {
+        "seconds": 0.03333333333333333,
+        "normalized_phase": 0.05555555555555555,
+        "locomotion_phase": 0.5666166552354824,
+        "speed_mps": 4.184485596707819,
+        "reference_forward_distance_m": 0.13982596021947874
+      },
+      {
+        "seconds": 0.05,
+        "normalized_phase": 0.08333333333333333,
+        "locomotion_phase": 0.5998336226851851,
+        "speed_mps": 4.165763888888889,
+        "reference_forward_distance_m": 0.20942100694444443
+      },
+      {
+        "seconds": 0.06666666666666667,
+        "normalized_phase": 0.1111111111111111,
+        "locomotion_phase": 0.6329446730681298,
+        "speed_mps": 4.140329218106996,
+        "reference_forward_distance_m": 0.2786474622770919
+      },
+      {
+        "seconds": 0.08333333333333333,
+        "normalized_phase": 0.1388888888888889,
+        "locomotion_phase": 0.6659187278520805,
+        "speed_mps": 4.1086291152263374,
+        "reference_forward_distance_m": 0.3473971729252401
+      },
+      {
+        "seconds": 0.1,
+        "normalized_phase": 0.16666666666666666,
+        "locomotion_phase": 0.6987268518518518,
+        "speed_mps": 4.071111111111112,
+        "reference_forward_distance_m": 0.41556944444444444
+      },
+      {
+        "seconds": 0.11666666666666667,
+        "normalized_phase": 0.19444444444444445,
+        "locomotion_phase": 0.7313422532293096,
+        "speed_mps": 4.028222736625515,
+        "reference_forward_distance_m": 0.48307104123799727
+      },
+      {
+        "seconds": 0.13333333333333333,
+        "normalized_phase": 0.2222222222222222,
+        "locomotion_phase": 0.76374028349337,
+        "speed_mps": 3.980411522633745,
+        "reference_forward_distance_m": 0.5498161865569272
+      },
+      {
+        "seconds": 0.15,
+        "normalized_phase": 0.25,
+        "locomotion_phase": 0.7958984375,
+        "speed_mps": 3.928125,
+        "reference_forward_distance_m": 0.6157265625
+      },
+      {
+        "seconds": 0.16666666666666666,
+        "normalized_phase": 0.2777777777777778,
+        "locomotion_phase": 0.8277963534522177,
+        "speed_mps": 3.8718106995884773,
+        "reference_forward_distance_m": 0.6807313100137174
+      },
+      {
+        "seconds": 0.18333333333333332,
+        "normalized_phase": 0.3055555555555556,
+        "locomotion_phase": 0.8594158129000915,
+        "speed_mps": 3.8119161522633744,
+        "reference_forward_distance_m": 0.7447670288923184
+      },
+      {
+        "seconds": 0.2,
+        "normalized_phase": 0.3333333333333333,
+        "locomotion_phase": 0.8907407407407407,
+        "speed_mps": 3.748888888888889,
+        "reference_forward_distance_m": 0.8077777777777776
+      },
+      {
+        "seconds": 0.21666666666666667,
+        "normalized_phase": 0.3611111111111111,
+        "locomotion_phase": 0.9217572052183356,
+        "speed_mps": 3.683176440329218,
+        "reference_forward_distance_m": 0.8697150741598079
+      },
+      {
+        "seconds": 0.23333333333333334,
+        "normalized_phase": 0.3888888888888889,
+        "locomotion_phase": 0.9524534179240969,
+        "speed_mps": 3.6152263374485596,
+        "reference_forward_distance_m": 0.9305378943758574
+      },
+      {
+        "seconds": 0.25,
+        "normalized_phase": 0.4166666666666667,
+        "locomotion_phase": 0.9828197337962963,
+        "speed_mps": 3.545486111111111,
+        "reference_forward_distance_m": 0.9902126736111111
+      },
+      {
+        "seconds": 0.26666666666666666,
+        "normalized_phase": 0.4444444444444444,
+        "locomotion_phase": 0.012848651120255905,
+        "speed_mps": 3.47440329218107,
+        "reference_forward_distance_m": 1.0487133058984912
+      },
+      {
+        "seconds": 0.2833333333333333,
+        "normalized_phase": 0.4722222222222222,
+        "locomotion_phase": 0.04253481152834926,
+        "speed_mps": 3.402425411522634,
+        "reference_forward_distance_m": 1.1060211441186558
+      },
+      {
+        "seconds": 0.3,
+        "normalized_phase": 0.5,
+        "locomotion_phase": 0.07187499999999991,
+        "speed_mps": 3.33,
+        "reference_forward_distance_m": 1.162125
+      },
+      {
+        "seconds": 0.31666666666666665,
+        "normalized_phase": 0.5277777777777778,
+        "locomotion_phase": 0.10086814486168283,
+        "speed_mps": 3.2575745884773664,
+        "reference_forward_distance_m": 1.2170211441186556
+      },
+      {
+        "seconds": 0.3333333333333333,
+        "normalized_phase": 0.5555555555555556,
+        "locomotion_phase": 0.1295153177869226,
+        "speed_mps": 3.18559670781893,
+        "reference_forward_distance_m": 1.270713305898491
+      },
+      {
+        "seconds": 0.35,
+        "normalized_phase": 0.5833333333333334,
+        "locomotion_phase": 0.1578197337962961,
+        "speed_mps": 3.114513888888889,
+        "reference_forward_distance_m": 1.3232126736111112
+      },
+      {
+        "seconds": 0.36666666666666664,
+        "normalized_phase": 0.6111111111111112,
+        "locomotion_phase": 0.18578675125743027,
+        "speed_mps": 3.0447736625514406,
+        "reference_forward_distance_m": 1.3745378943758573
+      },
+      {
+        "seconds": 0.38333333333333336,
+        "normalized_phase": 0.6388888888888888,
+        "locomotion_phase": 0.21342387188500211,
+        "speed_mps": 2.976823559670782,
+        "reference_forward_distance_m": 1.4247150741598078
+      },
+      {
+        "seconds": 0.4,
+        "normalized_phase": 0.6666666666666666,
+        "locomotion_phase": 0.2407407407407407,
+        "speed_mps": 2.911111111111111,
+        "reference_forward_distance_m": 1.4737777777777776
+      },
+      {
+        "seconds": 0.4166666666666667,
+        "normalized_phase": 0.6944444444444444,
+        "locomotion_phase": 0.2677491462334247,
+        "speed_mps": 2.8480838477366257,
+        "reference_forward_distance_m": 1.521767028892318
+      },
+      {
+        "seconds": 0.43333333333333335,
+        "normalized_phase": 0.7222222222222222,
+        "locomotion_phase": 0.29446302011888426,
+        "speed_mps": 2.7881893004115224,
+        "reference_forward_distance_m": 1.5687313100137172
+      },
+      {
+        "seconds": 0.45,
+        "normalized_phase": 0.75,
+        "locomotion_phase": 0.3208984374999999,
+        "speed_mps": 2.731875,
+        "reference_forward_distance_m": 1.6147265625
+      },
+      {
+        "seconds": 0.4666666666666667,
+        "normalized_phase": 0.7777777777777778,
+        "locomotion_phase": 0.34707361682670324,
+        "speed_mps": 2.6795884773662553,
+        "reference_forward_distance_m": 1.6598161865569276
+      },
+      {
+        "seconds": 0.48333333333333334,
+        "normalized_phase": 0.8055555555555556,
+        "locomotion_phase": 0.3730089198959763,
+        "speed_mps": 2.6317772633744854,
+        "reference_forward_distance_m": 1.7040710412379976
+      },
+      {
+        "seconds": 0.5,
+        "normalized_phase": 0.8333333333333334,
+        "locomotion_phase": 0.39872685185185186,
+        "speed_mps": 2.588888888888889,
+        "reference_forward_distance_m": 1.7475694444444445
+      },
+      {
+        "seconds": 0.5166666666666667,
+        "normalized_phase": 0.8611111111111112,
+        "locomotion_phase": 0.4242520611854137,
+        "speed_mps": 2.5513708847736627,
+        "reference_forward_distance_m": 1.7903971729252401
+      },
+      {
+        "seconds": 0.5333333333333333,
+        "normalized_phase": 0.8888888888888888,
+        "locomotion_phase": 0.4496113397347965,
+        "speed_mps": 2.5196707818930038,
+        "reference_forward_distance_m": 1.8326474622770919
+      },
+      {
+        "seconds": 0.55,
+        "normalized_phase": 0.9166666666666666,
+        "locomotion_phase": 0.47483362268518503,
+        "speed_mps": 2.4942361111111113,
+        "reference_forward_distance_m": 1.8744210069444445
+      },
+      {
+        "seconds": 0.5666666666666667,
+        "normalized_phase": 0.9444444444444444,
+        "locomotion_phase": 0.4999499885688157,
+        "speed_mps": 2.4755144032921814,
+        "reference_forward_distance_m": 1.915825960219479
+      },
+      {
+        "seconds": 0.5833333333333334,
+        "normalized_phase": 0.9722222222222222,
+        "locomotion_phase": 0.5249936592649747,
+        "speed_mps": 2.463953189300412,
+        "reference_forward_distance_m": 1.956977934242112
+      },
+      {
+        "seconds": 0.6,
+        "normalized_phase": 1.0,
+        "locomotion_phase": 0.55,
+        "speed_mps": 2.46,
+        "reference_forward_distance_m": 1.998
+      }
+    ]
+  }
+}

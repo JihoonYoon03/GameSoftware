@@ -368,5 +368,32 @@
     "keep_locomotion_phase": true,
     "aim_crossfade_seconds": 0.15,
     "ammo_changes_from_events": false
+  },
+  "acceleration": {
+    "contract": "acceleration_blending.json",
+    "new_clips": [
+      "Sprint",
+      "Walk_Start_L",
+      "Walk_Start_R",
+      "Walk_Stop_L",
+      "Walk_Stop_R",
+      "Run_Start_L",
+      "Run_Start_R",
+      "Run_Stop_L",
+      "Run_Stop_R",
+      "Sprint_Start_L",
+      "Sprint_Start_R",
+      "Sprint_Stop_L",
+      "Sprint_Stop_R",
+      "Run_To_Walk_L",
+      "Run_To_Walk_R",
+      "Run_To_Sprint_L",
+      "Run_To_Sprint_R",
+      "Sprint_To_Run_L",
+      "Sprint_To_Run_R"
+    ],
+    "preserve_existing_walk_to_run": true,
+    "preserve_existing_aim_2d": true,
+    "preserve_phase_on_handoff": true
   }
 }

@@ -7,8 +7,8 @@
   "humanoid_skeleton": "HUMAN_7H",
   "bones": 23,
   "original_clips_preserved": 15,
-  "humanoid_clips": 63,
-  "human_new_clips": 48,
+  "humanoid_clips": 82,
+  "human_new_clips": 67,
   "vehicle_new_actions": 21,
   "human_forward": "-Y",
   "human_left": "+X",
@@ -324,5 +324,10 @@
     "contract": "pistol_layer_contract.json",
     "new_clips": 4,
     "existing_59_preserved": true
+  },
+  "acceleration": {
+    "contract": "acceleration_blending.json",
+    "new_clips": 19,
+    "previous_63_preserved": true
   }
 }

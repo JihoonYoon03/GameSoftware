@@ -20,6 +20,14 @@
 
 [비행체·도시·도로·야외 프롭 안내](Documentation/AIR_CITY_ko.md) · [비행체 조합](Documentation/aircraft_assemblies.json) · [배경 조합](Documentation/scenery_assemblies.json)
 
+## 가감속·스프린트 추가 - 2026-10-29
+
+기존 인체 63클립과 23본·메시·스킨·장비를 보존하고 **가감속 19클립을 추가해 총 82개**입니다. 걷기/달리기/스프린트 출발·정지는 좌우 발 선택지가 있고, 달리기에서 걷기로 감속 및 달리기와 스프린트 사이의 전환을 제공합니다. 스프린트 기준 속도는 4.2m/s입니다. 기존 캐릭터 GLB 10개와 Blender 원본 두 파일에 반영했습니다. 게임 코드와 Runtime 캐시는 변경하지 않았습니다.
+
+[제작·연결 안내](Documentation/ACCELERATION_ko.md) · [속도·위상 계약](Documentation/acceleration_blending.json) · [출발](Preview/Acceleration/Run_Start_L.gif) · [제동](Preview/Acceleration/Run_Stop_L.gif) · [스프린트](Preview/Acceleration/Sprint.gif)
+
+![가감속 검토](Preview/Acceleration/delivery_overview.jpg)
+
 ## 권총 운반·재장전 추가 ? 2026-10-28
 
 최신 애니메이션 요청서의 `Pistol_Carry_Idle`, `Pistol_Carry_Walk`, `Pistol_Carry_Run`, `Reload_Pistol`을 기존 캐릭터 GLB 10개와 Blender 원본에 추가했습니다. 기존 59클립·메시·23본·바인드는 보존했습니다. 믹사모 동작 미리보기를 기본 레퍼런스로 삼는 원칙을 작업 지침에 기록했습니다. 상체 마스크와 위상·재장전 이벤트는 아래 안내를 따릅니다. 게임 Runtime 연결은 별도입니다.

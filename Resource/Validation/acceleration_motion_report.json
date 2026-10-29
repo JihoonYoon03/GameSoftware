@@ -1,0 +1,227 @@
+{
+  "clips": {
+    "Walk_Start_L": {
+      "min_fitted_skin_z_m": 0.0009356260816637554,
+      "max_root_error": 0,
+      "max_120hz_joint_step_radians": 0.05144040659070015,
+      "loop_error": null,
+      "endpoint_errors": {
+        "entry": 1.7881393432617188e-07,
+        "exit": 1.7881393432617188e-07
+      },
+      "max_joint_translation_movement_m": 0.32167317443371307
+    },
+    "Walk_Start_R": {
+      "min_fitted_skin_z_m": 0.0009301080626999327,
+      "max_root_error": 0,
+      "max_120hz_joint_step_radians": 0.051445040851831436,
+      "loop_error": null,
+      "endpoint_errors": {
+        "entry": 1.7881393432617188e-07,
+        "exit": 1.9371509552001953e-07
+      },
+      "max_joint_translation_movement_m": 0.32167339433956965
+    },
+    "Walk_Stop_L": {
+      "min_fitted_skin_z_m": 0.0009161063525468987,
+      "max_root_error": 0,
+      "max_120hz_joint_step_radians": 0.0516485758125782,
+      "loop_error": null,
+      "endpoint_errors": {
+        "entry": 1.7881393432617188e-07,
+        "exit": 1.7881393432617188e-07
+      },
+      "max_joint_translation_movement_m": 0.3407584798156763
+    },
+    "Walk_Stop_R": {
+      "min_fitted_skin_z_m": 0.0009161175314742296,
+      "max_root_error": 0,
+      "max_120hz_joint_step_radians": 0.0516485758125782,
+      "loop_error": null,
+      "endpoint_errors": {
+        "entry": 1.9371509552001953e-07,
+        "exit": 1.7881393432617188e-07
+      },
+      "max_joint_translation_movement_m": 0.34068019111073805
+    },
+    "Run_Start_L": {
+      "min_fitted_skin_z_m": 0.0006921037324782858,
+      "max_root_error": 0,
+      "max_120hz_joint_step_radians": 0.06985337287187576,
+      "loop_error": null,
+      "endpoint_errors": {
+        "entry": 1.7881393432617188e-07,
+        "exit": 2.086162567138672e-07
+      },
+      "max_joint_translation_movement_m": 0.45918143566258895
+    },
+    "Run_Start_R": {
+      "min_fitted_skin_z_m": 0.0006919779394648704,
+      "max_root_error": 0,
+      "max_120hz_joint_step_radians": 0.06984996050596237,
+      "loop_error": null,
+      "endpoint_errors": {
+        "entry": 1.7881393432617188e-07,
+        "exit": 1.7881393432617188e-07
+      },
+      "max_joint_translation_movement_m": 0.3712189262483495
+    },
+    "Run_Stop_L": {
+      "min_fitted_skin_z_m": 0.0006665686714569753,
+      "max_root_error": 0,
+      "max_120hz_joint_step_radians": 0.07494243234395981,
+      "loop_error": null,
+      "endpoint_errors": {
+        "entry": 2.086162567138672e-07,
+        "exit": 1.7881393432617188e-07
+      },
+      "max_joint_translation_movement_m": 0.6155846114726892
+    },
+    "Run_Stop_R": {
+      "min_fitted_skin_z_m": 0.0006664345889457043,
+      "max_root_error": 0,
+      "max_120hz_joint_step_radians": 0.07493925094604492,
+      "loop_error": null,
+      "endpoint_errors": {
+        "entry": 1.7881393432617188e-07,
+        "exit": 1.7881393432617188e-07
+      },
+      "max_joint_translation_movement_m": 0.6155652462594208
+    },
+    "Sprint_Start_L": {
+      "min_fitted_skin_z_m": 0.00027045191708062466,
+      "max_root_error": 0,
+      "max_120hz_joint_step_radians": 0.10815837979316711,
+      "loop_error": null,
+      "endpoint_errors": {
+        "entry": 1.7881393432617188e-07,
+        "exit": 3.203749656677246e-07
+      },
+      "max_joint_translation_movement_m": 0.4784011694206477
+    },
+    "Sprint_Start_R": {
+      "min_fitted_skin_z_m": 0.0002703684016016547,
+      "max_root_error": 0,
+      "max_120hz_joint_step_radians": 0.10815837979316711,
+      "loop_error": null,
+      "endpoint_errors": {
+        "entry": 1.7881393432617188e-07,
+        "exit": 2.980232238769531e-07
+      },
+      "max_joint_translation_movement_m": 0.5157769513926115
+    },
+    "Sprint_Stop_L": {
+      "min_fitted_skin_z_m": -0.0003372527737956661,
+      "max_root_error": 0,
+      "max_120hz_joint_step_radians": 0.1233934685587883,
+      "loop_error": null,
+      "endpoint_errors": {
+        "entry": 3.203749656677246e-07,
+        "exit": 1.7881393432617188e-07
+      },
+      "max_joint_translation_movement_m": 0.7284960271397083
+    },
+    "Sprint_Stop_R": {
+      "min_fitted_skin_z_m": -0.0003372750871212865,
+      "max_root_error": 0,
+      "max_120hz_joint_step_radians": 0.1233953982591629,
+      "loop_error": null,
+      "endpoint_errors": {
+        "entry": 2.980232238769531e-07,
+        "exit": 1.7881393432617188e-07
+      },
+      "max_joint_translation_movement_m": 0.7284958429953422
+    },
+    "Run_To_Walk_L": {
+      "min_fitted_skin_z_m": 0.0006891330254309371,
+      "max_root_error": 0,
+      "max_120hz_joint_step_radians": 0.07277921587228775,
+      "loop_error": null,
+      "endpoint_errors": {
+        "entry": 2.086162567138672e-07,
+        "exit": 1.7881393432617188e-07
+      },
+      "max_joint_translation_movement_m": 0.6938701721622528
+    },
+    "Run_To_Walk_R": {
+      "min_fitted_skin_z_m": 0.0006890877920393947,
+      "max_root_error": 0,
+      "max_120hz_joint_step_radians": 0.07277921587228775,
+      "loop_error": null,
+      "endpoint_errors": {
+        "entry": 1.7881393432617188e-07,
+        "exit": 2.980232238769531e-07
+      },
+      "max_joint_translation_movement_m": 0.6939727077827904
+    },
+    "Run_To_Sprint_L": {
+      "min_fitted_skin_z_m": 6.622606402452956e-06,
+      "max_root_error": 0,
+      "max_120hz_joint_step_radians": 0.12331224232912064,
+      "loop_error": null,
+      "endpoint_errors": {
+        "entry": 2.086162567138672e-07,
+        "exit": 2.384185791015625e-07
+      },
+      "max_joint_translation_movement_m": 0.7418354451386668
+    },
+    "Run_To_Sprint_R": {
+      "min_fitted_skin_z_m": 6.645580384361232e-06,
+      "max_root_error": 0,
+      "max_120hz_joint_step_radians": 0.12331224232912064,
+      "loop_error": null,
+      "endpoint_errors": {
+        "entry": 1.7881393432617188e-07,
+        "exit": 4.172325134277344e-07
+      },
+      "max_joint_translation_movement_m": 0.7418905406249999
+    },
+    "Sprint_To_Run_L": {
+      "min_fitted_skin_z_m": -0.00033493077829495344,
+      "max_root_error": 0,
+      "max_120hz_joint_step_radians": 0.12217521667480469,
+      "loop_error": null,
+      "endpoint_errors": {
+        "entry": 3.203749656677246e-07,
+        "exit": 2.980232238769531e-07
+      },
+      "max_joint_translation_movement_m": 0.7529636022554815
+    },
+    "Sprint_To_Run_R": {
+      "min_fitted_skin_z_m": -0.00033494731858367544,
+      "max_root_error": 0,
+      "max_120hz_joint_step_radians": 0.12125793099403381,
+      "loop_error": null,
+      "endpoint_errors": {
+        "entry": 2.980232238769531e-07,
+        "exit": 2.682209014892578e-07
+      },
+      "max_joint_translation_movement_m": 0.7529632713885058
+    },
+    "Sprint": {
+      "min_fitted_skin_z_m": -0.0003383626176795334,
+      "max_root_error": 0,
+      "max_120hz_joint_step_radians": 0.12818624079227448,
+      "loop_error": 0.0,
+      "endpoint_errors": {},
+      "max_joint_translation_movement_m": 0.7661046312717932
+    }
+  },
+  "all_checks_passed": true,
+  "sprint_support": {
+    "heel": {
+      "phase_range": [
+        0.09,
+        0.18
+      ],
+      "compensated_horizontal_drift_m": 0.0006266899281832904
+    },
+    "toe": {
+      "phase_range": [
+        0.24,
+        0.31
+      ],
+      "compensated_horizontal_drift_m": 0.0005931127294628931
+    }
+  }
+}
