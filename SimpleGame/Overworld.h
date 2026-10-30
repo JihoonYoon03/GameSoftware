@@ -13,6 +13,7 @@ struct CityInfo
     Vector2 center;
     const char *mood;
     const char *rumor;
+    world::SettlementTier tier = world::SettlementTier::District;
 };
 
 // ============================================================================
@@ -248,6 +249,7 @@ class Overworld
     static constexpr float kBikeReverseSpeed = .65f;
     static constexpr Vector2 kMineEntrance = {128, 18};
     static const std::array<CityInfo, kCityCount> &Cities();
+    static const std::vector<world::StoryAnchor> &StoryAnchors();
     static int CityAt(Vector2 position);
     static bool IsRoad(int x, int y);
     static TrafficSystem &Traffic();

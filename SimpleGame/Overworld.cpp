@@ -1776,6 +1776,21 @@ const std::array<CityInfo, Overworld::kCityCount> &Overworld::Cities()
     return cities;
 }
 
+const std::vector<world::StoryAnchor> &Overworld::StoryAnchors()
+{
+    static const std::vector<world::StoryAnchor> anchors = [] {
+        const auto &adapter = world::LegacyWorldAdapter::ErmaExterior();
+        auto anchor = [&](const char *id, const char *region, Vector2 p) {
+            return adapter.Anchor(id, region, {double(p.x), double(p.y), 0});
+        };
+        return std::vector<world::StoryAnchor>{anchor("home_entrance", "halo_07", kHomeDoor),
+                                               anchor("ria_home", "halo_07", kLiaPosition),
+                                               anchor("observatory", "halo_07", kObservatoryBuildingPosition),
+                                               anchor("city_receiver", "halo_07", kCityReceiverPosition),
+                                               anchor("mine_entrance", "mq00_mine", kMineEntrance)};
+    }();
+    return anchors;
+}
 int Overworld::CityAt(Vector2 position)
 {
     for (int i = 0; i < kCityCount; ++i)

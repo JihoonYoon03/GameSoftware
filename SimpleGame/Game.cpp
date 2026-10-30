@@ -883,6 +883,20 @@ void Game::MouseButton(int button, int buttonState, int x, int y)
                             (game::GameLevels::IsCombatActive() || CivicCombat::Available());
     }
 }
+std::optional<world::WorldLocation> Game::PlanetLocation() const
+{
+    static_assert(world::WorldCatalog::MetersPerLegacyUnit == models::WorldScale::metersPerUnit,
+                  "Planet adapter and model units must agree");
+    if (state.isInsideHome || state.isInObservatory || game::GameLevels::Active())
+    {
+        return std::nullopt;
+    }
+    int city = Overworld::CityAt(state.playerPosition);
+    const char *region = city >= 0 ? Overworld::Cities()[size_t(city)].id : "overworld";
+    return world::LegacyWorldAdapter::ErmaExterior().Locate(
+        region, {double(state.playerPosition.x), double(state.playerPosition.y),
+                 state.isBikeMounted ? double(state.bikeElevation) : 0});
+}
 bool Game::IsAiming() const
 {
     return state.mouseAiming && !state.isBikeMounted && !state.isPaused && !state.mapVisible &&

@@ -2,6 +2,7 @@
 #include "ModelLibrary.h"
 #include "Weapon.h"
 #include "Animation.h"
+#include "World.h"
 #include <string>
 #include <functional>
 #include <map>
@@ -433,6 +434,8 @@ class Game
     Game &operator=(const Game &) = delete;
     static Game &Get();
     GameState &GetState();
+    // CQ-01A bridge only: interior/instance maps have no migrated planet location yet.
+    std::optional<world::WorldLocation> PlanetLocation() const;
     void Reset();
     bool EnterTestStage(TestStage stage);
     static const char *StageName(TestStage stage);
