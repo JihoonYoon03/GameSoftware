@@ -437,6 +437,24 @@ SurfacePoint CubeSphere::Corner(const ChunkKey &key, unsigned right, unsigned up
                                              2 * (double(key.y) + up) / cells - 1)),
             0};
 }
+SurfacePoint CubeSphere::Point(const ChunkKey &key, double right, double up)
+{
+    key.Validate();
+    Require(std::isfinite(right) && std::isfinite(up) && right >= 0 && right <= 1 && up >= 0 && up <= 1,
+            "Invalid chunk sample coordinate");
+    double cells = double(1ull << key.level);
+    return {SurfaceGeometry::Unit(CubeVector(key.face, 2 * (double(key.x) + right) / cells - 1,
+                                             2 * (double(key.y) + up) / cells - 1)),
+            0};
+}
+std::array<double, 2> CubeSphere::Coordinates(const ChunkKey &key, const SurfacePoint &point)
+{
+    key.Validate();
+    SurfaceGeometry::Validate(point);
+    auto uv = FaceUV(key.face, point.normal);
+    double cells = double(1ull << key.level);
+    return {(uv[0] + 1) * .5 * cells - key.x, (uv[1] + 1) * .5 * cells - key.y};
+}
 ChunkKey CubeSphere::Neighbor(const ChunkKey &key, ChunkEdge edge)
 {
     key.Validate();

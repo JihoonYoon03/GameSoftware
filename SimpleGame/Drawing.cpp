@@ -80,7 +80,8 @@ Vector2 Drawing::WorldToScreen(float x, float y, float height)
 {
     auto &world = Game::Get().GetState();
     return {kCanvasWidth * .5f + (x - y - world.cameraPosition.x + world.cameraPosition.y) * 36,
-            kCanvasHeight * .57f + (x + y - world.cameraPosition.x - world.cameraPosition.y) * 18 - height};
+            kCanvasHeight * .57f + (x + y - world.cameraPosition.x - world.cameraPosition.y) * 18 - height +
+                (world.surfaceExploration ? world.surfaceCameraHeight * 44 : 0)};
 }
 void Drawing::DrawTile(float x, float y, float width, float depth, ColorRGBA color)
 {

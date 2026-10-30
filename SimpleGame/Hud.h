@@ -46,6 +46,7 @@ class Hud
     friend class CityHud;
     friend class MineHud;
     friend class ChapterHud;
+    friend class PlanetHud;
 };
 
 // ============================================================================
@@ -96,6 +97,16 @@ class ChapterHud final : public Hud
   public:
     void Draw() override;
     static void DrawJournal();
+};
+
+// ============================================================================
+// PlanetHud : Hud — surface survey status and fixed schematic local maps
+// ============================================================================
+class PlanetHud final : public Hud
+{
+  public:
+    void Draw() override;
+    static void DrawMap(bool full = false);
 };
 
 } // namespace tutorial

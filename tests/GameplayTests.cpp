@@ -154,7 +154,7 @@ void TestStageSelectionAndLoadout()
                    GameLevels::Chapter().IsAvailable());
         }
     }
-    assert(!g.EnterTestStage(TestStage::Count) && GameLevels::Chapter().IsActive());
+    assert(!g.EnterTestStage(TestStage::Count) && w.surfaceExploration);
     // The normal narrative gives the pistol once, only after reading Ria's entrance handover.
     assert(g.EnterTestStage(TestStage::BikeUnlocked));
     w.isBikeMounted = false;

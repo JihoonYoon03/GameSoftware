@@ -357,6 +357,7 @@ void Game::UpdateCamera(float deltaSeconds)
 }
 void Game::Reset()
 {
+    StopSurface();
     WeaponWheel::Close();
     game::SceneManager::Reset();
     game::GameLevels::Reset();
@@ -413,6 +414,8 @@ const char *Game::StageName(TestStage stage)
         return "광산 · 스테이지 시작";
     case TestStage::ChapterOne:
         return "1장 · 빛나는 개척지 시작";
+    case TestStage::SurfaceSurvey:
+        return "행성 자유 탐사 · 도보 / 바이크";
     default:
         return "";
     }
@@ -451,6 +454,20 @@ bool Game::EnterTestStage(TestStage stage)
     else if (stage == TestStage::ChapterOne)
     {
         game::GameLevels::Chapter().Enter();
+    }
+    else if (stage == TestStage::SurfaceSurvey)
+    {
+        const auto planet = world::WorldCatalog::Erma();
+        auto spawn = world::LegacyWorldAdapter::ErmaExterior().Locate("halo_07", {}).position;
+        state.surfaceExploration = true;
+        state.isInsideHome = false;
+        state.playerPosition = state.cameraPosition = {};
+        surface = std::make_unique<world::SurfaceSession>(planet, spawn);
+        surfaceBike =
+            world::SurfaceGeometry::Advance(world::SurfaceGeometry::Frame(spawn), 4, 0, planet.radiusMeters)
+                .origin;
+        state.bikePosition = {2, 0};
+        surface->Start(world::PlanetGenerator::Erma(Overworld::StoryAnchors()));
     }
     state.cameraPosition = state.playerPosition;
     ShowNotice(std::string("테스트 진입 / ") + StageName(stage) + " · 이전 필수 진행 완료 / 기본 무장: 맨손");
@@ -602,6 +619,29 @@ void Game::KeyDown(unsigned char key, int, int)
     }
     if (repeated && (key == 'e' || key == 13 || key == 'j' || key == 'h' || key == 'm'))
     {
+        return;
+    }
+    if (state.surfaceExploration)
+    {
+        if (key == 'm')
+        {
+            state.mapVisible = !state.mapVisible;
+            state.StopMotion();
+        }
+        else if (key == 'e' && !state.mapVisible && surface && surface->Ready() &&
+                 (state.isBikeMounted || Distance(state.playerPosition, state.bikePosition) < 1.8f))
+        {
+            auto old = state.playerPosition;
+            Overworld::ToggleBike(state);
+            surface->Move((state.playerPosition.x - old.x) * 2, (state.playerPosition.y - old.y) * 2,
+                          state.isBikeMounted);
+            auto local = surface->Local(surface->Pose().origin);
+            state.playerPosition = {float(local.x / 2), float(local.y / 2)};
+            if (state.isBikeMounted)
+            {
+                surfaceBike = surface->Pose().origin;
+            }
+        }
         return;
     }
     if (key == 'j' || key == 'h')
@@ -885,6 +925,10 @@ void Game::MouseButton(int button, int buttonState, int x, int y)
 }
 std::optional<world::WorldLocation> Game::PlanetLocation() const
 {
+    if (state.surfaceExploration && surface)
+    {
+        return surface->Location();
+    }
     static_assert(world::WorldCatalog::MetersPerLegacyUnit == models::WorldScale::metersPerUnit,
                   "Planet adapter and model units must agree");
     if (state.isInsideHome || state.isInObservatory || game::GameLevels::Active())
@@ -946,6 +990,11 @@ void Game::MouseEntry(int pointerState)
 void Game::Update(float deltaSeconds)
 {
     deltaSeconds = Clamp(deltaSeconds, 0, kMaximumDeltaSeconds);
+    if (state.surfaceExploration)
+    {
+        UpdateSurface(deltaSeconds);
+        return;
+    }
     HospitalRecovery::Update(deltaSeconds);
     if (!state.weaponWheel.visible && !state.isPaused && !state.mapVisible && !HospitalRecovery::Active() &&
         Dialogue::LocksWorld())
@@ -1012,6 +1061,105 @@ void Game::Update(float deltaSeconds)
         game::SceneManager::Update(deltaSeconds);
     }
 }
+void Game::StopSurface()
+{
+    if (surface)
+    {
+        surface->Stop();
+        surface.reset();
+    }
+    surfaceBike.reset();
+    state.surfaceExploration = false;
+    state.surfaceCameraHeight = 0;
+}
+void Game::UpdateSurface(float dt)
+{
+    if (!surface)
+    {
+        return;
+    }
+    auto velocity = state.isBikeMounted ? state.bikeVelocity : state.playerMotion.velocity;
+    surface->Update({velocity.x * 2, velocity.y * 2, 0});
+    if (!surface->Ready())
+    {
+        state.StopMotion();
+        return;
+    }
+    if (!state.isPaused && !state.mapVisible && !state.weaponWheel.visible)
+    {
+        state.animationTimeSeconds += dt;
+        auto before = state.playerPosition;
+        UpdatePlayerMovement(dt);
+        auto desired = state.playerPosition;
+        surface->Move((desired.x - before.x) * 2, (desired.y - before.y) * 2, state.isBikeMounted);
+        auto position = surface->Local(surface->Pose().origin);
+        state.playerPosition = {float(position.x / 2), float(position.y / 2)};
+        Vector2 requested{desired.x - before.x, desired.y - before.y},
+            actual{state.playerPosition.x - before.x, state.playerPosition.y - before.y};
+        if (state.isBikeMounted)
+        {
+            state.bikeVelocity = MotionMath::ContactVelocity(state.bikeVelocity, requested, actual);
+            float direction = state.bikeSpeed < 0 ? -1.f : 1.f;
+            state.bikeSpeed = direction * std::hypot(state.bikeVelocity.x, state.bikeVelocity.y);
+        }
+        else
+        {
+            state.playerMotion.velocity =
+                MotionMath::ContactVelocity(state.playerMotion.velocity, requested, actual);
+        }
+        state.movementSpeed = dt > 0 ? Distance(before, state.playerPosition) / dt : 0;
+        state.movementAmount =
+            Clamp(state.movementSpeed / (state.isBikeMounted ? 12.8f : kMovementSpeed), 0, 1);
+        auto animationVelocity = state.isBikeMounted ? state.bikeVelocity : state.playerMotion.velocity;
+        state.playerAnimation.Update(dt, {animationVelocity.x, animationVelocity.y, 0}, state.facingYaw,
+                                     false, state.isBikeMounted);
+        if (state.isBikeMounted)
+        {
+            surfaceBike = surface->Pose().origin;
+        }
+        auto cameraPoint = surface->PointAt(state.cameraPosition.x * 2, state.cameraPosition.y * 2);
+        cameraPoint.altitudeMeters = surface->Origin().origin.altitudeMeters + state.surfaceCameraHeight * 2;
+        auto old = surface->Rebase();
+        if (old)
+        {
+            auto camera = surface->Local(cameraPoint);
+            state.cameraPosition = {float(camera.x / 2), float(camera.y / 2)};
+            state.surfaceCameraHeight = float(camera.z / 2);
+            auto rotate = [&](Vector2 v) {
+                auto d = world::SurfaceGeometry::TransformDirection({v.x, v.y, 0}, *old, surface->Origin());
+                return Vector2{float(d.x), float(d.y)};
+            };
+            auto heading = rotate({std::cos(state.facingYaw), std::sin(state.facingYaw)});
+            auto bikeHeading = rotate({std::cos(state.bikeYaw), std::sin(state.bikeYaw)});
+            state.facingYaw = std::atan2(heading.y, heading.x);
+            state.bikeYaw = std::atan2(bikeHeading.y, bikeHeading.x);
+            state.playerMotion.velocity = rotate(state.playerMotion.velocity);
+            state.bikeVelocity = rotate(state.bikeVelocity);
+            state.playerPosition = {};
+        }
+        if (surfaceBike && world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, *surfaceBike,
+                                                            surface->Pose().origin) < 1000)
+        {
+            auto bike = surface->Local(*surfaceBike);
+            state.bikePosition = {float(bike.x / 2), float(bike.y / 2)};
+            auto ground = surface->ContactAt(bike.x, bike.y);
+            surfaceBike->altitudeMeters =
+                (std::max)(world::PlanetTerrain::SeaLevelMeters, ground.heightMeters);
+            state.bikeElevation =
+                float((surfaceBike->altitudeMeters - surface->Origin().origin.altitudeMeters) / 2);
+        }
+        else
+        {
+            state.bikePosition = {1000000, 1000000};
+        }
+        UpdateCamera(dt);
+        float targetHeight = float(surface->Local(surface->Pose().origin).z / 2);
+        state.surfaceCameraHeight +=
+            (targetHeight - state.surfaceCameraHeight) * (1 - std::exp(-kCameraFollowRate * dt));
+        game::SceneManager::Update(dt);
+    }
+}
+
 unsigned int FrameSchedule::NextDelay(double startedMilliseconds, double finishedMilliseconds)
 {
     constexpr double kFrameMilliseconds = 1000.0 / 60.0;
@@ -1457,6 +1605,10 @@ void Game::ShowNotice(const std::string &message)
 bool Game::IsPositionBlocked(Vector2 position)
 {
     profiling::Count(profiling::Counter::CollisionQueries);
+    if (state.surfaceExploration)
+    {
+        return !surface || surface->Blocked(position.x * 2, position.y * 2, state.isBikeMounted);
+    }
     if (game::GameLevels::Chapter().IsActive())
     {
         return game::GameLevels::Chapter().IsBlocked(position);
@@ -1565,6 +1717,12 @@ bool Game::IsQuestInteraction(InteractionTarget target) const
 }
 InteractionTarget Game::FindNearbyInteraction()
 {
+    if (state.surfaceExploration)
+    {
+        return (state.isBikeMounted || Distance(state.playerPosition, state.bikePosition) < 1.8f)
+                   ? InteractionTarget::JetBike
+                   : InteractionTarget::None;
+    }
     if (HospitalRecovery::Active())
     {
         return InteractionTarget::None;

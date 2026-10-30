@@ -299,6 +299,12 @@ void Reproducibility(const GeneratedPlanet &baseline)
 }
 void Queries(const GeneratedPlanet &plan)
 {
+    auto anchorPoint = plan.Region("halo_07").access.position;
+    auto sampled = plan.terrain.Sample(anchorPoint);
+    auto reused = plan.terrain.Environment(anchorPoint, sampled.elevationMeters, sampled.slope);
+    Check(reused.biome == sampled.biome && reused.moisture == sampled.moisture &&
+              reused.minerals == sampled.minerals,
+          "Contact grids can reuse the exact same environment rules without extra height sampling");
     auto digest = plan.Digest();
     const auto &planet = plan.terrain.Planet();
     std::vector<SurfacePoint> points;

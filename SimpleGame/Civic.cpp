@@ -591,7 +591,8 @@ CivicState &CivicJustice::State()
 bool CivicJustice::IsExterior()
 {
     const auto &world = Game::Get().GetState();
-    return !game::GameLevels::Active() && !world.isInsideHome && !world.isInObservatory;
+    return !world.surfaceExploration && !game::GameLevels::Active() && !world.isInsideHome &&
+           !world.isInObservatory;
 }
 bool CivicJustice::Solid(Vector2 p, float radius, float altitude, bool driving)
 {

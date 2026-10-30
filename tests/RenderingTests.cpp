@@ -18,6 +18,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <thread>
 #include <vector>
 #include <windows.h>
 
@@ -788,6 +789,81 @@ void CaptureScenes(const std::filesystem::path &output)
     std::ofstream catalog(output / "models.json");
     catalog << monitoring::ModelCatalog::Build();
 }
+void CapturePlanetSurface(const std::filesystem::path &output)
+{
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    assert(g.EnterTestStage(TestStage::SurfaceSurvey));
+    auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(15);
+    while (g.Surface() && (!g.Surface()->Ready() || g.Surface()->Stream().Snapshot()->chunks.empty()) &&
+           std::chrono::steady_clock::now() < deadline)
+    {
+        g.Update(0);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    assert(g.Surface() && g.Surface()->Ready() && !g.Surface()->Stream().Snapshot()->chunks.empty());
+    assert(game::SceneManager::Current() == game::SceneKind::Planet);
+    for (unsigned frame = 0; frame < 12; ++frame)
+    {
+        Begin();
+        game::SceneManager::Get(game::SceneKind::Planet).Draw();
+        GameRenderer::Get().Backend().EndScene(0);
+    }
+    Save(output / "planet-surface.bmp");
+    w.mapVisible = true;
+    Begin();
+    Hud::Render();
+    GameRenderer::Get().Backend().EndScene(0);
+    Save(output / "planet-survey-map.bmp");
+    w.mapVisible = false;
+    // Cross at least one floating-origin threshold with the real bike motion code.
+    w.isBikeMounted = true;
+    w.pressedKeys['w'] = w.pressedKeys[' '] = true;
+    auto origin = g.Surface()->Origin().origin;
+    for (unsigned i = 0; i < 420; ++i)
+    {
+        g.Update(1.f / 60);
+        if (i % 16 == 0)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+    }
+    assert(world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, origin,
+                                            g.Surface()->Origin().origin) > 100);
+    assert(std::hypot(w.playerPosition.x, w.playerPosition.y) < 65);
+    w.pressedKeys['w'] = w.pressedKeys[' '] = false;
+    Begin();
+    game::SceneManager::Get(game::SceneKind::Planet).Draw();
+    GameRenderer::Get().Backend().EndScene(0);
+    Save(output / "planet-bike-rebased.bmp");
+    g.Reset();
+    assert(!g.Surface() && !w.surfaceExploration);
+
+    // Reuse the exact same Model address after eviction: stale GPU geometry must not survive.
+    Model dynamic;
+    dynamic.space = CoordinateSpace::World;
+    dynamic.ground = true;
+    dynamic.count = 1;
+    dynamic.parts.resize(1);
+    dynamic.parts[0].count = 3;
+    dynamic.parts[0].points[0] = {-1, -1, 0};
+    dynamic.parts[0].points[1] = {1, -1, 0};
+    dynamic.parts[0].points[2] = {0, 1, 0};
+    dynamic.parts[0].color = {1, .05f, .05f, 1};
+    auto render = [&] {
+        Begin();
+        Drawing::DrawModel3D(dynamic, {640, 400}, {2, 2, 1}, {}, 0, {});
+        GameRenderer::Get().Backend().EndScene(0);
+        return Pixels();
+    };
+    auto red = render();
+    GameRenderer::Get().Backend().ReleaseModel(dynamic);
+    dynamic.parts[0].color = {.05f, 1, .05f, 1};
+    auto green = render();
+    assert(red != green);
+    GameRenderer::Get().Backend().ReleaseModel(dynamic);
+}
+
 void TestPixelPresentation(const std::filesystem::path &output)
 {
     auto &renderer = GameRenderer::Get().Backend();
@@ -2287,6 +2363,7 @@ int main(int argc, char **argv)
     CaptureAnimationBlends(output);
     CapturePlayerMomentum(output);
     CaptureCivicSystems(output);
+    CapturePlanetSurface(output);
     BenchmarkQuality(output);
     GameRenderer::Get().Shutdown();
     std::cout << "Resource GLB meshes, 23-bone skins, nine wardrobes, direct driving, billboard effects, "

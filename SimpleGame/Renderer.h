@@ -101,6 +101,8 @@ class Renderer
                      const models::CharacterPose *pose);
     void BeginModels();
     void EndModels();
+    // Call between model passes on the GL thread, before a streamed Model is destroyed/reused.
+    void ReleaseModel(const models::Model &model);
     void BindObject(std::vector<rendering::RenderObject> *objects);
     bool DeferOverlay(std::function<void()> draw);
     bool DrawMineDarkness();

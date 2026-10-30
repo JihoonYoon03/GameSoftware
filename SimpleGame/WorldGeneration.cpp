@@ -342,6 +342,16 @@ TerrainSample PlanetTerrain::Sample(const SurfacePoint &point) const
     double dy = Height(G::Advance(frame, 0, step, planet.radiusMeters).origin) -
                 Height(G::Advance(frame, 0, -step, planet.radiusMeters).origin);
     result.slope = std::hypot(dx, dy) / (2 * step);
+    return Environment(point, result.elevationMeters, result.slope);
+}
+TerrainSample PlanetTerrain::Environment(const SurfacePoint &point, double elevation, double slope) const
+{
+    G::Validate(point);
+    Require(std::isfinite(elevation) && std::isfinite(slope) && slope >= 0,
+            "Invalid terrain contact environment");
+    TerrainSample result;
+    result.elevationMeters = elevation;
+    result.slope = slope;
     result.moisture = Fractal(point.normal, 7, 4, 611);
     result.temperature =
         std::clamp(.9 - std::fabs(point.normal.z) * .8 + (Noise(point.normal, 5, 701) - .5) * .25 -
@@ -629,10 +639,18 @@ PlanetGenerator PlanetGenerator::Erma(const std::vector<StoryAnchor> &anchors, G
 
 namespace
 {
-void BuildConnections(GeneratedPlanet &result, const GenerationSettings &settings);
+void BuildConnections(GeneratedPlanet &result, const GenerationSettings &settings,
+                      const std::atomic_bool *cancel);
 }
-GeneratedPlanet PlanetGenerator::Generate() const
+GeneratedPlanet PlanetGenerator::Generate(const std::atomic_bool *cancel) const
 {
+    auto cancelled = [&] {
+        if (cancel && cancel->load())
+        {
+            throw std::runtime_error("Planet generation cancelled");
+        }
+    };
+    cancelled();
     std::vector<GeneratedRegion> protectedRegions;
     std::vector<TerrainReservation> pads;
     std::optional<SurfacePoint> homeland;
@@ -674,11 +692,16 @@ GeneratedPlanet PlanetGenerator::Generate() const
     Random clusterRng{WorldIdentity::StreamSeed(planet, "overworld", "population_clusters")};
     for (unsigned slot = unsigned(result.clusters.size()); slot < settings.clusters; ++slot)
     {
+        cancelled();
         double best = -1;
         SurfacePoint selected;
         bool found = false;
         for (unsigned trial = 0; trial < 512; ++trial)
         {
+            if (trial % 16 == 0)
+            {
+                cancelled();
+            }
             auto candidate = RandomSurface(clusterRng);
             auto sample = result.terrain.Sample(candidate);
             if (!sample.land || sample.elevationMeters < PlanetTerrain::SeaLevelMeters + 120 ||
@@ -748,6 +771,7 @@ GeneratedPlanet PlanetGenerator::Generate() const
     }
     for (auto definition : pending)
     {
+        cancelled();
         Require(ids.insert(definition.id).second, "Generated region ID collision");
         if (!names.insert(definition.name).second)
         {
@@ -764,6 +788,10 @@ GeneratedPlanet PlanetGenerator::Generate() const
         double spread = (std::min)(settings.clusterRadiusMeters, planet.radiusMeters * .03);
         for (unsigned trial = 0; trial < settings.placementAttempts; ++trial)
         {
+            if (trial % 16 == 0)
+            {
+                cancelled();
+            }
             unsigned index = nearby ? cluster : (cluster + trial / 48) % unsigned(result.clusters.size());
             double angle = rng.Unit() * 2 * G::Pi, radius = spread * (.12 + .88 * std::sqrt(rng.Unit()));
             auto point = G::Advance(G::Frame(result.clusters[index]), std::cos(angle) * radius,
@@ -826,7 +854,9 @@ GeneratedPlanet PlanetGenerator::Generate() const
         r.biome = result.terrain.Sample(r.access.position).biome;
     }
     AddRelays(result, settings);
-    BuildConnections(result, settings);
+    cancelled();
+    BuildConnections(result, settings, cancel);
+    cancelled();
     result.Validate();
     return result;
 }
@@ -1090,7 +1120,8 @@ TravelConnection Connect(const GeneratedPlanet &result, unsigned from, unsigned 
     }
     return edge;
 }
-void BuildConnections(GeneratedPlanet &result, const GenerationSettings &settings)
+void BuildConnections(GeneratedPlanet &result, const GenerationSettings &settings,
+                      const std::atomic_bool *cancel)
 {
     const auto &p = result.terrain.Planet();
     for (const auto &region : result.regions)
@@ -1134,6 +1165,10 @@ void BuildConnections(GeneratedPlanet &result, const GenerationSettings &setting
     };
     std::set<std::pair<unsigned, unsigned>> used;
     auto connect = [&](unsigned a, unsigned b) {
+        if (cancel && cancel->load())
+        {
+            throw std::runtime_error("Planet routes cancelled");
+        }
         if (a > b)
         {
             std::swap(a, b);

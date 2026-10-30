@@ -3,6 +3,7 @@
 #include "Weapon.h"
 #include "Animation.h"
 #include "World.h"
+#include "WorldStreaming.h"
 #include <string>
 #include <functional>
 #include <map>
@@ -314,6 +315,7 @@ enum class TestStage
     WeaponUnlocked,
     Mine,
     ChapterOne,
+    SurfaceSurvey,
     Count
 };
 struct WeaponWheelState
@@ -336,6 +338,8 @@ class WeaponWheel
 // State owned by Game. Renderers read it without changing gameplay.
 struct GameState
 {
+    bool surfaceExploration = false;
+    float surfaceCameraHeight = 0;
     int viewportWidth = kCanvasWidth;
     int viewportHeight = kCanvasHeight;
     int lastUpdateMilliseconds = 0;
@@ -436,6 +440,15 @@ class Game
     GameState &GetState();
     // CQ-01A bridge only: interior/instance maps have no migrated planet location yet.
     std::optional<world::WorldLocation> PlanetLocation() const;
+    const world::SurfaceSession *Surface() const
+    {
+        return surface.get();
+    }
+    std::optional<world::SurfacePoint> SurfaceBike() const
+    {
+        return surfaceBike;
+    }
+    void StopSurface();
     void Reset();
     bool EnterTestStage(TestStage stage);
     static const char *StageName(TestStage stage);
@@ -462,10 +475,13 @@ class Game
   private:
     Game() = default;
     GameState state;
+    std::unique_ptr<world::SurfaceSession> surface;
+    std::optional<world::SurfacePoint> surfaceBike;
     FrameSchedule frameSchedule;
     static unsigned char NormalizeKey(unsigned char key);
     void UpdatePlayerMovement(float deltaSeconds);
     void UpdateCamera(float deltaSeconds);
+    void UpdateSurface(float deltaSeconds);
 };
 // ============================================================================
 // GameCallbacks - GLUT adapters

@@ -1,5 +1,6 @@
 #pragma once
 #include "World.h"
+#include <atomic>
 
 namespace world
 {
@@ -43,6 +44,8 @@ class PlanetTerrain
                   std::optional<SurfacePoint> homeland = std::nullopt);
     double Height(const SurfacePoint &point) const;
     TerrainSample Sample(const SurfacePoint &point) const;
+    // Reuse a contact grid's height/slope without resampling the height field.
+    TerrainSample Environment(const SurfacePoint &point, double elevationMeters, double slope) const;
     const PlanetDefinition &Planet() const
     {
         return planet;
@@ -140,7 +143,12 @@ class PlanetGenerator
     PlanetGenerator(PlanetDefinition planet, std::vector<RegionDefinition> definitions,
                     std::vector<FixedRegionPlacement> fixed, std::vector<StoryAnchor> anchors,
                     GenerationSettings settings = {});
-    GeneratedPlanet Generate() const;
+    // Cancellation does not alter generated values or the generator version.
+    GeneratedPlanet Generate(const std::atomic_bool *cancel = nullptr) const;
+    const PlanetDefinition &Planet() const
+    {
+        return planet;
+    }
     PlanetGenerator WithSeed(std::uint64_t seed) const;
     static PlanetGenerator Erma(const std::vector<StoryAnchor> &anchors, GenerationSettings settings = {});
 

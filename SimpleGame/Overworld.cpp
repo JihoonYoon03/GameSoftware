@@ -1958,7 +1958,10 @@ void Overworld::Populate(GameState &state)
 
 void Overworld::UpdateBike(GameState &state, float deltaSeconds)
 {
-    BodyCollision::RecoverBike();
+    if (!state.surfaceExploration)
+    {
+        BodyCollision::RecoverBike();
+    }
     Vector2 previous = state.playerPosition;
     float oldYaw = state.bikeYaw;
     constexpr float response = MotionMath::kResponse;
@@ -1980,6 +1983,27 @@ void Overworld::UpdateBike(GameState &state, float deltaSeconds)
         state.bikeSpeed * targetSpeed < 0 || (targetSpeed == 0 && std::fabs(state.bikeSpeed) > .01f);
     float acceleration = braking ? 24.f : reverse ? 4.f : 18.f;
     auto blocked = [&](Vector2 p) {
+        if (state.surfaceExploration)
+        {
+            auto session = Game::Get().Surface();
+            if (!session)
+            {
+                return true;
+            }
+            float c = std::cos(state.bikeYaw), s = std::sin(state.bikeYaw);
+            for (float front : {-.65f, .65f})
+            {
+                for (float side : {-.22f, .22f})
+                {
+                    if (session->Blocked((p.x + c * front - s * side) * 2, (p.y + s * front + c * side) * 2,
+                                         true))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
         float h = RoadNetwork::Get().DriveElevation(p, state.bikeElevation);
         if (state.bikeElevation > .5f && h < state.bikeElevation - .6f)
         {
@@ -2023,7 +2047,10 @@ void Overworld::UpdateBike(GameState &state, float deltaSeconds)
         {state.playerPosition.x - previous.x, state.playerPosition.y - previous.y});
     speed = std::hypot(state.bikeVelocity.x, state.bikeVelocity.y);
     state.bikeSpeed = (longitudinal < -.001f ? -1.f : 1.f) * speed;
-    state.bikeElevation = RoadNetwork::Get().DriveElevation(state.playerPosition, state.bikeElevation);
+    if (!state.surfaceExploration)
+    {
+        state.bikeElevation = RoadNetwork::Get().DriveElevation(state.playerPosition, state.bikeElevation);
+    }
     state.bikePosition = state.playerPosition;
     state.facingYaw = state.bikeYaw;
     state.movementSpeed = deltaSeconds > 0 ? actual / deltaSeconds : 0;
@@ -2039,7 +2066,7 @@ void Overworld::ToggleBike(GameState &state)
     }
     if (state.isBikeMounted)
     {
-        if (state.bikeElevation > .3f)
+        if (!state.surfaceExploration && state.bikeElevation > .3f)
         {
             Game::Get().ShowNotice("바이크 / 고가도로에서는 하차할 수 없습니다. 진출 경사로로 이동하세요.");
             return;
@@ -2052,7 +2079,10 @@ void Overworld::ToggleBike(GameState &state)
         for (Vector2 offset : {Vector2{1.2f, 0}, {-1.2f, 0}, {0, 1.2f}, {0, -1.2f}})
         {
             Vector2 position = {state.bikePosition.x + offset.x, state.bikePosition.y + offset.y};
-            if (!Game::Get().IsPositionBlocked(position))
+            bool safe = state.surfaceExploration && Game::Get().Surface()
+                            ? !Game::Get().Surface()->Blocked(position.x * 2, position.y * 2, false)
+                            : !Game::Get().IsPositionBlocked(position);
+            if (safe)
             {
                 state.playerPosition = position;
                 state.isBikeMounted = false;
@@ -2070,6 +2100,8 @@ void Overworld::ToggleBike(GameState &state)
     state.playerPosition = state.bikePosition;
     state.StopMotion();
     Game::Get().ShowNotice(
-        "바이크 / W 가속 · S 제동 · A/D 조향 · 정차 후 E 하차. 교차로의 홀로그램 신호를 확인하세요.");
+        state.surfaceExploration
+            ? "바이크 / W 가속 · S 제동/후진 · A/D 조향 · Space 부스트 · 정차 후 E 하차"
+            : "바이크 / W 가속 · S 제동 · A/D 조향 · 정차 후 E 하차. 교차로의 홀로그램 신호를 확인하세요.");
 }
 } // namespace tutorial

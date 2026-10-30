@@ -223,17 +223,28 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                                 (!chapter.kainJoined || chapter.active ? 1 : 0) + fieldScrappers
                           : 0;
     const bool simulating = level.active && !world.isPaused;
-    const bool citySimulation =
-        !level.active && !chapter.active && !world.isPaused && !world.isInsideHome && !world.isInObservatory;
+    const bool citySimulation = !world.surfaceExploration && !level.active && !chapter.active &&
+                                !world.isPaused && !world.isInsideHome && !world.isInObservatory;
     const bool cityLia = !level.active && !chapter.active;
     const bool cityKain = chapter.kainJoined && !chapter.active;
     const size_t haloPopulation = 19 + (cityLia ? 1 : 0) - (chapter.kainJoined ? 1 : 0) + (cityKain ? 1 : 0);
     const size_t cityPopulation =
         haloPopulation + (tutorial::Overworld::kCityCount - 1) * tutorial::Overworld::kPopulationPerCity;
     int currentCity = tutorial::Overworld::CityAt(world.playerPosition);
-    const char *outdoorId = currentCity >= 0 ? tutorial::Overworld::Cities()[currentCity].id : "overworld";
-    const char *outdoorName =
+    std::string outdoorId = currentCity >= 0 ? tutorial::Overworld::Cities()[currentCity].id : "overworld";
+    std::string outdoorName =
         currentCity >= 0 ? tutorial::Overworld::Cities()[currentCity].name : "도시 간 연결 도로";
+    if (world.surfaceExploration && tutorial::Game::Get().Surface())
+    {
+        const auto &surface = *tutorial::Game::Get().Surface();
+        auto snapshot = surface.Stream().Snapshot();
+        outdoorId = surface.Location().regionId;
+        outdoorName = surface.Planet().name + " / 야외 탐사";
+        if (snapshot->planet && outdoorId != "overworld")
+        {
+            outdoorName = snapshot->planet->Region(outdoorId).definition.name;
+        }
+    }
     const size_t minePopulation = level.survivors.size() + (level.active ? 1 : 0);
     size_t aliveMobs = 0;
     for (const auto &enemy : level.enemies)
@@ -250,6 +261,31 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                                          .count());
     result.Number("publish_interval_ms", 500);
     result.Bool("paused", world.isPaused);
+    if (world.surfaceExploration && tutorial::Game::Get().Surface())
+    {
+        const auto &surface = *tutorial::Game::Get().Surface();
+        auto snapshot = surface.Stream().Snapshot();
+        const auto &stats = snapshot->statistics;
+        JsonObject streaming;
+        streaming.Bool("ready", surface.Ready());
+        streaming.Text("planet_id", surface.Planet().id);
+        streaming.Number("epoch", stats.epoch);
+        streaming.Number("revision", stats.revision);
+        streaming.Number("resident", stats.resident);
+        streaming.Number("queued", stats.queued);
+        streaming.Number("completed", stats.completed);
+        streaming.Number("resident_bytes", stats.bytes);
+        streaming.Number("generated", stats.generated);
+        streaming.Number("cancelled", stats.cancelled);
+        streaming.Number("discarded", stats.discarded);
+        streaming.Number("evicted", stats.evicted);
+        streaming.Text("error", stats.error);
+        auto ll = ::world::SurfaceGeometry::ToDegrees(surface.Pose().origin);
+        streaming.Number("latitude", ll[0]);
+        streaming.Number("longitude", ll[1]);
+        streaming.Number("altitude_meters", surface.Pose().origin.altitudeMeters);
+        result.Raw("surface_streaming", streaming.Finish());
+    }
     result.Text("current_region_id", chapter.active ? "frontier" : level.active ? "mine" : outdoorId);
     result.Text("current_area", chapter.active          ? "빛나는 개척지 · 발전기/운송대/폐설비"
                                 : level.active          ? "광산 · 구조 신호 조사"
@@ -258,11 +294,12 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                                                         : outdoorName);
     result.Seconds("play_time_seconds", world.playTimeSeconds);
     counts.Number("npc_total", cityPopulation + minePopulation + frontierPopulation);
-    counts.Number("npc_current_region", chapter.active     ? frontierPopulation
-                                        : level.active     ? minePopulation
-                                        : currentCity == 0 ? haloPopulation
-                                        : currentCity > 0  ? tutorial::Overworld::kPopulationPerCity
-                                                           : 0);
+    counts.Number("npc_current_region", world.surfaceExploration ? 0
+                                        : chapter.active         ? frontierPopulation
+                                        : level.active           ? minePopulation
+                                        : currentCity == 0       ? haloPopulation
+                                        : currentCity > 0        ? tutorial::Overworld::kPopulationPerCity
+                                                                 : 0);
     counts.Number("npc_simulating", chapter.active && !world.isPaused ? frontierPopulation
                                     : simulating                      ? minePopulation
                                     : citySimulation ? world.residents.size() - (chapter.kainJoined ? 1 : 0)

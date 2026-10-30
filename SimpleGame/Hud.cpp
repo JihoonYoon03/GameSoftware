@@ -703,6 +703,10 @@ bool MapHud::Contains(Vector2 canvasPoint, bool fullMap)
 bool MapHud::HandleClick(Vector2 point, bool clear)
 {
     auto &world = Game::Get().GetState();
+    if (world.surfaceExploration)
+    {
+        return false;
+    }
     if (!world.mapVisible || !Contains(point, true))
     {
         return false;
@@ -755,6 +759,10 @@ void MapHud::DrawMinimap()
 }
 void MapHud::DrawFullMap()
 {
+    if (Game::Get().GetState().surfaceExploration)
+    {
+        return;
+    }
     if (!Game::Get().GetState().mapVisible)
     {
         return;
@@ -1469,8 +1477,8 @@ std::vector<UiControl> Hud::Controls()
         for (int i = 0; i < int(TestStage::Count); ++i)
         {
             controls.push_back({UiAction::EnterStage,
-                                {96, 211 + i * 62.f},
-                                {652, 52},
+                                {96, 211 + i * 56.f},
+                                {652, 48},
                                 Game::StageName(TestStage(i)),
                                 true,
                                 i});
@@ -2000,7 +2008,9 @@ void Hud::DrawMenu()
             "바이크에 탑승한 상태로 광산 출발 지점에서 시작합니다.",
             "광산 입구 야외에서 시작합니다. 권총을 보유하지만 기본 장착은 맨손입니다.",
             "광산 탐험의 시작 지점으로 이동합니다. 구조와 스캔을 확인할 수 있습니다.",
-            "1장 빛나는 개척지의 시작 지점으로 이동합니다."};
+            "1장 빛나는 개척지의 시작 지점으로 이동합니다.",
+            "에르마 표면을 도보와 바이크로 자유롭게 탐사합니다. 주변 지형과 지역 연결 경로를 확인할 수 "
+            "있습니다."};
         Icon("stage", 824, 222, 36);
         auto heading = Dialogue::Wrap(Game::StageName(TestStage(stage)), 328, 24);
         for (size_t i = 0; i < heading.size(); ++i)
@@ -2140,6 +2150,121 @@ void Hud::DrawMenu()
     }
 }
 
+void PlanetHud::Draw()
+{
+    auto session = Game::Get().Surface();
+    if (!session)
+    {
+        return;
+    }
+    auto snapshot = session->Stream().Snapshot();
+    if (!session->Ready())
+    {
+        Panel(390, 320, 500, 138);
+        UiText(420, 365,
+               snapshot->statistics.error.empty() ? "에르마 탐사 준비" : "탐사 지형을 불러오지 못했습니다.",
+               22);
+        UiText(420, 405,
+               snapshot->statistics.error.empty() ? "주변 지형을 준비하고 있습니다."
+                                                  : "Esc 메뉴에서 다시 진입해 주세요.",
+               17);
+        return;
+    }
+    auto location = session->Location();
+    std::string area = "에르마 야외";
+    if (location.regionId != "overworld")
+    {
+        area = snapshot->planet->Region(location.regionId).definition.name;
+    }
+    Hud::DrawObjective("자유 탐사", area + " · M 주변 지도 / Esc 메뉴");
+    DrawMap();
+    if (Game::Get().FindNearbyInteraction() == InteractionTarget::JetBike)
+    {
+        Hud::DrawInteraction(Game::Get().GetState().isBikeMounted ? "바이크 / 정차 후 하차"
+                                                                  : "바이크 / 탑승");
+    }
+    auto ll = world::SurfaceGeometry::ToDegrees(location.position);
+    char coordinates[160];
+    std::snprintf(coordinates, sizeof(coordinates), "%.4f° / %.4f° · %.0fm", ll[0], ll[1],
+                  location.position.altitudeMeters - world::PlanetTerrain::SeaLevelMeters);
+    UiText(32, 154, coordinates, 14, {.64f, .79f, .76f});
+    UiText(32, 728,
+           Game::Get().GetState().isBikeMounted ? "W 가속 · S 제동/후진 · A/D 조향 · Space 부스트"
+                                                : "WASD 이동 · 바이크 근처에서 E 탑승",
+           16);
+}
+void PlanetHud::DrawMap(bool full)
+{
+    auto session = Game::Get().Surface();
+    if (!session || !session->Ready())
+    {
+        return;
+    }
+    const auto &w = Game::Get().GetState();
+    auto snapshot = session->Stream().Snapshot();
+    float radius = full ? 244.f : 82.f, range = full ? 5000.f : 160.f;
+    Vector2 center = full ? Vector2{488, 400} : kMinimapCenter;
+    if (full)
+    {
+        Drawing::DrawRectangle(0, 0, kCanvasWidth, kCanvasHeight, {.015f, .035f, .045f, .95f});
+        Panel(64, 92, 1152, 616);
+        UiText(96, 143, "주변 탐사도", 26);
+        UiText(820, 196, "주변 5km", 20);
+        UiText(820, 240, "지역 외곽 · 연결 도로", 17);
+        UiText(820, 659, "M / Esc 닫기", 16);
+    }
+    Drawing::DrawEllipse(center.x, center.y, radius + 3, radius + 3, {.35f, .62f, .61f});
+    Drawing::DrawEllipse(center.x, center.y, radius, radius, {.075f, .14f, .14f});
+    auto local = session->Local(session->Pose().origin);
+    SchematicView view{center, {float(local.x), float(local.y)}, radius / range, radius};
+    auto project = [&](world::SurfacePoint point) {
+        auto p = session->Local(point);
+        return Vector2{float(p.x), float(p.y)};
+    };
+    for (const auto &r : snapshot->planet->regions)
+    {
+        if (r.center.space != world::SpaceKind::Surface ||
+            world::SurfaceGeometry::Distance(session->Planet().radiusMeters, r.center.position,
+                                             session->Pose().origin) > r.boundingRadiusMeters + range * 1.5)
+        {
+            continue;
+        }
+        std::vector<Vector2> polygon;
+        for (auto vertex : r.footprint)
+        {
+            polygon.push_back(view.Project(
+                project(world::SurfaceGeometry::FromLocal(r.frame, vertex, session->Planet().radiusMeters))));
+        }
+        MapPolygon(view, std::move(polygon),
+                   r.definition.kind == world::RegionKind::Settlement ? ColorRGBA(.19f, .31f, .32f)
+                                                                      : ColorRGBA(.22f, .29f, .23f));
+    }
+    for (const auto &edge : snapshot->planet->connections)
+    {
+        if (edge.mode != world::RouteMode::Road)
+        {
+            continue;
+        }
+        for (std::size_t i = 1; i < edge.points.size(); ++i)
+        {
+            auto a = edge.points[i - 1], b = edge.points[i];
+            double length = world::SurfaceGeometry::Distance(session->Planet().radiusMeters, a, b);
+            double distance =
+                world::SurfaceGeometry::Distance(session->Planet().radiusMeters, a, session->Pose().origin);
+            if (distance > range * 1.5 + length)
+            {
+                continue;
+            }
+            MapLine(view, project(a), project(b), {.56f, .69f, .65f}, full ? 2 : 3);
+        }
+    }
+    if (Game::Distance(w.bikePosition, w.playerPosition) < range / 2)
+    {
+        MapDisc(view, {w.bikePosition.x * 2, w.bikePosition.y * 2}, range * .025f, {1, .76f, .4f});
+    }
+    DirectionArrow(center, w.facingYaw + kPi * .25f, full ? 12 : 8, {.3f, .95f, .88f});
+}
+
 void Hud::Render()
 {
     const auto &w = Game::Get().GetState();
@@ -2150,7 +2275,12 @@ void Hud::Render()
         static CityHud city;
         static MineHud mine;
         static ChapterHud chapter;
-        if (game::GameLevels::Chapter().IsActive())
+        static PlanetHud planet;
+        if (w.surfaceExploration)
+        {
+            planet.Draw();
+        }
+        else if (game::GameLevels::Chapter().IsActive())
         {
             chapter.Draw();
         }
@@ -2166,7 +2296,14 @@ void Hud::Render()
         DrawNoticePanel();
         DrawDialogue();
     }
-    MapHud::DrawFullMap();
+    if (w.surfaceExploration && w.mapVisible)
+    {
+        PlanetHud::DrawMap(true);
+    }
+    else
+    {
+        MapHud::DrawFullMap();
+    }
     ChapterHud::DrawJournal();
     DrawMenu();
     DrawWeaponWheel();

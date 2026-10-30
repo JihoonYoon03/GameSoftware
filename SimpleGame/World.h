@@ -169,6 +169,8 @@ class CubeSphere
                             std::int32_t layer = 0);
     static SurfacePoint Center(const ChunkKey &key);
     static SurfacePoint Corner(const ChunkKey &key, unsigned right, unsigned up);
+    static SurfacePoint Point(const ChunkKey &key, double right, double up);
+    static std::array<double, 2> Coordinates(const ChunkKey &key, const SurfacePoint &point);
     static ChunkKey Neighbor(const ChunkKey &key, ChunkEdge edge);
     static std::array<ChunkKey, 4> Children(const ChunkKey &key);
     static ChunkKey Parent(const ChunkKey &key);

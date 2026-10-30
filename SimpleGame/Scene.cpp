@@ -11,9 +11,12 @@
 #include "ResidentAI.h"
 #include "ResourceAssets.h"
 #include "TransitLayout.h"
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <utility>
+#include <set>
+#include <chrono>
 
 namespace game
 {
@@ -1614,9 +1617,302 @@ void HudScene::Draw()
 }
 
 // ============================================================================
-// SceneManager
+// PlanetScene : Scene — main-thread terrain model/GPU ownership
 // ============================================================================
 
+namespace
+{
+world::Vector3d SurfaceProjection(const world::SurfacePoint &point, const world::TangentFrame &frame,
+                                  double radius)
+{
+    auto p = world::SurfaceGeometry::Cartesian(radius, point),
+         o = world::SurfaceGeometry::Cartesian(radius, frame.origin);
+    world::Vector3d delta{p.x - o.x, p.y - o.y, p.z - o.z};
+    return {world::SurfaceGeometry::Dot(delta, frame.right),
+            world::SurfaceGeometry::Dot(delta, frame.forward),
+            world::SurfaceGeometry::Dot(delta, frame.origin.normal)};
+}
+std::array<float, 4> TerrainColor(world::Biome biome)
+{
+    switch (biome)
+    {
+    case world::Biome::Ocean:
+        return {.065f, .24f, .32f, 1};
+    case world::Biome::Coast:
+        return {.52f, .51f, .35f, 1};
+    case world::Biome::Forest:
+        return {.20f, .36f, .29f, 1};
+    case world::Biome::Desert:
+        return {.53f, .43f, .30f, 1};
+    case world::Biome::Rocky:
+        return {.40f, .42f, .43f, 1};
+    case world::Biome::Alpine:
+        return {.52f, .57f, .58f, 1};
+    case world::Biome::Ice:
+        return {.74f, .86f, .88f, 1};
+    default:
+        return {.31f, .43f, .31f, 1};
+    }
+}
+std::unique_ptr<models::Model> SurfaceModel(const world::SurfaceChunk &chunk, double radius, bool skirts)
+{
+    auto model = std::make_unique<models::Model>();
+    model->ground = true;
+    model->space = models::CoordinateSpace::World;
+    auto triangle = [&](std::array<models::Point, 3> points, std::array<models::Point, 3> normals,
+                        std::array<float, 4> color) {
+        models::Part part;
+        part.count = 3;
+        part.color = color;
+        part.surface = models::Surface::Default;
+        for (unsigned i = 0; i < 3; ++i)
+        {
+            part.points[i] = points[i];
+            part.normals[i] = normals[i];
+        }
+        model->parts.push_back(part);
+    };
+    std::vector<models::Point> positions, normals;
+    for (const auto &vertex : chunk.vertices)
+    {
+        auto point = vertex.point;
+        point.altitudeMeters = (std::max)(world::PlanetTerrain::SeaLevelMeters, point.altitudeMeters);
+        auto v = SurfaceProjection(point, chunk.frame, radius);
+        auto n =
+            vertex.point.altitudeMeters < world::PlanetTerrain::SeaLevelMeters ? point.normal : vertex.normal;
+        positions.push_back({float(v.x / 2), float(v.y / 2), float(v.z / 2)});
+        normals.push_back({float(world::SurfaceGeometry::Dot(n, chunk.frame.right)),
+                           float(world::SurfaceGeometry::Dot(n, chunk.frame.forward)),
+                           float(world::SurfaceGeometry::Dot(n, chunk.frame.origin.normal))});
+    }
+    auto add = [&](unsigned a, unsigned b, unsigned c) {
+        auto color = TerrainColor(chunk.vertices[a].biome);
+        triangle({positions[a], positions[b], positions[c]}, {normals[a], normals[b], normals[c]}, color);
+    };
+    for (unsigned y = 0; y < chunk.cells; ++y)
+    {
+        for (unsigned x = 0; x < chunk.cells; ++x)
+        {
+            unsigned a = y * (chunk.cells + 1) + x, b = a + 1, c = a + chunk.cells + 1, d = c + 1;
+            add(a, b, c);
+            add(b, d, c);
+        }
+    }
+    if (skirts)
+    {
+        for (unsigned edge = 0; edge < 4; ++edge)
+        {
+            for (unsigned i = 0; i < chunk.cells; ++i)
+            {
+                unsigned a = edge == 0   ? i
+                             : edge == 1 ? i * (chunk.cells + 1) + chunk.cells
+                             : edge == 2 ? chunk.cells * (chunk.cells + 1) + i
+                                         : i * (chunk.cells + 1);
+                unsigned b = a + (edge % 2 ? chunk.cells + 1 : 1);
+                auto lowA = positions[a], lowB = positions[b];
+                lowA.z -= 1;
+                lowB.z -= 1;
+                auto n = normals[a];
+                auto color = TerrainColor(chunk.vertices[a].biome);
+                triangle({positions[a], lowA, positions[b]}, {n, n, n}, color);
+                triangle({positions[b], lowA, lowB}, {n, n, n}, color);
+            }
+        }
+    }
+    for (const auto &road : chunk.roads)
+    {
+        for (std::size_t i = 1; i < road.points.size(); ++i)
+        {
+            auto a = SurfaceProjection(road.points[i - 1], chunk.frame, radius),
+                 b = SurfaceProjection(road.points[i], chunk.frame, radius);
+            double length = std::hypot(b.x - a.x, b.y - a.y);
+            if (length < .01)
+            {
+                continue;
+            }
+            double x = -(b.y - a.y) / length * road.widthMeters * .5,
+                   y = (b.x - a.x) / length * road.widthMeters * .5;
+            models::Point p{float((a.x + x) / 2), float((a.y + y) / 2), float(a.z / 2)},
+                q{float((b.x + x) / 2), float((b.y + y) / 2), float(b.z / 2)},
+                r{float((a.x - x) / 2), float((a.y - y) / 2), float(a.z / 2)},
+                s{float((b.x - x) / 2), float((b.y - y) / 2), float(b.z / 2)}, n{0, 0, 1};
+            triangle({p, r, q}, {n, n, n}, {.18f, .22f, .24f, 1});
+            triangle({q, r, s}, {n, n, n}, {.18f, .22f, .24f, 1});
+        }
+    }
+    model->count = std::uint32_t(model->parts.size());
+    return model;
+}
+void DrawSurfaceModel(const models::Model &model, const world::TangentFrame &frame,
+                      const world::SurfaceSession &session, float lower = 0)
+{
+    const auto &origin = session.Origin();
+    auto p = SurfaceProjection(frame.origin, origin, session.Planet().radiusMeters);
+    auto x = world::SurfaceGeometry::TransformDirection({1, 0, 0}, frame, origin);
+    auto y = world::SurfaceGeometry::TransformDirection({0, 1, 0}, frame, origin);
+    auto z = world::SurfaceGeometry::TransformDirection({0, 0, 1}, frame, origin);
+    models::Transform3D transform;
+    transform.yaw = float(std::atan2(x.y, x.x));
+    transform.pitch = float(std::asin(std::clamp(-x.z, -1., 1.)));
+    transform.roll = float(std::atan2(y.z, z.z));
+    transform.position.z = float(p.z / 2) + lower;
+    float px = float(p.x / 2), py = float(p.y / 2);
+    Drawing::DrawModel3D(model, Drawing::WorldToScreen(px, py), {1, 1, 1}, transform, (px + py) * 36, {});
+}
+} // namespace
+struct PlanetScene::Data
+{
+    struct Entry
+    {
+        std::shared_ptr<const world::SurfaceChunk> chunk;
+        std::unique_ptr<models::Model> model;
+    };
+    std::map<world::ChunkKey, Entry> meshes;
+    std::unique_ptr<models::Model> fallback;
+    world::TangentFrame fallbackFrame;
+    std::uint64_t epoch = 0;
+};
+PlanetScene::PlanetScene() : data(std::make_unique<Data>())
+{
+}
+PlanetScene::~PlanetScene() = default;
+void PlanetScene::ResetResources()
+{
+    for (const auto &entry : data->meshes)
+    {
+        GameRenderer::Get().Backend().ReleaseModel(*entry.second.model);
+    }
+    data->meshes.clear();
+    if (data->fallback)
+    {
+        GameRenderer::Get().Backend().ReleaseModel(*data->fallback);
+        data->fallback.reset();
+    }
+    data->epoch = 0;
+}
+void PlanetScene::Draw()
+{
+    auto started = std::chrono::steady_clock::now();
+    const auto session = Game::Get().Surface();
+    if (!session || !session->Ready())
+    {
+        return;
+    }
+    WorldView view;
+    auto snapshot = session->Stream().Snapshot();
+    auto &d = *data;
+    if (d.epoch != snapshot->statistics.epoch)
+    {
+        ResetResources();
+        d.epoch = snapshot->statistics.epoch;
+    }
+    std::vector<std::shared_ptr<const world::SurfaceChunk>> visible;
+    for (const auto &chunk : snapshot->chunks)
+    {
+        if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, session->Pose().origin,
+                                             chunk->frame.origin) < chunk->radiusMeters + 96)
+        {
+            visible.push_back(chunk);
+        }
+    }
+    std::sort(visible.begin(), visible.end(), [&](const auto &a, const auto &b) {
+        return world::SurfaceGeometry::Dot(a->frame.origin.normal, session->Pose().origin.normal) >
+               world::SurfaceGeometry::Dot(b->frame.origin.normal, session->Pose().origin.normal);
+    });
+    if (visible.size() > 32)
+    {
+        visible.resize(32);
+    }
+    std::set<world::ChunkKey> retained;
+    for (const auto &chunk : visible)
+    {
+        retained.insert(chunk->key);
+    }
+    for (auto it = d.meshes.begin(); it != d.meshes.end();)
+    {
+        if (!retained.count(it->first))
+        {
+            GameRenderer::Get().Backend().ReleaseModel(*it->second.model);
+            it = d.meshes.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+    unsigned uploads = 0;
+    // Small, bounded safety patch is always available while CPU chunks or GPU uploads catch up.
+    if (!d.fallback || world::SurfaceGeometry::Distance(session->Planet().radiusMeters,
+                                                        d.fallbackFrame.origin, session->Pose().origin) > 16)
+    {
+        world::SurfaceChunk coarse;
+        coarse.frame = session->Pose();
+        coarse.cells = 8;
+        for (unsigned y = 0; y <= 8; ++y)
+        {
+            for (unsigned x = 0; x <= 8; ++x)
+            {
+                auto point =
+                    world::SurfaceGeometry::Advance(coarse.frame, (double(x) - 4) * 16, (double(y) - 4) * 16,
+                                                    session->Planet().radiusMeters)
+                        .origin;
+                point.altitudeMeters = snapshot->planet->terrain.Height(point);
+                auto biome = snapshot->planet->terrain.Environment(point, point.altitudeMeters, 0).biome;
+                coarse.vertices.push_back({point, point.normal, biome});
+            }
+        }
+        if (d.fallback)
+        {
+            GameRenderer::Get().Backend().ReleaseModel(*d.fallback);
+        }
+        d.fallback = SurfaceModel(coarse, session->Planet().radiusMeters, false);
+        d.fallbackFrame = coarse.frame;
+        ++uploads;
+    }
+    for (const auto &chunk : visible)
+    {
+        if (uploads >= 2 || std::chrono::steady_clock::now() - started > std::chrono::milliseconds(2))
+        {
+            break;
+        }
+        if (d.meshes.count(chunk->key))
+        {
+            continue;
+        }
+        auto model = SurfaceModel(*chunk, session->Planet().radiusMeters, true);
+        d.meshes.emplace(chunk->key, Data::Entry{chunk, std::move(model)});
+        ++uploads;
+    }
+    auto &backend = GameRenderer::Get().Backend();
+    backend.BeginModels();
+    DrawSurfaceModel(*d.fallback, d.fallbackFrame, *session, -.08f);
+    for (const auto &chunk : visible)
+    {
+        auto it = d.meshes.find(chunk->key);
+        if (it != d.meshes.end())
+        {
+            DrawSurfaceModel(*it->second.model, it->second.chunk->frame, *session);
+        }
+    }
+    const auto &w = Game::Get().GetState();
+    if (Game::Distance(w.bikePosition, w.playerPosition) < 80)
+    {
+        Drawing::DrawWorldBike(w.bikePosition, w.bikeYaw, std::fabs(w.bikeSpeed) / 12.8f, w.isBikeMounted);
+    }
+    if (!w.isBikeMounted)
+    {
+        float elevation = float(session->Local(session->Pose().origin).z / 2);
+        renderqueue::PushMatrix();
+        renderqueue::Translate(0, -elevation * 44, elevation * (1296.f / 44));
+        Drawing::DrawPerson(w.playerPosition, {.55f, .68f, .72f}, true);
+        renderqueue::PopMatrix();
+    }
+    backend.EndModels();
+}
+
+// ============================================================================
+// SceneManager — active-scene selection and resource retirement
+// ============================================================================
 Scene &SceneManager::Get(SceneKind kind)
 {
     static auto scenes = []() {
@@ -1626,6 +1922,7 @@ Scene &SceneManager::Get(SceneKind kind)
         result[size_t(SceneKind::Observatory)] = std::make_unique<ObservatoryScene>();
         result[size_t(SceneKind::Mine)] = std::make_unique<MineScene>();
         result[size_t(SceneKind::Frontier)] = std::make_unique<FrontierScene>();
+        result[size_t(SceneKind::Planet)] = std::make_unique<PlanetScene>();
         result[size_t(SceneKind::Background)] = std::make_unique<BackgroundScene>();
         result[size_t(SceneKind::Hud)] = std::make_unique<HudScene>();
         return result;
@@ -1635,17 +1932,19 @@ Scene &SceneManager::Get(SceneKind kind)
 SceneKind SceneManager::Current()
 {
     const auto &state = Game::Get().GetState();
-    return GameLevels::Chapter().IsActive() ? SceneKind::Frontier
-           : GameLevels::Mine().IsActive()  ? SceneKind::Mine
-           : state.isInObservatory          ? SceneKind::Observatory
-           : state.isInsideHome             ? SceneKind::Interior
-                                            : SceneKind::Exterior;
+    return state.surfaceExploration           ? SceneKind::Planet
+           : GameLevels::Chapter().IsActive() ? SceneKind::Frontier
+           : GameLevels::Mine().IsActive()    ? SceneKind::Mine
+           : state.isInObservatory            ? SceneKind::Observatory
+           : state.isInsideHome               ? SceneKind::Interior
+                                              : SceneKind::Exterior;
 }
 void SceneManager::Reset()
 {
     for (size_t i = 0; i < size_t(SceneKind::Count); ++i)
     {
         auto &scene = Get(SceneKind(i));
+        scene.ResetResources();
         scene.BeginPlacement();
         scene.EndPlacement();
         scene.GetGraph().Clear();

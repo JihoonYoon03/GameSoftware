@@ -23,6 +23,9 @@ class Scene
 {
   public:
     virtual ~Scene() = default;
+    virtual void ResetResources()
+    {
+    }
     virtual void Draw()
     {
     }
@@ -52,6 +55,7 @@ enum class SceneKind
     Observatory,
     Mine,
     Frontier,
+    Planet,
     Background,
     Hud,
     Count
@@ -132,6 +136,22 @@ class FrontierScene final : public Scene
 {
   public:
     void Draw() override;
+};
+
+// ============================================================================
+// PlanetScene : Scene — streamed surface meshes, coarse safety terrain and exploration actors
+// ============================================================================
+class PlanetScene final : public Scene
+{
+  public:
+    PlanetScene();
+    ~PlanetScene() override;
+    void Draw() override;
+    void ResetResources() override;
+
+  private:
+    struct Data;
+    std::unique_ptr<Data> data;
 };
 
 // ============================================================================
