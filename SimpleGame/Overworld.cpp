@@ -1791,6 +1791,12 @@ const std::vector<world::StoryAnchor> &Overworld::StoryAnchors()
     }();
     return anchors;
 }
+const world::GeneratedPlanet &Overworld::PlanetPlan()
+{
+    static const auto plan = world::PlanetGenerator::Erma(StoryAnchors()).Generate();
+    return plan;
+}
+
 int Overworld::CityAt(Vector2 position)
 {
     for (int i = 0; i < kCityCount; ++i)

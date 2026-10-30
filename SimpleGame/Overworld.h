@@ -1,5 +1,6 @@
 #pragma once
 #include "Game.h"
+#include "WorldGeneration.h"
 #include <array>
 #include <cstdint>
 #include <map>
@@ -250,6 +251,8 @@ class Overworld
     static constexpr Vector2 kMineEntrance = {128, 18};
     static const std::array<CityInfo, kCityCount> &Cities();
     static const std::vector<world::StoryAnchor> &StoryAnchors();
+    // Lazy read-only plan. Streaming activates this in CQ-01C; legacy gameplay stays unchanged.
+    static const world::GeneratedPlanet &PlanetPlan();
     static int CityAt(Vector2 position);
     static bool IsRoad(int x, int y);
     static TrafficSystem &Traffic();

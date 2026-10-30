@@ -38,6 +38,7 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="World.h"><Filter>헤더 파일</Filter></ClInclude>
+    <ClInclude Include="WorldGeneration.h"><Filter>헤더 파일</Filter></ClInclude>
     <ClInclude Include="Hud.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -113,6 +114,7 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="World.cpp"><Filter>소스 파일</Filter></ClCompile>
+    <ClCompile Include="WorldGeneration.cpp"><Filter>소스 파일</Filter></ClCompile>
     <ClCompile Include="Hud.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
