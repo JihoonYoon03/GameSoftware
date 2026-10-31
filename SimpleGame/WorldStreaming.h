@@ -1,5 +1,5 @@
 #pragma once
-#include "WorldGeneration.h"
+#include "WorldContent.h"
 #include <functional>
 #include <memory>
 #include <string>
@@ -31,6 +31,8 @@ struct RoadRibbon
 {
     std::vector<SurfacePoint> points;
     double widthMeters = 6;
+    double sidewalkMeters = 0;
+    unsigned lanes = 2;
 };
 // ============================================================================
 // SurfaceChunk — immutable CPU terrain, contact grid and clipped route publication
@@ -43,6 +45,7 @@ struct SurfaceChunk
     std::vector<TerrainVertex> vertices;
     std::vector<std::size_t> regions;
     std::vector<RoadRibbon> roads;
+    std::vector<SurfaceStructure> structures;
     double radiusMeters = 0;
     std::size_t Bytes() const;
     GroundContact Contact(const SurfacePoint &point) const;
@@ -125,14 +128,25 @@ class SurfaceSession
     SurfacePoint PointAt(double rightMeters, double forwardMeters) const;
     GroundContact ContactAt(double rightMeters, double forwardMeters) const;
     bool Blocked(double rightMeters, double forwardMeters, bool hovering = false) const;
-    // Swept terrain contact, <=2m substeps; missing detailed chunks use the same global height field.
+    // Swept terrain/object contact, <=0.4m substeps; missing chunks use the same global rules.
     void Move(double rightMeters, double forwardMeters, bool hovering = false);
+    // Developer survey relocation. Same world/stream, safe land placement; no quest or travel unlock.
+    bool Relocate(const SurfacePoint &point);
     std::optional<TangentFrame> Rebase();
     WorldLocation Location() const;
+    std::size_t CollisionCells() const
+    {
+        return contentCollision.CachedCells();
+    }
+    std::vector<const SurfaceStructure *> NearbyStructures() const
+    {
+        return contentCollision.Structures();
+    }
 
   private:
     PlanetDefinition planet;
     TangentFrame pose, origin;
     TerrainStream stream;
+    mutable ContentCollision contentCollision;
 };
 } // namespace world

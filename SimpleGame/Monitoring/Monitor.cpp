@@ -275,6 +275,14 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         streaming.Number("queued", stats.queued);
         streaming.Number("completed", stats.completed);
         streaming.Number("resident_bytes", stats.bytes);
+        streaming.Number("content_layout_revision", ::world::ContentLayout::Revision);
+        streaming.Number("collision_cells", surface.CollisionCells());
+        std::size_t structureCount = 0;
+        for (const auto &chunk : snapshot->chunks)
+        {
+            structureCount += chunk->structures.size();
+        }
+        streaming.Number("structures", structureCount);
         streaming.Number("generated", stats.generated);
         streaming.Number("cancelled", stats.cancelled);
         streaming.Number("discarded", stats.discarded);

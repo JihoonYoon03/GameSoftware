@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <set>
 
 namespace tutorial
 {
@@ -2009,8 +2010,8 @@ void Hud::DrawMenu()
             "광산 입구 야외에서 시작합니다. 권총을 보유하지만 기본 장착은 맨손입니다.",
             "광산 탐험의 시작 지점으로 이동합니다. 구조와 스캔을 확인할 수 있습니다.",
             "1장 빛나는 개척지의 시작 지점으로 이동합니다.",
-            "에르마 표면을 도보와 바이크로 자유롭게 탐사합니다. 주변 지형과 지역 연결 경로를 확인할 수 "
-            "있습니다."};
+            "에르마의 지형·도시 블록·시설을 탐사합니다. [ / ]로 검사할 지역을 바꿉니다. 기존 임무와 "
+            "NPC의 행성 이전은 후속 단계입니다."};
         Icon("stage", 824, 222, 36);
         auto heading = Dialogue::Wrap(Game::StageName(TestStage(stage)), 328, 24);
         for (size_t i = 0; i < heading.size(); ++i)
@@ -2176,7 +2177,7 @@ void PlanetHud::Draw()
     {
         area = snapshot->planet->Region(location.regionId).definition.name;
     }
-    Hud::DrawObjective("자유 탐사", area + " · M 주변 지도 / Esc 메뉴");
+    Hud::DrawObjective("자유 탐사 · 지역 배치 확인", area + " · M 지도 / [ ] 지역 변경");
     DrawMap();
     if (Game::Get().FindNearbyInteraction() == InteractionTarget::JetBike)
     {
@@ -2211,6 +2212,8 @@ void PlanetHud::DrawMap(bool full)
         UiText(96, 143, "주변 탐사도", 26);
         UiText(820, 196, "주변 5km", 20);
         UiText(820, 240, "지역 외곽 · 연결 도로", 17);
+        UiText(820, 276, "주변 블록 · 건물 용도", 17);
+        UiText(820, 312, "[ / ] 개발용 지역 이동", 16);
         UiText(820, 659, "M / Esc 닫기", 16);
     }
     Drawing::DrawEllipse(center.x, center.y, radius + 3, radius + 3, {.35f, .62f, .61f});
@@ -2257,6 +2260,62 @@ void PlanetHud::DrawMap(bool full)
             }
             MapLine(view, project(a), project(b), {.56f, .69f, .65f}, full ? 2 : 3);
         }
+    }
+    std::set<std::string> drawnStructures;
+    auto structure = [&](const world::SurfaceStructure &item) {
+        if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, item.frame.origin,
+                                             session->Pose().origin) >
+            range + std::hypot(item.sizeMeters.x, item.sizeMeters.y))
+        {
+            return;
+        }
+        if (!drawnStructures.insert(item.id).second)
+        {
+            return;
+        }
+        auto position = project(item.frame.origin);
+        if (Game::Distance(position, {float(local.x), float(local.y)}) >
+            range + float(std::hypot(item.sizeMeters.x, item.sizeMeters.y)))
+        {
+            return;
+        }
+        std::vector<Vector2> polygon;
+        for (auto corner : std::array<Vector2, 4>{{{-1, -1}, {1, -1}, {1, 1}, {-1, 1}}})
+        {
+            double x = corner.x * item.sizeMeters.x * .5, y = corner.y * item.sizeMeters.y * .5;
+            auto point =
+                world::SurfaceGeometry::FromLocal(item.frame,
+                                                  {x * std::cos(item.yaw) - y * std::sin(item.yaw),
+                                                   x * std::sin(item.yaw) + y * std::cos(item.yaw), 0},
+                                                  session->Planet().radiusMeters);
+            polygon.push_back(view.Project(project(point)));
+        }
+        MapPolygon(view, std::move(polygon),
+                   item.use == world::ContentUse::Housing ? ColorRGBA(.44f, .56f, .57f)
+                                                          : ColorRGBA(.55f, .66f, .47f));
+    };
+    for (const auto &chunk : snapshot->chunks)
+    {
+        for (const auto &road : chunk->roads)
+        {
+            if (road.sidewalkMeters <= 0)
+            {
+                continue;
+            }
+            for (std::size_t i = 1; i < road.points.size(); ++i)
+            {
+                MapLine(view, project(road.points[i - 1]), project(road.points[i]), {.39f, .47f, .46f},
+                        full ? 1 : float(road.widthMeters) * view.scale);
+            }
+        }
+        for (const auto &item : chunk->structures)
+        {
+            structure(item);
+        }
+    }
+    for (auto item : session->NearbyStructures())
+    {
+        structure(*item);
     }
     if (Game::Distance(w.bikePosition, w.playerPosition) < range / 2)
     {

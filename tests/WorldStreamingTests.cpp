@@ -8,6 +8,7 @@
 #include <iostream>
 #include <map>
 #include <mutex>
+#include <set>
 #include <stdexcept>
 #include <thread>
 
@@ -63,6 +64,231 @@ double Norm(Vector3d v)
 double Difference(Vector3d a, Vector3d b)
 {
     return Norm({a.x - b.x, a.y - b.y, a.z - b.z});
+}
+std::shared_ptr<GeneratedPlanet> ContentFixture()
+{
+    auto plan = std::make_shared<GeneratedPlanet>(*FlatPlanet(4800000));
+    auto base = G::Frame(G::FromDegrees(0, 0));
+    // Geometry-only fixture: real catalog area/footprint validation stays in WorldGenerationTests.
+    for (unsigned tier = 1; tier <= 4; ++tier)
+    {
+        GeneratedRegion region;
+        region.definition = {"content_city_" + std::to_string(tier), "도시 검사", plan->terrain.Planet().id,
+                             RegionKind::Settlement, SettlementTier(tier)};
+        region.center = {plan->terrain.Planet().id, region.definition.id, plan->terrain.Planet().seed, 1};
+        region.center.position = G::Advance(base, tier * 4000, 0, plan->terrain.Planet().radiusMeters).origin;
+        region.access = region.center;
+        region.frame = G::Frame(region.center.position);
+        region.footprint = {{-600, -600, 0}, {600, -600, 0}, {600, 600, 0}, {-600, 600, 0}};
+        region.boundingRadiusMeters = 850;
+        plan->regions.push_back(std::move(region));
+    }
+    for (auto kind : {RegionKind::Outpost, RegionKind::Mine, RegionKind::Outlaw, RegionKind::AncientRuins})
+    {
+        auto region = plan->regions.front();
+        region.definition.id = "content_zone_" + std::to_string(unsigned(kind));
+        region.definition.kind = kind;
+        region.definition.tier = SettlementTier::None;
+        region.center.regionId = region.definition.id;
+        region.center.position =
+            G::Advance(base, double(plan->regions.size() + 1) * 4000, 0, plan->terrain.Planet().radiusMeters)
+                .origin;
+        region.access = region.center;
+        region.frame = G::Frame(region.center.position);
+        if (kind == RegionKind::Mine)
+        {
+            region.center.space = SpaceKind::Subsurface;
+            region.center.layer = -1;
+            region.center.position.altitudeMeters = -30;
+        }
+        plan->regions.push_back(std::move(region));
+    }
+    return plan;
+}
+void ContentContracts()
+{
+    auto plan = ContentFixture();
+    const auto &p = plan->terrain.Planet();
+    auto junctionCell = ContentLayout::Generate(*plan, {0, 1, 1});
+    auto east = ContentLayout::Generate(*plan, {0, 2, 1});
+    auto north = ContentLayout::Generate(*plan, {0, 1, 2});
+    Check(junctionCell.streets.size() == 2 && east.streets.size() == 2 && north.streets.size() == 2,
+          "Interior blocks publish shared street nodes");
+    Check(G::Distance(p.radiusMeters, junctionCell.streets[0].points.back(), east.streets[0].points.front()) <
+                  1.e-6 &&
+              G::Distance(p.radiusMeters, junctionCell.streets[1].points.back(),
+                          north.streets[1].points.front()) < 1.e-6,
+          "Neighbouring streets join the same physical junction without gaps");
+    double districtMaximum = 0, capitalMaximum = 0;
+    std::vector<SurfaceStructure> structures;
+    for (std::size_t region = 0; region < plan->regions.size(); ++region)
+    {
+        std::size_t count = 0;
+        for (std::int64_t y = -4; y <= 4; ++y)
+        {
+            for (std::int64_t x = -4; x <= 4; ++x)
+            {
+                ContentCellKey key{region, x, y};
+                auto cell = ContentLayout::Generate(*plan, key);
+                auto again = ContentLayout::Generate(*plan, key);
+                Check(cell.structures.size() == again.structures.size() &&
+                          cell.streets.size() == again.streets.size(),
+                      "Layout is independent of cache/visit order");
+                for (std::size_t i = 0; i < cell.structures.size(); ++i)
+                {
+                    const auto &s = cell.structures[i], &a = again.structures[i];
+                    Check(s.id == a.id && s.yaw == a.yaw &&
+                              Difference(s.frame.origin.normal, a.frame.origin.normal) < 1.e-12 &&
+                              Difference(s.sizeMeters, a.sizeMeters) < 1.e-12,
+                          "Stable identity, geometry and orientation");
+                    Check(s.Contains(s.frame.origin, p.radiusMeters),
+                          "The rendered rectangle's centre is solid");
+                    auto outside = G::Advance(s.frame, std::cos(s.yaw) * (s.sizeMeters.x * .5 + 1),
+                                              std::sin(s.yaw) * (s.sizeMeters.x * .5 + 1), p.radiusMeters)
+                                       .origin;
+                    Check(!s.Contains(outside, p.radiusMeters, .2),
+                          "Collision respects mesh-sized rotated bounds");
+                    for (const auto &road : cell.streets)
+                    {
+                        for (auto point : road.points)
+                        {
+                            Check(!s.Contains(point, p.radiusMeters,
+                                              road.widthMeters * .5 + road.sidewalkMeters),
+                                  "Buildings keep roads and sidewalks clear");
+                        }
+                    }
+                    if (region == 0)
+                    {
+                        districtMaximum = (std::max)(districtMaximum, s.sizeMeters.z);
+                    }
+                    if (region == 3)
+                    {
+                        capitalMaximum = (std::max)(capitalMaximum, s.sizeMeters.z);
+                    }
+                    ++count;
+                    structures.push_back(s);
+                }
+                for (const auto &road : cell.streets)
+                {
+                    Check(road.lanes == 2 || road.lanes == 4 || road.lanes == 6,
+                          "City road hierarchy remains two/four/six lanes");
+                }
+            }
+        }
+        Check(count > 0, "All city tiers and non-city zone types place usable content");
+    }
+    Check(capitalMaximum > districtMaximum * 2, "Settlement tiers have distinct building scales");
+    Check(!structures.empty(), "Content fixture has physical structures");
+    const auto target = structures.front();
+    auto protectedPlan = *plan;
+    WorldLocation anchorLocation{p.id, target.regionId, p.seed, p.generatorVersion};
+    anchorLocation.position = target.frame.origin;
+    protectedPlan.anchors.push_back({"authored_core", anchorLocation});
+    bool protectedSlot = true;
+    for (auto address : ContentLayout::Near(protectedPlan, target.frame.origin, 0))
+    {
+        for (const auto &item : ContentLayout::Generate(protectedPlan, address).structures)
+        {
+            protectedSlot &= item.id != target.id;
+        }
+    }
+    Check(protectedSlot, "Fixed story anchors reserve their physical footprint before generated lots");
+    std::atomic_bool cancel{false};
+    auto key = CubeSphere::Address(p, target.frame.origin, StreamSettings{}.Level(p));
+    std::set<std::string> ids;
+    bool publishedTarget = false;
+    std::set<ChunkKey> keys{key};
+    for (auto edge : {ChunkEdge::Left, ChunkEdge::Right, ChunkEdge::Down, ChunkEdge::Up})
+    {
+        keys.insert(CubeSphere::Neighbor(key, edge));
+    }
+    for (auto address : keys)
+    {
+        auto patch = ContentLayout::Publish(*plan, address, 180, cancel);
+        for (const auto &s : patch.structures)
+        {
+            Check(ids.insert(s.id).second, "Cross-chunk objects have exactly one owner");
+            Check(CubeSphere::Address(p, s.frame.origin, address.level) == address,
+                  "Content owner is canonical");
+            publishedTarget |= s.id == target.id;
+        }
+        for (const auto &road : patch.streets)
+        {
+            for (std::size_t i = 1; i < road.points.size(); ++i)
+            {
+                auto a = road.points[i - 1], b = road.points[i];
+                SurfacePoint middle{
+                    G::Unit({a.normal.x + b.normal.x, a.normal.y + b.normal.y, a.normal.z + b.normal.z}), 0};
+                Check(CubeSphere::Address(p, middle, address.level) == address,
+                      "Road fragments agree across chunk boundaries");
+            }
+        }
+    }
+    Check(publishedTarget, "A detailed chunk publishes its physical structures");
+    ContentCollision collision;
+    Check(collision.Blocked(*plan, target.frame.origin, .32),
+          "Physical content works before any render publication");
+    for (const auto &s : structures)
+    {
+        Check(collision.Blocked(*plan, s.frame.origin, .32),
+              "Collision survives neighbourhood eviction and return");
+        Check(collision.CachedCells() <= ContentCollision::MaximumCells,
+              "Collision cache has a hard cell bound");
+    }
+    Check(collision.Blocked(*plan, target.frame.origin, .32), "Evicted content regenerates identically");
+    for (auto point : {G::FromDegrees(0, 45), G::FromDegrees(90, 0), G::FromDegrees(-90, 0)})
+    {
+        Check(!collision.Blocked(*plan, point, .32), "Far-side/polar queries never create phantom content");
+    }
+    cancel.store(true);
+    Check(ContentLayout::Publish(*plan, key, 180, cancel).structures.empty(),
+          "Cancelled content publishes no partial objects");
+    auto bad = key;
+    ++bad.planetSeed;
+    Throws([&] { ContentLayout::Publish(*plan, bad, 180, cancel); },
+           "Cross-world content publication is rejected");
+    Throws([&] { ContentLayout::Near(*plan, target.frame.origin, -1); },
+           "Invalid local content queries are rejected");
+    auto changed = *plan;
+    changed.terrain = PlanetTerrain(
+        PlanetDefinition{p.id, p.name, p.systemId, p.seed + 1, p.generatorVersion, p.radiusMeters, false},
+        {{"flat", G::FromDegrees(0, 0), G::Pi * p.radiusMeters + 1, 1, 0}});
+    bool different = false;
+    for (std::int64_t x = -2; x <= 2; ++x)
+    {
+        auto a = ContentLayout::Generate(*plan, {0, x, 0}), b = ContentLayout::Generate(changed, {0, x, 0});
+        different |= a.structures.size() != b.structures.size();
+        if (!a.structures.empty() && !b.structures.empty())
+        {
+            different |= Difference(a.structures.front().frame.origin.normal,
+                                    b.structures.front().frame.origin.normal) > 1.e-7 ||
+                         Difference(a.structures.front().sizeMeters, b.structures.front().sizeMeters) > 1.e-6;
+        }
+    }
+    Check(different, "Another seed does not reuse the same city layout/identities");
+    collision.Blocked(changed, changed.regions.front().center.position, .32);
+    Check(collision.CachedCells() < ContentCollision::MaximumCells,
+          "Changing worlds drops old collision cells");
+
+    auto start = G::Advance(target.frame, -std::cos(target.yaw) * (target.sizeMeters.x * .5 + 5),
+                            -std::sin(target.yaw) * (target.sizeMeters.x * .5 + 5), p.radiusMeters)
+                     .origin;
+    SurfaceSession session(p, start);
+    session.Start(plan);
+    Pump([&] { session.Update(); }, [&] { return session.Ready(); });
+    auto direction =
+        G::TransformDirection({std::cos(target.yaw), std::sin(target.yaw), 0}, target.frame, session.Pose());
+    session.Move(direction.x * (target.sizeMeters.x + 10), direction.y * (target.sizeMeters.x + 10));
+    Check(!target.Contains(session.Pose().origin, p.radiusMeters),
+          "Fast movement cannot tunnel through a generated building");
+    Check(G::Distance(p.radiusMeters, start, session.Pose().origin) < target.sizeMeters.x + 9,
+          "Building sweep stops at contact");
+    auto epoch = session.Stream().Snapshot()->statistics.epoch;
+    Check(session.Relocate(target.frame.origin), "Survey relocation finds nearby unoccupied ground");
+    Check(!collision.Blocked(*plan, session.Pose().origin, .65), "Survey landing is safe for its test bike");
+    Check(session.Stream().Snapshot()->statistics.epoch == epoch,
+          "Survey relocation retains the same world and worker");
+    session.Stop();
 }
 void MeshSeamsAndContacts()
 {
@@ -360,6 +586,7 @@ int main()
         QueueCancellationAndWorldSwitch();
         FaultAndShutdown();
         SphericalTravelAndOrigin();
+        ContentContracts();
         std::cout << "World streaming tests passed: " << checks << " checks\n";
         return 0;
     }

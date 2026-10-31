@@ -202,6 +202,7 @@
     <ClInclude Include="Weapon.h" />
     <ClInclude Include="World.h" />
     <ClInclude Include="WorldGeneration.h" />
+    <ClInclude Include="WorldContent.h" />
     <ClInclude Include="WorldStreaming.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -231,6 +232,7 @@
     <ClCompile Include="Weapon.cpp" />
     <ClCompile Include="World.cpp" />
     <ClCompile Include="WorldGeneration.cpp" />
+    <ClCompile Include="WorldContent.cpp" />
     <ClCompile Include="WorldStreaming.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

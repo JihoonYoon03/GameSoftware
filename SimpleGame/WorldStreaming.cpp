@@ -97,10 +97,15 @@ std::size_t SurfaceChunk::Bytes() const
 {
     std::size_t bytes = sizeof(*this) + key.planetId.capacity() +
                         vertices.capacity() * sizeof(TerrainVertex) +
-                        regions.capacity() * sizeof(std::size_t) + roads.capacity() * sizeof(RoadRibbon);
+                        regions.capacity() * sizeof(std::size_t) + roads.capacity() * sizeof(RoadRibbon) +
+                        structures.capacity() * sizeof(SurfaceStructure);
     for (const auto &road : roads)
     {
         bytes += road.points.capacity() * sizeof(SurfacePoint);
+    }
+    for (const auto &structure : structures)
+    {
+        bytes += structure.id.capacity() + structure.regionId.capacity();
     }
     return bytes;
 }
@@ -247,6 +252,17 @@ std::shared_ptr<const SurfaceChunk> SurfaceChunk::Build(const GeneratedPlanet &p
         {
             break;
         }
+    }
+    auto content = ContentLayout::Publish(plan, key, result->radiusMeters, cancel);
+    if (cancel.load())
+    {
+        return {};
+    }
+    result->structures = std::move(content.structures);
+    for (auto &street : content.streets)
+    {
+        result->roads.push_back(
+            {std::move(street.points), street.widthMeters, street.sidewalkMeters, street.lanes});
     }
     return result;
 }
@@ -665,16 +681,19 @@ SurfaceSession::SurfaceSession(PlanetDefinition p, SurfacePoint spawn, StreamSet
 void SurfaceSession::Start(PlanetGenerator generator)
 {
     Require(generator.Planet().SameWorld(planet), "Session generator belongs to another world");
+    contentCollision.Clear();
     stream.Open(std::move(generator));
 }
 void SurfaceSession::Start(std::shared_ptr<const GeneratedPlanet> plan)
 {
     Require(plan && plan->terrain.Planet().SameWorld(planet), "Session world mismatch");
+    contentCollision.Clear();
     stream.Open(std::move(plan));
 }
 void SurfaceSession::Stop()
 {
     stream.Close();
+    contentCollision.Clear();
 }
 bool SurfaceSession::Ready() const
 {
@@ -688,6 +707,8 @@ void SurfaceSession::Update(Vector3d velocity)
     {
         pose.origin.altitudeMeters =
             (std::max)(PlanetTerrain::SeaLevelMeters, stream.Contact(pose.origin).heightMeters);
+        // Also provides a tiny CPU-only object fallback before a detailed render chunk is published.
+        contentCollision.Blocked(*stream.Snapshot()->planet, pose.origin, .32);
     }
 }
 Vector3d SurfaceSession::Local(const SurfacePoint &point) const
@@ -709,7 +730,8 @@ bool SurfaceSession::Blocked(double x, double y, bool hovering) const
         return true;
     }
     auto contact = ContactAt(x, y);
-    return (!contact.land && !hovering) || (contact.land && contact.slope > (hovering ? .35 : .65));
+    return (!contact.land && !hovering) || (contact.land && contact.slope > (hovering ? .35 : .65)) ||
+           contentCollision.Blocked(*stream.Snapshot()->planet, PointAt(x, y), hovering ? .65 : .32);
 }
 void SurfaceSession::Move(double x, double y, bool hovering)
 {
@@ -719,18 +741,49 @@ void SurfaceSession::Move(double x, double y, bool hovering)
     {
         return;
     }
-    unsigned steps = (std::max)(1u, unsigned(std::ceil(std::hypot(x, y) / 2)));
+    // Small object sweeps complement the existing local sliding solver; no tunnelling through props.
+    unsigned steps = (std::max)(1u, unsigned(std::ceil(std::hypot(x, y) / .4)));
     for (unsigned step = 0; step < steps; ++step)
     {
         auto next = G::Advance(pose, x / steps, y / steps, planet.radiusMeters);
         auto contact = stream.Contact(next.origin);
-        if ((!contact.land && !hovering) || (contact.land && contact.slope > (hovering ? .35 : .65)))
+        if ((!contact.land && !hovering) || (contact.land && contact.slope > (hovering ? .35 : .65)) ||
+            contentCollision.Blocked(*stream.Snapshot()->planet, next.origin, hovering ? .65 : .32))
         {
             break;
         }
         next.origin.altitudeMeters = (std::max)(PlanetTerrain::SeaLevelMeters, contact.heightMeters);
         pose = next;
     }
+}
+bool SurfaceSession::Relocate(const SurfacePoint &point)
+{
+    G::Validate(point);
+    if (!Ready())
+    {
+        return false;
+    }
+    auto plan = stream.Snapshot()->planet;
+    auto frame = G::Frame(point);
+    for (unsigned ring = 0; ring <= 8; ++ring)
+    {
+        for (unsigned step = 0; step < (ring == 0 ? 1u : 8u); ++step)
+        {
+            double angle = step * G::Pi / 4;
+            auto candidate = G::Advance(frame, ring * 4 * std::cos(angle), ring * 4 * std::sin(angle),
+                                        planet.radiusMeters);
+            auto contact = stream.Contact(candidate.origin);
+            if (!contact.land || contact.slope > .3 || contentCollision.Blocked(*plan, candidate.origin, .65))
+            {
+                continue;
+            }
+            candidate.origin.altitudeMeters = contact.heightMeters;
+            pose = origin = candidate;
+            stream.Update(pose);
+            return true;
+        }
+    }
+    return false;
 }
 std::optional<TangentFrame> SurfaceSession::Rebase()
 {

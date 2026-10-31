@@ -17,6 +17,7 @@
 #include <utility>
 #include <set>
 #include <chrono>
+#include <map>
 
 namespace game
 {
@@ -48,7 +49,7 @@ class WorldView
 } // namespace
 
 // ============================================================================
-// Scene ‚Äî Actor placement
+// Scene ? Actor placement
 // ============================================================================
 void Scene::BeginPlacement()
 {
@@ -218,11 +219,11 @@ void InteriorScene::Draw()
         scene.PlaceWorldActor("terminal-label", 1, -1.2f, WorldBounds(1, -1.2f, 0, 0, 80, 80), 3, 0,
                               [this]() {
                                   Vector2 label = Drawing::WorldToScreen(1, -1.2f, 65);
-                                  Drawing::DrawLabel(label.x - 30, label.y, "Îã®Îßê");
+                                  Drawing::DrawLabel(label.x - 30, label.y, "¥‹∏ª");
                               });
         scene.PlaceWorldActor("door-label", 2.4f, 2.4f, WorldBounds(2.4f, 2.4f, 0, 0, 0, 80), 3, 0, [this]() {
             Vector2 label = Drawing::WorldToScreen(2.4f, 2.4f);
-            Drawing::DrawLabel(label.x - 20, label.y + 25, "Ï∂úÍµ¨");
+            Drawing::DrawLabel(label.x - 20, label.y + 25, "√‚±∏");
         });
         scene.GetGraph().Reparent("terminal-label", *scene.GetGraph().Find("terminal"));
         scene.GetGraph().Reparent("door-label", *scene.GetGraph().Find("door"));
@@ -402,7 +403,7 @@ void CityScene::DrawTrafficInfrastructure(game::Scene &scene)
                             const auto &resource = models::ResourceAssets::Get(
                                 models::ModelLibrary::TrafficSignal(0).resourceId);
                             auto label = Drawing::WorldToScreen(head.x, head.y, resource.maximum.z * 44 + 12);
-                            Drawing::DrawLabel(label.x - 20, label.y, "Ï¢åÌöåÏ†Ñ", {.2f, 1, .75f});
+                            Drawing::DrawLabel(label.x - 20, label.y, "¡¬»∏¿¸", {.2f, 1, .75f});
                         }
                     }
                     // Paint the stop line at the actual approach boundary, immediately before the crossing.
@@ -716,14 +717,14 @@ void CityScene::DrawUtilityDevices(game::Scene &scene)
         entrance.x + entrance.y, [entrance]() {
             Drawing::DrawProp(models::ModelLibrary::Get().trafficGate, {entrance.x - 3, entrance.y - 1},
                               {6, .3f, 2.5f});
-            Drawing::DrawInteractionMarker(entrance, "Í¥ëÏÇ∞ ÏûÖÍµ¨ / ÌïòÏ∞® ÌõÑ E ÏûÖÏû•", {.4f, .9f, 1});
+            Drawing::DrawInteractionMarker(entrance, "±§ªÍ ¿‘±∏ / «œ¬˜ »ƒ E ¿‘¿Â", {.4f, .9f, 1});
         });
     for (const auto &city : Overworld::Cities())
     {
         auto p = city.center;
         std::string label =
-            std::string(city.name) + " / Ï£ºÎØº " +
-            std::to_string(CivicJustice::LivingPopulation(int(&city - Overworld::Cities().data()))) + "Î™Ö";
+            std::string(city.name) + " / ¡÷πŒ " +
+            std::to_string(CivicJustice::LivingPopulation(int(&city - Overworld::Cities().data()))) + "∏Ì";
         scene.PlaceWorldActor(
             std::string("city-sign/") + city.id, p.x, p.y, WorldBounds(p.x, p.y, 0, 0, 100, 150), 4, 0,
             [p, label]() { Drawing::DrawInteractionMarker({p.x, p.y + 4}, label, {.5f, .8f, .85f}); });
@@ -763,23 +764,23 @@ void CityScene::DrawQuestMarkers(game::Scene &scene)
     auto &game = Game::Get();
     if (game.IsQuestInteraction(InteractionTarget::HomeEntrance))
     {
-        marker("home", kHomeDoor, "Ïßë Îã®Îßê ÌôïÏù∏", {.6f, .78f, .81f});
+        marker("home", kHomeDoor, "¡˝ ¥‹∏ª »Æ¿Œ", {.6f, .78f, .81f});
     }
     if (game.IsQuestInteraction(InteractionTarget::Lia))
     {
-        marker("lia", kLiaPosition, "Î¶¨ÏïÑ / E ÎåÄÌôî", {1, .69f, .38f});
+        marker("lia", kLiaPosition, "∏Ææ∆ / E ¥Î»≠", {1, .69f, .38f});
     }
     if (game.IsQuestInteraction(InteractionTarget::Mara))
     {
-        marker("mara", kMaraPosition, "ÎßàÎùº / ÏÑ†ÌÉù ÏùòÎ¢∞", {1, .77f, .4f});
+        marker("mara", kMaraPosition, "∏∂∂Û / º±≈√ ¿«∑⁄", {1, .77f, .4f});
     }
     if (game.IsQuestInteraction(InteractionTarget::PowerRelay))
     {
-        marker("relay", kRelayPosition, "Ï†ÑÎ†• Î≥µÍµ¨ [E]", {1, .7f, .3f});
+        marker("relay", kRelayPosition, "¿¸∑¬ ∫π±∏ [E]", {1, .7f, .3f});
     }
     if (game.IsQuestInteraction(InteractionTarget::GateBeacon))
     {
-        marker("beacon", kBeaconPosition, "Ï†ÑÎßùÎåÄ ÏäπÍ∞ïÍ∏∞ [E]", {.4f, .93f, .96f});
+        marker("beacon", kBeaconPosition, "¿¸∏¡¥Î Ω¬∞≠±‚ [E]", {.4f, .93f, .96f});
     }
     if (game.IsQuestInteraction(InteractionTarget::CityReceiver))
     {
@@ -787,16 +788,16 @@ void CityScene::DrawQuestMarkers(game::Scene &scene)
                GameLevels::Chapter().IsAvailable()
                    ? (GameLevels::Chapter().CompletedSites() == 3 &&
                               !GameLevels::Chapter().GetState().recordsCompared
-                          ? "1Ïû• / Í∏∞Î°ù ÎåÄÏ°∞ [E]"
-                          : "1Ïû• / ÌòÑÏû• Ï∂úÎ∞ú [E]")
-                   : "ÎèÑÏãú ÏàòÏã†Îßù [E]",
+                          ? "1¿Â / ±‚∑œ ¥Î¡∂ [E]"
+                          : "1¿Â / «ˆ¿Â √‚πﬂ [E]")
+                   : "µµΩ√ ºˆΩ≈∏¡ [E]",
                {.4f, .9f, 1});
     }
     if (game.IsQuestInteraction(InteractionTarget::JetBike))
     {
         if (!game.GetState().isBikeMounted)
         {
-            marker("jet-bike", game.GetState().bikePosition, "Ï†úÌä∏ Î∞îÏù¥ÌÅ¨ ÌÉëÏäπ [E]", {1, .75f, .4f});
+            marker("jet-bike", game.GetState().bikePosition, "¡¶∆Æ πŸ¿Ã≈© ≈æΩ¬ [E]", {1, .75f, .4f});
         }
     }
 }
@@ -827,7 +828,7 @@ void CityScene::Draw()
                     if (Game::Distance(p, Game::Get().GetState().playerPosition) < 3)
                     {
                         auto label = Drawing::WorldToScreen(p.x, p.y, 60);
-                        Drawing::DrawLabel(label.x - 16, label.y, "Ïπ¥Ïù∏");
+                        Drawing::DrawLabel(label.x - 16, label.y, "ƒ´¿Œ");
                     }
                 });
         }
@@ -879,7 +880,7 @@ void ObservatoryScene::Draw()
         });
         scene.PlaceWorldActor("deck-label", 0, 0, WorldBounds(0, 0, 0, 0, 0, 150), 1, 0, [this]() {
             Vector2 center = Drawing::WorldToScreen(0, 0);
-            Drawing::DrawLabel(center.x - 74, center.y + 8, "Í¥ÄÏ∏° Îç∞ÌÅ¨ / 180 m", ColorRGBA(.5f, .8f, .82f));
+            Drawing::DrawLabel(center.x - 74, center.y + 8, "∞¸√¯ µ•≈© / 180 m", ColorRGBA(.5f, .8f, .82f));
         });
         scene.PlaceWorldActor("panorama-railing", -4, -4, WorldBounds(-4, -4, 8, 8, 78, 70), 1, 0, [this]() {
             for (int i = 0; i < 9; ++i)
@@ -954,8 +955,8 @@ void ObservatoryScene::Draw()
                     return;
                 }
                 Drawing::DrawInteractionMarker(kObservatoryConsole,
-                                               Game::Get().GetState().gateSignalHeard ? "Í¥ÄÎ¨∏ ÏùëÎãµ Í∏∞Î°ù"
-                                                                                      : "Ïã†Ìò∏ Ï∏°Ï†ï [E]",
+                                               Game::Get().GetState().gateSignalHeard ? "∞¸πÆ ¿¿¥‰ ±‚∑œ"
+                                                                                      : "Ω≈»£ √¯¡§ [E]",
                                                ColorRGBA(.4f, .93f, .96f));
             });
         scene.PlaceWorldActor("exit-marker", kObservatoryStairs.x, kObservatoryStairs.y,
@@ -965,7 +966,7 @@ void ObservatoryScene::Draw()
                                   {
                                       return;
                                   }
-                                  Drawing::DrawInteractionMarker(kObservatoryStairs, "ÎèÑÏãúÎ°ú ÎÇ¥Î†§Í∞ÄÍ∏∞ [E]",
+                                  Drawing::DrawInteractionMarker(kObservatoryStairs, "µµΩ√∑Œ ≥ª∑¡∞°±‚ [E]",
                                                                  ColorRGBA(1, .75f, .4f));
                               });
         scene.GetGraph().Reparent("signal-marker", *scene.GetGraph().Find("signal-console"));
@@ -1000,7 +1001,7 @@ void MineScene::PlacePerson(game::Scene &scene, const std::string &id, Vector2 p
             if (Game::Distance(position, Game::Get().GetState().playerPosition) < 3 && !label.empty())
             {
                 auto screen = Drawing::WorldToScreen(position.x, position.y, 66);
-                Drawing::DrawLabel(screen.x - 25, screen.y, downed ? "E ÏùëÍ∏â Ï≤òÏπò" : label, coat);
+                Drawing::DrawLabel(screen.x - 25, screen.y, downed ? "E ¿¿±ﬁ √≥ƒ°" : label, coat);
                 if (combat.health < 100)
                 {
                     Drawing::DrawRectangle(screen.x - 18, screen.y + 8, 36, 3, {.12f, .18f, .2f});
@@ -1156,15 +1157,15 @@ void MineScene::Draw()
                                   Drawing::DrawGlow(center, 32, {.95f, .63f, .23f});
                               });
     }
-    PlaceClue(scene, "power-bypass", kPowerBypass, "E ÎπÑÏÉÅ Ï†ÑÎ†• Ïö∞Ìöå", {1, .7f, .3f},
+    PlaceClue(scene, "power-bypass", kPowerBypass, "E ∫ÒªÛ ¿¸∑¬ øÏ»∏", {1, .7f, .3f},
               MineQuestStage::BypassPower);
-    PlaceClue(scene, "ruin-signal", kRuinSignal, "E Íµ¨Ï°∞ Ïã†Ìò∏ Ï°∞ÏÇ¨", {.3f, .8f, 1},
+    PlaceClue(scene, "ruin-signal", kRuinSignal, "E ±∏¡∂ Ω≈»£ ¡∂ªÁ", {.3f, .8f, 1},
               MineQuestStage::InvestigateSignal);
-    PlaceClue(scene, "observer-glyph", kObserverGlyph, "E Í¥ÄÏ∏°Ïûê Î¨∏Ïñë", {.7f, .55f, 1},
+    PlaceClue(scene, "observer-glyph", kObserverGlyph, "E ∞¸√¯¿⁄ πÆæÁ", {.7f, .55f, 1},
               MineQuestStage::InvestigateGlyph, true);
-    PlaceClue(scene, "relay-coordinates", kCoordinateTerminal, "E Ï§ëÍ≥Ñ Ï¢åÌëú ÌôïÎ≥¥", {.4f, 1, .8f},
+    PlaceClue(scene, "relay-coordinates", kCoordinateTerminal, "E ¡ﬂ∞Ë ¡¬«• »Æ∫∏", {.4f, 1, .8f},
               MineQuestStage::CollectCoordinates);
-    PlaceClue(scene, "mine-exit", GameLevels::Mine().GetState().entry, "E Í¥ëÏÇ∞ Î∞ñÏúºÎ°ú", {.4f, .9f, .8f},
+    PlaceClue(scene, "mine-exit", GameLevels::Mine().GetState().entry, "E ±§ªÍ π€¿∏∑Œ", {.4f, .9f, .8f},
               MineQuestStage::ReturnToHalo);
     for (size_t i = 0; i < GameLevels::Mine().GetState().enemies.size(); ++i)
     {
@@ -1219,13 +1220,13 @@ void MineScene::Draw()
                     guard ? ColorRGBA(.38f, .62f, .8f) : ColorRGBA(.9f, .68f, .28f),
                     guard ? models::CharacterType::HeavyCombat : models::CharacterType::Miner,
                     npc.facing.walking,
-                    npc.evacuating ? "Ìó§ÏùºÎ°úÎ°ú Ï≤†Ïàò Ï§ë"
-                    : guard        ? "Í≥†Î¶Ω Ï†ÑÌà¨Ïõê / E Íµ¨Ï°∞"
-                                   : "Í¥ëÎ∂Ä / E Íµ¨Ï°∞",
+                    npc.evacuating ? "«Ï¿œ∑Œ∑Œ √∂ºˆ ¡ﬂ"
+                    : guard        ? "∞Ì∏≥ ¿¸≈ıø¯ / E ±∏¡∂"
+                                   : "±§∫Œ / E ±∏¡∂",
                     npc.facing.yaw, npc.gender, npc.hair, npc.combat);
     }
     PlacePerson(scene, "ria", GameLevels::Mine().GetState().riaPosition, {.95f, .55f, .25f},
-                models::CharacterType::Engineer, GameLevels::Mine().GetState().riaFacing.walking, "Î¶¨ÏïÑ",
+                models::CharacterType::Engineer, GameLevels::Mine().GetState().riaFacing.walking, "∏Ææ∆",
                 GameLevels::Mine().GetState().riaFacing.yaw, models::Gender::Female,
                 models::HairStyle::Ponytail, GameLevels::Mine().GetState().riaCombat);
     auto player = Game::Get().GetState().playerPosition;
@@ -1255,7 +1256,7 @@ void MineScene::Draw()
 }
 
 // ============================================================================
-// MineScene ‚Äî darkness overlay
+// MineScene ? darkness overlay
 // ============================================================================
 void MineScene::DrawDarkness()
 {
@@ -1493,7 +1494,7 @@ void FrontierScene::Draw()
                 {
                     auto screen = Drawing::WorldToScreen(npc.position.x, npc.position.y, 60);
                     Drawing::DrawLabel(screen.x - 20, screen.y, label, color);
-                    if (label == "ÌèêÏÑ§ÎπÑ Ï†êÍ±∞Ïûê")
+                    if (label == "∆Ûº≥∫Ò ¡°∞≈¿⁄")
                     {
                         Drawing::DrawRectangle(screen.x - 15, screen.y + 7, 30, 3, {.2f, .08f, .05f});
                         Drawing::DrawRectangle(screen.x - 15, screen.y + 7, 30.f * npc.combat.health / 60, 3,
@@ -1503,16 +1504,16 @@ void FrontierScene::Draw()
             });
     };
     person("companion/ria", state.ria, models::CharacterType::Engineer, models::Gender::Female,
-           models::HairStyle::Ponytail, {.9f, .58f, .3f}, "Î¶¨ÏïÑ", true);
+           models::HairStyle::Ponytail, {.9f, .58f, .3f}, "∏Ææ∆", true);
     person("companion/kain", state.kain, models::CharacterType::Guard, models::Gender::Male,
-           models::HairStyle::Buzz, {.38f, .53f, .66f}, "Ïπ¥Ïù∏", state.kainJoined);
+           models::HairStyle::Buzz, {.38f, .53f, .66f}, "ƒ´¿Œ", state.kainJoined);
     for (size_t i = 0; i < state.survivors.size(); ++i)
     {
         person("convoy/person/" + std::to_string(i), state.survivors[i],
                i % 3 ? models::CharacterType::Engineer : models::CharacterType::Explorer,
                i % 2 ? models::Gender::Female : models::Gender::Male, models::HairStyle(i % 6),
                {.65f, .69f, .51f},
-               i == 0 ? (state.convoyRescued ? "Íµ¨Ï°∞Îêú Ïö¥ÏÜ°ÎåÄ ¬∑ 5Î™Ö" : "Ïö¥ÏÜ°ÎåÄ ÏÉùÏ°¥Ïûê ¬∑ 5Î™Ö") : "", false);
+               i == 0 ? (state.convoyRescued ? "±∏¡∂µ» øÓº€¥Î °§ 5∏Ì" : "øÓº€¥Î ª˝¡∏¿⁄ °§ 5∏Ì") : "", false);
     }
     for (size_t i = 0; i < state.scrappers.size(); ++i)
     {
@@ -1525,9 +1526,9 @@ void FrontierScene::Draw()
                i ? models::CharacterType::Guard : models::CharacterType::Explorer,
                i == 1 ? models::Gender::Female : models::Gender::Male, models::HairStyle::Curls,
                {.7f, .36f, .25f},
-               state.negotiated         ? "Ï≤†Ïàò Ï§ë"
-               : npc.combat.health <= 0 ? "Ï†úÏïïÎê®"
-                                        : "ÌèêÏÑ§ÎπÑ Ï†êÍ±∞Ïûê",
+               state.negotiated         ? "√∂ºˆ ¡ﬂ"
+               : npc.combat.health <= 0 ? "¡¶æ–µ "
+                                        : "∆Ûº≥∫Ò ¡°∞≈¿⁄",
                true);
     }
     auto player = Game::Get().GetState().playerPosition;
@@ -1586,7 +1587,7 @@ void ScreenScene::DrawScreenScene(game::Scene &scene)
 }
 
 // ============================================================================
-// BackgroundScene / HudScene ‚Äî screen-space compositions
+// BackgroundScene / HudScene ? screen-space compositions
 // ============================================================================
 
 void BackgroundScene::Draw()
@@ -1617,7 +1618,7 @@ void HudScene::Draw()
 }
 
 // ============================================================================
-// PlanetScene : Scene ‚Äî main-thread terrain model/GPU ownership
+// PlanetScene : Scene ? main-thread terrain model/GPU ownership
 // ============================================================================
 
 namespace
@@ -1730,14 +1731,35 @@ std::unique_ptr<models::Model> SurfaceModel(const world::SurfaceChunk &chunk, do
             {
                 continue;
             }
-            double x = -(b.y - a.y) / length * road.widthMeters * .5,
-                   y = (b.x - a.x) / length * road.widthMeters * .5;
-            models::Point p{float((a.x + x) / 2), float((a.y + y) / 2), float(a.z / 2)},
-                q{float((b.x + x) / 2), float((b.y + y) / 2), float(b.z / 2)},
-                r{float((a.x - x) / 2), float((a.y - y) / 2), float(a.z / 2)},
-                s{float((b.x - x) / 2), float((b.y - y) / 2), float(b.z / 2)}, n{0, 0, 1};
-            triangle({p, r, q}, {n, n, n}, {.18f, .22f, .24f, 1});
-            triangle({q, r, s}, {n, n, n}, {.18f, .22f, .24f, 1});
+            auto strip = [&](double width, double offset, double lift, std::array<float, 4> color) {
+                double nx = -(b.y - a.y) / length, ny = (b.x - a.x) / length;
+                double left = offset + width * .5, right = offset - width * .5;
+                models::Point p{float((a.x + nx * left) / 2), float((a.y + ny * left) / 2),
+                                float((a.z + lift) / 2)},
+                    q{float((b.x + nx * left) / 2), float((b.y + ny * left) / 2), float((b.z + lift) / 2)},
+                    r{float((a.x + nx * right) / 2), float((a.y + ny * right) / 2), float((a.z + lift) / 2)},
+                    s{float((b.x + nx * right) / 2), float((b.y + ny * right) / 2), float((b.z + lift) / 2)},
+                    n{0, 0, 1};
+                triangle({p, r, q}, {n, n, n}, color);
+                triangle({q, r, s}, {n, n, n}, color);
+            };
+            if (road.sidewalkMeters > 0)
+            {
+                strip(road.widthMeters + road.sidewalkMeters * 2, 0, 0, {.38f, .43f, .43f, 1});
+            }
+            strip(road.widthMeters, 0, .015, {.16f, .2f, .23f, 1});
+            if (road.sidewalkMeters > 0)
+            {
+                strip(.12, 0, .03, {.82f, .71f, .36f, 1});
+                for (unsigned lane = 1; lane < road.lanes; ++lane)
+                {
+                    if (lane * 2 == road.lanes)
+                    {
+                        continue;
+                    }
+                    strip(.09, -road.widthMeters * .5 + lane * 3., .03, {.61f, .68f, .68f, 1});
+                }
+            }
         }
     }
     model->count = std::uint32_t(model->parts.size());
@@ -1758,6 +1780,112 @@ void DrawSurfaceModel(const models::Model &model, const world::TangentFrame &fra
     transform.position.z = float(p.z / 2) + lower;
     float px = float(p.x / 2), py = float(p.y / 2);
     Drawing::DrawModel3D(model, Drawing::WorldToScreen(px, py), {1, 1, 1}, transform, (px + py) * 36, {});
+}
+const models::Model &StructureModel(world::ContentForm form)
+{
+    using F = world::ContentForm;
+    using B = models::BuildingType;
+    using S = models::SceneryType;
+    auto &library = models::ModelLibrary::Get();
+    switch (form)
+    {
+    case F::Habitat:
+        return library.buildings[size_t(B::Habitat)];
+    case F::Terrace:
+        return library.buildings[size_t(B::Terraced)];
+    case F::Workshop:
+        return library.buildings[size_t(B::Workshop)];
+    case F::Dome:
+        return library.buildings[size_t(B::Dome)];
+    case F::Spire:
+        return library.buildings[size_t(B::SpireHelix)];
+    case F::TwinBridge:
+        return library.buildings[size_t(B::TwinBridge)];
+    case F::Arcology:
+        return library.buildings[size_t(B::ArcologyTerrace)];
+    case F::Transit:
+        return library.buildings[size_t(B::TransitAtrium)];
+    case F::Courtyard:
+        return library.buildings[size_t(B::CourtyardHabitat)];
+    case F::Cargo:
+        return models::ModelLibrary::Scenery(S::CargoContainer);
+    case F::Relay:
+        return models::ModelLibrary::Scenery(S::CommRelay);
+    case F::Solar:
+        return models::ModelLibrary::Scenery(S::SolarArray);
+    case F::WaterTank:
+        return models::ModelLibrary::Scenery(S::WaterTank);
+    case F::Conveyor:
+        return models::ModelLibrary::Scenery(S::MiningConveyor);
+    case F::Monolith:
+        return models::ModelLibrary::Scenery(S::ObserverMonolith);
+    case F::Arch:
+        return models::ModelLibrary::Scenery(S::FracturedArch);
+    default:
+        return models::ModelLibrary::Scenery(S::FieldShelter);
+    }
+}
+void DrawSurfaceStructure(const world::SurfaceStructure &structure, const world::SurfaceSession &session)
+{
+    const auto &model = StructureModel(structure.form);
+    if (!model.resourceId)
+    {
+        return;
+    }
+    const auto &asset = models::ResourceAssets::Get(model.resourceId);
+    if (asset.maximum.x <= asset.minimum.x || asset.maximum.y <= asset.minimum.y ||
+        asset.maximum.z <= asset.minimum.z)
+    {
+        return;
+    }
+    models::Point scale = {float(structure.sizeMeters.x / 2 / (asset.maximum.x - asset.minimum.x)),
+                           float(structure.sizeMeters.y / 2 / (asset.maximum.y - asset.minimum.y)),
+                           float(structure.sizeMeters.z / 2 / (asset.maximum.z - asset.minimum.z))};
+    const auto &origin = session.Origin();
+    auto x = world::SurfaceGeometry::TransformDirection({std::cos(structure.yaw), std::sin(structure.yaw), 0},
+                                                        structure.frame, origin);
+    auto y = world::SurfaceGeometry::TransformDirection(
+        {-std::sin(structure.yaw), std::cos(structure.yaw), 0}, structure.frame, origin);
+    auto z = world::SurfaceGeometry::TransformDirection({0, 0, 1}, structure.frame, origin);
+    auto p = SurfaceProjection(structure.frame.origin, origin, session.Planet().radiusMeters);
+    models::Transform3D transform;
+    transform.yaw = float(std::atan2(x.y, x.x));
+    transform.pitch = float(std::asin(std::clamp(-x.z, -1., 1.)));
+    transform.roll = float(std::atan2(y.z, z.z));
+    // Resource pivots differ: centre the real mesh bounds on the same rectangle used by collision.
+    auto offset =
+        transform.Apply({-(asset.minimum.x + asset.maximum.x) * .5f * scale.x,
+                         -(asset.minimum.y + asset.maximum.y) * .5f * scale.y, -asset.minimum.z * scale.z});
+    transform.position = {offset.x, offset.y, offset.z + float(p.z / 2)};
+    float px = float(p.x / 2), py = float(p.y / 2);
+    models::Palette palette;
+    palette.body = {.28f + float(structure.appearance % 5) * .035f,
+                    .38f + float((structure.appearance >> 4) % 4) * .025f, .44f, 1};
+    palette.accent = {.35f, .63f, .68f, 1};
+    palette.emission = {.25f, .78f, .87f, 1};
+    auto screen = Drawing::WorldToScreen(px, py, float(p.z / 2) * 44);
+    auto player = Drawing::WorldToScreen(Game::Get().GetState().playerPosition.x,
+                                         Game::Get().GetState().playerPosition.y,
+                                         float(session.Local(session.Pose().origin).z / 2) * 44);
+    float width = float((structure.sizeMeters.x + structure.sizeMeters.y) * 9);
+    if (screen.y > player.y - 12 && player.y > screen.y - float(structure.sizeMeters.z * 22) - 20 &&
+        std::fabs(screen.x - player.x) < width)
+    {
+        palette.body[3] = palette.accent[3] = palette.emission[3] = .28f;
+    }
+    if (structure.foundationMeters > .05)
+    {
+        auto foundation = transform;
+        foundation.position = {0, 0, float(p.z / 2)};
+        auto shift = foundation.Apply({-float(structure.sizeMeters.x / 4), -float(structure.sizeMeters.y / 4),
+                                       -float(structure.foundationMeters / 2)});
+        foundation.position = shift;
+        Drawing::DrawModel3D(models::ModelLibrary::Get().box, Drawing::WorldToScreen(px, py),
+                             {float(structure.sizeMeters.x / 2), float(structure.sizeMeters.y / 2),
+                              float(structure.foundationMeters / 2)},
+                             foundation, (px + py) * 36, palette);
+    }
+    Drawing::DrawModel3D(model, Drawing::WorldToScreen(px, py), scale, transform, (px + py) * 36, palette);
 }
 } // namespace
 struct PlanetScene::Data
@@ -1895,6 +2023,29 @@ void PlanetScene::Draw()
         }
     }
     const auto &w = Game::Get().GetState();
+    std::map<std::string, const world::SurfaceStructure *> structures;
+    for (const auto &chunk : visible)
+    {
+        for (const auto &structure : chunk->structures)
+        {
+            structures.emplace(structure.id, &structure);
+        }
+    }
+    // Collision's bounded neighbourhood is also the object fallback during chunk publication.
+    for (auto structure : session->NearbyStructures())
+    {
+        structures.emplace(structure->id, structure);
+    }
+    for (const auto &entry : structures)
+    {
+        const auto &structure = *entry.second;
+        if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, session->Pose().origin,
+                                             structure.frame.origin) <
+            80 + std::hypot(structure.sizeMeters.x, structure.sizeMeters.y) * .5)
+        {
+            DrawSurfaceStructure(structure, *session);
+        }
+    }
     if (Game::Distance(w.bikePosition, w.playerPosition) < 80)
     {
         Drawing::DrawWorldBike(w.bikePosition, w.bikeYaw, std::fabs(w.bikeSpeed) / 12.8f, w.isBikeMounted);
@@ -1911,7 +2062,7 @@ void PlanetScene::Draw()
 }
 
 // ============================================================================
-// SceneManager ‚Äî active-scene selection and resource retirement
+// SceneManager ? active-scene selection and resource retirement
 // ============================================================================
 Scene &SceneManager::Get(SceneKind kind)
 {

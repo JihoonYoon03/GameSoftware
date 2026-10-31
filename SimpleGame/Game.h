@@ -449,6 +449,7 @@ class Game
         return surfaceBike;
     }
     void StopSurface();
+    bool RelocateSurfaceSurvey(const world::SurfacePoint &point);
     void Reset();
     bool EnterTestStage(TestStage stage);
     static const char *StageName(TestStage stage);
@@ -477,6 +478,7 @@ class Game
     GameState state;
     std::unique_ptr<world::SurfaceSession> surface;
     std::optional<world::SurfacePoint> surfaceBike;
+    std::optional<std::size_t> surfaceSurveyRegion;
     FrameSchedule frameSchedule;
     static unsigned char NormalizeKey(unsigned char key);
     void UpdatePlayerMovement(float deltaSeconds);

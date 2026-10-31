@@ -628,6 +628,38 @@ void Game::KeyDown(unsigned char key, int, int)
             state.mapVisible = !state.mapVisible;
             state.StopMotion();
         }
+        else if ((key == '[' || key == ']') && !repeated && !state.mapVisible && surface && surface->Ready())
+        {
+            const auto plan = surface->Stream().Snapshot()->planet;
+            if (!plan->regions.empty())
+            {
+                auto count = plan->regions.size();
+                auto current = surfaceSurveyRegion.value_or(0);
+                if (!surfaceSurveyRegion)
+                {
+                    auto region = surface->Location().regionId;
+                    for (std::size_t i = 0; i < count; ++i)
+                    {
+                        if (plan->regions[i].definition.id == region)
+                        {
+                            current = i;
+                        }
+                    }
+                }
+                auto next = key == ']' ? (current + 1) % count : (current + count - 1) % count;
+                // An unavailable landing must not trap the developer's region browser on one entry.
+                surfaceSurveyRegion = next;
+                if (RelocateSurfaceSurvey(plan->regions[next].access.position))
+                {
+                    ShowNotice("개발용 배치 확인 / " + plan->regions[next].definition.name +
+                               " · 임무 진행은 바뀌지 않습니다.");
+                }
+                else
+                {
+                    ShowNotice("해당 지역 입구 주변에서 안전한 착지점을 찾지 못했습니다.");
+                }
+            }
+        }
         else if (key == 'e' && !state.mapVisible && surface && surface->Ready() &&
                  (state.isBikeMounted || Distance(state.playerPosition, state.bikePosition) < 1.8f))
         {
@@ -1071,6 +1103,27 @@ void Game::StopSurface()
     surfaceBike.reset();
     state.surfaceExploration = false;
     state.surfaceCameraHeight = 0;
+    surfaceSurveyRegion.reset();
+}
+bool Game::RelocateSurfaceSurvey(const world::SurfacePoint &point)
+{
+    if (!state.surfaceExploration || !surface || !surface->Relocate(point))
+    {
+        return false;
+    }
+    // Survey-only transport includes the test bike. Actual discovered relay travel belongs to F.
+    WeaponWheel::Close();
+    state.StopMotion();
+    state.mouseAiming = state.mouseFiring = false;
+    state.mapVisible = false;
+    std::fill(std::begin(state.pressedKeys), std::end(state.pressedKeys), false);
+    state.playerPosition = state.cameraPosition = {};
+    state.surfaceCameraHeight = 0;
+    state.bikePosition = {};
+    state.bikeElevation = 0;
+    state.bikeSafePoseValid = false;
+    surfaceBike = surface->Pose().origin;
+    return true;
 }
 void Game::UpdateSurface(float dt)
 {

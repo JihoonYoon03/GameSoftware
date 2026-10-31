@@ -817,6 +817,9 @@ void CapturePlanetSurface(const std::filesystem::path &output)
     Save(output / "planet-survey-map.bmp");
     w.mapVisible = false;
     // Cross at least one floating-origin threshold with the real bike motion code.
+    // City blocks now have real contact; this movement-only regression uses the reserved flat exterior.
+    assert(g.RelocateSurfaceSurvey(
+        world::LegacyWorldAdapter::ErmaExterior().Locate("overworld", {1500, 1500, 0}).position));
     w.isBikeMounted = true;
     w.pressedKeys['w'] = w.pressedKeys[' '] = true;
     auto origin = g.Surface()->Origin().origin;

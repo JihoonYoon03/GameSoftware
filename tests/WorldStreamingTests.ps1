@@ -10,7 +10,7 @@ $outputPrefix = $checkDirectory.Replace('\', '/') + '/'
 $executable = Join-Path $checkDirectory 'WorldStreamingTests.exe'
 $buildLog = Join-Path $checkDirectory 'build.log'
 $testLog = Join-Path $checkDirectory 'tests.log'
-$sources = @('SimpleGame/World.cpp', 'SimpleGame/WorldGeneration.cpp', 'SimpleGame/WorldStreaming.cpp', 'tests/WorldStreamingTests.cpp') |
+$sources = @('SimpleGame/World.cpp', 'SimpleGame/WorldGeneration.cpp', 'SimpleGame/WorldContent.cpp', 'SimpleGame/WorldStreaming.cpp', 'tests/WorldStreamingTests.cpp') |
     ForEach-Object { Join-Path $projectRoot $_ }
 & cl.exe /nologo /O2 /W4 /EHsc /std:c++17 /utf-8 /Y- "/I$projectRoot/SimpleGame" "/Fo:$outputPrefix" "/Fe:$executable" @sources *> $buildLog
 if ($LASTEXITCODE -ne 0) {
