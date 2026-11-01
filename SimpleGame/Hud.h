@@ -63,6 +63,10 @@ class MapHud
     static Vector2 WorldToMap(Vector2 worldPoint, bool fullMap);
     static Vector2 MapToWorld(Vector2 canvasPoint, bool fullMap);
     static bool Contains(Vector2 canvasPoint, bool fullMap);
+    static bool Zoom(int steps, Vector2 canvasPivot);
+    static void Pan(Vector2 canvasDelta);
+    static void ResetView(bool centerOnPlayer = false);
+    static bool HandleMapKey(unsigned char key);
 };
 
 // ============================================================================

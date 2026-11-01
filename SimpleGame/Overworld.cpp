@@ -2422,7 +2422,7 @@ float PlanetCities::Yaw(const world::SurfaceSession &session, int city, float ya
 void PlanetCities::Update(GameState &state, const world::SurfaceSession &session, float dt)
 {
     activeCity = -1;
-    if (!session.Ready() || state.isInsideHome || state.isInObservatory)
+    if (!session.Ready() || state.isInsideHome || state.isInObservatory || Game::Get().IsSurfaceMine())
     {
         return;
     }
@@ -2529,10 +2529,13 @@ InteractionTarget PlanetCities::Nearby(const GameState &state, const world::Surf
     }
     return result;
 }
-bool PlanetCities::Occupied(const GameState &state, const world::SurfaceSession &session, Vector2 local) const
+bool PlanetCities::Occupied(const GameState &state, const world::SurfaceSession &session, Vector2 local,
+                            int cityOverride) const
 {
-    int city = state.isInsideHome || state.isInObservatory ? 0 : activeCity;
-    if (city < 0 || !session.Ready())
+    int city = cityOverride >= 0                             ? cityOverride
+               : state.isInsideHome || state.isInObservatory ? 0
+                                                             : activeCity;
+    if (city < 0 || city >= Overworld::kCityCount || !session.Ready())
     {
         return false;
     }

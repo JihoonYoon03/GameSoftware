@@ -625,16 +625,20 @@ void Game::KeyDown(unsigned char key, int, int)
     {
         return;
     }
-    if (state.surfaceExploration && !Dialogue::Active() && !state.journalVisible &&
-        !state.dialogueHistoryVisible && key != 'j' && key != 'h')
+    if (state.mapVisible && MapHud::HandleMapKey(key))
+    {
+        return;
+    }
+    if (state.surfaceExploration && !game::GameLevels::Active() && !Dialogue::Active() &&
+        !state.journalVisible && !state.dialogueHistoryVisible && key != 'j' && key != 'h')
     {
         if (key == 'm')
         {
             state.mapVisible = !state.mapVisible;
             state.StopMotion();
         }
-        else if ((key == '[' || key == ']') && !repeated && !state.mapVisible && !state.isInsideHome &&
-                 !state.isInObservatory && surface && surface->Ready())
+        else if ((key == '[' || key == ']') && !repeated && !state.mapVisible && !IsSurfaceMine() &&
+                 !state.isInsideHome && !state.isInObservatory && surface && surface->Ready())
         {
             const auto plan = surface->Stream().Snapshot()->planet;
             if (!plan->regions.empty())
@@ -825,6 +829,19 @@ void Game::SpecialKeyDown(int key, int, int)
     {
         return;
     }
+    if (state.mapVisible && !state.isPaused && state.ui.screen == UiScreen::None)
+    {
+        if (key == GLUT_KEY_LEFT || key == GLUT_KEY_RIGHT || key == GLUT_KEY_UP || key == GLUT_KEY_DOWN)
+        {
+            MapHud::Pan({key == GLUT_KEY_LEFT    ? -56.f
+                         : key == GLUT_KEY_RIGHT ? 56.f
+                                                 : 0,
+                         key == GLUT_KEY_UP     ? -56.f
+                         : key == GLUT_KEY_DOWN ? 56.f
+                                                : 0});
+        }
+        return;
+    }
     if (state.journalVisible || state.dialogueHistoryVisible)
     {
         auto &offset = state.dialogue.historyOffset;
@@ -932,6 +949,10 @@ void Game::MouseButton(int button, int buttonState, int x, int y)
             {
                 MapHud::HandleClick(state.cursorPosition, button == GLUT_RIGHT_BUTTON);
             }
+            else if (button == 3 || button == 4)
+            {
+                MapHud::Zoom(button == 3 ? 1 : -1, state.cursorPosition);
+            }
         }
         return;
     }
@@ -955,6 +976,16 @@ std::optional<world::WorldLocation> Game::PlanetLocation() const
 {
     if (state.surfaceExploration && surface)
     {
+        if (IsSurfaceMine() && surface->Ready())
+        {
+            auto location = surface->Stream().Snapshot()->planet->Region("mq00_mine").center;
+            auto entry = game::GameLevels::Mine().GetState().entry;
+            location.position = world::SurfaceGeometry::FromLocal(
+                surface->Stream().Snapshot()->planet->Region("mq00_mine").frame,
+                {(state.playerPosition.x - entry.x) * 2, (state.playerPosition.y - entry.y) * 2, 0},
+                surface->Planet().radiusMeters);
+            return location;
+        }
         auto location = surface->Location();
         if ((state.isInsideHome || state.isInObservatory) && surfaceCities)
         {
@@ -1109,12 +1140,17 @@ void Game::Update(float deltaSeconds)
 }
 void Game::StopSurface()
 {
+    if (IsSurfaceMine())
+    {
+        game::GameLevels::Mine().GetState().active = false;
+    }
     if (surface)
     {
         surface->Stop();
         surface.reset();
     }
     surfaceBike.reset();
+    surfaceMineReturn.reset();
     surfaceCities.reset();
     state.surfaceExploration = false;
     state.surfaceCameraHeight = 0;
@@ -1122,8 +1158,8 @@ void Game::StopSurface()
 }
 bool Game::RelocateSurfaceSurvey(const world::SurfacePoint &point)
 {
-    if (!state.surfaceExploration || state.isInsideHome || state.isInObservatory || !surface ||
-        !surface->Relocate(point))
+    if (!state.surfaceExploration || IsSurfaceMine() || state.isInsideHome || state.isInObservatory ||
+        !surface || !surface->Relocate(point))
     {
         return false;
     }
@@ -1139,6 +1175,68 @@ bool Game::RelocateSurfaceSurvey(const world::SurfacePoint &point)
     state.bikeElevation = 0;
     state.bikeSafePoseValid = false;
     surfaceBike = surface->Pose().origin;
+    state.planetMapPan = {};
+    return true;
+}
+bool Game::EnterSurfaceMine()
+{
+    if (!state.surfaceExploration || !surface || !surface->Ready() || game::GameLevels::Active() ||
+        state.isInsideHome || state.isInObservatory || IsSurfaceMine() || state.isPaused ||
+        state.mapVisible || state.weaponWheel.visible || Dialogue::Active() || state.journalVisible ||
+        state.dialogueHistoryVisible || HospitalRecovery::Active())
+    {
+        return false;
+    }
+    const auto &region = surface->Stream().Snapshot()->planet->Region("mq00_mine");
+    if (world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, surface->Pose().origin,
+                                         region.access.position) > 5)
+    {
+        return false;
+    }
+    if (state.isBikeMounted)
+    {
+        ShowNotice("광산 / 바이크를 주차하고 내린 뒤 입장하세요.");
+        return false;
+    }
+    surfaceMineReturn = surface->Pose().origin;
+    auto facing = world::SurfaceGeometry::TransformDirection(
+        {std::cos(state.facingYaw), std::sin(state.facingYaw), 0}, surface->Origin(), region.frame);
+    state.facingYaw = float(std::atan2(facing.y, facing.x));
+    WeaponWheel::Close();
+    state.mapVisible = false;
+    state.surfaceCameraHeight = 0;
+    game::GameLevels::Mine().Enter();
+    if (surfaceCities)
+    {
+        surfaceCities->Update(state, *surface, 0);
+    }
+    return game::GameLevels::Mine().IsActive();
+}
+bool Game::LeaveSurfaceMine()
+{
+    if (!surfaceMineReturn || !LandOnSurface(*surfaceMineReturn))
+    {
+        return false;
+    }
+    auto &mine = game::GameLevels::Mine().GetState();
+    mine.active = false;
+    mine.bullets.clear();
+    mine.tracers.clear();
+    mine.scannerContacts.clear();
+    mine.scannerSeconds = mine.scannerRadius = 0;
+    surfaceMineReturn.reset();
+    ShowNotice(
+        "오르딘 광산 입구 / 갱도·발견한 길·현장 인원·조사 기록을 유지합니다. E로 재입장할 수 있습니다.");
+    return true;
+}
+bool Game::RecoverSurfaceAt(int city, Vector2 position)
+{
+    if (!state.surfaceExploration || !ReturnToSurface(position, city))
+    {
+        return false;
+    }
+    game::GameLevels::Mine().GetState().active = false;
+    surfaceMineReturn.reset();
     return true;
 }
 std::optional<Vector2> Game::ResidentPosition(const Resident &resident) const
@@ -1153,7 +1251,7 @@ std::optional<Vector2> Game::ResidentPosition(const Resident &resident) const
 }
 void Game::ToggleSurfaceBike()
 {
-    if (!surface || state.isInsideHome || state.isInObservatory)
+    if (!surface || IsSurfaceMine() || state.isInsideHome || state.isInObservatory)
     {
         return;
     }
@@ -1168,14 +1266,23 @@ void Game::ToggleSurfaceBike()
         surfaceBike = surface->Pose().origin;
     }
 }
-bool Game::ReturnToSurface(Vector2 door)
+bool Game::ReturnToSurface(Vector2 door, int city)
 {
-    auto point = surface && surfaceCities ? surfaceCities->Point(*surface, 0, door) : std::nullopt;
-    auto oldFrame = surface ? surface->Origin() : world::TangentFrame{};
-    bool placed = false;
-    if (point)
+    auto point = surface && surfaceCities ? surfaceCities->Point(*surface, city, door) : std::nullopt;
+    return point && LandOnSurface(*point, city);
+}
+bool Game::LandOnSurface(const world::SurfacePoint &point, int city)
+{
+    if (!surface || !surface->Ready())
     {
-        auto frame = world::SurfaceGeometry::Frame(*point);
+        return false;
+    }
+    auto oldFrame = surface ? surface->Origin() : world::TangentFrame{};
+    auto facingFrame =
+        IsSurfaceMine() ? surface->Stream().Snapshot()->planet->Region("mq00_mine").frame : oldFrame;
+    bool placed = false;
+    {
+        auto frame = world::SurfaceGeometry::Frame(point);
         for (unsigned ring = 0; ring <= 8 && !placed; ++ring)
         {
             for (unsigned step = 0; step < (ring == 0 ? 1u : 8u) && !placed; ++step)
@@ -1187,7 +1294,8 @@ bool Game::ReturnToSurface(Vector2 door)
                         .origin;
                 auto local = surface->Local(candidate);
                 if (surface->Blocked(local.x, local.y) ||
-                    surfaceCities->Occupied(state, *surface, {float(local.x / 2), float(local.y / 2)}) ||
+                    (surfaceCities && surfaceCities->Occupied(
+                                          state, *surface, {float(local.x / 2), float(local.y / 2)}, city)) ||
                     (surfaceBike && world::SurfaceGeometry::Distance(surface->Planet().radiusMeters,
                                                                      *surfaceBike, candidate) < 1))
                 {
@@ -1206,9 +1314,15 @@ bool Game::ReturnToSurface(Vector2 door)
     auto bikeHeading = world::SurfaceGeometry::TransformDirection(
         {std::cos(state.bikeYaw), std::sin(state.bikeYaw), 0}, oldFrame, surface->Origin());
     state.bikeYaw = float(std::atan2(bikeHeading.y, bikeHeading.x));
+    auto facing = world::SurfaceGeometry::TransformDirection(
+        {std::cos(state.facingYaw), std::sin(state.facingYaw), 0}, facingFrame, surface->Origin());
+    state.facingYaw = float(std::atan2(facing.y, facing.x));
     state.StopMotion();
     state.surfaceCameraHeight = 0;
     state.playerPosition = state.cameraPosition = {};
+    state.planetMapPan = {};
+    WeaponWheel::Close();
+    state.mapVisible = false;
     if (surfaceBike && world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, *surfaceBike,
                                                         surface->Pose().origin) < 1000)
     {
@@ -1231,10 +1345,17 @@ void Game::UpdateSurface(float dt)
         return;
     }
     auto velocity = state.isBikeMounted ? state.bikeVelocity : state.playerMotion.velocity;
-    surface->Update({velocity.x * 2, velocity.y * 2, 0});
+    surface->Update(IsSurfaceMine() || state.isInsideHome || state.isInObservatory
+                        ? world::Vector3d{}
+                        : world::Vector3d{velocity.x * 2, velocity.y * 2, 0});
     if (!surface->Ready())
     {
         state.StopMotion();
+        return;
+    }
+    HospitalRecovery::Update(dt);
+    if (HospitalRecovery::Active())
+    {
         return;
     }
     bool advancing = !state.isPaused && !state.mapVisible && !state.weaponWheel.visible &&
@@ -1242,6 +1363,34 @@ void Game::UpdateSurface(float dt)
     if (surfaceCities)
     {
         surfaceCities->Update(state, *surface, 0);
+    }
+    if (IsSurfaceMine())
+    {
+        if (advancing)
+        {
+            state.animationTimeSeconds += dt;
+            if (!Dialogue::Active())
+            {
+                state.noticeSecondsRemaining -= dt;
+            }
+            auto before = state.playerPosition;
+            UpdatePlayerMovement(dt);
+            if (IsAiming())
+            {
+                auto direction = game::MineLevel::GetAimDirection(game::GameLevels::AimAngle());
+                state.facingYaw = std::atan2(direction.y, direction.x);
+            }
+            models::Point animationVelocity = dt > 0
+                                                  ? models::Point{(state.playerPosition.x - before.x) / dt,
+                                                                  (state.playerPosition.y - before.y) / dt, 0}
+                                                  : models::Point{};
+            state.playerAnimation.Update(dt, animationVelocity, state.facingYaw, IsAiming(), false);
+            game::GameLevels::Mine().Update(dt);
+            HospitalRecovery::Update(0);
+            UpdateCamera(dt);
+            game::SceneManager::Update(dt);
+        }
+        return;
     }
     if (advancing && (state.isInsideHome || state.isInObservatory))
     {
@@ -1312,6 +1461,7 @@ void Game::UpdateSurface(float dt)
             state.bikeYaw = std::atan2(bikeHeading.y, bikeHeading.x);
             state.playerMotion.velocity = rotate(state.playerMotion.velocity);
             state.bikeVelocity = rotate(state.bikeVelocity);
+            state.planetMapPan = rotate(state.planetMapPan);
             state.playerPosition = {};
         }
         if (surfaceBike && world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, *surfaceBike,
@@ -1786,7 +1936,8 @@ void Game::ShowNotice(const std::string &message)
 bool Game::IsPositionBlocked(Vector2 position)
 {
     profiling::Count(profiling::Counter::CollisionQueries);
-    if (state.surfaceExploration && !state.isInsideHome && !state.isInObservatory)
+    if (state.surfaceExploration && !game::GameLevels::Active() && !state.isInsideHome &&
+        !state.isInObservatory)
     {
         return !surface || surface->Blocked(position.x * 2, position.y * 2, state.isBikeMounted) ||
                (surfaceCities && surfaceCities->Occupied(state, *surface, position));
@@ -1899,7 +2050,8 @@ bool Game::IsQuestInteraction(InteractionTarget target) const
 }
 InteractionTarget Game::FindNearbyInteraction()
 {
-    if (state.surfaceExploration && !state.isInsideHome && !state.isInObservatory)
+    if (state.surfaceExploration && !game::GameLevels::Active() && !state.isInsideHome &&
+        !state.isInObservatory)
     {
         if (state.isBikeMounted)
         {
@@ -1908,6 +2060,15 @@ InteractionTarget Game::FindNearbyInteraction()
         float distance = 1000000;
         auto target = surface && surfaceCities ? surfaceCities->Nearby(state, *surface, &distance)
                                                : InteractionTarget::None;
+        if (surface && surface->Ready())
+        {
+            const auto &mine = surface->Stream().Snapshot()->planet->Region("mq00_mine");
+            if (world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, surface->Pose().origin,
+                                                 mine.access.position) <= 5)
+            {
+                return InteractionTarget::MineEntrance;
+            }
+        }
         float bikeDistance = Distance(state.playerPosition, state.bikePosition);
         return bikeDistance < 1.8f && bikeDistance < distance ? InteractionTarget::JetBike : target;
     }
@@ -2048,6 +2209,11 @@ void Game::InteractWithNearbyTarget()
     };
     if (target == InteractionTarget::MineEntrance)
     {
+        if (state.surfaceExploration)
+        {
+            EnterSurfaceMine();
+            return;
+        }
         if (game::GameLevels::Mine().GetState().quest.GetStage() < game::MineQuestStage::TravelToMine)
         {
             ShowNotice("광산 / 리아에게 기록을 보여 주고 헤일로 수신망에서 접근 경로를 확인하세요.");

@@ -371,6 +371,15 @@ struct GameState
     bool hasDescendedObservatory = false;
     bool isPaused = false;
     bool mapVisible = false;
+    struct MapViewState
+    {
+        float zoom = 1;
+        Vector2 pan = {};
+    };
+    std::array<MapViewState, size_t(MapRegion::Count)> mapViews = {};
+    float planetMapRange = 1000; // Radius in metres, independent of the streamed render radius.
+    Vector2 planetMapPan = {};
+    std::optional<world::SurfacePoint> planetDestination;
     bool journalVisible = false, dialogueHistoryVisible = false;
     DialogueState dialogue;
     UiPreferences uiPreferences;
@@ -440,7 +449,7 @@ class Game
     Game &operator=(const Game &) = delete;
     static Game &Get();
     GameState &GetState();
-    // CQ-01A bridge only: interior/instance maps have no migrated planet location yet.
+    // Migrated city interiors and the physical mine report their actual planet/space/layer.
     std::optional<world::WorldLocation> PlanetLocation() const;
     const world::SurfaceSession *Surface() const
     {
@@ -457,6 +466,13 @@ class Game
     }
     std::optional<Vector2> ResidentPosition(const Resident &resident) const;
     bool RelocateSurfaceSurvey(const world::SurfacePoint &point);
+    bool IsSurfaceMine() const
+    {
+        return surfaceMineReturn.has_value();
+    }
+    bool EnterSurfaceMine();
+    bool LeaveSurfaceMine();
+    bool RecoverSurfaceAt(int city, Vector2 legacyPosition);
     void Reset();
     bool EnterTestStage(TestStage stage);
     static const char *StageName(TestStage stage);
@@ -486,6 +502,7 @@ class Game
     std::unique_ptr<world::SurfaceSession> surface;
     std::unique_ptr<PlanetCities> surfaceCities;
     std::optional<world::SurfacePoint> surfaceBike;
+    std::optional<world::SurfacePoint> surfaceMineReturn;
     std::optional<std::size_t> surfaceSurveyRegion;
     FrameSchedule frameSchedule;
     static unsigned char NormalizeKey(unsigned char key);
@@ -493,7 +510,8 @@ class Game
     void UpdateCamera(float deltaSeconds);
     void UpdateSurface(float deltaSeconds);
     void ToggleSurfaceBike();
-    bool ReturnToSurface(Vector2 legacyDoor);
+    bool ReturnToSurface(Vector2 legacyDoor, int city = 0);
+    bool LandOnSurface(const world::SurfacePoint &point, int city = -1);
 };
 // ============================================================================
 // GameCallbacks - GLUT adapters

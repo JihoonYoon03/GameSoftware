@@ -291,7 +291,8 @@ class PlanetCities
     float Yaw(const world::SurfaceSession &session, int city, float legacyYaw) const;
     InteractionTarget Nearby(const GameState &state, const world::SurfaceSession &session,
                              float *nearestDistance = nullptr) const;
-    bool Occupied(const GameState &state, const world::SurfaceSession &session, Vector2 local) const;
+    bool Occupied(const GameState &state, const world::SurfaceSession &session, Vector2 local,
+                  int cityOverride = -1) const;
 
   private:
     int activeCity = -1;

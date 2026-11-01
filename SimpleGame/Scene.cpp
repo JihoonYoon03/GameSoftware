@@ -1225,10 +1225,13 @@ void MineScene::Draw()
                                    : "광부 / E 구조",
                     npc.facing.yaw, npc.gender, npc.hair, npc.combat);
     }
-    PlacePerson(scene, "ria", GameLevels::Mine().GetState().riaPosition, {.95f, .55f, .25f},
-                models::CharacterType::Engineer, GameLevels::Mine().GetState().riaFacing.walking, "리아",
-                GameLevels::Mine().GetState().riaFacing.yaw, models::Gender::Female,
-                models::HairStyle::Ponytail, GameLevels::Mine().GetState().riaCombat);
+    if (GameLevels::Mine().GetState().quest.IsRiaJoined())
+    {
+        PlacePerson(scene, "ria", GameLevels::Mine().GetState().riaPosition, {.95f, .55f, .25f},
+                    models::CharacterType::Engineer, GameLevels::Mine().GetState().riaFacing.walking, "리아",
+                    GameLevels::Mine().GetState().riaFacing.yaw, models::Gender::Female,
+                    models::HairStyle::Ponytail, GameLevels::Mine().GetState().riaCombat);
+    }
     auto player = Game::Get().GetState().playerPosition;
     scene.PlaceWorldActor("player", player.x, player.y, WorldBounds(player.x, player.y, 0, 0, 85), 1,
                           player.x + player.y,
@@ -2269,6 +2272,17 @@ void PlanetScene::Draw()
         }
     }
     DrawSurfaceCities(*session);
+    const auto &mineEntrance = snapshot->planet->Region("mq00_mine").access.position;
+    if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, session->Pose().origin,
+                                         mineEntrance) < 100)
+    {
+        auto local = session->Local(mineEntrance);
+        renderqueue::PushMatrix();
+        renderqueue::Translate(0, -float(local.z / 2) * 44, float(local.z / 2) * (1296.f / 44));
+        Drawing::DrawInteractionMarker({float(local.x / 2), float(local.y / 2)},
+                                       "오르딘 광산 / 하차 후 E 입장", {.4f, .9f, 1});
+        renderqueue::PopMatrix();
+    }
     if (Game::Distance(w.bikePosition, w.playerPosition) < 80)
     {
         Drawing::DrawWorldBike(w.bikePosition, w.bikeYaw, std::fabs(w.bikeSpeed) / 12.8f, w.isBikeMounted);
@@ -2306,7 +2320,8 @@ Scene &SceneManager::Get(SceneKind kind)
 SceneKind SceneManager::Current()
 {
     const auto &state = Game::Get().GetState();
-    return state.surfaceExploration           ? (state.isInsideHome      ? SceneKind::Interior
+    return Game::Get().IsSurfaceMine()        ? SceneKind::Mine
+           : state.surfaceExploration         ? (state.isInsideHome      ? SceneKind::Interior
                                                  : state.isInObservatory ? SceneKind::Observatory
                                                                          : SceneKind::Planet)
            : GameLevels::Chapter().IsActive() ? SceneKind::Frontier

@@ -185,6 +185,22 @@ struct SchematicView
                p.y <= kMapMaximum.y - inset;
     }
 };
+bool PlanetMapActive()
+{
+    return Game::Get().GetState().surfaceExploration && !game::GameLevels::Active();
+}
+SchematicView PlanetMapView(bool full)
+{
+    const auto &game = Game::Get();
+    const auto &state = Game::Get().GetState();
+    auto session = game.Surface();
+    auto player = session ? session->Local(session->Pose().origin) : world::Vector3d{};
+    return {full ? Vector2{488, 400} : kMinimapCenter,
+            {float(player.x) + (full ? state.planetMapPan.x : 0),
+             float(player.y) + (full ? state.planetMapPan.y : 0)},
+            (full ? 244.f : kMinimapRadius) / (full ? state.planetMapRange : 160.f),
+            full ? 244.f : kMinimapRadius};
+}
 SchematicView MapView(bool full)
 {
     if (!full)
@@ -232,10 +248,12 @@ SchematicView MapView(bool full)
     float height = width;
     float scale = (std::min)((kMapMaximum.x - kMapMinimum.x - 30) / (width + 8),
                              (kMapMaximum.y - kMapMinimum.y - 30) / (height + 8));
-    return {{(kMapMinimum.x + kMapMaximum.x) * .5f, (kMapMinimum.y + kMapMaximum.y) * .5f},
-            {(minimum.x + maximum.x) * .5f, (minimum.y + maximum.y) * .5f},
-            scale,
-            0};
+    const auto &navigation = Game::Get().GetState().mapViews[size_t(MapHud::Region())];
+    return {
+        {(kMapMinimum.x + kMapMaximum.x) * .5f, (kMapMinimum.y + kMapMaximum.y) * .5f},
+        {(minimum.x + maximum.x) * .5f + navigation.pan.x, (minimum.y + maximum.y) * .5f + navigation.pan.y},
+        scale * navigation.zoom,
+        0};
 }
 void MapPolygon(const SchematicView &view, std::vector<Vector2> points, ColorRGBA color)
 {
@@ -691,22 +709,132 @@ MapRegion MapHud::Region()
 }
 Vector2 MapHud::WorldToMap(Vector2 worldPoint, bool fullMap)
 {
-    return MapView(fullMap).Project(worldPoint);
+    return (PlanetMapActive() ? PlanetMapView(fullMap) : MapView(fullMap)).Project(worldPoint);
 }
 Vector2 MapHud::MapToWorld(Vector2 canvasPoint, bool fullMap)
 {
-    return MapView(fullMap).Unproject(canvasPoint);
+    return (PlanetMapActive() ? PlanetMapView(fullMap) : MapView(fullMap)).Unproject(canvasPoint);
 }
 bool MapHud::Contains(Vector2 canvasPoint, bool fullMap)
 {
-    return MapView(fullMap).Inside(canvasPoint);
+    return (PlanetMapActive() ? PlanetMapView(fullMap) : MapView(fullMap)).Inside(canvasPoint);
+}
+bool MapHud::Zoom(int steps, Vector2 pivot)
+{
+    auto &state = Game::Get().GetState();
+    if (PlanetMapActive() && (!Game::Get().Surface() || !Game::Get().Surface()->Ready()))
+    {
+        return false;
+    }
+    if (!state.mapVisible || state.isPaused || state.ui.screen != UiScreen::None || !Contains(pivot, true))
+    {
+        return false;
+    }
+    auto before = MapToWorld(pivot, true);
+    float multiplier = std::pow(1.35f, Game::Clamp(float(steps), -8, 8));
+    if (PlanetMapActive())
+    {
+        state.planetMapRange =
+            Game::Clamp(state.planetMapRange / multiplier, 64,
+                        float((std::min)(200000., Game::Get().Surface()->Planet().radiusMeters * .25)));
+    }
+    else
+    {
+        auto &navigation = state.mapViews[size_t(Region())];
+        navigation.zoom = Game::Clamp(navigation.zoom * multiplier, .25f, 32);
+    }
+    auto after = MapToWorld(pivot, true);
+    auto &pan = PlanetMapActive() ? state.planetMapPan : state.mapViews[size_t(Region())].pan;
+    pan.x += before.x - after.x;
+    pan.y += before.y - after.y;
+    Pan({}); // Also applies the finite navigation bounds after zooming at an edge.
+    return true;
+}
+void MapHud::Pan(Vector2 delta)
+{
+    auto &state = Game::Get().GetState();
+    if (!state.mapVisible || state.isPaused || state.ui.screen != UiScreen::None)
+    {
+        return;
+    }
+    if (PlanetMapActive() && !Game::Get().Surface())
+    {
+        return;
+    }
+    auto view = PlanetMapActive() ? PlanetMapView(true) : MapView(true);
+    auto origin = view.Unproject(view.center);
+    auto shifted = view.Unproject({view.center.x + delta.x, view.center.y + delta.y});
+    auto &pan = PlanetMapActive() ? state.planetMapPan : state.mapViews[size_t(Region())].pan;
+    float limit = PlanetMapActive()
+                      ? float((std::min)(300000., Game::Get().Surface()->Planet().radiusMeters * .25))
+                  : Region() == MapRegion::City ? 2000.f
+                                                : 256.f;
+    pan.x = Game::Clamp(pan.x + shifted.x - origin.x, -limit, limit);
+    pan.y = Game::Clamp(pan.y + shifted.y - origin.y, -limit, limit);
+}
+void MapHud::ResetView(bool playerOnly)
+{
+    auto &state = Game::Get().GetState();
+    if (PlanetMapActive())
+    {
+        state.planetMapPan = {};
+        if (!playerOnly)
+        {
+            state.planetMapRange = 1000;
+        }
+    }
+    else
+    {
+        auto &navigation = state.mapViews[size_t(Region())];
+        navigation.pan = {};
+        if (playerOnly)
+        {
+            auto center = MapView(true).worldCenter, player = PlayerMapPosition();
+            navigation.pan = {player.x - center.x, player.y - center.y};
+        }
+        else
+        {
+            navigation.zoom = 1;
+        }
+    }
+}
+bool MapHud::HandleMapKey(unsigned char key)
+{
+    if (key == '+' || key == '=' || key == '-' || key == '_')
+    {
+        Zoom(key == '+' || key == '=' ? 1 : -1,
+             (PlanetMapActive() ? PlanetMapView(true) : MapView(true)).center);
+        return true;
+    }
+    if (key == '0' || key == 'c')
+    {
+        ResetView(key == 'c');
+        return true;
+    }
+    return false;
 }
 bool MapHud::HandleClick(Vector2 point, bool clear)
 {
     auto &world = Game::Get().GetState();
-    if (world.surfaceExploration)
+    if (PlanetMapActive())
     {
-        return false;
+        auto session = Game::Get().Surface();
+        if (!world.mapVisible || !session || !session->Ready() || !Contains(point, true))
+        {
+            return false;
+        }
+        if (clear)
+        {
+            world.planetDestination.reset();
+        }
+        else
+        {
+            auto target = MapToWorld(point, true);
+            auto location = session->PointAt(target.x, target.y);
+            location.altitudeMeters = session->Stream().Snapshot()->planet->terrain.Height(location);
+            world.planetDestination = location;
+        }
+        return true;
     }
     if (!world.mapVisible || !Contains(point, true))
     {
@@ -760,7 +888,7 @@ void MapHud::DrawMinimap()
 }
 void MapHud::DrawFullMap()
 {
-    if (Game::Get().GetState().surfaceExploration)
+    if (PlanetMapActive())
     {
         return;
     }
@@ -795,7 +923,7 @@ void MapHud::DrawFullMap()
     UiText(938, 548, "목표는 표시되지 않습니다.", 15);
     UiText(80, 714, "좌클릭 목적지 설정     우클릭 해제", 16);
     UiText(1190, 714, "M / Esc 닫기", 16, kUiInk, false, true);
-    UiText(80, 741, "방향 고정 · 지도 열람 중 일시정지 · 자동 길찾기 경로는 제공하지 않음", 14,
+    UiText(80, 741, "휠 / +/- 확대·축소 · 방향키 이동 · C 내 위치 · 0 초기화 · 지도 열람 중 정지", 14,
            {.55f, .72f, .72f});
 }
 
@@ -2211,23 +2339,38 @@ void PlanetHud::DrawMap(bool full)
     }
     const auto &w = Game::Get().GetState();
     auto snapshot = session->Stream().Snapshot();
-    float radius = full ? 244.f : 82.f, range = full ? 5000.f : 160.f;
+    float radius = full ? 244.f : 82.f, range = full ? w.planetMapRange : 160.f;
     Vector2 center = full ? Vector2{488, 400} : kMinimapCenter;
     if (full)
     {
         Drawing::DrawRectangle(0, 0, kCanvasWidth, kCanvasHeight, {.015f, .035f, .045f, .95f});
         Panel(64, 92, 1152, 616);
         UiText(96, 143, "주변 탐사도", 26);
-        UiText(820, 196, "주변 5km", 20);
+        char scale[80];
+        if (range >= 1000)
+        {
+            std::snprintf(scale, sizeof(scale), "표시 반경 %.2f km", range / 1000);
+        }
+        else
+        {
+            std::snprintf(scale, sizeof(scale), "표시 반경 %.0f m", range);
+        }
+        UiText(820, 196, scale, 20);
         UiText(820, 240, "지역 외곽 · 연결 도로", 17);
         UiText(820, 276, "주변 블록 · 건물 용도", 17);
-        UiText(820, 312, "[ / ] 개발용 지역 이동", 16);
+        UiText(820, 312, "휠 / +/- 확대·축소", 16);
+        UiText(820, 346, "방향키 지도 이동", 16);
+        UiText(820, 380, "C 내 위치 · 0 초기화", 16);
+        UiText(820, 430, "좌클릭 목적지 · 우클릭 해제", 16);
+        UiText(820, 476, "[ / ] 개발용 지역 이동", 15);
         UiText(820, 659, "M / Esc 닫기", 16);
     }
     Drawing::DrawEllipse(center.x, center.y, radius + 3, radius + 3, {.35f, .62f, .61f});
     Drawing::DrawEllipse(center.x, center.y, radius, radius, {.075f, .14f, .14f});
     auto local = session->Local(session->Pose().origin);
-    SchematicView view{center, {float(local.x), float(local.y)}, radius / range, radius};
+    auto view = PlanetMapView(full);
+    auto focus = session->PointAt(view.worldCenter.x, view.worldCenter.y);
+    mapLabels.clear();
     auto project = [&](world::SurfacePoint point) {
         auto p = session->Local(point);
         return Vector2{float(p.x), float(p.y)};
@@ -2235,8 +2378,8 @@ void PlanetHud::DrawMap(bool full)
     for (const auto &r : snapshot->planet->regions)
     {
         if (r.center.space != world::SpaceKind::Surface ||
-            world::SurfaceGeometry::Distance(session->Planet().radiusMeters, r.center.position,
-                                             session->Pose().origin) > r.boundingRadiusMeters + range * 1.5)
+            world::SurfaceGeometry::Distance(session->Planet().radiusMeters, r.center.position, focus) >
+                r.boundingRadiusMeters + range * 1.5)
         {
             continue;
         }
@@ -2260,8 +2403,7 @@ void PlanetHud::DrawMap(bool full)
         {
             auto a = edge.points[i - 1], b = edge.points[i];
             double length = world::SurfaceGeometry::Distance(session->Planet().radiusMeters, a, b);
-            double distance =
-                world::SurfaceGeometry::Distance(session->Planet().radiusMeters, a, session->Pose().origin);
+            double distance = world::SurfaceGeometry::Distance(session->Planet().radiusMeters, a, focus);
             if (distance > range * 1.5 + length)
             {
                 continue;
@@ -2271,8 +2413,7 @@ void PlanetHud::DrawMap(bool full)
     }
     std::set<std::string> drawnStructures;
     auto structure = [&](const world::SurfaceStructure &item) {
-        if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, item.frame.origin,
-                                             session->Pose().origin) >
+        if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, item.frame.origin, focus) >
             range + std::hypot(item.sizeMeters.x, item.sizeMeters.y))
         {
             return;
@@ -2282,7 +2423,7 @@ void PlanetHud::DrawMap(bool full)
             return;
         }
         auto position = project(item.frame.origin);
-        if (Game::Distance(position, {float(local.x), float(local.y)}) >
+        if (Game::Distance(position, view.worldCenter) >
             range + float(std::hypot(item.sizeMeters.x, item.sizeMeters.y)))
         {
             return;
@@ -2325,11 +2466,58 @@ void PlanetHud::DrawMap(bool full)
     {
         structure(*item);
     }
-    if (Game::Distance(w.bikePosition, w.playerPosition) < range / 2)
+    for (const auto &region : snapshot->planet->regions)
     {
-        MapDisc(view, {w.bikePosition.x * 2, w.bikePosition.y * 2}, range * .025f, {1, .76f, .4f});
+        if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, region.access.position, focus) >
+            range)
+        {
+            continue;
+        }
+        MapPin(view, project(region.access.position),
+               region.center.space == world::SpaceKind::Subsurface ? ColorRGBA(.65f, .81f, 1)
+                                                                   : ColorRGBA(.73f, .88f, .77f),
+               region.definition.name.c_str(), full, full ? 4 : 3);
     }
-    DirectionArrow(center, w.facingYaw + kPi * .25f, full ? 12 : 8, {.3f, .95f, .88f});
+    if (auto bike = Game::Get().SurfaceBike();
+        bike && world::SurfaceGeometry::Distance(session->Planet().radiusMeters, *bike, focus) < range + 10)
+    {
+        MapDisc(view, project(*bike), 4 / view.scale, {1, .76f, .4f});
+    }
+    if (w.planetDestination)
+    {
+        // At an antipode a great-circle bearing is genuinely ambiguous. Keep the distance readout,
+        // but don't ask the local projection for a direction that does not exist.
+        bool hasBearing = world::SurfaceGeometry::Dot(session->Origin().origin.normal,
+                                                      w.planetDestination->normal) > -1 + 1.e-12;
+        auto point = hasBearing ? view.Project(project(*w.planetDestination)) : view.center;
+        auto player = view.Project({float(local.x), float(local.y)});
+        float distance = Game::Distance(point, view.center);
+        if (hasBearing && view.Inside(point, 10))
+        {
+            MapPin(view, project(*w.planetDestination), {1, .78f, .3f}, "목적지", full, 6);
+        }
+        else if (hasBearing && distance > .001f)
+        {
+            Vector2 edge{view.center.x + (point.x - view.center.x) * (radius - 12) / distance,
+                         view.center.y + (point.y - view.center.y) * (radius - 12) / distance};
+            DirectionArrow(edge, std::atan2(point.y - player.y, point.x - player.x), 8, {1, .78f, .3f}, true);
+        }
+        if (full)
+        {
+            char destination[80];
+            std::snprintf(destination, sizeof(destination), "목적지 거리 %.2f km",
+                          world::SurfaceGeometry::Distance(session->Planet().radiusMeters,
+                                                           *w.planetDestination, session->Pose().origin) /
+                              1000);
+            UiText(820, 550, destination, 16);
+        }
+    }
+    auto player = view.Project({float(local.x), float(local.y)});
+    if (view.Inside(player, 14))
+    {
+        DirectionArrow(player, (w.isBikeMounted ? w.bikeYaw : w.facingYaw) + kPi * .25f, full ? 12 : 8,
+                       {.3f, .95f, .88f});
+    }
 }
 
 void Hud::Render()
@@ -2343,7 +2531,7 @@ void Hud::Render()
         static MineHud mine;
         static ChapterHud chapter;
         static PlanetHud planet;
-        if (w.surfaceExploration)
+        if (w.surfaceExploration && !game::GameLevels::Active())
         {
             planet.Draw();
         }
@@ -2363,7 +2551,7 @@ void Hud::Render()
         DrawNoticePanel();
         DrawDialogue();
     }
-    if (w.surfaceExploration && w.mapVisible)
+    if (PlanetMapActive() && w.mapVisible)
     {
         PlanetHud::DrawMap(true);
     }

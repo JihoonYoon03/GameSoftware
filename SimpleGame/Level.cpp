@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "Level.h"
 #include "Civic.h"
 #include "Hud.h"
@@ -823,7 +823,10 @@ void MineCombat::UpdateNpcs(float deltaSeconds)
             }
         }
     };
-    defend(state.riaPosition, state.riaFacing, state.riaCombat, true, false, state.riaPosition);
+    if (state.quest.IsRiaJoined())
+    {
+        defend(state.riaPosition, state.riaFacing, state.riaCombat, true, false, state.riaPosition);
+    }
     for (auto &npc : state.survivors)
     {
         const auto &group = state.rescueGroups[npc.group];
@@ -865,12 +868,13 @@ void MineCombat::UpdateEnemies(float deltaSeconds)
                     std::any_of(state.enemies.begin(), state.enemies.end(), [&](const Enemy &other) {
                         return other.health > 0 && tutorial::Game::Distance(other.position, position) < 1;
                     });
-                occupied = occupied || tutorial::Game::Distance(position, state.riaPosition) < 4 ||
-                           std::any_of(
-                               state.survivors.begin(), state.survivors.end(),
-                               [&](const RescueNpc &npc) {
-                                   return tutorial::Game::Distance(position, npc.position) < 4;
-                               });
+                occupied =
+                    occupied ||
+                    (state.quest.IsRiaJoined() &&
+                     tutorial::Game::Distance(position, state.riaPosition) < 4) ||
+                    std::any_of(state.survivors.begin(), state.survivors.end(), [&](const RescueNpc &npc) {
+                        return tutorial::Game::Distance(position, npc.position) < 4;
+                    });
                 if (!occupied)
                 {
                     enemy.position = position;
@@ -906,7 +910,10 @@ void MineCombat::UpdateEnemies(float deltaSeconds)
                 playerTarget = false;
             }
         };
-        consider(state.riaPosition, state.riaCombat);
+        if (state.quest.IsRiaJoined())
+        {
+            consider(state.riaPosition, state.riaCombat);
+        }
         for (auto &npc : state.survivors)
         {
             consider(npc.position, npc.combat);
@@ -1000,7 +1007,7 @@ void MineRescue::Update(float deltaSeconds)
     profiling::Scope timer(profiling::Timer::NpcUpdate);
     state.riaNavigationCooldown -= deltaSeconds;
     state.riaMovement = 0;
-    if (state.riaNavigationCooldown <= 0)
+    if (state.quest.IsRiaJoined() && state.riaNavigationCooldown <= 0)
     {
         state.riaNavigationCooldown = .65f;
         if (tutorial::Game::Distance(state.riaPosition, world.playerPosition) > 2)
@@ -1014,7 +1021,7 @@ void MineRescue::Update(float deltaSeconds)
             state.riaRouteIndex = 0;
         }
     }
-    if (state.riaCombat.health > 0)
+    if (state.quest.IsRiaJoined() && state.riaCombat.health > 0)
     {
         state.riaMovement = WalkRoute(state.riaPosition, state.riaRoute, state.riaRouteIndex,
                                       4.8f * deltaSeconds, state.riaFacing);
@@ -1140,7 +1147,7 @@ bool MineRescue::TryInteract()
         tutorial::Game::Get().ShowNotice("응급 처치 / 다시 움직일 수 있습니다.");
         return true;
     };
-    if (aid(state.riaPosition, state.riaCombat))
+    if (state.quest.IsRiaJoined() && aid(state.riaPosition, state.riaCombat))
     {
         return true;
     }
@@ -1278,7 +1285,7 @@ float MineLighting::At(tutorial::Vector2 position)
     {
         light = (std::max)(light, RadialLight(player, position, 3.5f));
     }
-    if (state.riaCombat.muzzleFlash > 0)
+    if (state.quest.IsRiaJoined() && state.riaCombat.muzzleFlash > 0)
     {
         light = (std::max)(light, RadialLight(state.riaPosition, position, 3));
     }
@@ -1354,6 +1361,11 @@ void MineLevel::AddExperience(int amount)
 void MineLevel::Enter(bool debugEntry)
 {
     auto &world = tutorial::Game::Get().GetState();
+    const bool surfaceVisit = world.surfaceExploration;
+    if (surfaceVisit && !tutorial::Game::Get().IsSurfaceMine())
+    {
+        return;
+    }
     if (debugEntry)
     {
         GameLevels::PrepareTestEntry(tutorial::TestStage::Mine);
@@ -1363,15 +1375,24 @@ void MineLevel::Enter(bool debugEntry)
         state.quest.Advance(MineQuestStage::ShowRecord);
         state.quest.Advance(MineQuestStage::CheckCityRelay);
     }
-    if (!state.quest.BeginJourney())
+    if (!surfaceVisit && !state.quest.BeginJourney())
     {
         tutorial::Game::Get().ShowNotice(
             "리아 / 신호 기록을 보여 주고 도시 수신망에서 광산 중계 흔적부터 확인하자.");
         return;
     }
-    state.quest.Advance(MineQuestStage::TravelToMine);
-    // Every entry is a fresh instance; story flags, inventory and RPG stats survive regeneration.
-    Map().Generate(std::random_device{}());
+    if (!surfaceVisit)
+    {
+        state.quest.Advance(MineQuestStage::TravelToMine);
+    }
+    // One physical mine per game world. Leaving suspends the live site instead of rerolling it.
+    if (!state.generated)
+    {
+        const auto &planet =
+            surfaceVisit ? tutorial::Game::Get().Surface()->Planet() : ::world::WorldCatalog::Erma();
+        Map().Generate(
+            std::uint32_t(::world::WorldIdentity::StreamSeed(planet, "mq00_mine", "mine_layout_v1")));
+    }
     state.active = true;
     world.isInsideHome = false;
     world.isInObservatory = false;
@@ -1379,10 +1400,6 @@ void MineLevel::Enter(bool debugEntry)
     world.StopMotion();
     world.playerPosition = state.entry;
     world.cameraPosition = state.entry;
-    state.riaPosition = {state.entry.x + 1, state.entry.y + 1};
-    state.riaRoute.clear();
-    state.riaRouteIndex = 0;
-    state.riaNavigationCooldown = 0;
     state.bullets.clear();
     state.tracers.clear();
     state.scannerSeconds = 0;
@@ -1391,12 +1408,20 @@ void MineLevel::Enter(bool debugEntry)
     ClearInput();
     state.invulnerability = 2;
     state.navigationCooldown = 0;
-    tutorial::Game::Get().ShowNotice(state.quest.GetRiaDialogue());
+    tutorial::Game::Get().ShowNotice(
+        surfaceVisit
+            ? "오르딘 광산 / F 구조 신호 스캔 · E 조사·구조 · V 근접 공격. 입구에서 E로 지상에 복귀합니다."
+            : state.quest.GetRiaDialogue());
 }
 
 void MineLevel::Leave()
 {
     auto &world = tutorial::Game::Get().GetState();
+    if (world.surfaceExploration)
+    {
+        tutorial::Game::Get().LeaveSurfaceMine();
+        return;
+    }
     state.active = false;
     state.bullets.clear();
     state.tracers.clear();
@@ -1415,8 +1440,8 @@ void MineLevel::Leave()
     tutorial::Game::Get().ShowNotice(
         state.quest.GetStage() == MineQuestStage::ReturnToHalo
             ? "광산 입구 / 바이크로 헤일로에 돌아가 도시 수신망에서 중계 좌표를 보고하세요."
-            : "광산 입구 / 조사 기록과 보유품은 유지됩니다. 다시 입장하면 갱도와 현장 인원이 새로 "
-              "배치됩니다. 주차한 바이크로 이동하거나 입구에서 E로 재입장하세요.");
+            : "광산 입구 / 갱도·발견한 길·현장 인원과 조사 기록을 유지합니다. 주차한 바이크로 이동하거나 "
+              "입구에서 E로 재입장하세요.");
 }
 
 void MineLevel::Reset()
@@ -1555,7 +1580,7 @@ void MineLevel::Interact()
     {
         tutorial::Game::Get().ShowNotice("물자 회수 / 주변 물자를 챙겼습니다. 보유품에 반영했습니다.");
     }
-    else if (IsNear(state.riaPosition))
+    else if (state.quest.IsRiaJoined() && IsNear(state.riaPosition))
     {
         tell(state.quest.GetRiaDialogue());
     }

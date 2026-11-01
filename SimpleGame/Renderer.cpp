@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "Drawing.h"
 #include "Game.h"
 #include "Level.h"
@@ -1528,9 +1528,9 @@ void GameRenderer::Draw()
     {
         return;
     }
-    profiling::BeginFrame(Game::Get().GetState().surfaceExploration ? "planet_surface"
-                          : game::GameLevels::Mine().IsActive()     ? "mine"
-                          : Game::Get().GetState().isBikeMounted    ? "overworld_bike"
+    profiling::BeginFrame(game::GameLevels::Mine().IsActive()         ? "mine"
+                          : Game::Get().GetState().surfaceExploration ? "planet_surface"
+                          : Game::Get().GetState().isBikeMounted      ? "overworld_bike"
                           : Game::Get().GetState().isInObservatory
                               ? "observatory"
                               : (Game::Get().GetState().isInsideHome ? "interior" : "exterior"));
@@ -1547,13 +1547,13 @@ void GameRenderer::Draw()
     {
         profiling::Scope timer(profiling::Timer::Background);
         profiling::GpuScope gpuTimer(profiling::Timer::Background);
-        if (Game::Get().GetState().surfaceExploration)
-        {
-            Drawing::DrawRectangle(0, 0, float(kCanvasWidth), float(kCanvasHeight), {.045f, .085f, .11f});
-        }
-        else if (game::GameLevels::Mine().IsActive())
+        if (game::GameLevels::Mine().IsActive())
         {
             Drawing::DrawRectangle(0, 0, float(kCanvasWidth), float(kCanvasHeight), ColorRGBA(0, 0, 0));
+        }
+        else if (Game::Get().GetState().surfaceExploration)
+        {
+            Drawing::DrawRectangle(0, 0, float(kCanvasWidth), float(kCanvasHeight), {.045f, .085f, .11f});
         }
         else
         {

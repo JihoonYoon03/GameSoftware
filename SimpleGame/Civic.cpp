@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "Civic.h"
 #include "Profiler.h"
 #include "Drawing.h"
@@ -551,16 +551,30 @@ void TransferToHospital()
         civic.hospitals.empty() ? HospitalSite{0, kHomeDoor} : civic.hospitals[size_t(civic.hospital)];
     world.isInsideHome = world.isInObservatory = world.isBikeMounted = world.mapVisible = world.mouseFiring =
         world.mouseAiming = false;
-    world.playerPosition = world.cameraPosition = hospital.position;
     world.StopMotion();
-    world.bikeElevation = 0;
-    world.bikePosition = hospital.position;
-    for (Vector2 offset : {Vector2{1.5f, 0}, {-1.5f, 0}, {0, 1.5f}, {0, -1.5f}})
+    bool transported = true;
+    if (world.surfaceExploration)
     {
-        if (!CivicJustice::Solid(Add(hospital.position, offset), .65f))
+        // Keep planetary coordinates and the parked bike; never install legacy city XY into the surface
+        // frame.
+        if (!Game::Get().RecoverSurfaceAt(hospital.city, hospital.position))
         {
-            world.bikePosition = Add(hospital.position, offset);
-            break;
+            mine.active = Game::Get().IsSurfaceMine();
+            transported = false;
+        }
+    }
+    else
+    {
+        world.playerPosition = world.cameraPosition = hospital.position;
+        world.bikeElevation = 0;
+        world.bikePosition = hospital.position;
+        for (Vector2 offset : {Vector2{1.5f, 0}, {-1.5f, 0}, {0, 1.5f}, {0, -1.5f}})
+        {
+            if (!CivicJustice::Solid(Add(hospital.position, offset), .65f))
+            {
+                world.bikePosition = Add(hospital.position, offset);
+                break;
+            }
         }
     }
     std::fill(std::begin(world.pressedKeys), std::end(world.pressedKeys), false);
@@ -576,7 +590,8 @@ void TransferToHospital()
     mine.invulnerability = 5;
     ++civic.deaths;
     Game::Get().ShowNotice(
-        std::string(Overworld::Cities()[hospital.city].name) + " 의료소 / 레벨 -" +
+        (transported ? std::string(Overworld::Cities()[hospital.city].name) + " 의료소 / 레벨 -"
+                     : "의료 지원 / 의료소 도착 지점이 막혀 현장에서 회복했습니다. 레벨 -") +
         std::to_string(civic.lostLevels) + " · 크레딧 -" + std::to_string(civic.lostCredits) +
         " · 거래 부품 -" + std::to_string(civic.lostSalvage) +
         ". 조사 기록은 유지되며 보안망의 평판은 남습니다." +
@@ -1859,6 +1874,17 @@ void HospitalRecovery::Begin()
     for (size_t i = 0; i < civic.hospitals.size(); ++i)
     {
         float distance = Game::Distance(source, civic.hospitals[i].position);
+        if (world.surfaceExploration && Game::Get().SurfaceCities())
+        {
+            auto location = Game::Get().PlanetLocation();
+            auto destination = Game::Get().SurfaceCities()->Point(
+                *Game::Get().Surface(), civic.hospitals[i].city, civic.hospitals[i].position);
+            if (location && destination)
+            {
+                distance = float(::world::SurfaceGeometry::Distance(
+                    Game::Get().Surface()->Planet().radiusMeters, location->position, *destination));
+            }
+        }
         if (distance < best)
         {
             best = distance;

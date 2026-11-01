@@ -133,8 +133,116 @@ void TestPlanetCityMigration()
     assert(!w.isInObservatory && !w.isInsideHome && SceneManager::Current() == SceneKind::Planet);
     assert(w.mainQuestStage == mainStage && mineState.quest.GetStage() == mineStage &&
            w.residents.front().health == 43);
+    assert(!g.EnterSurfaceMine()); // A remote interaction cannot teleport into a field site.
+    w.mapVisible = true;
+    auto mapEpoch = g.Surface()->Stream().Snapshot()->statistics.epoch;
+    Vector2 pivot{530, 430};
+    auto target = MapHud::MapToWorld(pivot, true);
+    assert(MapHud::Zoom(3, pivot));
+    assert(Game::Distance(target, MapHud::MapToWorld(pivot, true)) < .01f);
+    assert(MapHud::HandleClick(pivot) && w.planetDestination);
+    auto destination = *w.planetDestination;
+    MapHud::Pan({90, -45});
+    assert(Game::Distance(MapHud::WorldToMap(target, true), pivot) > 20);
+    MapHud::ResetView(true);
+    assert(w.planetMapPan.x == 0 && w.planetMapPan.y == 0);
+    assert(g.Surface()->Stream().Snapshot()->statistics.epoch == mapEpoch);
+    w.mapVisible = false;
+    assert(g.RelocateSurfaceSurvey(plan->Region("mq00_mine").access.position));
+    auto mineReturn = g.Surface()->Pose().origin;
+    auto mineBike = *g.SurfaceBike();
+    mineState.quest = MineQuest{}; // Geography must work before a story is accepted.
+    assert(g.FindNearbyInteraction() == InteractionTarget::MineEntrance);
+    press('e');
+    assert(g.IsSurfaceMine() && mineState.active && SceneManager::Current() == SceneKind::Mine);
+    assert(mineState.quest.GetStage() == MineQuestStage::ShowRecord && !mineState.quest.IsRiaJoined());
+    auto underground = g.PlanetLocation();
+    assert(underground && underground->regionId == "mq00_mine" &&
+           underground->space == world::SpaceKind::Subsurface && underground->layer == -1);
+    underground->Validate(g.Surface()->Planet());
+    assert(std::fabs(underground->position.altitudeMeters -
+                     plan->Region("mq00_mine").center.position.altitudeMeters) < .001);
+    auto revision = mineState.mapRevision;
+    auto tiles = mineState.tiles;
+    mineState.enemies.front().health = 7;
+    mineState.survivors.front().combat.health = 61;
+    mineState.rescueGroups.front().rescued = true;
+    mineState.drops.push_back({{20.5f, 20.5f}, ItemKind::Salvage, 975});
+    GameLevels::Mine().Map().Reveal({35.5f, 41.5f});
+    auto explored = mineState.explored;
+    w.mapVisible = true;
+    auto beforeEnemy = mineState.enemies.front().position;
+    g.Update(.05f);
+    assert(Game::Distance(beforeEnemy, mineState.enemies.front().position) < 1.e-6);
+    assert(!g.RelocateSurfaceSurvey(plan->Region("halo_07").access.position));
+    w.mapVisible = false;
+    w.playerPosition = mineState.entry;
+    press('e');
+    assert(!g.IsSurfaceMine() && !mineState.active && SceneManager::Current() == SceneKind::Planet);
+    assert(world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, mineReturn,
+                                            g.Surface()->Pose().origin) <= 8.01);
+    for (int i = 0; i < 20; ++i)
+    {
+        g.Update(.05f);
+    }
+    assert(mineState.mapRevision == revision && mineState.enemies.front().health == 7 &&
+           mineState.survivors.front().combat.health == 61);
+    assert(mineState.explored == explored && mineState.rescueGroups.front().rescued &&
+           mineState.drops.back().actorId == 975);
+    press('e');
+    assert(g.IsSurfaceMine() && mineState.mapRevision == revision && mineState.tiles == tiles &&
+           mineState.explored == explored);
+    assert(mineState.quest.GetStage() == MineQuestStage::ShowRecord && !mineState.quest.IsRiaJoined());
+    assert(w.planetDestination &&
+           world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, destination,
+                                            *w.planetDestination) < 1.e-6);
+    assert(world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, mineBike, *g.SurfaceBike()) <
+           1.e-6);
+    mineState.player.health = 0;
+    for (int i = 0; i < 60; ++i)
+    {
+        g.Update(.05f);
+    }
+    assert(!g.IsSurfaceMine() && !mineState.active && mineState.player.health == mineState.player.maxHealth);
+    assert(w.ui.screen == UiScreen::Medical && g.PlanetLocation()->space == world::SpaceKind::Surface);
+    assert(mineState.mapRevision == revision && mineState.quest.GetStage() == MineQuestStage::ShowRecord);
+    assert(world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, mineBike, *g.SurfaceBike()) <
+           1.e-6);
     g.Reset();
     assert(!g.SurfaceCities() && !g.Surface());
+}
+void TestMapZoomAndSelection()
+{
+    using namespace tutorial;
+    auto &g = Game::Get();
+    g.Reset();
+    auto &w = g.GetState();
+    w.isInsideHome = false;
+    w.mapVisible = true;
+    for (auto region : {MapRegion::City, MapRegion::Mine, MapRegion::Frontier})
+    {
+        mineState.active = region == MapRegion::Mine;
+        GameLevels::Chapter().GetState().active = region == MapRegion::Frontier;
+        assert(MapHud::Region() == region);
+        Vector2 cursor{510, 350};
+        auto before = MapHud::MapToWorld(cursor, true);
+        auto mini = MapHud::WorldToMap(w.playerPosition, false);
+        assert(MapHud::Zoom(3, cursor));
+        assert(Game::Distance(before, MapHud::MapToWorld(cursor, true)) < .002f);
+        assert(Game::Distance(mini, MapHud::WorldToMap(w.playerPosition, false)) < .001f);
+        MapHud::Pan({70, 35});
+        assert(Game::Distance(MapHud::WorldToMap(before, true), cursor) > 30);
+        auto point = MapHud::MapToWorld({400, 300}, true);
+        assert(Game::Distance(MapHud::WorldToMap(point, true), {400, 300}) < .001f);
+        MapHud::ResetView(true);
+        auto centered = MapHud::WorldToMap(w.playerPosition, true);
+        assert(Game::Distance(centered, {489, 400}) < 5);
+        MapHud::ResetView();
+        assert(w.mapViews[size_t(region)].zoom == 1);
+    }
+    w.mapVisible = false;
+    assert(!MapHud::Zoom(1, {500, 400}));
+    g.Reset();
 }
 void TestFrameScheduleAndTextCache()
 {
@@ -2024,7 +2132,7 @@ void TestStoryAndReentry()
     ReadDialogue();
     assert(mineState.quest.GetStage() == MineQuestStage::Complete);
     GameLevels::Mine().Enter();
-    assert(GameLevels::Mine().IsActive() && mineState.mapRevision > revision &&
+    assert(GameLevels::Mine().IsActive() && mineState.mapRevision == revision &&
            mineState.player.salvage == 7);
     assert(mineState.quest.GetStage() == MineQuestStage::Complete);
 }
@@ -2252,6 +2360,7 @@ int main(int argc, char **argv)
     TestForwardFlashlight();
     TestStageSelectionAndLoadout();
     TestPlanetCityMigration();
+    TestMapZoomAndSelection();
     TestUiMenusAndTransactions();
     TestDialogueProgress();
     TestExplorationAndMelee();

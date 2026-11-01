@@ -222,13 +222,15 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         chapter.generated ? chapter.survivors.size() + (chapter.active ? 1 : 0) +
                                 (!chapter.kainJoined || chapter.active ? 1 : 0) + fieldScrappers
                           : 0;
-    const bool simulating = level.active && !world.isPaused;
+    const bool simulating = level.active && !world.isPaused && !world.mapVisible &&
+                            !world.weaponWheel.visible && !tutorial::Dialogue::LocksWorld() &&
+                            !tutorial::HospitalRecovery::Active();
     const auto surfaceCities = tutorial::Game::Get().SurfaceCities();
     const int surfaceCity = surfaceCities ? surfaceCities->ActiveCity() : -1;
     const bool citySimulation = (!world.surfaceExploration || surfaceCity >= 0) && !level.active &&
                                 !chapter.active && !world.isPaused && !world.isInsideHome &&
                                 !world.isInObservatory && !world.mapVisible && !world.weaponWheel.visible &&
-                                !tutorial::Dialogue::LocksWorld();
+                                !tutorial::Dialogue::LocksWorld() && !tutorial::HospitalRecovery::Active();
     const bool cityLia = !level.active && !chapter.active;
     const bool cityKain = chapter.kainJoined && !chapter.active;
     const size_t haloPopulation = 19 + (cityLia ? 1 : 0) - (chapter.kainJoined ? 1 : 0) + (cityKain ? 1 : 0);
@@ -250,7 +252,8 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
             outdoorName = snapshot->planet->Region(outdoorId).definition.name;
         }
     }
-    const size_t minePopulation = level.survivors.size() + (level.active ? 1 : 0);
+    const size_t minePopulation =
+        level.survivors.size() + (level.active && level.quest.IsRiaJoined() ? 1 : 0);
     size_t aliveMobs = 0;
     for (const auto &enemy : level.enemies)
     {
@@ -283,6 +286,8 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         streaming.Number("content_layout_revision", ::world::ContentLayout::Revision);
         streaming.Number("collision_cells", surface.CollisionCells());
         streaming.Number("active_city", surfaceCity);
+        streaming.Bool("mine_visit_active", tutorial::Game::Get().IsSurfaceMine());
+        streaming.Number("map_radius_meters", world.planetMapRange);
         streaming.Number("authored_cores", snapshot->planet && snapshot->planet->cityCores
                                                ? snapshot->planet->cityCores->cities.size()
                                                : 0);
@@ -497,8 +502,7 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         Append(junctionSignals, item.Finish());
     }
     traffic.Raw("signals", "[" + junctionSignals + "]");
-    traffic.Bool("simulating", !level.active && !chapter.active && !world.isInsideHome &&
-                                   !world.isInObservatory && !world.isPaused);
+    traffic.Bool("simulating", citySimulation);
     std::string cars = "[";
     for (const auto &car : trafficSystem.Vehicles())
     {
