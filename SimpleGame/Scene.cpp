@@ -1807,6 +1807,20 @@ const models::Model &StructureModel(world::ContentForm form, std::uint16_t varia
         return models::ModelLibrary::Transit(assetName);
     case F::Aircraft:
         return models::ModelLibrary::Aircraft(models::AircraftType(variant / 2), variant % 2 != 0);
+    case F::Generator:
+        return library.generator;
+    case F::Table:
+        return library.table;
+    case F::Lantern:
+        return library.lantern;
+    case F::Salvage:
+        return library.salvage;
+    case F::Reeds:
+        return library.reeds;
+    case F::Rock:
+        return library.rock;
+    case F::Vehicle:
+        return library.vehicles.at(variant).body;
     case F::Habitat:
         return library.buildings[size_t(B::Habitat)];
     case F::Terrace:
@@ -1886,6 +1900,11 @@ void DrawSurfaceStructure(const world::SurfaceStructure &structure, const world:
         palette.body = structure.palette->body;
         palette.accent = structure.palette->accent;
         palette.emission = structure.palette->emission;
+    }
+    if (structure.regionId == "frontier" && structure.form == world::ContentForm::Vehicle &&
+        GameLevels::Chapter().GetState().vehicleRepaired)
+    {
+        palette.body = {.42f, .65f, .65f, 1};
     }
     auto screen = Drawing::WorldToScreen(px, py, float(p.z / 2) * 44);
     auto player = Drawing::WorldToScreen(Game::Get().GetState().playerPosition.x,
@@ -2112,6 +2131,175 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
         renderqueue::PopMatrix();
     }
 }
+std::unique_ptr<models::Model> FrontierGround(const world::GeneratedPlanet &planet)
+{
+    const auto &region = planet.Region("frontier");
+    const auto &state = GameLevels::Chapter().GetState();
+    const auto &core = *planet.cityCores->Find("frontier");
+    auto model = std::make_unique<models::Model>();
+    model->ground = true;
+    model->space = models::CoordinateSpace::World;
+    auto outside = TerrainColor(region.biome);
+    for (int y = 0; y < kFrontierHeight; ++y)
+    {
+        for (int x = 0; x < kFrontierWidth; ++x)
+        {
+            auto tile = state.tiles[size_t(y * kFrontierWidth + x)];
+            std::array<float, 4> color =
+                tile == FrontierTile::Grass   ? std::array<float, 4>{.24f, .37f, .26f, 1}
+                : tile == FrontierTile::Sand  ? std::array<float, 4>{.55f, .44f, .28f, 1}
+                : tile == FrontierTile::Canal ? std::array<float, 4>{.12f, .15f, .14f, 1}
+                : tile == FrontierTile::Road  ? std::array<float, 4>{.28f, .30f, .30f, 1}
+                                              : std::array<float, 4>{.31f, .34f, .35f, 1};
+            float edge = std::clamp(
+                float((std::min)({x, y, kFrontierWidth - 1 - x, kFrontierHeight - 1 - y})) / 4, 0.f, 1.f);
+            if (tile == FrontierTile::Grass || tile == FrontierTile::Sand)
+            {
+                for (unsigned i = 0; i < 3; ++i)
+                {
+                    color[i] = outside[i] + (color[i] - outside[i]) * edge;
+                }
+            }
+            for (auto indices : {std::array<unsigned, 3>{0, 1, 2}, std::array<unsigned, 3>{0, 2, 3}})
+            {
+                constexpr int corners[4][2] = {{0, 0}, {1, 0}, {1, 1}, {0, 1}};
+                models::Part part;
+                part.count = 3;
+                part.color = color;
+                part.surface = models::Surface::Default;
+                for (unsigned i = 0; i < 3; ++i)
+                {
+                    auto p = world::SurfaceGeometry::FromLocal(
+                        region.frame,
+                        {(x + corners[indices[i]][0] - kFrontierEntry.x) * 2,
+                         (y + corners[indices[i]][1] - kFrontierEntry.y) * 2, 0},
+                        planet.terrain.Planet().radiusMeters);
+                    p.altitudeMeters = core.elevationMeters + .03;
+                    auto local = SurfaceProjection(p, region.frame, planet.terrain.Planet().radiusMeters);
+                    part.points[i] = {float(local.x / 2), float(local.y / 2), float(local.z / 2)};
+                    part.normals[i] = {
+                        float(world::SurfaceGeometry::Dot(p.normal, region.frame.right)),
+                        float(world::SurfaceGeometry::Dot(p.normal, region.frame.forward)),
+                        float(world::SurfaceGeometry::Dot(p.normal, region.frame.origin.normal))};
+                }
+                model->parts.push_back(part);
+            }
+        }
+    }
+    model->count = std::uint32_t(model->parts.size());
+    return model;
+}
+void DrawSurfaceFrontier(const world::SurfaceSession &session)
+{
+    auto &level = GameLevels::Chapter();
+    const auto &state = level.GetState();
+    const auto &surface = level.Surface();
+    if (!state.generated ||
+        world::SurfaceGeometry::Distance(
+            session.Planet().radiusMeters, session.Pose().origin,
+            session.Stream().Snapshot()->planet->Region("frontier").access.position) > 260)
+    {
+        return;
+    }
+    auto height = [&](Vector2 authored) { return float(session.Local(surface.Point(authored)).z / 2); };
+    auto person = [&](const FrontierPerson &npc, models::CharacterType role, models::Gender gender,
+                      models::HairStyle hair, ColorRGBA color, const char *label, bool armed) {
+        auto point = surface.Project(npc.position);
+        if (!point)
+        {
+            return;
+        }
+        float z = height(npc.position);
+        renderqueue::PushMatrix();
+        renderqueue::Translate(0, -z * 44, z * (1296.f / 44));
+        Drawing::DrawPerson(*point, color, false, role, npc.facing.walking,
+                            surface.Yaw(npc.combat.engaged ? npc.combat.aimYaw : npc.facing.yaw), gender,
+                            hair, armed && npc.combat.engaged && npc.combat.health > 0,
+                            npc.combat.muzzleFlash, npc.combat.health <= 0, 2.1f,
+                            npc.combat.pistol.IsReloading() ? npc.combat.pistol.GetReloadProgress() : -1);
+        if (Game::Distance(*point, Game::Get().GetState().playerPosition) < 4 && label[0])
+        {
+            auto at = Drawing::WorldToScreen(point->x, point->y, 60);
+            Drawing::DrawLabel(at.x - 20, at.y, label, color);
+        }
+        renderqueue::PopMatrix();
+    };
+    if (GameLevels::Mine().GetState().quest.IsRiaJoined())
+    {
+        person(state.ria, models::CharacterType::Engineer, models::Gender::Female,
+               models::HairStyle::Ponytail, {.9f, .58f, .3f}, "리아", true);
+    }
+    person(state.kain, models::CharacterType::Guard, models::Gender::Male, models::HairStyle::Buzz,
+           {.38f, .53f, .66f}, "카인", state.kainJoined);
+    for (size_t i = 0; i < state.survivors.size(); ++i)
+    {
+        person(state.survivors[i], i % 3 ? models::CharacterType::Engineer : models::CharacterType::Explorer,
+               i % 2 ? models::Gender::Female : models::Gender::Male, models::HairStyle(i % 6),
+               {.65f, .69f, .51f}, i == 0 ? "운송대 생존자" : "", false);
+    }
+    for (size_t i = 0; i < state.scrappers.size(); ++i)
+    {
+        if (!(state.negotiated && state.scrappers[i].arrived))
+        {
+            person(state.scrappers[i], i ? models::CharacterType::Guard : models::CharacterType::Explorer,
+                   i == 1 ? models::Gender::Female : models::Gender::Male, models::HairStyle::Curls,
+                   {.7f, .36f, .25f}, state.negotiated ? "철수 중" : "폐설비 점거자", true);
+        }
+    }
+    auto glow = [&](Vector2 authored, float z, float radius, ColorRGBA color) {
+        if (auto p = surface.Project(authored))
+        {
+            Drawing::DrawGlow(Drawing::WorldToScreen(p->x, p->y, height(authored) * 44 + z), radius, color);
+        }
+    };
+    for (int i = 0; i < 3; ++i)
+    {
+        glow({9.5f + i * .9f, 9.7f}, 28, 7,
+             state.generatorRestored ? ColorRGBA(.35f, .94f, .8f) : ColorRGBA(.9f, .52f, .2f));
+    }
+    constexpr Vector2 markers[] = {{36.5f, 13.5f}, {36.5f, 18.5f}, {29.5f, 18.5f}};
+    for (unsigned i = 0; i < 3; ++i)
+    {
+        glow(markers[i], 34, 12,
+             state.surveyMarkers > int(i) ? ColorRGBA(.3f, 1, .8f) : ColorRGBA(1, .6f, .25f, .5f));
+    }
+    if (state.portableLightRepaired)
+    {
+        glow({9.5f, 13.5f}, 35, 18, {1, .82f, .5f});
+        glow({24.5f, 21.6f}, 37, 26, {1, .82f, .5f});
+    }
+    for (const auto &clue : level.Interactions())
+    {
+        if (clue.action == ChapterAction::Exit || clue.action == ChapterAction::ConvoySupply)
+        {
+            continue;
+        }
+        if (auto p = surface.Project(clue.position))
+        {
+            float z = height(clue.position);
+            renderqueue::PushMatrix();
+            renderqueue::Translate(0, -z * 44, z * (1296.f / 44));
+            Drawing::DrawInteractionMarker(*p, clue.label, {.9f, .78f, .4f});
+            renderqueue::PopMatrix();
+        }
+    }
+    for (const auto &tracer : state.tracers)
+    {
+        auto first = surface.Project(tracer.start), last = surface.Project(tracer.end);
+        if (!first || !last)
+        {
+            continue;
+        }
+        Drawing::DrawLine(
+            Drawing::WorldToScreen(first->x, first->y,
+                                   height(tracer.start) * 44 + models::WorldScale::aimHeightPixels),
+            Drawing::WorldToScreen(last->x, last->y,
+                                   height(tracer.end) * 44 + models::WorldScale::aimHeightPixels),
+            tracer.npcOwned ? ColorRGBA(.3f, .85f, 1, tracer.remaining / .12f)
+                            : ColorRGBA(1, .74f, .3f, tracer.remaining / .12f),
+            2);
+    }
+}
 } // namespace
 struct PlanetScene::Data
 {
@@ -2122,6 +2310,7 @@ struct PlanetScene::Data
     };
     std::map<world::ChunkKey, Entry> meshes;
     std::unique_ptr<models::Model> fallback;
+    std::unique_ptr<models::Model> frontierGround;
     world::TangentFrame fallbackFrame;
     std::uint64_t epoch = 0;
 };
@@ -2136,6 +2325,11 @@ void PlanetScene::ResetResources()
         GameRenderer::Get().Backend().ReleaseModel(*entry.second.model);
     }
     data->meshes.clear();
+    if (data->frontierGround)
+    {
+        GameRenderer::Get().Backend().ReleaseModel(*data->frontierGround);
+        data->frontierGround.reset();
+    }
     if (data->fallback)
     {
         GameRenderer::Get().Backend().ReleaseModel(*data->fallback);
@@ -2270,6 +2464,18 @@ void PlanetScene::Draw()
         {
             DrawSurfaceStructure(structure, *session);
         }
+    }
+    const auto &frontier = snapshot->planet->Region("frontier");
+    if (snapshot->planet->cityCores && snapshot->planet->cityCores->Find("frontier") &&
+        world::SurfaceGeometry::Distance(session->Planet().radiusMeters, session->Pose().origin,
+                                         frontier.access.position) < 260)
+    {
+        if (!d.frontierGround)
+        {
+            d.frontierGround = FrontierGround(*snapshot->planet);
+        }
+        DrawSurfaceModel(*d.frontierGround, frontier.frame, *session);
+        DrawSurfaceFrontier(*session);
     }
     DrawSurfaceCities(*session);
     const auto &mineEntrance = snapshot->planet->Region("mq00_mine").access.position;

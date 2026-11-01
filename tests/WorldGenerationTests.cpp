@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "Overworld.h"
 #include "WorldGeneration.h"
 #include <algorithm>
@@ -547,6 +547,13 @@ int main(int argc, char **argv)
     {
         auto start = std::chrono::steady_clock::now();
         const auto &plan = tutorial::Overworld::PlanetPlan();
+        const auto &adapter = LegacyWorldAdapter::ErmaExterior();
+        Check(Distance(plan, plan.Region("frontier").access.position,
+                       adapter.Locate("frontier", {1500, 1000, 0}).position) < .001,
+              "Frontier travel distance is one quarter while its field geometry keeps physical units");
+        Check(Distance(plan, plan.Region("n0_outskirts").access.position,
+                       adapter.Locate("n0_outskirts", {3625, -1750, 0}).position) < .001,
+              "N-0 travel anchor follows compact profile");
         auto milliseconds =
             std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start)
                 .count();

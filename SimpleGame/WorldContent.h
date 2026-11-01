@@ -30,7 +30,14 @@ enum class ContentForm : std::uint8_t
     Breaker,
     Beacon,
     TransitMesh,
-    Aircraft
+    Aircraft,
+    Generator,
+    Table,
+    Lantern,
+    Salvage,
+    Reeds,
+    Rock,
+    Vehicle
 };
 enum class ContentUse : std::uint8_t
 {
@@ -123,7 +130,7 @@ struct CityCore
     std::map<std::pair<std::int64_t, std::int64_t>, ContentCell> cells;
 };
 // ============================================================================
-// CityCorePlan — authored local blocks placed in generated region frames, with real street joins
+// CityCorePlan — authored city/field blocks placed in generated region frames, with real street joins
 // ============================================================================
 class CityCorePlan
 {

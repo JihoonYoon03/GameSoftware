@@ -30,6 +30,7 @@ namespace
 using namespace game;
 MineState &mineState = GameLevels::Mine().GetState();
 using tutorial::Vector2;
+void ReadDialogue();
 void TestPlanetCityMigration()
 {
     using namespace tutorial;
@@ -44,7 +45,8 @@ void TestPlanetCityMigration()
     }
     assert(g.Surface()->Ready() && g.SurfaceCities());
     auto plan = g.Surface()->Stream().Snapshot()->planet;
-    assert(plan->cityCores && plan->cityCores->cities.size() == Overworld::kCityCount);
+    assert(plan->cityCores && plan->cityCores->cities.size() == Overworld::kCityCount + 1 &&
+           plan->cityCores->Find("frontier"));
     for (const auto &anchor : Overworld::StoryAnchors())
     {
         assert(std::fabs(plan->terrain.Height(anchor.location.position) -
@@ -134,6 +136,83 @@ void TestPlanetCityMigration()
     assert(w.mainQuestStage == mainStage && mineState.quest.GetStage() == mineStage &&
            w.residents.front().health == 43);
     assert(!g.EnterSurfaceMine()); // A remote interaction cannot teleport into a field site.
+    auto &chapter = GameLevels::Chapter();
+    auto &field = chapter.GetState();
+    assert(field.generated && field.survivors.size() == 5 && field.scrappers.size() == 3 && !field.active);
+    auto riaHealth = field.ria.combat.health;
+    field.ria.combat.health = 0;
+    auto fieldEpoch = g.Surface()->Stream().Snapshot()->statistics.epoch;
+    assert(g.RelocateSurfaceSurvey(chapter.Surface().Point({-2, 20.5f})));
+    auto outside = chapter.Surface().Local(w.playerPosition);
+    assert(outside.x < 0 && SceneManager::Current() == SceneKind::Planet);
+    g.KeyDown('d', 0, 0);
+    g.KeyDown('s', 0, 0);
+    for (int i = 0; i < 60; ++i)
+    {
+        g.Update(.05f);
+    }
+    g.KeyUp('d', 0, 0);
+    g.KeyUp('s', 0, 0);
+    w.StopMotion();
+    assert(chapter.Surface().Local(w.playerPosition).x > 0 && SceneManager::Current() == SceneKind::Planet);
+    assert(g.Surface()->Stream().Snapshot()->statistics.epoch == fieldEpoch && !w.isBikeMounted);
+    assert(g.RelocateSurfaceSurvey(chapter.Surface().Point({-2, 20.5f})));
+    w.bikeYaw = chapter.Surface().Yaw(0);
+    press('e');
+    assert(w.isBikeMounted);
+    g.KeyDown('w', 0, 0);
+    for (int i = 0; i < 300 && chapter.Surface().Local(w.playerPosition).x < 50; ++i)
+    {
+        g.Update(.05f);
+    }
+    g.KeyUp('w', 0, 0);
+    w.StopMotion();
+    assert(w.isBikeMounted && chapter.Surface().Local(w.playerPosition).x > kFrontierWidth &&
+           SceneManager::Current() == SceneKind::Planet);
+    field.ria.combat.health = riaHealth;
+    assert(g.RelocateSurfaceSurvey(chapter.Surface().Point({11.5f, 10.9f})));
+    w.isBikeMounted = false;
+    assert(g.FindNearbyInteraction() == InteractionTarget::FrontierSite);
+    auto globalPosition = w.playerPosition, cursor = w.cursorPosition;
+    press('e');
+    ReadDialogue();
+    assert(field.generatorInspected && Game::Distance(globalPosition, w.playerPosition) < 1.e-5f &&
+           Game::Distance(cursor, w.cursorPosition) < 1.e-5f);
+    assert(g.RelocateSurfaceSurvey(chapter.Surface().Point({18.5f, 20.5f})));
+    globalPosition = w.playerPosition;
+    mineState.loadout.Select(combat::WeaponSlot::Secondary);
+    w.facingYaw = chapter.Surface().Yaw(0);
+    w.mouseAiming = false;
+    mineState.pistol.Reset();
+    field.bullets.clear();
+    chapter.Attack();
+    assert(!field.bullets.empty() && field.bullets.back().shot.direction.x > .98f);
+    assert(Game::Distance(globalPosition, w.playerPosition) < 1.e-5f);
+    field.scrappers.front().combat.health = 37;
+    auto savedScrapper = field.scrappers.front().position;
+    auto fieldTileCount = field.tiles.size();
+    assert(g.RelocateSurfaceSurvey(plan->Region("halo_07").access.position));
+    for (int i = 0; i < 10; ++i)
+    {
+        g.Update(.05f);
+    }
+    assert(!field.active && field.bullets.empty() && field.generatorInspected &&
+           field.scrappers.front().combat.health == 37);
+    assert(Game::Distance(savedScrapper, field.scrappers.front().position) < 1.e-6f);
+    auto accepted = field.unlocked;
+    auto questBefore = mineState.quest;
+    field.unlocked = false;
+    mineState.quest = MineQuest{};
+    assert(g.RelocateSurfaceSurvey(plan->Region("frontier").access.position));
+    g.Update(0);
+    assert(field.active && !field.unlocked && mineState.quest.GetStage() == MineQuestStage::ShowRecord &&
+           !mineState.quest.IsRiaJoined());
+    assert(field.tiles.size() == fieldTileCount && field.survivors.size() == 5 &&
+           field.scrappers.front().combat.health == 37);
+    assert(g.Surface()->Stream().Snapshot()->statistics.epoch == fieldEpoch);
+    field.unlocked = accepted;
+    mineState.quest = questBefore;
+    assert(g.RelocateSurfaceSurvey(plan->Region("halo_07").access.position));
     w.mapVisible = true;
     auto mapEpoch = g.Surface()->Stream().Snapshot()->statistics.epoch;
     Vector2 pivot{530, 430};

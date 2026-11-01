@@ -219,13 +219,18 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     const size_t fieldScrappers = std::count_if(chapter.scrappers.begin(), chapter.scrappers.end(),
                                                 [](const game::FrontierPerson &p) { return !p.arrived; });
     const size_t frontierPopulation =
-        chapter.generated ? chapter.survivors.size() + (chapter.active ? 1 : 0) +
-                                (!chapter.kainJoined || chapter.active ? 1 : 0) + fieldScrappers
-                          : 0;
+        chapter.generated
+            ? chapter.survivors.size() +
+                  (chapter.active && (!world.surfaceExploration || level.quest.IsRiaJoined()) ? 1 : 0) +
+                  (!chapter.kainJoined || chapter.active ? 1 : 0) + fieldScrappers
+            : 0;
     const bool simulating = level.active && !world.isPaused && !world.mapVisible &&
                             !world.weaponWheel.visible && !tutorial::Dialogue::LocksWorld() &&
                             !tutorial::HospitalRecovery::Active();
     const auto surfaceCities = tutorial::Game::Get().SurfaceCities();
+    const bool fieldSimulating = chapter.active && !world.isPaused && !world.mapVisible &&
+                                 !world.weaponWheel.visible && !tutorial::Dialogue::LocksWorld() &&
+                                 !tutorial::HospitalRecovery::Active();
     const int surfaceCity = surfaceCities ? surfaceCities->ActiveCity() : -1;
     const bool citySimulation = (!world.surfaceExploration || surfaceCity >= 0) && !level.active &&
                                 !chapter.active && !world.isPaused && !world.isInsideHome &&
@@ -287,6 +292,8 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         streaming.Number("collision_cells", surface.CollisionCells());
         streaming.Number("active_city", surfaceCity);
         streaming.Bool("mine_visit_active", tutorial::Game::Get().IsSurfaceMine());
+        streaming.Bool("frontier_active", chapter.active);
+        streaming.Number("planet_radius_meters", surface.Planet().radiusMeters);
         streaming.Number("map_radius_meters", world.planetMapRange);
         streaming.Number("authored_cores", snapshot->planet && snapshot->planet->cityCores
                                                ? snapshot->planet->cityCores->cities.size()
@@ -322,8 +329,8 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                                         : currentCity > 0  ? tutorial::Overworld::kPopulationPerCity
                                                            : 0);
     counts.Number("npc_simulating",
-                  chapter.active && !world.isPaused ? frontierPopulation
-                  : simulating                      ? minePopulation
+                  fieldSimulating ? frontierPopulation
+                  : simulating    ? minePopulation
                   : citySimulation && world.surfaceExploration
                       ? std::count_if(world.residents.begin(), world.residents.end(),
                                       [&](const auto &r) { return r.cityIndex == surfaceCity; })
@@ -575,8 +582,8 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     {
         activeScrappers += person.combat.health > 0 && !person.arrived;
     }
-    fillRegion(frontier, "frontier", "빛나는 개척지", chapter.generated, chapter.active,
-               chapter.active && !world.isPaused, frontierPopulation, 0, 0);
+    fillRegion(frontier, "frontier", "빛나는 개척지", chapter.generated, chapter.active, fieldSimulating,
+               frontierPopulation, 0, 0);
     frontier.Text("mood", game::GameLevels::Chapter().Objective());
     std::string regions = city.Finish();
     for (int i = 1; i < tutorial::Overworld::kCityCount; ++i)
@@ -652,7 +659,7 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         item.Text("source", "mine_story_actor");
         Append(npcArray, item.Finish());
     };
-    if (level.active)
+    if (level.active && level.quest.IsRiaJoined())
     {
         mineNpc("mine/ria", "리아", "동료 · 정비사", level.riaPosition, "following", "동행",
                 level.riaRoute.size() - (std::min)(level.riaRoute.size(), level.riaRouteIndex), true, -1,
@@ -681,7 +688,7 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         item.Text("activity", person.combat.engaged   ? "defending"
                               : person.facing.walking ? "walking"
                                                       : "idle");
-        item.Bool("simulation_active", chapter.active && !world.isPaused && !person.arrived);
+        item.Bool("simulation_active", fieldSimulating && !person.arrived);
         item.Bool("following", following);
         item.Number("magazine_rounds", person.combat.pistol.GetRounds());
         item.Text("source", "chapter_one_actor");
@@ -689,7 +696,7 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     };
     if (chapter.generated)
     {
-        if (chapter.active)
+        if (chapter.active && (!world.surfaceExploration || level.quest.IsRiaJoined()))
         {
             frontierNpc("frontier/ria", "리아", chapter.ria, true, false);
         }

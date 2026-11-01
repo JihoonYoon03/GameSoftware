@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "World.h"
 #include <algorithm>
 #include <cmath>
@@ -539,7 +539,7 @@ bool WorldCatalog::AllowsInstancing(SpaceKind space)
 }
 const PlanetDefinition &WorldCatalog::Erma()
 {
-    static const PlanetDefinition result = {"erma", "에르마", "erma_system", 0x458a91ull, 1, 4800000, true};
+    static const PlanetDefinition result = {"erma", "에르마", "erma_system", 0x458a91ull, 2, 1200000, true};
     return result;
 }
 const std::vector<RegionDefinition> &WorldCatalog::ErmaRegions()

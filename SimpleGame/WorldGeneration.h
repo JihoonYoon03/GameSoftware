@@ -73,8 +73,8 @@ class PlanetTerrain
 struct GenerationSettings
 {
     unsigned extraRegions = 64, clusters = 12, placementAttempts = 256;
-    double regionGapMeters = 1500, clusterRadiusMeters = 65000;
-    double roadLimitMeters = 180000, maximumRoadGrade = .09, relayCoverageMeters = 5000;
+    double regionGapMeters = 375, clusterRadiusMeters = 16250;
+    double roadLimitMeters = 45000, maximumRoadGrade = .09, relayCoverageMeters = 5000;
     void Validate() const;
 };
 struct FixedRegionPlacement

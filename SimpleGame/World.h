@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <array>
 #include <cstdint>
 #include <optional>
@@ -184,6 +184,7 @@ class WorldCatalog
     static constexpr double CityAreaRatio = .25;
     static constexpr double CityLengthRatio = .5;
     static constexpr double MetersPerLegacyUnit = 2;
+    static constexpr double ExplorationDistanceScale = .25;
     static double CityAreaKm2(double referenceAreaKm2);
     static bool AllowsInstancing(SpaceKind space);
     static const PlanetDefinition &Erma();

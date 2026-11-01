@@ -374,9 +374,10 @@ void CityCorePlan::Prepare(GeneratedPlanet &p, const std::atomic_bool *cancel)
     {
         cancelled();
         const auto &r = p.Region(city.regionId);
-        if (r.center.space != SpaceKind::Surface || r.definition.kind != RegionKind::Settlement)
+        if (r.center.space != SpaceKind::Surface ||
+            (r.definition.kind != RegionKind::Settlement && r.definition.id != "frontier"))
         {
-            throw std::invalid_argument("City core requires a surface settlement");
+            throw std::invalid_argument("Authored core requires a surface settlement or frontier field");
         }
         city.elevationMeters = p.terrain.Height(r.center.position);
         double feather = 3000;
@@ -430,6 +431,10 @@ void CityCorePlan::Prepare(GeneratedPlanet &p, const std::atomic_bool *cancel)
         std::set<std::pair<std::int64_t, std::int64_t>> usedJoins;
         for (auto terminal : terminals)
         {
+            if (r.definition.kind != RegionKind::Settlement)
+            {
+                continue;
+            }
             if (terminal.second.first != 1)
             {
                 continue;

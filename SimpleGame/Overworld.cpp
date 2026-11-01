@@ -2373,6 +2373,7 @@ world::CityCorePlan PlanetCities::Describe(const GameState &state)
         }
         plan.cities.push_back(std::move(core));
     }
+    plan.cities.push_back(game::GameLevels::Chapter().Surface().Describe());
     plan.Validate();
     return plan;
 }

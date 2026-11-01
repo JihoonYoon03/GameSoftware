@@ -308,7 +308,9 @@ void Game::UpdatePlayerMovement(float deltaSeconds)
         return;
     }
     state.movementSpeed = 0;
-    if (state.isBikeMounted && !game::GameLevels::Active() && !state.isInsideHome && !state.isInObservatory)
+    if (state.isBikeMounted &&
+        (!game::GameLevels::Active() || (state.surfaceExploration && !IsSurfaceMine())) &&
+        !state.isInsideHome && !state.isInObservatory)
     {
         Overworld::UpdateBike(state, deltaSeconds);
         return;
@@ -629,8 +631,8 @@ void Game::KeyDown(unsigned char key, int, int)
     {
         return;
     }
-    if (state.surfaceExploration && !game::GameLevels::Active() && !Dialogue::Active() &&
-        !state.journalVisible && !state.dialogueHistoryVisible && key != 'j' && key != 'h')
+    if (state.surfaceExploration && !IsSurfaceMine() && !Dialogue::Active() && !state.journalVisible &&
+        !state.dialogueHistoryVisible && key != 'j' && key != 'h')
     {
         if (key == 'm')
         {
@@ -673,6 +675,22 @@ void Game::KeyDown(unsigned char key, int, int)
         else if (key == 'e' && !state.mapVisible && surface && surface->Ready())
         {
             InteractWithNearbyTarget();
+        }
+        else if (key == 'v' && !repeated && game::GameLevels::Chapter().IsActive())
+        {
+            game::GameLevels::Chapter().Melee();
+        }
+        else if (key == 'r' && game::GameLevels::Chapter().IsActive())
+        {
+            game::GameLevels::Mine().Combat().Reload();
+        }
+        else if (key == 'g' && !repeated && game::GameLevels::Chapter().IsActive())
+        {
+            game::GameLevels::Mine().UseRecoveryKit();
+        }
+        else if (key == 'q' && !repeated)
+        {
+            WeaponWheel::Open();
         }
         return;
     }
@@ -1140,6 +1158,10 @@ void Game::Update(float deltaSeconds)
 }
 void Game::StopSurface()
 {
+    if (state.surfaceExploration)
+    {
+        game::GameLevels::Chapter().GetState().active = false;
+    }
     if (IsSurfaceMine())
     {
         game::GameLevels::Mine().GetState().active = false;
@@ -1176,6 +1198,7 @@ bool Game::RelocateSurfaceSurvey(const world::SurfacePoint &point)
     state.bikeSafePoseValid = false;
     surfaceBike = surface->Pose().origin;
     state.planetMapPan = {};
+    game::GameLevels::Chapter().Surface().Refresh();
     return true;
 }
 bool Game::EnterSurfaceMine()
@@ -1358,6 +1381,7 @@ void Game::UpdateSurface(float dt)
     {
         return;
     }
+    game::GameLevels::Chapter().Surface().Refresh();
     bool advancing = !state.isPaused && !state.mapVisible && !state.weaponWheel.visible &&
                      !state.journalVisible && !state.dialogueHistoryVisible && !Dialogue::LocksWorld();
     if (surfaceCities)
@@ -1437,8 +1461,13 @@ void Game::UpdateSurface(float dt)
         state.movementAmount =
             Clamp(state.movementSpeed / (state.isBikeMounted ? 12.8f : kMovementSpeed), 0, 1);
         auto animationVelocity = state.isBikeMounted ? state.bikeVelocity : state.playerMotion.velocity;
+        if (IsAiming())
+        {
+            auto direction = game::MineLevel::GetAimDirection(game::GameLevels::Mine().GetAimAngle());
+            state.facingYaw = std::atan2(direction.y, direction.x);
+        }
         state.playerAnimation.Update(dt, {animationVelocity.x, animationVelocity.y, 0}, state.facingYaw,
-                                     false, state.isBikeMounted);
+                                     IsAiming(), state.isBikeMounted);
         if (state.isBikeMounted)
         {
             surfaceBike = surface->Pose().origin;
@@ -1483,6 +1512,9 @@ void Game::UpdateSurface(float dt)
         {
             surfaceCities->Update(state, *surface, dt);
         }
+        game::GameLevels::Chapter().Surface().Refresh();
+        game::GameLevels::Chapter().Surface().Update(dt);
+        HospitalRecovery::Update(0);
         UpdateCamera(dt);
         float targetHeight = float(surface->Local(surface->Pose().origin).z / 2);
         state.surfaceCameraHeight +=
@@ -1595,14 +1627,19 @@ bool Dialogue::Danger()
     auto &chapter = game::GameLevels::Chapter();
     if (chapter.IsActive() && chapter.GetState().hostile)
     {
+        auto player = world.playerPosition;
+        if (world.surfaceExploration && !chapter.Surface().Observing())
+        {
+            player = chapter.Surface().Local(player);
+        }
         if (!chapter.GetState().bullets.empty())
         {
             return true;
         }
         for (const auto &person : chapter.GetState().scrappers)
         {
-            if (person.combat.health > 0 && Game::Distance(person.position, world.playerPosition) < 14 &&
-                chapter.HasLineOfSight(world.playerPosition, person.position))
+            if (person.combat.health > 0 && Game::Distance(person.position, player) < 14 &&
+                chapter.HasLineOfSight(player, person.position))
             {
                 return true;
             }
@@ -1936,10 +1973,10 @@ void Game::ShowNotice(const std::string &message)
 bool Game::IsPositionBlocked(Vector2 position)
 {
     profiling::Count(profiling::Counter::CollisionQueries);
-    if (state.surfaceExploration && !game::GameLevels::Active() && !state.isInsideHome &&
-        !state.isInObservatory)
+    if (state.surfaceExploration && !IsSurfaceMine() && !state.isInsideHome && !state.isInObservatory)
     {
         return !surface || surface->Blocked(position.x * 2, position.y * 2, state.isBikeMounted) ||
+               game::GameLevels::Chapter().Surface().Blocked(position, state.isBikeMounted) ||
                (surfaceCities && surfaceCities->Occupied(state, *surface, position));
     }
     if (game::GameLevels::Chapter().IsActive())
@@ -2050,14 +2087,18 @@ bool Game::IsQuestInteraction(InteractionTarget target) const
 }
 InteractionTarget Game::FindNearbyInteraction()
 {
-    if (state.surfaceExploration && !game::GameLevels::Active() && !state.isInsideHome &&
-        !state.isInObservatory)
+    if (state.surfaceExploration && !IsSurfaceMine() && !state.isInsideHome && !state.isInObservatory)
     {
         if (state.isBikeMounted)
         {
             return InteractionTarget::JetBike;
         }
         float distance = 1000000;
+        game::ChapterInteraction interaction{};
+        if (!state.isBikeMounted && game::GameLevels::Chapter().NearestInteraction(interaction))
+        {
+            return InteractionTarget::FrontierSite;
+        }
         auto target = surface && surfaceCities ? surfaceCities->Nearby(state, *surface, &distance)
                                                : InteractionTarget::None;
         if (surface && surface->Ready())
@@ -2190,6 +2231,11 @@ void Game::InteractWithNearbyTarget()
         }
     }
     const InteractionTarget target = FindNearbyInteraction();
+    if (target == InteractionTarget::FrontierSite)
+    {
+        game::GameLevels::Chapter().Interact();
+        return;
+    }
     if (state.surfaceExploration && target == InteractionTarget::JetBike)
     {
         ToggleSurfaceBike();
@@ -2321,7 +2367,15 @@ void Game::InteractWithNearbyTarget()
     {
         if (state.surfaceExploration)
         {
-            tell(std::string("도시 수신망 / ") + game::GameLevels::Chapter().Objective());
+            if (game::GameLevels::Chapter().IsAvailable())
+            {
+                game::GameLevels::Chapter().InteractHub();
+            }
+            else
+            {
+                tell(std::string("도시 수신망 / ") +
+                     game::GameLevels::Mine().GetState().quest.GetObjective());
+            }
             return;
         }
         if (game::GameLevels::Mine().GetState().quest.Advance(game::MineQuestStage::ReturnToHalo))

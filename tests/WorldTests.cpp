@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "World.h"
 #include "Game.h"
 #include "Level.h"
@@ -49,7 +49,10 @@ void DefinitionsAndIdentity()
 {
     const auto &planet = WorldCatalog::Erma();
     planet.Validate();
-    Check(planet.id == "erma" && planet.radiusMeters == 4800000, "Erma profile contract");
+    Check(planet.id == "erma" && planet.radiusMeters == 1200000 && planet.generatorVersion == 2,
+          "Compact Erma profile contract");
+    Check(WorldCatalog::ExplorationDistanceScale == .25 && WorldCatalog::MetersPerLegacyUnit == 2,
+          "Travel is compressed without shrinking people, props or weapon ranges");
     static_assert(WorldCatalog::MetersPerLegacyUnit == models::WorldScale::metersPerUnit);
     std::set<std::string> ids, names;
     unsigned districts = 0, towns = 0, metropolises = 0, capitals = 0;
@@ -76,8 +79,14 @@ void DefinitionsAndIdentity()
           "Area and length scale differ");
     Check(WorldCatalog::Region("mq00_mine").storyFixed && WorldCatalog::Region("frontier").storyFixed,
           "Existing story regions must stay fixed");
-    Check(WorldIdentity::StreamSeed(planet, "halo_07", "terrain") == 16501998420092516863ull,
+    auto previousProfile = planet;
+    previousProfile.generatorVersion = 1;
+    previousProfile.radiusMeters = 4800000;
+    Check(WorldIdentity::StreamSeed(previousProfile, "halo_07", "terrain") == 16501998420092516863ull,
           "Portable seed golden (fixed-width little-endian encoding)");
+    Check(WorldIdentity::StreamSeed(planet, "halo_07", "terrain") !=
+              WorldIdentity::StreamSeed(previousProfile, "halo_07", "terrain"),
+          "Compact world isolates old generation keys");
     auto renamed = planet;
     renamed.name = "표시명 변경";
     Check(renamed.SameWorld(planet) && WorldIdentity::ContentKey(renamed, "halo_07", "home") ==
@@ -352,7 +361,7 @@ void CubeSeamsAndKeys()
     auto second = planet;
     ++second.seed;
     Check(!(CubeSphere::Address(second, CubeSphere::Center(key), 2) == key), "Chunk seed isolation");
-    Check(key.StableKey() == "p/erma/s/4557457/v/1/l/0/f/0/q/2/x/2/y/2", "Stable chunk key encoding");
+    Check(key.StableKey() == "p/erma/s/4557457/v/2/l/0/f/0/q/2/x/2/y/2", "Stable chunk key encoding");
     Throws(
         [&] {
             auto bad = key;

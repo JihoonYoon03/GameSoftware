@@ -1460,7 +1460,16 @@ void MineLevel::Restart()
 float MineLevel::GetAimAngle()
 {
     auto &world = tutorial::Game::Get().GetState();
-    auto origin = Project(world.playerPosition, models::WorldScale::aimHeightPixels);
+    float height = models::WorldScale::aimHeightPixels;
+    if (world.surfaceExploration && !tutorial::Game::Get().IsSurfaceMine())
+    {
+        height +=
+            float(tutorial::Game::Get().Surface()->Local(tutorial::Game::Get().Surface()->Pose().origin).z /
+                  2) *
+                44 -
+            world.surfaceCameraHeight * 44;
+    }
+    auto origin = Project(world.playerPosition, height);
     return std::atan2(world.cursorPosition.y - origin.y, world.cursorPosition.x - origin.x);
 }
 
@@ -1643,8 +1652,364 @@ void MineLevel::Update(float deltaSeconds)
 // ============================================================================
 // ChapterOneLevel : Level — Light of the Frontier
 // ============================================================================
-ChapterOneLevel::ChapterOneLevel() : map(*this), combat(*this), party(*this)
+ChapterOneLevel::ChapterOneLevel() : map(*this), combat(*this), party(*this), surface(*this)
 {
+}
+FrontierSurface::FrontierSurface(ChapterOneLevel &owner) : level(owner)
+{
+}
+void ChapterOneLevel::PrepareSurface()
+{
+    if (!state.generated)
+    {
+        map.Generate();
+    }
+}
+world::CityCore FrontierSurface::Describe()
+{
+    level.PrepareSurface();
+    auto &state = level.GetState();
+    const auto &library = models::ModelLibrary::Get();
+    world::CityCore core;
+    core.regionId = "frontier";
+    core.radiusMeters = 140;
+    auto model = [&](std::string id, world::ContentForm form, unsigned variant, const models::Model &asset,
+                     tutorial::Vector2 position, models::Point scale, bool solid,
+                     models::Palette palette = {}) {
+        if (!asset.resourceId)
+        {
+            return;
+        }
+        const auto &mesh = models::ResourceAssets::Get(asset.resourceId);
+        world::CoreLot lot;
+        lot.id = std::move(id);
+        lot.form = form;
+        lot.variant = std::uint16_t(variant);
+        lot.use = world::ContentUse::Expedition;
+        lot.solid = solid;
+        lot.positionMeters = {
+            (position.x - kFrontierEntry.x) * 2 + (mesh.minimum.x + mesh.maximum.x) * scale.x,
+            (position.y - kFrontierEntry.y) * 2 + (mesh.minimum.y + mesh.maximum.y) * scale.y,
+            mesh.minimum.z * scale.z * 2};
+        lot.sizeMeters = {mesh.physicalSize.x * scale.x * 2, mesh.physicalSize.y * scale.y * 2,
+                          mesh.physicalSize.z * scale.z * 2};
+        lot.palette = world::SurfaceStructure::Palette{palette.body, palette.accent, palette.emission};
+        if (lot.sizeMeters.x > .001 && lot.sizeMeters.y > .001 && lot.sizeMeters.z > .001)
+        {
+            core.lots.push_back(std::move(lot));
+        }
+    };
+    using F = world::ContentForm;
+    using S = models::SceneryType;
+    for (size_t i = 0; i < state.structures.size(); ++i)
+    {
+        const auto &b = state.structures[i];
+        model("facility_" + std::to_string(i), F::Building, unsigned(b.type),
+              library.buildings[size_t(b.type)], {b.x, b.y}, {b.width, b.depth, b.height / 44}, true,
+              b.palette);
+    }
+    auto prop = [&](std::string id, F form, const models::Model &asset, tutorial::Vector2 p, bool solid,
+                    models::Point scale = {1, 1, 1}) {
+        model(std::move(id), form, 0, asset, p, scale, solid);
+    };
+    for (int i = 0; i < 3; ++i)
+    {
+        if (i == 0)
+        {
+            model("generator_0", F::Scenery, unsigned(S::Transformer),
+                  models::ModelLibrary::Scenery(S::Transformer), {9.5f, 9.7f}, {1, 1, 1}, true);
+        }
+        else
+        {
+            prop("generator_" + std::to_string(i), F::Generator, library.generator, {9.5f + i * .9f, 9.7f},
+                 true);
+        }
+    }
+    prop("generator_console", F::Console, library.console, {10.5f, 10.5f}, true, {.7f, .7f, .7f});
+    prop("breaker", F::Breaker, library.breaker, {12.4f, 10.5f}, true);
+    prop("workbench", F::Table, library.table, {9.5f, 13.5f}, true);
+    prop("workbench_light", F::Lantern, library.lantern, {9.5f, 13.5f}, false, {.7f, .7f, .7f});
+    prop("camp", F::Table, library.table, {24.5f, 21.7f}, true);
+    for (int i = 0; i < 2; ++i)
+    {
+        auto type = i ? models::VehicleType::Shuttle : models::VehicleType::Hauler;
+        models::Palette palette;
+        palette.body = {.57f, .43f, .27f, 1};
+        model("convoy_" + std::to_string(i), F::Vehicle, unsigned(type), library.vehicles[size_t(type)].body,
+              {32.5f + i * 3.5f, 9.5f}, {1, 1, 1}, true, palette);
+    }
+    constexpr tutorial::Vector2 markers[] = {{36.5f, 13.5f}, {36.5f, 18.5f}, {29.5f, 18.5f}};
+    for (unsigned i = 0; i < 3; ++i)
+    {
+        model("survey_" + std::to_string(i), F::Scenery, unsigned(S::SurveyTripod),
+              models::ModelLibrary::Scenery(S::SurveyTripod), markers[i], {1, 1, 1}, false);
+    }
+    prop("trade", F::Salvage, library.salvage, {24.5f, 30.5f}, true);
+    prop("ledger", F::Console, library.console, {33.5f, 32.5f}, true);
+    prop("detail", F::Salvage, library.salvage, {35.5f, 33.5f}, true);
+    for (unsigned i = 0; i < 75; ++i)
+    {
+        tutorial::Vector2 p{2.5f + float((i * 17) % 43), 3.5f + float((i * 13) % 37)};
+        if (level.IsBlocked(p) || std::fabs(p.x - 5.5f) < 1.5f || std::fabs(p.x - 24.5f) < 1.5f ||
+            std::fabs(p.y - 20.5f) < 1.5f)
+        {
+            continue;
+        }
+        if (p.x >= 24)
+        {
+            prop("flora_" + std::to_string(i), F::Rock, library.rock, p, false, {.3f, .3f, .28f});
+        }
+        else if (i % 3)
+        {
+            prop("flora_" + std::to_string(i), F::Reeds, library.reeds, p, false, {.8f, .8f, .8f});
+        }
+        else
+        {
+            model("flora_" + std::to_string(i), F::Scenery, unsigned(S::PrismBloom),
+                  models::ModelLibrary::Scenery(S::PrismBloom), p, {.8f, .8f, .8f}, false);
+        }
+    }
+    auto road = [&](unsigned from, unsigned to, tutorial::Vector2 a, tutorial::Vector2 b) {
+        core.roads.push_back({from,
+                              to,
+                              {(a.x - kFrontierEntry.x) * 2, (a.y - kFrontierEntry.y) * 2, 0},
+                              {(b.x - kFrontierEntry.x) * 2, (b.y - kFrontierEntry.y) * 2, 0},
+                              2});
+    };
+    road(0, 1, {5.5f, -8}, {5.5f, 20.5f});
+    road(1, 2, {5.5f, 20.5f}, {5.5f, 52});
+    road(3, 1, {-8, 20.5f}, {5.5f, 20.5f});
+    road(1, 4, {5.5f, 20.5f}, {24.5f, 20.5f});
+    road(4, 5, {24.5f, 20.5f}, {56, 20.5f});
+    road(6, 4, {24.5f, -8}, {24.5f, 20.5f});
+    road(4, 7, {24.5f, 20.5f}, {24.5f, 30.5f});
+    road(7, 8, {24.5f, 30.5f}, {24.5f, 52});
+    road(7, 9, {24.5f, 30.5f}, {56, 30.5f});
+    state.surfaceObstacles.assign(kFrontierWidth * kFrontierHeight, 0);
+    for (int y = 0; y < kFrontierHeight; ++y)
+    {
+        for (int x = 0; x < kFrontierWidth; ++x)
+        {
+            for (const auto &lot : core.lots)
+            {
+                if (lot.solid &&
+                    std::fabs((x + .5 - kFrontierEntry.x) * 2 - lot.positionMeters.x) <
+                        lot.sizeMeters.x * .5 + .35 &&
+                    std::fabs((y + .5 - kFrontierEntry.y) * 2 - lot.positionMeters.y) <
+                        lot.sizeMeters.y * .5 + .35)
+                {
+                    state.surfaceObstacles[size_t(y * kFrontierWidth + x)] = 1;
+                }
+            }
+        }
+    }
+    return core;
+}
+tutorial::Vector2 FrontierSurface::Local(tutorial::Vector2 position) const
+{
+    const auto &session = *tutorial::Game::Get().Surface();
+    const auto &region = session.Stream().Snapshot()->planet->Region("frontier");
+    auto point = session.PointAt(position.x * 2, position.y * 2);
+    auto local = world::SurfaceGeometry::ToLocal(region.frame, point, session.Planet().radiusMeters);
+    return {kFrontierEntry.x + float(local.x / 2), kFrontierEntry.y + float(local.y / 2)};
+}
+world::SurfacePoint FrontierSurface::Point(tutorial::Vector2 p) const
+{
+    const auto &session = *tutorial::Game::Get().Surface();
+    const auto &region = session.Stream().Snapshot()->planet->Region("frontier");
+    auto point = world::SurfaceGeometry::FromLocal(
+        region.frame, {(p.x - kFrontierEntry.x) * 2, (p.y - kFrontierEntry.y) * 2, 0},
+        session.Planet().radiusMeters);
+    auto plan = session.Stream().Snapshot()->planet;
+    auto core = plan->cityCores ? plan->cityCores->Find("frontier") : nullptr;
+    point.altitudeMeters =
+        core && std::hypot((p.x - kFrontierEntry.x) * 2, (p.y - kFrontierEntry.y) * 2) <= core->radiusMeters
+            ? core->elevationMeters
+            : plan->terrain.Height(point);
+    return point;
+}
+std::optional<tutorial::Vector2> FrontierSurface::Project(tutorial::Vector2 p, double distance) const
+{
+    const auto &session = *tutorial::Game::Get().Surface();
+    auto point = Point(p);
+    if (world::SurfaceGeometry::Distance(session.Planet().radiusMeters, point, session.Pose().origin) >
+        distance)
+    {
+        return {};
+    }
+    auto local = session.Local(point);
+    return tutorial::Vector2{float(local.x / 2), float(local.y / 2)};
+}
+float FrontierSurface::Yaw(float yaw) const
+{
+    const auto &session = *tutorial::Game::Get().Surface();
+    auto v = world::SurfaceGeometry::TransformDirection(
+        {std::cos(yaw), std::sin(yaw), 0}, session.Stream().Snapshot()->planet->Region("frontier").frame,
+        session.Origin());
+    return float(std::atan2(v.y, v.x));
+}
+void FrontierSurface::Refresh()
+{
+    auto &g = tutorial::Game::Get();
+    auto &w = g.GetState();
+    auto &state = level.GetState();
+    bool active = false;
+    if (w.surfaceExploration && g.Surface() && g.Surface()->Ready() && !g.IsSurfaceMine() &&
+        !w.isInsideHome && !w.isInObservatory)
+    {
+        const auto &session = *g.Surface();
+        const auto &r = session.Stream().Snapshot()->planet->Region("frontier");
+        if (world::SurfaceGeometry::Distance(session.Planet().radiusMeters, r.access.position,
+                                             session.Pose().origin) < 240)
+        {
+            auto p = Local(w.playerPosition);
+            active = p.x >= -12 && p.y >= -12 && p.x <= kFrontierWidth + 12 && p.y <= kFrontierHeight + 12;
+        }
+    }
+    if (!active && state.active)
+    {
+        state.bullets.clear();
+        state.tracers.clear();
+        state.muzzleFlash = state.meleeSeconds = 0;
+        auto stop = [](FrontierPerson &p) {
+            p.facing.walking = false;
+            p.combat.engaged = false;
+            p.combat.muzzleFlash = 0;
+        };
+        stop(state.ria);
+        stop(state.kain);
+        for (auto &p : state.survivors)
+        {
+            stop(p);
+        }
+        for (auto &p : state.scrappers)
+        {
+            stop(p);
+        }
+    }
+    state.active = active;
+}
+bool FrontierSurface::Blocked(tutorial::Vector2 position, bool driving) const
+{
+    const auto &g = tutorial::Game::Get();
+    if (!g.Surface() || !g.Surface()->Ready() || !level.GetState().generated)
+    {
+        return false;
+    }
+    const auto &r = g.Surface()->Stream().Snapshot()->planet->Region("frontier");
+    if (world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, r.access.position,
+                                         g.Surface()->PointAt(position.x * 2, position.y * 2)) > 240)
+    {
+        return false;
+    }
+    auto p = Local(position);
+    if (p.x < 0 || p.y < 0 || p.x >= kFrontierWidth || p.y >= kFrontierHeight)
+    {
+        return false;
+    }
+    const auto &state = level.GetState();
+    if (!driving && BodyHitsTile(p, [&](int x, int y) {
+            return x < 0 || y < 0 || x >= kFrontierWidth || y >= kFrontierHeight ||
+                   state.tiles[size_t(y * kFrontierWidth + x)] != FrontierTile::Canal;
+        }))
+    {
+        return true;
+    }
+    if (state.kain.combat.health > 0 && tutorial::Game::Distance(p, state.kain.position) < .36f)
+    {
+        return true;
+    }
+    if (GameLevels::Mine().GetState().quest.IsRiaJoined() && state.ria.combat.health > 0 &&
+        tutorial::Game::Distance(p, state.ria.position) < .36f)
+    {
+        return true;
+    }
+    for (const auto &person : state.survivors)
+    {
+        if (person.combat.health > 0 && tutorial::Game::Distance(p, person.position) < .36f)
+        {
+            return true;
+        }
+    }
+    for (const auto &person : state.scrappers)
+    {
+        if (!(state.negotiated && person.arrived) && person.combat.health > 0 &&
+            tutorial::Game::Distance(p, person.position) < .36f)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+void FrontierSurface::Observe(const std::function<void()> &operation)
+{
+    if (observing)
+    {
+        operation();
+        return;
+    }
+    auto &g = tutorial::Game::Get();
+    auto &w = g.GetState();
+    if (!g.Surface() || !g.Surface()->Ready() || !level.IsActive())
+    {
+        return;
+    }
+    const auto &session = *g.Surface();
+    auto source = session.Origin(), target = session.Stream().Snapshot()->planet->Region("frontier").frame;
+    struct Restore
+    {
+        tutorial::GameState &w;
+        bool &observing;
+        tutorial::Vector2 player, camera, cursor;
+        float yaw, height;
+        ~Restore()
+        {
+            w.playerPosition = player;
+            w.cameraPosition = camera;
+            w.cursorPosition = cursor;
+            w.facingYaw = yaw;
+            w.surfaceCameraHeight = height;
+            observing = false;
+        }
+    } restore{w,
+              observing,
+              w.playerPosition,
+              w.cameraPosition,
+              w.cursorPosition,
+              w.facingYaw,
+              w.surfaceCameraHeight};
+    auto aimOrigin = tutorial::WorldCamera::ToViewport(
+        {tutorial::kCanvasWidth * .5f +
+             (w.playerPosition.x - w.playerPosition.y - w.cameraPosition.x + w.cameraPosition.y) * 36,
+         tutorial::kCanvasHeight * .57f +
+             (w.playerPosition.x + w.playerPosition.y - w.cameraPosition.x - w.cameraPosition.y) * 18 -
+             models::WorldScale::aimHeightPixels + w.surfaceCameraHeight * 44 -
+             float(session.Local(session.Pose().origin).z / 2) * 44});
+    auto aim = MineLevel::GetAimDirection(
+        std::atan2(w.cursorPosition.y - aimOrigin.y, w.cursorPosition.x - aimOrigin.x));
+    auto localAim = world::SurfaceGeometry::TransformDirection({aim.x, aim.y, 0}, source, target);
+    auto facing = world::SurfaceGeometry::TransformDirection(
+        {std::cos(w.facingYaw), std::sin(w.facingYaw), 0}, source, target);
+    w.playerPosition = Local(restore.player);
+    w.cameraPosition = Local(restore.camera);
+    w.surfaceCameraHeight = 0;
+    w.facingYaw = float(std::atan2(facing.y, facing.x));
+    observing = true;
+    auto p = w.playerPosition, c = w.cameraPosition;
+    auto origin =
+        tutorial::WorldCamera::ToViewport({tutorial::kCanvasWidth * .5f + (p.x - p.y - c.x + c.y) * 36,
+                                           tutorial::kCanvasHeight * .57f + (p.x + p.y - c.x - c.y) * 18 -
+                                               models::WorldScale::aimHeightPixels});
+    w.cursorPosition = {origin.x + float(localAim.x - localAim.y) * 360,
+                        origin.y + float(localAim.x + localAim.y) * 180};
+    operation();
+}
+void FrontierSurface::Update(float dt)
+{
+    if (level.IsActive())
+    {
+        Observe([&] { level.Update(dt); });
+    }
 }
 FrontierMap::FrontierMap(ChapterOneLevel &owner) : state(owner.GetState())
 {
@@ -1669,10 +2034,20 @@ std::vector<tutorial::Vector2> ChapterOneLevel::FindRoute(tutorial::Vector2 from
 }
 void ChapterOneLevel::Attack()
 {
+    if (tutorial::Game::Get().GetState().surfaceExploration && !surface.Observing())
+    {
+        surface.Observe([&] { combat.Attack(); });
+        return;
+    }
     combat.Attack();
 }
 void ChapterOneLevel::Melee()
 {
+    if (tutorial::Game::Get().GetState().surfaceExploration && !surface.Observing())
+    {
+        surface.Observe([&] { combat.Melee(); });
+        return;
+    }
     combat.Melee();
 }
 ChapterOneState &ChapterOneLevel::GetState()
@@ -1767,6 +2142,12 @@ bool FrontierMap::IsWalkable(int x, int y) const
         return false;
     }
     auto tile = state.tiles[y * kFrontierWidth + x];
+    if (tutorial::Game::Get().GetState().surfaceExploration &&
+        state.surfaceObstacles.size() == state.tiles.size() &&
+        state.surfaceObstacles[size_t(y * kFrontierWidth + x)])
+    {
+        return false;
+    }
     return tile != FrontierTile::Canal && tile != FrontierTile::Foundation;
 }
 bool FrontierMap::IsBlocked(tutorial::Vector2 position) const
@@ -1867,6 +2248,11 @@ bool FrontierParty::Move(FrontierPerson &person, float amount)
 }
 void ChapterOneLevel::Enter(bool debugEntry)
 {
+    if (tutorial::Game::Get().GetState().surfaceExploration)
+    {
+        tutorial::Game::Get().ShowNotice("빛나는 개척지 / 지도에 표시된 현장까지 직접 이동하세요.");
+        return;
+    }
     tutorial::WeaponWheel::Close();
     tutorial::Game::Get().GetState().mapVisible = false;
     if (debugEntry)
@@ -1908,6 +2294,10 @@ void ChapterOneLevel::Enter(bool debugEntry)
 }
 void ChapterOneLevel::Leave()
 {
+    if (tutorial::Game::Get().GetState().surfaceExploration)
+    {
+        return;
+    }
     tutorial::WeaponWheel::Close();
     tutorial::Game::Get().GetState().mapVisible = false;
     state.active = false;
@@ -1954,7 +2344,16 @@ bool ChapterOneLevel::RelayClear() const
 }
 std::vector<ChapterInteraction> ChapterOneLevel::Interactions() const
 {
-    std::vector<ChapterInteraction> result = {{ChapterAction::Exit, kFrontierEntry, "헤일로 귀환 [E]"}};
+    const bool planet = tutorial::Game::Get().GetState().surfaceExploration;
+    if (planet && !IsAvailable())
+    {
+        return {};
+    }
+    std::vector<ChapterInteraction> result;
+    if (!planet)
+    {
+        result.push_back({ChapterAction::Exit, kFrontierEntry, "헤일로 귀환 [E]"});
+    }
     if (!state.generatorInspected)
     {
         result.push_back({ChapterAction::Generator, {10.5f, 10.5f}, "발전기 / 전력 유출 조사 [E]"});
@@ -2015,12 +2414,20 @@ std::vector<ChapterInteraction> ChapterOneLevel::Interactions() const
 }
 bool ChapterOneLevel::NearestInteraction(ChapterInteraction &result) const
 {
+    auto player = tutorial::Game::Get().GetState().playerPosition;
+    if (tutorial::Game::Get().GetState().surfaceExploration && !surface.Observing())
+    {
+        if (!state.active)
+        {
+            return false;
+        }
+        player = surface.Local(player);
+    }
     float best = 1.5f;
     bool found = false;
     for (const auto &point : Interactions())
     {
-        float distance =
-            tutorial::Game::Distance(tutorial::Game::Get().GetState().playerPosition, point.position);
+        float distance = tutorial::Game::Distance(player, point.position);
         if (distance < best)
         {
             best = distance;
@@ -2032,6 +2439,11 @@ bool ChapterOneLevel::NearestInteraction(ChapterInteraction &result) const
 }
 void ChapterOneLevel::Interact()
 {
+    if (tutorial::Game::Get().GetState().surfaceExploration && !surface.Observing())
+    {
+        surface.Observe([&] { Interact(); });
+        return;
+    }
     const auto &world = tutorial::Game::Get().GetState();
     if (tutorial::HospitalRecovery::Active() || tutorial::Dialogue::Active() || world.mapVisible ||
         world.isPaused || world.journalVisible || world.dialogueHistoryVisible)
@@ -2206,6 +2618,13 @@ void ChapterOneLevel::InteractHub()
         }
         return;
     }
+    if (tutorial::Game::Get().GetState().surfaceExploration)
+    {
+        tutorial::Game::Get().ShowNotice("빛나는 개척지 / 지도에 현장 위치를 표시했습니다. 직접 이동해 "
+                                         "발전기·운송대·폐설비를 조사할 수 있습니다.");
+        tutorial::Game::Get().GetState().planetDestination = surface.Point(kFrontierEntry);
+        return;
+    }
     Dialogue::Start(
         "chapter1/departure",
         {{"confirm",
@@ -2234,9 +2653,10 @@ float ChapterOneLevel::GetAimAngle() const
 void FrontierCombat::Attack()
 {
     auto &world = tutorial::Game::Get().GetState();
-    if (tutorial::Dialogue::LocksWorld() || world.isPaused || world.mapVisible || world.weaponWheel.visible ||
-        world.journalVisible || world.dialogueHistoryVisible || tutorial::HospitalRecovery::Active() ||
-        GameLevels::Mine().GetState().player.health <= 0 || state.meleeSeconds > 0)
+    if (tutorial::Dialogue::LocksWorld() || world.isBikeMounted || world.isPaused || world.mapVisible ||
+        world.weaponWheel.visible || world.journalVisible || world.dialogueHistoryVisible ||
+        tutorial::HospitalRecovery::Active() || GameLevels::Mine().GetState().player.health <= 0 ||
+        state.meleeSeconds > 0)
     {
         return;
     }
@@ -2271,10 +2691,10 @@ void FrontierCombat::Attack()
 void FrontierCombat::Melee()
 {
     const auto &world = tutorial::Game::Get().GetState();
-    if (!state.active || world.isPaused || world.mapVisible || world.weaponWheel.visible ||
-        world.journalVisible || world.dialogueHistoryVisible || tutorial::Dialogue::LocksWorld() ||
-        tutorial::HospitalRecovery::Active() || GameLevels::Mine().GetState().player.health <= 0 ||
-        state.meleeSeconds > 0)
+    if (!state.active || world.isBikeMounted || world.isPaused || world.mapVisible ||
+        world.weaponWheel.visible || world.journalVisible || world.dialogueHistoryVisible ||
+        tutorial::Dialogue::LocksWorld() || tutorial::HospitalRecovery::Active() ||
+        GameLevels::Mine().GetState().player.health <= 0 || state.meleeSeconds > 0)
     {
         return;
     }
@@ -2385,7 +2805,9 @@ void FrontierCombat::Advance(ChapterProjectile &projectile, float distance)
                 state.invulnerability = .45f;
                 shot.remaining = 0;
             }
-            else if (damagePerson(state.ria) || (state.kainJoined && damagePerson(state.kain)))
+            else if (((!world.surfaceExploration || GameLevels::Mine().GetState().quest.IsRiaJoined()) &&
+                      damagePerson(state.ria)) ||
+                     (state.kainJoined && damagePerson(state.kain)))
             {
                 shot.remaining = 0;
             }
@@ -2487,6 +2909,11 @@ void FrontierCombat::Update(float deltaSeconds)
                 {
                     continue;
                 }
+                if (ally == &state.ria && world.surfaceExploration &&
+                    !GameLevels::Mine().GetState().quest.IsRiaJoined())
+                {
+                    continue;
+                }
                 float distance = tutorial::Game::Distance(person.position, ally->position);
                 if (ally->combat.health > 0 && distance < nearest &&
                     level.HasLineOfSight(person.position, ally->position))
@@ -2501,7 +2928,10 @@ void FrontierCombat::Update(float deltaSeconds)
             }
         }
     };
-    updatePerson(state.ria, true);
+    if (!world.surfaceExploration || GameLevels::Mine().GetState().quest.IsRiaJoined())
+    {
+        updatePerson(state.ria, true);
+    }
     if (state.kainJoined)
     {
         updatePerson(state.kain, true);
@@ -2555,7 +2985,10 @@ void FrontierParty::Update(float deltaSeconds)
             person.waypoint = 0;
         }
     };
-    follow(state.ria, 1.6f);
+    if (!world.surfaceExploration || GameLevels::Mine().GetState().quest.IsRiaJoined())
+    {
+        follow(state.ria, 1.6f);
+    }
     if (state.kainJoined)
     {
         follow(state.kain, 2.4f);

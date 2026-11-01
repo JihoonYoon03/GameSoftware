@@ -642,8 +642,14 @@ PlanetGenerator PlanetGenerator::Erma(const std::vector<StoryAnchor> &anchors, G
     std::vector<FixedRegionPlacement> fixed = {
         {"halo_07", adapter.Locate("halo_07", {}).position},
         {"mq00_mine", mine->location.position, SpaceKind::Subsurface, -1, 30},
-        {"frontier", adapter.Locate("frontier", {6000, 4000, 0}).position},
-        {"n0_outskirts", adapter.Locate("n0_outskirts", {14500, -7000, 0}).position}};
+        {"frontier", adapter
+                         .Locate("frontier", {6000 * WorldCatalog::ExplorationDistanceScale,
+                                              4000 * WorldCatalog::ExplorationDistanceScale, 0})
+                         .position},
+        {"n0_outskirts", adapter
+                             .Locate("n0_outskirts", {14500 * WorldCatalog::ExplorationDistanceScale,
+                                                      -7000 * WorldCatalog::ExplorationDistanceScale, 0})
+                             .position}};
     return PlanetGenerator(planet, WorldCatalog::ErmaRegions(), std::move(fixed), anchors, settings);
 }
 

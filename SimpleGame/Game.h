@@ -159,7 +159,8 @@ enum class InteractionTarget
     JetBike,
     CityReceiver,
     Kain,
-    MineEntrance
+    MineEntrance,
+    FrontierSite
 };
 
 constexpr float kPi = 3.14159265f;

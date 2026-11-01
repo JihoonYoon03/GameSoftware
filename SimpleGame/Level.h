@@ -1,8 +1,11 @@
-#pragma once
+﻿#pragma once
 #include "Game.h"
 #include "Weapon.h"
+#include "WorldContent.h"
 #include <cstddef>
 #include <cstdint>
+#include <functional>
+#include <optional>
 #include <vector>
 
 namespace game
@@ -420,6 +423,7 @@ struct ChapterOneState
     float comparisonSeconds = 0, invulnerability = 0, muzzleFlash = 0, meleeSeconds = 0;
     bool mapVisible = true;
     std::vector<FrontierTile> tiles;
+    std::vector<std::uint8_t> surfaceObstacles; // NPC navigation only; player uses actual mesh bounds.
     std::vector<tutorial::Building> structures;
     std::vector<FrontierPerson> survivors, scrappers;
     FrontierPerson ria, kain;
@@ -427,6 +431,31 @@ struct ChapterOneState
     std::vector<Tracer> tracers;
 };
 class ChapterOneLevel;
+// ============================================================================
+// FrontierSurface — one authored outdoor site in the planet frame; CPU gameplay observes local metres
+// ============================================================================
+class FrontierSurface
+{
+  public:
+    explicit FrontierSurface(ChapterOneLevel &owner);
+    world::CityCore Describe();
+    void Refresh();
+    void Update(float dt);
+    void Observe(const std::function<void()> &operation);
+    bool Observing() const
+    {
+        return observing;
+    }
+    bool Blocked(tutorial::Vector2 surfacePosition, bool driving = false) const;
+    tutorial::Vector2 Local(tutorial::Vector2 surfacePosition) const;
+    world::SurfacePoint Point(tutorial::Vector2 authored) const;
+    std::optional<tutorial::Vector2> Project(tutorial::Vector2 authored, double distance = 140) const;
+    float Yaw(float authoredYaw) const;
+
+  private:
+    ChapterOneLevel &level;
+    bool observing = false;
+};
 // ============================================================================
 // FrontierMap — connected outdoor terrain and route planning
 // ============================================================================
@@ -482,6 +511,15 @@ class ChapterOneLevel final : public Level
   public:
     ChapterOneLevel();
     ChapterOneState &GetState();
+    FrontierSurface &Surface()
+    {
+        return surface;
+    }
+    const FrontierSurface &Surface() const
+    {
+        return surface;
+    }
+    void PrepareSurface();
     bool IsAvailable() const;
     bool IsActive() const override;
     bool Unlock();
@@ -507,6 +545,7 @@ class ChapterOneLevel final : public Level
     FrontierMap map;
     FrontierCombat combat;
     FrontierParty party;
+    FrontierSurface surface;
     bool RelayClear() const;
 };
 

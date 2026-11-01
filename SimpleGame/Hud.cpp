@@ -187,7 +187,7 @@ struct SchematicView
 };
 bool PlanetMapActive()
 {
-    return Game::Get().GetState().surfaceExploration && !game::GameLevels::Active();
+    return Game::Get().GetState().surfaceExploration && !Game::Get().IsSurfaceMine();
 }
 SchematicView PlanetMapView(bool full)
 {
@@ -970,6 +970,11 @@ void CityHud::DrawInteractionPrompt()
     case InteractionTarget::MineEntrance:
         label = "광산 / 입장";
         break;
+    case InteractionTarget::FrontierSite: {
+        game::ChapterInteraction point{};
+        label = game::GameLevels::Chapter().NearestInteraction(point) ? point.label : "현장 / 조사";
+        break;
+    }
     case InteractionTarget::ObservatorySignal:
         label = "신호 콘솔 / 기록 수신";
         break;
@@ -1525,7 +1530,9 @@ void Hud::DrawVitals()
     if (game::GameLevels::Chapter().IsActive())
     {
         Icon(chapter.ria.combat.health > 0 ? "companion" : "injured", 32, 139, 18, true);
-        std::string names = chapter.ria.combat.health > 0 ? "리아 · 동행" : "리아 · 회복 중";
+        std::string names = !w.surfaceExploration || mine.quest.IsRiaJoined()
+                                ? (chapter.ria.combat.health > 0 ? "리아 · 동행" : "리아 · 회복 중")
+                                : "빛나는 개척지";
         if (chapter.kainJoined)
         {
             names += chapter.kain.combat.health > 0 ? " / 카인 동행" : " / 카인 회복 중";
@@ -1597,9 +1604,10 @@ std::vector<UiControl> Hud::Controls()
         row(UiAction::Options, "옵션");
         row(UiAction::Summary, "보유 · 성장 정보");
         row(UiAction::Help, "조작 안내");
-        row(UiAction::Restart, game::GameLevels::Chapter().IsActive() ? "헤일로 귀환 · 기록 유지"
-                               : game::GameLevels::Mine().IsActive()  ? "광산 재시작"
-                                                                      : "새 게임 · 진행 초기화");
+        row(UiAction::Restart, w.surfaceExploration                     ? "행성 탐사 재시작 · 진행 초기화"
+                               : game::GameLevels::Chapter().IsActive() ? "헤일로 귀환 · 기록 유지"
+                               : game::GameLevels::Mine().IsActive()    ? "광산 재시작"
+                                                                        : "새 게임 · 진행 초기화");
         row(UiAction::Quit, "종료");
         break;
     case UiScreen::Stages:
@@ -1721,7 +1729,11 @@ void Hud::Activate(const UiControl &control, int direction)
                 break;
             }
             CloseMenu();
-            if (game::GameLevels::Chapter().IsActive())
+            if (w.surfaceExploration)
+            {
+                g.EnterTestStage(TestStage::SurfaceSurvey);
+            }
+            else if (game::GameLevels::Chapter().IsActive())
             {
                 game::GameLevels::Chapter().Leave();
             }
@@ -1982,8 +1994,10 @@ void Hud::ExchangeSupply()
 {
     auto &level = game::GameLevels::Chapter();
     const auto &w = Game::Get().GetState();
+    auto player =
+        w.surfaceExploration && level.IsActive() ? level.Surface().Local(w.playerPosition) : w.playerPosition;
     if (!level.IsActive() || !level.GetState().convoyRescued ||
-        Game::Distance(w.playerPosition, {24.5f, 20.5f}) >= 1.5f || Dialogue::Danger())
+        Game::Distance(player, {24.5f, 20.5f}) >= 1.5f || Dialogue::Danger())
     {
         return;
     }
@@ -2314,7 +2328,10 @@ void PlanetHud::Draw()
     {
         area = "헤일로 · 전망대";
     }
-    Hud::DrawObjective("자유 탐사", area + " · E 대화·출입 / M 지도");
+    Hud::DrawObjective(game::GameLevels::Chapter().IsActive() && game::GameLevels::Chapter().IsAvailable()
+                           ? game::GameLevels::Chapter().Objective()
+                           : "자유 탐사",
+                       area + " · E 대화·조사 / M 지도");
     if (!state.isInsideHome && !state.isInObservatory)
     {
         DrawMap();
@@ -2478,6 +2495,19 @@ void PlanetHud::DrawMap(bool full)
                                                                    : ColorRGBA(.73f, .88f, .77f),
                region.definition.name.c_str(), full, full ? 4 : 3);
     }
+    auto &chapter = game::GameLevels::Chapter();
+    if (chapter.IsActive())
+    {
+        for (const auto &point : chapter.Interactions())
+        {
+            if (point.action != game::ChapterAction::Exit &&
+                point.action != game::ChapterAction::ConvoySupply)
+            {
+                MapPin(view, project(chapter.Surface().Point(point.position)), {1, .79f, .36f}, point.label,
+                       full, 4);
+            }
+        }
+    }
     if (auto bike = Game::Get().SurfaceBike();
         bike && world::SurfaceGeometry::Distance(session->Planet().radiusMeters, *bike, focus) < range + 10)
     {
@@ -2531,7 +2561,7 @@ void Hud::Render()
         static MineHud mine;
         static ChapterHud chapter;
         static PlanetHud planet;
-        if (w.surfaceExploration && !game::GameLevels::Active())
+        if (w.surfaceExploration && !Game::Get().IsSurfaceMine())
         {
             planet.Draw();
         }
