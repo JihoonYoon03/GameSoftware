@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "ResidentAI.h"
 #include "Civic.h"
 #include "Level.h"
@@ -493,7 +493,7 @@ bool CityResidents::Plan(GameState &world, Resident &resident)
     }
     return FindRoute(from, to, resident);
 }
-void CityResidents::Update(GameState &world, float dt)
+void CityResidents::Update(GameState &world, float dt, int activeCity)
 {
     profiling::Scope timer(profiling::Timer::NpcUpdate);
     dt = Game::Clamp(dt, 0, .05f);
@@ -508,6 +508,10 @@ void CityResidents::Update(GameState &world, float dt)
         size_t index = (decisionCursor + step) % world.residents.size();
         auto &resident = world.residents[index];
         resident.facing.walking = false;
+        if (activeCity >= 0 && resident.cityIndex != activeCity)
+        {
+            continue;
+        }
         if (index == Overworld::kKainResidentSlot && game::GameLevels::Chapter().GetState().kainJoined)
         {
             resident.activity = ResidentActivity::Resting;

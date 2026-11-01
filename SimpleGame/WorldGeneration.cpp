@@ -1,5 +1,6 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "WorldGeneration.h"
+#include "WorldContent.h"
 #include <algorithm>
 #include <cmath>
 #include <cstring>
@@ -611,6 +612,13 @@ PlanetGenerator::PlanetGenerator(PlanetDefinition p, std::vector<RegionDefinitio
                 "Unreserved story anchor");
     }
 }
+PlanetGenerator PlanetGenerator::WithCityCores(const CityCorePlan &cores) const
+{
+    cores.Validate();
+    auto result = *this;
+    result.cityCores = std::make_shared<const CityCorePlan>(cores);
+    return result;
+}
 PlanetGenerator PlanetGenerator::WithSeed(std::uint64_t seed) const
 {
     auto p = planet;
@@ -620,7 +628,9 @@ PlanetGenerator PlanetGenerator::WithSeed(std::uint64_t seed) const
     {
         anchor.location.planetSeed = seed;
     }
-    return PlanetGenerator(p, definitions, fixed, std::move(a), settings);
+    auto result = PlanetGenerator(p, definitions, fixed, std::move(a), settings);
+    result.cityCores = cityCores;
+    return result;
 }
 PlanetGenerator PlanetGenerator::Erma(const std::vector<StoryAnchor> &anchors, GenerationSettings settings)
 {
@@ -853,6 +863,12 @@ GeneratedPlanet PlanetGenerator::Generate(const std::atomic_bool *cancel) const
     {
         r.biome = result.terrain.Sample(r.access.position).biome;
     }
+    if (cityCores)
+    {
+        auto prepared = std::make_shared<CityCorePlan>(*cityCores);
+        prepared->Prepare(result, cancel);
+        result.cityCores = std::move(prepared);
+    }
     AddRelays(result, settings);
     cancelled();
     BuildConnections(result, settings, cancel);
@@ -908,9 +924,13 @@ std::vector<SurfacePoint> GroundPath(const GeneratedPlanet &result, const Travel
     struct Cap
     {
         Vector3d normal;
-        double dot;
+        double dot, chordRadius;
     };
     std::vector<Cap> forbidden;
+    auto addCap = [&](Vector3d normal, double radius) {
+        double angle = radius / p.radiusMeters;
+        forbidden.push_back({normal, std::cos(angle), 2 * std::sin(angle * .5)});
+    };
     for (const auto &region : result.regions)
     {
         if (region.center.space != SpaceKind::Surface || region.definition.id == from.regionId ||
@@ -924,8 +944,57 @@ std::vector<SurfacePoint> GroundPath(const GeneratedPlanet &result, const Travel
         {
             continue;
         }
-        forbidden.push_back({region.center.position.normal, std::cos(radius / p.radiusMeters)});
+        addCap(region.center.position.normal, radius);
     }
+    if (result.cityCores)
+    {
+        for (const auto &core : result.cityCores->cities)
+        {
+            if (core.regionId != from.regionId && core.regionId != to.regionId)
+            {
+                continue;
+            }
+            for (const auto &cell : core.cells)
+            {
+                for (const auto &object : cell.second.structures)
+                {
+                    if (object.solid)
+                    {
+                        addCap(object.frame.origin.normal,
+                               std::hypot(object.sizeMeters.x, object.sizeMeters.y) * .5 + 3.2);
+                    }
+                }
+            }
+        }
+    }
+    auto crosses = [&](const SurfacePoint &first, const SurfacePoint &last, const Cap &cap) {
+        double reach = std::sqrt((std::max)(0., 2 - 2 * G::Dot(first.normal, last.normal))) + cap.chordRadius;
+        if (2 - 2 * G::Dot(first.normal, cap.normal) > reach * reach + 1.e-15)
+        {
+            return false;
+        }
+        if (G::Dot(first.normal, cap.normal) > cap.dot || G::Dot(last.normal, cap.normal) > cap.dot)
+        {
+            return true;
+        }
+        auto normal = G::Cross(first.normal, last.normal);
+        double square = G::Dot(normal, normal);
+        if (square < 1.e-24)
+        {
+            return false;
+        }
+        double perpendicular = G::Dot(cap.normal, normal) / square;
+        Vector3d projected{cap.normal.x - normal.x * perpendicular, cap.normal.y - normal.y * perpendicular,
+                           cap.normal.z - normal.z * perpendicular};
+        if (G::Dot(projected, projected) < 1.e-24)
+        {
+            return false;
+        }
+        projected = G::Unit(projected);
+        return G::Dot(G::Cross(first.normal, projected), normal) >= -1.e-18 &&
+               G::Dot(G::Cross(projected, last.normal), normal) >= -1.e-18 &&
+               G::Dot(projected, cap.normal) > cap.dot;
+    };
     std::array<SurfacePoint, count> points;
     std::array<bool, count> allowed;
     for (int x = 0; x < columns; ++x)
@@ -1005,6 +1074,13 @@ std::vector<SurfacePoint> GroundPath(const GeneratedPlanet &result, const Travel
                 {
                     continue;
                 }
+                // A road segment must avoid an authored building even between distant search samples.
+                if (result.cityCores && std::any_of(forbidden.begin(), forbidden.end(), [&](const auto &cap) {
+                        return crosses(points[current.index], points[next], cap);
+                    }))
+                {
+                    continue;
+                }
                 auto middle = Arc(p, points[current.index], points[next], .5);
                 if (result.terrain.Height(middle) < PlanetTerrain::SeaLevelMeters + 4)
                 {
@@ -1044,6 +1120,12 @@ std::vector<SurfacePoint> GroundPath(const GeneratedPlanet &result, const Travel
     auto usable = [&](const std::vector<SurfacePoint> &candidate) {
         for (std::size_t i = 1; i < candidate.size(); ++i)
         {
+            if (result.cityCores && std::any_of(forbidden.begin(), forbidden.end(), [&](const auto &cap) {
+                    return crosses(candidate[i - 1], candidate[i], cap);
+                }))
+            {
+                return false;
+            }
             if (!GroundSegment(result.terrain, candidate[i - 1], candidate[i], settings.maximumRoadGrade))
             {
                 return false;
@@ -1126,7 +1208,16 @@ void BuildConnections(GeneratedPlanet &result, const GenerationSettings &setting
     const auto &p = result.terrain.Planet();
     for (const auto &region : result.regions)
     {
-        result.nodes.push_back({"site_" + region.definition.id, region.definition.id, region.access, false});
+        auto access = region.access;
+        if (result.cityCores)
+        {
+            if (auto core = result.cityCores->Find(region.definition.id); core && !core->approaches.empty())
+            {
+                access.position = G::FromLocal(region.frame, core->approaches.front().join, p.radiusMeters);
+                access.position.altitudeMeters = result.terrain.Height(access.position);
+            }
+        }
+        result.nodes.push_back({"site_" + region.definition.id, region.definition.id, access, false});
     }
     const unsigned sites = unsigned(result.nodes.size());
     if (sites == 0)
@@ -1475,6 +1566,10 @@ std::uint64_t GeneratedPlanet::Digest() const
         {
             point(position);
         }
+    }
+    if (cityCores)
+    {
+        number(cityCores->Digest());
     }
     return hash;
 }

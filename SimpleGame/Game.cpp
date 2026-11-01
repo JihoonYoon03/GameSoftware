@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "Game.h"
 #include "Civic.h"
 #include "Hud.h"
@@ -112,6 +112,8 @@ class WeaponCursorCapture
 };
 WeaponCursorCapture weaponCursorCapture;
 } // namespace
+Game::Game() = default;
+Game::~Game() = default;
 Game &Game::Get()
 {
     static Game game;
@@ -463,11 +465,13 @@ bool Game::EnterTestStage(TestStage stage)
         state.isInsideHome = false;
         state.playerPosition = state.cameraPosition = {};
         surface = std::make_unique<world::SurfaceSession>(planet, spawn);
-        surfaceBike =
-            world::SurfaceGeometry::Advance(world::SurfaceGeometry::Frame(spawn), 4, 0, planet.radiusMeters)
-                .origin;
-        state.bikePosition = {2, 0};
-        surface->Start(world::PlanetGenerator::Erma(Overworld::StoryAnchors()));
+        surfaceBike = world::LegacyWorldAdapter::ErmaExterior()
+                          .Locate("halo_07", {kJetBikePosition.x, kJetBikePosition.y, 0})
+                          .position;
+        state.bikePosition = kJetBikePosition;
+        surfaceCities = std::make_unique<PlanetCities>();
+        surface->Start(world::PlanetGenerator::Erma(Overworld::StoryAnchors())
+                           .WithCityCores(PlanetCities::Describe(state)));
     }
     state.cameraPosition = state.playerPosition;
     ShowNotice(std::string("테스트 진입 / ") + StageName(stage) + " · 이전 필수 진행 완료 / 기본 무장: 맨손");
@@ -621,14 +625,16 @@ void Game::KeyDown(unsigned char key, int, int)
     {
         return;
     }
-    if (state.surfaceExploration)
+    if (state.surfaceExploration && !Dialogue::Active() && !state.journalVisible &&
+        !state.dialogueHistoryVisible && key != 'j' && key != 'h')
     {
         if (key == 'm')
         {
             state.mapVisible = !state.mapVisible;
             state.StopMotion();
         }
-        else if ((key == '[' || key == ']') && !repeated && !state.mapVisible && surface && surface->Ready())
+        else if ((key == '[' || key == ']') && !repeated && !state.mapVisible && !state.isInsideHome &&
+                 !state.isInObservatory && surface && surface->Ready())
         {
             const auto plan = surface->Stream().Snapshot()->planet;
             if (!plan->regions.empty())
@@ -660,19 +666,9 @@ void Game::KeyDown(unsigned char key, int, int)
                 }
             }
         }
-        else if (key == 'e' && !state.mapVisible && surface && surface->Ready() &&
-                 (state.isBikeMounted || Distance(state.playerPosition, state.bikePosition) < 1.8f))
+        else if (key == 'e' && !state.mapVisible && surface && surface->Ready())
         {
-            auto old = state.playerPosition;
-            Overworld::ToggleBike(state);
-            surface->Move((state.playerPosition.x - old.x) * 2, (state.playerPosition.y - old.y) * 2,
-                          state.isBikeMounted);
-            auto local = surface->Local(surface->Pose().origin);
-            state.playerPosition = {float(local.x / 2), float(local.y / 2)};
-            if (state.isBikeMounted)
-            {
-                surfaceBike = surface->Pose().origin;
-            }
+            InteractWithNearbyTarget();
         }
         return;
     }
@@ -959,7 +955,25 @@ std::optional<world::WorldLocation> Game::PlanetLocation() const
 {
     if (state.surfaceExploration && surface)
     {
-        return surface->Location();
+        auto location = surface->Location();
+        if ((state.isInsideHome || state.isInObservatory) && surfaceCities)
+        {
+            Vector2 door = state.isInsideHome ? kHomeDoor : kBeaconPosition;
+            auto anchor = surfaceCities->Point(*surface, 0, door);
+            if (anchor)
+            {
+                auto localDoor = state.isInsideHome ? Vector2{2.4f, 2.4f} : kObservatoryStairs;
+                location.position = world::SurfaceGeometry::FromLocal(
+                    world::SurfaceGeometry::Frame(*anchor),
+                    {(state.playerPosition.x - localDoor.x) * 2, (state.playerPosition.y - localDoor.y) * 2,
+                     state.isInsideHome ? 0. : 8.},
+                    surface->Planet().radiusMeters);
+                location.regionId = "halo_07";
+                location.space = world::SpaceKind::Interior;
+                location.layer = state.isInsideHome ? 1 : 2;
+            }
+        }
+        return location;
     }
     static_assert(world::WorldCatalog::MetersPerLegacyUnit == models::WorldScale::metersPerUnit,
                   "Planet adapter and model units must agree");
@@ -1101,13 +1115,15 @@ void Game::StopSurface()
         surface.reset();
     }
     surfaceBike.reset();
+    surfaceCities.reset();
     state.surfaceExploration = false;
     state.surfaceCameraHeight = 0;
     surfaceSurveyRegion.reset();
 }
 bool Game::RelocateSurfaceSurvey(const world::SurfacePoint &point)
 {
-    if (!state.surfaceExploration || !surface || !surface->Relocate(point))
+    if (!state.surfaceExploration || state.isInsideHome || state.isInObservatory || !surface ||
+        !surface->Relocate(point))
     {
         return false;
     }
@@ -1125,6 +1141,89 @@ bool Game::RelocateSurfaceSurvey(const world::SurfacePoint &point)
     surfaceBike = surface->Pose().origin;
     return true;
 }
+std::optional<Vector2> Game::ResidentPosition(const Resident &resident) const
+{
+    if (state.surfaceExploration)
+    {
+        return surface && surfaceCities
+                   ? surfaceCities->Local(*surface, resident.cityIndex, resident.position)
+                   : std::nullopt;
+    }
+    return resident.position;
+}
+void Game::ToggleSurfaceBike()
+{
+    if (!surface || state.isInsideHome || state.isInObservatory)
+    {
+        return;
+    }
+    auto before = state.playerPosition;
+    Overworld::ToggleBike(state);
+    surface->Move((state.playerPosition.x - before.x) * 2, (state.playerPosition.y - before.y) * 2,
+                  state.isBikeMounted);
+    auto local = surface->Local(surface->Pose().origin);
+    state.playerPosition = {float(local.x / 2), float(local.y / 2)};
+    if (state.isBikeMounted)
+    {
+        surfaceBike = surface->Pose().origin;
+    }
+}
+bool Game::ReturnToSurface(Vector2 door)
+{
+    auto point = surface && surfaceCities ? surfaceCities->Point(*surface, 0, door) : std::nullopt;
+    auto oldFrame = surface ? surface->Origin() : world::TangentFrame{};
+    bool placed = false;
+    if (point)
+    {
+        auto frame = world::SurfaceGeometry::Frame(*point);
+        for (unsigned ring = 0; ring <= 8 && !placed; ++ring)
+        {
+            for (unsigned step = 0; step < (ring == 0 ? 1u : 8u) && !placed; ++step)
+            {
+                double angle = step * world::SurfaceGeometry::Pi / 4;
+                auto candidate =
+                    world::SurfaceGeometry::Advance(frame, ring * std::cos(angle), ring * std::sin(angle),
+                                                    surface->Planet().radiusMeters)
+                        .origin;
+                auto local = surface->Local(candidate);
+                if (surface->Blocked(local.x, local.y) ||
+                    surfaceCities->Occupied(state, *surface, {float(local.x / 2), float(local.y / 2)}) ||
+                    (surfaceBike && world::SurfaceGeometry::Distance(surface->Planet().radiusMeters,
+                                                                     *surfaceBike, candidate) < 1))
+                {
+                    continue;
+                }
+                placed = surface->Relocate(candidate, .32, 0);
+            }
+        }
+    }
+    if (!placed)
+    {
+        ShowNotice("출입구 주변이 막혀 있습니다. 잠시 후 다시 나가세요.");
+        return false;
+    }
+    state.isInsideHome = state.isInObservatory = false;
+    auto bikeHeading = world::SurfaceGeometry::TransformDirection(
+        {std::cos(state.bikeYaw), std::sin(state.bikeYaw), 0}, oldFrame, surface->Origin());
+    state.bikeYaw = float(std::atan2(bikeHeading.y, bikeHeading.x));
+    state.StopMotion();
+    state.surfaceCameraHeight = 0;
+    state.playerPosition = state.cameraPosition = {};
+    if (surfaceBike && world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, *surfaceBike,
+                                                        surface->Pose().origin) < 1000)
+    {
+        auto bike = surface->Local(*surfaceBike);
+        state.bikePosition = {float(bike.x / 2), float(bike.y / 2)};
+        state.bikeElevation = float(bike.z / 2);
+    }
+    else
+    {
+        state.bikePosition = {1000000, 1000000};
+    }
+    std::fill(std::begin(state.pressedKeys), std::end(state.pressedKeys), false);
+    state.mouseAiming = state.mouseFiring = false;
+    return true;
+}
 void Game::UpdateSurface(float dt)
 {
     if (!surface)
@@ -1138,9 +1237,34 @@ void Game::UpdateSurface(float dt)
         state.StopMotion();
         return;
     }
-    if (!state.isPaused && !state.mapVisible && !state.weaponWheel.visible)
+    bool advancing = !state.isPaused && !state.mapVisible && !state.weaponWheel.visible &&
+                     !state.journalVisible && !state.dialogueHistoryVisible && !Dialogue::LocksWorld();
+    if (surfaceCities)
+    {
+        surfaceCities->Update(state, *surface, 0);
+    }
+    if (advancing && (state.isInsideHome || state.isInObservatory))
     {
         state.animationTimeSeconds += dt;
+        if (!Dialogue::Active())
+        {
+            state.noticeSecondsRemaining -= dt;
+        }
+        UpdatePlayerMovement(dt);
+        UpdateCamera(dt);
+        state.surfaceCameraHeight = 0;
+        state.playerAnimation.Update(dt, {state.playerMotion.velocity.x, state.playerMotion.velocity.y, 0},
+                                     state.facingYaw, false, false);
+        game::SceneManager::Update(dt);
+        return;
+    }
+    if (advancing)
+    {
+        state.animationTimeSeconds += dt;
+        if (!Dialogue::Active())
+        {
+            state.noticeSecondsRemaining -= dt;
+        }
         auto before = state.playerPosition;
         UpdatePlayerMovement(dt);
         auto desired = state.playerPosition;
@@ -1204,6 +1328,10 @@ void Game::UpdateSurface(float dt)
         else
         {
             state.bikePosition = {1000000, 1000000};
+        }
+        if (surfaceCities)
+        {
+            surfaceCities->Update(state, *surface, dt);
         }
         UpdateCamera(dt);
         float targetHeight = float(surface->Local(surface->Pose().origin).z / 2);
@@ -1658,9 +1786,10 @@ void Game::ShowNotice(const std::string &message)
 bool Game::IsPositionBlocked(Vector2 position)
 {
     profiling::Count(profiling::Counter::CollisionQueries);
-    if (state.surfaceExploration)
+    if (state.surfaceExploration && !state.isInsideHome && !state.isInObservatory)
     {
-        return !surface || surface->Blocked(position.x * 2, position.y * 2, state.isBikeMounted);
+        return !surface || surface->Blocked(position.x * 2, position.y * 2, state.isBikeMounted) ||
+               (surfaceCities && surfaceCities->Occupied(state, *surface, position));
     }
     if (game::GameLevels::Chapter().IsActive())
     {
@@ -1770,11 +1899,17 @@ bool Game::IsQuestInteraction(InteractionTarget target) const
 }
 InteractionTarget Game::FindNearbyInteraction()
 {
-    if (state.surfaceExploration)
+    if (state.surfaceExploration && !state.isInsideHome && !state.isInObservatory)
     {
-        return (state.isBikeMounted || Distance(state.playerPosition, state.bikePosition) < 1.8f)
-                   ? InteractionTarget::JetBike
-                   : InteractionTarget::None;
+        if (state.isBikeMounted)
+        {
+            return InteractionTarget::JetBike;
+        }
+        float distance = 1000000;
+        auto target = surface && surfaceCities ? surfaceCities->Nearby(state, *surface, &distance)
+                                               : InteractionTarget::None;
+        float bikeDistance = Distance(state.playerPosition, state.bikePosition);
+        return bikeDistance < 1.8f && bikeDistance < distance ? InteractionTarget::JetBike : target;
     }
     if (HospitalRecovery::Active())
     {
@@ -1882,15 +2017,23 @@ void Game::InteractWithNearbyTarget()
     {
         return;
     }
-    for (auto position : {kLiaPosition, kMaraPosition, kCityKainPosition})
+    if (!state.surfaceExploration)
     {
-        if (Distance(state.playerPosition, position) < 1.35f && CivicCombat::LandmarkDown(position))
+        for (auto position : {kLiaPosition, kMaraPosition, kCityKainPosition})
         {
-            ShowNotice("의료 지원 / 중상자를 치료하고 있습니다. 회복 후 다시 대화할 수 있습니다.");
-            return;
+            if (Distance(state.playerPosition, position) < 1.35f && CivicCombat::LandmarkDown(position))
+            {
+                ShowNotice("의료 지원 / 중상자를 치료하고 있습니다. 회복 후 다시 대화할 수 있습니다.");
+                return;
+            }
         }
     }
     const InteractionTarget target = FindNearbyInteraction();
+    if (state.surfaceExploration && target == InteractionTarget::JetBike)
+    {
+        ToggleSurfaceBike();
+        return;
+    }
     auto tell = [&](const std::string &message) {
         auto &chapter = game::GameLevels::Chapter();
         Dialogue::Say(
@@ -1952,7 +2095,8 @@ void Game::InteractWithNearbyTarget()
             {
                 continue;
             }
-            float candidate = Distance(state.playerPosition, resident.position);
+            auto position = ResidentPosition(resident);
+            float candidate = position ? Distance(state.playerPosition, *position) : 1000000.f;
             if (candidate < distance)
             {
                 distance = candidate;
@@ -1978,9 +2122,17 @@ void Game::InteractWithNearbyTarget()
     }
     if (target == InteractionTarget::ApartmentExit)
     {
-        if (state.mainQuestStage == MainQuestStage::ReadHomeTerminal)
+        if (!state.surfaceExploration && state.mainQuestStage == MainQuestStage::ReadHomeTerminal)
         {
             ShowNotice("외출하기 전에 집 단말을 확인하세요. 청록색 불빛을 찾으세요.");
+            return;
+        }
+        if (state.surfaceExploration)
+        {
+            if (ReturnToSurface(kHomeDoor))
+            {
+                ShowNotice("헤일로 / 거주지 앞 보행로로 나왔습니다.");
+            }
             return;
         }
         state.isInsideHome = false;
@@ -1996,10 +2148,16 @@ void Game::InteractWithNearbyTarget()
         state.playerPosition = {2, 2};
         state.StopMotion();
         state.cameraPosition = {0, 0};
+        state.surfaceCameraHeight = 0;
         ShowNotice("집 / 문이 닫히자 도시의 웅성거림이 멀어집니다.");
     }
     if (target == InteractionTarget::CityReceiver)
     {
+        if (state.surfaceExploration)
+        {
+            tell(std::string("도시 수신망 / ") + game::GameLevels::Chapter().Objective());
+            return;
+        }
         if (game::GameLevels::Mine().GetState().quest.Advance(game::MineQuestStage::ReturnToHalo))
         {
             state.isComplete = true;
@@ -2118,7 +2276,7 @@ void Game::InteractWithNearbyTarget()
     }
     if (target == InteractionTarget::GateBeacon)
     {
-        if (state.mainQuestStage < MainQuestStage::EnterObservatory)
+        if (!state.surfaceExploration && state.mainQuestStage < MainQuestStage::EnterObservatory)
         {
             ShowNotice("전망대 / 리아가 접근 코드를 가지고 있습니다. 집 근처의 리아와 먼저 대화하세요.");
             return;
@@ -2128,6 +2286,7 @@ void Game::InteractWithNearbyTarget()
         state.playerPosition = kObservatoryStairs;
         state.StopMotion();
         state.cameraPosition = {0, 0};
+        state.surfaceCameraHeight = 0;
         std::fill(state.pressedKeys, state.pressedKeys + 256, false);
         if (!state.gateSignalHeard)
         {
@@ -2137,6 +2296,15 @@ void Game::InteractWithNearbyTarget()
     }
     if (target == InteractionTarget::ObservatorySignal)
     {
+        if (state.surfaceExploration && state.gateSignalHeard)
+        {
+            Dialogue::Start("surface/observatory-archive",
+                            {{"archive", "리아", "수신 기록",
+                              "전망대에서 받은 기록은 보관돼 있어. 광산 구조 신호와 같은 통신선을 거쳤다는 "
+                              "사실도 확인했지."}},
+                            {}, true);
+            return;
+        }
         state.gateSignalHeard = true;
         state.mainQuestStage = (std::max)(state.mainQuestStage, MainQuestStage::DescendObservatory);
         Dialogue::Start("MQ00/observatory",
@@ -2146,9 +2314,17 @@ void Game::InteractWithNearbyTarget()
     }
     if (target == InteractionTarget::ObservatoryExit)
     {
-        if (!state.gateSignalHeard)
+        if (!state.surfaceExploration && !state.gateSignalHeard)
         {
             ShowNotice("조사 안내 / 관측 데크 북동쪽 콘솔에서 신호 기록을 받은 뒤 내려가세요.");
+            return;
+        }
+        if (state.surfaceExploration)
+        {
+            if (ReturnToSurface(kBeaconPosition))
+            {
+                ShowNotice("헤일로 / 전망대 앞 승강기로 내려왔습니다.");
+            }
             return;
         }
         state.isInObservatory = false;

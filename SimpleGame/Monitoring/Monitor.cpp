@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "Monitor.h"
 #include "../Civic.h"
 #include "../AssetCache.h"
@@ -223,14 +223,19 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                                 (!chapter.kainJoined || chapter.active ? 1 : 0) + fieldScrappers
                           : 0;
     const bool simulating = level.active && !world.isPaused;
-    const bool citySimulation = !world.surfaceExploration && !level.active && !chapter.active &&
-                                !world.isPaused && !world.isInsideHome && !world.isInObservatory;
+    const auto surfaceCities = tutorial::Game::Get().SurfaceCities();
+    const int surfaceCity = surfaceCities ? surfaceCities->ActiveCity() : -1;
+    const bool citySimulation = (!world.surfaceExploration || surfaceCity >= 0) && !level.active &&
+                                !chapter.active && !world.isPaused && !world.isInsideHome &&
+                                !world.isInObservatory && !world.mapVisible && !world.weaponWheel.visible &&
+                                !tutorial::Dialogue::LocksWorld();
     const bool cityLia = !level.active && !chapter.active;
     const bool cityKain = chapter.kainJoined && !chapter.active;
     const size_t haloPopulation = 19 + (cityLia ? 1 : 0) - (chapter.kainJoined ? 1 : 0) + (cityKain ? 1 : 0);
     const size_t cityPopulation =
         haloPopulation + (tutorial::Overworld::kCityCount - 1) * tutorial::Overworld::kPopulationPerCity;
-    int currentCity = tutorial::Overworld::CityAt(world.playerPosition);
+    int currentCity =
+        world.surfaceExploration ? surfaceCity : tutorial::Overworld::CityAt(world.playerPosition);
     std::string outdoorId = currentCity >= 0 ? tutorial::Overworld::Cities()[currentCity].id : "overworld";
     std::string outdoorName =
         currentCity >= 0 ? tutorial::Overworld::Cities()[currentCity].name : "도시 간 연결 도로";
@@ -277,6 +282,10 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         streaming.Number("resident_bytes", stats.bytes);
         streaming.Number("content_layout_revision", ::world::ContentLayout::Revision);
         streaming.Number("collision_cells", surface.CollisionCells());
+        streaming.Number("active_city", surfaceCity);
+        streaming.Number("authored_cores", snapshot->planet && snapshot->planet->cityCores
+                                               ? snapshot->planet->cityCores->cities.size()
+                                               : 0);
         std::size_t structureCount = 0;
         for (const auto &chunk : snapshot->chunks)
         {
@@ -302,16 +311,19 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                                                         : outdoorName);
     result.Seconds("play_time_seconds", world.playTimeSeconds);
     counts.Number("npc_total", cityPopulation + minePopulation + frontierPopulation);
-    counts.Number("npc_current_region", world.surfaceExploration ? 0
-                                        : chapter.active         ? frontierPopulation
-                                        : level.active           ? minePopulation
-                                        : currentCity == 0       ? haloPopulation
-                                        : currentCity > 0        ? tutorial::Overworld::kPopulationPerCity
-                                                                 : 0);
-    counts.Number("npc_simulating", chapter.active && !world.isPaused ? frontierPopulation
-                                    : simulating                      ? minePopulation
-                                    : citySimulation ? world.residents.size() - (chapter.kainJoined ? 1 : 0)
-                                                     : 0);
+    counts.Number("npc_current_region", chapter.active     ? frontierPopulation
+                                        : level.active     ? minePopulation
+                                        : currentCity == 0 ? haloPopulation
+                                        : currentCity > 0  ? tutorial::Overworld::kPopulationPerCity
+                                                           : 0);
+    counts.Number("npc_simulating",
+                  chapter.active && !world.isPaused ? frontierPopulation
+                  : simulating                      ? minePopulation
+                  : citySimulation && world.surfaceExploration
+                      ? std::count_if(world.residents.begin(), world.residents.end(),
+                                      [&](const auto &r) { return r.cityIndex == surfaceCity; })
+                  : citySimulation ? world.residents.size() - (chapter.kainJoined ? 1 : 0)
+                                   : 0);
     counts.Number("mob_total", level.enemies.size());
     counts.Number("mob_alive", aliveMobs);
     counts.Number("mob_respawning", level.enemies.size() - aliveMobs);
@@ -595,7 +607,9 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         const auto &resident = world.residents[i];
         Append(npcArray, ResidentNpc(std::string(tutorial::Overworld::Cities()[resident.cityIndex].id) +
                                          "/resident/" + std::to_string(i),
-                                     resident, citySimulation));
+                                     resident,
+                                     citySimulation &&
+                                         (!world.surfaceExploration || resident.cityIndex == surfaceCity)));
     }
     auto mineNpc = [&](const std::string &id, const char *name, const char *role, tutorial::Vector2 position,
                        const char *activity, const char *label, size_t remaining, bool following, int group,

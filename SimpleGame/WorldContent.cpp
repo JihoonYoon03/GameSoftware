@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "WorldContent.h"
 #include <algorithm>
 #include <cmath>
@@ -6,6 +6,8 @@
 #include <stdexcept>
 #include <tuple>
 #include <utility>
+#include <cstring>
+#include <set>
 
 namespace world
 {
@@ -204,6 +206,16 @@ bool IntercityClear(const GeneratedPlanet &p, const GeneratedRegion &r, Vector3d
 void AddStreet(ContentCell &cell, const GeneratedPlanet &p, const GeneratedRegion &r, Vector3d a, Vector3d b,
                unsigned lanes)
 {
+    if (p.cityCores)
+    {
+        if (auto core = p.cityCores->Find(r.definition.id))
+        {
+            if (Norm(a) < core->radiusMeters + 20 || Norm(b) < core->radiusMeters + 20)
+            {
+                return;
+            }
+        }
+    }
     if (!Clip(r, a, b))
     {
         return;
@@ -213,7 +225,8 @@ void AddStreet(ContentCell &cell, const GeneratedPlanet &p, const GeneratedRegio
     street.widthMeters = lanes * 3.;
     street.sidewalkMeters = 2.4;
     // Eight-metre samples let the road follow the same terrain used by movement.
-    unsigned steps = (std::max)(1u, unsigned(std::ceil(Norm(Sub(b, a)) / 8)));
+    // Even subdivisions preserve the exact midpoint used by authored approach T-junctions.
+    unsigned steps = (std::max)(2u, unsigned(std::ceil(Norm(Sub(b, a)) / 16)) * 2);
     for (unsigned i = 0; i <= steps; ++i)
     {
         auto point = At(p, r, Add(a, Mul(Sub(b, a), double(i) / steps)));
@@ -266,6 +279,361 @@ ContentForm CityForm(SettlementTier tier, std::uint64_t seed, ContentUse &use)
 }
 } // namespace
 
+// ============================================================================
+// CityCorePlan — authored geometry is resolved once, before route/relay planning
+// ============================================================================
+const CityCore *CityCorePlan::Find(std::string_view region) const
+{
+    for (const auto &city : cities)
+    {
+        if (city.regionId == region)
+        {
+            return &city;
+        }
+    }
+    return nullptr;
+}
+void CityCorePlan::Validate() const
+{
+    std::set<std::string> regions;
+    for (const auto &city : cities)
+    {
+        if (!WorldIdentity::ValidId(city.regionId) || !regions.insert(city.regionId).second ||
+            !std::isfinite(city.radiusMeters) || city.radiusMeters < 40 || city.radiusMeters > 1000)
+        {
+            throw std::invalid_argument("Invalid authored city core");
+        }
+        std::set<std::string> ids;
+        for (const auto &lot : city.lots)
+        {
+            if (!WorldIdentity::ValidId(lot.id) || !ids.insert(lot.id).second || !std::isfinite(lot.yaw))
+            {
+                throw std::invalid_argument("Invalid authored lot identity/orientation");
+            }
+            for (auto value : {lot.positionMeters.x, lot.positionMeters.y, lot.positionMeters.z,
+                               lot.sizeMeters.x, lot.sizeMeters.y, lot.sizeMeters.z})
+            {
+                if (!std::isfinite(value))
+                {
+                    throw std::invalid_argument("Non-finite authored lot");
+                }
+            }
+            if (lot.sizeMeters.x <= 0 || lot.sizeMeters.y <= 0 || lot.sizeMeters.z <= 0 ||
+                Norm(lot.positionMeters) + Norm(lot.sizeMeters) * .5 > city.radiusMeters)
+            {
+                throw std::invalid_argument("Authored lot exceeds its protected city core");
+            }
+            if (lot.form == ContentForm::TransitMesh && lot.assetName.empty())
+            {
+                throw std::invalid_argument("Authored walkway has no asset identity");
+            }
+        }
+        for (const auto &road : city.roads)
+        {
+            if (road.from == road.to || (road.lanes != 2 && road.lanes != 4 && road.lanes != 6) ||
+                !std::isfinite(road.start.x + road.start.y + road.start.z + road.end.x + road.end.y +
+                               road.end.z) ||
+                Norm(road.start) > city.radiusMeters || Norm(road.end) > city.radiusMeters ||
+                Norm(Sub(road.end, road.start)) < .1)
+            {
+                throw std::invalid_argument("Invalid authored city street");
+            }
+        }
+    }
+}
+void CityCorePlan::Prepare(GeneratedPlanet &p, const std::atomic_bool *cancel)
+{
+    Validate();
+    auto cancelled = [&] {
+        if (Cancelled(cancel))
+        {
+            throw std::runtime_error("City preparation cancelled");
+        }
+    };
+    auto reservations = p.terrain.Reservations();
+    reservations.erase(std::remove_if(reservations.begin(), reservations.end(),
+                                      [&](const auto &pad) {
+                                          for (const auto &city : cities)
+                                          {
+                                              if (pad.id == "core_" + city.regionId)
+                                              {
+                                                  return true;
+                                              }
+                                          }
+                                          return false;
+                                      }),
+                       reservations.end());
+    for (auto &pad : reservations)
+    {
+        if (pad.id.compare(0, 7, "anchor_") == 0)
+        {
+            pad.priority = 3;
+        }
+    }
+    for (auto &city : cities)
+    {
+        cancelled();
+        const auto &r = p.Region(city.regionId);
+        if (r.center.space != SpaceKind::Surface || r.definition.kind != RegionKind::Settlement)
+        {
+            throw std::invalid_argument("City core requires a surface settlement");
+        }
+        city.elevationMeters = p.terrain.Height(r.center.position);
+        double feather = 3000;
+        for (const auto &other : cities)
+        {
+            if (other.regionId == city.regionId)
+            {
+                continue;
+            }
+            double gap = G::Distance(p.terrain.Planet().radiusMeters, r.center.position,
+                                     p.Region(other.regionId).center.position) -
+                         city.radiusMeters - other.radiusMeters;
+            if (gap < 10)
+            {
+                throw std::invalid_argument("Authored city cores overlap");
+            }
+            feather = (std::min)(feather, gap * .45);
+        }
+        reservations.push_back({"core_" + city.regionId, r.center.position, city.radiusMeters, feather,
+                                city.elevationMeters, 2});
+    }
+    p.terrain = PlanetTerrain(p.terrain.Planet(), std::move(reservations), p.terrain.Homeland());
+    for (auto &city : cities)
+    {
+        cancelled();
+        const auto &r = p.Region(city.regionId);
+        std::size_t region = std::size_t(&r - p.regions.data());
+        Grid grid(p, r);
+        city.cells.clear();
+        city.approaches.clear();
+        auto owner = [&](Vector3d local) {
+            auto axis = Rotate(local, -grid.yaw);
+            return std::make_pair(std::int64_t(std::floor(axis.x / grid.width)),
+                                  std::int64_t(std::floor(axis.y / grid.depth)));
+        };
+        auto cellAt = [&](Vector3d local) -> ContentCell & {
+            auto address = owner(local);
+            auto &cell = city.cells[address];
+            cell.key = {region, address.first, address.second};
+            return cell;
+        };
+        std::map<std::uint32_t, std::pair<unsigned, Vector3d>> terminals;
+        for (const auto &road : city.roads)
+        {
+            auto &a = terminals[road.from], &b = terminals[road.to];
+            ++a.first;
+            a.second = road.start;
+            ++b.first;
+            b.second = road.end;
+        }
+        std::set<std::pair<std::int64_t, std::int64_t>> usedJoins;
+        for (auto terminal : terminals)
+        {
+            if (terminal.second.first != 1)
+            {
+                continue;
+            }
+            auto start = terminal.second.second;
+            Vector3d direction;
+            for (const auto &road : city.roads)
+            {
+                if (road.from == terminal.first)
+                {
+                    direction = Sub(road.start, road.end);
+                }
+                if (road.to == terminal.first)
+                {
+                    direction = Sub(road.end, road.start);
+                }
+            }
+            direction = Mul(direction, 1 / Norm(direction));
+            auto outside = start;
+            for (unsigned step = 0; Norm(outside) < city.radiusMeters + 40 && step < 200; ++step)
+            {
+                outside = Add(outside, Mul(direction, 4));
+            }
+            auto approximate = owner(outside);
+            double best = std::numeric_limits<double>::max();
+            CoreApproach approach;
+            approach.from = terminal.first;
+            for (std::int64_t y = approximate.second - 4; y <= approximate.second + 4; ++y)
+            {
+                for (std::int64_t x = approximate.first - 4; x <= approximate.first + 4; ++x)
+                {
+                    if (usedJoins.count({x, y}) || y % 6 == 0)
+                    {
+                        continue;
+                    }
+                    auto a = grid.Node(x, y), b = grid.Node(x + 1, y), middle = Mul(Add(a, b), .5);
+                    if (Norm(a) < city.radiusMeters + 40 || Norm(b) < city.radiusMeters + 40 ||
+                        !Inside(r, middle, 12))
+                    {
+                        continue;
+                    }
+                    double distance = Norm(Sub(middle, outside));
+                    if (distance < best)
+                    {
+                        best = distance;
+                        approach.cellX = x;
+                        approach.cellY = y;
+                        approach.join = middle;
+                    }
+                }
+            }
+            if (best == std::numeric_limits<double>::max())
+            {
+                throw std::runtime_error("City footprint has no safe local-street approach");
+            }
+            approach.points = {start, outside, approach.join};
+            usedJoins.insert({approach.cellX, approach.cellY});
+            city.approaches.push_back(std::move(approach));
+        }
+        auto road = [&](Vector3d a, Vector3d b, unsigned lanes, double width = 0) {
+            unsigned steps = (std::max)(2u, unsigned(std::ceil(Norm(Sub(b, a)) / 16)) * 2);
+            for (unsigned i = 0; i < steps; ++i)
+            {
+                cancelled();
+                auto left = Add(a, Mul(Sub(b, a), double(i) / steps)),
+                     right = Add(a, Mul(Sub(b, a), double(i + 1) / steps));
+                auto pa = At(p, r, left), pb = At(p, r, right);
+                pa.altitudeMeters += .08;
+                pb.altitudeMeters += .08;
+                cellAt(Mul(Add(left, right), .5))
+                    .streets.push_back({{pa, pb}, width > 0 ? width : lanes * 3., 2.4, lanes});
+            }
+        };
+        for (const auto &edge : city.roads)
+        {
+            road(edge.start, edge.end, edge.lanes);
+        }
+        for (const auto &approach : city.approaches)
+        {
+            auto start = approach.points.front(), direction = Sub(approach.points[1], start);
+            direction = Mul(direction, 1 / Norm(direction));
+            road(Sub(start, Mul(direction, 12)), Add(start, Mul(direction, 4)), 2, 10);
+            for (std::size_t i = 1; i < approach.points.size(); ++i)
+            {
+                road(approach.points[i - 1], approach.points[i], 2);
+            }
+        }
+        for (const auto &lot : city.lots)
+        {
+            cancelled();
+            auto point = At(p, r, lot.positionMeters);
+            point.altitudeMeters += lot.positionMeters.z;
+            auto frame = G::Advance(r.frame, lot.positionMeters.x, lot.positionMeters.y,
+                                    p.terrain.Planet().radiusMeters);
+            frame.origin = point;
+            SurfaceStructure structure;
+            structure.id = WorldIdentity::ContentKey(p.terrain.Planet(), city.regionId, "core1." + lot.id);
+            structure.regionId = city.regionId;
+            structure.form = lot.form;
+            structure.use = lot.use;
+            structure.assetName = lot.assetName;
+            structure.frame = frame;
+            structure.sizeMeters = lot.sizeMeters;
+            structure.yaw = lot.yaw;
+            structure.variant = lot.variant;
+            structure.solid = lot.solid;
+            structure.palette = lot.palette;
+            structure.foundationMeters = lot.solid ? .15 : 0;
+            cellAt(lot.positionMeters).structures.push_back(std::move(structure));
+        }
+    }
+}
+bool CityCorePlan::Reserved(const GeneratedPlanet &, const GeneratedRegion &region, Vector3d point,
+                            double clearance) const
+{
+    auto city = Find(region.definition.id);
+    if (!city)
+    {
+        return false;
+    }
+    if (Norm(point) < city->radiusMeters + clearance)
+    {
+        return true;
+    }
+    for (const auto &approach : city->approaches)
+    {
+        for (std::size_t i = 1; i < approach.points.size(); ++i)
+        {
+            if (SegmentDistance(point, approach.points[i - 1], approach.points[i]) < 6 + clearance)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+std::uint64_t CityCorePlan::Digest() const
+{
+    std::uint64_t hash = 14695981039346656037ULL;
+    auto number = [&](std::uint64_t n) {
+        for (unsigned i = 0; i < 8; ++i)
+        {
+            hash ^= (n >> (i * 8)) & 255;
+            hash *= 1099511628211ULL;
+        }
+    };
+    auto text = [&](const std::string &s) {
+        number(s.size());
+        for (unsigned char c : s)
+        {
+            number(c);
+        }
+    };
+    auto scalar = [&](double d) {
+        std::uint64_t n;
+        std::memcpy(&n, &d, sizeof(n));
+        number(n);
+    };
+    auto point = [&](Vector3d p) {
+        scalar(p.x);
+        scalar(p.y);
+        scalar(p.z);
+    };
+    number(cities.size());
+    for (const auto &city : cities)
+    {
+        text(city.regionId);
+        scalar(city.radiusMeters);
+        number(city.lots.size());
+        number(city.roads.size());
+        for (const auto &lot : city.lots)
+        {
+            text(lot.id);
+            text(lot.assetName);
+            number(unsigned(lot.form));
+            number(unsigned(lot.use));
+            point(lot.positionMeters);
+            point(lot.sizeMeters);
+            scalar(lot.yaw);
+            number(lot.variant);
+            number(lot.solid);
+            number(lot.palette.has_value());
+            if (lot.palette)
+            {
+                for (auto color : {lot.palette->body, lot.palette->accent, lot.palette->emission})
+                {
+                    for (float c : color)
+                    {
+                        scalar(c);
+                    }
+                }
+            }
+        }
+        for (const auto &road : city.roads)
+        {
+            number(road.from);
+            number(road.to);
+            point(road.start);
+            point(road.end);
+            number(road.lanes);
+        }
+    }
+    return hash;
+}
 bool ContentCellKey::operator<(const ContentCellKey &b) const
 {
     return std::tie(region, x, y) < std::tie(b.region, b.x, b.y);
@@ -362,6 +730,16 @@ ContentCell ContentLayout::Generate(const GeneratedPlanet &p, ContentCellKey key
         r.footprint = {{-90, -90, 0}, {90, -90, 0}, {90, 90, 0}, {-90, 90, 0}};
     }
     Grid grid(p, r);
+    if (p.cityCores)
+    {
+        if (auto core = p.cityCores->Find(r.definition.id))
+        {
+            if (auto found = core->cells.find({key.x, key.y}); found != core->cells.end())
+            {
+                result = found->second;
+            }
+        }
+    }
     const auto a = grid.Node(key.x, key.y), b = grid.Node(key.x + 1, key.y),
                c = grid.Node(key.x + 1, key.y + 1), d = grid.Node(key.x, key.y + 1);
     const bool city = r.definition.kind == RegionKind::Settlement;
@@ -478,7 +856,8 @@ ContentCell ContentLayout::Generate(const GeneratedPlanet &p, ContentCellKey key
             continue;
         }
         auto point = At(p, r, local);
-        if (Reserved(p, point, extent + 2) || !IntercityClear(p, r, local, extent))
+        if (Reserved(p, point, extent + 2) || !IntercityClear(p, r, local, extent) ||
+            (p.cityCores && p.cityCores->Reserved(p, r, local, extent + 3)))
         {
             continue;
         }

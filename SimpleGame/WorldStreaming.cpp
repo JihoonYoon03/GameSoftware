@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "WorldStreaming.h"
 #include <algorithm>
 #include <chrono>
@@ -105,7 +105,7 @@ std::size_t SurfaceChunk::Bytes() const
     }
     for (const auto &structure : structures)
     {
-        bytes += structure.id.capacity() + structure.regionId.capacity();
+        bytes += structure.id.capacity() + structure.regionId.capacity() + structure.assetName.capacity();
     }
     return bytes;
 }
@@ -756,24 +756,30 @@ void SurfaceSession::Move(double x, double y, bool hovering)
         pose = next;
     }
 }
-bool SurfaceSession::Relocate(const SurfacePoint &point)
+bool SurfaceSession::Relocate(const SurfacePoint &point, double clearance, double searchRadius)
 {
     G::Validate(point);
+    Require(std::isfinite(clearance) && clearance >= 0 && clearance <= 4 && std::isfinite(searchRadius) &&
+                searchRadius >= 0 && searchRadius <= 32,
+            "Invalid surface landing search");
     if (!Ready())
     {
         return false;
     }
     auto plan = stream.Snapshot()->planet;
     auto frame = G::Frame(point);
-    for (unsigned ring = 0; ring <= 8; ++ring)
+    unsigned rings = unsigned(std::ceil(searchRadius));
+    for (unsigned ring = 0; ring <= rings; ++ring)
     {
         for (unsigned step = 0; step < (ring == 0 ? 1u : 8u); ++step)
         {
             double angle = step * G::Pi / 4;
-            auto candidate = G::Advance(frame, ring * 4 * std::cos(angle), ring * 4 * std::sin(angle),
+            double distance = (std::min)(double(ring), searchRadius);
+            auto candidate = G::Advance(frame, distance * std::cos(angle), distance * std::sin(angle),
                                         planet.radiusMeters);
             auto contact = stream.Contact(candidate.origin);
-            if (!contact.land || contact.slope > .3 || contentCollision.Blocked(*plan, candidate.origin, .65))
+            if (!contact.land || contact.slope > .3 ||
+                contentCollision.Blocked(*plan, candidate.origin, clearance))
             {
                 continue;
             }

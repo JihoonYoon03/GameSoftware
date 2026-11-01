@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "WorldGeneration.h"
 #include <map>
 
@@ -23,7 +23,14 @@ enum class ContentForm : std::uint8_t
     WaterTank,
     Conveyor,
     Monolith,
-    Arch
+    Arch,
+    Building,
+    Scenery,
+    Console,
+    Breaker,
+    Beacon,
+    TransitMesh,
+    Aircraft
 };
 enum class ContentUse : std::uint8_t
 {
@@ -39,6 +46,7 @@ enum class ContentUse : std::uint8_t
 struct SurfaceStructure
 {
     std::string id, regionId;
+    std::string assetName;
     ContentForm form = ContentForm::Habitat;
     ContentUse use = ContentUse::Housing;
     TangentFrame frame;
@@ -46,6 +54,12 @@ struct SurfaceStructure
     double yaw = 0, foundationMeters = 0;
     std::uint64_t appearance = 0;
     bool solid = true;
+    std::uint16_t variant = 0;
+    struct Palette
+    {
+        std::array<float, 4> body, accent, emission;
+    };
+    std::optional<Palette> palette;
     bool Contains(const SurfacePoint &point, double planetRadius, double clearance = 0) const;
 };
 struct SurfaceStreet
@@ -71,6 +85,56 @@ struct SurfaceContentPatch
 {
     std::vector<SurfaceStructure> structures;
     std::vector<SurfaceStreet> streets;
+};
+struct CoreLot
+{
+    std::string id;
+    std::string assetName;
+    ContentForm form = ContentForm::Building;
+    ContentUse use = ContentUse::Housing;
+    Vector3d positionMeters, sizeMeters;
+    double yaw = 0;
+    std::uint16_t variant = 0;
+    bool solid = true;
+    std::optional<SurfaceStructure::Palette> palette;
+};
+struct CoreRoad
+{
+    std::uint32_t from = 0, to = 0;
+    Vector3d start, end;
+    unsigned lanes = 2;
+};
+struct CoreApproach
+{
+    std::uint32_t from = 0;
+    std::int64_t cellX = 0, cellY = 0;
+    Vector3d join;
+    std::vector<Vector3d> points;
+};
+struct CityCore
+{
+    std::string regionId;
+    double radiusMeters = 260;
+    double elevationMeters = 0;
+    std::vector<CoreLot> lots;
+    std::vector<CoreRoad> roads;
+    // Prepared on the world worker, then published immutable with its terrain/region plan.
+    std::vector<CoreApproach> approaches;
+    std::map<std::pair<std::int64_t, std::int64_t>, ContentCell> cells;
+};
+// ============================================================================
+// CityCorePlan — authored local blocks placed in generated region frames, with real street joins
+// ============================================================================
+class CityCorePlan
+{
+  public:
+    std::vector<CityCore> cities;
+    const CityCore *Find(std::string_view region) const;
+    void Validate() const;
+    void Prepare(GeneratedPlanet &planet, const std::atomic_bool *cancel = nullptr);
+    bool Reserved(const GeneratedPlanet &planet, const GeneratedRegion &region, Vector3d position,
+                  double clearance) const;
+    std::uint64_t Digest() const;
 };
 // ============================================================================
 // ContentLayout — seeded, bounded neighbourhoods; no GL, assets, quests or visit state

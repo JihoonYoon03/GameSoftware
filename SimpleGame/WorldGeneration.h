@@ -1,9 +1,11 @@
-#pragma once
+﻿#pragma once
 #include "World.h"
 #include <atomic>
+#include <memory>
 
 namespace world
 {
+class CityCorePlan;
 enum class Biome : std::uint8_t
 {
     Ocean,
@@ -125,6 +127,7 @@ class GeneratedPlanet
     std::vector<TravelNode> nodes;
     std::vector<TravelConnection> connections;
     std::vector<SurfacePoint> clusters;
+    std::shared_ptr<const CityCorePlan> cityCores;
     double relayCoverageMeters = 5000;
     double regionGapMeters = 1500, maximumRoadGrade = .09;
     const GeneratedRegion &Region(std::string_view id) const;
@@ -150,6 +153,7 @@ class PlanetGenerator
         return planet;
     }
     PlanetGenerator WithSeed(std::uint64_t seed) const;
+    PlanetGenerator WithCityCores(const CityCorePlan &cores) const;
     static PlanetGenerator Erma(const std::vector<StoryAnchor> &anchors, GenerationSettings settings = {});
 
   private:
@@ -158,5 +162,6 @@ class PlanetGenerator
     std::vector<FixedRegionPlacement> fixed;
     std::vector<StoryAnchor> anchors;
     GenerationSettings settings;
+    std::shared_ptr<const CityCorePlan> cityCores;
 };
 } // namespace world

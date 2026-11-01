@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "Hud.h"
 #include "Civic.h"
 #include "Drawing.h"
@@ -118,10 +118,10 @@ DialogueLayout LayoutDialogue()
     float y = d.bodyTop + float(d.body.size()) * 32 + 8;
     for (size_t i = 0; i < page.choices.size(); ++i)
     {
-        float height = (std::max)(
-            46.f,
-            20.f +
-                24.f * Dialogue::Wrap(std::to_string(i + 1) + "  " + page.choices[i].text, 758, 17).size());
+        float height =
+            (std::max)(46.f, 20.f + 24.f * Dialogue::Wrap(std::to_string(i + 1) + "  " + page.choices[i].text,
+                                                          758, 17)
+                                               .size());
         d.controls.push_back({UiAction::Choice,
                               {232, y},
                               {816, height},
@@ -837,7 +837,7 @@ void CityHud::DrawInteractionPrompt()
         label = w.isBikeMounted ? "바이크 / 하차" : "바이크 / 탑승";
         break;
     case InteractionTarget::CityReceiver:
-        label = "도시 수신망 / 조사·출발";
+        label = w.surfaceExploration ? "도시 수신망 / 조사 기록" : "도시 수신망 / 조사·출발";
         break;
     case InteractionTarget::MineEntrance:
         label = "광산 / 입장";
@@ -893,9 +893,9 @@ void Hud::DrawNoticePanel()
     Icon("check", 918, 322, 22, true);
     const auto pages = TextPages(w.noticeText, 294, 16, 4);
     const float secondsPerPage = (std::max)(1.f, w.noticeDurationSeconds / pages.size());
-    const auto page = (std::min)(
-        pages.size() - 1,
-        size_t((std::max)(0.f, w.noticeDurationSeconds - w.noticeSecondsRemaining) / secondsPerPage));
+    const auto page = (std::min)(pages.size() - 1,
+                                 size_t((std::max)(0.f, w.noticeDurationSeconds - w.noticeSecondsRemaining) /
+                                        secondsPerPage));
     const auto &rows = pages[page];
     for (size_t i = 0; i < rows.size(); ++i)
     {
@@ -1920,7 +1920,7 @@ void Hud::DrawMenu()
     }
     float x = screen == UiScreen::Title || screen == UiScreen::Stages                                  ? 96.f
               : screen == UiScreen::Help || screen == UiScreen::Options || screen == UiScreen::Summary ? 96.f
-              : narrow                                                                                 ? 408.f
+              : narrow ? 408.f
                        : 336.f;
     const char *title = screen == UiScreen::Title     ? "침묵하는 관문"
                         : screen == UiScreen::Pause   ? "일시정지"
@@ -2171,19 +2171,27 @@ void PlanetHud::Draw()
                17);
         return;
     }
-    auto location = session->Location();
+    auto location = Game::Get().PlanetLocation().value_or(session->Location());
     std::string area = "에르마 야외";
     if (location.regionId != "overworld")
     {
         area = snapshot->planet->Region(location.regionId).definition.name;
     }
-    Hud::DrawObjective("자유 탐사 · 지역 배치 확인", area + " · M 지도 / [ ] 지역 변경");
-    DrawMap();
-    if (Game::Get().FindNearbyInteraction() == InteractionTarget::JetBike)
+    const auto &state = Game::Get().GetState();
+    if (state.isInsideHome)
     {
-        Hud::DrawInteraction(Game::Get().GetState().isBikeMounted ? "바이크 / 정차 후 하차"
-                                                                  : "바이크 / 탑승");
+        area = "헤일로 · 거주지";
     }
+    if (state.isInObservatory)
+    {
+        area = "헤일로 · 전망대";
+    }
+    Hud::DrawObjective("자유 탐사", area + " · E 대화·출입 / M 지도");
+    if (!state.isInsideHome && !state.isInObservatory)
+    {
+        DrawMap();
+    }
+    CityHud::DrawInteractionPrompt();
     auto ll = world::SurfaceGeometry::ToDegrees(location.position);
     char coordinates[160];
     std::snprintf(coordinates, sizeof(coordinates), "%.4f° / %.4f° · %.0fm", ll[0], ll[1],

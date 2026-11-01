@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Game.h"
 #include "WorldGeneration.h"
 #include <array>
@@ -131,6 +131,8 @@ class TrafficSystem
     static constexpr size_t kVehicleLimit = 112;
     static constexpr float kDespawnDistance = 155;
     void Reset();
+    void SetCityFilter(int city);
+    static bool CoreLane(int lane, int city);
     void Update(GameState &world, float deltaSeconds);
     const std::vector<TrafficVehicle> &Vehicles() const
     {
@@ -161,12 +163,14 @@ class TrafficSystem
     void Step(GameState &world, float deltaSeconds);
     void Populate(const GameState &world);
     void ChooseExit(TrafficVehicle &vehicle);
+    bool Allows(int lane, TrafficTurn turn) const;
     unsigned int Random();
     std::vector<TrafficVehicle> vehicles;
     std::vector<JunctionSignal> signals;
     unsigned int randomState = 0x71b39a5u;
     std::uint64_t nextId = 0;
     float accumulator = 0, spawnTimer = 0, impactCooldown = 0;
+    int cityFilter = -1;
 };
 
 // ============================================================================
@@ -262,5 +266,35 @@ class Overworld
     static void UpdateBike(GameState &state, float deltaSeconds);
     static void ToggleBike(GameState &state);
     static models::Palette BikePalette();
+};
+// ============================================================================
+// PlanetCities — main-thread legacy city actors in generated frames, with persistent local traffic
+// ============================================================================
+class PlanetCities
+{
+  public:
+    PlanetCities();
+    static world::CityCorePlan Describe(const GameState &state);
+    void Update(GameState &state, const world::SurfaceSession &session, float dt);
+    int ActiveCity() const
+    {
+        return activeCity;
+    }
+    TrafficSystem *ActiveTraffic();
+    const TrafficSystem &Traffic(int city) const
+    {
+        return traffic.at(size_t(city));
+    }
+    std::optional<world::SurfacePoint> Point(const world::SurfaceSession &session, int city,
+                                             Vector2 legacy) const;
+    std::optional<Vector2> Local(const world::SurfaceSession &session, int city, Vector2 legacy) const;
+    float Yaw(const world::SurfaceSession &session, int city, float legacyYaw) const;
+    InteractionTarget Nearby(const GameState &state, const world::SurfaceSession &session,
+                             float *nearestDistance = nullptr) const;
+    bool Occupied(const GameState &state, const world::SurfaceSession &session, Vector2 local) const;
+
+  private:
+    int activeCity = -1;
+    std::array<TrafficSystem, Overworld::kCityCount> traffic;
 };
 } // namespace tutorial

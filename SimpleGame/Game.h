@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "ModelLibrary.h"
 #include "Weapon.h"
 #include "Animation.h"
@@ -12,6 +12,7 @@
 
 namespace tutorial
 {
+class PlanetCities;
 struct Vector2
 {
     float x, y;
@@ -434,6 +435,7 @@ class FrameSchedule
 class Game
 {
   public:
+    ~Game();
     Game(const Game &) = delete;
     Game &operator=(const Game &) = delete;
     static Game &Get();
@@ -449,6 +451,11 @@ class Game
         return surfaceBike;
     }
     void StopSurface();
+    PlanetCities *SurfaceCities() const
+    {
+        return surfaceCities.get();
+    }
+    std::optional<Vector2> ResidentPosition(const Resident &resident) const;
     bool RelocateSurfaceSurvey(const world::SurfacePoint &point);
     void Reset();
     bool EnterTestStage(TestStage stage);
@@ -474,9 +481,10 @@ class Game
     void InteractWithNearbyTarget();
 
   private:
-    Game() = default;
+    Game();
     GameState state;
     std::unique_ptr<world::SurfaceSession> surface;
+    std::unique_ptr<PlanetCities> surfaceCities;
     std::optional<world::SurfacePoint> surfaceBike;
     std::optional<std::size_t> surfaceSurveyRegion;
     FrameSchedule frameSchedule;
@@ -484,6 +492,8 @@ class Game
     void UpdatePlayerMovement(float deltaSeconds);
     void UpdateCamera(float deltaSeconds);
     void UpdateSurface(float deltaSeconds);
+    void ToggleSurfaceBike();
+    bool ReturnToSurface(Vector2 legacyDoor);
 };
 // ============================================================================
 // GameCallbacks - GLUT adapters

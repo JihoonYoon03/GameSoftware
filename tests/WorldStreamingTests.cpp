@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "WorldStreaming.h"
 #include <algorithm>
 #include <atomic>
@@ -289,6 +289,107 @@ void ContentContracts()
     Check(session.Stream().Snapshot()->statistics.epoch == epoch,
           "Survey relocation retains the same world and worker");
     session.Stop();
+}
+void AuthoredCoreContracts()
+{
+    auto plan = ContentFixture();
+    const auto &p = plan->terrain.Planet();
+    auto cores = std::make_shared<CityCorePlan>();
+    CityCore core;
+    core.regionId = plan->regions.front().definition.id;
+    core.radiusMeters = 120;
+    CoreLot house;
+    house.id = "home";
+    house.positionMeters = {-30, 40, 0};
+    house.sizeMeters = {12, 16, 8};
+    house.variant = 3;
+    core.lots.push_back(house);
+    core.roads = {{1, 0, {-80, 0, 0}, {0, 0, 0}, 2},
+                  {0, 2, {0, 0, 0}, {80, 0, 0}, 2},
+                  {0, 3, {0, 0, 0}, {0, 80, 0}, 2}};
+    cores->cities.push_back(core);
+    auto digest = cores->Digest();
+    auto footprint = plan->regions.front().footprint;
+    cores->Prepare(*plan);
+    plan->cityCores = cores;
+    Check(cores->Digest() == digest, "Preparing a city never changes authored identities/geometry");
+    Check(plan->regions.front().footprint.size() == footprint.size(),
+          "Authored cores keep the generated city footprint");
+    Check(cores->cities.front().approaches.size() == 3,
+          "Every authored street terminal has a physical local-street approach");
+    std::set<std::pair<std::int64_t, std::int64_t>> joins;
+    for (const auto &approach : cores->cities.front().approaches)
+    {
+        Check(joins.insert({approach.cellX, approach.cellY}).second,
+              "Approaches never stack on the same T-junction");
+        auto point = G::FromLocal(plan->regions.front().frame, approach.join, p.radiusMeters);
+        unsigned incident = 0;
+        for (auto address : ContentLayout::Near(*plan, point, 20))
+        {
+            for (const auto &road : ContentLayout::Generate(*plan, address).streets)
+            {
+                for (std::size_t i = 1; i < road.points.size(); ++i)
+                {
+                    bool first = G::Distance(p.radiusMeters, road.points[i - 1], point) < 1.e-5;
+                    bool second = G::Distance(p.radiusMeters, road.points[i], point) < 1.e-5;
+                    incident += first || second ? 1 : 0;
+                }
+            }
+        }
+        Check(incident == 3,
+              "Approaches meet an exact shared road vertex as a T, not a disconnected/five-way crossing");
+    }
+    auto point = G::FromLocal(plan->regions.front().frame, house.positionMeters, p.radiusMeters);
+    ContentCollision collision;
+    Check(collision.Blocked(*plan, point, .32),
+          "Authored buildings participate in the same chunk-independent collision");
+    auto plaza = G::FromLocal(plan->regions.front().frame, {20, 20, 0}, p.radiusMeters);
+    Check(!collision.Blocked(*plan, plaza, .32), "Generated lots do not overwrite an authored plaza");
+    std::size_t authored = 0;
+    for (auto address : ContentLayout::Near(*plan, point, 180))
+    {
+        for (const auto &s : ContentLayout::Generate(*plan, address).structures)
+        {
+            if (s.id == WorldIdentity::ContentKey(p, core.regionId, "core1.home"))
+            {
+                ++authored;
+                Check(s.form == ContentForm::Building && s.variant == house.variant &&
+                          Difference(s.sizeMeters, house.sizeMeters) < 1.e-12,
+                      "Authored model/physical size survives worker preparation");
+                Check(G::Distance(p.radiusMeters, s.frame.origin, point) < 1.e-5,
+                      "Authored points keep their physical planet location");
+            }
+        }
+    }
+    Check(authored == 1, "Authored lots have one local-cell owner");
+    auto duplicate = *cores;
+    duplicate.cities.front().lots.push_back(house);
+    Throws([&] { duplicate.Validate(); }, "Duplicate authored object identities are rejected");
+    auto changed = *cores;
+    changed.cities.front().lots.front().sizeMeters.x += 1;
+    Check(changed.Digest() != digest, "Core content changes affect the world manifest digest");
+    std::atomic_bool stop{true};
+    Throws([&] { changed.Prepare(*plan, &stop); },
+           "Authored preparation cooperatively cancels before publishing");
+    auto templateCore = core;
+    templateCore.regionId = "core_test";
+    CityCorePlan input;
+    input.cities.push_back(templateCore);
+    GenerationSettings settings;
+    settings.extraRegions = 0;
+    settings.clusters = 2;
+    RegionDefinition definition{
+        "core_test", "핵심 구역", p.id, RegionKind::Settlement, SettlementTier::District, true, 4, "fixture"};
+    auto generator = PlanetGenerator(p, {definition}, {{"core_test", G::FromDegrees(0, 0)}}, {}, settings)
+                         .WithCityCores(input);
+    input.cities.front().lots.front().sizeMeters.x = 77;
+    auto generated = generator.Generate();
+    Check(generated.cityCores &&
+              generated.cityCores->cities.front().lots.front().sizeMeters.x == house.sizeMeters.x,
+          "Generator owns an immutable copy of authored input");
+    auto anotherSeed = generator.WithSeed(p.seed + 1).Generate();
+    Check(anotherSeed.cityCores && anotherSeed.cityCores->cities.front().lots.size() == 1,
+          "Changing the planet seed retains its authored core contract");
 }
 void MeshSeamsAndContacts()
 {
@@ -587,6 +688,7 @@ int main()
         FaultAndShutdown();
         SphericalTravelAndOrigin();
         ContentContracts();
+        AuthoredCoreContracts();
         std::cout << "World streaming tests passed: " << checks << " checks\n";
         return 0;
     }

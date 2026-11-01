@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "Level.h"
 #include "Hud.h"
 #include "Civic.h"
@@ -21,6 +21,8 @@
 #include <limits>
 #include <type_traits>
 #include <unordered_map>
+#include <chrono>
+#include <thread>
 
 // Link the production core; tests exercise CPU rules without creating a window or GL context.
 namespace
@@ -28,6 +30,112 @@ namespace
 using namespace game;
 MineState &mineState = GameLevels::Mine().GetState();
 using tutorial::Vector2;
+void TestPlanetCityMigration()
+{
+    using namespace tutorial;
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    assert(g.EnterTestStage(TestStage::SurfaceSurvey));
+    auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(20);
+    while (!g.Surface()->Ready() && std::chrono::steady_clock::now() < deadline)
+    {
+        g.Update(0);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    assert(g.Surface()->Ready() && g.SurfaceCities());
+    auto plan = g.Surface()->Stream().Snapshot()->planet;
+    assert(plan->cityCores && plan->cityCores->cities.size() == Overworld::kCityCount);
+    for (const auto &anchor : Overworld::StoryAnchors())
+    {
+        assert(std::fabs(plan->terrain.Height(anchor.location.position) -
+                         anchor.location.position.altitudeMeters) < .001);
+    }
+    auto bike = g.SurfaceBike();
+    auto authoredBike = world::LegacyWorldAdapter::ErmaExterior()
+                            .Locate("halo_07", {kJetBikePosition.x, kJetBikePosition.y, 0})
+                            .position;
+    assert(bike &&
+           world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, *bike, authoredBike) < 1.e-5);
+    for (int i = 0; i < 120; ++i)
+    {
+        g.Update(.05f);
+    }
+    assert(g.SurfaceCities()->ActiveCity() == 0);
+    w.residents.front().health = 43;
+    auto savedResident = w.residents.front();
+    auto savedCars = g.SurfaceCities()->Traffic(0).Vehicles();
+    auto savedSignals = g.SurfaceCities()->Traffic(0).Signals();
+    auto epoch = g.Surface()->Stream().Snapshot()->statistics.epoch;
+    assert(g.RelocateSurfaceSurvey(plan->Region("cinder").access.position));
+    for (int i = 0; i < 60; ++i)
+    {
+        g.Update(.05f);
+    }
+    assert(g.SurfaceCities()->ActiveCity() == 1 &&
+           g.Surface()->Stream().Snapshot()->statistics.epoch == epoch);
+    assert(w.residents.front().name == savedResident.name && w.residents.front().health == 43 &&
+           Game::Distance(w.residents.front().position, savedResident.position) < 1.e-6);
+    assert(g.RelocateSurfaceSurvey(plan->Region("halo_07").access.position));
+    g.Update(0);
+    assert(g.SurfaceCities()->ActiveCity() == 0);
+    const auto &cars = g.SurfaceCities()->Traffic(0).Vehicles();
+    assert(cars.size() == savedCars.size());
+    for (size_t i = 0; i < cars.size(); ++i)
+    {
+        assert(cars[i].id == savedCars[i].id && cars[i].health == savedCars[i].health &&
+               Game::Distance(cars[i].position, savedCars[i].position) < 1.e-6);
+    }
+    assert(g.SurfaceCities()->Traffic(0).Signals().front().elapsed == savedSignals.front().elapsed);
+    for (int city = 0; city < Overworld::kCityCount; ++city)
+    {
+        for (const auto &car : g.SurfaceCities()->Traffic(city).Vehicles())
+        {
+            assert(TrafficSystem::CoreLane(car.lane, city));
+        }
+    }
+    auto mainStage = w.mainQuestStage;
+    auto mineStage = mineState.quest.GetStage();
+    auto press = [&](unsigned char key) {
+        g.KeyDown(key, 0, 0);
+        g.KeyUp(key, 0, 0);
+    };
+    auto near = [&](Vector2 legacy) {
+        auto point = g.SurfaceCities()->Point(*g.Surface(), 0, legacy);
+        assert(point);
+        assert(g.RelocateSurfaceSurvey(*point));
+        // Probe the interaction contract at its exact portal, independently of swept walking contact.
+        auto local = g.SurfaceCities()->Local(*g.Surface(), 0, legacy);
+        assert(local);
+        w.playerPosition = *local;
+    };
+    near(kHomeDoor);
+    auto parked = g.SurfaceBike();
+    assert(g.FindNearbyInteraction() == InteractionTarget::HomeEntrance);
+    press('e');
+    assert(w.isInsideHome && SceneManager::Current() == SceneKind::Interior);
+    auto room = g.PlanetLocation();
+    assert(room && room->space == world::SpaceKind::Interior);
+    room->Validate(g.Surface()->Planet());
+    w.playerPosition = {2.4f, 2.4f};
+    press('e');
+    assert(!w.isInsideHome && g.PlanetLocation()->space == world::SpaceKind::Surface);
+    assert(parked && g.SurfaceBike() &&
+           world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, *parked, *g.SurfaceBike()) <
+               1.e-6);
+    auto parkedLocal = g.Surface()->Local(*g.SurfaceBike());
+    assert(Game::Distance(w.bikePosition, {float(parkedLocal.x / 2), float(parkedLocal.y / 2)}) < 1.e-5f);
+    near(kBeaconPosition);
+    press('e');
+    assert(w.isInObservatory && SceneManager::Current() == SceneKind::Observatory);
+    g.PlanetLocation()->Validate(g.Surface()->Planet());
+    w.playerPosition = kObservatoryStairs;
+    press('e');
+    assert(!w.isInObservatory && !w.isInsideHome && SceneManager::Current() == SceneKind::Planet);
+    assert(w.mainQuestStage == mainStage && mineState.quest.GetStage() == mineStage &&
+           w.residents.front().health == 43);
+    g.Reset();
+    assert(!g.SurfaceCities() && !g.Surface());
+}
 void TestFrameScheduleAndTextCache()
 {
     tutorial::FrameSchedule schedule;
@@ -2143,6 +2251,7 @@ int main(int argc, char **argv)
     TestAimMovementAndLayers();
     TestForwardFlashlight();
     TestStageSelectionAndLoadout();
+    TestPlanetCityMigration();
     TestUiMenusAndTransactions();
     TestDialogueProgress();
     TestExplorationAndMelee();

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Game.h"
 #include <map>
 #include <utility>
@@ -11,7 +11,7 @@ class CityResidents
   public:
     static CityResidents &Get();
     void Reset(GameState &world);
-    void Update(GameState &world, float deltaSeconds);
+    void Update(GameState &world, float deltaSeconds, int activeCity = -1);
     static const char *ProfessionName(ResidentProfession profession);
     static const char *ActivityName(ResidentActivity activity);
     static const char *ActivityLabel(const Resident &resident);

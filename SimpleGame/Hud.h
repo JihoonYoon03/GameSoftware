@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Game.h"
 namespace tutorial
 {
@@ -73,8 +73,7 @@ class CityHud final : public Hud
   public:
     void Draw() override;
 
-  private:
-    void DrawInteractionPrompt();
+    static void DrawInteractionPrompt();
 };
 
 // ============================================================================

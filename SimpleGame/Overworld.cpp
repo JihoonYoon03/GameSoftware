@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "Overworld.h"
 #include "Civic.h"
 #include "Level.h"
@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iterator>
+#include <stdexcept>
 
 namespace tutorial
 {
@@ -511,8 +512,41 @@ int RoadNetwork::SignalAxis(int index, int atJunction) const
 // ============================================================================
 TrafficSystem &Overworld::Traffic()
 {
+    if (auto cities = Game::Get().SurfaceCities())
+    {
+        if (auto active = cities->ActiveTraffic())
+        {
+            return *active;
+        }
+    }
     static TrafficSystem traffic;
     return traffic;
+}
+bool TrafficSystem::CoreLane(int index, int city)
+{
+    const auto &net = RoadNetwork::Get();
+    if (city < -1 || city >= Overworld::kCityCount || index < 0 || size_t(index) >= net.lanes.size())
+    {
+        return false;
+    }
+    if (city == -1)
+    {
+        return true;
+    }
+    const auto &lane = net.lanes[size_t(index)];
+    auto center = Overworld::Cities()[size_t(city)].center;
+    const auto &a = net.junctions[size_t(lane.from)], &b = net.junctions[size_t(lane.to)];
+    return a.altitude == 0 && b.altitude == 0 && Game::Distance(a.position, center) <= 110 &&
+           Game::Distance(b.position, center) <= 110;
+}
+void TrafficSystem::SetCityFilter(int city)
+{
+    if (city < -1 || city >= Overworld::kCityCount)
+    {
+        throw std::invalid_argument("Invalid traffic city");
+    }
+    cityFilter = city;
+    Reset();
 }
 unsigned int TrafficSystem::Random()
 {
@@ -603,7 +637,7 @@ TrafficLight TrafficSystem::Light(int laneIndex, TrafficTurn turn) const
 {
     const auto &net = RoadNetwork::Get();
     const auto &lane = net.lanes[laneIndex];
-    if (!net.CanTurn(laneIndex, turn))
+    if (!Allows(laneIndex, turn))
     {
         return TrafficLight::Red;
     }
@@ -623,6 +657,57 @@ TrafficLight TrafficSystem::Light(int laneIndex, TrafficTurn turn) const
         return TrafficLight::Green;
     }
     return phase == greenPhase + 1 ? TrafficLight::Amber : TrafficLight::Red;
+}
+bool TrafficSystem::Allows(int index, TrafficTurn turn) const
+{
+    const auto &net = RoadNetwork::Get();
+    if (cityFilter < 0)
+    {
+        return net.CanTurn(index, turn);
+    }
+    if (!CoreLane(index, cityFilter))
+    {
+        return false;
+    }
+    const auto &lane = net.lanes[size_t(index)];
+    bool straight = false, left = false, right = false;
+    int arms = 0;
+    for (int outgoing : net.junctions[size_t(lane.to)].outgoing)
+    {
+        if (!CoreLane(outgoing, cityFilter))
+        {
+            continue;
+        }
+        const auto &out = net.lanes[size_t(outgoing)];
+        if (out.slot == 0)
+        {
+            ++arms;
+        }
+        if (out.road == lane.road)
+        {
+            continue;
+        }
+        auto direction = ClassifyTurn(lane.direction, out.direction);
+        straight |= direction == TrafficTurn::Straight;
+        left |= direction == TrafficTurn::Left;
+        right |= direction == TrafficTurn::Right;
+    }
+    if (arms == 1)
+    {
+        return turn == TrafficTurn::Left;
+    }
+    bool exists = turn == TrafficTurn::Straight ? straight : turn == TrafficTurn::Left ? left : right;
+    if (!exists)
+    {
+        return false;
+    }
+    if (arms == 2 || turn == TrafficTurn::Straight)
+    {
+        return true;
+    }
+    int count = net.roads[size_t(lane.road)].lanes / 2;
+    return turn == TrafficTurn::Left ? lane.slot == 0 || (!straight && (!right || lane.slot < count - 1))
+                                     : lane.slot == count - 1 || (!straight && !left);
 }
 bool TrafficSystem::HasRightTurnSignal(int lane) const
 {
@@ -853,13 +938,17 @@ void TrafficSystem::ChooseExit(TrafficVehicle &car)
     std::vector<int> candidates;
     for (int index : net.junctions[lane.to].outgoing)
     {
+        if (!CoreLane(index, cityFilter))
+        {
+            continue;
+        }
         const auto &out = net.lanes[index];
         if (out.road == lane.road)
         {
             continue;
         }
         TrafficTurn turn = ClassifyTurn(lane.direction, out.direction);
-        if (!net.CanTurn(car.lane, turn))
+        if (!Allows(car.lane, turn))
         {
             continue;
         }
@@ -876,6 +965,10 @@ void TrafficSystem::ChooseExit(TrafficVehicle &car)
         // A terminal or a lane drop has a continuous, reserved U-turn; no teleport/wrap.
         for (int index : net.junctions[lane.to].outgoing)
         {
+            if (!CoreLane(index, cityFilter))
+            {
+                continue;
+            }
             if (net.lanes[index].road == lane.road && net.lanes[index].slot == 0)
             {
                 candidates.push_back(index);
@@ -902,6 +995,10 @@ void TrafficSystem::Populate(const GameState &world)
     float localLength = 0;
     for (const auto &lane : net.lanes)
     {
+        if (!CoreLane(int(&lane - net.lanes.data()), cityFilter))
+        {
+            continue;
+        }
         float projection = Dot(Sub(world.playerPosition, lane.start), lane.direction);
         auto nearest =
             net.LanePosition(int(&lane - net.lanes.data()), Game::Clamp(projection, 0, lane.length));
@@ -915,6 +1012,10 @@ void TrafficSystem::Populate(const GameState &world)
     for (int attempt = 0; attempt < 100 && vehicles.size() < desired; ++attempt)
     {
         int laneIndex = int(Random() % net.lanes.size());
+        if (!CoreLane(laneIndex, cityFilter))
+        {
+            continue;
+        }
         const auto &lane = net.lanes[laneIndex];
         float projection = Dot(Sub(world.playerPosition, lane.start), lane.direction);
         float distance =
@@ -981,6 +1082,11 @@ void TrafficSystem::Step(GameState &world, float dt)
     impactCooldown = (std::max)(0.f, impactCooldown - dt);
     for (size_t i = 0; i < signals.size(); ++i)
     {
+        if (cityFilter >= 0 &&
+            Game::Distance(net.junctions[i].position, Overworld::Cities()[size_t(cityFilter)].center) > 110)
+        {
+            continue;
+        }
         auto &signal = signals[i];
         signal.elapsed += dt;
         float duration = PhaseDuration(int(i));
@@ -1006,10 +1112,14 @@ void TrafficSystem::Step(GameState &world, float dt)
             bool left = int(next) % 6 == 3;
             for (size_t lane = 0; lane < net.lanes.size(); ++lane)
             {
+                if (!CoreLane(int(lane), cityFilter))
+                {
+                    continue;
+                }
                 if (net.lanes[lane].to == int(i) && net.SignalAxis(int(lane)) == axis &&
-                    (left ? net.CanTurn(int(lane), TrafficTurn::Left)
-                          : net.CanTurn(int(lane), TrafficTurn::Straight) ||
-                                net.CanTurn(int(lane), TrafficTurn::Right)))
+                    (left
+                         ? Allows(int(lane), TrafficTurn::Left)
+                         : Allows(int(lane), TrafficTurn::Straight) || Allows(int(lane), TrafficTurn::Right)))
                 {
                     available = true;
                     break;
@@ -1995,8 +2105,8 @@ void Overworld::UpdateBike(GameState &state, float deltaSeconds)
             {
                 for (float side : {-.22f, .22f})
                 {
-                    if (session->Blocked((p.x + c * front - s * side) * 2, (p.y + s * front + c * side) * 2,
-                                         true))
+                    if (Game::Get().IsPositionBlocked(
+                            {p.x + c * front - s * side, p.y + s * front + c * side}))
                     {
                         return true;
                     }
@@ -2103,5 +2213,379 @@ void Overworld::ToggleBike(GameState &state)
         state.surfaceExploration
             ? "바이크 / W 가속 · S 제동/후진 · A/D 조향 · Space 부스트 · 정차 후 E 하차"
             : "바이크 / W 가속 · S 제동 · A/D 조향 · 정차 후 E 하차. 교차로의 홀로그램 신호를 확인하세요.");
+}
+// ============================================================================
+// PlanetCities — city-local simulation is never rebased or recreated on a revisit
+// ============================================================================
+PlanetCities::PlanetCities()
+{
+    for (int city = 0; city < Overworld::kCityCount; ++city)
+    {
+        traffic[size_t(city)].SetCityFilter(city);
+    }
+}
+TrafficSystem *PlanetCities::ActiveTraffic()
+{
+    return activeCity >= 0 ? &traffic[size_t(activeCity)] : nullptr;
+}
+world::CityCorePlan PlanetCities::Describe(const GameState &state)
+{
+    world::CityCorePlan plan;
+    const auto &net = RoadNetwork::Get();
+    const auto &library = models::ModelLibrary::Get();
+    for (int city = 0; city < Overworld::kCityCount; ++city)
+    {
+        auto center = Overworld::Cities()[size_t(city)].center;
+        world::CityCore core;
+        core.regionId = Overworld::Cities()[size_t(city)].id;
+        auto palette = [](const models::Palette &p) {
+            return world::SurfaceStructure::Palette{p.body, p.accent, p.emission};
+        };
+        for (size_t i = 0; i < state.buildings.size(); ++i)
+        {
+            const auto &b = state.buildings[i];
+            const auto &mesh = models::ResourceAssets::Get(library.buildings[size_t(b.type)].resourceId);
+            Vector2 position{b.x + (mesh.minimum.x + mesh.maximum.x) * b.width * .5f,
+                             b.y + (mesh.minimum.y + mesh.maximum.y) * b.depth * .5f};
+            if (Game::Distance(position, center) > 100)
+            {
+                continue;
+            }
+            world::CoreLot lot;
+            lot.id = "building_" + std::to_string(i);
+            lot.variant = std::uint16_t(b.type);
+            lot.positionMeters = {(position.x - center.x) * 2, (position.y - center.y) * 2,
+                                  mesh.minimum.z * b.height / 22};
+            lot.sizeMeters = {(mesh.maximum.x - mesh.minimum.x) * b.width * 2,
+                              (mesh.maximum.y - mesh.minimum.y) * b.depth * 2,
+                              (mesh.maximum.z - mesh.minimum.z) * b.height / 22};
+            lot.palette = palette(b.palette);
+            core.lots.push_back(std::move(lot));
+        }
+        for (size_t i = 0; i < net.roads.size(); ++i)
+        {
+            const auto &road = net.roads[i];
+            int lane = -1;
+            for (int index : net.junctions[size_t(road.from)].outgoing)
+            {
+                if (net.lanes[size_t(index)].road == int(i))
+                {
+                    lane = index;
+                    break;
+                }
+            }
+            if (lane < 0 || !TrafficSystem::CoreLane(lane, city))
+            {
+                continue;
+            }
+            auto a = Sub(net.junctions[size_t(road.from)].position, center),
+                 b = Sub(net.junctions[size_t(road.to)].position, center);
+            core.roads.push_back({std::uint32_t(road.from),
+                                  std::uint32_t(road.to),
+                                  {a.x * 2, a.y * 2, 0},
+                                  {b.x * 2, b.y * 2, 0},
+                                  unsigned(road.lanes)});
+        }
+        auto model = [&](std::string id, world::ContentForm form, std::uint16_t variant,
+                         const models::Model &asset, Vector2 position, float yaw, bool solid,
+                         float elevation = 0) {
+            if (!asset.resourceId || Game::Distance(position, center) > 100)
+            {
+                return;
+            }
+            const auto &mesh = models::ResourceAssets::Get(asset.resourceId);
+            float x = (mesh.minimum.x + mesh.maximum.x) * .5f, y = (mesh.minimum.y + mesh.maximum.y) * .5f;
+            world::CoreLot lot;
+            lot.id = std::move(id);
+            lot.form = form;
+            lot.variant = variant;
+            lot.use = world::ContentUse::Services;
+            lot.positionMeters = {(position.x - center.x + x * std::cos(yaw) - y * std::sin(yaw)) * 2,
+                                  (position.y - center.y + x * std::sin(yaw) + y * std::cos(yaw)) * 2,
+                                  (mesh.minimum.z + elevation) * 2};
+            lot.sizeMeters = {(mesh.maximum.x - mesh.minimum.x) * 2, (mesh.maximum.y - mesh.minimum.y) * 2,
+                              (mesh.maximum.z - mesh.minimum.z) * 2};
+            lot.yaw = yaw;
+            lot.solid = solid;
+            lot.palette = palette({});
+            if (lot.sizeMeters.x > .001 && lot.sizeMeters.y > .001 && lot.sizeMeters.z > .001 &&
+                std::hypot(lot.positionMeters.x, lot.positionMeters.y) +
+                        std::hypot(lot.sizeMeters.x, lot.sizeMeters.y) * .5 <=
+                    core.radiusMeters)
+            {
+                core.lots.push_back(std::move(lot));
+            }
+        };
+        const auto &props = Overworld::Scenery().Props();
+        for (size_t i = 0; i < props.size(); ++i)
+        {
+            const auto &prop = props[i];
+            if (!prop.model || prop.elevation > .1f)
+            {
+                continue;
+            }
+            if (prop.type == models::SceneryType::Count)
+            {
+                bool matched = false;
+                for (unsigned type = 0; type < unsigned(models::AircraftType::Count) && !matched; ++type)
+                {
+                    for (unsigned alternate = 0; alternate < 2 && !matched; ++alternate)
+                    {
+                        if (models::ModelLibrary::Aircraft(models::AircraftType(type), alternate != 0)
+                                .resourceId == prop.model->resourceId)
+                        {
+                            model("parked_aircraft_" + std::to_string(i), world::ContentForm::Aircraft,
+                                  std::uint16_t(type * 2 + alternate), *prop.model, prop.position, prop.yaw,
+                                  prop.solid, prop.elevation);
+                            matched = true;
+                        }
+                    }
+                }
+                continue;
+            }
+            model("prop_" + std::to_string(i), world::ContentForm::Scenery, std::uint16_t(prop.type),
+                  *prop.model, prop.position, prop.yaw, prop.solid, prop.elevation);
+        }
+        if (city == 0)
+        {
+            model("receiver", world::ContentForm::Console, 0, library.console, kCityReceiverPosition, 0,
+                  true);
+            model("power", world::ContentForm::Breaker, 0, library.breaker, kRelayPosition, 0, true);
+            model("observatory_lift", world::ContentForm::Beacon, 0, library.beacon, kBeaconPosition, 0,
+                  true);
+        }
+        const auto &walkways = CityPlan::Walkways();
+        for (size_t i = 0; i < walkways.size(); ++i)
+        {
+            const auto &walkway = walkways[i];
+            if (Game::Distance(walkway.position, center) > 95 || walkway.altitude > .1f)
+            {
+                continue;
+            }
+            auto count = core.lots.size();
+            model("walkway_" + std::to_string(i), world::ContentForm::TransitMesh, 0,
+                  models::ModelLibrary::Transit(walkway.asset), walkway.position, walkway.yaw, false,
+                  walkway.altitude);
+            if (core.lots.size() > count)
+            {
+                core.lots.back().assetName = walkway.asset;
+            }
+        }
+        plan.cities.push_back(std::move(core));
+    }
+    plan.Validate();
+    return plan;
+}
+std::optional<world::SurfacePoint> PlanetCities::Point(const world::SurfaceSession &session, int city,
+                                                       Vector2 legacy) const
+{
+    if (!session.Ready() || city < 0 || city >= Overworld::kCityCount)
+    {
+        return std::nullopt;
+    }
+    const auto plan = session.Stream().Snapshot()->planet;
+    if (!plan->cityCores || !plan->cityCores->Find(Overworld::Cities()[size_t(city)].id))
+    {
+        return std::nullopt;
+    }
+    const auto &region = plan->Region(Overworld::Cities()[size_t(city)].id);
+    auto center = Overworld::Cities()[size_t(city)].center;
+    auto point = world::SurfaceGeometry::FromLocal(region.frame,
+                                                   {(legacy.x - center.x) * 2, (legacy.y - center.y) * 2, 0},
+                                                   session.Planet().radiusMeters);
+    auto core = plan->cityCores->Find(Overworld::Cities()[size_t(city)].id);
+    point.altitudeMeters = Game::Distance(legacy, center) * 2 <= core->radiusMeters
+                               ? core->elevationMeters
+                               : plan->terrain.Height(point);
+    return point;
+}
+std::optional<Vector2> PlanetCities::Local(const world::SurfaceSession &session, int city,
+                                           Vector2 legacy) const
+{
+    auto point = Point(session, city, legacy);
+    if (!point ||
+        world::SurfaceGeometry::Distance(session.Planet().radiusMeters, *point, session.Pose().origin) > 1000)
+    {
+        return std::nullopt;
+    }
+    auto local = session.Local(*point);
+    return Vector2{float(local.x / 2), float(local.y / 2)};
+}
+float PlanetCities::Yaw(const world::SurfaceSession &session, int city, float yaw) const
+{
+    auto plan = session.Stream().Snapshot()->planet;
+    const auto &region = plan->Region(Overworld::Cities()[size_t(city)].id);
+    auto direction = world::SurfaceGeometry::TransformDirection({std::cos(yaw), std::sin(yaw), 0},
+                                                                region.frame, session.Origin());
+    return float(std::atan2(direction.y, direction.x));
+}
+void PlanetCities::Update(GameState &state, const world::SurfaceSession &session, float dt)
+{
+    activeCity = -1;
+    if (!session.Ready() || state.isInsideHome || state.isInObservatory)
+    {
+        return;
+    }
+    const auto plan = session.Stream().Snapshot()->planet;
+    if (!plan->cityCores)
+    {
+        return;
+    }
+    double best = 450;
+    for (int city = 0; city < Overworld::kCityCount; ++city)
+    {
+        auto distance = world::SurfaceGeometry::Distance(
+            session.Planet().radiusMeters, session.Pose().origin,
+            plan->Region(Overworld::Cities()[size_t(city)].id).center.position);
+        if (distance < best)
+        {
+            best = distance;
+            activeCity = city;
+        }
+    }
+    if (activeCity < 0 || dt <= 0)
+    {
+        return;
+    }
+    const auto &region = plan->Region(Overworld::Cities()[size_t(activeCity)].id);
+    auto center = Overworld::Cities()[size_t(activeCity)].center;
+    auto convert = [&](world::SurfacePoint p) {
+        auto local = world::SurfaceGeometry::ToLocal(region.frame, p, session.Planet().radiusMeters);
+        return Vector2{center.x + float(local.x / 2), center.y + float(local.y / 2)};
+    };
+    // Only the old algorithms' observation coordinates change. Persistent actor coordinates never do.
+    struct Observation
+    {
+        GameState &state;
+        Vector2 player, camera, bike;
+        ~Observation()
+        {
+            state.playerPosition = player;
+            state.cameraPosition = camera;
+            state.bikePosition = bike;
+        }
+    } restore{state, state.playerPosition, state.cameraPosition, state.bikePosition};
+    state.playerPosition = convert(session.Pose().origin);
+    state.cameraPosition = convert(session.PointAt(restore.camera.x * 2, restore.camera.y * 2));
+    auto bike = Game::Get().SurfaceBike();
+    state.bikePosition = bike && world::SurfaceGeometry::Distance(session.Planet().radiusMeters, *bike,
+                                                                  region.center.position) < 1000
+                             ? convert(*bike)
+                             : Vector2{1000000, 1000000};
+    traffic[size_t(activeCity)].Update(state, dt);
+    CityResidents::Get().Update(state, dt, activeCity);
+}
+InteractionTarget PlanetCities::Nearby(const GameState &state, const world::SurfaceSession &session,
+                                       float *nearestDistance) const
+{
+    InteractionTarget result = InteractionTarget::None;
+    float best = 1.35f;
+    auto consider = [&](Vector2 point, InteractionTarget target) {
+        if (auto local = Local(session, 0, point))
+        {
+            if (auto distance = Game::Distance(*local, state.playerPosition); distance < best)
+            {
+                best = distance;
+                result = target;
+            }
+        }
+    };
+    consider(kHomeDoor, InteractionTarget::HomeEntrance);
+    if (!CivicCombat::LandmarkDown(kLiaPosition))
+    {
+        consider(kLiaPosition, InteractionTarget::Lia);
+    }
+    if (!CivicCombat::LandmarkDown(kMaraPosition))
+    {
+        consider(kMaraPosition, InteractionTarget::Mara);
+    }
+    if (game::GameLevels::Chapter().GetState().kainJoined && !CivicCombat::LandmarkDown(kCityKainPosition))
+    {
+        consider(kCityKainPosition, InteractionTarget::Kain);
+    }
+    consider(kRelayPosition, InteractionTarget::PowerRelay);
+    consider(kBeaconPosition, InteractionTarget::GateBeacon);
+    consider(kCityReceiverPosition, InteractionTarget::CityReceiver);
+    for (size_t i = 0; i < state.residents.size(); ++i)
+    {
+        const auto &r = state.residents[i];
+        if (r.health <= 0 || r.fearSeconds > 0 ||
+            (i == Overworld::kKainResidentSlot && game::GameLevels::Chapter().GetState().kainJoined))
+        {
+            continue;
+        }
+        if (auto local = Local(session, r.cityIndex, r.position))
+        {
+            if (auto distance = Game::Distance(*local, state.playerPosition); distance < best)
+            {
+                best = distance;
+                result = InteractionTarget::Resident;
+            }
+        }
+    }
+    if (nearestDistance)
+    {
+        *nearestDistance = result == InteractionTarget::None ? 1000000.f : best;
+    }
+    return result;
+}
+bool PlanetCities::Occupied(const GameState &state, const world::SurfaceSession &session, Vector2 local) const
+{
+    int city = state.isInsideHome || state.isInObservatory ? 0 : activeCity;
+    if (city < 0 || !session.Ready())
+    {
+        return false;
+    }
+    auto plan = session.Stream().Snapshot()->planet;
+    const auto &region = plan->Region(Overworld::Cities()[size_t(city)].id);
+    auto relative = world::SurfaceGeometry::ToLocal(region.frame, session.PointAt(local.x * 2, local.y * 2),
+                                                    session.Planet().radiusMeters);
+    auto center = Overworld::Cities()[size_t(city)].center;
+    Vector2 query{center.x + float(relative.x / 2), center.y + float(relative.y / 2)};
+    for (size_t i = 0; i < state.residents.size(); ++i)
+    {
+        const auto &r = state.residents[i];
+        if (r.cityIndex != city || r.health <= 0 ||
+            (i == Overworld::kKainResidentSlot && game::GameLevels::Chapter().GetState().kainJoined))
+        {
+            continue;
+        }
+        if (Game::Distance(query, r.position) < .36f)
+        {
+            return true;
+        }
+    }
+    if (city == 0)
+    {
+        for (auto point : {kLiaPosition, kMaraPosition, kCityKainPosition})
+        {
+            if (point.x == kCityKainPosition.x && point.y == kCityKainPosition.y &&
+                !game::GameLevels::Chapter().GetState().kainJoined)
+            {
+                continue;
+            }
+            if (!CivicCombat::LandmarkDown(point) && Game::Distance(query, point) < .36f)
+            {
+                return true;
+            }
+        }
+    }
+    for (const auto &car : traffic[size_t(city)].Vehicles())
+    {
+        if (Game::Distance(query, car.position) > 5)
+        {
+            continue;
+        }
+        const auto &mesh = models::ResourceAssets::Get(
+            models::ModelLibrary::Get().vehicles[size_t(car.id % 4)].body.resourceId);
+        auto delta = Sub(query, car.position);
+        float c = std::cos(car.yaw), s = std::sin(car.yaw);
+        if (std::fabs(delta.x * c + delta.y * s) < mesh.physicalSize.x * .5f + .16f &&
+            std::fabs(-delta.x * s + delta.y * c) < mesh.physicalSize.y * .5f + .16f)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 } // namespace tutorial

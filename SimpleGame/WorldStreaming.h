@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "WorldContent.h"
 #include <functional>
 #include <memory>
@@ -131,7 +131,7 @@ class SurfaceSession
     // Swept terrain/object contact, <=0.4m substeps; missing chunks use the same global rules.
     void Move(double rightMeters, double forwardMeters, bool hovering = false);
     // Developer survey relocation. Same world/stream, safe land placement; no quest or travel unlock.
-    bool Relocate(const SurfacePoint &point);
+    bool Relocate(const SurfacePoint &point, double clearanceMeters = .65, double searchRadiusMeters = 32);
     std::optional<TangentFrame> Rebase();
     WorldLocation Location() const;
     std::size_t CollisionCells() const
