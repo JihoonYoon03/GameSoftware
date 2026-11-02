@@ -393,6 +393,31 @@ void CubeSeamsAndKeys()
         },
         "Leaf cannot overflow integer key");
 }
+void AtlasRoundTrips()
+{
+    for (double radius : {1000., 1200000., 4800000.})
+    {
+        for (auto origin : {SurfaceGeometry::FromDegrees(0, 179.99),
+                            SurfaceGeometry::FromDegrees(89.9, -179.9), SurfaceGeometry::FromDegrees(90, 0)})
+        {
+            const auto frame = SurfaceGeometry::Frame(origin);
+            for (auto point : {SurfaceGeometry::FromDegrees(0, -179.99),
+                               SurfaceGeometry::FromDegrees(-85, 120), SurfaceGeometry::FromDegrees(45, 0)})
+            {
+                auto local = SurfaceAtlas::Project(frame, point, radius);
+                auto restored = SurfaceAtlas::Unproject(frame, local, radius);
+                Check(restored && SurfaceGeometry::Distance(radius, point, *restored) < 1.e-5,
+                      "Atlas clicks round-trip across longitudes and poles at all profile scales");
+            }
+            auto antipode = origin;
+            antipode.normal = {-origin.normal.x, -origin.normal.y, -origin.normal.z};
+            Check(std::isfinite(Norm(SurfaceAtlas::Project(frame, antipode, radius))),
+                  "Antipode marker never throws or invents a great-circle bearing");
+            Check(!SurfaceAtlas::Unproject(frame, {radius * SurfaceGeometry::Pi + 1, 0, 0}, radius),
+                  "Atlas rejects coordinates beyond its spherical cut");
+        }
+    }
+}
 void LegacyIntegration()
 {
     const auto &planet = WorldCatalog::Erma();
@@ -479,6 +504,7 @@ int main()
     GeographicRoundTrips();
     Circumnavigation();
     CubeSeamsAndKeys();
+    AtlasRoundTrips();
     LegacyIntegration();
     std::cout << "Planet foundation checks passed: " << checks
               << " assertions, definitions/IDs, sphere closure, poles, "

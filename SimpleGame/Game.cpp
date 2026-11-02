@@ -613,6 +613,7 @@ void Game::Reset()
 void Game::StartSurface(bool insideHome)
 {
     const auto planet = world::WorldCatalog::Erma();
+    state.relayNetwork.Bind(planet);
     auto spawn =
         world::LegacyWorldAdapter::ErmaExterior()
             .Locate("halo_07", insideHome ? world::Vector3d{kHomeDoor.x, kHomeDoor.y, 0} : world::Vector3d{})
@@ -627,6 +628,7 @@ void Game::StartSurface(bool insideHome)
                       .position;
     auto bike = surface->Local(*surfaceBike);
     state.bikePosition = {float(bike.x / 2), float(bike.y / 2)};
+    StoreSurfaceBikeHeading();
     surfaceCities = std::make_unique<PlanetCities>();
     surface->Start(
         world::PlanetGenerator::Erma(Overworld::StoryAnchors()).WithCityCores(PlanetCities::Describe(state)));
@@ -794,6 +796,14 @@ void Game::KeyDown(unsigned char key, int, int)
         return;
     }
     key = NormalizeKey(key);
+    if (state.relayPreparing)
+    {
+        if (key == 27 || key == 'x')
+        {
+            RelayTravel::Cancel();
+        }
+        return;
+    }
     if (key == 'q')
     {
         if (state.weaponWheel.qHeld)
@@ -980,6 +990,10 @@ void Game::KeyDown(unsigned char key, int, int)
     if (key == 'm')
     {
         state.mapVisible = !state.mapVisible;
+        if (state.mapVisible && IsSurfaceMine())
+        {
+            state.planetMapSurface = false;
+        }
         state.StopMotion();
         state.mouseFiring = state.mouseAiming = false;
         std::fill(std::begin(state.pressedKeys), std::end(state.pressedKeys), false);
@@ -1393,6 +1407,9 @@ void Game::Update(float deltaSeconds)
 }
 void Game::StopSurface()
 {
+    state.relayPreparing = false;
+    state.relaySource.clear();
+    state.relayTarget.clear();
     if (state.surfaceExploration)
     {
         game::GameLevels::Chapter().GetState().active = false;
@@ -1407,6 +1424,7 @@ void Game::StopSurface()
         surface.reset();
     }
     surfaceBike.reset();
+    surfaceBikeHeading.reset();
     surfaceMineReturn.reset();
     surfaceCities.reset();
     state.surfaceExploration = false;
@@ -1415,12 +1433,16 @@ void Game::StopSurface()
 }
 bool Game::RelocateSurfaceSurvey(const world::SurfacePoint &point)
 {
+    if (state.relayPreparing)
+    {
+        return false;
+    }
     if (!state.surfaceExploration || IsSurfaceMine() || state.isInsideHome || state.isInObservatory ||
         !surface || !surface->Relocate(point))
     {
         return false;
     }
-    // Survey-only transport includes the test bike. Actual discovered relay travel belongs to F.
+    // Developer-only transport includes the test bike; normal relay travel keeps it parked.
     WeaponWheel::Close();
     state.StopMotion();
     state.mouseAiming = state.mouseFiring = false;
@@ -1432,6 +1454,7 @@ bool Game::RelocateSurfaceSurvey(const world::SurfacePoint &point)
     state.bikeElevation = 0;
     state.bikeSafePoseValid = false;
     surfaceBike = surface->Pose().origin;
+    StoreSurfaceBikeHeading();
     state.planetMapPan = {};
     game::GameLevels::Chapter().Surface().Refresh();
     return true;
@@ -1523,6 +1546,30 @@ void Game::ToggleSurfaceBike()
     {
         surfaceBike = surface->Pose().origin;
     }
+    StoreSurfaceBikeHeading();
+}
+void Game::StoreSurfaceBikeHeading()
+{
+    if (!surface || !surfaceBike)
+    {
+        return;
+    }
+    const auto &f = surface->Origin();
+    const double c = std::cos(state.bikeYaw), s = std::sin(state.bikeYaw);
+    surfaceBikeHeading = world::Vector3d{f.right.x * c + f.forward.x * s, f.right.y * c + f.forward.y * s,
+                                         f.right.z * c + f.forward.z * s};
+}
+void Game::RestoreSurfaceBikeHeading()
+{
+    if (!surface || !surfaceBike || !surfaceBikeHeading ||
+        world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, *surfaceBike,
+                                         surface->Pose().origin) >= 1000)
+    {
+        return;
+    }
+    const auto &f = surface->Origin();
+    state.bikeYaw = float(std::atan2(world::SurfaceGeometry::Dot(*surfaceBikeHeading, f.forward),
+                                     world::SurfaceGeometry::Dot(*surfaceBikeHeading, f.right)));
 }
 bool Game::ReturnToSurface(Vector2 door, int city)
 {
@@ -1536,6 +1583,11 @@ bool Game::LandOnSurface(const world::SurfacePoint &point, int city)
         return false;
     }
     auto oldFrame = surface ? surface->Origin() : world::TangentFrame{};
+    if (surfaceBike && world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, *surfaceBike,
+                                                        surface->Pose().origin) < 1000)
+    {
+        StoreSurfaceBikeHeading();
+    }
     auto facingFrame =
         IsSurfaceMine() ? surface->Stream().Snapshot()->planet->Region("mq00_mine").frame : oldFrame;
     bool placed = false;
@@ -1550,10 +1602,27 @@ bool Game::LandOnSurface(const world::SurfacePoint &point, int city)
                     world::SurfaceGeometry::Advance(frame, ring * std::cos(angle), ring * std::sin(angle),
                                                     surface->Planet().radiusMeters)
                         .origin;
-                auto local = surface->Local(candidate);
-                if (surface->Blocked(local.x, local.y) ||
-                    (surfaceCities && surfaceCities->Occupied(
-                                          state, *surface, {float(local.x / 2), float(local.y / 2)}, city)) ||
+                bool fieldOccupied = false;
+                const auto &frontier = surface->Stream().Snapshot()->planet->Region("frontier");
+                if (world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, candidate,
+                                                     frontier.center.position) < 150)
+                {
+                    auto local = world::SurfaceGeometry::ToLocal(frontier.frame, candidate,
+                                                                 surface->Planet().radiusMeters);
+                    Vector2 position{game::kFrontierEntry.x + float(local.x / 2),
+                                     game::kFrontierEntry.y + float(local.y / 2)};
+                    const auto &field = game::GameLevels::Chapter().GetState();
+                    auto occupied = [&](const game::FrontierPerson &person) {
+                        return person.combat.health > 0 && Distance(position, person.position) < .6f;
+                    };
+                    fieldOccupied =
+                        (game::GameLevels::Mine().GetState().quest.IsRiaJoined() && occupied(field.ria)) ||
+                        (field.kainJoined && occupied(field.kain)) ||
+                        std::any_of(field.survivors.begin(), field.survivors.end(), occupied) ||
+                        std::any_of(field.scrappers.begin(), field.scrappers.end(), occupied);
+                }
+                if (!surface->LandingClear(candidate, .32) || fieldOccupied ||
+                    (surfaceCities && surfaceCities->OccupiedAt(state, *surface, candidate, city)) ||
                     (surfaceBike && world::SurfaceGeometry::Distance(surface->Planet().radiusMeters,
                                                                      *surfaceBike, candidate) < 1))
                 {
@@ -1575,6 +1644,7 @@ bool Game::LandOnSurface(const world::SurfacePoint &point, int city)
     auto facing = world::SurfaceGeometry::TransformDirection(
         {std::cos(state.facingYaw), std::sin(state.facingYaw), 0}, facingFrame, surface->Origin());
     state.facingYaw = float(std::atan2(facing.y, facing.x));
+    RestoreSurfaceBikeHeading();
     state.StopMotion();
     state.surfaceCameraHeight = 0;
     state.playerPosition = state.cameraPosition = {};
@@ -1602,10 +1672,19 @@ void Game::UpdateSurface(float dt)
     {
         return;
     }
+    std::optional<world::SurfacePoint> relayDestination;
+    if (state.relayPreparing && surface->Ready())
+    {
+        if (auto relay = world::RelayNetwork::Find(*surface->Stream().Snapshot()->planet, state.relayTarget))
+        {
+            relayDestination = relay->location.position;
+        }
+    }
     auto velocity = state.isBikeMounted ? state.bikeVelocity : state.playerMotion.velocity;
     surface->Update(IsSurfaceMine() || state.isInsideHome || state.isInObservatory
                         ? world::Vector3d{}
-                        : world::Vector3d{velocity.x * 2, velocity.y * 2, 0});
+                        : world::Vector3d{velocity.x * 2, velocity.y * 2, 0},
+                    relayDestination);
     if (!surface->Ready())
     {
         state.StopMotion();
@@ -1614,7 +1693,20 @@ void Game::UpdateSurface(float dt)
     HospitalRecovery::Update(dt);
     if (HospitalRecovery::Active())
     {
+        if (state.relayPreparing)
+        {
+            RelayTravel::Cancel("의료 이송으로 중계 이동을 취소했습니다.");
+        }
         return;
+    }
+    if (state.relayPreparing)
+    {
+        RelayTravel::Update(dt);
+        return;
+    }
+    if (!IsSurfaceMine() && !state.isInsideHome && !state.isInObservatory)
+    {
+        state.relayNetwork.Observe(*surface->Stream().Snapshot()->planet, surface->Location());
     }
     game::GameLevels::Chapter().Surface().Refresh();
     bool advancing = !state.isPaused && !state.mapVisible && !state.weaponWheel.visible &&
@@ -1727,6 +1819,14 @@ void Game::UpdateSurface(float dt)
             state.bikeVelocity = rotate(state.bikeVelocity);
             state.planetMapPan = rotate(state.planetMapPan);
             state.playerPosition = {};
+        }
+        if (state.isBikeMounted)
+        {
+            StoreSurfaceBikeHeading();
+        }
+        else
+        {
+            RestoreSurfaceBikeHeading();
         }
         if (surfaceBike && world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, *surfaceBike,
                                                             surface->Pose().origin) < 1000)
@@ -2440,7 +2540,22 @@ InteractionTarget Game::FindNearbyInteraction()
             }
         }
         float bikeDistance = Distance(state.playerPosition, state.bikePosition);
-        return bikeDistance < 1.8f && bikeDistance < distance ? InteractionTarget::JetBike : target;
+        if (bikeDistance < 1.8f && bikeDistance < distance)
+        {
+            distance = bikeDistance;
+            target = InteractionTarget::JetBike;
+        }
+        if (auto relay = RelayTravel::Nearby())
+        {
+            if (world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, surface->Pose().origin,
+                                                 relay->location.position) *
+                    .5 <
+                distance)
+            {
+                return InteractionTarget::Relay;
+            }
+        }
+        return target;
     }
     if (HospitalRecovery::Active())
     {
@@ -2560,6 +2675,11 @@ void Game::InteractWithNearbyTarget()
         }
     }
     const InteractionTarget target = FindNearbyInteraction();
+    if (target == InteractionTarget::Relay)
+    {
+        RelayTravel::Interact();
+        return;
+    }
     if (state.surfaceExploration &&
         (target == InteractionTarget::HomeTerminal || target == InteractionTarget::Lia ||
          target == InteractionTarget::Mara || target == InteractionTarget::PowerRelay ||
@@ -3117,6 +3237,188 @@ void Game::InteractSurfaceStory(InteractionTarget target)
         say("receiver/free", "수신망 / 지역 정보는 열려 있습니다. 전망대에서 확보한 음성 기록이 있으면 "
                              "리아와 수신 경로를 조사할 수 있습니다.");
     }
+}
+// ============================================================================
+// RelayTravel — keeps the source live until destination chunks and an unoccupied landing are ready
+// ============================================================================
+const world::RelayCandidate *RelayTravel::Nearby()
+{
+    auto &g = Game::Get();
+    const auto &s = g.GetState();
+    if (!s.surfaceExploration || g.IsSurfaceMine() || s.isInsideHome || s.isInObservatory || !g.Surface() ||
+        !g.Surface()->Ready())
+    {
+        return nullptr;
+    }
+    return world::RelayNetwork::Nearest(*g.Surface()->Stream().Snapshot()->planet,
+                                        g.Surface()->Pose().origin);
+}
+const char *RelayTravel::Restriction(std::string_view destination)
+{
+    auto &g = Game::Get();
+    const auto &s = g.GetState();
+    if (!s.surfaceExploration || !g.Surface() || !g.Surface()->Ready())
+    {
+        return "행성 지형을 준비 중입니다.";
+    }
+    if (g.IsSurfaceMine() || s.isInsideHome || s.isInObservatory)
+    {
+        return "지상의 중계환에서 이용할 수 있습니다.";
+    }
+    if (s.isBikeMounted)
+    {
+        return "바이크를 주차하고 내려 주세요. 차량은 출발지에 남습니다.";
+    }
+    if (HospitalRecovery::Active() || game::GameLevels::Mine().GetState().player.health <= 0)
+    {
+        return "의료 이송 중에는 이용할 수 없습니다.";
+    }
+    if (s.isPaused || s.ui.screen != UiScreen::None || s.journalVisible || s.dialogueHistoryVisible ||
+        s.weaponWheel.visible || Dialogue::Active() || s.dialogue.suspended)
+    {
+        return "열린 메뉴나 대화를 마친 뒤 이용해 주세요.";
+    }
+    if (CivicJustice::State().wanted > 0 || Dialogue::Danger())
+    {
+        return "수배 또는 교전 중에는 이용할 수 없습니다.";
+    }
+    const auto *source = Nearby();
+    if (!source || !s.relayNetwork.Registered(source->id))
+    {
+        return "가까운 중계환을 E로 등록한 뒤 이용해 주세요.";
+    }
+    const auto *target = world::RelayNetwork::Find(*g.Surface()->Stream().Snapshot()->planet, destination);
+    if (!target || !s.relayNetwork.Registered(destination))
+    {
+        return "목적지 중계환에 직접 방문해 등록해야 합니다.";
+    }
+    if (source->id == target->id)
+    {
+        return "현재 위치의 중계환입니다. 다른 목적지를 선택하세요.";
+    }
+    return nullptr;
+}
+bool RelayTravel::Begin(const std::string &destination)
+{
+    auto &g = Game::Get();
+    auto &s = g.GetState();
+    if (s.relayPreparing)
+    {
+        return false;
+    }
+    if (auto reason = Restriction(destination))
+    {
+        s.relayStatus = reason;
+        g.ShowNotice(std::string("중계 이동 / ") + reason);
+        return false;
+    }
+    s.relaySource = Nearby()->id;
+    s.relayStatus.clear();
+    s.relayTarget = destination;
+    s.relayElapsed = 0;
+    s.relayPreparing = true;
+    s.selectedRelay = destination;
+    s.mapVisible = true;
+    s.StopMotion();
+    s.mouseAiming = s.mouseFiring = false;
+    std::fill(std::begin(s.pressedKeys), std::end(s.pressedKeys), false);
+    g.ShowNotice("중계 이동 / 도착 지형과 착지 공간을 준비합니다. X 또는 Esc로 취소할 수 있습니다.");
+    return true;
+}
+void RelayTravel::Cancel(const std::string &reason)
+{
+    auto &g = Game::Get();
+    auto &s = g.GetState();
+    if (!s.relayPreparing)
+    {
+        return;
+    }
+    s.relayPreparing = false;
+    s.relayStatus = reason;
+    s.relaySource.clear();
+    s.relayTarget.clear();
+    s.relayElapsed = 0;
+    s.StopMotion();
+    g.ShowNotice(std::string("중계 이동 / ") + reason);
+}
+void RelayTravel::Interact()
+{
+    auto &g = Game::Get();
+    auto &s = g.GetState();
+    const auto *relay = Nearby();
+    if (!relay || s.isBikeMounted || s.relayPreparing)
+    {
+        return;
+    }
+    if (Dialogue::Active() || s.dialogue.suspended || HospitalRecovery::Active())
+    {
+        return;
+    }
+    bool added = s.relayNetwork.Register(*g.Surface()->Stream().Snapshot()->planet, relay->id,
+                                         g.Surface()->Location());
+    s.selectedRelay = relay->id;
+    s.relayStatus.clear();
+    s.mapVisible = true;
+    s.planetMapSurface = true;
+    s.StopMotion();
+    g.ShowNotice(
+        added ? "국지 중계환 등록 / M 지도에서 등록한 다른 중계환을 선택하세요. 임무 진행은 바뀌지 않습니다."
+              : "국지 중계환 / 등록한 다른 목적지를 지도에서 선택하세요.");
+}
+void RelayTravel::Update(float dt)
+{
+    auto &g = Game::Get();
+    auto &s = g.GetState();
+    if (!s.relayPreparing)
+    {
+        return;
+    }
+    if (auto reason = Restriction(s.relayTarget))
+    {
+        Cancel(reason);
+        return;
+    }
+    if (!Nearby() || Nearby()->id != s.relaySource)
+    {
+        Cancel("출발 중계환을 벗어났습니다.");
+        return;
+    }
+    s.relayElapsed += dt;
+    const auto *target = world::RelayNetwork::Find(*g.Surface()->Stream().Snapshot()->planet, s.relayTarget);
+    const auto snapshot = g.Surface()->Stream().Snapshot();
+    if (g.Surface()->Stream().FailedAt(target->location.position, 96))
+    {
+        Cancel("도착 지형을 준비하지 못했습니다. 출발지에서 다시 시도해 주세요.");
+        return;
+    }
+    if (s.relayElapsed > 20)
+    {
+        Cancel("도착 준비 시간이 초과됐습니다. 출발 위치를 유지합니다.");
+        return;
+    }
+    if (s.relayElapsed < .35f || !g.Surface()->Stream().Detailed(target->location.position, 96))
+    {
+        return;
+    }
+    const auto destination = target->location.position;
+    const auto name = snapshot->planet->Region(target->regionId).definition.name;
+    if (!g.LandOnSurface(destination))
+    {
+        Cancel("도착 공간이 점유돼 있습니다. 출발 위치를 유지합니다.");
+        return;
+    }
+    s.relayPreparing = false;
+    s.relaySource.clear();
+    s.relayTarget.clear();
+    s.relayElapsed = 0;
+    s.planetDestination.reset();
+    if (g.SurfaceCities())
+    {
+        g.SurfaceCities()->Update(s, *g.Surface(), 0);
+    }
+    game::GameLevels::Chapter().Surface().Refresh();
+    s.relayNetwork.Observe(*snapshot->planet, g.Surface()->Location());
+    g.ShowNotice("중계 이동 / " + name + " 도착. 바이크와 현장 인원·조사·보상 상태는 유지됩니다.");
 }
 // ============================================================================
 // GameCallbacks — GLUT entry points

@@ -621,6 +621,43 @@ void FaultAndShutdown()
     Check(std::chrono::steady_clock::now() - start < std::chrono::seconds(1),
           "Shutdown signals cancellation before joining the worker");
 }
+void RemotePreparation()
+{
+    auto plan = FlatPlanet(1200000);
+    const auto source = G::FromDegrees(0, 0), target = G::FromDegrees(0, 180);
+    SurfaceSession session(plan->terrain.Planet(), source);
+    session.Start(plan);
+    Pump([&] { session.Update(); }, [&] { return session.Ready() && session.Stream().Detailed(source, 12); });
+    const auto epoch = session.Stream().Snapshot()->statistics.epoch;
+    Pump([&] { session.Update({}, target); },
+         [&] { return session.Stream().Detailed(target, 12) && session.Stream().Detailed(source, 12); });
+    Check(G::Distance(session.Planet().radiusMeters, source, session.Pose().origin) < 1.e-6,
+          "Prefetch never moves the authoritative player");
+    session.Update(); // Cancellation removes remote-only jobs/chunks while retaining the source.
+    Check(!session.Stream().Detailed(target) && session.Stream().Detailed(source),
+          "Cancelling a remote focus keeps the source ready");
+    Pump([&] { session.Update({}, target); }, [&] { return session.Stream().Detailed(target, 12); });
+    Check(session.LandingClear(target) && session.Relocate(target, .65, 0),
+          "A prepared antipodal landing uses direct spherical contact checks");
+    Check(session.Stream().Snapshot()->statistics.epoch == epoch,
+          "Travel commits within the same world epoch");
+    Check(session.Stream().Snapshot()->statistics.resident <= session.Stream().Settings().maxResident &&
+              session.Stream().Snapshot()->statistics.bytes <= session.Stream().Settings().memoryBudgetBytes,
+          "Two-focus preparation retains the existing memory budget");
+    TerrainStream failed({}, [&](const GeneratedPlanet &p, const ChunkKey &key, unsigned cells,
+                                 const std::atomic_bool &cancel) {
+        if (key.face == CubeFace::NegativeX)
+        {
+            throw std::runtime_error("remote fixture failure");
+        }
+        return SurfaceChunk::Build(p, key, cells, cancel);
+    });
+    failed.Open(plan);
+    Pump([&] { failed.Update(G::Frame(source), {}, target); },
+         [&] { return failed.FailedAt(target) && failed.Detailed(source); });
+    Check(!failed.Detailed(target),
+          "A failed destination never becomes ready while the source remains usable");
+}
 void SphericalTravelAndOrigin()
 {
     for (double radius : {1000., 4800000.})
@@ -695,6 +732,7 @@ int main()
         MeshSeamsAndContacts();
         QueueCancellationAndWorldSwitch();
         FaultAndShutdown();
+        RemotePreparation();
         SphericalTravelAndOrigin();
         ContentContracts();
         AuthoredCoreContracts();

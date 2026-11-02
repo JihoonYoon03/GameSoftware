@@ -187,7 +187,8 @@ struct SchematicView
 };
 bool PlanetMapActive()
 {
-    return Game::Get().GetState().surfaceExploration && !Game::Get().IsSurfaceMine();
+    const auto &w = Game::Get().GetState();
+    return w.surfaceExploration && (!Game::Get().IsSurfaceMine() || (w.mapVisible && w.planetMapSurface));
 }
 SchematicView PlanetMapView(bool full)
 {
@@ -700,6 +701,60 @@ void DrawSchematic(const SchematicView &view, bool full)
     DirectionArrow(view.Project(PlayerMapPosition()), heading + kPi * .25f, full ? 8.f : 10.f,
                    {.25f, 1, .94f});
 }
+std::vector<const world::RelayCandidate *> RegisteredRelays()
+{
+    std::vector<const world::RelayCandidate *> result;
+    const auto *session = Game::Get().Surface();
+    const auto &w = Game::Get().GetState();
+    if (session && session->Ready())
+    {
+        for (const auto &relay : session->Stream().Snapshot()->planet->relays)
+        {
+            if (w.relayNetwork.Registered(relay.id))
+            {
+                result.push_back(&relay);
+            }
+        }
+    }
+    return result;
+}
+std::vector<UiControl> RelayControls()
+{
+    auto &w = Game::Get().GetState();
+    auto entries = RegisteredRelays();
+    int pages = (std::max)(1, int((entries.size() + 2) / 3));
+    w.relayPage = std::clamp(w.relayPage, 0, pages - 1);
+    std::vector<UiControl> controls;
+    const auto *session = Game::Get().Surface();
+    for (int row = 0; row < 3 && size_t(w.relayPage * 3 + row) < entries.size(); ++row)
+    {
+        int index = w.relayPage * 3 + row;
+        const auto *relay = entries[size_t(index)];
+        auto name = session->Stream().Snapshot()->planet->Region(relay->regionId).definition.name;
+        auto suffix = relay->id.substr(relay->id.find_last_of('_') + 1);
+        controls.push_back(
+            {UiAction::Choice,
+             {820, 232.f + row * 62},
+             {344, 56},
+             name + " · " + suffix + (w.selectedRelay == relay->id ? "\n선택됨" : "\n등록 중계환"),
+             !w.relayPreparing,
+             index});
+    }
+    controls.push_back(
+        {UiAction::Previous, {820, 424}, {164, 44}, "이전 [", w.relayPage > 0 && !w.relayPreparing});
+    controls.push_back(
+        {UiAction::Next, {1000, 424}, {164, 44}, "다음 ]", w.relayPage + 1 < pages && !w.relayPreparing});
+    controls.push_back({UiAction::Continue,
+                        {820, 486},
+                        {344, 44},
+                        w.relayPreparing ? "도착 준비 중…" : "선택한 중계환으로 이동 · T",
+                        !w.relayPreparing && RelayTravel::Restriction(w.selectedRelay) == nullptr});
+    if (w.relayPreparing)
+    {
+        controls.push_back({UiAction::Back, {820, 544}, {344, 44}, "중계 이동 취소 · X / Esc"});
+    }
+    return controls;
+}
 } // namespace
 MapRegion MapHud::Region()
 {
@@ -715,6 +770,27 @@ Vector2 MapHud::MapToWorld(Vector2 canvasPoint, bool fullMap)
 {
     return (PlanetMapActive() ? PlanetMapView(fullMap) : MapView(fullMap)).Unproject(canvasPoint);
 }
+Vector2 MapHud::PlanetToMap(const world::SurfacePoint &point, bool full)
+{
+    const auto *session = Game::Get().Surface();
+    if (!session || !session->Ready())
+    {
+        return {};
+    }
+    auto local = world::SurfaceAtlas::Project(session->Origin(), point, session->Planet().radiusMeters);
+    return PlanetMapView(full).Project({float(local.x), float(local.y)});
+}
+std::optional<world::SurfacePoint> MapHud::PlanetAt(Vector2 canvas)
+{
+    const auto *session = Game::Get().Surface();
+    if (!PlanetMapActive() || !session || !session->Ready() || !Contains(canvas, true))
+    {
+        return std::nullopt;
+    }
+    auto local = MapToWorld(canvas, true);
+    return world::SurfaceAtlas::Unproject(session->Origin(), {local.x, local.y, 0},
+                                          session->Planet().radiusMeters);
+}
 bool MapHud::Contains(Vector2 canvasPoint, bool fullMap)
 {
     return (PlanetMapActive() ? PlanetMapView(fullMap) : MapView(fullMap)).Inside(canvasPoint);
@@ -726,7 +802,8 @@ bool MapHud::Zoom(int steps, Vector2 pivot)
     {
         return false;
     }
-    if (!state.mapVisible || state.isPaused || state.ui.screen != UiScreen::None || !Contains(pivot, true))
+    if (!state.mapVisible || state.relayPreparing || state.isPaused || state.ui.screen != UiScreen::None ||
+        !Contains(pivot, true))
     {
         return false;
     }
@@ -734,9 +811,9 @@ bool MapHud::Zoom(int steps, Vector2 pivot)
     float multiplier = std::pow(1.35f, Game::Clamp(float(steps), -8, 8));
     if (PlanetMapActive())
     {
-        state.planetMapRange =
-            Game::Clamp(state.planetMapRange / multiplier, 64,
-                        float((std::min)(200000., Game::Get().Surface()->Planet().radiusMeters * .25)));
+        state.planetMapRange = Game::Clamp(
+            state.planetMapRange / multiplier, 64,
+            float(world::SurfaceAtlas::MaximumRange(Game::Get().Surface()->Planet().radiusMeters)));
     }
     else
     {
@@ -753,7 +830,7 @@ bool MapHud::Zoom(int steps, Vector2 pivot)
 void MapHud::Pan(Vector2 delta)
 {
     auto &state = Game::Get().GetState();
-    if (!state.mapVisible || state.isPaused || state.ui.screen != UiScreen::None)
+    if (!state.mapVisible || state.relayPreparing || state.isPaused || state.ui.screen != UiScreen::None)
     {
         return;
     }
@@ -766,11 +843,22 @@ void MapHud::Pan(Vector2 delta)
     auto shifted = view.Unproject({view.center.x + delta.x, view.center.y + delta.y});
     auto &pan = PlanetMapActive() ? state.planetMapPan : state.mapViews[size_t(Region())].pan;
     float limit = PlanetMapActive()
-                      ? float((std::min)(300000., Game::Get().Surface()->Planet().radiusMeters * .25))
+                      ? float(world::SurfaceAtlas::MaximumRange(Game::Get().Surface()->Planet().radiusMeters))
                   : Region() == MapRegion::City ? 2000.f
                                                 : 256.f;
     pan.x = Game::Clamp(pan.x + shifted.x - origin.x, -limit, limit);
     pan.y = Game::Clamp(pan.y + shifted.y - origin.y, -limit, limit);
+    if (PlanetMapActive())
+    {
+        auto local = Game::Get().Surface()->Local(Game::Get().Surface()->Pose().origin);
+        double x = local.x + pan.x, y = local.y + pan.y, length = std::hypot(x, y);
+        double reach = (std::max)(0., double(limit) - state.planetMapRange);
+        if (length > reach && length > 0)
+        {
+            pan.x = float(x * reach / length - local.x);
+            pan.y = float(y * reach / length - local.y);
+        }
+    }
 }
 void MapHud::ResetView(bool playerOnly)
 {
@@ -782,6 +870,7 @@ void MapHud::ResetView(bool playerOnly)
         {
             state.planetMapRange = 1000;
         }
+        Pan({});
     }
     else
     {
@@ -800,6 +889,38 @@ void MapHud::ResetView(bool playerOnly)
 }
 bool MapHud::HandleMapKey(unsigned char key)
 {
+    auto &w = Game::Get().GetState();
+    if (w.surfaceExploration && key == 9 && Game::Get().IsSurfaceMine())
+    {
+        w.planetMapSurface = !w.planetMapSurface;
+        return true;
+    }
+    if (PlanetMapActive())
+    {
+        if (key == 'p' && Game::Get().Surface())
+        {
+            w.planetMapRange =
+                float(world::SurfaceAtlas::MaximumRange(Game::Get().Surface()->Planet().radiusMeters));
+            w.planetMapPan = {};
+            Pan({});
+            return true;
+        }
+        if (key == 'l')
+        {
+            w.mapRegisteredRelaysOnly = !w.mapRegisteredRelaysOnly;
+            return true;
+        }
+        if (key == 't')
+        {
+            RelayTravel::Begin(w.selectedRelay);
+            return true;
+        }
+        if (key == '[' || key == ']')
+        {
+            w.relayPage = (std::max)(0, w.relayPage + (key == ']' ? 1 : -1));
+            return true;
+        }
+    }
     if (key == '+' || key == '=' || key == '-' || key == '_')
     {
         Zoom(key == '+' || key == '=' ? 1 : -1,
@@ -819,20 +940,92 @@ bool MapHud::HandleClick(Vector2 point, bool clear)
     if (PlanetMapActive())
     {
         auto session = Game::Get().Surface();
-        if (!world.mapVisible || !session || !session->Ready() || !Contains(point, true))
+        if (!world.mapVisible || !session || !session->Ready())
+        {
+            return false;
+        }
+        if (!clear)
+        {
+            for (const auto &control : RelayControls())
+            {
+                if (Inside(control, point))
+                {
+                    if (!control.enabled)
+                    {
+                        return true;
+                    }
+                    if (control.action == UiAction::Back)
+                    {
+                        RelayTravel::Cancel();
+                    }
+                    else if (control.action == UiAction::Continue)
+                    {
+                        RelayTravel::Begin(world.selectedRelay);
+                    }
+                    else if (control.action == UiAction::Next)
+                    {
+                        ++world.relayPage;
+                    }
+                    else if (control.action == UiAction::Previous)
+                    {
+                        --world.relayPage;
+                    }
+                    else
+                    {
+                        auto entries = RegisteredRelays();
+                        auto relay = entries.at(size_t(control.choice));
+                        world.selectedRelay = relay->id;
+                        world.relayStatus.clear();
+                        world.planetDestination = relay->location.position;
+                    }
+                    return true;
+                }
+            }
+        }
+        if (world.relayPreparing || !Contains(point, true))
         {
             return false;
         }
         if (clear)
         {
             world.planetDestination.reset();
+            world.selectedRelay.clear();
+            world.relayStatus.clear();
         }
         else
         {
-            auto target = MapToWorld(point, true);
-            auto location = session->PointAt(target.x, target.y);
+            const world::RelayCandidate *hit = nullptr;
+            float nearest = 10;
+            for (const auto &relay : session->Stream().Snapshot()->planet->relays)
+            {
+                if (world.relayNetwork.Discovered(relay.id) &&
+                    (!world.mapRegisteredRelaysOnly || world.relayNetwork.Registered(relay.id)))
+                {
+                    float distance = Game::Distance(PlanetToMap(relay.location.position), point);
+                    if (distance < nearest)
+                    {
+                        hit = &relay;
+                        nearest = distance;
+                    }
+                }
+            }
+            if (hit)
+            {
+                world.relayStatus.clear();
+                world.selectedRelay = hit->id;
+                world.planetDestination = hit->location.position;
+                return true;
+            }
+            auto target = PlanetAt(point);
+            if (!target)
+            {
+                return false;
+            }
+            auto location = *target;
             location.altitudeMeters = session->Stream().Snapshot()->planet->terrain.Height(location);
             world.planetDestination = location;
+            world.selectedRelay.clear();
+            world.relayStatus.clear();
         }
         return true;
     }
@@ -923,8 +1116,11 @@ void MapHud::DrawFullMap()
     UiText(938, 548, "목표는 표시되지 않습니다.", 15);
     UiText(80, 714, "좌클릭 목적지 설정     우클릭 해제", 16);
     UiText(1190, 714, "M / Esc 닫기", 16, kUiInk, false, true);
-    UiText(80, 741, "휠 / +/- 확대·축소 · 방향키 이동 · C 내 위치 · 0 초기화 · 지도 열람 중 정지", 14,
-           {.55f, .72f, .72f});
+    UiText(80, 741,
+           Game::Get().IsSurfaceMine()
+               ? "Tab 지상 지도 · 휠 확대·축소 · 방향키 이동 · C 내 위치 · 0 초기화"
+               : "휠 / +/- 확대·축소 · 방향키 이동 · C 내 위치 · 0 초기화 · 지도 열람 중 정지",
+           14, {.55f, .72f, .72f});
 }
 
 // ============================================================================
@@ -969,6 +1165,9 @@ void CityHud::DrawInteractionPrompt()
         break;
     case InteractionTarget::MineEntrance:
         label = "광산 / 입장";
+        break;
+    case InteractionTarget::Relay:
+        label = "국지 중계환 / 등록·이동 지도";
         break;
     case InteractionTarget::FrontierSite: {
         game::ChapterInteraction point{};
@@ -2387,7 +2586,7 @@ void PlanetHud::DrawMap(bool full)
     {
         Drawing::DrawRectangle(0, 0, kCanvasWidth, kCanvasHeight, {.015f, .035f, .045f, .95f});
         Panel(64, 92, 1152, 616);
-        UiText(96, 143, "주변 탐사도", 26);
+        UiText(96, 143, range > 200000 ? "행성 개관" : range > 4000 ? "지역 탐사도" : "주변 블록 약도", 26);
         char scale[80];
         if (range >= 1000)
         {
@@ -2397,15 +2596,18 @@ void PlanetHud::DrawMap(bool full)
         {
             std::snprintf(scale, sizeof(scale), "표시 반경 %.0f m", range);
         }
-        UiText(820, 196, scale, 20);
-        UiText(820, 240, "지역 외곽 · 연결 도로", 17);
-        UiText(820, 276, "주변 블록 · 건물 용도", 17);
-        UiText(820, 312, "휠 / +/- 확대·축소", 16);
-        UiText(820, 346, "방향키 지도 이동", 16);
-        UiText(820, 380, "C 내 위치 · 0 초기화", 16);
-        UiText(820, 430, "좌클릭 목적지 · 우클릭 해제", 16);
-        UiText(820, 476, "[ / ] 개발용 지역 이동", 15);
-        UiText(820, 659, "M / Esc 닫기", 16);
+        UiText(820, 196, scale, 18);
+        UiText(96, 174, "휠 +/- 확대·축소 · 방향키 이동 · C 내 위치 · P 행성 전체 · 0 초기화", 15);
+        UiText(96, 650,
+               w.mapRegisteredRelaysOnly ? "L 필터: 등록 중계환"
+                                         : "L 필터: 발견 중계환 · 미방문 지역은 미확인 표시",
+               15);
+        UiText(96, 682,
+               Game::Get().IsSurfaceMine() ? "Tab 지하 약도 / 지상 지도 · M 닫기"
+                                           : "좌클릭 목적지/중계환 선택 · 우클릭 해제 · M 닫기",
+               15);
+        UiText(820, 626, "현장 E 등록 · 주차 후 이동", 15);
+        UiText(820, 659, "차량은 출발지에 남습니다.", 15);
     }
     Drawing::DrawEllipse(center.x, center.y, radius + 3, radius + 3, {.35f, .62f, .61f});
     Drawing::DrawEllipse(center.x, center.y, radius, radius, {.075f, .14f, .14f});
@@ -2414,14 +2616,51 @@ void PlanetHud::DrawMap(bool full)
     auto focus = session->PointAt(view.worldCenter.x, view.worldCenter.y);
     mapLabels.clear();
     auto project = [&](world::SurfacePoint point) {
-        auto p = session->Local(point);
+        auto p = world::SurfaceAtlas::Project(session->Origin(), point, session->Planet().radiusMeters);
         return Vector2{float(p.x), float(p.y)};
     };
+    auto line = [&](world::SurfacePoint a, world::SurfacePoint b, ColorRGBA color, float width) {
+        auto x = project(a), y = project(b);
+        // The projection cut is the antipodal rim; never draw a chord across the whole atlas.
+        if (Game::Distance(x, y) > session->Planet().radiusMeters * .4 &&
+            world::SurfaceGeometry::Distance(session->Planet().radiusMeters, a, b) <
+                session->Planet().radiusMeters * .2)
+        {
+            return;
+        }
+        MapLine(view, x, y, color, width);
+    };
+    if (full && range > 200000)
+    {
+        for (int latitude = -75; latitude <= 75; latitude += 15)
+        {
+            for (int longitude = -180; longitude < 180; longitude += 5)
+            {
+                line(world::SurfaceGeometry::FromDegrees(latitude, longitude),
+                     world::SurfaceGeometry::FromDegrees(latitude, longitude + 5), {.16f, .25f, .27f}, 1);
+            }
+        }
+        for (int longitude = -180; longitude < 180; longitude += 30)
+        {
+            for (int latitude = -90; latitude < 90; latitude += 5)
+            {
+                line(world::SurfaceGeometry::FromDegrees(latitude, longitude),
+                     world::SurfaceGeometry::FromDegrees(latitude + 5, longitude), {.16f, .25f, .27f}, 1);
+            }
+        }
+    }
     for (const auto &r : snapshot->planet->regions)
     {
         if (r.center.space != world::SpaceKind::Surface ||
             world::SurfaceGeometry::Distance(session->Planet().radiusMeters, r.center.position, focus) >
                 r.boundingRadiusMeters + range * 1.5)
+        {
+            continue;
+        }
+        if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, r.center.position,
+                                             session->Origin().origin) +
+                r.boundingRadiusMeters >=
+            session->Planet().radiusMeters * world::SurfaceGeometry::Pi)
         {
             continue;
         }
@@ -2432,25 +2671,32 @@ void PlanetHud::DrawMap(bool full)
                 project(world::SurfaceGeometry::FromLocal(r.frame, vertex, session->Planet().radiusMeters))));
         }
         MapPolygon(view, std::move(polygon),
-                   r.definition.kind == world::RegionKind::Settlement ? ColorRGBA(.19f, .31f, .32f)
-                                                                      : ColorRGBA(.22f, .29f, .23f));
+                   !w.relayNetwork.RegionVisited(r.definition.id)       ? ColorRGBA(.13f, .2f, .21f)
+                   : r.definition.kind == world::RegionKind::Settlement ? ColorRGBA(.19f, .31f, .32f)
+                                                                        : ColorRGBA(.22f, .29f, .23f));
     }
     for (const auto &edge : snapshot->planet->connections)
     {
-        if (edge.mode != world::RouteMode::Road)
+        if (edge.mode != world::RouteMode::Road && (!full || range < 10000))
         {
             continue;
         }
-        for (std::size_t i = 1; i < edge.points.size(); ++i)
+        const size_t stride = range > 200000  ? (std::max)(size_t(1), (edge.points.size() + 5) / 6)
+                              : range > 10000 ? (std::max)(size_t(1), (edge.points.size() + 23) / 24)
+                                              : 1;
+        for (std::size_t i = stride; i < edge.points.size() + stride - 1; i += stride)
         {
-            auto a = edge.points[i - 1], b = edge.points[i];
+            auto a = edge.points[i - stride], b = edge.points[(std::min)(i, edge.points.size() - 1)];
             double length = world::SurfaceGeometry::Distance(session->Planet().radiusMeters, a, b);
             double distance = world::SurfaceGeometry::Distance(session->Planet().radiusMeters, a, focus);
             if (distance > range * 1.5 + length)
             {
                 continue;
             }
-            MapLine(view, project(a), project(b), {.56f, .69f, .65f}, full ? 2 : 3);
+            line(a, b,
+                 edge.mode == world::RouteMode::Road ? ColorRGBA(.56f, .69f, .65f)
+                                                     : ColorRGBA(.3f, .47f, .59f, .5f),
+                 full ? 1.5f : 3);
         }
     }
     std::set<std::string> drawnStructures;
@@ -2485,28 +2731,34 @@ void PlanetHud::DrawMap(bool full)
                    item.use == world::ContentUse::Housing ? ColorRGBA(.44f, .56f, .57f)
                                                           : ColorRGBA(.55f, .66f, .47f));
     };
-    for (const auto &chunk : snapshot->chunks)
+    if (range < 10000)
     {
-        for (const auto &road : chunk->roads)
+        for (const auto &chunk : snapshot->chunks)
         {
-            if (road.sidewalkMeters <= 0)
+            for (const auto &road : chunk->roads)
             {
-                continue;
+                if (road.sidewalkMeters <= 0)
+                {
+                    continue;
+                }
+                for (std::size_t i = 1; i < road.points.size(); ++i)
+                {
+                    MapLine(view, project(road.points[i - 1]), project(road.points[i]), {.39f, .47f, .46f},
+                            full ? 1 : float(road.widthMeters) * view.scale);
+                }
             }
-            for (std::size_t i = 1; i < road.points.size(); ++i)
+            for (const auto &item : chunk->structures)
             {
-                MapLine(view, project(road.points[i - 1]), project(road.points[i]), {.39f, .47f, .46f},
-                        full ? 1 : float(road.widthMeters) * view.scale);
+                structure(item);
             }
-        }
-        for (const auto &item : chunk->structures)
-        {
-            structure(item);
         }
     }
-    for (auto item : session->NearbyStructures())
+    if (range < 10000)
     {
-        structure(*item);
+        for (auto item : session->NearbyStructures())
+        {
+            structure(*item);
+        }
     }
     for (const auto &region : snapshot->planet->regions)
     {
@@ -2518,10 +2770,29 @@ void PlanetHud::DrawMap(bool full)
         MapPin(view, project(region.access.position),
                region.center.space == world::SpaceKind::Subsurface ? ColorRGBA(.65f, .81f, 1)
                                                                    : ColorRGBA(.73f, .88f, .77f),
-               region.definition.name.c_str(), full, full ? 4 : 3);
+               w.relayNetwork.RegionVisited(region.definition.id) ? region.definition.name.c_str()
+                                                                  : "미확인 지역",
+               full, full ? 4 : 3);
+    }
+    for (const auto &relay : snapshot->planet->relays)
+    {
+        if (!w.relayNetwork.Discovered(relay.id) ||
+            (w.mapRegisteredRelaysOnly && !w.relayNetwork.Registered(relay.id)))
+        {
+            continue;
+        }
+        if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, relay.location.position, focus) >
+            range)
+        {
+            continue;
+        }
+        MapPin(view, project(relay.location.position),
+               w.relayNetwork.Registered(relay.id) ? ColorRGBA(.35f, 1, .9f) : ColorRGBA(.65f, .69f, .75f),
+               full ? (w.relayNetwork.Registered(relay.id) ? "등록 중계환" : "발견 · E 등록 필요") : nullptr,
+               full, w.selectedRelay == relay.id ? 7 : 4);
     }
     auto &chapter = game::GameLevels::Chapter();
-    if (chapter.IsActive())
+    if (chapter.IsActive() && range < 4000 && w.missions.Active(MissionId::Frontier))
     {
         for (const auto &point : chapter.Interactions())
         {
@@ -2564,7 +2835,7 @@ void PlanetHud::DrawMap(bool full)
                           world::SurfaceGeometry::Distance(session->Planet().radiusMeters,
                                                            *w.planetDestination, session->Pose().origin) /
                               1000);
-            UiText(820, 550, destination, 16);
+            UiText(96, 208, destination, 15);
         }
     }
     auto player = view.Project({float(local.x), float(local.y)});
@@ -2572,6 +2843,30 @@ void PlanetHud::DrawMap(bool full)
     {
         DirectionArrow(player, (w.isBikeMounted ? w.bikeYaw : w.facingYaw) + kPi * .25f, full ? 12 : 8,
                        {.3f, .95f, .88f});
+    }
+    if (full)
+    {
+        auto controls = RelayControls();
+        for (size_t i = 0; i < controls.size(); ++i)
+        {
+            Button(controls[i], int(i));
+        }
+        const char *reason = RelayTravel::Restriction(w.selectedRelay);
+        auto lines = Dialogue::Wrap(w.relayPreparing         ? "목적지 지형 준비 중 · X 취소"
+                                    : !w.relayStatus.empty() ? w.relayStatus
+                                    : reason                 ? reason
+                                                             : "등록 목적지 준비 완료",
+                                    330, 15);
+        for (size_t i = 0; i < (std::min)(size_t(2), lines.size()); ++i)
+        {
+            UiText(820, (w.relayPreparing ? 608.f : 586.f) + float(i) * 22, lines[i], 15, {.76f, .87f, .82f});
+        }
+        const float meters = range * .5f;
+        Drawing::DrawLine({284, 704}, {406, 704}, {.7f, .88f, .87f}, 2);
+        char distance[64];
+        std::snprintf(distance, sizeof(distance), meters >= 1000 ? "%.1f km" : "%.0f m",
+                      meters >= 1000 ? meters / 1000 : meters);
+        UiText(416, 709, distance, 14);
     }
 }
 

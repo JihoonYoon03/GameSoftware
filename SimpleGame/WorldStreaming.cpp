@@ -6,6 +6,7 @@
 #include <condition_variable>
 #include <deque>
 #include <map>
+#include <limits>
 #include <mutex>
 #include <set>
 #include <stdexcept>
@@ -433,9 +434,81 @@ std::shared_ptr<const SurfaceSnapshot> TerrainStream::Snapshot() const
 {
     return std::atomic_load(&data->published);
 }
-void TerrainStream::Update(const TangentFrame &focus, Vector3d velocity)
+bool TerrainStream::Detailed(const SurfacePoint &point, double radius) const
+{
+    auto snapshot = Snapshot();
+    if (!snapshot->planet || !std::isfinite(radius) || radius < 0 || radius > 256)
+    {
+        return false;
+    }
+    const auto &p = snapshot->planet->terrain.Planet();
+    std::deque<ChunkKey> pending{CubeSphere::Address(p, point, settings.Level(p))};
+    std::set<ChunkKey> visited;
+    while (!pending.empty())
+    {
+        auto key = pending.front();
+        pending.pop_front();
+        if (!visited.insert(key).second)
+        {
+            continue;
+        }
+        if (visited.size() > 1024)
+        {
+            return false;
+        }
+        const auto center = CubeSphere::Center(key);
+        double bound = 0;
+        for (unsigned i = 0; i < 4; ++i)
+        {
+            bound = (std::max)(bound, Distance(p, center, CubeSphere::Corner(key, i % 2, i / 2)));
+        }
+        if (Distance(p, point, center) > radius + bound)
+        {
+            continue;
+        }
+        if (std::none_of(snapshot->chunks.begin(), snapshot->chunks.end(),
+                         [&](const auto &chunk) { return chunk->key == key; }))
+        {
+            return false;
+        }
+        for (unsigned i = 0; i < 4; ++i)
+        {
+            pending.push_back(CubeSphere::Neighbor(key, ChunkEdge(i)));
+        }
+    }
+    return true;
+}
+bool TerrainStream::FailedAt(const SurfacePoint &point, double radius) const
+{
+    const auto snapshot = Snapshot();
+    if (!snapshot->planet || !std::isfinite(radius) || radius < 0 || radius > 256)
+    {
+        return false;
+    }
+    const auto &p = snapshot->planet->terrain.Planet();
+    const auto frame = G::Frame(point);
+    std::lock_guard<std::mutex> lock(data->mutex);
+    for (unsigned i = 0; i < 9; ++i)
+    {
+        auto sample = i == 0 ? point
+                             : G::Advance(frame, radius * std::cos((i - 1) * G::Pi / 4),
+                                          radius * std::sin((i - 1) * G::Pi / 4), p.radiusMeters)
+                                   .origin;
+        if (data->failed.count(CubeSphere::Address(p, sample, settings.Level(p))))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+void TerrainStream::Update(const TangentFrame &focus, Vector3d velocity,
+                           std::optional<SurfacePoint> destination)
 {
     G::Validate(focus);
+    if (destination)
+    {
+        G::Validate(*destination);
+    }
     Require(std::isfinite(Length(velocity)), "Invalid streaming velocity");
     auto &d = *data;
     // Only this main-thread method mutates retained chunks and publishes snapshots.
@@ -513,6 +586,10 @@ void TerrainStream::Update(const TangentFrame &focus, Vector3d velocity)
         };
         enqueue(CubeSphere::Address(p, focus.origin, level));
         enqueue(CubeSphere::Address(p, lead, level));
+        if (destination)
+        {
+            enqueue(CubeSphere::Address(p, *destination, level));
+        }
         while (!search.empty() && visited.size() <= 1024)
         {
             auto key = search.front();
@@ -524,11 +601,13 @@ void TerrainStream::Update(const TangentFrame &focus, Vector3d velocity)
                 bound = (std::max)(bound, Distance(p, center, CubeSphere::Corner(key, i % 2, i / 2)));
             }
             double here = Distance(p, focus.origin, center), there = Distance(p, lead, center);
-            if ((std::min)(here, there) > settings.loadRadiusMeters + bound)
+            double remote =
+                destination ? Distance(p, *destination, center) : std::numeric_limits<double>::infinity();
+            if ((std::min)({here, there, remote}) > settings.loadRadiusMeters + bound)
             {
                 continue;
             }
-            candidates.push_back({key, (std::min)(here, there + settings.loadRadiusMeters * .35)});
+            candidates.push_back({key, (std::min)({here, there + settings.loadRadiusMeters * .35, remote})});
             for (unsigned edge = 0; edge < 4; ++edge)
             {
                 enqueue(CubeSphere::Neighbor(key, ChunkEdge(edge)));
@@ -605,7 +684,9 @@ void TerrainStream::Update(const TangentFrame &focus, Vector3d velocity)
         for (auto it = d.resident.begin(); it != d.resident.end();)
         {
             auto center = it->second->frame.origin;
-            if ((std::min)(Distance(p, focus.origin, center), Distance(p, lead, center)) >
+            if ((std::min)({Distance(p, focus.origin, center), Distance(p, lead, center),
+                            destination ? Distance(p, *destination, center)
+                                        : std::numeric_limits<double>::infinity()}) >
                 settings.retainRadiusMeters + it->second->radiusMeters)
             {
                 bytes -= it->second->Bytes();
@@ -624,7 +705,9 @@ void TerrainStream::Update(const TangentFrame &focus, Vector3d velocity)
             double farthest = -1;
             for (auto it = d.resident.begin(); it != d.resident.end(); ++it)
             {
-                double distance = Distance(p, focus.origin, it->second->frame.origin);
+                double distance = (std::min)(Distance(p, focus.origin, it->second->frame.origin),
+                                             destination ? Distance(p, *destination, it->second->frame.origin)
+                                                         : std::numeric_limits<double>::infinity());
                 if (distance > farthest)
                 {
                     farthest = distance;
@@ -700,9 +783,9 @@ bool SurfaceSession::Ready() const
     auto snapshot = stream.Snapshot();
     return snapshot->planet && snapshot->planet->terrain.Planet().SameWorld(planet);
 }
-void SurfaceSession::Update(Vector3d velocity)
+void SurfaceSession::Update(Vector3d velocity, std::optional<SurfacePoint> destination)
 {
-    stream.Update(pose, velocity);
+    stream.Update(pose, velocity, destination);
     if (Ready())
     {
         pose.origin.altitudeMeters =
@@ -790,6 +873,16 @@ bool SurfaceSession::Relocate(const SurfacePoint &point, double clearance, doubl
         }
     }
     return false;
+}
+bool SurfaceSession::LandingClear(const SurfacePoint &point, double clearance) const
+{
+    if (!Ready() || !std::isfinite(clearance) || clearance < 0 || clearance > 4)
+    {
+        return false;
+    }
+    const auto contact = stream.Contact(point);
+    return contact.land && contact.slope <= .3 &&
+           !contentCollision.Blocked(*stream.Snapshot()->planet, point, clearance);
 }
 std::optional<TangentFrame> SurfaceSession::Rebase()
 {

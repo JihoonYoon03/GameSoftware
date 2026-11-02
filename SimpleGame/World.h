@@ -129,6 +129,17 @@ class SurfaceGeometry
     static Vector3d ToLocal(const TangentFrame &frame, const SurfacePoint &point, double radiusMeters);
 };
 // ============================================================================
+// SurfaceAtlas — azimuthal-equidistant schematic projection; only the exact antipode lacks a bearing
+// ============================================================================
+class SurfaceAtlas
+{
+  public:
+    static Vector3d Project(const TangentFrame &frame, const SurfacePoint &point, double radiusMeters);
+    static std::optional<SurfacePoint> Unproject(const TangentFrame &frame, Vector3d localMeters,
+                                                 double radiusMeters);
+    static double MaximumRange(double radiusMeters);
+};
+// ============================================================================
 // CubeSphere — canonical ownership and same-level adjacency across all six faces
 // ============================================================================
 enum class CubeFace : std::uint8_t

@@ -67,6 +67,8 @@ class MapHud
     static void Pan(Vector2 canvasDelta);
     static void ResetView(bool centerOnPlayer = false);
     static bool HandleMapKey(unsigned char key);
+    static Vector2 PlanetToMap(const world::SurfacePoint &point, bool fullMap = true);
+    static std::optional<world::SurfacePoint> PlanetAt(Vector2 canvasPoint);
 };
 
 // ============================================================================

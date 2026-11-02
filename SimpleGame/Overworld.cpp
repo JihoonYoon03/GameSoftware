@@ -2536,14 +2536,38 @@ bool PlanetCities::Occupied(const GameState &state, const world::SurfaceSession 
     int city = cityOverride >= 0                             ? cityOverride
                : state.isInsideHome || state.isInObservatory ? 0
                                                              : activeCity;
+    return OccupiedAt(state, session, session.PointAt(local.x * 2, local.y * 2), city);
+}
+bool PlanetCities::OccupiedAt(const GameState &state, const world::SurfaceSession &session,
+                              const world::SurfacePoint &point, int cityOverride) const
+{
+    int city = cityOverride;
+    if (city < 0 && session.Ready())
+    {
+        for (int i = 0; i < Overworld::kCityCount; ++i)
+        {
+            if (world::SurfaceGeometry::Distance(session.Planet().radiusMeters, point,
+                                                 session.Stream()
+                                                     .Snapshot()
+                                                     ->planet->Region(Overworld::Cities()[size_t(i)].id)
+                                                     .center.position) < 300)
+            {
+                city = i;
+                break;
+            }
+        }
+    }
     if (city < 0 || city >= Overworld::kCityCount || !session.Ready())
     {
         return false;
     }
     auto plan = session.Stream().Snapshot()->planet;
     const auto &region = plan->Region(Overworld::Cities()[size_t(city)].id);
-    auto relative = world::SurfaceGeometry::ToLocal(region.frame, session.PointAt(local.x * 2, local.y * 2),
-                                                    session.Planet().radiusMeters);
+    if (world::SurfaceGeometry::Distance(session.Planet().radiusMeters, point, region.center.position) > 300)
+    {
+        return false;
+    }
+    auto relative = world::SurfaceGeometry::ToLocal(region.frame, point, session.Planet().radiusMeters);
     auto center = Overworld::Cities()[size_t(city)].center;
     Vector2 query{center.x + float(relative.x / 2), center.y + float(relative.y / 2)};
     for (size_t i = 0; i < state.residents.size(); ++i)

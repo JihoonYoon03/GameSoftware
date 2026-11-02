@@ -2485,6 +2485,33 @@ void PlanetScene::Draw()
         DrawSurfaceFrontier(*session);
     }
     DrawSurfaceCities(*session);
+    for (const auto &relay : snapshot->planet->relays)
+    {
+        if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, session->Pose().origin,
+                                             relay.location.position) > 100)
+        {
+            continue;
+        }
+        auto local = session->Local(relay.location.position);
+        Vector2 position{float(local.x / 2), float(local.y / 2)};
+        bool registered = w.relayNetwork.Registered(relay.id);
+        renderqueue::PushMatrix();
+        renderqueue::Translate(0, -float(local.z / 2) * 44, float(local.z / 2) * (1296.f / 44));
+        // Shared console and a billboard ring are a test representation, not a new stretched building.
+        Drawing::DrawProp(models::ModelLibrary::Get().console, {position.x + 1.5f, position.y},
+                          {.6f, .6f, .6f});
+        auto center = Drawing::WorldToScreen(position.x, position.y, 10);
+        auto color = registered ? ColorRGBA(.25f, 1, .85f, .75f) : ColorRGBA(.5f, .7f, .85f, .7f);
+        Drawing::DrawGlow(center, 24, color);
+        Drawing::DrawEllipse(center.x, center.y, 20, 10, color);
+        if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, session->Pose().origin,
+                                             relay.location.position) < 6)
+        {
+            Drawing::DrawLabel(center.x - 48, center.y - 34,
+                               registered ? "국지 중계환 · E" : "중계환 등록 · E", color);
+        }
+        renderqueue::PopMatrix();
+    }
     const auto &mineEntrance = snapshot->planet->Region("mq00_mine").access.position;
     if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, session->Pose().origin,
                                          mineEntrance) < 100)

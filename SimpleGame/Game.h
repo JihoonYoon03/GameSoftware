@@ -200,7 +200,8 @@ enum class InteractionTarget
     CityReceiver,
     Kain,
     MineEntrance,
-    FrontierSite
+    FrontierSite,
+    Relay
 };
 
 constexpr float kPi = 3.14159265f;
@@ -381,6 +382,11 @@ class WeaponWheel
 // State owned by Game. Renderers read it without changing gameplay.
 struct GameState
 {
+    world::RelayNetwork relayNetwork;
+    std::string selectedRelay, relaySource, relayTarget, relayStatus;
+    float relayElapsed = 0;
+    bool relayPreparing = false, mapRegisteredRelaysOnly = false, planetMapSurface = false;
+    int relayPage = 0;
     bool surfaceExploration = false;
     float surfaceCameraHeight = 0;
     int viewportWidth = kCanvasWidth;
@@ -552,6 +558,7 @@ class Game
     std::unique_ptr<world::SurfaceSession> surface;
     std::unique_ptr<PlanetCities> surfaceCities;
     std::optional<world::SurfacePoint> surfaceBike;
+    std::optional<world::Vector3d> surfaceBikeHeading;
     std::optional<world::SurfacePoint> surfaceMineReturn;
     std::optional<std::size_t> surfaceSurveyRegion;
     FrameSchedule frameSchedule;
@@ -562,8 +569,24 @@ class Game
     void UpdateCamera(float deltaSeconds);
     void UpdateSurface(float deltaSeconds);
     void ToggleSurfaceBike();
+    void StoreSurfaceBikeHeading();
+    void RestoreSurfaceBikeHeading();
     bool ReturnToSurface(Vector2 legacyDoor, int city = 0);
     bool LandOnSurface(const world::SurfacePoint &point, int city = -1);
+    friend class RelayTravel;
+};
+// ============================================================================
+// RelayTravel — registration, travel policy and cancellable, preloaded landing transaction
+// ============================================================================
+class RelayTravel
+{
+  public:
+    static const world::RelayCandidate *Nearby();
+    static const char *Restriction(std::string_view destination);
+    static bool Begin(const std::string &destination);
+    static void Cancel(const std::string &reason = "중계 이동을 취소했습니다.");
+    static void Interact();
+    static void Update(float deltaSeconds);
 };
 // ============================================================================
 // GameCallbacks - GLUT adapters

@@ -295,6 +295,15 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         streaming.Bool("frontier_active", chapter.active);
         streaming.Number("planet_radius_meters", surface.Planet().radiusMeters);
         streaming.Number("map_radius_meters", world.planetMapRange);
+        streaming.Number("discovered_regions", world.relayNetwork.VisitedRegions().size());
+        streaming.Number("discovered_relays", world.relayNetwork.Discoveries().size());
+        streaming.Number("registered_relays", world.relayNetwork.Registrations().size());
+        streaming.Bool("relay_preparing", world.relayPreparing);
+        streaming.Text("relay_source", world.relaySource);
+        streaming.Text("relay_target", world.relayTarget);
+        streaming.Number("relay_preparation_seconds", world.relayElapsed);
+        streaming.Bool("map_surface_layer", !tutorial::Game::Get().IsSurfaceMine() || world.planetMapSurface);
+        streaming.Bool("map_registered_relays_only", world.mapRegisteredRelaysOnly);
         streaming.Number("authored_cores", snapshot->planet && snapshot->planet->cityCores
                                                ? snapshot->planet->cityCores->cities.size()
                                                : 0);

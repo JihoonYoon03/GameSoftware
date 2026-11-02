@@ -438,6 +438,100 @@ void TestOpenWorldParticipation()
     assert(g.Surface()->Stream().Snapshot()->statistics.epoch == epoch);
     g.Reset();
 }
+void TestRelayTravelAndAtlas()
+{
+    using namespace tutorial;
+    using G = world::SurfaceGeometry;
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    assert(g.EnterTestStage(TestStage::SurfaceSurvey));
+    auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(20);
+    while (!g.Surface()->Ready() && std::chrono::steady_clock::now() < deadline)
+    {
+        g.Update(0);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    assert(g.Surface()->Ready());
+    const auto plan = g.Surface()->Stream().Snapshot()->planet;
+    const auto *source = world::RelayNetwork::Find(*plan, "relay_halo_07_0");
+    const auto *target = world::RelayNetwork::Find(*plan, "relay_frontier_0");
+    assert(source && target);
+    const auto epoch = g.Surface()->Stream().Snapshot()->statistics.epoch;
+    const auto stage = mineState.quest.GetStage();
+    const auto salvage = mineState.player.salvage;
+    auto visit = [&](const world::RelayCandidate &relay) {
+        w.mapVisible = false;
+        assert(g.RelocateSurfaceSurvey(relay.location.position));
+        RelayTravel::Interact();
+        assert(w.relayNetwork.Registered(relay.id) && w.mapVisible);
+    };
+    visit(*target);
+    visit(*source);
+    const auto start = g.Surface()->Pose().origin, bike = *g.SurfaceBike();
+    w.selectedRelay = target->id;
+    assert(MapHud::HandleMapKey('p') && w.planetMapRange > g.Surface()->Planet().radiusMeters * 3);
+    for (const auto &region : plan->regions)
+    {
+        auto canvas = MapHud::PlanetToMap(region.access.position);
+        if (MapHud::Contains(canvas, true))
+        {
+            auto restored = MapHud::PlanetAt(canvas);
+            assert(restored &&
+                   G::Distance(g.Surface()->Planet().radiusMeters, *restored, region.access.position) < 3);
+        }
+    }
+    MapHud::ResetView();
+    CivicJustice::State().wanted = 1;
+    assert(!RelayTravel::Begin(target->id));
+    CivicJustice::State().wanted = 0;
+    w.isBikeMounted = true;
+    assert(!RelayTravel::Begin(target->id));
+    w.isBikeMounted = false;
+    assert(!RelayTravel::Begin("unknown_relay"));
+    assert(RelayTravel::Begin(target->id) && !RelayTravel::Begin(target->id));
+    g.Update(.05f);
+    assert(G::Distance(g.Surface()->Planet().radiusMeters, start, g.Surface()->Pose().origin) < 1.e-6);
+    g.KeyDown(27, 0, 0);
+    g.KeyUp(27, 0, 0);
+    assert(!w.relayPreparing &&
+           G::Distance(g.Surface()->Planet().radiusMeters, start, g.Surface()->Pose().origin) < 1.e-6);
+    assert(RelayTravel::Begin(target->id));
+    for (int i = 0; i < 8 && w.relayPreparing; ++i)
+    {
+        g.Update(.05f);
+    }
+    deadline = std::chrono::steady_clock::now() + std::chrono::seconds(20);
+    while (w.relayPreparing && std::chrono::steady_clock::now() < deadline)
+    {
+        g.Update(0);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    assert(!w.relayPreparing && !w.mapVisible &&
+           G::Distance(g.Surface()->Planet().radiusMeters, target->location.position,
+                       g.Surface()->Pose().origin) <= 8.01);
+    assert(G::Distance(g.Surface()->Planet().radiusMeters, bike, *g.SurfaceBike()) < 1.e-6);
+    assert(g.Surface()->Stream().Snapshot()->statistics.epoch == epoch &&
+           mineState.quest.GetStage() == stage && mineState.player.salvage == salvage);
+    w.mapVisible = false;
+    assert(g.RelocateSurfaceSurvey(plan->Region("mq00_mine").access.position));
+    assert(g.EnterSurfaceMine());
+    const auto fog = mineState.explored;
+    w.mapVisible = true;
+    w.planetMapSurface = false;
+    assert(MapHud::HandleMapKey(9) && w.planetMapSurface && MapHud::PlanetAt({488, 400}));
+    assert(!RelayTravel::Begin(source->id));
+    assert(MapHud::HandleMapKey(9) && !w.planetMapSurface && mineState.explored == fog);
+    w.mapVisible = false;
+    assert(g.LeaveSurfaceMine());
+    visit(*source);
+    w.selectedRelay = target->id;
+    assert(RelayTravel::Begin(target->id));
+    mineState.player.health = 0;
+    g.Update(.05f);
+    assert(!w.relayPreparing && w.relayNetwork.Registered(source->id) &&
+           w.relayNetwork.Registered(target->id));
+    g.Reset();
+}
 void TestMapZoomAndSelection()
 {
     using namespace tutorial;
@@ -2588,6 +2682,7 @@ int main(int argc, char **argv)
     TestStageSelectionAndLoadout();
     TestPlanetCityMigration();
     TestOpenWorldParticipation();
+    TestRelayTravelAndAtlas();
     TestMapZoomAndSelection();
     TestUiMenusAndTransactions();
     TestDialogueProgress();

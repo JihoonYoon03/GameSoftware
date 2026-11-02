@@ -293,6 +293,8 @@ class PlanetCities
                              float *nearestDistance = nullptr) const;
     bool Occupied(const GameState &state, const world::SurfaceSession &session, Vector2 local,
                   int cityOverride = -1) const;
+    bool OccupiedAt(const GameState &state, const world::SurfaceSession &session,
+                    const world::SurfacePoint &point, int cityOverride = -1) const;
 
   private:
     int activeCity = -1;

@@ -864,7 +864,11 @@ ContentCell ContentLayout::Generate(const GeneratedPlanet &p, ContentCellKey key
             continue;
         }
         auto point = At(p, r, local);
-        if (Reserved(p, point, extent + 2) || !IntercityClear(p, r, local, extent) ||
+        const double relayCap = std::cos((extent + 8) / p.terrain.Planet().radiusMeters);
+        const bool relayReserved = std::any_of(p.relays.begin(), p.relays.end(), [&](const auto &relay) {
+            return G::Dot(point.normal, relay.location.position.normal) > relayCap;
+        });
+        if (relayReserved || Reserved(p, point, extent + 2) || !IntercityClear(p, r, local, extent) ||
             (p.cityCores && p.cityCores->Reserved(p, r, local, extent + 3)))
         {
             continue;

@@ -277,6 +277,31 @@ SurfacePoint SurfaceGeometry::FromDegrees(double latitude, double longitude, dou
     double lat = latitude * Pi / 180, lon = std::remainder(longitude, 360.) * Pi / 180;
     return {Unit({std::cos(lat) * std::cos(lon), std::cos(lat) * std::sin(lon), std::sin(lat)}), altitude};
 }
+double SurfaceAtlas::MaximumRange(double radius)
+{
+    Require(std::isfinite(radius) && radius > 0, "Invalid atlas radius");
+    return radius * SurfaceGeometry::Pi * (1 - 1.e-7);
+}
+Vector3d SurfaceAtlas::Project(const TangentFrame &frame, const SurfacePoint &point, double radius)
+{
+    SurfaceGeometry::Validate(frame);
+    SurfaceGeometry::Validate(point);
+    // A deterministic rim marker for the antipode, never a navigational bearing.
+    if (SurfaceGeometry::Dot(frame.origin.normal, point.normal) < -1 + 1.e-12)
+    {
+        return {MaximumRange(radius), 0, point.altitudeMeters - frame.origin.altitudeMeters};
+    }
+    return SurfaceGeometry::ToLocal(frame, point, radius);
+}
+std::optional<SurfacePoint> SurfaceAtlas::Unproject(const TangentFrame &frame, Vector3d point, double radius)
+{
+    if (!std::isfinite(point.x) || !std::isfinite(point.y) ||
+        std::hypot(point.x, point.y) > MaximumRange(radius))
+    {
+        return std::nullopt;
+    }
+    return SurfaceGeometry::FromLocal(frame, point, radius);
+}
 std::array<double, 2> SurfaceGeometry::ToDegrees(const SurfacePoint &p)
 {
     Validate(p);

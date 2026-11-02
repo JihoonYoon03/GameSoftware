@@ -2,6 +2,7 @@
 #include "World.h"
 #include <atomic>
 #include <memory>
+#include <set>
 
 namespace world
 {
@@ -136,6 +137,43 @@ class GeneratedPlanet
     bool Connected(bool roadsOnly = false) const;
     std::uint64_t Digest() const;
     void Validate() const;
+};
+// ============================================================================
+// RelayNetwork — per-world discoveries/registrations, independent of mission participation
+// ============================================================================
+class RelayNetwork
+{
+  public:
+    static constexpr double DiscoverMeters = 100, UseMeters = 5;
+    void Bind(const PlanetDefinition &planet);
+    const std::string &WorldKey() const
+    {
+        return worldKey;
+    }
+    void Observe(const GeneratedPlanet &planet, const WorldLocation &location);
+    bool Register(const GeneratedPlanet &planet, std::string_view id, const WorldLocation &location);
+    bool Discovered(std::string_view id) const;
+    bool Registered(std::string_view id) const;
+    bool RegionVisited(std::string_view id) const;
+    const std::set<std::string> &Discoveries() const
+    {
+        return discovered;
+    }
+    const std::set<std::string> &Registrations() const
+    {
+        return registered;
+    }
+    const std::set<std::string> &VisitedRegions() const
+    {
+        return visited;
+    }
+    static const RelayCandidate *Find(const GeneratedPlanet &planet, std::string_view id);
+    static const RelayCandidate *Nearest(const GeneratedPlanet &planet, const SurfacePoint &position,
+                                         double rangeMeters = UseMeters);
+
+  private:
+    std::string worldKey;
+    std::set<std::string> discovered, registered, visited;
 };
 // ============================================================================
 // PlanetGenerator — fixed reservations first, then seeded sites, relays and routes

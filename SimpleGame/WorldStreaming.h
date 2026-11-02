@@ -81,7 +81,10 @@ class TerrainStream
     void Open(std::shared_ptr<const GeneratedPlanet> planet);
     void Close();
     // Main thread only. A published snapshot may be read on other threads while retained.
-    void Update(const TangentFrame &focus, Vector3d velocityMeters = {});
+    void Update(const TangentFrame &focus, Vector3d velocityMeters = {},
+                std::optional<SurfacePoint> destination = std::nullopt);
+    bool Detailed(const SurfacePoint &point, double radiusMeters = 0) const;
+    bool FailedAt(const SurfacePoint &point, double radiusMeters = 0) const;
     std::shared_ptr<const SurfaceSnapshot> Snapshot() const;
     GroundContact Contact(const SurfacePoint &point) const;
     const StreamSettings &Settings() const
@@ -106,7 +109,7 @@ class SurfaceSession
     void Start(PlanetGenerator generator);
     void Start(std::shared_ptr<const GeneratedPlanet> planet);
     void Stop();
-    void Update(Vector3d velocityMeters = {});
+    void Update(Vector3d velocityMeters = {}, std::optional<SurfacePoint> destination = std::nullopt);
     bool Ready() const;
     const TangentFrame &Pose() const
     {
@@ -132,6 +135,8 @@ class SurfaceSession
     void Move(double rightMeters, double forwardMeters, bool hovering = false);
     // Developer survey relocation. Same world/stream, safe land placement; no quest or travel unlock.
     bool Relocate(const SurfacePoint &point, double clearanceMeters = .65, double searchRadiusMeters = 32);
+    // Remote landing checks do not project through the player's tangent plane or change the live pose.
+    bool LandingClear(const SurfacePoint &point, double clearanceMeters = .65) const;
     std::optional<TangentFrame> Rebase();
     WorldLocation Location() const;
     std::size_t CollisionCells() const

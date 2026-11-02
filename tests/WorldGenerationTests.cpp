@@ -297,6 +297,49 @@ void Reproducibility(const GeneratedPlanet &baseline)
         },
         "Reject anchors without fixed reservations");
 }
+void RelayContracts(const GeneratedPlanet &plan)
+{
+    RelayNetwork progress;
+    const auto &relay = plan.relays.front();
+    auto location = relay.location;
+    auto wrong = location;
+    wrong.planetSeed++;
+    progress.Observe(plan, wrong);
+    Check(progress.Discoveries().empty() && !progress.Register(plan, relay.id, wrong),
+          "Discoveries reject another world identity");
+    auto underground = location;
+    underground.space = SpaceKind::Subsurface;
+    underground.layer = -1;
+    progress.Observe(plan, underground);
+    Check(progress.Discoveries().empty(), "A subsurface map cannot register a surface relay");
+    progress.Observe(plan, location);
+    Check(progress.Discovered(relay.id) && !progress.Registered(relay.id),
+          "Physical discovery and explicit registration are separate");
+    Check(progress.Register(plan, relay.id, location) && !progress.Register(plan, relay.id, location),
+          "Relay registration is idempotent");
+    for (const auto &candidate : plan.relays)
+    {
+        Check(candidate.location.space == SpaceKind::Surface && candidate.location.layer == 0 &&
+                  plan.terrain.Sample(candidate.location.position).land,
+              "Every relay has a real surface landing, including mine entrances");
+        if (Distance(plan, location.position, candidate.location.position) > RelayNetwork::UseMeters)
+        {
+            Check(!progress.Register(plan, candidate.id, location),
+                  "Registration cannot be performed remotely");
+        }
+    }
+}
+void RelayWorldScope(const GeneratedPlanet &plan)
+{
+    RelayNetwork network;
+    const auto &relay = plan.relays.front();
+    Check(network.Register(plan, relay.id, relay.location), "Register a physical relay in its world");
+    auto another = plan.terrain.Planet();
+    another.seed++;
+    network.Bind(another);
+    Check(network.Registrations().empty() && network.Discoveries().empty(),
+          "A new world cannot reuse another seed's registrations");
+}
 void Queries(const GeneratedPlanet &plan)
 {
     auto anchorPoint = plan.Region("halo_07").access.position;
@@ -566,6 +609,8 @@ int main(int argc, char **argv)
         }
         Layout(plan, 64);
         Routes(plan);
+        RelayContracts(plan);
+        RelayWorldScope(plan);
         Queries(plan);
         Reproducibility(plan);
         DefensiveContracts(plan);

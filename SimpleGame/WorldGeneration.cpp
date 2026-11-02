@@ -518,11 +518,85 @@ std::string ProceduralName(unsigned index, Random &rng, RegionKind kind)
                                                           : "";
     return std::string(prefix[word % 16]) + middle[(word / 16) % 16] + suffix[word / 256] + type;
 }
-void AddRelays(GeneratedPlanet &result, const GenerationSettings &settings)
+void AddRelays(GeneratedPlanet &result, const GenerationSettings &settings, const std::atomic_bool *cancel)
 {
     const auto &planet = result.terrain.Planet();
+    auto pads = result.terrain.Reservations();
+    auto place = [&](const GeneratedRegion &region, SurfacePoint target) {
+        auto frame = G::Frame(target);
+        for (unsigned ring = 0; ring <= 16; ++ring)
+        {
+            for (unsigned step = 0; step < (ring ? 16u : 1u); ++step)
+            {
+                double distance = (std::min)(96., settings.relayCoverageMeters * .045) * ring / 16;
+                auto point = G::Advance(frame, distance * std::cos(step * G::Pi / 8),
+                                        distance * std::sin(step * G::Pi / 8), planet.radiusMeters)
+                                 .origin;
+                double height = result.terrain.Height(point);
+                if (height < PlanetTerrain::SeaLevelMeters + 4)
+                {
+                    continue;
+                }
+                if (result.terrain.Sample(point).slope > .25)
+                {
+                    continue;
+                }
+                bool clear = true;
+                for (const auto &anchor : result.anchors)
+                {
+                    if (anchor.location.space == SpaceKind::Surface &&
+                        Distance(planet, point, anchor.location.position) < 22)
+                    {
+                        clear = false;
+                    }
+                }
+                if (auto core = result.cityCores ? result.cityCores->Find(region.definition.id) : nullptr)
+                {
+                    auto local = G::ToLocal(region.frame, point, planet.radiusMeters);
+                    for (const auto &lot : core->lots)
+                    {
+                        if (!lot.solid)
+                        {
+                            continue;
+                        }
+                        double dx = local.x - lot.positionMeters.x, dy = local.y - lot.positionMeters.y;
+                        if (std::fabs(dx * std::cos(lot.yaw) + dy * std::sin(lot.yaw)) <
+                                lot.sizeMeters.x * .5 + 4 &&
+                            std::fabs(-dx * std::sin(lot.yaw) + dy * std::cos(lot.yaw)) <
+                                lot.sizeMeters.y * .5 + 4)
+                        {
+                            clear = false;
+                        }
+                    }
+                    for (const auto &road : core->roads)
+                    {
+                        auto d = Add(road.end, Mul(road.start, -1));
+                        double t =
+                            std::clamp(((local.x - road.start.x) * d.x + (local.y - road.start.y) * d.y) /
+                                           (d.x * d.x + d.y * d.y),
+                                       0., 1.);
+                        if (std::hypot(local.x - road.start.x - d.x * t, local.y - road.start.y - d.y * t) <
+                            road.lanes * 1.5 + 3)
+                        {
+                            clear = false;
+                        }
+                    }
+                }
+                if (clear)
+                {
+                    point.altitudeMeters = height;
+                    return point;
+                }
+            }
+        }
+        throw std::invalid_argument("No accessible relay pad: " + region.definition.id);
+    };
     for (const auto &region : result.regions)
     {
+        if (cancel && cancel->load(std::memory_order_relaxed))
+        {
+            throw std::runtime_error("Relay preparation cancelled");
+        }
         std::vector<SurfacePoint> samples;
         for (auto v : CoverageSamples(region, settings.relayCoverageMeters))
         {
@@ -548,7 +622,7 @@ void AddRelays(GeneratedPlanet &result, const GenerationSettings &settings)
                     farthest = i;
                 }
             }
-            if (largest <= settings.relayCoverageMeters * .7)
+            if (largest <= settings.relayCoverageMeters * (planet.generatorVersion >= 2 ? .65 : .7))
             {
                 break;
             }
@@ -557,12 +631,130 @@ void AddRelays(GeneratedPlanet &result, const GenerationSettings &settings)
         for (std::size_t i = 0; i < points.size(); ++i)
         {
             std::string id = "relay_" + region.definition.id + "_" + std::to_string(i);
+            if (planet.generatorVersion >= 2)
+            {
+                points[i] = place(region, points[i]);
+                pads.push_back({"pad_" + id, points[i], 12, 8, points[i].altitudeMeters, 2});
+            }
             result.relays.push_back(
                 {id, region.definition.id, Location(planet, region.definition.id, points[i])});
         }
     }
+    if (planet.generatorVersion >= 2)
+    {
+        result.terrain = PlanetTerrain(planet, std::move(pads), result.terrain.Homeland());
+    }
 }
 } // namespace
+
+// ============================================================================
+// RelayNetwork — discoveries remain physical facts, not quest or equipment unlocks
+// ============================================================================
+const RelayCandidate *RelayNetwork::Find(const GeneratedPlanet &planet, std::string_view id)
+{
+    auto found = std::find_if(planet.relays.begin(), planet.relays.end(),
+                              [&](const auto &relay) { return relay.id == id; });
+    return found == planet.relays.end() ? nullptr : &*found;
+}
+const RelayCandidate *RelayNetwork::Nearest(const GeneratedPlanet &planet, const SurfacePoint &position,
+                                            double range)
+{
+    const RelayCandidate *found = nullptr;
+    for (const auto &relay : planet.relays)
+    {
+        double distance = Distance(planet.terrain.Planet(), position, relay.location.position);
+        if (distance <= range)
+        {
+            range = distance;
+            found = &relay;
+        }
+    }
+    return found;
+}
+bool RelayNetwork::Discovered(std::string_view id) const
+{
+    return discovered.count(std::string(id)) != 0;
+}
+bool RelayNetwork::Registered(std::string_view id) const
+{
+    return registered.count(std::string(id)) != 0;
+}
+bool RelayNetwork::RegionVisited(std::string_view id) const
+{
+    return visited.count(std::string(id)) != 0;
+}
+void RelayNetwork::Bind(const PlanetDefinition &planet)
+{
+    const auto key = WorldIdentity::ContentKey(planet, "overworld", "relay_registry");
+    if (key == worldKey)
+    {
+        return;
+    }
+    worldKey = key;
+    discovered.clear();
+    registered.clear();
+    visited.clear();
+}
+void RelayNetwork::Observe(const GeneratedPlanet &planet, const WorldLocation &location)
+{
+    const auto &p = planet.terrain.Planet();
+    if (location.planetId != p.id || location.planetSeed != p.seed ||
+        location.generatorVersion != p.generatorVersion || location.space != SpaceKind::Surface ||
+        location.layer != 0)
+    {
+        return;
+    }
+    Bind(p);
+    for (const auto &relay : planet.relays)
+    {
+        if (Distance(p, location.position, relay.location.position) <= DiscoverMeters)
+        {
+            discovered.insert(relay.id);
+        }
+    }
+    for (const auto &region : planet.regions)
+    {
+        if (region.center.space != SpaceKind::Surface)
+        {
+            if (Distance(p, location.position, region.access.position) < DiscoverMeters)
+            {
+                visited.insert(region.definition.id);
+            }
+            continue;
+        }
+        if (Distance(p, location.position, region.center.position) > region.boundingRadiusMeters)
+        {
+            continue;
+        }
+        const auto local = G::ToLocal(region.frame, location.position, p.radiusMeters);
+        bool positive = false, negative = false;
+        for (size_t i = 0; i < region.footprint.size(); ++i)
+        {
+            auto a = region.footprint[i], b = region.footprint[(i + 1) % region.footprint.size()];
+            double cross = (b.x - a.x) * (local.y - a.y) - (b.y - a.y) * (local.x - a.x);
+            positive |= cross > 1.e-6;
+            negative |= cross < -1.e-6;
+        }
+        if (!(positive && negative))
+        {
+            visited.insert(region.definition.id);
+        }
+    }
+}
+bool RelayNetwork::Register(const GeneratedPlanet &planet, std::string_view id, const WorldLocation &location)
+{
+    Observe(planet, location);
+    const auto *relay = Find(planet, id);
+    if (!relay || location.space != SpaceKind::Surface || location.layer != 0 || !Discovered(id) ||
+        location.planetId != planet.terrain.Planet().id ||
+        location.planetSeed != planet.terrain.Planet().seed ||
+        location.generatorVersion != planet.terrain.Planet().generatorVersion ||
+        Distance(planet.terrain.Planet(), location.position, relay->location.position) > UseMeters)
+    {
+        return false;
+    }
+    return registered.insert(std::string(id)).second;
+}
 
 // ============================================================================
 // PlanetGenerator — sorted, independent streams and reservations precede all sites
@@ -875,7 +1067,7 @@ GeneratedPlanet PlanetGenerator::Generate(const std::atomic_bool *cancel) const
         prepared->Prepare(result, cancel);
         result.cityCores = std::move(prepared);
     }
-    AddRelays(result, settings);
+    AddRelays(result, settings, cancel);
     cancelled();
     BuildConnections(result, settings, cancel);
     cancelled();
