@@ -1017,7 +1017,7 @@ void MineScene::PlaceClue(game::Scene &scene, const char *id, Vector2 position, 
 {
     scene.PlaceWorldActor(
         id, position.x, position.y, WorldBounds(position.x, position.y, 1, 1, 80, 180), 1,
-        position.x + position.y, [this, position, label, color, glyph, expected]() {
+        position.x + position.y, [this, id, position, label, color, glyph, expected]() {
             Drawing::DrawProp(glyph ? models::ModelLibrary::Scenery(models::SceneryType::ObserverMonolith)
                                     : models::ModelLibrary::Get().console,
                               position, glyph ? models::Point{.6f, .6f, .6f} : models::Point{1, 1, 1});
@@ -1033,6 +1033,11 @@ void MineScene::PlaceClue(game::Scene &scene, const char *id, Vector2 position, 
                 Drawing::DrawEllipse(center.x, center.y, 3, 7, {.04f, .06f, .08f});
             }
             bool relevant = GameLevels::Mine().GetState().quest.GetStage() == expected;
+            if (Game::Get().GetState().surfaceExploration &&
+                !Game::Get().GetState().missions.Active(MissionId::Mine))
+            {
+                relevant = std::string(id) == "mine-exit";
+            }
             if (relevant && Game::Distance(position, Game::Get().GetState().playerPosition) < 4 &&
                 GameLevels::Mine().Lighting().At(position) > .1f)
             {
@@ -1100,7 +1105,7 @@ void MineScene::Draw()
             {
                 continue;
             }
-            if (gate && GameLevels::Mine().GetState().quest.IsPowerBypassed())
+            if (gate && GameLevels::Mine().PowerAvailable())
             {
                 continue;
             }
@@ -1145,7 +1150,7 @@ void MineScene::Draw()
     for (size_t i = 0; i < GameLevels::Mine().GetState().lights.size(); ++i)
     {
         const auto lamp = GameLevels::Mine().GetState().lights[i];
-        if (lamp.needsPower && !GameLevels::Mine().GetState().quest.IsPowerBypassed())
+        if (lamp.needsPower && !GameLevels::Mine().PowerAvailable())
         {
             continue;
         }
@@ -1870,6 +1875,8 @@ void DrawSurfaceStructure(const world::SurfaceStructure &structure, const world:
     {
         return;
     }
+    // Prototype only: production parcels need native-sized buildings/modules
+    // (Resource/RENDER_RESOURCE_REQUEST.md).
     models::Point scale = {float(structure.sizeMeters.x / 2 / (asset.maximum.x - asset.minimum.x)),
                            float(structure.sizeMeters.y / 2 / (asset.maximum.y - asset.minimum.y)),
                            float(structure.sizeMeters.z / 2 / (asset.maximum.z - asset.minimum.z))};

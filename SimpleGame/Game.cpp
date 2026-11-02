@@ -123,6 +123,221 @@ GameState &Game::GetState()
 {
     return state;
 }
+bool QuestParticipation::Accept(MissionId id, bool eligible)
+{
+    auto &status = states.at(size_t(id));
+    if (!eligible || status == MissionStatus::Completed || status == MissionStatus::Active)
+    {
+        return false;
+    }
+    status = MissionStatus::Active;
+    return true;
+}
+bool QuestParticipation::Pause(MissionId id)
+{
+    auto &status = states.at(size_t(id));
+    if (status != MissionStatus::Active)
+    {
+        return false;
+    }
+    status = MissionStatus::Paused;
+    return true;
+}
+bool QuestParticipation::Complete(MissionId id)
+{
+    auto &status = states.at(size_t(id));
+    if (status != MissionStatus::Active)
+    {
+        return false;
+    }
+    status = MissionStatus::Completed;
+    return true;
+}
+const char *QuestParticipation::Key(MissionId id)
+{
+    switch (id)
+    {
+    case MissionId::Signal:
+        return "signal";
+    case MissionId::Mine:
+        return "mine";
+    case MissionId::Frontier:
+        return "frontier";
+    case MissionId::Mara:
+        return "mara";
+    default:
+        return "unknown";
+    }
+}
+const char *QuestParticipation::Name(MissionId id)
+{
+    switch (id)
+    {
+    case MissionId::Signal:
+        return "전망대의 목소리";
+    case MissionId::Mine:
+        return "광산 구조 신호";
+    case MissionId::Frontier:
+        return "빛나는 개척지";
+    case MissionId::Mara:
+        return "남겨 둔 불빛";
+    default:
+        return "임무";
+    }
+}
+const char *QuestParticipation::Label(MissionStatus status)
+{
+    switch (status)
+    {
+    case MissionStatus::Active:
+        return "진행 중 · 보류";
+    case MissionStatus::Paused:
+        return "보류 · 재개";
+    case MissionStatus::Completed:
+        return "완료";
+    default:
+        return "미수락 · 제안 보기";
+    }
+}
+bool Game::MissionEligible(MissionId id) const
+{
+    switch (id)
+    {
+    case MissionId::Signal:
+    case MissionId::Mara:
+        return true;
+    case MissionId::Mine:
+        return state.gateSignalHeard && state.hasDescendedObservatory;
+    case MissionId::Frontier:
+        return game::GameLevels::Mine().GetState().quest.GetStage() == game::MineQuestStage::Complete;
+    default:
+        return false;
+    }
+}
+const char *Game::MissionObjective() const
+{
+    if (state.missions.Active(MissionId::Signal))
+    {
+        return !state.homeMessageRead   ? "집 단말에서 측정 요청 확인 [E]"
+               : !state.gateSignalHeard ? "전망대에서 신호 기록 조사 [E]"
+                                        : "전망대 승강기로 지상 복귀 [E]";
+    }
+    if (state.missions.Active(MissionId::Mine))
+    {
+        const auto &quest = game::GameLevels::Mine().GetState().quest;
+        return quest.GetStage() == game::MineQuestStage::TravelToMine && !quest.IsRiaJoined()
+                   ? "리아에게 광산 동행 요청 [E]"
+                   : quest.GetObjective();
+    }
+    if (state.missions.Active(MissionId::Frontier))
+    {
+        return game::GameLevels::Chapter().Objective();
+    }
+    if (state.missions.Active(MissionId::Mara))
+    {
+        return state.isPowerRestored ? "마라에게 전력 복구 보고 [E]" : "동쪽 전력 장치 복구 [E]";
+    }
+    return "자유 탐사 · J에서 임무 제안 확인";
+}
+void Game::OfferMission(MissionId id)
+{
+    if (!state.surfaceExploration || Dialogue::Active() || state.dialogue.suspended ||
+        HospitalRecovery::Active())
+    {
+        return;
+    }
+    if (state.missions.Status(id) == MissionStatus::Completed || state.missions.Active(id))
+    {
+        return;
+    }
+    if (!MissionEligible(id))
+    {
+        ShowNotice(id == MissionId::Mine
+                       ? "조사 조건 / 전망대 기록을 확보하고 지상으로 돌아온 뒤 제안을 받을 수 있습니다."
+                       : "조사 조건 / 광산 좌표를 확보해 헤일로 수신망에 보고한 뒤 제안을 받을 수 있습니다.");
+        return;
+    }
+    state.journalVisible = state.dialogueHistoryVisible = false;
+    static const std::array<const char *, size_t(MissionId::Count)> offers = {
+        "전망대에서 이상한 응답이 잡혔어. 같이 조사해 줄래? 지금은 자유롭게 둘러보고 나중에 시작해도 돼.",
+        "이 기록의 수신 경로를 광산 통신선과 대조해 보자. 조사는 네가 원할 때 시작하면 돼. 현장 출입과 "
+        "구조는 따로 할 수 있어.",
+        "광산 좌표와 연결된 발전기·운송대·폐설비를 조사해 줘. 세 현장은 원하는 순서로 살펴볼 수 있어. 이동은 "
+        "지상 지도에 표시할게.",
+        "딸아이 방에 불이 안 들어와요. 동쪽 전력 장치를 살펴봐 주시겠어요? 준비가 되면 시작해도 괜찮아요."};
+    Dialogue::Start(
+        std::string("mission/proposal/") + QuestParticipation::Key(id),
+        {{"offer",
+          id == MissionId::Mara ? "마라" : "리아",
+          "임무 제안",
+          offers.at(size_t(id)),
+          {{"accept", "수락 / 재개한다"}, {"later", "지금은 하지 않는다"}}}},
+        [this, id](const std::string &choice) {
+            if (choice != "accept")
+            {
+                ShowNotice("제안 보관 / 지역은 계속 탐사할 수 있습니다. J 조사 기록이나 제안자에게서 다시 "
+                           "시작하세요.");
+                return;
+            }
+            if (state.missions.Accept(id, MissionEligible(id)))
+            {
+                if (id == MissionId::Mine)
+                {
+                    game::GameLevels::Mine().GetState().quest.Advance(game::MineQuestStage::ShowRecord);
+                }
+                if (id == MissionId::Frontier)
+                {
+                    game::GameLevels::Chapter().Unlock();
+                }
+                if (id == MissionId::Mara)
+                {
+                    state.isSideQuestAccepted = true;
+                }
+                SyncMissionProgress();
+                ShowNotice(std::string("임무 시작 / ") + QuestParticipation::Name(id) +
+                           " · J에서 보류/재개 가능");
+            }
+        },
+        true);
+}
+void Game::ManageMission(MissionId id)
+{
+    if (Dialogue::Active() || state.dialogue.suspended || HospitalRecovery::Active())
+    {
+        ShowNotice("진행 중인 대화를 마치거나 이력에서 재개한 뒤 임무 참여를 변경하세요.");
+        return;
+    }
+    if (state.missions.Pause(id))
+    {
+        ShowNotice(std::string("임무 보류 / ") + QuestParticipation::Name(id) +
+                   " · 발견 기록·보유품·현장 상태는 유지됩니다.");
+    }
+    else
+    {
+        OfferMission(id);
+    }
+}
+void Game::SyncMissionProgress()
+{
+    if (!state.surfaceExploration)
+    {
+        return;
+    }
+    if (state.missions.Active(MissionId::Signal))
+    {
+        auto stage = !state.homeMessageRead           ? MainQuestStage::ReadHomeTerminal
+                     : !state.gateSignalHeard         ? MainQuestStage::EnterObservatory
+                     : !state.hasDescendedObservatory ? MainQuestStage::DescendObservatory
+                                                      : MainQuestStage::MountJetBike;
+        state.mainQuestStage = (std::max)(state.mainQuestStage, stage);
+        if (state.gateSignalHeard && state.hasDescendedObservatory)
+        {
+            state.missions.Complete(MissionId::Signal);
+        }
+    }
+    game::GameLevels::Mine().SyncInvestigation();
+    game::GameLevels::Chapter().SyncEvidence();
+}
 Vector2 WorldCamera::ToViewport(Vector2 p)
 {
     return {kCanvasWidth * .5f + (p.x - kCanvasWidth * .5f) * zoom,
@@ -395,6 +610,34 @@ void Game::Reset()
     ShowNotice("리아 · 수신 메시지 / 좋은 아침. 전망대 측정을 좀 도와줄래? 집 단말에 내용을 보냈어. 밖에서 "
                "기다릴게.");
 }
+void Game::StartSurface(bool insideHome)
+{
+    const auto planet = world::WorldCatalog::Erma();
+    auto spawn =
+        world::LegacyWorldAdapter::ErmaExterior()
+            .Locate("halo_07", insideHome ? world::Vector3d{kHomeDoor.x, kHomeDoor.y, 0} : world::Vector3d{})
+            .position;
+    state.surfaceExploration = true;
+    state.isInsideHome = insideHome;
+    state.playerPosition = insideHome ? Vector2{2, 2} : Vector2{};
+    state.cameraPosition = {};
+    surface = std::make_unique<world::SurfaceSession>(planet, spawn);
+    surfaceBike = world::LegacyWorldAdapter::ErmaExterior()
+                      .Locate("halo_07", {kJetBikePosition.x, kJetBikePosition.y, 0})
+                      .position;
+    auto bike = surface->Local(*surfaceBike);
+    state.bikePosition = {float(bike.x / 2), float(bike.y / 2)};
+    surfaceCities = std::make_unique<PlanetCities>();
+    surface->Start(
+        world::PlanetGenerator::Erma(Overworld::StoryAnchors()).WithCityCores(PlanetCities::Describe(state)));
+}
+void Game::StartNewGame()
+{
+    Reset();
+    StartSurface(true);
+    ShowNotice("헤일로 / 임무는 대화의 제안을 수락해 시작합니다. 집을 나와 자유롭게 탐사할 수 있습니다. J "
+               "조사 기록.");
+}
 void Game::Resize(int width, int height)
 {
     state.viewportWidth = (std::max)(width, 1);
@@ -432,7 +675,11 @@ bool Game::EnterTestStage(TestStage stage)
     }
     Reset();
     game::GameLevels::PrepareTestEntry(stage);
-    if (stage == TestStage::Observatory)
+    if (stage == TestStage::Prologue)
+    {
+        StartSurface(true);
+    }
+    else if (stage == TestStage::Observatory)
     {
         state.isInsideHome = false;
         state.isInObservatory = true;
@@ -461,19 +708,7 @@ bool Game::EnterTestStage(TestStage stage)
     }
     else if (stage == TestStage::SurfaceSurvey)
     {
-        const auto planet = world::WorldCatalog::Erma();
-        auto spawn = world::LegacyWorldAdapter::ErmaExterior().Locate("halo_07", {}).position;
-        state.surfaceExploration = true;
-        state.isInsideHome = false;
-        state.playerPosition = state.cameraPosition = {};
-        surface = std::make_unique<world::SurfaceSession>(planet, spawn);
-        surfaceBike = world::LegacyWorldAdapter::ErmaExterior()
-                          .Locate("halo_07", {kJetBikePosition.x, kJetBikePosition.y, 0})
-                          .position;
-        state.bikePosition = kJetBikePosition;
-        surfaceCities = std::make_unique<PlanetCities>();
-        surface->Start(world::PlanetGenerator::Erma(Overworld::StoryAnchors())
-                           .WithCityCores(PlanetCities::Describe(state)));
+        StartSurface(false);
     }
     state.cameraPosition = state.playerPosition;
     ShowNotice(std::string("테스트 진입 / ") + StageName(stage) + " · 이전 필수 진행 완료 / 기본 무장: 맨손");
@@ -1890,11 +2125,50 @@ std::vector<std::string> Dialogue::Journal()
     const auto &s = game::GameLevels::Chapter().GetState();
     std::vector<std::string> lines = {"인물: 리아는 헤일로의 정비 담당, 마라는 주거 구역 주민이다.",
                                       "N-0은 도시 가까이의 관문이다."};
+    if (w.surfaceExploration)
+    {
+        for (int i = 0; i < int(MissionId::Count); ++i)
+        {
+            lines.push_back(std::string("임무: ") + QuestParticipation::Name(MissionId(i)) + " / " +
+                            QuestParticipation::Label(w.missions.Status(MissionId(i))));
+        }
+        lines.push_back("지역 방문과 기록 열람은 자유입니다. 왼쪽 임무 버튼에서 수락·보류·재개합니다.");
+        if (mine.powerBypassed)
+        {
+            lines.push_back("광산 현장: 비상 전력을 우회했다. 임무 보류 중에도 격벽과 조명 상태는 유지된다.");
+        }
+        if (s.observedRecords)
+        {
+            lines.push_back("개척지 사전 기록을 보관 중이다. 임무 수락 시 확보한 기록만 조사에 반영한다.");
+        }
+        if (s.observedRecords & 1)
+        {
+            lines.push_back(
+                "발전기 사전 기록: 폐쇄된 외곽 선로로 전력이 빠져나간다. 전력 복구 여부와는 별개다.");
+        }
+        if (s.observedRecords & 2)
+        {
+            lines.push_back(
+                "수신기 사전 기록: 현장 인원 다섯 명에 무전 응답 여섯 명. 추가 생존자 확인은 아니다.");
+        }
+        if (s.observedRecords & 4)
+        {
+            lines.push_back("거래 사전 기록: 익명 구매자가 N-0/17 부품을 시세보다 비싸게 샀다.");
+        }
+        if (s.observedRecords & 8)
+        {
+            lines.push_back("기본 장부 사전 기록: 발주처가 지워진 좌표·전력 주기·교신 시각.");
+        }
+        if (s.observedRecords & 16)
+        {
+            lines.push_back("상세 장부 사전 기록: 구매자 추적 단서. 발주처 정체는 미확인.");
+        }
+    }
     if (s.unlocked)
     {
         lines.push_back("N-0/17은 관문 자체가 아닌 외곽 설비 번호다.");
     }
-    if (w.mainQuestStage >= MainQuestStage::MeetLia)
+    if (w.homeMessageRead || (!w.surfaceExploration && w.mainQuestStage >= MainQuestStage::MeetLia))
     {
         lines.push_back("집 단말: N-0 정기 측정 요청과 전망대 접근 코드를 받았다.");
     }
@@ -1908,15 +2182,15 @@ std::vector<std::string> Dialogue::Journal()
         lines.push_back(
             "수신망: 전망대 기록과 광산 통신선의 중계 흔적이 겹친다. 같은 발신원인지는 아직 모른다.");
     }
-    if (mine.quest.GetStage() >= game::MineQuestStage::InvestigateGlyph)
+    if (mine.signalRecorded || mine.quest.GetStage() >= game::MineQuestStage::InvestigateGlyph)
     {
         lines.push_back("광산 신호: 실종 탐사선 식별자가 남았다. 현재 생존자를 확인했다는 뜻은 아니다.");
     }
-    if (mine.quest.GetStage() >= game::MineQuestStage::CollectCoordinates)
+    if (mine.glyphRecorded || mine.quest.GetStage() >= game::MineQuestStage::CollectCoordinates)
     {
         lines.push_back("문양: 나를 닮은 형상을 발견했다. 누가, 언제 새겼는지는 모른다.");
     }
-    if (mine.quest.AreCoordinatesFound())
+    if (mine.coordinatesRecorded || mine.quest.AreCoordinatesFound())
     {
         lines.push_back("광산 좌표: 중계 좌표를 확보했다. 입구로 나와 바이크로 헤일로 수신망에 보고한다.");
     }
@@ -1955,7 +2229,8 @@ std::vector<std::string> Dialogue::Journal()
                         "지역은 아직 진입할 수 없다.");
     }
     lines.push_back(std::string("다음 행동: ") +
-                    (s.unlocked ? game::GameLevels::Chapter().Objective()
+                    (w.surfaceExploration ? Game::Get().MissionObjective()
+                     : s.unlocked         ? game::GameLevels::Chapter().Objective()
                      : w.mainQuestStage >= MainQuestStage::MountJetBike ? mine.quest.GetObjective()
                      : w.gateSignalHeard ? "전망대에서 내려와 리아에게 기록을 보여 준다."
                                          : "집 단말과 리아의 안내에 따라 전망대에서 신호를 측정한다."));
@@ -2039,6 +2314,60 @@ bool Game::IsQuestInteraction(InteractionTarget target) const
         return false;
     }
     auto stage = game::GameLevels::Mine().GetState().quest.GetStage();
+    if (state.surfaceExploration)
+    {
+        if (state.missions.Active(MissionId::Signal))
+        {
+            if (target == InteractionTarget::HomeTerminal)
+            {
+                return state.isInsideHome && !state.homeMessageRead;
+            }
+            if (target == InteractionTarget::GateBeacon)
+            {
+                return !state.gateSignalHeard;
+            }
+            if (target == InteractionTarget::ObservatorySignal)
+            {
+                return state.isInObservatory && !state.gateSignalHeard;
+            }
+            if (target == InteractionTarget::ObservatoryExit)
+            {
+                return state.isInObservatory && state.gateSignalHeard && !state.hasDescendedObservatory;
+            }
+        }
+        if (state.missions.Active(MissionId::Mine))
+        {
+            if (target == InteractionTarget::Lia)
+            {
+                return stage == game::MineQuestStage::ShowRecord ||
+                       (stage == game::MineQuestStage::TravelToMine &&
+                        !game::GameLevels::Mine().GetState().quest.IsRiaJoined());
+            }
+            if (target == InteractionTarget::CityReceiver)
+            {
+                return stage == game::MineQuestStage::CheckCityRelay ||
+                       stage == game::MineQuestStage::ReturnToHalo;
+            }
+            if (target == InteractionTarget::MineEntrance || target == InteractionTarget::JetBike)
+            {
+                return stage == game::MineQuestStage::TravelToMine;
+            }
+        }
+        if (state.missions.Active(MissionId::Mara))
+        {
+            if (target == InteractionTarget::Mara)
+            {
+                return state.isPowerRestored && !state.isSideQuestComplete;
+            }
+            if (target == InteractionTarget::PowerRelay)
+            {
+                return !state.isPowerRestored;
+            }
+        }
+        return target == InteractionTarget::CityReceiver && state.missions.Active(MissionId::Frontier) &&
+               game::GameLevels::Chapter().CompletedSites() == 3 &&
+               !game::GameLevels::Chapter().GetState().recordsCompared;
+    }
     if (game::GameLevels::Chapter().IsAvailable() &&
         (target == InteractionTarget::HomeTerminal || target == InteractionTarget::ApartmentExit ||
          target == InteractionTarget::HomeEntrance || target == InteractionTarget::Lia ||
@@ -2231,6 +2560,15 @@ void Game::InteractWithNearbyTarget()
         }
     }
     const InteractionTarget target = FindNearbyInteraction();
+    if (state.surfaceExploration &&
+        (target == InteractionTarget::HomeTerminal || target == InteractionTarget::Lia ||
+         target == InteractionTarget::Mara || target == InteractionTarget::PowerRelay ||
+         target == InteractionTarget::CityReceiver || target == InteractionTarget::ObservatorySignal ||
+         target == InteractionTarget::ObservatoryExit))
+    {
+        InteractSurfaceStory(target);
+        return;
+    }
     if (target == InteractionTarget::FrontierSite)
     {
         game::GameLevels::Chapter().Interact();
@@ -2257,6 +2595,24 @@ void Game::InteractWithNearbyTarget()
     {
         if (state.surfaceExploration)
         {
+            auto &mine = game::GameLevels::Mine().GetState();
+            if (state.missions.Active(MissionId::Mine) && mine.quest.IsRiaJoined() &&
+                !mine.loadout.HasPistol())
+            {
+                Dialogue::Start("MQ00/mine-weapon",
+                                {{"pistol", "리아", "장비 인계",
+                                  "직접 들어가기로 했구나. 이 코일 권총을 가져가. Q 홀드로 보조 무장을 "
+                                  "고르고 R로 재장전해. 위험할 때만 써."}},
+                                [this](const std::string &) {
+                                    if (!state.missions.Active(MissionId::Mine))
+                                    {
+                                        return;
+                                    }
+                                    game::GameLevels::Mine().GetState().loadout.GrantPistol();
+                                    EnterSurfaceMine();
+                                });
+                return;
+            }
             EnterSurfaceMine();
             return;
         }
@@ -2508,7 +2864,7 @@ void Game::InteractWithNearbyTarget()
         state.cameraPosition = {0, 0};
         state.surfaceCameraHeight = 0;
         std::fill(state.pressedKeys, state.pressedKeys + 256, false);
-        if (!state.gateSignalHeard)
+        if (!state.gateSignalHeard && (!state.surfaceExploration || state.missions.Active(MissionId::Signal)))
         {
             state.mainQuestStage = MainQuestStage::ReadGateSignal;
         }
@@ -2574,9 +2930,197 @@ void Game::InteractWithNearbyTarget()
 }
 
 // ============================================================================
+// Game — optional surface-story interactions
+// ============================================================================
+void Game::InteractSurfaceStory(InteractionTarget target)
+{
+    auto &mine = game::GameLevels::Mine().GetState();
+    auto &chapter = game::GameLevels::Chapter();
+    auto say = [&](const std::string &key, const std::string &text) {
+        Dialogue::Say("surface/story/" + key, text);
+    };
+    if (target == InteractionTarget::HomeTerminal)
+    {
+        state.homeMessageRead = true;
+        SyncMissionProgress();
+        if (state.missions.Status(MissionId::Signal) != MissionStatus::Completed &&
+            !state.missions.Active(MissionId::Signal))
+        {
+            OfferMission(MissionId::Signal);
+        }
+        else
+        {
+            say("home", "리아 · 단말 메시지 / N-0 정기 측정 요청과 전망대 접근 코드를 보관했습니다. 외출과 "
+                        "탐사는 자유입니다.");
+        }
+        return;
+    }
+    if (target == InteractionTarget::ObservatorySignal)
+    {
+        bool first = !state.gateSignalHeard;
+        state.gateSignalHeard = true;
+        SyncMissionProgress();
+        if (first)
+        {
+            Dialogue::Start("MQ00/observatory",
+                            {{"voice", "발신자 미상", "수신 기록", "…수신 확인. 이 목소리가 들리면…"},
+                             {"observation", "나", "현장", "내 목소리다. 이런 말을 녹음한 기억은 없는데."},
+                             {"ria", "리아", "무전", "기록은 저장됐어. 내려오면 같이 확인해 보자."}});
+        }
+        else
+        {
+            say("observatory/archive", "전망대 기록 / 음성과 수신 경로는 이미 보관돼 있습니다.");
+        }
+        return;
+    }
+    if (target == InteractionTarget::ObservatoryExit)
+    {
+        if (ReturnToSurface(kBeaconPosition))
+        {
+            if (state.gateSignalHeard)
+            {
+                state.hasDescendedObservatory = true;
+            }
+            SyncMissionProgress();
+            ShowNotice(
+                "헤일로 / 전망대 앞 승강기로 내려왔습니다. 임무를 받지 않아도 자유롭게 탐사할 수 있습니다.");
+        }
+        return;
+    }
+    if (target == InteractionTarget::Mara)
+    {
+        if (!state.missions.Active(MissionId::Mara) &&
+            state.missions.Status(MissionId::Mara) != MissionStatus::Completed)
+        {
+            OfferMission(MissionId::Mara);
+        }
+        else if (state.missions.Active(MissionId::Mara) && state.isPowerRestored)
+        {
+            state.missions.Complete(MissionId::Mara);
+            state.isSideQuestComplete = true;
+            say("mara/report", "마라 / 불이 돌아왔어요. 정말 고마워요. [선택 의뢰 완료: 남겨 둔 불빛]");
+        }
+        else
+        {
+            say("mara/status/" + std::to_string(state.isSideQuestComplete),
+                state.isSideQuestComplete ? "마라 / 언제든 들러요. 따뜻한 차를 준비해 둘게요."
+                                          : "마라 / 동쪽 전력 장치를 살펴봐 주세요. 천천히 다녀오세요.");
+        }
+        return;
+    }
+    if (target == InteractionTarget::PowerRelay)
+    {
+        state.isPowerRestored = true;
+        ShowNotice(
+            "전력 장치 / 주거 구역 전력을 복구했습니다. 복구 사실은 임무 참여 여부와 별도로 유지됩니다.");
+        return;
+    }
+    if (target == InteractionTarget::Lia)
+    {
+        if (MissionEligible(MissionId::Mine) &&
+            state.missions.Status(MissionId::Mine) != MissionStatus::Completed)
+        {
+            if (!state.missions.Active(MissionId::Mine))
+            {
+                OfferMission(MissionId::Mine);
+                return;
+            }
+            if (mine.quest.GetStage() == game::MineQuestStage::TravelToMine && !mine.quest.IsRiaJoined())
+            {
+                Dialogue::Start(
+                    "mission/mine/companion",
+                    {{"join",
+                      "리아",
+                      "동행 제안",
+                      "광산 조사에 동행할까? 네가 준비되면 같이 가자.",
+                      {{"join", "동행을 요청한다"}, {"later", "아직 혼자 둘러본다"}}}},
+                    [this](const std::string &choice) {
+                        if (choice == "join" && state.missions.Active(MissionId::Mine))
+                        {
+                            game::GameLevels::Mine().GetState().quest.BeginJourney();
+                        }
+                    },
+                    true);
+                return;
+            }
+            say("mine/status/" + std::to_string(int(mine.quest.GetStage())), mine.quest.GetRiaDialogue());
+            return;
+        }
+        if (MissionEligible(MissionId::Frontier) && !state.missions.Active(MissionId::Frontier) &&
+            state.missions.Status(MissionId::Frontier) != MissionStatus::Completed)
+        {
+            OfferMission(MissionId::Frontier);
+            return;
+        }
+        if (state.missions.Active(MissionId::Signal))
+        {
+            say("signal/status", "리아 / 전망대의 수신 기록을 확인해 줘. 출입과 탐사는 자유야.");
+            return;
+        }
+        if (state.missions.Status(MissionId::Signal) != MissionStatus::Completed)
+        {
+            OfferMission(MissionId::Signal);
+            return;
+        }
+        say("lia/free",
+            "리아 / 기록은 보관돼 있어. 수신망에서 조사 위치를 확인하거나 네가 원하는 곳을 탐사해.");
+        return;
+    }
+    if (target == InteractionTarget::CityReceiver)
+    {
+        if (state.missions.Active(MissionId::Mine))
+        {
+            if (mine.quest.Advance(game::MineQuestStage::ReturnToHalo))
+            {
+                state.missions.Complete(MissionId::Mine);
+                state.isComplete = true;
+                state.mainQuestStage = MainQuestStage::Complete;
+                chapter.Unlock();
+                say("mine/report", "수신망 / 광산 중계 좌표를 보고했습니다. N-0 외곽 설비와 연결된 세 현장의 "
+                                   "조사 제안을 받을 수 있습니다.");
+                return;
+            }
+            if (mine.quest.Advance(game::MineQuestStage::CheckCityRelay))
+            {
+                state.planetDestination =
+                    surface->Stream().Snapshot()->planet->Region("mq00_mine").access.position;
+                say("mine/route", "수신망 / 전망대 신호와 광산 통신선의 중계 흔적이 겹칩니다. 리아에게 "
+                                  "동행을 요청할 수 있습니다. 입구는 지도에 표시했습니다.");
+                return;
+            }
+            if (mine.quest.GetStage() == game::MineQuestStage::TravelToMine)
+            {
+                state.planetDestination =
+                    surface->Stream().Snapshot()->planet->Region("mq00_mine").access.position;
+            }
+            say("mine/objective/" + std::to_string(int(mine.quest.GetStage())), mine.quest.GetRiaDialogue());
+            return;
+        }
+        if (MissionEligible(MissionId::Frontier))
+        {
+            if (state.missions.Active(MissionId::Frontier) ||
+                state.missions.Status(MissionId::Frontier) == MissionStatus::Completed)
+            {
+                chapter.InteractHub();
+            }
+            else
+            {
+                OfferMission(MissionId::Frontier);
+            }
+            return;
+        }
+        if (MissionEligible(MissionId::Mine))
+        {
+            OfferMission(MissionId::Mine);
+            return;
+        }
+        say("receiver/free", "수신망 / 지역 정보는 열려 있습니다. 전망대에서 확보한 음성 기록이 있으면 "
+                             "리아와 수신 경로를 조사할 수 있습니다.");
+    }
+}
+// ============================================================================
 // GameCallbacks — GLUT entry points
 // ============================================================================
-
 void GameCallbacks::Draw()
 {
     GameRenderer::Get().Draw();

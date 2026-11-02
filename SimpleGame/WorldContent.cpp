@@ -128,7 +128,9 @@ struct Grid
         bool city = r.definition.kind == RegionKind::Settlement;
         width = city ? 84 + Fraction(seed) * 24 : 132 + Fraction(seed) * 44;
         depth = city ? 92 + Fraction(seed + 1) * 30 : 140 + Fraction(seed + 1) * 44;
-        yaw = Fraction(seed + 2) * G::Pi;
+        // Match Halo's world axes: the shared quarter-view projects these axes at 45 degrees.
+        // Warped shared nodes keep organic streets without randomly rotating an entire settlement.
+        yaw = 0;
     }
     Vector3d Node(std::int64_t x, std::int64_t y) const
     {
@@ -790,9 +792,10 @@ ContentCell ContentLayout::Generate(const GeneratedPlanet &p, ContentCellKey key
         }
         SurfaceStructure structure;
         structure.regionId = r.definition.id;
-        structure.id = WorldIdentity::ContentKey(p.terrain.Planet(), r.definition.id,
-                                                 "layout1.cell." + std::to_string(key.x) + "." +
-                                                     std::to_string(key.y) + "." + std::to_string(slot));
+        structure.id =
+            WorldIdentity::ContentKey(p.terrain.Planet(), r.definition.id,
+                                      "layout" + std::to_string(Revision) + ".cell." + std::to_string(key.x) +
+                                          "." + std::to_string(key.y) + "." + std::to_string(slot));
         structure.appearance = random;
         auto direction = Sub(b, a);
         structure.yaw = std::atan2(direction.y, direction.x);

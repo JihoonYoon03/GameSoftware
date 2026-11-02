@@ -1249,7 +1249,11 @@ void MineHud::Draw()
 {
     auto &level = game::GameLevels::Mine();
     const auto &s = level.GetState();
-    Hud::DrawObjective(s.quest.GetObjective(), "광산 / 구조 신호 조사 · J 기록");
+    Hud::DrawObjective(Game::Get().GetState().surfaceExploration &&
+                               !Game::Get().GetState().missions.Active(MissionId::Mine)
+                           ? "광산 자유 탐사 · 기록 보관"
+                           : s.quest.GetObjective(),
+                       "광산 / 구조 신호 조사 · J 기록");
     MapHud::DrawMinimap();
     DrawScanner();
     if (!Dialogue::Active())
@@ -1350,13 +1354,17 @@ void ChapterHud::DrawJournal()
     Panel(64, 48, 1152, 704);
     Icon(world.journalVisible ? "record" : "history", 96, 104, 26);
     UiText(136, 132, world.journalVisible ? "조사 기록" : "대사 이력", 28);
-    UiText(96, 164, "현재 실행에서 확인한 기록입니다.", 18);
+    UiText(96, 164, "현재 실행의 기록 · 저장 기능은 아직 없습니다.", 18);
     UiText(454, 218, world.journalVisible ? "확인한 사실과 다음 행동" : "읽은 대사 / 전달 기록", 18,
            {.61f, .88f, .83f});
-    UiText(96, 366, "현재 실행의 기록", 17, {.95f, .78f, .4f});
-    UiText(96, 400, "게임 종료 후 복원하는", 15);
-    UiText(96, 426, "저장 기능은 아직 없습니다.", 15);
-    if (Dialogue::Danger())
+    if (world.surfaceExploration && world.journalVisible)
+    {
+        UiText(96, 622,
+               Dialogue::Danger() ? "교전 중 · 기록을 봐도 시간은 흐릅니다."
+                                  : "임무를 보류해도 현장 기록은 유지됩니다.",
+               14, Dialogue::Danger() ? ColorRGBA(1, .78f, .4f) : ColorRGBA(.61f, .88f, .83f));
+    }
+    else if (Dialogue::Danger())
     {
         Icon("warning", 96, 466, 22);
         UiText(130, 485, "교전 중", 17, {1, .78f, .4f});
@@ -1671,6 +1679,23 @@ std::vector<UiControl> Hud::Controls()
             controls.push_back({UiAction::Previous, {454, 676}, {176, 44}, "이전 페이지"});
             controls.push_back({UiAction::Next, {648, 676}, {176, 44}, "다음 페이지"});
             controls.push_back({UiAction::Continue, {848, 676}, {320, 44}, "닫기"});
+            if (w.surfaceExploration && w.journalVisible)
+            {
+                for (int i = 0; i < int(MissionId::Count); ++i)
+                {
+                    auto id = MissionId(i);
+                    auto status = w.missions.Status(id);
+                    bool eligible = status != MissionStatus::NotAccepted || Game::Get().MissionEligible(id);
+                    controls.push_back({UiAction::Mission,
+                                        {96, 344.f + i * 66},
+                                        {296, 56},
+                                        std::string(QuestParticipation::Name(id)) + "\n" +
+                                            (eligible ? QuestParticipation::Label(status) : "선행 조사 필요"),
+                                        eligible && status != MissionStatus::Completed &&
+                                            !Dialogue::Active() && !w.dialogue.suspended,
+                                        i});
+                }
+            }
         }
         else if (Dialogue::Active())
         {
@@ -1697,7 +1722,10 @@ void Hud::Activate(const UiControl &control, int direction)
         CloseMenu();
         break;
     case UiAction::Start:
-        g.Reset();
+        g.StartNewGame();
+        break;
+    case UiAction::Mission:
+        g.ManageMission(MissionId(control.choice));
         break;
     case UiAction::EnterStage:
         g.EnterTestStage(TestStage(control.choice));
@@ -1731,7 +1759,7 @@ void Hud::Activate(const UiControl &control, int direction)
             CloseMenu();
             if (w.surfaceExploration)
             {
-                g.EnterTestStage(TestStage::SurfaceSurvey);
+                g.StartNewGame();
             }
             else if (game::GameLevels::Chapter().IsActive())
             {
@@ -2328,10 +2356,7 @@ void PlanetHud::Draw()
     {
         area = "헤일로 · 전망대";
     }
-    Hud::DrawObjective(game::GameLevels::Chapter().IsActive() && game::GameLevels::Chapter().IsAvailable()
-                           ? game::GameLevels::Chapter().Objective()
-                           : "자유 탐사",
-                       area + " · E 대화·조사 / M 지도");
+    Hud::DrawObjective(Game::Get().MissionObjective(), area + " · E 대화·조사 / M 지도");
     if (!state.isInsideHome && !state.isInObservatory)
     {
         DrawMap();

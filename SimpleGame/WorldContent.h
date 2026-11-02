@@ -149,7 +149,7 @@ class CityCorePlan
 class ContentLayout
 {
   public:
-    static constexpr unsigned Revision = 1;
+    static constexpr unsigned Revision = 2;
     static std::vector<ContentCellKey> Near(const GeneratedPlanet &planet, const SurfacePoint &point,
                                             double radiusMeters);
     static ContentCell Generate(const GeneratedPlanet &planet, ContentCellKey key,

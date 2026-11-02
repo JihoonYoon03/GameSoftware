@@ -198,8 +198,7 @@ bool MineMap::IsGateCell(int x, int y)
 bool MineMap::IsWalkable(int x, int y)
 {
     return x >= 0 && y >= 0 && x < kMapSize && y < kMapSize && state.tiles.size() == kMapSize * kMapSize &&
-           state.tiles[y * kMapSize + x] != Tile::Wall &&
-           (!IsGateCell(x, y) || state.quest.IsPowerBypassed());
+           state.tiles[y * kMapSize + x] != Tile::Wall && (!IsGateCell(x, y) || level.PowerAvailable());
 }
 
 bool MineMap::IsBlocked(tutorial::Vector2 position)
@@ -1264,7 +1263,7 @@ float MineLighting::At(tutorial::Vector2 position)
     }
     for (const auto &lamp : state.lights)
     {
-        if (!lamp.needsPower || state.quest.IsPowerBypassed())
+        if (!lamp.needsPower || level.PowerAvailable())
         {
             light = (std::max)(light, RadialLight(lamp.position, position, lamp.radius));
         }
@@ -1394,6 +1393,10 @@ void MineLevel::Enter(bool debugEntry)
             std::uint32_t(::world::WorldIdentity::StreamSeed(planet, "mq00_mine", "mine_layout_v1")));
     }
     state.active = true;
+    if (surfaceVisit)
+    {
+        SyncInvestigation();
+    }
     world.isInsideHome = false;
     world.isInObservatory = false;
     world.isBikeMounted = false;
@@ -1481,6 +1484,47 @@ tutorial::Vector2 MineLevel::GetAimDirection(float angle)
     return {direction.x / length, direction.y / length};
 }
 
+bool MineLevel::PowerAvailable() const
+{
+    return state.powerBypassed || state.quest.IsPowerBypassed();
+}
+void MineLevel::SyncInvestigation()
+{
+    const auto &world = tutorial::Game::Get().GetState();
+    if (!world.surfaceExploration || !world.missions.Active(tutorial::MissionId::Mine))
+    {
+        return;
+    }
+    for (int step = 0; step < 5; ++step)
+    {
+        auto stage = state.quest.GetStage();
+        bool ready = false;
+        switch (stage)
+        {
+        case MineQuestStage::TravelToMine:
+            ready = state.active && state.quest.IsRiaJoined();
+            break;
+        case MineQuestStage::BypassPower:
+            ready = state.powerBypassed;
+            break;
+        case MineQuestStage::InvestigateSignal:
+            ready = state.signalRecorded;
+            break;
+        case MineQuestStage::InvestigateGlyph:
+            ready = state.glyphRecorded;
+            break;
+        case MineQuestStage::CollectCoordinates:
+            ready = state.coordinatesRecorded;
+            break;
+        default:
+            break;
+        }
+        if (!ready || !state.quest.Advance(stage))
+        {
+            break;
+        }
+    }
+}
 void MineLevel::Interact()
 {
     const auto &world = tutorial::Game::Get().GetState();
@@ -1488,6 +1532,63 @@ void MineLevel::Interact()
         world.isPaused || world.journalVisible || world.dialogueHistoryVisible)
     {
         return;
+    }
+    if (world.surfaceExploration)
+    {
+        const bool accompanied = state.quest.IsRiaJoined();
+        const char *record = nullptr;
+        const char *key = nullptr;
+        if (IsNear(kPowerBypass))
+        {
+            state.powerBypassed = true;
+            state.navigationCooldown = 0;
+            key = "power";
+            record = accompanied
+                         ? "리아 / 전력이 들어왔어. 동쪽 격벽도 열렸고. 비상등이 켜진 길을 따라가 보자."
+                         : "배전반 / 비상 전력을 우회했습니다. 동쪽 격벽이 열리고 비상등이 켜집니다.";
+        }
+        else if (IsNear(kRuinSignal))
+        {
+            state.signalRecorded = true;
+            key = "signal";
+            record = accompanied ? "리아 / 식별자는 오래전에 실종된 탐사선의 것이야. 그런데 통신선은 이 벽 "
+                                   "앞에서 끊겨 있어. 신호는 벽 안쪽에서 오고 있고."
+                                 : "구조 신호 / 실종 탐사선 식별자입니다. 통신선은 벽 앞에서 끊겼는데 신호는 "
+                                   "안쪽에서 나옵니다. 기록을 보관했습니다.";
+        }
+        else if (IsNear(kObserverGlyph))
+        {
+            state.glyphRecorded = true;
+            key = "glyph";
+            record = accompanied ? "리아 / 이 문양, 너랑 닮았네. 그래도 널 새긴 거라고 단정하진 말자. 기록해 "
+                                   "둘게. 안쪽 단말도 확인해 보자."
+                                 : "문양 조사 기록 / 당신을 닮은 형상입니다. 제작 시기와 의미는 알 수 "
+                                   "없습니다. 문양 조사 기록을 보관했습니다.";
+        }
+        else if (IsNear(kCoordinateTerminal))
+        {
+            key = "coordinates";
+            if (state.signalRecorded && state.glyphRecorded)
+            {
+                state.coordinatesRecorded = true;
+                record = "중계 좌표 저장 / 신호가 거쳐 간 중계 좌표를 보관했습니다. 조사에 참여한 경우 "
+                         "헤일로 수신망에 보고할 수 있습니다.";
+            }
+            else
+            {
+                record = "단말 / 구조 신호와 벽면 문양 기록이 있어야 단말의 중계 좌표를 확인할 수 있습니다.";
+            }
+        }
+        if (record)
+        {
+            SyncInvestigation();
+            const auto event =
+                world.missions.Active(tutorial::MissionId::Mine)
+                    ? std::string("MQ00/mine/") + key + "/" + std::to_string(int(state.quest.GetStage()))
+                    : std::string("surface/mine/record/") + key;
+            tutorial::Dialogue::Say(event, record);
+            return;
+        }
     }
     auto tell = [&](const std::string &message) {
         const char *action = IsNear(kPowerBypass)          ? "power"
@@ -1664,6 +1765,41 @@ void ChapterOneLevel::PrepareSurface()
     {
         map.Generate();
     }
+}
+void ChapterOneLevel::SyncEvidence()
+{
+    const auto &world = tutorial::Game::Get().GetState();
+    if (!world.surfaceExploration || !world.missions.Active(tutorial::MissionId::Frontier))
+    {
+        return;
+    }
+    state.generatorInspected |= (state.observedRecords & 1) != 0;
+    state.receiverInspected |= (state.observedRecords & 2) != 0;
+    state.tradeProofFound |= (state.observedRecords & 4) != 0;
+    if (RelayClear())
+    {
+        state.ledgerFound |= (state.observedRecords & 8) != 0;
+        state.detailLedgerFound |= (state.observedRecords & 16) != 0;
+    }
+    CommitConvoy();
+}
+void ChapterOneLevel::CommitConvoy()
+{
+    auto &world = tutorial::Game::Get().GetState();
+    if (!state.convoyEvacuated || state.convoyRewardClaimed ||
+        (world.surfaceExploration && !world.missions.Active(tutorial::MissionId::Frontier)))
+    {
+        return;
+    }
+    state.convoyRewardClaimed = state.convoyRescued = state.kainJoined = true;
+    auto &stats = GameLevels::Mine().GetState().player;
+    stats.salvage = (std::min)(9999, stats.salvage + 3);
+    state.receiverInspected = true;
+    state.kain.position = {25.5f, 20.5f};
+    tutorial::Dialogue::Say(
+        "chapter1/convoy/received",
+        "카인 / 다섯 명, 전원 확인했습니다. …그 기록에도 N-0이 있군요. 예전에 그 외곽에서 근무했습니다. 저도 "
+        "동행하겠습니다. [구조 완료] 카인 합류 · 보급품 교환 가능 · 부품 3개 획득");
 }
 world::CityCore FrontierSurface::Describe()
 {
@@ -2345,9 +2481,21 @@ bool ChapterOneLevel::RelayClear() const
 std::vector<ChapterInteraction> ChapterOneLevel::Interactions() const
 {
     const bool planet = tutorial::Game::Get().GetState().surfaceExploration;
-    if (planet && !IsAvailable())
+    if (planet && !tutorial::Game::Get().GetState().missions.Active(tutorial::MissionId::Frontier) &&
+        tutorial::Game::Get().GetState().missions.Status(tutorial::MissionId::Frontier) !=
+            tutorial::MissionStatus::Completed)
     {
-        return {};
+        std::vector<ChapterInteraction> records = {
+            {ChapterAction::Mission, kFrontierEntry, "현장 조사 / 제안·재개 [E]"},
+            {ChapterAction::Generator, {10.5f, 10.5f}, "발전기 기록 / 사전 조사 [E]"},
+            {ChapterAction::Receiver, {33.5f, 9.5f}, "수신기 기록 / 사전 조사 [E]"},
+            {ChapterAction::TradeProof, {24.5f, 30.5f}, "거래 흔적 / 사전 조사 [E]"}};
+        if (RelayClear())
+        {
+            records.push_back({ChapterAction::Ledger, {33.5f, 32.5f}, "장부 / 사전 기록 [E]"});
+            records.push_back({ChapterAction::DetailLedger, {35.5f, 33.5f}, "상세 장부 / 사전 기록 [E]"});
+        }
+        return records;
     }
     std::vector<ChapterInteraction> result;
     if (!planet)
@@ -2455,6 +2603,52 @@ void ChapterOneLevel::Interact()
     {
         return;
     }
+    if (world.surfaceExploration && !world.missions.Active(tutorial::MissionId::Frontier) &&
+        world.missions.Status(tutorial::MissionId::Frontier) != tutorial::MissionStatus::Completed)
+    {
+        if (point.action == ChapterAction::Mission)
+        {
+            tutorial::Game::Get().OfferMission(tutorial::MissionId::Frontier);
+        }
+        else
+        {
+            unsigned record = 0;
+            const char *text = nullptr;
+            switch (point.action)
+            {
+            case ChapterAction::Generator:
+                record = 1;
+                text = "발전기 사전 기록 / 폐쇄된 N-0 외곽 선로가 일정한 주기로 전력을 가져가고 있습니다. "
+                       "조사 기록을 보관했습니다.";
+                break;
+            case ChapterAction::Receiver:
+                record = 2;
+                text = "수신기 사전 기록 / 현장 인원은 다섯 명인데 무전 응답은 여섯 명입니다. 추가 생존자의 "
+                       "존재를 확인한 것은 아닙니다.";
+                break;
+            case ChapterAction::TradeProof:
+                record = 4;
+                text = "거래 사전 기록 / 익명의 구매자가 N-0/17 부품을 시세보다 비싸게 샀습니다. 구매자의 "
+                       "신원은 알 수 없습니다.";
+                break;
+            case ChapterAction::Ledger:
+                record = 8;
+                text = "기본 장부 사전 기록 / 발주처는 지워져 있습니다. 좌표·전력 주기·교신 시각을 "
+                       "보관했습니다.";
+                break;
+            case ChapterAction::DetailLedger:
+                record = 16;
+                text = "상세 장부 사전 기록 / 구매자를 추적할 단서를 보관했습니다. 발주처의 정체는 아직 "
+                       "확인되지 않았습니다.";
+                break;
+            default:
+                return;
+            }
+            state.observedRecords |= record;
+            tutorial::Dialogue::Say("surface/frontier/evidence/" + std::to_string(record), text);
+        }
+        return;
+    }
     auto &game = tutorial::Game::Get();
     auto tell = [&](const std::string &message) {
         tutorial::Dialogue::Say("chapter1/action/" + std::to_string(int(point.action)) + "/" +
@@ -2465,6 +2659,9 @@ void ChapterOneLevel::Interact()
     };
     switch (point.action)
     {
+    case ChapterAction::Mission:
+        tutorial::Game::Get().OfferMission(tutorial::MissionId::Frontier);
+        return;
     case ChapterAction::Exit:
         Leave();
         return;
@@ -2579,6 +2776,13 @@ void ChapterOneLevel::Interact()
 void ChapterOneLevel::InteractHub()
 {
     using tutorial::Dialogue;
+    auto &world = tutorial::Game::Get().GetState();
+    if (world.surfaceExploration && !world.missions.Active(tutorial::MissionId::Frontier) &&
+        world.missions.Status(tutorial::MissionId::Frontier) != tutorial::MissionStatus::Completed)
+    {
+        tutorial::Game::Get().OfferMission(tutorial::MissionId::Frontier);
+        return;
+    }
     if (!Unlock() || Dialogue::Active() || tutorial::HospitalRecovery::Active())
     {
         return;
@@ -2607,7 +2811,16 @@ void ChapterOneLevel::InteractHub()
               {}},
              {"next", "카인", "현장", "먼저 그 길이 남아 있는지 확인합시다.", {}}},
             [this](const std::string &) {
+                auto &world = tutorial::Game::Get().GetState();
+                if (world.surfaceExploration && !world.missions.Active(tutorial::MissionId::Frontier))
+                {
+                    return;
+                }
                 state.recordsCompared = state.waterwayUnlocked = true;
+                if (world.surfaceExploration)
+                {
+                    world.missions.Complete(tutorial::MissionId::Frontier);
+                }
                 tutorial::Game::Get().ShowNotice("1장 완료 / 수로 진입로 기록 확보. 2장 지역은 아직 진입할 "
                                                  "수 없습니다. 1장 재방문과 선택 의뢰를 계속할 수 있습니다.");
             });
@@ -3015,16 +3228,8 @@ void FrontierParty::Update(float deltaSeconds)
         }
         if (all)
         {
-            state.convoyRescued = state.kainJoined = true;
-            auto &stats = GameLevels::Mine().GetState().player;
-            stats.salvage = (std::min)(9999, stats.salvage + 3);
-            state.receiverInspected =
-                true; // The wrapped receiver is logged at the final headcount, even if skipped earlier.
-            state.kain.position = {25.5f, 20.5f};
-            tutorial::Dialogue::Say("chapter1/convoy/received",
-                                    "카인 / 다섯 명, 전원 확인했습니다. …그 기록에도 N-0이 있군요. "
-                                    "예전에 그 외곽에서 근무했습니다. 저도 동행하겠습니다. [구조 "
-                                    "완료] 카인 합류 · 보급품 교환 가능 · 부품 3개 획득");
+            state.convoyEvacuated = true;
+            level.CommitConvoy();
         }
     }
     if (state.negotiated)
@@ -3126,10 +3331,14 @@ void GameLevels::PrepareTestEntry(tutorial::TestStage stage)
     auto &mine = Mine().GetState();
     if (stage >= tutorial::TestStage::Observatory)
     {
+        w.homeMessageRead = true;
+        w.missions.Accept(tutorial::MissionId::Signal, true);
         w.mainQuestStage = tutorial::MainQuestStage::ReadGateSignal;
     }
     if (stage >= tutorial::TestStage::BikeUnlocked)
     {
+        w.missions.Complete(tutorial::MissionId::Signal);
+        w.missions.Accept(tutorial::MissionId::Mine, true);
         w.gateSignalHeard = w.hasDescendedObservatory = true;
         w.mainQuestStage = tutorial::MainQuestStage::MountJetBike;
         w.dialogue.scenes["MQ00/observatory"].phase = tutorial::DialoguePhase::Completed;
@@ -3147,6 +3356,9 @@ void GameLevels::PrepareTestEntry(tutorial::TestStage stage)
     }
     if (stage >= tutorial::TestStage::ChapterOne)
     {
+        mine.powerBypassed = mine.signalRecorded = mine.glyphRecorded = mine.coordinatesRecorded = true;
+        w.missions.Complete(tutorial::MissionId::Mine);
+        w.missions.Accept(tutorial::MissionId::Frontier, true);
         while (mine.quest.GetStage() != MineQuestStage::Complete)
         {
             mine.quest.Advance(mine.quest.GetStage());

@@ -290,6 +290,154 @@ void TestPlanetCityMigration()
     g.Reset();
     assert(!g.SurfaceCities() && !g.Surface());
 }
+void TestOpenWorldParticipation()
+{
+    using namespace tutorial;
+    QuestParticipation participation;
+    assert(!participation.Accept(MissionId::Mine, false));
+    assert(participation.Accept(MissionId::Mine, true) && !participation.Accept(MissionId::Mine, true));
+    assert(participation.Pause(MissionId::Mine) && !participation.Complete(MissionId::Mine));
+    assert(participation.Accept(MissionId::Mine, true) && participation.Complete(MissionId::Mine));
+    assert(!participation.Accept(MissionId::Mine, true) && !participation.Complete(MissionId::Mine));
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    g.StartNewGame();
+    auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(20);
+    while (!g.Surface()->Ready() && std::chrono::steady_clock::now() < deadline)
+    {
+        g.Update(0);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    assert(g.Surface()->Ready() && w.surfaceExploration && w.isInsideHome && !mineState.loadout.HasPistol());
+    for (int i = 0; i < int(MissionId::Count); ++i)
+    {
+        assert(w.missions.Status(MissionId(i)) == MissionStatus::NotAccepted);
+    }
+    auto read = [&](size_t choice = 0) {
+        for (unsigned page = 0; Dialogue::Active() && page < 128; ++page)
+        {
+            const auto &line = w.dialogue.pages[w.dialogue.page];
+            if (!line.choices.empty() && w.dialogue.selection < 0)
+            {
+                assert(Dialogue::Select(choice));
+            }
+            assert(Dialogue::Advance());
+        }
+        assert(!Dialogue::Active());
+    };
+    auto city = [&](Vector2 p) {
+        auto target = g.SurfaceCities()->Point(*g.Surface(), 0, p);
+        assert(target);
+        assert(g.RelocateSurfaceSurvey(*target));
+        w.playerPosition = *g.SurfaceCities()->Local(*g.Surface(), 0, p);
+        g.InteractWithNearbyTarget();
+    };
+    w.playerPosition = {1, -1.2f};
+    g.InteractWithNearbyTarget();
+    read(1);
+    assert(w.homeMessageRead && w.missions.Status(MissionId::Signal) == MissionStatus::NotAccepted);
+    w.playerPosition = {2.4f, 2.4f};
+    g.InteractWithNearbyTarget();
+    assert(!w.isInsideHome);
+    city(kBeaconPosition);
+    assert(w.isInObservatory);
+    w.playerPosition = kObservatoryConsole;
+    g.InteractWithNearbyTarget();
+    read();
+    w.playerPosition = kObservatoryStairs;
+    g.InteractWithNearbyTarget();
+    assert(w.gateSignalHeard && w.hasDescendedObservatory &&
+           w.missions.Status(MissionId::Signal) == MissionStatus::NotAccepted);
+    g.OfferMission(MissionId::Signal);
+    read();
+    assert(w.missions.Status(MissionId::Signal) == MissionStatus::Completed);
+    auto plan = g.Surface()->Stream().Snapshot()->planet;
+    auto epoch = g.Surface()->Stream().Snapshot()->statistics.epoch;
+    assert(g.RelocateSurfaceSurvey(plan->Region("mq00_mine").access.position));
+    assert(g.EnterSurfaceMine() && !mineState.loadout.HasPistol() && !mineState.quest.IsRiaJoined());
+    for (auto point : {kPowerBypass, kRuinSignal, kObserverGlyph, kCoordinateTerminal})
+    {
+        w.playerPosition = point;
+        GameLevels::Mine().Interact();
+        read();
+    }
+    assert(mineState.powerBypassed && mineState.coordinatesRecorded &&
+           mineState.quest.GetStage() == MineQuestStage::ShowRecord);
+    w.playerPosition = mineState.entry;
+    GameLevels::Mine().Interact();
+    assert(!g.IsSurfaceMine());
+    g.OfferMission(MissionId::Mine);
+    read(1);
+    assert(w.missions.Status(MissionId::Mine) == MissionStatus::NotAccepted);
+    g.OfferMission(MissionId::Mine);
+    read();
+    assert(w.missions.Active(MissionId::Mine) &&
+           mineState.quest.GetStage() == MineQuestStage::CheckCityRelay);
+    city(kCityReceiverPosition);
+    read();
+    assert(mineState.quest.GetStage() == MineQuestStage::TravelToMine && !mineState.quest.IsRiaJoined());
+    city(kLiaPosition);
+    read(1);
+    assert(!mineState.quest.IsRiaJoined());
+    city(kLiaPosition);
+    read();
+    assert(mineState.quest.IsRiaJoined() && !mineState.loadout.HasPistol());
+    assert(g.RelocateSurfaceSurvey(plan->Region("mq00_mine").access.position));
+    g.InteractWithNearbyTarget();
+    assert(Dialogue::Active() && !mineState.active);
+    read();
+    assert(mineState.active && mineState.loadout.HasPistol() &&
+           mineState.quest.GetStage() == MineQuestStage::ReturnToHalo);
+    g.ManageMission(MissionId::Mine);
+    assert(w.missions.Status(MissionId::Mine) == MissionStatus::Paused);
+    assert(mineState.powerBypassed && mineState.coordinatesRecorded);
+    g.ManageMission(MissionId::Mine);
+    read();
+    assert(w.missions.Active(MissionId::Mine));
+    w.playerPosition = mineState.entry;
+    GameLevels::Mine().Interact();
+    city(kCityReceiverPosition);
+    read();
+    assert(w.missions.Status(MissionId::Mine) == MissionStatus::Completed &&
+           w.missions.Status(MissionId::Frontier) == MissionStatus::NotAccepted);
+    auto &chapter = GameLevels::Chapter();
+    auto &field = chapter.GetState();
+    assert(g.RelocateSurfaceSurvey(chapter.Surface().Point({11.5f, 10.9f})));
+    chapter.Interact();
+    read();
+    assert(field.observedRecords && !field.generatorInspected);
+    g.OfferMission(MissionId::Frontier);
+    read();
+    assert(w.missions.Active(MissionId::Frontier) && field.generatorInspected && !field.generatorRestored);
+    g.ManageMission(MissionId::Frontier);
+    assert(w.missions.Status(MissionId::Frontier) == MissionStatus::Paused);
+    auto salvage = mineState.player.salvage;
+    field.convoyEvacuated = true;
+    chapter.CommitConvoy();
+    assert(mineState.player.salvage == salvage);
+    g.ManageMission(MissionId::Frontier);
+    read();
+    assert(field.convoyRewardClaimed && field.convoyRescued && mineState.player.salvage == salvage + 3);
+    chapter.CommitConvoy();
+    assert(mineState.player.salvage == salvage + 3);
+    city(kRelayPosition);
+    assert(w.isPowerRestored && !w.isSideQuestAccepted);
+    g.OfferMission(MissionId::Mara);
+    read();
+    city(kMaraPosition);
+    read();
+    assert(w.isSideQuestComplete && w.missions.Status(MissionId::Mara) == MissionStatus::Completed);
+    g.ManageMission(MissionId::Frontier);
+    mineState.player.health = 0;
+    for (int i = 0; i < 60; ++i)
+    {
+        g.Update(.05f);
+    }
+    assert(w.missions.Status(MissionId::Frontier) == MissionStatus::Paused && field.generatorInspected &&
+           field.convoyRewardClaimed);
+    assert(g.Surface()->Stream().Snapshot()->statistics.epoch == epoch);
+    g.Reset();
+}
 void TestMapZoomAndSelection()
 {
     using namespace tutorial;
@@ -2439,6 +2587,7 @@ int main(int argc, char **argv)
     TestForwardFlashlight();
     TestStageSelectionAndLoadout();
     TestPlanetCityMigration();
+    TestOpenWorldParticipation();
     TestMapZoomAndSelection();
     TestUiMenusAndTransactions();
     TestDialogueProgress();

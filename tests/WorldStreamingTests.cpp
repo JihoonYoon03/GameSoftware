@@ -172,6 +172,15 @@ void ContentContracts()
                 {
                     Check(road.lanes == 2 || road.lanes == 4 || road.lanes == 6,
                           "City road hierarchy remains two/four/six lanes");
+                    for (size_t i = 1; i < road.points.size(); ++i)
+                    {
+                        auto a = G::ToLocal(plan->regions[region].frame, road.points[i - 1], p.radiusMeters);
+                        auto b = G::ToLocal(plan->regions[region].frame, road.points[i], p.radiusMeters);
+                        double dx = std::fabs(b.x - a.x), dy = std::fabs(b.y - a.y);
+                        Check((std::min)(dx, dy) < std::hypot(dx, dy) * .3,
+                              "Generated settlement street axes match Halo's quarter-view basis while "
+                              "retaining gentle warps");
+                    }
                 }
             }
         }

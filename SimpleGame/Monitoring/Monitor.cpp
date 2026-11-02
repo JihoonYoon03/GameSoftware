@@ -389,7 +389,8 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     result.Raw("security", security.Finish());
 
     quests.Text("tutorial_stage", QuestStage());
-    quests.Text("main_quest", game::GameLevels::Chapter().IsAvailable()
+    quests.Text("main_quest", world.surfaceExploration ? tutorial::Game::Get().MissionObjective()
+                              : game::GameLevels::Chapter().IsAvailable()
                                   ? game::GameLevels::Chapter().Objective()
                                   : level.quest.GetObjective());
     quests.Bool("gate_signal_heard", world.gateSignalHeard);
@@ -399,6 +400,22 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     quests.Bool("mara_power_restored", world.isPowerRestored);
     quests.Bool("side_quest_accepted", world.isSideQuestAccepted);
     quests.Bool("side_quest_complete", world.isSideQuestComplete);
+    JsonObject participation;
+    const char *statuses[] = {"not_accepted", "active", "paused", "completed"};
+    for (int i = 0; i < int(tutorial::MissionId::Count); ++i)
+    {
+        auto id = tutorial::MissionId(i);
+        JsonObject item;
+        item.Text("status", statuses[int(world.missions.Status(id))]);
+        item.Bool("eligible", tutorial::Game::Get().MissionEligible(id));
+        participation.Raw(tutorial::QuestParticipation::Key(id), item.Finish());
+    }
+    quests.Raw("participation", participation.Finish());
+    quests.Bool("mine_power_bypassed", level.powerBypassed);
+    quests.Bool("mine_signal_recorded", level.signalRecorded);
+    quests.Bool("mine_glyph_recorded", level.glyphRecorded);
+    quests.Bool("mine_coordinates_recorded", level.coordinatesRecorded);
+    quests.Number("frontier_observed_records", chapter.observedRecords);
     result.Raw("quests", quests.Finish());
     auto stage = level.quest.GetStage();
     flags.Bool("main.signal_record_shown", stage >= game::MineQuestStage::CheckCityRelay);

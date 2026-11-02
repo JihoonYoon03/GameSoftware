@@ -4,6 +4,7 @@
 #include "Animation.h"
 #include "World.h"
 #include "WorldStreaming.h"
+#include <array>
 #include <string>
 #include <functional>
 #include <map>
@@ -141,6 +142,45 @@ enum class MainQuestStage
     DescendObservatory,
     MountJetBike,
     Complete
+};
+enum class MissionId
+{
+    Signal,
+    Mine,
+    Frontier,
+    Mara,
+    Count
+};
+enum class MissionStatus
+{
+    NotAccepted,
+    Active,
+    Paused,
+    Completed
+};
+// ============================================================================
+// QuestParticipation — acceptance is separate from physical discoveries and persistent world actions
+// ============================================================================
+class QuestParticipation
+{
+  public:
+    MissionStatus Status(MissionId id) const
+    {
+        return states.at(size_t(id));
+    }
+    bool Active(MissionId id) const
+    {
+        return Status(id) == MissionStatus::Active;
+    }
+    bool Accept(MissionId id, bool eligible);
+    bool Pause(MissionId id);
+    bool Complete(MissionId id);
+    static const char *Name(MissionId id);
+    static const char *Key(MissionId id);
+    static const char *Label(MissionStatus status);
+
+  private:
+    std::array<MissionStatus, size_t(MissionId::Count)> states = {};
 };
 
 enum class InteractionTarget
@@ -297,7 +337,8 @@ enum class UiAction
     Journal,
     History,
     Previous,
-    Next
+    Next,
+    Mission
 };
 struct UiPreferences
 {
@@ -346,6 +387,8 @@ struct GameState
     int viewportHeight = kCanvasHeight;
     int lastUpdateMilliseconds = 0;
     MainQuestStage mainQuestStage = MainQuestStage::ReadHomeTerminal;
+    QuestParticipation missions;
+    bool homeMessageRead = false;
     bool pressedKeys[256] = {};
     Vector2 cursorPosition = {900, 400};
     Vector2 cursorWindowPosition = {900, 400};
@@ -475,6 +518,12 @@ class Game
     bool LeaveSurfaceMine();
     bool RecoverSurfaceAt(int city, Vector2 legacyPosition);
     void Reset();
+    void StartNewGame();
+    bool MissionEligible(MissionId id) const;
+    const char *MissionObjective() const;
+    void OfferMission(MissionId id);
+    void ManageMission(MissionId id);
+    void SyncMissionProgress();
     bool EnterTestStage(TestStage stage);
     static const char *StageName(TestStage stage);
     void Resize(int width, int height);
@@ -506,6 +555,8 @@ class Game
     std::optional<world::SurfacePoint> surfaceMineReturn;
     std::optional<std::size_t> surfaceSurveyRegion;
     FrameSchedule frameSchedule;
+    void StartSurface(bool insideHome);
+    void InteractSurfaceStory(InteractionTarget target);
     static unsigned char NormalizeKey(unsigned char key);
     void UpdatePlayerMovement(float deltaSeconds);
     void UpdateCamera(float deltaSeconds);

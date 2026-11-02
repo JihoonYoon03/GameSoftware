@@ -165,6 +165,7 @@ struct MineState
 {
     bool active = false;
     bool generated = false;
+    bool powerBypassed = false, signalRecorded = false, glyphRecorded = false, coordinatesRecorded = false;
     std::uint64_t mapRevision = 0;
     std::uint32_t seed = 0;
     MineQuest quest;
@@ -336,6 +337,8 @@ class MineLevel final : public Level
     float GetAimAngle();
     static tutorial::Vector2 GetAimDirection(float angle);
     void Interact();
+    bool PowerAvailable() const;
+    void SyncInvestigation();
     void UseRecoveryKit();
 
   private:
@@ -382,7 +385,8 @@ enum class ChapterAction
     Scrappers,
     Ledger,
     DetailLedger,
-    ConvoySupply
+    ConvoySupply,
+    Mission
 };
 struct ChapterInteraction
 {
@@ -414,6 +418,8 @@ struct ChapterProjectile
 struct ChapterOneState
 {
     bool unlocked = false, active = false, generated = false;
+    unsigned observedRecords = 0;
+    bool convoyEvacuated = false, convoyRewardClaimed = false;
     bool generatorInspected = false, generatorRestored = false, portableLightRepaired = false;
     bool convoyBriefed = false, receiverInspected = false, escortStarted = false, convoyRescued = false;
     int surveyMarkers = 0;
@@ -520,6 +526,8 @@ class ChapterOneLevel final : public Level
         return surface;
     }
     void PrepareSurface();
+    void SyncEvidence();
+    void CommitConvoy();
     bool IsAvailable() const;
     bool IsActive() const override;
     bool Unlock();
