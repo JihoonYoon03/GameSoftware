@@ -975,6 +975,13 @@ void PrepareCheckpointFixture()
     assert(g.RelocateSurfaceSurvey(plan->Region("mq00_mine").access.position));
     assert(g.EnterSurfaceMine());
     mineState.player.credits = 1737;
+    // A regional visit must never refill or heal a joined companion.
+    assert(g.HasCompanion(CompanionId::Ria, CompanionPlace::Mine));
+    mineState.riaCombat.health = 37;
+    combat::Shot companionShot;
+    assert(mineState.riaCombat.pistol.TryFire(0, companionShot));
+    assert(mineState.riaCombat.pistol.Reload());
+    mineState.riaCombat.pistol.Update(.42f);
     mineState.player.salvage = 23;
     mineState.enemies.front().health = 7;
     mineState.survivors.front().combat.health = 61;
@@ -1025,6 +1032,9 @@ void VerifyCheckpointFixture(int credits = 1737)
            mineState.drops.back().actorId + 1 == mineState.nextDropActorId);
     assert(mineState.pistol.GetRounds() == 11 && mineState.pistol.IsReloading() &&
            std::fabs(mineState.pistol.GetReloadProgress() - .3f) < .0001f);
+    assert(g.HasCompanion(CompanionId::Ria, CompanionPlace::Mine) && mineState.riaCombat.health == 37 &&
+           mineState.riaCombat.pistol.GetRounds() == 11 && mineState.riaCombat.pistol.IsReloading() &&
+           std::fabs(mineState.riaCombat.pistol.GetReloadProgress() - .3f) < .0001f);
     assert(w.missions.Status(MissionId::Frontier) == MissionStatus::Paused &&
            GameLevels::Chapter().GetState().generatorInspected);
     assert(w.relayNetwork.Registered("relay_halo_07_0") && w.playerGender == models::Gender::Female &&
@@ -1053,8 +1063,9 @@ void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::file
         }
         return result;
     };
-    assert(number(8) == 3 && (version == 1 || version == 2));
-    const size_t payloadEnd = bytes.size() - 8 - size_t(number(bytes.size() - 8));
+    assert(number(8) == 4 && (version == 1 || version == 2 || version == 3));
+    const size_t partyStart = bytes.size() - 8 - size_t(number(bytes.size() - 8));
+    const size_t payloadEnd = version == 3 ? partyStart : partyStart - 8 - size_t(number(partyStart - 8));
     size_t offset = 40;
     const auto activeLength = number(offset);
     offset += 8 + size_t(activeLength);
@@ -1111,7 +1122,10 @@ void TestWorldCheckpoints()
     const auto legacy2 = folder / "schema2.sav";
     WriteLegacyCheckpoint(file, legacy2, 2);
     assert(SaveSystem::CheckFile(legacy2));
-    const auto malformed = folder / "traffic-footer.sav";
+    const auto legacy3 = folder / "schema3.sav";
+    WriteLegacyCheckpoint(file, legacy3, 3);
+    assert(SaveSystem::CheckFile(legacy3));
+    const auto malformed = folder / "party-footer.sav";
     {
         std::ifstream input(file, std::ios::binary);
         std::vector<unsigned char> bytes{std::istreambuf_iterator<char>(input),
@@ -1207,6 +1221,9 @@ void TestWorldCheckpoints()
     assert(!w.relayPreparing && !w.mapVisible &&
            world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, departure,
                                             g.Surface()->Pose().origin) < 1.e-6);
+    assert(SaveSystem::Load(legacy3));
+    WaitForCheckpointLoad();
+    VerifyCheckpointFixture();
     assert(SaveSystem::Load(legacy2));
     WaitForCheckpointLoad();
     VerifyCheckpointFixture();
@@ -1216,12 +1233,121 @@ void TestWorldCheckpoints()
     g.Reset();
     std::filesystem::remove(legacy);
     std::filesystem::remove(legacy2);
+    std::filesystem::remove(legacy3);
     std::filesystem::remove(malformed);
     std::filesystem::remove(file);
     std::filesystem::remove(std::filesystem::path(file.wstring() + L".bak"));
     std::filesystem::remove(bad);
     std::filesystem::remove(opaqueBackup);
     std::filesystem::remove(transit);
+    std::filesystem::remove(folder);
+}
+
+void TestPlanetParty()
+{
+    using namespace tutorial;
+    using G = world::SurfaceGeometry;
+    PrepareCheckpointFixture();
+    auto &g = Game::Get();
+    auto &field = GameLevels::Chapter().GetState();
+    auto plan = g.Surface()->Stream().Snapshot()->planet;
+    auto *party = g.SurfaceParty();
+    party->Capture();
+    auto seed = party->State();
+    field.kainJoined = true;
+    seed.members[1] = seed.members[0];
+    seed.members[1].combat.health = 46;
+    seed.members[1].position =
+        G::FromLocal(plan->Region("mq00_mine").frame, {4, -2, 0}, g.Surface()->Planet().radiusMeters);
+    *party = PlanetParty(seed);
+    party->Bind(plan);
+    party->Publish();
+    assert(g.HasCompanion(CompanionId::Kain, CompanionPlace::Mine) && mineState.kain.combat.health == 46);
+    assert(!g.HasCompanion(CompanionId::Kain, CompanionPlace::Frontier));
+    // Non-owning projections cannot heal, move or refill either physical actor.
+    field.ria.combat.health = 99;
+    field.kain.combat.health = 98;
+    party->Capture();
+    party->Update(0);
+    assert(party->State().members[0].combat.health == 37 && party->State().members[1].combat.health == 46);
+    const auto folder =
+        std::filesystem::path("x64/RevisionChecks") /
+        ("party-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    const auto file = folder / "party.sav";
+    assert(SaveSystem::Save(file) && SaveSystem::Load(file));
+    WaitForCheckpointLoad();
+    party = g.SurfaceParty();
+    assert(g.HasCompanion(CompanionId::Ria, CompanionPlace::Mine) &&
+           g.HasCompanion(CompanionId::Kain, CompanionPlace::Mine));
+    assert(mineState.riaCombat.health == 37 && mineState.kain.combat.health == 46 &&
+           mineState.kain.combat.pistol.GetRounds() == 11);
+    // A downed actor deeper inside the mine stays there when the player leaves or relocates.
+    seed = party->State();
+    seed.members[0].position =
+        G::FromLocal(plan->Region("mq00_mine").frame,
+                     {(kPowerBypass.x - mineState.entry.x) * 2, (kPowerBypass.y - mineState.entry.y) * 2, 0},
+                     g.Surface()->Planet().radiusMeters);
+    seed.members[0].combat.health = 0;
+    seed.members[0].combat.downedSeconds = 12;
+    *party = PlanetParty(seed);
+    party->Bind(plan);
+    party->Publish();
+    const auto downed = party->State().members[0].position;
+    assert(g.LeaveSurfaceMine());
+    party->Update(.05f);
+    assert(g.RelocateSurfaceSurvey(plan->Region("halo_07").access.position));
+    assert(party->Owns(CompanionId::Ria, CompanionPlace::Mine) &&
+           G::Distance(g.Surface()->Planet().radiusMeters, downed, party->State().members[0].position) <
+               .001);
+    assert(!party->NearbyTravelers()[0]);
+    // On the surface, only a nearby healthy companion joins a deliberate transport.
+    seed = party->State();
+    seed.members[0].place = CompanionPlace::Surface;
+    seed.members[0].position =
+        G::Advance(g.Surface()->Pose(), 4, 0, g.Surface()->Planet().radiusMeters).origin;
+    seed.members[0].combat.health = 37;
+    seed.members[0].combat.downedSeconds = 0;
+    seed.members[1].place = CompanionPlace::Surface;
+    seed.members[1].position = downed;
+    *party = PlanetParty(seed);
+    party->Bind(plan);
+    const auto travelers = party->NearbyTravelers();
+    assert(travelers[0] && !travelers[1]);
+    const auto farKain = party->State().members[1].position;
+    assert(g.RelocateSurfaceSurvey(plan->Region("frontier").access.position));
+    assert(G::Distance(g.Surface()->Planet().radiusMeters, g.Surface()->Pose().origin,
+                       party->State().members[0].position) <= 8.1);
+    assert(G::Distance(g.Surface()->Planet().radiusMeters, farKain, party->State().members[1].position) <
+           .001);
+    assert(party->State().members[0].combat.health == 37 &&
+           party->State().members[0].combat.pistol.GetRounds() == 11);
+    const auto monitor = monitoring::WorldSnapshot::Build(1, "party-test");
+    assert(monitor.find("halo/ria") == std::string::npos &&
+           monitor.find("frontier/kain") == std::string::npos &&
+           monitor.find("planet_party") != std::string::npos);
+    // Corrupt ownership and cross-planet records are rejected before changing the live game.
+    auto invalid = party->State();
+    invalid.members[0].place = CompanionPlace(255);
+    bool rejected = false;
+    try
+    {
+        PlanetParty::Validate(invalid, g.Surface()->Planet());
+    }
+    catch (const std::exception &)
+    {
+        rejected = true;
+    }
+    assert(rejected);
+    CivicJustice::State().wanted = 0;
+    CivicJustice::State().heat = 0;
+    assert(SaveSystem::SwitchPlanet("seira"));
+    WaitForCheckpointLoad();
+    assert(!g.SurfaceParty()->Joined(CompanionId::Ria) && !g.SurfaceParty()->Joined(CompanionId::Kain));
+    assert(SaveSystem::SwitchPlanet("erma"));
+    WaitForCheckpointLoad();
+    assert(g.SurfaceParty()->Joined(CompanionId::Ria) && g.SurfaceParty()->Joined(CompanionId::Kain));
+    g.Reset();
+    std::filesystem::remove(file);
     std::filesystem::remove(folder);
 }
 
@@ -3484,6 +3610,7 @@ int main(int argc, char **argv)
     TestOpenWorldParticipation();
     TestRelayTravelAndAtlas();
     TestWorldCheckpoints();
+    TestPlanetParty();
     TestPlanetProfileVisits();
     TestMapZoomAndSelection();
     TestUiMenusAndTransactions();

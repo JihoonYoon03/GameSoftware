@@ -12,9 +12,528 @@
 #include <limits>
 #include <set>
 #include <stdexcept>
+#include <utility>
 
 namespace tutorial
 {
+// ============================================================================
+// PlanetParty — persistent companions and explicit physical handoff between local simulations
+// ============================================================================
+PlanetParty::PlanetParty(PlanetPartyState initial) : state(std::move(initial))
+{
+}
+void PlanetParty::Bind(std::shared_ptr<const world::GeneratedPlanet> plan)
+{
+    if (!plan || planet == plan)
+    {
+        return;
+    }
+    Validate(state, plan->terrain.Planet());
+    planet = std::move(plan);
+    state.worldKey = world::WorldIdentity::ContentKey(planet->terrain.Planet(), "overworld", "party_v1");
+}
+bool PlanetParty::Joined(CompanionId id) const
+{
+    return state.members.at(size_t(id)).joined;
+}
+bool PlanetParty::Owns(CompanionId id, CompanionPlace place) const
+{
+    const auto &member = state.members.at(size_t(id));
+    return member.joined && member.place == place;
+}
+world::TangentFrame PlanetParty::Frame(CompanionPlace place) const
+{
+    return place == CompanionPlace::Surface
+               ? Game::Get().Surface()->Origin()
+               : planet->Region(place == CompanionPlace::Mine ? "mq00_mine" : "frontier").frame;
+}
+world::SurfacePoint PlanetParty::MinePoint(Vector2 local) const
+{
+    auto entry = game::GameLevels::Mine().GetState().entry;
+    return world::SurfaceGeometry::FromLocal(Frame(CompanionPlace::Mine),
+                                             {(local.x - entry.x) * 2, (local.y - entry.y) * 2, 0},
+                                             planet->terrain.Planet().radiusMeters);
+}
+Vector2 PlanetParty::MineLocal(const world::SurfacePoint &point) const
+{
+    auto local = world::SurfaceGeometry::ToLocal(Frame(CompanionPlace::Mine), point,
+                                                 planet->terrain.Planet().radiusMeters);
+    auto entry = game::GameLevels::Mine().GetState().entry;
+    return {entry.x + float(local.x / 2), entry.y + float(local.y / 2)};
+}
+void PlanetParty::Join()
+{
+    if (!planet || !planet->terrain.Planet().storyPlanet)
+    {
+        return;
+    }
+    auto &g = Game::Get();
+    auto &mine = game::GameLevels::Mine().GetState();
+    auto &field = game::GameLevels::Chapter().GetState();
+    for (size_t i = 0; i < state.members.size(); ++i)
+    {
+        auto &member = state.members[i];
+        if (member.joined || !(i == 0 ? mine.quest.IsRiaJoined() : field.kainJoined))
+        {
+            continue;
+        }
+        member.joined = true;
+        if (g.IsSurfaceMine() && mine.generated)
+        {
+            member.place = CompanionPlace::Mine;
+            member.position = MinePoint(i == 0 ? mine.riaPosition : mine.kain.position);
+            member.combat = i == 0 ? mine.riaCombat : mine.kain.combat;
+        }
+        else if (field.generated && (field.active || i == 1))
+        {
+            member.place = CompanionPlace::Frontier;
+            const auto &person = i == 0 ? field.ria : field.kain;
+            member.position = game::GameLevels::Chapter().Surface().Point(person.position);
+            member.combat = person.combat;
+        }
+        else
+        {
+            member.position =
+                *g.SurfaceCities()->Point(*g.Surface(), 0, i == 0 ? kLiaPosition : kCityKainPosition);
+            member.combat.health = CivicJustice::State().landmarkHealth[i == 0 ? 0 : 2];
+            member.combat.downedSeconds = member.combat.health <= 0 ? 12.f : 0.f;
+        }
+        member.heading = Frame(member.place).right;
+    }
+}
+void PlanetParty::Capture()
+{
+    if (!planet)
+    {
+        return;
+    }
+    Join();
+    const auto &mine = game::GameLevels::Mine().GetState();
+    const auto &field = game::GameLevels::Chapter().GetState();
+    for (size_t i = 0; i < state.members.size(); ++i)
+    {
+        auto &member = state.members[i];
+        if (!member.joined || member.place == CompanionPlace::Surface)
+        {
+            continue;
+        }
+        MovementFacing facing;
+        if (member.place == CompanionPlace::Mine)
+        {
+            member.position = MinePoint(i == 0 ? mine.riaPosition : mine.kain.position);
+            member.combat = i == 0 ? mine.riaCombat : mine.kain.combat;
+            facing = i == 0 ? mine.riaFacing : mine.kain.facing;
+        }
+        else
+        {
+            const auto &person = i == 0 ? field.ria : field.kain;
+            member.position = game::GameLevels::Chapter().Surface().Point(person.position);
+            member.combat = person.combat;
+            facing = person.facing;
+        }
+        member.combat.downedSeconds = (std::max)(0.f, member.combat.downedSeconds);
+        auto frame = Frame(member.place);
+        member.heading = world::SurfaceGeometry::Unit(
+            {frame.right.x * std::cos(facing.yaw) + frame.forward.x * std::sin(facing.yaw),
+             frame.right.y * std::cos(facing.yaw) + frame.forward.y * std::sin(facing.yaw),
+             frame.right.z * std::cos(facing.yaw) + frame.forward.z * std::sin(facing.yaw)});
+        member.walking = facing.walking;
+    }
+}
+void PlanetParty::Publish()
+{
+    if (!planet)
+    {
+        return;
+    }
+    auto &mine = game::GameLevels::Mine().GetState();
+    auto &field = game::GameLevels::Chapter().GetState();
+    for (size_t i = 0; i < state.members.size(); ++i)
+    {
+        const auto &member = state.members[i];
+        if (!member.joined || member.place == CompanionPlace::Surface)
+        {
+            continue;
+        }
+        auto frame = Frame(member.place);
+        float yaw = float(std::atan2(world::SurfaceGeometry::Dot(member.heading, frame.forward),
+                                     world::SurfaceGeometry::Dot(member.heading, frame.right)));
+        MovementFacing facing;
+        facing.yaw = yaw;
+        facing.walking = member.walking;
+        if (member.place == CompanionPlace::Mine)
+        {
+            if (i == 0)
+            {
+                mine.riaPosition = MineLocal(member.position);
+                mine.riaCombat = member.combat;
+                mine.riaFacing = facing;
+            }
+            else
+            {
+                mine.kain.position = MineLocal(member.position);
+                mine.kain.combat = member.combat;
+                mine.kain.facing = facing;
+            }
+        }
+        else
+        {
+            auto local = world::SurfaceGeometry::ToLocal(frame, member.position,
+                                                         planet->terrain.Planet().radiusMeters);
+            auto &person = i == 0 ? field.ria : field.kain;
+            person.position = {game::kFrontierEntry.x + float(local.x / 2),
+                               game::kFrontierEntry.y + float(local.y / 2)};
+            person.combat = member.combat;
+            person.facing = facing;
+        }
+    }
+}
+void PlanetParty::ChangeOwner(size_t index, CompanionPlace place, const world::SurfacePoint &position)
+{
+    profiling::Count(profiling::Counter::CompanionHandoffs);
+    auto &member = state.members[index];
+    member.place = place;
+    member.position = position;
+    member.walking = false;
+    member.combat.engaged = member.combat.evading = false;
+    member.combat.muzzleFlash = 0;
+    member.combat.aimYaw = 0; // Reacquire a target in the new adapter, never transport a stale aim.
+    auto &mine = game::GameLevels::Mine().GetState();
+    if (index == 0)
+    {
+        mine.riaRoute.clear();
+        mine.riaRouteIndex = 0;
+        mine.riaNavigationCooldown = 0;
+    }
+    else
+    {
+        mine.kain.route.clear();
+        mine.kain.routeIndex = 0;
+        mine.kain.navigationCooldown = 0;
+    }
+    auto &person =
+        index == 0 ? game::GameLevels::Chapter().GetState().ria : game::GameLevels::Chapter().GetState().kain;
+    person.route.clear();
+    person.waypoint = 0;
+}
+bool PlanetParty::Blocked(const world::SurfacePoint &point, double clearance, int except) const
+{
+    if (!planet)
+    {
+        return false;
+    }
+    for (size_t i = 0; i < state.members.size(); ++i)
+    {
+        const auto &m = state.members[i];
+        if (int(i) != except && m.joined && m.place != CompanionPlace::Mine &&
+            world::SurfaceGeometry::Distance(planet->terrain.Planet().radiusMeters, point, m.position) <
+                clearance + .32)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+bool PlanetParty::Clear(const world::SurfacePoint &point, int except) const
+{
+    auto &g = Game::Get();
+    const auto &field = game::GameLevels::Chapter().GetState();
+    if (field.generated && world::SurfaceGeometry::Distance(planet->terrain.Planet().radiusMeters, point,
+                                                            planet->Region("frontier").center.position) < 150)
+    {
+        auto local = world::SurfaceGeometry::ToLocal(Frame(CompanionPlace::Frontier), point,
+                                                     planet->terrain.Planet().radiusMeters);
+        Vector2 p{game::kFrontierEntry.x + float(local.x / 2), game::kFrontierEntry.y + float(local.y / 2)};
+        if (p.x >= 0 && p.y >= 0 && p.x < game::kFrontierWidth && p.y < game::kFrontierHeight &&
+            field.tiles[size_t(int(p.y) * game::kFrontierWidth + int(p.x))] == game::FrontierTile::Canal)
+        {
+            return false;
+        }
+        auto occupied = [&](const game::FrontierPerson &person) {
+            return person.combat.health > 0 && Game::Distance(p, person.position) < .65f;
+        };
+        if ((!field.kainJoined && occupied(field.kain)) ||
+            std::any_of(field.survivors.begin(), field.survivors.end(), occupied) ||
+            std::any_of(field.scrappers.begin(), field.scrappers.end(), [&](const auto &person) {
+                return !(field.negotiated && person.arrived) && occupied(person);
+            }))
+        {
+            return false;
+        }
+    }
+    return g.Surface()->LandingClear(point, .32) && !Blocked(point, .32, except) &&
+           (!g.SurfaceBike() || world::SurfaceGeometry::Distance(planet->terrain.Planet().radiusMeters,
+                                                                 *g.SurfaceBike(), point) >= 1) &&
+           (!g.SurfaceTraffic() || !g.SurfaceTraffic()->Blocked(point, .32)) &&
+           (!g.SurfaceCities() || !g.SurfaceCities()->OccupiedAt(g.GetState(), *g.Surface(), point));
+}
+void PlanetParty::Update(float seconds)
+{
+    profiling::Scope timer(profiling::Timer::PlanetParty);
+    seconds = std::isfinite(seconds) ? std::clamp(seconds, 0.f, .05f) : 0.f;
+    if (!planet || !planet->terrain.Planet().storyPlanet)
+    {
+        return;
+    }
+    using G = world::SurfaceGeometry;
+    auto &g = Game::Get();
+    auto &mine = game::GameLevels::Mine();
+    auto &field = game::GameLevels::Chapter();
+    Join();
+    const double radius = planet->terrain.Planet().radiusMeters;
+    const auto &door = planet->Region("mq00_mine").access.position;
+    for (size_t i = 0; i < state.members.size(); ++i)
+    {
+        auto &member = state.members[i];
+        routeCooldown[i] = (std::max)(0.f, routeCooldown[i] - seconds);
+        if (!member.joined)
+        {
+            continue;
+        }
+        if (member.place == CompanionPlace::Frontier && !field.IsActive())
+        {
+            ChangeOwner(i, CompanionPlace::Surface, member.position);
+        }
+        if (member.place == CompanionPlace::Surface && g.IsSurfaceMine() && member.combat.health > 0 &&
+            G::Distance(radius, member.position, door) <= 6)
+        {
+            Vector2 entry = mine.GetState().entry;
+            Vector2 candidate{entry.x + 1, entry.y + (i == 0 ? 1.f : -1.f)};
+            if (!mine.Map().IsBlocked(candidate))
+            {
+                ChangeOwner(i, CompanionPlace::Mine, MinePoint(candidate));
+            }
+        }
+        if (member.place == CompanionPlace::Surface && field.IsActive() &&
+            G::Distance(radius, member.position, planet->Region("frontier").access.position) < 240)
+        {
+            auto local = G::ToLocal(Frame(CompanionPlace::Frontier), member.position, radius);
+            const double x = game::kFrontierEntry.x + local.x / 2, y = game::kFrontierEntry.y + local.y / 2;
+            if (x >= 0 && y >= 0 && x < game::kFrontierWidth && y < game::kFrontierHeight)
+            {
+                ChangeOwner(i, CompanionPlace::Frontier, member.position);
+            }
+        }
+        bool simulated = (member.place == CompanionPlace::Mine && g.IsSurfaceMine()) ||
+                         (member.place == CompanionPlace::Frontier && field.IsActive());
+        if (simulated || seconds <= 0)
+        {
+            continue;
+        }
+        auto &combat = member.combat;
+        combat.pistol.Update(seconds);
+        combat.cooldown = (std::max)(0.f, combat.cooldown - seconds);
+        combat.hitGrace = (std::max)(0.f, combat.hitGrace - seconds);
+        combat.muzzleFlash = 0;
+        combat.engaged = combat.evading = false;
+        member.walking = false;
+        if (combat.health <= 0)
+        {
+            combat.downedSeconds = (std::max)(0.f, combat.downedSeconds - seconds);
+            if (combat.downedSeconds <= 0)
+            {
+                combat.health = 50;
+                combat.hitGrace = 3;
+            }
+            continue;
+        }
+        if (member.place == CompanionPlace::Mine)
+        {
+            auto position = MineLocal(member.position);
+            const auto entry = mine.GetState().entry;
+            if (Game::Distance(position, entry) <= 1.8f)
+            {
+                auto frame = G::Frame(door);
+                auto candidate = G::Advance(frame, (i == 0 ? -2. : 2.), -2., radius).origin;
+                if (Clear(candidate, int(i)))
+                {
+                    candidate.altitudeMeters = g.Surface()->Stream().Contact(candidate).heightMeters;
+                    ChangeOwner(i, CompanionPlace::Surface, candidate);
+                }
+            }
+            else
+            {
+                // Only two actors; cache a path until its end rather than rerunning a map search per frame.
+                auto &s = mine.GetState();
+                auto &route = i == 0 ? s.riaRoute : s.kain.route;
+                auto &index = i == 0 ? s.riaRouteIndex : s.kain.routeIndex;
+                if (!route.empty() && Game::Distance(route.back(), entry) > .1f)
+                {
+                    route.clear();
+                    index = 0;
+                    routeCooldown[i] = 0;
+                }
+                if (index >= route.size() && routeCooldown[i] <= 0)
+                {
+                    route = mine.Map().FindRoute(position, entry);
+                    index = 0;
+                    routeCooldown[i] = .8f;
+                }
+                if (index < route.size())
+                {
+                    auto next = route[index];
+                    float d = Game::Distance(position, next), step = (std::min)(4.f * seconds, d);
+                    if (d > .001f)
+                    {
+                        const float yaw = std::atan2(next.y - position.y, next.x - position.x);
+                        auto frame = Frame(CompanionPlace::Mine);
+                        member.heading =
+                            G::Unit({frame.right.x * std::cos(yaw) + frame.forward.x * std::sin(yaw),
+                                     frame.right.y * std::cos(yaw) + frame.forward.y * std::sin(yaw),
+                                     frame.right.z * std::cos(yaw) + frame.forward.z * std::sin(yaw)});
+                        position = {position.x + (next.x - position.x) * step / d,
+                                    position.y + (next.y - position.y) * step / d};
+                        member.position = MinePoint(position);
+                        member.walking = true;
+                    }
+                    if (d <= step + .01f)
+                    {
+                        ++index;
+                    }
+                }
+            }
+            continue;
+        }
+        auto target = g.IsSurfaceMine() ? door : g.Surface()->Pose().origin;
+        const double distance = G::Distance(radius, member.position, target);
+        if (distance <= (i == 0 ? 3.2 : 4.8))
+        {
+            continue;
+        }
+        auto frame = G::Frame(member.position);
+        double angle = std::atan2(G::Dot(target.normal, frame.forward), G::Dot(target.normal, frame.right)),
+               step = (std::min)(8. * seconds, distance - 2.5);
+        // Bounded steps and steering check local obstacles without per-frame global pathfinding.
+        for (double turn : {0., .45, -.45, .9, -.9})
+        {
+            auto candidate =
+                G::Advance(frame, std::cos(angle + turn) * step, std::sin(angle + turn) * step, radius)
+                    .origin;
+            if (Clear(candidate, int(i)))
+            {
+                candidate.altitudeMeters = g.Surface()->Stream().Contact(candidate).heightMeters;
+                member.heading = G::Unit(
+                    {frame.right.x * std::cos(angle + turn) + frame.forward.x * std::sin(angle + turn),
+                     frame.right.y * std::cos(angle + turn) + frame.forward.y * std::sin(angle + turn),
+                     frame.right.z * std::cos(angle + turn) + frame.forward.z * std::sin(angle + turn)});
+                member.position = candidate;
+                member.walking = true;
+                break;
+            }
+        }
+    }
+    Publish();
+}
+InteractionTarget PlanetParty::Nearby(float *distance) const
+{
+    auto &g = Game::Get();
+    InteractionTarget result = InteractionTarget::None;
+    double best = 2.7;
+    for (size_t i = 0; planet && i < state.members.size(); ++i)
+    {
+        const auto &m = state.members[i];
+        if (m.joined && m.place == CompanionPlace::Surface && m.combat.health > 0)
+        {
+            double d = world::SurfaceGeometry::Distance(planet->terrain.Planet().radiusMeters, m.position,
+                                                        g.Surface()->Pose().origin);
+            if (d < best)
+            {
+                best = d;
+                result = i == 0 ? InteractionTarget::Lia : InteractionTarget::Kain;
+            }
+        }
+    }
+    if (distance)
+    {
+        *distance = result == InteractionTarget::None ? 1000000.f : float(best / 2);
+    }
+    return result;
+}
+std::array<bool, 2> PlanetParty::NearbyTravelers() const
+{
+    std::array<bool, 2> result = {};
+    auto &g = Game::Get();
+    for (size_t i = 0; planet && i < state.members.size(); ++i)
+    {
+        const auto &m = state.members[i];
+        result[i] = m.joined && m.place != CompanionPlace::Mine && m.combat.health > 0 &&
+                    world::SurfaceGeometry::Distance(planet->terrain.Planet().radiusMeters, m.position,
+                                                     g.Surface()->Pose().origin) <= 12;
+    }
+    return result;
+}
+void PlanetParty::Arrive(const std::array<bool, 2> &travelers)
+{
+    auto &g = Game::Get();
+    for (size_t i = 0; planet && i < travelers.size(); ++i)
+    {
+        if (!travelers[i])
+        {
+            continue;
+        }
+        for (unsigned ring = 2; ring <= 8; ++ring)
+        {
+            bool placed = false;
+            for (unsigned j = 0; j < 8; ++j)
+            {
+                auto candidate = world::SurfaceGeometry::Advance(
+                                     g.Surface()->Pose(), ring * std::cos(j * world::SurfaceGeometry::Pi / 4),
+                                     ring * std::sin(j * world::SurfaceGeometry::Pi / 4),
+                                     planet->terrain.Planet().radiusMeters)
+                                     .origin;
+                if (Clear(candidate, int(i)))
+                {
+                    candidate.altitudeMeters = g.Surface()->Stream().Contact(candidate).heightMeters;
+                    ChangeOwner(i, CompanionPlace::Surface, candidate);
+                    placed = true;
+                    break;
+                }
+            }
+            if (placed)
+            {
+                break;
+            }
+        }
+    }
+    Publish();
+}
+void PlanetParty::Validate(const PlanetPartyState &value, const world::PlanetDefinition &definition)
+{
+    using G = world::SurfaceGeometry;
+    if (!value.worldKey.empty() &&
+        value.worldKey != world::WorldIdentity::ContentKey(definition, "overworld", "party_v1"))
+    {
+        throw std::runtime_error("동료 기록의 행성이 다릅니다.");
+    }
+    for (const auto &m : value.members)
+    {
+        if (!m.joined)
+        {
+            continue;
+        }
+        if (!definition.storyPlanet || value.worldKey.empty() || unsigned(m.place) > 2 ||
+            m.combat.health < 0 || m.combat.health > 100 || !std::isfinite(m.combat.downedSeconds) ||
+            m.combat.downedSeconds < 0 || m.combat.downedSeconds > 120 || !std::isfinite(m.heading.x) ||
+            !std::isfinite(m.heading.y) || !std::isfinite(m.heading.z) ||
+            std::abs(G::Dot(m.heading, m.heading) - 1) > .01)
+        {
+            throw std::runtime_error("저장된 동료 상태가 올바르지 않습니다.");
+        }
+        for (float timer : {m.combat.cooldown, m.combat.hitGrace})
+        {
+            if (!std::isfinite(timer) || timer < 0 || timer > 120)
+            {
+                throw std::runtime_error("동료의 전투 대기 시간이 올바르지 않습니다.");
+            }
+        }
+        if (!std::isfinite(m.combat.aimYaw))
+        {
+            throw std::runtime_error("동료의 조준 방향이 올바르지 않습니다.");
+        }
+        G::Validate(m.position);
+    }
+}
+
 namespace
 {
 Vector2 Add(Vector2 a, Vector2 b)
@@ -3390,7 +3909,8 @@ InteractionTarget PlanetCities::Nearby(const GameState &state, const world::Surf
         }
     };
     consider(kHomeDoor, InteractionTarget::HomeEntrance);
-    if (!CivicCombat::LandmarkDown(kLiaPosition))
+    if ((!Game::Get().SurfaceParty() || !Game::Get().SurfaceParty()->Joined(CompanionId::Ria)) &&
+        !CivicCombat::LandmarkDown(kLiaPosition))
     {
         consider(kLiaPosition, InteractionTarget::Lia);
     }
@@ -3398,7 +3918,8 @@ InteractionTarget PlanetCities::Nearby(const GameState &state, const world::Surf
     {
         consider(kMaraPosition, InteractionTarget::Mara);
     }
-    if (game::GameLevels::Chapter().GetState().kainJoined && !CivicCombat::LandmarkDown(kCityKainPosition))
+    if (!Game::Get().SurfaceParty() && game::GameLevels::Chapter().GetState().kainJoined &&
+        !CivicCombat::LandmarkDown(kCityKainPosition))
     {
         consider(kCityKainPosition, InteractionTarget::Kain);
     }
@@ -3485,6 +4006,13 @@ bool PlanetCities::OccupiedAt(const GameState &state, const world::SurfaceSessio
     {
         for (auto point : {kLiaPosition, kMaraPosition, kCityKainPosition})
         {
+            if (Game::Get().SurfaceParty() &&
+                ((point.x == kLiaPosition.x && point.y == kLiaPosition.y &&
+                  Game::Get().SurfaceParty()->Joined(CompanionId::Ria)) ||
+                 (point.x == kCityKainPosition.x && point.y == kCityKainPosition.y)))
+            {
+                continue;
+            }
             if (point.x == kCityKainPosition.x && point.y == kCityKainPosition.y &&
                 !game::GameLevels::Chapter().GetState().kainJoined)
             {

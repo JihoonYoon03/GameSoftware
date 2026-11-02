@@ -132,13 +132,15 @@ struct RescueGroup
     bool combatants = false;
     bool rescued = false;
 };
-struct NpcCombatState
+using NpcCombatState = combat::NpcCombatState;
+struct MineCompanion
 {
-    int health = 100;
-    float cooldown = 0, hitGrace = 0, muzzleFlash = 0, downedSeconds = 0;
-    bool engaged = false, evading = false;
-    float aimYaw = 0;
-    combat::Pistol pistol;
+    tutorial::Vector2 position = kMineEntry;
+    std::vector<tutorial::Vector2> route;
+    size_t routeIndex = 0;
+    float navigationCooldown = 0;
+    tutorial::MovementFacing facing;
+    NpcCombatState combat;
 };
 struct RescueNpc
 {
@@ -194,6 +196,7 @@ struct MineState
     float riaMovement = 0;
     tutorial::MovementFacing riaFacing;
     NpcCombatState riaCombat;
+    MineCompanion kain; // Projection of PlanetParty; not a second persistent actor.
     float invulnerability = 0;
     float navigationCooldown = 0;
     float scannerSeconds = 0;

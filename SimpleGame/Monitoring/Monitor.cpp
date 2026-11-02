@@ -217,13 +217,29 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     const auto &world = tutorial::Game::Get().GetState();
     const auto &level = game::GameLevels::Mine().GetState();
     const auto &chapter = game::GameLevels::Chapter().GetState();
+    const auto *party = tutorial::Game::Get().SurfaceParty();
+    auto owns = [&](tutorial::CompanionId id, tutorial::CompanionPlace place) {
+        return tutorial::Game::Get().HasCompanion(id, place);
+    };
+    size_t surfaceCompanions = 0;
+    if (party)
+    {
+        for (const auto &member : party->State().members)
+        {
+            surfaceCompanions += member.joined && member.place == tutorial::CompanionPlace::Surface;
+        }
+    }
     const size_t fieldScrappers = std::count_if(chapter.scrappers.begin(), chapter.scrappers.end(),
                                                 [](const game::FrontierPerson &p) { return !p.arrived; });
     const size_t frontierPopulation =
         chapter.generated
             ? chapter.survivors.size() +
-                  (chapter.active && (!world.surfaceExploration || level.quest.IsRiaJoined()) ? 1 : 0) +
-                  (!chapter.kainJoined || chapter.active ? 1 : 0) + fieldScrappers
+                  (owns(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Frontier) ? 1 : 0) +
+                  (!chapter.kainJoined ||
+                           owns(tutorial::CompanionId::Kain, tutorial::CompanionPlace::Frontier)
+                       ? 1
+                       : 0) +
+                  fieldScrappers
             : 0;
     const bool simulating = !tutorial::SaveSystem::Loading() && level.active && !world.isPaused &&
                             !world.mapVisible && !world.weaponWheel.visible &&
@@ -239,8 +255,9 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                                 !world.isInObservatory && !world.mapVisible && !world.weaponWheel.visible &&
                                 !tutorial::Dialogue::LocksWorld() && !tutorial::HospitalRecovery::Active();
     const bool story = tutorial::Game::Get().IsStoryWorld();
-    const bool cityLia = story && !level.active && !chapter.active;
-    const bool cityKain = story && chapter.kainJoined && !chapter.active;
+    const bool cityLia =
+        story && !level.active && !chapter.active && !(party && party->Joined(tutorial::CompanionId::Ria));
+    const bool cityKain = story && chapter.kainJoined && !chapter.active && !party;
     const size_t haloPopulation =
         story ? 19 + (cityLia ? 1 : 0) - (chapter.kainJoined ? 1 : 0) + (cityKain ? 1 : 0) : 0;
     const size_t cityPopulation = story ? haloPopulation + (tutorial::Overworld::kCityCount - 1) *
@@ -262,8 +279,9 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
             outdoorName = snapshot->planet->Region(outdoorId).definition.name;
         }
     }
-    const size_t minePopulation =
-        level.survivors.size() + (level.active && level.quest.IsRiaJoined() ? 1 : 0);
+    const size_t minePopulation = level.survivors.size() +
+                                  (owns(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Mine) ? 1 : 0) +
+                                  (owns(tutorial::CompanionId::Kain, tutorial::CompanionPlace::Mine) ? 1 : 0);
     size_t aliveMobs = 0;
     for (const auto &enemy : level.enemies)
     {
@@ -404,7 +422,11 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                                 : world.isInsideHome    ? "플레이어의 집"
                                                         : outdoorName);
     result.Seconds("play_time_seconds", world.playTimeSeconds);
-    counts.Number("npc_total", cityPopulation + minePopulation + frontierPopulation);
+    counts.Number("npc_total", cityPopulation + minePopulation + frontierPopulation + surfaceCompanions);
+    counts.Number("party_on_surface", surfaceCompanions);
+    counts.Number("party_in_mine",
+                  (owns(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Mine) ? 1 : 0) +
+                      (owns(tutorial::CompanionId::Kain, tutorial::CompanionPlace::Mine) ? 1 : 0));
     counts.Number("npc_current_region", chapter.active     ? frontierPopulation
                                         : level.active     ? minePopulation
                                         : currentCity == 0 ? haloPopulation
@@ -785,11 +807,17 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         item.Text("source", "mine_story_actor");
         Append(npcArray, item.Finish());
     };
-    if (level.active && level.quest.IsRiaJoined())
+    if (owns(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Mine))
     {
-        mineNpc("mine/ria", "리아", "동료 · 정비사", level.riaPosition, "following", "동행",
-                level.riaRoute.size() - (std::min)(level.riaRoute.size(), level.riaRouteIndex), true, -1,
-                level.riaCombat);
+        mineNpc(party ? "party/ria" : "mine/ria", "리아", "동료 · 정비사", level.riaPosition, "following",
+                "동행", level.riaRoute.size() - (std::min)(level.riaRoute.size(), level.riaRouteIndex), true,
+                -1, level.riaCombat);
+    }
+    if (owns(tutorial::CompanionId::Kain, tutorial::CompanionPlace::Mine))
+    {
+        mineNpc("party/kain", "카인", "동료 · 경비원", level.kain.position, "following", "동행",
+                level.kain.route.size() - (std::min)(level.kain.route.size(), level.kain.routeIndex), true,
+                -1, level.kain.combat);
     }
     for (const auto &npc : level.survivors)
     {
@@ -822,13 +850,14 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     };
     if (chapter.generated)
     {
-        if (chapter.active && (!world.surfaceExploration || level.quest.IsRiaJoined()))
+        if (owns(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Frontier))
         {
-            frontierNpc("frontier/ria", "리아", chapter.ria, true, false);
+            frontierNpc(party ? "party/ria" : "frontier/ria", "리아", chapter.ria, true, false);
         }
-        if (!chapter.kainJoined || chapter.active)
+        if (!chapter.kainJoined || owns(tutorial::CompanionId::Kain, tutorial::CompanionPlace::Frontier))
         {
-            frontierNpc("frontier/kain", "카인", chapter.kain, chapter.kainJoined, false);
+            frontierNpc(party && chapter.kainJoined ? "party/kain" : "frontier/kain", "카인", chapter.kain,
+                        chapter.kainJoined, false);
         }
         else if (cityKain)
         {
@@ -849,6 +878,64 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
             }
         }
     }
+    std::string partyRecords;
+    if (party && tutorial::Game::Get().Surface())
+    {
+        const auto &surface = *tutorial::Game::Get().Surface();
+        for (size_t i = 0; i < party->State().members.size(); ++i)
+        {
+            const auto &member = party->State().members[i];
+            if (!member.joined)
+            {
+                continue;
+            }
+            JsonObject item;
+            item.Text("id", i == 0 ? "party/ria" : "party/kain");
+            item.Text("name", i == 0 ? "리아" : "카인");
+            item.Text("world_key", party->State().worldKey);
+            item.Text("owner", member.place == tutorial::CompanionPlace::Mine       ? "mine"
+                               : member.place == tutorial::CompanionPlace::Frontier ? "frontier"
+                                                                                    : "surface");
+            item.Text("region_id", "overworld");
+            item.Text("role", "동료");
+            item.Text("source", "planet_party");
+            item.Text("life_state", member.combat.health > 0 ? "alive" : "downed");
+            item.Text("activity", member.walking ? "walking" : "idle");
+            item.Text("activity_label", member.combat.health <= 0 ? "회복 중"
+                                        : member.combat.engaged   ? "엄호 중"
+                                        : member.walking          ? "동행 이동"
+                                                                  : "대기");
+            item.Text("behavior_pattern", "실제 위치 추종 / 출입구에서 지역 인계");
+            item.Raw("personality", "null");
+            item.Raw("home", "null");
+            item.Raw("destination", "null");
+            item.Number("group_id", -1);
+            item.Number("route_remaining", 0);
+            item.Bool("simulation_active",
+                      !world.isPaused && !world.mapVisible && !world.weaponWheel.visible &&
+                          !world.journalVisible && !world.dialogueHistoryVisible && !world.relayPreparing &&
+                          !tutorial::SaveSystem::Loading() && !tutorial::Dialogue::LocksWorld() &&
+                          !tutorial::HospitalRecovery::Active());
+            item.Bool("following", true);
+            item.Number("health", member.combat.health);
+            item.Number("max_health", 100);
+            item.Number("magazine_rounds", member.combat.pistol.GetRounds());
+            auto degrees = ::world::SurfaceGeometry::ToDegrees(member.position);
+            item.Number("latitude", degrees[0]);
+            item.Number("longitude", degrees[1]);
+            item.Number("altitude_meters", member.position.altitudeMeters);
+            auto local = ::world::SurfaceAtlas::Project(surface.Origin(), member.position,
+                                                        surface.Planet().radiusMeters);
+            item.Raw("position", Position({float(local.x / 2), float(local.y / 2)}));
+            auto record = item.Finish();
+            Append(partyRecords, record);
+            if (member.place == tutorial::CompanionPlace::Surface)
+            {
+                Append(npcArray, record);
+            }
+        }
+    }
+    result.Raw("planet_party", "[" + partyRecords + "]");
     result.Raw("npcs", "[" + npcArray + "]");
     result.Raw("workstations", "[]");
     std::string groups;

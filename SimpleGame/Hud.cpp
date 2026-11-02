@@ -1459,9 +1459,14 @@ void MineHud::Draw()
     if (!Dialogue::Active())
     {
         std::string hint;
-        if (level.IsNear(s.riaPosition))
+        if (Game::Get().HasCompanion(CompanionId::Ria, CompanionPlace::Mine) && level.IsNear(s.riaPosition))
         {
             hint = "리아 / 대화·응급 처치";
+        }
+        if (Game::Get().HasCompanion(CompanionId::Kain, CompanionPlace::Mine) &&
+            level.IsNear(s.kain.position))
+        {
+            hint = "카인 / 대화·응급 처치";
         }
         for (const auto &group : s.rescueGroups)
         {
@@ -1727,24 +1732,36 @@ void Hud::DrawVitals()
                    true);
         }
     }
-    if (game::GameLevels::Mine().IsActive() && mine.quest.IsRiaJoined())
+    if (game::GameLevels::Mine().IsActive())
     {
-        Icon(mine.riaCombat.health > 0 ? "companion" : "injured", 32, 115, 18, true);
-        UiText(62, 132,
-               mine.riaCombat.health <= 0 ? "리아 · 회복 중"
-               : mine.riaCombat.engaged   ? "리아 · 엄호 중"
-                                          : "리아 · 동행",
-               15, {.83f, .86f, .71f}, true);
+        const bool ria = Game::Get().HasCompanion(CompanionId::Ria, CompanionPlace::Mine);
+        const bool kain = Game::Get().HasCompanion(CompanionId::Kain, CompanionPlace::Mine);
+        Icon("companion", 32, 115, 18, true);
+        std::string companions = ria ? (mine.riaCombat.health <= 0 ? "리아 회복 중"
+                                        : mine.riaCombat.engaged   ? "리아 엄호 중"
+                                                                   : "리아 동행")
+                                     : "";
+        if (kain)
+        {
+            if (!companions.empty())
+            {
+                companions += " / ";
+            }
+            companions += mine.kain.combat.health <= 0 ? "카인 회복 중"
+                          : mine.kain.combat.engaged   ? "카인 엄호 중"
+                                                       : "카인 동행";
+        }
+        UiText(62, 132, companions.empty() ? "오르딘 광산" : companions, 15, {.83f, .86f, .71f}, true);
         Icon("rescue", 32, 148, 18, true);
         UiText(62, 165, "광산 구조 " + std::to_string(mine.rescuedPeople) + " / 12명", 15, kUiInk, true);
     }
     if (game::GameLevels::Chapter().IsActive())
     {
         Icon(chapter.ria.combat.health > 0 ? "companion" : "injured", 32, 139, 18, true);
-        std::string names = !w.surfaceExploration || mine.quest.IsRiaJoined()
+        std::string names = Game::Get().HasCompanion(CompanionId::Ria, CompanionPlace::Frontier)
                                 ? (chapter.ria.combat.health > 0 ? "리아 · 동행" : "리아 · 회복 중")
                                 : "빛나는 개척지";
-        if (chapter.kainJoined)
+        if (Game::Get().HasCompanion(CompanionId::Kain, CompanionPlace::Frontier))
         {
             names += chapter.kain.combat.health > 0 ? " / 카인 동행" : " / 카인 회복 중";
         }
@@ -2916,6 +2933,21 @@ void PlanetHud::DrawMap(bool full)
         bike && world::SurfaceGeometry::Distance(session->Planet().radiusMeters, *bike, focus) < range + 10)
     {
         MapDisc(view, project(*bike), 4 / view.scale, {1, .76f, .4f});
+    }
+    if (const auto *party = Game::Get().SurfaceParty())
+    {
+        for (size_t i = 0; i < party->State().members.size(); ++i)
+        {
+            const auto &member = party->State().members[i];
+            if (member.joined && member.place != CompanionPlace::Mine &&
+                world::SurfaceGeometry::Distance(session->Planet().radiusMeters, member.position, focus) <
+                    range)
+            {
+                MapPin(view, project(member.position),
+                       member.combat.health > 0 ? ColorRGBA(.4f, .92f, .83f) : ColorRGBA(1, .4f, .3f),
+                       i == 0 ? "리아" : "카인", full, 4);
+            }
+        }
     }
     if (w.planetDestination)
     {

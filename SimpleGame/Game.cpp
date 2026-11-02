@@ -641,6 +641,7 @@ void Game::StartSurface(bool insideHome)
     StoreSurfaceBikeHeading();
     surfaceCities = std::make_unique<PlanetCities>();
     surfaceTraffic = std::make_unique<PlanetTraffic>();
+    surfaceParty = std::make_unique<PlanetParty>();
     surface->Start(
         world::PlanetGenerator::Erma(Overworld::StoryAnchors()).WithCityCores(PlanetCities::Describe(state)));
 }
@@ -1473,6 +1474,7 @@ void Game::StopSurface()
     surfaceMineReturn.reset();
     surfaceCities.reset();
     surfaceTraffic.reset();
+    surfaceParty.reset();
     state.surfaceExploration = false;
     state.surfaceCameraHeight = 0;
     surfaceSurveyRegion.reset();
@@ -1483,6 +1485,11 @@ bool Game::RelocateSurfaceSurvey(const world::SurfacePoint &point)
     {
         return false;
     }
+    if (surfaceParty)
+    {
+        surfaceParty->Capture();
+    }
+    const auto travelers = surfaceParty ? surfaceParty->NearbyTravelers() : std::array<bool, 2>{};
     if (!state.surfaceExploration || IsSurfaceMine() || state.isInsideHome || state.isInObservatory ||
         !surface || !surface->Relocate(point))
     {
@@ -1503,6 +1510,10 @@ bool Game::RelocateSurfaceSurvey(const world::SurfacePoint &point)
     StoreSurfaceBikeHeading();
     state.planetMapPan = {};
     game::GameLevels::Chapter().Surface().Refresh();
+    if (surfaceParty)
+    {
+        surfaceParty->Arrive(travelers);
+    }
     return true;
 }
 bool Game::EnterSurfaceMine()
@@ -1525,6 +1536,10 @@ bool Game::EnterSurfaceMine()
         ShowNotice("광산 / 바이크를 주차하고 내린 뒤 입장하세요.");
         return false;
     }
+    if (surfaceParty)
+    {
+        surfaceParty->Capture();
+    }
     surfaceMineReturn = surface->Pose().origin;
     auto facing = world::SurfaceGeometry::TransformDirection(
         {std::cos(state.facingYaw), std::sin(state.facingYaw), 0}, surface->Origin(), region.frame);
@@ -1533,6 +1548,10 @@ bool Game::EnterSurfaceMine()
     state.mapVisible = false;
     state.surfaceCameraHeight = 0;
     game::GameLevels::Mine().Enter();
+    if (surfaceParty)
+    {
+        surfaceParty->Update(0);
+    }
     if (surfaceCities)
     {
         surfaceCities->Update(state, *surface, 0);
@@ -1641,6 +1660,13 @@ bool Game::LandOnSurface(const world::SurfacePoint &point, int city)
     {
         return false;
     }
+    if (surfaceParty)
+    {
+        surfaceParty->Capture();
+    }
+    const auto travelers = surfaceParty && !IsSurfaceMine() && !state.isInsideHome && !state.isInObservatory
+                               ? surfaceParty->NearbyTravelers()
+                               : std::array<bool, 2>{};
     auto oldFrame = surface ? surface->Origin() : world::TangentFrame{};
     if (surfaceBike && world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, *surfaceBike,
                                                         surface->Pose().origin) < 1000)
@@ -1677,14 +1703,17 @@ bool Game::LandOnSurface(const world::SurfacePoint &point, int city)
                             return person.combat.health > 0 && Distance(position, person.position) < .6f;
                         };
                         fieldOccupied =
-                            (game::GameLevels::Mine().GetState().quest.IsRiaJoined() &&
+                            (HasCompanion(CompanionId::Ria, CompanionPlace::Frontier) &&
                              occupied(field.ria)) ||
-                            (field.kainJoined && occupied(field.kain)) ||
+                            ((!field.kainJoined ||
+                              HasCompanion(CompanionId::Kain, CompanionPlace::Frontier)) &&
+                             occupied(field.kain)) ||
                             std::any_of(field.survivors.begin(), field.survivors.end(), occupied) ||
                             std::any_of(field.scrappers.begin(), field.scrappers.end(), occupied);
                     }
                 }
                 if (!surface->LandingClear(candidate, .32) || fieldOccupied ||
+                    (surfaceParty && surfaceParty->Blocked(candidate, .32)) ||
                     (surfaceTraffic && surfaceTraffic->Blocked(candidate, .32)) ||
                     (surfaceCities && surfaceCities->OccupiedAt(state, *surface, candidate, city)) ||
                     (surfaceBike && world::SurfaceGeometry::Distance(surface->Planet().radiusMeters,
@@ -1728,7 +1757,24 @@ bool Game::LandOnSurface(const world::SurfacePoint &point, int city)
     }
     std::fill(std::begin(state.pressedKeys), std::end(state.pressedKeys), false);
     state.mouseAiming = state.mouseFiring = false;
+    if (surfaceParty)
+    {
+        surfaceParty->Arrive(travelers);
+    }
     return true;
+}
+bool Game::HasCompanion(CompanionId id, CompanionPlace place) const
+{
+    if (state.surfaceExploration)
+    {
+        return surfaceParty && surfaceParty->Owns(id, place);
+    }
+    if (place == CompanionPlace::Mine)
+    {
+        return id == CompanionId::Ria && game::GameLevels::Mine().GetState().quest.IsRiaJoined();
+    }
+    return place == CompanionPlace::Frontier &&
+           (id == CompanionId::Ria || game::GameLevels::Chapter().GetState().kainJoined);
 }
 void Game::UpdateSurface(float dt)
 {
@@ -1758,6 +1804,11 @@ void Game::UpdateSurface(float dt)
     {
         surfaceTraffic->Bind(surface->Stream().Snapshot()->planet);
     }
+    if (surfaceParty)
+    {
+        surfaceParty->Bind(surface->Stream().Snapshot()->planet);
+        surfaceParty->Capture();
+    }
     HospitalRecovery::Update(dt);
     if (HospitalRecovery::Active())
     {
@@ -1779,6 +1830,10 @@ void Game::UpdateSurface(float dt)
     game::GameLevels::Chapter().Surface().Refresh();
     bool advancing = !state.isPaused && !state.mapVisible && !state.weaponWheel.visible &&
                      !state.journalVisible && !state.dialogueHistoryVisible && !Dialogue::LocksWorld();
+    if (surfaceParty)
+    {
+        surfaceParty->Update(advancing ? dt : 0);
+    }
     if (surfaceCities)
     {
         surfaceCities->Update(state, *surface, 0);
@@ -1823,6 +1878,10 @@ void Game::UpdateSurface(float dt)
                                                   : models::Point{};
             state.playerAnimation.Update(dt, animationVelocity, state.facingYaw, IsAiming(), false);
             game::GameLevels::Mine().Update(dt);
+            if (surfaceParty)
+            {
+                surfaceParty->Capture();
+            }
             HospitalRecovery::Update(0);
             UpdateCamera(dt);
             game::SceneManager::Update(dt);
@@ -1953,6 +2012,10 @@ void Game::UpdateSurface(float dt)
         }
         game::GameLevels::Chapter().Surface().Refresh();
         game::GameLevels::Chapter().Surface().Update(dt);
+        if (surfaceParty)
+        {
+            surfaceParty->Capture();
+        }
         HospitalRecovery::Update(0);
         UpdateCamera(dt);
         float targetHeight = float(surface->Local(surface->Pose().origin).z / 2);
@@ -2465,6 +2528,11 @@ bool Game::IsPositionBlocked(Vector2 position)
     profiling::Count(profiling::Counter::CollisionQueries);
     if (state.surfaceExploration && surfaceCities && surfaceCities->Observing())
     {
+        auto point = surfaceCities->Point(*surface, surfaceCities->ObservedCity(), position);
+        if (point && surfaceParty && surfaceParty->Blocked(*point, state.isBikeMounted ? .5 : .32))
+        {
+            return true;
+        }
         return CivicJustice::Solid(position, .16f, state.isBikeMounted ? state.bikeElevation : 0,
                                    state.isBikeMounted);
     }
@@ -2473,6 +2541,8 @@ bool Game::IsPositionBlocked(Vector2 position)
         return !surface || surface->Blocked(position.x * 2, position.y * 2, state.isBikeMounted) ||
                game::GameLevels::Chapter().Surface().Blocked(position, state.isBikeMounted) ||
                (surfaceCities && surfaceCities->Occupied(state, *surface, position)) ||
+               (surfaceParty && surfaceParty->Blocked(surface->PointAt(position.x * 2, position.y * 2),
+                                                      state.isBikeMounted ? .5 : .32)) ||
                (surfaceTraffic && surfaceTraffic->Blocked(surface->PointAt(position.x * 2, position.y * 2),
                                                           state.isBikeMounted ? .5 : .32));
     }
@@ -2652,6 +2722,16 @@ InteractionTarget Game::FindNearbyInteraction()
         }
         auto target = surface && surfaceCities ? surfaceCities->Nearby(state, *surface, &distance)
                                                : InteractionTarget::None;
+        if (surfaceParty)
+        {
+            float companionDistance = 1000000;
+            auto companionTarget = surfaceParty->Nearby(&companionDistance);
+            if (companionDistance < distance)
+            {
+                target = companionTarget;
+                distance = companionDistance;
+            }
+        }
         if (IsStoryWorld() && surface && surface->Ready())
         {
             const auto &mine = surface->Stream().Snapshot()->planet->Region("mq00_mine");

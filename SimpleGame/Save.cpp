@@ -25,7 +25,7 @@ namespace tutorial
 namespace
 {
 constexpr std::uint64_t kMaximumFile = 16 * 1024 * 1024;
-constexpr unsigned kSchema = 3;
+constexpr unsigned kSchema = 4;
 void Require(bool value, const char *message)
 {
     if (!value)
@@ -48,6 +48,7 @@ struct Checkpoint
     PlanetCities cities;
     AirTraffic flights;
     PlanetTrafficState transit;
+    PlanetPartyState party;
 };
 std::string WorldKey(const world::PlanetDefinition &planet)
 {
@@ -69,6 +70,7 @@ struct PendingLoad
     Campaign candidate;
     std::unique_ptr<world::SurfaceSession> session;
     std::unique_ptr<PlanetTraffic> traffic;
+    std::unique_ptr<PlanetParty> party;
     std::chrono::steady_clock::time_point began = std::chrono::steady_clock::now();
     bool validated = false, restored = false, backup = false;
     bool switching = false, fresh = false;
@@ -149,6 +151,10 @@ template <class T> constexpr unsigned EnumCount()
     {
         return 3;
     }
+    else if constexpr (std::is_same_v<T, CompanionPlace>)
+    {
+        return 3;
+    }
     else if constexpr (std::is_same_v<T, SignalPhase>)
     {
         return unsigned(SignalPhase::WalkClear) + 1;
@@ -175,6 +181,10 @@ class SaveArchive
     static Checkpoint Capture()
     {
         const auto &g = Game::Get();
+        if (g.surfaceParty)
+        {
+            g.surfaceParty->Capture();
+        }
         Checkpoint c;
         c.planet = g.surface->Planet();
         c.digest = g.surface->Stream().Snapshot()->planet->Digest();
@@ -196,15 +206,21 @@ class SaveArchive
         {
             c.transit = g.surfaceTraffic->State();
         }
+        if (g.surfaceParty)
+        {
+            c.party = g.surfaceParty->State();
+        }
         // The memory ledger follows disk persistence rules too: no held inputs, callbacks,
         // projectiles, menu state, render resources or temporary worker ownership survive a visit.
         SaveArchive writer(false);
         writer.Value(c);
         writer.Value(c.transit);
+        writer.Value(c.party);
         Checkpoint clean;
         SaveArchive reader(true, writer.Bytes());
         reader.Value(clean);
         reader.Value(clean.transit);
+        reader.Value(clean.party);
         return clean;
     }
     explicit SaveArchive(bool reading, std::vector<unsigned char> bytes = {})
@@ -751,6 +767,48 @@ class SaveArchive
             }
         }
     }
+    void Value(PlanetCompanion &v)
+    {
+        Fields(v.joined, v.place, v.position, v.heading, v.combat);
+        // Walking/targets/muzzle flashes and navigation paths restart from the physical position.
+        v.walking = false;
+        if (reading)
+        {
+            v.combat.engaged = v.combat.evading = false;
+            v.combat.muzzleFlash = 0;
+        }
+    }
+    void Value(PlanetPartyState &v)
+    {
+        Fields(v.worldKey, v.members);
+    }
+    void PartyRecords(Campaign &v)
+    {
+        std::uint64_t count = v.worlds.size();
+        Value(count);
+        Require(count == v.worlds.size(), "동료 확장의 월드 수가 일치하지 않습니다.");
+        if (reading)
+        {
+            std::set<std::string> keys;
+            for (std::uint64_t i = 0; i < count; ++i)
+            {
+                std::string key;
+                PlanetPartyState state;
+                Fields(key, state);
+                Require(v.worlds.count(key) && keys.insert(key).second,
+                        "동료 확장의 월드 ID가 올바르지 않습니다.");
+                v.worlds.at(key).party = std::move(state);
+            }
+        }
+        else
+        {
+            for (auto &entry : v.worlds)
+            {
+                auto key = entry.first;
+                Fields(key, entry.second.party);
+            }
+        }
+    }
     void Value(Checkpoint &v)
     {
         Fields(v.planet, v.layout, v.digest, v.pose, v.origin, v.bike, v.bikeHeading, v.mineReturn, v.game,
@@ -801,6 +859,20 @@ void Validate(const Checkpoint &c)
     Require(world::PlanetProfiles::Supported(c.planet), "지원하지 않거나 버전이 다른 행성 프로필입니다.");
     const bool story = c.planet.storyPlanet;
     PlanetTraffic::Validate(c.transit, c.planet, c.digest);
+    PlanetParty::Validate(c.party, c.planet);
+    if (!c.party.worldKey.empty() && c.planet.storyPlanet)
+    {
+        Require(c.party.members[0].joined == c.mine.quest.IsRiaJoined() &&
+                    c.party.members[1].joined == c.chapter.kainJoined,
+                "동료의 합류 기록과 임무 기록이 다릅니다.");
+        for (const auto &member : c.party.members)
+        {
+            Require(!member.joined || member.place != CompanionPlace::Mine || c.mine.generated,
+                    "동료가 있는 광산 데이터가 없습니다.");
+            Require(!member.joined || member.place != CompanionPlace::Frontier || c.chapter.generated,
+                    "동료가 있는 개척지 데이터가 없습니다.");
+        }
+    }
     Require(c.layout == world::ContentLayout::Revision,
             "도시 배치 버전이 다릅니다. 원본 저장을 보존하고 같은 버전으로 불러와 주세요.");
     G::Validate(c.pose);
@@ -1070,6 +1142,19 @@ Campaign Decode(const std::filesystem::path &path)
             "저장 형식 버전이 다릅니다. 원본 파일은 변경하지 않았습니다.");
     Require(envelope.layout == world::ContentLayout::Revision,
             "저장된 도시 배치 버전이 현재 게임과 다릅니다.");
+    std::vector<unsigned char> partyExtension;
+    if (envelope.schema >= 4)
+    {
+        Require(envelope.payload.size() >= 8, "동료 확장의 길이 정보가 없습니다.");
+        SaveArchive footer(true,
+                           std::vector<unsigned char>(envelope.payload.end() - 8, envelope.payload.end()));
+        std::uint64_t size = 0;
+        footer.Value(size);
+        Require(size > 0 && size <= envelope.payload.size() - 8, "동료 확장의 길이가 올바르지 않습니다.");
+        const size_t start = envelope.payload.size() - 8 - size_t(size);
+        partyExtension.assign(envelope.payload.begin() + start, envelope.payload.end() - 8);
+        envelope.payload.resize(start);
+    }
     std::vector<unsigned char> extension;
     if (envelope.schema >= 3)
     {
@@ -1104,6 +1189,12 @@ Campaign Decode(const std::filesystem::path &path)
         SaveArchive traffic(true, std::move(extension));
         traffic.TrafficRecords(result);
         Require(traffic.Finished(), "행성 교통 확장에 지원하지 않는 데이터가 있습니다.");
+    }
+    if (envelope.schema >= 4)
+    {
+        SaveArchive party(true, std::move(partyExtension));
+        party.PartyRecords(result);
+        Require(party.Finished(), "동료 확장에 지원하지 않는 데이터가 있습니다.");
     }
     ValidateCampaign(result);
     return result;
@@ -1175,6 +1266,73 @@ void WriteAtomic(const std::filesystem::path &path, const std::vector<unsigned c
         throw;
     }
 }
+void MigrateParty(Checkpoint &c, const world::GeneratedPlanet &plan)
+{
+    if (!c.party.worldKey.empty())
+    {
+        return;
+    }
+    c.party.worldKey = world::WorldIdentity::ContentKey(c.planet, "overworld", "party_v1");
+    if (!c.planet.storyPlanet)
+    {
+        return;
+    }
+    for (size_t i = 0; i < c.party.members.size(); ++i)
+    {
+        auto &member = c.party.members[i];
+        member.joined = i == 0 ? c.mine.quest.IsRiaJoined() : c.chapter.kainJoined;
+        if (!member.joined)
+        {
+            continue;
+        }
+        // Formats 1-3 never had a mine Kain. Recover the actor actually shown in that format.
+        const bool mine = i == 0 && c.mineReturn.has_value();
+        const bool field = !mine && c.chapter.active;
+        member.place = mine    ? CompanionPlace::Mine
+                       : field ? CompanionPlace::Frontier
+                               : CompanionPlace::Surface;
+        const auto &region = plan.Region(mine ? "mq00_mine" : field ? "frontier" : "halo_07");
+        Vector2 position, origin;
+        float yaw = .78539816f;
+        if (mine)
+        {
+            position = c.mine.riaPosition;
+            origin = c.mine.entry;
+            yaw = c.mine.riaFacing.yaw;
+            member.combat = c.mine.riaCombat;
+        }
+        else if (field)
+        {
+            const auto &person = i == 0 ? c.chapter.ria : c.chapter.kain;
+            position = person.position;
+            origin = game::kFrontierEntry;
+            yaw = person.facing.yaw;
+            member.combat = person.combat;
+        }
+        else
+        {
+            position = i == 0 ? kLiaPosition : kCityKainPosition;
+            origin = Overworld::Cities()[0].center;
+            member.combat.health = c.civic.landmarkHealth[i == 0 ? 0 : 2];
+            member.combat.downedSeconds = member.combat.health <= 0 ? 12.f : 0.f;
+        }
+        member.combat.downedSeconds = (std::max)(0.f, member.combat.downedSeconds);
+        member.position =
+            G::FromLocal(region.frame, {(position.x - origin.x) * 2, (position.y - origin.y) * 2, 0},
+                         c.planet.radiusMeters);
+        if (!mine)
+        {
+            const auto *core =
+                plan.cityCores ? plan.cityCores->Find(field ? "frontier" : "halo_07") : nullptr;
+            member.position.altitudeMeters =
+                core ? core->elevationMeters : plan.terrain.Height(member.position);
+        }
+        member.heading =
+            G::Unit({region.frame.right.x * std::cos(yaw) + region.frame.forward.x * std::sin(yaw),
+                     region.frame.right.y * std::cos(yaw) + region.frame.forward.y * std::sin(yaw),
+                     region.frame.right.z * std::cos(yaw) + region.frame.forward.z * std::sin(yaw)});
+    }
+}
 void ValidateRegistry(const Checkpoint &c, const world::GeneratedPlanet &plan)
 {
     world::RelayNetwork expected;
@@ -1195,6 +1353,26 @@ void ValidateRegistry(const Checkpoint &c, const world::GeneratedPlanet &plan)
     }
     Require(c.game.selectedRelay.empty() || world::RelayNetwork::Find(plan, c.game.selectedRelay),
             "선택한 중계환이 현재 월드에 없습니다.");
+    for (const auto &member : c.party.members)
+    {
+        if (!member.joined || member.place == CompanionPlace::Surface)
+        {
+            continue;
+        }
+        const bool mine = member.place == CompanionPlace::Mine;
+        auto local = G::ToLocal(plan.Region(mine ? "mq00_mine" : "frontier").frame, member.position,
+                                c.planet.radiusMeters);
+        const double x = (mine ? c.mine.entry.x : game::kFrontierEntry.x) + local.x / 2,
+                     y = (mine ? c.mine.entry.y : game::kFrontierEntry.y) + local.y / 2;
+        Require(x >= 0 && y >= 0 && x < (mine ? game::kMapSize : game::kFrontierWidth) &&
+                    y < (mine ? game::kMapSize : game::kFrontierHeight),
+                "동료 위치가 소속 현장의 범위를 벗어났습니다.");
+        if (mine)
+        {
+            Require(c.mine.tiles[size_t(int(y) * game::kMapSize + int(x))] != game::Tile::Wall,
+                    "광산 동료 위치가 벽 내부에 있습니다.");
+        }
+    }
 }
 void Prepare(PendingLoad &load)
 {
@@ -1307,6 +1485,10 @@ const char *SaveSystem::Restriction()
     {
         return "도시 물리 갱신을 마친 뒤 저장할 수 있습니다.";
     }
+    if (game::GameLevels::Chapter().Surface().Observing())
+    {
+        return "개척지 물리 갱신을 마친 뒤 저장할 수 있습니다.";
+    }
     if (HospitalRecovery::Active() || game::GameLevels::Mine().GetState().player.health <= 0)
     {
         return "의료 이송을 마친 뒤 저장해 주세요.";
@@ -1357,6 +1539,12 @@ bool SaveSystem::Save(const std::filesystem::path &path)
         auto payload = body.Bytes();
         payload.insert(payload.end(), extension.Bytes().begin(), extension.Bytes().end());
         payload.insert(payload.end(), footer.Bytes().begin(), footer.Bytes().end());
+        SaveArchive party(false), partyFooter(false);
+        party.PartyRecords(candidate);
+        std::uint64_t partySize = party.Bytes().size();
+        partyFooter.Value(partySize);
+        payload.insert(payload.end(), party.Bytes().begin(), party.Bytes().end());
+        payload.insert(payload.end(), partyFooter.Bytes().begin(), partyFooter.Bytes().end());
         Require(payload.size() <= kMaximumFile, "저장 데이터가 허용 크기를 초과했습니다.");
         SaveArchive header(false);
         unsigned char magic[8] = {'S', 'G', 'W', 'O', 'R', 'L', 'D', 0};
@@ -1555,11 +1743,14 @@ void SaveSystem::Update()
             Require(
                 snapshot->planet->Digest() == c.digest,
                 "현재 생성기/건물·도로 리소스로 저장된 배치를 재현할 수 없습니다. 원본 저장은 유지합니다.");
+            MigrateParty(c, *snapshot->planet);
             Validate(c);
             ValidateRegistry(c, *snapshot->planet);
             load.traffic = std::make_unique<PlanetTraffic>(c.transit);
             load.traffic->Bind(snapshot->planet);
             c.transit = load.traffic->State();
+            load.party = std::make_unique<PlanetParty>(c.party);
+            load.party->Bind(snapshot->planet);
             load.validated = true;
         }
         if (!load.session->Stream().Detailed(c.pose.origin, 96))
@@ -1594,9 +1785,14 @@ void SaveSystem::Update()
         campaign = std::move(ready->candidate);
         g.surfaceCities = std::move(cities);
         g.surfaceTraffic = std::move(ready->traffic);
+        g.surfaceParty = std::move(ready->party);
         g.surfaceBike = record.bike;
         g.surfaceBikeHeading = record.bikeHeading;
         g.surfaceMineReturn = record.mineReturn;
+        // Preflight migrated old records before commit. Publish before any local cache can be captured.
+        g.surfaceParty->Publish();
+        g.surfaceParty->Capture();
+        g.surfaceParty->Update(0);
         g.state.viewportWidth = width;
         g.state.viewportHeight = height;
         g.state.lastUpdateMilliseconds = lastTick;

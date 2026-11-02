@@ -107,6 +107,17 @@ class Pistol final : public Firearm
     const char *GetName() const override;
 };
 // ============================================================================
+// NpcCombatState — persistent health and firearm state shared by companion adapters
+// ============================================================================
+struct NpcCombatState
+{
+    int health = 100;
+    float cooldown = 0, hitGrace = 0, muzzleFlash = 0, downedSeconds = 0;
+    bool engaged = false, evading = false;
+    float aimYaw = 0;
+    Pistol pistol;
+};
+// ============================================================================
 // SecurityCarbine — tier-scaled frontier suppression firearm
 // ============================================================================
 class SecurityCarbine final : public Firearm

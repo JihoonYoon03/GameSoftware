@@ -11,6 +11,67 @@
 
 namespace tutorial
 {
+// ============================================================================
+// PlanetParty — one physical actor per companion; levels only borrow a local projection
+// ============================================================================
+enum class CompanionId : std::uint8_t
+{
+    Ria,
+    Kain
+};
+enum class CompanionPlace : std::uint8_t
+{
+    Surface,
+    Mine,
+    Frontier
+};
+struct PlanetCompanion
+{
+    bool joined = false;
+    CompanionPlace place = CompanionPlace::Surface;
+    world::SurfacePoint position;
+    world::Vector3d heading = {0, 1, 0};
+    combat::NpcCombatState combat;
+    bool walking = false;
+};
+struct PlanetPartyState
+{
+    std::string worldKey;
+    std::array<PlanetCompanion, 2> members;
+};
+class PlanetParty
+{
+  public:
+    explicit PlanetParty(PlanetPartyState state = {});
+    void Bind(std::shared_ptr<const world::GeneratedPlanet> planet);
+    const PlanetPartyState &State() const
+    {
+        return state;
+    }
+    bool Joined(CompanionId id) const;
+    bool Owns(CompanionId id, CompanionPlace place) const;
+    // Capture before changing scene ownership; publish only to the current owner's adapter.
+    void Capture();
+    void Publish();
+    void Update(float seconds);
+    InteractionTarget Nearby(float *distance = nullptr) const;
+    bool Blocked(const world::SurfacePoint &point, double clearance, int except = -1) const;
+    std::array<bool, 2> NearbyTravelers() const;
+    void Arrive(const std::array<bool, 2> &travelers);
+    static void Validate(const PlanetPartyState &state, const world::PlanetDefinition &planet);
+
+  private:
+    void Join();
+    world::SurfacePoint MinePoint(Vector2 local) const;
+    Vector2 MineLocal(const world::SurfacePoint &point) const;
+    world::TangentFrame Frame(CompanionPlace place) const;
+    void ChangeOwner(size_t index, CompanionPlace place, const world::SurfacePoint &position);
+    bool Clear(const world::SurfacePoint &point, int except) const;
+    PlanetPartyState state;
+    std::shared_ptr<const world::GeneratedPlanet> planet;
+    std::array<float, 2> routeCooldown = {};
+};
+
 struct CityInfo
 {
     const char *id;

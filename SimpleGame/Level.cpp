@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "Level.h"
+#include "Overworld.h"
 #include "Civic.h"
 #include "Hud.h"
 #include "Profiler.h"
@@ -822,9 +823,13 @@ void MineCombat::UpdateNpcs(float deltaSeconds)
             }
         }
     };
-    if (state.quest.IsRiaJoined())
+    if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Mine))
     {
         defend(state.riaPosition, state.riaFacing, state.riaCombat, true, false, state.riaPosition);
+    }
+    if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Kain, tutorial::CompanionPlace::Mine))
+    {
+        defend(state.kain.position, state.kain.facing, state.kain.combat, true, false, state.kain.position);
     }
     for (auto &npc : state.survivors)
     {
@@ -869,8 +874,12 @@ void MineCombat::UpdateEnemies(float deltaSeconds)
                     });
                 occupied =
                     occupied ||
-                    (state.quest.IsRiaJoined() &&
+                    (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Ria,
+                                                        tutorial::CompanionPlace::Mine) &&
                      tutorial::Game::Distance(position, state.riaPosition) < 4) ||
+                    (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Kain,
+                                                        tutorial::CompanionPlace::Mine) &&
+                     tutorial::Game::Distance(position, state.kain.position) < 4) ||
                     std::any_of(state.survivors.begin(), state.survivors.end(), [&](const RescueNpc &npc) {
                         return tutorial::Game::Distance(position, npc.position) < 4;
                     });
@@ -909,9 +918,13 @@ void MineCombat::UpdateEnemies(float deltaSeconds)
                 playerTarget = false;
             }
         };
-        if (state.quest.IsRiaJoined())
+        if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Mine))
         {
             consider(state.riaPosition, state.riaCombat);
+        }
+        if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Kain, tutorial::CompanionPlace::Mine))
+        {
+            consider(state.kain.position, state.kain.combat);
         }
         for (auto &npc : state.survivors)
         {
@@ -1006,7 +1019,8 @@ void MineRescue::Update(float deltaSeconds)
     profiling::Scope timer(profiling::Timer::NpcUpdate);
     state.riaNavigationCooldown -= deltaSeconds;
     state.riaMovement = 0;
-    if (state.quest.IsRiaJoined() && state.riaNavigationCooldown <= 0)
+    if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Mine) &&
+        state.riaNavigationCooldown <= 0)
     {
         state.riaNavigationCooldown = .65f;
         if (tutorial::Game::Distance(state.riaPosition, world.playerPosition) > 2)
@@ -1020,7 +1034,8 @@ void MineRescue::Update(float deltaSeconds)
             state.riaRouteIndex = 0;
         }
     }
-    if (state.quest.IsRiaJoined() && state.riaCombat.health > 0)
+    if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Mine) &&
+        state.riaCombat.health > 0)
     {
         state.riaMovement = WalkRoute(state.riaPosition, state.riaRoute, state.riaRouteIndex,
                                       4.8f * deltaSeconds, state.riaFacing);
@@ -1028,6 +1043,27 @@ void MineRescue::Update(float deltaSeconds)
     else
     {
         state.riaFacing.walking = false;
+    }
+    if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Kain, tutorial::CompanionPlace::Mine))
+    {
+        auto &npc = state.kain;
+        npc.navigationCooldown -= deltaSeconds;
+        if (npc.navigationCooldown <= 0)
+        {
+            npc.navigationCooldown = .7f;
+            npc.route = tutorial::Game::Distance(npc.position, world.playerPosition) > 2.8f
+                            ? level.Map().FindRoute(npc.position, world.playerPosition)
+                            : std::vector<tutorial::Vector2>{};
+            npc.routeIndex = 0;
+        }
+        if (npc.combat.health > 0)
+        {
+            WalkRoute(npc.position, npc.route, npc.routeIndex, 4.6f * deltaSeconds, npc.facing);
+        }
+        else
+        {
+            npc.facing.walking = false;
+        }
     }
     for (auto &npc : state.survivors)
     {
@@ -1146,7 +1182,13 @@ bool MineRescue::TryInteract()
         tutorial::Game::Get().ShowNotice("응급 처치 / 다시 움직일 수 있습니다.");
         return true;
     };
-    if (state.quest.IsRiaJoined() && aid(state.riaPosition, state.riaCombat))
+    if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Mine) &&
+        aid(state.riaPosition, state.riaCombat))
+    {
+        return true;
+    }
+    if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Kain, tutorial::CompanionPlace::Mine) &&
+        aid(state.kain.position, state.kain.combat))
     {
         return true;
     }
@@ -1284,7 +1326,13 @@ float MineLighting::At(tutorial::Vector2 position)
     {
         light = (std::max)(light, RadialLight(player, position, 3.5f));
     }
-    if (state.quest.IsRiaJoined() && state.riaCombat.muzzleFlash > 0)
+    if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Kain, tutorial::CompanionPlace::Mine) &&
+        state.kain.combat.muzzleFlash > 0)
+    {
+        light = (std::max)(light, RadialLight(state.kain.position, position, 3));
+    }
+    if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Mine) &&
+        state.riaCombat.muzzleFlash > 0)
     {
         light = (std::max)(light, RadialLight(state.riaPosition, position, 3));
     }
@@ -1690,7 +1738,14 @@ void MineLevel::Interact()
     {
         tutorial::Game::Get().ShowNotice("물자 회수 / 주변 물자를 챙겼습니다. 보유품에 반영했습니다.");
     }
-    else if (state.quest.IsRiaJoined() && IsNear(state.riaPosition))
+    else if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Kain,
+                                                tutorial::CompanionPlace::Mine) &&
+             IsNear(state.kain.position))
+    {
+        tell("카인 / 갱도 뒤쪽은 내가 살피겠소. 구조 신호가 닿는 곳부터 확인합시다.");
+    }
+    else if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Mine) &&
+             IsNear(state.riaPosition))
     {
         tell(state.quest.GetRiaDialogue());
     }
@@ -2051,12 +2106,14 @@ bool FrontierSurface::Blocked(tutorial::Vector2 position, bool driving) const
     {
         return true;
     }
-    if (state.kain.combat.health > 0 && tutorial::Game::Distance(p, state.kain.position) < .36f)
+    if ((!state.kainJoined || tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Kain,
+                                                                 tutorial::CompanionPlace::Frontier)) &&
+        state.kain.combat.health > 0 && tutorial::Game::Distance(p, state.kain.position) < .36f)
     {
         return true;
     }
-    if (GameLevels::Mine().GetState().quest.IsRiaJoined() && state.ria.combat.health > 0 &&
-        tutorial::Game::Distance(p, state.ria.position) < .36f)
+    if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Frontier) &&
+        state.ria.combat.health > 0 && tutorial::Game::Distance(p, state.ria.position) < .36f)
     {
         return true;
     }
@@ -3018,9 +3075,12 @@ void FrontierCombat::Advance(ChapterProjectile &projectile, float distance)
                 state.invulnerability = .45f;
                 shot.remaining = 0;
             }
-            else if (((!world.surfaceExploration || GameLevels::Mine().GetState().quest.IsRiaJoined()) &&
+            else if (((tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Ria,
+                                                          tutorial::CompanionPlace::Frontier)) &&
                       damagePerson(state.ria)) ||
-                     (state.kainJoined && damagePerson(state.kain)))
+                     (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Kain,
+                                                         tutorial::CompanionPlace::Frontier) &&
+                      damagePerson(state.kain)))
             {
                 shot.remaining = 0;
             }
@@ -3118,12 +3178,14 @@ void FrontierCombat::Update(float deltaSeconds)
             float nearest = tutorial::Game::Distance(person.position, target);
             for (const auto *ally : {&state.ria, &state.kain})
             {
-                if (ally == &state.kain && !state.kainJoined)
+                if (ally == &state.kain &&
+                    !tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Kain,
+                                                        tutorial::CompanionPlace::Frontier))
                 {
                     continue;
                 }
-                if (ally == &state.ria && world.surfaceExploration &&
-                    !GameLevels::Mine().GetState().quest.IsRiaJoined())
+                if (ally == &state.ria && !tutorial::Game::Get().HasCompanion(
+                                              tutorial::CompanionId::Ria, tutorial::CompanionPlace::Frontier))
                 {
                     continue;
                 }
@@ -3141,11 +3203,11 @@ void FrontierCombat::Update(float deltaSeconds)
             }
         }
     };
-    if (!world.surfaceExploration || GameLevels::Mine().GetState().quest.IsRiaJoined())
+    if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Frontier))
     {
         updatePerson(state.ria, true);
     }
-    if (state.kainJoined)
+    if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Kain, tutorial::CompanionPlace::Frontier))
     {
         updatePerson(state.kain, true);
     }
@@ -3198,11 +3260,11 @@ void FrontierParty::Update(float deltaSeconds)
             person.waypoint = 0;
         }
     };
-    if (!world.surfaceExploration || GameLevels::Mine().GetState().quest.IsRiaJoined())
+    if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Frontier))
     {
         follow(state.ria, 1.6f);
     }
-    if (state.kainJoined)
+    if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Kain, tutorial::CompanionPlace::Frontier))
     {
         follow(state.kain, 2.4f);
     }

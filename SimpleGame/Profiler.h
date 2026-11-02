@@ -52,6 +52,7 @@ enum class Counter
     PlanetTrafficRetired,
     PlanetTrafficDetailedTicks,
     PlanetTrafficFarTicks,
+    CompanionHandoffs,
     Count
 };
 enum class Timer
@@ -87,6 +88,7 @@ enum class Timer
     PlanetSimulation,
     PlanetTraffic,
     PlanetTrafficPrepare,
+    PlanetParty,
     Count
 };
 class Scope

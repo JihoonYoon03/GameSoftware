@@ -935,6 +935,10 @@ void ObservatoryScene::Draw()
         scene.PlaceWorldActor(
             "lia", kObservatoryLiaPosition.x, kObservatoryLiaPosition.y,
             WorldBounds(kObservatoryLiaPosition.x, kObservatoryLiaPosition.y, 0, 0, 95), 3, -2.5f, [this]() {
+                if (Game::Get().SurfaceParty() && Game::Get().SurfaceParty()->Joined(CompanionId::Ria))
+                {
+                    return;
+                }
                 Drawing::DrawPerson(kObservatoryLiaPosition, ColorRGBA(.89f, .52f, .28f), false,
                                     models::CharacterType::Engineer, false, .78539816f,
                                     models::Gender::Female, models::HairStyle::Ponytail);
@@ -1230,12 +1234,19 @@ void MineScene::Draw()
                                    : "광부 / E 구조",
                     npc.facing.yaw, npc.gender, npc.hair, npc.combat);
     }
-    if (GameLevels::Mine().GetState().quest.IsRiaJoined())
+    if (Game::Get().HasCompanion(CompanionId::Ria, CompanionPlace::Mine))
     {
         PlacePerson(scene, "ria", GameLevels::Mine().GetState().riaPosition, {.95f, .55f, .25f},
                     models::CharacterType::Engineer, GameLevels::Mine().GetState().riaFacing.walking, "리아",
                     GameLevels::Mine().GetState().riaFacing.yaw, models::Gender::Female,
                     models::HairStyle::Ponytail, GameLevels::Mine().GetState().riaCombat);
+    }
+    if (Game::Get().HasCompanion(CompanionId::Kain, CompanionPlace::Mine))
+    {
+        const auto &npc = GameLevels::Mine().GetState().kain;
+        PlacePerson(scene, "kain", npc.position, {.38f, .53f, .66f}, models::CharacterType::Guard,
+                    npc.facing.walking, "카인", npc.facing.yaw, models::Gender::Male, models::HairStyle::Buzz,
+                    npc.combat);
     }
     auto player = Game::Get().GetState().playerPosition;
     scene.PlaceWorldActor("player", player.x, player.y, WorldBounds(player.x, player.y, 0, 0, 85), 1,
@@ -2035,13 +2046,16 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
         person(r.cityIndex, r.position, {r.coat[0], r.coat[1], r.coat[2]}, r.type, r.facing.walking,
                r.facing.yaw, r.gender, r.hair, r.health <= 0, r.name);
     }
-    person(0, kLiaPosition, {.89f, .52f, .28f}, models::CharacterType::Engineer, false, .7854f,
-           models::Gender::Female, models::HairStyle::Ponytail, CivicJustice::State().landmarkHealth[0] <= 0,
-           "리아");
+    if (!Game::Get().SurfaceParty() || !Game::Get().SurfaceParty()->Joined(CompanionId::Ria))
+    {
+        person(0, kLiaPosition, {.89f, .52f, .28f}, models::CharacterType::Engineer, false, .7854f,
+               models::Gender::Female, models::HairStyle::Ponytail,
+               CivicJustice::State().landmarkHealth[0] <= 0, "리아");
+    }
     person(0, kMaraPosition, {.48f, .4f, .64f}, models::CharacterType::Medic, false, .7854f,
            models::Gender::Female, models::HairStyle::Bun, CivicJustice::State().landmarkHealth[1] <= 0,
            "마라");
-    if (GameLevels::Chapter().GetState().kainJoined)
+    if (GameLevels::Chapter().GetState().kainJoined && !Game::Get().SurfaceParty())
     {
         person(0, kCityKainPosition, {.38f, .53f, .66f}, models::CharacterType::Guard, false, .7854f,
                models::Gender::Male, models::HairStyle::Buzz, CivicJustice::State().landmarkHealth[2] <= 0,
@@ -2176,6 +2190,11 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
                         Marker{kBeaconPosition, InteractionTarget::GateBeacon, "전망대"},
                         Marker{kCityReceiverPosition, InteractionTarget::CityReceiver, "도시 수신망"}})
     {
+        if (marker.target == InteractionTarget::Lia && Game::Get().SurfaceParty() &&
+            Game::Get().SurfaceParty()->Joined(CompanionId::Ria))
+        {
+            continue;
+        }
         if (!Game::Get().IsQuestInteraction(marker.target))
         {
             continue;
@@ -2189,6 +2208,47 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
         renderqueue::Translate(0, -float(point->z / 2) * 44, float(point->z / 2) * (1296.f / 44));
         Drawing::DrawInteractionMarker({float(point->x / 2), float(point->y / 2)}, marker.label,
                                        {.4f, .9f, .85f});
+        renderqueue::PopMatrix();
+    }
+}
+void DrawPlanetParty(const world::SurfaceSession &session)
+{
+    const auto *party = Game::Get().SurfaceParty();
+    if (!party)
+    {
+        return;
+    }
+    const auto &members = party->State().members;
+    for (size_t i = 0; i < members.size(); ++i)
+    {
+        const auto &m = members[i];
+        if (!m.joined || m.place != CompanionPlace::Surface ||
+            world::SurfaceGeometry::Distance(session.Planet().radiusMeters, m.position,
+                                             session.Pose().origin) > 260)
+        {
+            continue;
+        }
+        auto local = session.Local(m.position);
+        Vector2 position{float(local.x / 2), float(local.y / 2)};
+        float yaw = float(std::atan2(world::SurfaceGeometry::Dot(m.heading, session.Origin().forward),
+                                     world::SurfaceGeometry::Dot(m.heading, session.Origin().right)));
+        renderqueue::PushMatrix();
+        renderqueue::Translate(0, -float(local.z / 2) * 44, float(local.z / 2) * (1296.f / 44));
+        Drawing::DrawPerson(position, i == 0 ? ColorRGBA(.9f, .58f, .3f) : ColorRGBA(.38f, .53f, .66f), false,
+                            i == 0 ? models::CharacterType::Engineer : models::CharacterType::Guard,
+                            m.walking, yaw, i == 0 ? models::Gender::Female : models::Gender::Male,
+                            i == 0 ? models::HairStyle::Ponytail : models::HairStyle::Buzz, false, 0,
+                            m.combat.health <= 0);
+        if (Game::Distance(position, Game::Get().GetState().playerPosition) < 4)
+        {
+            auto at = Drawing::WorldToScreen(position.x, position.y, 62);
+            Drawing::DrawLabel(at.x - 20, at.y, i == 0 ? "리아" : "카인");
+            if (m.combat.health > 0 &&
+                Game::Get().IsQuestInteraction(i == 0 ? InteractionTarget::Lia : InteractionTarget::Kain))
+            {
+                Drawing::DrawInteractionMarker(position, i == 0 ? "리아" : "카인", {.4f, .9f, .85f});
+            }
+        }
         renderqueue::PopMatrix();
     }
 }
@@ -2285,13 +2345,16 @@ void DrawSurfaceFrontier(const world::SurfaceSession &session)
         }
         renderqueue::PopMatrix();
     };
-    if (GameLevels::Mine().GetState().quest.IsRiaJoined())
+    if (Game::Get().HasCompanion(CompanionId::Ria, CompanionPlace::Frontier))
     {
         person(state.ria, models::CharacterType::Engineer, models::Gender::Female,
                models::HairStyle::Ponytail, {.9f, .58f, .3f}, "리아", true);
     }
-    person(state.kain, models::CharacterType::Guard, models::Gender::Male, models::HairStyle::Buzz,
-           {.38f, .53f, .66f}, "카인", state.kainJoined);
+    if (!state.kainJoined || Game::Get().HasCompanion(CompanionId::Kain, CompanionPlace::Frontier))
+    {
+        person(state.kain, models::CharacterType::Guard, models::Gender::Male, models::HairStyle::Buzz,
+               {.38f, .53f, .66f}, "카인", state.kainJoined);
+    }
     for (size_t i = 0; i < state.survivors.size(); ++i)
     {
         person(state.survivors[i], i % 3 ? models::CharacterType::Engineer : models::CharacterType::Explorer,
@@ -2542,6 +2605,7 @@ void PlanetScene::Draw()
         }
     }
     DrawSurfaceCities(*session);
+    DrawPlanetParty(*session);
     DrawPlanetTraffic(*session);
     for (const auto &relay : snapshot->planet->relays)
     {

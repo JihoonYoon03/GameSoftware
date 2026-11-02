@@ -38,6 +38,11 @@ bool LandmarksPresent()
 {
     return ObservedCity() <= 0;
 }
+bool LandmarkPresent(size_t index)
+{
+    const auto *party = Game::Get().SurfaceParty();
+    return LandmarksPresent() && !(party && ((index == 0 && party->Joined(CompanionId::Ria)) || index == 2));
+}
 bool OfficersPresent()
 {
     return !Game::Get().GetState().surfaceExploration;
@@ -511,7 +516,7 @@ Vector2 Separate(Vector2 from, Vector2 to, float radius, int ignoreResident, boo
             }
             for (size_t index = 0; index < std::size(kPeople); ++index)
             {
-                if (LandmarksPresent() && civic.landmarkHealth[index] > 0 &&
+                if (LandmarkPresent(index) && civic.landmarkHealth[index] > 0 &&
                     (index != 2 || game::GameLevels::Chapter().GetState().kainJoined))
                 {
                     separate(kPeople[index], .18f);
@@ -741,6 +746,10 @@ int CivicJustice::ShopPrice(int basePrice)
 }
 int CivicJustice::LivingPopulation(int city)
 {
+    if (!Game::Get().IsStoryWorld())
+    {
+        return 0;
+    }
     auto &world = Game::Get().GetState();
     int count = 0;
     bool kain = game::GameLevels::Chapter().GetState().kainJoined;
@@ -754,8 +763,31 @@ int CivicJustice::LivingPopulation(int city)
     }
     if (city < 0 || city == 0)
     {
-        count += (civic.landmarkHealth[0] > 0) + (civic.landmarkHealth[1] > 0);
-        count += kain && civic.landmarkHealth[2] > 0;
+        const auto *party = Game::Get().SurfaceParty();
+        count += (!(party && party->Joined(CompanionId::Ria)) && civic.landmarkHealth[0] > 0) +
+                 (civic.landmarkHealth[1] > 0);
+        count += !party && kain && civic.landmarkHealth[2] > 0;
+    }
+    if (const auto *party = Game::Get().SurfaceParty(); party && Game::Get().Surface()->Ready())
+    {
+        const auto &surface = *Game::Get().Surface();
+        for (const auto &member : party->State().members)
+        {
+            if (!member.joined || member.place == CompanionPlace::Mine || member.combat.health <= 0)
+            {
+                continue;
+            }
+            if (city < 0 ||
+                (city < Overworld::kCityCount &&
+                 ::world::SurfaceGeometry::Distance(surface.Planet().radiusMeters, member.position,
+                                                    surface.Stream()
+                                                        .Snapshot()
+                                                        ->planet->Region(Overworld::Cities()[size_t(city)].id)
+                                                        .center.position) < 300))
+            {
+                ++count;
+            }
+        }
     }
     return count;
 }
@@ -1166,7 +1198,7 @@ bool CivicCombat::DamageOfficer(size_t index, int damage, Vector2 impulse, bool 
 }
 bool CivicCombat::DamageLandmark(size_t index, int damage, bool weaponOwned)
 {
-    if (index >= civic.landmarkHealth.size() ||
+    if (index >= civic.landmarkHealth.size() || !LandmarkPresent(index) ||
         (index == 2 && !game::GameLevels::Chapter().GetState().kainJoined) ||
         civic.landmarkHealth[index] <= 0 || damage <= 0)
     {
@@ -1185,7 +1217,7 @@ bool CivicCombat::LandmarkDown(Vector2 position)
 {
     for (size_t i = 0; i < std::size(kPeople); ++i)
     {
-        if (civic.landmarkHealth[i] <= 0 && Game::Distance(position, kPeople[i]) < .6f)
+        if (LandmarkPresent(i) && civic.landmarkHealth[i] <= 0 && Game::Distance(position, kPeople[i]) < .6f)
         {
             return true;
         }
@@ -1938,7 +1970,7 @@ void BodyCollision::VehicleContacts(float)
         }
         for (size_t i = 0; i < std::size(kPeople); ++i)
         {
-            if (LandmarksPresent() && civic.landmarkHealth[i] > 0 &&
+            if (LandmarkPresent(i) && civic.landmarkHealth[i] > 0 &&
                 (i != 2 || game::GameLevels::Chapter().GetState().kainJoined) &&
                 BikeTouches(kPeople[i], .18f))
             {

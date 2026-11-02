@@ -5,6 +5,7 @@
 #include "World.h"
 #include "WorldStreaming.h"
 #include <array>
+#include <cstdint>
 #include <string>
 #include <functional>
 #include <map>
@@ -17,6 +18,9 @@ class SaveArchive;
 class SaveSystem;
 class PlanetCities;
 class PlanetTraffic;
+class PlanetParty;
+enum class CompanionId : std::uint8_t;
+enum class CompanionPlace : std::uint8_t;
 struct Vector2
 {
     float x, y;
@@ -531,6 +535,11 @@ class Game
     {
         return surfaceTraffic.get();
     }
+    PlanetParty *SurfaceParty() const
+    {
+        return surfaceParty.get();
+    }
+    bool HasCompanion(CompanionId id, CompanionPlace place) const;
     std::optional<Vector2> ResidentPosition(const Resident &resident) const;
     bool RelocateSurfaceSurvey(const world::SurfacePoint &point);
     bool IsSurfaceMine() const
@@ -580,6 +589,7 @@ class Game
     std::unique_ptr<world::SurfaceSession> surface;
     std::unique_ptr<PlanetCities> surfaceCities;
     std::unique_ptr<PlanetTraffic> surfaceTraffic;
+    std::unique_ptr<PlanetParty> surfaceParty;
     std::optional<world::SurfacePoint> surfaceBike;
     std::optional<world::Vector3d> surfaceBikeHeading;
     std::optional<world::SurfacePoint> surfaceMineReturn;
