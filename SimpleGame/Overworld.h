@@ -127,6 +127,8 @@ struct TrafficVehicle
 };
 class TrafficSystem
 {
+    friend class SaveArchive;
+
   public:
     static constexpr size_t kVehicleLimit = 112;
     static constexpr float kDespawnDistance = 155;
@@ -190,6 +192,8 @@ struct AircraftActor
 };
 class AirTraffic
 {
+    friend class SaveArchive;
+
   public:
     static constexpr size_t kAircraftLimit = 24;
     void Reset();
@@ -248,6 +252,19 @@ class Overworld
   public:
     static constexpr int kCityCount = 5;
     static constexpr int kPopulationPerCity = 20;
+    static constexpr int ResidentPopulation(int city)
+    {
+        return kPopulationPerCity - (city == 0 ? 2 : 0); // Ria and Mara are separate landmarks.
+    }
+    static constexpr int ResidentPopulation()
+    {
+        int count = 0;
+        for (int city = 0; city < kCityCount; ++city)
+        {
+            count += ResidentPopulation(city);
+        }
+        return count;
+    }
     static constexpr int kKainResidentSlot = kPopulationPerCity - 3;
     static constexpr float kBikeCruiseSpeed = 7.5f;
     static constexpr float kBikeBoostSpeed = 12.8f;
@@ -272,6 +289,8 @@ class Overworld
 // ============================================================================
 class PlanetCities
 {
+    friend class SaveArchive;
+
   public:
     PlanetCities();
     static world::CityCorePlan Describe(const GameState &state);

@@ -374,3 +374,6 @@ Cache/
 
 # Local comparison/recovery archives are not game inputs and can exceed GitHub's file limit.
 /Resource/Source/Archives/
+
+# Local world checkpoints (the normal location is outside the repository in LocalAppData).
+[Ss]aves/

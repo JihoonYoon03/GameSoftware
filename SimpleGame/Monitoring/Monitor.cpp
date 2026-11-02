@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "Monitor.h"
+#include "../Save.h"
 #include "../Civic.h"
 #include "../AssetCache.h"
 #include "../Level.h"
@@ -224,23 +225,27 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                   (chapter.active && (!world.surfaceExploration || level.quest.IsRiaJoined()) ? 1 : 0) +
                   (!chapter.kainJoined || chapter.active ? 1 : 0) + fieldScrappers
             : 0;
-    const bool simulating = level.active && !world.isPaused && !world.mapVisible &&
-                            !world.weaponWheel.visible && !tutorial::Dialogue::LocksWorld() &&
-                            !tutorial::HospitalRecovery::Active();
+    const bool simulating = !tutorial::SaveSystem::Loading() && level.active && !world.isPaused &&
+                            !world.mapVisible && !world.weaponWheel.visible &&
+                            !tutorial::Dialogue::LocksWorld() && !tutorial::HospitalRecovery::Active();
     const auto surfaceCities = tutorial::Game::Get().SurfaceCities();
-    const bool fieldSimulating = chapter.active && !world.isPaused && !world.mapVisible &&
-                                 !world.weaponWheel.visible && !tutorial::Dialogue::LocksWorld() &&
-                                 !tutorial::HospitalRecovery::Active();
+    const bool fieldSimulating = !tutorial::SaveSystem::Loading() && chapter.active && !world.isPaused &&
+                                 !world.mapVisible && !world.weaponWheel.visible &&
+                                 !tutorial::Dialogue::LocksWorld() && !tutorial::HospitalRecovery::Active();
     const int surfaceCity = surfaceCities ? surfaceCities->ActiveCity() : -1;
-    const bool citySimulation = (!world.surfaceExploration || surfaceCity >= 0) && !level.active &&
+    const bool citySimulation = !tutorial::SaveSystem::Loading() &&
+                                (!world.surfaceExploration || surfaceCity >= 0) && !level.active &&
                                 !chapter.active && !world.isPaused && !world.isInsideHome &&
                                 !world.isInObservatory && !world.mapVisible && !world.weaponWheel.visible &&
                                 !tutorial::Dialogue::LocksWorld() && !tutorial::HospitalRecovery::Active();
-    const bool cityLia = !level.active && !chapter.active;
-    const bool cityKain = chapter.kainJoined && !chapter.active;
-    const size_t haloPopulation = 19 + (cityLia ? 1 : 0) - (chapter.kainJoined ? 1 : 0) + (cityKain ? 1 : 0);
-    const size_t cityPopulation =
-        haloPopulation + (tutorial::Overworld::kCityCount - 1) * tutorial::Overworld::kPopulationPerCity;
+    const bool story = tutorial::Game::Get().IsStoryWorld();
+    const bool cityLia = story && !level.active && !chapter.active;
+    const bool cityKain = story && chapter.kainJoined && !chapter.active;
+    const size_t haloPopulation =
+        story ? 19 + (cityLia ? 1 : 0) - (chapter.kainJoined ? 1 : 0) + (cityKain ? 1 : 0) : 0;
+    const size_t cityPopulation = story ? haloPopulation + (tutorial::Overworld::kCityCount - 1) *
+                                                               tutorial::Overworld::kPopulationPerCity
+                                        : 0;
     int currentCity =
         world.surfaceExploration ? surfaceCity : tutorial::Overworld::CityAt(world.playerPosition);
     std::string outdoorId = currentCity >= 0 ? tutorial::Overworld::Cities()[currentCity].id : "overworld";
@@ -273,7 +278,12 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                                          std::chrono::system_clock::now().time_since_epoch())
                                          .count());
     result.Number("publish_interval_ms", 500);
-    result.Bool("paused", world.isPaused);
+    result.Bool("paused", world.isPaused || tutorial::SaveSystem::Loading());
+    JsonObject persistence;
+    persistence.Bool("loading", tutorial::SaveSystem::Loading());
+    persistence.Bool("can_save", tutorial::SaveSystem::Restriction() == nullptr);
+    persistence.Text("message", tutorial::SaveSystem::Message());
+    result.Raw("world_checkpoint", persistence.Finish());
     if (world.surfaceExploration && tutorial::Game::Get().Surface())
     {
         const auto &surface = *tutorial::Game::Get().Surface();
@@ -622,8 +632,29 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         region.Raw("center", Position(info.center));
         Append(regions, region.Finish());
     }
-    result.Raw("regions",
-               "[" + regions + "," + mine.Finish() + "," + corridor.Finish() + "," + frontier.Finish() + "]");
+    if (story)
+    {
+        result.Raw("regions", "[" + regions + "," + mine.Finish() + "," + corridor.Finish() + "," +
+                                  frontier.Finish() + "]");
+    }
+    else
+    {
+        std::string entries;
+        const auto surface = tutorial::Game::Get().Surface();
+        if (surface && surface->Stream().Snapshot()->planet)
+        {
+            for (const auto &site : surface->Stream().Snapshot()->planet->regions)
+            {
+                JsonObject item;
+                fillRegion(item, site.definition.id.c_str(), site.definition.name.c_str(), true,
+                           outdoorId == site.definition.id, false, 0, 0, 0);
+                item.Bool("visited", world.relayNetwork.RegionVisited(site.definition.id));
+                item.Number("settlement_tier", unsigned(site.definition.tier));
+                Append(entries, item.Finish());
+            }
+        }
+        result.Raw("regions", "[" + entries + "]");
+    }
 
     std::string npcArray;
     if (cityLia)
@@ -633,8 +664,12 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                          world.isInObservatory ? tutorial::kObservatoryLiaPosition : tutorial::kLiaPosition,
                          "정비사", level.quest.GetObjective()));
     }
-    Append(npcArray, StaticNpc("halo/mara", "마라", tutorial::kMaraPosition, "주민",
-                               world.isPowerRestored ? "불빛이 돌아왔어요." : "전력 장치를 확인해 주세요."));
+    if (story)
+    {
+        Append(npcArray,
+               StaticNpc("halo/mara", "마라", tutorial::kMaraPosition, "주민",
+                         world.isPowerRestored ? "불빛이 돌아왔어요." : "전력 장치를 확인해 주세요."));
+    }
     for (size_t i = 0; i < world.residents.size(); ++i)
     {
         if (i == tutorial::Overworld::kKainResidentSlot && chapter.kainJoined)

@@ -181,6 +181,7 @@
     <ClInclude Include="Animation.h" />
     <ClInclude Include="Drawing.h" />
     <ClInclude Include="Game.h" />
+    <ClInclude Include="Save.h" />
     <ClInclude Include="Civic.h" />
     <ClInclude Include="Hud.h" />
     <ClInclude Include="Level.h" />
@@ -211,6 +212,7 @@
     <ClCompile Include="Animation.cpp" />
     <ClCompile Include="Drawing.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="Save.cpp" />
     <ClCompile Include="Civic.cpp" />
     <ClCompile Include="Hud.cpp" />
     <ClCompile Include="Level.cpp" />

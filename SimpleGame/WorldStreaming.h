@@ -137,6 +137,8 @@ class SurfaceSession
     bool Relocate(const SurfacePoint &point, double clearanceMeters = .65, double searchRadiusMeters = 32);
     // Remote landing checks do not project through the player's tangent plane or change the live pose.
     bool LandingClear(const SurfacePoint &point, double clearanceMeters = .65) const;
+    // Restore transported axes and the floating origin without losing the saved local coordinate system.
+    bool RestorePose(const TangentFrame &savedPose, const TangentFrame &savedOrigin, bool hovering);
     std::optional<TangentFrame> Rebase();
     WorldLocation Location() const;
     std::size_t CollisionCells() const

@@ -850,6 +850,50 @@ namespace
 void BuildConnections(GeneratedPlanet &result, const GenerationSettings &settings,
                       const std::atomic_bool *cancel);
 }
+const std::vector<PlanetDefinition> &PlanetProfiles::All()
+{
+    static const std::vector<PlanetDefinition> profiles = {
+        WorldCatalog::Erma(),
+        {"seira", "세이라", "survey_system", 0x5e17a31ull, 2,
+         1737400 * WorldCatalog::ExplorationDistanceScale, false},
+        {"orren", "오르엔", "survey_system", 0x077e493ull, 2,
+         7000000 * WorldCatalog::ExplorationDistanceScale, false}};
+    return profiles;
+}
+const PlanetDefinition *PlanetProfiles::Find(std::string_view id)
+{
+    const auto &profiles = All();
+    auto found = std::find_if(profiles.begin(), profiles.end(), [&](const auto &p) { return p.id == id; });
+    return found == profiles.end() ? nullptr : &*found;
+}
+bool PlanetProfiles::Supported(const PlanetDefinition &p)
+{
+    auto profile = Find(p.id);
+    return profile && p.SameWorld(*profile) && p.storyPlanet == profile->storyPlanet;
+}
+PlanetGenerator PlanetProfiles::Generator(const PlanetDefinition &p, const std::vector<StoryAnchor> &anchors)
+{
+    Require(Supported(p), "Unknown or incompatible planet profile");
+    if (p.storyPlanet)
+    {
+        return PlanetGenerator::Erma(anchors);
+    }
+    std::vector<RegionDefinition> definitions = {
+        {"landing_zone", p.name + " 착륙 거점", p.id, RegionKind::Outpost, SettlementTier::None, true},
+        {"district_hub", p.name + " 시내", p.id, RegionKind::Settlement, SettlementTier::District, false, 4,
+         "district-profile-v1"},
+        {"trade_city", p.name + " 물류시", p.id, RegionKind::Settlement, SettlementTier::Town, false, 64,
+         "town-profile-v1"},
+        {"high_city", p.name + " 광역시", p.id, RegionKind::Settlement, SettlementTier::Metropolis, false,
+         605.25, "metropolis-profile-v1"},
+        {"system_hub", p.name + " 수도권", p.id, RegionKind::Settlement, SettlementTier::SystemCapital, false,
+         1200, "capital-profile-v1"}};
+    GenerationSettings settings;
+    settings.clusters = 6;
+    settings.extraRegions = 32;
+    return PlanetGenerator(p, std::move(definitions), {{"landing_zone", SurfaceGeometry::FromDegrees(0, 0)}},
+                           {}, settings);
+}
 GeneratedPlanet PlanetGenerator::Generate(const std::atomic_bool *cancel) const
 {
     auto cancelled = [&] {
@@ -876,7 +920,7 @@ GeneratedPlanet PlanetGenerator::Generate(const std::atomic_bool *cancel) const
         // Broad transitions keep protected legacy elevations reachable by ground transport.
         pads.push_back(
             {"region_" + definition.id, placement.access, radius, 32000, placement.access.altitudeMeters});
-        if (definition.id == "halo_07")
+        if (definition.id == "halo_07" || definition.id == "landing_zone")
         {
             homeland = placement.access;
         }

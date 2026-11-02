@@ -2029,7 +2029,7 @@ void Overworld::Populate(GameState &state)
     for (int cityIndex = 0; cityIndex < kCityCount; ++cityIndex)
     {
         const auto &city = Cities()[cityIndex];
-        int count = cityIndex == 0 ? kPopulationPerCity - 2 : kPopulationPerCity;
+        int count = ResidentPopulation(cityIndex);
         for (int i = 0; i < count; ++i)
         {
             Vector2 position = {city.center.x + positions[i].x, city.center.y + positions[i].y};

@@ -492,6 +492,60 @@ void ProfileScales()
               "Profile radius controls planetary travel scale");
     }
 }
+void SelectableProfiles()
+{
+    const auto &profiles = PlanetProfiles::All();
+    Check(profiles.size() == 3 && PlanetProfiles::Find("unknown") == nullptr,
+          "Only catalogued planet profiles can be selected");
+    std::set<std::string> identities;
+    std::set<double> circumferences;
+    for (const auto &profile : profiles)
+    {
+        profile.Validate();
+        Check(PlanetProfiles::Supported(profile), "Every selectable profile has a stable identity");
+        RelayNetwork network;
+        network.Bind(profile);
+        Check(identities.insert(network.WorldKey()).second, "Planet ledgers cannot share a key");
+        circumferences.insert(G::Circumference(profile.radiusMeters));
+        auto incompatible = profile;
+        ++incompatible.seed;
+        Check(!PlanetProfiles::Supported(incompatible), "A changed seed is not the same saved profile");
+        Throws([&] { PlanetProfiles::Generator(incompatible); },
+               "Unknown profile identity is rejected before generation");
+        if (profile.storyPlanet)
+        {
+            continue;
+        }
+        auto plan = PlanetProfiles::Generator(profile).Generate();
+        plan.Validate();
+        Check(
+            plan.regions.size() == 37 && plan.Connected() && plan.anchors.empty() && !plan.cityCores,
+            "Generic profiles generate independent connected regions without Erma actors or authored cores");
+        Check(plan.Region("landing_zone").definition.storyFixed && plan.terrain.Homeland().has_value(),
+              "A deterministic landing reservation anchors playable land");
+        Check(plan.terrain.Sample(plan.Region("landing_zone").access.position).land,
+              "Landing reservation is above sea level");
+        std::set<SettlementTier> tiers;
+        for (const auto &r : plan.regions)
+        {
+            Check(r.definition.planetId == profile.id && r.definition.id != "halo_07" &&
+                      r.definition.id != "frontier" && r.definition.id != "mq00_mine",
+                  "Erma-only places never leak into a generic planet");
+            if (r.definition.kind == RegionKind::Settlement)
+            {
+                tiers.insert(r.definition.tier);
+            }
+            Check(std::any_of(plan.relays.begin(), plan.relays.end(),
+                              [&](const auto &relay) { return relay.regionId == r.definition.id; }),
+                  "Every generated region has its own relay coverage");
+        }
+        Check(tiers.size() == 4, "All four settlement tiers remain available on each generic planet");
+        Check(PlanetProfiles::Generator(profile).Generate().Digest() == plan.Digest(),
+              "Profile revisits reproduce the same layout");
+    }
+    Check(circumferences.size() == profiles.size(),
+          "Different radii produce distinct round-the-planet travel lengths");
+}
 void WritePreview(const GeneratedPlanet &plan, const char *path)
 {
     std::ofstream file(path);
@@ -615,6 +669,7 @@ int main(int argc, char **argv)
         Reproducibility(plan);
         DefensiveContracts(plan);
         ProfileScales();
+        SelectableProfiles();
         std::cout << "World generation tests passed: " << checks << " checks\n";
         return EXIT_SUCCESS;
     }

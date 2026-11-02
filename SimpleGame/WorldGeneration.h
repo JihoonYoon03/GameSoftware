@@ -3,6 +3,10 @@
 #include <atomic>
 #include <memory>
 #include <set>
+namespace tutorial
+{
+class SaveArchive;
+}
 
 namespace world
 {
@@ -143,6 +147,8 @@ class GeneratedPlanet
 // ============================================================================
 class RelayNetwork
 {
+    friend class tutorial::SaveArchive;
+
   public:
     static constexpr double DiscoverMeters = 100, UseMeters = 5;
     void Bind(const PlanetDefinition &planet);
@@ -201,5 +207,17 @@ class PlanetGenerator
     std::vector<StoryAnchor> anchors;
     GenerationSettings settings;
     std::shared_ptr<const CityCorePlan> cityCores;
+};
+// ============================================================================
+// PlanetProfiles — reproducible presets; only Erma owns the existing story actors
+// ============================================================================
+class PlanetProfiles
+{
+  public:
+    static const std::vector<PlanetDefinition> &All();
+    static const PlanetDefinition *Find(std::string_view id);
+    static bool Supported(const PlanetDefinition &planet);
+    static PlanetGenerator Generator(const PlanetDefinition &planet,
+                                     const std::vector<StoryAnchor> &ermaAnchors = {});
 };
 } // namespace world

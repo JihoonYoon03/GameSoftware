@@ -13,6 +13,8 @@
 
 namespace tutorial
 {
+class SaveArchive;
+class SaveSystem;
 class PlanetCities;
 struct Vector2
 {
@@ -163,6 +165,8 @@ enum class MissionStatus
 // ============================================================================
 class QuestParticipation
 {
+    friend class SaveArchive;
+
   public:
     MissionStatus Status(MissionId id) const
     {
@@ -312,7 +316,9 @@ enum class UiScreen
     Help,
     Supply,
     Confirm,
-    Medical
+    Medical,
+    Checkpoint,
+    PlanetProfiles
 };
 enum class UiAction
 {
@@ -339,7 +345,13 @@ enum class UiAction
     History,
     Previous,
     Next,
-    Mission
+    Mission,
+    Checkpoint,
+    SaveWorld,
+    LoadWorld,
+    CancelLoad,
+    Profiles,
+    SelectProfile
 };
 struct UiPreferences
 {
@@ -520,6 +532,11 @@ class Game
     {
         return surfaceMineReturn.has_value();
     }
+    bool IsStoryWorld() const
+    {
+        return !state.surfaceExploration ||
+               (surface && surface->Planet().SameWorld(world::WorldCatalog::Erma()));
+    }
     bool EnterSurfaceMine();
     bool LeaveSurfaceMine();
     bool RecoverSurfaceAt(int city, Vector2 legacyPosition);
@@ -574,6 +591,8 @@ class Game
     bool ReturnToSurface(Vector2 legacyDoor, int city = 0);
     bool LandOnSurface(const world::SurfacePoint &point, int city = -1);
     friend class RelayTravel;
+    friend class SaveSystem;
+    friend class SaveArchive;
 };
 // ============================================================================
 // RelayTravel — registration, travel policy and cancellable, preloaded landing transaction

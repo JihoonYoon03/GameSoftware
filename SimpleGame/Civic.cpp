@@ -590,8 +590,11 @@ void TransferToHospital()
     mine.invulnerability = 5;
     ++civic.deaths;
     Game::Get().ShowNotice(
-        (transported ? std::string(Overworld::Cities()[hospital.city].name) + " 의료소 / 레벨 -"
-                     : "의료 지원 / 의료소 도착 지점이 막혀 현장에서 회복했습니다. 레벨 -") +
+        (transported
+             ? (Game::Get().IsStoryWorld() ? std::string(Overworld::Cities()[hospital.city].name) + " 의료소"
+                                           : Game::Get().Surface()->Planet().name + " 착륙 지원소") +
+                   " / 레벨 -"
+             : "의료 지원 / 의료소 도착 지점이 막혀 현장에서 회복했습니다. 레벨 -") +
         std::to_string(civic.lostLevels) + " · 크레딧 -" + std::to_string(civic.lostCredits) +
         " · 거래 부품 -" + std::to_string(civic.lostSalvage) +
         ". 조사 기록은 유지되며 보안망의 평판은 남습니다." +

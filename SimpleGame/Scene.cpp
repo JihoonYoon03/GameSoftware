@@ -2472,17 +2472,20 @@ void PlanetScene::Draw()
             DrawSurfaceStructure(structure, *session);
         }
     }
-    const auto &frontier = snapshot->planet->Region("frontier");
-    if (snapshot->planet->cityCores && snapshot->planet->cityCores->Find("frontier") &&
-        world::SurfaceGeometry::Distance(session->Planet().radiusMeters, session->Pose().origin,
-                                         frontier.access.position) < 260)
+    if (Game::Get().IsStoryWorld())
     {
-        if (!d.frontierGround)
+        const auto &frontier = snapshot->planet->Region("frontier");
+        if (snapshot->planet->cityCores && snapshot->planet->cityCores->Find("frontier") &&
+            world::SurfaceGeometry::Distance(session->Planet().radiusMeters, session->Pose().origin,
+                                             frontier.access.position) < 260)
         {
-            d.frontierGround = FrontierGround(*snapshot->planet);
+            if (!d.frontierGround)
+            {
+                d.frontierGround = FrontierGround(*snapshot->planet);
+            }
+            DrawSurfaceModel(*d.frontierGround, frontier.frame, *session);
+            DrawSurfaceFrontier(*session);
         }
-        DrawSurfaceModel(*d.frontierGround, frontier.frame, *session);
-        DrawSurfaceFrontier(*session);
     }
     DrawSurfaceCities(*session);
     for (const auto &relay : snapshot->planet->relays)
@@ -2512,16 +2515,19 @@ void PlanetScene::Draw()
         }
         renderqueue::PopMatrix();
     }
-    const auto &mineEntrance = snapshot->planet->Region("mq00_mine").access.position;
-    if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, session->Pose().origin,
-                                         mineEntrance) < 100)
+    if (Game::Get().IsStoryWorld())
     {
-        auto local = session->Local(mineEntrance);
-        renderqueue::PushMatrix();
-        renderqueue::Translate(0, -float(local.z / 2) * 44, float(local.z / 2) * (1296.f / 44));
-        Drawing::DrawInteractionMarker({float(local.x / 2), float(local.y / 2)},
-                                       "오르딘 광산 / 하차 후 E 입장", {.4f, .9f, 1});
-        renderqueue::PopMatrix();
+        const auto &mineEntrance = snapshot->planet->Region("mq00_mine").access.position;
+        if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, session->Pose().origin,
+                                             mineEntrance) < 100)
+        {
+            auto local = session->Local(mineEntrance);
+            renderqueue::PushMatrix();
+            renderqueue::Translate(0, -float(local.z / 2) * 44, float(local.z / 2) * (1296.f / 44));
+            Drawing::DrawInteractionMarker({float(local.x / 2), float(local.y / 2)},
+                                           "오르딘 광산 / 하차 후 E 입장", {.4f, .9f, 1});
+            renderqueue::PopMatrix();
+        }
     }
     if (Game::Distance(w.bikePosition, w.playerPosition) < 80)
     {

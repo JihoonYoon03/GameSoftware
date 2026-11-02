@@ -1990,8 +1990,8 @@ void FrontierSurface::Refresh()
     auto &w = g.GetState();
     auto &state = level.GetState();
     bool active = false;
-    if (w.surfaceExploration && g.Surface() && g.Surface()->Ready() && !g.IsSurfaceMine() &&
-        !w.isInsideHome && !w.isInObservatory)
+    if (w.surfaceExploration && g.IsStoryWorld() && g.Surface() && g.Surface()->Ready() &&
+        !g.IsSurfaceMine() && !w.isInsideHome && !w.isInObservatory)
     {
         const auto &session = *g.Surface();
         const auto &r = session.Stream().Snapshot()->planet->Region("frontier");
@@ -2028,7 +2028,7 @@ void FrontierSurface::Refresh()
 bool FrontierSurface::Blocked(tutorial::Vector2 position, bool driving) const
 {
     const auto &g = tutorial::Game::Get();
-    if (!g.Surface() || !g.Surface()->Ready() || !level.GetState().generated)
+    if (!g.IsStoryWorld() || !g.Surface() || !g.Surface()->Ready() || !level.GetState().generated)
     {
         return false;
     }

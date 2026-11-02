@@ -1,5 +1,9 @@
-#pragma once
+﻿#pragma once
 #include <cstdint>
+namespace tutorial
+{
+class SaveArchive;
+}
 
 namespace combat
 {
@@ -15,6 +19,8 @@ enum class WeaponSlot
 };
 class PlayerLoadout
 {
+    friend class tutorial::SaveArchive;
+
   public:
     bool GrantPistol();
     bool HasPistol() const;
@@ -68,6 +74,8 @@ struct FirearmSettings
 
 class Firearm : public Weapon
 {
+    friend class tutorial::SaveArchive;
+
   public:
     explicit Firearm(FirearmSettings settings);
     void Update(float deltaSeconds) override;

@@ -884,6 +884,28 @@ bool SurfaceSession::LandingClear(const SurfacePoint &point, double clearance) c
     return contact.land && contact.slope <= .3 &&
            !contentCollision.Blocked(*stream.Snapshot()->planet, point, clearance);
 }
+bool SurfaceSession::RestorePose(const TangentFrame &savedPose, const TangentFrame &savedOrigin,
+                                 bool hovering)
+{
+    G::Validate(savedPose);
+    G::Validate(savedOrigin);
+    if (!Ready() ||
+        Distance(planet, savedPose.origin, savedOrigin.origin) > stream.Settings().originRadiusMeters + 2 ||
+        std::fabs(savedPose.origin.altitudeMeters - savedOrigin.origin.altitudeMeters) > 66)
+    {
+        return false;
+    }
+    const auto contact = stream.Contact(savedPose.origin);
+    if ((!contact.land && !hovering) || (contact.land && contact.slope > (hovering ? .35 : .65)) ||
+        contentCollision.Blocked(*stream.Snapshot()->planet, savedPose.origin, hovering ? .65 : .32))
+    {
+        return false;
+    }
+    pose = savedPose;
+    origin = savedOrigin;
+    stream.Update(pose);
+    return true;
+}
 std::optional<TangentFrame> SurfaceSession::Rebase()
 {
     if (Distance(planet, pose.origin, origin.origin) < stream.Settings().originRadiusMeters &&

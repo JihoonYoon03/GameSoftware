@@ -9,6 +9,7 @@
 #include "Profiler.h"
 #include "ResidentAI.h"
 #include "Scene.h"
+#include "Save.h"
 #include "ResourceAssets.h"
 #include "TransitLayout.h"
 #include "RenderAssets.h"
@@ -16,6 +17,7 @@
 #include <cassert>
 #include <cmath>
 #include <fstream>
+#include <filesystem>
 #include <iostream>
 #include <iterator>
 #include <limits>
@@ -532,6 +534,326 @@ void TestRelayTravelAndAtlas()
            w.relayNetwork.Registered(target->id));
     g.Reset();
 }
+void PrepareCheckpointFixture()
+{
+    using namespace tutorial;
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    assert(g.EnterTestStage(TestStage::SurfaceSurvey));
+    const auto until = std::chrono::steady_clock::now() + std::chrono::seconds(30);
+    while (!g.Surface()->Ready() && std::chrono::steady_clock::now() < until)
+    {
+        g.Update(0);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    assert(g.Surface()->Ready());
+    auto plan = g.Surface()->Stream().Snapshot()->planet;
+    auto relay = world::RelayNetwork::Find(*plan, "relay_halo_07_0");
+    assert(relay);
+    assert(g.RelocateSurfaceSurvey(relay->location.position));
+    RelayTravel::Interact();
+    w.mapVisible = false;
+    assert(w.relayNetwork.Registered(relay->id));
+    w.residents.front().name = "저장 검사 주민";
+    w.residents.front().health = 64;
+    assert(g.RelocateSurfaceSurvey(plan->Region("mq00_mine").access.position));
+    assert(g.EnterSurfaceMine());
+    mineState.player.credits = 1737;
+    mineState.player.salvage = 23;
+    mineState.enemies.front().health = 7;
+    mineState.survivors.front().combat.health = 61;
+    mineState.drops.push_back({{20.5f, 20.5f}, ItemKind::Salvage, mineState.nextDropActorId++});
+    GameLevels::Mine().Map().Reveal({35.5f, 41.5f});
+    assert(mineState.loadout.Select(combat::WeaponSlot::Secondary));
+    combat::Shot shot;
+    assert(mineState.pistol.TryFire(0, shot));
+    assert(mineState.pistol.Reload());
+    mineState.pistol.Update(.42f);
+    assert(w.missions.Pause(MissionId::Frontier));
+    auto &field = GameLevels::Chapter().GetState();
+    field.generatorInspected = true;
+    field.observedRecords |= 1;
+    w.dialogue.history.push_back(
+        {"checkpoint/line", "리아", "기록", "다시 불러와도 한글과 완료 기록을 보존한다.", {}});
+    w.dialogue.scenes["checkpoint/scene"] = {DialoguePhase::Completed, 1, "accept", ""};
+    w.dialogue.events.insert("checkpoint/event");
+    w.playerGender = models::Gender::Female;
+    w.playerHair = models::HairStyle::Bun;
+    w.planetMapRange = 64000;
+    w.mapRegisteredRelaysOnly = true;
+    CivicJustice::State().infamy = 17;
+    CivicJustice::State().heat = 200;
+    CivicJustice::State().wanted = 2;
+}
+void WaitForCheckpointLoad()
+{
+    const auto until = std::chrono::steady_clock::now() + std::chrono::seconds(35);
+    while (tutorial::SaveSystem::Loading() && std::chrono::steady_clock::now() < until)
+    {
+        tutorial::Game::Get().Update(0);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    assert(!tutorial::SaveSystem::Loading());
+}
+void VerifyCheckpointFixture(int credits = 1737)
+{
+    using namespace tutorial;
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    assert(g.Surface() && g.Surface()->Ready() &&
+           g.Surface()->Planet().SameWorld(world::WorldCatalog::Erma()));
+    assert(g.IsSurfaceMine() && mineState.active &&
+           g.PlanetLocation()->space == world::SpaceKind::Subsurface);
+    assert(mineState.player.credits == credits && mineState.player.salvage == 23 &&
+           mineState.enemies.front().health == 7 && mineState.survivors.front().combat.health == 61 &&
+           mineState.drops.back().actorId + 1 == mineState.nextDropActorId);
+    assert(mineState.pistol.GetRounds() == 11 && mineState.pistol.IsReloading() &&
+           std::fabs(mineState.pistol.GetReloadProgress() - .3f) < .0001f);
+    assert(w.missions.Status(MissionId::Frontier) == MissionStatus::Paused &&
+           GameLevels::Chapter().GetState().generatorInspected);
+    assert(w.relayNetwork.Registered("relay_halo_07_0") && w.playerGender == models::Gender::Female &&
+           w.playerHair == models::HairStyle::Bun);
+    assert(w.residents.front().name == "저장 검사 주민" && w.residents.front().health == 64);
+    assert(w.dialogue.events.count("checkpoint/event") &&
+           w.dialogue.scenes.at("checkpoint/scene").choice == "accept" &&
+           w.dialogue.history.back().text == "다시 불러와도 한글과 완료 기록을 보존한다.");
+    assert(w.planetMapRange == 64000 && w.mapRegisteredRelaysOnly && !w.relayPreparing && !w.mouseAiming &&
+           !w.mouseFiring);
+    assert(CivicJustice::State().infamy == 17 && CivicJustice::State().wanted == 2 &&
+           CivicJustice::State().heat == 200);
+}
+void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::filesystem::path &legacy)
+{
+    std::ifstream stream(current, std::ios::binary);
+    std::vector<unsigned char> bytes{std::istreambuf_iterator<char>(stream),
+                                     std::istreambuf_iterator<char>()};
+    auto number = [&](size_t offset) {
+        std::uint64_t result = 0;
+        assert(offset + 8 <= bytes.size());
+        for (unsigned i = 0; i < 8; ++i)
+        {
+            result |= std::uint64_t(bytes[offset + i]) << (8 * i);
+        }
+        return result;
+    };
+    assert(number(8) == 2);
+    size_t offset = 40;
+    const auto activeLength = number(offset);
+    offset += 8 + size_t(activeLength);
+    assert(number(offset) == 1);
+    offset += 8;
+    const auto keyLength = number(offset);
+    offset += 8 + size_t(keyLength);
+    assert(offset < bytes.size());
+    std::vector<unsigned char> previous(bytes.begin(), bytes.begin() + 40);
+    previous.insert(previous.end(), bytes.begin() + offset, bytes.end());
+    auto put = [&](size_t at, std::uint64_t value) {
+        for (unsigned i = 0; i < 8; ++i)
+        {
+            previous[at + i] = static_cast<unsigned char>(value >> (8 * i));
+        }
+    };
+    std::uint64_t hash = 14695981039346656037ull;
+    for (size_t i = 40; i < previous.size(); ++i)
+    {
+        hash ^= previous[i];
+        hash *= 1099511628211ull;
+    }
+    put(8, 1);
+    put(24, previous.size() - 40);
+    put(32, hash);
+    std::ofstream output(legacy, std::ios::binary);
+    output.write(reinterpret_cast<const char *>(previous.data()), std::streamsize(previous.size()));
+    assert(output.good());
+}
+void TestWorldCheckpoints()
+{
+    using namespace tutorial;
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    const auto folder =
+        std::filesystem::path("x64/RevisionChecks") /
+        ("checkpoint-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    const auto file = folder / std::filesystem::u8path("월드.sav"), bad = folder / "incompatible.sav";
+    PrepareCheckpointFixture();
+    const auto fog = mineState.explored;
+    const auto bike = *g.SurfaceBike();
+    // Ria and Mara are separate landmarks: the ordinary resident vector contains 98, not 100.
+    assert(Overworld::ResidentPopulation() == 98 && w.residents.size() == 98);
+    for (int city = 0; city < Overworld::kCityCount; ++city)
+    {
+        assert(std::count_if(w.residents.begin(), w.residents.end(), [&](const auto &r) {
+                   return r.cityIndex == city;
+               }) == Overworld::ResidentPopulation(city));
+    }
+    assert(SaveSystem::Save(file) && SaveSystem::CheckFile(file));
+    const auto legacy = folder / "schema1.sav";
+    WriteLegacyCheckpoint(file, legacy);
+    assert(SaveSystem::CheckFile(legacy));
+    mineState.player.credits = 2701;
+    assert(SaveSystem::Save(file) &&
+           std::filesystem::exists(std::filesystem::path(file.wstring() + L".bak")));
+    g.Reset();
+    w.isPowerRestored = true;
+    const bool generated = GameLevels::Chapter().GetState().generated;
+    assert(SaveSystem::Load(file) && SaveSystem::Loading());
+    SaveSystem::Cancel();
+    assert(!SaveSystem::Loading() && !g.Surface() && w.isPowerRestored &&
+           GameLevels::Chapter().GetState().generated == generated);
+    assert(SaveSystem::Load(file) && !SaveSystem::Load(file));
+    WaitForCheckpointLoad();
+    VerifyCheckpointFixture(2701);
+    assert(mineState.explored == fog && world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters,
+                                                                         bike, *g.SurfaceBike()) < 1.e-6);
+    assert(
+        Dialogue::Start("checkpoint/incomplete", {{"line", "리아", "기록", "대화를 끝내고 저장한다.", {}}}));
+    assert(!SaveSystem::Save(file));
+    ReadDialogue();
+    // Corruption falls back to the previous valid checkpoint without rewriting the damaged primary.
+    {
+        std::fstream stream(file, std::ios::binary | std::ios::in | std::ios::out);
+        stream.put('X');
+        assert(stream.good());
+    }
+    assert(!SaveSystem::CheckFile(file));
+    assert(SaveSystem::Load(file));
+    WaitForCheckpointLoad();
+    VerifyCheckpointFixture();
+    assert(!SaveSystem::CheckFile(file));
+    // A mismatching schema with no backup never changes the live world.
+    std::filesystem::copy_file(std::filesystem::path(file.wstring() + L".bak"), bad);
+    {
+        std::fstream stream(bad, std::ios::binary | std::ios::in | std::ios::out);
+        stream.seekp(8);
+        stream.put(char(99));
+        assert(stream.good());
+    }
+    const auto position = g.Surface()->Pose().origin;
+    mineState.player.credits = 4444;
+    assert(!SaveSystem::Load(bad) && !SaveSystem::Loading() && mineState.player.credits == 4444 &&
+           world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, position,
+                                            g.Surface()->Pose().origin) < 1.e-6);
+    assert(SaveSystem::Save(bad));
+    const auto opaqueBackup = std::filesystem::path(bad.wstring() + L".bak");
+    {
+        std::ifstream stream(opaqueBackup, std::ios::binary);
+        stream.seekg(8);
+        assert(stream.get() == 99);
+    }
+    assert(g.LeaveSurfaceMine());
+    CivicJustice::State().wanted = 0;
+    CivicJustice::State().heat = 0;
+    const auto plan = g.Surface()->Stream().Snapshot()->planet;
+    const auto *from = world::RelayNetwork::Find(*plan, "relay_halo_07_0"),
+               *to = world::RelayNetwork::Find(*plan, "relay_frontier_0");
+    assert(from && to);
+    auto registerAt = [&](const world::RelayCandidate &relay) {
+        w.mapVisible = false;
+        assert(g.RelocateSurfaceSurvey(relay.location.position));
+        RelayTravel::Interact();
+    };
+    registerAt(*to);
+    registerAt(*from);
+    const auto departure = g.Surface()->Pose().origin;
+    const auto transit = folder / "transit.sav";
+    assert(RelayTravel::Begin(to->id) && SaveSystem::Save(transit));
+    RelayTravel::Cancel();
+    assert(SaveSystem::Load(transit));
+    WaitForCheckpointLoad();
+    assert(!w.relayPreparing && !w.mapVisible &&
+           world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, departure,
+                                            g.Surface()->Pose().origin) < 1.e-6);
+    assert(SaveSystem::Load(legacy));
+    WaitForCheckpointLoad();
+    VerifyCheckpointFixture();
+    g.Reset();
+    std::filesystem::remove(legacy);
+    std::filesystem::remove(file);
+    std::filesystem::remove(std::filesystem::path(file.wstring() + L".bak"));
+    std::filesystem::remove(bad);
+    std::filesystem::remove(opaqueBackup);
+    std::filesystem::remove(transit);
+    std::filesystem::remove(folder);
+}
+
+void TestPlanetProfileVisits()
+{
+    using namespace tutorial;
+    using G = world::SurfaceGeometry;
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    PrepareCheckpointFixture();
+    assert(g.LeaveSurfaceMine());
+    const auto ermaBike = *g.SurfaceBike();
+    mineState.player.credits = 7000;
+    CivicJustice::State().wanted = 0;
+    CivicJustice::State().heat = 0;
+    assert(!SaveSystem::SwitchPlanet("unknown_profile"));
+    assert(SaveSystem::SwitchPlanet("seira"));
+    SaveSystem::Cancel();
+    assert(g.IsStoryWorld() && w.residents.front().health == 64 && mineState.player.credits == 7000);
+    assert(SaveSystem::SwitchPlanet("seira"));
+    assert(!SaveSystem::SwitchPlanet("orren"));
+    WaitForCheckpointLoad();
+    assert(g.Surface()->Planet().id == "seira" && !g.IsStoryWorld() && !g.SurfaceCities());
+    assert(w.residents.empty() && w.buildings.empty() && !mineState.generated &&
+           !GameLevels::Chapter().GetState().generated && !g.EnterSurfaceMine());
+    assert(!g.MissionEligible(MissionId::Signal) && !g.MissionEligible(MissionId::Mine));
+    assert(w.dialogue.scenes.empty() && w.dialogue.history.empty() && !mineState.quest.IsRiaJoined());
+    assert(mineState.player.credits == 7000 && mineState.loadout.HasPistol() &&
+           CivicJustice::State().infamy == 17);
+    const auto plan = g.Surface()->Stream().Snapshot()->planet;
+    assert(plan->anchors.empty() && !plan->cityCores &&
+           plan->Region("landing_zone").definition.planetId == "seira");
+    const auto &relay = plan->relays.front();
+    assert(g.RelocateSurfaceSurvey(relay.location.position));
+    RelayTravel::Interact();
+    w.mapVisible = false;
+    assert(w.relayNetwork.Registered(relay.id));
+    w.planetDestination = plan->Region("high_city").access.position;
+    w.planetMapRange = 9900;
+    const auto seiraPose = g.Surface()->Pose().origin, seiraBike = *g.SurfaceBike();
+    mineState.player.credits = 7300;
+    CivicJustice::State().infamy = 23;
+    w.pressedKeys['w'] = true;
+    w.mouseAiming = true;
+    assert(SaveSystem::SwitchPlanet("orren"));
+    WaitForCheckpointLoad();
+    assert(g.Surface()->Planet().id == "orren" && w.relayNetwork.Registrations().empty() &&
+           !w.planetDestination && mineState.player.credits == 7300 && CivicJustice::State().infamy == 23);
+    assert(SaveSystem::SwitchPlanet("seira"));
+    WaitForCheckpointLoad();
+    assert(g.Surface()->Planet().id == "seira" && w.relayNetwork.Registered(relay.id) &&
+           w.planetDestination && w.planetMapRange == 9900 && !w.pressedKeys['w'] && !w.mouseAiming &&
+           G::Distance(g.Surface()->Planet().radiusMeters, seiraPose, g.Surface()->Pose().origin) < 1.e-6 &&
+           G::Distance(g.Surface()->Planet().radiusMeters, seiraBike, *g.SurfaceBike()) < 1.e-6);
+    auto monitor = monitoring::WorldSnapshot::Build(101, "profile-test");
+    assert(monitor.find("halo/ria") == std::string::npos && monitor.find("halo/mara") == std::string::npos);
+    const auto folder =
+        std::filesystem::path("x64/RevisionChecks") /
+        ("profiles-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    const auto file = folder / "campaign.sav";
+    assert(SaveSystem::Save(file) && SaveSystem::CheckFile(file));
+    g.Reset();
+    assert(SaveSystem::Load(file));
+    WaitForCheckpointLoad();
+    assert(g.Surface()->Planet().id == "seira" && w.relayNetwork.Registered(relay.id));
+    mineState.player.credits = 8100;
+    assert(SaveSystem::SwitchPlanet("erma"));
+    WaitForCheckpointLoad();
+    assert(g.IsStoryWorld() && w.residents.size() == 98 && w.residents.front().health == 64 &&
+           w.residents.front().name == "저장 검사 주민" && w.relayNetwork.Registered("relay_halo_07_0") &&
+           GameLevels::Chapter().GetState().generatorInspected && mineState.generated &&
+           mineState.enemies.front().health == 7 && mineState.player.credits == 8100 &&
+           CivicJustice::State().infamy == 23 &&
+           G::Distance(g.Surface()->Planet().radiusMeters, ermaBike, *g.SurfaceBike()) < 1.e-6);
+    assert(SaveSystem::SwitchPlanet("orren"));
+    WaitForCheckpointLoad();
+    assert(g.Surface()->Planet().id == "orren" && mineState.player.credits == 8100);
+    g.Reset();
+    std::filesystem::remove(file);
+    std::filesystem::remove(folder);
+}
 void TestMapZoomAndSelection()
 {
     using namespace tutorial;
@@ -785,7 +1107,7 @@ void TestUiMenusAndTransactions()
     Hud::OpenMenu(UiScreen::Title);
     assert(w.isPaused && !w.mouseFiring);
     auto title = Hud::Controls();
-    assert(title.front().action == UiAction::Start && title.size() == 5);
+    assert(title.front().action == UiAction::Start && title.size() == 6);
     Hud::OpenMenu(UiScreen::Options);
     auto slider = Hud::Controls().front();
     // Fit a 1280x800 canvas into a 1920x1080 window; input must share the same inverse transform.
@@ -2663,6 +2985,20 @@ void TestAimMovementAndLayers()
 } // namespace
 int main(int argc, char **argv)
 {
+    if (argc == 3 && std::string(argv[1]) == "--checkpoint-write")
+    {
+        PrepareCheckpointFixture();
+        assert(tutorial::SaveSystem::Save(std::filesystem::u8path(argv[2])));
+        return 0;
+    }
+    if (argc == 3 && std::string(argv[1]) == "--checkpoint-read")
+    {
+        tutorial::Game::Get().Reset();
+        assert(tutorial::SaveSystem::Load(std::filesystem::u8path(argv[2])));
+        WaitForCheckpointLoad();
+        VerifyCheckpointFixture();
+        return 0;
+    }
     TestFrameScheduleAndTextCache();
     static_assert(std::is_base_of<game::Level, game::MineLevel>::value);
     static_assert(!std::is_copy_constructible<game::MineLevel>::value);
@@ -2683,6 +3019,8 @@ int main(int argc, char **argv)
     TestPlanetCityMigration();
     TestOpenWorldParticipation();
     TestRelayTravelAndAtlas();
+    TestWorldCheckpoints();
+    TestPlanetProfileVisits();
     TestMapZoomAndSelection();
     TestUiMenusAndTransactions();
     TestDialogueProgress();

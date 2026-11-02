@@ -2,6 +2,7 @@
 #include "Game.h"
 #include "Civic.h"
 #include "Hud.h"
+#include "Save.h"
 #include "RenderAssets.h"
 #include "Overworld.h"
 #include "ResidentAI.h"
@@ -201,6 +202,10 @@ const char *QuestParticipation::Label(MissionStatus status)
 }
 bool Game::MissionEligible(MissionId id) const
 {
+    if (!IsStoryWorld())
+    {
+        return false;
+    }
     switch (id)
     {
     case MissionId::Signal:
@@ -216,6 +221,10 @@ bool Game::MissionEligible(MissionId id) const
 }
 const char *Game::MissionObjective() const
 {
+    if (!IsStoryWorld())
+    {
+        return "행성 자유 탐사 · 중계환 발견·등록 / M 지도";
+    }
     if (state.missions.Active(MissionId::Signal))
     {
         return !state.homeMessageRead   ? "집 단말에서 측정 요청 확인 [E]"
@@ -241,7 +250,7 @@ const char *Game::MissionObjective() const
 }
 void Game::OfferMission(MissionId id)
 {
-    if (!state.surfaceExploration || Dialogue::Active() || state.dialogue.suspended ||
+    if (!state.surfaceExploration || !IsStoryWorld() || Dialogue::Active() || state.dialogue.suspended ||
         HospitalRecovery::Active())
     {
         return;
@@ -576,6 +585,7 @@ void Game::UpdateCamera(float deltaSeconds)
 }
 void Game::Reset()
 {
+    SaveSystem::ResetCampaign();
     StopSurface();
     WeaponWheel::Close();
     game::SceneManager::Reset();
@@ -791,6 +801,14 @@ void WeaponWheel::Close(bool commit)
 }
 void Game::KeyDown(unsigned char key, int, int)
 {
+    if (SaveSystem::Loading())
+    {
+        if (key == 27)
+        {
+            SaveSystem::Cancel();
+        }
+        return;
+    }
     if (HospitalRecovery::Active())
     {
         return;
@@ -1088,6 +1106,26 @@ void Game::KeyDown(unsigned char key, int, int)
 }
 void Game::SpecialKeyDown(int key, int, int)
 {
+    if (SaveSystem::Loading())
+    {
+        return;
+    }
+    if (key == GLUT_KEY_F5)
+    {
+        SaveSystem::Save();
+        return;
+    }
+    if (key == GLUT_KEY_F9)
+    {
+        if (state.relayPreparing)
+        {
+            return;
+        }
+        auto parent = state.ui.screen == UiScreen::Title ? UiScreen::Title : UiScreen::Pause;
+        Hud::OpenMenu(UiScreen::Checkpoint);
+        state.ui.returnTo = parent;
+        return;
+    }
     if (HospitalRecovery::Active())
     {
         return;
@@ -1333,6 +1371,11 @@ void Game::MouseEntry(int pointerState)
 }
 void Game::Update(float deltaSeconds)
 {
+    if (SaveSystem::Loading())
+    {
+        SaveSystem::Update();
+        return;
+    }
     deltaSeconds = Clamp(deltaSeconds, 0, kMaximumDeltaSeconds);
     if (state.surfaceExploration)
     {
@@ -1407,6 +1450,7 @@ void Game::Update(float deltaSeconds)
 }
 void Game::StopSurface()
 {
+    SaveSystem::Cancel();
     state.relayPreparing = false;
     state.relaySource.clear();
     state.relayTarget.clear();
@@ -1461,10 +1505,10 @@ bool Game::RelocateSurfaceSurvey(const world::SurfacePoint &point)
 }
 bool Game::EnterSurfaceMine()
 {
-    if (!state.surfaceExploration || !surface || !surface->Ready() || game::GameLevels::Active() ||
-        state.isInsideHome || state.isInObservatory || IsSurfaceMine() || state.isPaused ||
-        state.mapVisible || state.weaponWheel.visible || Dialogue::Active() || state.journalVisible ||
-        state.dialogueHistoryVisible || HospitalRecovery::Active())
+    if (!IsStoryWorld() || !state.surfaceExploration || !surface || !surface->Ready() ||
+        game::GameLevels::Active() || state.isInsideHome || state.isInObservatory || IsSurfaceMine() ||
+        state.isPaused || state.mapVisible || state.weaponWheel.visible || Dialogue::Active() ||
+        state.journalVisible || state.dialogueHistoryVisible || HospitalRecovery::Active())
     {
         return false;
     }
@@ -1512,6 +1556,19 @@ bool Game::LeaveSurfaceMine()
 }
 bool Game::RecoverSurfaceAt(int city, Vector2 position)
 {
+    if (state.surfaceExploration && !IsStoryWorld())
+    {
+        if (!surface || !surface->Ready())
+        {
+            return false;
+        }
+        const auto plan = surface->Stream().Snapshot()->planet;
+        const auto *nearest = world::RelayNetwork::Nearest(
+            *plan, surface->Pose().origin, world::SurfaceGeometry::Pi * surface->Planet().radiusMeters);
+        const auto point =
+            nearest ? nearest->location.position : plan->Region("landing_zone").access.position;
+        return LandOnSurface(point);
+    }
     if (!state.surfaceExploration || !ReturnToSurface(position, city))
     {
         return false;
@@ -1603,23 +1660,27 @@ bool Game::LandOnSurface(const world::SurfacePoint &point, int city)
                                                     surface->Planet().radiusMeters)
                         .origin;
                 bool fieldOccupied = false;
-                const auto &frontier = surface->Stream().Snapshot()->planet->Region("frontier");
-                if (world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, candidate,
-                                                     frontier.center.position) < 150)
+                if (IsStoryWorld())
                 {
-                    auto local = world::SurfaceGeometry::ToLocal(frontier.frame, candidate,
-                                                                 surface->Planet().radiusMeters);
-                    Vector2 position{game::kFrontierEntry.x + float(local.x / 2),
-                                     game::kFrontierEntry.y + float(local.y / 2)};
-                    const auto &field = game::GameLevels::Chapter().GetState();
-                    auto occupied = [&](const game::FrontierPerson &person) {
-                        return person.combat.health > 0 && Distance(position, person.position) < .6f;
-                    };
-                    fieldOccupied =
-                        (game::GameLevels::Mine().GetState().quest.IsRiaJoined() && occupied(field.ria)) ||
-                        (field.kainJoined && occupied(field.kain)) ||
-                        std::any_of(field.survivors.begin(), field.survivors.end(), occupied) ||
-                        std::any_of(field.scrappers.begin(), field.scrappers.end(), occupied);
+                    const auto &frontier = surface->Stream().Snapshot()->planet->Region("frontier");
+                    if (world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, candidate,
+                                                         frontier.center.position) < 150)
+                    {
+                        auto local = world::SurfaceGeometry::ToLocal(frontier.frame, candidate,
+                                                                     surface->Planet().radiusMeters);
+                        Vector2 position{game::kFrontierEntry.x + float(local.x / 2),
+                                         game::kFrontierEntry.y + float(local.y / 2)};
+                        const auto &field = game::GameLevels::Chapter().GetState();
+                        auto occupied = [&](const game::FrontierPerson &person) {
+                            return person.combat.health > 0 && Distance(position, person.position) < .6f;
+                        };
+                        fieldOccupied =
+                            (game::GameLevels::Mine().GetState().quest.IsRiaJoined() &&
+                             occupied(field.ria)) ||
+                            (field.kainJoined && occupied(field.kain)) ||
+                            std::any_of(field.survivors.begin(), field.survivors.end(), occupied) ||
+                            std::any_of(field.scrappers.begin(), field.scrappers.end(), occupied);
+                    }
                 }
                 if (!surface->LandingClear(candidate, .32) || fieldOccupied ||
                     (surfaceCities && surfaceCities->OccupiedAt(state, *surface, candidate, city)) ||
@@ -2220,6 +2281,17 @@ void Dialogue::Say(const std::string &id, const std::string &message)
 }
 std::vector<std::string> Dialogue::Journal()
 {
+    if (!Game::Get().IsStoryWorld())
+    {
+        const auto &s = Game::Get().GetState();
+        return {Game::Get().Surface()->Planet().name + " 탐사 기록",
+                "이 행성의 지형·도시·지대와 중계환은 고유 시드로 생성됩니다.",
+                "발견한 중계환을 E로 등록하면 같은 행성 안에서 이동할 수 있습니다.",
+                "발견 " + std::to_string(s.relayNetwork.Discoveries().size()) + " / 등록 " +
+                    std::to_string(s.relayNetwork.Registrations().size()),
+                "행성 선택은 탐사 테스트 기능입니다. 현장 기록은 행성별로 유지됩니다.",
+                "F5로 방문한 모든 행성의 기록을 디스크에 보관합니다."};
+    }
     const auto &w = Game::Get().GetState();
     const auto &mine = game::GameLevels::Mine().GetState();
     const auto &s = game::GameLevels::Chapter().GetState();
@@ -2530,7 +2602,7 @@ InteractionTarget Game::FindNearbyInteraction()
         }
         auto target = surface && surfaceCities ? surfaceCities->Nearby(state, *surface, &distance)
                                                : InteractionTarget::None;
-        if (surface && surface->Ready())
+        if (IsStoryWorld() && surface && surface->Ready())
         {
             const auto &mine = surface->Stream().Snapshot()->planet->Region("mq00_mine");
             if (world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, surface->Pose().origin,

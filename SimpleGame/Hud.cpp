@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "Hud.h"
+#include "Save.h"
 #include "Civic.h"
 #include "Drawing.h"
 #include "Level.h"
@@ -1553,7 +1554,10 @@ void ChapterHud::DrawJournal()
     Panel(64, 48, 1152, 704);
     Icon(world.journalVisible ? "record" : "history", 96, 104, 26);
     UiText(136, 132, world.journalVisible ? "조사 기록" : "대사 이력", 28);
-    UiText(96, 164, "현재 실행의 기록 · 저장 기능은 아직 없습니다.", 18);
+    UiText(96, 164,
+           world.surfaceExploration ? "F5 월드 저장 · F9 저장/불러오기"
+                                    : "현재 실행 기록 · 테스트 직행은 저장 미지원",
+           18);
     UiText(454, 218, world.journalVisible ? "확인한 사실과 다음 행동" : "읽은 대사 / 전달 기록", 18,
            {.61f, .88f, .83f});
     if (world.surfaceExploration && world.journalVisible)
@@ -1758,6 +1762,11 @@ void Hud::DrawVitals()
 }
 void Hud::OpenMenu(UiScreen screen)
 {
+    if (SaveSystem::Loading())
+    {
+        return;
+    }
+    SaveSystem::Refresh();
     auto &w = Game::Get().GetState();
     if (HospitalRecovery::Active())
     {
@@ -1779,6 +1788,10 @@ void Hud::CloseMenu()
 }
 std::vector<UiControl> Hud::Controls()
 {
+    if (SaveSystem::Loading())
+    {
+        return {{UiAction::CancelLoad, {440, 336}, {400, 46}, "불러오기 취소 · Esc"}};
+    }
     const auto &w = Game::Get().GetState();
     auto screen = w.ui.screen;
     if (screen == UiScreen::None && w.isPaused)
@@ -1804,6 +1817,7 @@ std::vector<UiControl> Hud::Controls()
         row(UiAction::Options, "옵션");
         row(UiAction::Help, "조작 안내");
         row(UiAction::Quit, "종료");
+        row(UiAction::Checkpoint, "월드 불러오기");
         break;
     case UiScreen::Pause:
         row(UiAction::Continue, "계속하기");
@@ -1816,6 +1830,28 @@ std::vector<UiControl> Hud::Controls()
                                : game::GameLevels::Mine().IsActive()    ? "광산 재시작"
                                                                         : "새 게임 · 진행 초기화");
         row(UiAction::Quit, "종료");
+        row(UiAction::Checkpoint, "월드 저장 · 불러오기");
+        row(UiAction::Profiles, "행성 선택 · 탐사 테스트", SaveSystem::Restriction() == nullptr);
+        break;
+    case UiScreen::PlanetProfiles:
+        for (size_t i = 0; i < world::PlanetProfiles::All().size(); ++i)
+        {
+            const auto &p = world::PlanetProfiles::All()[i];
+            bool current = Game::Get().Surface() && p.SameWorld(Game::Get().Surface()->Planet());
+            controls.push_back({UiAction::SelectProfile,
+                                {440, 220 + float(i) * 70},
+                                {400, 60},
+                                p.name + " · 반경 " + std::to_string(int(p.radiusMeters / 1000)) + " km" +
+                                    (current ? " · 현재" : ""),
+                                !current,
+                                int(i)});
+        }
+        controls.push_back({UiAction::Back, {440, 440}, {400, 46}, "뒤로"});
+        break;
+    case UiScreen::Checkpoint:
+        row(UiAction::SaveWorld, "현재 월드 저장 · F5", SaveSystem::Restriction() == nullptr);
+        row(UiAction::LoadWorld, "저장된 월드 불러오기", SaveSystem::Available());
+        row(UiAction::Back, "뒤로");
         break;
     case UiScreen::Stages:
         for (int i = 0; i < int(TestStage::Count); ++i)
@@ -1878,7 +1914,7 @@ std::vector<UiControl> Hud::Controls()
             controls.push_back({UiAction::Previous, {454, 676}, {176, 44}, "이전 페이지"});
             controls.push_back({UiAction::Next, {648, 676}, {176, 44}, "다음 페이지"});
             controls.push_back({UiAction::Continue, {848, 676}, {320, 44}, "닫기"});
-            if (w.surfaceExploration && w.journalVisible)
+            if (w.surfaceExploration && Game::Get().IsStoryWorld() && w.journalVisible)
             {
                 for (int i = 0; i < int(MissionId::Count); ++i)
                 {
@@ -1922,6 +1958,31 @@ void Hud::Activate(const UiControl &control, int direction)
         break;
     case UiAction::Start:
         g.StartNewGame();
+        break;
+    case UiAction::Checkpoint: {
+        const auto parent = w.ui.screen == UiScreen::Title ? UiScreen::Title : UiScreen::Pause;
+        OpenMenu(UiScreen::Checkpoint);
+        w.ui.returnTo = parent;
+        break;
+    }
+    case UiAction::Profiles:
+        OpenMenu(UiScreen::PlanetProfiles);
+        w.ui.returnTo = UiScreen::Pause;
+        break;
+    case UiAction::SelectProfile:
+        if (control.choice >= 0 && control.choice < int(world::PlanetProfiles::All().size()))
+        {
+            SaveSystem::SwitchPlanet(world::PlanetProfiles::All()[size_t(control.choice)].id);
+        }
+        break;
+    case UiAction::SaveWorld:
+        SaveSystem::Save();
+        break;
+    case UiAction::LoadWorld:
+        SaveSystem::Load();
+        break;
+    case UiAction::CancelLoad:
+        SaveSystem::Cancel();
         break;
     case UiAction::Mission:
         g.ManageMission(MissionId(control.choice));
@@ -2169,7 +2230,8 @@ bool Hud::HandlePointer(int button, bool down)
 {
     auto &w = Game::Get().GetState();
     auto controls = Controls();
-    bool modal = w.ui.screen != UiScreen::None || w.isPaused || w.journalVisible || w.dialogueHistoryVisible;
+    bool modal = SaveSystem::Loading() || w.ui.screen != UiScreen::None || w.isPaused || w.journalVisible ||
+                 w.dialogueHistoryVisible;
     if (!modal && !Dialogue::Active())
     {
         return false;
@@ -2255,7 +2317,7 @@ void Hud::DrawMedicalFade()
 void Hud::DrawMenu()
 {
     const auto &w = Game::Get().GetState();
-    UiScreen screen = w.ui.screen;
+    UiScreen screen = SaveSystem::Loading() ? UiScreen::Checkpoint : w.ui.screen;
     if (screen == UiScreen::None && w.isPaused)
     {
         screen = UiScreen::Pause;
@@ -2291,15 +2353,17 @@ void Hud::DrawMenu()
               : screen == UiScreen::Help || screen == UiScreen::Options || screen == UiScreen::Summary ? 96.f
               : narrow ? 408.f
                        : 336.f;
-    const char *title = screen == UiScreen::Title     ? "침묵하는 관문"
-                        : screen == UiScreen::Pause   ? "일시정지"
-                        : screen == UiScreen::Stages  ? "스테이지 목록 · 테스트 진입"
-                        : screen == UiScreen::Options ? "옵션"
-                        : screen == UiScreen::Summary ? "보유 · 성장 정보"
-                        : screen == UiScreen::Help    ? "조작 안내"
-                        : screen == UiScreen::Supply  ? "운송대 보급 교환"
-                        : screen == UiScreen::Medical ? "의료소 복귀"
-                                                      : "진행 확인";
+    const char *title = screen == UiScreen::Title            ? "침묵하는 관문"
+                        : screen == UiScreen::Pause          ? "일시정지"
+                        : screen == UiScreen::Stages         ? "스테이지 목록 · 테스트 진입"
+                        : screen == UiScreen::Options        ? "옵션"
+                        : screen == UiScreen::Summary        ? "보유 · 성장 정보"
+                        : screen == UiScreen::Help           ? "조작 안내"
+                        : screen == UiScreen::Supply         ? "운송대 보급 교환"
+                        : screen == UiScreen::Medical        ? "의료소 복귀"
+                        : screen == UiScreen::PlanetProfiles ? "행성 선택 · 탐사 테스트"
+                        : screen == UiScreen::Checkpoint     ? "월드 저장 · 불러오기"
+                                                             : "진행 확인";
     UiText(x,
            screen == UiScreen::Title   ? 253
            : screen == UiScreen::Pause ? 144
@@ -2316,6 +2380,44 @@ void Hud::DrawMenu()
     for (size_t i = 0; i < controls.size(); ++i)
     {
         Button(controls[i], int(i));
+    }
+    if (screen == UiScreen::PlanetProfiles)
+    {
+        const std::string text = SaveSystem::Message().empty()
+                                     ? "지상에서 하차한 뒤 선택하세요. 현재 행성의 탐험 기록은 유지됩니다."
+                                     : SaveSystem::Message();
+        auto rows = Dialogue::Wrap(text, 560, 18);
+        for (size_t i = 0; i < rows.size(); ++i)
+        {
+            UiText(336, 520 + float(i) * 26, rows[i], 18, {.67f, .9f, .85f});
+        }
+        UiText(336, 630, "행성 간 비행·스토리 이동은 이후 단계에서 연결합니다.", 16);
+    }
+    if (screen == UiScreen::Checkpoint)
+    {
+        const auto reason = SaveSystem::Restriction();
+        if (reason && !SaveSystem::Loading())
+        {
+            auto restriction = Dialogue::Wrap(reason, 560, 17);
+            for (size_t i = 0; i < restriction.size(); ++i)
+            {
+                UiText(336, 418 + float(i) * 24, restriction[i], 17, {1, .81f, .5f});
+            }
+        }
+        const auto text = !SaveSystem::Message().empty() ? SaveSystem::Message()
+                          : reason
+                              ? std::string(reason)
+                              : "현재 월드를 수동으로 저장합니다. 불러오면 저장 이후의 진행을 되돌립니다.";
+        auto rows = Dialogue::Wrap(text, 560, 18);
+        for (size_t i = 0; i < rows.size(); ++i)
+        {
+            UiText(336, 486 + float(i) * 26, rows[i], 18, {.67f, .9f, .85f});
+        }
+        auto path = Dialogue::Wrap("저장 위치: " + SaveSystem::DefaultPath().u8string(), 560, 14);
+        for (size_t i = 0; i < (std::min)(size_t(3), path.size()); ++i)
+        {
+            UiText(336, 606 + float(i) * 19, path[i], 14, {.55f, .7f, .72f});
+        }
     }
     if (screen == UiScreen::Options)
     {
@@ -2350,6 +2452,11 @@ void Hud::DrawMenu()
     }
     if (screen == UiScreen::Title || screen == UiScreen::Pause)
     {
+        if (screen == UiScreen::Pause && w.noticeText == SaveSystem::Message() &&
+            w.noticeSecondsRemaining > 0)
+        {
+            DrawNoticePanel();
+        }
         const bool titleScreen = screen == UiScreen::Title;
         UiText(x, titleScreen ? 166 : 98, titleScreen ? "에르마 · 헤일로" : "플레이를 잠시 멈췄습니다", 15,
                {.59f, .79f, .77f});
@@ -2357,10 +2464,10 @@ void Hud::DrawMenu()
         {
             UiText(96, 299, "신호가 닿은 곳에서, 이야기가 시작된다.", 20);
         }
-        UiText(x, titleScreen ? 727 : 687, "현재 진행은 실행 세션에만 유지됩니다.", 15, {.95f, .77f, .4f});
+        UiText(x, titleScreen ? 742 : 704, "F5 수동 저장 · F9 저장/불러오기", 15, {.95f, .77f, .4f});
         if (!titleScreen)
         {
-            UiText(x, 717, "W/S · 방향 키 선택 / Enter 확인", 14, {.59f, .75f, .75f});
+            UiText(x, 730, "W/S · 방향 키 선택 / Enter 확인", 14, {.59f, .75f, .75f});
         }
     }
     if (screen == UiScreen::Stages)
@@ -2379,8 +2486,8 @@ void Hud::DrawMenu()
             "광산 입구 야외에서 시작합니다. 권총을 보유하지만 기본 장착은 맨손입니다.",
             "광산 탐험의 시작 지점으로 이동합니다. 구조와 스캔을 확인할 수 있습니다.",
             "1장 빛나는 개척지의 시작 지점으로 이동합니다.",
-            "에르마의 지형·도시 블록·시설을 탐사합니다. [ / ]로 검사할 지역을 바꿉니다. 기존 임무와 "
-            "NPC의 행성 이전은 후속 단계입니다."};
+            "에르마의 도시·광산·개척지와 중계환을 탐사합니다. 이전 필수 진행은 완료 처리합니다. [ / ]는 "
+            "개발용 지역 이동입니다."};
         Icon("stage", 824, 222, 36);
         auto heading = Dialogue::Wrap(Game::StageName(TestStage(stage)), 328, 24);
         for (size_t i = 0; i < heading.size(); ++i)
@@ -2448,7 +2555,7 @@ void Hud::DrawMenu()
             }
         }
         auto footer = Dialogue::Wrap(
-            "I 보유 정보 · ? 도움말 · Esc 일시정지 · 예비 탄창 무제한 · 저장/불러오기 미지원", 1072, 16);
+            "I 보유 정보 · ? 도움말 · Esc 일시정지 · F5 행성 월드 저장 · F9 저장/불러오기", 1072, 16);
         for (size_t line = 0; line < footer.size(); ++line)
         {
             UiText(96, 620 + float(line) * 24, footer[line], 16);
@@ -2486,7 +2593,7 @@ void Hud::DrawMenu()
     if (screen == UiScreen::Confirm)
     {
         auto rows = Dialogue::Wrap(w.ui.confirmation == UiAction::Quit
-                                       ? "게임을 종료할까요? 현재 세션의 진행은 파일로 저장되지 않습니다."
+                                       ? "게임을 종료할까요? 마지막 수동 저장 이후의 진행은 사라집니다."
                                    : game::GameLevels::Chapter().IsActive()
                                        ? "조사 기록을 유지하고 헤일로로 귀환할까요?"
                                    : game::GameLevels::Mine().IsActive()
@@ -2532,7 +2639,8 @@ void PlanetHud::Draw()
     {
         Panel(390, 320, 500, 138);
         UiText(420, 365,
-               snapshot->statistics.error.empty() ? "에르마 탐사 준비" : "탐사 지형을 불러오지 못했습니다.",
+               snapshot->statistics.error.empty() ? session->Planet().name + " 탐사 준비"
+                                                  : "탐사 지형을 불러오지 못했습니다.",
                22);
         UiText(420, 405,
                snapshot->statistics.error.empty() ? "주변 지형을 준비하고 있습니다."
@@ -2541,7 +2649,7 @@ void PlanetHud::Draw()
         return;
     }
     auto location = Game::Get().PlanetLocation().value_or(session->Location());
-    std::string area = "에르마 야외";
+    std::string area = session->Planet().name + " 야외";
     if (location.regionId != "overworld")
     {
         area = snapshot->planet->Region(location.regionId).definition.name;

@@ -29,6 +29,8 @@ enum class MineQuestStage
 
 class MineQuest
 {
+    friend class tutorial::SaveArchive;
+
   public:
     MineQuestStage GetStage() const;
     bool Advance(MineQuestStage expected);
