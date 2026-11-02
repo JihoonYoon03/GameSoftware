@@ -640,6 +640,7 @@ void Game::StartSurface(bool insideHome)
     state.bikePosition = {float(bike.x / 2), float(bike.y / 2)};
     StoreSurfaceBikeHeading();
     surfaceCities = std::make_unique<PlanetCities>();
+    surfaceTraffic = std::make_unique<PlanetTraffic>();
     surface->Start(
         world::PlanetGenerator::Erma(Overworld::StoryAnchors()).WithCityCores(PlanetCities::Describe(state)));
 }
@@ -1471,6 +1472,7 @@ void Game::StopSurface()
     surfaceBikeHeading.reset();
     surfaceMineReturn.reset();
     surfaceCities.reset();
+    surfaceTraffic.reset();
     state.surfaceExploration = false;
     state.surfaceCameraHeight = 0;
     surfaceSurveyRegion.reset();
@@ -1683,6 +1685,7 @@ bool Game::LandOnSurface(const world::SurfacePoint &point, int city)
                     }
                 }
                 if (!surface->LandingClear(candidate, .32) || fieldOccupied ||
+                    (surfaceTraffic && surfaceTraffic->Blocked(candidate, .32)) ||
                     (surfaceCities && surfaceCities->OccupiedAt(state, *surface, candidate, city)) ||
                     (surfaceBike && world::SurfaceGeometry::Distance(surface->Planet().radiusMeters,
                                                                      *surfaceBike, candidate) < 1))
@@ -1751,6 +1754,10 @@ void Game::UpdateSurface(float dt)
         state.StopMotion();
         return;
     }
+    if (surfaceTraffic)
+    {
+        surfaceTraffic->Bind(surface->Stream().Snapshot()->planet);
+    }
     HospitalRecovery::Update(dt);
     if (HospitalRecovery::Active())
     {
@@ -1784,6 +1791,15 @@ void Game::UpdateSurface(float dt)
     {
         state.playTimeSeconds += dt;
         CivicJustice::AdvanceSurfaceTimers(dt);
+        if (surfaceTraffic)
+        {
+            surfaceTraffic->Update(state, *surface, dt,
+                                   !IsSurfaceMine() && !state.isInsideHome && !state.isInObservatory);
+        }
+    }
+    if (HospitalRecovery::Active())
+    {
+        return;
     }
     if (IsSurfaceMine())
     {
@@ -1887,6 +1903,7 @@ void Game::UpdateSurface(float dt)
             state.bikeYaw = std::atan2(bikeHeading.y, bikeHeading.x);
             state.playerMotion.velocity = rotate(state.playerMotion.velocity);
             state.bikeVelocity = rotate(state.bikeVelocity);
+            CivicJustice::State().playerImpact.velocity = rotate(CivicJustice::State().playerImpact.velocity);
             state.planetMapPan = rotate(state.planetMapPan);
             state.playerPosition = {};
         }
@@ -2455,7 +2472,9 @@ bool Game::IsPositionBlocked(Vector2 position)
     {
         return !surface || surface->Blocked(position.x * 2, position.y * 2, state.isBikeMounted) ||
                game::GameLevels::Chapter().Surface().Blocked(position, state.isBikeMounted) ||
-               (surfaceCities && surfaceCities->Occupied(state, *surface, position));
+               (surfaceCities && surfaceCities->Occupied(state, *surface, position)) ||
+               (surfaceTraffic && surfaceTraffic->Blocked(surface->PointAt(position.x * 2, position.y * 2),
+                                                          state.isBikeMounted ? .5 : .32));
     }
     if (game::GameLevels::Chapter().IsActive())
     {

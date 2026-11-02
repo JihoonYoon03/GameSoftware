@@ -48,6 +48,10 @@ enum class Counter
     CityPassiveResidents,
     CityRetiredWrecks,
     CityContactCorrections,
+    PlanetTrafficSpawned,
+    PlanetTrafficRetired,
+    PlanetTrafficDetailedTicks,
+    PlanetTrafficFarTicks,
     Count
 };
 enum class Timer
@@ -81,6 +85,8 @@ enum class Timer
     NpcCooperation,
     MineLighting,
     PlanetSimulation,
+    PlanetTraffic,
+    PlanetTrafficPrepare,
     Count
 };
 class Scope

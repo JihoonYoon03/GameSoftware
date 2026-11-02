@@ -5,6 +5,9 @@
 #include <cstdint>
 #include <map>
 #include <functional>
+#include <memory>
+#include <string_view>
+#include <vector>
 
 namespace tutorial
 {
@@ -210,13 +213,86 @@ class AirTraffic
     static Vector2 Position(int route, float parameter);
     static Vector2 Tangent(int route, float parameter);
     // Includes both the banked hull and the renderer's projected, blurred ground shadow.
-    static bool OutsideVisibleFootprint(const AircraftActor &craft, Vector2 camera, float padding = 40);
+    static bool OutsideVisibleFootprint(const AircraftActor &craft, Vector2 camera, float padding = 40,
+                                        float groundElevation = 0);
 
   private:
     std::vector<AircraftActor> aircraft;
     unsigned int randomState = 0x85ab32u;
     std::uint64_t nextId = 0;
     float spawnTimer = 0;
+};
+
+// ============================================================================
+// PlanetTraffic — bounded spherical traffic, independent of city-local coordinates and render chunks
+// ============================================================================
+struct PlanetTrafficActor
+{
+    std::uint64_t id = 0;
+    std::string routeId;
+    bool airborne = false, occupied = true, collisionReady = true;
+    int direction = 1, health = 140;
+    double distanceMeters = 0, speedMeters = 0, altitudeMeters = 0;
+    world::SurfacePoint position;
+    world::Vector3d heading = {0, 1, 0};
+    float bank = 0, wreckSeconds = 0, fallSpeed = 0, farSeconds = 0;
+};
+struct PlanetTrafficState
+{
+    std::string worldKey;
+    std::uint64_t manifestDigest = 0, nextId = 1;
+    unsigned randomState = 1;
+    float spawnSeconds = 0;
+    std::vector<PlanetTrafficActor> actors;
+};
+struct PlanetTrafficRoute
+{
+    std::string id;
+    unsigned from = 0, to = 0;
+    bool airborne = false;
+    std::vector<world::SurfacePoint> points;
+    std::vector<double> distances, capDots;
+    std::vector<world::Vector3d> caps;
+    double lengthMeters = 0;
+};
+class PlanetTraffic
+{
+  public:
+    static constexpr size_t GroundLimit = 64, AirLimit = 24;
+    static constexpr double DetailedMeters = 1500, RetireMeters = 4000;
+    static constexpr unsigned Revision = 1;
+    explicit PlanetTraffic(PlanetTrafficState state = {});
+    void Bind(std::shared_ptr<const world::GeneratedPlanet> planet);
+    void Update(GameState &state, const world::SurfaceSession &session, float deltaSeconds, bool exterior);
+    const PlanetTrafficState &State() const
+    {
+        return state;
+    }
+    const std::vector<PlanetTrafficRoute> &Routes() const
+    {
+        return *routes;
+    }
+    const PlanetTrafficRoute *Find(std::string_view id) const;
+    static void Validate(const PlanetTrafficState &state, const world::PlanetDefinition &planet,
+                         std::uint64_t digest);
+    world::SurfacePoint Position(const PlanetTrafficRoute &route, double distance, int direction) const;
+    bool Blocked(const world::SurfacePoint &point, double clearanceMeters) const;
+    bool Damage(std::uint64_t id, int amount);
+    bool Outside(const PlanetTrafficActor &actor, const GameState &world,
+                 const world::SurfaceSession &session, float padding = 240) const;
+
+  private:
+    unsigned Random();
+    void Advance(PlanetTrafficActor &actor, float seconds, const GameState &world,
+                 const world::SurfaceSession &session, bool exterior);
+    void Populate(const GameState &world, const world::SurfaceSession &session);
+    bool InsideCore(const world::SurfacePoint &point) const;
+    PlanetTrafficState state;
+    std::shared_ptr<const world::GeneratedPlanet> planet;
+    std::shared_ptr<const std::vector<PlanetTrafficRoute>> routes =
+        std::make_shared<const std::vector<PlanetTrafficRoute>>();
+    std::map<std::string, size_t, std::less<>> routeIndex;
+    std::map<unsigned, std::vector<size_t>> groundConnections;
 };
 
 // ============================================================================

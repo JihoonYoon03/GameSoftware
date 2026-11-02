@@ -1937,6 +1937,52 @@ void DrawSurfaceStructure(const world::SurfaceStructure &structure, const world:
     }
     Drawing::DrawModel3D(model, Drawing::WorldToScreen(px, py), scale, transform, (px + py) * 36, palette);
 }
+void DrawPlanetTraffic(const world::SurfaceSession &session)
+{
+    const auto traffic = Game::Get().SurfaceTraffic();
+    if (!traffic)
+    {
+        return;
+    }
+    const auto &state = Game::Get().GetState();
+    for (const auto &actor : traffic->State().actors)
+    {
+        if (traffic->Outside(actor, state, session, 80))
+        {
+            continue;
+        }
+        auto ground = actor.position;
+        ground.altitudeMeters -= actor.altitudeMeters;
+        const auto local = session.Local(ground);
+        const float height = float(local.z / 2);
+        const Vector2 position{float(local.x / 2), float(local.y / 2)};
+        const float yaw =
+            float(std::atan2(world::SurfaceGeometry::Dot(actor.heading, session.Origin().forward),
+                             world::SurfaceGeometry::Dot(actor.heading, session.Origin().right)));
+        renderqueue::PushMatrix();
+        renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
+        if (actor.airborne)
+        {
+            Drawing::DrawWorldAircraft(
+                position, float(actor.altitudeMeters / 2),
+                models::AircraftType((actor.id / 2) % size_t(models::AircraftType::Count)), actor.id % 2 != 0,
+                yaw, actor.bank, actor.health <= 0);
+        }
+        else
+        {
+            models::Palette palette;
+            palette.body = {.25f + float(actor.id % 4) * .1f, .4f, .55f, 1};
+            if (actor.health <= 0)
+            {
+                palette.body = {.12f, .13f, .14f, 1};
+                palette.emission = {.08f, .03f, .01f, 1};
+            }
+            Drawing::DrawWorldVehicle(position, 3.3f, 1, models::VehicleType(actor.id % 4), palette,
+                                      float(actor.speedMeters / 20), yaw);
+        }
+        renderqueue::PopMatrix();
+    }
+}
 void DrawSurfaceCities(const world::SurfaceSession &session)
 {
     auto cities = Game::Get().SurfaceCities();
@@ -2496,6 +2542,7 @@ void PlanetScene::Draw()
         }
     }
     DrawSurfaceCities(*session);
+    DrawPlanetTraffic(*session);
     for (const auto &relay : snapshot->planet->relays)
     {
         if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, session->Pose().origin,

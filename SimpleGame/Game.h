@@ -16,6 +16,7 @@ namespace tutorial
 class SaveArchive;
 class SaveSystem;
 class PlanetCities;
+class PlanetTraffic;
 struct Vector2
 {
     float x, y;
@@ -526,6 +527,10 @@ class Game
     {
         return surfaceCities.get();
     }
+    PlanetTraffic *SurfaceTraffic() const
+    {
+        return surfaceTraffic.get();
+    }
     std::optional<Vector2> ResidentPosition(const Resident &resident) const;
     bool RelocateSurfaceSurvey(const world::SurfacePoint &point);
     bool IsSurfaceMine() const
@@ -574,6 +579,7 @@ class Game
     GameState state;
     std::unique_ptr<world::SurfaceSession> surface;
     std::unique_ptr<PlanetCities> surfaceCities;
+    std::unique_ptr<PlanetTraffic> surfaceTraffic;
     std::optional<world::SurfacePoint> surfaceBike;
     std::optional<world::Vector3d> surfaceBikeHeading;
     std::optional<world::SurfacePoint> surfaceMineReturn;

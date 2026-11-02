@@ -356,6 +356,45 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         streaming.Number("latitude", ll[0]);
         streaming.Number("longitude", ll[1]);
         streaming.Number("altitude_meters", surface.Pose().origin.altitudeMeters);
+        if (const auto transit = tutorial::Game::Get().SurfaceTraffic())
+        {
+            JsonObject traffic;
+            traffic.Text("world_key", transit->State().worldKey);
+            traffic.Number("revision", tutorial::PlanetTraffic::Revision);
+            traffic.Number("routes", transit->Routes().size());
+            traffic.Number("ground_limit", tutorial::PlanetTraffic::GroundLimit);
+            traffic.Number("air_limit", tutorial::PlanetTraffic::AirLimit);
+            traffic.Number("detailed_meters", tutorial::PlanetTraffic::DetailedMeters);
+            traffic.Number("retire_meters", tutorial::PlanetTraffic::RetireMeters);
+            size_t ground = 0, air = 0, detailed = 0;
+            std::string actors;
+            for (const auto &actor : transit->State().actors)
+            {
+                actor.airborne ? ++air : ++ground;
+                detailed += ::world::SurfaceGeometry::Distance(surface.Planet().radiusMeters, actor.position,
+                                                               surface.Pose().origin) <
+                            tutorial::PlanetTraffic::DetailedMeters;
+                JsonObject item;
+                item.Number("id", actor.id);
+                item.Text("route_id", actor.routeId);
+                item.Bool("airborne", actor.airborne);
+                item.Bool("occupied", actor.occupied);
+                item.Number("health", actor.health);
+                item.Number("progress_meters", actor.distanceMeters);
+                item.Number("speed_meters", actor.speedMeters);
+                item.Number("wreck_seconds", actor.wreckSeconds);
+                auto location = ::world::SurfaceGeometry::ToDegrees(actor.position);
+                item.Number("latitude", location[0]);
+                item.Number("longitude", location[1]);
+                item.Number("altitude_meters", actor.position.altitudeMeters);
+                Append(actors, item.Finish());
+            }
+            traffic.Number("ground", ground);
+            traffic.Number("air", air);
+            traffic.Number("nearby", detailed);
+            traffic.Raw("actors", "[" + actors + "]");
+            streaming.Raw("planet_traffic", traffic.Finish());
+        }
         result.Raw("surface_streaming", streaming.Finish());
     }
     result.Text("current_region_id", chapter.active ? "frontier" : level.active ? "mine" : outdoorId);

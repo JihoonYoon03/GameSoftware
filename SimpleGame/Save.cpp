@@ -25,7 +25,7 @@ namespace tutorial
 namespace
 {
 constexpr std::uint64_t kMaximumFile = 16 * 1024 * 1024;
-constexpr unsigned kSchema = 2;
+constexpr unsigned kSchema = 3;
 void Require(bool value, const char *message)
 {
     if (!value)
@@ -47,6 +47,7 @@ struct Checkpoint
     CivicState civic;
     PlanetCities cities;
     AirTraffic flights;
+    PlanetTrafficState transit;
 };
 std::string WorldKey(const world::PlanetDefinition &planet)
 {
@@ -67,6 +68,7 @@ struct PendingLoad
     Checkpoint checkpoint;
     Campaign candidate;
     std::unique_ptr<world::SurfaceSession> session;
+    std::unique_ptr<PlanetTraffic> traffic;
     std::chrono::steady_clock::time_point began = std::chrono::steady_clock::now();
     bool validated = false, restored = false, backup = false;
     bool switching = false, fresh = false;
@@ -190,13 +192,19 @@ class SaveArchive
             c.cities = *g.surfaceCities;
         }
         c.flights = Overworld::Flights();
+        if (g.surfaceTraffic)
+        {
+            c.transit = g.surfaceTraffic->State();
+        }
         // The memory ledger follows disk persistence rules too: no held inputs, callbacks,
         // projectiles, menu state, render resources or temporary worker ownership survive a visit.
         SaveArchive writer(false);
         writer.Value(c);
+        writer.Value(c.transit);
         Checkpoint clean;
         SaveArchive reader(true, writer.Bytes());
         reader.Value(clean);
+        reader.Value(clean.transit);
         return clean;
     }
     explicit SaveArchive(bool reading, std::vector<unsigned char> bytes = {})
@@ -695,6 +703,54 @@ class SaveArchive
                v.lostSalvage, v.pursuitSeconds, v.initialUnseenSeconds, v.pendingInfamy, v.responseStarted,
                v.identified, v.randomState);
     }
+    void Value(PlanetTrafficActor &v)
+    {
+        Fields(v.id, v.routeId, v.airborne, v.occupied, v.collisionReady, v.direction, v.health,
+               v.distanceMeters, v.speedMeters, v.altitudeMeters, v.position, v.heading, v.bank,
+               v.wreckSeconds, v.fallSpeed, v.farSeconds);
+    }
+    void Value(PlanetTrafficState &v)
+    {
+        Fields(v.worldKey, v.manifestDigest, v.nextId, v.randomState, v.spawnSeconds);
+        const auto count = Count(v.actors.size());
+        Require(count <= PlanetTraffic::GroundLimit + PlanetTraffic::AirLimit,
+                "저장된 행성 교통 개체 수가 상한을 초과했습니다.");
+        if (reading)
+        {
+            v.actors.resize(size_t(count));
+        }
+        for (auto &actor : v.actors)
+        {
+            Value(actor);
+        }
+    }
+    void TrafficRecords(Campaign &v)
+    {
+        std::uint64_t count = v.worlds.size();
+        Value(count);
+        Require(count == v.worlds.size(), "행성 교통 확장의 월드 수가 일치하지 않습니다.");
+        if (reading)
+        {
+            std::set<std::string> keys;
+            for (std::uint64_t i = 0; i < count; ++i)
+            {
+                std::string key;
+                PlanetTrafficState state;
+                Fields(key, state);
+                Require(v.worlds.count(key) && keys.insert(key).second,
+                        "행성 교통 확장의 월드 ID가 올바르지 않습니다.");
+                v.worlds.at(key).transit = std::move(state);
+            }
+        }
+        else
+        {
+            for (auto &entry : v.worlds)
+            {
+                auto key = entry.first;
+                Fields(key, entry.second.transit);
+            }
+        }
+    }
     void Value(Checkpoint &v)
     {
         Fields(v.planet, v.layout, v.digest, v.pose, v.origin, v.bike, v.bikeHeading, v.mineReturn, v.game,
@@ -744,6 +800,7 @@ void Validate(const Checkpoint &c)
     c.planet.Validate();
     Require(world::PlanetProfiles::Supported(c.planet), "지원하지 않거나 버전이 다른 행성 프로필입니다.");
     const bool story = c.planet.storyPlanet;
+    PlanetTraffic::Validate(c.transit, c.planet, c.digest);
     Require(c.layout == world::ContentLayout::Revision,
             "도시 배치 버전이 다릅니다. 원본 저장을 보존하고 같은 버전으로 불러와 주세요.");
     G::Validate(c.pose);
@@ -1009,10 +1066,24 @@ void ValidateCampaign(const Campaign &records)
 Campaign Decode(const std::filesystem::path &path)
 {
     auto envelope = ReadEnvelope(path);
-    Require(envelope.schema == 1 || envelope.schema == kSchema,
+    Require(envelope.schema >= 1 && envelope.schema <= kSchema,
             "저장 형식 버전이 다릅니다. 원본 파일은 변경하지 않았습니다.");
     Require(envelope.layout == world::ContentLayout::Revision,
             "저장된 도시 배치 버전이 현재 게임과 다릅니다.");
+    std::vector<unsigned char> extension;
+    if (envelope.schema >= 3)
+    {
+        Require(envelope.payload.size() >= 8, "행성 교통 확장의 길이 정보가 없습니다.");
+        SaveArchive footer(true,
+                           std::vector<unsigned char>(envelope.payload.end() - 8, envelope.payload.end()));
+        std::uint64_t size = 0;
+        footer.Value(size);
+        Require(size > 0 && size <= envelope.payload.size() - 8,
+                "행성 교통 확장의 길이가 올바르지 않습니다.");
+        const size_t start = envelope.payload.size() - 8 - size_t(size);
+        extension.assign(envelope.payload.begin() + start, envelope.payload.end() - 8);
+        envelope.payload.resize(start);
+    }
     SaveArchive reader(true, std::move(envelope.payload));
     Campaign result;
     if (envelope.schema == 1)
@@ -1028,6 +1099,12 @@ Campaign Decode(const std::filesystem::path &path)
         reader.Value(result);
     }
     Require(reader.Finished(), "저장 파일 끝에 지원하지 않는 데이터가 있습니다.");
+    if (envelope.schema >= 3)
+    {
+        SaveArchive traffic(true, std::move(extension));
+        traffic.TrafficRecords(result);
+        Require(traffic.Finished(), "행성 교통 확장에 지원하지 않는 데이터가 있습니다.");
+    }
     ValidateCampaign(result);
     return result;
 }
@@ -1066,7 +1143,7 @@ void WriteAtomic(const std::filesystem::path &path, const std::vector<unsigned c
             auto envelope = ReadEnvelope(path);
             // Preserve intact older/newer version files too; unreadable corruption must not replace a good
             // backup.
-            if ((envelope.schema == 1 || envelope.schema == kSchema) &&
+            if ((envelope.schema >= 1 && envelope.schema <= kSchema) &&
                 envelope.layout == world::ContentLayout::Revision)
             {
                 Decode(path);
@@ -1272,14 +1349,23 @@ bool SaveSystem::Save(const std::filesystem::path &path)
         ValidateCampaign(candidate);
         SaveArchive body(false);
         body.Value(candidate);
+        SaveArchive extension(false);
+        extension.TrafficRecords(candidate);
+        SaveArchive footer(false);
+        std::uint64_t extensionSize = extension.Bytes().size();
+        footer.Value(extensionSize);
+        auto payload = body.Bytes();
+        payload.insert(payload.end(), extension.Bytes().begin(), extension.Bytes().end());
+        payload.insert(payload.end(), footer.Bytes().begin(), footer.Bytes().end());
+        Require(payload.size() <= kMaximumFile, "저장 데이터가 허용 크기를 초과했습니다.");
         SaveArchive header(false);
         unsigned char magic[8] = {'S', 'G', 'W', 'O', 'R', 'L', 'D', 0};
         header.Raw(magic, 8);
         unsigned schema = kSchema, layout = world::ContentLayout::Revision;
-        std::uint64_t size = body.Bytes().size(), checksum = Checksum(body.Bytes());
+        std::uint64_t size = payload.size(), checksum = Checksum(payload);
         header.Fields(schema, layout, size, checksum);
         auto bytes = header.Bytes();
-        bytes.insert(bytes.end(), body.Bytes().begin(), body.Bytes().end());
+        bytes.insert(bytes.end(), payload.begin(), payload.end());
         WriteAtomic(path, bytes);
         campaign = std::move(candidate);
         Refresh();
@@ -1471,6 +1557,9 @@ void SaveSystem::Update()
                 "현재 생성기/건물·도로 리소스로 저장된 배치를 재현할 수 없습니다. 원본 저장은 유지합니다.");
             Validate(c);
             ValidateRegistry(c, *snapshot->planet);
+            load.traffic = std::make_unique<PlanetTraffic>(c.transit);
+            load.traffic->Bind(snapshot->planet);
+            c.transit = load.traffic->State();
             load.validated = true;
         }
         if (!load.session->Stream().Detailed(c.pose.origin, 96))
@@ -1504,6 +1593,7 @@ void SaveSystem::Update()
         g.surface = std::move(ready->session);
         campaign = std::move(ready->candidate);
         g.surfaceCities = std::move(cities);
+        g.surfaceTraffic = std::move(ready->traffic);
         g.surfaceBike = record.bike;
         g.surfaceBikeHeading = record.bikeHeading;
         g.surfaceMineReturn = record.mineReturn;

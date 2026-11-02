@@ -34,6 +34,227 @@ using namespace game;
 MineState &mineState = GameLevels::Mine().GetState();
 using tutorial::Vector2;
 void ReadDialogue();
+tutorial::PlanetTrafficActor TrafficFixtureActor(const tutorial::PlanetTraffic &traffic,
+                                                 const world::GeneratedPlanet &plan,
+                                                 const tutorial::PlanetTrafficRoute &route, double progress,
+                                                 std::uint64_t id = 1)
+{
+    tutorial::PlanetTrafficActor actor;
+    actor.id = id;
+    actor.routeId = route.id;
+    actor.airborne = route.airborne;
+    actor.collisionReady = !actor.airborne;
+    actor.health = actor.airborne ? 180 : 140;
+    actor.distanceMeters = progress;
+    actor.speedMeters = 12;
+    actor.altitudeMeters = actor.airborne ? 40 : 0;
+    actor.position = traffic.Position(route, progress, 1);
+    actor.position.altitudeMeters =
+        (std::max)(world::PlanetTerrain::SeaLevelMeters, plan.terrain.Height(actor.position)) +
+        actor.altitudeMeters;
+    actor.heading = world::SurfaceGeometry::Frame(actor.position).right;
+    return actor;
+}
+void InstallTrafficFixture(int damage = 0)
+{
+    auto &g = tutorial::Game::Get();
+    auto plan = g.Surface()->Stream().Snapshot()->planet;
+    auto traffic = g.SurfaceTraffic();
+    assert(traffic && !traffic->Routes().empty());
+    const auto route = std::find_if(traffic->Routes().begin(), traffic->Routes().end(),
+                                    [](const auto &r) { return r.airborne; });
+    assert(route != traffic->Routes().end());
+    auto state = traffic->State();
+    state.actors = {TrafficFixtureActor(*traffic, *plan, *route, route->lengthMeters * .5)};
+    state.nextId = 2;
+    state.spawnSeconds = .75f;
+    tutorial::PlanetTraffic replacement(state);
+    replacement.Bind(plan);
+    *traffic = std::move(replacement);
+    if (damage)
+    {
+        assert(traffic->Damage(1, damage));
+    }
+}
+void TestPlanetTraffic()
+{
+    using namespace tutorial;
+    using G = world::SurfaceGeometry;
+    auto p = *world::PlanetProfiles::Find("seira");
+    const auto center = G::FromDegrees(0, 179.99);
+    const auto frame = G::Frame(center);
+    // Minimal transit-only manifest isolates spherical route rules from story generation.
+    auto plan = std::make_shared<world::GeneratedPlanet>(
+        world::PlanetTerrain(p, {{"traffic_pad", center, 12000, 1000, 0}}, center));
+    auto a = G::Advance(frame, -5000, 0, p.radiusMeters).origin,
+         b = G::Advance(frame, 5000, 0, p.radiusMeters).origin,
+         c = G::Advance(frame, 5000, 5000, p.radiusMeters).origin;
+    auto location = [&](const char *id, world::SurfacePoint point) {
+        world::WorldLocation l;
+        l.planetId = p.id;
+        l.planetSeed = p.seed;
+        l.generatorVersion = p.generatorVersion;
+        l.regionId = id;
+        l.position = point;
+        return l;
+    };
+    plan->nodes = {{"a", "a", location("a", a), false},
+                   {"b", "b", location("b", b), false},
+                   {"c", "c", location("c", c), false}};
+    plan->connections = {{0, 1, world::RouteMode::Road, {a, b}, G::Distance(p.radiusMeters, a, b)},
+                         {1, 2, world::RouteMode::Road, {b, c}, G::Distance(p.radiusMeters, b, c)}};
+    PlanetTraffic prototype;
+    prototype.Bind(plan);
+    assert(prototype.Routes().size() == 4);
+    const auto &road = prototype.Routes().front(), &air = prototype.Routes()[1];
+    assert(!road.airborne && air.airborne && air.id != road.id);
+    auto right = prototype.Position(road, road.lengthMeters * .5, 1),
+         left = prototype.Position(road, road.lengthMeters * .5, -1);
+    assert(std::fabs(G::Distance(p.radiusMeters, right, left) - 3) < .001);
+    assert(G::ToLocal(frame, right, p.radiusMeters).y < -1.4 &&
+           G::ToLocal(frame, left, p.radiusMeters).y > 1.4);
+    assert(G::Distance(p.radiusMeters, prototype.Position(air, air.lengthMeters * .5, 1), center) > 50);
+    assert(G::Distance(p.radiusMeters, prototype.Position(air, air.lengthMeters + 20, 1),
+                       prototype.Position(air, air.lengthMeters + 20 + G::Circumference(p.radiusMeters), 1)) <
+           .001);
+    assert(std::fabs(G::ToDegrees(right)[1]) > 179.9);
+    auto rejected = [](const auto &operation) {
+        bool caught = false;
+        try
+        {
+            operation();
+        }
+        catch (const std::exception &)
+        {
+            caught = true;
+        }
+        assert(caught);
+    };
+    auto record = prototype.State();
+    record.nextId = 2;
+    record.spawnSeconds = 1;
+    record.actors = {TrafficFixtureActor(prototype, *plan, road, road.lengthMeters * .5)};
+    PlanetTraffic::Validate(record, p, plan->Digest());
+    auto bad = record;
+    bad.actors.push_back(bad.actors.front());
+    rejected([&] { PlanetTraffic::Validate(bad, p, plan->Digest()); });
+    bad = record;
+    bad.worldKey += "wrong";
+    rejected([&] { PlanetTraffic::Validate(bad, p, plan->Digest()); });
+    bad = record;
+    bad.actors.front().routeId = "unknown";
+    rejected([&] {
+        PlanetTraffic candidate(bad);
+        candidate.Bind(plan);
+    });
+    bad = record;
+    bad.actors.front().position =
+        G::Advance(G::Frame(bad.actors.front().position), 30, 0, p.radiusMeters).origin;
+    rejected([&] {
+        PlanetTraffic candidate(bad);
+        candidate.Bind(plan);
+    });
+    world::SurfaceSession session(p, center);
+    session.Start(plan);
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+    while (!session.Ready() && std::chrono::steady_clock::now() < deadline)
+    {
+        session.Update();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    assert(session.Ready());
+    GameState observation;
+    observation.isInsideHome = false;
+    auto visibleAir = TrafficFixtureActor(prototype, *plan, air, air.lengthMeters * .5);
+    auto base = visibleAir.position;
+    base.altitudeMeters -= visibleAir.altitudeMeters;
+    auto anchor = session.Local(base);
+    GameState elevated = observation;
+    elevated.playerPosition =
+        elevated.cameraPosition = {float(anchor.x / 2 + .38 * visibleAir.altitudeMeters / 2),
+                                   float(anchor.y / 2 + .55 * visibleAir.altitudeMeters / 2)};
+    const bool hidden = prototype.Outside(visibleAir, elevated, session, 0);
+    assert(!hidden);
+    visibleAir.position.altitudeMeters += 20;
+    elevated.surfaceCameraHeight = 10;
+    assert(prototype.Outside(visibleAir, elevated, session, 0) ==
+           hidden); // Raising ground and camera preserves the projected hull/shadow.
+
+    PlanetTraffic moving(record);
+    moving.Bind(plan);
+    const auto initial = moving.State().actors.front().distanceMeters;
+    for (int i = 0; i < 9; ++i)
+    {
+        moving.Update(observation, session, .05f, false);
+    }
+    assert(moving.State().actors.front().distanceMeters == initial);
+    moving.Update(observation, session, .05f, false);
+    assert(moving.State().actors.front().distanceMeters > initial + 1 &&
+           moving.State().actors.front().distanceMeters < initial + 20);
+    auto paused = moving.State();
+    observation.isPaused = true;
+    for (int i = 0; i < 20; ++i)
+    {
+        moving.Update(observation, session, .05f, false);
+    }
+    assert(moving.State().actors.front().distanceMeters == paused.actors.front().distanceMeters &&
+           moving.State().actors.front().farSeconds == paused.actors.front().farSeconds);
+    observation.isPaused = false;
+    record.actors = {TrafficFixtureActor(prototype, *plan, road, 3000)};
+    PlanetTraffic retained(record);
+    retained.Bind(plan);
+    retained.Update(observation, session, .05f, false);
+    assert(retained.State().actors.size() == 1); // Offscreen traffic is retained for kilometres.
+    record.actors = {TrafficFixtureActor(prototype, *plan, road, 500)};
+    PlanetTraffic distant(record);
+    distant.Bind(plan);
+    const auto local = session.Local(record.actors.front().position);
+    observation.cameraPosition = {float(local.x / 2), float(local.y / 2)};
+    assert(!distant.Outside(record.actors.front(), observation, session));
+    distant.Update(observation, session, .05f, true);
+    assert(distant.State().actors.size() == 1);
+    observation.cameraPosition = {};
+    distant.Update(observation, session, .05f, false);
+    assert(distant.State().actors.empty() && distant.State().nextId == 2);
+    record.actors = {TrafficFixtureActor(prototype, *plan, air, air.lengthMeters * .25)};
+    PlanetTraffic wreck(record);
+    wreck.Bind(plan);
+    assert(wreck.Damage(1, 999) && !wreck.Damage(1, 5));
+    for (int i = 0; i < 120; ++i)
+    {
+        wreck.Update(observation, session, .05f, false);
+    }
+    assert(wreck.State().actors.size() == 1 && wreck.State().actors.front().altitudeMeters == 0 &&
+           wreck.State().actors.front().collisionReady);
+    const auto &hull = models::ResourceAssets::Get(
+        models::ModelLibrary::Aircraft(models::AircraftType::Courier, true).resourceId);
+    const auto wreckCenter =
+        G::Advance(G::Frame(wreck.State().actors.front().position), hull.minimum.x + hull.maximum.x,
+                   hull.minimum.y + hull.maximum.y, p.radiusMeters)
+            .origin;
+    assert(wreck.Blocked(wreckCenter, .32));
+    for (int i = 0; i < 300; ++i)
+    {
+        wreck.Update(observation, session, .05f, false);
+    }
+    assert(wreck.State().actors.empty());
+    PlanetTraffic spawned;
+    spawned.Bind(plan);
+    spawned.Update(observation, session, .05f, true);
+    assert(!spawned.State().actors.empty() &&
+           spawned.State().actors.size() <= PlanetTraffic::GroundLimit + PlanetTraffic::AirLimit);
+    for (const auto &actor : spawned.State().actors)
+    {
+        assert(spawned.Outside(actor, observation, session, 320));
+    }
+    PlanetTraffic::Validate(spawned.State(), p, plan->Digest());
+    auto copy = spawned.State();
+    PlanetTraffic restored(copy);
+    restored.Bind(plan);
+    assert(restored.State().worldKey == copy.worldKey && restored.State().nextId == copy.nextId &&
+           restored.State().actors.size() == copy.actors.size());
+    session.Stop();
+}
 void TestCitySimulationPolicy()
 {
     using namespace tutorial;
@@ -817,7 +1038,8 @@ void VerifyCheckpointFixture(int credits = 1737)
     assert(CivicJustice::State().infamy == 17 && CivicJustice::State().wanted == 2 &&
            CivicJustice::State().heat == 200);
 }
-void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::filesystem::path &legacy)
+void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::filesystem::path &legacy,
+                           unsigned version = 1)
 {
     std::ifstream stream(current, std::ios::binary);
     std::vector<unsigned char> bytes{std::istreambuf_iterator<char>(stream),
@@ -831,7 +1053,8 @@ void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::file
         }
         return result;
     };
-    assert(number(8) == 2);
+    assert(number(8) == 3 && (version == 1 || version == 2));
+    const size_t payloadEnd = bytes.size() - 8 - size_t(number(bytes.size() - 8));
     size_t offset = 40;
     const auto activeLength = number(offset);
     offset += 8 + size_t(activeLength);
@@ -841,7 +1064,7 @@ void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::file
     offset += 8 + size_t(keyLength);
     assert(offset < bytes.size());
     std::vector<unsigned char> previous(bytes.begin(), bytes.begin() + 40);
-    previous.insert(previous.end(), bytes.begin() + offset, bytes.end());
+    previous.insert(previous.end(), bytes.begin() + (version == 1 ? offset : 40), bytes.begin() + payloadEnd);
     auto put = [&](size_t at, std::uint64_t value) {
         for (unsigned i = 0; i < 8; ++i)
         {
@@ -854,7 +1077,7 @@ void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::file
         hash ^= previous[i];
         hash *= 1099511628211ull;
     }
-    put(8, 1);
+    put(8, version);
     put(24, previous.size() - 40);
     put(32, hash);
     std::ofstream output(legacy, std::ios::binary);
@@ -885,6 +1108,32 @@ void TestWorldCheckpoints()
     const auto legacy = folder / "schema1.sav";
     WriteLegacyCheckpoint(file, legacy);
     assert(SaveSystem::CheckFile(legacy));
+    const auto legacy2 = folder / "schema2.sav";
+    WriteLegacyCheckpoint(file, legacy2, 2);
+    assert(SaveSystem::CheckFile(legacy2));
+    const auto malformed = folder / "traffic-footer.sav";
+    {
+        std::ifstream input(file, std::ios::binary);
+        std::vector<unsigned char> bytes{std::istreambuf_iterator<char>(input),
+                                         std::istreambuf_iterator<char>()};
+        std::fill(bytes.end() - 8, bytes.end(), 0);
+        std::uint64_t hash = 14695981039346656037ull;
+        for (size_t i = 40; i < bytes.size(); ++i)
+        {
+            hash ^= bytes[i];
+            hash *= 1099511628211ull;
+        }
+        for (unsigned i = 0; i < 8; ++i)
+        {
+            bytes[32 + i] = static_cast<unsigned char>(hash >> (i * 8));
+        }
+        std::ofstream output(malformed, std::ios::binary);
+        output.write(reinterpret_cast<const char *>(bytes.data()), std::streamsize(bytes.size()));
+    }
+    assert(!SaveSystem::CheckFile(malformed));
+    const auto creditsBefore = mineState.player.credits;
+    assert(!SaveSystem::Load(malformed) && !SaveSystem::Loading() &&
+           mineState.player.credits == creditsBefore);
     mineState.player.credits = 2701;
     assert(SaveSystem::Save(file) &&
            std::filesystem::exists(std::filesystem::path(file.wstring() + L".bak")));
@@ -958,11 +1207,16 @@ void TestWorldCheckpoints()
     assert(!w.relayPreparing && !w.mapVisible &&
            world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, departure,
                                             g.Surface()->Pose().origin) < 1.e-6);
+    assert(SaveSystem::Load(legacy2));
+    WaitForCheckpointLoad();
+    VerifyCheckpointFixture();
     assert(SaveSystem::Load(legacy));
     WaitForCheckpointLoad();
     VerifyCheckpointFixture();
     g.Reset();
     std::filesystem::remove(legacy);
+    std::filesystem::remove(legacy2);
+    std::filesystem::remove(malformed);
     std::filesystem::remove(file);
     std::filesystem::remove(std::filesystem::path(file.wstring() + L".bak"));
     std::filesystem::remove(bad);
@@ -997,6 +1251,8 @@ void TestPlanetProfileVisits()
     assert(w.dialogue.scenes.empty() && w.dialogue.history.empty() && !mineState.quest.IsRiaJoined());
     assert(mineState.player.credits == 7000 && mineState.loadout.HasPistol() &&
            CivicJustice::State().infamy == 17);
+    InstallTrafficFixture(17);
+    const auto seiraTrafficKey = g.SurfaceTraffic()->State().worldKey;
     const auto plan = g.Surface()->Stream().Snapshot()->planet;
     assert(plan->anchors.empty() && !plan->cityCores &&
            plan->Region("landing_zone").definition.planetId == "seira");
@@ -1016,8 +1272,14 @@ void TestPlanetProfileVisits()
     WaitForCheckpointLoad();
     assert(g.Surface()->Planet().id == "orren" && w.relayNetwork.Registrations().empty() &&
            !w.planetDestination && mineState.player.credits == 7300 && CivicJustice::State().infamy == 23);
+    assert(g.SurfaceTraffic()->State().worldKey != seiraTrafficKey &&
+           g.SurfaceTraffic()->State().actors.empty());
+    InstallTrafficFixture(10);
     assert(SaveSystem::SwitchPlanet("seira"));
     WaitForCheckpointLoad();
+    assert(g.SurfaceTraffic()->State().worldKey == seiraTrafficKey &&
+           g.SurfaceTraffic()->State().actors.front().id == 1 &&
+           g.SurfaceTraffic()->State().actors.front().health == 163);
     assert(g.Surface()->Planet().id == "seira" && w.relayNetwork.Registered(relay.id) &&
            w.planetDestination && w.planetMapRange == 9900 && !w.pressedKeys['w'] && !w.mouseAiming &&
            G::Distance(g.Surface()->Planet().radiusMeters, seiraPose, g.Surface()->Pose().origin) < 1.e-6 &&
@@ -1033,6 +1295,8 @@ void TestPlanetProfileVisits()
     assert(SaveSystem::Load(file));
     WaitForCheckpointLoad();
     assert(g.Surface()->Planet().id == "seira" && w.relayNetwork.Registered(relay.id));
+    assert(g.SurfaceTraffic()->State().worldKey == seiraTrafficKey &&
+           g.SurfaceTraffic()->State().actors.front().health == 163);
     mineState.player.credits = 8100;
     assert(SaveSystem::SwitchPlanet("erma"));
     WaitForCheckpointLoad();
@@ -1045,6 +1309,8 @@ void TestPlanetProfileVisits()
     assert(SaveSystem::SwitchPlanet("orren"));
     WaitForCheckpointLoad();
     assert(g.Surface()->Planet().id == "orren" && mineState.player.credits == 8100);
+    assert(g.SurfaceTraffic()->State().actors.front().id == 1 &&
+           g.SurfaceTraffic()->State().actors.front().health == 170);
     g.Reset();
     std::filesystem::remove(file);
     std::filesystem::remove(folder);
@@ -3211,6 +3477,7 @@ int main(int argc, char **argv)
     TestAimMovementAndLayers();
     TestForwardFlashlight();
     TestStageSelectionAndLoadout();
+    TestPlanetTraffic();
     TestCitySimulationPolicy();
     TestPlanetCityMigration();
     TestPlanetCityRuntime();
