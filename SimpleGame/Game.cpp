@@ -1775,6 +1775,15 @@ void Game::UpdateSurface(float dt)
     if (surfaceCities)
     {
         surfaceCities->Update(state, *surface, 0);
+        if (advancing && (IsSurfaceMine() || state.isInsideHome || state.isInObservatory))
+        {
+            surfaceCities->Update(state, *surface, dt);
+        }
+    }
+    if (advancing)
+    {
+        state.playTimeSeconds += dt;
+        CivicJustice::AdvanceSurfaceTimers(dt);
     }
     if (IsSurfaceMine())
     {
@@ -1907,6 +1916,23 @@ void Game::UpdateSurface(float dt)
         if (surfaceCities)
         {
             surfaceCities->Update(state, *surface, dt);
+            // Contacts ran in a city frame; apply their correction to the authoritative sphere too.
+            const auto current = surface->Local(surface->Pose().origin);
+            const double dx = state.playerPosition.x * 2 - current.x,
+                         dy = state.playerPosition.y * 2 - current.y;
+            if (std::hypot(dx, dy) > .0001)
+            {
+                surface->Move(dx, dy, state.isBikeMounted);
+                profiling::Count(profiling::Counter::CityContactCorrections);
+            }
+            const auto corrected = surface->Local(surface->Pose().origin);
+            state.playerPosition = {float(corrected.x / 2), float(corrected.y / 2)};
+            if (state.isBikeMounted)
+            {
+                surfaceBike = surface->Pose().origin;
+                state.bikePosition = state.playerPosition;
+                StoreSurfaceBikeHeading();
+            }
         }
         game::GameLevels::Chapter().Surface().Refresh();
         game::GameLevels::Chapter().Surface().Update(dt);
@@ -2420,6 +2446,11 @@ void Game::ShowNotice(const std::string &message)
 bool Game::IsPositionBlocked(Vector2 position)
 {
     profiling::Count(profiling::Counter::CollisionQueries);
+    if (state.surfaceExploration && surfaceCities && surfaceCities->Observing())
+    {
+        return CivicJustice::Solid(position, .16f, state.isBikeMounted ? state.bikeElevation : 0,
+                                   state.isBikeMounted);
+    }
     if (state.surfaceExploration && !IsSurfaceMine() && !state.isInsideHome && !state.isInObservatory)
     {
         return !surface || surface->Blocked(position.x * 2, position.y * 2, state.isBikeMounted) ||

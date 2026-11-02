@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "Profiler.h"
 #include "Dependencies/glew.h"
 #include <windows.h>
@@ -57,7 +57,11 @@ const char *counterNames[] = {"draw_calls",
                               "npc_enemy_kills",
                               "workstation_repair_completions",
                               "workstation_supply_deliveries",
-                              "npc_rescues"};
+                              "npc_rescues",
+                              "city_detailed_ticks",
+                              "city_passive_residents",
+                              "city_retired_wrecks",
+                              "city_contact_corrections"};
 const char *timerNames[] = {"frame_cpu",
                             "update",
                             "movement",
@@ -85,7 +89,8 @@ const char *timerNames[] = {"frame_cpu",
                             "npc_navigation",
                             "monitor_snapshot",
                             "npc_cooperation",
-                            "mine_lighting"};
+                            "mine_lighting",
+                            "planet_simulation"};
 static_assert(sizeof(counterNames) / sizeof(*counterNames) == kCounterCount);
 static_assert(sizeof(timerNames) / sizeof(*timerNames) == kTimerCount);
 struct Sample
@@ -362,8 +367,8 @@ class ConsoleReport
             // Reserve only once using normal output, preserving terminal scrollback. Windows
             // Terminal has no extensible native screen buffer, so long reports use pages.
             const int visibleRows = info.srWindow.Bottom - info.srWindow.Top + 1;
-            reservedRows = short((std::min)(
-                int(rows + 1), (std::min)((std::max)(4, visibleRows * 2 / 3), int(info.dwSize.Y) - 2)));
+            reservedRows = short((std::min)(int(rows + 1), (std::min)((std::max)(4, visibleRows * 2 / 3),
+                                                                      int(info.dwSize.Y) - 2)));
             if (reservedRows < 2)
             {
                 return false;

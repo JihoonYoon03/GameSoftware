@@ -4,6 +4,7 @@
 #include <array>
 #include <cstdint>
 #include <map>
+#include <functional>
 
 namespace tutorial
 {
@@ -136,6 +137,8 @@ class TrafficSystem
     void SetCityFilter(int city);
     static bool CoreLane(int lane, int city);
     void Update(GameState &world, float deltaSeconds);
+    // A hidden city retains routes/reservations; only temporary states and wreck lifetime advance.
+    size_t AdvanceDormant(float deltaSeconds);
     const std::vector<TrafficVehicle> &Vehicles() const
     {
         return vehicles;
@@ -285,7 +288,32 @@ class Overworld
     static models::Palette BikePalette();
 };
 // ============================================================================
-// PlanetCities — main-thread legacy city actors in generated frames, with persistent local traffic
+// CitySimulation — distance policy shared by update, culling and monitoring; no catch-up debt
+// ============================================================================
+enum class CitySimulationBand
+{
+    Dormant,
+    Retained,
+    Detailed
+};
+struct CitySimulationStatus
+{
+    CitySimulationBand band = CitySimulationBand::Dormant;
+    double distanceMeters = 0;
+    std::uint64_t detailedTicks = 0;
+    double passiveSeconds = 0;
+};
+class CitySimulation
+{
+  public:
+    static constexpr double EnterMeters = 420, LeaveMeters = 500, RetainMeters = 900;
+    static constexpr int PathBudget = 2;
+    static CitySimulationBand Select(double distanceMeters, CitySimulationBand previous, bool exterior);
+    static const char *Name(CitySimulationBand band);
+    static void AdvanceDormant(Resident &resident, float deltaSeconds);
+};
+// ============================================================================
+// PlanetCities — main-thread city actors in persistent local frames, with bounded distance tiers
 // ============================================================================
 class PlanetCities
 {
@@ -300,6 +328,29 @@ class PlanetCities
         return activeCity;
     }
     TrafficSystem *ActiveTraffic();
+    int ObservedCity() const
+    {
+        return observedCity;
+    }
+    bool Observing() const
+    {
+        return observedCity >= 0;
+    }
+    bool PlayerObserved() const
+    {
+        return Observing() && observedCity == activeCity;
+    }
+    const CitySimulationStatus &Status(int city) const
+    {
+        return simulation.at(size_t(city));
+    }
+    int RemainingPathBudget() const
+    {
+        return remainingPathBudget;
+    }
+    // Only observation coordinates rotate; a completed player contact correction is mapped back.
+    void Observe(GameState &state, const world::SurfaceSession &session, int city,
+                 const std::function<void()> &operation);
     const TrafficSystem &Traffic(int city) const
     {
         return traffic.at(size_t(city));
@@ -317,6 +368,8 @@ class PlanetCities
 
   private:
     int activeCity = -1;
+    int observedCity = -1, remainingPathBudget = CitySimulation::PathBudget;
+    std::array<CitySimulationStatus, Overworld::kCityCount> simulation;
     std::array<TrafficSystem, Overworld::kCityCount> traffic;
 };
 } // namespace tutorial

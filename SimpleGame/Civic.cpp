@@ -19,6 +19,29 @@ namespace
 {
 CivicState civic;
 void ClearPursuit();
+int ObservedCity()
+{
+    const auto cities = Game::Get().SurfaceCities();
+    return Game::Get().GetState().surfaceExploration && cities ? cities->ObservedCity() : -1;
+}
+bool PlayerPresent()
+{
+    const auto cities = Game::Get().SurfaceCities();
+    return !Game::Get().GetState().surfaceExploration || (cities && cities->PlayerObserved());
+}
+bool ResidentPresent(const Resident &resident)
+{
+    const int city = ObservedCity();
+    return city < 0 || resident.cityIndex == city;
+}
+bool LandmarksPresent()
+{
+    return ObservedCity() <= 0;
+}
+bool OfficersPresent()
+{
+    return !Game::Get().GetState().surfaceExploration;
+}
 struct Footprint
 {
     std::vector<Vector2> polygon;
@@ -478,7 +501,8 @@ Vector2 Separate(Vector2 from, Vector2 to, float radius, int ignoreResident, boo
             };
             for (size_t index = 0; index < world.residents.size(); ++index)
             {
-                if (int(index) != ignoreResident && world.residents[index].health > 0 &&
+                if (int(index) != ignoreResident && ResidentPresent(world.residents[index]) &&
+                    world.residents[index].health > 0 &&
                     !(index == Overworld::kKainResidentSlot &&
                       game::GameLevels::Chapter().GetState().kainJoined))
                 {
@@ -487,7 +511,7 @@ Vector2 Separate(Vector2 from, Vector2 to, float radius, int ignoreResident, boo
             }
             for (size_t index = 0; index < std::size(kPeople); ++index)
             {
-                if (civic.landmarkHealth[index] > 0 &&
+                if (LandmarksPresent() && civic.landmarkHealth[index] > 0 &&
                     (index != 2 || game::GameLevels::Chapter().GetState().kainJoined))
                 {
                     separate(kPeople[index], .18f);
@@ -496,12 +520,12 @@ Vector2 Separate(Vector2 from, Vector2 to, float radius, int ignoreResident, boo
             for (size_t index = 0; index < civic.officers.size(); ++index)
             {
                 const auto &officer = civic.officers[index];
-                if (officer.health > 0 && int(index) != ignoreOfficer)
+                if (OfficersPresent() && officer.health > 0 && int(index) != ignoreOfficer)
                 {
                     separate(officer.position, .18f);
                 }
             }
-            if (!player && !world.isBikeMounted)
+            if (!player && PlayerPresent() && !world.isBikeMounted)
             {
                 separate(world.playerPosition, .18f);
             }
@@ -819,7 +843,7 @@ void CivicJustice::Report(Offense offense, Vector2 position)
     auto &world = Game::Get().GetState();
     for (auto &person : world.residents)
     {
-        if (person.health > 0 && Game::Distance(person.position, position) < 12 &&
+        if (ResidentPresent(person) && person.health > 0 && Game::Distance(person.position, position) < 12 &&
             ClearLine(position, person.position))
         {
             person.fearSeconds = (std::max)(person.fearSeconds, 8.f);
@@ -827,7 +851,7 @@ void CivicJustice::Report(Offense offense, Vector2 position)
     }
     for (auto &officer : civic.officers)
     {
-        if (officer.health > 0)
+        if (OfficersPresent() && officer.health > 0)
         {
             officer.lastKnown = position;
         }
@@ -835,6 +859,33 @@ void CivicJustice::Report(Offense offense, Vector2 position)
     if (civic.wanted)
     {
         civic.spawnSeconds = (std::min)(civic.spawnSeconds, 2.f);
+    }
+}
+void CivicJustice::AdvanceSurfaceTimers(float dt)
+{
+    dt = Game::Clamp(dt, 0, .05f);
+    if (dt <= 0)
+    {
+        return;
+    }
+    civic.playerGrace = (std::max)(0.f, civic.playerGrace - dt);
+    civic.dischargeCooldown = (std::max)(0.f, civic.dischargeCooldown - dt);
+    for (size_t i = 0; i < civic.landmarkHealth.size(); ++i)
+    {
+        if (civic.landmarkHealth[i] <= 0)
+        {
+            civic.landmarkRecovery[i] = (std::max)(0.f, civic.landmarkRecovery[i] - dt);
+            if (civic.landmarkRecovery[i] <= 0)
+            {
+                civic.landmarkHealth[i] = 100;
+            }
+        }
+    }
+    const auto cities = Game::Get().SurfaceCities();
+    if (!cities || cities->ActiveCity() < 0)
+    {
+        auto &position = Game::Get().GetState().playerPosition;
+        AdvanceImpact(position, civic.playerImpact, dt, false);
     }
 }
 void CivicJustice::Update(float dt)
@@ -1652,6 +1703,50 @@ Vector2 BodyCollision::MoveResident(size_t index, Vector2 from, Vector2 desired)
 {
     return Separate(from, desired, .18f, int(index), false);
 }
+void BodyCollision::AgeResident(Resident &resident, float dt)
+{
+    AdvanceImpact(resident.position, resident.impact, dt, false);
+    if (resident.health <= 0)
+    {
+        resident.corpseSeconds += dt;
+    }
+}
+void BodyCollision::UpdateCity(float dt, int city, bool playerPresent)
+{
+    if (ObservedCity() != city || dt <= 0)
+    {
+        return;
+    }
+    auto &world = Game::Get().GetState();
+    if (playerPresent)
+    {
+        auto before = world.playerPosition;
+        AdvanceImpact(world.playerPosition, civic.playerImpact, dt, !world.isBikeMounted);
+        if (!world.isBikeMounted)
+        {
+            world.playerPosition = Separate(before, world.playerPosition, .18f, -1, true);
+        }
+    }
+    for (size_t index = 0; index < world.residents.size(); ++index)
+    {
+        auto &resident = world.residents[index];
+        if (resident.cityIndex != city ||
+            (index == Overworld::kKainResidentSlot && game::GameLevels::Chapter().GetState().kainJoined))
+        {
+            continue;
+        }
+        auto before = resident.position;
+        AdvanceImpact(resident.position, resident.impact, dt);
+        if (Game::Distance(before, resident.position) > .00001f)
+        {
+            resident.position = MoveResident(index, before, resident.position);
+        }
+        if (resident.health <= 0)
+        {
+            resident.corpseSeconds += dt;
+        }
+    }
+}
 void BodyCollision::Update(float dt)
 {
     if (!CivicJustice::IsExterior())
@@ -1689,7 +1784,7 @@ void BodyCollision::Update(float dt)
 }
 void BodyCollision::VehicleContacts(float)
 {
-    if (!CivicJustice::IsExterior() || HospitalRecovery::Active())
+    if ((!CivicJustice::IsExterior() && ObservedCity() < 0) || HospitalRecovery::Active())
     {
         return;
     }
@@ -1711,7 +1806,7 @@ void BodyCollision::VehicleContacts(float)
             }
             return false;
         };
-        if (std::fabs(height - PlayerHeight()) < .7f &&
+        if (PlayerPresent() && std::fabs(height - PlayerHeight()) < .7f &&
             (world.isBikeMounted ? bikeHitsCar(true) : SweptCarContains(car, world.playerPosition, .18f)))
         {
             float speed = (std::max)(car.speed, world.isBikeMounted ? std::fabs(world.bikeSpeed) : 0);
@@ -1752,7 +1847,7 @@ void BodyCollision::VehicleContacts(float)
             {
                 continue;
             }
-            if (resident.health > 0 && resident.impact.invulnerability <= 0 &&
+            if (ResidentPresent(resident) && resident.health > 0 && resident.impact.invulnerability <= 0 &&
                 SweptCarContains(car, resident.position, .3f))
             {
                 float impactSpeed = car.speed;
@@ -1784,7 +1879,7 @@ void BodyCollision::VehicleContacts(float)
         for (size_t person = 0; person < civic.officers.size(); ++person)
         {
             auto &officer = civic.officers[person];
-            if (officer.health <= 0 || officer.impact.invulnerability > 0 ||
+            if (!OfficersPresent() || officer.health <= 0 || officer.impact.invulnerability > 0 ||
                 !SweptCarContains(car, officer.position, .3f))
             {
                 continue;
@@ -1806,7 +1901,7 @@ void BodyCollision::VehicleContacts(float)
             }
         }
     }
-    if (world.isBikeMounted && PlayerHeight() < .7f)
+    if (PlayerPresent() && world.isBikeMounted && PlayerHeight() < .7f)
     {
         for (size_t i = 0; i < world.residents.size(); ++i)
         {
@@ -1815,7 +1910,7 @@ void BodyCollision::VehicleContacts(float)
             {
                 continue;
             }
-            if (resident.health <= 0 || !BikeTouches(resident.position, .18f))
+            if (!ResidentPresent(resident) || resident.health <= 0 || !BikeTouches(resident.position, .18f))
             {
                 continue;
             }
@@ -1829,7 +1924,8 @@ void BodyCollision::VehicleContacts(float)
         }
         for (size_t i = 0; i < civic.officers.size(); ++i)
         {
-            if (civic.officers[i].health > 0 && BikeTouches(civic.officers[i].position, .18f))
+            if (OfficersPresent() && civic.officers[i].health > 0 &&
+                BikeTouches(civic.officers[i].position, .18f))
             {
                 if (world.bikeSpeed > 2 && civic.officers[i].impact.invulnerability <= 0)
                 {
@@ -1842,7 +1938,7 @@ void BodyCollision::VehicleContacts(float)
         }
         for (size_t i = 0; i < std::size(kPeople); ++i)
         {
-            if (civic.landmarkHealth[i] > 0 &&
+            if (LandmarksPresent() && civic.landmarkHealth[i] > 0 &&
                 (i != 2 || game::GameLevels::Chapter().GetState().kainJoined) &&
                 BikeTouches(kPeople[i], .18f))
             {
@@ -1854,7 +1950,10 @@ void BodyCollision::VehicleContacts(float)
             }
         }
     }
-    RecoverBike();
+    if (!world.surfaceExploration)
+    {
+        RecoverBike();
+    }
 }
 
 bool HospitalRecovery::Active()

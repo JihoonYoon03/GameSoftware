@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <functional>
 #include "Game.h"
 #include "Level.h"
@@ -98,6 +98,7 @@ class CivicJustice
     static bool ClearLine(Vector2 from, Vector2 to);
     static bool Solid(Vector2 position, float radius = .3f, float altitude = 0, bool driving = false);
     static void Update(float deltaSeconds);
+    static void AdvanceSurfaceTimers(float deltaSeconds);
     static bool CanSee(const SecurityOfficer &officer, Vector2 position, float altitude = 0);
     static float SightDistance(const SecurityOfficer &officer, float angle);
 };
@@ -130,6 +131,8 @@ class BodyCollision
     static Vector2 MoveResident(size_t index, Vector2 from, Vector2 desired);
     static void Update(float deltaSeconds);
     static void VehicleContacts(float deltaSeconds);
+    static void UpdateCity(float deltaSeconds, int city, bool playerPresent);
+    static void AgeResident(Resident &resident, float deltaSeconds);
 };
 // ============================================================================
 // HospitalRecovery — all-cause defeat, black-screen transfer and a single penalty transaction

@@ -11,7 +11,7 @@ class CityResidents
   public:
     static CityResidents &Get();
     void Reset(GameState &world);
-    void Update(GameState &world, float deltaSeconds, int activeCity = -1);
+    void Update(GameState &world, float deltaSeconds, int activeCity = -1, int *decisionBudget = nullptr);
     static const char *ProfessionName(ResidentProfession profession);
     static const char *ActivityName(ResidentActivity activity);
     static const char *ActivityLabel(const Resident &resident);

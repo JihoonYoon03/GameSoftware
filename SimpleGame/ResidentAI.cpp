@@ -493,7 +493,7 @@ bool CityResidents::Plan(GameState &world, Resident &resident)
     }
     return FindRoute(from, to, resident);
 }
-void CityResidents::Update(GameState &world, float dt, int activeCity)
+void CityResidents::Update(GameState &world, float dt, int activeCity, int *decisionBudget)
 {
     profiling::Scope timer(profiling::Timer::NpcUpdate);
     dt = Game::Clamp(dt, 0, .05f);
@@ -502,16 +502,17 @@ void CityResidents::Update(GameState &world, float dt, int activeCity)
         return;
     }
     // Bound replanning bursts when a city loads; every resident still advances movement each frame.
-    int budget = 2;
+    int localBudget = 2;
+    int &budget = decisionBudget ? *decisionBudget : localBudget;
     for (size_t step = 0; step < world.residents.size(); ++step)
     {
         size_t index = (decisionCursor + step) % world.residents.size();
         auto &resident = world.residents[index];
-        resident.facing.walking = false;
         if (activeCity >= 0 && resident.cityIndex != activeCity)
         {
             continue;
         }
+        resident.facing.walking = false;
         if (index == Overworld::kKainResidentSlot && game::GameLevels::Chapter().GetState().kainJoined)
         {
             resident.activity = ResidentActivity::Resting;
@@ -619,7 +620,8 @@ void CityResidents::Update(GameState &world, float dt, int activeCity)
         }
         for (size_t other = 0; other < world.residents.size() && !blocked; ++other)
         {
-            if (world.residents[other].health <= 0 || other == index ||
+            if ((world.surfaceExploration && world.residents[other].cityIndex != resident.cityIndex) ||
+                world.residents[other].health <= 0 || other == index ||
                 (other == Overworld::kKainResidentSlot && game::GameLevels::Chapter().GetState().kainJoined))
             {
                 continue;

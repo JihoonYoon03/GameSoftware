@@ -25,6 +25,7 @@
 #include <unordered_map>
 #include <chrono>
 #include <thread>
+#include <stdexcept>
 
 // Link the production core; tests exercise CPU rules without creating a window or GL context.
 namespace
@@ -33,6 +34,200 @@ using namespace game;
 MineState &mineState = GameLevels::Mine().GetState();
 using tutorial::Vector2;
 void ReadDialogue();
+void TestCitySimulationPolicy()
+{
+    using namespace tutorial;
+    using B = CitySimulationBand;
+    assert(CitySimulation::Select(420, B::Dormant, true) == B::Detailed);
+    assert(CitySimulation::Select(460, B::Detailed, true) == B::Detailed);
+    assert(CitySimulation::Select(460, B::Dormant, true) == B::Retained);
+    assert(CitySimulation::Select(501, B::Detailed, true) == B::Retained);
+    assert(CitySimulation::Select(901, B::Detailed, true) == B::Dormant);
+    assert(CitySimulation::Select(10, B::Detailed, false) == B::Dormant);
+    assert(CitySimulation::Select(std::numeric_limits<double>::quiet_NaN(), B::Detailed, true) == B::Dormant);
+    Resident resident;
+    resident.position = {7, 8};
+    resident.route = {{{8, 8}, 3}};
+    resident.crossingJunction = 3;
+    resident.facing.walking = true;
+    resident.waitSeconds = resident.conversationSeconds = resident.fearSeconds = 1;
+    resident.impact = {{3, 0}, .6f, .7f, BodyResponse::Knockdown};
+    for (int i = 0; i < 30; ++i)
+    {
+        CitySimulation::AdvanceDormant(resident, .05f);
+    }
+    assert(resident.health == 100 && resident.position.x == 7 && resident.position.y == 8 &&
+           resident.route.size() == 1 && resident.crossingJunction == 3 && resident.waitSeconds == 0 &&
+           resident.conversationSeconds == 0 && resident.fearSeconds == 0 && resident.impact.seconds == 0 &&
+           resident.impact.invulnerability == 0 && resident.impact.response == BodyResponse::None &&
+           !resident.facing.walking);
+    resident.health = 0;
+    resident.impact.response = BodyResponse::Dead;
+    CitySimulation::AdvanceDormant(resident, .05f);
+    assert(resident.activity == ResidentActivity::Dead && resident.route.empty() &&
+           resident.crossingJunction == -1 && resident.corpseSeconds > 0 &&
+           resident.impact.response == BodyResponse::Dead);
+    TrafficSystem hidden;
+    hidden.SetCityFilter(0);
+    auto &cars = const_cast<std::vector<TrafficVehicle> &>(hidden.Vehicles());
+    TrafficVehicle living, wreck;
+    living.id = 12;
+    living.position = {2, 3};
+    living.previousPosition = {1, 3};
+    living.speed = 4;
+    living.reservedFrom = 0;
+    living.reservedTo = 1;
+    wreck.id = 13;
+    wreck.health = 0;
+    wreck.wreckSeconds = 11.99f;
+    cars = {living, wreck};
+    const auto phase = hidden.Signals().front().phase;
+    const auto elapsed = hidden.Signals().front().elapsed;
+    assert(hidden.AdvanceDormant(.05f) == 1 && hidden.Vehicles().size() == 1);
+    assert(cars.front().id == 12 && cars.front().position.x == 2 && cars.front().position.y == 3 &&
+           cars.front().previousPosition.x == 2 && cars.front().reservedFrom == 0 &&
+           cars.front().reservedTo == 1 && hidden.Signals().front().phase == phase &&
+           hidden.Signals().front().elapsed == elapsed);
+    hidden.AdvanceDormant(.05f);
+    assert(cars.size() == 1); // No remote population/spawn burst and no replay of live movement.
+}
+void TestPlanetCityRuntime()
+{
+    using namespace tutorial;
+    using G = world::SurfaceGeometry;
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    assert(g.EnterTestStage(TestStage::SurfaceSurvey));
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(30);
+    while (!g.Surface()->Ready() && std::chrono::steady_clock::now() < deadline)
+    {
+        g.Update(0);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    assert(g.Surface()->Ready());
+    g.Update(0);
+    auto cities = g.SurfaceCities();
+    auto plan = g.Surface()->Stream().Snapshot()->planet;
+    assert(cities && cities->ActiveCity() == 0 && cities->Status(0).band == CitySimulationBand::Detailed);
+    w.bikeVelocity = {1.2f, -.8f};
+    w.playerMotion.velocity = {-.3f, .4f};
+    w.facingYaw = .31f;
+    w.bikeYaw = -1.7f;
+    const auto before = w;
+    bool rejected = false;
+    try
+    {
+        cities->Observe(w, *g.Surface(), 0, [&] {
+            assert(cities->ObservedCity() == 0 && cities->PlayerObserved() &&
+                   &Overworld::Traffic() == &cities->Traffic(0));
+            assert(SaveSystem::Restriction() != nullptr);
+            cities->Observe(w, *g.Surface(), 1, [] {});
+        });
+    }
+    catch (const std::logic_error &)
+    {
+        rejected = true;
+    }
+    assert(rejected && !cities->Observing() &&
+           Game::Distance(w.playerPosition, before.playerPosition) < 1.e-6 &&
+           Game::Distance(w.cameraPosition, before.cameraPosition) < 1.e-6 &&
+           Game::Distance(w.bikeVelocity, before.bikeVelocity) < 1.e-6 && w.facingYaw == before.facingYaw &&
+           w.bikeYaw == before.bikeYaw);
+    cities->Observe(w, *g.Surface(), 1, [&] {
+        assert(cities->ObservedCity() == 1 && !cities->PlayerObserved() &&
+               &Overworld::Traffic() == &cities->Traffic(1));
+    });
+    assert(!cities->Observing() && Game::Distance(w.playerPosition, before.playerPosition) < 1.e-6);
+    w.StopMotion();
+    auto &resident = w.residents.front();
+    resident.impact = {{3, 0}, .6f, .7f, BodyResponse::Knockdown};
+    resident.fearSeconds = 1;
+    const auto residentPosition = resident.position;
+    assert(g.RelocateSurfaceSurvey(plan->Region("cinder").access.position));
+    g.Update(0);
+    const auto oldTicks = cities->Status(0).detailedTicks;
+    const auto oldPassive = cities->Status(0).passiveSeconds;
+    const float playTime = w.playTimeSeconds;
+    w.isPaused = true;
+    for (int i = 0; i < 30; ++i)
+    {
+        g.Update(.05f);
+    }
+    assert(cities->Status(0).passiveSeconds == oldPassive && resident.impact.seconds == .6f &&
+           w.playTimeSeconds == playTime);
+    w.isPaused = false;
+    for (int i = 0; i < 30; ++i)
+    {
+        g.Update(.05f);
+    }
+    assert(cities->Status(0).detailedTicks == oldTicks && cities->Status(0).passiveSeconds > oldPassive + 1 &&
+           resident.impact.seconds == 0 && resident.fearSeconds == 0 &&
+           Game::Distance(resident.position, residentPosition) < 1.e-6 &&
+           cities->RemainingPathBudget() >= 0 && cities->RemainingPathBudget() <= CitySimulation::PathBudget);
+    auto snapshot = monitoring::WorldSnapshot::Build(20, "surface-simulation");
+    assert(snapshot.find("city_simulation") != std::string::npos &&
+           snapshot.find("remaining_path_budget") != std::string::npos);
+    assert(g.RelocateSurfaceSurvey(plan->Region("halo_07").access.position));
+    g.Update(0);
+    auto &cars = const_cast<std::vector<TrafficVehicle> &>(cities->Traffic(0).Vehicles());
+    cars.clear();
+    const auto playerLegacy = Overworld::Cities()[0].center;
+    int lane = -1;
+    const auto &net = RoadNetwork::Get();
+    for (size_t i = 0; i < net.lanes.size(); ++i)
+    {
+        if (TrafficSystem::CoreLane(int(i), 0))
+        {
+            lane = int(i);
+            break;
+        }
+    }
+    assert(lane >= 0);
+    TrafficVehicle car;
+    car.id = 0;
+    car.lane = lane;
+    car.distance = net.lanes[size_t(lane)].length * .5f;
+    car.position = car.previousPosition = playerLegacy;
+    car.speed = 5;
+    car.yaw = 0;
+    cars.push_back(car);
+    auto phantom =
+        std::find_if(w.residents.begin(), w.residents.end(), [](const auto &p) { return p.cityIndex == 1; });
+    assert(phantom != w.residents.end());
+    phantom->position = playerLegacy;
+    const auto phantomHealth = phantom->health;
+    auto &stats = mineState.player;
+    stats.health = stats.maxHealth;
+    CivicJustice::State().playerGrace = 0;
+    CivicJustice::State().playerImpact = {};
+    cities->Observe(w, *g.Surface(), 0, [&] { BodyCollision::VehicleContacts(.03f); });
+    assert(stats.health < stats.maxHealth && phantom->health == phantomHealth && !cities->Observing());
+    const int health = stats.health;
+    cities->Observe(w, *g.Surface(), 0, [&] { BodyCollision::VehicleContacts(.03f); });
+    assert(stats.health == health); // Same collision window must not drain health each substep.
+    cars.clear();
+    assert(g.RelocateSurfaceSurvey(plan->Region("halo_07").access.position));
+    g.Update(0);
+    for (auto &npc : w.residents)
+    {
+        npc.health = 0;
+    }
+    const auto pose = g.Surface()->Pose().origin;
+    CivicJustice::State().playerImpact = {{3, 0}, .6f, .7f, BodyResponse::Stagger};
+    CivicJustice::State().playerGrace = .1f;
+    const auto corrections = profiling::ReadCounter(profiling::Counter::CityContactCorrections);
+    g.Update(.05f);
+    const auto local = g.Surface()->Local(g.Surface()->Pose().origin);
+    assert(G::Distance(g.Surface()->Planet().radiusMeters, pose, g.Surface()->Pose().origin) > .05 &&
+           Game::Distance(w.playerPosition, {float(local.x / 2), float(local.y / 2)}) < 1.e-5 &&
+           profiling::ReadCounter(profiling::Counter::CityContactCorrections) > corrections);
+    for (int i = 0; i < 4; ++i)
+    {
+        g.Update(.05f);
+    }
+    assert(CivicJustice::State().playerGrace == 0);
+    g.Reset();
+}
 void TestPlanetCityMigration()
 {
     using namespace tutorial;
@@ -3016,7 +3211,9 @@ int main(int argc, char **argv)
     TestAimMovementAndLayers();
     TestForwardFlashlight();
     TestStageSelectionAndLoadout();
+    TestCitySimulationPolicy();
     TestPlanetCityMigration();
+    TestPlanetCityRuntime();
     TestOpenWorldParticipation();
     TestRelayTravelAndAtlas();
     TestWorldCheckpoints();

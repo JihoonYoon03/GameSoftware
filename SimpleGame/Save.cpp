@@ -1226,6 +1226,10 @@ const char *SaveSystem::Restriction()
     {
         return "저장은 행성 탐사를 시작한 뒤 사용할 수 있습니다.";
     }
+    if (g.SurfaceCities() && g.SurfaceCities()->Observing())
+    {
+        return "도시 물리 갱신을 마친 뒤 저장할 수 있습니다.";
+    }
     if (HospitalRecovery::Active() || game::GameLevels::Mine().GetState().player.health <= 0)
     {
         return "의료 이송을 마친 뒤 저장해 주세요.";
@@ -1295,6 +1299,11 @@ bool SaveSystem::Load(const std::filesystem::path &path)
 {
     if (Loading())
     {
+        return false;
+    }
+    if (auto cities = Game::Get().SurfaceCities(); cities && cities->Observing())
+    {
+        message = "도시 물리 갱신을 마친 뒤 불러올 수 있습니다.";
         return false;
     }
     if (HospitalRecovery::Active())

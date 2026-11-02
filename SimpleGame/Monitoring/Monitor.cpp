@@ -301,6 +301,30 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         streaming.Number("content_layout_revision", ::world::ContentLayout::Revision);
         streaming.Number("collision_cells", surface.CollisionCells());
         streaming.Number("active_city", surfaceCity);
+        if (surfaceCities)
+        {
+            JsonObject simulation;
+            simulation.Number("detailed_enter_meters", tutorial::CitySimulation::EnterMeters);
+            simulation.Number("detailed_leave_meters", tutorial::CitySimulation::LeaveMeters);
+            simulation.Number("retain_meters", tutorial::CitySimulation::RetainMeters);
+            simulation.Number("path_budget", tutorial::CitySimulation::PathBudget);
+            simulation.Number("remaining_path_budget", surfaceCities->RemainingPathBudget());
+            std::string entries;
+            for (int i = 0; i < tutorial::Overworld::kCityCount; ++i)
+            {
+                const auto &status = surfaceCities->Status(i);
+                JsonObject entry;
+                entry.Text("id", tutorial::Overworld::Cities()[size_t(i)].id);
+                entry.Text("band", tutorial::CitySimulation::Name(status.band));
+                entry.Number("distance_meters", status.distanceMeters);
+                entry.Number("detailed_ticks", status.detailedTicks);
+                entry.Number("passive_seconds", status.passiveSeconds);
+                entry.Number("vehicles", surfaceCities->Traffic(i).Vehicles().size());
+                Append(entries, entry.Finish());
+            }
+            simulation.Raw("cities", "[" + entries + "]");
+            streaming.Raw("city_simulation", simulation.Finish());
+        }
         streaming.Bool("mine_visit_active", tutorial::Game::Get().IsSurfaceMine());
         streaming.Bool("frontier_active", chapter.active);
         streaming.Number("planet_radius_meters", surface.Planet().radiusMeters);
@@ -681,7 +705,9 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                                          "/resident/" + std::to_string(i),
                                      resident,
                                      citySimulation &&
-                                         (!world.surfaceExploration || resident.cityIndex == surfaceCity)));
+                                         (!world.surfaceExploration ||
+                                          (surfaceCities && surfaceCities->Status(resident.cityIndex).band ==
+                                                                tutorial::CitySimulationBand::Detailed))));
     }
     auto mineNpc = [&](const std::string &id, const char *name, const char *role, tutorial::Vector2 position,
                        const char *activity, const char *label, size_t remaining, bool following, int group,

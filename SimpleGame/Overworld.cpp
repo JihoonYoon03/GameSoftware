@@ -860,13 +860,14 @@ bool TrafficSystem::CrossingOccupied(const GameState &world, int junction) const
         }
     }
     return std::any_of(world.residents.begin(), world.residents.end(),
-                       [&world, junction](const Resident &resident) {
+                       [&world, junction, this](const Resident &resident) {
                            if (&resident - world.residents.data() == Overworld::kKainResidentSlot &&
                                game::GameLevels::Chapter().GetState().kainJoined)
                            {
                                return false;
                            }
-                           return resident.crossingJunction == junction;
+                           return (cityFilter < 0 || resident.cityIndex == cityFilter) &&
+                                  resident.crossingJunction == junction;
                        });
 }
 int TrafficSystem::NearbyCrossing(Vector2 position) const
@@ -1075,6 +1076,36 @@ void TrafficSystem::Update(GameState &world, float dt)
         Step(world, step);
         accumulator -= step;
     }
+}
+size_t TrafficSystem::AdvanceDormant(float dt)
+{
+    dt = Game::Clamp(dt, 0, .05f);
+    if (dt <= 0)
+    {
+        return 0;
+    }
+    accumulator = 0;
+    spawnTimer = (std::max)(0.f, spawnTimer - dt);
+    impactCooldown = (std::max)(0.f, impactCooldown - dt);
+    for (auto &car : vehicles)
+    {
+        car.previousPosition = car.position;
+        car.previousYaw = car.yaw;
+        car.impactCooldown = (std::max)(0.f, car.impactCooldown - dt);
+        car.hitFlash = (std::max)(0.f, car.hitFlash - dt);
+        if (car.health <= 0)
+        {
+            car.speed = 0;
+            car.wreckSeconds += dt;
+        }
+    }
+    auto before = vehicles.size();
+    vehicles.erase(std::remove_if(vehicles.begin(), vehicles.end(),
+                                  [](const auto &car) { return car.health <= 0 && car.wreckSeconds > 12; }),
+                   vehicles.end());
+    // Live vehicles, crossing reservations and signal phases stay consistent while hidden.
+    // We never replay missed routing/contacts or manufacture traffic on re-entry.
+    return before - vehicles.size();
 }
 void TrafficSystem::Step(GameState &world, float dt)
 {
@@ -1309,8 +1340,9 @@ void TrafficSystem::Step(GameState &world, float dt)
             if (!committed &&
                 (PedestrianGreen(lane.to) ||
                  (signals[lane.to].phase == SignalPhase::WalkClear && CrossingOccupied(world, lane.to)) ||
-                 std::any_of(world.residents.begin(), world.residents.end(),
-                             [&](const Resident &r) { return r.crossingJunction == lane.to; })))
+                 std::any_of(world.residents.begin(), world.residents.end(), [&](const Resident &r) {
+                     return (cityFilter < 0 || r.cityIndex == cityFilter) && r.crossingJunction == lane.to;
+                 })))
             {
                 gap = (std::min)(gap, lane.length - car.distance - 3.6f);
                 target = (std::min)(target, (std::max)(0.f, gap * 2));
@@ -2226,7 +2258,8 @@ PlanetCities::PlanetCities()
 }
 TrafficSystem *PlanetCities::ActiveTraffic()
 {
-    return activeCity >= 0 ? &traffic[size_t(activeCity)] : nullptr;
+    const int city = observedCity >= 0 ? observedCity : activeCity;
+    return city >= 0 ? &traffic[size_t(city)] : nullptr;
 }
 world::CityCorePlan PlanetCities::Describe(const GameState &state)
 {
@@ -2420,10 +2453,65 @@ float PlanetCities::Yaw(const world::SurfaceSession &session, int city, float ya
                                                                 region.frame, session.Origin());
     return float(std::atan2(direction.y, direction.x));
 }
+// ============================================================================
+// CitySimulation — passive time is charged once per play frame, without expensive remote decisions
+// ============================================================================
+CitySimulationBand CitySimulation::Select(double distance, CitySimulationBand previous, bool exterior)
+{
+    if (!exterior || !std::isfinite(distance) || distance < 0)
+    {
+        return CitySimulationBand::Dormant;
+    }
+    if (distance <= EnterMeters || (previous == CitySimulationBand::Detailed && distance <= LeaveMeters))
+    {
+        return CitySimulationBand::Detailed;
+    }
+    return distance <= RetainMeters ? CitySimulationBand::Retained : CitySimulationBand::Dormant;
+}
+const char *CitySimulation::Name(CitySimulationBand band)
+{
+    switch (band)
+    {
+    case CitySimulationBand::Detailed:
+        return "detailed";
+    case CitySimulationBand::Retained:
+        return "retained";
+    default:
+        return "dormant";
+    }
+}
+void CitySimulation::AdvanceDormant(Resident &resident, float dt)
+{
+    dt = Game::Clamp(dt, 0, .05f);
+    if (dt <= 0)
+    {
+        return;
+    }
+    resident.facing.walking = false;
+    resident.waitSeconds = (std::max)(0.f, resident.waitSeconds - dt);
+    resident.conversationSeconds = (std::max)(0.f, resident.conversationSeconds - dt);
+    resident.fearSeconds = (std::max)(0.f, resident.fearSeconds - dt);
+    BodyCollision::AgeResident(resident, dt);
+    if (resident.health <= 0)
+    {
+        resident.activity = ResidentActivity::Dead;
+        resident.crossingJunction = -1;
+        resident.route.clear();
+        resident.routeCursor = 0;
+    }
+    else if ((resident.activity == ResidentActivity::Talking && resident.conversationSeconds <= 0) ||
+             (resident.activity == ResidentActivity::Fleeing && resident.fearSeconds <= 0) ||
+             (resident.activity == ResidentActivity::Injured && resident.impact.seconds <= 0))
+    {
+        resident.activity = ResidentActivity::Resting;
+    }
+    // Preserve living route/crossing occupancy: no teleport to a routine's final waypoint.
+}
 void PlanetCities::Update(GameState &state, const world::SurfaceSession &session, float dt)
 {
+    profiling::Scope timer(profiling::Timer::PlanetSimulation);
     activeCity = -1;
-    if (!session.Ready() || state.isInsideHome || state.isInObservatory || Game::Get().IsSurfaceMine())
+    if (!session.Ready())
     {
         return;
     }
@@ -2432,49 +2520,149 @@ void PlanetCities::Update(GameState &state, const world::SurfaceSession &session
     {
         return;
     }
-    double best = 450;
+    const bool exterior = !state.isInsideHome && !state.isInObservatory && !Game::Get().IsSurfaceMine();
+    double best = CitySimulation::LeaveMeters + 1;
     for (int city = 0; city < Overworld::kCityCount; ++city)
     {
-        auto distance = world::SurfaceGeometry::Distance(
+        auto &status = simulation[size_t(city)];
+        status.distanceMeters = world::SurfaceGeometry::Distance(
             session.Planet().radiusMeters, session.Pose().origin,
             plan->Region(Overworld::Cities()[size_t(city)].id).center.position);
-        if (distance < best)
+        status.band = CitySimulation::Select(status.distanceMeters, status.band, exterior);
+        if (status.band == CitySimulationBand::Detailed && status.distanceMeters < best)
         {
-            best = distance;
+            best = status.distanceMeters;
             activeCity = city;
         }
     }
-    if (activeCity < 0 || dt <= 0)
+    if (dt <= 0 || state.isPaused || state.mapVisible || state.weaponWheel.visible || state.journalVisible ||
+        state.dialogueHistoryVisible || Dialogue::LocksWorld() || HospitalRecovery::Active())
     {
         return;
     }
-    const auto &region = plan->Region(Overworld::Cities()[size_t(activeCity)].id);
-    auto center = Overworld::Cities()[size_t(activeCity)].center;
-    auto convert = [&](world::SurfacePoint p) {
-        auto local = world::SurfaceGeometry::ToLocal(region.frame, p, session.Planet().radiusMeters);
+    dt = Game::Clamp(dt, 0, .05f);
+    remainingPathBudget = CitySimulation::PathBudget;
+    for (int city = 0; city < Overworld::kCityCount; ++city)
+    {
+        auto &status = simulation[size_t(city)];
+        if (status.band == CitySimulationBand::Detailed)
+        {
+            Observe(state, session, city, [&] {
+                BodyCollision::UpdateCity(dt, city, city == activeCity);
+                traffic[size_t(city)].Update(state, dt);
+                CityResidents::Get().Update(state, dt, city, &remainingPathBudget);
+            });
+            ++status.detailedTicks;
+            profiling::Count(profiling::Counter::CityDetailedTicks);
+        }
+        else
+        {
+            status.passiveSeconds += dt;
+            auto retired = traffic[size_t(city)].AdvanceDormant(dt);
+            profiling::Count(profiling::Counter::CityRetiredWrecks, retired);
+            for (auto &resident : state.residents)
+            {
+                if (resident.cityIndex == city)
+                {
+                    CitySimulation::AdvanceDormant(resident, dt);
+                    profiling::Count(profiling::Counter::CityPassiveResidents);
+                }
+            }
+        }
+    }
+}
+void PlanetCities::Observe(GameState &state, const world::SurfaceSession &session, int city,
+                           const std::function<void()> &operation)
+{
+    if (observedCity >= 0 || city < 0 || city >= Overworld::kCityCount || !session.Ready())
+    {
+        throw std::logic_error("Invalid or nested city observation");
+    }
+    const auto &frame =
+        session.Stream().Snapshot()->planet->Region(Overworld::Cities()[size_t(city)].id).frame;
+    const auto center = Overworld::Cities()[size_t(city)].center;
+    auto point = [&](world::SurfacePoint p) {
+        auto local = world::SurfaceGeometry::ToLocal(frame, p, session.Planet().radiusMeters);
         return Vector2{center.x + float(local.x / 2), center.y + float(local.y / 2)};
     };
-    // Only the old algorithms' observation coordinates change. Persistent actor coordinates never do.
-    struct Observation
+    auto vector = [&](Vector2 v, const world::TangentFrame &from, const world::TangentFrame &to) {
+        auto r = world::SurfaceGeometry::TransformDirection({v.x, v.y, 0}, from, to);
+        return Vector2{float(r.x), float(r.y)};
+    };
+    auto yaw = [&](float angle, const world::TangentFrame &from, const world::TangentFrame &to) {
+        auto v = vector({std::cos(angle), std::sin(angle)}, from, to);
+        return std::atan2(v.y, v.x);
+    };
+    auto &impact = CivicJustice::State().playerImpact;
+    struct Restore
     {
         GameState &state;
-        Vector2 player, camera, bike;
-        ~Observation()
+        BodyImpact &impact;
+        int &observer;
+        Vector2 player, camera, bike, bikeVelocity, velocity, impulse;
+        float facing, bikeYaw, bikeElevation;
+        ~Restore()
         {
             state.playerPosition = player;
             state.cameraPosition = camera;
             state.bikePosition = bike;
+            state.bikeVelocity = bikeVelocity;
+            state.playerMotion.velocity = velocity;
+            impact.velocity = impulse;
+            state.facingYaw = facing;
+            state.bikeYaw = bikeYaw;
+            state.bikeElevation = bikeElevation;
+            observer = -1;
         }
-    } restore{state, state.playerPosition, state.cameraPosition, state.bikePosition};
-    state.playerPosition = convert(session.Pose().origin);
-    state.cameraPosition = convert(session.PointAt(restore.camera.x * 2, restore.camera.y * 2));
-    auto bike = Game::Get().SurfaceBike();
-    state.bikePosition = bike && world::SurfaceGeometry::Distance(session.Planet().radiusMeters, *bike,
-                                                                  region.center.position) < 1000
-                             ? convert(*bike)
-                             : Vector2{1000000, 1000000};
-    traffic[size_t(activeCity)].Update(state, dt);
-    CityResidents::Get().Update(state, dt, activeCity);
+    } restore{state,
+              impact,
+              observedCity,
+              state.playerPosition,
+              state.cameraPosition,
+              state.bikePosition,
+              state.bikeVelocity,
+              state.playerMotion.velocity,
+              impact.velocity,
+              state.facingYaw,
+              state.bikeYaw,
+              state.bikeElevation};
+    const bool playerPresent = city == activeCity;
+    observedCity = city;
+    state.playerPosition = point(session.Pose().origin);
+    const auto entry = state.playerPosition;
+    state.cameraPosition = point(session.PointAt(restore.camera.x * 2, restore.camera.y * 2));
+    const auto bike = Game::Get().SurfaceBike();
+    state.bikePosition =
+        bike && world::SurfaceGeometry::Distance(session.Planet().radiusMeters, *bike, frame.origin) < 1000
+            ? point(*bike)
+            : Vector2{1000000, 1000000};
+    state.facingYaw = yaw(restore.facing, session.Origin(), frame);
+    state.bikeYaw = yaw(restore.bikeYaw, session.Origin(), frame);
+    state.bikeVelocity = vector(restore.bikeVelocity, session.Origin(), frame);
+    state.playerMotion.velocity = vector(restore.velocity, session.Origin(), frame);
+    impact.velocity = vector(restore.impulse, session.Origin(), frame);
+    // City roads are at the core elevation, not at the current floating origin's elevation.
+    const auto core =
+        session.Stream().Snapshot()->planet->cityCores->Find(Overworld::Cities()[size_t(city)].id);
+    state.bikeElevation =
+        core ? restore.bikeElevation +
+                   float((session.Origin().origin.altitudeMeters - core->elevationMeters) / 2)
+             : 0;
+    operation();
+    if (playerPresent)
+    {
+        auto delta = vector(Sub(state.playerPosition, entry), frame, session.Origin());
+        restore.player = Add(restore.player, delta);
+        if (state.isBikeMounted)
+        {
+            restore.bike = restore.player;
+        }
+        restore.bikeVelocity = vector(state.bikeVelocity, frame, session.Origin());
+        restore.velocity = vector(state.playerMotion.velocity, frame, session.Origin());
+        restore.impulse = vector(impact.velocity, frame, session.Origin());
+        restore.facing = yaw(state.facingYaw, frame, session.Origin());
+        restore.bikeYaw = yaw(state.bikeYaw, frame, session.Origin());
+    }
 }
 InteractionTarget PlanetCities::Nearby(const GameState &state, const world::SurfaceSession &session,
                                        float *nearestDistance) const

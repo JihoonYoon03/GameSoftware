@@ -1946,6 +1946,10 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
     }
     const auto &state = Game::Get().GetState();
     auto place = [&](int city, Vector2 legacy) -> std::optional<world::Vector3d> {
+        if (cities->Status(city).band != CitySimulationBand::Detailed)
+        {
+            return std::nullopt;
+        }
         auto point = cities->Point(session, city, legacy);
         if (!point || world::SurfaceGeometry::Distance(session.Planet().radiusMeters, *point,
                                                        session.Pose().origin) > 100)
@@ -1999,6 +2003,10 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
     }
     for (int city = 0; city < Overworld::kCityCount; ++city)
     {
+        if (cities->Status(city).band != CitySimulationBand::Detailed)
+        {
+            continue;
+        }
         const auto &traffic = cities->Traffic(city);
         for (size_t i = 0; i < traffic.Vehicles().size(); ++i)
         {

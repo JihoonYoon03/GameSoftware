@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <chrono>
 #include <cstdint>
 #include <string>
@@ -44,6 +44,10 @@ enum class Counter
     WorkstationRepairCompletions,
     WorkstationSupplyDeliveries,
     NpcRescues,
+    CityDetailedTicks,
+    CityPassiveResidents,
+    CityRetiredWrecks,
+    CityContactCorrections,
     Count
 };
 enum class Timer
@@ -76,6 +80,7 @@ enum class Timer
     MonitorSnapshot,
     NpcCooperation,
     MineLighting,
+    PlanetSimulation,
     Count
 };
 class Scope
