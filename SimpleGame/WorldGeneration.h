@@ -124,6 +124,8 @@ struct TravelConnection
 class GeneratedPlanet
 {
   public:
+    static constexpr unsigned CurrentLayoutRevision = 4, LegacyLayoutRevision = 3;
+    unsigned layoutRevision = CurrentLayoutRevision;
     explicit GeneratedPlanet(PlanetTerrain terrain);
     PlanetTerrain terrain;
     std::vector<StoryAnchor> anchors;
@@ -217,6 +219,7 @@ class PlanetGenerator
     }
     PlanetGenerator WithSeed(std::uint64_t seed) const;
     PlanetGenerator WithCityCores(const CityCorePlan &cores) const;
+    PlanetGenerator WithLayoutRevision(unsigned revision) const;
     static PlanetGenerator Erma(const std::vector<StoryAnchor> &anchors, GenerationSettings settings = {});
 
   private:
@@ -226,6 +229,7 @@ class PlanetGenerator
     std::vector<StoryAnchor> anchors;
     GenerationSettings settings;
     std::shared_ptr<const CityCorePlan> cityCores;
+    unsigned layoutRevision = GeneratedPlanet::CurrentLayoutRevision;
 };
 // ============================================================================
 // PlanetProfiles — reproducible presets; only Erma owns the existing story actors

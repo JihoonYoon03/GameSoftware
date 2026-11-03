@@ -661,6 +661,16 @@ bool SurfaceStructure::Contains(const SurfacePoint &point, double radius, double
     return std::fabs(local.x) < sizeMeters.x * .5 + clearance &&
            std::fabs(local.y) < sizeMeters.y * .5 + clearance;
 }
+double SurfaceStructure::BaseClearanceMeters() const
+{
+    const bool building = form <= ContentForm::Shelter || form == ContentForm::Building;
+    return solid && building && foundationMeters > .05 ? .08 : 0;
+}
+double SurfaceStructure::FoundationTopMeters() const
+{
+    const double clearance = BaseClearanceMeters();
+    return clearance > 0 ? clearance + .02 : 0;
+}
 std::vector<ContentCellKey> ContentLayout::Near(const GeneratedPlanet &p, const SurfacePoint &point,
                                                 double radius)
 {
@@ -792,10 +802,10 @@ ContentCell ContentLayout::Generate(const GeneratedPlanet &p, ContentCellKey key
         }
         SurfaceStructure structure;
         structure.regionId = r.definition.id;
-        structure.id =
-            WorldIdentity::ContentKey(p.terrain.Planet(), r.definition.id,
-                                      "layout" + std::to_string(Revision) + ".cell." + std::to_string(key.x) +
-                                          "." + std::to_string(key.y) + "." + std::to_string(slot));
+        structure.id = WorldIdentity::ContentKey(p.terrain.Planet(), r.definition.id,
+                                                 "layout" + std::to_string(p.layoutRevision) + ".cell." +
+                                                     std::to_string(key.x) + "." + std::to_string(key.y) +
+                                                     "." + std::to_string(slot));
         structure.appearance = random;
         auto direction = Sub(b, a);
         structure.yaw = std::atan2(direction.y, direction.x);
@@ -874,16 +884,34 @@ ContentCell ContentLayout::Generate(const GeneratedPlanet &p, ContentCellKey key
             continue;
         }
         double low = point.altitudeMeters, high = low;
-        for (double x : {-1., 1.})
+        if (p.layoutRevision >= 4)
         {
-            for (double y : {-1., 1.})
+            for (int x = -2; x <= 2; ++x)
             {
-                auto corner =
-                    Add(local, Rotate({x * structure.sizeMeters.x * .5, y * structure.sizeMeters.y * .5, 0},
+                for (int y = -2; y <= 2; ++y)
+                {
+                    auto sample = Add(
+                        local, Rotate({x * structure.sizeMeters.x * .25, y * structure.sizeMeters.y * .25, 0},
                                       structure.yaw));
-                double height = At(p, r, corner).altitudeMeters;
-                low = (std::min)(low, height);
-                high = (std::max)(high, height);
+                    const auto height = At(p, r, sample).altitudeMeters;
+                    low = (std::min)(low, height);
+                    high = (std::max)(high, height);
+                }
+            }
+        }
+        else
+        {
+            for (double x : {-1., 1.})
+            {
+                for (double y : {-1., 1.})
+                {
+                    auto corner = Add(
+                        local, Rotate({x * structure.sizeMeters.x * .5, y * structure.sizeMeters.y * .5, 0},
+                                      structure.yaw));
+                    double height = At(p, r, corner).altitudeMeters;
+                    low = (std::min)(low, height);
+                    high = (std::max)(high, height);
+                }
             }
         }
         if (low < PlanetTerrain::SeaLevelMeters || high - low > (city ? 2.5 : 4))

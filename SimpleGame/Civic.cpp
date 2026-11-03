@@ -2651,6 +2651,262 @@ void BodyCollision::Update(float dt)
         AdvanceImpact(officer.position, officer.impact, dt);
     }
 }
+Vector2 BodyCollision::SurfaceBikeContacts(const world::SurfacePoint &from, const world::SurfacePoint &to,
+                                           float previousYaw, float impactSpeed)
+{
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    const auto *session = g.Surface();
+    if (!session)
+    {
+        return w.playerPosition;
+    }
+    const auto a = session->Local(from), b = session->Local(to);
+    const Vector2 start{float(a.x / 2), float(a.y / 2)}, finish{float(b.x / 2), float(b.y / 2)};
+    if (!w.isBikeMounted || !CivicJustice::IsExterior() || !std::isfinite(impactSpeed))
+    {
+        return finish;
+    }
+    const float travel = Game::Distance(start, finish);
+    if (travel > 32)
+    {
+        return finish; // Developer relocation is not a physical vehicle sweep.
+    }
+    // Test a small spherical cap before any tangent projection (including the antipode).
+    const double reachCosine = std::cos((travel + 2) * 2 / session->Planet().radiusMeters);
+    auto nearby = [&](const world::SurfacePoint &point) {
+        return world::SurfaceGeometry::Dot(from.normal, point.normal) >= reachCosine;
+    };
+    const float turn = std::remainder(w.bikeYaw - previousYaw, 2 * kPi);
+    const int steps = (std::min)(256, (std::max)(1, int(std::ceil((travel + std::abs(turn) * .65f) / .12f))));
+    struct Hit
+    {
+        Vector2 normal;
+        std::function<void(Vector2)> damage;
+    };
+    std::vector<Hit> hits;
+    float first = 1;
+    auto center = [&](float t) { return Add(start, Sub(finish, start), t); };
+    auto closest = [&](Vector2 person, float t) {
+        const float yaw = previousYaw + turn * t;
+        const Vector2 direction{std::cos(yaw), std::sin(yaw)};
+        const auto delta = Sub(person, center(t));
+        return Add(center(t), direction,
+                   Game::Clamp(delta.x * direction.x + delta.y * direction.y, -.4023f, .4023f));
+    };
+    auto offer = [&](Vector2 person, float height, std::function<void(Vector2)> damage) {
+        if (Game::Distance(person, start) > travel + 1.2f || std::abs(height - float((a.z + b.z) / 4)) > .8f)
+        {
+            return;
+        }
+        auto distance = [&](float t) { return Game::Distance(person, closest(person, t)); };
+        const float initial = distance(0);
+        // Allow a pre-existing overlap to escape; never lock the rider inside a person.
+        if (initial < .40271f && distance(1) > initial + .001f)
+        {
+            return;
+        }
+        for (int step = 0; step <= steps; ++step)
+        {
+            float upper = float(step) / steps;
+            if (distance(upper) >= .40271f)
+            {
+                continue;
+            }
+            float lower = step ? float(step - 1) / steps : 0;
+            for (int i = 0; i < 8 && upper > lower; ++i)
+            {
+                const float middle = (lower + upper) * .5f;
+                if (distance(middle) < .40271f)
+                {
+                    upper = middle;
+                }
+                else
+                {
+                    lower = middle;
+                }
+            }
+            if (upper < first - .001f)
+            {
+                first = upper;
+                hits.clear();
+            }
+            if (upper <= first + .001f)
+            {
+                const auto delta = Sub(closest(person, upper), person);
+                const auto normal = std::hypot(delta.x, delta.y) > .0001f
+                                        ? Unit(delta)
+                                        : Vector2{-std::cos(w.bikeYaw), -std::sin(w.bikeYaw)};
+                hits.push_back({normal, std::move(damage)});
+            }
+            break;
+        }
+    };
+    const int damage = impactSpeed > 2 ? int((std::min)(impactSpeed * 9, 1000.f)) : 0;
+    for (const auto &target : surfaceTargets)
+    {
+        if (target.vehicleBody)
+        {
+            continue;
+        }
+        if (target.resident >= 0)
+        {
+            const size_t index = size_t(target.resident);
+            if (index >= w.residents.size() || w.residents[index].health <= 0)
+            {
+                continue;
+            }
+            offer(target.position, target.elevation, [&, index, city = target.city](Vector2 impulse) {
+                if (w.residents[index].impact.invulnerability > 0)
+                {
+                    return;
+                }
+                const auto &frame =
+                    session->Stream().Snapshot()->planet->Region(Overworld::Cities()[size_t(city)].id).frame;
+                auto v = world::SurfaceGeometry::TransformDirection({impulse.x, impulse.y, 0},
+                                                                    session->Origin(), frame);
+                CivicCombat::DamageResident(index, damage, {float(v.x), float(v.y)}, false);
+            });
+        }
+        else if (target.landmark >= 0 && civic.landmarkHealth[size_t(target.landmark)] > 0)
+        {
+            offer(target.position, target.elevation, [index = size_t(target.landmark), damage](Vector2) {
+                CivicCombat::DamageLandmark(index, damage, false);
+            });
+        }
+    }
+    for (size_t i = 0; i < civic.officers.size(); ++i)
+    {
+        const auto &officer = civic.officers[i];
+        if (officer.health <= 0)
+        {
+            continue;
+        }
+        auto record = std::find_if(planetary.officers.begin(), planetary.officers.end(),
+                                   [&](const auto &v) { return v.id == officer.id; });
+        if (record == planetary.officers.end())
+        {
+            continue;
+        }
+        offer(officer.position, PlanetSecurity::Elevation(record->position), [&, i](Vector2 impulse) {
+            if (civic.officers[i].impact.invulnerability <= 0)
+            {
+                CivicCombat::DamageOfficer(i, damage, impulse, false);
+            }
+        });
+    }
+    if (auto *party = g.SurfaceParty())
+    {
+        for (size_t i = 0; i < party->State().members.size(); ++i)
+        {
+            const auto &person = party->State().members[i];
+            if (!person.joined || person.place == CompanionPlace::Mine || person.combat.health <= 0 ||
+                !nearby(person.position))
+            {
+                continue;
+            }
+            auto p = session->Local(person.position);
+            offer({float(p.x / 2), float(p.y / 2)}, float(p.z / 2), [party, i, damage](Vector2) {
+                if (party->State().members[i].combat.hitGrace <= 0)
+                {
+                    party->Damage(CompanionId(i), damage, false);
+                }
+            });
+        }
+    }
+    if (auto *community = g.SurfaceCommunity())
+    {
+        for (const auto &site : community->State().sites)
+        {
+            for (const auto &person : site.residents)
+            {
+                if (person.health <= 0 || !nearby(person.position))
+                {
+                    continue;
+                }
+                auto p = session->Local(person.position);
+                offer({float(p.x / 2), float(p.y / 2)}, float(p.z / 2),
+                      [community, id = person.id, damage](Vector2) {
+                          for (const auto &site : community->State().sites)
+                          {
+                              for (const auto &person : site.residents)
+                              {
+                                  if (person.id == id && person.hitFlash <= 0)
+                                  {
+                                      community->Damage(id, damage, false);
+                                      return;
+                                  }
+                              }
+                          }
+                      });
+            }
+        }
+    }
+    auto &chapter = game::GameLevels::Chapter();
+    auto &field = chapter.GetState();
+    if (g.IsStoryWorld() && field.generated)
+    {
+        auto frontierPerson = [&](game::FrontierPerson &person) {
+            if (person.combat.health <= 0)
+            {
+                return;
+            }
+            const auto point = chapter.Surface().Point(person.position);
+            if (!nearby(point))
+            {
+                return;
+            }
+            const auto local = session->Local(point);
+            auto *victim = &person;
+            offer({float(local.x / 2), float(local.y / 2)}, float(local.z / 2), [victim, damage](Vector2) {
+                if (victim->combat.hitGrace > 0)
+                {
+                    return;
+                }
+                victim->combat.health = (std::max)(0, victim->combat.health - damage);
+                victim->combat.hitGrace = .25f;
+                victim->route.clear();
+                victim->waypoint = 0;
+                if (victim->combat.health == 0)
+                {
+                    victim->combat.downedSeconds = 12;
+                    victim->combat.engaged = false;
+                }
+            });
+        };
+        if (!field.kainJoined)
+        {
+            frontierPerson(field.kain);
+        }
+        for (auto &person : field.survivors)
+        {
+            frontierPerson(person);
+        }
+        for (auto &person : field.scrappers)
+        {
+            if (!(field.negotiated && person.arrived))
+            {
+                frontierPerson(person);
+            }
+        }
+    }
+    if (hits.empty())
+    {
+        return finish;
+    }
+    for (const auto &hit : hits)
+    {
+        if (damage > 0)
+        {
+            hit.damage(Add({}, hit.normal, -5));
+        }
+        DeflectBike(hit.normal);
+    }
+    const float safe = (std::max)(0.f, first - .01f / (std::max)(.01f, travel + std::abs(turn) * .65f));
+    w.bikeYaw = previousYaw + turn * safe;
+    return center(safe);
+}
+
 void BodyCollision::VehicleContacts(float)
 {
     if ((!CivicJustice::IsExterior() && ObservedCity() < 0) || HospitalRecovery::Active())

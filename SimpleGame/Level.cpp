@@ -2106,6 +2106,11 @@ bool FrontierSurface::Blocked(tutorial::Vector2 position, bool driving) const
     {
         return true;
     }
+    // A mounted bike resolves people through the swept contact pass, after static geometry.
+    if (driving)
+    {
+        return false;
+    }
     if ((!state.kainJoined || tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Kain,
                                                                  tutorial::CompanionPlace::Frontier)) &&
         state.kain.combat.health > 0 && tutorial::Game::Distance(p, state.kain.position) < .36f)

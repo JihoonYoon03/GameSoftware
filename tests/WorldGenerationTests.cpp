@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "Overworld.h"
 #include "WorldGeneration.h"
+#include "WorldContent.h"
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -245,6 +246,98 @@ void Routes(const GeneratedPlanet &plan)
         }
     }
 }
+void DistributedJunctions(const GeneratedPlanet &plan)
+{
+    Check(plan.layoutRevision == 4 && plan.Connected(), "New worlds use a connected distributed road layout");
+    std::vector<unsigned> degrees(plan.nodes.size(), 0);
+    for (const auto &edge : plan.connections)
+    {
+        ++degrees[edge.from];
+        ++degrees[edge.to];
+    }
+    unsigned chainedRelays = 0;
+    for (size_t i = 0; i < degrees.size(); ++i)
+    {
+        const auto &node = plan.nodes[i];
+        const bool approach = !node.relay && plan.cityCores && plan.cityCores->Find(node.regionId);
+        Check(degrees[i] <= (approach ? 3u : 4u), "No regional centre or relay becomes a many-arm hub");
+    }
+    for (const auto &edge : plan.connections)
+    {
+        if (plan.nodes[edge.from].relay && plan.nodes[edge.to].relay)
+        {
+            ++chainedRelays;
+        }
+    }
+    Check(chainedRelays > 0,
+          "Local relays share nearby access rather than all connecting to the city centre");
+    unsigned sharedPads = 0;
+    for (const auto &site : plan.nodes)
+    {
+        if (site.relay)
+        {
+            continue;
+        }
+        auto onPad = [&](unsigned node) {
+            return plan.nodes[node].regionId == site.regionId &&
+                   Distance(plan, plan.nodes[node].location.position, site.location.position) < .5 &&
+                   std::abs(plan.nodes[node].location.position.altitudeMeters -
+                            site.location.position.altitudeMeters) < .5;
+        };
+        unsigned members = 0, arms = 0;
+        for (unsigned i = 0; i < plan.nodes.size(); ++i)
+        {
+            if (onPad(i))
+            {
+                ++members;
+            }
+        }
+        if (members < 2)
+        {
+            continue;
+        }
+        ++sharedPads;
+        for (const auto &edge : plan.connections)
+        {
+            if (onPad(edge.from) != onPad(edge.to))
+            {
+                ++arms;
+            }
+        }
+        Check(arms <= (plan.cityCores && plan.cityCores->Find(site.regionId) ? 3u : 4u),
+              "A co-located city entrance and relay share one physical intersection budget");
+    }
+    Check(sharedPads > 0, "Regression includes coincident region/relay nodes");
+    auto generator = PlanetGenerator::Erma(tutorial::Overworld::StoryAnchors()).WithLayoutRevision(3);
+    auto legacy = generator.Generate();
+    Check(legacy.layoutRevision == 3 && legacy.Connected(),
+          "Previous saves retain their connected revision-3 roads");
+    Check(legacy.Digest() == generator.WithSeed(legacy.terrain.Planet().seed).Generate().Digest(),
+          "Seed copies retain the requested legacy layout and digest");
+    Check(legacy.Digest() != plan.Digest(), "Road layout revisions cannot share a traffic manifest identity");
+    std::vector<unsigned> oldDegrees(legacy.nodes.size(), 0);
+    for (const auto &edge : legacy.connections)
+    {
+        ++oldDegrees[edge.from];
+        ++oldDegrees[edge.to];
+    }
+    Check(*std::max_element(oldDegrees.begin(), oldDegrees.end()) > 4,
+          "Legacy compatibility preserves the old star topology rather than silently moving saved actors");
+    Throws([&] { generator.WithLayoutRevision(999); }, "Unknown layouts are rejected explicitly");
+    SurfaceStructure building;
+    building.form = ContentForm::Building;
+    building.foundationMeters = .15;
+    Check(building.BaseClearanceMeters() == .08, "Building floors sit above terrain and their plinth top");
+    Check(building.FoundationTopMeters() > building.BaseClearanceMeters() &&
+              building.FoundationTopMeters() == .10,
+          "Plinth embeds the building floor without sharing its plane or leaving an air gap");
+    building.form = ContentForm::TransitMesh;
+    Check(building.BaseClearanceMeters() == 0, "Road connection heights are not lifted with buildings");
+    building.form = ContentForm::Building;
+    building.solid = false;
+    Check(building.BaseClearanceMeters() == 0,
+          "Non-solid decorative planes retain their authored elevations");
+}
 void Reproducibility(const GeneratedPlanet &baseline)
 {
     auto definitions = WorldCatalog::ErmaRegions();
@@ -273,6 +366,7 @@ void Reproducibility(const GeneratedPlanet &baseline)
         auto plan = generator.WithSeed(seed).Generate();
         Layout(plan, 16);
         Routes(plan);
+        DistributedJunctions(plan);
         for (const auto &r : baseline.regions)
         {
             if (r.definition.storyFixed)

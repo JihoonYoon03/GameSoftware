@@ -1944,12 +1944,19 @@ std::vector<UiControl> Hud::Controls()
                     bool eligible = status != MissionStatus::NotAccepted || Game::Get().MissionEligible(id);
                     controls.push_back({UiAction::Mission,
                                         {96, 344.f + i * 66},
-                                        {296, 56},
+                                        {208, 56},
                                         std::string(QuestParticipation::Name(id)) + "\n" +
                                             (eligible ? QuestParticipation::Label(status) : "선행 조사 필요"),
                                         eligible && status != MissionStatus::Completed &&
                                             !Dialogue::Active() && !w.dialogue.suspended,
                                         i});
+                    controls.push_back(
+                        {UiAction::TrackMission,
+                         {312, 344.f + i * 66},
+                         {80, 56},
+                         Game::Get().FocusedMission() == id ? "추적 중" : "목표 추적",
+                         status == MissionStatus::Active && !Dialogue::Active() && !w.dialogue.suspended,
+                         i});
                 }
             }
         }
@@ -2004,6 +2011,12 @@ void Hud::Activate(const UiControl &control, int direction)
         break;
     case UiAction::CancelLoad:
         SaveSystem::Cancel();
+        break;
+    case UiAction::TrackMission:
+        if (w.missions.Track(MissionId(control.choice)))
+        {
+            g.ShowNotice(std::string("목표 추적 / ") + QuestParticipation::Name(MissionId(control.choice)));
+        }
         break;
     case UiAction::Mission:
         g.ManageMission(MissionId(control.choice));

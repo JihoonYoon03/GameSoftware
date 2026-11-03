@@ -177,6 +177,8 @@ class BodyCollision
     static Vector2 MoveResident(size_t index, Vector2 from, Vector2 desired);
     static void Update(float deltaSeconds);
     static void VehicleContacts(float deltaSeconds);
+    static Vector2 SurfaceBikeContacts(const world::SurfacePoint &from, const world::SurfacePoint &to,
+                                       float previousYaw, float impactSpeed);
     static void UpdateCity(float deltaSeconds, int city, bool playerPresent);
     static void AgeResident(Resident &resident, float deltaSeconds);
 };

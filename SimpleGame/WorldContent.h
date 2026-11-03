@@ -67,6 +67,8 @@ struct SurfaceStructure
         std::array<float, 4> body, accent, emission;
     };
     std::optional<Palette> palette;
+    double BaseClearanceMeters() const;
+    double FoundationTopMeters() const;
     bool Contains(const SurfacePoint &point, double planetRadius, double clearance = 0) const;
 };
 struct SurfaceStreet
@@ -149,7 +151,11 @@ class CityCorePlan
 class ContentLayout
 {
   public:
-    static constexpr unsigned Revision = 3;
+    static constexpr unsigned Revision = GeneratedPlanet::CurrentLayoutRevision;
+    static bool SupportsRevision(unsigned revision)
+    {
+        return revision == Revision || revision == GeneratedPlanet::LegacyLayoutRevision;
+    }
     static std::vector<ContentCellKey> Near(const GeneratedPlanet &planet, const SurfacePoint &point,
                                             double radiusMeters);
     static ContentCell Generate(const GeneratedPlanet &planet, ContentCellKey key,

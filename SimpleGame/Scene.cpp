@@ -1903,9 +1903,10 @@ void DrawSurfaceStructure(const world::SurfaceStructure &structure, const world:
     transform.pitch = float(std::asin(std::clamp(-x.z, -1., 1.)));
     transform.roll = float(std::atan2(y.z, z.z));
     // Resource pivots differ: centre the real mesh bounds on the same rectangle used by collision.
-    auto offset =
-        transform.Apply({-(asset.minimum.x + asset.maximum.x) * .5f * scale.x,
-                         -(asset.minimum.y + asset.maximum.y) * .5f * scale.y, -asset.minimum.z * scale.z});
+    const double baseLift = structure.BaseClearanceMeters();
+    auto offset = transform.Apply({-(asset.minimum.x + asset.maximum.x) * .5f * scale.x,
+                                   -(asset.minimum.y + asset.maximum.y) * .5f * scale.y,
+                                   -asset.minimum.z * scale.z + float(baseLift / 2)});
     transform.position = {offset.x, offset.y, offset.z + float(p.z / 2)};
     float px = float(p.x / 2), py = float(p.y / 2);
     models::Palette palette;
@@ -1943,7 +1944,7 @@ void DrawSurfaceStructure(const world::SurfaceStructure &structure, const world:
         foundation.position = shift;
         Drawing::DrawModel3D(models::ModelLibrary::Get().box, Drawing::WorldToScreen(px, py),
                              {float(structure.sizeMeters.x / 2), float(structure.sizeMeters.y / 2),
-                              float(structure.foundationMeters / 2)},
+                              float((structure.foundationMeters + structure.FoundationTopMeters()) / 2)},
                              foundation, (px + py) * 36, palette);
     }
     Drawing::DrawModel3D(model, Drawing::WorldToScreen(px, py), scale, transform, (px + py) * 36, palette);

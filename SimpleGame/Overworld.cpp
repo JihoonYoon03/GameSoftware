@@ -3976,7 +3976,7 @@ CommunityResident *PlanetCommunity::Find(const std::string &id)
     }
     return nullptr;
 }
-bool PlanetCommunity::Blocked(const world::SurfacePoint &point, double clearance) const
+bool PlanetCommunity::Blocked(const world::SurfacePoint &point, double clearance, bool includePeople) const
 {
     if (!planet)
     {
@@ -3995,7 +3995,8 @@ bool PlanetCommunity::Blocked(const world::SurfacePoint &point, double clearance
         }
         for (const auto &person : site.residents)
         {
-            if (person.health > 0 && std::abs(person.position.altitudeMeters - point.altitudeMeters) < 1.8 &&
+            if (includePeople && person.health > 0 &&
+                std::abs(person.position.altitudeMeters - point.altitudeMeters) < 1.8 &&
                 TG::Distance(radius, point, person.position) < .4 + clearance)
             {
                 return true;
@@ -5259,15 +5260,15 @@ InteractionTarget PlanetCities::Nearby(const GameState &state, const world::Surf
     return result;
 }
 bool PlanetCities::Occupied(const GameState &state, const world::SurfaceSession &session, Vector2 local,
-                            int cityOverride) const
+                            int cityOverride, bool includePeople) const
 {
     int city = cityOverride >= 0                             ? cityOverride
                : state.isInsideHome || state.isInObservatory ? 0
                                                              : activeCity;
-    return OccupiedAt(state, session, session.PointAt(local.x * 2, local.y * 2), city);
+    return OccupiedAt(state, session, session.PointAt(local.x * 2, local.y * 2), city, includePeople);
 }
 bool PlanetCities::OccupiedAt(const GameState &state, const world::SurfaceSession &session,
-                              const world::SurfacePoint &point, int cityOverride) const
+                              const world::SurfacePoint &point, int cityOverride, bool includePeople) const
 {
     int city = cityOverride;
     if (city < 0 && session.Ready())
@@ -5301,7 +5302,7 @@ bool PlanetCities::OccupiedAt(const GameState &state, const world::SurfaceSessio
     for (size_t i = 0; i < state.residents.size(); ++i)
     {
         const auto &r = state.residents[i];
-        if (r.cityIndex != city || r.health <= 0 ||
+        if (!includePeople || r.cityIndex != city || r.health <= 0 ||
             (i == Overworld::kKainResidentSlot && game::GameLevels::Chapter().GetState().kainJoined))
         {
             continue;
@@ -5311,7 +5312,7 @@ bool PlanetCities::OccupiedAt(const GameState &state, const world::SurfaceSessio
             return true;
         }
     }
-    if (city == 0)
+    if (includePeople && city == 0)
     {
         for (auto point : {kLiaPosition, kMaraPosition, kCityKainPosition})
         {

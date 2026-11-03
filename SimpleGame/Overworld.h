@@ -422,7 +422,7 @@ class PlanetCommunity
     {
         return state;
     }
-    bool Blocked(const world::SurfacePoint &point, double clearance) const;
+    bool Blocked(const world::SurfacePoint &point, double clearance, bool includePeople = true) const;
     bool Damage(const std::string &id, int damage, bool playerOwned);
     bool Hit(const world::SurfacePoint &point, int damage, bool playerOwned);
     InteractionTarget Nearby(float *legacyDistance = nullptr) const;
@@ -593,9 +593,9 @@ class PlanetCities
     InteractionTarget Nearby(const GameState &state, const world::SurfaceSession &session,
                              float *nearestDistance = nullptr) const;
     bool Occupied(const GameState &state, const world::SurfaceSession &session, Vector2 local,
-                  int cityOverride = -1) const;
+                  int cityOverride = -1, bool includePeople = true) const;
     bool OccupiedAt(const GameState &state, const world::SurfaceSession &session,
-                    const world::SurfacePoint &point, int cityOverride = -1) const;
+                    const world::SurfacePoint &point, int cityOverride = -1, bool includePeople = true) const;
 
   private:
     int activeCity = -1;

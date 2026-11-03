@@ -132,6 +132,10 @@ bool QuestParticipation::Accept(MissionId id, bool eligible)
         return false;
     }
     status = MissionStatus::Active;
+    if (tracked == MissionId::Count || !Active(tracked))
+    {
+        tracked = id;
+    }
     return true;
 }
 bool QuestParticipation::Pause(MissionId id)
@@ -142,6 +146,10 @@ bool QuestParticipation::Pause(MissionId id)
         return false;
     }
     status = MissionStatus::Paused;
+    if (tracked == id)
+    {
+        tracked = MissionId::Count;
+    }
     return true;
 }
 bool QuestParticipation::Complete(MissionId id)
@@ -152,7 +160,24 @@ bool QuestParticipation::Complete(MissionId id)
         return false;
     }
     status = MissionStatus::Completed;
+    if (tracked == id)
+    {
+        tracked = MissionId::Count;
+    }
     return true;
+}
+bool QuestParticipation::Track(MissionId id)
+{
+    if (size_t(id) >= states.size() || !Active(id))
+    {
+        return false;
+    }
+    tracked = id;
+    return true;
+}
+MissionId QuestParticipation::Tracked() const
+{
+    return tracked != MissionId::Count && Active(tracked) ? tracked : MissionId::Count;
 }
 const char *QuestParticipation::Key(MissionId id)
 {
@@ -200,24 +225,60 @@ const char *QuestParticipation::Label(MissionStatus status)
         return "미수락 · 제안 보기";
     }
 }
-bool Game::MissionEligible(MissionId id) const
+const char *Game::MissionRestriction(MissionId id) const
 {
     if (!IsStoryWorld())
     {
-        return false;
+        return "이 행성에서는 에르마의 임무를 수락할 수 없습니다.";
     }
     switch (id)
     {
     case MissionId::Signal:
     case MissionId::Mara:
-        return true;
+        return nullptr;
     case MissionId::Mine:
-        return state.gateSignalHeard && state.hasDescendedObservatory;
+        return state.gateSignalHeard && state.hasDescendedObservatory
+                   ? nullptr
+                   : "전망대 기록을 확보하고 지상으로 돌아와야 합니다.";
     case MissionId::Frontier:
-        return game::GameLevels::Mine().GetState().quest.GetStage() == game::MineQuestStage::Complete;
+        return game::GameLevels::Mine().GetState().quest.GetStage() == game::MineQuestStage::Complete
+                   ? nullptr
+                   : "광산 좌표를 확보해 헤일로 수신망에 보고해야 합니다.";
     default:
-        return false;
+        return "알 수 없는 임무입니다.";
     }
+}
+bool Game::MissionEligible(MissionId id) const
+{
+    return MissionRestriction(id) == nullptr;
+}
+MissionId Game::FocusedMission() const
+{
+    if (!IsStoryWorld())
+    {
+        return MissionId::Count;
+    }
+    auto selected = state.missions.Tracked();
+    if (selected != MissionId::Count)
+    {
+        return selected;
+    }
+    if (IsSurfaceMine() && state.missions.Active(MissionId::Mine))
+    {
+        return MissionId::Mine;
+    }
+    if (game::GameLevels::Chapter().IsActive() && state.missions.Active(MissionId::Frontier))
+    {
+        return MissionId::Frontier;
+    }
+    for (size_t i = 0; i < size_t(MissionId::Count); ++i)
+    {
+        if (state.missions.Active(MissionId(i)))
+        {
+            return MissionId(i);
+        }
+    }
+    return MissionId::Count;
 }
 const char *Game::MissionObjective() const
 {
@@ -225,24 +286,25 @@ const char *Game::MissionObjective() const
     {
         return "행성 자유 탐사 · 중계환 발견·등록 / M 지도";
     }
-    if (state.missions.Active(MissionId::Signal))
+    const auto focused = FocusedMission();
+    if (focused == MissionId::Signal)
     {
         return !state.homeMessageRead   ? "집 단말에서 측정 요청 확인 [E]"
                : !state.gateSignalHeard ? "전망대에서 신호 기록 조사 [E]"
                                         : "전망대 승강기로 지상 복귀 [E]";
     }
-    if (state.missions.Active(MissionId::Mine))
+    if (focused == MissionId::Mine)
     {
         const auto &quest = game::GameLevels::Mine().GetState().quest;
         return quest.GetStage() == game::MineQuestStage::TravelToMine && !quest.IsRiaJoined()
                    ? "리아에게 광산 동행 요청 [E]"
                    : quest.GetObjective();
     }
-    if (state.missions.Active(MissionId::Frontier))
+    if (focused == MissionId::Frontier)
     {
         return game::GameLevels::Chapter().Objective();
     }
-    if (state.missions.Active(MissionId::Mara))
+    if (focused == MissionId::Mara)
     {
         return state.isPowerRestored ? "마라에게 전력 복구 보고 [E]" : "동쪽 전력 장치 복구 [E]";
     }
@@ -261,9 +323,7 @@ void Game::OfferMission(MissionId id)
     }
     if (!MissionEligible(id))
     {
-        ShowNotice(id == MissionId::Mine
-                       ? "조사 조건 / 전망대 기록을 확보하고 지상으로 돌아온 뒤 제안을 받을 수 있습니다."
-                       : "조사 조건 / 광산 좌표를 확보해 헤일로 수신망에 보고한 뒤 제안을 받을 수 있습니다.");
+        ShowNotice(std::string("조사 조건 / ") + MissionRestriction(id));
         return;
     }
     state.journalVisible = state.dialogueHistoryVisible = false;
@@ -1923,10 +1983,25 @@ void Game::UpdateSurface(float dt)
             state.noticeSecondsRemaining -= dt;
         }
         auto before = state.playerPosition;
+        const auto surfaceFrom = surface->Pose().origin;
+        const float previousBikeYaw = state.bikeYaw;
         UpdatePlayerMovement(dt);
         auto desired = state.playerPosition;
         surface->Move((desired.x - before.x) * 2, (desired.y - before.y) * 2, state.isBikeMounted);
         auto position = surface->Local(surface->Pose().origin);
+        if (state.isBikeMounted)
+        {
+            auto contact = BodyCollision::SurfaceBikeContacts(surfaceFrom, surface->Pose().origin,
+                                                              previousBikeYaw, std::fabs(state.bikeSpeed));
+            if (std::hypot(contact.x * 2 - position.x, contact.y * 2 - position.y) > .0001)
+            {
+                surface->Move(contact.x * 2 - position.x, contact.y * 2 - position.y, true);
+                position = surface->Local(surface->Pose().origin);
+                state.bikeSafePosition = {float(position.x / 2), float(position.y / 2)};
+                state.bikeSafeYaw = state.bikeYaw;
+                state.bikeSafePoseValid = true;
+            }
+        }
         state.playerPosition = {float(position.x / 2), float(position.y / 2)};
         Vector2 requested{desired.x - before.x, desired.y - before.y},
             actual{state.playerPosition.x - before.x, state.playerPosition.y - before.y};
@@ -2429,8 +2504,16 @@ std::vector<std::string> Dialogue::Journal()
         {
             lines.push_back(std::string("임무: ") + QuestParticipation::Name(MissionId(i)) + " / " +
                             QuestParticipation::Label(w.missions.Status(MissionId(i))));
+            if (w.missions.Status(MissionId(i)) != MissionStatus::Completed)
+            {
+                if (auto reason = Game::Get().MissionRestriction(MissionId(i)))
+                {
+                    lines.push_back(std::string("선행 조건: ") + reason);
+                }
+            }
         }
-        lines.push_back("지역 방문과 기록 열람은 자유입니다. 왼쪽 임무 버튼에서 수락·보류·재개합니다.");
+        lines.push_back("지역 방문과 기록 열람은 자유입니다. 왼쪽에서 수락·보류·재개하고, 목표 추적을 별도로 "
+                        "선택합니다.");
         if (auto *community = Game::Get().SurfaceCommunity())
         {
             auto local = community->Journal();
@@ -2554,8 +2637,9 @@ bool Game::IsPositionBlocked(Vector2 position)
     if (state.surfaceExploration && surfaceCities && surfaceCities->Observing())
     {
         auto point = surfaceCities->Point(*surface, surfaceCities->ObservedCity(), position);
-        if (point && ((surfaceParty && surfaceParty->Blocked(*point, state.isBikeMounted ? .5 : .32)) ||
-                      PlanetSecurity::OfficerBlocked(*point, state.isBikeMounted ? .5 : .32)))
+        if (point && !state.isBikeMounted &&
+            ((surfaceParty && surfaceParty->Blocked(*point, state.isBikeMounted ? .5 : .32)) ||
+             PlanetSecurity::OfficerBlocked(*point, state.isBikeMounted ? .5 : .32)))
         {
             return true;
         }
@@ -2566,16 +2650,18 @@ bool Game::IsPositionBlocked(Vector2 position)
     {
         return !surface || surface->Blocked(position.x * 2, position.y * 2, state.isBikeMounted) ||
                game::GameLevels::Chapter().Surface().Blocked(position, state.isBikeMounted) ||
-               (surfaceCities && surfaceCities->Occupied(state, *surface, position)) ||
-               (surfaceParty && surfaceParty->Blocked(surface->PointAt(position.x * 2, position.y * 2),
-                                                      state.isBikeMounted ? .5 : .32)) ||
-               PlanetSecurity::OfficerBlocked(surface->PointAt(position.x * 2, position.y * 2),
-                                              state.isBikeMounted ? .5 : .32) ||
+               (surfaceCities &&
+                surfaceCities->Occupied(state, *surface, position, -1, !state.isBikeMounted)) ||
+               (!state.isBikeMounted && surfaceParty &&
+                surfaceParty->Blocked(surface->PointAt(position.x * 2, position.y * 2),
+                                      state.isBikeMounted ? .5 : .32)) ||
+               (!state.isBikeMounted &&
+                PlanetSecurity::OfficerBlocked(surface->PointAt(position.x * 2, position.y * 2), .32)) ||
                (surfaceTraffic && surfaceTraffic->Blocked(surface->PointAt(position.x * 2, position.y * 2),
                                                           state.isBikeMounted ? .5 : .32)) ||
                (surfaceCommunity &&
                 surfaceCommunity->Blocked(surface->PointAt(position.x * 2, position.y * 2),
-                                          state.isBikeMounted ? .5 : .32));
+                                          state.isBikeMounted ? .5 : .32, !state.isBikeMounted));
     }
     if (game::GameLevels::Chapter().IsActive())
     {

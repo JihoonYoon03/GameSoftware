@@ -316,7 +316,7 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         streaming.Number("queued", stats.queued);
         streaming.Number("completed", stats.completed);
         streaming.Number("resident_bytes", stats.bytes);
-        streaming.Number("content_layout_revision", ::world::ContentLayout::Revision);
+        streaming.Number("content_layout_revision", snapshot->planet ? snapshot->planet->layoutRevision : 0);
         streaming.Number("collision_cells", surface.CollisionCells());
         streaming.Number("active_city", surfaceCity);
         if (surfaceCities)
@@ -602,6 +602,11 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         JsonObject item;
         item.Text("status", statuses[int(world.missions.Status(id))]);
         item.Bool("eligible", tutorial::Game::Get().MissionEligible(id));
+        item.Bool("tracked", tutorial::Game::Get().FocusedMission() == id);
+        if (const auto *reason = tutorial::Game::Get().MissionRestriction(id))
+        {
+            item.Text("restriction", reason);
+        }
         participation.Raw(tutorial::QuestParticipation::Key(id), item.Finish());
     }
     quests.Raw("participation", participation.Finish());

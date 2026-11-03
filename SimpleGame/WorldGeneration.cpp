@@ -891,6 +891,14 @@ PlanetGenerator PlanetGenerator::WithSeed(std::uint64_t seed) const
     }
     auto result = PlanetGenerator(p, definitions, fixed, std::move(a), settings);
     result.cityCores = cityCores;
+    result.layoutRevision = layoutRevision;
+    return result;
+}
+PlanetGenerator PlanetGenerator::WithLayoutRevision(unsigned revision) const
+{
+    Require(ContentLayout::SupportsRevision(revision), "Unsupported world layout revision");
+    auto result = *this;
+    result.layoutRevision = revision;
     return result;
 }
 PlanetGenerator PlanetGenerator::Erma(const std::vector<StoryAnchor> &anchors, GenerationSettings settings)
@@ -1001,6 +1009,7 @@ GeneratedPlanet PlanetGenerator::Generate(const std::atomic_bool *cancel) const
                         anchor.location.position.altitudeMeters, 1});
     }
     GeneratedPlanet result(PlanetTerrain(planet, std::move(pads), homeland));
+    result.layoutRevision = layoutRevision;
     result.anchors = anchors;
     result.regions = std::move(protectedRegions);
     result.relayCoverageMeters = settings.relayCoverageMeters;
@@ -1566,6 +1575,19 @@ void BuildConnections(GeneratedPlanet &result, const GenerationSettings &setting
         return node;
     };
     std::set<std::pair<unsigned, unsigned>> used;
+    const bool distributed = result.layoutRevision >= 4;
+    std::vector<unsigned> degree(sites, 0);
+    auto authored = [&](unsigned node) {
+        return result.cityCores && result.cityCores->Find(result.nodes[node].regionId);
+    };
+    // Keep one slot for local relay access, plus the authored city's physical approach.
+    auto regionalLimit = [&](unsigned node) { return authored(node) ? 2u : 3u; };
+    std::vector<unsigned> junction(sites), ports(sites, 0), portLimit;
+    std::iota(junction.begin(), junction.end(), 0u);
+    for (unsigned i = 0; i < sites; ++i)
+    {
+        portLimit.push_back(authored(i) ? 3u : 4u);
+    }
     auto connect = [&](unsigned a, unsigned b) {
         if (cancel && cancel->load())
         {
@@ -1580,11 +1602,23 @@ void BuildConnections(GeneratedPlanet &result, const GenerationSettings &setting
             return;
         }
         result.connections.push_back(Connect(result, a, b, settings));
+        ++degree[a];
+        ++degree[b];
+        if (junction[a] != junction[b])
+        {
+            ++ports[junction[a]];
+            ++ports[junction[b]];
+        }
     };
     for (auto pair : pairs)
     {
         unsigned a = root(pair.a), b = root(pair.b);
         if (a == b)
+        {
+            continue;
+        }
+        if (distributed &&
+            (degree[pair.a] >= regionalLimit(pair.a) || degree[pair.b] >= regionalLimit(pair.b)))
         {
             continue;
         }
@@ -1604,6 +1638,11 @@ void BuildConnections(GeneratedPlanet &result, const GenerationSettings &setting
             {
                 continue;
             }
+            if (distributed &&
+                (degree[pair.a] >= regionalLimit(pair.a) || degree[pair.b] >= regionalLimit(pair.b)))
+            {
+                continue;
+            }
             if (!used.count({pair.a, pair.b}))
             {
                 connect(pair.a, pair.b);
@@ -1616,22 +1655,55 @@ void BuildConnections(GeneratedPlanet &result, const GenerationSettings &setting
     }
     for (const auto &relay : result.relays)
     {
-        unsigned nearest = 0;
-        double distance = std::numeric_limits<double>::infinity();
-        for (unsigned i = 0; i < sites; ++i)
+        unsigned sharedJunction = unsigned(result.nodes.size());
+        if (distributed)
         {
-            if (result.nodes[i].regionId == relay.regionId)
+            for (unsigned i = 0; i < result.nodes.size(); ++i)
             {
-                double candidate = Distance(p, result.nodes[i].location.position, relay.location.position);
-                if (candidate < distance)
+                if (result.nodes[i].regionId == relay.regionId &&
+                    Distance(p, result.nodes[i].location.position, relay.location.position) < .5 &&
+                    std::abs(result.nodes[i].location.position.altitudeMeters -
+                             relay.location.position.altitudeMeters) < .5)
                 {
-                    distance = candidate;
-                    nearest = i;
+                    sharedJunction = junction[i];
+                    break;
                 }
             }
         }
+        unsigned nearest = 0;
+        double distance = std::numeric_limits<double>::infinity();
+        for (unsigned i = 0; i < (distributed ? result.nodes.size() : sites); ++i)
+        {
+            if (result.nodes[i].regionId != relay.regionId)
+            {
+                continue;
+            }
+            if (distributed)
+            {
+                const auto physical = junction[i];
+                const bool samePad = physical == sharedJunction;
+                const bool newPadHasRoom = sharedJunction == result.nodes.size() ||
+                                           ports[sharedJunction] < portLimit[sharedJunction];
+                if (degree[i] >= (!result.nodes[i].relay && authored(i) ? 3u : 4u) ||
+                    (!samePad && (ports[physical] >= portLimit[physical] || !newPadHasRoom)))
+                {
+                    continue;
+                }
+            }
+            double candidate = Distance(p, result.nodes[i].location.position, relay.location.position);
+            if (candidate < distance)
+            {
+                distance = candidate;
+                nearest = i;
+            }
+        }
+        Require(std::isfinite(distance), "Relay has no available regional road junction");
         unsigned index = unsigned(result.nodes.size());
         result.nodes.push_back({relay.id, relay.regionId, relay.location, true});
+        degree.push_back(0);
+        junction.push_back(sharedJunction);
+        ports.push_back(0);
+        portLimit.push_back(4);
         connect(nearest, index);
     }
 }
@@ -1639,6 +1711,7 @@ void BuildConnections(GeneratedPlanet &result, const GenerationSettings &setting
 
 void GeneratedPlanet::Validate() const
 {
+    Require(ContentLayout::SupportsRevision(layoutRevision), "Unsupported generated layout revision");
     const auto &p = terrain.Planet();
     p.Validate();
     Require(std::isfinite(relayCoverageMeters) && relayCoverageMeters >= 500 &&
@@ -1764,6 +1837,53 @@ void GeneratedPlanet::Validate() const
         }
         Require(std::fabs(length - edge.lengthMeters) < .01, "Travel length does not match its path");
     }
+    if (layoutRevision >= 4)
+    {
+        std::vector<unsigned> degree(nodes.size(), 0);
+        for (const auto &edge : connections)
+        {
+            ++degree[edge.from];
+            ++degree[edge.to];
+        }
+        for (size_t i = 0; i < nodes.size(); ++i)
+        {
+            const bool physicalApproach = !nodes[i].relay && cityCores && cityCores->Find(nodes[i].regionId);
+            Require(degree[i] <= (physicalApproach ? 3u : 4u), "Too many roads share one junction");
+        }
+        // A site and its first relay may occupy the same pad; their virtual edge is not a road arm.
+        std::vector<unsigned> junction(nodes.size()), ports(nodes.size(), 0), limits(nodes.size(), 4);
+        for (unsigned i = 0; i < nodes.size(); ++i)
+        {
+            junction[i] = i;
+            for (unsigned j = 0; j < i; ++j)
+            {
+                if (nodes[i].regionId == nodes[j].regionId &&
+                    Distance(p, nodes[i].location.position, nodes[j].location.position) < .5 &&
+                    std::abs(nodes[i].location.position.altitudeMeters -
+                             nodes[j].location.position.altitudeMeters) < .5)
+                {
+                    junction[i] = junction[j];
+                    break;
+                }
+            }
+            if (!nodes[i].relay && cityCores && cityCores->Find(nodes[i].regionId))
+            {
+                limits[junction[i]] = 3;
+            }
+        }
+        for (const auto &edge : connections)
+        {
+            if (junction[edge.from] != junction[edge.to])
+            {
+                ++ports[junction[edge.from]];
+                ++ports[junction[edge.to]];
+            }
+        }
+        for (size_t i = 0; i < ports.size(); ++i)
+        {
+            Require(ports[i] <= limits[i], "Coincident road nodes exceed physical junction capacity");
+        }
+    }
     Require(Connected(), "Generated travel graph is disconnected");
 }
 std::uint64_t GeneratedPlanet::Digest() const
@@ -1797,6 +1917,11 @@ std::uint64_t GeneratedPlanet::Digest() const
     };
     const auto &p = terrain.Planet();
     text(p.id);
+    // Revision 3 keeps its original byte-for-byte digest for existing checkpoints.
+    if (layoutRevision != LegacyLayoutRevision)
+    {
+        number(layoutRevision);
+    }
     number(p.seed);
     number(p.generatorVersion);
     scalar(p.radiusMeters);

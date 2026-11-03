@@ -750,9 +750,15 @@ void TestOpenWorldParticipation()
 {
     using namespace tutorial;
     QuestParticipation participation;
+    assert(participation.Tracked() == MissionId::Count && !participation.Track(MissionId::Mine));
+    assert(!participation.Track(MissionId::Count));
+    assert(participation.Accept(MissionId::Mara, true) && participation.Tracked() == MissionId::Mara);
     assert(!participation.Accept(MissionId::Mine, false));
     assert(participation.Accept(MissionId::Mine, true) && !participation.Accept(MissionId::Mine, true));
+    assert(participation.Tracked() == MissionId::Mara);
+    assert(participation.Track(MissionId::Mine) && participation.Tracked() == MissionId::Mine);
     assert(participation.Pause(MissionId::Mine) && !participation.Complete(MissionId::Mine));
+    assert(participation.Tracked() == MissionId::Count && participation.Active(MissionId::Mara));
     assert(participation.Accept(MissionId::Mine, true) && participation.Complete(MissionId::Mine));
     assert(!participation.Accept(MissionId::Mine, true) && !participation.Complete(MissionId::Mine));
     auto &g = Game::Get();
@@ -792,6 +798,14 @@ void TestOpenWorldParticipation()
     g.InteractWithNearbyTarget();
     read(1);
     assert(w.homeMessageRead && w.missions.Status(MissionId::Signal) == MissionStatus::NotAccepted);
+    assert(g.MissionRestriction(MissionId::Mine) && !g.MissionEligible(MissionId::Mine));
+    assert(w.missions.Accept(MissionId::Mara, true));
+    assert(w.missions.Accept(MissionId::Signal, true));
+    assert(w.missions.Track(MissionId::Signal) && g.FocusedMission() == MissionId::Signal);
+    assert(std::string(g.MissionObjective()).find("전망대") != std::string::npos);
+    assert(w.missions.Track(MissionId::Mara) && g.FocusedMission() == MissionId::Mara);
+    assert(w.missions.Pause(MissionId::Signal) && w.missions.Pause(MissionId::Mara));
+    w.missions = {}; // Restore the freely visited, never-accepted scenario below.
     w.playerPosition = {2.4f, 2.4f};
     g.InteractWithNearbyTarget();
     assert(!w.isInsideHome);
@@ -1481,6 +1495,48 @@ void TestPlanetCommunity()
     const auto personPosition = community->State().sites.front().residents.back().position;
     const auto nearby = G::Advance(G::Frame(personPosition), 0, 4, g.Surface()->Planet().radiusMeters).origin;
     assert(g.RelocateSurfaceSurvey(nearby));
+    // Isolate one real saved community actor; the sweep must hit even when both endpoints miss.
+    auto collisionFixture = initial;
+    collisionFixture.sites.resize(1);
+    for (auto &person : collisionFixture.sites.front().residents)
+    {
+        person.health = 0;
+    }
+    collisionFixture.sites.front().residents.back().health = 100;
+    collisionFixture.sites.front().residents.back().hitFlash = 0;
+    *community = PlanetCommunity(collisionFixture);
+    community->Bind(plan);
+    const auto personLocal = g.Surface()->Local(personPosition);
+    auto from = g.Surface()->PointAt(personLocal.x - 6, personLocal.y);
+    auto to = g.Surface()->PointAt(personLocal.x + 6, personLocal.y);
+    from.altitudeMeters = to.altitudeMeters = personPosition.altitudeMeters;
+    w.isBikeMounted = true;
+    w.bikeYaw = 0;
+    w.bikeSpeed = 12;
+    w.bikeVelocity = {12, 0};
+    PlanetSecurity::Project();
+    const auto stopped = BodyCollision::SurfaceBikeContacts(from, to, 0, 12);
+    assert(stopped.x < personLocal.x / 2 - .5 &&
+           community->State().sites.front().residents.back().health < 100);
+    assert(CivicJustice::State().wanted == 0 && CivicJustice::State().heat == 0);
+    assert(community->Blocked(personPosition, .32) && !community->Blocked(personPosition, .32, false));
+    assert(community->Blocked(contact, .32, false)); // A terminal remains solid for a mounted rider.
+    *community = PlanetCommunity(collisionFixture);
+    community->Bind(plan);
+    from.altitudeMeters += 10;
+    to.altitudeMeters += 10;
+    const auto overpass = BodyCollision::SurfaceBikeContacts(from, to, 0, 12);
+    assert(std::abs(overpass.x - float(g.Surface()->Local(to).x / 2)) < .001f);
+    assert(community->State().sites.front().residents.back().health == 100);
+    const auto escape = BodyCollision::SurfaceBikeContacts(
+        personPosition, g.Surface()->PointAt(personLocal.x - 6, personLocal.y), 0, .65f);
+    assert(escape.x < personLocal.x / 2 - 2.9 &&
+           community->State().sites.front().residents.back().health == 100);
+    w.isBikeMounted = false;
+    w.bikeSpeed = 0;
+    w.bikeVelocity = {};
+    *community = PlanetCommunity(initial);
+    community->Bind(plan);
     CivicJustice::State().infamy = 40;
     community->Update(.05f, true);
     assert(community->State().sites.front().residents.back().fearSeconds > 0);

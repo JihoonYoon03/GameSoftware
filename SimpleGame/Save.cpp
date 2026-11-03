@@ -203,6 +203,7 @@ class SaveArchive
         Checkpoint c;
         c.planet = g.surface->Planet();
         c.digest = g.surface->Stream().Snapshot()->planet->Digest();
+        c.layout = g.surface->Stream().Snapshot()->planet->layoutRevision;
         c.pose = g.surface->Pose();
         c.origin = g.surface->Origin();
         c.bike = g.surfaceBike;
@@ -1129,7 +1130,7 @@ void Validate(const Checkpoint &c)
                     "동료가 있는 개척지 데이터가 없습니다.");
         }
     }
-    Require(c.layout == world::ContentLayout::Revision,
+    Require(world::ContentLayout::SupportsRevision(c.layout),
             "도시 배치 버전이 다릅니다. 원본 저장을 보존하고 같은 버전으로 불러와 주세요.");
     G::Validate(c.pose);
     G::Validate(c.origin);
@@ -1396,7 +1397,7 @@ Campaign Decode(const std::filesystem::path &path)
     auto envelope = ReadEnvelope(path);
     Require(envelope.schema >= 1 && envelope.schema <= kSchema,
             "저장 형식 버전이 다릅니다. 원본 파일은 변경하지 않았습니다.");
-    Require(envelope.layout == world::ContentLayout::Revision,
+    Require(world::ContentLayout::SupportsRevision(envelope.layout),
             "저장된 도시 배치 버전이 현재 게임과 다릅니다.");
     std::vector<unsigned char> communityExtension;
     if (envelope.schema >= 7)
@@ -1561,7 +1562,7 @@ void WriteAtomic(const std::filesystem::path &path, const std::vector<unsigned c
             // Preserve intact older/newer version files too; unreadable corruption must not replace a good
             // backup.
             if ((envelope.schema >= 1 && envelope.schema <= kSchema) &&
-                envelope.layout == world::ContentLayout::Revision)
+                world::ContentLayout::SupportsRevision(envelope.layout))
             {
                 Decode(path);
             }
@@ -1661,6 +1662,7 @@ void MigrateParty(Checkpoint &c, const world::GeneratedPlanet &plan)
 }
 void ValidateRegistry(const Checkpoint &c, const world::GeneratedPlanet &plan)
 {
+    Require(c.layout == plan.layoutRevision, "저장과 생성된 월드의 배치 버전이 다릅니다.");
     auto communityPlan = std::shared_ptr<const world::GeneratedPlanet>(&plan, [](const auto *) {});
     PlanetCommunity community(c.community);
     community.Bind(std::move(communityPlan));
@@ -1732,6 +1734,7 @@ void Prepare(PendingLoad &load)
     auto &c = load.checkpoint;
     auto generator = world::PlanetProfiles::Generator(
         c.planet, c.planet.storyPlanet ? Overworld::StoryAnchors() : std::vector<world::StoryAnchor>{});
+    generator = generator.WithLayoutRevision(c.layout);
     if (c.planet.storyPlanet)
     {
         struct BorrowChapter

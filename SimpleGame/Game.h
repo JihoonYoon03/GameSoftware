@@ -185,12 +185,16 @@ class QuestParticipation
     bool Accept(MissionId id, bool eligible);
     bool Pause(MissionId id);
     bool Complete(MissionId id);
+    bool Track(MissionId id);
+    MissionId Tracked() const;
     static const char *Name(MissionId id);
     static const char *Key(MissionId id);
     static const char *Label(MissionStatus status);
 
   private:
     std::array<MissionStatus, size_t(MissionId::Count)> states = {};
+    // Display preference only; checkpoint wire format continues to contain states alone.
+    MissionId tracked = MissionId::Count;
 };
 
 enum class InteractionTarget
@@ -358,7 +362,8 @@ enum class UiAction
     LoadWorld,
     CancelLoad,
     Profiles,
-    SelectProfile
+    SelectProfile,
+    TrackMission
 };
 struct UiPreferences
 {
@@ -563,6 +568,8 @@ class Game
     void Reset();
     void StartNewGame();
     bool MissionEligible(MissionId id) const;
+    const char *MissionRestriction(MissionId id) const;
+    MissionId FocusedMission() const;
     const char *MissionObjective() const;
     void OfferMission(MissionId id);
     void ManageMission(MissionId id);
