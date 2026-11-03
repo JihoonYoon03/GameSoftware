@@ -67,7 +67,9 @@ const char *counterNames[] = {"draw_calls",
                               "planet_traffic_detailed_ticks",
                               "planet_traffic_far_ticks",
                               "companion_handoffs",
-                              "traffic_handoffs"};
+                              "traffic_handoffs",
+                              "community_sites_prepared",
+                              "community_detailed_ticks"};
 const char *timerNames[] = {"frame_cpu",
                             "update",
                             "movement",
@@ -100,7 +102,8 @@ const char *timerNames[] = {"frame_cpu",
                             "planet_traffic",
                             "planet_traffic_prepare",
                             "planet_party",
-                            "planet_security"};
+                            "planet_security",
+                            "planet_community"};
 static_assert(sizeof(counterNames) / sizeof(*counterNames) == kCounterCount);
 static_assert(sizeof(timerNames) / sizeof(*timerNames) == kTimerCount);
 struct Sample

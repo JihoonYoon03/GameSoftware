@@ -26,7 +26,7 @@ namespace tutorial
 namespace
 {
 constexpr std::uint64_t kMaximumFile = 16 * 1024 * 1024;
-constexpr unsigned kSchema = 6;
+constexpr unsigned kSchema = 7;
 void Require(bool value, const char *message)
 {
     if (!value)
@@ -52,6 +52,8 @@ struct Checkpoint
     PlanetPartyState party;
     PlanetSecurityState security;
     std::vector<PlanetTrafficLink> trafficLinks;
+    PlanetCommunityState community;
+    bool legacyLeftTraffic = false;
 };
 std::string WorldKey(const world::PlanetDefinition &planet)
 {
@@ -74,6 +76,7 @@ struct PendingLoad
     std::unique_ptr<world::SurfaceSession> session;
     std::unique_ptr<PlanetTraffic> traffic;
     std::unique_ptr<PlanetParty> party;
+    std::unique_ptr<PlanetCommunity> community;
     std::chrono::steady_clock::time_point began = std::chrono::steady_clock::now();
     bool validated = false, restored = false, backup = false;
     bool switching = false, fresh = false;
@@ -224,6 +227,10 @@ class SaveArchive
         {
             c.party = g.surfaceParty->State();
         }
+        if (g.surfaceCommunity)
+        {
+            c.community = g.surfaceCommunity->State();
+        }
         // The memory ledger follows disk persistence rules too: no held inputs, callbacks,
         // projectiles, menu state, render resources or temporary worker ownership survive a visit.
         SaveArchive writer(false);
@@ -232,6 +239,7 @@ class SaveArchive
         writer.Value(c.party);
         writer.Value(c.security);
         writer.Value(c.trafficLinks);
+        writer.Value(c.community);
         Checkpoint clean;
         SaveArchive reader(true, writer.Bytes());
         reader.Value(clean);
@@ -239,6 +247,7 @@ class SaveArchive
         reader.Value(clean.party);
         reader.Value(clean.security);
         reader.Value(clean.trafficLinks);
+        reader.Value(clean.community);
         ApplyTrafficLinks(clean);
         return clean;
     }
@@ -991,6 +1000,68 @@ class SaveArchive
             }
         }
     }
+    void Value(CommunityResident &v)
+    {
+        Fields(v.id, v.appearance, v.path, v.position, v.heading, v.distanceMeters, v.speed, v.fearSeconds,
+               v.hitFlash, v.corpseSeconds, v.direction, v.health);
+    }
+    void Value(CommunitySite &v)
+    {
+        Fields(v.regionId, v.contact, v.target, v.task);
+        const auto count = Count(v.residents.size());
+        Require(count <= PlanetCommunity::ResidentsPerSite, "현장 주민 수가 상한을 초과했습니다.");
+        if (reading)
+        {
+            v.residents.resize(size_t(count));
+        }
+        for (auto &person : v.residents)
+        {
+            Value(person);
+        }
+    }
+    void Value(PlanetCommunityState &v)
+    {
+        Value(v.worldKey);
+        const auto count = Count(v.sites.size());
+        Require(count <= PlanetCommunity::SiteLimit, "현장 거점 수가 상한을 초과했습니다.");
+        if (reading)
+        {
+            v.sites.resize(size_t(count));
+        }
+        for (auto &site : v.sites)
+        {
+            Value(site);
+        }
+    }
+    void CommunityRecords(Campaign &v)
+    {
+        std::uint64_t count = v.worlds.size();
+        Value(count);
+        Require(count == v.worlds.size(), "지역 활동 확장의 월드 수가 다릅니다.");
+        std::set<std::string> keys;
+        if (reading)
+        {
+            for (std::uint64_t i = 0; i < count; ++i)
+            {
+                std::string key;
+                bool legacy = false;
+                PlanetCommunityState community;
+                Fields(key, legacy, community);
+                Require(v.worlds.count(key) && keys.insert(key).second,
+                        "지역 활동 확장의 월드 ID가 올바르지 않습니다.");
+                v.worlds.at(key).community = std::move(community);
+                v.worlds.at(key).legacyLeftTraffic = legacy;
+            }
+        }
+        else
+        {
+            for (auto &entry : v.worlds)
+            {
+                auto key = entry.first;
+                Fields(key, entry.second.legacyLeftTraffic, entry.second.community);
+            }
+        }
+    }
     void Value(Checkpoint &v)
     {
         Fields(v.planet, v.layout, v.digest, v.pose, v.origin, v.bike, v.bikeHeading, v.mineReturn, v.game,
@@ -1044,6 +1115,7 @@ void Validate(const Checkpoint &c)
     PlanetParty::Validate(c.party, c.planet);
     PlanetSecurity::Validate(c.security, c.civic, c.planet);
     SaveArchive::ValidateTrafficLinks(c);
+    PlanetCommunity::Validate(c.community, c.planet);
     if (!c.party.worldKey.empty() && c.planet.storyPlanet)
     {
         Require(c.party.members[0].joined == c.mine.quest.IsRiaJoined() &&
@@ -1326,6 +1398,20 @@ Campaign Decode(const std::filesystem::path &path)
             "저장 형식 버전이 다릅니다. 원본 파일은 변경하지 않았습니다.");
     Require(envelope.layout == world::ContentLayout::Revision,
             "저장된 도시 배치 버전이 현재 게임과 다릅니다.");
+    std::vector<unsigned char> communityExtension;
+    if (envelope.schema >= 7)
+    {
+        Require(envelope.payload.size() >= 8, "지역 활동 확장의 길이 정보가 없습니다.");
+        SaveArchive footer(true,
+                           std::vector<unsigned char>(envelope.payload.end() - 8, envelope.payload.end()));
+        std::uint64_t size = 0;
+        footer.Value(size);
+        Require(size > 0 && size <= envelope.payload.size() - 8,
+                "지역 활동 확장의 길이가 올바르지 않습니다.");
+        const size_t start = envelope.payload.size() - 8 - size_t(size);
+        communityExtension.assign(envelope.payload.begin() + start, envelope.payload.end() - 8);
+        envelope.payload.resize(start);
+    }
     std::vector<unsigned char> linkExtension;
     if (envelope.schema >= 6)
     {
@@ -1421,6 +1507,19 @@ Campaign Decode(const std::filesystem::path &path)
         for (auto &entry : result.worlds)
         {
             SaveArchive::ApplyTrafficLinks(entry.second);
+        }
+    }
+    if (envelope.schema >= 7)
+    {
+        SaveArchive community(true, std::move(communityExtension));
+        community.CommunityRecords(result);
+        Require(community.Finished(), "지역 활동 확장에 지원하지 않는 데이터가 있습니다.");
+    }
+    else
+    {
+        for (auto &entry : result.worlds)
+        {
+            entry.second.legacyLeftTraffic = true;
         }
     }
     ValidateCampaign(result);
@@ -1562,6 +1661,9 @@ void MigrateParty(Checkpoint &c, const world::GeneratedPlanet &plan)
 }
 void ValidateRegistry(const Checkpoint &c, const world::GeneratedPlanet &plan)
 {
+    auto communityPlan = std::shared_ptr<const world::GeneratedPlanet>(&plan, [](const auto *) {});
+    PlanetCommunity community(c.community);
+    community.Bind(std::move(communityPlan));
     world::RelayNetwork expected;
     expected.Bind(c.planet);
     Require(c.game.relayNetwork.WorldKey() == expected.WorldKey(),
@@ -1808,6 +1910,12 @@ bool SaveSystem::Save(const std::filesystem::path &path)
         linkFooter.Value(linkSize);
         payload.insert(payload.end(), links.Bytes().begin(), links.Bytes().end());
         payload.insert(payload.end(), linkFooter.Bytes().begin(), linkFooter.Bytes().end());
+        SaveArchive community(false), communityFooter(false);
+        community.CommunityRecords(candidate);
+        std::uint64_t communitySize = community.Bytes().size();
+        communityFooter.Value(communitySize);
+        payload.insert(payload.end(), community.Bytes().begin(), community.Bytes().end());
+        payload.insert(payload.end(), communityFooter.Bytes().begin(), communityFooter.Bytes().end());
         Require(payload.size() <= kMaximumFile, "저장 데이터가 허용 크기를 초과했습니다.");
         SaveArchive header(false);
         unsigned char magic[8] = {'S', 'G', 'W', 'O', 'R', 'L', 'D', 0};
@@ -2009,7 +2117,15 @@ void SaveSystem::Update()
             MigrateParty(c, *snapshot->planet);
             PlanetSecurity::Migrate(c.security, c.civic, c.planet, c.origin);
             Validate(c);
+            if (c.legacyLeftTraffic)
+            {
+                PlanetTraffic::MigrateLanes(c.transit, snapshot->planet);
+                c.legacyLeftTraffic = false;
+            }
             ValidateRegistry(c, *snapshot->planet);
+            load.community = std::make_unique<PlanetCommunity>(c.community);
+            load.community->Bind(snapshot->planet);
+            c.community = load.community->State();
             load.traffic = std::make_unique<PlanetTraffic>(c.transit);
             load.traffic->Bind(snapshot->planet);
             c.transit = load.traffic->State();
@@ -2051,6 +2167,7 @@ void SaveSystem::Update()
         g.surfaceCities = std::move(cities);
         g.surfaceTraffic = std::move(ready->traffic);
         g.surfaceParty = std::move(ready->party);
+        g.surfaceCommunity = std::move(ready->community);
         g.surfaceBike = record.bike;
         g.surfaceBikeHeading = record.bikeHeading;
         g.surfaceMineReturn = record.mineReturn;

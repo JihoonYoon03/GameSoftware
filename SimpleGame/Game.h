@@ -19,6 +19,7 @@ class SaveSystem;
 class PlanetCities;
 class PlanetTraffic;
 class PlanetParty;
+class PlanetCommunity;
 enum class CompanionId : std::uint8_t;
 enum class CompanionPlace : std::uint8_t;
 struct Vector2
@@ -210,7 +211,8 @@ enum class InteractionTarget
     Kain,
     MineEntrance,
     FrontierSite,
-    Relay
+    Relay,
+    Community
 };
 
 constexpr float kPi = 3.14159265f;
@@ -539,6 +541,10 @@ class Game
     {
         return surfaceParty.get();
     }
+    PlanetCommunity *SurfaceCommunity() const
+    {
+        return surfaceCommunity.get();
+    }
     bool HasCompanion(CompanionId id, CompanionPlace place) const;
     std::optional<Vector2> ResidentPosition(const Resident &resident) const;
     bool RelocateSurfaceSurvey(const world::SurfacePoint &point);
@@ -590,6 +596,7 @@ class Game
     std::unique_ptr<PlanetCities> surfaceCities;
     std::unique_ptr<PlanetTraffic> surfaceTraffic;
     std::unique_ptr<PlanetParty> surfaceParty;
+    std::unique_ptr<PlanetCommunity> surfaceCommunity;
     std::optional<world::SurfacePoint> surfaceBike;
     std::optional<world::Vector3d> surfaceBikeHeading;
     std::optional<world::SurfacePoint> surfaceMineReturn;

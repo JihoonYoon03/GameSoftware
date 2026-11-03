@@ -322,6 +322,7 @@ bool PlanetParty::Clear(const world::SurfacePoint &point, int except) const
            (!g.SurfaceBike() || world::SurfaceGeometry::Distance(planet->terrain.Planet().radiusMeters,
                                                                  *g.SurfaceBike(), point) >= 1) &&
            (!g.SurfaceTraffic() || !g.SurfaceTraffic()->Blocked(point, .32)) &&
+           (!g.SurfaceCommunity() || !g.SurfaceCommunity()->Blocked(point, .32)) &&
            (!g.SurfaceCities() || !g.SurfaceCities()->OccupiedAt(g.GetState(), *g.Surface(), point));
 }
 void PlanetParty::Update(float seconds)
@@ -2418,6 +2419,57 @@ void PlanetTraffic::Validate(const PlanetTrafficState &s, const world::PlanetDef
 }
 void PlanetTraffic::Bind(std::shared_ptr<const world::GeneratedPlanet> input)
 {
+    BindLayout(std::move(input), false);
+}
+void PlanetTraffic::MigrateLanes(PlanetTrafficState &record,
+                                 std::shared_ptr<const world::GeneratedPlanet> input)
+{
+    // Some old-format files already contain corrected positions (including legacy test exports).
+    try
+    {
+        PlanetTraffic current(record);
+        current.Bind(input);
+        record = current.State();
+        return;
+    }
+    catch (const std::invalid_argument &)
+    {
+    }
+    PlanetTraffic previous(record), current;
+    previous.BindLayout(input, true); // Validate the old lane geometry before migrating it.
+    current.Bind(input);
+    auto migrated = previous.State();
+    for (auto &actor : migrated.actors)
+    {
+        if (actor.airborne)
+        {
+            continue;
+        }
+        const auto *oldRoute = previous.Find(actor.routeId), *route = current.Find(actor.routeId);
+        if (!oldRoute || !route)
+        {
+            throw std::invalid_argument("교통 차선 이전 경로가 없습니다.");
+        }
+        if (route->portalCity >= 0)
+        {
+            actor.distanceMeters *= route->lengthMeters / oldRoute->lengthMeters;
+        }
+        if (actor.city >= 0)
+        {
+            continue;
+        }
+        actor.position = current.Position(*route, actor.distanceMeters, actor.direction);
+        actor.position.altitudeMeters =
+            (std::max)(world::PlanetTerrain::SeaLevelMeters, input->terrain.Height(actor.position));
+        actor.heading = TG::Unit(
+            TransitAdd(actor.heading, actor.position.normal, -TG::Dot(actor.heading, actor.position.normal)));
+    }
+    PlanetTraffic verified(migrated);
+    verified.Bind(input);
+    record = verified.State();
+}
+void PlanetTraffic::BindLayout(std::shared_ptr<const world::GeneratedPlanet> input, bool legacyLeft)
+{
     if (!input)
     {
         throw std::invalid_argument("Missing traffic world");
@@ -2429,6 +2481,7 @@ void PlanetTraffic::Bind(std::shared_ptr<const world::GeneratedPlanet> input)
     profiling::Scope prepareTimer(profiling::Timer::PlanetTrafficPrepare);
     const auto &p = input->terrain.Planet();
     const auto digest = input->Digest();
+    const double side = legacyLeft ? 1. : -1.;
     Validate(state, p, digest);
     auto prepared = std::make_shared<std::vector<PlanetTrafficRoute>>();
     auto add = [&](PlanetTrafficRoute route) {
@@ -2572,8 +2625,9 @@ void PlanetTraffic::Bind(std::shared_ptr<const world::GeneratedPlanet> input)
                         return at(join);
                     }
                     const double reach = (std::min)(24., length * .5);
-                    return at({join.x + dx / length * reach + (entry ? 1 : -1) * dy / length * 1.5,
-                               join.y + dy / length * reach - (entry ? 1 : -1) * dx / length * 1.5, 0});
+                    return at({join.x + dx / length * reach + side * (entry ? 1 : -1) * dy / length * 1.5,
+                               join.y + dy / length * reach - side * (entry ? 1 : -1) * dx / length * 1.5,
+                               0});
                 };
                 if (entry)
                 {
@@ -2590,8 +2644,8 @@ void PlanetTraffic::Bind(std::shared_ptr<const world::GeneratedPlanet> input)
                     auto point = points[i];
                     if (length > .001)
                     {
-                        point.x += dy / length * 1.5;
-                        point.y -= dx / length * 1.5;
+                        point.x += side * dy / length * 1.5;
+                        point.y -= side * dx / length * 1.5;
                     }
                     route.points.push_back(at(point));
                 }
@@ -2648,6 +2702,7 @@ void PlanetTraffic::Bind(std::shared_ptr<const world::GeneratedPlanet> input)
     }
     PlanetTraffic probe;
     probe.planet = input;
+    probe.leftTraffic = legacyLeft;
     for (const auto &actor : state.actors)
     {
         if (actor.city >= 0)
@@ -2666,6 +2721,7 @@ void PlanetTraffic::Bind(std::shared_ptr<const world::GeneratedPlanet> input)
         }
     }
     planet = std::move(input);
+    leftTraffic = legacyLeft;
     routes = std::move(prepared);
     routeIndex = std::move(index);
     groundConnections = std::move(adjacency);
@@ -2714,7 +2770,9 @@ world::SurfacePoint PlanetTraffic::Position(const PlanetTrafficRoute &route, dou
     }
     else if (!route.airborne && route.portalCity < 0)
     {
-        auto right = TG::Unit(TG::Cross(tangent, point.normal));
+        // The game uses downward local Y: match RoadNetwork::RightOf({x,y}) == {-y,x}.
+        auto right =
+            TG::Unit(leftTraffic ? TG::Cross(tangent, point.normal) : TG::Cross(point.normal, tangent));
         const double lane =
             1.5 * direction * std::clamp((std::min)(clamped, route.lengthMeters - clamped) / 20., 0., 1.);
         point = TG::Advance(frame, TG::Dot(right, frame.right) * lane, TG::Dot(right, frame.forward) * lane,
@@ -3275,6 +3333,23 @@ void PlanetTraffic::Advance(PlanetTrafficActor &actor, float seconds, const Game
                     }
                 }
             }
+            if (auto *community = Game::Get().SurfaceCommunity())
+            {
+                for (const auto &site : community->State().sites)
+                {
+                    for (const auto &person : site.residents)
+                    {
+                        if (person.health > 0 && hit(person.position))
+                        {
+                            if (actor.speedMeters > 2)
+                            {
+                                community->Damage(person.id, int(8 + actor.speedMeters * 2), false);
+                            }
+                            npcContact = true;
+                        }
+                    }
+                }
+            }
             for (const auto &record : PlanetSecurity::State().officers)
             {
                 auto &officers = CivicJustice::State().officers;
@@ -3351,10 +3426,11 @@ void PlanetTraffic::Populate(const GameState &world, const world::SurfaceSession
         {
             continue; // Portals receive real cars; they never spawn copies.
         }
-        auto near = TransitNearest((*routes)[i], session.Pose().origin, session.Planet().radiusMeters);
-        if (near >= 0)
+        auto nearestProgress =
+            TransitNearest((*routes)[i], session.Pose().origin, session.Planet().radiusMeters);
+        if (nearestProgress >= 0)
         {
-            candidates.push_back({i, near});
+            candidates.push_back({i, nearestProgress});
         }
     }
     if (candidates.empty())
@@ -3488,6 +3564,639 @@ void PlanetTraffic::Update(GameState &world, const world::SurfaceSession &sessio
         state.spawnSeconds = .75f;
         Populate(world, session);
     }
+}
+
+// ============================================================================
+// PlanetCommunity — lazy, deterministic hub preparation; physical actors survive streaming and visits
+// ============================================================================
+PlanetCommunity::PlanetCommunity(PlanetCommunityState value) : state(std::move(value))
+{
+}
+void PlanetCommunity::Validate(const PlanetCommunityState &value, const world::PlanetDefinition &p)
+{
+    auto require = [](bool ok) {
+        if (!ok)
+        {
+            throw std::invalid_argument("지역 주민/현장 의뢰 기록이 올바르지 않습니다.");
+        }
+    };
+    world::RelayNetwork key;
+    key.Bind(p);
+    require((value.worldKey.empty() && value.sites.empty()) || value.worldKey == key.WorldKey());
+    require(value.sites.size() <= SiteLimit);
+    std::set<std::string> regions, ids;
+    for (const auto &site : value.sites)
+    {
+        require(world::WorldIdentity::ValidId(site.regionId) && regions.insert(site.regionId).second &&
+                site.task <= 3 && site.residents.size() >= 2 && site.residents.size() <= ResidentsPerSite);
+        TG::Validate(site.contact);
+        TG::Validate(site.target);
+        for (const auto &person : site.residents)
+        {
+            require(ids.insert(person.id).second && person.id.size() <= 512 && person.health >= 0 &&
+                    person.health <= 100 && (person.direction == -1 || person.direction == 1) &&
+                    std::isfinite(person.distanceMeters) && person.distanceMeters >= 0 &&
+                    person.distanceMeters <= 200 && std::isfinite(person.speed) && person.speed >= 0 &&
+                    person.speed <= 3 && std::isfinite(person.fearSeconds) && person.fearSeconds >= 0 &&
+                    person.fearSeconds <= 30 && std::isfinite(person.hitFlash) && person.hitFlash >= 0 &&
+                    person.hitFlash <= 1 && std::isfinite(person.corpseSeconds) &&
+                    person.corpseSeconds >= 0 && person.corpseSeconds <= 60);
+            TG::Validate(person.position);
+            for (const auto &point : person.path)
+            {
+                TG::Validate(point);
+            }
+            const double magnitude = TG::Dot(person.heading, person.heading);
+            require(std::isfinite(magnitude) && std::abs(magnitude - 1) < 1.e-5 &&
+                    std::abs(TG::Dot(person.heading, person.position.normal)) < 1.e-5);
+        }
+    }
+}
+void PlanetCommunity::Bind(std::shared_ptr<const world::GeneratedPlanet> input)
+{
+    if (!input)
+    {
+        throw std::invalid_argument("지역 활동 월드가 없습니다.");
+    }
+    if (planet == input)
+    {
+        return;
+    }
+    const auto &p = input->terrain.Planet();
+    Validate(state, p);
+    for (const auto &site : state.sites)
+    {
+        const auto &region = input->Region(site.regionId);
+        if (region.center.space != world::SpaceKind::Surface ||
+            (region.definition.kind != world::RegionKind::Settlement &&
+             region.definition.kind != world::RegionKind::Outpost) ||
+            (input->cityCores && input->cityCores->Find(site.regionId)) ||
+            TG::Distance(p.radiusMeters, region.access.position, site.contact) > 220 ||
+            TG::Distance(p.radiusMeters, region.access.position, site.target) > 220 ||
+            TG::Distance(p.radiusMeters, site.contact, site.target) < 12 ||
+            std::abs(input->terrain.Height(site.contact) - site.contact.altitudeMeters) > .25 ||
+            std::abs(input->terrain.Height(site.target) - site.target.altitudeMeters) > .25)
+        {
+            throw std::invalid_argument("현장 의뢰가 저장된 도시/전초기지와 맞지 않습니다.");
+        }
+        for (size_t i = 0; i < site.residents.size(); ++i)
+        {
+            const auto &person = site.residents[i];
+            const auto length = TG::Distance(p.radiusMeters, person.path[0], person.path[1]);
+            auto expected =
+                TransitArc(person.path[0], person.path[1], person.distanceMeters / (std::max)(.001, length));
+            if (person.id != world::WorldIdentity::ContentKey(p, site.regionId,
+                                                              "community1.resident." + std::to_string(i)) ||
+                length < 6 || length > 200 || person.distanceMeters > length + .001 ||
+                TG::Distance(p.radiusMeters, region.access.position, person.path[0]) > 220 ||
+                TG::Distance(p.radiusMeters, region.access.position, person.path[1]) > 220 ||
+                TG::Distance(p.radiusMeters, expected, person.position) > .1 ||
+                std::abs(input->terrain.Height(person.position) - person.position.altitudeMeters) > .25)
+            {
+                throw std::invalid_argument("지역 주민의 경로/실제 위치가 다릅니다.");
+            }
+        }
+    }
+    planet = std::move(input);
+    if (state.worldKey.empty())
+    {
+        world::RelayNetwork key;
+        key.Bind(p);
+        state.worldKey = key.WorldKey();
+    }
+}
+bool PlanetCommunity::Populate(const world::GeneratedRegion &region)
+{
+    auto *surface = Game::Get().Surface();
+    if (!surface || !surface->Ready() || state.sites.size() >= SiteLimit)
+    {
+        return false;
+    }
+    const auto &p = surface->Planet();
+    CommunitySite site;
+    site.regionId = region.definition.id;
+    auto cells = world::ContentLayout::Near(*planet, region.access.position, 90);
+    cells.erase(std::remove_if(cells.begin(), cells.end(),
+                               [&](const auto &key) {
+                                   return planet->regions[key.region].definition.id != site.regionId;
+                               }),
+                cells.end());
+    const auto access = TG::ToLocal(region.frame, region.access.position, p.radiusMeters);
+    const double gridWidth = region.definition.kind == world::RegionKind::Settlement ? 96 : 154;
+    const double gridDepth = region.definition.kind == world::RegionKind::Settlement ? 107 : 162;
+    std::stable_sort(cells.begin(), cells.end(), [&](const auto &a, const auto &b) {
+        return std::hypot((a.x + .5) * gridWidth - access.x, (a.y + .5) * gridDepth - access.y) <
+               std::hypot((b.x + .5) * gridWidth - access.x, (b.y + .5) * gridDepth - access.y);
+    });
+    // Same cell order on every visit/PC. Preparing one hub is bounded even in huge capitals.
+    size_t generated = 0, attempts = 0;
+    for (const auto &key : cells)
+    {
+        if (++generated > 16 || attempts >= 48 || site.residents.size() == ResidentsPerSite)
+        {
+            break;
+        }
+        auto cell = world::ContentLayout::Generate(*planet, key);
+        if (region.definition.kind == world::RegionKind::Outpost)
+        {
+            // Outposts have service yards instead of urban sidewalks. Walk around actual structures.
+            for (const auto &structure : cell.structures)
+            {
+                const double x = structure.sizeMeters.x * .5 + 4, y = structure.sizeMeters.y * .5 + 4;
+                std::array<world::Vector3d, 4> corners = {{{-x, -y, 0}, {x, -y, 0}, {x, y, 0}, {-x, y, 0}}};
+                for (size_t i = 0; i < corners.size(); ++i)
+                {
+                    world::SurfaceStreet path;
+                    path.widthMeters = 0;
+                    path.sidewalkMeters = 2;
+                    for (const auto &v : {corners[i], corners[(i + 1) % 4]})
+                    {
+                        auto point =
+                            TG::FromLocal(structure.frame,
+                                          {v.x * std::cos(structure.yaw) - v.y * std::sin(structure.yaw),
+                                           v.x * std::sin(structure.yaw) + v.y * std::cos(structure.yaw), 0},
+                                          p.radiusMeters);
+                        point.altitudeMeters = planet->terrain.Height(point);
+                        path.points.push_back(point);
+                    }
+                    cell.streets.push_back(std::move(path));
+                }
+            }
+        }
+        for (const auto &street : cell.streets)
+        {
+            if (street.sidewalkMeters <= 0)
+            {
+                continue;
+            }
+            for (size_t segment = 0; segment + 1 < street.points.size();)
+            {
+                if (++attempts > 48 || site.residents.size() == ResidentsPerSite)
+                {
+                    break;
+                }
+                // Generated pavement is sampled every eight metres. Join consecutive samples of this
+                // straight street instead of rejecting each short terrain segment as a whole path.
+                const size_t first = segment;
+                double reach = 0;
+                do
+                {
+                    reach += TG::Distance(p.radiusMeters, street.points[segment], street.points[segment + 1]);
+                    ++segment;
+                } while (segment + 1 < street.points.size() && reach < 45);
+                const auto &a = street.points[first], &b = street.points[segment];
+                const double length = TG::Distance(p.radiusMeters, a, b);
+                if (length < 14)
+                {
+                    continue;
+                }
+                const auto frame = TG::Frame(a);
+                auto direction = TG::ToLocal(frame, b, p.radiusMeters);
+                const double norm = std::hypot(direction.x, direction.y);
+                if (norm < .001)
+                {
+                    continue;
+                }
+                direction.x /= norm;
+                direction.y /= norm;
+                // Use the real sidewalk, never the road centre or a building parcel.
+                const double side = site.residents.size() % 2 ? -1 : 1;
+                const double offset =
+                    side * (street.widthMeters * .5 + (std::min)(street.sidewalkMeters * .5, 1.5));
+                auto at = [&](double distance) {
+                    auto point = TG::FromLocal(frame,
+                                               {direction.x * distance - direction.y * offset,
+                                                direction.y * distance + direction.x * offset, 0},
+                                               p.radiusMeters);
+                    point.altitudeMeters = planet->terrain.Height(point);
+                    return point;
+                };
+                const auto start = at(3), end = at((std::min)(length - 3, 65.));
+                if (TG::Distance(p.radiusMeters, region.access.position, start) > 210 ||
+                    TG::Distance(p.radiusMeters, region.access.position, end) > 210)
+                {
+                    continue;
+                }
+                bool clear = true;
+                for (unsigned n = 0; n <= 8 && clear; ++n)
+                {
+                    clear = surface->LandingClear(TransitArc(start, end, n / 8.), .45);
+                }
+                if (!clear)
+                {
+                    continue;
+                }
+                if (std::any_of(site.residents.begin(), site.residents.end(), [&](const auto &person) {
+                        return TG::Distance(p.radiusMeters, person.path[0], start) < 4;
+                    }))
+                {
+                    continue;
+                }
+                CommunityResident person;
+                const auto slot = site.residents.size();
+                person.id = world::WorldIdentity::ContentKey(p, site.regionId,
+                                                             "community1.resident." + std::to_string(slot));
+                person.appearance = world::WorldIdentity::StreamSeed(
+                    p, site.regionId, "community1.appearance." + std::to_string(slot));
+                person.path = {start, end};
+                person.distanceMeters = 3;
+                person.position =
+                    TransitArc(start, end, person.distanceMeters / TG::Distance(p.radiusMeters, start, end));
+                person.position.altitudeMeters = planet->terrain.Height(person.position);
+                auto local = TG::ToLocal(TG::Frame(person.position), end, p.radiusMeters);
+                auto basis = TG::Frame(person.position);
+                person.heading = TG::Unit(
+                    TransitAdd({basis.right.x * local.x, basis.right.y * local.x, basis.right.z * local.x},
+                               basis.forward, local.y));
+                site.residents.push_back(std::move(person));
+            }
+        }
+    }
+    if (site.residents.size() < 2)
+    {
+        return false;
+    }
+    site.contact = site.residents.front().path[0];
+    auto target = std::find_if(site.residents.rbegin(), site.residents.rend(), [&](const auto &person) {
+        return TG::Distance(p.radiusMeters, site.contact, person.path[1]) >= 12;
+    });
+    if (target == site.residents.rend())
+    {
+        return false;
+    }
+    site.target = target->path[1];
+    state.sites.push_back(std::move(site));
+    profiling::Count(profiling::Counter::CommunitySitesPrepared);
+    return true;
+}
+void PlanetCommunity::Update(float dt, bool exterior)
+{
+    auto &g = Game::Get();
+    if (!g.Surface() || !g.Surface()->Ready())
+    {
+        return;
+    }
+    Bind(g.Surface()->Stream().Snapshot()->planet);
+    const auto &w = g.GetState();
+    if (!std::isfinite(dt) || dt <= 0 || w.isPaused || w.mapVisible || w.weaponWheel.visible ||
+        w.journalVisible || w.dialogueHistoryVisible || Dialogue::LocksWorld() || HospitalRecovery::Active())
+    {
+        return;
+    }
+    profiling::Scope timer(profiling::Timer::PlanetCommunity);
+    dt = (std::min)(dt, .05f);
+    const auto &p = g.Surface()->Planet();
+    const auto &hero = g.Surface()->Pose().origin;
+    prepareSeconds = (std::max)(0.f, prepareSeconds - dt);
+    if (exterior && prepareSeconds <= 0)
+    {
+        prepareSeconds = .5f;
+        const world::GeneratedRegion *nearest = nullptr;
+        double best = WakeMeters;
+        for (const auto &region : planet->regions)
+        {
+            if (region.center.space != world::SpaceKind::Surface ||
+                (region.definition.kind != world::RegionKind::Settlement &&
+                 region.definition.kind != world::RegionKind::Outpost) ||
+                (planet->cityCores && planet->cityCores->Find(region.definition.id)) ||
+                std::any_of(state.sites.begin(), state.sites.end(),
+                            [&](const auto &site) { return site.regionId == region.definition.id; }))
+            {
+                continue;
+            }
+            const double distance = TG::Distance(p.radiusMeters, hero, region.access.position);
+            if (distance < best)
+            {
+                best = distance;
+                nearest = &region;
+            }
+        }
+        if (nearest && !Populate(*nearest))
+        {
+            prepareSeconds = 5;
+        }
+    }
+    size_t active = 0;
+    for (auto &site : state.sites)
+    {
+        for (size_t i = 0; i < site.residents.size(); ++i)
+        {
+            auto &person = site.residents[i];
+            person.fearSeconds = (std::max)(0.f, person.fearSeconds - dt);
+            person.hitFlash = (std::max)(0.f, person.hitFlash - dt);
+            if (person.health <= 0)
+            {
+                person.speed = 0;
+                person.corpseSeconds = (std::min)(60.f, person.corpseSeconds + dt);
+                continue;
+            }
+            const double distance = TG::Distance(p.radiusMeters, hero, person.position);
+            if (!exterior || distance > DetailedMeters || active >= ActiveLimit)
+            {
+                person.speed = 0;
+                continue;
+            }
+            ++active;
+            profiling::Count(profiling::Counter::CommunityDetailedTicks);
+            const bool witnessed = distance < 18 && (CivicJustice::State().infamy >= 30 ||
+                                                     CivicJustice::State().muzzleFlash > 0);
+            const bool alarm = witnessed || person.fearSeconds > 0;
+            if (witnessed)
+            {
+                person.fearSeconds = (std::max)(person.fearSeconds, 3.f);
+            }
+            const double length = TG::Distance(p.radiusMeters, person.path[0], person.path[1]);
+            if (alarm && distance < 18)
+            {
+                const auto startDistance = TG::Distance(p.radiusMeters, hero, person.path[0]);
+                const auto endDistance = TG::Distance(p.radiusMeters, hero, person.path[1]);
+                person.direction = endDistance > startDistance ? 1 : -1;
+            }
+            else if (person.distanceMeters >= length - 2.05)
+            {
+                person.direction = -1;
+            }
+            else if (person.distanceMeters <= 2.05)
+            {
+                person.direction = 1;
+            }
+            const bool talking = Dialogue::Active() || (i == 0 && !alarm) || (distance < 1.5 && !alarm);
+            const float desired = talking ? 0 : person.fearSeconds > 0 ? 2.5f : 1.1f;
+            person.speed += std::clamp(desired - person.speed, -5.f * dt, 3.f * dt);
+            double progress =
+                std::clamp(person.distanceMeters + person.direction * person.speed * dt, 2., length - 2);
+            auto next = TransitArc(person.path[0], person.path[1], progress / length);
+            next.altitudeMeters = planet->terrain.Height(next);
+            if (TG::Distance(p.radiusMeters, next, hero) < (w.isBikeMounted ? 1.6 : .8) ||
+                !g.Surface()->LandingClear(next, .35) ||
+                (g.SurfaceTraffic() && g.SurfaceTraffic()->Blocked(next, .45)) ||
+                (g.SurfaceParty() && g.SurfaceParty()->Blocked(next, .45)) ||
+                PlanetSecurity::OfficerBlocked(next, .45) ||
+                std::any_of(site.residents.begin(), site.residents.end(), [&](const auto &other) {
+                    return other.id != person.id && other.health > 0 &&
+                           TG::Distance(p.radiusMeters, next, other.position) < .85;
+                }))
+            {
+                person.speed = 0;
+                continue;
+            }
+            const auto frame = TG::Frame(next);
+            const auto toward = TG::ToLocal(frame, person.path[person.direction > 0 ? 1 : 0], p.radiusMeters);
+            if (std::hypot(toward.x, toward.y) > .01)
+            {
+                const float old = float(
+                    std::atan2(TG::Dot(person.heading, frame.forward), TG::Dot(person.heading, frame.right)));
+                const float yaw = MotionMath::Turn(old, float(std::atan2(toward.y, toward.x)), 3.f * dt);
+                person.heading =
+                    TG::Unit(TransitAdd({frame.right.x * std::cos(yaw), frame.right.y * std::cos(yaw),
+                                         frame.right.z * std::cos(yaw)},
+                                        frame.forward, std::sin(yaw)));
+            }
+            person.position = next;
+            person.distanceMeters = progress;
+        }
+    }
+}
+CommunityResident *PlanetCommunity::Find(const std::string &id)
+{
+    for (auto &site : state.sites)
+    {
+        for (auto &person : site.residents)
+        {
+            if (person.id == id)
+            {
+                return &person;
+            }
+        }
+    }
+    return nullptr;
+}
+bool PlanetCommunity::Blocked(const world::SurfacePoint &point, double clearance) const
+{
+    if (!planet)
+    {
+        return false;
+    }
+    const double radius = planet->terrain.Planet().radiusMeters;
+    for (const auto &site : state.sites)
+    {
+        for (const auto &terminal : {site.contact, site.target})
+        {
+            if (std::abs(terminal.altitudeMeters - point.altitudeMeters) < 2 &&
+                TG::Distance(radius, point, terminal) < .45 + clearance)
+            {
+                return true;
+            }
+        }
+        for (const auto &person : site.residents)
+        {
+            if (person.health > 0 && std::abs(person.position.altitudeMeters - point.altitudeMeters) < 1.8 &&
+                TG::Distance(radius, point, person.position) < .4 + clearance)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+bool PlanetCommunity::Damage(const std::string &id, int damage, bool playerOwned)
+{
+    auto *person = Find(id);
+    if (!person || person->health <= 0 || damage <= 0)
+    {
+        return false;
+    }
+    person->health = (std::max)(0, person->health - damage);
+    person->fearSeconds = 15;
+    person->hitFlash = .15f;
+    person->speed = 0;
+    if (playerOwned)
+    {
+        PlanetSecurity::Report(person->health > 0 ? Offense::Assault : Offense::Homicide, person->position);
+    }
+    return true;
+}
+bool PlanetCommunity::Hit(const world::SurfacePoint &point, int damage, bool playerOwned)
+{
+    if (!planet)
+    {
+        return false;
+    }
+    for (const auto &site : state.sites)
+    {
+        for (const auto &person : site.residents)
+        {
+            if (person.health > 0 && point.altitudeMeters >= person.position.altitudeMeters &&
+                point.altitudeMeters <= person.position.altitudeMeters + 1.9 &&
+                TG::Distance(planet->terrain.Planet().radiusMeters, point, person.position) < .7)
+            {
+                return Damage(person.id, damage, playerOwned);
+            }
+        }
+    }
+    return false;
+}
+std::optional<PlanetCommunity::Contact> PlanetCommunity::Nearest() const
+{
+    auto &g = Game::Get();
+    if (!planet || !g.Surface() || !CivicJustice::IsExterior() || g.GetState().isBikeMounted ||
+        HospitalRecovery::Active())
+    {
+        return std::nullopt;
+    }
+    const auto &hero = g.Surface()->Pose().origin;
+    std::optional<Contact> result;
+    double best = 2.8;
+    auto offer = [&](size_t site, size_t resident, int kind, const world::SurfacePoint &point) {
+        const double distance = TG::Distance(planet->terrain.Planet().radiusMeters, hero, point);
+        if (distance < best && std::abs(hero.altitudeMeters - point.altitudeMeters) < 2)
+        {
+            best = distance;
+            result = Contact{site, resident, kind, distance};
+        }
+    };
+    for (size_t i = 0; i < state.sites.size(); ++i)
+    {
+        const auto &site = state.sites[i];
+        offer(i, 0, 0, site.contact);
+        if (site.task == 1)
+        {
+            offer(i, 0, 1, site.target);
+        }
+        for (size_t n = 0; n < site.residents.size(); ++n)
+        {
+            if (site.residents[n].health > 0 && site.residents[n].fearSeconds <= 0)
+            {
+                offer(i, n, 2, site.residents[n].position);
+            }
+        }
+    }
+    return result;
+}
+InteractionTarget PlanetCommunity::Nearby(float *legacyDistance) const
+{
+    auto contact = Nearest();
+    if (legacyDistance)
+    {
+        *legacyDistance = contact ? float(contact->distance / 2) : 1.e6f;
+    }
+    return contact ? InteractionTarget::Community : InteractionTarget::None;
+}
+const char *PlanetCommunity::Label() const
+{
+    const auto contact = Nearest();
+    if (!contact)
+    {
+        return "현장 / 상호작용";
+    }
+    return contact->kind == 1   ? "현장 센서 / 측정 기록"
+           : contact->kind == 2 ? "지역 주민 / 대화"
+                                : "현장 접수 단말 / 선택 의뢰";
+}
+const char *PlanetCommunity::TaskName(const CommunitySite &site)
+{
+    unsigned hash = 0;
+    for (unsigned char c : site.regionId)
+    {
+        hash = hash * 33 + c;
+    }
+    static const char *names[] = {"중계 잡음 측정", "전력 분기 진단", "환경 센서 점검"};
+    return names[hash % 3];
+}
+void PlanetCommunity::Interact()
+{
+    const auto contact = Nearest();
+    if (!contact)
+    {
+        return;
+    }
+    auto &site = state.sites[contact->site];
+    auto &g = Game::Get();
+    const auto &region = planet->Region(site.regionId);
+    if (contact->kind == 2)
+    {
+        static const char *lines[] = {
+            "이 구역 일은 현장 단말에 올라옵니다. 급한 일정이 없다면 확인해 보세요.",
+            "큰 관문이 멎어도 동네 전력과 통신은 계속 돌봐야죠. 작은 고장부터 잡고 있어요.",
+            "다친 사람이 있으면 의료소부터 찾으세요. 외곽에서는 구조대가 오는 데 시간이 걸려요.",
+            "도시 밖에 나갈 땐 중계환부터 등록해 두세요. 돌아오는 길이 훨씬 편해집니다."};
+        Dialogue::Say("community." + site.regionId + ".resident." + std::to_string(contact->resident),
+                      region.definition.name + " 주민 / " + lines[contact->resident % 4]);
+        return;
+    }
+    if (contact->kind == 1)
+    {
+        site.task = 2;
+        g.ShowNotice(std::string(TaskName(site)) + " / 기록 확보. 현장 접수 단말에 제출하세요.");
+        return;
+    }
+    if (site.task == 2)
+    {
+        site.task = 3;
+        auto &credits = game::GameLevels::Mine().GetState().player.credits;
+        credits = (std::min)(credits, std::numeric_limits<int>::max() - 100) + 100;
+        g.ShowNotice(std::string(TaskName(site)) + " 완료 / 100 크레딧. 현장 기록을 보관했습니다.");
+        return;
+    }
+    if (site.task == 3)
+    {
+        Dialogue::Say("community." + site.regionId + ".complete",
+                      "제출한 측정 기록은 현장 담당자가 확인했습니다. 이 의뢰의 보상은 이미 지급되었습니다.");
+        return;
+    }
+    const auto key = state.worldKey, id = site.regionId;
+    const bool active = site.task == 1;
+    const std::string question =
+        active ? "측정을 계속하거나 이 의뢰를 중단할 수 있습니다. 메인 임무에는 영향을 주지 않습니다."
+               : std::string(TaskName(site)) +
+                     " / 표식이 있는 센서에서 기록을 확보해 돌아오세요. 보상 100 크레딧. 수락은 선택입니다.";
+    Dialogue::Start(
+        "community." + id + (active ? ".manage" : ".offer"),
+        {{"choice", "현장 접수 단말", "지역 의뢰", question,
+          active ? std::vector<DialogueChoice>{{"keep", "계속 진행"}, {"cancel", "의뢰 중단"}}
+                 : std::vector<DialogueChoice>{{"accept", "의뢰 수락"}, {"later", "나중에"}}}},
+        [key, id](const std::string &choice) {
+            auto *community = Game::Get().SurfaceCommunity();
+            if (!community || community->state.worldKey != key)
+            {
+                return;
+            }
+            auto site = std::find_if(community->state.sites.begin(), community->state.sites.end(),
+                                     [&](const auto &v) { return v.regionId == id; });
+            if (site == community->state.sites.end())
+            {
+                return;
+            }
+            if (choice == "accept" && site->task == 0)
+            {
+                site->task = 1;
+                Game::Get().ShowNotice("현장 의뢰 수락 / 지도와 탐험 기록에 측정 지점을 표시했습니다.");
+            }
+            if (choice == "cancel" && site->task == 1)
+            {
+                site->task = 0;
+                Game::Get().ShowNotice("현장 의뢰를 중단했습니다. 접수 단말에서 다시 수락할 수 있습니다.");
+            }
+        },
+        true);
+}
+std::vector<std::string> PlanetCommunity::Journal() const
+{
+    std::vector<std::string> lines;
+    if (!planet)
+    {
+        return lines;
+    }
+    for (const auto &site : state.sites)
+    {
+        if (site.task == 1 || site.task == 2)
+        {
+            lines.push_back(
+                planet->Region(site.regionId).definition.name + " / " + TaskName(site) +
+                (site.task == 1 ? " — 지도에 표시된 센서 측정" : " — 현장 접수 단말에 기록 제출"));
+        }
+    }
+    return lines;
 }
 
 // ============================================================================

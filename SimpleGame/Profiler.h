@@ -54,6 +54,8 @@ enum class Counter
     PlanetTrafficFarTicks,
     CompanionHandoffs,
     TrafficHandoffs,
+    CommunitySitesPrepared,
+    CommunityDetailedTicks,
     Count
 };
 enum class Timer
@@ -91,6 +93,7 @@ enum class Timer
     PlanetTrafficPrepare,
     PlanetParty,
     PlanetSecurity,
+    PlanetCommunity,
     Count
 };
 class Scope

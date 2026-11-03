@@ -1170,6 +1170,9 @@ void CityHud::DrawInteractionPrompt()
     case InteractionTarget::Relay:
         label = "국지 중계환 / 등록·이동 지도";
         break;
+    case InteractionTarget::Community:
+        label = g.SurfaceCommunity() ? g.SurfaceCommunity()->Label() : "지역 현장 / 상호작용";
+        break;
     case InteractionTarget::FrontierSite: {
         game::ChapterInteraction point{};
         label = game::GameLevels::Chapter().NearestInteraction(point) ? point.label : "현장 / 조사";
@@ -2915,6 +2918,19 @@ void PlanetHud::DrawMap(bool full)
                w.relayNetwork.Registered(relay.id) ? ColorRGBA(.35f, 1, .9f) : ColorRGBA(.65f, .69f, .75f),
                full ? (w.relayNetwork.Registered(relay.id) ? "등록 중계환" : "발견 · E 등록 필요") : nullptr,
                full, w.selectedRelay == relay.id ? 7 : 4);
+    }
+    if (const auto *community = Game::Get().SurfaceCommunity())
+    {
+        for (const auto &site : community->State().sites)
+        {
+            if (site.task != 1 && site.task != 2)
+            {
+                continue;
+            }
+            const auto &target = site.task == 1 ? site.target : site.contact;
+            MapPin(view, project(target), {1, .8f, .35f},
+                   site.task == 1 ? PlanetCommunity::TaskName(site) : "현장 기록 제출", full, 5);
+        }
     }
     auto &chapter = game::GameLevels::Chapter();
     if (chapter.IsActive() && range < 4000 && w.missions.Active(MissionId::Frontier))

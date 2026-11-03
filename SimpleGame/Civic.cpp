@@ -997,7 +997,8 @@ bool PlanetSecurity::BodyBlocked(Vector2 p, double radius)
     return !g.Surface()->LandingClear(point, radius) ||
            (g.SurfaceCities() && g.SurfaceCities()->OccupiedAt(g.GetState(), *g.Surface(), point)) ||
            (g.SurfaceTraffic() && g.SurfaceTraffic()->Blocked(point, radius)) ||
-           (g.SurfaceParty() && g.SurfaceParty()->Blocked(point, radius));
+           (g.SurfaceParty() && g.SurfaceParty()->Blocked(point, radius)) ||
+           (g.SurfaceCommunity() && g.SurfaceCommunity()->Blocked(point, radius));
 }
 bool PlanetSecurity::OfficerBlocked(const world::SurfacePoint &point, double radius)
 {
@@ -1049,7 +1050,8 @@ bool PlanetSecurity::Spawn()
              !TrafficSystem::OutsideView(local, g.GetState().cameraPosition, 90)) ||
             (g.SurfaceTraffic() && g.SurfaceTraffic()->Blocked(p, .8)) ||
             (g.SurfaceCities() && g.SurfaceCities()->OccupiedAt(g.GetState(), *g.Surface(), p)) ||
-            (g.SurfaceParty() && g.SurfaceParty()->Blocked(p, .8)))
+            (g.SurfaceParty() && g.SurfaceParty()->Blocked(p, .8)) ||
+            (g.SurfaceCommunity() && g.SurfaceCommunity()->Blocked(p, .8)))
         {
             continue;
         }
@@ -1144,6 +1146,10 @@ bool PlanetSecurity::Hit(models::Point p, int damage, bool playerOwned, bool com
                 return true;
             }
         }
+    }
+    if (g.SurfaceCommunity() && g.SurfaceCommunity()->Hit(point, damage, playerOwned))
+    {
+        return true;
     }
     for (const auto &target : surfaceTargets)
     {

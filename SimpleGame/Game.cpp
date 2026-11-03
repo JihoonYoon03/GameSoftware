@@ -642,6 +642,7 @@ void Game::StartSurface(bool insideHome)
     surfaceCities = std::make_unique<PlanetCities>();
     surfaceTraffic = std::make_unique<PlanetTraffic>();
     surfaceParty = std::make_unique<PlanetParty>();
+    surfaceCommunity = std::make_unique<PlanetCommunity>();
     surface->Start(
         world::PlanetGenerator::Erma(Overworld::StoryAnchors()).WithCityCores(PlanetCities::Describe(state)));
 }
@@ -1476,6 +1477,7 @@ void Game::StopSurface()
     surfaceCities.reset();
     surfaceTraffic.reset();
     surfaceParty.reset();
+    surfaceCommunity.reset();
     state.surfaceExploration = false;
     state.surfaceCameraHeight = 0;
     surfaceSurveyRegion.reset();
@@ -1716,6 +1718,7 @@ bool Game::LandOnSurface(const world::SurfacePoint &point, int city)
                 if (!surface->LandingClear(candidate, .32) || fieldOccupied ||
                     (surfaceParty && surfaceParty->Blocked(candidate, .32)) ||
                     (surfaceTraffic && surfaceTraffic->Blocked(candidate, .32)) ||
+                    (surfaceCommunity && surfaceCommunity->Blocked(candidate, .32)) ||
                     (surfaceCities && surfaceCities->OccupiedAt(state, *surface, candidate, city)) ||
                     (surfaceBike && world::SurfaceGeometry::Distance(surface->Planet().radiusMeters,
                                                                      *surfaceBike, candidate) < 1))
@@ -1847,6 +1850,10 @@ void Game::UpdateSurface(float dt)
     }
     if (advancing)
     {
+        if (surfaceCommunity)
+        {
+            surfaceCommunity->Update(dt, !IsSurfaceMine() && !state.isInsideHome && !state.isInObservatory);
+        }
         state.playTimeSeconds += dt;
         CivicJustice::Update(dt);
         PlanetSecurity::UpdateCompanions(dt);
@@ -2396,13 +2403,20 @@ std::vector<std::string> Dialogue::Journal()
     if (!Game::Get().IsStoryWorld())
     {
         const auto &s = Game::Get().GetState();
-        return {Game::Get().Surface()->Planet().name + " 탐사 기록",
-                "이 행성의 지형·도시·지대와 중계환은 고유 시드로 생성됩니다.",
-                "발견한 중계환을 E로 등록하면 같은 행성 안에서 이동할 수 있습니다.",
-                "발견 " + std::to_string(s.relayNetwork.Discoveries().size()) + " / 등록 " +
-                    std::to_string(s.relayNetwork.Registrations().size()),
-                "행성 선택은 탐사 테스트 기능입니다. 현장 기록은 행성별로 유지됩니다.",
-                "F5로 방문한 모든 행성의 기록을 디스크에 보관합니다."};
+        std::vector<std::string> lines = {
+            Game::Get().Surface()->Planet().name + " 탐사 기록",
+            "이 행성의 지형·도시·지대와 중계환은 고유 시드로 생성됩니다.",
+            "발견한 중계환을 E로 등록하면 같은 행성 안에서 이동할 수 있습니다.",
+            "발견 " + std::to_string(s.relayNetwork.Discoveries().size()) + " / 등록 " +
+                std::to_string(s.relayNetwork.Registrations().size()),
+            "행성 선택은 탐사 테스트 기능입니다. 현장 기록은 행성별로 유지됩니다.",
+            "F5로 방문한 모든 행성의 기록을 디스크에 보관합니다."};
+        if (auto *community = Game::Get().SurfaceCommunity())
+        {
+            auto local = community->Journal();
+            lines.insert(lines.end(), local.begin(), local.end());
+        }
+        return lines;
     }
     const auto &w = Game::Get().GetState();
     const auto &mine = game::GameLevels::Mine().GetState();
@@ -2417,6 +2431,11 @@ std::vector<std::string> Dialogue::Journal()
                             QuestParticipation::Label(w.missions.Status(MissionId(i))));
         }
         lines.push_back("지역 방문과 기록 열람은 자유입니다. 왼쪽 임무 버튼에서 수락·보류·재개합니다.");
+        if (auto *community = Game::Get().SurfaceCommunity())
+        {
+            auto local = community->Journal();
+            lines.insert(lines.end(), local.begin(), local.end());
+        }
         if (mine.powerBypassed)
         {
             lines.push_back("광산 현장: 비상 전력을 우회했다. 임무 보류 중에도 격벽과 조명 상태는 유지된다.");
@@ -2553,7 +2572,10 @@ bool Game::IsPositionBlocked(Vector2 position)
                PlanetSecurity::OfficerBlocked(surface->PointAt(position.x * 2, position.y * 2),
                                               state.isBikeMounted ? .5 : .32) ||
                (surfaceTraffic && surfaceTraffic->Blocked(surface->PointAt(position.x * 2, position.y * 2),
-                                                          state.isBikeMounted ? .5 : .32));
+                                                          state.isBikeMounted ? .5 : .32)) ||
+               (surfaceCommunity &&
+                surfaceCommunity->Blocked(surface->PointAt(position.x * 2, position.y * 2),
+                                          state.isBikeMounted ? .5 : .32));
     }
     if (game::GameLevels::Chapter().IsActive())
     {
@@ -2731,6 +2753,16 @@ InteractionTarget Game::FindNearbyInteraction()
         }
         auto target = surface && surfaceCities ? surfaceCities->Nearby(state, *surface, &distance)
                                                : InteractionTarget::None;
+        if (surfaceCommunity)
+        {
+            float communityDistance = 1000000;
+            auto communityTarget = surfaceCommunity->Nearby(&communityDistance);
+            if (communityDistance < distance)
+            {
+                target = communityTarget;
+                distance = communityDistance;
+            }
+        }
         if (surfaceParty)
         {
             float companionDistance = 1000000;
@@ -2886,6 +2918,11 @@ void Game::InteractWithNearbyTarget()
         }
     }
     const InteractionTarget target = FindNearbyInteraction();
+    if (target == InteractionTarget::Community && surfaceCommunity)
+    {
+        surfaceCommunity->Interact();
+        return;
+    }
     if (target == InteractionTarget::Relay)
     {
         RelayTravel::Interact();

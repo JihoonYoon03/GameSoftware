@@ -339,6 +339,7 @@ class PlanetTraffic
     static constexpr size_t CityLimit = 8;
     explicit PlanetTraffic(PlanetTrafficState state = {});
     void Bind(std::shared_ptr<const world::GeneratedPlanet> planet);
+    static void MigrateLanes(PlanetTrafficState &state, std::shared_ptr<const world::GeneratedPlanet> planet);
     void Update(GameState &state, const world::SurfaceSession &session, float deltaSeconds, bool exterior);
     const PlanetTrafficState &State() const
     {
@@ -364,6 +365,8 @@ class PlanetTraffic
     std::vector<PlanetTrafficLink> Links() const;
 
   private:
+    void BindLayout(std::shared_ptr<const world::GeneratedPlanet> planet, bool leftTraffic);
+    bool leftTraffic = false;
     unsigned Random();
     void Advance(PlanetTrafficActor &actor, float seconds, const GameState &world,
                  const world::SurfaceSession &session, bool exterior);
@@ -378,6 +381,69 @@ class PlanetTraffic
     std::map<std::string, size_t, std::less<>> routeIndex;
     std::map<unsigned, std::vector<size_t>> groundConnections;
     std::array<std::string, 5> exits;
+};
+
+// ============================================================================
+// PlanetCommunity — persistent procedural settlement hubs, residents and optional local work
+// ============================================================================
+struct CommunityResident
+{
+    std::string id;
+    std::uint64_t appearance = 0;
+    std::array<world::SurfacePoint, 2> path;
+    world::SurfacePoint position;
+    world::Vector3d heading = {0, 1, 0};
+    double distanceMeters = 0;
+    float speed = 0, fearSeconds = 0, hitFlash = 0, corpseSeconds = 0;
+    int direction = 1, health = 100;
+};
+struct CommunitySite
+{
+    std::string regionId;
+    world::SurfacePoint contact, target;
+    unsigned task = 0; // 0 offered, 1 accepted, 2 measured, 3 paid. Never advances the main story.
+    std::vector<CommunityResident> residents;
+};
+struct PlanetCommunityState
+{
+    std::string worldKey;
+    std::vector<CommunitySite> sites;
+};
+class PlanetCommunity
+{
+  public:
+    static constexpr size_t SiteLimit = 512, ResidentsPerSite = 4, ActiveLimit = 48;
+    static constexpr double WakeMeters = 350, DetailedMeters = 160;
+    explicit PlanetCommunity(PlanetCommunityState state = {});
+    void Bind(std::shared_ptr<const world::GeneratedPlanet> planet);
+    static void Validate(const PlanetCommunityState &state, const world::PlanetDefinition &planet);
+    void Update(float deltaSeconds, bool exterior);
+    const PlanetCommunityState &State() const
+    {
+        return state;
+    }
+    bool Blocked(const world::SurfacePoint &point, double clearance) const;
+    bool Damage(const std::string &id, int damage, bool playerOwned);
+    bool Hit(const world::SurfacePoint &point, int damage, bool playerOwned);
+    InteractionTarget Nearby(float *legacyDistance = nullptr) const;
+    const char *Label() const;
+    void Interact();
+    std::vector<std::string> Journal() const;
+    static const char *TaskName(const CommunitySite &site);
+
+  private:
+    bool Populate(const world::GeneratedRegion &region);
+    CommunityResident *Find(const std::string &id);
+    struct Contact
+    {
+        size_t site = 0, resident = 0;
+        int kind = 0;
+        double distance = 0;
+    };
+    std::optional<Contact> Nearest() const;
+    PlanetCommunityState state;
+    std::shared_ptr<const world::GeneratedPlanet> planet;
+    float prepareSeconds = 0;
 };
 
 // ============================================================================

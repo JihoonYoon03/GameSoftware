@@ -417,6 +417,38 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
             traffic.Raw("actors", "[" + actors + "]");
             streaming.Raw("planet_traffic", traffic.Finish());
         }
+        if (const auto *community = tutorial::Game::Get().SurfaceCommunity())
+        {
+            JsonObject local;
+            local.Text("world_key", community->State().worldKey);
+            local.Number("active_limit", tutorial::PlanetCommunity::ActiveLimit);
+            local.Number("detailed_meters", tutorial::PlanetCommunity::DetailedMeters);
+            std::string sites;
+            for (const auto &site : community->State().sites)
+            {
+                JsonObject item;
+                item.Text("region_id", site.regionId);
+                item.Number("task_state", site.task);
+                item.Text("task_name", tutorial::PlanetCommunity::TaskName(site));
+                std::string residents;
+                for (const auto &person : site.residents)
+                {
+                    JsonObject actor;
+                    actor.Text("id", person.id);
+                    actor.Number("health", person.health);
+                    actor.Seconds("speed_meters", person.speed);
+                    actor.Seconds("fear_seconds", person.fearSeconds);
+                    const auto location = ::world::SurfaceGeometry::ToDegrees(person.position);
+                    actor.Number("latitude", location[0]);
+                    actor.Number("longitude", location[1]);
+                    Append(residents, actor.Finish());
+                }
+                item.Raw("residents", "[" + residents + "]");
+                Append(sites, item.Finish());
+            }
+            local.Raw("sites", "[" + sites + "]");
+            streaming.Raw("community", local.Finish());
+        }
         result.Raw("surface_streaming", streaming.Finish());
     }
     result.Text("current_region_id", chapter.active ? "frontier" : level.active ? "mine" : outdoorId);
@@ -426,7 +458,34 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                                 : world.isInsideHome    ? "플레이어의 집"
                                                         : outdoorName);
     result.Seconds("play_time_seconds", world.playTimeSeconds);
-    counts.Number("npc_total", cityPopulation + minePopulation + frontierPopulation + surfaceCompanions);
+    size_t communityPopulation = 0, currentCommunity = 0, activeCommunity = 0;
+    if (const auto *community = tutorial::Game::Get().SurfaceCommunity())
+    {
+        for (const auto &site : community->State().sites)
+        {
+            communityPopulation += site.residents.size();
+            if (site.regionId == outdoorId)
+            {
+                currentCommunity += site.residents.size();
+            }
+            for (const auto &person : site.residents)
+            {
+                activeCommunity += tutorial::CivicJustice::IsExterior() && !world.isPaused &&
+                                   !world.mapVisible && !world.weaponWheel.visible && !world.journalVisible &&
+                                   !world.dialogueHistoryVisible && !tutorial::SaveSystem::Loading() &&
+                                   !tutorial::Dialogue::LocksWorld() && person.health > 0 &&
+                                   ::world::SurfaceGeometry::Distance(
+                                       tutorial::Game::Get().Surface()->Planet().radiusMeters,
+                                       tutorial::Game::Get().Surface()->Pose().origin,
+                                       person.position) < tutorial::PlanetCommunity::DetailedMeters;
+            }
+        }
+    }
+    counts.Number("npc_community", communityPopulation);
+    counts.Number("npc_community_nearby",
+                  (std::min)(activeCommunity, tutorial::PlanetCommunity::ActiveLimit));
+    counts.Number("npc_total", cityPopulation + minePopulation + frontierPopulation + surfaceCompanions +
+                                   communityPopulation);
     counts.Number("party_on_surface", surfaceCompanions);
     counts.Number("party_in_mine",
                   (owns(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Mine) ? 1 : 0) +
@@ -435,7 +494,7 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                                         : level.active     ? minePopulation
                                         : currentCity == 0 ? haloPopulation
                                         : currentCity > 0  ? tutorial::Overworld::kPopulationPerCity
-                                                           : 0);
+                                                           : currentCommunity);
     counts.Number("npc_simulating",
                   fieldSimulating ? frontierPopulation
                   : simulating    ? minePopulation

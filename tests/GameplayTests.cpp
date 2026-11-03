@@ -111,8 +111,8 @@ void TestPlanetTraffic()
     auto right = prototype.Position(road, road.lengthMeters * .5, 1),
          left = prototype.Position(road, road.lengthMeters * .5, -1);
     assert(std::fabs(G::Distance(p.radiusMeters, right, left) - 3) < .001);
-    assert(G::ToLocal(frame, right, p.radiusMeters).y < -1.4 &&
-           G::ToLocal(frame, left, p.radiusMeters).y > 1.4);
+    assert(G::ToLocal(frame, right, p.radiusMeters).y > 1.4 &&
+           G::ToLocal(frame, left, p.radiusMeters).y < -1.4);
     assert(G::Distance(p.radiusMeters, prototype.Position(air, air.lengthMeters * .5, 1), center) > 50);
     assert(G::Distance(p.radiusMeters, prototype.Position(air, air.lengthMeters + 20, 1),
                        prototype.Position(air, air.lengthMeters + 20 + G::Circumference(p.radiusMeters), 1)) <
@@ -135,6 +135,26 @@ void TestPlanetTraffic()
     record.spawnSeconds = 1;
     record.actors = {TrafficFixtureActor(prototype, *plan, road, road.lengthMeters * .5)};
     PlanetTraffic::Validate(record, p, plan->Digest());
+    auto legacyLanes = record;
+    legacyLanes.actors.front().position = left; // The former forward lane was the new reverse lane.
+    legacyLanes.actors.front().position.altitudeMeters = plan->terrain.Height(left);
+    legacyLanes.actors.front().health = 73;
+    auto reverseActor = legacyLanes.actors.front();
+    reverseActor.id = 2;
+    reverseActor.direction = -1;
+    reverseActor.position = right;
+    reverseActor.position.altitudeMeters = plan->terrain.Height(right);
+    legacyLanes.actors.push_back(reverseActor);
+    legacyLanes.nextId = 3;
+    PlanetTraffic::MigrateLanes(legacyLanes, plan);
+    assert(legacyLanes.actors.front().id == 1 && legacyLanes.actors.front().health == 73 &&
+           G::Distance(p.radiusMeters, legacyLanes.actors.front().position, right) < .01);
+    assert(legacyLanes.actors.back().id == 2 && legacyLanes.actors.back().direction == -1 &&
+           G::Distance(p.radiusMeters, legacyLanes.actors.back().position, left) < .01);
+    PlanetTraffic::MigrateLanes(legacyLanes, plan);
+    assert(G::Distance(p.radiusMeters, legacyLanes.actors.front().position, right) < .01);
+    assert(RoadNetwork::RightOf({1, 0}).y > 0); // Authored and spherical road frames must agree.
+
     auto bad = record;
     bad.actors.push_back(bad.actors.front());
     rejected([&] { PlanetTraffic::Validate(bad, p, plan->Digest()); });
@@ -1064,11 +1084,13 @@ void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::file
         }
         return result;
     };
-    assert(number(8) == 6 && version >= 1 && version <= 5);
-    const size_t linkStart = bytes.size() - 8 - size_t(number(bytes.size() - 8));
+    assert(number(8) == 7 && version >= 1 && version <= 6);
+    const size_t communityStart = bytes.size() - 8 - size_t(number(bytes.size() - 8)));
+    const size_t linkStart = communityStart - 8 - size_t(number(communityStart - 8));
     const size_t securityStart = linkStart - 8 - size_t(number(linkStart - 8));
     const size_t partyStart = securityStart - 8 - size_t(number(securityStart - 8));
-    const size_t payloadEnd = version == 5   ? linkStart
+    const size_t payloadEnd = version == 6   ? communityStart
+                              : version == 5 ? linkStart
                               : version == 4 ? securityStart
                               : version == 3 ? partyStart
                                              : partyStart - 8 - size_t(number(partyStart - 8));
@@ -1137,7 +1159,12 @@ void TestWorldCheckpoints()
     const auto legacy5 = folder / "schema5.sav";
     WriteLegacyCheckpoint(file, legacy5, 5);
     assert(SaveSystem::CheckFile(legacy5));
-    const auto malformed = folder / "traffic-links-footer.sav";
+    const auto legacy6 = folder / "version6.sav";
+    WriteLegacyCheckpoint(file, legacy6, 6);
+    assert(SaveSystem::Load(legacy6));
+    WaitForCheckpointLoad();
+    VerifyCheckpointFixture();
+    const auto malformed = folder / "community-footer.sav";
     {
         std::ifstream input(file, std::ios::binary);
         std::vector<unsigned char> bytes{std::istreambuf_iterator<char>(input),
@@ -1254,6 +1281,7 @@ void TestWorldCheckpoints()
     std::filesystem::remove(legacy3);
     std::filesystem::remove(legacy4);
     std::filesystem::remove(legacy5);
+    std::filesystem::remove(legacy6);
     std::filesystem::remove(malformed);
     std::filesystem::remove(file);
     std::filesystem::remove(std::filesystem::path(file.wstring() + L".bak"));
@@ -1367,6 +1395,138 @@ void TestCityTrafficHandoff()
     assert(!transit->Damage(37, 999, true) && CivicJustice::State().heat == 50);
     const auto json = monitoring::WorldSnapshot::Build(1, "handoff-test");
     assert(json.find("owner_city") != std::string::npos && json.find("city_owned") != std::string::npos);
+    g.Reset();
+    std::filesystem::remove(file);
+    std::filesystem::remove(folder);
+}
+
+void TestPlanetCommunity()
+{
+    using namespace tutorial;
+    using G = world::SurfaceGeometry;
+    PrepareCheckpointFixture();
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    assert(g.LeaveSurfaceMine());
+    CivicJustice::State().wanted = 0;
+    CivicJustice::State().heat = 0;
+    CivicJustice::State().infamy = 0;
+    const auto plan = g.Surface()->Stream().Snapshot()->planet;
+    auto *community = g.SurfaceCommunity();
+    assert(community);
+    unsigned attempts = 0;
+    for (const auto &region : plan->regions)
+    {
+        if (region.center.space != world::SpaceKind::Surface ||
+            (region.definition.kind != world::RegionKind::Settlement &&
+             region.definition.kind != world::RegionKind::Outpost) ||
+            (plan->cityCores && plan->cityCores->Find(region.definition.id)))
+        {
+            continue;
+        }
+        if (++attempts > 12)
+        {
+            break;
+        }
+        assert(g.RelocateSurfaceSurvey(region.access.position));
+        g.Update(0);
+        for (int i = 0; i < 110 && community->State().sites.empty(); ++i)
+        {
+            community->Update(.05f, true);
+        }
+        if (!community->State().sites.empty())
+        {
+            break;
+        }
+    }
+    assert(!community->State().sites.empty());
+    const auto initial = community->State();
+    const auto regionId = initial.sites.front().regionId;
+    const auto contact = initial.sites.front().contact, target = initial.sites.front().target;
+    const auto citizen = initial.sites.front().residents.back().id;
+    const auto mainStage = mineState.quest.GetStage();
+    PlanetCommunity::Validate(initial, g.Surface()->Planet());
+    PlanetCommunity copied(initial);
+    copied.Bind(plan);
+    auto rejected = initial;
+    rejected.sites.push_back(rejected.sites.front());
+    bool caught = false;
+    try
+    {
+        PlanetCommunity::Validate(rejected, g.Surface()->Planet());
+    }
+    catch (const std::invalid_argument &)
+    {
+        caught = true;
+    }
+    assert(caught);
+    const auto personPosition = community->State().sites.front().residents.back().position;
+    const auto nearby = G::Advance(G::Frame(personPosition), 0, 4, g.Surface()->Planet().radiusMeters).origin;
+    assert(g.RelocateSurfaceSurvey(nearby));
+    CivicJustice::State().infamy = 40;
+    community->Update(.05f, true);
+    assert(community->State().sites.front().residents.back().fearSeconds > 0);
+    CivicJustice::State().infamy = 0;
+    const auto position = community->State().sites.front().residents.back().position;
+    w.isPaused = true;
+    community->Update(.05f, true);
+    w.isPaused = false;
+    assert(G::Distance(g.Surface()->Planet().radiusMeters, position,
+                       community->State().sites.front().residents.back().position) < .0001);
+    auto read = [&](size_t choice) {
+        int pages = 0;
+        while (Dialogue::Active())
+        {
+            assert(++pages < 200);
+            if (!w.dialogue.pages[w.dialogue.page].choices.empty())
+            {
+                assert(Dialogue::Select(choice));
+            }
+            assert(Dialogue::Advance());
+        }
+    };
+    assert(g.RelocateSurfaceSurvey(contact));
+    assert(community->Nearby() == InteractionTarget::Community);
+    community->Interact();
+    read(1); // Discovering a settlement never accepts work automatically.
+    assert(community->State().sites.front().task == 0);
+    community->Interact();
+    read(0);
+    assert(community->State().sites.front().task == 1 && !community->Journal().empty());
+    community->Interact();
+    read(1);
+    assert(community->State().sites.front().task == 0);
+    community->Interact();
+    read(0);
+    const int credits = mineState.player.credits;
+    assert(g.RelocateSurfaceSurvey(target));
+    community->Interact();
+    assert(community->State().sites.front().task == 2 && mineState.player.credits == credits);
+    assert(g.RelocateSurfaceSurvey(contact));
+    community->Interact();
+    assert(community->State().sites.front().task == 3 && mineState.player.credits == credits + 100 &&
+           mineState.quest.GetStage() == mainStage);
+    community->Interact();
+    read(0);
+    assert(mineState.player.credits == credits + 100);
+    assert(community->Damage(citizen, 7, false) && CivicJustice::State().heat == 0);
+    assert(community->Damage(citizen, 5, true) && CivicJustice::State().heat > 0);
+    CivicJustice::State().wanted = 0;
+    CivicJustice::State().heat = 0;
+    const auto folder =
+        std::filesystem::path("x64/RevisionChecks") /
+        ("community-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    const auto file = folder / "residents.sav";
+    assert(SaveSystem::Save(file) && SaveSystem::Load(file));
+    WaitForCheckpointLoad();
+    community = g.SurfaceCommunity();
+    assert(community && community->State().sites.front().regionId == regionId &&
+           community->State().sites.front().task == 3 &&
+           community->State().sites.front().residents.back().health == 88 &&
+           community->State().sites.front().residents.back().id == citizen &&
+           mineState.player.credits == credits + 100);
+    const auto json = monitoring::WorldSnapshot::Build(1, "community-test");
+    assert(json.find("task_state") != std::string::npos && json.find("npc_community") != std::string::npos);
     g.Reset();
     std::filesystem::remove(file);
     std::filesystem::remove(folder);
@@ -3864,6 +4024,7 @@ int main(int argc, char **argv)
     TestRelayTravelAndAtlas();
     TestWorldCheckpoints();
     TestCityTrafficHandoff();
+    TestPlanetCommunity();
     TestPlanetSecurity();
     TestPlanetParty();
     TestPlanetProfileVisits();

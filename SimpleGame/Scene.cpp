@@ -1994,6 +1994,75 @@ void DrawPlanetTraffic(const world::SurfaceSession &session)
         renderqueue::PopMatrix();
     }
 }
+void DrawPlanetCommunity(const world::SurfaceSession &session)
+{
+    const auto *community = Game::Get().SurfaceCommunity();
+    if (!community)
+    {
+        return;
+    }
+    const auto &hero = session.Pose().origin;
+    auto withinDrawRange = [&](const world::SurfacePoint &point) {
+        return world::SurfaceGeometry::Distance(session.Planet().radiusMeters, hero, point) < 120;
+    };
+    static constexpr models::CharacterType types[] = {
+        models::CharacterType::Engineer, models::CharacterType::Miner, models::CharacterType::Medic,
+        models::CharacterType::Researcher};
+    size_t drawn = 0;
+    for (const auto &site : community->State().sites)
+    {
+        for (size_t i = 0; i < site.residents.size(); ++i)
+        {
+            const auto &person = site.residents[i];
+            if (!withinDrawRange(person.position) || (person.health <= 0 && person.corpseSeconds >= 30) ||
+                drawn >= PlanetCommunity::ActiveLimit)
+            {
+                continue;
+            }
+            ++drawn;
+            const auto p = session.Local(person.position);
+            const Vector2 position{float(p.x / 2), float(p.y / 2)};
+            const float height = float(p.z / 2);
+            const float yaw =
+                float(std::atan2(world::SurfaceGeometry::Dot(person.heading, session.Origin().forward),
+                                 world::SurfaceGeometry::Dot(person.heading, session.Origin().right)));
+            renderqueue::PushMatrix();
+            renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
+            const ColorRGBA coat = person.hitFlash > 0
+                                       ? ColorRGBA(1, .3f, .25f)
+                                       : ColorRGBA(.3f + float(person.appearance % 5) * .08f, .5f, .6f);
+            Drawing::DrawPerson(
+                position, coat, false, types[i % 4], person.speed > .1f, yaw,
+                models::Gender(person.appearance % 2),
+                models::HairStyle((person.appearance >> 8) % size_t(models::HairStyle::Count)), false, 0,
+                person.health <= 0, person.speed / 2);
+            renderqueue::PopMatrix();
+        }
+        auto terminal = [&](const world::SurfacePoint &point, const char *label, bool mark) {
+            if (!withinDrawRange(point))
+            {
+                return;
+            }
+            const auto p = session.Local(point);
+            const Vector2 position{float(p.x / 2), float(p.y / 2)};
+            const float height = float(p.z / 2);
+            renderqueue::PushMatrix();
+            renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
+            models::Palette palette;
+            palette.emission = {.25f, .85f, .9f, 1};
+            Drawing::DrawProp(models::ModelLibrary::Scenery(models::SceneryType::Wayfinding), position,
+                              {1, 1, 1}, palette);
+            if (mark)
+            {
+                Drawing::DrawInteractionMarker(position, label, {1, .8f, .35f});
+            }
+            renderqueue::PopMatrix();
+        };
+        terminal(site.contact, site.task == 2 ? "현장 기록 제출" : "선택 의뢰",
+                 site.task != 1 && site.task != 3);
+        terminal(site.target, PlanetCommunity::TaskName(site), site.task == 1);
+    }
+}
 void DrawSurfaceCities(const world::SurfaceSession &session)
 {
     auto cities = Game::Get().SurfaceCities();
@@ -2606,6 +2675,7 @@ void PlanetScene::Draw()
         }
     }
     DrawSurfaceCities(*session);
+    DrawPlanetCommunity(*session);
     DrawPlanetParty(*session);
     DrawPlanetTraffic(*session);
     CivicPresentation::DrawWorld();
