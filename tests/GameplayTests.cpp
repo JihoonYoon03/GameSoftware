@@ -230,9 +230,27 @@ void TestPlanetTraffic()
     distant.Bind(plan);
     const auto local = session.Local(record.actors.front().position);
     observation.cameraPosition = {float(local.x / 2), float(local.y / 2)};
-    assert(!distant.Outside(record.actors.front(), observation, session));
+    observation.surfaceCameraHeight = float(local.z / 2);
+    assert(!distant.Outside(record.actors.front(), observation, session, 80));
+    const auto visibleProgress = distant.State().actors.front().distanceMeters;
     distant.Update(observation, session, .05f, true);
-    assert(distant.State().actors.size() == 1);
+    assert(distant.State().actors.size() == 1 &&
+           distant.State().actors.front().distanceMeters > visibleProgress);
+    // Hidden actors remain real and advance at 2Hz, even while the exterior is active.
+    record.actors = {TrafficFixtureActor(prototype, *plan, road, road.lengthMeters * .5 + 500)};
+    PlanetTraffic hiddenTraffic(record);
+    hiddenTraffic.Bind(plan);
+    observation.cameraPosition = {};
+    observation.surfaceCameraHeight = 0;
+    const auto hiddenProgress = hiddenTraffic.State().actors.front().distanceMeters;
+    for (int i = 0; i < 9; ++i)
+    {
+        hiddenTraffic.Update(observation, session, .05f, true);
+    }
+    assert(hiddenTraffic.State().actors.front().distanceMeters == hiddenProgress);
+    hiddenTraffic.Update(observation, session, .05f, true);
+    assert(hiddenTraffic.State().actors.front().distanceMeters > hiddenProgress &&
+           hiddenTraffic.State().actors.front().id == 1);
     observation.cameraPosition = {};
     distant.Update(observation, session, .05f, false);
     assert(distant.State().actors.empty() && distant.State().nextId == 2);
@@ -539,7 +557,7 @@ void TestPlanetCityMigration()
         g.KeyDown(key, 0, 0);
         g.KeyUp(key, 0, 0);
     };
-    auto near = [&](Vector2 legacy) {
+    auto placeAtPortal = [&](Vector2 legacy) {
         auto point = g.SurfaceCities()->Point(*g.Surface(), 0, legacy);
         assert(point);
         assert(g.RelocateSurfaceSurvey(*point));
@@ -548,7 +566,7 @@ void TestPlanetCityMigration()
         assert(local);
         w.playerPosition = *local;
     };
-    near(kHomeDoor);
+    placeAtPortal(kHomeDoor);
     auto parked = g.SurfaceBike();
     assert(g.FindNearbyInteraction() == InteractionTarget::HomeEntrance);
     press('e');
@@ -564,7 +582,7 @@ void TestPlanetCityMigration()
                1.e-6);
     auto parkedLocal = g.Surface()->Local(*g.SurfaceBike());
     assert(Game::Distance(w.bikePosition, {float(parkedLocal.x / 2), float(parkedLocal.y / 2)}) < 1.e-5f);
-    near(kBeaconPosition);
+    placeAtPortal(kBeaconPosition);
     press('e');
     assert(w.isInObservatory && SceneManager::Current() == SceneKind::Observatory);
     g.PlanetLocation()->Validate(g.Surface()->Planet());

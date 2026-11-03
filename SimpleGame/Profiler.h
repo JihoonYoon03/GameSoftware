@@ -56,6 +56,8 @@ enum class Counter
     TrafficHandoffs,
     CommunitySitesPrepared,
     CommunityDetailedTicks,
+    PlanetMapRoutesRejected,
+    PlanetMapSegmentsVisited,
     Count
 };
 enum class Timer
@@ -94,6 +96,9 @@ enum class Timer
     PlanetParty,
     PlanetSecurity,
     PlanetCommunity,
+    PlanetMap,
+    PlanetTrafficContacts,
+    PlanetTrafficPopulate,
     Count
 };
 class Scope
@@ -124,7 +129,14 @@ class GpuScope
 void InitializeConsoleOutput();
 void Initialize();
 void Shutdown();
-void BeginFrame(const char *scene);
+struct FrameContext
+{
+    int width = 0, height = 0;
+    bool paused = false, fullMap = false, menu = false, mounted = false;
+    int resolutionDivisor = 1, msaaSamples = 0;
+    bool cartoon = true, antialiasing = true;
+};
+void BeginFrame(const char *scene, const FrameContext &context = {});
 void EndGpuFrame();
 void EndFrame();
 void Count(Counter counter, std::uint64_t amount = 1);

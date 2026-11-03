@@ -143,6 +143,25 @@ class GeneratedPlanet
     void Validate() const;
 };
 // ============================================================================
+// RouteSpatialIndex — conservative spherical caps for immutable connections, without render state
+// ============================================================================
+class RouteSpatialIndex
+{
+  public:
+    explicit RouteSpatialIndex(const GeneratedPlanet &planet);
+    std::vector<std::size_t> Query(const SurfacePoint &focus, double radiusMeters) const;
+
+  private:
+    struct Bound
+    {
+        Vector3d center;
+        double angle = 0;
+    };
+    double planetRadius = 0;
+    std::vector<Bound> bounds;
+};
+
+// ============================================================================
 // RelayNetwork — per-world discoveries/registrations, independent of mission participation
 // ============================================================================
 class RelayNetwork

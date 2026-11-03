@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "Hud.h"
+#include "Profiler.h"
 #include "Save.h"
 #include "Civic.h"
 #include "Drawing.h"
@@ -2701,6 +2702,7 @@ void PlanetHud::Draw()
 }
 void PlanetHud::DrawMap(bool full)
 {
+    profiling::Scope mapTimer(profiling::Timer::PlanetMap);
     auto session = Game::Get().Surface();
     if (!session || !session->Ready())
     {
@@ -2803,8 +2805,19 @@ void PlanetHud::DrawMap(bool full)
                    : r.definition.kind == world::RegionKind::Settlement ? ColorRGBA(.19f, .31f, .32f)
                                                                         : ColorRGBA(.22f, .29f, .23f));
     }
-    for (const auto &edge : snapshot->planet->connections)
+    static std::weak_ptr<const world::GeneratedPlanet> indexedPlanet;
+    static std::unique_ptr<world::RouteSpatialIndex> routeIndex;
+    if (indexedPlanet.lock() != snapshot->planet || !routeIndex)
     {
+        routeIndex = std::make_unique<world::RouteSpatialIndex>(*snapshot->planet);
+        indexedPlanet = snapshot->planet;
+    }
+    const auto nearbyRoutes = routeIndex->Query(focus, range * 1.5);
+    profiling::Count(profiling::Counter::PlanetMapRoutesRejected,
+                     snapshot->planet->connections.size() - nearbyRoutes.size());
+    for (const auto route : nearbyRoutes)
+    {
+        const auto &edge = snapshot->planet->connections[route];
         if (edge.mode != world::RouteMode::Road && (!full || range < 10000))
         {
             continue;
@@ -2814,6 +2827,7 @@ void PlanetHud::DrawMap(bool full)
                                               : 1;
         for (std::size_t i = stride; i < edge.points.size() + stride - 1; i += stride)
         {
+            profiling::Count(profiling::Counter::PlanetMapSegmentsVisited);
             auto a = edge.points[i - stride], b = edge.points[(std::min)(i, edge.points.size() - 1)];
             double length = world::SurfaceGeometry::Distance(session->Planet().radiusMeters, a, b);
             double distance = world::SurfaceGeometry::Distance(session->Planet().radiusMeters, a, focus);

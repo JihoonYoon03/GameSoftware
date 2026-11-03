@@ -59,6 +59,37 @@ bool Inside(const GeneratedRegion &r, double x, double y)
     }
     return true;
 }
+void RouteVisibility(const GeneratedPlanet &plan)
+{
+    RouteSpatialIndex index(plan);
+    const auto all = index.Query(G::FromDegrees(0, 0), G::Pi * plan.terrain.Planet().radiusMeters);
+    Check(all.size() == plan.connections.size(), "Planet view retains every nonempty connection");
+    for (size_t route = 0; route < plan.connections.size(); ++route)
+    {
+        const auto &edge = plan.connections[route];
+        for (size_t i = 1; i < edge.points.size(); ++i)
+        {
+            const auto middle = Between(plan, edge.points[i - 1], edge.points[i], .5);
+            const auto visible = index.Query(middle, 0);
+            Check(std::binary_search(visible.begin(), visible.end(), route),
+                  "Spherical route culling never removes an intersecting segment");
+        }
+    }
+    Throws([&] { index.Query(G::FromDegrees(0, 0), -1); }, "Negative route query rejected");
+    GeneratedPlanet wrap{PlanetTerrain(plan.terrain.Planet())};
+    auto a = G::FromDegrees(0, 179.9), b = G::FromDegrees(0, -179.9);
+    wrap.connections.push_back({0, 1, RouteMode::Road, {a, b}, Distance(wrap, a, b)});
+    RouteSpatialIndex seam(wrap);
+    Check(seam.Query(G::FromDegrees(0, 180), 1).size() == 1, "Dateline-spanning road remains visible");
+    Check(seam.Query(G::FromDegrees(0, 0), 160).empty(), "Distant road can be rejected");
+    wrap.connections.clear();
+    a = G::FromDegrees(89, -45);
+    b = G::FromDegrees(89, 45);
+    wrap.connections.push_back({0, 1, RouteMode::Air, {a, b}, Distance(wrap, a, b)});
+    RouteSpatialIndex pole(wrap);
+    Check(pole.Query(Between(wrap, a, b, .5), 1).size() == 1, "Polar route remains visible");
+}
+
 void Layout(const GeneratedPlanet &plan, unsigned extras)
 {
     plan.Validate();
@@ -663,6 +694,7 @@ int main(int argc, char **argv)
         }
         Layout(plan, 64);
         Routes(plan);
+        RouteVisibility(plan);
         RelayContracts(plan);
         RelayWorldScope(plan);
         Queries(plan);

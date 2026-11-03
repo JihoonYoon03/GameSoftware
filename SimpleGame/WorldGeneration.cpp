@@ -648,6 +648,75 @@ void AddRelays(GeneratedPlanet &result, const GenerationSettings &settings, cons
 } // namespace
 
 // ============================================================================
+// RouteSpatialIndex — broad phase only; exact projection/clipping remains the caller's responsibility
+// ============================================================================
+RouteSpatialIndex::RouteSpatialIndex(const GeneratedPlanet &planet)
+    : planetRadius(planet.terrain.Planet().radiusMeters)
+{
+    planet.terrain.Planet().Validate();
+    bounds.reserve(planet.connections.size());
+    for (const auto &route : planet.connections)
+    {
+        Bound bound;
+        bound.angle = -1;
+        if (route.points.size() >= 2)
+        {
+            Vector3d sum = {};
+            for (const auto &point : route.points)
+            {
+                G::Validate(point);
+                sum = Add(sum, point.normal);
+            }
+            bound.center = G::Dot(sum, sum) > 1.e-16 ? G::Unit(sum) : route.points.front().normal;
+            SurfacePoint center{bound.center, 0};
+            double endpointAngle = 0, halfSegmentAngle = 0;
+            for (size_t i = 0; i < route.points.size(); ++i)
+            {
+                endpointAngle = (std::max)(endpointAngle,
+                                           G::Distance(planetRadius, center, route.points[i]) / planetRadius);
+                if (i)
+                {
+                    halfSegmentAngle =
+                        (std::max)(halfSegmentAngle,
+                                   G::Distance(planetRadius, route.points[i - 1], route.points[i]) /
+                                       (2 * planetRadius));
+                }
+            }
+            // Every point on a segment lies within half its length of at least one endpoint.
+            bound.angle = (std::min)(G::Pi, endpointAngle + halfSegmentAngle + 1.e-9);
+            // A smaller hemisphere is geodesically convex, including coarse map shortcuts.
+            // For a wider cap, retain the connection everywhere rather than risk an atlas false negative.
+            if (bound.angle >= G::Pi * .5)
+            {
+                bound.angle = G::Pi;
+            }
+        }
+        bounds.push_back(bound);
+    }
+}
+std::vector<std::size_t> RouteSpatialIndex::Query(const SurfacePoint &focus, double radiusMeters) const
+{
+    G::Validate(focus);
+    Require(std::isfinite(radiusMeters) && radiusMeters >= 0, "Invalid route query radius");
+    std::vector<std::size_t> result;
+    const double angle = (std::min)(G::Pi, radiusMeters / planetRadius);
+    for (size_t i = 0; i < bounds.size(); ++i)
+    {
+        const auto &bound = bounds[i];
+        if (bound.angle < 0)
+        {
+            continue;
+        }
+        const double reach = (std::min)(G::Pi, bound.angle + angle);
+        if (reach >= G::Pi || G::Dot(bound.center, focus.normal) >= std::cos(reach) - 1.e-12)
+        {
+            result.push_back(i);
+        }
+    }
+    return result;
+}
+
+// ============================================================================
 // RelayNetwork — discoveries remain physical facts, not quest or equipment unlocks
 // ============================================================================
 const RelayCandidate *RelayNetwork::Find(const GeneratedPlanet &planet, std::string_view id)

@@ -69,7 +69,9 @@ const char *counterNames[] = {"draw_calls",
                               "companion_handoffs",
                               "traffic_handoffs",
                               "community_sites_prepared",
-                              "community_detailed_ticks"};
+                              "community_detailed_ticks",
+                              "planet_map_routes_rejected",
+                              "planet_map_segments_visited"};
 const char *timerNames[] = {"frame_cpu",
                             "update",
                             "movement",
@@ -103,7 +105,10 @@ const char *timerNames[] = {"frame_cpu",
                             "planet_traffic_prepare",
                             "planet_party",
                             "planet_security",
-                            "planet_community"};
+                            "planet_community",
+                            "planet_map",
+                            "planet_traffic_contacts",
+                            "planet_traffic_populate"};
 static_assert(sizeof(counterNames) / sizeof(*counterNames) == kCounterCount);
 static_assert(sizeof(timerNames) / sizeof(*timerNames) == kTimerCount);
 struct Sample
@@ -138,6 +143,8 @@ double intervalMax = 0;
 bool initialized = false, inFrame = false, timerSupported = false, mixedScene = false;
 int activeQuery = -1;
 const char *sceneName = "unknown";
+FrameContext frameContext;
+bool mixedContext = false;
 FILE *logFile = nullptr;
 std::filesystem::path logBase;
 std::uint64_t logBytes = 0;
@@ -504,8 +511,25 @@ void Report(Clock::time_point now)
 #else
         << ",\"build_config\":\"release\""
 #endif
-        << ",\"scene\":\"" << (mixedScene ? "mixed" : sceneName) << "\",\"window_seconds\":" << seconds
-        << ",\"frames\":" << frames << ",\"fps\":" << frames / seconds
+        << ",\"scene\":\"" << (mixedScene ? "mixed" : sceneName)
+        << "\",\"mixed_context\":" << (mixedContext ? "true" : "false") << ",\"context\":";
+    if (mixedContext)
+    {
+        out << "null";
+    }
+    else
+    {
+        out << "{\"viewport\":[" << frameContext.width << ',' << frameContext.height
+            << "],\"paused\":" << (frameContext.paused ? "true" : "false")
+            << ",\"full_map\":" << (frameContext.fullMap ? "true" : "false")
+            << ",\"menu\":" << (frameContext.menu ? "true" : "false")
+            << ",\"mounted\":" << (frameContext.mounted ? "true" : "false")
+            << ",\"resolution_divisor\":" << frameContext.resolutionDivisor
+            << ",\"msaa_samples\":" << frameContext.msaaSamples
+            << ",\"cartoon\":" << (frameContext.cartoon ? "true" : "false")
+            << ",\"antialiasing\":" << (frameContext.antialiasing ? "true" : "false") << '}';
+    }
+    out << ",\"window_seconds\":" << seconds << ",\"frames\":" << frames << ",\"fps\":" << frames / seconds
         << ",\"target_fps\":60,\"below_target_fps\":" << (frames / seconds < 60 ? "true" : "false")
         << ",\"frame_interval_ms\":{\"p95\":" << percentile(.95) << ",\"p99\":" << percentile(.99)
         << ",\"max\":" << intervalMax << ",\"samples\":" << intervals.size()
@@ -570,6 +594,7 @@ void Report(Clock::time_point now)
     intervals.clear();
     windowStart = now;
     mixedScene = false;
+    mixedContext = false;
     auto logStart = reportStart;
     const std::string line = out.str();
     latestReportJson = line;
@@ -677,6 +702,8 @@ void Initialize()
     InitializeConsoleOutput();
     latestReportJson = "null";
     windowIndex = 0;
+    mixedScene = mixedContext = false;
+    frameContext = {};
     vendorJson = JsonString(glGetString(GL_VENDOR));
     rendererJson = JsonString(glGetString(GL_RENDERER));
     versionJson = JsonString(glGetString(GL_VERSION));
@@ -715,7 +742,7 @@ void Initialize()
         }
     }
 }
-void BeginFrame(const char *scene)
+void BeginFrame(const char *scene, const FrameContext &context)
 {
     if (!initialized)
     {
@@ -737,6 +764,17 @@ void BeginFrame(const char *scene)
         mixedScene = true;
     }
     sceneName = scene;
+    if (frames &&
+        (context.width != frameContext.width || context.height != frameContext.height ||
+         context.paused != frameContext.paused || context.fullMap != frameContext.fullMap ||
+         context.menu != frameContext.menu || context.mounted != frameContext.mounted ||
+         context.resolutionDivisor != frameContext.resolutionDivisor ||
+         context.msaaSamples != frameContext.msaaSamples || context.cartoon != frameContext.cartoon ||
+         context.antialiasing != frameContext.antialiasing))
+    {
+        mixedContext = true;
+    }
+    frameContext = context;
     frameStart = lastFrame = now;
     ++frameId;
     frameDraws = 0;

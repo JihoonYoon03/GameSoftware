@@ -1528,12 +1528,19 @@ void GameRenderer::Draw()
     {
         return;
     }
-    profiling::BeginFrame(game::GameLevels::Mine().IsActive()         ? "mine"
-                          : Game::Get().GetState().surfaceExploration ? "planet_surface"
-                          : Game::Get().GetState().isBikeMounted      ? "overworld_bike"
-                          : Game::Get().GetState().isInObservatory
-                              ? "observatory"
-                              : (Game::Get().GetState().isInsideHome ? "interior" : "exterior"));
+    const auto &state = Game::Get().GetState();
+    const char *scene = game::GameLevels::Mine().IsActive()      ? "mine"
+                        : state.isInsideHome                     ? "interior"
+                        : state.isInObservatory                  ? "observatory"
+                        : game::GameLevels::Chapter().IsActive() ? "frontier"
+                        : state.surfaceExploration               ? "planet_surface"
+                        : state.isBikeMounted                    ? "overworld_bike"
+                                                                 : "exterior";
+    const auto &style = renderer->GetStyle();
+    profiling::BeginFrame(scene,
+                          {state.viewportWidth, state.viewportHeight, state.isPaused, state.mapVisible,
+                           state.ui.screen != UiScreen::None, state.isBikeMounted, int(style.resolution),
+                           renderer->GetAntialiasingSamples(), style.cartoon, style.antialiasing});
     renderqueue::BeginFrame();
     renderer->BeginScene(Game::Get().GetState().viewportWidth, Game::Get().GetState().viewportHeight);
     glMatrixMode(GL_PROJECTION);

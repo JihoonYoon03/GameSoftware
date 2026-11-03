@@ -3261,6 +3261,7 @@ void PlanetTraffic::Advance(PlanetTrafficActor &actor, float seconds, const Game
                           actor.altitudeMeters;
     if (!actor.airborne)
     {
+        profiling::Scope contactTimer(profiling::Timer::PlanetTrafficContacts);
         if ((route->portalCity < 0 && InsideCore(next)) ||
             (TG::Distance(radius, next, session.Pose().origin) < DetailedMeters &&
              !session.LandingClear(next, .8)))
@@ -3414,6 +3415,7 @@ void PlanetTraffic::Advance(PlanetTrafficActor &actor, float seconds, const Game
 }
 void PlanetTraffic::Populate(const GameState &world, const world::SurfaceSession &session)
 {
+    profiling::Scope populateTimer(profiling::Timer::PlanetTrafficPopulate);
     struct Candidate
     {
         size_t route;
@@ -3518,8 +3520,11 @@ void PlanetTraffic::Update(GameState &world, const world::SurfaceSession &sessio
         {
             continue;
         }
-        const bool detailed = exterior && TG::Distance(session.Planet().radiusMeters, actor.position,
-                                                       session.Pose().origin) < DetailedMeters;
+        // Hidden traffic keeps its physical record and advances at 2Hz; anything actually visible
+        // uses per-frame updates even with a distant/elevated camera.
+        const bool detailed = exterior && (TG::Distance(session.Planet().radiusMeters, actor.position,
+                                                        session.Pose().origin) < DetailedMeters ||
+                                           !Outside(actor, world, session, 80));
         if (actor.health <= 0)
         {
             actor.wreckSeconds += dt;

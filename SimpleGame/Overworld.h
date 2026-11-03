@@ -334,7 +334,7 @@ class PlanetTraffic
 {
   public:
     static constexpr size_t GroundLimit = 64, AirLimit = 24;
-    static constexpr double DetailedMeters = 1500, RetireMeters = 4000;
+    static constexpr double DetailedMeters = 240, RetireMeters = 4000;
     static constexpr unsigned Revision = 1;
     static constexpr size_t CityLimit = 8;
     explicit PlanetTraffic(PlanetTrafficState state = {});
