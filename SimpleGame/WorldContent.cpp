@@ -988,7 +988,8 @@ const char *ContentLayout::UseName(ContentUse use)
         return "탐사 거점";
     }
 }
-bool ContentCollision::Blocked(const GeneratedPlanet &p, const SurfacePoint &point, double clearance)
+bool ContentCollision::Blocked(const GeneratedPlanet &p, const SurfacePoint &point, double clearance,
+                               bool heightAware)
 {
     if (!std::isfinite(clearance) || clearance < 0 || clearance > 4)
     {
@@ -1017,7 +1018,10 @@ bool ContentCollision::Blocked(const GeneratedPlanet &p, const SurfacePoint &poi
         found->second.touched = clock;
         for (const auto &structure : found->second.cell.structures)
         {
-            if (structure.Contains(point, p.terrain.Planet().radiusMeters, clearance))
+            if ((!heightAware || (point.altitudeMeters >= structure.frame.origin.altitudeMeters - clearance &&
+                                  point.altitudeMeters <= structure.frame.origin.altitudeMeters +
+                                                              structure.sizeMeters.z + clearance)) &&
+                structure.Contains(point, p.terrain.Planet().radiusMeters, clearance))
             {
                 return true;
             }

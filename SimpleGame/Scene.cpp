@@ -2237,7 +2237,8 @@ void DrawPlanetParty(const world::SurfaceSession &session)
         Drawing::DrawPerson(position, i == 0 ? ColorRGBA(.9f, .58f, .3f) : ColorRGBA(.38f, .53f, .66f), false,
                             i == 0 ? models::CharacterType::Engineer : models::CharacterType::Guard,
                             m.walking, yaw, i == 0 ? models::Gender::Female : models::Gender::Male,
-                            i == 0 ? models::HairStyle::Ponytail : models::HairStyle::Buzz, false, 0,
+                            i == 0 ? models::HairStyle::Ponytail : models::HairStyle::Buzz,
+                            m.combat.engaged && m.combat.health > 0, m.combat.muzzleFlash,
                             m.combat.health <= 0);
         if (Game::Distance(position, Game::Get().GetState().playerPosition) < 4)
         {
@@ -2607,6 +2608,7 @@ void PlanetScene::Draw()
     DrawSurfaceCities(*session);
     DrawPlanetParty(*session);
     DrawPlanetTraffic(*session);
+    CivicPresentation::DrawWorld();
     for (const auto &relay : snapshot->planet->relays)
     {
         if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, session->Pose().origin,

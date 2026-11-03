@@ -2949,6 +2949,34 @@ void PlanetHud::DrawMap(bool full)
             }
         }
     }
+    if (CivicJustice::State().wanted > 0 && CivicJustice::IsExterior() && range < 4000)
+    {
+        for (const auto &officer : CivicJustice::State().officers)
+        {
+            if (officer.health <= 0)
+            {
+                continue;
+            }
+            auto at = view.Project({officer.position.x * 2, officer.position.y * 2});
+            if (!view.Inside(at, 7))
+            {
+                continue;
+            }
+            std::vector<Vector2> cone{at};
+            for (int i = 0; i <= 8; ++i)
+            {
+                float angle = officer.facing.yaw - CivicJustice::kSightHalfAngle +
+                              2 * CivicJustice::kSightHalfAngle * i / 8;
+                cone.push_back(
+                    view.Project({(officer.position.x + std::cos(angle) * CivicJustice::kSightRange) * 2,
+                                  (officer.position.y + std::sin(angle) * CivicJustice::kSightRange) * 2}));
+            }
+            MapPolygon(view, std::move(cone), {1, .5f, .2f, .15f});
+            auto ahead = view.Project({(officer.position.x + std::cos(officer.facing.yaw)) * 2,
+                                       (officer.position.y + std::sin(officer.facing.yaw)) * 2});
+            DirectionArrow(at, std::atan2(ahead.y - at.y, ahead.x - at.x), 5, {1, .65f, .3f});
+        }
+    }
     if (w.planetDestination)
     {
         // At an antipode a great-circle bearing is genuinely ambiguous. Keep the distance readout,

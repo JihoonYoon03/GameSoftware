@@ -1452,6 +1452,7 @@ void Game::Update(float deltaSeconds)
 }
 void Game::StopSurface()
 {
+    PlanetSecurity::Reset();
     SaveSystem::Cancel();
     state.relayPreparing = false;
     state.relaySource.clear();
@@ -1730,6 +1731,7 @@ bool Game::LandOnSurface(const world::SurfacePoint &point, int city)
         ShowNotice("출입구 주변이 막혀 있습니다. 잠시 후 다시 나가세요.");
         return false;
     }
+    CivicCombat::ClearProjectiles();
     state.isInsideHome = state.isInObservatory = false;
     auto bikeHeading = world::SurfaceGeometry::TransformDirection(
         {std::cos(state.bikeYaw), std::sin(state.bikeYaw), 0}, oldFrame, surface->Origin());
@@ -1809,6 +1811,7 @@ void Game::UpdateSurface(float dt)
         surfaceParty->Bind(surface->Stream().Snapshot()->planet);
         surfaceParty->Capture();
     }
+    PlanetSecurity::Project();
     HospitalRecovery::Update(dt);
     if (HospitalRecovery::Active())
     {
@@ -1845,7 +1848,9 @@ void Game::UpdateSurface(float dt)
     if (advancing)
     {
         state.playTimeSeconds += dt;
-        CivicJustice::AdvanceSurfaceTimers(dt);
+        CivicJustice::Update(dt);
+        PlanetSecurity::UpdateCompanions(dt);
+        CivicCombat::Update(dt);
         if (surfaceTraffic)
         {
             surfaceTraffic->Update(state, *surface, dt,
@@ -2016,6 +2021,7 @@ void Game::UpdateSurface(float dt)
         {
             surfaceParty->Capture();
         }
+        PlanetSecurity::Project();
         HospitalRecovery::Update(0);
         UpdateCamera(dt);
         float targetHeight = float(surface->Local(surface->Pose().origin).z / 2);
@@ -2529,7 +2535,8 @@ bool Game::IsPositionBlocked(Vector2 position)
     if (state.surfaceExploration && surfaceCities && surfaceCities->Observing())
     {
         auto point = surfaceCities->Point(*surface, surfaceCities->ObservedCity(), position);
-        if (point && surfaceParty && surfaceParty->Blocked(*point, state.isBikeMounted ? .5 : .32))
+        if (point && ((surfaceParty && surfaceParty->Blocked(*point, state.isBikeMounted ? .5 : .32)) ||
+                      PlanetSecurity::OfficerBlocked(*point, state.isBikeMounted ? .5 : .32)))
         {
             return true;
         }
@@ -2543,6 +2550,8 @@ bool Game::IsPositionBlocked(Vector2 position)
                (surfaceCities && surfaceCities->Occupied(state, *surface, position)) ||
                (surfaceParty && surfaceParty->Blocked(surface->PointAt(position.x * 2, position.y * 2),
                                                       state.isBikeMounted ? .5 : .32)) ||
+               PlanetSecurity::OfficerBlocked(surface->PointAt(position.x * 2, position.y * 2),
+                                              state.isBikeMounted ? .5 : .32) ||
                (surfaceTraffic && surfaceTraffic->Blocked(surface->PointAt(position.x * 2, position.y * 2),
                                                           state.isBikeMounted ? .5 : .32));
     }

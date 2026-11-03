@@ -7,17 +7,99 @@
 #include "ResidentAI.h"
 #include "ResourceAssets.h"
 #include "TransitLayout.h"
+#include "RenderQueue.h"
+#include "WorldContent.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
 #include <queue>
 #include <tuple>
+#include <set>
+#include <stdexcept>
 
 namespace tutorial
 {
 namespace
 {
 CivicState civic;
+PlanetSecurityState planetary;
+world::ContentCollision shotCollision;
+std::optional<world::SurfacePoint> reportedPoint;
+int navigationBudget = 2;
+struct SurfaceTarget
+{
+    Vector2 position;
+    float elevation = 0;
+    int resident = -1, landmark = -1, city = -1;
+    std::uint64_t vehicle = 0;
+    bool vehicleBody = false;
+    float yaw = 0;
+    models::Point minimum, maximum;
+};
+std::vector<SurfaceTarget> surfaceTargets;
+void PrepareSurfaceTargets()
+{
+    auto &g = Game::Get();
+    surfaceTargets.clear();
+    if (!g.SurfaceCities() || !CivicJustice::IsExterior())
+    {
+        return;
+    }
+    auto add = [&](int city, Vector2 p, int resident, int landmark, const TrafficVehicle *vehicle) {
+        auto point = g.SurfaceCities()->Point(*g.Surface(), city, p);
+        if (!point || world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, *point,
+                                                       g.Surface()->Pose().origin) > 150)
+        {
+            return;
+        }
+        SurfaceTarget target;
+        target.position = PlanetSecurity::Local(*point);
+        target.elevation = PlanetSecurity::Elevation(*point);
+        target.city = city;
+        target.resident = resident;
+        target.landmark = landmark;
+        if (vehicle)
+        {
+            target.vehicle = vehicle->id;
+            target.vehicleBody = true;
+            target.yaw = g.SurfaceCities()->Yaw(*g.Surface(), city, vehicle->yaw);
+            const auto &mesh = models::ResourceAssets::Get(
+                models::ModelLibrary::Get().vehicles[size_t(vehicle->id % 4)].body.resourceId);
+            target.minimum = mesh.minimum;
+            target.maximum = mesh.maximum;
+        }
+        surfaceTargets.push_back(std::move(target));
+    };
+    const auto &residents = g.GetState().residents;
+    for (size_t i = 0; i < residents.size(); ++i)
+    {
+        const auto &r = residents[i];
+        if (r.health > 0 &&
+            !(i == Overworld::kKainResidentSlot && game::GameLevels::Chapter().GetState().kainJoined))
+        {
+            add(r.cityIndex, r.position, int(i), -1, nullptr);
+        }
+    }
+    if (!g.SurfaceParty() || !g.SurfaceParty()->Joined(CompanionId::Ria))
+    {
+        add(0, kLiaPosition, -1, 0, nullptr);
+    }
+    add(0, kMaraPosition, -1, 1, nullptr);
+    for (int city = 0; city < Overworld::kCityCount; ++city)
+    {
+        for (size_t i = 0; i < g.SurfaceCities()->Traffic(city).Vehicles().size(); ++i)
+        {
+            const auto &traffic = g.SurfaceCities()->Traffic(city);
+            const auto &car = traffic.Vehicles()[i];
+            const auto count = surfaceTargets.size();
+            add(city, car.position, -1, -1, &car);
+            if (surfaceTargets.size() > count)
+            {
+                surfaceTargets.back().elevation += traffic.RenderElevation(i);
+            }
+        }
+    }
+}
 void ClearPursuit();
 int ObservedCity()
 {
@@ -253,6 +335,13 @@ bool SegmentClear(Vector2 a, Vector2 b, float radius = .3f)
 // Bounded local emergency routing. Police may cross streets, but never buildings or solid props.
 std::vector<Vector2> EmergencyRoute(Vector2 start, Vector2 target)
 {
+    profiling::Scope navigation(profiling::Timer::NpcNavigation);
+    profiling::Count(profiling::Counter::NpcPathRequests);
+    const bool surfaceMode = Game::Get().GetState().surfaceExploration;
+    if (surfaceMode && Game::Distance(start, target) < 40 && SegmentClear(start, target))
+    {
+        return {target};
+    }
     constexpr int size = 49, half = size / 2, count = size * size;
     auto position = [=](int index) {
         return Vector2{start.x + (index % size - half) * 2, start.y + (index / size - half) * 2};
@@ -272,7 +361,7 @@ std::vector<Vector2> EmergencyRoute(Vector2 start, Vector2 target)
     int best = origin;
     float closest = Game::Distance(start, target);
     int expansions = 0;
-    while (!open.empty() && ++expansions < 2400)
+    while (!open.empty() && ++expansions < (surfaceMode ? 256 : 2400))
     {
         int current = open.top().second;
         open.pop();
@@ -307,6 +396,7 @@ std::vector<Vector2> EmergencyRoute(Vector2 start, Vector2 target)
         }
     }
     std::vector<Vector2> result;
+    profiling::Count(profiling::Counter::NpcPathVisitedCells, expansions);
     for (int node = best; node != origin && node >= 0; node = parents[node])
     {
         result.push_back(position(node));
@@ -610,6 +700,7 @@ void TransferToHospital()
     civic.heat = 0;
     ClearPursuit();
     civic.officers.clear();
+    planetary.officers.clear();
     civic.bullets.clear();
     civic.tracers.clear();
     civic.airBullets.clear();
@@ -631,6 +722,516 @@ void TransferToHospital()
 }
 } // namespace
 
+// ============================================================================
+// PlanetSecurity — main-thread spherical authority and bounded local projections
+// ============================================================================
+PlanetSecurityState &PlanetSecurity::State()
+{
+    return planetary;
+}
+void PlanetSecurity::Reset()
+{
+    planetary = {};
+    shotCollision.Clear();
+    reportedPoint.reset();
+    surfaceTargets.clear();
+}
+void PlanetSecurity::Migrate(PlanetSecurityState &s, const CivicState &law,
+                             const world::PlanetDefinition &planet, const world::TangentFrame &frame)
+{
+    if (!s.worldKey.empty())
+    {
+        return;
+    }
+    s.worldKey = world::WorldIdentity::ContentKey(planet, "overworld", "security_v1");
+    s.frame = frame;
+    auto point = [&](Vector2 p) {
+        return world::SurfaceGeometry::FromLocal(frame, {p.x * 2, p.y * 2, 0}, planet.radiusMeters);
+    };
+    if (law.wanted > 0)
+    {
+        s.incident = s.search = point(law.lastCrime);
+    }
+    for (const auto &o : law.officers)
+    {
+        PlanetOfficer record;
+        record.id = o.id;
+        record.position = point(o.position);
+        record.lastKnown = point(o.lastKnown);
+        record.heading = world::SurfaceGeometry::Unit(
+            {frame.right.x * std::cos(o.facing.yaw) + frame.forward.x * std::sin(o.facing.yaw),
+             frame.right.y * std::cos(o.facing.yaw) + frame.forward.y * std::sin(o.facing.yaw),
+             frame.right.z * std::cos(o.facing.yaw) + frame.forward.z * std::sin(o.facing.yaw)});
+        record.jurisdiction = "overworld";
+        s.officers.push_back(std::move(record));
+    }
+}
+void PlanetSecurity::Validate(const PlanetSecurityState &s, const CivicState &law,
+                              const world::PlanetDefinition &planet)
+{
+    if (s.worldKey.empty())
+    {
+        if (!s.officers.empty() || s.incident || s.search)
+        {
+            throw std::runtime_error("치안 기록의 월드 키가 없습니다.");
+        }
+        return;
+    }
+    if (s.worldKey != world::WorldIdentity::ContentKey(planet, "overworld", "security_v1") ||
+        s.officers.size() != law.officers.size() || s.officers.size() > 16)
+    {
+        throw std::runtime_error("행성 보안대의 소유권/인원 기록이 다릅니다.");
+    }
+    world::SurfaceGeometry::Validate(s.frame);
+    if (s.incident)
+    {
+        world::SurfaceGeometry::Validate(*s.incident);
+    }
+    if (s.search)
+    {
+        world::SurfaceGeometry::Validate(*s.search);
+    }
+    if (law.wanted > 0 && (!s.incident || !s.search))
+    {
+        throw std::runtime_error("수배 사건 위치가 없습니다.");
+    }
+    std::set<std::uint64_t> ids;
+    for (const auto &o : s.officers)
+    {
+        world::SurfaceGeometry::Validate(o.position);
+        world::SurfaceGeometry::Validate(o.lastKnown);
+        if (!ids.insert(o.id).second || o.jurisdiction.size() > 128 || !std::isfinite(o.heading.x) ||
+            !std::isfinite(o.heading.y) || !std::isfinite(o.heading.z) ||
+            std::abs(world::SurfaceGeometry::Dot(o.heading, o.heading) - 1) > .01 ||
+            std::none_of(law.officers.begin(), law.officers.end(),
+                         [&](const auto &v) { return v.id == o.id; }))
+        {
+            throw std::runtime_error("보안대 위치/방향/ID가 올바르지 않습니다.");
+        }
+    }
+}
+world::SurfacePoint PlanetSecurity::Point(Vector2 p)
+{
+    auto &g = Game::Get();
+    if (g.SurfaceCities() && g.SurfaceCities()->Observing())
+    {
+        return *g.SurfaceCities()->Point(*g.Surface(), g.SurfaceCities()->ObservedCity(), p);
+    }
+    if (game::GameLevels::Chapter().Surface().Observing())
+    {
+        return game::GameLevels::Chapter().Surface().Point(p);
+    }
+    return g.Surface()->PointAt(p.x * 2, p.y * 2);
+}
+Vector2 PlanetSecurity::Local(const world::SurfacePoint &p)
+{
+    const auto &s = *Game::Get().Surface();
+    auto local = world::SurfaceAtlas::Project(s.Origin(), p, s.Planet().radiusMeters);
+    return {float(local.x / 2), float(local.y / 2)};
+}
+float PlanetSecurity::Elevation(const world::SurfacePoint &p)
+{
+    return float((p.altitudeMeters - Game::Get().Surface()->Origin().origin.altitudeMeters) / 2);
+}
+void PlanetSecurity::Project()
+{
+    profiling::Scope profile(profiling::Timer::PlanetSecurity);
+    auto &g = Game::Get();
+    if (!g.GetState().surfaceExploration || !g.Surface() || !g.Surface()->Ready())
+    {
+        return;
+    }
+    const auto &s = *g.Surface();
+    Migrate(planetary, civic, s.Planet(), s.Origin());
+    navigationBudget = 2;
+    using G = world::SurfaceGeometry;
+    const bool changed =
+        G::Distance(s.Planet().radiusMeters, planetary.frame.origin, s.Origin().origin) > .001 ||
+        std::abs(planetary.frame.origin.altitudeMeters - s.Origin().origin.altitudeMeters) > .001 ||
+        G::Dot(planetary.frame.right, s.Origin().right) < 1 - 1.e-10;
+    if (changed)
+    {
+        auto convert = [&](models::Point p) {
+            auto point = G::FromLocal(planetary.frame, {p.x * 2, p.y * 2, p.z * 2}, s.Planet().radiusMeters);
+            auto local = world::SurfaceAtlas::Project(s.Origin(), point, s.Planet().radiusMeters);
+            return models::Point{float(local.x / 2), float(local.y / 2), float(local.z / 2)};
+        };
+        const bool transport =
+            G::Distance(s.Planet().radiusMeters, planetary.frame.origin, s.Origin().origin) > 1000;
+        if (transport || !CivicJustice::IsExterior())
+        {
+            civic.bullets.clear();
+            civic.airBullets.clear();
+            civic.tracers.clear();
+            civic.airTracers.clear();
+        }
+        else
+        {
+            for (auto &b : civic.bullets)
+            {
+                auto p = convert({b.position.x, b.position.y, b.elevation});
+                b.position = {p.x, p.y};
+                b.elevation = p.z;
+                auto d =
+                    G::TransformDirection({b.direction.x, b.direction.y, 0}, planetary.frame, s.Origin());
+                b.direction = {float(d.x), float(d.y)};
+            }
+            for (auto &t : civic.tracers)
+            {
+                auto a = convert({t.start.x, t.start.y, t.elevation});
+                auto b = convert({t.end.x, t.end.y, t.elevation});
+                t.start = {a.x, a.y};
+                t.end = {b.x, b.y};
+                t.elevation = a.z;
+            }
+            for (auto &b : civic.airBullets)
+            {
+                b.position = convert(b.position);
+                auto d = G::TransformDirection({b.direction.x, b.direction.y, b.direction.z}, planetary.frame,
+                                               s.Origin());
+                b.direction = {float(d.x), float(d.y), float(d.z)};
+            }
+            for (auto &t : civic.airTracers)
+            {
+                t.start = convert(t.start);
+                t.end = convert(t.end);
+            }
+        }
+        for (auto &o : civic.officers)
+        {
+            auto velocity = G::TransformDirection({o.impact.velocity.x, o.impact.velocity.y, 0},
+                                                  planetary.frame, s.Origin());
+            o.impact.velocity = {float(velocity.x), float(velocity.y)};
+            o.route.clear();
+            o.waypoint = 0;
+            o.navigationSeconds = 0;
+        }
+    }
+    planetary.frame = s.Origin();
+    for (auto &o : civic.officers)
+    {
+        auto record = std::find_if(planetary.officers.begin(), planetary.officers.end(),
+                                   [&](const auto &r) { return r.id == o.id; });
+        if (record == planetary.officers.end())
+        {
+            continue;
+        }
+        o.position = Local(record->position);
+        o.lastKnown = Local(record->lastKnown);
+        o.facing.yaw = float(std::atan2(G::Dot(record->heading, s.Origin().forward),
+                                        G::Dot(record->heading, s.Origin().right)));
+    }
+    if (planetary.search)
+    {
+        civic.lastCrime = Local(*planetary.search);
+    }
+    if (!CivicJustice::IsExterior())
+    {
+        civic.bullets.clear();
+        civic.airBullets.clear();
+        civic.tracers.clear();
+        civic.airTracers.clear();
+    }
+    PrepareSurfaceTargets();
+}
+void PlanetSecurity::Capture()
+{
+    const auto *session = Game::Get().Surface();
+    if (!session || planetary.worldKey.empty())
+    {
+        return;
+    }
+    const auto &frame = session->Origin();
+    for (const auto &o : civic.officers)
+    {
+        auto record = std::find_if(planetary.officers.begin(), planetary.officers.end(),
+                                   [&](const auto &r) { return r.id == o.id; });
+        if (record == planetary.officers.end() ||
+            Game::Distance(o.position, Game::Get().GetState().playerPosition) > 400)
+        {
+            continue;
+        }
+        record->position = session->PointAt(o.position.x * 2, o.position.y * 2);
+        record->position.altitudeMeters = session->Stream().Contact(record->position).heightMeters;
+        if (Game::Distance(o.lastKnown, Game::Get().GetState().playerPosition) < 1000)
+        {
+            record->lastKnown = session->PointAt(o.lastKnown.x * 2, o.lastKnown.y * 2);
+        }
+        record->heading = world::SurfaceGeometry::Unit(
+            {frame.right.x * std::cos(o.facing.yaw) + frame.forward.x * std::sin(o.facing.yaw),
+             frame.right.y * std::cos(o.facing.yaw) + frame.forward.y * std::sin(o.facing.yaw),
+             frame.right.z * std::cos(o.facing.yaw) + frame.forward.z * std::sin(o.facing.yaw)});
+    }
+    planetary.officers.erase(std::remove_if(planetary.officers.begin(), planetary.officers.end(),
+                                            [&](const auto &r) {
+                                                return std::none_of(
+                                                    civic.officers.begin(), civic.officers.end(),
+                                                    [&](const auto &o) { return r.id == o.id; });
+                                            }),
+                             planetary.officers.end());
+}
+void PlanetSecurity::Report(Offense offense, const world::SurfacePoint &p)
+{
+    const auto previous = reportedPoint;
+    reportedPoint = p;
+    CivicJustice::Report(offense, Local(p));
+    reportedPoint = previous;
+}
+void PlanetSecurity::SawPlayer()
+{
+    planetary.search = Game::Get().Surface()->Pose().origin;
+}
+bool PlanetSecurity::CanNavigate()
+{
+    if (navigationBudget <= 0)
+    {
+        return false;
+    }
+    --navigationBudget;
+    return true;
+}
+bool PlanetSecurity::BodyBlocked(Vector2 p, double radius)
+{
+    auto &g = Game::Get();
+    auto point = g.Surface()->PointAt(p.x * 2, p.y * 2);
+    return !g.Surface()->LandingClear(point, radius) ||
+           (g.SurfaceCities() && g.SurfaceCities()->OccupiedAt(g.GetState(), *g.Surface(), point)) ||
+           (g.SurfaceTraffic() && g.SurfaceTraffic()->Blocked(point, radius)) ||
+           (g.SurfaceParty() && g.SurfaceParty()->Blocked(point, radius));
+}
+bool PlanetSecurity::OfficerBlocked(const world::SurfacePoint &point, double radius)
+{
+    const auto *surface = Game::Get().Surface();
+    if (!surface)
+    {
+        return false;
+    }
+    for (const auto &record : planetary.officers)
+    {
+        auto officer = std::find_if(civic.officers.begin(), civic.officers.end(),
+                                    [&](const auto &o) { return o.id == record.id; });
+        if (officer != civic.officers.end() && officer->health > 0 &&
+            world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, point, record.position) <
+                radius + .32)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+bool PlanetSecurity::ShotBlocked(models::Point p)
+{
+    auto &g = Game::Get();
+    auto point = g.Surface()->PointAt(p.x * 2, p.y * 2);
+    point.altitudeMeters = g.Surface()->Origin().origin.altitudeMeters + p.z * 2;
+    return point.altitudeMeters <= g.Surface()->Stream().Contact(point).heightMeters + .03 ||
+           shotCollision.Blocked(*g.Surface()->Stream().Snapshot()->planet, point, .04, true);
+}
+bool PlanetSecurity::Spawn()
+{
+    using G = world::SurfaceGeometry;
+    auto &g = Game::Get();
+    if (!planetary.search || civic.officers.size() >= 16)
+    {
+        return false;
+    }
+    auto frame = G::Frame(*planetary.search);
+    for (int attempt = 0; attempt < 24; ++attempt)
+    {
+        double angle = double(Random() % 6283) * .001, range = 40 + double(Random() % 33);
+        auto p = G::Advance(frame, std::cos(angle) * range, std::sin(angle) * range,
+                            g.Surface()->Planet().radiusMeters)
+                     .origin;
+        auto local = Local(p);
+        if (!g.Surface()->LandingClear(p, .65) ||
+            (CivicJustice::IsExterior() &&
+             G::Distance(g.Surface()->Planet().radiusMeters, p, g.Surface()->Pose().origin) < 1000 &&
+             !TrafficSystem::OutsideView(local, g.GetState().cameraPosition, 90)) ||
+            (g.SurfaceTraffic() && g.SurfaceTraffic()->Blocked(p, .8)) ||
+            (g.SurfaceCities() && g.SurfaceCities()->OccupiedAt(g.GetState(), *g.Surface(), p)) ||
+            (g.SurfaceParty() && g.SurfaceParty()->Blocked(p, .8)))
+        {
+            continue;
+        }
+        if (std::any_of(planetary.officers.begin(), planetary.officers.end(), [&](const auto &o) {
+                return G::Distance(g.Surface()->Planet().radiusMeters, o.position, p) < 2;
+            }))
+        {
+            continue;
+        }
+        p.altitudeMeters = g.Surface()->Stream().Contact(p).heightMeters;
+        SecurityOfficer o;
+        o.id = civic.nextOfficer++;
+        o.position = local;
+        o.lastKnown = Local(*planetary.search);
+        o.facing.yaw = std::atan2(o.lastKnown.y - local.y, o.lastKnown.x - local.x);
+        o.tier = civic.wanted;
+        o.health = 60 + 40 * o.tier + 8 * (game::GameLevels::Mine().GetState().player.level - 1);
+        PlanetOfficer record;
+        record.id = o.id;
+        record.position = p;
+        record.lastKnown = *planetary.search;
+        record.heading = G::Unit({g.Surface()->Origin().right.x * std::cos(o.facing.yaw) +
+                                      g.Surface()->Origin().forward.x * std::sin(o.facing.yaw),
+                                  g.Surface()->Origin().right.y * std::cos(o.facing.yaw) +
+                                      g.Surface()->Origin().forward.y * std::sin(o.facing.yaw),
+                                  g.Surface()->Origin().right.z * std::cos(o.facing.yaw) +
+                                      g.Surface()->Origin().forward.z * std::sin(o.facing.yaw)});
+        auto location = g.Surface()->Stream().Snapshot()->planet;
+        record.jurisdiction = "overworld";
+        for (const auto &region : location->regions)
+        {
+            if (G::Distance(g.Surface()->Planet().radiusMeters, region.center.position, p) <
+                region.boundingRadiusMeters)
+            {
+                record.jurisdiction = region.definition.id;
+                break;
+            }
+        }
+        planetary.officers.push_back(std::move(record));
+        civic.officers.push_back(std::move(o));
+        if (!civic.responseStarted)
+        {
+            civic.responseStarted = true;
+            civic.initialUnseenSeconds = 0;
+        }
+        return true;
+    }
+    return false;
+}
+bool PlanetSecurity::Hit(models::Point p, int damage, bool playerOwned, bool companionOwned)
+{
+    auto &g = Game::Get();
+    auto point = Point({p.x, p.y});
+    point.altitudeMeters = (game::GameLevels::Chapter().Surface().Observing() ||
+                            (g.SurfaceCities() && g.SurfaceCities()->Observing()))
+                               ? point.altitudeMeters + p.z * 2
+                               : g.Surface()->Origin().origin.altitudeMeters + p.z * 2;
+    Vector2 local = Local(point);
+    float z = Elevation(point);
+    auto body = [&](Vector2 q, float ground) {
+        return Game::Distance(local, q) < .35f && z >= ground && z <= ground + .95f;
+    };
+    if (!playerOwned && !companionOwned &&
+        body(g.GetState().playerPosition, Elevation(g.Surface()->Pose().origin)))
+    {
+        CivicCombat::DamagePlayer(damage);
+        return true;
+    }
+    if (playerOwned || companionOwned)
+    {
+        for (size_t i = 0; i < civic.officers.size(); ++i)
+        {
+            const auto &o = civic.officers[i];
+            auto record = std::find_if(planetary.officers.begin(), planetary.officers.end(),
+                                       [&](const auto &r) { return r.id == o.id; });
+            if (record != planetary.officers.end() && body(o.position, Elevation(record->position)) &&
+                CivicCombat::DamageOfficer(i, damage, {}, playerOwned))
+            {
+                return true;
+            }
+        }
+    }
+    if (!companionOwned && g.SurfaceParty())
+    {
+        for (size_t i = 0; i < g.SurfaceParty()->State().members.size(); ++i)
+        {
+            const auto &m = g.SurfaceParty()->State().members[i];
+            if (m.joined && m.place != CompanionPlace::Mine && m.combat.health > 0 &&
+                body(Local(m.position), Elevation(m.position)))
+            {
+                g.SurfaceParty()->Damage(CompanionId(i), damage, playerOwned);
+                return true;
+            }
+        }
+    }
+    for (const auto &target : surfaceTargets)
+    {
+        if (target.vehicleBody)
+        {
+            if (Game::Distance(local, target.position) > 8)
+            {
+                continue;
+            }
+            auto delta = Sub(local, target.position);
+            float c = std::cos(target.yaw), s = std::sin(target.yaw);
+            const float x = delta.x * c + delta.y * s, y = -delta.x * s + delta.y * c;
+            if (x < target.minimum.x || x > target.maximum.x || y < target.minimum.y ||
+                y > target.maximum.y || z < target.elevation + target.minimum.z ||
+                z > target.elevation + target.maximum.z)
+            {
+                continue;
+            }
+            g.SurfaceCities()->Observe(g.GetState(), *g.Surface(), target.city, [&] {
+                if (auto *traffic = g.SurfaceCities()->ActiveTraffic())
+                {
+                    traffic->DamageVehicle(target.vehicle, damage, playerOwned);
+                }
+            });
+            return true;
+        }
+        if (!body(target.position, target.elevation))
+        {
+            continue;
+        }
+        if (target.resident >= 0 &&
+            CivicCombat::DamageResident(size_t(target.resident), damage, {}, playerOwned))
+        {
+            return true;
+        }
+        if (target.landmark >= 0 && CivicCombat::DamageLandmark(size_t(target.landmark), damage, playerOwned))
+        {
+            return true;
+        }
+    }
+    if (auto *traffic = g.SurfaceTraffic())
+    {
+        for (const auto &actor : traffic->State().actors)
+        {
+            if (traffic->Contains(actor, point, .04))
+            {
+                traffic->Damage(actor.id, damage, playerOwned);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+void PlanetSecurity::UpdateCompanions(float seconds)
+{
+    auto &g = Game::Get();
+    if (seconds <= 0 || !CivicJustice::IsExterior() || !g.SurfaceParty() || civic.wanted == 0 ||
+        !civic.identified)
+    {
+        return;
+    }
+    for (size_t i = 0; i < g.SurfaceParty()->State().members.size(); ++i)
+    {
+        const auto &m = g.SurfaceParty()->State().members[i];
+        if (!m.joined || m.place != CompanionPlace::Surface || m.combat.health <= 0)
+        {
+            continue;
+        }
+        Vector2 p = Local(m.position);
+        const SecurityOfficer *target = nullptr;
+        float nearest = 8;
+        for (const auto &o : civic.officers)
+        {
+            const float d = Game::Distance(p, o.position);
+            if (o.health > 0 && d < nearest && CivicJustice::ClearLine(p, o.position))
+            {
+                target = &o;
+                nearest = d;
+            }
+        }
+        if (target)
+        {
+            g.SurfaceParty()->Defend(CompanionId(i),
+                                     std::atan2(target->position.y - p.y, target->position.x - p.x));
+        }
+    }
+}
+
 CivicState &CivicJustice::State()
 {
     return civic;
@@ -638,11 +1239,18 @@ CivicState &CivicJustice::State()
 bool CivicJustice::IsExterior()
 {
     const auto &world = Game::Get().GetState();
-    return !world.surfaceExploration && !game::GameLevels::Active() && !world.isInsideHome &&
-           !world.isInObservatory;
+    return !world.isInsideHome && !world.isInObservatory &&
+           (world.surfaceExploration
+                ? Game::Get().Surface() && Game::Get().Surface()->Ready() && !Game::Get().IsSurfaceMine()
+                : !game::GameLevels::Active());
 }
 bool CivicJustice::Solid(Vector2 p, float radius, float altitude, bool driving)
 {
+    if (Game::Get().GetState().surfaceExploration && ObservedCity() < 0 &&
+        !game::GameLevels::Chapter().Surface().Observing())
+    {
+        return PlanetSecurity::BodyBlocked(p, radius * 2);
+    }
     if (TransitLayout::IsBlocked(p, radius, altitude, driving))
     {
         return true;
@@ -681,11 +1289,35 @@ bool CivicJustice::Solid(Vector2 p, float radius, float altitude, bool driving)
 }
 bool CivicJustice::ClearLine(Vector2 from, Vector2 to)
 {
+    if (Game::Get().GetState().surfaceExploration && ObservedCity() < 0 &&
+        !game::GameLevels::Chapter().Surface().Observing())
+    {
+        const auto &surface = *Game::Get().Surface();
+        const float eye = models::WorldScale::aimHeightPixels / 44;
+        float a = PlanetSecurity::Elevation(surface.Pose().origin);
+        auto start = surface.PointAt(from.x * 2, from.y * 2), end = surface.PointAt(to.x * 2, to.y * 2);
+        start.altitudeMeters = surface.Stream().Contact(start).heightMeters;
+        end.altitudeMeters = surface.Stream().Contact(end).heightMeters;
+        a = PlanetSecurity::Elevation(start) + eye;
+        float b = PlanetSecurity::Elevation(end) + eye;
+        const int steps = (std::max)(1, int(std::ceil(Game::Distance(from, to) / .4f)));
+        for (int i = 0; i <= steps; ++i)
+        {
+            const float t = float(i) / steps;
+            auto p = Add(from, Sub(to, from), t);
+            if (PlanetSecurity::ShotBlocked({p.x, p.y, a + (b - a) * t}))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
     return SegmentClear(from, to, .05f);
 }
 void CivicJustice::Reset(GameState &world)
 {
     civic = CivicState{};
+    PlanetSecurity::Reset();
     BuildObstacles(world);
     for (int city = 0; city < Overworld::kCityCount; ++city)
     {
@@ -817,7 +1449,7 @@ float CivicJustice::SightDistance(const SecurityOfficer &officer, float angle)
 }
 bool CivicJustice::CanSee(const SecurityOfficer &officer, Vector2 target, float altitude)
 {
-    if (officer.health <= 0 || altitude >= .8f ||
+    if (officer.health <= 0 || (!Game::Get().GetState().surfaceExploration && altitude >= .8f) ||
         (officer.impact.response == BodyResponse::Knockdown && officer.impact.seconds > 0))
     {
         return false;
@@ -855,6 +1487,18 @@ void CivicJustice::Report(Offense offense, Vector2 position)
         ClearPursuit();
         civic.spawnSeconds = 0;
     }
+    if (Game::Get().GetState().surfaceExploration)
+    {
+        const auto &surface = *Game::Get().Surface();
+        PlanetSecurity::Migrate(planetary, civic, surface.Planet(), surface.Origin());
+        const auto point = reportedPoint ? *reportedPoint : PlanetSecurity::Point(position);
+        planetary.incident = planetary.search = point;
+        position = PlanetSecurity::Local(point);
+        for (auto &officer : planetary.officers)
+        {
+            officer.lastKnown = point;
+        }
+    }
     civic.heat = Game::Clamp(civic.heat + heat[index], 0, kMaximumHeat);
     civic.sinceCrime = civic.unseenSeconds = 0;
     civic.lastCrime = position;
@@ -875,15 +1519,28 @@ void CivicJustice::Report(Offense offense, Vector2 position)
     auto &world = Game::Get().GetState();
     for (auto &person : world.residents)
     {
-        if (ResidentPresent(person) && person.health > 0 && Game::Distance(person.position, position) < 12 &&
-            ClearLine(position, person.position))
+        Vector2 p = person.position;
+        if (world.surfaceExploration)
+        {
+            auto point = Game::Get().SurfaceCities()
+                             ? Game::Get().SurfaceCities()->Point(*Game::Get().Surface(), person.cityIndex,
+                                                                  person.position)
+                             : std::optional<::world::SurfacePoint>{};
+            if (!point)
+            {
+                continue;
+            }
+            p = PlanetSecurity::Local(*point);
+        }
+        if (ResidentPresent(person) && person.health > 0 && Game::Distance(p, position) < 12 &&
+            (world.surfaceExploration || ClearLine(position, p)))
         {
             person.fearSeconds = (std::max)(person.fearSeconds, 8.f);
         }
     }
     for (auto &officer : civic.officers)
     {
-        if (OfficersPresent() && officer.health > 0)
+        if ((OfficersPresent() || world.surfaceExploration) && officer.health > 0)
         {
             officer.lastKnown = position;
         }
@@ -922,9 +1579,15 @@ void CivicJustice::AdvanceSurfaceTimers(float dt)
 }
 void CivicJustice::Update(float dt)
 {
+    profiling::Scope profile(profiling::Timer::PlanetSecurity);
     if (dt <= 0 || HospitalRecovery::Active())
     {
         return;
+    }
+    const bool surfaceMode = Game::Get().GetState().surfaceExploration;
+    if (surfaceMode && (!Game::Get().SurfaceCities() || Game::Get().SurfaceCities()->ActiveCity() < 0))
+    {
+        AdvanceImpact(Game::Get().GetState().playerPosition, civic.playerImpact, dt, false);
     }
     bool unconfirmedAtStart = civic.wanted > 0 && !civic.identified;
     civic.sinceCrime += dt;
@@ -963,7 +1626,11 @@ void CivicJustice::Update(float dt)
             officer.corpseSeconds += dt;
             continue;
         }
-        if (!IsExterior())
+        if (surfaceMode)
+        {
+            AdvanceImpact(officer.position, officer.impact, dt, IsExterior());
+        }
+        if (!IsExterior() || (surfaceMode && Game::Distance(world.playerPosition, officer.position) > 300))
         {
             continue;
         }
@@ -974,13 +1641,17 @@ void CivicJustice::Update(float dt)
         if (sees)
         {
             officer.lastKnown = world.playerPosition;
+            if (surfaceMode)
+            {
+                PlanetSecurity::SawPlayer();
+            }
         }
         if (civic.wanted == 0)
         {
             officer.lastKnown = Add(officer.position, Unit(Sub(officer.position, world.playerPosition)), 15);
         }
         officer.navigationSeconds -= dt;
-        if (officer.navigationSeconds <= 0)
+        if (officer.navigationSeconds <= 0 && (!surfaceMode || PlanetSecurity::CanNavigate()))
         {
             officer.route = EmergencyRoute(officer.position, sees ? world.playerPosition : officer.lastKnown);
             officer.waypoint = 0;
@@ -996,7 +1667,11 @@ void CivicJustice::Update(float dt)
             if (SegmentClear(officer.position, next, .32f))
             {
                 officer.position =
-                    Separate(officer.position, next, .3f, -1, false, int(&officer - civic.officers.data()));
+                    surfaceMode
+                        ? BodyCollision::Slide(officer.position, next,
+                                               [](Vector2 p) { return PlanetSecurity::BodyBlocked(p); })
+                        : Separate(officer.position, next, .3f, -1, false,
+                                   int(&officer - civic.officers.data()));
             }
             if (remaining < .3f)
             {
@@ -1023,12 +1698,22 @@ void CivicJustice::Update(float dt)
                 const auto &stats = game::GameLevels::Mine().GetState().player;
                 int power = stats.defense +
                             (std::max)(8 + officer.tier * 4, int(stats.maxHealth * .015f * officer.tier));
-                civic.bullets.push_back({officer.position,
-                                         {std::cos(shot.angle), std::sin(shot.angle)},
-                                         shot.speed,
-                                         shot.range,
-                                         power,
-                                         false});
+                civic.bullets.push_back(
+                    {officer.position,
+                     {std::cos(shot.angle), std::sin(shot.angle)},
+                     shot.speed,
+                     shot.range,
+                     power,
+                     false,
+                     false,
+                     surfaceMode ? float((Game::Get()
+                                              .Surface()
+                                              ->ContactAt(officer.position.x * 2, officer.position.y * 2)
+                                              .heightMeters -
+                                          Game::Get().Surface()->Origin().origin.altitudeMeters) /
+                                         2) +
+                                       models::WorldScale::aimHeightPixels / 44
+                                 : 0});
                 officer.muzzleFlash = .07f;
             }
         }
@@ -1092,11 +1777,15 @@ void CivicJustice::Update(float dt)
             civic.officers.erase(body);
         }
     }
-    if (IsExterior() && civic.wanted > 0 && civic.spawnSeconds <= 0 && living < size_t(civic.wanted * 2) &&
-        civic.officers.size() < 16)
+    if ((IsExterior() || surfaceMode) && civic.wanted > 0 && civic.spawnSeconds <= 0 &&
+        living < size_t(civic.wanted * 2) && civic.officers.size() < 16)
     {
         civic.spawnSeconds = 3.5f;
-        for (int attempt = 0; attempt < 64; ++attempt)
+        if (surfaceMode)
+        {
+            PlanetSecurity::Spawn();
+        }
+        for (int attempt = 0; !surfaceMode && attempt < 64; ++attempt)
         {
             float angle = float(Random() % 6283) * .001f;
             float range = 18 + float(Random() % 17);
@@ -1129,14 +1818,20 @@ void CivicJustice::Update(float dt)
             break;
         }
     }
+    if (surfaceMode)
+    {
+        PlanetSecurity::Capture();
+    }
 }
 
 bool CivicCombat::Available()
 {
     const auto &world = Game::Get().GetState();
-    return CivicJustice::IsExterior() && !world.isBikeMounted && !HospitalRecovery::Active() &&
-           !world.isPaused && !world.mapVisible && !world.weaponWheel.visible && !world.journalVisible &&
-           !world.dialogueHistoryVisible && !Dialogue::LocksWorld();
+    return CivicJustice::IsExterior() &&
+           !(world.surfaceExploration && game::GameLevels::Chapter().IsActive()) && !world.isBikeMounted &&
+           !HospitalRecovery::Active() && !world.isPaused && !world.mapVisible &&
+           !world.weaponWheel.visible && !world.journalVisible && !world.dialogueHistoryVisible &&
+           !Dialogue::LocksWorld();
 }
 void CivicCombat::DamagePlayer(int damage, Vector2 impulse)
 {
@@ -1176,7 +1871,16 @@ bool CivicCombat::DamageResident(size_t index, int damage, Vector2 impulse, bool
     person.activity = person.health ? ResidentActivity::Injured : ResidentActivity::Dead;
     if (playerOwned)
     {
-        CivicJustice::Report(person.health ? Offense::Assault : Offense::Homicide, person.position);
+        if (world.surfaceExploration && Game::Get().SurfaceCities())
+        {
+            PlanetSecurity::Report(person.health ? Offense::Assault : Offense::Homicide,
+                                   *Game::Get().SurfaceCities()->Point(*Game::Get().Surface(),
+                                                                       person.cityIndex, person.position));
+        }
+        else
+        {
+            CivicJustice::Report(person.health ? Offense::Assault : Offense::Homicide, person.position);
+        }
     }
     return true;
 }
@@ -1191,8 +1895,17 @@ bool CivicCombat::DamageOfficer(size_t index, int damage, Vector2 impulse, bool 
     Impact(officer.impact, impulse, officer.health == 0);
     if (playerOwned)
     {
-        CivicJustice::Report(officer.health ? Offense::AssaultOfficer : Offense::OfficerKilled,
-                             officer.position);
+        if (Game::Get().GetState().surfaceExploration)
+        {
+            PlanetSecurity::Report(
+                officer.health ? Offense::AssaultOfficer : Offense::OfficerKilled,
+                Game::Get().Surface()->PointAt(officer.position.x * 2, officer.position.y * 2));
+        }
+        else
+        {
+            CivicJustice::Report(officer.health ? Offense::AssaultOfficer : Offense::OfficerKilled,
+                                 officer.position);
+        }
     }
     return true;
 }
@@ -1208,8 +1921,17 @@ bool CivicCombat::DamageLandmark(size_t index, int damage, bool weaponOwned)
     civic.landmarkRecovery[index] = 60;
     if (weaponOwned)
     {
-        CivicJustice::Report(civic.landmarkHealth[index] ? Offense::Assault : Offense::AggravatedAssault,
-                             kPeople[index]);
+        if (Game::Get().GetState().surfaceExploration)
+        {
+            PlanetSecurity::Report(
+                civic.landmarkHealth[index] ? Offense::Assault : Offense::AggravatedAssault,
+                *Game::Get().SurfaceCities()->Point(*Game::Get().Surface(), 0, kPeople[index]));
+        }
+        else
+        {
+            CivicJustice::Report(civic.landmarkHealth[index] ? Offense::Assault : Offense::AggravatedAssault,
+                                 kPeople[index]);
+        }
     }
     return true;
 }
@@ -1226,7 +1948,7 @@ bool CivicCombat::LandmarkDown(Vector2 position)
 }
 namespace
 {
-bool AimAtAirTraffic(float shotAngle, models::Point &target)
+bool AimAtVehicles(float shotAngle, models::Point &target)
 {
     const auto &w = Game::Get().GetState();
     float best = 1.e20f;
@@ -1236,14 +1958,62 @@ bool AimAtAirTraffic(float shotAngle, models::Point &target)
     float radius = Game::Distance(w.cursorPosition, muzzle);
     auto cursor = WorldCamera::FromViewport(
         {muzzle.x + std::cos(shotAngle) * radius, muzzle.y + std::sin(shotAngle) * radius});
-    for (const auto &craft : Overworld::Flights().Aircraft())
+    std::vector<AircraftActor> candidates;
+    if (w.surfaceExploration && Game::Get().SurfaceTraffic())
+    {
+        const auto &surface = *Game::Get().Surface();
+        for (const auto &actor : Game::Get().SurfaceTraffic()->State().actors)
+        {
+            if (actor.health <= 0 ||
+                ::world::SurfaceGeometry::Distance(surface.Planet().radiusMeters, actor.position,
+                                                   surface.Pose().origin) > 250)
+            {
+                continue;
+            }
+            AircraftActor craft;
+            craft.id = actor.id;
+            craft.position = PlanetSecurity::Local(actor.position);
+            craft.altitude = PlanetSecurity::Elevation(actor.position);
+            craft.health = actor.health;
+            craft.type = actor.airborne
+                             ? models::AircraftType((actor.id / 2) % size_t(models::AircraftType::Count))
+                             : models::AircraftType::Count;
+            craft.alternate = actor.id % 2 != 0;
+            craft.bank = actor.bank;
+            craft.yaw =
+                float(std::atan2(::world::SurfaceGeometry::Dot(actor.heading, surface.Origin().forward),
+                                 ::world::SurfaceGeometry::Dot(actor.heading, surface.Origin().right)));
+            candidates.push_back(craft);
+        }
+    }
+    if (w.surfaceExploration)
+    {
+        for (const auto &body : surfaceTargets)
+        {
+            if (!body.vehicleBody)
+            {
+                continue;
+            }
+            AircraftActor craft;
+            craft.id = body.vehicle;
+            craft.position = body.position;
+            craft.altitude = body.elevation;
+            craft.type = models::AircraftType::Count;
+            craft.yaw = body.yaw;
+            candidates.push_back(craft);
+        }
+    }
+    const auto &aircraft = w.surfaceExploration ? candidates : Overworld::Flights().Aircraft();
+    for (const auto &craft : aircraft)
     {
         if (craft.health <= 0)
         {
             continue;
         }
         const auto &mesh = models::ResourceAssets::Get(
-            models::ModelLibrary::Aircraft(craft.type, craft.alternate).resourceId);
+            craft.type == models::AircraftType::Count
+                ? models::ModelLibrary::Get().vehicles[size_t(craft.id % 4)].body.resourceId
+                : models::ModelLibrary::Aircraft(craft.type, craft.alternate).resourceId);
         models::Transform3D transform;
         transform.yaw = craft.yaw;
         transform.roll = craft.bank;
@@ -1281,6 +2051,10 @@ bool AimAtAirTraffic(float shotAngle, models::Point &target)
 }
 bool AirShotBlocked(models::Point p)
 {
+    if (Game::Get().GetState().surfaceExploration)
+    {
+        return PlanetSecurity::ShotBlocked(p);
+    }
     if (p.z < 1 && CivicJustice::Solid({p.x, p.y}, .03f))
     {
         return true;
@@ -1329,6 +2103,14 @@ void UpdateAirProjectiles(float dt)
                 bullet.remaining = 0;
                 break;
             }
+            if (Game::Get().GetState().surfaceExploration)
+            {
+                if (PlanetSecurity::Hit(bullet.position, bullet.damage, true))
+                {
+                    bullet.remaining = 0;
+                }
+                continue;
+            }
             for (const auto &craft : Overworld::Flights().Aircraft())
             {
                 if (craft.health > 0 && AirTraffic::Contains(craft, bullet.position))
@@ -1371,10 +2153,13 @@ void CivicCombat::Fire()
     }
     world.playerAnimation.Fire();
     models::Point target{};
-    if (Game::Get().IsAiming() && AimAtAirTraffic(shot.angle, target))
+    if (Game::Get().IsAiming() && AimAtVehicles(shot.angle, target))
     {
         models::Point origin{world.playerPosition.x, world.playerPosition.y,
-                             models::WorldScale::aimHeightPixels / 44};
+                             models::WorldScale::aimHeightPixels / 44 +
+                                 (world.surfaceExploration
+                                      ? PlanetSecurity::Elevation(Game::Get().Surface()->Pose().origin)
+                                      : 0)};
         models::Point d{target.x - origin.x, target.y - origin.y, target.z - origin.z};
         float length = std::sqrt(d.x * d.x + d.y * d.y + d.z * d.z);
         if (length > .001f)
@@ -1389,7 +2174,11 @@ void CivicCombat::Fire()
         return;
     }
     civic.bullets.push_back({world.playerPosition, game::MineLevel::GetAimDirection(shot.angle), shot.speed,
-                             shot.range, shot.damage + (mine.GetState().player.level - 1) * 4, true});
+                             shot.range, shot.damage + (mine.GetState().player.level - 1) * 4, true, false,
+                             world.surfaceExploration
+                                 ? PlanetSecurity::Elevation(Game::Get().Surface()->Pose().origin) +
+                                       models::WorldScale::aimHeightPixels / 44
+                                 : 0});
     civic.muzzleFlash = .06f;
 }
 void CivicCombat::Melee()
@@ -1407,6 +2196,24 @@ void CivicCombat::Melee()
         return range < 1.45f && (range < .45f || d.x * aim.x + d.y * aim.y > range * .25f) &&
                CivicJustice::ClearLine(world.playerPosition, p);
     };
+    if (world.surfaceExploration)
+    {
+        float z = PlanetSecurity::Elevation(Game::Get().Surface()->Pose().origin) +
+                  models::WorldScale::aimHeightPixels / 44;
+        for (int i = 1; i <= 12; ++i)
+        {
+            auto p = Add(world.playerPosition, aim, i * .1f);
+            if (PlanetSecurity::ShotBlocked({p.x, p.y, z}))
+            {
+                break;
+            }
+            if (PlanetSecurity::Hit({p.x, p.y, z}, 30, true))
+            {
+                break;
+            }
+        }
+        return;
+    }
     auto impulse = Add({}, aim, 4);
     for (size_t i = 0; i < civic.officers.size(); ++i)
     {
@@ -1476,6 +2283,18 @@ void CivicCombat::Update(float dt)
         for (int step = 0; step < steps && bullet.remaining > 0; ++step)
         {
             auto next = Add(bullet.position, bullet.direction, movement / steps);
+            if (world.surfaceExploration)
+            {
+                bullet.position = next;
+                bullet.remaining = (std::max)(0.f, bullet.remaining - movement / steps);
+                if (PlanetSecurity::ShotBlocked({next.x, next.y, bullet.elevation}) ||
+                    PlanetSecurity::Hit({next.x, next.y, bullet.elevation}, bullet.damage, bullet.playerOwned,
+                                        bullet.companionOwned))
+                {
+                    bullet.remaining = 0;
+                }
+                continue;
+            }
             if (CivicJustice::Solid(next, .03f))
             {
                 bullet.remaining = 0;
@@ -1548,7 +2367,7 @@ void CivicCombat::Update(float dt)
                 }
             }
         }
-        civic.tracers.push_back({start, bullet.position, .12f, !bullet.playerOwned});
+        civic.tracers.push_back({start, bullet.position, .12f, !bullet.playerOwned, bullet.elevation});
     }
     civic.bullets.erase(std::remove_if(civic.bullets.begin(), civic.bullets.end(),
                                        [](const game::Bullet &b) { return b.remaining <= 0; }),
@@ -1557,6 +2376,14 @@ void CivicCombat::Update(float dt)
     {
         civic.tracers.erase(civic.tracers.begin(), civic.tracers.end() - 160);
     }
+}
+void CivicCombat::ClearProjectiles()
+{
+    civic.bullets.clear();
+    civic.airBullets.clear();
+    civic.tracers.clear();
+    civic.airTracers.clear();
+    civic.muzzleFlash = 0;
 }
 
 Vector2 BodyCollision::Slide(Vector2 from, Vector2 desired, const std::function<bool(Vector2)> &blocked)
@@ -1725,6 +2552,10 @@ void BodyCollision::RecoverBike()
 }
 Vector2 BodyCollision::MovePlayer(Vector2 from, Vector2 desired)
 {
+    if (Game::Get().GetState().surfaceExploration && ObservedCity() < 0)
+    {
+        return desired;
+    }
     if (!CivicJustice::IsExterior())
     {
         return desired;
@@ -1821,7 +2652,7 @@ void BodyCollision::VehicleContacts(float)
         return;
     }
     auto &world = Game::Get().GetState();
-    const auto &traffic = Overworld::Traffic();
+    auto &traffic = Overworld::Traffic();
     for (size_t i = 0; i < traffic.Vehicles().size(); ++i)
     {
         const auto &car = traffic.Vehicles()[i];
@@ -1866,6 +2697,56 @@ void BodyCollision::VehicleContacts(float)
                     world.bikePosition = world.playerPosition;
                 }
                 Overworld::Traffic().StopForImpact(car.id);
+            }
+        }
+        if (world.surfaceExploration && ObservedCity() >= 0)
+        {
+            const auto &surface = *Game::Get().Surface();
+            const int city = ObservedCity();
+            const auto &region =
+                surface.Stream().Snapshot()->planet->Region(Overworld::Cities()[size_t(city)].id);
+            auto contact = [&](const ::world::SurfacePoint &point) {
+                if (::world::SurfaceGeometry::Distance(surface.Planet().radiusMeters, point,
+                                                       region.center.position) > 300)
+                {
+                    return false;
+                }
+                auto local =
+                    ::world::SurfaceGeometry::ToLocal(region.frame, point, surface.Planet().radiusMeters);
+                auto center = Overworld::Cities()[size_t(city)].center;
+                return std::abs(float(local.z / 2) - height) < .9f &&
+                       SweptCarContains(car, {center.x + float(local.x / 2), center.y + float(local.y / 2)},
+                                        .3f);
+            };
+            if (auto *party = Game::Get().SurfaceParty())
+            {
+                for (size_t n = 0; n < party->State().members.size(); ++n)
+                {
+                    const auto &member = party->State().members[n];
+                    if (member.joined && member.place != CompanionPlace::Mine && member.combat.health > 0 &&
+                        contact(member.position))
+                    {
+                        if (car.speed > .8f)
+                        {
+                            party->Damage(CompanionId(n), int(5 + car.speed * 7), false);
+                        }
+                        traffic.StopForImpact(car.id);
+                    }
+                }
+            }
+            for (const auto &record : planetary.officers)
+            {
+                auto o = std::find_if(civic.officers.begin(), civic.officers.end(),
+                                      [&](const auto &v) { return v.id == record.id; });
+                if (o != civic.officers.end() && o->health > 0 && contact(record.position))
+                {
+                    if (car.speed > .8f && o->impact.invulnerability <= 0)
+                    {
+                        CivicCombat::DamageOfficer(size_t(o - civic.officers.begin()), int(5 + car.speed * 7),
+                                                   {}, false);
+                    }
+                    traffic.StopForImpact(car.id);
+                }
             }
         }
         if (height > .7f)
@@ -2091,7 +2972,11 @@ void CivicPresentation::DrawWorld()
         return;
     }
     auto &renderer = GameRenderer::Get().Backend();
-    renderer.BeginModels();
+    const bool surfaceMode = Game::Get().GetState().surfaceExploration;
+    if (!surfaceMode)
+    {
+        renderer.BeginModels();
+    }
     for (const auto &officer : civic.officers)
     {
         if (officer.corpseSeconds > 20 &&
@@ -2099,16 +2984,38 @@ void CivicPresentation::DrawWorld()
         {
             continue;
         }
+        float elevation = 0;
+        if (surfaceMode)
+        {
+            auto record = std::find_if(planetary.officers.begin(), planetary.officers.end(),
+                                       [&](const auto &r) { return r.id == officer.id; });
+            if (record == planetary.officers.end() ||
+                Game::Distance(officer.position, Game::Get().GetState().playerPosition) > 130)
+            {
+                continue;
+            }
+            elevation = PlanetSecurity::Elevation(record->position);
+        }
+        renderqueue::PushMatrix();
+        renderqueue::Translate(0, -elevation * 44, elevation * (1296.f / 44));
         Drawing::DrawPerson(
             officer.position, {.18f, .36f, .48f}, false,
             officer.tier >= 3 ? models::CharacterType::HeavyCombat : models::CharacterType::Guard,
             officer.facing.walking, officer.facing.yaw, models::Gender::Male, models::HairStyle::Buzz, true,
             officer.muzzleFlash, officer.health <= 0 || officer.impact.response == BodyResponse::Knockdown,
             2.5f, officer.weapon.IsReloading() ? officer.weapon.GetReloadProgress() : -1);
+        renderqueue::PopMatrix();
     }
-    renderer.EndModels();
+    if (!surfaceMode)
+    {
+        renderer.EndModels();
+    }
     for (const auto &hospital : civic.hospitals)
     {
+        if (surfaceMode)
+        {
+            continue;
+        }
         auto p = Drawing::WorldToScreen(hospital.position.x, hospital.position.y, 35);
         Drawing::DrawLabel(p.x - 8, p.y, "+", {.35f, 1, .72f}, GLUT_BITMAP_HELVETICA_18);
         if (Game::Distance(hospital.position, Game::Get().GetState().playerPosition) < 3)
@@ -2120,8 +3027,12 @@ void CivicPresentation::DrawWorld()
     }
     for (const auto &tracer : civic.tracers)
     {
-        auto a = Drawing::WorldToScreen(tracer.start.x, tracer.start.y, models::WorldScale::aimHeightPixels);
-        auto b = Drawing::WorldToScreen(tracer.end.x, tracer.end.y, models::WorldScale::aimHeightPixels);
+        auto a =
+            Drawing::WorldToScreen(tracer.start.x, tracer.start.y,
+                                   surfaceMode ? tracer.elevation * 44 : models::WorldScale::aimHeightPixels);
+        auto b =
+            Drawing::WorldToScreen(tracer.end.x, tracer.end.y,
+                                   surfaceMode ? tracer.elevation * 44 : models::WorldScale::aimHeightPixels);
         Drawing::DrawLine(a, b,
                           tracer.npcOwned ? ColorRGBA(.25f, .8f, 1, tracer.remaining / .12f)
                                           : ColorRGBA(1, .83f, .38f, tracer.remaining / .12f),

@@ -484,6 +484,33 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     security.Seconds("initial_unseen_seconds", law.initialUnseenSeconds);
     security.Number("price_multiplier", tutorial::CivicJustice::PriceMultiplier());
     security.Number("officers", law.officers.size());
+    std::string surfaceOfficers;
+    const auto &planetLaw = tutorial::PlanetSecurity::State();
+    security.Text("world_key", planetLaw.worldKey);
+    for (const auto &record : planetLaw.officers)
+    {
+        auto officer = std::find_if(law.officers.begin(), law.officers.end(),
+                                    [&](const auto &o) { return o.id == record.id; });
+        if (officer == law.officers.end())
+        {
+            continue;
+        }
+        JsonObject item;
+        item.Number("id", record.id);
+        item.Text("jurisdiction", record.jurisdiction);
+        item.Number("health", officer->health);
+        item.Number("tier", officer->tier);
+        item.Number("facing_yaw", officer->facing.yaw);
+        item.Number("magazine_rounds", officer->weapon.GetRounds());
+        auto degrees = ::world::SurfaceGeometry::ToDegrees(record.position);
+        item.Number("latitude", degrees[0]);
+        item.Number("longitude", degrees[1]);
+        degrees = ::world::SurfaceGeometry::ToDegrees(record.lastKnown);
+        item.Number("search_latitude", degrees[0]);
+        item.Number("search_longitude", degrees[1]);
+        Append(surfaceOfficers, item.Finish());
+    }
+    security.Raw("planet_officers", "[" + surfaceOfficers + "]");
     security.Number("hospital_transfers", law.deaths);
     security.Bool("recovering", tutorial::HospitalRecovery::Active());
     security.Number("recovery_opacity", tutorial::HospitalRecovery::Opacity());

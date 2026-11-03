@@ -50,6 +50,8 @@ class PlanetParty
     }
     bool Joined(CompanionId id) const;
     bool Owns(CompanionId id, CompanionPlace place) const;
+    bool Damage(CompanionId id, int amount, bool playerOwned);
+    void Defend(CompanionId id, float yaw);
     // Capture before changing scene ownership; publish only to the current owner's adapter.
     void Capture();
     void Publish();
@@ -338,7 +340,9 @@ class PlanetTraffic
                          std::uint64_t digest);
     world::SurfacePoint Position(const PlanetTrafficRoute &route, double distance, int direction) const;
     bool Blocked(const world::SurfacePoint &point, double clearanceMeters) const;
-    bool Damage(std::uint64_t id, int amount);
+    bool Damage(std::uint64_t id, int amount, bool playerOwned = false);
+    bool Contains(const PlanetTrafficActor &actor, const world::SurfacePoint &point,
+                  double padding = 0) const;
     bool Outside(const PlanetTrafficActor &actor, const GameState &world,
                  const world::SurfaceSession &session, float padding = 240) const;
 

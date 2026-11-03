@@ -89,6 +89,7 @@ enum class Timer
     PlanetTraffic,
     PlanetTrafficPrepare,
     PlanetParty,
+    PlanetSecurity,
     Count
 };
 class Scope

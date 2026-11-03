@@ -112,6 +112,9 @@ struct Bullet
     float remaining;
     int damage;
     bool playerOwned = true;
+    bool companionOwned = false;
+    float elevation =
+        0; // Surface civic projectiles only; local mine/frontier adapters keep their own height.
 };
 struct Tracer
 {
@@ -119,6 +122,7 @@ struct Tracer
     tutorial::Vector2 end;
     float remaining = .12f;
     bool npcOwned = false;
+    float elevation = 0;
 };
 struct MineLight
 {

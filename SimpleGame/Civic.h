@@ -3,6 +3,10 @@
 #include "Game.h"
 #include "Level.h"
 #include <array>
+#include <cstdint>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace tutorial
 {
@@ -78,6 +82,47 @@ struct CivicState
     unsigned randomState = 0x39ab17u;
 };
 // ============================================================================
+// PlanetSecurity — spherical ownership; CivicState officers are local simulation projections
+// ============================================================================
+struct PlanetOfficer
+{
+    std::uint64_t id = 0;
+    world::SurfacePoint position, lastKnown;
+    world::Vector3d heading = {0, 1, 0};
+    std::string jurisdiction;
+};
+struct PlanetSecurityState
+{
+    std::string worldKey;
+    world::TangentFrame frame;
+    std::optional<world::SurfacePoint> incident, search;
+    std::vector<PlanetOfficer> officers;
+};
+class PlanetSecurity
+{
+  public:
+    static PlanetSecurityState &State();
+    static void Reset();
+    static void Project();
+    static void Capture();
+    static void Migrate(PlanetSecurityState &state, const CivicState &civic,
+                        const world::PlanetDefinition &planet, const world::TangentFrame &frame);
+    static void Validate(const PlanetSecurityState &state, const CivicState &civic,
+                         const world::PlanetDefinition &planet);
+    static world::SurfacePoint Point(Vector2 position);
+    static Vector2 Local(const world::SurfacePoint &point);
+    static float Elevation(const world::SurfacePoint &point);
+    static void Report(Offense offense, const world::SurfacePoint &point);
+    static void SawPlayer();
+    static bool Spawn();
+    static bool BodyBlocked(Vector2 position, double radius = .65);
+    static bool OfficerBlocked(const world::SurfacePoint &point, double radius);
+    static bool ShotBlocked(models::Point position);
+    static bool Hit(models::Point position, int damage, bool playerOwned, bool companionOwned = false);
+    static void UpdateCompanions(float seconds);
+    static bool CanNavigate();
+};
+// ============================================================================
 // CivicJustice — shared frontier security network, active pursuit and lasting reputation
 // ============================================================================
 class CivicJustice
@@ -111,6 +156,7 @@ class CivicCombat
     static bool Available();
     static void Update(float deltaSeconds);
     static void Fire();
+    static void ClearProjectiles();
     static void Melee();
     static bool DamageResident(size_t index, int damage, Vector2 impulse, bool playerOwned);
     static bool DamageOfficer(size_t index, int damage, Vector2 impulse, bool playerOwned = true);

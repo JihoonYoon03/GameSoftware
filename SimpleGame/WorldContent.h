@@ -166,7 +166,8 @@ class ContentCollision
 {
   public:
     static constexpr std::size_t MaximumCells = 64;
-    bool Blocked(const GeneratedPlanet &planet, const SurfacePoint &point, double clearance);
+    bool Blocked(const GeneratedPlanet &planet, const SurfacePoint &point, double clearance,
+                 bool heightAware = false);
     void Clear();
     std::size_t CachedCells() const
     {

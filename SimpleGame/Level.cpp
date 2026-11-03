@@ -2969,11 +2969,27 @@ void FrontierCombat::Melee()
         return;
     }
     state.meleeSeconds = .65f;
+    auto aim = MineLevel::GetAimDirection(GameLevels::FireAngle());
+    if (world.surfaceExploration)
+    {
+        for (int i = 1; i <= 10; ++i)
+        {
+            tutorial::Vector2 p{world.playerPosition.x + aim.x * i * .1f,
+                                world.playerPosition.y + aim.y * i * .1f};
+            if (!level.HasLineOfSight(world.playerPosition, p))
+            {
+                break;
+            }
+            if (tutorial::PlanetSecurity::Hit({p.x, p.y, models::WorldScale::aimHeightPixels / 44}, 30, true))
+            {
+                return;
+            }
+        }
+    }
     if (state.negotiated)
     {
         return;
     }
-    auto aim = MineLevel::GetAimDirection(GameLevels::FireAngle());
     FrontierPerson *closest = nullptr;
     float best = .85f;
     for (auto &person : state.scrappers)
@@ -3060,6 +3076,14 @@ void FrontierCombat::Advance(ChapterProjectile &projectile, float distance)
         shot.position.y += shot.direction.y * step;
         shot.remaining = (std::max)(0.f, shot.remaining - step);
         if (!level.HasLineOfSight(shot.position, shot.position))
+        {
+            shot.remaining = 0;
+            break;
+        }
+        if (tutorial::Game::Get().GetState().surfaceExploration && shot.playerOwned &&
+            tutorial::PlanetSecurity::Hit(
+                {shot.position.x, shot.position.y, models::WorldScale::aimHeightPixels / 44}, shot.damage,
+                true))
         {
             shot.remaining = 0;
             break;

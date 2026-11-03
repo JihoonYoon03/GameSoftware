@@ -98,7 +98,8 @@ const char *timerNames[] = {"frame_cpu",
                             "planet_simulation",
                             "planet_traffic",
                             "planet_traffic_prepare",
-                            "planet_party"};
+                            "planet_party",
+                            "planet_security"};
 static_assert(sizeof(counterNames) / sizeof(*counterNames) == kCounterCount);
 static_assert(sizeof(timerNames) / sizeof(*timerNames) == kTimerCount);
 struct Sample

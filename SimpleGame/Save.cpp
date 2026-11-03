@@ -25,7 +25,7 @@ namespace tutorial
 namespace
 {
 constexpr std::uint64_t kMaximumFile = 16 * 1024 * 1024;
-constexpr unsigned kSchema = 4;
+constexpr unsigned kSchema = 5;
 void Require(bool value, const char *message)
 {
     if (!value)
@@ -49,6 +49,7 @@ struct Checkpoint
     AirTraffic flights;
     PlanetTrafficState transit;
     PlanetPartyState party;
+    PlanetSecurityState security;
 };
 std::string WorldKey(const world::PlanetDefinition &planet)
 {
@@ -181,6 +182,8 @@ class SaveArchive
     static Checkpoint Capture()
     {
         const auto &g = Game::Get();
+        PlanetSecurity::Project();
+        PlanetSecurity::Capture();
         if (g.surfaceParty)
         {
             g.surfaceParty->Capture();
@@ -197,6 +200,7 @@ class SaveArchive
         c.mine = game::GameLevels::Mine().GetState();
         c.chapter = game::GameLevels::Chapter().GetState();
         c.civic = CivicJustice::State();
+        c.security = PlanetSecurity::State();
         if (g.surfaceCities)
         {
             c.cities = *g.surfaceCities;
@@ -216,11 +220,13 @@ class SaveArchive
         writer.Value(c);
         writer.Value(c.transit);
         writer.Value(c.party);
+        writer.Value(c.security);
         Checkpoint clean;
         SaveArchive reader(true, writer.Bytes());
         reader.Value(clean);
         reader.Value(clean.transit);
         reader.Value(clean.party);
+        reader.Value(clean.security);
         return clean;
     }
     explicit SaveArchive(bool reading, std::vector<unsigned char> bytes = {})
@@ -809,6 +815,51 @@ class SaveArchive
             }
         }
     }
+    void Value(PlanetOfficer &v)
+    {
+        Fields(v.id, v.position, v.lastKnown, v.heading, v.jurisdiction);
+    }
+    void Value(PlanetSecurityState &v)
+    {
+        Fields(v.worldKey, v.frame, v.incident, v.search);
+        const auto count = Count(v.officers.size());
+        Require(count <= 16, "행성 보안대 수가 상한을 초과했습니다.");
+        if (reading)
+        {
+            v.officers.resize(size_t(count));
+        }
+        for (auto &officer : v.officers)
+        {
+            Value(officer);
+        }
+    }
+    void SecurityRecords(Campaign &v)
+    {
+        std::uint64_t count = v.worlds.size();
+        Value(count);
+        Require(count == v.worlds.size(), "치안 확장의 월드 수가 다릅니다.");
+        std::set<std::string> keys;
+        if (reading)
+        {
+            for (std::uint64_t i = 0; i < count; ++i)
+            {
+                std::string key;
+                PlanetSecurityState state;
+                Fields(key, state);
+                Require(v.worlds.count(key) && keys.insert(key).second,
+                        "치안 확장의 월드 ID가 올바르지 않습니다.");
+                v.worlds.at(key).security = std::move(state);
+            }
+        }
+        else
+        {
+            for (auto &entry : v.worlds)
+            {
+                auto key = entry.first;
+                Fields(key, entry.second.security);
+            }
+        }
+    }
     void Value(Checkpoint &v)
     {
         Fields(v.planet, v.layout, v.digest, v.pose, v.origin, v.bike, v.bikeHeading, v.mineReturn, v.game,
@@ -860,6 +911,7 @@ void Validate(const Checkpoint &c)
     const bool story = c.planet.storyPlanet;
     PlanetTraffic::Validate(c.transit, c.planet, c.digest);
     PlanetParty::Validate(c.party, c.planet);
+    PlanetSecurity::Validate(c.security, c.civic, c.planet);
     if (!c.party.worldKey.empty() && c.planet.storyPlanet)
     {
         Require(c.party.members[0].joined == c.mine.quest.IsRiaJoined() &&
@@ -1017,7 +1069,7 @@ void Validate(const Checkpoint &c)
                     w.dialogue.scenes.empty() && w.dialogue.events.empty() && w.dialogue.history.empty() &&
                     !w.homeMessageRead && !w.gateSignalHeard && !w.hasDescendedObservatory &&
                     !w.isSideQuestAccepted && !w.isPowerRestored && !w.isSideQuestComplete && !w.isComplete &&
-                    c.civic.wanted == 0 && c.civic.heat == 0 && c.civic.officers.empty(),
+                    !f.kainJoined,
                 "일반 행성에 에르마 전용 현장/인물/진행 기록이 섞여 있습니다.");
         for (int i = 0; i < int(MissionId::Count); ++i)
         {
@@ -1142,6 +1194,19 @@ Campaign Decode(const std::filesystem::path &path)
             "저장 형식 버전이 다릅니다. 원본 파일은 변경하지 않았습니다.");
     Require(envelope.layout == world::ContentLayout::Revision,
             "저장된 도시 배치 버전이 현재 게임과 다릅니다.");
+    std::vector<unsigned char> securityExtension;
+    if (envelope.schema >= 5)
+    {
+        Require(envelope.payload.size() >= 8, "치안 확장의 길이 정보가 없습니다.");
+        SaveArchive footer(true,
+                           std::vector<unsigned char>(envelope.payload.end() - 8, envelope.payload.end()));
+        std::uint64_t size = 0;
+        footer.Value(size);
+        Require(size > 0 && size <= envelope.payload.size() - 8, "치안 확장의 길이가 올바르지 않습니다.");
+        const size_t start = envelope.payload.size() - 8 - size_t(size);
+        securityExtension.assign(envelope.payload.begin() + start, envelope.payload.end() - 8);
+        envelope.payload.resize(start);
+    }
     std::vector<unsigned char> partyExtension;
     if (envelope.schema >= 4)
     {
@@ -1195,6 +1260,12 @@ Campaign Decode(const std::filesystem::path &path)
         SaveArchive party(true, std::move(partyExtension));
         party.PartyRecords(result);
         Require(party.Finished(), "동료 확장에 지원하지 않는 데이터가 있습니다.");
+    }
+    if (envelope.schema >= 5)
+    {
+        SaveArchive security(true, std::move(securityExtension));
+        security.SecurityRecords(result);
+        Require(security.Finished(), "치안 확장에 지원하지 않는 데이터가 있습니다.");
     }
     ValidateCampaign(result);
     return result;
@@ -1545,6 +1616,12 @@ bool SaveSystem::Save(const std::filesystem::path &path)
         partyFooter.Value(partySize);
         payload.insert(payload.end(), party.Bytes().begin(), party.Bytes().end());
         payload.insert(payload.end(), partyFooter.Bytes().begin(), partyFooter.Bytes().end());
+        SaveArchive security(false), securityFooter(false);
+        security.SecurityRecords(candidate);
+        std::uint64_t securitySize = security.Bytes().size();
+        securityFooter.Value(securitySize);
+        payload.insert(payload.end(), security.Bytes().begin(), security.Bytes().end());
+        payload.insert(payload.end(), securityFooter.Bytes().begin(), securityFooter.Bytes().end());
         Require(payload.size() <= kMaximumFile, "저장 데이터가 허용 크기를 초과했습니다.");
         SaveArchive header(false);
         unsigned char magic[8] = {'S', 'G', 'W', 'O', 'R', 'L', 'D', 0};
@@ -1744,6 +1821,7 @@ void SaveSystem::Update()
                 snapshot->planet->Digest() == c.digest,
                 "현재 생성기/건물·도로 리소스로 저장된 배치를 재현할 수 없습니다. 원본 저장은 유지합니다.");
             MigrateParty(c, *snapshot->planet);
+            PlanetSecurity::Migrate(c.security, c.civic, c.planet, c.origin);
             Validate(c);
             ValidateRegistry(c, *snapshot->planet);
             load.traffic = std::make_unique<PlanetTraffic>(c.transit);
@@ -1780,6 +1858,7 @@ void SaveSystem::Update()
         game::GameLevels::Mine().GetState() = std::move(record.mine);
         game::GameLevels::Chapter().GetState() = std::move(record.chapter);
         CivicJustice::State() = std::move(record.civic);
+        PlanetSecurity::State() = std::move(record.security);
         Overworld::Flights() = std::move(record.flights);
         g.surface = std::move(ready->session);
         campaign = std::move(ready->candidate);
@@ -1824,6 +1903,7 @@ void SaveSystem::Update()
             g.surfaceCities->Update(g.state, *g.surface, 0);
         }
         game::GameLevels::Chapter().Surface().Refresh();
+        PlanetSecurity::Project();
         message = ready->switching ? g.surface->Planet().name +
                                          " 탐사 시작 / 행성별 현장 기록을 유지합니다. 디스크 보관은 F5"
                   : ready->backup  ? "백업 월드 복원 완료 / 원본 파일은 변경하지 않았습니다."

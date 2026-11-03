@@ -1007,6 +1007,7 @@ void PrepareCheckpointFixture()
     CivicJustice::State().infamy = 17;
     CivicJustice::State().heat = 200;
     CivicJustice::State().wanted = 2;
+    PlanetSecurity::State().incident = PlanetSecurity::State().search = g.Surface()->Pose().origin;
 }
 void WaitForCheckpointLoad()
 {
@@ -1063,9 +1064,12 @@ void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::file
         }
         return result;
     };
-    assert(number(8) == 4 && (version == 1 || version == 2 || version == 3));
-    const size_t partyStart = bytes.size() - 8 - size_t(number(bytes.size() - 8));
-    const size_t payloadEnd = version == 3 ? partyStart : partyStart - 8 - size_t(number(partyStart - 8));
+    assert(number(8) == 5 && version >= 1 && version <= 4);
+    const size_t securityStart = bytes.size() - 8 - size_t(number(bytes.size() - 8));
+    const size_t partyStart = securityStart - 8 - size_t(number(securityStart - 8));
+    const size_t payloadEnd = version == 4   ? securityStart
+                              : version == 3 ? partyStart
+                                             : partyStart - 8 - size_t(number(partyStart - 8));
     size_t offset = 40;
     const auto activeLength = number(offset);
     offset += 8 + size_t(activeLength);
@@ -1125,7 +1129,10 @@ void TestWorldCheckpoints()
     const auto legacy3 = folder / "schema3.sav";
     WriteLegacyCheckpoint(file, legacy3, 3);
     assert(SaveSystem::CheckFile(legacy3));
-    const auto malformed = folder / "party-footer.sav";
+    const auto legacy4 = folder / "schema4.sav";
+    WriteLegacyCheckpoint(file, legacy4, 4);
+    assert(SaveSystem::CheckFile(legacy4));
+    const auto malformed = folder / "security-footer.sav";
     {
         std::ifstream input(file, std::ios::binary);
         std::vector<unsigned char> bytes{std::istreambuf_iterator<char>(input),
@@ -1221,6 +1228,9 @@ void TestWorldCheckpoints()
     assert(!w.relayPreparing && !w.mapVisible &&
            world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, departure,
                                             g.Surface()->Pose().origin) < 1.e-6);
+    assert(SaveSystem::Load(legacy4));
+    WaitForCheckpointLoad();
+    VerifyCheckpointFixture();
     assert(SaveSystem::Load(legacy3));
     WaitForCheckpointLoad();
     VerifyCheckpointFixture();
@@ -1234,12 +1244,137 @@ void TestWorldCheckpoints()
     std::filesystem::remove(legacy);
     std::filesystem::remove(legacy2);
     std::filesystem::remove(legacy3);
+    std::filesystem::remove(legacy4);
     std::filesystem::remove(malformed);
     std::filesystem::remove(file);
     std::filesystem::remove(std::filesystem::path(file.wstring() + L".bak"));
     std::filesystem::remove(bad);
     std::filesystem::remove(opaqueBackup);
     std::filesystem::remove(transit);
+    std::filesystem::remove(folder);
+}
+
+void TestPlanetSecurity()
+{
+    using namespace tutorial;
+    using G = world::SurfaceGeometry;
+    PrepareCheckpointFixture();
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    auto &law = CivicJustice::State();
+    assert(g.LeaveSurfaceMine());
+    auto plan = g.Surface()->Stream().Snapshot()->planet;
+    assert(g.RelocateSurfaceSurvey(plan->Region("halo_07").access.position));
+    g.Update(0);
+    law.wanted = 0;
+    law.heat = 0;
+    law.identified = false;
+    const float reputation = law.infamy;
+    PlanetSecurity::Report(Offense::Discharge, g.Surface()->Pose().origin);
+    PlanetSecurity::Report(Offense::RecklessDriving, g.Surface()->Pose().origin);
+    PlanetSecurity::Report(Offense::VehicleDamage, g.Surface()->Pose().origin);
+    assert(law.wanted == 0 && law.heat == 0 && law.infamy == reputation);
+    PlanetSecurity::Report(Offense::Assault, g.Surface()->Pose().origin);
+    assert(law.wanted == 1 && !law.identified && law.pendingInfamy > 0 && law.infamy == reputation);
+    for (int i = 0; i < 10 && law.officers.empty(); ++i)
+    {
+        PlanetSecurity::Spawn();
+    }
+    assert(!law.officers.empty() && law.responseStarted && !PlanetSecurity::State().officers.empty());
+    PlanetSecurity::Project();
+    const auto officerId = law.officers.front().id;
+    const auto policePosition = PlanetSecurity::State().officers.front().position;
+    const auto oldOrigin = g.Surface()->Origin();
+    const float elevation =
+        PlanetSecurity::Elevation(g.Surface()->Pose().origin) + models::WorldScale::aimHeightPixels / 44;
+    law.bullets.push_back({w.playerPosition, {1, 0}, 34, 30, 18, true, false, elevation});
+    const auto shotPosition =
+        G::FromLocal(oldOrigin, {w.playerPosition.x * 2, w.playerPosition.y * 2, elevation * 2},
+                     g.Surface()->Planet().radiusMeters);
+    auto destination = G::Advance(g.Surface()->Pose(), 260, 0, g.Surface()->Planet().radiusMeters).origin;
+    assert(g.RelocateSurfaceSurvey(destination));
+    PlanetSecurity::Project();
+    assert(law.officers.front().id == officerId &&
+           G::Distance(g.Surface()->Planet().radiusMeters, policePosition,
+                       PlanetSecurity::State().officers.front().position) < .001);
+    assert(!law.bullets.empty());
+    const auto &bullet = law.bullets.front();
+    auto restoredShot = g.Surface()->PointAt(bullet.position.x * 2, bullet.position.y * 2);
+    restoredShot.altitudeMeters = g.Surface()->Origin().origin.altitudeMeters + bullet.elevation * 2;
+    assert(G::Distance(g.Surface()->Planet().radiusMeters, shotPosition, restoredShot) < .01 &&
+           std::abs(shotPosition.altitudeMeters - restoredShot.altitudeMeters) < .01);
+    law.initialUnseenSeconds = 19.99f;
+    CivicJustice::Update(.05f);
+    assert(law.wanted == 0 && law.heat == 0 && law.pendingInfamy == 0 && law.infamy == reputation);
+    law.bullets.clear();
+    law.officers.clear();
+    PlanetSecurity::Capture();
+    PlanetSecurity::Report(Offense::Assault, g.Surface()->Pose().origin);
+    for (int i = 0; i < 14; ++i)
+    {
+        PlanetSecurity::Report(Offense::Assault, g.Surface()->Pose().origin);
+    }
+    assert(law.wanted == 1); // Heat alone cannot skip the elapsed pursuit requirement.
+    law.pursuitSeconds = 25;
+    PlanetSecurity::Report(Offense::Assault, g.Surface()->Pose().origin);
+    assert(law.wanted == 2);
+    InstallTrafficFixture();
+    auto *traffic = g.SurfaceTraffic();
+    float heat = law.heat;
+    assert(traffic->Damage(1, 1, true) && law.heat == heat);
+    assert(traffic->Damage(1, 999, true) && law.heat == heat + 50);
+    assert(!traffic->Damage(1, 999, true) && law.heat == heat + 50);
+    // Empty vehicles and damage caused by other actors do not charge the player.
+    InstallTrafficFixture();
+    auto vehicleState = traffic->State();
+    vehicleState.actors.front().occupied = false;
+    *traffic = PlanetTraffic(vehicleState);
+    traffic->Bind(plan);
+    heat = law.heat;
+    assert(traffic->Damage(1, 999, true) && law.heat == heat);
+    // Persist the response as physical actors, and reject mismatched actor IDs without mutating it.
+    PlanetSecurity::State().search = g.Surface()->Pose().origin;
+    for (int i = 0; i < 10 && law.officers.empty(); ++i)
+    {
+        PlanetSecurity::Spawn();
+    }
+    assert(!law.officers.empty());
+    PlanetSecurity::Project();
+    PlanetSecurity::Capture();
+    const auto records = PlanetSecurity::State();
+    auto bad = records;
+    bad.officers.front().id = law.nextOfficer + 10;
+    bool rejected = false;
+    try
+    {
+        PlanetSecurity::Validate(bad, law, g.Surface()->Planet());
+    }
+    catch (const std::exception &)
+    {
+        rejected = true;
+    }
+    assert(rejected);
+    const auto folder =
+        std::filesystem::path("x64/RevisionChecks") /
+        ("security-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    const auto file = folder / "security.sav";
+    const float savedHeat = law.heat;
+    assert(SaveSystem::Save(file) && SaveSystem::Load(file));
+    WaitForCheckpointLoad();
+    assert(law.heat == savedHeat &&
+           PlanetSecurity::State().officers.front().id == records.officers.front().id &&
+           G::Distance(g.Surface()->Planet().radiusMeters, PlanetSecurity::State().officers.front().position,
+                       records.officers.front().position) < .001);
+    const auto json = monitoring::WorldSnapshot::Build(1, "security-test");
+    assert(json.find("planet_officers") != std::string::npos &&
+           json.find("jurisdiction") != std::string::npos);
+    const auto pursuit = law.pursuitSeconds;
+    w.isPaused = true;
+    g.Update(.05f);
+    assert(law.pursuitSeconds == pursuit);
+    w.isPaused = false;
+    g.Reset();
+    std::filesystem::remove(file);
     std::filesystem::remove(folder);
 }
 
@@ -3610,6 +3745,7 @@ int main(int argc, char **argv)
     TestOpenWorldParticipation();
     TestRelayTravelAndAtlas();
     TestWorldCheckpoints();
+    TestPlanetSecurity();
     TestPlanetParty();
     TestPlanetProfileVisits();
     TestMapZoomAndSelection();
