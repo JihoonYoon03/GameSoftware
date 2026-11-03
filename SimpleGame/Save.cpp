@@ -26,7 +26,7 @@ namespace tutorial
 namespace
 {
 constexpr std::uint64_t kMaximumFile = 16 * 1024 * 1024;
-constexpr unsigned kSchema = 7;
+constexpr unsigned kSchema = 8;
 void Require(bool value, const char *message)
 {
     if (!value)
@@ -92,6 +92,10 @@ template <class T> constexpr unsigned EnumCount()
     else if constexpr (std::is_same_v<T, MainQuestStage>)
     {
         return unsigned(MainQuestStage::Complete) + 1;
+    }
+    else if constexpr (std::is_same_v<T, MissionId>)
+    {
+        return unsigned(MissionId::Count) + 1; // Count represents automatic/no explicit story selection.
     }
     else if constexpr (std::is_same_v<T, MissionStatus>)
     {
@@ -233,7 +237,8 @@ class SaveArchive
             c.community = g.surfaceCommunity->State();
         }
         // The memory ledger follows disk persistence rules too: no held inputs, callbacks,
-        // projectiles, menu state, render resources or temporary worker ownership survive a visit.
+        // projectiles, open panels, render resources or temporary worker ownership survive a visit.
+        // Activity selection is serialized explicitly after the physical/community records.
         SaveArchive writer(false);
         writer.Value(c);
         writer.Value(c.transit);
@@ -241,6 +246,7 @@ class SaveArchive
         writer.Value(c.security);
         writer.Value(c.trafficLinks);
         writer.Value(c.community);
+        writer.Tracking(c);
         Checkpoint clean;
         SaveArchive reader(true, writer.Bytes());
         reader.Value(clean);
@@ -249,6 +255,8 @@ class SaveArchive
         reader.Value(clean.security);
         reader.Value(clean.trafficLinks);
         reader.Value(clean.community);
+        reader.Tracking(clean);
+        Require(reader.Finished(), "메모리 월드 기록에 지원하지 않는 데이터가 있습니다.");
         ApplyTrafficLinks(clean);
         return clean;
     }
@@ -1063,6 +1071,49 @@ class SaveArchive
             }
         }
     }
+    void Value(ActivityTrackingState &v)
+    {
+        Fields(v.mission, v.communityWorldKey, v.communityRegion);
+        Require(v.communityWorldKey.size() <= 512 && v.communityRegion.size() <= 512,
+                "활동 추적 식별자가 허용 길이를 초과했습니다.");
+    }
+    void Tracking(Checkpoint &v)
+    {
+        auto tracking = reading ? ActivityTrackingState{}
+                                : ActivityJournal::CaptureTracking(v.game, v.community, v.planet);
+        Value(tracking);
+        if (reading)
+        {
+            ActivityJournal::RestoreTracking(v.game, tracking, v.community, v.planet);
+        }
+    }
+    void TrackingRecords(Campaign &v)
+    {
+        std::uint64_t count = v.worlds.size();
+        Value(count);
+        Require(count == v.worlds.size(), "활동 추적 확장의 월드 수가 다릅니다.");
+        std::set<std::string> keys;
+        if (reading)
+        {
+            for (std::uint64_t i = 0; i < count; ++i)
+            {
+                std::string key;
+                Value(key);
+                Require(v.worlds.count(key) && keys.insert(key).second,
+                        "활동 추적 확장의 월드 ID가 올바르지 않습니다.");
+                Tracking(v.worlds.at(key));
+            }
+        }
+        else
+        {
+            for (auto &entry : v.worlds)
+            {
+                auto key = entry.first;
+                Value(key);
+                Tracking(entry.second);
+            }
+        }
+    }
     void Value(Checkpoint &v)
     {
         Fields(v.planet, v.layout, v.digest, v.pose, v.origin, v.bike, v.bikeHeading, v.mineReturn, v.game,
@@ -1158,8 +1209,9 @@ void Validate(const Checkpoint &c)
             "저장된 공간/층 상태가 올바르지 않습니다.");
     Require(m.player.health > 0 && m.player.health <= m.player.maxHealth && m.player.maxHealth <= 100000 &&
                 m.player.level >= 1 && m.player.level <= 1000 && m.player.experience >= 0 &&
-                m.player.credits >= 0 && m.player.credits <= 9999999 && m.player.salvage >= 0 &&
-                m.player.salvage <= 9999 && m.player.recoveryKits >= 0 && m.player.recoveryKits <= 999,
+                m.player.credits >= 0 && m.player.credits <= game::PlayerStats::kMaximumCredits &&
+                m.player.salvage >= 0 && m.player.salvage <= 9999 && m.player.recoveryKits >= 0 &&
+                m.player.recoveryKits <= 999,
             "저장된 성장/보유품 상태가 올바르지 않습니다.");
     Require(m.player.attack >= 0 && m.player.attack <= 10000 && m.player.defense >= 0 &&
                 m.player.defense <= 10000,
@@ -1399,6 +1451,20 @@ Campaign Decode(const std::filesystem::path &path)
             "저장 형식 버전이 다릅니다. 원본 파일은 변경하지 않았습니다.");
     Require(world::ContentLayout::SupportsRevision(envelope.layout),
             "저장된 도시 배치 버전이 현재 게임과 다릅니다.");
+    std::vector<unsigned char> trackingExtension;
+    if (envelope.schema >= 8)
+    {
+        Require(envelope.payload.size() >= 8, "활동 추적 확장의 길이 정보가 없습니다.");
+        SaveArchive footer(true,
+                           std::vector<unsigned char>(envelope.payload.end() - 8, envelope.payload.end()));
+        std::uint64_t size = 0;
+        footer.Value(size);
+        Require(size > 0 && size <= envelope.payload.size() - 8,
+                "활동 추적 확장의 길이가 올바르지 않습니다.");
+        const size_t start = envelope.payload.size() - 8 - size_t(size);
+        trackingExtension.assign(envelope.payload.begin() + start, envelope.payload.end() - 8);
+        envelope.payload.resize(start);
+    }
     std::vector<unsigned char> communityExtension;
     if (envelope.schema >= 7)
     {
@@ -1522,6 +1588,12 @@ Campaign Decode(const std::filesystem::path &path)
         {
             entry.second.legacyLeftTraffic = true;
         }
+    }
+    if (envelope.schema >= 8)
+    {
+        SaveArchive tracking(true, std::move(trackingExtension));
+        tracking.TrackingRecords(result);
+        Require(tracking.Finished(), "활동 추적 확장에 지원하지 않는 데이터가 있습니다.");
     }
     ValidateCampaign(result);
     return result;
@@ -1919,6 +1991,12 @@ bool SaveSystem::Save(const std::filesystem::path &path)
         communityFooter.Value(communitySize);
         payload.insert(payload.end(), community.Bytes().begin(), community.Bytes().end());
         payload.insert(payload.end(), communityFooter.Bytes().begin(), communityFooter.Bytes().end());
+        SaveArchive tracking(false), trackingFooter(false);
+        tracking.TrackingRecords(candidate);
+        std::uint64_t trackingSize = tracking.Bytes().size();
+        trackingFooter.Value(trackingSize);
+        payload.insert(payload.end(), tracking.Bytes().begin(), tracking.Bytes().end());
+        payload.insert(payload.end(), trackingFooter.Bytes().begin(), trackingFooter.Bytes().end());
         Require(payload.size() <= kMaximumFile, "저장 데이터가 허용 크기를 초과했습니다.");
         SaveArchive header(false);
         unsigned char magic[8] = {'S', 'G', 'W', 'O', 'R', 'L', 'D', 0};
@@ -2077,7 +2155,10 @@ void SaveSystem::Update()
         auto &c = load.checkpoint;
         load.session->Update();
         const auto snapshot = load.session->Stream().Snapshot();
-        Require(snapshot->statistics.error.empty(), "저장된 월드를 준비하지 못했습니다.");
+        if (!snapshot->statistics.error.empty())
+        {
+            throw std::runtime_error(c.planet.name + " 월드 준비 실패 / " + snapshot->statistics.error);
+        }
         Require(std::chrono::steady_clock::now() - load.began < std::chrono::seconds(30),
                 "월드 준비 시간이 초과됐습니다. 현재 게임은 유지합니다.");
         if (!load.session->Ready())

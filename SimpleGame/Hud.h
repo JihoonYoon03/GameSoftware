@@ -40,6 +40,7 @@ class Hud
     static void DrawVitals();
     static void DrawWeaponWheel();
     static void DrawObjective(const std::string &objective, const std::string &context);
+    static void DrawActivityObjective(const std::string &fallbackContext);
     static void DrawInteraction(const std::string &label);
     static void DrawMenu();
     static void Activate(const UiControl &control, int direction = 1);
@@ -66,6 +67,7 @@ class MapHud
     static bool Zoom(int steps, Vector2 canvasPivot);
     static void Pan(Vector2 canvasDelta);
     static void ResetView(bool centerOnPlayer = false);
+    static bool FocusTrackedObjective();
     static bool HandleMapKey(unsigned char key);
     static Vector2 PlanetToMap(const world::SurfacePoint &point, bool fullMap = true);
     static std::optional<world::SurfacePoint> PlanetAt(Vector2 canvasPoint);

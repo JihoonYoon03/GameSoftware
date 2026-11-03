@@ -86,6 +86,32 @@ void Button(const UiControl &control, int index)
     Sprite("Components/button_" + state, control.position.x, control.position.y, control.size.x,
            control.size.y, control.enabled ? ColorRGBA(1, 1, 1) : ColorRGBA(.55f, .6f, .62f), 1, true);
     renderqueue::Opacity(world.uiPreferences.content);
+    const bool activity =
+        control.action == UiAction::Mission || control.action == UiAction::TrackMission ||
+        control.action == UiAction::ActivityTab || control.action == UiAction::ActivityPage ||
+        control.action == UiAction::TrackCommunity || control.action == UiAction::ViewActivity;
+    if (activity)
+    {
+        const auto pages = Hud::TextPages(control.label, control.size.x - 16, 14,
+                                          size_t((std::max)(1, int((control.size.y - 8) / 18))));
+        // UI time continues while the journal pauses simulation. Long names retain every line.
+        const size_t page = size_t((std::max)(0, world.lastUpdateMilliseconds) / 6000) % pages.size();
+        for (size_t row = 0; row < pages[page].size(); ++row)
+        {
+            UiText(control.position.x + 8, control.position.y + 18 + row * 18, pages[page][row], 14,
+                   control.enabled ? ColorRGBA(.87f, .95f, .94f) : ColorRGBA(.54f, .62f, .65f));
+        }
+        if (pages.size() > 1)
+        {
+            for (size_t i = 0; i < pages.size(); ++i)
+            {
+                Drawing::DrawEllipse(control.position.x + 8 + i * 5, control.position.y + control.size.y - 4,
+                                     1.5f, 1.5f,
+                                     i == page ? ColorRGBA(.32f, 1, .82f) : ColorRGBA(.3f, .45f, .45f));
+            }
+        }
+        return;
+    }
     Icon(control.enabled ? "chevron" : "lock", control.position.x + 12, control.position.y + 14, 18);
     auto rows = Dialogue::Wrap(control.label, control.size.x - 58, 17);
     for (size_t row = 0; row < rows.size(); ++row)
@@ -434,7 +460,8 @@ void MapLabel(Vector2 anchor, const char *label, ColorRGBA color)
 void MapPin(const SchematicView &view, Vector2 position, ColorRGBA color, const char *label, bool full,
             float size = 5)
 {
-    if (MapHud::Region() == MapRegion::Mine && !game::GameLevels::Mine().Map().IsExplored(position))
+    if (!PlanetMapActive() && MapHud::Region() == MapRegion::Mine &&
+        !game::GameLevels::Mine().Map().IsExplored(position))
     {
         return;
     }
@@ -591,6 +618,31 @@ void DrawCitySchematic(const SchematicView &view, bool full)
         MapPin(view, hospital.position, {.35f, 1, .72f}, "의료소", full, 4);
     }
 }
+void DrawTrackedMarker(const SchematicView &view, Vector2 target, const std::string &label, bool full)
+{
+    if (!PlanetMapActive() && MapHud::Region() == MapRegion::Mine &&
+        !game::GameLevels::Mine().Map().IsExplored(target))
+    {
+        return;
+    }
+    const ColorRGBA color{.32f, 1, .82f};
+    const auto point = view.Project(target);
+    if (view.Inside(point, 10))
+    {
+        MapPin(view, target, color, label.c_str(), full, 6);
+    }
+    else if (view.radius > 0)
+    {
+        const float distance = Game::Distance(point, view.center);
+        if (distance <= .001f)
+        {
+            return;
+        }
+        const Vector2 edge{view.center.x + (point.x - view.center.x) * (view.radius - 13) / distance,
+                           view.center.y + (point.y - view.center.y) * (view.radius - 13) / distance};
+        DirectionArrow(edge, std::atan2(point.y - view.center.y, point.x - view.center.x), 7, color, true);
+    }
+}
 void DrawFieldSchematic(const SchematicView &view, bool full)
 {
     DrawMapTiles(view);
@@ -604,7 +656,18 @@ void DrawFieldSchematic(const SchematicView &view, bool full)
                             : stage == game::MineQuestStage::InvestigateGlyph   ? game::kObserverGlyph
                             : stage == game::MineQuestStage::CollectCoordinates ? game::kCoordinateTerminal
                                                                                 : mine.entry;
-        MapPin(view, objective, {1, .88f, .5f}, "현재 목표", full, 5);
+        if (Game::Get().GetState().surfaceExploration)
+        {
+            const auto goal = ActivityJournal::Current();
+            if (goal.mineTarget)
+            {
+                DrawTrackedMarker(view, *goal.mineTarget, goal.title, full);
+            }
+        }
+        else
+        {
+            MapPin(view, objective, {1, .88f, .5f}, "현재 목표", full, 5);
+        }
         for (const auto &contact : mine.scannerContacts)
         {
             if (contact.group < mine.rescueGroups.size() && !mine.rescueGroups[contact.group].rescued &&
@@ -888,6 +951,46 @@ void MapHud::ResetView(bool playerOnly)
             navigation.zoom = 1;
         }
     }
+}
+bool MapHud::FocusTrackedObjective()
+{
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    const auto goal = ActivityJournal::Current();
+    if (!w.surfaceExploration || !g.Surface() || !g.Surface()->Ready() || goal.title.empty() ||
+        Dialogue::Active() || w.dialogue.suspended || HospitalRecovery::Active() || w.relayPreparing)
+    {
+        return false;
+    }
+    if (g.IsSurfaceMine() && goal.mineTarget)
+    {
+        w.mapVisible = true;
+        w.planetMapSurface = false;
+        auto &viewState = w.mapViews[size_t(MapRegion::Mine)];
+        viewState.pan = {};
+        const auto view = MapView(true);
+        viewState.pan = {goal.mineTarget->x - view.worldCenter.x, goal.mineTarget->y - view.worldCenter.y};
+    }
+    else if (goal.surfaceTarget)
+    {
+        const auto point = world::SurfaceAtlas::Project(g.Surface()->Origin(), *goal.surfaceTarget,
+                                                        g.Surface()->Planet().radiusMeters);
+        const auto player = g.Surface()->Local(g.Surface()->Pose().origin);
+        w.planetMapPan = {float(point.x - player.x), float(point.y - player.y)};
+        w.planetMapRange = (std::min)(w.planetMapRange, 1000.f);
+        w.mapVisible = true;
+        w.planetMapSurface = true;
+    }
+    else
+    {
+        return false;
+    }
+    w.journalVisible = w.dialogueHistoryVisible = false;
+    w.mouseFiring = w.mouseAiming = false;
+    w.ui.focus = 0;
+    w.ui.pressed = -1;
+    w.StopMotion();
+    return true;
 }
 bool MapHud::HandleMapKey(unsigned char key)
 {
@@ -1308,11 +1411,21 @@ void Hud::DrawObjective(const std::string &objective, const std::string &context
     const auto detail = context + (pages.size() > 1 ? " · " + std::to_string(page + 1) + "/" +
                                                           std::to_string(pages.size()) + " · J 전체 목표"
                                                     : "");
-    auto detailRows = Dialogue::Wrap(detail, 420, 14);
-    for (size_t i = 0; i < detailRows.size(); ++i)
+    const auto detailPages = TextPages(detail, 420, 14, 2);
+    const size_t detailPage =
+        size_t((std::max)(0, Game::Get().GetState().lastUpdateMilliseconds) / 6000) % detailPages.size();
+    for (size_t i = 0; i < detailPages[detailPage].size(); ++i)
     {
-        UiText(68, 58 + float(rows.size()) * 26 + float(i) * 21, detailRows[i], 14, {.68f, .83f, .83f}, true);
+        UiText(68, 58 + float(rows.size()) * 26 + float(i) * 21, detailPages[detailPage][i], 14,
+               {.68f, .83f, .83f}, true);
     }
+}
+
+void Hud::DrawActivityObjective(const std::string &context)
+{
+    const auto goal = ActivityJournal::Current();
+    const auto detail = goal.title.empty() ? context : goal.title + " · " + goal.location + " · J 기록";
+    DrawObjective(goal.action, detail);
 }
 
 void CityHud::Draw()
@@ -1357,8 +1470,15 @@ void CityHud::Draw()
                        : w.isInObservatory ? "헤일로 / 전망대"
                        : city >= 0         ? Overworld::Cities()[city].name
                                            : "도시 연결 구역";
-    Hud::DrawObjective(objective, area + " · J 조사 기록");
-    if (w.isSideQuestAccepted && !w.isSideQuestComplete)
+    if (w.surfaceExploration)
+    {
+        Hud::DrawActivityObjective(area + " · J 조사 기록");
+    }
+    else
+    {
+        Hud::DrawObjective(objective, area + " · J 조사 기록");
+    }
+    if (!w.surfaceExploration && w.isSideQuestAccepted && !w.isSideQuestComplete)
     {
         Icon("objective", 36, 139, 16, true);
         UiText(68, 153, w.isPowerRestored ? "마라에게 전력 복구 보고" : "선택 · 마라의 전력 장치 복구", 15,
@@ -1453,11 +1573,14 @@ void MineHud::Draw()
 {
     auto &level = game::GameLevels::Mine();
     const auto &s = level.GetState();
-    Hud::DrawObjective(Game::Get().GetState().surfaceExploration &&
-                               !Game::Get().GetState().missions.Active(MissionId::Mine)
-                           ? "광산 자유 탐사 · 기록 보관"
-                           : s.quest.GetObjective(),
-                       "광산 / 구조 신호 조사 · J 기록");
+    if (Game::Get().GetState().surfaceExploration)
+    {
+        Hud::DrawActivityObjective("광산 · J 기록");
+    }
+    else
+    {
+        Hud::DrawObjective(s.quest.GetObjective(), "광산 / 구조 신호 조사 · J 기록");
+    }
     MapHud::DrawMinimap();
     DrawScanner();
     if (!Dialogue::Active())
@@ -1508,8 +1631,15 @@ void MineHud::Draw()
 void ChapterHud::Draw()
 {
     auto &level = game::GameLevels::Chapter();
-    Hud::DrawObjective(level.Objective(), "1장 / 빛나는 개척지 · J 조사 기록");
-    UiText(68, 113, "현장 조사 " + std::to_string(level.CompletedSites()) + " / 3", 15, {.67f, .83f, .8f},
+    if (Game::Get().GetState().surfaceExploration)
+    {
+        Hud::DrawActivityObjective("빛나는 개척지 · J 기록");
+    }
+    else
+    {
+        Hud::DrawObjective(level.Objective(), "1장 / 빛나는 개척지 · J 조사 기록");
+    }
+    UiText(68, 162, "현장 조사 " + std::to_string(level.CompletedSites()) + " / 3", 15, {.67f, .83f, .8f},
            true);
     MapHud::DrawMinimap();
     game::ChapterInteraction point{};
@@ -1935,28 +2065,96 @@ std::vector<UiControl> Hud::Controls()
             controls.push_back({UiAction::Previous, {454, 676}, {176, 44}, "이전 페이지"});
             controls.push_back({UiAction::Next, {648, 676}, {176, 44}, "다음 페이지"});
             controls.push_back({UiAction::Continue, {848, 676}, {320, 44}, "닫기"});
-            if (w.surfaceExploration && Game::Get().IsStoryWorld() && w.journalVisible)
+            if (w.surfaceExploration && w.journalVisible)
             {
-                for (int i = 0; i < int(MissionId::Count); ++i)
+                const bool unlocked = !Dialogue::Active() && !w.dialogue.suspended;
+                const bool local = w.journalLocalActivities || !Game::Get().IsStoryWorld();
+                controls.push_back({UiAction::ActivityTab,
+                                    {96, 344},
+                                    {144, 44},
+                                    local ? "이야기 임무" : "이야기 선택 중",
+                                    unlocked && Game::Get().IsStoryWorld(),
+                                    0});
+                controls.push_back({UiAction::ActivityTab,
+                                    {248, 344},
+                                    {144, 44},
+                                    local ? "지역 선택 중" : "지역 의뢰",
+                                    unlocked,
+                                    1});
+                if (!local)
                 {
-                    auto id = MissionId(i);
-                    auto status = w.missions.Status(id);
-                    bool eligible = status != MissionStatus::NotAccepted || Game::Get().MissionEligible(id);
-                    controls.push_back({UiAction::Mission,
-                                        {96, 344.f + i * 66},
-                                        {208, 56},
-                                        std::string(QuestParticipation::Name(id)) + "\n" +
-                                            (eligible ? QuestParticipation::Label(status) : "선행 조사 필요"),
-                                        eligible && status != MissionStatus::Completed &&
-                                            !Dialogue::Active() && !w.dialogue.suspended,
-                                        i});
-                    controls.push_back(
-                        {UiAction::TrackMission,
-                         {312, 344.f + i * 66},
-                         {80, 56},
-                         Game::Get().FocusedMission() == id ? "추적 중" : "목표 추적",
-                         status == MissionStatus::Active && !Dialogue::Active() && !w.dialogue.suspended,
-                         i});
+                    for (int i = 0; i < int(MissionId::Count); ++i)
+                    {
+                        auto id = MissionId(i);
+                        auto status = w.missions.Status(id);
+                        bool eligible =
+                            status != MissionStatus::NotAccepted || Game::Get().MissionEligible(id);
+                        controls.push_back(
+                            {UiAction::Mission,
+                             {96, 400.f + i * 54},
+                             {208, 48},
+                             std::string(QuestParticipation::Name(id)) + "\n" +
+                                 (eligible ? QuestParticipation::Label(status) : "선행 조사 필요"),
+                             eligible && status != MissionStatus::Completed && unlocked,
+                             i});
+                        controls.push_back({UiAction::TrackMission,
+                                            {312, 400.f + i * 54},
+                                            {80, 48},
+                                            Game::Get().FocusedMission() == id ? "추적 중" : "목표 추적",
+                                            status == MissionStatus::Active && unlocked,
+                                            i});
+                    }
+                    controls.push_back({UiAction::ViewActivity,
+                                        {96, 626},
+                                        {296, 34},
+                                        "추적 목표 지도 보기",
+                                        unlocked && !ActivityJournal::Current().title.empty(),
+                                        -1});
+                }
+                else
+                {
+                    const auto entries = ActivityJournal::CommunityEntries();
+                    const int pages =
+                        (std::max)(1, int((entries.size() + ActivityJournal::LocalEntriesPerPage - 1) /
+                                          ActivityJournal::LocalEntriesPerPage));
+                    const int page = std::clamp(w.journalActivityPage, 0, pages - 1);
+                    const auto *community = Game::Get().SurfaceCommunity();
+                    const auto *trackedSite = ActivityJournal::TrackedCommunity();
+                    for (int row = 0;
+                         row < ActivityJournal::LocalEntriesPerPage &&
+                         size_t(page * ActivityJournal::LocalEntriesPerPage + row) < entries.size();
+                         ++row)
+                    {
+                        const auto index = entries[size_t(page * ActivityJournal::LocalEntriesPerPage + row)];
+                        const auto &site = community->State().sites[index];
+                        const auto &region =
+                            Game::Get().Surface()->Stream().Snapshot()->planet->Region(site.regionId);
+                        const bool selected = trackedSite == &site;
+                        controls.push_back({UiAction::TrackCommunity,
+                                            {96, 400.f + row * 72},
+                                            {208, 64},
+                                            region.definition.name + "\n" + PlanetCommunity::TaskName(site),
+                                            unlocked,
+                                            int(index)});
+                        controls.push_back({UiAction::ViewActivity,
+                                            {312, 400.f + row * 72},
+                                            {80, 64},
+                                            selected ? "추적 · 지도" : "지도 보기",
+                                            unlocked,
+                                            int(index)});
+                    }
+                    controls.push_back({UiAction::ActivityPage,
+                                        {96, 626},
+                                        {144, 34},
+                                        "이전 의뢰",
+                                        unlocked && page > 0,
+                                        -1});
+                    controls.push_back({UiAction::ActivityPage,
+                                        {248, 626},
+                                        {144, 34},
+                                        "다음 " + std::to_string(page + 1) + "/" + std::to_string(pages),
+                                        unlocked && page + 1 < pages,
+                                        1});
                 }
             }
         }
@@ -2012,8 +2210,47 @@ void Hud::Activate(const UiControl &control, int direction)
     case UiAction::CancelLoad:
         SaveSystem::Cancel();
         break;
+    case UiAction::ActivityTab:
+        w.journalLocalActivities = control.choice == 1;
+        w.journalActivityPage = 0;
+        w.ui.focus = 0;
+        break;
+    case UiAction::ActivityPage: {
+        const int pages = (std::max)(1, int((ActivityJournal::CommunityEntries().size() +
+                                             ActivityJournal::LocalEntriesPerPage - 1) /
+                                            ActivityJournal::LocalEntriesPerPage));
+        const int page = std::clamp(w.journalActivityPage, 0, pages - 1);
+        w.journalActivityPage = std::clamp(page + control.choice, 0, pages - 1);
+        w.ui.focus = 0;
+        break;
+    }
+    case UiAction::TrackCommunity:
+    case UiAction::ViewActivity: {
+        bool tracked = control.choice < 0;
+        if (control.choice >= 0)
+        {
+            const auto *community = g.SurfaceCommunity();
+            if (community && size_t(control.choice) < community->State().sites.size())
+            {
+                tracked = ActivityJournal::TrackCommunity(
+                    community->State().sites[size_t(control.choice)].regionId);
+            }
+        }
+        if (tracked)
+        {
+            if (control.action == UiAction::ViewActivity)
+            {
+                MapHud::FocusTrackedObjective();
+            }
+            else
+            {
+                g.ShowNotice("목표 추적 / " + ActivityJournal::Current().title);
+            }
+        }
+        break;
+    }
     case UiAction::TrackMission:
-        if (w.missions.Track(MissionId(control.choice)))
+        if (ActivityJournal::TrackMission(MissionId(control.choice)))
         {
             g.ShowNotice(std::string("목표 추적 / ") + QuestParticipation::Name(MissionId(control.choice)));
         }
@@ -2697,7 +2934,7 @@ void PlanetHud::Draw()
     {
         area = "헤일로 · 전망대";
     }
-    Hud::DrawObjective(Game::Get().MissionObjective(), area + " · E 대화·조사 / M 지도");
+    Hud::DrawActivityObjective(area + " · E 대화·조사 / M 지도");
     if (!state.isInsideHome && !state.isInObservatory)
     {
         DrawMap();
@@ -2946,21 +3183,24 @@ void PlanetHud::DrawMap(bool full)
                full ? (w.relayNetwork.Registered(relay.id) ? "등록 중계환" : "발견 · E 등록 필요") : nullptr,
                full, w.selectedRelay == relay.id ? 7 : 4);
     }
-    if (const auto *community = Game::Get().SurfaceCommunity())
+    if (const auto *community = Game::Get().SurfaceCommunity(); community && full)
     {
+        const auto *trackedSite = ActivityJournal::TrackedCommunity();
         for (const auto &site : community->State().sites)
         {
-            if (site.task != 1 && site.task != 2)
+            if (!CommunityTaskProgress::IsActive(site) || trackedSite == &site)
             {
                 continue;
             }
-            const auto &target = site.task == 1 ? site.target : site.contact;
+            const auto &target = site.task == CommunityTaskProgress::Accepted ? site.target : site.contact;
             MapPin(view, project(target), {1, .8f, .35f},
-                   site.task == 1 ? PlanetCommunity::TaskName(site) : "현장 기록 제출", full, 5);
+                   site.task == CommunityTaskProgress::Accepted ? PlanetCommunity::TaskName(site)
+                                                                : "현장 기록 제출",
+                   full, 5);
         }
     }
     auto &chapter = game::GameLevels::Chapter();
-    if (chapter.IsActive() && range < 4000 && w.missions.Active(MissionId::Frontier))
+    if (full && chapter.IsActive() && range < 4000 && Game::Get().FocusedMission() == MissionId::Frontier)
     {
         for (const auto &point : chapter.Interactions())
         {
@@ -2971,6 +3211,13 @@ void PlanetHud::DrawMap(bool full)
                        full, 4);
             }
         }
+    }
+    const auto goal = ActivityJournal::Current();
+    if (goal.surfaceTarget && !goal.title.empty() &&
+        world::SurfaceGeometry::Dot(session->Origin().origin.normal, goal.surfaceTarget->normal) >
+            -1 + 1.e-12)
+    {
+        DrawTrackedMarker(view, project(*goal.surfaceTarget), goal.title, full);
     }
     if (auto bike = Game::Get().SurfaceBike();
         bike && world::SurfaceGeometry::Distance(session->Planet().radiusMeters, *bike, focus) < range + 10)

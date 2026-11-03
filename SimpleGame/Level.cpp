@@ -1728,7 +1728,8 @@ void MineLevel::Interact()
                                    else
                                    {
                                        state.player.salvage = (std::min)(9999, state.player.salvage + 1);
-                                       state.player.credits = (std::min)(9999999, state.player.credits + 5);
+                                       state.player.credits =
+                                           (std::min)(PlayerStats::kMaximumCredits, state.player.credits + 5);
                                    }
                                    ++collected;
                                    return true;

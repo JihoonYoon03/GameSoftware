@@ -471,14 +471,14 @@ SurfacePoint RandomSurface(Random &rng)
            scale = std::sqrt((std::max)(0., 1 - z * z));
     return {G::Unit({std::cos(angle) * scale, std::sin(angle) * scale, z}), 0};
 }
-bool Suitable(const PlanetTerrain &terrain, const GeneratedRegion &r)
+bool Suitable(const PlanetTerrain &terrain, const GeneratedRegion &r, double citySlope = .045)
 {
     for (auto v : CoverageSamples(r))
     {
         auto point = G::FromLocal(r.frame, v, terrain.Planet().radiusMeters);
         auto sample = terrain.Sample(point);
         if (!sample.land || sample.elevationMeters < PlanetTerrain::SeaLevelMeters + 12 ||
-            sample.slope > (r.definition.kind == RegionKind::Settlement ? .045 : .08))
+            sample.slope > (r.definition.kind == RegionKind::Settlement ? citySlope : .08))
         {
             return false;
         }
@@ -1112,8 +1112,9 @@ GeneratedPlanet PlanetGenerator::Generate(const std::atomic_bool *cancel) const
         bool nearby = definition.id == "cinder" || definition.id == "veil" || definition.id == "lumen" ||
                       definition.id == "echo";
         unsigned cluster = nearby && homeland ? 0 : unsigned(rng.Next() % result.clusters.size());
-        std::optional<GeneratedRegion> selected;
+        std::optional<GeneratedRegion> selected, terrainFallback;
         double best = std::numeric_limits<double>::infinity();
+        double fallbackScore = std::numeric_limits<double>::infinity();
         unsigned valid = 0;
         double spread = (std::min)(settings.clusterRadiusMeters, planet.radiusMeters * .03);
         for (unsigned trial = 0; trial < settings.placementAttempts; ++trial)
@@ -1143,7 +1144,18 @@ GeneratedPlanet PlanetGenerator::Generate(const std::atomic_bool *cancel) const
                     break;
                 }
             }
-            if (overlap || !Suitable(result.terrain, candidate))
+            if (overlap)
+            {
+                continue;
+            }
+            const bool preferredTerrain = Suitable(result.terrain, candidate);
+            // Compact survey planets can lack a city-wide 4.5% patch even with a safe entrance.
+            // Only use these bounded 6% candidates if the original search has no result, so every
+            // previously successful seed retains its exact placement and digest. Never relax water,
+            // separation, city area, entrance slope or the configured road routing limit.
+            if (!preferredTerrain &&
+                (planet.storyPlanet || definition.kind != RegionKind::Settlement ||
+                 !Suitable(result.terrain, candidate, (std::min)(.06, settings.maximumRoadGrade))))
             {
                 continue;
             }
@@ -1159,6 +1171,16 @@ GeneratedPlanet PlanetGenerator::Generate(const std::atomic_bool *cancel) const
                     }
                 }
             }
+            if (!preferredTerrain)
+            {
+                if (score < fallbackScore)
+                {
+                    fallbackScore = score;
+                    candidate.biome = sample.biome;
+                    terrainFallback = std::move(candidate);
+                }
+                continue;
+            }
             if (score < best)
             {
                 best = score;
@@ -1169,6 +1191,10 @@ GeneratedPlanet PlanetGenerator::Generate(const std::atomic_bool *cancel) const
             {
                 break;
             }
+        }
+        if (!selected)
+        {
+            selected = std::move(terrainFallback);
         }
         if (!selected)
         {

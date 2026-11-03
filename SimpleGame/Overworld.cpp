@@ -3572,6 +3572,54 @@ void PlanetTraffic::Update(GameState &world, const world::SurfaceSession &sessio
 }
 
 // ============================================================================
+// CommunityTaskProgress — validated local activity transitions and one-time rewards
+// ============================================================================
+bool CommunityTaskProgress::IsActive(const CommunitySite &site)
+{
+    return site.task == Accepted || site.task == Measured;
+}
+bool CommunityTaskProgress::Change(CommunitySite &site, unsigned expected, unsigned next)
+{
+    if (site.task != expected)
+    {
+        return false;
+    }
+    site.task = next;
+    return true;
+}
+bool CommunityTaskProgress::Accept(CommunitySite &site)
+{
+    return Change(site, Offered, Accepted);
+}
+bool CommunityTaskProgress::Cancel(CommunitySite &site)
+{
+    return Change(site, Accepted, Offered);
+}
+bool CommunityTaskProgress::Measure(CommunitySite &site)
+{
+    return Change(site, Accepted, Measured);
+}
+CommunityTaskProgress::SubmitResult CommunityTaskProgress::Submit(CommunitySite &site, int &credits)
+{
+    if (site.task == Paid)
+    {
+        return SubmitResult::AlreadyPaid;
+    }
+    if (site.task != Measured || credits < 0)
+    {
+        return SubmitResult::NotReady;
+    }
+    if (credits > game::PlayerStats::kMaximumCredits - RewardCredits)
+    {
+        return SubmitResult::WalletFull;
+    }
+    // One main-thread transaction: no completion or payment is published before both checks pass.
+    credits += RewardCredits;
+    site.task = Paid;
+    return SubmitResult::Granted;
+}
+
+// ============================================================================
 // PlanetCommunity — lazy, deterministic hub preparation; physical actors survive streaming and visits
 // ============================================================================
 PlanetCommunity::PlanetCommunity(PlanetCommunityState value) : state(std::move(value))
@@ -3593,7 +3641,8 @@ void PlanetCommunity::Validate(const PlanetCommunityState &value, const world::P
     for (const auto &site : value.sites)
     {
         require(world::WorldIdentity::ValidId(site.regionId) && regions.insert(site.regionId).second &&
-                site.task <= 3 && site.residents.size() >= 2 && site.residents.size() <= ResidentsPerSite);
+                site.task <= CommunityTaskProgress::Paid && site.residents.size() >= 2 &&
+                site.residents.size() <= ResidentsPerSite);
         TG::Validate(site.contact);
         TG::Validate(site.target);
         for (const auto &person : site.residents)
@@ -4065,7 +4114,7 @@ std::optional<PlanetCommunity::Contact> PlanetCommunity::Nearest() const
     {
         const auto &site = state.sites[i];
         offer(i, 0, 0, site.contact);
-        if (site.task == 1)
+        if (site.task == CommunityTaskProgress::Accepted)
         {
             offer(i, 0, 1, site.target);
         }
@@ -4132,30 +4181,42 @@ void PlanetCommunity::Interact()
     }
     if (contact->kind == 1)
     {
-        site.task = 2;
-        g.ShowNotice(std::string(TaskName(site)) + " / 기록 확보. 현장 접수 단말에 제출하세요.");
+        if (CommunityTaskProgress::Measure(site))
+        {
+            g.ShowNotice(std::string(TaskName(site)) + " / 기록 확보. 현장 접수 단말에 제출하세요.");
+        }
         return;
     }
-    if (site.task == 2)
+    if (site.task == CommunityTaskProgress::Measured)
     {
-        site.task = 3;
         auto &credits = game::GameLevels::Mine().GetState().player.credits;
-        credits = (std::min)(credits, std::numeric_limits<int>::max() - 100) + 100;
-        g.ShowNotice(std::string(TaskName(site)) + " 완료 / 100 크레딧. 현장 기록을 보관했습니다.");
+        const auto result = CommunityTaskProgress::Submit(site, credits);
+        if (result == CommunityTaskProgress::SubmitResult::Granted)
+        {
+            ActivityJournal::Refresh();
+            g.ShowNotice(std::string(TaskName(site)) + " 완료 / " +
+                         std::to_string(CommunityTaskProgress::RewardCredits) +
+                         " 크레딧. 현장 기록을 보관했습니다.");
+        }
+        else if (result == CommunityTaskProgress::SubmitResult::WalletFull)
+        {
+            g.ShowNotice("의뢰 정산 보류 / 크레딧 소지 한도로 보상을 받을 수 없습니다. 측정 기록은 유지되며, "
+                         "여유가 생기면 이 단말에서 다시 제출할 수 있습니다.");
+        }
         return;
     }
-    if (site.task == 3)
+    if (site.task == CommunityTaskProgress::Paid)
     {
         Dialogue::Say("community." + site.regionId + ".complete",
                       "제출한 측정 기록은 현장 담당자가 확인했습니다. 이 의뢰의 보상은 이미 지급되었습니다.");
         return;
     }
     const auto key = state.worldKey, id = site.regionId;
-    const bool active = site.task == 1;
+    const bool active = site.task == CommunityTaskProgress::Accepted;
     const std::string question =
         active ? "측정을 계속하거나 이 의뢰를 중단할 수 있습니다. 메인 임무에는 영향을 주지 않습니다."
-               : std::string(TaskName(site)) +
-                     " / 표식이 있는 센서에서 기록을 확보해 돌아오세요. 보상 100 크레딧. 수락은 선택입니다.";
+               : std::string(TaskName(site)) + " / 표식이 있는 센서에서 기록을 확보해 돌아오세요. 보상 " +
+                     std::to_string(CommunityTaskProgress::RewardCredits) + " 크레딧. 수락은 선택입니다.";
     Dialogue::Start(
         "community." + id + (active ? ".manage" : ".offer"),
         {{"choice", "현장 접수 단말", "지역 의뢰", question,
@@ -4173,14 +4234,13 @@ void PlanetCommunity::Interact()
             {
                 return;
             }
-            if (choice == "accept" && site->task == 0)
+            if (choice == "accept" && CommunityTaskProgress::Accept(*site))
             {
-                site->task = 1;
                 Game::Get().ShowNotice("현장 의뢰 수락 / 지도와 탐험 기록에 측정 지점을 표시했습니다.");
             }
-            if (choice == "cancel" && site->task == 1)
+            if (choice == "cancel" && CommunityTaskProgress::Cancel(*site))
             {
-                site->task = 0;
+                ActivityJournal::Refresh();
                 Game::Get().ShowNotice("현장 의뢰를 중단했습니다. 접수 단말에서 다시 수락할 수 있습니다.");
             }
         },
@@ -4193,14 +4253,26 @@ std::vector<std::string> PlanetCommunity::Journal() const
     {
         return lines;
     }
+    const auto *trackedSite = ActivityJournal::TrackedCommunity();
     for (const auto &site : state.sites)
     {
-        if (site.task == 1 || site.task == 2)
+        if (CommunityTaskProgress::IsActive(site))
         {
-            lines.push_back(
-                planet->Region(site.regionId).definition.name + " / " + TaskName(site) +
-                (site.task == 1 ? " — 지도에 표시된 센서 측정" : " — 현장 접수 단말에 기록 제출"));
+            lines.push_back(planet->Region(site.regionId).definition.name + " / " + TaskName(site) +
+                            (site.task == CommunityTaskProgress::Accepted ? " — 지도에 표시된 센서 측정"
+                                                                          : " — 현장 접수 단말에 기록 제출") +
+                            (trackedSite == &site ? " · 추적 중" : ""));
         }
+    }
+    if (lines.empty())
+    {
+        lines.push_back(
+            "진행 중인 지역 의뢰가 없습니다. 도시·전초기지의 현장 접수 단말에서 선택해 수락하세요.");
+    }
+    else
+    {
+        lines.push_back("J의 지역 의뢰 목록에서 목표 추적과 지도 보기를 선택할 수 있습니다. 중단·제출은 현장 "
+                        "단말에서 합니다.");
     }
     return lines;
 }

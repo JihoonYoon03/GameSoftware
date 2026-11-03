@@ -610,6 +610,19 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         participation.Raw(tutorial::QuestParticipation::Key(id), item.Finish());
     }
     quests.Raw("participation", participation.Finish());
+    const auto goal = tutorial::ActivityJournal::Current();
+    JsonObject activity;
+    activity.Text("title", goal.title);
+    activity.Text("action", goal.action);
+    activity.Text("location", goal.location);
+    activity.Text("community_region", goal.communityRegion);
+    activity.Text("kind", goal.title.empty() ? "none" : goal.communityRegion.empty() ? "story" : "community");
+    activity.Text("mission", goal.mission == tutorial::MissionId::Count
+                                 ? ""
+                                 : tutorial::QuestParticipation::Key(goal.mission));
+    activity.Bool("surface_target", goal.surfaceTarget.has_value());
+    activity.Bool("mine_target", goal.mineTarget.has_value());
+    quests.Raw("tracked_activity", activity.Finish());
     quests.Bool("mine_power_bypassed", level.powerBypassed);
     quests.Bool("mine_signal_recorded", level.signalRecorded);
     quests.Bool("mine_glyph_recorded", level.glyphRecorded);

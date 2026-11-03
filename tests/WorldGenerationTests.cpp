@@ -665,6 +665,34 @@ void SelectableProfiles()
                   "Every generated region has its own relay coverage");
         }
         Check(tiers.size() == 4, "All four settlement tiers remain available on each generic planet");
+        if (profile.id == "seira" && profile.generatorVersion == 2)
+        {
+            Check(plan.regions.size() == 37,
+                  "Seira retains all named and procedural regions after placement fallback");
+            const auto &capital = plan.Region("system_hub");
+            double maximumSlope = 0;
+            auto inspect = [&](Vector3d local) {
+                const auto point = G::FromLocal(capital.frame, local, profile.radiusMeters);
+                const auto sample = plan.terrain.Sample(point);
+                Check(sample.land && sample.elevationMeters >= PlanetTerrain::SeaLevelMeters + 12,
+                      "Terrain fallback does not allow ocean-side city footprint samples");
+                maximumSlope = (std::max)(maximumSlope, sample.slope);
+            };
+            inspect({0, 0, 0});
+            for (size_t i = 0; i < capital.footprint.size(); ++i)
+            {
+                const auto a = capital.footprint[i],
+                           b = capital.footprint[(i + 1) % capital.footprint.size()];
+                inspect(a);
+                inspect({a.x * .5, a.y * .5, 0});
+                inspect({(a.x + b.x) * .5, (a.y + b.y) * .5, 0});
+            }
+            Check(
+                maximumSlope > .045 && maximumSlope <= .06001,
+                "Seira exercises the bounded fallback instead of changing the planet's radius or city area");
+            Check(std::abs(capital.areaMeters2 - 1200 * .25e6) < .01,
+                  "Capital quarter-area contract is preserved");
+        }
         Check(PlanetProfiles::Generator(profile).Generate().Digest() == plan.Digest(),
               "Profile revisits reproduce the same layout");
     }

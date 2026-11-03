@@ -79,6 +79,7 @@ enum class ItemKind
 };
 struct PlayerStats
 {
+    static constexpr int kMaximumCredits = 9999999;
     int experience = 0;
     int level = 1;
     int maxHealth = 100;
@@ -526,6 +527,10 @@ class ChapterOneLevel final : public Level
   public:
     ChapterOneLevel();
     ChapterOneState &GetState();
+    const ChapterOneState &GetState() const
+    {
+        return state;
+    }
     FrontierSurface &Surface()
     {
         return surface;

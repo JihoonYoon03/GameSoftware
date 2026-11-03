@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <cmath>
 #include <chrono>
+#include <limits>
 
 namespace tutorial
 {
@@ -254,6 +255,10 @@ bool Game::MissionEligible(MissionId id) const
 }
 MissionId Game::FocusedMission() const
 {
+    if (ActivityJournal::TrackedCommunity())
+    {
+        return MissionId::Count;
+    }
     if (!IsStoryWorld())
     {
         return MissionId::Count;
@@ -309,6 +314,333 @@ const char *Game::MissionObjective() const
         return state.isPowerRestored ? "마라에게 전력 복구 보고 [E]" : "동쪽 전력 장치 복구 [E]";
     }
     return "자유 탐사 · J에서 임무 제안 확인";
+}
+ActivityTrackingState ActivityJournal::CaptureTracking(const GameState &state,
+                                                       const PlanetCommunityState &community,
+                                                       const world::PlanetDefinition &planet)
+{
+    ActivityTrackingState result;
+    if (planet.storyPlanet)
+    {
+        result.mission = state.missions.Tracked();
+    }
+    world::RelayNetwork identity;
+    identity.Bind(planet);
+    if (state.trackedCommunityRegion.empty() || state.trackedCommunityWorldKey != identity.WorldKey() ||
+        community.worldKey != identity.WorldKey())
+    {
+        return result;
+    }
+    for (const auto &site : community.sites)
+    {
+        if (site.regionId == state.trackedCommunityRegion && CommunityTaskProgress::IsActive(site))
+        {
+            result.communityWorldKey = identity.WorldKey();
+            result.communityRegion = site.regionId;
+            break;
+        }
+    }
+    return result;
+}
+void ActivityJournal::RestoreTracking(GameState &state, const ActivityTrackingState &tracking,
+                                      const PlanetCommunityState &community,
+                                      const world::PlanetDefinition &planet)
+{
+    state.missions.ClearTracking();
+    if (planet.storyPlanet && unsigned(tracking.mission) < unsigned(MissionId::Count) &&
+        state.missions.Active(tracking.mission))
+    {
+        state.missions.Track(tracking.mission);
+    }
+    state.trackedCommunityRegion.clear();
+    state.trackedCommunityWorldKey.clear();
+    state.journalLocalActivities = false;
+    state.journalActivityPage = 0;
+    world::RelayNetwork identity;
+    identity.Bind(planet);
+    if (tracking.communityRegion.empty() || tracking.communityWorldKey != identity.WorldKey() ||
+        community.worldKey != identity.WorldKey())
+    {
+        return;
+    }
+    for (const auto &site : community.sites)
+    {
+        if (site.regionId == tracking.communityRegion && CommunityTaskProgress::IsActive(site))
+        {
+            state.trackedCommunityRegion = site.regionId;
+            state.trackedCommunityWorldKey = identity.WorldKey();
+            state.journalLocalActivities = true;
+            int preceding = 0;
+            for (const auto &candidate : community.sites)
+            {
+                if (CommunityTaskProgress::IsActive(candidate) && candidate.regionId < site.regionId)
+                {
+                    ++preceding;
+                }
+            }
+            state.journalActivityPage = preceding / LocalEntriesPerPage;
+            return;
+        }
+    }
+}
+const CommunitySite *ActivityJournal::TrackedCommunity()
+{
+    auto &g = Game::Get();
+    const auto &id = g.GetState().trackedCommunityRegion;
+    const auto *community = g.SurfaceCommunity();
+    if (!g.GetState().surfaceExploration || !g.Surface() || !g.Surface()->Ready() || !community ||
+        id.empty() || community->State().worldKey.empty() ||
+        g.GetState().trackedCommunityWorldKey != community->State().worldKey)
+    {
+        return nullptr;
+    }
+    for (const auto &site : community->State().sites)
+    {
+        if (site.regionId == id && CommunityTaskProgress::IsActive(site))
+        {
+            return &site;
+        }
+    }
+    return nullptr;
+}
+bool ActivityJournal::TrackMission(MissionId id)
+{
+    auto &g = Game::Get();
+    if (!g.IsStoryWorld() || !g.GetState().missions.Track(id))
+    {
+        return false;
+    }
+    g.GetState().trackedCommunityRegion.clear();
+    g.GetState().trackedCommunityWorldKey.clear();
+    return true;
+}
+bool ActivityJournal::TrackCommunity(const std::string &id)
+{
+    auto &g = Game::Get();
+    const auto *community = g.SurfaceCommunity();
+    if (!g.GetState().surfaceExploration || !g.Surface() || !g.Surface()->Ready() || !community ||
+        community->State().worldKey.empty())
+    {
+        return false;
+    }
+    for (const auto &site : community->State().sites)
+    {
+        if (site.regionId == id && CommunityTaskProgress::IsActive(site))
+        {
+            g.GetState().trackedCommunityRegion = id;
+            g.GetState().trackedCommunityWorldKey = community->State().worldKey;
+            return true;
+        }
+    }
+    return false;
+}
+void ActivityJournal::Refresh()
+{
+    auto &w = Game::Get().GetState();
+    if (!TrackedCommunity())
+    {
+        w.trackedCommunityRegion.clear();
+        w.trackedCommunityWorldKey.clear();
+    }
+}
+std::vector<size_t> ActivityJournal::CommunityEntries()
+{
+    std::vector<size_t> result;
+    auto &g = Game::Get();
+    const auto *community = g.SurfaceCommunity();
+    if (!g.GetState().surfaceExploration || !g.Surface() || !g.Surface()->Ready() || !community)
+    {
+        return result;
+    }
+    const auto &sites = community->State().sites;
+    for (size_t i = 0; i < sites.size(); ++i)
+    {
+        if (CommunityTaskProgress::IsActive(sites[i]))
+        {
+            result.push_back(i);
+        }
+    }
+    std::sort(result.begin(), result.end(),
+              [&](size_t a, size_t b) { return sites[a].regionId < sites[b].regionId; });
+    return result;
+}
+ActivityObjective ActivityJournal::Current()
+{
+    auto &g = Game::Get();
+    const auto &w = g.GetState();
+    ActivityObjective goal;
+    goal.action = g.MissionObjective();
+    if (!w.surfaceExploration || !g.Surface() || !g.Surface()->Ready())
+    {
+        return goal;
+    }
+    const auto plan = g.Surface()->Stream().Snapshot()->planet;
+    if (const auto *site = TrackedCommunity())
+    {
+        goal.communityRegion = site->regionId;
+        goal.title = PlanetCommunity::TaskName(*site);
+        goal.location = plan->Region(site->regionId).definition.name;
+        goal.action = site->task == CommunityTaskProgress::Accepted ? "현장 센서에서 측정 기록 확보 [E]"
+                                                                    : "현장 접수 단말에 측정 기록 제출 [E]";
+        goal.surfaceTarget = site->task == CommunityTaskProgress::Accepted ? site->target : site->contact;
+    }
+    else
+    {
+        goal.mission = g.FocusedMission();
+        if (goal.mission == MissionId::Count)
+        {
+            if (g.IsSurfaceMine())
+            {
+                goal.action = "광산 자유 탐사 · 기록 보관";
+            }
+            return goal;
+        }
+        goal.title = QuestParticipation::Name(goal.mission);
+        auto city = [&](Vector2 point) {
+            goal.location = "헤일로";
+            if (g.SurfaceCities())
+            {
+                goal.surfaceTarget = g.SurfaceCities()->Point(*g.Surface(), 0, point);
+            }
+        };
+        const auto &mine = game::GameLevels::Mine().GetState();
+        switch (goal.mission)
+        {
+        case MissionId::Signal:
+            city(!w.homeMessageRead ? kHomeDoor : kBeaconPosition);
+            if (!w.homeMessageRead)
+            {
+                goal.location = "헤일로 · 집 단말";
+            }
+            else
+            {
+                goal.location = "헤일로 · 전망대";
+            }
+            break;
+        case MissionId::Mara:
+            city(w.isPowerRestored ? kMaraPosition : kRelayPosition);
+            break;
+        case MissionId::Mine:
+            switch (mine.quest.GetStage())
+            {
+            case game::MineQuestStage::ShowRecord:
+                city(kLiaPosition);
+                break;
+            case game::MineQuestStage::CheckCityRelay:
+                city(kCityReceiverPosition);
+                break;
+            case game::MineQuestStage::TravelToMine:
+                if (!mine.quest.IsRiaJoined())
+                {
+                    city(kLiaPosition);
+                    break;
+                }
+                [[fallthrough]];
+            default:
+                if (mine.quest.GetStage() == game::MineQuestStage::ReturnToHalo)
+                {
+                    city(kCityReceiverPosition);
+                }
+                else
+                {
+                    goal.location = "광산";
+                    goal.surfaceTarget = plan->Region("mq00_mine").access.position;
+                    if (!g.IsSurfaceMine())
+                    {
+                        goal.action = "광산 입구로 이동 · 하차 후 입장 [E]";
+                    }
+                }
+                break;
+            }
+            if (g.IsSurfaceMine())
+            {
+                switch (mine.quest.GetStage())
+                {
+                case game::MineQuestStage::BypassPower:
+                    goal.mineTarget = game::kPowerBypass;
+                    break;
+                case game::MineQuestStage::InvestigateSignal:
+                    goal.mineTarget = game::kRuinSignal;
+                    break;
+                case game::MineQuestStage::InvestigateGlyph:
+                    goal.mineTarget = game::kObserverGlyph;
+                    break;
+                case game::MineQuestStage::CollectCoordinates:
+                    goal.mineTarget = game::kCoordinateTerminal;
+                    break;
+                default:
+                    break;
+                }
+            }
+            break;
+        case MissionId::Frontier: {
+            const auto &chapter = game::GameLevels::Chapter();
+            const auto &field = chapter.GetState();
+            if (chapter.CompletedSites() == 3 || field.comparisonStarted)
+            {
+                city(kCityReceiverPosition);
+                break;
+            }
+            goal.location = "빛나는 개척지";
+            goal.surfaceTarget = plan->Region("frontier").access.position;
+            if (chapter.IsActive())
+            {
+                // Concurrent field sites stay optional; choose the closest unfinished required action.
+                double best = std::numeric_limits<double>::infinity();
+                for (const auto &point : chapter.Interactions())
+                {
+                    using A = game::ChapterAction;
+                    if (point.action == A::Exit || point.action == A::Vehicle ||
+                        point.action == A::PortableLight || point.action == A::TradeProof ||
+                        point.action == A::DetailLedger || point.action == A::ConvoySupply ||
+                        point.action == A::Mission)
+                    {
+                        continue;
+                    }
+                    auto target = chapter.Surface().Point(point.position);
+                    double distance = world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters,
+                                                                       g.Surface()->Pose().origin, target);
+                    if (distance < best)
+                    {
+                        best = distance;
+                        goal.surfaceTarget = target;
+                        goal.action = point.label;
+                    }
+                }
+                if (field.escortStarted && !field.convoyRescued)
+                {
+                    for (const auto &person : field.survivors)
+                    {
+                        if (!person.arrived && person.combat.health > 0)
+                        {
+                            goal.surfaceTarget = chapter.Surface().Point(person.position);
+                            break;
+                        }
+                    }
+                    goal.action = chapter.Objective();
+                }
+            }
+            break;
+        }
+        default:
+            break;
+        }
+    }
+    // Exterior objectives route via the current interior's actual exit, without changing participation.
+    if (g.IsSurfaceMine() && !goal.mineTarget)
+    {
+        goal.mineTarget = game::GameLevels::Mine().GetState().entry;
+        goal.action = "광산 출구로 이동 [E]";
+    }
+    if (w.isInsideHome && !(goal.mission == MissionId::Signal && !w.homeMessageRead))
+    {
+        goal.action = "집 밖으로 이동해 추적 중인 활동 계속 [E]";
+    }
+    if (w.isInObservatory && !(goal.mission == MissionId::Signal && w.homeMessageRead))
+    {
+        goal.action = "전망대 승강기로 지상 복귀 [E]";
+    }
+    return goal;
 }
 void Game::OfferMission(MissionId id)
 {
@@ -1928,6 +2260,7 @@ void Game::UpdateSurface(float dt)
     {
         return;
     }
+    ActivityJournal::Refresh();
     if (IsSurfaceMine())
     {
         if (advancing)
@@ -2615,7 +2948,7 @@ std::vector<std::string> Dialogue::Journal()
                         "지역은 아직 진입할 수 없다.");
     }
     lines.push_back(std::string("다음 행동: ") +
-                    (w.surfaceExploration ? Game::Get().MissionObjective()
+                    (w.surfaceExploration ? ActivityJournal::Current().action
                      : s.unlocked         ? game::GameLevels::Chapter().Objective()
                      : w.mainQuestStage >= MainQuestStage::MountJetBike ? mine.quest.GetObjective()
                      : w.gateSignalHeard ? "전망대에서 내려와 리아에게 기록을 보여 준다."

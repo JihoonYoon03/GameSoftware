@@ -1116,12 +1116,14 @@ void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::file
         }
         return result;
     };
-    assert(number(8) == 7 && version >= 1 && version <= 6);
-    const size_t communityStart = bytes.size() - 8 - size_t(number(bytes.size() - 8)));
+    assert(number(8) == 8 && version >= 1 && version <= 7);
+    const size_t trackingStart = bytes.size() - 8 - size_t(number(bytes.size() - 8));
+    const size_t communityStart = trackingStart - 8 - size_t(number(trackingStart - 8));
     const size_t linkStart = communityStart - 8 - size_t(number(communityStart - 8));
     const size_t securityStart = linkStart - 8 - size_t(number(linkStart - 8));
     const size_t partyStart = securityStart - 8 - size_t(number(securityStart - 8));
-    const size_t payloadEnd = version == 6   ? communityStart
+    const size_t payloadEnd = version == 7   ? trackingStart
+                              : version == 6 ? communityStart
                               : version == 5 ? linkStart
                               : version == 4 ? securityStart
                               : version == 3 ? partyStart
@@ -1155,6 +1157,192 @@ void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::file
     output.write(reinterpret_cast<const char *>(previous.data()), std::streamsize(previous.size()));
     assert(output.good());
 }
+void TestActivityObjectives()
+{
+    using namespace tutorial;
+    using G = world::SurfaceGeometry;
+    PrepareCheckpointFixture();
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    const auto fog = mineState.explored;
+    const auto credits = mineState.player.credits;
+    w.missions = {};
+    assert(w.missions.Accept(MissionId::Mara, true));
+    assert(ActivityJournal::TrackMission(MissionId::Mara));
+    auto goal = ActivityJournal::Current();
+    assert(goal.mission == MissionId::Mara && goal.mineTarget &&
+           Game::Distance(*goal.mineTarget, mineState.entry) < .001f);
+    assert(goal.action.find("출구") != std::string::npos);
+    assert(!ActivityJournal::TrackCommunity("unaccepted_region") &&
+           !ActivityJournal::TrackMission(MissionId::Count));
+    assert(w.missions.Accept(MissionId::Mine, true) && ActivityJournal::TrackMission(MissionId::Mine));
+    mineState.quest = MineQuest{};
+    assert(mineState.quest.Advance(MineQuestStage::ShowRecord));
+    assert(mineState.quest.Advance(MineQuestStage::CheckCityRelay));
+    assert(mineState.quest.BeginJourney());
+    assert(mineState.quest.Advance(MineQuestStage::TravelToMine));
+    for (auto target : {kPowerBypass, kRuinSignal, kObserverGlyph, kCoordinateTerminal})
+    {
+        const auto stage = mineState.quest.GetStage();
+        goal = ActivityJournal::Current();
+        assert(goal.mineTarget && Game::Distance(*goal.mineTarget, target) < .001f);
+        assert(mineState.quest.GetStage() == stage && mineState.player.credits == credits &&
+               mineState.explored == fog);
+        assert(mineState.quest.Advance(stage));
+    }
+    goal = ActivityJournal::Current();
+    assert(goal.mineTarget && Game::Distance(*goal.mineTarget, mineState.entry) < .001f);
+    w.mapDestinations[size_t(MapRegion::Mine)] = {true, {12.5f, 11.5f}};
+    w.planetDestination = g.Surface()->Pose().origin;
+    const auto manual = *w.planetDestination;
+    assert(MapHud::FocusTrackedObjective() && w.mapVisible && !w.planetMapSurface);
+    const auto centered = MapHud::WorldToMap(*goal.mineTarget, true);
+    assert(Game::Distance(centered, {489, 400}) < .01f);
+    assert(w.mapDestinations[size_t(MapRegion::Mine)].active &&
+           Game::Distance(w.mapDestinations[size_t(MapRegion::Mine)].position, {12.5f, 11.5f}) < .001f &&
+           G::Distance(g.Surface()->Planet().radiusMeters, manual, *w.planetDestination) < .001 &&
+           mineState.explored == fog);
+    w.mapVisible = false;
+    assert(g.LeaveSurfaceMine());
+    assert(ActivityJournal::TrackMission(MissionId::Mara));
+    for (bool restored : {false, true})
+    {
+        w.isPowerRestored = restored;
+        goal = ActivityJournal::Current();
+        const auto expected =
+            g.SurfaceCities()->Point(*g.Surface(), 0, restored ? kMaraPosition : kRelayPosition);
+        assert(expected && goal.surfaceTarget &&
+               G::Distance(g.Surface()->Planet().radiusMeters, *expected, *goal.surfaceTarget) < .001 &&
+               !goal.mineTarget);
+    }
+    const auto statuses = w.missions.Status(MissionId::Mara);
+    w.journalVisible = true;
+    assert(MapHud::FocusTrackedObjective() && !w.journalVisible && w.mapVisible);
+    const auto onMap = MapHud::PlanetToMap(*goal.surfaceTarget, true);
+    assert(Game::Distance(onMap, {488, 400}) < .01f && w.missions.Status(MissionId::Mara) == statuses);
+    assert(G::Distance(g.Surface()->Planet().radiusMeters, manual, *w.planetDestination) < .001);
+    g.Reset();
+}
+
+void TestCommunityTaskTransactions()
+{
+    using namespace tutorial;
+    using Progress = CommunityTaskProgress;
+    CommunitySite site;
+    int credits = 500;
+    assert(!Progress::Measure(site) && !Progress::Cancel(site));
+    assert(Progress::Submit(site, credits) == Progress::SubmitResult::NotReady && credits == 500);
+    assert(Progress::Accept(site) && !Progress::Accept(site) && Progress::IsActive(site));
+    assert(Progress::Cancel(site) && !Progress::Cancel(site) && !Progress::IsActive(site));
+    assert(Progress::Accept(site) && Progress::Measure(site) && !Progress::Measure(site));
+    assert(!Progress::Cancel(site)); // A measured record is never discarded by an obsolete cancel callback.
+    credits = game::PlayerStats::kMaximumCredits;
+    assert(Progress::Submit(site, credits) == Progress::SubmitResult::WalletFull &&
+           site.task == Progress::Measured && credits == game::PlayerStats::kMaximumCredits);
+    credits = game::PlayerStats::kMaximumCredits - Progress::RewardCredits + 1;
+    const auto full = credits;
+    assert(Progress::Submit(site, credits) == Progress::SubmitResult::WalletFull && credits == full);
+    credits = -1;
+    assert(Progress::Submit(site, credits) == Progress::SubmitResult::NotReady && credits == -1);
+    credits = game::PlayerStats::kMaximumCredits - Progress::RewardCredits;
+    assert(Progress::Submit(site, credits) == Progress::SubmitResult::Granted &&
+           site.task == Progress::Paid && credits == game::PlayerStats::kMaximumCredits);
+    assert(Progress::Submit(site, credits) == Progress::SubmitResult::AlreadyPaid &&
+           credits == game::PlayerStats::kMaximumCredits && !Progress::IsActive(site));
+    assert(!Progress::Accept(site) && !Progress::Cancel(site) && !Progress::Measure(site));
+    site.task = 999;
+    assert(Progress::Submit(site, credits) == Progress::SubmitResult::NotReady && !Progress::IsActive(site));
+}
+
+void TestActivityTrackingContracts()
+{
+    using namespace tutorial;
+    const auto planet = world::WorldCatalog::Erma();
+    world::RelayNetwork key;
+    key.Bind(planet);
+    PlanetCommunityState community;
+    community.worldKey = key.WorldKey();
+    // Only identity/status fields participate in this metadata contract; geometry is validated separately.
+    for (const auto *id : {"site_z", "site_a", "site_c", "site_b"})
+    {
+        CommunitySite site;
+        site.regionId = id;
+        site.task = 1;
+        community.sites.push_back(site);
+    }
+    GameState state;
+    assert(state.missions.Accept(MissionId::Mara, true));
+    assert(state.missions.Accept(MissionId::Frontier, true));
+    ActivityTrackingState chosen{MissionId::Mara, key.WorldKey(), "site_z"};
+    ActivityJournal::RestoreTracking(state, chosen, community, planet);
+    auto saved = ActivityJournal::CaptureTracking(state, community, planet);
+    assert(saved.mission == MissionId::Mara && saved.communityRegion == "site_z" &&
+           saved.communityWorldKey == key.WorldKey());
+    assert(state.journalLocalActivities && state.journalActivityPage == 1);
+    assert(state.missions.Active(MissionId::Mara) && state.missions.Active(MissionId::Frontier));
+    const auto original = state;
+    chosen.communityWorldKey = "foreign_planet";
+    ActivityJournal::RestoreTracking(state, chosen, community, planet);
+    assert(state.trackedCommunityRegion.empty() && state.missions.Tracked() == MissionId::Mara);
+    assert(state.missions.Active(MissionId::Mara) && state.missions.Active(MissionId::Frontier));
+    chosen.communityWorldKey = key.WorldKey();
+    for (unsigned status : {0u, 3u})
+    {
+        community.sites.front().task = status;
+        ActivityJournal::RestoreTracking(state, chosen, community, planet);
+        assert(state.trackedCommunityRegion.empty() && community.sites.front().task == status);
+    }
+    community.sites.front().task = 2;
+    ActivityJournal::RestoreTracking(state, chosen, community, planet);
+    assert(state.trackedCommunityRegion == "site_z" && community.sites.front().task == 2);
+    assert(state.missions.Pause(MissionId::Mara));
+    ActivityJournal::RestoreTracking(state, chosen, community, planet);
+    assert(state.missions.Tracked() == MissionId::Count &&
+           state.missions.Status(MissionId::Mara) == MissionStatus::Paused);
+    chosen.communityRegion = "missing_site";
+    chosen.mission = MissionId(999);
+    ActivityJournal::RestoreTracking(state, chosen, community, planet);
+    assert(state.trackedCommunityRegion.empty() && state.missions.Tracked() == MissionId::Count);
+    assert(ActivityJournal::CaptureTracking(original, community, world::PlanetProfiles::All()[1])
+               .communityRegion.empty());
+    assert(ActivityJournal::CaptureTracking(original, community, world::PlanetProfiles::All()[1]).mission ==
+           MissionId::Count);
+}
+void TestActivityTrackingPersistence()
+{
+    using namespace tutorial;
+    PrepareCheckpointFixture();
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    assert(w.missions.Accept(MissionId::Mara, true) && w.missions.Accept(MissionId::Frontier, true));
+    w.isSideQuestAccepted = true;
+    assert(ActivityJournal::TrackMission(MissionId::Mara));
+    const auto folder =
+        std::filesystem::path("x64/RevisionChecks") /
+        ("tracking-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    const auto file = folder / "selected.sav", legacy = folder / "previous7.sav";
+    assert(SaveSystem::Save(file) && SaveSystem::CheckFile(file));
+    assert(w.missions.Tracked() == MissionId::Mara);
+    WriteLegacyCheckpoint(file, legacy, 7);
+    assert(SaveSystem::CheckFile(legacy) && w.missions.Tracked() == MissionId::Mara);
+    assert(ActivityJournal::TrackMission(MissionId::Frontier));
+    assert(SaveSystem::Load(file));
+    SaveSystem::Cancel();
+    assert(w.missions.Tracked() == MissionId::Frontier);
+    assert(SaveSystem::Load(file));
+    WaitForCheckpointLoad();
+    assert(w.missions.Tracked() == MissionId::Mara && ActivityJournal::Current().mission == MissionId::Mara);
+    assert(w.missions.Active(MissionId::Frontier) && w.missions.Active(MissionId::Mara));
+    assert(SaveSystem::Load(legacy));
+    WaitForCheckpointLoad();
+    assert(w.missions.Tracked() == MissionId::Count && w.missions.Active(MissionId::Mara) &&
+           w.missions.Active(MissionId::Frontier) && w.trackedCommunityRegion.empty());
+    g.Reset();
+    std::filesystem::remove(file);
+    std::filesystem::remove(legacy);
+    std::filesystem::remove(folder);
+}
+
 void TestWorldCheckpoints()
 {
     using namespace tutorial;
@@ -1196,9 +1384,16 @@ void TestWorldCheckpoints()
     assert(SaveSystem::Load(legacy6));
     WaitForCheckpointLoad();
     VerifyCheckpointFixture();
-    const auto malformed = folder / "community-footer.sav";
-    {
-        std::ifstream input(file, std::ios::binary);
+    const auto legacy7 = folder / "version7.sav";
+    WriteLegacyCheckpoint(file, legacy7, 7);
+    assert(SaveSystem::Load(legacy7));
+    WaitForCheckpointLoad();
+    VerifyCheckpointFixture();
+    assert(w.missions.Tracked() == MissionId::Count && w.trackedCommunityRegion.empty());
+    const auto malformed = folder / "tracking-footer.sav";
+    const auto malformedCommunity = folder / "community-footer.sav";
+    auto breakFooter = [&](const auto &source, const auto &destination) {
+        std::ifstream input(source, std::ios::binary);
         std::vector<unsigned char> bytes{std::istreambuf_iterator<char>(input),
                                          std::istreambuf_iterator<char>()};
         std::fill(bytes.end() - 8, bytes.end(), 0);
@@ -1212,10 +1407,12 @@ void TestWorldCheckpoints()
         {
             bytes[32 + i] = static_cast<unsigned char>(hash >> (i * 8));
         }
-        std::ofstream output(malformed, std::ios::binary);
+        std::ofstream output(destination, std::ios::binary);
         output.write(reinterpret_cast<const char *>(bytes.data()), std::streamsize(bytes.size()));
-    }
-    assert(!SaveSystem::CheckFile(malformed));
+    };
+    breakFooter(file, malformed);
+    breakFooter(legacy7, malformedCommunity);
+    assert(!SaveSystem::CheckFile(malformed) && !SaveSystem::CheckFile(malformedCommunity));
     const auto creditsBefore = mineState.player.credits;
     assert(!SaveSystem::Load(malformed) && !SaveSystem::Loading() &&
            mineState.player.credits == creditsBefore);
@@ -1314,6 +1511,8 @@ void TestWorldCheckpoints()
     std::filesystem::remove(legacy4);
     std::filesystem::remove(legacy5);
     std::filesystem::remove(legacy6);
+    std::filesystem::remove(legacy7);
+    std::filesystem::remove(malformedCommunity);
     std::filesystem::remove(malformed);
     std::filesystem::remove(file);
     std::filesystem::remove(std::filesystem::path(file.wstring() + L".bak"));
@@ -1564,22 +1763,103 @@ void TestPlanetCommunity()
     community->Interact();
     read(1); // Discovering a settlement never accepts work automatically.
     assert(community->State().sites.front().task == 0);
+    assert(!ActivityJournal::TrackCommunity(regionId)); // Seeing an offer does not accept it remotely.
     community->Interact();
     read(0);
     assert(community->State().sites.front().task == 1 && !community->Journal().empty());
+    assert(ActivityJournal::TrackCommunity(regionId) && Game::Get().FocusedMission() == MissionId::Count);
+    const auto activityKey = w.trackedCommunityWorldKey;
+    w.trackedCommunityWorldKey = "different_world";
+    assert(!ActivityJournal::TrackedCommunity());
+    ActivityJournal::Current(); // A query must not repair or mutate a foreign selection.
+    assert(w.trackedCommunityWorldKey == "different_world");
+    ActivityJournal::Refresh();
+    assert(w.trackedCommunityRegion.empty() && w.trackedCommunityWorldKey.empty());
+    assert(ActivityJournal::TrackCommunity(regionId) && w.trackedCommunityWorldKey == activityKey);
+    auto objective = ActivityJournal::Current();
+    assert(objective.communityRegion == regionId && objective.surfaceTarget &&
+           G::Distance(g.Surface()->Planet().radiusMeters, *objective.surfaceTarget, target) < .001);
     community->Interact();
     read(1);
-    assert(community->State().sites.front().task == 0);
+    assert(community->State().sites.front().task == 0 && !ActivityJournal::TrackedCommunity() &&
+           w.trackedCommunityRegion.empty());
     community->Interact();
     read(0);
+    assert(ActivityJournal::TrackCommunity(regionId));
+    w.journalVisible = true;
+    w.journalLocalActivities = true;
+    auto controls = Hud::Controls();
+    const auto selected = std::find_if(controls.begin(), controls.end(),
+                                       [](const auto &c) { return c.action == UiAction::TrackCommunity; });
+    assert(selected != controls.end() && selected->enabled);
+    for (size_t i = 0; i < controls.size(); ++i)
+    {
+        for (size_t j = i + 1; j < controls.size(); ++j)
+        {
+            const auto &a = controls[i], &b = controls[j];
+            assert(a.position.x + a.size.x <= b.position.x || b.position.x + b.size.x <= a.position.x ||
+                   a.position.y + a.size.y <= b.position.y || b.position.y + b.size.y <= a.position.y);
+        }
+    }
+    assert(selected->label.find('\n') != std::string::npos &&
+           selected->label.find("\\n") == std::string::npos);
+    const auto show = std::find_if(controls.begin(), controls.end(),
+                                   [](const auto &c) { return c.action == UiAction::ViewActivity; });
+    assert(show != controls.end() && show->enabled);
+    w.cursorInsideViewport = true;
+    w.cursorPosition = {show->position.x + show->size.x * .5f, show->position.y + show->size.y * .5f};
+    assert(Hud::HandlePointer(0, true) && Hud::HandlePointer(0, false));
+    assert(w.mapVisible && !w.journalVisible && ActivityJournal::TrackedCommunity());
+    w.mapVisible = false;
     const int credits = mineState.player.credits;
     assert(g.RelocateSurfaceSurvey(target));
     community->Interact();
     assert(community->State().sites.front().task == 2 && mineState.player.credits == credits);
+    objective = ActivityJournal::Current();
+    assert(objective.surfaceTarget &&
+           G::Distance(g.Surface()->Planet().radiusMeters, *objective.surfaceTarget, contact) < .001 &&
+           objective.action.find("제출") != std::string::npos);
+    assert(mineState.quest.GetStage() == mainStage);
+    const auto activityJson = monitoring::WorldSnapshot::Build(1, "tracked-activity-test");
+    assert(activityJson.find("\"tracked_activity\"") != std::string::npos &&
+           activityJson.find("\"community_region\":\"" + regionId + "\"") != std::string::npos);
+    {
+        const auto focusFolder =
+            std::filesystem::path("x64/RevisionChecks") /
+            ("community-focus-" +
+             std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+        const auto focusFile = focusFolder / "selected.sav";
+        const auto worldKey = w.trackedCommunityWorldKey;
+        assert(SaveSystem::Save(focusFile) && SaveSystem::CheckFile(focusFile));
+        w.trackedCommunityRegion.clear();
+        w.trackedCommunityWorldKey.clear();
+        assert(SaveSystem::Load(focusFile));
+        WaitForCheckpointLoad();
+        community = g.SurfaceCommunity();
+        assert(community && community->State().sites.front().task == 2 &&
+               w.trackedCommunityRegion == regionId && w.trackedCommunityWorldKey == worldKey &&
+               w.journalLocalActivities && ActivityJournal::TrackedCommunity());
+        objective = ActivityJournal::Current();
+        assert(objective.surfaceTarget &&
+               G::Distance(g.Surface()->Planet().radiusMeters, *objective.surfaceTarget, contact) < .001 &&
+               mineState.player.credits == credits);
+        std::filesystem::remove(focusFile);
+        std::filesystem::remove(focusFolder);
+    }
     assert(g.RelocateSurfaceSurvey(contact));
+    mineState.player.credits = game::PlayerStats::kMaximumCredits;
+    community->Interact();
+    assert(community->State().sites.front().task == CommunityTaskProgress::Measured &&
+           mineState.player.credits == game::PlayerStats::kMaximumCredits &&
+           ActivityJournal::TrackedCommunity());
+    assert(w.noticeText.find("정산 보류") != std::string::npos &&
+           w.noticeText.find("소지 한도") != std::string::npos);
+    mineState.player.credits = credits;
     community->Interact();
     assert(community->State().sites.front().task == 3 && mineState.player.credits == credits + 100 &&
            mineState.quest.GetStage() == mainStage);
+    assert(!ActivityJournal::TrackedCommunity() && w.trackedCommunityRegion.empty() &&
+           !ActivityJournal::TrackCommunity(regionId));
     community->Interact();
     read(0);
     assert(mineState.player.credits == credits + 100);
@@ -1846,6 +2126,9 @@ void TestPlanetProfileVisits()
     auto &w = g.GetState();
     PrepareCheckpointFixture();
     assert(g.LeaveSurfaceMine());
+    assert(w.missions.Accept(MissionId::Mara, true));
+    w.isSideQuestAccepted = true;
+    assert(ActivityJournal::TrackMission(MissionId::Mara));
     const auto ermaBike = *g.SurfaceBike();
     mineState.player.credits = 7000;
     CivicJustice::State().wanted = 0;
@@ -1853,11 +2136,13 @@ void TestPlanetProfileVisits()
     assert(!SaveSystem::SwitchPlanet("unknown_profile"));
     assert(SaveSystem::SwitchPlanet("seira"));
     SaveSystem::Cancel();
-    assert(g.IsStoryWorld() && w.residents.front().health == 64 && mineState.player.credits == 7000);
+    assert(g.IsStoryWorld() && w.residents.front().health == 64 && mineState.player.credits == 7000 &&
+           w.missions.Tracked() == MissionId::Mara);
     assert(SaveSystem::SwitchPlanet("seira"));
     assert(!SaveSystem::SwitchPlanet("orren"));
     WaitForCheckpointLoad();
     assert(g.Surface()->Planet().id == "seira" && !g.IsStoryWorld() && !g.SurfaceCities());
+    assert(w.missions.Tracked() == MissionId::Count && w.trackedCommunityRegion.empty());
     assert(w.residents.empty() && w.buildings.empty() && !mineState.generated &&
            !GameLevels::Chapter().GetState().generated && !g.EnterSurfaceMine());
     assert(!g.MissionEligible(MissionId::Signal) && !g.MissionEligible(MissionId::Mine));
@@ -1913,6 +2198,7 @@ void TestPlanetProfileVisits()
     mineState.player.credits = 8100;
     assert(SaveSystem::SwitchPlanet("erma"));
     WaitForCheckpointLoad();
+    assert(w.missions.Tracked() == MissionId::Mara && ActivityJournal::Current().mission == MissionId::Mara);
     assert(g.IsStoryWorld() && w.residents.size() == 98 && w.residents.front().health == 64 &&
            w.residents.front().name == "저장 검사 주민" && w.relayNetwork.Registered("relay_halo_07_0") &&
            GameLevels::Chapter().GetState().generatorInspected && mineState.generated &&
@@ -4095,6 +4381,10 @@ int main(int argc, char **argv)
     TestPlanetCityMigration();
     TestPlanetCityRuntime();
     TestOpenWorldParticipation();
+    TestActivityObjectives();
+    TestCommunityTaskTransactions();
+    TestActivityTrackingContracts();
+    TestActivityTrackingPersistence();
     TestRelayTravelAndAtlas();
     TestWorldCheckpoints();
     TestCityTrafficHandoff();

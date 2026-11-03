@@ -404,6 +404,31 @@ struct CommunitySite
     unsigned task = 0; // 0 offered, 1 accepted, 2 measured, 3 paid. Never advances the main story.
     std::vector<CommunityResident> residents;
 };
+// ============================================================================
+// CommunityTaskProgress — validated local activity transitions; paid state owns one-time rewards
+// ============================================================================
+class CommunityTaskProgress
+{
+  public:
+    static constexpr unsigned Offered = 0, Accepted = 1, Measured = 2, Paid = 3;
+    static constexpr int RewardCredits = 100;
+    enum class SubmitResult
+    {
+        Granted,
+        NotReady,
+        AlreadyPaid,
+        WalletFull
+    };
+    static bool IsActive(const CommunitySite &site);
+    static bool Accept(CommunitySite &site);
+    static bool Cancel(CommunitySite &site);
+    static bool Measure(CommunitySite &site);
+    static SubmitResult Submit(CommunitySite &site, int &credits);
+
+  private:
+    static bool Change(CommunitySite &site, unsigned expected, unsigned next);
+};
+
 struct PlanetCommunityState
 {
     std::string worldKey;

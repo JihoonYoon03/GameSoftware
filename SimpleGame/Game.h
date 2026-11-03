@@ -9,6 +9,7 @@
 #include <string>
 #include <functional>
 #include <map>
+#include <optional>
 #include <set>
 #include <vector>
 
@@ -20,6 +21,9 @@ class PlanetCities;
 class PlanetTraffic;
 class PlanetParty;
 class PlanetCommunity;
+struct CommunitySite;
+struct PlanetCommunityState;
+struct GameState;
 enum class CompanionId : std::uint8_t;
 enum class CompanionPlace : std::uint8_t;
 struct Vector2
@@ -187,14 +191,50 @@ class QuestParticipation
     bool Complete(MissionId id);
     bool Track(MissionId id);
     MissionId Tracked() const;
+    void ClearTracking()
+    {
+        tracked = MissionId::Count;
+    }
     static const char *Name(MissionId id);
     static const char *Key(MissionId id);
     static const char *Label(MissionStatus status);
 
   private:
     std::array<MissionStatus, size_t(MissionId::Count)> states = {};
-    // Display preference only; checkpoint wire format continues to contain states alone.
+    // Participation stays in the base archive; the tracking extension preserves this preference.
     MissionId tracked = MissionId::Count;
+};
+
+// ============================================================================
+// ActivityJournal — selection, read-only objectives and persistent activity references
+// ============================================================================
+struct ActivityObjective
+{
+    MissionId mission = MissionId::Count;
+    std::string communityRegion, title, action, location;
+    std::optional<world::SurfacePoint> surfaceTarget;
+    std::optional<Vector2> mineTarget;
+};
+struct ActivityTrackingState
+{
+    MissionId mission = MissionId::Count;
+    std::string communityWorldKey, communityRegion;
+};
+class ActivityJournal
+{
+  public:
+    static constexpr int LocalEntriesPerPage = 3;
+    static ActivityObjective Current();
+    static ActivityTrackingState CaptureTracking(const GameState &state,
+                                                 const PlanetCommunityState &community,
+                                                 const world::PlanetDefinition &planet);
+    static void RestoreTracking(GameState &state, const ActivityTrackingState &tracking,
+                                const PlanetCommunityState &community, const world::PlanetDefinition &planet);
+    static bool TrackMission(MissionId id);
+    static bool TrackCommunity(const std::string &regionId);
+    static const CommunitySite *TrackedCommunity();
+    static std::vector<size_t> CommunityEntries();
+    static void Refresh();
 };
 
 enum class InteractionTarget
@@ -363,7 +403,11 @@ enum class UiAction
     CancelLoad,
     Profiles,
     SelectProfile,
-    TrackMission
+    TrackMission,
+    ActivityTab,
+    ActivityPage,
+    TrackCommunity,
+    ViewActivity
 };
 struct UiPreferences
 {
@@ -455,6 +499,10 @@ struct GameState
     Vector2 planetMapPan = {};
     std::optional<world::SurfacePoint> planetDestination;
     bool journalVisible = false, dialogueHistoryVisible = false;
+    // Open panels/pages are transient; activity selection is stored in a separate archive extension.
+    bool journalLocalActivities = false;
+    int journalActivityPage = 0;
+    std::string trackedCommunityRegion, trackedCommunityWorldKey;
     DialogueState dialogue;
     UiPreferences uiPreferences;
     UiState ui;
