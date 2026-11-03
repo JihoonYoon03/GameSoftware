@@ -1964,7 +1964,7 @@ bool AimAtVehicles(float shotAngle, models::Point &target)
         const auto &surface = *Game::Get().Surface();
         for (const auto &actor : Game::Get().SurfaceTraffic()->State().actors)
         {
-            if (actor.health <= 0 ||
+            if (actor.city >= 0 || actor.health <= 0 ||
                 ::world::SurfaceGeometry::Distance(surface.Planet().radiusMeters, actor.position,
                                                    surface.Pose().origin) > 250)
             {

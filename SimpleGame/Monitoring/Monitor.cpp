@@ -382,6 +382,8 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
             traffic.Number("routes", transit->Routes().size());
             traffic.Number("ground_limit", tutorial::PlanetTraffic::GroundLimit);
             traffic.Number("air_limit", tutorial::PlanetTraffic::AirLimit);
+            traffic.Number("city_limit", tutorial::PlanetTraffic::CityLimit);
+            traffic.Number("city_owned", transit->Links().size());
             traffic.Number("detailed_meters", tutorial::PlanetTraffic::DetailedMeters);
             traffic.Number("retire_meters", tutorial::PlanetTraffic::RetireMeters);
             size_t ground = 0, air = 0, detailed = 0;
@@ -394,6 +396,8 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                             tutorial::PlanetTraffic::DetailedMeters;
                 JsonObject item;
                 item.Number("id", actor.id);
+                item.Number("owner_city", actor.city);
+                item.Number("city_vehicle_id", actor.cityVehicle);
                 item.Text("route_id", actor.routeId);
                 item.Bool("airborne", actor.airborne);
                 item.Bool("occupied", actor.occupied);
@@ -663,6 +667,7 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     {
         JsonObject item;
         item.Number("id", car.id);
+        item.Number("global_id", car.globalId);
         item.Number("lane", car.lane);
         item.Raw("position", Position(car.position));
         item.Seconds("speed", car.speed);

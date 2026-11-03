@@ -1064,10 +1064,12 @@ void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::file
         }
         return result;
     };
-    assert(number(8) == 5 && version >= 1 && version <= 4);
-    const size_t securityStart = bytes.size() - 8 - size_t(number(bytes.size() - 8));
+    assert(number(8) == 6 && version >= 1 && version <= 5);
+    const size_t linkStart = bytes.size() - 8 - size_t(number(bytes.size() - 8));
+    const size_t securityStart = linkStart - 8 - size_t(number(linkStart - 8));
     const size_t partyStart = securityStart - 8 - size_t(number(securityStart - 8));
-    const size_t payloadEnd = version == 4   ? securityStart
+    const size_t payloadEnd = version == 5   ? linkStart
+                              : version == 4 ? securityStart
                               : version == 3 ? partyStart
                                              : partyStart - 8 - size_t(number(partyStart - 8));
     size_t offset = 40;
@@ -1132,7 +1134,10 @@ void TestWorldCheckpoints()
     const auto legacy4 = folder / "schema4.sav";
     WriteLegacyCheckpoint(file, legacy4, 4);
     assert(SaveSystem::CheckFile(legacy4));
-    const auto malformed = folder / "security-footer.sav";
+    const auto legacy5 = folder / "schema5.sav";
+    WriteLegacyCheckpoint(file, legacy5, 5);
+    assert(SaveSystem::CheckFile(legacy5));
+    const auto malformed = folder / "traffic-links-footer.sav";
     {
         std::ifstream input(file, std::ios::binary);
         std::vector<unsigned char> bytes{std::istreambuf_iterator<char>(input),
@@ -1228,6 +1233,9 @@ void TestWorldCheckpoints()
     assert(!w.relayPreparing && !w.mapVisible &&
            world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, departure,
                                             g.Surface()->Pose().origin) < 1.e-6);
+    assert(SaveSystem::Load(legacy5));
+    WaitForCheckpointLoad();
+    VerifyCheckpointFixture();
     assert(SaveSystem::Load(legacy4));
     WaitForCheckpointLoad();
     VerifyCheckpointFixture();
@@ -1245,12 +1253,122 @@ void TestWorldCheckpoints()
     std::filesystem::remove(legacy2);
     std::filesystem::remove(legacy3);
     std::filesystem::remove(legacy4);
+    std::filesystem::remove(legacy5);
     std::filesystem::remove(malformed);
     std::filesystem::remove(file);
     std::filesystem::remove(std::filesystem::path(file.wstring() + L".bak"));
     std::filesystem::remove(bad);
     std::filesystem::remove(opaqueBackup);
     std::filesystem::remove(transit);
+    std::filesystem::remove(folder);
+}
+
+void TestCityTrafficHandoff()
+{
+    using namespace tutorial;
+    using G = world::SurfaceGeometry;
+    PrepareCheckpointFixture();
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    assert(g.LeaveSurfaceMine());
+    auto plan = g.Surface()->Stream().Snapshot()->planet;
+    auto *transit = g.SurfaceTraffic();
+    auto portal = std::find_if(transit->Routes().begin(), transit->Routes().end(),
+                               [](const auto &r) { return r.portalCity >= 0 && r.entry; });
+    assert(portal != transit->Routes().end());
+    const auto entry = *portal;
+    auto exitIterator = std::find_if(transit->Routes().begin(), transit->Routes().end(), [&](const auto &r) {
+        return r.portalCity == entry.portalCity && !r.entry;
+    });
+    assert(exitIterator != transit->Routes().end());
+    const auto exit = *exitIterator;
+    const int city = entry.portalCity;
+    const auto &net = RoadNetwork::Get();
+    assert(g.RelocateSurfaceSurvey(entry.points.front()));
+    g.Update(0);
+    CivicJustice::State().wanted = 0;
+    CivicJustice::State().heat = 0;
+    auto state = transit->State();
+    auto actor = TrafficFixtureActor(*transit, *plan, entry, entry.lengthMeters - .01, 37);
+    actor.health = 91;
+    state.actors = {actor};
+    state.nextId = 38;
+    state.spawnSeconds = .75f;
+    *transit = PlanetTraffic(state);
+    transit->Bind(plan);
+    transit->Update(w, *g.Surface(), .05f, true);
+    assert(transit->State().actors.front().city == city && transit->Links().size() == 1);
+    auto *traffic = &g.SurfaceCities()->Traffic(city);
+    auto findCar = [&]() {
+        return std::find_if(traffic->Vehicles().begin(), traffic->Vehicles().end(),
+                            [](const auto &v) { return v.globalId == 37; });
+    };
+    auto car = findCar();
+    assert(car != traffic->Vehicles().end() && car->health == 91 && car->id % 4 == 37 % 4);
+    const auto position = *g.SurfaceCities()->Point(*g.Surface(), city, car->position);
+    assert(G::Distance(g.Surface()->Planet().radiusMeters, position,
+                       transit->State().actors.front().position) < .01);
+    const auto before = car->position;
+    g.SurfaceCities()->Observe(w, *g.Surface(), city, [&] { traffic->Update(w, .1f); });
+    transit->SyncCity(city, *traffic, *g.Surface());
+    car = findCar();
+    assert(car != traffic->Vehicles().end() && Game::Distance(before, car->position) > .0001f);
+    assert(transit->Damage(37, 5, true) && findCar()->health == 86 &&
+           transit->State().actors.front().health == 86 && CivicJustice::State().heat == 0);
+    const auto folder =
+        std::filesystem::path("x64/RevisionChecks") /
+        ("traffic-links-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    const auto file = folder / "city-owned.sav";
+    assert(SaveSystem::Save(file) && SaveSystem::Load(file));
+    WaitForCheckpointLoad();
+    transit = g.SurfaceTraffic();
+    traffic = &g.SurfaceCities()->Traffic(city);
+    assert(transit->Links().size() == 1 && findCar() != traffic->Vehicles().end() &&
+           findCar()->health == 86 && transit->State().actors.front().city == city);
+    // Simulate the same physical actor reaching the egress lane, without manufacturing another car.
+    auto &cars = const_cast<std::vector<TrafficVehicle> &>(traffic->Vehicles());
+    cars.erase(std::remove_if(cars.begin(), cars.end(), [](const auto &v) { return v.globalId != 37; }),
+               cars.end());
+    auto &leaving = cars.front();
+    leaving.lane = exit.lane;
+    leaving.distance = net.lanes[size_t(exit.lane)].length;
+    leaving.position = net.lanes[size_t(exit.lane)].end;
+    leaving.turnDistance = -1;
+    const auto departing = *g.SurfaceCities()->Point(*g.Surface(), city, leaving.position);
+    assert(transit->Depart(city, leaving) && leaving.departed);
+    cars.clear(); // TrafficSystem::Step removes this relinquished projection before contacts/rendering.
+    transit->SyncCity(city, *traffic, *g.Surface());
+    const auto &roadActor = transit->State().actors.front();
+    assert(roadActor.id == 37 && roadActor.city == -1 && roadActor.health == 86 && transit->Links().empty() &&
+           roadActor.routeId == exit.id &&
+           G::Distance(g.Surface()->Planet().radiusMeters, departing, roadActor.position) < .01);
+    // A blocked receiving lane keeps the actor at its last safe point, rather than teleporting onto a car.
+    state = transit->State();
+    actor = TrafficFixtureActor(*transit, *plan, entry, entry.lengthMeters - .01, 37);
+    actor.health = 86;
+    state.actors = {actor};
+    state.spawnSeconds = .75f;
+    *transit = PlanetTraffic(state);
+    transit->Bind(g.Surface()->Stream().Snapshot()->planet);
+    TrafficVehicle blocker;
+    blocker.id = 0;
+    blocker.lane = entry.lane;
+    blocker.position = net.lanes[size_t(entry.lane)].start;
+    cars.push_back(blocker);
+    const auto waiting = transit->State().actors.front().position;
+    transit->Update(w, *g.Surface(), .05f, true);
+    assert(transit->State().actors.front().city == -1 && transit->Links().empty() &&
+           G::Distance(g.Surface()->Planet().radiusMeters, waiting,
+                       transit->State().actors.front().position) < .001);
+    cars.clear();
+    transit->Update(w, *g.Surface(), .05f, true);
+    assert(transit->State().actors.front().city == city && findCar() != traffic->Vehicles().end());
+    assert(transit->Damage(37, 999, true) && findCar()->health == 0 && CivicJustice::State().heat == 50);
+    assert(!transit->Damage(37, 999, true) && CivicJustice::State().heat == 50);
+    const auto json = monitoring::WorldSnapshot::Build(1, "handoff-test");
+    assert(json.find("owner_city") != std::string::npos && json.find("city_owned") != std::string::npos);
+    g.Reset();
+    std::filesystem::remove(file);
     std::filesystem::remove(folder);
 }
 
@@ -3745,6 +3863,7 @@ int main(int argc, char **argv)
     TestOpenWorldParticipation();
     TestRelayTravelAndAtlas();
     TestWorldCheckpoints();
+    TestCityTrafficHandoff();
     TestPlanetSecurity();
     TestPlanetParty();
     TestPlanetProfileVisits();

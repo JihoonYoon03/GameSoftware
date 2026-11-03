@@ -191,10 +191,13 @@ struct TrafficVehicle
     int health = 140;
     bool occupied = true;
     float wreckSeconds = 0, impactCooldown = 0, hitFlash = 0;
+    std::uint64_t globalId = 0; // Nonzero only while borrowing a PlanetTraffic actor.
+    bool departed = false;      // A same-frame ownership transfer, never saved as a second car.
 };
 class TrafficSystem
 {
     friend class SaveArchive;
+    friend class PlanetTraffic;
 
   public:
     static constexpr size_t kVehicleLimit = 112;
@@ -299,6 +302,13 @@ struct PlanetTrafficActor
     world::SurfacePoint position;
     world::Vector3d heading = {0, 1, 0};
     float bank = 0, wreckSeconds = 0, fallSpeed = 0, farSeconds = 0;
+    int city = -1;
+    std::uint64_t cityVehicle = 0;
+};
+struct PlanetTrafficLink
+{
+    std::uint64_t actor = 0, vehicle = 0;
+    int city = -1;
 };
 struct PlanetTrafficState
 {
@@ -317,6 +327,8 @@ struct PlanetTrafficRoute
     std::vector<double> distances, capDots;
     std::vector<world::Vector3d> caps;
     double lengthMeters = 0;
+    int portalCity = -1, lane = -1;
+    bool entry = false; // City portals are directed; regional roads remain bidirectional.
 };
 class PlanetTraffic
 {
@@ -324,6 +336,7 @@ class PlanetTraffic
     static constexpr size_t GroundLimit = 64, AirLimit = 24;
     static constexpr double DetailedMeters = 1500, RetireMeters = 4000;
     static constexpr unsigned Revision = 1;
+    static constexpr size_t CityLimit = 8;
     explicit PlanetTraffic(PlanetTrafficState state = {});
     void Bind(std::shared_ptr<const world::GeneratedPlanet> planet);
     void Update(GameState &state, const world::SurfaceSession &session, float deltaSeconds, bool exterior);
@@ -345,6 +358,10 @@ class PlanetTraffic
                   double padding = 0) const;
     bool Outside(const PlanetTrafficActor &actor, const GameState &world,
                  const world::SurfaceSession &session, float padding = 240) const;
+    bool Depart(int city, TrafficVehicle &vehicle);
+    void SyncCity(int city, const TrafficSystem &traffic, const world::SurfaceSession &session);
+    void SyncDamage(const TrafficVehicle &vehicle);
+    std::vector<PlanetTrafficLink> Links() const;
 
   private:
     unsigned Random();
@@ -352,12 +369,15 @@ class PlanetTraffic
                  const world::SurfaceSession &session, bool exterior);
     void Populate(const GameState &world, const world::SurfaceSession &session);
     bool InsideCore(const world::SurfacePoint &point) const;
+    bool Arrive(PlanetTrafficActor &actor, const PlanetTrafficRoute &route,
+                const world::SurfaceSession &session);
     PlanetTrafficState state;
     std::shared_ptr<const world::GeneratedPlanet> planet;
     std::shared_ptr<const std::vector<PlanetTrafficRoute>> routes =
         std::make_shared<const std::vector<PlanetTrafficRoute>>();
     std::map<std::string, size_t, std::less<>> routeIndex;
     std::map<unsigned, std::vector<size_t>> groundConnections;
+    std::array<std::string, 5> exits;
 };
 
 // ============================================================================
@@ -493,6 +513,10 @@ class PlanetCities
     void Observe(GameState &state, const world::SurfaceSession &session, int city,
                  const std::function<void()> &operation);
     const TrafficSystem &Traffic(int city) const
+    {
+        return traffic.at(size_t(city));
+    }
+    TrafficSystem &Traffic(int city)
     {
         return traffic.at(size_t(city));
     }

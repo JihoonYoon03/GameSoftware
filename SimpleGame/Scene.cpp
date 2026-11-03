@@ -1958,7 +1958,7 @@ void DrawPlanetTraffic(const world::SurfaceSession &session)
     const auto &state = Game::Get().GetState();
     for (const auto &actor : traffic->State().actors)
     {
-        if (traffic->Outside(actor, state, session, 80))
+        if (actor.city >= 0 || traffic->Outside(actor, state, session, 80))
         {
             continue;
         }
@@ -2077,11 +2077,11 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
                 continue;
             }
             models::Palette palette;
-            palette.body = {.28f + float((car.id + city) % 4) * .1f, .39f, .52f, 1};
+            palette.body = {.25f + float(car.id % 4) * .1f, .4f, .55f, 1};
             if (car.health <= 0)
             {
                 palette.body = {.12f, .13f, .14f, 1};
-                palette.emission = {.1f, .04f, .01f, 1};
+                palette.emission = {.08f, .03f, .01f, 1};
             }
             Drawing::DrawWorldVehicle({float(point->x / 2), float(point->y / 2)},
                                       float(point->z / 2) * 44 + 3.3f, 1, models::VehicleType(car.id % 4),

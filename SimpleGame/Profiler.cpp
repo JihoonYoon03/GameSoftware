@@ -66,7 +66,8 @@ const char *counterNames[] = {"draw_calls",
                               "planet_traffic_retired",
                               "planet_traffic_detailed_ticks",
                               "planet_traffic_far_ticks",
-                              "companion_handoffs"};
+                              "companion_handoffs",
+                              "traffic_handoffs"};
 const char *timerNames[] = {"frame_cpu",
                             "update",
                             "movement",

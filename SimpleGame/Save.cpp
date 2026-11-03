@@ -17,6 +17,7 @@
 #include <memory>
 #include <iterator>
 #include <map>
+#include <set>
 #include <stdexcept>
 #include <type_traits>
 
@@ -25,7 +26,7 @@ namespace tutorial
 namespace
 {
 constexpr std::uint64_t kMaximumFile = 16 * 1024 * 1024;
-constexpr unsigned kSchema = 5;
+constexpr unsigned kSchema = 6;
 void Require(bool value, const char *message)
 {
     if (!value)
@@ -50,6 +51,7 @@ struct Checkpoint
     PlanetTrafficState transit;
     PlanetPartyState party;
     PlanetSecurityState security;
+    std::vector<PlanetTrafficLink> trafficLinks;
 };
 std::string WorldKey(const world::PlanetDefinition &planet)
 {
@@ -184,6 +186,13 @@ class SaveArchive
         const auto &g = Game::Get();
         PlanetSecurity::Project();
         PlanetSecurity::Capture();
+        if (g.surfaceTraffic && g.surfaceCities)
+        {
+            for (int city = 0; city < Overworld::kCityCount; ++city)
+            {
+                g.surfaceTraffic->SyncCity(city, g.surfaceCities->Traffic(city), *g.surface);
+            }
+        }
         if (g.surfaceParty)
         {
             g.surfaceParty->Capture();
@@ -209,6 +218,7 @@ class SaveArchive
         if (g.surfaceTraffic)
         {
             c.transit = g.surfaceTraffic->State();
+            c.trafficLinks = g.surfaceTraffic->Links();
         }
         if (g.surfaceParty)
         {
@@ -221,13 +231,90 @@ class SaveArchive
         writer.Value(c.transit);
         writer.Value(c.party);
         writer.Value(c.security);
+        writer.Value(c.trafficLinks);
         Checkpoint clean;
         SaveArchive reader(true, writer.Bytes());
         reader.Value(clean);
         reader.Value(clean.transit);
         reader.Value(clean.party);
         reader.Value(clean.security);
+        reader.Value(clean.trafficLinks);
+        ApplyTrafficLinks(clean);
         return clean;
+    }
+    static void ApplyTrafficLinks(Checkpoint &c)
+    {
+        for (auto &actor : c.transit.actors)
+        {
+            actor.city = -1;
+            actor.cityVehicle = 0;
+        }
+        for (auto &traffic : c.cities.traffic)
+        {
+            for (auto &car : traffic.vehicles)
+            {
+                car.globalId = 0;
+            }
+        }
+        Require(c.trafficLinks.size() <= PlanetTraffic::GroundLimit, "차량 인계 기록이 너무 많습니다.");
+        std::set<std::uint64_t> actors;
+        std::set<std::pair<int, std::uint64_t>> projections;
+        std::array<size_t, Overworld::kCityCount> counts = {};
+        for (const auto &link : c.trafficLinks)
+        {
+            Require(c.planet.storyPlanet && link.city >= 0 && link.city < Overworld::kCityCount &&
+                        actors.insert(link.actor).second &&
+                        projections.insert({link.city, link.vehicle}).second,
+                    "차량 인계의 지역/중복 ID가 올바르지 않습니다.");
+            Require(++counts[size_t(link.city)] <= PlanetTraffic::CityLimit,
+                    "도시 전역 차량 수가 상한을 초과했습니다.");
+            auto actor = std::find_if(c.transit.actors.begin(), c.transit.actors.end(),
+                                      [&](const auto &v) { return v.id == link.actor; });
+            auto &traffic = c.cities.traffic[size_t(link.city)];
+            auto car = std::find_if(traffic.vehicles.begin(), traffic.vehicles.end(),
+                                    [&](const auto &v) { return v.id == link.vehicle; });
+            Require(actor != c.transit.actors.end() && !actor->airborne && car != traffic.vehicles.end() &&
+                        TrafficSystem::CoreLane(car->lane, link.city) && actor->health == car->health &&
+                        actor->occupied == car->occupied && actor->id % 4 == car->id % 4,
+                    "도시 차량과 전역 차량의 소유권/체력/외형이 다릅니다.");
+            actor->city = link.city;
+            actor->cityVehicle = link.vehicle;
+            car->globalId = link.actor;
+        }
+    }
+    static void ValidateTrafficLinks(const Checkpoint &c)
+    {
+        size_t owned = 0;
+        for (const auto &actor : c.transit.actors)
+        {
+            if (actor.city < 0)
+            {
+                continue;
+            }
+            ++owned;
+            Require(std::any_of(c.trafficLinks.begin(), c.trafficLinks.end(),
+                                [&](const auto &link) {
+                                    return link.actor == actor.id && link.city == actor.city &&
+                                           link.vehicle == actor.cityVehicle;
+                                }),
+                    "도시가 맡은 차량의 인계 기록이 없습니다.");
+        }
+        Require(owned == c.trafficLinks.size(), "차량 인계 기록의 소유권 수가 다릅니다.");
+        for (size_t city = 0; city < c.cities.traffic.size(); ++city)
+        {
+            for (const auto &car : c.cities.traffic[city].vehicles)
+            {
+                if (car.globalId)
+                {
+                    Require(std::any_of(c.trafficLinks.begin(), c.trafficLinks.end(),
+                                        [&](const auto &link) {
+                                            return link.actor == car.globalId && link.city == int(city) &&
+                                                   link.vehicle == car.id;
+                                        }),
+                            "도시 차량에 대응하는 전역 개체가 없습니다.");
+                }
+            }
+        }
     }
     explicit SaveArchive(bool reading, std::vector<unsigned char> bytes = {})
         : reading(reading), bytes(std::move(bytes))
@@ -860,6 +947,50 @@ class SaveArchive
             }
         }
     }
+    void Value(PlanetTrafficLink &v)
+    {
+        Fields(v.actor, v.vehicle, v.city);
+    }
+    void Value(std::vector<PlanetTrafficLink> &v)
+    {
+        const auto count = Count(v.size());
+        Require(count <= PlanetTraffic::GroundLimit, "차량 인계 기록이 너무 많습니다.");
+        if (reading)
+        {
+            v.resize(size_t(count));
+        }
+        for (auto &link : v)
+        {
+            Value(link);
+        }
+    }
+    void LinkRecords(Campaign &v)
+    {
+        std::uint64_t count = v.worlds.size();
+        Value(count);
+        Require(count == v.worlds.size(), "차량 인계 확장의 월드 수가 다릅니다.");
+        std::set<std::string> keys;
+        if (reading)
+        {
+            for (std::uint64_t i = 0; i < count; ++i)
+            {
+                std::string key;
+                std::vector<PlanetTrafficLink> links;
+                Fields(key, links);
+                Require(v.worlds.count(key) && keys.insert(key).second,
+                        "차량 인계 확장의 월드 ID가 올바르지 않습니다.");
+                v.worlds.at(key).trafficLinks = std::move(links);
+            }
+        }
+        else
+        {
+            for (auto &entry : v.worlds)
+            {
+                auto key = entry.first;
+                Fields(key, entry.second.trafficLinks);
+            }
+        }
+    }
     void Value(Checkpoint &v)
     {
         Fields(v.planet, v.layout, v.digest, v.pose, v.origin, v.bike, v.bikeHeading, v.mineReturn, v.game,
@@ -912,6 +1043,7 @@ void Validate(const Checkpoint &c)
     PlanetTraffic::Validate(c.transit, c.planet, c.digest);
     PlanetParty::Validate(c.party, c.planet);
     PlanetSecurity::Validate(c.security, c.civic, c.planet);
+    SaveArchive::ValidateTrafficLinks(c);
     if (!c.party.worldKey.empty() && c.planet.storyPlanet)
     {
         Require(c.party.members[0].joined == c.mine.quest.IsRiaJoined() &&
@@ -1194,6 +1326,20 @@ Campaign Decode(const std::filesystem::path &path)
             "저장 형식 버전이 다릅니다. 원본 파일은 변경하지 않았습니다.");
     Require(envelope.layout == world::ContentLayout::Revision,
             "저장된 도시 배치 버전이 현재 게임과 다릅니다.");
+    std::vector<unsigned char> linkExtension;
+    if (envelope.schema >= 6)
+    {
+        Require(envelope.payload.size() >= 8, "차량 인계 확장의 길이 정보가 없습니다.");
+        SaveArchive footer(true,
+                           std::vector<unsigned char>(envelope.payload.end() - 8, envelope.payload.end()));
+        std::uint64_t size = 0;
+        footer.Value(size);
+        Require(size > 0 && size <= envelope.payload.size() - 8,
+                "차량 인계 확장의 길이가 올바르지 않습니다.");
+        const size_t start = envelope.payload.size() - 8 - size_t(size);
+        linkExtension.assign(envelope.payload.begin() + start, envelope.payload.end() - 8);
+        envelope.payload.resize(start);
+    }
     std::vector<unsigned char> securityExtension;
     if (envelope.schema >= 5)
     {
@@ -1266,6 +1412,16 @@ Campaign Decode(const std::filesystem::path &path)
         SaveArchive security(true, std::move(securityExtension));
         security.SecurityRecords(result);
         Require(security.Finished(), "치안 확장에 지원하지 않는 데이터가 있습니다.");
+    }
+    if (envelope.schema >= 6)
+    {
+        SaveArchive links(true, std::move(linkExtension));
+        links.LinkRecords(result);
+        Require(links.Finished(), "차량 인계 확장에 지원하지 않는 데이터가 있습니다.");
+        for (auto &entry : result.worlds)
+        {
+            SaveArchive::ApplyTrafficLinks(entry.second);
+        }
     }
     ValidateCampaign(result);
     return result;
@@ -1424,6 +1580,30 @@ void ValidateRegistry(const Checkpoint &c, const world::GeneratedPlanet &plan)
     }
     Require(c.game.selectedRelay.empty() || world::RelayNetwork::Find(plan, c.game.selectedRelay),
             "선택한 중계환이 현재 월드에 없습니다.");
+    for (const auto &link : c.trafficLinks)
+    {
+        const auto &region = plan.Region(Overworld::Cities()[size_t(link.city)].id);
+        const auto *core = plan.cityCores ? plan.cityCores->Find(region.definition.id) : nullptr;
+        Require(core != nullptr, "차량을 소유한 도시의 도로 블록이 없습니다.");
+        const auto &cars = c.cities.Traffic(link.city).Vehicles();
+        const auto car =
+            std::find_if(cars.begin(), cars.end(), [&](const auto &v) { return v.id == link.vehicle; });
+        const auto actor = std::find_if(c.transit.actors.begin(), c.transit.actors.end(),
+                                        [&](const auto &v) { return v.id == link.actor; });
+        Require(car != cars.end() && actor != c.transit.actors.end(), "저장된 차량 인계 대상이 없습니다.");
+        const auto center = Overworld::Cities()[size_t(link.city)].center;
+        auto expected = G::FromLocal(region.frame,
+                                     {(car->position.x - center.x) * 2, (car->position.y - center.y) * 2, 0},
+                                     c.planet.radiusMeters);
+        expected.altitudeMeters = Game::Distance(car->position, center) * 2 <= core->radiusMeters
+                                      ? core->elevationMeters
+                                      : plan.terrain.Height(expected);
+        Require(G::Distance(c.planet.radiusMeters, expected, actor->position) <= .25 &&
+                    std::abs(expected.altitudeMeters - actor->position.altitudeMeters) <= .25 &&
+                    std::abs(actor->speedMeters - car->speed * 2) <= .01 &&
+                    std::abs(actor->wreckSeconds - car->wreckSeconds) <= .01,
+                "도시 차량과 전역 차량의 실제 위치/속도/잔해 시간이 다릅니다.");
+    }
     for (const auto &member : c.party.members)
     {
         if (!member.joined || member.place == CompanionPlace::Surface)
@@ -1622,6 +1802,12 @@ bool SaveSystem::Save(const std::filesystem::path &path)
         securityFooter.Value(securitySize);
         payload.insert(payload.end(), security.Bytes().begin(), security.Bytes().end());
         payload.insert(payload.end(), securityFooter.Bytes().begin(), securityFooter.Bytes().end());
+        SaveArchive links(false), linkFooter(false);
+        links.LinkRecords(candidate);
+        std::uint64_t linkSize = links.Bytes().size();
+        linkFooter.Value(linkSize);
+        payload.insert(payload.end(), links.Bytes().begin(), links.Bytes().end());
+        payload.insert(payload.end(), linkFooter.Bytes().begin(), linkFooter.Bytes().end());
         Require(payload.size() <= kMaximumFile, "저장 데이터가 허용 크기를 초과했습니다.");
         SaveArchive header(false);
         unsigned char magic[8] = {'S', 'G', 'W', 'O', 'R', 'L', 'D', 0};

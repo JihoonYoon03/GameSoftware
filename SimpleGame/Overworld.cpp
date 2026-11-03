@@ -1198,6 +1198,10 @@ bool TrafficSystem::DamageVehicle(std::uint64_t id, int damage, bool playerOwned
         car->speed = 0;
         car->reservedFrom = car->reservedTo = -1;
     }
+    if (Game::Get().SurfaceTraffic())
+    {
+        Game::Get().SurfaceTraffic()->SyncDamage(*car);
+    }
     return true;
 }
 void TrafficSystem::StopForImpact(std::uint64_t id)
@@ -1955,6 +1959,12 @@ void TrafficSystem::Step(GameState &world, float dt)
             car.distance += travel;
             if (car.distance >= lane.length)
             {
+                car.position = net.LanePosition(car.lane, lane.length);
+                if (cityFilter >= 0 && Game::Get().GetState().surfaceExploration &&
+                    Game::Get().SurfaceTraffic() && Game::Get().SurfaceTraffic()->Depart(cityFilter, car))
+                {
+                    continue;
+                }
                 car.turnDistance = car.distance - lane.length;
             }
             else
@@ -1988,6 +1998,9 @@ void TrafficSystem::Step(GameState &world, float dt)
             car.yaw = MotionMath::Turn(car.yaw, std::atan2(lane.direction.y, lane.direction.x), 2.8f * dt);
         }
     }
+    vehicles.erase(
+        std::remove_if(vehicles.begin(), vehicles.end(), [](const auto &car) { return car.departed; }),
+        vehicles.end());
     // Oriented hulls are a final physical constraint even when routing normally avoids contact.
     for (size_t a = 0; a < vehicles.size(); ++a)
     {
@@ -2056,7 +2069,8 @@ void TrafficSystem::Step(GameState &world, float dt)
                            {
                                return true;
                            }
-                           return Game::Distance(car.position, world.playerPosition) > kDespawnDistance &&
+                           return !car.globalId &&
+                                  Game::Distance(car.position, world.playerPosition) > kDespawnDistance &&
                                   Game::Distance(car.position, world.cameraPosition) > kDespawnDistance &&
                                   OutsideView(car.position, world.cameraPosition, 320);
                        }),
@@ -2393,6 +2407,8 @@ void PlanetTraffic::Validate(const PlanetTrafficState &s, const world::PlanetDef
             std::isfinite(actor.wreckSeconds) && actor.wreckSeconds >= 0 && actor.wreckSeconds <= 1.e6 &&
             std::isfinite(actor.fallSpeed) && actor.fallSpeed >= 0 && actor.fallSpeed <= 1000 &&
             std::isfinite(actor.farSeconds) && actor.farSeconds >= 0 && actor.farSeconds < .6f &&
+            actor.city >= -1 && actor.city < Overworld::kCityCount &&
+            (actor.city < 0 ? actor.cityVehicle == 0 : !actor.airborne) &&
             (actor.airborne ? (!actor.health || !actor.collisionReady)
                             : (actor.collisionReady && actor.altitudeMeters == 0 && actor.fallSpeed == 0 &&
                                actor.bank == 0)));
@@ -2463,6 +2479,144 @@ void PlanetTraffic::Bind(std::shared_ptr<const world::GeneratedPlanet> input)
         }
         add(std::move(flight));
     }
+    // The macro planner ends each authored city's roads at its first real approach join.
+    // Add two directed lane-centre paths on that existing pavement; never invent a bridge across lots.
+    std::array<std::string, Overworld::kCityCount> preparedExits;
+    if (p.storyPlanet && input->cityCores)
+    {
+        const auto &net = RoadNetwork::Get();
+        for (int city = 0; city < Overworld::kCityCount; ++city)
+        {
+            const auto &info = Overworld::Cities()[size_t(city)];
+            const auto *core = input->cityCores->Find(info.id);
+            if (!core || core->approaches.empty())
+            {
+                continue;
+            }
+            const auto &approach = core->approaches.front();
+            if (approach.points.size() < 2)
+            {
+                continue;
+            }
+            auto node = std::find_if(input->nodes.begin(), input->nodes.end(),
+                                     [&](const auto &v) { return v.id == "site_" + std::string(info.id); });
+            if (node == input->nodes.end())
+            {
+                continue;
+            }
+            const unsigned nodeId = unsigned(node - input->nodes.begin());
+            if (std::none_of(prepared->begin(), prepared->end(), [&](const auto &v) {
+                    return !v.airborne && (v.from == nodeId || v.to == nodeId);
+                }))
+            {
+                continue;
+            }
+            const auto &region = input->Region(info.id);
+            auto at = [&](world::Vector3d local) {
+                auto point = TG::FromLocal(region.frame, local, p.radiusMeters);
+                point.altitudeMeters = input->terrain.Height(point);
+                return point;
+            };
+            if (TG::Distance(p.radiusMeters, at(approach.join), node->location.position) > .25)
+            {
+                continue;
+            }
+            int outgoing = -1, incoming = -1;
+            for (size_t lane = 0; lane < net.lanes.size(); ++lane)
+            {
+                const auto &v = net.lanes[lane];
+                if (!TrafficSystem::CoreLane(int(lane), city) || v.slot != 0)
+                {
+                    continue;
+                }
+                if (v.from == int(approach.from))
+                {
+                    outgoing = int(lane);
+                }
+                if (v.to == int(approach.from))
+                {
+                    incoming = int(lane);
+                }
+            }
+            if (outgoing < 0 || incoming < 0)
+            {
+                continue;
+            }
+            auto lanePoint = [&](Vector2 v) {
+                return at({(v.x - info.center.x) * 2, (v.y - info.center.y) * 2, 0});
+            };
+            auto build = [&](bool entry, int lane) {
+                PlanetTrafficRoute route;
+                route.id = world::WorldIdentity::ContentKey(
+                    p, info.id, entry ? "traffic1.portal.in" : "traffic1.portal.out");
+                route.portalCity = city;
+                route.lane = lane;
+                route.entry = entry;
+                const unsigned marker = unsigned(input->nodes.size()) + unsigned(city * 2);
+                route.from = entry ? nodeId : marker;
+                route.to = entry ? marker + 1 : nodeId;
+                auto points = approach.points;
+                if (entry)
+                {
+                    std::reverse(points.begin(), points.end());
+                }
+                route.points.push_back(entry ? node->location.position
+                                             : lanePoint(net.lanes[size_t(lane)].end));
+                auto joinLane = [&] {
+                    const auto join = entry ? points.front() : points.back();
+                    const auto neighbor = entry ? points[1] : points[points.size() - 2];
+                    const double dx = neighbor.x - join.x, dy = neighbor.y - join.y,
+                                 length = std::hypot(dx, dy);
+                    if (length < .001)
+                    {
+                        return at(join);
+                    }
+                    const double reach = (std::min)(24., length * .5);
+                    return at({join.x + dx / length * reach + (entry ? 1 : -1) * dy / length * 1.5,
+                               join.y + dy / length * reach - (entry ? 1 : -1) * dx / length * 1.5, 0});
+                };
+                if (entry)
+                {
+                    route.points.push_back(joinLane());
+                }
+                for (size_t i = 0; i < points.size(); ++i)
+                {
+                    if ((entry && i == 0) || (!entry && i + 1 == points.size()))
+                    {
+                        continue;
+                    }
+                    auto a = points[i == 0 ? 0 : i - 1], b = points[i + 1 < points.size() ? i + 1 : i];
+                    const double dx = b.x - a.x, dy = b.y - a.y, length = std::hypot(dx, dy);
+                    auto point = points[i];
+                    if (length > .001)
+                    {
+                        point.x += dy / length * 1.5;
+                        point.y -= dx / length * 1.5;
+                    }
+                    route.points.push_back(at(point));
+                }
+                if (!entry)
+                {
+                    route.points.push_back(joinLane());
+                }
+                route.points.push_back(entry ? lanePoint(net.lanes[size_t(lane)].start)
+                                             : node->location.position);
+                // Remove zero-length joints before distance/cap preparation.
+                route.points.erase(std::unique(route.points.begin(), route.points.end(),
+                                               [&](const auto &a, const auto &b) {
+                                                   return TG::Distance(p.radiusMeters, a, b) < .01;
+                                               }),
+                                   route.points.end());
+                if (!entry)
+                {
+                    preparedExits[size_t(city)] = route.id;
+                }
+                add(std::move(route));
+            };
+            build(false, incoming);
+            build(true, outgoing);
+        }
+    }
     std::map<std::string, size_t, std::less<>> index;
     std::map<unsigned, std::vector<size_t>> adjacency;
     for (size_t i = 0; i < prepared->size(); ++i)
@@ -2482,7 +2636,8 @@ void PlanetTraffic::Bind(std::shared_ptr<const world::GeneratedPlanet> input)
             throw std::invalid_argument("저장된 행성 교통 경로가 존재하지 않습니다.");
         }
         const auto &route = (*prepared)[found->second];
-        if (actor.airborne != route.airborne ||
+        if (actor.airborne != route.airborne || (route.portalCity >= 0 && actor.direction != 1) ||
+            (actor.city >= 0 && (route.portalCity != actor.city || !route.entry)) ||
             actor.distanceMeters >
                 route.lengthMeters + (actor.airborne ? TG::Circumference(p.radiusMeters) * 4 : 0) ||
             (!actor.airborne && actor.distanceMeters < 0) ||
@@ -2495,6 +2650,10 @@ void PlanetTraffic::Bind(std::shared_ptr<const world::GeneratedPlanet> input)
     probe.planet = input;
     for (const auto &actor : state.actors)
     {
+        if (actor.city >= 0)
+        {
+            continue; // Its checked city projection owns the interior path.
+        }
         const auto &route = prepared->at(index.at(actor.routeId));
         auto expected = probe.Position(route, actor.distanceMeters, actor.direction);
         expected.altitudeMeters =
@@ -2510,6 +2669,7 @@ void PlanetTraffic::Bind(std::shared_ptr<const world::GeneratedPlanet> input)
     routes = std::move(prepared);
     routeIndex = std::move(index);
     groundConnections = std::move(adjacency);
+    exits = std::move(preparedExits);
     if (state.worldKey.empty())
     {
         state.worldKey = TransitKey(p);
@@ -2552,7 +2712,7 @@ world::SurfacePoint PlanetTraffic::Position(const PlanetTrafficRoute &route, dou
                             TG::Dot(tangent, frame.forward) * (distance - clamped), radius)
                     .origin;
     }
-    else if (!route.airborne)
+    else if (!route.airborne && route.portalCity < 0)
     {
         auto right = TG::Unit(TG::Cross(tangent, point.normal));
         const double lane =
@@ -2591,7 +2751,8 @@ bool PlanetTraffic::Blocked(const world::SurfacePoint &point, double clearance) 
     }
     for (const auto &actor : state.actors)
     {
-        if (actor.collisionReady && (!actor.airborne || (actor.health <= 0 && actor.altitudeMeters < 1)) &&
+        if (actor.city < 0 && actor.collisionReady &&
+            (!actor.airborne || (actor.health <= 0 && actor.altitudeMeters < 1)) &&
             TransitHull(actor, point, planet->terrain.Planet().radiusMeters, clearance))
         {
             return true;
@@ -2606,6 +2767,19 @@ bool PlanetTraffic::Damage(std::uint64_t id, int amount, bool playerOwned)
     if (found == state.actors.end() || found->health <= 0 || amount <= 0)
     {
         return false;
+    }
+    if (found->city >= 0)
+    {
+        auto *cities = Game::Get().SurfaceCities();
+        if (!cities)
+        {
+            return false;
+        }
+        bool hit = false;
+        cities->Observe(Game::Get().GetState(), *Game::Get().Surface(), found->city, [&] {
+            hit = cities->Traffic(found->city).DamageVehicle(found->cityVehicle, amount, playerOwned);
+        });
+        return hit;
     }
     found->health = (std::max)(0, found->health - amount);
     if (found->health == 0)
@@ -2622,7 +2796,8 @@ bool PlanetTraffic::Damage(std::uint64_t id, int amount, bool playerOwned)
 bool PlanetTraffic::Contains(const PlanetTrafficActor &actor, const world::SurfacePoint &point,
                              double padding) const
 {
-    if (!planet || !TransitHull(actor, point, planet->terrain.Planet().radiusMeters, padding))
+    if (!planet || actor.city >= 0 ||
+        !TransitHull(actor, point, planet->terrain.Planet().radiusMeters, padding))
     {
         return false;
     }
@@ -2669,6 +2844,208 @@ bool PlanetTraffic::Outside(const PlanetTrafficActor &actor, const GameState &wo
            TrafficSystem::OutsideView(position, viewCamera(world.playerPosition), padding,
                                       float(local.z / 2));
 }
+std::vector<PlanetTrafficLink> PlanetTraffic::Links() const
+{
+    std::vector<PlanetTrafficLink> links;
+    for (const auto &actor : state.actors)
+    {
+        if (actor.city >= 0)
+        {
+            links.push_back({actor.id, actor.cityVehicle, actor.city});
+        }
+    }
+    return links;
+}
+void PlanetTraffic::SyncDamage(const TrafficVehicle &car)
+{
+    if (!car.globalId)
+    {
+        return;
+    }
+    auto actor = std::find_if(state.actors.begin(), state.actors.end(),
+                              [&](const auto &v) { return v.id == car.globalId; });
+    if (actor != state.actors.end() && actor->city >= 0)
+    {
+        actor->health = car.health;
+        actor->occupied = car.occupied;
+        actor->speedMeters = car.speed * 2;
+        actor->wreckSeconds = car.wreckSeconds;
+    }
+}
+void PlanetTraffic::SyncCity(int city, const TrafficSystem &traffic, const world::SurfaceSession &session)
+{
+    auto &g = Game::Get();
+    if (!g.SurfaceCities() || !session.Ready() || city < 0 || city >= Overworld::kCityCount ||
+        std::none_of(state.actors.begin(), state.actors.end(), [&](const auto &v) { return v.city == city; }))
+    {
+        return;
+    }
+    const auto &frame =
+        session.Stream().Snapshot()->planet->Region(Overworld::Cities()[size_t(city)].id).frame;
+    state.actors.erase(
+        std::remove_if(state.actors.begin(), state.actors.end(),
+                       [&](auto &actor) {
+                           if (actor.city != city)
+                           {
+                               return false;
+                           }
+                           auto car = std::find_if(traffic.Vehicles().begin(), traffic.Vehicles().end(),
+                                                   [&](const auto &v) { return v.globalId == actor.id; });
+                           if (car == traffic.Vehicles().end())
+                           {
+                               return true; // The city retired the real wreck, not a second copy.
+                           }
+                           actor.cityVehicle = car->id;
+                           actor.position = *g.SurfaceCities()->Point(session, city, car->position);
+                           auto h = world::Vector3d{
+                               frame.right.x * std::cos(car->yaw) + frame.forward.x * std::sin(car->yaw),
+                               frame.right.y * std::cos(car->yaw) + frame.forward.y * std::sin(car->yaw),
+                               frame.right.z * std::cos(car->yaw) + frame.forward.z * std::sin(car->yaw)};
+                           actor.heading = TG::Unit(
+                               TransitAdd(h, actor.position.normal, -TG::Dot(h, actor.position.normal)));
+                           actor.health = car->health;
+                           actor.occupied = car->occupied;
+                           actor.speedMeters = car->speed * 2;
+                           actor.wreckSeconds = car->wreckSeconds;
+                           actor.farSeconds = 0;
+                           return false;
+                       }),
+        state.actors.end());
+}
+bool PlanetTraffic::Depart(int city, TrafficVehicle &car)
+{
+    if (!planet || city < 0 || city >= Overworld::kCityCount || car.health <= 0 || car.turnDistance >= 0)
+    {
+        return false;
+    }
+    const auto *exit = Find(exits[size_t(city)]);
+    if (!exit || exit->lane != car.lane)
+    {
+        return false;
+    }
+    const auto &lane = RoadNetwork::Get().lanes[size_t(car.lane)];
+    if (car.distance < lane.length - .001f)
+    {
+        return false;
+    }
+    auto actor = std::find_if(state.actors.begin(), state.actors.end(),
+                              [&](const auto &v) { return car.globalId && v.id == car.globalId; });
+    if (car.globalId && (actor == state.actors.end() || actor->city != city || actor->cityVehicle != car.id))
+    {
+        return false;
+    }
+    if (!car.globalId && (std::count_if(state.actors.begin(), state.actors.end(),
+                                        [](const auto &v) { return !v.airborne; }) >= GroundLimit ||
+                          state.nextId > std::numeric_limits<std::uint64_t>::max() - 4))
+    {
+        return false;
+    }
+    auto point = Position(*exit, 0, 1);
+    point.altitudeMeters = planet->terrain.Height(point);
+    // Do not merge into a queued portal vehicle or a blocked approach.
+    const auto *session = Game::Get().Surface();
+    if (!session || !session->LandingClear(point, .8))
+    {
+        return false;
+    }
+    for (const auto &other : state.actors)
+    {
+        if (other.id != car.globalId && other.city < 0 && !other.airborne &&
+            TG::Distance(planet->terrain.Planet().radiusMeters, point, other.position) < 7)
+        {
+            return false;
+        }
+    }
+    if (!car.globalId)
+    {
+        const auto id = state.nextId + (car.id % 4 + 4 - state.nextId % 4) % 4;
+        state.nextId = id + 1;
+        PlanetTrafficActor created;
+        created.id = id;
+        state.actors.push_back(created);
+        actor = std::prev(state.actors.end());
+    }
+    actor->city = -1;
+    actor->cityVehicle = 0;
+    actor->routeId = exit->id;
+    actor->distanceMeters = 0;
+    actor->direction = 1;
+    actor->position = point;
+    actor->speedMeters = car.speed * 2;
+    actor->farSeconds = 0;
+    actor->health = car.health;
+    actor->occupied = car.occupied;
+    actor->wreckSeconds = car.wreckSeconds;
+    auto ahead = Position(*exit, .25, 1);
+    actor->heading = TG::Unit(TransitAdd(ahead.normal, point.normal, -TG::Dot(ahead.normal, point.normal)));
+    car.departed = true;
+    profiling::Count(profiling::Counter::TrafficHandoffs);
+    return true;
+}
+bool PlanetTraffic::Arrive(PlanetTrafficActor &actor, const PlanetTrafficRoute &route,
+                           const world::SurfaceSession &session)
+{
+    auto *cities = Game::Get().SurfaceCities();
+    if (!cities || route.portalCity < 0 || !route.entry || actor.health <= 0)
+    {
+        return false;
+    }
+    auto &traffic = cities->Traffic(route.portalCity);
+    if (traffic.vehicles.size() >= TrafficSystem::kVehicleLimit ||
+        traffic.nextId > std::numeric_limits<std::uint64_t>::max() - 4 ||
+        std::count_if(state.actors.begin(), state.actors.end(),
+                      [&](const auto &v) { return v.city == route.portalCity; }) >= CityLimit)
+    {
+        return false;
+    }
+    const auto &lane = RoadNetwork::Get().lanes[size_t(route.lane)];
+    for (const auto &car : traffic.vehicles)
+    {
+        if (Game::Distance(car.position, lane.start) < 4 ||
+            (car.reservedTo == route.lane && car.turnDistance >= 0))
+        {
+            return false;
+        }
+    }
+    auto point = *cities->Point(session, route.portalCity, lane.start);
+    if (!session.LandingClear(point, .8) ||
+        cities->OccupiedAt(Game::Get().GetState(), session, point, route.portalCity) ||
+        (CivicJustice::IsExterior() &&
+         TG::Distance(session.Planet().radiusMeters, point, session.Pose().origin) < 3) ||
+        (Game::Get().SurfaceParty() && Game::Get().SurfaceParty()->Blocked(point, .8)) ||
+        PlanetSecurity::OfficerBlocked(point, .8))
+    {
+        return false;
+    }
+    TrafficVehicle car;
+    car.id = traffic.nextId + (actor.id % 4 + 4 - traffic.nextId % 4) % 4;
+    car.globalId = actor.id;
+    car.lane = route.lane;
+    car.distance = 0;
+    car.position = car.previousPosition = lane.start;
+    car.yaw = car.previousYaw = std::atan2(lane.direction.y, lane.direction.x);
+    car.speed = (std::min)(float(actor.speedMeters / 2), lane.speedLimit);
+    car.health = actor.health;
+    car.occupied = actor.occupied;
+    car.wreckSeconds = actor.wreckSeconds;
+    traffic.ChooseExit(car); // Prepare before either ownership record changes.
+    traffic.vehicles.push_back(car);
+    traffic.nextId = car.id + 1;
+    actor.city = route.portalCity;
+    actor.cityVehicle = car.id;
+    actor.position = point;
+    actor.distanceMeters = route.lengthMeters;
+    actor.farSeconds = 0;
+    actor.speedMeters = car.speed * 2;
+    const auto &frame =
+        session.Stream().Snapshot()->planet->Region(Overworld::Cities()[size_t(route.portalCity)].id).frame;
+    const world::Vector3d heading{frame.right.x * std::cos(car.yaw) + frame.forward.x * std::sin(car.yaw),
+                                  frame.right.y * std::cos(car.yaw) + frame.forward.y * std::sin(car.yaw),
+                                  frame.right.z * std::cos(car.yaw) + frame.forward.z * std::sin(car.yaw)};
+    actor.heading = TG::Unit(TransitAdd(heading, point.normal, -TG::Dot(heading, point.normal)));
+    profiling::Count(profiling::Counter::TrafficHandoffs);
+    return true;
+}
 void PlanetTraffic::Advance(PlanetTrafficActor &actor, float seconds, const GameState &world,
                             const world::SurfaceSession &session, bool exterior)
 {
@@ -2695,11 +3072,56 @@ void PlanetTraffic::Advance(PlanetTrafficActor &actor, float seconds, const Game
     const double edge = (std::min)(actor.distanceMeters, route->lengthMeters - actor.distanceMeters);
     double target = actor.airborne ? 40. + actor.id % 4 * 6
                                    : (std::min)(12. + actor.id % 4 * 2, (std::max)(3., 4 + edge * .6));
+    if (route->portalCity >= 0)
+    {
+        target = (std::min)(target, 6.);
+    }
+    double nodeTravel = std::numeric_limits<double>::infinity();
+    if (!actor.airborne && edge < 30)
+    {
+        const unsigned node = actor.direction > 0 ? route->to : route->from;
+        const bool portalNode = std::any_of(routes->begin(), routes->end(), [&](const auto &v) {
+            return v.portalCity >= 0 && v.entry && v.from == node;
+        });
+        if (portalNode)
+        {
+            const double ownEnd =
+                actor.direction > 0 ? route->lengthMeters - actor.distanceMeters : actor.distanceMeters;
+            for (const auto &other : state.actors)
+            {
+                if (other.id == actor.id || other.airborne || other.city >= 0)
+                {
+                    continue;
+                }
+                const auto *r = Find(other.routeId);
+                if (!r)
+                {
+                    continue;
+                }
+                const unsigned end = other.direction > 0 ? r->to : r->from,
+                               start = other.direction > 0 ? r->from : r->to;
+                const double remaining =
+                    other.direction > 0 ? r->lengthMeters - other.distanceMeters : other.distanceMeters;
+                const double traveled =
+                    other.direction > 0 ? other.distanceMeters : r->lengthMeters - other.distanceMeters;
+                const bool crossing = start == node && traveled >= 0 && traveled < 24;
+                const bool ahead =
+                    end == node && remaining >= 0 && remaining < 30 &&
+                    (remaining < ownEnd - .1 || (std::abs(remaining - ownEnd) <= .1 && other.id < actor.id));
+                if (crossing || ahead)
+                {
+                    nodeTravel = (std::max)(0., ownEnd - 24);
+                    target = (std::min)(target, nodeTravel * 1.5);
+                    break;
+                }
+            }
+        }
+    }
     if (!actor.airborne)
     {
         for (const auto &other : state.actors)
         {
-            if (other.id == actor.id || other.airborne || other.routeId != actor.routeId ||
+            if (other.id == actor.id || other.city >= 0 || other.airborne || other.routeId != actor.routeId ||
                 other.direction != actor.direction)
             {
                 continue;
@@ -2712,8 +3134,21 @@ void PlanetTraffic::Advance(PlanetTrafficActor &actor, float seconds, const Game
         }
     }
     actor.speedMeters += std::clamp(target - actor.speedMeters, -12. * seconds, 5. * seconds);
-    double progress = actor.distanceMeters + actor.speedMeters * seconds * actor.direction;
+    double progress =
+        actor.distanceMeters + (std::min)(actor.speedMeters * seconds, nodeTravel) * actor.direction;
+    if (nodeTravel < actor.speedMeters * seconds)
+    {
+        actor.speedMeters = 0;
+    }
     int direction = actor.direction;
+    if (route->entry && route->portalCity >= 0 && progress >= route->lengthMeters)
+    {
+        if (!Arrive(actor, *route, session))
+        {
+            actor.speedMeters = 0;
+        }
+        return;
+    }
 
     if (!actor.airborne && (progress < 0 || progress > route->lengthMeters))
     {
@@ -2725,6 +3160,12 @@ void PlanetTraffic::Advance(PlanetTrafficActor &actor, float seconds, const Game
             for (size_t index : adjacent->second)
             {
                 const auto &candidate = routes->at(index);
+                if (candidate.portalCity >= 0 &&
+                    (candidate.from != node ||
+                     (route->portalCity >= 0 && candidate.portalCity == route->portalCity)))
+                {
+                    continue;
+                }
                 if (candidate.id != route->id && (!next || Random() % 2 == 0))
                 {
                     next = &candidate;
@@ -2762,15 +3203,23 @@ void PlanetTraffic::Advance(PlanetTrafficActor &actor, float seconds, const Game
                           actor.altitudeMeters;
     if (!actor.airborne)
     {
-        if (InsideCore(next) || (TG::Distance(radius, next, session.Pose().origin) < DetailedMeters &&
-                                 !session.LandingClear(next, .8)))
+        if ((route->portalCity < 0 && InsideCore(next)) ||
+            (TG::Distance(radius, next, session.Pose().origin) < DetailedMeters &&
+             !session.LandingClear(next, .8)))
+        {
+            actor.speedMeters = 0;
+            return;
+        }
+        if (Game::Get().SurfaceCities() &&
+            Game::Get().SurfaceCities()->OccupiedAt(world, session, next, route->portalCity))
         {
             actor.speedMeters = 0;
             return;
         }
         for (const auto &other : state.actors)
         {
-            if (other.id != actor.id && !other.airborne && TransitHull(other, next, radius, .9))
+            if (other.id != actor.id && other.city < 0 && !other.airborne &&
+                TransitHull(other, next, radius, .9))
             {
                 actor.speedMeters = 0;
                 return;
@@ -2898,6 +3347,10 @@ void PlanetTraffic::Populate(const GameState &world, const world::SurfaceSession
     std::vector<Candidate> candidates;
     for (size_t i = 0; i < routes->size(); ++i)
     {
+        if (routes->at(i).portalCity >= 0)
+        {
+            continue; // Portals receive real cars; they never spawn copies.
+        }
         auto near = TransitNearest((*routes)[i], session.Pose().origin, session.Planet().radiusMeters);
         if (near >= 0)
         {
@@ -2985,6 +3438,10 @@ void PlanetTraffic::Update(GameState &world, const world::SurfaceSession &sessio
     }
     for (auto &actor : state.actors)
     {
+        if (actor.city >= 0)
+        {
+            continue;
+        }
         const bool detailed = exterior && TG::Distance(session.Planet().radiusMeters, actor.position,
                                                        session.Pose().origin) < DetailedMeters;
         if (actor.health <= 0)
@@ -3010,6 +3467,10 @@ void PlanetTraffic::Update(GameState &world, const world::SurfaceSession &sessio
     const auto previousCount = state.actors.size();
     state.actors.erase(std::remove_if(state.actors.begin(), state.actors.end(),
                                       [&](const auto &actor) {
+                                          if (actor.city >= 0)
+                                          {
+                                              return false;
+                                          }
                                           if (actor.health <= 0 && actor.wreckSeconds > 20 &&
                                               (!exterior || Outside(actor, world, session, 80)))
                                           {
@@ -3927,6 +4388,10 @@ void PlanetCities::Update(GameState &state, const world::SurfaceSession &session
                     profiling::Count(profiling::Counter::CityPassiveResidents);
                 }
             }
+        }
+        if (auto *transit = Game::Get().SurfaceTraffic())
+        {
+            transit->SyncCity(city, traffic[size_t(city)], session);
         }
     }
 }

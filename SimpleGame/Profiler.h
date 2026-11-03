@@ -53,6 +53,7 @@ enum class Counter
     PlanetTrafficDetailedTicks,
     PlanetTrafficFarTicks,
     CompanionHandoffs,
+    TrafficHandoffs,
     Count
 };
 enum class Timer
