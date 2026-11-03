@@ -226,9 +226,13 @@ const char *QuestParticipation::Label(MissionStatus status)
         return "미수락 · 제안 보기";
     }
 }
-const char *Game::MissionRestriction(MissionId id) const
+// ============================================================================
+// StoryMissionProgress — facts are observed freely; completion still requires active participation
+// ============================================================================
+const char *StoryMissionProgress::Restriction(MissionId id, const GameState &state,
+                                              const game::MineState &mine, bool storyPlanet)
 {
-    if (!IsStoryWorld())
+    if (!storyPlanet)
     {
         return "이 행성에서는 에르마의 임무를 수락할 수 없습니다.";
     }
@@ -242,12 +246,85 @@ const char *Game::MissionRestriction(MissionId id) const
                    ? nullptr
                    : "전망대 기록을 확보하고 지상으로 돌아와야 합니다.";
     case MissionId::Frontier:
-        return game::GameLevels::Mine().GetState().quest.GetStage() == game::MineQuestStage::Complete
+        return mine.quest.GetStage() == game::MineQuestStage::Complete
                    ? nullptr
                    : "광산 좌표를 확보해 헤일로 수신망에 보고해야 합니다.";
     default:
         return "알 수 없는 임무입니다.";
     }
+}
+bool StoryMissionProgress::CanComplete(MissionId id, const GameState &state, const game::MineState &mine,
+                                       const game::ChapterOneState &chapter, bool storyPlanet)
+{
+    if (!state.surfaceExploration || !storyPlanet || unsigned(id) >= unsigned(MissionId::Count) ||
+        !state.missions.Active(id))
+    {
+        return false;
+    }
+    switch (id)
+    {
+    case MissionId::Signal:
+        return state.gateSignalHeard && state.hasDescendedObservatory;
+    case MissionId::Mine:
+        return mine.quest.GetStage() == game::MineQuestStage::ReturnToHalo;
+    case MissionId::Frontier:
+        return chapter.generatorRestored && chapter.convoyRescued && chapter.ledgerFound &&
+               !chapter.recordsCompared;
+    case MissionId::Mara:
+        return state.isPowerRestored && !state.isSideQuestComplete;
+    default:
+        return false;
+    }
+}
+bool StoryMissionProgress::Complete(MissionId id, GameState &state, game::MineState &mine,
+                                    game::ChapterOneState &chapter, bool storyPlanet)
+{
+    if (!CanComplete(id, state, mine, chapter, storyPlanet))
+    {
+        return false;
+    }
+    // No callbacks or world access between validation and commit; rejected reports change no facts.
+    state.missions.Complete(id);
+    switch (id)
+    {
+    case MissionId::Signal:
+        state.mainQuestStage = (std::max)(state.mainQuestStage, MainQuestStage::MountJetBike);
+        break;
+    case MissionId::Mine:
+        mine.quest.Advance(game::MineQuestStage::ReturnToHalo);
+        state.isComplete = true;
+        state.mainQuestStage = MainQuestStage::Complete;
+        break;
+    case MissionId::Frontier:
+        chapter.recordsCompared = chapter.waterwayUnlocked = true;
+        break;
+    case MissionId::Mara:
+        state.isSideQuestComplete = true;
+        break;
+    default:
+        break;
+    }
+    return true;
+}
+
+const char *Game::MissionRestriction(MissionId id) const
+{
+    return StoryMissionProgress::Restriction(id, state, game::GameLevels::Mine().GetState(), IsStoryWorld());
+}
+bool Game::CanCompleteMission(MissionId id) const
+{
+    return StoryMissionProgress::CanComplete(id, state, game::GameLevels::Mine().GetState(),
+                                             game::GameLevels::Chapter().GetState(), IsStoryWorld());
+}
+bool Game::CompleteMission(MissionId id)
+{
+    if (!StoryMissionProgress::Complete(id, state, game::GameLevels::Mine().GetState(),
+                                        game::GameLevels::Chapter().GetState(), IsStoryWorld()))
+    {
+        return false;
+    }
+    ActivityJournal::Refresh();
+    return true;
 }
 bool Game::MissionEligible(MissionId id) const
 {
@@ -720,7 +797,7 @@ void Game::ManageMission(MissionId id)
 }
 void Game::SyncMissionProgress()
 {
-    if (!state.surfaceExploration)
+    if (!state.surfaceExploration || !IsStoryWorld())
     {
         return;
     }
@@ -731,10 +808,7 @@ void Game::SyncMissionProgress()
                      : !state.hasDescendedObservatory ? MainQuestStage::DescendObservatory
                                                       : MainQuestStage::MountJetBike;
         state.mainQuestStage = (std::max)(state.mainQuestStage, stage);
-        if (state.gateSignalHeard && state.hasDescendedObservatory)
-        {
-            state.missions.Complete(MissionId::Signal);
-        }
+        CompleteMission(MissionId::Signal);
     }
     game::GameLevels::Mine().SyncInvestigation();
     game::GameLevels::Chapter().SyncEvidence();
@@ -3087,8 +3161,7 @@ bool Game::IsQuestInteraction(InteractionTarget target) const
             }
             if (target == InteractionTarget::CityReceiver)
             {
-                return stage == game::MineQuestStage::CheckCityRelay ||
-                       stage == game::MineQuestStage::ReturnToHalo;
+                return stage == game::MineQuestStage::CheckCityRelay || CanCompleteMission(MissionId::Mine);
             }
             if (target == InteractionTarget::MineEntrance || target == InteractionTarget::JetBike)
             {
@@ -3099,16 +3172,14 @@ bool Game::IsQuestInteraction(InteractionTarget target) const
         {
             if (target == InteractionTarget::Mara)
             {
-                return state.isPowerRestored && !state.isSideQuestComplete;
+                return CanCompleteMission(MissionId::Mara);
             }
             if (target == InteractionTarget::PowerRelay)
             {
                 return !state.isPowerRestored;
             }
         }
-        return target == InteractionTarget::CityReceiver && state.missions.Active(MissionId::Frontier) &&
-               game::GameLevels::Chapter().CompletedSites() == 3 &&
-               !game::GameLevels::Chapter().GetState().recordsCompared;
+        return target == InteractionTarget::CityReceiver && CanCompleteMission(MissionId::Frontier);
     }
     if (game::GameLevels::Chapter().IsAvailable() &&
         (target == InteractionTarget::HomeTerminal || target == InteractionTarget::ApartmentExit ||
@@ -3781,10 +3852,8 @@ void Game::InteractSurfaceStory(InteractionTarget target)
         {
             OfferMission(MissionId::Mara);
         }
-        else if (state.missions.Active(MissionId::Mara) && state.isPowerRestored)
+        else if (CompleteMission(MissionId::Mara))
         {
-            state.missions.Complete(MissionId::Mara);
-            state.isSideQuestComplete = true;
             say("mara/report", "마라 / 불이 돌아왔어요. 정말 고마워요. [선택 의뢰 완료: 남겨 둔 불빛]");
         }
         else
@@ -3857,11 +3926,8 @@ void Game::InteractSurfaceStory(InteractionTarget target)
     {
         if (state.missions.Active(MissionId::Mine))
         {
-            if (mine.quest.Advance(game::MineQuestStage::ReturnToHalo))
+            if (CompleteMission(MissionId::Mine))
             {
-                state.missions.Complete(MissionId::Mine);
-                state.isComplete = true;
-                state.mainQuestStage = MainQuestStage::Complete;
                 chapter.Unlock();
                 say("mine/report", "수신망 / 광산 중계 좌표를 보고했습니다. N-0 외곽 설비와 연결된 세 현장의 "
                                    "조사 제안을 받을 수 있습니다.");

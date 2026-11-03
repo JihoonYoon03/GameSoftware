@@ -13,6 +13,12 @@
 #include <set>
 #include <vector>
 
+namespace game
+{
+struct MineState;
+struct ChapterOneState;
+} // namespace game
+
 namespace tutorial
 {
 class SaveArchive;
@@ -203,6 +209,20 @@ class QuestParticipation
     std::array<MissionStatus, size_t(MissionId::Count)> states = {};
     // Participation stays in the base archive; the tracking extension preserves this preference.
     MissionId tracked = MissionId::Count;
+};
+
+// ============================================================================
+// StoryMissionProgress — existing story conditions and explicit completion, independent of UI/session
+// ============================================================================
+class StoryMissionProgress
+{
+  public:
+    static const char *Restriction(MissionId id, const GameState &state, const game::MineState &mine,
+                                   bool storyPlanet);
+    static bool CanComplete(MissionId id, const GameState &state, const game::MineState &mine,
+                            const game::ChapterOneState &chapter, bool storyPlanet);
+    static bool Complete(MissionId id, GameState &state, game::MineState &mine,
+                         game::ChapterOneState &chapter, bool storyPlanet);
 };
 
 // ============================================================================
@@ -617,6 +637,8 @@ class Game
     void StartNewGame();
     bool MissionEligible(MissionId id) const;
     const char *MissionRestriction(MissionId id) const;
+    bool CanCompleteMission(MissionId id) const;
+    bool CompleteMission(MissionId id);
     MissionId FocusedMission() const;
     const char *MissionObjective() const;
     void OfferMission(MissionId id);

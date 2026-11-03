@@ -602,6 +602,7 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         JsonObject item;
         item.Text("status", statuses[int(world.missions.Status(id))]);
         item.Bool("eligible", tutorial::Game::Get().MissionEligible(id));
+        item.Bool("completion_ready", tutorial::Game::Get().CanCompleteMission(id));
         item.Bool("tracked", tutorial::Game::Get().FocusedMission() == id);
         if (const auto *reason = tutorial::Game::Get().MissionRestriction(id))
         {

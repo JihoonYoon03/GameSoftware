@@ -746,6 +746,95 @@ void TestPlanetCityMigration()
     g.Reset();
     assert(!g.SurfaceCities() && !g.Surface());
 }
+void TestStoryMissionCompletionContracts()
+{
+    using namespace tutorial;
+    using Progress = StoryMissionProgress;
+    GameState state;
+    game::MineState mine;
+    game::ChapterOneState chapter;
+    state.surfaceExploration = true;
+    const auto signal = MissionId::Signal, excavation = MissionId::Mine;
+    const auto frontier = MissionId::Frontier, mara = MissionId::Mara;
+    auto ready = [&](MissionId id, bool story = true) {
+        return Progress::CanComplete(id, state, mine, chapter, story);
+    };
+    auto complete = [&](MissionId id, bool story = true) {
+        return Progress::Complete(id, state, mine, chapter, story);
+    };
+    assert(Progress::Restriction(excavation, state, mine, true));
+    assert(Progress::Restriction(frontier, state, mine, true));
+    assert(Progress::Restriction(mara, state, mine, false));
+    assert(!ready(MissionId::Count) && !complete(MissionId(-1)));
+    state.gateSignalHeard = true;
+    assert(state.missions.Accept(signal, true) && !complete(signal));
+    state.hasDescendedObservatory = true;
+    assert(!Progress::Restriction(excavation, state, mine, true));
+    assert(ready(signal) && state.missions.Status(signal) == MissionStatus::Active);
+    assert(state.missions.Pause(signal) && !complete(signal));
+    assert(state.gateSignalHeard && state.hasDescendedObservatory);
+    assert(state.missions.Accept(signal, true));
+    assert(state.missions.Accept(mara, true) && state.missions.Track(mara));
+    state.surfaceExploration = false;
+    assert(!complete(signal));
+    state.surfaceExploration = true;
+    assert(!complete(signal, false) && complete(signal) && !complete(signal));
+    assert(state.missions.Tracked() == mara && state.missions.Active(mara));
+    assert(state.mainQuestStage == MainQuestStage::MountJetBike);
+
+    // Pre-visited mine evidence remains a physical record; only the return report completes the mission.
+    mine.powerBypassed = mine.signalRecorded = mine.glyphRecorded = mine.coordinatesRecorded = true;
+    assert(!complete(excavation) && !state.isComplete);
+    assert(state.missions.Accept(excavation, true) && !complete(excavation));
+    while (mine.quest.GetStage() != game::MineQuestStage::ReturnToHalo)
+    {
+        const auto stage = mine.quest.GetStage();
+        if (stage == game::MineQuestStage::TravelToMine)
+        {
+            assert(mine.quest.BeginJourney());
+        }
+        assert(mine.quest.Advance(stage));
+    }
+    assert(ready(excavation) && !state.isComplete);
+    assert(state.missions.Pause(excavation) && !complete(excavation));
+    assert(mine.coordinatesRecorded && mine.quest.GetStage() == game::MineQuestStage::ReturnToHalo);
+    assert(state.missions.Accept(excavation, true) && !complete(excavation, false));
+    const int credits = mine.player.credits, salvage = mine.player.salvage;
+    assert(complete(excavation) && !complete(excavation));
+    assert(state.isComplete && state.mainQuestStage == MainQuestStage::Complete);
+    assert(mine.quest.GetStage() == game::MineQuestStage::Complete);
+    assert(!Progress::Restriction(frontier, state, mine, true));
+    assert(mine.player.credits == credits && mine.player.salvage == salvage && !mine.loadout.HasPistol());
+    assert(state.missions.Status(frontier) == MissionStatus::NotAccepted);
+
+    assert(!complete(mara));
+    state.isPowerRestored = true;
+    assert(ready(mara) && !state.isSideQuestComplete);
+    assert(state.missions.Pause(mara) && !complete(mara));
+    assert(state.isPowerRestored && !state.isSideQuestComplete);
+    assert(state.missions.Accept(mara, true) && complete(mara) && !complete(mara));
+    assert(state.isSideQuestComplete);
+
+    // Each of the three existing site facts is required, regardless of discovery order.
+    assert(state.missions.Accept(frontier, true));
+    chapter.ledgerFound = chapter.convoyRescued = true;
+    assert(!complete(frontier) && !chapter.recordsCompared && !chapter.waterwayUnlocked);
+    chapter.generatorRestored = true;
+    chapter.ledgerFound = false;
+    assert(!complete(frontier));
+    chapter.ledgerFound = true;
+    chapter.convoyRescued = false;
+    assert(!complete(frontier));
+    chapter.convoyRescued = true;
+    assert(ready(frontier) && !chapter.recordsCompared && !chapter.waterwayUnlocked);
+    assert(!complete(frontier, false) && !chapter.recordsCompared && !chapter.waterwayUnlocked);
+    assert(state.missions.Pause(frontier) && !complete(frontier));
+    assert(chapter.generatorRestored && chapter.ledgerFound && chapter.convoyRescued);
+    assert(state.missions.Accept(frontier, true) && complete(frontier) && !complete(frontier));
+    assert(chapter.recordsCompared && chapter.waterwayUnlocked);
+    assert(mine.player.credits == credits && mine.player.salvage == salvage);
+}
+
 void TestOpenWorldParticipation()
 {
     using namespace tutorial;
@@ -906,6 +995,25 @@ void TestOpenWorldParticipation()
     assert(w.missions.Status(MissionId::Frontier) == MissionStatus::Paused && field.generatorInspected &&
            field.convoyRewardClaimed);
     assert(g.Surface()->Stream().Snapshot()->statistics.epoch == epoch);
+    Hud::CloseMenu();
+    assert(!HospitalRecovery::Active());
+    g.ManageMission(MissionId::Frontier);
+    read();
+    field.generatorRestored = field.ledgerFound = true;
+    assert(g.CanCompleteMission(MissionId::Frontier));
+    chapter.InteractHub();
+    assert(Dialogue::Active());
+    // An obsolete dialogue callback must not complete a paused mission or consume the only retry.
+    assert(w.missions.Pause(MissionId::Frontier));
+    read();
+    assert(!field.recordsCompared && !field.waterwayUnlocked);
+    g.ManageMission(MissionId::Frontier);
+    read();
+    chapter.InteractHub();
+    read();
+    assert(field.recordsCompared && field.waterwayUnlocked &&
+           w.missions.Status(MissionId::Frontier) == MissionStatus::Completed);
+    assert(!g.CompleteMission(MissionId::Frontier) && !g.CanCompleteMission(MissionId::Frontier));
     g.Reset();
 }
 void TestRelayTravelAndAtlas()
@@ -4380,6 +4488,7 @@ int main(int argc, char **argv)
     TestCitySimulationPolicy();
     TestPlanetCityMigration();
     TestPlanetCityRuntime();
+    TestStoryMissionCompletionContracts();
     TestOpenWorldParticipation();
     TestActivityObjectives();
     TestCommunityTaskTransactions();

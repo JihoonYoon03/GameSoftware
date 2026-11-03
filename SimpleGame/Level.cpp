@@ -2850,7 +2850,8 @@ void ChapterOneLevel::InteractHub()
     {
         return;
     }
-    if (CompletedSites() == 3 && !state.recordsCompared)
+    if (world.surfaceExploration ? tutorial::Game::Get().CanCompleteMission(tutorial::MissionId::Frontier)
+                                 : CompletedSites() == 3 && !state.recordsCompared)
     {
         bool started = Dialogue::Start(
             "MQ01D/comparison",
@@ -2875,18 +2876,21 @@ void ChapterOneLevel::InteractHub()
              {"next", "카인", "현장", "먼저 그 길이 남아 있는지 확인합시다.", {}}},
             [this](const std::string &) {
                 auto &world = tutorial::Game::Get().GetState();
-                if (world.surfaceExploration && !world.missions.Active(tutorial::MissionId::Frontier))
-                {
-                    return;
-                }
-                state.recordsCompared = state.waterwayUnlocked = true;
                 if (world.surfaceExploration)
                 {
-                    world.missions.Complete(tutorial::MissionId::Frontier);
+                    if (!tutorial::Game::Get().CompleteMission(tutorial::MissionId::Frontier))
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    state.recordsCompared = state.waterwayUnlocked = true;
                 }
                 tutorial::Game::Get().ShowNotice("1장 완료 / 수로 진입로 기록 확보. 2장 지역은 아직 진입할 "
                                                  "수 없습니다. 1장 재방문과 선택 의뢰를 계속할 수 있습니다.");
-            });
+            },
+            true); // A rejected completion can be retried; the story contract rejects duplicate commits.
         if (started && !state.comparisonStarted)
         {
             state.comparisonStarted = true;
