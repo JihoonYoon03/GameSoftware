@@ -1,0 +1,33 @@
+# Production sources, also listed in SimpleGame/SimpleGame.vcxproj.
+set(GAME_SOURCES
+    SimpleGame/Actor/Actor.cpp
+    SimpleGame/AssetCache.cpp
+    SimpleGame/Animation.cpp
+    SimpleGame/Drawing.cpp
+    SimpleGame/Window.cpp
+    SimpleGame/Game.cpp
+    SimpleGame/Story.cpp
+    SimpleGame/Save.cpp
+    SimpleGame/Civic.cpp
+    SimpleGame/Hud.cpp
+    SimpleGame/Level.cpp
+    SimpleGame/ModelLibrary.cpp
+    SimpleGame/Overworld.cpp
+    SimpleGame/ResidentAI.cpp
+    SimpleGame/TransitLayout.cpp
+    SimpleGame/ResourceAssets.cpp
+    SimpleGame/Monitoring/LocalMonitorServer.cpp
+    SimpleGame/Monitoring/Monitor.cpp
+    SimpleGame/Profiler.cpp
+    SimpleGame/RenderAssets.cpp
+    SimpleGame/RenderCache.cpp
+    SimpleGame/RenderQueue.cpp
+    SimpleGame/Renderer.cpp
+    SimpleGame/Scene.cpp
+    SimpleGame/Scene/SceneGraph.cpp
+    SimpleGame/Weapon.cpp
+    SimpleGame/World.cpp
+    SimpleGame/WorldGeneration.cpp
+    SimpleGame/WorldContent.cpp
+    SimpleGame/WorldStreaming.cpp
+)

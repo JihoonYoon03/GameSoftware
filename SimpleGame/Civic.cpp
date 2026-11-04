@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include "Civic.h"
 #include "Profiler.h"
 #include "Drawing.h"
@@ -3279,7 +3279,7 @@ void CivicPresentation::DrawWorld()
             continue;
         }
         auto p = Drawing::WorldToScreen(hospital.position.x, hospital.position.y, 35);
-        Drawing::DrawLabel(p.x - 8, p.y, "+", {.35f, 1, .72f}, GLUT_BITMAP_HELVETICA_18);
+        Drawing::DrawLabel(p.x - 8, p.y, "+", {.35f, 1, .72f}, LabelFont::Large);
         if (Game::Distance(hospital.position, Game::Get().GetState().playerPosition) < 3)
         {
             Drawing::DrawLabel(p.x - 30, p.y - 18,

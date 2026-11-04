@@ -55,14 +55,14 @@ void Drawing::DrawRectangle(float x, float y, float width, float height, ColorRG
     }
     renderqueue::End();
 }
-void Drawing::DrawLabel(float x, float y, const std::string &text, ColorRGBA color, void *font)
+void Drawing::DrawLabel(float x, float y, const std::string &text, ColorRGBA color, LabelFont font)
 {
     if (GameRenderer::Get().Backend().DeferOverlay([=]() { DrawLabel(x, y, text, color, font); }))
     {
         return;
     }
     SetColor(color);
-    int size = font == GLUT_BITMAP_HELVETICA_18 ? 19 : 15;
+    const int size = static_cast<int>(font);
     GameRenderer::Get().Backend().DrawUtf8Text(x, y, text, size);
 }
 void Drawing::DrawEllipse(float x, float y, float radiusX, float radiusY, ColorRGBA color)

@@ -4,7 +4,7 @@
 #include "Civic.h"
 #include "Overworld.h"
 #include "Hud.h"
-#include "Dependencies/freeglut.h"
+#include "Window.h"
 #include <algorithm>
 #include <cassert>
 #include <cmath>

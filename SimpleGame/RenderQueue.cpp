@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "RenderQueue.h"
 #include "Profiler.h"
-#include "Dependencies/glew.h"
+#include "Dependencies/glew/include/GL/glew.h"
 #include <array>
 #include <vector>
 #include <cmath>

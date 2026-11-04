@@ -365,10 +365,6 @@ FodyWeavers.xsd
 # Generated model and material cache beside the executable.
 Cache/
 
-# Checked-in graphics dependencies are not build output.
-!SimpleGame/Dependencies/x64/
-!SimpleGame/Dependencies/Win32/
-
 # Generated from tracked GLB/JSON by tools/ensure-resources.mjs before the game build.
 /Resource/Runtime/
 
@@ -377,3 +373,7 @@ Cache/
 
 # Local world checkpoints (the normal location is outside the repository in LocalAppData).
 [Ss]aves/
+
+# Local CMake and source-built graphics output.
+/build/
+/graphics-build.log

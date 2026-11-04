@@ -1,6 +1,6 @@
 #include "stdafx.h"
-#include "Dependencies/glew.h"
-#include "Dependencies/freeglut.h"
+#include "Dependencies/glew/include/GL/glew.h"
+#include "Window.h"
 #include "Profiler.h"
 #include "RenderQueue.h"
 #include <array>
@@ -33,17 +33,13 @@ void Clear()
 } // namespace
 int main(int argc, char **argv)
 {
-    glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_RGBA | GLUT_SINGLE);
-    glutInitWindowSize(64, 64);
-    int window = glutCreateWindow("Render queue smoke tests");
-    glutHideWindow();
+    assert(platform::Initialize("Render queue smoke tests", 64, 64, false));
     const GLenum glewResult = glewInit();
     assert(glewResult == GLEW_OK);
     if (!GLEW_VERSION_3_0)
     {
         std::fprintf(stderr, "Offscreen smoke tests require OpenGL 3.0.\n");
-        glutDestroyWindow(window);
+        platform::Shutdown();
         return 77;
     }
     // Some compatibility drivers leave an error during extension discovery.
@@ -129,5 +125,5 @@ int main(int argc, char **argv)
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDeleteFramebuffers(1, &framebuffer);
     glDeleteTextures(1, &target);
-    glutDestroyWindow(window);
+    platform::Shutdown();
 }

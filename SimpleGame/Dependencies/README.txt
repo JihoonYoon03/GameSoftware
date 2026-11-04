@@ -1,12 +1,30 @@
-그래픽 라이브러리 구성
+Graphics dependencies (built from source, no graphics DLL distribution)
 
-Win32/: FreeGLUT 3.0.0 및 GLEW 2.1.0의 32비트 import library/DLL.
-x64/: 기존에 사용자가 교체한 FreeGLUT import library와 동일한
-      로컬 freeglut-3.8.0 x64-Release 빌드의 DLL, GLEW 2.1.0 64비트 파일.
+GLFW 3.4: glfw/ contains the upstream src, include, CMake and deps directories,
+CMakeLists.txt, README.md and LICENSE.md. Source tag:
+https://github.com/glfw/glfw/tree/3.4
+Archive: https://codeload.github.com/glfw/glfw/zip/refs/tags/3.4
+Archive SHA256: a133ddc3d3c66143eba9035621db8e0bcf34dba1ee9514a9e23e96afd39fd57a
 
-GLEW는 로컬 다운로드 패키지의 헤더가 프로젝트 헤더와 동일한지 확인했다.
-프로젝트는 Dependencies/$(Platform)을 우선 검색한다.
-빌드 성공 후 동일 플랫폼의 freeglut.dll 및 glew32.dll을 출력 폴더로 복사한다.
-루트에 있던 라이브러리는 보존하지만 플랫폼별 파일을 우선 사용한다.
-라이브러리 갱신 시 같은 패키지/빌드의 LIB와 DLL을 함께 교체한다.
-라이선스는 GLEW-LICENSE.txt 및 각 플랫폼 폴더의 FREEGLUT-LICENSE.txt 참조.
+GLEW 2.1.0: glew/ contains the generated upstream glew.c, include/GL headers
+and LICENSE.txt, from the same version as the former import libraries.
+https://github.com/nigels-com/glew/releases/tag/glew-2.1.0
+Archive: https://github.com/nigels-com/glew/releases/download/glew-2.1.0/glew-2.1.0.zip
+Archive SHA256: 2700383d4de2455f06114fbaf872684f15529d4bdc5cdea69b5fb0e9aa7763f1
+
+The upstream source files are unmodified. Examples, tests and documentation
+not required for the game build are omitted. No FetchContent, submodule,
+package restore, network connection or external graphics SDK is needed.
+
+Visual Studio: GraphicsDependencies.vcxproj builds GameGraphics.lib for the
+selected configuration and architecture. The game has a ProjectReference.
+CMake: the upstream GLFW CMake target and the generated GLEW C source build
+static libraries. GLEW_STATIC and GLFW_INCLUDE_NONE propagate to consumers.
+Both build paths use a static MSVC runtime (/MT, /MTd for Debug).
+FreeGLUT, glew32.dll and precompiled platform-specific libraries are removed.
+Windows system OpenGL, windowing, font, image, socket and timer APIs are linked
+through the Windows SDK. A working OpenGL driver is still required.
+
+Licenses: glfw/LICENSE.md, glew/LICENSE.txt and ../../licenses/*.txt.
+The game output includes licenses/ for redistribution.
+See ../../README.md and ../../docs/GLFW_MIGRATION.md for build and validation.

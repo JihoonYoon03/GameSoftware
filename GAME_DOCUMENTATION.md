@@ -1402,7 +1402,7 @@ RTX 5080, 1280×800, MSVC /O2, 장면별 24프레임 준비 후 120프레임 측
 - **형태:** 싱글 플레이 실시간 렌더링 기반 게임
 - **장르:** 쿼터뷰 2.5D 오픈 월드 RPG
 - **핵심 경험:** 미지의 SF 세계를 탐험하며 동료와 유대를 쌓고, 인간의 통제를 벗어난 우주적 공포와 상실을 마주한다.
-- **현재 기술 기반:** Windows C++, OpenGL, GLEW, FreeGLUT
+- **현재 기술 기반:** Windows C++, OpenGL, GLEW, GLFW
 
 초기에는 단색 사각형 렌더링 기반에서 시작했으며, 현재 구현 범위는 1절에 정리한다. 이후의 코드는 일회성 예제보다 게임 기능을 지속적으로 추가할 수 있는 구조를 우선한다.
 
@@ -1545,7 +1545,7 @@ Resource   : 텍스처, 셰이더, 사운드 등 리소스의 로딩과 캐싱
 | 세계관 | 성간 문명이 형성된 먼 미래의 SF |
 | 분위기 | 신비와 경이로 시작해 탐험이 깊어질수록 어두워지는 코스믹 호러 |
 | 정서적 중심 | 동료와의 유대, 갑작스럽고 피할 수 없는 상실, 그 이후의 삶 |
-| 현재 개발 기반 | Windows, C++, OpenGL, GLEW, FreeGLUT |
+| 현재 개발 기반 | Windows, C++, OpenGL, GLEW, GLFW |
 | 1편 이야기 | 《침묵하는 관문》 — 변방 행성의 사고 조사에서 시작되는 장막 붕괴 |
 
 플레이어는 아름답고 낯선 개척 행성을 동료들과 탐험한다. 작은 구조 요청과 지역 문제를 해결할수록 세계를 지탱하던 기술에 대한 믿음이 흔들리고, 결국 인간을 적으로 여기기조차 하지 않는 거대한 현상과 마주한다.
@@ -2964,28 +2964,14 @@ F 스캔은 활성화 지점에서 지면 파동을 2.8초간 15월드 단위/�
 - 실제 모니터 스냅샷 출력 및 JSON 해석.
 
 Visual Studio x64 Developer PowerShell에서 다음과 같이 실제 코어와 회귀 테스트를 연결할 수 있다.
-테스트 main은 게임 프로젝트에 포함하지 않는다. GameplayTests와 SceneGraphTests는 창이나 GL 컨텍스트를 만들지 않는다. RenderingTests는 화면에 표시하지 않는 WGL 표면을 만들어 실제 그래픽 드라이버로 검사한다. 그래픽 DLL은 검색 경로에 있어야 한다. RenderingTests의 BMP 캡처·모델 JSON·performance.json은 기본적으로 x64/ModelChecks/renders에 저장한다. 첫 인자로 다른 출력 폴더를 지정할 수 있다. 아래 /O2 최적화 빌드에서도 NDEBUG를 정의하지 않아 assert 검증을 유지한다.
+Tests use separate executables. RenderingTests checks hidden WGL and GLFW contexts with the real graphics driver, writes BMP captures and performance.json, and needs no graphics DLLs. CMake keeps assertions enabled in Release tests. See README.md and docs/GLFW_MIGRATION.md for builds and current validation results.
 
 ```powershell
-$checkDir = "x64/CoreChecks"
-New-Item -ItemType Directory -Force $checkDir | Out-Null
-$sourceFiles = @(Get-ChildItem SimpleGame -Recurse -Filter *.cpp |
-    Where-Object { $_.FullName -notmatch '\\Dependencies\\|\\x64\\' -and $_.Name -ne 'SimpleGame.cpp' } |
-    Select-Object -ExpandProperty FullName)
-cl /nologo /O2 /c /EHsc /std:c++17 /utf-8 /Y- /I SimpleGame "/Fo:$checkDir/" @sourceFiles
-if ($LASTEXITCODE -ne 0) { throw "코어 컴파일 실패" }
-$objectFiles = @($sourceFiles | ForEach-Object {
-    Join-Path $checkDir (([IO.Path]::GetFileNameWithoutExtension($_)) + '.obj')
-})
-lib /nologo "/OUT:$checkDir/GameCore.lib" @objectFiles
-if ($LASTEXITCODE -ne 0) { throw "코어 라이브러리 생성 실패" }
-$env:PATH = (Resolve-Path SimpleGame/Dependencies/x64).Path + ';' + $env:PATH
-foreach ($testName in @('GameplayTests', 'SceneGraphTests', 'RenderingTests', 'MonitorServerTests')) {
-    cl /nologo /O2 /EHsc /std:c++17 /utf-8 /Y- /I SimpleGame "/Fo:$checkDir/" "/Fe:$checkDir/$testName.exe" "tests/$testName.cpp" /link "$checkDir/GameCore.lib" /LIBPATH:SimpleGame/Dependencies/x64 freeglut.lib glew32.lib opengl32.lib user32.lib gdi32.lib psapi.lib ws2_32.lib
-    if ($LASTEXITCODE -ne 0) { throw "$testName 링크 실패" }
-    & "$checkDir/$testName.exe"
-    if ($LASTEXITCODE -ne 0) { throw "$testName 검사 실패" }
-}
+cmake --preset windows-x64
+cmake --build --preset release-x64 --parallel
+ctest --preset release-x64
+# GLFW production context; omit --glfw to use the independent WGL check.
+./build/cmake-x64/Release/RenderingTests.exe build/manual-renders --glfw
 ```
 
 게임 실행에서는 다음 순서로 확인한다.
@@ -3154,7 +3140,7 @@ Renderer의 입체 모델 경로는 동일 메시·관절 포즈를 모아 인�
 화면 출력 함수는 게임 상태를 변경하지 않는다.
 
 6. .cpp 첫 include는 stdafx.h로 유지한다.
-GLEW는 FreeGLUT보다 먼저 포함하고, Windows 매크로와 충돌하는 함수 이름을 피한다.
+Define GLFW_INCLUDE_NONE before including GLFW; include OpenGL through GLEW. Avoid Windows macro collisions.
 
 7. 소스는 UTF-8, 화면 문구는 한글을 사용한다. 빌드는 기존 C++17 설정을 유지한다.
 8. 자원을 생성한 객체가 해제 책임도 가진다. GPU 자원은 GL 컨텍스트가 살아 있을 때 해제한다.
@@ -3320,7 +3306,7 @@ static_assert로 항목 수 불일치를 검사한다.
 - GPU 패스: profiling::GpuScope timer(profiling::Timer::...);
 GPU 구간 종료 전에 해당 패스 RenderQueue::Flush를 실행해야 올바르게 측정된다.
 
-- 현재는 GLUT 단일 스레드 전용이다. 작업 스레드 추가 시 thread-local 집계/병합을 먼저 구현한다.
+- 현재는 GLFW 단일 스레드 전용이다. 작업 스레드 추가 시 thread-local 집계/병합을 먼저 구현한다.
 - 새 저수준 GL 출력 경로는 큐를 통하거나 최종 제출 지점에서 DrawCalls를 집계한다.
 - framebuffer/viewport/projection/blending 변경과 텍스처/메시 삭제 전에는 반드시 큐를 Flush한다.
 - 성능 문제가 생길 수 있는 모든 함수를 자동 추적하지는 않는다. 주요 경로에 계측 지점을 제공한다.
@@ -3343,9 +3329,9 @@ GPU 구간 종료 전에 해당 패스 RenderQueue::Flush를 실행해야 올바
 - x64 Native Tools Command Prompt에서 저장소 루트 기준(테스트는 NDEBUG 없이 빌드):
 
 ```bat
-cl /nologo /EHsc /std:c++17 /utf-8 /Y- /I SimpleGame tests\RenderQueueSmokeTests.cpp SimpleGame\RenderQueue.cpp SimpleGame\Profiler.cpp /Fe:RenderQueueSmokeTests.exe /link /LIBPATH:SimpleGame\Dependencies\x64 freeglut.lib glew32.lib opengl32.lib psapi.lib
-set "PATH=%CD%\SimpleGame\Dependencies\x64;%PATH%"
-RenderQueueSmokeTests.exe
+cmake --preset windows-x64
+cmake --build build/cmake-x64 --config Release --target RenderQueueSmokeTests
+ctest --test-dir build/cmake-x64 -C Release -R RenderQueueSmoke --output-on-failure
 ```
 
 - 이 테스트의 glReadPixels는 검증용 동기화이다. 실제 게임의 프로파일링은 GPU 결과를 기다리지 않는다.

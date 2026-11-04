@@ -30,6 +30,7 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Animation.h"><Filter>헤더 파일</Filter></ClInclude>
+    <ClInclude Include="Window.h"><Filter>Header Files</Filter></ClInclude>
     <ClInclude Include="Drawing.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -112,6 +113,7 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Animation.cpp"><Filter>소스 파일</Filter></ClCompile>
+    <ClCompile Include="Window.cpp"><Filter>Source Files</Filter></ClCompile>
     <ClCompile Include="Drawing.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>

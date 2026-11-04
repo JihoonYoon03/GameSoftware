@@ -1,9 +1,11 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26730.10
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimpleGame", "SimpleGame\SimpleGame.vcxproj", "{25179D6C-FA85-4619-8EDB-AC241382F6CA}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GameGraphics", "SimpleGame\Dependencies\GraphicsDependencies.vcxproj", "{EA0540D1-7A41-4BF1-964F-3D3A9E585036}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,6 +15,14 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EA0540D1-7A41-4BF1-964F-3D3A9E585036}.Debug|x64.ActiveCfg = Debug|x64
+		{EA0540D1-7A41-4BF1-964F-3D3A9E585036}.Debug|x64.Build.0 = Debug|x64
+		{EA0540D1-7A41-4BF1-964F-3D3A9E585036}.Debug|x86.ActiveCfg = Debug|Win32
+		{EA0540D1-7A41-4BF1-964F-3D3A9E585036}.Debug|x86.Build.0 = Debug|Win32
+		{EA0540D1-7A41-4BF1-964F-3D3A9E585036}.Release|x64.ActiveCfg = Release|x64
+		{EA0540D1-7A41-4BF1-964F-3D3A9E585036}.Release|x64.Build.0 = Release|x64
+		{EA0540D1-7A41-4BF1-964F-3D3A9E585036}.Release|x86.ActiveCfg = Release|Win32
+		{EA0540D1-7A41-4BF1-964F-3D3A9E585036}.Release|x86.Build.0 = Release|Win32
 		{25179D6C-FA85-4619-8EDB-AC241382F6CA}.Debug|x64.ActiveCfg = Debug|x64
 		{25179D6C-FA85-4619-8EDB-AC241382F6CA}.Debug|x64.Build.0 = Debug|x64
 		{25179D6C-FA85-4619-8EDB-AC241382F6CA}.Debug|x86.ActiveCfg = Debug|Win32

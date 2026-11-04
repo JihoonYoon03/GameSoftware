@@ -1,13 +1,15 @@
-﻿#pragma once
+#pragma once
 #include "Game.h"
 #include "Renderer.h"
-#include "Dependencies/glew.h"
-#include "Dependencies/freeglut.h"
+#include "Dependencies/glew/include/GL/glew.h"
+#include "Window.h"
 #include <functional>
 #include <initializer_list>
 
 namespace tutorial
 {
+enum class LabelFont { Normal = 15, Large = 19 };
+
 struct ColorRGBA
 {
     float r, g, b, a;
@@ -25,7 +27,7 @@ class Drawing
     static void DrawLine(Vector2 start, Vector2 end, ColorRGBA color, float lineWidth = 1);
     static void DrawRectangle(float x, float y, float width, float height, ColorRGBA color);
     static void DrawLabel(float x, float y, const std::string &text,
-                          ColorRGBA color = ColorRGBA(.8f, .88f, .9f), void *font = GLUT_BITMAP_HELVETICA_12);
+                          ColorRGBA color = ColorRGBA(.8f, .88f, .9f), LabelFont font = LabelFont::Normal);
     static void DrawEllipse(float x, float y, float radiusX, float radiusY, ColorRGBA color);
     static Vector2 WorldToScreen(float x, float y, float height = 0);
     static void DrawTile(float x, float y, float width, float depth, ColorRGBA color);

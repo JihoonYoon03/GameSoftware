@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "ModelLibrary.h"
 #include "Weapon.h"
 #include "Animation.h"
@@ -652,12 +652,14 @@ class Game
     void SpecialKeyDown(int key, int x, int y);
     void MouseMotion(int x, int y);
     void MouseButton(int button, int state, int x, int y);
+    void MouseWheel(int steps, int x, int y);
     void MouseEntry(int state);
     // Deterministic simulation step, also used by the window timer.
     void Update(float deltaSeconds);
     bool IsAiming() const;
     models::CharacterPose PlayerPose(float recoil = 0) const;
     void Tick(int timer);
+    unsigned int NextFrameDelay(double startedMilliseconds, double finishedMilliseconds);
     static float Clamp(float value, float minimum, float maximum);
     static float Distance(Vector2 first, Vector2 second);
     void ShowNotice(const std::string &message);
@@ -708,7 +710,7 @@ class RelayTravel
     static void Update(float deltaSeconds);
 };
 // ============================================================================
-// GameCallbacks - GLUT adapters
+// GameCallbacks - window callback adapters
 // ============================================================================
 class GameCallbacks
 {

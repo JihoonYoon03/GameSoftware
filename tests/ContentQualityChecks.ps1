@@ -34,7 +34,8 @@ if ($duplicates.Count) { throw '오브젝트 파일명이 겹칩니다. 검사 �
 $headers = @(Get-ChildItem -LiteralPath (Join-Path $projectRoot 'SimpleGame') -Filter *.h -File -Recurse |
     Where-Object { $_.FullName -notmatch '[\\/]Dependencies[\\/]' } | ForEach-Object FullName)
 $testSources = @($Test | Sort-Object -Unique | ForEach-Object { Join-Path $PSScriptRoot ($_ + '.cpp') })
-$inputFiles = @($sources + $headers + $testSources + $PSCommandPath + (Join-Path $projectRoot 'SimpleGame/SimpleGame.vcxproj') | Sort-Object -Unique)
+$graphicsInputs = @(Get-ChildItem -LiteralPath (Join-Path $projectRoot 'SimpleGame/Dependencies') -Recurse -File | Where-Object { $_.Extension -in '.c','.h','.vcxproj' } | ForEach-Object FullName)
+$inputFiles = @($sources + $headers + $testSources + $graphicsInputs + $PSCommandPath + (Join-Path $projectRoot 'SimpleGame/SimpleGame.vcxproj') | Sort-Object -Unique)
 $inputLines = @($inputFiles | ForEach-Object { $_ + ':' + (Get-FileHash -LiteralPath $_ -Algorithm SHA256).Hash })
 $manifest = Join-Path $projectRoot 'Resource/Runtime/manifest.json'
 if (Test-Path -LiteralPath $manifest) { $inputLines += 'resource-manifest:' + (Get-FileHash -LiteralPath $manifest -Algorithm SHA256).Hash }
@@ -42,7 +43,7 @@ $sha = [Security.Cryptography.SHA256]::Create()
 try { $fingerprint = [BitConverter]::ToString($sha.ComputeHash($utf8.GetBytes($inputLines -join "`n"))).Replace('-','') } finally { $sha.Dispose() }
 $stampFile = Join-Path $checkDirectory 'build-state.json'
 New-Item -ItemType Directory -Path $checkDirectory, $binaryDirectory, $objectDirectory -Force | Out-Null
-$compileOptions = @('/nologo','/O2','/EHsc','/std:c++17','/utf-8','/we4819','/we4828','/Y-','/UNDEBUG','/DNOMINMAX','/D_CRT_SECURE_NO_WARNINGS',('/I' + (Join-Path $projectRoot 'SimpleGame')))
+$compileOptions = @('/nologo','/O2','/EHsc','/std:c++17','/utf-8','/we4819','/we4828','/Y-','/UNDEBUG','/DNOMINMAX','/DGLEW_STATIC','/DGLEW_NO_GLU','/DGLFW_INCLUDE_NONE','/MT','/D_CRT_SECURE_NO_WARNINGS',('/I' + (Join-Path $projectRoot 'SimpleGame')))
 if ($Build) {
     if (-not (Get-Command cl.exe -ErrorAction SilentlyContinue) -or -not (Get-Command lib.exe -ErrorAction SilentlyContinue) -or $env:VSCMD_ARG_TGT_ARCH -ne 'x64') {
         throw 'Visual Studio의 x64 Native Tools 콘솔에서 실행해 주세요.'
@@ -50,6 +51,9 @@ if ($Build) {
     $assertionHeader = Join-Path $objectDirectory 'assertions-required.h'
     [IO.File]::WriteAllText($assertionHeader, "#ifdef NDEBUG`r`n#error Native regression checks require assertions.`r`n#endif`r`n", $utf8)
     $compileOptions += '/FI' + $assertionHeader
+    $graphicsProject = Join-Path $projectRoot 'SimpleGame/Dependencies/GraphicsDependencies.vcxproj'
+    & msbuild.exe $graphicsProject /m:1 /nr:false /p:Configuration=Release /p:Platform=x64 /nologo /verbosity:minimal
+    if ($LASTEXITCODE -ne 0) { throw 'Source-built graphics dependencies failed.' }
     # The engine is compiled once, outside the normal game output. Assertions stay enabled with /O2.
     $coreLog = Join-Path $checkDirectory 'core-build.log'
     & cl.exe @compileOptions /c ('/Fo:' + $objectDirectory.Replace('\','/') + '/') @sources *> $coreLog
@@ -61,11 +65,8 @@ if ($Build) {
     foreach ($name in $Test) {
         $log = Join-Path $checkDirectory ($name + '-build.log')
         $binary = Join-Path $binaryDirectory ($name + '.exe')
-        & cl.exe @compileOptions (Join-Path $PSScriptRoot ($name + '.cpp')) $library ('/Fo:' + (Join-Path $objectDirectory ($name + '.obj'))) ('/Fe:' + $binary) /link ('/LIBPATH:' + (Join-Path $projectRoot 'SimpleGame/Dependencies/x64')) freeglut.lib glew32.lib opengl32.lib psapi.lib ws2_32.lib user32.lib gdi32.lib shell32.lib winmm.lib *> $log
+        & cl.exe @compileOptions (Join-Path $PSScriptRoot ($name + '.cpp')) $library ('/Fo:' + (Join-Path $objectDirectory ($name + '.obj'))) ('/Fe:' + $binary) /link (Join-Path $projectRoot 'build/graphics/x64/Release/GameGraphics.lib') opengl32.lib psapi.lib ws2_32.lib user32.lib gdi32.lib shell32.lib winmm.lib *> $log
         if ($LASTEXITCODE -ne 0) { Get-Content -LiteralPath $log -Tail 20; throw ('검사 빌드 실패: ' + $log) }
-    }
-    foreach ($dll in 'freeglut.dll','glew32.dll') {
-        Copy-Item -LiteralPath (Join-Path $projectRoot ('SimpleGame/Dependencies/x64/' + $dll)) -Destination $binaryDirectory -Force
     }
     $binaries = @($Test | ForEach-Object { [pscustomobject]@{ name = $_; sha256 = (Get-FileHash -LiteralPath (Join-Path $binaryDirectory ($_ + '.exe'))).Hash } })
     $stamp = [pscustomobject]@{ schema = 'cq01_h3_build_v1'; fingerprint = $fingerprint; tests = @($Test | Sort-Object -Unique); compiler = (Get-Command cl.exe).Source; toolset = $env:VCToolsVersion; created_utc = [DateTime]::UtcNow.ToString('o'); optimized = $true; assertions = $true; binaries = $binaries }

@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <windows.h>
 #include "Drawing.h"
 #include "Civic.h"
 #include "Hud.h"
@@ -20,13 +21,13 @@
 #include <iostream>
 #include <thread>
 #include <vector>
-#include <windows.h>
 
 // Hidden WGL surface: exercises the production mesh and FBO depth path without
 // displaying a game window or changing the user's desktop.
 namespace
 {
 using namespace tutorial;
+bool useGlfwContext = false;
 using namespace models;
 float Distance3D(Point a, Point b)
 {
@@ -428,6 +429,14 @@ struct OffscreenContext
     HGLRC context = nullptr;
     OffscreenContext()
     {
+        if (useGlfwContext)
+        {
+            assert(platform::Initialize("GLFW rendering checks", kCanvasWidth, kCanvasHeight, false));
+            // Permit hidden captures larger than the desktop's default tracking
+            // limits; the test also validates 1920x1080 and 2560x1440 clients.
+            glfwSetWindowSizeLimits(platform::Window(), GLFW_DONT_CARE, GLFW_DONT_CARE, 4096, 4096);
+            return;
+        }
         WNDCLASSW type = {};
         type.style = CS_OWNDC;
         type.lpfnWndProc = DefWindowProcW;
@@ -461,6 +470,11 @@ struct OffscreenContext
     }
     ~OffscreenContext()
     {
+        if (useGlfwContext)
+        {
+            platform::Shutdown();
+            return;
+        }
         wglMakeCurrent(nullptr, nullptr);
         wglDeleteContext(context);
         ReleaseDC(window, dc);
@@ -915,9 +929,9 @@ void TestPixelPresentation(const std::filesystem::path &output)
     }
     renderer.SetStyle({});
     assert(renderer.GetRenderWidth() == kCanvasWidth);
-    Game::Get().SpecialKeyDown(GLUT_KEY_F7, 0, 0);
+    Game::Get().SpecialKeyDown(GLFW_KEY_F7, 0, 0);
     assert(!renderer.GetStyle().cartoon);
-    Game::Get().SpecialKeyDown(GLUT_KEY_F8, 0, 0);
+    Game::Get().SpecialKeyDown(GLFW_KEY_F8, 0, 0);
     assert(renderer.GetStyle().resolution == WorldResolution::Half);
     renderer.SetStyle({});
 }
@@ -1770,10 +1784,31 @@ void CaptureDeliveredUi(const std::filesystem::path &output)
                        {"two", "아직 준비한다. 보급품과 지금까지 확인한 내용을 다시 점검한다"},
                        {"three", "헤일로에 남아 다른 조사 현장의 기록을 먼저 확인한다"}}}});
     HWND surface = WindowFromDC(wglGetCurrentDC());
+    auto resizeSurface = [&](int width, int height) {
+        if (useGlfwContext)
+        {
+            // GLFW sizes the client area. SetWindowPos sizes the decorated outer
+            // window and would leave glReadPixels reading beyond its framebuffer.
+            glfwSetWindowSize(platform::Window(), width, height);
+            glfwPollEvents();
+            int actualWidth = 0, actualHeight = 0;
+            glfwGetFramebufferSize(platform::Window(), &actualWidth, &actualHeight);
+            if (actualWidth != width || actualHeight != height)
+            {
+                std::cerr << "Requested " << width << 'x' << height << "; GLFW framebuffer is "
+                          << actualWidth << 'x' << actualHeight << '\n';
+            }
+            assert(actualWidth == width && actualHeight == height);
+        }
+        else
+        {
+            assert(SetWindowPos(surface, nullptr, 0, 0, width, height,
+                                SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE));
+        }
+    };
     for (auto size : {std::pair<int, int>{1920, 1080}, {2560, 1440}})
     {
-        assert(SetWindowPos(surface, nullptr, 0, 0, size.first, size.second,
-                            SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE));
+        resizeSurface(size.first, size.second);
         g.Resize(size.first, size.second);
         renderqueue::BeginFrame();
         renderer.BeginScene(size.first, size.second);
@@ -1793,8 +1828,7 @@ void CaptureDeliveredUi(const std::filesystem::path &output)
                  ("ui-dialogue-" + std::to_string(size.first) + "x" + std::to_string(size.second) + ".bmp"),
              size.first, size.second);
     }
-    assert(SetWindowPos(surface, nullptr, 0, 0, kCanvasWidth, kCanvasHeight,
-                        SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE));
+    resizeSurface(kCanvasWidth, kCanvasHeight);
     g.Resize(kCanvasWidth, kCanvasHeight);
     g.Reset();
 }
@@ -2275,7 +2309,7 @@ void BenchmarkQuality(const std::filesystem::path &output)
 } // namespace
 int main(int argc, char **argv)
 {
-    glutInit(&argc, argv);
+    useGlfwContext = argc > 2 && std::string(argv[argc - 1]) == "--glfw";
     if (argc > 1 && std::string(argv[1]) == "--civic-only")
     {
         OffscreenContext context;

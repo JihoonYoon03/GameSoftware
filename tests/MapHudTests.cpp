@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Hud.h"
 #include "Level.h"
-#include "Dependencies/freeglut.h"
+#include "Window.h"
 #include <cassert>
 #include <cmath>
 #include <iostream>
@@ -90,13 +90,13 @@ void TestInputAndLetterboxing()
     auto canvas = MapHud::WorldToMap(destination, true);
     int windowX = int(std::lround(96 + canvas.x * 1.35f));
     int windowY = int(std::lround(canvas.y * 1.35f));
-    game.MouseButton(GLUT_LEFT_BUTTON, GLUT_DOWN, windowX, windowY);
+    game.MouseButton(GLFW_MOUSE_BUTTON_LEFT, GLFW_PRESS, windowX, windowY);
     assert(!world.mouseFiring);
     auto &selected = world.mapDestinations[size_t(MapRegion::City)];
     assert(selected.active && Game::Distance(selected.position, destination) < 1.5f);
-    game.MouseButton(GLUT_RIGHT_BUTTON, GLUT_DOWN, windowX, windowY);
+    game.MouseButton(GLFW_MOUSE_BUTTON_RIGHT, GLFW_PRESS, windowX, windowY);
     assert(!selected.active);
-    game.MouseButton(GLUT_LEFT_BUTTON, GLUT_DOWN, 4, 4);
+    game.MouseButton(GLFW_MOUSE_BUTTON_LEFT, GLFW_PRESS, 4, 4);
     assert(!selected.active && !world.mouseFiring);
 }
 } // namespace

@@ -1,6 +1,6 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include "Profiler.h"
-#include "Dependencies/glew.h"
+#include "Dependencies/glew/include/GL/glew.h"
 #include <windows.h>
 #include <psapi.h>
 #include <algorithm>

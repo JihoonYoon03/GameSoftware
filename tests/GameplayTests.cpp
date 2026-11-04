@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include "Level.h"
 #include "Story.h"
 #include "Hud.h"
@@ -2632,7 +2632,7 @@ void TestStageSelectionAndLoadout()
     g.KeyDown('q', 0, 0); // Auto-repeat cannot consume a kit or reopen the wheel.
     g.MouseMotion(780, 470);
     GameLevels::Mine().Combat().Attack();
-    g.MouseButton(GLUT_LEFT_BUTTON, GLUT_DOWN, 780, 470);
+    g.MouseButton(GLFW_MOUSE_BUTTON_LEFT, GLFW_PRESS, 780, 470);
     assert(!w.mouseFiring && mineState.pistol.GetRounds() == rounds - 1);
     press(27); // Cancel preserves the prior weapon; Q auto-repeat cannot reopen it.
     g.KeyDown('q', 0, 0);
@@ -2643,7 +2643,7 @@ void TestStageSelectionAndLoadout()
     g.MouseMotion(640, 400);
     g.KeyDown('q', 0, 0);
     g.MouseMotion(500, 470);
-    g.MouseEntry(GLUT_LEFT);
+    g.MouseEntry(GLFW_FALSE);
     g.KeyUp('q', 0, 0);
     assert(mineState.loadout.IsPistolEquipped());
     Hud::OpenMenu(UiScreen::Pause);
@@ -2696,8 +2696,8 @@ void TestUiMenusAndTransactions()
     auto click = [&](Vector2 p) {
         float scale = 1.35f;
         int x = int(96 + p.x * scale), y = int(p.y * scale);
-        g.MouseButton(GLUT_LEFT_BUTTON, GLUT_DOWN, x, y);
-        g.MouseButton(GLUT_LEFT_BUTTON, GLUT_UP, x, y);
+        g.MouseButton(GLFW_MOUSE_BUTTON_LEFT, GLFW_PRESS, x, y);
+        g.MouseButton(GLFW_MOUSE_BUTTON_LEFT, GLFW_RELEASE, x, y);
     };
     click({slider.position.x + 16, slider.position.y + 60});
     assert(std::fabs(w.uiPreferences.background - .8f) < .001f && !w.mouseFiring);
@@ -4011,7 +4011,7 @@ void TestForwardFlashlight()
     assert(std::fabs(std::remainder(w.facingYaw - .4f, 2 * kPi)) > .1f);
     checkForward();
     mineState.loadout.Select(combat::WeaponSlot::Secondary);
-    g.MouseButton(GLUT_RIGHT_BUTTON, GLUT_DOWN, 640, 300);
+    g.MouseButton(GLFW_MOUSE_BUTTON_RIGHT, GLFW_PRESS, 640, 300);
     for (int i = 0; i < 16; ++i)
     {
         float angle = i * 2 * kPi / 16;
@@ -4025,7 +4025,7 @@ void TestForwardFlashlight()
         assert(g.IsAiming() && std::cos(w.facingYaw - angle) > .999f);
         checkForward();
     }
-    g.MouseButton(GLUT_RIGHT_BUTTON, GLUT_UP, 640, 300);
+    g.MouseButton(GLFW_MOUSE_BUTTON_RIGHT, GLFW_RELEASE, 640, 300);
     float facing = w.facingYaw;
     g.MouseMotion(100, 100);
     g.Update(1.f / 60);
@@ -4491,10 +4491,10 @@ void TestAimMovementAndLayers()
         assert(w.facingYaw == yaw && !g.IsAiming());
     }
     mineState.loadout.Select(combat::WeaponSlot::Unarmed);
-    g.MouseButton(GLUT_RIGHT_BUTTON, GLUT_DOWN, 100, 300);
+    g.MouseButton(GLFW_MOUSE_BUTTON_RIGHT, GLFW_PRESS, 100, 300);
     assert(!g.IsAiming());
     mineState.loadout.Select(combat::WeaponSlot::Secondary);
-    g.MouseButton(GLUT_RIGHT_BUTTON, GLUT_DOWN, 100, 300);
+    g.MouseButton(GLFW_MOUSE_BUTTON_RIGHT, GLFW_PRESS, 100, 300);
     assert(g.IsAiming());
     g.KeyDown('d', 0, 0);
     auto before = w.playerPosition;
@@ -4507,7 +4507,7 @@ void TestAimMovementAndLayers()
     assert(std::cos(w.facingYaw) * aim.x + std::sin(w.facingYaw) * aim.y > .995f);
     auto pose = g.PlayerPose();
     assert(pose.blended && pose.moveForward < 0 && pose.aimWeight > .99f);
-    g.MouseButton(GLUT_RIGHT_BUTTON, GLUT_UP, 100, 300);
+    g.MouseButton(GLFW_MOUSE_BUTTON_RIGHT, GLFW_RELEASE, 100, 300);
     float beforeTurn = w.facingYaw;
     g.Update(1.f / 60);
     assert(!g.IsAiming() && std::fabs(std::remainder(w.facingYaw - beforeTurn, 2 * kPi)) <=
@@ -4518,17 +4518,17 @@ void TestAimMovementAndLayers()
     }
     assert(std::fabs(w.facingYaw + kPi / 4) < .001f);
     g.KeyUp('d', 0, 0);
-    g.MouseButton(GLUT_RIGHT_BUTTON, GLUT_DOWN, 100, 300);
+    g.MouseButton(GLFW_MOUSE_BUTTON_RIGHT, GLFW_PRESS, 100, 300);
     Hud::OpenMenu(UiScreen::Pause);
     assert(!w.mouseAiming && !g.IsAiming());
     Hud::CloseMenu();
     assert(!g.IsAiming());
-    g.MouseButton(GLUT_RIGHT_BUTTON, GLUT_DOWN, 100, 300);
+    g.MouseButton(GLFW_MOUSE_BUTTON_RIGHT, GLFW_PRESS, 100, 300);
     g.KeyDown('q', 0, 0);
     assert(w.weaponWheel.visible && !w.mouseAiming);
     g.KeyUp('q', 0, 0);
-    g.MouseButton(GLUT_RIGHT_BUTTON, GLUT_DOWN, 100, 300);
-    g.MouseEntry(GLUT_LEFT);
+    g.MouseButton(GLFW_MOUSE_BUTTON_RIGHT, GLFW_PRESS, 100, 300);
+    g.MouseEntry(GLFW_FALSE);
     assert(!w.mouseAiming);
     w.cursorInsideViewport = true;
     // Hip fire follows the moving actor; aiming fire follows the cursor. Both use the same pose.
@@ -4555,7 +4555,7 @@ void TestAimMovementAndLayers()
     mineState.loadout.Select(combat::WeaponSlot::Secondary);
     mineState.pistol.Update(1.f);
     assert(!mineState.pistol.IsReloading() && g.PlayerPose().reloadProgress < 0);
-    g.MouseButton(GLUT_RIGHT_BUTTON, GLUT_DOWN, 100, 300);
+    g.MouseButton(GLFW_MOUSE_BUTTON_RIGHT, GLFW_PRESS, 100, 300);
     GameLevels::Mine().Leave();
     assert(!w.mouseAiming);
     w.mouseFiring = w.mouseAiming = true;

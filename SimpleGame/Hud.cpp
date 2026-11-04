@@ -1,4 +1,4 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
 #include "Hud.h"
 #include "Profiler.h"
 #include "Save.h"
@@ -2284,7 +2284,7 @@ void Hud::Activate(const UiControl &control, int direction)
         {
             if (control.action == UiAction::Quit)
             {
-                glutLeaveMainLoop();
+                platform::RequestClose();
                 break;
             }
             CloseMenu();
@@ -2445,23 +2445,23 @@ bool Hud::HandleSpecialKey(int key)
     {
         return false;
     }
-    if (key == GLUT_KEY_UP)
+    if (key == GLFW_KEY_UP)
     {
         return HandleKey('w');
     }
-    if (key == GLUT_KEY_DOWN)
+    if (key == GLFW_KEY_DOWN)
     {
         return HandleKey('s');
     }
-    if (key == GLUT_KEY_LEFT)
+    if (key == GLFW_KEY_LEFT)
     {
         return HandleKey('a');
     }
-    if (key == GLUT_KEY_RIGHT)
+    if (key == GLFW_KEY_RIGHT)
     {
         return HandleKey('d');
     }
-    return key != GLUT_KEY_F7 && key != GLUT_KEY_F8;
+    return key != GLFW_KEY_F7 && key != GLFW_KEY_F8;
 }
 void Hud::HandleMotion()
 {
@@ -2519,7 +2519,7 @@ bool Hud::HandlePointer(int button, bool down)
             }
         }
     }
-    if (button != GLUT_LEFT_BUTTON)
+    if (button != GLFW_MOUSE_BUTTON_LEFT)
     {
         return modal;
     }

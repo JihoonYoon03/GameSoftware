@@ -1,4 +1,8 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
 #include "Game.h"
 #include "Story.h"
 #include "Civic.h"
@@ -13,12 +17,8 @@
 #include "Renderer.h"
 #include "Profiler.h"
 #include "Monitoring/Monitor.h"
-#include "Dependencies/glew.h"
-#include "Dependencies/freeglut.h"
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
+#include "Dependencies/glew/include/GL/glew.h"
+#include "Window.h"
 #include <algorithm>
 #include <cmath>
 #include <chrono>
@@ -1056,7 +1056,7 @@ void Game::Reset()
     state.uiPreferences = preferences;
     state.viewportWidth = viewportWidth;
     state.viewportHeight = viewportHeight;
-    state.lastUpdateMilliseconds = glutGet(GLUT_ELAPSED_TIME);
+    state.lastUpdateMilliseconds = platform::ElapsedMilliseconds();
     // Only narrative landmarks precede the road plan; ordinary lots are generated from its frontages.
     Building home{kHomeBuildingPosition.x, kHomeBuildingPosition.y, 1, 1,
                   7.2f * models::WorldScale::pixelsPerMeter};
@@ -1570,12 +1570,12 @@ void Game::SpecialKeyDown(int key, int, int)
     {
         return;
     }
-    if (key == GLUT_KEY_F5)
+    if (key == GLFW_KEY_F5)
     {
         SaveSystem::Save();
         return;
     }
-    if (key == GLUT_KEY_F9)
+    if (key == GLFW_KEY_F9)
     {
         if (state.relayPreparing)
         {
@@ -1596,13 +1596,13 @@ void Game::SpecialKeyDown(int key, int, int)
     }
     if (state.mapVisible && !state.isPaused && state.ui.screen == UiScreen::None)
     {
-        if (key == GLUT_KEY_LEFT || key == GLUT_KEY_RIGHT || key == GLUT_KEY_UP || key == GLUT_KEY_DOWN)
+        if (key == GLFW_KEY_LEFT || key == GLFW_KEY_RIGHT || key == GLFW_KEY_UP || key == GLFW_KEY_DOWN)
         {
-            MapHud::Pan({key == GLUT_KEY_LEFT    ? -56.f
-                         : key == GLUT_KEY_RIGHT ? 56.f
+            MapHud::Pan({key == GLFW_KEY_LEFT    ? -56.f
+                         : key == GLFW_KEY_RIGHT ? 56.f
                                                  : 0,
-                         key == GLUT_KEY_UP     ? -56.f
-                         : key == GLUT_KEY_DOWN ? 56.f
+                         key == GLFW_KEY_UP     ? -56.f
+                         : key == GLFW_KEY_DOWN ? 56.f
                                                 : 0});
         }
         return;
@@ -1610,23 +1610,23 @@ void Game::SpecialKeyDown(int key, int, int)
     if (state.journalVisible || state.dialogueHistoryVisible)
     {
         auto &offset = state.dialogue.historyOffset;
-        if (key == GLUT_KEY_PAGE_DOWN)
+        if (key == GLFW_KEY_PAGE_DOWN)
         {
             ++offset;
         }
-        if (key == GLUT_KEY_PAGE_UP && offset > 0)
+        if (key == GLFW_KEY_PAGE_UP && offset > 0)
         {
             --offset;
         }
         return;
     }
-    if (key != GLUT_KEY_F7 && key != GLUT_KEY_F8)
+    if (key != GLFW_KEY_F7 && key != GLFW_KEY_F8)
     {
         return;
     }
     auto &renderer = GameRenderer::Get().Backend();
     auto style = renderer.GetStyle();
-    if (key == GLUT_KEY_F7)
+    if (key == GLFW_KEY_F7)
     {
         style.cartoon = !style.cartoon;
         renderer.SetStyle(style);
@@ -1686,7 +1686,7 @@ void Game::MouseMotion(int x, int y)
 void Game::MouseButton(int button, int buttonState, int x, int y)
 {
     MouseMotion(x, y);
-    if (button == GLUT_RIGHT_BUTTON && buttonState == GLUT_UP)
+    if (button == GLFW_MOUSE_BUTTON_RIGHT && buttonState == GLFW_RELEASE)
     {
         state.mouseAiming = false;
     }
@@ -1700,7 +1700,7 @@ void Game::MouseButton(int button, int buttonState, int x, int y)
         state.mouseFiring = state.mouseAiming = false;
         return;
     }
-    if (Hud::HandlePointer(button, buttonState == GLUT_DOWN))
+    if (Hud::HandlePointer(button, buttonState == GLFW_PRESS))
     {
         state.mouseFiring = state.mouseAiming = false;
         return;
@@ -1708,29 +1708,25 @@ void Game::MouseButton(int button, int buttonState, int x, int y)
     if (state.mapVisible)
     {
         state.mouseFiring = state.mouseAiming = false;
-        if (buttonState == GLUT_DOWN && state.cursorInsideViewport && !state.isPaused)
+        if (buttonState == GLFW_PRESS && state.cursorInsideViewport && !state.isPaused)
         {
-            if (button == GLUT_LEFT_BUTTON || button == GLUT_RIGHT_BUTTON)
+            if (button == GLFW_MOUSE_BUTTON_LEFT || button == GLFW_MOUSE_BUTTON_RIGHT)
             {
-                MapHud::HandleClick(state.cursorPosition, button == GLUT_RIGHT_BUTTON);
-            }
-            else if (button == 3 || button == 4)
-            {
-                MapHud::Zoom(button == 3 ? 1 : -1, state.cursorPosition);
+                MapHud::HandleClick(state.cursorPosition, button == GLFW_MOUSE_BUTTON_RIGHT);
             }
         }
         return;
     }
-    if (button == GLUT_LEFT_BUTTON)
+    if (button == GLFW_MOUSE_BUTTON_LEFT)
     {
-        state.mouseFiring = buttonState == GLUT_DOWN &&
+        state.mouseFiring = buttonState == GLFW_PRESS &&
                             (game::GameLevels::IsCombatActive() || CivicCombat::Available()) &&
                             !state.isPaused && state.cursorInsideViewport && !Dialogue::LocksWorld() &&
                             !state.journalVisible && !state.dialogueHistoryVisible;
     }
-    if (button == GLUT_RIGHT_BUTTON)
+    if (button == GLFW_MOUSE_BUTTON_RIGHT)
     {
-        state.mouseAiming = buttonState == GLUT_DOWN && state.cursorInsideViewport && !state.isPaused &&
+        state.mouseAiming = buttonState == GLFW_PRESS && state.cursorInsideViewport && !state.isPaused &&
                             !state.journalVisible && !state.dialogueHistoryVisible &&
                             !Dialogue::LocksWorld() && !state.isBikeMounted &&
                             game::GameLevels::Mine().GetState().loadout.IsPistolEquipped() &&
@@ -1817,9 +1813,17 @@ models::CharacterPose Game::PlayerPose(float recoil) const
     }
     return pose;
 }
+void Game::MouseWheel(int steps, int x, int y)
+{
+    MouseMotion(x, y);
+    if (!SaveSystem::Loading() && !HospitalRecovery::Active() && state.cursorInsideViewport)
+    {
+        MapHud::Zoom(steps, state.cursorPosition);
+    }
+}
 void Game::MouseEntry(int pointerState)
 {
-    if (pointerState == GLUT_LEFT)
+    if (pointerState == GLFW_FALSE)
     {
         if (state.weaponWheel.visible)
         {
@@ -2523,14 +2527,13 @@ unsigned int FrameSchedule::NextDelay(double startedMilliseconds, double finishe
     return static_cast<unsigned int>((std::max)(1.0, std::ceil(nextMilliseconds - finishedMilliseconds)));
 }
 
+unsigned int Game::NextFrameDelay(double startedMilliseconds, double finishedMilliseconds)
+{
+    return frameSchedule.NextDelay(startedMilliseconds, finishedMilliseconds);
+}
 void Game::Tick(int)
 {
     profiling::Scope profileTimer(profiling::Timer::Update);
-    const auto milliseconds = []() {
-        return std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now().time_since_epoch())
-            .count();
-    };
-    const double startedMilliseconds = milliseconds();
     WeaponWheel::RefreshCursorCapture();
     HWND activeWindow = GetActiveWindow();
     if (activeWindow && IsWindowVisible(activeWindow) && GetForegroundWindow() != activeWindow)
@@ -2538,20 +2541,16 @@ void Game::Tick(int)
         state.mouseFiring = state.mouseAiming = false;
         std::fill(std::begin(state.pressedKeys), std::end(state.pressedKeys), false);
     }
-    const int nowMilliseconds = glutGet(GLUT_ELAPSED_TIME);
+    const int nowMilliseconds = platform::ElapsedMilliseconds();
     float deltaSeconds =
         Clamp((nowMilliseconds - state.lastUpdateMilliseconds) / 1000.f, 0, kMaximumDeltaSeconds);
     state.lastUpdateMilliseconds = nowMilliseconds;
     Update(deltaSeconds);
     monitoring::GameMonitor::Get().Update();
-    glutSetCursor(
+    platform::SetCursorHidden(
         (state.weaponWheel.visible || game::GameLevels::IsCombatActive() || CivicCombat::Available()) &&
                 !state.mapVisible && !state.isPaused && state.ui.screen == UiScreen::None &&
-                !Dialogue::LocksWorld() && !state.journalVisible && !state.dialogueHistoryVisible
-            ? GLUT_CURSOR_NONE
-            : GLUT_CURSOR_INHERIT);
-    glutPostRedisplay();
-    glutTimerFunc(frameSchedule.NextDelay(startedMilliseconds, milliseconds()), GameCallbacks::Tick, 0);
+            !Dialogue::LocksWorld() && !state.journalVisible && !state.dialogueHistoryVisible);
 }
 float Game::Clamp(float value, float minimum, float maximum)
 {
@@ -4145,7 +4144,7 @@ void RelayTravel::Update(float dt)
     g.ShowNotice("중계 이동 / " + name + " 도착. 바이크와 현장 인원·조사·보상 상태는 유지됩니다.");
 }
 // ============================================================================
-// GameCallbacks — GLUT entry points
+// GameCallbacks — window entry points
 // ============================================================================
 void GameCallbacks::Draw()
 {

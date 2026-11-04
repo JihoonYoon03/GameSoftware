@@ -1,4 +1,5 @@
-﻿#include "stdafx.h"
+#include "stdafx.h"
+#include <windows.h>
 #include "Drawing.h"
 #include "Game.h"
 #include "Level.h"
@@ -6,7 +7,7 @@
 #include "ResourceAssets.h"
 #include "Scene.h"
 
-#include "Dependencies/glew.h"
+#include "Dependencies/glew/include/GL/glew.h"
 #include "Profiler.h"
 #include "RenderAssets.h"
 #include "RenderCache.h"
@@ -1590,7 +1591,7 @@ void GameRenderer::Draw()
     profiling::EndGpuFrame();
     {
         profiling::Scope timer(profiling::Timer::Present);
-        glutSwapBuffers();
+        platform::SwapBuffers();
     }
     profiling::EndFrame();
 }

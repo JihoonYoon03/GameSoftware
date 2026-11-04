@@ -1,0 +1,17 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": { "major": 3, "minor": 21, "patch": 0 },
+  "configurePresets": [
+    { "name": "windows-x64", "displayName": "Windows x64 (installed Visual Studio)", "binaryDir": "${sourceDir}/build/cmake-x64", "architecture": "x64" },
+    { "name": "windows-x86", "displayName": "Windows x86 (installed Visual Studio)", "binaryDir": "${sourceDir}/build/cmake-x86", "architecture": "Win32" }
+  ],
+  "buildPresets": [
+    { "name": "release-x64", "configurePreset": "windows-x64", "configuration": "Release" },
+    { "name": "debug-x64", "configurePreset": "windows-x64", "configuration": "Debug" },
+    { "name": "release-x86", "configurePreset": "windows-x86", "configuration": "Release" },
+    { "name": "debug-x86", "configurePreset": "windows-x86", "configuration": "Debug" }
+  ],
+  "testPresets": [
+    { "name": "release-x64", "configurePreset": "windows-x64", "configuration": "Release", "output": { "outputOnFailure": true } }
+  ]
+}

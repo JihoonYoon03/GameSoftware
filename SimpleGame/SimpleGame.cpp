@@ -14,9 +14,8 @@ but WITHOUT ANY WARRANTY.
 #include "Renderer.h"
 #include "Profiler.h"
 #include "Monitoring/Monitor.h"
-#include "Dependencies/glew.h"
-#include "Dependencies/freeglut.h"
-#include <windows.h>
+#include "Dependencies/glew/include/GL/glew.h"
+#include "Window.h"
 #include <cstdio>
 #include <exception>
 #include <chrono>
@@ -29,12 +28,10 @@ int main(int argc, char **argv)
     const auto milliseconds = [](auto from, auto to) {
         return std::chrono::duration<double, std::milli>(to - from).count();
     };
-    glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-    glutInitWindowSize(1280, 800);
-    glutCreateWindow("헤일로 / 관문 인접 주거 구역 07");
-    SetWindowTextW(GetActiveWindow(), L"헤일로 / 관문 인접 주거 구역 07");
-    glewInit();
+    if (!platform::Initialize("헤일로 / 관문 인접 주거 구역 07"))
+    {
+        return 1;
+    }
     const auto contextReady = Clock::now();
     double renderResourcesMs = 0, worldMs = 0;
     try
@@ -53,12 +50,9 @@ int main(int argc, char **argv)
                      "확인하세요.\n",
                      error.what());
         tutorial::GameRenderer::Get().Shutdown();
-        glutDestroyWindow(glutGetWindow());
+        platform::Shutdown();
         return 1;
     }
-    glutCloseFunc(tutorial::GameCallbacks::Shutdown);
-    glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_GLUTMAINLOOP_RETURNS);
-    glutIgnoreKeyRepeat(1);
     const auto monitorStarted = Clock::now();
     monitoring::GameMonitor::Get().Initialize();
     const auto ready = Clock::now();
@@ -66,17 +60,9 @@ int main(int argc, char **argv)
                 "\"world_ms\":%.3f,\"monitor_ms\":%.3f,\"total_ms\":%.3f}\n",
                 milliseconds(started, contextReady), renderResourcesMs, worldMs,
                 milliseconds(monitorStarted, ready), milliseconds(started, ready));
-    glutDisplayFunc(tutorial::GameCallbacks::Draw);
-    glutReshapeFunc(tutorial::GameCallbacks::Resize);
-    glutKeyboardFunc(tutorial::GameCallbacks::KeyDown);
-    glutKeyboardUpFunc(tutorial::GameCallbacks::KeyUp);
-    glutSpecialFunc(tutorial::GameCallbacks::SpecialKeyDown);
-    glutPassiveMotionFunc(tutorial::GameCallbacks::MouseMotion);
-    glutMotionFunc(tutorial::GameCallbacks::MouseMotion);
-    glutMouseFunc(tutorial::GameCallbacks::MouseButton);
-    glutEntryFunc(tutorial::GameCallbacks::MouseEntry);
-    glutTimerFunc(16, tutorial::GameCallbacks::Tick, 0);
-    glutMainLoop();
+    platform::Run();
+    tutorial::GameCallbacks::Shutdown();
+    platform::Shutdown();
     monitoring::GameMonitor::Get().Shutdown();
     return 0;
 }
