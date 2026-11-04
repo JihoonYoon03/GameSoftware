@@ -641,7 +641,7 @@ class Game
     bool CompleteMission(MissionId id);
     MissionId FocusedMission() const;
     const char *MissionObjective() const;
-    void OfferMission(MissionId id);
+    void OfferMission(MissionId id, const char *channel = "제안 기록");
     void ManageMission(MissionId id);
     void SyncMissionProgress();
     bool EnterTestStage(TestStage stage);

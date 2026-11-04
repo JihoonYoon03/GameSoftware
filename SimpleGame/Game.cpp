@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "Game.h"
+#include "Story.h"
 #include "Civic.h"
 #include "Hud.h"
 #include "Save.h"
@@ -719,10 +720,10 @@ ActivityObjective ActivityJournal::Current()
     }
     return goal;
 }
-void Game::OfferMission(MissionId id)
+void Game::OfferMission(MissionId id, const char *channel)
 {
-    if (!state.surfaceExploration || !IsStoryWorld() || Dialogue::Active() || state.dialogue.suspended ||
-        HospitalRecovery::Active())
+    if (unsigned(id) >= unsigned(MissionId::Count) || !state.surfaceExploration || !IsStoryWorld() ||
+        Dialogue::Active() || state.dialogue.suspended || HospitalRecovery::Active())
     {
         return;
     }
@@ -736,20 +737,10 @@ void Game::OfferMission(MissionId id)
         return;
     }
     state.journalVisible = state.dialogueHistoryVisible = false;
-    static const std::array<const char *, size_t(MissionId::Count)> offers = {
-        "전망대에서 이상한 응답이 잡혔어. 같이 조사해 줄래? 지금은 자유롭게 둘러보고 나중에 시작해도 돼.",
-        "이 기록의 수신 경로를 광산 통신선과 대조해 보자. 조사는 네가 원할 때 시작하면 돼. 현장 출입과 "
-        "구조는 따로 할 수 있어.",
-        "광산 좌표와 연결된 발전기·운송대·폐설비를 조사해 줘. 세 현장은 원하는 순서로 살펴볼 수 있어. 이동은 "
-        "지상 지도에 표시할게.",
-        "딸아이 방에 불이 안 들어와요. 동쪽 전력 장치를 살펴봐 주시겠어요? 준비가 되면 시작해도 괜찮아요."};
     Dialogue::Start(
         std::string("mission/proposal/") + QuestParticipation::Key(id),
-        {{"offer",
-          id == MissionId::Mara ? "마라" : "리아",
-          "임무 제안",
-          offers.at(size_t(id)),
-          {{"accept", "수락 / 재개한다"}, {"later", "지금은 하지 않는다"}}}},
+        StoryDialogue::Proposal(id, state, game::GameLevels::Mine().GetState(),
+                                game::GameLevels::Chapter().GetState(), channel),
         [this, id](const std::string &choice) {
             if (choice != "accept")
             {
@@ -3804,7 +3795,7 @@ void Game::InteractSurfaceStory(InteractionTarget target)
         if (state.missions.Status(MissionId::Signal) != MissionStatus::Completed &&
             !state.missions.Active(MissionId::Signal))
         {
-            OfferMission(MissionId::Signal);
+            OfferMission(MissionId::Signal, "단말 기록");
         }
         else
         {
@@ -3850,7 +3841,7 @@ void Game::InteractSurfaceStory(InteractionTarget target)
         if (!state.missions.Active(MissionId::Mara) &&
             state.missions.Status(MissionId::Mara) != MissionStatus::Completed)
         {
-            OfferMission(MissionId::Mara);
+            OfferMission(MissionId::Mara, "현장");
         }
         else if (CompleteMission(MissionId::Mara))
         {
@@ -3878,7 +3869,7 @@ void Game::InteractSurfaceStory(InteractionTarget target)
         {
             if (!state.missions.Active(MissionId::Mine))
             {
-                OfferMission(MissionId::Mine);
+                OfferMission(MissionId::Mine, "현장");
                 return;
             }
             if (mine.quest.GetStage() == game::MineQuestStage::TravelToMine && !mine.quest.IsRiaJoined())
@@ -3905,7 +3896,7 @@ void Game::InteractSurfaceStory(InteractionTarget target)
         if (MissionEligible(MissionId::Frontier) && !state.missions.Active(MissionId::Frontier) &&
             state.missions.Status(MissionId::Frontier) != MissionStatus::Completed)
         {
-            OfferMission(MissionId::Frontier);
+            OfferMission(MissionId::Frontier, "현장");
             return;
         }
         if (state.missions.Active(MissionId::Signal))
@@ -3915,7 +3906,7 @@ void Game::InteractSurfaceStory(InteractionTarget target)
         }
         if (state.missions.Status(MissionId::Signal) != MissionStatus::Completed)
         {
-            OfferMission(MissionId::Signal);
+            OfferMission(MissionId::Signal, "현장");
             return;
         }
         say("lia/free",
@@ -3958,13 +3949,13 @@ void Game::InteractSurfaceStory(InteractionTarget target)
             }
             else
             {
-                OfferMission(MissionId::Frontier);
+                OfferMission(MissionId::Frontier, "수신망 기록");
             }
             return;
         }
         if (MissionEligible(MissionId::Mine))
         {
-            OfferMission(MissionId::Mine);
+            OfferMission(MissionId::Mine, "수신망 기록");
             return;
         }
         say("receiver/free", "수신망 / 지역 정보는 열려 있습니다. 전망대에서 확보한 음성 기록이 있으면 "

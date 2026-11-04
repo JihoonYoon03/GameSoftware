@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "Level.h"
+#include "Story.h"
 #include "Hud.h"
 #include "Civic.h"
 #include "Drawing.h"
@@ -746,6 +747,111 @@ void TestPlanetCityMigration()
     g.Reset();
     assert(!g.SurfaceCities() && !g.Surface());
 }
+void TestStoryDialogueContext()
+{
+    using namespace tutorial;
+    GameState state;
+    game::MineState mine;
+    game::ChapterOneState chapter;
+    auto proposal = [&](MissionId id, const char *channel = "제안 기록") {
+        auto lines = StoryDialogue::Proposal(id, state, mine, chapter, channel);
+        assert(!lines.empty() && lines.back().id == "offer");
+        assert(lines.back().choices.size() == 2 && lines.back().choices[0].id == "accept" &&
+               lines.back().choices[1].id == "later");
+        for (const auto &line : lines)
+        {
+            assert((line.channel == channel || (line.speaker == "나" && line.channel == "조사 기록")) &&
+                   !line.text.empty());
+        }
+        assert(lines.back().channel == channel);
+        return lines;
+    };
+    auto signal = proposal(MissionId::Signal, "단말 기록");
+    state.gateSignalHeard = true;
+    assert(proposal(MissionId::Signal).front().id != signal.front().id);
+    assert(state.missions.Status(MissionId::Signal) == MissionStatus::NotAccepted);
+    state.hasDescendedObservatory = true;
+    auto excavation = proposal(MissionId::Mine);
+    mine.powerBypassed = true;
+    auto visited = proposal(MissionId::Mine);
+    assert(visited.front().id != excavation.front().id);
+    mine.signalRecorded = mine.glyphRecorded = mine.coordinatesRecorded = true;
+    assert(proposal(MissionId::Mine).front().id != visited.front().id);
+    assert(mine.quest.GetStage() == game::MineQuestStage::ShowRecord && !mine.quest.IsRiaJoined());
+    assert(!mine.loadout.HasPistol() && !state.isComplete);
+    assert(state.missions.Accept(MissionId::Mine, true) && state.missions.Pause(MissionId::Mine));
+    const auto resumed = proposal(MissionId::Mine);
+    assert(resumed.front().id == "resume" && resumed[1].id == "mine/coordinates");
+    assert(state.missions.Status(MissionId::Mine) == MissionStatus::Paused);
+    assert(state.missions.Accept(MissionId::Mine, true));
+    assert(StoryDialogue::Proposal(MissionId::Mine, state, mine, chapter).empty());
+    assert(state.missions.Complete(MissionId::Mine));
+    assert(StoryDialogue::Proposal(MissionId::Mine, state, mine, chapter).empty());
+    assert(StoryDialogue::Proposal(MissionId::Count, state, mine, chapter).empty());
+    assert(StoryDialogue::Proposal(MissionId(-1), state, mine, chapter).empty());
+
+    auto frontier = proposal(MissionId::Frontier);
+    chapter.observedRecords = 1;
+    assert(proposal(MissionId::Frontier).front().id != frontier.front().id);
+    chapter.generatorRestored = chapter.convoyRescued = chapter.ledgerFound = true;
+    assert(proposal(MissionId::Frontier).front().id == "frontier/report");
+    assert(!chapter.recordsCompared && !chapter.waterwayUnlocked && !chapter.convoyRewardClaimed);
+    auto mara = proposal(MissionId::Mara, "현장");
+    state.isPowerRestored = true;
+    assert(proposal(MissionId::Mara, "현장").front().id != mara.front().id);
+    assert(!state.isSideQuestAccepted && !state.isSideQuestComplete);
+
+    // First reads, companion reactions and archive reads use separate history entries without new flags.
+    for (auto discovery :
+         {MineDiscovery::Power, MineDiscovery::Signal, MineDiscovery::Glyph, MineDiscovery::Coordinates})
+    {
+        game::MineState facts;
+        if (discovery == MineDiscovery::Coordinates)
+        {
+            auto missing = StoryDialogue::ObserveMine(discovery, facts, true);
+            assert(missing.front().id == "requires-records" && missing.front().speaker != "리아");
+            assert(!facts.coordinatesRecorded);
+            facts.signalRecorded = true;
+            assert(StoryDialogue::ObserveMine(discovery, facts, false).front().id == "requires-records");
+            facts.glyphRecorded = true;
+        }
+        const auto solo = StoryDialogue::ObserveMine(discovery, facts, false);
+        const auto accompanied = StoryDialogue::ObserveMine(discovery, facts, true);
+        assert(solo.size() == 1 && accompanied.size() == 1);
+        assert(solo.front().id == "discovery/solo" && solo.front().speaker != "리아");
+        assert(accompanied.front().id == "discovery/ria" && accompanied.front().speaker == "리아" &&
+               accompanied.front().channel == "무전");
+        assert(!facts.coordinatesRecorded && !facts.powerBypassed);
+        assert(facts.quest.GetStage() == game::MineQuestStage::ShowRecord && !facts.quest.IsRiaJoined());
+        switch (discovery)
+        {
+        case MineDiscovery::Power:
+            facts.powerBypassed = true;
+            break;
+        case MineDiscovery::Signal:
+            facts.signalRecorded = true;
+            break;
+        case MineDiscovery::Glyph:
+            facts.glyphRecorded = true;
+            break;
+        case MineDiscovery::Coordinates:
+            facts.coordinatesRecorded = true;
+            break;
+        default:
+            assert(false);
+        }
+        for (bool riaPresent : {false, true})
+        {
+            const auto archive = StoryDialogue::ObserveMine(discovery, facts, riaPresent);
+            assert(archive.front().id == "archive" && archive.front().speaker != "리아");
+        }
+        assert(StoryDialogue::DiscoveryKey(discovery));
+    }
+    assert(!StoryDialogue::DiscoveryKey(MineDiscovery::Count));
+    assert(StoryDialogue::ObserveMine(MineDiscovery(-1), mine, true).empty());
+    assert(mine.player.credits == game::PlayerStats{}.credits && mine.player.salvage == 0);
+}
+
 void TestStoryMissionCompletionContracts()
 {
     using namespace tutorial;
@@ -885,6 +991,7 @@ void TestOpenWorldParticipation()
     };
     w.playerPosition = {1, -1.2f};
     g.InteractWithNearbyTarget();
+    assert(Dialogue::Active() && w.dialogue.pages.front().channel == "단말 기록");
     read(1);
     assert(w.homeMessageRead && w.missions.Status(MissionId::Signal) == MissionStatus::NotAccepted);
     assert(g.MissionRestriction(MissionId::Mine) && !g.MissionEligible(MissionId::Mine));
@@ -918,14 +1025,20 @@ void TestOpenWorldParticipation()
     {
         w.playerPosition = point;
         GameLevels::Mine().Interact();
+        assert(Dialogue::Active() && w.dialogue.pages.front().speaker != "리아");
         read();
     }
+    w.playerPosition = kRuinSignal;
+    GameLevels::Mine().Interact();
+    assert(Dialogue::Active() && w.dialogue.pages.front().id.find("/archive/") != std::string::npos);
+    read();
     assert(mineState.powerBypassed && mineState.coordinatesRecorded &&
            mineState.quest.GetStage() == MineQuestStage::ShowRecord);
     w.playerPosition = mineState.entry;
     GameLevels::Mine().Interact();
     assert(!g.IsSurfaceMine());
     g.OfferMission(MissionId::Mine);
+    assert(Dialogue::Active() && w.dialogue.pages.front().id.find("/mine/coordinates/") != std::string::npos);
     read(1);
     assert(w.missions.Status(MissionId::Mine) == MissionStatus::NotAccepted);
     g.OfferMission(MissionId::Mine);
@@ -4488,6 +4601,7 @@ int main(int argc, char **argv)
     TestCitySimulationPolicy();
     TestPlanetCityMigration();
     TestPlanetCityRuntime();
+    TestStoryDialogueContext();
     TestStoryMissionCompletionContracts();
     TestOpenWorldParticipation();
     TestActivityObjectives();

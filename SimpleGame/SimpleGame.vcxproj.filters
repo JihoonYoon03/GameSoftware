@@ -37,6 +37,9 @@
     <ClInclude Include="Game.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="Story.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
     <ClInclude Include="Save.h"><Filter>헤더 파일</Filter></ClInclude>
     <ClInclude Include="World.h"><Filter>헤더 파일</Filter></ClInclude>
     <ClInclude Include="WorldGeneration.h"><Filter>헤더 파일</Filter></ClInclude>
@@ -114,6 +117,9 @@
     </ClCompile>
     <ClCompile Include="Civic.cpp"><Filter>소스 파일</Filter></ClCompile>
     <ClCompile Include="Game.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="Story.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Save.cpp"><Filter>소스 파일</Filter></ClCompile>

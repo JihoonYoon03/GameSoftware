@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "Level.h"
+#include "Story.h"
 #include "Overworld.h"
 #include "Civic.h"
 #include "Hud.h"
@@ -1583,58 +1584,56 @@ void MineLevel::Interact()
     }
     if (world.surfaceExploration)
     {
-        const bool accompanied = state.quest.IsRiaJoined();
-        const char *record = nullptr;
-        const char *key = nullptr;
+        auto discovery = tutorial::MineDiscovery::Count;
         if (IsNear(kPowerBypass))
         {
-            state.powerBypassed = true;
-            state.navigationCooldown = 0;
-            key = "power";
-            record = accompanied
-                         ? "리아 / 전력이 들어왔어. 동쪽 격벽도 열렸고. 비상등이 켜진 길을 따라가 보자."
-                         : "배전반 / 비상 전력을 우회했습니다. 동쪽 격벽이 열리고 비상등이 켜집니다.";
+            discovery = tutorial::MineDiscovery::Power;
         }
         else if (IsNear(kRuinSignal))
         {
-            state.signalRecorded = true;
-            key = "signal";
-            record = accompanied ? "리아 / 식별자는 오래전에 실종된 탐사선의 것이야. 그런데 통신선은 이 벽 "
-                                   "앞에서 끊겨 있어. 신호는 벽 안쪽에서 오고 있고."
-                                 : "구조 신호 / 실종 탐사선 식별자입니다. 통신선은 벽 앞에서 끊겼는데 신호는 "
-                                   "안쪽에서 나옵니다. 기록을 보관했습니다.";
+            discovery = tutorial::MineDiscovery::Signal;
         }
         else if (IsNear(kObserverGlyph))
         {
-            state.glyphRecorded = true;
-            key = "glyph";
-            record = accompanied ? "리아 / 이 문양, 너랑 닮았네. 그래도 널 새긴 거라고 단정하진 말자. 기록해 "
-                                   "둘게. 안쪽 단말도 확인해 보자."
-                                 : "문양 조사 기록 / 당신을 닮은 형상입니다. 제작 시기와 의미는 알 수 "
-                                   "없습니다. 문양 조사 기록을 보관했습니다.";
+            discovery = tutorial::MineDiscovery::Glyph;
         }
         else if (IsNear(kCoordinateTerminal))
         {
-            key = "coordinates";
-            if (state.signalRecorded && state.glyphRecorded)
-            {
-                state.coordinatesRecorded = true;
-                record = "중계 좌표 저장 / 신호가 거쳐 간 중계 좌표를 보관했습니다. 조사에 참여한 경우 "
-                         "헤일로 수신망에 보고할 수 있습니다.";
-            }
-            else
-            {
-                record = "단말 / 구조 신호와 벽면 문양 기록이 있어야 단말의 중계 좌표를 확인할 수 있습니다.";
-            }
+            discovery = tutorial::MineDiscovery::Coordinates;
         }
-        if (record)
+        if (const auto *key = tutorial::StoryDialogue::DiscoveryKey(discovery))
         {
+            const bool riaPresent = tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Ria,
+                                                                       tutorial::CompanionPlace::Mine) &&
+                                    state.riaCombat.health > 0;
+            auto lines = tutorial::StoryDialogue::ObserveMine(discovery, state, riaPresent);
+            switch (discovery)
+            {
+            case tutorial::MineDiscovery::Power:
+                state.powerBypassed = true;
+                state.navigationCooldown = 0;
+                break;
+            case tutorial::MineDiscovery::Signal:
+                state.signalRecorded = true;
+                break;
+            case tutorial::MineDiscovery::Glyph:
+                state.glyphRecorded = true;
+                break;
+            case tutorial::MineDiscovery::Coordinates:
+                if (state.signalRecorded && state.glyphRecorded)
+                {
+                    state.coordinatesRecorded = true;
+                }
+                break;
+            default:
+                break;
+            }
             SyncInvestigation();
             const auto event =
                 world.missions.Active(tutorial::MissionId::Mine)
                     ? std::string("MQ00/mine/") + key + "/" + std::to_string(int(state.quest.GetStage()))
                     : std::string("surface/mine/record/") + key;
-            tutorial::Dialogue::Say(event, record);
+            tutorial::Dialogue::Start(event, std::move(lines));
             return;
         }
     }
