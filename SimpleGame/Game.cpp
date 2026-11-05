@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -2549,8 +2549,8 @@ void Game::Tick(int)
     monitoring::GameMonitor::Get().Update();
     platform::SetCursorHidden(
         (state.weaponWheel.visible || game::GameLevels::IsCombatActive() || CivicCombat::Available()) &&
-                !state.mapVisible && !state.isPaused && state.ui.screen == UiScreen::None &&
-            !Dialogue::LocksWorld() && !state.journalVisible && !state.dialogueHistoryVisible);
+        !state.mapVisible && !state.isPaused && state.ui.screen == UiScreen::None &&
+        !Dialogue::LocksWorld() && !state.journalVisible && !state.dialogueHistoryVisible);
 }
 float Game::Clamp(float value, float minimum, float maximum)
 {
@@ -3679,11 +3679,22 @@ void Game::InteractWithNearbyTarget()
             tell("마라 / 불이 돌아왔어요. 아이가 어두우면 혼자 있질 못하거든요. 정말 고마워요. [선택 "
                  "의뢰 완료: 남겨 둔 불빛]");
         }
+        else if (state.isSideQuestComplete && state.isPowerRestored)
+        {
+            if (Dialogue::Danger())
+            {
+                ShowNotice("마라와의 대화 / 안전을 확보한 뒤 다시 이야기하세요.");
+            }
+            else
+            {
+                Dialogue::Start("story/mara/followup",
+                                StoryDialogue::MaraFollowUp(state, game::GameLevels::Chapter().GetState()),
+                                {}, true);
+            }
+        }
         else
         {
-            tell(state.isSideQuestComplete
-                     ? "마라 / 언제든 들러요. 따뜻한 차를 준비해 둘게요."
-                     : "마라 / 전력 장치는 광장 동쪽에 있어요. 주황색 표시가 있는 장치예요. 부탁드릴게요.");
+            tell("마라 / 전력 장치는 광장 동쪽에 있어요. 주황색 표시가 있는 장치예요. 부탁드릴게요.");
         }
     }
     if (target == InteractionTarget::PowerRelay)
@@ -3845,6 +3856,18 @@ void Game::InteractSurfaceStory(InteractionTarget target)
         else if (CompleteMission(MissionId::Mara))
         {
             say("mara/report", "마라 / 불이 돌아왔어요. 정말 고마워요. [선택 의뢰 완료: 남겨 둔 불빛]");
+        }
+        else if (state.isSideQuestComplete && state.isPowerRestored)
+        {
+            if (Dialogue::Danger())
+            {
+                ShowNotice("마라와의 대화 / 안전을 확보한 뒤 다시 이야기하세요.");
+            }
+            else
+            {
+                Dialogue::Start("story/mara/followup", StoryDialogue::MaraFollowUp(state, chapter.GetState()),
+                                {}, true);
+            }
         }
         else
         {

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "Hud.h"
 #include "Profiler.h"
 #include "Save.h"
@@ -3205,7 +3205,8 @@ void PlanetHud::DrawMap(bool full)
         for (const auto &point : chapter.Interactions())
         {
             if (point.action != game::ChapterAction::Exit &&
-                point.action != game::ChapterAction::ConvoySupply)
+                point.action != game::ChapterAction::ConvoySupply &&
+                !game::ChapterOneLevel::IsOptionalConversation(point.action))
             {
                 MapPin(view, project(chapter.Surface().Point(point.position)), {1, .79f, .36f}, point.label,
                        full, 4);

@@ -396,7 +396,9 @@ enum class ChapterAction
     Ledger,
     DetailLedger,
     ConvoySupply,
-    Mission
+    Mission,
+    RiaTalk,
+    KainTalk
 };
 struct ChapterInteraction
 {
@@ -555,6 +557,8 @@ class ChapterOneLevel final : public Level
     bool HasLineOfSight(tutorial::Vector2 from, tutorial::Vector2 to) const;
     std::vector<tutorial::Vector2> FindRoute(tutorial::Vector2 from, tutorial::Vector2 to) const;
     std::vector<ChapterInteraction> Interactions() const;
+    static bool IsOptionalConversation(ChapterAction action);
+    bool CompanionAvailable(tutorial::CompanionId companion) const;
     bool NearestInteraction(ChapterInteraction &result) const;
     int CompletedSites() const;
     const char *Objective() const;

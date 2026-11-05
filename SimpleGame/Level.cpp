@@ -2540,8 +2540,31 @@ bool ChapterOneLevel::RelayClear() const
     return state.negotiated || std::all_of(state.scrappers.begin(), state.scrappers.end(),
                                            [](const FrontierPerson &p) { return p.combat.health <= 0; });
 }
+bool ChapterOneLevel::IsOptionalConversation(ChapterAction action)
+{
+    return action == ChapterAction::RiaTalk || action == ChapterAction::KainTalk;
+}
+bool ChapterOneLevel::CompanionAvailable(tutorial::CompanionId companion) const
+{
+    const auto &person = companion == tutorial::CompanionId::Ria ? state.ria : state.kain;
+    return person.combat.health > 0 &&
+           tutorial::Game::Get().HasCompanion(companion, tutorial::CompanionPlace::Frontier);
+}
 std::vector<ChapterInteraction> ChapterOneLevel::Interactions() const
 {
+    auto appendConversations = [&](std::vector<ChapterInteraction> &points) {
+        for (auto companion : {tutorial::CompanionId::Ria, tutorial::CompanionId::Kain})
+        {
+            if (tutorial::StoryDialogue::CanFollowUp(companion, state, CompanionAvailable(companion)))
+            {
+                const bool ria = companion == tutorial::CompanionId::Ria;
+                points.push_back(
+                    {ria ? ChapterAction::RiaTalk : ChapterAction::KainTalk,
+                     ria ? state.ria.position : state.kain.position,
+                     ria ? "선택 대화 / 리아 · 잠깐의 휴식 [E]" : "선택 대화 / 카인 · 대피 인원 확인 [E]"});
+            }
+        }
+    };
     const bool planet = tutorial::Game::Get().GetState().surfaceExploration;
     if (planet && !tutorial::Game::Get().GetState().missions.Active(tutorial::MissionId::Frontier) &&
         tutorial::Game::Get().GetState().missions.Status(tutorial::MissionId::Frontier) !=
@@ -2557,6 +2580,7 @@ std::vector<ChapterInteraction> ChapterOneLevel::Interactions() const
             records.push_back({ChapterAction::Ledger, {33.5f, 32.5f}, "장부 / 사전 기록 [E]"});
             records.push_back({ChapterAction::DetailLedger, {35.5f, 33.5f}, "상세 장부 / 사전 기록 [E]"});
         }
+        appendConversations(records);
         return records;
     }
     std::vector<ChapterInteraction> result;
@@ -2574,9 +2598,9 @@ std::vector<ChapterInteraction> ChapterOneLevel::Interactions() const
     }
     if (state.generatorRestored && !state.portableLightRepaired)
     {
-        result.push_back({ChapterAction::PortableLight, {9.5f, 13.5f}, "리아 / 휴대 조명 수리 [E]"});
+        result.push_back({ChapterAction::PortableLight, {9.5f, 13.5f}, "선택 / 휴대 조명 수리 [E]"});
     }
-    if (!state.convoyBriefed)
+    if (!state.convoyBriefed && state.kain.combat.health > 0)
     {
         result.push_back({ChapterAction::Kain, {30.5f, 10.5f}, "카인 / 현장 인원 확인 [E]"});
     }
@@ -2620,6 +2644,7 @@ std::vector<ChapterInteraction> ChapterOneLevel::Interactions() const
     {
         result.push_back({ChapterAction::ConvoySupply, {24.5f, 20.5f}, "운송대 보급 / 회복 키트 교환 [E]"});
     }
+    appendConversations(result);
     return result;
 }
 bool ChapterOneLevel::NearestInteraction(ChapterInteraction &result) const
@@ -2663,6 +2688,21 @@ void ChapterOneLevel::Interact()
     ChapterInteraction point{};
     if (!NearestInteraction(point))
     {
+        return;
+    }
+    if (IsOptionalConversation(point.action))
+    {
+        if (tutorial::Dialogue::Danger())
+        {
+            tutorial::Game::Get().ShowNotice("동료 대화 / 안전을 확보한 뒤 다시 이야기하세요.");
+            return;
+        }
+        const auto companion =
+            point.action == ChapterAction::RiaTalk ? tutorial::CompanionId::Ria : tutorial::CompanionId::Kain;
+        tutorial::Dialogue::Start(
+            point.action == ChapterAction::RiaTalk ? "chapter1/followup/ria" : "chapter1/followup/kain",
+            tutorial::StoryDialogue::FrontierFollowUp(companion, state, CompanionAvailable(companion)), {},
+            true);
         return;
     }
     if (world.surfaceExploration && !world.missions.Active(tutorial::MissionId::Frontier) &&
@@ -2729,18 +2769,26 @@ void ChapterOneLevel::Interact()
         return;
     case ChapterAction::Generator:
         state.generatorInspected = true;
-        tell("리아 / 고장이 아니야. 폐쇄된 N-0 외곽 선로가 일정한 주기로 전력을 가져가고 있어. "
-             "오른쪽 차단기를 분리하자.");
+        tell(CompanionAvailable(tutorial::CompanionId::Ria)
+                 ? "리아 · 무전 / 고장이 아니야. 폐쇄된 N-0 외곽 선로가 일정한 주기로 전력을 가져가고 "
+                   "있어. 오른쪽 차단기를 분리하자."
+                 : "발전기 기록 / 폐쇄된 N-0 외곽 선로로 주기적인 전력 유출이 확인됩니다. 오른쪽 "
+                   "차단기에서 선로를 분리할 수 있습니다.");
         break;
     case ChapterAction::IsolateLine:
         state.generatorRestored = true;
-        tell("리아 / 도시 쪽 전력은 안정됐어. 이상하네… 끊어 놓은 선로의 계기판이 아직 움직여. "
-             "같은 간격이야. 이것도 기록해 두자.");
+        tell(CompanionAvailable(tutorial::CompanionId::Ria)
+                 ? "리아 · 무전 / 도시 쪽 전력은 안정됐어. 이상하네… 끊어 놓은 선로의 계기판이 아직 "
+                   "움직여. 같은 간격이야. 이것도 기록해 두자."
+                 : "선로 분리 기록 / 도시 쪽 전력은 안정됐습니다. 분리된 선로 계기판의 주기적인 "
+                   "움직임은 계속됩니다. 관측 기록을 보관했습니다.");
         break;
     case ChapterAction::PortableLight:
         state.portableLightRepaired = true;
-        tell("리아 / 됐다, 켜지네. 접점만 손보면 되는 걸 버릴 뻔했어. 다음에 야영할 때 가져가자. "
-             "네가 길 좀 밝혀 줘. 잠깐 이 불빛 아래서 쉬었다 가자.");
+        tell(CompanionAvailable(tutorial::CompanionId::Ria)
+                 ? "리아 · 무전 / 됐다, 켜지네. 접점만 손보면 되는 걸 버릴 뻔했어. 다음에 야영할 때 "
+                   "가져가자. [선택 의뢰 완료] 휴대 조명 수리 · 리아에게 다시 말 걸기 [E]"
+                 : "휴대 조명 / 접점을 수리해 불이 들어옵니다. [선택 의뢰 완료] 휴대 조명 수리");
         break;
     case ChapterAction::Kain:
         state.convoyBriefed = true;
@@ -2833,6 +2881,9 @@ void ChapterOneLevel::Interact()
         tell("상세 장부 확보 / 구매자 추적 단서를 보관합니다. 삭제된 발주처의 정체는 아직 "
              "확인되지 않았습니다.");
         break;
+    case ChapterAction::RiaTalk:
+    case ChapterAction::KainTalk:
+        break; // Read-only conversations are handled before the mission participation branch.
     }
 }
 void ChapterOneLevel::InteractHub()
@@ -2852,27 +2903,23 @@ void ChapterOneLevel::InteractHub()
     if (world.surfaceExploration ? tutorial::Game::Get().CanCompleteMission(tutorial::MissionId::Frontier)
                                  : CompletedSites() == 3 && !state.recordsCompared)
     {
+        auto available = [&](tutorial::CompanionId companion) {
+            if (!world.surfaceExploration)
+            {
+                return companion == tutorial::CompanionId::Ria
+                           ? state.ria.combat.health > 0 &&
+                                 !tutorial::CivicCombat::LandmarkDown(tutorial::kLiaPosition)
+                           : state.kainJoined && state.kain.combat.health > 0 &&
+                                 !tutorial::CivicCombat::LandmarkDown(tutorial::kCityKainPosition);
+            }
+            const auto *party = tutorial::Game::Get().SurfaceParty();
+            return party && party->Owns(companion, tutorial::CompanionPlace::Surface) &&
+                   party->State().members.at(size_t(companion)).combat.health > 0;
+        };
         bool started = Dialogue::Start(
             "MQ01D/comparison",
-            {{"match",
-              "수신망",
-              "단말 기록",
-              "광산 좌표·발전기 전력 유출·운송대 교신 시각이 설비 N-0/17의 기록과 일치합니다. 외곽 설비의 "
-              "원격 화면을 연결합니다.",
-              {}},
-             {"observation", "나", "현장", "관문은 멈춰 있는데, 그 주변에는 차례로 불이 들어온다.", {}},
-             {"ria",
-              "리아",
-              "현장",
-              "관문 가동 기록은 없는데 외곽 설비에는 전력이 공급되고 있어. 멈춘 관문 주변에서 무언가 계속 "
-              "움직이고 있었던 거야.",
-              {}},
-             {"route",
-              "카인",
-              "현장",
-              "지도에 있던 다리는 사라졌습니다. 아래 수로의 옛 진입로는 기록해 뒀습니다.",
-              {}},
-             {"next", "카인", "현장", "먼저 그 길이 남아 있는지 확인합시다.", {}}},
+            tutorial::StoryDialogue::FrontierComparison(available(tutorial::CompanionId::Ria),
+                                                        available(tutorial::CompanionId::Kain)),
             [this](const std::string &) {
                 auto &world = tutorial::Game::Get().GetState();
                 if (world.surfaceExploration)

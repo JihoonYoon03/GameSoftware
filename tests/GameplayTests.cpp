@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "Level.h"
 #include "Story.h"
 #include "Hud.h"
@@ -850,6 +850,81 @@ void TestStoryDialogueContext()
     assert(!StoryDialogue::DiscoveryKey(MineDiscovery::Count));
     assert(StoryDialogue::ObserveMine(MineDiscovery(-1), mine, true).empty());
     assert(mine.player.credits == game::PlayerStats{}.credits && mine.player.salvage == 0);
+}
+
+void TestStoryFollowUpContracts()
+{
+    using namespace tutorial;
+    game::ChapterOneState chapter;
+    GameState state;
+    assert(!StoryDialogue::CanFollowUp(CompanionId::Ria, chapter, true));
+    chapter.generatorRestored = chapter.portableLightRepaired = true;
+    assert(StoryDialogue::FrontierFollowUp(CompanionId::Ria, chapter, false).empty());
+    auto rest = StoryDialogue::FrontierFollowUp(CompanionId::Ria, chapter, true);
+    assert(rest.size() == 3 && rest.front().speaker == "리아" && rest[1].speaker == "나");
+    chapter.ria.combat.health = 0;
+    assert(StoryDialogue::FrontierFollowUp(CompanionId::Ria, chapter, true).empty());
+    chapter.ria.combat.health = 100;
+    assert(!chapter.convoyRewardClaimed && !chapter.recordsCompared && !chapter.waterwayUnlocked);
+
+    chapter.convoyEvacuated = true;
+    assert(StoryDialogue::FrontierFollowUp(CompanionId::Kain, chapter, true).empty());
+    chapter.kainJoined = true;
+    auto empty = StoryDialogue::FrontierFollowUp(CompanionId::Kain, chapter, true);
+    assert(empty.front().id == "roll-call/0/0/0");
+    chapter.survivors.resize(5);
+    for (size_t i = 0; i < chapter.survivors.size(); ++i)
+    {
+        chapter.survivors[i].arrived = i < 4;
+    }
+    chapter.survivors.front().combat.health = 0;
+    auto count = StoryDialogue::FrontierFollowUp(CompanionId::Kain, chapter, true);
+    assert(count.front().id == "roll-call/5/4/1");
+    chapter.survivors.back().arrived = true;
+    chapter.survivors.front().combat.health = 100;
+    auto received = StoryDialogue::FrontierFollowUp(CompanionId::Kain, chapter, true);
+    assert(received.front().id == "roll-call/5/5/0" && received[1].text == count[1].text);
+    chapter.receiverInspected = true;
+    assert(StoryDialogue::FrontierFollowUp(CompanionId::Kain, chapter, true)[1].text != received[1].text);
+    chapter.kain.combat.health = 0;
+    assert(!StoryDialogue::CanFollowUp(CompanionId::Kain, chapter, true));
+    chapter.kain.combat.health = 100;
+    assert(StoryDialogue::FrontierFollowUp(CompanionId::Kain, chapter, false).empty());
+    assert(StoryDialogue::FrontierFollowUp(CompanionId(255), chapter, true).empty());
+    assert(!chapter.convoyRewardClaimed && !chapter.recordsCompared && chapter.survivors.back().arrived);
+
+    assert(StoryDialogue::MaraFollowUp(state, chapter).empty());
+    state.isPowerRestored = true;
+    assert(StoryDialogue::MaraFollowUp(state, chapter).empty());
+    state.isSideQuestComplete = true;
+    auto mara = StoryDialogue::MaraFollowUp(state, chapter);
+    assert(mara.size() == 4 && mara[2].speaker == "나" && mara[2].id == "power");
+    chapter.generatorRestored = false;
+    assert(StoryDialogue::MaraFollowUp(state, chapter).size() == 3);
+    assert(!state.isSideQuestAccepted && state.isSideQuestComplete);
+
+    for (bool ria : {false, true})
+    {
+        for (bool kain : {false, true})
+        {
+            const auto comparison = StoryDialogue::FrontierComparison(ria, kain);
+            assert(comparison.size() == 5 && comparison.front().id == "match" &&
+                   comparison.back().id == "next");
+            assert(std::any_of(comparison.begin(), comparison.end(),
+                               [](const auto &line) { return line.speaker == "리아"; }) == ria);
+            assert(std::any_of(comparison.begin(), comparison.end(),
+                               [](const auto &line) { return line.speaker == "카인"; }) == kain);
+            if (ria)
+            {
+                assert(comparison[2].channel == "무전");
+            }
+            if (!kain)
+            {
+                assert(comparison[3].speaker == "수신망" && comparison[3].channel == "단말 기록");
+            }
+        }
+    }
+    assert(!chapter.recordsCompared && !chapter.waterwayUnlocked && !chapter.convoyRewardClaimed);
 }
 
 void TestStoryMissionCompletionContracts()
@@ -4163,6 +4238,74 @@ void CompleteChapterSite(int site, bool peaceful = true)
         assert(s.ledgerFound);
     }
 }
+void TestChapterFollowUpInteractions()
+{
+    using namespace tutorial;
+    auto &g = Game::Get();
+    auto &world = g.GetState();
+    auto &level = GameLevels::Chapter();
+    g.Reset();
+    level.Enter(true);
+    auto &chapter = level.GetState();
+    chapter.generatorRestored = chapter.portableLightRepaired = true;
+    chapter.convoyEvacuated = chapter.convoyRescued = chapter.kainJoined = true;
+    chapter.ria.position = {7.5f, 6.5f};
+    chapter.kain.position = {8.5f, 7.5f};
+    auto find = [&](ChapterAction action) {
+        const auto points = level.Interactions();
+        return std::any_of(points.begin(), points.end(),
+                           [&](const auto &point) { return point.action == action; });
+    };
+    assert(level.CompanionAvailable(CompanionId::Ria) && find(ChapterAction::RiaTalk));
+    assert(find(ChapterAction::KainTalk) && ChapterOneLevel::IsOptionalConversation(ChapterAction::KainTalk));
+    assert(!ChapterOneLevel::IsOptionalConversation(ChapterAction::PortableLight));
+    chapter.ria.combat.health = 0;
+    assert(!level.CompanionAvailable(CompanionId::Ria) && !find(ChapterAction::RiaTalk));
+    chapter.ria.combat.health = 100;
+    chapter.kain.combat.health = 0;
+    assert(!find(ChapterAction::KainTalk));
+    chapter.kain.combat.health = 100;
+    const int salvage = mineState.player.salvage, credits = mineState.player.credits;
+    const auto participation = world.missions.Status(MissionId::Frontier);
+    world.playerPosition = chapter.ria.position;
+    ChapterInteraction nearest{};
+    assert(level.NearestInteraction(nearest) && nearest.action == ChapterAction::RiaTalk);
+    level.Interact();
+    assert(Dialogue::Active() && world.dialogue.sceneId == "chapter1/followup/ria" &&
+           !world.dialogue.completion);
+    const auto position = chapter.survivors.front().position;
+    level.Update(1);
+    assert(Game::Distance(position, chapter.survivors.front().position) == 0);
+    ReadDialogue();
+    const auto history = world.dialogue.history.size();
+    level.Interact();
+    ReadDialogue();
+    assert(world.dialogue.history.size() == history);
+
+    // Optional rest cannot pause a live firefight or commit any mission/reward state.
+    chapter.hostile = true;
+    chapter.bullets.push_back({});
+    level.Interact();
+    assert(!Dialogue::Active());
+    chapter.hostile = false;
+    chapter.bullets.clear();
+    world.playerPosition = chapter.kain.position;
+    level.Interact();
+    assert(Dialogue::Active() && world.dialogue.sceneId == "chapter1/followup/kain");
+    ReadDialogue();
+    assert(mineState.player.salvage == salvage && mineState.player.credits == credits);
+    assert(world.missions.Status(MissionId::Frontier) == participation && !chapter.recordsCompared &&
+           !chapter.waterwayUnlocked && !chapter.convoyRewardClaimed);
+    assert(chapter.generatorRestored && chapter.portableLightRepaired && chapter.convoyRescued);
+
+    // The same physical conversations remain after leaving/re-entering; no duplicate joining/payout.
+    level.Leave();
+    level.Enter();
+    assert(find(ChapterAction::RiaTalk) && find(ChapterAction::KainTalk));
+    assert(mineState.player.salvage == salvage && mineState.player.credits == credits);
+    g.Reset();
+}
+
 void TestChapterOne()
 {
     auto &game = tutorial::Game::Get();
@@ -4581,6 +4724,14 @@ int main(int argc, char **argv)
         return 0;
     }
     TestFrameScheduleAndTextCache();
+    if (argc > 1 && std::string(argv[1]) == "--story-followups")
+    {
+        TestStoryDialogueContext();
+        TestStoryFollowUpContracts();
+        TestChapterFollowUpInteractions();
+        std::cout << "Story context and optional follow-up checks passed.\n";
+        return 0;
+    }
     static_assert(std::is_base_of<game::Level, game::MineLevel>::value);
     static_assert(!std::is_copy_constructible<game::MineLevel>::value);
     static_assert(std::is_base_of<game::Scene, game::MineScene>::value);
@@ -4602,6 +4753,8 @@ int main(int argc, char **argv)
     TestPlanetCityMigration();
     TestPlanetCityRuntime();
     TestStoryDialogueContext();
+    TestStoryFollowUpContracts();
+    TestChapterFollowUpInteractions();
     TestStoryMissionCompletionContracts();
     TestOpenWorldParticipation();
     TestActivityObjectives();

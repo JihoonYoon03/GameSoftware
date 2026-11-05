@@ -1,6 +1,8 @@
 ﻿#include "stdafx.h"
 #include "Story.h"
 #include "Level.h"
+#include "Overworld.h"
+#include <algorithm>
 
 namespace tutorial
 {
@@ -190,5 +192,154 @@ std::vector<DialogueLine> StoryDialogue::ObserveMine(MineDiscovery discovery, co
         return {};
     }
     return {{"discovery/ria", "리아", "무전", text, {}}};
+}
+bool StoryDialogue::CanFollowUp(CompanionId companion, const game::ChapterOneState &chapter,
+                                bool speakerAvailable)
+{
+    if (!speakerAvailable)
+    {
+        return false;
+    }
+    switch (companion)
+    {
+    case CompanionId::Ria:
+        return chapter.generatorRestored && chapter.portableLightRepaired && chapter.ria.combat.health > 0;
+    case CompanionId::Kain:
+        return chapter.convoyEvacuated && chapter.kainJoined && chapter.kain.combat.health > 0;
+    default:
+        return false;
+    }
+}
+
+std::vector<DialogueLine> StoryDialogue::FrontierFollowUp(CompanionId companion,
+                                                          const game::ChapterOneState &chapter,
+                                                          bool speakerAvailable)
+{
+    if (!CanFollowUp(companion, chapter, speakerAvailable))
+    {
+        return {};
+    }
+    if (companion == CompanionId::Ria)
+    {
+        return {{"light",
+                 "리아",
+                 "현장",
+                 "잠깐 쉬었다 갈까? 여기서는 해야 할 일만 보고 걷게 되네. 서로 얼굴은 보고 다니자.",
+                 {}},
+                {"answer",
+                 "나",
+                 "현장",
+                 "휴대 조명은 고쳐 뒀어. 불 하나 켰을 뿐인데, 아까보다 덜 멀리 "
+                 "온 것 같더라. 돌아갈 때 챙겨 가자.",
+                 {}},
+                {"rest",
+                 "리아",
+                 "현장",
+                 "돌아가면 따뜻한 것부터 마시자. 기록은 도망가지 않을 테니까. "
+                 "출발할 때 불러 줘.",
+                 {}}};
+    }
+    const auto arrived = std::count_if(chapter.survivors.begin(), chapter.survivors.end(),
+                                       [](const auto &person) { return person.arrived; });
+    const auto injured = std::count_if(chapter.survivors.begin(), chapter.survivors.end(),
+                                       [](const auto &person) { return person.combat.health <= 0; });
+    std::string count = chapter.survivors.empty()
+                            ? "현장 명부를 다시 확인해야겠습니다. 도착 인원을 지금 단정하지 않겠습니다."
+                            : "현장 명부 " + std::to_string(chapter.survivors.size()) +
+                                  "명 중 안전 지점 "
+                                  "도착을 확인한 사람은 " +
+                                  std::to_string(arrived) + "명입니다.";
+    if (injured)
+    {
+        count += " 의료 지원이 필요한 사람은 " + std::to_string(injured) + "명입니다.";
+    }
+    return {{"roll-call/" + std::to_string(chapter.survivors.size()) + "/" + std::to_string(arrived) + "/" +
+                 std::to_string(injured),
+             "카인",
+             "현장",
+             count,
+             {}},
+            {"question",
+             "나",
+             "현장",
+             chapter.receiverInspected || (chapter.observedRecords & 2)
+                 ? "무전에서는 다른 응답도 들렸는데, 그건 어떻게 적어 둘까?"
+                 : "조금 전에도 확인했는데, 또 세는 거야?",
+             {}},
+            {"answer",
+             "카인",
+             "현장",
+             "직접 확인한 사람부터 적겠습니다. 목소리만으로 누가 더 있다고 "
+             "단정할 수는 없으니까요. 돌아갈 때도 한 번 더 확인하죠.",
+             {}}};
+}
+
+std::vector<DialogueLine> StoryDialogue::MaraFollowUp(const GameState &state,
+                                                      const game::ChapterOneState &chapter)
+{
+    if (!state.isPowerRestored || !state.isSideQuestComplete)
+    {
+        return {};
+    }
+    std::vector<DialogueLine> lines = {{"window",
+                                        "마라",
+                                        "현장",
+                                        "불이 돌아오니 아이도 자기 방에 책을 가져가려 해요. 문은 "
+                                        "열어 둘 거라네요.",
+                                        {}},
+                                       {"answer", "나", "현장", "불이 돌아와서 다행이에요.", {}}};
+    if (chapter.generatorRestored)
+    {
+        lines.push_back({"power",
+                         "나",
+                         "현장",
+                         "개척지 발전기에서도 전력이 새던 선로를 분리했어요. "
+                         "이상한 점은 기록해 뒀고요.",
+                         {}});
+        lines.push_back({"thanks",
+                         "마라",
+                         "현장",
+                         "밖에서도 애쓰셨군요. 오늘은 차 한 잔 마실 시간은 "
+                         "있으세요?",
+                         {}});
+    }
+    else
+    {
+        lines.push_back({"tea", "마라", "현장", "언제든 들러요. 따뜻한 차를 준비해 둘게요.", {}});
+    }
+    return lines;
+}
+
+std::vector<DialogueLine> StoryDialogue::FrontierComparison(bool riaAvailable, bool kainAvailable)
+{
+    return {{"match",
+             "수신망",
+             "단말 기록",
+             "광산 좌표·발전기 전력 유출·운송대 교신 시각이 설비 "
+             "N-0/17의 기록과 일치합니다. 외곽 설비의 원격 화면을 "
+             "연결합니다.",
+             {}},
+            {"observation", "나", "현장", "관문은 멈춰 있는데, 그 주변에는 차례로 불이 들어온다.", {}},
+            {"ria",
+             riaAvailable ? "리아" : "나",
+             riaAvailable ? "무전" : "현장",
+             riaAvailable ? "관문 가동 기록은 없는데 외곽 설비에는 전력이 공급되고 있어. 멈춘 관문 "
+                            "주변에서 무언가 계속 움직이고 있었던 거야."
+                          : "관문 가동 기록은 없는데 외곽 설비에는 전력이 공급되고 있다. 전력이 어디로 "
+                            "흐르는지 확인해야겠다.",
+             {}},
+            {"route",
+             kainAvailable ? "카인" : "수신망",
+             kainAvailable ? "무전" : "단말 기록",
+             kainAvailable ? "지도에 있던 다리는 사라졌습니다. 아래 수로의 옛 진입로는 기록해 뒀습니다."
+                           : "교량 연결을 확인할 수 없습니다. 보관 지도의 수로 진입로 좌표를 표시합니다.",
+             {}},
+            {"next",
+             kainAvailable ? "카인" : "나",
+             kainAvailable ? "무전" : "현장",
+             kainAvailable ? "먼저 그 길이 남아 있는지 확인합시다."
+                           : "수로에 실제로 길이 남아 있는지는 "
+                             "직접 확인해야겠다.",
+             {}}};
 }
 } // namespace tutorial

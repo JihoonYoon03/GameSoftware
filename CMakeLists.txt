@@ -83,6 +83,10 @@ if(BUILD_TESTING)
                 TIMEOUT 600)
         endif()
     endforeach()
+    add_test(NAME StoryFollowups COMMAND GameplayTests --story-followups)
+    set_tests_properties(StoryFollowups PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        ENVIRONMENT "LOCALAPPDATA=${PROJECT_BINARY_DIR}/TestUserData/StoryFollowups"
+        TIMEOUT 600)
     foreach(backend WGL GLFW)
         if(backend STREQUAL "GLFW")
             set(backend_arg --glfw)

@@ -1564,10 +1564,16 @@ void FrontierScene::Draw()
         {
             continue;
         }
-        PlaceWorldActor("objective/" + std::to_string(int(point.action)), point.position.x, point.position.y,
-                        WorldBounds(point.position.x, point.position.y, 0, 0, 70, 230), 5, 0, [point]() {
-                            Drawing::DrawInteractionMarker(point.position, point.label, {.9f, .78f, .4f});
-                        });
+        PlaceWorldActor(
+            (ChapterOneLevel::IsOptionalConversation(point.action) ? "conversation/" : "objective/") +
+                std::to_string(int(point.action)),
+            point.position.x, point.position.y,
+            WorldBounds(point.position.x, point.position.y, 0, 0, 70, 230), 5, 0, [point]() {
+                Drawing::DrawInteractionMarker(point.position, point.label,
+                                               ChapterOneLevel::IsOptionalConversation(point.action)
+                                                   ? ColorRGBA(.4f, .85f, .8f)
+                                                   : ColorRGBA(.9f, .78f, .4f));
+            });
     }
     DrawActors();
     for (const auto &tracer : state.tracers)
@@ -2474,7 +2480,10 @@ void DrawSurfaceFrontier(const world::SurfaceSession &session)
             float z = height(clue.position);
             renderqueue::PushMatrix();
             renderqueue::Translate(0, -z * 44, z * (1296.f / 44));
-            Drawing::DrawInteractionMarker(*p, clue.label, {.9f, .78f, .4f});
+            Drawing::DrawInteractionMarker(*p, clue.label,
+                                           ChapterOneLevel::IsOptionalConversation(clue.action)
+                                               ? ColorRGBA(.4f, .85f, .8f)
+                                               : ColorRGBA(.9f, .78f, .4f));
             renderqueue::PopMatrix();
         }
     }
