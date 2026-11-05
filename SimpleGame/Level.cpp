@@ -2944,6 +2944,34 @@ void ChapterOneLevel::InteractHub()
         }
         return;
     }
+    if (state.recordsCompared)
+    {
+        Dialogue::Start(
+            "chapter1/return", tutorial::StoryDialogue::FrontierReturn(state),
+            [this](const std::string &choice) {
+                if (choice != "revisit" || !state.recordsCompared)
+                {
+                    return;
+                }
+                auto &g = tutorial::Game::Get();
+                if (g.GetState().surfaceExploration)
+                {
+                    if (!g.IsStoryWorld() || !g.Surface() || !g.Surface()->Ready())
+                    {
+                        return;
+                    }
+                    g.GetState().planetDestination = surface.Point(kFrontierEntry);
+                    g.ShowNotice(
+                        "빛나는 개척지 / 재방문 위치를 지도에 표시했습니다. 현장 기록은 유지됩니다.");
+                }
+                else
+                {
+                    Enter();
+                }
+            },
+            true);
+        return;
+    }
     if (tutorial::Game::Get().GetState().surfaceExploration)
     {
         tutorial::Game::Get().ShowNotice("빛나는 개척지 / 지도에 현장 위치를 표시했습니다. 직접 이동해 "

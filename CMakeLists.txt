@@ -87,6 +87,10 @@ if(BUILD_TESTING)
     set_tests_properties(StoryFollowups PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         ENVIRONMENT "LOCALAPPDATA=${PROJECT_BINARY_DIR}/TestUserData/StoryFollowups"
         TIMEOUT 600)
+    add_test(NAME CityFacilities COMMAND GameplayTests --city-facilities)
+    set_tests_properties(CityFacilities PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        ENVIRONMENT "LOCALAPPDATA=${PROJECT_BINARY_DIR}/TestUserData/CityFacilities"
+        TIMEOUT 600)
     foreach(backend WGL GLFW)
         if(backend STREQUAL "GLFW")
             set(backend_arg --glfw)

@@ -11,6 +11,11 @@ enum class MineDiscovery
     Coordinates,
     Count
 };
+enum class StoryContact
+{
+    Ria,
+    Receiver
+};
 
 // Read-only narrative selection. Progress, rewards and dialogue playback remain with their owners.
 class StoryDialogue
@@ -32,5 +37,9 @@ class StoryDialogue
     static std::vector<DialogueLine> MaraFollowUp(const GameState &state,
                                                   const game::ChapterOneState &chapter);
     static std::vector<DialogueLine> FrontierComparison(bool riaAvailable, bool kainAvailable);
+    static std::vector<DialogueLine> MineStatus(const game::MineState &mine, StoryContact contact);
+    static std::vector<DialogueLine> FrontierStatus(const game::ChapterOneState &chapter,
+                                                    StoryContact contact = StoryContact::Ria);
+    static std::vector<DialogueLine> FrontierReturn(const game::ChapterOneState &chapter);
 };
 } // namespace tutorial

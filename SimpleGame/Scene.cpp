@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "Scene.h"
 #include "Civic.h"
+#include "CityFacilities.h"
 #include "Drawing.h"
 #include "Hud.h"
 #include "Level.h"
@@ -751,6 +752,35 @@ void CityScene::DrawUtilityDevices(game::Scene &scene)
                                   Drawing::WorldToScreen(kBeaconPosition.x, kBeaconPosition.y, 34), 20,
                                   ColorRGBA(.5f, .83f, 1));
                           });
+    const CityFacility *nearest = nullptr;
+    float distance = 5;
+    for (const auto &facility : CityFacilities::All())
+    {
+        const auto d = Game::Distance(Game::Get().GetState().playerPosition, facility.exterior);
+        if (d < distance)
+        {
+            nearest = &facility;
+            distance = d;
+        }
+    }
+    if (nearest)
+    {
+        const auto facility = *nearest;
+        const auto p = facility.exterior;
+        scene.PlaceWorldActor(
+            "facility/" + std::string(facility.id), p.x, p.y, WorldBounds(p.x, p.y, 0, 0, 90, 150), 5, 0,
+            [facility]() {
+                if (facility.hasInterior)
+                {
+                    Drawing::DrawHologramStrip(CityFacilities::StandingPoint(facility), facility.exterior,
+                                               .3f, {.3f, .8f, .85f}, .07f);
+                }
+                if (!Game::Get().IsQuestInteraction(facility.target))
+                {
+                    Drawing::DrawInteractionMarker(facility.exterior, facility.label, {.4f, .85f, .9f});
+                }
+            });
+    }
 }
 
 void CityScene::DrawQuestMarkers(game::Scene &scene)
@@ -2252,6 +2282,44 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
                 }
             }
         }
+    }
+    const CityFacility *nearestFacility = nullptr;
+    float facilityDistance = 5;
+    for (const auto &facility : CityFacilities::All())
+    {
+        const auto p = place(0, facility.exterior);
+        if (!p)
+        {
+            continue;
+        }
+        const float distance = Game::Distance({float(p->x / 2), float(p->y / 2)}, state.playerPosition);
+        if (distance < facilityDistance)
+        {
+            nearestFacility = &facility;
+            facilityDistance = distance;
+        }
+    }
+    if (nearestFacility)
+    {
+        const auto &facility = *nearestFacility;
+        const auto p = *place(0, facility.exterior);
+        const Vector2 local{float(p.x / 2), float(p.y / 2)};
+        const float height = float(p.z / 2);
+        renderqueue::PushMatrix();
+        renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
+        if (facility.hasInterior)
+        {
+            if (const auto pad = place(0, CityFacilities::StandingPoint(facility)))
+            {
+                Drawing::DrawHologramStrip({float(pad->x / 2), float(pad->y / 2)}, local, .3f,
+                                           {.3f, .8f, .85f}, .07f);
+            }
+        }
+        if (!Game::Get().IsQuestInteraction(facility.target))
+        {
+            Drawing::DrawInteractionMarker(local, facility.label, {.4f, .85f, .9f});
+        }
+        renderqueue::PopMatrix();
     }
     struct Marker
     {

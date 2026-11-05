@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "Profiler.h"
 #include "Dependencies/glew/include/GL/glew.h"
 #include <windows.h>
@@ -71,7 +71,9 @@ const char *counterNames[] = {"draw_calls",
                               "community_sites_prepared",
                               "community_detailed_ticks",
                               "planet_map_routes_rejected",
-                              "planet_map_segments_visited"};
+                              "planet_map_segments_visited",
+                              "facility_exit_visited_nodes",
+                              "facility_exit_failures"};
 const char *timerNames[] = {"frame_cpu",
                             "update",
                             "movement",
@@ -108,7 +110,8 @@ const char *timerNames[] = {"frame_cpu",
                             "planet_community",
                             "planet_map",
                             "planet_traffic_contacts",
-                            "planet_traffic_populate"};
+                            "planet_traffic_populate",
+                            "facility_exit_search"};
 static_assert(sizeof(counterNames) / sizeof(*counterNames) == kCounterCount);
 static_assert(sizeof(timerNames) / sizeof(*timerNames) == kTimerCount);
 struct Sample

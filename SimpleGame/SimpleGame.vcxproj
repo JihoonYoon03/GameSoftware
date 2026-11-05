@@ -187,8 +187,10 @@
     <ClInclude Include="Window.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Story.h" />
+    <ClInclude Include="StoryJournal.h" />
     <ClInclude Include="Save.h" />
     <ClInclude Include="Civic.h" />
+    <ClInclude Include="CityFacilities.h" />
     <ClInclude Include="Hud.h" />
     <ClInclude Include="Level.h" />
     <ClInclude Include="ModelLibrary.h" />
@@ -220,8 +222,10 @@
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="Story.cpp" />
+    <ClCompile Include="StoryJournal.cpp" />
     <ClCompile Include="Save.cpp" />
     <ClCompile Include="Civic.cpp" />
+    <ClCompile Include="CityFacilities.cpp" />
     <ClCompile Include="Hud.cpp" />
     <ClCompile Include="Level.cpp" />
     <ClCompile Include="ModelLibrary.cpp" />

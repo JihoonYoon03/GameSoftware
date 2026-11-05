@@ -1,8 +1,10 @@
 ﻿#include "stdafx.h"
 #include "Level.h"
 #include "Story.h"
+#include "StoryJournal.h"
 #include "Hud.h"
 #include "Civic.h"
+#include "CityFacilities.h"
 #include "Drawing.h"
 #include "Monitoring/LocalMonitorServer.h"
 #include "Monitoring/Monitor.h"
@@ -15,6 +17,7 @@
 #include "TransitLayout.h"
 #include "RenderAssets.h"
 #include <algorithm>
+#include <set>
 #include <cassert>
 #include <cmath>
 #include <fstream>
@@ -747,6 +750,135 @@ void TestPlanetCityMigration()
     g.Reset();
     assert(!g.SurfaceCities() && !g.Surface());
 }
+void TestFacilityAccessContracts()
+{
+    using namespace tutorial;
+    std::set<std::string> ids;
+    int interiors = 0;
+    for (const auto &facility : CityFacilities::All())
+    {
+        assert(ids.insert(facility.id).second && CityFacilities::Find(facility.target) == &facility);
+        interiors += facility.hasInterior;
+        if (facility.hasInterior)
+        {
+            assert(CityFacilities::ExitAt(facility.exterior) == &facility);
+        }
+    }
+    assert(interiors == 2 && !CityFacilities::Find(InteractionTarget::None));
+    auto door = *CityFacilities::Find(InteractionTarget::HomeEntrance);
+    assert(Game::Distance(door.exterior, kHomeDoor) == 0);
+    assert(Game::Distance(CityFacilities::Find(InteractionTarget::GateBeacon)->exterior, kBeaconPosition) ==
+           0);
+    door.exterior = {};
+    auto clear = [](Vector2) { return true; };
+    unsigned visited = 0;
+    auto find = [&](const CityFacilities::ClearPoint &geometry, const CityFacilities::ClearPoint &occupancy) {
+        auto point = CityFacilities::FindExit(door, geometry, occupancy, &visited);
+        assert(visited <= 289);
+        return point;
+    };
+    auto original = find(clear, clear);
+    assert(original && Game::Distance(*original, {}) == 0 && visited == 1);
+    auto occupied = find(clear, [](Vector2 p) { return std::hypot(p.x, p.y) > .4f; });
+    assert(occupied && occupied->y > 0 && visited > 1);
+    assert(!find(clear, [](Vector2 p) { return p.y < -.1f; }));
+    assert(!find(clear, [](Vector2 p) { return std::hypot(p.x, p.y) > 4.1f; }));
+    assert(!find([](Vector2) { return false; }, clear) && visited == 0);
+    // A free point across an unbroken wall is not a usable exit, even within the old search radius.
+    assert(!find([](Vector2 p) { return std::fabs(p.x - 1) > .21f; }, [](Vector2 p) { return p.x > 1.5f; }));
+    auto around = find([](Vector2 p) { return std::fabs(p.x - 1) > .21f || p.y > 1.2f; },
+                       [](Vector2 p) { return p.x > 1.5f; });
+    assert(around && around->x > 1.5f);
+    assert(!find([](Vector2 p) { return p.y > .1f; }, clear)); // A blocked residential doorway stays closed.
+    door.role = FacilityRole::Observation;
+    auto control = find([](Vector2 p) { return std::hypot(p.x, p.y) > .3f; }, clear);
+    assert(control && Game::Distance(*control, CityFacilities::StandingPoint(door)) < .001f);
+    door.role = FacilityRole::Residence;
+    door.outward = {1, 0};
+    assert(!find(clear, [](Vector2 p) { return p.x < -.1f; }));
+    assert(find(clear, [](Vector2 p) { return p.x > .4f; }));
+    door.outward = {};
+    assert(!find(clear, clear) && visited == 0);
+    door.outward = {0, 1};
+    door.hasInterior = false;
+    assert(!find(clear, clear));
+    door.hasInterior = true;
+    door.exterior.x = std::numeric_limits<float>::quiet_NaN();
+    assert(!find(clear, clear));
+}
+
+void TestFacilityExitIntegration()
+{
+    using namespace tutorial;
+    auto &g = Game::Get();
+    g.StartNewGame();
+    auto &state = g.GetState();
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(20);
+    while (!g.Surface()->Ready() && std::chrono::steady_clock::now() < deadline)
+    {
+        g.Update(0);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    assert(g.Surface()->Ready() && state.isInsideHome);
+    const auto &door = *CityFacilities::Find(InteractionTarget::HomeEntrance);
+    const auto pose = g.Surface()->Pose().origin;
+    const auto bike = g.SurfaceBike();
+    const auto epoch = g.Surface()->Stream().Snapshot()->statistics.epoch;
+    const auto stage = state.mainQuestStage;
+    const int credits = mineState.player.credits, salvage = mineState.player.salvage;
+    auto residents = std::move(state.residents);
+    // Occupy every candidate pad without replacing terrain or enabling a quest fixture.
+    for (int x = -8; x <= 8; ++x)
+    {
+        for (int y = 0; y <= 8; ++y)
+        {
+            Resident person;
+            person.position = {door.exterior.x + x * .5f, door.exterior.y + y * .5f};
+            person.cityIndex = 0;
+            state.residents.push_back(person);
+        }
+    }
+    state.playerPosition = door.exit;
+    assert(g.FindNearbyInteraction() == InteractionTarget::ApartmentExit);
+    g.InteractWithNearbyTarget();
+    assert(state.isInsideHome && g.Surface()->Stream().Snapshot()->statistics.epoch == epoch);
+    assert(world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, pose,
+                                            g.Surface()->Pose().origin) < 1.e-6);
+    state.residents = std::move(residents);
+    g.InteractWithNearbyTarget();
+    assert(!state.isInsideHome && !state.isInObservatory);
+    const auto &region = g.Surface()->Stream().Snapshot()->planet->Region("halo_07");
+    auto local = world::SurfaceGeometry::ToLocal(region.frame, g.Surface()->Pose().origin,
+                                                 g.Surface()->Planet().radiusMeters);
+    auto center = Overworld::Cities()[0].center;
+    const Vector2 exit{center.x + float(local.x / 2), center.y + float(local.y / 2)};
+    assert(exit.y >= door.exterior.y - .001f && Game::Distance(exit, door.exterior) <= 4.01f);
+    assert(!RoadNetwork::Get().Contains(exit, .2f));
+    assert(g.Surface()->LandingClear(g.Surface()->Pose().origin, .32));
+    assert(state.mainQuestStage == stage && mineState.player.credits == credits &&
+           mineState.player.salvage == salvage && !mineState.loadout.HasPistol());
+    assert(bike && g.SurfaceBike() &&
+           world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, *bike, *g.SurfaceBike()) <
+               1.e-6);
+    assert(g.Surface()->Stream().Snapshot()->statistics.epoch == epoch);
+    const auto &lift = *CityFacilities::Find(InteractionTarget::GateBeacon);
+    const auto front = g.SurfaceCities()->Point(*g.Surface(), 0, CityFacilities::StandingPoint(lift));
+    assert(front && g.RelocateSurfaceSurvey(*front));
+    auto savedResidents = std::move(state.residents);
+    assert(g.FindNearbyInteraction() == InteractionTarget::GateBeacon);
+    g.InteractWithNearbyTarget();
+    assert(state.isInObservatory && Game::Distance(state.playerPosition, lift.arrival) < .001f);
+    state.playerPosition = lift.exit;
+    g.InteractWithNearbyTarget();
+    assert(!state.isInObservatory && !state.isInsideHome);
+    local = world::SurfaceGeometry::ToLocal(region.frame, g.Surface()->Pose().origin,
+                                            g.Surface()->Planet().radiusMeters);
+    assert(center.y + float(local.y / 2) >= lift.exterior.y - .001f);
+    state.residents = std::move(savedResidents);
+    assert(state.mainQuestStage == stage && g.Surface()->Stream().Snapshot()->statistics.epoch == epoch);
+    g.Reset();
+}
+
 void TestStoryDialogueContext()
 {
     using namespace tutorial;
@@ -925,6 +1057,113 @@ void TestStoryFollowUpContracts()
         }
     }
     assert(!chapter.recordsCompared && !chapter.waterwayUnlocked && !chapter.convoyRewardClaimed);
+}
+
+void TestStoryJournalContracts()
+{
+    using namespace tutorial;
+    GameState state;
+    game::MineState mine;
+    game::ChapterOneState chapter;
+    state.surfaceExploration = true;
+    auto collect = [&] { return StoryJournal::Collect(state, mine, chapter); };
+    auto find = [&](const std::string &id) -> std::optional<InvestigationRecord> {
+        const auto records = collect();
+        std::set<std::string> ids;
+        for (const auto &record : records)
+        {
+            assert(ids.insert(record.id).second && !record.fact.empty());
+            assert(record.fact.find("장막") == std::string::npos &&
+                   record.fact.find("네레우스") == std::string::npos);
+        }
+        for (const auto &record : records)
+        {
+            if (record.id == id)
+            {
+                return record;
+            }
+        }
+        return std::nullopt;
+    };
+    assert(collect().empty());
+    state.gateSignalHeard = true;
+    assert(find("observatory/voice") && !find("mine/route") && !find("mine/glyph"));
+    assert(!find("observatory/voice")->unresolved.empty());
+    mine.signalRecorded = mine.glyphRecorded = mine.coordinatesRecorded = true;
+    assert(find("mine/signal") && find("mine/glyph") && find("mine/coordinates"));
+    assert(!find("mine/report") && !mine.quest.IsRiaJoined());
+    assert(state.missions.Status(MissionId::Mine) == MissionStatus::NotAccepted);
+    assert(state.missions.Accept(MissionId::Mine, true) && state.missions.Pause(MissionId::Mine));
+    assert(find("mine/glyph") && state.missions.Status(MissionId::Mine) == MissionStatus::Paused);
+
+    chapter.observedRecords = 1 | 2 | 4 | 8 | 16;
+    assert(find("frontier/generator") && find("frontier/radio") && find("frontier/trade"));
+    assert(find("frontier/ledger") && find("frontier/detail-ledger"));
+    assert(!chapter.generatorInspected && !chapter.ledgerFound && !chapter.recordsCompared);
+    const auto before = collect().size();
+    const auto generator = find("frontier/generator")->fact;
+    chapter.generatorInspected = chapter.receiverInspected = chapter.tradeProofFound = true;
+    chapter.ledgerFound = chapter.detailLedgerFound = true;
+    assert(collect().size() == before); // Acceptance must not duplicate an already observed record.
+    chapter.generatorRestored = true;
+    assert(find("frontier/generator")->fact != generator && collect().size() == before);
+    chapter.convoyEvacuated = true;
+    assert(find("frontier/evacuation") && !find("frontier/kain") && !chapter.convoyRewardClaimed);
+    chapter.kainJoined = true;
+    assert(find("frontier/kain"));
+    chapter.waterwayUnlocked = true;
+    assert(!find("frontier/waterway"));
+    chapter.recordsCompared = true;
+    assert(find("frontier/comparison") && find("frontier/waterway"));
+    assert(!find("frontier/waterway")->unresolved.empty());
+
+    while (mine.quest.GetStage() != game::MineQuestStage::Complete)
+    {
+        const auto stage = mine.quest.GetStage();
+        if (stage == game::MineQuestStage::TravelToMine)
+        {
+            assert(mine.quest.BeginJourney());
+        }
+        assert(mine.quest.Advance(stage));
+    }
+    assert(find("mine/report") && find("mine/coordinates")->fact.find("보고한다") == std::string::npos);
+    mine.signalRecorded = mine.glyphRecorded = mine.coordinatesRecorded = false;
+    assert(!find("mine/glyph")); // Surface facts are not invented from an unrelated progression fixture.
+    state.surfaceExploration = false;
+    assert(find("mine/glyph") && find("mine/signal") && find("mine/coordinates"));
+    assert(mine.player.credits == game::PlayerStats{}.credits && !mine.loadout.HasPistol());
+
+    const auto terminal = StoryDialogue::MineStatus(mine, StoryContact::Receiver);
+    assert(terminal.front().id == "reported" && terminal.size() == 1);
+    for (const auto &line : terminal)
+    {
+        assert(line.speaker == "수신망");
+    }
+    game::MineState ongoing;
+    while (ongoing.quest.GetStage() != game::MineQuestStage::Complete)
+    {
+        auto lines = StoryDialogue::MineStatus(ongoing, StoryContact::Receiver);
+        assert(!lines.empty());
+        for (const auto &line : lines)
+        {
+            assert(line.speaker != "리아");
+        }
+        const auto stage = ongoing.quest.GetStage();
+        if (stage == game::MineQuestStage::TravelToMine)
+        {
+            assert(ongoing.quest.BeginJourney());
+        }
+        assert(ongoing.quest.Advance(stage));
+    }
+    const auto status = StoryDialogue::FrontierStatus(chapter, StoryContact::Receiver);
+    const auto revisit = StoryDialogue::FrontierReturn(chapter);
+    assert(status.front().id == "compared" && revisit.back().choices.size() == 2);
+    assert(revisit.back().choices[0].id == "revisit" && revisit.back().choices[1].id == "later");
+    chapter.recordsCompared = false;
+    assert(StoryDialogue::FrontierReturn(chapter).empty());
+    assert(StoryDialogue::MineStatus(mine, StoryContact(-1)).empty());
+    assert(StoryDialogue::FrontierStatus(chapter, StoryContact(-1)).empty());
+    assert(!chapter.convoyRewardClaimed && state.missions.Status(MissionId::Mine) == MissionStatus::Paused);
 }
 
 void TestStoryMissionCompletionContracts()
@@ -1202,6 +1441,25 @@ void TestOpenWorldParticipation()
     assert(field.recordsCompared && field.waterwayUnlocked &&
            w.missions.Status(MissionId::Frontier) == MissionStatus::Completed);
     assert(!g.CompleteMission(MissionId::Frontier) && !g.CanCompleteMission(MissionId::Frontier));
+    const auto position = g.Surface()->Pose().origin;
+    const auto manualPin = plan->Region("mq00_mine").access.position;
+    w.planetDestination = manualPin;
+    chapter.InteractHub();
+    assert(Dialogue::Active() && w.dialogue.sceneId == "chapter1/return");
+    assert(world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, *w.planetDestination,
+                                            manualPin) < 1.e-6);
+    read(1);
+    assert(world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, *w.planetDestination,
+                                            manualPin) < 1.e-6);
+    const int reportSalvage = mineState.player.salvage;
+    chapter.InteractHub();
+    read();
+    assert(world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, *w.planetDestination,
+                                            chapter.Surface().Point(kFrontierEntry)) < 1.e-6);
+    assert(world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, position,
+                                            g.Surface()->Pose().origin) < 1.e-6);
+    assert(mineState.player.salvage == reportSalvage && field.recordsCompared &&
+           g.Surface()->Stream().Snapshot()->statistics.epoch == epoch);
     g.Reset();
 }
 void TestRelayTravelAndAtlas()
@@ -4306,6 +4564,50 @@ void TestChapterFollowUpInteractions()
     g.Reset();
 }
 
+void TestStoryReturnFlow()
+{
+    using namespace tutorial;
+    auto &g = Game::Get();
+    auto &level = GameLevels::Chapter();
+    g.Reset();
+    level.Enter(true);
+    auto &chapter = level.GetState();
+    chapter.generatorRestored = chapter.convoyRescued = chapter.ledgerFound = true;
+    chapter.recordsCompared = chapter.waterwayUnlocked = true;
+    level.Leave();
+    const int salvage = mineState.player.salvage, credits = mineState.player.credits;
+    auto finish = [&](size_t choice) {
+        for (unsigned page = 0; Dialogue::Active() && page < 128; ++page)
+        {
+            auto &d = g.GetState().dialogue;
+            if (!d.pages[d.page].choices.empty() && d.selection < 0)
+            {
+                assert(Dialogue::Select(choice));
+            }
+            assert(Dialogue::Advance());
+        }
+        assert(!Dialogue::Active());
+    };
+    level.InteractHub();
+    assert(Dialogue::Active() && !level.IsActive() && g.GetState().dialogue.sceneId == "chapter1/return");
+    finish(1);
+    assert(!level.IsActive());
+    level.InteractHub();
+    finish(0);
+    assert(level.IsActive() && chapter.recordsCompared && chapter.waterwayUnlocked);
+    const auto journal = Dialogue::Journal();
+    assert(std::any_of(journal.begin(), journal.end(),
+                       [](const auto &line) { return line.find("확인한 사실 /") == 0; }));
+    assert(std::any_of(journal.begin(), journal.end(),
+                       [](const auto &line) { return line.find("남은 의문 /") == 0; }));
+    assert(std::none_of(journal.begin(), journal.end(), [](const auto &line) {
+        return line.find("입구로 나와 바이크로") != std::string::npos;
+    }));
+    assert(mineState.player.salvage == salvage && mineState.player.credits == credits);
+    assert(!chapter.convoyRewardClaimed);
+    g.Reset();
+}
+
 void TestChapterOne()
 {
     auto &game = tutorial::Game::Get();
@@ -4724,11 +5026,20 @@ int main(int argc, char **argv)
         return 0;
     }
     TestFrameScheduleAndTextCache();
+    if (argc > 1 && std::string(argv[1]) == "--city-facilities")
+    {
+        TestFacilityAccessContracts();
+        TestFacilityExitIntegration();
+        std::cout << "City facility metadata and connected exit checks passed.\n";
+        return 0;
+    }
     if (argc > 1 && std::string(argv[1]) == "--story-followups")
     {
         TestStoryDialogueContext();
         TestStoryFollowUpContracts();
+        TestStoryJournalContracts();
         TestChapterFollowUpInteractions();
+        TestStoryReturnFlow();
         std::cout << "Story context and optional follow-up checks passed.\n";
         return 0;
     }
@@ -4748,13 +5059,17 @@ int main(int argc, char **argv)
     TestAimMovementAndLayers();
     TestForwardFlashlight();
     TestStageSelectionAndLoadout();
+    TestFacilityAccessContracts();
+    TestFacilityExitIntegration();
     TestPlanetTraffic();
     TestCitySimulationPolicy();
     TestPlanetCityMigration();
     TestPlanetCityRuntime();
     TestStoryDialogueContext();
     TestStoryFollowUpContracts();
+    TestStoryJournalContracts();
     TestChapterFollowUpInteractions();
+    TestStoryReturnFlow();
     TestStoryMissionCompletionContracts();
     TestOpenWorldParticipation();
     TestActivityObjectives();

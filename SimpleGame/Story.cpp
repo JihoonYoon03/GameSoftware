@@ -342,4 +342,114 @@ std::vector<DialogueLine> StoryDialogue::FrontierComparison(bool riaAvailable, b
                              "직접 확인해야겠다.",
              {}}};
 }
+std::vector<DialogueLine> StoryDialogue::MineStatus(const game::MineState &mine, StoryContact contact)
+{
+    const auto stage = mine.quest.GetStage();
+    if (contact == StoryContact::Ria)
+    {
+        std::string text = mine.quest.GetRiaDialogue();
+        const auto delimiter = text.find(" / ");
+        if (delimiter != std::string::npos)
+        {
+            text.erase(0, delimiter + 3);
+        }
+        if (stage == game::MineQuestStage::ReturnToHalo)
+        {
+            text = "좌표는 보관했어. 헤일로 수신망에 직접 보고하고 다른 기록과 대조하자.";
+        }
+        return {{"ria", "리아", "현장", text, {}}};
+    }
+    if (contact != StoryContact::Receiver)
+    {
+        return {};
+    }
+    if (stage == game::MineQuestStage::Complete)
+    {
+        return {{"reported",
+                 "수신망",
+                 "단말 기록",
+                 "광산 좌표 보고는 완료됐습니다. 보관된 조사 기록을 "
+                 "다시 열람할 수 있습니다.",
+                 {}}};
+    }
+    std::vector<DialogueLine> lines;
+    if (mine.coordinatesRecorded || mine.quest.AreCoordinatesFound())
+    {
+        lines.push_back({"coordinates",
+                         "수신망",
+                         "단말 기록",
+                         "확보한 중계 좌표가 보관돼 있습니다. "
+                         "기록 보유와 정식 조사 보고는 별도로 처리합니다.",
+                         {}});
+    }
+    lines.push_back({"objective",
+                     "수신망",
+                     "조사 안내",
+                     std::string("현재 조사에서 남은 행동: ") + mine.quest.GetObjective(),
+                     {}});
+    return lines;
+}
+
+std::vector<DialogueLine> StoryDialogue::FrontierStatus(const game::ChapterOneState &chapter,
+                                                        StoryContact contact)
+{
+    if (contact != StoryContact::Ria && contact != StoryContact::Receiver)
+    {
+        return {};
+    }
+    const char *speaker = contact == StoryContact::Ria ? "리아" : "수신망";
+    const char *channel = contact == StoryContact::Ria ? "현장" : "단말 기록";
+    if (chapter.recordsCompared)
+    {
+        return {{"compared",
+                 speaker,
+                 channel,
+                 "세 현장 기록은 N-0/17에서 겹칩니다. 기록 대조는 끝났지만 신호의 발신자와 "
+                 "외곽 설비의 전력원은 아직 확인하지 못했습니다.",
+                 {}},
+                {"route",
+                 "조사 기록",
+                 "보관 기록",
+                 chapter.waterwayUnlocked
+                     ? "옛 수로 진입로 좌표를 보관했습니다. 실제 통행 가능 여부를 확인한 것은 아닙니다."
+                     : "후속 경로는 아직 확인하지 않았습니다.",
+                 {}},
+                {"available",
+                 "안내",
+                 "활동 안내",
+                 "현재 이용 가능한 이야기 구간의 조사는 여기까지입니다. 기존 지역 탐사와 남은 선택 "
+                 "의뢰를 계속할 수 있습니다.",
+                 {}}};
+    }
+    if (chapter.generatorRestored && chapter.convoyRescued && chapter.ledgerFound)
+    {
+        return {{"report",
+                 speaker,
+                 channel,
+                 "세 현장의 필수 기록이 모였습니다. 헤일로 수신망에서 광산 좌표와 대조할 수 있습니다. "
+                 "기록을 모은 것만으로 대조가 끝난 것은 아닙니다.",
+                 {}}};
+    }
+    return {{"remaining",
+             speaker,
+             channel,
+             "확보한 기록과 현장 상태는 유지됩니다. 발전기·운송대·폐설비의 남은 일은 원하는 순서로 "
+             "살펴볼 수 있습니다. 조사 기록에서 추적할 목표를 선택하세요.",
+             {}}};
+}
+
+std::vector<DialogueLine> StoryDialogue::FrontierReturn(const game::ChapterOneState &chapter)
+{
+    if (!chapter.recordsCompared)
+    {
+        return {};
+    }
+    auto lines = FrontierStatus(chapter, StoryContact::Receiver);
+    lines.push_back({"return",
+                     "수신망",
+                     "재방문 안내",
+                     "빛나는 개척지를 다시 살펴보시겠습니까?",
+                     {{"revisit", "기존 현장 재방문"}, {"later", "지금은 기록만 확인한다"}}});
+    return lines;
+}
 } // namespace tutorial

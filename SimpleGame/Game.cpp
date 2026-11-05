@@ -5,6 +5,8 @@
 #include <windows.h>
 #include "Game.h"
 #include "Story.h"
+#include "StoryJournal.h"
+#include "CityFacilities.h"
 #include "Civic.h"
 #include "Hud.h"
 #include "Save.h"
@@ -2115,10 +2117,80 @@ void Game::RestoreSurfaceBikeHeading()
 }
 bool Game::ReturnToSurface(Vector2 door, int city)
 {
+    if (city == 0 && surface && surface->Ready() && surfaceCities)
+    {
+        if (const auto *facility = CityFacilities::ExitAt(door))
+        {
+            profiling::Scope accessTimer(profiling::Timer::FacilityExitSearch);
+            auto staticClear = [&](Vector2 local) {
+                const auto point = surfaceCities->Point(*surface, city, local);
+                return point && !RoadNetwork::Get().Contains(local, .2f) &&
+                       surface->LandingClear(*point, .32);
+            };
+            auto available = [&](Vector2 local) {
+                const auto point = surfaceCities->Point(*surface, city, local);
+                return point && SurfaceLandingClear(*point, city);
+            };
+            unsigned visited = 0;
+            const auto landing = CityFacilities::FindExit(*facility, staticClear, available, &visited);
+            profiling::Count(profiling::Counter::FacilityExitVisitedNodes, visited);
+            const auto point = landing ? surfaceCities->Point(*surface, city, *landing) : std::nullopt;
+            if (!point)
+            {
+                profiling::Count(profiling::Counter::FacilityExitFailures);
+                ShowNotice("출입구 앞 보행 공간이 막혀 있습니다. 잠시 후 다시 나가세요.");
+                return false;
+            }
+            // The connected front pad was already checked; never fall back to the opposite side of a wall.
+            const bool landed = LandOnSurface(*point, city, 0);
+            if (!landed)
+            {
+                profiling::Count(profiling::Counter::FacilityExitFailures);
+            }
+            return landed;
+        }
+    }
     auto point = surface && surfaceCities ? surfaceCities->Point(*surface, city, door) : std::nullopt;
     return point && LandOnSurface(*point, city);
 }
-bool Game::LandOnSurface(const world::SurfacePoint &point, int city)
+bool Game::SurfaceLandingClear(const world::SurfacePoint &point, int city) const
+{
+    if (!surface || !surface->Ready() || !surface->LandingClear(point, .32))
+    {
+        return false;
+    }
+    if (IsStoryWorld())
+    {
+        const auto &frontier = surface->Stream().Snapshot()->planet->Region("frontier");
+        if (world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, point,
+                                             frontier.center.position) < 150)
+        {
+            const auto local =
+                world::SurfaceGeometry::ToLocal(frontier.frame, point, surface->Planet().radiusMeters);
+            const Vector2 position{game::kFrontierEntry.x + float(local.x / 2),
+                                   game::kFrontierEntry.y + float(local.y / 2)};
+            const auto &field = game::GameLevels::Chapter().GetState();
+            auto occupied = [&](const game::FrontierPerson &person) {
+                return person.combat.health > 0 && Distance(position, person.position) < .6f;
+            };
+            if ((HasCompanion(CompanionId::Ria, CompanionPlace::Frontier) && occupied(field.ria)) ||
+                ((!field.kainJoined || HasCompanion(CompanionId::Kain, CompanionPlace::Frontier)) &&
+                 occupied(field.kain)) ||
+                std::any_of(field.survivors.begin(), field.survivors.end(), occupied) ||
+                std::any_of(field.scrappers.begin(), field.scrappers.end(), occupied))
+            {
+                return false;
+            }
+        }
+    }
+    return !(surfaceParty && surfaceParty->Blocked(point, .32)) &&
+           !(surfaceTraffic && surfaceTraffic->Blocked(point, .32)) &&
+           !(surfaceCommunity && surfaceCommunity->Blocked(point, .32)) &&
+           !(surfaceCities && surfaceCities->OccupiedAt(state, *surface, point, city)) &&
+           !(surfaceBike &&
+             world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, *surfaceBike, point) < 1);
+}
+bool Game::LandOnSurface(const world::SurfacePoint &point, int city, unsigned searchRings)
 {
     if (!surface || !surface->Ready())
     {
@@ -2142,7 +2214,7 @@ bool Game::LandOnSurface(const world::SurfacePoint &point, int city)
     bool placed = false;
     {
         auto frame = world::SurfaceGeometry::Frame(point);
-        for (unsigned ring = 0; ring <= 8 && !placed; ++ring)
+        for (unsigned ring = 0; ring <= searchRings && !placed; ++ring)
         {
             for (unsigned step = 0; step < (ring == 0 ? 1u : 8u) && !placed; ++step)
             {
@@ -2151,38 +2223,7 @@ bool Game::LandOnSurface(const world::SurfacePoint &point, int city)
                     world::SurfaceGeometry::Advance(frame, ring * std::cos(angle), ring * std::sin(angle),
                                                     surface->Planet().radiusMeters)
                         .origin;
-                bool fieldOccupied = false;
-                if (IsStoryWorld())
-                {
-                    const auto &frontier = surface->Stream().Snapshot()->planet->Region("frontier");
-                    if (world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, candidate,
-                                                         frontier.center.position) < 150)
-                    {
-                        auto local = world::SurfaceGeometry::ToLocal(frontier.frame, candidate,
-                                                                     surface->Planet().radiusMeters);
-                        Vector2 position{game::kFrontierEntry.x + float(local.x / 2),
-                                         game::kFrontierEntry.y + float(local.y / 2)};
-                        const auto &field = game::GameLevels::Chapter().GetState();
-                        auto occupied = [&](const game::FrontierPerson &person) {
-                            return person.combat.health > 0 && Distance(position, person.position) < .6f;
-                        };
-                        fieldOccupied =
-                            (HasCompanion(CompanionId::Ria, CompanionPlace::Frontier) &&
-                             occupied(field.ria)) ||
-                            ((!field.kainJoined ||
-                              HasCompanion(CompanionId::Kain, CompanionPlace::Frontier)) &&
-                             occupied(field.kain)) ||
-                            std::any_of(field.survivors.begin(), field.survivors.end(), occupied) ||
-                            std::any_of(field.scrappers.begin(), field.scrappers.end(), occupied);
-                    }
-                }
-                if (!surface->LandingClear(candidate, .32) || fieldOccupied ||
-                    (surfaceParty && surfaceParty->Blocked(candidate, .32)) ||
-                    (surfaceTraffic && surfaceTraffic->Blocked(candidate, .32)) ||
-                    (surfaceCommunity && surfaceCommunity->Blocked(candidate, .32)) ||
-                    (surfaceCities && surfaceCities->OccupiedAt(state, *surface, candidate, city)) ||
-                    (surfaceBike && world::SurfaceGeometry::Distance(surface->Planet().radiusMeters,
-                                                                     *surfaceBike, candidate) < 1))
+                if (!SurfaceLandingClear(candidate, city))
                 {
                     continue;
                 }
@@ -2916,100 +2957,14 @@ std::vector<std::string> Dialogue::Journal()
             auto local = community->Journal();
             lines.insert(lines.end(), local.begin(), local.end());
         }
-        if (mine.powerBypassed)
+    }
+    for (const auto &record : StoryJournal::Collect(w, mine, s))
+    {
+        lines.push_back("확인한 사실 / " + record.title + ": " + record.fact);
+        if (!record.unresolved.empty())
         {
-            lines.push_back("광산 현장: 비상 전력을 우회했다. 임무 보류 중에도 격벽과 조명 상태는 유지된다.");
+            lines.push_back("남은 의문 / " + record.title + ": " + record.unresolved);
         }
-        if (s.observedRecords)
-        {
-            lines.push_back("개척지 사전 기록을 보관 중이다. 임무 수락 시 확보한 기록만 조사에 반영한다.");
-        }
-        if (s.observedRecords & 1)
-        {
-            lines.push_back(
-                "발전기 사전 기록: 폐쇄된 외곽 선로로 전력이 빠져나간다. 전력 복구 여부와는 별개다.");
-        }
-        if (s.observedRecords & 2)
-        {
-            lines.push_back(
-                "수신기 사전 기록: 현장 인원 다섯 명에 무전 응답 여섯 명. 추가 생존자 확인은 아니다.");
-        }
-        if (s.observedRecords & 4)
-        {
-            lines.push_back("거래 사전 기록: 익명 구매자가 N-0/17 부품을 시세보다 비싸게 샀다.");
-        }
-        if (s.observedRecords & 8)
-        {
-            lines.push_back("기본 장부 사전 기록: 발주처가 지워진 좌표·전력 주기·교신 시각.");
-        }
-        if (s.observedRecords & 16)
-        {
-            lines.push_back("상세 장부 사전 기록: 구매자 추적 단서. 발주처 정체는 미확인.");
-        }
-    }
-    if (s.unlocked)
-    {
-        lines.push_back("N-0/17은 관문 자체가 아닌 외곽 설비 번호다.");
-    }
-    if (w.homeMessageRead || (!w.surfaceExploration && w.mainQuestStage >= MainQuestStage::MeetLia))
-    {
-        lines.push_back("집 단말: N-0 정기 측정 요청과 전망대 접근 코드를 받았다.");
-    }
-    if (w.gateSignalHeard)
-    {
-        lines.push_back(
-            "전망대: 내 목소리와 같은 수신 음성을 저장했다. 녹음한 기억은 없고 발신자는 확인하지 못했다.");
-    }
-    if (mine.quest.GetStage() >= game::MineQuestStage::TravelToMine)
-    {
-        lines.push_back(
-            "수신망: 전망대 기록과 광산 통신선의 중계 흔적이 겹친다. 같은 발신원인지는 아직 모른다.");
-    }
-    if (mine.signalRecorded || mine.quest.GetStage() >= game::MineQuestStage::InvestigateGlyph)
-    {
-        lines.push_back("광산 신호: 실종 탐사선 식별자가 남았다. 현재 생존자를 확인했다는 뜻은 아니다.");
-    }
-    if (mine.glyphRecorded || mine.quest.GetStage() >= game::MineQuestStage::CollectCoordinates)
-    {
-        lines.push_back("문양: 나를 닮은 형상을 발견했다. 누가, 언제 새겼는지는 모른다.");
-    }
-    if (mine.coordinatesRecorded || mine.quest.AreCoordinatesFound())
-    {
-        lines.push_back("광산 좌표: 중계 좌표를 확보했다. 입구로 나와 바이크로 헤일로 수신망에 보고한다.");
-    }
-    if (s.generatorInspected)
-    {
-        lines.push_back(
-            s.generatorRestored
-                ? "발전기: 외곽 선로를 분리했다. 끊어진 선로의 계기판은 여전히 같은 간격으로 움직인다."
-                : "발전기: 폐쇄된 외곽 선로로 전력이 빠져나간다. 차단기를 분리해야 한다.");
-    }
-    if (s.receiverInspected)
-    {
-        lines.push_back(
-            "운송대: 현장 인원은 다섯 명, 무전 응답은 여섯 명이다. 추가 생존자를 확인한 것은 아니다.");
-    }
-    if (s.convoyRescued)
-    {
-        lines.push_back(
-            "구조: 운송대 다섯 명이 실제 안전 지점에 도착했다. 카인이 인원을 재확인하고 동행했다.");
-    }
-    if (s.tradeProofFound)
-    {
-        lines.push_back("거래 기록: 익명의 구매자가 N-0/17 부품을 시세보다 비싸게 샀다.");
-    }
-    if (s.ledgerFound)
-    {
-        lines.push_back("기본 장부: 발주처는 지워졌다. 좌표·전력 주기·교신 시각을 확보했다.");
-    }
-    if (s.detailLedgerFound)
-    {
-        lines.push_back("상세 장부: 구매자 추적 단서를 보관한다. 발주처의 정체는 미확인이다.");
-    }
-    if (s.recordsCompared)
-    {
-        lines.push_back("기록 대조 완료: N-0 외곽 설비의 움직임이 겹친다. 수로 진입로 기록을 얻었지만 2장 "
-                        "지역은 아직 진입할 수 없다.");
     }
     lines.push_back(std::string("다음 행동: ") +
                     (w.surfaceExploration ? ActivityJournal::Current().action
@@ -3290,7 +3245,7 @@ InteractionTarget Game::FindNearbyInteraction()
         {
             return InteractionTarget::ObservatorySignal;
         }
-        if (Distance(state.playerPosition, kObservatoryStairs) < 1.4f)
+        if (Distance(state.playerPosition, CityFacilities::Find(InteractionTarget::GateBeacon)->exit) < 1.4f)
         {
             return InteractionTarget::ObservatoryExit;
         }
@@ -3302,7 +3257,8 @@ InteractionTarget Game::FindNearbyInteraction()
         {
             return InteractionTarget::HomeTerminal;
         }
-        if (Distance(state.playerPosition, {2.4f, 2.4f}) < 1.5f)
+        if (Distance(state.playerPosition, CityFacilities::Find(InteractionTarget::HomeEntrance)->exit) <
+            1.5f)
         {
             return InteractionTarget::ApartmentExit;
         }
@@ -3338,12 +3294,8 @@ InteractionTarget Game::FindNearbyInteraction()
         Vector2 position;
         InteractionTarget target;
     };
-    const InteractionPoint points[] = {{kHomeDoor, InteractionTarget::HomeEntrance},
-                                       {kLiaPosition, InteractionTarget::Lia},
-                                       {kMaraPosition, InteractionTarget::Mara},
-                                       {kRelayPosition, InteractionTarget::PowerRelay},
-                                       {kBeaconPosition, InteractionTarget::GateBeacon},
-                                       {kCityReceiverPosition, InteractionTarget::CityReceiver}};
+    const InteractionPoint points[] = {{kLiaPosition, InteractionTarget::Lia},
+                                       {kMaraPosition, InteractionTarget::Mara}};
     InteractionTarget nearestTarget = InteractionTarget::None;
     float nearestDistance = 1.35f;
     for (const auto &point : points)
@@ -3357,6 +3309,15 @@ InteractionTarget Game::FindNearbyInteraction()
         {
             nearestDistance = distance;
             nearestTarget = point.target;
+        }
+    }
+    for (const auto &facility : CityFacilities::All())
+    {
+        const float distance = Distance(state.playerPosition, facility.exterior);
+        if (distance < nearestDistance)
+        {
+            nearestDistance = distance;
+            nearestTarget = facility.target;
         }
     }
     for (const auto &resident : state.residents)
@@ -3561,7 +3522,7 @@ void Game::InteractWithNearbyTarget()
     if (target == InteractionTarget::HomeEntrance)
     {
         state.isInsideHome = true;
-        state.playerPosition = {2, 2};
+        state.playerPosition = CityFacilities::Find(target)->arrival;
         state.StopMotion();
         state.cameraPosition = {0, 0};
         state.surfaceCameraHeight = 0;
@@ -3625,22 +3586,8 @@ void Game::InteractWithNearbyTarget()
     {
         if (game::GameLevels::Chapter().IsAvailable())
         {
-            if (game::GameLevels::Chapter().GetState().recordsCompared)
-            {
-                tell("리아 / 세 현장 모두 N-0 외곽 설비와 이어져 있어. 다음에는 카인이 기록한 수로를 "
-                     "확인해 보자.");
-                return;
-            }
-            if (game::GameLevels::Chapter().CompletedSites() == 3)
-            {
-                tell("리아 / 현장 기록은 다 모였어. 광장 수신망에서 광산 좌표와 대조해 보자.");
-                return;
-            }
-            tell(game::GameLevels::Chapter().GetState().generatorRestored
-                     ? "리아 / 발전기는 안정됐어. N-0 외곽으로 전력이 빠져나간 기록도 챙겼고. "
-                       "수신망에서 출발해서 남은 현장을 확인하자."
-                     : "리아 / 광산 좌표가 폐쇄된 N-0 외곽 설비 목록에도 있었어. 그래도 주민들은 지금 "
-                       "정전과 운송 지연이 더 급해. 수신망 단말에서 출발하자.");
+            Dialogue::Start("city/frontier/status",
+                            StoryDialogue::FrontierStatus(game::GameLevels::Chapter().GetState()), {}, true);
             return;
         }
         if (state.gateSignalHeard)
@@ -3718,7 +3665,7 @@ void Game::InteractWithNearbyTarget()
         }
         state.isInObservatory = true;
         state.isInsideHome = false;
-        state.playerPosition = kObservatoryStairs;
+        state.playerPosition = CityFacilities::Find(target)->arrival;
         state.StopMotion();
         state.cameraPosition = {0, 0};
         state.surfaceCameraHeight = 0;
@@ -3912,13 +3859,21 @@ void Game::InteractSurfaceStory(InteractionTarget target)
                     true);
                 return;
             }
-            say("mine/status/" + std::to_string(int(mine.quest.GetStage())), mine.quest.GetRiaDialogue());
+            Dialogue::Start("surface/story/mine/status/" + std::to_string(int(mine.quest.GetStage())),
+                            StoryDialogue::MineStatus(mine, StoryContact::Ria));
             return;
         }
         if (MissionEligible(MissionId::Frontier) && !state.missions.Active(MissionId::Frontier) &&
             state.missions.Status(MissionId::Frontier) != MissionStatus::Completed)
         {
             OfferMission(MissionId::Frontier, "현장");
+            return;
+        }
+        if (state.missions.Active(MissionId::Frontier) ||
+            state.missions.Status(MissionId::Frontier) == MissionStatus::Completed)
+        {
+            Dialogue::Start("surface/story/frontier/status",
+                            StoryDialogue::FrontierStatus(chapter.GetState()), {}, true);
             return;
         }
         if (state.missions.Active(MissionId::Signal))
@@ -3959,7 +3914,8 @@ void Game::InteractSurfaceStory(InteractionTarget target)
                 state.planetDestination =
                     surface->Stream().Snapshot()->planet->Region("mq00_mine").access.position;
             }
-            say("mine/objective/" + std::to_string(int(mine.quest.GetStage())), mine.quest.GetRiaDialogue());
+            Dialogue::Start("surface/story/mine/objective/" + std::to_string(int(mine.quest.GetStage())),
+                            StoryDialogue::MineStatus(mine, StoryContact::Receiver));
             return;
         }
         if (MissionEligible(MissionId::Frontier))

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "ModelLibrary.h"
 #include "Weapon.h"
 #include "Animation.h"
@@ -691,7 +691,8 @@ class Game
     void StoreSurfaceBikeHeading();
     void RestoreSurfaceBikeHeading();
     bool ReturnToSurface(Vector2 legacyDoor, int city = 0);
-    bool LandOnSurface(const world::SurfacePoint &point, int city = -1);
+    bool SurfaceLandingClear(const world::SurfacePoint &point, int city) const;
+    bool LandOnSurface(const world::SurfacePoint &point, int city = -1, unsigned searchRings = 8);
     friend class RelayTravel;
     friend class SaveSystem;
     friend class SaveArchive;

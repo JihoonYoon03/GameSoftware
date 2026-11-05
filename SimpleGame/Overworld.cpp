@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "Overworld.h"
+#include "CityFacilities.h"
 #include "Civic.h"
 #include "Level.h"
 #include "ResidentAI.h"
@@ -5290,7 +5291,10 @@ InteractionTarget PlanetCities::Nearby(const GameState &state, const world::Surf
             }
         }
     };
-    consider(kHomeDoor, InteractionTarget::HomeEntrance);
+    for (const auto &facility : CityFacilities::All())
+    {
+        consider(facility.exterior, facility.target);
+    }
     if ((!Game::Get().SurfaceParty() || !Game::Get().SurfaceParty()->Joined(CompanionId::Ria)) &&
         !CivicCombat::LandmarkDown(kLiaPosition))
     {
@@ -5305,9 +5309,6 @@ InteractionTarget PlanetCities::Nearby(const GameState &state, const world::Surf
     {
         consider(kCityKainPosition, InteractionTarget::Kain);
     }
-    consider(kRelayPosition, InteractionTarget::PowerRelay);
-    consider(kBeaconPosition, InteractionTarget::GateBeacon);
-    consider(kCityReceiverPosition, InteractionTarget::CityReceiver);
     for (size_t i = 0; i < state.residents.size(); ++i)
     {
         const auto &r = state.residents[i];

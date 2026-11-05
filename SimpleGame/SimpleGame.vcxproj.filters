@@ -35,10 +35,14 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Civic.h"><Filter>헤더 파일</Filter></ClInclude>
+    <ClInclude Include="CityFacilities.h"><Filter>헤더 파일</Filter></ClInclude>
     <ClInclude Include="Game.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Story.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="StoryJournal.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Save.h"><Filter>헤더 파일</Filter></ClInclude>
@@ -118,10 +122,14 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Civic.cpp"><Filter>소스 파일</Filter></ClCompile>
+    <ClCompile Include="CityFacilities.cpp"><Filter>소스 파일</Filter></ClCompile>
     <ClCompile Include="Game.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Story.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="StoryJournal.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Save.cpp"><Filter>소스 파일</Filter></ClCompile>
