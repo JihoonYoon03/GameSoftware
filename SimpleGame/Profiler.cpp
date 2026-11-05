@@ -73,7 +73,10 @@ const char *counterNames[] = {"draw_calls",
                               "planet_map_routes_rejected",
                               "planet_map_segments_visited",
                               "facility_exit_visited_nodes",
-                              "facility_exit_failures"};
+                              "facility_exit_failures",
+                              "facility_approach_visited_nodes",
+                              "facility_approach_connections",
+                              "facility_approach_failures"};
 const char *timerNames[] = {"frame_cpu",
                             "update",
                             "movement",
@@ -111,7 +114,8 @@ const char *timerNames[] = {"frame_cpu",
                             "planet_map",
                             "planet_traffic_contacts",
                             "planet_traffic_populate",
-                            "facility_exit_search"};
+                            "facility_exit_search",
+                            "facility_approach_prepare"};
 static_assert(sizeof(counterNames) / sizeof(*counterNames) == kCounterCount);
 static_assert(sizeof(timerNames) / sizeof(*timerNames) == kTimerCount);
 struct Sample

@@ -5,6 +5,7 @@
 #include "Hud.h"
 #include "Civic.h"
 #include "CityFacilities.h"
+#include "FacilityApproaches.h"
 #include "Drawing.h"
 #include "Monitoring/LocalMonitorServer.h"
 #include "Monitoring/Monitor.h"
@@ -38,6 +39,7 @@ using namespace game;
 MineState &mineState = GameLevels::Mine().GetState();
 using tutorial::Vector2;
 void ReadDialogue();
+void WaitForCheckpointLoad();
 tutorial::PlanetTrafficActor TrafficFixtureActor(const tutorial::PlanetTraffic &traffic,
                                                  const world::GeneratedPlanet &plan,
                                                  const tutorial::PlanetTrafficRoute &route, double progress,
@@ -807,6 +809,66 @@ void TestFacilityAccessContracts()
     assert(!find(clear, clear));
 }
 
+void TestFacilityApproachContracts()
+{
+    using namespace tutorial;
+    auto clear = [](Vector2) { return true; };
+    const std::vector<WalkwaySegment> sidewalks = {{{4, -3}, {4, 3}}};
+    unsigned visited = 0;
+    auto connect = [&](const std::vector<WalkwaySegment> &target,
+                       const CityFacilities::ClearPoint &geometry) {
+        auto path = FacilityApproaches::Connect({}, target, geometry, &visited);
+        assert(visited <= 4225);
+        if (!path.empty())
+        {
+            assert(Game::Distance(path.front(), {}) < .001f);
+            for (size_t i = 1; i < path.size(); ++i)
+            {
+                // Independently sample the resulting corridor, including simplified bends and final joins.
+                const int samples = (std::max)(1, int(std::ceil(Game::Distance(path[i - 1], path[i]) * 32)));
+                for (int step = 0; step <= samples; ++step)
+                {
+                    const float t = float(step) / samples;
+                    Vector2 p{path[i - 1].x + (path[i].x - path[i - 1].x) * t,
+                              path[i - 1].y + (path[i].y - path[i - 1].y) * t};
+                    assert(geometry(p) && std::hypot(p.x, p.y) <= 16.001f);
+                }
+            }
+        }
+        return path;
+    };
+    auto direct = connect(sidewalks, clear);
+    assert(!direct.empty() && std::fabs(direct.back().x - 4) < .001f && std::fabs(direct.back().y) <= 3);
+    auto again = connect(sidewalks, clear);
+    assert(direct.size() == again.size());
+    for (size_t i = 0; i < direct.size(); ++i)
+    {
+        assert(Game::Distance(direct[i], again[i]) == 0);
+    }
+    // A nearby endpoint beyond a solid wall must not be accepted as connected.
+    assert(connect(sidewalks, [](Vector2 p) { return std::fabs(p.x - 2) > .2f; }).empty());
+    auto around = connect(sidewalks, [](Vector2 p) { return std::fabs(p.x - 2) > .2f || p.y > 2; });
+    assert(!around.empty());
+    bool detoured = false;
+    for (auto p : around)
+    {
+        detoured |= p.y > 2;
+    }
+    assert(detoured && std::fabs(around.back().x - 4) < .001f);
+    assert(connect(sidewalks, [](Vector2) { return false; }).empty() && visited == 0);
+    assert(connect({}, clear).empty() && visited == 0);
+    assert(connect({{{17, -1}, {17, 1}}}, clear).empty());
+    // Exact projection onto an oblique sidewalk, rather than stopping near its endpoint.
+    auto diagonal = connect({{{4, 2}, {6, 4}}}, clear);
+    assert(!diagonal.empty() && std::fabs(diagonal.back().x - diagonal.back().y - 2) < .001f);
+    auto onSidewalk = connect({{{-1, 0}, {1, 0}}}, clear);
+    assert(onSidewalk.size() == 1 && visited == 1);
+    const float nan = std::numeric_limits<float>::quiet_NaN();
+    assert(FacilityApproaches::Connect({nan, 0}, sidewalks, clear, &visited).empty() && visited == 0);
+    assert(connect({{{nan, 0}, {1, 0}}}, clear).empty() && visited == 0);
+    assert(FacilityApproaches::Connect({}, sidewalks, {}, &visited).empty() && visited == 0);
+}
+
 void TestFacilityExitIntegration()
 {
     using namespace tutorial;
@@ -820,6 +882,70 @@ void TestFacilityExitIntegration()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     assert(g.Surface()->Ready() && state.isInsideHome);
+    const auto coreDigest = PlanetCities::Describe(state).Digest();
+    const auto baseWalkways = CityPlan::Walkways().size();
+    const auto *publishedModules = FacilityApproaches::Get().modules.data();
+    auto prepared = FacilityApproaches::Prepare(state);
+    assert(FacilityApproaches::Get().modules.data() == publishedModules);
+    assert(PlanetCities::Describe(state).Digest() == coreDigest &&
+           CityPlan::Walkways().size() == baseWalkways);
+    for (size_t i = 0; i < prepared.facilities.size(); ++i)
+    {
+        const auto &facility = CityFacilities::All()[i];
+        const auto &approach = prepared.facilities[i];
+        assert(approach.target == facility.target && !approach.path.empty());
+        const auto entrance = facility.role == FacilityRole::Residence
+                                  ? facility.exterior
+                                  : CityFacilities::StandingPoint(facility);
+        assert(Game::Distance(approach.path.front(), entrance) < .001f);
+        assert(FacilityApproaches::Connected(facility.target) && FacilityApproaches::Contains(entrance));
+        bool joined = CityPlan::IsWalkway(approach.path.back());
+        for (size_t earlier = 0; earlier < i && !joined; ++earlier)
+        {
+            const auto &previous = prepared.facilities[earlier].path;
+            for (size_t j = 1; j < previous.size(); ++j)
+            {
+                // Reuse the public connection query for an exact point on an earlier proven route.
+                auto connection = FacilityApproaches::Connect(
+                    approach.path.back(), {{previous[j - 1], previous[j]}}, [](Vector2) { return true; });
+                joined |= connection.size() == 1;
+            }
+        }
+        assert(joined);
+        for (auto p : approach.path)
+        {
+            assert(!RoadNetwork::Get().Contains(p, .4f) && !Overworld::Scenery().IsBlocked(p, .4f));
+        }
+    }
+    auto originalResidents = state.residents;
+    assert(!state.residents.empty());
+    auto &traveller = state.residents.front();
+    traveller.route = {{traveller.position, -1}, {{traveller.position.x + 1, traveller.position.y}, 0}};
+    traveller.routeCursor = 1;
+    traveller.randomState = 917923;
+    traveller.waitSeconds = 1.75f;
+    traveller.activity = ResidentActivity::WaitingSignal;
+    const auto residentsBefore = state.residents;
+    const auto navigation = CityResidents::Get().NavigationFingerprint();
+    FacilityApproaches::Publish({});
+    CityResidents::Get().RefreshSidewalks();
+    FacilityApproaches::Publish(std::move(prepared));
+    CityResidents::Get().RefreshSidewalks();
+    assert(CityResidents::Get().NavigationFingerprint() == navigation);
+    for (size_t i = 0; i < state.residents.size(); ++i)
+    {
+        const auto &before = residentsBefore[i], &after = state.residents[i];
+        assert(Game::Distance(before.position, after.position) == 0 &&
+               before.route.size() == after.route.size() && before.routeCursor == after.routeCursor &&
+               before.randomState == after.randomState && before.activity == after.activity &&
+               before.waitSeconds == after.waitSeconds);
+        for (size_t j = 0; j < before.route.size(); ++j)
+        {
+            assert(Game::Distance(before.route[j].position, after.route[j].position) == 0 &&
+                   before.route[j].crossing == after.route[j].crossing);
+        }
+    }
+    state.residents = std::move(originalResidents);
     const auto &door = *CityFacilities::Find(InteractionTarget::HomeEntrance);
     const auto pose = g.Surface()->Pose().origin;
     const auto bike = g.SurfaceBike();
@@ -854,6 +980,7 @@ void TestFacilityExitIntegration()
     const Vector2 exit{center.x + float(local.x / 2), center.y + float(local.y / 2)};
     assert(exit.y >= door.exterior.y - .001f && Game::Distance(exit, door.exterior) <= 4.01f);
     assert(!RoadNetwork::Get().Contains(exit, .2f));
+    assert(FacilityApproaches::Contains(exit) || CityPlan::IsWalkway(exit));
     assert(g.Surface()->LandingClear(g.Surface()->Pose().origin, .32));
     assert(state.mainQuestStage == stage && mineState.player.credits == credits &&
            mineState.player.salvage == salvage && !mineState.loadout.HasPistol());
@@ -876,6 +1003,26 @@ void TestFacilityExitIntegration()
     assert(center.y + float(local.y / 2) >= lift.exterior.y - .001f);
     state.residents = std::move(savedResidents);
     assert(state.mainQuestStage == stage && g.Surface()->Stream().Snapshot()->statistics.epoch == epoch);
+    const auto file =
+        std::filesystem::path("x64/RevisionChecks") /
+        ("facility-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count())) /
+        "access.sav";
+    assert(SaveSystem::Save(file));
+    publishedModules = FacilityApproaches::Get().modules.data();
+    assert(SaveSystem::Load(file));
+    SaveSystem::Cancel();
+    assert(FacilityApproaches::Get().modules.data() == publishedModules &&
+           CityResidents::Get().NavigationFingerprint() == navigation);
+    assert(SaveSystem::Load(file));
+    WaitForCheckpointLoad();
+    assert(PlanetCities::Describe(state).Digest() == coreDigest);
+    for (const auto &facility : CityFacilities::All())
+    {
+        assert(FacilityApproaches::Connected(facility.target));
+    }
+    const auto snapshot = monitoring::WorldSnapshot::Build(1, "facility-test");
+    assert(snapshot.find("\"city_facilities\"") != std::string::npos &&
+           snapshot.find("\"access_status\":\"connected\"") != std::string::npos);
     g.Reset();
 }
 
@@ -5029,8 +5176,9 @@ int main(int argc, char **argv)
     if (argc > 1 && std::string(argv[1]) == "--city-facilities")
     {
         TestFacilityAccessContracts();
+        TestFacilityApproachContracts();
         TestFacilityExitIntegration();
-        std::cout << "City facility metadata and connected exit checks passed.\n";
+        std::cout << "City facility metadata, sidewalk alignment and connected exit checks passed.\n";
         return 0;
     }
     if (argc > 1 && std::string(argv[1]) == "--story-followups")
@@ -5060,6 +5208,7 @@ int main(int argc, char **argv)
     TestForwardFlashlight();
     TestStageSelectionAndLoadout();
     TestFacilityAccessContracts();
+    TestFacilityApproachContracts();
     TestFacilityExitIntegration();
     TestPlanetTraffic();
     TestCitySimulationPolicy();

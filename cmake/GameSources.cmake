@@ -11,6 +11,7 @@ set(GAME_SOURCES
     SimpleGame/Save.cpp
     SimpleGame/Civic.cpp
     SimpleGame/CityFacilities.cpp
+    SimpleGame/FacilityApproaches.cpp
     SimpleGame/Hud.cpp
     SimpleGame/Level.cpp
     SimpleGame/ModelLibrary.cpp

@@ -7,6 +7,7 @@
 #include "Story.h"
 #include "StoryJournal.h"
 #include "CityFacilities.h"
+#include "FacilityApproaches.h"
 #include "Civic.h"
 #include "Hud.h"
 #include "Save.h"
@@ -1074,8 +1075,11 @@ void Game::Reset()
     observatory.palette.accent = {.3f, .76f, .86f, 1};
     observatory.palette.emission = {.42f, .9f, 1, 1};
     state.buildings.push_back(observatory);
+    FacilityApproaches::Publish({});
     Overworld::Populate(state);
     CivicJustice::Reset(state);
+    FacilityApproaches::Publish(FacilityApproaches::Prepare(state));
+    CityResidents::Get().RefreshSidewalks();
     ShowNotice("리아 · 수신 메시지 / 좋은 아침. 전망대 측정을 좀 도와줄래? 집 단말에 내용을 보냈어. 밖에서 "
                "기다릴게.");
 }
@@ -2129,7 +2133,10 @@ bool Game::ReturnToSurface(Vector2 door, int city)
             };
             auto available = [&](Vector2 local) {
                 const auto point = surfaceCities->Point(*surface, city, local);
-                return point && SurfaceLandingClear(*point, city);
+                const bool connectedWalkway = !FacilityApproaches::Connected(facility->target) ||
+                                              FacilityApproaches::Contains(local) ||
+                                              CityPlan::IsWalkway(local);
+                return connectedWalkway && point && SurfaceLandingClear(*point, city);
             };
             unsigned visited = 0;
             const auto landing = CityFacilities::FindExit(*facility, staticClear, available, &visited);

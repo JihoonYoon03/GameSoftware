@@ -191,6 +191,7 @@
     <ClInclude Include="Save.h" />
     <ClInclude Include="Civic.h" />
     <ClInclude Include="CityFacilities.h" />
+    <ClInclude Include="FacilityApproaches.h" />
     <ClInclude Include="Hud.h" />
     <ClInclude Include="Level.h" />
     <ClInclude Include="ModelLibrary.h" />
@@ -226,6 +227,7 @@
     <ClCompile Include="Save.cpp" />
     <ClCompile Include="Civic.cpp" />
     <ClCompile Include="CityFacilities.cpp" />
+    <ClCompile Include="FacilityApproaches.cpp" />
     <ClCompile Include="Hud.cpp" />
     <ClCompile Include="Level.cpp" />
     <ClCompile Include="ModelLibrary.cpp" />

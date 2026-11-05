@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "ResidentAI.h"
+#include "FacilityApproaches.h"
 #include "Civic.h"
 #include "Level.h"
 #include "Overworld.h"
@@ -310,6 +311,13 @@ int CityResidents::Nearest(const GameState &world, Vector2 position, int city, f
     }
     return nearest;
 }
+void CityResidents::RefreshSidewalks()
+{
+    for (auto &node : nodes)
+    {
+        node.sidewalk = node.baseSidewalk || FacilityApproaches::Contains(node.position);
+    }
+}
 void CityResidents::Reset(GameState &world)
 {
     decisionCursor = 0;
@@ -337,8 +345,13 @@ void CityResidents::Reset(GameState &world)
     if (nodes.empty() || signature != layoutSignature)
     {
         Build(world);
+        for (auto &node : nodes)
+        {
+            node.baseSidewalk = node.sidewalk;
+        }
         layoutSignature = signature;
     }
+    RefreshSidewalks();
     for (size_t i = 0; i < world.residents.size(); ++i)
     {
         auto &resident = world.residents[i];

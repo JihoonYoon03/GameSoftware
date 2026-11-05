@@ -60,6 +60,9 @@ enum class Counter
     PlanetMapSegmentsVisited,
     FacilityExitVisitedNodes,
     FacilityExitFailures,
+    FacilityApproachVisitedNodes,
+    FacilityApproachConnections,
+    FacilityApproachFailures,
     Count
 };
 enum class Timer
@@ -102,6 +105,7 @@ enum class Timer
     PlanetTrafficContacts,
     PlanetTrafficPopulate,
     FacilityExitSearch,
+    FacilityApproachPrepare,
     Count
 };
 class Scope

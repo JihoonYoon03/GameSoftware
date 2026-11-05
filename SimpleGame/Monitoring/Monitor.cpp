@@ -2,6 +2,7 @@
 #include "Monitor.h"
 #include "../Save.h"
 #include "../Civic.h"
+#include "../FacilityApproaches.h"
 #include "../AssetCache.h"
 #include "../Level.h"
 #include "../ModelLibrary.h"
@@ -630,6 +631,25 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     quests.Bool("mine_coordinates_recorded", level.coordinatesRecorded);
     quests.Number("frontier_observed_records", chapter.observedRecords);
     result.Raw("quests", quests.Finish());
+    std::string facilities;
+    const auto &approaches = tutorial::FacilityApproaches::Get();
+    for (size_t i = 0; i < tutorial::CityFacilities::All().size(); ++i)
+    {
+        const auto &facility = tutorial::CityFacilities::All()[i];
+        const auto &approach = approaches.facilities[i];
+        JsonObject item;
+        item.Text("id", facility.id);
+        item.Text("label", facility.label);
+        item.Text("region_id", "halo_07");
+        item.Bool("has_interior", facility.hasInterior);
+        item.Text("access_status", approach.target != facility.target ? "not_prepared"
+                                   : approach.path.empty()            ? "unconnected"
+                                                                      : "connected");
+        item.Number("path_points", approach.path.size());
+        item.Number("search_visited_nodes", approach.visitedNodes);
+        Append(facilities, item.Finish());
+    }
+    result.Raw("city_facilities", "[" + facilities + "]");
     auto stage = level.quest.GetStage();
     flags.Bool("main.signal_record_shown", stage >= game::MineQuestStage::CheckCityRelay);
     flags.Bool("main.mine_trace_confirmed", stage >= game::MineQuestStage::TravelToMine);

@@ -2,6 +2,7 @@
 #include "Scene.h"
 #include "Civic.h"
 #include "CityFacilities.h"
+#include "FacilityApproaches.h"
 #include "Drawing.h"
 #include "Hud.h"
 #include "Level.h"
@@ -323,6 +324,22 @@ void CityScene::DrawTrafficInfrastructure(game::Scene &scene)
         }
         scene.PlaceWorldActor(
             "frontage/" + std::to_string(i), m.position.x, m.position.y,
+            WorldBounds(m.position.x - m.radius, m.position.y - m.radius, m.radius * 2, m.radius * 2, 20), 1,
+            0, [m]() {
+                Drawing::DrawProp(models::ModelLibrary::Transit(m.asset), m.position, {1, 1, 1}, {}, m.yaw,
+                                  m.altitude);
+            });
+    }
+    const auto &approaches = FacilityApproaches::Get().modules;
+    for (size_t i = 0; i < approaches.size(); ++i)
+    {
+        const auto &m = approaches[i];
+        if (Game::Distance(m.position, camera) > 48 + m.radius)
+        {
+            continue;
+        }
+        scene.PlaceWorldActor(
+            "facility/walkway/" + std::to_string(i), m.position.x, m.position.y,
             WorldBounds(m.position.x - m.radius, m.position.y - m.radius, m.radius * 2, m.radius * 2, 20), 1,
             0, [m]() {
                 Drawing::DrawProp(models::ModelLibrary::Transit(m.asset), m.position, {1, 1, 1}, {}, m.yaw,
@@ -2282,6 +2299,21 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
                 }
             }
         }
+    }
+    for (const auto &module : FacilityApproaches::Get().modules)
+    {
+        const auto point = place(0, module.position);
+        if (!point)
+        {
+            continue;
+        }
+        const float height = float(point->z / 2);
+        renderqueue::PushMatrix();
+        renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
+        Drawing::DrawProp(models::ModelLibrary::Transit(module.asset),
+                          {float(point->x / 2), float(point->y / 2)}, {1, 1, 1}, {},
+                          cities->Yaw(session, 0, module.yaw), module.altitude);
+        renderqueue::PopMatrix();
     }
     const CityFacility *nearestFacility = nullptr;
     float facilityDistance = 5;

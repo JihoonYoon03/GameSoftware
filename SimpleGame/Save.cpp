@@ -1,6 +1,8 @@
 ﻿#include "stdafx.h"
 #include "Save.h"
 #include "Civic.h"
+#include "FacilityApproaches.h"
+#include "ResidentAI.h"
 #include "Level.h"
 #include "Overworld.h"
 #include "Scene.h"
@@ -2229,6 +2231,7 @@ void SaveSystem::Update()
         }
         // Allocate before commit. Moving the prepared containers keeps owned level references stable.
         auto cities = c.planet.storyPlanet ? std::make_unique<PlanetCities>(c.cities) : nullptr;
+        auto approaches = c.planet.storyPlanet ? FacilityApproaches::Prepare(c.game) : FacilityApproachPlan{};
         load.candidate.worlds.insert_or_assign(load.candidate.active, c);
         ValidateCampaign(load.candidate);
         auto ready = std::move(pending);
@@ -2241,6 +2244,8 @@ void SaveSystem::Update()
         game::GameLevels::Reset();
         WeaponWheel::Close();
         g.state = std::move(record.game);
+        FacilityApproaches::Publish(std::move(approaches));
+        CityResidents::Get().RefreshSidewalks();
         game::GameLevels::Mine().GetState() = std::move(record.mine);
         game::GameLevels::Chapter().GetState() = std::move(record.chapter);
         CivicJustice::State() = std::move(record.civic);

@@ -11,6 +11,8 @@ class CityResidents
   public:
     static CityResidents &Get();
     void Reset(GameState &world);
+    // Relabel the existing graph after publishing an access overlay; preserve every resident's route/state.
+    void RefreshSidewalks();
     void Update(GameState &world, float deltaSeconds, int activeCity = -1, int *decisionBudget = nullptr);
     static const char *ProfessionName(ResidentProfession profession);
     static const char *ActivityName(ResidentActivity activity);
@@ -30,6 +32,7 @@ class CityResidents
         int city, component = -1;
         std::vector<Link> links;
         bool sidewalk = false;
+        bool baseSidewalk = false;
     };
     void Build(const GameState &world);
     int Nearest(const GameState &world, Vector2 position, int city, float limit) const;

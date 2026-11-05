@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Game.h"
 #include <string>
 #include <vector>
@@ -51,6 +51,8 @@ class CityPlan
     static void Rebuild(GameState &world);
     static const std::vector<BuildingConnection> &Connections();
     static const std::vector<TransitPlacement> &Walkways();
+    // Fit an additional path without changing the saved city-core frontage/digest input.
+    static std::vector<TransitPlacement> FitWalkway(const std::vector<Vector2> &path);
     static bool IsWalkway(Vector2 position);
     static bool OverlapsAccess(Vector2 minimum, Vector2 maximum, float padding = .3f);
     static const std::vector<TerrainPatch> &Terrain(int x, int y, int size);

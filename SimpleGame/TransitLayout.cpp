@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "TransitLayout.h"
 #include "Overworld.h"
 #include "ResourceAssets.h"
@@ -1038,6 +1038,15 @@ const std::vector<BuildingConnection> &CityPlan::Connections()
 const std::vector<TransitPlacement> &CityPlan::Walkways()
 {
     return accessModules;
+}
+std::vector<TransitPlacement> CityPlan::FitWalkway(const std::vector<Vector2> &path)
+{
+    std::vector<TransitPlacement> modules;
+    for (size_t i = 1; i < path.size(); ++i)
+    {
+        Span(modules, "RoadPlan_Walk_W2_L4", path[i - 1], path[i], .75f);
+    }
+    return modules;
 }
 bool CityPlan::IsWalkway(Vector2 p)
 {
