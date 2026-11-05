@@ -1,8 +1,6 @@
 ﻿#include "stdafx.h"
 #include "FacilityApproaches.h"
-#include "Overworld.h"
 #include "Profiler.h"
-#include "ResourceAssets.h"
 #include <algorithm>
 #include <cmath>
 
@@ -10,7 +8,7 @@ namespace tutorial
 {
 namespace
 {
-constexpr float kStep = .5f, kRadius = 16.f, kJoin = .75f, kProbe = .125f, kClearance = .4f;
+constexpr float kStep = .5f, kRadius = 16.f, kJoin = .75f, kProbe = .125f;
 constexpr int kHalf = 32, kWidth = kHalf * 2 + 1, kCount = kWidth * kWidth;
 using SegmentCells = std::map<std::pair<int, int>, std::vector<WalkwaySegment>>;
 FacilityApproachPlan published;
@@ -24,24 +22,7 @@ std::pair<int, int> Cell(Vector2 p)
 }
 Vector2 Project(Vector2 p, const WalkwaySegment &s)
 {
-    const float x = s.second.x - s.first.x, y = s.second.y - s.first.y;
-    const float t = Game::Clamp(
-        ((p.x - s.first.x) * x + (p.y - s.first.y) * y) / (std::max)(.00001f, x * x + y * y), 0, 1);
-    return {s.first.x + x * t, s.first.y + y * t};
-}
-void Index(SegmentCells &cells, WalkwaySegment segment, float margin)
-{
-    auto lo = Cell({(std::min)(segment.first.x, segment.second.x) - margin,
-                    (std::min)(segment.first.y, segment.second.y) - margin});
-    auto hi = Cell({(std::max)(segment.first.x, segment.second.x) + margin,
-                    (std::max)(segment.first.y, segment.second.y) + margin});
-    for (int x = lo.first; x <= hi.first; ++x)
-    {
-        for (int y = lo.second; y <= hi.second; ++y)
-        {
-            cells[{x, y}].push_back(segment);
-        }
-    }
+    return CityWalkways::Project(p, s);
 }
 bool Swept(Vector2 a, Vector2 b, const CityFacilities::ClearPoint &clear)
 {
@@ -195,48 +176,8 @@ FacilityApproachPlan FacilityApproaches::Prepare(const GameState &world)
 {
     profiling::Scope timer(profiling::Timer::FacilityApproachPrepare);
     FacilityApproachPlan plan;
-    std::vector<WalkwaySegment> sidewalks;
-    for (const auto &connection : CityPlan::Connections())
-    {
-        for (size_t i = 1; i < connection.path.size(); ++i)
-        {
-            sidewalks.push_back({connection.path[i - 1], connection.path[i]});
-        }
-    }
-    struct Bounds
-    {
-        Vector2 lo, hi;
-    };
-    std::vector<Bounds> obstacles;
-    for (const auto &b : world.buildings)
-    {
-        obstacles.push_back({{b.x, b.y}, {b.x + b.width, b.y + b.depth}});
-    }
-    const auto &library = models::ModelLibrary::Get();
-    for (const auto &device : {std::make_pair(kBeaconPosition, &library.beacon),
-                               std::make_pair(kCityReceiverPosition, &library.console),
-                               std::make_pair(kRelayPosition, &library.breaker)})
-    {
-        const auto &mesh = models::ResourceAssets::Get(device.second->resourceId);
-        obstacles.push_back({{device.first.x + mesh.minimum.x, device.first.y + mesh.minimum.y},
-                             {device.first.x + mesh.maximum.x, device.first.y + mesh.maximum.y}});
-    }
-    auto clear = [&](Vector2 p) {
-        if (RoadNetwork::Get().Contains(p, kClearance) || TransitLayout::IsBlocked(p, kClearance) ||
-            Overworld::Scenery().IsBlocked(p, kClearance))
-        {
-            return false;
-        }
-        for (const auto &b : obstacles)
-        {
-            if (p.x > b.lo.x - kClearance && p.x < b.hi.x + kClearance && p.y > b.lo.y - kClearance &&
-                p.y < b.hi.y + kClearance)
-            {
-                return false;
-            }
-        }
-        return true;
-    };
+    auto sidewalks = CityWalkways::BaseSegments();
+    const auto clear = CityWalkways::StaticClearance(world);
     for (size_t i = 0; i < plan.facilities.size(); ++i)
     {
         const auto &facility = CityFacilities::All()[i];
@@ -249,32 +190,7 @@ FacilityApproachPlan FacilityApproaches::Prepare(const GameState &world)
         profiling::Count(profiling::Counter::FacilityApproachVisitedNodes, approach.visitedNodes);
         profiling::Count(approach.path.empty() ? profiling::Counter::FacilityApproachFailures
                                                : profiling::Counter::FacilityApproachConnections);
-        for (size_t j = 1; j < approach.path.size(); ++j)
-        {
-            const WalkwaySegment edge{approach.path[j - 1], approach.path[j]};
-            const bool covered = std::any_of(sidewalks.begin(), sidewalks.end(), [&](const auto &s) {
-                return Game::Distance(edge.first, Project(edge.first, s)) < .001f &&
-                       Game::Distance(edge.second, Project(edge.second, s)) < .001f;
-            });
-            if (!covered)
-            {
-                auto modules = CityPlan::FitWalkway({edge.first, edge.second});
-                for (auto &module : modules)
-                {
-                    // Separate overlay joins from the existing coplanar sidewalk surface.
-                    module.altitude += .003f;
-                }
-                plan.modules.insert(plan.modules.end(), modules.begin(), modules.end());
-            }
-            Index(plan.cells, edge, .5f);
-            // Later facilities can share a proven connection instead of drawing overlapping full routes.
-            sidewalks.push_back(edge);
-        }
-        // A pad already on a sidewalk has no new span, but remains a connected facility.
-        if (approach.path.size() == 1)
-        {
-            Index(plan.cells, {entrance, entrance}, .5f);
-        }
+        CityWalkways::Append(plan, approach.path, sidewalks);
     }
     return plan;
 }
@@ -299,17 +215,6 @@ bool FacilityApproaches::Connected(InteractionTarget target)
 }
 bool FacilityApproaches::Contains(Vector2 position)
 {
-    const auto found = published.cells.find(Cell(position));
-    if (found != published.cells.end())
-    {
-        for (const auto &segment : found->second)
-        {
-            if (Game::Distance(position, Project(position, segment)) < .5f)
-            {
-                return true;
-            }
-        }
-    }
-    return false;
+    return CityWalkways::Contains(published, position);
 }
 } // namespace tutorial

@@ -4,10 +4,12 @@
 #endif
 #include <windows.h>
 #include "Game.h"
+#include "PlayerCombat.h"
 #include "Story.h"
 #include "StoryJournal.h"
 #include "CityFacilities.h"
 #include "FacilityApproaches.h"
+#include "CityInfrastructure.h"
 #include "Civic.h"
 #include "Hud.h"
 #include "Save.h"
@@ -905,9 +907,16 @@ void PlayerMotion::Update(Vector2 target, float &yaw, bool aiming, float dt)
     forwardLean += (forward - forwardLean) * blend;
     sideLean += (side - sideLean) * blend;
 }
+void PlayerMotion::Stop()
+{
+    velocity = {};
+    forwardLean = sideLean = 0;
+    pivoting = false;
+    mobility.Cancel();
+}
 void GameState::StopMotion()
 {
-    playerMotion = {};
+    playerMotion.Stop();
     bikeVelocity = {};
     bikeYawSpeed = bikeSpeed = movementAmount = movementSpeed = 0;
 }
@@ -988,6 +997,7 @@ void Game::UpdatePlayerMovement(float deltaSeconds)
         CivicJustice::State().playerImpact.seconds > 0 &&
         CivicJustice::State().playerImpact.response == BodyResponse::Knockdown)
     {
+        state.playerMotion.mobility.Update(deltaSeconds, {}, state.facingYaw, false, false, false, false);
         state.StopMotion();
         return;
     }
@@ -997,6 +1007,7 @@ void Game::UpdatePlayerMovement(float deltaSeconds)
         !state.isInsideHome && !state.isInObservatory)
     {
         Overworld::UpdateBike(state, deltaSeconds);
+        state.playerMotion.mobility.Update(deltaSeconds, {}, state.facingYaw, false, false, false, false);
         return;
     }
     float screenX = (state.pressedKeys['d'] ? 1.f : 0) - (state.pressedKeys['a'] ? 1.f : 0);
@@ -1017,13 +1028,35 @@ void Game::UpdatePlayerMovement(float deltaSeconds)
     }
     // Invert the 2:1 isometric projection so WASD follows screen directions.
     Vector2 target = {screenX * .5f + screenY, screenY - screenX * .5f};
+    const auto combatContext = combat::PlayerCombat::Current();
+    const bool mobilityAllowed = combat::PlayerCombat::EnvironmentBlock(combatContext, combatContext.area) ==
+                                 combat::CombatBlock::Ready;
+    const bool wasDodging = state.playerMotion.mobility.Dodging();
+    const auto dash = state.playerMotion.mobility.Update(
+        deltaSeconds, {target.x, target.y, 0}, state.facingYaw, state.pressedKeys[platform::SprintKey],
+        IsAiming(), mobilityAllowed,
+        combatContext.reloading || combatContext.fireCooldown > 0 || combatContext.meleeRemaining > 0);
+    if (wasDodging && !state.playerMotion.mobility.Dodging())
+    {
+        state.playerMotion.velocity = {};
+    }
     float length = std::hypot(target.x, target.y);
+    const float speed =
+        kMovementSpeed * (state.playerMotion.mobility.Sprinting() ? PlayerMobility::SprintMultiplier : 1);
     if (length > 0)
     {
-        target.x *= kMovementSpeed / length;
-        target.y *= kMovementSpeed / length;
+        target.x *= speed / length;
+        target.y *= speed / length;
     }
-    state.playerMotion.Update(target, state.facingYaw, IsAiming(), deltaSeconds);
+    if (state.playerMotion.mobility.Dodging() && deltaSeconds > 0)
+    {
+        state.playerMotion.velocity = {dash.x / deltaSeconds, dash.y / deltaSeconds};
+        state.playerMotion.pivoting = false;
+    }
+    else
+    {
+        state.playerMotion.Update(target, state.facingYaw, IsAiming(), deltaSeconds);
+    }
     Vector2 requested = {state.playerMotion.velocity.x * deltaSeconds,
                          state.playerMotion.velocity.y * deltaSeconds};
     Vector2 candidate = {previous.x + requested.x, previous.y + requested.y};
@@ -1034,6 +1067,11 @@ void Game::UpdatePlayerMovement(float deltaSeconds)
         state.playerMotion.velocity, requested,
         {state.playerPosition.x - previous.x, state.playerPosition.y - previous.y});
     state.movementSpeed = deltaSeconds > 0 ? Distance(previous, state.playerPosition) / deltaSeconds : 0;
+    if (state.playerMotion.mobility.Contact(std::hypot(requested.x, requested.y),
+                                            Distance(previous, state.playerPosition)))
+    {
+        state.playerMotion.velocity = {};
+    }
     state.movementAmount = Game::Clamp(state.movementSpeed / kMovementSpeed, 0, 1);
 }
 void Game::UpdateCamera(float deltaSeconds)
@@ -1076,9 +1114,11 @@ void Game::Reset()
     observatory.palette.emission = {.42f, .9f, 1, 1};
     state.buildings.push_back(observatory);
     FacilityApproaches::Publish({});
+    CityInfrastructure::Publish({});
     Overworld::Populate(state);
     CivicJustice::Reset(state);
     FacilityApproaches::Publish(FacilityApproaches::Prepare(state));
+    CityInfrastructure::Publish(CityInfrastructure::Prepare(state, FacilityApproaches::Get()));
     CityResidents::Get().RefreshSidewalks();
     ShowNotice("리아 · 수신 메시지 / 좋은 아침. 전망대 측정을 좀 도와줄래? 집 단말에 내용을 보냈어. 밖에서 "
                "기다릴게.");
@@ -1496,6 +1536,15 @@ void Game::KeyDown(unsigned char key, int, int)
         }
         return;
     }
+    if (key == ' ' && !repeated && !state.isBikeMounted)
+    {
+        const auto context = combat::PlayerCombat::Current();
+        if (combat::PlayerCombat::EnvironmentBlock(context, context.area) == combat::CombatBlock::Ready)
+        {
+            state.playerMotion.mobility.RequestDodge();
+        }
+        return;
+    }
     if (key == 'v' && !repeated)
     {
         if (game::GameLevels::Mine().IsActive())
@@ -1810,6 +1859,13 @@ models::CharacterPose Game::PlayerPose(float recoil) const
     {
         pose.motionForwardLean = state.playerMotion.forwardLean;
         pose.motionSideLean = state.playerMotion.sideLean;
+        if (state.playerMotion.mobility.Dodging())
+        {
+            const auto direction = state.playerMotion.mobility.Direction();
+            const float cy = std::cos(state.facingYaw), sy = std::sin(state.facingYaw);
+            pose.motionForwardLean += (direction.x * cy + direction.y * sy) * .12f;
+            pose.motionSideLean += (-direction.x * sy + direction.y * cy) * .12f;
+        }
     }
     const auto &gun = game::GameLevels::Mine().GetState().pistol;
     pose.reloadProgress = armed && gun.IsReloading() ? gun.GetReloadProgress() : -1;
@@ -2465,6 +2521,11 @@ void Game::UpdateSurface(float dt)
         {
             state.playerMotion.velocity =
                 MotionMath::ContactVelocity(state.playerMotion.velocity, requested, actual);
+            if (state.playerMotion.mobility.Contact(std::hypot(requested.x, requested.y),
+                                                    std::hypot(actual.x, actual.y)))
+            {
+                state.playerMotion.velocity = {};
+            }
         }
         state.movementSpeed = dt > 0 ? Distance(before, state.playerPosition) / dt : 0;
         state.movementAmount =
@@ -2498,6 +2559,9 @@ void Game::UpdateSurface(float dt)
             state.facingYaw = std::atan2(heading.y, heading.x);
             state.bikeYaw = std::atan2(bikeHeading.y, bikeHeading.x);
             state.playerMotion.velocity = rotate(state.playerMotion.velocity);
+            const auto dodgeDirection = state.playerMotion.mobility.Direction();
+            const auto rotatedDodge = rotate({dodgeDirection.x, dodgeDirection.y});
+            state.playerMotion.mobility.RotateDirection(rotatedDodge.x, rotatedDodge.y);
             state.bikeVelocity = rotate(state.bikeVelocity);
             CivicJustice::State().playerImpact.velocity = rotate(CivicJustice::State().playerImpact.velocity);
             state.planetMapPan = rotate(state.planetMapPan);

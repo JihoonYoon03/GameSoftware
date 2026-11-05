@@ -2,6 +2,7 @@
 #include "Save.h"
 #include "Civic.h"
 #include "FacilityApproaches.h"
+#include "CityInfrastructure.h"
 #include "ResidentAI.h"
 #include "Level.h"
 #include "Overworld.h"
@@ -28,7 +29,7 @@ namespace tutorial
 namespace
 {
 constexpr std::uint64_t kMaximumFile = 16 * 1024 * 1024;
-constexpr unsigned kSchema = 8;
+constexpr unsigned kSchema = 9;
 void Require(bool value, const char *message)
 {
     if (!value)
@@ -1116,6 +1117,31 @@ class SaveArchive
             }
         }
     }
+    void MobilityRecords(Campaign &v)
+    {
+        std::uint64_t count = v.worlds.size();
+        Value(count);
+        Require(count == v.worlds.size(), "기동 상태 확장의 월드 수가 다릅니다.");
+        std::set<std::string> keys;
+        auto entry = v.worlds.begin();
+        for (std::uint64_t i = 0; i < count; ++i)
+        {
+            std::string key = reading ? std::string{} : (entry++)->first;
+            Value(key);
+            Require(v.worlds.count(key) && keys.insert(key).second,
+                    "기동 상태 확장의 월드 ID가 올바르지 않습니다.");
+            auto &mobility = v.worlds.at(key).game.playerMotion.mobility;
+            float cooldown = reading ? 0.f : mobility.Cooldown();
+            Value(cooldown);
+            Require(std::isfinite(cooldown) && cooldown >= 0 &&
+                        cooldown <= PlayerMobility::DodgeSeconds + PlayerMobility::RecoverySeconds,
+                    "저장된 회피 대기 시간이 올바르지 않습니다.");
+            if (reading)
+            {
+                mobility.RestoreCooldown(cooldown);
+            }
+        }
+    }
     void Value(Checkpoint &v)
     {
         Fields(v.planet, v.layout, v.digest, v.pose, v.origin, v.bike, v.bikeHeading, v.mineReturn, v.game,
@@ -1453,6 +1479,20 @@ Campaign Decode(const std::filesystem::path &path)
             "저장 형식 버전이 다릅니다. 원본 파일은 변경하지 않았습니다.");
     Require(world::ContentLayout::SupportsRevision(envelope.layout),
             "저장된 도시 배치 버전이 현재 게임과 다릅니다.");
+    std::vector<unsigned char> mobilityExtension;
+    if (envelope.schema >= 9)
+    {
+        Require(envelope.payload.size() >= 8, "기동 상태 확장의 길이 정보가 없습니다.");
+        SaveArchive footer(true,
+                           std::vector<unsigned char>(envelope.payload.end() - 8, envelope.payload.end()));
+        std::uint64_t size = 0;
+        footer.Value(size);
+        Require(size > 0 && size <= envelope.payload.size() - 8,
+                "기동 상태 확장의 길이가 올바르지 않습니다.");
+        const size_t start = envelope.payload.size() - 8 - size_t(size);
+        mobilityExtension.assign(envelope.payload.begin() + start, envelope.payload.end() - 8);
+        envelope.payload.resize(start);
+    }
     std::vector<unsigned char> trackingExtension;
     if (envelope.schema >= 8)
     {
@@ -1596,6 +1636,12 @@ Campaign Decode(const std::filesystem::path &path)
         SaveArchive tracking(true, std::move(trackingExtension));
         tracking.TrackingRecords(result);
         Require(tracking.Finished(), "활동 추적 확장에 지원하지 않는 데이터가 있습니다.");
+    }
+    if (envelope.schema >= 9)
+    {
+        SaveArchive mobility(true, std::move(mobilityExtension));
+        mobility.MobilityRecords(result);
+        Require(mobility.Finished(), "기동 상태 확장에 지원하지 않는 데이터가 있습니다.");
     }
     ValidateCampaign(result);
     return result;
@@ -1999,6 +2045,12 @@ bool SaveSystem::Save(const std::filesystem::path &path)
         trackingFooter.Value(trackingSize);
         payload.insert(payload.end(), tracking.Bytes().begin(), tracking.Bytes().end());
         payload.insert(payload.end(), trackingFooter.Bytes().begin(), trackingFooter.Bytes().end());
+        SaveArchive mobility(false), mobilityFooter(false);
+        mobility.MobilityRecords(candidate);
+        std::uint64_t mobilitySize = mobility.Bytes().size();
+        mobilityFooter.Value(mobilitySize);
+        payload.insert(payload.end(), mobility.Bytes().begin(), mobility.Bytes().end());
+        payload.insert(payload.end(), mobilityFooter.Bytes().begin(), mobilityFooter.Bytes().end());
         Require(payload.size() <= kMaximumFile, "저장 데이터가 허용 크기를 초과했습니다.");
         SaveArchive header(false);
         unsigned char magic[8] = {'S', 'G', 'W', 'O', 'R', 'L', 'D', 0};
@@ -2232,6 +2284,8 @@ void SaveSystem::Update()
         // Allocate before commit. Moving the prepared containers keeps owned level references stable.
         auto cities = c.planet.storyPlanet ? std::make_unique<PlanetCities>(c.cities) : nullptr;
         auto approaches = c.planet.storyPlanet ? FacilityApproaches::Prepare(c.game) : FacilityApproachPlan{};
+        auto infrastructure =
+            c.planet.storyPlanet ? CityInfrastructure::Prepare(c.game, approaches) : CityInfrastructurePlan{};
         load.candidate.worlds.insert_or_assign(load.candidate.active, c);
         ValidateCampaign(load.candidate);
         auto ready = std::move(pending);
@@ -2245,6 +2299,7 @@ void SaveSystem::Update()
         WeaponWheel::Close();
         g.state = std::move(record.game);
         FacilityApproaches::Publish(std::move(approaches));
+        CityInfrastructure::Publish(std::move(infrastructure));
         CityResidents::Get().RefreshSidewalks();
         game::GameLevels::Mine().GetState() = std::move(record.mine);
         game::GameLevels::Chapter().GetState() = std::move(record.chapter);

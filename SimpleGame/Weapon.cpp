@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "Weapon.h"
 #include <algorithm>
 #include <cmath>
@@ -125,6 +125,10 @@ int Firearm::GetMagazineSize() const
 float Firearm::GetSpread() const
 {
     return spread;
+}
+float Firearm::GetCooldownRemaining() const
+{
+    return cooldown;
 }
 float Firearm::GetReloadProgress() const
 {

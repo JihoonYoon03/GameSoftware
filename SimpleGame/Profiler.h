@@ -63,6 +63,18 @@ enum class Counter
     FacilityApproachVisitedNodes,
     FacilityApproachConnections,
     FacilityApproachFailures,
+    CityInfrastructureAttempts,
+    CityInfrastructureVisitedNodes,
+    CityInfrastructureConnections,
+    CityInfrastructureFailures,
+    CombatActionRequests,
+    CombatContextBlocks,
+    CombatRecoveryBlocks,
+    CombatWeaponBlocks,
+    CombatCapacityBlocks,
+    DodgeStarted,
+    DodgeRejected,
+    DodgeContacts,
     Count
 };
 enum class Timer
@@ -106,6 +118,7 @@ enum class Timer
     PlanetTrafficPopulate,
     FacilityExitSearch,
     FacilityApproachPrepare,
+    CityInfrastructurePrepare,
     Count
 };
 class Scope

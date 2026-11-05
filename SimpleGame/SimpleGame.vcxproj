@@ -192,6 +192,8 @@
     <ClInclude Include="Civic.h" />
     <ClInclude Include="CityFacilities.h" />
     <ClInclude Include="FacilityApproaches.h" />
+    <ClInclude Include="CityWalkways.h" />
+    <ClInclude Include="CityInfrastructure.h" />
     <ClInclude Include="Hud.h" />
     <ClInclude Include="Level.h" />
     <ClInclude Include="ModelLibrary.h" />
@@ -210,6 +212,8 @@
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Scene\SceneGraph.h" />
     <ClInclude Include="Weapon.h" />
+    <ClInclude Include="PlayerCombat.h" />
+    <ClInclude Include="PlayerMobility.h" />
     <ClInclude Include="World.h" />
     <ClInclude Include="WorldGeneration.h" />
     <ClInclude Include="WorldContent.h" />
@@ -228,6 +232,8 @@
     <ClCompile Include="Civic.cpp" />
     <ClCompile Include="CityFacilities.cpp" />
     <ClCompile Include="FacilityApproaches.cpp" />
+    <ClCompile Include="CityWalkways.cpp" />
+    <ClCompile Include="CityInfrastructure.cpp" />
     <ClCompile Include="Hud.cpp" />
     <ClCompile Include="Level.cpp" />
     <ClCompile Include="ModelLibrary.cpp" />
@@ -246,6 +252,8 @@
     <ClCompile Include="Scene\SceneGraph.cpp" />
     <ClCompile Include="SimpleGame.cpp" />
     <ClCompile Include="Weapon.cpp" />
+    <ClCompile Include="PlayerCombat.cpp" />
+    <ClCompile Include="PlayerMobility.cpp" />
     <ClCompile Include="World.cpp" />
     <ClCompile Include="WorldGeneration.cpp" />
     <ClCompile Include="WorldContent.cpp" />

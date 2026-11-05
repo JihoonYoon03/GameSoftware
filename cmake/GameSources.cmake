@@ -12,6 +12,8 @@ set(GAME_SOURCES
     SimpleGame/Civic.cpp
     SimpleGame/CityFacilities.cpp
     SimpleGame/FacilityApproaches.cpp
+    SimpleGame/CityWalkways.cpp
+    SimpleGame/CityInfrastructure.cpp
     SimpleGame/Hud.cpp
     SimpleGame/Level.cpp
     SimpleGame/ModelLibrary.cpp
@@ -29,6 +31,8 @@ set(GAME_SOURCES
     SimpleGame/Scene.cpp
     SimpleGame/Scene/SceneGraph.cpp
     SimpleGame/Weapon.cpp
+    SimpleGame/PlayerCombat.cpp
+    SimpleGame/PlayerMobility.cpp
     SimpleGame/World.cpp
     SimpleGame/WorldGeneration.cpp
     SimpleGame/WorldContent.cpp

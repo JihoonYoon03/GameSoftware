@@ -6,6 +6,7 @@
 #include "Civic.h"
 #include "CityFacilities.h"
 #include "FacilityApproaches.h"
+#include "CityInfrastructure.h"
 #include "Drawing.h"
 #include "Monitoring/LocalMonitorServer.h"
 #include "Monitoring/Monitor.h"
@@ -869,6 +870,105 @@ void TestFacilityApproachContracts()
     assert(FacilityApproaches::Connect({}, sidewalks, {}, &visited).empty() && visited == 0);
 }
 
+void TestCityInfrastructureContracts(const tutorial::GameState &state)
+{
+    using namespace tutorial;
+    std::set<std::string> ids;
+    for (size_t city = 0; city < CityInfrastructure::Profiles().size(); ++city)
+    {
+        const auto &profile = CityInfrastructure::Profiles()[city];
+        assert(std::string(profile.regionId) == Overworld::Cities()[city].id);
+        assert(world::WorldCatalog::Region(profile.regionId).tier == Overworld::Cities()[city].tier);
+        for (const auto &role : profile.roles)
+        {
+            assert(ids.insert(std::string(profile.regionId) + "/" + role.key).second && role.label[0]);
+            assert(role.assets.front() != models::SceneryType::Count);
+        }
+    }
+    SceneryProp rotated;
+    rotated.minimum = {-3, 7};
+    rotated.maximum = {1, 9};
+    for (auto pad : CityInfrastructure::Pads(rotated))
+    {
+        // All inspection pads stay outside the delivered, already-rotated footprint with walking clearance.
+        assert(pad.x <= rotated.minimum.x - .64f || pad.x >= rotated.maximum.x + .64f ||
+               pad.y <= rotated.minimum.y - .64f || pad.y >= rotated.maximum.y + .64f);
+    }
+    CityWalkwayPlan empty;
+    assert(!CityWalkways::Contains(empty, {}));
+    assert(!CityWalkways::Contains(empty, {std::numeric_limits<float>::quiet_NaN(), 0}));
+    const auto digest = PlanetCities::Describe(state).Digest();
+    const auto baseCount = CityPlan::Walkways().size();
+    const auto *live = CityInfrastructure::Get().modules.data();
+    auto plan = CityInfrastructure::Prepare(state, FacilityApproaches::Get());
+    assert(plan.prepared && CityInfrastructure::Get().modules.data() == live);
+    assert(plan.modules.size() == plan.moduleCities.size());
+    assert(PlanetCities::Describe(state).Digest() == digest && CityPlan::Walkways().size() == baseCount);
+    auto connected = CityWalkways::BaseSegments();
+    for (const auto &facility : FacilityApproaches::Get().facilities)
+    {
+        for (size_t j = 1; j < facility.path.size(); ++j)
+        {
+            connected.push_back({facility.path[j - 1], facility.path[j]});
+        }
+    }
+    const auto &props = Overworld::Scenery().Props();
+    const auto clear = CityWalkways::StaticClearance(state);
+    std::set<size_t> selected;
+    std::array<unsigned, 5> connectedCities = {};
+    for (size_t i = 0; i < plan.sites.size(); ++i)
+    {
+        const auto &site = plan.sites[i];
+        const auto &role = CityInfrastructure::Profiles()[i / 3].roles[i % 3];
+        assert(site.city == int(i / 3) && site.attempts <= 4 && site.visitedNodes <= 4 * 4225);
+        if (site.access == InfrastructureAccess::Missing)
+        {
+            assert(site.path.empty() && site.sourceIndex == (std::numeric_limits<size_t>::max)());
+            continue;
+        }
+        assert(site.sourceIndex < props.size());
+        const auto &prop = props[site.sourceIndex];
+        assert(std::find(role.assets.begin(), role.assets.end(), prop.type) != role.assets.end());
+        const auto &mesh = models::ResourceAssets::Get(prop.model->resourceId);
+        assert(site.asset == mesh.name && Game::Distance(site.equipment, prop.position) == 0);
+        assert(std::fabs(site.nativeSizeMeters.x - (mesh.maximum.x - mesh.minimum.x) * 2) < .001f &&
+               std::fabs(site.nativeSizeMeters.y - (mesh.maximum.y - mesh.minimum.y) * 2) < .001f &&
+               std::fabs(site.nativeSizeMeters.z - (mesh.maximum.z - mesh.minimum.z) * 2) < .001f);
+        if (site.access != InfrastructureAccess::Connected)
+        {
+            assert(site.path.empty());
+            continue;
+        }
+        ++connectedCities[i / 3];
+        assert(site.pathLengthMeters >= 0 && site.pathLengthMeters <= 64);
+        assert(selected.insert(site.sourceIndex).second && !site.path.empty());
+        assert(Game::Distance(site.path.front(), site.standing) == 0 &&
+               CityWalkways::Contains(plan, site.standing));
+        assert(std::any_of(connected.begin(), connected.end(), [&](auto segment) {
+            return Game::Distance(site.path.back(), CityWalkways::Project(site.path.back(), segment)) < .001f;
+        }));
+        for (size_t j = 1; j < site.path.size(); ++j)
+        {
+            const auto a = site.path[j - 1], b = site.path[j];
+            const int samples = (std::max)(1, int(std::ceil(Game::Distance(a, b) * 16)));
+            for (int sample = 0; sample <= samples; ++sample)
+            {
+                const float t = float(sample) / samples;
+                assert(clear({a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t}));
+            }
+            connected.push_back({a, b});
+        }
+    }
+    for (auto count : connectedCities)
+    {
+        assert(count > 0); // An entire city's profile must not silently produce only diagnostic failures.
+    }
+    for (auto city : plan.moduleCities)
+    {
+        assert(city >= 0 && city < Overworld::kCityCount);
+    }
+}
+
 void TestFacilityExitIntegration()
 {
     using namespace tutorial;
@@ -882,6 +982,7 @@ void TestFacilityExitIntegration()
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     assert(g.Surface()->Ready() && state.isInsideHome);
+    TestCityInfrastructureContracts(state);
     const auto coreDigest = PlanetCities::Describe(state).Digest();
     const auto baseWalkways = CityPlan::Walkways().size();
     const auto *publishedModules = FacilityApproaches::Get().modules.data();
@@ -1009,20 +1110,25 @@ void TestFacilityExitIntegration()
         "access.sav";
     assert(SaveSystem::Save(file));
     publishedModules = FacilityApproaches::Get().modules.data();
+    const auto *publishedInfrastructure = CityInfrastructure::Get().modules.data();
     assert(SaveSystem::Load(file));
     SaveSystem::Cancel();
     assert(FacilityApproaches::Get().modules.data() == publishedModules &&
+           CityInfrastructure::Get().modules.data() == publishedInfrastructure &&
            CityResidents::Get().NavigationFingerprint() == navigation);
     assert(SaveSystem::Load(file));
     WaitForCheckpointLoad();
     assert(PlanetCities::Describe(state).Digest() == coreDigest);
+    assert(CityInfrastructure::Get().prepared);
     for (const auto &facility : CityFacilities::All())
     {
         assert(FacilityApproaches::Connected(facility.target));
     }
     const auto snapshot = monitoring::WorldSnapshot::Build(1, "facility-test");
     assert(snapshot.find("\"city_facilities\"") != std::string::npos &&
-           snapshot.find("\"access_status\":\"connected\"") != std::string::npos);
+           snapshot.find("\"access_status\":\"connected\"") != std::string::npos &&
+           snapshot.find("\"city_infrastructure\"") != std::string::npos &&
+           snapshot.find("\"building_entrance_contract\":\"awaiting_delivery\"") != std::string::npos);
     g.Reset();
 }
 
@@ -1817,13 +1923,16 @@ void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::file
         }
         return result;
     };
-    assert(number(8) == 8 && version >= 1 && version <= 7);
-    const size_t trackingStart = bytes.size() - 8 - size_t(number(bytes.size() - 8));
+    assert((number(8) == 8 || number(8) == 9) && version >= 1 && version <= 8);
+    const size_t schema8End =
+        number(8) == 9 ? bytes.size() - 8 - size_t(number(bytes.size() - 8)) : bytes.size();
+    const size_t trackingStart = schema8End - 8 - size_t(number(schema8End - 8));
     const size_t communityStart = trackingStart - 8 - size_t(number(trackingStart - 8));
     const size_t linkStart = communityStart - 8 - size_t(number(communityStart - 8));
     const size_t securityStart = linkStart - 8 - size_t(number(linkStart - 8));
     const size_t partyStart = securityStart - 8 - size_t(number(securityStart - 8));
-    const size_t payloadEnd = version == 7   ? trackingStart
+    const size_t payloadEnd = version == 8   ? schema8End
+                              : version == 7 ? trackingStart
                               : version == 6 ? communityStart
                               : version == 5 ? linkStart
                               : version == 4 ? securityStart
@@ -2091,6 +2200,9 @@ void TestWorldCheckpoints()
     WaitForCheckpointLoad();
     VerifyCheckpointFixture();
     assert(w.missions.Tracked() == MissionId::Count && w.trackedCommunityRegion.empty());
+    const auto legacy8 = folder / "version8.sav";
+    WriteLegacyCheckpoint(file, legacy8, 8);
+    assert(SaveSystem::CheckFile(legacy8));
     const auto malformed = folder / "tracking-footer.sav";
     const auto malformedCommunity = folder / "community-footer.sav";
     auto breakFooter = [&](const auto &source, const auto &destination) {
@@ -2111,7 +2223,7 @@ void TestWorldCheckpoints()
         std::ofstream output(destination, std::ios::binary);
         output.write(reinterpret_cast<const char *>(bytes.data()), std::streamsize(bytes.size()));
     };
-    breakFooter(file, malformed);
+    breakFooter(legacy8, malformed);
     breakFooter(legacy7, malformedCommunity);
     assert(!SaveSystem::CheckFile(malformed) && !SaveSystem::CheckFile(malformedCommunity));
     const auto creditsBefore = mineState.player.credits;
@@ -2843,6 +2955,7 @@ void TestPlanetProfileVisits()
     assert(!SaveSystem::SwitchPlanet("orren"));
     WaitForCheckpointLoad();
     assert(g.Surface()->Planet().id == "seira" && !g.IsStoryWorld() && !g.SurfaceCities());
+    assert(!CityInfrastructure::Get().prepared && CityInfrastructure::Get().modules.empty());
     assert(w.missions.Tracked() == MissionId::Count && w.trackedCommunityRegion.empty());
     assert(w.residents.empty() && w.buildings.empty() && !mineState.generated &&
            !GameLevels::Chapter().GetState().generated && !g.EnterSurfaceMine());
@@ -2899,6 +3012,7 @@ void TestPlanetProfileVisits()
     mineState.player.credits = 8100;
     assert(SaveSystem::SwitchPlanet("erma"));
     WaitForCheckpointLoad();
+    assert(CityInfrastructure::Get().prepared);
     assert(w.missions.Tracked() == MissionId::Mara && ActivityJournal::Current().mission == MissionId::Mara);
     assert(g.IsStoryWorld() && w.residents.size() == 98 && w.residents.front().health == 64 &&
            w.residents.front().name == "저장 검사 주민" && w.relayNetwork.Registered("relay_halo_07_0") &&

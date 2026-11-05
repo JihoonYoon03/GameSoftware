@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include <windows.h>
 #include <mmsystem.h>
 #include "Window.h"
@@ -42,8 +42,12 @@ void Key(GLFWwindow *, int key, int, int action, int modifiers)
         // Use the character from key-down, even if Shift was released first.
         if (heldKeys[key])
         {
-            tutorial::GameCallbacks::KeyUp(heldKeys[key], cursor.first, cursor.second);
+            const auto released = heldKeys[key];
             heldKeys[key] = 0;
+            if (std::find(heldKeys.begin(), heldKeys.end(), released) == heldKeys.end())
+            {
+                tutorial::GameCallbacks::KeyUp(released, cursor.first, cursor.second);
+            }
         }
         return;
     }
@@ -75,6 +79,7 @@ void Focus(GLFWwindow *, int focused)
         tutorial::GameCallbacks::MouseEntry(GLFW_FALSE);
         auto &state = tutorial::Game::Get().GetState();
         std::fill(std::begin(state.pressedKeys), std::end(state.pressedKeys), false);
+        state.StopMotion();
         SetCursorHidden(false);
     }
 }
@@ -93,44 +98,65 @@ void Resize(GLFWwindow *, int width, int height)
 unsigned char GameKey(int key, int modifiers)
 {
     // These are gameplay controls, independent of IME composition. Shift affects
-    // punctuation (not movement); there is no editable text field in this game.
+    // punctuation; letter keys remain WASD while Shift also maps to the sprint token.
     if (key >= GLFW_KEY_A && key <= GLFW_KEY_Z)
     {
         return static_cast<unsigned char>('a' + key - GLFW_KEY_A);
     }
     if (key >= GLFW_KEY_0 && key <= GLFW_KEY_9)
     {
-        return static_cast<unsigned char>((modifiers & GLFW_MOD_SHIFT)
-                                              ? ")!@#$%^&*("[key - GLFW_KEY_0]
-                                              : '0' + key - GLFW_KEY_0);
+        return static_cast<unsigned char>((modifiers & GLFW_MOD_SHIFT) ? ")!@#$%^&*("[key - GLFW_KEY_0]
+                                                                       : '0' + key - GLFW_KEY_0);
     }
     switch (key)
     {
-    case GLFW_KEY_ESCAPE: return 27;
+    case GLFW_KEY_ESCAPE:
+        return 27;
     case GLFW_KEY_ENTER:
-    case GLFW_KEY_KP_ENTER: return 13;
-    case GLFW_KEY_TAB: return 9;
-    case GLFW_KEY_BACKSPACE: return 8;
-    case GLFW_KEY_SPACE: return ' ';
-    case GLFW_KEY_EQUAL: return modifiers & GLFW_MOD_SHIFT ? '+' : '=';
-    case GLFW_KEY_MINUS: return modifiers & GLFW_MOD_SHIFT ? '_' : '-';
-    case GLFW_KEY_LEFT_BRACKET: return modifiers & GLFW_MOD_SHIFT ? '{' : '[';
-    case GLFW_KEY_RIGHT_BRACKET: return modifiers & GLFW_MOD_SHIFT ? '}' : ']';
-    case GLFW_KEY_SLASH: return modifiers & GLFW_MOD_SHIFT ? '?' : '/';
-    case GLFW_KEY_BACKSLASH: return modifiers & GLFW_MOD_SHIFT ? '|' : '\\';
-    case GLFW_KEY_SEMICOLON: return modifiers & GLFW_MOD_SHIFT ? ':' : ';';
-    case GLFW_KEY_APOSTROPHE: return modifiers & GLFW_MOD_SHIFT ? '"' : '\'';
-    case GLFW_KEY_COMMA: return modifiers & GLFW_MOD_SHIFT ? '<' : ',';
-    case GLFW_KEY_PERIOD: return modifiers & GLFW_MOD_SHIFT ? '>' : '.';
-    case GLFW_KEY_GRAVE_ACCENT: return modifiers & GLFW_MOD_SHIFT ? '~' : '`';
-    case GLFW_KEY_KP_ADD: return '+';
-    case GLFW_KEY_KP_SUBTRACT: return '-';
-    default: return 0;
+    case GLFW_KEY_KP_ENTER:
+        return 13;
+    case GLFW_KEY_TAB:
+        return 9;
+    case GLFW_KEY_BACKSPACE:
+        return 8;
+    case GLFW_KEY_SPACE:
+        return ' ';
+    case GLFW_KEY_LEFT_SHIFT:
+    case GLFW_KEY_RIGHT_SHIFT:
+        return SprintKey;
+    case GLFW_KEY_EQUAL:
+        return modifiers & GLFW_MOD_SHIFT ? '+' : '=';
+    case GLFW_KEY_MINUS:
+        return modifiers & GLFW_MOD_SHIFT ? '_' : '-';
+    case GLFW_KEY_LEFT_BRACKET:
+        return modifiers & GLFW_MOD_SHIFT ? '{' : '[';
+    case GLFW_KEY_RIGHT_BRACKET:
+        return modifiers & GLFW_MOD_SHIFT ? '}' : ']';
+    case GLFW_KEY_SLASH:
+        return modifiers & GLFW_MOD_SHIFT ? '?' : '/';
+    case GLFW_KEY_BACKSLASH:
+        return modifiers & GLFW_MOD_SHIFT ? '|' : '\\';
+    case GLFW_KEY_SEMICOLON:
+        return modifiers & GLFW_MOD_SHIFT ? ':' : ';';
+    case GLFW_KEY_APOSTROPHE:
+        return modifiers & GLFW_MOD_SHIFT ? '"' : '\'';
+    case GLFW_KEY_COMMA:
+        return modifiers & GLFW_MOD_SHIFT ? '<' : ',';
+    case GLFW_KEY_PERIOD:
+        return modifiers & GLFW_MOD_SHIFT ? '>' : '.';
+    case GLFW_KEY_GRAVE_ACCENT:
+        return modifiers & GLFW_MOD_SHIFT ? '~' : '`';
+    case GLFW_KEY_KP_ADD:
+        return '+';
+    case GLFW_KEY_KP_SUBTRACT:
+        return '-';
+    default:
+        return 0;
     }
 }
 
 std::pair<int, int> FramebufferCursor(double x, double y, int windowWidth, int windowHeight,
-                                    int framebufferWidth, int framebufferHeight)
+                                      int framebufferWidth, int framebufferHeight)
 {
     return {int(std::floor(x * framebufferWidth / (std::max)(1, windowWidth))),
             int(std::floor(y * framebufferHeight / (std::max)(1, windowHeight)))};
@@ -138,9 +164,8 @@ std::pair<int, int> FramebufferCursor(double x, double y, int windowWidth, int w
 
 bool Initialize(const char *title, int width, int height, bool visible)
 {
-    glfwSetErrorCallback([](int code, const char *message) {
-        std::fprintf(stderr, "GLFW error %d: %s\n", code, message);
-    });
+    glfwSetErrorCallback(
+        [](int code, const char *message) { std::fprintf(stderr, "GLFW error %d: %s\n", code, message); });
     if (!glfwInit())
     {
         return false;
@@ -173,7 +198,9 @@ bool Initialize(const char *title, int width, int height, bool visible)
         Shutdown();
         return false;
     }
-    while (glGetError() != GL_NO_ERROR) {}
+    while (glGetError() != GL_NO_ERROR)
+    {
+    }
     heldKeys.fill(0);
     scrollRemainder = 0;
     return true;
@@ -188,9 +215,8 @@ void InstallCallbacks()
         const auto cursor = Cursor();
         tutorial::GameCallbacks::MouseMotion(cursor.first, cursor.second);
     });
-    glfwSetCursorEnterCallback(window, [](GLFWwindow *, int entered) {
-        tutorial::GameCallbacks::MouseEntry(entered);
-    });
+    glfwSetCursorEnterCallback(
+        window, [](GLFWwindow *, int entered) { tutorial::GameCallbacks::MouseEntry(entered); });
     glfwSetMouseButtonCallback(window, [](GLFWwindow *, int button, int action, int) {
         const auto cursor = Cursor();
         tutorial::GameCallbacks::MouseButton(button, action, cursor.first, cursor.second);
@@ -219,7 +245,13 @@ void Run()
     struct TimerResolution
     {
         bool active = timeBeginPeriod(1) == TIMERR_NOERROR;
-        ~TimerResolution() { if (active) { timeEndPeriod(1); } }
+        ~TimerResolution()
+        {
+            if (active)
+            {
+                timeEndPeriod(1);
+            }
+        }
     } timerResolution;
     double nextFrame = glfwGetTime() + .016;
     while (!glfwWindowShouldClose(window))
@@ -234,7 +266,10 @@ void Run()
             continue;
         }
         glfwPollEvents();
-        if (glfwWindowShouldClose(window)) { break; }
+        if (glfwWindowShouldClose(window))
+        {
+            break;
+        }
         const double started = glfwGetTime() * 1000;
         tutorial::GameCallbacks::Tick(0);
         if (!glfwGetWindowAttrib(window, GLFW_ICONIFIED))
@@ -255,22 +290,41 @@ void Shutdown()
     }
     glfwTerminate();
 }
-void RequestClose() { if (window) { glfwSetWindowShouldClose(window, GLFW_TRUE); } }
-void SwapBuffers() { if (window) { glfwSwapBuffers(window); } }
+void RequestClose()
+{
+    if (window)
+    {
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
+    }
+}
+void SwapBuffers()
+{
+    if (window)
+    {
+        glfwSwapBuffers(window);
+    }
+}
 void SetCursorHidden(bool hidden)
 {
     if (window)
     {
-        const int mode = hidden && glfwGetWindowAttrib(window, GLFW_FOCUSED) ? GLFW_CURSOR_HIDDEN
-                                                                          : GLFW_CURSOR_NORMAL;
-        if (glfwGetInputMode(window, GLFW_CURSOR) != mode) { glfwSetInputMode(window, GLFW_CURSOR, mode); }
+        const int mode =
+            hidden && glfwGetWindowAttrib(window, GLFW_FOCUSED) ? GLFW_CURSOR_HIDDEN : GLFW_CURSOR_NORMAL;
+        if (glfwGetInputMode(window, GLFW_CURSOR) != mode)
+        {
+            glfwSetInputMode(window, GLFW_CURSOR, mode);
+        }
     }
 }
 int ElapsedMilliseconds()
 {
     // Available to CPU-only simulation/tests before GLFW initialization, too.
-    return int(std::chrono::duration_cast<std::chrono::milliseconds>(
-                   std::chrono::steady_clock::now() - clockOrigin).count());
+    return int(
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - clockOrigin)
+            .count());
 }
-GLFWwindow *Window() { return window; }
+GLFWwindow *Window()
+{
+    return window;
+}
 } // namespace platform

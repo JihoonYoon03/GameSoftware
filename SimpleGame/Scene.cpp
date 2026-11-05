@@ -3,6 +3,7 @@
 #include "Civic.h"
 #include "CityFacilities.h"
 #include "FacilityApproaches.h"
+#include "CityInfrastructure.h"
 #include "Drawing.h"
 #include "Hud.h"
 #include "Level.h"
@@ -48,6 +49,13 @@ class WorldView
         glMatrixMode(GL_MODELVIEW);
     }
 };
+void DrawInfrastructureGuide(Vector2 standing, Vector2 equipment, const std::string &label)
+{
+    Drawing::DrawHologramStrip(standing, equipment, .18f, {.3f, .75f, .8f}, .06f);
+    const auto screen = Drawing::WorldToScreen(standing.x, standing.y, 50);
+    Drawing::DrawLabel(screen.x + 9, screen.y - 8, label, {.5f, .85f, .9f});
+    Drawing::DrawLabel(screen.x + 9, screen.y + 12, "외부 점검 접근로", {.65f, .75f, .8f});
+}
 } // namespace
 
 // ============================================================================
@@ -330,21 +338,24 @@ void CityScene::DrawTrafficInfrastructure(game::Scene &scene)
                                   m.altitude);
             });
     }
-    const auto &approaches = FacilityApproaches::Get().modules;
-    for (size_t i = 0; i < approaches.size(); ++i)
+    for (const auto &group : {std::make_pair("facility/walkway/", &FacilityApproaches::Get().modules),
+                              std::make_pair("infrastructure/walkway/", &CityInfrastructure::Get().modules)})
     {
-        const auto &m = approaches[i];
-        if (Game::Distance(m.position, camera) > 48 + m.radius)
+        for (size_t i = 0; i < group.second->size(); ++i)
         {
-            continue;
+            const auto &m = (*group.second)[i];
+            if (Game::Distance(m.position, camera) > 48 + m.radius)
+            {
+                continue;
+            }
+            scene.PlaceWorldActor(
+                std::string(group.first) + std::to_string(i), m.position.x, m.position.y,
+                WorldBounds(m.position.x - m.radius, m.position.y - m.radius, m.radius * 2, m.radius * 2, 20),
+                1, 0, [m]() {
+                    Drawing::DrawProp(models::ModelLibrary::Transit(m.asset), m.position, {1, 1, 1}, {},
+                                      m.yaw, m.altitude);
+                });
         }
-        scene.PlaceWorldActor(
-            "facility/walkway/" + std::to_string(i), m.position.x, m.position.y,
-            WorldBounds(m.position.x - m.radius, m.position.y - m.radius, m.radius * 2, m.radius * 2, 20), 1,
-            0, [m]() {
-                Drawing::DrawProp(models::ModelLibrary::Transit(m.asset), m.position, {1, 1, 1}, {}, m.yaw,
-                                  m.altitude);
-            });
     }
     for (size_t junction = 0; junction < net.junctions.size(); ++junction)
     {
@@ -809,6 +820,31 @@ void CityScene::DrawQuestMarkers(game::Scene &scene)
             0, [this, position, label, color]() { Drawing::DrawInteractionMarker(position, label, color); });
     };
     auto &game = Game::Get();
+    const CityInfrastructureSite *nearestInfrastructure = nullptr;
+    size_t infrastructureRole = 0;
+    float infrastructureDistance = 5;
+    const auto &infrastructure = CityInfrastructure::Get();
+    for (size_t i = 0; i < infrastructure.sites.size(); ++i)
+    {
+        const auto &site = infrastructure.sites[i];
+        const float distance = Game::Distance(site.standing, game.GetState().playerPosition);
+        if (site.access == InfrastructureAccess::Connected && distance < infrastructureDistance)
+        {
+            nearestInfrastructure = &site;
+            infrastructureRole = i % 3;
+            infrastructureDistance = distance;
+        }
+    }
+    if (nearestInfrastructure)
+    {
+        const auto &site = *nearestInfrastructure;
+        const auto standing = site.standing, equipment = site.equipment;
+        const std::string label = CityInfrastructure::Profiles()[site.city].roles[infrastructureRole].label;
+        scene.PlaceWorldActor(
+            "infrastructure/guide/" + site.id, standing.x, standing.y,
+            WorldBounds(standing.x, standing.y, 0, 0, 90, 240), 5, 0,
+            [standing, equipment, label]() { DrawInfrastructureGuide(standing, equipment, label); });
+    }
     if (game.IsQuestInteraction(InteractionTarget::HomeEntrance))
     {
         marker("home", kHomeDoor, "집 단말 확인", {.6f, .78f, .81f});
@@ -2300,20 +2336,68 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
             }
         }
     }
-    for (const auto &module : FacilityApproaches::Get().modules)
-    {
-        const auto point = place(0, module.position);
+    auto drawWalkway = [&](const TransitPlacement &module, int city) {
+        const auto point = place(city, module.position);
         if (!point)
         {
-            continue;
+            return;
         }
         const float height = float(point->z / 2);
         renderqueue::PushMatrix();
         renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
         Drawing::DrawProp(models::ModelLibrary::Transit(module.asset),
                           {float(point->x / 2), float(point->y / 2)}, {1, 1, 1}, {},
-                          cities->Yaw(session, 0, module.yaw), module.altitude);
+                          cities->Yaw(session, city, module.yaw), module.altitude);
         renderqueue::PopMatrix();
+    };
+    for (const auto &module : FacilityApproaches::Get().modules)
+    {
+        drawWalkway(module, 0);
+    }
+    const auto &infrastructure = CityInfrastructure::Get();
+    for (size_t i = 0; i < infrastructure.modules.size(); ++i)
+    {
+        drawWalkway(infrastructure.modules[i], infrastructure.moduleCities[i]);
+    }
+    const CityInfrastructureSite *nearestInfrastructure = nullptr;
+    size_t infrastructureRole = 0;
+    float infrastructureDistance = 5;
+    for (size_t i = 0; i < infrastructure.sites.size(); ++i)
+    {
+        const auto &site = infrastructure.sites[i];
+        if (site.access != InfrastructureAccess::Connected)
+        {
+            continue;
+        }
+        const auto point = place(site.city, site.standing);
+        if (!point)
+        {
+            continue;
+        }
+        const float distance =
+            Game::Distance({float(point->x / 2), float(point->y / 2)}, state.playerPosition);
+        if (distance < infrastructureDistance)
+        {
+            infrastructureDistance = distance;
+            nearestInfrastructure = &site;
+            infrastructureRole = i % 3;
+        }
+    }
+    if (nearestInfrastructure)
+    {
+        const auto &site = *nearestInfrastructure;
+        const auto point = place(site.city, site.standing), equipment = place(site.city, site.equipment);
+        if (point && equipment)
+        {
+            const float height = float(point->z / 2);
+            renderqueue::PushMatrix();
+            renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
+            DrawInfrastructureGuide(
+                {float(point->x / 2), float(point->y / 2)},
+                {float(equipment->x / 2), float(equipment->y / 2)},
+                CityInfrastructure::Profiles()[site.city].roles[infrastructureRole].label);
+            renderqueue::PopMatrix();
+        }
     }
     const CityFacility *nearestFacility = nullptr;
     float facilityDistance = 5;

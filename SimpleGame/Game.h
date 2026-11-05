@@ -2,6 +2,7 @@
 #include "ModelLibrary.h"
 #include "Weapon.h"
 #include "Animation.h"
+#include "PlayerMobility.h"
 #include "World.h"
 #include "WorldStreaming.h"
 #include <array>
@@ -49,10 +50,12 @@ class MotionMath
 };
 struct PlayerMotion
 {
+    PlayerMobility mobility;
     Vector2 velocity = {};
     float forwardLean = 0, sideLean = 0;
     bool pivoting = false;
     void Update(Vector2 target, float &yaw, bool aiming, float deltaSeconds);
+    void Stop();
 };
 // ============================================================================
 // WorldCamera — world view magnification; HUD/cursor stay in viewport coordinates

@@ -82,6 +82,8 @@ function renderSummary(data) {
   }));
 }
 function renderRegions(data) {
+  const expandedInfrastructure = new Set([...document.querySelectorAll("#regions details[open]")]
+    .map((details) => details.dataset.regionId));
   byId("regions").replaceChildren(...data.regions.map((region) => {
     const card = node("article", undefined, "region" + (region.current ? " current" : ""));
     const title = node("div");
@@ -98,6 +100,31 @@ function renderRegions(data) {
       ["구조 성과", "발견 " + format(data.counts.rescued_people) + "명 / 화면 밖 철수 " + format(data.counts.returned_people) + "명"],
       ["구역 크기", region.map_size_label ?? region.map_width + " × " + region.map_height],
     ]));
+    const infrastructure = Array.isArray(data.city_infrastructure?.sites)
+      ? data.city_infrastructure.sites.filter((site) => site.region_id === region.id) : [];
+    if (infrastructure.length) {
+      const details = node("details", undefined, "infrastructure");
+      details.dataset.regionId = region.id;
+      details.open = expandedInfrastructure.has(region.id);
+      const connected = infrastructure.filter((site) => site.access_status === "connected").length;
+      details.append(node("summary", "기반시설 접근 " + connected + " / " + infrastructure.length));
+      details.append(node("p", infrastructure[0].city_purpose, "muted"));
+      const accessLabels = { connected: "보행 연결됨", unconnected: "접근로 연결 불가",
+        missing_asset: "배치된 설비 없음", not_prepared: "현재 월드에 준비되지 않음" };
+      for (const site of infrastructure) {
+        const entry = node("div");
+        entry.append(node("strong", site.label), facts([
+          ["접근 상태", accessLabels[site.access_status] ?? "상태 미확인"],
+          ["접근로 길이", site.access_status === "connected" ? format(site.path_length_m, 1) + "m" : "—"],
+          ["원본 크기", site.asset_bound ? [site.native_width_m, site.native_depth_m, site.native_height_m]
+            .map((value) => format(value, 2)).join(" × ") + "m" : "—"],
+          ["접근 지점", site.asset_bound ? format(site.standing_local_x_m, 1) + ", "
+            + format(site.standing_local_y_m, 1) + "m (도시 기준)" : "—"],
+        ]));
+        details.append(entry);
+      }
+      card.append(details);
+    }
     const rumors = node("ul", undefined, "rumors");
     if (region.loaded) for (const rumor of region.rumors) {
       const item = node("li", rumor.text);
@@ -210,6 +237,28 @@ function renderEnvironment(data) {
     metric("구조", format(data.mine?.rescued_people) + "명 / 화면 밖 철수 " + format(data.mine?.returned_people) + "명"),
     metric("스캐너", format(data.mine?.scanner_seconds, 1) + "초 / 대기 " + format(data.mine?.scanner_cooldown, 1) + "초"),
   );
+  const combat = data.player.combat;
+  if (combat) {
+    const reasons = { ready: "가능", world_loading: "월드 준비 중", inactive_combat_area: "비전투 공간",
+      menu_open: "메뉴 열림", paused: "일시정지", map_open: "지도 열림", weapon_wheel_open: "무기 선택 중",
+      journal_open: "조사 기록 열림", dialogue_history_open: "대화 기록 열림", blocking_dialogue: "대화 중",
+      hospital_transfer: "의료 이송 중", player_dead: "체력 소진", vehicle_mounted: "이동수단 탑승 중",
+      relay_preparing: "중계 이동 준비 중", melee_recovery: "근접 공격 회복 중", firearm_not_equipped: "총기 미장착",
+      weapon_reloading: "재장전 중", fire_cooldown: "다음 발사 대기", magazine_full: "탄창 가득 참",
+      projectile_capacity: "동시 탄환 한도", dodge_active: "회피 동작 중" };
+    const primary = { melee: "근접", auto_reload: "빈 탄창 자동 재장전", fire: "사격" };
+    byId("world-status").append(
+      metric("좌클릭", (primary[combat.primary_action] ?? "공격") + " · "
+        + (reasons[combat.primary_block_reason] ?? combat.primary_block_reason)),
+      metric("V 근접", reasons[combat.melee_block_reason] ?? combat.melee_block_reason),
+      metric("R 재장전", reasons[combat.reload_block_reason] ?? combat.reload_block_reason),
+      metric("공격 회복 · 사격 / 근접", format(combat.fire_cooldown_seconds, 2) + " / "
+        + format(combat.melee_recovery_seconds, 2) + "초"),
+      metric("동시 탄환", format(combat.active_projectiles) + " / " + format(combat.projectile_limit)),
+      metric("기동 상태", combat.dodging ? "회피 대시 · 무적 없음" : combat.sprinting ? "달리기" : "일반 이동"),
+      metric("회피 재사용 대기", format(combat.dodge_cooldown_seconds, 2) + "초"),
+    );
+  }
   const travel = data.jet_travel;
   if (travel) byId("world-status").append(
     metric("개인 바이크", travel.active ? "야외 직접 운전 중" : "주차 / 도보 이동"),

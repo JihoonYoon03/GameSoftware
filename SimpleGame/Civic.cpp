@@ -1,5 +1,6 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "Civic.h"
+#include "PlayerCombat.h"
 #include "Profiler.h"
 #include "Drawing.h"
 #include "Hud.h"
@@ -1832,12 +1833,8 @@ void CivicJustice::Update(float dt)
 
 bool CivicCombat::Available()
 {
-    const auto &world = Game::Get().GetState();
-    return CivicJustice::IsExterior() &&
-           !(world.surfaceExploration && game::GameLevels::Chapter().IsActive()) && !world.isBikeMounted &&
-           !HospitalRecovery::Active() && !world.isPaused && !world.mapVisible &&
-           !world.weaponWheel.visible && !world.journalVisible && !world.dialogueHistoryVisible &&
-           !Dialogue::LocksWorld();
+    return combat::PlayerCombat::EnvironmentBlock(combat::PlayerCombat::Current(),
+                                                  combat::CombatArea::Exterior) == combat::CombatBlock::Ready;
 }
 void CivicCombat::DamagePlayer(int damage, Vector2 impulse)
 {
@@ -2140,10 +2137,6 @@ void UpdateAirProjectiles(float dt)
 } // namespace
 void CivicCombat::Fire()
 {
-    if (!Available() || civic.meleeSeconds > 0)
-    {
-        return;
-    }
     auto &world = Game::Get().GetState();
     auto &mine = game::GameLevels::Mine();
     if (!mine.GetState().loadout.IsPistolEquipped())
@@ -2151,9 +2144,12 @@ void CivicCombat::Fire()
         Melee();
         return;
     }
+    if (!combat::PlayerCombat::Allow(combat::CombatAction::Fire, combat::CombatArea::Exterior))
+    {
+        return;
+    }
     combat::Shot shot;
-    if (civic.bullets.size() + civic.airBullets.size() >= 96 ||
-        !mine.GetState().pistol.TryFire(game::GameLevels::FireAngle(), shot))
+    if (!mine.GetState().pistol.TryFire(game::GameLevels::FireAngle(), shot))
     {
         return;
     }
@@ -2189,7 +2185,7 @@ void CivicCombat::Fire()
 }
 void CivicCombat::Melee()
 {
-    if (!Available() || civic.meleeSeconds > 0)
+    if (!combat::PlayerCombat::Allow(combat::CombatAction::Melee, combat::CombatArea::Exterior))
     {
         return;
     }

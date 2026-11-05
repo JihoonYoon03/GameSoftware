@@ -85,6 +85,7 @@ class Firearm : public Weapon
     int GetRounds() const;
     int GetMagazineSize() const;
     float GetSpread() const;
+    float GetCooldownRemaining() const;
     void SetRandomSeed(std::uint32_t seed);
     float GetReloadProgress() const;
     bool IsReloading() const;

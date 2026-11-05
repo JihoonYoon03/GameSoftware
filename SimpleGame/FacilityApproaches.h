@@ -1,23 +1,17 @@
 ﻿#pragma once
-#include "CityFacilities.h"
-#include "TransitLayout.h"
-#include <map>
-#include <utility>
+#include "CityWalkways.h"
 
 namespace tutorial
 {
-using WalkwaySegment = std::pair<Vector2, Vector2>;
 struct FacilityApproach
 {
     InteractionTarget target = InteractionTarget::None;
     std::vector<Vector2> path; // Entrance/front pad to a connected sidewalk, never a nearby free point.
     unsigned visitedNodes = 0;
 };
-struct FacilityApproachPlan
+struct FacilityApproachPlan : CityWalkwayPlan
 {
     std::array<FacilityApproach, 4> facilities = {};
-    std::vector<TransitPlacement> modules;
-    std::map<std::pair<int, int>, std::vector<WalkwaySegment>> cells;
 };
 
 // Derived game-thread overlay. It is deliberately excluded from saved city-core generation/digests.

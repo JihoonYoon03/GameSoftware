@@ -3,10 +3,12 @@
 #include "../Save.h"
 #include "../Civic.h"
 #include "../FacilityApproaches.h"
+#include "../CityInfrastructure.h"
 #include "../AssetCache.h"
 #include "../Level.h"
 #include "../ModelLibrary.h"
 #include "../Profiler.h"
+#include "../PlayerCombat.h"
 #include "LocalMonitorServer.h"
 #include "Overworld.h"
 #include "ResidentAI.h"
@@ -19,6 +21,7 @@
 #include <filesystem>
 #include <iomanip>
 #include <locale>
+#include <limits>
 #include <set>
 #include <sstream>
 #include <string_view>
@@ -535,6 +538,35 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     player.Number("magazine_capacity", level.pistol.GetMagazineSize());
     player.Bool("reloading", level.pistol.IsReloading());
     player.Seconds("spread_radians", level.pistol.GetSpread());
+    const auto combatContext = combat::PlayerCombat::Current();
+    const auto fireBlock =
+        combat::PlayerCombat::Evaluate(combatContext, combat::CombatAction::Fire, combatContext.area);
+    const auto meleeBlock =
+        combat::PlayerCombat::Evaluate(combatContext, combat::CombatAction::Melee, combatContext.area);
+    const auto reloadBlock =
+        combat::PlayerCombat::Evaluate(combatContext, combat::CombatAction::Reload, combatContext.area);
+    JsonObject combatStatus;
+    combatStatus.Text("area", combat::PlayerCombat::AreaName(combatContext.area));
+    combatStatus.Text("primary_action", !combatContext.pistolEquipped ? "melee"
+                                        : combatContext.rounds == 0 && !combatContext.reloading
+                                            ? "auto_reload"
+                                            : "fire");
+    combatStatus.Bool("primary_input_allowed", fireBlock == combat::CombatBlock::Ready);
+    combatStatus.Bool("melee_allowed", meleeBlock == combat::CombatBlock::Ready);
+    combatStatus.Bool("reload_allowed", reloadBlock == combat::CombatBlock::Ready);
+    combatStatus.Text("primary_block_reason", combat::PlayerCombat::BlockName(fireBlock));
+    combatStatus.Text("melee_block_reason", combat::PlayerCombat::BlockName(meleeBlock));
+    combatStatus.Text("reload_block_reason", combat::PlayerCombat::BlockName(reloadBlock));
+    combatStatus.Number("fire_cooldown_seconds", combatContext.fireCooldown);
+    combatStatus.Number("melee_recovery_seconds", combatContext.meleeRemaining);
+    combatStatus.Number("active_projectiles", combatContext.projectiles);
+    combatStatus.Number("projectile_limit", combatContext.projectileLimit);
+    const auto &mobility = world.playerMotion.mobility;
+    combatStatus.Bool("sprinting", mobility.Sprinting());
+    combatStatus.Bool("dodging", mobility.Dodging());
+    combatStatus.Number("dodge_cooldown_seconds", mobility.Cooldown());
+    combatStatus.Bool("dodge_invulnerable", false);
+    player.Raw("combat", combatStatus.Finish());
     result.Raw("player", player.Finish());
     const auto &law = tutorial::CivicJustice::State();
     JsonObject security;
@@ -650,6 +682,51 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         Append(facilities, item.Finish());
     }
     result.Raw("city_facilities", "[" + facilities + "]");
+    JsonObject infrastructure;
+    const auto &infrastructurePlan = tutorial::CityInfrastructure::Get();
+    infrastructure.Bool("prepared", infrastructurePlan.prepared);
+    infrastructure.Text("geometry_contract", "runtime_native_mesh_bounds");
+    infrastructure.Text("access_contract", "external_perimeter_inspection");
+    infrastructure.Text("building_entrance_contract", "awaiting_delivery");
+    infrastructure.Number("walkway_modules", infrastructurePlan.modules.size());
+    std::string infrastructureSites;
+    for (size_t i = 0; i < infrastructurePlan.sites.size(); ++i)
+    {
+        const auto &site = infrastructurePlan.sites[i];
+        const size_t cityIndex = i / 3;
+        const auto &profile = tutorial::CityInfrastructure::Profiles()[cityIndex];
+        const auto &role = profile.roles[i % 3];
+        JsonObject item;
+        item.Text("id", std::string(profile.regionId) + "/infrastructure/" + role.key);
+        item.Text("region_id", profile.regionId);
+        item.Text("city_purpose", profile.purpose);
+        item.Number("city_tier", unsigned(::world::WorldCatalog::Region(profile.regionId).tier));
+        item.Text("role", role.key);
+        item.Text("label", role.label);
+        item.Text("access_status", infrastructurePlan.prepared
+                                       ? tutorial::CityInfrastructure::AccessName(site.access)
+                                       : "not_prepared");
+        item.Text("asset", site.asset);
+        item.Number("attempts", site.attempts);
+        item.Number("search_visited_nodes", site.visitedNodes);
+        item.Number("path_points", site.path.size());
+        item.Number("path_length_m", site.pathLengthMeters);
+        const bool bound = site.sourceIndex != (std::numeric_limits<size_t>::max)();
+        item.Bool("asset_bound", bound);
+        if (bound)
+        {
+            item.Number("source_index", site.sourceIndex);
+            item.Number("native_width_m", site.nativeSizeMeters.x);
+            item.Number("native_depth_m", site.nativeSizeMeters.y);
+            item.Number("native_height_m", site.nativeSizeMeters.z);
+            const auto center = tutorial::Overworld::Cities()[cityIndex].center;
+            item.Number("standing_local_x_m", (site.standing.x - center.x) * 2);
+            item.Number("standing_local_y_m", (site.standing.y - center.y) * 2);
+        }
+        Append(infrastructureSites, item.Finish());
+    }
+    infrastructure.Raw("sites", "[" + infrastructureSites + "]");
+    result.Raw("city_infrastructure", infrastructure.Finish());
     auto stage = level.quest.GetStage();
     flags.Bool("main.signal_record_shown", stage >= game::MineQuestStage::CheckCityRelay);
     flags.Bool("main.mine_trace_confirmed", stage >= game::MineQuestStage::TravelToMine);

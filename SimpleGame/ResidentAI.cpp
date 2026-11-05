@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "ResidentAI.h"
 #include "FacilityApproaches.h"
+#include "CityInfrastructure.h"
 #include "Civic.h"
 #include "Level.h"
 #include "Overworld.h"
@@ -315,7 +316,8 @@ void CityResidents::RefreshSidewalks()
 {
     for (auto &node : nodes)
     {
-        node.sidewalk = node.baseSidewalk || FacilityApproaches::Contains(node.position);
+        node.sidewalk = node.baseSidewalk || FacilityApproaches::Contains(node.position) ||
+                        CityInfrastructure::Contains(node.position);
     }
 }
 void CityResidents::Reset(GameState &world)

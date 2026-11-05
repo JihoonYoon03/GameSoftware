@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "Level.h"
+#include "PlayerCombat.h"
 #include "Story.h"
 #include "Overworld.h"
 #include "Civic.h"
@@ -595,16 +596,13 @@ void MineCombat::UpdateBullets(float deltaSeconds)
 void MineCombat::Attack()
 {
     auto &world = tutorial::Game::Get().GetState();
-    if (!state.active || world.isPaused || world.mapVisible || world.weaponWheel.visible ||
-        world.journalVisible || world.dialogueHistoryVisible || state.player.health <= 0 ||
-        tutorial::HospitalRecovery::Active() || tutorial::Dialogue::LocksWorld() || state.meleeSeconds > 0 ||
-        state.bullets.size() >= 128)
-    {
-        return;
-    }
     if (!state.loadout.IsPistolEquipped())
     {
         Melee();
+        return;
+    }
+    if (!combat::PlayerCombat::Allow(combat::CombatAction::Fire, combat::CombatArea::Mine))
+    {
         return;
     }
     combat::Shot shot;
@@ -633,10 +631,7 @@ void MineCombat::Attack()
 void MineCombat::Melee()
 {
     auto &world = tutorial::Game::Get().GetState();
-    if (!state.active || world.isPaused || world.mapVisible || world.weaponWheel.visible ||
-        state.player.health <= 0 || tutorial::HospitalRecovery::Active() ||
-        tutorial::Dialogue::LocksWorld() || world.journalVisible || world.dialogueHistoryVisible ||
-        state.meleeSeconds > 0)
+    if (!combat::PlayerCombat::Allow(combat::CombatAction::Melee, combat::CombatArea::Mine))
     {
         return;
     }
@@ -665,10 +660,8 @@ void MineCombat::Melee()
 
 void MineCombat::Reload()
 {
-    const auto &world = tutorial::Game::Get().GetState();
-    if (state.loadout.IsPistolEquipped() && !world.weaponWheel.visible && !world.isPaused &&
-        !world.mapVisible && !world.journalVisible && !world.dialogueHistoryVisible &&
-        !tutorial::Dialogue::LocksWorld() && !tutorial::HospitalRecovery::Active() && state.pistol.Reload())
+    const auto context = combat::PlayerCombat::Current();
+    if (combat::PlayerCombat::Allow(combat::CombatAction::Reload, context.area) && state.pistol.Reload())
     {
         tutorial::Game::Get().ShowNotice("권총 / 재장전 중. 예비 탄창은 제한 없이 보급됩니다.");
     }
@@ -3006,22 +2999,14 @@ float ChapterOneLevel::GetAimAngle() const
 }
 void FrontierCombat::Attack()
 {
-    auto &world = tutorial::Game::Get().GetState();
-    if (tutorial::Dialogue::LocksWorld() || world.isBikeMounted || world.isPaused || world.mapVisible ||
-        world.weaponWheel.visible || world.journalVisible || world.dialogueHistoryVisible ||
-        tutorial::HospitalRecovery::Active() || GameLevels::Mine().GetState().player.health <= 0 ||
-        state.meleeSeconds > 0)
-    {
-        return;
-    }
-    if (!state.active || state.bullets.size() >= 128)
-    {
-        return;
-    }
     auto &mine = GameLevels::Mine().GetState();
     if (!mine.loadout.IsPistolEquipped())
     {
         Melee();
+        return;
+    }
+    if (!combat::PlayerCombat::Allow(combat::CombatAction::Fire, combat::CombatArea::Frontier))
+    {
         return;
     }
     combat::Shot shot;
@@ -3045,10 +3030,7 @@ void FrontierCombat::Attack()
 void FrontierCombat::Melee()
 {
     const auto &world = tutorial::Game::Get().GetState();
-    if (!state.active || world.isBikeMounted || world.isPaused || world.mapVisible ||
-        world.weaponWheel.visible || world.journalVisible || world.dialogueHistoryVisible ||
-        tutorial::Dialogue::LocksWorld() || tutorial::HospitalRecovery::Active() ||
-        GameLevels::Mine().GetState().player.health <= 0 || state.meleeSeconds > 0)
+    if (!combat::PlayerCombat::Allow(combat::CombatAction::Melee, combat::CombatArea::Frontier))
     {
         return;
     }

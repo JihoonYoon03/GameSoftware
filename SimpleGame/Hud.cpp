@@ -1742,6 +1742,24 @@ void Hud::DrawVitals()
         return;
     }
     const auto &stats = mine.player;
+    if (!w.isBikeMounted && (mine.active || chapter.active || CivicJustice::IsExterior()))
+    {
+        const auto &mobility = w.playerMotion.mobility;
+        char text[128];
+        if (mobility.Dodging())
+        {
+            std::snprintf(text, sizeof(text), "회피 중 · 공격 제한");
+        }
+        else if (mobility.Cooldown() > 0)
+        {
+            std::snprintf(text, sizeof(text), "회피 재사용 %.1f초 · Shift 달리기", mobility.Cooldown());
+        }
+        else
+        {
+            std::snprintf(text, sizeof(text), "Space 회피 · Shift 달리기");
+        }
+        UiText(456, 762, text, 14, {.65f, .9f, .81f});
+    }
     const bool critical = stats.health <= stats.maxHealth * .25f;
     Icon("health", 32, 736, 24, true);
     UiText(66, 735, std::to_string(stats.health), 28, critical ? ColorRGBA(1, .56f, .44f) : kUiInk, true);
@@ -2803,9 +2821,10 @@ void Hud::DrawMenu()
     {
         UiText(96, 86, "필드 가이드", 14, {.65f, .9f, .81f});
         UiText(96, 164, "도보·전투·탐험에서 사용하는 조작입니다.", 18);
-        const char *keys[] = {"WASD",  "우클릭 홀드", "좌클릭 / V",     "Q 홀드 + 마우스",      "R / G", "E",
-                              "F / M", "J / H",       "E·Enter / 숫자", "바이크 W·S·AD / Space"};
-        const char *rows[] = {"이동 · 이동 방향 회전",
+        const char *keys[] = {
+            "WASD / Shift", "우클릭 홀드", "좌클릭 / V",     "Q 홀드 + 마우스",      "R / G", "E",
+            "F / M",        "J / H",       "E·Enter / 숫자", "바이크 W·S·AD / Space"};
+        const char *rows[] = {"이동 · 이동 방향 회전 / 누른 채 달리기",
                               "권총 장착 시 커서 방향 조준",
                               "장착 무기 공격 / 근접 공격",
                               "무기 선택 · Q 해제로 확정",
@@ -2814,7 +2833,7 @@ void Hud::DrawMenu()
                               "광산 스캔 / 지도 (클릭 지정·우클릭 해제)",
                               "조사 기록 / 대사 이력 · PageUp/Down 페이지",
                               "대화 진행 / 선택지 선택 후 확정",
-                              "가속·제동/후진·조향 / 부스트"};
+                              "도보 Space 회피 / 바이크 가속·제동/후진·조향·부스트"};
         for (int i = 0; i < 10; ++i)
         {
             float column = i % 2 ? 660.f : 96.f, y = 219.f + (i / 2) * 84;
