@@ -138,7 +138,7 @@ def apply_design(g):
         b+=text('신호가 닿은 곳에서, 이야기가 시작된다.',96,299,20,C['muted'],width=1000)
         for i,(label,ic) in enumerate([('새 게임','gate'),('스테이지 목록 · 테스트','stage'),('옵션','settings'),('조작 안내','keyboard'),('종료','exit')]):
             b+=item(label,96,366+i*58,430,i==0,ic)
-        b+=text('현재 진행은 실행 세션에만 유지됩니다.',96,727,14,C['muted'])
+        b+=text('F5 빠른 저장 / F9 저장·불러오기',96,727,14,C['muted'])
         return b
     scene('15_title','타이틀 / 여백과 정보 위계',['UI-18'],hero)
 
@@ -238,7 +238,7 @@ def apply_design(g):
         b+=text(region,408,98,14,C['accent'],600)+text('일시정지',408,144,32,weight=700)
         labels=['계속하기','스테이지 목록 · 테스트','옵션','보유 · 성장 정보','조작 안내','헤일로 귀환 · 기록 유지' if region=='1장' else '광산 재시작' if region=='광산' else '다시 시작 · 진행 초기화','종료']
         for i,s in enumerate(labels):b+=item(s,408,178+i*64,464,i==0,None)
-        b+=text('현재 진행은 실행 세션에만 유지됩니다.',408,687,14,C['muted'],width=464)
+        b+=text('저장하지 않은 진행은 유지되지 않습니다.',408,687,14,C['muted'],width=464)
         b+=text('Esc 계속하기 · 방향 키 선택 · Enter 확인',408,717,14,C['muted'],width=464)
         return b
     scene('09_pause','일시정지 / 1장 귀환',['UI-17'],pause_screen)

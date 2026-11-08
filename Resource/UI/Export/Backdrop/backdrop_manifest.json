@@ -1,0 +1,201 @@
+{
+  "schema": "erma.backdrop.layers",
+  "version": 1,
+  "canvas": [
+    1280,
+    800
+  ],
+  "geometry_source": {
+    "file": "Resource/Runtime/game-assets.bin",
+    "sha256": "6a233a888663979481b82f1f863b34a1390e4fc8489b358da4ee9a3a4b73edba"
+  },
+  "geometry_instances": 23,
+  "model_names": [
+    "Habitat",
+    "Terraced",
+    "Workshop",
+    "Dome"
+  ],
+  "layers": [
+    {
+      "name": "stars",
+      "variant": "smooth",
+      "file": "stars_1x.png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "4a31a7c9ae7b94cbdc55f72eb31c023373eb8245e1555f8629d4a3a0d3aa744f",
+      "alpha": "straight"
+    },
+    {
+      "name": "gate_rings",
+      "variant": "smooth",
+      "file": "gate_rings_1x.png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "8d79910a5384b0148e850b8ca5aef615a4f80116433532d03044ee87b58399cf",
+      "alpha": "straight"
+    },
+    {
+      "name": "rail",
+      "variant": "smooth",
+      "file": "rail_1x.png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "f4022eba8e5460beeef4043b66446380d404c5ddea9ccf48b27d2c57c1f293b7",
+      "alpha": "straight"
+    },
+    {
+      "name": "distant_skyline",
+      "variant": "smooth",
+      "file": "distant_skyline_1x.png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "d26de0aa30e5b67ba60835f5085000a07863bdaf2b8d851f63b0a18ec1d30174",
+      "alpha": "straight"
+    },
+    {
+      "name": "distant_skyline",
+      "variant": "_cartoon",
+      "file": "distant_skyline_cartoon_1x.png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "a97799e3adca24f11588ba179c920d72cc8ec6dda27eca68612d767b6582b874",
+      "alpha": "straight"
+    },
+    {
+      "name": "stars",
+      "variant": "smooth",
+      "file": "stars_2x.png",
+      "width": 2560,
+      "height": 1600,
+      "sha256": "67d2b059c2e081a8d00e23fffe388140aca732c4f597d26d66a59020157d1e48",
+      "alpha": "straight"
+    },
+    {
+      "name": "gate_rings",
+      "variant": "smooth",
+      "file": "gate_rings_2x.png",
+      "width": 2560,
+      "height": 1600,
+      "sha256": "36a79c5202b796b52244b70a5806f0de15ad6ef4995c9758899a025c05c9e8d0",
+      "alpha": "straight"
+    },
+    {
+      "name": "rail",
+      "variant": "smooth",
+      "file": "rail_2x.png",
+      "width": 2560,
+      "height": 1600,
+      "sha256": "6f1b341256946059b887b1304522f37d166a4f320d67ccffc65f661f82375006",
+      "alpha": "straight"
+    },
+    {
+      "name": "distant_skyline",
+      "variant": "smooth",
+      "file": "distant_skyline_2x.png",
+      "width": 2560,
+      "height": 1600,
+      "sha256": "261462c982170792a3f19f2078d59fca187bc29568140cd9e1f86ce677a37a82",
+      "alpha": "straight"
+    },
+    {
+      "name": "distant_skyline",
+      "variant": "_cartoon",
+      "file": "distant_skyline_cartoon_2x.png",
+      "width": 2560,
+      "height": 1600,
+      "sha256": "392af429b5b1def25d6eaacefeb7389040e79e4cf017dfe647ad45ddaf0ccf06",
+      "alpha": "straight"
+    }
+  ],
+  "base_color": [
+    0.025,
+    0.045,
+    0.085,
+    1
+  ],
+  "composition": [
+    "base_color",
+    "stars",
+    "gate_rings",
+    "dynamic_rotating_markers",
+    "dynamic_completion_effect",
+    "distant_skyline",
+    "dynamic_gate_label",
+    "rail",
+    "dynamic_vehicles"
+  ],
+  "excluded": [
+    "12 rotating gate markers",
+    "4 moving vehicles",
+    "completion effect",
+    "all text"
+  ],
+  "runtime_integration": false,
+  "note": "Offline hidden WGL mesh capture using source triangles and Drawing.cpp projection/lighting; stars/rings/rail rasterized from editable vectors. Does not claim pixel parity with the active game backend, MSAA, postprocess, or live timings.",
+  "reviews": [
+    {
+      "file": "backdrop_0_1.png",
+      "cartoon": false,
+      "render_scale": 1,
+      "postprocess": "none",
+      "game_capture": false
+    },
+    {
+      "file": "backdrop_0_0.5.png",
+      "cartoon": false,
+      "render_scale": 0.5,
+      "postprocess": "none",
+      "game_capture": false
+    },
+    {
+      "file": "backdrop_0_0.25.png",
+      "cartoon": false,
+      "render_scale": 0.25,
+      "postprocess": "none",
+      "game_capture": false
+    },
+    {
+      "file": "backdrop_1_1.png",
+      "cartoon": true,
+      "render_scale": 1,
+      "postprocess": "none",
+      "game_capture": false
+    },
+    {
+      "file": "backdrop_1_0.5.png",
+      "cartoon": true,
+      "render_scale": 0.5,
+      "postprocess": "none",
+      "game_capture": false
+    },
+    {
+      "file": "backdrop_1_0.25.png",
+      "cartoon": true,
+      "render_scale": 0.25,
+      "postprocess": "none",
+      "game_capture": false
+    },
+    {
+      "file": "backdrop_2_1.png",
+      "cartoon": false,
+      "render_scale": 1,
+      "postprocess": "illustrative desaturation .85 and contrast 1.05",
+      "game_capture": false
+    },
+    {
+      "file": "backdrop_2_0.5.png",
+      "cartoon": false,
+      "render_scale": 0.5,
+      "postprocess": "illustrative desaturation .85 and contrast 1.05",
+      "game_capture": false
+    },
+    {
+      "file": "backdrop_2_0.25.png",
+      "cartoon": false,
+      "render_scale": 0.25,
+      "postprocess": "illustrative desaturation .85 and contrast 1.05",
+      "game_capture": false
+    }
+  ]
+}

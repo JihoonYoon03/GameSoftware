@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "RenderQueue.h"
 #include "Profiler.h"
 #include "Dependencies/glew/include/GL/glew.h"
@@ -15,15 +15,334 @@
 #include <tuple>
 #include <list>
 #include <stdexcept>
+#include <fstream>
+#include <set>
+#include <cstdlib>
+#include <bcrypt.h>
 #include <wincodec.h>
 #include <wrl/client.h>
 #pragma comment(lib, "windowscodecs.lib")
 #pragma comment(lib, "ole32.lib")
 
 #pragma comment(lib, "gdi32.lib")
+#pragma comment(lib, "bcrypt.lib")
 
 namespace
 {
+void AssetRequire(bool condition, const std::string &message)
+{
+    if (!condition)
+    {
+        throw std::runtime_error("UI delivery invalid: " + message);
+    }
+}
+std::vector<unsigned char> ReadAsset(const std::filesystem::path &path, size_t limit)
+{
+    std::ifstream file(path, std::ios::binary | std::ios::ate);
+    AssetRequire(bool(file) && file.tellg() > 0 && file.tellg() <= std::streamoff(limit), path.u8string());
+    std::vector<unsigned char> bytes(size_t(file.tellg()));
+    file.seekg(0);
+    AssetRequire(bool(file.read(reinterpret_cast<char *>(bytes.data()), bytes.size())), path.u8string());
+    return bytes;
+}
+class AssetHash
+{
+  public:
+    AssetHash()
+    {
+        AssetRequire(BCryptOpenAlgorithmProvider(&algorithm, BCRYPT_SHA256_ALGORITHM, nullptr, 0) >= 0,
+                     "SHA-256 provider");
+        if (BCryptCreateHash(algorithm, &hash, nullptr, 0, nullptr, 0, 0) < 0)
+        {
+            BCryptCloseAlgorithmProvider(algorithm, 0);
+            algorithm = nullptr;
+            AssetRequire(false, "SHA-256 initialization");
+        }
+    }
+    ~AssetHash()
+    {
+        if (hash)
+        {
+            BCryptDestroyHash(hash);
+        }
+        if (algorithm)
+        {
+            BCryptCloseAlgorithmProvider(algorithm, 0);
+        }
+    }
+    AssetHash(const AssetHash &) = delete;
+    AssetHash &operator=(const AssetHash &) = delete;
+    void Add(const unsigned char *bytes, size_t count)
+    {
+        AssetRequire(count <= 64 * 1024 * 1024 &&
+                         BCryptHashData(hash, const_cast<PUCHAR>(bytes), ULONG(count), 0) >= 0,
+                     "SHA-256 input");
+    }
+    std::string Finish()
+    {
+        unsigned char digest[32];
+        AssetRequire(BCryptFinishHash(hash, digest, sizeof(digest), 0) >= 0, "SHA-256 result");
+        std::string result;
+        for (auto byte : digest)
+        {
+            result += "0123456789abcdef"[byte >> 4];
+            result += "0123456789abcdef"[byte & 15];
+        }
+        return result;
+    }
+
+  private:
+    BCRYPT_ALG_HANDLE algorithm = nullptr;
+    BCRYPT_HASH_HANDLE hash = nullptr;
+};
+std::string Hash(const std::vector<unsigned char> &bytes)
+{
+    AssetHash hash;
+    hash.Add(bytes.data(), bytes.size());
+    return hash.Finish();
+}
+bool Digest(const std::string &text)
+{
+    return text.size() == 64 && text.find_first_not_of("0123456789abcdef") == std::string::npos;
+}
+
+// Bounded metadata reader. Duplicate keys, trailing data and malformed scalars fail before GL upload.
+class AssetJson
+{
+  public:
+    enum class Type
+    {
+        Null,
+        Number,
+        String,
+        Boolean,
+        Object,
+        Array
+    } type = Type::Null;
+    std::string text;
+    double number = 0;
+    bool boolean = false;
+    std::map<std::string, AssetJson> object;
+    std::vector<AssetJson> array;
+    const AssetJson &At(const std::string &key) const
+    {
+        auto it = object.find(key);
+        AssetRequire(type == Type::Object && it != object.end(), "missing key " + key);
+        return it->second;
+    }
+    const std::string &Text() const
+    {
+        AssetRequire(type == Type::String, "expected string");
+        return text;
+    }
+    int Integer() const
+    {
+        AssetRequire(type == Type::Number && std::isfinite(number) && number == std::floor(number) &&
+                         number >= -10000000 && number <= 10000000,
+                     "expected bounded integer");
+        return int(number);
+    }
+    static AssetJson Load(const std::filesystem::path &path)
+    {
+        auto bytes = ReadAsset(path, 1024 * 1024);
+        std::string input(bytes.begin(), bytes.end());
+        size_t offset = 0;
+        auto value = Parse(input, offset, 0);
+        Space(input, offset);
+        AssetRequire(offset == input.size(), "trailing JSON data");
+        return value;
+    }
+
+  private:
+    static void Space(const std::string &s, size_t &p)
+    {
+        while (p < s.size() && (s[p] == ' ' || s[p] == '\t' || s[p] == '\r' || s[p] == '\n'))
+        {
+            ++p;
+        }
+    }
+    static std::string String(const std::string &s, size_t &p)
+    {
+        AssetRequire(p < s.size() && s[p++] == '"', "JSON string");
+        std::string value;
+        while (p < s.size())
+        {
+            auto c = static_cast<unsigned char>(s[p++]);
+            if (c == '"')
+            {
+                return value;
+            }
+            AssetRequire(c >= 32 && value.size() < 8192, "JSON string bounds");
+            if (c == '\\')
+            {
+                AssetRequire(p < s.size(), "JSON escape");
+                c = s[p++];
+                if (c == 'n')
+                {
+                    c = '\n';
+                }
+                else if (c == 'r')
+                {
+                    c = '\r';
+                }
+                else if (c == 't')
+                {
+                    c = '\t';
+                }
+                else if (c == 'b')
+                {
+                    c = '\b';
+                }
+                else if (c == 'f')
+                {
+                    c = '\f';
+                }
+                else
+                {
+                    AssetRequire(c == '"' || c == '\\' || c == '/', "unsupported metadata escape");
+                }
+            }
+            value += char(c);
+        }
+        AssetRequire(false, "unterminated JSON string");
+        return {};
+    }
+    static AssetJson Parse(const std::string &s, size_t &p, unsigned depth)
+    {
+        Space(s, p);
+        AssetRequire(depth < 16 && p < s.size(), "JSON nesting/input bounds");
+        AssetJson v;
+        const char first = s[p];
+        if (first == '"')
+        {
+            v.type = Type::String;
+            v.text = String(s, p);
+            return v;
+        }
+        if (first == '{' || first == '[')
+        {
+            v.type = first == '{' ? Type::Object : Type::Array;
+            const char close = first == '{' ? '}' : ']';
+            ++p;
+            Space(s, p);
+            if (p < s.size() && s[p] == close)
+            {
+                ++p;
+                return v;
+            }
+            for (size_t entries = 0;; ++entries)
+            {
+                AssetRequire(entries < 4096, "JSON collection bounds");
+                if (first == '{')
+                {
+                    Space(s, p);
+                    auto key = String(s, p);
+                    Space(s, p);
+                    AssetRequire(p < s.size() && s[p++] == ':', "JSON object separator");
+                    AssetRequire(v.object.emplace(key, Parse(s, p, depth + 1)).second,
+                                 "duplicate JSON key " + key);
+                }
+                else
+                {
+                    v.array.push_back(Parse(s, p, depth + 1));
+                }
+                Space(s, p);
+                AssetRequire(p < s.size(), "unterminated JSON collection");
+                if (s[p] == close)
+                {
+                    ++p;
+                    return v;
+                }
+                AssetRequire(s[p++] == ',', "JSON collection separator");
+            }
+        }
+        if (s.compare(p, 4, "true") == 0)
+        {
+            p += 4;
+            v.type = Type::Boolean;
+            v.boolean = true;
+            return v;
+        }
+        if (s.compare(p, 5, "false") == 0)
+        {
+            p += 5;
+            v.type = Type::Boolean;
+            return v;
+        }
+        if (s.compare(p, 4, "null") == 0)
+        {
+            p += 4;
+            return v;
+        }
+        const size_t start = p;
+        if (s[p] == '-')
+        {
+            ++p;
+        }
+        AssetRequire(p < s.size() && s[p] >= '0' && s[p] <= '9', "JSON number");
+        if (s[p] == '0')
+        {
+            ++p;
+        }
+        else
+        {
+            while (p < s.size() && s[p] >= '0' && s[p] <= '9')
+            {
+                ++p;
+            }
+        }
+        if (p < s.size() && s[p] == '.')
+        {
+            const auto digits = ++p;
+            while (p < s.size() && s[p] >= '0' && s[p] <= '9')
+            {
+                ++p;
+            }
+            AssetRequire(p > digits, "JSON fraction");
+        }
+        if (p < s.size() && (s[p] == 'e' || s[p] == 'E'))
+        {
+            ++p;
+            if (p < s.size() && (s[p] == '-' || s[p] == '+'))
+            {
+                ++p;
+            }
+            const auto digits = p;
+            while (p < s.size() && s[p] >= '0' && s[p] <= '9')
+            {
+                ++p;
+            }
+            AssetRequire(p > digits, "JSON exponent");
+        }
+        v.type = Type::Number;
+        v.number = std::strtod(s.substr(start, p - start).c_str(), nullptr);
+        AssetRequire(std::isfinite(v.number), "JSON finite number");
+        return v;
+    }
+};
+
+std::vector<unsigned char> DecodePng(IWICImagingFactory *factory, const std::filesystem::path &path,
+                                     int width, int height)
+{
+    using Microsoft::WRL::ComPtr;
+    ComPtr<IWICBitmapDecoder> decoder;
+    ComPtr<IWICBitmapFrameDecode> frame;
+    ComPtr<IWICFormatConverter> converter;
+    UINT w = 0, h = 0;
+    AssetRequire(
+        SUCCEEDED(factory->CreateDecoderFromFilename(path.c_str(), nullptr, GENERIC_READ,
+                                                     WICDecodeMetadataCacheOnLoad, &decoder)) &&
+            SUCCEEDED(decoder->GetFrame(0, &frame)) && SUCCEEDED(frame->GetSize(&w, &h)) &&
+            w == unsigned(width) && h == unsigned(height) &&
+            SUCCEEDED(factory->CreateFormatConverter(&converter)) &&
+            SUCCEEDED(converter->Initialize(frame.Get(), GUID_WICPixelFormat32bppRGBA,
+                                            WICBitmapDitherTypeNone, nullptr, 0, WICBitmapPaletteTypeCustom)),
+        "PNG size/format " + path.u8string());
+    std::vector<unsigned char> pixels(size_t(width) * height * 4);
+    AssetRequire(SUCCEEDED(converter->CopyPixels(nullptr, width * 4, UINT(pixels.size()), pixels.data())),
+                 "PNG decoding " + path.u8string());
+    return pixels;
+}
 // CPU layout caches are bounded and independent of GL/context lifetime. They are used
 // only on the game thread, including CPU-only dialogue tests.
 template <typename Key, typename Value> class LayoutCache
@@ -139,6 +458,80 @@ std::vector<unsigned char> CreateMaterialPixels(int type)
 
 } // namespace
 
+UiAtlasCatalog UiAtlasCatalog::Load(const std::filesystem::path &exportRoot)
+{
+    const auto metadata = AssetJson::Load(exportRoot / "Atlases/ui_complete.json");
+    AssetRequire(metadata.At("schema").Text() == "erma.ui.atlas" && metadata.At("version").Integer() == 1,
+                 "atlas schema/version");
+    const auto &format = metadata.At("format");
+    const auto &sampling = metadata.At("sampling");
+    AssetRequire(format.At("channels").Text() == "RGBA8" && format.At("alpha").Text() == "straight" &&
+                     format.At("color_space").Text() == "sRGB" && format.At("origin").Text() == "top-left" &&
+                     format.At("row_direction").Text() == "down" &&
+                     sampling.At("filter").Text() == "linear" &&
+                     sampling.At("wrap").Text() == "clamp_to_edge" &&
+                     sampling.At("uv").Text() == "pixel centers; .5 inset" &&
+                     sampling.At("mipmaps").type == AssetJson::Type::Boolean &&
+                     !sampling.At("mipmaps").boolean && metadata.At("nine_slice_inset").Integer() == 12,
+                 "atlas format/sampling");
+    UiAtlasCatalog result;
+    const auto &atlas = metadata.At("atlas");
+    result.width = atlas.At("width").Integer();
+    result.height = atlas.At("height").Integer();
+    const auto filename = atlas.At("file").Text();
+    AssetRequire(filename == "ui_complete.png" && result.width > 0 && result.width <= 8192 &&
+                     result.height > 0 && result.height <= 8192 &&
+                     size_t(result.width) * result.height <= 16 * 1024 * 1024,
+                 "atlas dimensions/name");
+    result.image = exportRoot / "Atlases" / filename;
+    AssetRequire(Digest(atlas.At("sha256").Text()) &&
+                     Hash(ReadAsset(result.image, 64 * 1024 * 1024)) == atlas.At("sha256").Text(),
+                 "atlas PNG hash");
+    const int padding = metadata.At("padding").Integer();
+    const auto &sprites = metadata.At("sprites");
+    AssetRequire(padding >= 4 && padding <= 16 && sprites.type == AssetJson::Type::Object &&
+                     sprites.object.size() >= 127 && sprites.object.size() <= 512 &&
+                     int(sprites.object.size()) == metadata.At("source_count").Integer() &&
+                     metadata.At("legacy_count").Integer() == 127,
+                 "atlas inventory/padding");
+    std::set<std::string> sourceIds;
+    for (const auto *group : {"Icons", "HUDIcons", "Components"})
+    {
+        for (const auto &entry : std::filesystem::directory_iterator(exportRoot / group))
+        {
+            if (entry.is_regular_file() && entry.path().extension() == L".png")
+            {
+                sourceIds.insert(std::string(group) + "/" + entry.path().stem().u8string());
+            }
+        }
+    }
+    AssetRequire(sourceIds.size() == sprites.object.size(), "missing/outdated atlas source inventory");
+    for (const auto &entry : sprites.object)
+    {
+        const auto &v = entry.second;
+        Sprite sprite{v.At("x").Integer(), v.At("y").Integer(), v.At("width").Integer(),
+                      v.At("height").Integer(), v.At("rgba_sha256").Text()};
+        AssetRequire(
+            sourceIds.count(entry.first) && v.At("source").Text() == "Export/" + entry.first + ".png" &&
+                Digest(v.At("source_sha256").Text()) && Digest(sprite.rgbaHash) && sprite.x >= padding &&
+                sprite.y >= padding && sprite.width > 0 && sprite.height > 0 &&
+                sprite.width <= result.width - padding && sprite.height <= result.height - padding &&
+                sprite.x <= result.width - padding - sprite.width &&
+                sprite.y <= result.height - padding - sprite.height,
+            "atlas rectangle " + entry.first);
+        for (const auto &other : result.sprites)
+        {
+            const auto &b = other.second;
+            AssetRequire(sprite.x + sprite.width + padding <= b.x || b.x + b.width + padding <= sprite.x ||
+                             sprite.y + sprite.height + padding <= b.y ||
+                             b.y + b.height + padding <= sprite.y,
+                         "overlapping atlas sprites");
+        }
+        result.sprites.emplace(entry.first, std::move(sprite));
+    }
+    return result;
+}
+
 struct RenderAssets::Data
 {
     struct TextTexture
@@ -154,6 +547,9 @@ struct RenderAssets::Data
     GLuint uiAtlas = 0;
     int uiWidth = 2048, uiHeight = 0;
     std::map<std::string, Sprite> sprites;
+    std::filesystem::path exportRoot;
+    std::map<std::string, GLuint> backdrop;
+    AssetJson backdropMetadata;
     GLuint atlas = 0;
     std::map<std::tuple<int, bool, std::string>, TextTexture> texts;
     unsigned long long clock = 0;
@@ -161,6 +557,10 @@ struct RenderAssets::Data
     {
         glDeleteTextures(1, &atlas);
         glDeleteTextures(1, &uiAtlas);
+        for (const auto &entry : backdrop)
+        {
+            glDeleteTextures(1, &entry.second);
+        }
         for (const auto &entry : texts)
         {
             glDeleteTextures(1, &entry.second.texture);
@@ -194,6 +594,7 @@ RenderAssets::RenderAssets() : m_data(new Data())
     {
         throw std::runtime_error("UI assets missing: deploy Resource/UI/Export beside the game.");
     }
+    m_data->exportRoot = uiRoot;
     struct ComScope
     {
         HRESULT initialized = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
@@ -213,73 +614,52 @@ RenderAssets::RenderAssets() : m_data(new Data())
         {
             throw std::runtime_error("UI PNG decoder initialization failed.");
         }
-        // Decode straight into the final padded atlas, without retaining every PNG's pixels.
-        std::vector<unsigned char> pixels;
-        m_data->uiHeight = 1;
+        const auto catalog = UiAtlasCatalog::Load(uiRoot);
         GLint maximumTextureSize = 0;
         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maximumTextureSize);
-        int x = 2, y = 2, row = 0;
-        for (const auto &group : {"Icons", "HUDIcons", "Components"})
+        AssetRequire(catalog.width <= maximumTextureSize && catalog.height <= maximumTextureSize,
+                     "atlas exceeds graphics device texture limit");
+        auto pixels = DecodePng(factory.Get(), catalog.image, catalog.width, catalog.height);
+        m_data->uiWidth = catalog.width;
+        m_data->uiHeight = catalog.height;
+        for (const auto &entry : catalog.sprites)
         {
-            std::vector<fs::path> paths;
-            for (const auto &entry : fs::directory_iterator(uiRoot / group))
+            const auto &s = entry.second;
+            AssetHash hash;
+            for (int row = 0; row < s.height; ++row)
             {
-                if (entry.path().extension() == L".png")
-                {
-                    paths.push_back(entry.path());
-                }
+                hash.Add(pixels.data() + (size_t(s.y + row) * catalog.width + s.x) * 4, size_t(s.width) * 4);
             }
-            std::sort(paths.begin(), paths.end());
-            for (const auto &path : paths)
-            {
-                ComPtr<IWICBitmapDecoder> decoder;
-                ComPtr<IWICBitmapFrameDecode> frame;
-                ComPtr<IWICFormatConverter> converter;
-                UINT w = 0, h = 0;
-                if (FAILED(factory->CreateDecoderFromFilename(path.c_str(), nullptr, GENERIC_READ,
-                                                              WICDecodeMetadataCacheOnLoad, &decoder)) ||
-                    FAILED(decoder->GetFrame(0, &frame)) || FAILED(frame->GetSize(&w, &h)) || !w || !h ||
-                    w > 2044 || h > 2044 || FAILED(factory->CreateFormatConverter(&converter)) ||
-                    FAILED(converter->Initialize(frame.Get(), GUID_WICPixelFormat32bppRGBA,
-                                                 WICBitmapDitherTypeNone, nullptr, 0,
-                                                 WICBitmapPaletteTypeCustom)))
-                {
-                    throw std::runtime_error("Invalid UI PNG: " + path.filename().string());
-                }
-                if (x + int(w) + 2 > m_data->uiWidth)
-                {
-                    x = 2;
-                    y += row + 4;
-                    row = 0;
-                }
-                while (m_data->uiHeight < y + int(h) + 2)
-                {
-                    m_data->uiHeight *= 2;
-                }
-                if (m_data->uiWidth > maximumTextureSize || m_data->uiHeight > maximumTextureSize)
-                {
-                    throw std::runtime_error("UI atlas exceeds the graphics device texture limit.");
-                }
-                pixels.resize(size_t(m_data->uiWidth) * m_data->uiHeight * 4, 0);
-                const UINT stride = UINT(m_data->uiWidth) * 4;
-                const UINT bytes = (h - 1) * stride + w * 4;
-                auto *destination = pixels.data() + (size_t(y) * m_data->uiWidth + x) * 4;
-                if (FAILED(converter->CopyPixels(nullptr, stride, bytes, destination)))
-                {
-                    throw std::runtime_error("UI PNG pixel conversion failed.");
-                }
-                m_data->sprites.emplace(std::string(group) + "/" + path.stem().string(),
-                                        Data::Sprite{x, y, int(w), int(h)});
-                x += int(w) + 4;
-                row = (std::max)(row, int(h));
-            }
+            AssetRequire(hash.Finish() == s.rgbaHash, "atlas sprite pixels " + entry.first);
+            m_data->sprites.emplace(entry.first, Data::Sprite{s.x, s.y, s.width, s.height});
         }
-        while (m_data->uiHeight < y + row + 2)
-        {
-            m_data->uiHeight *= 2;
-        }
-        pixels.resize(size_t(m_data->uiWidth) * m_data->uiHeight * 4, 0);
         m_data->uiAtlas = Upload(m_data->uiWidth, m_data->uiHeight, pixels);
+        m_data->backdropMetadata = AssetJson::Load(uiRoot / "Backdrop/backdrop_manifest.json");
+        AssetRequire(m_data->backdropMetadata.At("schema").Text() == "erma.backdrop.layers" &&
+                         m_data->backdropMetadata.At("version").Integer() == 1,
+                     "backdrop schema/version");
+        const auto &layers = m_data->backdropMetadata.At("layers");
+        AssetRequire(layers.type == AssetJson::Type::Array && layers.array.size() == 10,
+                     "backdrop inventory");
+        std::set<std::tuple<std::string, std::string, int>> layerKeys;
+        for (const auto &layer : layers.array)
+        {
+            const auto name = layer.At("name").Text(), variant = layer.At("variant").Text();
+            const auto file = layer.At("file").Text();
+            const int width = layer.At("width").Integer();
+            AssetRequire(
+                (name == "stars" || name == "gate_rings" || name == "rail" || name == "distant_skyline") &&
+                    (variant == "smooth" || (name == "distant_skyline" && variant == "_cartoon")) &&
+                    (width == 1280 || width == 2560) && layer.At("height").Integer() == width * 800 / 1280 &&
+                    layer.At("alpha").Text() == "straight" &&
+                    layerKeys.emplace(name, variant, width).second &&
+                    fs::path(file).filename().u8string() == file && fs::path(file).extension() == L".png",
+                "backdrop layer contract");
+            AssetRequire(Digest(layer.At("sha256").Text()) &&
+                             Hash(ReadAsset(uiRoot / "Backdrop" / file, 64 * 1024 * 1024)) ==
+                                 layer.At("sha256").Text(),
+                         "backdrop PNG hash " + file);
+        }
     }
     // Four materials, a white cell, and a radial glow share a padded atlas.
     constexpr int cell = 66, atlasWidth = cell * 6;
@@ -609,6 +989,67 @@ void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf
 size_t RenderAssets::UiSpriteCount() const
 {
     return m_data->sprites.size();
+}
+bool RenderAssets::DrawBackdropLayer(const std::string &name, bool cartoon, int renderWidth)
+{
+    const std::string variant = name == "distant_skyline" && cartoon ? "_cartoon" : "smooth";
+    // Use the supplied 2x layer only when the world render target can benefit from it.
+    const int width = renderWidth > 1280 ? 2560 : 1280;
+    const std::string key = name + variant + std::to_string(width);
+    auto found = m_data->backdrop.find(key);
+    if (found == m_data->backdrop.end())
+    {
+        const auto &layers = m_data->backdropMetadata.At("layers");
+        AssetRequire(layers.type == AssetJson::Type::Array && layers.array.size() == 10,
+                     "backdrop inventory");
+        const AssetJson *selected = nullptr;
+        for (const auto &layer : layers.array)
+        {
+            if (layer.At("name").Text() == name && layer.At("variant").Text() == variant &&
+                layer.At("width").Integer() == width)
+            {
+                AssetRequire(!selected, "duplicate backdrop layer");
+                selected = &layer;
+            }
+        }
+        AssetRequire(selected != nullptr, "missing backdrop layer " + name);
+        const auto file = selected->At("file").Text();
+        AssetRequire(std::filesystem::path(file).filename().u8string() == file &&
+                         std::filesystem::path(file).extension() == L".png" &&
+                         selected->At("height").Integer() == width * 800 / 1280 &&
+                         selected->At("alpha").Text() == "straight",
+                     "backdrop dimensions/path");
+        const auto path = m_data->exportRoot / "Backdrop" / file;
+        AssetRequire(Digest(selected->At("sha256").Text()) &&
+                         Hash(ReadAsset(path, 64 * 1024 * 1024)) == selected->At("sha256").Text(),
+                     "backdrop hash " + file);
+        GLint maximum = 0;
+        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maximum);
+        AssetRequire(width <= maximum, "backdrop graphics device texture limit");
+        const HRESULT apartment = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+        // COM must also be released when decoding throws.
+        struct Apartment
+        {
+            HRESULT result;
+            ~Apartment()
+            {
+                if (SUCCEEDED(result))
+                {
+                    CoUninitialize();
+                }
+            }
+        } cleanup{apartment};
+        Microsoft::WRL::ComPtr<IWICImagingFactory> factory;
+        AssetRequire(SUCCEEDED(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER,
+                                                IID_PPV_ARGS(factory.GetAddressOf()))),
+                     "backdrop PNG decoder");
+        auto pixels = DecodePng(factory.Get(), path, width, width * 800 / 1280);
+        found = m_data->backdrop.emplace(key, Upload(width, width * 800 / 1280, pixels)).first;
+    }
+    renderqueue::Depth(false);
+    renderqueue::Color(1, 1, 1, 1);
+    Quad(found->second, 0, 0, 1280, 800);
+    return true;
 }
 bool RenderAssets::DrawUiSprite(const std::string &name, float x, float y, float width, float height,
                                 float fraction, bool nineSlice)

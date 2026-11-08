@@ -12,6 +12,16 @@ struct UiControl
     int choice = -1;
 };
 
+// ActivityJournalUi — transient record selection and independent list/body navigation.
+class ActivityJournalUi
+{
+  public:
+    static std::vector<UiControl> Controls();
+    static void Draw();
+    static void Select(int choice);
+    static void TurnPage(int direction);
+};
+
 // ============================================================================
 // Hud — shared display lifecycle
 // ============================================================================

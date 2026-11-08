@@ -24,7 +24,7 @@ add_library(GameCore STATIC ${GAME_SOURCES})
 target_include_directories(GameCore PUBLIC SimpleGame)
 target_compile_definitions(GameCore PUBLIC GLFW_INCLUDE_NONE NOMINMAX)
 target_link_libraries(GameCore PUBLIC glfw glew opengl32 user32 gdi32 shell32
-    windowscodecs ole32 psapi ws2_32 winmm)
+    windowscodecs ole32 psapi ws2_32 winmm bcrypt)
 if(MSVC)
     target_compile_options(glfw PRIVATE /utf-8)
     target_compile_options(glew PRIVATE /utf-8)

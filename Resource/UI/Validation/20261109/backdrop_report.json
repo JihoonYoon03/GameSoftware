@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "geometry_source_unchanged": true,
+  "layer_count": 10,
+  "canvas": [
+    1280,
+    800
+  ],
+  "scales": [
+    1,
+    2
+  ],
+  "dynamic_elements_baked": false,
+  "native_game_comparison": false
+}

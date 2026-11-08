@@ -1,0 +1,209 @@
+{
+  "version": "1.0",
+  "fixtures": [
+    {
+      "screen": "50_story_tracking",
+      "kind": "story",
+      "participation": [
+        "active",
+        "active",
+        "not_accepted",
+        "paused"
+      ],
+      "tracked": "mine"
+    },
+    {
+      "screen": "51_story_completed",
+      "kind": "story",
+      "completed": "mine",
+      "tracked": "signal",
+      "reward_from_render": false
+    },
+    {
+      "screen": "52_story_prerequisite",
+      "kind": "story",
+      "eligible": false,
+      "track_enabled": false
+    },
+    {
+      "screen": "53_story_danger",
+      "kind": "story",
+      "danger": true,
+      "world_paused": false
+    },
+    {
+      "screen": "54_regional_empty",
+      "kind": "regional",
+      "accepted_count": 0,
+      "list_page": 1,
+      "phase": "measure",
+      "restored": false,
+      "remote_accept": false
+    },
+    {
+      "screen": "55_regional_measure",
+      "kind": "regional",
+      "accepted_count": 3,
+      "list_page": 1,
+      "phase": "measure",
+      "restored": false,
+      "remote_accept": false
+    },
+    {
+      "screen": "56_regional_submit",
+      "kind": "regional",
+      "accepted_count": 1,
+      "list_page": 1,
+      "phase": "submit",
+      "restored": false,
+      "remote_accept": false
+    },
+    {
+      "screen": "57_regional_restored",
+      "kind": "regional",
+      "accepted_count": 6,
+      "list_page": 2,
+      "phase": "submit",
+      "restored": true,
+      "remote_accept": false
+    },
+    {
+      "screen": "58_regional_long_name",
+      "kind": "regional",
+      "accepted_count": 3,
+      "list_page": 1,
+      "phase": "measure",
+      "restored": false,
+      "remote_accept": false
+    },
+    {
+      "screen": "59_regional_one",
+      "kind": "regional",
+      "accepted_count": 1,
+      "list_page": 1,
+      "phase": "measure",
+      "restored": false,
+      "remote_accept": false
+    },
+    {
+      "screen": "60_hud_tracking_and_pin",
+      "kind": "hud",
+      "tracked_marker": "cyan_diamond",
+      "user_marker": "gold_pin",
+      "user_pin_preserved": true,
+      "route_line": false
+    },
+    {
+      "screen": "61_mine_surface_tracking",
+      "kind": "hud",
+      "context": "mine",
+      "target": "known_exit",
+      "hidden_terrain_exposed": false
+    },
+    {
+      "screen": "62_settlement_hold_01",
+      "kind": "notice",
+      "page": 1,
+      "total": 1,
+      "reward_applied": false,
+      "record_preserved": true,
+      "phase": "submit",
+      "automatic_completion": false
+    },
+    {
+      "screen": "63_planet_failure_01",
+      "kind": "notice",
+      "page": 1,
+      "total": 2,
+      "example_error": true,
+      "exact_cause_preserved": true,
+      "no_success_popup": true
+    },
+    {
+      "screen": "63_planet_failure_02",
+      "kind": "notice",
+      "page": 2,
+      "total": 2,
+      "example_error": true,
+      "exact_cause_preserved": true,
+      "no_success_popup": true
+    },
+    {
+      "screen": "64_activity_state_legend",
+      "kind": "legend",
+      "states": [
+        "active",
+        "paused",
+        "completed",
+        "unaccepted",
+        "locked"
+      ],
+      "color_only": false
+    },
+    {
+      "screen": "65_story_focus_and_tracking",
+      "kind": "story",
+      "selected": "signal",
+      "tracked": "mine",
+      "participation_changed": false
+    },
+    {
+      "screen": "66_restore_legacy_fallback",
+      "kind": "restore",
+      "archive_formats": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "fallback": "active_story",
+      "progress_preserved": true
+    },
+    {
+      "screen": "67_after_completion_list",
+      "kind": "story",
+      "completed": "mine",
+      "fallback": "signal",
+      "duplicate_reward": false
+    },
+    {
+      "screen": "68_map_activity_markers",
+      "kind": "map",
+      "other_accepted_markers": true,
+      "pin_preserved": true,
+      "route_line": false
+    },
+    {
+      "screen": "69_story_not_accepted",
+      "kind": "story",
+      "selected": "mara",
+      "participation": "unaccepted",
+      "tracked": "mine",
+      "selected_track_enabled": false
+    },
+    {
+      "screen": "70_activity_symbols",
+      "kind": "symbol_reference",
+      "text_baked": false,
+      "icons": [
+        "activity_track",
+        "activity_untracked",
+        "activity_active",
+        "activity_paused",
+        "activity_complete",
+        "activity_offer",
+        "activity_prerequisite",
+        "activity_measure",
+        "activity_submit",
+        "activity_payment_hold",
+        "activity_restore",
+        "activity_map"
+      ]
+    }
+  ],
+  "simulated_only": true,
+  "read_only": true
+}

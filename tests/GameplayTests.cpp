@@ -2027,6 +2027,37 @@ void TestActivityObjectives()
     }
     const auto statuses = w.missions.Status(MissionId::Mara);
     w.journalVisible = true;
+    w.mapVisible = false;
+    w.ui = {};
+    const auto previousTracking = ActivityJournal::Current().mission;
+    ActivityJournalUi::Select(int(MissionId::Mine));
+    assert(w.ui.activityMission == MissionId::Mine && ActivityJournal::Current().mission == previousTracking);
+    const auto activityControls = Hud::Controls();
+    for (size_t i = 0; i < activityControls.size(); ++i)
+    {
+        const auto &a = activityControls[i];
+        assert(a.position.x >= 64 && a.position.y >= 40 && a.position.x + a.size.x <= 1216 &&
+               a.position.y + a.size.y <= 760);
+        for (size_t j = i + 1; j < activityControls.size(); ++j)
+        {
+            const auto &b = activityControls[j];
+            assert(a.position.x + a.size.x <= b.position.x || b.position.x + b.size.x <= a.position.x ||
+                   a.position.y + a.size.y <= b.position.y || b.position.y + b.size.y <= a.position.y);
+        }
+    }
+    assert(std::any_of(activityControls.begin(), activityControls.end(), [](const UiControl &c) {
+        return c.action == UiAction::TrackMission && c.choice == int(MissionId::Mine) && c.enabled;
+    }));
+    const auto beforePage = w.journalActivityPage;
+    ActivityJournalUi::TurnPage(1);
+    assert(w.journalActivityPage == beforePage && w.missions.Status(MissionId::Mara) == statuses &&
+           ActivityJournal::Current().mission == previousTracking && mineState.player.credits == credits);
+    assert(Hud::HandleKey('r') && w.ui.screen == UiScreen::None); // Reading cannot trigger restart.
+    w.pressedKeys['w'] = true;
+    assert(Hud::HandleKey('w') && !w.pressedKeys['w']);
+    ActivityJournalUi::TurnPage(-1);
+    assert(w.ui.activityDetailPage == 0);
+    w.journalVisible = true;
     assert(MapHud::FocusTrackedObjective() && !w.journalVisible && w.mapVisible);
     const auto onMap = MapHud::PlanetToMap(*goal.surfaceTarget, true);
     assert(Game::Distance(onMap, {488, 400}) < .01f && w.missions.Status(MissionId::Mara) == statuses);

@@ -8,7 +8,7 @@ import hashlib
 
 ROOT = Path(__file__).resolve().parents[1]
 for folder in ('Source/Icons', 'Source/HUDIcons', 'Source/Components', 'Source/Screens', 'Export/Icons',
-               'Export/HUDIcons', 'Export/Components', 'Export/Atlases', 'Preview', 'Validation'):
+               'Export/HUDIcons', 'Export/Components', 'Export/Atlases', 'Preview', 'Validation', 'Preview/20261109', 'Validation/20261109'):
     (ROOT / folder).mkdir(parents=True, exist_ok=True)
 
 C = dict(bg='#0a1821', panel='#142b34', edge='#65818c', ink='#f4f6f1', muted='#d4e1e4',
@@ -338,7 +338,7 @@ scene('05_dialogue','긴 한글 대화 / 선택',['UI-08','UI-15'],lambda:dialog
 scene('06_journal','조사 기록 / 알려진 사실',['UI-09'],lambda:backdrop()+modal('조사 기록','확인한 사실과 다음 행동 / J',176,72,928,656)+row('관문 N-0의 수신 기록',200,160,270,'selected')+row('발전기 조사',200,216,270)+row('운송대 구조',200,272,270)+text('관문과 외곽 설비는 다른 대상이다.',510,182,21,weight=700,width=560)+text('확인한 사실',510,234,14,C['accent'],700)+text('N-0/17은 외곽 설비의 식별 번호다.',510,268,17,width=548)+text('현재 할 일',510,330,14,C['accent'],700)+text('리아에게 조사 결과를 보고하고 기록을 대조한다.',510,364,17,width=548)+panel(510,464,566,118,'중단한 대화가 있습니다.',accent=C['amber'])+text('안전한 곳에서 상대에게 다시 말을 걸어 이어 읽으세요.',530,540,15,C['muted'],width=526)+hint('PageUp / PageDown','페이지',200,674)+hint('J / Esc','닫기',898,674)+text('01 / 03',1056,646,13,C['muted'],anchor='end'))
 scene('07_chapter','1장 HUD / 조사 · 철수',['UI-04','UI-07','UI-11','UI-15'],chapter_screen)
 scene('08_medical','의료 이송 / 실제 손실',['UI-16'],lambda:backdrop()+modal('의료 이송 완료','헤일로 의료소 / 현재 적용 결과',312,130,656,540)+icon('medical',608,218,64)+text('안전한 곳으로 복귀했습니다.',640,328,26,weight=700,anchor='middle',width=600)+text('레벨 −1     크레딧 −120     부품 −2',640,388,21,C['amber'],anchor='middle',width=600)+text('조사 기록과 확인한 사실은 유지됩니다.',640,438,17,anchor='middle',width=600)+text('중단한 대화는 안전한 곳에서 다시 말을 걸어 재개하세요.',640,476,15,C['muted'],anchor='middle',width=600)+row('계속하기',404,550,472,'selected',trailing='Enter'))
-scene('09_pause','일시정지 / 지역별 복귀',['UI-17'],lambda:backdrop()+modal('일시정지','1장 / 빛나는 개척지',416,112,448,576)+row('계속하기',440,220,400,'selected',trailing='Esc')+row('헤일로로 귀환',440,278,400,trailing='R')+row('조작 도움말',440,336,400,ico='keyboard')+row('종료',440,394,400,'warning',ico='exit')+text('현재 지역에서는 R로 헤일로에 귀환합니다.',440,488,14,C['muted'],width=400)+text('세션의 진행은 영구 저장되지 않습니다.',440,518,14,C['amber'],width=400)+text('광산에서는 R의 기능이 광산 재시작으로 바뀝니다.',440,568,13,C['muted'],width=400))
+scene('09_pause','일시정지 / 지역별 복귀',['UI-17'],lambda:backdrop()+modal('일시정지','1장 / 빛나는 개척지',416,112,448,576)+row('계속하기',440,220,400,'selected',trailing='Esc')+row('헤일로로 귀환',440,278,400,trailing='R')+row('조작 도움말',440,336,400,ico='keyboard')+row('종료',440,394,400,'warning',ico='exit')+text('현재 지역에서는 R로 헤일로에 귀환합니다.',440,488,14,C['muted'],width=400)+text('저장하지 않은 진행은 유지되지 않습니다.',440,518,14,C['amber'],width=400)+text('광산에서는 R의 기능이 광산 재시작으로 바뀝니다.',440,568,13,C['muted'],width=400))
 scene('10_city_map','전체 지도 / 도시',['UI-06'],lambda:map_screen())
 scene('11_mine_map','전체 지도 / 광산 비공개 영역',['UI-06'],lambda:map_screen('mine'))
 scene('12_chapter_map','전체 지도 / 1장 현장',['UI-06'],lambda:map_screen()+badge('1장 현장 · 현재 조사 대상',126,172,C['accent'],362)+icon('power',420,328,30)+text('발전기',458,350,15)+icon('transport',628,525,30)+text('운송대',668,549,15)+icon('investigation_site',760,377,30)+text('폐설비',800,400,15))
@@ -348,7 +348,7 @@ scene('15_title','타이틀 / 후속 연결용',['UI-18'],lambda:backdrop('mine'
 scene('16_options','옵션 / 투명도 / 후속 연결용',['UI-19'],lambda:backdrop()+modal('옵션','UI 투명도는 필수 연결 항목입니다.',224,72,832,656)+text('패널 불투명도',260,190,18,weight=700)+text('94%',1004,190,21,C['accent'],700,'end')+bar(260,218,744,.94)+text('지원 제안 80–100% · 기본 94% / 글자·아이콘 별도',260,257,14,C['muted'],width=744)+text('테두리 불투명도',260,315,18,weight=700)+text('100%',1004,315,21,C['accent'],700,'end')+bar(260,343,744,1)+text('콘텐츠 불투명도',260,400,18,weight=700)+text('100%',1004,400,21,C['accent'],700,'end')+text('지원 제안 85–100% · 본문 가독성 유지',260,433,14,C['muted'],width=744)+row('카툰 명암',260,472,744,trailing='켜짐')+row('렌더 해상도',260,528,744,trailing='기본 / ½ / ¼')+row('안티앨리어싱',260,584,744,trailing='켜짐')+text('글자 크기와 UI 배율은 별도 구현 검토 항목입니다.',260,680,14,C['muted'],width=744))
 scene('17_summary','보유 / 성장 요약 / 후속 연결용',['UI-20'],lambda:backdrop()+modal('보유 · 성장 정보','현재 데이터 요약',224,96,832,608)+icon('level',264,196,34)+text('레벨 7',312,224,27,weight=700)+text('경험치 420 / 800',264,270,16,C['muted'])+bar(264,290,752,.525)+row('공격 / 방어',264,338,752,trailing='24 / 12',ico='attack')+row('크레딧',264,394,752,trailing='12,480',ico='credit')+row('거래 부품',264,450,752,trailing='18',ico='parts')+row('회복 키트',264,506,752,trailing='3',ico='heal')+text('장비 슬롯과 아이템 격자는 현재 기능에 포함되지 않습니다.',264,628,14,C['muted'],width=752))
 scene('18_supply','보급 교환 / 후속 연결용',['UI-21'],lambda:backdrop()+modal('운송대 보급 교환','현재 게임은 E로 즉시 교환 / 별도 창 연결 필요',280,112,720,576)+icon('parts',344,224,54)+icon('arrow',593,236,32)+icon('heal',814,224,54)+text('부품 3개',372,322,23,weight=700,anchor='middle')+text('회복 키트 1개',838,322,23,weight=700,anchor='middle')+text('기본 2개 → 평판 할증 적용 3개',640,384,17,C['amber'],anchor='middle',width=640)+text('보유 부품 18개 / 회복 키트 3개',640,428,17,anchor='middle',width=640)+row('교환 가능',320,486,640,'selected',trailing='E',ico='check')+text('부족 / 보유 상한 / 완료 상태는 부품 갤러리에서 확인',640,611,14,C['muted'],anchor='middle',width=640))
-scene('19_confirm','중요 행동 확인 / 후속 연결용',['UI-22'],lambda:backdrop()+modal('현재 세션을 종료할까요?','진행은 영구 저장되지 않습니다.',360,224,560,352)+text('종료하면 이번 세션의 진행을 잃습니다.',392,348,18,width=496)+text('취소하면 현재 화면으로 돌아갑니다.',392,384,16,C['muted'],width=496)+row('취소 · 계속 플레이',392,440,236,'selected')+row('종료',644,440,244,'warning',ico='exit'))
+scene('19_confirm','중요 행동 확인 / 후속 연결용',['UI-22'],lambda:backdrop()+modal('현재 세션을 종료할까요?','저장하지 않은 진행은 사라집니다.',360,224,560,352)+text('종료하면 저장하지 않은 진행을 잃습니다.',392,348,18,width=496)+text('취소하면 현재 화면으로 돌아갑니다.',392,384,16,C['muted'],width=496)+row('취소 · 계속 플레이',392,440,236,'selected')+row('종료',644,440,244,'warning',ico='exit'))
 scene('20_help','맥락별 조작 / 후속 연결용',['UI-23'],lambda:backdrop()+modal('조작 도움말','현재 가능한 행동만 표시합니다.',208,64,864,672)+row('도보 · 전투',240,149,800,'selected',ico='keyboard')+hint('WASD','이동',248,226)+hint('좌클릭','사격',638,226)+hint('V','근접 공격',248,280)+hint('R','재장전',638,280)+hint('Q','회복',248,334)+hint('E','조사 · 대화 · 회수',638,334)+hint('F','광산 스캔',248,388)+hint('M','전체 지도',638,388)+hint('J','조사 기록',248,442)+hint('H','대사 이력',638,442)+text('바이크: W 가속 · S 제동/후진 · A/D 조향 · Space 부스트',248,538,16,width=784)+text('대화: E/Enter 다음 · 숫자로 선택 후 Enter 확정',248,581,16,width=784)+text('지도: 좌클릭 목적지 설정 · 우클릭 해제 · M/Esc 닫기',248,624,16,width=784)+hint('Esc','닫기',900,677))
 
 def state_gallery():
@@ -459,6 +459,8 @@ scene('34_low_health','저체력 HUD / 위험 기호와 회복 키',['UI-01','UI
 
 from design_20261028 import apply_design
 apply_design(globals())
+from design_20261109 import apply_activity_design
+apply_activity_design(globals())
 
 # Text-free independent assets. All state colors can be supplied as draw-time tint.
 COMPONENTS={}
@@ -512,13 +514,13 @@ component('hud_reticle_arm','<path d="M3 3h8" stroke="#02080d" stroke-width="6"/
 for name,body,w,h,role in EXTRA_COMPONENTS: component(name,body,w,h,role=role)
 for name in ICONS:
     write(f'Source/Icons/{name}.svg',svg(icon(name,0,0,24,'#ffffff'),24,24))
-HUD_ICON_NAMES='health pistol infinite reload objective wanted scan signal unknown_signal bike boost reverse speed injured rescue check warning companion destination player unarmed slot_empty mouse_right key_release'.split()
+HUD_ICON_NAMES='health pistol infinite reload objective wanted scan signal unknown_signal bike boost reverse speed injured rescue check warning companion destination player unarmed slot_empty mouse_right key_release activity_track activity_submit activity_payment_hold'.split()
 for name in HUD_ICON_NAMES:
     write(f'Source/HUDIcons/{name}.svg',svg(hud_icon(name,4,4,24,'#ffffff'),32,32))
 
 for name,entry in SCENES.items(): write(f'Source/Screens/{name}.svg',entry['svg'])
 
-manifest=dict(version='1.2.0',title='ERMA / FIELD INTERFACE',date='2026-10-28',
+manifest=dict(version='1.3.0',title='ERMA / FIELD INTERFACE',date='2026-11-09',
     canvas=dict(width=1280,height=800,safe_margin=32,scale='uniform_min_viewport_fit',letterbox=True),
     font=dict(family='Malgun Gothic',windows_path='C:/Windows/Fonts/malgun.ttf',redistributed=False,
               text_in_assets=False,encoding='UTF-8',body_px=20,metadata_px=14,line_height=32),
@@ -538,11 +540,14 @@ manifest=dict(version='1.2.0',title='ERMA / FIELD INTERFACE',date='2026-10-28',
              runtime_primitives=['health','ammo_pips','reload','heat','scan_arc','reticle_arms','speed'],
              render_text='runtime only; black 4px outside outline; independent content opacity'),
     atlas=dict(png='Export/Atlases/icons.png',metadata='Export/Atlases/icons.json',padding=4),
-    screens={n:dict(label=v['label'],requirements=v['ids'],svg=f'Source/Screens/{n}.svg',png=f'Preview/{n}_20261028'+('_r2' if n=='05_dialogue' or n.startswith('45_dialogue_page_') else '')+'.png') for n,v in SCENES.items()},
+    complete_atlas=dict(png='Export/Atlases/ui_complete.png',metadata='Export/Atlases/ui_complete.json',padding=4,runtime_integration=True,runtime_validation='source_connected; user_build_and_game_checks_pending'),
+    backdrop=dict(metadata='Export/Backdrop/backdrop_manifest.json',runtime_integration=True,runtime_validation='world_layers_connected; native_visual_comparison_pending'),
+    activity=dict(contract='Source/activity_design_contract.json',review_states='Source/activity_review_states.json',runtime_integration=True,runtime_validation='source_connected; user_build_and_game_checks_pending'),
+    screens={n:dict(label=v['label'],requirements=v['ids'],svg=f'Source/Screens/{n}.svg',png=f'Preview/20261109/{n}.png') for n,v in SCENES.items()},
     constraints=['No automatic route polyline','Map north is fixed northeast; rotate actor only',
                  'Mine geometry/targets only in explored and eligible state','Approximate signal is not an exact map pin',
                  'Unlimited spare magazines; no spare ammunition count','No bike fuel or energy resource',
-                 'No persistent save/load UI','No unrevealed facts or unjoined companions',
+                 'Archive format 8 tracking restore with formats 1-7 fallback','No unrevealed facts or unjoined companions',
                  'No interaction during medical transfer','Dialogue input must be consumed before world input'])
 dump('ui_manifest.json',manifest)
 dump('Validation/text_inventory.json',TEXT_AUDIT)

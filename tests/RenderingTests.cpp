@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include <windows.h>
 #include "Drawing.h"
 #include "Civic.h"
@@ -1643,7 +1643,7 @@ void CaptureDeliveredUi(const std::filesystem::path &output)
     auto &g = Game::Get();
     auto &w = g.GetState();
     auto &renderer = GameRenderer::Get().Backend();
-    assert(renderer.UiSpriteCount() >= 127);
+    assert(renderer.UiSpriteCount() >= 145);
     auto draw = [&](const char *name) {
         Begin();
         game::SceneManager::Get(game::SceneManager::Current()).Draw();
@@ -1795,8 +1795,8 @@ void CaptureDeliveredUi(const std::filesystem::path &output)
             glfwGetFramebufferSize(platform::Window(), &actualWidth, &actualHeight);
             if (actualWidth != width || actualHeight != height)
             {
-                std::cerr << "Requested " << width << 'x' << height << "; GLFW framebuffer is "
-                          << actualWidth << 'x' << actualHeight << '\n';
+                std::cerr << "Requested " << width << 'x' << height << "; GLFW framebuffer is " << actualWidth
+                          << 'x' << actualHeight << '\n';
             }
             assert(actualWidth == width && actualHeight == height);
         }

@@ -278,5 +278,110 @@
     "y": 48,
     "w": 1152,
     "h": 704
+  },
+  {
+    "screen": "50_story_tracking",
+    "x": 64,
+    "y": 40,
+    "w": 1152,
+    "h": 720
+  },
+  {
+    "screen": "51_story_completed",
+    "x": 64,
+    "y": 40,
+    "w": 1152,
+    "h": 720
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "x": 64,
+    "y": 40,
+    "w": 1152,
+    "h": 720
+  },
+  {
+    "screen": "53_story_danger",
+    "x": 64,
+    "y": 40,
+    "w": 1152,
+    "h": 720
+  },
+  {
+    "screen": "54_regional_empty",
+    "x": 64,
+    "y": 40,
+    "w": 1152,
+    "h": 720
+  },
+  {
+    "screen": "55_regional_measure",
+    "x": 64,
+    "y": 40,
+    "w": 1152,
+    "h": 720
+  },
+  {
+    "screen": "56_regional_submit",
+    "x": 64,
+    "y": 40,
+    "w": 1152,
+    "h": 720
+  },
+  {
+    "screen": "57_regional_restored",
+    "x": 64,
+    "y": 40,
+    "w": 1152,
+    "h": 720
+  },
+  {
+    "screen": "58_regional_long_name",
+    "x": 64,
+    "y": 40,
+    "w": 1152,
+    "h": 720
+  },
+  {
+    "screen": "59_regional_one",
+    "x": 64,
+    "y": 40,
+    "w": 1152,
+    "h": 720
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "x": 64,
+    "y": 40,
+    "w": 1152,
+    "h": 720
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "x": 64,
+    "y": 40,
+    "w": 1152,
+    "h": 720
+  },
+  {
+    "screen": "67_after_completion_list",
+    "x": 64,
+    "y": 40,
+    "w": 1152,
+    "h": 720
+  },
+  {
+    "screen": "68_map_activity_markers",
+    "x": 56,
+    "y": 40,
+    "w": 1168,
+    "h": 720
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "x": 64,
+    "y": 40,
+    "w": 1152,
+    "h": 720
   }
 ]

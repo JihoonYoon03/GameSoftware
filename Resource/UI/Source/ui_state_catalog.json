@@ -147,13 +147,21 @@
     ],
     "rules": [
       "Never show optional kill count as a mandatory rescue goal.",
-      "Chapter conclusion is confirmed only after final dialogue has been read."
+      "Chapter conclusion is confirmed only after final dialogue has been read.",
+      "Use the same ActivityJournal objective for HUD and map.",
+      "After measurement target the reception terminal. Defer completion until the full 100-credit payout succeeds.",
+      "Use StoryMissionProgress::CanComplete for final report eligibility; do not show debug completion_ready in HUD."
     ],
     "presentation": "hud_primitives",
     "dedicated_status_panel": false,
     "implementation_document": "HUD_IMPLEMENTATION_ko.md",
     "priority": "current_play",
     "preview_screens": [
+      "50_story_tracking",
+      "51_story_completed",
+      "60_hud_tracking_and_pin",
+      "61_mine_surface_tracking",
+      "64_activity_state_legend",
       "01_city",
       "07_chapter",
       "33_exploration"
@@ -183,18 +191,23 @@
       "player",
       "destination",
       "objective",
-      "unknown_signal"
+      "unknown_signal",
+      "activity_track"
     ],
     "rules": [
       "Map rotation is fixed 45 degrees clockwise: north northeast.",
       "Rotate only player/bike. Clip every map primitive and icon to circle.",
-      "Exact destination arrow differs from the approximate rescue triangle."
+      "Exact destination arrow differs from the approximate rescue triangle.",
+      "Cyan tracked marker and gold user destination coexist; never overwrite the user pin.",
+      "In the mine, a surface objective points to a known exit without revealing fogged geometry."
     ],
     "presentation": "hud_primitives",
     "dedicated_status_panel": false,
     "implementation_document": "HUD_IMPLEMENTATION_ko.md",
     "priority": "current_play",
     "preview_screens": [
+      "60_hud_tracking_and_pin",
+      "61_mine_surface_tracking",
       "01_city",
       "03_bike",
       "04_mine",
@@ -236,6 +249,8 @@
     "dedicated_status_panel": null,
     "priority": "current_play",
     "preview_screens": [
+      "60_hud_tracking_and_pin",
+      "68_map_activity_markers",
       "10_city_map",
       "11_mine_map",
       "12_chapter_map"
@@ -346,7 +361,20 @@
       "history",
       "empty",
       "multiple_pages",
-      "interrupted_dialogue"
+      "interrupted_dialogue",
+      "story_active",
+      "story_paused",
+      "story_completed",
+      "story_unaccepted",
+      "story_prerequisite",
+      "regional_empty",
+      "regional_measure",
+      "regional_submit",
+      "regional_multiple_pages",
+      "regional_long_name",
+      "restored_tracking",
+      "legacy_restore",
+      "invalid_tracking_fallback"
     ],
     "bindings": [
       "known_facts",
@@ -356,22 +384,60 @@
       "channel",
       "page_index",
       "page_count",
-      "interruption_hint"
+      "interruption_hint",
+      "ActivityJournal::Current",
+      "ActivityJournal::CommunityEntries",
+      "ActivityJournal::CaptureTracking",
+      "ActivityJournal::RestoreTracking",
+      "participation",
+      "tracked_mission",
+      "community_world_key",
+      "community_region",
+      "list_page",
+      "body_page"
     ],
     "icons": [
       "record",
       "history",
-      "empty"
+      "empty",
+      "activity_track",
+      "activity_paused",
+      "activity_complete",
+      "activity_measure",
+      "activity_submit",
+      "activity_restore"
     ],
     "rules": [
       "Only known facts and read dialogue. Do not reveal unjoined companions.",
       "N-0 gate and N-0/17 facility are distinct.",
-      "J/H toggles; PageUp/PageDown pages; Esc closes."
+      "J/H toggles; PageUp/PageDown pages; Esc closes.",
+      "Participation and tracking are separate actions; only active stories can be tracked.",
+      "Show only accepted regional contracts on the current planet, three per list page.",
+      "Never accept, submit, complete or pay rewards while drawing or querying.",
+      "Archive v8 derives tab and list page from tracked activity; formats 1-7 fall back to existing progress.",
+      "Invalid references clear tracking only; preserve progress and currency.",
+      "No confirmation popup for normal restoration.",
+      "Keep full long names and body text; use separate list and body pagers."
     ],
     "presentation": "screen_or_modal",
     "dedicated_status_panel": null,
     "priority": "current_play",
     "preview_screens": [
+      "50_story_tracking",
+      "51_story_completed",
+      "52_story_prerequisite",
+      "53_story_danger",
+      "54_regional_empty",
+      "55_regional_measure",
+      "56_regional_submit",
+      "57_regional_restored",
+      "58_regional_long_name",
+      "59_regional_one",
+      "64_activity_state_legend",
+      "65_story_focus_and_tracking",
+      "66_restore_legacy_fallback",
+      "67_after_completion_list",
+      "69_story_not_accepted",
       "06_journal",
       "13_history",
       "14_empty"
@@ -480,7 +546,6 @@
     ],
     "rules": [
       "Wanted is current pursuit; notoriety persists between cities in the current session.",
-      "Do not imply persistent disk saving.",
       "Filled/outline stars plus numeric level; heat threshold data supplied by game."
     ],
     "presentation": "hud_primitives",
@@ -574,7 +639,9 @@
       "insufficient",
       "objective_updated",
       "region_entered",
-      "returned"
+      "returned",
+      "settlement_deferred",
+      "planet_preparation_failed"
     ],
     "bindings": [
       "notice_type",
@@ -595,13 +662,18 @@
     ],
     "rules": [
       "Coalesce repeated battle notices into a single slot.",
-      "Do not overlay dialogue or important objective. Keep narrative dialogue indefinite."
+      "Do not overlay dialogue or important objective. Keep narrative dialogue indefinite.",
+      "Preserve the complete settlement deferral and actual preparation failure reason across pages.",
+      "No extra success or approval popup for ordinary travel."
     ],
     "presentation": "hud_primitives",
     "dedicated_status_panel": false,
     "implementation_document": "HUD_IMPLEMENTATION_ko.md",
     "priority": "current_play",
     "preview_screens": [
+      "62_settlement_hold_01",
+      "63_planet_failure_01",
+      "63_planet_failure_02",
       "02_combat",
       "07_chapter",
       "26_notifications",
@@ -700,9 +772,7 @@
       "keyboard",
       "exit"
     ],
-    "rules": [
-      "Design candidate only; no Continue or Load without permanent saves."
-    ],
+    "rules": [],
     "presentation": "screen_or_modal",
     "dedicated_status_panel": null,
     "priority": "existing_menu",
@@ -833,7 +903,7 @@
     ],
     "rules": [
       "Default focus is cancel. No irreversible action on initial focus.",
-      "Explicitly explain that this session is not permanently saved."
+      "Warn about unsaved progress when leaving; existing saved data remains available."
     ],
     "presentation": "screen_or_modal",
     "dedicated_status_panel": null,

@@ -786,12 +786,12 @@
   },
   {
     "screen": "19_confirm",
-    "text": "진행은 영구 저장되지 않습니다.",
+    "text": "저장하지 않은 진행은 사라집니다.",
     "size": 14
   },
   {
     "screen": "19_confirm",
-    "text": "종료하면 이번 세션의 진행을 잃습니다.",
+    "text": "종료하면 저장하지 않은 진행을 잃습니다.",
     "size": 20
   },
   {
@@ -2521,7 +2521,7 @@
   },
   {
     "screen": "15_title",
-    "text": "현재 진행은 실행 세션에만 유지됩니다.",
+    "text": "F5 빠른 저장 / F9 저장·불러오기",
     "size": 16
   },
   {
@@ -3131,7 +3131,7 @@
   },
   {
     "screen": "09_pause",
-    "text": "현재 진행은 실행 세션에만 유지됩니다.",
+    "text": "저장하지 않은 진행은 유지되지 않습니다.",
     "size": 16
   },
   {
@@ -3186,7 +3186,7 @@
   },
   {
     "screen": "28_pause_mine",
-    "text": "현재 진행은 실행 세션에만 유지됩니다.",
+    "text": "저장하지 않은 진행은 유지되지 않습니다.",
     "size": 16
   },
   {
@@ -3241,7 +3241,7 @@
   },
   {
     "screen": "29_pause_city",
-    "text": "현재 진행은 실행 세션에만 유지됩니다.",
+    "text": "저장하지 않은 진행은 유지되지 않습니다.",
     "size": 16
   },
   {
@@ -3843,5 +3843,2890 @@
     "screen": "23_icons",
     "text": "stage",
     "size": 9
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "에르마 · 활동 기록",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "조사 기록",
+    "size": 32
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "현재 행성의 활동 · F5 저장 / F9 저장·불러오기",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "이야기 임무",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "지역 의뢰",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "참여와 추적은 별개",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "목록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "현장 기록 유지 · 제출과 보고는 현장에서 진행",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "닫기 · Esc",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "전망대의 목소리",
+    "size": 20
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "진행 중",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "진행 보류",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "광산 구조 신호",
+    "size": 20
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "진행 중",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "진행 보류",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "추적 중",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "빛나는 개척지",
+    "size": 20
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "선행 조사 필요",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "수락 불가",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "남겨 둔 불빛",
+    "size": 20
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "보류",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "재개",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "현재 추적 중",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "광산 구조 신호",
+    "size": 26
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "다음 행동",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "확보한 좌표 기록을 리아에게 보고한다.",
+    "size": 20
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "지도 보기",
+    "size": 16
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "목표 추적은 화면에 표시할 활동을 고르는 동작입니다. 다른 ",
+    "size": 18
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "임무의 참여 상태나 현장 기록을 바꾸지 않습니다.",
+    "size": 18
+  },
+  {
+    "screen": "50_story_tracking",
+    "text": "기록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "에르마 · 활동 기록",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "조사 기록",
+    "size": 32
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "현재 행성의 활동 · F5 저장 / F9 저장·불러오기",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "이야기 임무",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "지역 의뢰",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "참여와 추적은 별개",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "목록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "현장 기록 유지 · 제출과 보고는 현장에서 진행",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "닫기 · Esc",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "전망대의 목소리",
+    "size": 20
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "진행 중",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "진행 보류",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "추적 중",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "광산 구조 신호",
+    "size": 20
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "완료",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "완료",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "빛나는 개척지",
+    "size": 20
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "선행 조사 필요",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "수락 불가",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "남겨 둔 불빛",
+    "size": 20
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "보류",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "재개",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "완료 기록",
+    "size": 16
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "광산 구조 신호",
+    "size": 26
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "현장 보고를 마쳐 완료된 임무입니다. 완료 기록은 남으며 ",
+    "size": 20
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "다시 수락하거나 보상을 중복으로 받지 않습니다.",
+    "size": 20
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "표시 목표는 남아 있는 진행 중 임무로 돌아갑니다. 완료된 ",
+    "size": 18
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "활동은 추적하지 않습니다.",
+    "size": 18
+  },
+  {
+    "screen": "51_story_completed",
+    "text": "기록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "에르마 · 활동 기록",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "조사 기록",
+    "size": 32
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "현재 행성의 활동 · F5 저장 / F9 저장·불러오기",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "이야기 임무",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "지역 의뢰",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "참여와 추적은 별개",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "목록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "현장 기록 유지 · 제출과 보고는 현장에서 진행",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "닫기 · Esc",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "전망대의 목소리",
+    "size": 20
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "진행 중",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "진행 보류",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "광산 구조 신호",
+    "size": 20
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "진행 중",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "진행 보류",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "추적 중",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "빛나는 개척지",
+    "size": 20
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "선행 조사 필요",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "수락 불가",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "남겨 둔 불빛",
+    "size": 20
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "보류",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "재개",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "선행 조사",
+    "size": 16
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "빛나는 개척지",
+    "size": 26
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "먼저 현재 조사 안내에 따라 필요한 현장 기록을 ",
+    "size": 20
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "확인해야 합니다. 선행 조사가 끝나면 이 임무를 수락할 ",
+    "size": 20
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "수 있습니다.",
+    "size": 20
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "미수락 상태에서는 추적할 수 없습니다. 다른 진행 중 임무는 ",
+    "size": 18
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "그대로 유지됩니다.",
+    "size": 18
+  },
+  {
+    "screen": "52_story_prerequisite",
+    "text": "기록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "에르마 · 활동 기록",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "조사 기록",
+    "size": 32
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "현재 행성의 활동 · F5 저장 / F9 저장·불러오기",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "이야기 임무",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "지역 의뢰",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "참여와 추적은 별개",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "목록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "교전 중 · 기록을 읽어도 시간은 계속 흐릅니다.",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "닫기 · Esc",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "전망대의 목소리",
+    "size": 20
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "진행 중",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "진행 보류",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "광산 구조 신호",
+    "size": 20
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "진행 중",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "진행 보류",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "추적 중",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "빛나는 개척지",
+    "size": 20
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "선행 조사 필요",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "수락 불가",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "남겨 둔 불빛",
+    "size": 20
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "보류",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "재개",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "현재 추적 중",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "광산 구조 신호",
+    "size": 26
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "다음 행동",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "확보한 좌표 기록을 리아에게 보고한다.",
+    "size": 20
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "지도 보기",
+    "size": 16
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "목표 추적은 화면에 표시할 활동을 고르는 동작입니다. 다른 ",
+    "size": 18
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "임무의 참여 상태나 현장 기록을 바꾸지 않습니다.",
+    "size": 18
+  },
+  {
+    "screen": "53_story_danger",
+    "text": "기록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "54_regional_empty",
+    "text": "에르마 · 활동 기록",
+    "size": 16
+  },
+  {
+    "screen": "54_regional_empty",
+    "text": "조사 기록",
+    "size": 32
+  },
+  {
+    "screen": "54_regional_empty",
+    "text": "현재 행성의 활동 · F5 저장 / F9 저장·불러오기",
+    "size": 16
+  },
+  {
+    "screen": "54_regional_empty",
+    "text": "이야기 임무",
+    "size": 16
+  },
+  {
+    "screen": "54_regional_empty",
+    "text": "지역 의뢰",
+    "size": 16
+  },
+  {
+    "screen": "54_regional_empty",
+    "text": "수락한 의뢰만 표시",
+    "size": 16
+  },
+  {
+    "screen": "54_regional_empty",
+    "text": "목록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "54_regional_empty",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "54_regional_empty",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "54_regional_empty",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "54_regional_empty",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "54_regional_empty",
+    "text": "현장 기록 유지 · 제출과 보고는 현장에서 진행",
+    "size": 16
+  },
+  {
+    "screen": "54_regional_empty",
+    "text": "닫기 · Esc",
+    "size": 16
+  },
+  {
+    "screen": "54_regional_empty",
+    "text": "수락한 지역 의뢰가 없습니다.",
+    "size": 20
+  },
+  {
+    "screen": "54_regional_empty",
+    "text": "현장에서 의뢰를 수락하면 현재 행성의 목록에 ",
+    "size": 18
+  },
+  {
+    "screen": "54_regional_empty",
+    "text": "표시됩니다.",
+    "size": 18
+  },
+  {
+    "screen": "54_regional_empty",
+    "text": "자유 탐사",
+    "size": 26
+  },
+  {
+    "screen": "54_regional_empty",
+    "text": "현재 가능한 조사와 주변 지역을 확인하세요.",
+    "size": 20
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "에르마 · 활동 기록",
+    "size": 16
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "조사 기록",
+    "size": 32
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "현재 행성의 활동 · F5 저장 / F9 저장·불러오기",
+    "size": 16
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "이야기 임무",
+    "size": 16
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "지역 의뢰",
+    "size": 16
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "수락한 의뢰만 표시",
+    "size": 16
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "목록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "현장 기록 유지 · 제출과 보고는 현장에서 진행",
+    "size": 16
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "닫기 · Esc",
+    "size": 16
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "헤일로 외곽",
+    "size": 18
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "중계 잡음 측정",
+    "size": 16
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "측정 중",
+    "size": 16
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "지도 보기",
+    "size": 16
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "동부 중계 구역",
+    "size": 18
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "전력 분기 진단",
+    "size": 16
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "측정 중",
+    "size": 16
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "지도 보기",
+    "size": 16
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "광산 접근 구역",
+    "size": 18
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "환경 센서 점검",
+    "size": 16
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "측정 중",
+    "size": 16
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "지도 보기",
+    "size": 16
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "현재 추적 중",
+    "size": 16
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "헤일로 외곽",
+    "size": 24
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "중계 잡음 측정",
+    "size": 18
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "현장 센서에서 중계 잡음을 측정한다.",
+    "size": 20
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "목록에서 의뢰 이름을 선택하면 추적합니다. 수락과 기록 제출은 ",
+    "size": 18
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "현장에서 진행합니다.",
+    "size": 18
+  },
+  {
+    "screen": "55_regional_measure",
+    "text": "기록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "56_regional_submit",
+    "text": "에르마 · 활동 기록",
+    "size": 16
+  },
+  {
+    "screen": "56_regional_submit",
+    "text": "조사 기록",
+    "size": 32
+  },
+  {
+    "screen": "56_regional_submit",
+    "text": "현재 행성의 활동 · F5 저장 / F9 저장·불러오기",
+    "size": 16
+  },
+  {
+    "screen": "56_regional_submit",
+    "text": "이야기 임무",
+    "size": 16
+  },
+  {
+    "screen": "56_regional_submit",
+    "text": "지역 의뢰",
+    "size": 16
+  },
+  {
+    "screen": "56_regional_submit",
+    "text": "수락한 의뢰만 표시",
+    "size": 16
+  },
+  {
+    "screen": "56_regional_submit",
+    "text": "목록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "56_regional_submit",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "56_regional_submit",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "56_regional_submit",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "56_regional_submit",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "56_regional_submit",
+    "text": "현장 기록 유지 · 제출과 보고는 현장에서 진행",
+    "size": 16
+  },
+  {
+    "screen": "56_regional_submit",
+    "text": "닫기 · Esc",
+    "size": 16
+  },
+  {
+    "screen": "56_regional_submit",
+    "text": "헤일로 외곽",
+    "size": 18
+  },
+  {
+    "screen": "56_regional_submit",
+    "text": "중계 잡음 측정",
+    "size": 16
+  },
+  {
+    "screen": "56_regional_submit",
+    "text": "제출 대기",
+    "size": 16
+  },
+  {
+    "screen": "56_regional_submit",
+    "text": "지도 보기",
+    "size": 16
+  },
+  {
+    "screen": "56_regional_submit",
+    "text": "현재 추적 중",
+    "size": 16
+  },
+  {
+    "screen": "56_regional_submit",
+    "text": "헤일로 외곽",
+    "size": 24
+  },
+  {
+    "screen": "56_regional_submit",
+    "text": "중계 잡음 측정",
+    "size": 18
+  },
+  {
+    "screen": "56_regional_submit",
+    "text": "측정 기록을 현장 접수 단말에 제출한다.",
+    "size": 20
+  },
+  {
+    "screen": "56_regional_submit",
+    "text": "측정 기록은 보관 중입니다. 현장 제출이 끝나야 정산과 완료가 ",
+    "size": 18
+  },
+  {
+    "screen": "56_regional_submit",
+    "text": "처리됩니다.",
+    "size": 18
+  },
+  {
+    "screen": "56_regional_submit",
+    "text": "기록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "에르마 · 활동 기록",
+    "size": 16
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "조사 기록",
+    "size": 32
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "현재 행성의 활동 · F5 저장 / F9 저장·불러오기",
+    "size": 16
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "이야기 임무",
+    "size": 16
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "지역 의뢰",
+    "size": 16
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "수락한 의뢰만 표시",
+    "size": 16
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "목록 02 / 02",
+    "size": 16
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "현장 기록 유지 · 제출과 보고는 현장에서 진행",
+    "size": 16
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "닫기 · Esc",
+    "size": 16
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "남부 중계 구역",
+    "size": 18
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "중계 잡음 측정",
+    "size": 16
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "제출 대기",
+    "size": 16
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "지도 보기",
+    "size": 16
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "외곽 현장 접수 구역",
+    "size": 18
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "전력 분기 진단",
+    "size": 16
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "제출 대기",
+    "size": 16
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "지도 보기",
+    "size": 16
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "헤일로 북부",
+    "size": 18
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "환경 센서 점검",
+    "size": 16
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "제출 대기",
+    "size": 16
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "지도 보기",
+    "size": 16
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "복원된 추적 활동",
+    "size": 16
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "남부 중계 구역",
+    "size": 24
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "중계 잡음 측정",
+    "size": 18
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "측정 기록을 현장 접수 단말에 제출한다.",
+    "size": 20
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "측정 기록은 보관 중입니다. 현장 제출이 끝나야 정산과 완료가 ",
+    "size": 18
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "처리됩니다.",
+    "size": 18
+  },
+  {
+    "screen": "57_regional_restored",
+    "text": "기록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "에르마 · 활동 기록",
+    "size": 16
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "조사 기록",
+    "size": 32
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "현재 행성의 활동 · F5 저장 / F9 저장·불러오기",
+    "size": 16
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "이야기 임무",
+    "size": 16
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "지역 의뢰",
+    "size": 16
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "수락한 의뢰만 표시",
+    "size": 16
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "목록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "현장 기록 유지 · 제출과 보고는 현장에서 진행",
+    "size": 16
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "닫기 · Esc",
+    "size": 16
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "헤일로 동부 고가와 광산 접근로 사이의 외곽 ",
+    "size": 18
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "수신망 구역",
+    "size": 18
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "측정 중 · 중계 잡음 측정",
+    "size": 16
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "지도 보기",
+    "size": 16
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "동부 중계 구역",
+    "size": 18
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "전력 분기 진단",
+    "size": 16
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "측정 중",
+    "size": 16
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "지도 보기",
+    "size": 16
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "광산 접근 구역",
+    "size": 18
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "환경 센서 점검",
+    "size": 16
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "측정 중",
+    "size": 16
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "지도 보기",
+    "size": 16
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "현재 추적 중",
+    "size": 16
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "헤일로 동부 고가와 광산 접근로 사이의 외곽 ",
+    "size": 24
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "수신망 구역",
+    "size": 24
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "중계 잡음 측정",
+    "size": 18
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "현장 센서에서 중계 잡음을 측정한다.",
+    "size": 20
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "목록에서 의뢰 이름을 선택하면 추적합니다. 수락과 기록 제출은 ",
+    "size": 18
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "현장에서 진행합니다.",
+    "size": 18
+  },
+  {
+    "screen": "58_regional_long_name",
+    "text": "기록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "59_regional_one",
+    "text": "에르마 · 활동 기록",
+    "size": 16
+  },
+  {
+    "screen": "59_regional_one",
+    "text": "조사 기록",
+    "size": 32
+  },
+  {
+    "screen": "59_regional_one",
+    "text": "현재 행성의 활동 · F5 저장 / F9 저장·불러오기",
+    "size": 16
+  },
+  {
+    "screen": "59_regional_one",
+    "text": "이야기 임무",
+    "size": 16
+  },
+  {
+    "screen": "59_regional_one",
+    "text": "지역 의뢰",
+    "size": 16
+  },
+  {
+    "screen": "59_regional_one",
+    "text": "수락한 의뢰만 표시",
+    "size": 16
+  },
+  {
+    "screen": "59_regional_one",
+    "text": "목록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "59_regional_one",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "59_regional_one",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "59_regional_one",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "59_regional_one",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "59_regional_one",
+    "text": "현장 기록 유지 · 제출과 보고는 현장에서 진행",
+    "size": 16
+  },
+  {
+    "screen": "59_regional_one",
+    "text": "닫기 · Esc",
+    "size": 16
+  },
+  {
+    "screen": "59_regional_one",
+    "text": "헤일로 외곽",
+    "size": 18
+  },
+  {
+    "screen": "59_regional_one",
+    "text": "중계 잡음 측정",
+    "size": 16
+  },
+  {
+    "screen": "59_regional_one",
+    "text": "측정 중",
+    "size": 16
+  },
+  {
+    "screen": "59_regional_one",
+    "text": "지도 보기",
+    "size": 16
+  },
+  {
+    "screen": "59_regional_one",
+    "text": "현재 추적 중",
+    "size": 16
+  },
+  {
+    "screen": "59_regional_one",
+    "text": "헤일로 외곽",
+    "size": 24
+  },
+  {
+    "screen": "59_regional_one",
+    "text": "중계 잡음 측정",
+    "size": 18
+  },
+  {
+    "screen": "59_regional_one",
+    "text": "현장 센서에서 중계 잡음을 측정한다.",
+    "size": 20
+  },
+  {
+    "screen": "59_regional_one",
+    "text": "목록에서 의뢰 이름을 선택하면 추적합니다. 수락과 기록 제출은 ",
+    "size": 18
+  },
+  {
+    "screen": "59_regional_one",
+    "text": "현장에서 진행합니다.",
+    "size": 18
+  },
+  {
+    "screen": "59_regional_one",
+    "text": "기록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "60_hud_tracking_and_pin",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "60_hud_tracking_and_pin",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "60_hud_tracking_and_pin",
+    "text": "추적 · 중계 잡음 측정",
+    "size": 20
+  },
+  {
+    "screen": "60_hud_tracking_and_pin",
+    "text": "현장 접수 단말에 측정 기록 제출",
+    "size": 18
+  },
+  {
+    "screen": "60_hud_tracking_and_pin",
+    "text": "J 조사 기록",
+    "size": 16
+  },
+  {
+    "screen": "60_hud_tracking_and_pin",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "60_hud_tracking_and_pin",
+    "text": "헤일로",
+    "size": 16
+  },
+  {
+    "screen": "60_hud_tracking_and_pin",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "60_hud_tracking_and_pin",
+    "text": "추적 목표",
+    "size": 18
+  },
+  {
+    "screen": "60_hud_tracking_and_pin",
+    "text": "지정 목적지 · 240 m",
+    "size": 18
+  },
+  {
+    "screen": "60_hud_tracking_and_pin",
+    "text": "목표를 바꿔도 지정 목적지는 유지됩니다.",
+    "size": 16
+  },
+  {
+    "screen": "61_mine_surface_tracking",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "61_mine_surface_tracking",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "61_mine_surface_tracking",
+    "text": "08",
+    "size": 38
+  },
+  {
+    "screen": "61_mine_surface_tracking",
+    "text": "/ 12",
+    "size": 22
+  },
+  {
+    "screen": "61_mine_surface_tracking",
+    "text": "미탐험",
+    "size": 14
+  },
+  {
+    "screen": "61_mine_surface_tracking",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "61_mine_surface_tracking",
+    "text": "광산 · 탐험 구간",
+    "size": 16
+  },
+  {
+    "screen": "61_mine_surface_tracking",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "61_mine_surface_tracking",
+    "text": "지상 활동 추적",
+    "size": 20
+  },
+  {
+    "screen": "61_mine_surface_tracking",
+    "text": "먼저 광산 출구로 이동한다.",
+    "size": 18
+  },
+  {
+    "screen": "61_mine_surface_tracking",
+    "text": "출구 방향",
+    "size": 18
+  },
+  {
+    "screen": "61_mine_surface_tracking",
+    "text": "미탐험 지형은 표시하지 않습니다.",
+    "size": 16
+  },
+  {
+    "screen": "62_settlement_hold_01",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "62_settlement_hold_01",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "62_settlement_hold_01",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "62_settlement_hold_01",
+    "text": "헤일로",
+    "size": 16
+  },
+  {
+    "screen": "62_settlement_hold_01",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "62_settlement_hold_01",
+    "text": "의뢰 정산 보류",
+    "size": 18
+  },
+  {
+    "screen": "62_settlement_hold_01",
+    "text": "크레딧 소지 한도로 보상을 받을 ",
+    "size": 18
+  },
+  {
+    "screen": "62_settlement_hold_01",
+    "text": "수 없습니다. 측정 기록은 ",
+    "size": 18
+  },
+  {
+    "screen": "62_settlement_hold_01",
+    "text": "유지되며, 여유가 생기면 이 ",
+    "size": 18
+  },
+  {
+    "screen": "62_settlement_hold_01",
+    "text": "단말에서 다시 제출할 수 있습니다.",
+    "size": 18
+  },
+  {
+    "screen": "63_planet_failure_01",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "63_planet_failure_01",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "63_planet_failure_01",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "63_planet_failure_01",
+    "text": "헤일로",
+    "size": 16
+  },
+  {
+    "screen": "63_planet_failure_01",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "63_planet_failure_01",
+    "text": "행성 준비 실패",
+    "size": 18
+  },
+  {
+    "screen": "63_planet_failure_01",
+    "text": "세이라로 이동할 준비를 완료하지 ",
+    "size": 18
+  },
+  {
+    "screen": "63_planet_failure_01",
+    "text": "못했습니다. 실제 원인: 지역 ",
+    "size": 18
+  },
+  {
+    "screen": "63_planet_failure_01",
+    "text": "데이터 준비 작업이 ",
+    "size": 18
+  },
+  {
+    "screen": "63_planet_failure_01",
+    "text": "취소되었습니다. 현재 행성의 ",
+    "size": 18
+  },
+  {
+    "screen": "63_planet_failure_01",
+    "text": "1 / 2 · 자동 다음",
+    "size": 16
+  },
+  {
+    "screen": "63_planet_failure_02",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "63_planet_failure_02",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "63_planet_failure_02",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "63_planet_failure_02",
+    "text": "헤일로",
+    "size": 16
+  },
+  {
+    "screen": "63_planet_failure_02",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "63_planet_failure_02",
+    "text": "행성 준비 실패",
+    "size": 18
+  },
+  {
+    "screen": "63_planet_failure_02",
+    "text": "위치와 활동 기록은 유지됩니다.",
+    "size": 18
+  },
+  {
+    "screen": "63_planet_failure_02",
+    "text": "2 / 2 · 자동 다음",
+    "size": 16
+  },
+  {
+    "screen": "64_activity_state_legend",
+    "text": "활동 상태",
+    "size": 14
+  },
+  {
+    "screen": "64_activity_state_legend",
+    "text": "상태와 행동을 분리합니다.",
+    "size": 32
+  },
+  {
+    "screen": "64_activity_state_legend",
+    "text": "같은 색이어도 기호·문구·버튼의 역할로 구분할 수 있습니다.",
+    "size": 16
+  },
+  {
+    "screen": "64_activity_state_legend",
+    "text": "진행 중",
+    "size": 20
+  },
+  {
+    "screen": "64_activity_state_legend",
+    "text": "기록 상태",
+    "size": 18
+  },
+  {
+    "screen": "64_activity_state_legend",
+    "text": "진행 보류",
+    "size": 16
+  },
+  {
+    "screen": "64_activity_state_legend",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "64_activity_state_legend",
+    "text": "보류",
+    "size": 20
+  },
+  {
+    "screen": "64_activity_state_legend",
+    "text": "기록 상태",
+    "size": 18
+  },
+  {
+    "screen": "64_activity_state_legend",
+    "text": "재개",
+    "size": 16
+  },
+  {
+    "screen": "64_activity_state_legend",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "64_activity_state_legend",
+    "text": "완료",
+    "size": 20
+  },
+  {
+    "screen": "64_activity_state_legend",
+    "text": "기록 상태",
+    "size": 18
+  },
+  {
+    "screen": "64_activity_state_legend",
+    "text": "완료",
+    "size": 16
+  },
+  {
+    "screen": "64_activity_state_legend",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "64_activity_state_legend",
+    "text": "미수락",
+    "size": 20
+  },
+  {
+    "screen": "64_activity_state_legend",
+    "text": "기록 상태",
+    "size": 18
+  },
+  {
+    "screen": "64_activity_state_legend",
+    "text": "수락",
+    "size": 16
+  },
+  {
+    "screen": "64_activity_state_legend",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "64_activity_state_legend",
+    "text": "선행 조사 필요",
+    "size": 20
+  },
+  {
+    "screen": "64_activity_state_legend",
+    "text": "기록 상태",
+    "size": 18
+  },
+  {
+    "screen": "64_activity_state_legend",
+    "text": "수락 불가",
+    "size": 16
+  },
+  {
+    "screen": "64_activity_state_legend",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "64_activity_state_legend",
+    "text": "추적 중은 참여 상태가 아닙니다. 완료는 현장 보고와 정산 성공 뒤에만 표시합니다.",
+    "size": 18
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "에르마 · 활동 기록",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "조사 기록",
+    "size": 32
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "현재 행성의 활동 · F5 저장 / F9 저장·불러오기",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "이야기 임무",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "지역 의뢰",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "참여와 추적은 별개",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "목록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "현장 기록 유지 · 제출과 보고는 현장에서 진행",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "닫기 · Esc",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "전망대의 목소리",
+    "size": 20
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "진행 중",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "진행 보류",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "광산 구조 신호",
+    "size": 20
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "진행 중",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "진행 보류",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "추적 중",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "빛나는 개척지",
+    "size": 20
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "선행 조사 필요",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "수락 불가",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "남겨 둔 불빛",
+    "size": 20
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "보류",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "재개",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "선택한 기록",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "전망대의 목소리",
+    "size": 26
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "다음 행동",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "전망대에서 수신한 기록을 확인한다.",
+    "size": 20
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "지도 보기",
+    "size": 16
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "목표 추적은 화면에 표시할 활동을 고르는 동작입니다. 다른 ",
+    "size": 18
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "임무의 참여 상태나 현장 기록을 바꾸지 않습니다.",
+    "size": 18
+  },
+  {
+    "screen": "65_story_focus_and_tracking",
+    "text": "기록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "에르마 · 활동 기록",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "조사 기록",
+    "size": 32
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "현재 행성의 활동 · F5 저장 / F9 저장·불러오기",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "이야기 임무",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "지역 의뢰",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "참여와 추적은 별개",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "목록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "현장 기록 유지 · 제출과 보고는 현장에서 진행",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "닫기 · Esc",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "전망대의 목소리",
+    "size": 20
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "진행 중",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "진행 보류",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "광산 구조 신호",
+    "size": 20
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "진행 중",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "진행 보류",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "추적 중",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "빛나는 개척지",
+    "size": 20
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "선행 조사 필요",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "수락 불가",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "남겨 둔 불빛",
+    "size": 20
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "보류",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "재개",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "현재 추적 중",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "광산 구조 신호",
+    "size": 26
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "다음 행동",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "확보한 좌표 기록을 리아에게 보고한다.",
+    "size": 20
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "지도 보기",
+    "size": 16
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "목표 추적은 화면에 표시할 활동을 고르는 동작입니다. 다른 ",
+    "size": 18
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "임무의 참여 상태나 현장 기록을 바꾸지 않습니다.",
+    "size": 18
+  },
+  {
+    "screen": "66_restore_legacy_fallback",
+    "text": "기록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "에르마 · 활동 기록",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "조사 기록",
+    "size": 32
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "현재 행성의 활동 · F5 저장 / F9 저장·불러오기",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "이야기 임무",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "지역 의뢰",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "참여와 추적은 별개",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "목록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "현장 기록 유지 · 제출과 보고는 현장에서 진행",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "닫기 · Esc",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "전망대의 목소리",
+    "size": 20
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "진행 중",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "진행 보류",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "추적 중",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "광산 구조 신호",
+    "size": 20
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "완료",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "완료",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "빛나는 개척지",
+    "size": 20
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "선행 조사 필요",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "수락 불가",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "남겨 둔 불빛",
+    "size": 20
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "보류",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "재개",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "완료 기록",
+    "size": 16
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "광산 구조 신호",
+    "size": 26
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "현장 보고를 마쳐 완료된 임무입니다. 완료 기록은 남으며 ",
+    "size": 20
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "다시 수락하거나 보상을 중복으로 받지 않습니다.",
+    "size": 20
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "표시 목표는 남아 있는 진행 중 임무로 돌아갑니다. 완료된 ",
+    "size": 18
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "활동은 추적하지 않습니다.",
+    "size": 18
+  },
+  {
+    "screen": "67_after_completion_list",
+    "text": "기록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "68_map_activity_markers",
+    "text": "지역 약도",
+    "size": 28
+  },
+  {
+    "screen": "68_map_activity_markers",
+    "text": "헤일로 주변 · 북쪽 고정 · 지상",
+    "size": 16
+  },
+  {
+    "screen": "68_map_activity_markers",
+    "text": "현재 위치",
+    "size": 16
+  },
+  {
+    "screen": "68_map_activity_markers",
+    "text": "접수 단말 · 추적 목표",
+    "size": 16
+  },
+  {
+    "screen": "68_map_activity_markers",
+    "text": "지정 목적지",
+    "size": 16
+  },
+  {
+    "screen": "68_map_activity_markers",
+    "text": "N ↗",
+    "size": 20
+  },
+  {
+    "screen": "68_map_activity_markers",
+    "text": "목표와 목적지",
+    "size": 22
+  },
+  {
+    "screen": "68_map_activity_markers",
+    "text": "현재 추적 목표",
+    "size": 16
+  },
+  {
+    "screen": "68_map_activity_markers",
+    "text": "다른 수락한 의뢰",
+    "size": 16
+  },
+  {
+    "screen": "68_map_activity_markers",
+    "text": "지정 목적지",
+    "size": 16
+  },
+  {
+    "screen": "68_map_activity_markers",
+    "text": "현재 위치",
+    "size": 16
+  },
+  {
+    "screen": "68_map_activity_markers",
+    "text": "측정이 끝나면 목표는 현장 ",
+    "size": 18
+  },
+  {
+    "screen": "68_map_activity_markers",
+    "text": "접수 단말로 바뀝니다. 지정 ",
+    "size": 18
+  },
+  {
+    "screen": "68_map_activity_markers",
+    "text": "목적지는 유지됩니다.",
+    "size": 18
+  },
+  {
+    "screen": "68_map_activity_markers",
+    "text": "자동 경로 없음",
+    "size": 16
+  },
+  {
+    "screen": "68_map_activity_markers",
+    "text": "좌클릭 목적지 설정 · 우클릭 해제",
+    "size": 18
+  },
+  {
+    "screen": "68_map_activity_markers",
+    "text": "닫기 · M / Esc",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "에르마 · 활동 기록",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "조사 기록",
+    "size": 32
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "현재 행성의 활동 · F5 저장 / F9 저장·불러오기",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "이야기 임무",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "지역 의뢰",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "참여와 추적은 별개",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "목록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "이전",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "다음",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "현장 기록 유지 · 제출과 보고는 현장에서 진행",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "닫기 · Esc",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "전망대의 목소리",
+    "size": 20
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "진행 중",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "진행 보류",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "광산 구조 신호",
+    "size": 20
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "진행 중",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "진행 보류",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "추적 중",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "빛나는 개척지",
+    "size": 20
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "선행 조사 필요",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "수락 불가",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "남겨 둔 불빛",
+    "size": 20
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "미수락",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "수락",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "목표 추적",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "선택한 기록",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "남겨 둔 불빛",
+    "size": 26
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "다음 행동",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "현장에서 수락 조건과 기록을 확인한다.",
+    "size": 20
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "지도 보기",
+    "size": 16
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "목표 추적은 화면에 표시할 활동을 고르는 동작입니다. 다른 ",
+    "size": 18
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "임무의 참여 상태나 현장 기록을 바꾸지 않습니다.",
+    "size": 18
+  },
+  {
+    "screen": "69_story_not_accepted",
+    "text": "기록 01 / 01",
+    "size": 16
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "활동 기호",
+    "size": 14
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "작은 기호와 짧은 상태 문구",
+    "size": 32
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "동적 문구와 분리 · 상태는 색상과 형태로 함께 구분",
+    "size": 16
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "추적 중",
+    "size": 20
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "activity_track",
+    "size": 14
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "추적하지 않음",
+    "size": 20
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "activity_untracked",
+    "size": 14
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "진행 중",
+    "size": 20
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "activity_active",
+    "size": 14
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "보류",
+    "size": 20
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "activity_paused",
+    "size": 14
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "완료",
+    "size": 20
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "activity_complete",
+    "size": 14
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "미수락",
+    "size": 20
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "activity_offer",
+    "size": 14
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "선행 조사 필요",
+    "size": 20
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "activity_prerequisite",
+    "size": 14
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "측정 중",
+    "size": 20
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "activity_measure",
+    "size": 14
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "기록 제출",
+    "size": 20
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "activity_submit",
+    "size": 14
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "정산 보류",
+    "size": 20
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "activity_payment_hold",
+    "size": 14
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "추적 복원",
+    "size": 20
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "activity_restore",
+    "size": 14
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "지도 보기",
+    "size": 20
+  },
+  {
+    "screen": "70_activity_symbols",
+    "text": "activity_map",
+    "size": 14
   }
 ]

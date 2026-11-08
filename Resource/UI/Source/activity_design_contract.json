@@ -1,0 +1,106 @@
+{
+  "version": "1.0",
+  "request_sections": [
+    "CQ-02A",
+    "CQ-02B",
+    "CQ-02C",
+    "CQ-02D",
+    "CQ-02E"
+  ],
+  "journal": {
+    "frame": [
+      64,
+      40,
+      1152,
+      720
+    ],
+    "list": [
+      96,
+      232,
+      472,
+      368
+    ],
+    "detail": [
+      624,
+      236,
+      560,
+      422
+    ],
+    "story_row": [
+      472,
+      86
+    ],
+    "story_stride": 94,
+    "regional_row": [
+      472,
+      112
+    ],
+    "regional_stride": 122,
+    "action_button_min_width": 116,
+    "pager_button_min_width": 78,
+    "list_pager": [
+      392,
+      629,
+      166,
+      34
+    ],
+    "body_pager": [
+      944,
+      629,
+      212,
+      34
+    ],
+    "page_label_baseline": 651,
+    "close_y": 697,
+    "body_min_px": 18
+  },
+  "tracking": {
+    "selection_does_not_change_participation": true,
+    "only_active_story_trackable": true,
+    "regional_only_accepted_current_planet": true,
+    "no_remote_accept_submit_reward": true
+  },
+  "map": {
+    "tracked": "cyan diamond + crosshair",
+    "user_destination": "gold pin",
+    "preserve_user_pin": true,
+    "rotate_actor_only": true,
+    "north_fixed_clockwise_degrees": 45,
+    "hide_unexplored": true,
+    "no_automatic_route_line": true
+  },
+  "restore": {
+    "format": 8,
+    "legacy_formats": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "open_window_saved": false,
+    "pointer_saved": false,
+    "pressed_saved": false,
+    "derive_tab_and_page_from_activity": true,
+    "normal_restore_popup": false,
+    "invalid_reference": "clear tracking only; keep progress and currency"
+  },
+  "settlement": {
+    "credits_reward": 100,
+    "full_credit_limit": "defer full payment and keep records; no partial payment",
+    "complete_only_after_payment": true,
+    "no_reward_during_render": true
+  },
+  "completion": {
+    "common_predicate": "StoryMissionProgress::CanComplete",
+    "requires_participation_and_facts": true,
+    "explicit_final_dialogue": true,
+    "rejected_final_dialogue_resumable": true,
+    "duplicate_reward": false,
+    "debug_completion_ready_in_hud": false
+  },
+  "integration": false,
+  "samples_are_not_new_game_content": true
+}

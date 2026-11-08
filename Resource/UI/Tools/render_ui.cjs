@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto=require('node:crypto');
 const {pathToFileURL} = require('node:url');
-const bundle = process.env.UI_NODE_MODULES || 'C:/Users/wlgns/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules';
+const bundle = process.env.UI_NODE_MODULES || path.resolve(path.dirname(process.execPath),'..','node_modules');
 const sharp = require(require.resolve('sharp', {paths:[bundle]}));
 const {chromium} = require(require.resolve('playwright', {paths:[bundle]}));
 const root = path.resolve(__dirname, '..');
@@ -84,23 +84,23 @@ const save = (p,v) => fs.writeFileSync(path.join(root,p),JSON.stringify(v,null,2
   for(const [width,height] of [[1280,800],[1920,1080],[2560,1440]]){
     const scale=Math.min(width/1280,height/800);
     const tab=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
-    const scene=await page.evaluate(()=>window.uiScenes['05_dialogue'].svg);
+    const scene=await page.evaluate(()=>window.uiScenes['58_regional_long_name'].svg);
     await tab.setContent(`<style>html,body{margin:0;background:#071016}body{display:flex;align-items:center;justify-content:center;width:100vw;height:100vh}svg{display:block;width:${1280*scale}px;height:${800*scale}px}</style>`+scene);
     await tab.evaluate(()=>document.fonts.ready);
-    const file=`Validation/v1_2_r2_dialogue_${width}x${height}.png`;
+    const file=`Validation/20261109/journal_${width}x${height}.png`;
     fs.writeFileSync(path.join(root,file),await tab.screenshot());await tab.close();
     resolutions.push({width,height,uniformScale:scale,offsetX:(width-1280*scale)/2,offsetY:(height-800*scale)/2,file,
       note:'Browser-rendered uniform canvas-fit design preview. Live-game integration untested.'});
   }
   // Background opacity stress captures in the same renderer.
   const opacity=[];
-  for(const name of ['01_city','02_combat','04_mine','05_dialogue']){
+  for(const name of ['01_city','04_mine','50_story_tracking','58_regional_long_name','60_hud_tracking_and_pin']){
     for(const alpha of [0.6,0.8,0.94,1]){
       const tab=await browser.newPage({viewport:{width:1280,height:800}});
       const scene=await page.evaluate(n=>window.uiScenes[n].svg,name);
       await tab.setContent(`<style>html,body{margin:0}svg{display:block;--panel-opacity:${alpha}}</style>`+scene);
       await tab.evaluate(()=>document.fonts.ready);
-      const filename=`Validation/v1_2_${name}_alpha_${Math.round(alpha*100)}${name==='05_dialogue'?'_r2':''}.png`;
+      const filename=`Validation/20261109/${name}_alpha_${Math.round(alpha*100)}.png`;
       if(!unchanged(manifest.screens[name].svg)||!fs.existsSync(path.join(root,filename)))fs.writeFileSync(path.join(root,filename),await tab.screenshot());await tab.close();
       opacity.push({scene:name,backgroundAlpha:alpha,file:filename});
     }
@@ -149,7 +149,7 @@ const save = (p,v) => fs.writeFileSync(path.join(root,p),JSON.stringify(v,null,2
     const caption=Buffer.from(`<svg width="400" height="30"><rect width="400" height="30" fill="#10242d"/><text x="12" y="20" fill="#eef5ef" font-size="12" font-family="Malgun Gothic">${n} · ${manifest.screens[n].requirements.join(' / ')}</text></svg>`);
     thumbs.push({input:await sharp(caption).png().toBuffer(),left:(i%4)*tileW,top:Math.floor(i/4)*tileH+250});
   }
-  await sharp({create:{width:sheetW,height:Math.ceil(scenes.length/4)*tileH,channels:4,background:'#071016'}}).composite(thumbs).png().toFile(path.join(root,'Preview/contact_sheet_20261028_r2.png'));
+  await sharp({create:{width:sheetW,height:Math.ceil(scenes.length/4)*tileH,channels:4,background:'#071016'}}).composite(thumbs).png().toFile(path.join(root,'Preview/20261109/contact_sheet.png'));
   const report={generated:new Date().toISOString(),font,screenCount:scenes.length,assetCount:assetChecks.length,
     pageErrors:errors,overflowCount:scenes.reduce((n,s)=>n+s.overflow.length,0),overlapCount:scenes.reduce((n,s)=>n+s.overlaps.length,0),controlCheck,coverage,scenes,assets:assetChecks,stress,resolutions,opacity,
     scope:'Production raster asset checks and browser-rendered design previews. No game code, Runtime cache, gameplay or menu behavior tested.'};

@@ -370,11 +370,14 @@ MissionId Game::FocusedMission() const
 }
 const char *Game::MissionObjective() const
 {
+    return MissionObjective(FocusedMission());
+}
+const char *Game::MissionObjective(MissionId focused) const
+{
     if (!IsStoryWorld())
     {
         return "행성 자유 탐사 · 중계환 발견·등록 / M 지도";
     }
-    const auto focused = FocusedMission();
     if (focused == MissionId::Signal)
     {
         return !state.homeMessageRead   ? "집 단말에서 측정 요청 확인 [E]"

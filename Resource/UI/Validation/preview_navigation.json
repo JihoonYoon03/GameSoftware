@@ -2,5 +2,10 @@
   "status": "PASS",
   "dialogueNext": "45_dialogue_page_02",
   "dialoguePrevious": "05_dialogue",
-  "noticeNext": "47_notice_page_02"
+  "noticeNext": "47_notice_page_02",
+  "settlementFitsOnePage": true,
+  "failureNext": "63_planet_failure_02",
+  "failurePrevious": "63_planet_failure_01",
+  "journalOpacity": "0.8",
+  "journalBackgroundHidden": true
 }

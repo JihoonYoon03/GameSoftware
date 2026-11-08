@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "Drawing.h"
 #include "Civic.h"
 #include "Level.h"
@@ -239,23 +239,10 @@ void Drawing::DrawBackdrop()
 {
     auto &world = Game::Get().GetState();
     DrawRectangle(0, 0, (float)kCanvasWidth, (float)kCanvasHeight, ColorRGBA(.025f, .045f, .085f));
-    for (int i = 0; i < 65; i++)
-    {
-        DrawRectangle((float)((i * 193 + 31) % 1280) * kCanvasWidth / 1280, (float)((i * 71 + 11) % 230), 1,
-                      1, ColorRGBA(.4f, .64f, .72f, .35f));
-    }
+    auto &backend = GameRenderer::Get().Backend();
+    backend.DrawBackdropLayer("stars");
     float gateX = kCanvasWidth * .76f, gateY = kCanvasHeight * .27f;
-    for (int j = 8; j > 0; j--)
-    {
-        SetColor(ColorRGBA(.18f, .62f, .7f, j == 1 ? .85f : .025f));
-        renderqueue::LineWidth((float)j * 2);
-        renderqueue::Begin(GL_LINE_LOOP);
-        for (const auto &point : models::ModelLibrary::Get().gateRing)
-        {
-            renderqueue::Vertex(gateX + point.x * 115, gateY + point.y * 145);
-        }
-        renderqueue::End();
-    }
+    backend.DrawBackdropLayer("gate_rings");
     for (int i = 0; i < 12; i++)
     {
         float angle = i * 2 * kPi / 12 + world.animationTimeSeconds * .015f;
@@ -267,17 +254,10 @@ void Drawing::DrawBackdrop()
         DrawLine({gateX - 65, gateY}, {gateX + 65, gateY}, ColorRGBA(.85f, .38f, .53f, .6f), 2);
         DrawEllipse(gateX, gateY, 8, 38, ColorRGBA(.9f, .65f, .8f, .6f));
     }
-    for (int i = 0; i < 23; i++)
-    {
-        float x = i * kCanvasWidth / 22.f, towerHeight = 40.f + (i * 53 % 100);
-        models::Palette distant;
-        distant.body = {.09f, .14f, .19f, 1};
-        DrawModel3D(models::ModelLibrary::Get().buildings[size_t(i) % 4], {x, kCanvasHeight * .39f},
-                    {.7f, .7f, towerHeight / 44}, {}, -6000, distant);
-    }
+    backend.DrawBackdropLayer("distant_skyline");
     DrawLabel(gateX - 63, gateY + 163, "N - 0 / 관문망", ColorRGBA(.3f, .6f, .69f));
     float railY = kCanvasHeight * .4f;
-    DrawLine({0, railY}, {(float)kCanvasWidth, railY - 55}, ColorRGBA(.22f, .42f, .51f), 3);
+    backend.DrawBackdropLayer("rail");
     for (int i = 0; i < 4; i++)
     {
         float x = std::fmod(world.animationTimeSeconds * 115 + i * 360.f, kCanvasWidth + 300.f) - 150,

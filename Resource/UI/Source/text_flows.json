@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
+  "version": "1.3.0",
   "font": "Malgun Gothic",
   "flows": [
     {
@@ -786,7 +786,2868 @@
       "weight": 400,
       "lossless": true,
       "ellipsis": false
+    },
+    {
+      "source": "이야기 임무",
+      "lines": [
+        "이야기 임무"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지역 의뢰",
+      "lines": [
+        "지역 의뢰"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "닫기 · Esc",
+      "lines": [
+        "닫기 · Esc"
+      ],
+      "width": 132,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "진행 보류",
+      "lines": [
+        "진행 보류"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "진행 보류",
+      "lines": [
+        "진행 보류"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "추적 중",
+      "lines": [
+        "추적 중"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "수락 불가",
+      "lines": [
+        "수락 불가"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "재개",
+      "lines": [
+        "재개"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "확보한 좌표 기록을 리아에게 보고한다.",
+      "lines": [
+        "확보한 좌표 기록을 리아에게 보고한다."
+      ],
+      "width": 528,
+      "size": 20,
+      "weight": 400,
+      "role": "tracked_story_action",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지도 보기",
+      "lines": [
+        "지도 보기"
+      ],
+      "width": 140,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적은 화면에 표시할 활동을 고르는 동작입니다. 다른 임무의 참여 상태나 현장 기록을 바꾸지 않습니다.",
+      "lines": [
+        "목표 추적은 화면에 표시할 활동을 고르는 동작입니다. 다른 ",
+        "임무의 참여 상태나 현장 기록을 바꾸지 않습니다."
+      ],
+      "width": 528,
+      "size": 16,
+      "weight": 400,
+      "role": "track_vs_participation",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이야기 임무",
+      "lines": [
+        "이야기 임무"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지역 의뢰",
+      "lines": [
+        "지역 의뢰"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "닫기 · Esc",
+      "lines": [
+        "닫기 · Esc"
+      ],
+      "width": 132,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "진행 보류",
+      "lines": [
+        "진행 보류"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "추적 중",
+      "lines": [
+        "추적 중"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "완료",
+      "lines": [
+        "완료"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "수락 불가",
+      "lines": [
+        "수락 불가"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "재개",
+      "lines": [
+        "재개"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "현장 보고를 마쳐 완료된 임무입니다. 완료 기록은 남으며 다시 수락하거나 보상을 중복으로 받지 않습니다.",
+      "lines": [
+        "현장 보고를 마쳐 완료된 임무입니다. 완료 기록은 남으며 ",
+        "다시 수락하거나 보상을 중복으로 받지 않습니다."
+      ],
+      "width": 528,
+      "size": 20,
+      "weight": 400,
+      "role": "completion_full",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "표시 목표는 남아 있는 진행 중 임무로 돌아갑니다. 완료된 활동은 추적하지 않습니다.",
+      "lines": [
+        "표시 목표는 남아 있는 진행 중 임무로 돌아갑니다. 완료된 ",
+        "활동은 추적하지 않습니다."
+      ],
+      "width": 528,
+      "size": 16,
+      "weight": 400,
+      "role": "completion_fallback",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이야기 임무",
+      "lines": [
+        "이야기 임무"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지역 의뢰",
+      "lines": [
+        "지역 의뢰"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "닫기 · Esc",
+      "lines": [
+        "닫기 · Esc"
+      ],
+      "width": 132,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "진행 보류",
+      "lines": [
+        "진행 보류"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "진행 보류",
+      "lines": [
+        "진행 보류"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "추적 중",
+      "lines": [
+        "추적 중"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "수락 불가",
+      "lines": [
+        "수락 불가"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "재개",
+      "lines": [
+        "재개"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "먼저 현재 조사 안내에 따라 필요한 현장 기록을 확인해야 합니다. 선행 조사가 끝나면 이 임무를 수락할 수 있습니다.",
+      "lines": [
+        "먼저 현재 조사 안내에 따라 필요한 현장 기록을 ",
+        "확인해야 합니다. 선행 조사가 끝나면 이 임무를 수락할 ",
+        "수 있습니다."
+      ],
+      "width": 528,
+      "size": 20,
+      "weight": 400,
+      "role": "prerequisite_full",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "미수락 상태에서는 추적할 수 없습니다. 다른 진행 중 임무는 그대로 유지됩니다.",
+      "lines": [
+        "미수락 상태에서는 추적할 수 없습니다. 다른 진행 중 임무는 ",
+        "그대로 유지됩니다."
+      ],
+      "width": 528,
+      "size": 16,
+      "weight": 400,
+      "role": "prerequisite_tracking",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이야기 임무",
+      "lines": [
+        "이야기 임무"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지역 의뢰",
+      "lines": [
+        "지역 의뢰"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "닫기 · Esc",
+      "lines": [
+        "닫기 · Esc"
+      ],
+      "width": 132,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "진행 보류",
+      "lines": [
+        "진행 보류"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "진행 보류",
+      "lines": [
+        "진행 보류"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "추적 중",
+      "lines": [
+        "추적 중"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "수락 불가",
+      "lines": [
+        "수락 불가"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "재개",
+      "lines": [
+        "재개"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "확보한 좌표 기록을 리아에게 보고한다.",
+      "lines": [
+        "확보한 좌표 기록을 리아에게 보고한다."
+      ],
+      "width": 528,
+      "size": 20,
+      "weight": 400,
+      "role": "tracked_story_action",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지도 보기",
+      "lines": [
+        "지도 보기"
+      ],
+      "width": 140,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적은 화면에 표시할 활동을 고르는 동작입니다. 다른 임무의 참여 상태나 현장 기록을 바꾸지 않습니다.",
+      "lines": [
+        "목표 추적은 화면에 표시할 활동을 고르는 동작입니다. 다른 ",
+        "임무의 참여 상태나 현장 기록을 바꾸지 않습니다."
+      ],
+      "width": 528,
+      "size": 16,
+      "weight": 400,
+      "role": "track_vs_participation",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이야기 임무",
+      "lines": [
+        "이야기 임무"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지역 의뢰",
+      "lines": [
+        "지역 의뢰"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "닫기 · Esc",
+      "lines": [
+        "닫기 · Esc"
+      ],
+      "width": 132,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "수락한 지역 의뢰가 없습니다.",
+      "lines": [
+        "수락한 지역 의뢰가 없습니다."
+      ],
+      "width": 400,
+      "size": 20,
+      "weight": 400,
+      "role": "regional_empty",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "현장에서 의뢰를 수락하면 현재 행성의 목록에 표시됩니다.",
+      "lines": [
+        "현장에서 의뢰를 수락하면 현재 행성의 목록에 ",
+        "표시됩니다."
+      ],
+      "width": 400,
+      "size": 16,
+      "weight": 400,
+      "role": "regional_empty_note",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이야기 임무",
+      "lines": [
+        "이야기 임무"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지역 의뢰",
+      "lines": [
+        "지역 의뢰"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "닫기 · Esc",
+      "lines": [
+        "닫기 · Esc"
+      ],
+      "width": 132,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "헤일로 외곽",
+      "lines": [
+        "헤일로 외곽"
+      ],
+      "width": 410,
+      "size": 16,
+      "weight": 600,
+      "role": "regional_name",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지도 보기",
+      "lines": [
+        "지도 보기"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "동부 중계 구역",
+      "lines": [
+        "동부 중계 구역"
+      ],
+      "width": 410,
+      "size": 16,
+      "weight": 600,
+      "role": "regional_name",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지도 보기",
+      "lines": [
+        "지도 보기"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "광산 접근 구역",
+      "lines": [
+        "광산 접근 구역"
+      ],
+      "width": 410,
+      "size": 16,
+      "weight": 600,
+      "role": "regional_name",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지도 보기",
+      "lines": [
+        "지도 보기"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "헤일로 외곽",
+      "lines": [
+        "헤일로 외곽"
+      ],
+      "width": 528,
+      "size": 24,
+      "weight": 700,
+      "role": "regional_detail_title",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "현장 센서에서 중계 잡음을 측정한다.",
+      "lines": [
+        "현장 센서에서 중계 잡음을 측정한다."
+      ],
+      "width": 528,
+      "size": 20,
+      "weight": 400,
+      "role": "regional_action",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목록에서 의뢰 이름을 선택하면 추적합니다. 수락과 기록 제출은 현장에서 진행합니다.",
+      "lines": [
+        "목록에서 의뢰 이름을 선택하면 추적합니다. 수락과 기록 제출은 ",
+        "현장에서 진행합니다."
+      ],
+      "width": 528,
+      "size": 16,
+      "weight": 400,
+      "role": "regional_action_note",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이야기 임무",
+      "lines": [
+        "이야기 임무"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지역 의뢰",
+      "lines": [
+        "지역 의뢰"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "닫기 · Esc",
+      "lines": [
+        "닫기 · Esc"
+      ],
+      "width": 132,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "헤일로 외곽",
+      "lines": [
+        "헤일로 외곽"
+      ],
+      "width": 410,
+      "size": 16,
+      "weight": 600,
+      "role": "regional_name",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지도 보기",
+      "lines": [
+        "지도 보기"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "헤일로 외곽",
+      "lines": [
+        "헤일로 외곽"
+      ],
+      "width": 528,
+      "size": 24,
+      "weight": 700,
+      "role": "regional_detail_title",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "측정 기록을 현장 접수 단말에 제출한다.",
+      "lines": [
+        "측정 기록을 현장 접수 단말에 제출한다."
+      ],
+      "width": 528,
+      "size": 20,
+      "weight": 400,
+      "role": "regional_action",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "측정 기록은 보관 중입니다. 현장 제출이 끝나야 정산과 완료가 처리됩니다.",
+      "lines": [
+        "측정 기록은 보관 중입니다. 현장 제출이 끝나야 정산과 완료가 ",
+        "처리됩니다."
+      ],
+      "width": 528,
+      "size": 16,
+      "weight": 400,
+      "role": "regional_action_note",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이야기 임무",
+      "lines": [
+        "이야기 임무"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지역 의뢰",
+      "lines": [
+        "지역 의뢰"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "닫기 · Esc",
+      "lines": [
+        "닫기 · Esc"
+      ],
+      "width": 132,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "남부 중계 구역",
+      "lines": [
+        "남부 중계 구역"
+      ],
+      "width": 410,
+      "size": 16,
+      "weight": 600,
+      "role": "regional_name",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지도 보기",
+      "lines": [
+        "지도 보기"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "외곽 현장 접수 구역",
+      "lines": [
+        "외곽 현장 접수 구역"
+      ],
+      "width": 410,
+      "size": 16,
+      "weight": 600,
+      "role": "regional_name",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지도 보기",
+      "lines": [
+        "지도 보기"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "헤일로 북부",
+      "lines": [
+        "헤일로 북부"
+      ],
+      "width": 410,
+      "size": 16,
+      "weight": 600,
+      "role": "regional_name",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지도 보기",
+      "lines": [
+        "지도 보기"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "남부 중계 구역",
+      "lines": [
+        "남부 중계 구역"
+      ],
+      "width": 528,
+      "size": 24,
+      "weight": 700,
+      "role": "regional_detail_title",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "측정 기록을 현장 접수 단말에 제출한다.",
+      "lines": [
+        "측정 기록을 현장 접수 단말에 제출한다."
+      ],
+      "width": 528,
+      "size": 20,
+      "weight": 400,
+      "role": "regional_action",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "측정 기록은 보관 중입니다. 현장 제출이 끝나야 정산과 완료가 처리됩니다.",
+      "lines": [
+        "측정 기록은 보관 중입니다. 현장 제출이 끝나야 정산과 완료가 ",
+        "처리됩니다."
+      ],
+      "width": 528,
+      "size": 16,
+      "weight": 400,
+      "role": "regional_action_note",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이야기 임무",
+      "lines": [
+        "이야기 임무"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지역 의뢰",
+      "lines": [
+        "지역 의뢰"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "닫기 · Esc",
+      "lines": [
+        "닫기 · Esc"
+      ],
+      "width": 132,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "헤일로 동부 고가와 광산 접근로 사이의 외곽 수신망 구역",
+      "lines": [
+        "헤일로 동부 고가와 광산 접근로 사이의 외곽 ",
+        "수신망 구역"
+      ],
+      "width": 410,
+      "size": 16,
+      "weight": 600,
+      "role": "regional_name",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지도 보기",
+      "lines": [
+        "지도 보기"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "동부 중계 구역",
+      "lines": [
+        "동부 중계 구역"
+      ],
+      "width": 410,
+      "size": 16,
+      "weight": 600,
+      "role": "regional_name",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지도 보기",
+      "lines": [
+        "지도 보기"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "광산 접근 구역",
+      "lines": [
+        "광산 접근 구역"
+      ],
+      "width": 410,
+      "size": 16,
+      "weight": 600,
+      "role": "regional_name",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지도 보기",
+      "lines": [
+        "지도 보기"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "헤일로 동부 고가와 광산 접근로 사이의 외곽 수신망 구역",
+      "lines": [
+        "헤일로 동부 고가와 광산 접근로 사이의 외곽 ",
+        "수신망 구역"
+      ],
+      "width": 528,
+      "size": 24,
+      "weight": 700,
+      "role": "regional_detail_title",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "현장 센서에서 중계 잡음을 측정한다.",
+      "lines": [
+        "현장 센서에서 중계 잡음을 측정한다."
+      ],
+      "width": 528,
+      "size": 20,
+      "weight": 400,
+      "role": "regional_action",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목록에서 의뢰 이름을 선택하면 추적합니다. 수락과 기록 제출은 현장에서 진행합니다.",
+      "lines": [
+        "목록에서 의뢰 이름을 선택하면 추적합니다. 수락과 기록 제출은 ",
+        "현장에서 진행합니다."
+      ],
+      "width": 528,
+      "size": 16,
+      "weight": 400,
+      "role": "regional_action_note",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이야기 임무",
+      "lines": [
+        "이야기 임무"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지역 의뢰",
+      "lines": [
+        "지역 의뢰"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "닫기 · Esc",
+      "lines": [
+        "닫기 · Esc"
+      ],
+      "width": 132,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "헤일로 외곽",
+      "lines": [
+        "헤일로 외곽"
+      ],
+      "width": 410,
+      "size": 16,
+      "weight": 600,
+      "role": "regional_name",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지도 보기",
+      "lines": [
+        "지도 보기"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "헤일로 외곽",
+      "lines": [
+        "헤일로 외곽"
+      ],
+      "width": 528,
+      "size": 24,
+      "weight": 700,
+      "role": "regional_detail_title",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "현장 센서에서 중계 잡음을 측정한다.",
+      "lines": [
+        "현장 센서에서 중계 잡음을 측정한다."
+      ],
+      "width": 528,
+      "size": 20,
+      "weight": 400,
+      "role": "regional_action",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목록에서 의뢰 이름을 선택하면 추적합니다. 수락과 기록 제출은 현장에서 진행합니다.",
+      "lines": [
+        "목록에서 의뢰 이름을 선택하면 추적합니다. 수락과 기록 제출은 ",
+        "현장에서 진행합니다."
+      ],
+      "width": 528,
+      "size": 16,
+      "weight": 400,
+      "role": "regional_action_note",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "크레딧 소지 한도로 보상을 받을 수 없습니다. 측정 기록은 유지되며, 여유가 생기면 이 단말에서 다시 제출할 수 있습니다.",
+      "lines": [
+        "크레딧 소지 한도로 보상을 받을 ",
+        "수 없습니다. 측정 기록은 ",
+        "유지되며, 여유가 생기면 이 ",
+        "단말에서 다시 제출할 수 있습니다."
+      ],
+      "width": 294,
+      "size": 16,
+      "weight": 400,
+      "role": "notice_full_62_settlement_hold",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "세이라로 이동할 준비를 완료하지 못했습니다. 실제 원인: 지역 데이터 준비 작업이 취소되었습니다. 현재 행성의 위치와 활동 기록은 유지됩니다.",
+      "lines": [
+        "세이라로 이동할 준비를 완료하지 ",
+        "못했습니다. 실제 원인: 지역 ",
+        "데이터 준비 작업이 ",
+        "취소되었습니다. 현재 행성의 ",
+        "위치와 활동 기록은 유지됩니다."
+      ],
+      "width": 294,
+      "size": 16,
+      "weight": 400,
+      "role": "notice_full_63_planet_failure",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "진행 보류",
+      "lines": [
+        "진행 보류"
+      ],
+      "width": 160,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 200,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "재개",
+      "lines": [
+        "재개"
+      ],
+      "width": 160,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 200,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "완료",
+      "lines": [
+        "완료"
+      ],
+      "width": 160,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 200,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "수락",
+      "lines": [
+        "수락"
+      ],
+      "width": 160,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 200,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "수락 불가",
+      "lines": [
+        "수락 불가"
+      ],
+      "width": 160,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 200,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이야기 임무",
+      "lines": [
+        "이야기 임무"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지역 의뢰",
+      "lines": [
+        "지역 의뢰"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "닫기 · Esc",
+      "lines": [
+        "닫기 · Esc"
+      ],
+      "width": 132,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "진행 보류",
+      "lines": [
+        "진행 보류"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "진행 보류",
+      "lines": [
+        "진행 보류"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "추적 중",
+      "lines": [
+        "추적 중"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "수락 불가",
+      "lines": [
+        "수락 불가"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "재개",
+      "lines": [
+        "재개"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "전망대에서 수신한 기록을 확인한다.",
+      "lines": [
+        "전망대에서 수신한 기록을 확인한다."
+      ],
+      "width": 528,
+      "size": 20,
+      "weight": 400,
+      "role": "tracked_story_action",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지도 보기",
+      "lines": [
+        "지도 보기"
+      ],
+      "width": 140,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적은 화면에 표시할 활동을 고르는 동작입니다. 다른 임무의 참여 상태나 현장 기록을 바꾸지 않습니다.",
+      "lines": [
+        "목표 추적은 화면에 표시할 활동을 고르는 동작입니다. 다른 ",
+        "임무의 참여 상태나 현장 기록을 바꾸지 않습니다."
+      ],
+      "width": 528,
+      "size": 16,
+      "weight": 400,
+      "role": "track_vs_participation",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이야기 임무",
+      "lines": [
+        "이야기 임무"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지역 의뢰",
+      "lines": [
+        "지역 의뢰"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "닫기 · Esc",
+      "lines": [
+        "닫기 · Esc"
+      ],
+      "width": 132,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "진행 보류",
+      "lines": [
+        "진행 보류"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "진행 보류",
+      "lines": [
+        "진행 보류"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "추적 중",
+      "lines": [
+        "추적 중"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "수락 불가",
+      "lines": [
+        "수락 불가"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "재개",
+      "lines": [
+        "재개"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "확보한 좌표 기록을 리아에게 보고한다.",
+      "lines": [
+        "확보한 좌표 기록을 리아에게 보고한다."
+      ],
+      "width": 528,
+      "size": 20,
+      "weight": 400,
+      "role": "tracked_story_action",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지도 보기",
+      "lines": [
+        "지도 보기"
+      ],
+      "width": 140,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적은 화면에 표시할 활동을 고르는 동작입니다. 다른 임무의 참여 상태나 현장 기록을 바꾸지 않습니다.",
+      "lines": [
+        "목표 추적은 화면에 표시할 활동을 고르는 동작입니다. 다른 ",
+        "임무의 참여 상태나 현장 기록을 바꾸지 않습니다."
+      ],
+      "width": 528,
+      "size": 16,
+      "weight": 400,
+      "role": "track_vs_participation",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이야기 임무",
+      "lines": [
+        "이야기 임무"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지역 의뢰",
+      "lines": [
+        "지역 의뢰"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "닫기 · Esc",
+      "lines": [
+        "닫기 · Esc"
+      ],
+      "width": 132,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "진행 보류",
+      "lines": [
+        "진행 보류"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "추적 중",
+      "lines": [
+        "추적 중"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "완료",
+      "lines": [
+        "완료"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "수락 불가",
+      "lines": [
+        "수락 불가"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "재개",
+      "lines": [
+        "재개"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "현장 보고를 마쳐 완료된 임무입니다. 완료 기록은 남으며 다시 수락하거나 보상을 중복으로 받지 않습니다.",
+      "lines": [
+        "현장 보고를 마쳐 완료된 임무입니다. 완료 기록은 남으며 ",
+        "다시 수락하거나 보상을 중복으로 받지 않습니다."
+      ],
+      "width": 528,
+      "size": 20,
+      "weight": 400,
+      "role": "completion_full",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "표시 목표는 남아 있는 진행 중 임무로 돌아갑니다. 완료된 활동은 추적하지 않습니다.",
+      "lines": [
+        "표시 목표는 남아 있는 진행 중 임무로 돌아갑니다. 완료된 ",
+        "활동은 추적하지 않습니다."
+      ],
+      "width": 528,
+      "size": 16,
+      "weight": 400,
+      "role": "completion_fallback",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "측정이 끝나면 목표는 현장 접수 단말로 바뀝니다. 지정 목적지는 유지됩니다.",
+      "lines": [
+        "측정이 끝나면 목표는 현장 ",
+        "접수 단말로 바뀝니다. 지정 ",
+        "목적지는 유지됩니다."
+      ],
+      "width": 250,
+      "size": 16,
+      "weight": 400,
+      "role": "map_target_preserved",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "닫기 · M / Esc",
+      "lines": [
+        "닫기 · M / Esc"
+      ],
+      "width": 166,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이야기 임무",
+      "lines": [
+        "이야기 임무"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지역 의뢰",
+      "lines": [
+        "지역 의뢰"
+      ],
+      "width": 148,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 58,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "이전",
+      "lines": [
+        "이전"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "다음",
+      "lines": [
+        "다음"
+      ],
+      "width": 80,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "닫기 · Esc",
+      "lines": [
+        "닫기 · Esc"
+      ],
+      "width": 132,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "진행 보류",
+      "lines": [
+        "진행 보류"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "진행 보류",
+      "lines": [
+        "진행 보류"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "추적 중",
+      "lines": [
+        "추적 중"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "수락 불가",
+      "lines": [
+        "수락 불가"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "수락",
+      "lines": [
+        "수락"
+      ],
+      "width": 96,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적",
+      "lines": [
+        "목표 추적"
+      ],
+      "width": 114,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "현장에서 수락 조건과 기록을 확인한다.",
+      "lines": [
+        "현장에서 수락 조건과 기록을 확인한다."
+      ],
+      "width": 528,
+      "size": 20,
+      "weight": 400,
+      "role": "tracked_story_action",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "지도 보기",
+      "lines": [
+        "지도 보기"
+      ],
+      "width": 140,
+      "size": 14,
+      "weight": 600,
+      "role": "activity_button",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목표 추적은 화면에 표시할 활동을 고르는 동작입니다. 다른 임무의 참여 상태나 현장 기록을 바꾸지 않습니다.",
+      "lines": [
+        "목표 추적은 화면에 표시할 활동을 고르는 동작입니다. 다른 ",
+        "임무의 참여 상태나 현장 기록을 바꾸지 않습니다."
+      ],
+      "width": 528,
+      "size": 16,
+      "weight": 400,
+      "role": "track_vs_participation",
+      "lossless": true,
+      "ellipsis": false
     }
   ],
-  "policy": "Lossless wrap/expand/paginate; never ellipsize required information"
+  "policy": "Lossless wrap and numbered pages; do not ellipsize required text"
 }

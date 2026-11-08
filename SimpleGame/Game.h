@@ -430,7 +430,9 @@ enum class UiAction
     ActivityTab,
     ActivityPage,
     TrackCommunity,
-    ViewActivity
+    ViewActivity,
+    SelectActivity,
+    ActivityDetailPage
 };
 struct UiPreferences
 {
@@ -441,6 +443,9 @@ struct UiState
     UiScreen screen = UiScreen::None, returnTo = UiScreen::Pause;
     UiAction confirmation = UiAction::Restart;
     int focus = 0, pressed = -1;
+    MissionId activityMission = MissionId::Count;
+    std::string activityRegion;
+    int activityDetailPage = 0;
 };
 enum class TestStage
 {
@@ -644,6 +649,7 @@ class Game
     bool CompleteMission(MissionId id);
     MissionId FocusedMission() const;
     const char *MissionObjective() const;
+    const char *MissionObjective(MissionId mission) const;
     void OfferMission(MissionId id, const char *channel = "제안 기록");
     void ManageMission(MissionId id);
     void SyncMissionProgress();

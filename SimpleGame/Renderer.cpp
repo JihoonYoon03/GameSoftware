@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include <windows.h>
 #include "Drawing.h"
 #include "Game.h"
@@ -1471,6 +1471,10 @@ bool Renderer::DrawUiSprite(const std::string &name, float x, float y, float wid
 size_t Renderer::UiSpriteCount() const
 {
     return m_assets->UiSpriteCount();
+}
+bool Renderer::DrawBackdropLayer(const std::string &name)
+{
+    return m_assets->DrawBackdropLayer(name, GetStyle().cartoon, GetRenderWidth());
 }
 
 void Renderer::DrawSolidRect(float x, float y, float z, float size, float r, float g, float b, float a)

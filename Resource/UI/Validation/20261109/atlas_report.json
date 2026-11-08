@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "sprite_count": 145,
+  "legacy_count": 127,
+  "legacy_expected": 127,
+  "missing": [],
+  "duplicates": [],
+  "original_png_hashes_preserved": true,
+  "rgba_crops_exact": true,
+  "transparent_gutter_px": 4,
+  "bilinear_isolated_comparisons": 290,
+  "scope": "Exact source pixels and bilinear isolation, without mipmaps. Loader, draw batching and startup timing have not been changed or measured."
+}

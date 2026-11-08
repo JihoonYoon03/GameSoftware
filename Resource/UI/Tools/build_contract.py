@@ -66,6 +66,21 @@ UI['UI-23']['rules']+=['Q hold/release selects weapons; G heals. Retire old Q-he
 layouts['weapon_wheel']=dict(center=[640,390],inner_radius=87,outer_radius=224,sector_span_degrees=114,sector_centers_degrees=dict(primary=-90,secondary=30,unarmed=150),labels='separate runtime text, no baked labels',input='Q hold + mouse; release commit; Esc cancel',layer_order=['dim','sectors','equipped_marker','hover_outline','icons','labels','instructions'])
 layouts['stages']=dict(rect=[64,48,1152,704],rows_origin=[96,211],row_size=[652,52],row_stride=62,description_rect=[824,214,328,350],warning=[96,636],back=[96,678,170,52])
 layouts['text_flow']=dict(source='Source/text_flows.json',wrap='actual Malgun Gothic glyph advances',overflow='expand or retain every line across numbered pages',ellipsis=False,notice_lines_per_page=4,notice_seconds_per_page=6,short_notice_seconds=4,objective_lines_per_page=2,objective_seconds_per_page=5)
+activity=json.loads((ROOT/'Source/activity_design_contract.json').read_text(encoding='utf8'))
+layouts['journal_legacy']=layouts['journal']
+layouts['journal']=activity['journal']
+UI['UI-09']['states']+=['story_active','story_paused','story_completed','story_unaccepted','story_prerequisite','regional_empty','regional_measure','regional_submit','regional_multiple_pages','regional_long_name','restored_tracking','legacy_restore','invalid_tracking_fallback']
+UI['UI-09']['bindings']+=['ActivityJournal::Current','ActivityJournal::CommunityEntries','ActivityJournal::CaptureTracking','ActivityJournal::RestoreTracking','participation','tracked_mission','community_world_key','community_region','list_page','body_page']
+UI['UI-09']['icons']+=['activity_track','activity_paused','activity_complete','activity_measure','activity_submit','activity_restore']
+UI['UI-09']['rules']+=['Participation and tracking are separate actions; only active stories can be tracked.','Show only accepted regional contracts on the current planet, three per list page.','Never accept, submit, complete or pay rewards while drawing or querying.','Archive v8 derives tab and list page from tracked activity; formats 1-7 fall back to existing progress.','Invalid references clear tracking only; preserve progress and currency.','No confirmation popup for normal restoration.','Keep full long names and body text; use separate list and body pagers.']
+UI['UI-04']['rules']+=['Use the same ActivityJournal objective for HUD and map.','After measurement target the reception terminal. Defer completion until the full 100-credit payout succeeds.','Use StoryMissionProgress::CanComplete for final report eligibility; do not show debug completion_ready in HUD.']
+UI['UI-05']['icons']+=['activity_track']
+UI['UI-05']['rules']+=['Cyan tracked marker and gold user destination coexist; never overwrite the user pin.','In the mine, a surface objective points to a known exit without revealing fogged geometry.']
+UI['UI-15']['states']+=['settlement_deferred','planet_preparation_failed']
+UI['UI-15']['rules']+=['Preserve the complete settlement deferral and actual preparation failure reason across pages.','No extra success or approval popup for ordinary travel.']
+for key in ['UI-12','UI-18','UI-22']:
+    UI[key]['rules']=[rule for rule in UI[key]['rules'] if not any(old in rule for old in ['Do not imply persistent disk','no Continue or Load without','not permanently saved'])]
+UI['UI-22']['rules']+=['Warn about unsaved progress when leaving; existing saved data remains available.']
 # Persist the new layout entries as well as the existing template contract.
 layout_document=json.loads((ROOT/'Source/layouts.json').read_text(encoding='utf8'))
 layout_document['layouts']=layouts
@@ -79,10 +94,14 @@ for id,data in UI.items():
     data['preview_screens']=[n for n,s in manifest['screens'].items() if id in s['requirements']]
     data['delivery']='shared text-free assets + named state specification + composed editable review screen'
 save('Source/ui_state_catalog.json',UI)
-lines=['# UI 요구사항 제작 대응표','','2026-10-28 디자인 v1.2. 기존 UI-01~23의 게임 연결 기록은 `INTEGRATION_ko.md`를 보존합니다. 이번 새 디자인이 모든 게임 화면에 다시 연결되었다는 뜻은 아닙니다. UI-24/25는 기존 임시 기능에 사용할 전용 디자인을 납품합니다.','','상태·데이터·노출 조건은 `Source/ui_state_catalog.json`, 좌표는 `Source/layouts.json`, 원문 보존 검토는 `Source/text_flows.json`을 확인합니다.','','| ID | UI | 상태 수 | 대표 화면 | 제작/연결 구분 |','|---|---|---:|---|---|']
+lines=['# UI 요구사항 제작 대응표','','2026-11-09 디자인 v1.3. CQ-02A~E의 활동 추적·저장 복원·정산 보류·현장 완료 상태를 반영했습니다. 기존 UI-01~25와 게임 연결 이력은 보존합니다. 이번 납품은 리소스와 디자인 계약이며 게임 코드·실행 파일·Runtime 팩은 변경하지 않았습니다.','','상태·데이터·노출 조건은 `Source/ui_state_catalog.json`, 좌표는 `Source/layouts.json`, 원문 보존 검토는 `Source/text_flows.json`, 활동 계약은 `Source/activity_design_contract.json`을 확인합니다.','','| ID | UI | 상태 수 | 대표 화면 | 제작/연결 구분 |','|---|---|---:|---|---|']
 for id,d in UI.items():
     p=', '.join(f'[{n}]({manifest["screens"][n]["png"]})' for n in d['preview_screens'])
     lines.append(f'| {id} | {d["name"]} | {len(d["states"])} | {p} | '+('기존 게임 연결 유지 / 디자인 갱신' if int(id[-2:])<=23 else '전용 디자인 납품 / 임시 게임 표현 교체용')+' |')
 lines+=['','','모든 상태를 별도의 완성 화면으로 만든 것은 아닙니다. 반복되는 상태는 동일 부품·라벨·아이콘 교체로 구성하며, 기본/포커스/눌림/선택/비활성/경고, 스캔·교환·주행·동료·전달 방식 등은 21·22·25·26번 갤러리에 모았습니다.','제작 검토 화면의 수치와 문구는 예시이며, 실제 적용 결과·화자·공개 조건·가격은 게임에서 전달해야 합니다.']
+lines+=['','## 최신 추가 요청','','| 요청 | 제작 화면 |','|---|---|']
+for cq in activity['request_sections']:
+    names=[f'[{n}]({s["png"]})' for n,s in manifest['screens'].items() if cq in s['requirements']]
+    lines.append('| '+cq+' | '+', '.join(names)+' |')
 (ROOT/'COVERAGE_ko.md').write_text('\n'.join(lines)+'\n',encoding='utf8')
 print(f'Wrote {len(UI)} UI contracts and {len(layouts)} layout templates')

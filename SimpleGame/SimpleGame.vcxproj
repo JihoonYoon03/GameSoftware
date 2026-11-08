@@ -321,7 +321,7 @@
   </Target>
   <Target Name="CopyGameUiResources" AfterTargets="Build">
     <ItemGroup>
-      <GameUiAsset Include="$(ProjectDir)..\Resource\UI\Export\**\*.png" />
+      <GameUiAsset Include="$(ProjectDir)..\Resource\UI\Export\**\*.png;$(ProjectDir)..\Resource\UI\Export\**\*.json" />
       <GameUiContract Include="$(ProjectDir)..\Resource\UI\ui_manifest.json" />
     </ItemGroup>
     <Copy SourceFiles="@(GameUiAsset)" DestinationFiles="@(GameUiAsset->'$(OutDir)Resource\UI\Export\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />

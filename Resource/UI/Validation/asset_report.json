@@ -1,17 +1,17 @@
 {
   "status": "PASS",
   "issues": [],
-  "icon_count": 58,
-  "hud_icon_count": 24,
-  "component_count": 45,
-  "screen_count": 48,
+  "icon_count": 70,
+  "hud_icon_count": 27,
+  "component_count": 48,
+  "screen_count": 70,
   "requirement_count": 25,
-  "state_count": 155,
+  "state_count": 170,
   "glyphs": {
     "font": "Malgun Gothic",
-    "unique_characters": 410,
+    "unique_characters": 437,
     "missing": [],
-    "gdi_result": 410
+    "gdi_result": 437
   },
   "geometry": {
     "overflow": 0,
@@ -795,7 +795,15 @@
     ],
     "note": "Solid-color compositing estimate; anti-aliasing edges, patterned game backgrounds, live renderer and color vision are not certified."
   },
-  "text_flow_count": 64,
+  "text_flow_count": 300,
   "text_lossless": true,
-  "scope": "Resource/browser checks. Game-source checks are recorded separately in INTEGRATION_ko.md; user executable and model Runtime pack unchanged."
+  "activity_sections": [
+    "CQ-02A",
+    "CQ-02B",
+    "CQ-02C",
+    "CQ-02D",
+    "CQ-02E"
+  ],
+  "legacy_sprites_preserved": 127,
+  "scope": "Resource/browser checks only for 2026-11-09. Game code, executable and model Runtime pack unchanged; native renderer integration not tested."
 }

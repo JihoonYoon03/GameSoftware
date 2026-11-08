@@ -246,26 +246,51 @@
       "speaker_max_width": 575
     },
     "journal": {
-      "rect": [
-        176,
-        72,
-        928,
-        656
+      "frame": [
+        64,
+        40,
+        1152,
+        720
       ],
-      "list_rect": [
-        200,
-        160,
-        270,
-        450
+      "list": [
+        96,
+        232,
+        472,
+        368
       ],
-      "body_rect": [
-        510,
-        160,
-        566,
-        460
+      "detail": [
+        624,
+        236,
+        560,
+        422
       ],
-      "max_text_width": 526,
-      "controls_y": 674
+      "story_row": [
+        472,
+        86
+      ],
+      "story_stride": 94,
+      "regional_row": [
+        472,
+        112
+      ],
+      "regional_stride": 122,
+      "action_button_min_width": 116,
+      "pager_button_min_width": 78,
+      "list_pager": [
+        392,
+        629,
+        166,
+        34
+      ],
+      "body_pager": [
+        944,
+        629,
+        212,
+        34
+      ],
+      "page_label_baseline": 651,
+      "close_y": 697,
+      "body_min_px": 18
     },
     "full_map": {
       "rect": [
@@ -381,6 +406,28 @@
       "short_notice_seconds": 4,
       "objective_lines_per_page": 2,
       "objective_seconds_per_page": 5
+    },
+    "journal_legacy": {
+      "rect": [
+        176,
+        72,
+        928,
+        656
+      ],
+      "list_rect": [
+        200,
+        160,
+        270,
+        450
+      ],
+      "body_rect": [
+        510,
+        160,
+        566,
+        460
+      ],
+      "max_text_width": 526,
+      "controls_y": 674
     }
   },
   "transform": "scale=min(viewport_w/1280,viewport_h/800); offset=(viewport-canvas*scale)/2; apply to drawing and inverse to input",

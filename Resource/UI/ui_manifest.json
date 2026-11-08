@@ -1,7 +1,7 @@
 {
-  "version": "1.2.0",
+  "version": "1.3.0",
   "title": "ERMA / FIELD INTERFACE",
-  "date": "2026-10-28",
+  "date": "2026-11-09",
   "canvas": {
     "width": 1280,
     "height": 800,
@@ -521,6 +521,102 @@
       "height": 48,
       "logical_size": 24,
       "stroke": 2.1
+    },
+    "activity_track": {
+      "svg": "Source/Icons/activity_track.svg",
+      "png": "Export/Icons/activity_track.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "activity_untracked": {
+      "svg": "Source/Icons/activity_untracked.svg",
+      "png": "Export/Icons/activity_untracked.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "activity_active": {
+      "svg": "Source/Icons/activity_active.svg",
+      "png": "Export/Icons/activity_active.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "activity_paused": {
+      "svg": "Source/Icons/activity_paused.svg",
+      "png": "Export/Icons/activity_paused.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "activity_complete": {
+      "svg": "Source/Icons/activity_complete.svg",
+      "png": "Export/Icons/activity_complete.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "activity_offer": {
+      "svg": "Source/Icons/activity_offer.svg",
+      "png": "Export/Icons/activity_offer.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "activity_prerequisite": {
+      "svg": "Source/Icons/activity_prerequisite.svg",
+      "png": "Export/Icons/activity_prerequisite.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "activity_measure": {
+      "svg": "Source/Icons/activity_measure.svg",
+      "png": "Export/Icons/activity_measure.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "activity_submit": {
+      "svg": "Source/Icons/activity_submit.svg",
+      "png": "Export/Icons/activity_submit.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "activity_payment_hold": {
+      "svg": "Source/Icons/activity_payment_hold.svg",
+      "png": "Export/Icons/activity_payment_hold.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "activity_restore": {
+      "svg": "Source/Icons/activity_restore.svg",
+      "png": "Export/Icons/activity_restore.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "activity_map": {
+      "svg": "Source/Icons/activity_map.svg",
+      "png": "Export/Icons/activity_map.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
     }
   },
   "components": {
@@ -922,6 +1018,27 @@
       "width": 32,
       "height": 32,
       "role": "pointer_no_aim_ring"
+    },
+    "activity_row_focus": {
+      "svg": "Source/Components/activity_row_focus.svg",
+      "png": "Export/Components/activity_row_focus.png",
+      "width": 472,
+      "height": 112,
+      "role": "activity_overlay_fixed_or_nine_slice"
+    },
+    "activity_row_warning": {
+      "svg": "Source/Components/activity_row_warning.svg",
+      "png": "Export/Components/activity_row_warning.png",
+      "width": 472,
+      "height": 112,
+      "role": "activity_overlay_fixed_or_nine_slice"
+    },
+    "activity_page_dot": {
+      "svg": "Source/Components/activity_page_dot.svg",
+      "png": "Export/Components/activity_page_dot.png",
+      "width": 10,
+      "height": 10,
+      "role": "page_position_tint"
     }
   },
   "hud_icons": {
@@ -1260,6 +1377,48 @@
         24
       ],
       "black_outline_baked": true
+    },
+    "activity_track": {
+      "svg": "Source/HUDIcons/activity_track.svg",
+      "png": "Export/HUDIcons/activity_track.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "activity_submit": {
+      "svg": "Source/HUDIcons/activity_submit.svg",
+      "png": "Export/HUDIcons/activity_submit.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "activity_payment_hold": {
+      "svg": "Source/HUDIcons/activity_payment_hold.svg",
+      "png": "Export/HUDIcons/activity_payment_hold.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
     }
   },
   "hud": {
@@ -1283,7 +1442,235 @@
     "metadata": "Export/Atlases/icons.json",
     "padding": 4
   },
+  "complete_atlas": {
+    "png": "Export/Atlases/ui_complete.png",
+    "metadata": "Export/Atlases/ui_complete.json",
+    "padding": 4,
+    "runtime_integration": true,
+    "runtime_validation": "source_connected; user_build_and_game_checks_pending"
+  },
+  "backdrop": {
+    "metadata": "Export/Backdrop/backdrop_manifest.json",
+    "runtime_integration": true,
+    "runtime_validation": "world_layers_connected; native_visual_comparison_pending"
+  },
+  "activity": {
+    "contract": "Source/activity_design_contract.json",
+    "review_states": "Source/activity_review_states.json",
+    "runtime_integration": true,
+    "runtime_validation": "source_connected; user_build_and_game_checks_pending"
+  },
   "screens": {
+    "50_story_tracking": {
+      "label": "이야기 임무 / 참여와 추적 분리",
+      "requirements": [
+        "UI-04",
+        "UI-09",
+        "CQ-02A"
+      ],
+      "svg": "Source/Screens/50_story_tracking.svg",
+      "png": "Preview/20261109/50_story_tracking.png"
+    },
+    "51_story_completed": {
+      "label": "이야기 임무 / 완료와 추적 해제",
+      "requirements": [
+        "UI-04",
+        "UI-09",
+        "CQ-02E"
+      ],
+      "svg": "Source/Screens/51_story_completed.svg",
+      "png": "Preview/20261109/51_story_completed.png"
+    },
+    "52_story_prerequisite": {
+      "label": "선행 조사 / 전체 조건 안내",
+      "requirements": [
+        "UI-09",
+        "CQ-02A"
+      ],
+      "svg": "Source/Screens/52_story_prerequisite.svg",
+      "png": "Preview/20261109/52_story_prerequisite.png"
+    },
+    "53_story_danger": {
+      "label": "기록 열람 / 교전 중 경고",
+      "requirements": [
+        "UI-09",
+        "CQ-02A"
+      ],
+      "svg": "Source/Screens/53_story_danger.svg",
+      "png": "Preview/20261109/53_story_danger.png"
+    },
+    "54_regional_empty": {
+      "label": "지역 의뢰 / 0개",
+      "requirements": [
+        "UI-09",
+        "CQ-02B",
+        "CQ-02C"
+      ],
+      "svg": "Source/Screens/54_regional_empty.svg",
+      "png": "Preview/20261109/54_regional_empty.png"
+    },
+    "55_regional_measure": {
+      "label": "지역 의뢰 / 측정 중",
+      "requirements": [
+        "UI-09",
+        "CQ-02B",
+        "CQ-02C"
+      ],
+      "svg": "Source/Screens/55_regional_measure.svg",
+      "png": "Preview/20261109/55_regional_measure.png"
+    },
+    "56_regional_submit": {
+      "label": "지역 의뢰 / 기록 제출 대기",
+      "requirements": [
+        "UI-09",
+        "CQ-02B",
+        "CQ-02C"
+      ],
+      "svg": "Source/Screens/56_regional_submit.svg",
+      "png": "Preview/20261109/56_regional_submit.png"
+    },
+    "57_regional_restored": {
+      "label": "복원된 추적 / 뒤쪽 목록 페이지",
+      "requirements": [
+        "UI-09",
+        "CQ-02B",
+        "CQ-02C"
+      ],
+      "svg": "Source/Screens/57_regional_restored.svg",
+      "png": "Preview/20261109/57_regional_restored.png"
+    },
+    "58_regional_long_name": {
+      "label": "긴 지역명 / 전체 이름 보존",
+      "requirements": [
+        "UI-09",
+        "CQ-02B",
+        "CQ-02C"
+      ],
+      "svg": "Source/Screens/58_regional_long_name.svg",
+      "png": "Preview/20261109/58_regional_long_name.png"
+    },
+    "59_regional_one": {
+      "label": "지역 의뢰 / 한 항목",
+      "requirements": [
+        "UI-09",
+        "CQ-02B",
+        "CQ-02C"
+      ],
+      "svg": "Source/Screens/59_regional_one.svg",
+      "png": "Preview/20261109/59_regional_one.png"
+    },
+    "60_hud_tracking_and_pin": {
+      "label": "HUD / 추적 목표와 지정 목적지 공존",
+      "requirements": [
+        "UI-04",
+        "UI-05",
+        "UI-06",
+        "CQ-02B"
+      ],
+      "svg": "Source/Screens/60_hud_tracking_and_pin.svg",
+      "png": "Preview/20261109/60_hud_tracking_and_pin.png"
+    },
+    "61_mine_surface_tracking": {
+      "label": "광산 / 지상 활동은 출구 안내",
+      "requirements": [
+        "UI-04",
+        "UI-05",
+        "CQ-02B"
+      ],
+      "svg": "Source/Screens/61_mine_surface_tracking.svg",
+      "png": "Preview/20261109/61_mine_surface_tracking.png"
+    },
+    "62_settlement_hold_01": {
+      "label": "의뢰 정산 보류 / 1페이지",
+      "requirements": [
+        "UI-15",
+        "CQ-02D"
+      ],
+      "svg": "Source/Screens/62_settlement_hold_01.svg",
+      "png": "Preview/20261109/62_settlement_hold_01.png"
+    },
+    "63_planet_failure_01": {
+      "label": "행성 준비 실패 / 1페이지",
+      "requirements": [
+        "UI-15",
+        "CQ-02D"
+      ],
+      "svg": "Source/Screens/63_planet_failure_01.svg",
+      "png": "Preview/20261109/63_planet_failure_01.png"
+    },
+    "63_planet_failure_02": {
+      "label": "행성 준비 실패 / 2페이지",
+      "requirements": [
+        "UI-15",
+        "CQ-02D"
+      ],
+      "svg": "Source/Screens/63_planet_failure_02.svg",
+      "png": "Preview/20261109/63_planet_failure_02.png"
+    },
+    "64_activity_state_legend": {
+      "label": "활동 상태 / 참여·추적·잠금·완료",
+      "requirements": [
+        "UI-04",
+        "UI-09",
+        "CQ-02A",
+        "CQ-02E"
+      ],
+      "svg": "Source/Screens/64_activity_state_legend.svg",
+      "png": "Preview/20261109/64_activity_state_legend.png"
+    },
+    "65_story_focus_and_tracking": {
+      "label": "선택한 기록과 추적 목표 분리",
+      "requirements": [
+        "UI-09",
+        "CQ-02A"
+      ],
+      "svg": "Source/Screens/65_story_focus_and_tracking.svg",
+      "png": "Preview/20261109/65_story_focus_and_tracking.png"
+    },
+    "66_restore_legacy_fallback": {
+      "label": "구형 저장 / 유효한 이야기 임무로 복원",
+      "requirements": [
+        "UI-09",
+        "CQ-02C"
+      ],
+      "svg": "Source/Screens/66_restore_legacy_fallback.svg",
+      "png": "Preview/20261109/66_restore_legacy_fallback.png"
+    },
+    "67_after_completion_list": {
+      "label": "완료 후 이야기 목록 / 중복 보상 없음",
+      "requirements": [
+        "UI-09",
+        "CQ-02E"
+      ],
+      "svg": "Source/Screens/67_after_completion_list.svg",
+      "png": "Preview/20261109/67_after_completion_list.png"
+    },
+    "68_map_activity_markers": {
+      "label": "지도 / 추적·다른 의뢰·지정 목적지",
+      "requirements": [
+        "UI-06",
+        "CQ-02B"
+      ],
+      "svg": "Source/Screens/68_map_activity_markers.svg",
+      "png": "Preview/20261109/68_map_activity_markers.png"
+    },
+    "69_story_not_accepted": {
+      "label": "미수락 / 수락과 추적 비활성",
+      "requirements": [
+        "UI-09",
+        "CQ-02A"
+      ],
+      "svg": "Source/Screens/69_story_not_accepted.svg",
+      "png": "Preview/20261109/69_story_not_accepted.png"
+    },
+    "70_activity_symbols": {
+      "label": "활동 기호 / 신규 12종",
+      "requirements": [
+        "COMMON"
+      ],
+      "svg": "Source/Screens/70_activity_symbols.svg",
+      "png": "Preview/20261109/70_activity_symbols.png"
+    },
     "01_city": {
       "label": "밝은 도시 / 기본 HUD",
       "requirements": [
@@ -1295,7 +1682,7 @@
         "UI-14"
       ],
       "svg": "Source/Screens/01_city.svg",
-      "png": "Preview/01_city_20261028.png"
+      "png": "Preview/20261109/01_city.png"
     },
     "02_combat": {
       "label": "전투 HUD / 저체력 · 재장전",
@@ -1307,7 +1694,7 @@
         "UI-15"
       ],
       "svg": "Source/Screens/02_combat.svg",
-      "png": "Preview/02_combat_20261028.png"
+      "png": "Preview/20261109/02_combat.png"
     },
     "03_bike": {
       "label": "주행 HUD / 속도 · 부스트",
@@ -1316,7 +1703,7 @@
         "UI-13"
       ],
       "svg": "Source/Screens/03_bike.svg",
-      "png": "Preview/03_bike_20261028.png"
+      "png": "Preview/20261109/03_bike.png"
     },
     "04_mine": {
       "label": "광산 HUD / 스캔 · 구조",
@@ -1326,7 +1713,7 @@
         "UI-11"
       ],
       "svg": "Source/Screens/04_mine.svg",
-      "png": "Preview/04_mine_20261028.png"
+      "png": "Preview/20261109/04_mine.png"
     },
     "05_dialogue": {
       "label": "긴 대화 / 1페이지 · 본문 보존",
@@ -1334,7 +1721,7 @@
         "UI-08"
       ],
       "svg": "Source/Screens/05_dialogue.svg",
-      "png": "Preview/05_dialogue_20261028_r2.png"
+      "png": "Preview/20261109/05_dialogue.png"
     },
     "06_journal": {
       "label": "조사 기록 / 문단과 여백 재설계",
@@ -1342,7 +1729,7 @@
         "UI-09"
       ],
       "svg": "Source/Screens/06_journal.svg",
-      "png": "Preview/06_journal_20261028.png"
+      "png": "Preview/20261109/06_journal.png"
     },
     "07_chapter": {
       "label": "1장 HUD / 조사 · 철수",
@@ -1353,7 +1740,7 @@
         "UI-15"
       ],
       "svg": "Source/Screens/07_chapter.svg",
-      "png": "Preview/07_chapter_20261028.png"
+      "png": "Preview/20261109/07_chapter.png"
     },
     "08_medical": {
       "label": "의료 이송 / 실제 손실",
@@ -1361,7 +1748,7 @@
         "UI-16"
       ],
       "svg": "Source/Screens/08_medical.svg",
-      "png": "Preview/08_medical_20261028.png"
+      "png": "Preview/20261109/08_medical.png"
     },
     "09_pause": {
       "label": "일시정지 / 1장 귀환",
@@ -1369,7 +1756,7 @@
         "UI-17"
       ],
       "svg": "Source/Screens/09_pause.svg",
-      "png": "Preview/09_pause_20261028.png"
+      "png": "Preview/20261109/09_pause.png"
     },
     "10_city_map": {
       "label": "전체 지도 / 도시",
@@ -1377,7 +1764,7 @@
         "UI-06"
       ],
       "svg": "Source/Screens/10_city_map.svg",
-      "png": "Preview/10_city_map_20261028.png"
+      "png": "Preview/20261109/10_city_map.png"
     },
     "11_mine_map": {
       "label": "전체 지도 / 광산 비공개 영역",
@@ -1385,7 +1772,7 @@
         "UI-06"
       ],
       "svg": "Source/Screens/11_mine_map.svg",
-      "png": "Preview/11_mine_map_20261028.png"
+      "png": "Preview/20261109/11_mine_map.png"
     },
     "12_chapter_map": {
       "label": "전체 지도 / 1장 현장",
@@ -1393,7 +1780,7 @@
         "UI-06"
       ],
       "svg": "Source/Screens/12_chapter_map.svg",
-      "png": "Preview/12_chapter_map_20261028.png"
+      "png": "Preview/20261109/12_chapter_map.png"
     },
     "13_history": {
       "label": "대사 이력 / 전달 방식과 본문 분리",
@@ -1401,7 +1788,7 @@
         "UI-09"
       ],
       "svg": "Source/Screens/13_history.svg",
-      "png": "Preview/13_history_20261028.png"
+      "png": "Preview/20261109/13_history.png"
     },
     "14_empty": {
       "label": "조사 기록 / 내용 없음",
@@ -1409,7 +1796,7 @@
         "UI-09"
       ],
       "svg": "Source/Screens/14_empty.svg",
-      "png": "Preview/14_empty_20261028.png"
+      "png": "Preview/20261109/14_empty.png"
     },
     "15_title": {
       "label": "타이틀 / 여백과 정보 위계",
@@ -1417,7 +1804,7 @@
         "UI-18"
       ],
       "svg": "Source/Screens/15_title.svg",
-      "png": "Preview/15_title_20261028.png"
+      "png": "Preview/20261109/15_title.png"
     },
     "16_options": {
       "label": "옵션 / 조절 항목과 그래픽 분리",
@@ -1425,7 +1812,7 @@
         "UI-19"
       ],
       "svg": "Source/Screens/16_options.svg",
-      "png": "Preview/16_options_20261028.png"
+      "png": "Preview/20261109/16_options.png"
     },
     "17_summary": {
       "label": "보유·성장 / 항목과 수치 정렬",
@@ -1433,7 +1820,7 @@
         "UI-20"
       ],
       "svg": "Source/Screens/17_summary.svg",
-      "png": "Preview/17_summary_20261028.png"
+      "png": "Preview/20261109/17_summary.png"
     },
     "18_supply": {
       "label": "보급 교환 / 후속 연결용",
@@ -1441,7 +1828,7 @@
         "UI-21"
       ],
       "svg": "Source/Screens/18_supply.svg",
-      "png": "Preview/18_supply_20261028.png"
+      "png": "Preview/20261109/18_supply.png"
     },
     "19_confirm": {
       "label": "중요 행동 확인 / 후속 연결용",
@@ -1449,7 +1836,7 @@
         "UI-22"
       ],
       "svg": "Source/Screens/19_confirm.svg",
-      "png": "Preview/19_confirm_20261028.png"
+      "png": "Preview/20261109/19_confirm.png"
     },
     "20_help": {
       "label": "조작 도움말 / 최신 Q·G 입력",
@@ -1457,7 +1844,7 @@
         "UI-23"
       ],
       "svg": "Source/Screens/20_help.svg",
-      "png": "Preview/20_help_20261028.png"
+      "png": "Preview/20261109/20_help.png"
     },
     "21_components": {
       "label": "공통 부품 / 버튼 / 게이지",
@@ -1465,7 +1852,7 @@
         "COMMON"
       ],
       "svg": "Source/Screens/21_components.svg",
-      "png": "Preview/21_components_20261028.png"
+      "png": "Preview/20261109/21_components.png"
     },
     "22_states": {
       "label": "상태 목록 / 기능 맥락",
@@ -1473,7 +1860,7 @@
         "COMMON"
       ],
       "svg": "Source/Screens/22_states.svg",
-      "png": "Preview/22_states_20261028.png"
+      "png": "Preview/20261109/22_states.png"
     },
     "23_icons": {
       "label": "아이콘 라이브러리 / 신규 조작 포함",
@@ -1481,7 +1868,7 @@
         "COMMON"
       ],
       "svg": "Source/Screens/23_icons.svg",
-      "png": "Preview/23_icons_20261028.png"
+      "png": "Preview/20261109/23_icons.png"
     },
     "24_local_dialogue": {
       "label": "현장 대화 / 진행 일시정지",
@@ -1489,7 +1876,7 @@
         "UI-08"
       ],
       "svg": "Source/Screens/24_local_dialogue.svg",
-      "png": "Preview/24_local_dialogue_20261028.png"
+      "png": "Preview/20261109/24_local_dialogue.png"
     },
     "25_interactions": {
       "label": "상호작용 / 월드 표식",
@@ -1497,7 +1884,7 @@
         "UI-07"
       ],
       "svg": "Source/Screens/25_interactions.svg",
-      "png": "Preview/25_interactions_20261028.png"
+      "png": "Preview/20261109/25_interactions.png"
     },
     "26_notifications": {
       "label": "획득 / 회복 / 거래 / 피격 알림",
@@ -1507,7 +1894,7 @@
         "UI-15"
       ],
       "svg": "Source/Screens/26_notifications.svg",
-      "png": "Preview/26_notifications_20261028.png"
+      "png": "Preview/20261109/26_notifications.png"
     },
     "27_transfer": {
       "label": "의료 이송 중 / 입력 잠금",
@@ -1515,7 +1902,7 @@
         "UI-16"
       ],
       "svg": "Source/Screens/27_transfer.svg",
-      "png": "Preview/27_transfer_20261028.png"
+      "png": "Preview/20261109/27_transfer.png"
     },
     "28_pause_mine": {
       "label": "일시정지 / 광산 재시작",
@@ -1523,7 +1910,7 @@
         "UI-17"
       ],
       "svg": "Source/Screens/28_pause_mine.svg",
-      "png": "Preview/28_pause_mine_20261028.png"
+      "png": "Preview/20261109/28_pause_mine.png"
     },
     "29_pause_city": {
       "label": "일시정지 / 도시 다시 시작",
@@ -1531,7 +1918,7 @@
         "UI-17"
       ],
       "svg": "Source/Screens/29_pause_city.svg",
-      "png": "Preview/29_pause_city_20261028.png"
+      "png": "Preview/20261109/29_pause_city.png"
     },
     "30_text_stress": {
       "label": "긴 한글 / 큰 수치 검토",
@@ -1539,7 +1926,7 @@
         "COMMON"
       ],
       "svg": "Source/Screens/30_text_stress.svg",
-      "png": "Preview/30_text_stress_20261028.png"
+      "png": "Preview/20261109/30_text_stress.png"
     },
     "31_dialogue_page": {
       "label": "대화 / 다음 페이지",
@@ -1547,7 +1934,7 @@
         "UI-08"
       ],
       "svg": "Source/Screens/31_dialogue_page.svg",
-      "png": "Preview/31_dialogue_page_20261028.png"
+      "png": "Preview/20261109/31_dialogue_page.png"
     },
     "32_hud_parts": {
       "label": "HUD 부품 / 게이지·아이콘 구성",
@@ -1555,7 +1942,7 @@
         "COMMON"
       ],
       "svg": "Source/Screens/32_hud_parts.svg",
-      "png": "Preview/32_hud_parts_20261028.png"
+      "png": "Preview/20261109/32_hud_parts.png"
     },
     "33_exploration": {
       "label": "탐험 HUD / 불필요한 전투 정보 숨김",
@@ -1565,7 +1952,7 @@
         "UI-05"
       ],
       "svg": "Source/Screens/33_exploration.svg",
-      "png": "Preview/33_exploration_20261028.png"
+      "png": "Preview/20261109/33_exploration.png"
     },
     "34_low_health": {
       "label": "저체력 HUD / 위험 기호와 회복 키",
@@ -1575,7 +1962,7 @@
         "UI-03"
       ],
       "svg": "Source/Screens/34_low_health.svg",
-      "png": "Preview/34_low_health_20261028.png"
+      "png": "Preview/20261109/34_low_health.png"
     },
     "35_weapon_wheel_locked": {
       "label": "무기 선택 / 해금 전",
@@ -1583,7 +1970,7 @@
         "UI-24"
       ],
       "svg": "Source/Screens/35_weapon_wheel_locked.svg",
-      "png": "Preview/35_weapon_wheel_locked_20261028.png"
+      "png": "Preview/20261109/35_weapon_wheel_locked.png"
     },
     "36_weapon_wheel_pistol": {
       "label": "무기 선택 / 권총 가리킴",
@@ -1591,7 +1978,7 @@
         "UI-24"
       ],
       "svg": "Source/Screens/36_weapon_wheel_pistol.svg",
-      "png": "Preview/36_weapon_wheel_pistol_20261028.png"
+      "png": "Preview/20261109/36_weapon_wheel_pistol.png"
     },
     "37_weapon_wheel_empty": {
       "label": "무기 선택 / 빈 슬롯 유지",
@@ -1599,7 +1986,7 @@
         "UI-24"
       ],
       "svg": "Source/Screens/37_weapon_wheel_empty.svg",
-      "png": "Preview/37_weapon_wheel_empty_20261028.png"
+      "png": "Preview/20261109/37_weapon_wheel_empty.png"
     },
     "38_weapon_wheel_equipped": {
       "label": "무기 선택 / 권총 장착 중",
@@ -1607,7 +1994,7 @@
         "UI-24"
       ],
       "svg": "Source/Screens/38_weapon_wheel_equipped.svg",
-      "png": "Preview/38_weapon_wheel_equipped_20261028.png"
+      "png": "Preview/20261109/38_weapon_wheel_equipped.png"
     },
     "39_weapon_wheel_unowned": {
       "label": "무기 선택 / 미보유 슬롯",
@@ -1615,7 +2002,7 @@
         "UI-24"
       ],
       "svg": "Source/Screens/39_weapon_wheel_unowned.svg",
-      "png": "Preview/39_weapon_wheel_unowned_20261028.png"
+      "png": "Preview/20261109/39_weapon_wheel_unowned.png"
     },
     "40_stages": {
       "label": "스테이지 시험 진입 / 6개 지점",
@@ -1623,7 +2010,7 @@
         "UI-25"
       ],
       "svg": "Source/Screens/40_stages.svg",
-      "png": "Preview/40_stages_20261028.png"
+      "png": "Preview/20261109/40_stages.png"
     },
     "41_unarmed": {
       "label": "맨손 HUD / 탄약 숨김",
@@ -1632,7 +2019,7 @@
         "UI-03"
       ],
       "svg": "Source/Screens/41_unarmed.svg",
-      "png": "Preview/41_unarmed_20261028.png"
+      "png": "Preview/20261109/41_unarmed.png"
     },
     "42_pistol_hip": {
       "label": "권총 비조준 / 기본 포인터",
@@ -1641,7 +2028,7 @@
         "UI-03"
       ],
       "svg": "Source/Screens/42_pistol_hip.svg",
-      "png": "Preview/42_pistol_hip_20261028.png"
+      "png": "Preview/20261109/42_pistol_hip.png"
     },
     "43_pistol_aim": {
       "label": "우클릭 조준 / 실제 탄퍼짐",
@@ -1650,7 +2037,7 @@
         "UI-03"
       ],
       "svg": "Source/Screens/43_pistol_aim.svg",
-      "png": "Preview/43_pistol_aim_20261028.png"
+      "png": "Preview/20261109/43_pistol_aim.png"
     },
     "44_pistol_reload": {
       "label": "재장전 / 사격 불가",
@@ -1659,7 +2046,7 @@
         "UI-03"
       ],
       "svg": "Source/Screens/44_pistol_reload.svg",
-      "png": "Preview/44_pistol_reload_20261028.png"
+      "png": "Preview/20261109/44_pistol_reload.png"
     },
     "45_dialogue_page_02": {
       "label": "긴 대화 / 2페이지 · 본문 보존",
@@ -1667,7 +2054,7 @@
         "UI-08"
       ],
       "svg": "Source/Screens/45_dialogue_page_02.svg",
-      "png": "Preview/45_dialogue_page_02_20261028_r2.png"
+      "png": "Preview/20261109/45_dialogue_page_02.png"
     },
     "46_unlock_notice": {
       "label": "해금 알림 / 전체 안내 보존",
@@ -1676,7 +2063,7 @@
         "UI-23"
       ],
       "svg": "Source/Screens/46_unlock_notice.svg",
-      "png": "Preview/46_unlock_notice_20261028.png"
+      "png": "Preview/20261109/46_unlock_notice.png"
     },
     "47_notice_page_01": {
       "label": "긴 알림 / 1페이지 · 생략 없음",
@@ -1684,7 +2071,7 @@
         "UI-15"
       ],
       "svg": "Source/Screens/47_notice_page_01.svg",
-      "png": "Preview/47_notice_page_01_20261028.png"
+      "png": "Preview/20261109/47_notice_page_01.png"
     },
     "47_notice_page_02": {
       "label": "긴 알림 / 2페이지 · 생략 없음",
@@ -1692,7 +2079,7 @@
         "UI-15"
       ],
       "svg": "Source/Screens/47_notice_page_02.svg",
-      "png": "Preview/47_notice_page_02_20261028.png"
+      "png": "Preview/20261109/47_notice_page_02.png"
     }
   },
   "constraints": [
@@ -1702,7 +2089,7 @@
     "Approximate signal is not an exact map pin",
     "Unlimited spare magazines; no spare ammunition count",
     "No bike fuel or energy resource",
-    "No persistent save/load UI",
+    "Archive format 8 tracking restore with formats 1-7 fallback",
     "No unrevealed facts or unjoined companions",
     "No interaction during medical transfer",
     "Dialogue input must be consumed before world input"

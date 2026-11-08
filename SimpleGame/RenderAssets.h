@@ -2,6 +2,23 @@
 #include "Renderer.h"
 #include <memory>
 #include <vector>
+#include <filesystem>
+#include <map>
+
+// CPU-only delivery contract; validation never creates a GL context or repacks source PNGs.
+class UiAtlasCatalog
+{
+  public:
+    struct Sprite
+    {
+        int x, y, width, height;
+        std::string rgbaHash;
+    };
+    int width = 0, height = 0;
+    std::filesystem::path image;
+    std::map<std::string, Sprite> sprites;
+    static UiAtlasCatalog Load(const std::filesystem::path &exportRoot);
+};
 
 // Generated materials and bounded Korean text texture cache.
 class RenderAssets
@@ -17,6 +34,7 @@ class RenderAssets
     bool DrawUiSprite(const std::string &name, float x, float y, float width, float height,
                       float fraction = 1, bool nineSlice = false);
     size_t UiSpriteCount() const;
+    bool DrawBackdropLayer(const std::string &name, bool cartoon, int renderWidth);
 
   private:
     struct Data;
