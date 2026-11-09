@@ -47,7 +47,7 @@ PlayerCombatContext PlayerCombat::Current()
     // exists.
     context.dialogue = world.dialogue.active && world.dialogue.blocking && tutorial::Dialogue::LocksWorld();
     context.hospital = tutorial::HospitalRecovery::Active();
-    context.mounted = world.isBikeMounted;
+    context.mounted = world.Mounted();
     context.dodging = world.playerMotion.mobility.Dodging();
     context.relayPreparing = world.relayPreparing;
     context.health = mine.player.health;

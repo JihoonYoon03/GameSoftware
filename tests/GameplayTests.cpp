@@ -1924,7 +1924,7 @@ void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::file
         }
         return result;
     };
-    assert(number(8) >= 8 && number(8) <= 10 && version >= 1 && version <= 8);
+    assert(number(8) >= 8 && number(8) <= 11 && version >= 1 && version <= 8);
     const size_t schema8End =
         number(8) >= 9 ? bytes.size() - 8 - size_t(number(bytes.size() - 8)) : bytes.size();
     const size_t trackingStart = schema8End - 8 - size_t(number(schema8End - 8));
@@ -2163,6 +2163,11 @@ void TestActivityTrackingPersistence()
         std::filesystem::path("x64/RevisionChecks") /
         ("tracking-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     const auto file = folder / "selected.sav", legacy = folder / "previous7.sav";
+    const auto parked = g.Surface()->Pose().origin;
+    w.car.position = parked;
+    w.car.SetYaw(.6f, g.Surface()->Origin());
+    w.car.health = 71;
+    const auto savedHeading = w.car.heading;
     assert(SaveSystem::Save(file) && SaveSystem::CheckFile(file));
     assert(w.missions.Tracked() == MissionId::Mara);
     WriteLegacyCheckpoint(file, legacy, 7);
@@ -2174,11 +2179,16 @@ void TestActivityTrackingPersistence()
     assert(SaveSystem::Load(file));
     WaitForCheckpointLoad();
     assert(w.missions.Tracked() == MissionId::Mara && ActivityJournal::Current().mission == MissionId::Mara);
+    assert(w.car.position && !w.car.mounted && w.car.speed == 0 && w.car.health == 71);
+    assert(world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, parked, *w.car.position) <
+           .001);
+    assert(world::SurfaceGeometry::Dot(savedHeading, w.car.heading) > .9999);
     assert(w.missions.Active(MissionId::Frontier) && w.missions.Active(MissionId::Mara));
     assert(SaveSystem::Load(legacy));
     WaitForCheckpointLoad();
     assert(w.missions.Tracked() == MissionId::Count && w.missions.Active(MissionId::Mara) &&
            w.missions.Active(MissionId::Frontier) && w.trackedCommunityRegion.empty());
+    assert(!w.car.position);
     g.Reset();
     std::filesystem::remove(file);
     std::filesystem::remove(legacy);
@@ -2559,7 +2569,7 @@ void TestPlanetCommunity()
     w.bikeSpeed = 12;
     w.bikeVelocity = {12, 0};
     PlanetSecurity::Project();
-    const auto stopped = BodyCollision::SurfaceBikeContacts(from, to, 0, 12);
+    const auto stopped = BodyCollision::SurfaceVehicleContacts(from, to, 0, 12);
     assert(stopped.x < personLocal.x / 2 - .5 &&
            community->State().sites.front().residents.back().health < 100);
     assert(CivicJustice::State().wanted == 0 && CivicJustice::State().heat == 0);
@@ -2569,10 +2579,10 @@ void TestPlanetCommunity()
     community->Bind(plan);
     from.altitudeMeters += 10;
     to.altitudeMeters += 10;
-    const auto overpass = BodyCollision::SurfaceBikeContacts(from, to, 0, 12);
+    const auto overpass = BodyCollision::SurfaceVehicleContacts(from, to, 0, 12);
     assert(std::abs(overpass.x - float(g.Surface()->Local(to).x / 2)) < .001f);
     assert(community->State().sites.front().residents.back().health == 100);
-    const auto escape = BodyCollision::SurfaceBikeContacts(
+    const auto escape = BodyCollision::SurfaceVehicleContacts(
         personPosition, g.Surface()->PointAt(personLocal.x - 6, personLocal.y), 0, .65f);
     assert(escape.x < personLocal.x / 2 - 2.9 &&
            community->State().sites.front().residents.back().health == 100);

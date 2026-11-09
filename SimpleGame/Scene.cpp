@@ -2909,11 +2909,29 @@ void PlanetScene::Draw()
             renderqueue::PopMatrix();
         }
     }
+    if (w.car.position && world::SurfaceGeometry::Distance(session->Planet().radiusMeters, *w.car.position,
+                                                           session->Pose().origin) < 180)
+    {
+        const auto local = session->Local(*w.car.position);
+        const Vector2 p{float(local.x / 2), float(local.y / 2)};
+        models::Palette palette;
+        palette.body = {.16f, .46f, .52f, 1};
+        if (w.car.health <= 0)
+        {
+            palette = VehicleWreck::Appearance(VehicleWreck::Opacity(w.car.wreckSeconds, true));
+        }
+        const float height = float(local.z / 2);
+        renderqueue::PushMatrix();
+        renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
+        Drawing::DrawWorldVehicle(p, 0, 1, models::VehicleType::Coupe, palette, std::abs(w.car.speed) / 11,
+                                  w.car.Yaw(session->Origin()), w.car.health <= 0, w.car.mounted);
+        renderqueue::PopMatrix();
+    }
     if (Game::Distance(w.bikePosition, w.playerPosition) < 80)
     {
         Drawing::DrawWorldBike(w.bikePosition, w.bikeYaw, std::fabs(w.bikeSpeed) / 12.8f, w.isBikeMounted);
     }
-    if (!w.isBikeMounted)
+    if (!w.Mounted())
     {
         float elevation = float(session->Local(session->Pose().origin).z / 2);
         renderqueue::PushMatrix();

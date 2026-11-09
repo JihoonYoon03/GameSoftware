@@ -170,15 +170,16 @@ class CivicCombat
 class BodyCollision
 {
   public:
-    static Vector2 Slide(Vector2 from, Vector2 desired, const std::function<bool(Vector2)> &blocked);
+    static Vector2 Slide(Vector2 from, Vector2 desired, const std::function<bool(Vector2)> &blocked,
+                         float sweepStep = .02f);
     static bool BikeBlocked(Vector2 position, float yaw, float elevation, bool includeVehicles = true);
     static void RecoverBike();
     static Vector2 MovePlayer(Vector2 from, Vector2 desired);
     static Vector2 MoveResident(size_t index, Vector2 from, Vector2 desired);
     static void Update(float deltaSeconds);
     static void VehicleContacts(float deltaSeconds);
-    static Vector2 SurfaceBikeContacts(const world::SurfacePoint &from, const world::SurfacePoint &to,
-                                       float previousYaw, float impactSpeed);
+    static Vector2 SurfaceVehicleContacts(const world::SurfacePoint &from, const world::SurfacePoint &to,
+                                          float previousYaw, float impactSpeed);
     static void UpdateCity(float deltaSeconds, int city, bool playerPresent);
     static void AgeResident(Resident &resident, float deltaSeconds);
 };

@@ -665,14 +665,15 @@ models::Palette OcclusionPalette(const models::Model &model, Vector2 position, f
 }
 } // namespace
 void Drawing::DrawWorldVehicle(Vector2 position, float altitude, float scale, models::VehicleType type,
-                               const models::Palette &palette, float throttle, float yaw, bool wreck)
+                               const models::Palette &palette, float throttle, float yaw, bool wreck,
+                               bool playerDriven)
 {
     const auto &vehicle = models::ModelLibrary::Get().vehicles.at(size_t(type));
     auto screen = WorldToScreen(position.x, position.y, altitude);
     models::Transform3D rotation;
     rotation.yaw = yaw;
     auto pose = models::ModelRig::Pose(Game::Get().GetState().animationTimeSeconds * 10, throttle > .2f);
-    auto visiblePalette = type == models::VehicleType::JetBike
+    auto visiblePalette = playerDriven || type == models::VehicleType::JetBike
                               ? palette
                               : OcclusionPalette(vehicle.body, position, altitude / 44, yaw, 0, palette);
     if (!wreck)

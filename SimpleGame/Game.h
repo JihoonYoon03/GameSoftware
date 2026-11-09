@@ -279,7 +279,8 @@ enum class InteractionTarget
     MineEntrance,
     FrontierSite,
     Relay,
-    Community
+    Community,
+    GroundVehicle
 };
 
 constexpr float kPi = 3.14159265f;
@@ -475,6 +476,23 @@ class WeaponWheel
     static void Close(bool commit = false);
     static void RefreshCursorCapture();
 };
+struct GroundVehicle
+{
+    static constexpr int MaxHealth = 140;
+    std::optional<world::SurfacePoint> position;
+    world::Vector3d heading{};
+    int health = MaxHealth;
+    float wreckSeconds = 0;
+    bool mounted = false;
+    Vector2 velocity{};
+    float speed = 0;
+
+    void SetYaw(float yaw, const world::TangentFrame &origin);
+    float Yaw(const world::TangentFrame &frame) const;
+    bool Contains(const world::SurfaceSession &session, const world::SurfacePoint &point, float padding,
+                  bool projectile = false) const;
+};
+
 // State owned by Game. Renderers read it without changing gameplay.
 struct GameState
 {
@@ -503,6 +521,11 @@ struct GameState
     bool isInsideHome = true;
     bool isInObservatory = false;
     bool isBikeMounted = false;
+    GroundVehicle car;
+    bool Mounted() const
+    {
+        return isBikeMounted || car.mounted;
+    }
     float bikeSpeed = 0;
     Vector2 bikeVelocity = {};
     float bikeYawSpeed = 0;
@@ -699,10 +722,16 @@ class Game
     void UpdateCamera(float deltaSeconds);
     void UpdateSurface(float deltaSeconds);
     void ToggleSurfaceBike();
+    void UpdateGroundVehicle(float dt);
+    void UpdateGroundVehicleLifecycle(float dt);
+    bool GroundVehicleBlocked(Vector2 position, float yaw, bool includePeople) const;
+    bool ExitGroundVehicle();
+    void InteractGroundVehicle();
+    float groundVehicleSpawnRetry = 0;
     void StoreSurfaceBikeHeading();
     void RestoreSurfaceBikeHeading();
     bool ReturnToSurface(Vector2 legacyDoor, int city = 0);
-    bool SurfaceLandingClear(const world::SurfacePoint &point, int city) const;
+    bool SurfaceLandingClear(const world::SurfacePoint &point, int city, bool ignoreServiceCar = false) const;
     bool LandOnSurface(const world::SurfacePoint &point, int city = -1, unsigned searchRings = 8);
     friend class RelayTravel;
     friend class SaveSystem;

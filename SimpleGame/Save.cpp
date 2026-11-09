@@ -29,7 +29,7 @@ namespace tutorial
 namespace
 {
 constexpr std::uint64_t kMaximumFile = 16 * 1024 * 1024;
-constexpr unsigned kSchema = 10;
+constexpr unsigned kSchema = 11;
 void Require(bool value, const char *message)
 {
     if (!value)
@@ -250,6 +250,7 @@ class SaveArchive
         writer.Value(c.trafficLinks);
         writer.Value(c.community);
         writer.Tracking(c);
+        writer.GroundVehicleRecord(c.game.car);
         Checkpoint clean;
         SaveArchive reader(true, writer.Bytes());
         reader.Value(clean);
@@ -259,6 +260,7 @@ class SaveArchive
         reader.Value(clean.trafficLinks);
         reader.Value(clean.community);
         reader.Tracking(clean);
+        reader.GroundVehicleRecord(clean.game.car);
         Require(reader.Finished(), "메모리 월드 기록에 지원하지 않는 데이터가 있습니다.");
         ApplyTrafficLinks(clean);
         return clean;
@@ -1117,6 +1119,14 @@ class SaveArchive
             }
         }
     }
+    void GroundVehicleRecord(GroundVehicle &car)
+    {
+        Value(car.position);
+        if (car.position)
+        {
+            Fields(car.heading, car.health, car.wreckSeconds);
+        }
+    }
     void MobilityRecords(Campaign &v, unsigned schema)
     {
         std::uint64_t count = v.worlds.size();
@@ -1130,7 +1140,8 @@ class SaveArchive
             Value(key);
             Require(v.worlds.count(key) && keys.insert(key).second,
                     "기동 상태 확장의 월드 ID가 올바르지 않습니다.");
-            auto &mobility = v.worlds.at(key).game.playerMotion.mobility;
+            auto &game = v.worlds.at(key).game;
+            auto &mobility = game.playerMotion.mobility;
             if (schema == 9)
             {
                 float cooldown = 0;
@@ -1148,6 +1159,10 @@ class SaveArchive
             if (reading)
             {
                 mobility.RestoreStamina(stamina, delay);
+            }
+            if (schema >= 11)
+            {
+                GroundVehicleRecord(game.car);
             }
         }
     }
@@ -1199,6 +1214,17 @@ void Validate(const Checkpoint &c)
 {
     c.planet.Validate();
     Require(world::PlanetProfiles::Supported(c.planet), "지원하지 않거나 버전이 다른 행성 프로필입니다.");
+    const auto &car = c.game.car;
+    if (car.position)
+    {
+        G::Validate(*car.position);
+        Require(std::abs(G::Dot(car.heading, car.heading) - 1) < .001 &&
+                    std::abs(G::Dot(car.heading, car.position->normal)) < .001 && car.health >= 0 &&
+                    car.health <= GroundVehicle::MaxHealth && std::isfinite(car.wreckSeconds) &&
+                    car.wreckSeconds >= 0 && car.wreckSeconds < VehicleWreck::RetireSeconds &&
+                    (car.health == 0 || car.wreckSeconds == 0),
+                "저장된 공용차 상태가 올바르지 않습니다.");
+    }
     const bool story = c.planet.storyPlanet;
     PlanetTraffic::Validate(c.transit, c.planet, c.digest);
     PlanetParty::Validate(c.party, c.planet);
@@ -1979,6 +2005,10 @@ const char *SaveSystem::Restriction()
     if (HospitalRecovery::Active() || game::GameLevels::Mine().GetState().player.health <= 0)
     {
         return "의료 이송을 마친 뒤 저장해 주세요.";
+    }
+    if (s.car.mounted)
+    {
+        return "공용차를 주차하고 내린 뒤 저장하거나 행성을 선택해 주세요.";
     }
     if (Dialogue::Active() || s.dialogue.suspended || !s.dialogue.pending.empty())
     {

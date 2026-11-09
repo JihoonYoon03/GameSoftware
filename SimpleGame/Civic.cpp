@@ -621,7 +621,7 @@ Vector2 Separate(Vector2 from, Vector2 to, float radius, int ignoreResident, boo
                     separate(officer.position, .18f);
                 }
             }
-            if (!player && PlayerPresent() && !world.isBikeMounted)
+            if (!player && PlayerPresent() && !world.Mounted())
             {
                 separate(world.playerPosition, .18f);
             }
@@ -642,6 +642,7 @@ Vector2 Separate(Vector2 from, Vector2 to, float radius, int ignoreResident, boo
 void TransferToHospital()
 {
     auto &world = Game::Get().GetState();
+    world.car.mounted = false;
     auto &mine = game::GameLevels::Mine().GetState();
     auto &stats = mine.player;
     civic.lostLevels =
@@ -1112,6 +1113,12 @@ bool PlanetSecurity::Hit(models::Point p, int damage, bool playerOwned, bool com
                                : g.Surface()->Origin().origin.altitudeMeters + p.z * 2;
     Vector2 local = Local(point);
     float z = Elevation(point);
+    auto &car = g.GetState().car;
+    if (car.Contains(*g.Surface(), point, .03f, true))
+    {
+        car.health = (std::max)(0, car.health - damage);
+        return true;
+    }
     auto body = [&](Vector2 q, float ground) {
         return Game::Distance(local, q) < .35f && z >= ground && z <= ground + .95f;
     };
@@ -2389,7 +2396,8 @@ void CivicCombat::ClearProjectiles()
     civic.muzzleFlash = 0;
 }
 
-Vector2 BodyCollision::Slide(Vector2 from, Vector2 desired, const std::function<bool(Vector2)> &blocked)
+Vector2 BodyCollision::Slide(Vector2 from, Vector2 desired, const std::function<bool(Vector2)> &blocked,
+                             float sweepStep)
 {
     Vector2 result = from;
     if (blocked(result))
@@ -2422,8 +2430,8 @@ Vector2 BodyCollision::Slide(Vector2 from, Vector2 desired, const std::function<
         }
     }
     auto displacement = Sub(desired, from);
-    // Smaller than the narrowest bike contact probe: a fast step cannot skip a thin fence/edge.
-    int steps = (std::max)(1, int(std::ceil(std::hypot(displacement.x, displacement.y) / .02f)));
+    // Subdivide the motion so a fast step cannot skip a thin fence or edge.
+    int steps = (std::max)(1, int(std::ceil(std::hypot(displacement.x, displacement.y) / sweepStep)));
     auto increment = Add({}, displacement, 1.f / steps);
     for (int step = 0; step < steps; ++step)
     {
@@ -2587,8 +2595,8 @@ void BodyCollision::UpdateCity(float dt, int city, bool playerPresent)
     if (playerPresent)
     {
         auto before = world.playerPosition;
-        AdvanceImpact(world.playerPosition, civic.playerImpact, dt, !world.isBikeMounted);
-        if (!world.isBikeMounted)
+        AdvanceImpact(world.playerPosition, civic.playerImpact, dt, !world.Mounted());
+        if (!world.Mounted())
         {
             world.playerPosition = Separate(before, world.playerPosition, .18f, -1, true);
         }
@@ -2620,7 +2628,7 @@ void BodyCollision::Update(float dt)
         return;
     }
     auto &world = Game::Get().GetState();
-    if (!world.isBikeMounted)
+    if (!world.Mounted())
     {
         auto before = world.playerPosition;
         AdvanceImpact(world.playerPosition, civic.playerImpact, dt);
@@ -2648,8 +2656,8 @@ void BodyCollision::Update(float dt)
         AdvanceImpact(officer.position, officer.impact, dt);
     }
 }
-Vector2 BodyCollision::SurfaceBikeContacts(const world::SurfacePoint &from, const world::SurfacePoint &to,
-                                           float previousYaw, float impactSpeed)
+Vector2 BodyCollision::SurfaceVehicleContacts(const world::SurfacePoint &from, const world::SurfacePoint &to,
+                                              float previousYaw, float impactSpeed)
 {
     auto &g = Game::Get();
     auto &w = g.GetState();
@@ -2660,7 +2668,7 @@ Vector2 BodyCollision::SurfaceBikeContacts(const world::SurfacePoint &from, cons
     }
     const auto a = session->Local(from), b = session->Local(to);
     const Vector2 start{float(a.x / 2), float(a.y / 2)}, finish{float(b.x / 2), float(b.y / 2)};
-    if (!w.isBikeMounted || !CivicJustice::IsExterior() || !std::isfinite(impactSpeed))
+    if (!w.Mounted() || !CivicJustice::IsExterior() || !std::isfinite(impactSpeed))
     {
         return finish;
     }
@@ -2669,13 +2677,26 @@ Vector2 BodyCollision::SurfaceBikeContacts(const world::SurfacePoint &from, cons
     {
         return finish; // Developer relocation is not a physical vehicle sweep.
     }
+    float halfAxle = .4023f, radius = .40271f, lever = .65f;
+    if (w.car.mounted)
+    {
+        const auto &model = models::ModelLibrary::Get().vehicles[size_t(models::VehicleType::Coupe)].body;
+        const auto &mesh = models::ResourceAssets::Get(model.resourceId);
+        const float halfLength = mesh.physicalSize.x * .5f, halfWidth = mesh.physicalSize.y * .5f;
+        halfAxle = (std::max)(0.f, halfLength - halfWidth);
+        radius = halfWidth + .18f;
+        lever = halfLength;
+    }
     // Test a small spherical cap before any tangent projection (including the antipode).
-    const double reachCosine = std::cos((travel + 2) * 2 / session->Planet().radiusMeters);
+    const double reachCosine =
+        std::cos((travel + halfAxle + radius + 1) * 2 / session->Planet().radiusMeters);
     auto nearby = [&](const world::SurfacePoint &point) {
         return world::SurfaceGeometry::Dot(from.normal, point.normal) >= reachCosine;
     };
-    const float turn = std::remainder(w.bikeYaw - previousYaw, 2 * kPi);
-    const int steps = (std::min)(256, (std::max)(1, int(std::ceil((travel + std::abs(turn) * .65f) / .12f))));
+    float &vehicleYaw = w.car.mounted ? w.facingYaw : w.bikeYaw;
+    const float turn = std::remainder(vehicleYaw - previousYaw, 2 * kPi);
+    const int steps =
+        (std::min)(256, (std::max)(1, int(std::ceil((travel + std::abs(turn) * lever) / .12f))));
     struct Hit
     {
         Vector2 normal;
@@ -2689,24 +2710,25 @@ Vector2 BodyCollision::SurfaceBikeContacts(const world::SurfacePoint &from, cons
         const Vector2 direction{std::cos(yaw), std::sin(yaw)};
         const auto delta = Sub(person, center(t));
         return Add(center(t), direction,
-                   Game::Clamp(delta.x * direction.x + delta.y * direction.y, -.4023f, .4023f));
+                   Game::Clamp(delta.x * direction.x + delta.y * direction.y, -halfAxle, halfAxle));
     };
     auto offer = [&](Vector2 person, float height, std::function<void(Vector2)> damage) {
-        if (Game::Distance(person, start) > travel + 1.2f || std::abs(height - float((a.z + b.z) / 4)) > .8f)
+        if (Game::Distance(person, start) > travel + halfAxle + radius + .4f ||
+            std::abs(height - float((a.z + b.z) / 4)) > .8f)
         {
             return;
         }
         auto distance = [&](float t) { return Game::Distance(person, closest(person, t)); };
         const float initial = distance(0);
         // Allow a pre-existing overlap to escape; never lock the rider inside a person.
-        if (initial < .40271f && distance(1) > initial + .001f)
+        if (initial < radius && distance(1) > initial + .001f)
         {
             return;
         }
         for (int step = 0; step <= steps; ++step)
         {
             float upper = float(step) / steps;
-            if (distance(upper) >= .40271f)
+            if (distance(upper) >= radius)
             {
                 continue;
             }
@@ -2714,7 +2736,7 @@ Vector2 BodyCollision::SurfaceBikeContacts(const world::SurfacePoint &from, cons
             for (int i = 0; i < 8 && upper > lower; ++i)
             {
                 const float middle = (lower + upper) * .5f;
-                if (distance(middle) < .40271f)
+                if (distance(middle) < radius)
                 {
                     upper = middle;
                 }
@@ -2733,7 +2755,7 @@ Vector2 BodyCollision::SurfaceBikeContacts(const world::SurfacePoint &from, cons
                 const auto delta = Sub(closest(person, upper), person);
                 const auto normal = std::hypot(delta.x, delta.y) > .0001f
                                         ? Unit(delta)
-                                        : Vector2{-std::cos(w.bikeYaw), -std::sin(w.bikeYaw)};
+                                        : Vector2{-std::cos(vehicleYaw), -std::sin(vehicleYaw)};
                 hits.push_back({normal, std::move(damage)});
             }
             break;
@@ -2897,10 +2919,19 @@ Vector2 BodyCollision::SurfaceBikeContacts(const world::SurfacePoint &from, cons
         {
             hit.damage(Add({}, hit.normal, -5));
         }
-        DeflectBike(hit.normal);
+        if (w.car.mounted)
+        {
+            auto &velocity = w.car.velocity;
+            const float inward = velocity.x * hit.normal.x + velocity.y * hit.normal.y;
+            velocity = Add(velocity, hit.normal, -(std::min)(0.f, inward));
+        }
+        else
+        {
+            DeflectBike(hit.normal);
+        }
     }
-    const float safe = (std::max)(0.f, first - .01f / (std::max)(.01f, travel + std::abs(turn) * .65f));
-    w.bikeYaw = previousYaw + turn * safe;
+    const float safe = (std::max)(0.f, first - .01f / (std::max)(.01f, travel + std::abs(turn) * lever));
+    vehicleYaw = previousYaw + turn * safe;
     return center(safe);
 }
 
@@ -2928,7 +2959,7 @@ void BodyCollision::VehicleContacts(float)
             }
             return false;
         };
-        if (PlayerPresent() && std::fabs(height - PlayerHeight()) < .7f &&
+        if (PlayerPresent() && !world.car.mounted && std::fabs(height - PlayerHeight()) < .7f &&
             (world.isBikeMounted ? bikeHitsCar(true) : SweptCarContains(car, world.playerPosition, .18f)))
         {
             float speed = (std::max)(car.speed, world.isBikeMounted ? std::fabs(world.bikeSpeed) : 0);

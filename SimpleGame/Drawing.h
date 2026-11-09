@@ -68,7 +68,7 @@ class Drawing
                             const models::Palette &palette = {}, float throttle = .5f, float direction = 1);
     static void DrawWorldVehicle(Vector2 position, float altitude, float scale, models::VehicleType type,
                                  const models::Palette &palette, float throttle, float yaw,
-                                 bool wreck = false);
+                                 bool wreck = false, bool playerDriven = false);
     static void DrawWorldBike(Vector2 position, float yaw, float throttle, bool mounted);
     static void DrawWorldAircraft(Vector2 position, float altitude, models::AircraftType type, bool alternate,
                                   float yaw, float bank, bool destroyed = false, float wreckOpacity = 1);

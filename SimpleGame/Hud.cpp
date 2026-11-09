@@ -1287,6 +1287,9 @@ void CityHud::DrawInteractionPrompt()
     case InteractionTarget::Resident:
         label = "주민 / 대화";
         break;
+    case InteractionTarget::GroundVehicle:
+        label = w.car.mounted ? "차량 / 하차" : "공용차 / 탑승";
+        break;
     case InteractionTarget::JetBike:
         label = w.isBikeMounted ? "바이크 / 하차" : "바이크 / 탑승";
         break;
@@ -2164,7 +2167,7 @@ void Hud::DrawVitals()
         return;
     }
     const auto &stats = mine.player;
-    if (!w.isBikeMounted && Game::Get().HasWalkingControls())
+    if (!w.Mounted() && Game::Get().HasWalkingControls())
     {
         const auto &mobility = w.playerMotion.mobility;
         const bool low = mobility.Stamina() < PlayerMobility::DodgeCost;
@@ -2200,20 +2203,28 @@ void Hud::DrawVitals()
                    : "위험 · 의료 지원 필요",
                16, {1, .61f, .46f}, true);
     }
-    if (w.isBikeMounted)
+    if (w.Mounted())
     {
-        float speed = std::fabs(w.bikeSpeed) * models::WorldScale::metersPerUnit * 3.6f;
+        const float driveSpeed = w.car.mounted ? w.car.speed : w.bikeSpeed;
+        float speed = std::fabs(driveSpeed) * models::WorldScale::metersPerUnit * 3.6f;
         char value[48];
         std::snprintf(value, sizeof(value), speed < 10 ? "%.1f" : "%.0f", speed);
-        Icon("bike", 1044, 724, 25, true);
+        if (w.car.mounted)
+        {
+            UiText(1248, 676, "차량 내구도 " + std::to_string(w.car.health), 16, kUiInk, true, true);
+        }
+        else
+        {
+            Icon("bike", 1044, 724, 25, true);
+        }
         UiText(1176, 749, value, 44, kUiInk, true, true);
         UiText(1248, 748, "km/h", 18, kUiInk, true, true);
-        if (w.bikeSpeed < -.01f)
+        if (driveSpeed < -.01f)
         {
             Icon("reverse", 1090, 675, 20, true);
             UiText(1248, 695, "후진", 17, kUiInk, true, true);
         }
-        else if (w.pressedKeys[' '] && w.bikeSpeed > 0)
+        else if (w.isBikeMounted && w.pressedKeys[' '] && w.bikeSpeed > 0)
         {
             Icon("boost", 1090, 675, 20, true);
             UiText(1248, 695, "부스트", 17, {.55f, .95f, .88f}, true, true);
@@ -2270,7 +2281,7 @@ void Hud::DrawVitals()
             }
         }
     }
-    if (!w.isBikeMounted && combat && !mine.loadout.IsPistolEquipped())
+    if (!w.Mounted() && combat && !mine.loadout.IsPistolEquipped())
     {
         Icon("unarmed", 1040, 723, 28, true);
         UiText(1248, 736, "맨손", 25, kUiInk, true, true);
@@ -3343,10 +3354,10 @@ void PlanetHud::Draw()
     std::snprintf(coordinates, sizeof(coordinates), "%.4f° / %.4f° · %.0fm", ll[0], ll[1],
                   location.position.altitudeMeters - world::PlanetTerrain::SeaLevelMeters);
     UiText(32, 154, coordinates, 14, {.64f, .79f, .76f});
-    UiText(32, 728,
-           Game::Get().GetState().isBikeMounted ? "W 가속 · S 제동/후진 · A/D 조향 · Space 부스트"
-                                                : "WASD 이동 · 바이크 근처에서 E 탑승",
-           16);
+    const char *controls = state.car.mounted     ? "W 가속 · S 제동/후진 · A/D 조향 · E 하차"
+                           : state.isBikeMounted ? "W 가속 · S 제동/후진 · A/D 조향 · Space 부스트"
+                                                 : "WASD 이동 · 차량 근처에서 E 탑승";
+    UiText(32, 728, controls, 16);
 }
 void PlanetHud::DrawMap(bool full)
 {

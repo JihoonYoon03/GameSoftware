@@ -1736,6 +1736,21 @@ size_t TrafficSystem::AdvanceDormant(float dt)
 void TrafficSystem::Step(GameState &world, float dt)
 {
     const auto &net = RoadNetwork::Get();
+    const auto &game = Game::Get();
+    const auto *surface = game.Surface();
+    const auto *cities = game.SurfaceCities();
+    std::optional<Vector2> servicePosition;
+    if (cityFilter >= 0 && world.surfaceExploration && world.car.position && surface && cities)
+    {
+        const auto &city = Overworld::Cities()[size_t(cityFilter)];
+        const auto &frame = surface->Stream().Snapshot()->planet->Region(city.id).frame;
+        const auto radius = surface->Planet().radiusMeters;
+        if (world::SurfaceGeometry::Distance(radius, frame.origin, *world.car.position) < 300)
+        {
+            const auto local = world::SurfaceGeometry::ToLocal(frame, *world.car.position, radius);
+            servicePosition = Add(city.center, {float(local.x / 2), float(local.y / 2)});
+        }
+    }
     impactCooldown = (std::max)(0.f, impactCooldown - dt);
     for (size_t i = 0; i < signals.size(); ++i)
     {
@@ -1994,6 +2009,23 @@ void TrafficSystem::Step(GameState &world, float dt)
         }
         car.speed += Game::Clamp(target - car.speed, -7.f * dt, 3.f * dt);
         float travel = car.speed * dt;
+        if (servicePosition && Game::Distance(*servicePosition, car.position) < 5)
+        {
+            const auto next =
+                car.turnDistance < 0
+                    ? net.LanePosition(car.lane, (std::min)(car.distance + travel, lane.length))
+                    : TurnPoint(car, Game::Clamp((car.turnDistance + travel) / car.turnLength, 0, 1));
+            auto point = cities->Point(*surface, cityFilter, next);
+            if (point)
+            {
+                point->altitudeMeters += RenderElevation(size_t(&car - vehicles.data())) * 2;
+                if (world.car.Contains(*surface, *point, 1.2f) &&
+                    Game::Distance(*servicePosition, next) <= Game::Distance(*servicePosition, car.position))
+                {
+                    car.speed = travel = 0;
+                }
+            }
+        }
         if (car.turnDistance < 0)
         {
             travel = (std::min)(travel, (std::max)(0.f, gap));
@@ -3344,6 +3376,13 @@ void PlanetTraffic::Advance(PlanetTrafficActor &actor, float seconds, const Game
                 return;
             }
         }
+        if (world.car.Contains(session, next, .8f) &&
+            TG::Distance(radius, next, *world.car.position) <=
+                TG::Distance(radius, actor.position, *world.car.position))
+        {
+            actor.speedMeters = 0;
+            return;
+        }
         bool playerContact = false;
         if (exterior && TG::Distance(radius, actor.position, session.Pose().origin) < 45)
         {
@@ -4161,7 +4200,7 @@ bool PlanetCommunity::Hit(const world::SurfacePoint &point, int damage, bool pla
 std::optional<PlanetCommunity::Contact> PlanetCommunity::Nearest() const
 {
     auto &g = Game::Get();
-    if (!planet || !g.Surface() || !CivicJustice::IsExterior() || g.GetState().isBikeMounted ||
+    if (!planet || !g.Surface() || !CivicJustice::IsExterior() || g.GetState().Mounted() ||
         HospitalRecovery::Active())
     {
         return std::nullopt;
