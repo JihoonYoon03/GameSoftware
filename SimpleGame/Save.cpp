@@ -29,7 +29,7 @@ namespace tutorial
 namespace
 {
 constexpr std::uint64_t kMaximumFile = 16 * 1024 * 1024;
-constexpr unsigned kSchema = 9;
+constexpr unsigned kSchema = 10;
 void Require(bool value, const char *message)
 {
     if (!value)
@@ -1117,7 +1117,7 @@ class SaveArchive
             }
         }
     }
-    void MobilityRecords(Campaign &v)
+    void MobilityRecords(Campaign &v, unsigned schema)
     {
         std::uint64_t count = v.worlds.size();
         Value(count);
@@ -1131,14 +1131,23 @@ class SaveArchive
             Require(v.worlds.count(key) && keys.insert(key).second,
                     "기동 상태 확장의 월드 ID가 올바르지 않습니다.");
             auto &mobility = v.worlds.at(key).game.playerMotion.mobility;
-            float cooldown = reading ? 0.f : mobility.Cooldown();
-            Value(cooldown);
-            Require(std::isfinite(cooldown) && cooldown >= 0 &&
-                        cooldown <= PlayerMobility::DodgeSeconds + PlayerMobility::RecoverySeconds,
-                    "저장된 회피 대기 시간이 올바르지 않습니다.");
+            if (schema == 9)
+            {
+                float cooldown = 0;
+                Value(cooldown);
+                Require(std::isfinite(cooldown) && cooldown >= 0 && cooldown <= .22f + .85f,
+                        "저장된 회피 대기 시간이 올바르지 않습니다.");
+                continue;
+            }
+            float stamina = reading ? 0.f : mobility.Stamina();
+            float delay = reading ? 0.f : mobility.RegenDelay();
+            Fields(stamina, delay);
+            Require(std::isfinite(stamina) && stamina >= 0 && stamina <= PlayerMobility::MaxStamina &&
+                        std::isfinite(delay) && delay >= 0 && delay <= PlayerMobility::RegenDelaySeconds,
+                    "저장된 스태미너 상태가 올바르지 않습니다.");
             if (reading)
             {
-                mobility.RestoreCooldown(cooldown);
+                mobility.RestoreStamina(stamina, delay);
             }
         }
     }
@@ -1640,7 +1649,7 @@ Campaign Decode(const std::filesystem::path &path)
     if (envelope.schema >= 9)
     {
         SaveArchive mobility(true, std::move(mobilityExtension));
-        mobility.MobilityRecords(result);
+        mobility.MobilityRecords(result, envelope.schema);
         Require(mobility.Finished(), "기동 상태 확장에 지원하지 않는 데이터가 있습니다.");
     }
     ValidateCampaign(result);
@@ -1886,6 +1895,8 @@ void CarryTraveler(const Checkpoint &source, Checkpoint &target)
     target.game.playerHair = source.game.playerHair;
     target.game.uiPreferences = source.game.uiPreferences;
     target.game.playTimeSeconds = source.game.playTimeSeconds;
+    const auto &mobility = source.game.playerMotion.mobility;
+    target.game.playerMotion.mobility.RestoreStamina(mobility.Stamina(), mobility.RegenDelay());
     target.civic.infamy = source.civic.infamy;
     target.civic.deaths = source.civic.deaths;
     target.civic.lostLevels = source.civic.lostLevels;
@@ -2046,7 +2057,7 @@ bool SaveSystem::Save(const std::filesystem::path &path)
         payload.insert(payload.end(), tracking.Bytes().begin(), tracking.Bytes().end());
         payload.insert(payload.end(), trackingFooter.Bytes().begin(), trackingFooter.Bytes().end());
         SaveArchive mobility(false), mobilityFooter(false);
-        mobility.MobilityRecords(candidate);
+        mobility.MobilityRecords(candidate, kSchema);
         std::uint64_t mobilitySize = mobility.Bytes().size();
         mobilityFooter.Value(mobilitySize);
         payload.insert(payload.end(), mobility.Bytes().begin(), mobility.Bytes().end());

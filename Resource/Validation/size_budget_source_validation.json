@@ -2,13 +2,13 @@
   "projects": {
     "Erma_Resource_Library.blend": {
       "unique_parts": 2293,
-      "mesh_instances": 12400,
+      "mesh_instances": 12707,
       "max_triangles": 196,
       "default_scene": "16_Transit_Connected_Example"
     },
     "Civic_Animations.blend": {
-      "unique_parts": 180,
-      "mesh_instances": 594,
+      "unique_parts": 210,
+      "mesh_instances": 901,
       "max_triangles": 188,
       "default_scene": "37_Civic_Animation_Review"
     },

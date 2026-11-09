@@ -1,0 +1,1008 @@
+{
+  "characters": {
+    "Player_Explorer": {
+      "Dodge_Forward_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0010000044712796807,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Forward_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.00100000633392483,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardLeft_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998169261962175,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardLeft_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998187888413668,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Left_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999017929658294,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Left_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999549947679043,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackLeft_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999418398365378,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackLeft_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998729219660163,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Back_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009995661675930023,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Back_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009996573207899928,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackRight_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.000999747309833765,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackRight_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999844478443265,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Right_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000259188003838,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Right_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000146265141666,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardRight_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000167103484273,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardRight_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998669847846031,
+        "root_error": 0,
+        "loop_error": null
+      }
+    },
+    "Ria_Engineer": {
+      "Dodge_Forward_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0010000044712796807,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Forward_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.00100000633392483,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardLeft_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998169261962175,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardLeft_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998187888413668,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Left_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999017929658294,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Left_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999549947679043,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackLeft_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999418398365378,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackLeft_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998729219660163,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Back_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009995661675930023,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Back_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009996573207899928,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackRight_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.000999747309833765,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackRight_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999844478443265,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Right_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000259188003838,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Right_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000146265141666,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardRight_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000167103484273,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardRight_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998669847846031,
+        "root_error": 0,
+        "loop_error": null
+      }
+    },
+    "Kain_Guard": {
+      "Dodge_Forward_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0010000044712796807,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Forward_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.00100000633392483,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardLeft_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998169261962175,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardLeft_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998187888413668,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Left_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999017929658294,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Left_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999549947679043,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackLeft_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999418398365378,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackLeft_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998729219660163,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Back_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009995661675930023,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Back_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009996573207899928,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackRight_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.000999747309833765,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackRight_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999844478443265,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Right_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000259188003838,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Right_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000146265141666,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardRight_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000167103484273,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardRight_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998669847846031,
+        "root_error": 0,
+        "loop_error": null
+      }
+    },
+    "Mara_Medic": {
+      "Dodge_Forward_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0010000044712796807,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Forward_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.00100000633392483,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardLeft_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998169261962175,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardLeft_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998187888413668,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Left_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999017929658294,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Left_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999549947679043,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackLeft_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999418398365378,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackLeft_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998729219660163,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Back_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009995661675930023,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Back_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009996573207899928,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackRight_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.000999747309833765,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackRight_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999844478443265,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Right_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000259188003838,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Right_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000146265141666,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardRight_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000167103484273,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardRight_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998669847846031,
+        "root_error": 0,
+        "loop_error": null
+      }
+    },
+    "NPC_Researcher": {
+      "Dodge_Forward_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0010000044712796807,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Forward_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.00100000633392483,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardLeft_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998169261962175,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardLeft_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998187888413668,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Left_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999017929658294,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Left_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999549947679043,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackLeft_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999418398365378,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackLeft_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998729219660163,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Back_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009995661675930023,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Back_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009996573207899928,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackRight_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.000999747309833765,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackRight_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999844478443265,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Right_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000259188003838,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Right_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000146265141666,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardRight_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000167103484273,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardRight_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998669847846031,
+        "root_error": 0,
+        "loop_error": null
+      }
+    },
+    "NPC_Miner": {
+      "Dodge_Forward_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0010000044712796807,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Forward_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.00100000633392483,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardLeft_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998169261962175,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardLeft_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998187888413668,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Left_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999017929658294,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Left_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999549947679043,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackLeft_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999418398365378,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackLeft_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998729219660163,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Back_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009995661675930023,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Back_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009996573207899928,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackRight_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.000999747309833765,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackRight_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999844478443265,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Right_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000259188003838,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Right_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000146265141666,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardRight_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000167103484273,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardRight_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998669847846031,
+        "root_error": 0,
+        "loop_error": null
+      }
+    },
+    "NPC_Guard_Helmet": {
+      "Dodge_Forward_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0010000044712796807,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Forward_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.00100000633392483,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardLeft_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998169261962175,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardLeft_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998187888413668,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Left_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999017929658294,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Left_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999549947679043,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackLeft_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999418398365378,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackLeft_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998729219660163,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Back_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009995661675930023,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Back_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009996573207899928,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackRight_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.000999747309833765,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackRight_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999844478443265,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Right_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000259188003838,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Right_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000146265141666,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardRight_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000167103484273,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardRight_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998669847846031,
+        "root_error": 0,
+        "loop_error": null
+      }
+    },
+    "NPC_HeavyCombat": {
+      "Dodge_Forward_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0010000044712796807,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Forward_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.00100000633392483,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardLeft_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998169261962175,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardLeft_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998187888413668,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Left_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999017929658294,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Left_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999549947679043,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackLeft_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999418398365378,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackLeft_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998729219660163,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Back_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009995661675930023,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Back_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009996573207899928,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackRight_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.000999747309833765,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackRight_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999844478443265,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Right_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000259188003838,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Right_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000146265141666,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardRight_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000167103484273,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardRight_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998669847846031,
+        "root_error": 0,
+        "loop_error": null
+      }
+    },
+    "NPC_Pilot": {
+      "Dodge_Forward_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0010000044712796807,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Forward_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.00100000633392483,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardLeft_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998169261962175,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardLeft_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998187888413668,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Left_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999017929658294,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Left_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999549947679043,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackLeft_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999418398365378,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackLeft_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998729219660163,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Back_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009995661675930023,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Back_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009996573207899928,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackRight_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.000999747309833765,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackRight_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999844478443265,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Right_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000259188003838,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Right_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000146265141666,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardRight_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000167103484273,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardRight_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998669847846031,
+        "root_error": 0,
+        "loop_error": null
+      }
+    },
+    "NPC_Civilian": {
+      "Dodge_Forward_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0010000044712796807,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Forward_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.00100000633392483,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardLeft_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998169261962175,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardLeft_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998187888413668,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Left_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999017929658294,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Left_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999549947679043,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackLeft_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999418398365378,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackLeft_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998729219660163,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Back_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009995661675930023,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Back_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009996573207899928,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackRight_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.000999747309833765,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_BackRight_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009999844478443265,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Right_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000259188003838,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_Right_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000146265141666,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardRight_L": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.001000167103484273,
+        "root_error": 0,
+        "loop_error": null
+      },
+      "Dodge_ForwardRight_R": {
+        "duration_seconds": 0.4,
+        "min_z_m": 0.0009998669847846031,
+        "root_error": 0,
+        "loop_error": null
+      }
+    }
+  },
+  "geometry_reference": "unchanged delivered GLB bind vertices driven by the authoring rig",
+  "max_source_reimport_bounds_error_m": 1.1920928955078125e-06,
+  "all_checks_passed": true,
+  "worst_source_bounds_sample": {
+    "clip": "Dodge_BackLeft_R",
+    "phase": 0.75,
+    "part": "Body_Hand_L",
+    "source": [
+      0.29924720525741577,
+      0.06058512255549431,
+      0.7675990462303162,
+      0.38342899084091187,
+      0.16788487136363983,
+      0.8486144542694092
+    ],
+    "actual": [
+      0.29924747347831726,
+      0.06058501824736595,
+      0.7676002383232117,
+      0.38342925906181335,
+      0.16788482666015625,
+      0.8486154675483704
+    ]
+  }
+}

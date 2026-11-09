@@ -1,8 +1,9 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "Animation.h"
 #include "ResourceAssets.h"
 #include <algorithm>
 #include <cmath>
+#include <iterator>
 #include <stdexcept>
 
 namespace models
@@ -308,6 +309,27 @@ AnimationWeights AnimationBlendSpace::Evaluate(const AnimationRig &rig, float le
 // ============================================================================
 // LayeredAnimation
 // ============================================================================
+void LayeredAnimation::BindDodgeClip(AnimationRig &rig, const std::string &name, int index)
+{
+    if (name.compare(0, 6, "Dodge_") != 0)
+    {
+        return;
+    }
+    constexpr const char *directions[] = {"Forward", "ForwardLeft", "Left",  "BackLeft",
+                                          "Back",    "BackRight",   "Right", "ForwardRight"};
+    for (size_t direction = 0; direction < std::size(directions); ++direction)
+    {
+        const auto prefix = std::string("Dodge_") + directions[direction];
+        for (size_t foot = 0; foot < 2; ++foot)
+        {
+            if (name == prefix + (foot == 0 ? "_L" : "_R"))
+            {
+                rig.dodgeClips[direction * 2 + foot] = index;
+                return;
+            }
+        }
+    }
+}
 void LayeredAnimation::PrepareGraph(std::vector<ResourceClip> &clips, const AnimationRig &rig)
 {
     std::vector<bool> required(clips.size(), false);
@@ -325,6 +347,10 @@ void LayeredAnimation::PrepareGraph(std::vector<ResourceClip> &clips, const Anim
     for (const auto &sample : rig.samples)
     {
         require(sample.clipIndex);
+    }
+    for (int index : rig.dodgeClips)
+    {
+        require(index);
     }
     for (size_t index = 0; index < clips.size(); ++index)
     {
@@ -402,6 +428,25 @@ void LayeredAnimation::Sample(const ResourceMesh &mesh, const CharacterPose &pos
         }
         Mix(base, aimPose, aim, mesh.boneCount);
     }
+    const int dodge = pose.dodgeSample >= 0 && size_t(pose.dodgeSample) < rig.dodgeClips.size()
+                          ? rig.dodgeClips[size_t(pose.dodgeSample)]
+                          : -1;
+    const bool dodgeLayer = dodge >= 0 && pose.dodgeWeight > 0;
+    if (pose.dodgeEntryWeight > 0 && pose.dodgeEntrySample >= 0 &&
+        size_t(pose.dodgeEntrySample) < rig.dodgeClips.size())
+    {
+        const int entry = rig.dodgeClips[size_t(pose.dodgeEntrySample)];
+        if (entry >= 0)
+        {
+            ClipPose(mesh, entry, pose.dodgeEntryTime / mesh.Clips()[size_t(entry)].duration, false, other);
+            Mix(base, other, pose.dodgeEntryWeight, mesh.boneCount);
+        }
+    }
+    if (dodgeLayer)
+    {
+        ClipPose(mesh, dodge, pose.dodgeTime / mesh.Clips()[size_t(dodge)].duration, false, other);
+        Mix(base, other, pose.dodgeWeight, mesh.boneCount);
+    }
     if (pose.armed && rig.carryIdle >= 0 && rig.carryWalk >= 0 && rig.carryRun >= 0)
     {
         PoseBuffer carry{}, moving{};
@@ -439,7 +484,7 @@ void LayeredAnimation::Sample(const ResourceMesh &mesh, const CharacterPose &pos
         float alpha = Smooth(progress * 1.4f / .15f) * Smooth((1 - progress) * 1.4f / .15f);
         UpperLayer(mesh, base, other, alpha, true);
     }
-    if (pose.meleeSeconds > 0)
+    if (pose.meleeSeconds > 0 && !dodgeLayer)
     {
         float t = 1 - std::clamp(pose.meleeSeconds / .65f, 0.f, 1.f);
         ClipPose(mesh, rig.melee, t, false, other);
@@ -447,7 +492,7 @@ void LayeredAnimation::Sample(const ResourceMesh &mesh, const CharacterPose &pos
     }
     // Small spine counterbalance while start/stop/pivot clips are being authored.
     // Keep root/legs and precise aimed upper-body poses intact.
-    float leanWeight = pose.blended ? 1 - aim : 0;
+    float leanWeight = pose.blended ? (1 - aim) * (1 - (dodgeLayer ? pose.dodgeWeight : 0)) : 0;
     AnimationRotation pitch = {0, std::sin(pose.motionForwardLean * leanWeight * .5f), 0,
                                std::cos(pose.motionForwardLean * leanWeight * .5f)};
     AnimationRotation roll = {std::sin(pose.motionSideLean * leanWeight * .5f), 0, 0,
@@ -481,16 +526,90 @@ void LayeredAnimation::Sample(const ResourceMesh &mesh, const CharacterPose &pos
 // ============================================================================
 // CharacterAnimation
 // ============================================================================
+namespace
+{
+constexpr float kDodgeClipSeconds = .4f, kDodgeBlendIn = .05f, kDodgeBlendOut = .1f;
+}
+void CharacterAnimation::StartDodge(Point direction, float facingYaw)
+{
+    const float cy = std::cos(facingYaw), sy = std::sin(facingYaw);
+    const float angle = std::atan2(-sy * direction.x + cy * direction.y, cy * direction.x + sy * direction.y);
+    constexpr float kOctant = .7853981634f;
+    const int octant = (int(std::round(angle / kOctant)) + 8) % 8;
+    const int foot = phase >= .25f && phase < .75f ? 1 : 0;
+    // Stamina may allow another dash before the previous clip finishes its recovery.
+    dodgeEntrySample = dodgeSample;
+    dodgeEntryTime = dodgeTime;
+    dodgeEntryWeight = DodgeWeight();
+    dodgeSample = octant * 2 + foot;
+    dodgeTime = 0;
+    dodgeFade = -1;
+    dodgeEntryLeft = left;
+    dodgeEntryForward = forward;
+    dodgeEntryPhase = phase;
+}
+float CharacterAnimation::DodgeWeight() const
+{
+    if (dodgeSample < 0)
+    {
+        return 0;
+    }
+    if (dodgeFade >= 0)
+    {
+        return dodgeInterruptWeight * Smooth(dodgeFade / kDodgeBlendOut);
+    }
+    return Smooth((std::min)(dodgeTime / kDodgeBlendIn, (kDodgeClipSeconds - dodgeTime) / kDodgeBlendOut));
+}
+void CharacterAnimation::InterruptDodge()
+{
+    if (dodgeSample >= 0 && dodgeFade < 0)
+    {
+        dodgeInterruptWeight = DodgeWeight();
+        dodgeFade = kDodgeBlendOut;
+    }
+}
 void CharacterAnimation::Update(float dt, Point worldVelocity, float facingYaw, bool aiming, bool riding)
 {
     dt = std::clamp(dt, 0.f, .05f);
+    float phaseDelta = dt;
     if (riding)
     {
         velocity = {};
         left = forward = 0;
         aimWeight = 0;
         fireSeconds = 0;
+        dodgeSample = -1;
         return;
+    }
+    if (dodgeSample >= 0)
+    {
+        if (dodgeFade >= 0)
+        {
+            dodgeFade = (std::max)(0.f, dodgeFade - dt);
+            if (dodgeFade == 0)
+            {
+                dodgeSample = -1;
+            }
+        }
+        else
+        {
+            const float previousTime = dodgeTime;
+            dodgeTime += dt;
+            if (previousTime < kDodgeClipSeconds - kDodgeBlendOut &&
+                dodgeTime >= kDodgeClipSeconds - kDodgeBlendOut)
+            {
+                phase = dodgeSample % 2 == 0 ? .5f : 0.f;
+            }
+            if (dodgeTime >= kDodgeClipSeconds)
+            {
+                phaseDelta = dodgeTime - kDodgeClipSeconds;
+                dodgeSample = -1;
+            }
+            else
+            {
+                phaseDelta = 0;
+            }
+        }
     }
     float weight = 1 - std::exp(-16 * dt);
     velocity = Lerp(velocity, worldVelocity, weight);
@@ -498,12 +617,12 @@ void CharacterAnimation::Update(float dt, Point worldVelocity, float facingYaw, 
     left = (-sy * velocity.x + cy * velocity.y) * WorldScale::metersPerUnit;
     forward = (cy * velocity.x + sy * velocity.y) * WorldScale::metersPerUnit;
     float speed = std::hypot(left, forward);
-    if (std::hypot(worldVelocity.x, worldVelocity.y) > .001f)
+    if (phaseDelta > 0 && std::hypot(worldVelocity.x, worldVelocity.y) > .001f)
     {
         float runWeight = std::clamp((speed - 1.08f) / (2.46f - 1.08f), 0.f, 1.f);
         float reference = 1.08f + (2.46f - 1.08f) * runWeight;
         float frequency = (1 + .5f * runWeight) * std::clamp(speed / reference, .1f, 2.f);
-        phase = std::fmod(phase + dt * frequency, 1.f);
+        phase = std::fmod(phase + phaseDelta * frequency, 1.f);
     }
     if (speed < .001f)
     {
@@ -524,6 +643,19 @@ void CharacterAnimation::Apply(CharacterPose &pose) const
     pose.moveForward = forward;
     pose.aimWeight = aimWeight;
     pose.fireSeconds = (std::max)(fireSeconds, pose.recoil * .4f);
+    pose.dodgeSample = dodgeSample;
+    pose.dodgeTime = dodgeTime;
+    pose.dodgeWeight = DodgeWeight();
+    if (dodgeSample >= 0 && dodgeTime < kDodgeBlendIn)
+    {
+        pose.locomotionPhase = dodgeEntryPhase;
+        pose.moveLeft = dodgeEntryLeft;
+        pose.moveForward = dodgeEntryForward;
+        pose.dodgeEntrySample = dodgeEntrySample;
+        pose.dodgeEntryTime = dodgeEntryTime;
+        pose.dodgeEntryWeight =
+            dodgeEntryWeight * (dodgeFade >= 0 ? Smooth(dodgeFade / kDodgeBlendOut) : 1.f);
+    }
 }
 void CharacterAnimation::Fire()
 {

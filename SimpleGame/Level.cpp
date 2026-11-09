@@ -955,6 +955,7 @@ void MineCombat::UpdateEnemies(float deltaSeconds)
         else if (state.invulnerability <= 0)
         {
             state.player.health -= (std::max)(1, 10 - state.player.defense);
+            tutorial::Game::Get().GetState().InterruptDodge();
             enemy.attackCooldown = 1;
             state.invulnerability = .45f;
             if (state.player.health <= 0)
@@ -3162,6 +3163,7 @@ void FrontierCombat::Advance(ChapterProjectile &projectile, float distance)
             {
                 auto &stats = GameLevels::Mine().GetState().player;
                 stats.health -= (std::max)(1, shot.damage - stats.defense);
+                world.InterruptDodge();
                 state.invulnerability = .45f;
                 shot.remaining = 0;
             }

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "ResourceAssets.h"
 #include "Profiler.h"
 #ifndef NOMINMAX
@@ -212,6 +212,7 @@ struct Store
                 clips->push_back(std::move(clip));
                 const auto &name = clips->back().name;
                 int clipIndex = int(index);
+                LayeredAnimation::BindDodgeClip(*rig, name, clipIndex);
                 if (name == "Idle")
                 {
                     rig->idle = clipIndex;
@@ -520,11 +521,25 @@ void ResourcePoseSampler::Sample(unsigned int id, const CharacterPose &pose, Ski
         ResourceAssets::Sample(id, &pose, matrices);
         return;
     }
-    const std::array<float, 13> nextInputs = {
-        pose.animationPhase,  pose.recoil,         pose.locomotionSpeed, pose.meleeSeconds,
-        pose.locomotionPhase, pose.moveLeft,       pose.moveForward,     pose.aimWeight,
-        pose.fireSeconds,     pose.reloadProgress, float(pose.gender),   pose.motionForwardLean,
-        pose.motionSideLean};
+    const std::array<float, 19> nextInputs = {pose.animationPhase,
+                                              pose.recoil,
+                                              pose.locomotionSpeed,
+                                              pose.meleeSeconds,
+                                              pose.locomotionPhase,
+                                              pose.moveLeft,
+                                              pose.moveForward,
+                                              pose.aimWeight,
+                                              pose.fireSeconds,
+                                              pose.reloadProgress,
+                                              float(pose.gender),
+                                              pose.motionForwardLean,
+                                              pose.motionSideLean,
+                                              float(pose.dodgeSample),
+                                              pose.dodgeTime,
+                                              pose.dodgeWeight,
+                                              float(pose.dodgeEntrySample),
+                                              pose.dodgeEntryTime,
+                                              pose.dodgeEntryWeight};
     const unsigned int nextFlags =
         unsigned(pose.armed) | (unsigned(pose.walking) << 1) | (unsigned(pose.blended) << 2);
     if (rig != mesh.rig.get() || animations != mesh.animations.get() || flags != nextFlags ||

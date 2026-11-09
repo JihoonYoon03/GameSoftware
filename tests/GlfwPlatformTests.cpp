@@ -127,9 +127,9 @@ int main()
     state.mouseAiming = state.mouseFiring = true;
     state.playerMotion.mobility.RequestDodge();
     state.playerMotion.mobility.Update(.016f, {1, 0, 0}, 0, false, false, true, false);
-    const float dodgeCooldown = state.playerMotion.mobility.Cooldown();
+    const float stamina = state.playerMotion.mobility.Stamina();
     focus(platform::Window(), GLFW_FALSE);
-    assert(!state.playerMotion.mobility.Dodging() && state.playerMotion.mobility.Cooldown() == dodgeCooldown);
+    assert(!state.playerMotion.mobility.Dodging() && state.playerMotion.mobility.Stamina() == stamina);
     assert(!state.pressedKeys['w'] && !state.mouseAiming && !state.mouseFiring);
     state.mouseAiming = state.mouseFiring = true;
     entry(platform::Window(), GLFW_FALSE);

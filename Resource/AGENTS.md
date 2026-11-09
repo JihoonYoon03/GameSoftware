@@ -39,3 +39,4 @@
 - 사용자 요청 범위에 맞춰 제작하고, 다른 작업에서 변경 중인 게임 코드·Runtime 캐시를 모델링 작업에 함께 수정하지 않는다.
 
 - 2026-10-29 가감속 확장은 `Tools/acceleration_motion.py`, `build_acceleration_animations.py`, `publish_acceleration_animations.py`가 소유한다. 기존 63개를 보존해 총 82클립이다. `Documentation/ACCELERATION_ko.md`, `acceleration_blending.json`을 따른다. 전환 종료는 실제 저장된 타깃 루프의 위상과 일치시킨다. 무장 시 새 하체와 기존 권총 운반/조준 상체를 합성하며, 비무장 기본 모션에는 무기를 표시하지 않는다. 원본 두 파일에 44번 검토 장면을 추가하고 기존 진입 장면을 유지한다.
+- 2026-11-09 CQ-05B 회피 스텝은 `Tools/dodge_motion.py`와 `build_dodge_animations.py`가 소유한다. 기존 82개에 방향 8종과 밀어내는 발 2종을 조합한 16개를 더해 HUMAN_7H는 현재 98클립이다. `Documentation/DODGE_STEP_ko.md`와 `dodge_blending.json`에 접지·위상·중단 계약을 기록한다. 배우 이동은 46번 검토 장면의 별도 오브젝트 트랙에서 확인한다. GLB 클립은 루트 이동·yaw 0이며 게임의 배우 이동·충돌을 참조한다.

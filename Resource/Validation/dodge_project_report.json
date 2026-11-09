@@ -1,0 +1,35 @@
+{
+  "projects": {
+    "Erma_Resource_Library.blend": {
+      "entry_scene": "16_Transit_Connected_Example",
+      "preserved_actions": 377,
+      "human_clips": 98,
+      "review_scenes": {
+        "45_Dodge_Direction_Review": {
+          "human_review_actors": 4,
+          "min_review_actor_joint_movement_m": 0.4769744167683561
+        },
+        "46_Dodge_Interrupt_Review": {
+          "human_review_actors": 5,
+          "min_review_actor_joint_movement_m": 0.6332257821715057
+        }
+      }
+    },
+    "Civic_Animations.blend": {
+      "entry_scene": "37_Civic_Animation_Review",
+      "preserved_actions": 282,
+      "human_clips": 98,
+      "review_scenes": {
+        "45_Dodge_Direction_Review": {
+          "human_review_actors": 4,
+          "min_review_actor_joint_movement_m": 0.4769744167683561
+        },
+        "46_Dodge_Interrupt_Review": {
+          "human_review_actors": 5,
+          "min_review_actor_joint_movement_m": 0.6332257821715057
+        }
+      }
+    }
+  },
+  "all_checks_passed": true
+}

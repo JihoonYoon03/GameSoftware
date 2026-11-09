@@ -191,6 +191,10 @@ struct CharacterPose
     float locomotionPhase = 0, moveLeft = 0, moveForward = 0, aimWeight = 0, fireSeconds = 0;
     float reloadProgress = -1;
     float motionForwardLean = 0, motionSideLean = 0;
+    int dodgeSample = -1;
+    float dodgeTime = 0, dodgeWeight = 0;
+    int dodgeEntrySample = -1;
+    float dodgeEntryTime = 0, dodgeEntryWeight = 0;
     Point Apply(Point point, Joint joint) const;
 };
 // ============================================================================

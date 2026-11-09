@@ -68,6 +68,14 @@ CombatBlock PlayerCombat::EnvironmentBlock(const PlayerCombatContext &c, CombatA
     {
         return CombatBlock::Inactive;
     }
+    return ControlBlock(c);
+}
+CombatBlock PlayerCombat::ControlBlock(const PlayerCombatContext &c)
+{
+    if (c.loading)
+    {
+        return CombatBlock::Loading;
+    }
     if (c.menu)
     {
         return CombatBlock::Menu;

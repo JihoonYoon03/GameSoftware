@@ -1845,6 +1845,7 @@ void CivicCombat::DamagePlayer(int damage, Vector2 impulse)
         return;
     }
     stats.health = (std::max)(0, stats.health - (std::max)(1, damage - stats.defense));
+    Game::Get().GetState().InterruptDodge();
     Impact(civic.playerImpact, impulse, stats.health == 0);
     if (stats.health == 0)
     {

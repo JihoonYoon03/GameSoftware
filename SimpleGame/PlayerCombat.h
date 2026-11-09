@@ -56,6 +56,7 @@ class PlayerCombat
 {
   public:
     static PlayerCombatContext Current();
+    static CombatBlock ControlBlock(const PlayerCombatContext &context);
     static CombatBlock EnvironmentBlock(const PlayerCombatContext &context, CombatArea expected);
     static CombatBlock Evaluate(const PlayerCombatContext &context, CombatAction action, CombatArea expected);
     // Count only action requests reaching an adapter; reading state/evaluating a snapshot never logs.

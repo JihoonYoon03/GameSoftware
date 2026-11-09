@@ -2164,23 +2164,23 @@ void Hud::DrawVitals()
         return;
     }
     const auto &stats = mine.player;
-    if (!w.isBikeMounted && (mine.active || chapter.active || CivicJustice::IsExterior()))
+    if (!w.isBikeMounted && Game::Get().HasWalkingControls())
     {
         const auto &mobility = w.playerMotion.mobility;
-        char text[128];
-        if (mobility.Dodging())
-        {
-            std::snprintf(text, sizeof(text), "회피 중 · 공격 제한");
-        }
-        else if (mobility.Cooldown() > 0)
-        {
-            std::snprintf(text, sizeof(text), "회피 재사용 %.1f초 · Shift 달리기", mobility.Cooldown());
-        }
-        else
-        {
-            std::snprintf(text, sizeof(text), "Space 회피 · Shift 달리기");
-        }
-        UiText(456, 762, text, 14, {.65f, .9f, .81f});
+        const bool low = mobility.Stamina() < PlayerMobility::DodgeCost;
+        const ColorRGBA ink = low ? ColorRGBA(1, .78f, .4f) : ColorRGBA(.65f, .9f, .81f);
+        UiText(456, 743,
+               "스태미너 " + std::to_string(int(mobility.Stamina())) + " / " +
+                   std::to_string(int(PlayerMobility::MaxStamina)),
+               14, ink, true);
+        const char *hint = mobility.Dodging() ? "회피 중 · 공격 제한"
+                           : low              ? "회피에 필요한 스태미너 부족"
+                           : (mine.active || chapter.active || CivicJustice::IsExterior())
+                               ? "Space 회피 · Shift 달리기"
+                               : "Space 회피";
+        UiText(456, 762, hint, 14, ink, true);
+        Drawing::DrawRectangle(456, 771, 205, 5, {.14f, .23f, .27f});
+        Drawing::DrawRectangle(456, 771, 205 * mobility.Stamina() / PlayerMobility::MaxStamina, 5, ink);
     }
     const bool critical = stats.health <= stats.maxHealth * .25f;
     Icon("health", 32, 736, 24, true);

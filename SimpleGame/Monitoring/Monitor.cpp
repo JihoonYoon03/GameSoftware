@@ -564,7 +564,8 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     const auto &mobility = world.playerMotion.mobility;
     combatStatus.Bool("sprinting", mobility.Sprinting());
     combatStatus.Bool("dodging", mobility.Dodging());
-    combatStatus.Number("dodge_cooldown_seconds", mobility.Cooldown());
+    combatStatus.Number("stamina", mobility.Stamina());
+    combatStatus.Number("stamina_max", tutorial::PlayerMobility::MaxStamina);
     combatStatus.Bool("dodge_invulnerable", false);
     player.Raw("combat", combatStatus.Finish());
     result.Raw("player", player.Finish());

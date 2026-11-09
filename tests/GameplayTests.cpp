@@ -1923,9 +1923,9 @@ void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::file
         }
         return result;
     };
-    assert((number(8) == 8 || number(8) == 9) && version >= 1 && version <= 8);
+    assert(number(8) >= 8 && number(8) <= 10 && version >= 1 && version <= 8);
     const size_t schema8End =
-        number(8) == 9 ? bytes.size() - 8 - size_t(number(bytes.size() - 8)) : bytes.size();
+        number(8) >= 9 ? bytes.size() - 8 - size_t(number(bytes.size() - 8)) : bytes.size();
     const size_t trackingStart = schema8End - 8 - size_t(number(schema8End - 8));
     const size_t communityStart = trackingStart - 8 - size_t(number(trackingStart - 8));
     const size_t linkStart = communityStart - 8 - size_t(number(communityStart - 8));

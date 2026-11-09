@@ -256,7 +256,7 @@ function renderEnvironment(data) {
         + format(combat.melee_recovery_seconds, 2) + "초"),
       metric("동시 탄환", format(combat.active_projectiles) + " / " + format(combat.projectile_limit)),
       metric("기동 상태", combat.dodging ? "회피 대시 · 무적 없음" : combat.sprinting ? "달리기" : "일반 이동"),
-      metric("회피 재사용 대기", format(combat.dodge_cooldown_seconds, 2) + "초"),
+      metric("스태미너", format(combat.stamina, 0) + " / " + format(combat.stamina_max, 0)),
     );
   }
   const travel = data.jet_travel;

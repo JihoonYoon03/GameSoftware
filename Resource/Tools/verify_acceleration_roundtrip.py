@@ -3,7 +3,13 @@ import bpy,ast,json,sys,math
 from pathlib import Path
 from mathutils import Vector
 ROOT=Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT/'Tools'))
-from acceleration_motion import SPECS
+if '--dodge' in sys.argv:
+    from dodge_motion import SPECS as dodge_clips, FRAMES
+    SPECS={name:dict(source='Run',frames=FRAMES,loop=False) for name in dodge_clips}
+    extension='dodge'
+else:
+    from acceleration_motion import SPECS
+    extension='acceleration'
 from verify_resource_pack import read_glb,accessor
 meta=json.loads((ROOT/'Documentation/animation_clips.json').read_text(encoding='utf-8'))
 recipes=json.loads((ROOT/'Documentation/assembly_recipes.json').read_text(encoding='utf-8'))
@@ -45,7 +51,7 @@ for name,info in recipes.items():
     if not isinstance(info,dict) or 'body' not in info:continue
     if '--only' in sys.argv and name!=sys.argv[sys.argv.index('--only')+1]:continue
     scene,rig,objects,actions=load('Export/Characters/'+name+'.glb')
-    assert len(rig.data.bones)==23 and set(actions)=={c['clip'] for c in meta['HUMAN_7H']}
+    assert len(rig.data.bones)==23 and set(actions)==({c['clip'] for c in meta['HUMAN_7H']} | set(SPECS))
     row={}
     for clip,info in SPECS.items():
         base,end,loop=info["source"],info["frames"],info["loop"]
@@ -70,8 +76,8 @@ for name,info in recipes.items():
         row[clip]=dict(duration_seconds=duration,min_z_m=low,root_error=root_error,loop_error=seam if loop else None)
     report['characters'][name]=row
     print('ACCELERATION_ROUNDTRIP_CHECKED',name,flush=True)
-(ROOT/'Validation/acceleration_roundtrip_diagnostic.json').write_text(json.dumps(report,indent=2)+'\n')
+(ROOT/f'Validation/{extension}_roundtrip_diagnostic.json').write_text(json.dumps(report,indent=2)+'\n')
 assert report['max_source_reimport_bounds_error_m']<.0005,report.get('worst_source_bounds_sample')
 report['all_checks_passed']=True
-(ROOT/'Validation/acceleration_roundtrip_report.json').write_text(json.dumps(report,indent=2)+'\n')
-print('ACCELERATION_ROUNDTRIP_VERIFIED',len(report['characters']),report['max_source_reimport_bounds_error_m'],flush=True)
+(ROOT/f'Validation/{extension}_roundtrip_report.json').write_text(json.dumps(report,indent=2)+'\n')
+print(f'{extension.upper()}_ROUNDTRIP_VERIFIED',len(report['characters']),report['max_source_reimport_bounds_error_m'],flush=True)

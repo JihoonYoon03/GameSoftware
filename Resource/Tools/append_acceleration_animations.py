@@ -1,10 +1,15 @@
 """Append only the new animation streams, protecting all original data and clips."""
-import copy,json,struct,hashlib,time
+import argparse,copy,json,struct,hashlib,time
 from pathlib import Path
 from verify_resource_pack import read_glb,accessor
 ROOT=Path(__file__).resolve().parents[1]
-NEW=set(json.loads((ROOT/'Validation/acceleration_authoring.json').read_text())['clips'])
-src,bb=read_glb(ROOT/'Validation/Acceleration_Animation_Bank.glb');assert {a['name'] for a in src['animations']}==NEW
+parser=argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--extension',choices=['acceleration','dodge'],default='acceleration')
+args=parser.parse_args()
+extension=args.extension
+bank={'acceleration':'Acceleration_Animation_Bank.glb','dodge':'Dodge_Staging/Dodge_Animation_Bank.glb'}[extension]
+NEW=set(json.loads((ROOT/f'Validation/{extension}_authoring.json').read_text())['clips'])
+src,bb=read_glb(ROOT/'Validation'/bank);assert {a['name'] for a in src['animations']}==NEW
 def signature(doc,buf,animation):
     data=[]
     for channel in animation['channels']:
@@ -41,7 +46,7 @@ for e in cat['exports']:
             doc['animations'].append(a)
         doc['buffers'][0]['byteLength']=len(payload);raw=json.dumps(doc,separators=(',',':'),ensure_ascii=False).encode();raw+=b' '*((-len(raw))%4);payload+=b'\0'*((-len(payload))%4)
         data=struct.pack('<4sII',b'glTF',2,12+8+len(raw)+8+len(payload))+struct.pack('<II',len(raw),0x4E4F534A)+raw+struct.pack('<II',len(payload),0x004E4942)+payload
-        stage=path.with_suffix('.acceleration-staging.glb');stage.write_bytes(data)
+        stage=path.with_suffix(f'.{extension}-staging.glb');stage.write_bytes(data)
         for attempt in range(10):
             try:stage.replace(path);break
             except PermissionError:
@@ -56,5 +61,5 @@ for e in cat['exports']:
     report['files'][e['file']]={'preserved_clips':len(old),'new_clips':len(NEW),'clips':e['clips'],'streams_written':len(changed),'geometry_skin_materials_and_bind_unchanged':True,'original_binary_prefix_sha256':hashlib.sha256(buf).hexdigest()}
 assert len(report['files'])==10
 catpath.write_text(json.dumps(cat,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
-report['all_checks_passed']=True;(ROOT/'Validation/acceleration_glb_preservation.json').write_text(json.dumps(report,indent=2)+'\n')
-print('ACCELERATION_ANIMATIONS_APPENDED',len(report['files']),'CHARACTERS; EXISTING CLIPS/GEOMETRY PRESERVED',flush=True)
+report['all_checks_passed']=True;(ROOT/f'Validation/{extension}_glb_preservation.json').write_text(json.dumps(report,indent=2)+'\n')
+print(f'{extension.upper()}_ANIMATIONS_APPENDED',len(report['files']),'CHARACTERS; EXISTING CLIPS/GEOMETRY PRESERVED',flush=True)

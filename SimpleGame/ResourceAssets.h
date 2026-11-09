@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "ModelLibrary.h"
 #include "Animation.h"
 #include <array>
@@ -64,7 +64,7 @@ class ResourcePoseSampler
   private:
     const AnimationRig *rig = nullptr;
     const std::vector<ResourceClip> *animations = nullptr;
-    std::array<float, 13> inputs = {};
+    std::array<float, 19> inputs = {};
     unsigned int flags = 0;
     SkinMatrices cached = {};
 };

@@ -8,8 +8,7 @@ namespace tutorial
 {
 void PlayerMobility::RequestDodge()
 {
-    // Requests during recovery are discarded immediately, never queued until the cooldown expires.
-    if (cooldown <= 0)
+    if (!Dodging() && stamina >= DodgeCost)
     {
         pending = true;
     }
@@ -26,24 +25,30 @@ models::Point PlayerMobility::Update(float dt, models::Point input, float facing
         return {};
     }
     dt = (std::min)(dt, .05f);
-    cooldown = (std::max)(0.f, cooldown - dt);
     activeFrame = false;
     sprinting = false;
+    if (!sprintHeld)
+    {
+        sprintExhausted = false;
+    }
     if (!allowed)
     {
         Cancel();
+        Recover(dt);
         return {};
     }
     if (pending)
     {
         pending = false;
-        if (cooldown <= 0 && std::isfinite(input.x) && std::isfinite(input.y) && std::isfinite(facingYaw))
+        if (stamina >= DodgeCost && std::isfinite(input.x) && std::isfinite(input.y) &&
+            std::isfinite(facingYaw))
         {
             const float length = std::hypot(input.x, input.y);
             direction = length > .001f ? models::Point{input.x / length, input.y / length, 0}
                                        : models::Point{std::cos(facingYaw), std::sin(facingYaw), 0};
             remaining = DodgeSeconds;
-            cooldown = DodgeSeconds + RecoverySeconds - dt;
+            stamina -= DodgeCost;
+            regenDelay = RegenDelaySeconds;
             profiling::Count(profiling::Counter::DodgeStarted);
         }
     }
@@ -55,8 +60,27 @@ models::Point PlayerMobility::Update(float dt, models::Point input, float facing
         activeFrame = true;
         return {direction.x * DodgeSpeed * time, direction.y * DodgeSpeed * time, 0};
     }
-    sprinting = sprintHeld && !aiming && !weaponBusy && std::hypot(input.x, input.y) > .001f;
+    if (sprintHeld && !sprintExhausted && !aiming && !weaponBusy && std::hypot(input.x, input.y) > .001f)
+    {
+        const float cost = SprintCostPerSecond * dt;
+        if (stamina >= cost)
+        {
+            stamina -= cost;
+            regenDelay = RegenDelaySeconds;
+            sprinting = true;
+            sprintExhausted = stamina == 0;
+            return {};
+        }
+        sprintExhausted = true;
+    }
+    Recover(dt);
     return {};
+}
+void PlayerMobility::Recover(float dt)
+{
+    const float seconds = (std::max)(0.f, dt - regenDelay);
+    regenDelay = (std::max)(0.f, regenDelay - dt);
+    stamina = (std::min)(MaxStamina, stamina + seconds * RegenPerSecond);
 }
 void PlayerMobility::Cancel()
 {
@@ -64,10 +88,12 @@ void PlayerMobility::Cancel()
     remaining = 0;
     direction = {};
 }
-void PlayerMobility::RestoreCooldown(float seconds)
+void PlayerMobility::RestoreStamina(float amount, float delay)
 {
     Cancel();
-    cooldown = std::isfinite(seconds) ? std::clamp(seconds, 0.f, DodgeSeconds + RecoverySeconds) : 0;
+    sprintExhausted = false;
+    stamina = std::isfinite(amount) ? std::clamp(amount, 0.f, MaxStamina) : MaxStamina;
+    regenDelay = std::isfinite(delay) ? std::clamp(delay, 0.f, RegenDelaySeconds) : 0;
 }
 void PlayerMobility::RotateDirection(float x, float y)
 {
@@ -94,10 +120,6 @@ bool PlayerMobility::Contact(float requestedDistance, float actualDistance)
 bool PlayerMobility::Sprinting() const
 {
     return sprinting;
-}
-float PlayerMobility::Cooldown() const
-{
-    return cooldown;
 }
 models::Point PlayerMobility::Direction() const
 {

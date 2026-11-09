@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "ModelLibrary.h"
 #include <array>
 #include <string>
@@ -50,6 +50,7 @@ struct AnimationRig
     std::vector<SolePoint> soles;
     int idle = -1, walk = -1, run = -1, aim = -1, fire = -1, melee = -1, muzzle = -1;
     int carryIdle = -1, carryWalk = -1, carryRun = -1, reload = -1;
+    std::array<int, 16> dodgeClips = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 };
 struct AnimationWeights
 {
@@ -72,6 +73,7 @@ struct ResourceClip;
 class LayeredAnimation
 {
   public:
+    static void BindDodgeClip(AnimationRig &rig, const std::string &name, int index);
     static void Prepare(ResourceClip &clip, const AnimationRig &rig);
     // Prepare only graph-referenced clips; keep every authored matrix clip available.
     static void PrepareGraph(std::vector<ResourceClip> &clips, const AnimationRig &rig);
@@ -85,6 +87,8 @@ class CharacterAnimation
   public:
     void Update(float deltaSeconds, Point worldVelocity, float facingYaw, bool aiming, bool riding);
     void Apply(CharacterPose &pose) const;
+    void StartDodge(Point direction, float facingYaw);
+    void InterruptDodge();
     void Fire();
     float Phase() const
     {
@@ -96,7 +100,13 @@ class CharacterAnimation
     }
 
   private:
+    float DodgeWeight() const;
     Point velocity = {};
     float phase = 0, aimWeight = 0, left = 0, forward = 0, fireSeconds = 0;
+    int dodgeSample = -1;
+    float dodgeTime = 0, dodgeFade = -1, dodgeInterruptWeight = 0;
+    float dodgeEntryLeft = 0, dodgeEntryForward = 0, dodgeEntryPhase = 0;
+    int dodgeEntrySample = -1;
+    float dodgeEntryTime = 0, dodgeEntryWeight = 0;
 };
 } // namespace models

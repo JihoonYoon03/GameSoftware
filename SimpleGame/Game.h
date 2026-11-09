@@ -557,6 +557,7 @@ struct GameState
     std::vector<Building> buildings;
     std::vector<Resident> residents;
     void StopMotion();
+    void InterruptDodge();
 };
 // ============================================================================
 // CityLayout — road footprints and reserved quest/parking access
@@ -666,6 +667,7 @@ class Game
     // Deterministic simulation step, also used by the window timer.
     void Update(float deltaSeconds);
     bool IsAiming() const;
+    bool HasWalkingControls() const;
     models::CharacterPose PlayerPose(float recoil = 0) const;
     void Tick(int timer);
     unsigned int NextFrameDelay(double startedMilliseconds, double finishedMilliseconds);

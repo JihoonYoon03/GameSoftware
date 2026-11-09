@@ -1,0 +1,217 @@
+{
+  "clips": {
+    "Dodge_Forward_L": {
+      "min_skin_z_m": 0.0009999813309266264,
+      "contacts": {
+        "push": {
+          "foot": "L",
+          "max_anchor_drift_m": 1.8189185285171422e-07
+        },
+        "land": {
+          "foot": "R",
+          "max_anchor_drift_m": 2.502330485544602e-07
+        }
+      }
+    },
+    "Dodge_Forward_R": {
+      "min_skin_z_m": 0.0009999813309266264,
+      "contacts": {
+        "push": {
+          "foot": "R",
+          "max_anchor_drift_m": 1.9213254687529247e-07
+        },
+        "land": {
+          "foot": "L",
+          "max_anchor_drift_m": 2.407356265396403e-07
+        }
+      }
+    },
+    "Dodge_ForwardLeft_L": {
+      "min_skin_z_m": 0.000999979913650441,
+      "contacts": {
+        "push": {
+          "foot": "L",
+          "max_anchor_drift_m": 2.03224743857769e-07
+        },
+        "land": {
+          "foot": "R",
+          "max_anchor_drift_m": 4.777675730550706e-07
+        }
+      }
+    },
+    "Dodge_ForwardLeft_R": {
+      "min_skin_z_m": 0.0009999795318067584,
+      "contacts": {
+        "push": {
+          "foot": "R",
+          "max_anchor_drift_m": 2.2364155977671794e-07
+        },
+        "land": {
+          "foot": "L",
+          "max_anchor_drift_m": 4.777675730550706e-07
+        }
+      }
+    },
+    "Dodge_Left_L": {
+      "min_skin_z_m": 0.0009999959789629834,
+      "contacts": {
+        "push": {
+          "foot": "L",
+          "max_anchor_drift_m": 1.1171163458362153e-07
+        },
+        "land": {
+          "foot": "R",
+          "max_anchor_drift_m": 8.862823392131323e-08
+        }
+      }
+    },
+    "Dodge_Left_R": {
+      "min_skin_z_m": 0.0009999796621919124,
+      "contacts": {
+        "push": {
+          "foot": "R",
+          "max_anchor_drift_m": 1.8134333088328537e-07
+        },
+        "land": {
+          "foot": "L",
+          "max_anchor_drift_m": 7.302901528343577e-08
+        }
+      }
+    },
+    "Dodge_BackLeft_L": {
+      "min_skin_z_m": 0.0009999842023886971,
+      "contacts": {
+        "push": {
+          "foot": "L",
+          "max_anchor_drift_m": 2.568019619526578e-07
+        },
+        "land": {
+          "foot": "R",
+          "max_anchor_drift_m": 4.770699320310986e-07
+        }
+      }
+    },
+    "Dodge_BackLeft_R": {
+      "min_skin_z_m": 0.0009999789078225221,
+      "contacts": {
+        "push": {
+          "foot": "R",
+          "max_anchor_drift_m": 1.0667607980427409e-07
+        },
+        "land": {
+          "foot": "L",
+          "max_anchor_drift_m": 3.375038997204937e-07
+        }
+      }
+    },
+    "Dodge_Back_L": {
+      "min_skin_z_m": 0.0009999973573212209,
+      "contacts": {
+        "push": {
+          "foot": "L",
+          "max_anchor_drift_m": 9.996002811937585e-08
+        },
+        "land": {
+          "foot": "R",
+          "max_anchor_drift_m": 2.443972150513042e-07
+        }
+      }
+    },
+    "Dodge_Back_R": {
+      "min_skin_z_m": 0.0009999803769812914,
+      "contacts": {
+        "push": {
+          "foot": "R",
+          "max_anchor_drift_m": 2.421152116249788e-07
+        },
+        "land": {
+          "foot": "L",
+          "max_anchor_drift_m": 2.4027400458748785e-07
+        }
+      }
+    },
+    "Dodge_BackRight_L": {
+      "min_skin_z_m": 0.000999980067317793,
+      "contacts": {
+        "push": {
+          "foot": "L",
+          "max_anchor_drift_m": 2.5133979012717306e-07
+        },
+        "land": {
+          "foot": "R",
+          "max_anchor_drift_m": 4.470348358154297e-08
+        }
+      }
+    },
+    "Dodge_BackRight_R": {
+      "min_skin_z_m": 0.0009999988427799736,
+      "contacts": {
+        "push": {
+          "foot": "R",
+          "max_anchor_drift_m": 1.7071424778386353e-07
+        },
+        "land": {
+          "foot": "L",
+          "max_anchor_drift_m": 4.924151790695877e-07
+        }
+      }
+    },
+    "Dodge_Right_L": {
+      "min_skin_z_m": 0.0010000238860467326,
+      "contacts": {
+        "push": {
+          "foot": "L",
+          "max_anchor_drift_m": 1.5248526402708844e-07
+        },
+        "land": {
+          "foot": "R",
+          "max_anchor_drift_m": 1.4564493124673098e-07
+        }
+      }
+    },
+    "Dodge_Right_R": {
+      "min_skin_z_m": 0.0009999768466134279,
+      "contacts": {
+        "push": {
+          "foot": "R",
+          "max_anchor_drift_m": 1.9487112940019855e-07
+        },
+        "land": {
+          "foot": "L",
+          "max_anchor_drift_m": 1.781666615768986e-07
+        }
+      }
+    },
+    "Dodge_ForwardRight_L": {
+      "min_skin_z_m": 0.001000007937145765,
+      "contacts": {
+        "push": {
+          "foot": "L",
+          "max_anchor_drift_m": 2.119163074095233e-07
+        },
+        "land": {
+          "foot": "R",
+          "max_anchor_drift_m": 4.770699320310986e-07
+        }
+      }
+    },
+    "Dodge_ForwardRight_R": {
+      "min_skin_z_m": 0.000999993035984962,
+      "contacts": {
+        "push": {
+          "foot": "R",
+          "max_anchor_drift_m": 1.812804499357408e-07
+        },
+        "land": {
+          "foot": "L",
+          "max_anchor_drift_m": 1.4901161193847656e-08
+        }
+      }
+    }
+  },
+  "old_actions_preserved": 377,
+  "bones": 23,
+  "geometry_preserved": true,
+  "entry_scene": "16_Transit_Connected_Example",
+  "master_sha256": "b1252528404523dfaaae99048b63d71d710292782ec04be6cba02593c890bd6d"
+}

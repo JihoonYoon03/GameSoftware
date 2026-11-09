@@ -920,8 +920,18 @@ void PlayerMotion::Stop()
 void GameState::StopMotion()
 {
     playerMotion.Stop();
+    playerAnimation.InterruptDodge();
     bikeVelocity = {};
     bikeYawSpeed = bikeSpeed = movementAmount = movementSpeed = 0;
+}
+void GameState::InterruptDodge()
+{
+    if (playerMotion.mobility.Dodging())
+    {
+        playerMotion.mobility.Cancel();
+        playerMotion.velocity = {};
+    }
+    playerAnimation.InterruptDodge();
 }
 bool CityLayout::IsRoadTile(int x, int y)
 {
@@ -991,6 +1001,15 @@ unsigned char Game::NormalizeKey(unsigned char key)
     }
     return key;
 }
+bool Game::HasWalkingControls() const
+{
+    if (state.surfaceExploration)
+    {
+        return surface && surface->Ready();
+    }
+    const auto *level = game::GameLevels::Active();
+    return !level || level->UsesWalkingControls();
+}
 void Game::UpdatePlayerMovement(float deltaSeconds)
 {
     profiling::Scope profileTimer(profiling::Timer::Movement);
@@ -1032,13 +1051,27 @@ void Game::UpdatePlayerMovement(float deltaSeconds)
     // Invert the 2:1 isometric projection so WASD follows screen directions.
     Vector2 target = {screenX * .5f + screenY, screenY - screenX * .5f};
     const auto combatContext = combat::PlayerCombat::Current();
-    const bool mobilityAllowed = combat::PlayerCombat::EnvironmentBlock(combatContext, combatContext.area) ==
-                                 combat::CombatBlock::Ready;
-    const bool wasDodging = state.playerMotion.mobility.Dodging();
-    const auto dash = state.playerMotion.mobility.Update(
-        deltaSeconds, {target.x, target.y, 0}, state.facingYaw, state.pressedKeys[platform::SprintKey],
-        IsAiming(), mobilityAllowed,
+    const bool mobilityAllowed =
+        combat::PlayerCombat::ControlBlock(combatContext) == combat::CombatBlock::Ready;
+    auto &mobility = state.playerMotion.mobility;
+    const bool wasDodging = mobility.Dodging();
+    const bool wasMoving = mobility.Moving();
+    const bool aiming = IsAiming();
+    float dodgeFacing = state.facingYaw;
+    if (wasDodging && !wasMoving && aiming)
+    {
+        const auto aim = game::MineLevel::GetAimDirection(game::GameLevels::AimAngle());
+        dodgeFacing = std::atan2(aim.y, aim.x);
+    }
+    const bool sprintHeld =
+        state.pressedKeys[platform::SprintKey] && combatContext.area != combat::CombatArea::Inactive;
+    const auto dash = mobility.Update(
+        deltaSeconds, {target.x, target.y, 0}, dodgeFacing, sprintHeld, aiming, mobilityAllowed,
         combatContext.reloading || combatContext.fireCooldown > 0 || combatContext.meleeRemaining > 0);
+    if (!wasMoving && mobility.Moving())
+    {
+        state.playerAnimation.StartDodge(mobility.Direction(), dodgeFacing);
+    }
     if (wasDodging && !state.playerMotion.mobility.Dodging())
     {
         state.playerMotion.velocity = {};
@@ -1058,7 +1091,7 @@ void Game::UpdatePlayerMovement(float deltaSeconds)
     }
     else
     {
-        state.playerMotion.Update(target, state.facingYaw, IsAiming(), deltaSeconds);
+        state.playerMotion.Update(target, state.facingYaw, aiming, deltaSeconds);
     }
     Vector2 requested = {state.playerMotion.velocity.x * deltaSeconds,
                          state.playerMotion.velocity.y * deltaSeconds};
@@ -1074,6 +1107,7 @@ void Game::UpdatePlayerMovement(float deltaSeconds)
                                             Distance(previous, state.playerPosition)))
     {
         state.playerMotion.velocity = {};
+        state.playerAnimation.InterruptDodge();
     }
     state.movementAmount = Game::Clamp(state.movementSpeed / kMovementSpeed, 0, 1);
 }
@@ -1403,6 +1437,16 @@ void Game::KeyDown(unsigned char key, int, int)
     {
         return;
     }
+    if (key == ' ' && !state.isBikeMounted)
+    {
+        const auto context = combat::PlayerCombat::Current();
+        if (!repeated && HasWalkingControls() &&
+            combat::PlayerCombat::ControlBlock(context) == combat::CombatBlock::Ready)
+        {
+            state.playerMotion.mobility.RequestDodge();
+        }
+        return;
+    }
     if (state.surfaceExploration && !IsSurfaceMine() && !Dialogue::Active() && !state.journalVisible &&
         !state.dialogueHistoryVisible && key != 'j' && key != 'h')
     {
@@ -1536,15 +1580,6 @@ void Game::KeyDown(unsigned char key, int, int)
         if (!repeated)
         {
             WeaponWheel::Open();
-        }
-        return;
-    }
-    if (key == ' ' && !repeated && !state.isBikeMounted)
-    {
-        const auto context = combat::PlayerCombat::Current();
-        if (combat::PlayerCombat::EnvironmentBlock(context, context.area) == combat::CombatBlock::Ready)
-        {
-            state.playerMotion.mobility.RequestDodge();
         }
         return;
     }
@@ -2528,6 +2563,7 @@ void Game::UpdateSurface(float dt)
                                                     std::hypot(actual.x, actual.y)))
             {
                 state.playerMotion.velocity = {};
+                state.playerAnimation.InterruptDodge();
             }
         }
         state.movementSpeed = dt > 0 ? Distance(before, state.playerPosition) / dt : 0;

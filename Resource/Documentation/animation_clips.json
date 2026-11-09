@@ -3134,6 +3134,1334 @@
           "visual_only": true
         }
       ]
+    },
+    {
+      "clip": "Dodge_Forward_L",
+      "action": "HUMAN_7H__Dodge_Forward_L",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "revision": "dodge_step_v1",
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "full_body_locomotion",
+      "armed_lower_body_mask": "human_lower_body",
+      "direction": "Forward",
+      "direction_blender_xy": [
+        0.0,
+        -1.0
+      ],
+      "entry_contact": "L",
+      "landing_contact": "R",
+      "entry_lower_body_reference": "Run",
+      "exit_lower_body_reference": "Run",
+      "entry_phase": 0.0,
+      "exit_phase": 0.5,
+      "phase_sync_group": "human_locomotion",
+      "blend_in_seconds": 0.05,
+      "blend_out_seconds": 0.1,
+      "support_intervals": [
+        {
+          "foot": "L",
+          "seconds": [
+            0,
+            0.03333333333333333
+          ]
+        },
+        {
+          "foot": "R",
+          "seconds": [
+            0.18333333333333332,
+            0.21666666666666667
+          ]
+        }
+      ],
+      "events": [
+        {
+          "event": "dodge_push_plant",
+          "seconds": 0,
+          "phase": 0.0,
+          "visual_only": true,
+          "foot": "L"
+        },
+        {
+          "event": "dodge_push_off",
+          "seconds": 0.03333333333333333,
+          "phase": 0.08333333333333333,
+          "visual_only": true,
+          "foot": "L"
+        },
+        {
+          "event": "dodge_land_plant",
+          "seconds": 0.18333333333333332,
+          "phase": 0.45833333333333326,
+          "visual_only": true,
+          "foot": "R"
+        },
+        {
+          "event": "dodge_move_window_end",
+          "seconds": 0.22,
+          "phase": 0.5499999999999999,
+          "visual_only": true
+        },
+        {
+          "event": "locomotion_handoff",
+          "seconds": 0.4,
+          "phase": 1.0,
+          "visual_only": true,
+          "target_clip": "Run",
+          "target_normalized_phase": 0.5
+        }
+      ]
+    },
+    {
+      "clip": "Dodge_Forward_R",
+      "action": "HUMAN_7H__Dodge_Forward_R",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "revision": "dodge_step_v1",
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "full_body_locomotion",
+      "armed_lower_body_mask": "human_lower_body",
+      "direction": "Forward",
+      "direction_blender_xy": [
+        0.0,
+        -1.0
+      ],
+      "entry_contact": "R",
+      "landing_contact": "L",
+      "entry_lower_body_reference": "Run",
+      "exit_lower_body_reference": "Run",
+      "entry_phase": 0.5,
+      "exit_phase": 0.0,
+      "phase_sync_group": "human_locomotion",
+      "blend_in_seconds": 0.05,
+      "blend_out_seconds": 0.1,
+      "support_intervals": [
+        {
+          "foot": "R",
+          "seconds": [
+            0,
+            0.03333333333333333
+          ]
+        },
+        {
+          "foot": "L",
+          "seconds": [
+            0.18333333333333332,
+            0.21666666666666667
+          ]
+        }
+      ],
+      "events": [
+        {
+          "event": "dodge_push_plant",
+          "seconds": 0,
+          "phase": 0.0,
+          "visual_only": true,
+          "foot": "R"
+        },
+        {
+          "event": "dodge_push_off",
+          "seconds": 0.03333333333333333,
+          "phase": 0.08333333333333333,
+          "visual_only": true,
+          "foot": "R"
+        },
+        {
+          "event": "dodge_land_plant",
+          "seconds": 0.18333333333333332,
+          "phase": 0.45833333333333326,
+          "visual_only": true,
+          "foot": "L"
+        },
+        {
+          "event": "dodge_move_window_end",
+          "seconds": 0.22,
+          "phase": 0.5499999999999999,
+          "visual_only": true
+        },
+        {
+          "event": "locomotion_handoff",
+          "seconds": 0.4,
+          "phase": 1.0,
+          "visual_only": true,
+          "target_clip": "Run",
+          "target_normalized_phase": 0.0
+        }
+      ]
+    },
+    {
+      "clip": "Dodge_ForwardLeft_L",
+      "action": "HUMAN_7H__Dodge_ForwardLeft_L",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "revision": "dodge_step_v1",
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "full_body_locomotion",
+      "armed_lower_body_mask": "human_lower_body",
+      "direction": "ForwardLeft",
+      "direction_blender_xy": [
+        0.7071067690849304,
+        -0.7071067690849304
+      ],
+      "entry_contact": "L",
+      "landing_contact": "R",
+      "entry_lower_body_reference": "Aim_Run_ForwardLeft",
+      "exit_lower_body_reference": "Aim_Run_ForwardLeft",
+      "entry_phase": 0.0,
+      "exit_phase": 0.5,
+      "phase_sync_group": "human_locomotion",
+      "blend_in_seconds": 0.05,
+      "blend_out_seconds": 0.1,
+      "support_intervals": [
+        {
+          "foot": "L",
+          "seconds": [
+            0,
+            0.03333333333333333
+          ]
+        },
+        {
+          "foot": "R",
+          "seconds": [
+            0.18333333333333332,
+            0.21666666666666667
+          ]
+        }
+      ],
+      "events": [
+        {
+          "event": "dodge_push_plant",
+          "seconds": 0,
+          "phase": 0.0,
+          "visual_only": true,
+          "foot": "L"
+        },
+        {
+          "event": "dodge_push_off",
+          "seconds": 0.03333333333333333,
+          "phase": 0.08333333333333333,
+          "visual_only": true,
+          "foot": "L"
+        },
+        {
+          "event": "dodge_land_plant",
+          "seconds": 0.18333333333333332,
+          "phase": 0.45833333333333326,
+          "visual_only": true,
+          "foot": "R"
+        },
+        {
+          "event": "dodge_move_window_end",
+          "seconds": 0.22,
+          "phase": 0.5499999999999999,
+          "visual_only": true
+        },
+        {
+          "event": "locomotion_handoff",
+          "seconds": 0.4,
+          "phase": 1.0,
+          "visual_only": true,
+          "target_clip": "Aim_Run_ForwardLeft",
+          "target_normalized_phase": 0.5
+        }
+      ]
+    },
+    {
+      "clip": "Dodge_ForwardLeft_R",
+      "action": "HUMAN_7H__Dodge_ForwardLeft_R",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "revision": "dodge_step_v1",
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "full_body_locomotion",
+      "armed_lower_body_mask": "human_lower_body",
+      "direction": "ForwardLeft",
+      "direction_blender_xy": [
+        0.7071067690849304,
+        -0.7071067690849304
+      ],
+      "entry_contact": "R",
+      "landing_contact": "L",
+      "entry_lower_body_reference": "Aim_Run_ForwardLeft",
+      "exit_lower_body_reference": "Aim_Run_ForwardLeft",
+      "entry_phase": 0.5,
+      "exit_phase": 0.0,
+      "phase_sync_group": "human_locomotion",
+      "blend_in_seconds": 0.05,
+      "blend_out_seconds": 0.1,
+      "support_intervals": [
+        {
+          "foot": "R",
+          "seconds": [
+            0,
+            0.03333333333333333
+          ]
+        },
+        {
+          "foot": "L",
+          "seconds": [
+            0.18333333333333332,
+            0.21666666666666667
+          ]
+        }
+      ],
+      "events": [
+        {
+          "event": "dodge_push_plant",
+          "seconds": 0,
+          "phase": 0.0,
+          "visual_only": true,
+          "foot": "R"
+        },
+        {
+          "event": "dodge_push_off",
+          "seconds": 0.03333333333333333,
+          "phase": 0.08333333333333333,
+          "visual_only": true,
+          "foot": "R"
+        },
+        {
+          "event": "dodge_land_plant",
+          "seconds": 0.18333333333333332,
+          "phase": 0.45833333333333326,
+          "visual_only": true,
+          "foot": "L"
+        },
+        {
+          "event": "dodge_move_window_end",
+          "seconds": 0.22,
+          "phase": 0.5499999999999999,
+          "visual_only": true
+        },
+        {
+          "event": "locomotion_handoff",
+          "seconds": 0.4,
+          "phase": 1.0,
+          "visual_only": true,
+          "target_clip": "Aim_Run_ForwardLeft",
+          "target_normalized_phase": 0.0
+        }
+      ]
+    },
+    {
+      "clip": "Dodge_Left_L",
+      "action": "HUMAN_7H__Dodge_Left_L",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "revision": "dodge_step_v1",
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "full_body_locomotion",
+      "armed_lower_body_mask": "human_lower_body",
+      "direction": "Left",
+      "direction_blender_xy": [
+        1.0,
+        0.0
+      ],
+      "entry_contact": "L",
+      "landing_contact": "R",
+      "entry_lower_body_reference": "Aim_Run_Left",
+      "exit_lower_body_reference": "Aim_Run_Left",
+      "entry_phase": 0.0,
+      "exit_phase": 0.5,
+      "phase_sync_group": "human_locomotion",
+      "blend_in_seconds": 0.05,
+      "blend_out_seconds": 0.1,
+      "support_intervals": [
+        {
+          "foot": "L",
+          "seconds": [
+            0,
+            0.03333333333333333
+          ]
+        },
+        {
+          "foot": "R",
+          "seconds": [
+            0.18333333333333332,
+            0.21666666666666667
+          ]
+        }
+      ],
+      "events": [
+        {
+          "event": "dodge_push_plant",
+          "seconds": 0,
+          "phase": 0.0,
+          "visual_only": true,
+          "foot": "L"
+        },
+        {
+          "event": "dodge_push_off",
+          "seconds": 0.03333333333333333,
+          "phase": 0.08333333333333333,
+          "visual_only": true,
+          "foot": "L"
+        },
+        {
+          "event": "dodge_land_plant",
+          "seconds": 0.18333333333333332,
+          "phase": 0.45833333333333326,
+          "visual_only": true,
+          "foot": "R"
+        },
+        {
+          "event": "dodge_move_window_end",
+          "seconds": 0.22,
+          "phase": 0.5499999999999999,
+          "visual_only": true
+        },
+        {
+          "event": "locomotion_handoff",
+          "seconds": 0.4,
+          "phase": 1.0,
+          "visual_only": true,
+          "target_clip": "Aim_Run_Left",
+          "target_normalized_phase": 0.5
+        }
+      ]
+    },
+    {
+      "clip": "Dodge_Left_R",
+      "action": "HUMAN_7H__Dodge_Left_R",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "revision": "dodge_step_v1",
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "full_body_locomotion",
+      "armed_lower_body_mask": "human_lower_body",
+      "direction": "Left",
+      "direction_blender_xy": [
+        1.0,
+        0.0
+      ],
+      "entry_contact": "R",
+      "landing_contact": "L",
+      "entry_lower_body_reference": "Aim_Run_Left",
+      "exit_lower_body_reference": "Aim_Run_Left",
+      "entry_phase": 0.5,
+      "exit_phase": 0.0,
+      "phase_sync_group": "human_locomotion",
+      "blend_in_seconds": 0.05,
+      "blend_out_seconds": 0.1,
+      "support_intervals": [
+        {
+          "foot": "R",
+          "seconds": [
+            0,
+            0.03333333333333333
+          ]
+        },
+        {
+          "foot": "L",
+          "seconds": [
+            0.18333333333333332,
+            0.21666666666666667
+          ]
+        }
+      ],
+      "events": [
+        {
+          "event": "dodge_push_plant",
+          "seconds": 0,
+          "phase": 0.0,
+          "visual_only": true,
+          "foot": "R"
+        },
+        {
+          "event": "dodge_push_off",
+          "seconds": 0.03333333333333333,
+          "phase": 0.08333333333333333,
+          "visual_only": true,
+          "foot": "R"
+        },
+        {
+          "event": "dodge_land_plant",
+          "seconds": 0.18333333333333332,
+          "phase": 0.45833333333333326,
+          "visual_only": true,
+          "foot": "L"
+        },
+        {
+          "event": "dodge_move_window_end",
+          "seconds": 0.22,
+          "phase": 0.5499999999999999,
+          "visual_only": true
+        },
+        {
+          "event": "locomotion_handoff",
+          "seconds": 0.4,
+          "phase": 1.0,
+          "visual_only": true,
+          "target_clip": "Aim_Run_Left",
+          "target_normalized_phase": 0.0
+        }
+      ]
+    },
+    {
+      "clip": "Dodge_BackLeft_L",
+      "action": "HUMAN_7H__Dodge_BackLeft_L",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "revision": "dodge_step_v1",
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "full_body_locomotion",
+      "armed_lower_body_mask": "human_lower_body",
+      "direction": "BackLeft",
+      "direction_blender_xy": [
+        0.7071067690849304,
+        0.7071067690849304
+      ],
+      "entry_contact": "L",
+      "landing_contact": "R",
+      "entry_lower_body_reference": "Aim_Run_BackLeft",
+      "exit_lower_body_reference": "Aim_Run_BackLeft",
+      "entry_phase": 0.0,
+      "exit_phase": 0.5,
+      "phase_sync_group": "human_locomotion",
+      "blend_in_seconds": 0.05,
+      "blend_out_seconds": 0.1,
+      "support_intervals": [
+        {
+          "foot": "L",
+          "seconds": [
+            0,
+            0.03333333333333333
+          ]
+        },
+        {
+          "foot": "R",
+          "seconds": [
+            0.18333333333333332,
+            0.21666666666666667
+          ]
+        }
+      ],
+      "events": [
+        {
+          "event": "dodge_push_plant",
+          "seconds": 0,
+          "phase": 0.0,
+          "visual_only": true,
+          "foot": "L"
+        },
+        {
+          "event": "dodge_push_off",
+          "seconds": 0.03333333333333333,
+          "phase": 0.08333333333333333,
+          "visual_only": true,
+          "foot": "L"
+        },
+        {
+          "event": "dodge_land_plant",
+          "seconds": 0.18333333333333332,
+          "phase": 0.45833333333333326,
+          "visual_only": true,
+          "foot": "R"
+        },
+        {
+          "event": "dodge_move_window_end",
+          "seconds": 0.22,
+          "phase": 0.5499999999999999,
+          "visual_only": true
+        },
+        {
+          "event": "locomotion_handoff",
+          "seconds": 0.4,
+          "phase": 1.0,
+          "visual_only": true,
+          "target_clip": "Aim_Run_BackLeft",
+          "target_normalized_phase": 0.5
+        }
+      ]
+    },
+    {
+      "clip": "Dodge_BackLeft_R",
+      "action": "HUMAN_7H__Dodge_BackLeft_R",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "revision": "dodge_step_v1",
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "full_body_locomotion",
+      "armed_lower_body_mask": "human_lower_body",
+      "direction": "BackLeft",
+      "direction_blender_xy": [
+        0.7071067690849304,
+        0.7071067690849304
+      ],
+      "entry_contact": "R",
+      "landing_contact": "L",
+      "entry_lower_body_reference": "Aim_Run_BackLeft",
+      "exit_lower_body_reference": "Aim_Run_BackLeft",
+      "entry_phase": 0.5,
+      "exit_phase": 0.0,
+      "phase_sync_group": "human_locomotion",
+      "blend_in_seconds": 0.05,
+      "blend_out_seconds": 0.1,
+      "support_intervals": [
+        {
+          "foot": "R",
+          "seconds": [
+            0,
+            0.03333333333333333
+          ]
+        },
+        {
+          "foot": "L",
+          "seconds": [
+            0.18333333333333332,
+            0.21666666666666667
+          ]
+        }
+      ],
+      "events": [
+        {
+          "event": "dodge_push_plant",
+          "seconds": 0,
+          "phase": 0.0,
+          "visual_only": true,
+          "foot": "R"
+        },
+        {
+          "event": "dodge_push_off",
+          "seconds": 0.03333333333333333,
+          "phase": 0.08333333333333333,
+          "visual_only": true,
+          "foot": "R"
+        },
+        {
+          "event": "dodge_land_plant",
+          "seconds": 0.18333333333333332,
+          "phase": 0.45833333333333326,
+          "visual_only": true,
+          "foot": "L"
+        },
+        {
+          "event": "dodge_move_window_end",
+          "seconds": 0.22,
+          "phase": 0.5499999999999999,
+          "visual_only": true
+        },
+        {
+          "event": "locomotion_handoff",
+          "seconds": 0.4,
+          "phase": 1.0,
+          "visual_only": true,
+          "target_clip": "Aim_Run_BackLeft",
+          "target_normalized_phase": 0.0
+        }
+      ]
+    },
+    {
+      "clip": "Dodge_Back_L",
+      "action": "HUMAN_7H__Dodge_Back_L",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "revision": "dodge_step_v1",
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "full_body_locomotion",
+      "armed_lower_body_mask": "human_lower_body",
+      "direction": "Back",
+      "direction_blender_xy": [
+        0.0,
+        1.0
+      ],
+      "entry_contact": "L",
+      "landing_contact": "R",
+      "entry_lower_body_reference": "Aim_Run_Back",
+      "exit_lower_body_reference": "Aim_Run_Back",
+      "entry_phase": 0.0,
+      "exit_phase": 0.5,
+      "phase_sync_group": "human_locomotion",
+      "blend_in_seconds": 0.05,
+      "blend_out_seconds": 0.1,
+      "support_intervals": [
+        {
+          "foot": "L",
+          "seconds": [
+            0,
+            0.03333333333333333
+          ]
+        },
+        {
+          "foot": "R",
+          "seconds": [
+            0.18333333333333332,
+            0.21666666666666667
+          ]
+        }
+      ],
+      "events": [
+        {
+          "event": "dodge_push_plant",
+          "seconds": 0,
+          "phase": 0.0,
+          "visual_only": true,
+          "foot": "L"
+        },
+        {
+          "event": "dodge_push_off",
+          "seconds": 0.03333333333333333,
+          "phase": 0.08333333333333333,
+          "visual_only": true,
+          "foot": "L"
+        },
+        {
+          "event": "dodge_land_plant",
+          "seconds": 0.18333333333333332,
+          "phase": 0.45833333333333326,
+          "visual_only": true,
+          "foot": "R"
+        },
+        {
+          "event": "dodge_move_window_end",
+          "seconds": 0.22,
+          "phase": 0.5499999999999999,
+          "visual_only": true
+        },
+        {
+          "event": "locomotion_handoff",
+          "seconds": 0.4,
+          "phase": 1.0,
+          "visual_only": true,
+          "target_clip": "Aim_Run_Back",
+          "target_normalized_phase": 0.5
+        }
+      ]
+    },
+    {
+      "clip": "Dodge_Back_R",
+      "action": "HUMAN_7H__Dodge_Back_R",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "revision": "dodge_step_v1",
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "full_body_locomotion",
+      "armed_lower_body_mask": "human_lower_body",
+      "direction": "Back",
+      "direction_blender_xy": [
+        0.0,
+        1.0
+      ],
+      "entry_contact": "R",
+      "landing_contact": "L",
+      "entry_lower_body_reference": "Aim_Run_Back",
+      "exit_lower_body_reference": "Aim_Run_Back",
+      "entry_phase": 0.5,
+      "exit_phase": 0.0,
+      "phase_sync_group": "human_locomotion",
+      "blend_in_seconds": 0.05,
+      "blend_out_seconds": 0.1,
+      "support_intervals": [
+        {
+          "foot": "R",
+          "seconds": [
+            0,
+            0.03333333333333333
+          ]
+        },
+        {
+          "foot": "L",
+          "seconds": [
+            0.18333333333333332,
+            0.21666666666666667
+          ]
+        }
+      ],
+      "events": [
+        {
+          "event": "dodge_push_plant",
+          "seconds": 0,
+          "phase": 0.0,
+          "visual_only": true,
+          "foot": "R"
+        },
+        {
+          "event": "dodge_push_off",
+          "seconds": 0.03333333333333333,
+          "phase": 0.08333333333333333,
+          "visual_only": true,
+          "foot": "R"
+        },
+        {
+          "event": "dodge_land_plant",
+          "seconds": 0.18333333333333332,
+          "phase": 0.45833333333333326,
+          "visual_only": true,
+          "foot": "L"
+        },
+        {
+          "event": "dodge_move_window_end",
+          "seconds": 0.22,
+          "phase": 0.5499999999999999,
+          "visual_only": true
+        },
+        {
+          "event": "locomotion_handoff",
+          "seconds": 0.4,
+          "phase": 1.0,
+          "visual_only": true,
+          "target_clip": "Aim_Run_Back",
+          "target_normalized_phase": 0.0
+        }
+      ]
+    },
+    {
+      "clip": "Dodge_BackRight_L",
+      "action": "HUMAN_7H__Dodge_BackRight_L",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "revision": "dodge_step_v1",
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "full_body_locomotion",
+      "armed_lower_body_mask": "human_lower_body",
+      "direction": "BackRight",
+      "direction_blender_xy": [
+        -0.7071067690849304,
+        0.7071067690849304
+      ],
+      "entry_contact": "L",
+      "landing_contact": "R",
+      "entry_lower_body_reference": "Aim_Run_BackRight",
+      "exit_lower_body_reference": "Aim_Run_BackRight",
+      "entry_phase": 0.0,
+      "exit_phase": 0.5,
+      "phase_sync_group": "human_locomotion",
+      "blend_in_seconds": 0.05,
+      "blend_out_seconds": 0.1,
+      "support_intervals": [
+        {
+          "foot": "L",
+          "seconds": [
+            0,
+            0.03333333333333333
+          ]
+        },
+        {
+          "foot": "R",
+          "seconds": [
+            0.18333333333333332,
+            0.21666666666666667
+          ]
+        }
+      ],
+      "events": [
+        {
+          "event": "dodge_push_plant",
+          "seconds": 0,
+          "phase": 0.0,
+          "visual_only": true,
+          "foot": "L"
+        },
+        {
+          "event": "dodge_push_off",
+          "seconds": 0.03333333333333333,
+          "phase": 0.08333333333333333,
+          "visual_only": true,
+          "foot": "L"
+        },
+        {
+          "event": "dodge_land_plant",
+          "seconds": 0.18333333333333332,
+          "phase": 0.45833333333333326,
+          "visual_only": true,
+          "foot": "R"
+        },
+        {
+          "event": "dodge_move_window_end",
+          "seconds": 0.22,
+          "phase": 0.5499999999999999,
+          "visual_only": true
+        },
+        {
+          "event": "locomotion_handoff",
+          "seconds": 0.4,
+          "phase": 1.0,
+          "visual_only": true,
+          "target_clip": "Aim_Run_BackRight",
+          "target_normalized_phase": 0.5
+        }
+      ]
+    },
+    {
+      "clip": "Dodge_BackRight_R",
+      "action": "HUMAN_7H__Dodge_BackRight_R",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "revision": "dodge_step_v1",
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "full_body_locomotion",
+      "armed_lower_body_mask": "human_lower_body",
+      "direction": "BackRight",
+      "direction_blender_xy": [
+        -0.7071067690849304,
+        0.7071067690849304
+      ],
+      "entry_contact": "R",
+      "landing_contact": "L",
+      "entry_lower_body_reference": "Aim_Run_BackRight",
+      "exit_lower_body_reference": "Aim_Run_BackRight",
+      "entry_phase": 0.5,
+      "exit_phase": 0.0,
+      "phase_sync_group": "human_locomotion",
+      "blend_in_seconds": 0.05,
+      "blend_out_seconds": 0.1,
+      "support_intervals": [
+        {
+          "foot": "R",
+          "seconds": [
+            0,
+            0.03333333333333333
+          ]
+        },
+        {
+          "foot": "L",
+          "seconds": [
+            0.18333333333333332,
+            0.21666666666666667
+          ]
+        }
+      ],
+      "events": [
+        {
+          "event": "dodge_push_plant",
+          "seconds": 0,
+          "phase": 0.0,
+          "visual_only": true,
+          "foot": "R"
+        },
+        {
+          "event": "dodge_push_off",
+          "seconds": 0.03333333333333333,
+          "phase": 0.08333333333333333,
+          "visual_only": true,
+          "foot": "R"
+        },
+        {
+          "event": "dodge_land_plant",
+          "seconds": 0.18333333333333332,
+          "phase": 0.45833333333333326,
+          "visual_only": true,
+          "foot": "L"
+        },
+        {
+          "event": "dodge_move_window_end",
+          "seconds": 0.22,
+          "phase": 0.5499999999999999,
+          "visual_only": true
+        },
+        {
+          "event": "locomotion_handoff",
+          "seconds": 0.4,
+          "phase": 1.0,
+          "visual_only": true,
+          "target_clip": "Aim_Run_BackRight",
+          "target_normalized_phase": 0.0
+        }
+      ]
+    },
+    {
+      "clip": "Dodge_Right_L",
+      "action": "HUMAN_7H__Dodge_Right_L",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "revision": "dodge_step_v1",
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "full_body_locomotion",
+      "armed_lower_body_mask": "human_lower_body",
+      "direction": "Right",
+      "direction_blender_xy": [
+        -1.0,
+        0.0
+      ],
+      "entry_contact": "L",
+      "landing_contact": "R",
+      "entry_lower_body_reference": "Aim_Run_Right",
+      "exit_lower_body_reference": "Aim_Run_Right",
+      "entry_phase": 0.0,
+      "exit_phase": 0.5,
+      "phase_sync_group": "human_locomotion",
+      "blend_in_seconds": 0.05,
+      "blend_out_seconds": 0.1,
+      "support_intervals": [
+        {
+          "foot": "L",
+          "seconds": [
+            0,
+            0.03333333333333333
+          ]
+        },
+        {
+          "foot": "R",
+          "seconds": [
+            0.18333333333333332,
+            0.21666666666666667
+          ]
+        }
+      ],
+      "events": [
+        {
+          "event": "dodge_push_plant",
+          "seconds": 0,
+          "phase": 0.0,
+          "visual_only": true,
+          "foot": "L"
+        },
+        {
+          "event": "dodge_push_off",
+          "seconds": 0.03333333333333333,
+          "phase": 0.08333333333333333,
+          "visual_only": true,
+          "foot": "L"
+        },
+        {
+          "event": "dodge_land_plant",
+          "seconds": 0.18333333333333332,
+          "phase": 0.45833333333333326,
+          "visual_only": true,
+          "foot": "R"
+        },
+        {
+          "event": "dodge_move_window_end",
+          "seconds": 0.22,
+          "phase": 0.5499999999999999,
+          "visual_only": true
+        },
+        {
+          "event": "locomotion_handoff",
+          "seconds": 0.4,
+          "phase": 1.0,
+          "visual_only": true,
+          "target_clip": "Aim_Run_Right",
+          "target_normalized_phase": 0.5
+        }
+      ]
+    },
+    {
+      "clip": "Dodge_Right_R",
+      "action": "HUMAN_7H__Dodge_Right_R",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "revision": "dodge_step_v1",
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "full_body_locomotion",
+      "armed_lower_body_mask": "human_lower_body",
+      "direction": "Right",
+      "direction_blender_xy": [
+        -1.0,
+        0.0
+      ],
+      "entry_contact": "R",
+      "landing_contact": "L",
+      "entry_lower_body_reference": "Aim_Run_Right",
+      "exit_lower_body_reference": "Aim_Run_Right",
+      "entry_phase": 0.5,
+      "exit_phase": 0.0,
+      "phase_sync_group": "human_locomotion",
+      "blend_in_seconds": 0.05,
+      "blend_out_seconds": 0.1,
+      "support_intervals": [
+        {
+          "foot": "R",
+          "seconds": [
+            0,
+            0.03333333333333333
+          ]
+        },
+        {
+          "foot": "L",
+          "seconds": [
+            0.18333333333333332,
+            0.21666666666666667
+          ]
+        }
+      ],
+      "events": [
+        {
+          "event": "dodge_push_plant",
+          "seconds": 0,
+          "phase": 0.0,
+          "visual_only": true,
+          "foot": "R"
+        },
+        {
+          "event": "dodge_push_off",
+          "seconds": 0.03333333333333333,
+          "phase": 0.08333333333333333,
+          "visual_only": true,
+          "foot": "R"
+        },
+        {
+          "event": "dodge_land_plant",
+          "seconds": 0.18333333333333332,
+          "phase": 0.45833333333333326,
+          "visual_only": true,
+          "foot": "L"
+        },
+        {
+          "event": "dodge_move_window_end",
+          "seconds": 0.22,
+          "phase": 0.5499999999999999,
+          "visual_only": true
+        },
+        {
+          "event": "locomotion_handoff",
+          "seconds": 0.4,
+          "phase": 1.0,
+          "visual_only": true,
+          "target_clip": "Aim_Run_Right",
+          "target_normalized_phase": 0.0
+        }
+      ]
+    },
+    {
+      "clip": "Dodge_ForwardRight_L",
+      "action": "HUMAN_7H__Dodge_ForwardRight_L",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "revision": "dodge_step_v1",
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "full_body_locomotion",
+      "armed_lower_body_mask": "human_lower_body",
+      "direction": "ForwardRight",
+      "direction_blender_xy": [
+        -0.7071067690849304,
+        -0.7071067690849304
+      ],
+      "entry_contact": "L",
+      "landing_contact": "R",
+      "entry_lower_body_reference": "Aim_Run_ForwardRight",
+      "exit_lower_body_reference": "Aim_Run_ForwardRight",
+      "entry_phase": 0.0,
+      "exit_phase": 0.5,
+      "phase_sync_group": "human_locomotion",
+      "blend_in_seconds": 0.05,
+      "blend_out_seconds": 0.1,
+      "support_intervals": [
+        {
+          "foot": "L",
+          "seconds": [
+            0,
+            0.03333333333333333
+          ]
+        },
+        {
+          "foot": "R",
+          "seconds": [
+            0.18333333333333332,
+            0.21666666666666667
+          ]
+        }
+      ],
+      "events": [
+        {
+          "event": "dodge_push_plant",
+          "seconds": 0,
+          "phase": 0.0,
+          "visual_only": true,
+          "foot": "L"
+        },
+        {
+          "event": "dodge_push_off",
+          "seconds": 0.03333333333333333,
+          "phase": 0.08333333333333333,
+          "visual_only": true,
+          "foot": "L"
+        },
+        {
+          "event": "dodge_land_plant",
+          "seconds": 0.18333333333333332,
+          "phase": 0.45833333333333326,
+          "visual_only": true,
+          "foot": "R"
+        },
+        {
+          "event": "dodge_move_window_end",
+          "seconds": 0.22,
+          "phase": 0.5499999999999999,
+          "visual_only": true
+        },
+        {
+          "event": "locomotion_handoff",
+          "seconds": 0.4,
+          "phase": 1.0,
+          "visual_only": true,
+          "target_clip": "Aim_Run_ForwardRight",
+          "target_normalized_phase": 0.5
+        }
+      ]
+    },
+    {
+      "clip": "Dodge_ForwardRight_R",
+      "action": "HUMAN_7H__Dodge_ForwardRight_R",
+      "fps": 30,
+      "start": 0,
+      "end": 12,
+      "duration_seconds": 0.4,
+      "loop": false,
+      "authoring_fps": 30,
+      "delivery_sampling_fps": 60,
+      "revision": "dodge_step_v1",
+      "root_translation": "in_place",
+      "root_yaw_degrees": 0,
+      "layer": "full_body_locomotion",
+      "armed_lower_body_mask": "human_lower_body",
+      "direction": "ForwardRight",
+      "direction_blender_xy": [
+        -0.7071067690849304,
+        -0.7071067690849304
+      ],
+      "entry_contact": "R",
+      "landing_contact": "L",
+      "entry_lower_body_reference": "Aim_Run_ForwardRight",
+      "exit_lower_body_reference": "Aim_Run_ForwardRight",
+      "entry_phase": 0.5,
+      "exit_phase": 0.0,
+      "phase_sync_group": "human_locomotion",
+      "blend_in_seconds": 0.05,
+      "blend_out_seconds": 0.1,
+      "support_intervals": [
+        {
+          "foot": "R",
+          "seconds": [
+            0,
+            0.03333333333333333
+          ]
+        },
+        {
+          "foot": "L",
+          "seconds": [
+            0.18333333333333332,
+            0.21666666666666667
+          ]
+        }
+      ],
+      "events": [
+        {
+          "event": "dodge_push_plant",
+          "seconds": 0,
+          "phase": 0.0,
+          "visual_only": true,
+          "foot": "R"
+        },
+        {
+          "event": "dodge_push_off",
+          "seconds": 0.03333333333333333,
+          "phase": 0.08333333333333333,
+          "visual_only": true,
+          "foot": "R"
+        },
+        {
+          "event": "dodge_land_plant",
+          "seconds": 0.18333333333333332,
+          "phase": 0.45833333333333326,
+          "visual_only": true,
+          "foot": "L"
+        },
+        {
+          "event": "dodge_move_window_end",
+          "seconds": 0.22,
+          "phase": 0.5499999999999999,
+          "visual_only": true
+        },
+        {
+          "event": "locomotion_handoff",
+          "seconds": 0.4,
+          "phase": 1.0,
+          "visual_only": true,
+          "target_clip": "Aim_Run_ForwardRight",
+          "target_normalized_phase": 0.0
+        }
+      ]
     }
   ],
   "RiftGrazer": [

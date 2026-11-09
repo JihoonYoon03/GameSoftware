@@ -395,5 +395,26 @@
     "preserve_existing_walk_to_run": true,
     "preserve_existing_aim_2d": true,
     "preserve_phase_on_handoff": true
+  },
+  "dodge_step": {
+    "contract": "dodge_blending.json",
+    "new_clips": [
+      "Dodge_Forward_L",
+      "Dodge_Forward_R",
+      "Dodge_ForwardLeft_L",
+      "Dodge_ForwardLeft_R",
+      "Dodge_Left_L",
+      "Dodge_Left_R",
+      "Dodge_BackLeft_L",
+      "Dodge_BackLeft_R",
+      "Dodge_Back_L",
+      "Dodge_Back_R",
+      "Dodge_BackRight_L",
+      "Dodge_BackRight_R",
+      "Dodge_Right_L",
+      "Dodge_Right_R",
+      "Dodge_ForwardRight_L",
+      "Dodge_ForwardRight_R"
+    ]
   }
 }
