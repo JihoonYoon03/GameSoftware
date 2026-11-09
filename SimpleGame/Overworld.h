@@ -177,6 +177,18 @@ struct JunctionSignal
     float elapsed = 0;
     unsigned int walkCycle = 0;
 };
+// Wreck state is derived from the existing health, altitude and age fields.
+class VehicleWreck
+{
+  public:
+    static constexpr float CityCleanupSeconds = 12, WorldCleanupSeconds = 20;
+    static constexpr float FadeStartSeconds = 57, RetireSeconds = 60;
+    static bool ShouldRetire(float age, bool hidden, bool grounded, float hiddenSeconds);
+    static float Opacity(float age, bool grounded);
+    static const char *Phase(int health, float age, bool grounded);
+    static models::Palette Appearance(float opacity);
+    static double Fall(double altitude, float &fallSpeed, double floorHeight, double gravity, float dt);
+};
 struct TrafficVehicle
 {
     std::uint64_t id = 0;

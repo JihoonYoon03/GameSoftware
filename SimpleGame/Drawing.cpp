@@ -657,13 +657,15 @@ models::Palette OcclusionPalette(const models::Model &model, Vector2 position, f
     if (front > playerDepth && player.x >= minX - 10 && player.x <= maxX + 10 && player.y >= minY - 8 &&
         player.y <= maxY + 8)
     {
-        palette.body[3] = palette.accent[3] = palette.emission[3] = .28f;
+        palette.body[3] *= .28f;
+        palette.accent[3] *= .28f;
+        palette.emission[3] *= .28f;
     }
     return palette;
 }
 } // namespace
 void Drawing::DrawWorldVehicle(Vector2 position, float altitude, float scale, models::VehicleType type,
-                               const models::Palette &palette, float throttle, float yaw)
+                               const models::Palette &palette, float throttle, float yaw, bool wreck)
 {
     const auto &vehicle = models::ModelLibrary::Get().vehicles.at(size_t(type));
     auto screen = WorldToScreen(position.x, position.y, altitude);
@@ -673,8 +675,11 @@ void Drawing::DrawWorldVehicle(Vector2 position, float altitude, float scale, mo
     auto visiblePalette = type == models::VehicleType::JetBike
                               ? palette
                               : OcclusionPalette(vehicle.body, position, altitude / 44, yaw, 0, palette);
-    VehicleEffects(vehicle.exhausts, vehicle.headlights, screen, scale, rotation, visiblePalette, throttle,
-                   (position.x + position.y) * 36 + altitude * (1296.f / 1936));
+    if (!wreck)
+    {
+        VehicleEffects(vehicle.exhausts, vehicle.headlights, screen, scale, rotation, visiblePalette,
+                       throttle, (position.x + position.y) * 36 + altitude * (1296.f / 1936));
+    }
     DrawModel3D(vehicle.body, screen, {scale, scale, scale}, rotation,
                 (position.x + position.y) * 36 + altitude * (1296.f / 1936), visiblePalette, &pose);
 }
@@ -693,7 +698,7 @@ void Drawing::DrawProp(const models::Model &model, Vector2 position, models::Poi
                 (position.x + position.y) * 36, visiblePalette);
 }
 void Drawing::DrawWorldAircraft(Vector2 position, float altitude, models::AircraftType type, bool alternate,
-                                float yaw, float bank, bool destroyed)
+                                float yaw, float bank, bool destroyed, float wreckOpacity)
 {
     models::Transform3D transform;
     transform.yaw = yaw;
@@ -701,30 +706,26 @@ void Drawing::DrawWorldAircraft(Vector2 position, float altitude, models::Aircra
     transform.position.z = altitude;
     auto pose = models::ModelRig::Pose(Game::Get().GetState().animationTimeSeconds * 10, true);
     const auto &model = models::ModelLibrary::Aircraft(type, alternate);
-    const auto &resource = models::ResourceAssets::Get(model.resourceId);
-    std::array<models::Point, 2> exhausts = {resource.sockets[0], resource.sockets[1]};
-    models::SkinMatrices matrices;
-    models::ResourceAssets::Sample(model.resourceId, &pose, matrices);
-    for (int side = 0; side < 2; ++side)
-    {
-        models::ResourceVertex attachment = {};
-        attachment.x = exhausts[side].x;
-        attachment.y = exhausts[side].y;
-        attachment.z = exhausts[side].z;
-        float joint = side ? resource.sockets[5].y : resource.sockets[5].x;
-        attachment.joints = {joint, 31, 31, 31};
-        attachment.weights = {1, 0, 0, 0};
-        exhausts[side] = models::ResourceAssets::SkinPoint(attachment, matrices);
-    }
-    auto palette = OcclusionPalette(model, position, altitude, yaw, bank, {});
-    if (destroyed)
-    {
-        palette.body = {.12f, .13f, .14f, palette.body[3]};
-        palette.accent = {.15f, .16f, .17f, palette.accent[3]};
-        palette.emission = {0, 0, 0, palette.emission[3]};
-    }
+    const auto palette =
+        OcclusionPalette(model, position, altitude, yaw, bank,
+                         destroyed ? VehicleWreck::Appearance(wreckOpacity) : models::Palette{});
     if (!destroyed)
     {
+        const auto &resource = models::ResourceAssets::Get(model.resourceId);
+        std::array<models::Point, 2> exhausts = {resource.sockets[0], resource.sockets[1]};
+        models::SkinMatrices matrices;
+        models::ResourceAssets::Sample(model.resourceId, &pose, matrices);
+        for (int side = 0; side < 2; ++side)
+        {
+            models::ResourceVertex attachment = {};
+            attachment.x = exhausts[side].x;
+            attachment.y = exhausts[side].y;
+            attachment.z = exhausts[side].z;
+            float joint = side ? resource.sockets[5].y : resource.sockets[5].x;
+            attachment.joints = {joint, 31, 31, 31};
+            attachment.weights = {1, 0, 0, 0};
+            exhausts[side] = models::ResourceAssets::SkinPoint(attachment, matrices);
+        }
         VehicleEffects(exhausts, {}, WorldToScreen(position.x, position.y), 1, transform, palette, .65f,
                        (position.x + position.y) * 36);
     }

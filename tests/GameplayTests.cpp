@@ -270,7 +270,8 @@ void TestPlanetTraffic()
         wreck.Update(observation, session, .05f, false);
     }
     assert(wreck.State().actors.size() == 1 && wreck.State().actors.front().altitudeMeters == 0 &&
-           wreck.State().actors.front().collisionReady);
+           wreck.State().actors.front().fallSpeed == 0 && wreck.State().actors.front().collisionReady &&
+           !wreck.State().actors.front().occupied);
     const auto &hull = models::ResourceAssets::Get(
         models::ModelLibrary::Aircraft(models::AircraftType::Courier, true).resourceId);
     const auto wreckCenter =

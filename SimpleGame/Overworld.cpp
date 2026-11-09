@@ -1181,6 +1181,41 @@ float TrafficSystem::RenderElevation(size_t index) const
     }
     return net.RoadElevation(lane.road, fraction);
 }
+bool VehicleWreck::ShouldRetire(float age, bool hidden, bool grounded, float hiddenSeconds)
+{
+    return grounded && (age >= RetireSeconds || (hidden && age >= hiddenSeconds));
+}
+float VehicleWreck::Opacity(float age, bool grounded)
+{
+    return grounded ? Game::Clamp((RetireSeconds - age) / (RetireSeconds - FadeStartSeconds), 0, 1) : 1;
+}
+const char *VehicleWreck::Phase(int health, float age, bool grounded)
+{
+    if (health > 0)
+    {
+        return "operational";
+    }
+    if (!grounded)
+    {
+        return "falling";
+    }
+    return age >= FadeStartSeconds ? "fading" : "wreck";
+}
+models::Palette VehicleWreck::Appearance(float opacity)
+{
+    return {{.12f, .13f, .14f, opacity}, {.17f, .18f, .19f, opacity}, {0, 0, 0, opacity}};
+}
+double VehicleWreck::Fall(double altitude, float &fallSpeed, double floorHeight, double gravity, float dt)
+{
+    const double next = altitude - (fallSpeed + .5 * gravity * dt) * dt;
+    if (next <= floorHeight)
+    {
+        fallSpeed = 0;
+        return floorHeight;
+    }
+    fallSpeed += float(gravity * dt);
+    return next;
+}
 bool TrafficSystem::DamageVehicle(std::uint64_t id, int damage, bool playerOwned)
 {
     auto car =
@@ -1191,18 +1226,20 @@ bool TrafficSystem::DamageVehicle(std::uint64_t id, int damage, bool playerOwned
     }
     car->health = (std::max)(0, car->health - damage);
     car->hitFlash = .15f;
-    if (playerOwned && car->occupied && car->health == 0)
-    {
-        CivicJustice::Report(Offense::VehicleDestruction, car->position);
-    }
+    const bool report = playerOwned && car->occupied && car->health == 0;
     if (car->health <= 0)
     {
         car->speed = 0;
         car->reservedFrom = car->reservedTo = -1;
+        car->occupied = false;
     }
     if (Game::Get().SurfaceTraffic())
     {
         Game::Get().SurfaceTraffic()->SyncDamage(*car);
+    }
+    if (report)
+    {
+        CivicJustice::Report(Offense::VehicleDestruction, car->position);
     }
     return true;
 }
@@ -1680,12 +1717,17 @@ size_t TrafficSystem::AdvanceDormant(float dt)
         if (car.health <= 0)
         {
             car.speed = 0;
+            car.occupied = false;
             car.wreckSeconds += dt;
         }
     }
     auto before = vehicles.size();
     vehicles.erase(std::remove_if(vehicles.begin(), vehicles.end(),
-                                  [](const auto &car) { return car.health <= 0 && car.wreckSeconds > 12; }),
+                                  [](const auto &car) {
+                                      return car.health <= 0 &&
+                                             VehicleWreck::ShouldRetire(car.wreckSeconds, true, true,
+                                                                        VehicleWreck::CityCleanupSeconds);
+                                  }),
                    vehicles.end());
     // Live vehicles, crossing reservations and signal phases stay consistent while hidden.
     // We never replay missed routing/contacts or manufacture traffic on re-entry.
@@ -1822,6 +1864,7 @@ void TrafficSystem::Step(GameState &world, float dt)
         {
             car.previousPosition = car.position;
             car.speed = 0;
+            car.occupied = false;
             car.wreckSeconds += dt;
             car.reservedFrom = car.reservedTo = -1;
             continue;
@@ -2065,11 +2108,14 @@ void TrafficSystem::Step(GameState &world, float dt)
     vehicles.erase(
         std::remove_if(vehicles.begin(), vehicles.end(),
                        [&](const TrafficVehicle &car) {
-                           if (car.health <= 0 && (car.wreckSeconds > 60 ||
-                                                   (car.wreckSeconds > 12 &&
-                                                    OutsideView(car.position, world.cameraPosition, 180))))
+                           if (car.health <= 0)
                            {
-                               return true;
+                               const bool hidden = car.wreckSeconds >= VehicleWreck::CityCleanupSeconds &&
+                                                   car.wreckSeconds < VehicleWreck::RetireSeconds &&
+                                                   OutsideView(car.position, world.cameraPosition, 180) &&
+                                                   OutsideView(car.position, world.playerPosition, 180);
+                               return VehicleWreck::ShouldRetire(car.wreckSeconds, hidden, true,
+                                                                 VehicleWreck::CityCleanupSeconds);
                            }
                            return !car.globalId &&
                                   Game::Distance(car.position, world.playerPosition) > kDespawnDistance &&
@@ -2173,8 +2219,10 @@ bool AirTraffic::DamageAircraft(std::uint64_t id, int damage, bool playerOwned)
     found->health = (std::max)(0, found->health - damage);
     if (found->health == 0)
     {
+        const bool report = playerOwned && found->occupied;
         found->speed = 0;
-        if (playerOwned && found->occupied)
+        found->occupied = false;
+        if (report)
         {
             CivicJustice::Report(Offense::VehicleDestruction, found->position);
         }
@@ -2188,9 +2236,9 @@ void AirTraffic::Update(const GameState &world, float dt)
     {
         if (craft.health <= 0)
         {
+            craft.occupied = false;
             craft.wreckSeconds += dt;
-            craft.fallSpeed += 4.9f * dt;
-            craft.altitude = (std::max)(.2f, craft.altitude - craft.fallSpeed * dt);
+            craft.altitude = float(VehicleWreck::Fall(craft.altitude, craft.fallSpeed, .2f, 4.9, dt));
             continue;
         }
         auto oldDirection = Unit(Mul(Tangent(craft.route, craft.parameter), float(craft.direction)));
@@ -2205,10 +2253,17 @@ void AirTraffic::Update(const GameState &world, float dt)
     }
     aircraft.erase(std::remove_if(aircraft.begin(), aircraft.end(),
                                   [&](const AircraftActor &craft) {
-                                      if (craft.health <= 0 && craft.wreckSeconds > 20 &&
-                                          OutsideVisibleFootprint(craft, world.cameraPosition, 80))
+                                      if (craft.health <= 0)
                                       {
-                                          return true;
+                                          const bool hidden =
+                                              craft.altitude <= .2f &&
+                                              craft.wreckSeconds >= VehicleWreck::WorldCleanupSeconds &&
+                                              craft.wreckSeconds < VehicleWreck::RetireSeconds &&
+                                              OutsideVisibleFootprint(craft, world.cameraPosition, 80) &&
+                                              OutsideVisibleFootprint(craft, world.playerPosition, 80);
+                                          return VehicleWreck::ShouldRetire(
+                                              craft.wreckSeconds, hidden, craft.altitude <= .2f,
+                                              VehicleWreck::WorldCleanupSeconds);
                                       }
                                       return Game::Distance(craft.position, world.playerPosition) > 180 &&
                                              Game::Distance(craft.position, world.cameraPosition) > 180 &&
@@ -2811,7 +2866,7 @@ bool PlanetTraffic::Blocked(const world::SurfacePoint &point, double clearance) 
     for (const auto &actor : state.actors)
     {
         if (actor.city < 0 && actor.collisionReady &&
-            (!actor.airborne || (actor.health <= 0 && actor.altitudeMeters < 1)) &&
+            (!actor.airborne || (actor.health <= 0 && actor.altitudeMeters == 0)) &&
             TransitHull(actor, point, planet->terrain.Planet().radiusMeters, clearance))
         {
             return true;
@@ -2843,9 +2898,11 @@ bool PlanetTraffic::Damage(std::uint64_t id, int amount, bool playerOwned)
     found->health = (std::max)(0, found->health - amount);
     if (found->health == 0)
     {
+        const bool report = playerOwned && found->occupied;
         found->speedMeters = 0;
         found->farSeconds = 0;
-        if (playerOwned && found->occupied)
+        found->occupied = false;
+        if (report)
         {
             PlanetSecurity::Report(Offense::VehicleDestruction, found->position);
         }
@@ -3117,11 +3174,13 @@ void PlanetTraffic::Advance(PlanetTrafficActor &actor, float seconds, const Game
     const double radius = session.Planet().radiusMeters;
     if (actor.health <= 0)
     {
-        if (actor.airborne)
+        if (actor.airborne && (actor.altitudeMeters > 0 || actor.fallSpeed > 0))
         {
-            actor.altitudeMeters =
-                (std::max)(0., actor.altitudeMeters - actor.fallSpeed * seconds - 4.9 * seconds * seconds);
-            actor.fallSpeed = (std::min)(1000.f, actor.fallSpeed + 9.8f * seconds);
+            if (actor.altitudeMeters > 0)
+            {
+                actor.collisionReady = false;
+            }
+            actor.altitudeMeters = VehicleWreck::Fall(actor.altitudeMeters, actor.fallSpeed, 0, 9.8, seconds);
             actor.position.altitudeMeters =
                 (std::max)(::world::PlanetTerrain::SeaLevelMeters, planet->terrain.Height(actor.position)) +
                 actor.altitudeMeters;
@@ -3528,6 +3587,7 @@ void PlanetTraffic::Update(GameState &world, const world::SurfaceSession &sessio
                                            !Outside(actor, world, session, 80));
         if (actor.health <= 0)
         {
+            actor.occupied = false;
             actor.wreckSeconds += dt;
         }
         actor.farSeconds += dt;
@@ -3540,29 +3600,35 @@ void PlanetTraffic::Update(GameState &world, const world::SurfaceSession &sessio
                                       : profiling::Counter::PlanetTrafficFarTicks);
         }
         // Never create a solid fallen hull around the player.
-        if (actor.airborne && actor.health <= 0 && actor.altitudeMeters < 1 && !actor.collisionReady &&
+        if (actor.airborne && actor.health <= 0 && actor.altitudeMeters == 0 && !actor.collisionReady &&
             !TransitHull(actor, session.Pose().origin, session.Planet().radiusMeters, .7))
         {
             actor.collisionReady = true;
         }
     }
     const auto previousCount = state.actors.size();
-    state.actors.erase(std::remove_if(state.actors.begin(), state.actors.end(),
-                                      [&](const auto &actor) {
-                                          if (actor.city >= 0)
-                                          {
-                                              return false;
-                                          }
-                                          if (actor.health <= 0 && actor.wreckSeconds > 20 &&
-                                              (!exterior || Outside(actor, world, session, 80)))
-                                          {
-                                              return true;
-                                          }
-                                          return TG::Distance(session.Planet().radiusMeters, actor.position,
-                                                              session.Pose().origin) > RetireMeters &&
-                                                 (!exterior || Outside(actor, world, session, 400));
-                                      }),
-                       state.actors.end());
+    state.actors.erase(
+        std::remove_if(state.actors.begin(), state.actors.end(),
+                       [&](const auto &actor) {
+                           if (actor.city >= 0)
+                           {
+                               return false;
+                           }
+                           if (actor.health <= 0)
+                           {
+                               const bool grounded = !actor.airborne || actor.altitudeMeters == 0;
+                               const bool hidden = grounded &&
+                                                   actor.wreckSeconds >= VehicleWreck::WorldCleanupSeconds &&
+                                                   actor.wreckSeconds < VehicleWreck::RetireSeconds &&
+                                                   (!exterior || Outside(actor, world, session, 80));
+                               return VehicleWreck::ShouldRetire(actor.wreckSeconds, hidden, grounded,
+                                                                 VehicleWreck::WorldCleanupSeconds);
+                           }
+                           return TG::Distance(session.Planet().radiusMeters, actor.position,
+                                               session.Pose().origin) > RetireMeters &&
+                                  (!exterior || Outside(actor, world, session, 400));
+                       }),
+        state.actors.end());
     profiling::Count(profiling::Counter::PlanetTrafficRetired, previousCount - state.actors.size());
     state.spawnSeconds = (std::max)(0.f, state.spawnSeconds - dt);
     if (exterior && state.spawnSeconds <= 0)

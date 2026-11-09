@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "Civic.h"
 #include "Drawing.h"
 #include "Overworld.h"
@@ -184,7 +184,7 @@ void TestBodiesAndVehicles()
         return *std::find_if(traffic.Vehicles().begin(), traffic.Vehicles().end(),
                              [=](const TrafficVehicle &c) { return c.id == id; });
     };
-    assert(find().health == 0 && find().speed == 0 && find().reservedFrom == -1);
+    assert(find().health == 0 && find().speed == 0 && find().reservedFrom == -1 && !find().occupied);
     traffic.Update(World(), .5f);
     assert(Game::Distance(location, find().position) < .001f);
     auto heat = CivicJustice::State().heat;
@@ -218,6 +218,48 @@ void TestBodiesAndVehicles()
     World().playerPosition = moving->position;
     BodyCollision::VehicleContacts(.03f);
     assert(HospitalRecovery::Active() && Stats().health == 0);
+}
+void TestVehicleWreckLifecycle()
+{
+    Exterior();
+    auto &world = World();
+    auto &traffic = Overworld::Traffic();
+    auto &cars = const_cast<std::vector<TrafficVehicle> &>(traffic.Vehicles());
+    TrafficVehicle wreck;
+    wreck.id = 900000;
+    wreck.health = 0;
+    wreck.position = world.playerPosition;
+    wreck.wreckSeconds = VehicleWreck::FadeStartSeconds;
+    cars.push_back(wreck);
+    auto contains = [&] {
+        return std::any_of(cars.begin(), cars.end(), [&](const auto &car) { return car.id == wreck.id; });
+    };
+    traffic.Update(world, .05f);
+    assert(contains()); // A visible wreck remains during its fade.
+    for (int i = 0; i < 65; ++i)
+    {
+        traffic.Update(world, .05f);
+    }
+    assert(!contains());
+
+    AirTraffic trafficInAir;
+    auto &aircraft = const_cast<std::vector<AircraftActor> &>(trafficInAir.Aircraft());
+    AircraftActor falling;
+    falling.id = 900001;
+    falling.health = 0;
+    falling.position = world.playerPosition;
+    falling.altitude = 2;
+    falling.wreckSeconds = VehicleWreck::RetireSeconds;
+    aircraft.push_back(falling);
+    trafficInAir.Update(world, .05f);
+    assert(aircraft.front().id == falling.id && aircraft.front().altitude < 2 &&
+           aircraft.front().altitude > .2f && aircraft.front().fallSpeed > 0);
+    for (int i = 0; i < 30; ++i)
+    {
+        trafficInAir.Update(world, .05f);
+    }
+    assert(std::none_of(aircraft.begin(), aircraft.end(),
+                        [&](const auto &craft) { return craft.id == falling.id; }));
 }
 void TestPolice()
 {
@@ -745,6 +787,7 @@ int main()
     TestSeverityAndMemory();
     TestFireMeleeAndWalls();
     TestBodiesAndVehicles();
+    TestVehicleWreckLifecycle();
     TestHighSpeedOverlapRecovery();
     TestMountedImpactControls();
     TestPolice();

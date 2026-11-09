@@ -404,8 +404,11 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                 item.Number("city_vehicle_id", actor.cityVehicle);
                 item.Text("route_id", actor.routeId);
                 item.Bool("airborne", actor.airborne);
-                item.Bool("occupied", actor.occupied);
+                item.Bool("occupied", actor.health > 0 && actor.occupied);
                 item.Number("health", actor.health);
+                item.Text("phase",
+                          tutorial::VehicleWreck::Phase(actor.health, actor.wreckSeconds,
+                                                        !actor.airborne || actor.altitudeMeters == 0));
                 item.Number("progress_meters", actor.distanceMeters);
                 item.Number("speed_meters", actor.speedMeters);
                 item.Number("wreck_seconds", actor.wreckSeconds);
@@ -847,6 +850,10 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         item.Number("lane", car.lane);
         item.Raw("position", Position(car.position));
         item.Seconds("speed", car.speed);
+        item.Number("health", car.health);
+        item.Bool("occupied", car.health > 0 && car.occupied);
+        item.Text("phase", tutorial::VehicleWreck::Phase(car.health, car.wreckSeconds, true));
+        item.Number("wreck_seconds", car.wreckSeconds);
         item.Bool("turning", car.turnDistance >= 0);
         item.Text("turn", car.turn == tutorial::TrafficTurn::Left    ? "left"
                           : car.turn == tutorial::TrafficTurn::Right ? "right"
@@ -862,6 +869,11 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         item.Number("route", craft.route);
         item.Raw("position", Position(craft.position));
         item.Seconds("altitude_m", craft.altitude * 2);
+        item.Number("health", craft.health);
+        item.Bool("occupied", craft.health > 0 && craft.occupied);
+        item.Text("phase",
+                  tutorial::VehicleWreck::Phase(craft.health, craft.wreckSeconds, craft.altitude <= .2f));
+        item.Number("wreck_seconds", craft.wreckSeconds);
         item.Number("type", unsigned(craft.type));
         item.Bool("alternate", craft.alternate);
         Append(flights, item.Finish());

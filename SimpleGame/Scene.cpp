@@ -548,9 +548,10 @@ void CityScene::DrawImportedScenery(game::Scene &scene)
                               WorldBounds(p.x - radius, p.y - radius, radius * 2, radius * 2,
                                           (craft.altitude + resource.maximum.z + 3) * 44 + 24),
                               3, p.x + p.y, [craft]() {
-                                  Drawing::DrawWorldAircraft(craft.position, craft.altitude, craft.type,
-                                                             craft.alternate, craft.yaw, craft.bank,
-                                                             craft.health <= 0);
+                                  Drawing::DrawWorldAircraft(
+                                      craft.position, craft.altitude, craft.type, craft.alternate, craft.yaw,
+                                      craft.bank, craft.health <= 0,
+                                      VehicleWreck::Opacity(craft.wreckSeconds, craft.altitude <= .2f));
                               });
     }
 }
@@ -639,19 +640,14 @@ void CityScene::DrawDepthSortedObjects(game::Scene &scene)
             if (item.kind == SceneObjectKind::Vehicle)
             {
                 Vector2 position = GetTrafficPosition(item.index);
-                auto palette = GetTrafficPalette(int(Overworld::Traffic().Vehicles()[item.index].id % 12));
-                if (Overworld::Traffic().Vehicles()[item.index].health <= 0)
-                {
-                    palette.body = {.12f, .13f, .14f, 1};
-                    palette.accent = {.17f, .18f, .19f, 1};
-                    palette.emission = {.1f, .04f, .01f, 1};
-                }
+                const auto &car = Overworld::Traffic().Vehicles()[item.index];
+                const auto palette =
+                    car.health <= 0 ? VehicleWreck::Appearance(VehicleWreck::Opacity(car.wreckSeconds, true))
+                                    : GetTrafficPalette(int(car.id % 12));
                 Drawing::DrawWorldVehicle(
                     position, 3.3f + Overworld::Traffic().RenderElevation(size_t(item.index)) * 44, 1.f,
-                    static_cast<models::VehicleType>(Overworld::Traffic().Vehicles()[item.index].id % 4),
-                    palette, Overworld::Traffic().Vehicles()[item.index].speed / 10.f,
-                    Overworld::Traffic().RenderYaw(size_t(item.index)));
-                const auto &car = Overworld::Traffic().Vehicles()[item.index];
+                    static_cast<models::VehicleType>(car.id % 4), palette, car.speed / 10.f,
+                    Overworld::Traffic().RenderYaw(size_t(item.index)), car.health <= 0);
                 if (car.hitFlash > 0)
                 {
                     Drawing::DrawGlow(Drawing::WorldToScreen(position.x, position.y, 32), 18,
@@ -2067,7 +2063,8 @@ void DrawPlanetTraffic(const world::SurfaceSession &session)
             Drawing::DrawWorldAircraft(
                 position, float(actor.altitudeMeters / 2),
                 models::AircraftType((actor.id / 2) % size_t(models::AircraftType::Count)), actor.id % 2 != 0,
-                yaw, actor.bank, actor.health <= 0);
+                yaw, actor.bank, actor.health <= 0,
+                VehicleWreck::Opacity(actor.wreckSeconds, actor.altitudeMeters == 0));
         }
         else
         {
@@ -2075,11 +2072,10 @@ void DrawPlanetTraffic(const world::SurfaceSession &session)
             palette.body = {.25f + float(actor.id % 4) * .1f, .4f, .55f, 1};
             if (actor.health <= 0)
             {
-                palette.body = {.12f, .13f, .14f, 1};
-                palette.emission = {.08f, .03f, .01f, 1};
+                palette = VehicleWreck::Appearance(VehicleWreck::Opacity(actor.wreckSeconds, true));
             }
             Drawing::DrawWorldVehicle(position, 3.3f, 1, models::VehicleType(actor.id % 4), palette,
-                                      float(actor.speedMeters / 20), yaw);
+                                      float(actor.speedMeters / 20), yaw, actor.health <= 0);
         }
         renderqueue::PopMatrix();
     }
@@ -2239,13 +2235,12 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
             palette.body = {.25f + float(car.id % 4) * .1f, .4f, .55f, 1};
             if (car.health <= 0)
             {
-                palette.body = {.12f, .13f, .14f, 1};
-                palette.emission = {.08f, .03f, .01f, 1};
+                palette = VehicleWreck::Appearance(VehicleWreck::Opacity(car.wreckSeconds, true));
             }
             Drawing::DrawWorldVehicle({float(point->x / 2), float(point->y / 2)},
                                       float(point->z / 2) * 44 + 3.3f, 1, models::VehicleType(car.id % 4),
                                       palette, car.speed / 10,
-                                      cities->Yaw(session, city, traffic.RenderYaw(i)));
+                                      cities->Yaw(session, city, traffic.RenderYaw(i)), car.health <= 0);
         }
         const auto &net = RoadNetwork::Get();
         for (size_t junction = 0; junction < net.junctions.size(); ++junction)
