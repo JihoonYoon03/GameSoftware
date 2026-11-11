@@ -669,7 +669,7 @@ void CityScene::DrawDepthSortedObjects(game::Scene &scene)
                     resident.type, resident.facing.walking, resident.facing.yaw, resident.gender,
                     resident.hair, false, 0,
                     resident.health <= 0 || resident.impact.response == BodyResponse::Knockdown,
-                    resident.speed);
+                    resident.speed, -1, &resident.facing);
                 if (Game::Distance(Game::Get().GetState().playerPosition, resident.position) < 2.2f)
                 {
                     Vector2 label = Drawing::WorldToScreen(resident.position.x, resident.position.y, 62);
@@ -1064,7 +1064,7 @@ void ObservatoryScene::Draw()
 void MineScene::PlacePerson(game::Scene &scene, const std::string &id, Vector2 position, ColorRGBA coat,
                             models::CharacterType type, bool walking, const std::string &label,
                             float facingYaw, models::Gender gender, models::HairStyle hair,
-                            const NpcCombatState &combat)
+                            const NpcCombatState &combat, const MovementFacing &motion)
 {
     if (GameLevels::Mine().Lighting().At(position) < .025f)
     {
@@ -1073,14 +1073,14 @@ void MineScene::PlacePerson(game::Scene &scene, const std::string &id, Vector2 p
     scene.PlaceWorldActor(
         id, position.x, position.y, WorldBounds(position.x, position.y, 0, 0, 85, 100), 1,
         position.x + position.y,
-        [this, position, coat, type, walking, label, facingYaw, gender, hair, combat, id]() {
+        [this, position, coat, type, walking, label, facingYaw, gender, hair, combat, motion, id]() {
             bool downed = combat.health <= 0;
-            Drawing::DrawPerson(position, coat, false, type, walking && !downed,
-                                combat.engaged ? combat.aimYaw : facingYaw, gender, hair,
-                                combat.engaged && !downed &&
-                                    (type == models::CharacterType::Guard || id == "ria"),
-                                combat.muzzleFlash, downed, 2.1f,
-                                combat.pistol.IsReloading() ? combat.pistol.GetReloadProgress() : -1);
+            Drawing::DrawPerson(
+                position, coat, false, type, walking && !downed, combat.engaged ? combat.aimYaw : facingYaw,
+                gender, hair,
+                combat.engaged && !downed && (type == models::CharacterType::Guard || id == "ria"),
+                combat.muzzleFlash, downed, 2.1f,
+                combat.pistol.IsReloading() ? combat.pistol.GetReloadProgress() : -1, &motion);
             if (Game::Distance(position, Game::Get().GetState().playerPosition) < 3 && !label.empty())
             {
                 auto screen = Drawing::WorldToScreen(position.x, position.y, 66);
@@ -1311,21 +1311,22 @@ void MineScene::Draw()
                     npc.evacuating ? "헤일로로 철수 중"
                     : guard        ? "고립 전투원 / E 구조"
                                    : "광부 / E 구조",
-                    npc.facing.yaw, npc.gender, npc.hair, npc.combat);
+                    npc.facing.yaw, npc.gender, npc.hair, npc.combat, npc.facing);
     }
     if (Game::Get().HasCompanion(CompanionId::Ria, CompanionPlace::Mine))
     {
         PlacePerson(scene, "ria", GameLevels::Mine().GetState().riaPosition, {.95f, .55f, .25f},
                     models::CharacterType::Engineer, GameLevels::Mine().GetState().riaFacing.walking, "리아",
                     GameLevels::Mine().GetState().riaFacing.yaw, models::Gender::Female,
-                    models::HairStyle::Ponytail, GameLevels::Mine().GetState().riaCombat);
+                    models::HairStyle::Ponytail, GameLevels::Mine().GetState().riaCombat,
+                    GameLevels::Mine().GetState().riaFacing);
     }
     if (Game::Get().HasCompanion(CompanionId::Kain, CompanionPlace::Mine))
     {
         const auto &npc = GameLevels::Mine().GetState().kain;
         PlacePerson(scene, "kain", npc.position, {.38f, .53f, .66f}, models::CharacterType::Guard,
                     npc.facing.walking, "카인", npc.facing.yaw, models::Gender::Male, models::HairStyle::Buzz,
-                    npc.combat);
+                    npc.combat, npc.facing);
     }
     auto player = Game::Get().GetState().playerPosition;
     scene.PlaceWorldActor("player", player.x, player.y, WorldBounds(player.x, player.y, 0, 0, 85), 1,
@@ -1587,7 +1588,8 @@ void FrontierScene::Draw()
                                     armed && npc.combat.engaged && npc.combat.health > 0,
                                     npc.combat.muzzleFlash, npc.combat.health <= 0, 2.1f,
                                     npc.combat.pistol.IsReloading() ? npc.combat.pistol.GetReloadProgress()
-                                                                    : -1);
+                                                                    : -1,
+                                    &npc.facing);
                 if (Game::Distance(npc.position, Game::Get().GetState().playerPosition) < 4 && !label.empty())
                 {
                     auto screen = Drawing::WorldToScreen(npc.position.x, npc.position.y, 60);
@@ -2030,9 +2032,10 @@ void DrawSurfaceStructure(const world::SurfaceStructure &structure, const world:
         Drawing::DrawModel3D(models::ModelLibrary::Get().box, Drawing::WorldToScreen(px, py),
                              {float(structure.sizeMeters.x / 2), float(structure.sizeMeters.y / 2),
                               float((structure.foundationMeters + structure.FoundationTopMeters()) / 2)},
-                             foundation, (px + py) * 36, palette);
+                             foundation, (px + py) * 36, palette, nullptr, float(p.z / 2));
     }
-    Drawing::DrawModel3D(model, Drawing::WorldToScreen(px, py), scale, transform, (px + py) * 36, palette);
+    Drawing::DrawModel3D(model, Drawing::WorldToScreen(px, py), scale, transform, (px + py) * 36, palette,
+                         nullptr, float(p.z / 2));
 }
 void DrawPlanetTraffic(const world::SurfaceSession &session)
 {
@@ -2121,7 +2124,7 @@ void DrawPlanetCommunity(const world::SurfaceSession &session)
                 position, coat, false, types[i % 4], person.speed > .1f, yaw,
                 models::Gender(person.appearance % 2),
                 models::HairStyle((person.appearance >> 8) % size_t(models::HairStyle::Count)), false, 0,
-                person.health <= 0, person.speed / 2);
+                person.health <= 0, person.speed / 2, -1, &person.motion);
             renderqueue::PopMatrix();
         }
         auto terminal = [&](const world::SurfacePoint &point, const char *label, bool mark) {
@@ -2172,7 +2175,7 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
     };
     auto person = [&](int city, Vector2 legacy, ColorRGBA coat, models::CharacterType type, bool walking,
                       float yaw, models::Gender gender, models::HairStyle hair, bool downed,
-                      const std::string &name) {
+                      const std::string &name, const MovementFacing *motion = nullptr) {
         auto point = place(city, legacy);
         if (!point)
         {
@@ -2183,7 +2186,7 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
         renderqueue::PushMatrix();
         renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
         Drawing::DrawPerson(local, coat, false, type, walking, cities->Yaw(session, city, yaw), gender, hair,
-                            false, 0, downed);
+                            false, 0, downed, 0, -1, motion);
         if (Game::Distance(local, state.playerPosition) < 2.2f)
         {
             auto label = Drawing::WorldToScreen(local.x, local.y, 62);
@@ -2199,7 +2202,7 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
             continue;
         }
         person(r.cityIndex, r.position, {r.coat[0], r.coat[1], r.coat[2]}, r.type, r.facing.walking,
-               r.facing.yaw, r.gender, r.hair, r.health <= 0, r.name);
+               r.facing.yaw, r.gender, r.hair, r.health <= 0, r.name, &r.facing);
     }
     if (!Game::Get().SurfaceParty() || !Game::Get().SurfaceParty()->Joined(CompanionId::Ria))
     {
@@ -2494,7 +2497,7 @@ void DrawPlanetParty(const world::SurfaceSession &session)
                             m.walking, yaw, i == 0 ? models::Gender::Female : models::Gender::Male,
                             i == 0 ? models::HairStyle::Ponytail : models::HairStyle::Buzz,
                             m.combat.engaged && m.combat.health > 0, m.combat.muzzleFlash,
-                            m.combat.health <= 0);
+                            m.combat.health <= 0, 0, -1, &m.motion);
         if (Game::Distance(position, Game::Get().GetState().playerPosition) < 4)
         {
             auto at = Drawing::WorldToScreen(position.x, position.y, 62);
@@ -2593,7 +2596,8 @@ void DrawSurfaceFrontier(const world::SurfaceSession &session)
                             surface.Yaw(npc.combat.engaged ? npc.combat.aimYaw : npc.facing.yaw), gender,
                             hair, armed && npc.combat.engaged && npc.combat.health > 0,
                             npc.combat.muzzleFlash, npc.combat.health <= 0, 2.1f,
-                            npc.combat.pistol.IsReloading() ? npc.combat.pistol.GetReloadProgress() : -1);
+                            npc.combat.pistol.IsReloading() ? npc.combat.pistol.GetReloadProgress() : -1,
+                            &npc.facing);
         if (Game::Distance(*point, Game::Get().GetState().playerPosition) < 4 && label[0])
         {
             auto at = Drawing::WorldToScreen(point->x, point->y, 60);
@@ -2695,6 +2699,7 @@ struct PlanetScene::Data
     std::unique_ptr<models::Model> fallback;
     std::unique_ptr<models::Model> frontierGround;
     world::TangentFrame fallbackFrame;
+    double fallbackRadius = 0;
     std::uint64_t epoch = 0;
 };
 PlanetScene::PlanetScene() : data(std::make_unique<Data>())
@@ -2730,6 +2735,7 @@ void PlanetScene::Draw()
     }
     WorldView view;
     auto snapshot = session->Stream().Snapshot();
+    const auto terrainView = Game::Get().SurfaceTerrainView();
     auto &d = *data;
     if (d.epoch != snapshot->statistics.epoch)
     {
@@ -2739,15 +2745,16 @@ void PlanetScene::Draw()
     std::vector<std::shared_ptr<const world::SurfaceChunk>> visible;
     for (const auto &chunk : snapshot->chunks)
     {
-        if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, session->Pose().origin,
-                                             chunk->frame.origin) < chunk->radiusMeters + 96)
+        if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, terrainView.center,
+                                             chunk->frame.origin) <
+            chunk->radiusMeters + terrainView.radiusMeters)
         {
             visible.push_back(chunk);
         }
     }
     std::sort(visible.begin(), visible.end(), [&](const auto &a, const auto &b) {
-        return world::SurfaceGeometry::Dot(a->frame.origin.normal, session->Pose().origin.normal) >
-               world::SurfaceGeometry::Dot(b->frame.origin.normal, session->Pose().origin.normal);
+        return world::SurfaceGeometry::Dot(a->frame.origin.normal, terrainView.center.normal) >
+               world::SurfaceGeometry::Dot(b->frame.origin.normal, terrainView.center.normal);
     });
     if (visible.size() > 32)
     {
@@ -2772,19 +2779,22 @@ void PlanetScene::Draw()
     }
     unsigned uploads = 0;
     // Small, bounded safety patch is always available while CPU chunks or GPU uploads catch up.
-    if (!d.fallback || world::SurfaceGeometry::Distance(session->Planet().radiusMeters,
-                                                        d.fallbackFrame.origin, session->Pose().origin) > 16)
+    if (!d.fallback ||
+        world::SurfaceGeometry::Distance(session->Planet().radiusMeters, d.fallbackFrame.origin,
+                                         terrainView.center) > 16 ||
+        std::abs(d.fallbackRadius - terrainView.radiusMeters) > 1)
     {
         world::SurfaceChunk coarse;
-        coarse.frame = session->Pose();
-        coarse.cells = 8;
-        for (unsigned y = 0; y <= 8; ++y)
+        coarse.frame = world::SurfaceGeometry::Frame(terrainView.center);
+        coarse.cells = 16;
+        const double step = terrainView.radiusMeters / 8;
+        for (unsigned y = 0; y <= coarse.cells; ++y)
         {
-            for (unsigned x = 0; x <= 8; ++x)
+            for (unsigned x = 0; x <= coarse.cells; ++x)
             {
                 auto point =
-                    world::SurfaceGeometry::Advance(coarse.frame, (double(x) - 4) * 16, (double(y) - 4) * 16,
-                                                    session->Planet().radiusMeters)
+                    world::SurfaceGeometry::Advance(coarse.frame, (double(x) - 8) * step,
+                                                    (double(y) - 8) * step, session->Planet().radiusMeters)
                         .origin;
                 point.altitudeMeters = snapshot->planet->terrain.Height(point);
                 auto biome = snapshot->planet->terrain.Environment(point, point.altitudeMeters, 0).biome;
@@ -2797,6 +2807,7 @@ void PlanetScene::Draw()
         }
         d.fallback = SurfaceModel(coarse, session->Planet().radiusMeters, false);
         d.fallbackFrame = coarse.frame;
+        d.fallbackRadius = terrainView.radiusMeters;
         ++uploads;
     }
     for (const auto &chunk : visible)
@@ -2841,9 +2852,9 @@ void PlanetScene::Draw()
     for (const auto &entry : structures)
     {
         const auto &structure = *entry.second;
-        if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, session->Pose().origin,
+        if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, terrainView.center,
                                              structure.frame.origin) <
-            80 + std::hypot(structure.sizeMeters.x, structure.sizeMeters.y) * .5)
+            terrainView.radiusMeters + std::hypot(structure.sizeMeters.x, structure.sizeMeters.y) * .5)
         {
             DrawSurfaceStructure(structure, *session);
         }

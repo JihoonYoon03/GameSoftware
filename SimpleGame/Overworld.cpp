@@ -195,6 +195,7 @@ void PlanetParty::Capture()
              frame.right.y * std::cos(facing.yaw) + frame.forward.y * std::sin(facing.yaw),
              frame.right.z * std::cos(facing.yaw) + frame.forward.z * std::sin(facing.yaw)});
         member.walking = facing.walking;
+        member.motion = facing;
     }
 }
 void PlanetParty::Publish()
@@ -215,7 +216,7 @@ void PlanetParty::Publish()
         auto frame = Frame(member.place);
         float yaw = float(std::atan2(world::SurfaceGeometry::Dot(member.heading, frame.forward),
                                      world::SurfaceGeometry::Dot(member.heading, frame.right)));
-        MovementFacing facing;
+        MovementFacing facing = member.motion;
         facing.yaw = yaw;
         facing.walking = member.walking;
         if (member.place == CompanionPlace::Mine)
@@ -252,6 +253,7 @@ void PlanetParty::ChangeOwner(size_t index, CompanionPlace place, const world::S
     member.place = place;
     member.position = position;
     member.walking = false;
+    member.motion.walking = member.motion.following = false;
     member.combat.engaged = member.combat.evading = false;
     member.combat.muzzleFlash = 0;
     member.combat.aimYaw = 0; // Reacquire a target in the new adapter, never transport a stale aim.
@@ -279,9 +281,18 @@ bool PlanetParty::Blocked(const world::SurfacePoint &point, double clearance, in
     {
         return false;
     }
+    auto &g = Game::Get();
+    const auto &aircraft = g.GetState().aircraft;
     for (size_t i = 0; i < state.members.size(); ++i)
     {
         const auto &m = state.members[i];
+        if (m.joined && m.place != CompanionPlace::Mine && aircraft.mounted && aircraft.position &&
+            std::abs(m.position.altitudeMeters - aircraft.position->altitudeMeters) < 3 &&
+            world::SurfaceGeometry::Distance(planet->terrain.Planet().radiusMeters, m.position,
+                                             *aircraft.position) < PlayerAircraft::RadiusMeters() + .72)
+        {
+            continue; // Existing follower overlaps separate on the ground without pinning the pilot.
+        }
         if (int(i) != except && m.joined && m.place != CompanionPlace::Mine &&
             world::SurfaceGeometry::Distance(planet->terrain.Planet().radiusMeters, point, m.position) <
                 clearance + .32)
@@ -291,9 +302,21 @@ bool PlanetParty::Blocked(const world::SurfacePoint &point, double clearance, in
     }
     return false;
 }
-bool PlanetParty::Clear(const world::SurfacePoint &point, int except) const
+bool PlanetParty::Clear(const world::SurfacePoint &point, int except, bool leavingAircraft) const
 {
     auto &g = Game::Get();
+    const auto &from = state.members[size_t(except)].position;
+    const double radius = planet->terrain.Planet().radiusMeters;
+    for (size_t i = 0; i < state.members.size(); ++i)
+    {
+        const auto &other = state.members[i];
+        const double distance = world::SurfaceGeometry::Distance(radius, point, other.position);
+        if (int(i) != except && other.joined && other.place != CompanionPlace::Mine && distance < .64 &&
+            distance <= world::SurfaceGeometry::Distance(radius, from, other.position))
+        {
+            return false;
+        }
+    }
     const auto &field = game::GameLevels::Chapter().GetState();
     if (field.generated && world::SurfaceGeometry::Distance(planet->terrain.Planet().radiusMeters, point,
                                                             planet->Region("frontier").center.position) < 150)
@@ -318,13 +341,15 @@ bool PlanetParty::Clear(const world::SurfacePoint &point, int except) const
             return false;
         }
     }
-    return g.Surface()->LandingClear(point, .32) && !Blocked(point, .32, except) &&
+    return g.Surface()->LandingClear(point, .32) &&
+           (leavingAircraft || !g.GetState().aircraft.Contains(*g.Surface(), point, .4)) &&
            !PlanetSecurity::OfficerBlocked(point, .32) &&
            (!g.SurfaceBike() || world::SurfaceGeometry::Distance(planet->terrain.Planet().radiusMeters,
                                                                  *g.SurfaceBike(), point) >= 1) &&
            (!g.SurfaceTraffic() || !g.SurfaceTraffic()->Blocked(point, .32)) &&
            (!g.SurfaceCommunity() || !g.SurfaceCommunity()->Blocked(point, .32)) &&
-           (!g.SurfaceCities() || !g.SurfaceCities()->OccupiedAt(g.GetState(), *g.Surface(), point));
+           (!g.SurfaceCities() ||
+            !g.SurfaceCities()->OccupiedAt(g.GetState(), *g.Surface(), point, -1, true, &from));
 }
 void PlanetParty::Update(float seconds)
 {
@@ -349,7 +374,7 @@ void PlanetParty::Update(float seconds)
         {
             continue;
         }
-        if (member.place == CompanionPlace::Frontier && !field.IsActive())
+        if (member.place == CompanionPlace::Frontier && (!field.IsActive() || g.GetState().aircraft.mounted))
         {
             ChangeOwner(i, CompanionPlace::Surface, member.position);
         }
@@ -363,7 +388,7 @@ void PlanetParty::Update(float seconds)
                 ChangeOwner(i, CompanionPlace::Mine, MinePoint(candidate));
             }
         }
-        if (member.place == CompanionPlace::Surface && field.IsActive() &&
+        if (member.place == CompanionPlace::Surface && !g.GetState().aircraft.mounted && field.IsActive() &&
             G::Distance(radius, member.position, planet->Region("frontier").access.position) < 240)
         {
             auto local = G::ToLocal(Frame(CompanionPlace::Frontier), member.position, radius);
@@ -444,6 +469,7 @@ void PlanetParty::Update(float seconds)
                                     position.y + (next.y - position.y) * step / d};
                         member.position = MinePoint(position);
                         member.walking = true;
+                        member.motion.Update({}, {step, 0}, seconds);
                     }
                     if (d <= step + .01f)
                     {
@@ -453,22 +479,42 @@ void PlanetParty::Update(float seconds)
             }
             continue;
         }
-        auto target = g.IsSurfaceMine() ? door : g.Surface()->Pose().origin;
+        const auto &aircraft = g.GetState().aircraft;
+        const bool waitingForPilot = aircraft.mounted && aircraft.position;
+        auto target = waitingForPilot     ? *aircraft.position
+                      : g.IsSurfaceMine() ? door
+                                          : g.Surface()->Pose().origin;
         const double distance = G::Distance(radius, member.position, target);
-        if (distance <= (i == 0 ? 3.2 : 4.8))
+        const double aircraftClearance = PlayerAircraft::RadiusMeters() + 1;
+        const double stopDistance = i == 0 ? 3.2 : 4.8;
+        if (waitingForPilot)
+        {
+            member.motion.following = false;
+        }
+        if (waitingForPilot ? (distance >= aircraftClearance ||
+                               std::abs(member.position.altitudeMeters - target.altitudeMeters) > 3)
+                            : !member.motion.Follow(float(distance / 2), float(stopDistance / 2)))
         {
             continue;
         }
         auto frame = G::Frame(member.position);
         double angle = std::atan2(G::Dot(target.normal, frame.forward), G::Dot(target.normal, frame.right)),
-               step = (std::min)(8. * seconds, distance - 2.5);
+               step = (std::min)(8. * seconds,
+                                 waitingForPilot ? aircraftClearance - distance : distance - stopDistance);
+        if (waitingForPilot)
+        {
+            angle += G::Pi;
+        }
         // Bounded steps and steering check local obstacles without per-frame global pathfinding.
-        for (double turn : {0., .45, -.45, .9, -.9})
+        for (double turn : {0., -.45, .45, -.9, .9, -G::Pi / 2, G::Pi / 2})
         {
             auto candidate =
                 G::Advance(frame, std::cos(angle + turn) * step, std::sin(angle + turn) * step, radius)
                     .origin;
-            if (Clear(candidate, int(i)))
+            const bool leavingAircraft = waitingForPilot &&
+                                         aircraft.Contains(*g.Surface(), member.position, .4) &&
+                                         G::Distance(radius, candidate, target) > distance;
+            if (Clear(candidate, int(i), leavingAircraft))
             {
                 candidate.altitudeMeters = g.Surface()->Stream().Contact(candidate).heightMeters;
                 member.heading = G::Unit(
@@ -477,6 +523,7 @@ void PlanetParty::Update(float seconds)
                      frame.right.z * std::cos(angle + turn) + frame.forward.z * std::sin(angle + turn)});
                 member.position = candidate;
                 member.walking = true;
+                member.motion.Update({}, {float(step / 2), 0}, seconds);
                 break;
             }
         }
@@ -3805,6 +3852,7 @@ void PlanetCommunity::Bind(std::shared_ptr<const world::GeneratedPlanet> input)
     }
     const auto &p = input->terrain.Planet();
     Validate(state, p);
+    world::ContentCollision placement;
     for (const auto &site : state.sites)
     {
         const auto &region = input->Region(site.regionId);
@@ -3831,7 +3879,8 @@ void PlanetCommunity::Bind(std::shared_ptr<const world::GeneratedPlanet> input)
                 length < 6 || length > 200 || person.distanceMeters > length + .001 ||
                 TG::Distance(p.radiusMeters, region.access.position, person.path[0]) > 220 ||
                 TG::Distance(p.radiusMeters, region.access.position, person.path[1]) > 220 ||
-                TG::Distance(p.radiusMeters, expected, person.position) > .1 ||
+                TG::Distance(p.radiusMeters, expected, person.position) > 1.6 ||
+                placement.Blocked(*input, person.position, .35) ||
                 std::abs(input->terrain.Height(person.position) - person.position.altitudeMeters) > .25)
             {
                 throw std::invalid_argument("지역 주민의 경로/실제 위치가 다릅니다.");
@@ -4104,37 +4153,82 @@ void PlanetCommunity::Update(float dt, bool exterior)
             const bool talking = Dialogue::Active() || (i == 0 && !alarm) || (distance < 1.5 && !alarm);
             const float desired = talking ? 0 : person.fearSeconds > 0 ? 2.5f : 1.1f;
             person.speed += std::clamp(desired - person.speed, -5.f * dt, 3.f * dt);
-            double progress =
-                std::clamp(person.distanceMeters + person.direction * person.speed * dt, 2., length - 2);
-            auto next = TransitArc(person.path[0], person.path[1], progress / length);
-            next.altitudeMeters = planet->terrain.Height(next);
-            if (TG::Distance(p.radiusMeters, next, hero) < (w.isBikeMounted ? 1.6 : .8) ||
-                !g.Surface()->LandingClear(next, .35) ||
-                (g.SurfaceTraffic() && g.SurfaceTraffic()->Blocked(next, .45)) ||
-                (g.SurfaceParty() && g.SurfaceParty()->Blocked(next, .45)) ||
-                PlanetSecurity::OfficerBlocked(next, .45) ||
-                std::any_of(site.residents.begin(), site.residents.end(), [&](const auto &other) {
-                    return other.id != person.id && other.health > 0 &&
-                           TG::Distance(p.radiusMeters, next, other.position) < .85;
-                }))
+            const double step = person.speed * dt;
+            if (step <= .00001)
+            {
+                continue;
+            }
+            const auto from = person.position;
+            const auto movementFrame = TG::Frame(from);
+            const double ahead = std::clamp(person.distanceMeters + person.direction * 1.5, 2., length - 2);
+            const auto goal = TransitArc(person.path[0], person.path[1], ahead / length);
+            const auto center = TransitArc(person.path[0], person.path[1], person.distanceMeters / length);
+            const auto routeFrame = TG::Frame(center);
+            const auto routeEnd = TG::ToLocal(routeFrame, person.path[1], p.radiusMeters);
+            const double routeLength = std::hypot(routeEnd.x, routeEnd.y);
+            const auto toward = TG::ToLocal(movementFrame, goal, p.radiusMeters);
+            const double angle = std::atan2(toward.y, toward.x);
+            auto next = from;
+            bool moved = false;
+            for (double turn : {0., -.9, -TG::Pi / 2, TG::Pi / 2})
+            {
+                auto candidate = TG::Advance(movementFrame, std::cos(angle + turn) * step,
+                                             std::sin(angle + turn) * step, p.radiusMeters)
+                                     .origin;
+                candidate.altitudeMeters = planet->terrain.Height(candidate);
+                const auto offset = TG::ToLocal(routeFrame, candidate, p.radiusMeters);
+                if (routeLength < .001 ||
+                    std::abs(offset.x * routeEnd.y - offset.y * routeEnd.x) / routeLength > 1.5)
+                {
+                    continue;
+                }
+                const bool crowded =
+                    std::any_of(site.residents.begin(), site.residents.end(), [&](const auto &other) {
+                        const double gap = TG::Distance(p.radiusMeters, candidate, other.position);
+                        return other.id != person.id && other.health > 0 && gap < .85 &&
+                               gap <= TG::Distance(p.radiusMeters, from, other.position);
+                    });
+                if ((!w.Mounted() && TG::Distance(p.radiusMeters, candidate, hero) < .8 &&
+                     TG::Distance(p.radiusMeters, candidate, hero) <=
+                         TG::Distance(p.radiusMeters, from, hero)) ||
+                    !g.Surface()->LandingClear(candidate, .35) || crowded ||
+                    (g.SurfaceTraffic() && g.SurfaceTraffic()->Blocked(candidate, .45)) ||
+                    (g.SurfaceParty() && g.SurfaceParty()->Blocked(candidate, .45)) ||
+                    PlanetSecurity::OfficerBlocked(candidate, .45))
+                {
+                    continue;
+                }
+                next = candidate;
+                moved = true;
+                break;
+            }
+            if (!moved)
             {
                 person.speed = 0;
                 continue;
             }
             const auto frame = TG::Frame(next);
-            const auto toward = TG::ToLocal(frame, person.path[person.direction > 0 ? 1 : 0], p.radiusMeters);
-            if (std::hypot(toward.x, toward.y) > .01)
+            const auto movement = TG::ToLocal(movementFrame, next, p.radiusMeters);
+            if (std::hypot(movement.x, movement.y) > .001)
             {
                 const float old = float(
                     std::atan2(TG::Dot(person.heading, frame.forward), TG::Dot(person.heading, frame.right)));
-                const float yaw = MotionMath::Turn(old, float(std::atan2(toward.y, toward.x)), 3.f * dt);
+                const float yaw = MotionMath::Turn(old, float(std::atan2(movement.y, movement.x)), 3.f * dt);
                 person.heading =
                     TG::Unit(TransitAdd({frame.right.x * std::cos(yaw), frame.right.y * std::cos(yaw),
                                          frame.right.z * std::cos(yaw)},
                                         frame.forward, std::sin(yaw)));
             }
+            const auto delta = TG::ToLocal(routeFrame, next, p.radiusMeters);
+            const auto previous = TG::ToLocal(routeFrame, from, p.radiusMeters);
+            const double progress =
+                routeLength > .001
+                    ? ((delta.x - previous.x) * routeEnd.x + (delta.y - previous.y) * routeEnd.y) /
+                          routeLength
+                    : 0;
             person.position = next;
-            person.distanceMeters = progress;
+            person.distanceMeters = std::clamp(person.distanceMeters + progress, 2., length - 2);
+            person.motion.Update({}, {float(TG::Distance(p.radiusMeters, from, next) / 2), 0}, dt);
         }
     }
 }
@@ -5467,7 +5561,8 @@ bool PlanetCities::Occupied(const GameState &state, const world::SurfaceSession 
     return OccupiedAt(state, session, session.PointAt(local.x * 2, local.y * 2), city, includePeople);
 }
 bool PlanetCities::OccupiedAt(const GameState &state, const world::SurfaceSession &session,
-                              const world::SurfacePoint &point, int cityOverride, bool includePeople) const
+                              const world::SurfacePoint &point, int cityOverride, bool includePeople,
+                              const world::SurfacePoint *escapeFrom) const
 {
     int city = cityOverride;
     if (city < 0 && session.Ready())
@@ -5498,6 +5593,10 @@ bool PlanetCities::OccupiedAt(const GameState &state, const world::SurfaceSessio
     auto relative = world::SurfaceGeometry::ToLocal(region.frame, point, session.Planet().radiusMeters);
     auto center = Overworld::Cities()[size_t(city)].center;
     Vector2 query{center.x + float(relative.x / 2), center.y + float(relative.y / 2)};
+    const auto start =
+        escapeFrom ? world::SurfaceGeometry::ToLocal(region.frame, *escapeFrom, session.Planet().radiusMeters)
+                   : relative;
+    const Vector2 previous{center.x + float(start.x / 2), center.y + float(start.y / 2)};
     for (size_t i = 0; i < state.residents.size(); ++i)
     {
         const auto &r = state.residents[i];
@@ -5506,7 +5605,8 @@ bool PlanetCities::OccupiedAt(const GameState &state, const world::SurfaceSessio
         {
             continue;
         }
-        if (Game::Distance(query, r.position) < .36f)
+        if (Game::Distance(query, r.position) < .36f &&
+            (!escapeFrom || Game::Distance(query, r.position) <= Game::Distance(previous, r.position)))
         {
             return true;
         }
@@ -5527,7 +5627,8 @@ bool PlanetCities::OccupiedAt(const GameState &state, const world::SurfaceSessio
             {
                 continue;
             }
-            if (!CivicCombat::LandmarkDown(point) && Game::Distance(query, point) < .36f)
+            if (!CivicCombat::LandmarkDown(point) && Game::Distance(query, point) < .36f &&
+                (!escapeFrom || Game::Distance(query, point) <= Game::Distance(previous, point)))
             {
                 return true;
             }

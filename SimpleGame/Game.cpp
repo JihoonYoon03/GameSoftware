@@ -823,14 +823,52 @@ Vector2 WorldCamera::FromViewport(Vector2 p)
     return {kCanvasWidth * .5f + (p.x - kCanvasWidth * .5f) / zoom,
             kCanvasHeight * .57f + (p.y - kCanvasHeight * .57f) / zoom};
 }
-void MovementFacing::Update(Vector2 from, Vector2 to)
+void MovementFacing::Update(Vector2 from, Vector2 to, float dt)
 {
     const float dx = to.x - from.x, dy = to.y - from.y;
     walking = dx * dx + dy * dy > 1.e-10f;
+    if (dt <= 0)
+    {
+        return;
+    }
+    const float now = Game::Get().GetState().animationTimeSeconds;
+    const float idle = (std::max)(0.f, now - lastMotionSeconds - dt);
+    const float speed = std::hypot(dx, dy) / dt;
+    motionSpeed = motionSpeed * std::exp(-14 * (idle + dt)) + speed * (1 - std::exp(-14 * dt));
+    const float metersPerSecond = speed * models::WorldScale::metersPerUnit;
+    const float run = Game::Clamp((metersPerSecond - 1.08f) / (2.46f - 1.08f), 0, 1);
+    const float stride = (1.08f + (2.46f - 1.08f) * run) / (1 + .5f * run);
+    motionPhase =
+        std::fmod(motionPhase + std::hypot(dx, dy) * models::WorldScale::metersPerUnit / stride, 1.f);
+    lastMotionSeconds = now + dt;
     if (walking)
     {
         yaw = std::atan2(dy, dx);
     }
+}
+bool MovementFacing::Follow(float distance, float stopDistance, bool visible)
+{
+    if (following)
+    {
+        following = !visible || distance > stopDistance + .04f;
+    }
+    else
+    {
+        following = !visible || distance > stopDistance + .6f;
+    }
+    return following;
+}
+void MovementFacing::ApplyMotion(models::CharacterPose &pose) const
+{
+    const float age = (std::max)(0.f, Game::Get().GetState().animationTimeSeconds - lastMotionSeconds);
+    const float speed = motionSpeed * std::exp(-14 * age);
+    pose.blended = true;
+    pose.locomotionSpeed = speed;
+    pose.locomotionPhase = motionPhase;
+    pose.moveLeft = 0;
+    pose.moveForward = speed * models::WorldScale::metersPerUnit;
+    pose.aimWeight = pose.armed ? 1.f : 0.f;
+    pose.fireSeconds = pose.recoil * .4f;
 }
 Vector2 MotionMath::Approach(Vector2 velocity, Vector2 target, float maximumChange)
 {
@@ -1135,6 +1173,47 @@ void Game::UpdateCamera(float deltaSeconds)
     float followAmount = 1 - std::exp(-kCameraFollowRate * deltaSeconds);
     state.cameraPosition.x += (target.x - state.cameraPosition.x) * followAmount;
     state.cameraPosition.y += (target.y - state.cameraPosition.y) * followAmount;
+}
+world::SurfaceView Game::SurfaceTerrainView() const
+{
+    // Invert the isometric projection at the camera's ground height. At altitude the visible
+    // terrain is behind the aircraft, and can be several chunk widths from the pilot.
+    world::SurfaceView view;
+    if (!surface || !surface->Ready())
+    {
+        return view;
+    }
+    const double right = state.cameraPosition.x * 2, forward = state.cameraPosition.y * 2;
+    auto project = [&](double screenX, double screenY) {
+        const double baseX = right + screenX / 36 + screenY / 18;
+        const double baseY = forward - screenX / 36 + screenY / 18;
+        double x = baseX, y = baseY;
+        for (unsigned i = 0; i < 6; ++i)
+        {
+            const double ground =
+                (std::max)(world::PlanetTerrain::SeaLevelMeters, surface->ContactAt(x, y).heightMeters);
+            const double height =
+                surface->Origin().origin.altitudeMeters + state.surfaceCameraHeight * 2 - ground;
+            x = baseX - height * (44. / 36);
+            y = baseY - height * (44. / 36);
+        }
+        auto point = surface->PointAt(x, y);
+        point.altitudeMeters = surface->ContactAt(x, y).heightMeters;
+        return point;
+    };
+    view.center = project(0, 0);
+    double radius = 0;
+    for (double x : {-kCanvasWidth * .5 / WorldCamera::zoom, kCanvasWidth * .5 / WorldCamera::zoom})
+    {
+        for (double y : {-kCanvasHeight * .57 / WorldCamera::zoom, kCanvasHeight * .43 / WorldCamera::zoom})
+        {
+            radius = (std::max)(radius, world::SurfaceGeometry::Distance(surface->Planet().radiusMeters,
+                                                                         view.center, project(x, y)));
+        }
+    }
+    // Quantize coverage so small camera/terrain changes do not rebuild the fallback every frame.
+    view.radiusMeters = (std::min)(512., (std::max)(96., std::ceil((radius + 64) / 16) * 16));
+    return view;
 }
 void Game::Reset()
 {
@@ -2688,9 +2767,10 @@ void Game::UpdateSurface(float dt)
                                           : state.playerMotion.velocity;
     const auto streamVelocity =
         state.aircraft.mounted ? state.aircraft.velocity : world::Vector3d{velocity.x * 2, velocity.y * 2, 0};
-    surface->Update(IsSurfaceMine() || state.isInsideHome || state.isInObservatory ? world::Vector3d{}
-                                                                                   : streamVelocity,
-                    relayDestination, state.aircraft.mounted);
+    surface->Update(
+        IsSurfaceMine() || state.isInsideHome || state.isInObservatory ? world::Vector3d{} : streamVelocity,
+        relayDestination, state.aircraft.mounted,
+        surface->Ready() ? std::optional<world::SurfaceView>(SurfaceTerrainView()) : std::nullopt);
     if (!surface->Ready())
     {
         state.StopMotion();
@@ -3621,7 +3701,11 @@ InteractionTarget Game::FindNearbyInteraction()
     {
         if (state.aircraft.mounted)
         {
-            return InteractionTarget::Aircraft;
+            const auto &a = state.aircraft;
+            return a.health > 0 && (a.grounded || a.landingRequested ||
+                                    (a.landingAvailable && std::hypot(a.velocity.x, a.velocity.y) <= 2))
+                       ? InteractionTarget::Aircraft
+                       : InteractionTarget::None;
         }
         if (state.car.mounted)
         {

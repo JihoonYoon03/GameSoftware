@@ -33,6 +33,7 @@ struct PlanetCompanion
     world::Vector3d heading = {0, 1, 0};
     combat::NpcCombatState combat;
     bool walking = false;
+    MovementFacing motion;
 };
 struct PlanetPartyState
 {
@@ -68,7 +69,7 @@ class PlanetParty
     Vector2 MineLocal(const world::SurfacePoint &point) const;
     world::TangentFrame Frame(CompanionPlace place) const;
     void ChangeOwner(size_t index, CompanionPlace place, const world::SurfacePoint &position);
-    bool Clear(const world::SurfacePoint &point, int except) const;
+    bool Clear(const world::SurfacePoint &point, int except, bool leavingAircraft = false) const;
     PlanetPartyState state;
     std::shared_ptr<const world::GeneratedPlanet> planet;
     std::array<float, 2> routeCooldown = {};
@@ -408,6 +409,7 @@ struct CommunityResident
     double distanceMeters = 0;
     float speed = 0, fearSeconds = 0, hitFlash = 0, corpseSeconds = 0;
     int direction = 1, health = 100;
+    MovementFacing motion;
 };
 struct CommunitySite
 {
@@ -632,7 +634,8 @@ class PlanetCities
     bool Occupied(const GameState &state, const world::SurfaceSession &session, Vector2 local,
                   int cityOverride = -1, bool includePeople = true) const;
     bool OccupiedAt(const GameState &state, const world::SurfaceSession &session,
-                    const world::SurfacePoint &point, int cityOverride = -1, bool includePeople = true) const;
+                    const world::SurfacePoint &point, int cityOverride = -1, bool includePeople = true,
+                    const world::SurfacePoint *escapeFrom = nullptr) const;
 
   private:
     int activeCity = -1;

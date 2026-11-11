@@ -46,7 +46,7 @@ bool Clear(const GameState &world, Vector2 p)
     }
     return true;
 }
-bool WalkSegment(const GameState &world, Vector2 from, Vector2 to, bool checkEndpoints)
+bool WalkSegment(const GameState &world, Vector2 from, Vector2 to, bool checkEndpoints, bool crossing = false)
 {
     const int steps = (std::max)(1, int(std::ceil(Game::Distance(from, to) / .25f)));
     const int first = checkEndpoints ? 0 : 1;
@@ -54,7 +54,7 @@ bool WalkSegment(const GameState &world, Vector2 from, Vector2 to, bool checkEnd
     for (int i = first; i <= last; ++i)
     {
         Vector2 p = {from.x + (to.x - from.x) * i / steps, from.y + (to.y - from.y) * i / steps};
-        if (!Clear(world, p) || RoadNetwork::Get().Contains(p, .32f))
+        if (!Clear(world, p) || (!crossing && RoadNetwork::Get().Contains(p, .32f)))
         {
             return false;
         }
@@ -547,6 +547,7 @@ void CityResidents::Update(GameState &world, float dt, int activeCity, int *deci
         if (resident.impact.seconds > 0)
         {
             resident.activity = ResidentActivity::Injured;
+            resident.blockedSeconds = 0;
             continue;
         }
         resident.fearSeconds = (std::max)(0.f, resident.fearSeconds - dt);
@@ -575,7 +576,7 @@ void CityResidents::Update(GameState &world, float dt, int activeCity, int *deci
             resident.conversationSeconds = 0;
             resident.route.clear();
             resident.routeCursor = 0;
-            resident.facing.Update(before, resident.position);
+            resident.facing.Update(before, resident.position, dt);
             continue;
         }
         const auto before = resident.position;
@@ -583,6 +584,7 @@ void CityResidents::Update(GameState &world, float dt, int activeCity, int *deci
         {
             resident.conversationSeconds = (std::max)(0.f, resident.conversationSeconds - dt);
             resident.activity = ResidentActivity::Talking;
+            resident.blockedSeconds = 0;
             continue;
         }
         resident.waitSeconds = (std::max)(0.f, resident.waitSeconds - dt);
@@ -613,6 +615,7 @@ void CityResidents::Update(GameState &world, float dt, int activeCity, int *deci
                     Overworld::Traffic().CrossingRoad(waypoint.crossing, resident.position)))
             {
                 resident.activity = ResidentActivity::WaitingSignal;
+                resident.blockedSeconds = 0;
                 continue;
             }
             resident.crossingJunction = waypoint.crossing;
@@ -628,27 +631,91 @@ void CityResidents::Update(GameState &world, float dt, int activeCity, int *deci
                            : waypoint.position;
         // Graph edges (including the initial connector) were validated against immutable obstacles.
         // Don't rescan every building/prop/road for every moving resident every frame.
-        bool blocked = false;
-        if (!world.isBikeMounted && Game::Distance(next, world.playerPosition) < .65f)
-        {
-            blocked = true;
-        }
-        for (size_t other = 0; other < world.residents.size() && !blocked; ++other)
-        {
-            if ((world.surfaceExploration && world.residents[other].cityIndex != resident.cityIndex) ||
-                world.residents[other].health <= 0 || other == index ||
-                (other == Overworld::kKainResidentSlot && game::GameLevels::Chapter().GetState().kainJoined))
+        auto crowded = [&](Vector2 candidate) {
+            if (!world.Mounted() && Game::Distance(candidate, world.playerPosition) < .65f &&
+                Game::Distance(candidate, world.playerPosition) <
+                    Game::Distance(before, world.playerPosition))
             {
-                continue;
+                return true;
             }
-            if (Game::Distance(next, world.residents[other].position) < .38f &&
-                Game::Distance(next, world.residents[other].position) <
-                    Game::Distance(before, world.residents[other].position))
+            for (size_t other = 0; other < world.residents.size(); ++other)
             {
-                blocked = true;
+                const auto &person = world.residents[other];
+                if ((world.surfaceExploration && person.cityIndex != resident.cityIndex) ||
+                    person.health <= 0 || other == index ||
+                    (other == Overworld::kKainResidentSlot &&
+                     game::GameLevels::Chapter().GetState().kainJoined))
+                {
+                    continue;
+                }
+                if (Game::Distance(candidate, person.position) < .38f &&
+                    Game::Distance(candidate, person.position) < Game::Distance(before, person.position))
+                {
+                    return true;
+                }
+            }
+            return false;
+        };
+        if (resident.crossingJunction < 0 && waypoint.crossing < 0 && crowded(waypoint.position) &&
+            resident.routeCursor + 1 < resident.route.size() &&
+            resident.route[resident.routeCursor + 1].crossing < 0 &&
+            CanWalkSegment(world, before, resident.route[resident.routeCursor + 1].position))
+        {
+            ++resident.routeCursor;
+            resident.blockedSeconds = 0;
+            continue;
+        }
+        const bool sharedGoal = resident.crossingJunction < 0 &&
+                                resident.routeCursor + 1 == resident.route.size() && distance <= .65f &&
+                                crowded(waypoint.position) &&
+                                CanWalkSegment(world, before, waypoint.position);
+        bool blocked = crowded(next);
+        bool sidestepping = false;
+        auto clearStep = [&](Vector2 candidate) {
+            if (resident.crossingJunction < 0)
+            {
+                return CanWalkSegment(world, before, candidate);
+            }
+            const auto entry =
+                resident.routeCursor > 0 ? resident.route[resident.routeCursor - 1].position : before;
+            const Vector2 axis{waypoint.position.x - entry.x, waypoint.position.y - entry.y};
+            const float length = std::hypot(axis.x, axis.y);
+            if (length < .001f ||
+                std::abs((candidate.x - entry.x) * axis.y - (candidate.y - entry.y) * axis.x) / length > .5f)
+            {
+                return false;
+            }
+            return WalkSegment(world, before, candidate, true, true);
+        };
+        if (!blocked && resident.blockedSeconds >= .35f)
+        {
+            blocked = !clearStep(waypoint.position);
+        }
+        if (blocked && resident.blockedSeconds >= .35f && amount > .001f)
+        {
+            // Opposing pedestrians step to their own right. Crossing actors stay within
+            // their reserved crosswalk; other detours stay off roads.
+            const float angle = std::atan2(waypoint.position.y - before.y, waypoint.position.x - before.x);
+            for (float turn : {-.9f, -kPi * .5f})
+            {
+                const Vector2 detour{before.x + std::cos(angle + turn) * amount,
+                                     before.y + std::sin(angle + turn) * amount};
+                if (!crowded(detour) && clearStep(detour))
+                {
+                    next = detour;
+                    blocked = false;
+                    sidestepping = true;
+                    break;
+                }
             }
         }
-        if (blocked)
+        if (!blocked)
+        {
+            resident.position = BodyCollision::MoveResident(index, before, next);
+            blocked = amount > .001f && Game::Distance(before, resident.position) < amount * .2f;
+        }
+        resident.facing.Update(before, resident.position, dt);
+        if (blocked && !sharedGoal)
         {
             resident.blockedSeconds += dt;
             if (resident.crossingJunction < 0)
@@ -664,10 +731,12 @@ void CityResidents::Update(GameState &world, float dt, int activeCity, int *deci
             }
             continue;
         }
-        resident.blockedSeconds = 0;
-        resident.position = BodyCollision::MoveResident(index, before, next);
-        resident.facing.Update(before, resident.position);
-        if (distance <= amount + .001f)
+        resident.blockedSeconds = sidestepping ? .35f : 0;
+        if (sidestepping && resident.crossingJunction < 0)
+        {
+            resident.activity = ResidentActivity::Yielding;
+        }
+        if (Game::Distance(resident.position, waypoint.position) <= (sharedGoal ? .65f : .08f))
         {
             resident.crossingJunction = -1;
             resident.activity = resident.profession == ResidentProfession::Guard

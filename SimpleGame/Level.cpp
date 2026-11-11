@@ -516,35 +516,48 @@ void MineCombat::MoveEnemy(Enemy &enemy, float deltaSeconds, tutorial::Vector2 t
                 if (distance >= 0 && distance < best)
                 {
                     best = distance;
-                    target = {nx + .5f, ny + .5f};
+                    const tutorial::Vector2 center{nx + .5f, ny + .5f};
+                    // Reach this cell's center before taking a turn across a blocked corner.
+                    target = level.Map().HasLineOfSight(enemy.position, center)
+                                 ? center
+                                 : tutorial::Vector2{x + .5f, y + .5f};
                 }
             }
         }
     }
     float distance = tutorial::Game::Distance(enemy.position, target);
-    if (distance < .05f)
+    if (distance < .6f && level.Map().HasLineOfSight(enemy.position, enemy.target))
     {
         return;
     }
     float step = (std::min)(distance, 1.35f * deltaSeconds);
-    auto next = tutorial::Vector2{enemy.position.x + (target.x - enemy.position.x) / distance * step,
-                                  enemy.position.y + (target.y - enemy.position.y) / distance * step};
-    if (tutorial::Game::Distance(next, state.entry) >= kSafeAreaRadius && !level.Map().IsBlocked(next))
+    if (distance < .0001f)
     {
-        enemy.position = next;
+        return;
     }
-    else if (tutorial::Game::Distance(next, state.entry) >= kSafeAreaRadius)
+    const float angle = std::atan2(target.y - previous.y, target.x - previous.x);
+    for (float turn : {0.f, .6f, -.6f, 1.2f, -1.2f})
     {
-        if (!level.Map().IsBlocked({next.x, enemy.position.y}))
+        const tutorial::Vector2 next{previous.x + std::cos(angle + turn) * step,
+                                     previous.y + std::sin(angle + turn) * step};
+        if (tutorial::Game::Distance(next, state.entry) < kSafeAreaRadius || level.Map().IsBlocked(next) ||
+            !level.Map().HasLineOfSight(previous, next))
         {
-            enemy.position.x = next.x;
+            continue;
         }
-        if (!level.Map().IsBlocked({enemy.position.x, next.y}))
+        const bool crowded = std::any_of(state.enemies.begin(), state.enemies.end(), [&](const Enemy &other) {
+            return &other != &enemy && other.health > 0 &&
+                   tutorial::Game::Distance(next, other.position) < .42f &&
+                   tutorial::Game::Distance(next, other.position) <
+                       tutorial::Game::Distance(previous, other.position);
+        });
+        if (!crowded)
         {
-            enemy.position.y = next.y;
+            enemy.position = next;
+            break;
         }
     }
-    enemy.facing.Update(previous, enemy.position);
+    enemy.facing.Update(previous, enemy.position, deltaSeconds);
 }
 
 void MineCombat::AdvanceBullet(Bullet &bullet, float movement)
@@ -812,7 +825,7 @@ void MineCombat::UpdateNpcs(float deltaSeconds)
                 {
                     position = next;
                 }
-                facing.Update(previous, position);
+                facing.Update(previous, position, deltaSeconds);
                 combat.evading = facing.walking;
             }
         }
@@ -974,10 +987,27 @@ MineRescue::MineRescue(MineLevel &owner) : level(owner), state(owner.GetState())
 {
 }
 float MineRescue::WalkRoute(tutorial::Vector2 &position, const std::vector<tutorial::Vector2> &route,
-                            size_t &index, float amount, tutorial::MovementFacing &facing)
+                            size_t &index, float amount, tutorial::MovementFacing &facing, float dt)
 {
+    const auto previous = position;
     float travelled = 0;
     facing.walking = false;
+    auto crowded = [&](tutorial::Vector2 next) {
+        auto blocks = [&](const tutorial::Vector2 &other, int health) {
+            return &other != &position && health > 0 && tutorial::Game::Distance(next, other) < .38f &&
+                   tutorial::Game::Distance(next, other) <= tutorial::Game::Distance(position, other);
+        };
+        const auto &g = tutorial::Game::Get();
+        if ((g.HasCompanion(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Mine) &&
+             blocks(state.riaPosition, state.riaCombat.health)) ||
+            (g.HasCompanion(tutorial::CompanionId::Kain, tutorial::CompanionPlace::Mine) &&
+             blocks(state.kain.position, state.kain.combat.health)))
+        {
+            return true;
+        }
+        return std::any_of(state.survivors.begin(), state.survivors.end(),
+                           [&](const RescueNpc &npc) { return blocks(npc.position, npc.combat.health); });
+    };
     while (index < route.size() && amount > 0)
     {
         auto target = route[index];
@@ -987,43 +1017,82 @@ float MineRescue::WalkRoute(tutorial::Vector2 &position, const std::vector<tutor
             ++index;
             continue;
         }
+        if (crowded(target) && index + 1 < route.size() &&
+            level.Map().HasLineOfSight(position, route[index + 1]))
+        {
+            ++index; // A temporary occupant cannot pin every follower to the same intermediate cell.
+            continue;
+        }
         float step = (std::min)(amount, distance);
         tutorial::Vector2 next = {position.x + (target.x - position.x) / distance * step,
                                   position.y + (target.y - position.y) / distance * step};
-        if (level.Map().IsBlocked(next))
+        if (level.Map().IsBlocked(next) || !level.Map().HasLineOfSight(position, next))
         {
             break;
         }
-        facing.Update(position, next);
+        if (crowded(next))
+        {
+            const float angle = std::atan2(target.y - position.y, target.x - position.x);
+            bool clear = false;
+            for (float turn : {-tutorial::kPi * .5f, tutorial::kPi * .5f})
+            {
+                const tutorial::Vector2 side{position.x + std::cos(angle + turn) * step,
+                                             position.y + std::sin(angle + turn) * step};
+                if (!crowded(side) && !level.Map().IsBlocked(side) &&
+                    level.Map().HasLineOfSight(position, side))
+                {
+                    next = side;
+                    clear = true;
+                    break;
+                }
+            }
+            if (!clear)
+            {
+                break;
+            }
+        }
         position = next;
         travelled += step;
         amount -= step;
-        if (step >= distance)
+        if (tutorial::Game::Distance(position, target) < .025f)
         {
             ++index;
         }
     }
+    facing.Update(previous, position, dt);
     return travelled;
 }
 
 void MineRescue::Update(float deltaSeconds)
 {
     auto &world = tutorial::Game::Get().GetState();
+    int routeBudget = 3;
     UpdateScanner(deltaSeconds);
     state.scannerCooldown = (std::max)(0.f, state.scannerCooldown - deltaSeconds);
     profiling::Scope timer(profiling::Timer::NpcUpdate);
     state.riaNavigationCooldown -= deltaSeconds;
     state.riaMovement = 0;
+    const float riaDistance = tutorial::Game::Distance(state.riaPosition, world.playerPosition);
+    const bool riaSeesPlayer = level.Map().HasLineOfSight(state.riaPosition, world.playerPosition);
+    const bool riaFollowing = state.riaFacing.Follow(riaDistance, 2, riaSeesPlayer);
+    if (!riaFollowing)
+    {
+        state.riaRoute.clear();
+        state.riaRouteIndex = 0;
+    }
     if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Mine) &&
-        state.riaNavigationCooldown <= 0)
+        state.riaNavigationCooldown <= 0 && routeBudget > 0)
     {
         state.riaNavigationCooldown = .65f;
-        if (tutorial::Game::Distance(state.riaPosition, world.playerPosition) > 2)
+        if (riaFollowing && state.riaCombat.health > 0 &&
+            (state.riaRouteIndex >= state.riaRoute.size() ||
+             tutorial::Game::Distance(state.riaRoute.back(), world.playerPosition) > 1.5f))
         {
+            --routeBudget;
             state.riaRoute = level.Map().FindRoute(state.riaPosition, world.playerPosition);
             state.riaRouteIndex = 0;
         }
-        else
+        else if (!riaFollowing)
         {
             state.riaRoute.clear();
             state.riaRouteIndex = 0;
@@ -1032,8 +1101,17 @@ void MineRescue::Update(float deltaSeconds)
     if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Mine) &&
         state.riaCombat.health > 0)
     {
-        state.riaMovement = WalkRoute(state.riaPosition, state.riaRoute, state.riaRouteIndex,
-                                      4.8f * deltaSeconds, state.riaFacing);
+        const float requested = !riaFollowing ? 0
+                                : riaSeesPlayer
+                                    ? (std::min)(4.8f * deltaSeconds, (std::max)(0.f, riaDistance - 2))
+                                    : 4.8f * deltaSeconds;
+        state.riaMovement = WalkRoute(state.riaPosition, state.riaRoute, state.riaRouteIndex, requested,
+                                      state.riaFacing, deltaSeconds);
+        if (requested > .001f && state.riaMovement < requested * .2f)
+        {
+            state.riaRoute.clear();
+            state.riaRouteIndex = 0;
+        }
     }
     else
     {
@@ -1042,18 +1120,39 @@ void MineRescue::Update(float deltaSeconds)
     if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Kain, tutorial::CompanionPlace::Mine))
     {
         auto &npc = state.kain;
+        const float distance = tutorial::Game::Distance(npc.position, world.playerPosition);
+        const bool seesPlayer = level.Map().HasLineOfSight(npc.position, world.playerPosition);
+        const bool following = npc.facing.Follow(distance, 2.8f, seesPlayer);
+        if (!following)
+        {
+            npc.route.clear();
+            npc.routeIndex = 0;
+        }
         npc.navigationCooldown -= deltaSeconds;
-        if (npc.navigationCooldown <= 0)
+        if (npc.navigationCooldown <= 0 && npc.combat.health > 0 && routeBudget > 0)
         {
             npc.navigationCooldown = .7f;
-            npc.route = tutorial::Game::Distance(npc.position, world.playerPosition) > 2.8f
-                            ? level.Map().FindRoute(npc.position, world.playerPosition)
-                            : std::vector<tutorial::Vector2>{};
-            npc.routeIndex = 0;
+            if (following && (npc.routeIndex >= npc.route.size() ||
+                              tutorial::Game::Distance(npc.route.back(), world.playerPosition) > 1.5f))
+            {
+                --routeBudget;
+                npc.route = level.Map().FindRoute(npc.position, world.playerPosition);
+                npc.routeIndex = 0;
+            }
         }
         if (npc.combat.health > 0)
         {
-            WalkRoute(npc.position, npc.route, npc.routeIndex, 4.6f * deltaSeconds, npc.facing);
+            const float requested = !following ? 0
+                                    : seesPlayer
+                                        ? (std::min)(4.6f * deltaSeconds, (std::max)(0.f, distance - 2.8f))
+                                        : 4.6f * deltaSeconds;
+            const float actual =
+                WalkRoute(npc.position, npc.route, npc.routeIndex, requested, npc.facing, deltaSeconds);
+            if (requested > .001f && actual < requested * .2f)
+            {
+                npc.route.clear();
+                npc.routeIndex = 0;
+            }
         }
         else
         {
@@ -1075,8 +1174,20 @@ void MineRescue::Update(float deltaSeconds)
             }
             continue;
         }
-        npc.walkedDistance +=
-            WalkRoute(npc.position, npc.route, npc.routeIndex, 2.1f * deltaSeconds, npc.facing);
+        npc.navigationRetrySeconds = (std::max)(0.f, npc.navigationRetrySeconds - deltaSeconds);
+        const bool atExit = tutorial::Game::Distance(npc.position, state.entry) <= .65f &&
+                            level.Map().HasLineOfSight(npc.position, state.entry);
+        const float walked = WalkRoute(npc.position, npc.route, npc.routeIndex,
+                                       atExit ? 0 : 2.1f * deltaSeconds, npc.facing, deltaSeconds);
+        npc.walkedDistance += walked;
+        if (walked < 2.1f * deltaSeconds * .2f && tutorial::Game::Distance(npc.position, state.entry) > 1 &&
+            npc.navigationRetrySeconds <= 0 && routeBudget > 0)
+        {
+            --routeBudget;
+            npc.route = level.Map().FindRoute(npc.position, state.entry);
+            npc.routeIndex = 0;
+            npc.navigationRetrySeconds = 1;
+        }
         auto screen = level.Project(npc.position, 25);
         bool outside = screen.x < -240 || screen.x > tutorial::kCanvasWidth + 240 || screen.y < -200 ||
                        screen.y > tutorial::kCanvasHeight + 200;
@@ -2406,8 +2517,9 @@ std::vector<tutorial::Vector2> FrontierMap::FindRoute(tutorial::Vector2 from, tu
     result.push_back(to);
     return result;
 }
-bool FrontierParty::Move(FrontierPerson &person, float amount)
+bool FrontierParty::Move(FrontierPerson &person, float amount, float dt)
 {
+    const auto previous = person.position;
     person.facing.walking = false;
     if (person.combat.health <= 0)
     {
@@ -2425,11 +2537,10 @@ bool FrontierParty::Move(FrontierPerson &person, float amount)
         float step = (std::min)(distance, amount);
         tutorial::Vector2 next = {person.position.x + (to.x - person.position.x) * step / distance,
                                   person.position.y + (to.y - person.position.y) * step / distance};
-        if (level.IsBlocked(next))
+        if (level.IsBlocked(next) || !level.HasLineOfSight(person.position, next))
         {
             break;
         }
-        person.facing.Update(person.position, next);
         person.position = next;
         amount -= step;
         if (step >= distance)
@@ -2437,6 +2548,7 @@ bool FrontierParty::Move(FrontierPerson &person, float amount)
             ++person.waypoint;
         }
     }
+    person.facing.Update(previous, person.position, dt);
     return person.waypoint >= person.route.size();
 }
 void ChapterOneLevel::Enter(bool debugEntry)
@@ -3336,7 +3448,9 @@ void FrontierParty::Update(float deltaSeconds)
             person.facing.walking = false;
             return;
         }
-        if (tutorial::Game::Distance(person.position, world.playerPosition) > spacing)
+        const float distance = tutorial::Game::Distance(person.position, world.playerPosition);
+        const bool seesPlayer = level.HasLineOfSight(person.position, world.playerPosition);
+        if (person.facing.Follow(distance, spacing, seesPlayer))
         {
             if (person.waypoint >= person.route.size() ||
                 tutorial::Game::Distance(person.route.back(), world.playerPosition) > 2)
@@ -3344,7 +3458,10 @@ void FrontierParty::Update(float deltaSeconds)
                 person.route = level.FindRoute(person.position, world.playerPosition);
                 person.waypoint = 0;
             }
-            Move(person, 4 * deltaSeconds);
+            Move(person,
+                 seesPlayer ? (std::min)(4 * deltaSeconds, (std::max)(0.f, distance - spacing))
+                            : 4 * deltaSeconds,
+                 deltaSeconds);
         }
         else
         {
@@ -3373,7 +3490,7 @@ void FrontierParty::Update(float deltaSeconds)
             }
             else if (!person.arrived)
             {
-                person.arrived = Move(person, 2.7f * deltaSeconds);
+                person.arrived = Move(person, 2.7f * deltaSeconds, deltaSeconds);
             }
             if (person.arrived)
             {
@@ -3393,7 +3510,7 @@ void FrontierParty::Update(float deltaSeconds)
         {
             if (person.combat.health > 0 && !person.arrived)
             {
-                person.arrived = Move(person, 2.7f * deltaSeconds);
+                person.arrived = Move(person, 2.7f * deltaSeconds, deltaSeconds);
             }
             else
             {

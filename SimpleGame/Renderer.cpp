@@ -224,7 +224,10 @@ void main() {
  coverage=instanceBody.a; holographic=instanceAnchor.w;
  if(holographic>.5){ tint.rgb=mix(tint.rgb,vec3(.22,.72,1.),.6)*(1.15+.08*sin(hologramTime));tint.a*=.64;coverage=.64;}
  if(vertexInfo.x>2.5)surface=4.;
- if(shadowPass!=0) { p.xy+=vec2(.38,.55)*p.z;p.z=0.; }
+ if(shadowPass!=0) {
+  float ground=instanceTranslation.w;
+  p.xy+=vec2(.38,.55)*max(0.,p.z-ground);p.z=ground;
+ }
  vec2 screen=instanceAnchor.xy+vec2((p.x-p.y)*36.,(p.x+p.y)*18.-p.z*44.);
  float depth=instanceAnchor.z+(p.x+p.y)*36.+p.z*(1296./44.);
  if(shadowPass!=0) {screen+=shadowJitter;depth=-7000.;}
@@ -293,7 +296,7 @@ models::Point Unit(models::Point p)
 } // namespace
 bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, models::Point scale,
                            const models::Transform3D &transform, float depth, const models::Palette &palette,
-                           const models::CharacterPose *pose)
+                           const models::CharacterPose *pose, float shadowGroundZ)
 {
     if (!m_meshes->program)
     {
@@ -537,7 +540,8 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
         {},
         {},
         {material->roughness, material->metallic, material->emission, material->castsShadow ? 1.f : 0.f},
-        {transform.position.x, transform.position.y, transform.position.z, 0}};
+        // The fourth component carries the receiver plane without enlarging the instance stream.
+        {transform.position.x, transform.position.y, transform.position.z, shadowGroundZ}};
     std::copy(palette.body.begin(), palette.body.end(), instance.body);
     std::copy(palette.accent.begin(), palette.accent.end(), instance.accent);
     std::copy(palette.emission.begin(), palette.emission.end(), instance.emission);

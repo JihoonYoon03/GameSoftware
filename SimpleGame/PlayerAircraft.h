@@ -20,6 +20,8 @@ struct PlayerAircraft
     float wreckSeconds = 0;
     bool grounded = true;
     bool mounted = false, landingRequested = false;
+    bool landingAvailable = false;
+    float landingCheckSeconds = 0;
     world::Vector3d velocity{}; // Metres/second in the current floating origin.
     float bank = 0, fallSpeed = 0, spawnRetry = 0;
 
@@ -38,6 +40,7 @@ class PlayerAircraftController
     static void Drive(Game &game, float dt);
     static void Interact(Game &game);
     static bool Nearby(const Game &game);
+    static bool CanLand(const Game &game);
 
   private:
     static bool Occupied(const Game &game, const world::SurfacePoint &point);

@@ -1291,7 +1291,9 @@ void CityHud::DrawInteractionPrompt()
         label = w.car.mounted ? "차량 / 하차" : "공용차 / 탑승";
         break;
     case InteractionTarget::Aircraft:
-        label = w.aircraft.mounted ? (w.aircraft.grounded ? "비행체 / 하차" : "비행체 / 착륙 요청·취소")
+        label = w.aircraft.mounted ? (w.aircraft.grounded           ? "비행체 / 하차"
+                                      : w.aircraft.landingRequested ? "비행체 / 착륙 취소"
+                                                                    : "비행체 / 착륙")
                                    : "공용 비행체 / 탑승";
         break;
     case InteractionTarget::JetBike:
@@ -2227,7 +2229,8 @@ void Hud::DrawVitals()
             UiText(1248, 676,
                    "고도 " + std::to_string((std::max)(0, altitude)) + " m · " +
                        (w.aircraft.grounded           ? "착륙"
-                        : w.aircraft.landingRequested ? "착륙 대기"
+                        : w.aircraft.landingRequested ? "착륙 중"
+                        : w.aircraft.landingAvailable ? "착륙 가능"
                                                       : "비행"),
                    16, kUiInk, true, true);
         }
@@ -3376,11 +3379,10 @@ void PlanetHud::Draw()
     std::snprintf(coordinates, sizeof(coordinates), "%.4f° / %.4f° · %.0fm", ll[0], ll[1],
                   location.position.altitudeMeters - world::PlanetTerrain::SeaLevelMeters);
     UiText(32, 154, coordinates, 14, {.64f, .79f, .76f});
-    const char *controls = state.aircraft.mounted
-                               ? "W/S 이동 · A/D 조향 · Space/C 상승/하강 · X 제동 · E 착륙/하차"
-                           : state.car.mounted   ? "W 가속 · S 제동/후진 · A/D 조향 · E 하차"
-                           : state.isBikeMounted ? "W 가속 · S 제동/후진 · A/D 조향 · Space 부스트"
-                                                 : "WASD 이동 · 차량 근처에서 E 탑승";
+    const char *controls = state.aircraft.mounted ? "W/S 이동 · A/D 조향 · Space/C 상승/하강 · X 제동"
+                           : state.car.mounted    ? "W 가속 · S 제동/후진 · A/D 조향 · E 하차"
+                           : state.isBikeMounted  ? "W 가속 · S 제동/후진 · A/D 조향 · Space 부스트"
+                                                  : "WASD 이동 · 차량 근처에서 E 탑승";
     UiText(32, 728, controls, 16);
 }
 void PlanetHud::DrawMap(bool full)

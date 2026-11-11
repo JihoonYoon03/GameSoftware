@@ -34,6 +34,7 @@ struct SecurityOfficer
     MovementFacing facing;
     int tier = 1, health = 80;
     float cooldown = 0, navigationSeconds = 0, corpseSeconds = 0, muzzleFlash = 0;
+    float blockedSeconds = 0; // Transient contact progress; restored routes are checked on use.
     BodyImpact impact;
     combat::SecurityCarbine weapon;
     int weaponTier = 0;

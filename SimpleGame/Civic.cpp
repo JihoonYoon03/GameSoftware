@@ -411,6 +411,11 @@ std::vector<Vector2> EmergencyRoute(Vector2 start, Vector2 target)
         result.push_back(position(node));
     }
     std::reverse(result.begin(), result.end());
+    const auto end = result.empty() ? start : result.back();
+    if (Game::Distance(end, target) < 2 && SegmentClear(end, target))
+    {
+        result.push_back(target);
+    }
     return result;
 }
 void AdvanceImpact(Vector2 &position, BodyImpact &body, float dt, bool applyDisplacement = true)
@@ -1654,6 +1659,7 @@ void CivicJustice::Update(float dt)
         }
     }
     bool visible = false;
+    int routeBudget = 2;
     auto &world = Game::Get().GetState();
     for (auto &officer : civic.officers)
     {
@@ -1696,14 +1702,21 @@ void CivicJustice::Update(float dt)
             officer.lastKnown = Add(officer.position, Unit(Sub(officer.position, world.playerPosition)), 15);
         }
         officer.navigationSeconds -= dt;
-        if (officer.navigationSeconds <= 0 && (!surfaceMode || PlanetSecurity::CanNavigate()))
+        const bool moving = (!sees || distance > 5) && officer.impact.seconds <= 0;
+        const auto destination = sees ? world.playerPosition : officer.lastKnown;
+        const bool needsRoute = officer.waypoint >= officer.route.size() || officer.blockedSeconds >= 1 ||
+                                Game::Distance(officer.route.back(), destination) > 2;
+        if (moving && needsRoute && officer.navigationSeconds <= 0 && routeBudget > 0 &&
+            (!surfaceMode || PlanetSecurity::CanNavigate()))
         {
-            officer.route = EmergencyRoute(officer.position, sees ? world.playerPosition : officer.lastKnown);
+            --routeBudget;
+            officer.route = EmergencyRoute(officer.position, destination);
             officer.waypoint = 0;
             officer.navigationSeconds = 1.2f + float(officer.id % 4) * .15f;
+            officer.blockedSeconds = 0;
         }
         auto previous = officer.position;
-        if ((!sees || distance > 5) && officer.waypoint < officer.route.size() && officer.impact.seconds <= 0)
+        if (moving && officer.waypoint < officer.route.size())
         {
             auto target = officer.route[officer.waypoint];
             float remaining = Game::Distance(target, officer.position);
@@ -1718,18 +1731,29 @@ void CivicJustice::Update(float dt)
                         : Separate(officer.position, next, .3f, -1, false,
                                    int(&officer - civic.officers.data()));
             }
-            if (remaining < .3f)
+            const float actual = Game::Distance(previous, officer.position);
+            const float requested = Game::Distance(previous, next);
+            officer.blockedSeconds =
+                requested > .001f && actual < requested * .2f ? officer.blockedSeconds + dt : 0;
+            if (Game::Distance(officer.position, target) < .15f)
             {
                 ++officer.waypoint;
+                officer.blockedSeconds = 0;
             }
         }
-        officer.facing.Update(previous, officer.position);
+        else
+        {
+            officer.blockedSeconds = 0;
+        }
+        officer.facing.Update(previous, officer.position, dt);
         if (!sees && !officer.facing.walking && Game::Distance(officer.position, officer.lastKnown) < 1)
         {
             officer.facing.yaw += dt * .8f;
         }
         sees = CanSee(officer, world.playerPosition, PlayerHeight());
         visible |= sees;
+        delta = Sub(world.playerPosition, officer.position);
+        distance = std::hypot(delta.x, delta.y);
         if (sees)
         {
             officer.facing.yaw = std::atan2(delta.y, delta.x);
@@ -3324,7 +3348,7 @@ void CivicPresentation::DrawWorld()
             officer.tier >= 3 ? models::CharacterType::HeavyCombat : models::CharacterType::Guard,
             officer.facing.walking, officer.facing.yaw, models::Gender::Male, models::HairStyle::Buzz, true,
             officer.muzzleFlash, officer.health <= 0 || officer.impact.response == BodyResponse::Knockdown,
-            2.5f, officer.weapon.IsReloading() ? officer.weapon.GetReloadProgress() : -1);
+            2.5f, officer.weapon.IsReloading() ? officer.weapon.GetReloadProgress() : -1, &officer.facing);
         renderqueue::PopMatrix();
     }
     if (!surfaceMode)

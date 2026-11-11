@@ -570,6 +570,31 @@ void TestAntialiasing()
     renderer.EndScene(0);
     renderer.SetStyle({});
 }
+void TestShadowGroundRebase()
+{
+    auto &renderer = GameRenderer::Get().Backend();
+    auto draw = [&](float originOffset) {
+        Begin();
+        renderer.BeginModels();
+        for (int i = 0; i < 2; ++i)
+        {
+            // Equivalent screen placement after rebasing, including distinct receiver planes
+            // in the same instanced batch. Only the local origin height changes.
+            const float ground = originOffset + i * 6.f;
+            Transform3D transform;
+            transform.position.z = ground;
+            Drawing::DrawModel3D(ModelLibrary::Get().box, {480.f + i * 260, 500 + ground * 44}, {2, 2, 3},
+                                 transform, -ground * (1296.f / 44), {}, nullptr, ground);
+        }
+        renderer.EndModels();
+        assert(renderer.GetFrameStatistics().instancedDraws > 0 &&
+               renderer.GetFrameStatistics().shadowDraws > 0);
+        return Pixels();
+    };
+    const auto reference = draw(0);
+    assert(draw(64) == reference);
+    assert(draw(-64) == reference);
+}
 void TestDepth()
 {
     auto draw = [](bool reverse) {
@@ -2376,6 +2401,7 @@ int main(int argc, char **argv)
     std::cout << "Checking antialiasing, depth and effect occlusion.\n" << std::flush;
     TestAntialiasing();
     TestBatchReuse();
+    TestShadowGroundRebase();
     TestDepth();
     TestEffectDepth();
     TestForwardFlashlightMask();

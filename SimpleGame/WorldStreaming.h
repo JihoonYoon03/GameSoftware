@@ -21,6 +21,12 @@ struct GroundContact
     Vector3d normal = {1, 0, 0};
     bool land = true, detailed = false;
 };
+// Ground footprint of the rendered camera, independent of the travelling actor's position.
+struct SurfaceView
+{
+    SurfacePoint center;
+    double radiusMeters = 96;
+};
 struct TerrainVertex
 {
     SurfacePoint point;
@@ -82,7 +88,8 @@ class TerrainStream
     void Close();
     // Main thread only. A published snapshot may be read on other threads while retained.
     void Update(const TangentFrame &focus, Vector3d velocityMeters = {},
-                std::optional<SurfacePoint> destination = std::nullopt);
+                std::optional<SurfacePoint> destination = std::nullopt,
+                std::optional<SurfaceView> view = std::nullopt);
     bool Detailed(const SurfacePoint &point, double radiusMeters = 0) const;
     bool FailedAt(const SurfacePoint &point, double radiusMeters = 0) const;
     std::shared_ptr<const SurfaceSnapshot> Snapshot() const;
@@ -110,7 +117,7 @@ class SurfaceSession
     void Start(std::shared_ptr<const GeneratedPlanet> planet);
     void Stop();
     void Update(Vector3d velocityMeters = {}, std::optional<SurfacePoint> destination = std::nullopt,
-                bool airborne = false);
+                bool airborne = false, std::optional<SurfaceView> view = std::nullopt);
     bool Ready() const;
     const TangentFrame &Pose() const
     {

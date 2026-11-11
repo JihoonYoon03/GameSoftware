@@ -161,6 +161,7 @@ struct RescueNpc
     models::Gender gender = models::Gender::Male;
     models::HairStyle hair = models::HairStyle::SidePart;
     NpcCombatState combat;
+    float navigationRetrySeconds = 0; // Transient retry budget for an interrupted evacuation route.
 };
 struct ScannerContact
 {
@@ -303,7 +304,7 @@ class MineRescue
     MineState &state;
     void UpdateScanner(float deltaSeconds);
     float WalkRoute(tutorial::Vector2 &position, const std::vector<tutorial::Vector2> &route, size_t &index,
-                    float amount, tutorial::MovementFacing &facing);
+                    float amount, tutorial::MovementFacing &facing, float deltaSeconds);
 };
 
 // ============================================================================
@@ -519,7 +520,7 @@ class FrontierParty
   private:
     ChapterOneLevel &level;
     ChapterOneState &state;
-    bool Move(FrontierPerson &person, float amount);
+    bool Move(FrontierPerson &person, float amount, float deltaSeconds);
 };
 // ============================================================================
 // ChapterOneLevel : Level — quest progression and field/hub lifecycle

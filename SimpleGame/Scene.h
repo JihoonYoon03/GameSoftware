@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Scene/SceneGraph.h"
 #include "Game.h"
 #include "Level.h"
@@ -123,7 +123,8 @@ class MineScene final : public Scene
   private:
     void PlacePerson(game::Scene &scene, const std::string &id, Vector2 position, ColorRGBA coat,
                      models::CharacterType type, bool walking, const std::string &label, float facingYaw,
-                     models::Gender gender, models::HairStyle hair, const NpcCombatState &combat);
+                     models::Gender gender, models::HairStyle hair, const NpcCombatState &combat,
+                     const tutorial::MovementFacing &motion);
     void PlaceClue(game::Scene &scene, const char *id, Vector2 position, const char *label, ColorRGBA color,
                    MineQuestStage expected, bool glyph = false);
     std::uint64_t cachedRevision = 0;

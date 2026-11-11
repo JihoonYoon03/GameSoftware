@@ -1951,6 +1951,32 @@ void TestAircraftFlightContracts()
     assert(!session.Fly({0, 0, -1000}, PlayerAircraft::RadiusMeters(), PlayerAircraft::HeightMeters()));
     assert(session.Pose().origin.altitudeMeters >=
            session.Stream().Contact(session.Pose().origin).heightMeters - .05);
+    auto &w = g.GetState();
+    const auto previousCamera = w.cameraPosition;
+    const float previousCameraHeight = w.surfaceCameraHeight;
+    w.cameraPosition = {};
+    w.surfaceCameraHeight =
+        float((g.Surface()->ContactAt(0, 0).heightMeters - g.Surface()->Origin().origin.altitudeMeters) / 2);
+    const auto groundView = g.SurfaceTerrainView();
+    w.surfaceCameraHeight += 60; // Raise the camera by 120 metres.
+    const auto elevatedView = g.SurfaceTerrainView();
+    assert(G::Distance(g.Surface()->Planet().radiusMeters, groundView.center, elevatedView.center) > 100);
+    const auto localGround = g.Surface()->Local(elevatedView.center);
+    const auto projectedGround =
+        Drawing::WorldToScreen(float(localGround.x / 2), float(localGround.y / 2), float(localGround.z * 22));
+    assert(std::abs(projectedGround.x - kCanvasWidth * .5f) < 32 &&
+           std::abs(projectedGround.y - kCanvasHeight * .57f) < 32);
+    w.cameraPosition = previousCamera;
+    w.surfaceCameraHeight = previousCameraHeight;
+    auto &a = g.GetState().aircraft;
+    a.position = g.Surface()->Pose().origin;
+    a.mounted = true;
+    a.grounded = false;
+    a.velocity = {3, 0, 0};
+    assert(!PlayerAircraftController::CanLand(g));
+    PlayerAircraftController::Interact(g);
+    assert(!a.landingRequested); // A fast craft cannot queue a landing for later.
+    a = {};
     session.Stop();
     g.Reset();
 }
@@ -2605,6 +2631,38 @@ void TestPlanetCommunity()
     PlanetCommunity::Validate(initial, g.Surface()->Planet());
     PlanetCommunity copied(initial);
     copied.Bind(plan);
+    auto passing = initial;
+    bool sidestep = false;
+    for (auto &person : passing.sites.front().residents)
+    {
+        const auto frame = G::Frame(person.position);
+        const auto axis = G::ToLocal(frame, person.path[1], g.Surface()->Planet().radiusMeters);
+        const double length = std::hypot(axis.x, axis.y);
+        if (length < .001)
+        {
+            continue;
+        }
+        for (double offset : {-.2, .2})
+        {
+            auto candidate = G::Advance(frame, -axis.y / length * offset, axis.x / length * offset,
+                                        g.Surface()->Planet().radiusMeters)
+                                 .origin;
+            candidate.altitudeMeters = plan->terrain.Height(candidate);
+            if (g.Surface()->LandingClear(candidate, .35))
+            {
+                person.position = candidate;
+                sidestep = true;
+                break;
+            }
+        }
+        if (sidestep)
+        {
+            break;
+        }
+    }
+    assert(sidestep);
+    PlanetCommunity passingRestored(passing);
+    passingRestored.Bind(plan); // A physical sidestep must survive validation and a later visit.
     auto rejected = initial;
     rejected.sites.push_back(rejected.sites.front());
     bool caught = false;
@@ -3006,6 +3064,21 @@ void TestPlanetParty()
     party->Bind(plan);
     const auto travelers = party->NearbyTravelers();
     assert(travelers[0] && !travelers[1]);
+    auto &aircraft = g.GetState().aircraft;
+    aircraft.position = party->State().members[0].position;
+    aircraft.mounted = true;
+    assert(!party->Blocked(*aircraft.position, .32, 1));
+    const auto beforeSeparation = party->State().members[0].position;
+    party->Update(.05f);
+    assert(G::Distance(g.Surface()->Planet().radiusMeters, beforeSeparation,
+                       party->State().members[0].position) <= .401);
+    const auto waiting = party->State().members[0].position;
+    aircraft.position = G::Advance(g.Surface()->Pose(), 100, 0, g.Surface()->Planet().radiusMeters).origin;
+    aircraft.position->altitudeMeters += 20;
+    party->Update(.05f);
+    assert(G::Distance(g.Surface()->Planet().radiusMeters, waiting, party->State().members[0].position) <
+           .001);
+    aircraft = {};
     const auto farKain = party->State().members[1].position;
     assert(g.RelocateSurfaceSurvey(plan->Region("frontier").access.position));
     assert(G::Distance(g.Surface()->Planet().radiusMeters, g.Surface()->Pose().origin,
@@ -3613,13 +3686,16 @@ void TestNpcFacing()
         assert(!facing.walking && facing.yaw == lastYaw);
     }
     ReadyMine();
+    std::fill(mineState.tiles.begin(), mineState.tiles.end(), Tile::Floor);
+    mineState.entry = {9.5f, 10.5f};
+    tutorial::Game::Get().GetState().playerPosition = {12.5f, 12.5f};
     mineState.survivors.clear();
     RescueNpc npc{100, 0, {8.5f, 9.5f}};
     npc.evacuating = true;
     npc.route = {{9.5f, 9.5f}, {9.5f, 10.5f}};
     mineState.survivors.push_back(npc);
-    mineState.riaPosition = {8.5f, 9.5f};
-    mineState.riaRoute = npc.route;
+    mineState.riaPosition = {8.5f, 7.5f};
+    mineState.riaRoute = {{9.5f, 7.5f}, {9.5f, 8.5f}};
     mineState.riaNavigationCooldown = 100;
     GameLevels::Mine().Rescue().Update(.1f);
     assert(mineState.survivors.front().facing.walking);
@@ -4681,6 +4757,51 @@ void TestNpcCombat()
     mineState.riaCombat.muzzleFlash = .05f;
     assert(level.Lighting().At(mineState.riaPosition) > .99f);
 }
+void TestMineNavigationProgress()
+{
+    using namespace tutorial;
+    auto &g = Game::Get();
+    g.Reset();
+    ReadyMine();
+    auto &level = GameLevels::Mine();
+    auto &w = g.GetState();
+    std::fill(mineState.tiles.begin(), mineState.tiles.end(), Tile::Floor);
+    mineState.survivors.clear();
+    mineState.enemies.clear();
+    w.playerPosition = {24.5f, 20.5f};
+    mineState.riaPosition = {22.6f, 20.5f};
+    mineState.riaRoute = {w.playerPosition};
+    mineState.riaNavigationCooldown = 1;
+    const auto stopped = mineState.riaPosition;
+    level.Rescue().Update(.05f);
+    assert(Game::Distance(stopped, mineState.riaPosition) < .001f && mineState.riaRoute.empty());
+
+    mineState.riaPosition = mineState.entry;
+    mineState.enemies = {{{20.5f, 20.5f}}, {{20.5f, 21.5f}}};
+    for (int frame = 0; frame < 160; ++frame)
+    {
+        level.Combat().UpdateEnemies(.05f);
+        assert(Game::Distance(mineState.enemies[0].position, mineState.enemies[1].position) >= .4f);
+        for (const auto &enemy : mineState.enemies)
+        {
+            assert(!level.Map().IsBlocked(enemy.position));
+        }
+    }
+    mineState.enemies.clear();
+    w.playerPosition = mineState.riaPosition = mineState.entry;
+    mineState.tiles[20 * kMapSize + 21] = Tile::Wall;
+    mineState.survivors = {{101, 0, {20.5f, 20.5f}}};
+    auto &npc = mineState.survivors.front();
+    npc.evacuating = true;
+    npc.route = {{22.5f, 20.5f}};
+    for (int frame = 0; frame < 24; ++frame)
+    {
+        level.Rescue().Update(.05f);
+    }
+    assert(!npc.route.empty() && Game::Distance(npc.route.back(), mineState.entry) < 1);
+    assert(!level.Map().IsBlocked(npc.position));
+    g.Reset();
+}
 void TestForwardFlashlight()
 {
     using namespace tutorial;
@@ -5385,6 +5506,12 @@ void TestAimMovementAndLayers()
 } // namespace
 int main(int argc, char **argv)
 {
+    if (argc > 1 && std::string(argv[1]) == "--navigation")
+    {
+        TestMineNavigationProgress();
+        std::cout << "Mine crowd, companion spacing and evacuation navigation checks passed.\n";
+        return 0;
+    }
     if (argc > 1 && std::string(argv[1]) == "--aircraft")
     {
         TestAircraftFlightContracts();
@@ -5439,6 +5566,7 @@ int main(int argc, char **argv)
     }
     TestAimMovementAndLayers();
     TestForwardFlashlight();
+    TestMineNavigationProgress();
     TestStageSelectionAndLoadout();
     TestFacilityAccessContracts();
     TestFacilityApproachContracts();

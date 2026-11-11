@@ -99,7 +99,7 @@ class Renderer
     void DrawSolidRect(float x, float y, float z, float size, float r, float g, float b, float a);
     bool SubmitModel(const models::Model &model, RenderPoint screen, models::Point scale,
                      const models::Transform3D &transform, float depth, const models::Palette &palette,
-                     const models::CharacterPose *pose);
+                     const models::CharacterPose *pose, float shadowGroundZ = 0);
     void BeginModels();
     void EndModels();
     // Call between model passes on the GL thread, before a streamed Model is destroyed/reused.

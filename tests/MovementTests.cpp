@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "Game.h"
 #include "Level.h"
 #include "Civic.h"
@@ -16,6 +16,37 @@ namespace
 float Speed(Vector2 v)
 {
     return std::hypot(v.x, v.y);
+}
+void TestNpcCadenceAndFollowRange()
+{
+    auto &g = Game::Get();
+    g.Reset();
+    MovementFacing follower;
+    assert(follower.Follow(3, 2));
+    assert(!follower.Follow(2.01f, 2));
+    for (int i = 0; i < 120; ++i)
+    {
+        assert(!follower.Follow(2.1f + (i % 4) * .1f, 2));
+    }
+    assert(follower.Follow(2.7f, 2) && follower.Follow(2.2f, 2));
+    assert(!follower.Follow(2.02f, 2));
+    MovementFacing slow, fast;
+    constexpr float dt = 1.f / 60;
+    for (int i = 0; i < 60; ++i)
+    {
+        g.GetState().animationTimeSeconds += dt;
+        slow.Update({}, {.2f * dt, 0}, dt);
+        fast.Update({}, {.4f * dt, 0}, dt);
+    }
+    models::CharacterPose pose;
+    fast.ApplyMotion(pose);
+    assert(pose.blended && std::abs(pose.moveForward - .8f) < .01f);
+    assert(std::abs(fast.motionPhase - slow.motionPhase * 2) < .001f);
+    const float stoppedPhase = pose.locomotionPhase;
+    g.GetState().animationTimeSeconds += .5f;
+    fast.ApplyMotion(pose);
+    assert(pose.moveForward < .002f && pose.locomotionPhase == stoppedPhase);
+    g.Reset();
 }
 void TestStartBrakePivot()
 {
@@ -161,6 +192,7 @@ void TestBikeDriftAndRecovery()
 } // namespace
 int main()
 {
+    TestNpcCadenceAndFollowRange();
     TestStartBrakePivot();
     TestRateAndResponse();
     TestGameContextsAndInput();

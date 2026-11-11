@@ -629,6 +629,17 @@ void RemotePreparation()
     session.Start(plan);
     Pump([&] { session.Update(); }, [&] { return session.Ready() && session.Stream().Detailed(source, 12); });
     const auto epoch = session.Stream().Snapshot()->statistics.epoch;
+    const SurfaceView camera{G::Advance(session.Pose(), -240, -240, session.Planet().radiusMeters).origin,
+                             96};
+    Pump([&] { session.Update({}, std::nullopt, true, camera); },
+         [&] {
+             return session.Stream().Detailed(camera.center, 64) && session.Stream().Detailed(source, 12);
+         });
+    Check(G::Distance(session.Planet().radiusMeters, source, session.Pose().origin) < 1.e-6,
+          "An elevated camera loads the visible ground without moving the pilot");
+    Check(session.Stream().Snapshot()->statistics.resident <= session.Stream().Settings().maxResident &&
+              session.Stream().Snapshot()->statistics.bytes <= session.Stream().Settings().memoryBudgetBytes,
+          "Camera coverage shares the bounded streaming budget");
     Pump([&] { session.Update({}, target); },
          [&] { return session.Stream().Detailed(target, 12) && session.Stream().Detailed(source, 12); });
     Check(G::Distance(session.Planet().radiusMeters, source, session.Pose().origin) < 1.e-6,

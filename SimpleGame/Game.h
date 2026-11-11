@@ -74,7 +74,11 @@ struct MovementFacing
 {
     float yaw = .78539816f;
     bool walking = false;
-    void Update(Vector2 from, Vector2 to);
+    bool following = false;
+    float motionSpeed = 0, motionPhase = 0, lastMotionSeconds = -1000;
+    void Update(Vector2 from, Vector2 to, float deltaSeconds = 1.f / 60);
+    bool Follow(float distance, float stopDistance, bool visible = true);
+    void ApplyMotion(models::CharacterPose &pose) const;
 };
 struct Building
 {
@@ -636,6 +640,7 @@ class Game
     {
         return surfaceBike;
     }
+    world::SurfaceView SurfaceTerrainView() const;
     void StopSurface();
     PlanetCities *SurfaceCities() const
     {

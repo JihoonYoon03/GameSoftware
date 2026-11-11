@@ -42,7 +42,7 @@ class Drawing
                            float facingYaw = .78539816f, models::Gender gender = models::Gender::Male,
                            models::HairStyle hair = models::HairStyle::SidePart, bool npcArmed = false,
                            float npcFlash = 0, bool downed = false, float locomotionSpeed = 2.1f,
-                           float reloadProgress = -1);
+                           float reloadProgress = -1, const MovementFacing *motion = nullptr);
     static void DrawHair(Vector2 screen, models::Point scale, const models::Transform3D &rotation,
                          float depth, const models::CharacterPose &pose, models::CharacterType type,
                          models::Gender gender, models::HairStyle hair);
@@ -74,8 +74,9 @@ class Drawing
                                   float yaw, float bank, bool destroyed = false, float wreckOpacity = 1);
     static void DrawProp(const models::Model &model, Vector2 position, models::Point scale = {1, 1, 1},
                          const models::Palette &palette = {}, float yaw = 0, float elevation = 0);
+    // Shadow receiver height uses the same local model units as transform.position.z.
     static void DrawModel3D(const models::Model &model, Vector2 screen, models::Point scale,
                             const models::Transform3D &transform, float depth, const models::Palette &palette,
-                            const models::CharacterPose *pose = nullptr);
+                            const models::CharacterPose *pose = nullptr, float shadowGroundZ = 0);
 };
 } // namespace tutorial

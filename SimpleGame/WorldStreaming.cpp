@@ -502,12 +502,18 @@ bool TerrainStream::FailedAt(const SurfacePoint &point, double radius) const
     return false;
 }
 void TerrainStream::Update(const TangentFrame &focus, Vector3d velocity,
-                           std::optional<SurfacePoint> destination)
+                           std::optional<SurfacePoint> destination, std::optional<SurfaceView> view)
 {
     G::Validate(focus);
     if (destination)
     {
         G::Validate(*destination);
+    }
+    if (view)
+    {
+        G::Validate(view->center);
+        Require(std::isfinite(view->radiusMeters) && view->radiusMeters > 0 && view->radiusMeters <= 512,
+                "Invalid camera ground coverage");
     }
     Require(std::isfinite(Length(velocity)), "Invalid streaming velocity");
     auto &d = *data;
@@ -586,6 +592,10 @@ void TerrainStream::Update(const TangentFrame &focus, Vector3d velocity,
         };
         enqueue(CubeSphere::Address(p, focus.origin, level));
         enqueue(CubeSphere::Address(p, lead, level));
+        if (view)
+        {
+            enqueue(CubeSphere::Address(p, view->center, level));
+        }
         if (destination)
         {
             enqueue(CubeSphere::Address(p, *destination, level));
@@ -603,11 +613,15 @@ void TerrainStream::Update(const TangentFrame &focus, Vector3d velocity,
             double here = Distance(p, focus.origin, center), there = Distance(p, lead, center);
             double remote =
                 destination ? Distance(p, *destination, center) : std::numeric_limits<double>::infinity();
-            if ((std::min)({here, there, remote}) > settings.loadRadiusMeters + bound)
+            const double visible =
+                view ? Distance(p, view->center, center) : std::numeric_limits<double>::infinity();
+            if ((std::min)({here, there, remote}) > settings.loadRadiusMeters + bound &&
+                (!view || visible > view->radiusMeters + bound))
             {
                 continue;
             }
-            candidates.push_back({key, (std::min)({here, there + settings.loadRadiusMeters * .35, remote})});
+            candidates.push_back(
+                {key, (std::min)({here, visible, there + settings.loadRadiusMeters * .35, remote})});
             for (unsigned edge = 0; edge < 4; ++edge)
             {
                 enqueue(CubeSphere::Neighbor(key, ChunkEdge(edge)));
@@ -686,7 +700,9 @@ void TerrainStream::Update(const TangentFrame &focus, Vector3d velocity,
             auto center = it->second->frame.origin;
             if ((std::min)({Distance(p, focus.origin, center), Distance(p, lead, center),
                             destination ? Distance(p, *destination, center)
-                                        : std::numeric_limits<double>::infinity()}) >
+                                        : std::numeric_limits<double>::infinity(),
+                            view ? (std::max)(0., Distance(p, view->center, center) - view->radiusMeters)
+                                 : std::numeric_limits<double>::infinity()}) >
                 settings.retainRadiusMeters + it->second->radiusMeters)
             {
                 bytes -= it->second->Bytes();
@@ -705,9 +721,12 @@ void TerrainStream::Update(const TangentFrame &focus, Vector3d velocity,
             double farthest = -1;
             for (auto it = d.resident.begin(); it != d.resident.end(); ++it)
             {
-                double distance = (std::min)(Distance(p, focus.origin, it->second->frame.origin),
-                                             destination ? Distance(p, *destination, it->second->frame.origin)
-                                                         : std::numeric_limits<double>::infinity());
+                double distance =
+                    (std::min)({Distance(p, focus.origin, it->second->frame.origin),
+                                destination ? Distance(p, *destination, it->second->frame.origin)
+                                            : std::numeric_limits<double>::infinity(),
+                                view ? Distance(p, view->center, it->second->frame.origin)
+                                     : std::numeric_limits<double>::infinity()});
                 if (distance > farthest)
                 {
                     farthest = distance;
@@ -783,9 +802,10 @@ bool SurfaceSession::Ready() const
     auto snapshot = stream.Snapshot();
     return snapshot->planet && snapshot->planet->terrain.Planet().SameWorld(planet);
 }
-void SurfaceSession::Update(Vector3d velocity, std::optional<SurfacePoint> destination, bool airborne)
+void SurfaceSession::Update(Vector3d velocity, std::optional<SurfacePoint> destination, bool airborne,
+                            std::optional<SurfaceView> view)
 {
-    stream.Update(pose, velocity, destination);
+    stream.Update(pose, velocity, destination, view);
     if (Ready() && !airborne)
     {
         pose.origin.altitudeMeters =

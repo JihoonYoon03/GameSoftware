@@ -261,6 +261,50 @@ void TestVehicleWreckLifecycle()
     assert(std::none_of(aircraft.begin(), aircraft.end(),
                         [&](const auto &craft) { return craft.id == falling.id; }));
 }
+void TestNavigationProgress()
+{
+    Exterior();
+    const auto center = Open(0);
+    World().playerPosition = World().cameraPosition = {center.x + 20, center.y + 20};
+    for (int i = 0; i < 2; ++i)
+    {
+        const float sign = i ? 1.f : -1.f;
+        auto resident = Person({center.x + sign, center.y});
+        resident.destination = {center.x - sign, center.y};
+        resident.route = {{resident.destination, -1}};
+        World().residents.push_back(resident);
+    }
+    bool arrived = false;
+    for (int frame = 0; frame < 240 && !arrived; ++frame)
+    {
+        CityResidents::Get().Update(World(), 1.f / 30);
+        const auto &a = World().residents[0], &b = World().residents[1];
+        assert(Game::Distance(a.position, b.position) >= .35f);
+        assert(!RoadNetwork::Get().Contains(a.position, .2f) &&
+               !RoadNetwork::Get().Contains(b.position, .2f));
+        arrived = Game::Distance(a.position, {center.x + 1, center.y}) <= .08f &&
+                  Game::Distance(b.position, {center.x - 1, center.y}) <= .08f;
+    }
+    assert(arrived); // Opposing pedestrians must pass, rather than abandon the same blocked edge.
+
+    World().residents.clear();
+    World().playerPosition = {center.x + 10, center.y};
+    auto &law = CivicJustice::State();
+    law.wanted = 1;
+    law.heat = 20;
+    law.identified = true;
+    law.spawnSeconds = law.playerGrace = 100;
+    SecurityOfficer officer;
+    officer.id = 1;
+    officer.position = center;
+    officer.lastKnown = {center.x + 2, center.y};
+    officer.facing.yaw = kPi;
+    officer.route = {{center.x + 1, center.y}, officer.lastKnown};
+    law.officers = {officer};
+    CivicJustice::Update(.05f);
+    assert(law.officers.front().route.size() == 2 && law.officers.front().navigationSeconds < 0);
+    assert(Game::Distance(law.officers.front().position, center) > .01f);
+}
 void TestPolice()
 {
     Exterior();
@@ -790,6 +834,7 @@ int main()
     TestVehicleWreckLifecycle();
     TestHighSpeedOverlapRecovery();
     TestMountedImpactControls();
+    TestNavigationProgress();
     TestPolice();
     TestSecuritySpreadAndEvasion();
     TestUnidentifiedEscapeAndVision();

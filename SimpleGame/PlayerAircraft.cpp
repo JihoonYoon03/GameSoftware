@@ -45,6 +45,8 @@ void PlayerAircraft::Stop()
     velocity = {};
     bank = 0;
     landingRequested = false;
+    landingAvailable = false;
+    landingCheckSeconds = 0;
 }
 void PlayerAircraft::SetYaw(float yaw, const world::TangentFrame &origin)
 {
@@ -186,6 +188,35 @@ bool PlayerAircraftController::Nearby(const Game &g)
            G::Distance(g.surface->Planet().radiusMeters, *a.position, g.surface->Pose().origin) <
                PlayerAircraft::RadiusMeters() + 1.5;
 }
+bool PlayerAircraftController::CanLand(const Game &g)
+{
+    const auto &a = g.state.aircraft;
+    if (!g.surface || !g.surface->Ready() || !a.position || !a.mounted || a.grounded || a.health <= 0 ||
+        std::hypot(a.velocity.x, a.velocity.y) > 2)
+    {
+        return false;
+    }
+    const auto landing = LandingHeight(g, *a.position);
+    if (!landing)
+    {
+        return false;
+    }
+    // Cover the entire descent with overlapping vertical hulls so bridges and overhangs
+    // cannot offer a landing prompt for ground that the craft cannot reach.
+    const double height = PlayerAircraft::HeightMeters();
+    const double step = (std::max)(.1, 16 - height);
+    for (double altitude = *landing; altitude <= a.position->altitudeMeters; altitude += step)
+    {
+        auto base = *a.position;
+        base.altitudeMeters = altitude;
+        if (!g.surface->AirClear(base, PlayerAircraft::RadiusMeters(),
+                                 (std::min)(16., a.position->altitudeMeters - altitude + height)))
+        {
+            return false;
+        }
+    }
+    return true;
+}
 bool PlayerAircraftController::Exit(Game &g)
 {
     auto &a = g.state.aircraft;
@@ -235,10 +266,18 @@ void PlayerAircraftController::Interact(Game &g)
     {
         if (!a.grounded)
         {
-            a.landingRequested = !a.landingRequested;
-            g.ShowNotice(a.landingRequested
-                             ? "착륙 요청: 평탄하고 비어 있는 지면 위에서 감속합니다. E로 취소."
-                             : "착륙 요청을 취소했습니다.");
+            if (a.landingRequested)
+            {
+                a.landingRequested = false;
+                g.ShowNotice("착륙을 취소했습니다.");
+            }
+            else if (CanLand(g))
+            {
+                a.landingRequested = true;
+                g.ShowNotice("착륙합니다. E로 취소할 수 있습니다.");
+            }
+            a.landingAvailable = false;
+            a.landingCheckSeconds = 0;
         }
         else if (!Exit(g))
         {
@@ -274,7 +313,7 @@ void PlayerAircraftController::Interact(Game &g)
     g.state.playerPosition = {float(offset.x / 2), float(offset.y / 2)};
     g.state.mouseAiming = g.state.mouseFiring = false;
     profiling::Count(profiling::Counter::AircraftBoardings);
-    g.ShowNotice("공용 비행체 탑승 · Space 상승 · C 하강 · W/S 이동 · A/D 조향 · X 제동 · E 착륙/하차");
+    g.ShowNotice("공용 비행체 탑승 · Space 상승 · C 하강 · W/S 이동 · A/D 조향 · X 제동 · 착륙 가능 시 E");
 }
 void PlayerAircraftController::Drive(Game &g, float dt)
 {
@@ -295,13 +334,23 @@ void PlayerAircraftController::Drive(Game &g, float dt)
     }
     const double steering = double(keys['d']) - double(keys['a']);
     const float yaw = a.Yaw(g.surface->Origin()) + float(steering * 1.25 * dt);
+    auto landing = (a.landingRequested || keys['c']) ? LandingHeight(g, *a.position) : std::nullopt;
+    if (a.landingRequested && !landing)
+    {
+        a.landingRequested = false;
+        a.landingAvailable = false;
+        a.velocity.z = 0;
+    }
     const double target = a.landingRequested || keys['x'] || keys['w'] == keys['s'] ? 0 : keys['w'] ? 36 : -8;
     const double along = Approach(a.velocity.x * std::cos(yaw) + a.velocity.y * std::sin(yaw), target,
                                   (keys['x'] || a.landingRequested ? 24 : 12) * dt);
+    if (std::abs(along) > 2)
+    {
+        a.landingAvailable = false;
+    }
     a.velocity.x = along * std::cos(yaw);
     a.velocity.y = along * std::sin(yaw);
     double vertical = (double(keys[' ']) - double(keys['c'])) * 9;
-    auto landing = (a.landingRequested || keys['c']) ? LandingHeight(g, *a.position) : std::nullopt;
     if (a.landingRequested)
     {
         vertical = landing && std::abs(along) < .5 ? -5 : 0;
@@ -322,6 +371,12 @@ void PlayerAircraftController::Drive(Game &g, float dt)
                         PlayerAircraft::RadiusMeters(), PlayerAircraft::HeightMeters(),
                         [&](const auto &p) { return Occupied(g, p); }))
     {
+        if (a.landingRequested)
+        {
+            a.landingRequested = false;
+            a.landingAvailable = false;
+            g.ShowNotice("착륙 경로가 막혀 착륙을 중단했습니다.");
+        }
         const double speed = std::sqrt(G::Dot(a.velocity, a.velocity));
         if (speed > 6)
         {
@@ -352,6 +407,17 @@ void PlayerAircraftController::Update(Game &g, float dt)
     {
         if (a.health > 0)
         {
+            a.landingCheckSeconds -= dt;
+            if (!a.mounted || a.grounded || std::hypot(a.velocity.x, a.velocity.y) > 2)
+            {
+                a.landingAvailable = false;
+                a.landingCheckSeconds = 0;
+            }
+            else if (a.landingCheckSeconds <= 0)
+            {
+                a.landingAvailable = CanLand(g);
+                a.landingCheckSeconds = .2f;
+            }
             return;
         }
         a.Stop();

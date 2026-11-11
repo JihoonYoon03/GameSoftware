@@ -296,10 +296,10 @@ void Drawing::DrawInteractionMarker(Vector2 worldPosition, const std::string &la
 // ============================================================================
 void Drawing::DrawModel3D(const models::Model &model, Vector2 screen, models::Point scale,
                           const models::Transform3D &transform, float depth, const models::Palette &palette,
-                          const models::CharacterPose *pose)
+                          const models::CharacterPose *pose, float shadowGroundZ)
 {
     if (GameRenderer::Get().Backend().SubmitModel(model, {screen.x, screen.y}, scale, transform, depth,
-                                                  palette, pose))
+                                                  palette, pose, shadowGroundZ))
     {
         return;
     }
@@ -410,7 +410,7 @@ void Drawing::DrawModel3D(const models::Model &model, Vector2 screen, models::Po
 void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models::CharacterType type,
                          bool walking, float facingYaw, models::Gender gender, models::HairStyle hair,
                          bool npcArmed, float npcFlash, bool downed, float locomotionSpeed,
-                         float reloadProgress)
+                         float reloadProgress, const MovementFacing *motion)
 {
     auto &world = Game::Get().GetState();
     Vector2 screen = WorldToScreen(position.x, position.y);
@@ -449,6 +449,10 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
     pose.meleeSeconds = melee;
     pose.locomotionSpeed = isPlayer ? world.movementSpeed : locomotionSpeed;
     pose.reloadProgress = reloadProgress;
+    if (!isPlayer && motion && !downed)
+    {
+        motion->ApplyMotion(pose);
+    }
     if (isPlayer)
     {
         pose = Game::Get().PlayerPose(armed ? flash / .055f : 0);
