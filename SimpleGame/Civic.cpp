@@ -109,6 +109,10 @@ int ObservedCity()
 }
 bool PlayerPresent()
 {
+    if (Game::Get().GetState().aircraft.mounted)
+    {
+        return false; // Ground body contacts must not move the airborne authoritative pose.
+    }
     const auto cities = Game::Get().SurfaceCities();
     return !Game::Get().GetState().surfaceExploration || (cities && cities->PlayerObserved());
 }
@@ -310,6 +314,10 @@ unsigned Random()
 float PlayerHeight()
 {
     const auto &world = Game::Get().GetState();
+    if (world.aircraft.mounted && world.aircraft.position)
+    {
+        return PlanetSecurity::Elevation(*world.aircraft.position);
+    }
     return world.isBikeMounted ? world.bikeElevation : 0;
 }
 void Impact(BodyImpact &body, Vector2 impulse, bool dead = false)
@@ -643,6 +651,12 @@ void TransferToHospital()
 {
     auto &world = Game::Get().GetState();
     world.car.mounted = false;
+    if (world.aircraft.mounted && !world.aircraft.grounded)
+    {
+        world.aircraft.health = 0; // An evacuated pilot must not leave an immortal craft in mid-air.
+    }
+    world.aircraft.mounted = false;
+    world.aircraft.Stop();
     auto &mine = game::GameLevels::Mine().GetState();
     auto &stats = mine.player;
     civic.lostLevels =
@@ -1113,6 +1127,12 @@ bool PlanetSecurity::Hit(models::Point p, int damage, bool playerOwned, bool com
                                : g.Surface()->Origin().origin.altitudeMeters + p.z * 2;
     Vector2 local = Local(point);
     float z = Elevation(point);
+    auto &aircraft = g.GetState().aircraft;
+    if (aircraft.Contains(*g.Surface(), point, .06))
+    {
+        aircraft.health = (std::max)(0, aircraft.health - damage);
+        return true;
+    }
     auto &car = g.GetState().car;
     if (car.Contains(*g.Surface(), point, .03f, true))
     {
@@ -1122,7 +1142,7 @@ bool PlanetSecurity::Hit(models::Point p, int damage, bool playerOwned, bool com
     auto body = [&](Vector2 q, float ground) {
         return Game::Distance(local, q) < .35f && z >= ground && z <= ground + .95f;
     };
-    if (!playerOwned && !companionOwned &&
+    if (!g.GetState().aircraft.mounted && !playerOwned && !companionOwned &&
         body(g.GetState().playerPosition, Elevation(g.Surface()->Pose().origin)))
     {
         CivicCombat::DamagePlayer(damage);
@@ -1260,6 +1280,17 @@ bool CivicJustice::IsExterior()
 }
 bool CivicJustice::Solid(Vector2 p, float radius, float altitude, bool driving)
 {
+    auto &g = Game::Get();
+    if (g.GetState().surfaceExploration && g.Surface() && g.Surface()->Ready() &&
+        g.GetState().aircraft.position && CivicJustice::IsExterior())
+    {
+        auto point = PlanetSecurity::Point(p);
+        point.altitudeMeters += altitude * 2;
+        if (g.GetState().aircraft.Contains(*g.Surface(), point, radius * 2 + .15))
+        {
+            return true;
+        }
+    }
     if (Game::Get().GetState().surfaceExploration && ObservedCity() < 0 &&
         !game::GameLevels::Chapter().Surface().Observing())
     {

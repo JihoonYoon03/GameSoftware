@@ -33,6 +33,7 @@ set(GAME_SOURCES
     SimpleGame/Weapon.cpp
     SimpleGame/PlayerCombat.cpp
     SimpleGame/PlayerMobility.cpp
+    SimpleGame/PlayerAircraft.cpp
     SimpleGame/World.cpp
     SimpleGame/WorldGeneration.cpp
     SimpleGame/WorldContent.cpp

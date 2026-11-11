@@ -1017,9 +1017,10 @@ const char *ContentLayout::UseName(ContentUse use)
     }
 }
 bool ContentCollision::Blocked(const GeneratedPlanet &p, const SurfacePoint &point, double clearance,
-                               bool heightAware)
+                               bool heightAware, double verticalClearance)
 {
-    if (!std::isfinite(clearance) || clearance < 0 || clearance > 4)
+    if (!std::isfinite(clearance) || clearance < 0 || clearance > 16 || !std::isfinite(verticalClearance) ||
+        verticalClearance < -1 || verticalClearance > 16)
     {
         throw std::invalid_argument("Invalid structure clearance");
     }
@@ -1044,14 +1045,38 @@ bool ContentCollision::Blocked(const GeneratedPlanet &p, const SurfacePoint &poi
             found = cells.emplace(key, Entry{ContentLayout::Generate(p, key), clock}).first;
         }
         found->second.touched = clock;
+        const double vertical = verticalClearance < 0 ? clearance : verticalClearance;
         for (const auto &structure : found->second.cell.structures)
         {
-            if ((!heightAware || (point.altitudeMeters >= structure.frame.origin.altitudeMeters - clearance &&
+            if ((!heightAware || (point.altitudeMeters >= structure.frame.origin.altitudeMeters - vertical &&
                                   point.altitudeMeters <= structure.frame.origin.altitudeMeters +
-                                                              structure.sizeMeters.z + clearance)) &&
+                                                              structure.sizeMeters.z + vertical)) &&
                 structure.Contains(point, p.terrain.Planet().radiusMeters, clearance))
             {
                 return true;
+            }
+        }
+        // Explicit flight hulls must also respect elevated road decks. Existing ground/projectile
+        // queries retain their previous contract.
+        if (heightAware && verticalClearance >= 0)
+        {
+            const auto frame = G::Frame(point);
+            for (const auto &street : found->second.cell.streets)
+            {
+                for (size_t i = 1; i < street.points.size(); ++i)
+                {
+                    const auto a = G::ToLocal(frame, street.points[i - 1], p.terrain.Planet().radiusMeters);
+                    const auto b = G::ToLocal(frame, street.points[i], p.terrain.Planet().radiusMeters);
+                    const double dx = b.x - a.x, dy = b.y - a.y, length = dx * dx + dy * dy;
+                    const double t = length > .0001 ? std::clamp(-(a.x * dx + a.y * dy) / length, 0., 1.) : 0;
+                    const double altitude =
+                        street.points[i - 1].altitudeMeters * (1 - t) + street.points[i].altitudeMeters * t;
+                    if (std::hypot(a.x + dx * t, a.y + dy * t) < street.widthMeters / 2 + clearance &&
+                        std::abs(point.altitudeMeters - altitude) < vertical + .2)
+                    {
+                        return true;
+                    }
+                }
             }
         }
     }

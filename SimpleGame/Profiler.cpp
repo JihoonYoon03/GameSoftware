@@ -88,7 +88,13 @@ const char *counterNames[] = {"draw_calls",
                               "combat_capacity_blocks",
                               "dodge_started",
                               "dodge_rejected",
-                              "dodge_contacts"};
+                              "dodge_contacts",
+                              "aircraft_hull_queries",
+                              "aircraft_contacts",
+                              "aircraft_boardings",
+                              "aircraft_exits",
+                              "aircraft_landings",
+                              "aircraft_crashes"};
 const char *timerNames[] = {"frame_cpu",
                             "update",
                             "movement",
@@ -128,7 +134,8 @@ const char *timerNames[] = {"frame_cpu",
                             "planet_traffic_populate",
                             "facility_exit_search",
                             "facility_approach_prepare",
-                            "city_infrastructure_prepare"};
+                            "city_infrastructure_prepare",
+                            "player_aircraft"};
 static_assert(sizeof(counterNames) / sizeof(*counterNames) == kCounterCount);
 static_assert(sizeof(timerNames) / sizeof(*timerNames) == kTimerCount);
 struct Sample

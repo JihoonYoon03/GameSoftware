@@ -203,6 +203,8 @@
     <ClCompile Include="PlayerCombat.cpp"><Filter>소스 파일</Filter></ClCompile>
     <ClCompile Include="PlayerMobility.cpp"><Filter>소스 파일</Filter></ClCompile>
     <ClInclude Include="PlayerMobility.h"><Filter>헤더 파일</Filter></ClInclude>
+    <ClCompile Include="PlayerAircraft.cpp"><Filter>소스 파일</Filter></ClCompile>
+    <ClInclude Include="PlayerAircraft.h"><Filter>헤더 파일</Filter></ClInclude>
     <ClCompile Include="stdafx.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>

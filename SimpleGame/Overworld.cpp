@@ -2009,6 +2009,21 @@ void TrafficSystem::Step(GameState &world, float dt)
         }
         car.speed += Game::Clamp(target - car.speed, -7.f * dt, 3.f * dt);
         float travel = car.speed * dt;
+        if (surface && cities && world.aircraft.position)
+        {
+            const auto next =
+                car.turnDistance < 0
+                    ? net.LanePosition(car.lane, (std::min)(car.distance + travel, lane.length))
+                    : TurnPoint(car, Game::Clamp((car.turnDistance + travel) / car.turnLength, 0, 1));
+            if (auto point = cities->Point(*surface, cityFilter, next))
+            {
+                point->altitudeMeters += RenderElevation(size_t(&car - vehicles.data())) * 2;
+                if (world.aircraft.Contains(*surface, *point, 2))
+                {
+                    car.speed = travel = 0;
+                }
+            }
+        }
         if (servicePosition && Game::Distance(*servicePosition, car.position) < 5)
         {
             const auto next =
@@ -3351,6 +3366,11 @@ void PlanetTraffic::Advance(PlanetTrafficActor &actor, float seconds, const Game
     auto next = Position(*route, progress, direction);
     next.altitudeMeters = (std::max)(::world::PlanetTerrain::SeaLevelMeters, planet->terrain.Height(next)) +
                           actor.altitudeMeters;
+    if (world.aircraft.Contains(session, next, actor.airborne ? 3 : 2))
+    {
+        actor.speedMeters = 0;
+        return;
+    }
     if (!actor.airborne)
     {
         profiling::Scope contactTimer(profiling::Timer::PlanetTrafficContacts);
@@ -3384,7 +3404,8 @@ void PlanetTraffic::Advance(PlanetTrafficActor &actor, float seconds, const Game
             return;
         }
         bool playerContact = false;
-        if (exterior && TG::Distance(radius, actor.position, session.Pose().origin) < 45)
+        if (exterior && !world.aircraft.mounted &&
+            TG::Distance(radius, actor.position, session.Pose().origin) < 45)
         {
             const unsigned steps =
                 (std::max)(1u, unsigned(std::ceil(TG::Distance(radius, actor.position, next) / .4)));
@@ -5343,7 +5364,7 @@ void PlanetCities::Observe(GameState &state, const world::SurfaceSession &sessio
               state.facingYaw,
               state.bikeYaw,
               state.bikeElevation};
-    const bool playerPresent = city == activeCity;
+    const bool playerPresent = city == activeCity && !state.aircraft.mounted;
     observedCity = city;
     state.playerPosition = point(session.Pose().origin);
     const auto entry = state.playerPosition;

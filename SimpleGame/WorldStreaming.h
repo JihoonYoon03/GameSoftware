@@ -109,7 +109,8 @@ class SurfaceSession
     void Start(PlanetGenerator generator);
     void Start(std::shared_ptr<const GeneratedPlanet> planet);
     void Stop();
-    void Update(Vector3d velocityMeters = {}, std::optional<SurfacePoint> destination = std::nullopt);
+    void Update(Vector3d velocityMeters = {}, std::optional<SurfacePoint> destination = std::nullopt,
+                bool airborne = false);
     bool Ready() const;
     const TangentFrame &Pose() const
     {
@@ -133,6 +134,10 @@ class SurfaceSession
     bool Blocked(double rightMeters, double forwardMeters, bool hovering = false) const;
     // Swept terrain/object contact, <=0.4m substeps; missing chunks use the same global rules.
     void Move(double rightMeters, double forwardMeters, bool hovering = false);
+    // Flight uses an explicit altitude and a swept hull; it never projects the pilot onto terrain.
+    bool AirClear(const SurfacePoint &base, double radiusMeters, double heightMeters) const;
+    bool Fly(Vector3d deltaMeters, double radiusMeters, double heightMeters,
+             const std::function<bool(const SurfacePoint &)> &occupied = {});
     // Developer survey relocation. Same world/stream, safe land placement; no quest or travel unlock.
     bool Relocate(const SurfacePoint &point, double clearanceMeters = .65, double searchRadiusMeters = 32);
     // Remote landing checks do not project through the player's tangent plane or change the live pose.

@@ -75,6 +75,12 @@ enum class Counter
     DodgeStarted,
     DodgeRejected,
     DodgeContacts,
+    AircraftHullQueries,
+    AircraftContacts,
+    AircraftBoardings,
+    AircraftExits,
+    AircraftLandings,
+    AircraftCrashes,
     Count
 };
 enum class Timer
@@ -119,6 +125,7 @@ enum class Timer
     FacilityExitSearch,
     FacilityApproachPrepare,
     CityInfrastructurePrepare,
+    PlayerAircraft,
     Count
 };
 class Scope

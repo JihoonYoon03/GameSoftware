@@ -2198,7 +2198,8 @@ void FrontierSurface::Observe(const std::function<void()> &operation)
 }
 void FrontierSurface::Update(float dt)
 {
-    if (level.IsActive())
+    // Ground-only frontier combat must not apply its 2D contacts/damage to an airborne pilot.
+    if (level.IsActive() && !tutorial::Game::Get().GetState().aircraft.mounted)
     {
         Observe([&] { level.Update(dt); });
     }

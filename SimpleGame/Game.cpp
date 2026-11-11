@@ -926,6 +926,7 @@ void GameState::StopMotion()
     bikeYawSpeed = bikeSpeed = movementAmount = movementSpeed = 0;
     car.velocity = {};
     car.speed = 0;
+    aircraft.Stop();
 }
 void GameState::InterruptDodge()
 {
@@ -1006,7 +1007,7 @@ unsigned char Game::NormalizeKey(unsigned char key)
 }
 bool Game::HasWalkingControls() const
 {
-    if (state.car.mounted)
+    if (state.car.mounted || state.aircraft.mounted)
     {
         return false;
     }
@@ -1019,6 +1020,11 @@ bool Game::HasWalkingControls() const
 }
 void Game::UpdatePlayerMovement(float deltaSeconds)
 {
+    if (state.aircraft.mounted)
+    {
+        PlayerAircraftController::Drive(*this, deltaSeconds);
+        return;
+    }
     profiling::Scope profileTimer(profiling::Timer::Movement);
     const Vector2 previous = state.playerPosition;
     if (state.car.mounted)
@@ -2027,6 +2033,8 @@ void Game::Update(float deltaSeconds)
 void Game::StopSurface()
 {
     state.car.mounted = false;
+    state.aircraft.mounted = false;
+    state.aircraft.Stop();
     groundVehicleSpawnRetry = 0;
     PlanetSecurity::Reset();
     SaveSystem::Cancel();
@@ -2059,7 +2067,7 @@ void Game::StopSurface()
 }
 bool Game::RelocateSurfaceSurvey(const world::SurfacePoint &point)
 {
-    if (state.relayPreparing || state.car.mounted)
+    if (state.relayPreparing || state.car.mounted || state.aircraft.mounted)
     {
         return false;
     }
@@ -2243,7 +2251,7 @@ bool Game::GroundVehicleBlocked(Vector2 position, float yaw, bool includePeople)
             auto point = surface->PointAt(probe.x * 2, probe.y * 2);
             const auto contact = surface->ContactAt(probe.x * 2, probe.y * 2);
             point.altitudeMeters = contact.heightMeters;
-            if (!contact.land || contact.slope > .35 ||
+            if (!contact.land || contact.slope > .35 || state.aircraft.Contains(*surface, point, .32) ||
                 (surfaceBike && world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, point,
                                                                  *surfaceBike) < .65) ||
                 surface->Blocked(probe.x * 2, probe.y * 2, false) ||
@@ -2528,7 +2536,8 @@ bool Game::ReturnToSurface(Vector2 door, int city)
     auto point = surface && surfaceCities ? surfaceCities->Point(*surface, city, door) : std::nullopt;
     return point && LandOnSurface(*point, city);
 }
-bool Game::SurfaceLandingClear(const world::SurfacePoint &point, int city, bool ignoreServiceCar) const
+bool Game::SurfaceLandingClear(const world::SurfacePoint &point, int city, bool ignoreServiceCar,
+                               bool ignoreAircraft) const
 {
     if (!surface || !surface->Ready() || !surface->LandingClear(point, .32))
     {
@@ -2559,6 +2568,7 @@ bool Game::SurfaceLandingClear(const world::SurfacePoint &point, int city, bool 
         }
     }
     return (ignoreServiceCar || !state.car.Contains(*surface, point, .18f)) &&
+           (ignoreAircraft || !state.aircraft.Contains(*surface, point, .36)) &&
            !(surfaceParty && surfaceParty->Blocked(point, .32)) &&
            !(surfaceTraffic && surfaceTraffic->Blocked(point, .32)) &&
            !(surfaceCommunity && surfaceCommunity->Blocked(point, .32)) &&
@@ -2676,10 +2686,11 @@ void Game::UpdateSurface(float dt)
     auto velocity = state.car.mounted     ? state.car.velocity
                     : state.isBikeMounted ? state.bikeVelocity
                                           : state.playerMotion.velocity;
-    surface->Update(IsSurfaceMine() || state.isInsideHome || state.isInObservatory
-                        ? world::Vector3d{}
-                        : world::Vector3d{velocity.x * 2, velocity.y * 2, 0},
-                    relayDestination);
+    const auto streamVelocity =
+        state.aircraft.mounted ? state.aircraft.velocity : world::Vector3d{velocity.x * 2, velocity.y * 2, 0};
+    surface->Update(IsSurfaceMine() || state.isInsideHome || state.isInObservatory ? world::Vector3d{}
+                                                                                   : streamVelocity,
+                    relayDestination, state.aircraft.mounted);
     if (!surface->Ready())
     {
         state.StopMotion();
@@ -2739,6 +2750,7 @@ void Game::UpdateSurface(float dt)
         PlanetSecurity::UpdateCompanions(dt);
         CivicCombat::Update(dt);
         UpdateGroundVehicleLifecycle(dt);
+        PlayerAircraftController::Update(*this, dt);
         if (surfaceTraffic && !HospitalRecovery::Active())
         {
             surfaceTraffic->Update(state, *surface, dt,
@@ -2809,9 +2821,12 @@ void Game::UpdateSurface(float dt)
         const float previousVehicleYaw = state.isBikeMounted ? state.bikeYaw : state.facingYaw;
         UpdatePlayerMovement(dt);
         auto desired = state.playerPosition;
-        surface->Move((desired.x - before.x) * 2, (desired.y - before.y) * 2, state.isBikeMounted);
+        if (!state.aircraft.mounted)
+        {
+            surface->Move((desired.x - before.x) * 2, (desired.y - before.y) * 2, state.isBikeMounted);
+        }
         auto position = surface->Local(surface->Pose().origin);
-        if (state.Mounted())
+        if (state.Mounted() && !state.aircraft.mounted)
         {
             const float speed = state.car.mounted ? state.car.speed : state.bikeSpeed;
             auto contact = BodyCollision::SurfaceVehicleContacts(surfaceFrom, surface->Pose().origin,
@@ -2844,7 +2859,7 @@ void Game::UpdateSurface(float dt)
             float direction = state.bikeSpeed < 0 ? -1.f : 1.f;
             state.bikeSpeed = direction * std::hypot(state.bikeVelocity.x, state.bikeVelocity.y);
         }
-        else
+        else if (!state.aircraft.mounted)
         {
             state.playerMotion.velocity =
                 MotionMath::ContactVelocity(state.playerMotion.velocity, requested, actual);
@@ -2891,6 +2906,9 @@ void Game::UpdateSurface(float dt)
             state.playerMotion.mobility.RotateDirection(rotatedDodge.x, rotatedDodge.y);
             state.bikeVelocity = rotate(state.bikeVelocity);
             state.car.velocity = rotate(state.car.velocity);
+            const auto airVelocity =
+                world::SurfaceGeometry::TransformDirection(state.aircraft.velocity, *old, surface->Origin());
+            state.aircraft.velocity = airVelocity;
             CivicJustice::State().playerImpact.velocity = rotate(CivicJustice::State().playerImpact.velocity);
             state.planetMapPan = rotate(state.planetMapPan);
             state.playerPosition = {};
@@ -2930,7 +2948,7 @@ void Game::UpdateSurface(float dt)
             const auto current = surface->Local(surface->Pose().origin);
             const double dx = state.playerPosition.x * 2 - current.x,
                          dy = state.playerPosition.y * 2 - current.y;
-            if (std::hypot(dx, dy) > .0001)
+            if (!state.aircraft.mounted && std::hypot(dx, dy) > .0001)
             {
                 surface->Move(dx, dy, state.isBikeMounted);
                 profiling::Count(profiling::Counter::CityContactCorrections);
@@ -3390,6 +3408,16 @@ void Game::ShowNotice(const std::string &message)
 bool Game::IsPositionBlocked(Vector2 position)
 {
     profiling::Count(profiling::Counter::CollisionQueries);
+    if (state.surfaceExploration && surface && surface->Ready() && state.aircraft.position &&
+        !state.aircraft.mounted && !IsSurfaceMine() && !state.isInsideHome && !state.isInObservatory)
+    {
+        auto point = PlanetSecurity::Point(position);
+        point.altitudeMeters = surface->Stream().Contact(point).heightMeters;
+        if (state.aircraft.Contains(*surface, point, .4))
+        {
+            return true;
+        }
+    }
     if (state.surfaceExploration && surfaceCities && surfaceCities->Observing())
     {
         auto point = surfaceCities->Point(*surface, surfaceCities->ObservedCity(), position);
@@ -3591,6 +3619,10 @@ InteractionTarget Game::FindNearbyInteraction()
 {
     if (state.surfaceExploration && !IsSurfaceMine() && !state.isInsideHome && !state.isInObservatory)
     {
+        if (state.aircraft.mounted)
+        {
+            return InteractionTarget::Aircraft;
+        }
         if (state.car.mounted)
         {
             return InteractionTarget::GroundVehicle;
@@ -3649,6 +3681,10 @@ InteractionTarget Game::FindNearbyInteraction()
             target == InteractionTarget::None)
         {
             return InteractionTarget::GroundVehicle;
+        }
+        if (target == InteractionTarget::None && PlayerAircraftController::Nearby(*this))
+        {
+            return InteractionTarget::Aircraft;
         }
         if (auto relay = RelayTravel::Nearby())
         {
@@ -3786,6 +3822,11 @@ void Game::InteractWithNearbyTarget()
         }
     }
     const InteractionTarget target = FindNearbyInteraction();
+    if (target == InteractionTarget::Aircraft)
+    {
+        PlayerAircraftController::Interact(*this);
+        return;
+    }
     if (target == InteractionTarget::GroundVehicle)
     {
         InteractGroundVehicle();

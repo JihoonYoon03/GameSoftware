@@ -1909,6 +1909,51 @@ void VerifyCheckpointFixture(int credits = 1737)
     assert(CivicJustice::State().infamy == 17 && CivicJustice::State().wanted == 2 &&
            CivicJustice::State().heat == 200);
 }
+void TestAircraftFlightContracts()
+{
+    using namespace tutorial;
+    using G = world::SurfaceGeometry;
+    PrepareCheckpointFixture();
+    auto &g = Game::Get();
+    const auto plan = g.Surface()->Stream().Snapshot()->planet;
+    auto start = g.Surface()->Pose().origin;
+    start.altitudeMeters = plan->terrain.Height(start) + 512;
+    world::SurfaceSession session(g.Surface()->Planet(), start);
+    session.Start(plan);
+    const auto until = std::chrono::steady_clock::now() + std::chrono::seconds(30);
+    while (!session.Ready() && std::chrono::steady_clock::now() < until)
+    {
+        session.Update({}, std::nullopt, true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    assert(session.Ready());
+    session.Update({}, std::nullopt, true);
+    assert(std::abs(session.Pose().origin.altitudeMeters - start.altitudeMeters) < .0001);
+    assert(session.Fly({3, 0, 2}, PlayerAircraft::RadiusMeters(), PlayerAircraft::HeightMeters()));
+    assert(G::Distance(session.Planet().radiusMeters, start, session.Pose().origin) > 2.9);
+    assert(std::abs(session.Pose().origin.altitudeMeters - start.altitudeMeters - 2) < .0001);
+    const double ceiling = session.Pose().origin.altitudeMeters + .8;
+    assert(!session.Fly({0, 0, 10}, PlayerAircraft::RadiusMeters(), PlayerAircraft::HeightMeters(),
+                        [&](const auto &p) { return p.altitudeMeters > ceiling; }));
+    assert(session.Pose().origin.altitudeMeters <= ceiling + .0001);
+    PlayerAircraft aircraft;
+    aircraft.position = session.Pose().origin;
+    aircraft.SetYaw(.7f, session.Origin());
+    auto inside = *aircraft.position;
+    inside.altitudeMeters += PlayerAircraft::HeightMeters() / 2;
+    assert(aircraft.Contains(session, inside));
+    inside.altitudeMeters += PlayerAircraft::HeightMeters() + 1;
+    assert(!aircraft.Contains(session, inside));
+    assert(session.Fly({0, 0, 65}, PlayerAircraft::RadiusMeters(), PlayerAircraft::HeightMeters()));
+    const auto global = session.Pose().origin;
+    assert(session.Rebase());
+    assert(G::Distance(session.Planet().radiusMeters, global, session.Origin().origin) < .0001);
+    assert(!session.Fly({0, 0, -1000}, PlayerAircraft::RadiusMeters(), PlayerAircraft::HeightMeters()));
+    assert(session.Pose().origin.altitudeMeters >=
+           session.Stream().Contact(session.Pose().origin).heightMeters - .05);
+    session.Stop();
+    g.Reset();
+}
 void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::filesystem::path &legacy,
                            unsigned version = 1)
 {
@@ -1924,7 +1969,7 @@ void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::file
         }
         return result;
     };
-    assert(number(8) >= 8 && number(8) <= 11 && version >= 1 && version <= 8);
+    assert(number(8) >= 8 && number(8) <= 12 && ((version >= 1 && version <= 8) || version == 11));
     const size_t schema8End =
         number(8) >= 9 ? bytes.size() - 8 - size_t(number(bytes.size() - 8)) : bytes.size();
     const size_t trackingStart = schema8End - 8 - size_t(number(schema8End - 8));
@@ -1947,8 +1992,23 @@ void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::file
     const auto keyLength = number(offset);
     offset += 8 + size_t(keyLength);
     assert(offset < bytes.size());
-    std::vector<unsigned char> previous(bytes.begin(), bytes.begin() + 40);
-    previous.insert(previous.end(), bytes.begin() + (version == 1 ? offset : 40), bytes.begin() + payloadEnd);
+    std::vector<unsigned char> previous;
+    size_t aircraftBytes = 0;
+    if (version == 11)
+    {
+        assert(number(8) == 12);
+        // This fixture has exactly one world. The final schema-12 field is its aircraft record:
+        // optional flag, SurfacePoint (4 doubles), heading (3), health (8), age (4), grounded flag.
+        aircraftBytes = bytes[bytes.size() - 9] == 0 ? 1 : 1 + 4 * 8 + 3 * 8 + 8 + 4 + 1;
+        previous = bytes;
+        previous.erase(previous.end() - 8 - aircraftBytes, previous.end() - 8);
+    }
+    else
+    {
+        previous.assign(bytes.begin(), bytes.begin() + 40);
+        previous.insert(previous.end(), bytes.begin() + (version == 1 ? offset : 40),
+                        bytes.begin() + payloadEnd);
+    }
     auto put = [&](size_t at, std::uint64_t value) {
         for (unsigned i = 0; i < 8; ++i)
         {
@@ -1956,6 +2016,10 @@ void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::file
         }
     };
     std::uint64_t hash = 14695981039346656037ull;
+    if (version == 11)
+    {
+        put(previous.size() - 8, number(bytes.size() - 8) - aircraftBytes);
+    }
     for (size_t i = 40; i < previous.size(); ++i)
     {
         hash ^= previous[i];
@@ -2162,7 +2226,8 @@ void TestActivityTrackingPersistence()
     const auto folder =
         std::filesystem::path("x64/RevisionChecks") /
         ("tracking-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
-    const auto file = folder / "selected.sav", legacy = folder / "previous7.sav";
+    const auto file = folder / "selected.sav", legacy = folder / "previous7.sav",
+               legacy11 = folder / "previous11.sav";
     const auto parked = g.Surface()->Pose().origin;
     w.car.position = parked;
     w.car.SetYaw(.6f, g.Surface()->Origin());
@@ -2171,6 +2236,8 @@ void TestActivityTrackingPersistence()
     assert(SaveSystem::Save(file) && SaveSystem::CheckFile(file));
     assert(w.missions.Tracked() == MissionId::Mara);
     WriteLegacyCheckpoint(file, legacy, 7);
+    WriteLegacyCheckpoint(file, legacy11, 11);
+    assert(SaveSystem::CheckFile(legacy11));
     assert(SaveSystem::CheckFile(legacy) && w.missions.Tracked() == MissionId::Mara);
     assert(ActivityJournal::TrackMission(MissionId::Frontier));
     assert(SaveSystem::Load(file));
@@ -2183,6 +2250,9 @@ void TestActivityTrackingPersistence()
     assert(world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, parked, *w.car.position) <
            .001);
     assert(world::SurfaceGeometry::Dot(savedHeading, w.car.heading) > .9999);
+    assert(SaveSystem::Load(legacy11));
+    WaitForCheckpointLoad();
+    assert(w.car.position && w.car.health == 71 && !w.aircraft.position);
     assert(w.missions.Active(MissionId::Frontier) && w.missions.Active(MissionId::Mara));
     assert(SaveSystem::Load(legacy));
     WaitForCheckpointLoad();
@@ -2192,6 +2262,7 @@ void TestActivityTrackingPersistence()
     g.Reset();
     std::filesystem::remove(file);
     std::filesystem::remove(legacy);
+    std::filesystem::remove(legacy11);
     std::filesystem::remove(folder);
 }
 
@@ -5314,6 +5385,12 @@ void TestAimMovementAndLayers()
 } // namespace
 int main(int argc, char **argv)
 {
+    if (argc > 1 && std::string(argv[1]) == "--aircraft")
+    {
+        TestAircraftFlightContracts();
+        std::cout << "Aircraft flight sweep, altitude, hull and rebase checks passed.\n";
+        return 0;
+    }
     if (argc == 3 && std::string(argv[1]) == "--checkpoint-write")
     {
         PrepareCheckpointFixture();
@@ -5381,6 +5458,7 @@ int main(int argc, char **argv)
     TestCommunityTaskTransactions();
     TestActivityTrackingContracts();
     TestActivityTrackingPersistence();
+    TestAircraftFlightContracts();
     TestRelayTravelAndAtlas();
     TestWorldCheckpoints();
     TestCityTrafficHandoff();

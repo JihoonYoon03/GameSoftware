@@ -1290,6 +1290,10 @@ void CityHud::DrawInteractionPrompt()
     case InteractionTarget::GroundVehicle:
         label = w.car.mounted ? "차량 / 하차" : "공용차 / 탑승";
         break;
+    case InteractionTarget::Aircraft:
+        label = w.aircraft.mounted ? (w.aircraft.grounded ? "비행체 / 하차" : "비행체 / 착륙 요청·취소")
+                                   : "공용 비행체 / 탑승";
+        break;
     case InteractionTarget::JetBike:
         label = w.isBikeMounted ? "바이크 / 하차" : "바이크 / 탑승";
         break;
@@ -2205,11 +2209,29 @@ void Hud::DrawVitals()
     }
     if (w.Mounted())
     {
-        const float driveSpeed = w.car.mounted ? w.car.speed : w.bikeSpeed;
+        const float driveSpeed = w.aircraft.mounted
+                                     ? float(std::hypot(w.aircraft.velocity.x, w.aircraft.velocity.y) / 2)
+                                 : w.car.mounted ? w.car.speed
+                                                 : w.bikeSpeed;
         float speed = std::fabs(driveSpeed) * models::WorldScale::metersPerUnit * 3.6f;
         char value[48];
         std::snprintf(value, sizeof(value), speed < 10 ? "%.1f" : "%.0f", speed);
-        if (w.car.mounted)
+        if (w.aircraft.mounted)
+        {
+            const auto *session = Game::Get().Surface();
+            const int altitude = session && w.aircraft.position
+                                     ? int(w.aircraft.position->altitudeMeters -
+                                           session->Stream().Contact(*w.aircraft.position).heightMeters)
+                                     : 0;
+            UiText(1248, 650, "기체 내구도 " + std::to_string(w.aircraft.health), 16, kUiInk, true, true);
+            UiText(1248, 676,
+                   "고도 " + std::to_string((std::max)(0, altitude)) + " m · " +
+                       (w.aircraft.grounded           ? "착륙"
+                        : w.aircraft.landingRequested ? "착륙 대기"
+                                                      : "비행"),
+                   16, kUiInk, true, true);
+        }
+        else if (w.car.mounted)
         {
             UiText(1248, 676, "차량 내구도 " + std::to_string(w.car.health), 16, kUiInk, true, true);
         }
@@ -3354,7 +3376,9 @@ void PlanetHud::Draw()
     std::snprintf(coordinates, sizeof(coordinates), "%.4f° / %.4f° · %.0fm", ll[0], ll[1],
                   location.position.altitudeMeters - world::PlanetTerrain::SeaLevelMeters);
     UiText(32, 154, coordinates, 14, {.64f, .79f, .76f});
-    const char *controls = state.car.mounted     ? "W 가속 · S 제동/후진 · A/D 조향 · E 하차"
+    const char *controls = state.aircraft.mounted
+                               ? "W/S 이동 · A/D 조향 · Space/C 상승/하강 · X 제동 · E 착륙/하차"
+                           : state.car.mounted   ? "W 가속 · S 제동/후진 · A/D 조향 · E 하차"
                            : state.isBikeMounted ? "W 가속 · S 제동/후진 · A/D 조향 · Space 부스트"
                                                  : "WASD 이동 · 차량 근처에서 E 탑승";
     UiText(32, 728, controls, 16);
@@ -3633,6 +3657,12 @@ void PlanetHud::DrawMap(bool full)
         bike && world::SurfaceGeometry::Distance(session->Planet().radiusMeters, *bike, focus) < range + 10)
     {
         MapDisc(view, project(*bike), 4 / view.scale, {1, .76f, .4f});
+    }
+    if (w.aircraft.position && world::SurfaceGeometry::Distance(session->Planet().radiusMeters,
+                                                                *w.aircraft.position, focus) < range + 10)
+    {
+        MapPin(view, project(*w.aircraft.position), {.4f, .9f, 1},
+               w.aircraft.health > 0 ? "공용 비행체" : "비행체 잔해", full, 4);
     }
     if (const auto *party = Game::Get().SurfaceParty())
     {

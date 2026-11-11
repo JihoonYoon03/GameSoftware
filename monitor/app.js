@@ -259,6 +259,13 @@ function renderEnvironment(data) {
       metric("스태미너", format(combat.stamina, 0) + " / " + format(combat.stamina_max, 0)),
     );
   }
+  const aircraft = data.player.aircraft;
+  if (aircraft?.available) byId("world-status").append(
+    metric("공용 비행체", aircraft.health <= 0 ? (aircraft.grounded ? "잔해" : "추락 중") :
+      aircraft.mounted ? (aircraft.grounded ? "탑승 · 착륙" : aircraft.landing_requested ? "착륙 대기" : "조종 중") : "주차"),
+    metric("기체 상태", "내구도 " + aircraft.health + " / 고도 " + format(aircraft.altitude_agl_meters, 1) + " m"),
+    metric("비행 속도", format(aircraft.speed_meters_per_second, 1) + " m/s / 수직 " + format(aircraft.vertical_meters_per_second, 1) + " m/s"),
+  );
   const travel = data.jet_travel;
   if (travel) byId("world-status").append(
     metric("개인 바이크", travel.active ? "야외 직접 운전 중" : "주차 / 도보 이동"),

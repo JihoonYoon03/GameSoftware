@@ -783,10 +783,10 @@ bool SurfaceSession::Ready() const
     auto snapshot = stream.Snapshot();
     return snapshot->planet && snapshot->planet->terrain.Planet().SameWorld(planet);
 }
-void SurfaceSession::Update(Vector3d velocity, std::optional<SurfacePoint> destination)
+void SurfaceSession::Update(Vector3d velocity, std::optional<SurfacePoint> destination, bool airborne)
 {
     stream.Update(pose, velocity, destination);
-    if (Ready())
+    if (Ready() && !airborne)
     {
         pose.origin.altitudeMeters =
             (std::max)(PlanetTerrain::SeaLevelMeters, stream.Contact(pose.origin).heightMeters);
@@ -815,6 +815,53 @@ bool SurfaceSession::Blocked(double x, double y, bool hovering) const
     auto contact = ContactAt(x, y);
     return (!contact.land && !hovering) || (contact.land && contact.slope > (hovering ? .35 : .65)) ||
            contentCollision.Blocked(*stream.Snapshot()->planet, PointAt(x, y), hovering ? .65 : .32);
+}
+bool SurfaceSession::AirClear(const SurfacePoint &base, double radius, double height) const
+{
+    G::Validate(base);
+    Require(std::isfinite(radius) && radius > 0 && radius <= 16 && std::isfinite(height) && height > 0 &&
+                height <= 16,
+            "Invalid flight hull");
+    if (!Ready())
+    {
+        return false;
+    }
+    const auto frame = G::Frame(base);
+    for (unsigned i = 0; i <= 8; ++i)
+    {
+        const double angle = i * G::Pi / 4;
+        const double r = i == 8 ? 0 : radius;
+        const auto p =
+            G::FromLocal(frame, {r * std::cos(angle), r * std::sin(angle), 0}, planet.radiusMeters);
+        const auto ground = stream.Contact(p);
+        if (base.altitudeMeters + .05 < (std::max)(PlanetTerrain::SeaLevelMeters, ground.heightMeters))
+        {
+            return false;
+        }
+    }
+    auto center = base;
+    center.altitudeMeters += height / 2;
+    return !contentCollision.Blocked(*stream.Snapshot()->planet, center, radius, true, height / 2);
+}
+bool SurfaceSession::Fly(Vector3d delta, double radius, double height,
+                         const std::function<bool(const SurfacePoint &)> &occupied)
+{
+    const double length = std::sqrt(G::Dot(delta, delta));
+    Require(std::isfinite(length) && length <= 4096, "Invalid flight sweep");
+    const unsigned steps = (std::max)(1u, unsigned(std::ceil(length / .4)));
+    bool complete = true;
+    for (unsigned i = 0; i < steps; ++i)
+    {
+        auto next = G::Advance(pose, delta.x / steps, delta.y / steps, planet.radiusMeters);
+        next.origin.altitudeMeters = pose.origin.altitudeMeters + delta.z / steps;
+        if (!AirClear(next.origin, radius, height) || (occupied && occupied(next.origin)))
+        {
+            complete = false;
+            break;
+        }
+        pose = next;
+    }
+    return complete;
 }
 void SurfaceSession::Move(double x, double y, bool hovering)
 {

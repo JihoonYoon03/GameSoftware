@@ -521,6 +521,23 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     player.Raw("position", Position(world.playerPosition));
     player.Number("level", level.player.level);
     player.Number("health", level.player.health);
+    const auto &aircraft = world.aircraft;
+    JsonObject flight;
+    flight.Bool("available", aircraft.position.has_value());
+    flight.Bool("mounted", aircraft.mounted);
+    flight.Bool("grounded", aircraft.grounded);
+    flight.Bool("landing_requested", aircraft.landingRequested);
+    flight.Number("health", aircraft.health);
+    flight.Number("speed_meters_per_second", std::hypot(aircraft.velocity.x, aircraft.velocity.y));
+    flight.Number("vertical_meters_per_second", aircraft.velocity.z);
+    flight.Number("wreck_seconds", aircraft.wreckSeconds);
+    if (aircraft.position && tutorial::Game::Get().Surface() && tutorial::Game::Get().Surface()->Ready())
+    {
+        flight.Number("altitude_agl_meters",
+                      aircraft.position->altitudeMeters -
+                          tutorial::Game::Get().Surface()->Stream().Contact(*aircraft.position).heightMeters);
+    }
+    player.Raw("aircraft", flight.Finish());
     player.Number("max_health", level.player.maxHealth);
     player.Number("experience", level.player.experience);
     player.Number("attack", level.player.attack);

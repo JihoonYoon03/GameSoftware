@@ -29,7 +29,7 @@ namespace tutorial
 namespace
 {
 constexpr std::uint64_t kMaximumFile = 16 * 1024 * 1024;
-constexpr unsigned kSchema = 11;
+constexpr unsigned kSchema = 12;
 void Require(bool value, const char *message)
 {
     if (!value)
@@ -251,6 +251,7 @@ class SaveArchive
         writer.Value(c.community);
         writer.Tracking(c);
         writer.GroundVehicleRecord(c.game.car);
+        writer.AircraftRecord(c.game.aircraft);
         Checkpoint clean;
         SaveArchive reader(true, writer.Bytes());
         reader.Value(clean);
@@ -261,6 +262,7 @@ class SaveArchive
         reader.Value(clean.community);
         reader.Tracking(clean);
         reader.GroundVehicleRecord(clean.game.car);
+        reader.AircraftRecord(clean.game.aircraft);
         Require(reader.Finished(), "메모리 월드 기록에 지원하지 않는 데이터가 있습니다.");
         ApplyTrafficLinks(clean);
         return clean;
@@ -1127,6 +1129,14 @@ class SaveArchive
             Fields(car.heading, car.health, car.wreckSeconds);
         }
     }
+    void AircraftRecord(PlayerAircraft &aircraft)
+    {
+        Value(aircraft.position);
+        if (aircraft.position)
+        {
+            Fields(aircraft.heading, aircraft.health, aircraft.wreckSeconds, aircraft.grounded);
+        }
+    }
     void MobilityRecords(Campaign &v, unsigned schema)
     {
         std::uint64_t count = v.worlds.size();
@@ -1163,6 +1173,10 @@ class SaveArchive
             if (schema >= 11)
             {
                 GroundVehicleRecord(game.car);
+            }
+            if (schema >= 12)
+            {
+                AircraftRecord(game.aircraft);
             }
         }
     }
@@ -1226,6 +1240,18 @@ void Validate(const Checkpoint &c)
                 "저장된 공용차 상태가 올바르지 않습니다.");
     }
     const bool story = c.planet.storyPlanet;
+    const auto &aircraft = c.game.aircraft;
+    if (aircraft.position)
+    {
+        G::Validate(*aircraft.position);
+        Require(std::abs(G::Dot(aircraft.heading, aircraft.heading) - 1) < .001 &&
+                    std::abs(G::Dot(aircraft.heading, aircraft.position->normal)) < .001 &&
+                    aircraft.health >= 0 && aircraft.health <= PlayerAircraft::MaxHealth &&
+                    aircraft.grounded && !aircraft.mounted && std::isfinite(aircraft.wreckSeconds) &&
+                    aircraft.wreckSeconds >= 0 && aircraft.wreckSeconds < VehicleWreck::RetireSeconds &&
+                    (aircraft.health == 0 || aircraft.wreckSeconds == 0),
+                "저장된 공용 비행체 상태가 올바르지 않습니다.");
+    }
     PlanetTraffic::Validate(c.transit, c.planet, c.digest);
     PlanetParty::Validate(c.party, c.planet);
     PlanetSecurity::Validate(c.security, c.civic, c.planet);
@@ -1818,6 +1844,34 @@ void MigrateParty(Checkpoint &c, const world::GeneratedPlanet &plan)
 void ValidateRegistry(const Checkpoint &c, const world::GeneratedPlanet &plan)
 {
     Require(c.layout == plan.layoutRevision, "저장과 생성된 월드의 배치 버전이 다릅니다.");
+    if (c.game.aircraft.position)
+    {
+        const auto &aircraft = c.game.aircraft;
+        const auto &position = *aircraft.position;
+        const double height = plan.terrain.Height(position);
+        world::ContentCollision hull;
+        auto center = position;
+        center.altitudeMeters += PlayerAircraft::HeightMeters() / 2;
+        double highestGround = height;
+        for (unsigned i = 0; i < 8; ++i)
+        {
+            const double angle = i * G::Pi / 4, radius = PlayerAircraft::RadiusMeters();
+            const auto sample =
+                G::FromLocal(G::Frame(position), {radius * std::cos(angle), radius * std::sin(angle), 0},
+                             c.planet.radiusMeters);
+            highestGround = (std::max)(highestGround, plan.terrain.Height(sample));
+        }
+        auto below = center;
+        below.altitudeMeters -= .8;
+        const bool supported =
+            position.altitudeMeters <= highestGround + .8 ||
+            (aircraft.health == 0 && hull.Blocked(plan, below, PlayerAircraft::RadiusMeters(), true,
+                                                  PlayerAircraft::HeightMeters() / 2));
+        Require(position.altitudeMeters >= highestGround - .5 && supported &&
+                    !hull.Blocked(plan, center, PlayerAircraft::RadiusMeters(), true,
+                                  PlayerAircraft::HeightMeters() / 2 - .05),
+                "저장된 비행체가 지형 또는 건물 내부에 있습니다.");
+    }
     auto communityPlan = std::shared_ptr<const world::GeneratedPlanet>(&plan, [](const auto *) {});
     PlanetCommunity community(c.community);
     community.Bind(std::move(communityPlan));
@@ -2006,6 +2060,10 @@ const char *SaveSystem::Restriction()
     {
         return "의료 이송을 마친 뒤 저장해 주세요.";
     }
+    if (s.aircraft.mounted || (s.aircraft.position && !s.aircraft.grounded))
+    {
+        return "비행체를 착륙시키고 내린 뒤 저장하거나 행성을 선택해 주세요.";
+    }
     if (s.car.mounted)
     {
         return "공용차를 주차하고 내린 뒤 저장하거나 행성을 선택해 주세요.";
@@ -2118,6 +2176,12 @@ bool SaveSystem::Save(const std::filesystem::path &path)
 }
 bool SaveSystem::Load(const std::filesystem::path &path)
 {
+    if (Game::Get().GetState().aircraft.mounted)
+    {
+        message = "비행체를 착륙시키고 내린 뒤 불러와 주세요.";
+        Game::Get().ShowNotice(message);
+        return false;
+    }
     if (Loading())
     {
         return false;

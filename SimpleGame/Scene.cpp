@@ -2927,6 +2927,30 @@ void PlanetScene::Draw()
                                   w.car.Yaw(session->Origin()), w.car.health <= 0, w.car.mounted);
         renderqueue::PopMatrix();
     }
+    if (w.aircraft.position &&
+        (w.aircraft.mounted ||
+         world::SurfaceGeometry::Distance(session->Planet().radiusMeters, *w.aircraft.position,
+                                          session->Pose().origin) < 300))
+    {
+        auto ground = *w.aircraft.position;
+        ground.altitudeMeters =
+            (std::max)(world::PlanetTerrain::SeaLevelMeters, session->Stream().Contact(ground).heightMeters);
+        const auto local = session->Local(ground);
+        const float height = float(local.z / 2);
+        renderqueue::PushMatrix();
+        renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
+        Drawing::DrawWorldAircraft({float(local.x / 2), float(local.y / 2)},
+                                   float((w.aircraft.position->altitudeMeters - ground.altitudeMeters) / 2),
+                                   models::AircraftType::Courier, false, w.aircraft.Yaw(session->Origin()),
+                                   w.aircraft.bank, w.aircraft.health <= 0,
+                                   VehicleWreck::Opacity(w.aircraft.wreckSeconds, w.aircraft.grounded));
+        if (!w.Mounted() && w.aircraft.health > 0 && w.aircraft.grounded)
+        {
+            Drawing::DrawInteractionMarker({float(local.x / 2), float(local.y / 2)}, "공용 비행체 / E 탑승",
+                                           {.4f, .9f, 1});
+        }
+        renderqueue::PopMatrix();
+    }
     if (Game::Distance(w.bikePosition, w.playerPosition) < 80)
     {
         Drawing::DrawWorldBike(w.bikePosition, w.bikeYaw, std::fabs(w.bikeSpeed) / 12.8f, w.isBikeMounted);

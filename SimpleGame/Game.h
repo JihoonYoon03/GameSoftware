@@ -3,6 +3,7 @@
 #include "Weapon.h"
 #include "Animation.h"
 #include "PlayerMobility.h"
+#include "PlayerAircraft.h"
 #include "World.h"
 #include "WorldStreaming.h"
 #include <array>
@@ -280,7 +281,8 @@ enum class InteractionTarget
     FrontierSite,
     Relay,
     Community,
-    GroundVehicle
+    GroundVehicle,
+    Aircraft
 };
 
 constexpr float kPi = 3.14159265f;
@@ -522,9 +524,10 @@ struct GameState
     bool isInObservatory = false;
     bool isBikeMounted = false;
     GroundVehicle car;
+    PlayerAircraft aircraft;
     bool Mounted() const
     {
-        return isBikeMounted || car.mounted;
+        return isBikeMounted || car.mounted || aircraft.mounted;
     }
     float bikeSpeed = 0;
     Vector2 bikeVelocity = {};
@@ -731,11 +734,13 @@ class Game
     void StoreSurfaceBikeHeading();
     void RestoreSurfaceBikeHeading();
     bool ReturnToSurface(Vector2 legacyDoor, int city = 0);
-    bool SurfaceLandingClear(const world::SurfacePoint &point, int city, bool ignoreServiceCar = false) const;
+    bool SurfaceLandingClear(const world::SurfacePoint &point, int city, bool ignoreServiceCar = false,
+                             bool ignoreAircraft = false) const;
     bool LandOnSurface(const world::SurfacePoint &point, int city = -1, unsigned searchRings = 8);
     friend class RelayTravel;
     friend class SaveSystem;
     friend class SaveArchive;
+    friend class PlayerAircraftController;
 };
 // ============================================================================
 // RelayTravel — registration, travel policy and cancellable, preloaded landing transaction
