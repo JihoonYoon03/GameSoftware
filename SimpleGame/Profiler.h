@@ -86,6 +86,14 @@ enum class Counter
     NpcStimuliReceived,
     NpcMemoriesExpired,
     NpcMemoryPathRequests,
+    NpcReportsShared,
+    NpcTeamAssignments,
+    NpcFriendlyFireHolds,
+    NpcSupportAssignments,
+    NpcSupportPathRequests,
+    NpcSupportBlockedTicks,
+    NpcSupportAids,
+    NpcSupportWorkCycles,
     Count
 };
 enum class Timer
@@ -132,6 +140,7 @@ enum class Timer
     CityInfrastructurePrepare,
     PlayerAircraft,
     NpcPerception,
+    NpcSupport,
     Count
 };
 class Scope

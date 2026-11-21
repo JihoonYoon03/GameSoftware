@@ -68,7 +68,8 @@ include(CTest)
 if(BUILD_TESTING)
     # The existing console and monitor checks write diagnostics at this location.
     file(MAKE_DIRECTORY "${PROJECT_SOURCE_DIR}/x64/RevisionChecks")
-    foreach(name Gameplay PlayerCombat PlayerMobility NpcPerception Movement Civic MapHud SceneGraph RoadPlan ConsoleOutput World
+    foreach(name Gameplay PlayerCombat PlayerMobility NpcPerception NpcCooperation NpcSupport Movement Civic MapHud
+                 SceneGraph RoadPlan ConsoleOutput World
                  WorldGeneration WorldStreaming ResourceAssets ResourceLoading RenderQueueSmoke
                  MonitorServer Startup GlfwPlatform Rendering)
         add_executable(${name}Tests tests/${name}Tests.cpp)

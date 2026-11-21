@@ -207,6 +207,12 @@
     <ClInclude Include="PlayerAircraft.h"><Filter>헤더 파일</Filter></ClInclude>
     <ClCompile Include="NpcPerception.cpp"><Filter>소스 파일</Filter></ClCompile>
     <ClInclude Include="NpcPerception.h"><Filter>헤더 파일</Filter></ClInclude>
+    <ClCompile Include="NpcCooperation.cpp"><Filter>소스 파일</Filter></ClCompile>
+    <ClCompile Include="NpcTeams.cpp"><Filter>소스 파일</Filter></ClCompile>
+    <ClInclude Include="NpcCooperation.h"><Filter>헤더 파일</Filter></ClInclude>
+    <ClInclude Include="NpcSupport.h"><Filter>헤더 파일</Filter></ClInclude>
+    <ClCompile Include="NpcSupport.cpp"><Filter>소스 파일</Filter></ClCompile>
+    <ClCompile Include="NpcSupportScenes.cpp"><Filter>소스 파일</Filter></ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>

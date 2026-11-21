@@ -2718,11 +2718,26 @@ void TestPlanetCommunity()
     w.isBikeMounted = false;
     w.bikeSpeed = 0;
     w.bikeVelocity = {};
-    *community = PlanetCommunity(initial);
+    auto visionFixture = initial;
+    for (auto &site : visionFixture.sites)
+    {
+        for (auto &person : site.residents)
+        {
+            person.perceptionCooldown = 0;
+        }
+    }
+    *community = PlanetCommunity(visionFixture);
     community->Bind(plan);
+    // Put the witness in a known, unobstructed viewing fixture rather than relying on omniscient infamy.
+    const auto viewer = G::Advance(G::Frame(personPosition), 0, 1, g.Surface()->Planet().radiusMeters).origin;
+    assert(g.RelocateSurfaceSurvey(viewer));
+    assert(CivicJustice::ClearLine(PlanetSecurity::Local(personPosition),
+                                   PlanetSecurity::Local(g.Surface()->Pose().origin)));
     CivicJustice::State().infamy = 40;
     community->Update(.05f, true);
     assert(community->State().sites.front().residents.back().fearSeconds > 0);
+    assert(community->State().sites.front().residents.back().threat.Visible());
+    const auto rememberedThreat = *community->State().sites.front().residents.back().lastThreat;
     CivicJustice::State().infamy = 0;
     const auto position = community->State().sites.front().residents.back().position;
     w.isPaused = true;
@@ -2730,6 +2745,15 @@ void TestPlanetCommunity()
     w.isPaused = false;
     assert(G::Distance(g.Surface()->Planet().radiusMeters, position,
                        community->State().sites.front().residents.back().position) < .0001);
+    community->Update(.05f, false);
+    const auto &witness = community->State().sites.front().residents.back();
+    assert(witness.threat.Known() && !witness.threat.Visible() &&
+           G::Distance(g.Surface()->Planet().radiusMeters, *witness.lastThreat, rememberedThreat) < .0001);
+    for (int frame = 0; frame < 122; ++frame)
+    {
+        community->Update(.05f, false);
+    }
+    assert(!community->State().sites.front().residents.back().threat.Known());
     auto read = [&](size_t choice) {
         int pages = 0;
         while (Dialogue::Active())
@@ -4552,6 +4576,150 @@ void TestAimLightingAndWallShots()
     assert(mineState.kills == 1 && mineState.player.experience == kExperiencePerKill);
     assert(mineState.drops.size() == 1);
 }
+void TestNpcSupport()
+{
+    using namespace tutorial;
+    using ai::SupportTask;
+    auto &game = Game::Get();
+    game.Reset();
+    ReadyMine();
+    auto &world = game.GetState();
+    auto &mine = GameLevels::Mine();
+    std::fill(mineState.tiles.begin(), mineState.tiles.end(), Tile::Floor);
+    mineState.enemies.clear();
+    mineState.survivors = {{777, 0, {20.5f, 20.5f}}};
+    auto &patient = mineState.survivors.front();
+    patient.combat.health = 0;
+    patient.combat.downedSeconds = 12;
+    mineState.rescueGroups[0].rescued = false;
+    mineState.riaPosition = {19.7f, 20.5f};
+    world.playerPosition = {20.5f, 23.5f};
+    const int credits = mineState.player.credits, experience = mineState.player.experience;
+    const auto stage = mineState.quest.GetStage();
+    for (int frame = 0; frame < 20; ++frame)
+    {
+        mine.Combat().UpdateNpcs(.05f);
+        mine.Rescue().Update(.05f);
+    }
+    assert(mineState.riaCombat.support.task == SupportTask::Aid &&
+           mineState.riaCombat.support.progressSeconds > .8f && patient.combat.health == 0);
+    mineState.enemies = {{{21.5f, 20.5f}}};
+    mine.Rescue().Update(.05f);
+    assert(mineState.riaCombat.support.blocked && mineState.riaCombat.support.progressSeconds == 0);
+    mineState.enemies.clear();
+    for (int frame = 0; frame < 62; ++frame)
+    {
+        mine.Combat().UpdateNpcs(.05f);
+        mine.Rescue().Update(.05f);
+    }
+    assert(patient.combat.health == 50 && patient.combat.downedSeconds == 0 && patient.combat.hitGrace > 2);
+    assert(!mineState.rescueGroups[0].rescued && !patient.evacuating);
+    assert(mineState.player.credits == credits && mineState.player.experience == experience &&
+           mineState.quest.GetStage() == stage);
+    patient.combat.health = 0;
+    patient.combat.downedSeconds = 12;
+    mine.Rescue().Update(.05f);
+    assert(mineState.riaCombat.support.task == SupportTask::Aid);
+    world.playerPosition = {40.5f, 40.5f};
+    mine.Rescue().Update(.05f);
+    assert(mineState.riaCombat.support.task == SupportTask::None);
+
+    game.Reset();
+    auto &chapter = GameLevels::Chapter();
+    chapter.Enter(true);
+    ReadDialogue();
+    auto &field = chapter.GetState();
+    std::fill(field.tiles.begin(), field.tiles.end(), FrontierTile::Grass);
+    std::fill(field.surfaceObstacles.begin(), field.surfaceObstacles.end(), 0);
+    field.structures.clear();
+    field.scrappers.clear();
+    field.survivors.clear();
+    field.kainJoined = true;
+    field.ria.position = {12, 10.5f};
+    field.kain.position = {14.5f, 10.5f};
+    world.playerPosition = {10.5f, 12.5f};
+    const auto beforeCredits = mineState.player.credits;
+    const bool generator = field.generatorRestored, convoy = field.convoyRescued;
+    // The production party adapter can also be exercised independently of bullets and story interaction.
+    FrontierParty party(chapter);
+    party.Update(.05f);
+    assert(field.ria.combat.support.task == SupportTask::Inspect &&
+           field.kain.combat.support.task == SupportTask::Cover);
+    const float guardRetry = field.kain.combat.support.retrySeconds;
+    for (int frame = 0; frame < 5; ++frame)
+    {
+        party.Update(.05f);
+    }
+    assert(field.kain.combat.support.retrySeconds < guardRetry); // Work cover retains its route across ticks.
+    for (int frame = 0; frame < 77; ++frame)
+    {
+        party.Update(.05f);
+    }
+    assert(field.ria.combat.support.task == SupportTask::Supply);
+    assert(field.generatorRestored == generator && field.convoyRescued == convoy && !field.vehicleRepaired &&
+           !field.escortStarted && mineState.player.credits == beforeCredits);
+    const auto snapshot = monitoring::WorldSnapshot::Build(1, "support-test");
+    assert(snapshot.find("\"support\":") != std::string::npos &&
+           snapshot.find("\"duration_seconds\":") != std::string::npos);
+    world.playerPosition = {5.5f, 30.5f};
+    party.Update(.05f);
+    assert(field.ria.combat.support.task == SupportTask::None &&
+           field.kain.combat.support.task == SupportTask::None);
+    game.Reset();
+}
+void TestMineCooperation()
+{
+    using namespace tutorial;
+    Game::Get().Reset();
+    ReadyMine();
+    auto &world = Game::Get().GetState();
+    auto &level = GameLevels::Mine();
+    std::fill(mineState.tiles.begin(), mineState.tiles.end(), Tile::Floor);
+    mineState.survivors.clear();
+    world.playerPosition = {20.5f, 20.5f};
+    mineState.riaPosition = {17.5f, 20.5f};
+    mineState.riaCombat.pistol.Reset();
+    mineState.enemies = {{{23.5f, 20.5f}}};
+    const int rounds = mineState.riaCombat.pistol.GetRounds();
+    level.Combat().UpdateNpcs(.05f);
+    assert(mineState.riaCombat.teamwork.task == ai::TeamTask::HoldFire &&
+           mineState.riaCombat.pistol.GetRounds() == rounds && mineState.bullets.empty());
+    world.playerPosition.y += 4;
+    level.Combat().UpdateNpcs(.05f);
+    assert(mineState.riaCombat.pistol.GetRounds() == rounds - 1 && !mineState.bullets.empty());
+    mineState.rescueGroups[0].combatants = true;
+    mineState.survivors = {{888, 0, {17.5f, 21.5f}}};
+    mineState.enemies = {{{23.5f, 20.5f}}, {{23.5f, 21.5f}}};
+    level.Combat().UpdateNpcs(.05f);
+    assert(mineState.riaCombat.teamwork.targetId != mineState.survivors.front().combat.teamwork.targetId &&
+           mineState.riaCombat.teamwork.targetId > 0 &&
+           mineState.survivors.front().combat.teamwork.targetId > 0);
+
+    mineState.bullets.clear();
+    mineState.survivors.clear();
+    mineState.riaCombat.health = 0;
+    world.playerPosition = {25.5f, 20.5f};
+    for (int y = 0; y < kMapSize; ++y)
+    {
+        mineState.tiles[size_t(y * kMapSize + 22)] = Tile::Wall;
+    }
+    mineState.enemies = {{{23.5f, 20.5f}}, {{20.5f, 20.5f}}, {{13.5f, 20.5f}}};
+    level.Combat().UpdateEnemies(.05f);
+    assert(mineState.enemies[0].threat.Visible());
+    assert(mineState.enemies[1].threat.Known() && !mineState.enemies[1].threat.Visible() &&
+           mineState.enemies[1].teamwork.reporterId == 1);
+    assert(!mineState.enemies[2].threat.Known());
+    const auto reported = mineState.enemies[1].target;
+    world.playerPosition = {65.5f, 20.5f};
+    for (int frame = 0; frame < 45; ++frame)
+    {
+        level.Combat().UpdateEnemies(.05f);
+        assert(!mineState.enemies[2].threat.Known());
+        assert(Game::Distance(reported, mineState.enemies[1].target) < .001f);
+    }
+    assert(!mineState.enemies[1].threat.Known());
+    Game::Get().Reset();
+}
 void TestMinePerceptionMemory()
 {
     using namespace tutorial;
@@ -5559,6 +5727,18 @@ void TestAimMovementAndLayers()
 } // namespace
 int main(int argc, char **argv)
 {
+    if (argc > 1 && std::string(argv[1]) == "--support")
+    {
+        TestNpcSupport();
+        std::cout << "Companion aid interruption, cover/work roles and quest isolation checks passed.\n";
+        return 0;
+    }
+    if (argc > 1 && std::string(argv[1]) == "--cooperation")
+    {
+        TestMineCooperation();
+        std::cout << "Mine ally shot hold, ammo preservation and direct-sighting warning checks passed.\n";
+        return 0;
+    }
     if (argc > 1 && std::string(argv[1]) == "--perception")
     {
         TestMinePerceptionMemory();
@@ -5669,7 +5849,9 @@ int main(int argc, char **argv)
     TestRescueAndScanner();
     TestMinePerceptionMemory();
     TestScannerPropagation();
+    TestMineCooperation();
     TestStoryAndReentry();
+    TestNpcSupport();
     TestChapterOne();
     TestConnectedOverworld();
     TestCityQuestAccess();

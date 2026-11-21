@@ -216,6 +216,8 @@
     <ClInclude Include="PlayerMobility.h" />
     <ClInclude Include="PlayerAircraft.h" />
     <ClInclude Include="NpcPerception.h" />
+    <ClInclude Include="NpcCooperation.h" />
+    <ClInclude Include="NpcSupport.h" />
     <ClInclude Include="World.h" />
     <ClInclude Include="WorldGeneration.h" />
     <ClInclude Include="WorldContent.h" />
@@ -258,6 +260,10 @@
     <ClCompile Include="PlayerMobility.cpp" />
     <ClCompile Include="PlayerAircraft.cpp" />
     <ClCompile Include="NpcPerception.cpp" />
+    <ClCompile Include="NpcCooperation.cpp" />
+    <ClCompile Include="NpcTeams.cpp" />
+    <ClCompile Include="NpcSupport.cpp" />
+    <ClCompile Include="NpcSupportScenes.cpp" />
     <ClCompile Include="World.cpp" />
     <ClCompile Include="WorldGeneration.cpp" />
     <ClCompile Include="WorldContent.cpp" />

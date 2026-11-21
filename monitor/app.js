@@ -224,6 +224,15 @@ function renderNpcDetail() {
     ["행동 판단", perception ? decisions[perception.decision] ?? perception.decision : "해당 없음"],
     ["위험 기억", perception ? format(perception.memory_seconds, 1) + "초" : "해당 없음"],
     ["마지막 위험 위치", perception?.last_known_position ? position(perception.last_known_position) : "없음"],
+    ["협동 행동", npc.teamwork?.task_label ?? "해당 없음"],
+    ["분담 표적", npc.teamwork?.target_id ?? "없음"],
+    ["경고 전달자", npc.teamwork?.reporter_id ?? "없음"],
+    ["현장 지원", npc.support?.task_label ?? "해당 없음"],
+    ["지원 대상", npc.support?.subject_id || "없음"],
+    ["작업 진행", npc.support?.duration_seconds > 0 ?
+      format(npc.support.progress_seconds, 1) + " / " + format(npc.support.duration_seconds, 1) + "초" : "해당 없음"],
+    ["지원 상태", !npc.support ? "해당 없음" : npc.support.blocked ? "위험으로 중단" :
+      npc.support.performing ? "수행 중" : npc.support.task === "none" ? "일반 행동" : "이동 / 대기"],
   ]));
 }
 function renderEnvironment(data) {

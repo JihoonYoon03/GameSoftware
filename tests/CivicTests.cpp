@@ -826,6 +826,34 @@ void TestPerceptionAndRememberedPositions()
     assert(law.officers.front().decision == ai::Decision::Routine &&
            Game::Distance(stopped, law.officers.front().position) < .001f);
 }
+void TestCooperativeShotHold()
+{
+    Exterior();
+    auto &world = World();
+    auto &law = CivicJustice::State();
+    const auto p = Open(0);
+    world.playerPosition = {p.x + 2, p.y};
+    law.wanted = 1;
+    law.heat = 20;
+    law.spawnSeconds = 1000;
+    SecurityOfficer shooter, ally;
+    shooter.id = 1;
+    shooter.position = p;
+    shooter.facing.yaw = 0;
+    ally.id = 2;
+    ally.position = {p.x + 1, p.y};
+    ally.facing.yaw = kPi;
+    law.officers = {shooter, ally};
+    assert(CivicJustice::FriendlyFireBlocked(law.officers[0], world.playerPosition));
+    const int rounds = law.officers[0].weapon.GetRounds();
+    CivicJustice::Update(.05f);
+    assert(law.officers[0].teamwork.task == ai::TeamTask::HoldFire &&
+           law.officers[0].weapon.GetRounds() == rounds);
+    law.officers[1].position.y += 2;
+    assert(!CivicJustice::FriendlyFireBlocked(law.officers[0], world.playerPosition));
+    CivicJustice::Update(.05f);
+    assert(law.officers[0].weapon.GetRounds() == rounds - 1);
+}
 void TestHospitalAllCauses()
 {
     Exterior();
@@ -886,6 +914,7 @@ int main()
     TestUnidentifiedEscapeAndVision();
     TestQualifyingDamageAndAircraft();
     TestPerceptionAndRememberedPositions();
+    TestCooperativeShotHold();
     TestHospitalAllCauses();
     Game::Get().Reset();
     std::cout

@@ -35,6 +35,10 @@ set(GAME_SOURCES
     SimpleGame/PlayerMobility.cpp
     SimpleGame/PlayerAircraft.cpp
     SimpleGame/NpcPerception.cpp
+    SimpleGame/NpcCooperation.cpp
+    SimpleGame/NpcTeams.cpp
+    SimpleGame/NpcSupport.cpp
+    SimpleGame/NpcSupportScenes.cpp
     SimpleGame/World.cpp
     SimpleGame/WorldGeneration.cpp
     SimpleGame/WorldContent.cpp

@@ -1238,12 +1238,14 @@ bool PlanetSecurity::Hit(models::Point p, int damage, bool playerOwned, bool com
 }
 void PlanetSecurity::UpdateCompanions(float seconds)
 {
+    profiling::Scope cooperationTimer(profiling::Timer::NpcCooperation);
     auto &g = Game::Get();
     if (seconds <= 0 || !CivicJustice::IsExterior() || !g.SurfaceParty() || civic.wanted == 0 ||
         !civic.identified)
     {
         return;
     }
+    std::vector<unsigned> claims(civic.officers.size());
     for (size_t i = 0; i < g.SurfaceParty()->State().members.size(); ++i)
     {
         const auto &m = g.SurfaceParty()->State().members[i];
@@ -1253,20 +1255,25 @@ void PlanetSecurity::UpdateCompanions(float seconds)
         }
         Vector2 p = Local(m.position);
         const SecurityOfficer *target = nullptr;
-        float nearest = 8;
+        float bestScore = (std::numeric_limits<float>::max)();
         for (const auto &o : civic.officers)
         {
             const float d = Game::Distance(p, o.position);
-            if (o.health > 0 && d < nearest && CivicJustice::ClearLine(p, o.position))
+            const auto index = size_t(&o - civic.officers.data());
+            const float score = ai::Cooperation::TargetScore(d, claims[index], false);
+            if (o.health > 0 && d < 8 && score < bestScore && CivicJustice::ClearLine(p, o.position))
             {
                 target = &o;
-                nearest = d;
+                bestScore = score;
             }
         }
         if (target)
         {
+            ++claims[size_t(target - civic.officers.data())];
             g.SurfaceParty()->Defend(CompanionId(i),
-                                     std::atan2(target->position.y - p.y, target->position.x - p.x));
+                                     std::atan2(target->position.y - p.y, target->position.x - p.x),
+                                     target->id, CompanionFireBlocked(CompanionId(i), target->position));
+            profiling::Count(profiling::Counter::NpcTeamAssignments);
         }
     }
 }
@@ -1606,6 +1613,7 @@ void CivicJustice::Report(Offense offense, Vector2 position)
             officer.lastKnown = position;
             officer.threat.Remember(ai::Stimulus::Report, ai::PerceptionSettings::kReportMemorySeconds);
             officer.departing = false;
+            officer.teamwork = {ai::TeamTask::Investigate, 0, 0};
             profiling::Count(profiling::Counter::NpcStimuliReceived);
         }
     }
@@ -1701,6 +1709,7 @@ void CivicJustice::Update(float dt)
         {
             officer.threat.Forget();
             officer.decision = ai::Decision::Routine;
+            officer.teamwork = {};
             officer.corpseSeconds += dt;
             continue;
         }
@@ -1802,6 +1811,18 @@ void CivicJustice::Update(float dt)
                                ? ai::Perception::Decide(ai::Role::Officer, officer.threat, distance)
                                : ai::Decision::Routine;
         visible |= sees;
+        if (!officer.threat.Known())
+        {
+            officer.teamwork = {};
+        }
+        else
+        {
+            officer.teamwork.task = sees ? ai::TeamTask::Defend : ai::TeamTask::Investigate;
+            if (sees)
+            {
+                officer.teamwork.reporterId = 0;
+            }
+        }
         delta = Sub(world.playerPosition, officer.position);
         distance = std::hypot(delta.x, delta.y);
         if (sees && civic.wanted > 0)
@@ -1812,8 +1833,14 @@ void CivicJustice::Update(float dt)
         if (civic.wanted > 0 && sees && distance < 8 + officer.tier * 1.5f && officer.impact.seconds <= 0 &&
             civic.bullets.size() < 128)
         {
+            const bool blocked = FriendlyFireBlocked(officer, world.playerPosition);
+            if (blocked)
+            {
+                officer.teamwork.task = ai::TeamTask::HoldFire;
+                profiling::Count(profiling::Counter::NpcFriendlyFireHolds);
+            }
             combat::Shot shot;
-            if (officer.weapon.TryFire(std::atan2(delta.y, delta.x), shot))
+            if (!blocked && officer.weapon.TryFire(std::atan2(delta.y, delta.x), shot))
             {
                 const auto &stats = game::GameLevels::Mine().GetState().player;
                 int power = stats.defense +
@@ -1838,6 +1865,7 @@ void CivicJustice::Update(float dt)
             }
         }
     }
+    PlanetSecurity::ShareThreats();
     if (civic.wanted > 0)
     {
         bool responders = std::any_of(civic.officers.begin(), civic.officers.end(),

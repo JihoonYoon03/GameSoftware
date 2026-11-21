@@ -32,6 +32,7 @@ struct PlanetCompanion
     world::SurfacePoint position;
     world::Vector3d heading = {0, 1, 0};
     combat::NpcCombatState combat;
+    std::optional<world::SurfacePoint> threatPosition;
     bool walking = false;
     MovementFacing motion;
 };
@@ -52,7 +53,7 @@ class PlanetParty
     bool Joined(CompanionId id) const;
     bool Owns(CompanionId id, CompanionPlace place) const;
     bool Damage(CompanionId id, int amount, bool playerOwned);
-    void Defend(CompanionId id, float yaw);
+    void Defend(CompanionId id, float yaw, std::uint64_t targetId = 0, bool blocked = false);
     // Capture before changing scene ownership; publish only to the current owner's adapter.
     void Capture();
     void Publish();
@@ -410,6 +411,9 @@ struct CommunityResident
     float speed = 0, fearSeconds = 0, hitFlash = 0, corpseSeconds = 0;
     int direction = 1, health = 100;
     MovementFacing motion;
+    ai::ThreatMemory threat;
+    std::optional<world::SurfacePoint> lastThreat;
+    float perceptionCooldown = 0;
 };
 struct CommunitySite
 {

@@ -99,6 +99,7 @@ struct Enemy
     tutorial::MovementFacing facing;
     tutorial::Vector2 target = {};
     ai::ThreatMemory threat;
+    ai::TeamState teamwork;
     ai::Decision decision = ai::Decision::Routine;
     std::vector<tutorial::Vector2> searchRoute;
     size_t searchWaypoint = 0;
@@ -291,6 +292,9 @@ class MineCombat
     void MoveEnemy(Enemy &enemy, float deltaSeconds, tutorial::Vector2 target, bool playerTarget);
     void UpdateBullets(float deltaSeconds);
     void AdvanceBullet(Bullet &bullet, float movement);
+    void ShareThreats();
+    bool FriendlyFireBlocked(tutorial::Vector2 from, tutorial::Vector2 target,
+                             const NpcCombatState &shooter) const;
 };
 
 // ============================================================================
@@ -308,6 +312,7 @@ class MineRescue
     MineLevel &level;
     MineState &state;
     void UpdateScanner(float deltaSeconds);
+    std::array<bool, 2> UpdateSupport(float deltaSeconds);
     float WalkRoute(tutorial::Vector2 &position, const std::vector<tutorial::Vector2> &route, size_t &index,
                     float amount, tutorial::MovementFacing &facing, float deltaSeconds);
 };
@@ -512,6 +517,7 @@ class FrontierCombat
     ChapterOneState &state;
     void Advance(ChapterProjectile &projectile, float distance);
     void Fire(FrontierPerson &person, tutorial::Vector2 target, ChapterTeam team);
+    bool FriendlyFireBlocked(const FrontierPerson &shooter, tutorial::Vector2 target, ChapterTeam team) const;
 };
 // ============================================================================
 // FrontierParty — companions, escorted survivors and departing scrappers
@@ -526,6 +532,7 @@ class FrontierParty
     ChapterOneLevel &level;
     ChapterOneState &state;
     bool Move(FrontierPerson &person, float amount, float deltaSeconds);
+    std::array<bool, 2> UpdateSupport(float deltaSeconds);
 };
 // ============================================================================
 // ChapterOneLevel : Level — quest progression and field/hub lifecycle

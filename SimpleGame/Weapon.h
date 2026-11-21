@@ -1,5 +1,8 @@
 ﻿#pragma once
 #include <cstdint>
+#include "NpcCooperation.h"
+#include "NpcSupport.h"
+#include "NpcPerception.h"
 namespace tutorial
 {
 class SaveArchive;
@@ -117,6 +120,10 @@ struct NpcCombatState
     bool engaged = false, evading = false;
     float aimYaw = 0;
     Pistol pistol;
+    ai::TeamState teamwork;
+    ai::SupportState support;
+    ai::ThreatMemory threat;
+    models::Point lastThreat{};
 };
 // ============================================================================
 // SecurityCarbine — tier-scaled frontier suppression firearm

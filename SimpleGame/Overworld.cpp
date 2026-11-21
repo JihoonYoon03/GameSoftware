@@ -64,16 +64,34 @@ bool PlanetParty::Damage(CompanionId id, int amount, bool playerOwned)
     Publish();
     return true;
 }
-void PlanetParty::Defend(CompanionId id, float yaw)
+void PlanetParty::Defend(CompanionId id, float yaw, std::uint64_t targetId, bool blocked)
 {
     auto &m = state.members.at(size_t(id));
     m.combat.engaged = true;
     m.combat.aimYaw = yaw;
+    m.combat.teamwork = {blocked ? ai::TeamTask::HoldFire : ai::TeamTask::Defend, targetId, 0};
+    const auto &officers = CivicJustice::State().officers;
+    const auto observed = std::find_if(officers.begin(), officers.end(), [&](const SecurityOfficer &officer) {
+        return officer.id == targetId;
+    });
+    if (observed != officers.end())
+    {
+        m.combat.threat.Observe(true, ai::PerceptionSettings::kCombatMemorySeconds);
+        profiling::Count(profiling::Counter::NpcVisualDetections);
+        m.threatPosition = Game::Get().Surface()->PointAt(observed->position.x * 2, observed->position.y * 2);
+        m.threatPosition->altitudeMeters =
+            Game::Get().Surface()->Stream().Contact(*m.threatPosition).heightMeters;
+    }
     const auto &frame = Game::Get().Surface()->Origin();
     m.heading =
         world::SurfaceGeometry::Unit({frame.right.x * std::cos(yaw) + frame.forward.x * std::sin(yaw),
                                       frame.right.y * std::cos(yaw) + frame.forward.y * std::sin(yaw),
                                       frame.right.z * std::cos(yaw) + frame.forward.z * std::sin(yaw)});
+    if (blocked)
+    {
+        profiling::Count(profiling::Counter::NpcFriendlyFireHolds);
+        return;
+    }
     if (m.combat.pistol.GetRounds() == 0)
     {
         m.combat.pistol.Reload();
@@ -256,6 +274,11 @@ void PlanetParty::ChangeOwner(size_t index, CompanionPlace place, const world::S
     member.motion.walking = member.motion.following = false;
     member.combat.engaged = member.combat.evading = false;
     member.combat.muzzleFlash = 0;
+    member.combat.teamwork = {};
+    member.combat.support = {};
+    member.combat.threat = {};
+    member.combat.lastThreat = {};
+    member.threatPosition.reset();
     member.combat.aimYaw = 0; // Reacquire a target in the new adapter, never transport a stale aim.
     auto &mine = game::GameLevels::Mine().GetState();
     if (index == 0)
@@ -410,9 +433,19 @@ void PlanetParty::Update(float seconds)
         combat.hitGrace = (std::max)(0.f, combat.hitGrace - seconds);
         combat.muzzleFlash = 0;
         combat.engaged = combat.evading = false;
+        combat.teamwork = {};
+        const bool remembered = combat.threat.Known();
+        combat.threat.Advance(seconds);
+        if (remembered && !combat.threat.Known())
+        {
+            profiling::Count(profiling::Counter::NpcMemoriesExpired);
+        }
+        combat.threat.Observe(false, ai::PerceptionSettings::kCombatMemorySeconds);
         member.walking = false;
         if (combat.health <= 0)
         {
+            combat.threat.Forget();
+            member.threatPosition.reset();
             combat.downedSeconds = (std::max)(0.f, combat.downedSeconds - seconds);
             if (combat.downedSeconds <= 0)
             {
@@ -4112,10 +4145,19 @@ void PlanetCommunity::Update(float dt, bool exterior)
         for (size_t i = 0; i < site.residents.size(); ++i)
         {
             auto &person = site.residents[i];
+            const bool remembered = person.threat.Known();
+            person.threat.Advance(dt);
+            if (remembered && !person.threat.Known())
+            {
+                profiling::Count(profiling::Counter::NpcMemoriesExpired);
+            }
+            person.perceptionCooldown -= dt;
             person.fearSeconds = (std::max)(0.f, person.fearSeconds - dt);
             person.hitFlash = (std::max)(0.f, person.hitFlash - dt);
             if (person.health <= 0)
             {
+                person.threat.Forget();
+                person.lastThreat.reset();
                 person.speed = 0;
                 person.corpseSeconds = (std::min)(60.f, person.corpseSeconds + dt);
                 continue;
@@ -4123,23 +4165,42 @@ void PlanetCommunity::Update(float dt, bool exterior)
             const double distance = TG::Distance(p.radiusMeters, hero, person.position);
             if (!exterior || distance > DetailedMeters || active >= ActiveLimit)
             {
+                person.threat.Observe(false, ai::PerceptionSettings::kCivilianMemorySeconds);
                 person.speed = 0;
                 continue;
             }
             ++active;
             profiling::Count(profiling::Counter::CommunityDetailedTicks);
-            const bool witnessed = distance < 18 && (CivicJustice::State().infamy >= 30 ||
-                                                     CivicJustice::State().muzzleFlash > 0);
-            const bool alarm = witnessed || person.fearSeconds > 0;
-            if (witnessed)
+            if (person.perceptionCooldown <= 0)
             {
-                person.fearSeconds = (std::max)(person.fearSeconds, 3.f);
+                person.perceptionCooldown = ai::PerceptionSettings::kScanSeconds +
+                                            float(i % 4) * ai::PerceptionSettings::kScanSpreadSeconds;
+                const auto frame = TG::Frame(person.position);
+                const auto local = TG::ToLocal(frame, hero, p.radiusMeters);
+                const float yaw = float(
+                    std::atan2(TG::Dot(person.heading, frame.forward), TG::Dot(person.heading, frame.right)));
+                profiling::Count(profiling::Counter::NpcPerceptionQueries);
+                const bool noticed =
+                    !w.aircraft.mounted &&
+                    (CivicJustice::State().infamy >= 30 || CivicJustice::State().muzzleFlash > 0) &&
+                    ai::Perception::InSight({}, yaw, {float(local.x), float(local.y), float(local.z)},
+                                            {18, 1.1f, 2, 2}) &&
+                    CivicJustice::ClearLine(PlanetSecurity::Local(person.position),
+                                            PlanetSecurity::Local(hero));
+                person.threat.Observe(noticed, ai::PerceptionSettings::kCivilianMemorySeconds);
+                if (noticed)
+                {
+                    person.lastThreat = hero;
+                    profiling::Count(profiling::Counter::NpcVisualDetections);
+                }
             }
+            const bool alarm = person.threat.Known() && person.lastThreat;
+            person.fearSeconds = (std::max)(person.fearSeconds, person.threat.Remaining());
             const double length = TG::Distance(p.radiusMeters, person.path[0], person.path[1]);
-            if (alarm && distance < 18)
+            if (alarm)
             {
-                const auto startDistance = TG::Distance(p.radiusMeters, hero, person.path[0]);
-                const auto endDistance = TG::Distance(p.radiusMeters, hero, person.path[1]);
+                const auto startDistance = TG::Distance(p.radiusMeters, *person.lastThreat, person.path[0]);
+                const auto endDistance = TG::Distance(p.radiusMeters, *person.lastThreat, person.path[1]);
                 person.direction = endDistance > startDistance ? 1 : -1;
             }
             else if (person.distanceMeters >= length - 2.05)
@@ -4284,6 +4345,8 @@ bool PlanetCommunity::Damage(const std::string &id, int damage, bool playerOwned
     }
     person->health = (std::max)(0, person->health - damage);
     person->fearSeconds = 15;
+    person->lastThreat = person->position;
+    person->threat.Remember(ai::Stimulus::Report, person->fearSeconds);
     person->hitFlash = .15f;
     person->speed = 0;
     if (playerOwned)

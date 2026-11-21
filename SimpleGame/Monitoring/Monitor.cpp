@@ -123,6 +123,45 @@ std::string PerceptionState(const ai::ThreatMemory &memory, ai::Decision decisio
     result.Raw("last_known_position", memory.Known() ? Position(lastKnown) : "null");
     return result.Finish();
 }
+std::string TeamworkState(const ai::TeamState &teamwork, const char *scope)
+{
+    JsonObject result;
+    result.Text("task", ai::Cooperation::TaskName(teamwork.task));
+    result.Text("task_label", ai::Cooperation::TaskLabel(teamwork.task));
+    result.Text("target_scope", scope);
+    if (teamwork.targetId)
+    {
+        result.Number("target_id", teamwork.targetId);
+    }
+    else
+    {
+        result.Raw("target_id", "null");
+    }
+    if (teamwork.reporterId)
+    {
+        result.Number("reporter_id", teamwork.reporterId);
+    }
+    else
+    {
+        result.Raw("reporter_id", "null");
+    }
+    return result.Finish();
+}
+std::string SupportState(const ai::SupportState &support, const char *frame)
+{
+    JsonObject result;
+    result.Text("task", ai::Support::TaskName(support.task));
+    result.Text("task_label", ai::Support::TaskLabel(support.task));
+    result.Number("subject_id", support.subjectId);
+    result.Number("progress_seconds", support.progressSeconds);
+    result.Number("duration_seconds", ai::Support::Duration(support.task));
+    result.Bool("performing", support.performing);
+    result.Bool("blocked", support.blocked);
+    result.Text("coordinate_frame", frame);
+    result.Raw("goal",
+               support.task == ai::SupportTask::None ? "null" : Position({support.goal.x, support.goal.y}));
+    return result.Finish();
+}
 void Append(std::string &array, const std::string &object)
 {
     array += (array.empty() ? "" : ",") + object;
@@ -464,6 +503,19 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
                     const auto location = ::world::SurfaceGeometry::ToDegrees(person.position);
                     actor.Number("latitude", location[0]);
                     actor.Number("longitude", location[1]);
+                    JsonObject perception;
+                    perception.Text("state", person.threat.StateName());
+                    perception.Text("stimulus", ai::Perception::StimulusName(person.threat.Source()));
+                    perception.Number("memory_seconds", person.threat.Remaining());
+                    perception.Bool("target_visible", person.threat.Visible());
+                    perception.Text("coordinate_frame", "planet_degrees");
+                    if (person.threat.Known() && person.lastThreat)
+                    {
+                        const auto last = ::world::SurfaceGeometry::ToDegrees(*person.lastThreat);
+                        perception.Number("last_latitude", last[0]);
+                        perception.Number("last_longitude", last[1]);
+                    }
+                    actor.Raw("perception", perception.Finish());
                     Append(residents, actor.Finish());
                 }
                 item.Raw("residents", "[" + residents + "]");
@@ -624,6 +676,7 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         item.Number("id", officer.id);
         item.Number("health", officer.health);
         item.Bool("departing", officer.departing);
+        item.Raw("teamwork", TeamworkState(officer.teamwork, "player"));
         item.Raw("position", Position(officer.position));
         item.Raw("perception", PerceptionState(officer.threat, officer.decision, officer.lastKnown,
                                                world.surfaceExploration ? "surface_origin" : "civic"));
@@ -648,6 +701,7 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         item.Number("tier", officer->tier);
         item.Number("facing_yaw", officer->facing.yaw);
         item.Number("magazine_rounds", officer->weapon.GetRounds());
+        item.Raw("teamwork", TeamworkState(officer->teamwork, "player"));
         item.Raw("perception",
                  PerceptionState(officer->threat, officer->decision, officer->lastKnown, "surface_origin"));
         auto degrees = ::world::SurfaceGeometry::ToDegrees(record.position);
@@ -1049,13 +1103,26 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         item.Text("personality", following ? "실증적 · 기록 우선" : "구조 요청 중");
         item.Text("behavior_pattern", following ? "벽을 우회하며 플레이어 동행" : "구조 확인 후 귀환로 보행");
         item.Text("activity", combat.health <= 0 ? "downed"
-                              : combat.evading   ? "evading"
-                              : combat.engaged   ? "defending"
-                                                 : activity);
+                              : combat.support.task != ai::SupportTask::None
+                                  ? ai::Support::TaskName(combat.support.task)
+                              : combat.evading ? "evading"
+                              : combat.engaged ? "defending"
+                                               : activity);
         item.Text("activity_label", combat.health <= 0 ? "응급 처치 대기"
-                                    : combat.evading   ? "회피"
-                                    : combat.engaged   ? "자체 방어"
-                                                       : label);
+                                    : combat.support.task != ai::SupportTask::None
+                                        ? ai::Support::TaskLabel(combat.support.task)
+                                    : combat.evading ? "회피"
+                                    : combat.teamwork.task != ai::TeamTask::None
+                                        ? ai::Cooperation::TaskLabel(combat.teamwork.task)
+                                    : combat.engaged ? "자체 방어"
+                                                     : label);
+        item.Raw("teamwork", TeamworkState(combat.teamwork, "mine/enemies"));
+        item.Raw("support", SupportState(combat.support, "mine"));
+        item.Raw("perception", PerceptionState(combat.threat,
+                                               combat.engaged          ? ai::Decision::Engage
+                                               : combat.threat.Known() ? ai::Decision::Observe
+                                                                       : ai::Decision::Routine,
+                                               {combat.lastThreat.x, combat.lastThreat.y}, "mine"));
         item.Bool("simulation_active", simulating);
         item.Bool("following", following);
         item.Text("life_state", combat.health <= 0 ? "downed" : "alive");
@@ -1066,7 +1133,7 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         item.Raw("station_id", "null");
         item.Raw("target_enemy_id", "null");
         item.Number("kills", 0);
-        item.Bool("carrying_supplies", false);
+        item.Bool("carrying_supplies", combat.support.task == ai::SupportTask::Supply);
         item.Raw("position", Position(position));
         item.Raw("home", Position(level.entry));
         item.Raw("destination", Position(following ? world.playerPosition : level.entry));
@@ -1107,12 +1174,31 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         item.Number("health", person.combat.health);
         item.Number("max_health", hostile ? 60 : 100);
         item.Text("life_state", person.combat.health > 0 ? "alive" : "downed");
-        item.Text("activity", person.combat.engaged   ? "defending"
+        item.Text("activity", person.combat.health <= 0 ? "downed"
+                              : person.combat.support.task != ai::SupportTask::None
+                                  ? ai::Support::TaskName(person.combat.support.task)
+                              : person.combat.engaged ? "defending"
                               : person.facing.walking ? "walking"
                                                       : "idle");
         item.Bool("simulation_active", fieldSimulating && !person.arrived);
         item.Bool("following", following);
         item.Number("magazine_rounds", person.combat.pistol.GetRounds());
+        item.Raw("teamwork", TeamworkState(person.combat.teamwork,
+                                           hostile ? "frontier/player_ria_kain" : "frontier/scrappers"));
+        item.Raw("support", SupportState(person.combat.support, "frontier"));
+        item.Raw("perception",
+                 PerceptionState(person.combat.threat,
+                                 person.combat.engaged          ? ai::Decision::Engage
+                                 : person.combat.threat.Known() ? ai::Decision::Observe
+                                                                : ai::Decision::Routine,
+                                 {person.combat.lastThreat.x, person.combat.lastThreat.y}, "frontier"));
+        item.Text("activity_label", person.combat.health <= 0 ? "응급 처치 대기"
+                                    : person.combat.support.task != ai::SupportTask::None
+                                        ? ai::Support::TaskLabel(person.combat.support.task)
+                                    : person.combat.teamwork.task != ai::TeamTask::None
+                                        ? ai::Cooperation::TaskLabel(person.combat.teamwork.task)
+                                    : person.facing.walking ? "이동"
+                                                            : "대기");
         item.Text("source", "chapter_one_actor");
         Append(npcArray, item.Finish());
     };
@@ -1188,6 +1274,25 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
             item.Number("health", member.combat.health);
             item.Number("max_health", 100);
             item.Number("magazine_rounds", member.combat.pistol.GetRounds());
+            item.Raw("teamwork", TeamworkState(member.combat.teamwork, "security/officers"));
+            // Scene-owned records are emitted above; their local coordinates must not be projected as surface
+            // positions.
+            if (member.place == tutorial::CompanionPlace::Surface)
+            {
+                item.Raw("support", SupportState(member.combat.support, "surface_origin"));
+                tutorial::Vector2 last{};
+                if (member.threatPosition)
+                {
+                    const auto projected = ::world::SurfaceAtlas::Project(
+                        surface.Origin(), *member.threatPosition, surface.Planet().radiusMeters);
+                    last = {float(projected.x / 2), float(projected.y / 2)};
+                }
+                item.Raw("perception", PerceptionState(member.combat.threat,
+                                                       member.combat.engaged          ? ai::Decision::Engage
+                                                       : member.combat.threat.Known() ? ai::Decision::Observe
+                                                                                      : ai::Decision::Routine,
+                                                       last, "surface_origin"));
+            }
             auto degrees = ::world::SurfaceGeometry::ToDegrees(member.position);
             item.Number("latitude", degrees[0]);
             item.Number("longitude", degrees[1]);
@@ -1255,6 +1360,7 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         item.Bool("alive", enemy.health > 0);
         item.Seconds("respawn_seconds", (std::max)(0.f, enemy.respawnSeconds));
         item.Raw("perception", PerceptionState(enemy.threat, enemy.decision, enemy.target, "mine"));
+        item.Raw("teamwork", TeamworkState(enemy.teamwork, "mine/combatants"));
         item.Raw("position", Position(enemy.position));
         Append(mobArray, item.Finish());
     }

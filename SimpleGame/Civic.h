@@ -36,6 +36,7 @@ struct SecurityOfficer
     float cooldown = 0, navigationSeconds = 0, corpseSeconds = 0, muzzleFlash = 0;
     float blockedSeconds = 0; // Transient contact progress; restored routes are checked on use.
     ai::ThreatMemory threat;
+    ai::TeamState teamwork;
     ai::Decision decision = ai::Decision::Routine;
     bool departing = false;
     BodyImpact impact;
@@ -125,6 +126,8 @@ class PlanetSecurity
     static bool Hit(models::Point position, int damage, bool playerOwned, bool companionOwned = false);
     static void UpdateCompanions(float seconds);
     static bool CanNavigate();
+    static void ShareThreats();
+    static bool CompanionFireBlocked(CompanionId id, Vector2 target);
 };
 // ============================================================================
 // CivicJustice — shared frontier security network, active pursuit and lasting reputation
@@ -149,6 +152,7 @@ class CivicJustice
     static void Update(float deltaSeconds);
     static void AdvanceSurfaceTimers(float deltaSeconds);
     static bool CanSee(const SecurityOfficer &officer, Vector2 position, float altitude = 0);
+    static bool FriendlyFireBlocked(const SecurityOfficer &officer, Vector2 target);
     static float SightDistance(const SecurityOfficer &officer, float angle);
 };
 // ============================================================================

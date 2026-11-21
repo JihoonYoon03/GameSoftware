@@ -9,6 +9,7 @@
 #include "ResourceAssets.h"
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <queue>
 #include <random>
 #include <utility>
@@ -632,6 +633,7 @@ void MineCombat::Attack()
         {
             enemy.target = world.playerPosition;
             enemy.threat.Remember(ai::Stimulus::Sound, ai::PerceptionSettings::kCombatMemorySeconds);
+            enemy.teamwork = {ai::TeamTask::Investigate, 0, 0};
             enemy.searchRoute.clear();
             enemy.searchWaypoint = 0;
             profiling::Count(profiling::Counter::NpcStimuliReceived);
@@ -706,6 +708,7 @@ bool MineCombat::DamageEnemy(size_t index, int damage, bool playerCredit)
     {
         enemy.target = tutorial::Game::Get().GetState().playerPosition;
         enemy.threat.Remember(ai::Stimulus::Report, ai::PerceptionSettings::kCombatMemorySeconds);
+        enemy.teamwork = {ai::TeamTask::Investigate, 0, 0};
         enemy.searchRoute.clear();
         enemy.searchWaypoint = 0;
         profiling::Count(profiling::Counter::NpcStimuliReceived);
@@ -716,6 +719,7 @@ bool MineCombat::DamageEnemy(size_t index, int damage, bool playerCredit)
     }
     enemy.threat.Forget();
     enemy.decision = ai::Decision::Routine;
+    enemy.teamwork = {};
     enemy.searchRoute.clear();
     enemy.searchWaypoint = 0;
     ++state.totalEnemyDeaths;
@@ -764,6 +768,20 @@ void MineCombat::Update(float deltaSeconds)
 
 void MineCombat::UpdateNpcs(float deltaSeconds)
 {
+    profiling::Scope cooperationTimer(profiling::Timer::NpcCooperation);
+    std::vector<unsigned> claims(state.enemies.size());
+    std::vector<bool> protectedTargets(state.enemies.size());
+    for (size_t i = 0; i < state.enemies.size(); ++i)
+    {
+        const auto &enemy = state.enemies[i];
+        protectedTargets[i] =
+            enemy.health > 0 &&
+            std::any_of(state.survivors.begin(), state.survivors.end(), [&](const RescueNpc &person) {
+                return (person.combat.health <= 0 || !state.rescueGroups[person.group].combatants) &&
+                       tutorial::Game::Distance(enemy.position, person.position) <
+                           ai::CooperationSettings::kProtectedRange;
+            });
+    }
     auto defend = [&](tutorial::Vector2 &position, tutorial::MovementFacing &facing, NpcCombatState &combat,
                       bool armed, bool evacuating, tutorial::Vector2 anchor) {
         combat.pistol.Update(deltaSeconds);
@@ -771,8 +789,17 @@ void MineCombat::UpdateNpcs(float deltaSeconds)
         combat.hitGrace = (std::max)(0.f, combat.hitGrace - deltaSeconds);
         combat.muzzleFlash = (std::max)(0.f, combat.muzzleFlash - deltaSeconds);
         combat.engaged = combat.evading = false;
+        combat.teamwork = {};
+        const bool remembered = combat.threat.Known();
+        combat.threat.Advance(deltaSeconds);
+        if (remembered && !combat.threat.Known())
+        {
+            profiling::Count(profiling::Counter::NpcMemoriesExpired);
+        }
+        combat.threat.Observe(false, ai::PerceptionSettings::kCombatMemorySeconds);
         if (combat.health <= 0)
         {
+            combat.threat.Forget();
             facing.walking = false;
             combat.downedSeconds -= deltaSeconds;
             if (combat.downedSeconds <= 0)
@@ -782,29 +809,58 @@ void MineCombat::UpdateNpcs(float deltaSeconds)
             }
             return;
         }
+        if (ai::Support::Busy(combat.support))
+        {
+            return;
+        }
         profiling::Count(profiling::Counter::NpcDecisions);
         size_t target = state.enemies.size();
         float nearest = armed ? 7.f : 3.f;
+        float bestScore = (std::numeric_limits<float>::max)();
         for (size_t i = 0; i < state.enemies.size(); ++i)
         {
             const auto &enemy = state.enemies[i];
             float distance = tutorial::Game::Distance(position, enemy.position);
-            if (enemy.health > 0 && distance < nearest &&
+            const float score = ai::Cooperation::TargetScore(distance, claims[i], protectedTargets[i]);
+            if (enemy.health > 0 && distance < (armed ? 7.f : 3.f) && score < bestScore &&
                 level.Map().HasLineOfSight(position, enemy.position))
             {
                 nearest = distance;
+                bestScore = score;
                 target = i;
             }
         }
         if (target == state.enemies.size())
         {
+            if (combat.threat.Known())
+            {
+                combat.aimYaw =
+                    std::atan2(combat.lastThreat.y - position.y, combat.lastThreat.x - position.x);
+                facing.yaw = combat.aimYaw;
+            }
             return;
         }
         auto threat = state.enemies[target].position;
+        combat.threat.Observe(true, ai::PerceptionSettings::kCombatMemorySeconds);
+        combat.lastThreat = {threat.x, threat.y, 0};
+        profiling::Count(profiling::Counter::NpcVisualDetections);
+        ++claims[target];
+        combat.teamwork = {ai::TeamTask::Defend, target + 1, 0};
+        if (protectedTargets[target])
+        {
+            combat.teamwork.task = ai::TeamTask::Protect;
+        }
+        profiling::Count(profiling::Counter::NpcTeamAssignments);
         combat.aimYaw = std::atan2(threat.y - position.y, threat.x - position.x);
         combat.engaged = true;
         if (armed)
         {
+            if (FriendlyFireBlocked(position, threat, combat))
+            {
+                combat.teamwork.task = ai::TeamTask::HoldFire;
+                profiling::Count(profiling::Counter::NpcFriendlyFireHolds);
+                return;
+            }
             if (combat.pistol.GetRounds() == 0)
             {
                 combat.pistol.Reload();
@@ -885,6 +941,10 @@ void MineCombat::UpdateEnemies(float deltaSeconds)
     {
         const bool remembered = enemy.threat.Known();
         enemy.threat.Advance(deltaSeconds);
+        if (!enemy.threat.Known())
+        {
+            enemy.teamwork = {};
+        }
         enemy.searchCooldown = (std::max)(0.f, enemy.searchCooldown - deltaSeconds);
         if (remembered && !enemy.threat.Known())
         {
@@ -987,6 +1047,7 @@ void MineCombat::UpdateEnemies(float deltaSeconds)
         enemy.threat.Observe(visibleTarget, ai::PerceptionSettings::kCombatMemorySeconds);
         if (visibleTarget)
         {
+            enemy.teamwork = {ai::TeamTask::Defend, 0, 0};
             enemy.target = target;
             enemy.searchRoute.clear();
             enemy.searchWaypoint = 0;
@@ -1068,6 +1129,7 @@ void MineCombat::UpdateEnemies(float deltaSeconds)
             }
         }
     }
+    ShareThreats();
 }
 
 // ============================================================================
@@ -1157,57 +1219,63 @@ void MineRescue::Update(float deltaSeconds)
 {
     auto &world = tutorial::Game::Get().GetState();
     int routeBudget = 3;
+    state.riaMovement = 0;
+    const auto supported = UpdateSupport(deltaSeconds);
     UpdateScanner(deltaSeconds);
     state.scannerCooldown = (std::max)(0.f, state.scannerCooldown - deltaSeconds);
     profiling::Scope timer(profiling::Timer::NpcUpdate);
-    state.riaNavigationCooldown -= deltaSeconds;
-    state.riaMovement = 0;
-    const float riaDistance = tutorial::Game::Distance(state.riaPosition, world.playerPosition);
-    const bool riaSeesPlayer = level.Map().HasLineOfSight(state.riaPosition, world.playerPosition);
-    const bool riaFollowing = state.riaFacing.Follow(riaDistance, 2, riaSeesPlayer);
-    if (!riaFollowing)
+    if (!supported[0])
     {
-        state.riaRoute.clear();
-        state.riaRouteIndex = 0;
-    }
-    if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Mine) &&
-        state.riaNavigationCooldown <= 0 && routeBudget > 0)
-    {
-        state.riaNavigationCooldown = .65f;
-        if (riaFollowing && state.riaCombat.health > 0 &&
-            (state.riaRouteIndex >= state.riaRoute.size() ||
-             tutorial::Game::Distance(state.riaRoute.back(), world.playerPosition) > 1.5f))
-        {
-            --routeBudget;
-            state.riaRoute = level.Map().FindRoute(state.riaPosition, world.playerPosition);
-            state.riaRouteIndex = 0;
-        }
-        else if (!riaFollowing)
+        state.riaNavigationCooldown -= deltaSeconds;
+        state.riaMovement = 0;
+        const float riaDistance = tutorial::Game::Distance(state.riaPosition, world.playerPosition);
+        const bool riaSeesPlayer = level.Map().HasLineOfSight(state.riaPosition, world.playerPosition);
+        const bool riaFollowing = state.riaFacing.Follow(riaDistance, 2, riaSeesPlayer);
+        if (!riaFollowing)
         {
             state.riaRoute.clear();
             state.riaRouteIndex = 0;
         }
-    }
-    if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Mine) &&
-        state.riaCombat.health > 0)
-    {
-        const float requested = !riaFollowing ? 0
-                                : riaSeesPlayer
-                                    ? (std::min)(4.8f * deltaSeconds, (std::max)(0.f, riaDistance - 2))
-                                    : 4.8f * deltaSeconds;
-        state.riaMovement = WalkRoute(state.riaPosition, state.riaRoute, state.riaRouteIndex, requested,
-                                      state.riaFacing, deltaSeconds);
-        if (requested > .001f && state.riaMovement < requested * .2f)
+        if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Mine) &&
+            state.riaNavigationCooldown <= 0 && routeBudget > 0)
         {
-            state.riaRoute.clear();
-            state.riaRouteIndex = 0;
+            state.riaNavigationCooldown = .65f;
+            if (riaFollowing && state.riaCombat.health > 0 &&
+                (state.riaRouteIndex >= state.riaRoute.size() ||
+                 tutorial::Game::Distance(state.riaRoute.back(), world.playerPosition) > 1.5f))
+            {
+                --routeBudget;
+                state.riaRoute = level.Map().FindRoute(state.riaPosition, world.playerPosition);
+                state.riaRouteIndex = 0;
+            }
+            else if (!riaFollowing)
+            {
+                state.riaRoute.clear();
+                state.riaRouteIndex = 0;
+            }
+        }
+        if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Mine) &&
+            state.riaCombat.health > 0)
+        {
+            const float requested = !riaFollowing ? 0
+                                    : riaSeesPlayer
+                                        ? (std::min)(4.8f * deltaSeconds, (std::max)(0.f, riaDistance - 2))
+                                        : 4.8f * deltaSeconds;
+            state.riaMovement = WalkRoute(state.riaPosition, state.riaRoute, state.riaRouteIndex, requested,
+                                          state.riaFacing, deltaSeconds);
+            if (requested > .001f && state.riaMovement < requested * .2f)
+            {
+                state.riaRoute.clear();
+                state.riaRouteIndex = 0;
+            }
+        }
+        else
+        {
+            state.riaFacing.walking = false;
         }
     }
-    else
-    {
-        state.riaFacing.walking = false;
-    }
-    if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Kain, tutorial::CompanionPlace::Mine))
+    if (!supported[1] &&
+        tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Kain, tutorial::CompanionPlace::Mine))
     {
         auto &npc = state.kain;
         const float distance = tutorial::Game::Distance(npc.position, world.playerPosition);
@@ -3291,6 +3359,15 @@ void FrontierCombat::Fire(FrontierPerson &person, tutorial::Vector2 target, Chap
     auto &combat = person.combat;
     combat.engaged = true;
     combat.aimYaw = std::atan2(target.y - person.position.y, target.x - person.position.x);
+    combat.threat.Observe(true, ai::PerceptionSettings::kCombatMemorySeconds);
+    combat.lastThreat = {target.x, target.y, 0};
+    profiling::Count(profiling::Counter::NpcVisualDetections);
+    if (FriendlyFireBlocked(person, target, team))
+    {
+        combat.teamwork.task = ai::TeamTask::HoldFire;
+        profiling::Count(profiling::Counter::NpcFriendlyFireHolds);
+        return;
+    }
     if (combat.pistol.GetRounds() == 0)
     {
         combat.pistol.Reload();
@@ -3402,6 +3479,7 @@ void FrontierCombat::Advance(ChapterProjectile &projectile, float distance)
 }
 void FrontierCombat::Update(float deltaSeconds)
 {
+    profiling::Scope cooperationTimer(profiling::Timer::NpcCooperation);
     auto &world = tutorial::Game::Get().GetState();
     auto &mine = GameLevels::Mine().GetState();
     mine.pistol.Update(deltaSeconds);
@@ -3424,6 +3502,8 @@ void FrontierCombat::Update(float deltaSeconds)
     {
         state.hostile = true;
     }
+    std::vector<unsigned> friendlyClaims(state.scrappers.size());
+    std::array<unsigned, 3> hostileClaims{};
     auto updatePerson = [&](FrontierPerson &person, bool friendly) {
         auto &combat = person.combat;
         combat.pistol.Update(deltaSeconds);
@@ -3431,8 +3511,17 @@ void FrontierCombat::Update(float deltaSeconds)
         combat.hitGrace = (std::max)(0.f, combat.hitGrace - deltaSeconds);
         combat.muzzleFlash = (std::max)(0.f, combat.muzzleFlash - deltaSeconds);
         combat.engaged = false;
+        combat.teamwork = {};
+        const bool remembered = combat.threat.Known();
+        combat.threat.Advance(deltaSeconds);
+        if (remembered && !combat.threat.Known())
+        {
+            profiling::Count(profiling::Counter::NpcMemoriesExpired);
+        }
+        combat.threat.Observe(false, ai::PerceptionSettings::kCombatMemorySeconds);
         if (combat.health <= 0)
         {
+            combat.threat.Forget();
             if (friendly)
             {
                 combat.downedSeconds -= deltaSeconds;
@@ -3446,31 +3535,54 @@ void FrontierCombat::Update(float deltaSeconds)
         }
         if (!state.hostile || state.negotiated)
         {
+            combat.threat.Forget();
+            return;
+        }
+        if (ai::Support::Busy(combat.support))
+        {
             return;
         }
         if (friendly)
         {
             const FrontierPerson *target = nullptr;
-            float nearest = 7;
+            float bestScore = (std::numeric_limits<float>::max)();
             for (const auto &enemy : state.scrappers)
             {
                 float distance = tutorial::Game::Distance(person.position, enemy.position);
-                if (enemy.combat.health > 0 && distance < nearest &&
+                const auto index = size_t(&enemy - state.scrappers.data());
+                const bool protecting = std::any_of(
+                    state.survivors.begin(), state.survivors.end(), [&](const FrontierPerson &civilian) {
+                        return !civilian.arrived &&
+                               tutorial::Game::Distance(enemy.position, civilian.position) <
+                                   ai::CooperationSettings::kProtectedRange;
+                    });
+                const float score = ai::Cooperation::TargetScore(distance, friendlyClaims[index], protecting);
+                if (enemy.combat.health > 0 && distance < 7 && score < bestScore &&
                     level.HasLineOfSight(person.position, enemy.position))
                 {
-                    nearest = distance;
+                    bestScore = score;
                     target = &enemy;
                 }
             }
             if (target)
             {
+                const auto index = size_t(target - state.scrappers.data());
+                ++friendlyClaims[index];
+                combat.teamwork = {ai::TeamTask::Defend, index + 1, 0};
+                profiling::Count(profiling::Counter::NpcTeamAssignments);
                 Fire(person, target->position, ChapterTeam::Companion);
             }
         }
         else
         {
             tutorial::Vector2 target = world.playerPosition;
-            float nearest = tutorial::Game::Distance(person.position, target);
+            size_t targetSlot = 0;
+            float bestScore =
+                level.HasLineOfSight(person.position, target) &&
+                        tutorial::Game::Distance(person.position, target) < 8
+                    ? ai::Cooperation::TargetScore(tutorial::Game::Distance(person.position, target),
+                                                   hostileClaims[0], false)
+                    : (std::numeric_limits<float>::max)();
             for (const auto *ally : {&state.ria, &state.kain})
             {
                 if (ally == &state.kain &&
@@ -3485,17 +3597,30 @@ void FrontierCombat::Update(float deltaSeconds)
                     continue;
                 }
                 float distance = tutorial::Game::Distance(person.position, ally->position);
-                if (ally->combat.health > 0 && distance < nearest &&
+                const size_t slot = ally == &state.ria ? 1 : 2;
+                const float score = ai::Cooperation::TargetScore(distance, hostileClaims[slot], false);
+                if (ally->combat.health > 0 && distance < 8 && score < bestScore &&
                     level.HasLineOfSight(person.position, ally->position))
                 {
                     target = ally->position;
-                    nearest = distance;
+                    targetSlot = slot;
+                    bestScore = score;
                 }
             }
-            if (nearest < 8 && level.HasLineOfSight(person.position, target))
+            if (bestScore < (std::numeric_limits<float>::max)() &&
+                level.HasLineOfSight(person.position, target))
             {
+                ++hostileClaims[targetSlot];
+                combat.teamwork = {ai::TeamTask::Defend, targetSlot + 1, 0};
+                profiling::Count(profiling::Counter::NpcTeamAssignments);
                 Fire(person, target, ChapterTeam::Scrapper);
             }
+        }
+        if (!combat.engaged && combat.threat.Known())
+        {
+            combat.aimYaw =
+                std::atan2(combat.lastThreat.y - person.position.y, combat.lastThreat.x - person.position.x);
+            person.facing.yaw = combat.aimYaw;
         }
     };
     if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Frontier))
@@ -3532,6 +3657,7 @@ void FrontierCombat::Update(float deltaSeconds)
 void FrontierParty::Update(float deltaSeconds)
 {
     auto &world = tutorial::Game::Get().GetState();
+    const auto supported = UpdateSupport(deltaSeconds);
     auto follow = [&](FrontierPerson &person, float spacing) {
         if (person.combat.health <= 0)
         {
@@ -3562,11 +3688,17 @@ void FrontierParty::Update(float deltaSeconds)
     };
     if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Frontier))
     {
-        follow(state.ria, 1.6f);
+        if (!supported[0])
+        {
+            follow(state.ria, 1.6f);
+        }
     }
     if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Kain, tutorial::CompanionPlace::Frontier))
     {
-        follow(state.kain, 2.4f);
+        if (!supported[1])
+        {
+            follow(state.kain, 2.4f);
+        }
     }
     if (state.escortStarted && !state.convoyRescued)
     {
