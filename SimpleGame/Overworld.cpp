@@ -5319,6 +5319,16 @@ void CitySimulation::AdvanceDormant(Resident &resident, float dt)
     resident.waitSeconds = (std::max)(0.f, resident.waitSeconds - dt);
     resident.conversationSeconds = (std::max)(0.f, resident.conversationSeconds - dt);
     resident.fearSeconds = (std::max)(0.f, resident.fearSeconds - dt);
+    const bool remembered = resident.threat.Known();
+    resident.threat.Advance(dt);
+    if (remembered && !resident.threat.Known())
+    {
+        profiling::Count(profiling::Counter::NpcMemoriesExpired);
+    }
+    if (!resident.threat.Known())
+    {
+        resident.decision = ai::Decision::Routine;
+    }
     BodyCollision::AgeResident(resident, dt);
     if (resident.health <= 0)
     {

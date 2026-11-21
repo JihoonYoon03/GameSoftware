@@ -38,6 +38,7 @@ class CityResidents
     int Nearest(const GameState &world, Vector2 position, int city, float limit) const;
     bool Plan(GameState &world, Resident &resident);
     bool FindRoute(int from, int to, Resident &resident);
+    void UpdateThreat(GameState &world, Resident &resident, size_t index, float dt);
     // Game-thread-only scratch, reused across requests. Only touched nodes need initialization.
     struct SearchNode
     {

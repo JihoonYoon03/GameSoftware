@@ -780,6 +780,52 @@ void TestQualifyingDamageAndAircraft()
     }
     assert(hit);
 }
+void TestPerceptionAndRememberedPositions()
+{
+    Exterior();
+    auto &world = World();
+    auto point = Open(0);
+    world.residents = {Person(point)};
+    auto &resident = world.residents.front();
+    resident.lastThreat = {point.x - 4, point.y};
+    resident.threat.Remember(ai::Stimulus::Report, 8);
+    world.playerPosition = {point.x + 4, point.y};
+    CityResidents::Get().Update(world, .05f);
+    assert(resident.decision == ai::Decision::Withdraw && resident.position.x > point.x);
+    assert(resident.lastThreat.x == point.x - 4); // Flee the event, not the hidden live player.
+    resident.position = point;
+    resident.profession = ResidentProfession::Guard;
+    resident.lastThreat = {point.x + 4, point.y};
+    resident.threat = {};
+    resident.threat.Observe(true, 4);
+    resident.perceptionCooldown = 1;
+    CityResidents::Get().Update(world, .05f);
+    assert(resident.decision == ai::Decision::Observe && Game::Distance(point, resident.position) < .001f);
+
+    Exterior();
+    auto &law = CivicJustice::State();
+    point = Open(0);
+    world.playerPosition = {point.x - 100, point.y - 100};
+    law.wanted = 1;
+    law.heat = 20;
+    law.spawnSeconds = 1000;
+    SecurityOfficer officer;
+    officer.id = 1;
+    officer.position = point;
+    officer.lastKnown = {point.x + 1, point.y};
+    officer.route = {officer.lastKnown};
+    officer.navigationSeconds = 10;
+    officer.threat.Remember(ai::Stimulus::Report, 8);
+    law.officers = {officer};
+    CivicJustice::Update(.05f);
+    assert(law.officers.front().decision == ai::Decision::Investigate);
+    assert(Game::Distance(law.officers.front().lastKnown, officer.lastKnown) < .001f);
+    law.officers.front().threat.Advance(9);
+    const auto stopped = law.officers.front().position;
+    CivicJustice::Update(.05f);
+    assert(law.officers.front().decision == ai::Decision::Routine &&
+           Game::Distance(stopped, law.officers.front().position) < .001f);
+}
 void TestHospitalAllCauses()
 {
     Exterior();
@@ -839,6 +885,7 @@ int main()
     TestSecuritySpreadAndEvasion();
     TestUnidentifiedEscapeAndVision();
     TestQualifyingDamageAndAircraft();
+    TestPerceptionAndRememberedPositions();
     TestHospitalAllCauses();
     Game::Get().Reset();
     std::cout

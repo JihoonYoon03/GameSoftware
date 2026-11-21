@@ -34,6 +34,7 @@ set(GAME_SOURCES
     SimpleGame/PlayerCombat.cpp
     SimpleGame/PlayerMobility.cpp
     SimpleGame/PlayerAircraft.cpp
+    SimpleGame/NpcPerception.cpp
     SimpleGame/World.cpp
     SimpleGame/WorldGeneration.cpp
     SimpleGame/WorldContent.cpp

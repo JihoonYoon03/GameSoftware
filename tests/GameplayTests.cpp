@@ -4552,6 +4552,59 @@ void TestAimLightingAndWallShots()
     assert(mineState.kills == 1 && mineState.player.experience == kExperiencePerKill);
     assert(mineState.drops.size() == 1);
 }
+void TestMinePerceptionMemory()
+{
+    using namespace tutorial;
+    ReadyMine();
+    auto &world = Game::Get().GetState();
+    auto &level = GameLevels::Mine();
+    std::fill(mineState.tiles.begin(), mineState.tiles.end(), Tile::Floor);
+    for (int y = 0; y < kMapSize; ++y)
+    {
+        mineState.tiles[size_t(y * kMapSize + 22)] = Tile::Wall;
+    }
+    mineState.survivors.clear();
+    mineState.riaCombat.health = mineState.kain.combat.health = 0;
+    mineState.enemies = {{{20.5f, 20.5f}}};
+    auto &enemy = mineState.enemies.front();
+    enemy.target = {21.5f, 20.5f};
+    enemy.threat.Remember(ai::Stimulus::Sight, 4);
+    world.playerPosition = {24.5f, 20.5f};
+    const int health = mineState.player.health;
+    for (int frame = 0; frame < 30; ++frame)
+    {
+        level.Combat().UpdateEnemies(.05f);
+        assert(!enemy.threat.Visible() && Game::Distance(enemy.target, {21.5f, 20.5f}) < .001f);
+        assert(mineState.player.health == health);
+    }
+    for (int frame = 0; frame < 60; ++frame)
+    {
+        level.Combat().UpdateEnemies(.05f);
+    }
+    assert(!enemy.threat.Known() && enemy.decision == ai::Decision::Routine);
+    const auto stopped = enemy.position;
+    level.Combat().UpdateEnemies(.05f);
+    assert(Game::Distance(stopped, enemy.position) < .001f);
+    world.playerPosition = {21.5f, 20.5f};
+    mineState.navigationCooldown = 0;
+    level.Combat().UpdateEnemies(.05f);
+    assert(enemy.threat.Visible() && enemy.decision == ai::Decision::Engage &&
+           Game::Distance(enemy.target, world.playerPosition) < .001f);
+    mineState.enemies.clear();
+    world.playerPosition = {24.5f, 20.5f};
+    for (int i = 0; i < 5; ++i)
+    {
+        Enemy listener;
+        listener.position = {20.5f, 25.5f + i};
+        listener.target = world.playerPosition;
+        listener.threat.Remember(ai::Stimulus::Sound, 4);
+        mineState.enemies.push_back(listener);
+    }
+    const auto requests = profiling::ReadCounter(profiling::Counter::NpcMemoryPathRequests);
+    level.Combat().UpdateEnemies(.05f);
+    assert(profiling::ReadCounter(profiling::Counter::NpcMemoryPathRequests) - requests == 2);
+    Game::Get().Reset();
+}
 void TestRescueAndScanner()
 {
     ReadyMine();
@@ -5506,6 +5559,12 @@ void TestAimMovementAndLayers()
 } // namespace
 int main(int argc, char **argv)
 {
+    if (argc > 1 && std::string(argv[1]) == "--perception")
+    {
+        TestMinePerceptionMemory();
+        std::cout << "Mine remembered-position pursuit, expiry and reacquisition checks passed.\n";
+        return 0;
+    }
     if (argc > 1 && std::string(argv[1]) == "--navigation")
     {
         TestMineNavigationProgress();
@@ -5608,6 +5667,7 @@ int main(int argc, char **argv)
     TestNpcCombat();
     TestAimLightingAndWallShots();
     TestRescueAndScanner();
+    TestMinePerceptionMemory();
     TestScannerPropagation();
     TestStoryAndReentry();
     TestChapterOne();

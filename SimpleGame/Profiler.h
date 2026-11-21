@@ -81,6 +81,11 @@ enum class Counter
     AircraftExits,
     AircraftLandings,
     AircraftCrashes,
+    NpcPerceptionQueries,
+    NpcVisualDetections,
+    NpcStimuliReceived,
+    NpcMemoriesExpired,
+    NpcMemoryPathRequests,
     Count
 };
 enum class Timer
@@ -126,6 +131,7 @@ enum class Timer
     FacilityApproachPrepare,
     CityInfrastructurePrepare,
     PlayerAircraft,
+    NpcPerception,
     Count
 };
 class Scope

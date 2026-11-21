@@ -110,6 +110,19 @@ std::string Position(tutorial::Vector2 position)
     result.Seconds("y", position.y);
     return result.Finish();
 }
+std::string PerceptionState(const ai::ThreatMemory &memory, ai::Decision decision,
+                            tutorial::Vector2 lastKnown, const char *frame)
+{
+    JsonObject result;
+    result.Text("state", memory.StateName());
+    result.Text("stimulus", ai::Perception::StimulusName(memory.Source()));
+    result.Text("decision", ai::Perception::DecisionName(decision));
+    result.Number("memory_seconds", memory.Remaining());
+    result.Bool("target_visible", memory.Visible());
+    result.Text("coordinate_frame", frame);
+    result.Raw("last_known_position", memory.Known() ? Position(lastKnown) : "null");
+    return result.Finish();
+}
 void Append(std::string &array, const std::string &object)
 {
     array += (array.empty() ? "" : ",") + object;
@@ -198,6 +211,9 @@ std::string ResidentNpc(const std::string &id, const tutorial::Resident &residen
     result.Text("life_state", resident.health > 0 ? "alive" : "dead");
     result.Number("health", resident.health);
     result.Number("fear_seconds", resident.fearSeconds);
+    result.Number("perception_scan_seconds", resident.perceptionCooldown);
+    result.Raw("perception", PerceptionState(resident.threat, resident.decision, resident.lastThreat,
+                                             tutorial::Overworld::Cities()[resident.cityIndex].id));
     result.Raw("position", Position(resident.position));
     result.Raw("home", Position(resident.home));
     result.Raw("destination", Position(resident.destination));
@@ -601,6 +617,19 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     security.Seconds("initial_unseen_seconds", law.initialUnseenSeconds);
     security.Number("price_multiplier", tutorial::CivicJustice::PriceMultiplier());
     security.Number("officers", law.officers.size());
+    std::string responders;
+    for (const auto &officer : law.officers)
+    {
+        JsonObject item;
+        item.Number("id", officer.id);
+        item.Number("health", officer.health);
+        item.Bool("departing", officer.departing);
+        item.Raw("position", Position(officer.position));
+        item.Raw("perception", PerceptionState(officer.threat, officer.decision, officer.lastKnown,
+                                               world.surfaceExploration ? "surface_origin" : "civic"));
+        Append(responders, item.Finish());
+    }
+    security.Raw("responders", "[" + responders + "]");
     std::string surfaceOfficers;
     const auto &planetLaw = tutorial::PlanetSecurity::State();
     security.Text("world_key", planetLaw.worldKey);
@@ -619,6 +648,8 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         item.Number("tier", officer->tier);
         item.Number("facing_yaw", officer->facing.yaw);
         item.Number("magazine_rounds", officer->weapon.GetRounds());
+        item.Raw("perception",
+                 PerceptionState(officer->threat, officer->decision, officer->lastKnown, "surface_origin"));
         auto degrees = ::world::SurfaceGeometry::ToDegrees(record.position);
         item.Number("latitude", degrees[0]);
         item.Number("longitude", degrees[1]);
@@ -1223,6 +1254,7 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         item.Number("max_health", game::kEnemyMaxHealth);
         item.Bool("alive", enemy.health > 0);
         item.Seconds("respawn_seconds", (std::max)(0.f, enemy.respawnSeconds));
+        item.Raw("perception", PerceptionState(enemy.threat, enemy.decision, enemy.target, "mine"));
         item.Raw("position", Position(enemy.position));
         Append(mobArray, item.Finish());
     }

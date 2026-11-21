@@ -4,6 +4,7 @@
 #include "Animation.h"
 #include "PlayerMobility.h"
 #include "PlayerAircraft.h"
+#include "NpcPerception.h"
 #include "World.h"
 #include "WorldStreaming.h"
 #include <array>
@@ -156,6 +157,10 @@ struct Resident
     bool destinationIsWork = false;
     int health = 100;
     float fearSeconds = 0, corpseSeconds = 0;
+    ai::ThreatMemory threat;
+    Vector2 lastThreat = {};
+    ai::Decision decision = ai::Decision::Routine;
+    float perceptionCooldown = 0;
     BodyImpact impact;
 };
 

@@ -623,6 +623,20 @@ void MineCombat::Attack()
     {
         return;
     }
+    // A shot is a position-bearing sound event, not permission to track its shooter through walls.
+    for (auto &enemy : state.enemies)
+    {
+        if (enemy.health > 0 && !enemy.threat.Visible() &&
+            tutorial::Game::Distance(enemy.position, world.playerPosition) <
+                ai::PerceptionSettings::kSoundRange)
+        {
+            enemy.target = world.playerPosition;
+            enemy.threat.Remember(ai::Stimulus::Sound, ai::PerceptionSettings::kCombatMemorySeconds);
+            enemy.searchRoute.clear();
+            enemy.searchWaypoint = 0;
+            profiling::Count(profiling::Counter::NpcStimuliReceived);
+        }
+    }
     auto aim = level.GetAimDirection(GameLevels::FireAngle());
     world.playerAnimation.Fire();
     auto pose = tutorial::Game::Get().PlayerPose(1);
@@ -688,10 +702,22 @@ bool MineCombat::DamageEnemy(size_t index, int damage, bool playerCredit)
     }
     auto &enemy = state.enemies[index];
     enemy.health = (std::max)(0, enemy.health - damage);
+    if (playerCredit && enemy.health > 0)
+    {
+        enemy.target = tutorial::Game::Get().GetState().playerPosition;
+        enemy.threat.Remember(ai::Stimulus::Report, ai::PerceptionSettings::kCombatMemorySeconds);
+        enemy.searchRoute.clear();
+        enemy.searchWaypoint = 0;
+        profiling::Count(profiling::Counter::NpcStimuliReceived);
+    }
     if (enemy.health > 0)
     {
         return false;
     }
+    enemy.threat.Forget();
+    enemy.decision = ai::Decision::Routine;
+    enemy.searchRoute.clear();
+    enemy.searchWaypoint = 0;
     ++state.totalEnemyDeaths;
     enemy.respawnSeconds = 15;
     if (!playerCredit)
@@ -848,6 +874,7 @@ void MineCombat::UpdateNpcs(float deltaSeconds)
 void MineCombat::UpdateEnemies(float deltaSeconds)
 {
     auto &world = tutorial::Game::Get().GetState();
+    int searchBudget = ai::PerceptionSettings::kEnemySearchBudget;
     state.navigationCooldown -= deltaSeconds;
     if (state.navigationCooldown <= 0)
     {
@@ -856,8 +883,19 @@ void MineCombat::UpdateEnemies(float deltaSeconds)
     }
     for (auto &enemy : state.enemies)
     {
+        const bool remembered = enemy.threat.Known();
+        enemy.threat.Advance(deltaSeconds);
+        enemy.searchCooldown = (std::max)(0.f, enemy.searchCooldown - deltaSeconds);
+        if (remembered && !enemy.threat.Known())
+        {
+            profiling::Count(profiling::Counter::NpcMemoriesExpired);
+        }
         if (enemy.health <= 0)
         {
+            enemy.threat.Forget();
+            enemy.decision = ai::Decision::Routine;
+            enemy.searchRoute.clear();
+            enemy.searchWaypoint = 0;
             enemy.respawnSeconds -= deltaSeconds;
             if (enemy.respawnSeconds > 0)
             {
@@ -901,8 +939,16 @@ void MineCombat::UpdateEnemies(float deltaSeconds)
             continue;
         }
         enemy.attackCooldown -= deltaSeconds;
-        // Select the closest reachable combatant. NPC targets require a clear sight line;
-        // the player can also be reached through the existing navigation field.
+        // Only visible combatants can replace a remembered target position.
+        auto sees = [&](tutorial::Vector2 p) {
+            profiling::Scope timer(profiling::Timer::NpcPerception);
+            profiling::Count(profiling::Counter::NpcPerceptionQueries);
+            return ai::Perception::InSight({enemy.position.x, enemy.position.y, 0}, enemy.facing.yaw,
+                                           {p.x, p.y, 0},
+                                           {ai::PerceptionSettings::kEnemySightRange, tutorial::kPi * .75f,
+                                            ai::PerceptionSettings::kEnemyNearRange, 0}) &&
+                   level.Map().HasLineOfSight(enemy.position, p);
+        };
         tutorial::Vector2 target = world.playerPosition;
         NpcCombatState *victim = nullptr;
         int x = int(std::floor(enemy.position.x)), y = int(std::floor(enemy.position.y));
@@ -911,13 +957,12 @@ void MineCombat::UpdateEnemies(float deltaSeconds)
                 ? state.navigationDistances[y * kMapSize + x]
                 : -1;
         bool playerTarget = tutorial::Game::Distance(target, state.entry) >= kSafeAreaRadius &&
-                            navigation >= 0 && navigation <= 19;
+                            navigation >= 0 && navigation <= 19 && state.player.health > 0 && sees(target);
         float nearest = playerTarget ? tutorial::Game::Distance(enemy.position, target) : 1000.f;
         auto consider = [&](tutorial::Vector2 position, NpcCombatState &combat) {
             float distance = tutorial::Game::Distance(enemy.position, position);
             if (combat.health > 0 && distance < 10 && distance < nearest &&
-                tutorial::Game::Distance(position, state.entry) >= kSafeAreaRadius &&
-                level.Map().HasLineOfSight(enemy.position, position))
+                tutorial::Game::Distance(position, state.entry) >= kSafeAreaRadius && sees(position))
             {
                 nearest = distance;
                 target = position;
@@ -938,12 +983,57 @@ void MineCombat::UpdateEnemies(float deltaSeconds)
             consider(npc.position, npc.combat);
         }
         enemy.facing.walking = false;
-        if (!playerTarget && !victim)
+        const bool visibleTarget = playerTarget || victim;
+        enemy.threat.Observe(visibleTarget, ai::PerceptionSettings::kCombatMemorySeconds);
+        if (visibleTarget)
         {
+            enemy.target = target;
+            enemy.searchRoute.clear();
+            enemy.searchWaypoint = 0;
+            profiling::Count(profiling::Counter::NpcVisualDetections);
+        }
+        enemy.decision = ai::Perception::Decide(ai::Role::Predator, enemy.threat, nearest);
+        if (!enemy.threat.Known())
+        {
+            enemy.searchRoute.clear();
+            enemy.searchWaypoint = 0;
             continue;
         }
-        enemy.target = target;
+        if (!visibleTarget)
+        {
+            target = enemy.target;
+            if (tutorial::Game::Distance(enemy.position, target) < .6f)
+            {
+                enemy.facing.yaw += deltaSeconds * .8f;
+                continue;
+            }
+            if (!level.Map().HasLineOfSight(enemy.position, target))
+            {
+                if (enemy.searchCooldown <= 0 && searchBudget > 0)
+                {
+                    --searchBudget;
+                    enemy.searchRoute = level.Map().FindRoute(enemy.position, target);
+                    enemy.searchWaypoint = 0;
+                    enemy.searchCooldown = ai::PerceptionSettings::kSearchRetrySeconds;
+                    profiling::Count(profiling::Counter::NpcMemoryPathRequests);
+                }
+                if (enemy.searchWaypoint >= enemy.searchRoute.size())
+                {
+                    continue;
+                }
+                target = enemy.searchRoute[enemy.searchWaypoint];
+            }
+        }
         MoveEnemy(enemy, deltaSeconds, target, playerTarget);
+        if (!visibleTarget)
+        {
+            if (enemy.searchWaypoint < enemy.searchRoute.size() &&
+                tutorial::Game::Distance(enemy.position, enemy.searchRoute[enemy.searchWaypoint]) < .15f)
+            {
+                ++enemy.searchWaypoint;
+            }
+            continue; // Reaching a remembered position never deals damage to a hidden combatant.
+        }
         if (enemy.attackCooldown > 0 || tutorial::Game::Distance(enemy.position, target) >= .8f ||
             !level.Map().HasLineOfSight(enemy.position, target))
         {

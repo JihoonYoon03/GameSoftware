@@ -377,6 +377,9 @@ void CityResidents::Reset(GameState &world)
         resident.conversationSeconds = resident.blockedSeconds = 0;
         resident.destinationIsWork = false;
         resident.facing.walking = false;
+        resident.threat = {};
+        resident.decision = ai::Decision::Routine;
+        resident.perceptionCooldown = float(i % 7) * ai::PerceptionSettings::kScanPhaseSeconds;
     }
 }
 bool CityResidents::FindRoute(int from, int to, Resident &resident)
@@ -508,6 +511,48 @@ bool CityResidents::Plan(GameState &world, Resident &resident)
     }
     return FindRoute(from, to, resident);
 }
+void CityResidents::UpdateThreat(GameState &world, Resident &resident, size_t index, float dt)
+{
+    profiling::Scope timer(profiling::Timer::NpcPerception);
+    const bool remembered = resident.threat.Known();
+    resident.threat.Advance(dt);
+    if (remembered && !resident.threat.Known())
+    {
+        profiling::Count(profiling::Counter::NpcMemoriesExpired);
+    }
+    resident.perceptionCooldown -= dt;
+    if (resident.perceptionCooldown <= 0)
+    {
+        resident.perceptionCooldown = ai::PerceptionSettings::kScanSeconds +
+                                      float(index % 4) * ai::PerceptionSettings::kScanSpreadSeconds;
+        const float reputation = CivicJustice::State().infamy;
+        const bool watcher = resident.profession == ResidentProfession::Guard ||
+                             resident.profession == ResidentProfession::Observer;
+        const ai::Vision vision{3 + reputation * .05f, watcher ? 1.4f : 1.1f, 1.2f, .8f};
+        const bool exterior = !world.isInsideHome && !world.isInObservatory && !Game::Get().IsSurfaceMine() &&
+                              !world.aircraft.mounted;
+        const float height = world.isBikeMounted ? world.bikeElevation : 0;
+        profiling::Count(profiling::Counter::NpcPerceptionQueries);
+        const bool sees =
+            exterior && reputation >= 25 &&
+            ai::Perception::InSight({resident.position.x, resident.position.y, 0}, resident.facing.yaw,
+                                    {world.playerPosition.x, world.playerPosition.y, height}, vision) &&
+            CivicJustice::ClearLine(resident.position, world.playerPosition);
+        resident.threat.Observe(sees, watcher ? ai::PerceptionSettings::kWatcherMemorySeconds
+                                              : ai::PerceptionSettings::kCivilianMemorySeconds);
+        if (sees)
+        {
+            resident.lastThreat = world.playerPosition;
+            profiling::Count(profiling::Counter::NpcVisualDetections);
+        }
+    }
+    const bool watcher = resident.profession == ResidentProfession::Guard ||
+                         resident.profession == ResidentProfession::Observer;
+    resident.decision =
+        ai::Perception::Decide(watcher ? ai::Role::Watcher : ai::Role::Civilian, resident.threat,
+                               Game::Distance(resident.position, resident.lastThreat));
+    resident.fearSeconds = (std::max)(resident.fearSeconds, resident.threat.Remaining());
+}
 void CityResidents::Update(GameState &world, float dt, int activeCity, int *decisionBudget)
 {
     profiling::Scope timer(profiling::Timer::NpcUpdate);
@@ -538,6 +583,8 @@ void CityResidents::Update(GameState &world, float dt, int activeCity, int *deci
         }
         if (resident.health <= 0)
         {
+            resident.threat.Forget();
+            resident.decision = ai::Decision::Routine;
             resident.activity = ResidentActivity::Dead;
             resident.crossingJunction = -1;
             resident.route.clear();
@@ -551,17 +598,21 @@ void CityResidents::Update(GameState &world, float dt, int activeCity, int *deci
             continue;
         }
         resident.fearSeconds = (std::max)(0.f, resident.fearSeconds - dt);
-        float reputation = CivicJustice::State().infamy;
-        float nearPlayer = Game::Distance(resident.position, world.playerPosition);
-        if (reputation >= 25 && nearPlayer < 3 + reputation * .05f &&
-            CivicJustice::ClearLine(resident.position, world.playerPosition))
+        UpdateThreat(world, resident, index, dt);
+        if (resident.threat.Known() && resident.crossingJunction < 0 &&
+            resident.decision == ai::Decision::Observe)
         {
-            resident.fearSeconds = (std::max)(resident.fearSeconds, 2.f);
+            resident.facing.yaw = std::atan2(resident.lastThreat.y - resident.position.y,
+                                             resident.lastThreat.x - resident.position.x);
+            resident.activity = ResidentActivity::Patrolling;
+            resident.conversationSeconds = resident.blockedSeconds = 0;
+            continue;
         }
-        if (resident.fearSeconds > 0 && resident.crossingJunction < 0)
+        if (resident.threat.Known() && resident.crossingJunction < 0 &&
+            resident.decision == ai::Decision::Withdraw)
         {
             auto before = resident.position;
-            float angle = std::atan2(before.y - world.playerPosition.y, before.x - world.playerPosition.x);
+            float angle = std::atan2(before.y - resident.lastThreat.y, before.x - resident.lastThreat.x);
             for (float turn : {0.f, .6f, -.6f, 1.2f, -1.2f})
             {
                 Vector2 next = {before.x + std::cos(angle + turn) * 2.2f * dt,
@@ -776,6 +827,11 @@ const char *CityResidents::ActivityName(ResidentActivity activity)
 }
 const char *CityResidents::ActivityLabel(const Resident &resident)
 {
+    if (resident.threat.Known() && resident.decision == ai::Decision::Observe &&
+        resident.crossingJunction < 0 && resident.activity == ResidentActivity::Patrolling)
+    {
+        return "위험 관찰 / 거리 유지";
+    }
     if (resident.activity == ResidentActivity::Working)
     {
         switch (resident.profession)
@@ -807,7 +863,7 @@ const char *CityResidents::ActivityLabel(const Resident &resident)
                                       "플레이어와 대화",
                                       "보행자 양보",
                                       "경로 재탐색 대기",
-                                      "악명 높은 인물 회피",
+                                      "기억한 위험 지점 회피",
                                       "피격 / 회복",
                                       "사망"};
     return labels[size_t(resident.activity)];

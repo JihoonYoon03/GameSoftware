@@ -98,6 +98,11 @@ struct Enemy
     float respawnSeconds = 0;
     tutorial::MovementFacing facing;
     tutorial::Vector2 target = {};
+    ai::ThreatMemory threat;
+    ai::Decision decision = ai::Decision::Routine;
+    std::vector<tutorial::Vector2> searchRoute;
+    size_t searchWaypoint = 0;
+    float searchCooldown = 0;
 };
 struct Drop
 {

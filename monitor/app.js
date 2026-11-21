@@ -207,6 +207,9 @@ function renderNpcDetail() {
     panel.replaceChildren(node("h3", "인물 상세"), node("p", "목록에서 이름을 선택하세요.", "muted"));
     return;
   }
+  const perception = npc.perception;
+  const perceptionStates = { unaware: "미감지", visible: "시야 확인", remembered: "기억한 위치" };
+  const decisions = { routine: "일상", withdraw: "위험 회피", observe: "관찰·거리 유지", investigate: "마지막 위치 수색", engage: "대응" };
   panel.replaceChildren(node("h3", npc.name), facts([
     ["역할", npc.role], ["행동", npc.activity_label], ["패턴", npc.behavior_pattern],
     ["구조 무리", groupName(npc.group_id)], ["동행", npc.following ? "동행 중" : "해당 없음"],
@@ -217,6 +220,10 @@ function renderNpcDetail() {
     ["경로 상태", npc.warning ?? "정상"],
     ["남은 경로", format(npc.route_remaining) + "칸"],
     ["AI 갱신", npc.simulation_active ? "진행 중" : "중지 / 정적 배치"],
+    ["감지 상태", perception ? perceptionStates[perception.state] ?? perception.state : "해당 없음"],
+    ["행동 판단", perception ? decisions[perception.decision] ?? perception.decision : "해당 없음"],
+    ["위험 기억", perception ? format(perception.memory_seconds, 1) + "초" : "해당 없음"],
+    ["마지막 위험 위치", perception?.last_known_position ? position(perception.last_known_position) : "없음"],
   ]));
 }
 function renderEnvironment(data) {
