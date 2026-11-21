@@ -213,6 +213,8 @@
     <ClInclude Include="NpcSupport.h"><Filter>헤더 파일</Filter></ClInclude>
     <ClCompile Include="NpcSupport.cpp"><Filter>소스 파일</Filter></ClCompile>
     <ClCompile Include="NpcSupportScenes.cpp"><Filter>소스 파일</Filter></ClCompile>
+    <ClCompile Include="SecurityResponse.cpp"><Filter>소스 파일</Filter></ClCompile>
+    <ClInclude Include="SecurityResponse.h"><Filter>헤더 파일</Filter></ClInclude>
     <ClCompile Include="stdafx.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>

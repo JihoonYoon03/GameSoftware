@@ -8,6 +8,7 @@
 #include <cassert>
 #include <chrono>
 #include <iostream>
+#include "Monitoring/Monitor.h"
 
 using namespace tutorial;
 namespace
@@ -63,6 +64,117 @@ Vector2 Open(int city)
     }
     assert(false);
     return {};
+}
+void TestResponseScalingAndDispatch()
+{
+    Exterior();
+    auto &law = CivicJustice::State();
+    const auto incident = Open(0);
+    law.wanted = 1;
+    law.lastCrime = incident;
+    law.sinceCrime = 1000;
+    auto target = CivicJustice::DispatchTarget();
+    assert(target && target->memorySeconds == ai::PerceptionSettings::kReportMemorySeconds);
+    law.responseStarted = true;
+    assert(!CivicJustice::DispatchTarget());
+    SecurityOfficer observer;
+    observer.id = 2;
+    observer.position = incident;
+    observer.lastKnown = {incident.x + 1, incident.y};
+    observer.threat.Remember(ai::Stimulus::Report, 1.25f);
+    law.officers = {observer};
+    World().playerPosition = {incident.x + 150, incident.y + 150};
+    target = CivicJustice::DispatchTarget();
+    assert(target && Game::Distance(target->position, observer.lastKnown) < .001f &&
+           target->memorySeconds == 1.25f);
+    auto reinforcement = observer;
+    reinforcement.id = 3;
+    reinforcement.threat = {};
+    reinforcement.threat.Remember(ai::Stimulus::Report, target->memorySeconds);
+    law.officers.push_back(reinforcement);
+    for (auto &o : law.officers)
+    {
+        o.threat.Advance(1.3f);
+    }
+    assert(!CivicJustice::DispatchTarget()); // Reinforcements cannot refresh an old report.
+    law.sinceCrime = 7.75f;
+    target = CivicJustice::DispatchTarget();
+    assert(target && target->memorySeconds == .25f);
+    law.sinceCrime = 8;
+    assert(!CivicJustice::DispatchTarget());
+
+    Exterior();
+    law.wanted = 1;
+    law.lastCrime = Open(0);
+    law.sinceCrime = 0;
+    World().playerPosition = World().cameraPosition = {law.lastCrime.x + 150, law.lastCrime.y + 150};
+    for (int attempt = 0; attempt < 32 && law.officers.empty(); ++attempt)
+    {
+        law.spawnSeconds = 0;
+        CivicJustice::Update(.01f);
+    }
+    assert(!law.officers.empty());
+    const auto &dispatched = law.officers.front();
+    const float dispatchDistance = Game::Distance(dispatched.position, law.lastCrime);
+    assert(dispatchDistance >= 17.9f && dispatchDistance <= 34.1f &&
+           Game::Distance(dispatched.lastKnown, law.lastCrime) < .001f &&
+           Game::Distance(dispatched.position, World().playerPosition) > 100);
+    law.sinceCrime = 100;
+    law.officers.front().threat.Forget();
+    const auto count = law.officers.size();
+    law.spawnSeconds = 0;
+    CivicJustice::Update(.01f);
+    assert(!CivicJustice::DispatchTarget() && law.officers.size() == count);
+
+    Exterior();
+    World().playerPosition = World().cameraPosition = Open(0);
+    const auto p = World().playerPosition;
+    World().playerPosition.x += 2;
+    law.wanted = 5;
+    law.heat = 1000;
+    law.identified = law.responseStarted = true;
+    law.spawnSeconds = 1000;
+    law.lastCrime = World().playerPosition;
+    Stats().level = 21;
+    SecurityOfficer shooter;
+    shooter.id = 1;
+    shooter.position = p;
+    shooter.lastKnown = World().playerPosition;
+    shooter.tier = shooter.weaponTier = 5;
+    shooter.health = 50;
+    shooter.weapon = combat::SecurityCarbine(5, 77);
+    law.officers = {shooter};
+    CivicJustice::Update(.01f);
+    assert(!law.bullets.empty());
+    const int damage = law.bullets.back().damage;
+    assert(damage == SecurityResponse::ForTier(5, 21).damage);
+    law.bullets.clear();
+    law.officers.front().weapon.Reset();
+    Stats().defense = 500;
+    Stats().maxHealth = 100000;
+    CivicJustice::Update(.01f);
+    assert(!law.bullets.empty() && law.bullets.back().damage == damage && law.officers.front().health == 50);
+    const auto snapshot = monitoring::WorldSnapshot::Build(1, "response-test");
+    assert(snapshot.find("\"damage_before_defense\":60") != std::string::npos &&
+           snapshot.find("\"dispatch_target\":") != std::string::npos);
+    law.wanted = 1;
+    law.heat = 20;
+    law.officers.resize(3, shooter);
+    for (size_t i = 0; i < law.officers.size(); ++i)
+    {
+        auto &o = law.officers[i];
+        o.id = i + 1;
+        o.position.y = p.y + float(i) * .6f;
+        o.threat.Remember(ai::Stimulus::Report, 4);
+    }
+    CivicJustice::Update(.01f);
+    assert(law.officers[0].tier == 1 && law.officers[0].health == 50);
+    assert(law.officers[2].departing && !law.officers[2].threat.Known());
+    law.wanted = 3;
+    law.heat = 400;
+    CivicJustice::Update(.01f);
+    assert(law.officers[0].health == 50); // Escalation never heals existing responders.
+    Game::Get().Reset();
 }
 void TestSeverityAndMemory()
 {
@@ -902,6 +1014,7 @@ void TestHospitalAllCauses()
 } // namespace
 int main()
 {
+    TestResponseScalingAndDispatch();
     TestSeverityAndMemory();
     TestFireMeleeAndWalls();
     TestBodiesAndVehicles();

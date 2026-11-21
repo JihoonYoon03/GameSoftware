@@ -1053,17 +1053,29 @@ bool PlanetSecurity::Spawn()
 {
     using G = world::SurfaceGeometry;
     auto &g = Game::Get();
-    if (!planetary.search || civic.officers.size() >= 16)
+    const auto target = CivicJustice::DispatchTarget();
+    const auto profile =
+        SecurityResponse::ForTier(civic.wanted, game::GameLevels::Mine().GetState().player.level);
+    const auto living = std::count_if(civic.officers.begin(), civic.officers.end(),
+                                      [](const SecurityOfficer &o) { return o.health > 0 && !o.departing; });
+    if (!target || !g.Surface() || !g.Surface()->Ready() ||
+        civic.officers.size() >= SecurityResponse::kOfficerSlots || living >= profile.responderLimit)
     {
         return false;
     }
-    auto frame = G::Frame(*planetary.search);
+    profiling::Scope dispatch(profiling::Timer::SecurityDispatch);
+    profiling::Count(profiling::Counter::SecurityDispatchAttempts);
+    auto report = Point(target->position);
+    report.altitudeMeters = g.Surface()->Stream().Contact(report).heightMeters;
+    auto frame = G::Frame(report);
     for (int attempt = 0; attempt < 24; ++attempt)
     {
+        profiling::Count(profiling::Counter::SecuritySpawnCandidates);
         double angle = double(Random() % 6283) * .001, range = 40 + double(Random() % 33);
         auto p = G::Advance(frame, std::cos(angle) * range, std::sin(angle) * range,
                             g.Surface()->Planet().radiusMeters)
                      .origin;
+        p.altitudeMeters = g.Surface()->Stream().Contact(p).heightMeters;
         auto local = Local(p);
         if (!g.Surface()->LandingClear(p, .65) ||
             (CivicJustice::IsExterior() &&
@@ -1082,18 +1094,18 @@ bool PlanetSecurity::Spawn()
         {
             continue;
         }
-        p.altitudeMeters = g.Surface()->Stream().Contact(p).heightMeters;
         SecurityOfficer o;
         o.id = civic.nextOfficer++;
         o.position = local;
-        o.lastKnown = Local(*planetary.search);
+        o.lastKnown = Local(report);
+        o.threat.Remember(ai::Stimulus::Report, target->memorySeconds);
         o.facing.yaw = std::atan2(o.lastKnown.y - local.y, o.lastKnown.x - local.x);
         o.tier = civic.wanted;
-        o.health = 60 + 40 * o.tier + 8 * (game::GameLevels::Mine().GetState().player.level - 1);
+        o.health = profile.health;
         PlanetOfficer record;
         record.id = o.id;
         record.position = p;
-        record.lastKnown = *planetary.search;
+        record.lastKnown = report;
         record.heading = G::Unit({g.Surface()->Origin().right.x * std::cos(o.facing.yaw) +
                                       g.Surface()->Origin().forward.x * std::sin(o.facing.yaw),
                                   g.Surface()->Origin().right.y * std::cos(o.facing.yaw) +
@@ -1113,6 +1125,7 @@ bool PlanetSecurity::Spawn()
         }
         planetary.officers.push_back(std::move(record));
         civic.officers.push_back(std::move(o));
+        profiling::Count(profiling::Counter::SecurityDispatchSpawned);
         if (!civic.responseStarted)
         {
             civic.responseStarted = true;
@@ -1261,7 +1274,8 @@ void PlanetSecurity::UpdateCompanions(float seconds)
             const float d = Game::Distance(p, o.position);
             const auto index = size_t(&o - civic.officers.data());
             const float score = ai::Cooperation::TargetScore(d, claims[index], false);
-            if (o.health > 0 && d < 8 && score < bestScore && CivicJustice::ClearLine(p, o.position))
+            if (o.health > 0 && !o.departing && d < 8 && score < bestScore &&
+                CivicJustice::ClearLine(p, o.position))
             {
                 target = &o;
                 bestScore = score;
@@ -1416,13 +1430,44 @@ void CivicJustice::Reset(GameState &world)
 }
 int CivicJustice::WantedForHeat(float heat)
 {
-    constexpr float thresholds[] = {20, 180, 400, 650, 900};
-    int result = 0;
-    for (float threshold : thresholds)
+    return SecurityResponse::WantedForHeat(heat);
+}
+std::optional<SecurityDispatchTarget> CivicJustice::DispatchTarget()
+{
+    if (civic.wanted <= 0)
     {
-        result += heat >= threshold;
+        return std::nullopt;
     }
-    return result;
+    const auto finite = [](Vector2 p) { return std::isfinite(p.x) && std::isfinite(p.y); };
+    const SecurityOfficer *best = nullptr;
+    for (const auto &officer : civic.officers)
+    {
+        if (officer.health <= 0 || officer.departing || !officer.threat.Known() || !finite(officer.lastKnown))
+        {
+            continue;
+        }
+        if (!best || (officer.threat.Visible() && !best->threat.Visible()) ||
+            (officer.threat.Visible() == best->threat.Visible() &&
+             (officer.threat.Remaining() > best->threat.Remaining() ||
+              (officer.threat.Remaining() == best->threat.Remaining() && officer.id < best->id))))
+        {
+            best = &officer;
+        }
+    }
+    if (best)
+    {
+        return SecurityDispatchTarget{best->lastKnown, best->threat.Remaining(), best->id,
+                                      best->threat.Visible() ? "direct_sighting" : "remembered_report"};
+    }
+    const float reportSeconds = ai::PerceptionSettings::kReportMemorySeconds;
+    if (finite(civic.lastCrime) && (!civic.responseStarted || civic.sinceCrime < reportSeconds))
+    {
+        const float remaining =
+            civic.responseStarted ? reportSeconds - (std::max)(0.f, civic.sinceCrime) : reportSeconds;
+        return SecurityDispatchTarget{civic.lastCrime, remaining, 0,
+                                      civic.responseStarted ? "recent_crime" : "initial_dispatch"};
+    }
+    return std::nullopt;
 }
 float CivicJustice::PriceMultiplier()
 {
@@ -1563,11 +1608,11 @@ void CivicJustice::Report(Offense offense, Vector2 position)
     {
         civic.pendingInfamy = Game::Clamp(civic.pendingInfamy + infamy[index], 0, 100);
     }
-    constexpr float escalationTime[] = {0, 0, 25, 60, 105, 165};
-    int next = (std::min)(5, civic.wanted + 1);
-    if (WantedForHeat(civic.heat) >= next && civic.pursuitSeconds >= escalationTime[next])
+    const int next = SecurityResponse::NextTier(civic.wanted, civic.heat, civic.pursuitSeconds);
+    if (next > civic.wanted)
     {
         civic.wanted = next;
+        profiling::Count(profiling::Counter::WantedEscalations);
     }
     auto &world = Game::Get().GetState();
     for (auto &person : world.residents)
@@ -1619,7 +1664,8 @@ void CivicJustice::Report(Offense offense, Vector2 position)
     }
     if (civic.wanted)
     {
-        civic.spawnSeconds = (std::min)(civic.spawnSeconds, 2.f);
+        civic.spawnSeconds =
+            (std::min)(civic.spawnSeconds, SecurityResponse::ForTier(civic.wanted).reinforcementSeconds);
     }
 }
 void CivicJustice::AdvanceSurfaceTimers(float dt)
@@ -1682,6 +1728,11 @@ void CivicJustice::Update(float dt)
     }
     bool visible = false;
     int routeBudget = 2;
+    int mobilizedCount = 0;
+    const auto currentResponse =
+        SecurityResponse::ForTier(civic.wanted, game::GameLevels::Mine().GetState().player.level);
+    const auto activeReport = DispatchTarget();
+    const auto responseCenter = activeReport ? activeReport->position : civic.lastCrime;
     auto &world = Game::Get().GetState();
     for (auto &officer : civic.officers)
     {
@@ -1696,13 +1747,6 @@ void CivicJustice::Update(float dt)
             // Restored responders may investigate their saved report once, without learning the live target.
             officer.threat.Remember(ai::Stimulus::Report, ai::PerceptionSettings::kReportMemorySeconds);
         }
-        if (officer.weaponTier != officer.tier)
-        {
-            officer.weapon =
-                combat::SecurityCarbine(officer.tier, std::uint32_t(officer.id * 2654435761u) ^ 0x914e31u);
-            officer.weaponTier = officer.tier;
-        }
-        officer.weapon.Update(dt);
         officer.cooldown = (std::max)(0.f, officer.cooldown - dt);
         officer.muzzleFlash = (std::max)(0.f, officer.muzzleFlash - dt);
         if (officer.health <= 0)
@@ -1713,28 +1757,31 @@ void CivicJustice::Update(float dt)
             officer.corpseSeconds += dt;
             continue;
         }
+        const bool mobilized = mobilizedCount < currentResponse.responderLimit &&
+                               Game::Distance(officer.position, responseCenter) <= 300;
+        if (mobilized)
+        {
+            ++mobilizedCount;
+            if (officer.tier > civic.wanted)
+            {
+                officer.tier = civic.wanted;
+                officer.health = (std::min)(officer.health, currentResponse.health);
+            }
+        }
+        const auto response =
+            SecurityResponse::ForTier(officer.tier, game::GameLevels::Mine().GetState().player.level);
+        if (officer.weaponTier != officer.tier)
+        {
+            officer.weapon =
+                combat::SecurityCarbine(officer.tier, std::uint32_t(officer.id * 2654435761u) ^ 0x914e31u);
+            officer.weaponTier = officer.tier;
+        }
+        officer.weapon.Update(dt);
         if (surfaceMode)
         {
             AdvanceImpact(officer.position, officer.impact, dt, IsExterior());
         }
-        if (!IsExterior() || (surfaceMode && Game::Distance(world.playerPosition, officer.position) > 300))
-        {
-            continue;
-        }
-        auto delta = Sub(world.playerPosition, officer.position);
-        float distance = std::hypot(delta.x, delta.y);
-        bool sees = CanSee(officer, world.playerPosition, PlayerHeight());
-        officer.threat.Observe(sees && civic.wanted > 0, ai::PerceptionSettings::kOfficerMemorySeconds);
-        visible |= sees;
-        if (sees && civic.wanted > 0)
-        {
-            officer.lastKnown = world.playerPosition;
-            if (surfaceMode)
-            {
-                PlanetSecurity::SawPlayer();
-            }
-        }
-        if (civic.wanted == 0)
+        if (!mobilized)
         {
             if (!officer.departing)
             {
@@ -1744,21 +1791,40 @@ void CivicJustice::Update(float dt)
                 officer.waypoint = 0;
             }
             officer.threat.Forget();
+            officer.teamwork = {};
+            officer.decision = ai::Decision::Routine;
         }
         else
         {
             officer.departing = false;
         }
-        officer.decision = civic.wanted > 0
-                               ? ai::Perception::Decide(ai::Role::Officer, officer.threat, distance)
-                               : ai::Decision::Routine;
+        if (!IsExterior() || (surfaceMode && Game::Distance(world.playerPosition, officer.position) > 300))
+        {
+            officer.threat.Observe(false, ai::PerceptionSettings::kOfficerMemorySeconds);
+            continue;
+        }
+        auto delta = Sub(world.playerPosition, officer.position);
+        float distance = std::hypot(delta.x, delta.y);
+        bool sees = mobilized && CanSee(officer, world.playerPosition, PlayerHeight());
+        officer.threat.Observe(sees, ai::PerceptionSettings::kOfficerMemorySeconds);
+        visible |= sees;
+        if (sees)
+        {
+            officer.lastKnown = world.playerPosition;
+            if (surfaceMode)
+            {
+                PlanetSecurity::SawPlayer();
+            }
+        }
+        officer.decision = mobilized ? ai::Perception::Decide(ai::Role::Officer, officer.threat, distance)
+                                     : ai::Decision::Routine;
         officer.navigationSeconds -= dt;
         const bool moving =
-            (officer.departing ||
+            ((officer.departing && Game::Distance(officer.position, officer.lastKnown) > .8f) ||
              (officer.threat.Known() &&
               (sees ? distance > 5 : Game::Distance(officer.position, officer.lastKnown) > .8f))) &&
             officer.impact.seconds <= 0;
-        const auto destination = sees && civic.wanted > 0 ? world.playerPosition : officer.lastKnown;
+        const auto destination = sees ? world.playerPosition : officer.lastKnown;
         const bool needsRoute = officer.waypoint >= officer.route.size() || officer.blockedSeconds >= 1 ||
                                 Game::Distance(officer.route.back(), destination) > 2;
         if (moving && needsRoute && officer.navigationSeconds <= 0 && routeBudget > 0 &&
@@ -1776,7 +1842,7 @@ void CivicJustice::Update(float dt)
             auto target = officer.route[officer.waypoint];
             float remaining = Game::Distance(target, officer.position);
             auto next = Add(officer.position, Unit(Sub(target, officer.position)),
-                            (std::min)(remaining, (2.2f + .25f * officer.tier) * dt));
+                            (std::min)(remaining, response.moveSpeed * dt));
             if (SegmentClear(officer.position, next, .32f))
             {
                 officer.position =
@@ -1805,11 +1871,10 @@ void CivicJustice::Update(float dt)
         {
             officer.facing.yaw += dt * .8f;
         }
-        sees = CanSee(officer, world.playerPosition, PlayerHeight());
-        officer.threat.Observe(sees && civic.wanted > 0, ai::PerceptionSettings::kOfficerMemorySeconds);
-        officer.decision = civic.wanted > 0
-                               ? ai::Perception::Decide(ai::Role::Officer, officer.threat, distance)
-                               : ai::Decision::Routine;
+        sees = mobilized && CanSee(officer, world.playerPosition, PlayerHeight());
+        officer.threat.Observe(sees, ai::PerceptionSettings::kOfficerMemorySeconds);
+        officer.decision = mobilized ? ai::Perception::Decide(ai::Role::Officer, officer.threat, distance)
+                                     : ai::Decision::Routine;
         visible |= sees;
         if (!officer.threat.Known())
         {
@@ -1825,12 +1890,12 @@ void CivicJustice::Update(float dt)
         }
         delta = Sub(world.playerPosition, officer.position);
         distance = std::hypot(delta.x, delta.y);
-        if (sees && civic.wanted > 0)
+        if (sees)
         {
             officer.lastKnown = world.playerPosition;
             officer.facing.yaw = std::atan2(delta.y, delta.x);
         }
-        if (civic.wanted > 0 && sees && distance < 8 + officer.tier * 1.5f && officer.impact.seconds <= 0 &&
+        if (sees && distance < response.fireRange && officer.impact.seconds <= 0 &&
             civic.bullets.size() < 128)
         {
             const bool blocked = FriendlyFireBlocked(officer, world.playerPosition);
@@ -1842,15 +1907,12 @@ void CivicJustice::Update(float dt)
             combat::Shot shot;
             if (!blocked && officer.weapon.TryFire(std::atan2(delta.y, delta.x), shot))
             {
-                const auto &stats = game::GameLevels::Mine().GetState().player;
-                int power = stats.defense +
-                            (std::max)(8 + officer.tier * 4, int(stats.maxHealth * .015f * officer.tier));
                 civic.bullets.push_back(
                     {officer.position,
                      {std::cos(shot.angle), std::sin(shot.angle)},
                      shot.speed,
                      shot.range,
-                     power,
+                     response.damage,
                      false,
                      false,
                      surfaceMode ? float((Game::Get()
@@ -1869,7 +1931,7 @@ void CivicJustice::Update(float dt)
     if (civic.wanted > 0)
     {
         bool responders = std::any_of(civic.officers.begin(), civic.officers.end(),
-                                      [](const SecurityOfficer &o) { return o.health > 0; });
+                                      [](const SecurityOfficer &o) { return o.health > 0 && !o.departing; });
         bool justStarted = !civic.responseStarted && responders;
         if (justStarted)
         {
@@ -1888,13 +1950,15 @@ void CivicJustice::Update(float dt)
             civic.initialUnseenSeconds += dt;
             if (civic.initialUnseenSeconds >= kUnidentifiedEscapeSeconds)
             {
+                profiling::Count(profiling::Counter::WantedUnidentifiedEscapes);
                 ClearPursuit();
                 Game::Get().ShowNotice(
                     "수배 해제 / 보안대에 식별되지 않았습니다. 이번 사건은 악명에 반영되지 않습니다.");
             }
         }
-        else if (civic.identified && civic.unseenSeconds >= 20)
+        else if (civic.identified && civic.unseenSeconds >= SecurityResponse::kIdentifiedEscapeSeconds)
         {
+            profiling::Count(profiling::Counter::WantedIdentifiedEscapes);
             ClearPursuit();
             Game::Get().ShowNotice("수배 해제 / 보안대의 추적을 벗어났습니다. 기존 악명은 유지됩니다.");
         }
@@ -1909,14 +1973,16 @@ void CivicJustice::Update(float dt)
                        [&](const SecurityOfficer &o) {
                            return (o.health <= 0 && o.corpseSeconds > 20 &&
                                    TrafficSystem::OutsideView(o.position, world.cameraPosition, 80)) ||
-                                  (civic.wanted == 0 &&
+                                  ((civic.wanted == 0 || o.departing) &&
                                    TrafficSystem::OutsideView(o.position, world.cameraPosition, 100));
                        }),
         civic.officers.end());
     civic.spawnSeconds -= dt;
+    const auto response =
+        SecurityResponse::ForTier(civic.wanted, game::GameLevels::Mine().GetState().player.level);
     size_t living = std::count_if(civic.officers.begin(), civic.officers.end(),
-                                  [](const SecurityOfficer &o) { return o.health > 0; });
-    if (civic.officers.size() >= 16 && living < size_t(civic.wanted * 2))
+                                  [](const SecurityOfficer &o) { return o.health > 0 && !o.departing; });
+    if (civic.officers.size() >= SecurityResponse::kOfficerSlots && living < size_t(response.responderLimit))
     {
         auto body = std::find_if(civic.officers.begin(), civic.officers.end(),
                                  [](const SecurityOfficer &o) { return o.health <= 0; });
@@ -1925,24 +1991,41 @@ void CivicJustice::Update(float dt)
             civic.officers.erase(body);
         }
     }
-    if ((IsExterior() || surfaceMode) && civic.wanted > 0 && civic.spawnSeconds <= 0 &&
-        living < size_t(civic.wanted * 2) && civic.officers.size() < 16)
+    const auto target = DispatchTarget();
+    if (civic.wanted > 0 && !target)
     {
-        civic.spawnSeconds = 3.5f;
+        profiling::Count(profiling::Counter::SecurityDispatchDeferred);
+    }
+    if ((IsExterior() || surfaceMode) && target && civic.spawnSeconds <= 0 &&
+        living < size_t(response.responderLimit) && civic.officers.size() < SecurityResponse::kOfficerSlots)
+    {
+        civic.spawnSeconds = response.reinforcementSeconds;
+        bool spawned = false;
         if (surfaceMode)
         {
-            PlanetSecurity::Spawn();
+            spawned = PlanetSecurity::Spawn();
         }
+        profiling::Scope dispatch(profiling::Timer::SecurityDispatch);
+        if (!surfaceMode)
+        {
+            profiling::Count(profiling::Counter::SecurityDispatchAttempts);
+        }
+        int spawnRoutes = SecurityResponse::kSpawnRouteBudget;
         for (int attempt = 0; !surfaceMode && attempt < 64; ++attempt)
         {
+            profiling::Count(profiling::Counter::SecuritySpawnCandidates);
             float angle = float(Random() % 6283) * .001f;
             float range = 18 + float(Random() % 17);
-            auto p = Add(world.playerPosition, {std::cos(angle), std::sin(angle)}, range);
+            auto p = Add(target->position, {std::cos(angle), std::sin(angle)}, range);
             if (Solid(p, .6f) || !TrafficSystem::OutsideView(p, world.cameraPosition, 90))
             {
                 continue;
             }
-            auto route = EmergencyRoute(p, civic.lastCrime);
+            if (spawnRoutes-- <= 0)
+            {
+                break;
+            }
+            auto route = EmergencyRoute(p, target->position);
             if (route.empty())
             {
                 continue;
@@ -1950,20 +2033,26 @@ void CivicJustice::Update(float dt)
             SecurityOfficer officer;
             officer.id = civic.nextOfficer++;
             officer.position = p;
-            officer.lastKnown = civic.lastCrime;
-            officer.facing.yaw = std::atan2(civic.lastCrime.y - p.y, civic.lastCrime.x - p.x);
+            officer.lastKnown = target->position;
+            officer.threat.Remember(ai::Stimulus::Report, target->memorySeconds);
+            officer.facing.yaw = std::atan2(target->position.y - p.y, target->position.x - p.x);
             officer.tier = civic.wanted;
-            officer.health =
-                60 + 40 * civic.wanted + 8 * (game::GameLevels::Mine().GetState().player.level - 1);
+            officer.health = response.health;
             officer.route = std::move(route);
             officer.navigationSeconds = 1;
             civic.officers.push_back(std::move(officer));
+            spawned = true;
+            profiling::Count(profiling::Counter::SecurityDispatchSpawned);
             if (!civic.responseStarted)
             {
                 civic.responseStarted = true;
                 civic.initialUnseenSeconds = 0;
             }
             break;
+        }
+        if (!spawned)
+        {
+            civic.spawnSeconds = (std::min)(civic.spawnSeconds, 1.f);
         }
     }
     if (surfaceMode)

@@ -136,7 +136,7 @@ void PlanetSecurity::ShareThreats()
     std::vector<ai::ThreatReport> sightings;
     for (const auto &officer : law.officers)
     {
-        if (officer.health > 0 && officer.threat.Visible() &&
+        if (officer.health > 0 && !officer.departing && officer.threat.Visible() &&
             Game::Distance(officer.position, Game::Get().GetState().playerPosition) <= 300)
         {
             sightings.push_back({officer.id, FlatPoint(officer.position), FlatPoint(officer.lastKnown),
@@ -149,7 +149,7 @@ void PlanetSecurity::ShareThreats()
     }
     for (auto &officer : law.officers)
     {
-        if (officer.health <= 0 || officer.threat.Known())
+        if (officer.health <= 0 || officer.departing || officer.threat.Known())
         {
             continue;
         }

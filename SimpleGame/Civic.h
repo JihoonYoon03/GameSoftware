@@ -2,6 +2,7 @@
 #include <functional>
 #include "Game.h"
 #include "Level.h"
+#include "SecurityResponse.h"
 #include <array>
 #include <cstdint>
 #include <optional>
@@ -86,6 +87,13 @@ struct CivicState
     bool responseStarted = false, identified = false;
     unsigned randomState = 0x39ab17u;
 };
+struct SecurityDispatchTarget
+{
+    Vector2 position;
+    float memorySeconds;
+    std::uint64_t reporterId;
+    const char *source;
+};
 // ============================================================================
 // PlanetSecurity — spherical ownership; CivicState officers are local simulation projections
 // ============================================================================
@@ -136,13 +144,14 @@ class CivicJustice
 {
   public:
     static constexpr float kMaximumHeat = 1000;
-    static constexpr float kUnidentifiedEscapeSeconds = 20;
+    static constexpr float kUnidentifiedEscapeSeconds = SecurityResponse::kUnidentifiedEscapeSeconds;
     static constexpr float kSightRange = 26;
     static constexpr float kSightHalfAngle = .95993109f; // 55 degrees; total field of view is 110 degrees.
     static CivicState &State();
     static void Reset(GameState &world);
     static void Report(Offense offense, Vector2 position);
     static int WantedForHeat(float heat);
+    static std::optional<SecurityDispatchTarget> DispatchTarget();
     static float PriceMultiplier();
     static int ShopPrice(int basePrice);
     static int LivingPopulation(int city = -1);

@@ -669,12 +669,72 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     security.Seconds("initial_unseen_seconds", law.initialUnseenSeconds);
     security.Number("price_multiplier", tutorial::CivicJustice::PriceMultiplier());
     security.Number("officers", law.officers.size());
+    const auto response = tutorial::SecurityResponse::ForTier(law.wanted, level.player.level);
+    const auto dispatch = tutorial::CivicJustice::DispatchTarget();
+    const auto living = std::count_if(law.officers.begin(), law.officers.end(),
+                                      [](const auto &o) { return o.health > 0 && !o.departing; });
+    JsonObject responseInfo;
+    responseInfo.Text("label", response.label);
+    responseInfo.Number("responder_limit", response.responderLimit);
+    responseInfo.Number("active_responders", living);
+    responseInfo.Number("growth_band", response.growthBand);
+    responseInfo.Number("new_responder_health", response.health);
+    responseInfo.Number("damage_before_defense", response.damage);
+    responseInfo.Number("damage_after_defense",
+                        response.tier ? (std::max)(1, response.damage - level.player.defense) : 0);
+    responseInfo.Number("move_speed", response.moveSpeed);
+    responseInfo.Number("fire_range", response.fireRange);
+    responseInfo.Number("fire_interval_seconds", response.fireInterval);
+    responseInfo.Number("minimum_spread_radians", response.minimumSpread);
+    responseInfo.Number("reinforcement_interval_seconds", response.reinforcementSeconds);
+    responseInfo.Seconds("reinforcement_cooldown_seconds", (std::max)(0.f, law.spawnSeconds));
+    responseInfo.Text("dispatch_state", law.wanted == 0                     ? "inactive"
+                                        : !dispatch                         ? "awaiting_report"
+                                        : living >= response.responderLimit ? "capacity_reached"
+                                        : law.officers.size() >= tutorial::SecurityResponse::kOfficerSlots
+                                            ? "roster_full"
+                                        : law.spawnSeconds > 0 ? "cooldown"
+                                                               : "ready");
+    responseInfo.Text("target_source", dispatch ? dispatch->source : "none");
+    responseInfo.Number("target_memory_seconds", dispatch ? dispatch->memorySeconds : 0);
+    responseInfo.Number("reporter_id", dispatch ? dispatch->reporterId : 0);
+    responseInfo.Text("coordinate_frame", world.surfaceExploration ? "surface_origin" : "civic");
+    responseInfo.Raw("dispatch_target", dispatch ? Position(dispatch->position) : "null");
+    const bool canEscalate = law.wanted > 0 && law.wanted < tutorial::SecurityResponse::kMaximumTier;
+    const auto next = tutorial::SecurityResponse::ForTier(law.wanted + 1);
+    responseInfo.Number("next_tier", canEscalate ? next.tier : 0);
+    responseInfo.Number("next_tier_heat_remaining",
+                        canEscalate ? (std::max)(0.f, next.heatThreshold - law.heat) : 0);
+    responseInfo.Number("next_tier_time_remaining",
+                        canEscalate ? (std::max)(0.f, next.minimumPursuitSeconds - law.pursuitSeconds) : 0);
+    responseInfo.Bool("new_crime_required", canEscalate);
+    responseInfo.Text("pursuit_phase", law.wanted == 0         ? "inactive"
+                                       : !law.responseStarted  ? "awaiting_response"
+                                       : !law.identified       ? "unidentified_search"
+                                       : law.unseenSeconds > 0 ? "lost_contact"
+                                                               : "identified_pursuit");
+    if (law.wanted > 0 && law.responseStarted)
+    {
+        responseInfo.Number(
+            "escape_remaining_seconds",
+            (std::max)(0.f, law.identified
+                                ? tutorial::SecurityResponse::kIdentifiedEscapeSeconds - law.unseenSeconds
+                                : tutorial::SecurityResponse::kUnidentifiedEscapeSeconds -
+                                      law.initialUnseenSeconds));
+    }
+    else
+    {
+        responseInfo.Raw("escape_remaining_seconds", "null");
+    }
+    security.Raw("response", responseInfo.Finish());
     std::string responders;
     for (const auto &officer : law.officers)
     {
         JsonObject item;
         item.Number("id", officer.id);
         item.Number("health", officer.health);
+        item.Number("tier", officer.tier);
+        item.Number("magazine_rounds", officer.weapon.GetRounds());
         item.Bool("departing", officer.departing);
         item.Raw("teamwork", TeamworkState(officer.teamwork, "player"));
         item.Raw("position", Position(officer.position));

@@ -253,6 +253,24 @@ function renderEnvironment(data) {
     metric("구조", format(data.mine?.rescued_people) + "명 / 화면 밖 철수 " + format(data.mine?.returned_people) + "명"),
     metric("스캐너", format(data.mine?.scanner_seconds, 1) + "초 / 대기 " + format(data.mine?.scanner_cooldown, 1) + "초"),
   );
+  const response = data.security?.response;
+  if (response) {
+    const dispatch = { inactive: "대응 없음", awaiting_report: "정보 만료 · 증원 보류",
+      capacity_reached: "대응 인원 충족", roster_full: "전체 인원 한도", cooldown: "다음 증원 대기", ready: "배치 지점 탐색 가능" };
+    const phase = { inactive: "수배 없음", awaiting_response: "초동 배치 대기", unidentified_search: "미식별 수색",
+      lost_contact: "마지막 확인 지점 수색", identified_pursuit: "식별 후 추적" };
+    byId("world-status").append(
+      metric("수배 대응", (data.security.wanted_stars ?? 0) + "단계 · " + response.label),
+      metric("추적 상태", phase[response.pursuit_phase] ?? response.pursuit_phase),
+      metric("대응 인원", format(response.active_responders) + " / " + format(response.responder_limit)),
+      metric("증원", (dispatch[response.dispatch_state] ?? response.dispatch_state) + " · 간격 "
+        + format(response.reinforcement_interval_seconds, 1) + "초 / 대기 " + format(response.reinforcement_cooldown_seconds, 1) + "초"),
+      metric("정보 유효 시간", format(response.target_memory_seconds, 1) + "초"),
+      metric("추적 해제까지", response.escape_remaining_seconds == null ?
+        (data.security.wanted_stars > 0 ? "초동 배치 후 계산" : "해당 없음") :
+        format(response.escape_remaining_seconds, 1) + "초 · 재발견/사건 발생 시 조건 재평가"),
+    );
+  }
   const combat = data.player.combat;
   if (combat) {
     const reasons = { ready: "가능", world_loading: "월드 준비 중", inactive_combat_area: "비전투 공간",

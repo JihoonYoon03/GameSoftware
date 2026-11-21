@@ -94,6 +94,13 @@ enum class Counter
     NpcSupportBlockedTicks,
     NpcSupportAids,
     NpcSupportWorkCycles,
+    SecurityDispatchAttempts,
+    SecurityDispatchSpawned,
+    SecurityDispatchDeferred,
+    SecuritySpawnCandidates,
+    WantedEscalations,
+    WantedUnidentifiedEscapes,
+    WantedIdentifiedEscapes,
     Count
 };
 enum class Timer
@@ -141,6 +148,7 @@ enum class Timer
     PlayerAircraft,
     NpcPerception,
     NpcSupport,
+    SecurityDispatch,
     Count
 };
 class Scope

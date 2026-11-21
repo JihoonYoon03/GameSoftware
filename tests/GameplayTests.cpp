@@ -2921,6 +2921,9 @@ void TestPlanetSecurity()
         PlanetSecurity::Spawn();
     }
     assert(!law.officers.empty() && law.responseStarted && !PlanetSecurity::State().officers.empty());
+    assert(law.officers.front().threat.Known() && !law.officers.front().threat.Visible() &&
+           law.officers.front().threat.Remaining() <= ai::PerceptionSettings::kReportMemorySeconds &&
+           law.officers.front().health == SecurityResponse::ForTier(1, mineState.player.level).health);
     PlanetSecurity::Project();
     const auto officerId = law.officers.front().id;
     const auto policePosition = PlanetSecurity::State().officers.front().position;

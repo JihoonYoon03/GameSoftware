@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "Weapon.h"
+#include "SecurityResponse.h"
 #include <algorithm>
 #include <cmath>
 
@@ -148,9 +149,17 @@ const char *Pistol::GetName() const
 {
     return "개척자 권총";
 }
-SecurityCarbine::SecurityCarbine(int tier, std::uint32_t seed)
-    : Firearm({18, 12, 1.6f - (std::max)(1, (std::min)(5, tier)) * .2f, 2.1f, 32, 20,
-               .08f - (std::max)(1, (std::min)(5, tier)) * .009f, .28f, .025f, .008f})
+namespace
+{
+FirearmSettings SecuritySettings(int tier)
+{
+    const auto profile =
+        tutorial::SecurityResponse::ForTier(std::clamp(tier, 1, tutorial::SecurityResponse::kMaximumTier));
+    return {18,    profile.damage, profile.fireInterval, 2.1f, 32, 20, profile.minimumSpread, .28f,
+            .025f, .008f};
+}
+} // namespace
+SecurityCarbine::SecurityCarbine(int tier, std::uint32_t seed) : Firearm(SecuritySettings(tier))
 {
     SetRandomSeed(seed);
 }

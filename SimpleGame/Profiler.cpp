@@ -107,7 +107,14 @@ const char *counterNames[] = {"draw_calls",
                               "npc_support_path_requests",
                               "npc_support_blocked_ticks",
                               "npc_support_aids",
-                              "npc_support_work_cycles"};
+                              "npc_support_work_cycles",
+                              "security_dispatch_attempts",
+                              "security_dispatch_spawned",
+                              "security_dispatch_deferred",
+                              "security_spawn_candidates",
+                              "wanted_escalations",
+                              "wanted_unidentified_escapes",
+                              "wanted_identified_escapes"};
 const char *timerNames[] = {"frame_cpu",
                             "update",
                             "movement",
@@ -150,7 +157,8 @@ const char *timerNames[] = {"frame_cpu",
                             "city_infrastructure_prepare",
                             "player_aircraft",
                             "npc_perception",
-                            "npc_support"};
+                            "npc_support",
+                            "security_dispatch"};
 static_assert(sizeof(counterNames) / sizeof(*counterNames) == kCounterCount);
 static_assert(sizeof(timerNames) / sizeof(*timerNames) == kTimerCount);
 struct Sample

@@ -39,6 +39,7 @@ set(GAME_SOURCES
     SimpleGame/NpcTeams.cpp
     SimpleGame/NpcSupport.cpp
     SimpleGame/NpcSupportScenes.cpp
+    SimpleGame/SecurityResponse.cpp
     SimpleGame/World.cpp
     SimpleGame/WorldGeneration.cpp
     SimpleGame/WorldContent.cpp
