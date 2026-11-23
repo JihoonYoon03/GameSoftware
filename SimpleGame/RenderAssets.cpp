@@ -569,6 +569,7 @@ struct RenderAssets::Data
     static constexpr int kTextAtlasWidth = 2048;
     static constexpr int kTextAtlasHeight = 1024;
     GLuint uiAtlas = 0;
+    GLuint pbrBaseArray = 0, pbrNormalArray = 0, pbrOrmArray = 0, damageMaskTex = 0;
     int uiWidth = 2048, uiHeight = 0;
     std::unordered_map<std::string, Sprite> sprites;
     std::filesystem::path exportRoot;
@@ -585,6 +586,22 @@ struct RenderAssets::Data
     {
         glDeleteTextures(1, &atlas);
         glDeleteTextures(1, &uiAtlas);
+        if (pbrBaseArray)
+        {
+            glDeleteTextures(1, &pbrBaseArray);
+        }
+        if (pbrNormalArray)
+        {
+            glDeleteTextures(1, &pbrNormalArray);
+        }
+        if (pbrOrmArray)
+        {
+            glDeleteTextures(1, &pbrOrmArray);
+        }
+        if (damageMaskTex)
+        {
+            glDeleteTextures(1, &damageMaskTex);
+        }
         if (textAtlas)
         {
             glDeleteTextures(1, &textAtlas);
@@ -702,6 +719,82 @@ RenderAssets::RenderAssets() : m_data(new Data())
                              Hash(ReadAsset(uiRoot / "Backdrop" / file, 64 * 1024 * 1024)) ==
                                  layer.At("sha256").Text(),
                          "backdrop PNG hash " + file);
+        }
+        // GFX-01 / GFX-08: Load optional shared PBR pilot texture arrays (1024^2 x 4) and vehicle damage mask (256^2).
+        const fs::path resourceRoot = uiRoot.parent_path().parent_path();
+        const fs::path pilotDir = resourceRoot / "Export" / "Textures" / "Pilot";
+        const fs::path damagePath =
+            resourceRoot / "Export" / "Textures" / "SharedDamage" / "Vehicle_DamageMask.png";
+        constexpr const char *kPilotSets[4] = {"Pilot_CastPaving", "Pilot_TechnicalWeave", "Pilot_BrushedSteel",
+                                               "Pilot_PaintedAlloy"};
+        auto uploadArray = [&](const char *suffix, bool srgb) -> GLuint {
+            constexpr int kSize = 1024, kLayers = 4;
+            std::vector<unsigned char> merged;
+            merged.reserve(size_t(kSize) * kSize * 4 * kLayers);
+            for (int layer = 0; layer < kLayers; ++layer)
+            {
+                const fs::path p = pilotDir / (std::string(kPilotSets[layer]) + suffix);
+                std::error_code ec;
+                if (!fs::is_regular_file(p, ec))
+                {
+                    return 0;
+                }
+                auto px = DecodePng(factory.Get(), p, kSize, kSize);
+                merged.insert(merged.end(), px.begin(), px.end());
+            }
+            GLuint tex = 0;
+            glGenTextures(1, &tex);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, tex);
+            glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, srgb ? GL_SRGB8_ALPHA8 : GL_RGBA8, kSize, kSize, kLayers, 0,
+                         GL_RGBA, GL_UNSIGNED_BYTE, merged.data());
+            glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+            return tex;
+        };
+        try
+        {
+            if (maximumTextureSize >= 1024 && GLEW_VERSION_3_0)
+            {
+                GLuint baseArr = uploadArray("_BaseColor.png", false);
+                GLuint nrmArr = baseArr ? uploadArray("_Normal.png", false) : 0;
+                GLuint ormArr = nrmArr ? uploadArray("_ORM.png", false) : 0;
+                if (baseArr && nrmArr && ormArr)
+                {
+                    m_data->pbrBaseArray = baseArr;
+                    m_data->pbrNormalArray = nrmArr;
+                    m_data->pbrOrmArray = ormArr;
+                }
+                else
+                {
+                    if (baseArr) glDeleteTextures(1, &baseArr);
+                    if (nrmArr) glDeleteTextures(1, &nrmArr);
+                    if (ormArr) glDeleteTextures(1, &ormArr);
+                }
+            }
+            std::error_code ec;
+            if (fs::is_regular_file(damagePath, ec))
+            {
+                auto px = DecodePng(factory.Get(), damagePath, 256, 256);
+                GLuint tex = 0;
+                glGenTextures(1, &tex);
+                glBindTexture(GL_TEXTURE_2D, tex);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, px.data());
+                glGenerateMipmap(GL_TEXTURE_2D);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                m_data->damageMaskTex = tex;
+            }
+        }
+        catch (const std::exception &)
+        {
+            // Keep graceful vertex-color fallback if optional pilot/damage textures are unavailable.
         }
     }
     // Four materials, a white cell, and a radial glow share a padded atlas.
@@ -1107,6 +1200,30 @@ void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf
 size_t RenderAssets::UiSpriteCount() const
 {
     return m_data->sprites.size();
+}
+unsigned int RenderAssets::PbrBaseArray() const
+{
+    return m_data->pbrBaseArray;
+}
+unsigned int RenderAssets::PbrNormalArray() const
+{
+    return m_data->pbrNormalArray;
+}
+unsigned int RenderAssets::PbrOrmArray() const
+{
+    return m_data->pbrOrmArray;
+}
+unsigned int RenderAssets::DamageMaskTexture() const
+{
+    return m_data->damageMaskTex;
+}
+bool RenderAssets::HasPbrTextures() const
+{
+    return m_data->pbrBaseArray != 0 && m_data->pbrNormalArray != 0 && m_data->pbrOrmArray != 0;
+}
+bool RenderAssets::HasDamageMask() const
+{
+    return m_data->damageMaskTex != 0;
 }
 bool RenderAssets::DrawBackdropLayer(const std::string &name, bool cartoon, int renderWidth)
 {

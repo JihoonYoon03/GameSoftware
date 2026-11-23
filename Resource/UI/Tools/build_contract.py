@@ -69,6 +69,18 @@ layouts['text_flow']=dict(source='Source/text_flows.json',wrap='actual Malgun Go
 activity=json.loads((ROOT/'Source/activity_design_contract.json').read_text(encoding='utf8'))
 layouts['journal_legacy']=layouts['journal']
 layouts['journal']=activity['journal']
+UI['UI-01']['states']+=['stamina_draining','dodge_in_progress','stamina_insufficient','stamina_recovering']
+UI['UI-02']['states']+=['carbine_equipped','carbine_empty','carbine_reloading','tactical_focus']
+UI['UI-24']['states']+=['primary_owned','primary_unowned','primary_hovered']
+UI['UI-24']['icons']+=['carbine']
+UI['UI-13']['states']+=['shared_car','aircraft_cruise','landing_available','landing_unavailable','landing_requested','landed','crash_notice']
+UI['UI-12']['states']+=['surrender_eligible','fine_settled','airborne_interceptor_warning']
+UI['UI-06']['states']+=['planet_overview','relay_ready','relay_restricted','relay_preparing']
+UI['UI-17']['states']+=['checkpoint_ready','checkpoint_empty','checkpoint_restricted','checkpoint_loading','planet_profiles']
+UI['UI-23']['states']+=['aircraft_controls']
+for coverage_id, artwork in {'UI-01':['stamina'],'UI-02':['carbine'],'UI-13':['ground_car','flight','landing'],
+                             'UI-12':['security'],'UI-06':['relay'],'UI-17':['checkpoint']}.items():
+    UI[coverage_id]['icons']+=artwork
 UI['UI-09']['states']+=['story_active','story_paused','story_completed','story_unaccepted','story_prerequisite','regional_empty','regional_measure','regional_submit','regional_multiple_pages','regional_long_name','restored_tracking','legacy_restore','invalid_tracking_fallback']
 UI['UI-09']['bindings']+=['ActivityJournal::Current','ActivityJournal::CommunityEntries','ActivityJournal::CaptureTracking','ActivityJournal::RestoreTracking','participation','tracked_mission','community_world_key','community_region','list_page','body_page']
 UI['UI-09']['icons']+=['activity_track','activity_paused','activity_complete','activity_measure','activity_submit','activity_restore']
@@ -99,7 +111,7 @@ for id,d in UI.items():
     p=', '.join(f'[{n}]({manifest["screens"][n]["png"]})' for n in d['preview_screens'])
     lines.append(f'| {id} | {d["name"]} | {len(d["states"])} | {p} | '+('기존 게임 연결 유지 / 디자인 갱신' if int(id[-2:])<=23 else '전용 디자인 납품 / 임시 게임 표현 교체용')+' |')
 lines+=['','','모든 상태를 별도의 완성 화면으로 만든 것은 아닙니다. 반복되는 상태는 동일 부품·라벨·아이콘 교체로 구성하며, 기본/포커스/눌림/선택/비활성/경고, 스캔·교환·주행·동료·전달 방식 등은 21·22·25·26번 갤러리에 모았습니다.','제작 검토 화면의 수치와 문구는 예시이며, 실제 적용 결과·화자·공개 조건·가격은 게임에서 전달해야 합니다.']
-lines+=['','## 최신 추가 요청','','| 요청 | 제작 화면 |','|---|---|']
+lines+=['','## 최신 플레이 화면','','[2026-11-23 추가 제작 명세](CURRENT_PLAY_UI_ko.md)에서 도보·카빈·차량·비행·수배·중계환·저장 화면과 기존 게임 표시의 차이를 확인할 수 있습니다.','','## 활동 추적 요청','','| 요청 | 제작 화면 |','|---|---|']
 for cq in activity['request_sections']:
     names=[f'[{n}]({s["png"]})' for n,s in manifest['screens'].items() if cq in s['requirements']]
     lines.append('| '+cq+' | '+', '.join(names)+' |')

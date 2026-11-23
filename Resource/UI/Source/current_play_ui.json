@@ -1,0 +1,154 @@
+{
+  "schema": "erma.ui.current_play",
+  "version": 1,
+  "basis": "GAME_DOCUMENTATION 42-52 and current game source",
+  "baseline_canvas": [
+    1280,
+    800
+  ],
+  "native_integration": "pending",
+  "dimensions": {
+    "stamina": [
+      66,
+      772,
+      220,
+      6
+    ],
+    "vehicle_durability": [
+      1060,
+      709,
+      188,
+      5
+    ],
+    "relay_panel": [
+      56,
+      40,
+      1168,
+      720
+    ],
+    "checkpoint_panel": [
+      220,
+      90,
+      840,
+      620
+    ]
+  },
+  "mapping": {
+    "stamina": "PlayerMobility; threshold = DodgeCost / MaxStamina",
+    "transport": "PlayerAircraft, PlayerCar; height above local ground",
+    "armed": "Loadout.HasPrimary, Game.ActiveFirearm",
+    "law": "CivicJustice + SecurityResponse actual eligibility and timers",
+    "relay": "RelayTravel.Restriction + GameState.relayPreparing",
+    "checkpoint": "SaveSystem.Restriction, Available, Loading and Message"
+  },
+  "fixtures": {
+    "71_stamina_sprint": {
+      "stamina": 62,
+      "sprinting": true
+    },
+    "72_stamina_low": {
+      "stamina": 21,
+      "dodge_available": false
+    },
+    "73_stamina_dodge": {
+      "stamina": 45,
+      "dodging": true
+    },
+    "74_carbine_focus": {
+      "rounds": 18,
+      "magazine": 24,
+      "focus": true
+    },
+    "75_carbine_reload": {
+      "rounds": 0,
+      "magazine": 24,
+      "reload_progress": 0.58
+    },
+    "76_carbine_empty": {
+      "rounds": 0,
+      "magazine": 24
+    },
+    "77_carbine_wheel": {
+      "primary_owned": true
+    },
+    "78_carbine_locked": {
+      "primary_owned": false
+    },
+    "79_car_reverse": {
+      "mounted": "car",
+      "reverse": true
+    },
+    "80_flight_cruise": {
+      "mounted": "aircraft",
+      "cruise": true
+    },
+    "81_flight_landing": {
+      "landing_requested": true
+    },
+    "82_flight_no_landing": {
+      "landing_available": false
+    },
+    "83_flight_grounded": {
+      "grounded": true
+    },
+    "84_security_surrender": {
+      "wanted": 1,
+      "surrender_eligible": true,
+      "requires_patrol_confirmation": true
+    },
+    "85_security_interceptor": {
+      "wanted": 5,
+      "airborne": true
+    },
+    "86_security_paid": {
+      "wanted": 0,
+      "fine": 100
+    },
+    "87_relay_ready": {
+      "relay_state": "ready",
+      "route_line": false,
+      "fictional_layout": true
+    },
+    "88_relay_blocked": {
+      "relay_state": "blocked",
+      "route_line": false,
+      "fictional_layout": true
+    },
+    "89_relay_prep": {
+      "relay_state": "prep",
+      "route_line": false,
+      "fictional_layout": true
+    },
+    "90_checkpoint_ready": {
+      "checkpoint_state": "ready",
+      "slots": 1
+    },
+    "91_checkpoint_empty": {
+      "checkpoint_state": "empty",
+      "slots": 1
+    },
+    "92_checkpoint_restricted": {
+      "checkpoint_state": "restricted",
+      "slots": 1
+    },
+    "93_checkpoint_loading": {
+      "checkpoint_state": "loading",
+      "slots": 1
+    },
+    "94_planet_profiles": {
+      "current_profile": "erma",
+      "candidate": "seira",
+      "distinct_from_relay_travel": true
+    },
+    "95_flight_landing_ready": {
+      "landing_available": true
+    },
+    "96_aircraft_crash_notice": {
+      "crashed": true,
+      "display": "one common notice or existing medical transition"
+    },
+    "97_flight_controls": {
+      "context": "aircraft"
+    }
+  }
+}

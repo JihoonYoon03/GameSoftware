@@ -3647,6 +3647,94 @@
       "role": "track_vs_participation",
       "lossless": true,
       "ellipsis": false
+    },
+    {
+      "source": "현장 E 등록 · 탑승 중이면 주차 후 이동. 차량은 출발지에 남습니다.",
+      "lines": [
+        "현장 E 등록 · 탑승 중이면 주차 후 이동. ",
+        "차량은 출발지에 남습니다."
+      ],
+      "width": 370,
+      "size": 16,
+      "weight": 400,
+      "role": "current_UI_body",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "차량을 주차하고 내려 주세요. 차량은 출발지에 남습니다.",
+      "lines": [
+        "차량을 주차하고 내려 주세요. ",
+        "차량은 출발지에 남습니다."
+      ],
+      "width": 370,
+      "size": 16,
+      "weight": 400,
+      "role": "current_UI_body",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "목적지 지형을 준비하고 있습니다. 취소하면 현재 위치에서 계속합니다.",
+      "lines": [
+        "목적지 지형을 준비하고 있습니다. ",
+        "취소하면 현재 위치에서 계속합니다."
+      ],
+      "width": 370,
+      "size": 16,
+      "weight": 400,
+      "role": "current_UI_body",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "%LOCALAPPDATA%\\GameSoftware\\Saves\\world.sav",
+      "lines": [
+        "%LOCALAPPDATA%\\GameSoftware\\Saves\\world.sav"
+      ],
+      "width": 735,
+      "size": 15,
+      "weight": 400,
+      "role": "current_UI_body",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "%LOCALAPPDATA%\\GameSoftware\\Saves\\world.sav",
+      "lines": [
+        "%LOCALAPPDATA%\\GameSoftware\\Saves\\world.sav"
+      ],
+      "width": 735,
+      "size": 15,
+      "weight": 400,
+      "role": "current_UI_body",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "비행체를 착륙시키고 내린 뒤 저장하거나 행성을 선택해 주세요.",
+      "lines": [
+        "비행체를 착륙시키고 내린 뒤 저장하거나 ",
+        "행성을 선택해 주세요."
+      ],
+      "width": 660,
+      "size": 16,
+      "weight": 400,
+      "role": "current_UI_body",
+      "lossless": true,
+      "ellipsis": false
+    },
+    {
+      "source": "%LOCALAPPDATA%\\GameSoftware\\Saves\\world.sav",
+      "lines": [
+        "%LOCALAPPDATA%\\GameSoftware\\Saves\\world.sav"
+      ],
+      "width": 735,
+      "size": 15,
+      "weight": 400,
+      "role": "current_UI_body",
+      "lossless": true,
+      "ellipsis": false
     }
   ],
   "policy": "Lossless wrap and numbered pages; do not ellipsize required text"

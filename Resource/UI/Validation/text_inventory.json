@@ -6728,5 +6728,1335 @@
     "screen": "70_activity_symbols",
     "text": "activity_map",
     "size": 14
+  },
+  {
+    "screen": "71_stamina_sprint",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "71_stamina_sprint",
+    "text": "헤일로",
+    "size": 16
+  },
+  {
+    "screen": "71_stamina_sprint",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "71_stamina_sprint",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "71_stamina_sprint",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "72_stamina_low",
+    "text": "미탐험",
+    "size": 14
+  },
+  {
+    "screen": "72_stamina_low",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "72_stamina_low",
+    "text": "광산 · 탐험 구간",
+    "size": 16
+  },
+  {
+    "screen": "72_stamina_low",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "72_stamina_low",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "72_stamina_low",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "72_stamina_low",
+    "text": "회피에 필요한 스태미너 부족",
+    "size": 14
+  },
+  {
+    "screen": "73_stamina_dodge",
+    "text": "미탐험",
+    "size": 14
+  },
+  {
+    "screen": "73_stamina_dodge",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "73_stamina_dodge",
+    "text": "광산 · 탐험 구간",
+    "size": 16
+  },
+  {
+    "screen": "73_stamina_dodge",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "73_stamina_dodge",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "73_stamina_dodge",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "73_stamina_dodge",
+    "text": "회피 중 · 공격 제한",
+    "size": 14
+  },
+  {
+    "screen": "74_carbine_focus",
+    "text": "미탐험",
+    "size": 14
+  },
+  {
+    "screen": "74_carbine_focus",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "74_carbine_focus",
+    "text": "광산 · 탐험 구간",
+    "size": 16
+  },
+  {
+    "screen": "74_carbine_focus",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "74_carbine_focus",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "74_carbine_focus",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "74_carbine_focus",
+    "text": "펄스 카빈",
+    "size": 16
+  },
+  {
+    "screen": "74_carbine_focus",
+    "text": "18",
+    "size": 38
+  },
+  {
+    "screen": "74_carbine_focus",
+    "text": "/ 24",
+    "size": 22
+  },
+  {
+    "screen": "74_carbine_focus",
+    "text": "전술 집중",
+    "size": 16
+  },
+  {
+    "screen": "75_carbine_reload",
+    "text": "미탐험",
+    "size": 14
+  },
+  {
+    "screen": "75_carbine_reload",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "75_carbine_reload",
+    "text": "광산 · 탐험 구간",
+    "size": 16
+  },
+  {
+    "screen": "75_carbine_reload",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "75_carbine_reload",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "75_carbine_reload",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "75_carbine_reload",
+    "text": "펄스 카빈",
+    "size": 16
+  },
+  {
+    "screen": "75_carbine_reload",
+    "text": "00",
+    "size": 38
+  },
+  {
+    "screen": "75_carbine_reload",
+    "text": "/ 24",
+    "size": 22
+  },
+  {
+    "screen": "75_carbine_reload",
+    "text": "재장전 중",
+    "size": 16
+  },
+  {
+    "screen": "76_carbine_empty",
+    "text": "미탐험",
+    "size": 14
+  },
+  {
+    "screen": "76_carbine_empty",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "76_carbine_empty",
+    "text": "광산 · 탐험 구간",
+    "size": 16
+  },
+  {
+    "screen": "76_carbine_empty",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "76_carbine_empty",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "76_carbine_empty",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "76_carbine_empty",
+    "text": "펄스 카빈",
+    "size": 16
+  },
+  {
+    "screen": "76_carbine_empty",
+    "text": "00",
+    "size": 38
+  },
+  {
+    "screen": "76_carbine_empty",
+    "text": "/ 24",
+    "size": 22
+  },
+  {
+    "screen": "76_carbine_empty",
+    "text": "R 재장전",
+    "size": 16
+  },
+  {
+    "screen": "77_carbine_wheel",
+    "text": "장비",
+    "size": 16
+  },
+  {
+    "screen": "77_carbine_wheel",
+    "text": "무기 선택",
+    "size": 32
+  },
+  {
+    "screen": "77_carbine_wheel",
+    "text": "가리킨 뒤 Q를 놓으면 장착됩니다.",
+    "size": 18
+  },
+  {
+    "screen": "77_carbine_wheel",
+    "text": "주 무장",
+    "size": 18
+  },
+  {
+    "screen": "77_carbine_wheel",
+    "text": "펄스 카빈",
+    "size": 16
+  },
+  {
+    "screen": "77_carbine_wheel",
+    "text": "보조 무장",
+    "size": 18
+  },
+  {
+    "screen": "77_carbine_wheel",
+    "text": "현재 장착",
+    "size": 16
+  },
+  {
+    "screen": "77_carbine_wheel",
+    "text": "맨손",
+    "size": 18
+  },
+  {
+    "screen": "77_carbine_wheel",
+    "text": "근접 공격",
+    "size": 16
+  },
+  {
+    "screen": "77_carbine_wheel",
+    "text": "펄스 카빈",
+    "size": 24
+  },
+  {
+    "screen": "77_carbine_wheel",
+    "text": "Q 놓아서 선택",
+    "size": 16
+  },
+  {
+    "screen": "77_carbine_wheel",
+    "text": "Q 홀드",
+    "size": 14
+  },
+  {
+    "screen": "77_carbine_wheel",
+    "text": "마우스로 가리키기",
+    "size": 14
+  },
+  {
+    "screen": "77_carbine_wheel",
+    "text": "Q 해제",
+    "size": 14
+  },
+  {
+    "screen": "77_carbine_wheel",
+    "text": "장착",
+    "size": 14
+  },
+  {
+    "screen": "77_carbine_wheel",
+    "text": "Esc",
+    "size": 14
+  },
+  {
+    "screen": "77_carbine_wheel",
+    "text": "취소",
+    "size": 14
+  },
+  {
+    "screen": "77_carbine_wheel",
+    "text": "게임 일시정지 · 빈 슬롯과 취소는 기존 장착 유지",
+    "size": 16
+  },
+  {
+    "screen": "78_carbine_locked",
+    "text": "장비",
+    "size": 16
+  },
+  {
+    "screen": "78_carbine_locked",
+    "text": "무기 선택",
+    "size": 32
+  },
+  {
+    "screen": "78_carbine_locked",
+    "text": "가리킨 뒤 Q를 놓으면 장착됩니다.",
+    "size": 18
+  },
+  {
+    "screen": "78_carbine_locked",
+    "text": "주 무장",
+    "size": 18
+  },
+  {
+    "screen": "78_carbine_locked",
+    "text": "비어 있음",
+    "size": 16
+  },
+  {
+    "screen": "78_carbine_locked",
+    "text": "보조 무장",
+    "size": 18
+  },
+  {
+    "screen": "78_carbine_locked",
+    "text": "현재 장착",
+    "size": 16
+  },
+  {
+    "screen": "78_carbine_locked",
+    "text": "맨손",
+    "size": 18
+  },
+  {
+    "screen": "78_carbine_locked",
+    "text": "근접 공격",
+    "size": 16
+  },
+  {
+    "screen": "78_carbine_locked",
+    "text": "선택 불가",
+    "size": 24
+  },
+  {
+    "screen": "78_carbine_locked",
+    "text": "현재 장착 유지",
+    "size": 16
+  },
+  {
+    "screen": "78_carbine_locked",
+    "text": "Q 홀드",
+    "size": 14
+  },
+  {
+    "screen": "78_carbine_locked",
+    "text": "마우스로 가리키기",
+    "size": 14
+  },
+  {
+    "screen": "78_carbine_locked",
+    "text": "Q 해제",
+    "size": 14
+  },
+  {
+    "screen": "78_carbine_locked",
+    "text": "장착",
+    "size": 14
+  },
+  {
+    "screen": "78_carbine_locked",
+    "text": "Esc",
+    "size": 14
+  },
+  {
+    "screen": "78_carbine_locked",
+    "text": "취소",
+    "size": 14
+  },
+  {
+    "screen": "78_carbine_locked",
+    "text": "게임 일시정지 · 빈 슬롯과 취소는 기존 장착 유지",
+    "size": 16
+  },
+  {
+    "screen": "79_car_reverse",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "79_car_reverse",
+    "text": "헤일로",
+    "size": 16
+  },
+  {
+    "screen": "79_car_reverse",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "79_car_reverse",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "79_car_reverse",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "79_car_reverse",
+    "text": "4.6",
+    "size": 42
+  },
+  {
+    "screen": "79_car_reverse",
+    "text": "km/h",
+    "size": 18
+  },
+  {
+    "screen": "79_car_reverse",
+    "text": "후진",
+    "size": 16
+  },
+  {
+    "screen": "79_car_reverse",
+    "text": "내구도 106 / 140",
+    "size": 14
+  },
+  {
+    "screen": "80_flight_cruise",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "80_flight_cruise",
+    "text": "헤일로",
+    "size": 16
+  },
+  {
+    "screen": "80_flight_cruise",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "80_flight_cruise",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "80_flight_cruise",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "80_flight_cruise",
+    "text": "504",
+    "size": 42
+  },
+  {
+    "screen": "80_flight_cruise",
+    "text": "km/h",
+    "size": 18
+  },
+  {
+    "screen": "80_flight_cruise",
+    "text": "고도 210 m  ·  순항",
+    "size": 16
+  },
+  {
+    "screen": "80_flight_cruise",
+    "text": "내구도 160 / 160",
+    "size": 14
+  },
+  {
+    "screen": "81_flight_landing",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "81_flight_landing",
+    "text": "헤일로",
+    "size": 16
+  },
+  {
+    "screen": "81_flight_landing",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "81_flight_landing",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "81_flight_landing",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "81_flight_landing",
+    "text": "22",
+    "size": 42
+  },
+  {
+    "screen": "81_flight_landing",
+    "text": "km/h",
+    "size": 18
+  },
+  {
+    "screen": "81_flight_landing",
+    "text": "고도 22 m  ·  착륙 중",
+    "size": 16
+  },
+  {
+    "screen": "81_flight_landing",
+    "text": "내구도 126 / 160",
+    "size": 14
+  },
+  {
+    "screen": "81_flight_landing",
+    "text": "E 착륙 취소",
+    "size": 14
+  },
+  {
+    "screen": "82_flight_no_landing",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "82_flight_no_landing",
+    "text": "헤일로",
+    "size": 16
+  },
+  {
+    "screen": "82_flight_no_landing",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "82_flight_no_landing",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "82_flight_no_landing",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "82_flight_no_landing",
+    "text": "44",
+    "size": 42
+  },
+  {
+    "screen": "82_flight_no_landing",
+    "text": "km/h",
+    "size": 18
+  },
+  {
+    "screen": "82_flight_no_landing",
+    "text": "고도 44 m  ·  착륙 불가",
+    "size": 16
+  },
+  {
+    "screen": "82_flight_no_landing",
+    "text": "내구도 40 / 160",
+    "size": 14
+  },
+  {
+    "screen": "83_flight_grounded",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "83_flight_grounded",
+    "text": "헤일로",
+    "size": 16
+  },
+  {
+    "screen": "83_flight_grounded",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "83_flight_grounded",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "83_flight_grounded",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "83_flight_grounded",
+    "text": "0.0",
+    "size": 42
+  },
+  {
+    "screen": "83_flight_grounded",
+    "text": "km/h",
+    "size": 18
+  },
+  {
+    "screen": "83_flight_grounded",
+    "text": "고도 0 m  ·  착륙",
+    "size": 16
+  },
+  {
+    "screen": "83_flight_grounded",
+    "text": "내구도 126 / 160",
+    "size": 14
+  },
+  {
+    "screen": "83_flight_grounded",
+    "text": "E 하차",
+    "size": 14
+  },
+  {
+    "screen": "84_security_surrender",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "84_security_surrender",
+    "text": "헤일로",
+    "size": 16
+  },
+  {
+    "screen": "84_security_surrender",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "84_security_surrender",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "84_security_surrender",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "84_security_surrender",
+    "text": "★☆☆☆☆",
+    "size": 24
+  },
+  {
+    "screen": "84_security_surrender",
+    "text": "비무장 투항 가능",
+    "size": 16
+  },
+  {
+    "screen": "84_security_surrender",
+    "text": "지상에서 맨손으로 멈추고 순찰의 확인을 기다리세요.",
+    "size": 16
+  },
+  {
+    "screen": "85_security_interceptor",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "85_security_interceptor",
+    "text": "헤일로",
+    "size": 16
+  },
+  {
+    "screen": "85_security_interceptor",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "85_security_interceptor",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "85_security_interceptor",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "85_security_interceptor",
+    "text": "★★★★★",
+    "size": 24
+  },
+  {
+    "screen": "85_security_interceptor",
+    "text": "대공 요격 경계",
+    "size": 16
+  },
+  {
+    "screen": "85_security_interceptor",
+    "text": "보안망 추적 중",
+    "size": 16
+  },
+  {
+    "screen": "86_security_paid",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "86_security_paid",
+    "text": "헤일로",
+    "size": 16
+  },
+  {
+    "screen": "86_security_paid",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "86_security_paid",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "86_security_paid",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "86_security_paid",
+    "text": "비무장 투항 확인 · 수배 해제",
+    "size": 16
+  },
+  {
+    "screen": "86_security_paid",
+    "text": "벌금 100 크레딧 정산",
+    "size": 16
+  },
+  {
+    "screen": "87_relay_ready",
+    "text": "행성 개관 · 에르마",
+    "size": 30
+  },
+  {
+    "screen": "87_relay_ready",
+    "text": "휠 확대·축소  ·  C 내 위치  ·  P 행성 전체  ·  0 초기화",
+    "size": 16
+  },
+  {
+    "screen": "87_relay_ready",
+    "text": "N ↗",
+    "size": 20
+  },
+  {
+    "screen": "87_relay_ready",
+    "text": "등록 중계환",
+    "size": 23
+  },
+  {
+    "screen": "87_relay_ready",
+    "text": "L 필터  ·  발견 / 등록",
+    "size": 16
+  },
+  {
+    "screen": "87_relay_ready",
+    "text": "헤일로 · 07",
+    "size": 16
+  },
+  {
+    "screen": "87_relay_ready",
+    "text": "외곽 주거 구역 · 12",
+    "size": 16
+  },
+  {
+    "screen": "87_relay_ready",
+    "text": "개척지 지원 구역 · 08",
+    "size": 16
+  },
+  {
+    "screen": "87_relay_ready",
+    "text": "목록 1 / 2  ·  [ 이전   ] 다음",
+    "size": 16
+  },
+  {
+    "screen": "87_relay_ready",
+    "text": "선택한 중계환으로 이동 · T",
+    "size": 16
+  },
+  {
+    "screen": "87_relay_ready",
+    "text": "현장 E 등록 · 탑승 중이면 주차 후 이동. ",
+    "size": 18
+  },
+  {
+    "screen": "87_relay_ready",
+    "text": "차량은 출발지에 남습니다.",
+    "size": 18
+  },
+  {
+    "screen": "87_relay_ready",
+    "text": "청록 · 선택 중계환",
+    "size": 16
+  },
+  {
+    "screen": "87_relay_ready",
+    "text": "금색 핀 · 지정 목적지",
+    "size": 16
+  },
+  {
+    "screen": "87_relay_ready",
+    "text": "좌클릭 선택 · 우클릭 해제 · M 닫기",
+    "size": 16
+  },
+  {
+    "screen": "88_relay_blocked",
+    "text": "행성 개관 · 에르마",
+    "size": 30
+  },
+  {
+    "screen": "88_relay_blocked",
+    "text": "휠 확대·축소  ·  C 내 위치  ·  P 행성 전체  ·  0 초기화",
+    "size": 16
+  },
+  {
+    "screen": "88_relay_blocked",
+    "text": "N ↗",
+    "size": 20
+  },
+  {
+    "screen": "88_relay_blocked",
+    "text": "등록 중계환",
+    "size": 23
+  },
+  {
+    "screen": "88_relay_blocked",
+    "text": "L 필터  ·  발견 / 등록",
+    "size": 16
+  },
+  {
+    "screen": "88_relay_blocked",
+    "text": "헤일로 · 07",
+    "size": 16
+  },
+  {
+    "screen": "88_relay_blocked",
+    "text": "외곽 주거 구역 · 12",
+    "size": 16
+  },
+  {
+    "screen": "88_relay_blocked",
+    "text": "개척지 지원 구역 · 08",
+    "size": 16
+  },
+  {
+    "screen": "88_relay_blocked",
+    "text": "목록 1 / 2  ·  [ 이전   ] 다음",
+    "size": 16
+  },
+  {
+    "screen": "88_relay_blocked",
+    "text": "선택한 중계환으로 이동 · T",
+    "size": 16
+  },
+  {
+    "screen": "88_relay_blocked",
+    "text": "차량을 주차하고 내려 주세요. ",
+    "size": 18
+  },
+  {
+    "screen": "88_relay_blocked",
+    "text": "차량은 출발지에 남습니다.",
+    "size": 18
+  },
+  {
+    "screen": "88_relay_blocked",
+    "text": "청록 · 선택 중계환",
+    "size": 16
+  },
+  {
+    "screen": "88_relay_blocked",
+    "text": "금색 핀 · 지정 목적지",
+    "size": 16
+  },
+  {
+    "screen": "88_relay_blocked",
+    "text": "좌클릭 선택 · 우클릭 해제 · M 닫기",
+    "size": 16
+  },
+  {
+    "screen": "89_relay_prep",
+    "text": "행성 개관 · 에르마",
+    "size": 30
+  },
+  {
+    "screen": "89_relay_prep",
+    "text": "휠 확대·축소  ·  C 내 위치  ·  P 행성 전체  ·  0 초기화",
+    "size": 16
+  },
+  {
+    "screen": "89_relay_prep",
+    "text": "N ↗",
+    "size": 20
+  },
+  {
+    "screen": "89_relay_prep",
+    "text": "등록 중계환",
+    "size": 23
+  },
+  {
+    "screen": "89_relay_prep",
+    "text": "L 필터  ·  발견 / 등록",
+    "size": 16
+  },
+  {
+    "screen": "89_relay_prep",
+    "text": "헤일로 · 07",
+    "size": 16
+  },
+  {
+    "screen": "89_relay_prep",
+    "text": "외곽 주거 구역 · 12",
+    "size": 16
+  },
+  {
+    "screen": "89_relay_prep",
+    "text": "개척지 지원 구역 · 08",
+    "size": 16
+  },
+  {
+    "screen": "89_relay_prep",
+    "text": "목적지 준비 중",
+    "size": 16
+  },
+  {
+    "screen": "89_relay_prep",
+    "text": "중계 이동 취소 · X / Esc",
+    "size": 16
+  },
+  {
+    "screen": "89_relay_prep",
+    "text": "목적지 지형을 준비하고 있습니다. ",
+    "size": 18
+  },
+  {
+    "screen": "89_relay_prep",
+    "text": "취소하면 현재 위치에서 계속합니다.",
+    "size": 18
+  },
+  {
+    "screen": "89_relay_prep",
+    "text": "청록 · 선택 중계환",
+    "size": 16
+  },
+  {
+    "screen": "89_relay_prep",
+    "text": "금색 핀 · 지정 목적지",
+    "size": 16
+  },
+  {
+    "screen": "89_relay_prep",
+    "text": "준비가 끝날 때까지 다른 이동 입력이 잠깁니다.",
+    "size": 16
+  },
+  {
+    "screen": "90_checkpoint_ready",
+    "text": "월드 저장 · 불러오기",
+    "size": 28
+  },
+  {
+    "screen": "90_checkpoint_ready",
+    "text": "현재 월드 저장 · F5",
+    "size": 16
+  },
+  {
+    "screen": "90_checkpoint_ready",
+    "text": "저장된 월드 불러오기",
+    "size": 16
+  },
+  {
+    "screen": "90_checkpoint_ready",
+    "text": "불러오면 마지막 저장 이후의 진행을 되돌립니다.",
+    "size": 20
+  },
+  {
+    "screen": "90_checkpoint_ready",
+    "text": "저장 위치",
+    "size": 16
+  },
+  {
+    "screen": "90_checkpoint_ready",
+    "text": "%LOCALAPPDATA%\\GameSoftware\\Saves\\world.sav",
+    "size": 16
+  },
+  {
+    "screen": "90_checkpoint_ready",
+    "text": "뒤로 · Esc",
+    "size": 16
+  },
+  {
+    "screen": "91_checkpoint_empty",
+    "text": "월드 저장 · 불러오기",
+    "size": 28
+  },
+  {
+    "screen": "91_checkpoint_empty",
+    "text": "현재 월드 저장 · F5",
+    "size": 16
+  },
+  {
+    "screen": "91_checkpoint_empty",
+    "text": "저장된 월드 불러오기",
+    "size": 16
+  },
+  {
+    "screen": "91_checkpoint_empty",
+    "text": "저장된 월드가 없습니다.",
+    "size": 20
+  },
+  {
+    "screen": "91_checkpoint_empty",
+    "text": "저장 위치",
+    "size": 16
+  },
+  {
+    "screen": "91_checkpoint_empty",
+    "text": "%LOCALAPPDATA%\\GameSoftware\\Saves\\world.sav",
+    "size": 16
+  },
+  {
+    "screen": "91_checkpoint_empty",
+    "text": "뒤로 · Esc",
+    "size": 16
+  },
+  {
+    "screen": "92_checkpoint_restricted",
+    "text": "월드 저장 · 불러오기",
+    "size": 28
+  },
+  {
+    "screen": "92_checkpoint_restricted",
+    "text": "현재 월드 저장 · F5",
+    "size": 16
+  },
+  {
+    "screen": "92_checkpoint_restricted",
+    "text": "저장된 월드 불러오기",
+    "size": 16
+  },
+  {
+    "screen": "92_checkpoint_restricted",
+    "text": "비행체를 착륙시키고 내린 뒤 저장하거나 ",
+    "size": 18
+  },
+  {
+    "screen": "92_checkpoint_restricted",
+    "text": "행성을 선택해 주세요.",
+    "size": 18
+  },
+  {
+    "screen": "92_checkpoint_restricted",
+    "text": "저장 위치",
+    "size": 16
+  },
+  {
+    "screen": "92_checkpoint_restricted",
+    "text": "%LOCALAPPDATA%\\GameSoftware\\Saves\\world.sav",
+    "size": 16
+  },
+  {
+    "screen": "92_checkpoint_restricted",
+    "text": "뒤로 · Esc",
+    "size": 16
+  },
+  {
+    "screen": "93_checkpoint_loading",
+    "text": "월드 저장 · 불러오기",
+    "size": 28
+  },
+  {
+    "screen": "93_checkpoint_loading",
+    "text": "저장된 월드를 준비하고 있습니다.",
+    "size": 23
+  },
+  {
+    "screen": "93_checkpoint_loading",
+    "text": "완료되면 저장된 시점부터 이어집니다.",
+    "size": 18
+  },
+  {
+    "screen": "93_checkpoint_loading",
+    "text": "불러오기 취소 · Esc",
+    "size": 16
+  },
+  {
+    "screen": "94_planet_profiles",
+    "text": "행성 선택 · 탐사 테스트",
+    "size": 28
+  },
+  {
+    "screen": "94_planet_profiles",
+    "text": "에르마 · 현재 행성",
+    "size": 16
+  },
+  {
+    "screen": "94_planet_profiles",
+    "text": "세이라",
+    "size": 16
+  },
+  {
+    "screen": "94_planet_profiles",
+    "text": "오르엔",
+    "size": 16
+  },
+  {
+    "screen": "94_planet_profiles",
+    "text": "행성별 탐험 기록은 유지됩니다.",
+    "size": 20
+  },
+  {
+    "screen": "94_planet_profiles",
+    "text": "지상에서 하차한 뒤 선택할 수 있습니다.",
+    "size": 18
+  },
+  {
+    "screen": "94_planet_profiles",
+    "text": "뒤로 · Esc",
+    "size": 16
+  },
+  {
+    "screen": "95_flight_landing_ready",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "95_flight_landing_ready",
+    "text": "헤일로",
+    "size": 16
+  },
+  {
+    "screen": "95_flight_landing_ready",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "95_flight_landing_ready",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "95_flight_landing_ready",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "95_flight_landing_ready",
+    "text": "16",
+    "size": 42
+  },
+  {
+    "screen": "95_flight_landing_ready",
+    "text": "km/h",
+    "size": 18
+  },
+  {
+    "screen": "95_flight_landing_ready",
+    "text": "고도 9 m  ·  착륙 가능",
+    "size": 16
+  },
+  {
+    "screen": "95_flight_landing_ready",
+    "text": "내구도 138 / 160",
+    "size": 14
+  },
+  {
+    "screen": "95_flight_landing_ready",
+    "text": "E 착륙",
+    "size": 14
+  },
+  {
+    "screen": "96_aircraft_crash_notice",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "96_aircraft_crash_notice",
+    "text": "헤일로",
+    "size": 16
+  },
+  {
+    "screen": "96_aircraft_crash_notice",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "96_aircraft_crash_notice",
+    "text": "22",
+    "size": 28
+  },
+  {
+    "screen": "96_aircraft_crash_notice",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "96_aircraft_crash_notice",
+    "text": "위험 · G 회복",
+    "size": 18
+  },
+  {
+    "screen": "96_aircraft_crash_notice",
+    "text": "비행체 추락 폭발",
+    "size": 20
+  },
+  {
+    "screen": "96_aircraft_crash_notice",
+    "text": "주변 충격 피해가 발생했습니다.",
+    "size": 16
+  },
+  {
+    "screen": "97_flight_controls",
+    "text": "공용 비행체 조작",
+    "size": 30
+  },
+  {
+    "screen": "97_flight_controls",
+    "text": "W / S",
+    "size": 14
+  },
+  {
+    "screen": "97_flight_controls",
+    "text": "전진 / 감속",
+    "size": 16
+  },
+  {
+    "screen": "97_flight_controls",
+    "text": "A / D",
+    "size": 14
+  },
+  {
+    "screen": "97_flight_controls",
+    "text": "조향",
+    "size": 16
+  },
+  {
+    "screen": "97_flight_controls",
+    "text": "Space / C",
+    "size": 14
+  },
+  {
+    "screen": "97_flight_controls",
+    "text": "상승 / 하강",
+    "size": 16
+  },
+  {
+    "screen": "97_flight_controls",
+    "text": "Shift + W",
+    "size": 14
+  },
+  {
+    "screen": "97_flight_controls",
+    "text": "고고도 순항",
+    "size": 16
+  },
+  {
+    "screen": "97_flight_controls",
+    "text": "X",
+    "size": 14
+  },
+  {
+    "screen": "97_flight_controls",
+    "text": "제동",
+    "size": 16
+  },
+  {
+    "screen": "97_flight_controls",
+    "text": "E",
+    "size": 14
+  },
+  {
+    "screen": "97_flight_controls",
+    "text": "착륙 / 착륙 취소 / 하차",
+    "size": 16
+  },
+  {
+    "screen": "97_flight_controls",
+    "text": "착륙 가능 표시가 뜨면 E로 착륙할 수 있습니다.",
+    "size": 18
+  },
+  {
+    "screen": "97_flight_controls",
+    "text": "뒤로 · Esc",
+    "size": 16
   }
 ]

@@ -38,7 +38,8 @@ enum class ContentForm : std::uint8_t
     Salvage,
     Reeds,
     Rock,
-    Vehicle
+    Vehicle,
+    MeasuredBuilding
 };
 enum class ContentUse : std::uint8_t
 {

@@ -296,10 +296,10 @@ void Drawing::DrawInteractionMarker(Vector2 worldPosition, const std::string &la
 // ============================================================================
 void Drawing::DrawModel3D(const models::Model &model, Vector2 screen, models::Point scale,
                           const models::Transform3D &transform, float depth, const models::Palette &palette,
-                          const models::CharacterPose *pose, float shadowGroundZ)
+                          const models::CharacterPose *pose, float shadowGroundZ, float damage)
 {
     if (GameRenderer::Get().Backend().SubmitModel(model, {screen.x, screen.y}, scale, transform, depth,
-                                                  palette, pose, shadowGroundZ))
+                                                  palette, pose, shadowGroundZ, damage))
     {
         return;
     }
@@ -410,7 +410,7 @@ void Drawing::DrawModel3D(const models::Model &model, Vector2 screen, models::Po
 void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models::CharacterType type,
                          bool walking, float facingYaw, models::Gender gender, models::HairStyle hair,
                          bool npcArmed, float npcFlash, bool downed, float locomotionSpeed,
-                         float reloadProgress, const MovementFacing *motion)
+                         float reloadProgress, const MovementFacing *motion, const ai::SupportState *support)
 {
     auto &world = Game::Get().GetState();
     Vector2 screen = WorldToScreen(position.x, position.y);
@@ -419,10 +419,16 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
     {
         DrawEllipse(screen.x, screen.y, 16, 6, {.25f, .95f, .9f, .17f});
     }
+    const bool carryingSupply =
+        !isPlayer && !downed && support && support->task == ai::SupportTask::Supply;
+    const bool performingSupport =
+        !isPlayer && !downed && support && support->performing &&
+        (support->task == ai::SupportTask::Aid || support->task == ai::SupportTask::Inspect);
     bool armed =
-        (isPlayer && Game::Get().Loadout().IsFirearmEquipped() &&
-         (game::GameLevels::IsCombatActive() || CivicJustice::IsExterior()) && !world.isBikeMounted) ||
-        npcArmed;
+        ((isPlayer && Game::Get().Loadout().IsFirearmEquipped() &&
+          (game::GameLevels::IsCombatActive() || CivicJustice::IsExterior()) && !world.isBikeMounted) ||
+         npcArmed) &&
+        !carryingSupply && !performingSupport;
     float yaw = isPlayer ? world.facingYaw : facingYaw;
     if (isPlayer)
     {
@@ -459,6 +465,56 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
         {
             motion->ApplyMotion(pose);
         }
+        if (performingSupport && support->task == ai::SupportTask::Aid)
+        {
+            const float t = support->progressSeconds;
+            const float dur = ai::Support::kAidSeconds;
+            if (t < .80f)
+            {
+                pose.supportClip = 0; // Support_Treat_Enter
+                pose.supportPhase = std::clamp(t / .80f, 0.f, 1.f);
+            }
+            else if (t > dur - .70f)
+            {
+                pose.supportClip = 2; // Support_Treat_Exit
+                pose.supportPhase = std::clamp((t - (dur - .70f)) / .70f, 0.f, 1.f);
+            }
+            else
+            {
+                pose.supportClip = 1; // Support_Treat_Loop
+                pose.supportPhase = std::fmod((t - .80f) / 1.20f, 1.f);
+            }
+            pose.supportWeight = std::clamp(t / .16f, 0.f, 1.f) * std::clamp((dur - t) / .16f, 0.f, 1.f);
+        }
+        else if (performingSupport && support->task == ai::SupportTask::Inspect)
+        {
+            const float t = support->progressSeconds;
+            const float dur = ai::Support::kInspectSeconds;
+            if (t < .50f)
+            {
+                pose.supportClip = 3; // Support_Inspect_Enter
+                pose.supportPhase = std::clamp(t / .50f, 0.f, 1.f);
+            }
+            else if (t > dur - .50f)
+            {
+                pose.supportClip = 5; // Support_Inspect_Exit
+                pose.supportPhase = std::clamp((t - (dur - .50f)) / .50f, 0.f, 1.f);
+            }
+            else
+            {
+                pose.supportClip = 4; // Support_Inspect_Loop
+                pose.supportPhase = std::fmod((t - .50f) / 1.40f, 1.f);
+            }
+            pose.supportWeight = std::clamp(t / .15f, 0.f, 1.f) * std::clamp((dur - t) / .15f, 0.f, 1.f);
+        }
+        else if (carryingSupply)
+        {
+            pose.supportClip = walking ? 7 : 6; // Support_Carry_Walk / Support_Carry_Idle
+            pose.supportPhase =
+                walking ? (pose.blended ? pose.locomotionPhase : std::fmod(pose.animationPhase / 10 * 1.5f, 1.f))
+                        : std::fmod(world.animationTimeSeconds / 2.f, 1.f);
+            pose.supportWeight = 1.f;
+        }
     }
     models::Palette palette;
     palette.body = {coat.r, coat.g, coat.b, coat.a};
@@ -469,7 +525,8 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
         rotation.pitch = -1.35f;
         rotation.position.z = .12f;
     }
-    DrawModel3D(models::ModelLibrary::Character(type, gender), screen,
+    const auto &characterModel = models::ModelLibrary::Character(type, gender);
+    DrawModel3D(characterModel, screen,
                 {models::WorldScale::characterScale, models::WorldScale::characterScale,
                  models::WorldScale::characterScale},
                 rotation, (position.x + position.y) * 36, palette, &pose);
@@ -477,6 +534,17 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
              {models::WorldScale::characterScale, models::WorldScale::characterScale,
               models::WorldScale::characterScale},
              rotation, (position.x + position.y) * 36, pose, type, gender, hair);
+    if (carryingSupply && characterModel.resourceId)
+    {
+        // CQ-07C2 carry prop contract: attach Interior_Med_Kit to animated hand.R socket.
+        const float bodyScale = models::WorldScale::characterScale;
+        const auto hand = models::ResourceAssets::HandR(characterModel.resourceId, pose);
+        models::Transform3D propTransform = rotation;
+        propTransform.position =
+            rotation.Apply({hand.x * bodyScale, hand.y * bodyScale, hand.z * bodyScale});
+        DrawModel3D(models::ModelLibrary::Get().recoveryKit, screen, {.85f, .85f, .85f}, propTransform,
+                    (position.x + position.y) * 36 + 1.f, models::Palette{});
+    }
     if (armed && flash > 0)
     {
         auto muzzle = models::ModelRig::Muzzle(pose);
@@ -673,7 +741,7 @@ models::Palette OcclusionPalette(const models::Model &model, Vector2 position, f
 } // namespace
 void Drawing::DrawWorldVehicle(Vector2 position, float altitude, float scale, models::VehicleType type,
                                const models::Palette &palette, float throttle, float yaw, bool wreck,
-                               bool playerDriven)
+                               bool playerDriven, float damage)
 {
     const auto &vehicle = models::ModelLibrary::Get().vehicles.at(size_t(type));
     auto screen = WorldToScreen(position.x, position.y, altitude);
@@ -689,7 +757,8 @@ void Drawing::DrawWorldVehicle(Vector2 position, float altitude, float scale, mo
                        throttle, (position.x + position.y) * 36 + altitude * (1296.f / 1936));
     }
     DrawModel3D(vehicle.body, screen, {scale, scale, scale}, rotation,
-                (position.x + position.y) * 36 + altitude * (1296.f / 1936), visiblePalette, &pose);
+                (position.x + position.y) * 36 + altitude * (1296.f / 1936), visiblePalette, &pose, 0,
+                wreck ? 1.f : damage);
 }
 void Drawing::DrawProp(const models::Model &model, Vector2 position, models::Point scale,
                        const models::Palette &palette, float yaw, float elevation)
@@ -706,7 +775,7 @@ void Drawing::DrawProp(const models::Model &model, Vector2 position, models::Poi
                 (position.x + position.y) * 36, visiblePalette);
 }
 void Drawing::DrawWorldAircraft(Vector2 position, float altitude, models::AircraftType type, bool alternate,
-                                float yaw, float bank, bool destroyed, float wreckOpacity)
+                                float yaw, float bank, bool destroyed, float wreckOpacity, float damage)
 {
     models::Transform3D transform;
     transform.yaw = yaw;
@@ -738,7 +807,7 @@ void Drawing::DrawWorldAircraft(Vector2 position, float altitude, models::Aircra
                        (position.x + position.y) * 36);
     }
     Drawing::DrawModel3D(model, WorldToScreen(position.x, position.y), {1, 1, 1}, transform,
-                         (position.x + position.y) * 36, palette, &pose);
+                         (position.x + position.y) * 36, palette, &pose, 0, destroyed ? 1.f : damage);
 }
 void Drawing::DrawWorldBike(Vector2 position, float yaw, float throttle, bool mounted)
 {

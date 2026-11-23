@@ -1,0 +1,89 @@
+{
+  "buildings": {
+    "Halo_Rowhouse": {
+      "sha256": "4a3112a759fdfecc7ac1d508e7afc7495c07f789398528fceb94b46270d9593f",
+      "parts": 18,
+      "nodes": 18,
+      "max_triangles": 120
+    },
+    "Halo_ServiceShop": {
+      "sha256": "c24bf5fdbc8c5dc92910b347a0075050a819496a772f9562c5cfa5549cff506b",
+      "parts": 9,
+      "nodes": 9,
+      "max_triangles": 96
+    },
+    "Halo_Clinic": {
+      "sha256": "a82dcf453480e23be093e84388dd1ade63bbf2b6178155f454ad46552c732f3d",
+      "parts": 14,
+      "nodes": 14,
+      "max_triangles": 96
+    },
+    "Karden_Logistics": {
+      "sha256": "7019001de3709dc03be0510e6597371564bd5a7a5780fcd0bda9737599cf2767",
+      "parts": 14,
+      "nodes": 14,
+      "max_triangles": 96
+    },
+    "Karden_TransitHall": {
+      "sha256": "bdf3fd9a094749c29339120eb49e484660026165839dd908738a35e226cb4935",
+      "parts": 14,
+      "nodes": 18,
+      "max_triangles": 96
+    },
+    "Karden_Market": {
+      "sha256": "74388869d1c2141c844878df3c60504f99e1c126e1bb5198ebafbfb63bb6c5bf",
+      "parts": 14,
+      "nodes": 14,
+      "max_triangles": 120
+    },
+    "Metro_MixedResidence": {
+      "sha256": "623351fbdbbdf9473ee9791c4092e71b1512cf350a56365f46b1c1c79f81dd95",
+      "parts": 28,
+      "nodes": 56,
+      "max_triangles": 120
+    },
+    "Metro_CivicCommerce": {
+      "sha256": "5a8f26786f9b7496139a1c2d48e5d5ca0012f8fe50f4f8660e80fc8929b4d038",
+      "parts": 25,
+      "nodes": 65,
+      "max_triangles": 120
+    },
+    "Capital_GateAdministration": {
+      "sha256": "dcb69758aee5c6262206709ab7eb57a0815123bbbd5a061322d00fe5d0a4d1b5",
+      "parts": 25,
+      "nodes": 73,
+      "max_triangles": 144
+    },
+    "Capital_PublicForum": {
+      "sha256": "6e63ae70bc87a7e645a68aed47c79ac099e6950175dcc001f742fe9a83651f9a",
+      "parts": 14,
+      "nodes": 22,
+      "max_triangles": 120
+    },
+    "Frontier_FieldWorkshop": {
+      "sha256": "506f06581deca5ba365046a4ce4a6c761b33c52c4bf2c7c9b0fa0201f3d62b45",
+      "parts": 9,
+      "nodes": 9,
+      "max_triangles": 96
+    },
+    "Frontier_FreightDepot": {
+      "sha256": "b0c15c4e09b2b0dfd29b444a65221fca0efa7898fad93175aacbfa84a5395eb6",
+      "parts": 14,
+      "nodes": 14,
+      "max_triangles": 96
+    },
+    "Frontier_DecommissionedRelay": {
+      "sha256": "6e26b4cef3c136908ce8e67262a0a31e2553b4d14877de04204ec5c07ca0b55e",
+      "parts": 9,
+      "nodes": 9,
+      "max_triangles": 72
+    },
+    "Mine_AccessSupport": {
+      "sha256": "f1204a075816b583375bfc2e58fe51bf43e073beb361180c8553603f5688430a",
+      "parts": 9,
+      "nodes": 9,
+      "max_triangles": 96
+    }
+  },
+  "all_checks_passed": true
+}

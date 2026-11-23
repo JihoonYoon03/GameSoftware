@@ -3,11 +3,13 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 
 export const maxPackBytes = 512 * 1024 * 1024;
-export const maxAnimationClips = 128;
+export const maxAnimationClips = 256;
 const buildFiles = [
     'tools/pack-resources.mjs', 'tools/road-plan-catalog.mjs', 'tools/resource-pack-inputs.mjs',
     'Resource/Documentation/assembly_recipes.json', 'Resource/Documentation/accessory_fitting_offsets.json',
     'Resource/Documentation/character_detail_assemblies.json', 'Resource/Documentation/architecture_styles.json',
+    'Resource/Documentation/measured_buildings.json', 'Resource/Documentation/support_animation_bank.json',
+    'Resource/Documentation/directional_transitions.json',
     'Resource/Documentation/scenery_assemblies.json', 'Resource/Documentation/transit_modules.json',
     'Resource/Documentation/road_plan_modules.json', 'SimpleGame/RoadPlanCatalog.h',
     'Resource/Documentation/aim_locomotion_blending.json'

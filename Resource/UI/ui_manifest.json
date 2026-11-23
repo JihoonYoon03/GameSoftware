@@ -1,7 +1,7 @@
 {
-  "version": "1.3.0",
+  "version": "1.4.0",
   "title": "ERMA / FIELD INTERFACE",
-  "date": "2026-11-09",
+  "date": "2026-11-23",
   "canvas": {
     "width": 1280,
     "height": 800,
@@ -613,6 +613,70 @@
     "activity_map": {
       "svg": "Source/Icons/activity_map.svg",
       "png": "Export/Icons/activity_map.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "stamina": {
+      "svg": "Source/Icons/stamina.svg",
+      "png": "Export/Icons/stamina.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "carbine": {
+      "svg": "Source/Icons/carbine.svg",
+      "png": "Export/Icons/carbine.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "ground_car": {
+      "svg": "Source/Icons/ground_car.svg",
+      "png": "Export/Icons/ground_car.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "flight": {
+      "svg": "Source/Icons/flight.svg",
+      "png": "Export/Icons/flight.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "landing": {
+      "svg": "Source/Icons/landing.svg",
+      "png": "Export/Icons/landing.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "security": {
+      "svg": "Source/Icons/security.svg",
+      "png": "Export/Icons/security.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "checkpoint": {
+      "svg": "Source/Icons/checkpoint.svg",
+      "png": "Export/Icons/checkpoint.png",
+      "width": 48,
+      "height": 48,
+      "logical_size": 24,
+      "stroke": 2.1
+    },
+    "relay": {
+      "svg": "Source/Icons/relay.svg",
+      "png": "Export/Icons/relay.png",
       "width": 48,
       "height": 48,
       "logical_size": 24,
@@ -1419,6 +1483,90 @@
         24
       ],
       "black_outline_baked": true
+    },
+    "stamina": {
+      "svg": "Source/HUDIcons/stamina.svg",
+      "png": "Export/HUDIcons/stamina.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "carbine": {
+      "svg": "Source/HUDIcons/carbine.svg",
+      "png": "Export/HUDIcons/carbine.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "ground_car": {
+      "svg": "Source/HUDIcons/ground_car.svg",
+      "png": "Export/HUDIcons/ground_car.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "flight": {
+      "svg": "Source/HUDIcons/flight.svg",
+      "png": "Export/HUDIcons/flight.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "landing": {
+      "svg": "Source/HUDIcons/landing.svg",
+      "png": "Export/HUDIcons/landing.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
+    },
+    "security": {
+      "svg": "Source/HUDIcons/security.svg",
+      "png": "Export/HUDIcons/security.png",
+      "width": 64,
+      "height": 64,
+      "logical_size": 32,
+      "content_box": [
+        4,
+        4,
+        24,
+        24
+      ],
+      "black_outline_baked": true
     }
   },
   "hud": {
@@ -1460,7 +1608,254 @@
     "runtime_integration": true,
     "runtime_validation": "source_connected; user_build_and_game_checks_pending"
   },
+  "current_play": {
+    "contract": "Source/current_play_ui.json",
+    "runtime_integration": true
+  },
   "screens": {
+    "71_stamina_sprint": {
+      "label": "도보 HUD / 달리기",
+      "requirements": [
+        "UI-01",
+        "UI-23"
+      ],
+      "svg": "Source/Screens/71_stamina_sprint.svg",
+      "png": "Preview/20261123/71_stamina_sprint.png"
+    },
+    "72_stamina_low": {
+      "label": "도보 HUD / 회피 불가",
+      "requirements": [
+        "UI-01",
+        "UI-23"
+      ],
+      "svg": "Source/Screens/72_stamina_low.svg",
+      "png": "Preview/20261123/72_stamina_low.png"
+    },
+    "73_stamina_dodge": {
+      "label": "도보 HUD / 회피 중 공격 제한",
+      "requirements": [
+        "UI-01",
+        "UI-03"
+      ],
+      "svg": "Source/Screens/73_stamina_dodge.svg",
+      "png": "Preview/20261123/73_stamina_dodge.png"
+    },
+    "74_carbine_focus": {
+      "label": "펄스 카빈 / 전술 집중",
+      "requirements": [
+        "UI-02",
+        "UI-03"
+      ],
+      "svg": "Source/Screens/74_carbine_focus.svg",
+      "png": "Preview/20261123/74_carbine_focus.png"
+    },
+    "75_carbine_reload": {
+      "label": "펄스 카빈 / 재장전",
+      "requirements": [
+        "UI-02",
+        "UI-03"
+      ],
+      "svg": "Source/Screens/75_carbine_reload.svg",
+      "png": "Preview/20261123/75_carbine_reload.png"
+    },
+    "76_carbine_empty": {
+      "label": "펄스 카빈 / 빈 탄창",
+      "requirements": [
+        "UI-02",
+        "UI-03"
+      ],
+      "svg": "Source/Screens/76_carbine_empty.svg",
+      "png": "Preview/20261123/76_carbine_empty.png"
+    },
+    "77_carbine_wheel": {
+      "label": "무기 선택 / 주 무장 후보",
+      "requirements": [
+        "UI-24"
+      ],
+      "svg": "Source/Screens/77_carbine_wheel.svg",
+      "png": "Preview/20261123/77_carbine_wheel.png"
+    },
+    "78_carbine_locked": {
+      "label": "무기 선택 / 주 무장 해금 전",
+      "requirements": [
+        "UI-24"
+      ],
+      "svg": "Source/Screens/78_carbine_locked.svg",
+      "png": "Preview/20261123/78_carbine_locked.png"
+    },
+    "79_car_reverse": {
+      "label": "공용차 / 후진과 내구도",
+      "requirements": [
+        "UI-13"
+      ],
+      "svg": "Source/Screens/79_car_reverse.svg",
+      "png": "Preview/20261123/79_car_reverse.png"
+    },
+    "80_flight_cruise": {
+      "label": "비행체 / 고고도 순항",
+      "requirements": [
+        "UI-13",
+        "UI-23"
+      ],
+      "svg": "Source/Screens/80_flight_cruise.svg",
+      "png": "Preview/20261123/80_flight_cruise.png"
+    },
+    "81_flight_landing": {
+      "label": "비행체 / 착륙 중",
+      "requirements": [
+        "UI-07",
+        "UI-13"
+      ],
+      "svg": "Source/Screens/81_flight_landing.svg",
+      "png": "Preview/20261123/81_flight_landing.png"
+    },
+    "82_flight_no_landing": {
+      "label": "비행체 / 착륙 불가",
+      "requirements": [
+        "UI-07",
+        "UI-13"
+      ],
+      "svg": "Source/Screens/82_flight_no_landing.svg",
+      "png": "Preview/20261123/82_flight_no_landing.png"
+    },
+    "83_flight_grounded": {
+      "label": "비행체 / 착륙과 하차",
+      "requirements": [
+        "UI-07",
+        "UI-13"
+      ],
+      "svg": "Source/Screens/83_flight_grounded.svg",
+      "png": "Preview/20261123/83_flight_grounded.png"
+    },
+    "84_security_surrender": {
+      "label": "수배 1단계 / 투항 조건 안내",
+      "requirements": [
+        "UI-12",
+        "UI-23"
+      ],
+      "svg": "Source/Screens/84_security_surrender.svg",
+      "png": "Preview/20261123/84_security_surrender.png"
+    },
+    "85_security_interceptor": {
+      "label": "수배 5단계 / 대공 요격 경고",
+      "requirements": [
+        "UI-12",
+        "UI-15"
+      ],
+      "svg": "Source/Screens/85_security_interceptor.svg",
+      "png": "Preview/20261123/85_security_interceptor.png"
+    },
+    "86_security_paid": {
+      "label": "투항 확인 / 실제 벌금 정산",
+      "requirements": [
+        "UI-12",
+        "UI-15"
+      ],
+      "svg": "Source/Screens/86_security_paid.svg",
+      "png": "Preview/20261123/86_security_paid.png"
+    },
+    "87_relay_ready": {
+      "label": "행성 지도 / 목적지 선택",
+      "requirements": [
+        "UI-06",
+        "UI-15"
+      ],
+      "svg": "Source/Screens/87_relay_ready.svg",
+      "png": "Preview/20261123/87_relay_ready.png"
+    },
+    "88_relay_blocked": {
+      "label": "행성 지도 / 차량 탑승 중 제한",
+      "requirements": [
+        "UI-06",
+        "UI-15"
+      ],
+      "svg": "Source/Screens/88_relay_blocked.svg",
+      "png": "Preview/20261123/88_relay_blocked.png"
+    },
+    "89_relay_prep": {
+      "label": "행성 지도 / 목적지 준비 및 취소",
+      "requirements": [
+        "UI-06",
+        "UI-15"
+      ],
+      "svg": "Source/Screens/89_relay_prep.svg",
+      "png": "Preview/20261123/89_relay_prep.png"
+    },
+    "90_checkpoint_ready": {
+      "label": "저장 / 현재 월드",
+      "requirements": [
+        "UI-17",
+        "UI-18",
+        "UI-22"
+      ],
+      "svg": "Source/Screens/90_checkpoint_ready.svg",
+      "png": "Preview/20261123/90_checkpoint_ready.png"
+    },
+    "91_checkpoint_empty": {
+      "label": "저장 / 저장 없음",
+      "requirements": [
+        "UI-17",
+        "UI-18",
+        "UI-22"
+      ],
+      "svg": "Source/Screens/91_checkpoint_empty.svg",
+      "png": "Preview/20261123/91_checkpoint_empty.png"
+    },
+    "92_checkpoint_restricted": {
+      "label": "저장 / 저장 제한",
+      "requirements": [
+        "UI-17",
+        "UI-18",
+        "UI-22"
+      ],
+      "svg": "Source/Screens/92_checkpoint_restricted.svg",
+      "png": "Preview/20261123/92_checkpoint_restricted.png"
+    },
+    "93_checkpoint_loading": {
+      "label": "저장 / 불러오기 및 취소",
+      "requirements": [
+        "UI-17",
+        "UI-18",
+        "UI-22"
+      ],
+      "svg": "Source/Screens/93_checkpoint_loading.svg",
+      "png": "Preview/20261123/93_checkpoint_loading.png"
+    },
+    "94_planet_profiles": {
+      "label": "행성 선택 / 탐사 테스트",
+      "requirements": [
+        "UI-17",
+        "UI-22"
+      ],
+      "svg": "Source/Screens/94_planet_profiles.svg",
+      "png": "Preview/20261123/94_planet_profiles.png"
+    },
+    "95_flight_landing_ready": {
+      "label": "비행체 / 착륙 가능",
+      "requirements": [
+        "UI-07",
+        "UI-13"
+      ],
+      "svg": "Source/Screens/95_flight_landing_ready.svg",
+      "png": "Preview/20261123/95_flight_landing_ready.png"
+    },
+    "96_aircraft_crash_notice": {
+      "label": "비행체 / 추락 경고",
+      "requirements": [
+        "UI-13",
+        "UI-15"
+      ],
+      "svg": "Source/Screens/96_aircraft_crash_notice.svg",
+      "png": "Preview/20261123/96_aircraft_crash_notice.png"
+    },
+    "97_flight_controls": {
+      "label": "조작 안내 / 공용 비행체",
+      "requirements": [
+        "UI-23"
+      ],
+      "svg": "Source/Screens/97_flight_controls.svg",
+      "png": "Preview/20261123/97_flight_controls.png"
+    },
     "50_story_tracking": {
       "label": "이야기 임무 / 참여와 추적 분리",
       "requirements": [

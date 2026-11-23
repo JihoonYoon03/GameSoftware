@@ -1,0 +1,7136 @@
+{
+  "schema": "erma.measured_buildings.v1",
+  "request": "GFX-02 / CQ-04C2",
+  "axes_authoring": "+X front, +Y side, +Z up",
+  "units": "m",
+  "gltf_transform": "(x,z,-y)",
+  "placement_scale": 1,
+  "retained_materials": [
+    "Ceramic",
+    "Copper",
+    "Frame_Graphite",
+    "Glass_Opaque",
+    "Glow_Amber",
+    "Glow_Cyan",
+    "Habitat_Concrete",
+    "Habitat_Panels",
+    "Ruin_Obsidian",
+    "Steel"
+  ],
+  "prefabs": {
+    "Halo_Rowhouse": {
+      "district": "town",
+      "source_scene": "Halo_Rowhouse",
+      "asset": "Export/MeasuredBuildings/Halo_Rowhouse.glb",
+      "structure_dimensions_m": [
+        11,
+        8,
+        9.0
+      ],
+      "story_heights_m": [
+        3.0,
+        3.0,
+        3.0
+      ],
+      "pivot_m": [
+        0,
+        0,
+        0
+      ],
+      "ground_contact_z_m": 0,
+      "floor_surface_z_m": 0.06,
+      "foundation_skirt_depth_m": 0.65,
+      "floor_bounds_xy_m": [
+        [
+          -5.5,
+          -4.0
+        ],
+        [
+          5.5,
+          4.0
+        ]
+      ],
+      "entrances": [
+        {
+          "kind": "pedestrian",
+          "outward_xyz": [
+            1,
+            0,
+            0
+          ],
+          "threshold_xyz_m": [
+            5.5,
+            0.0,
+            0.06
+          ],
+          "opening_width_m": 1.55,
+          "opening_height_m": 2.315,
+          "ramp_run_m": 1.2,
+          "outdoor_connection_xyz_m": [
+            6.7,
+            0.0,
+            0
+          ],
+          "interior_connection_xyz_m": [
+            2.7,
+            0.0,
+            0.06
+          ],
+          "keep_clear_xy_m": [
+            [
+              2.7,
+              -0.775
+            ],
+            [
+              6.7,
+              0.775
+            ]
+          ]
+        }
+      ],
+      "minimum_front_setback_m": 3.8,
+      "collision": {
+        "ground_wall_boxes_xyz_m": [
+          [
+            [
+              -5.5,
+              -4.0,
+              0.06
+            ],
+            [
+              -5.22,
+              4.0,
+              3.0
+            ]
+          ],
+          [
+            [
+              -5.22,
+              -4.0,
+              0.06
+            ],
+            [
+              5.22,
+              -3.7199999999999998,
+              3.0
+            ]
+          ],
+          [
+            [
+              -5.22,
+              3.7199999999999998,
+              0.06
+            ],
+            [
+              5.22,
+              4.0,
+              3.0
+            ]
+          ],
+          [
+            [
+              5.22,
+              -4.0,
+              0.06
+            ],
+            [
+              5.5,
+              -0.85,
+              3.0
+            ]
+          ],
+          [
+            [
+              5.22,
+              0.85,
+              0.06
+            ],
+            [
+              5.5,
+              4.0,
+              3.0
+            ]
+          ]
+        ],
+        "lintel_boxes_xyz_m": [
+          [
+            [
+              5.22,
+              -0.85,
+              2.41
+            ],
+            [
+              5.5,
+              0.85,
+              3.0
+            ]
+          ]
+        ],
+        "walk_surface_part": "Halo_Rowhouse_Foundation",
+        "upper_occlusion_begins_z_m": 3.0
+      },
+      "parts": {
+        "Halo_Rowhouse_Foundation": {
+          "role": "floor_and_skirt",
+          "triangles": 12,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Halo_Rowhouse_ThresholdRamp": {
+          "role": "walk_surface",
+          "triangles": 12,
+          "triangle_budget": 188,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Halo_Rowhouse_GroundShell": {
+          "role": "wall_collision",
+          "triangles": 72,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Panels"
+          ]
+        },
+        "Halo_Rowhouse_PortalFrame": {
+          "detail_source": "Halo_Rowhouse_PortalFrame_Detail",
+          "detail_triangles": 144,
+          "role": "static",
+          "triangles": 48,
+          "triangle_budget": 188,
+          "slots": [
+            "Steel",
+            "Glow_Cyan"
+          ]
+        },
+        "Halo_Rowhouse_GroundWindows": {
+          "role": "facade_glazing",
+          "triangles": 72,
+          "triangle_budget": 192,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Halo_Rowhouse_PortalFixture": {
+          "role": "static",
+          "triangles": 24,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Cyan"
+          ]
+        },
+        "Halo_Rowhouse_TerraceDeck_1": {
+          "role": "floor_and_occlusion",
+          "triangles": 12,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Halo_Rowhouse_Upper1_Shell": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Panels"
+          ]
+        },
+        "Halo_Rowhouse_Upper1_SlabBand": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Halo_Rowhouse_Upper1_EndGlazing": {
+          "role": "facade_glazing",
+          "triangles": 120,
+          "triangle_budget": 192,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Halo_Rowhouse_Upper1_SideGlazing": {
+          "role": "facade_glazing",
+          "triangles": 96,
+          "triangle_budget": 192,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Halo_Rowhouse_TerraceDeck_2": {
+          "role": "floor_and_occlusion",
+          "triangles": 12,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Halo_Rowhouse_Upper2_Shell": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Panels"
+          ]
+        },
+        "Halo_Rowhouse_Upper2_SlabBand": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Halo_Rowhouse_Upper2_EndGlazing": {
+          "role": "facade_glazing",
+          "triangles": 120,
+          "triangle_budget": 192,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Halo_Rowhouse_Upper2_SideGlazing": {
+          "role": "facade_glazing",
+          "triangles": 96,
+          "triangle_budget": 192,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Halo_Rowhouse_Roof": {
+          "role": "occlusion_roof",
+          "triangles": 60,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Halo_Rowhouse_RoofPlant": {
+          "detail_source": "Halo_Rowhouse_RoofPlant_Detail",
+          "detail_triangles": 168,
+          "role": "replaceable_equipment",
+          "triangles": 72,
+          "triangle_budget": 188,
+          "slots": [
+            "Habitat_Panels",
+            "Steel"
+          ]
+        }
+      },
+      "instances": [
+        {
+          "part_id": "Halo_Rowhouse_Foundation",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Halo_Rowhouse_ThresholdRamp",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Halo_Rowhouse_GroundShell",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Halo_Rowhouse_PortalFrame",
+          "translation_m": [
+            5.5,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Halo_Rowhouse_GroundWindows",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Halo_Rowhouse_PortalFixture",
+          "translation_m": [
+            5.5,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Halo_Rowhouse_TerraceDeck_1",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.0
+          ]
+        },
+        {
+          "part_id": "Halo_Rowhouse_Upper1_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.0
+          ]
+        },
+        {
+          "part_id": "Halo_Rowhouse_Upper1_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.0
+          ]
+        },
+        {
+          "part_id": "Halo_Rowhouse_Upper1_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.0
+          ]
+        },
+        {
+          "part_id": "Halo_Rowhouse_Upper1_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.0
+          ]
+        },
+        {
+          "part_id": "Halo_Rowhouse_TerraceDeck_2",
+          "translation_m": [
+            0.0,
+            0.0,
+            6.0
+          ]
+        },
+        {
+          "part_id": "Halo_Rowhouse_Upper2_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            6.0
+          ]
+        },
+        {
+          "part_id": "Halo_Rowhouse_Upper2_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            6.0
+          ]
+        },
+        {
+          "part_id": "Halo_Rowhouse_Upper2_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            6.0
+          ]
+        },
+        {
+          "part_id": "Halo_Rowhouse_Upper2_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            6.0
+          ]
+        },
+        {
+          "part_id": "Halo_Rowhouse_Roof",
+          "translation_m": [
+            0.0,
+            0.0,
+            9.0
+          ]
+        },
+        {
+          "part_id": "Halo_Rowhouse_RoofPlant",
+          "translation_m": [
+            -1.309499979019165,
+            0.550000011920929,
+            9.25
+          ]
+        }
+      ]
+    },
+    "Halo_ServiceShop": {
+      "district": "town",
+      "source_scene": "Halo_ServiceShop",
+      "asset": "Export/MeasuredBuildings/Halo_ServiceShop.glb",
+      "structure_dimensions_m": [
+        10,
+        13,
+        4.4
+      ],
+      "story_heights_m": [
+        4.4
+      ],
+      "pivot_m": [
+        0,
+        0,
+        0
+      ],
+      "ground_contact_z_m": 0,
+      "floor_surface_z_m": 0.06,
+      "foundation_skirt_depth_m": 0.65,
+      "floor_bounds_xy_m": [
+        [
+          -5.0,
+          -6.5
+        ],
+        [
+          5.0,
+          6.5
+        ]
+      ],
+      "entrances": [
+        {
+          "kind": "vehicle",
+          "outward_xyz": [
+            1,
+            0,
+            0
+          ],
+          "threshold_xyz_m": [
+            5.0,
+            0.0,
+            0.06
+          ],
+          "opening_width_m": 4.25,
+          "opening_height_m": 3.315,
+          "ramp_run_m": 1.2,
+          "outdoor_connection_xyz_m": [
+            6.2,
+            0.0,
+            0
+          ],
+          "interior_connection_xyz_m": [
+            2.2,
+            0.0,
+            0.06
+          ],
+          "keep_clear_xy_m": [
+            [
+              2.2,
+              -2.125
+            ],
+            [
+              6.2,
+              2.125
+            ]
+          ]
+        },
+        {
+          "kind": "pedestrian",
+          "outward_xyz": [
+            1,
+            0,
+            0
+          ],
+          "threshold_xyz_m": [
+            5.0,
+            3.4800000000000004,
+            0.06
+          ],
+          "opening_width_m": 1.4500000000000002,
+          "opening_height_m": 2.2849999999999997,
+          "ramp_run_m": 1.2,
+          "outdoor_connection_xyz_m": [
+            6.2,
+            3.4800000000000004,
+            0
+          ],
+          "interior_connection_xyz_m": [
+            2.2,
+            3.4800000000000004,
+            0.06
+          ],
+          "keep_clear_xy_m": [
+            [
+              2.2,
+              2.7550000000000003
+            ],
+            [
+              6.2,
+              4.205
+            ]
+          ]
+        }
+      ],
+      "minimum_front_setback_m": 5.0,
+      "collision": {
+        "ground_wall_boxes_xyz_m": [
+          [
+            [
+              -5.0,
+              -6.5,
+              0.06
+            ],
+            [
+              -4.72,
+              6.5,
+              4.4
+            ]
+          ],
+          [
+            [
+              -4.72,
+              -6.5,
+              0.06
+            ],
+            [
+              4.72,
+              -6.22,
+              4.4
+            ]
+          ],
+          [
+            [
+              -4.72,
+              6.22,
+              0.06
+            ],
+            [
+              4.72,
+              6.5,
+              4.4
+            ]
+          ],
+          [
+            [
+              4.72,
+              -6.5,
+              0.06
+            ],
+            [
+              5.0,
+              -2.2,
+              4.4
+            ]
+          ],
+          [
+            [
+              4.72,
+              2.2,
+              0.06
+            ],
+            [
+              5.0,
+              2.68,
+              4.4
+            ]
+          ],
+          [
+            [
+              4.72,
+              4.28,
+              0.06
+            ],
+            [
+              5.0,
+              6.5,
+              4.4
+            ]
+          ]
+        ],
+        "lintel_boxes_xyz_m": [
+          [
+            [
+              4.72,
+              -2.2,
+              3.41
+            ],
+            [
+              5.0,
+              2.2,
+              4.4
+            ]
+          ],
+          [
+            [
+              4.72,
+              2.68,
+              2.38
+            ],
+            [
+              5.0,
+              4.28,
+              4.4
+            ]
+          ]
+        ],
+        "walk_surface_part": "Halo_ServiceShop_Foundation",
+        "upper_occlusion_begins_z_m": 4.4
+      },
+      "parts": {
+        "Halo_ServiceShop_Foundation": {
+          "role": "floor_and_skirt",
+          "triangles": 12,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Halo_ServiceShop_ThresholdRamp": {
+          "role": "walk_surface",
+          "triangles": 24,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Halo_ServiceShop_GroundShell": {
+          "role": "wall_collision",
+          "triangles": 96,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Panels"
+          ]
+        },
+        "Halo_ServiceShop_PortalFrame": {
+          "detail_source": "Halo_ServiceShop_PortalFrame_Detail",
+          "detail_triangles": 192,
+          "role": "static",
+          "triangles": 96,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Cyan"
+          ]
+        },
+        "Halo_ServiceShop_GroundWindows": {
+          "role": "facade_glazing",
+          "triangles": 72,
+          "triangle_budget": 192,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Halo_ServiceShop_PortalFixture": {
+          "role": "static",
+          "triangles": 24,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Cyan"
+          ]
+        },
+        "Halo_ServiceShop_Roof": {
+          "role": "occlusion_roof",
+          "triangles": 60,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Halo_ServiceShop_RoofPlant": {
+          "detail_source": "Halo_ServiceShop_RoofPlant_Detail",
+          "detail_triangles": 168,
+          "role": "replaceable_equipment",
+          "triangles": 72,
+          "triangle_budget": 188,
+          "slots": [
+            "Habitat_Panels",
+            "Steel"
+          ]
+        },
+        "Halo_ServiceShop_RoofMonitor": {
+          "role": "occlusion_roof",
+          "triangles": 48,
+          "triangle_budget": 192,
+          "slots": [
+            "Frame_Graphite",
+            "Habitat_Panels",
+            "Glass_Opaque"
+          ]
+        }
+      },
+      "instances": [
+        {
+          "part_id": "Halo_ServiceShop_Foundation",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Halo_ServiceShop_ThresholdRamp",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Halo_ServiceShop_GroundShell",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Halo_ServiceShop_PortalFrame",
+          "translation_m": [
+            5.0,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Halo_ServiceShop_GroundWindows",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Halo_ServiceShop_PortalFixture",
+          "translation_m": [
+            5.0,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Halo_ServiceShop_Roof",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.400000095367432
+          ]
+        },
+        {
+          "part_id": "Halo_ServiceShop_RoofPlant",
+          "translation_m": [
+            -1.5299999713897705,
+            1.649999976158142,
+            4.650000095367432
+          ]
+        },
+        {
+          "part_id": "Halo_ServiceShop_RoofMonitor",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.650000095367432
+          ]
+        }
+      ]
+    },
+    "Halo_Clinic": {
+      "district": "town",
+      "source_scene": "Halo_Clinic",
+      "asset": "Export/MeasuredBuildings/Halo_Clinic.glb",
+      "structure_dimensions_m": [
+        13,
+        12,
+        7.0
+      ],
+      "story_heights_m": [
+        3.5,
+        3.5
+      ],
+      "pivot_m": [
+        0,
+        0,
+        0
+      ],
+      "ground_contact_z_m": 0,
+      "floor_surface_z_m": 0.06,
+      "foundation_skirt_depth_m": 0.65,
+      "floor_bounds_xy_m": [
+        [
+          -6.5,
+          -6.0
+        ],
+        [
+          6.5,
+          6.0
+        ]
+      ],
+      "entrances": [
+        {
+          "kind": "pedestrian",
+          "outward_xyz": [
+            1,
+            0,
+            0
+          ],
+          "threshold_xyz_m": [
+            6.5,
+            0.0,
+            0.06
+          ],
+          "opening_width_m": 2.65,
+          "opening_height_m": 2.6149999999999998,
+          "ramp_run_m": 1.2,
+          "outdoor_connection_xyz_m": [
+            7.7,
+            0.0,
+            0
+          ],
+          "interior_connection_xyz_m": [
+            3.7,
+            0.0,
+            0.06
+          ],
+          "keep_clear_xy_m": [
+            [
+              3.7,
+              -1.325
+            ],
+            [
+              7.7,
+              1.325
+            ]
+          ]
+        }
+      ],
+      "minimum_front_setback_m": 3.8,
+      "collision": {
+        "ground_wall_boxes_xyz_m": [
+          [
+            [
+              -6.5,
+              -6.0,
+              0.06
+            ],
+            [
+              -6.22,
+              6.0,
+              3.5
+            ]
+          ],
+          [
+            [
+              -6.22,
+              -6.0,
+              0.06
+            ],
+            [
+              6.22,
+              -5.72,
+              3.5
+            ]
+          ],
+          [
+            [
+              -6.22,
+              5.72,
+              0.06
+            ],
+            [
+              6.22,
+              6.0,
+              3.5
+            ]
+          ],
+          [
+            [
+              6.22,
+              -6.0,
+              0.06
+            ],
+            [
+              6.5,
+              -1.4,
+              3.5
+            ]
+          ],
+          [
+            [
+              6.22,
+              1.4,
+              0.06
+            ],
+            [
+              6.5,
+              6.0,
+              3.5
+            ]
+          ]
+        ],
+        "lintel_boxes_xyz_m": [
+          [
+            [
+              6.22,
+              -1.4,
+              2.71
+            ],
+            [
+              6.5,
+              1.4,
+              3.5
+            ]
+          ]
+        ],
+        "walk_surface_part": "Halo_Clinic_Foundation",
+        "upper_occlusion_begins_z_m": 3.5
+      },
+      "parts": {
+        "Halo_Clinic_Foundation": {
+          "role": "floor_and_skirt",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Halo_Clinic_ThresholdRamp": {
+          "role": "walk_surface",
+          "triangles": 12,
+          "triangle_budget": 188,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Halo_Clinic_GroundShell": {
+          "role": "wall_collision",
+          "triangles": 72,
+          "triangle_budget": 196,
+          "slots": [
+            "Ceramic"
+          ]
+        },
+        "Halo_Clinic_PortalFrame": {
+          "detail_source": "Halo_Clinic_PortalFrame_Detail",
+          "detail_triangles": 144,
+          "role": "static",
+          "triangles": 48,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Cyan"
+          ]
+        },
+        "Halo_Clinic_GroundWindows": {
+          "role": "facade_glazing",
+          "triangles": 72,
+          "triangle_budget": 192,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Halo_Clinic_PortalFixture": {
+          "role": "static",
+          "triangles": 24,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Cyan"
+          ]
+        },
+        "Halo_Clinic_TerraceDeck_1": {
+          "role": "floor_and_occlusion",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Halo_Clinic_Upper1_Shell": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 192,
+          "slots": [
+            "Ceramic"
+          ]
+        },
+        "Halo_Clinic_Upper1_SlabBand": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Halo_Clinic_Upper1_EndGlazing": {
+          "role": "facade_glazing",
+          "triangles": 96,
+          "triangle_budget": 192,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Halo_Clinic_Upper1_SideGlazing": {
+          "role": "facade_glazing",
+          "triangles": 96,
+          "triangle_budget": 192,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Halo_Clinic_Roof": {
+          "role": "occlusion_roof",
+          "triangles": 60,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Halo_Clinic_RoofPlant": {
+          "detail_source": "Halo_Clinic_RoofPlant_Detail",
+          "detail_triangles": 168,
+          "role": "replaceable_equipment",
+          "triangles": 72,
+          "triangle_budget": 188,
+          "slots": [
+            "Habitat_Panels",
+            "Steel"
+          ]
+        },
+        "Halo_Clinic_CivicLantern": {
+          "role": "occlusion_roof",
+          "triangles": 36,
+          "triangle_budget": 192,
+          "slots": [
+            "Glass_Opaque",
+            "Ceramic",
+            "Glow_Cyan"
+          ]
+        }
+      },
+      "instances": [
+        {
+          "part_id": "Halo_Clinic_Foundation",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Halo_Clinic_ThresholdRamp",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Halo_Clinic_GroundShell",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Halo_Clinic_PortalFrame",
+          "translation_m": [
+            6.5,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Halo_Clinic_GroundWindows",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Halo_Clinic_PortalFixture",
+          "translation_m": [
+            6.5,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Halo_Clinic_TerraceDeck_1",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.5
+          ]
+        },
+        {
+          "part_id": "Halo_Clinic_Upper1_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.5
+          ]
+        },
+        {
+          "part_id": "Halo_Clinic_Upper1_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.5
+          ]
+        },
+        {
+          "part_id": "Halo_Clinic_Upper1_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.5
+          ]
+        },
+        {
+          "part_id": "Halo_Clinic_Upper1_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.5
+          ]
+        },
+        {
+          "part_id": "Halo_Clinic_Roof",
+          "translation_m": [
+            0.0,
+            0.0,
+            7.0
+          ]
+        },
+        {
+          "part_id": "Halo_Clinic_RoofPlant",
+          "translation_m": [
+            -1.746000051498413,
+            1.225000023841858,
+            7.25
+          ]
+        },
+        {
+          "part_id": "Halo_Clinic_CivicLantern",
+          "translation_m": [
+            0.11999999731779099,
+            0.0,
+            7.25
+          ]
+        }
+      ]
+    },
+    "Karden_Logistics": {
+      "district": "small_city",
+      "source_scene": "Karden_Logistics",
+      "asset": "Export/MeasuredBuildings/Karden_Logistics.glb",
+      "structure_dimensions_m": [
+        24,
+        18,
+        9.0
+      ],
+      "story_heights_m": [
+        4.5,
+        4.5
+      ],
+      "pivot_m": [
+        0,
+        0,
+        0
+      ],
+      "ground_contact_z_m": 0,
+      "floor_surface_z_m": 0.06,
+      "foundation_skirt_depth_m": 0.65,
+      "floor_bounds_xy_m": [
+        [
+          -12.0,
+          -9.0
+        ],
+        [
+          12.0,
+          9.0
+        ]
+      ],
+      "entrances": [
+        {
+          "kind": "vehicle",
+          "outward_xyz": [
+            1,
+            0,
+            0
+          ],
+          "threshold_xyz_m": [
+            12.0,
+            0.0,
+            0.06
+          ],
+          "opening_width_m": 6.05,
+          "opening_height_m": 3.965,
+          "ramp_run_m": 1.2,
+          "outdoor_connection_xyz_m": [
+            13.2,
+            0.0,
+            0
+          ],
+          "interior_connection_xyz_m": [
+            9.2,
+            0.0,
+            0.06
+          ],
+          "keep_clear_xy_m": [
+            [
+              9.2,
+              -3.025
+            ],
+            [
+              13.2,
+              3.025
+            ]
+          ]
+        },
+        {
+          "kind": "pedestrian",
+          "outward_xyz": [
+            1,
+            0,
+            0
+          ],
+          "threshold_xyz_m": [
+            12.0,
+            4.38,
+            0.06
+          ],
+          "opening_width_m": 1.4499999999999997,
+          "opening_height_m": 2.2849999999999997,
+          "ramp_run_m": 1.2,
+          "outdoor_connection_xyz_m": [
+            13.2,
+            4.38,
+            0
+          ],
+          "interior_connection_xyz_m": [
+            9.2,
+            4.38,
+            0.06
+          ],
+          "keep_clear_xy_m": [
+            [
+              9.2,
+              3.6550000000000002
+            ],
+            [
+              13.2,
+              5.1049999999999995
+            ]
+          ]
+        }
+      ],
+      "minimum_front_setback_m": 5.0,
+      "collision": {
+        "ground_wall_boxes_xyz_m": [
+          [
+            [
+              -12.0,
+              -9.0,
+              0.06
+            ],
+            [
+              -11.72,
+              9.0,
+              4.5
+            ]
+          ],
+          [
+            [
+              -11.72,
+              -9.0,
+              0.06
+            ],
+            [
+              11.72,
+              -8.72,
+              4.5
+            ]
+          ],
+          [
+            [
+              -11.72,
+              8.72,
+              0.06
+            ],
+            [
+              11.72,
+              9.0,
+              4.5
+            ]
+          ],
+          [
+            [
+              11.72,
+              -9.0,
+              0.06
+            ],
+            [
+              12.0,
+              -3.1,
+              4.5
+            ]
+          ],
+          [
+            [
+              11.72,
+              3.1,
+              0.06
+            ],
+            [
+              12.0,
+              3.58,
+              4.5
+            ]
+          ],
+          [
+            [
+              11.72,
+              5.18,
+              0.06
+            ],
+            [
+              12.0,
+              9.0,
+              4.5
+            ]
+          ]
+        ],
+        "lintel_boxes_xyz_m": [
+          [
+            [
+              11.72,
+              -3.1,
+              4.06
+            ],
+            [
+              12.0,
+              3.1,
+              4.5
+            ]
+          ],
+          [
+            [
+              11.72,
+              3.58,
+              2.38
+            ],
+            [
+              12.0,
+              5.18,
+              4.5
+            ]
+          ]
+        ],
+        "walk_surface_part": "Karden_Logistics_Foundation",
+        "upper_occlusion_begins_z_m": 4.5
+      },
+      "parts": {
+        "Karden_Logistics_Foundation": {
+          "role": "floor_and_skirt",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Karden_Logistics_ThresholdRamp": {
+          "role": "walk_surface",
+          "triangles": 24,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Karden_Logistics_GroundShell": {
+          "role": "wall_collision",
+          "triangles": 96,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Panels"
+          ]
+        },
+        "Karden_Logistics_PortalFrame": {
+          "detail_source": "Karden_Logistics_PortalFrame_Detail",
+          "detail_triangles": 192,
+          "role": "static",
+          "triangles": 96,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Amber"
+          ]
+        },
+        "Karden_Logistics_GroundWindows": {
+          "role": "facade_glazing",
+          "triangles": 72,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Karden_Logistics_PortalFixture": {
+          "role": "static",
+          "triangles": 48,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Cyan"
+          ]
+        },
+        "Karden_Logistics_TerraceDeck_1": {
+          "role": "floor_and_occlusion",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Karden_Logistics_Upper1_Shell": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Panels"
+          ]
+        },
+        "Karden_Logistics_Upper1_SlabBand": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Karden_Logistics_Upper1_EndGlazing": {
+          "role": "facade_glazing",
+          "triangles": 96,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Karden_Logistics_Upper1_SideGlazing": {
+          "role": "facade_glazing",
+          "triangles": 96,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Karden_Logistics_Roof": {
+          "role": "occlusion_roof",
+          "triangles": 60,
+          "triangle_budget": 196,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Karden_Logistics_RoofPlant": {
+          "detail_source": "Karden_Logistics_RoofPlant_Detail",
+          "detail_triangles": 168,
+          "role": "replaceable_equipment",
+          "triangles": 72,
+          "triangle_budget": 188,
+          "slots": [
+            "Habitat_Panels",
+            "Steel"
+          ]
+        },
+        "Karden_Logistics_RoofMonitor": {
+          "role": "occlusion_roof",
+          "triangles": 48,
+          "triangle_budget": 196,
+          "slots": [
+            "Frame_Graphite",
+            "Habitat_Panels",
+            "Glass_Opaque"
+          ]
+        }
+      },
+      "instances": [
+        {
+          "part_id": "Karden_Logistics_Foundation",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Karden_Logistics_ThresholdRamp",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Karden_Logistics_GroundShell",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Karden_Logistics_PortalFrame",
+          "translation_m": [
+            12.0,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Karden_Logistics_GroundWindows",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Karden_Logistics_PortalFixture",
+          "translation_m": [
+            12.0,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Karden_Logistics_TerraceDeck_1",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.5
+          ]
+        },
+        {
+          "part_id": "Karden_Logistics_Upper1_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.5
+          ]
+        },
+        {
+          "part_id": "Karden_Logistics_Upper1_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.5
+          ]
+        },
+        {
+          "part_id": "Karden_Logistics_Upper1_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.5
+          ]
+        },
+        {
+          "part_id": "Karden_Logistics_Upper1_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.5
+          ]
+        },
+        {
+          "part_id": "Karden_Logistics_Roof",
+          "translation_m": [
+            0.0,
+            0.0,
+            9.0
+          ]
+        },
+        {
+          "part_id": "Karden_Logistics_RoofPlant",
+          "translation_m": [
+            -3.630000114440918,
+            2.2750000953674316,
+            9.25
+          ]
+        },
+        {
+          "part_id": "Karden_Logistics_RoofMonitor",
+          "translation_m": [
+            0.0,
+            0.0,
+            9.25
+          ]
+        }
+      ]
+    },
+    "Karden_TransitHall": {
+      "district": "small_city",
+      "source_scene": "Karden_TransitHall",
+      "asset": "Export/MeasuredBuildings/Karden_TransitHall.glb",
+      "structure_dimensions_m": [
+        19,
+        23,
+        12.0
+      ],
+      "story_heights_m": [
+        4.0,
+        4.0,
+        4.0
+      ],
+      "pivot_m": [
+        0,
+        0,
+        0
+      ],
+      "ground_contact_z_m": 0,
+      "floor_surface_z_m": 0.06,
+      "foundation_skirt_depth_m": 0.65,
+      "floor_bounds_xy_m": [
+        [
+          -9.5,
+          -11.5
+        ],
+        [
+          9.5,
+          11.5
+        ]
+      ],
+      "entrances": [
+        {
+          "kind": "pedestrian",
+          "outward_xyz": [
+            1,
+            0,
+            0
+          ],
+          "threshold_xyz_m": [
+            9.5,
+            0.0,
+            0.06
+          ],
+          "opening_width_m": 5.05,
+          "opening_height_m": 3.3649999999999998,
+          "ramp_run_m": 1.2,
+          "outdoor_connection_xyz_m": [
+            10.7,
+            0.0,
+            0
+          ],
+          "interior_connection_xyz_m": [
+            6.7,
+            0.0,
+            0.06
+          ],
+          "keep_clear_xy_m": [
+            [
+              6.7,
+              -2.525
+            ],
+            [
+              10.7,
+              2.525
+            ]
+          ]
+        }
+      ],
+      "minimum_front_setback_m": 3.8,
+      "collision": {
+        "ground_wall_boxes_xyz_m": [
+          [
+            [
+              -9.5,
+              -11.5,
+              0.06
+            ],
+            [
+              -9.22,
+              11.5,
+              4.0
+            ]
+          ],
+          [
+            [
+              -9.22,
+              -11.5,
+              0.06
+            ],
+            [
+              9.22,
+              -11.22,
+              4.0
+            ]
+          ],
+          [
+            [
+              -9.22,
+              11.22,
+              0.06
+            ],
+            [
+              9.22,
+              11.5,
+              4.0
+            ]
+          ],
+          [
+            [
+              9.22,
+              -11.5,
+              0.06
+            ],
+            [
+              9.5,
+              -2.6,
+              4.0
+            ]
+          ],
+          [
+            [
+              9.22,
+              2.6,
+              0.06
+            ],
+            [
+              9.5,
+              11.5,
+              4.0
+            ]
+          ]
+        ],
+        "lintel_boxes_xyz_m": [
+          [
+            [
+              9.22,
+              -2.6,
+              3.46
+            ],
+            [
+              9.5,
+              2.6,
+              4.0
+            ]
+          ]
+        ],
+        "walk_surface_part": "Karden_TransitHall_Foundation",
+        "upper_occlusion_begins_z_m": 4.0
+      },
+      "parts": {
+        "Karden_TransitHall_Foundation": {
+          "role": "floor_and_skirt",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Karden_TransitHall_ThresholdRamp": {
+          "role": "walk_surface",
+          "triangles": 12,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Karden_TransitHall_GroundShell": {
+          "role": "wall_collision",
+          "triangles": 72,
+          "triangle_budget": 196,
+          "slots": [
+            "Ceramic"
+          ]
+        },
+        "Karden_TransitHall_PortalFrame": {
+          "detail_source": "Karden_TransitHall_PortalFrame_Detail",
+          "detail_triangles": 144,
+          "role": "static",
+          "triangles": 48,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Cyan"
+          ]
+        },
+        "Karden_TransitHall_GroundWindows": {
+          "role": "facade_glazing",
+          "triangles": 72,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Karden_TransitHall_PortalFixture": {
+          "role": "static",
+          "triangles": 24,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Cyan"
+          ]
+        },
+        "Karden_TransitHall_TerraceDeck_1": {
+          "role": "floor_and_occlusion",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Karden_TransitHall_Upper1_Shell": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Ceramic"
+          ]
+        },
+        "Karden_TransitHall_Upper1_SlabBand": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Karden_TransitHall_Upper1_EndGlazing": {
+          "role": "facade_glazing",
+          "triangles": 96,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Karden_TransitHall_Upper1_SideGlazing": {
+          "role": "facade_glazing",
+          "triangles": 96,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Karden_TransitHall_Roof": {
+          "role": "occlusion_roof",
+          "triangles": 60,
+          "triangle_budget": 196,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Karden_TransitHall_RoofPlant": {
+          "detail_source": "Karden_TransitHall_RoofPlant_Detail",
+          "detail_triangles": 168,
+          "role": "replaceable_equipment",
+          "triangles": 72,
+          "triangle_budget": 188,
+          "slots": [
+            "Habitat_Panels",
+            "Steel"
+          ]
+        },
+        "Karden_TransitHall_CivicLantern": {
+          "role": "occlusion_roof",
+          "triangles": 36,
+          "triangle_budget": 192,
+          "slots": [
+            "Glass_Opaque",
+            "Ceramic",
+            "Glow_Cyan"
+          ]
+        }
+      },
+      "instances": [
+        {
+          "part_id": "Karden_TransitHall_Foundation",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Karden_TransitHall_ThresholdRamp",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Karden_TransitHall_GroundShell",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Karden_TransitHall_PortalFrame",
+          "translation_m": [
+            9.5,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Karden_TransitHall_GroundWindows",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Karden_TransitHall_PortalFixture",
+          "translation_m": [
+            9.5,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Karden_TransitHall_TerraceDeck_1",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.0
+          ]
+        },
+        {
+          "part_id": "Karden_TransitHall_Upper1_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.0
+          ]
+        },
+        {
+          "part_id": "Karden_TransitHall_Upper1_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            8.0
+          ]
+        },
+        {
+          "part_id": "Karden_TransitHall_Upper1_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.0
+          ]
+        },
+        {
+          "part_id": "Karden_TransitHall_Upper1_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            8.0
+          ]
+        },
+        {
+          "part_id": "Karden_TransitHall_Upper1_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.0
+          ]
+        },
+        {
+          "part_id": "Karden_TransitHall_Upper1_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            8.0
+          ]
+        },
+        {
+          "part_id": "Karden_TransitHall_Upper1_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.0
+          ]
+        },
+        {
+          "part_id": "Karden_TransitHall_Upper1_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            8.0
+          ]
+        },
+        {
+          "part_id": "Karden_TransitHall_Roof",
+          "translation_m": [
+            0.0,
+            0.0,
+            12.0
+          ]
+        },
+        {
+          "part_id": "Karden_TransitHall_RoofPlant",
+          "translation_m": [
+            -2.6459999084472656,
+            2.5999999046325684,
+            12.25
+          ]
+        },
+        {
+          "part_id": "Karden_TransitHall_CivicLantern",
+          "translation_m": [
+            0.11999999731779099,
+            0.0,
+            12.25
+          ]
+        }
+      ]
+    },
+    "Karden_Market": {
+      "district": "small_city",
+      "source_scene": "Karden_Market",
+      "asset": "Export/MeasuredBuildings/Karden_Market.glb",
+      "structure_dimensions_m": [
+        15,
+        24,
+        7.4
+      ],
+      "story_heights_m": [
+        3.7,
+        3.7
+      ],
+      "pivot_m": [
+        0,
+        0,
+        0
+      ],
+      "ground_contact_z_m": 0,
+      "floor_surface_z_m": 0.06,
+      "foundation_skirt_depth_m": 0.65,
+      "floor_bounds_xy_m": [
+        [
+          -7.5,
+          -12.0
+        ],
+        [
+          7.5,
+          12.0
+        ]
+      ],
+      "entrances": [
+        {
+          "kind": "pedestrian",
+          "outward_xyz": [
+            1,
+            0,
+            0
+          ],
+          "threshold_xyz_m": [
+            7.5,
+            0.0,
+            0.06
+          ],
+          "opening_width_m": 5.6499999999999995,
+          "opening_height_m": 3.1149999999999998,
+          "ramp_run_m": 1.2,
+          "outdoor_connection_xyz_m": [
+            8.7,
+            0.0,
+            0
+          ],
+          "interior_connection_xyz_m": [
+            4.7,
+            0.0,
+            0.06
+          ],
+          "keep_clear_xy_m": [
+            [
+              4.7,
+              -2.8249999999999997
+            ],
+            [
+              8.7,
+              2.8249999999999997
+            ]
+          ]
+        }
+      ],
+      "minimum_front_setback_m": 3.8,
+      "collision": {
+        "ground_wall_boxes_xyz_m": [
+          [
+            [
+              -7.5,
+              -12.0,
+              0.06
+            ],
+            [
+              -7.22,
+              12.0,
+              3.7
+            ]
+          ],
+          [
+            [
+              -7.22,
+              -12.0,
+              0.06
+            ],
+            [
+              7.22,
+              -11.72,
+              3.7
+            ]
+          ],
+          [
+            [
+              -7.22,
+              11.72,
+              0.06
+            ],
+            [
+              7.22,
+              12.0,
+              3.7
+            ]
+          ],
+          [
+            [
+              7.22,
+              -12.0,
+              0.06
+            ],
+            [
+              7.5,
+              -2.9,
+              3.7
+            ]
+          ],
+          [
+            [
+              7.22,
+              2.9,
+              0.06
+            ],
+            [
+              7.5,
+              12.0,
+              3.7
+            ]
+          ]
+        ],
+        "lintel_boxes_xyz_m": [
+          [
+            [
+              7.22,
+              -2.9,
+              3.21
+            ],
+            [
+              7.5,
+              2.9,
+              3.7
+            ]
+          ]
+        ],
+        "walk_surface_part": "Karden_Market_Foundation",
+        "upper_occlusion_begins_z_m": 3.7
+      },
+      "parts": {
+        "Karden_Market_Foundation": {
+          "role": "floor_and_skirt",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Karden_Market_ThresholdRamp": {
+          "role": "walk_surface",
+          "triangles": 12,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Karden_Market_GroundShell": {
+          "role": "wall_collision",
+          "triangles": 72,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Panels"
+          ]
+        },
+        "Karden_Market_PortalFrame": {
+          "detail_source": "Karden_Market_PortalFrame_Detail",
+          "detail_triangles": 144,
+          "role": "static",
+          "triangles": 48,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Cyan"
+          ]
+        },
+        "Karden_Market_GroundWindows": {
+          "role": "facade_glazing",
+          "triangles": 72,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Karden_Market_PortalFixture": {
+          "role": "static",
+          "triangles": 48,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Cyan"
+          ]
+        },
+        "Karden_Market_TerraceDeck_1": {
+          "role": "floor_and_occlusion",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Karden_Market_Upper1_Shell": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Panels"
+          ]
+        },
+        "Karden_Market_Upper1_SlabBand": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Karden_Market_Upper1_EndGlazing": {
+          "role": "facade_glazing",
+          "triangles": 120,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Karden_Market_Upper1_SideGlazing": {
+          "role": "facade_glazing",
+          "triangles": 96,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Karden_Market_Roof": {
+          "role": "occlusion_roof",
+          "triangles": 60,
+          "triangle_budget": 196,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Karden_Market_RoofPlant": {
+          "detail_source": "Karden_Market_RoofPlant_Detail",
+          "detail_triangles": 168,
+          "role": "replaceable_equipment",
+          "triangles": 72,
+          "triangle_budget": 188,
+          "slots": [
+            "Habitat_Panels",
+            "Steel"
+          ]
+        },
+        "Karden_Market_RoofMonitor": {
+          "role": "occlusion_roof",
+          "triangles": 48,
+          "triangle_budget": 192,
+          "slots": [
+            "Frame_Graphite",
+            "Habitat_Panels",
+            "Glass_Opaque"
+          ]
+        }
+      },
+      "instances": [
+        {
+          "part_id": "Karden_Market_Foundation",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Karden_Market_ThresholdRamp",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Karden_Market_GroundShell",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Karden_Market_PortalFrame",
+          "translation_m": [
+            7.5,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Karden_Market_GroundWindows",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Karden_Market_PortalFixture",
+          "translation_m": [
+            7.5,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Karden_Market_TerraceDeck_1",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.700000047683716
+          ]
+        },
+        {
+          "part_id": "Karden_Market_Upper1_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.700000047683716
+          ]
+        },
+        {
+          "part_id": "Karden_Market_Upper1_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.700000047683716
+          ]
+        },
+        {
+          "part_id": "Karden_Market_Upper1_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.700000047683716
+          ]
+        },
+        {
+          "part_id": "Karden_Market_Upper1_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.700000047683716
+          ]
+        },
+        {
+          "part_id": "Karden_Market_Roof",
+          "translation_m": [
+            0.0,
+            0.0,
+            7.400000095367432
+          ]
+        },
+        {
+          "part_id": "Karden_Market_RoofPlant",
+          "translation_m": [
+            -2.0460000038146973,
+            2.7249999046325684,
+            7.650000095367432
+          ]
+        },
+        {
+          "part_id": "Karden_Market_RoofMonitor",
+          "translation_m": [
+            0.0,
+            0.0,
+            7.650000095367432
+          ]
+        }
+      ]
+    },
+    "Metro_MixedResidence": {
+      "district": "large_city",
+      "source_scene": "Metro_MixedResidence",
+      "asset": "Export/MeasuredBuildings/Metro_MixedResidence.glb",
+      "structure_dimensions_m": [
+        24,
+        28,
+        39.0
+      ],
+      "story_heights_m": [
+        3.25,
+        3.25,
+        3.25,
+        3.25,
+        3.25,
+        3.25,
+        3.25,
+        3.25,
+        3.25,
+        3.25,
+        3.25,
+        3.25
+      ],
+      "pivot_m": [
+        0,
+        0,
+        0
+      ],
+      "ground_contact_z_m": 0,
+      "floor_surface_z_m": 0.06,
+      "foundation_skirt_depth_m": 0.65,
+      "floor_bounds_xy_m": [
+        [
+          -12.0,
+          -14.0
+        ],
+        [
+          12.0,
+          14.0
+        ]
+      ],
+      "entrances": [
+        {
+          "kind": "pedestrian",
+          "outward_xyz": [
+            1,
+            0,
+            0
+          ],
+          "threshold_xyz_m": [
+            12.0,
+            0.0,
+            0.06
+          ],
+          "opening_width_m": 4.05,
+          "opening_height_m": 2.8649999999999998,
+          "ramp_run_m": 1.2,
+          "outdoor_connection_xyz_m": [
+            13.2,
+            0.0,
+            0
+          ],
+          "interior_connection_xyz_m": [
+            9.2,
+            0.0,
+            0.06
+          ],
+          "keep_clear_xy_m": [
+            [
+              9.2,
+              -2.025
+            ],
+            [
+              13.2,
+              2.025
+            ]
+          ]
+        }
+      ],
+      "minimum_front_setback_m": 3.8,
+      "collision": {
+        "ground_wall_boxes_xyz_m": [
+          [
+            [
+              -12.0,
+              -14.0,
+              0.06
+            ],
+            [
+              -11.72,
+              14.0,
+              3.25
+            ]
+          ],
+          [
+            [
+              -11.72,
+              -14.0,
+              0.06
+            ],
+            [
+              11.72,
+              -13.72,
+              3.25
+            ]
+          ],
+          [
+            [
+              -11.72,
+              13.72,
+              0.06
+            ],
+            [
+              11.72,
+              14.0,
+              3.25
+            ]
+          ],
+          [
+            [
+              11.72,
+              -14.0,
+              0.06
+            ],
+            [
+              12.0,
+              -2.1,
+              3.25
+            ]
+          ],
+          [
+            [
+              11.72,
+              2.1,
+              0.06
+            ],
+            [
+              12.0,
+              14.0,
+              3.25
+            ]
+          ]
+        ],
+        "lintel_boxes_xyz_m": [
+          [
+            [
+              11.72,
+              -2.1,
+              2.96
+            ],
+            [
+              12.0,
+              2.1,
+              3.25
+            ]
+          ]
+        ],
+        "walk_surface_part": "Metro_MixedResidence_Foundation",
+        "upper_occlusion_begins_z_m": 3.25
+      },
+      "parts": {
+        "Metro_MixedResidence_Foundation": {
+          "role": "floor_and_skirt",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Metro_MixedResidence_ThresholdRamp": {
+          "role": "walk_surface",
+          "triangles": 12,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Metro_MixedResidence_GroundShell": {
+          "role": "wall_collision",
+          "triangles": 72,
+          "triangle_budget": 196,
+          "slots": [
+            "Ceramic"
+          ]
+        },
+        "Metro_MixedResidence_PortalFrame": {
+          "detail_source": "Metro_MixedResidence_PortalFrame_Detail",
+          "detail_triangles": 144,
+          "role": "static",
+          "triangles": 48,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Cyan"
+          ]
+        },
+        "Metro_MixedResidence_GroundWindows": {
+          "role": "facade_glazing",
+          "triangles": 72,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Metro_MixedResidence_PortalFixture": {
+          "role": "static",
+          "triangles": 24,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Cyan"
+          ]
+        },
+        "Metro_MixedResidence_TerraceDeck_1": {
+          "role": "floor_and_occlusion",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Metro_MixedResidence_Upper1_Shell": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Ceramic"
+          ]
+        },
+        "Metro_MixedResidence_Upper1_SlabBand": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Metro_MixedResidence_Upper1_EndGlazing": {
+          "role": "facade_glazing",
+          "triangles": 120,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Metro_MixedResidence_Upper1_SideGlazing": {
+          "role": "facade_glazing",
+          "triangles": 96,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Metro_MixedResidence_TerraceDeck_4": {
+          "role": "floor_and_occlusion",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Metro_MixedResidence_Upper2_Shell": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Ceramic"
+          ]
+        },
+        "Metro_MixedResidence_Upper2_SlabBand": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Metro_MixedResidence_Upper2_EndGlazing": {
+          "role": "facade_glazing",
+          "triangles": 120,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Metro_MixedResidence_Upper2_SideGlazing": {
+          "role": "facade_glazing",
+          "triangles": 96,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Metro_MixedResidence_TerraceDeck_8": {
+          "role": "floor_and_occlusion",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Metro_MixedResidence_Upper3_Shell": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Ceramic"
+          ]
+        },
+        "Metro_MixedResidence_Upper3_SlabBand": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Metro_MixedResidence_Upper3_EndGlazing": {
+          "role": "facade_glazing",
+          "triangles": 120,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Metro_MixedResidence_Upper3_SideGlazing": {
+          "role": "facade_glazing",
+          "triangles": 96,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Metro_MixedResidence_TerraceDeck_11": {
+          "role": "floor_and_occlusion",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Metro_MixedResidence_Upper4_Shell": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Ceramic"
+          ]
+        },
+        "Metro_MixedResidence_Upper4_SlabBand": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Metro_MixedResidence_Upper4_EndGlazing": {
+          "role": "facade_glazing",
+          "triangles": 120,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Metro_MixedResidence_Upper4_SideGlazing": {
+          "role": "facade_glazing",
+          "triangles": 96,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Metro_MixedResidence_Roof": {
+          "role": "occlusion_roof",
+          "triangles": 60,
+          "triangle_budget": 196,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Metro_MixedResidence_RoofPlant": {
+          "detail_source": "Metro_MixedResidence_RoofPlant_Detail",
+          "detail_triangles": 168,
+          "role": "replaceable_equipment",
+          "triangles": 72,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Panels",
+            "Steel"
+          ]
+        }
+      },
+      "instances": [
+        {
+          "part_id": "Metro_MixedResidence_Foundation",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_ThresholdRamp",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_GroundShell",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_PortalFrame",
+          "translation_m": [
+            12.0,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_GroundWindows",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_PortalFixture",
+          "translation_m": [
+            12.0,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_TerraceDeck_1",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.25
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper1_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.25
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper1_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            6.5
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper1_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            9.75
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper1_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.25
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper1_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            6.5
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper1_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            9.75
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper1_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.25
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper1_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            6.5
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper1_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            9.75
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper1_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.25
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper1_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            6.5
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper1_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            9.75
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_TerraceDeck_4",
+          "translation_m": [
+            0.0,
+            0.0,
+            13.0
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper2_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            13.0
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper2_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            16.25
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper2_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            19.5
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper2_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            22.75
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper2_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            13.0
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper2_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            16.25
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper2_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            19.5
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper2_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            22.75
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper2_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            13.0
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper2_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            16.25
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper2_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            19.5
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper2_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            22.75
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper2_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            13.0
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper2_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            16.25
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper2_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            19.5
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper2_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            22.75
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_TerraceDeck_8",
+          "translation_m": [
+            0.0,
+            0.0,
+            26.0
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper3_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            26.0
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper3_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            29.25
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper3_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            32.5
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper3_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            26.0
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper3_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            29.25
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper3_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            32.5
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper3_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            26.0
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper3_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            29.25
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper3_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            32.5
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper3_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            26.0
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper3_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            29.25
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper3_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            32.5
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_TerraceDeck_11",
+          "translation_m": [
+            0.0,
+            0.0,
+            35.75
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper4_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            35.75
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper4_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            35.75
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper4_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            35.75
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Upper4_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            35.75
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_Roof",
+          "translation_m": [
+            0.0,
+            0.0,
+            39.0
+          ]
+        },
+        {
+          "part_id": "Metro_MixedResidence_RoofPlant",
+          "translation_m": [
+            -2.5185000896453857,
+            2.0999999046325684,
+            39.25
+          ]
+        }
+      ]
+    },
+    "Metro_CivicCommerce": {
+      "district": "large_city",
+      "source_scene": "Metro_CivicCommerce",
+      "asset": "Export/MeasuredBuildings/Metro_CivicCommerce.glb",
+      "structure_dimensions_m": [
+        27,
+        32,
+        50.4
+      ],
+      "story_heights_m": [
+        3.6,
+        3.6,
+        3.6,
+        3.6,
+        3.6,
+        3.6,
+        3.6,
+        3.6,
+        3.6,
+        3.6,
+        3.6,
+        3.6,
+        3.6,
+        3.6
+      ],
+      "pivot_m": [
+        0,
+        0,
+        0
+      ],
+      "ground_contact_z_m": 0,
+      "floor_surface_z_m": 0.06,
+      "foundation_skirt_depth_m": 0.65,
+      "floor_bounds_xy_m": [
+        [
+          -13.5,
+          -16.0
+        ],
+        [
+          13.5,
+          16.0
+        ]
+      ],
+      "entrances": [
+        {
+          "kind": "pedestrian",
+          "outward_xyz": [
+            1,
+            0,
+            0
+          ],
+          "threshold_xyz_m": [
+            13.5,
+            0.0,
+            0.06
+          ],
+          "opening_width_m": 6.25,
+          "opening_height_m": 3.1149999999999998,
+          "ramp_run_m": 1.2,
+          "outdoor_connection_xyz_m": [
+            14.7,
+            0.0,
+            0
+          ],
+          "interior_connection_xyz_m": [
+            10.7,
+            0.0,
+            0.06
+          ],
+          "keep_clear_xy_m": [
+            [
+              10.7,
+              -3.125
+            ],
+            [
+              14.7,
+              3.125
+            ]
+          ]
+        }
+      ],
+      "minimum_front_setback_m": 3.8,
+      "collision": {
+        "ground_wall_boxes_xyz_m": [
+          [
+            [
+              -13.5,
+              -16.0,
+              0.06
+            ],
+            [
+              -13.22,
+              16.0,
+              3.6
+            ]
+          ],
+          [
+            [
+              -13.22,
+              -16.0,
+              0.06
+            ],
+            [
+              13.22,
+              -15.72,
+              3.6
+            ]
+          ],
+          [
+            [
+              -13.22,
+              15.72,
+              0.06
+            ],
+            [
+              13.22,
+              16.0,
+              3.6
+            ]
+          ],
+          [
+            [
+              13.22,
+              -16.0,
+              0.06
+            ],
+            [
+              13.5,
+              -3.2,
+              3.6
+            ]
+          ],
+          [
+            [
+              13.22,
+              3.2,
+              0.06
+            ],
+            [
+              13.5,
+              16.0,
+              3.6
+            ]
+          ]
+        ],
+        "lintel_boxes_xyz_m": [
+          [
+            [
+              13.22,
+              -3.2,
+              3.21
+            ],
+            [
+              13.5,
+              3.2,
+              3.6
+            ]
+          ]
+        ],
+        "walk_surface_part": "Metro_CivicCommerce_Foundation",
+        "upper_occlusion_begins_z_m": 3.6
+      },
+      "parts": {
+        "Metro_CivicCommerce_Foundation": {
+          "role": "floor_and_skirt",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Metro_CivicCommerce_ThresholdRamp": {
+          "role": "walk_surface",
+          "triangles": 12,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Metro_CivicCommerce_GroundShell": {
+          "role": "wall_collision",
+          "triangles": 72,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Panels"
+          ]
+        },
+        "Metro_CivicCommerce_PortalFrame": {
+          "detail_source": "Metro_CivicCommerce_PortalFrame_Detail",
+          "detail_triangles": 144,
+          "role": "static",
+          "triangles": 48,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Cyan"
+          ]
+        },
+        "Metro_CivicCommerce_GroundWindows": {
+          "role": "facade_glazing",
+          "triangles": 72,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Metro_CivicCommerce_PortalFixture": {
+          "role": "static",
+          "triangles": 24,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Cyan"
+          ]
+        },
+        "Metro_CivicCommerce_TerraceDeck_1": {
+          "role": "floor_and_occlusion",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Metro_CivicCommerce_Upper1_Shell": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Panels"
+          ]
+        },
+        "Metro_CivicCommerce_Upper1_SlabBand": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Metro_CivicCommerce_Upper1_EndGlazing": {
+          "role": "facade_glazing",
+          "triangles": 120,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Metro_CivicCommerce_Upper1_SideGlazing": {
+          "role": "facade_glazing",
+          "triangles": 96,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Metro_CivicCommerce_TerraceDeck_3": {
+          "role": "floor_and_occlusion",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Metro_CivicCommerce_Upper2_Shell": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Panels"
+          ]
+        },
+        "Metro_CivicCommerce_Upper2_SlabBand": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Metro_CivicCommerce_Upper2_EndGlazing": {
+          "role": "facade_glazing",
+          "triangles": 120,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Metro_CivicCommerce_Upper2_SideGlazing": {
+          "role": "facade_glazing",
+          "triangles": 96,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Metro_CivicCommerce_TerraceDeck_10": {
+          "role": "floor_and_occlusion",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Metro_CivicCommerce_Upper3_Shell": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Panels"
+          ]
+        },
+        "Metro_CivicCommerce_Upper3_SlabBand": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Metro_CivicCommerce_Upper3_EndGlazing": {
+          "role": "facade_glazing",
+          "triangles": 120,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Metro_CivicCommerce_Upper3_SideGlazing": {
+          "role": "facade_glazing",
+          "triangles": 96,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Metro_CivicCommerce_Roof": {
+          "role": "occlusion_roof",
+          "triangles": 60,
+          "triangle_budget": 196,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Metro_CivicCommerce_RoofPlant": {
+          "detail_source": "Metro_CivicCommerce_RoofPlant_Detail",
+          "detail_triangles": 168,
+          "role": "replaceable_equipment",
+          "triangles": 72,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Panels",
+            "Steel"
+          ]
+        },
+        "Metro_CivicCommerce_RoofServiceBridge": {
+          "role": "occlusion_roof",
+          "triangles": 36,
+          "triangle_budget": 192,
+          "slots": [
+            "Frame_Graphite",
+            "Glass_Opaque"
+          ]
+        },
+        "Metro_CivicCommerce_SignalSpine": {
+          "detail_source": "Metro_CivicCommerce_SignalSpine_Detail",
+          "detail_triangles": 132,
+          "role": "replaceable_equipment",
+          "triangles": 36,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Amber"
+          ]
+        }
+      },
+      "instances": [
+        {
+          "part_id": "Metro_CivicCommerce_Foundation",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_ThresholdRamp",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_GroundShell",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_PortalFrame",
+          "translation_m": [
+            13.5,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_GroundWindows",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_PortalFixture",
+          "translation_m": [
+            13.5,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_TerraceDeck_1",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.5999999046325684
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper1_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.5999999046325684
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper1_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            7.199999809265137
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper1_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.5999999046325684
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper1_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            7.199999809265137
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper1_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.5999999046325684
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper1_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            7.199999809265137
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper1_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            3.5999999046325684
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper1_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            7.199999809265137
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_TerraceDeck_3",
+          "translation_m": [
+            0.0,
+            0.0,
+            10.800000190734863
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            10.800000190734863
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            14.399999618530273
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            18.0
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            21.600000381469727
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            25.200000762939453
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            28.799999237060547
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            32.400001525878906
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            10.800000190734863
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            14.399999618530273
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            18.0
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            21.600000381469727
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            25.200000762939453
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            28.799999237060547
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            32.400001525878906
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            10.800000190734863
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            14.399999618530273
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            18.0
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            21.600000381469727
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            25.200000762939453
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            28.799999237060547
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            32.400001525878906
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            10.800000190734863
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            14.399999618530273
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            18.0
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            21.600000381469727
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            25.200000762939453
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            28.799999237060547
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper2_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            32.400001525878906
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_TerraceDeck_10",
+          "translation_m": [
+            0.0,
+            0.0,
+            36.0
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper3_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            36.0
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper3_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            39.599998474121094
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper3_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            43.20000076293945
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper3_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            46.79999923706055
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper3_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            36.0
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper3_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            39.599998474121094
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper3_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            43.20000076293945
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper3_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            46.79999923706055
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper3_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            36.0
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper3_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            39.599998474121094
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper3_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            43.20000076293945
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper3_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            46.79999923706055
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper3_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            36.0
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper3_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            39.599998474121094
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper3_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            43.20000076293945
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Upper3_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            46.79999923706055
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_Roof",
+          "translation_m": [
+            0.0,
+            0.0,
+            50.400001525878906
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_RoofPlant",
+          "translation_m": [
+            -3.0464999675750732,
+            2.700000047683716,
+            50.650001525878906
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_RoofServiceBridge",
+          "translation_m": [
+            0.0,
+            0.0,
+            50.650001525878906
+          ]
+        },
+        {
+          "part_id": "Metro_CivicCommerce_SignalSpine",
+          "translation_m": [
+            2.843400001525879,
+            -4.104000091552734,
+            50.650001525878906
+          ]
+        }
+      ]
+    },
+    "Capital_GateAdministration": {
+      "district": "system_capital",
+      "source_scene": "Capital_GateAdministration",
+      "asset": "Export/MeasuredBuildings/Capital_GateAdministration.glb",
+      "structure_dimensions_m": [
+        35,
+        40,
+        64.0
+      ],
+      "story_heights_m": [
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0,
+        4.0
+      ],
+      "pivot_m": [
+        0,
+        0,
+        0
+      ],
+      "ground_contact_z_m": 0,
+      "floor_surface_z_m": 0.06,
+      "foundation_skirt_depth_m": 0.65,
+      "floor_bounds_xy_m": [
+        [
+          -17.5,
+          -20.0
+        ],
+        [
+          17.5,
+          20.0
+        ]
+      ],
+      "entrances": [
+        {
+          "kind": "pedestrian",
+          "outward_xyz": [
+            1,
+            0,
+            0
+          ],
+          "threshold_xyz_m": [
+            17.5,
+            0.0,
+            0.06
+          ],
+          "opening_width_m": 7.05,
+          "opening_height_m": 3.6149999999999998,
+          "ramp_run_m": 1.2,
+          "outdoor_connection_xyz_m": [
+            18.7,
+            0.0,
+            0
+          ],
+          "interior_connection_xyz_m": [
+            14.7,
+            0.0,
+            0.06
+          ],
+          "keep_clear_xy_m": [
+            [
+              14.7,
+              -3.525
+            ],
+            [
+              18.7,
+              3.525
+            ]
+          ]
+        }
+      ],
+      "minimum_front_setback_m": 3.8,
+      "collision": {
+        "ground_wall_boxes_xyz_m": [
+          [
+            [
+              -17.5,
+              -20.0,
+              0.06
+            ],
+            [
+              -17.22,
+              20.0,
+              4.0
+            ]
+          ],
+          [
+            [
+              -17.22,
+              -20.0,
+              0.06
+            ],
+            [
+              17.22,
+              -19.72,
+              4.0
+            ]
+          ],
+          [
+            [
+              -17.22,
+              19.72,
+              0.06
+            ],
+            [
+              17.22,
+              20.0,
+              4.0
+            ]
+          ],
+          [
+            [
+              17.22,
+              -20.0,
+              0.06
+            ],
+            [
+              17.5,
+              -3.6,
+              4.0
+            ]
+          ],
+          [
+            [
+              17.22,
+              3.6,
+              0.06
+            ],
+            [
+              17.5,
+              20.0,
+              4.0
+            ]
+          ]
+        ],
+        "lintel_boxes_xyz_m": [
+          [
+            [
+              17.22,
+              -3.6,
+              3.71
+            ],
+            [
+              17.5,
+              3.6,
+              4.0
+            ]
+          ]
+        ],
+        "walk_surface_part": "Capital_GateAdministration_Foundation",
+        "upper_occlusion_begins_z_m": 4.0
+      },
+      "parts": {
+        "Capital_GateAdministration_Foundation": {
+          "role": "floor_and_skirt",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Capital_GateAdministration_ThresholdRamp": {
+          "role": "walk_surface",
+          "triangles": 12,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Capital_GateAdministration_GroundShell": {
+          "role": "wall_collision",
+          "triangles": 72,
+          "triangle_budget": 196,
+          "slots": [
+            "Ceramic"
+          ]
+        },
+        "Capital_GateAdministration_PortalFrame": {
+          "detail_source": "Capital_GateAdministration_PortalFrame_Detail",
+          "detail_triangles": 144,
+          "role": "static",
+          "triangles": 48,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Cyan"
+          ]
+        },
+        "Capital_GateAdministration_GroundWindows": {
+          "role": "facade_glazing",
+          "triangles": 72,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Capital_GateAdministration_PortalFixture": {
+          "role": "static",
+          "triangles": 48,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Cyan"
+          ]
+        },
+        "Capital_GateAdministration_TerraceDeck_1": {
+          "role": "floor_and_occlusion",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Capital_GateAdministration_Upper1_Shell": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Ceramic"
+          ]
+        },
+        "Capital_GateAdministration_Upper1_SlabBand": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Capital_GateAdministration_Upper1_EndGlazing": {
+          "role": "facade_glazing",
+          "triangles": 144,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Capital_GateAdministration_Upper1_SideGlazing": {
+          "role": "facade_glazing",
+          "triangles": 96,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Capital_GateAdministration_TerraceDeck_3": {
+          "role": "floor_and_occlusion",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Capital_GateAdministration_Upper2_Shell": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Ceramic"
+          ]
+        },
+        "Capital_GateAdministration_Upper2_SlabBand": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Capital_GateAdministration_Upper2_EndGlazing": {
+          "role": "facade_glazing",
+          "triangles": 144,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Capital_GateAdministration_Upper2_SideGlazing": {
+          "role": "facade_glazing",
+          "triangles": 96,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Capital_GateAdministration_TerraceDeck_14": {
+          "role": "floor_and_occlusion",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Capital_GateAdministration_Upper3_Shell": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Ceramic"
+          ]
+        },
+        "Capital_GateAdministration_Upper3_SlabBand": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Capital_GateAdministration_Upper3_EndGlazing": {
+          "role": "facade_glazing",
+          "triangles": 144,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Capital_GateAdministration_Upper3_SideGlazing": {
+          "role": "facade_glazing",
+          "triangles": 96,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Capital_GateAdministration_Roof": {
+          "role": "occlusion_roof",
+          "triangles": 60,
+          "triangle_budget": 196,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Capital_GateAdministration_RoofPlant": {
+          "detail_source": "Capital_GateAdministration_RoofPlant_Detail",
+          "detail_triangles": 168,
+          "role": "replaceable_equipment",
+          "triangles": 72,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Panels",
+            "Steel"
+          ]
+        },
+        "Capital_GateAdministration_GateCrown": {
+          "role": "occlusion_roof",
+          "triangles": 60,
+          "triangle_budget": 196,
+          "slots": [
+            "Frame_Graphite",
+            "Glow_Cyan",
+            "Steel"
+          ]
+        },
+        "Capital_GateAdministration_SignalSpine": {
+          "detail_source": "Capital_GateAdministration_SignalSpine_Detail",
+          "detail_triangles": 132,
+          "role": "replaceable_equipment",
+          "triangles": 36,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Amber"
+          ]
+        }
+      },
+      "instances": [
+        {
+          "part_id": "Capital_GateAdministration_Foundation",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_ThresholdRamp",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_GroundShell",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_PortalFrame",
+          "translation_m": [
+            17.5,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_GroundWindows",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_PortalFixture",
+          "translation_m": [
+            17.5,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_TerraceDeck_1",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper1_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper1_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            8.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper1_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper1_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            8.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper1_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper1_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            8.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper1_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper1_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            8.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_TerraceDeck_3",
+          "translation_m": [
+            0.0,
+            0.0,
+            12.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            12.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            16.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            20.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            24.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            28.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            32.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            36.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            40.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            44.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            48.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            52.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            12.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            16.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            20.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            24.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            28.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            32.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            36.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            40.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            44.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            48.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            52.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            12.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            16.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            20.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            24.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            28.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            32.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            36.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            40.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            44.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            48.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            52.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            12.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            16.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            20.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            24.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            28.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            32.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            36.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            40.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            44.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            48.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper2_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            52.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_TerraceDeck_14",
+          "translation_m": [
+            0.0,
+            0.0,
+            56.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper3_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            56.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper3_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            60.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper3_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            56.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper3_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            60.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper3_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            56.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper3_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            60.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper3_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            56.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Upper3_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            60.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_Roof",
+          "translation_m": [
+            0.0,
+            0.0,
+            64.0
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_RoofPlant",
+          "translation_m": [
+            -4.14900016784668,
+            3.575000047683716,
+            64.25
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_GateCrown",
+          "translation_m": [
+            2.07450008392334,
+            0.0,
+            64.25
+          ]
+        },
+        {
+          "part_id": "Capital_GateAdministration_SignalSpine",
+          "translation_m": [
+            3.8724000453948975,
+            -5.434000015258789,
+            64.25
+          ]
+        }
+      ]
+    },
+    "Capital_PublicForum": {
+      "district": "system_capital",
+      "source_scene": "Capital_PublicForum",
+      "asset": "Export/MeasuredBuildings/Capital_PublicForum.glb",
+      "structure_dimensions_m": [
+        37,
+        48,
+        19.2
+      ],
+      "story_heights_m": [
+        4.8,
+        4.8,
+        4.8,
+        4.8
+      ],
+      "pivot_m": [
+        0,
+        0,
+        0
+      ],
+      "ground_contact_z_m": 0,
+      "floor_surface_z_m": 0.06,
+      "foundation_skirt_depth_m": 0.65,
+      "floor_bounds_xy_m": [
+        [
+          -18.5,
+          -24.0
+        ],
+        [
+          18.5,
+          24.0
+        ]
+      ],
+      "entrances": [
+        {
+          "kind": "pedestrian",
+          "outward_xyz": [
+            1,
+            0,
+            0
+          ],
+          "threshold_xyz_m": [
+            18.5,
+            0.0,
+            0.06
+          ],
+          "opening_width_m": 9.85,
+          "opening_height_m": 4.0649999999999995,
+          "ramp_run_m": 1.2,
+          "outdoor_connection_xyz_m": [
+            19.7,
+            0.0,
+            0
+          ],
+          "interior_connection_xyz_m": [
+            15.7,
+            0.0,
+            0.06
+          ],
+          "keep_clear_xy_m": [
+            [
+              15.7,
+              -4.925
+            ],
+            [
+              19.7,
+              4.925
+            ]
+          ]
+        }
+      ],
+      "minimum_front_setback_m": 3.8,
+      "collision": {
+        "ground_wall_boxes_xyz_m": [
+          [
+            [
+              -18.5,
+              -24.0,
+              0.06
+            ],
+            [
+              -18.22,
+              24.0,
+              4.8
+            ]
+          ],
+          [
+            [
+              -18.22,
+              -24.0,
+              0.06
+            ],
+            [
+              18.22,
+              -23.72,
+              4.8
+            ]
+          ],
+          [
+            [
+              -18.22,
+              23.72,
+              0.06
+            ],
+            [
+              18.22,
+              24.0,
+              4.8
+            ]
+          ],
+          [
+            [
+              18.22,
+              -24.0,
+              0.06
+            ],
+            [
+              18.5,
+              -5.0,
+              4.8
+            ]
+          ],
+          [
+            [
+              18.22,
+              5.0,
+              0.06
+            ],
+            [
+              18.5,
+              24.0,
+              4.8
+            ]
+          ]
+        ],
+        "lintel_boxes_xyz_m": [
+          [
+            [
+              18.22,
+              -5.0,
+              4.159999999999999
+            ],
+            [
+              18.5,
+              5.0,
+              4.8
+            ]
+          ]
+        ],
+        "walk_surface_part": "Capital_PublicForum_Foundation",
+        "upper_occlusion_begins_z_m": 4.8
+      },
+      "parts": {
+        "Capital_PublicForum_Foundation": {
+          "role": "floor_and_skirt",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Capital_PublicForum_ThresholdRamp": {
+          "role": "walk_surface",
+          "triangles": 12,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Capital_PublicForum_GroundShell": {
+          "role": "wall_collision",
+          "triangles": 72,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Capital_PublicForum_PortalFrame": {
+          "detail_source": "Capital_PublicForum_PortalFrame_Detail",
+          "detail_triangles": 144,
+          "role": "static",
+          "triangles": 48,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Cyan"
+          ]
+        },
+        "Capital_PublicForum_GroundWindows": {
+          "role": "facade_glazing",
+          "triangles": 72,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Capital_PublicForum_PortalFixture": {
+          "role": "static",
+          "triangles": 48,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Cyan"
+          ]
+        },
+        "Capital_PublicForum_TerraceDeck_1": {
+          "role": "floor_and_occlusion",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Capital_PublicForum_Upper1_Shell": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Capital_PublicForum_Upper1_SlabBand": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Capital_PublicForum_Upper1_EndGlazing": {
+          "role": "facade_glazing",
+          "triangles": 120,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Capital_PublicForum_Upper1_SideGlazing": {
+          "role": "facade_glazing",
+          "triangles": 96,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Capital_PublicForum_Roof": {
+          "role": "occlusion_roof",
+          "triangles": 60,
+          "triangle_budget": 196,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Capital_PublicForum_RoofPlant": {
+          "detail_source": "Capital_PublicForum_RoofPlant_Detail",
+          "detail_triangles": 168,
+          "role": "replaceable_equipment",
+          "triangles": 72,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Panels",
+            "Steel"
+          ]
+        },
+        "Capital_PublicForum_RoofMonitor": {
+          "role": "occlusion_roof",
+          "triangles": 48,
+          "triangle_budget": 196,
+          "slots": [
+            "Frame_Graphite",
+            "Habitat_Concrete",
+            "Glass_Opaque"
+          ]
+        }
+      },
+      "instances": [
+        {
+          "part_id": "Capital_PublicForum_Foundation",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Capital_PublicForum_ThresholdRamp",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Capital_PublicForum_GroundShell",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Capital_PublicForum_PortalFrame",
+          "translation_m": [
+            18.5,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Capital_PublicForum_GroundWindows",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Capital_PublicForum_PortalFixture",
+          "translation_m": [
+            18.5,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Capital_PublicForum_TerraceDeck_1",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.800000190734863
+          ]
+        },
+        {
+          "part_id": "Capital_PublicForum_Upper1_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.800000190734863
+          ]
+        },
+        {
+          "part_id": "Capital_PublicForum_Upper1_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            9.600000381469727
+          ]
+        },
+        {
+          "part_id": "Capital_PublicForum_Upper1_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            14.399999618530273
+          ]
+        },
+        {
+          "part_id": "Capital_PublicForum_Upper1_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.800000190734863
+          ]
+        },
+        {
+          "part_id": "Capital_PublicForum_Upper1_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            9.600000381469727
+          ]
+        },
+        {
+          "part_id": "Capital_PublicForum_Upper1_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            14.399999618530273
+          ]
+        },
+        {
+          "part_id": "Capital_PublicForum_Upper1_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.800000190734863
+          ]
+        },
+        {
+          "part_id": "Capital_PublicForum_Upper1_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            9.600000381469727
+          ]
+        },
+        {
+          "part_id": "Capital_PublicForum_Upper1_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            14.399999618530273
+          ]
+        },
+        {
+          "part_id": "Capital_PublicForum_Upper1_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.800000190734863
+          ]
+        },
+        {
+          "part_id": "Capital_PublicForum_Upper1_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            9.600000381469727
+          ]
+        },
+        {
+          "part_id": "Capital_PublicForum_Upper1_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            14.399999618530273
+          ]
+        },
+        {
+          "part_id": "Capital_PublicForum_Roof",
+          "translation_m": [
+            0.0,
+            0.0,
+            19.200000762939453
+          ]
+        },
+        {
+          "part_id": "Capital_PublicForum_RoofPlant",
+          "translation_m": [
+            -5.3460001945495605,
+            5.724999904632568,
+            19.450000762939453
+          ]
+        },
+        {
+          "part_id": "Capital_PublicForum_RoofMonitor",
+          "translation_m": [
+            0.0,
+            0.0,
+            19.450000762939453
+          ]
+        }
+      ]
+    },
+    "Frontier_FieldWorkshop": {
+      "district": "frontier",
+      "source_scene": "Frontier_FieldWorkshop",
+      "asset": "Export/MeasuredBuildings/Frontier_FieldWorkshop.glb",
+      "structure_dimensions_m": [
+        12,
+        11,
+        4.7
+      ],
+      "story_heights_m": [
+        4.7
+      ],
+      "pivot_m": [
+        0,
+        0,
+        0
+      ],
+      "ground_contact_z_m": 0,
+      "floor_surface_z_m": 0.06,
+      "foundation_skirt_depth_m": 0.65,
+      "floor_bounds_xy_m": [
+        [
+          -6.0,
+          -5.5
+        ],
+        [
+          6.0,
+          5.5
+        ]
+      ],
+      "entrances": [
+        {
+          "kind": "vehicle",
+          "outward_xyz": [
+            1,
+            0,
+            0
+          ],
+          "threshold_xyz_m": [
+            6.0,
+            0.0,
+            0.06
+          ],
+          "opening_width_m": 3.65,
+          "opening_height_m": 3.3649999999999998,
+          "ramp_run_m": 1.2,
+          "outdoor_connection_xyz_m": [
+            7.2,
+            0.0,
+            0
+          ],
+          "interior_connection_xyz_m": [
+            3.2,
+            0.0,
+            0.06
+          ],
+          "keep_clear_xy_m": [
+            [
+              3.2,
+              -1.825
+            ],
+            [
+              7.2,
+              1.825
+            ]
+          ]
+        },
+        {
+          "kind": "pedestrian",
+          "outward_xyz": [
+            1,
+            0,
+            0
+          ],
+          "threshold_xyz_m": [
+            6.0,
+            3.1799999999999997,
+            0.06
+          ],
+          "opening_width_m": 1.4500000000000002,
+          "opening_height_m": 2.2849999999999997,
+          "ramp_run_m": 1.2,
+          "outdoor_connection_xyz_m": [
+            7.2,
+            3.1799999999999997,
+            0
+          ],
+          "interior_connection_xyz_m": [
+            3.2,
+            3.1799999999999997,
+            0.06
+          ],
+          "keep_clear_xy_m": [
+            [
+              3.2,
+              2.455
+            ],
+            [
+              7.2,
+              3.905
+            ]
+          ]
+        }
+      ],
+      "minimum_front_setback_m": 5.0,
+      "collision": {
+        "ground_wall_boxes_xyz_m": [
+          [
+            [
+              -6.0,
+              -5.5,
+              0.06
+            ],
+            [
+              -5.72,
+              5.5,
+              4.7
+            ]
+          ],
+          [
+            [
+              -5.72,
+              -5.5,
+              0.06
+            ],
+            [
+              5.72,
+              -5.22,
+              4.7
+            ]
+          ],
+          [
+            [
+              -5.72,
+              5.22,
+              0.06
+            ],
+            [
+              5.72,
+              5.5,
+              4.7
+            ]
+          ],
+          [
+            [
+              5.72,
+              -5.5,
+              0.06
+            ],
+            [
+              6.0,
+              -1.9,
+              4.7
+            ]
+          ],
+          [
+            [
+              5.72,
+              1.9,
+              0.06
+            ],
+            [
+              6.0,
+              2.38,
+              4.7
+            ]
+          ],
+          [
+            [
+              5.72,
+              3.98,
+              0.06
+            ],
+            [
+              6.0,
+              5.5,
+              4.7
+            ]
+          ]
+        ],
+        "lintel_boxes_xyz_m": [
+          [
+            [
+              5.72,
+              -1.9,
+              3.46
+            ],
+            [
+              6.0,
+              1.9,
+              4.7
+            ]
+          ],
+          [
+            [
+              5.72,
+              2.38,
+              2.38
+            ],
+            [
+              6.0,
+              3.98,
+              4.7
+            ]
+          ]
+        ],
+        "walk_surface_part": "Frontier_FieldWorkshop_Foundation",
+        "upper_occlusion_begins_z_m": 4.7
+      },
+      "parts": {
+        "Frontier_FieldWorkshop_Foundation": {
+          "role": "floor_and_skirt",
+          "triangles": 12,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Frontier_FieldWorkshop_ThresholdRamp": {
+          "role": "walk_surface",
+          "triangles": 24,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Frontier_FieldWorkshop_GroundShell": {
+          "role": "wall_collision",
+          "triangles": 96,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Panels"
+          ]
+        },
+        "Frontier_FieldWorkshop_PortalFrame": {
+          "detail_source": "Frontier_FieldWorkshop_PortalFrame_Detail",
+          "detail_triangles": 192,
+          "role": "static",
+          "triangles": 96,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Cyan"
+          ]
+        },
+        "Frontier_FieldWorkshop_GroundWindows": {
+          "role": "facade_glazing",
+          "triangles": 72,
+          "triangle_budget": 192,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Frontier_FieldWorkshop_PortalFixture": {
+          "role": "static",
+          "triangles": 24,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Cyan"
+          ]
+        },
+        "Frontier_FieldWorkshop_Roof": {
+          "role": "occlusion_roof",
+          "triangles": 60,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Frontier_FieldWorkshop_RoofPlant": {
+          "detail_source": "Frontier_FieldWorkshop_RoofPlant_Detail",
+          "detail_triangles": 168,
+          "role": "replaceable_equipment",
+          "triangles": 72,
+          "triangle_budget": 188,
+          "slots": [
+            "Habitat_Panels",
+            "Steel"
+          ]
+        },
+        "Frontier_FieldWorkshop_RoofMonitor": {
+          "role": "occlusion_roof",
+          "triangles": 48,
+          "triangle_budget": 192,
+          "slots": [
+            "Frame_Graphite",
+            "Habitat_Panels",
+            "Glass_Opaque"
+          ]
+        }
+      },
+      "instances": [
+        {
+          "part_id": "Frontier_FieldWorkshop_Foundation",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Frontier_FieldWorkshop_ThresholdRamp",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Frontier_FieldWorkshop_GroundShell",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Frontier_FieldWorkshop_PortalFrame",
+          "translation_m": [
+            6.0,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Frontier_FieldWorkshop_GroundWindows",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Frontier_FieldWorkshop_PortalFixture",
+          "translation_m": [
+            6.0,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Frontier_FieldWorkshop_Roof",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.699999809265137
+          ]
+        },
+        {
+          "part_id": "Frontier_FieldWorkshop_RoofPlant",
+          "translation_m": [
+            -1.8300000429153442,
+            1.399999976158142,
+            4.949999809265137
+          ]
+        },
+        {
+          "part_id": "Frontier_FieldWorkshop_RoofMonitor",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.949999809265137
+          ]
+        }
+      ]
+    },
+    "Frontier_FreightDepot": {
+      "district": "frontier",
+      "source_scene": "Frontier_FreightDepot",
+      "asset": "Export/MeasuredBuildings/Frontier_FreightDepot.glb",
+      "structure_dimensions_m": [
+        20,
+        16,
+        9.6
+      ],
+      "story_heights_m": [
+        4.8,
+        4.8
+      ],
+      "pivot_m": [
+        0,
+        0,
+        0
+      ],
+      "ground_contact_z_m": 0,
+      "floor_surface_z_m": 0.06,
+      "foundation_skirt_depth_m": 0.65,
+      "floor_bounds_xy_m": [
+        [
+          -10.0,
+          -8.0
+        ],
+        [
+          10.0,
+          8.0
+        ]
+      ],
+      "entrances": [
+        {
+          "kind": "vehicle",
+          "outward_xyz": [
+            1,
+            0,
+            0
+          ],
+          "threshold_xyz_m": [
+            10.0,
+            0.0,
+            0.06
+          ],
+          "opening_width_m": 5.85,
+          "opening_height_m": 4.115,
+          "ramp_run_m": 1.2,
+          "outdoor_connection_xyz_m": [
+            11.2,
+            0.0,
+            0
+          ],
+          "interior_connection_xyz_m": [
+            7.2,
+            0.0,
+            0.06
+          ],
+          "keep_clear_xy_m": [
+            [
+              7.2,
+              -2.925
+            ],
+            [
+              11.2,
+              2.925
+            ]
+          ]
+        },
+        {
+          "kind": "pedestrian",
+          "outward_xyz": [
+            1,
+            0,
+            0
+          ],
+          "threshold_xyz_m": [
+            10.0,
+            4.28,
+            0.06
+          ],
+          "opening_width_m": 1.4500000000000002,
+          "opening_height_m": 2.2849999999999997,
+          "ramp_run_m": 1.2,
+          "outdoor_connection_xyz_m": [
+            11.2,
+            4.28,
+            0
+          ],
+          "interior_connection_xyz_m": [
+            7.2,
+            4.28,
+            0.06
+          ],
+          "keep_clear_xy_m": [
+            [
+              7.2,
+              3.555
+            ],
+            [
+              11.2,
+              5.005
+            ]
+          ]
+        }
+      ],
+      "minimum_front_setback_m": 5.0,
+      "collision": {
+        "ground_wall_boxes_xyz_m": [
+          [
+            [
+              -10.0,
+              -8.0,
+              0.06
+            ],
+            [
+              -9.72,
+              8.0,
+              4.8
+            ]
+          ],
+          [
+            [
+              -9.72,
+              -8.0,
+              0.06
+            ],
+            [
+              9.72,
+              -7.72,
+              4.8
+            ]
+          ],
+          [
+            [
+              -9.72,
+              7.72,
+              0.06
+            ],
+            [
+              9.72,
+              8.0,
+              4.8
+            ]
+          ],
+          [
+            [
+              9.72,
+              -8.0,
+              0.06
+            ],
+            [
+              10.0,
+              -3.0,
+              4.8
+            ]
+          ],
+          [
+            [
+              9.72,
+              3.0,
+              0.06
+            ],
+            [
+              10.0,
+              3.48,
+              4.8
+            ]
+          ],
+          [
+            [
+              9.72,
+              5.08,
+              0.06
+            ],
+            [
+              10.0,
+              8.0,
+              4.8
+            ]
+          ]
+        ],
+        "lintel_boxes_xyz_m": [
+          [
+            [
+              9.72,
+              -3.0,
+              4.21
+            ],
+            [
+              10.0,
+              3.0,
+              4.8
+            ]
+          ],
+          [
+            [
+              9.72,
+              3.48,
+              2.38
+            ],
+            [
+              10.0,
+              5.08,
+              4.8
+            ]
+          ]
+        ],
+        "walk_surface_part": "Frontier_FreightDepot_Foundation",
+        "upper_occlusion_begins_z_m": 4.8
+      },
+      "parts": {
+        "Frontier_FreightDepot_Foundation": {
+          "role": "floor_and_skirt",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Frontier_FreightDepot_ThresholdRamp": {
+          "role": "walk_surface",
+          "triangles": 24,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Frontier_FreightDepot_GroundShell": {
+          "role": "wall_collision",
+          "triangles": 96,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Panels"
+          ]
+        },
+        "Frontier_FreightDepot_PortalFrame": {
+          "detail_source": "Frontier_FreightDepot_PortalFrame_Detail",
+          "detail_triangles": 192,
+          "role": "static",
+          "triangles": 96,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Amber"
+          ]
+        },
+        "Frontier_FreightDepot_GroundWindows": {
+          "role": "facade_glazing",
+          "triangles": 72,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Frontier_FreightDepot_PortalFixture": {
+          "role": "static",
+          "triangles": 48,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Cyan"
+          ]
+        },
+        "Frontier_FreightDepot_TerraceDeck_1": {
+          "role": "floor_and_occlusion",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Frontier_FreightDepot_Upper1_Shell": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Panels"
+          ]
+        },
+        "Frontier_FreightDepot_Upper1_SlabBand": {
+          "role": "static",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Frontier_FreightDepot_Upper1_EndGlazing": {
+          "role": "facade_glazing",
+          "triangles": 96,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Frontier_FreightDepot_Upper1_SideGlazing": {
+          "role": "facade_glazing",
+          "triangles": 96,
+          "triangle_budget": 196,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Frontier_FreightDepot_Roof": {
+          "role": "occlusion_roof",
+          "triangles": 60,
+          "triangle_budget": 196,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Frontier_FreightDepot_RoofPlant": {
+          "detail_source": "Frontier_FreightDepot_RoofPlant_Detail",
+          "detail_triangles": 168,
+          "role": "replaceable_equipment",
+          "triangles": 72,
+          "triangle_budget": 188,
+          "slots": [
+            "Habitat_Panels",
+            "Steel"
+          ]
+        },
+        "Frontier_FreightDepot_RoofMonitor": {
+          "role": "occlusion_roof",
+          "triangles": 48,
+          "triangle_budget": 192,
+          "slots": [
+            "Frame_Graphite",
+            "Habitat_Panels",
+            "Glass_Opaque"
+          ]
+        }
+      },
+      "instances": [
+        {
+          "part_id": "Frontier_FreightDepot_Foundation",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Frontier_FreightDepot_ThresholdRamp",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Frontier_FreightDepot_GroundShell",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Frontier_FreightDepot_PortalFrame",
+          "translation_m": [
+            10.0,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Frontier_FreightDepot_GroundWindows",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Frontier_FreightDepot_PortalFixture",
+          "translation_m": [
+            10.0,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Frontier_FreightDepot_TerraceDeck_1",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.800000190734863
+          ]
+        },
+        {
+          "part_id": "Frontier_FreightDepot_Upper1_Shell",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.800000190734863
+          ]
+        },
+        {
+          "part_id": "Frontier_FreightDepot_Upper1_SlabBand",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.800000190734863
+          ]
+        },
+        {
+          "part_id": "Frontier_FreightDepot_Upper1_EndGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.800000190734863
+          ]
+        },
+        {
+          "part_id": "Frontier_FreightDepot_Upper1_SideGlazing",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.800000190734863
+          ]
+        },
+        {
+          "part_id": "Frontier_FreightDepot_Roof",
+          "translation_m": [
+            0.0,
+            0.0,
+            9.600000381469727
+          ]
+        },
+        {
+          "part_id": "Frontier_FreightDepot_RoofPlant",
+          "translation_m": [
+            -3.0299999713897705,
+            2.0250000953674316,
+            9.850000381469727
+          ]
+        },
+        {
+          "part_id": "Frontier_FreightDepot_RoofMonitor",
+          "translation_m": [
+            0.0,
+            0.0,
+            9.850000381469727
+          ]
+        }
+      ]
+    },
+    "Frontier_DecommissionedRelay": {
+      "district": "frontier",
+      "source_scene": "Frontier_DecommissionedRelay",
+      "asset": "Export/MeasuredBuildings/Frontier_DecommissionedRelay.glb",
+      "structure_dimensions_m": [
+        10,
+        10,
+        4.0
+      ],
+      "story_heights_m": [
+        4.0
+      ],
+      "pivot_m": [
+        0,
+        0,
+        0
+      ],
+      "ground_contact_z_m": 0,
+      "floor_surface_z_m": 0.06,
+      "foundation_skirt_depth_m": 0.65,
+      "floor_bounds_xy_m": [
+        [
+          -5.0,
+          -5.0
+        ],
+        [
+          5.0,
+          5.0
+        ]
+      ],
+      "entrances": [
+        {
+          "kind": "pedestrian",
+          "outward_xyz": [
+            1,
+            0,
+            0
+          ],
+          "threshold_xyz_m": [
+            5.0,
+            0.0,
+            0.06
+          ],
+          "opening_width_m": 2.25,
+          "opening_height_m": 2.7649999999999997,
+          "ramp_run_m": 1.2,
+          "outdoor_connection_xyz_m": [
+            6.2,
+            0.0,
+            0
+          ],
+          "interior_connection_xyz_m": [
+            2.2,
+            0.0,
+            0.06
+          ],
+          "keep_clear_xy_m": [
+            [
+              2.2,
+              -1.125
+            ],
+            [
+              6.2,
+              1.125
+            ]
+          ]
+        }
+      ],
+      "minimum_front_setback_m": 3.8,
+      "collision": {
+        "ground_wall_boxes_xyz_m": [
+          [
+            [
+              -5.0,
+              -5.0,
+              0.06
+            ],
+            [
+              -4.72,
+              5.0,
+              4.0
+            ]
+          ],
+          [
+            [
+              -4.72,
+              -5.0,
+              0.06
+            ],
+            [
+              4.72,
+              -4.72,
+              4.0
+            ]
+          ],
+          [
+            [
+              -4.72,
+              4.72,
+              0.06
+            ],
+            [
+              4.72,
+              5.0,
+              4.0
+            ]
+          ],
+          [
+            [
+              4.72,
+              -5.0,
+              0.06
+            ],
+            [
+              5.0,
+              -1.2,
+              4.0
+            ]
+          ],
+          [
+            [
+              4.72,
+              1.2,
+              0.06
+            ],
+            [
+              5.0,
+              5.0,
+              4.0
+            ]
+          ]
+        ],
+        "lintel_boxes_xyz_m": [
+          [
+            [
+              4.72,
+              -1.2,
+              2.86
+            ],
+            [
+              5.0,
+              1.2,
+              4.0
+            ]
+          ]
+        ],
+        "walk_surface_part": "Frontier_DecommissionedRelay_Foundation",
+        "upper_occlusion_begins_z_m": 4.0
+      },
+      "parts": {
+        "Frontier_DecommissionedRelay_Foundation": {
+          "role": "floor_and_skirt",
+          "triangles": 12,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Frontier_DecommissionedRelay_ThresholdRamp": {
+          "role": "walk_surface",
+          "triangles": 12,
+          "triangle_budget": 188,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Frontier_DecommissionedRelay_GroundShell": {
+          "role": "wall_collision",
+          "triangles": 72,
+          "triangle_budget": 192,
+          "slots": [
+            "Ruin_Obsidian"
+          ]
+        },
+        "Frontier_DecommissionedRelay_PortalFrame": {
+          "detail_source": "Frontier_DecommissionedRelay_PortalFrame_Detail",
+          "detail_triangles": 144,
+          "role": "static",
+          "triangles": 48,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Amber"
+          ]
+        },
+        "Frontier_DecommissionedRelay_GroundWindows": {
+          "role": "facade_glazing",
+          "triangles": 48,
+          "triangle_budget": 192,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Frontier_DecommissionedRelay_PortalFixture": {
+          "role": "static",
+          "triangles": 24,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Copper"
+          ]
+        },
+        "Frontier_DecommissionedRelay_Roof": {
+          "role": "occlusion_roof",
+          "triangles": 60,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Frontier_DecommissionedRelay_RoofPlant": {
+          "detail_source": "Frontier_DecommissionedRelay_RoofPlant_Detail",
+          "detail_triangles": 168,
+          "role": "replaceable_equipment",
+          "triangles": 72,
+          "triangle_budget": 188,
+          "slots": [
+            "Habitat_Panels",
+            "Steel"
+          ]
+        },
+        "Frontier_DecommissionedRelay_SignalSpine": {
+          "detail_source": "Frontier_DecommissionedRelay_SignalSpine_Detail",
+          "detail_triangles": 132,
+          "role": "replaceable_equipment",
+          "triangles": 36,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Amber"
+          ]
+        }
+      },
+      "instances": [
+        {
+          "part_id": "Frontier_DecommissionedRelay_Foundation",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Frontier_DecommissionedRelay_ThresholdRamp",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Frontier_DecommissionedRelay_GroundShell",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Frontier_DecommissionedRelay_PortalFrame",
+          "translation_m": [
+            5.0,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Frontier_DecommissionedRelay_GroundWindows",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Frontier_DecommissionedRelay_PortalFixture",
+          "translation_m": [
+            5.0,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Frontier_DecommissionedRelay_Roof",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.0
+          ]
+        },
+        {
+          "part_id": "Frontier_DecommissionedRelay_RoofPlant",
+          "translation_m": [
+            -1.5299999713897705,
+            1.274999976158142,
+            4.25
+          ]
+        },
+        {
+          "part_id": "Frontier_DecommissionedRelay_SignalSpine",
+          "translation_m": [
+            1.4279999732971191,
+            -1.937999963760376,
+            4.25
+          ]
+        }
+      ]
+    },
+    "Mine_AccessSupport": {
+      "district": "mine",
+      "source_scene": "Mine_AccessSupport",
+      "asset": "Export/MeasuredBuildings/Mine_AccessSupport.glb",
+      "structure_dimensions_m": [
+        15,
+        13,
+        4.6
+      ],
+      "story_heights_m": [
+        4.6
+      ],
+      "pivot_m": [
+        0,
+        0,
+        0
+      ],
+      "ground_contact_z_m": 0,
+      "floor_surface_z_m": 0.06,
+      "foundation_skirt_depth_m": 0.65,
+      "floor_bounds_xy_m": [
+        [
+          -7.5,
+          -6.5
+        ],
+        [
+          7.5,
+          6.5
+        ]
+      ],
+      "entrances": [
+        {
+          "kind": "vehicle",
+          "outward_xyz": [
+            1,
+            0,
+            0
+          ],
+          "threshold_xyz_m": [
+            7.5,
+            0.0,
+            0.06
+          ],
+          "opening_width_m": 4.25,
+          "opening_height_m": 3.5149999999999997,
+          "ramp_run_m": 1.2,
+          "outdoor_connection_xyz_m": [
+            8.7,
+            0.0,
+            0
+          ],
+          "interior_connection_xyz_m": [
+            4.7,
+            0.0,
+            0.06
+          ],
+          "keep_clear_xy_m": [
+            [
+              4.7,
+              -2.125
+            ],
+            [
+              8.7,
+              2.125
+            ]
+          ]
+        },
+        {
+          "kind": "pedestrian",
+          "outward_xyz": [
+            1,
+            0,
+            0
+          ],
+          "threshold_xyz_m": [
+            7.5,
+            3.4800000000000004,
+            0.06
+          ],
+          "opening_width_m": 1.4500000000000002,
+          "opening_height_m": 2.2849999999999997,
+          "ramp_run_m": 1.2,
+          "outdoor_connection_xyz_m": [
+            8.7,
+            3.4800000000000004,
+            0
+          ],
+          "interior_connection_xyz_m": [
+            4.7,
+            3.4800000000000004,
+            0.06
+          ],
+          "keep_clear_xy_m": [
+            [
+              4.7,
+              2.7550000000000003
+            ],
+            [
+              8.7,
+              4.205
+            ]
+          ]
+        }
+      ],
+      "minimum_front_setback_m": 5.0,
+      "collision": {
+        "ground_wall_boxes_xyz_m": [
+          [
+            [
+              -7.5,
+              -6.5,
+              0.06
+            ],
+            [
+              -7.22,
+              6.5,
+              4.6
+            ]
+          ],
+          [
+            [
+              -7.22,
+              -6.5,
+              0.06
+            ],
+            [
+              7.22,
+              -6.22,
+              4.6
+            ]
+          ],
+          [
+            [
+              -7.22,
+              6.22,
+              0.06
+            ],
+            [
+              7.22,
+              6.5,
+              4.6
+            ]
+          ],
+          [
+            [
+              7.22,
+              -6.5,
+              0.06
+            ],
+            [
+              7.5,
+              -2.2,
+              4.6
+            ]
+          ],
+          [
+            [
+              7.22,
+              2.2,
+              0.06
+            ],
+            [
+              7.5,
+              2.68,
+              4.6
+            ]
+          ],
+          [
+            [
+              7.22,
+              4.28,
+              0.06
+            ],
+            [
+              7.5,
+              6.5,
+              4.6
+            ]
+          ]
+        ],
+        "lintel_boxes_xyz_m": [
+          [
+            [
+              7.22,
+              -2.2,
+              3.61
+            ],
+            [
+              7.5,
+              2.2,
+              4.6
+            ]
+          ],
+          [
+            [
+              7.22,
+              2.68,
+              2.38
+            ],
+            [
+              7.5,
+              4.28,
+              4.6
+            ]
+          ]
+        ],
+        "walk_surface_part": "Mine_AccessSupport_Foundation",
+        "upper_occlusion_begins_z_m": 4.6
+      },
+      "parts": {
+        "Mine_AccessSupport_Foundation": {
+          "role": "floor_and_skirt",
+          "triangles": 12,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Mine_AccessSupport_ThresholdRamp": {
+          "role": "walk_surface",
+          "triangles": 24,
+          "triangle_budget": 192,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Mine_AccessSupport_GroundShell": {
+          "role": "wall_collision",
+          "triangles": 96,
+          "triangle_budget": 196,
+          "slots": [
+            "Habitat_Concrete"
+          ]
+        },
+        "Mine_AccessSupport_PortalFrame": {
+          "detail_source": "Mine_AccessSupport_PortalFrame_Detail",
+          "detail_triangles": 192,
+          "role": "static",
+          "triangles": 96,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Amber"
+          ]
+        },
+        "Mine_AccessSupport_GroundWindows": {
+          "role": "facade_glazing",
+          "triangles": 48,
+          "triangle_budget": 192,
+          "slots": [
+            "Glass_Opaque"
+          ]
+        },
+        "Mine_AccessSupport_PortalFixture": {
+          "role": "static",
+          "triangles": 48,
+          "triangle_budget": 192,
+          "slots": [
+            "Steel",
+            "Glow_Cyan"
+          ]
+        },
+        "Mine_AccessSupport_Roof": {
+          "role": "occlusion_roof",
+          "triangles": 60,
+          "triangle_budget": 196,
+          "slots": [
+            "Steel"
+          ]
+        },
+        "Mine_AccessSupport_RoofPlant": {
+          "detail_source": "Mine_AccessSupport_RoofPlant_Detail",
+          "detail_triangles": 168,
+          "role": "replaceable_equipment",
+          "triangles": 72,
+          "triangle_budget": 188,
+          "slots": [
+            "Habitat_Panels",
+            "Steel"
+          ]
+        },
+        "Mine_AccessSupport_RoofMonitor": {
+          "role": "occlusion_roof",
+          "triangles": 48,
+          "triangle_budget": 192,
+          "slots": [
+            "Frame_Graphite",
+            "Habitat_Concrete",
+            "Glass_Opaque"
+          ]
+        }
+      },
+      "instances": [
+        {
+          "part_id": "Mine_AccessSupport_Foundation",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Mine_AccessSupport_ThresholdRamp",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Mine_AccessSupport_GroundShell",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Mine_AccessSupport_PortalFrame",
+          "translation_m": [
+            7.5,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Mine_AccessSupport_GroundWindows",
+          "translation_m": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "part_id": "Mine_AccessSupport_PortalFixture",
+          "translation_m": [
+            7.5,
+            0.0,
+            0.05999999865889549
+          ]
+        },
+        {
+          "part_id": "Mine_AccessSupport_Roof",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.599999904632568
+          ]
+        },
+        {
+          "part_id": "Mine_AccessSupport_RoofPlant",
+          "translation_m": [
+            -2.2799999713897705,
+            1.649999976158142,
+            4.849999904632568
+          ]
+        },
+        {
+          "part_id": "Mine_AccessSupport_RoofMonitor",
+          "translation_m": [
+            0.0,
+            0.0,
+            4.849999904632568
+          ]
+        }
+      ]
+    }
+  }
+}

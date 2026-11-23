@@ -20,7 +20,11 @@ const {chromium}=require(require.resolve('playwright',{paths:[bundle]}));
   await page.locator('#opacity').fill('80');await page.locator('#opacity').dispatchEvent('input');
   const journalOpacity=await page.locator('.panel-fill').first().evaluate(e=>getComputedStyle(e).opacity);
   await page.click('#background');const journalBackgroundHidden=await page.locator('.world-background').first().evaluate(e=>getComputedStyle(e).display==='none');
-  const result={status:next.startsWith('45_dialogue_page_')&&previous==='05_dialogue'&&noticeNext==='47_notice_page_02'&&settlementFitsOnePage&&failureNext==='63_planet_failure_02'&&failurePrevious==='63_planet_failure_01'&&journalOpacity==='0.8'&&journalBackgroundHidden?'PASS':'FAIL',dialogueNext:next,dialoguePrevious:previous,noticeNext,settlementFitsOnePage,failureNext,failurePrevious,journalOpacity,journalBackgroundHidden};
+  await page.selectOption('#scene','87_relay_ready');
+  await page.locator('#border').fill('80');await page.locator('#border').dispatchEvent('input');
+  const borderOpacity=await page.locator('#stage .panel-border').first().evaluate(e=>getComputedStyle(e).opacity);
+  const panelOpacity=await page.locator('#stage .panel-fill').first().evaluate(e=>getComputedStyle(e).opacity);
+  const result={status:next.startsWith('45_dialogue_page_')&&previous==='05_dialogue'&&noticeNext==='47_notice_page_02'&&settlementFitsOnePage&&failureNext==='63_planet_failure_02'&&failurePrevious==='63_planet_failure_01'&&journalOpacity==='0.8'&&journalBackgroundHidden&&borderOpacity==='0.8'&&panelOpacity==='0.8'?'PASS':'FAIL',dialogueNext:next,dialoguePrevious:previous,noticeNext,settlementFitsOnePage,failureNext,failurePrevious,journalOpacity,journalBackgroundHidden,borderOpacity,panelOpacity};
   fs.writeFileSync(path.join(root,'Validation/preview_navigation.json'),JSON.stringify(result,null,2)+'\n');
   console.log(result);if(result.status!=='PASS')process.exitCode=1;
  }finally{await browser.close()}

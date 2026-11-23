@@ -71,31 +71,32 @@ def apply_design(g):
         'stage':'<path d="M3 4h18v16H3zM3 9h18M8 4v16M12 13l5 2-5 3z"/>',
     })
 
-    def wheel(owned=True,hover='pistol',equipped='hand'):
+    def wheel(owned=True,hover='pistol',equipped='hand',primary=False):
         b=backdrop('mine')+rect(0,0,1280,800,'#02090e',extra='opacity=".75"')
         b+=text('장비',640,79,14,C['accent'],600,'middle')+text('무기 선택',640,125,32,weight=700,anchor='middle')
         b+=text('가리킨 뒤 Q를 놓으면 장착됩니다.',640,157,16,C['muted'],anchor='middle')
         for name,angle,cx,cy,title in [('empty',-90,640,236,'주 무장'),('pistol',30,780,466,'보조 무장'),('hand',150,500,466,'맨손')]:
-            available=name=='hand' or (name=='pistol' and owned)
+            available=name=='hand' or (name=='pistol' and owned) or (name=='empty' and primary)
             pointed=hover==name;active=equipped==name
             fill='#244c50' if pointed and available else '#283034' if pointed else '#112630'
             stroke=C['accent'] if pointed and available else C['amber'] if pointed else '#3f5b66'
             b+=f'<g class="panel-fill"><path d="{sector(640,390,87,224,angle)}" fill="{fill}"/></g>'
             b+=f'<path d="{sector(640,390,87,224,angle)}" fill="none" stroke="{stroke}" stroke-width="{3 if pointed else 1}"/>'
             col=C['ink'] if available else C['muted']
-            ic='unarmed' if name=='hand' else 'pistol' if available else 'slot_empty'
+            ic='unarmed' if name=='hand' else 'carbine' if name=='empty' and primary else 'pistol' if available else 'slot_empty'
             b+=icon(ic,cx-18,cy-37,36,col)+text(title,cx,cy+23,16,col,600,'middle',180)
-            status='현재 장착' if active else '권총' if name=='pistol' and owned else '근접 공격' if name=='hand' else '비어 있음' if name=='empty' else '미보유'
+            status='현재 장착' if active else '권총' if name=='pistol' and owned else '근접 공격' if name=='hand' else '펄스 카빈' if name=='empty' and primary else '비어 있음' if name=='empty' else '미보유'
             b+=text(status,cx,cy+49,14,C['accent'] if active else C['muted'],400,'middle',180)
             if active:b+=icon('check',cx+42,cy-43,18,C['accent'])
-        available=hover=='hand' or (hover=='pistol' and owned)
-        center_title='맨손' if hover=='hand' else '권총' if available else '선택 불가'
+        available=hover=='hand' or (hover=='pistol' and owned) or (hover=='empty' and primary)
+        center_title='맨손' if hover=='hand' else '펄스 카빈' if hover=='empty' and primary else '권총' if available else '선택 불가'
         b+=text(center_title,640,387,24,weight=700,anchor='middle',width=150)
         b+=text('현재 장착 유지' if not available else 'Q 놓아서 선택',640,416,14,C['muted'],anchor='middle',width=160)
         b+=hint('Q 홀드','마우스로 가리키기',264,676)+hint('Q 해제','장착',646,676)+hint('Esc','취소',882,676)
         b+=text('게임 일시정지 · 빈 슬롯과 취소는 기존 장착 유지',640,742,14,C['muted'],anchor='middle',width=1100)
         return b
 
+    g['current_weapon_wheel']=wheel
     scene('35_weapon_wheel_locked','무기 선택 / 해금 전',['UI-24'],lambda:wheel(False,'hand'))
     scene('36_weapon_wheel_pistol','무기 선택 / 권총 가리킴',['UI-24'],lambda:wheel(True,'pistol'))
     scene('37_weapon_wheel_empty','무기 선택 / 빈 슬롯 유지',['UI-24'],lambda:wheel(True,'empty'))

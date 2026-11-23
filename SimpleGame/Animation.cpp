@@ -326,6 +326,37 @@ void LayeredAnimation::BindDodgeClip(AnimationRig &rig, const std::string &name,
         }
     }
 }
+void LayeredAnimation::BindSupportClip(AnimationRig &rig, const std::string &name, int index)
+{
+    constexpr const char *kNames[8] = {"Support_Treat_Enter",   "Support_Treat_Loop",   "Support_Treat_Exit",
+                                       "Support_Inspect_Enter", "Support_Inspect_Loop", "Support_Inspect_Exit",
+                                       "Support_Carry_Idle",    "Support_Carry_Walk"};
+    for (size_t i = 0; i < std::size(kNames); ++i)
+    {
+        if (name == kNames[i])
+        {
+            rig.supportClips[i] = index;
+            return;
+        }
+    }
+}
+void LayeredAnimation::BindTransitionClip(AnimationRig &rig, const std::string &name, int index)
+{
+    constexpr const char *kNames[12] = {"Run_Turn180_Left",         "Run_Turn180_Right",
+                                        "Turn90_Left",              "Turn90_Right",
+                                        "Aim_Strafe_Start_Forward", "Aim_Strafe_Start_Back",
+                                        "Aim_Strafe_Start_Left",    "Aim_Strafe_Start_Right",
+                                        "Aim_Strafe_Stop_Forward",  "Aim_Strafe_Stop_Back",
+                                        "Aim_Strafe_Stop_Left",     "Aim_Strafe_Stop_Right"};
+    for (size_t i = 0; i < std::size(kNames); ++i)
+    {
+        if (name == kNames[i])
+        {
+            rig.transitionClips[i] = index;
+            return;
+        }
+    }
+}
 void LayeredAnimation::PrepareGraph(std::vector<ResourceClip> &clips, const AnimationRig &rig)
 {
     std::vector<bool> required(clips.size(), false);
@@ -345,6 +376,14 @@ void LayeredAnimation::PrepareGraph(std::vector<ResourceClip> &clips, const Anim
         require(sample.clipIndex);
     }
     for (int index : rig.dodgeClips)
+    {
+        require(index);
+    }
+    for (int index : rig.supportClips)
+    {
+        require(index);
+    }
+    for (int index : rig.transitionClips)
     {
         require(index);
     }
@@ -463,7 +502,31 @@ void LayeredAnimation::Sample(const ResourceMesh &mesh, const CharacterPose &pos
         ClipPose(mesh, dodge, pose.dodgeTime / mesh.Clips()[size_t(dodge)].duration, false, other);
         Mix(base, other, pose.dodgeWeight, mesh.boneCount);
     }
-    if (pose.armed && rig.carryIdle >= 0 && rig.carryWalk >= 0 && rig.carryRun >= 0)
+    const int transition =
+        !dodgeLayer && pose.transitionClip >= 0 && size_t(pose.transitionClip) < rig.transitionClips.size()
+            ? rig.transitionClips[size_t(pose.transitionClip)]
+            : -1;
+    const float transWeight = transition >= 0 ? std::clamp(pose.transitionWeight, 0.f, 1.f) : 0.f;
+    if (transWeight > 0.f)
+    {
+        ClipPose(mesh, transition, std::clamp(pose.transitionPhase, 0.f, 1.f), false, other);
+        Mix(base, other, transWeight, mesh.boneCount);
+    }
+    const int support =
+        !dodgeLayer && pose.supportClip >= 0 && size_t(pose.supportClip) < rig.supportClips.size()
+            ? rig.supportClips[size_t(pose.supportClip)]
+            : -1;
+    const float supportWeight = support >= 0 ? std::clamp(pose.supportWeight, 0.f, 1.f) : 0.f;
+    const bool supportFullBody = supportWeight > 0.f && pose.supportClip <= 2;
+    const bool supportUpperBody = supportWeight > 0.f && pose.supportClip >= 3;
+    const bool suppressWeaponHands = supportWeight > 0.5f;
+    if (supportFullBody)
+    {
+        const bool loop = pose.supportClip == 1;
+        ClipPose(mesh, support, pose.supportPhase, loop, other);
+        Mix(base, other, supportWeight, mesh.boneCount);
+    }
+    if (!suppressWeaponHands && pose.armed && rig.carryIdle >= 0 && rig.carryWalk >= 0 && rig.carryRun >= 0)
     {
         PoseBuffer carry{}, moving{};
         if (aim < 1.f)
@@ -512,10 +575,16 @@ void LayeredAnimation::Sample(const ResourceMesh &mesh, const CharacterPose &pos
         }
         UpperLayer(mesh, base, carry, 1, true);
     }
-    else if (aim > 0)
+    else if (!suppressWeaponHands && aim > 0)
     {
         ClipPose(mesh, rig.aim, 0, false, other);
         UpperLayer(mesh, base, other, aim);
+    }
+    if (supportUpperBody)
+    {
+        const bool loop = pose.supportClip == 4 || pose.supportClip >= 6;
+        ClipPose(mesh, support, pose.supportPhase, loop, other);
+        UpperLayer(mesh, base, other, supportWeight, true);
     }
     float fire = pose.blended ? pose.fireSeconds : pose.recoil * .4f;
     if (fire > 0)
@@ -538,7 +607,9 @@ void LayeredAnimation::Sample(const ResourceMesh &mesh, const CharacterPose &pos
     }
     // Small spine counterbalance while start/stop/pivot clips are being authored.
     // Keep root/legs and precise aimed upper-body poses intact.
-    const float leanWeight = pose.blended ? (1 - aim) * (1 - (dodgeLayer ? pose.dodgeWeight : 0)) : 0;
+    const float leanWeight = pose.blended ? (1 - aim) * (1 - (dodgeLayer ? pose.dodgeWeight : 0)) *
+                                                (1 - transWeight) * (1 - supportWeight)
+                                          : 0;
     if (leanWeight > 0.f && (pose.motionForwardLean != 0.f || pose.motionSideLean != 0.f))
     {
         AnimationRotation pitch = {0, std::sin(pose.motionForwardLean * leanWeight * .5f), 0,
@@ -617,6 +688,24 @@ void CharacterAnimation::InterruptDodge()
         dodgeFade = kDodgeBlendOut;
     }
 }
+void CharacterAnimation::TriggerTurn(bool run180, bool rightTurn)
+{
+    if (dodgeSample >= 0)
+    {
+        return;
+    }
+    transitionClip = (run180 ? 0 : 2) + (rightTurn ? 1 : 0);
+    transitionTime = 0;
+    transitionDuration = run180 ? .5333f : .50f;
+}
+float CharacterAnimation::TransitionWeight() const
+{
+    if (transitionClip < 0 || transitionDuration <= 0)
+    {
+        return 0;
+    }
+    return Smooth((std::min)(transitionTime / .08f, (transitionDuration - transitionTime) / .10f));
+}
 void CharacterAnimation::Update(float dt, Point worldVelocity, float facingYaw, bool aiming, bool riding)
 {
     dt = std::clamp(dt, 0.f, .05f);
@@ -628,10 +717,13 @@ void CharacterAnimation::Update(float dt, Point worldVelocity, float facingYaw, 
         aimWeight = 0;
         fireSeconds = 0;
         dodgeSample = -1;
+        transitionClip = -1;
+        wasAimMoving = false;
         return;
     }
     if (dodgeSample >= 0)
     {
+        transitionClip = -1;
         if (dodgeFade >= 0)
         {
             dodgeFade = (std::max)(0.f, dodgeFade - dt);
@@ -666,6 +758,50 @@ void CharacterAnimation::Update(float dt, Point worldVelocity, float facingYaw, 
     left = (-sy * velocity.x + cy * velocity.y) * WorldScale::metersPerUnit;
     forward = (cy * velocity.x + sy * velocity.y) * WorldScale::metersPerUnit;
     float speed = std::hypot(left, forward);
+    // Directional transitions: advance active clip or trigger Aim_Strafe_Start/Stop on aim movement edges.
+    if (transitionClip >= 0)
+    {
+        transitionTime += dt;
+        if (transitionTime >= transitionDuration)
+        {
+            if (transitionClip <= 3)
+            {
+                phase = (transitionClip % 2 == 0) ? .5f : 0.f;
+            }
+            transitionClip = -1;
+        }
+    }
+    if (aiming && dodgeSample < 0)
+    {
+        const bool movingNow = speed >= .55f;
+        const bool stoppedNow = speed < .25f;
+        if (movingNow)
+        {
+            lastAimDir = std::fabs(forward) >= std::fabs(left) ? (forward >= 0 ? 0 : 1) : (left >= 0 ? 2 : 3);
+        }
+        if (!wasAimMoving && movingNow)
+        {
+            transitionClip = 4 + lastAimDir;
+            transitionTime = 0;
+            transitionDuration = .40f;
+            wasAimMoving = true;
+        }
+        else if (wasAimMoving && stoppedNow)
+        {
+            transitionClip = 8 + lastAimDir;
+            transitionTime = 0;
+            transitionDuration = .4667f;
+            wasAimMoving = false;
+        }
+    }
+    else
+    {
+        wasAimMoving = false;
+        if (transitionClip >= 4)
+        {
+            transitionClip = -1;
+        }
+    }
     if (phaseDelta > 0 && std::hypot(worldVelocity.x, worldVelocity.y) > .001f)
     {
         float runWeight = std::clamp((speed - 1.08f) / (2.46f - 1.08f), 0.f, 1.f);
@@ -695,6 +831,9 @@ void CharacterAnimation::Apply(CharacterPose &pose) const
     pose.dodgeSample = dodgeSample;
     pose.dodgeTime = dodgeTime;
     pose.dodgeWeight = DodgeWeight();
+    pose.transitionClip = transitionClip;
+    pose.transitionPhase = transitionDuration > 0 ? std::clamp(transitionTime / transitionDuration, 0.f, 1.f) : 0;
+    pose.transitionWeight = TransitionWeight();
     if (dodgeSample >= 0 && dodgeTime < kDodgeBlendIn)
     {
         pose.locomotionPhase = dodgeEntryPhase;

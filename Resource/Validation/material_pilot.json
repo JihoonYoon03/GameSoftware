@@ -1,0 +1,1472 @@
+{
+  "status": "PASS",
+  "scope": "Pilot bindings and preserved source geometry, not native game rendering",
+  "metrics": {
+    "habitat": {
+      "geometry_unchanged": true,
+      "skin_and_animations_unchanged": true,
+      "original_parts": {
+        "Hab_Corner_3p6m_BudgetMesh.049": 24,
+        "Hab_Floor_2m_BudgetMesh.142": 24,
+        "Hab_Heat_Exchanger_BudgetMesh.007": 136,
+        "Hab_Pressure_Door_BudgetMesh.012": 36,
+        "Hab_Roof_2m_BudgetMesh.049": 24,
+        "Hab_Sensor_Mast_BudgetMesh.009": 140,
+        "Hab_Solar_Array_BudgetMesh.005": 72,
+        "Hab_Wall_Door_2m_BudgetMesh.007": 72,
+        "Hab_Wall_Solid_2m_BudgetMesh.040": 36,
+        "Hab_Wall_Window_2m_BudgetMesh.165": 188,
+        "Hab_Wall_Window_2m_Glazing_BudgetMesh.165": 24
+      },
+      "primitives": [
+        {
+          "mesh": "Hab_Corner_3p6m_BudgetMesh.049",
+          "material_id": "erma.material.Steel",
+          "vertices": 24,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 12,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Hab_Corner_3p6m_BudgetMesh.049",
+          "material_id": "erma.material.Glow_Cyan",
+          "vertices": 24,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 12,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Hab_Floor_2m_BudgetMesh.142",
+          "material_id": "erma.material.Habitat_Concrete",
+          "vertices": 24,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 12,
+          "density_texels_per_local_m_median": 256.0
+        },
+        {
+          "mesh": "Hab_Floor_2m_BudgetMesh.142",
+          "material_id": "erma.material.Habitat_Panels",
+          "vertices": 24,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 12,
+          "density_texels_per_local_m_median": 256.0
+        },
+        {
+          "mesh": "Hab_Heat_Exchanger_BudgetMesh.007",
+          "material_id": "erma.material.Steel",
+          "vertices": 24,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 12,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Hab_Heat_Exchanger_BudgetMesh.007",
+          "material_id": "erma.material.Alloy_Light",
+          "vertices": 192,
+          "triangles": 96,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 96,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Hab_Heat_Exchanger_BudgetMesh.007",
+          "material_id": "erma.material.Copper",
+          "vertices": 48,
+          "triangles": 28,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 24,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Hab_Pressure_Door_BudgetMesh.012",
+          "material_id": "erma.material.Steel",
+          "vertices": 24,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 12,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Hab_Pressure_Door_BudgetMesh.012",
+          "material_id": "erma.material.Glow_Cyan",
+          "vertices": 24,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 12,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Hab_Pressure_Door_BudgetMesh.012",
+          "material_id": "erma.material.Warning",
+          "vertices": 24,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 12,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Hab_Roof_2m_BudgetMesh.049",
+          "material_id": "erma.material.Habitat_Panels",
+          "vertices": 24,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 12,
+          "density_texels_per_local_m_median": 256.0
+        },
+        {
+          "mesh": "Hab_Roof_2m_BudgetMesh.049",
+          "material_id": "erma.material.Steel",
+          "vertices": 24,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 12,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Hab_Sensor_Mast_BudgetMesh.009",
+          "material_id": "erma.material.Steel",
+          "vertices": 72,
+          "triangles": 40,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 36,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Hab_Sensor_Mast_BudgetMesh.009",
+          "material_id": "erma.material.Alloy_Light",
+          "vertices": 48,
+          "triangles": 24,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 24,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Hab_Sensor_Mast_BudgetMesh.009",
+          "material_id": "erma.material.Glow_Amber",
+          "vertices": 174,
+          "triangles": 76,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 90,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Hab_Solar_Array_BudgetMesh.005",
+          "material_id": "erma.material.Steel",
+          "vertices": 48,
+          "triangles": 24,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 24,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Hab_Solar_Array_BudgetMesh.005",
+          "material_id": "erma.material.Solar",
+          "vertices": 24,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 12,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Hab_Solar_Array_BudgetMesh.005",
+          "material_id": "erma.material.Alloy_Light",
+          "vertices": 72,
+          "triangles": 36,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 36,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Hab_Wall_Door_2m_BudgetMesh.007",
+          "material_id": "erma.material.Habitat_Panels",
+          "vertices": 72,
+          "triangles": 36,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 36,
+          "density_texels_per_local_m_median": 256.0
+        },
+        {
+          "mesh": "Hab_Wall_Door_2m_BudgetMesh.007",
+          "material_id": "erma.material.Steel",
+          "vertices": 72,
+          "triangles": 36,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 36,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Hab_Wall_Solid_2m_BudgetMesh.040",
+          "material_id": "erma.material.Habitat_Panels",
+          "vertices": 24,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 12,
+          "density_texels_per_local_m_median": 256.0
+        },
+        {
+          "mesh": "Hab_Wall_Solid_2m_BudgetMesh.040",
+          "material_id": "erma.material.Steel",
+          "vertices": 48,
+          "triangles": 24,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 24,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Hab_Wall_Window_2m_BudgetMesh.165",
+          "material_id": "erma.material.Habitat_Panels",
+          "vertices": 48,
+          "triangles": 24,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 24,
+          "density_texels_per_local_m_median": 256.0
+        },
+        {
+          "mesh": "Hab_Wall_Window_2m_BudgetMesh.165",
+          "material_id": "erma.material.Steel",
+          "vertices": 174,
+          "triangles": 80,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 88,
+          "density_texels_per_local_m_median": 430.5
+        },
+        {
+          "mesh": "Hab_Wall_Window_2m_BudgetMesh.165",
+          "material_id": "erma.material.Alloy_Light",
+          "vertices": 48,
+          "triangles": 24,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 24,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Hab_Wall_Window_2m_BudgetMesh.165",
+          "material_id": "erma.material.Rubber",
+          "vertices": 96,
+          "triangles": 48,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 48,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Hab_Wall_Window_2m_BudgetMesh.165",
+          "material_id": "erma.material.Glow_Amber",
+          "vertices": 24,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 12,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Hab_Wall_Window_2m_Glazing_BudgetMesh.165",
+          "material_id": "erma.material.Glazing_Laminated",
+          "vertices": 48,
+          "triangles": 24,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 24,
+          "density_texels_per_local_m_median": null
+        }
+      ],
+      "texture_normal_issues": 0
+    },
+    "curve": {
+      "geometry_unchanged": true,
+      "skin_and_animations_unchanged": true,
+      "original_parts": {
+        "RoadPlan_Curve_2L_A30_R18_Surface_BudgetMesh.002": 116
+      },
+      "primitives": [
+        {
+          "mesh": "RoadPlan_Curve_2L_A30_R18_Surface_BudgetMesh.002",
+          "material_id": "erma.material.Road_Asphalt",
+          "vertices": 224,
+          "triangles": 116,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 122,
+          "density_texels_per_local_m_median": 250.8
+        }
+      ],
+      "texture_normal_issues": 0
+    },
+    "sidewalk": {
+      "geometry_unchanged": true,
+      "skin_and_animations_unchanged": true,
+      "original_parts": {
+        "RoadPlan_WalkCurve_2L_A30_R18_Paving_-1_BudgetMesh.002": 116,
+        "RoadPlan_WalkCurve_2L_A30_R18_Curb_-1_BudgetMesh.002": 116,
+        "RoadPlan_WalkCurve_2L_A30_R18_Paving_1_BudgetMesh.002": 116,
+        "RoadPlan_WalkCurve_2L_A30_R18_Curb_1_BudgetMesh.002": 116
+      },
+      "primitives": [
+        {
+          "mesh": "RoadPlan_WalkCurve_2L_A30_R18_Paving_-1_BudgetMesh.002",
+          "material_id": "erma.material.Walk_Paving",
+          "vertices": 184,
+          "triangles": 116,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 92,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "RoadPlan_WalkCurve_2L_A30_R18_Curb_-1_BudgetMesh.002",
+          "material_id": "erma.material.Road_Edge",
+          "vertices": 184,
+          "triangles": 116,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 92,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "RoadPlan_WalkCurve_2L_A30_R18_Paving_1_BudgetMesh.002",
+          "material_id": "erma.material.Walk_Paving",
+          "vertices": 182,
+          "triangles": 116,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 92,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "RoadPlan_WalkCurve_2L_A30_R18_Curb_1_BudgetMesh.002",
+          "material_id": "erma.material.Road_Edge",
+          "vertices": 180,
+          "triangles": 116,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 90,
+          "density_texels_per_local_m_median": 512.0
+        }
+      ],
+      "texture_normal_issues": 0
+    },
+    "paint": {
+      "geometry_unchanged": true,
+      "skin_and_animations_unchanged": true,
+      "original_parts": {
+        "RoadPlan_CurveMarking_2L_A30_R18_Center_BudgetMesh.002": 116,
+        "RoadPlan_CurveMarking_2L_A30_R18_EdgeRight_BudgetMesh.002": 116,
+        "RoadPlan_CurveMarking_2L_A30_R18_EdgeLeft_BudgetMesh.002": 116
+      },
+      "primitives": [
+        {
+          "mesh": "RoadPlan_CurveMarking_2L_A30_R18_Center_BudgetMesh.002",
+          "material_id": "erma.material.Marking_Center",
+          "vertices": 182,
+          "triangles": 116,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 90,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "RoadPlan_CurveMarking_2L_A30_R18_EdgeRight_BudgetMesh.002",
+          "material_id": "erma.material.Marking_White",
+          "vertices": 180,
+          "triangles": 116,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 90,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "RoadPlan_CurveMarking_2L_A30_R18_EdgeLeft_BudgetMesh.002",
+          "material_id": "erma.material.Marking_White",
+          "vertices": 184,
+          "triangles": 116,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 92,
+          "density_texels_per_local_m_median": null
+        }
+      ],
+      "texture_normal_issues": 0
+    },
+    "ramp": {
+      "geometry_unchanged": true,
+      "skin_and_animations_unchanged": true,
+      "original_parts": {
+        "RoadPlan_Ramp_2L_Rise8p4_L110_LowerVerticalCurve_BudgetMesh.004": 192,
+        "RoadPlan_Ramp_2L_Rise8p4_L110_ConstantGrade_BudgetMesh.004": 12,
+        "RoadPlan_Ramp_2L_Rise8p4_L110_UpperVerticalCurve_BudgetMesh.004": 192
+      },
+      "primitives": [
+        {
+          "mesh": "RoadPlan_Ramp_2L_Rise8p4_L110_LowerVerticalCurve_BudgetMesh.004",
+          "material_id": "erma.material.Road_Asphalt",
+          "vertices": 383,
+          "triangles": 192,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 198,
+          "density_texels_per_local_m_median": 256.0
+        },
+        {
+          "mesh": "RoadPlan_Ramp_2L_Rise8p4_L110_ConstantGrade_BudgetMesh.004",
+          "material_id": "erma.material.Road_Asphalt",
+          "vertices": 24,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 12,
+          "density_texels_per_local_m_median": 256.0
+        },
+        {
+          "mesh": "RoadPlan_Ramp_2L_Rise8p4_L110_UpperVerticalCurve_BudgetMesh.004",
+          "material_id": "erma.material.Road_Asphalt",
+          "vertices": 408,
+          "triangles": 192,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 217,
+          "density_texels_per_local_m_median": 256.0
+        }
+      ],
+      "texture_normal_issues": 0
+    },
+    "coupe": {
+      "geometry_unchanged": true,
+      "skin_and_animations_unchanged": true,
+      "original_parts": {
+        "Vehicle_Coupe_Canopy_Panoramic_BudgetMesh.001": 136,
+        "Vehicle_Coupe_Canopy_Panoramic_Glazing_BudgetMesh.001": 119,
+        "Vehicle_Coupe_Chassis_BudgetMesh.001": 162,
+        "Vehicle_Coupe_Engine_Efficient_L_BudgetMesh.001": 44,
+        "Vehicle_Coupe_Engine_Efficient_R_BudgetMesh.001": 44,
+        "Vehicle_Coupe_Nose_Sport_BudgetMesh.001": 112,
+        "Vehicle_Coupe_Payload_RearDeck_BudgetMesh.001": 56,
+        "Vehicle_Coupe_Pod_Front_Standard_L_BudgetMesh.001": 88,
+        "Vehicle_Coupe_Pod_Front_Standard_R_BudgetMesh.001": 88,
+        "Vehicle_Coupe_Pod_Rear_Standard_L_BudgetMesh.001": 88,
+        "Vehicle_Coupe_Pod_Rear_Standard_R_BudgetMesh.001": 88,
+        "Vehicle_Coupe_Rail_L_BudgetMesh.001": 28,
+        "Vehicle_Coupe_Rail_R_BudgetMesh.001": 28,
+        "Vehicle_Coupe_Seat_Cockpit_BudgetMesh.001": 168,
+        "Vehicle_Coupe_Service_Hatch_BudgetMesh.001": 22,
+        "Vehicle_Coupe_Underbody_FieldCoil_BudgetMesh.001": 60
+      },
+      "primitives": [
+        {
+          "mesh": "Vehicle_Coupe_Canopy_Panoramic_BudgetMesh.001",
+          "material_id": "erma.material.Alloy_Light",
+          "vertices": 268,
+          "triangles": 134,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 128,
+          "density_texels_per_local_m_median": 511.5
+        },
+        {
+          "mesh": "Vehicle_Coupe_Canopy_Panoramic_BudgetMesh.001",
+          "material_id": "erma.material.Frame_Graphite",
+          "vertices": 4,
+          "triangles": 2,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 0,
+          "density_texels_per_local_m_median": 511.9
+        },
+        {
+          "mesh": "Vehicle_Coupe_Canopy_Panoramic_Glazing_BudgetMesh.001",
+          "material_id": "erma.material.Glazing_Laminated",
+          "vertices": 175,
+          "triangles": 75,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 93,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Vehicle_Coupe_Canopy_Panoramic_Glazing_BudgetMesh.001",
+          "material_id": "erma.material.Rubber",
+          "vertices": 92,
+          "triangles": 44,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 52,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Vehicle_Coupe_Chassis_BudgetMesh.001",
+          "material_id": "erma.material.Vehicle_Teal",
+          "vertices": 280,
+          "triangles": 118,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 132,
+          "density_texels_per_local_m_median": 501.2
+        },
+        {
+          "mesh": "Vehicle_Coupe_Chassis_BudgetMesh.001",
+          "material_id": "erma.material.Steel",
+          "vertices": 96,
+          "triangles": 44,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 48,
+          "density_texels_per_local_m_median": 430.5
+        },
+        {
+          "mesh": "Vehicle_Coupe_Engine_Efficient_L_BudgetMesh.001",
+          "material_id": "erma.material.Steel",
+          "vertices": 72,
+          "triangles": 44,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 36,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Vehicle_Coupe_Engine_Efficient_R_BudgetMesh.001",
+          "material_id": "erma.material.Steel",
+          "vertices": 72,
+          "triangles": 44,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 36,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Vehicle_Coupe_Nose_Sport_BudgetMesh.001",
+          "material_id": "erma.material.Vehicle_Teal",
+          "vertices": 208,
+          "triangles": 92,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 104,
+          "density_texels_per_local_m_median": 508.2
+        },
+        {
+          "mesh": "Vehicle_Coupe_Nose_Sport_BudgetMesh.001",
+          "material_id": "erma.material.Glow_Cyan",
+          "vertices": 40,
+          "triangles": 20,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 16,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Vehicle_Coupe_Payload_RearDeck_BudgetMesh.001",
+          "material_id": "erma.material.Vehicle_Teal",
+          "vertices": 96,
+          "triangles": 44,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 44,
+          "density_texels_per_local_m_median": 430.5
+        },
+        {
+          "mesh": "Vehicle_Coupe_Payload_RearDeck_BudgetMesh.001",
+          "material_id": "erma.material.Alloy_Light",
+          "vertices": 24,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 12,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Vehicle_Coupe_Pod_Front_Standard_L_BudgetMesh.001",
+          "material_id": "erma.material.Vehicle_Teal",
+          "vertices": 88,
+          "triangles": 44,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 44,
+          "density_texels_per_local_m_median": 511.9
+        },
+        {
+          "mesh": "Vehicle_Coupe_Pod_Front_Standard_L_BudgetMesh.001",
+          "material_id": "erma.material.Glow_Cyan",
+          "vertices": 72,
+          "triangles": 44,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 36,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Vehicle_Coupe_Pod_Front_Standard_R_BudgetMesh.001",
+          "material_id": "erma.material.Vehicle_Teal",
+          "vertices": 88,
+          "triangles": 44,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 44,
+          "density_texels_per_local_m_median": 511.9
+        },
+        {
+          "mesh": "Vehicle_Coupe_Pod_Front_Standard_R_BudgetMesh.001",
+          "material_id": "erma.material.Glow_Cyan",
+          "vertices": 72,
+          "triangles": 44,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 36,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Vehicle_Coupe_Pod_Rear_Standard_L_BudgetMesh.001",
+          "material_id": "erma.material.Vehicle_Teal",
+          "vertices": 88,
+          "triangles": 44,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 44,
+          "density_texels_per_local_m_median": 511.9
+        },
+        {
+          "mesh": "Vehicle_Coupe_Pod_Rear_Standard_L_BudgetMesh.001",
+          "material_id": "erma.material.Glow_Cyan",
+          "vertices": 72,
+          "triangles": 44,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 36,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Vehicle_Coupe_Pod_Rear_Standard_R_BudgetMesh.001",
+          "material_id": "erma.material.Vehicle_Teal",
+          "vertices": 88,
+          "triangles": 44,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 44,
+          "density_texels_per_local_m_median": 511.9
+        },
+        {
+          "mesh": "Vehicle_Coupe_Pod_Rear_Standard_R_BudgetMesh.001",
+          "material_id": "erma.material.Glow_Cyan",
+          "vertices": 72,
+          "triangles": 44,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 36,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Vehicle_Coupe_Rail_L_BudgetMesh.001",
+          "material_id": "erma.material.Alloy_Light",
+          "vertices": 48,
+          "triangles": 28,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 24,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Vehicle_Coupe_Rail_R_BudgetMesh.001",
+          "material_id": "erma.material.Alloy_Light",
+          "vertices": 48,
+          "triangles": 28,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 24,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Vehicle_Coupe_Seat_Cockpit_BudgetMesh.001",
+          "material_id": "erma.material.Rubber",
+          "vertices": 368,
+          "triangles": 168,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 184,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Vehicle_Coupe_Service_Hatch_BudgetMesh.001",
+          "material_id": "erma.material.Steel",
+          "vertices": 24,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 12,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Vehicle_Coupe_Service_Hatch_BudgetMesh.001",
+          "material_id": "erma.material.Glow_Cyan",
+          "vertices": 20,
+          "triangles": 10,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 8,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Vehicle_Coupe_Underbody_FieldCoil_BudgetMesh.001",
+          "material_id": "erma.material.Glow_Cyan",
+          "vertices": 96,
+          "triangles": 60,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 48,
+          "density_texels_per_local_m_median": null
+        }
+      ],
+      "texture_normal_issues": 0
+    },
+    "explorer": {
+      "geometry_unchanged": true,
+      "skin_and_animations_unchanged": true,
+      "original_parts": {
+        "Accessory_Belt_LifeSupport_BudgetMesh.001": 124,
+        "Accessory_LifeSupport_TwinTank_BudgetMesh.001": 181,
+        "Accessory_Navigation_Console_BudgetMesh.001": 126,
+        "Accessory_Utility_Pouch_R_BudgetMesh.001": 94,
+        "Accessory_Wrist_Scanner_L_BudgetMesh.001": 126,
+        "Body_Hand_L_BudgetMesh.013": 184,
+        "Body_Hand_R_BudgetMesh.013": 184,
+        "Body_Male_Normal_Pelvis_BudgetMesh.003": 68,
+        "Body_Neck_BudgetMesh.013": 28,
+        "Boot_L_BudgetMesh.013": 170,
+        "Boot_R_BudgetMesh.013": 170,
+        "Face_Neutral_BudgetMesh.013": 100,
+        "Hair_SidePart_BudgetMesh.001": 184,
+        "Head_Oval_BudgetMesh.013": 184,
+        "Outfit_Explorer_Male_Normal_Cuff_L_BudgetMesh.001": 183,
+        "Outfit_Explorer_Male_Normal_Cuff_R_BudgetMesh.001": 183,
+        "Outfit_Explorer_Male_Normal_Greave_L_BudgetMesh.001": 184,
+        "Outfit_Explorer_Male_Normal_Greave_R_BudgetMesh.001": 184,
+        "Outfit_Explorer_Male_Normal_Sleeve_L_BudgetMesh.001": 184,
+        "Outfit_Explorer_Male_Normal_Sleeve_R_BudgetMesh.001": 184,
+        "Outfit_Explorer_Male_Normal_Torso_BudgetMesh.001": 188,
+        "Outfit_Explorer_Male_Normal_Torso_OuterAssembly_BudgetMesh.001": 184,
+        "Outfit_Explorer_Male_Normal_Trouser_L_BudgetMesh.001": 176,
+        "Outfit_Explorer_Male_Normal_Trouser_R_BudgetMesh.001": 176,
+        "Weapon_CoilPistol_35cm_BudgetMesh.001": 182
+      },
+      "primitives": [
+        {
+          "mesh": "Accessory_Belt_LifeSupport_BudgetMesh.001",
+          "material_id": "erma.material.Steel",
+          "vertices": 96,
+          "triangles": 44,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 34,
+          "density_texels_per_local_m_median": 430.5
+        },
+        {
+          "mesh": "Accessory_Belt_LifeSupport_BudgetMesh.001",
+          "material_id": "erma.material.Glow_Cyan",
+          "vertices": 40,
+          "triangles": 20,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 20,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Accessory_Belt_LifeSupport_BudgetMesh.001",
+          "material_id": "erma.material.Rubber",
+          "vertices": 24,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 12,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Accessory_Belt_LifeSupport_BudgetMesh.001",
+          "material_id": "erma.material.Fastener_Titanium",
+          "vertices": 96,
+          "triangles": 48,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 48,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Accessory_LifeSupport_TwinTank_BudgetMesh.001",
+          "material_id": "erma.material.Steel",
+          "vertices": 90,
+          "triangles": 42,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 56,
+          "density_texels_per_local_m_median": 430.5
+        },
+        {
+          "mesh": "Accessory_LifeSupport_TwinTank_BudgetMesh.001",
+          "material_id": "erma.material.Ceramic",
+          "vertices": 95,
+          "triangles": 55,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 47,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Accessory_LifeSupport_TwinTank_BudgetMesh.001",
+          "material_id": "erma.material.Glow_Cyan",
+          "vertices": 48,
+          "triangles": 24,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 24,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Accessory_LifeSupport_TwinTank_BudgetMesh.001",
+          "material_id": "erma.material.Rubber",
+          "vertices": 24,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 12,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Accessory_LifeSupport_TwinTank_BudgetMesh.001",
+          "material_id": "erma.material.Fastener_Titanium",
+          "vertices": 96,
+          "triangles": 48,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 48,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Accessory_Navigation_Console_BudgetMesh.001",
+          "material_id": "erma.material.Steel",
+          "vertices": 96,
+          "triangles": 44,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 48,
+          "density_texels_per_local_m_median": 430.5
+        },
+        {
+          "mesh": "Accessory_Navigation_Console_BudgetMesh.001",
+          "material_id": "erma.material.Glow_Cyan",
+          "vertices": 44,
+          "triangles": 22,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 20,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Accessory_Navigation_Console_BudgetMesh.001",
+          "material_id": "erma.material.Rubber",
+          "vertices": 24,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 12,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Accessory_Navigation_Console_BudgetMesh.001",
+          "material_id": "erma.material.Fastener_Titanium",
+          "vertices": 96,
+          "triangles": 48,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 48,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Accessory_Utility_Pouch_R_BudgetMesh.001",
+          "material_id": "erma.material.Cloth_Ochre",
+          "vertices": 24,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 12,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Accessory_Utility_Pouch_R_BudgetMesh.001",
+          "material_id": "erma.material.Steel",
+          "vertices": 20,
+          "triangles": 10,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 8,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Accessory_Utility_Pouch_R_BudgetMesh.001",
+          "material_id": "erma.material.Rubber",
+          "vertices": 24,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 12,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Accessory_Utility_Pouch_R_BudgetMesh.001",
+          "material_id": "erma.material.Fastener_Titanium",
+          "vertices": 96,
+          "triangles": 48,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 48,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Accessory_Utility_Pouch_R_BudgetMesh.001",
+          "material_id": "erma.material.Glow_Cyan",
+          "vertices": 24,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 12,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Accessory_Wrist_Scanner_L_BudgetMesh.001",
+          "material_id": "erma.material.Steel",
+          "vertices": 96,
+          "triangles": 44,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 48,
+          "density_texels_per_local_m_median": 430.5
+        },
+        {
+          "mesh": "Accessory_Wrist_Scanner_L_BudgetMesh.001",
+          "material_id": "erma.material.Glow_Cyan",
+          "vertices": 44,
+          "triangles": 22,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 20,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Accessory_Wrist_Scanner_L_BudgetMesh.001",
+          "material_id": "erma.material.Rubber",
+          "vertices": 24,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 12,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Accessory_Wrist_Scanner_L_BudgetMesh.001",
+          "material_id": "erma.material.Fastener_Titanium",
+          "vertices": 96,
+          "triangles": 48,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 48,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Body_Hand_L_BudgetMesh.013",
+          "material_id": "erma.material.Skin_Warm",
+          "vertices": 460,
+          "triangles": 176,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 198,
+          "density_texels_per_local_m_median": 238.5
+        },
+        {
+          "mesh": "Body_Hand_L_BudgetMesh.013",
+          "material_id": "erma.material.Skin_Light",
+          "vertices": 16,
+          "triangles": 8,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 0,
+          "density_texels_per_local_m_median": 256.0
+        },
+        {
+          "mesh": "Body_Hand_R_BudgetMesh.013",
+          "material_id": "erma.material.Skin_Warm",
+          "vertices": 460,
+          "triangles": 176,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 238,
+          "density_texels_per_local_m_median": 238.9
+        },
+        {
+          "mesh": "Body_Hand_R_BudgetMesh.013",
+          "material_id": "erma.material.Skin_Light",
+          "vertices": 16,
+          "triangles": 8,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 0,
+          "density_texels_per_local_m_median": 256.0
+        },
+        {
+          "mesh": "Body_Male_Normal_Pelvis_BudgetMesh.003",
+          "material_id": "erma.material.Cloth_Indigo",
+          "vertices": 152,
+          "triangles": 68,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 76,
+          "density_texels_per_local_m_median": 505.1
+        },
+        {
+          "mesh": "Body_Neck_BudgetMesh.013",
+          "material_id": "erma.material.Skin_Warm",
+          "vertices": 48,
+          "triangles": 28,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 24,
+          "density_texels_per_local_m_median": 256.0
+        },
+        {
+          "mesh": "Boot_L_BudgetMesh.013",
+          "material_id": "erma.material.Rubber",
+          "vertices": 44,
+          "triangles": 22,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 20,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Boot_L_BudgetMesh.013",
+          "material_id": "erma.material.Ceramic",
+          "vertices": 76,
+          "triangles": 34,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 32,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Boot_L_BudgetMesh.013",
+          "material_id": "erma.material.Steel",
+          "vertices": 236,
+          "triangles": 114,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 124,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Boot_R_BudgetMesh.013",
+          "material_id": "erma.material.Rubber",
+          "vertices": 44,
+          "triangles": 22,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 20,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Boot_R_BudgetMesh.013",
+          "material_id": "erma.material.Ceramic",
+          "vertices": 76,
+          "triangles": 34,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 32,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Boot_R_BudgetMesh.013",
+          "material_id": "erma.material.Steel",
+          "vertices": 236,
+          "triangles": 114,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 124,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Face_Neutral_BudgetMesh.013",
+          "material_id": "erma.material.Eye_White",
+          "vertices": 96,
+          "triangles": 40,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 24,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Face_Neutral_BudgetMesh.013",
+          "material_id": "erma.material.Eye_Dark",
+          "vertices": 16,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 0,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Face_Neutral_BudgetMesh.013",
+          "material_id": "erma.material.Skin_Warm",
+          "vertices": 96,
+          "triangles": 44,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 36,
+          "density_texels_per_local_m_median": 227.7
+        },
+        {
+          "mesh": "Face_Neutral_BudgetMesh.013",
+          "material_id": "erma.material.Hair_Charcoal",
+          "vertices": 8,
+          "triangles": 4,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 0,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Hair_SidePart_BudgetMesh.001",
+          "material_id": "erma.material.Hair_Charcoal",
+          "vertices": 428,
+          "triangles": 184,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 182,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Head_Oval_BudgetMesh.013",
+          "material_id": "erma.material.Skin_Warm",
+          "vertices": 481,
+          "triangles": 184,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 235,
+          "density_texels_per_local_m_median": 234.3
+        },
+        {
+          "mesh": "Outfit_Explorer_Male_Normal_Cuff_L_BudgetMesh.001",
+          "material_id": "erma.material.Cloth_Teal",
+          "vertices": 363,
+          "triangles": 161,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 164,
+          "density_texels_per_local_m_median": 485.3
+        },
+        {
+          "mesh": "Outfit_Explorer_Male_Normal_Cuff_L_BudgetMesh.001",
+          "material_id": "erma.material.Steel",
+          "vertices": 64,
+          "triangles": 22,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 28,
+          "density_texels_per_local_m_median": 503.4
+        },
+        {
+          "mesh": "Outfit_Explorer_Male_Normal_Cuff_R_BudgetMesh.001",
+          "material_id": "erma.material.Cloth_Teal",
+          "vertices": 359,
+          "triangles": 161,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 180,
+          "density_texels_per_local_m_median": 483.9
+        },
+        {
+          "mesh": "Outfit_Explorer_Male_Normal_Cuff_R_BudgetMesh.001",
+          "material_id": "erma.material.Steel",
+          "vertices": 64,
+          "triangles": 22,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 31,
+          "density_texels_per_local_m_median": 503.4
+        },
+        {
+          "mesh": "Outfit_Explorer_Male_Normal_Greave_L_BudgetMesh.001",
+          "material_id": "erma.material.Rubber",
+          "vertices": 355,
+          "triangles": 164,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 176,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Outfit_Explorer_Male_Normal_Greave_L_BudgetMesh.001",
+          "material_id": "erma.material.Ceramic",
+          "vertices": 58,
+          "triangles": 20,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 30,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Outfit_Explorer_Male_Normal_Greave_R_BudgetMesh.001",
+          "material_id": "erma.material.Rubber",
+          "vertices": 356,
+          "triangles": 164,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 173,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Outfit_Explorer_Male_Normal_Greave_R_BudgetMesh.001",
+          "material_id": "erma.material.Ceramic",
+          "vertices": 58,
+          "triangles": 20,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 30,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Outfit_Explorer_Male_Normal_Sleeve_L_BudgetMesh.001",
+          "material_id": "erma.material.Cloth_Teal",
+          "vertices": 348,
+          "triangles": 160,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 186,
+          "density_texels_per_local_m_median": 474.9
+        },
+        {
+          "mesh": "Outfit_Explorer_Male_Normal_Sleeve_L_BudgetMesh.001",
+          "material_id": "erma.material.Ceramic",
+          "vertices": 68,
+          "triangles": 24,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 34,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Outfit_Explorer_Male_Normal_Sleeve_R_BudgetMesh.001",
+          "material_id": "erma.material.Cloth_Teal",
+          "vertices": 352,
+          "triangles": 160,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 173,
+          "density_texels_per_local_m_median": 474.2
+        },
+        {
+          "mesh": "Outfit_Explorer_Male_Normal_Sleeve_R_BudgetMesh.001",
+          "material_id": "erma.material.Ceramic",
+          "vertices": 68,
+          "triangles": 24,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 34,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Outfit_Explorer_Male_Normal_Torso_BudgetMesh.001",
+          "material_id": "erma.material.Cloth_Teal",
+          "vertices": 518,
+          "triangles": 188,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 236,
+          "density_texels_per_local_m_median": 480.6
+        },
+        {
+          "mesh": "Outfit_Explorer_Male_Normal_Torso_OuterAssembly_BudgetMesh.001",
+          "material_id": "erma.material.Ceramic",
+          "vertices": 198,
+          "triangles": 78,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 102,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Outfit_Explorer_Male_Normal_Torso_OuterAssembly_BudgetMesh.001",
+          "material_id": "erma.material.Rubber",
+          "vertices": 102,
+          "triangles": 52,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 49,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Outfit_Explorer_Male_Normal_Torso_OuterAssembly_BudgetMesh.001",
+          "material_id": "erma.material.Steel",
+          "vertices": 72,
+          "triangles": 44,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 36,
+          "density_texels_per_local_m_median": 511.8
+        },
+        {
+          "mesh": "Outfit_Explorer_Male_Normal_Torso_OuterAssembly_BudgetMesh.001",
+          "material_id": "erma.material.Glow_Cyan",
+          "vertices": 20,
+          "triangles": 10,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 8,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Outfit_Explorer_Male_Normal_Trouser_L_BudgetMesh.001",
+          "material_id": "erma.material.Cloth_Teal",
+          "vertices": 355,
+          "triangles": 176,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 174,
+          "density_texels_per_local_m_median": 476.4
+        },
+        {
+          "mesh": "Outfit_Explorer_Male_Normal_Trouser_R_BudgetMesh.001",
+          "material_id": "erma.material.Cloth_Teal",
+          "vertices": 360,
+          "triangles": 176,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 181,
+          "density_texels_per_local_m_median": 476.4
+        },
+        {
+          "mesh": "Weapon_CoilPistol_35cm_BudgetMesh.001",
+          "material_id": "erma.material.Steel",
+          "vertices": 96,
+          "triangles": 44,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 48,
+          "density_texels_per_local_m_median": 430.5
+        },
+        {
+          "mesh": "Weapon_CoilPistol_35cm_BudgetMesh.001",
+          "material_id": "erma.material.Rubber",
+          "vertices": 45,
+          "triangles": 22,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 24,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Weapon_CoilPistol_35cm_BudgetMesh.001",
+          "material_id": "erma.material.Alloy_Light",
+          "vertices": 48,
+          "triangles": 28,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 24,
+          "density_texels_per_local_m_median": 511.8
+        },
+        {
+          "mesh": "Weapon_CoilPistol_35cm_BudgetMesh.001",
+          "material_id": "erma.material.Glow_Cyan",
+          "vertices": 74,
+          "triangles": 40,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 39,
+          "density_texels_per_local_m_median": null
+        },
+        {
+          "mesh": "Weapon_CoilPistol_35cm_BudgetMesh.001",
+          "material_id": "erma.material.Fastener_Titanium",
+          "vertices": 96,
+          "triangles": 48,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 48,
+          "density_texels_per_local_m_median": 512.0
+        }
+      ],
+      "texture_normal_issues": 0
+    },
+    "mine_rock": {
+      "geometry_unchanged": true,
+      "skin_and_animations_unchanged": true,
+      "original_parts": {
+        "Nature_Rock_01_BudgetMesh.002": 66
+      },
+      "primitives": [
+        {
+          "mesh": "Nature_Rock_01_BudgetMesh.002",
+          "material_id": "erma.material.Rock_Mine",
+          "vertices": 182,
+          "triangles": 66,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 97,
+          "density_texels_per_local_m_median": 249.2
+        }
+      ],
+      "texture_normal_issues": 0
+    },
+    "mine_support": {
+      "geometry_unchanged": true,
+      "skin_and_animations_unchanged": true,
+      "original_parts": {
+        "Mine_Support_BudgetMesh.001": 48
+      },
+      "primitives": [
+        {
+          "mesh": "Mine_Support_BudgetMesh.001",
+          "material_id": "erma.material.Steel",
+          "vertices": 72,
+          "triangles": 36,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 36,
+          "density_texels_per_local_m_median": 512.0
+        },
+        {
+          "mesh": "Mine_Support_BudgetMesh.001",
+          "material_id": "erma.material.Glow_Amber",
+          "vertices": 24,
+          "triangles": 12,
+          "degenerate_uv_or_geometry": 0,
+          "invalid_tangents": 0,
+          "mirrored_vertices": 12,
+          "density_texels_per_local_m_median": null
+        }
+      ],
+      "texture_normal_issues": 0
+    }
+  }
+}

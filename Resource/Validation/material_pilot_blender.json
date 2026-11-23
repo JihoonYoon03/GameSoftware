@@ -1,0 +1,169 @@
+{
+  "status": "PASS",
+  "blender": "4.5.2 LTS",
+  "render_engine": "Cycles CPU",
+  "shots": {
+    "habitat_source": {
+      "assets": [
+        "habitat"
+      ],
+      "filename": "habitat_source_r2.png",
+      "mesh_objects": 66,
+      "camera_position": [
+        17.634923934936523,
+        -17.666173934936523,
+        19.076337814331055
+      ],
+      "ortho_width": 19.941499710083008
+    },
+    "habitat_pilot": {
+      "assets": [
+        "habitat"
+      ],
+      "filename": "habitat_pilot_r2.png",
+      "mesh_objects": 66,
+      "camera_position": [
+        17.634923934936523,
+        -17.666173934936523,
+        19.076337814331055
+      ],
+      "ortho_width": 19.941499710083008
+    },
+    "curve_source": {
+      "assets": [
+        "curve",
+        "sidewalk",
+        "paint"
+      ],
+      "filename": "curve_source_r2.png",
+      "mesh_objects": 8,
+      "camera_position": [
+        23.502756118774414,
+        -16.85995864868164,
+        25.67299461364746
+      ],
+      "ortho_width": 18.797672271728516
+    },
+    "curve_pilot": {
+      "assets": [
+        "curve",
+        "sidewalk",
+        "paint"
+      ],
+      "filename": "curve_pilot_r2.png",
+      "mesh_objects": 8,
+      "camera_position": [
+        23.502756118774414,
+        -16.85995864868164,
+        25.67299461364746
+      ],
+      "ortho_width": 18.797672271728516
+    },
+    "ramp_source": {
+      "assets": [
+        "ramp"
+      ],
+      "filename": "ramp_source_r2.png",
+      "mesh_objects": 3,
+      "camera_position": [
+        211.38009643554688,
+        -195.47512817382812,
+        219.12265014648438
+      ],
+      "ortho_width": 101.29741668701172
+    },
+    "ramp_pilot": {
+      "assets": [
+        "ramp"
+      ],
+      "filename": "ramp_pilot_r2.png",
+      "mesh_objects": 3,
+      "camera_position": [
+        211.38009643554688,
+        -195.47512817382812,
+        219.12265014648438
+      ],
+      "ortho_width": 101.29741668701172
+    },
+    "coupe_source": {
+      "assets": [
+        "coupe"
+      ],
+      "filename": "coupe_source_r2.png",
+      "mesh_objects": 17,
+      "camera_position": [
+        -7.769252300262451,
+        -7.769252300262451,
+        7.036250114440918
+      ],
+      "ortho_width": 4.963207721710205
+    },
+    "coupe_pilot": {
+      "assets": [
+        "coupe"
+      ],
+      "filename": "coupe_pilot_r2.png",
+      "mesh_objects": 17,
+      "camera_position": [
+        -7.769252300262451,
+        -7.769252300262451,
+        7.036250114440918
+      ],
+      "ortho_width": 4.963207721710205
+    },
+    "explorer_source": {
+      "assets": [
+        "explorer"
+      ],
+      "filename": "explorer_source_r2.png",
+      "mesh_objects": 26,
+      "camera_position": [
+        4.389926433563232,
+        -6.0971198081970215,
+        4.3131561279296875
+      ],
+      "ortho_width": 4.540275573730469
+    },
+    "explorer_pilot": {
+      "assets": [
+        "explorer"
+      ],
+      "filename": "explorer_pilot_r2.png",
+      "mesh_objects": 26,
+      "camera_position": [
+        4.389926433563232,
+        -6.0971198081970215,
+        4.3131561279296875
+      ],
+      "ortho_width": 4.540275573730469
+    },
+    "mine_source": {
+      "assets": [
+        "mine_rock",
+        "mine_support"
+      ],
+      "filename": "mine_source_r2.png",
+      "mesh_objects": 2,
+      "camera_position": [
+        5.095705986022949,
+        -5.227535247802734,
+        6.176506519317627
+      ],
+      "ortho_width": 6.055037021636963
+    },
+    "mine_pilot": {
+      "assets": [
+        "mine_rock",
+        "mine_support"
+      ],
+      "filename": "mine_pilot_r2.png",
+      "mesh_objects": 2,
+      "camera_position": [
+        5.095705986022949,
+        -5.227535247802734,
+        6.176506519317627
+      ],
+      "ortho_width": 6.055037021636963
+    }
+  }
+}

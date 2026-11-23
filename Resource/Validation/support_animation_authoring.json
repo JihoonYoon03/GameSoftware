@@ -1,0 +1,97 @@
+{
+  "original_actions_preserved": 408,
+  "original_civic_actions_preserved": 314,
+  "skeleton_bones": 23,
+  "bank_sha256": "220090fa5bf809b2581d53437f6f17678a1fbf8b4e1b25ac7df59301439e63cd",
+  "clips": {
+    "Support_Treat_Enter": {
+      "duration_seconds": 0.8,
+      "loop": false,
+      "layer": "full_body",
+      "min_fitted_skin_z_m": 0.0009999710086355668,
+      "lower_body_max_error": null
+    },
+    "Support_Treat_Loop": {
+      "duration_seconds": 1.2,
+      "loop": true,
+      "layer": "full_body",
+      "min_fitted_skin_z_m": 0.0010000290874819316,
+      "lower_body_max_error": null
+    },
+    "Support_Treat_Exit": {
+      "duration_seconds": 0.7,
+      "loop": false,
+      "layer": "full_body",
+      "min_fitted_skin_z_m": 0.0009999704720902725,
+      "lower_body_max_error": null
+    },
+    "Support_Inspect_Enter": {
+      "duration_seconds": 0.5,
+      "loop": false,
+      "layer": "human_upper_body",
+      "min_fitted_skin_z_m": 0.001000162409801698,
+      "lower_body_max_error": 1.1920928955078125e-07
+    },
+    "Support_Inspect_Loop": {
+      "duration_seconds": 1.4,
+      "loop": true,
+      "layer": "human_upper_body",
+      "min_fitted_skin_z_m": 0.001000162409801698,
+      "lower_body_max_error": 0.0
+    },
+    "Support_Inspect_Exit": {
+      "duration_seconds": 0.5,
+      "loop": false,
+      "layer": "human_upper_body",
+      "min_fitted_skin_z_m": 0.001000162409801698,
+      "lower_body_max_error": 1.1920928955078125e-07
+    },
+    "Support_Carry_Idle": {
+      "duration_seconds": 2.0,
+      "loop": true,
+      "layer": "human_upper_body",
+      "min_fitted_skin_z_m": 0.0010000579416031352,
+      "lower_body_max_error": 0.0
+    },
+    "Support_Carry_Walk": {
+      "duration_seconds": 1.0,
+      "loop": true,
+      "layer": "human_upper_body",
+      "min_fitted_skin_z_m": 0.0010001652465620632,
+      "lower_body_max_error": 0.0
+    }
+  },
+  "carry_case_hand_R_local_matrix": [
+    [
+      0.809003472328186,
+      -0.04546575993299484,
+      -0.5860428214073181,
+      0.2907896041870117
+    ],
+    [
+      -0.26530730724334717,
+      -0.917915403842926,
+      -0.2950310707092285,
+      0.06425747275352478
+    ],
+    [
+      -0.5245238542556763,
+      0.3941625654697418,
+      -0.7546592354774475,
+      -0.004945501685142517
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "treatment_patient_actor_offset_m": [
+    -0.3584897816181183,
+    -0.7151394486427307,
+    0.0
+  ],
+  "treatment_patient_actor_yaw_deg": 90,
+  "all_checks_passed": true
+}

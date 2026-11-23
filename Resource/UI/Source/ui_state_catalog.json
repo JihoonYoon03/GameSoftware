@@ -5,7 +5,11 @@
       "normal",
       "critical",
       "healing",
-      "growth_summary"
+      "growth_summary",
+      "stamina_draining",
+      "dodge_in_progress",
+      "stamina_insufficient",
+      "stamina_recovering"
     ],
     "bindings": [
       "health",
@@ -17,7 +21,8 @@
     "icons": [
       "health",
       "heal",
-      "level"
+      "level",
+      "stamina"
     ],
     "rules": [
       "Show current then maximum. Never reverse their positions.",
@@ -28,6 +33,9 @@
     "implementation_document": "HUD_IMPLEMENTATION_ko.md",
     "priority": "current_play",
     "preview_screens": [
+      "71_stamina_sprint",
+      "72_stamina_low",
+      "73_stamina_dodge",
       "01_city",
       "02_combat",
       "26_notifications",
@@ -45,7 +53,11 @@
       "reload_complete",
       "unarmed",
       "pistol_hip",
-      "pistol_aim"
+      "pistol_aim",
+      "carbine_equipped",
+      "carbine_empty",
+      "carbine_reloading",
+      "tactical_focus"
     ],
     "bindings": [
       "weapon_name",
@@ -58,7 +70,8 @@
       "pistol",
       "magazine",
       "reload",
-      "infinite"
+      "infinite",
+      "carbine"
     ],
     "rules": [
       "Spare magazines are unlimited. No finite reserve counter.",
@@ -69,6 +82,9 @@
     "implementation_document": "HUD_IMPLEMENTATION_ko.md",
     "priority": "current_play",
     "preview_screens": [
+      "74_carbine_focus",
+      "75_carbine_reload",
+      "76_carbine_empty",
       "01_city",
       "02_combat",
       "34_low_health",
@@ -109,6 +125,10 @@
     "implementation_document": "HUD_IMPLEMENTATION_ko.md",
     "priority": "current_play",
     "preview_screens": [
+      "73_stamina_dodge",
+      "74_carbine_focus",
+      "75_carbine_reload",
+      "76_carbine_empty",
       "02_combat",
       "34_low_health",
       "41_unarmed",
@@ -223,7 +243,11 @@
       "chapter",
       "destination_set",
       "destination_clear",
-      "unexplored"
+      "unexplored",
+      "planet_overview",
+      "relay_ready",
+      "relay_restricted",
+      "relay_preparing"
     ],
     "bindings": [
       "map_context",
@@ -239,7 +263,8 @@
       "transport",
       "investigation_site",
       "gate",
-      "exit"
+      "exit",
+      "relay"
     ],
     "rules": [
       "Left click sets destination in eligible explored space. Right click clears it. M/Esc closes.",
@@ -249,6 +274,9 @@
     "dedicated_status_panel": null,
     "priority": "current_play",
     "preview_screens": [
+      "87_relay_ready",
+      "88_relay_blocked",
+      "89_relay_prep",
       "60_hud_tracking_and_pin",
       "68_map_activity_markers",
       "10_city_map",
@@ -300,6 +328,10 @@
     "implementation_document": "HUD_IMPLEMENTATION_ko.md",
     "priority": "current_play",
     "preview_screens": [
+      "81_flight_landing",
+      "82_flight_no_landing",
+      "83_flight_grounded",
+      "95_flight_landing_ready",
       "01_city",
       "07_chapter",
       "25_interactions"
@@ -530,7 +562,10 @@
       "heat_increasing",
       "heat_cooling",
       "notoriety",
-      "trade_surcharge"
+      "trade_surcharge",
+      "surrender_eligible",
+      "fine_settled",
+      "airborne_interceptor_warning"
     ],
     "bindings": [
       "wanted_stars",
@@ -542,7 +577,8 @@
     ],
     "icons": [
       "wanted",
-      "reputation"
+      "reputation",
+      "security"
     ],
     "rules": [
       "Wanted is current pursuit; notoriety persists between cities in the current session.",
@@ -553,6 +589,9 @@
     "implementation_document": "HUD_IMPLEMENTATION_ko.md",
     "priority": "current_play",
     "preview_screens": [
+      "84_security_surrender",
+      "85_security_interceptor",
+      "86_security_paid",
       "02_combat"
     ],
     "delivery": "shared text-free assets + named state specification + composed editable review screen"
@@ -566,7 +605,14 @@
       "reverse",
       "stopped",
       "dismount_allowed",
-      "dismount_blocked"
+      "dismount_blocked",
+      "shared_car",
+      "aircraft_cruise",
+      "landing_available",
+      "landing_unavailable",
+      "landing_requested",
+      "landed",
+      "crash_notice"
     ],
     "bindings": [
       "mounted",
@@ -580,7 +626,10 @@
       "bike",
       "speed",
       "boost",
-      "reverse"
+      "reverse",
+      "ground_car",
+      "flight",
+      "landing"
     ],
     "rules": [
       "speed_kmh = abs(speed_world_units) * meters_per_world_unit * 3.6",
@@ -592,6 +641,13 @@
     "implementation_document": "HUD_IMPLEMENTATION_ko.md",
     "priority": "current_play",
     "preview_screens": [
+      "79_car_reverse",
+      "80_flight_cruise",
+      "81_flight_landing",
+      "82_flight_no_landing",
+      "83_flight_grounded",
+      "95_flight_landing_ready",
+      "96_aircraft_crash_notice",
       "03_bike"
     ],
     "delivery": "shared text-free assets + named state specification + composed editable review screen"
@@ -671,6 +727,12 @@
     "implementation_document": "HUD_IMPLEMENTATION_ko.md",
     "priority": "current_play",
     "preview_screens": [
+      "85_security_interceptor",
+      "86_security_paid",
+      "87_relay_ready",
+      "88_relay_blocked",
+      "89_relay_prep",
+      "96_aircraft_crash_notice",
       "62_settlement_hold_01",
       "63_planet_failure_01",
       "63_planet_failure_02",
@@ -729,7 +791,12 @@
       "mine_restart",
       "chapter_return",
       "help",
-      "exit"
+      "exit",
+      "checkpoint_ready",
+      "checkpoint_empty",
+      "checkpoint_restricted",
+      "checkpoint_loading",
+      "planet_profiles"
     ],
     "bindings": [
       "current_region",
@@ -739,7 +806,8 @@
     "icons": [
       "pause",
       "keyboard",
-      "exit"
+      "exit",
+      "checkpoint"
     ],
     "rules": [
       "Esc resumes. R means reset in city, mine restart in mine, return to Halo in chapter.",
@@ -749,6 +817,11 @@
     "dedicated_status_panel": null,
     "priority": "current_play",
     "preview_screens": [
+      "90_checkpoint_ready",
+      "91_checkpoint_empty",
+      "92_checkpoint_restricted",
+      "93_checkpoint_loading",
+      "94_planet_profiles",
       "09_pause",
       "28_pause_mine",
       "29_pause_city"
@@ -777,6 +850,10 @@
     "dedicated_status_panel": null,
     "priority": "existing_menu",
     "preview_screens": [
+      "90_checkpoint_ready",
+      "91_checkpoint_empty",
+      "92_checkpoint_restricted",
+      "93_checkpoint_loading",
       "15_title"
     ],
     "delivery": "shared text-free assets + named state specification + composed editable review screen"
@@ -909,6 +986,11 @@
     "dedicated_status_panel": null,
     "priority": "existing_menu",
     "preview_screens": [
+      "90_checkpoint_ready",
+      "91_checkpoint_empty",
+      "92_checkpoint_restricted",
+      "93_checkpoint_loading",
+      "94_planet_profiles",
       "19_confirm"
     ],
     "delivery": "shared text-free assets + named state specification + composed editable review screen"
@@ -921,7 +1003,8 @@
       "bike",
       "mine_scan",
       "map",
-      "dialogue"
+      "dialogue",
+      "aircraft_controls"
     ],
     "bindings": [
       "available_actions",
@@ -939,6 +1022,11 @@
     "dedicated_status_panel": null,
     "priority": "existing_menu",
     "preview_screens": [
+      "71_stamina_sprint",
+      "72_stamina_low",
+      "80_flight_cruise",
+      "84_security_surrender",
+      "97_flight_controls",
       "20_help",
       "46_unlock_notice"
     ],
@@ -954,7 +1042,10 @@
       "hover_available",
       "hover_unavailable",
       "release_commit",
-      "cancel_keep_equipped"
+      "cancel_keep_equipped",
+      "primary_owned",
+      "primary_unowned",
+      "primary_hovered"
     ],
     "bindings": [
       "equipped_slot",
@@ -968,7 +1059,8 @@
       "pistol",
       "slot_empty",
       "key_release",
-      "mouse_right"
+      "mouse_right",
+      "carbine"
     ],
     "rules": [
       "Q hold opens and pauses; release commits available candidate; Esc cancels.",
@@ -979,6 +1071,8 @@
     "dedicated_status_panel": null,
     "priority": "new_design_for_existing_feature",
     "preview_screens": [
+      "77_carbine_wheel",
+      "78_carbine_locked",
       "35_weapon_wheel_locked",
       "36_weapon_wheel_pistol",
       "37_weapon_wheel_empty",

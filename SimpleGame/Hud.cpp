@@ -94,9 +94,15 @@ void Button(const UiControl &control, int index)
     {
         state = "default";
     }
+    const bool warningCancel =
+        control.action == UiAction::CancelLoad || (world.mapVisible && world.relayPreparing && control.action == UiAction::Back);
     renderqueue::Opacity(world.uiPreferences.background);
     Sprite("Components/button_" + state, control.position.x, control.position.y, control.size.x,
-           control.size.y, control.enabled ? ColorRGBA(1, 1, 1) : ColorRGBA(.55f, .6f, .62f), 1, true);
+           control.size.y,
+           !control.enabled ? ColorRGBA(.55f, .6f, .62f)
+           : warningCancel  ? ColorRGBA(1, .78f, .42f)
+                            : ColorRGBA(1, 1, 1),
+           1, true);
     renderqueue::Opacity(world.uiPreferences.content);
     const bool activity =
         control.action == UiAction::Mission || control.action == UiAction::TrackMission ||
@@ -136,7 +142,20 @@ void Button(const UiControl &control, int index)
         }
         return;
     }
-    Icon(control.enabled ? "chevron" : "lock", control.position.x + 12, control.position.y + 14, 18);
+    const char *icon = !control.enabled                                      ? "lock"
+                       : (control.action == UiAction::SaveWorld ||
+                          control.action == UiAction::Checkpoint)            ? "checkpoint"
+                       : control.action == UiAction::LoadWorld               ? "activity_restore"
+                       : (control.action == UiAction::Profiles ||
+                          control.action == UiAction::SelectProfile ||
+                          (world.mapVisible &&
+                           (control.action == UiAction::Choice ||
+                            control.action == UiAction::Continue)))          ? "relay"
+                       : (control.action == UiAction::CancelLoad ||
+                          control.action == UiAction::Back)                  ? "exit"
+                                                                             : "chevron";
+    Icon(icon, control.position.x + 12, control.position.y + 14, 18, false,
+         warningCancel ? ColorRGBA(1, .78f, .42f) : ColorRGBA(1, 1, 1));
     auto rows = Dialogue::Wrap(control.label, control.size.x - 58, 17);
     for (size_t row = 0; row < rows.size(); ++row)
     {
@@ -1428,7 +1447,16 @@ void Hud::DrawNoticePanel()
     {
         return;
     }
-    Icon("check", 918, 322, 22, true);
+    const bool isWarningNotice = w.noticeText.find("추락") != std::string::npos ||
+                                 w.noticeText.find("파괴") != std::string::npos ||
+                                 w.noticeText.find("피해") != std::string::npos ||
+                                 w.noticeText.find("위험") != std::string::npos;
+    const bool isSecurityNotice = w.noticeText.find("수배") != std::string::npos ||
+                                  w.noticeText.find("투항") != std::string::npos ||
+                                  w.noticeText.find("벌금") != std::string::npos ||
+                                  w.noticeText.find("보안") != std::string::npos;
+    Icon(isWarningNotice ? "warning" : isSecurityNotice ? "security" : "check", 918, 322, 22, true,
+         isWarningNotice ? ColorRGBA(1, .78f, .4f) : ColorRGBA(1, 1, 1));
     const auto pages = TextPages(w.noticeText, 294, 16, 4);
     const float secondsPerPage = (std::max)(1.f, w.noticeDurationSeconds / pages.size());
     const auto page = (std::min)(pages.size() - 1,
@@ -2237,24 +2265,6 @@ void Hud::DrawVitals()
         return;
     }
     const auto &stats = mine.player;
-    if (!w.Mounted() && Game::Get().HasWalkingControls())
-    {
-        const auto &mobility = w.playerMotion.mobility;
-        const bool low = mobility.Stamina() < PlayerMobility::DodgeCost;
-        const ColorRGBA ink = low ? ColorRGBA(1, .78f, .4f) : ColorRGBA(.65f, .9f, .81f);
-        UiText(456, 743,
-               "스태미너 " + std::to_string(int(mobility.Stamina())) + " / " +
-                   std::to_string(int(PlayerMobility::MaxStamina)),
-               14, ink, true);
-        const char *hint = mobility.Dodging() ? "회피 중 · 공격 제한"
-                           : low              ? "회피에 필요한 스태미너 부족"
-                           : (mine.active || chapter.active || CivicJustice::IsExterior())
-                               ? "Space 회피 · Shift 달리기"
-                               : "Space 회피";
-        UiText(456, 762, hint, 14, ink, true);
-        Drawing::DrawRectangle(456, 771, 205, 5, {.14f, .23f, .27f});
-        Drawing::DrawRectangle(456, 771, 205 * mobility.Stamina() / PlayerMobility::MaxStamina, 5, ink);
-    }
     const bool critical = stats.health <= stats.maxHealth * .25f;
     Icon("health", 32, 736, 24, true);
     UiText(66, 735, std::to_string(stats.health), 28, critical ? ColorRGBA(1, .56f, .44f) : kUiInk, true);
@@ -2264,6 +2274,22 @@ void Hud::DrawVitals()
     Sprite("Components/hud_health_fill", 66, 748, 220, 12,
            critical ? ColorRGBA(1, .52f, .43f) : ColorRGBA(.65f, .92f, .86f),
            Game::Clamp(float(stats.health) / (std::max)(1, stats.maxHealth), 0, 1));
+    if (!w.Mounted() && Game::Get().HasWalkingControls())
+    {
+        const auto &mobility = w.playerMotion.mobility;
+        const bool low = mobility.Stamina() < PlayerMobility::DodgeCost;
+        const ColorRGBA ink = low ? ColorRGBA(1, .88f, .65f) : ColorRGBA(.65f, .9f, .81f);
+        Icon("stamina", 32, 762, 16, true, ink);
+        Drawing::DrawRectangle(66, 772, 220, 6, {.12f, .20f, .24f});
+        Drawing::DrawRectangle(66, 772, 220 * mobility.Stamina() / PlayerMobility::MaxStamina, 6, ink);
+        const float dodgeMarkX = 66.f + 220.f * (PlayerMobility::DodgeCost / PlayerMobility::MaxStamina);
+        Drawing::DrawRectangle(dodgeMarkX, 770, 2, 10, {.9f, .96f, .94f, .8f});
+        if (mobility.Dodging() || low)
+        {
+            UiText(302, 779, mobility.Dodging() ? "회피 중 · 공격 제한" : "회피에 필요한 스태미너 부족", 14, ink,
+                   true);
+        }
+    }
     bool combat = game::GameLevels::IsCombatActive() || CivicCombat::Available();
     if (critical)
     {
@@ -2289,29 +2315,59 @@ void Hud::DrawVitals()
                                      ? int(w.aircraft.position->altitudeMeters -
                                            session->Stream().Contact(*w.aircraft.position).heightMeters)
                                      : 0;
-            UiText(1248, 650, "기체 내구도 " + std::to_string(w.aircraft.health), 16, kUiInk, true, true);
-            UiText(1248, 676,
-                   "고도 " + std::to_string((std::max)(0, altitude)) + " m · " +
-                       (w.aircraft.grounded           ? "착륙"
-                        : w.aircraft.landingRequested ? "착륙 중"
-                        : w.aircraft.landingAvailable ? "착륙 가능"
-                                                      : "비행"),
-                   16, kUiInk, true, true);
+            const float hpRatio = Game::Clamp(float(w.aircraft.health) / float(PlayerAircraft::MaxHealth), 0, 1);
+            const ColorRGBA hpInk = hpRatio < .3f ? ColorRGBA(1, .88f, .65f) : ColorRGBA(.65f, .9f, .81f);
+            const bool cruising = !w.aircraft.grounded && !w.aircraft.landingRequested &&
+                                  !w.aircraft.landingAvailable && altitude >= 14;
+            const char *flightState = w.aircraft.grounded           ? "착륙"
+                                      : w.aircraft.landingRequested ? "착륙 중"
+                                      : w.aircraft.landingAvailable ? "착륙 가능"
+                                      : cruising                    ? "순항"
+                                                                    : "착륙 불가";
+            if (!cruising)
+            {
+                Icon("landing", 1054, 654, 20, true,
+                     w.aircraft.landingAvailable || w.aircraft.grounded ? ColorRGBA(.65f, .9f, .81f)
+                                                                        : ColorRGBA(1, .88f, .65f));
+            }
+            UiText(1248, 671,
+                   "고도 " + std::to_string((std::max)(0, altitude)) + " m · " + flightState, 16, kUiInk, true,
+                   true);
+            UiText(1248, 700,
+                   "내구도 " + std::to_string(w.aircraft.health) + " / " +
+                       std::to_string(PlayerAircraft::MaxHealth),
+                   15, hpInk, true, true);
+            Drawing::DrawRectangle(1060, 709, 188, 5, {.12f, .20f, .24f});
+            Drawing::DrawRectangle(1060, 709, 188 * hpRatio, 5, hpInk);
+            Icon("flight", 1022, 730, 22, true);
+            UiText(1248, 784,
+                   w.aircraft.grounded           ? "E 하차"
+                   : w.aircraft.landingRequested ? "E 착륙 취소"
+                                                 : "E 착륙",
+                   14, {.78f, .9f, .88f}, true, true);
         }
         else if (w.car.mounted)
         {
-            UiText(1248, 676, "차량 내구도 " + std::to_string(w.car.health), 16, kUiInk, true, true);
+            const float hpRatio = Game::Clamp(float(w.car.health) / float(GroundVehicle::MaxHealth), 0, 1);
+            const ColorRGBA hpInk = hpRatio < .3f ? ColorRGBA(1, .88f, .65f) : ColorRGBA(.65f, .9f, .81f);
+            UiText(1248, 700,
+                   "내구도 " + std::to_string(w.car.health) + " / " + std::to_string(GroundVehicle::MaxHealth),
+                   15, hpInk, true, true);
+            Drawing::DrawRectangle(1060, 709, 188, 5, {.12f, .20f, .24f});
+            Drawing::DrawRectangle(1060, 709, 188 * hpRatio, 5, hpInk);
+            Icon("ground_car", 1022, 730, 22, true);
+            UiText(1248, 784, "E 하차", 14, {.78f, .9f, .88f}, true, true);
         }
         else
         {
             Icon("bike", 1044, 724, 25, true);
         }
-        UiText(1176, 749, value, 44, kUiInk, true, true);
-        UiText(1248, 748, "km/h", 18, kUiInk, true, true);
+        UiText(1172, 749, value, 42, kUiInk, true, true);
+        UiText(1248, 747, "km/h", 18, kUiInk, true, true);
         if (driveSpeed < -.01f)
         {
-            Icon("reverse", 1090, 675, 20, true);
-            UiText(1248, 695, "후진", 17, kUiInk, true, true);
+            Icon("reverse", 1090, 650, 20, true);
+            UiText(1248, 670, "후진", 17, kUiInk, true, true);
         }
         else if (w.isBikeMounted && w.pressedKeys[' '] && w.bikeSpeed > 0)
         {
@@ -2322,15 +2378,12 @@ void Hud::DrawVitals()
     else if (combat && mine.loadout.IsFirearmEquipped())
     {
         const auto &gun = Game::Get().ActiveFirearm();
-        Icon("pistol", 1040, 723, 28, true);
+        Icon(mine.loadout.IsPrimaryEquipped() ? "carbine" : "pistol", 1040, 722, 28, true);
         Icon("infinite", 1064, 754, 15, true);
+        UiText(1040, 699, gun.GetName(), 15, {.72f, .92f, .96f}, true);
         if (w.playerMotion.mobility.FocusActive())
         {
-            UiText(1040, 705, "전술 집중 +30%", 15, {.42f, 1.f, .86f}, true);
-        }
-        else if (mine.loadout.IsPrimaryEquipped())
-        {
-            UiText(1040, 705, gun.GetName(), 15, {.72f, .92f, .96f}, true);
+            UiText(1248, 671, "전술 집중", 15, {.42f, 1.f, .86f}, true, true);
         }
         char count[32];
         std::snprintf(count, sizeof(count), "%02d", gun.GetRounds());
@@ -2340,7 +2393,7 @@ void Hud::DrawVitals()
         {
             Sprite("Components/hud_reload_track", 1088, 755, 156, 14);
             Sprite("Components/hud_reload_fill", 1090, 757, 152, 10, {1, .78f, .4f}, gun.GetReloadProgress());
-            UiText(1248, 705, "재장전", 17, {1, .77f, .4f}, true, true);
+            UiText(1248, 705, "재장전 중", 17, {1, .77f, .4f}, true, true);
         }
         else
         {
@@ -2398,6 +2451,7 @@ void Hud::DrawVitals()
     const auto &law = CivicJustice::State();
     if (CivicJustice::IsExterior() && law.wanted > 0)
     {
+        Icon("security", 526, 38, 21, true, {1, .78f, .4f});
         for (int i = 0; i < 5; ++i)
         {
             UiText(558 + i * 35, 60, i < law.wanted ? "★" : "☆", 25, {1, .78f, .4f}, true);
@@ -2405,8 +2459,22 @@ void Hud::DrawVitals()
         Sprite("Components/hud_heat_track", 556, 71, 169, 10);
         Sprite("Components/hud_heat_fill", 558, 73, 165, 6, {1, .78f, .4f},
                Game::Clamp(law.heat / CivicJustice::kMaximumHeat, 0, 1));
-        UiText(570, 106, law.identified ? "보안망 추적 중" : "수색 중 · 미식별", 15, {1, .78f, .4f}, true);
-        if (law.responseStarted && !law.identified)
+        const bool airborneInterceptor =
+            law.wanted >= 5 && w.aircraft.mounted && !w.aircraft.grounded;
+        const bool canSurrender =
+            w.surfaceExploration && law.wanted == 1 && law.heat < 60 && !w.Mounted() &&
+            std::any_of(law.officers.begin(), law.officers.end(),
+                        [](const auto &o) { return o.health > 0 && !o.departing; });
+        UiText(570, 106,
+               airborneInterceptor ? "대공 요격 경계 · 보안망 추적 중"
+               : law.identified    ? "보안망 추적 중"
+                                   : "수색 중 · 미식별",
+               15, airborneInterceptor ? ColorRGBA(1, .56f, .44f) : ColorRGBA(1, .78f, .4f), true);
+        if (canSurrender)
+        {
+            UiText(570, 128, "비무장 투항 가능 · 지상에서 맨손으로 정지", 14, {.65f, .9f, .81f}, true);
+        }
+        else if (law.responseStarted && !law.identified)
         {
             int remaining = int(std::ceil(
                 (std::max)(0.f, CivicJustice::kUnidentifiedEscapeSeconds - law.initialUnseenSeconds)));
@@ -3121,14 +3189,27 @@ void Hud::DrawMenu()
     {
         Panel(64, 48, 1152, 704);
     }
+    else if (screen == UiScreen::Checkpoint || screen == UiScreen::PlanetProfiles)
+    {
+        Panel(220, 90, 840, 620);
+    }
     else
     {
         Panel(312, 90, 656, 600);
     }
     float x = screen == UiScreen::Title || screen == UiScreen::Stages                                  ? 96.f
               : screen == UiScreen::Help || screen == UiScreen::Options || screen == UiScreen::Summary ? 96.f
+              : screen == UiScreen::Checkpoint || screen == UiScreen::PlanetProfiles                   ? 294.f
               : narrow ? 408.f
                        : 336.f;
+    if (screen == UiScreen::Checkpoint)
+    {
+        Icon("checkpoint", 254, 134, 28, false, {.65f, .9f, .81f});
+    }
+    else if (screen == UiScreen::PlanetProfiles)
+    {
+        Icon("relay", 254, 134, 28, false, {.65f, .9f, .81f});
+    }
     const char *title = screen == UiScreen::Title            ? "침묵하는 관문"
                         : screen == UiScreen::Pause          ? "일시정지"
                         : screen == UiScreen::Stages         ? "스테이지 목록 · 테스트 진입"
@@ -3162,37 +3243,54 @@ void Hud::DrawMenu()
         const std::string text = SaveSystem::Message().empty()
                                      ? "지상에서 하차한 뒤 선택하세요. 현재 행성의 탐험 기록은 유지됩니다."
                                      : SaveSystem::Message();
-        auto rows = Dialogue::Wrap(text, 560, 18);
-        for (size_t i = 0; i < rows.size(); ++i)
+        const auto pages = TextPages(text, 740, 18, 3);
+        const size_t page = size_t((std::max)(0, w.lastUpdateMilliseconds) / 5000) % pages.size();
+        for (size_t i = 0; i < pages[page].size(); ++i)
         {
-            UiText(336, 520 + float(i) * 26, rows[i], 18, {.67f, .9f, .85f});
+            UiText(254, 520 + float(i) * 26, pages[page][i], 18, {.67f, .9f, .85f});
         }
-        UiText(336, 630, "행성 간 비행·스토리 이동은 이후 단계에서 연결합니다.", 16);
+        UiText(254, 636, "행성 간 비행·스토리 이동은 이후 단계에서 연결합니다.", 16);
     }
     if (screen == UiScreen::Checkpoint)
     {
         const auto reason = SaveSystem::Restriction();
-        if (reason && !SaveSystem::Loading())
+        if (SaveSystem::Loading())
         {
-            auto restriction = Dialogue::Wrap(reason, 560, 17);
-            for (size_t i = 0; i < restriction.size(); ++i)
+            UiText(254, 430, "저장된 월드를 준비하고 있습니다. Esc로 취소할 수 있습니다.", 18, {.65f, .9f, .81f});
+        }
+        else
+        {
+            if (reason)
             {
-                UiText(336, 418 + float(i) * 24, restriction[i], 17, {1, .81f, .5f});
+                const auto rPages = TextPages(reason, 740, 17, 2);
+                const size_t rPage = size_t((std::max)(0, w.lastUpdateMilliseconds) / 5000) % rPages.size();
+                for (size_t i = 0; i < rPages[rPage].size(); ++i)
+                {
+                    UiText(254, 418 + float(i) * 24, rPages[rPage][i], 17, {1, .81f, .5f});
+                }
+            }
+            const auto text = !SaveSystem::Message().empty() ? SaveSystem::Message()
+                              : reason
+                                  ? std::string(reason)
+                                  : "현재 월드를 수동으로 저장합니다. 불러오면 저장 이후의 진행을 되돌립니다.";
+            const auto pages = TextPages(text, 740, 18, 3);
+            const size_t page = size_t((std::max)(0, w.lastUpdateMilliseconds) / 5000) % pages.size();
+            for (size_t i = 0; i < pages[page].size(); ++i)
+            {
+                UiText(254, 486 + float(i) * 26, pages[page][i], 18, {.67f, .9f, .85f});
             }
         }
-        const auto text = !SaveSystem::Message().empty() ? SaveSystem::Message()
-                          : reason
-                              ? std::string(reason)
-                              : "현재 월드를 수동으로 저장합니다. 불러오면 저장 이후의 진행을 되돌립니다.";
-        auto rows = Dialogue::Wrap(text, 560, 18);
-        for (size_t i = 0; i < rows.size(); ++i)
+        const auto pathPages = TextPages("저장 위치: " + SaveSystem::DefaultPath().u8string(), 740, 14, 3);
+        const size_t pathPage = size_t((std::max)(0, w.lastUpdateMilliseconds) / 5000) % pathPages.size();
+        for (size_t i = 0; i < pathPages[pathPage].size(); ++i)
         {
-            UiText(336, 486 + float(i) * 26, rows[i], 18, {.67f, .9f, .85f});
+            UiText(254, 606 + float(i) * 19, pathPages[pathPage][i], 14, {.55f, .7f, .72f});
         }
-        auto path = Dialogue::Wrap("저장 위치: " + SaveSystem::DefaultPath().u8string(), 560, 14);
-        for (size_t i = 0; i < (std::min)(size_t(3), path.size()); ++i)
+        if (pathPages.size() > 1)
         {
-            UiText(336, 606 + float(i) * 19, path[i], 14, {.55f, .7f, .72f});
+            UiText(254, 668,
+                   "경로 페이지 " + std::to_string(pathPage + 1) + " / " + std::to_string(pathPages.size()),
+                   13, {.55f, .7f, .72f});
         }
     }
     if (screen == UiScreen::Options)
@@ -3332,10 +3430,12 @@ void Hud::DrawMenu()
             }
         }
         auto footer = Dialogue::Wrap(
-            "I 보유 정보 · ? 도움말 · Esc 일시정지 · F5 행성 월드 저장 · F9 저장/불러오기", 1072, 16);
+            "비행체: W/S 전후진 · A/D 선회 · Space/C 상승·하강 · Shift+W 고속 순항 · X 제동 · E 착륙/하차  |  "
+            "I 보유 정보 · ? 도움말 · Esc 일시정지 · F5 저장 · F9 불러오기",
+            1072, 15);
         for (size_t line = 0; line < footer.size(); ++line)
         {
-            UiText(96, 620 + float(line) * 24, footer[line], 16);
+            UiText(96, 616 + float(line) * 22, footer[line], 15);
         }
     }
     if (screen == UiScreen::Supply)
@@ -3752,10 +3852,24 @@ void PlanetHud::DrawMap(bool full)
         {
             continue;
         }
-        MapPin(view, project(relay.location.position),
-               w.relayNetwork.Registered(relay.id) ? ColorRGBA(.35f, 1, .9f) : ColorRGBA(.65f, .69f, .75f),
-               full ? (w.relayNetwork.Registered(relay.id) ? "등록 중계환" : "발견 · E 등록 필요") : nullptr,
-               full, w.selectedRelay == relay.id ? 7 : 4);
+        const auto projected = view.Project(project(relay.location.position));
+        if (full && view.Inside(projected, 10))
+        {
+            const bool registered = w.relayNetwork.Registered(relay.id);
+            const bool selected = w.selectedRelay == relay.id;
+            const float iconSize = selected ? 20.f : 16.f;
+            Icon("relay", projected.x - iconSize * .5f, projected.y - iconSize * .5f, iconSize, false,
+                 registered ? ColorRGBA(.35f, 1, .9f) : ColorRGBA(.65f, .69f, .75f));
+            UiText(projected.x + iconSize * .5f + 4, projected.y + 4,
+                   registered ? "등록 중계환" : "발견 · E 등록 필요", 13,
+                   registered ? ColorRGBA(.35f, 1, .9f) : ColorRGBA(.65f, .69f, .75f));
+        }
+        else
+        {
+            MapPin(view, project(relay.location.position),
+                   w.relayNetwork.Registered(relay.id) ? ColorRGBA(.35f, 1, .9f) : ColorRGBA(.65f, .69f, .75f),
+                   nullptr, false, w.selectedRelay == relay.id ? 7 : 4);
+        }
     }
     if (const auto *community = Game::Get().SurfaceCommunity(); community && full)
     {
@@ -3859,7 +3973,15 @@ void PlanetHud::DrawMap(bool full)
         float distance = Game::Distance(point, view.center);
         if (hasBearing && view.Inside(point, 10))
         {
-            MapPin(view, project(*w.planetDestination), {1, .78f, .3f}, "목적지", full, 6);
+            if (full)
+            {
+                Icon("destination", point.x - 9, point.y - 9, 18, false, {1, .78f, .3f});
+                UiText(point.x + 12, point.y + 5, "목적지", 13, {1, .78f, .3f});
+            }
+            else
+            {
+                MapPin(view, project(*w.planetDestination), {1, .78f, .3f}, "목적지", false, 6);
+            }
         }
         else if (hasBearing && distance > .001f)
         {
@@ -3891,15 +4013,21 @@ void PlanetHud::DrawMap(bool full)
             Button(controls[i], int(i));
         }
         const char *reason = RelayTravel::Restriction(w.selectedRelay);
-        auto lines = Dialogue::Wrap(w.relayPreparing         ? "목적지 지형 준비 중 · X 취소"
-                                    : !w.relayStatus.empty() ? w.relayStatus
-                                    : reason                 ? reason
-                                                             : "등록 목적지 준비 완료",
-                                    330, 15);
-        for (size_t i = 0; i < (std::min)(size_t(2), lines.size()); ++i)
+        const std::string statusText = w.relayPreparing         ? "목적지 지형 준비 중 · X 취소"
+                                       : !w.relayStatus.empty() ? w.relayStatus
+                                       : reason                 ? reason
+                                                                : "등록 목적지 준비 완료";
+        const auto pages = Hud::TextPages(statusText, 330, 15, 2);
+        const size_t page = size_t((std::max)(0, w.lastUpdateMilliseconds) / 5000) % pages.size();
+        for (size_t i = 0; i < pages[page].size(); ++i)
         {
-            UiText(820, (w.relayPreparing ? 608.f : 586.f) + float(i) * 22, lines[i], 15, {.76f, .87f, .82f});
+            UiText(820, (w.relayPreparing ? 608.f : 586.f) + float(i) * 22, pages[page][i], 15,
+                   {.76f, .87f, .82f});
         }
+        Icon("relay", 96, 650, 14, false, {.35f, 1, .9f});
+        UiText(116, 661, "청록 · 중계환", 13, {.72f, .92f, .89f});
+        Icon("destination", 96, 672, 14, false, {1, .78f, .3f});
+        UiText(116, 683, "금색 핀 · 지정 목적지", 13, {.92f, .86f, .68f});
         const float meters = range * .5f;
         Drawing::DrawLine({284, 704}, {406, 704}, {.7f, .88f, .87f}, 2);
         char distance[64];
@@ -4010,8 +4138,11 @@ void Hud::DrawWeaponWheel()
             UiText(label.x - RenderAssets::MeasureUtf8(text, size) * .5f, y, text, size, color, false);
         };
         centeredText(sector.title, label.y + 23, 18, ink);
-        if ((sector.slot == combat::WeaponSlot::Secondary && loadout.HasPistol()) ||
-            (sector.slot == combat::WeaponSlot::Primary && loadout.HasPrimary()))
+        if (sector.slot == combat::WeaponSlot::Primary && loadout.HasPrimary())
+        {
+            Icon("carbine", label.x - 18, label.y - 37, 36, false, ink);
+        }
+        else if (sector.slot == combat::WeaponSlot::Secondary && loadout.HasPistol())
         {
             Icon("pistol", label.x - 18, label.y - 37, 36, false, ink);
         }
@@ -4029,7 +4160,9 @@ void Hud::DrawWeaponWheel()
         const bool equipped = loadout.Selected() == sector.slot;
         centeredText(equipped                                       ? "현재 장착"
                      : sector.slot == combat::WeaponSlot::Unarmed   ? "근접 공격"
-                     : available                                    ? "권총"
+                     : available                                    ? (sector.slot == combat::WeaponSlot::Primary
+                                                                           ? Game::Get().PrimaryWeapon().GetName()
+                                                                           : "권총")
                      : sector.slot == combat::WeaponSlot::Secondary ? "미보유"
                                                                     : "비어 있음",
                      label.y + 49, 16, equipped ? ColorRGBA(.65f, .9f, .81f) : ink);
@@ -4038,9 +4171,13 @@ void Hud::DrawWeaponWheel()
             Icon("check", label.x + 42, label.y - 43, 18, false, {.65f, .9f, .81f});
         }
     }
-    const char *name = wheel.hovered == combat::WeaponSlot::Unarmed ? "맨손"
-                       : loadout.IsAvailable(wheel.hovered)         ? "권총"
-                                                                    : "빈 슬롯";
+    const std::string name = wheel.hovered == combat::WeaponSlot::Unarmed
+                                 ? "맨손"
+                             : loadout.IsAvailable(wheel.hovered)
+                                 ? (wheel.hovered == combat::WeaponSlot::Primary
+                                        ? Game::Get().PrimaryWeapon().GetName()
+                                        : "권총")
+                                 : "빈 슬롯";
     UiText(center.x - RenderAssets::MeasureUtf8(name, 26) * .5f, center.y, name, 26, kUiInk, false);
     const char *status = loadout.IsAvailable(wheel.hovered) ? "Q 놓아서 선택" : "현재 장착 유지";
     UiText(center.x - RenderAssets::MeasureUtf8(status, 14) * .5f, center.y + 29, status, 14, kUiInk);

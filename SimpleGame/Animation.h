@@ -48,9 +48,13 @@ struct AnimationRig
     std::vector<AnimationSample> samples;
     std::vector<std::array<unsigned int, 3>> triangles;
     std::vector<SolePoint> soles;
-    int idle = -1, walk = -1, run = -1, aim = -1, fire = -1, melee = -1, muzzle = -1;
+    int idle = -1, walk = -1, run = -1, aim = -1, fire = -1, melee = -1, muzzle = -1, handR = -1;
     int carryIdle = -1, carryWalk = -1, carryRun = -1, reload = -1;
     std::array<int, 16> dodgeClips = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+    // CQ-07C2 shared support bank (8 clips): Treat(Enter/Loop/Exit), Inspect(Enter/Loop/Exit), Carry(Idle/Walk).
+    std::array<int, 8> supportClips = {-1, -1, -1, -1, -1, -1, -1, -1};
+    // Directional transition bank (12 clips): Run_Turn180(L/R), Turn90(L/R), Aim_Strafe_Start(F/B/L/R), Stop(F/B/L/R).
+    std::array<int, 12> transitionClips = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 };
 struct AnimationWeights
 {
@@ -74,6 +78,8 @@ class LayeredAnimation
 {
   public:
     static void BindDodgeClip(AnimationRig &rig, const std::string &name, int index);
+    static void BindSupportClip(AnimationRig &rig, const std::string &name, int index);
+    static void BindTransitionClip(AnimationRig &rig, const std::string &name, int index);
     static void Prepare(ResourceClip &clip, const AnimationRig &rig);
     // Prepare only graph-referenced clips; keep every authored matrix clip available.
     static void PrepareGraph(std::vector<ResourceClip> &clips, const AnimationRig &rig);
@@ -89,6 +95,7 @@ class CharacterAnimation
     void Apply(CharacterPose &pose) const;
     void StartDodge(Point direction, float facingYaw);
     void InterruptDodge();
+    void TriggerTurn(bool run180, bool rightTurn);
     void Fire();
     float Phase() const
     {
@@ -101,6 +108,7 @@ class CharacterAnimation
 
   private:
     float DodgeWeight() const;
+    float TransitionWeight() const;
     Point velocity = {};
     float phase = 0, aimWeight = 0, left = 0, forward = 0, fireSeconds = 0;
     int dodgeSample = -1;
@@ -108,5 +116,9 @@ class CharacterAnimation
     float dodgeEntryLeft = 0, dodgeEntryForward = 0, dodgeEntryPhase = 0;
     int dodgeEntrySample = -1;
     float dodgeEntryTime = 0, dodgeEntryWeight = 0;
+    int transitionClip = -1;
+    float transitionTime = 0, transitionDuration = 0;
+    bool wasAimMoving = false;
+    int lastAimDir = 0;
 };
 } // namespace models

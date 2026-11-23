@@ -1,0 +1,211 @@
+{
+  "asset": {
+    "generator": "Khronos glTF Blender I/O v4.5.47",
+    "version": "2.0",
+    "extras": {
+      "part_budget_revision": "silhouette_first_200_v3"
+    }
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "00_Library",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "extras": {
+        "asset_id": "RoadPlan_Curve_2L_A30_R18_Surface",
+        "slot": "Surface",
+        "family": "road_plan.road",
+        "triangle_count": 116,
+        "max_triangles": 192,
+        "units": "meters",
+        "detail_source": "Detail__RoadPlan_Curve_2L_A30_R18_Surface",
+        "pipeline": "detail_first_lossless_cleanup_v1",
+        "expansion": "road_plan_v1",
+        "collision_role": "drive_surface",
+        "module_id": "RoadPlan_Curve_2L_A30_R18",
+        "authoring_up": "+Z",
+        "budget_parent": "RoadPlan_Curve_2L_A30_R18_Surface",
+        "budget_revision": "silhouette_first_200_v3",
+        "functional_role": "Main"
+      },
+      "mesh": 0,
+      "name": "RoadPlan_Curve_2L_A30_R18_Surface"
+    }
+  ],
+  "materials": [
+    {
+      "doubleSided": true,
+      "name": "Road_Asphalt",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "metallicFactor": 1,
+        "roughnessFactor": 1,
+        "baseColorTexture": {
+          "index": 0,
+          "texCoord": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 1,
+          "texCoord": 0
+        }
+      },
+      "occlusionTexture": {
+        "index": 1,
+        "texCoord": 0
+      },
+      "normalTexture": {
+        "index": 2,
+        "texCoord": 0,
+        "scale": 0.32
+      },
+      "extras": {
+        "material_id": "erma.material.Road_Asphalt",
+        "texture_set_id": "erma.surface.Road_Basalt"
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "RoadPlan_Curve_2L_A30_R18_Surface_BudgetMesh.002",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2,
+            "TANGENT": 3
+          },
+          "indices": 4,
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 224,
+      "max": [
+        10.5,
+        0,
+        3
+      ],
+      "min": [
+        0,
+        -0.20000000298023224,
+        -5.009618759155273
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 224,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 224,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 224,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5123,
+      "count": 348,
+      "type": "SCALAR"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 2688,
+      "byteOffset": 0,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 2688,
+      "byteOffset": 2688,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 1792,
+      "byteOffset": 5376,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 3584,
+      "byteOffset": 7168,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 696,
+      "byteOffset": 10752,
+      "target": 34963
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 11448,
+      "uri": "curve.bin"
+    }
+  ],
+  "samplers": [
+    {
+      "wrapS": 10497,
+      "wrapT": 10497,
+      "magFilter": 9729,
+      "minFilter": 9987
+    }
+  ],
+  "images": [
+    {
+      "name": "Road_Basalt_BaseColor",
+      "uri": "../Textures/Road_Basalt_BaseColor.png"
+    },
+    {
+      "name": "Road_Basalt_ORM",
+      "uri": "../Textures/Road_Basalt_ORM.png"
+    },
+    {
+      "name": "Road_Basalt_Normal",
+      "uri": "../Textures/Road_Basalt_Normal.png"
+    }
+  ],
+  "textures": [
+    {
+      "source": 0,
+      "sampler": 0
+    },
+    {
+      "source": 1,
+      "sampler": 0
+    },
+    {
+      "source": 2,
+      "sampler": 0
+    }
+  ]
+}

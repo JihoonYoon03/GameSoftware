@@ -1,0 +1,1395 @@
+{
+  "schema": "erma.directional_transitions.v1",
+  "bank": "Export/AnimationBanks/HUMAN_7H_Transitions.glb",
+  "sha256": "48c7168553bf729f82b9acfbfefdebbcdcb23677c5ddc3aff626098f04ddbbe9",
+  "rig": "HUMAN_7H",
+  "source_review_scene": "50_Directional_Transitions",
+  "root": "fixed; scene object path demonstrates crop-free controller yaw and anchored plants",
+  "reference": "Mixamo Running Turn 180 public preview checked 2026-10-29 per ANIMATION_BLEND_REQUEST.md; authored on HUMAN_7H",
+  "clips": {
+    "Run_Turn180_Left": {
+      "duration_seconds": 0.5333333333333333,
+      "loop": false,
+      "minimum_skin_z_m": 0.0009999752225930006,
+      "layer": "full_body or human_lower_body with pistol carry",
+      "matching_gait": "Run",
+      "entry_phase": 0,
+      "exit_phase": 0.5,
+      "reference_turn_deg": 180.0,
+      "reference_only_actor_path": [
+        {
+          "phase": 0.0,
+          "actor_offset_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actor_yaw_deg": 0.0
+        },
+        {
+          "phase": 0.03125,
+          "actor_offset_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actor_yaw_deg": 0.0
+        },
+        {
+          "phase": 0.0625,
+          "actor_offset_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actor_yaw_deg": 0.0
+        },
+        {
+          "phase": 0.09375,
+          "actor_offset_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actor_yaw_deg": 0.0
+        },
+        {
+          "phase": 0.125,
+          "actor_offset_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actor_yaw_deg": 0.0
+        },
+        {
+          "phase": 0.15625,
+          "actor_offset_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actor_yaw_deg": 0.0
+        },
+        {
+          "phase": 0.1875,
+          "actor_offset_m": [
+            -0.0003144890069961548,
+            -0.00022490322589874268,
+            0.0
+          ],
+          "actor_yaw_deg": 0.07357835769653333
+        },
+        {
+          "phase": 0.21875,
+          "actor_offset_m": [
+            -0.00802554190158844,
+            -0.00593586266040802,
+            0.0
+          ],
+          "actor_yaw_deg": 1.899693310260773
+        },
+        {
+          "phase": 0.25,
+          "actor_offset_m": [
+            -0.02460724115371704,
+            -0.01959604024887085,
+            0.0
+          ],
+          "actor_yaw_deg": 5.988922119140626
+        },
+        {
+          "phase": 0.28125,
+          "actor_offset_m": [
+            -0.047432512044906616,
+            -0.042086780071258545,
+            0.0
+          ],
+          "actor_yaw_deg": 12.089807689189911
+        },
+        {
+          "phase": 0.3125,
+          "actor_offset_m": [
+            -0.07309502363204956,
+            -0.07441608607769012,
+            0.0
+          ],
+          "actor_yaw_deg": 19.95089292526245
+        },
+        {
+          "phase": 0.34375,
+          "actor_offset_m": [
+            -0.09755711257457733,
+            -0.11708348989486694,
+            0.0
+          ],
+          "actor_yaw_deg": 29.32072073221207
+        },
+        {
+          "phase": 0.375,
+          "actor_offset_m": [
+            -0.11647216975688934,
+            -0.16954153776168823,
+            0.0
+          ],
+          "actor_yaw_deg": 39.94783401489258
+        },
+        {
+          "phase": 0.40625,
+          "actor_offset_m": [
+            -0.12570072710514069,
+            -0.22986428439617157,
+            0.0
+          ],
+          "actor_yaw_deg": 51.580775678157806
+        },
+        {
+          "phase": 0.4375,
+          "actor_offset_m": [
+            -0.11004143208265305,
+            -0.29859459400177,
+            0.0
+          ],
+          "actor_yaw_deg": 63.96808862686158
+        },
+        {
+          "phase": 0.46875,
+          "actor_offset_m": [
+            -0.038282155990600586,
+            -0.37303924560546875,
+            0.0
+          ],
+          "actor_yaw_deg": 76.8583157658577
+        },
+        {
+          "phase": 0.5,
+          "actor_offset_m": [
+            0.03811940550804138,
+            -0.4294576346874237,
+            0.0
+          ],
+          "actor_yaw_deg": 90.0
+        },
+        {
+          "phase": 0.53125,
+          "actor_offset_m": [
+            0.07879997789859772,
+            -0.4683051109313965,
+            0.0
+          ],
+          "actor_yaw_deg": 103.1416842341423
+        },
+        {
+          "phase": 0.5625,
+          "actor_offset_m": [
+            0.07635581493377686,
+            -0.5034745931625366,
+            0.0
+          ],
+          "actor_yaw_deg": 116.03191137313843
+        },
+        {
+          "phase": 0.59375,
+          "actor_offset_m": [
+            0.05711899697780609,
+            -0.5431360602378845,
+            1.4901161193847656e-08
+          ],
+          "actor_yaw_deg": 128.4192243218422
+        },
+        {
+          "phase": 0.625,
+          "actor_offset_m": [
+            0.045826077461242676,
+            -0.583835244178772,
+            0.0
+          ],
+          "actor_yaw_deg": 140.05216598510742
+        },
+        {
+          "phase": 0.65625,
+          "actor_offset_m": [
+            0.04287993907928467,
+            -0.6223184466362,
+            0.0
+          ],
+          "actor_yaw_deg": 150.67927926778793
+        },
+        {
+          "phase": 0.6875,
+          "actor_offset_m": [
+            0.04621390998363495,
+            -0.6561951637268066,
+            0.0
+          ],
+          "actor_yaw_deg": 160.04910707473758
+        },
+        {
+          "phase": 0.71875,
+          "actor_offset_m": [
+            0.05323943495750427,
+            -0.6838864088058472,
+            0.0
+          ],
+          "actor_yaw_deg": 167.9101923108101
+        },
+        {
+          "phase": 0.75,
+          "actor_offset_m": [
+            0.061265960335731506,
+            -0.704561710357666,
+            0.0
+          ],
+          "actor_yaw_deg": 174.0110778808594
+        },
+        {
+          "phase": 0.78125,
+          "actor_offset_m": [
+            0.06785701215267181,
+            -0.7178906798362732,
+            0.0
+          ],
+          "actor_yaw_deg": 178.10030668973923
+        },
+        {
+          "phase": 0.8125,
+          "actor_offset_m": [
+            0.07110412418842316,
+            -0.7236840724945068,
+            0.0
+          ],
+          "actor_yaw_deg": 179.92642164230347
+        },
+        {
+          "phase": 0.84375,
+          "actor_offset_m": [
+            0.07123881578445435,
+            -0.7239152789115906,
+            0.0
+          ],
+          "actor_yaw_deg": 180.0
+        },
+        {
+          "phase": 0.875,
+          "actor_offset_m": [
+            0.07123881578445435,
+            -0.7239152789115906,
+            0.0
+          ],
+          "actor_yaw_deg": 180.0
+        },
+        {
+          "phase": 0.90625,
+          "actor_offset_m": [
+            0.07123881578445435,
+            -0.7239152789115906,
+            0.0
+          ],
+          "actor_yaw_deg": 180.0
+        },
+        {
+          "phase": 0.9375,
+          "actor_offset_m": [
+            0.07123881578445435,
+            -0.7239152789115906,
+            0.0
+          ],
+          "actor_yaw_deg": 180.0
+        },
+        {
+          "phase": 0.96875,
+          "actor_offset_m": [
+            0.07123881578445435,
+            -0.7239152789115906,
+            0.0
+          ],
+          "actor_yaw_deg": 180.0
+        },
+        {
+          "phase": 1.0,
+          "actor_offset_m": [
+            0.07123881578445435,
+            -0.7239152789115906,
+            0.0
+          ],
+          "actor_yaw_deg": 180.0
+        }
+      ],
+      "visual_events": {
+        "brake_plant": 0.2,
+        "turn_mid": 0.5,
+        "push_off": 0.58,
+        "recover": 1
+      },
+      "contacts": {
+        "L": {
+          "start_phase": 0.2,
+          "end_phase": 0.42,
+          "max_reference_motion_xy_m": 2.980232238769531e-07
+        },
+        "R": {
+          "start_phase": 0.58,
+          "end_phase": 0.76,
+          "max_reference_motion_xy_m": 3.03925246810483e-07
+        }
+      }
+    },
+    "Run_Turn180_Right": {
+      "duration_seconds": 0.5333333333333333,
+      "loop": false,
+      "minimum_skin_z_m": 0.0009999730743544483,
+      "layer": "full_body or human_lower_body with pistol carry",
+      "matching_gait": "Run",
+      "entry_phase": 0.5,
+      "exit_phase": 0,
+      "reference_turn_deg": -180.0,
+      "reference_only_actor_path": [
+        {
+          "phase": 0.0,
+          "actor_offset_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actor_yaw_deg": -0.0
+        },
+        {
+          "phase": 0.03125,
+          "actor_offset_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actor_yaw_deg": -0.0
+        },
+        {
+          "phase": 0.0625,
+          "actor_offset_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actor_yaw_deg": -0.0
+        },
+        {
+          "phase": 0.09375,
+          "actor_offset_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actor_yaw_deg": -0.0
+        },
+        {
+          "phase": 0.125,
+          "actor_offset_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actor_yaw_deg": -0.0
+        },
+        {
+          "phase": 0.15625,
+          "actor_offset_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actor_yaw_deg": -0.0
+        },
+        {
+          "phase": 0.1875,
+          "actor_offset_m": [
+            0.0003144890069961548,
+            -0.00022490322589874268,
+            0.0
+          ],
+          "actor_yaw_deg": -0.07357835769653333
+        },
+        {
+          "phase": 0.21875,
+          "actor_offset_m": [
+            0.00802554190158844,
+            -0.00593586266040802,
+            0.0
+          ],
+          "actor_yaw_deg": -1.899693310260773
+        },
+        {
+          "phase": 0.25,
+          "actor_offset_m": [
+            0.02460724115371704,
+            -0.01959604024887085,
+            0.0
+          ],
+          "actor_yaw_deg": -5.988922119140626
+        },
+        {
+          "phase": 0.28125,
+          "actor_offset_m": [
+            0.047432512044906616,
+            -0.042086780071258545,
+            0.0
+          ],
+          "actor_yaw_deg": -12.089807689189911
+        },
+        {
+          "phase": 0.3125,
+          "actor_offset_m": [
+            0.07309502363204956,
+            -0.07441608607769012,
+            0.0
+          ],
+          "actor_yaw_deg": -19.95089292526245
+        },
+        {
+          "phase": 0.34375,
+          "actor_offset_m": [
+            0.09755711257457733,
+            -0.11708348989486694,
+            0.0
+          ],
+          "actor_yaw_deg": -29.32072073221207
+        },
+        {
+          "phase": 0.375,
+          "actor_offset_m": [
+            0.11647216975688934,
+            -0.16954153776168823,
+            0.0
+          ],
+          "actor_yaw_deg": -39.94783401489258
+        },
+        {
+          "phase": 0.40625,
+          "actor_offset_m": [
+            0.12570072710514069,
+            -0.22986428439617157,
+            0.0
+          ],
+          "actor_yaw_deg": -51.580775678157806
+        },
+        {
+          "phase": 0.4375,
+          "actor_offset_m": [
+            0.11004142463207245,
+            -0.29859459400177,
+            0.0
+          ],
+          "actor_yaw_deg": -63.96808862686158
+        },
+        {
+          "phase": 0.46875,
+          "actor_offset_m": [
+            0.038282133638858795,
+            -0.373039186000824,
+            0.0
+          ],
+          "actor_yaw_deg": -76.8583157658577
+        },
+        {
+          "phase": 0.5,
+          "actor_offset_m": [
+            -0.03811945021152496,
+            -0.4294576644897461,
+            1.4901161193847656e-08
+          ],
+          "actor_yaw_deg": -90.0
+        },
+        {
+          "phase": 0.53125,
+          "actor_offset_m": [
+            -0.07880005985498428,
+            -0.4683050811290741,
+            0.0
+          ],
+          "actor_yaw_deg": -103.1416842341423
+        },
+        {
+          "phase": 0.5625,
+          "actor_offset_m": [
+            -0.07635589689016342,
+            -0.5034745335578918,
+            0.0
+          ],
+          "actor_yaw_deg": -116.03191137313843
+        },
+        {
+          "phase": 0.59375,
+          "actor_offset_m": [
+            -0.05711904168128967,
+            -0.5431361198425293,
+            0.0
+          ],
+          "actor_yaw_deg": -128.4192243218422
+        },
+        {
+          "phase": 0.625,
+          "actor_offset_m": [
+            -0.04582613706588745,
+            -0.583835244178772,
+            0.0
+          ],
+          "actor_yaw_deg": -140.05216598510742
+        },
+        {
+          "phase": 0.65625,
+          "actor_offset_m": [
+            -0.04288001358509064,
+            -0.6223183870315552,
+            0.0
+          ],
+          "actor_yaw_deg": -150.67927926778793
+        },
+        {
+          "phase": 0.6875,
+          "actor_offset_m": [
+            -0.046213969588279724,
+            -0.6561951637268066,
+            0.0
+          ],
+          "actor_yaw_deg": -160.04910707473758
+        },
+        {
+          "phase": 0.71875,
+          "actor_offset_m": [
+            -0.05323949456214905,
+            -0.6838864088058472,
+            0.0
+          ],
+          "actor_yaw_deg": -167.9101923108101
+        },
+        {
+          "phase": 0.75,
+          "actor_offset_m": [
+            -0.06126601994037628,
+            -0.704561710357666,
+            0.0
+          ],
+          "actor_yaw_deg": -174.0110778808594
+        },
+        {
+          "phase": 0.78125,
+          "actor_offset_m": [
+            -0.06785707175731659,
+            -0.7178906798362732,
+            0.0
+          ],
+          "actor_yaw_deg": -178.10030668973923
+        },
+        {
+          "phase": 0.8125,
+          "actor_offset_m": [
+            -0.07110415399074554,
+            -0.7236840724945068,
+            0.0
+          ],
+          "actor_yaw_deg": -179.92642164230347
+        },
+        {
+          "phase": 0.84375,
+          "actor_offset_m": [
+            -0.07123887538909912,
+            -0.7239153385162354,
+            0.0
+          ],
+          "actor_yaw_deg": -180.0
+        },
+        {
+          "phase": 0.875,
+          "actor_offset_m": [
+            -0.07123887538909912,
+            -0.7239153385162354,
+            0.0
+          ],
+          "actor_yaw_deg": -180.0
+        },
+        {
+          "phase": 0.90625,
+          "actor_offset_m": [
+            -0.07123887538909912,
+            -0.7239153385162354,
+            0.0
+          ],
+          "actor_yaw_deg": -180.0
+        },
+        {
+          "phase": 0.9375,
+          "actor_offset_m": [
+            -0.07123887538909912,
+            -0.7239153385162354,
+            0.0
+          ],
+          "actor_yaw_deg": -180.0
+        },
+        {
+          "phase": 0.96875,
+          "actor_offset_m": [
+            -0.07123887538909912,
+            -0.7239153385162354,
+            0.0
+          ],
+          "actor_yaw_deg": -180.0
+        },
+        {
+          "phase": 1.0,
+          "actor_offset_m": [
+            -0.07123887538909912,
+            -0.7239153385162354,
+            0.0
+          ],
+          "actor_yaw_deg": -180.0
+        }
+      ],
+      "visual_events": {
+        "brake_plant": 0.2,
+        "turn_mid": 0.5,
+        "push_off": 0.58,
+        "recover": 1
+      },
+      "contacts": {
+        "R": {
+          "start_phase": 0.2,
+          "end_phase": 0.42,
+          "max_reference_motion_xy_m": 2.0914776396182476e-07
+        },
+        "L": {
+          "start_phase": 0.58,
+          "end_phase": 0.76,
+          "max_reference_motion_xy_m": 1.7881393432617188e-07
+        }
+      }
+    },
+    "Turn90_Left": {
+      "duration_seconds": 0.5,
+      "loop": false,
+      "minimum_skin_z_m": 0.0009999779553912119,
+      "layer": "full_body or human_lower_body with pistol carry",
+      "matching_gait": "Walk",
+      "entry_phase": 0,
+      "exit_phase": 0.5,
+      "reference_turn_deg": 90.0,
+      "reference_only_actor_path": [
+        {
+          "phase": 0.0,
+          "actor_offset_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actor_yaw_deg": 0.0
+        },
+        {
+          "phase": 0.03333333333333333,
+          "actor_offset_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actor_yaw_deg": 0.0
+        },
+        {
+          "phase": 0.06666666666666667,
+          "actor_offset_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actor_yaw_deg": 0.0
+        },
+        {
+          "phase": 0.1,
+          "actor_offset_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actor_yaw_deg": 0.0
+        },
+        {
+          "phase": 0.13333333333333333,
+          "actor_offset_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actor_yaw_deg": 0.0
+        },
+        {
+          "phase": 0.16666666666666666,
+          "actor_offset_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actor_yaw_deg": 0.0
+        },
+        {
+          "phase": 0.2,
+          "actor_offset_m": [
+            -0.0011022090911865234,
+            -0.0007910579442977905,
+            0.0
+          ],
+          "actor_yaw_deg": 0.25817871093750044
+        },
+        {
+          "phase": 0.23333333333333334,
+          "actor_offset_m": [
+            -0.007487431168556213,
+            -0.00552484393119812,
+            0.0
+          ],
+          "actor_yaw_deg": 1.7708333333333337
+        },
+        {
+          "phase": 0.26666666666666666,
+          "actor_offset_m": [
+            -0.01869988441467285,
+            -0.01449979841709137,
+            0.0
+          ],
+          "actor_yaw_deg": 4.504191080729166
+        },
+        {
+          "phase": 0.3,
+          "actor_offset_m": [
+            -0.03355573117733002,
+            -0.027849122881889343,
+            0.0
+          ],
+          "actor_yaw_deg": 8.3056640625
+        },
+        {
+          "phase": 0.3333333333333333,
+          "actor_offset_m": [
+            -0.050706639885902405,
+            -0.045735061168670654,
+            -1.4901161193847656e-08
+          ],
+          "actor_yaw_deg": 13.022664388020832
+        },
+        {
+          "phase": 0.36666666666666664,
+          "actor_offset_m": [
+            -0.06870430707931519,
+            -0.06820008158683777,
+            0.0
+          ],
+          "actor_yaw_deg": 18.50260416666666
+        },
+        {
+          "phase": 0.4,
+          "actor_offset_m": [
+            -0.08608652651309967,
+            -0.09505394101142883,
+            0.0
+          ],
+          "actor_yaw_deg": 24.59289550781251
+        },
+        {
+          "phase": 0.43333333333333335,
+          "actor_offset_m": [
+            -0.0998314693570137,
+            -0.12937738001346588,
+            1.4901161193847656e-08
+          ],
+          "actor_yaw_deg": 31.140950520833336
+        },
+        {
+          "phase": 0.4666666666666667,
+          "actor_offset_m": [
+            -0.09859475493431091,
+            -0.18783368170261383,
+            -1.4901161193847656e-08
+          ],
+          "actor_yaw_deg": 37.994181315104164
+        },
+        {
+          "phase": 0.5,
+          "actor_offset_m": [
+            -0.09313865005970001,
+            -0.24213729798793793,
+            1.4901161193847656e-08
+          ],
+          "actor_yaw_deg": 45.0
+        },
+        {
+          "phase": 0.5333333333333333,
+          "actor_offset_m": [
+            -0.0967797189950943,
+            -0.2731768488883972,
+            0.0
+          ],
+          "actor_yaw_deg": 52.005818684895836
+        },
+        {
+          "phase": 0.5666666666666667,
+          "actor_offset_m": [
+            -0.11432673037052155,
+            -0.28166303038597107,
+            0.0
+          ],
+          "actor_yaw_deg": 58.859049479166664
+        },
+        {
+          "phase": 0.6,
+          "actor_offset_m": [
+            -0.13789039850234985,
+            -0.2829280197620392,
+            0.0
+          ],
+          "actor_yaw_deg": 65.4071044921875
+        },
+        {
+          "phase": 0.6333333333333333,
+          "actor_offset_m": [
+            -0.1597752869129181,
+            -0.2862802743911743,
+            0.0
+          ],
+          "actor_yaw_deg": 71.49739583333333
+        },
+        {
+          "phase": 0.6666666666666666,
+          "actor_offset_m": [
+            -0.17906439304351807,
+            -0.2912665605545044,
+            0.0
+          ],
+          "actor_yaw_deg": 76.97733561197916
+        },
+        {
+          "phase": 0.7,
+          "actor_offset_m": [
+            -0.19522236287593842,
+            -0.2970176935195923,
+            0.0
+          ],
+          "actor_yaw_deg": 81.6943359375
+        },
+        {
+          "phase": 0.7333333333333333,
+          "actor_offset_m": [
+            -0.2078654021024704,
+            -0.3026075065135956,
+            0.0
+          ],
+          "actor_yaw_deg": 85.49580891927083
+        },
+        {
+          "phase": 0.7666666666666667,
+          "actor_offset_m": [
+            -0.21671296656131744,
+            -0.30713874101638794,
+            0.0
+          ],
+          "actor_yaw_deg": 88.22916666666667
+        },
+        {
+          "phase": 0.8,
+          "actor_offset_m": [
+            -0.2215132713317871,
+            -0.309826135635376,
+            0.0
+          ],
+          "actor_yaw_deg": 89.7418212890625
+        },
+        {
+          "phase": 0.8333333333333334,
+          "actor_offset_m": [
+            -0.2223254144191742,
+            -0.310297429561615,
+            0.0
+          ],
+          "actor_yaw_deg": 90.0
+        },
+        {
+          "phase": 0.8666666666666667,
+          "actor_offset_m": [
+            -0.2223254144191742,
+            -0.310297429561615,
+            0.0
+          ],
+          "actor_yaw_deg": 90.0
+        },
+        {
+          "phase": 0.9,
+          "actor_offset_m": [
+            -0.2223254144191742,
+            -0.310297429561615,
+            0.0
+          ],
+          "actor_yaw_deg": 90.0
+        },
+        {
+          "phase": 0.9333333333333333,
+          "actor_offset_m": [
+            -0.2223254144191742,
+            -0.310297429561615,
+            0.0
+          ],
+          "actor_yaw_deg": 90.0
+        },
+        {
+          "phase": 0.9666666666666667,
+          "actor_offset_m": [
+            -0.2223254144191742,
+            -0.310297429561615,
+            0.0
+          ],
+          "actor_yaw_deg": 90.0
+        },
+        {
+          "phase": 1.0,
+          "actor_offset_m": [
+            -0.2223254144191742,
+            -0.310297429561615,
+            0.0
+          ],
+          "actor_yaw_deg": 90.0
+        }
+      ],
+      "visual_events": {
+        "brake_plant": 0.2,
+        "turn_mid": 0.5,
+        "push_off": 0.58,
+        "recover": 1
+      },
+      "contacts": {
+        "L": {
+          "start_phase": 0.2,
+          "end_phase": 0.42,
+          "max_reference_motion_xy_m": 4.480271452180418e-07
+        },
+        "R": {
+          "start_phase": 0.58,
+          "end_phase": 0.76,
+          "max_reference_motion_xy_m": 3.25872417220906e-07
+        }
+      }
+    },
+    "Turn90_Right": {
+      "duration_seconds": 0.5,
+      "loop": false,
+      "minimum_skin_z_m": 0.000999970722205733,
+      "layer": "full_body or human_lower_body with pistol carry",
+      "matching_gait": "Walk",
+      "entry_phase": 0.5,
+      "exit_phase": 0,
+      "reference_turn_deg": -90.0,
+      "reference_only_actor_path": [
+        {
+          "phase": 0.0,
+          "actor_offset_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actor_yaw_deg": -0.0
+        },
+        {
+          "phase": 0.03333333333333333,
+          "actor_offset_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actor_yaw_deg": -0.0
+        },
+        {
+          "phase": 0.06666666666666667,
+          "actor_offset_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actor_yaw_deg": -0.0
+        },
+        {
+          "phase": 0.1,
+          "actor_offset_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actor_yaw_deg": -0.0
+        },
+        {
+          "phase": 0.13333333333333333,
+          "actor_offset_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actor_yaw_deg": -0.0
+        },
+        {
+          "phase": 0.16666666666666666,
+          "actor_offset_m": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "actor_yaw_deg": -0.0
+        },
+        {
+          "phase": 0.2,
+          "actor_offset_m": [
+            0.0011022090911865234,
+            -0.0007910579442977905,
+            0.0
+          ],
+          "actor_yaw_deg": -0.25817871093750044
+        },
+        {
+          "phase": 0.23333333333333334,
+          "actor_offset_m": [
+            0.007487431168556213,
+            -0.00552484393119812,
+            0.0
+          ],
+          "actor_yaw_deg": -1.7708333333333337
+        },
+        {
+          "phase": 0.26666666666666666,
+          "actor_offset_m": [
+            0.01869988441467285,
+            -0.01449979841709137,
+            0.0
+          ],
+          "actor_yaw_deg": -4.504191080729166
+        },
+        {
+          "phase": 0.3,
+          "actor_offset_m": [
+            0.03355573117733002,
+            -0.027849122881889343,
+            0.0
+          ],
+          "actor_yaw_deg": -8.3056640625
+        },
+        {
+          "phase": 0.3333333333333333,
+          "actor_offset_m": [
+            0.050706639885902405,
+            -0.045735061168670654,
+            -1.4901161193847656e-08
+          ],
+          "actor_yaw_deg": -13.022664388020832
+        },
+        {
+          "phase": 0.36666666666666664,
+          "actor_offset_m": [
+            0.06870430707931519,
+            -0.06820008158683777,
+            0.0
+          ],
+          "actor_yaw_deg": -18.50260416666666
+        },
+        {
+          "phase": 0.4,
+          "actor_offset_m": [
+            0.08608652651309967,
+            -0.09505394101142883,
+            0.0
+          ],
+          "actor_yaw_deg": -24.59289550781251
+        },
+        {
+          "phase": 0.43333333333333335,
+          "actor_offset_m": [
+            0.0998314693570137,
+            -0.12937738001346588,
+            1.4901161193847656e-08
+          ],
+          "actor_yaw_deg": -31.140950520833336
+        },
+        {
+          "phase": 0.4666666666666667,
+          "actor_offset_m": [
+            0.09859475493431091,
+            -0.18783368170261383,
+            -1.4901161193847656e-08
+          ],
+          "actor_yaw_deg": -37.994181315104164
+        },
+        {
+          "phase": 0.5,
+          "actor_offset_m": [
+            0.09313865005970001,
+            -0.24213729798793793,
+            1.4901161193847656e-08
+          ],
+          "actor_yaw_deg": -45.0
+        },
+        {
+          "phase": 0.5333333333333333,
+          "actor_offset_m": [
+            0.0967797189950943,
+            -0.2731768488883972,
+            0.0
+          ],
+          "actor_yaw_deg": -52.005818684895836
+        },
+        {
+          "phase": 0.5666666666666667,
+          "actor_offset_m": [
+            0.11432673037052155,
+            -0.28166303038597107,
+            0.0
+          ],
+          "actor_yaw_deg": -58.859049479166664
+        },
+        {
+          "phase": 0.6,
+          "actor_offset_m": [
+            0.13789039850234985,
+            -0.2829280197620392,
+            0.0
+          ],
+          "actor_yaw_deg": -65.4071044921875
+        },
+        {
+          "phase": 0.6333333333333333,
+          "actor_offset_m": [
+            0.1597752869129181,
+            -0.2862802743911743,
+            0.0
+          ],
+          "actor_yaw_deg": -71.49739583333333
+        },
+        {
+          "phase": 0.6666666666666666,
+          "actor_offset_m": [
+            0.17906439304351807,
+            -0.2912665605545044,
+            0.0
+          ],
+          "actor_yaw_deg": -76.97733561197916
+        },
+        {
+          "phase": 0.7,
+          "actor_offset_m": [
+            0.195222407579422,
+            -0.2970176935195923,
+            0.0
+          ],
+          "actor_yaw_deg": -81.6943359375
+        },
+        {
+          "phase": 0.7333333333333333,
+          "actor_offset_m": [
+            0.2078654021024704,
+            -0.3026075065135956,
+            0.0
+          ],
+          "actor_yaw_deg": -85.49580891927083
+        },
+        {
+          "phase": 0.7666666666666667,
+          "actor_offset_m": [
+            0.21671295166015625,
+            -0.30713871121406555,
+            0.0
+          ],
+          "actor_yaw_deg": -88.22916666666667
+        },
+        {
+          "phase": 0.8,
+          "actor_offset_m": [
+            0.2215132862329483,
+            -0.30982616543769836,
+            0.0
+          ],
+          "actor_yaw_deg": -89.7418212890625
+        },
+        {
+          "phase": 0.8333333333333334,
+          "actor_offset_m": [
+            0.2223254144191742,
+            -0.31029748916625977,
+            1.4901161193847656e-08
+          ],
+          "actor_yaw_deg": -90.0
+        },
+        {
+          "phase": 0.8666666666666667,
+          "actor_offset_m": [
+            0.2223254144191742,
+            -0.31029748916625977,
+            1.4901161193847656e-08
+          ],
+          "actor_yaw_deg": -90.0
+        },
+        {
+          "phase": 0.9,
+          "actor_offset_m": [
+            0.2223254144191742,
+            -0.31029748916625977,
+            1.4901161193847656e-08
+          ],
+          "actor_yaw_deg": -90.0
+        },
+        {
+          "phase": 0.9333333333333333,
+          "actor_offset_m": [
+            0.2223254144191742,
+            -0.31029748916625977,
+            1.4901161193847656e-08
+          ],
+          "actor_yaw_deg": -90.0
+        },
+        {
+          "phase": 0.9666666666666667,
+          "actor_offset_m": [
+            0.2223254144191742,
+            -0.31029748916625977,
+            1.4901161193847656e-08
+          ],
+          "actor_yaw_deg": -90.0
+        },
+        {
+          "phase": 1.0,
+          "actor_offset_m": [
+            0.2223254144191742,
+            -0.31029748916625977,
+            1.4901161193847656e-08
+          ],
+          "actor_yaw_deg": -90.0
+        }
+      ],
+      "visual_events": {
+        "brake_plant": 0.2,
+        "turn_mid": 0.5,
+        "push_off": 0.58,
+        "recover": 1
+      },
+      "contacts": {
+        "R": {
+          "start_phase": 0.2,
+          "end_phase": 0.42,
+          "max_reference_motion_xy_m": 2.5506679368948475e-07
+        },
+        "L": {
+          "start_phase": 0.58,
+          "end_phase": 0.76,
+          "max_reference_motion_xy_m": 2.7567148208618164e-07
+        }
+      }
+    },
+    "Aim_Strafe_Start_Forward": {
+      "duration_seconds": 0.4,
+      "loop": false,
+      "minimum_skin_z_m": 0.0009999702531327667,
+      "layer": "human_lower_body, maintain aim upper body",
+      "entry_clip": "Aim_Base",
+      "exit_clip": "Aim_Walk_Forward",
+      "entry_phase": 0,
+      "exit_phase": 0,
+      "visual_events": {
+        "plant_or_release": 0.5,
+        "recover": 1
+      }
+    },
+    "Aim_Strafe_Stop_Forward": {
+      "duration_seconds": 0.4666666666666667,
+      "loop": false,
+      "minimum_skin_z_m": 0.0009999741765529388,
+      "layer": "human_lower_body, maintain aim upper body",
+      "entry_clip": "Aim_Walk_Forward",
+      "exit_clip": "Aim_Base",
+      "entry_phase": 0,
+      "exit_phase": 0,
+      "visual_events": {
+        "plant_or_release": 0.5,
+        "recover": 1
+      }
+    },
+    "Aim_Strafe_Start_Back": {
+      "duration_seconds": 0.4,
+      "loop": false,
+      "minimum_skin_z_m": 0.0009999703770359077,
+      "layer": "human_lower_body, maintain aim upper body",
+      "entry_clip": "Aim_Base",
+      "exit_clip": "Aim_Walk_Back",
+      "entry_phase": 0,
+      "exit_phase": 0,
+      "visual_events": {
+        "plant_or_release": 0.5,
+        "recover": 1
+      }
+    },
+    "Aim_Strafe_Stop_Back": {
+      "duration_seconds": 0.4666666666666667,
+      "loop": false,
+      "minimum_skin_z_m": 0.0009999707520960376,
+      "layer": "human_lower_body, maintain aim upper body",
+      "entry_clip": "Aim_Walk_Back",
+      "exit_clip": "Aim_Base",
+      "entry_phase": 0,
+      "exit_phase": 0,
+      "visual_events": {
+        "plant_or_release": 0.5,
+        "recover": 1
+      }
+    },
+    "Aim_Strafe_Start_Left": {
+      "duration_seconds": 0.4,
+      "loop": false,
+      "minimum_skin_z_m": 0.0009999701893591356,
+      "layer": "human_lower_body, maintain aim upper body",
+      "entry_clip": "Aim_Base",
+      "exit_clip": "Aim_Walk_Left",
+      "entry_phase": 0,
+      "exit_phase": 0,
+      "visual_events": {
+        "plant_or_release": 0.5,
+        "recover": 1
+      }
+    },
+    "Aim_Strafe_Stop_Left": {
+      "duration_seconds": 0.4666666666666667,
+      "loop": false,
+      "minimum_skin_z_m": 0.000999971082252739,
+      "layer": "human_lower_body, maintain aim upper body",
+      "entry_clip": "Aim_Walk_Left",
+      "exit_clip": "Aim_Base",
+      "entry_phase": 0,
+      "exit_phase": 0,
+      "visual_events": {
+        "plant_or_release": 0.5,
+        "recover": 1
+      }
+    },
+    "Aim_Strafe_Start_Right": {
+      "duration_seconds": 0.4,
+      "loop": false,
+      "minimum_skin_z_m": 0.0009999710786904332,
+      "layer": "human_lower_body, maintain aim upper body",
+      "entry_clip": "Aim_Base",
+      "exit_clip": "Aim_Walk_Right",
+      "entry_phase": 0,
+      "exit_phase": 0.5,
+      "visual_events": {
+        "plant_or_release": 0.5,
+        "recover": 1
+      }
+    },
+    "Aim_Strafe_Stop_Right": {
+      "duration_seconds": 0.4666666666666667,
+      "loop": false,
+      "minimum_skin_z_m": 0.0009999740930038024,
+      "layer": "human_lower_body, maintain aim upper body",
+      "entry_clip": "Aim_Walk_Right",
+      "exit_clip": "Aim_Base",
+      "entry_phase": 0.5,
+      "exit_phase": 0,
+      "visual_events": {
+        "plant_or_release": 0.5,
+        "recover": 1
+      }
+    }
+  }
+}

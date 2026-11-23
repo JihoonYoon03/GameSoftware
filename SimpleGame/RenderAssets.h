@@ -35,6 +35,12 @@ class RenderAssets
                       float fraction = 1, bool nineSlice = false);
     size_t UiSpriteCount() const;
     bool DrawBackdropLayer(const std::string &name, bool cartoon, int renderWidth);
+    unsigned int PbrBaseArray() const;
+    unsigned int PbrNormalArray() const;
+    unsigned int PbrOrmArray() const;
+    unsigned int DamageMaskTexture() const;
+    bool HasPbrTextures() const;
+    bool HasDamageMask() const;
 
   private:
     struct Data;

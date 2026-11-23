@@ -1,0 +1,425 @@
+{
+  "asset": {
+    "generator": "Khronos glTF Blender I/O v4.5.47",
+    "version": "2.0",
+    "extras": {
+      "part_budget_revision": "silhouette_first_200_v3"
+    }
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "00_Library",
+      "nodes": [
+        0,
+        1,
+        2
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "extras": {
+        "asset_id": "RoadPlan_Ramp_2L_Rise8p4_L110_LowerVerticalCurve",
+        "slot": "LowerVerticalCurve",
+        "family": "road_plan.ramp",
+        "triangle_count": 192,
+        "max_triangles": 192,
+        "units": "meters",
+        "detail_source": "Detail__RoadPlan_Ramp_2L_Rise8p4_L110_LowerVerticalCurve",
+        "pipeline": "detail_first_lossless_cleanup_v1",
+        "expansion": "road_plan_v1",
+        "collision_role": "drive_surface",
+        "module_id": "RoadPlan_Ramp_2L_Rise8p4_L110",
+        "authoring_up": "+Z",
+        "budget_parent": "RoadPlan_Ramp_2L_Rise8p4_L110_LowerVerticalCurve",
+        "budget_revision": "silhouette_first_200_v3",
+        "functional_role": "Main"
+      },
+      "mesh": 0,
+      "name": "RoadPlan_Ramp_2L_Rise8p4_L110_LowerVerticalCurve"
+    },
+    {
+      "extras": {
+        "asset_id": "RoadPlan_Ramp_2L_Rise8p4_L110_ConstantGrade",
+        "slot": "ConstantGrade",
+        "family": "road_plan.ramp",
+        "triangle_count": 12,
+        "max_triangles": 196,
+        "units": "meters",
+        "detail_source": "Detail__RoadPlan_Ramp_2L_Rise8p4_L110_ConstantGrade",
+        "pipeline": "detail_first_lossless_cleanup_v1",
+        "expansion": "road_plan_v1",
+        "collision_role": "drive_surface",
+        "module_id": "RoadPlan_Ramp_2L_Rise8p4_L110",
+        "authoring_up": "+Z",
+        "budget_parent": "RoadPlan_Ramp_2L_Rise8p4_L110_ConstantGrade",
+        "budget_revision": "silhouette_first_200_v3",
+        "functional_role": "Main"
+      },
+      "mesh": 1,
+      "name": "RoadPlan_Ramp_2L_Rise8p4_L110_ConstantGrade"
+    },
+    {
+      "extras": {
+        "asset_id": "RoadPlan_Ramp_2L_Rise8p4_L110_UpperVerticalCurve",
+        "slot": "UpperVerticalCurve",
+        "family": "road_plan.ramp",
+        "triangle_count": 192,
+        "max_triangles": 192,
+        "units": "meters",
+        "detail_source": "Detail__RoadPlan_Ramp_2L_Rise8p4_L110_UpperVerticalCurve",
+        "pipeline": "detail_first_lossless_cleanup_v1",
+        "expansion": "road_plan_v1",
+        "collision_role": "drive_surface",
+        "module_id": "RoadPlan_Ramp_2L_Rise8p4_L110",
+        "authoring_up": "+Z",
+        "budget_parent": "RoadPlan_Ramp_2L_Rise8p4_L110_UpperVerticalCurve",
+        "budget_revision": "silhouette_first_200_v3",
+        "functional_role": "Main"
+      },
+      "mesh": 2,
+      "name": "RoadPlan_Ramp_2L_Rise8p4_L110_UpperVerticalCurve"
+    }
+  ],
+  "materials": [
+    {
+      "doubleSided": true,
+      "name": "Road_Asphalt",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "metallicFactor": 1,
+        "roughnessFactor": 1,
+        "baseColorTexture": {
+          "index": 0,
+          "texCoord": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 1,
+          "texCoord": 0
+        }
+      },
+      "occlusionTexture": {
+        "index": 1,
+        "texCoord": 0
+      },
+      "normalTexture": {
+        "index": 2,
+        "texCoord": 0,
+        "scale": 0.32
+      },
+      "extras": {
+        "material_id": "erma.material.Road_Asphalt",
+        "texture_set_id": "erma.surface.Road_Basalt"
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "RoadPlan_Ramp_2L_Rise8p4_L110_LowerVerticalCurve_BudgetMesh.004",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2,
+            "TANGENT": 3
+          },
+          "indices": 4,
+          "material": 0
+        }
+      ]
+    },
+    {
+      "name": "RoadPlan_Ramp_2L_Rise8p4_L110_ConstantGrade_BudgetMesh.004",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 5,
+            "NORMAL": 6,
+            "TEXCOORD_0": 7,
+            "TANGENT": 8
+          },
+          "indices": 9,
+          "material": 0
+        }
+      ]
+    },
+    {
+      "name": "RoadPlan_Ramp_2L_Rise8p4_L110_UpperVerticalCurve_BudgetMesh.004",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 10,
+            "NORMAL": 11,
+            "TEXCOORD_0": 12,
+            "TANGENT": 13
+          },
+          "indices": 14,
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 383,
+      "max": [
+        16,
+        0.714893639087677,
+        3
+      ],
+      "min": [
+        0,
+        -0.20000000298023224,
+        -3
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 383,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 383,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 383,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5123,
+      "count": 576,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 24,
+      "max": [
+        94,
+        7.68510627746582,
+        3
+      ],
+      "min": [
+        16,
+        0.5148935914039612,
+        -3
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5126,
+      "count": 24,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5126,
+      "count": 24,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 8,
+      "componentType": 5126,
+      "count": 24,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 9,
+      "componentType": 5123,
+      "count": 36,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 10,
+      "componentType": 5126,
+      "count": 408,
+      "max": [
+        110,
+        8.399999618530273,
+        3
+      ],
+      "min": [
+        94,
+        7.485106468200684,
+        -3
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 11,
+      "componentType": 5126,
+      "count": 408,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 12,
+      "componentType": 5126,
+      "count": 408,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 13,
+      "componentType": 5126,
+      "count": 408,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 14,
+      "componentType": 5123,
+      "count": 576,
+      "type": "SCALAR"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 4596,
+      "byteOffset": 0,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 4596,
+      "byteOffset": 4596,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 3064,
+      "byteOffset": 9192,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 6128,
+      "byteOffset": 12256,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 1152,
+      "byteOffset": 18384,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 288,
+      "byteOffset": 19536,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 288,
+      "byteOffset": 19824,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 192,
+      "byteOffset": 20112,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 384,
+      "byteOffset": 20304,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 72,
+      "byteOffset": 20688,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 4896,
+      "byteOffset": 20760,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 4896,
+      "byteOffset": 25656,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 3264,
+      "byteOffset": 30552,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 6528,
+      "byteOffset": 33816,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 1152,
+      "byteOffset": 40344,
+      "target": 34963
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 41496,
+      "uri": "ramp.bin"
+    }
+  ],
+  "samplers": [
+    {
+      "wrapS": 10497,
+      "wrapT": 10497,
+      "magFilter": 9729,
+      "minFilter": 9987
+    }
+  ],
+  "images": [
+    {
+      "name": "Road_Basalt_BaseColor",
+      "uri": "../Textures/Road_Basalt_BaseColor.png"
+    },
+    {
+      "name": "Road_Basalt_ORM",
+      "uri": "../Textures/Road_Basalt_ORM.png"
+    },
+    {
+      "name": "Road_Basalt_Normal",
+      "uri": "../Textures/Road_Basalt_Normal.png"
+    }
+  ],
+  "textures": [
+    {
+      "source": 0,
+      "sampler": 0
+    },
+    {
+      "source": 1,
+      "sampler": 0
+    },
+    {
+      "source": 2,
+      "sampler": 0
+    }
+  ]
+}

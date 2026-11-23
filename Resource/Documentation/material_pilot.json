@@ -1,0 +1,3366 @@
+{
+  "schema": "erma.material.pilot",
+  "version": 1,
+  "compatibility": "authoring glTF 2.0 with external PNGs",
+  "builder": "Tools/build_material_pilot.py",
+  "builder_sha256": "e5fe477c952c96434e38761e1e209a9d49bdaf0fbe765195be561ca67051ed6f",
+  "authoring_units": "meter",
+  "coordinate_system": "GLTF +Y up, source node transforms retained",
+  "uv": "TEXCOORD_0, upper left origin, repeat",
+  "sampling": "linear mag, trilinear min, repeat; review mips computed offline, PNG output is base level",
+  "tangent": "original glTF tangent.w handedness; bitangent = cross(N,T) * w",
+  "maps_data_license": "Project-owned source and procedural authoring",
+  "status": "pilot resources produced; runtime integration pending",
+  "road_contract_sha256": "ff396874f5c6f1bbbbcf1ae7a1cb106f4a5271c9ebe99f36efeb91a775dde328",
+  "texture_sets": {
+    "erma.surface.Habitat_Concrete": {
+      "BaseColor": {
+        "file": "Export/Textures/Habitat_Concrete_BaseColor.png",
+        "sha256": "79540dc7ea85741a67331a8de7e066b5a9ca6513cc45752231e0db1c52e853d5",
+        "size": [
+          512,
+          512
+        ],
+        "color_space": "sRGB",
+        "channels": "RGB",
+        "mip_review": [
+          {
+            "side": 512,
+            "wrap_mean": 0.768,
+            "interior_mean": 0.763,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 256,
+            "wrap_mean": 1.299,
+            "interior_mean": 1.324,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 128,
+            "wrap_mean": 2.096,
+            "interior_mean": 2.023,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 64,
+            "wrap_mean": 2.784,
+            "interior_mean": 2.773,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 32,
+            "wrap_mean": 4.146,
+            "interior_mean": 4.145,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 16,
+            "wrap_mean": 5.771,
+            "interior_mean": 5.775,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 8,
+            "wrap_mean": 8.104,
+            "interior_mean": 7.366,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 4,
+            "wrap_mean": 1.417,
+            "interior_mean": 2.25,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.333,
+            "interior_mean": 0.333,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          }
+        ],
+        "rgba8_full_mip_bytes": 1398100
+      },
+      "Normal": {
+        "file": "Export/Textures/Habitat_Concrete_Normal.png",
+        "sha256": "e4f493dd56944b092b69bc505a22e97c4ecb1ea98e3281c6d31a034a94f9fc70",
+        "size": [
+          512,
+          512
+        ],
+        "color_space": "linear",
+        "channels": "XYZ tangent space +Y",
+        "mip_review": [
+          {
+            "side": 512,
+            "wrap_mean": 3.087,
+            "interior_mean": 3.105,
+            "normal_max_length_error": 0.0045
+          },
+          {
+            "side": 256,
+            "wrap_mean": 4.383,
+            "interior_mean": 4.451,
+            "normal_max_length_error": 0.0045
+          },
+          {
+            "side": 128,
+            "wrap_mean": 4.51,
+            "interior_mean": 4.485,
+            "normal_max_length_error": 0.0043
+          },
+          {
+            "side": 64,
+            "wrap_mean": 3.062,
+            "interior_mean": 3.046,
+            "normal_max_length_error": 0.0043
+          },
+          {
+            "side": 32,
+            "wrap_mean": 2.484,
+            "interior_mean": 2.497,
+            "normal_max_length_error": 0.0023
+          },
+          {
+            "side": 16,
+            "wrap_mean": 1.292,
+            "interior_mean": 1.425,
+            "normal_max_length_error": 0.001
+          },
+          {
+            "side": 8,
+            "wrap_mean": 1.479,
+            "interior_mean": 1.372,
+            "normal_max_length_error": 0.0003
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.625,
+            "interior_mean": 0.431,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          }
+        ],
+        "rgba8_full_mip_bytes": 1398100
+      },
+      "ORM": {
+        "file": "Export/Textures/Habitat_Concrete_ORM.png",
+        "sha256": "feb96e59081dc9be7eebe8ef32baeafe537f831997d6ba81e6d972247d6e8b22",
+        "size": [
+          512,
+          512
+        ],
+        "color_space": "linear",
+        "channels": "R=AO, G=roughness, B=metallic",
+        "mip_review": [
+          {
+            "side": 512,
+            "wrap_mean": 0.215,
+            "interior_mean": 0.218,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 256,
+            "wrap_mean": 0.385,
+            "interior_mean": 0.382,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 128,
+            "wrap_mean": 0.582,
+            "interior_mean": 0.57,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 64,
+            "wrap_mean": 0.807,
+            "interior_mean": 0.787,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 32,
+            "wrap_mean": 1.219,
+            "interior_mean": 1.184,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 16,
+            "wrap_mean": 1.635,
+            "interior_mean": 1.644,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 8,
+            "wrap_mean": 2.354,
+            "interior_mean": 2.11,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.417,
+            "interior_mean": 0.583,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.167,
+            "interior_mean": 0.167,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          }
+        ],
+        "rgba8_full_mip_bytes": 1398100
+      }
+    },
+    "erma.surface.Habitat_Panels": {
+      "BaseColor": {
+        "file": "Export/Textures/Habitat_Panels_BaseColor.png",
+        "sha256": "feef4a07fdb7666367988e2b7a792b21e3f9e6a0ddfbe49ddfd756377c8e106e",
+        "size": [
+          512,
+          512
+        ],
+        "color_space": "sRGB",
+        "channels": "RGB",
+        "mip_review": [
+          {
+            "side": 512,
+            "wrap_mean": 0.249,
+            "interior_mean": 0.282,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 256,
+            "wrap_mean": 0.41,
+            "interior_mean": 0.509,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 128,
+            "wrap_mean": 0.608,
+            "interior_mean": 0.805,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 64,
+            "wrap_mean": 1.562,
+            "interior_mean": 1.152,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 32,
+            "wrap_mean": 1.427,
+            "interior_mean": 1.517,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 16,
+            "wrap_mean": 1.844,
+            "interior_mean": 1.93,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 8,
+            "wrap_mean": 2.646,
+            "interior_mean": 2.479,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.458,
+            "interior_mean": 0.792,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.167,
+            "interior_mean": 0.167,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          }
+        ],
+        "rgba8_full_mip_bytes": 1398100
+      },
+      "Normal": {
+        "file": "Export/Textures/Habitat_Panels_Normal.png",
+        "sha256": "d1effe441c3c08a1dabdead718e7b4c453f73166fb6f7d2507a17e9d6073a390",
+        "size": [
+          512,
+          512
+        ],
+        "color_space": "linear",
+        "channels": "XYZ tangent space +Y",
+        "mip_review": [
+          {
+            "side": 512,
+            "wrap_mean": 0.237,
+            "interior_mean": 0.39,
+            "normal_max_length_error": 0.0043
+          },
+          {
+            "side": 256,
+            "wrap_mean": 0.305,
+            "interior_mean": 0.542,
+            "normal_max_length_error": 0.0045
+          },
+          {
+            "side": 128,
+            "wrap_mean": 0.229,
+            "interior_mean": 0.528,
+            "normal_max_length_error": 0.0045
+          },
+          {
+            "side": 64,
+            "wrap_mean": 8.404,
+            "interior_mean": 0.326,
+            "normal_max_length_error": 0.0037
+          },
+          {
+            "side": 32,
+            "wrap_mean": 4.302,
+            "interior_mean": 0.202,
+            "normal_max_length_error": 0.0017
+          },
+          {
+            "side": 16,
+            "wrap_mean": 1.979,
+            "interior_mean": 0.14,
+            "normal_max_length_error": 0.0004
+          },
+          {
+            "side": 8,
+            "wrap_mean": 0.708,
+            "interior_mean": 0.107,
+            "normal_max_length_error": 0.0001
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.083,
+            "interior_mean": 0.056,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          }
+        ],
+        "rgba8_full_mip_bytes": 1398100
+      },
+      "ORM": {
+        "file": "Export/Textures/Habitat_Panels_ORM.png",
+        "sha256": "40441728b3620c520751c18d7373011d2332e618d0f797054837e8cd1ecc0081",
+        "size": [
+          512,
+          512
+        ],
+        "color_space": "linear",
+        "channels": "R=AO, G=roughness, B=metallic",
+        "mip_review": [
+          {
+            "side": 512,
+            "wrap_mean": 0.021,
+            "interior_mean": 0.029,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 256,
+            "wrap_mean": 0.033,
+            "interior_mean": 0.053,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 128,
+            "wrap_mean": 0.042,
+            "interior_mean": 0.085,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 64,
+            "wrap_mean": 0.349,
+            "interior_mean": 0.111,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 32,
+            "wrap_mean": 0.115,
+            "interior_mean": 0.121,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 16,
+            "wrap_mean": 0.104,
+            "interior_mean": 0.143,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 8,
+            "wrap_mean": 0.146,
+            "interior_mean": 0.068,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          }
+        ],
+        "rgba8_full_mip_bytes": 1398100
+      }
+    },
+    "erma.surface.Road_Basalt": {
+      "BaseColor": {
+        "file": "Export/Textures/Road_Basalt_BaseColor.png",
+        "sha256": "d7bd692f1acd7f7cf80507bbfa929d495c6309897a832254c2368665ef08fd3a",
+        "size": [
+          512,
+          512
+        ],
+        "color_space": "sRGB",
+        "channels": "RGB",
+        "mip_review": [
+          {
+            "side": 512,
+            "wrap_mean": 0.358,
+            "interior_mean": 0.342,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 256,
+            "wrap_mean": 0.206,
+            "interior_mean": 0.248,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 128,
+            "wrap_mean": 0.221,
+            "interior_mean": 0.247,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 64,
+            "wrap_mean": 0.32,
+            "interior_mean": 0.332,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 32,
+            "wrap_mean": 0.51,
+            "interior_mean": 0.478,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 16,
+            "wrap_mean": 0.615,
+            "interior_mean": 0.622,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 8,
+            "wrap_mean": 1.042,
+            "interior_mean": 0.982,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.5,
+            "interior_mean": 0.639,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.333,
+            "interior_mean": 0.333,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          }
+        ],
+        "rgba8_full_mip_bytes": 1398100
+      },
+      "Normal": {
+        "file": "Export/Textures/Road_Basalt_Normal.png",
+        "sha256": "28ae15a2f175de901cbdf76ff358dfdcf3d194ba2723fd5623b727d5d924927e",
+        "size": [
+          512,
+          512
+        ],
+        "color_space": "linear",
+        "channels": "XYZ tangent space +Y",
+        "mip_review": [
+          {
+            "side": 512,
+            "wrap_mean": 9.462,
+            "interior_mean": 8.441,
+            "normal_max_length_error": 0.0046
+          },
+          {
+            "side": 256,
+            "wrap_mean": 6.483,
+            "interior_mean": 5.95,
+            "normal_max_length_error": 0.0043
+          },
+          {
+            "side": 128,
+            "wrap_mean": 1.026,
+            "interior_mean": 1.055,
+            "normal_max_length_error": 0.0007
+          },
+          {
+            "side": 64,
+            "wrap_mean": 0.638,
+            "interior_mean": 0.673,
+            "normal_max_length_error": 0.0004
+          },
+          {
+            "side": 32,
+            "wrap_mean": 0.474,
+            "interior_mean": 0.477,
+            "normal_max_length_error": 0.0002
+          },
+          {
+            "side": 16,
+            "wrap_mean": 0.229,
+            "interior_mean": 0.236,
+            "normal_max_length_error": 0.0001
+          },
+          {
+            "side": 8,
+            "wrap_mean": 0.271,
+            "interior_mean": 0.205,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          }
+        ],
+        "rgba8_full_mip_bytes": 1398100
+      },
+      "ORM": {
+        "file": "Export/Textures/Road_Basalt_ORM.png",
+        "sha256": "65681b8c668259abc1a57b01912254096e9281874330adfc379272fae4ec8c1e",
+        "size": [
+          512,
+          512
+        ],
+        "color_space": "linear",
+        "channels": "R=AO, G=roughness, B=metallic",
+        "mip_review": [
+          {
+            "side": 512,
+            "wrap_mean": 0.396,
+            "interior_mean": 0.358,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 256,
+            "wrap_mean": 0.276,
+            "interior_mean": 0.26,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 128,
+            "wrap_mean": 0.176,
+            "interior_mean": 0.155,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 64,
+            "wrap_mean": 0.219,
+            "interior_mean": 0.21,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 32,
+            "wrap_mean": 0.318,
+            "interior_mean": 0.32,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 16,
+            "wrap_mean": 0.438,
+            "interior_mean": 0.433,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 8,
+            "wrap_mean": 0.521,
+            "interior_mean": 0.557,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.167,
+            "interior_mean": 0.222,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          }
+        ],
+        "rgba8_full_mip_bytes": 1398100
+      }
+    },
+    "erma.surface.Rock_Mine": {
+      "BaseColor": {
+        "file": "Export/Textures/Rock_Mine_BaseColor.png",
+        "sha256": "92d39ed35d9b3b24de53bdc0cd70c8470a477522d132b1c10656d04b67caf134",
+        "size": [
+          512,
+          512
+        ],
+        "color_space": "sRGB",
+        "channels": "RGB",
+        "mip_review": [
+          {
+            "side": 512,
+            "wrap_mean": 0.525,
+            "interior_mean": 0.517,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 256,
+            "wrap_mean": 0.874,
+            "interior_mean": 0.899,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 128,
+            "wrap_mean": 1.415,
+            "interior_mean": 1.378,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 64,
+            "wrap_mean": 1.875,
+            "interior_mean": 1.881,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 32,
+            "wrap_mean": 2.823,
+            "interior_mean": 2.818,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 16,
+            "wrap_mean": 3.865,
+            "interior_mean": 3.895,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 8,
+            "wrap_mean": 5.417,
+            "interior_mean": 4.976,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.958,
+            "interior_mean": 1.569,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          }
+        ],
+        "rgba8_full_mip_bytes": 1398100
+      },
+      "Normal": {
+        "file": "Export/Textures/Rock_Mine_Normal.png",
+        "sha256": "e4f493dd56944b092b69bc505a22e97c4ecb1ea98e3281c6d31a034a94f9fc70",
+        "size": [
+          512,
+          512
+        ],
+        "color_space": "linear",
+        "channels": "XYZ tangent space +Y",
+        "mip_review": [
+          {
+            "side": 512,
+            "wrap_mean": 3.087,
+            "interior_mean": 3.105,
+            "normal_max_length_error": 0.0045
+          },
+          {
+            "side": 256,
+            "wrap_mean": 4.383,
+            "interior_mean": 4.451,
+            "normal_max_length_error": 0.0045
+          },
+          {
+            "side": 128,
+            "wrap_mean": 4.51,
+            "interior_mean": 4.485,
+            "normal_max_length_error": 0.0043
+          },
+          {
+            "side": 64,
+            "wrap_mean": 3.062,
+            "interior_mean": 3.046,
+            "normal_max_length_error": 0.0043
+          },
+          {
+            "side": 32,
+            "wrap_mean": 2.484,
+            "interior_mean": 2.497,
+            "normal_max_length_error": 0.0023
+          },
+          {
+            "side": 16,
+            "wrap_mean": 1.292,
+            "interior_mean": 1.425,
+            "normal_max_length_error": 0.001
+          },
+          {
+            "side": 8,
+            "wrap_mean": 1.479,
+            "interior_mean": 1.372,
+            "normal_max_length_error": 0.0003
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.625,
+            "interior_mean": 0.431,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          }
+        ],
+        "rgba8_full_mip_bytes": 1398100
+      },
+      "ORM": {
+        "file": "Export/Textures/Rock_Mine_ORM.png",
+        "sha256": "45081179423fd11708baf6e42952c5febc50d3113f3b41d3bef2e607c81075d3",
+        "size": [
+          512,
+          512
+        ],
+        "color_space": "linear",
+        "channels": "R=AO, G=roughness, B=metallic",
+        "mip_review": [
+          {
+            "side": 512,
+            "wrap_mean": 0.214,
+            "interior_mean": 0.217,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 256,
+            "wrap_mean": 0.376,
+            "interior_mean": 0.384,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 128,
+            "wrap_mean": 0.581,
+            "interior_mean": 0.57,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 64,
+            "wrap_mean": 0.794,
+            "interior_mean": 0.791,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 32,
+            "wrap_mean": 1.177,
+            "interior_mean": 1.184,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 16,
+            "wrap_mean": 1.615,
+            "interior_mean": 1.645,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 8,
+            "wrap_mean": 2.25,
+            "interior_mean": 2.048,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.333,
+            "interior_mean": 0.556,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          }
+        ],
+        "rgba8_full_mip_bytes": 1398100
+      }
+    },
+    "erma.surface.Pilot_PaintedAlloy": {
+      "BaseColor": {
+        "file": "Export/Textures/Pilot/Pilot_PaintedAlloy_BaseColor.png",
+        "sha256": "4e48404cb40b668e31b115308cf27ba72dcc9dd52b5ff73297c45143b2350a72",
+        "size": [
+          1024,
+          1024
+        ],
+        "color_space": "sRGB",
+        "channels": "RGB",
+        "mip_review": [
+          {
+            "side": 1024,
+            "wrap_mean": 1.489,
+            "interior_mean": 1.492,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 512,
+            "wrap_mean": 1.167,
+            "interior_mean": 1.2,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 256,
+            "wrap_mean": 0.822,
+            "interior_mean": 0.854,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 128,
+            "wrap_mean": 0.922,
+            "interior_mean": 0.957,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 64,
+            "wrap_mean": 1.086,
+            "interior_mean": 1.125,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 32,
+            "wrap_mean": 1.453,
+            "interior_mean": 1.519,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 16,
+            "wrap_mean": 1.812,
+            "interior_mean": 1.804,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 8,
+            "wrap_mean": 2.625,
+            "interior_mean": 2.446,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.5,
+            "interior_mean": 0.333,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          }
+        ],
+        "rgba8_full_mip_bytes": 5592404
+      },
+      "Normal": {
+        "file": "Export/Textures/Pilot/Pilot_PaintedAlloy_Normal.png",
+        "sha256": "d513933e72670d45cc90a59461513d948ccc56cd1b290cd4ae6abc0a83f36505",
+        "size": [
+          1024,
+          1024
+        ],
+        "color_space": "linear",
+        "channels": "XYZ tangent space +Y",
+        "mip_review": [
+          {
+            "side": 1024,
+            "wrap_mean": 0.277,
+            "interior_mean": 0.275,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 512,
+            "wrap_mean": 0.31,
+            "interior_mean": 0.317,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 256,
+            "wrap_mean": 0.135,
+            "interior_mean": 0.137,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 128,
+            "wrap_mean": 0.013,
+            "interior_mean": 0.012,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 64,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 32,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 16,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 8,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          }
+        ],
+        "rgba8_full_mip_bytes": 5592404
+      },
+      "ORM": {
+        "file": "Export/Textures/Pilot/Pilot_PaintedAlloy_ORM.png",
+        "sha256": "b49e76aac5b94c8f6ab997da1ab3887b40c770f755a9090a037b06bb9731cab3",
+        "size": [
+          1024,
+          1024
+        ],
+        "color_space": "linear",
+        "channels": "R=AO, G=roughness, B=metallic",
+        "mip_review": [
+          {
+            "side": 1024,
+            "wrap_mean": 0.081,
+            "interior_mean": 0.084,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 512,
+            "wrap_mean": 0.17,
+            "interior_mean": 0.165,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 256,
+            "wrap_mean": 0.322,
+            "interior_mean": 0.314,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 128,
+            "wrap_mean": 0.538,
+            "interior_mean": 0.53,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 64,
+            "wrap_mean": 0.685,
+            "interior_mean": 0.684,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 32,
+            "wrap_mean": 0.896,
+            "interior_mean": 0.903,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 16,
+            "wrap_mean": 1.167,
+            "interior_mean": 1.167,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 8,
+            "wrap_mean": 1.625,
+            "interior_mean": 1.458,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.375,
+            "interior_mean": 0.514,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          }
+        ],
+        "rgba8_full_mip_bytes": 5592404
+      }
+    },
+    "erma.surface.Pilot_BrushedSteel": {
+      "BaseColor": {
+        "file": "Export/Textures/Pilot/Pilot_BrushedSteel_BaseColor.png",
+        "sha256": "b3238ed10d942642491415f17849201d7537b25918e7c5ac6efb0d6b4475bdce",
+        "size": [
+          1024,
+          1024
+        ],
+        "color_space": "sRGB",
+        "channels": "RGB",
+        "mip_review": [
+          {
+            "side": 1024,
+            "wrap_mean": 0.721,
+            "interior_mean": 0.724,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 512,
+            "wrap_mean": 1.193,
+            "interior_mean": 1.138,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 256,
+            "wrap_mean": 1.408,
+            "interior_mean": 1.402,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 128,
+            "wrap_mean": 1.254,
+            "interior_mean": 1.31,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 64,
+            "wrap_mean": 0.906,
+            "interior_mean": 0.952,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 32,
+            "wrap_mean": 1.188,
+            "interior_mean": 1.24,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 16,
+            "wrap_mean": 1.625,
+            "interior_mean": 1.596,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 8,
+            "wrap_mean": 2.312,
+            "interior_mean": 1.991,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.375,
+            "interior_mean": 0.375,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          }
+        ],
+        "rgba8_full_mip_bytes": 5592404
+      },
+      "Normal": {
+        "file": "Export/Textures/Pilot/Pilot_BrushedSteel_Normal.png",
+        "sha256": "2f604c4ecc5f110aab0bfb2e3b7e22dd2071e875de90426d990d22f86e6cf78b",
+        "size": [
+          1024,
+          1024
+        ],
+        "color_space": "linear",
+        "channels": "XYZ tangent space +Y",
+        "mip_review": [
+          {
+            "side": 1024,
+            "wrap_mean": 0.289,
+            "interior_mean": 0.282,
+            "normal_max_length_error": 0.0002
+          },
+          {
+            "side": 512,
+            "wrap_mean": 0.327,
+            "interior_mean": 0.313,
+            "normal_max_length_error": 0.0002
+          },
+          {
+            "side": 256,
+            "wrap_mean": 0.142,
+            "interior_mean": 0.153,
+            "normal_max_length_error": 0.0001
+          },
+          {
+            "side": 128,
+            "wrap_mean": 0.018,
+            "interior_mean": 0.029,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 64,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 32,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 16,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 8,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          }
+        ],
+        "rgba8_full_mip_bytes": 5592404
+      },
+      "ORM": {
+        "file": "Export/Textures/Pilot/Pilot_BrushedSteel_ORM.png",
+        "sha256": "cba90d2fd5b01f97e0c3ca055cf91ba87bb12e4e39b71f6bcab5055931e1e232",
+        "size": [
+          1024,
+          1024
+        ],
+        "color_space": "linear",
+        "channels": "R=AO, G=roughness, B=metallic",
+        "mip_review": [
+          {
+            "side": 1024,
+            "wrap_mean": 0.556,
+            "interior_mean": 0.559,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 512,
+            "wrap_mean": 0.886,
+            "interior_mean": 0.866,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 256,
+            "wrap_mean": 1.048,
+            "interior_mean": 1.037,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 128,
+            "wrap_mean": 0.897,
+            "interior_mean": 0.878,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 64,
+            "wrap_mean": 0.424,
+            "interior_mean": 0.401,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 32,
+            "wrap_mean": 0.516,
+            "interior_mean": 0.54,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 16,
+            "wrap_mean": 0.573,
+            "interior_mean": 0.652,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 8,
+            "wrap_mean": 0.938,
+            "interior_mean": 0.884,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.167,
+            "interior_mean": 0.222,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.167,
+            "interior_mean": 0.167,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          }
+        ],
+        "rgba8_full_mip_bytes": 5592404
+      }
+    },
+    "erma.surface.Pilot_TechnicalWeave": {
+      "BaseColor": {
+        "file": "Export/Textures/Pilot/Pilot_TechnicalWeave_BaseColor.png",
+        "sha256": "32b1518ab253c6a261875cfcf56802cd8068088c5e3b53dfa50d0c2f0a0f9e79",
+        "size": [
+          1024,
+          1024
+        ],
+        "color_space": "sRGB",
+        "channels": "RGB",
+        "mip_review": [
+          {
+            "side": 1024,
+            "wrap_mean": 2.067,
+            "interior_mean": 1.723,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 512,
+            "wrap_mean": 3.618,
+            "interior_mean": 2.982,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 256,
+            "wrap_mean": 4.119,
+            "interior_mean": 3.383,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 128,
+            "wrap_mean": 1.73,
+            "interior_mean": 1.678,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 64,
+            "wrap_mean": 0.961,
+            "interior_mean": 0.993,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 32,
+            "wrap_mean": 1.219,
+            "interior_mean": 1.184,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 16,
+            "wrap_mean": 1.438,
+            "interior_mean": 1.479,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 8,
+            "wrap_mean": 1.875,
+            "interior_mean": 1.696,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.5,
+            "interior_mean": 0.833,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          }
+        ],
+        "rgba8_full_mip_bytes": 5592404
+      },
+      "Normal": {
+        "file": "Export/Textures/Pilot/Pilot_TechnicalWeave_Normal.png",
+        "sha256": "9dd946e71ef44a3e32c0c3d3830c3fd180fa001769d01e81d2d7d141362f486d",
+        "size": [
+          1024,
+          1024
+        ],
+        "color_space": "linear",
+        "channels": "XYZ tangent space +Y",
+        "mip_review": [
+          {
+            "side": 1024,
+            "wrap_mean": 0.555,
+            "interior_mean": 0.556,
+            "normal_max_length_error": 0.0011
+          },
+          {
+            "side": 512,
+            "wrap_mean": 0.793,
+            "interior_mean": 0.784,
+            "normal_max_length_error": 0.0006
+          },
+          {
+            "side": 256,
+            "wrap_mean": 0.76,
+            "interior_mean": 0.753,
+            "normal_max_length_error": 0.0002
+          },
+          {
+            "side": 128,
+            "wrap_mean": 0.257,
+            "interior_mean": 0.257,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 64,
+            "wrap_mean": 0.003,
+            "interior_mean": 0.001,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 32,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 16,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 8,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          }
+        ],
+        "rgba8_full_mip_bytes": 5592404
+      },
+      "ORM": {
+        "file": "Export/Textures/Pilot/Pilot_TechnicalWeave_ORM.png",
+        "sha256": "99ba08e76cedbc52c3ec01a53c7b43401eb9d7263039caffa46225e20dd58f3f",
+        "size": [
+          1024,
+          1024
+        ],
+        "color_space": "linear",
+        "channels": "R=AO, G=roughness, B=metallic",
+        "mip_review": [
+          {
+            "side": 1024,
+            "wrap_mean": 0.835,
+            "interior_mean": 0.694,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 512,
+            "wrap_mean": 1.473,
+            "interior_mean": 1.202,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 256,
+            "wrap_mean": 1.655,
+            "interior_mean": 1.37,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 128,
+            "wrap_mean": 0.592,
+            "interior_mean": 0.613,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 64,
+            "wrap_mean": 0.169,
+            "interior_mean": 0.182,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 32,
+            "wrap_mean": 0.177,
+            "interior_mean": 0.164,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 16,
+            "wrap_mean": 0.156,
+            "interior_mean": 0.178,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 8,
+            "wrap_mean": 0.25,
+            "interior_mean": 0.25,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.042,
+            "interior_mean": 0.125,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.167,
+            "interior_mean": 0.167,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          }
+        ],
+        "rgba8_full_mip_bytes": 5592404
+      }
+    },
+    "erma.surface.Pilot_CastPaving": {
+      "BaseColor": {
+        "file": "Export/Textures/Pilot/Pilot_CastPaving_BaseColor.png",
+        "sha256": "497abbcba1630e8243180b50bc334886ec5f295ec40b2af365dfa24b834df8d0",
+        "size": [
+          1024,
+          1024
+        ],
+        "color_space": "sRGB",
+        "channels": "RGB",
+        "mip_review": [
+          {
+            "side": 1024,
+            "wrap_mean": 1.684,
+            "interior_mean": 1.658,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 512,
+            "wrap_mean": 2.917,
+            "interior_mean": 2.882,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 256,
+            "wrap_mean": 3.701,
+            "interior_mean": 3.697,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 128,
+            "wrap_mean": 4.203,
+            "interior_mean": 4.153,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 64,
+            "wrap_mean": 5.539,
+            "interior_mean": 5.248,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 32,
+            "wrap_mean": 5.109,
+            "interior_mean": 5.144,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 16,
+            "wrap_mean": 3.094,
+            "interior_mean": 3.427,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 8,
+            "wrap_mean": 2.125,
+            "interior_mean": 2.179,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 4,
+            "wrap_mean": 1.375,
+            "interior_mean": 1.542,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.5,
+            "interior_mean": 0.5,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          }
+        ],
+        "rgba8_full_mip_bytes": 5592404
+      },
+      "Normal": {
+        "file": "Export/Textures/Pilot/Pilot_CastPaving_Normal.png",
+        "sha256": "abb83c9b80a9510392cad4b7eed00f7a6eb15b2027e3351cbe6d380c5e864001",
+        "size": [
+          1024,
+          1024
+        ],
+        "color_space": "linear",
+        "channels": "XYZ tangent space +Y",
+        "mip_review": [
+          {
+            "side": 1024,
+            "wrap_mean": 1.267,
+            "interior_mean": 1.258,
+            "normal_max_length_error": 0.0043
+          },
+          {
+            "side": 512,
+            "wrap_mean": 1.535,
+            "interior_mean": 1.508,
+            "normal_max_length_error": 0.0041
+          },
+          {
+            "side": 256,
+            "wrap_mean": 1.201,
+            "interior_mean": 1.168,
+            "normal_max_length_error": 0.0015
+          },
+          {
+            "side": 128,
+            "wrap_mean": 0.565,
+            "interior_mean": 0.548,
+            "normal_max_length_error": 0.0004
+          },
+          {
+            "side": 64,
+            "wrap_mean": 0.305,
+            "interior_mean": 0.316,
+            "normal_max_length_error": 0.0001
+          },
+          {
+            "side": 32,
+            "wrap_mean": 0.167,
+            "interior_mean": 0.149,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 16,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.008,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 8,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          }
+        ],
+        "rgba8_full_mip_bytes": 5592404
+      },
+      "ORM": {
+        "file": "Export/Textures/Pilot/Pilot_CastPaving_ORM.png",
+        "sha256": "e9571fd5fc184b28f1b34d68360f7736432840d906a2880d551dce7c0039db9b",
+        "size": [
+          1024,
+          1024
+        ],
+        "color_space": "linear",
+        "channels": "R=AO, G=roughness, B=metallic",
+        "mip_review": [
+          {
+            "side": 1024,
+            "wrap_mean": 0.676,
+            "interior_mean": 0.674,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 512,
+            "wrap_mean": 1.174,
+            "interior_mean": 1.17,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 256,
+            "wrap_mean": 1.495,
+            "interior_mean": 1.497,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 128,
+            "wrap_mean": 1.736,
+            "interior_mean": 1.67,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 64,
+            "wrap_mean": 2.263,
+            "interior_mean": 2.109,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 32,
+            "wrap_mean": 2.021,
+            "interior_mean": 2.07,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 16,
+            "wrap_mean": 1.24,
+            "interior_mean": 1.377,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 8,
+            "wrap_mean": 0.875,
+            "interior_mean": 0.905,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.458,
+            "interior_mean": 0.597,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.167,
+            "interior_mean": 0.167,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          }
+        ],
+        "rgba8_full_mip_bytes": 5592404
+      }
+    },
+    "erma.surface.SkinMicrograin": {
+      "BaseColor": {
+        "file": "Export/MaterialPilot/Textures/SkinMicrograin_BaseColor.png",
+        "sha256": "deea2a2de4657ad781fe97d5b7466c031e04f0bc7992f4ce5a04f8479fc0ad98",
+        "size": [
+          512,
+          512
+        ],
+        "color_space": "sRGB",
+        "channels": "RGB",
+        "mip_review": [
+          {
+            "side": 512,
+            "wrap_mean": 0.043,
+            "interior_mean": 0.207,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 256,
+            "wrap_mean": 0.166,
+            "interior_mean": 0.373,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 128,
+            "wrap_mean": 0.434,
+            "interior_mean": 0.483,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 64,
+            "wrap_mean": 0.312,
+            "interior_mean": 0.406,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 32,
+            "wrap_mean": 0.219,
+            "interior_mean": 0.375,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 16,
+            "wrap_mean": 0.531,
+            "interior_mean": 0.435,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 8,
+            "wrap_mean": 0.5,
+            "interior_mean": 0.464,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.375,
+            "interior_mean": 0.292,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          }
+        ],
+        "rgba8_full_mip_bytes": 1398100
+      },
+      "Normal": {
+        "file": "Export/MaterialPilot/Textures/SkinMicrograin_Normal.png",
+        "sha256": "5b07ab5d4382256d444d071bd7ed54834e7edef1ceb4f7b00ba62c8f5029aaa5",
+        "size": [
+          512,
+          512
+        ],
+        "color_space": "linear",
+        "channels": "XYZ tangent space +Y",
+        "mip_review": [
+          {
+            "side": 512,
+            "wrap_mean": 1.06,
+            "interior_mean": 1.009,
+            "normal_max_length_error": 0.0043
+          },
+          {
+            "side": 256,
+            "wrap_mean": 1.794,
+            "interior_mean": 1.594,
+            "normal_max_length_error": 0.0043
+          },
+          {
+            "side": 128,
+            "wrap_mean": 1.758,
+            "interior_mean": 1.596,
+            "normal_max_length_error": 0.0019
+          },
+          {
+            "side": 64,
+            "wrap_mean": 0.737,
+            "interior_mean": 0.695,
+            "normal_max_length_error": 0.0004
+          },
+          {
+            "side": 32,
+            "wrap_mean": 0.266,
+            "interior_mean": 0.285,
+            "normal_max_length_error": 0.0001
+          },
+          {
+            "side": 16,
+            "wrap_mean": 0.01,
+            "interior_mean": 0.063,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 8,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0.0
+          }
+        ],
+        "rgba8_full_mip_bytes": 1398100
+      },
+      "ORM": {
+        "file": "Export/MaterialPilot/Textures/SkinMicrograin_ORM.png",
+        "sha256": "ef6d4e54ee4b9a99aa842f2a1f84a0f37a02380c75d35d90d76ab1e21015f8e2",
+        "size": [
+          512,
+          512
+        ],
+        "color_space": "linear",
+        "channels": "R=AO, G=roughness, B=metallic",
+        "mip_review": [
+          {
+            "side": 512,
+            "wrap_mean": 0.147,
+            "interior_mean": 0.766,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 256,
+            "wrap_mean": 0.582,
+            "interior_mean": 1.343,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 128,
+            "wrap_mean": 1.453,
+            "interior_mean": 1.679,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 64,
+            "wrap_mean": 1.164,
+            "interior_mean": 1.237,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 32,
+            "wrap_mean": 0.578,
+            "interior_mean": 0.795,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 16,
+            "wrap_mean": 0.458,
+            "interior_mean": 0.567,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 8,
+            "wrap_mean": 0.312,
+            "interior_mean": 0.378,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 4,
+            "wrap_mean": 0.208,
+            "interior_mean": 0.264,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 2,
+            "wrap_mean": 0.167,
+            "interior_mean": 0.167,
+            "normal_max_length_error": 0
+          },
+          {
+            "side": 1,
+            "wrap_mean": 0.0,
+            "interior_mean": 0.0,
+            "normal_max_length_error": 0
+          }
+        ],
+        "rgba8_full_mip_bytes": 1398100
+      }
+    }
+  },
+  "material_templates": {
+    "erma.material.Steel": {
+      "texture_set_id": "erma.surface.Pilot_BrushedSteel",
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Glow_Cyan": {
+      "texture_set_id": null,
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Habitat_Concrete": {
+      "texture_set_id": "erma.surface.Habitat_Concrete",
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Habitat_Panels": {
+      "texture_set_id": "erma.surface.Habitat_Panels",
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Alloy_Light": {
+      "texture_set_id": "erma.surface.Pilot_BrushedSteel",
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Copper": {
+      "texture_set_id": null,
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Warning": {
+      "texture_set_id": null,
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Glow_Amber": {
+      "texture_set_id": null,
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Solar": {
+      "texture_set_id": null,
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Rubber": {
+      "texture_set_id": null,
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Glazing_Laminated": {
+      "texture_set_id": null,
+      "alpha": "BLEND",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "requires explicit blend policy"
+    },
+    "erma.material.Road_Asphalt": {
+      "texture_set_id": "erma.surface.Road_Basalt",
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Walk_Paving": {
+      "texture_set_id": "erma.surface.Pilot_CastPaving",
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Road_Edge": {
+      "texture_set_id": "erma.surface.Pilot_CastPaving",
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Marking_Center": {
+      "texture_set_id": null,
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Marking_White": {
+      "texture_set_id": null,
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Frame_Graphite": {
+      "texture_set_id": "erma.surface.Pilot_PaintedAlloy",
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Vehicle_Teal": {
+      "texture_set_id": "erma.surface.Pilot_PaintedAlloy",
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Fastener_Titanium": {
+      "texture_set_id": "erma.surface.Pilot_BrushedSteel",
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Ceramic": {
+      "texture_set_id": null,
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Cloth_Ochre": {
+      "texture_set_id": "erma.surface.Pilot_TechnicalWeave",
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Skin_Warm": {
+      "texture_set_id": "erma.surface.SkinMicrograin",
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Skin_Light": {
+      "texture_set_id": "erma.surface.SkinMicrograin",
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Cloth_Indigo": {
+      "texture_set_id": "erma.surface.Pilot_TechnicalWeave",
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Eye_White": {
+      "texture_set_id": null,
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Eye_Dark": {
+      "texture_set_id": null,
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Hair_Charcoal": {
+      "texture_set_id": null,
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Cloth_Teal": {
+      "texture_set_id": "erma.surface.Pilot_TechnicalWeave",
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    },
+    "erma.material.Rock_Mine": {
+      "texture_set_id": "erma.surface.Rock_Mine",
+      "alpha": "OPAQUE",
+      "cutoff": null,
+      "double_sided": true,
+      "shadow": "opaque caster or asset override"
+    }
+  },
+  "assets": {
+    "habitat": {
+      "source": "Export/Buildings/Habitat_7p2m.glb",
+      "source_sha256": "8235f5725d2137607eac67c462fc9dbf262f093562c33f157ae7e639496783e5",
+      "gltf": "Export/MaterialPilot/habitat.gltf",
+      "gltf_sha256": "b39379ad943ce680b65d5e19debc45bc9cd7c23ec63a255621c8943a091d30b1",
+      "geometry": "Export/MaterialPilot/habitat.bin",
+      "geometry_sha256": "e34e70673fbf5edb5401baf3a994fe85ab18da97d2024d2f86f357db2a03805a",
+      "material_ids": [
+        "erma.material.Steel",
+        "erma.material.Glow_Cyan",
+        "erma.material.Habitat_Concrete",
+        "erma.material.Habitat_Panels",
+        "erma.material.Alloy_Light",
+        "erma.material.Copper",
+        "erma.material.Warning",
+        "erma.material.Glow_Amber",
+        "erma.material.Solar",
+        "erma.material.Rubber",
+        "erma.material.Glazing_Laminated"
+      ],
+      "texture_set_ids": [
+        "erma.surface.Habitat_Concrete",
+        "erma.surface.Habitat_Panels",
+        "erma.surface.Pilot_BrushedSteel"
+      ],
+      "embedded_images_removed": 6,
+      "material_slots": 11,
+      "opaque_slots": 10,
+      "opaque_slot_goal": 2,
+      "retained_opaque_slots_above_goal": 8,
+      "nodes_with_mesh": [
+        {
+          "part_id": "Hab_Corner_3p6m",
+          "node_index": 0,
+          "mesh_index": 0,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Corner_3p6m",
+          "node_index": 1,
+          "mesh_index": 0,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Corner_3p6m",
+          "node_index": 2,
+          "mesh_index": 0,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Corner_3p6m",
+          "node_index": 3,
+          "mesh_index": 0,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Corner_3p6m",
+          "node_index": 4,
+          "mesh_index": 0,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Corner_3p6m",
+          "node_index": 5,
+          "mesh_index": 0,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Corner_3p6m",
+          "node_index": 6,
+          "mesh_index": 0,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Corner_3p6m",
+          "node_index": 7,
+          "mesh_index": 0,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Floor_2m",
+          "node_index": 8,
+          "mesh_index": 1,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Floor_2m",
+          "node_index": 9,
+          "mesh_index": 1,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Floor_2m",
+          "node_index": 10,
+          "mesh_index": 1,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Floor_2m",
+          "node_index": 11,
+          "mesh_index": 1,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Floor_2m",
+          "node_index": 12,
+          "mesh_index": 1,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Floor_2m",
+          "node_index": 13,
+          "mesh_index": 1,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Floor_2m",
+          "node_index": 14,
+          "mesh_index": 1,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Floor_2m",
+          "node_index": 15,
+          "mesh_index": 1,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Floor_2m",
+          "node_index": 16,
+          "mesh_index": 1,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Floor_2m",
+          "node_index": 17,
+          "mesh_index": 1,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Floor_2m",
+          "node_index": 18,
+          "mesh_index": 1,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Floor_2m",
+          "node_index": 19,
+          "mesh_index": 1,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Heat_Exchanger",
+          "node_index": 20,
+          "mesh_index": 2,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Pressure_Door",
+          "node_index": 21,
+          "mesh_index": 3,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Roof_2m",
+          "node_index": 22,
+          "mesh_index": 4,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Roof_2m",
+          "node_index": 23,
+          "mesh_index": 4,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Roof_2m",
+          "node_index": 24,
+          "mesh_index": 4,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Roof_2m",
+          "node_index": 25,
+          "mesh_index": 4,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Roof_2m",
+          "node_index": 26,
+          "mesh_index": 4,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Roof_2m",
+          "node_index": 27,
+          "mesh_index": 4,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Sensor_Mast",
+          "node_index": 28,
+          "mesh_index": 5,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Solar_Array",
+          "node_index": 29,
+          "mesh_index": 6,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Door_2m",
+          "node_index": 30,
+          "mesh_index": 7,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Solid_2m",
+          "node_index": 31,
+          "mesh_index": 8,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Solid_2m",
+          "node_index": 32,
+          "mesh_index": 8,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Solid_2m",
+          "node_index": 33,
+          "mesh_index": 8,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m",
+          "node_index": 34,
+          "mesh_index": 9,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m_Glazing",
+          "node_index": 35,
+          "mesh_index": 10,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m",
+          "node_index": 36,
+          "mesh_index": 9,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m_Glazing",
+          "node_index": 37,
+          "mesh_index": 10,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m",
+          "node_index": 38,
+          "mesh_index": 9,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m_Glazing",
+          "node_index": 39,
+          "mesh_index": 10,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m",
+          "node_index": 40,
+          "mesh_index": 9,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m_Glazing",
+          "node_index": 41,
+          "mesh_index": 10,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m",
+          "node_index": 42,
+          "mesh_index": 9,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m_Glazing",
+          "node_index": 43,
+          "mesh_index": 10,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m",
+          "node_index": 44,
+          "mesh_index": 9,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m_Glazing",
+          "node_index": 45,
+          "mesh_index": 10,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m",
+          "node_index": 46,
+          "mesh_index": 9,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m_Glazing",
+          "node_index": 47,
+          "mesh_index": 10,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m",
+          "node_index": 48,
+          "mesh_index": 9,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m_Glazing",
+          "node_index": 49,
+          "mesh_index": 10,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m",
+          "node_index": 50,
+          "mesh_index": 9,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m_Glazing",
+          "node_index": 51,
+          "mesh_index": 10,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m",
+          "node_index": 52,
+          "mesh_index": 9,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m_Glazing",
+          "node_index": 53,
+          "mesh_index": 10,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m",
+          "node_index": 54,
+          "mesh_index": 9,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m_Glazing",
+          "node_index": 55,
+          "mesh_index": 10,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m",
+          "node_index": 56,
+          "mesh_index": 9,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m_Glazing",
+          "node_index": 57,
+          "mesh_index": 10,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m",
+          "node_index": 58,
+          "mesh_index": 9,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m_Glazing",
+          "node_index": 59,
+          "mesh_index": 10,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m",
+          "node_index": 60,
+          "mesh_index": 9,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m_Glazing",
+          "node_index": 61,
+          "mesh_index": 10,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m",
+          "node_index": 62,
+          "mesh_index": 9,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m_Glazing",
+          "node_index": 63,
+          "mesh_index": 10,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m",
+          "node_index": 64,
+          "mesh_index": 9,
+          "skin_index": null
+        },
+        {
+          "part_id": "Hab_Wall_Window_2m_Glazing",
+          "node_index": 65,
+          "mesh_index": 10,
+          "skin_index": null
+        }
+      ],
+      "skeleton_joint_counts": [],
+      "animations": []
+    },
+    "curve": {
+      "source": "Export/RoadPlan/RoadPlan_Curve_2L_A30_R18.glb",
+      "source_sha256": "28258b71b4ad39e685a75a0a3d5be39edfc4eeaa1e64a777eabe8c33f0b1dfc4",
+      "gltf": "Export/MaterialPilot/curve.gltf",
+      "gltf_sha256": "43affb1bfd18a82e985ce97ea8beaa129a3d7b245e22133f9f42878d5f9585de",
+      "geometry": "Export/MaterialPilot/curve.bin",
+      "geometry_sha256": "03a7fcc5554960ebf84afefe1f89196644b531b1ba57484a1a09b3fcef626b65",
+      "material_ids": [
+        "erma.material.Road_Asphalt"
+      ],
+      "texture_set_ids": [
+        "erma.surface.Road_Basalt"
+      ],
+      "embedded_images_removed": 0,
+      "material_slots": 1,
+      "opaque_slots": 1,
+      "opaque_slot_goal": 2,
+      "retained_opaque_slots_above_goal": 0,
+      "nodes_with_mesh": [
+        {
+          "part_id": "RoadPlan_Curve_2L_A30_R18_Surface",
+          "node_index": 0,
+          "mesh_index": 0,
+          "skin_index": null
+        }
+      ],
+      "skeleton_joint_counts": [],
+      "animations": []
+    },
+    "sidewalk": {
+      "source": "Export/RoadPlan/RoadPlan_WalkCurve_2L_A30_R18.glb",
+      "source_sha256": "27d10996d1da6c6a449ebd08bb932f349a0cb9ac1363e25a70d52dcf16d8be97",
+      "gltf": "Export/MaterialPilot/sidewalk.gltf",
+      "gltf_sha256": "6ba8b87a2329c9875ff774d321c07246ca5f696cc9cf8b10d51c470abe477959",
+      "geometry": "Export/MaterialPilot/sidewalk.bin",
+      "geometry_sha256": "4053073dbe423ee978bf12d568437fb2ecc5af067c181e9d9f628dbc5468a34c",
+      "material_ids": [
+        "erma.material.Walk_Paving",
+        "erma.material.Road_Edge"
+      ],
+      "texture_set_ids": [
+        "erma.surface.Pilot_CastPaving"
+      ],
+      "embedded_images_removed": 0,
+      "material_slots": 2,
+      "opaque_slots": 2,
+      "opaque_slot_goal": 2,
+      "retained_opaque_slots_above_goal": 0,
+      "nodes_with_mesh": [
+        {
+          "part_id": "RoadPlan_WalkCurve_2L_A30_R18_Paving_-1",
+          "node_index": 0,
+          "mesh_index": 0,
+          "skin_index": null
+        },
+        {
+          "part_id": "RoadPlan_WalkCurve_2L_A30_R18_Curb_-1",
+          "node_index": 1,
+          "mesh_index": 1,
+          "skin_index": null
+        },
+        {
+          "part_id": "RoadPlan_WalkCurve_2L_A30_R18_Paving_1",
+          "node_index": 2,
+          "mesh_index": 2,
+          "skin_index": null
+        },
+        {
+          "part_id": "RoadPlan_WalkCurve_2L_A30_R18_Curb_1",
+          "node_index": 3,
+          "mesh_index": 3,
+          "skin_index": null
+        }
+      ],
+      "skeleton_joint_counts": [],
+      "animations": []
+    },
+    "paint": {
+      "source": "Export/RoadPlan/RoadPlan_CurveMarking_2L_A30_R18.glb",
+      "source_sha256": "dbd562ad8c5650ce6d68323ea5fd0c8e7e11ba3643b49927c3e57e74fef39eb8",
+      "gltf": "Export/MaterialPilot/paint.gltf",
+      "gltf_sha256": "4f1026d9f7968fc95046d7111a7660923a553d017cce4296e82fbbe2d041a5ed",
+      "geometry": "Export/MaterialPilot/paint.bin",
+      "geometry_sha256": "5719a2272a24dfd7dda3d0a25be436dbfa05585a7053f62187914022a51427fd",
+      "material_ids": [
+        "erma.material.Marking_Center",
+        "erma.material.Marking_White"
+      ],
+      "texture_set_ids": [],
+      "embedded_images_removed": 0,
+      "material_slots": 2,
+      "opaque_slots": 2,
+      "opaque_slot_goal": 2,
+      "retained_opaque_slots_above_goal": 0,
+      "nodes_with_mesh": [
+        {
+          "part_id": "RoadPlan_CurveMarking_2L_A30_R18_Center",
+          "node_index": 0,
+          "mesh_index": 0,
+          "skin_index": null
+        },
+        {
+          "part_id": "RoadPlan_CurveMarking_2L_A30_R18_EdgeRight",
+          "node_index": 1,
+          "mesh_index": 1,
+          "skin_index": null
+        },
+        {
+          "part_id": "RoadPlan_CurveMarking_2L_A30_R18_EdgeLeft",
+          "node_index": 2,
+          "mesh_index": 2,
+          "skin_index": null
+        }
+      ],
+      "skeleton_joint_counts": [],
+      "animations": []
+    },
+    "ramp": {
+      "source": "Export/RoadPlan/RoadPlan_Ramp_2L_Rise8p4_L110.glb",
+      "source_sha256": "2557baa8a5c37c82afabc3f6aa444673076fc9f147e162ef617ee7c6dc915798",
+      "gltf": "Export/MaterialPilot/ramp.gltf",
+      "gltf_sha256": "834f3017320d27b3f131d91a030265229bb8409255c302faed922d1eee2442d0",
+      "geometry": "Export/MaterialPilot/ramp.bin",
+      "geometry_sha256": "48b07152729f8e927a5323e644fcbc358f66b665eab834e14627a6a48a95e099",
+      "material_ids": [
+        "erma.material.Road_Asphalt"
+      ],
+      "texture_set_ids": [
+        "erma.surface.Road_Basalt"
+      ],
+      "embedded_images_removed": 0,
+      "material_slots": 1,
+      "opaque_slots": 1,
+      "opaque_slot_goal": 2,
+      "retained_opaque_slots_above_goal": 0,
+      "nodes_with_mesh": [
+        {
+          "part_id": "RoadPlan_Ramp_2L_Rise8p4_L110_LowerVerticalCurve",
+          "node_index": 0,
+          "mesh_index": 0,
+          "skin_index": null
+        },
+        {
+          "part_id": "RoadPlan_Ramp_2L_Rise8p4_L110_ConstantGrade",
+          "node_index": 1,
+          "mesh_index": 1,
+          "skin_index": null
+        },
+        {
+          "part_id": "RoadPlan_Ramp_2L_Rise8p4_L110_UpperVerticalCurve",
+          "node_index": 2,
+          "mesh_index": 2,
+          "skin_index": null
+        }
+      ],
+      "skeleton_joint_counts": [],
+      "animations": []
+    },
+    "coupe": {
+      "source": "Export/Vehicles/Coupe.glb",
+      "source_sha256": "0714638b2266da77845d3acc0a79edaf9f359985d510f746f3f0b5ac07032b56",
+      "gltf": "Export/MaterialPilot/coupe.gltf",
+      "gltf_sha256": "e13c4250b6450b9f8980a13632cc45deaa5129001f38554182355d9d24181d84",
+      "geometry": "Export/MaterialPilot/coupe.bin",
+      "geometry_sha256": "e69f016ee1e713833199f80d827e8703558d88c13ff69ef50c75c572001c0323",
+      "material_ids": [
+        "erma.material.Alloy_Light",
+        "erma.material.Frame_Graphite",
+        "erma.material.Glazing_Laminated",
+        "erma.material.Rubber",
+        "erma.material.Vehicle_Teal",
+        "erma.material.Steel",
+        "erma.material.Glow_Cyan"
+      ],
+      "texture_set_ids": [
+        "erma.surface.Pilot_BrushedSteel",
+        "erma.surface.Pilot_PaintedAlloy"
+      ],
+      "embedded_images_removed": 0,
+      "material_slots": 7,
+      "opaque_slots": 6,
+      "opaque_slot_goal": 2,
+      "retained_opaque_slots_above_goal": 4,
+      "nodes_with_mesh": [
+        {
+          "part_id": "Vehicle_Coupe_Canopy_Panoramic",
+          "node_index": 16,
+          "mesh_index": 0,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Vehicle_Coupe_Canopy_Panoramic_Glazing",
+          "node_index": 17,
+          "mesh_index": 1,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Vehicle_Coupe_Chassis",
+          "node_index": 18,
+          "mesh_index": 2,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Vehicle_Coupe_Engine_Efficient_L",
+          "node_index": 19,
+          "mesh_index": 3,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Vehicle_Coupe_Engine_Efficient_R",
+          "node_index": 20,
+          "mesh_index": 4,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Vehicle_Coupe_Nose_Sport",
+          "node_index": 21,
+          "mesh_index": 5,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Vehicle_Coupe_Payload_RearDeck",
+          "node_index": 22,
+          "mesh_index": 6,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Vehicle_Coupe_Pod_Front_Standard_L",
+          "node_index": 23,
+          "mesh_index": 7,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Vehicle_Coupe_Pod_Front_Standard_R",
+          "node_index": 24,
+          "mesh_index": 8,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Vehicle_Coupe_Pod_Rear_Standard_L",
+          "node_index": 25,
+          "mesh_index": 9,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Vehicle_Coupe_Pod_Rear_Standard_R",
+          "node_index": 26,
+          "mesh_index": 10,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Vehicle_Coupe_Rail_L",
+          "node_index": 27,
+          "mesh_index": 11,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Vehicle_Coupe_Rail_R",
+          "node_index": 28,
+          "mesh_index": 12,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Vehicle_Coupe_Seat_Cockpit",
+          "node_index": 29,
+          "mesh_index": 13,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Vehicle_Coupe_Service_Hatch",
+          "node_index": 30,
+          "mesh_index": 14,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Vehicle_Coupe_Underbody_FieldCoil",
+          "node_index": 31,
+          "mesh_index": 15,
+          "skin_index": 0
+        }
+      ],
+      "skeleton_joint_counts": [
+        16
+      ],
+      "animations": [
+        "Vehicle_Reference",
+        "Hover_Idle",
+        "Cruise",
+        "Boost",
+        "Steer_Left",
+        "Steer_Right",
+        "Canopy_Open",
+        "Canopy_Close",
+        "Cargo_Open",
+        "Cargo_Close",
+        "Vehicle_Impact_Front",
+        "Vehicle_Impact_Rear",
+        "Vehicle_Impact_Side",
+        "Vehicle_Disabled"
+      ]
+    },
+    "explorer": {
+      "source": "Export/Characters/Player_Explorer.glb",
+      "source_sha256": "3233a93d812562b9881cbfee429d5fd49730418b4c8f08b10b6e3f4df33e34fc",
+      "gltf": "Export/MaterialPilot/explorer.gltf",
+      "gltf_sha256": "718aa99d2743faa5819f22c8859e6b05580ed067e6ec764defc52afb34dde666",
+      "geometry": "Export/MaterialPilot/explorer.bin",
+      "geometry_sha256": "ea0a82c8db04245ac5049a50bb8da7005034c0320bb08e33847e0fad91551c14",
+      "material_ids": [
+        "erma.material.Steel",
+        "erma.material.Glow_Cyan",
+        "erma.material.Rubber",
+        "erma.material.Fastener_Titanium",
+        "erma.material.Ceramic",
+        "erma.material.Cloth_Ochre",
+        "erma.material.Skin_Warm",
+        "erma.material.Skin_Light",
+        "erma.material.Cloth_Indigo",
+        "erma.material.Eye_White",
+        "erma.material.Eye_Dark",
+        "erma.material.Hair_Charcoal",
+        "erma.material.Cloth_Teal",
+        "erma.material.Alloy_Light"
+      ],
+      "texture_set_ids": [
+        "erma.surface.Pilot_BrushedSteel",
+        "erma.surface.Pilot_TechnicalWeave",
+        "erma.surface.SkinMicrograin"
+      ],
+      "embedded_images_removed": 0,
+      "material_slots": 14,
+      "opaque_slots": 14,
+      "opaque_slot_goal": 3,
+      "retained_opaque_slots_above_goal": 11,
+      "nodes_with_mesh": [
+        {
+          "part_id": "Accessory_Belt_LifeSupport",
+          "node_index": 23,
+          "mesh_index": 0,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Accessory_LifeSupport_TwinTank",
+          "node_index": 24,
+          "mesh_index": 1,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Accessory_Navigation_Console",
+          "node_index": 25,
+          "mesh_index": 2,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Accessory_Utility_Pouch_R",
+          "node_index": 26,
+          "mesh_index": 3,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Accessory_Wrist_Scanner_L",
+          "node_index": 27,
+          "mesh_index": 4,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Body_Hand_L",
+          "node_index": 28,
+          "mesh_index": 5,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Body_Hand_R",
+          "node_index": 29,
+          "mesh_index": 6,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Body_Male_Normal_Pelvis",
+          "node_index": 30,
+          "mesh_index": 7,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Body_Neck",
+          "node_index": 31,
+          "mesh_index": 8,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Boot_L",
+          "node_index": 32,
+          "mesh_index": 9,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Boot_R",
+          "node_index": 33,
+          "mesh_index": 10,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Face_Neutral",
+          "node_index": 34,
+          "mesh_index": 11,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Hair_SidePart",
+          "node_index": 35,
+          "mesh_index": 12,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Head_Oval",
+          "node_index": 36,
+          "mesh_index": 13,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Outfit_Explorer_Male_Normal_Cuff_L",
+          "node_index": 37,
+          "mesh_index": 14,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Outfit_Explorer_Male_Normal_Cuff_R",
+          "node_index": 38,
+          "mesh_index": 15,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Outfit_Explorer_Male_Normal_Greave_L",
+          "node_index": 39,
+          "mesh_index": 16,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Outfit_Explorer_Male_Normal_Greave_R",
+          "node_index": 40,
+          "mesh_index": 17,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Outfit_Explorer_Male_Normal_Sleeve_L",
+          "node_index": 41,
+          "mesh_index": 18,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Outfit_Explorer_Male_Normal_Sleeve_R",
+          "node_index": 42,
+          "mesh_index": 19,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Outfit_Explorer_Male_Normal_Torso",
+          "node_index": 43,
+          "mesh_index": 20,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Outfit_Explorer_Male_Normal_Torso_OuterAssembly",
+          "node_index": 44,
+          "mesh_index": 21,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Outfit_Explorer_Male_Normal_Trouser_L",
+          "node_index": 45,
+          "mesh_index": 22,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Outfit_Explorer_Male_Normal_Trouser_R",
+          "node_index": 46,
+          "mesh_index": 23,
+          "skin_index": 0
+        },
+        {
+          "part_id": "Weapon_CoilPistol_35cm",
+          "node_index": 47,
+          "mesh_index": 24,
+          "skin_index": 0
+        }
+      ],
+      "skeleton_joint_counts": [
+        23
+      ],
+      "animations": [
+        "Reference_A",
+        "Turn_Base",
+        "Idle",
+        "Walk",
+        "Run",
+        "Turn_Left_90",
+        "Turn_Right_90",
+        "Attack_Melee",
+        "Aim_Base",
+        "Attack_Fire",
+        "Jump_Start",
+        "Jump_Air",
+        "Jump_Land",
+        "Jump_Full",
+        "Walk_To_Run",
+        "Hit_Front",
+        "Hit_Back",
+        "Hit_Left",
+        "Hit_Right",
+        "Knockdown_Front",
+        "Knockdown_Back",
+        "Knockdown_Left",
+        "Knockdown_Right",
+        "Downed_Loop",
+        "GetUp_Front",
+        "GetUp_Back",
+        "Death_Front",
+        "Death_Back",
+        "Death_Front_Pose",
+        "Death_Back_Pose",
+        "Flee_Start",
+        "Flee_Run",
+        "Flee_Stop",
+        "Security_StunFire",
+        "Medical_Stabilized",
+        "Medical_GetUp",
+        "Ride_Base",
+        "Rider_Brace",
+        "Downed_Back_Loop",
+        "Downed_Left_Loop",
+        "Downed_Right_Loop",
+        "GetUp_Left",
+        "GetUp_Right",
+        "Aim_Walk_Forward",
+        "Aim_Walk_ForwardLeft",
+        "Aim_Walk_Left",
+        "Aim_Walk_BackLeft",
+        "Aim_Walk_Back",
+        "Aim_Walk_BackRight",
+        "Aim_Walk_Right",
+        "Aim_Walk_ForwardRight",
+        "Aim_Run_Forward",
+        "Aim_Run_ForwardLeft",
+        "Aim_Run_Left",
+        "Aim_Run_BackLeft",
+        "Aim_Run_Back",
+        "Aim_Run_BackRight",
+        "Aim_Run_Right",
+        "Aim_Run_ForwardRight",
+        "Pistol_Carry_Idle",
+        "Pistol_Carry_Walk",
+        "Pistol_Carry_Run",
+        "Reload_Pistol",
+        "Walk_Start_L",
+        "Walk_Start_R",
+        "Walk_Stop_L",
+        "Walk_Stop_R",
+        "Run_Start_L",
+        "Run_Start_R",
+        "Run_Stop_L",
+        "Run_Stop_R",
+        "Sprint_Start_L",
+        "Sprint_Start_R",
+        "Sprint_Stop_L",
+        "Sprint_Stop_R",
+        "Run_To_Walk_L",
+        "Run_To_Walk_R",
+        "Run_To_Sprint_L",
+        "Run_To_Sprint_R",
+        "Sprint_To_Run_L",
+        "Sprint_To_Run_R",
+        "Sprint",
+        "Dodge_Forward_L",
+        "Dodge_Forward_R",
+        "Dodge_ForwardLeft_L",
+        "Dodge_ForwardLeft_R",
+        "Dodge_Left_L",
+        "Dodge_Left_R",
+        "Dodge_BackLeft_L",
+        "Dodge_BackLeft_R",
+        "Dodge_Back_L",
+        "Dodge_Back_R",
+        "Dodge_BackRight_L",
+        "Dodge_BackRight_R",
+        "Dodge_Right_L",
+        "Dodge_Right_R",
+        "Dodge_ForwardRight_L",
+        "Dodge_ForwardRight_R"
+      ]
+    },
+    "mine_rock": {
+      "source": "Export/Environment/Nature_Rock_01.glb",
+      "source_sha256": "f9a9859919766c6f0028de316261b2223fa28244d5559278c646a71b98572afa",
+      "gltf": "Export/MaterialPilot/mine_rock.gltf",
+      "gltf_sha256": "8af6cc9faa1b62722c3bc50a45452ca4d55565d759943b62e6612714ca59b531",
+      "geometry": "Export/MaterialPilot/mine_rock.bin",
+      "geometry_sha256": "305e6255c85d6e7bb21d89bbbc65ceea566d6306097aecc660b513456c36cbe8",
+      "material_ids": [
+        "erma.material.Rock_Mine"
+      ],
+      "texture_set_ids": [
+        "erma.surface.Rock_Mine"
+      ],
+      "embedded_images_removed": 3,
+      "material_slots": 1,
+      "opaque_slots": 1,
+      "opaque_slot_goal": 2,
+      "retained_opaque_slots_above_goal": 0,
+      "nodes_with_mesh": [
+        {
+          "part_id": "Nature_Rock_01",
+          "node_index": 0,
+          "mesh_index": 0,
+          "skin_index": null
+        }
+      ],
+      "skeleton_joint_counts": [],
+      "animations": []
+    },
+    "mine_support": {
+      "source": "Export/Modules/Mine_Support.glb",
+      "source_sha256": "fe67f30ce69d73d607ca61dcbc3680a0c747721372743eb343a41595ba2254cf",
+      "gltf": "Export/MaterialPilot/mine_support.gltf",
+      "gltf_sha256": "e08b306dce0cb73ebf8262cf79643b1e50d0e8f6ff496c3d00892935dc7bd3ed",
+      "geometry": "Export/MaterialPilot/mine_support.bin",
+      "geometry_sha256": "5e536e7fbcd5ae727eeb5d74ed9d16f345f39cbbf2d2160933d24218c1098750",
+      "material_ids": [
+        "erma.material.Steel",
+        "erma.material.Glow_Amber"
+      ],
+      "texture_set_ids": [
+        "erma.surface.Pilot_BrushedSteel"
+      ],
+      "embedded_images_removed": 0,
+      "material_slots": 2,
+      "opaque_slots": 2,
+      "opaque_slot_goal": 2,
+      "retained_opaque_slots_above_goal": 0,
+      "nodes_with_mesh": [
+        {
+          "part_id": "Mine_Support",
+          "node_index": 0,
+          "mesh_index": 0,
+          "skin_index": null
+        }
+      ],
+      "skeleton_joint_counts": [],
+      "animations": []
+    }
+  },
+  "all_unique_maps_rgba8_full_mip_bytes": 86682248
+}

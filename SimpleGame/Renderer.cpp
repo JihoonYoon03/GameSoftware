@@ -260,6 +260,12 @@ void main() {
 const char *kMeshFragmentBody = R"GLSL(
 uniform int cartoon;
 uniform int shadowPass;
+uniform sampler2DArray pbrBaseArray;
+uniform sampler2DArray pbrNormalArray;
+uniform sampler2DArray pbrOrmArray;
+uniform sampler2D damageMask;
+uniform int hasPbr;
+uniform int hasDamageMask;
 in vec3 normal;
 in vec3 localPosition;
 in vec4 tint;
@@ -288,10 +294,6 @@ void main() {
         return;
     }
     vec3 n = normalize(normal);
-    vec3 l = normalize(vec3(-0.35, -0.45, 0.82));
-    vec3 v = normalize(vec3(1.0, 1.0, 0.818));
-    float diffuse = max(0.0, dot(n, l));
-    float light = cartoon != 0 ? (diffuse < 0.22 ? 0.46 : diffuse < 0.65 ? 0.72 : 1.0) : 0.48 + 0.52 * diffuse;
     float rough = finish.x;
     float metal = finish.y;
     if (surface > 0.5 && surface < 1.5) { rough = 0.94; metal = 0.0; }
@@ -300,9 +302,44 @@ void main() {
     if (surface > 4.5 && surface < 5.5) { rough = 0.96; metal = 0.0; }
     if (surface > 5.5 && surface < 6.5) { rough = 0.9; metal = 0.0; }
     if (surface > 6.5) { rough = 0.75; metal = 0.0; }
+    vec3 baseColor = tint.rgb;
+    float ao = 1.0;
+    vec2 triUv = (abs(n.z) > 0.72) ? localPosition.xy : ((abs(n.x) > abs(n.y)) ? localPosition.yz : localPosition.xz);
+    triUv *= 0.45;
+    if (hasPbr != 0 && (surface < 2.5 || (surface > 4.5 && surface < 6.5))) {
+        float layer = (surface > 0.5 && surface < 1.5) ? 1.0 : (surface > 1.5 && surface < 2.5) ? 2.0 : 0.0;
+        vec3 pbrBase = texture(pbrBaseArray, vec3(triUv, layer)).rgb;
+        vec3 pbrNrm = texture(pbrNormalArray, vec3(triUv, layer)).xyz * 2.0 - 1.0;
+        vec3 pbrOrm = texture(pbrOrmArray, vec3(triUv, layer)).rgb;
+        vec3 upRef = abs(n.z) > 0.9 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 0.0, 1.0);
+        vec3 tangent = normalize(cross(upRef, n));
+        vec3 bitangent = cross(n, tangent);
+        vec3 detailN = normalize(tangent * pbrNrm.x + bitangent * pbrNrm.y + n * max(0.25, pbrNrm.z));
+        n = normalize(mix(n, detailN, 0.32));
+        float grain = dot(pbrBase, vec3(0.299, 0.587, 0.114));
+        baseColor *= mix(1.0, clamp(0.78 + grain * 0.42, 0.80, 1.18), 0.24);
+        ao = mix(1.0, pbrOrm.r, 0.35);
+        rough = clamp(mix(rough, pbrOrm.g, 0.35), 0.08, 0.98);
+        metal = clamp(mix(metal, pbrOrm.b, 0.25), 0.0, 1.0);
+    }
+    float damage = clamp(abs(finish.w) - 1.0, 0.0, 1.0);
+    if (hasDamageMask != 0 && damage > 0.01 && surface < 2.5) {
+        vec3 dmg = texture(damageMask, triUv * 1.45).rgb;
+        float chips = smoothstep(0.30, 0.78, dmg.r) * damage;
+        float soot = smoothstep(0.22, 0.72, dmg.g) * damage;
+        float scuffs = smoothstep(0.25, 0.75, dmg.b) * damage;
+        baseColor = mix(baseColor, vec3(0.46, 0.49, 0.54), chips * 0.75);
+        baseColor = mix(baseColor, vec3(0.06, 0.06, 0.07), soot * 0.80);
+        rough = clamp(rough + scuffs * 0.35 + soot * 0.25 - chips * 0.15, 0.08, 0.98);
+        metal = clamp(metal + chips * 0.45 - soot * 0.45, 0.0, 1.0);
+    }
+    vec3 l = normalize(vec3(-0.35, -0.45, 0.82));
+    vec3 v = normalize(vec3(1.0, 1.0, 0.818));
+    float diffuse = max(0.0, dot(n, l));
+    float light = (cartoon != 0 ? (diffuse < 0.22 ? 0.46 : diffuse < 0.65 ? 0.72 : 1.0) : 0.48 + 0.52 * diffuse) * ao;
     float spec = pow(max(0.0, dot(n, normalize(l + v))), mix(90.0, 8.0, rough)) * (1.0 - rough) * 0.65;
     float rim = pow(1.0 - max(0.0, dot(n, v)), 3.0) * 0.08;
-    vec3 color = tint.rgb * light + mix(vec3(0.7, 0.83, 0.9), tint.rgb, metal) * spec + vec3(0.2, 0.4, 0.48) * rim;
+    vec3 color = baseColor * light + mix(vec3(0.7, 0.83, 0.9), baseColor, metal) * spec + vec3(0.2, 0.4, 0.48) * rim;
     if (surface > 3.5 && surface < 4.5) color = tint.rgb * (1.0 + finish.z * 0.25);
     fragColor = vec4(color, coverage < 0.5 ? 1.0 : tint.a);
 }
@@ -596,6 +633,8 @@ struct Renderer::MeshData
     {
         GLint mvp = -1, cartoon = -1, shadowPass = -1, shadowJitter = -1, hologramTime = -1;
         GLint bones = -1, useBones = -1, armed = -1, imported = -1;
+        GLint pbrBaseArray = -1, pbrNormalArray = -1, pbrOrmArray = -1, damageMask = -1;
+        GLint hasPbr = -1, hasDamageMask = -1;
         void Initialize(GLuint program)
         {
             mvp = glGetUniformLocation(program, "mvp");
@@ -607,6 +646,12 @@ struct Renderer::MeshData
             useBones = glGetUniformLocation(program, "useBones");
             armed = glGetUniformLocation(program, "armed");
             imported = glGetUniformLocation(program, "imported");
+            pbrBaseArray = glGetUniformLocation(program, "pbrBaseArray");
+            pbrNormalArray = glGetUniformLocation(program, "pbrNormalArray");
+            pbrOrmArray = glGetUniformLocation(program, "pbrOrmArray");
+            damageMask = glGetUniformLocation(program, "damageMask");
+            hasPbr = glGetUniformLocation(program, "hasPbr");
+            hasDamageMask = glGetUniformLocation(program, "hasDamageMask");
         }
     } uniforms;
     struct PostUniforms
@@ -735,7 +780,7 @@ struct Renderer::MeshData
 
 bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, models::Point scale,
                            const models::Transform3D &transform, float depth, const models::Palette &palette,
-                           const models::CharacterPose *pose, float shadowGroundZ)
+                           const models::CharacterPose *pose, float shadowGroundZ, float damage)
 {
     if (!m_meshes->program)
     {
@@ -1068,6 +1113,7 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
         }
     }
 
+    const float clampedDamage = std::clamp(damage, 0.f, 1.f);
     MeshData::Instance instance = {
         {screen.x, screen.y, depth, mesh->data->holographic ? 1.f : 0.f},
         {scale.x, scale.y, scale.z, armed ? 1.f : 0.f},
@@ -1075,7 +1121,7 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
         {},
         {},
         {},
-        {roughness, metallic, 1.f, castsShadow ? 1.f : 0.f},
+        {roughness, metallic, 1.f, (castsShadow ? 1.f : -1.f) * (1.f + clampedDamage)},
         // The fourth component carries the receiver plane without enlarging the instance stream.
         {transform.position.x, transform.position.y, transform.position.z, shadowGroundZ}};
     std::copy(palette.body.begin(), palette.body.end(), instance.body);
@@ -1206,6 +1252,38 @@ void Renderer::DrawModels()
         glUniform1i(data.uniforms.shadowPass, shadow);
         glUniform2f(data.uniforms.shadowJitter, 0, 0);
         glUniform1f(data.uniforms.hologramTime, holoTime);
+        const bool pbrReady = shadow == 0 && m_assets && m_assets->HasPbrTextures();
+        const bool dmgReady = shadow == 0 && m_assets && m_assets->HasDamageMask();
+        if (data.uniforms.hasPbr >= 0)
+        {
+            glUniform1i(data.uniforms.hasPbr, pbrReady ? 1 : 0);
+        }
+        if (data.uniforms.hasDamageMask >= 0)
+        {
+            glUniform1i(data.uniforms.hasDamageMask, dmgReady ? 1 : 0);
+        }
+        if (pbrReady)
+        {
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, m_assets->PbrBaseArray());
+            glUniform1i(data.uniforms.pbrBaseArray, 1);
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, m_assets->PbrNormalArray());
+            glUniform1i(data.uniforms.pbrNormalArray, 2);
+            glActiveTexture(GL_TEXTURE3);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, m_assets->PbrOrmArray());
+            glUniform1i(data.uniforms.pbrOrmArray, 3);
+        }
+        if (dmgReady)
+        {
+            glActiveTexture(GL_TEXTURE4);
+            glBindTexture(GL_TEXTURE_2D, m_assets->DamageMaskTexture());
+            glUniform1i(data.uniforms.damageMask, 4);
+        }
+        if (pbrReady || dmgReady)
+        {
+            glActiveTexture(GL_TEXTURE0);
+        }
         if (data.useBaseInstance)
         {
             glBindBuffer(GL_ARRAY_BUFFER, data.instancesBuffer);

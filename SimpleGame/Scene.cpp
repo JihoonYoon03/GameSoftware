@@ -1082,7 +1082,8 @@ void MineScene::PlacePerson(game::Scene &scene, const std::string &id, Vector2 p
                 gender, hair,
                 combat.engaged && !downed && (type == models::CharacterType::Guard || id == "ria"),
                 combat.muzzleFlash, downed, 2.1f,
-                combat.pistol.IsReloading() ? combat.pistol.GetReloadProgress() : -1, &motion);
+                combat.pistol.IsReloading() ? combat.pistol.GetReloadProgress() : -1, &motion,
+                &combat.support);
             if (Game::Distance(position, Game::Get().GetState().playerPosition) < 3 && !label.empty())
             {
                 auto screen = Drawing::WorldToScreen(position.x, position.y, 66);
@@ -1591,7 +1592,7 @@ void FrontierScene::Draw()
                                     npc.combat.muzzleFlash, npc.combat.health <= 0, 2.1f,
                                     npc.combat.pistol.IsReloading() ? npc.combat.pistol.GetReloadProgress()
                                                                     : -1,
-                                    &npc.facing);
+                                    &npc.facing, &npc.combat.support);
                 if (Game::Distance(npc.position, Game::Get().GetState().playerPosition) < 4 && !label.empty())
                 {
                     auto screen = Drawing::WorldToScreen(npc.position.x, npc.position.y, 60);
@@ -1900,6 +1901,9 @@ const models::Model &StructureModel(world::ContentForm form, std::uint16_t varia
     {
     case F::Building:
         return library.buildings.at(variant);
+    case F::MeasuredBuilding:
+        return models::ModelLibrary::MeasuredBuilding(
+            models::MeasuredBuildingType(variant % unsigned(models::MeasuredBuildingType::Count)));
     case F::Scenery:
         return models::ModelLibrary::Scenery(S(variant));
     case F::Console:
@@ -2555,7 +2559,7 @@ void DrawPlanetParty(const world::SurfaceSession &session)
                             m.walking, yaw, i == 0 ? models::Gender::Female : models::Gender::Male,
                             i == 0 ? models::HairStyle::Ponytail : models::HairStyle::Buzz,
                             m.combat.engaged && m.combat.health > 0, m.combat.muzzleFlash,
-                            m.combat.health <= 0, 0, -1, &m.motion);
+                            m.combat.health <= 0, 0, -1, &m.motion, &m.combat.support);
         if (Game::Distance(position, Game::Get().GetState().playerPosition) < 4)
         {
             auto at = Drawing::WorldToScreen(position.x, position.y, 62);
@@ -2655,7 +2659,7 @@ void DrawSurfaceFrontier(const world::SurfaceSession &session)
                             hair, armed && npc.combat.engaged && npc.combat.health > 0,
                             npc.combat.muzzleFlash, npc.combat.health <= 0, 2.1f,
                             npc.combat.pistol.IsReloading() ? npc.combat.pistol.GetReloadProgress() : -1,
-                            &npc.facing);
+                            &npc.facing, &npc.combat.support);
         if (Game::Distance(*point, Game::Get().GetState().playerPosition) < 4 && label[0])
         {
             auto at = Drawing::WorldToScreen(point->x, point->y, 60);
@@ -3017,8 +3021,10 @@ void PlanetScene::Draw()
         const float height = float(local.z / 2);
         renderqueue::PushMatrix();
         renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
-        Drawing::DrawWorldVehicle(p, 0, 1, models::VehicleType::Coupe, palette, std::abs(w.car.speed) / 11,
-                                  w.car.Yaw(session->Origin()), w.car.health <= 0, w.car.mounted);
+        Drawing::DrawWorldVehicle(
+            p, 0, 1, models::VehicleType::Coupe, palette, std::abs(w.car.speed) / 11,
+            w.car.Yaw(session->Origin()), w.car.health <= 0, w.car.mounted,
+            1.f - float((std::max)(0, w.car.health)) / float(GroundVehicle::MaxHealth));
         renderqueue::PopMatrix();
     }
     if (w.aircraft.position &&
@@ -3033,11 +3039,12 @@ void PlanetScene::Draw()
         const float height = float(local.z / 2);
         renderqueue::PushMatrix();
         renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
-        Drawing::DrawWorldAircraft({float(local.x / 2), float(local.y / 2)},
-                                   float((w.aircraft.position->altitudeMeters - ground.altitudeMeters) / 2),
-                                   models::AircraftType::Courier, false, w.aircraft.Yaw(session->Origin()),
-                                   w.aircraft.bank, w.aircraft.health <= 0,
-                                   VehicleWreck::Opacity(w.aircraft.wreckSeconds, w.aircraft.grounded));
+        Drawing::DrawWorldAircraft(
+            {float(local.x / 2), float(local.y / 2)},
+            float((w.aircraft.position->altitudeMeters - ground.altitudeMeters) / 2),
+            models::AircraftType::Courier, false, w.aircraft.Yaw(session->Origin()), w.aircraft.bank,
+            w.aircraft.health <= 0, VehicleWreck::Opacity(w.aircraft.wreckSeconds, w.aircraft.grounded),
+            1.f - float((std::max)(0, w.aircraft.health)) / float(PlayerAircraft::MaxHealth));
         if (!w.Mounted() && w.aircraft.health > 0 && w.aircraft.grounded)
         {
             Drawing::DrawInteractionMarker({float(local.x / 2), float(local.y / 2)}, "공용 비행체 / E 탑승",

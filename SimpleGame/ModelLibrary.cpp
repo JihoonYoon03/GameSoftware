@@ -268,6 +268,17 @@ void Generate(Library &library)
     {
         ResourceAssets::Bind(library.buildings[i], std::string("building/") + buildings[i]);
     }
+    constexpr const char *measuredBuildings[] = {
+        "Halo_Rowhouse",           "Halo_ServiceShop",           "Halo_Clinic",
+        "Karden_Logistics",        "Karden_TransitHall",         "Karden_Market",
+        "Metro_MixedResidence",    "Metro_CivicCommerce",        "Capital_GateAdministration",
+        "Capital_PublicForum",     "Frontier_FieldWorkshop",     "Frontier_FreightDepot",
+        "Frontier_DecommissionedRelay", "Mine_AccessSupport"};
+    static_assert(std::size(measuredBuildings) == size_t(MeasuredBuildingType::Count));
+    for (size_t i = 0; i < library.measuredBuildings.size(); ++i)
+    {
+        ResourceAssets::Bind(library.measuredBuildings[i], std::string("building/") + measuredBuildings[i]);
+    }
     constexpr const char *creatures[] = {"RelaySentinel", "RelaySentinel_Variant",
                                          "RiftGrazer",    "RiftGrazer_Variant",
                                          "VeilWalker",    "VeilWalker_Variant"};
@@ -462,6 +473,10 @@ const Model &ModelLibrary::Aircraft(AircraftType type, bool alternate)
 const Model &ModelLibrary::Scenery(SceneryType type)
 {
     return Get().scenery.at(size_t(type));
+}
+const Model &ModelLibrary::MeasuredBuilding(MeasuredBuildingType type)
+{
+    return Get().measuredBuildings.at(size_t(type));
 }
 const Model &ModelLibrary::TrafficSignal(unsigned int state)
 {

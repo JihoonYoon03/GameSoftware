@@ -733,7 +733,8 @@ bool SurfaceStructure::Contains(const SurfacePoint &point, double radius, double
 }
 double SurfaceStructure::BaseClearanceMeters() const
 {
-    const bool building = form <= ContentForm::Shelter || form == ContentForm::Building;
+    const bool building =
+        form <= ContentForm::Shelter || form == ContentForm::Building || form == ContentForm::MeasuredBuilding;
     return solid && building && foundationMeters > .05 ? .08 : 0;
 }
 double SurfaceStructure::FoundationTopMeters() const
@@ -907,19 +908,100 @@ ContentCell ContentLayout::Generate(const GeneratedPlanet &p, ContentCellKey key
         if (city)
         {
             const double zoneRatio = Norm(local) / (std::max)(200., r.boundingRadiusMeters);
-            structure.form = CityForm(r.definition.tier, zoneRatio, random, structure.use);
-            const double tier = double(unsigned(r.definition.tier));
-            const double coreBoost = zoneRatio < .28 ? (tier >= 3 ? 1.42 : 1.22)
-                                     : zoneRatio > .68 ? .72
-                                                       : 1.;
-            const double footScale = denseUrban ? .82 : 1.;
-            structure.sizeMeters = {
-                (11. + Fraction(random + 1) * 5.) * footScale,
-                (13. + Fraction(random + 2) * 5.5) * footScale,
-                (5. + tier * tier * 3. + Fraction(random + 3) * (5. + tier * 4.)) * coreBoost};
-            if (structure.use != ContentUse::Housing)
+            // GFX-02 / CQ-04C2: Use tier-specific measured buildings (1:1 real-world proportions) on
+            // procedural settlement parcels alongside legacy architectural silhouettes.
+            struct MeasuredSpec
             {
-                structure.sizeMeters.z = (6. + tier * 2.4) * coreBoost;
+                std::uint16_t variant;
+                ContentUse use;
+                Vector3d sizeMeters; // X, Y, Z + 0.65m foundation skirt
+            };
+            constexpr MeasuredSpec kMeasured[] = {
+                {0, ContentUse::Housing, {11., 8., 9.65}},           // Halo_Rowhouse
+                {1, ContentUse::Services, {10., 13., 5.05}},         // Halo_ServiceShop
+                {2, ContentUse::Services, {13., 12., 7.65}},         // Halo_Clinic
+                {3, ContentUse::Industry, {24., 18., 9.65}},         // Karden_Logistics
+                {4, ContentUse::Services, {19., 23., 12.65}},        // Karden_TransitHall
+                {5, ContentUse::Services, {15., 24., 8.05}},         // Karden_Market
+                {6, ContentUse::Housing, {24., 28., 39.65}},         // Metro_MixedResidence
+                {7, ContentUse::Services, {27., 32., 51.05}},        // Metro_CivicCommerce
+                {8, ContentUse::Administration, {35., 40., 64.65}},  // Capital_GateAdministration
+                {9, ContentUse::Administration, {37., 48., 19.85}},  // Capital_PublicForum
+            };
+            const bool useMeasured =
+                p.layoutRevision >= GeneratedPlanet::CurrentLayoutRevision && (random % 5 < 3);
+            const MeasuredSpec *picked = nullptr;
+            if (useMeasured)
+            {
+                if (r.definition.tier == SettlementTier::District)
+                {
+                    picked = &kMeasured[random % 3];
+                }
+                else if (r.definition.tier == SettlementTier::Town)
+                {
+                    picked = (zoneRatio > .68) ? &kMeasured[3]
+                                               : (random % 3 == 0 ? &kMeasured[0 + (random / 3) % 3]
+                                                                  : &kMeasured[3 + (random % 3)]);
+                }
+                else if (r.definition.tier == SettlementTier::Metropolis)
+                {
+                    if (zoneRatio < .48 && slot == 4)
+                    {
+                        picked = &kMeasured[6 + (random % 2)];
+                    }
+                    else if (zoneRatio > .68)
+                    {
+                        picked = &kMeasured[3 + (random % 3)];
+                    }
+                    else
+                    {
+                        picked = &kMeasured[(random % 2 == 0) ? (6 + (random / 2) % 2) : (3 + (random % 3))];
+                    }
+                }
+                else if (r.definition.tier == SettlementTier::SystemCapital)
+                {
+                    if (zoneRatio < .32 && slot == 4)
+                    {
+                        picked = &kMeasured[8 + (random % 2)];
+                    }
+                    else if (zoneRatio < .68)
+                    {
+                        picked = &kMeasured[6 + (random % 2)];
+                    }
+                    else
+                    {
+                        picked = &kMeasured[3 + (random % 3)];
+                    }
+                }
+            }
+            if (picked)
+            {
+                structure.form = ContentForm::MeasuredBuilding;
+                structure.variant = picked->variant;
+                structure.use = picked->use;
+                // Keep exact authored ratios; scale down only if a dense 3x3 sub-slot cannot host a wide lot.
+                const double maxSpan = denseUrban && slot != 4 ? 19. : 52.;
+                const double span = (std::max)(picked->sizeMeters.x, picked->sizeMeters.y);
+                const double fit = span > maxSpan ? (maxSpan / span) : 1.;
+                structure.sizeMeters = {picked->sizeMeters.x * fit, picked->sizeMeters.y * fit,
+                                        picked->sizeMeters.z * fit};
+            }
+            else
+            {
+                structure.form = CityForm(r.definition.tier, zoneRatio, random, structure.use);
+                const double tier = double(unsigned(r.definition.tier));
+                const double coreBoost = zoneRatio < .28 ? (tier >= 3 ? 1.42 : 1.22)
+                                         : zoneRatio > .68 ? .72
+                                                           : 1.;
+                const double footScale = denseUrban ? .82 : 1.;
+                structure.sizeMeters = {
+                    (11. + Fraction(random + 1) * 5.) * footScale,
+                    (13. + Fraction(random + 2) * 5.5) * footScale,
+                    (5. + tier * tier * 3. + Fraction(random + 3) * (5. + tier * 4.)) * coreBoost};
+                if (structure.use != ContentUse::Housing)
+                {
+                    structure.sizeMeters.z = (6. + tier * 2.4) * coreBoost;
+                }
             }
         }
         else
@@ -929,18 +1011,48 @@ ContentCell ContentLayout::Generate(const GeneratedPlanet &p, ContentCellKey key
             {
             case RegionKind::Outpost:
                 structure.use = ContentUse::Expedition;
-                structure.form = random % 3 == 0   ? ContentForm::Relay
-                                 : random % 3 == 1 ? ContentForm::Solar
-                                                   : ContentForm::Shelter;
+                if (p.layoutRevision >= GeneratedPlanet::CurrentLayoutRevision && random % 2 == 0)
+                {
+                    structure.form = ContentForm::MeasuredBuilding;
+                    const unsigned pick = unsigned((random / 2) % 3);
+                    structure.variant = std::uint16_t(10 + pick); // Frontier_FieldWorkshop / FreightDepot / Relay
+                    structure.sizeMeters = pick == 0   ? Vector3d{12., 11., 5.35}
+                                           : pick == 1 ? Vector3d{20., 16., 10.25}
+                                                       : Vector3d{10., 10., 4.65};
+                }
+                else
+                {
+                    structure.form = random % 3 == 0   ? ContentForm::Relay
+                                     : random % 3 == 1 ? ContentForm::Solar
+                                                       : ContentForm::Shelter;
+                }
                 break;
             case RegionKind::Mine:
                 structure.use = ContentUse::Mining;
-                structure.form = ContentForm::Conveyor;
-                structure.sizeMeters = {8, 14, 5};
+                if (p.layoutRevision >= GeneratedPlanet::CurrentLayoutRevision && (random % 2 == 0 || entrance))
+                {
+                    structure.form = ContentForm::MeasuredBuilding;
+                    structure.variant = 13; // Mine_AccessSupport
+                    structure.sizeMeters = {15., 13., 5.25};
+                }
+                else
+                {
+                    structure.form = ContentForm::Conveyor;
+                    structure.sizeMeters = {8, 14, 5};
+                }
                 break;
             case RegionKind::Outlaw:
                 structure.use = ContentUse::Salvage;
-                structure.form = random % 2 ? ContentForm::Cargo : ContentForm::Shelter;
+                if (p.layoutRevision >= GeneratedPlanet::CurrentLayoutRevision && random % 3 == 0)
+                {
+                    structure.form = ContentForm::MeasuredBuilding;
+                    structure.variant = 12; // Frontier_DecommissionedRelay
+                    structure.sizeMeters = {10., 10., 4.65};
+                }
+                else
+                {
+                    structure.form = random % 2 ? ContentForm::Cargo : ContentForm::Shelter;
+                }
                 break;
             case RegionKind::AncientRuins:
                 structure.use = ContentUse::Archaeology;
@@ -953,7 +1065,7 @@ ContentCell ContentLayout::Generate(const GeneratedPlanet &p, ContentCellKey key
                 break;
             }
         }
-        const double extent = Norm(structure.sizeMeters) * .5;
+        const double extent = std::hypot(structure.sizeMeters.x, structure.sizeMeters.y) * .5;
         if (!Inside(r, local, extent + 3))
         {
             continue;

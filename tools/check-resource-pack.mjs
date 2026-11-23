@@ -151,9 +151,19 @@ for (let asset = 0; asset < count; ++asset) {
     if (name.startsWith('character/')) for (const clip of ['Idle', 'Run', 'Aim_Base', 'Attack_Fire', 'Ride']) assert.ok(clipNames.includes(clip));
     if (recipe) {
         const sourceClips = glbDocument(source).animations.map(clip => clip.name);
+        const supportClips = glbDocument('AnimationBanks/HUMAN_7H_Support').animations.map(clip => clip.name);
+        const transitionClips = glbDocument('AnimationBanks/HUMAN_7H_Transitions').animations.map(clip => clip.name);
         for (const clip of ['Idle', 'Walk', 'Run', 'Aim_Base', 'Attack_Fire', 'Attack_Melee', 'Jump_Air'])
             assert.ok(sourceClips.includes(clip), 'Required HUMAN_7H source clip missing: ' + clip);
-        assert.deepEqual(clipNames, [...sourceClips, 'Ride'], 'Human source animations must all survive conversion');
+        for (const clip of ['Support_Treat_Enter', 'Support_Treat_Loop', 'Support_Treat_Exit',
+            'Support_Inspect_Enter', 'Support_Inspect_Loop', 'Support_Inspect_Exit',
+            'Support_Carry_Idle', 'Support_Carry_Walk'])
+            assert.ok(supportClips.includes(clip), 'Required support bank clip missing: ' + clip);
+        for (const clip of ['Run_Turn180_Left', 'Run_Turn180_Right', 'Turn90_Left', 'Turn90_Right',
+            'Aim_Strafe_Start_Forward', 'Aim_Strafe_Stop_Forward'])
+            assert.ok(transitionClips.includes(clip), 'Required transition bank clip missing: ' + clip);
+        assert.deepEqual(clipNames, [...sourceClips, 'Ride', ...supportClips, ...transitionClips],
+            'Human source and shared bank animations must all survive conversion');
     }
     if (name.startsWith('vehicle/')) for (const clip of ['Hover_Idle', 'Cruise']) assert.ok(clipNames.includes(clip));
     if (name.startsWith('aircraft/')) for (const clip of ['Aircraft_Reference', 'Cruise', 'LandingGear_Retract', 'LandingGear_Deploy', 'Canopy_Open', 'Cargo_Open']) assert.ok(clipNames.includes(clip));
@@ -176,6 +186,18 @@ for (const [name, file] of [['SpireHelix', 'Spire_Helix_12F'], ['TwinBridge', 'T
     assert.equal(report.bounds[1][0], 1);
     assert.equal(report.bounds[1][1], 1);
     assert.ok(report.physical_world_units.every(size => size > 2));
+}
+const measuredBuildings = JSON.parse(fs.readFileSync(path.join(root, 'Resource/Documentation/measured_buildings.json')));
+for (const name of Object.keys(measuredBuildings.prefabs)) {
+    const report = manifest.assets.find(asset => asset.name === 'building/' + name);
+    assert.ok(report, 'Measured building missing: ' + name);
+    assert.equal(report.source, 'MeasuredBuildings/' + name);
+    assert.equal(report.triangles, sourceTriangles('MeasuredBuildings/' + name), 'Measured building lost authored detail: ' + name);
+    assert.deepEqual(report.bounds[0], [0, 0, 0]);
+    assert.equal(report.bounds[1][0], 1);
+    assert.equal(report.bounds[1][1], 1);
+    assert.equal(report.bounds[1][2], 1);
+    assert.ok(report.physical_world_units.every(size => size > 1.5));
 }
 for (const report of manifest.assets.filter(asset => asset.name.startsWith('character/'))) {
     const gender = report.name.split('/')[1], recipe = recipes[path.basename(report.source)];

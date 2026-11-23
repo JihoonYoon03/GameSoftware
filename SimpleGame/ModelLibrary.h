@@ -120,6 +120,24 @@ enum class BuildingType : std::uint32_t
     CourtyardHabitat,
     Count
 };
+enum class MeasuredBuildingType : std::uint32_t
+{
+    HaloRowhouse,
+    HaloServiceShop,
+    HaloClinic,
+    KardenLogistics,
+    KardenTransitHall,
+    KardenMarket,
+    MetroMixedResidence,
+    MetroCivicCommerce,
+    CapitalGateAdministration,
+    CapitalPublicForum,
+    FrontierFieldWorkshop,
+    FrontierFreightDepot,
+    FrontierDecommissionedRelay,
+    MineAccessSupport,
+    Count
+};
 enum class PaletteSlot : std::uint32_t
 {
     Fixed,
@@ -195,6 +213,10 @@ struct CharacterPose
     float dodgeTime = 0, dodgeWeight = 0;
     int dodgeEntrySample = -1;
     float dodgeEntryTime = 0, dodgeEntryWeight = 0;
+    int supportClip = -1;
+    float supportPhase = 0, supportWeight = 0;
+    int transitionClip = -1;
+    float transitionPhase = 0, transitionWeight = 0;
     Point Apply(Point point, Joint joint) const;
 };
 // ============================================================================
@@ -265,6 +287,7 @@ struct Library
     std::array<Model, static_cast<size_t>(HairStyle::Count)> hairs;
     std::array<Model, static_cast<size_t>(HairStyle::Count)> coveredHairs;
     std::array<Model, static_cast<size_t>(BuildingType::Count)> buildings;
+    std::array<Model, static_cast<size_t>(MeasuredBuildingType::Count)> measuredBuildings;
 };
 
 // Heap-owned immutable bindings. ResourceAssets owns the converted GLB geometry and animation cache.
@@ -279,6 +302,7 @@ class ModelLibrary
     static const char *SceneryName(SceneryType type);
     static const Model &TrafficSignal(unsigned int state);
     static const Model &Transit(const std::string &name);
+    static const Model &MeasuredBuilding(MeasuredBuildingType type);
 };
 
 // ============================================================================

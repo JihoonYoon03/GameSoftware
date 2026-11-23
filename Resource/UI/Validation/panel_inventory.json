@@ -383,5 +383,68 @@
     "y": 40,
     "w": 1152,
     "h": 720
+  },
+  {
+    "screen": "87_relay_ready",
+    "x": 56,
+    "y": 40,
+    "w": 1168,
+    "h": 720
+  },
+  {
+    "screen": "88_relay_blocked",
+    "x": 56,
+    "y": 40,
+    "w": 1168,
+    "h": 720
+  },
+  {
+    "screen": "89_relay_prep",
+    "x": 56,
+    "y": 40,
+    "w": 1168,
+    "h": 720
+  },
+  {
+    "screen": "90_checkpoint_ready",
+    "x": 220,
+    "y": 90,
+    "w": 840,
+    "h": 620
+  },
+  {
+    "screen": "91_checkpoint_empty",
+    "x": 220,
+    "y": 90,
+    "w": 840,
+    "h": 620
+  },
+  {
+    "screen": "92_checkpoint_restricted",
+    "x": 220,
+    "y": 90,
+    "w": 840,
+    "h": 620
+  },
+  {
+    "screen": "93_checkpoint_loading",
+    "x": 220,
+    "y": 90,
+    "w": 840,
+    "h": 620
+  },
+  {
+    "screen": "94_planet_profiles",
+    "x": 220,
+    "y": 90,
+    "w": 840,
+    "h": 620
+  },
+  {
+    "screen": "97_flight_controls",
+    "x": 174,
+    "y": 90,
+    "w": 932,
+    "h": 620
   }
 ]

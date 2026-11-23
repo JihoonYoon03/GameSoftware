@@ -141,6 +141,20 @@ void TestAnimationBlending()
     assert(mesh.rig && mesh.rig->samples.size() == 17 && mesh.rig->triangles.size() == 24);
     const auto &rig = *mesh.rig;
     assert(rig.carryIdle >= 0 && rig.carryWalk >= 0 && rig.carryRun >= 0 && rig.reload >= 0);
+    assert(rig.handR >= 0);
+    for (int clip : rig.supportClips)
+    {
+        assert(clip >= 0 && !mesh.Clips()[size_t(clip)].localFrames.empty());
+    }
+    for (int clip : rig.transitionClips)
+    {
+        assert(clip >= 0 && !mesh.Clips()[size_t(clip)].localFrames.empty());
+    }
+    for (unsigned i = 0; i < unsigned(MeasuredBuildingType::Count); ++i)
+    {
+        const auto &b = ModelLibrary::MeasuredBuilding(MeasuredBuildingType(i));
+        assert(b.resourceId && ModelFactory::ValidateModel(b));
+    }
     // Delivered carry/reload layers must leave the simulated lower body untouched.
     for (auto gender : {Gender::Male, Gender::Female})
     {
@@ -1668,7 +1682,7 @@ void CaptureDeliveredUi(const std::filesystem::path &output)
     auto &g = Game::Get();
     auto &w = g.GetState();
     auto &renderer = GameRenderer::Get().Backend();
-    assert(renderer.UiSpriteCount() >= 145);
+    assert(renderer.UiSpriteCount() >= 159);
     auto draw = [&](const char *name) {
         Begin();
         game::SceneManager::Get(game::SceneManager::Current()).Draw();
@@ -2433,6 +2447,87 @@ int main(int argc, char **argv)
         std::filesystem::create_directories(output);
         BenchmarkQuality(output);
         GameRenderer::Get().Shutdown();
+        return 0;
+    }
+    if (argc > 1 && std::string(argv[1]) == "--flight-stress")
+    {
+        OffscreenContext context;
+        GameRenderer::Get().Initialize();
+        auto &g = Game::Get();
+        auto &w = g.GetState();
+        assert(g.EnterTestStage(TestStage::SurfaceSurvey));
+        auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(15);
+        while (g.Surface() && (!g.Surface()->Ready() || g.Surface()->Stream().Snapshot()->chunks.empty()) &&
+               std::chrono::steady_clock::now() < deadline)
+        {
+            g.Update(0);
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        }
+        assert(g.Surface() && g.Surface()->Ready());
+        auto &a = w.aircraft;
+        const auto plan = g.Surface()->Stream().Snapshot()->planet;
+        std::vector<world::SurfacePoint> waypoints;
+        for (const auto &reg : plan->regions)
+        {
+            if (reg.center.space == world::SpaceKind::Surface)
+            {
+                waypoints.push_back(reg.access.position);
+            }
+        }
+        if (!waypoints.empty())
+        {
+            g.RelocateSurfaceSurvey(waypoints.front());
+        }
+        a.position = g.Surface()->Pose().origin;
+        a.position->altitudeMeters += 4.;
+        a.SetYaw(.25f, g.Surface()->Origin());
+        a.mounted = true;
+        a.grounded = false;
+        a.health = PlayerAircraft::MaxHealth;
+        size_t wpIndex = 1;
+        for (unsigned frame = 0; frame < 1800; ++frame)
+        {
+            a.health = PlayerAircraft::MaxHealth;
+            if (!waypoints.empty() && frame % 300 == 0 && frame > 0)
+            {
+                const auto &target = waypoints[wpIndex % waypoints.size()];
+                ++wpIndex;
+                auto nearTarget = world::SurfaceGeometry::Advance(world::SurfaceGeometry::Frame(target), -180, -180,
+                                                                  g.Surface()->Planet().radiusMeters)
+                                      .origin;
+                g.RelocateSurfaceSurvey(nearTarget);
+                a.position = g.Surface()->Pose().origin;
+                a.position->altitudeMeters += (frame % 600 == 0) ? 140. : 35.;
+                a.mounted = true;
+                a.grounded = false;
+                a.velocity = {};
+                const auto localDir = g.Surface()->Local(target);
+                a.SetYaw(float(std::atan2(localDir.y, localDir.x)), g.Surface()->Origin());
+            }
+            w.pressedKeys['w'] = 1;
+            w.pressedKeys[platform::SprintKey] = 1;
+            w.pressedKeys[' '] = (frame % 300 < 90) ? 1 : 0;
+            w.pressedKeys['c'] = (frame % 300 >= 180 && frame % 300 < 210) ? 1 : 0;
+            w.pressedKeys['d'] = (frame % 170 >= 130 && frame % 170 < 150) ? 1 : 0;
+            w.pressedKeys['a'] = (frame % 230 >= 190 && frame % 230 < 210) ? 1 : 0;
+            w.mapVisible = (frame % 200 >= 185 && frame % 200 < 195);
+            g.Update(1.f / 60.f);
+            GameRenderer::Get().Draw();
+            if (frame % 30 == 0)
+            {
+                (void)monitoring::WorldSnapshot::Build(frame, "flight-stress");
+            }
+            if (frame % 4 == 0)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
+        }
+        w.pressedKeys['w'] = w.pressedKeys[platform::SprintKey] = w.pressedKeys[' '] = w.pressedKeys['c'] =
+            w.pressedKeys['a'] = w.pressedKeys['d'] = 0;
+        w.mapVisible = false;
+        g.Reset();
+        GameRenderer::Get().Shutdown();
+        std::cout << "High-speed aircraft flight stress test passed (1800 frames).\n";
         return 0;
     }
     TestModelsAndRig();

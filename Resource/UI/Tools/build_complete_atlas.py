@@ -47,11 +47,11 @@ def build():
     data=dict(schema='erma.ui.atlas',version=1,atlas=dict(file='ui_complete.png',width=2048,height=2048,sha256=digest(target.read_bytes())),
         format=dict(channels='RGBA8',alpha='straight',color_space='sRGB',origin='top-left',row_direction='down',rectangles='integer pixels; exclude gutter'),
         padding=pad,nine_slice_inset=12,sampling=dict(uv='pixel centers; .5 inset',filter='linear',mipmaps=False,wrap='clamp_to_edge'),
-        source_count=len(entries),legacy_count=len(legacy),sprites=entries,runtime_loader_integrated=False)
+        source_count=len(entries),legacy_count=len(legacy),sprites=entries,runtime_loader_integrated=True)
     save('Export/Atlases/ui_complete.json',data)
     report=dict(status='PASS',sprite_count=len(entries),legacy_count=len(legacy),legacy_expected=len(baseline),missing=[],duplicates=[],
         original_png_hashes_preserved=True,rgba_crops_exact=True,transparent_gutter_px=pad,bilinear_isolated_comparisons=gutter_checks,
         scope='Exact source pixels and bilinear isolation, without mipmaps. Loader, draw batching and startup timing have not been changed or measured.')
-    save('Validation/20261109/atlas_report.json',report)
+    save('Validation/20261123/atlas_report.json',report)
     print(json.dumps(report,ensure_ascii=False))
 if __name__=='__main__':build()

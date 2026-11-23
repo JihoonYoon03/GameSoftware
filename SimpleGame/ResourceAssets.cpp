@@ -125,7 +125,7 @@ struct Store
         size_t animationClips = 0;
         for (unsigned bank = 0; bank < bankCount; ++bank)
         {
-            unsigned bones = reader.Count(31), clipCount = reader.Count(128);
+            unsigned bones = reader.Count(31), clipCount = reader.Count(256);
             if (!bones || !clipCount)
             {
                 throw std::runtime_error("Invalid resource animation bank");
@@ -151,6 +151,10 @@ struct Store
                 if (rig->names.back() == "muzzle")
                 {
                     rig->muzzle = int(j);
+                }
+                if (rig->names.back() == "hand.R")
+                {
+                    rig->handR = int(j);
                 }
             }
             unsigned sampleCount = reader.Count(128);
@@ -213,6 +217,8 @@ struct Store
                 const auto &name = clips->back().name;
                 int clipIndex = int(index);
                 LayeredAnimation::BindDodgeClip(*rig, name, clipIndex);
+                LayeredAnimation::BindSupportClip(*rig, name, clipIndex);
+                LayeredAnimation::BindTransitionClip(*rig, name, clipIndex);
                 if (name == "Idle")
                 {
                     rig->idle = clipIndex;
@@ -513,6 +519,20 @@ Point ResourceAssets::Muzzle(const CharacterPose &pose)
     auto selection = Select(Get(id), &pose, true);
     return selection.clip ? selection.clip->muzzles[selection.frame] : Point{.5f, 0, .8f};
 }
+Point ResourceAssets::HandR(unsigned int id, const CharacterPose &pose)
+{
+    const auto &mesh = Get(id);
+    if (mesh.rig && mesh.rig->handR >= 0 && !pose.riding)
+    {
+        SkinMatrices matrices;
+        Sample(id, &pose, matrices);
+        AnimationMatrix skin;
+        std::copy_n(matrices.begin() + mesh.rig->handR * 16, 16, skin.begin());
+        auto world = AnimationMath::Multiply(skin, mesh.rig->bind[size_t(mesh.rig->handR)]);
+        return {world[12], world[13], world[14]};
+    }
+    return {.22f, -.18f, .72f};
+}
 void ResourcePoseSampler::Sample(unsigned int id, const CharacterPose &pose, SkinMatrices &matrices)
 {
     const auto &mesh = ResourceAssets::Get(id);
@@ -521,7 +541,7 @@ void ResourcePoseSampler::Sample(unsigned int id, const CharacterPose &pose, Ski
         ResourceAssets::Sample(id, &pose, matrices);
         return;
     }
-    const std::array<float, 19> nextInputs = {pose.animationPhase,
+    const std::array<float, 25> nextInputs = {pose.animationPhase,
                                               pose.recoil,
                                               pose.locomotionSpeed,
                                               pose.meleeSeconds,
@@ -539,7 +559,13 @@ void ResourcePoseSampler::Sample(unsigned int id, const CharacterPose &pose, Ski
                                               pose.dodgeWeight,
                                               float(pose.dodgeEntrySample),
                                               pose.dodgeEntryTime,
-                                              pose.dodgeEntryWeight};
+                                              pose.dodgeEntryWeight,
+                                              float(pose.supportClip),
+                                              pose.supportPhase,
+                                              pose.supportWeight,
+                                              float(pose.transitionClip),
+                                              pose.transitionPhase,
+                                              pose.transitionWeight};
     const unsigned int nextFlags =
         unsigned(pose.armed) | (unsigned(pose.walking) << 1) | (unsigned(pose.blended) << 2);
     if (rig != mesh.rig.get() || animations != mesh.animations.get() || flags != nextFlags ||

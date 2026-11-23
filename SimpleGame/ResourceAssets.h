@@ -51,6 +51,7 @@ class ResourceAssets
     static unsigned int RegisterStatic(ResourceMesh mesh);
     static void Sample(unsigned int id, const CharacterPose *pose, SkinMatrices &matrices);
     static Point Muzzle(const CharacterPose &pose);
+    static Point HandR(unsigned int id, const CharacterPose &pose);
     static Point SkinPoint(const ResourceVertex &vertex, const SkinMatrices &matrices);
 };
 
@@ -64,7 +65,7 @@ class ResourcePoseSampler
   private:
     const AnimationRig *rig = nullptr;
     const std::vector<ResourceClip> *animations = nullptr;
-    std::array<float, 19> inputs = {};
+    std::array<float, 25> inputs = {};
     unsigned int flags = 0;
     SkinMatrices cached = {};
 };

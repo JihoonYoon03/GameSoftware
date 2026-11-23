@@ -7,5 +7,7 @@
   "failureNext": "63_planet_failure_02",
   "failurePrevious": "63_planet_failure_01",
   "journalOpacity": "0.8",
-  "journalBackgroundHidden": true
+  "journalBackgroundHidden": true,
+  "borderOpacity": "0.8",
+  "panelOpacity": "0.8"
 }

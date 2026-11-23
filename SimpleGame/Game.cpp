@@ -1248,7 +1248,29 @@ void Game::UpdatePlayerMovement(float deltaSeconds)
     }
     else
     {
+        const bool wasPivoting = state.playerMotion.pivoting;
+        const float prevYaw = state.facingYaw;
         state.playerMotion.Update(target, state.facingYaw, aiming, deltaSeconds);
+        if (!wasPivoting && state.playerMotion.pivoting && !aiming)
+        {
+            const float targetYaw = std::atan2(target.y, target.x);
+            float diff = targetYaw - prevYaw;
+            while (diff > kPi) diff -= 2 * kPi;
+            while (diff < -kPi) diff += 2 * kPi;
+            state.playerAnimation.TriggerTurn(true, diff < 0);
+        }
+        else if (!state.playerMotion.pivoting && !aiming && length > .1f &&
+                 std::hypot(state.playerMotion.velocity.x, state.playerMotion.velocity.y) > .6f)
+        {
+            const float targetYaw = std::atan2(target.y, target.x);
+            float diff = targetYaw - prevYaw;
+            while (diff > kPi) diff -= 2 * kPi;
+            while (diff < -kPi) diff += 2 * kPi;
+            if (std::fabs(diff) > 1.25f && std::fabs(diff) < 2.2f)
+            {
+                state.playerAnimation.TriggerTurn(false, diff < 0);
+            }
+        }
     }
     Vector2 requested = {state.playerMotion.velocity.x * deltaSeconds,
                          state.playerMotion.velocity.y * deltaSeconds};

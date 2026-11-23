@@ -1,0 +1,36 @@
+{
+  "blender_version": "4.5.2 LTS",
+  "blend_sha256": "062ed53ffcd9814d3aaa56398e0b4728919f0f4de58895794817e2692d5f22e1",
+  "scenes": {
+    "Workshop": {
+      "parts": 55,
+      "preview_override_slots": 45,
+      "rig_bones": []
+    },
+    "RoadCurve": {
+      "parts": 8,
+      "preview_override_slots": 5,
+      "rig_bones": []
+    },
+    "Coupe": {
+      "parts": 16,
+      "preview_override_slots": 15,
+      "rig_bones": [
+        16
+      ]
+    },
+    "Engineer": {
+      "parts": 25,
+      "preview_override_slots": 27,
+      "rig_bones": [
+        23
+      ]
+    },
+    "Mine": {
+      "parts": 3,
+      "preview_override_slots": 2,
+      "rig_bones": []
+    }
+  },
+  "all_checks_passed": true
+}

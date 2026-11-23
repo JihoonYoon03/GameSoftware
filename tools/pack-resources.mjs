@@ -382,6 +382,35 @@ function convert(name, relative, kind = 'prop', options = {}) {
                 }
                 clips.push({ name: clip.name, duration, frames, matrices, muzzles });
             }
+            if (kind === 'human') {
+                // Append shared HUMAN_7H animation banks (CQ-07C2 support + directional transitions) without duplicating meshes.
+                for (const bankRel of ['AnimationBanks/HUMAN_7H_Support', 'AnimationBanks/HUMAN_7H_Transitions']) {
+                    const bankData = load(bankRel);
+                    const bankSkin = bankData.json.skins?.[0];
+                    if (!bankSkin) throw Error('Shared animation bank missing skin: ' + bankRel);
+                    const bankJoints = bankSkin.joints.map(i => bankData.json.nodes[i].name);
+                    if (JSON.stringify(bankJoints) !== JSON.stringify(jointNames))
+                        throw Error('Shared animation bank skeleton mismatch: ' + bankRel);
+                    const bankInvBinds = accessor(bankData, bankSkin.inverseBindMatrices);
+                    const bankMuzzleNode = bankData.json.nodes.findIndex(n => n.name === 'muzzle');
+                    for (const clip of bankData.json.animations ?? []) {
+                        if (clips.some(existing => existing.name === clip.name))
+                            throw Error('Duplicate shared animation clip: ' + clip.name);
+                        const duration = Math.max(1 / 30, ...((clip.samplers ?? []).map(s => accessor(bankData, s.input).at(-1)[0])));
+                        const frames = Math.max(2, Math.round(duration * 30) + 1), matrices = [], muzzles = [];
+                        for (let frame = 0; frame < frames; ++frame) {
+                            const overrides = sampleOverrides(bankData, clip, Math.min(duration, frame / 30));
+                            const world = globals(bankData, overrides);
+                            for (let j = 0; j < bankSkin.joints.length; ++j) {
+                                const m = multiply(c, multiply(world[bankSkin.joints[j]], multiply(bankInvBinds[j], invC)));
+                                matrices.push(...m);
+                            }
+                            muzzles.push(...(bankMuzzleNode < 0 ? [0, 0, 0] : point(c, point(world[bankMuzzleNode], [0, 0, 0]))));
+                        }
+                        clips.push({ name: clip.name, duration, frames, matrices, muzzles });
+                    }
+                }
+            }
         }
         animationSamples.set(animationKey, clips);
     }
@@ -446,6 +475,13 @@ for (const [name, file] of [['SpireHelix', 'Spire_Helix_12F'], ['TwinBridge', 'T
     // glazing and roof component. Physical dimensions remain derived from the assembled GLB.
     convert('building/' + name, 'Buildings/' + file, 'prop',
         { normalize: true, height: style.floor_count * style.storey_height_m });
+}
+const measuredBuildings = JSON.parse(fs.readFileSync(path.join(resources, 'Documentation/measured_buildings.json')));
+for (const [name, prefab] of Object.entries(measuredBuildings.prefabs)) {
+    const dims = prefab.structure_dimensions_m;
+    if (!dims || dims.length !== 3 || dims.some(v => !(v > 0)))
+        throw Error('Measured building dimensions missing: ' + name);
+    convert('building/' + name, 'MeasuredBuildings/' + name, 'prop', { normalize: true });
 }
 for (const name of ['RelaySentinel', 'RiftGrazer', 'VeilWalker']) for (const variant of ['', '_Variant']) convert('creature/' + name + variant, 'Creatures/' + name + variant, 'creature');
 for (const [name, file, normalize] of [['box', 'Interior_Crate', true], ['salvage', 'Gear_Engineer_Powerpack', false],

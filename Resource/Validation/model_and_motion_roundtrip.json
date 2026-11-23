@@ -1,0 +1,28 @@
+{
+  "projects": {
+    "Erma_Resource_Library.blend": [
+      "47_Support_Treatment",
+      "48_Support_Terminal",
+      "49_Support_Carry",
+      "50_Directional_Transitions"
+    ],
+    "Civic_Animations.blend": [
+      "47_Support_Treatment",
+      "48_Support_Terminal",
+      "49_Support_Carry",
+      "50_Directional_Transitions"
+    ]
+  },
+  "measured_building_scenes": 14,
+  "bank_imports": {
+    "HUMAN_7H_Support": {
+      "clips": 8,
+      "minimum_midclip_joint_displacement_m": 0.003572611502139067
+    },
+    "HUMAN_7H_Transitions": {
+      "clips": 12,
+      "minimum_midclip_joint_displacement_m": 0.22826724961296885
+    }
+  },
+  "all_checks_passed": true
+}

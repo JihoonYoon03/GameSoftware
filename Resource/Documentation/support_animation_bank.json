@@ -1,0 +1,286 @@
+{
+  "schema": "erma.support_animation_bank.v1",
+  "request": "CQ-07C2 / GFX-04",
+  "rig_id": "HUMAN_7H",
+  "bones": 23,
+  "base_clips": 98,
+  "shared_extension_clips": 8,
+  "bank_glb": "Export/AnimationBanks/HUMAN_7H_Support.glb",
+  "bank_sha256": "220090fa5bf809b2581d53437f6f17678a1fbf8b4e1b25ac7df59301439e63cd",
+  "bank_bind_reference": "SupportBank_BindReference (ignore for rendering)",
+  "clip_contract": {
+    "Support_Treat_Enter": {
+      "duration_seconds": 0.8,
+      "loop": false,
+      "layer": "full_body",
+      "min_fitted_skin_z_m": 0.0009999710086355668,
+      "lower_body_max_error": null,
+      "rate_hz": 60,
+      "root_motion": false,
+      "root_yaw_deg": 0,
+      "events": [
+        {
+          "id": "work_ready",
+          "phase": 1,
+          "seconds": 0.8,
+          "visual_only": true
+        }
+      ]
+    },
+    "Support_Treat_Loop": {
+      "duration_seconds": 1.2,
+      "loop": true,
+      "layer": "full_body",
+      "min_fitted_skin_z_m": 0.0010000290874819316,
+      "lower_body_max_error": null,
+      "rate_hz": 60,
+      "root_motion": false,
+      "root_yaw_deg": 0,
+      "events": [
+        {
+          "id": "left_support",
+          "phase": 0.5,
+          "seconds": 0.6,
+          "visual_only": true
+        },
+        {
+          "id": "right_scan",
+          "phase": 0.42,
+          "seconds": 0.504,
+          "visual_only": true
+        }
+      ]
+    },
+    "Support_Treat_Exit": {
+      "duration_seconds": 0.7,
+      "loop": false,
+      "layer": "full_body",
+      "min_fitted_skin_z_m": 0.0009999704720902725,
+      "lower_body_max_error": null,
+      "rate_hz": 60,
+      "root_motion": false,
+      "root_yaw_deg": 0,
+      "events": [
+        {
+          "id": "hands_released",
+          "phase": 0.32,
+          "seconds": 0.22399999999999998,
+          "visual_only": true
+        },
+        {
+          "id": "locomotion_ready",
+          "phase": 1,
+          "seconds": 0.7,
+          "visual_only": true
+        }
+      ]
+    },
+    "Support_Inspect_Enter": {
+      "duration_seconds": 0.5,
+      "loop": false,
+      "layer": "human_upper_body",
+      "min_fitted_skin_z_m": 0.001000162409801698,
+      "lower_body_max_error": 1.1920928955078125e-07,
+      "rate_hz": 60,
+      "root_motion": false,
+      "root_yaw_deg": 0,
+      "events": [
+        {
+          "id": "work_ready",
+          "phase": 1,
+          "seconds": 0.5,
+          "visual_only": true
+        }
+      ]
+    },
+    "Support_Inspect_Loop": {
+      "duration_seconds": 1.4,
+      "loop": true,
+      "layer": "human_upper_body",
+      "min_fitted_skin_z_m": 0.001000162409801698,
+      "lower_body_max_error": 0.0,
+      "rate_hz": 60,
+      "root_motion": false,
+      "root_yaw_deg": 0,
+      "events": [
+        {
+          "id": "terminal_input_hover",
+          "phase": 0.5,
+          "seconds": 0.7,
+          "visual_only": true
+        }
+      ]
+    },
+    "Support_Inspect_Exit": {
+      "duration_seconds": 0.5,
+      "loop": false,
+      "layer": "human_upper_body",
+      "min_fitted_skin_z_m": 0.001000162409801698,
+      "lower_body_max_error": 1.1920928955078125e-07,
+      "rate_hz": 60,
+      "root_motion": false,
+      "root_yaw_deg": 0,
+      "events": [
+        {
+          "id": "hands_clear",
+          "phase": 0.45,
+          "seconds": 0.225,
+          "visual_only": true
+        },
+        {
+          "id": "aim_blend_allowed",
+          "phase": 1,
+          "seconds": 0.5,
+          "visual_only": true
+        }
+      ]
+    },
+    "Support_Carry_Idle": {
+      "duration_seconds": 2.0,
+      "loop": true,
+      "layer": "human_upper_body",
+      "min_fitted_skin_z_m": 0.0010000579416031352,
+      "lower_body_max_error": 0.0,
+      "rate_hz": 60,
+      "root_motion": false,
+      "root_yaw_deg": 0,
+      "events": [
+        {
+          "id": "case_attached",
+          "phase": 0,
+          "seconds": 0.0,
+          "visual_only": true
+        }
+      ]
+    },
+    "Support_Carry_Walk": {
+      "duration_seconds": 1.0,
+      "loop": true,
+      "layer": "human_upper_body",
+      "min_fitted_skin_z_m": 0.0010001652465620632,
+      "lower_body_max_error": 0.0,
+      "rate_hz": 60,
+      "root_motion": false,
+      "root_yaw_deg": 0,
+      "events": [
+        {
+          "id": "case_attached",
+          "phase": 0,
+          "seconds": 0.0,
+          "visual_only": true
+        }
+      ]
+    }
+  },
+  "duration_authority": "game; use loop sampling during the current treatment/inspection action clock",
+  "interruption": {
+    "from": "currently evaluated pose at any phase",
+    "blend_seconds": [
+      0.12,
+      0.2
+    ],
+    "to": "game-selected idle, aim, locomotion or hit response",
+    "release_visual_props_immediately": true,
+    "resume_phase_for_walk": "retain current gait phase"
+  },
+  "actor_wrist_space": "Blender authoring metres; HUMAN_7H +X left, -Y forward, +Z up",
+  "support_targets": {
+    "treatment": {
+      "reference_patient_action": "Downed_Back_Loop",
+      "patient_actor_offset_m": [
+        -0.3584897816181183,
+        -0.7151394486427307,
+        0.0
+      ],
+      "patient_actor_yaw_deg": 90,
+      "reference_actor_distance_m": 0.7999620956830611,
+      "game_target_acquisition_max_m": 1.8,
+      "contact": "left hand on torso; right hand performs short hover gesture",
+      "measured_left_min_gap_m": 0.00023972283815965056,
+      "kit": "Interior_Med_Kit, placed next to the pair"
+    },
+    "terminal": {
+      "asset": "Interior_Terminal",
+      "reference_actor_distance_m": 0.84,
+      "game_target_acquisition_max_m": 0.9,
+      "terminal_actor_offset_m": [
+        0,
+        -0.84,
+        0
+      ],
+      "terminal_yaw_deg": 180,
+      "keyboard_center_local_m": [
+        0,
+        -0.28,
+        0.977
+      ],
+      "contact": "right hand hover over control shelf",
+      "min_vertex_gap_m": 0.0386589599246758
+    },
+    "carry": {
+      "asset": "Interior_Med_Kit",
+      "use": "shared sealed case for the supply pickup",
+      "attach_bone": "hand.R",
+      "attachment_matrix_authoring_row_major": [
+        [
+          0.809003472328186,
+          -0.04546575993299484,
+          -0.5860428214073181,
+          0.2907896041870117
+        ],
+        [
+          -0.26530730724334717,
+          -0.917915403842926,
+          -0.2950310707092285,
+          0.06425747275352478
+        ],
+        [
+          -0.5245238542556763,
+          0.3941625654697418,
+          -0.7546592354774475,
+          -0.004945501685142517
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "grip_check_m": 2.030615556544468e-06,
+      "mask": "human_upper_body",
+      "walk_reference": "Walk",
+      "walk_phase": {
+        "left_contact": 0,
+        "right_contact": 0.5
+      },
+      "simultaneous_weapon_in_hands": false
+    }
+  },
+  "references": {
+    "reviewed": "2026-11-23",
+    "method": "public Mixamo previews; hand-authored on HUMAN_7H",
+    "motions": [
+      {
+        "name": "Kneeling Inspecting",
+        "query": "kneel",
+        "observed": "one-knee load and lowered gaze"
+      },
+      {
+        "name": "Button Pushing",
+        "query": "button",
+        "observed": "reach, brief hover and withdrawal"
+      },
+      {
+        "name": "Box Idle",
+        "query": "carry",
+        "observed": "hold the load near the body"
+      },
+      {
+        "name": "Box Walk Arc",
+        "query": "carry",
+        "observed": "stable forearms during a step"
+      }
+    ]
+  }
+}

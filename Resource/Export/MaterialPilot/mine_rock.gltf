@@ -1,0 +1,200 @@
+{
+  "asset": {
+    "generator": "Khronos glTF Blender I/O v4.5.47",
+    "version": "2.0",
+    "extras": {
+      "part_budget_revision": "silhouette_first_200_v3"
+    }
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "00_Library",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "extras": {
+        "asset_id": "Nature_Rock_01",
+        "slot": "nature.rock",
+        "family": "environment",
+        "triangle_count": 66,
+        "max_triangles": 188,
+        "units": "meters",
+        "budget_parent": "Nature_Rock_01",
+        "budget_revision": "silhouette_first_200_v3",
+        "functional_role": "Main"
+      },
+      "mesh": 0,
+      "name": "Nature_Rock_01"
+    }
+  ],
+  "materials": [
+    {
+      "doubleSided": true,
+      "name": "Rock_Mine",
+      "normalTexture": {
+        "index": 0,
+        "scale": 0.30000001192092896
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 1
+        },
+        "metallicRoughnessTexture": {
+          "index": 2
+        }
+      },
+      "occlusionTexture": {
+        "index": 2
+      },
+      "extras": {
+        "material_id": "erma.material.Rock_Mine",
+        "texture_set_id": "erma.surface.Rock_Mine"
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Nature_Rock_01_BudgetMesh.002",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2,
+            "TANGENT": 3
+          },
+          "indices": 4,
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "source": 0
+    },
+    {
+      "sampler": 0,
+      "source": 1
+    },
+    {
+      "sampler": 0,
+      "source": 2
+    }
+  ],
+  "images": [
+    {
+      "mimeType": "image/png",
+      "name": "Rock_Mine_Normal",
+      "uri": "../Textures/Rock_Mine_Normal.png"
+    },
+    {
+      "mimeType": "image/png",
+      "name": "Rock_Mine_BaseColor",
+      "uri": "../Textures/Rock_Mine_BaseColor.png"
+    },
+    {
+      "mimeType": "image/png",
+      "name": "Rock_Mine_ORM",
+      "uri": "../Textures/Rock_Mine_ORM.png"
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 182,
+      "max": [
+        0.3340076208114624,
+        0.5299999713897705,
+        0.3758389353752136
+      ],
+      "min": [
+        -0.37033218145370483,
+        0,
+        -0.3921799957752228
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 182,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 182,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 182,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5123,
+      "count": 198,
+      "type": "SCALAR"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 2184,
+      "byteOffset": 0,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 2184,
+      "byteOffset": 2184,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 1456,
+      "byteOffset": 4368,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 2912,
+      "byteOffset": 5824,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 396,
+      "byteOffset": 8736,
+      "target": 34963
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987
+    },
+    {
+      "wrapS": 10497,
+      "wrapT": 10497,
+      "magFilter": 9729,
+      "minFilter": 9987
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 9132,
+      "uri": "mine_rock.bin"
+    }
+  ]
+}

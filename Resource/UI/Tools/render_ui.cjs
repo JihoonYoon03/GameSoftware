@@ -84,23 +84,23 @@ const save = (p,v) => fs.writeFileSync(path.join(root,p),JSON.stringify(v,null,2
   for(const [width,height] of [[1280,800],[1920,1080],[2560,1440]]){
     const scale=Math.min(width/1280,height/800);
     const tab=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
-    const scene=await page.evaluate(()=>window.uiScenes['58_regional_long_name'].svg);
+    const scene=await page.evaluate(()=>window.uiScenes['87_relay_ready'].svg);
     await tab.setContent(`<style>html,body{margin:0;background:#071016}body{display:flex;align-items:center;justify-content:center;width:100vw;height:100vh}svg{display:block;width:${1280*scale}px;height:${800*scale}px}</style>`+scene);
     await tab.evaluate(()=>document.fonts.ready);
-    const file=`Validation/20261109/journal_${width}x${height}.png`;
+    const file=`Validation/20261123/relay_${width}x${height}.png`;
     fs.writeFileSync(path.join(root,file),await tab.screenshot());await tab.close();
     resolutions.push({width,height,uniformScale:scale,offsetX:(width-1280*scale)/2,offsetY:(height-800*scale)/2,file,
       note:'Browser-rendered uniform canvas-fit design preview. Live-game integration untested.'});
   }
   // Background opacity stress captures in the same renderer.
   const opacity=[];
-  for(const name of ['01_city','04_mine','50_story_tracking','58_regional_long_name','60_hud_tracking_and_pin']){
+  for(const name of ['72_stamina_low','80_flight_cruise','87_relay_ready','92_checkpoint_restricted']){
     for(const alpha of [0.6,0.8,0.94,1]){
       const tab=await browser.newPage({viewport:{width:1280,height:800}});
       const scene=await page.evaluate(n=>window.uiScenes[n].svg,name);
-      await tab.setContent(`<style>html,body{margin:0}svg{display:block;--panel-opacity:${alpha}}</style>`+scene);
+      await tab.setContent(`<style>html,body{margin:0}svg{display:block;--panel-opacity:${alpha};--border-opacity:.8;--content-opacity:.85}</style>`+scene);
       await tab.evaluate(()=>document.fonts.ready);
-      const filename=`Validation/20261109/${name}_alpha_${Math.round(alpha*100)}.png`;
+      const filename=`Validation/20261123/${name}_alpha_${Math.round(alpha*100)}.png`;
       if(!unchanged(manifest.screens[name].svg)||!fs.existsSync(path.join(root,filename)))fs.writeFileSync(path.join(root,filename),await tab.screenshot());await tab.close();
       opacity.push({scene:name,backgroundAlpha:alpha,file:filename});
     }
@@ -141,15 +141,16 @@ const save = (p,v) => fs.writeFileSync(path.join(root,p),JSON.stringify(v,null,2
   if(!fs.existsSync(path.join(root,'Preview/HUD_before_after_20261028.png'))||coverage.some(c=>!unchanged(manifest.screens[c.scene].svg)))
     await sharp({create:{width:1600,height:1590,channels:4,background:'#07131c'}}).composite(comparisons).png().toFile(path.join(root,'Preview/HUD_before_after_20261028.png'));
   // Contact sheet uses rasterized SVG review screens, not live-game images.
+  const recent=scenes.filter(s=>Number(s.name.slice(0,2))>=71);
   const thumbs=[];const sheetW=1600,tileW=400,tileH=280;
-  for(let i=0;i<scenes.length;i++){
-    const n=scenes[i].name;
+  for(let i=0;i<recent.length;i++){
+    const n=recent[i].name;
     const thumb=await sharp(path.join(root,manifest.screens[n].png)).resize(400,250).png().toBuffer();
     thumbs.push({input:thumb,left:(i%4)*tileW,top:Math.floor(i/4)*tileH});
     const caption=Buffer.from(`<svg width="400" height="30"><rect width="400" height="30" fill="#10242d"/><text x="12" y="20" fill="#eef5ef" font-size="12" font-family="Malgun Gothic">${n} · ${manifest.screens[n].requirements.join(' / ')}</text></svg>`);
     thumbs.push({input:await sharp(caption).png().toBuffer(),left:(i%4)*tileW,top:Math.floor(i/4)*tileH+250});
   }
-  await sharp({create:{width:sheetW,height:Math.ceil(scenes.length/4)*tileH,channels:4,background:'#071016'}}).composite(thumbs).png().toFile(path.join(root,'Preview/20261109/contact_sheet.png'));
+  await sharp({create:{width:sheetW,height:Math.ceil(recent.length/4)*tileH,channels:4,background:'#071016'}}).composite(thumbs).png().toFile(path.join(root,'Preview/20261123/contact_sheet.png'));
   const report={generated:new Date().toISOString(),font,screenCount:scenes.length,assetCount:assetChecks.length,
     pageErrors:errors,overflowCount:scenes.reduce((n,s)=>n+s.overflow.length,0),overlapCount:scenes.reduce((n,s)=>n+s.overlaps.length,0),controlCheck,coverage,scenes,assets:assetChecks,stress,resolutions,opacity,
     scope:'Production raster asset checks and browser-rendered design previews. No game code, Runtime cache, gameplay or menu behavior tested.'};

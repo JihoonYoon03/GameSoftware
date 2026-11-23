@@ -461,6 +461,10 @@ from design_20261028 import apply_design
 apply_design(globals())
 from design_20261109 import apply_activity_design
 apply_activity_design(globals())
+from design_20261123 import apply_current_design, HUD_ADDITIONS
+apply_current_design(globals())
+(ROOT/'Preview/20261123').mkdir(exist_ok=True)
+(ROOT/'Validation/20261123').mkdir(exist_ok=True)
 
 # Text-free independent assets. All state colors can be supplied as draw-time tint.
 COMPONENTS={}
@@ -514,13 +518,13 @@ component('hud_reticle_arm','<path d="M3 3h8" stroke="#02080d" stroke-width="6"/
 for name,body,w,h,role in EXTRA_COMPONENTS: component(name,body,w,h,role=role)
 for name in ICONS:
     write(f'Source/Icons/{name}.svg',svg(icon(name,0,0,24,'#ffffff'),24,24))
-HUD_ICON_NAMES='health pistol infinite reload objective wanted scan signal unknown_signal bike boost reverse speed injured rescue check warning companion destination player unarmed slot_empty mouse_right key_release activity_track activity_submit activity_payment_hold'.split()
+HUD_ICON_NAMES='health pistol infinite reload objective wanted scan signal unknown_signal bike boost reverse speed injured rescue check warning companion destination player unarmed slot_empty mouse_right key_release activity_track activity_submit activity_payment_hold'.split()+list(HUD_ADDITIONS)
 for name in HUD_ICON_NAMES:
     write(f'Source/HUDIcons/{name}.svg',svg(hud_icon(name,4,4,24,'#ffffff'),32,32))
 
 for name,entry in SCENES.items(): write(f'Source/Screens/{name}.svg',entry['svg'])
 
-manifest=dict(version='1.3.0',title='ERMA / FIELD INTERFACE',date='2026-11-09',
+manifest=dict(version='1.4.0',title='ERMA / FIELD INTERFACE',date='2026-11-23',
     canvas=dict(width=1280,height=800,safe_margin=32,scale='uniform_min_viewport_fit',letterbox=True),
     font=dict(family='Malgun Gothic',windows_path='C:/Windows/Fonts/malgun.ttf',redistributed=False,
               text_in_assets=False,encoding='UTF-8',body_px=20,metadata_px=14,line_height=32),
@@ -543,7 +547,9 @@ manifest=dict(version='1.3.0',title='ERMA / FIELD INTERFACE',date='2026-11-09',
     complete_atlas=dict(png='Export/Atlases/ui_complete.png',metadata='Export/Atlases/ui_complete.json',padding=4,runtime_integration=True,runtime_validation='source_connected; user_build_and_game_checks_pending'),
     backdrop=dict(metadata='Export/Backdrop/backdrop_manifest.json',runtime_integration=True,runtime_validation='world_layers_connected; native_visual_comparison_pending'),
     activity=dict(contract='Source/activity_design_contract.json',review_states='Source/activity_review_states.json',runtime_integration=True,runtime_validation='source_connected; user_build_and_game_checks_pending'),
-    screens={n:dict(label=v['label'],requirements=v['ids'],svg=f'Source/Screens/{n}.svg',png=f'Preview/20261109/{n}.png') for n,v in SCENES.items()},
+    current_play=dict(contract='Source/current_play_ui.json',runtime_integration=False),
+    screens={n:dict(label=v['label'],requirements=v['ids'],svg=f'Source/Screens/{n}.svg',
+                    png=f'Preview/{20261123 if int(n[:2])>=71 else 20261109}/{n}.png') for n,v in SCENES.items()},
     constraints=['No automatic route polyline','Map north is fixed northeast; rotate actor only',
                  'Mine geometry/targets only in explored and eligible state','Approximate signal is not an exact map pin',
                  'Unlimited spare magazines; no spare ammunition count','No bike fuel or energy resource',
@@ -557,12 +563,12 @@ dump('Validation/panel_inventory.json',PANEL_AUDIT)
 viewer='''<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>에르마 UI · 제작 미리보기</title><style>
 *{box-sizing:border-box}body{margin:0;background:#071016;color:#eef5ef;font:14px "Malgun Gothic",sans-serif}header{padding:20px 28px;border-bottom:1px solid #34515c;display:flex;gap:24px;align-items:center;flex-wrap:wrap}header b{color:#86e2ce;letter-spacing:.09em}select,button{background:#142a33;color:#eef5ef;border:1px solid #54717b;border-radius:5px;padding:9px;font:inherit}label{display:flex;align-items:center;gap:9px}input{accent-color:#86e2ce;width:110px}main{max-width:1440px;margin:auto;padding:20px}#stage{aspect-ratio:1.6;width:100%;border:1px solid #34515c;background:#0b1720}#stage svg{display:block;width:100%;height:100%}.note{color:#b2c7c9;line-height:1.8;margin:12px 0}footer{color:#8d9fa5;margin-top:20px}output{width:42px;font-variant-numeric:tabular-nums}button{cursor:pointer}:focus-visible{outline:3px solid #86e2ce;outline-offset:3px}
-</style><header><b>ERMA / FIELD INTERFACE</b><select id="scene" aria-label="대표 상황"></select><label>패널 <input id="opacity" type="range" min="30" max="100" value="94"><output id="alpha">94%</output></label><label>콘텐츠 <input id="content" type="range" min="85" max="100" value="100"><output id="contentAlpha">100%</output></label><button id="background">배경 표시 전환</button></header>
+</style><header><b>ERMA / FIELD INTERFACE</b><select id="scene" aria-label="대표 상황"></select><label>패널 <input id="opacity" type="range" min="30" max="100" value="94"><output id="alpha">94%</output></label><label>테두리 <input id="border" type="range" min="80" max="100" value="100"><output id="borderAlpha">100%</output></label><label>콘텐츠 <input id="content" type="range" min="85" max="100" value="100"><output id="contentAlpha">100%</output></label><button id="background">배경 표시 전환</button></header>
 <main><div id="stage" aria-label="UI 디자인 미리보기"></div><div class="note" id="description"></div><div class="note">제작용 예시 화면입니다. 수치·대사는 검토용이며 실제 게임 상태와 연결되어 있지 않습니다. 배경은 밝기·복잡도 비교용 약식 도형입니다.<br>기준 1280×800 / 한글 맑은 고딕 / 패널·테두리·내용 분리. 80% 미만 패널 값은 극단 조건 확인용입니다.</div><footer>SVG 원본 · 투명 PNG · 기호 아틀라스 · 연결 명세는 같은 폴더의 README_ko.md와 ui_manifest.json을 확인하세요.</footer></main>
-<script>const scenes=SCENE_DATA;const select=document.querySelector('#scene'),stage=document.querySelector('#stage'),opacity=document.querySelector('#opacity'),content=document.querySelector('#content'),alpha=document.querySelector('#alpha'),contentAlpha=document.querySelector('#contentAlpha'),description=document.querySelector('#description');let backgroundVisible=true;
+<script>const scenes=SCENE_DATA;const select=document.querySelector('#scene'),stage=document.querySelector('#stage'),opacity=document.querySelector('#opacity'),content=document.querySelector('#content'),border=document.querySelector('#border'),borderAlpha=document.querySelector('#borderAlpha'),alpha=document.querySelector('#alpha'),contentAlpha=document.querySelector('#contentAlpha'),description=document.querySelector('#description');let backgroundVisible=true;
 for(const [id,s] of Object.entries(scenes)){const o=document.createElement('option');o.value=id;o.textContent=s.label;select.append(o)}
-function update(){stage.innerHTML=scenes[select.value].svg;stage.style.setProperty('--panel-opacity',opacity.value/100);stage.style.setProperty('--content-opacity',content.value/100);document.querySelectorAll('.world-background').forEach(e=>e.style.display=backgroundVisible?'':'none');alpha.value=opacity.value+'%';contentAlpha.value=content.value+'%';description.textContent=scenes[select.value].ids.join(' · ')}
-select.onchange=update;opacity.oninput=update;content.oninput=update;document.querySelector('#background').onclick=()=>{backgroundVisible=!backgroundVisible;update()};
+function update(){stage.innerHTML=scenes[select.value].svg;stage.style.setProperty('--panel-opacity',opacity.value/100);stage.style.setProperty('--content-opacity',content.value/100);stage.style.setProperty('--border-opacity',border.value/100);borderAlpha.value=border.value+'%';document.querySelectorAll('.world-background').forEach(e=>e.style.display=backgroundVisible?'':'none');alpha.value=opacity.value+'%';contentAlpha.value=content.value+'%';description.textContent=scenes[select.value].ids.join(' · ')}
+select.onchange=update;opacity.oninput=update;content.oninput=update;border.oninput=update;document.querySelector('#background').onclick=()=>{backgroundVisible=!backgroundVisible;update()};
 const requested=new URLSearchParams(location.search).get('scene');if(scenes[requested])select.value=requested;update();window.uiScenes=scenes;
 </script></html>'''.replace('SCENE_DATA',json.dumps(SCENES,ensure_ascii=False).replace('</','<\\/'))
 viewer=viewer.replace('<main>','<main><nav id="flowNav" hidden style="margin-bottom:12px;display:flex;gap:12px"><button id="flowPrev">이전 내용</button><button id="flowNext">다음 내용</button></nav>')
