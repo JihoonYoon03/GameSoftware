@@ -368,6 +368,10 @@ class PlanetTraffic
                          std::uint64_t digest);
     world::SurfacePoint Position(const PlanetTrafficRoute &route, double distance, int direction) const;
     bool Blocked(const world::SurfacePoint &point, double clearanceMeters) const;
+    std::optional<double> NearestGroundDistance(const world::SurfacePoint &origin, double rangeMeters) const;
+    bool CommandeerNearest(const world::SurfacePoint &origin, double rangeMeters,
+                           world::SurfacePoint &outPos, world::Vector3d &outHeading, int &outHealth,
+                           bool &outOccupied);
     bool Damage(std::uint64_t id, int amount, bool playerOwned = false);
     bool Contains(const PlanetTrafficActor &actor, const world::SurfacePoint &point,
                   double padding = 0) const;
@@ -395,6 +399,7 @@ class PlanetTraffic
     std::map<std::string, size_t, std::less<>> routeIndex;
     std::map<unsigned, std::vector<size_t>> groundConnections;
     std::array<std::string, 5> exits;
+    world::ContentCollision populateCollision;
 };
 
 // ============================================================================
@@ -455,8 +460,9 @@ struct PlanetCommunityState
 class PlanetCommunity
 {
   public:
-    static constexpr size_t SiteLimit = 512, ResidentsPerSite = 4, ActiveLimit = 48;
-    static constexpr double WakeMeters = 350, DetailedMeters = 160;
+    static constexpr size_t SiteLimit = 512, ResidentsPerSite = 18, ActiveLimit = 72;
+    static constexpr double WakeMeters = 350, DetailedMeters = 180;
+    static size_t TargetResidents(const world::GeneratedRegion &region);
     explicit PlanetCommunity(PlanetCommunityState state = {});
     void Bind(std::shared_ptr<const world::GeneratedPlanet> planet);
     static void Validate(const PlanetCommunityState &state, const world::PlanetDefinition &planet);

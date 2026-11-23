@@ -50,12 +50,16 @@ PlayerCombatContext PlayerCombat::Current()
     context.mounted = world.Mounted();
     context.dodging = world.playerMotion.mobility.Dodging();
     context.relayPreparing = world.relayPreparing;
-    context.health = mine.player.health;
-    context.pistolEquipped = mine.loadout.IsPistolEquipped();
-    context.reloading = mine.pistol.IsReloading();
-    context.rounds = mine.pistol.GetRounds();
-    context.magazineSize = mine.pistol.GetMagazineSize();
-    context.fireCooldown = mine.pistol.GetCooldownRemaining();
+    const auto &game = tutorial::Game::Get();
+    const auto &player = game.Player();
+    const auto &loadout = game.Loadout();
+    const auto &weapon = game.ActiveFirearm();
+    context.health = player.health;
+    context.pistolEquipped = loadout.IsFirearmEquipped();
+    context.reloading = weapon.IsReloading();
+    context.rounds = weapon.GetRounds();
+    context.magazineSize = weapon.GetMagazineSize();
+    context.fireCooldown = weapon.GetCooldownRemaining();
     return context;
 }
 CombatBlock PlayerCombat::EnvironmentBlock(const PlayerCombatContext &c, CombatArea expected)

@@ -27,13 +27,18 @@ class PlayerLoadout
   public:
     bool GrantPistol();
     bool HasPistol() const;
+    bool GrantPrimary();
+    bool HasPrimary() const;
     bool IsAvailable(WeaponSlot slot) const;
     bool Select(WeaponSlot slot);
     WeaponSlot Selected() const;
     bool IsPistolEquipped() const;
+    bool IsPrimaryEquipped() const;
+    bool IsFirearmEquipped() const;
 
   private:
     bool pistolOwned = false;
+    bool primaryOwned = false;
     WeaponSlot selected = WeaponSlot::Unarmed;
 };
 
@@ -92,6 +97,7 @@ class Firearm : public Weapon
     void SetRandomSeed(std::uint32_t seed);
     float GetReloadProgress() const;
     bool IsReloading() const;
+    void TopUpRounds(int amount);
 
   private:
     FirearmSettings settings;
@@ -108,6 +114,15 @@ class Pistol final : public Firearm
 {
   public:
     Pistol();
+    const char *GetName() const override;
+};
+// ============================================================================
+// PulseCarbine — primary high-velocity rapid carbine
+// ============================================================================
+class PulseCarbine final : public Firearm
+{
+  public:
+    PulseCarbine();
     const char *GetName() const override;
 };
 // ============================================================================

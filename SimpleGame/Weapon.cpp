@@ -23,9 +23,23 @@ bool PlayerLoadout::HasPistol() const
 {
     return pistolOwned;
 }
+bool PlayerLoadout::GrantPrimary()
+{
+    if (primaryOwned)
+    {
+        return false;
+    }
+    primaryOwned = true;
+    return true;
+}
+bool PlayerLoadout::HasPrimary() const
+{
+    return primaryOwned;
+}
 bool PlayerLoadout::IsAvailable(WeaponSlot slot) const
 {
-    return slot == WeaponSlot::Unarmed || (slot == WeaponSlot::Secondary && pistolOwned);
+    return slot == WeaponSlot::Unarmed || (slot == WeaponSlot::Secondary && pistolOwned) ||
+           (slot == WeaponSlot::Primary && primaryOwned);
 }
 bool PlayerLoadout::Select(WeaponSlot slot)
 {
@@ -43,6 +57,14 @@ WeaponSlot PlayerLoadout::Selected() const
 bool PlayerLoadout::IsPistolEquipped() const
 {
     return selected == WeaponSlot::Secondary && pistolOwned;
+}
+bool PlayerLoadout::IsPrimaryEquipped() const
+{
+    return selected == WeaponSlot::Primary && primaryOwned;
+}
+bool PlayerLoadout::IsFirearmEquipped() const
+{
+    return IsPistolEquipped() || IsPrimaryEquipped();
 }
 
 // ============================================================================
@@ -139,6 +161,23 @@ bool Firearm::IsReloading() const
 {
     return reloadRemaining > 0;
 }
+void Firearm::TopUpRounds(int amount)
+{
+    if (amount <= 0)
+    {
+        return;
+    }
+    if (reloadRemaining > 0)
+    {
+        reloadRemaining = (std::max)(0.f, reloadRemaining - .35f);
+        if (reloadRemaining == 0)
+        {
+            rounds = settings.magazineSize;
+        }
+        return;
+    }
+    rounds = (std::min)(settings.magazineSize, rounds + amount);
+}
 // ============================================================================
 // Pistol
 // ============================================================================
@@ -148,6 +187,16 @@ Pistol::Pistol() : Firearm({12, 18, .2f, 1.4f, 38.f, 24.f, .008f, .16f, .033f, .
 const char *Pistol::GetName() const
 {
     return "개척자 권총";
+}
+// ============================================================================
+// PulseCarbine
+// ============================================================================
+PulseCarbine::PulseCarbine() : Firearm({24, 15, .11f, 1.65f, 44.f, 28.f, .012f, .14f, .018f, .11f})
+{
+}
+const char *PulseCarbine::GetName() const
+{
+    return "펄스 카빈";
 }
 namespace
 {

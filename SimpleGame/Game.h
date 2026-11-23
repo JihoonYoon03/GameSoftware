@@ -18,6 +18,7 @@
 
 namespace game
 {
+struct PlayerStats;
 struct MineState;
 struct ChapterOneState;
 } // namespace game
@@ -295,6 +296,7 @@ enum class InteractionTarget
 };
 
 constexpr float kPi = 3.14159265f;
+constexpr float kMovementSpeed = 3.2f;
 constexpr int kCanvasWidth = 1280;
 constexpr int kCanvasHeight = 800;
 constexpr Vector2 kHomeBuildingPosition = {-9, -7};
@@ -627,6 +629,19 @@ class FrameSchedule
     double nextMilliseconds = -1;
 };
 
+enum class WorldMode : std::uint8_t
+{
+    LegacyInterior,
+    LegacyObservatory,
+    LegacyCity,
+    LegacyMine,
+    LegacyFrontier,
+    SurfaceInterior,
+    SurfaceObservatory,
+    SurfaceExterior,
+    SurfaceMine
+};
+
 class Game
 {
   public:
@@ -635,6 +650,20 @@ class Game
     Game &operator=(const Game &) = delete;
     static Game &Get();
     GameState &GetState();
+    WorldMode Mode() const;
+    bool IsSurfaceMode() const;
+    bool IsInteriorMode() const;
+    bool IsExteriorMode() const;
+    game::PlayerStats &Player();
+    const game::PlayerStats &Player() const;
+    combat::PlayerLoadout &Loadout();
+    const combat::PlayerLoadout &Loadout() const;
+    combat::Pistol &Sidearm();
+    const combat::Pistol &Sidearm() const;
+    combat::PulseCarbine &PrimaryWeapon();
+    const combat::PulseCarbine &PrimaryWeapon() const;
+    combat::Firearm &ActiveFirearm();
+    const combat::Firearm &ActiveFirearm() const;
     // Migrated city interiors and the physical mine report their actual planet/space/layer.
     std::optional<world::WorldLocation> PlanetLocation() const;
     const world::SurfaceSession *Surface() const
@@ -727,6 +756,17 @@ class Game
     std::optional<world::Vector3d> surfaceBikeHeading;
     std::optional<world::SurfacePoint> surfaceMineReturn;
     std::optional<std::size_t> surfaceSurveyRegion;
+    struct TerrainViewCache
+    {
+        const world::SurfaceSession *session = nullptr;
+        std::uint64_t epoch = 0, revision = 0;
+        double originX = 0, originY = 0, originZ = 0;
+        Vector2 camera = {};
+        float camHeight = 0, zoom = 0;
+        world::SurfaceView result;
+        bool valid = false;
+    };
+    mutable TerrainViewCache terrainViewCache;
     FrameSchedule frameSchedule;
     void StartSurface(bool insideHome);
     void InteractSurfaceStory(InteractionTarget target);

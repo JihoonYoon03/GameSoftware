@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "WorldGeneration.h"
 #include <map>
+#include <unordered_map>
 
 namespace world
 {
@@ -168,6 +169,16 @@ class ContentLayout
 // ============================================================================
 // ContentCollision — bounded local cache; collision never depends on a render chunk arriving
 // ============================================================================
+struct ContentCellKeyHash
+{
+    std::size_t operator()(const ContentCellKey &key) const noexcept
+    {
+        std::size_t h = key.region * 11400714819323198485ULL;
+        h ^= std::size_t(key.x) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+        h ^= std::size_t(key.y) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+        return h;
+    }
+};
 class ContentCollision
 {
   public:
@@ -183,13 +194,46 @@ class ContentCollision
     std::vector<const SurfaceStructure *> Structures() const;
 
   private:
+    struct RegionMeta
+    {
+        SurfacePoint center;
+        TangentFrame frame;
+        double reach = 100;
+        std::uint64_t seed = 0;
+        double width = 96, depth = 96, yaw = 0;
+        double warpA = 0, warpB = 0, cellDiag = 0;
+        bool surface = true;
+    };
+    struct SpatialItem
+    {
+        std::size_t index = 0;
+        double cx = 0, cy = 0, bound = 0;
+    };
     struct Entry
     {
         ContentCell cell;
         std::uint64_t touched = 0;
+        bool hasGrid = false;
+        double minX = 0, minY = 0, invBucket = 1. / 16.;
+        int gridW = 0, gridH = 0;
+        std::vector<SpatialItem> items;
+        std::vector<std::uint32_t> bucketOffsets;
+        std::vector<std::uint32_t> bucketItems;
     };
-    std::map<ContentCellKey, Entry> cells;
+    struct CandidateKey
+    {
+        ContentCellKey key;
+        double localX = 0, localY = 0;
+    };
+    void BuildRegionCache(const GeneratedPlanet &planet);
+    void BuildCellGrid(const GeneratedPlanet &planet, Entry &entry) const;
+    std::unordered_map<ContentCellKey, Entry, ContentCellKeyHash> cells;
+    std::vector<RegionMeta> regionMeta;
+    std::vector<CandidateKey> scratchKeys;
+    std::vector<std::uint32_t> visitMarks;
+    std::uint32_t visitStamp = 0;
     std::optional<PlanetDefinition> owner;
+    const GeneratedPlanet *ownerPlan = nullptr;
     std::uint64_t clock = 0;
 };
 } // namespace world

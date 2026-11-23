@@ -178,6 +178,9 @@ class CubeSphere
     static constexpr std::uint8_t MaximumLevel = 30;
     static ChunkKey Address(const PlanetDefinition &planet, const SurfacePoint &point, std::uint8_t level,
                             std::int32_t layer = 0);
+    // Packs (face, x, y) into 63 bits without allocating planetId strings. Assumes valid point & level <= 30.
+    static std::uint64_t PackCell(CubeFace face, std::uint32_t x, std::uint32_t y);
+    static std::uint64_t FastCell(const SurfacePoint &point, std::uint8_t level);
     static SurfacePoint Center(const ChunkKey &key);
     static SurfacePoint Corner(const ChunkKey &key, unsigned right, unsigned up);
     static SurfacePoint Point(const ChunkKey &key, double right, double up);

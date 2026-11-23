@@ -3,12 +3,13 @@
 
 namespace tutorial
 {
-// Prototype tuning in local world units (2 metres/unit); no root motion or invulnerability.
+// Tactical mobility in local world units (2 metres/unit) with dodge i-frames and counter-focus synergy.
 class PlayerMobility
 {
   public:
     static constexpr float SprintMultiplier = 1.45f;
     static constexpr float DodgeSpeed = 7.5f, DodgeSeconds = .22f;
+    static constexpr float InvulnerableTailSeconds = .04f, FocusSeconds = 1.2f;
     static constexpr float MaxStamina = 100.f, DodgeCost = 30.f, SprintCostPerSecond = 18.f;
     static constexpr float RegenPerSecond = 25.f, RegenDelaySeconds = .6f;
     void RequestDodge();
@@ -20,6 +21,10 @@ class PlayerMobility
     void RotateDirection(float x, float y);
     bool Contact(float requestedDistance, float actualDistance);
     bool Dodging() const;
+    bool Invulnerable() const;
+    bool FocusActive() const;
+    bool ConsumeFocus();
+    bool PopDodgeTriggered();
     bool Moving() const
     {
         return remaining > 0 || activeFrame;
@@ -38,8 +43,8 @@ class PlayerMobility
   private:
     void Recover(float dt);
     models::Point direction = {};
-    float remaining = 0, stamina = MaxStamina, regenDelay = 0;
+    float remaining = 0, stamina = MaxStamina, regenDelay = 0, focusRemaining = 0;
     bool pending = false, sprinting = false, activeFrame = false;
-    bool sprintExhausted = false;
+    bool sprintExhausted = false, dodgeTriggered = false;
 };
 } // namespace tutorial

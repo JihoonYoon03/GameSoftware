@@ -19,6 +19,8 @@
 #include <cmath>
 #include <utility>
 #include <set>
+#include <string_view>
+#include <unordered_set>
 #include <chrono>
 #include <map>
 
@@ -1960,8 +1962,37 @@ const models::Model &StructureModel(world::ContentForm form, std::uint16_t varia
         return models::ModelLibrary::Scenery(S::FieldShelter);
     }
 }
-void DrawSurfaceStructure(const world::SurfaceStructure &structure, const world::SurfaceSession &session)
+struct ScreenFrustum
 {
+    Vector2 minPt, maxPt;
+    static ScreenFrustum Current()
+    {
+        return {WorldCamera::FromViewport({0, 0}),
+                WorldCamera::FromViewport({float(kCanvasWidth), float(kCanvasHeight)})};
+    }
+    bool Visible(Vector2 screen, float padLeft, float padRight, float padUp, float padDown) const
+    {
+        return screen.x + padRight >= minPt.x && screen.x - padLeft <= maxPt.x &&
+               screen.y + padDown >= minPt.y && screen.y - padUp <= maxPt.y;
+    }
+};
+void DrawSurfaceStructure(const world::SurfaceStructure &structure, const world::SurfaceSession &session,
+                          const ScreenFrustum &frustum, Vector2 playerScreen)
+{
+    const auto &origin = session.Origin();
+    const auto p = SurfaceProjection(structure.frame.origin, origin, session.Planet().radiusMeters);
+    const float px = float(p.x / 2), py = float(p.y / 2);
+    const auto screen = Drawing::WorldToScreen(px, py, float(p.z / 2) * 44);
+    const float padH = float((structure.sizeMeters.x + structure.sizeMeters.y) * 11. + structure.sizeMeters.z * 10.) + 96.f;
+    const float padUp = float(structure.sizeMeters.z * 24. + (structure.sizeMeters.x + structure.sizeMeters.y) * 6.) + 96.f;
+    const float padDown =
+        float((structure.sizeMeters.x + structure.sizeMeters.y) * 6. + structure.sizeMeters.z * 12. +
+              structure.foundationMeters * 24.) +
+        96.f;
+    if (!frustum.Visible(screen, padH, padH, padUp, padDown))
+    {
+        return;
+    }
     const auto &model = StructureModel(structure.form, structure.variant, structure.assetName);
     if (!model.resourceId)
     {
@@ -1978,13 +2009,11 @@ void DrawSurfaceStructure(const world::SurfaceStructure &structure, const world:
     models::Point scale = {float(structure.sizeMeters.x / 2 / (asset.maximum.x - asset.minimum.x)),
                            float(structure.sizeMeters.y / 2 / (asset.maximum.y - asset.minimum.y)),
                            float(structure.sizeMeters.z / 2 / (asset.maximum.z - asset.minimum.z))};
-    const auto &origin = session.Origin();
     auto x = world::SurfaceGeometry::TransformDirection({std::cos(structure.yaw), std::sin(structure.yaw), 0},
                                                         structure.frame, origin);
     auto y = world::SurfaceGeometry::TransformDirection(
         {-std::sin(structure.yaw), std::cos(structure.yaw), 0}, structure.frame, origin);
     auto z = world::SurfaceGeometry::TransformDirection({0, 0, 1}, structure.frame, origin);
-    auto p = SurfaceProjection(structure.frame.origin, origin, session.Planet().radiusMeters);
     models::Transform3D transform;
     transform.yaw = float(std::atan2(x.y, x.x));
     transform.pitch = float(std::asin(std::clamp(-x.z, -1., 1.)));
@@ -1995,7 +2024,6 @@ void DrawSurfaceStructure(const world::SurfaceStructure &structure, const world:
                                    -(asset.minimum.y + asset.maximum.y) * .5f * scale.y,
                                    -asset.minimum.z * scale.z + float(baseLift / 2)});
     transform.position = {offset.x, offset.y, offset.z + float(p.z / 2)};
-    float px = float(p.x / 2), py = float(p.y / 2);
     models::Palette palette;
     palette.body = {.28f + float(structure.appearance % 5) * .035f,
                     .38f + float((structure.appearance >> 4) % 4) * .025f, .44f, 1};
@@ -2012,16 +2040,13 @@ void DrawSurfaceStructure(const world::SurfaceStructure &structure, const world:
     {
         palette.body = {.42f, .65f, .65f, 1};
     }
-    auto screen = Drawing::WorldToScreen(px, py, float(p.z / 2) * 44);
-    auto player = Drawing::WorldToScreen(Game::Get().GetState().playerPosition.x,
-                                         Game::Get().GetState().playerPosition.y,
-                                         float(session.Local(session.Pose().origin).z / 2) * 44);
     float width = float((structure.sizeMeters.x + structure.sizeMeters.y) * 9);
-    if (screen.y > player.y - 12 && player.y > screen.y - float(structure.sizeMeters.z * 22) - 20 &&
-        std::fabs(screen.x - player.x) < width)
+    if (screen.y > playerScreen.y - 12 && playerScreen.y > screen.y - float(structure.sizeMeters.z * 22) - 20 &&
+        std::fabs(screen.x - playerScreen.x) < width)
     {
         palette.body[3] = palette.accent[3] = palette.emission[3] = .28f;
     }
+    const auto baseScreen = Drawing::WorldToScreen(px, py);
     if (structure.foundationMeters > .05)
     {
         auto foundation = transform;
@@ -2029,13 +2054,12 @@ void DrawSurfaceStructure(const world::SurfaceStructure &structure, const world:
         auto shift = foundation.Apply({-float(structure.sizeMeters.x / 4), -float(structure.sizeMeters.y / 4),
                                        -float(structure.foundationMeters / 2)});
         foundation.position = shift;
-        Drawing::DrawModel3D(models::ModelLibrary::Get().box, Drawing::WorldToScreen(px, py),
+        Drawing::DrawModel3D(models::ModelLibrary::Get().box, baseScreen,
                              {float(structure.sizeMeters.x / 2), float(structure.sizeMeters.y / 2),
                               float((structure.foundationMeters + structure.FoundationTopMeters()) / 2)},
                              foundation, (px + py) * 36, palette, nullptr, float(p.z / 2));
     }
-    Drawing::DrawModel3D(model, Drawing::WorldToScreen(px, py), scale, transform, (px + py) * 36, palette,
-                         nullptr, float(p.z / 2));
+    Drawing::DrawModel3D(model, baseScreen, scale, transform, (px + py) * 36, palette, nullptr, float(p.z / 2));
 }
 void DrawPlanetTraffic(const world::SurfaceSession &session)
 {
@@ -2044,6 +2068,7 @@ void DrawPlanetTraffic(const world::SurfaceSession &session)
     {
         return;
     }
+    const auto frustum = ScreenFrustum::Current();
     const auto &state = Game::Get().GetState();
     for (const auto &actor : traffic->State().actors)
     {
@@ -2056,6 +2081,12 @@ void DrawPlanetTraffic(const world::SurfaceSession &session)
         const auto local = session.Local(ground);
         const float height = float(local.z / 2);
         const Vector2 position{float(local.x / 2), float(local.y / 2)};
+        const auto scr = Drawing::WorldToScreen(position.x, position.y, (height + float(actor.altitudeMeters / 2)) * 44);
+        const float pad = actor.airborne ? 320.f : 220.f;
+        if (!frustum.Visible(scr, pad, pad, pad, pad + float(actor.altitudeMeters * 22.)))
+        {
+            continue;
+        }
         const float yaw =
             float(std::atan2(world::SurfaceGeometry::Dot(actor.heading, session.Origin().forward),
                              world::SurfaceGeometry::Dot(actor.heading, session.Origin().right)));
@@ -2090,6 +2121,7 @@ void DrawPlanetCommunity(const world::SurfaceSession &session)
     {
         return;
     }
+    const auto frustum = ScreenFrustum::Current();
     const auto &hero = session.Pose().origin;
     auto withinDrawRange = [&](const world::SurfacePoint &point) {
         return world::SurfaceGeometry::Distance(session.Planet().radiusMeters, hero, point) < 120;
@@ -2112,6 +2144,10 @@ void DrawPlanetCommunity(const world::SurfaceSession &session)
             const auto p = session.Local(person.position);
             const Vector2 position{float(p.x / 2), float(p.y / 2)};
             const float height = float(p.z / 2);
+            if (!frustum.Visible(Drawing::WorldToScreen(position.x, position.y, height * 44), 160, 160, 200, 140))
+            {
+                continue;
+            }
             const float yaw =
                 float(std::atan2(world::SurfaceGeometry::Dot(person.heading, session.Origin().forward),
                                  world::SurfaceGeometry::Dot(person.heading, session.Origin().right)));
@@ -2159,6 +2195,7 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
     {
         return;
     }
+    const auto frustum = ScreenFrustum::Current();
     const auto &state = Game::Get().GetState();
     auto place = [&](int city, Vector2 legacy) -> std::optional<world::Vector3d> {
         if (cities->Status(city).band != CitySimulationBand::Detailed)
@@ -2183,6 +2220,10 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
         }
         Vector2 local{float(point->x / 2), float(point->y / 2)};
         float height = float(point->z / 2);
+        if (!frustum.Visible(Drawing::WorldToScreen(local.x, local.y, height * 44), 160, 160, 200, 140))
+        {
+            return;
+        }
         renderqueue::PushMatrix();
         renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
         Drawing::DrawPerson(local, coat, false, type, walking, cities->Yaw(session, city, yaw), gender, hair,
@@ -2234,6 +2275,12 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
             {
                 continue;
             }
+            const Vector2 carLocal{float(point->x / 2), float(point->y / 2)};
+            if (!frustum.Visible(Drawing::WorldToScreen(carLocal.x, carLocal.y, float(point->z / 2) * 44), 220,
+                                 220, 200, 180))
+            {
+                continue;
+            }
             models::Palette palette;
             palette.body = {.25f + float(car.id % 4) * .1f, .4f, .55f, 1};
             if (car.health <= 0)
@@ -2256,6 +2303,12 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
             }
             auto point = place(city, j.position);
             if (!point)
+            {
+                continue;
+            }
+            if (!frustum.Visible(Drawing::WorldToScreen(float(point->x / 2), float(point->y / 2),
+                                                        float(point->z / 2) * 44),
+                                 380, 380, 260, 260))
             {
                 continue;
             }
@@ -2341,6 +2394,11 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
             return;
         }
         const float height = float(point->z / 2);
+        if (!frustum.Visible(Drawing::WorldToScreen(float(point->x / 2), float(point->y / 2), height * 44),
+                             260, 260, 220, 220))
+        {
+            return;
+        }
         renderqueue::PushMatrix();
         renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
         Drawing::DrawProp(models::ModelLibrary::Transit(module.asset),
@@ -2760,14 +2818,11 @@ void PlanetScene::Draw()
     {
         visible.resize(32);
     }
-    std::set<world::ChunkKey> retained;
-    for (const auto &chunk : visible)
-    {
-        retained.insert(chunk->key);
-    }
     for (auto it = d.meshes.begin(); it != d.meshes.end();)
     {
-        if (!retained.count(it->first))
+        const bool keep = std::any_of(visible.begin(), visible.end(),
+                                      [&](const auto &chunk) { return chunk->key == it->first; });
+        if (!keep)
         {
             GameRenderer::Get().Backend().ReleaseModel(*it->second.model);
             it = d.meshes.erase(it);
@@ -2824,40 +2879,68 @@ void PlanetScene::Draw()
         d.meshes.emplace(chunk->key, Data::Entry{chunk, std::move(model)});
         ++uploads;
     }
+    const auto frustum = ScreenFrustum::Current();
+    const auto &w = Game::Get().GetState();
+    const auto playerScreen =
+        Drawing::WorldToScreen(w.playerPosition.x, w.playerPosition.y,
+                               float(session->Local(session->Pose().origin).z / 2) * 44);
     auto &backend = GameRenderer::Get().Backend();
     backend.BeginModels();
     DrawSurfaceModel(*d.fallback, d.fallbackFrame, *session, -.08f);
     for (const auto &chunk : visible)
     {
         auto it = d.meshes.find(chunk->key);
-        if (it != d.meshes.end())
+        if (it == d.meshes.end())
+        {
+            continue;
+        }
+        const auto cp = SurfaceProjection(chunk->frame.origin, session->Origin(), session->Planet().radiusMeters);
+        const auto cscr = Drawing::WorldToScreen(float(cp.x / 2), float(cp.y / 2), float(cp.z / 2) * 44);
+        const float cpadH = float(chunk->radiusMeters) * 28.f + 200.f;
+        const float cpadV = float(chunk->radiusMeters) * 18.f + 360.f;
+        if (frustum.Visible(cscr, cpadH, cpadH, cpadV, cpadV))
         {
             DrawSurfaceModel(*it->second.model, it->second.chunk->frame, *session);
         }
     }
-    const auto &w = Game::Get().GetState();
-    std::map<std::string, const world::SurfaceStructure *> structures;
+    static std::unordered_set<std::string_view> drawnStructureIds;
+    drawnStructureIds.clear();
+    const double planetRadius = session->Planet().radiusMeters;
+    auto submitStructure = [&](const world::SurfaceStructure &structure) {
+        if (!drawnStructureIds.insert(structure.id).second)
+        {
+            return;
+        }
+        const double maxDist =
+            terrainView.radiusMeters + std::hypot(structure.sizeMeters.x, structure.sizeMeters.y) * .5;
+        const double limit = maxDist / planetRadius;
+        if (limit < 2.)
+        {
+            const double dx = terrainView.center.normal.x - structure.frame.origin.normal.x;
+            const double dy = terrainView.center.normal.y - structure.frame.origin.normal.y;
+            const double dz = terrainView.center.normal.z - structure.frame.origin.normal.z;
+            if (dx * dx + dy * dy + dz * dz > limit * limit)
+            {
+                return;
+            }
+        }
+        if (world::SurfaceGeometry::Distance(planetRadius, terrainView.center, structure.frame.origin) <
+            maxDist)
+        {
+            DrawSurfaceStructure(structure, *session, frustum, playerScreen);
+        }
+    };
     for (const auto &chunk : visible)
     {
         for (const auto &structure : chunk->structures)
         {
-            structures.emplace(structure.id, &structure);
+            submitStructure(structure);
         }
     }
     // Collision's bounded neighbourhood is also the object fallback during chunk publication.
     for (auto structure : session->NearbyStructures())
     {
-        structures.emplace(structure->id, structure);
-    }
-    for (const auto &entry : structures)
-    {
-        const auto &structure = *entry.second;
-        if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, terrainView.center,
-                                             structure.frame.origin) <
-            terrainView.radiusMeters + std::hypot(structure.sizeMeters.x, structure.sizeMeters.y) * .5)
-        {
-            DrawSurfaceStructure(structure, *session);
-        }
+        submitStructure(*structure);
     }
     if (Game::Get().IsStoryWorld())
     {
@@ -2998,16 +3081,25 @@ Scene &SceneManager::Get(SceneKind kind)
 }
 SceneKind SceneManager::Current()
 {
-    const auto &state = Game::Get().GetState();
-    return Game::Get().IsSurfaceMine()        ? SceneKind::Mine
-           : state.surfaceExploration         ? (state.isInsideHome      ? SceneKind::Interior
-                                                 : state.isInObservatory ? SceneKind::Observatory
-                                                                         : SceneKind::Planet)
-           : GameLevels::Chapter().IsActive() ? SceneKind::Frontier
-           : GameLevels::Mine().IsActive()    ? SceneKind::Mine
-           : state.isInObservatory            ? SceneKind::Observatory
-           : state.isInsideHome               ? SceneKind::Interior
-                                              : SceneKind::Exterior;
+    switch (Game::Get().Mode())
+    {
+    case WorldMode::SurfaceMine:
+    case WorldMode::LegacyMine:
+        return SceneKind::Mine;
+    case WorldMode::SurfaceInterior:
+    case WorldMode::LegacyInterior:
+        return SceneKind::Interior;
+    case WorldMode::SurfaceObservatory:
+    case WorldMode::LegacyObservatory:
+        return SceneKind::Observatory;
+    case WorldMode::SurfaceExterior:
+        return SceneKind::Planet;
+    case WorldMode::LegacyFrontier:
+        return SceneKind::Frontier;
+    case WorldMode::LegacyCity:
+    default:
+        return SceneKind::Exterior;
+    }
 }
 void SceneManager::Reset()
 {

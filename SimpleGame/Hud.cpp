@@ -7,6 +7,7 @@
 #include "Level.h"
 #include "Overworld.h"
 #include "RenderQueue.h"
+#include "RenderCache.h"
 #include "TransitLayout.h"
 #include "RenderAssets.h"
 #include "StoryJournal.h"
@@ -14,6 +15,8 @@
 #include <cmath>
 #include <cstdio>
 #include <set>
+#include <string_view>
+#include <unordered_set>
 
 namespace tutorial
 {
@@ -305,38 +308,70 @@ SchematicView MapView(bool full)
         scale * navigation.zoom,
         0};
 }
-void MapPolygon(const SchematicView &view, std::vector<Vector2> points, ColorRGBA color)
+void MapPolygonData(const SchematicView &view, const Vector2 *inputPoints, size_t inputCount, ColorRGBA color)
 {
-    // Clip all building/terrain geometry to a 64-sided circle. No camera render target or stencil pass.
+    if (inputCount < 3)
+    {
+        return;
+    }
+    // Precompute the 64-sided circular clip normals once and reuse scratch buffers (zero heap allocs).
+    static const struct CircleClipTable
+    {
+        std::array<Vector2, 64> normals;
+        float cosHalfStep;
+        CircleClipTable() : cosHalfStep(std::cos(kPi / 64.f))
+        {
+            for (int i = 0; i < 64; ++i)
+            {
+                const float angle = (i + .5f) * kPi * 2.f / 64.f;
+                normals[size_t(i)] = {std::cos(angle), std::sin(angle)};
+            }
+        }
+    } kClip;
+    static std::vector<Vector2> poly;
+    static std::vector<Vector2> clipped;
     bool insideCircle = view.radius > 0;
     if (view.radius > 0)
     {
-        Vector2 minimum = points.front(), maximum = points.front();
-        float innerRadius = view.radius * std::cos(kPi / 64);
-        for (auto point : points)
+        Vector2 minimum = inputPoints[0], maximum = inputPoints[0];
+        const float innerRadiusSq = (view.radius * kClip.cosHalfStep) * (view.radius * kClip.cosHalfStep);
+        for (size_t i = 0; i < inputCount; ++i)
         {
+            const auto point = inputPoints[i];
             minimum.x = (std::min)(minimum.x, point.x);
             minimum.y = (std::min)(minimum.y, point.y);
             maximum.x = (std::max)(maximum.x, point.x);
             maximum.y = (std::max)(maximum.y, point.y);
-            float dx = point.x - view.center.x, dy = point.y - view.center.y;
-            insideCircle &= dx * dx + dy * dy <= innerRadius * innerRadius;
+            const float dx = point.x - view.center.x, dy = point.y - view.center.y;
+            insideCircle &= dx * dx + dy * dy <= innerRadiusSq;
         }
         if (minimum.x > view.center.x + view.radius || maximum.x < view.center.x - view.radius ||
             minimum.y > view.center.y + view.radius || maximum.y < view.center.y - view.radius)
         {
             return;
         }
+        if (insideCircle)
+        {
+            Drawing::SetColor(color);
+            renderqueue::Begin(GL_TRIANGLE_FAN);
+            for (size_t i = 0; i < inputCount; ++i)
+            {
+                renderqueue::Vertex(inputPoints[i].x, inputPoints[i].y);
+            }
+            renderqueue::End();
+            return;
+        }
     }
+    poly.assign(inputPoints, inputPoints + inputCount);
     auto clip = [&](Vector2 normal, float bound) {
-        if (points.empty())
+        if (poly.empty())
         {
             return;
         }
-        std::vector<Vector2> clipped;
-        Vector2 previous = points.back();
+        clipped.clear();
+        Vector2 previous = poly.back();
         float previousDistance = previous.x * normal.x + previous.y * normal.y - bound;
-        for (Vector2 point : points)
+        for (Vector2 point : poly)
         {
             float distance = point.x * normal.x + point.y * normal.y - bound;
             if ((distance <= 0) != (previousDistance <= 0))
@@ -352,59 +387,88 @@ void MapPolygon(const SchematicView &view, std::vector<Vector2> points, ColorRGB
             previous = point;
             previousDistance = distance;
         }
-        points.swap(clipped);
+        poly.swap(clipped);
     };
-    if (view.radius > 0 && !insideCircle)
+    if (view.radius > 0)
     {
-        for (int i = 0; i < 64 && !points.empty(); ++i)
+        const float innerR = view.radius * kClip.cosHalfStep;
+        for (int i = 0; i < 64 && !poly.empty(); ++i)
         {
-            float angle = (i + .5f) * kPi * 2 / 64;
-            Vector2 normal = {std::cos(angle), std::sin(angle)};
-            clip(normal,
-                 normal.x * view.center.x + normal.y * view.center.y + view.radius * std::cos(kPi / 64));
+            const Vector2 normal = kClip.normals[size_t(i)];
+            const float bound = normal.x * view.center.x + normal.y * view.center.y + innerR;
+            // Skip half-plane clip if all vertices are already strictly inside this half-plane.
+            bool needsClip = false;
+            for (const auto &pt : poly)
+            {
+                if (pt.x * normal.x + pt.y * normal.y > bound)
+                {
+                    needsClip = true;
+                    break;
+                }
+            }
+            if (needsClip)
+            {
+                clip(normal, bound);
+            }
         }
     }
-    else if (view.radius <= 0)
+    else
     {
         clip({-1, 0}, -kMapMinimum.x);
         clip({1, 0}, kMapMaximum.x);
         clip({0, -1}, -kMapMinimum.y);
         clip({0, 1}, kMapMaximum.y);
     }
-    if (points.size() >= 3)
+    if (poly.size() >= 3)
     {
         Drawing::SetColor(color);
         renderqueue::Begin(GL_TRIANGLE_FAN);
-        for (auto point : points)
+        for (auto point : poly)
         {
             renderqueue::Vertex(point.x, point.y);
         }
         renderqueue::End();
     }
 }
+void MapPolygon(const SchematicView &view, const std::vector<Vector2> &points, ColorRGBA color)
+{
+    MapPolygonData(view, points.data(), points.size(), color);
+}
 void MapRectangle(const SchematicView &view, Vector2 minimum, Vector2 maximum, ColorRGBA color)
 {
-    MapPolygon(view,
-               {view.Project(minimum), view.Project({maximum.x, minimum.y}), view.Project(maximum),
-                view.Project({minimum.x, maximum.y})},
-               color);
+    const Vector2 quad[4] = {view.Project(minimum), view.Project({maximum.x, minimum.y}),
+                             view.Project(maximum), view.Project({minimum.x, maximum.y})};
+    MapPolygonData(view, quad, 4, color);
 }
 void MapLine(const SchematicView &view, Vector2 from, Vector2 to, ColorRGBA color, float width)
 {
     // A clipped quad keeps even wide road markings completely inside the circular rim.
     Vector2 a = view.Project(from), b = view.Project(to);
-    float length = Game::Distance(a, b);
-    if (length < .001f)
+    const float dx = b.x - a.x, dy = b.y - a.y;
+    const float lenSq = dx * dx + dy * dy;
+    if (lenSq < 1.e-6f)
     {
         return;
     }
-    Vector2 side = {-(b.y - a.y) * width / (2 * length), (b.x - a.x) * width / (2 * length)};
-    MapPolygon(view,
-               {{a.x + side.x, a.y + side.y},
-                {b.x + side.x, b.y + side.y},
-                {b.x - side.x, b.y - side.y},
-                {a.x - side.x, a.y - side.y}},
-               color);
+    if (view.radius > 0)
+    {
+        // Fast segment-to-circle distance broadphase before allocating or clipping.
+        const float t = std::clamp(((view.center.x - a.x) * dx + (view.center.y - a.y) * dy) / lenSq, 0.f, 1.f);
+        const float cx = a.x + dx * t - view.center.x;
+        const float cy = a.y + dy * t - view.center.y;
+        const float reach = view.radius + width * .5f + 1.f;
+        if (cx * cx + cy * cy > reach * reach)
+        {
+            return;
+        }
+    }
+    const float invLen = 1.f / std::sqrt(lenSq);
+    Vector2 side = {-dy * width * .5f * invLen, dx * width * .5f * invLen};
+    const Vector2 quad[4] = {{a.x + side.x, a.y + side.y},
+                             {b.x + side.x, b.y + side.y},
+                             {b.x - side.x, b.y - side.y},
+                             {a.x - side.x, a.y - side.y}};
+    MapPolygonData(view, quad, 4, color);
 }
 void MapDisc(const SchematicView &view, Vector2 position, float worldRadius, ColorRGBA color)
 {
@@ -2255,11 +2319,19 @@ void Hud::DrawVitals()
             UiText(1248, 695, "부스트", 17, {.55f, .95f, .88f}, true, true);
         }
     }
-    else if (combat && mine.loadout.IsPistolEquipped())
+    else if (combat && mine.loadout.IsFirearmEquipped())
     {
-        const auto &gun = mine.pistol;
+        const auto &gun = Game::Get().ActiveFirearm();
         Icon("pistol", 1040, 723, 28, true);
         Icon("infinite", 1064, 754, 15, true);
+        if (w.playerMotion.mobility.FocusActive())
+        {
+            UiText(1040, 705, "전술 집중 +30%", 15, {.42f, 1.f, .86f}, true);
+        }
+        else if (mine.loadout.IsPrimaryEquipped())
+        {
+            UiText(1040, 705, gun.GetName(), 15, {.72f, .92f, .96f}, true);
+        }
         char count[32];
         std::snprintf(count, sizeof(count), "%02d", gun.GetRounds());
         UiText(1182, 746, count, 38, gun.GetRounds() ? kUiInk : ColorRGBA(1, .78f, .4f), true, true);
@@ -2306,7 +2378,7 @@ void Hud::DrawVitals()
             }
         }
     }
-    if (!w.Mounted() && combat && !mine.loadout.IsPistolEquipped())
+    if (!w.Mounted() && combat && !mine.loadout.IsFirearmEquipped())
     {
         Icon("unarmed", 1040, 723, 28, true);
         UiText(1248, 736, "맨손", 25, kUiInk, true, true);
@@ -2315,9 +2387,9 @@ void Hud::DrawVitals()
     if (combat && !Game::Get().IsAiming() && w.cursorInsideViewport && !w.weaponWheel.visible)
     {
         auto p = w.cursorPosition;
-        Sprite(mine.loadout.IsPistolEquipped() ? "Components/cursor_hip" : "Components/cursor_unarmed",
+        Sprite(mine.loadout.IsFirearmEquipped() ? "Components/cursor_hip" : "Components/cursor_unarmed",
                p.x - 16, p.y - 16, 32, 32);
-        if (mine.loadout.IsPistolEquipped())
+        if (mine.loadout.IsFirearmEquipped())
         {
             Icon("mouse_right", 1034, 666, 20, true);
             UiText(1248, 683, "우클릭 홀드 · 조준", 15, kUiInk, true, true);
@@ -3340,7 +3412,8 @@ void PlanetHud::Draw()
         return;
     }
     auto snapshot = session->Stream().Snapshot();
-    if (!session->Ready())
+    const auto mode = Game::Get().Mode();
+    if (!session->Ready() && mode == WorldMode::SurfaceExterior)
     {
         Panel(390, 320, 500, 138);
         UiText(420, 365,
@@ -3353,36 +3426,35 @@ void PlanetHud::Draw()
                17);
         return;
     }
+    const auto &state = Game::Get().GetState();
+    if (mode == WorldMode::SurfaceInterior || mode == WorldMode::SurfaceObservatory)
+    {
+        const std::string area =
+            mode == WorldMode::SurfaceInterior ? "헤일로 · 거주지" : "헤일로 · 전망대";
+        Hud::DrawActivityObjective(area + " · E 대화·조사 / M 지도");
+        CityHud::DrawInteractionPrompt();
+        UiText(32, 728, "WASD 이동 · E 상호작용 · J 조사 기록 · Esc 메뉴", 16);
+        return;
+    }
     auto location = Game::Get().PlanetLocation().value_or(session->Location());
     std::string area = session->Planet().name + " 야외";
     if (location.regionId != "overworld")
     {
         area = snapshot->planet->Region(location.regionId).definition.name;
     }
-    const auto &state = Game::Get().GetState();
-    if (state.isInsideHome)
-    {
-        area = "헤일로 · 거주지";
-    }
-    if (state.isInObservatory)
-    {
-        area = "헤일로 · 전망대";
-    }
     Hud::DrawActivityObjective(area + " · E 대화·조사 / M 지도");
-    if (!state.isInsideHome && !state.isInObservatory)
-    {
-        DrawMap();
-    }
+    DrawMap();
     CityHud::DrawInteractionPrompt();
     auto ll = world::SurfaceGeometry::ToDegrees(location.position);
     char coordinates[160];
     std::snprintf(coordinates, sizeof(coordinates), "%.4f° / %.4f° · %.0fm", ll[0], ll[1],
                   location.position.altitudeMeters - world::PlanetTerrain::SeaLevelMeters);
     UiText(32, 154, coordinates, 14, {.64f, .79f, .76f});
-    const char *controls = state.aircraft.mounted ? "W/S 이동 · A/D 조향 · Space/C 상승/하강 · X 제동"
-                           : state.car.mounted    ? "W 가속 · S 제동/후진 · A/D 조향 · E 하차"
-                           : state.isBikeMounted  ? "W 가속 · S 제동/후진 · A/D 조향 · Space 부스트"
-                                                  : "WASD 이동 · 차량 근처에서 E 탑승";
+    const char *controls =
+        state.aircraft.mounted ? "W/S 이동 · A/D 조향 · Shift 순항 · Space/C 상승/하강 · X 제동 · E 착륙/하차"
+        : state.car.mounted    ? "W 가속 · S 제동/후진 · A/D 조향 · E 하차"
+        : state.isBikeMounted  ? "W 가속 · S 제동/후진 · A/D 조향 · Space 부스트 · E 하차"
+                               : "WASD 이동 · Shift 달리기 · Space 회피 · V 근접 · R 재장전 · G 회복 · E 탑승/상호작용";
     UiText(32, 728, controls, 16);
 }
 void PlanetHud::DrawMap(bool full)
@@ -3430,163 +3502,230 @@ void PlanetHud::DrawMap(bool full)
     auto view = PlanetMapView(full);
     auto focus = session->PointAt(view.worldCenter.x, view.worldCenter.y);
     mapLabels.clear();
-    auto project = [&](world::SurfacePoint point) {
-        auto p = world::SurfaceAtlas::Project(session->Origin(), point, session->Planet().radiusMeters);
+    const double planetRadius = session->Planet().radiusMeters;
+    const auto &originFrame = session->Origin();
+    auto project = [&](const world::SurfacePoint &point) {
+        auto p = world::SurfaceAtlas::Project(originFrame, point, planetRadius);
         return Vector2{float(p.x), float(p.y)};
     };
-    auto line = [&](world::SurfacePoint a, world::SurfacePoint b, ColorRGBA color, float width) {
-        auto x = project(a), y = project(b);
-        // The projection cut is the antipodal rim; never draw a chord across the whole atlas.
-        if (Game::Distance(x, y) > session->Planet().radiusMeters * .4 &&
-            world::SurfaceGeometry::Distance(session->Planet().radiusMeters, a, b) <
-                session->Planet().radiusMeters * .2)
+    auto chordFar = [&](const world::SurfacePoint &a, const world::SurfacePoint &b, double maxMeters) {
+        const double limit = maxMeters / planetRadius;
+        if (limit >= 2.)
         {
-            return;
+            return false;
         }
-        MapLine(view, x, y, color, width);
+        const double dx = a.normal.x - b.normal.x;
+        const double dy = a.normal.y - b.normal.y;
+        const double dz = a.normal.z - b.normal.z;
+        return dx * dx + dy * dy + dz * dz > limit * limit;
     };
-    if (full && range > 200000)
+    struct StaticMapCacheKey
     {
-        for (int latitude = -75; latitude <= 75; latitude += 15)
-        {
-            for (int longitude = -180; longitude < 180; longitude += 5)
+        const world::GeneratedPlanet *planet = nullptr;
+        std::uint64_t epoch = 0, revision = 0;
+        std::size_t visitedCount = 0, collisionCells = 0;
+        double originX = 0, originY = 0, originZ = 0;
+        float range = 0;
+        Vector2 worldCenter = {};
+        std::uint64_t version = 0;
+        bool valid = false;
+    };
+    static StaticMapCacheKey staticCache[2];
+    auto &cache = staticCache[full ? 1 : 0];
+    const double moveThreshold = full ? (std::max)(.5f, range * .0015f) : .5f;
+    const bool originMoved = std::fabs(originFrame.origin.normal.x - cache.originX) > 1.e-11 ||
+                             std::fabs(originFrame.origin.normal.y - cache.originY) > 1.e-11 ||
+                             std::fabs(originFrame.origin.normal.z - cache.originZ) > 1.e-11;
+    const bool needsRebuild = !cache.valid || cache.planet != snapshot->planet.get() ||
+                              cache.epoch != snapshot->statistics.epoch ||
+                              cache.revision != snapshot->statistics.revision ||
+                              cache.visitedCount != w.relayNetwork.VisitedRegions().size() ||
+                              cache.collisionCells != session->CollisionCells() ||
+                              std::fabs(cache.range - range) > .01f || originMoved ||
+                              Game::Distance(view.worldCenter, cache.worldCenter) > moveThreshold;
+    if (needsRebuild)
+    {
+        cache.planet = snapshot->planet.get();
+        cache.epoch = snapshot->statistics.epoch;
+        cache.revision = snapshot->statistics.revision;
+        cache.visitedCount = w.relayNetwork.VisitedRegions().size();
+        cache.collisionCells = session->CollisionCells();
+        cache.originX = originFrame.origin.normal.x;
+        cache.originY = originFrame.origin.normal.y;
+        cache.originZ = originFrame.origin.normal.z;
+        cache.range = range;
+        cache.worldCenter = view.worldCenter;
+        cache.valid = true;
+        ++cache.version;
+        profiling::Count(profiling::Counter::MinimapRebuilds);
+    }
+    auto drawStaticMap = [&]() {
+        auto line = [&](const world::SurfacePoint &a, const world::SurfacePoint &b, ColorRGBA color,
+                        float width) {
+            auto x = project(a), y = project(b);
+            // The projection cut is the antipodal rim; never draw a chord across the whole atlas.
+            if (Game::Distance(x, y) > planetRadius * .4 &&
+                world::SurfaceGeometry::Distance(planetRadius, a, b) < planetRadius * .2)
             {
-                line(world::SurfaceGeometry::FromDegrees(latitude, longitude),
-                     world::SurfaceGeometry::FromDegrees(latitude, longitude + 5), {.16f, .25f, .27f}, 1);
+                return;
+            }
+            MapLine(view, x, y, color, width);
+        };
+        if (full && range > 200000)
+        {
+            for (int latitude = -75; latitude <= 75; latitude += 15)
+            {
+                for (int longitude = -180; longitude < 180; longitude += 5)
+                {
+                    line(world::SurfaceGeometry::FromDegrees(latitude, longitude),
+                         world::SurfaceGeometry::FromDegrees(latitude, longitude + 5), {.16f, .25f, .27f}, 1);
+                }
+            }
+            for (int longitude = -180; longitude < 180; longitude += 30)
+            {
+                for (int latitude = -90; latitude < 90; latitude += 5)
+                {
+                    line(world::SurfaceGeometry::FromDegrees(latitude, longitude),
+                         world::SurfaceGeometry::FromDegrees(latitude + 5, longitude), {.16f, .25f, .27f}, 1);
+                }
             }
         }
-        for (int longitude = -180; longitude < 180; longitude += 30)
+        static std::vector<Vector2> regionPoly;
+        for (const auto &r : snapshot->planet->regions)
         {
-            for (int latitude = -90; latitude < 90; latitude += 5)
-            {
-                line(world::SurfaceGeometry::FromDegrees(latitude, longitude),
-                     world::SurfaceGeometry::FromDegrees(latitude + 5, longitude), {.16f, .25f, .27f}, 1);
-            }
-        }
-    }
-    for (const auto &r : snapshot->planet->regions)
-    {
-        if (r.center.space != world::SpaceKind::Surface ||
-            world::SurfaceGeometry::Distance(session->Planet().radiusMeters, r.center.position, focus) >
-                r.boundingRadiusMeters + range * 1.5)
-        {
-            continue;
-        }
-        if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, r.center.position,
-                                             session->Origin().origin) +
-                r.boundingRadiusMeters >=
-            session->Planet().radiusMeters * world::SurfaceGeometry::Pi)
-        {
-            continue;
-        }
-        std::vector<Vector2> polygon;
-        for (auto vertex : r.footprint)
-        {
-            polygon.push_back(view.Project(
-                project(world::SurfaceGeometry::FromLocal(r.frame, vertex, session->Planet().radiusMeters))));
-        }
-        MapPolygon(view, std::move(polygon),
-                   !w.relayNetwork.RegionVisited(r.definition.id)       ? ColorRGBA(.13f, .2f, .21f)
-                   : r.definition.kind == world::RegionKind::Settlement ? ColorRGBA(.19f, .31f, .32f)
-                                                                        : ColorRGBA(.22f, .29f, .23f));
-    }
-    static std::weak_ptr<const world::GeneratedPlanet> indexedPlanet;
-    static std::unique_ptr<world::RouteSpatialIndex> routeIndex;
-    if (indexedPlanet.lock() != snapshot->planet || !routeIndex)
-    {
-        routeIndex = std::make_unique<world::RouteSpatialIndex>(*snapshot->planet);
-        indexedPlanet = snapshot->planet;
-    }
-    const auto nearbyRoutes = routeIndex->Query(focus, range * 1.5);
-    profiling::Count(profiling::Counter::PlanetMapRoutesRejected,
-                     snapshot->planet->connections.size() - nearbyRoutes.size());
-    for (const auto route : nearbyRoutes)
-    {
-        const auto &edge = snapshot->planet->connections[route];
-        if (edge.mode != world::RouteMode::Road && (!full || range < 10000))
-        {
-            continue;
-        }
-        const size_t stride = range > 200000  ? (std::max)(size_t(1), (edge.points.size() + 5) / 6)
-                              : range > 10000 ? (std::max)(size_t(1), (edge.points.size() + 23) / 24)
-                                              : 1;
-        for (std::size_t i = stride; i < edge.points.size() + stride - 1; i += stride)
-        {
-            profiling::Count(profiling::Counter::PlanetMapSegmentsVisited);
-            auto a = edge.points[i - stride], b = edge.points[(std::min)(i, edge.points.size() - 1)];
-            double length = world::SurfaceGeometry::Distance(session->Planet().radiusMeters, a, b);
-            double distance = world::SurfaceGeometry::Distance(session->Planet().radiusMeters, a, focus);
-            if (distance > range * 1.5 + length)
+            if (r.center.space != world::SpaceKind::Surface ||
+                chordFar(r.center.position, focus, r.boundingRadiusMeters + range * 1.5) ||
+                world::SurfaceGeometry::Distance(planetRadius, r.center.position, focus) >
+                    r.boundingRadiusMeters + range * 1.5)
             {
                 continue;
             }
-            line(a, b,
-                 edge.mode == world::RouteMode::Road ? ColorRGBA(.56f, .69f, .65f)
-                                                     : ColorRGBA(.3f, .47f, .59f, .5f),
-                 full ? 1.5f : 3);
-        }
-    }
-    std::set<std::string> drawnStructures;
-    auto structure = [&](const world::SurfaceStructure &item) {
-        if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, item.frame.origin, focus) >
-            range + std::hypot(item.sizeMeters.x, item.sizeMeters.y))
-        {
-            return;
-        }
-        if (!drawnStructures.insert(item.id).second)
-        {
-            return;
-        }
-        auto position = project(item.frame.origin);
-        if (Game::Distance(position, view.worldCenter) >
-            range + float(std::hypot(item.sizeMeters.x, item.sizeMeters.y)))
-        {
-            return;
-        }
-        std::vector<Vector2> polygon;
-        for (auto corner : std::array<Vector2, 4>{{{-1, -1}, {1, -1}, {1, 1}, {-1, 1}}})
-        {
-            double x = corner.x * item.sizeMeters.x * .5, y = corner.y * item.sizeMeters.y * .5;
-            auto point =
-                world::SurfaceGeometry::FromLocal(item.frame,
-                                                  {x * std::cos(item.yaw) - y * std::sin(item.yaw),
-                                                   x * std::sin(item.yaw) + y * std::cos(item.yaw), 0},
-                                                  session->Planet().radiusMeters);
-            polygon.push_back(view.Project(project(point)));
-        }
-        MapPolygon(view, std::move(polygon),
-                   item.use == world::ContentUse::Housing ? ColorRGBA(.44f, .56f, .57f)
-                                                          : ColorRGBA(.55f, .66f, .47f));
-    };
-    if (range < 10000)
-    {
-        for (const auto &chunk : snapshot->chunks)
-        {
-            for (const auto &road : chunk->roads)
+            if (world::SurfaceGeometry::Distance(planetRadius, r.center.position, originFrame.origin) +
+                    r.boundingRadiusMeters >=
+                planetRadius * world::SurfaceGeometry::Pi)
             {
-                if (road.sidewalkMeters <= 0)
+                continue;
+            }
+            regionPoly.clear();
+            regionPoly.reserve(r.footprint.size());
+            for (auto vertex : r.footprint)
+            {
+                regionPoly.push_back(
+                    view.Project(project(world::SurfaceGeometry::FromLocal(r.frame, vertex, planetRadius))));
+            }
+            MapPolygonData(view, regionPoly.data(), regionPoly.size(),
+                           !w.relayNetwork.RegionVisited(r.definition.id)       ? ColorRGBA(.13f, .2f, .21f)
+                           : r.definition.kind == world::RegionKind::Settlement ? ColorRGBA(.19f, .31f, .32f)
+                                                                                : ColorRGBA(.22f, .29f, .23f));
+        }
+        static std::weak_ptr<const world::GeneratedPlanet> indexedPlanet;
+        static std::unique_ptr<world::RouteSpatialIndex> routeIndex;
+        static std::vector<std::size_t> nearbyRoutes;
+        if (indexedPlanet.lock() != snapshot->planet || !routeIndex)
+        {
+            routeIndex = std::make_unique<world::RouteSpatialIndex>(*snapshot->planet);
+            indexedPlanet = snapshot->planet;
+        }
+        routeIndex->QueryInto(focus, range * 1.5, nearbyRoutes);
+        profiling::Count(profiling::Counter::PlanetMapRoutesRejected,
+                         snapshot->planet->connections.size() - nearbyRoutes.size());
+        for (const auto route : nearbyRoutes)
+        {
+            const auto &edge = snapshot->planet->connections[route];
+            if (edge.mode != world::RouteMode::Road && (!full || range < 10000))
+            {
+                continue;
+            }
+            const size_t stride = range > 200000  ? (std::max)(size_t(1), (edge.points.size() + 5) / 6)
+                                  : range > 10000 ? (std::max)(size_t(1), (edge.points.size() + 23) / 24)
+                                                  : 1;
+            const ColorRGBA roadColor =
+                edge.mode == world::RouteMode::Road ? ColorRGBA(.56f, .69f, .65f) : ColorRGBA(.3f, .47f, .59f, .5f);
+            const float roadWidth = full ? 1.5f : 3.f;
+            for (std::size_t i = stride; i < edge.points.size() + stride - 1; i += stride)
+            {
+                profiling::Count(profiling::Counter::PlanetMapSegmentsVisited);
+                const auto &a = edge.points[i - stride];
+                const auto &b = edge.points[(std::min)(i, edge.points.size() - 1)];
+                const double length = stride == 1 ? routeIndex->SegmentLength(route, i - 1)
+                                                  : world::SurfaceGeometry::Distance(planetRadius, a, b);
+                if (chordFar(a, focus, range * 1.5 + length) ||
+                    world::SurfaceGeometry::Distance(planetRadius, a, focus) > range * 1.5 + length)
                 {
                     continue;
                 }
-                for (std::size_t i = 1; i < road.points.size(); ++i)
+                line(a, b, roadColor, roadWidth);
+            }
+        }
+        static std::unordered_set<std::string_view> drawnStructures;
+        drawnStructures.clear();
+        auto structure = [&](const world::SurfaceStructure &item) {
+            const double diag = std::hypot(item.sizeMeters.x, item.sizeMeters.y);
+            if (chordFar(item.frame.origin, focus, range + diag) ||
+                world::SurfaceGeometry::Distance(planetRadius, item.frame.origin, focus) > range + diag)
+            {
+                return;
+            }
+            if (!drawnStructures.insert(item.id).second)
+            {
+                return;
+            }
+            auto position = project(item.frame.origin);
+            if (Game::Distance(position, view.worldCenter) > range + float(diag))
+            {
+                return;
+            }
+            const double cy = std::cos(item.yaw), sy = std::sin(item.yaw);
+            const double hx = item.sizeMeters.x * .5, hy = item.sizeMeters.y * .5;
+            Vector2 quad[4];
+            static constexpr double kSigns[4][2] = {{-1, -1}, {1, -1}, {1, 1}, {-1, 1}};
+            for (int c = 0; c < 4; ++c)
+            {
+                const double x = kSigns[c][0] * hx, y = kSigns[c][1] * hy;
+                const auto pt = world::SurfaceGeometry::FromLocal(
+                    item.frame, {x * cy - y * sy, x * sy + y * cy, 0}, planetRadius);
+                quad[c] = view.Project(project(pt));
+            }
+            MapPolygonData(view, quad, 4,
+                           item.use == world::ContentUse::Housing ? ColorRGBA(.44f, .56f, .57f)
+                                                                  : ColorRGBA(.55f, .66f, .47f));
+        };
+        if (range < 10000)
+        {
+            for (const auto &chunk : snapshot->chunks)
+            {
+                if (chordFar(chunk->frame.origin, focus, chunk->radiusMeters + range + 40.))
                 {
-                    MapLine(view, project(road.points[i - 1]), project(road.points[i]), {.39f, .47f, .46f},
-                            full ? 1 : float(road.widthMeters) * view.scale);
+                    continue;
+                }
+                for (const auto &road : chunk->roads)
+                {
+                    if (road.sidewalkMeters <= 0 || road.points.size() < 2)
+                    {
+                        continue;
+                    }
+                    const float wPx = full ? 1.f : float(road.widthMeters) * view.scale;
+                    Vector2 prev = project(road.points[0]);
+                    for (std::size_t i = 1; i < road.points.size(); ++i)
+                    {
+                        const Vector2 curr = project(road.points[i]);
+                        MapLine(view, prev, curr, {.39f, .47f, .46f}, wPx);
+                        prev = curr;
+                    }
+                }
+                for (const auto &item : chunk->structures)
+                {
+                    structure(item);
                 }
             }
-            for (const auto &item : chunk->structures)
+            for (auto item : session->NearbyStructures())
             {
-                structure(item);
+                structure(*item);
             }
         }
-    }
-    if (range < 10000)
-    {
-        for (auto item : session->NearbyStructures())
-        {
-            structure(*item);
-        }
-    }
+    };
+    rendercache::DrawSlot(full ? "planet_fullmap_static" : "planet_minimap_static", cache.version,
+                          drawStaticMap);
     for (const auto &region : snapshot->planet->regions)
     {
         if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, region.access.position, focus) >
@@ -3781,21 +3920,26 @@ void Hud::Render()
         static MineHud mine;
         static ChapterHud chapter;
         static PlanetHud planet;
-        if (w.surfaceExploration && !Game::Get().IsSurfaceMine())
+        switch (Game::Get().Mode())
         {
+        case WorldMode::SurfaceExterior:
+        case WorldMode::SurfaceInterior:
+        case WorldMode::SurfaceObservatory:
             planet.Draw();
-        }
-        else if (game::GameLevels::Chapter().IsActive())
-        {
+            break;
+        case WorldMode::LegacyFrontier:
             chapter.Draw();
-        }
-        else if (game::GameLevels::Mine().IsActive())
-        {
+            break;
+        case WorldMode::SurfaceMine:
+        case WorldMode::LegacyMine:
             mine.Draw();
-        }
-        else
-        {
+            break;
+        case WorldMode::LegacyInterior:
+        case WorldMode::LegacyObservatory:
+        case WorldMode::LegacyCity:
+        default:
             city.Draw();
+            break;
         }
         DrawVitals();
         DrawNoticePanel();
@@ -3866,7 +4010,8 @@ void Hud::DrawWeaponWheel()
             UiText(label.x - RenderAssets::MeasureUtf8(text, size) * .5f, y, text, size, color, false);
         };
         centeredText(sector.title, label.y + 23, 18, ink);
-        if (sector.slot == combat::WeaponSlot::Secondary && loadout.HasPistol())
+        if ((sector.slot == combat::WeaponSlot::Secondary && loadout.HasPistol()) ||
+            (sector.slot == combat::WeaponSlot::Primary && loadout.HasPrimary()))
         {
             Icon("pistol", label.x - 18, label.y - 37, 36, false, ink);
         }

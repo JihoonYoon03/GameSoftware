@@ -9,6 +9,7 @@
 #include <cmath>
 #include <cstring>
 #include <map>
+#include <unordered_map>
 #include <vector>
 #include <iterator>
 #include <filesystem>
@@ -534,36 +535,78 @@ UiAtlasCatalog UiAtlasCatalog::Load(const std::filesystem::path &exportRoot)
 
 struct RenderAssets::Data
 {
-    struct TextTexture
+    struct TextKey
     {
-        GLuint texture;
-        int width, height;
-        unsigned long long lastUse;
+        int fontSize = 0;
+        bool outlined = false;
+        std::string text;
+        bool operator==(const TextKey &other) const
+        {
+            return fontSize == other.fontSize && outlined == other.outlined && text == other.text;
+        }
+    };
+    struct TextKeyHash
+    {
+        size_t operator()(const TextKey &k) const noexcept
+        {
+            size_t h = std::hash<std::string>{}(k.text);
+            h ^= size_t(k.fontSize) * 2654435761u + (k.outlined ? 0x9e3779b9u : 0u) + (h << 6) + (h >> 2);
+            return h;
+        }
+    };
+    struct TextEntry
+    {
+        GLuint texture = 0;
+        bool inAtlas = false;
+        int width = 0, height = 0;
+        float u0 = 0, v0 = 0, u1 = 1, v1 = 1;
+        unsigned long long lastUse = 0;
     };
     struct Sprite
     {
         int x, y, width, height;
     };
+    static constexpr int kTextAtlasWidth = 2048;
+    static constexpr int kTextAtlasHeight = 1024;
     GLuint uiAtlas = 0;
     int uiWidth = 2048, uiHeight = 0;
-    std::map<std::string, Sprite> sprites;
+    std::unordered_map<std::string, Sprite> sprites;
     std::filesystem::path exportRoot;
-    std::map<std::string, GLuint> backdrop;
+    std::unordered_map<std::string, GLuint> backdrop;
     AssetJson backdropMetadata;
     GLuint atlas = 0;
-    std::map<std::tuple<int, bool, std::string>, TextTexture> texts;
+    GLuint textAtlas = 0;
+    int textAtlasX = 2, textAtlasY = 2, textShelfHeight = 0;
+    HDC textDc = nullptr;
+    std::unordered_map<int, HFONT> textFonts;
+    std::unordered_map<TextKey, TextEntry, TextKeyHash> texts;
     unsigned long long clock = 0;
     ~Data()
     {
         glDeleteTextures(1, &atlas);
         glDeleteTextures(1, &uiAtlas);
+        if (textAtlas)
+        {
+            glDeleteTextures(1, &textAtlas);
+        }
         for (const auto &entry : backdrop)
         {
             glDeleteTextures(1, &entry.second);
         }
         for (const auto &entry : texts)
         {
-            glDeleteTextures(1, &entry.second.texture);
+            if (!entry.second.inAtlas && entry.second.texture)
+            {
+                glDeleteTextures(1, &entry.second.texture);
+            }
+        }
+        for (const auto &entry : textFonts)
+        {
+            DeleteObject(entry.second);
+        }
+        if (textDc)
+        {
+            DeleteDC(textDc);
         }
     }
 };
@@ -868,7 +911,7 @@ void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf
     {
         return;
     }
-    const auto key = std::make_tuple(fontSize, outlined, utf8);
+    const Data::TextKey key{fontSize, outlined, utf8};
     auto found = m_data->texts.find(key);
     if (found == m_data->texts.end())
     {
@@ -882,18 +925,25 @@ void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf
         }
         std::wstring text(count, L' ');
         MultiByteToWideChar(CP_UTF8, 0, utf8.data(), (int)utf8.size(), &text[0], count);
-        HDC dc = CreateCompatibleDC(nullptr);
+        if (!m_data->textDc)
+        {
+            m_data->textDc = CreateCompatibleDC(nullptr);
+        }
+        HDC dc = m_data->textDc;
         if (!dc)
         {
             return;
         }
-        HFONT font = CreateFontW(-fontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-                                 OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH,
-                                 L"Malgun Gothic");
+        HFONT &font = m_data->textFonts[fontSize];
         if (!font)
         {
-            DeleteDC(dc);
-            return;
+            font = CreateFontW(-fontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+                               OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH,
+                               L"Malgun Gothic");
+            if (!font)
+            {
+                return;
+            }
         }
         HGDIOBJ previousFont = SelectObject(dc, font);
         SIZE extent = {};
@@ -913,8 +963,6 @@ void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf
         if (!bitmap)
         {
             SelectObject(dc, previousFont);
-            DeleteObject(font);
-            DeleteDC(dc);
             return;
         }
         HGDIOBJ previousBitmap = SelectObject(dc, bitmap);
@@ -957,33 +1005,103 @@ void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf
                 }
             }
         }
-        GLuint texture = Upload(width, height, pixels);
         SelectObject(dc, previousBitmap);
         SelectObject(dc, previousFont);
         DeleteObject(bitmap);
-        DeleteObject(font);
-        DeleteDC(dc);
-        // Bound transient timer/NPC label textures. Evict the least recently drawn entry.
-        if (m_data->texts.size() >= 512)
+
+        Data::TextEntry entry;
+        entry.width = width;
+        entry.height = height;
+        const bool fitsAtlas = width + 4 <= Data::kTextAtlasWidth && height + 4 <= Data::kTextAtlasHeight;
+        if (fitsAtlas)
         {
-            auto oldest = std::min_element(
-                m_data->texts.begin(), m_data->texts.end(),
-                [](const auto &a, const auto &b) { return a.second.lastUse < b.second.lastUse; });
-            renderqueue::Flush();
-            profiling::Count(profiling::Counter::TextCacheEvictions);
-            glDeleteTextures(1, &oldest->second.texture);
-            m_data->texts.erase(oldest);
+            if (!m_data->textAtlas)
+            {
+                glGenTextures(1, &m_data->textAtlas);
+                glBindTexture(GL_TEXTURE_2D, m_data->textAtlas);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                std::vector<unsigned char> empty(size_t(Data::kTextAtlasWidth) * Data::kTextAtlasHeight * 4, 0);
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, Data::kTextAtlasWidth, Data::kTextAtlasHeight, 0,
+                             GL_RGBA, GL_UNSIGNED_BYTE, empty.data());
+                glBindTexture(GL_TEXTURE_2D, 0);
+                profiling::Count(profiling::Counter::TextureUploadBytes, empty.size());
+            }
+            if (m_data->textAtlasX + width + 2 > Data::kTextAtlasWidth)
+            {
+                m_data->textAtlasX = 2;
+                m_data->textAtlasY += m_data->textShelfHeight + 2;
+                m_data->textShelfHeight = 0;
+            }
+            if (m_data->textAtlasY + height + 2 > Data::kTextAtlasHeight)
+            {
+                // Flush queued quads referencing the old atlas layout, then reset the shelf.
+                renderqueue::Flush();
+                for (auto it = m_data->texts.begin(); it != m_data->texts.end();)
+                {
+                    if (it->second.inAtlas)
+                    {
+                        profiling::Count(profiling::Counter::TextCacheEvictions);
+                        it = m_data->texts.erase(it);
+                    }
+                    else
+                    {
+                        ++it;
+                    }
+                }
+                m_data->textAtlasX = 2;
+                m_data->textAtlasY = 2;
+                m_data->textShelfHeight = 0;
+            }
+            const int ax = m_data->textAtlasX;
+            const int ay = m_data->textAtlasY;
+            m_data->textAtlasX += width + 2;
+            m_data->textShelfHeight = (std::max)(m_data->textShelfHeight, height);
+            {
+                profiling::Scope uploadTimer(profiling::Timer::TextureUpload);
+                glBindTexture(GL_TEXTURE_2D, m_data->textAtlas);
+                glTexSubImage2D(GL_TEXTURE_2D, 0, ax, ay, width, height, GL_RGBA, GL_UNSIGNED_BYTE,
+                                pixels.data());
+                glBindTexture(GL_TEXTURE_2D, 0);
+                profiling::Count(profiling::Counter::TextureUploadBytes, pixels.size());
+            }
+            entry.texture = m_data->textAtlas;
+            entry.inAtlas = true;
+            entry.u0 = float(ax) / float(Data::kTextAtlasWidth);
+            entry.v0 = float(ay) / float(Data::kTextAtlasHeight);
+            entry.u1 = float(ax + width) / float(Data::kTextAtlasWidth);
+            entry.v1 = float(ay + height) / float(Data::kTextAtlasHeight);
         }
-        found = m_data->texts.emplace(key, Data::TextTexture{texture, width, height, 0}).first;
+        else
+        {
+            if (m_data->texts.size() >= 512)
+            {
+                auto oldest = std::min_element(
+                    m_data->texts.begin(), m_data->texts.end(),
+                    [](const auto &a, const auto &b) { return a.second.lastUse < b.second.lastUse; });
+                renderqueue::Flush();
+                profiling::Count(profiling::Counter::TextCacheEvictions);
+                if (!oldest->second.inAtlas && oldest->second.texture)
+                {
+                    glDeleteTextures(1, &oldest->second.texture);
+                }
+                m_data->texts.erase(oldest);
+            }
+            entry.texture = Upload(width, height, pixels);
+            entry.inAtlas = false;
+        }
+        found = m_data->texts.emplace(key, entry).first;
     }
     else
     {
         profiling::Count(profiling::Counter::TextCacheHits);
     }
     found->second.lastUse = ++m_data->clock;
-    const auto &texture = found->second;
-    Quad(texture.texture, x - (outlined ? 2 : 0), baselineY - fontSize - (outlined ? 2 : 0),
-         (float)texture.width, (float)texture.height);
+    const auto &entry = found->second;
+    Quad(entry.texture, x - (outlined ? 2 : 0), baselineY - fontSize - (outlined ? 2 : 0),
+         (float)entry.width, (float)entry.height, entry.u0, entry.v0, entry.u1, entry.v1);
 }
 
 size_t RenderAssets::UiSpriteCount() const

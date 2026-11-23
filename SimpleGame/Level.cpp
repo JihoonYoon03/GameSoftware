@@ -609,8 +609,9 @@ void MineCombat::UpdateBullets(float deltaSeconds)
 
 void MineCombat::Attack()
 {
-    auto &world = tutorial::Game::Get().GetState();
-    if (!state.loadout.IsPistolEquipped())
+    auto &g = tutorial::Game::Get();
+    auto &world = g.GetState();
+    if (!state.loadout.IsFirearmEquipped())
     {
         Melee();
         return;
@@ -620,9 +621,15 @@ void MineCombat::Attack()
         return;
     }
     combat::Shot shot;
-    if (!state.pistol.TryFire(GameLevels::FireAngle(), shot))
+    const float aimAngle = GameLevels::FireAngle();
+    if (!g.ActiveFirearm().TryFire(aimAngle, shot))
     {
         return;
+    }
+    const bool focused = world.playerMotion.mobility.ConsumeFocus();
+    if (focused)
+    {
+        shot.angle = aimAngle + (shot.angle - aimAngle) * .45f;
     }
     // A shot is a position-bearing sound event, not permission to track its shooter through walls.
     for (auto &enemy : state.enemies)
@@ -639,14 +646,14 @@ void MineCombat::Attack()
             profiling::Count(profiling::Counter::NpcStimuliReceived);
         }
     }
-    auto aim = level.GetAimDirection(GameLevels::FireAngle());
+    auto aim = level.GetAimDirection(aimAngle);
     world.playerAnimation.Fire();
-    auto pose = tutorial::Game::Get().PlayerPose(1);
+    auto pose = g.PlayerPose(1);
     auto muzzle = models::ModelRig::Muzzle(pose);
     float muzzleDistance =
         std::sqrt(muzzle.x * muzzle.x + muzzle.y * muzzle.y) * models::WorldScale::characterScale;
-    Bullet bullet = {world.playerPosition, aim, shot.speed, shot.range,
-                     shot.damage + (state.player.level - 1) * 4};
+    const int finalDamage = int((shot.damage + (state.player.level - 1) * 4) * (focused ? 1.3f : 1.f));
+    Bullet bullet = {world.playerPosition, aim, shot.speed, shot.range, finalDamage};
     // A gun pressed against a wall cannot spawn a projectile on its far side.
     AdvanceBullet(bullet, muzzleDistance);
     if (bullet.remaining > 0)
@@ -665,9 +672,10 @@ void MineCombat::Melee()
         return;
     }
     state.meleeSeconds = .65f;
+    const bool focused = world.playerMotion.mobility.ConsumeFocus();
     auto aim = level.GetAimDirection(GameLevels::FireAngle());
     size_t closest = state.enemies.size();
-    float best = .85f;
+    float best = .95f;
     for (size_t i = 0; i < state.enemies.size(); ++i)
     {
         const auto &enemy = state.enemies[i];
@@ -683,16 +691,18 @@ void MineCombat::Melee()
     }
     if (closest < state.enemies.size())
     {
-        DamageEnemy(closest, 30 + (state.player.level - 1) * 4);
+        DamageEnemy(closest, int((30 + (state.player.level - 1) * 4) * (focused ? 1.3f : 1.f)));
     }
 }
 
 void MineCombat::Reload()
 {
     const auto context = combat::PlayerCombat::Current();
-    if (combat::PlayerCombat::Allow(combat::CombatAction::Reload, context.area) && state.pistol.Reload())
+    auto &weapon = tutorial::Game::Get().ActiveFirearm();
+    if (combat::PlayerCombat::Allow(combat::CombatAction::Reload, context.area) && weapon.Reload())
     {
-        tutorial::Game::Get().ShowNotice("권총 / 재장전 중. 예비 탄창은 제한 없이 보급됩니다.");
+        tutorial::Game::Get().ShowNotice(std::string(weapon.GetName()) +
+                                         " / 재장전 중. 예비 탄창은 제한 없이 보급됩니다.");
     }
 }
 
@@ -745,6 +755,7 @@ void MineCombat::Update(float deltaSeconds)
 {
     auto &world = tutorial::Game::Get().GetState();
     state.pistol.Update(deltaSeconds);
+    state.carbine.Update(deltaSeconds);
     state.meleeSeconds = (std::max)(0.f, state.meleeSeconds - deltaSeconds);
     float angle = level.GetAimAngle();
     float aimX = std::cos(angle), aimY = std::sin(angle);
@@ -1116,7 +1127,8 @@ void MineCombat::UpdateEnemies(float deltaSeconds)
             }
             enemy.attackCooldown = 1;
         }
-        else if (state.invulnerability <= 0)
+        else if (state.invulnerability <= 0 &&
+                 !tutorial::Game::Get().GetState().playerMotion.mobility.Invulnerable())
         {
             state.player.health -= (std::max)(1, 10 - state.player.defense);
             tutorial::Game::Get().GetState().InterruptDodge();
@@ -1664,6 +1676,10 @@ void MineLevel::AddExperience(int amount)
     if (old != stats.level)
     {
         stats.health = stats.maxHealth;
+        if (stats.level >= 2 && state.loadout.HasPistol() && state.loadout.GrantPrimary())
+        {
+            tutorial::Game::Get().ShowNotice("주 무장 해금 / 펄스 카빈 (Q 홀드 위쪽 슬롯으로 선택)");
+        }
         tutorial::Game::Get().ShowNotice(
             "성장 / 최대 체력·총기 피해·방어력이 상승했습니다. 조사를 계속하거나 사냥할 수 있습니다.");
     }
@@ -2123,6 +2139,9 @@ world::CityCore FrontierSurface::Describe()
 {
     level.PrepareSurface();
     auto &state = level.GetState();
+    // Keep Describe() idempotent when reloading a saved ChapterOneState during active surface play;
+    // surfaceObstacles is rebuilt deterministically from the solid lots below.
+    state.surfaceObstacles.clear();
     const auto &library = models::ModelLibrary::Get();
     world::CityCore core;
     core.regionId = "frontier";
@@ -2531,6 +2550,11 @@ bool ChapterOneLevel::Unlock()
         return false;
     }
     state.unlocked = true;
+    auto &mine = GameLevels::Mine().GetState();
+    if (mine.loadout.HasPistol())
+    {
+        mine.loadout.GrantPrimary();
+    }
     return true;
 }
 void ChapterOneLevel::Reset()
@@ -3271,8 +3295,9 @@ float ChapterOneLevel::GetAimAngle() const
 }
 void FrontierCombat::Attack()
 {
+    auto &g = tutorial::Game::Get();
     auto &mine = GameLevels::Mine().GetState();
-    if (!mine.loadout.IsPistolEquipped())
+    if (!mine.loadout.IsFirearmEquipped())
     {
         Melee();
         return;
@@ -3282,16 +3307,23 @@ void FrontierCombat::Attack()
         return;
     }
     combat::Shot shot;
-    if (!mine.pistol.TryFire(GameLevels::FireAngle(), shot))
+    const float aimAngle = GameLevels::FireAngle();
+    if (!g.ActiveFirearm().TryFire(aimAngle, shot))
     {
         return;
     }
-    ChapterProjectile projectile{{tutorial::Game::Get().GetState().playerPosition,
-                                  MineLevel::GetAimDirection(shot.angle), shot.speed, shot.range,
-                                  shot.damage + (mine.player.level - 1) * 4, true},
-                                 ChapterTeam::Player};
-    tutorial::Game::Get().GetState().playerAnimation.Fire();
-    auto muzzle = models::ModelRig::Muzzle(tutorial::Game::Get().PlayerPose(1));
+    const bool focused = g.GetState().playerMotion.mobility.ConsumeFocus();
+    if (focused)
+    {
+        shot.angle = aimAngle + (shot.angle - aimAngle) * .45f;
+    }
+    const int finalDamage = int((shot.damage + (mine.player.level - 1) * 4) * (focused ? 1.3f : 1.f));
+    ChapterProjectile projectile{
+        {g.GetState().playerPosition, MineLevel::GetAimDirection(shot.angle), shot.speed, shot.range,
+         finalDamage, true},
+        ChapterTeam::Player};
+    g.GetState().playerAnimation.Fire();
+    auto muzzle = models::ModelRig::Muzzle(g.PlayerPose(1));
     Advance(projectile, std::hypot(muzzle.x, muzzle.y) * models::WorldScale::characterScale);
     if (projectile.shot.remaining > 0)
     {
@@ -3301,16 +3333,20 @@ void FrontierCombat::Attack()
 }
 void FrontierCombat::Melee()
 {
-    const auto &world = tutorial::Game::Get().GetState();
+    auto &world = tutorial::Game::Get().GetState();
     if (!combat::PlayerCombat::Allow(combat::CombatAction::Melee, combat::CombatArea::Frontier))
     {
         return;
     }
     state.meleeSeconds = .65f;
+    const bool focused = world.playerMotion.mobility.ConsumeFocus();
+    const int meleeDamage =
+        int((30 + (GameLevels::Mine().GetState().player.level - 1) * 4) * (focused ? 1.3f : 1.f));
     auto aim = MineLevel::GetAimDirection(GameLevels::FireAngle());
+    tutorial::Vector2 impulse{aim.x * (focused ? 5.2f : 4.f), aim.y * (focused ? 5.2f : 4.f)};
     if (world.surfaceExploration)
     {
-        for (int i = 1; i <= 10; ++i)
+        for (int i = 1; i <= 14; ++i)
         {
             tutorial::Vector2 p{world.playerPosition.x + aim.x * i * .1f,
                                 world.playerPosition.y + aim.y * i * .1f};
@@ -3318,7 +3354,8 @@ void FrontierCombat::Melee()
             {
                 break;
             }
-            if (tutorial::PlanetSecurity::Hit({p.x, p.y, models::WorldScale::aimHeightPixels / 44}, 30, true))
+            if (tutorial::PlanetSecurity::Hit({p.x, p.y, models::WorldScale::aimHeightPixels / 44},
+                                              meleeDamage, true, false, impulse))
             {
                 return;
             }
@@ -3329,7 +3366,7 @@ void FrontierCombat::Melee()
         return;
     }
     FrontierPerson *closest = nullptr;
-    float best = .85f;
+    float best = 1.05f;
     for (auto &person : state.scrappers)
     {
         float dx = person.position.x - world.playerPosition.x,
@@ -3346,8 +3383,7 @@ void FrontierCombat::Melee()
     if (closest)
     {
         state.hostile = true;
-        auto &stats = GameLevels::Mine().GetState().player;
-        closest->combat.health = (std::max)(0, closest->combat.health - 30 - (stats.level - 1) * 4);
+        closest->combat.health = (std::max)(0, closest->combat.health - meleeDamage);
         if (closest->combat.health == 0)
         {
             GameLevels::Mine().AddExperience(kExperiencePerKill);
@@ -3438,7 +3474,7 @@ void FrontierCombat::Advance(ChapterProjectile &projectile, float distance)
         if (projectile.team == ChapterTeam::Scrapper)
         {
             auto &world = tutorial::Game::Get().GetState();
-            if (state.invulnerability <= 0 &&
+            if (state.invulnerability <= 0 && !world.playerMotion.mobility.Invulnerable() &&
                 tutorial::Game::Distance(shot.position, world.playerPosition) < .35f)
             {
                 auto &stats = GameLevels::Mine().GetState().player;
@@ -3483,6 +3519,7 @@ void FrontierCombat::Update(float deltaSeconds)
     auto &world = tutorial::Game::Get().GetState();
     auto &mine = GameLevels::Mine().GetState();
     mine.pistol.Update(deltaSeconds);
+    mine.carbine.Update(deltaSeconds);
     state.meleeSeconds = (std::max)(0.f, state.meleeSeconds - deltaSeconds);
     state.invulnerability = (std::max)(0.f, state.invulnerability - deltaSeconds);
     state.muzzleFlash = (std::max)(0.f, state.muzzleFlash - deltaSeconds);
@@ -3575,11 +3612,22 @@ void FrontierCombat::Update(float deltaSeconds)
         }
         else
         {
+            const auto sight = [&](tutorial::Vector2 candidate) {
+                const float dist = tutorial::Game::Distance(person.position, candidate);
+                if (dist > 9.5f || !level.HasLineOfSight(person.position, candidate))
+                {
+                    return false;
+                }
+                const bool seen =
+                    ai::Perception::InSight({person.position.x, person.position.y, 0}, person.facing.yaw,
+                                            {candidate.x, candidate.y, 0},
+                                            {9.5f, 1.25f, 2.5f, 2.f});
+                return seen || (combat.threat.Known() && dist < 8.5f);
+            };
             tutorial::Vector2 target = world.playerPosition;
             size_t targetSlot = 0;
             float bestScore =
-                level.HasLineOfSight(person.position, target) &&
-                        tutorial::Game::Distance(person.position, target) < 8
+                sight(target)
                     ? ai::Cooperation::TargetScore(tutorial::Game::Distance(person.position, target),
                                                    hostileClaims[0], false)
                     : (std::numeric_limits<float>::max)();
@@ -3599,21 +3647,72 @@ void FrontierCombat::Update(float deltaSeconds)
                 float distance = tutorial::Game::Distance(person.position, ally->position);
                 const size_t slot = ally == &state.ria ? 1 : 2;
                 const float score = ai::Cooperation::TargetScore(distance, hostileClaims[slot], false);
-                if (ally->combat.health > 0 && distance < 8 && score < bestScore &&
-                    level.HasLineOfSight(person.position, ally->position))
+                if (ally->combat.health > 0 && sight(ally->position) && score < bestScore)
                 {
                     target = ally->position;
                     targetSlot = slot;
                     bestScore = score;
                 }
             }
-            if (bestScore < (std::numeric_limits<float>::max)() &&
-                level.HasLineOfSight(person.position, target))
+            const bool seesTarget = bestScore < (std::numeric_limits<float>::max)();
+            combat.threat.Observe(seesTarget, ai::PerceptionSettings::kCombatMemorySeconds);
+            if (seesTarget)
             {
+                combat.lastThreat = {target.x, target.y, 0};
+                // Share sighting with nearby scrappers so squads react cohesively.
+                for (auto &mate : state.scrappers)
+                {
+                    if (&mate != &person && mate.combat.health > 0 && !mate.combat.threat.Known() &&
+                        tutorial::Game::Distance(person.position, mate.position) <=
+                            ai::CooperationSettings::kReportRange)
+                    {
+                        mate.combat.lastThreat = combat.lastThreat;
+                        mate.combat.threat.Remember(ai::Stimulus::Report,
+                                                    ai::PerceptionSettings::kCombatMemorySeconds);
+                        profiling::Count(profiling::Counter::NpcReportsShared);
+                    }
+                }
                 ++hostileClaims[targetSlot];
                 combat.teamwork = {ai::TeamTask::Defend, targetSlot + 1, 0};
                 profiling::Count(profiling::Counter::NpcTeamAssignments);
                 Fire(person, target, ChapterTeam::Scrapper);
+                // Tactical combat movement: close in from afar or strafe laterally instead of standing frozen.
+                const float dist = tutorial::Game::Distance(person.position, target);
+                const float dx = target.x - person.position.x, dy = target.y - person.position.y;
+                if (dist > .01f)
+                {
+                    const float ux = dx / dist, uy = dy / dist;
+                    const float side = (size_t(&person - state.scrappers.data()) % 2 == 0) ? 1.f : -1.f;
+                    tutorial::Vector2 dir = dist > 6.2f ? tutorial::Vector2{ux, uy}
+                                            : dist < 3.2f ? tutorial::Vector2{-ux, -uy}
+                                                          : tutorial::Vector2{-uy * side, ux * side};
+                    const float step = 1.65f * deltaSeconds;
+                    const tutorial::Vector2 next{person.position.x + dir.x * step,
+                                                 person.position.y + dir.y * step};
+                    if (!level.IsBlocked(next))
+                    {
+                        person.facing.Update(person.position, next, deltaSeconds);
+                        person.position = next;
+                    }
+                }
+            }
+            else if (combat.threat.Known())
+            {
+                // Advance toward last known threat position while investigating.
+                const float dx = combat.lastThreat.x - person.position.x,
+                            dy = combat.lastThreat.y - person.position.y;
+                const float dist = std::hypot(dx, dy);
+                if (dist > 1.2f)
+                {
+                    const float step = (std::min)(dist - 1.f, 1.9f * deltaSeconds);
+                    const tutorial::Vector2 next{person.position.x + (dx / dist) * step,
+                                                 person.position.y + (dy / dist) * step};
+                    if (!level.IsBlocked(next))
+                    {
+                        person.facing.Update(person.position, next, deltaSeconds);
+                        person.position = next;
+                    }
+                }
             }
         }
         if (!combat.engaged && combat.threat.Known())

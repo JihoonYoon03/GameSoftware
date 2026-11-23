@@ -3,11 +3,13 @@
 #include "Profiler.h"
 #include "Dependencies/glew/include/GL/glew.h"
 #include <array>
-#include <vector>
 #include <cmath>
 #include <cstddef>
+#include <cstring>
 #include <stdexcept>
+#include <string>
 #include <utility>
+#include <vector>
 
 namespace renderqueue
 {
@@ -53,13 +55,92 @@ State state;
 std::array<float, 4> color = {1, 1, 1, 1};
 float u = 0, v = 0, lineWidth = 1, solidU = .5f, solidV = .5f, opacity = 1;
 GLuint solidTexture = 0, streamBuffer = 0;
+size_t streamCapacity = 0, streamHead = 0;
 GLenum mode = GL_TRIANGLES;
 constexpr size_t kMaximumBatchVertices = 65536;
 MeshPtr instanceMesh;
 std::vector<Transform> instances;
-GLuint instanceProgram = 0, instanceBuffer = 0;
+GLuint instanceProgram = 0, instanceBuffer = 0, instanceVao = 0;
+size_t instanceCapacity = 0;
+GLint instanceMvpLoc = -1, instanceImageLoc = -1;
+GLuint queueProgram = 0, queueVao = 0;
+GLint queueMvpLoc = -1, queueImageLoc = -1, queueHasTexLoc = -1;
+GLuint cachedEffectProgram = 0;
+GLint cachedEffectMvpLoc = -1, cachedEffectKindLoc = -1, cachedEffectSecondsLoc = -1;
 bool instanceInitialized = false;
 void FlushInstances();
+
+GLuint CompileSimpleProgram(const char *vertexBody, const char *fragmentBody)
+{
+    profiling::Scope timer(profiling::Timer::ShaderCompile);
+    const char *version = GLEW_VERSION_4_5 ? "#version 450 core\n" : "#version 330 core\n";
+    const std::string vsSrc = std::string(version) + vertexBody;
+    const std::string fsSrc = std::string(version) + fragmentBody;
+    const char *sources[] = {vsSrc.c_str(), fsSrc.c_str()};
+    GLuint shaders[] = {glCreateShader(GL_VERTEX_SHADER), glCreateShader(GL_FRAGMENT_SHADER)};
+    bool valid = shaders[0] && shaders[1];
+    for (int i = 0; i < 2 && valid; ++i)
+    {
+        glShaderSource(shaders[i], 1, &sources[i], nullptr);
+        glCompileShader(shaders[i]);
+        GLint compiled = 0;
+        glGetShaderiv(shaders[i], GL_COMPILE_STATUS, &compiled);
+        valid = compiled != 0;
+    }
+    GLuint program = 0;
+    if (valid)
+    {
+        program = glCreateProgram();
+        glAttachShader(program, shaders[0]);
+        glAttachShader(program, shaders[1]);
+        glLinkProgram(program);
+        GLint linked = 0;
+        glGetProgramiv(program, GL_LINK_STATUS, &linked);
+        if (!linked)
+        {
+            glDeleteProgram(program);
+            program = 0;
+        }
+    }
+    for (GLuint shader : shaders)
+    {
+        if (shader)
+        {
+            glDeleteShader(shader);
+        }
+    }
+    return program;
+}
+
+void MultiplyMat4(const float *a, const float *b, float *out)
+{
+    for (int c = 0; c < 4; ++c)
+    {
+        const float b0 = b[c * 4 + 0], b1 = b[c * 4 + 1], b2 = b[c * 4 + 2], b3 = b[c * 4 + 3];
+        out[c * 4 + 0] = a[0] * b0 + a[4] * b1 + a[8] * b2 + a[12] * b3;
+        out[c * 4 + 1] = a[1] * b0 + a[5] * b1 + a[9] * b2 + a[13] * b3;
+        out[c * 4 + 2] = a[2] * b0 + a[6] * b1 + a[10] * b2 + a[14] * b3;
+        out[c * 4 + 3] = a[3] * b0 + a[7] * b1 + a[11] * b2 + a[15] * b3;
+    }
+}
+
+void ComputeMvp(const Transform &t, float *out)
+{
+    float proj[16], mv[16], mvp[16];
+    glGetFloatv(GL_PROJECTION_MATRIX, proj);
+    glGetFloatv(GL_MODELVIEW_MATRIX, mv);
+    MultiplyMat4(proj, mv, mvp);
+    if (t.x == 0 && t.y == 0 && t.z == 0 && t.sx == 1 && t.sy == 1 && t.sz == 1)
+    {
+        for (int i = 0; i < 16; ++i)
+        {
+            out[i] = mvp[i];
+        }
+        return;
+    }
+    const float local[16] = {t.sx, 0, 0, 0, 0, t.sy, 0, 0, 0, 0, t.sz, 0, t.x, t.y, t.z, 1};
+    MultiplyMat4(mvp, local, out);
+}
 
 void InitializeInstances()
 {
@@ -72,58 +153,91 @@ void InitializeInstances()
     {
         return;
     }
-    profiling::Scope timer(profiling::Timer::ShaderCompile);
-    const char *sources[] = {
-        "#version 120\nattribute vec3 instancePosition; attribute vec3 instanceScale;"
-        "attribute vec3 vertexPosition; attribute vec4 vertexColor; attribute vec2 vertexUv;"
-        "varying vec4 tint; varying vec2 uv; void main(){"
-        "gl_Position=gl_ModelViewProjectionMatrix*vec4(vertexPosition*instanceScale+instancePosition,1.0);"
-        "tint=vertexColor; uv=vertexUv;}",
-        "#version 120\nuniform sampler2D image; varying vec4 tint; varying vec2 uv;"
-        "void main(){gl_FragColor=texture2D(image,uv)*tint;}"};
-    GLuint shaders[] = {glCreateShader(GL_VERTEX_SHADER), glCreateShader(GL_FRAGMENT_SHADER)};
-    bool valid = shaders[0] && shaders[1];
-    for (int i = 0; i < 2 && valid; ++i)
+    const char *kQueueVs = R"GLSL(
+layout(location = 0) in vec3 vertexPosition;
+layout(location = 1) in vec4 vertexColor;
+layout(location = 2) in vec2 vertexUv;
+uniform mat4 mvp;
+out vec4 tint;
+out vec2 uv;
+void main() {
+    gl_Position = mvp * vec4(vertexPosition, 1.0);
+    tint = vertexColor;
+    uv = vertexUv;
+}
+)GLSL";
+    const char *kQueueFs = R"GLSL(
+uniform sampler2D image;
+uniform int hasTexture;
+in vec4 tint;
+in vec2 uv;
+out vec4 fragColor;
+void main() {
+    fragColor = hasTexture != 0 ? texture(image, uv) * tint : tint;
+}
+)GLSL";
+    queueProgram = CompileSimpleProgram(kQueueVs, kQueueFs);
+    if (queueProgram)
     {
-        glShaderSource(shaders[i], 1, &sources[i], nullptr);
-        glCompileShader(shaders[i]);
-        GLint compiled = 0;
-        glGetShaderiv(shaders[i], GL_COMPILE_STATUS, &compiled);
-        valid = compiled != 0;
+        queueMvpLoc = glGetUniformLocation(queueProgram, "mvp");
+        queueImageLoc = glGetUniformLocation(queueProgram, "image");
+        queueHasTexLoc = glGetUniformLocation(queueProgram, "hasTexture");
+        glGenVertexArrays(1, &queueVao);
+        glBindVertexArray(queueVao);
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+        glEnableVertexAttribArray(2);
+        glBindVertexArray(0);
     }
-    if (valid)
-    {
-        instanceProgram = glCreateProgram();
-        glAttachShader(instanceProgram, shaders[0]);
-        glAttachShader(instanceProgram, shaders[1]);
-        glBindAttribLocation(instanceProgram, 0, "vertexPosition");
-        glBindAttribLocation(instanceProgram, 1, "vertexColor");
-        glBindAttribLocation(instanceProgram, 2, "vertexUv");
-        glBindAttribLocation(instanceProgram, 3, "instancePosition");
-        glBindAttribLocation(instanceProgram, 4, "instanceScale");
-        glLinkProgram(instanceProgram);
-        GLint linked = 0;
-        glGetProgramiv(instanceProgram, GL_LINK_STATUS, &linked);
-        if (!linked)
-        {
-            glDeleteProgram(instanceProgram);
-            instanceProgram = 0;
-        }
-    }
-    for (GLuint shader : shaders)
-    {
-        if (shader)
-        {
-            glDeleteShader(shader);
-        }
-    }
+
+    const char *kInstVs = R"GLSL(
+layout(location = 0) in vec3 vertexPosition;
+layout(location = 1) in vec4 vertexColor;
+layout(location = 2) in vec2 vertexUv;
+layout(location = 3) in vec3 instancePosition;
+layout(location = 4) in vec3 instanceScale;
+uniform mat4 mvp;
+out vec4 tint;
+out vec2 uv;
+void main() {
+    gl_Position = mvp * vec4(vertexPosition * instanceScale + instancePosition, 1.0);
+    tint = vertexColor;
+    uv = vertexUv;
+}
+)GLSL";
+    const char *kInstFs = R"GLSL(
+uniform sampler2D image;
+in vec4 tint;
+in vec2 uv;
+out vec4 fragColor;
+void main() {
+    fragColor = texture(image, uv) * tint;
+}
+)GLSL";
+    instanceProgram = CompileSimpleProgram(kInstVs, kInstFs);
     if (instanceProgram)
     {
+        instanceMvpLoc = glGetUniformLocation(instanceProgram, "mvp");
+        instanceImageLoc = glGetUniformLocation(instanceProgram, "image");
         glGenBuffers(1, &instanceBuffer);
+        glGenVertexArrays(1, &instanceVao);
+        glBindVertexArray(instanceVao);
+        for (GLuint a = 0; a < 5; ++a)
+        {
+            glEnableVertexAttribArray(a);
+        }
+        glBindBuffer(GL_ARRAY_BUFFER, instanceBuffer);
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Transform), nullptr);
+        glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Transform),
+                              reinterpret_cast<void *>(offsetof(Transform, sx)));
+        glVertexAttribDivisor(3, 1);
+        glVertexAttribDivisor(4, 1);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
     }
 }
 
-void ApplyState(const State &value)
+void ApplyLegacyState(const State &value)
 {
     if (value.depth)
     {
@@ -155,17 +269,120 @@ void ApplyState(const State &value)
     }
     if (value.program)
     {
-        // Uniform lookups are bounded by submitted batches, not individual effects.
-        glUniform1i(glGetUniformLocation(value.program, "effect"), value.effect);
-        glUniform1f(glGetUniformLocation(value.program, "seconds"), value.seconds);
+        if (value.program != cachedEffectProgram)
+        {
+            cachedEffectProgram = value.program;
+            cachedEffectMvpLoc = glGetUniformLocation(value.program, "mvp");
+            cachedEffectKindLoc = glGetUniformLocation(value.program, "effect");
+            cachedEffectSecondsLoc = glGetUniformLocation(value.program, "seconds");
+        }
+        if (cachedEffectKindLoc >= 0)
+        {
+            glUniform1i(cachedEffectKindLoc, value.effect);
+        }
+        if (cachedEffectSecondsLoc >= 0)
+        {
+            glUniform1f(cachedEffectSecondsLoc, value.seconds);
+        }
     }
 }
-void DrawGeometry(const Geometry &geometry, GLuint buffer, const Transform &transform)
+
+void DrawGeometry(const Geometry &geometry, GLuint buffer, const Transform &transform, size_t baseVertex = 0)
 {
     if (geometry.vertices.empty())
     {
         return;
     }
+    if (queueProgram && queueVao && buffer)
+    {
+        float mvp[16];
+        ComputeMvp(transform, mvp);
+        glBindVertexArray(queueVao);
+        glBindBuffer(GL_ARRAY_BUFFER, buffer);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData),
+                              reinterpret_cast<void *>(offsetof(VertexData, x)));
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(VertexData),
+                              reinterpret_cast<void *>(offsetof(VertexData, r)));
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData),
+                              reinterpret_cast<void *>(offsetof(VertexData, u)));
+        glActiveTexture(GL_TEXTURE0);
+        glDepthFunc(GL_LEQUAL);
+        GLuint activeProgram = 0;
+        GLuint activeTexture = ~0u;
+        int activeHasTex = -1;
+        for (const auto &range : geometry.ranges)
+        {
+            const auto &st = range.state;
+            if (st.depth)
+            {
+                glEnable(GL_DEPTH_TEST);
+            }
+            else
+            {
+                glDisable(GL_DEPTH_TEST);
+            }
+            glDepthMask(st.depthWrite ? GL_TRUE : GL_FALSE);
+            const GLuint targetProgram = st.program ? st.program : queueProgram;
+            if (targetProgram != activeProgram)
+            {
+                activeProgram = targetProgram;
+                glUseProgram(activeProgram);
+                if (activeProgram == queueProgram)
+                {
+                    glUniformMatrix4fv(queueMvpLoc, 1, GL_FALSE, mvp);
+                    glUniform1i(queueImageLoc, 0);
+                    activeHasTex = -1;
+                }
+                else
+                {
+                    if (activeProgram != cachedEffectProgram)
+                    {
+                        cachedEffectProgram = activeProgram;
+                        cachedEffectMvpLoc = glGetUniformLocation(activeProgram, "mvp");
+                        cachedEffectKindLoc = glGetUniformLocation(activeProgram, "effect");
+                        cachedEffectSecondsLoc = glGetUniformLocation(activeProgram, "seconds");
+                    }
+                    if (cachedEffectMvpLoc >= 0)
+                    {
+                        glUniformMatrix4fv(cachedEffectMvpLoc, 1, GL_FALSE, mvp);
+                    }
+                }
+            }
+            if (st.program)
+            {
+                if (cachedEffectKindLoc >= 0)
+                {
+                    glUniform1i(cachedEffectKindLoc, st.effect);
+                }
+                if (cachedEffectSecondsLoc >= 0)
+                {
+                    glUniform1f(cachedEffectSecondsLoc, st.seconds);
+                }
+            }
+            else
+            {
+                const int hasTex = st.texture ? 1 : 0;
+                if (hasTex != activeHasTex)
+                {
+                    glUniform1i(queueHasTexLoc, hasTex);
+                    activeHasTex = hasTex;
+                }
+                if (st.texture != activeTexture)
+                {
+                    glBindTexture(GL_TEXTURE_2D, st.texture);
+                    activeTexture = st.texture;
+                }
+            }
+            glDrawArrays(GL_TRIANGLES, GLint(baseVertex + range.first), GLsizei(range.count));
+            profiling::Count(profiling::Counter::DrawCalls);
+        }
+        glBindVertexArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glUseProgram(0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        return;
+    }
+
     glPushMatrix();
     glTranslatef(transform.x, transform.y, transform.z);
     glScalef(transform.sx, transform.sy, transform.sz);
@@ -190,7 +407,7 @@ void DrawGeometry(const Geometry &geometry, GLuint buffer, const Transform &tran
     glTexCoordPointer(2, GL_FLOAT, sizeof(VertexData), address(offsetof(VertexData, u)));
     for (const auto &range : geometry.ranges)
     {
-        ApplyState(range.state);
+        ApplyLegacyState(range.state);
         glDrawArrays(GL_TRIANGLES, GLint(range.first), GLsizei(range.count));
         profiling::Count(profiling::Counter::DrawCalls);
     }
@@ -235,7 +452,9 @@ void Append(VertexData a, VertexData b, VertexData c)
         }
         geometry.ranges.push_back({resolved, geometry.vertices.size(), 0});
     }
-    geometry.vertices.insert(geometry.vertices.end(), {a, b, c});
+    geometry.vertices.push_back(a);
+    geometry.vertices.push_back(b);
+    geometry.vertices.push_back(c);
     geometry.ranges.back().count += 3;
     if (!capture)
     {
@@ -287,7 +506,7 @@ void FlushInstances()
     }
     profiling::Scope timer(profiling::Timer::QueueFlush);
     const auto &geometry = instanceMesh->geometry;
-    bool compatible = instanceProgram && instanceMesh->buffer && instances.size() > 1;
+    bool compatible = instanceProgram && instanceVao && instanceMesh->buffer && instances.size() > 1;
     for (const auto &range : geometry.ranges)
     {
         compatible = compatible && range.state.program == 0 && range.state.texture != 0;
@@ -296,12 +515,21 @@ void FlushInstances()
     compatible = compatible && geometry.ranges.size() == 1;
     if (compatible)
     {
-        ApplyState(geometry.ranges[0].state);
-        glBindBuffer(GL_ARRAY_BUFFER, instanceMesh->buffer);
-        for (GLuint attribute = 0; attribute < 5; ++attribute)
+        const auto &st = geometry.ranges[0].state;
+        if (st.depth)
         {
-            glEnableVertexAttribArray(attribute);
+            glEnable(GL_DEPTH_TEST);
         }
+        else
+        {
+            glDisable(GL_DEPTH_TEST);
+        }
+        glDepthMask(st.depthWrite ? GL_TRUE : GL_FALSE);
+        glDepthFunc(GL_LEQUAL);
+        float mvp[16];
+        ComputeMvp({}, mvp);
+        glBindVertexArray(instanceVao);
+        glBindBuffer(GL_ARRAY_BUFFER, instanceMesh->buffer);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData),
                               reinterpret_cast<void *>(offsetof(VertexData, x)));
         glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(VertexData),
@@ -309,30 +537,26 @@ void FlushInstances()
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData),
                               reinterpret_cast<void *>(offsetof(VertexData, u)));
         glBindBuffer(GL_ARRAY_BUFFER, instanceBuffer);
-        glBufferData(GL_ARRAY_BUFFER, instances.size() * sizeof(Transform), instances.data(), GL_STREAM_DRAW);
-        profiling::Count(profiling::Counter::StreamUploadBytes, instances.size() * sizeof(Transform));
-        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Transform), nullptr);
-        glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Transform),
-                              reinterpret_cast<void *>(offsetof(Transform, sx)));
-        glVertexAttribDivisor(3, 1);
-        glVertexAttribDivisor(4, 1);
+        const size_t bytes = instances.size() * sizeof(Transform);
+        if (bytes > instanceCapacity)
+        {
+            instanceCapacity = (std::max)(bytes, instanceCapacity * 2);
+        }
+        glBufferData(GL_ARRAY_BUFFER, instanceCapacity, nullptr, GL_STREAM_DRAW);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, bytes, instances.data());
+        profiling::Count(profiling::Counter::StreamUploadBytes, bytes);
         glUseProgram(instanceProgram);
-        glUniform1i(glGetUniformLocation(instanceProgram, "image"), 0);
+        glUniformMatrix4fv(instanceMvpLoc, 1, GL_FALSE, mvp);
+        glUniform1i(instanceImageLoc, 0);
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, geometry.ranges[0].state.texture);
+        glBindTexture(GL_TEXTURE_2D, st.texture);
         glDrawArraysInstanced(GL_TRIANGLES, 0, GLsizei(geometry.vertices.size()), GLsizei(instances.size()));
         profiling::Count(profiling::Counter::DrawCalls);
         profiling::Count(profiling::Counter::InstancedDrawCalls);
-        glVertexAttribDivisor(3, 0);
-        glVertexAttribDivisor(4, 0);
-        for (GLuint attribute = 0; attribute < 5; ++attribute)
-        {
-            glDisableVertexAttribArray(attribute);
-        }
+        glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glUseProgram(0);
         glBindTexture(GL_TEXTURE_2D, 0);
-        glDisable(GL_TEXTURE_2D);
     }
     else
     {
@@ -359,18 +583,41 @@ void BeginFrame()
 void Shutdown()
 {
     Flush();
+    if (instanceVao)
+    {
+        glDeleteVertexArrays(1, &instanceVao);
+        instanceVao = 0;
+    }
     if (instanceProgram)
     {
         glDeleteProgram(instanceProgram);
         instanceProgram = 0;
+    }
+    if (instanceBuffer)
+    {
         glDeleteBuffers(1, &instanceBuffer);
         instanceBuffer = 0;
+        instanceCapacity = 0;
     }
+    if (queueVao)
+    {
+        glDeleteVertexArrays(1, &queueVao);
+        queueVao = 0;
+    }
+    if (queueProgram)
+    {
+        glDeleteProgram(queueProgram);
+        queueProgram = 0;
+    }
+    cachedEffectProgram = 0;
+    cachedEffectMvpLoc = cachedEffectKindLoc = cachedEffectSecondsLoc = -1;
     instanceInitialized = false;
     if (streamBuffer)
     {
         glDeleteBuffers(1, &streamBuffer);
         streamBuffer = 0;
+        streamCapacity = 0;
+        streamHead = 0;
     }
     solidTexture = 0;
 }
@@ -386,6 +633,7 @@ void Flush()
         return;
     }
     profiling::Scope timer(profiling::Timer::QueueFlush);
+    size_t baseVertex = 0;
     if (GLEW_VERSION_1_5)
     {
         if (!streamBuffer)
@@ -394,10 +642,43 @@ void Flush()
         }
         glBindBuffer(GL_ARRAY_BUFFER, streamBuffer);
         const size_t bytes = pending.vertices.size() * sizeof(VertexData);
-        glBufferData(GL_ARRAY_BUFFER, bytes, pending.vertices.data(), GL_STREAM_DRAW);
+        constexpr size_t kMinRingBytes = 4 * 1024 * 1024;
+        if (bytes > streamCapacity || streamCapacity == 0)
+        {
+            streamCapacity = (std::max)(kMinRingBytes, (std::max)(bytes, streamCapacity * 2));
+            glBufferData(GL_ARRAY_BUFFER, streamCapacity, nullptr, GL_STREAM_DRAW);
+            streamHead = 0;
+        }
+        else if (streamHead + bytes > streamCapacity)
+        {
+            // Orphan once per ring wrap instead of per tiny flush.
+            glBufferData(GL_ARRAY_BUFFER, streamCapacity, nullptr, GL_STREAM_DRAW);
+            streamHead = 0;
+        }
+        if (GLEW_VERSION_3_0 && glMapBufferRange != nullptr)
+        {
+            void *dst = glMapBufferRange(GL_ARRAY_BUFFER, GLintptr(streamHead), GLsizeiptr(bytes),
+                                         GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT);
+            if (dst)
+            {
+                std::memcpy(dst, pending.vertices.data(), bytes);
+                glUnmapBuffer(GL_ARRAY_BUFFER);
+            }
+            else
+            {
+                glBufferSubData(GL_ARRAY_BUFFER, GLintptr(streamHead), GLsizeiptr(bytes),
+                                pending.vertices.data());
+            }
+        }
+        else
+        {
+            glBufferSubData(GL_ARRAY_BUFFER, GLintptr(streamHead), GLsizeiptr(bytes), pending.vertices.data());
+        }
+        baseVertex = streamHead / sizeof(VertexData);
+        streamHead += bytes;
         profiling::Count(profiling::Counter::StreamUploadBytes, bytes);
     }
-    DrawGeometry(pending, streamBuffer, {});
+    DrawGeometry(pending, streamBuffer, {}, baseVertex);
     pending.vertices.clear();
     pending.ranges.clear();
 }

@@ -47,7 +47,7 @@ bool MineCombat::FriendlyFireBlocked(tutorial::Vector2 from, tutorial::Vector2 t
 {
     const float spread = shooter.pistol.GetSpread() * ai::CooperationSettings::kProjectedSpreadScale;
     auto blocks = [&](tutorial::Vector2 p, const NpcCombatState *identity = nullptr) {
-        return identity != &shooter &&
+        return identity != &shooter && (!identity || identity->health > 0) &&
                ai::Cooperation::BlocksShot(FlatPoint(from), FlatPoint(target), FlatPoint(p), spread);
     };
     auto &g = tutorial::Game::Get();
@@ -67,7 +67,7 @@ bool FrontierCombat::FriendlyFireBlocked(const FrontierPerson &shooter, tutorial
 {
     const float spread = shooter.combat.pistol.GetSpread() * ai::CooperationSettings::kProjectedSpreadScale;
     auto blocks = [&](const FrontierPerson &person) {
-        return &person != &shooter && !person.arrived &&
+        return &person != &shooter && !person.arrived && person.combat.health > 0 &&
                ai::Cooperation::BlocksShot(FlatPoint(shooter.position), FlatPoint(target),
                                            FlatPoint(person.position), spread);
     };
@@ -175,21 +175,44 @@ bool CivicJustice::FriendlyFireBlocked(const SecurityOfficer &shooter, Vector2 t
     const models::Point to{target.x, target.y, from.z};
     for (const auto &other : State().officers)
     {
-        if (&other != &shooter && BlocksHorizontalShot(from, to, CivicBody(other.position), spread))
+        if (&other != &shooter && other.health > 0 &&
+            BlocksHorizontalShot(from, to, CivicBody(other.position), spread))
         {
             return true;
         }
     }
+    bool surfaceCityNear[Overworld::kCityCount] = {};
+    if (world.surfaceExploration && g.SurfaceCities() && g.Surface() && g.Surface()->Ready())
+    {
+        auto snapshot = g.Surface()->Stream().Snapshot();
+        if (snapshot && snapshot->planet)
+        {
+            const auto shooterPoint = g.Surface()->PointAt(shooter.position.x * 2, shooter.position.y * 2);
+            const double radius = g.Surface()->Planet().radiusMeters;
+            for (int c = 0; c < Overworld::kCityCount; ++c)
+            {
+                const auto &reg = snapshot->planet->Region(Overworld::Cities()[size_t(c)].id);
+                surfaceCityNear[c] =
+                    ::world::SurfaceGeometry::Distance(radius, reg.center.position, shooterPoint) <= 450.;
+            }
+        }
+    }
     for (const auto &resident : world.residents)
     {
-        if (size_t(&resident - world.residents.data()) == Overworld::kKainResidentSlot &&
-            game::GameLevels::Chapter().GetState().kainJoined)
+        if (resident.health <= 0 ||
+            (size_t(&resident - world.residents.data()) == Overworld::kKainResidentSlot &&
+             game::GameLevels::Chapter().GetState().kainJoined))
         {
             continue;
         }
         auto p = FlatPoint(resident.position);
         if (world.surfaceExploration && g.SurfaceCities())
         {
+            if (resident.cityIndex < 0 || resident.cityIndex >= Overworld::kCityCount ||
+                !surfaceCityNear[resident.cityIndex])
+            {
+                continue;
+            }
             const auto point = g.SurfaceCities()->Point(*g.Surface(), resident.cityIndex, resident.position);
             if (!point)
             {
@@ -220,15 +243,37 @@ bool PlanetSecurity::CompanionFireBlocked(CompanionId id, Vector2 target)
     for (size_t i = 0; i < members.size(); ++i)
     {
         if (i != size_t(id) && members[i].joined && members[i].place == CompanionPlace::Surface &&
+            members[i].combat.health > 0 &&
             BlocksHorizontalShot(from, to, SurfaceBody(members[i].position), spread))
         {
             return true;
         }
     }
+    bool surfaceCityNear[Overworld::kCityCount] = {};
+    if (g.SurfaceCities() && g.Surface() && g.Surface()->Ready())
+    {
+        auto snapshot = g.Surface()->Stream().Snapshot();
+        if (snapshot && snapshot->planet)
+        {
+            const double radius = g.Surface()->Planet().radiusMeters;
+            for (int c = 0; c < Overworld::kCityCount; ++c)
+            {
+                const auto &reg = snapshot->planet->Region(Overworld::Cities()[size_t(c)].id);
+                surfaceCityNear[c] =
+                    ::world::SurfaceGeometry::Distance(radius, reg.center.position, shooter.position) <= 450.;
+            }
+        }
+    }
     for (const auto &resident : g.GetState().residents)
     {
-        if (size_t(&resident - g.GetState().residents.data()) == Overworld::kKainResidentSlot &&
-            game::GameLevels::Chapter().GetState().kainJoined)
+        if (resident.health <= 0 ||
+            (size_t(&resident - g.GetState().residents.data()) == Overworld::kKainResidentSlot &&
+             game::GameLevels::Chapter().GetState().kainJoined))
+        {
+            continue;
+        }
+        if (resident.cityIndex < 0 || resident.cityIndex >= Overworld::kCityCount ||
+            !surfaceCityNear[resident.cityIndex])
         {
             continue;
         }

@@ -81,33 +81,30 @@ void UpperLayer(const ResourceMesh &mesh, PoseBuffer &base, const PoseBuffer &la
         return;
     }
     const auto &rig = *mesh.rig;
-    std::array<AnimationMatrix, 32> baseWorld{}, layerWorld{}, resultWorld{};
-    Globals(rig, base, baseWorld);
-    Globals(rig, layer, layerWorld);
-    BonePose pelvisOffset;
-    pelvisOffset.translation = {baseWorld[1][12] - layerWorld[1][12], baseWorld[1][13] - layerWorld[1][13],
-                                baseWorld[1][14] - layerWorld[1][14]};
-    // Follow pelvis translation, while the aim layer keeps its component-space orientation.
-    auto correction = AnimationMath::Matrix(pelvisOffset);
-    for (size_t j = 0; j < rig.parents.size(); ++j)
+    const size_t count = rig.parents.size();
+    std::array<AnimationRotation, 32> baseWorldRot{}, layerWorldRot{}, resultWorldRot{};
+    for (size_t j = 0; j < count; ++j)
     {
+        const int parent = rig.parents[j];
+        const auto bq = Normalized(base[j].rotation);
+        const auto lq = Normalized(layer[j].rotation);
+        baseWorldRot[j] = parent < 0 ? bq : Product(baseWorldRot[size_t(parent)], bq);
+        layerWorldRot[j] = parent < 0 ? lq : Product(layerWorldRot[size_t(parent)], lq);
         // HUMAN_7H spine through muzzle: branch mask leaves root, pelvis and six leg bones intact.
-        float mask = j < 2 || j >= 17 ? 0.f : fullMask ? 1.f : j == 2 ? .35f : j == 3 ? .75f : 1.f;
-        float w = std::clamp(alpha * mask, 0.f, 1.f);
-        BonePose local = AnimationMath::Blend(base[j], layer[j], w);
-        if (w > 0)
+        const float mask = j < 2 || j >= 17 ? 0.f : fullMask ? 1.f : j == 2 ? .35f : j == 3 ? .75f : 1.f;
+        const float w = std::clamp(alpha * mask, 0.f, 1.f);
+        if (w <= 0)
         {
-            // Component-space rotation keeps the barrel/arms stable over the moving pelvis.
-            auto from = AnimationMath::Pose(baseWorld[j]).rotation;
-            auto to = AnimationMath::Pose(AnimationMath::Multiply(correction, layerWorld[j])).rotation;
-            auto desired = AnimationMath::Slerp(from, to, w);
-            auto parent = AnimationMath::Pose(resultWorld[size_t(rig.parents[j])]).rotation;
-            local.rotation = Product({-parent.x, -parent.y, -parent.z, parent.w}, desired);
+            resultWorldRot[j] = baseWorldRot[j];
+            continue;
         }
+        BonePose local = w >= 1.f ? layer[j] : AnimationMath::Blend(base[j], layer[j], w);
+        // Component-space rotation keeps the barrel/arms stable over the moving pelvis.
+        const auto desired = w >= 1.f ? layerWorldRot[j] : AnimationMath::Slerp(baseWorldRot[j], layerWorldRot[j], w);
+        const auto parentRot = parent < 0 ? AnimationRotation{0, 0, 0, 1} : resultWorldRot[size_t(parent)];
+        local.rotation = Product({-parentRot.x, -parentRot.y, -parentRot.z, parentRot.w}, desired);
         base[j] = local;
-        auto m = AnimationMath::Matrix(local);
-        resultWorld[j] =
-            rig.parents[j] < 0 ? m : AnimationMath::Multiply(resultWorld[size_t(rig.parents[j])], m);
+        resultWorldRot[j] = desired;
     }
 }
 } // namespace
@@ -117,16 +114,15 @@ void UpperLayer(const ResourceMesh &mesh, PoseBuffer &base, const PoseBuffer &la
 // ============================================================================
 AnimationMatrix AnimationMath::Multiply(const AnimationMatrix &a, const AnimationMatrix &b)
 {
-    AnimationMatrix m{};
+    // Unrolled column-major 4x4 multiply for affine animation transforms.
+    AnimationMatrix m;
     for (size_t c = 0; c < 4; ++c)
     {
-        for (size_t r = 0; r < 4; ++r)
-        {
-            for (size_t k = 0; k < 4; ++k)
-            {
-                m[c * 4 + r] += a[k * 4 + r] * b[c * 4 + k];
-            }
-        }
+        const float b0 = b[c * 4 + 0], b1 = b[c * 4 + 1], b2 = b[c * 4 + 2], b3 = b[c * 4 + 3];
+        m[c * 4 + 0] = a[0] * b0 + a[4] * b1 + a[8] * b2 + a[12] * b3;
+        m[c * 4 + 1] = a[1] * b0 + a[5] * b1 + a[9] * b2 + a[13] * b3;
+        m[c * 4 + 2] = a[2] * b0 + a[6] * b1 + a[10] * b2 + a[14] * b3;
+        m[c * 4 + 3] = a[3] * b0 + a[7] * b1 + a[11] * b2 + a[15] * b3;
     }
     return m;
 }
@@ -393,15 +389,35 @@ void LayeredAnimation::Sample(const ResourceMesh &mesh, const CharacterPose &pos
     PoseBuffer base{}, other{}, aimPose{};
     if (speed <= 1.08f)
     {
-        ClipPose(mesh, rig.idle, pose.animationPhase / 10 / 2, true, base);
-        ClipPose(mesh, rig.walk, phase, true, other);
-        Mix(base, other, std::clamp(speed / 1.08f, 0.f, 1.f), mesh.boneCount);
+        const float w = std::clamp(speed / 1.08f, 0.f, 1.f);
+        if (w <= 0.f)
+        {
+            ClipPose(mesh, rig.idle, pose.animationPhase / 10 / 2, true, base);
+        }
+        else if (w >= 1.f)
+        {
+            ClipPose(mesh, rig.walk, phase, true, base);
+        }
+        else
+        {
+            ClipPose(mesh, rig.idle, pose.animationPhase / 10 / 2, true, base);
+            ClipPose(mesh, rig.walk, phase, true, other);
+            Mix(base, other, w, mesh.boneCount);
+        }
     }
     else
     {
-        ClipPose(mesh, rig.walk, phase, true, base);
-        ClipPose(mesh, rig.run, phase, true, other);
-        Mix(base, other, std::clamp((speed - 1.08f) / (2.46f - 1.08f), 0.f, 1.f), mesh.boneCount);
+        const float w = std::clamp((speed - 1.08f) / (2.46f - 1.08f), 0.f, 1.f);
+        if (w >= 1.f)
+        {
+            ClipPose(mesh, rig.run, phase, true, base);
+        }
+        else
+        {
+            ClipPose(mesh, rig.walk, phase, true, base);
+            ClipPose(mesh, rig.run, phase, true, other);
+            Mix(base, other, w, mesh.boneCount);
+        }
     }
     if (aim > 0 && !rig.samples.empty())
     {
@@ -450,20 +466,50 @@ void LayeredAnimation::Sample(const ResourceMesh &mesh, const CharacterPose &pos
     if (pose.armed && rig.carryIdle >= 0 && rig.carryWalk >= 0 && rig.carryRun >= 0)
     {
         PoseBuffer carry{}, moving{};
-        if (speed <= 1.08f)
+        if (aim < 1.f)
         {
-            ClipPose(mesh, rig.carryIdle, pose.animationPhase / 10 / 2, true, carry);
-            ClipPose(mesh, rig.carryWalk, phase, true, moving);
-            Mix(carry, moving, std::clamp(speed / 1.08f, 0.f, 1.f), mesh.boneCount);
+            if (speed <= 1.08f)
+            {
+                const float w = std::clamp(speed / 1.08f, 0.f, 1.f);
+                if (w <= 0.f)
+                {
+                    ClipPose(mesh, rig.carryIdle, pose.animationPhase / 10 / 2, true, carry);
+                }
+                else if (w >= 1.f)
+                {
+                    ClipPose(mesh, rig.carryWalk, phase, true, carry);
+                }
+                else
+                {
+                    ClipPose(mesh, rig.carryIdle, pose.animationPhase / 10 / 2, true, carry);
+                    ClipPose(mesh, rig.carryWalk, phase, true, moving);
+                    Mix(carry, moving, w, mesh.boneCount);
+                }
+            }
+            else
+            {
+                const float w = std::clamp((speed - 1.08f) / (2.46f - 1.08f), 0.f, 1.f);
+                if (w >= 1.f)
+                {
+                    ClipPose(mesh, rig.carryRun, phase, true, carry);
+                }
+                else
+                {
+                    ClipPose(mesh, rig.carryWalk, phase, true, carry);
+                    ClipPose(mesh, rig.carryRun, phase, true, moving);
+                    Mix(carry, moving, w, mesh.boneCount);
+                }
+            }
+            if (aim > 0.f)
+            {
+                ClipPose(mesh, rig.aim, 0, false, other);
+                Mix(carry, other, aim, mesh.boneCount);
+            }
         }
         else
         {
-            ClipPose(mesh, rig.carryWalk, phase, true, carry);
-            ClipPose(mesh, rig.carryRun, phase, true, moving);
-            Mix(carry, moving, std::clamp((speed - 1.08f) / (2.46f - 1.08f), 0.f, 1.f), mesh.boneCount);
+            ClipPose(mesh, rig.aim, 0, false, carry);
         }
-        ClipPose(mesh, rig.aim, 0, false, other);
-        Mix(carry, other, aim, mesh.boneCount);
         UpperLayer(mesh, base, carry, 1, true);
     }
     else if (aim > 0)
@@ -492,12 +538,15 @@ void LayeredAnimation::Sample(const ResourceMesh &mesh, const CharacterPose &pos
     }
     // Small spine counterbalance while start/stop/pivot clips are being authored.
     // Keep root/legs and precise aimed upper-body poses intact.
-    float leanWeight = pose.blended ? (1 - aim) * (1 - (dodgeLayer ? pose.dodgeWeight : 0)) : 0;
-    AnimationRotation pitch = {0, std::sin(pose.motionForwardLean * leanWeight * .5f), 0,
-                               std::cos(pose.motionForwardLean * leanWeight * .5f)};
-    AnimationRotation roll = {std::sin(pose.motionSideLean * leanWeight * .5f), 0, 0,
-                              std::cos(pose.motionSideLean * leanWeight * .5f)};
-    base[2].rotation = Product(base[2].rotation, Product(pitch, roll));
+    const float leanWeight = pose.blended ? (1 - aim) * (1 - (dodgeLayer ? pose.dodgeWeight : 0)) : 0;
+    if (leanWeight > 0.f && (pose.motionForwardLean != 0.f || pose.motionSideLean != 0.f))
+    {
+        AnimationRotation pitch = {0, std::sin(pose.motionForwardLean * leanWeight * .5f), 0,
+                                   std::cos(pose.motionForwardLean * leanWeight * .5f)};
+        AnimationRotation roll = {std::sin(pose.motionSideLean * leanWeight * .5f), 0, 0,
+                                  std::cos(pose.motionSideLean * leanWeight * .5f)};
+        base[2].rotation = Product(base[2].rotation, Product(pitch, roll));
+    }
     std::array<AnimationMatrix, 32> world{};
     Globals(rig, base, world);
     for (size_t j = 0; j < mesh.boneCount; ++j)

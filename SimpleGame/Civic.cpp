@@ -24,7 +24,6 @@ namespace
 {
 CivicState civic;
 PlanetSecurityState planetary;
-world::ContentCollision shotCollision;
 std::optional<world::SurfacePoint> reportedPoint;
 int navigationBudget = 2;
 struct SurfaceTarget
@@ -38,18 +37,54 @@ struct SurfaceTarget
     models::Point minimum, maximum;
 };
 std::vector<SurfaceTarget> surfaceTargets;
+bool surfaceTargetsReady = false;
 void PrepareSurfaceTargets()
 {
+    surfaceTargets.clear();
+    surfaceTargetsReady = false;
+}
+void EnsureSurfaceTargets()
+{
+    if (surfaceTargetsReady)
+    {
+        return;
+    }
+    surfaceTargetsReady = true;
     auto &g = Game::Get();
     surfaceTargets.clear();
-    if (!g.SurfaceCities() || !CivicJustice::IsExterior())
+    if (!g.SurfaceCities() || !CivicJustice::IsExterior() || !g.Surface() || !g.Surface()->Ready())
+    {
+        return;
+    }
+    auto snapshot = g.Surface()->Stream().Snapshot();
+    if (!snapshot || !snapshot->planet)
+    {
+        return;
+    }
+    const double planetRadius = g.Surface()->Planet().radiusMeters;
+    const auto &hero = g.Surface()->Pose().origin;
+    bool cityNear[Overworld::kCityCount] = {};
+    bool anyNear = false;
+    for (int city = 0; city < Overworld::kCityCount; ++city)
+    {
+        const auto &region = snapshot->planet->Region(Overworld::Cities()[size_t(city)].id);
+        if (world::SurfaceGeometry::Distance(planetRadius, region.center.position, hero) <= 450.)
+        {
+            cityNear[city] = true;
+            anyNear = true;
+        }
+    }
+    if (!anyNear)
     {
         return;
     }
     auto add = [&](int city, Vector2 p, int resident, int landmark, const TrafficVehicle *vehicle) {
+        if (city < 0 || city >= Overworld::kCityCount || !cityNear[city])
+        {
+            return;
+        }
         auto point = g.SurfaceCities()->Point(*g.Surface(), city, p);
-        if (!point || world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, *point,
-                                                       g.Surface()->Pose().origin) > 150)
+        if (!point || world::SurfaceGeometry::Distance(planetRadius, *point, hero) > 150)
         {
             return;
         }
@@ -75,22 +110,30 @@ void PrepareSurfaceTargets()
     for (size_t i = 0; i < residents.size(); ++i)
     {
         const auto &r = residents[i];
-        if (r.health > 0 &&
+        if (r.health > 0 && r.cityIndex >= 0 && r.cityIndex < Overworld::kCityCount &&
+            cityNear[r.cityIndex] &&
             !(i == Overworld::kKainResidentSlot && game::GameLevels::Chapter().GetState().kainJoined))
         {
             add(r.cityIndex, r.position, int(i), -1, nullptr);
         }
     }
-    if (!g.SurfaceParty() || !g.SurfaceParty()->Joined(CompanionId::Ria))
+    if (cityNear[0])
     {
-        add(0, kLiaPosition, -1, 0, nullptr);
+        if (!g.SurfaceParty() || !g.SurfaceParty()->Joined(CompanionId::Ria))
+        {
+            add(0, kLiaPosition, -1, 0, nullptr);
+        }
+        add(0, kMaraPosition, -1, 1, nullptr);
     }
-    add(0, kMaraPosition, -1, 1, nullptr);
     for (int city = 0; city < Overworld::kCityCount; ++city)
     {
-        for (size_t i = 0; i < g.SurfaceCities()->Traffic(city).Vehicles().size(); ++i)
+        if (!cityNear[city])
         {
-            const auto &traffic = g.SurfaceCities()->Traffic(city);
+            continue;
+        }
+        const auto &traffic = g.SurfaceCities()->Traffic(city);
+        for (size_t i = 0; i < traffic.Vehicles().size(); ++i)
+        {
             const auto &car = traffic.Vehicles()[i];
             const auto count = surfaceTargets.size();
             add(city, car.position, -1, -1, &car);
@@ -341,13 +384,50 @@ bool SegmentClear(Vector2 a, Vector2 b, float radius = .3f)
     }
     return true;
 }
+bool StaticSurfaceSolid(Vector2 p, float radius = .3f)
+{
+    auto &g = Game::Get();
+    if (!g.GetState().surfaceExploration || ObservedCity() >= 0 ||
+        game::GameLevels::Chapter().Surface().Observing())
+    {
+        return CivicJustice::Solid(p, radius);
+    }
+    const auto *surface = g.Surface();
+    if (!surface || !surface->Ready())
+    {
+        return true;
+    }
+    auto point = surface->PointAt(p.x * 2, p.y * 2);
+    if (g.GetState().aircraft.position && CivicJustice::IsExterior())
+    {
+        auto airPoint = point;
+        airPoint.altitudeMeters = surface->Stream().Contact(point).heightMeters;
+        if (g.GetState().aircraft.Contains(*surface, airPoint, radius * 2 + .15))
+        {
+            return true;
+        }
+    }
+    return !surface->LandingClear(point, radius * 2);
+}
+bool StaticSegmentClear(Vector2 a, Vector2 b, float radius = .3f, float stride = .5f)
+{
+    int steps = (std::max)(1, int(std::ceil(Game::Distance(a, b) / stride)));
+    for (int i = 0; i <= steps; ++i)
+    {
+        if (StaticSurfaceSolid(Add(a, Sub(b, a), float(i) / steps), radius))
+        {
+            return false;
+        }
+    }
+    return true;
+}
 // Bounded local emergency routing. Police may cross streets, but never buildings or solid props.
 std::vector<Vector2> EmergencyRoute(Vector2 start, Vector2 target)
 {
     profiling::Scope navigation(profiling::Timer::NpcNavigation);
     profiling::Count(profiling::Counter::NpcPathRequests);
     const bool surfaceMode = Game::Get().GetState().surfaceExploration;
-    if (surfaceMode && Game::Distance(start, target) < 40 && SegmentClear(start, target))
+    if (surfaceMode && Game::Distance(start, target) < 40 && StaticSegmentClear(start, target, .3f, .5f))
     {
         return {target};
     }
@@ -360,22 +440,58 @@ std::vector<Vector2> EmergencyRoute(Vector2 start, Vector2 target)
     gx = (std::max)(1, (std::min)(size - 2, gx));
     gy = (std::max)(1, (std::min)(size - 2, gy));
     int goal = gy * size + gx, origin = half * size + half;
-    std::vector<float> costs(count, 1.e9f);
-    std::vector<int> parents(count, -1);
+    // Reuse bounded scratch storage across calls to eliminate per-route allocations.
+    struct Scratch
+    {
+        std::array<float, count> costs;
+        std::array<int, count> parents;
+        std::array<std::int8_t, count> cellState;
+        std::array<std::uint8_t, count> closed;
+        std::vector<std::pair<float, int>> heap;
+    };
+    static Scratch scratch;
+    scratch.costs.fill(1.e9f);
+    scratch.parents.fill(-1);
+    scratch.cellState.fill(0);
+    scratch.closed.fill(0);
+    scratch.heap.clear();
     using Candidate = std::pair<float, int>;
-    std::priority_queue<Candidate, std::vector<Candidate>, std::greater<Candidate>> open;
-    costs[origin] = 0;
-    parents[origin] = origin;
-    open.push({0.f, origin});
+    auto cmp = [](const Candidate &a, const Candidate &b) { return a.first > b.first; };
+    auto cellClear = [&](int idx) -> bool {
+        auto &st = scratch.cellState[size_t(idx)];
+        if (st == 0)
+        {
+            const auto pos = position(idx);
+            const bool blocked = surfaceMode ? StaticSurfaceSolid(pos, .3f) : CivicJustice::Solid(pos, .3f);
+            st = blocked ? -1 : 1;
+        }
+        return st > 0;
+    };
+    scratch.costs[origin] = 0;
+    scratch.parents[origin] = origin;
+    scratch.cellState[origin] = 1;
+    scratch.heap.push_back({0.f, origin});
     int best = origin;
     float closest = Game::Distance(start, target);
     int expansions = 0;
-    while (!open.empty() && ++expansions < (surfaceMode ? 256 : 2400))
+    const int limit = surfaceMode ? 256 : 2400;
+    static constexpr int kDirs[8][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1},
+                                        {1, 1}, {-1, 1}, {1, -1}, {-1, -1}};
+    static constexpr float kStepCost[8] = {2.f, 2.f, 2.f, 2.f, 2.8284271f, 2.8284271f, 2.8284271f, 2.8284271f};
+    while (!scratch.heap.empty() && expansions < limit)
     {
-        int current = open.top().second;
-        open.pop();
-        auto p = position(current);
-        float remaining = Game::Distance(p, target);
+        std::pop_heap(scratch.heap.begin(), scratch.heap.end(), cmp);
+        const int current = scratch.heap.back().second;
+        scratch.heap.pop_back();
+        if (scratch.closed[size_t(current)])
+        {
+            continue;
+        }
+        scratch.closed[size_t(current)] = 1;
+        ++expansions;
+        const int cx = current % size, cy = current / size;
+        const auto p = position(current);
+        const float remaining = Game::Distance(p, target);
         if (remaining < closest)
         {
             closest = remaining;
@@ -386,33 +502,50 @@ std::vector<Vector2> EmergencyRoute(Vector2 start, Vector2 target)
             best = current;
             break;
         }
-        for (auto d : {Vector2{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {-1, 1}, {1, -1}, {-1, -1}})
+        for (int dir = 0; dir < 8; ++dir)
         {
-            int x = current % size + int(d.x), y = current / size + int(d.y);
+            const int dx = kDirs[dir][0], dy = kDirs[dir][1];
+            const int x = cx + dx, y = cy + dy;
             if (x < 0 || y < 0 || x >= size || y >= size)
             {
                 continue;
             }
-            int next = y * size + x;
-            float cost = costs[current] + std::hypot(d.x, d.y) * 2;
-            if (cost >= costs[next] || !SegmentClear(p, position(next)))
+            const int next = y * size + x;
+            if (scratch.closed[size_t(next)])
             {
                 continue;
             }
-            parents[next] = current;
-            costs[next] = cost;
-            open.push({cost + Game::Distance(position(next), target), next});
+            const float cost = scratch.costs[size_t(current)] + kStepCost[dir];
+            if (cost >= scratch.costs[size_t(next)] || !cellClear(next))
+            {
+                continue;
+            }
+            if (dir >= 4 && (!cellClear(cy * size + x) || !cellClear(y * size + cx)))
+            {
+                continue;
+            }
+            const auto nextPos = position(next);
+            const Vector2 mid{(p.x + nextPos.x) * .5f, (p.y + nextPos.y) * .5f};
+            if (surfaceMode ? StaticSurfaceSolid(mid, .3f) : !SegmentClear(p, nextPos))
+            {
+                continue;
+            }
+            scratch.parents[size_t(next)] = current;
+            scratch.costs[size_t(next)] = cost;
+            scratch.heap.push_back({cost + Game::Distance(nextPos, target), next});
+            std::push_heap(scratch.heap.begin(), scratch.heap.end(), cmp);
         }
     }
     std::vector<Vector2> result;
     profiling::Count(profiling::Counter::NpcPathVisitedCells, expansions);
-    for (int node = best; node != origin && node >= 0; node = parents[node])
+    for (int node = best; node != origin && node >= 0; node = scratch.parents[size_t(node)])
     {
         result.push_back(position(node));
     }
     std::reverse(result.begin(), result.end());
     const auto end = result.empty() ? start : result.back();
-    if (Game::Distance(end, target) < 2 && SegmentClear(end, target))
+    if (Game::Distance(end, target) < 2 &&
+        (surfaceMode ? StaticSegmentClear(end, target, .3f, .5f) : SegmentClear(end, target)))
     {
         result.push_back(target);
     }
@@ -753,9 +886,9 @@ PlanetSecurityState &PlanetSecurity::State()
 void PlanetSecurity::Reset()
 {
     planetary = {};
-    shotCollision.Clear();
     reportedPoint.reset();
     surfaceTargets.clear();
+    surfaceTargetsReady = false;
 }
 void PlanetSecurity::Migrate(PlanetSecurityState &s, const CivicState &law,
                              const world::PlanetDefinition &planet, const world::TangentFrame &frame)
@@ -1046,8 +1179,7 @@ bool PlanetSecurity::ShotBlocked(models::Point p)
     auto &g = Game::Get();
     auto point = g.Surface()->PointAt(p.x * 2, p.y * 2);
     point.altitudeMeters = g.Surface()->Origin().origin.altitudeMeters + p.z * 2;
-    return point.altitudeMeters <= g.Surface()->Stream().Contact(point).heightMeters + .03 ||
-           shotCollision.Blocked(*g.Surface()->Stream().Snapshot()->planet, point, .04, true);
+    return g.Surface()->ShotBlocked(point, .04);
 }
 bool PlanetSecurity::Spawn()
 {
@@ -1135,7 +1267,7 @@ bool PlanetSecurity::Spawn()
     }
     return false;
 }
-bool PlanetSecurity::Hit(models::Point p, int damage, bool playerOwned, bool companionOwned)
+bool PlanetSecurity::Hit(models::Point p, int damage, bool playerOwned, bool companionOwned, Vector2 impulse)
 {
     auto &g = Game::Get();
     auto point = Point({p.x, p.y});
@@ -1174,7 +1306,7 @@ bool PlanetSecurity::Hit(models::Point p, int damage, bool playerOwned, bool com
             auto record = std::find_if(planetary.officers.begin(), planetary.officers.end(),
                                        [&](const auto &r) { return r.id == o.id; });
             if (record != planetary.officers.end() && body(o.position, Elevation(record->position)) &&
-                CivicCombat::DamageOfficer(i, damage, {}, playerOwned))
+                CivicCombat::DamageOfficer(i, damage, impulse, playerOwned))
             {
                 return true;
             }
@@ -1197,6 +1329,7 @@ bool PlanetSecurity::Hit(models::Point p, int damage, bool playerOwned, bool com
     {
         return true;
     }
+    EnsureSurfaceTargets();
     for (const auto &target : surfaceTargets)
     {
         if (target.vehicleBody)
@@ -1227,7 +1360,7 @@ bool PlanetSecurity::Hit(models::Point p, int damage, bool playerOwned, bool com
             continue;
         }
         if (target.resident >= 0 &&
-            CivicCombat::DamageResident(size_t(target.resident), damage, {}, playerOwned))
+            CivicCombat::DamageResident(size_t(target.resident), damage, impulse, playerOwned))
         {
             return true;
         }
@@ -1358,19 +1491,20 @@ bool CivicJustice::Solid(Vector2 p, float radius, float altitude, bool driving)
     }
     return false;
 }
-bool CivicJustice::ClearLine(Vector2 from, Vector2 to)
+namespace
+{
+bool ClearLine3D(Vector2 from, Vector2 to, std::optional<float> targetAltitude)
 {
     if (Game::Get().GetState().surfaceExploration && ObservedCity() < 0 &&
         !game::GameLevels::Chapter().Surface().Observing())
     {
         const auto &surface = *Game::Get().Surface();
         const float eye = models::WorldScale::aimHeightPixels / 44;
-        float a = PlanetSecurity::Elevation(surface.Pose().origin);
         auto start = surface.PointAt(from.x * 2, from.y * 2), end = surface.PointAt(to.x * 2, to.y * 2);
         start.altitudeMeters = surface.Stream().Contact(start).heightMeters;
         end.altitudeMeters = surface.Stream().Contact(end).heightMeters;
-        a = PlanetSecurity::Elevation(start) + eye;
-        float b = PlanetSecurity::Elevation(end) + eye;
+        const float a = PlanetSecurity::Elevation(start) + eye;
+        const float b = (targetAltitude ? *targetAltitude : PlanetSecurity::Elevation(end)) + eye;
         const int steps = (std::max)(1, int(std::ceil(Game::Distance(from, to) / .4f)));
         for (int i = 0; i <= steps; ++i)
         {
@@ -1384,6 +1518,11 @@ bool CivicJustice::ClearLine(Vector2 from, Vector2 to)
         return true;
     }
     return SegmentClear(from, to, .05f);
+}
+} // namespace
+bool CivicJustice::ClearLine(Vector2 from, Vector2 to)
+{
+    return ClearLine3D(from, to, std::nullopt);
 }
 void CivicJustice::Reset(GameState &world)
 {
@@ -1552,12 +1691,36 @@ float CivicJustice::SightDistance(const SecurityOfficer &officer, float angle)
 bool CivicJustice::CanSee(const SecurityOfficer &officer, Vector2 target, float altitude)
 {
     profiling::Scope perceptionTimer(profiling::Timer::NpcPerception);
-    if (officer.health <= 0 || (!Game::Get().GetState().surfaceExploration && altitude >= .8f) ||
+    const auto &world = Game::Get().GetState();
+    if (officer.health <= 0 || (!world.surfaceExploration && altitude >= .8f) ||
         (officer.impact.response == BodyResponse::Knockdown && officer.impact.seconds > 0))
     {
         return false;
     }
     profiling::Count(profiling::Counter::NpcPerceptionQueries);
+    if (world.surfaceExploration && ObservedCity() < 0 && !game::GameLevels::Chapter().Surface().Observing() &&
+        Game::Get().Surface() && Game::Get().Surface()->Ready())
+    {
+        const auto &surface = *Game::Get().Surface();
+        auto officerPoint = surface.PointAt(officer.position.x * 2, officer.position.y * 2);
+        officerPoint.altitudeMeters = surface.Stream().Contact(officerPoint).heightMeters;
+        const float officerAlt = PlanetSecurity::Elevation(officerPoint);
+        float targetAlt = altitude;
+        if (!world.aircraft.mounted)
+        {
+            auto targetPoint = surface.PointAt(target.x * 2, target.y * 2);
+            targetPoint.altitudeMeters = surface.Stream().Contact(targetPoint).heightMeters;
+            targetAlt = PlanetSecurity::Elevation(targetPoint) + altitude;
+        }
+        constexpr float kSurfaceVerticalSight = 10.f; // 20 metres vertical engagement envelope for foot units.
+        if (!ai::Perception::InSight({officer.position.x, officer.position.y, officerAlt}, officer.facing.yaw,
+                                     {target.x, target.y, targetAlt},
+                                     {kSightRange, kSightHalfAngle, 0, kSurfaceVerticalSight}))
+        {
+            return false;
+        }
+        return ClearLine3D(officer.position, target, targetAlt);
+    }
     if (!ai::Perception::InSight({officer.position.x, officer.position.y, 0}, officer.facing.yaw,
                                  {target.x, target.y, 0}, {kSightRange, kSightHalfAngle, 0, 0}))
     {
@@ -1805,7 +1968,20 @@ void CivicJustice::Update(float dt)
         }
         auto delta = Sub(world.playerPosition, officer.position);
         float distance = std::hypot(delta.x, delta.y);
+        const auto role = SecurityResponse::RoleForUnit(officer.tier, officer.id);
+        const float preferredRange = SecurityResponse::PreferredRange(role);
         bool sees = mobilized && CanSee(officer, world.playerPosition, PlayerHeight());
+        // Tier 5 Interceptor units track airborne aircraft up to 60 metres slant range.
+        const bool airTarget =
+            surfaceMode && role == SecurityRole::Interceptor && world.aircraft.mounted &&
+            world.aircraft.position && mobilized && distance < 26.f &&
+            std::abs(PlayerHeight() -
+                     PlanetSecurity::Elevation(
+                         Game::Get().Surface()->PointAt(officer.position.x * 2, officer.position.y * 2))) <= 35.f;
+        if (airTarget)
+        {
+            sees = true;
+        }
         officer.threat.Observe(sees, ai::PerceptionSettings::kOfficerMemorySeconds);
         visible |= sees;
         if (sees)
@@ -1816,17 +1992,48 @@ void CivicJustice::Update(float dt)
                 PlanetSecurity::SawPlayer();
             }
         }
+        // Tier 1 non-lethal arrest & fine compliance on surface when player is unarmed & stationary.
+        if (surfaceMode && civic.wanted == 1 && civic.heat < 60 && civic.pursuitSeconds > 1.5f &&
+            role == SecurityRole::Patrol && sees && distance < 2.6f && !world.Mounted() &&
+            !Game::Get().Loadout().IsFirearmEquipped() && world.movementSpeed < .15f)
+        {
+            auto &stats = Game::Get().Player();
+            const int fine = (std::min)(100, stats.credits);
+            stats.credits -= fine;
+            ClearPursuit();
+            Game::Get().ShowNotice("보안 순찰 / 비무장 투항 확인 · 벌금 " + std::to_string(fine) +
+                                   " 크레딧 정산 후 수배 해제");
+            return;
+        }
         officer.decision = mobilized ? ai::Perception::Decide(ai::Role::Officer, officer.threat, distance)
                                      : ai::Decision::Routine;
         officer.navigationSeconds -= dt;
+        const bool marksmanRetreat =
+            role == SecurityRole::Marksman && sees && distance < 6.5f && officer.impact.seconds <= 0;
+        const bool tacticalFlank =
+            (role == SecurityRole::Tactical || role == SecurityRole::Interceptor) && sees &&
+            distance <= preferredRange + 2.5f && distance >= 3.2f && officer.impact.seconds <= 0;
         const bool moving =
             ((officer.departing && Game::Distance(officer.position, officer.lastKnown) > .8f) ||
+             marksmanRetreat || tacticalFlank ||
              (officer.threat.Known() &&
-              (sees ? distance > 5 : Game::Distance(officer.position, officer.lastKnown) > .8f))) &&
+              (sees ? distance > preferredRange : Game::Distance(officer.position, officer.lastKnown) > .8f))) &&
             officer.impact.seconds <= 0;
-        const auto destination = sees ? world.playerPosition : officer.lastKnown;
-        const bool needsRoute = officer.waypoint >= officer.route.size() || officer.blockedSeconds >= 1 ||
-                                Game::Distance(officer.route.back(), destination) > 2;
+        Vector2 destination = sees ? world.playerPosition : officer.lastKnown;
+        if (marksmanRetreat)
+        {
+            destination = Add(officer.position, Unit(Sub(officer.position, world.playerPosition)), 4.f);
+        }
+        else if (tacticalFlank)
+        {
+            const Vector2 toPlayer = Unit(delta);
+            const float sideSign = (officer.id % 2 == 0) ? 1.f : -1.f;
+            const Vector2 perp{-toPlayer.y * sideSign, toPlayer.x * sideSign};
+            destination = Add(officer.position, perp, 2.2f);
+        }
+        const bool needsRoute = !marksmanRetreat && !tacticalFlank &&
+                                (officer.waypoint >= officer.route.size() || officer.blockedSeconds >= 1 ||
+                                 Game::Distance(officer.route.back(), destination) > 2);
         if (moving && needsRoute && officer.navigationSeconds <= 0 && routeBudget > 0 &&
             (!surfaceMode || PlanetSecurity::CanNavigate()))
         {
@@ -1837,12 +2044,29 @@ void CivicJustice::Update(float dt)
             officer.blockedSeconds = 0;
         }
         auto previous = officer.position;
-        if (moving && officer.waypoint < officer.route.size())
+        const float roleSpeed = response.moveSpeed * (role == SecurityRole::Heavy ? .82f
+                                                      : role == SecurityRole::Tactical ? 1.08f
+                                                                                       : 1.f);
+        if (moving && (marksmanRetreat || tacticalFlank))
+        {
+            auto next = Add(officer.position, Unit(Sub(destination, officer.position)), roleSpeed * .75f * dt);
+            if (SegmentClear(officer.position, next, .32f))
+            {
+                officer.position =
+                    surfaceMode
+                        ? BodyCollision::Slide(officer.position, next,
+                                               [](Vector2 p) { return PlanetSecurity::BodyBlocked(p); })
+                        : Separate(officer.position, next, .3f, -1, false,
+                                   int(&officer - civic.officers.data()));
+            }
+            officer.blockedSeconds = 0;
+        }
+        else if (moving && officer.waypoint < officer.route.size())
         {
             auto target = officer.route[officer.waypoint];
             float remaining = Game::Distance(target, officer.position);
             auto next = Add(officer.position, Unit(Sub(target, officer.position)),
-                            (std::min)(remaining, response.moveSpeed * dt));
+                            (std::min)(remaining, roleSpeed * dt));
             if (SegmentClear(officer.position, next, .32f))
             {
                 officer.position =
@@ -1866,16 +2090,22 @@ void CivicJustice::Update(float dt)
         {
             officer.blockedSeconds = 0;
         }
+        const float prevYaw = officer.facing.yaw;
         officer.facing.Update(previous, officer.position, dt);
         if (!sees && !officer.departing && !officer.facing.walking)
         {
             officer.facing.yaw += dt * .8f;
         }
-        sees = mobilized && CanSee(officer, world.playerPosition, PlayerHeight());
-        officer.threat.Observe(sees, ai::PerceptionSettings::kOfficerMemorySeconds);
-        officer.decision = mobilized ? ai::Perception::Decide(ai::Role::Officer, officer.threat, distance)
-                                     : ai::Decision::Routine;
-        visible |= sees;
+        const bool movedOrTurned =
+            Game::Distance(previous, officer.position) > 1.e-4f || std::fabs(officer.facing.yaw - prevYaw) > 1.e-4f;
+        if (movedOrTurned && !airTarget)
+        {
+            sees = mobilized && CanSee(officer, world.playerPosition, PlayerHeight());
+            officer.threat.Observe(sees, ai::PerceptionSettings::kOfficerMemorySeconds);
+            officer.decision = mobilized ? ai::Perception::Decide(ai::Role::Officer, officer.threat, distance)
+                                         : ai::Decision::Routine;
+            visible |= sees;
+        }
         if (!officer.threat.Known())
         {
             officer.teamwork = {};
@@ -1895,35 +2125,74 @@ void CivicJustice::Update(float dt)
             officer.lastKnown = world.playerPosition;
             officer.facing.yaw = std::atan2(delta.y, delta.x);
         }
-        if (sees && distance < response.fireRange && officer.impact.seconds <= 0 &&
+        const float roleRange = response.fireRange * (role == SecurityRole::Marksman      ? 1.4f
+                                                      : role == SecurityRole::Interceptor ? 1.6f
+                                                                                          : 1.f);
+        if (sees && distance < roleRange && officer.impact.seconds <= 0 &&
             civic.bullets.size() < 128)
         {
-            const bool blocked = FriendlyFireBlocked(officer, world.playerPosition);
+            const bool blocked = !airTarget && FriendlyFireBlocked(officer, world.playerPosition);
             if (blocked)
             {
                 officer.teamwork.task = ai::TeamTask::HoldFire;
                 profiling::Count(profiling::Counter::NpcFriendlyFireHolds);
             }
             combat::Shot shot;
-            if (!blocked && officer.weapon.TryFire(std::atan2(delta.y, delta.x), shot))
+            const float aimYaw = std::atan2(delta.y, delta.x);
+            if (!blocked && officer.weapon.TryFire(aimYaw, shot))
             {
-                civic.bullets.push_back(
-                    {officer.position,
-                     {std::cos(shot.angle), std::sin(shot.angle)},
-                     shot.speed,
-                     shot.range,
-                     response.damage,
-                     false,
-                     false,
-                     surfaceMode ? float((Game::Get()
-                                              .Surface()
-                                              ->ContactAt(officer.position.x * 2, officer.position.y * 2)
-                                              .heightMeters -
-                                          Game::Get().Surface()->Origin().origin.altitudeMeters) /
-                                         2) +
-                                       models::WorldScale::aimHeightPixels / 44
-                                 : 0});
-                officer.muzzleFlash = .07f;
+                if (role == SecurityRole::Marksman)
+                {
+                    shot.angle = aimYaw + (shot.angle - aimYaw) * .55f;
+                    shot.range *= 1.4f;
+                }
+                if (airTarget && world.aircraft.position && civic.airBullets.size() < 48)
+                {
+                    const float officerZ =
+                        float((Game::Get()
+                                   .Surface()
+                                   ->ContactAt(officer.position.x * 2, officer.position.y * 2)
+                                   .heightMeters -
+                               Game::Get().Surface()->Origin().origin.altitudeMeters) /
+                              2) +
+                        models::WorldScale::aimHeightPixels / 44;
+                    const models::Point origin{officer.position.x, officer.position.y, officerZ};
+                    const models::Point targetPt{world.playerPosition.x, world.playerPosition.y,
+                                                 PlayerHeight() + .4f};
+                    const models::Point d{targetPt.x - origin.x, targetPt.y - origin.y,
+                                          targetPt.z - origin.z};
+                    const float len = std::sqrt(d.x * d.x + d.y * d.y + d.z * d.z);
+                    if (len > .001f)
+                    {
+                        civic.airBullets.push_back({origin,
+                                                    {d.x / len, d.y / len, d.z / len},
+                                                    shot.speed * 1.15f,
+                                                    42.f,
+                                                    response.damage,
+                                                    false});
+                        officer.muzzleFlash = .07f;
+                    }
+                }
+                else
+                {
+                    civic.bullets.push_back(
+                        {officer.position,
+                         {std::cos(shot.angle), std::sin(shot.angle)},
+                         shot.speed,
+                         shot.range,
+                         int(response.damage * (role == SecurityRole::Marksman ? 1.25f : 1.f)),
+                         false,
+                         false,
+                         surfaceMode ? float((Game::Get()
+                                                  .Surface()
+                                                  ->ContactAt(officer.position.x * 2, officer.position.y * 2)
+                                                  .heightMeters -
+                                              Game::Get().Surface()->Origin().origin.altitudeMeters) /
+                                             2) +
+                                           models::WorldScale::aimHeightPixels / 44
+                                     : 0});
+                    officer.muzzleFlash = .07f;
+                }
             }
         }
     }
@@ -1945,10 +2214,16 @@ void CivicJustice::Update(float dt)
             civic.pendingInfamy = 0;
         }
         civic.unseenSeconds = visible ? 0 : civic.unseenSeconds + dt;
+        const float unidentifiedLimit =
+            surfaceMode ? SecurityResponse::SurfaceEscapeSeconds(civic.wanted, false)
+                        : kUnidentifiedEscapeSeconds;
+        const float identifiedLimit =
+            surfaceMode ? SecurityResponse::SurfaceEscapeSeconds(civic.wanted, true)
+                        : SecurityResponse::kIdentifiedEscapeSeconds;
         if (civic.responseStarted && !civic.identified && !justStarted)
         {
             civic.initialUnseenSeconds += dt;
-            if (civic.initialUnseenSeconds >= kUnidentifiedEscapeSeconds)
+            if (civic.initialUnseenSeconds >= unidentifiedLimit)
             {
                 profiling::Count(profiling::Counter::WantedUnidentifiedEscapes);
                 ClearPursuit();
@@ -1956,7 +2231,7 @@ void CivicJustice::Update(float dt)
                     "수배 해제 / 보안대에 식별되지 않았습니다. 이번 사건은 악명에 반영되지 않습니다.");
             }
         }
-        else if (civic.identified && civic.unseenSeconds >= SecurityResponse::kIdentifiedEscapeSeconds)
+        else if (civic.identified && civic.unseenSeconds >= identifiedLimit)
         {
             profiling::Count(profiling::Counter::WantedIdentifiedEscapes);
             ClearPursuit();
@@ -2037,7 +2312,8 @@ void CivicJustice::Update(float dt)
             officer.threat.Remember(ai::Stimulus::Report, target->memorySeconds);
             officer.facing.yaw = std::atan2(target->position.y - p.y, target->position.x - p.x);
             officer.tier = civic.wanted;
-            officer.health = response.health;
+            const auto spawnRole = SecurityResponse::RoleForUnit(officer.tier, officer.id);
+            officer.health = int(response.health * SecurityResponse::HealthMultiplier(spawnRole));
             officer.route = std::move(route);
             officer.navigationSeconds = 1;
             civic.officers.push_back(std::move(officer));
@@ -2068,9 +2344,9 @@ bool CivicCombat::Available()
 }
 void CivicCombat::DamagePlayer(int damage, Vector2 impulse)
 {
-    auto &stats = game::GameLevels::Mine().GetState().player;
+    auto &stats = Game::Get().Player();
     if (damage <= 0 || stats.health <= 0 || HospitalRecovery::Active() || civic.playerGrace > 0 ||
-        civic.playerImpact.invulnerability > 0)
+        civic.playerImpact.invulnerability > 0 || Game::Get().GetState().playerMotion.mobility.Invulnerable())
     {
         return;
     }
@@ -2129,7 +2405,10 @@ bool CivicCombat::DamageOfficer(size_t index, int damage, Vector2 impulse, bool 
     }
     auto &officer = civic.officers[index];
     officer.health = (std::max)(0, officer.health - damage);
-    Impact(officer.impact, impulse, officer.health == 0);
+    const auto role = SecurityResponse::RoleForUnit(officer.tier, officer.id);
+    const Vector2 effectiveImpulse =
+        role == SecurityRole::Heavy ? Vector2{impulse.x * .45f, impulse.y * .45f} : impulse;
+    Impact(officer.impact, effectiveImpulse, officer.health == 0);
     if (playerOwned)
     {
         if (Game::Get().GetState().surfaceExploration)
@@ -2225,6 +2504,7 @@ bool AimAtVehicles(float shotAngle, models::Point &target)
     }
     if (w.surfaceExploration)
     {
+        EnsureSurfaceTargets();
         for (const auto &body : surfaceTargets)
         {
             if (!body.vehicleBody)
@@ -2342,7 +2622,7 @@ void UpdateAirProjectiles(float dt)
             }
             if (Game::Get().GetState().surfaceExploration)
             {
-                if (PlanetSecurity::Hit(bullet.position, bullet.damage, true))
+                if (PlanetSecurity::Hit(bullet.position, bullet.damage, bullet.playerOwned))
                 {
                     bullet.remaining = 0;
                 }
@@ -2371,9 +2651,10 @@ void UpdateAirProjectiles(float dt)
 } // namespace
 void CivicCombat::Fire()
 {
-    auto &world = Game::Get().GetState();
+    auto &g = Game::Get();
+    auto &world = g.GetState();
     auto &mine = game::GameLevels::Mine();
-    if (!mine.GetState().loadout.IsPistolEquipped())
+    if (!g.Loadout().IsFirearmEquipped())
     {
         Melee();
         return;
@@ -2383,18 +2664,26 @@ void CivicCombat::Fire()
         return;
     }
     combat::Shot shot;
-    if (!mine.GetState().pistol.TryFire(game::GameLevels::FireAngle(), shot))
+    const float aimAngle = game::GameLevels::FireAngle();
+    if (!g.ActiveFirearm().TryFire(aimAngle, shot))
     {
         return;
     }
+    const bool focused = world.playerMotion.mobility.ConsumeFocus();
+    if (focused)
+    {
+        shot.angle = aimAngle + (shot.angle - aimAngle) * .45f;
+    }
+    const int finalDamage =
+        int((shot.damage + (mine.GetState().player.level - 1) * 4) * (focused ? 1.3f : 1.f));
     world.playerAnimation.Fire();
     models::Point target{};
-    if (Game::Get().IsAiming() && AimAtVehicles(shot.angle, target))
+    if (g.IsAiming() && AimAtVehicles(shot.angle, target))
     {
         models::Point origin{world.playerPosition.x, world.playerPosition.y,
                              models::WorldScale::aimHeightPixels / 44 +
                                  (world.surfaceExploration
-                                      ? PlanetSecurity::Elevation(Game::Get().Surface()->Pose().origin)
+                                      ? PlanetSecurity::Elevation(g.Surface()->Pose().origin)
                                       : 0)};
         models::Point d{target.x - origin.x, target.y - origin.y, target.z - origin.z};
         float length = std::sqrt(d.x * d.x + d.y * d.y + d.z * d.z);
@@ -2404,15 +2693,15 @@ void CivicCombat::Fire()
                                         {d.x / length, d.y / length, d.z / length},
                                         shot.speed,
                                         shot.range,
-                                        shot.damage + (mine.GetState().player.level - 1) * 4});
+                                        finalDamage});
         }
         civic.muzzleFlash = .06f;
         return;
     }
     civic.bullets.push_back({world.playerPosition, game::MineLevel::GetAimDirection(shot.angle), shot.speed,
-                             shot.range, shot.damage + (mine.GetState().player.level - 1) * 4, true, false,
+                             shot.range, finalDamage, true, false,
                              world.surfaceExploration
-                                 ? PlanetSecurity::Elevation(Game::Get().Surface()->Pose().origin) +
+                                 ? PlanetSecurity::Elevation(g.Surface()->Pose().origin) +
                                        models::WorldScale::aimHeightPixels / 44
                                  : 0});
     civic.muzzleFlash = .06f;
@@ -2426,6 +2715,10 @@ void CivicCombat::Melee()
     civic.meleeSeconds = .65f;
     auto &world = Game::Get().GetState();
     auto aim = game::MineLevel::GetAimDirection(game::GameLevels::FireAngle());
+    const bool focused = world.playerMotion.mobility.ConsumeFocus();
+    const int meleeDamage =
+        int((30 + (Game::Get().Player().level - 1) * 4) * (focused ? 1.3f : 1.f));
+    auto impulse = Add({}, aim, focused ? 5.2f : 4.f);
     auto hit = [&](Vector2 p) {
         auto d = Sub(p, world.playerPosition);
         float range = std::hypot(d.x, d.y);
@@ -2434,33 +2727,41 @@ void CivicCombat::Melee()
     };
     if (world.surfaceExploration)
     {
+        // Sweep true melee arc against officers first (matches legacy 1.45u cone + knockback),
+        // then fall through to 3D ray sweep for vehicles/community/city residents with impulse.
+        for (size_t i = 0; i < civic.officers.size(); ++i)
+        {
+            if (hit(civic.officers[i].position) && DamageOfficer(i, meleeDamage, impulse))
+            {
+                return;
+            }
+        }
         float z = PlanetSecurity::Elevation(Game::Get().Surface()->Pose().origin) +
                   models::WorldScale::aimHeightPixels / 44;
-        for (int i = 1; i <= 12; ++i)
+        for (int i = 1; i <= 14; ++i)
         {
             auto p = Add(world.playerPosition, aim, i * .1f);
             if (PlanetSecurity::ShotBlocked({p.x, p.y, z}))
             {
                 break;
             }
-            if (PlanetSecurity::Hit({p.x, p.y, z}, 30, true))
+            if (PlanetSecurity::Hit({p.x, p.y, z}, meleeDamage, true, false, impulse))
             {
                 break;
             }
         }
         return;
     }
-    auto impulse = Add({}, aim, 4);
     for (size_t i = 0; i < civic.officers.size(); ++i)
     {
-        if (hit(civic.officers[i].position) && DamageOfficer(i, 30, impulse))
+        if (hit(civic.officers[i].position) && DamageOfficer(i, meleeDamage, impulse))
         {
             return;
         }
     }
     for (size_t i = 0; i < world.residents.size(); ++i)
     {
-        if (hit(world.residents[i].position) && DamageResident(i, 30, impulse, true))
+        if (hit(world.residents[i].position) && DamageResident(i, meleeDamage, impulse, true))
         {
             return;
         }
@@ -2488,6 +2789,7 @@ void CivicCombat::Update(float dt)
     if (Available())
     {
         game::GameLevels::Mine().GetState().pistol.Update(dt);
+        game::GameLevels::Mine().GetState().carbine.Update(dt);
     }
     if (Available() && Game::Get().GetState().mouseFiring)
     {
@@ -2988,6 +3290,7 @@ Vector2 BodyCollision::SurfaceVehicleContacts(const world::SurfacePoint &from, c
         }
     };
     const int damage = impactSpeed > 2 ? int((std::min)(impactSpeed * 9, 1000.f)) : 0;
+    EnsureSurfaceTargets();
     for (const auto &target : surfaceTargets)
     {
         if (target.vehicleBody)
@@ -3493,6 +3796,8 @@ void CivicPresentation::DrawWorld()
     {
         renderer.BeginModels();
     }
+    const auto viewMin = WorldCamera::FromViewport({0, 0});
+    const auto viewMax = WorldCamera::FromViewport({float(kCanvasWidth), float(kCanvasHeight)});
     for (const auto &officer : civic.officers)
     {
         if (officer.corpseSeconds > 20 &&
@@ -3511,6 +3816,12 @@ void CivicPresentation::DrawWorld()
                 continue;
             }
             elevation = PlanetSecurity::Elevation(record->position);
+        }
+        const auto scr = Drawing::WorldToScreen(officer.position.x, officer.position.y, elevation * 44);
+        if (scr.x + 160.f < viewMin.x || scr.x - 160.f > viewMax.x || scr.y + 140.f < viewMin.y ||
+            scr.y - 200.f > viewMax.y)
+        {
+            continue;
         }
         renderqueue::PushMatrix();
         renderqueue::Translate(0, -elevation * 44, elevation * (1296.f / 44));

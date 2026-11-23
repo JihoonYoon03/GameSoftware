@@ -743,10 +743,22 @@ void TerrainStream::Update(const TangentFrame &focus, Vector3d velocity,
     }
     auto snapshot = std::make_shared<SurfaceSnapshot>();
     snapshot->planet = d.planet;
+    if (d.planet)
+    {
+        snapshot->chunkLevel = settings.Level(d.planet->terrain.Planet());
+        snapshot->hasChunkLevel = true;
+    }
+    snapshot->chunks.reserve(d.resident.size());
+    snapshot->chunkLookup.reserve(d.resident.size());
     for (const auto &entry : d.resident)
     {
+        const std::size_t idx = snapshot->chunks.size();
         snapshot->chunks.push_back(entry.second);
+        snapshot->chunkLookup.push_back(
+            {CubeSphere::PackCell(entry.first.face, entry.first.x, entry.first.y), idx});
     }
+    std::sort(snapshot->chunkLookup.begin(), snapshot->chunkLookup.end(),
+              [](const auto &a, const auto &b) { return a.cell < b.cell; });
     {
         std::lock_guard<std::mutex> lock(d.mutex);
         d.stats.queued = d.pending.size();
@@ -756,20 +768,36 @@ void TerrainStream::Update(const TangentFrame &focus, Vector3d velocity,
     std::atomic_store(&d.published, std::shared_ptr<const SurfaceSnapshot>(snapshot));
     d.changed.notify_all();
 }
-GroundContact TerrainStream::Contact(const SurfacePoint &point) const
+GroundContact TerrainStream::Contact(const SurfaceSnapshot &snapshot, const SurfacePoint &point) const
 {
     G::Validate(point);
-    auto snapshot = Snapshot();
-    Require(bool(snapshot->planet), "Surface world is not ready");
-    auto key = CubeSphere::Address(snapshot->planet->terrain.Planet(), point,
-                                   settings.Level(snapshot->planet->terrain.Planet()));
-    auto found = std::lower_bound(snapshot->chunks.begin(), snapshot->chunks.end(), key,
+    Require(bool(snapshot.planet), "Surface world is not ready");
+    const std::uint8_t level =
+        snapshot.hasChunkLevel ? snapshot.chunkLevel : settings.Level(snapshot.planet->terrain.Planet());
+    if (!snapshot.chunkLookup.empty())
+    {
+        const std::uint64_t cell = CubeSphere::FastCell(point, level);
+        auto found = std::lower_bound(snapshot.chunkLookup.begin(), snapshot.chunkLookup.end(), cell,
+                                      [](const auto &entry, std::uint64_t value) { return entry.cell < value; });
+        if (found != snapshot.chunkLookup.end() && found->cell == cell)
+        {
+            return snapshot.chunks[found->index]->Contact(point);
+        }
+        return FieldContact(snapshot.planet->terrain, point);
+    }
+    auto key = CubeSphere::Address(snapshot.planet->terrain.Planet(), point, level);
+    auto found = std::lower_bound(snapshot.chunks.begin(), snapshot.chunks.end(), key,
                                   [](const auto &chunk, const auto &value) { return chunk->key < value; });
-    if (found != snapshot->chunks.end() && (*found)->key == key)
+    if (found != snapshot.chunks.end() && (*found)->key == key)
     {
         return (*found)->Contact(point);
     }
-    return FieldContact(snapshot->planet->terrain, point);
+    return FieldContact(snapshot.planet->terrain, point);
+}
+GroundContact TerrainStream::Contact(const SurfacePoint &point) const
+{
+    auto snapshot = Snapshot();
+    return Contact(*snapshot, point);
 }
 
 // ============================================================================
@@ -828,13 +856,15 @@ GroundContact SurfaceSession::ContactAt(double x, double y) const
 }
 bool SurfaceSession::Blocked(double x, double y, bool hovering) const
 {
-    if (!Ready())
+    auto snapshot = stream.Snapshot();
+    if (!snapshot->planet || !snapshot->planet->terrain.Planet().SameWorld(planet))
     {
         return true;
     }
-    auto contact = ContactAt(x, y);
+    const auto point = PointAt(x, y);
+    const auto contact = stream.Contact(*snapshot, point);
     return (!contact.land && !hovering) || (contact.land && contact.slope > (hovering ? .35 : .65)) ||
-           contentCollision.Blocked(*stream.Snapshot()->planet, PointAt(x, y), hovering ? .65 : .32);
+           contentCollision.Blocked(*snapshot->planet, point, hovering ? .65 : .32);
 }
 bool SurfaceSession::AirClear(const SurfacePoint &base, double radius, double height) const
 {
@@ -943,13 +973,44 @@ bool SurfaceSession::Relocate(const SurfacePoint &point, double clearance, doubl
 }
 bool SurfaceSession::LandingClear(const SurfacePoint &point, double clearance) const
 {
-    if (!Ready() || !std::isfinite(clearance) || clearance < 0 || clearance > 4)
+    if (!std::isfinite(clearance) || clearance < 0 || clearance > 4)
     {
         return false;
     }
-    const auto contact = stream.Contact(point);
+    auto snapshot = stream.Snapshot();
+    if (!snapshot->planet || !snapshot->planet->terrain.Planet().SameWorld(planet))
+    {
+        return false;
+    }
+    const auto contact = stream.Contact(*snapshot, point);
     return contact.land && contact.slope <= .3 &&
-           !contentCollision.Blocked(*stream.Snapshot()->planet, point, clearance);
+           !contentCollision.Blocked(*snapshot->planet, point, clearance);
+}
+bool SurfaceSession::LandingClearIsolated(const SurfacePoint &point, double clearance,
+                                          ContentCollision &isolatedCache) const
+{
+    if (!std::isfinite(clearance) || clearance < 0 || clearance > 4)
+    {
+        return false;
+    }
+    auto snapshot = stream.Snapshot();
+    if (!snapshot->planet || !snapshot->planet->terrain.Planet().SameWorld(planet))
+    {
+        return false;
+    }
+    const auto contact = stream.Contact(*snapshot, point);
+    return contact.land && contact.slope <= .3 &&
+           !isolatedCache.Blocked(*snapshot->planet, point, clearance);
+}
+bool SurfaceSession::ShotBlocked(const SurfacePoint &point, double clearance) const
+{
+    auto snapshot = stream.Snapshot();
+    if (!snapshot->planet || !snapshot->planet->terrain.Planet().SameWorld(planet))
+    {
+        return false;
+    }
+    return point.altitudeMeters <= stream.Contact(*snapshot, point).heightMeters + .03 ||
+           contentCollision.Blocked(*snapshot->planet, point, clearance, true);
 }
 bool SurfaceSession::RestorePose(const TangentFrame &savedPose, const TangentFrame &savedOrigin,
                                  bool hovering)
@@ -1006,17 +1067,19 @@ WorldLocation SurfaceSession::Location() const
             continue;
         }
         auto local = G::ToLocal(r.frame, pose.origin, planet.radiusMeters);
-        bool inside = true;
+        bool positive = false, negative = false;
         for (std::size_t i = 0; i < r.footprint.size(); ++i)
         {
             auto a = r.footprint[i], b = r.footprint[(i + 1) % r.footprint.size()];
-            if ((b.x - a.x) * (local.y - a.y) - (b.y - a.y) * (local.x - a.x) < 0)
+            const double cross = (b.x - a.x) * (local.y - a.y) - (b.y - a.y) * (local.x - a.x);
+            positive |= cross > 1.e-9;
+            negative |= cross < -1.e-9;
+            if (positive && negative)
             {
-                inside = false;
                 break;
             }
         }
-        if (inside)
+        if (!(positive && negative))
         {
             location.regionId = r.definition.id;
             break;

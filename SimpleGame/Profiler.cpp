@@ -5,12 +5,18 @@
 #include <psapi.h>
 #include <algorithm>
 #include <array>
+#include <condition_variable>
 #include <cstdio>
+#include <cstring>
 #include <clocale>
+#include <deque>
 #include <filesystem>
+#include <functional>
+#include <mutex>
 #include <sstream>
 #include <iomanip>
 #include <locale>
+#include <thread>
 #include <vector>
 #pragma comment(lib, "psapi.lib")
 
@@ -537,6 +543,68 @@ class ConsoleReport
     std::wstring footer;
 };
 ConsoleReport consoleReport;
+struct AsyncLogQueue
+{
+    std::mutex mutex;
+    std::condition_variable cv;
+    std::deque<std::string> pending;
+    std::thread worker;
+    bool stopping = false;
+    void Enqueue(std::string payload, const std::function<void(const std::string &)> &fn)
+    {
+        std::lock_guard<std::mutex> lock(mutex);
+        if (!worker.joinable())
+        {
+            stopping = false;
+            worker = std::thread([this, fn]() {
+                for (;;)
+                {
+                    std::string item;
+                    {
+                        std::unique_lock<std::mutex> lk(mutex);
+                        cv.wait(lk, [&]() { return stopping || !pending.empty(); });
+                        if (pending.empty() && stopping)
+                        {
+                            break;
+                        }
+                        item = std::move(pending.front());
+                        pending.pop_front();
+                    }
+                    fn(item);
+                }
+            });
+        }
+        if (pending.size() < 16)
+        {
+            pending.push_back(std::move(payload));
+            cv.notify_one();
+        }
+    }
+    void Drain()
+    {
+        std::thread toJoin;
+        {
+            std::lock_guard<std::mutex> lock(mutex);
+            if (!worker.joinable())
+            {
+                return;
+            }
+            stopping = true;
+            cv.notify_one();
+            toJoin = std::move(worker);
+        }
+        if (toJoin.joinable())
+        {
+            toJoin.join();
+        }
+    }
+    ~AsyncLogQueue()
+    {
+        Drain();
+    }
+};
+AsyncLogQueue asyncLog;
+
 void Report(Clock::time_point now)
 {
     const auto reportStart = Clock::now();
@@ -648,34 +716,38 @@ void Report(Clock::time_point now)
     auto logStart = reportStart;
     const std::string line = out.str();
     latestReportJson = line;
-    const std::string formatted = FormatConsoleReport(line);
-    if (!consoleReport.Write(formatted))
-    {
-        std::fwrite(formatted.data(), 1, formatted.size(), stdout);
-        std::fflush(stdout);
-    }
-    if (logFile)
-    {
-        if (logBytes + line.size() > kLogSegmentBytes)
+    auto writeLine = [](const std::string &payload) {
+        const std::string formatted = FormatConsoleReport(payload);
+        if (!consoleReport.Write(formatted))
         {
-            std::fclose(logFile);
-            logFile = nullptr;
-            logSegment = (logSegment + 1) % 4;
-            auto path = logBase;
-            path += L"-" + std::to_wstring(logSegment) + L".jsonl";
-            _wfopen_s(&logFile, path.c_str(), L"wb");
-            logBytes = 0;
+            std::fwrite(formatted.data(), 1, formatted.size(), stdout);
+            std::fflush(stdout);
         }
-    }
-    if (logFile)
-    {
-        if (std::fwrite(line.data(), 1, line.size(), logFile) != line.size() || std::fflush(logFile) != 0)
+        if (logFile)
         {
-            std::fclose(logFile);
-            logFile = nullptr;
+            if (logBytes + payload.size() > kLogSegmentBytes)
+            {
+                std::fclose(logFile);
+                logFile = nullptr;
+                logSegment = (logSegment + 1) % 4;
+                auto path = logBase;
+                path += L"-" + std::to_wstring(logSegment) + L".jsonl";
+                _wfopen_s(&logFile, path.c_str(), L"wb");
+                logBytes = 0;
+            }
         }
-        logBytes += line.size();
-    }
+        if (logFile)
+        {
+            if (std::fwrite(payload.data(), 1, payload.size(), logFile) != payload.size() ||
+                std::fflush(logFile) != 0)
+            {
+                std::fclose(logFile);
+                logFile = nullptr;
+            }
+            logBytes += payload.size();
+        }
+    };
+    asyncLog.Enqueue(line, writeLine);
     Add(timers[static_cast<size_t>(Timer::LogOutput)], Milliseconds(Clock::now() - logStart));
 }
 } // namespace
@@ -809,7 +881,7 @@ void BeginFrame(const char *scene, const FrameContext &context)
             intervals.push_back(interval);
         }
     }
-    if (frames && std::string(sceneName) != scene)
+    if (frames && std::strcmp(sceneName, scene) != 0)
     {
         mixedScene = true;
     }
@@ -876,6 +948,7 @@ void Shutdown()
     {
         Report(Clock::now());
     }
+    asyncLog.Drain();
     for (auto &query : queries)
     {
         if (query.id)

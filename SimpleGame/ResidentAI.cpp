@@ -513,7 +513,6 @@ bool CityResidents::Plan(GameState &world, Resident &resident)
 }
 void CityResidents::UpdateThreat(GameState &world, Resident &resident, size_t index, float dt)
 {
-    profiling::Scope timer(profiling::Timer::NpcPerception);
     const bool remembered = resident.threat.Known();
     resident.threat.Advance(dt);
     if (remembered && !resident.threat.Known())
@@ -523,6 +522,7 @@ void CityResidents::UpdateThreat(GameState &world, Resident &resident, size_t in
     resident.perceptionCooldown -= dt;
     if (resident.perceptionCooldown <= 0)
     {
+        profiling::Scope timer(profiling::Timer::NpcPerception);
         resident.perceptionCooldown = ai::PerceptionSettings::kScanSeconds +
                                       float(index % 4) * ai::PerceptionSettings::kScanSpreadSeconds;
         const float reputation = CivicJustice::State().infamy;

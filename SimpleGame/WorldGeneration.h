@@ -3,6 +3,7 @@
 #include <atomic>
 #include <memory>
 #include <set>
+#include <unordered_map>
 namespace tutorial
 {
 class SaveArchive;
@@ -79,7 +80,7 @@ struct GenerationSettings
 {
     unsigned extraRegions = 64, clusters = 12, placementAttempts = 256;
     double regionGapMeters = 375, clusterRadiusMeters = 16250;
-    double roadLimitMeters = 45000, maximumRoadGrade = .09, relayCoverageMeters = 5000;
+    double roadLimitMeters = 260000, maximumRoadGrade = .09, relayCoverageMeters = 5000;
     void Validate() const;
 };
 struct FixedRegionPlacement
@@ -143,6 +144,9 @@ class GeneratedPlanet
     bool Connected(bool roadsOnly = false) const;
     std::uint64_t Digest() const;
     void Validate() const;
+    // Built once before publishing immutable planet plans; O(1) lookup by region ID.
+    std::unordered_map<std::string, std::size_t> regionIndex;
+    void RebuildRegionIndex();
 };
 // ============================================================================
 // RouteSpatialIndex — conservative spherical caps for immutable connections, without render state
@@ -152,15 +156,21 @@ class RouteSpatialIndex
   public:
     explicit RouteSpatialIndex(const GeneratedPlanet &planet);
     std::vector<std::size_t> Query(const SurfacePoint &focus, double radiusMeters) const;
+    void QueryInto(const SurfacePoint &focus, double radiusMeters, std::vector<std::size_t> &result) const;
+    // Precomputed per-segment geodesic lengths (index i corresponds to points[i] -> points[i+1]).
+    double SegmentLength(std::size_t route, std::size_t segment) const;
 
   private:
     struct Bound
     {
         Vector3d center;
         double angle = 0;
+        std::size_t lengthOffset = 0;
+        std::size_t segmentCount = 0;
     };
     double planetRadius = 0;
     std::vector<Bound> bounds;
+    std::vector<double> segmentLengths;
 };
 
 // ============================================================================
@@ -171,8 +181,9 @@ class RelayNetwork
     friend class tutorial::SaveArchive;
 
   public:
-    static constexpr double DiscoverMeters = 100, UseMeters = 5;
+    static constexpr double DiscoverMeters = 100, UseMeters = 12;
     void Bind(const PlanetDefinition &planet);
+    void RegisterPublicHubs(const GeneratedPlanet &planet);
     const std::string &WorldKey() const
     {
         return worldKey;

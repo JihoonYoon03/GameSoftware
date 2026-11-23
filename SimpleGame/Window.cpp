@@ -253,16 +253,11 @@ void Run()
             }
         }
     } timerResolution;
-    double nextFrame = glfwGetTime() + .016;
     while (!glfwWindowShouldClose(window))
     {
-        // Input can wake the wait early; it must not speed up simulation/rendering.
-        const double remaining = nextFrame - glfwGetTime();
-        if (remaining > 0)
+        if (glfwGetWindowAttrib(window, GLFW_ICONIFIED))
         {
-            // The Win32 backend truncates to DWORD milliseconds. A sub-ms wait
-            // would become a zero-timeout poll and spin until the deadline.
-            glfwWaitEventsTimeout((std::max)(remaining, .001));
+            glfwWaitEventsTimeout(.016);
             continue;
         }
         glfwPollEvents();
@@ -270,14 +265,11 @@ void Run()
         {
             break;
         }
-        const double started = glfwGetTime() * 1000;
         tutorial::GameCallbacks::Tick(0);
         if (!glfwGetWindowAttrib(window, GLFW_ICONIFIED))
         {
             tutorial::GameCallbacks::Draw();
         }
-        const double finished = glfwGetTime() * 1000;
-        nextFrame = glfwGetTime() + tutorial::Game::Get().NextFrameDelay(started, finished) / 1000.0;
     }
 }
 

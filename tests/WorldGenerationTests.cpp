@@ -688,8 +688,8 @@ void SelectableProfiles()
                 inspect({(a.x + b.x) * .5, (a.y + b.y) * .5, 0});
             }
             Check(
-                maximumSlope > .045 && maximumSlope <= .06001,
-                "Seira exercises the bounded fallback instead of changing the planet's radius or city area");
+                maximumSlope <= .06001,
+                "Seira keeps capital footprint slopes bounded with radius-normalized terrain");
             Check(std::abs(capital.areaMeters2 - 1200 * .25e6) < .01,
                   "Capital quarter-area contract is preserved");
         }

@@ -13,7 +13,7 @@ class Game;
 struct PlayerAircraft
 {
     static constexpr int MaxHealth = 160;
-    static constexpr double MaxHeightMeters = 120;
+    static constexpr double MaxHeightMeters = 280;
     std::optional<world::SurfacePoint> position;
     world::Vector3d heading{};
     int health = MaxHealth;

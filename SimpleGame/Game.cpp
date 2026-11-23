@@ -34,7 +34,6 @@ namespace tutorial
 {
 namespace
 {
-constexpr float kMovementSpeed = 3.2f;
 constexpr float kMaximumDeltaSeconds = 0.05f;
 constexpr float kCameraFollowRate = 5.0f;
 
@@ -131,6 +130,101 @@ Game &Game::Get()
 GameState &Game::GetState()
 {
     return state;
+}
+WorldMode Game::Mode() const
+{
+    if (IsSurfaceMine())
+    {
+        return WorldMode::SurfaceMine;
+    }
+    if (state.surfaceExploration)
+    {
+        if (state.isInsideHome)
+        {
+            return WorldMode::SurfaceInterior;
+        }
+        if (state.isInObservatory)
+        {
+            return WorldMode::SurfaceObservatory;
+        }
+        return WorldMode::SurfaceExterior;
+    }
+    if (game::GameLevels::Chapter().IsActive())
+    {
+        return WorldMode::LegacyFrontier;
+    }
+    if (game::GameLevels::Mine().IsActive())
+    {
+        return WorldMode::LegacyMine;
+    }
+    if (state.isInObservatory)
+    {
+        return WorldMode::LegacyObservatory;
+    }
+    if (state.isInsideHome)
+    {
+        return WorldMode::LegacyInterior;
+    }
+    return WorldMode::LegacyCity;
+}
+bool Game::IsSurfaceMode() const
+{
+    const auto mode = Mode();
+    return mode == WorldMode::SurfaceExterior || mode == WorldMode::SurfaceInterior ||
+           mode == WorldMode::SurfaceObservatory || mode == WorldMode::SurfaceMine;
+}
+bool Game::IsInteriorMode() const
+{
+    const auto mode = Mode();
+    return mode == WorldMode::LegacyInterior || mode == WorldMode::LegacyObservatory ||
+           mode == WorldMode::SurfaceInterior || mode == WorldMode::SurfaceObservatory;
+}
+bool Game::IsExteriorMode() const
+{
+    const auto mode = Mode();
+    return mode == WorldMode::LegacyCity || mode == WorldMode::SurfaceExterior;
+}
+game::PlayerStats &Game::Player()
+{
+    return game::GameLevels::Mine().GetState().player;
+}
+const game::PlayerStats &Game::Player() const
+{
+    return game::GameLevels::Mine().GetState().player;
+}
+combat::PlayerLoadout &Game::Loadout()
+{
+    return game::GameLevels::Mine().GetState().loadout;
+}
+const combat::PlayerLoadout &Game::Loadout() const
+{
+    return game::GameLevels::Mine().GetState().loadout;
+}
+combat::Pistol &Game::Sidearm()
+{
+    return game::GameLevels::Mine().GetState().pistol;
+}
+const combat::Pistol &Game::Sidearm() const
+{
+    return game::GameLevels::Mine().GetState().pistol;
+}
+combat::PulseCarbine &Game::PrimaryWeapon()
+{
+    return game::GameLevels::Mine().GetState().carbine;
+}
+const combat::PulseCarbine &Game::PrimaryWeapon() const
+{
+    return game::GameLevels::Mine().GetState().carbine;
+}
+combat::Firearm &Game::ActiveFirearm()
+{
+    return Loadout().IsPrimaryEquipped() ? static_cast<combat::Firearm &>(PrimaryWeapon())
+                                         : static_cast<combat::Firearm &>(Sidearm());
+}
+const combat::Firearm &Game::ActiveFirearm() const
+{
+    return Loadout().IsPrimaryEquipped() ? static_cast<const combat::Firearm &>(PrimaryWeapon())
+                                         : static_cast<const combat::Firearm &>(Sidearm());
 }
 bool QuestParticipation::Accept(MissionId id, bool eligible)
 {
@@ -1051,7 +1145,7 @@ bool Game::HasWalkingControls() const
     }
     if (state.surfaceExploration)
     {
-        return surface && surface->Ready();
+        return state.isInsideHome || state.isInObservatory || (surface && surface->Ready());
     }
     const auto *level = game::GameLevels::Active();
     return !level || level->UsesWalkingControls();
@@ -1128,9 +1222,16 @@ void Game::UpdatePlayerMovement(float deltaSeconds)
     {
         state.playerAnimation.StartDodge(mobility.Direction(), dodgeFacing);
     }
+    if (mobility.PopDodgeTriggered() && Loadout().IsFirearmEquipped())
+    {
+        ActiveFirearm().TopUpRounds(2);
+    }
     if (wasDodging && !state.playerMotion.mobility.Dodging())
     {
-        state.playerMotion.velocity = {};
+        if (!sprintHeld || std::hypot(target.x, target.y) <= .001f)
+        {
+            state.playerMotion.velocity = {};
+        }
     }
     float length = std::hypot(target.x, target.y);
     const float speed =
@@ -1183,6 +1284,19 @@ world::SurfaceView Game::SurfaceTerrainView() const
     {
         return view;
     }
+    auto &cache = terrainViewCache;
+    const auto snapshot = surface->Stream().Snapshot();
+    const auto &origin = surface->Origin().origin.normal;
+    if (cache.valid && cache.session == surface.get() && snapshot &&
+        cache.epoch == snapshot->statistics.epoch && cache.revision == snapshot->statistics.revision &&
+        std::fabs(cache.originX - origin.x) < 1.e-11 && std::fabs(cache.originY - origin.y) < 1.e-11 &&
+        std::fabs(cache.originZ - origin.z) < 1.e-11 &&
+        Game::Distance(cache.camera, state.cameraPosition) < .25f &&
+        std::fabs(cache.camHeight - state.surfaceCameraHeight) < .1f &&
+        std::fabs(cache.zoom - WorldCamera::zoom) < .001f)
+    {
+        return cache.result;
+    }
     const double right = state.cameraPosition.x * 2, forward = state.cameraPosition.y * 2;
     auto project = [&](double screenX, double screenY) {
         const double baseX = right + screenX / 36 + screenY / 18;
@@ -1213,6 +1327,20 @@ world::SurfaceView Game::SurfaceTerrainView() const
     }
     // Quantize coverage so small camera/terrain changes do not rebuild the fallback every frame.
     view.radiusMeters = (std::min)(512., (std::max)(96., std::ceil((radius + 64) / 16) * 16));
+    if (snapshot)
+    {
+        cache.session = surface.get();
+        cache.epoch = snapshot->statistics.epoch;
+        cache.revision = snapshot->statistics.revision;
+        cache.originX = origin.x;
+        cache.originY = origin.y;
+        cache.originZ = origin.z;
+        cache.camera = state.cameraPosition;
+        cache.camHeight = state.surfaceCameraHeight;
+        cache.zoom = WorldCamera::zoom;
+        cache.result = view;
+        cache.valid = true;
+    }
     return view;
 }
 void Game::Reset()
@@ -1537,7 +1665,7 @@ void Game::KeyDown(unsigned char key, int, int)
     if (key == ' ' && !state.Mounted())
     {
         const auto context = combat::PlayerCombat::Current();
-        if (!repeated && HasWalkingControls() &&
+        if (!repeated && HasWalkingControls() && context.area != combat::CombatArea::Inactive &&
             combat::PlayerCombat::ControlBlock(context) == combat::CombatBlock::Ready)
         {
             state.playerMotion.mobility.RequestDodge();
@@ -1589,15 +1717,22 @@ void Game::KeyDown(unsigned char key, int, int)
         {
             InteractWithNearbyTarget();
         }
-        else if (key == 'v' && !repeated && game::GameLevels::Chapter().IsActive())
+        else if (key == 'v' && !repeated)
         {
-            game::GameLevels::Chapter().Melee();
+            if (game::GameLevels::Chapter().IsActive())
+            {
+                game::GameLevels::Chapter().Melee();
+            }
+            else if (CivicCombat::Available())
+            {
+                CivicCombat::Melee();
+            }
         }
-        else if (key == 'r' && game::GameLevels::Chapter().IsActive())
+        else if (key == 'r' && (game::GameLevels::Chapter().IsActive() || CivicCombat::Available()))
         {
             game::GameLevels::Mine().Combat().Reload();
         }
-        else if (key == 'g' && !repeated && game::GameLevels::Chapter().IsActive())
+        else if (key == 'g' && !repeated && (game::GameLevels::Chapter().IsActive() || CivicCombat::Available()))
         {
             game::GameLevels::Mine().UseRecoveryKit();
         }
@@ -1699,6 +1834,11 @@ void Game::KeyDown(unsigned char key, int, int)
     if (key == 'r' && CivicCombat::Available())
     {
         game::GameLevels::Mine().Combat().Reload();
+        return;
+    }
+    if (key == 'g' && !repeated && CivicCombat::Available())
+    {
+        game::GameLevels::Mine().UseRecoveryKit();
         return;
     }
     auto &chapter = game::GameLevels::Chapter();
@@ -1919,7 +2059,7 @@ void Game::MouseButton(int button, int buttonState, int x, int y)
         state.mouseAiming = buttonState == GLFW_PRESS && state.cursorInsideViewport && !state.isPaused &&
                             !state.journalVisible && !state.dialogueHistoryVisible &&
                             !Dialogue::LocksWorld() && !state.Mounted() &&
-                            game::GameLevels::Mine().GetState().loadout.IsPistolEquipped() &&
+                            Loadout().IsFirearmEquipped() &&
                             (game::GameLevels::IsCombatActive() || CivicCombat::Available());
     }
 }
@@ -1973,13 +2113,12 @@ bool Game::IsAiming() const
 {
     return state.mouseAiming && !state.Mounted() && !state.isPaused && !state.mapVisible &&
            !state.weaponWheel.visible && !state.journalVisible && !state.dialogueHistoryVisible &&
-           !HospitalRecovery::Active() && !Dialogue::LocksWorld() &&
-           game::GameLevels::Mine().GetState().loadout.IsPistolEquipped() &&
+           !HospitalRecovery::Active() && !Dialogue::LocksWorld() && Loadout().IsFirearmEquipped() &&
            (game::GameLevels::IsCombatActive() || CivicJustice::IsExterior());
 }
 models::CharacterPose Game::PlayerPose(float recoil) const
 {
-    bool armed = game::GameLevels::Mine().GetState().loadout.IsPistolEquipped() && !state.isBikeMounted &&
+    bool armed = Loadout().IsFirearmEquipped() && !state.isBikeMounted &&
                  (game::GameLevels::IsCombatActive() || CivicJustice::IsExterior());
     auto pose = models::ModelRig::Pose(state.animationTimeSeconds * 10, state.movementAmount > 0, armed,
                                        recoil, state.isBikeMounted, state.playerGender);
@@ -2111,6 +2250,7 @@ void Game::Update(float deltaSeconds)
 }
 void Game::StopSurface()
 {
+    terrainViewCache.valid = false;
     state.car.mounted = false;
     state.aircraft.mounted = false;
     state.aircraft.Stop();
@@ -2360,6 +2500,9 @@ void Game::UpdateGroundVehicleLifecycle(float dt)
         {
             if (!ExitGroundVehicle())
             {
+                car.mounted = false;
+                car.velocity = {};
+                car.speed = 0;
                 game::GameLevels::Mine().GetState().player.health = 0;
                 HospitalRecovery::Begin();
             }
@@ -2381,14 +2524,43 @@ void Game::UpdateGroundVehicleLifecycle(float dt)
     }
     groundVehicleSpawnRetry = 1;
     const auto plan = surface->Stream().Snapshot()->planet;
-    const auto &region = plan->Region(IsStoryWorld() ? "halo_07" : "landing_zone");
-    const auto anchor = IsStoryWorld() && surfaceCities
-                            ? surfaceCities->Point(*surface, 0, kHomeDoor)
-                            : std::optional<world::SurfacePoint>(region.access.position);
-    if (!anchor || G::Distance(surface->Planet().radiusMeters, *anchor, surface->Pose().origin) > 40)
+    const auto hero = surface->Pose().origin;
+    const world::GeneratedRegion *spawnRegion = nullptr;
+    std::optional<world::SurfacePoint> anchor;
+    // Allow service vehicle availability near Halo home OR any nearby settlement/transit hub access point.
+    if (IsStoryWorld() && surfaceCities)
+    {
+        const auto &halo = plan->Region("halo_07");
+        const auto homeAnchor = surfaceCities->Point(*surface, 0, kHomeDoor);
+        if (homeAnchor && G::Distance(surface->Planet().radiusMeters, *homeAnchor, hero) <= 40)
+        {
+            spawnRegion = &halo;
+            anchor = homeAnchor;
+        }
+    }
+    if (!anchor)
+    {
+        for (const auto &reg : plan->regions)
+        {
+            if (reg.center.space != world::SpaceKind::Surface ||
+                (reg.definition.kind != world::RegionKind::Settlement &&
+                 reg.definition.id != "landing_zone"))
+            {
+                continue;
+            }
+            if (G::Distance(surface->Planet().radiusMeters, reg.access.position, hero) <= 60)
+            {
+                spawnRegion = &reg;
+                anchor = reg.access.position;
+                break;
+            }
+        }
+    }
+    if (!anchor || !spawnRegion)
     {
         return;
     }
+    const auto &region = *spawnRegion;
     const auto frame = G::Frame(*anchor);
     const auto direction = G::TransformDirection({0, -1, 0}, region.frame, surface->Origin());
     const float yaw = float(std::atan2(direction.y, direction.x));
@@ -2400,7 +2572,7 @@ void Game::UpdateGroundVehicleLifecycle(float dt)
             auto candidate = G::FromLocal(frame, {meters * std::cos(angle), meters * std::sin(angle), 0},
                                           surface->Planet().radiusMeters);
             const auto local = surface->Local(candidate);
-            if (IsStoryWorld())
+            if (IsStoryWorld() && region.definition.id == "halo_07")
             {
                 const auto city = G::ToLocal(region.frame, candidate, surface->Planet().radiusMeters);
                 const auto center = Overworld::Cities()[0].center;
@@ -2447,12 +2619,38 @@ void Game::UpdateGroundVehicle(float dt)
     car.velocity = {axis.x * along - axis.y * side, axis.y * along + axis.x * side};
     if (std::hypot(car.velocity.x, car.velocity.y) > .001f)
     {
+        const float preSpeed = std::hypot(car.velocity.x, car.velocity.y);
         const Vector2 requested{car.velocity.x * dt, car.velocity.y * dt};
+        const float reqLen = std::hypot(requested.x, requested.y);
         state.playerPosition = BodyCollision::Slide(
             start, {start.x + requested.x, start.y + requested.y},
             [&](Vector2 p) { return GroundVehicleBlocked(p, yaw, false); }, .08f);
-        car.velocity = MotionMath::ContactVelocity(
-            car.velocity, requested, {state.playerPosition.x - start.x, state.playerPosition.y - start.y});
+        const Vector2 actual{state.playerPosition.x - start.x, state.playerPosition.y - start.y};
+        const float actLen = std::hypot(actual.x, actual.y);
+        // Apply high-speed collision damage & bounce recoil on hard impact.
+        if (preSpeed > 7.5f && reqLen > .001f && actLen < reqLen * .45f)
+        {
+            const int impactDamage = (std::max)(6, int((preSpeed - 7.5f) * 4.5f));
+            car.health = (std::max)(0, car.health - impactDamage);
+            along = -along * .25f;
+            car.velocity = {axis.x * along, axis.y * along};
+            if (car.health == 0)
+            {
+                const float z = PlanetSecurity::Elevation(surface->Pose().origin) + .5f;
+                for (int ring = 0; ring < 6; ++ring)
+                {
+                    const float a = ring * (kPi / 3.f);
+                    PlanetSecurity::Hit({state.playerPosition.x + std::cos(a) * 1.8f,
+                                         state.playerPosition.y + std::sin(a) * 1.8f, z},
+                                        40, true);
+                }
+                ShowNotice("차량 충돌 파괴 / 충격 폭발이 발생했습니다!");
+            }
+        }
+        else
+        {
+            car.velocity = MotionMath::ContactVelocity(car.velocity, requested, actual);
+        }
     }
     car.speed = along;
     state.facingYaw = yaw;
@@ -2508,7 +2706,32 @@ void Game::InteractGroundVehicle()
         }
         return;
     }
-    if (state.Mounted() || !car.position || car.health <= 0)
+    if (state.Mounted())
+    {
+        return;
+    }
+    const bool nearOwnedCar =
+        car.position && car.health > 0 &&
+        world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, surface->Pose().origin,
+                                         *car.position) < 4.6;
+    bool commandeered = false;
+    bool commandeeredOccupied = false;
+    if (!nearOwnedCar && surfaceTraffic)
+    {
+        world::SurfacePoint pos{};
+        world::Vector3d heading{};
+        int hp = GroundVehicle::MaxHealth;
+        if (surfaceTraffic->CommandeerNearest(surface->Pose().origin, 4.8, pos, heading, hp,
+                                              commandeeredOccupied))
+        {
+            car = {};
+            car.position = pos;
+            car.heading = heading;
+            car.health = hp;
+            commandeered = true;
+        }
+    }
+    if (!car.position || car.health <= 0)
     {
         return;
     }
@@ -2520,16 +2743,29 @@ void Game::InteractGroundVehicle()
                         state.playerPosition.y + (center.y - state.playerPosition.y) * fraction};
         return surface->Blocked(p.x * 2, p.y * 2, false);
     };
-    if (approach(.25f) || approach(.5f) || approach(.75f) || GroundVehicleBlocked(center, yaw, true) ||
-        !surface->RestorePose(world::SurfaceGeometry::Frame(*car.position), surface->Origin(), false))
+    if (!commandeered &&
+        (approach(.25f) || approach(.5f) || approach(.75f) || GroundVehicleBlocked(center, yaw, true) ||
+         !surface->RestorePose(world::SurfaceGeometry::Frame(*car.position), surface->Origin(), false)))
     {
         ShowNotice("차량 주변이 막혀 탑승할 수 없습니다.");
         return;
+    }
+    if (commandeered)
+    {
+        surface->RestorePose(world::SurfaceGeometry::Frame(*car.position), surface->Origin(), false);
+        if (commandeeredOccupied)
+        {
+            PlanetSecurity::Report(Offense::Assault, *car.position);
+        }
     }
     state.StopMotion();
     car.mounted = true;
     state.playerPosition = center;
     state.facingYaw = yaw;
+    if (commandeered)
+    {
+        ShowNotice("차량 탈취 탑승 · W 가속 · S 제동/후진 · A/D 조향 · 정차 후 E 하차");
+    }
     state.mouseFiring = state.mouseAiming = false;
 }
 
@@ -2773,8 +3009,37 @@ void Game::UpdateSurface(float dt)
         surface->Ready() ? std::optional<world::SurfaceView>(SurfaceTerrainView()) : std::nullopt);
     if (!surface->Ready())
     {
+        if (state.isInsideHome || state.isInObservatory)
+        {
+            const bool advancing = !state.isPaused && !state.mapVisible && !state.weaponWheel.visible &&
+                                   !state.journalVisible && !state.dialogueHistoryVisible &&
+                                   !Dialogue::LocksWorld();
+            if (advancing)
+            {
+                state.playTimeSeconds += dt;
+                state.animationTimeSeconds += dt;
+                if (!Dialogue::Active())
+                {
+                    state.noticeSecondsRemaining -= dt;
+                }
+                UpdatePlayerMovement(dt);
+                UpdateCamera(dt);
+                state.surfaceCameraHeight = 0;
+                state.playerAnimation.Update(
+                    dt, {state.playerMotion.velocity.x, state.playerMotion.velocity.y, 0}, state.facingYaw,
+                    false, false);
+                game::SceneManager::Update(dt);
+            }
+            return;
+        }
         state.StopMotion();
         return;
+    }
+    const int healthBefore = game::GameLevels::Mine().GetState().player.health;
+    if (state.relayNetwork.Registrations().empty() && surface->Stream().Snapshot() &&
+        surface->Stream().Snapshot()->planet)
+    {
+        state.relayNetwork.RegisterPublicHubs(*surface->Stream().Snapshot()->planet);
     }
     if (surfaceTraffic)
     {
@@ -3041,6 +3306,11 @@ void Game::UpdateSurface(float dt)
                 state.bikePosition = state.playerPosition;
                 StoreSurfaceBikeHeading();
             }
+            if (state.car.mounted)
+            {
+                state.car.position = surface->Pose().origin;
+                state.car.SetYaw(state.facingYaw, surface->Origin());
+            }
         }
         game::GameLevels::Chapter().Surface().Refresh();
         game::GameLevels::Chapter().Surface().Update(dt);
@@ -3050,6 +3320,11 @@ void Game::UpdateSurface(float dt)
         }
         PlanetSecurity::Project();
         HospitalRecovery::Update(0);
+        const int healthAfter = game::GameLevels::Mine().GetState().player.health;
+        if (healthAfter < healthBefore && !HospitalRecovery::Active())
+        {
+            ShowNotice("피해 / 체력 -" + std::to_string(healthBefore - healthAfter));
+        }
         UpdateCamera(dt);
         float targetHeight = float(surface->Local(surface->Pose().origin).z / 2);
         state.surfaceCameraHeight +=
@@ -3077,17 +3352,40 @@ unsigned int Game::NextFrameDelay(double startedMilliseconds, double finishedMil
 void Game::Tick(int)
 {
     profiling::Scope profileTimer(profiling::Timer::Update);
-    WeaponWheel::RefreshCursorCapture();
-    HWND activeWindow = GetActiveWindow();
-    if (activeWindow && IsWindowVisible(activeWindow) && GetForegroundWindow() != activeWindow)
-    {
-        state.mouseFiring = state.mouseAiming = false;
-        std::fill(std::begin(state.pressedKeys), std::end(state.pressedKeys), false);
-    }
+    using TickClock = std::chrono::steady_clock;
+    static TickClock::time_point lastTick;
+    static bool hasLastTick = false;
+    static TickClock::time_point lastMaintenance;
+    static bool hasMaintenance = false;
+    const auto nowTime = TickClock::now();
     const int nowMilliseconds = platform::ElapsedMilliseconds();
-    float deltaSeconds =
-        Clamp((nowMilliseconds - state.lastUpdateMilliseconds) / 1000.f, 0, kMaximumDeltaSeconds);
+    float deltaSeconds = 0.f;
+    if (hasLastTick)
+    {
+        const double elapsed = std::chrono::duration<double>(nowTime - lastTick).count();
+        deltaSeconds = Clamp(float(elapsed), 0.f, kMaximumDeltaSeconds);
+    }
+    else
+    {
+        deltaSeconds = Clamp((nowMilliseconds - state.lastUpdateMilliseconds) / 1000.f, 0.f, kMaximumDeltaSeconds);
+        hasLastTick = true;
+    }
+    lastTick = nowTime;
     state.lastUpdateMilliseconds = nowMilliseconds;
+    // Rate-limit Win32 focus/cursor-clip polling and monitor publishing to ~60Hz so 144+ FPS
+    // frames do not multiply OS/monitoring overhead.
+    if (!hasMaintenance || std::chrono::duration<double>(nowTime - lastMaintenance).count() >= 0.016)
+    {
+        hasMaintenance = true;
+        lastMaintenance = nowTime;
+        WeaponWheel::RefreshCursorCapture();
+        HWND activeWindow = GetActiveWindow();
+        if (activeWindow && IsWindowVisible(activeWindow) && GetForegroundWindow() != activeWindow)
+        {
+            state.mouseFiring = state.mouseAiming = false;
+            std::fill(std::begin(state.pressedKeys), std::end(state.pressedKeys), false);
+        }
+    }
     Update(deltaSeconds);
     monitoring::GameMonitor::Get().Update();
     platform::SetCursorHidden(
@@ -3512,31 +3810,31 @@ bool Game::IsPositionBlocked(Vector2 position)
     }
     if (state.surfaceExploration && !IsSurfaceMine() && !state.isInsideHome && !state.isInObservatory)
     {
-        if (surface && state.car.position && !state.car.mounted &&
+        if (!surface)
+        {
+            return true;
+        }
+        const auto point = surface->PointAt(position.x * 2, position.y * 2);
+        if (state.car.position && !state.car.mounted &&
             world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, *state.car.position,
                                              surface->Pose().origin) < 25)
         {
-            auto point = surface->PointAt(position.x * 2, position.y * 2);
-            point.altitudeMeters = surface->ContactAt(position.x * 2, position.y * 2).heightMeters;
-            if (state.car.Contains(*surface, point, .16f))
+            auto carPoint = point;
+            carPoint.altitudeMeters = surface->Stream().Contact(point).heightMeters;
+            if (state.car.Contains(*surface, carPoint, .16f))
             {
                 return true;
             }
         }
-        return !surface || surface->Blocked(position.x * 2, position.y * 2, state.isBikeMounted) ||
+        const double clearance = state.isBikeMounted ? .5 : .32;
+        return surface->Blocked(position.x * 2, position.y * 2, state.isBikeMounted) ||
                game::GameLevels::Chapter().Surface().Blocked(position, state.isBikeMounted) ||
                (surfaceCities &&
-                surfaceCities->Occupied(state, *surface, position, -1, !state.isBikeMounted)) ||
-               (!state.isBikeMounted && surfaceParty &&
-                surfaceParty->Blocked(surface->PointAt(position.x * 2, position.y * 2),
-                                      state.isBikeMounted ? .5 : .32)) ||
-               (!state.isBikeMounted &&
-                PlanetSecurity::OfficerBlocked(surface->PointAt(position.x * 2, position.y * 2), .32)) ||
-               (surfaceTraffic && surfaceTraffic->Blocked(surface->PointAt(position.x * 2, position.y * 2),
-                                                          state.isBikeMounted ? .5 : .32)) ||
-               (surfaceCommunity &&
-                surfaceCommunity->Blocked(surface->PointAt(position.x * 2, position.y * 2),
-                                          state.isBikeMounted ? .5 : .32, !state.isBikeMounted));
+                surfaceCities->OccupiedAt(state, *surface, point, -1, !state.isBikeMounted)) ||
+               (!state.isBikeMounted && surfaceParty && surfaceParty->Blocked(point, clearance)) ||
+               (!state.isBikeMounted && PlanetSecurity::OfficerBlocked(point, .32)) ||
+               (surfaceTraffic && surfaceTraffic->Blocked(point, clearance)) ||
+               (surfaceCommunity && surfaceCommunity->Blocked(point, clearance, !state.isBikeMounted));
     }
     if (game::GameLevels::Chapter().IsActive())
     {
@@ -3752,23 +4050,59 @@ InteractionTarget Game::FindNearbyInteraction()
                 return InteractionTarget::MineEntrance;
             }
         }
+        const bool fixedFacility = target == InteractionTarget::HomeEntrance ||
+                                   target == InteractionTarget::GateBeacon ||
+                                   target == InteractionTarget::CityReceiver ||
+                                   target == InteractionTarget::PowerRelay;
         float bikeDistance = Distance(state.playerPosition, state.bikePosition);
-        if (bikeDistance < 1.8f && bikeDistance < distance)
+        if (!fixedFacility && bikeDistance < 1.8f && bikeDistance < distance)
         {
             distance = bikeDistance;
             target = InteractionTarget::JetBike;
         }
-        if (surface && surface->Ready() && state.car.position && state.car.health > 0 &&
-            std::abs(surface->Pose().origin.altitudeMeters - state.car.position->altitudeMeters) < 1.3 &&
-            world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, surface->Pose().origin,
-                                             *state.car.position) < 4.6 &&
-            target == InteractionTarget::None)
+        const bool vehicleAllowed = !fixedFacility && target != InteractionTarget::JetBike &&
+                                    target != InteractionTarget::Community;
+        if (vehicleAllowed && surface && surface->Ready() && state.car.position && state.car.health > 0 &&
+            std::abs(surface->Pose().origin.altitudeMeters - state.car.position->altitudeMeters) < 1.3)
         {
-            return InteractionTarget::GroundVehicle;
+            const float carDistance =
+                float(world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, surface->Pose().origin,
+                                                       *state.car.position) *
+                      .5);
+            if (carDistance < 2.3f && (target == InteractionTarget::None || carDistance < distance + .6f))
+            {
+                distance = carDistance;
+                target = InteractionTarget::GroundVehicle;
+            }
         }
-        if (target == InteractionTarget::None && PlayerAircraftController::Nearby(*this))
+        if (vehicleAllowed && target != InteractionTarget::GroundVehicle && surface && surface->Ready() &&
+            surfaceTraffic)
         {
-            return InteractionTarget::Aircraft;
+            if (auto npcCarMeters = surfaceTraffic->NearestGroundDistance(surface->Pose().origin, 4.8))
+            {
+                const float npcCarDistance = float(*npcCarMeters * .5);
+                if (target == InteractionTarget::None || npcCarDistance < distance + .6f)
+                {
+                    distance = npcCarDistance;
+                    target = InteractionTarget::GroundVehicle;
+                }
+            }
+        }
+        if (vehicleAllowed && target != InteractionTarget::GroundVehicle &&
+            PlayerAircraftController::Nearby(*this))
+        {
+            const float aircraftDistance =
+                state.aircraft.position
+                    ? float(world::SurfaceGeometry::Distance(surface->Planet().radiusMeters,
+                                                             surface->Pose().origin,
+                                                             *state.aircraft.position) *
+                            .5)
+                    : 0.f;
+            if (target == InteractionTarget::None || aircraftDistance < distance + .8f)
+            {
+                distance = aircraftDistance;
+                target = InteractionTarget::Aircraft;
+            }
         }
         if (auto relay = RelayTravel::Nearby())
         {

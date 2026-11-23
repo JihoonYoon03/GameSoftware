@@ -27,6 +27,7 @@ models::Point PlayerMobility::Update(float dt, models::Point input, float facing
     dt = (std::min)(dt, .05f);
     activeFrame = false;
     sprinting = false;
+    focusRemaining = (std::max)(0.f, focusRemaining - dt);
     if (!sprintHeld)
     {
         sprintExhausted = false;
@@ -49,6 +50,8 @@ models::Point PlayerMobility::Update(float dt, models::Point input, float facing
             remaining = DodgeSeconds;
             stamina -= DodgeCost;
             regenDelay = RegenDelaySeconds;
+            focusRemaining = FocusSeconds;
+            dodgeTriggered = true;
             profiling::Count(profiling::Counter::DodgeStarted);
         }
     }
@@ -106,6 +109,29 @@ void PlayerMobility::RotateDirection(float x, float y)
 bool PlayerMobility::Dodging() const
 {
     return pending || remaining > 0 || activeFrame;
+}
+bool PlayerMobility::Invulnerable() const
+{
+    return remaining > InvulnerableTailSeconds;
+}
+bool PlayerMobility::FocusActive() const
+{
+    return focusRemaining > 0;
+}
+bool PlayerMobility::ConsumeFocus()
+{
+    if (focusRemaining > 0)
+    {
+        focusRemaining = 0;
+        return true;
+    }
+    return false;
+}
+bool PlayerMobility::PopDodgeTriggered()
+{
+    const bool triggered = dodgeTriggered;
+    dodgeTriggered = false;
+    return triggered;
 }
 bool PlayerMobility::Contact(float requestedDistance, float actualDistance)
 {

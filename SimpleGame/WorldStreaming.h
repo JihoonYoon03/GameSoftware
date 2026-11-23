@@ -67,8 +67,16 @@ struct StreamStatistics
 };
 struct SurfaceSnapshot
 {
+    struct ChunkLookup
+    {
+        std::uint64_t cell = 0;
+        std::size_t index = 0;
+    };
     std::shared_ptr<const GeneratedPlanet> planet;
     std::vector<std::shared_ptr<const SurfaceChunk>> chunks;
+    std::vector<ChunkLookup> chunkLookup;
+    std::uint8_t chunkLevel = 0;
+    bool hasChunkLevel = false;
     StreamStatistics statistics;
 };
 // ============================================================================
@@ -94,6 +102,7 @@ class TerrainStream
     bool FailedAt(const SurfacePoint &point, double radiusMeters = 0) const;
     std::shared_ptr<const SurfaceSnapshot> Snapshot() const;
     GroundContact Contact(const SurfacePoint &point) const;
+    GroundContact Contact(const SurfaceSnapshot &snapshot, const SurfacePoint &point) const;
     const StreamSettings &Settings() const
     {
         return settings;
@@ -149,6 +158,9 @@ class SurfaceSession
     bool Relocate(const SurfacePoint &point, double clearanceMeters = .65, double searchRadiusMeters = 32);
     // Remote landing checks do not project through the player's tangent plane or change the live pose.
     bool LandingClear(const SurfacePoint &point, double clearanceMeters = .65) const;
+    bool LandingClearIsolated(const SurfacePoint &point, double clearanceMeters,
+                              ContentCollision &isolatedCache) const;
+    bool ShotBlocked(const SurfacePoint &point, double clearanceMeters = .04) const;
     // Restore transported axes and the floating origin without losing the saved local coordinate system.
     bool RestorePose(const TangentFrame &savedPose, const TangentFrame &savedOrigin, bool hovering);
     std::optional<TangentFrame> Rebase();

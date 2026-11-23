@@ -308,16 +308,19 @@ double PlanetTerrain::Fractal(Vector3d p, double frequency, unsigned octaves, st
 double PlanetTerrain::Height(const SurfacePoint &point) const
 {
     G::Validate(point);
+    // Normalize medium/fine terrain wavelengths to physical metres (1.0 on Erma R=1,200 km) so
+    // smaller planets do not produce artificially steeper slopes than larger planets.
+    const double radiusScale = std::clamp(planet.radiusMeters / 1200000., .25, 4.);
     double continent = Fractal(point.normal, 2.3, 4, 1);
-    double ridge = 1 - std::fabs(Fractal(point.normal, 42, 3, 87) * 2 - 1);
+    double ridge = 1 - std::fabs(Fractal(point.normal, 42 * radiusScale, 3, 87) * 2 - 1);
     double height = (continent - .49) * 7200 + std::pow(ridge, 5) * 650 * Smooth((continent - .48) * 12) +
-                    (Fractal(point.normal, 240, 3, 231) - .5) * 140;
+                    (Fractal(point.normal, 240 * radiusScale, 3, 231) - .5) * 140;
     if (homeland)
     {
         double radius = (std::min)(180000., planet.radiusMeters * .12);
-        double coast = radius * (.9 + Noise(point.normal, 38, 291) * .2);
+        double coast = radius * (.9 + Noise(point.normal, 38 * radiusScale, 291) * .2);
         double weight = 1 - Smooth((Distance(planet, point, *homeland) / coast - .70) / .50);
-        double floor = SeaLevelMeters + 180 + Fractal(point.normal, 65, 3, 355) * 220;
+        double floor = SeaLevelMeters + 180 + Fractal(point.normal, 65 * radiusScale, 3, 355) * 220;
         height += (std::max)(0., floor - height) * weight;
     }
     for (const auto &pad : reservations)
@@ -390,8 +393,27 @@ void GenerationSettings::Validate() const
 GeneratedPlanet::GeneratedPlanet(PlanetTerrain t) : terrain(std::move(t))
 {
 }
+void GeneratedPlanet::RebuildRegionIndex()
+{
+    regionIndex.clear();
+    regionIndex.reserve(regions.size() * 2);
+    for (std::size_t i = 0; i < regions.size(); ++i)
+    {
+        regionIndex[regions[i].definition.id] = i;
+    }
+}
 const GeneratedRegion &GeneratedPlanet::Region(std::string_view id) const
 {
+    if (regionIndex.size() == regions.size() && !regionIndex.empty())
+    {
+        // Avoid heap allocation on short IDs; falls back cleanly for arbitrary views.
+        auto it = regionIndex.find(std::string(id));
+        if (it != regionIndex.end() && it->second < regions.size() &&
+            regions[it->second].definition.id == id)
+        {
+            return regions[it->second];
+        }
+    }
     for (const auto &region : regions)
     {
         if (region.definition.id == id)
@@ -655,10 +677,21 @@ RouteSpatialIndex::RouteSpatialIndex(const GeneratedPlanet &planet)
 {
     planet.terrain.Planet().Validate();
     bounds.reserve(planet.connections.size());
+    std::size_t totalSegments = 0;
+    for (const auto &route : planet.connections)
+    {
+        if (route.points.size() >= 2)
+        {
+            totalSegments += route.points.size() - 1;
+        }
+    }
+    segmentLengths.reserve(totalSegments);
     for (const auto &route : planet.connections)
     {
         Bound bound;
         bound.angle = -1;
+        bound.lengthOffset = segmentLengths.size();
+        bound.segmentCount = route.points.size() >= 2 ? route.points.size() - 1 : 0;
         if (route.points.size() >= 2)
         {
             Vector3d sum = {};
@@ -676,10 +709,9 @@ RouteSpatialIndex::RouteSpatialIndex(const GeneratedPlanet &planet)
                                            G::Distance(planetRadius, center, route.points[i]) / planetRadius);
                 if (i)
                 {
-                    halfSegmentAngle =
-                        (std::max)(halfSegmentAngle,
-                                   G::Distance(planetRadius, route.points[i - 1], route.points[i]) /
-                                       (2 * planetRadius));
+                    const double segLen = G::Distance(planetRadius, route.points[i - 1], route.points[i]);
+                    segmentLengths.push_back(segLen);
+                    halfSegmentAngle = (std::max)(halfSegmentAngle, segLen / (2 * planetRadius));
                 }
             }
             // Every point on a segment lies within half its length of at least one endpoint.
@@ -694,11 +726,20 @@ RouteSpatialIndex::RouteSpatialIndex(const GeneratedPlanet &planet)
         bounds.push_back(bound);
     }
 }
-std::vector<std::size_t> RouteSpatialIndex::Query(const SurfacePoint &focus, double radiusMeters) const
+double RouteSpatialIndex::SegmentLength(std::size_t route, std::size_t segment) const
+{
+    if (route >= bounds.size() || segment >= bounds[route].segmentCount)
+    {
+        return 0;
+    }
+    return segmentLengths[bounds[route].lengthOffset + segment];
+}
+void RouteSpatialIndex::QueryInto(const SurfacePoint &focus, double radiusMeters,
+                                  std::vector<std::size_t> &result) const
 {
     G::Validate(focus);
     Require(std::isfinite(radiusMeters) && radiusMeters >= 0, "Invalid route query radius");
-    std::vector<std::size_t> result;
+    result.clear();
     const double angle = (std::min)(G::Pi, radiusMeters / planetRadius);
     for (size_t i = 0; i < bounds.size(); ++i)
     {
@@ -713,6 +754,11 @@ std::vector<std::size_t> RouteSpatialIndex::Query(const SurfacePoint &focus, dou
             result.push_back(i);
         }
     }
+}
+std::vector<std::size_t> RouteSpatialIndex::Query(const SurfacePoint &focus, double radiusMeters) const
+{
+    std::vector<std::size_t> result;
+    QueryInto(focus, radiusMeters, result);
     return result;
 }
 
@@ -763,6 +809,27 @@ void RelayNetwork::Bind(const PlanetDefinition &planet)
     discovered.clear();
     registered.clear();
     visited.clear();
+}
+void RelayNetwork::RegisterPublicHubs(const GeneratedPlanet &planet)
+{
+    Bind(planet.terrain.Planet());
+    for (const auto &region : planet.regions)
+    {
+        const bool isPublicHub =
+            region.definition.id == "halo_07" || region.definition.id == "landing_zone" ||
+            (region.definition.kind == RegionKind::Settlement &&
+             region.definition.tier >= SettlementTier::Town);
+        if (!isPublicHub)
+        {
+            continue;
+        }
+        const std::string primaryId = "relay_" + region.definition.id + "_0";
+        if (Find(planet, primaryId))
+        {
+            discovered.insert(primaryId);
+            registered.insert(primaryId);
+        }
+    }
 }
 void RelayNetwork::Observe(const GeneratedPlanet &planet, const WorldLocation &location)
 {
@@ -1205,6 +1272,7 @@ GeneratedPlanet PlanetGenerator::Generate(const std::atomic_bool *cancel) const
     }
     std::sort(result.regions.begin(), result.regions.end(),
               [](const auto &a, const auto &b) { return a.definition.id < b.definition.id; });
+    result.RebuildRegionIndex();
     for (auto &r : result.regions)
     {
         r.biome = result.terrain.Sample(r.access.position).biome;
@@ -1229,7 +1297,7 @@ bool GroundSegment(const PlanetTerrain &terrain, const SurfacePoint &a, const Su
 {
     const auto &p = terrain.Planet();
     double distance = Distance(p, a, b);
-    unsigned steps = (std::max)(1u, unsigned(std::ceil(distance / 500)));
+    unsigned steps = (std::max)(1u, unsigned(std::ceil(distance / 200)));
     double previous = terrain.Height(a), step = distance / steps;
     if (previous < PlanetTerrain::SeaLevelMeters + 4)
     {

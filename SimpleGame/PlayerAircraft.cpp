@@ -6,6 +6,7 @@
 #include "Level.h"
 #include "ResourceAssets.h"
 #include "Profiler.h"
+#include "Window.h"
 #include <algorithm>
 #include <cmath>
 
@@ -163,7 +164,7 @@ std::optional<double> PlayerAircraftController::LandingHeight(const Game &g, con
         auto p = HullSample(*g.surface, point, i);
         const auto contact = g.surface->Stream().Contact(p);
         p.altitudeMeters = contact.heightMeters;
-        if (!contact.land || contact.slope > .15 || !g.SurfaceLandingClear(p, -1, false, true))
+        if (!contact.land || contact.slope > .24 || !g.SurfaceLandingClear(p, -1, false, true))
         {
             return std::nullopt;
         }
@@ -172,7 +173,7 @@ std::optional<double> PlayerAircraftController::LandingHeight(const Game &g, con
     }
     auto p = point;
     p.altitudeMeters = high + .08;
-    if (high - low > .35 ||
+    if (high - low > .65 ||
         !g.surface->AirClear(p, PlayerAircraft::RadiusMeters(), PlayerAircraft::HeightMeters()) ||
         Occupied(g, p))
     {
@@ -341,27 +342,34 @@ void PlayerAircraftController::Drive(Game &g, float dt)
         a.landingAvailable = false;
         a.velocity.z = 0;
     }
-    const double target = a.landingRequested || keys['x'] || keys['w'] == keys['s'] ? 0 : keys['w'] ? 36 : -8;
-    const double along = Approach(a.velocity.x * std::cos(yaw) + a.velocity.y * std::sin(yaw), target,
-                                  (keys['x'] || a.landingRequested ? 24 : 12) * dt);
+    const double groundHeight = g.surface->Stream().Contact(*a.position).heightMeters;
+    const double agl = (std::max)(0., a.position->altitudeMeters - groundHeight);
+    const bool cruiseHeld = keys[platform::SprintKey] != 0;
+    // Scale cruise ceiling smoothly with altitude so low-altitude city flight remains precise (42 m/s)
+    // while high-altitude regional/continental flight reaches 140 m/s (~504 km/h).
+    const double cruiseFactor = std::clamp((agl - 18.) / 62., 0., 1.);
+    const double forwardSpeed = cruiseHeld ? (42. + 98. * cruiseFactor) : 42.;
+    const double target =
+        a.landingRequested || keys['x'] || keys['w'] == keys['s'] ? 0 : keys['w'] ? forwardSpeed : -10;
+    const double accelRate = (keys['x'] || a.landingRequested) ? 38. : (cruiseHeld && agl > 18. ? 42. : 18.);
+    const double along =
+        Approach(a.velocity.x * std::cos(yaw) + a.velocity.y * std::sin(yaw), target, accelRate * dt);
     if (std::abs(along) > 2)
     {
         a.landingAvailable = false;
     }
     a.velocity.x = along * std::cos(yaw);
     a.velocity.y = along * std::sin(yaw);
-    double vertical = (double(keys[' ']) - double(keys['c'])) * 9;
+    double vertical = (double(keys[' ']) - double(keys['c'])) * 16;
     if (a.landingRequested)
     {
-        vertical = landing && std::abs(along) < .5 ? -5 : 0;
+        vertical = landing && std::abs(along) < .5 ? -6 : 0;
     }
-    if (a.position->altitudeMeters - g.surface->Stream().Contact(*a.position).heightMeters >=
-            PlayerAircraft::MaxHeightMeters &&
-        vertical > 0)
+    if (agl >= PlayerAircraft::MaxHeightMeters && vertical > 0)
     {
         vertical = 0;
     }
-    a.velocity.z = Approach(a.velocity.z, vertical, 18 * dt);
+    a.velocity.z = Approach(a.velocity.z, vertical, 28 * dt);
     if (landing && a.velocity.z < 0)
     {
         a.velocity.z =
@@ -378,11 +386,12 @@ void PlayerAircraftController::Drive(Game &g, float dt)
             g.ShowNotice("착륙 경로가 막혀 착륙을 중단했습니다.");
         }
         const double speed = std::sqrt(G::Dot(a.velocity, a.velocity));
-        if (speed > 6)
+        if (speed > 8)
         {
-            a.health = (std::max)(0, a.health - int((speed - 6) * 2));
+            a.health = (std::max)(0, a.health - int((speed - 8) * 1.5));
         }
-        a.velocity = {};
+        // Deflect and damp instead of instant dead-stop unless speed is already low.
+        a.velocity = {a.velocity.x * -.25, a.velocity.y * -.25, (std::max)(0., a.velocity.z * .25)};
         profiling::Count(profiling::Counter::AircraftContacts);
     }
     a.position = g.surface->Pose().origin;
@@ -423,14 +432,15 @@ void PlayerAircraftController::Update(Game &g, float dt)
         a.Stop();
         if (!a.grounded)
         {
-            a.fallSpeed += 12 * dt;
-            const double drop = a.fallSpeed * dt;
-            auto next = *a.position;
-            next.altitudeMeters -= drop;
+            const double floorHeight = g.surface->Stream().Contact(*a.position).heightMeters;
+            const double previousAlt = a.position->altitudeMeters;
+            const double nextAlt = VehicleWreck::Fall(previousAlt, a.fallSpeed, floorHeight, 12., dt);
+            const double drop = (std::max)(0., previousAlt - nextAlt);
             if (a.mounted)
             {
                 a.grounded = !g.surface->Fly({0, 0, -drop}, PlayerAircraft::RadiusMeters(),
-                                             PlayerAircraft::HeightMeters());
+                                             PlayerAircraft::HeightMeters()) ||
+                             nextAlt <= floorHeight + .05;
                 a.position = g.surface->Pose().origin;
             }
             else
@@ -438,9 +448,10 @@ void PlayerAircraftController::Update(Game &g, float dt)
                 const unsigned steps = (std::max)(1u, unsigned(std::ceil(drop / .4)));
                 for (unsigned i = 0; i < steps; ++i)
                 {
-                    next = *a.position;
+                    auto next = *a.position;
                     next.altitudeMeters -= drop / steps;
-                    if (!g.surface->AirClear(next, PlayerAircraft::RadiusMeters(),
+                    if (next.altitudeMeters <= floorHeight + .05 ||
+                        !g.surface->AirClear(next, PlayerAircraft::RadiusMeters(),
                                              PlayerAircraft::HeightMeters()))
                     {
                         a.grounded = true;
@@ -454,6 +465,20 @@ void PlayerAircraftController::Update(Game &g, float dt)
                 return;
             }
             profiling::Count(profiling::Counter::AircraftCrashes);
+            // Crash blast radius damages nearby units on hard impact.
+            if (a.fallSpeed > 6.f && a.position)
+            {
+                const auto impactLocal = PlanetSecurity::Local(*a.position);
+                const float impactZ = PlanetSecurity::Elevation(*a.position) + .5f;
+                for (int ring = 0; ring < 8; ++ring)
+                {
+                    const float angle = ring * float(G::Pi / 4.);
+                    PlanetSecurity::Hit({impactLocal.x + std::cos(angle) * 2.5f,
+                                         impactLocal.y + std::sin(angle) * 2.5f, impactZ},
+                                        45, true);
+                }
+                g.ShowNotice("비행체 추락 폭발 / 주변 충격 피해가 발생했습니다!");
+            }
         }
         if (a.mounted)
         {
@@ -481,11 +506,34 @@ void PlayerAircraftController::Update(Game &g, float dt)
     }
     a.spawnRetry = 1;
     const auto plan = g.surface->Stream().Snapshot()->planet;
-    const auto &region = plan->Region(g.IsStoryWorld() ? "halo_07" : "landing_zone");
-    const auto anchor = g.IsStoryWorld() && g.surfaceCities
-                            ? g.surfaceCities->Point(*g.surface, 0, kHomeDoor)
-                            : std::optional<world::SurfacePoint>(region.access.position);
-    if (!anchor || G::Distance(g.surface->Planet().radiusMeters, *anchor, g.surface->Pose().origin) > 100)
+    const auto hero = g.surface->Pose().origin;
+    std::optional<world::SurfacePoint> anchor;
+    if (g.IsStoryWorld() && g.surfaceCities)
+    {
+        const auto homeAnchor = g.surfaceCities->Point(*g.surface, 0, kHomeDoor);
+        if (homeAnchor && G::Distance(g.surface->Planet().radiusMeters, *homeAnchor, hero) <= 100)
+        {
+            anchor = homeAnchor;
+        }
+    }
+    if (!anchor)
+    {
+        for (const auto &reg : plan->regions)
+        {
+            if (reg.center.space != world::SpaceKind::Surface ||
+                (reg.definition.kind != world::RegionKind::Settlement &&
+                 reg.definition.id != "landing_zone"))
+            {
+                continue;
+            }
+            if (G::Distance(g.surface->Planet().radiusMeters, reg.access.position, hero) <= 110)
+            {
+                anchor = reg.access.position;
+                break;
+            }
+        }
+    }
+    if (!anchor)
     {
         return;
     }

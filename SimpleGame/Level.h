@@ -188,6 +188,7 @@ struct MineState
     PlayerStats player;
     combat::PlayerLoadout loadout;
     combat::Pistol pistol;
+    combat::PulseCarbine carbine;
     std::vector<Tile> tiles;
     std::vector<std::uint8_t> explored;
     std::vector<int> reachableCells;

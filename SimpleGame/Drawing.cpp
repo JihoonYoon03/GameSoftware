@@ -420,7 +420,7 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
         DrawEllipse(screen.x, screen.y, 16, 6, {.25f, .95f, .9f, .17f});
     }
     bool armed =
-        (isPlayer && game::GameLevels::Mine().GetState().loadout.IsPistolEquipped() &&
+        (isPlayer && Game::Get().Loadout().IsFirearmEquipped() &&
          (game::GameLevels::IsCombatActive() || CivicJustice::IsExterior()) && !world.isBikeMounted) ||
         npcArmed;
     float yaw = isPlayer ? world.facingYaw : facingYaw;
@@ -443,19 +443,22 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
         downed |= CivicJustice::State().playerImpact.response == BodyResponse::Knockdown ||
                   HospitalRecovery::Active();
     }
-    auto pose = models::ModelRig::Pose(world.animationTimeSeconds * 10,
-                                       (isPlayer && world.movementAmount > 0) || walking, armed,
-                                       armed ? flash / .055f : 0, false, gender);
-    pose.meleeSeconds = melee;
-    pose.locomotionSpeed = isPlayer ? world.movementSpeed : locomotionSpeed;
-    pose.reloadProgress = reloadProgress;
-    if (!isPlayer && motion && !downed)
-    {
-        motion->ApplyMotion(pose);
-    }
+    models::CharacterPose pose;
     if (isPlayer)
     {
         pose = Game::Get().PlayerPose(armed ? flash / .055f : 0);
+    }
+    else
+    {
+        pose = models::ModelRig::Pose(world.animationTimeSeconds * 10, walking, armed,
+                                      armed ? flash / .055f : 0, false, gender);
+        pose.meleeSeconds = melee;
+        pose.locomotionSpeed = locomotionSpeed;
+        pose.reloadProgress = reloadProgress;
+        if (motion && !downed)
+        {
+            motion->ApplyMotion(pose);
+        }
     }
     models::Palette palette;
     palette.body = {coat.r, coat.g, coat.b, coat.a};

@@ -58,6 +58,7 @@ struct AirProjectile
     models::Point position, direction;
     float speed = 0, remaining = 0;
     int damage = 0;
+    bool playerOwned = true;
 };
 struct AirTracer
 {
@@ -131,7 +132,8 @@ class PlanetSecurity
     static bool BodyBlocked(Vector2 position, double radius = .65);
     static bool OfficerBlocked(const world::SurfacePoint &point, double radius);
     static bool ShotBlocked(models::Point position);
-    static bool Hit(models::Point position, int damage, bool playerOwned, bool companionOwned = false);
+    static bool Hit(models::Point position, int damage, bool playerOwned, bool companionOwned = false,
+                    Vector2 impulse = {});
     static void UpdateCompanions(float seconds);
     static bool CanNavigate();
     static void ShareThreats();

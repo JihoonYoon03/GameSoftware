@@ -264,6 +264,8 @@ class SaveArchive
         reader.GroundVehicleRecord(clean.game.car);
         reader.AircraftRecord(clean.game.aircraft);
         Require(reader.Finished(), "메모리 월드 기록에 지원하지 않는 데이터가 있습니다.");
+        clean.game.playerMotion.mobility.RestoreStamina(c.game.playerMotion.mobility.Stamina(),
+                                                        c.game.playerMotion.mobility.RegenDelay());
         ApplyTrafficLinks(clean);
         return clean;
     }
@@ -678,8 +680,13 @@ class SaveArchive
     void Value(combat::PlayerLoadout &v)
     {
         Fields(v.pistolOwned, v.selected);
-        Require(v.selected != combat::WeaponSlot::Primary &&
-                    (v.pistolOwned || v.selected == combat::WeaponSlot::Unarmed),
+        if (reading && v.selected == combat::WeaponSlot::Primary)
+        {
+            v.primaryOwned = true;
+        }
+        Require((v.selected == combat::WeaponSlot::Unarmed) ||
+                    (v.selected == combat::WeaponSlot::Secondary && v.pistolOwned) ||
+                    (v.selected == combat::WeaponSlot::Primary && (v.primaryOwned || v.pistolOwned)),
                 "소유하지 않은 무기가 선택된 저장입니다.");
     }
     void Value(combat::FirearmSettings &v)

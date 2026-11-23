@@ -431,6 +431,21 @@ std::string ChunkKey::StableKey() const
            "/l/" + std::to_string(layer) + "/f/" + std::to_string(unsigned(face)) + "/q/" +
            std::to_string(level) + "/x/" + std::to_string(x) + "/y/" + std::to_string(y);
 }
+std::uint64_t CubeSphere::PackCell(CubeFace face, std::uint32_t x, std::uint32_t y)
+{
+    return (std::uint64_t(face) << 60) | (std::uint64_t(x) << 30) | std::uint64_t(y);
+}
+std::uint64_t CubeSphere::FastCell(const SurfacePoint &p, std::uint8_t level)
+{
+    const auto face = Face(p.normal);
+    const auto uv = FaceUV(face, p.normal);
+    const std::uint64_t cells = 1ull << level;
+    const double scale = .5 * double(cells);
+    const double maxCell = double(cells - 1);
+    const auto cx = std::uint32_t(std::clamp(std::floor((uv[0] + 1.) * scale), 0., maxCell));
+    const auto cy = std::uint32_t(std::clamp(std::floor((uv[1] + 1.) * scale), 0., maxCell));
+    return PackCell(face, cx, cy);
+}
 ChunkKey CubeSphere::Address(const PlanetDefinition &planet, const SurfacePoint &p, std::uint8_t level,
                              std::int32_t layer)
 {

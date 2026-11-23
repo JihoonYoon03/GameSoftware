@@ -2105,7 +2105,7 @@ void BenchmarkQuality(const std::filesystem::path &output)
            << "\",\"resolution\":[1280,800],\"optimized\":" << (optimized ? "true" : "false")
            << ",\"warmup\":24,\"frames\":120,\"scenes\":[";
     auto &world = Game::Get().GetState();
-    for (int scenario = 0; scenario < 14; ++scenario)
+    for (int scenario = 0; scenario < 16; ++scenario)
     {
         Game::Get().Reset();
         world.noticeSecondsRemaining = 0;
@@ -2122,14 +2122,45 @@ void BenchmarkQuality(const std::filesystem::path &output)
                                          "city_security_5stars",
                                          "roads_junction",
                                          "roads_overpass",
-                                         "roads_ramp"};
+                                         "roads_ramp",
+                                         "planet_surface",
+                                         "planet_surface_security_5stars"};
+        if (scenario >= 14)
+        {
+            auto &g = Game::Get();
+            assert(g.EnterTestStage(TestStage::SurfaceSurvey));
+            auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(15);
+            while (g.Surface() && (!g.Surface()->Ready() || g.Surface()->Stream().Snapshot()->chunks.empty()) &&
+                   std::chrono::steady_clock::now() < deadline)
+            {
+                g.Update(0);
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
+            assert(g.Surface() && g.Surface()->Ready() && !g.Surface()->Stream().Snapshot()->chunks.empty());
+            if (scenario == 15)
+            {
+                auto &law = CivicJustice::State();
+                law.playerGrace = 1000;
+                for (int c = 0; c < 6; ++c)
+                {
+                    PlanetSecurity::Report(Offense::Homicide, g.Surface()->Pose().origin);
+                }
+                law.heat = 1000;
+                law.wanted = 5;
+                law.infamy = 100;
+                for (int i = 0; i < 6; ++i)
+                {
+                    PlanetSecurity::Spawn();
+                }
+            }
+        }
         if (scenario == 0)
         {
             world.isInsideHome = false;
             world.playerPosition = kLiaPosition;
             world.cameraPosition = kLiaPosition;
         }
-        if (scenario >= 11)
+        if (scenario >= 11 && scenario < 14)
         {
             world.isInsideHome = false;
             constexpr Vector2 stations[] = {{-32, -17}, {48, -17}, {48, -85}};
@@ -2235,7 +2266,7 @@ void BenchmarkQuality(const std::filesystem::path &output)
                 s.kain.position = {30, 33};
             }
         }
-        if (scenario == 0 || scenario == 2 || scenario >= 10)
+        if (scenario == 0 || scenario == 2 || (scenario >= 10 && scenario < 14))
         {
             for (int warm = 0; warm < 900; ++warm)
             {
@@ -2255,27 +2286,41 @@ void BenchmarkQuality(const std::filesystem::path &output)
             const auto previousDraws = profiling::ReadCounter(profiling::Counter::DrawCalls);
             auto start = std::chrono::steady_clock::now();
             profiling::BeginFrame(names[scenario]);
-            world.animationTimeSeconds += 1.f / 60;
-            if (scenario == 0 || scenario == 2 || scenario >= 10)
+            if (scenario >= 14)
             {
-                CivicCombat::Update(1.f / 60);
-                CivicJustice::Update(1.f / 60);
-                BodyCollision::Update(1.f / 60);
-                Overworld::Traffic().Update(world, 1.f / 60);
-                Overworld::Flights().Update(world, 1.f / 60);
-                CityResidents::Get().Update(world, 1.f / 60);
+                Game::Get().Update(1.f / 60);
             }
-            auto npcShotsBefore = profiling::ReadCounter(profiling::Counter::NpcShots);
-            if (auto *level = game::GameLevels::Active())
+            else
             {
-                level->Update(1.f / 60);
+                world.animationTimeSeconds += 1.f / 60;
+                if (scenario == 0 || scenario == 2 || scenario >= 10)
+                {
+                    CivicCombat::Update(1.f / 60);
+                    CivicJustice::Update(1.f / 60);
+                    BodyCollision::Update(1.f / 60);
+                    Overworld::Traffic().Update(world, 1.f / 60);
+                    Overworld::Flights().Update(world, 1.f / 60);
+                    CityResidents::Get().Update(world, 1.f / 60);
+                }
+                auto npcShotsBefore = profiling::ReadCounter(profiling::Counter::NpcShots);
+                if (auto *level = game::GameLevels::Active())
+                {
+                    level->Update(1.f / 60);
+                }
+                npcShotsObserved |= profiling::ReadCounter(profiling::Counter::NpcShots) > npcShotsBefore;
+                game::SceneManager::Update(1.f / 60);
             }
-            npcShotsObserved |= profiling::ReadCounter(profiling::Counter::NpcShots) > npcShotsBefore;
-            game::SceneManager::Update(1.f / 60);
             Begin();
-            if (scenario < 3 || scenario >= 10)
+            if (scenario < 3 || (scenario >= 10 && scenario < 14))
             {
                 game::SceneManager::Get(game::SceneKind::Background).Draw();
+                renderqueue::Flush();
+                glDepthMask(GL_TRUE);
+                glClear(GL_DEPTH_BUFFER_BIT);
+            }
+            else if (scenario >= 14)
+            {
+                Drawing::DrawRectangle(0, 0, float(kCanvasWidth), float(kCanvasHeight), {.045f, .085f, .11f});
                 renderqueue::Flush();
                 glDepthMask(GL_TRUE);
                 glClear(GL_DEPTH_BUFFER_BIT);

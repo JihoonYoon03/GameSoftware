@@ -126,8 +126,17 @@ struct Grid
         : seed(WorldIdentity::StreamSeed(p.terrain.Planet(), r.definition.id, "surface_content_v1"))
     {
         bool city = r.definition.kind == RegionKind::Settlement;
-        width = city ? 84 + Fraction(seed) * 24 : 132 + Fraction(seed) * 44;
-        depth = city ? 92 + Fraction(seed + 1) * 30 : 140 + Fraction(seed + 1) * 44;
+        if (city && p.layoutRevision >= GeneratedPlanet::CurrentLayoutRevision)
+        {
+            const bool major = r.definition.tier >= SettlementTier::Metropolis;
+            width = major ? 68 + Fraction(seed) * 14 : 64 + Fraction(seed) * 14;
+            depth = major ? 74 + Fraction(seed + 1) * 16 : 70 + Fraction(seed + 1) * 14;
+        }
+        else
+        {
+            width = city ? 84 + Fraction(seed) * 24 : 132 + Fraction(seed) * 44;
+            depth = city ? 92 + Fraction(seed + 1) * 30 : 140 + Fraction(seed + 1) * 44;
+        }
         // Match Halo's world axes: the shared quarter-view projects these axes at 45 degrees.
         // Warped shared nodes keep organic streets without randomly rotating an entire settlement.
         yaw = 0;
@@ -250,20 +259,64 @@ void AddStreet(ContentCell &cell, const GeneratedPlanet &p, const GeneratedRegio
         cell.streets.push_back(std::move(street));
     }
 }
-ContentForm CityForm(SettlementTier tier, std::uint64_t seed, ContentUse &use)
+ContentForm CityForm(SettlementTier tier, double zoneRatio, std::uint64_t seed, ContentUse &use)
 {
-    unsigned choice = unsigned(seed % 10);
+    unsigned choice = unsigned(seed % 12);
+    // Downtown Core (< 0.28): civic landmarks, transit hubs, high-rise towers & plazas
+    if (zoneRatio < .28)
+    {
+        if (choice <= 1)
+        {
+            use = ContentUse::Administration;
+            return ContentForm::Dome;
+        }
+        if (choice <= 3)
+        {
+            use = ContentUse::Services;
+            return ContentForm::Transit;
+        }
+        use = ContentUse::Housing;
+        if (tier >= SettlementTier::Town)
+        {
+            return choice % 3 == 0   ? ContentForm::Spire
+                   : choice % 3 == 1 ? ContentForm::TwinBridge
+                                     : ContentForm::Arcology;
+        }
+        return choice % 2 == 0 ? ContentForm::Arcology : ContentForm::Terrace;
+    }
+    // Outer Industrial / Logistics Ring (> 0.68)
+    if (zoneRatio > .68)
+    {
+        if (choice <= 3)
+        {
+            use = ContentUse::Industry;
+            return choice % 2 == 0 ? ContentForm::Workshop : ContentForm::Cargo;
+        }
+        if (choice == 4)
+        {
+            use = ContentUse::Services;
+            return ContentForm::Solar;
+        }
+        if (choice == 5)
+        {
+            use = ContentUse::Services;
+            return ContentForm::WaterTank;
+        }
+        use = ContentUse::Housing;
+        return choice % 2 == 0 ? ContentForm::Habitat : ContentForm::Courtyard;
+    }
+    // Mid-Ring Dense Mixed-Use & Residential (0.28 .. 0.68)
     if (choice == 0)
     {
         use = ContentUse::Industry;
         return ContentForm::Workshop;
     }
-    if (choice == 1)
+    if (choice == 1 || choice == 2)
     {
         use = ContentUse::Services;
         return ContentForm::Transit;
     }
-    if (choice == 2)
+    if (choice == 3)
     {
         use = ContentUse::Administration;
         return ContentForm::Dome;
@@ -271,9 +324,10 @@ ContentForm CityForm(SettlementTier tier, std::uint64_t seed, ContentUse &use)
     use = ContentUse::Housing;
     if (tier >= SettlementTier::Metropolis)
     {
-        return choice % 3 == 0   ? ContentForm::Spire
-               : choice % 3 == 1 ? ContentForm::TwinBridge
-                                 : ContentForm::Arcology;
+        return choice % 4 == 0   ? ContentForm::Spire
+               : choice % 4 == 1 ? ContentForm::TwinBridge
+               : choice % 4 == 2 ? ContentForm::Arcology
+                                 : ContentForm::Courtyard;
     }
     return choice % 3 == 0   ? ContentForm::Terrace
            : choice % 3 == 1 ? ContentForm::Courtyard
@@ -651,9 +705,25 @@ bool ContentCellKey::operator==(const ContentCellKey &b) const
 }
 bool SurfaceStructure::Contains(const SurfacePoint &point, double radius, double clearance) const
 {
+    if (!solid)
+    {
+        return false;
+    }
+    const double bound = std::hypot(sizeMeters.x * .5 + clearance, sizeMeters.y * .5 + clearance) + .01;
+    // Chord length on the unit sphere is always <= geodesic arc length, so this reject has zero false negatives.
+    const double limit = bound / radius;
+    if (limit < 2.)
+    {
+        const double dx = frame.origin.normal.x - point.normal.x;
+        const double dy = frame.origin.normal.y - point.normal.y;
+        const double dz = frame.origin.normal.z - point.normal.z;
+        if (dx * dx + dy * dy + dz * dz > limit * limit)
+        {
+            return false;
+        }
+    }
     // Cheap cap test avoids ambiguous tangent projections on the far side of the planet.
-    if (!solid || G::Distance(radius, frame.origin, point) >
-                      std::hypot(sizeMeters.x * .5 + clearance, sizeMeters.y * .5 + clearance) + .01)
+    if (G::Distance(radius, frame.origin, point) > bound)
     {
         return false;
     }
@@ -762,13 +832,23 @@ ContentCell ContentLayout::Generate(const GeneratedPlanet &p, ContentCellKey key
     const bool city = r.definition.kind == RegionKind::Settlement;
     const auto seed = grid.CellSeed(key);
     auto lanes = [&](std::int64_t coordinate) {
-        if (coordinate % 6 != 0)
+        if (r.definition.tier >= SettlementTier::Metropolis)
         {
+            if (coordinate % 4 == 0)
+            {
+                return 6u;
+            }
+            if (coordinate % 2 == 0)
+            {
+                return 4u;
+            }
             return 2u;
         }
-        return r.definition.tier >= SettlementTier::Metropolis ? 6u
-               : r.definition.tier == SettlementTier::Town     ? 4u
-                                                               : 2u;
+        if (r.definition.tier == SettlementTier::Town && coordinate % 3 == 0)
+        {
+            return 4u;
+        }
+        return 2u;
     };
     if (city)
     {
@@ -776,7 +856,14 @@ ContentCell ContentLayout::Generate(const GeneratedPlanet &p, ContentCellKey key
         AddStreet(result, p, r, a, b, lanes(key.y));
         AddStreet(result, p, r, a, d, lanes(key.x));
     }
-    unsigned slots = city ? 4 : 1;
+    const auto cellMid = Mul(Add(a, c), .5);
+    const double cellZoneRatio =
+        city ? Norm(cellMid) / (std::max)(200., r.boundingRadiusMeters) : 1.;
+    // Dense 3x3 urban parcels in Core & Mid-ring; 2x2 parcels in Outer industrial/suburban fringe.
+    const bool denseUrban = city && p.layoutRevision >= GeneratedPlanet::CurrentLayoutRevision &&
+                            cellZoneRatio <= .68;
+    const unsigned gridCols = denseUrban ? 3u : (city ? 2u : 1u);
+    const unsigned slots = gridCols * gridCols;
     for (unsigned slot = 0; slot < slots; ++slot)
     {
         if (Cancelled(cancel))
@@ -788,13 +875,21 @@ ContentCell ContentLayout::Generate(const GeneratedPlanet &p, ContentCellKey key
         {
             continue;
         }
-        // The unoccupied parcels are deliberate courtyards/green breaks, not missing chunks.
-        if (city && random % 11 == 0)
+        // Civic plazas in core (center slot of periodic blocks) and courtyard green breaks elsewhere.
+        if (denseUrban && cellZoneRatio < .28 && slot == 4 && (seed % 3 == 0))
         {
             continue;
         }
-        double u = city ? .26 + .48 * (slot % 2) : .5;
-        double v = city ? .26 + .48 * (slot / 2) : .5;
+        if (city && random % (cellZoneRatio > .68 ? 6 : 11) == 0)
+        {
+            continue;
+        }
+        const double u = denseUrban ? (.20 + .30 * double(slot % 3))
+                         : city     ? (.26 + .48 * double(slot % 2))
+                                    : .5;
+        const double v = denseUrban ? (.20 + .30 * double(slot / 3))
+                         : city     ? (.26 + .48 * double(slot / 2))
+                                    : .5;
         auto local = Add(Mul(Add(Mul(a, 1 - u), Mul(b, u)), 1 - v), Mul(Add(Mul(d, 1 - u), Mul(c, u)), v));
         if (entrance)
         {
@@ -811,13 +906,20 @@ ContentCell ContentLayout::Generate(const GeneratedPlanet &p, ContentCellKey key
         structure.yaw = std::atan2(direction.y, direction.x);
         if (city)
         {
-            structure.form = CityForm(r.definition.tier, random, structure.use);
-            double tier = double(unsigned(r.definition.tier));
-            structure.sizeMeters = {12 + Fraction(random + 1) * 6, 15 + Fraction(random + 2) * 7,
-                                    5 + tier * tier * 3 + Fraction(random + 3) * (5 + tier * 4)};
+            const double zoneRatio = Norm(local) / (std::max)(200., r.boundingRadiusMeters);
+            structure.form = CityForm(r.definition.tier, zoneRatio, random, structure.use);
+            const double tier = double(unsigned(r.definition.tier));
+            const double coreBoost = zoneRatio < .28 ? (tier >= 3 ? 1.42 : 1.22)
+                                     : zoneRatio > .68 ? .72
+                                                       : 1.;
+            const double footScale = denseUrban ? .82 : 1.;
+            structure.sizeMeters = {
+                (11. + Fraction(random + 1) * 5.) * footScale,
+                (13. + Fraction(random + 2) * 5.5) * footScale,
+                (5. + tier * tier * 3. + Fraction(random + 3) * (5. + tier * 4.)) * coreBoost};
             if (structure.use != ContentUse::Housing)
             {
-                structure.sizeMeters.z = 6 + tier * 2;
+                structure.sizeMeters.z = (6. + tier * 2.4) * coreBoost;
             }
         }
         else
@@ -1016,6 +1118,117 @@ const char *ContentLayout::UseName(ContentUse use)
         return "탐사 거점";
     }
 }
+void ContentCollision::BuildRegionCache(const GeneratedPlanet &p)
+{
+    regionMeta.clear();
+    regionMeta.reserve(p.regions.size());
+    for (const auto &r : p.regions)
+    {
+        RegionMeta meta;
+        meta.surface = r.center.space == SpaceKind::Surface;
+        meta.center = meta.surface ? r.center.position : r.access.position;
+        meta.frame = meta.surface ? r.frame : G::Frame(r.access.position);
+        meta.reach = meta.surface ? r.boundingRadiusMeters : 100.;
+        Grid grid(p, r);
+        meta.seed = grid.seed;
+        meta.width = grid.width;
+        meta.depth = grid.depth;
+        meta.yaw = grid.yaw;
+        meta.warpA = Fraction(grid.seed + 3) * 6.;
+        meta.warpB = Fraction(grid.seed + 4) * 6.;
+        meta.cellDiag = std::hypot(grid.width, grid.depth);
+        regionMeta.push_back(meta);
+    }
+}
+void ContentCollision::BuildCellGrid(const GeneratedPlanet &p, Entry &entry) const
+{
+    entry.hasGrid = false;
+    entry.items.clear();
+    entry.bucketOffsets.clear();
+    entry.bucketItems.clear();
+    if (entry.cell.structures.size() <= 8 || entry.cell.key.region >= regionMeta.size())
+    {
+        return;
+    }
+    const auto &meta = regionMeta[entry.cell.key.region];
+    const double planetRadius = p.terrain.Planet().radiusMeters;
+    double minX = 1.e18, minY = 1.e18, maxX = -1.e18, maxY = -1.e18;
+    entry.items.reserve(entry.cell.structures.size());
+    for (std::size_t i = 0; i < entry.cell.structures.size(); ++i)
+    {
+        const auto &s = entry.cell.structures[i];
+        if (!s.solid)
+        {
+            continue;
+        }
+        const auto loc = G::ToLocal(meta.frame, s.frame.origin, planetRadius);
+        const double bound = std::hypot(s.sizeMeters.x * .5, s.sizeMeters.y * .5) + 1.0;
+        entry.items.push_back({i, loc.x, loc.y, bound});
+        minX = (std::min)(minX, loc.x - bound);
+        minY = (std::min)(minY, loc.y - bound);
+        maxX = (std::max)(maxX, loc.x + bound);
+        maxY = (std::max)(maxY, loc.y + bound);
+    }
+    if (entry.items.size() <= 8)
+    {
+        return;
+    }
+    constexpr double kBucketSize = 16.;
+    double spanX = (std::max)(kBucketSize, maxX - minX);
+    double spanY = (std::max)(kBucketSize, maxY - minY);
+    double bucketSize = kBucketSize;
+    if (spanX / bucketSize > 64. || spanY / bucketSize > 64.)
+    {
+        bucketSize = (std::max)(spanX, spanY) / 64.;
+    }
+    entry.minX = minX;
+    entry.minY = minY;
+    entry.invBucket = 1. / bucketSize;
+    entry.gridW = (std::max)(1, (std::min)(64, int(std::ceil(spanX * entry.invBucket))));
+    entry.gridH = (std::max)(1, (std::min)(64, int(std::ceil(spanY * entry.invBucket))));
+    const int totalBuckets = entry.gridW * entry.gridH;
+    std::vector<std::uint32_t> counts(size_t(totalBuckets), 0);
+    auto clampX = [&](double v) {
+        return std::clamp(int(std::floor((v - entry.minX) * entry.invBucket)), 0, entry.gridW - 1);
+    };
+    auto clampY = [&](double v) {
+        return std::clamp(int(std::floor((v - entry.minY) * entry.invBucket)), 0, entry.gridH - 1);
+    };
+    for (const auto &item : entry.items)
+    {
+        const int bx0 = clampX(item.cx - item.bound), bx1 = clampX(item.cx + item.bound);
+        const int by0 = clampY(item.cy - item.bound), by1 = clampY(item.cy + item.bound);
+        for (int by = by0; by <= by1; ++by)
+        {
+            for (int bx = bx0; bx <= bx1; ++bx)
+            {
+                ++counts[size_t(by * entry.gridW + bx)];
+            }
+        }
+    }
+    entry.bucketOffsets.assign(size_t(totalBuckets + 1), 0);
+    for (int i = 0; i < totalBuckets; ++i)
+    {
+        entry.bucketOffsets[size_t(i + 1)] = entry.bucketOffsets[size_t(i)] + counts[size_t(i)];
+    }
+    entry.bucketItems.resize(entry.bucketOffsets.back());
+    std::vector<std::uint32_t> cursor = entry.bucketOffsets;
+    for (std::size_t idx = 0; idx < entry.items.size(); ++idx)
+    {
+        const auto &item = entry.items[idx];
+        const int bx0 = clampX(item.cx - item.bound), bx1 = clampX(item.cx + item.bound);
+        const int by0 = clampY(item.cy - item.bound), by1 = clampY(item.cy + item.bound);
+        for (int by = by0; by <= by1; ++by)
+        {
+            for (int bx = bx0; bx <= bx1; ++bx)
+            {
+                const size_t b = size_t(by * entry.gridW + bx);
+                entry.bucketItems[cursor[b]++] = std::uint32_t(idx);
+            }
+        }
+    }
+    entry.hasGrid = true;
+}
 bool ContentCollision::Blocked(const GeneratedPlanet &p, const SurfacePoint &point, double clearance,
                                bool heightAware, double verticalClearance)
 {
@@ -1024,15 +1237,75 @@ bool ContentCollision::Blocked(const GeneratedPlanet &p, const SurfacePoint &poi
     {
         throw std::invalid_argument("Invalid structure clearance");
     }
-    if (!owner || !owner->SameWorld(p.terrain.Planet()))
+    if (!owner || !owner->SameWorld(p.terrain.Planet()) || ownerPlan != &p ||
+        regionMeta.size() != p.regions.size())
     {
-        Clear();
-        owner = p.terrain.Planet();
+        if (!owner || !owner->SameWorld(p.terrain.Planet()))
+        {
+            Clear();
+            owner = p.terrain.Planet();
+        }
+        ownerPlan = &p;
+        BuildRegionCache(p);
     }
     ++clock;
-    for (auto key : ContentLayout::Near(p, point, clearance))
+    scratchKeys.clear();
+    const double planetRadius = p.terrain.Planet().radiusMeters;
+    for (std::size_t i = 0; i < regionMeta.size(); ++i)
     {
-        auto found = cells.find(key);
+        const auto &meta = regionMeta[i];
+        const double limitMeters = meta.reach + clearance + 200.;
+        const double limitAngle = limitMeters / planetRadius;
+        if (limitAngle < 2.)
+        {
+            const double dx = meta.center.normal.x - point.normal.x;
+            const double dy = meta.center.normal.y - point.normal.y;
+            const double dz = meta.center.normal.z - point.normal.z;
+            if (dx * dx + dy * dy + dz * dz > limitAngle * limitAngle)
+            {
+                continue;
+            }
+        }
+        if (G::Distance(planetRadius, meta.center, point) > limitMeters)
+        {
+            continue;
+        }
+        const auto regionLocal = G::ToLocal(meta.frame, point, planetRadius);
+        const auto local = meta.yaw != 0. ? Rotate(regionLocal, -meta.yaw) : regionLocal;
+        const auto x0 = std::int64_t(std::floor((local.x - clearance) / meta.width)) - 1;
+        const auto x1 = std::int64_t(std::floor((local.x + clearance) / meta.width)) + 1;
+        const auto y0 = std::int64_t(std::floor((local.y - clearance) / meta.depth)) - 1;
+        const auto y1 = std::int64_t(std::floor((local.y + clearance) / meta.depth)) + 1;
+        const double maxCellDist = clearance + meta.cellDiag;
+        const double maxCellDistSq = maxCellDist * maxCellDist;
+        auto node = [&](std::int64_t gx, std::int64_t gy) {
+            Vector3d v{double(gx) * meta.width + meta.width * .13 * std::sin(double(gy) * .61 + meta.warpA),
+                       double(gy) * meta.depth + meta.depth * .13 * std::sin(double(gx) * .53 + meta.warpB), 0};
+            return meta.yaw != 0. ? Rotate(v, meta.yaw) : v;
+        };
+        for (auto y = y0; y <= y1; ++y)
+        {
+            for (auto x = x0; x <= x1; ++x)
+            {
+                const auto a = node(x, y), b = node(x + 1, y + 1);
+                const double cx = (a.x + b.x) * .5 - regionLocal.x;
+                const double cy = (a.y + b.y) * .5 - regionLocal.y;
+                if (cx * cx + cy * cy > maxCellDistSq)
+                {
+                    continue;
+                }
+                if (!meta.surface && (x != 0 || y != 0))
+                {
+                    continue;
+                }
+                scratchKeys.push_back({{i, x, y}, regionLocal.x, regionLocal.y});
+            }
+        }
+    }
+    const double vertical = verticalClearance < 0 ? clearance : verticalClearance;
+    for (const auto &candidate : scratchKeys)
+    {
+        auto found = cells.find(candidate.key);
         if (found == cells.end())
         {
             if (cells.size() >= MaximumCells)
@@ -1042,18 +1315,92 @@ bool ContentCollision::Blocked(const GeneratedPlanet &p, const SurfacePoint &poi
                 });
                 cells.erase(oldest);
             }
-            found = cells.emplace(key, Entry{ContentLayout::Generate(p, key), clock}).first;
+            Entry created;
+            created.cell = ContentLayout::Generate(p, candidate.key);
+            created.touched = clock;
+            BuildCellGrid(p, created);
+            found = cells.emplace(candidate.key, std::move(created)).first;
         }
-        found->second.touched = clock;
-        const double vertical = verticalClearance < 0 ? clearance : verticalClearance;
-        for (const auto &structure : found->second.cell.structures)
+        auto &entry = found->second;
+        entry.touched = clock;
+        if (entry.hasGrid)
         {
-            if ((!heightAware || (point.altitudeMeters >= structure.frame.origin.altitudeMeters - vertical &&
+            const double pad = clearance + 1.0;
+            if (candidate.localX + pad >= entry.minX && candidate.localY + pad >= entry.minY)
+            {
+                const int bx0 = std::clamp(int(std::floor((candidate.localX - pad - entry.minX) * entry.invBucket)),
+                                           0, entry.gridW - 1);
+                const int bx1 = std::clamp(int(std::floor((candidate.localX + pad - entry.minX) * entry.invBucket)),
+                                           0, entry.gridW - 1);
+                const int by0 = std::clamp(int(std::floor((candidate.localY - pad - entry.minY) * entry.invBucket)),
+                                           0, entry.gridH - 1);
+                const int by1 = std::clamp(int(std::floor((candidate.localY + pad - entry.minY) * entry.invBucket)),
+                                           0, entry.gridH - 1);
+                const bool multiBucket = bx0 != bx1 || by0 != by1;
+                if (multiBucket)
+                {
+                    if (visitMarks.size() < entry.items.size())
+                    {
+                        visitMarks.resize(entry.items.size(), 0);
+                    }
+                    if (++visitStamp == 0)
+                    {
+                        std::fill(visitMarks.begin(), visitMarks.end(), 0);
+                        visitStamp = 1;
+                    }
+                }
+                for (int by = by0; by <= by1; ++by)
+                {
+                    for (int bx = bx0; bx <= bx1; ++bx)
+                    {
+                        const size_t b = size_t(by * entry.gridW + bx);
+                        const auto begin = entry.bucketOffsets[b];
+                        const auto end = entry.bucketOffsets[b + 1];
+                        for (auto k = begin; k < end; ++k)
+                        {
+                            const auto itemIdx = entry.bucketItems[k];
+                            if (multiBucket)
+                            {
+                                if (visitMarks[itemIdx] == visitStamp)
+                                {
+                                    continue;
+                                }
+                                visitMarks[itemIdx] = visitStamp;
+                            }
+                            const auto &item = entry.items[itemIdx];
+                            const double dx = candidate.localX - item.cx;
+                            const double dy = candidate.localY - item.cy;
+                            const double lim = item.bound + clearance;
+                            if (dx * dx + dy * dy > lim * lim)
+                            {
+                                continue;
+                            }
+                            const auto &structure = entry.cell.structures[item.index];
+                            if ((!heightAware ||
+                                 (point.altitudeMeters >= structure.frame.origin.altitudeMeters - vertical &&
                                   point.altitudeMeters <= structure.frame.origin.altitudeMeters +
                                                               structure.sizeMeters.z + vertical)) &&
-                structure.Contains(point, p.terrain.Planet().radiusMeters, clearance))
+                                structure.Contains(point, planetRadius, clearance))
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            for (const auto &structure : entry.cell.structures)
             {
-                return true;
+                if ((!heightAware ||
+                     (point.altitudeMeters >= structure.frame.origin.altitudeMeters - vertical &&
+                      point.altitudeMeters <=
+                          structure.frame.origin.altitudeMeters + structure.sizeMeters.z + vertical)) &&
+                    structure.Contains(point, planetRadius, clearance))
+                {
+                    return true;
+                }
             }
         }
         // Explicit flight hulls must also respect elevated road decks. Existing ground/projectile
@@ -1061,12 +1408,12 @@ bool ContentCollision::Blocked(const GeneratedPlanet &p, const SurfacePoint &poi
         if (heightAware && verticalClearance >= 0)
         {
             const auto frame = G::Frame(point);
-            for (const auto &street : found->second.cell.streets)
+            for (const auto &street : entry.cell.streets)
             {
                 for (size_t i = 1; i < street.points.size(); ++i)
                 {
-                    const auto a = G::ToLocal(frame, street.points[i - 1], p.terrain.Planet().radiusMeters);
-                    const auto b = G::ToLocal(frame, street.points[i], p.terrain.Planet().radiusMeters);
+                    const auto a = G::ToLocal(frame, street.points[i - 1], planetRadius);
+                    const auto b = G::ToLocal(frame, street.points[i], planetRadius);
                     const double dx = b.x - a.x, dy = b.y - a.y, length = dx * dx + dy * dy;
                     const double t = length > .0001 ? std::clamp(-(a.x * dx + a.y * dy) / length, 0., 1.) : 0;
                     const double altitude =
@@ -1085,7 +1432,10 @@ bool ContentCollision::Blocked(const GeneratedPlanet &p, const SurfacePoint &poi
 void ContentCollision::Clear()
 {
     cells.clear();
+    regionMeta.clear();
+    scratchKeys.clear();
     owner.reset();
+    ownerPlan = nullptr;
     clock = 0;
 }
 std::vector<const SurfaceStructure *> ContentCollision::Structures() const

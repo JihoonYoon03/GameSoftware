@@ -514,12 +514,52 @@ void PlanetParty::Update(float seconds)
         }
         const auto &aircraft = g.GetState().aircraft;
         const bool waitingForPilot = aircraft.mounted && aircraft.position;
-        auto target = waitingForPilot     ? *aircraft.position
+        // Surface companion support: revive a downed teammate on the surface before following.
+        const size_t otherIdx = 1 - i;
+        auto &other = state.members[otherIdx];
+        const bool aidingTeammate = !waitingForPilot && !g.IsSurfaceMine() && other.joined &&
+                                    other.place == CompanionPlace::Surface && other.combat.health <= 0 &&
+                                    G::Distance(radius, member.position, other.position) < 28.;
+        if (aidingTeammate)
+        {
+            const double aidDist = G::Distance(radius, member.position, other.position);
+            member.combat.support.task = ai::SupportTask::Aid;
+            if (aidDist <= 2.4)
+            {
+                member.combat.support.performing = true;
+                member.combat.support.progressSeconds += seconds;
+                if (member.combat.support.progressSeconds >= 2.5f)
+                {
+                    other.combat.health = 50;
+                    other.combat.downedSeconds = 0;
+                    member.combat.support = {};
+                    profiling::Count(profiling::Counter::NpcSupportAids);
+                    g.ShowNotice("동료 구조 / " + std::string(i == 0 ? "리아가 카인을" : "카인이 리아를") +
+                                 " 현장 응급 처치했습니다.");
+                }
+                continue;
+            }
+        }
+        else if (member.combat.support.task == ai::SupportTask::Aid)
+        {
+            member.combat.support = {};
+        }
+        auto target = aidingTeammate      ? other.position
+                      : waitingForPilot   ? *aircraft.position
                       : g.IsSurfaceMine() ? door
                                           : g.Surface()->Pose().origin;
+        // During active combat, take tactical flank spacing around the player instead of clumping.
+        if (!aidingTeammate && !waitingForPilot && !g.IsSurfaceMine() &&
+            CivicJustice::State().wanted > 0 && CivicJustice::State().identified)
+        {
+            const double flankAngle = double(g.GetState().facingYaw) + (i == 0 ? 1.25 : -1.25);
+            target = G::Advance(g.Surface()->Pose(), std::cos(flankAngle) * 3.4, std::sin(flankAngle) * 3.4,
+                                radius)
+                         .origin;
+        }
         const double distance = G::Distance(radius, member.position, target);
         const double aircraftClearance = PlayerAircraft::RadiusMeters() + 1;
-        const double stopDistance = i == 0 ? 3.2 : 4.8;
+        const double stopDistance = aidingTeammate ? 1.8 : (i == 0 ? 3.2 : 4.8);
         if (waitingForPilot)
         {
             member.motion.following = false;
@@ -2661,6 +2701,7 @@ void PlanetTraffic::BindLayout(std::shared_ptr<const world::GeneratedPlanet> inp
     {
         return;
     }
+    populateCollision.Clear();
     profiling::Scope prepareTimer(profiling::Timer::PlanetTrafficPrepare);
     const auto &p = input->terrain.Planet();
     const auto digest = input->Digest();
@@ -3000,6 +3041,70 @@ bool PlanetTraffic::Blocked(const world::SurfacePoint &point, double clearance) 
         }
     }
     return false;
+}
+std::optional<double> PlanetTraffic::NearestGroundDistance(const world::SurfacePoint &origin,
+                                                           double rangeMeters) const
+{
+    if (!planet)
+    {
+        return std::nullopt;
+    }
+    const double radius = planet->terrain.Planet().radiusMeters;
+    double best = rangeMeters;
+    bool found = false;
+    for (const auto &actor : state.actors)
+    {
+        if (actor.city >= 0 || actor.airborne || !actor.collisionReady || actor.health <= 0 ||
+            std::abs(actor.position.altitudeMeters - origin.altitudeMeters) >= 1.3)
+        {
+            continue;
+        }
+        const double dist = TG::Distance(radius, actor.position, origin);
+        if (dist < best)
+        {
+            best = dist;
+            found = true;
+        }
+    }
+    return found ? std::optional<double>(best) : std::nullopt;
+}
+bool PlanetTraffic::CommandeerNearest(const world::SurfacePoint &origin, double rangeMeters,
+                                      world::SurfacePoint &outPos, world::Vector3d &outHeading,
+                                      int &outHealth, bool &outOccupied)
+{
+    if (!planet)
+    {
+        return false;
+    }
+    const double radius = planet->terrain.Planet().radiusMeters;
+    size_t bestIndex = state.actors.size();
+    double bestDist = rangeMeters;
+    for (size_t i = 0; i < state.actors.size(); ++i)
+    {
+        const auto &actor = state.actors[i];
+        if (actor.city >= 0 || actor.airborne || !actor.collisionReady || actor.health <= 0 ||
+            std::abs(actor.position.altitudeMeters - origin.altitudeMeters) >= 1.3)
+        {
+            continue;
+        }
+        const double dist = TG::Distance(radius, actor.position, origin);
+        if (dist < bestDist)
+        {
+            bestDist = dist;
+            bestIndex = i;
+        }
+    }
+    if (bestIndex >= state.actors.size())
+    {
+        return false;
+    }
+    const auto actor = state.actors[bestIndex];
+    state.actors.erase(state.actors.begin() + std::ptrdiff_t(bestIndex));
+    outPos = actor.position;
+    outHeading = actor.heading;
+    outHealth = (std::min)(GroundVehicle::MaxHealth, (std::max)(20, actor.health));
+    outOccupied = actor.occupied;
+    return true;
 }
 bool PlanetTraffic::Damage(std::uint64_t id, int amount, bool playerOwned)
 {
@@ -3444,7 +3549,11 @@ void PlanetTraffic::Advance(PlanetTrafficActor &actor, float seconds, const Game
         }
     }
     auto next = Position(*route, progress, direction);
-    next.altitudeMeters = (std::max)(::world::PlanetTerrain::SeaLevelMeters, planet->terrain.Height(next)) +
+    const double groundHeight =
+        TG::Distance(radius, next, session.Pose().origin) < DetailedMeters + 40.
+            ? session.Stream().Contact(next).heightMeters
+            : planet->terrain.Height(next);
+    next.altitudeMeters = (std::max)(::world::PlanetTerrain::SeaLevelMeters, groundHeight) +
                           actor.altitudeMeters;
     if (world.aircraft.Contains(session, next, actor.airborne ? 3 : 2))
     {
@@ -3670,7 +3779,8 @@ void PlanetTraffic::Populate(const GameState &world, const world::SurfaceSession
         const double distance =
             TG::Distance(session.Planet().radiusMeters, actor.position, session.Pose().origin);
         if (distance < 180 || distance > 700 ||
-            (!actor.airborne && (InsideCore(actor.position) || !session.LandingClear(actor.position, 1))))
+            (!actor.airborne &&
+             (InsideCore(actor.position) || !session.LandingClearIsolated(actor.position, 1, populateCollision))))
         {
             continue;
         }
@@ -3928,6 +4038,25 @@ void PlanetCommunity::Bind(std::shared_ptr<const world::GeneratedPlanet> input)
         state.worldKey = key.WorldKey();
     }
 }
+size_t PlanetCommunity::TargetResidents(const world::GeneratedRegion &region)
+{
+    if (region.definition.kind != world::RegionKind::Settlement)
+    {
+        return 4;
+    }
+    switch (region.definition.tier)
+    {
+    case world::SettlementTier::SystemCapital:
+        return 18;
+    case world::SettlementTier::Metropolis:
+        return 14;
+    case world::SettlementTier::Town:
+        return 10;
+    case world::SettlementTier::District:
+    default:
+        return 6;
+    }
+}
 bool PlanetCommunity::Populate(const world::GeneratedRegion &region)
 {
     auto *surface = Game::Get().Surface();
@@ -3938,15 +4067,16 @@ bool PlanetCommunity::Populate(const world::GeneratedRegion &region)
     const auto &p = surface->Planet();
     CommunitySite site;
     site.regionId = region.definition.id;
-    auto cells = world::ContentLayout::Near(*planet, region.access.position, 90);
+    const size_t targetResidents = TargetResidents(region);
+    auto cells = world::ContentLayout::Near(*planet, region.access.position, 150);
     cells.erase(std::remove_if(cells.begin(), cells.end(),
                                [&](const auto &key) {
                                    return planet->regions[key.region].definition.id != site.regionId;
                                }),
                 cells.end());
     const auto access = TG::ToLocal(region.frame, region.access.position, p.radiusMeters);
-    const double gridWidth = region.definition.kind == world::RegionKind::Settlement ? 96 : 154;
-    const double gridDepth = region.definition.kind == world::RegionKind::Settlement ? 107 : 162;
+    const double gridWidth = region.definition.kind == world::RegionKind::Settlement ? 72 : 154;
+    const double gridDepth = region.definition.kind == world::RegionKind::Settlement ? 78 : 162;
     std::stable_sort(cells.begin(), cells.end(), [&](const auto &a, const auto &b) {
         return std::hypot((a.x + .5) * gridWidth - access.x, (a.y + .5) * gridDepth - access.y) <
                std::hypot((b.x + .5) * gridWidth - access.x, (b.y + .5) * gridDepth - access.y);
@@ -3955,7 +4085,7 @@ bool PlanetCommunity::Populate(const world::GeneratedRegion &region)
     size_t generated = 0, attempts = 0;
     for (const auto &key : cells)
     {
-        if (++generated > 16 || attempts >= 48 || site.residents.size() == ResidentsPerSite)
+        if (++generated > 32 || attempts >= 128 || site.residents.size() >= targetResidents)
         {
             break;
         }
@@ -3994,7 +4124,7 @@ bool PlanetCommunity::Populate(const world::GeneratedRegion &region)
             }
             for (size_t segment = 0; segment + 1 < street.points.size();)
             {
-                if (++attempts > 48 || site.residents.size() == ResidentsPerSite)
+                if (++attempts > 128 || site.residents.size() >= targetResidents)
                 {
                     break;
                 }
@@ -5112,9 +5242,26 @@ void Overworld::ToggleBike(GameState &state)
         for (Vector2 offset : {Vector2{1.2f, 0}, {-1.2f, 0}, {0, 1.2f}, {0, -1.2f}})
         {
             Vector2 position = {state.bikePosition.x + offset.x, state.bikePosition.y + offset.y};
-            bool safe = state.surfaceExploration && Game::Get().Surface()
-                            ? !Game::Get().Surface()->Blocked(position.x * 2, position.y * 2, false)
-                            : !Game::Get().IsPositionBlocked(position);
+            bool safe = false;
+            if (state.surfaceExploration && Game::Get().Surface())
+            {
+                const auto &s = *Game::Get().Surface();
+                const auto pt = s.PointAt(position.x * 2, position.y * 2);
+                const auto *traffic = Game::Get().SurfaceTraffic();
+                const auto *community = Game::Get().SurfaceCommunity();
+                const auto *cities = Game::Get().SurfaceCities();
+                safe = !s.Blocked(position.x * 2, position.y * 2, false) &&
+                       !PlanetSecurity::OfficerBlocked(pt, .32) &&
+                       (!traffic || !traffic->Blocked(pt, .35)) &&
+                       (!community || !community->Blocked(pt, .35, true)) &&
+                       (!cities || !cities->OccupiedAt(state, s, pt, -1, true)) &&
+                       (!state.car.position || !state.car.Contains(s, pt, .35f)) &&
+                       (!state.aircraft.position || !state.aircraft.Contains(s, pt, .35));
+            }
+            else
+            {
+                safe = !Game::Get().IsPositionBlocked(position);
+            }
             if (safe)
             {
                 state.playerPosition = position;
@@ -5637,33 +5784,51 @@ bool PlanetCities::OccupiedAt(const GameState &state, const world::SurfaceSessio
                               const world::SurfacePoint &point, int cityOverride, bool includePeople,
                               const world::SurfacePoint *escapeFrom) const
 {
+    auto snapshot = session.Stream().Snapshot();
+    if (!snapshot || !snapshot->planet ||
+        !snapshot->planet->terrain.Planet().SameWorld(session.Planet()))
+    {
+        return false;
+    }
+    const auto &plan = *snapshot->planet;
+    const double planetRadius = session.Planet().radiusMeters;
+    const double limitAngle = 300. / planetRadius;
+    const double limitChordSq = limitAngle * limitAngle;
+    auto within300 = [&](const world::SurfacePoint &center) {
+        const double dx = center.normal.x - point.normal.x;
+        const double dy = center.normal.y - point.normal.y;
+        const double dz = center.normal.z - point.normal.z;
+        if (dx * dx + dy * dy + dz * dz > limitChordSq)
+        {
+            return false;
+        }
+        return world::SurfaceGeometry::Distance(planetRadius, point, center) <= 300.;
+    };
     int city = cityOverride;
-    if (city < 0 && session.Ready())
+    const world::GeneratedRegion *foundRegion = nullptr;
+    if (city < 0)
     {
         for (int i = 0; i < Overworld::kCityCount; ++i)
         {
-            if (world::SurfaceGeometry::Distance(session.Planet().radiusMeters, point,
-                                                 session.Stream()
-                                                     .Snapshot()
-                                                     ->planet->Region(Overworld::Cities()[size_t(i)].id)
-                                                     .center.position) < 300)
+            const auto &reg = plan.Region(Overworld::Cities()[size_t(i)].id);
+            if (within300(reg.center.position))
             {
                 city = i;
+                foundRegion = &reg;
                 break;
             }
         }
     }
-    if (city < 0 || city >= Overworld::kCityCount || !session.Ready())
+    if (city < 0 || city >= Overworld::kCityCount)
     {
         return false;
     }
-    auto plan = session.Stream().Snapshot()->planet;
-    const auto &region = plan->Region(Overworld::Cities()[size_t(city)].id);
-    if (world::SurfaceGeometry::Distance(session.Planet().radiusMeters, point, region.center.position) > 300)
+    const auto &region = foundRegion ? *foundRegion : plan.Region(Overworld::Cities()[size_t(city)].id);
+    if (!foundRegion && !within300(region.center.position))
     {
         return false;
     }
-    auto relative = world::SurfaceGeometry::ToLocal(region.frame, point, session.Planet().radiusMeters);
+    auto relative = world::SurfaceGeometry::ToLocal(region.frame, point, planetRadius);
     auto center = Overworld::Cities()[size_t(city)].center;
     Vector2 query{center.x + float(relative.x / 2), center.y + float(relative.y / 2)};
     const auto start =
