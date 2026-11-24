@@ -613,6 +613,14 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     player.Number("recovery_kits", level.player.recoveryKits);
     player.Number("salvage", level.player.salvage);
     player.Number("credits", level.player.credits);
+    JsonObject residence;
+    residence.Number("stash_credits", world.residence.stashCredits);
+    residence.Number("stash_recovery_kits", world.residence.stashRecoveryKits);
+    residence.Number("stash_salvage", world.residence.stashSalvage);
+    residence.Number("armor_tier", world.residence.armorTier);
+    residence.Number("weapon_tier", world.residence.weaponTier);
+    residence.Number("rest_count", world.residence.restCount);
+    player.Raw("residence", residence.Finish());
     player.Number("kills", level.kills);
     player.Bool("pistol_owned", level.loadout.HasPistol());
     player.Text("equipped_slot", level.loadout.Selected() == combat::WeaponSlot::Unarmed   ? "unarmed"

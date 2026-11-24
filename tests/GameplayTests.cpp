@@ -1995,9 +1995,13 @@ void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::file
         }
         return result;
     };
-    assert(number(8) >= 8 && number(8) <= 12 && ((version >= 1 && version <= 8) || version == 11));
+    const auto schema = number(8);
+    assert(schema >= 8 && schema <= 13 &&
+           ((version >= 1 && version <= 8) || version == 11 || version == 12));
+    const size_t schema12End =
+        schema >= 13 ? bytes.size() - 8 - size_t(number(bytes.size() - 8)) : bytes.size();
     const size_t schema8End =
-        number(8) >= 9 ? bytes.size() - 8 - size_t(number(bytes.size() - 8)) : bytes.size();
+        schema >= 9 ? schema12End - 8 - size_t(number(schema12End - 8)) : schema12End;
     const size_t trackingStart = schema8End - 8 - size_t(number(schema8End - 8));
     const size_t communityStart = trackingStart - 8 - size_t(number(trackingStart - 8));
     const size_t linkStart = communityStart - 8 - size_t(number(communityStart - 8));
@@ -2022,12 +2026,17 @@ void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::file
     size_t aircraftBytes = 0;
     if (version == 11)
     {
-        assert(number(8) == 12);
+        assert(schema >= 12);
         // This fixture has exactly one world. The final schema-12 field is its aircraft record:
         // optional flag, SurfacePoint (4 doubles), heading (3), health (8), age (4), grounded flag.
-        aircraftBytes = bytes[bytes.size() - 9] == 0 ? 1 : 1 + 4 * 8 + 3 * 8 + 8 + 4 + 1;
-        previous = bytes;
+        aircraftBytes = bytes[schema12End - 9] == 0 ? 1 : 1 + 4 * 8 + 3 * 8 + 8 + 4 + 1;
+        previous.assign(bytes.begin(), bytes.begin() + schema12End);
         previous.erase(previous.end() - 8 - aircraftBytes, previous.end() - 8);
+    }
+    else if (version == 12)
+    {
+        assert(schema >= 13);
+        previous.assign(bytes.begin(), bytes.begin() + schema12End);
     }
     else
     {
@@ -2044,7 +2053,7 @@ void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::file
     std::uint64_t hash = 14695981039346656037ull;
     if (version == 11)
     {
-        put(previous.size() - 8, number(bytes.size() - 8) - aircraftBytes);
+        put(previous.size() - 8, number(schema12End - 8) - aircraftBytes);
     }
     for (size_t i = 40; i < previous.size(); ++i)
     {
@@ -2259,7 +2268,12 @@ void TestActivityTrackingPersistence()
     w.car.SetYaw(.6f, g.Surface()->Origin());
     w.car.health = 71;
     const auto savedHeading = w.car.heading;
-    assert(SaveSystem::Save(file) && SaveSystem::CheckFile(file));
+    const bool savedOk = SaveSystem::Save(file);
+    if (!savedOk)
+    {
+        std::cerr << "SaveSystem::Save failed: " << SaveSystem::Message() << "\n";
+    }
+    assert(savedOk && SaveSystem::CheckFile(file));
     assert(w.missions.Tracked() == MissionId::Mara);
     WriteLegacyCheckpoint(file, legacy, 7);
     WriteLegacyCheckpoint(file, legacy11, 11);
@@ -2312,7 +2326,12 @@ void TestWorldCheckpoints()
                    return r.cityIndex == city;
                }) == Overworld::ResidentPopulation(city));
     }
-    assert(SaveSystem::Save(file) && SaveSystem::CheckFile(file));
+    const bool savedOk = SaveSystem::Save(file);
+    if (!savedOk)
+    {
+        std::cerr << "SaveSystem::Save failed: " << SaveSystem::Message() << "\n";
+    }
+    assert(savedOk && SaveSystem::CheckFile(file));
     const auto legacy = folder / "schema1.sav";
     WriteLegacyCheckpoint(file, legacy);
     assert(SaveSystem::CheckFile(legacy));
@@ -2464,6 +2483,7 @@ void TestWorldCheckpoints()
     std::filesystem::remove(legacy5);
     std::filesystem::remove(legacy6);
     std::filesystem::remove(legacy7);
+    std::filesystem::remove(legacy8);
     std::filesystem::remove(malformedCommunity);
     std::filesystem::remove(malformed);
     std::filesystem::remove(file);
@@ -2702,10 +2722,11 @@ void TestPlanetCommunity()
     assert(stopped.x < personLocal.x / 2 - .5 &&
            community->State().sites.front().residents.back().health < 100);
     assert(CivicJustice::State().wanted == 0 && CivicJustice::State().heat == 0);
-    assert(community->Blocked(personPosition, .32) && !community->Blocked(personPosition, .32, false));
-    assert(community->Blocked(contact, .32, false)); // A terminal remains solid for a mounted rider.
+    assert(!community->Blocked(personPosition, .32)); // Lethal impact leaves no invisible corpse wall.
     *community = PlanetCommunity(collisionFixture);
     community->Bind(plan);
+    assert(community->Blocked(personPosition, .32) && !community->Blocked(personPosition, .32, false));
+    assert(community->Blocked(contact, .32, false)); // A terminal remains solid for a mounted rider.
     from.altitudeMeters += 10;
     to.altitudeMeters += 10;
     const auto overpass = BodyCollision::SurfaceVehicleContacts(from, to, 0, 12);
@@ -3215,7 +3236,12 @@ void TestPlanetProfileVisits()
         std::filesystem::path("x64/RevisionChecks") /
         ("profiles-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
     const auto file = folder / "campaign.sav";
-    assert(SaveSystem::Save(file) && SaveSystem::CheckFile(file));
+    const bool savedOk = SaveSystem::Save(file);
+    if (!savedOk)
+    {
+        std::cerr << "SaveSystem::Save failed: " << SaveSystem::Message() << "\n";
+    }
+    assert(savedOk && SaveSystem::CheckFile(file));
     g.Reset();
     assert(SaveSystem::Load(file));
     WaitForCheckpointLoad();
@@ -5200,10 +5226,10 @@ void CompleteChapterSite(int site, bool peaceful = true)
                     }
                 }
                 assert(found);
-                AimAt(target);
                 world.mouseFiring = true;
                 for (int frame = 0; frame < 300 && s.scrappers[i].combat.health > 0; ++frame)
                 {
+                    AimAt(s.scrappers[i].position);
                     level.Update(.025f);
                 }
                 world.mouseFiring = false;
@@ -5728,6 +5754,225 @@ void TestAimMovementAndLayers()
     g.Reset();
 }
 } // namespace
+void TestResidenceFeatures()
+{
+    using namespace tutorial;
+    auto &g = Game::Get();
+    g.Reset();
+    auto &w = g.GetState();
+    assert(w.isInsideHome);
+
+    // 1. Interior station detection & obstacle walkability checks.
+    w.playerPosition = kHomeBedInteraction;
+    assert(g.FindNearbyInteraction() == InteractionTarget::HomeBed);
+    assert(!g.IsPositionBlocked(kHomeBedInteraction));
+    w.playerPosition = kHomeWorkbenchInteraction;
+    assert(g.FindNearbyInteraction() == InteractionTarget::HomeWorkbench);
+    assert(!g.IsPositionBlocked(kHomeWorkbenchInteraction));
+    w.playerPosition = kHomeStorageInteraction;
+    assert(g.FindNearbyInteraction() == InteractionTarget::HomeStorage);
+    assert(!g.IsPositionBlocked(kHomeStorageInteraction));
+    const Vector2 terminalPos = {1.f, -1.2f};
+    const Vector2 exitPos = {2.f, 2.f};
+    w.playerPosition = terminalPos;
+    assert(g.FindNearbyInteraction() == InteractionTarget::HomeTerminal);
+    assert(!g.IsPositionBlocked(terminalPos));
+    w.playerPosition = exitPos;
+    assert(g.FindNearbyInteraction() == InteractionTarget::ApartmentExit);
+    assert(!g.IsPositionBlocked(exitPos));
+    assert(g.IsPositionBlocked({2.25f, -.15f})); // Storage crate solid footprint
+    assert(!g.IsPositionBlocked({0.f, 0.f}) && !g.IsPositionBlocked({1.6f, 1.5f}));
+
+    // 2. Prologue terminal flow preserved on first read; residence terminal opens afterward.
+    w.playerPosition = terminalPos;
+    assert(!w.homeMessageRead && w.mainQuestStage == MainQuestStage::ReadHomeTerminal);
+    g.InteractWithNearbyTarget();
+    assert(Dialogue::Active());
+    ReadDialogue();
+    assert(w.homeMessageRead && w.mainQuestStage == MainQuestStage::MeetLia);
+    g.InteractWithNearbyTarget();
+    assert(Dialogue::Active());
+    ReadDialogue();
+
+    // 3. Bed: heals HP/stamina/companions, reloads firearms, calms wanted <= 2*, refuses 3*+.
+    auto &player = mineState.player;
+    mineState.loadout.GrantPistol();
+    mineState.pistol.Reset();
+    combat::Shot shot{};
+    assert(mineState.pistol.TryFire(0, shot));
+    assert(mineState.pistol.GetRounds() < mineState.pistol.GetMagazineSize());
+    player.health = 28;
+    w.playerMotion.mobility.RestoreStamina(14.f, .5f);
+    mineState.riaCombat.health = 35;
+    CivicJustice::State().wanted = 2;
+    CivicJustice::State().heat = 140.f;
+    assert(g.ResidenceRest(false));
+    assert(player.health == player.maxHealth);
+    assert(w.playerMotion.mobility.Stamina() == PlayerMobility::MaxStamina);
+    assert(mineState.pistol.GetRounds() == mineState.pistol.GetMagazineSize());
+    assert(mineState.riaCombat.health >= 100);
+    assert(CivicJustice::State().wanted == 0 && CivicJustice::State().heat == 0.f);
+    assert(w.residence.restCount == 1);
+
+    player.health = 45;
+    CivicJustice::State().wanted = 3;
+    CivicJustice::State().heat = 280.f;
+    assert(g.ResidenceRest(false));
+    assert(player.health == player.maxHealth && CivicJustice::State().wanted == 3 &&
+           CivicJustice::State().heat == 280.f && w.residence.restCount == 2);
+    CivicJustice::State().wanted = 0;
+    CivicJustice::State().heat = 0.f;
+
+    // 4. Workbench: craft kits (salvage first, then credits), armor & weapon tiers 1..3 + cap.
+    player.recoveryKits = 0;
+    player.salvage = 1;
+    player.credits = 100;
+    assert(g.ResidenceCraftKit());
+    assert(player.salvage == 0 && player.recoveryKits == 1 && player.credits == 100);
+    assert(g.ResidenceCraftKit());
+    assert(player.credits == 60 && player.recoveryKits == 2);
+    player.credits = 10;
+    assert(!g.ResidenceCraftKit());
+
+    const int baseMaxHp = player.maxHealth;
+    const int baseDef = player.defense;
+    const int baseAtk = player.attack;
+    player.salvage = 30;
+    player.credits = 3000;
+    for (int tier = 1; tier <= ResidenceState::kMaxUpgradeTier; ++tier)
+    {
+        assert(g.ResidenceUpgradeArmor());
+        assert(w.residence.armorTier == tier);
+        assert(player.maxHealth == baseMaxHp + tier * 20);
+        assert(player.defense == baseDef + tier * 2);
+    }
+    assert(!g.ResidenceUpgradeArmor());
+    for (int tier = 1; tier <= ResidenceState::kMaxUpgradeTier; ++tier)
+    {
+        assert(g.ResidenceUpgradeWeapon());
+        assert(w.residence.weaponTier == tier);
+        assert(player.attack == baseAtk + tier * 4);
+    }
+    assert(!g.ResidenceUpgradeWeapon());
+
+    // 5. Storage & Wardrobe: safe deposit/withdraw, hospital-fee isolation, appearance cycling.
+    player.credits = 600;
+    player.recoveryKits = 3;
+    player.salvage = 5;
+    assert(g.ResidenceDepositCredits());
+    assert(g.ResidenceDepositCredits());
+    assert(w.residence.stashCredits == 400 && player.credits == 200);
+    assert(g.ResidenceWithdrawCredits());
+    assert(w.residence.stashCredits == 200 && player.credits == 400);
+    assert(g.ResidenceDepositCredits());
+    assert(w.residence.stashCredits == 400 && player.credits == 200);
+    assert(g.ResidenceDepositKit());
+    assert(w.residence.stashRecoveryKits == 1 && player.recoveryKits == 2);
+    assert(g.ResidenceWithdrawKit());
+    assert(w.residence.stashRecoveryKits == 0 && player.recoveryKits == 3);
+    assert(g.ResidenceDepositKit() && g.ResidenceDepositKit());
+    assert(w.residence.stashRecoveryKits == 2 && player.recoveryKits == 1);
+    assert(g.ResidenceDepositSalvage());
+    assert(w.residence.stashSalvage == 5 && player.salvage == 0);
+    assert(g.ResidenceWithdrawSalvage());
+    assert(w.residence.stashSalvage == 0 && player.salvage == 5);
+    assert(g.ResidenceDepositSalvage());
+    assert(w.residence.stashSalvage == 5 && player.salvage == 0);
+
+    // Hospital recovery penalizes carried wallet/salvage only, never residence stash.
+    player.credits = 150;
+    player.salvage = 2;
+    player.health = 0;
+    HospitalRecovery::Begin();
+    assert(w.residence.stashCredits == 400 && w.residence.stashSalvage == 5);
+    while (HospitalRecovery::Active())
+    {
+        HospitalRecovery::Update(.25f);
+    }
+    assert(w.residence.stashCredits == 400 && w.residence.stashSalvage == 5);
+
+    const auto startGender = w.playerGender;
+    g.ResidenceCycleGender();
+    assert(w.playerGender != startGender);
+    g.ResidenceCycleGender();
+    assert(w.playerGender == startGender);
+    const auto startHair = w.playerHair;
+    for (unsigned i = 0; i < unsigned(models::HairStyle::Count); ++i)
+    {
+        g.ResidenceCycleHair();
+    }
+    assert(w.playerHair == startHair);
+
+    // 6. Surface exploration: remote vehicle repair, vehicle recall, Monitor JSON, Schema 13 save/load.
+    assert(g.EnterTestStage(TestStage::SurfaceSurvey));
+    const auto until = std::chrono::steady_clock::now() + std::chrono::seconds(30);
+    while (!g.Surface()->Ready() && std::chrono::steady_clock::now() < until)
+    {
+        g.Update(0);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    assert(g.Surface()->Ready());
+    w.isInsideHome = true;
+    w.playerPosition = kHomeWorkbenchInteraction;
+    const auto parked = g.Surface()->Pose().origin;
+    w.car.position = parked;
+    w.car.SetYaw(.4f, g.Surface()->Origin());
+    w.car.health = 20;
+    w.car.wreckSeconds = 0;
+    w.aircraft.position = parked;
+    w.aircraft.heading = w.car.heading;
+    w.aircraft.health = 0;
+    w.aircraft.wreckSeconds = 3.f;
+    w.aircraft.grounded = true;
+    w.aircraft.mounted = false;
+    mineState.player.salvage = 4;
+    assert(g.ResidenceRepairVehicles());
+    assert(w.car.health == GroundVehicle::MaxHealth && w.car.wreckSeconds == 0);
+    assert(w.aircraft.health == PlayerAircraft::MaxHealth && w.aircraft.wreckSeconds == 0);
+    assert(mineState.player.salvage == 3);
+    assert(g.ResidenceRecallVehicles());
+    assert(w.car.position.has_value());
+
+    w.residence.stashCredits = 600;
+    w.residence.stashRecoveryKits = 3;
+    w.residence.stashSalvage = 9;
+    w.residence.armorTier = 2;
+    w.residence.weaponTier = 3;
+    w.residence.restCount = 4;
+    w.residence.lastRestPlayTime = 123.5f;
+
+    const auto snapshot = monitoring::WorldSnapshot::Build(1, "residence-test");
+    assert(snapshot.find("\"residence\":") != std::string::npos);
+    assert(snapshot.find("\"stash_credits\":600") != std::string::npos);
+    assert(snapshot.find("\"armor_tier\":2") != std::string::npos);
+    assert(snapshot.find("\"weapon_tier\":3") != std::string::npos);
+
+    const auto folder =
+        std::filesystem::path("x64/RevisionChecks") /
+        ("residence-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    const auto file = folder / "residence.sav";
+    const auto legacy12 = folder / "schema12.sav";
+    const bool savedOk = SaveSystem::Save(file);
+    if (!savedOk)
+    {
+        std::cerr << "SaveSystem::Save failed: " << SaveSystem::Message() << "\n";
+    }
+    assert(savedOk && SaveSystem::CheckFile(file));
+    WriteLegacyCheckpoint(file, legacy12, 12);
+    assert(SaveSystem::CheckFile(legacy12));
+    assert(SaveSystem::Load(legacy12));
+    WaitForCheckpointLoad();
+    assert(w.residence.stashCredits == 0 && w.residence.armorTier == 0 && w.residence.weaponTier == 0);
+    assert(SaveSystem::Load(file));
+    WaitForCheckpointLoad();
+    assert(w.residence.stashCredits == 600 && w.residence.stashRecoveryKits == 3 &&
+           w.residence.stashSalvage == 9 && w.residence.armorTier == 2 && w.residence.weaponTier == 3 &&
+           w.residence.restCount == 4 && std::fabs(w.residence.lastRestPlayTime - 123.5f) < .01f);
+    std::error_code ec;
+    std::filesystem::remove_all(folder, ec);
+    g.Reset();
+}
+
 int main(int argc, char **argv)
 {
     if (argc > 1 && std::string(argv[1]) == "--support")
@@ -5758,6 +6003,12 @@ int main(int argc, char **argv)
     {
         TestAircraftFlightContracts();
         std::cout << "Aircraft flight sweep, altitude, hull and rebase checks passed.\n";
+        return 0;
+    }
+    if (argc > 1 && std::string(argv[1]) == "--residence")
+    {
+        TestResidenceFeatures();
+        std::cout << "Residence stations, rest/wanted, crafting/upgrades, stash/wardrobe and Schema 13 save checks passed.\n";
         return 0;
     }
     if (argc == 3 && std::string(argv[1]) == "--checkpoint-write")
@@ -5828,6 +6079,7 @@ int main(int argc, char **argv)
     TestCommunityTaskTransactions();
     TestActivityTrackingContracts();
     TestActivityTrackingPersistence();
+    TestResidenceFeatures();
     TestAircraftFlightContracts();
     TestRelayTravelAndAtlas();
     TestWorldCheckpoints();

@@ -3571,11 +3571,14 @@ bool Dialogue::Start(const std::string &id, std::vector<DialogueLine> lines,
     }
     d.sceneId = id;
     d.selection = -1;
-    for (size_t i = 0; i < d.pages[d.page].choices.size(); ++i)
+    if (record.phase == DialoguePhase::InProgress)
     {
-        if (d.pages[d.page].choices[i].id == record.pendingChoice)
+        for (size_t i = 0; i < d.pages[d.page].choices.size(); ++i)
         {
-            d.selection = int(i);
+            if (d.pages[d.page].choices[i].id == record.pendingChoice)
+            {
+                d.selection = int(i);
+            }
         }
     }
     d.active = true;
@@ -3637,6 +3640,7 @@ bool Dialogue::Advance()
     auto id = d.sceneId;
     auto &record = d.scenes[id];
     record.choice = record.pendingChoice;
+    record.pendingChoice.clear();
     record.phase = DialoguePhase::Completed;
     record.nextPage = d.page;
     auto callback = std::move(d.completion);
@@ -3878,7 +3882,9 @@ bool Game::IsPositionBlocked(Vector2 position)
             position.x > 1.23f && position.x < 1.97f && position.y > -2.69f && position.y < -2.1f;
         const bool table =
             position.x > -2.32f && position.x < -1.28f && position.y > 1.03f && position.y < 1.77f;
-        return bed || console || table;
+        const bool storage =
+            position.x > 1.82f && position.x < 2.68f && position.y > -.58f && position.y < .28f;
+        return bed || console || table || storage;
     }
     if (state.isInObservatory)
     {
@@ -4156,16 +4162,31 @@ InteractionTarget Game::FindNearbyInteraction()
     }
     if (state.isInsideHome)
     {
-        if (Distance(state.playerPosition, {1, -1.2f}) < 1.5f)
+        struct HomePoint
         {
-            return InteractionTarget::HomeTerminal;
-        }
-        if (Distance(state.playerPosition, CityFacilities::Find(InteractionTarget::HomeEntrance)->exit) <
-            1.5f)
+            Vector2 position;
+            InteractionTarget target;
+            float radius;
+        };
+        const HomePoint points[] = {
+            {{1, -1.2f}, InteractionTarget::HomeTerminal, 1.5f},
+            {CityFacilities::Find(InteractionTarget::HomeEntrance)->exit, InteractionTarget::ApartmentExit,
+             1.5f},
+            {kHomeBedInteraction, InteractionTarget::HomeBed, 1.45f},
+            {kHomeWorkbenchInteraction, InteractionTarget::HomeWorkbench, 1.45f},
+            {kHomeStorageInteraction, InteractionTarget::HomeStorage, 1.45f}};
+        InteractionTarget best = InteractionTarget::None;
+        float bestDist = 1000.f;
+        for (const auto &pt : points)
         {
-            return InteractionTarget::ApartmentExit;
+            const float d = Distance(state.playerPosition, pt.position);
+            if (d < pt.radius && d < bestDist)
+            {
+                bestDist = d;
+                best = pt.target;
+            }
         }
-        return InteractionTarget::None;
+        return best;
     }
 
     if (state.isBikeMounted)
@@ -4262,6 +4283,12 @@ void Game::InteractWithNearbyTarget()
         }
     }
     const InteractionTarget target = FindNearbyInteraction();
+    if (target == InteractionTarget::HomeBed || target == InteractionTarget::HomeWorkbench ||
+        target == InteractionTarget::HomeStorage)
+    {
+        InteractResidence(target);
+        return;
+    }
     if (target == InteractionTarget::Aircraft)
     {
         PlayerAircraftController::Interact(*this);
@@ -4406,9 +4433,17 @@ void Game::InteractWithNearbyTarget()
     }
     if (target == InteractionTarget::HomeTerminal)
     {
-        state.mainQuestStage = (std::max)(state.mainQuestStage, MainQuestStage::MeetLia);
-        tell("리아 · 단말 메시지 / N-0 정기 측정일이야. 전망대 수신기가 이상한 응답을 잡았어. 같이 "
-             "확인해 줘. 접근 코드는 첨부했어.");
+        if (state.mainQuestStage == MainQuestStage::ReadHomeTerminal)
+        {
+            state.mainQuestStage = (std::max)(state.mainQuestStage, MainQuestStage::MeetLia);
+            state.homeMessageRead = true;
+            tell("리아 · 단말 메시지 / N-0 정기 측정일이야. 전망대 수신기가 이상한 응답을 잡았어. 같이 "
+                 "확인해 줘. 접근 코드는 첨부했어.");
+        }
+        else
+        {
+            InteractResidence(InteractionTarget::HomeTerminal);
+        }
     }
     if (target == InteractionTarget::ApartmentExit)
     {
@@ -4660,17 +4695,17 @@ void Game::InteractSurfaceStory(InteractionTarget target)
     };
     if (target == InteractionTarget::HomeTerminal)
     {
+        const bool firstRead = !state.homeMessageRead;
         state.homeMessageRead = true;
         SyncMissionProgress();
-        if (state.missions.Status(MissionId::Signal) != MissionStatus::Completed &&
-            !state.missions.Active(MissionId::Signal))
+        if (firstRead || (state.missions.Status(MissionId::Signal) != MissionStatus::Completed &&
+                          !state.missions.Active(MissionId::Signal)))
         {
             OfferMission(MissionId::Signal, "단말 기록");
         }
         else
         {
-            say("home", "리아 · 단말 메시지 / N-0 정기 측정 요청과 전망대 접근 코드를 보관했습니다. 외출과 "
-                        "탐사는 자유입니다.");
+            InteractResidence(InteractionTarget::HomeTerminal);
         }
         return;
     }
@@ -5034,6 +5069,578 @@ void RelayTravel::Update(float dt)
     game::GameLevels::Chapter().Surface().Refresh();
     s.relayNetwork.Observe(*snapshot->planet, g.Surface()->Location());
     g.ShowNotice("중계 이동 / " + name + " 도착. 바이크와 현장 인원·조사·보상 상태는 유지됩니다.");
+}
+// ============================================================================
+// Game — CQ-09 player residence hub (rest, crafting/upgrades, stash, terminal)
+// ============================================================================
+bool Game::ResidenceRest(bool saveCheckpoint)
+{
+    if (!state.isInsideHome || HospitalRecovery::Active())
+    {
+        return false;
+    }
+    auto &p = Player();
+    p.health = p.maxHealth;
+    state.playerMotion.mobility.RestoreStamina(PlayerMobility::MaxStamina, 0.f);
+    auto &law = CivicJustice::State();
+    law.playerImpact = {};
+    if (surfaceParty)
+    {
+        surfaceParty->RecoverAll();
+    }
+    auto &mine = game::GameLevels::Mine().GetState();
+    mine.riaCombat.health = (std::max)(mine.riaCombat.health, 100);
+    mine.riaCombat.downedSeconds = 0;
+    auto &chapter = game::GameLevels::Chapter().GetState();
+    chapter.ria.combat.health = (std::max)(chapter.ria.combat.health, 100);
+    chapter.ria.combat.downedSeconds = 0;
+    chapter.kain.combat.health = (std::max)(chapter.kain.combat.health, 100);
+    chapter.kain.combat.downedSeconds = 0;
+    if (mine.loadout.HasPistol())
+    {
+        mine.pistol.TopUpRounds(mine.pistol.GetMagazineSize());
+    }
+    if (mine.loadout.HasPrimary())
+    {
+        mine.carbine.TopUpRounds(mine.carbine.GetMagazineSize());
+    }
+    bool calmedWanted = false;
+    const bool highWantedBlocked = law.wanted >= 3;
+    if (law.wanted > 0 && law.wanted <= 2)
+    {
+        law.wanted = 0;
+        law.heat = 0;
+        law.unseenSeconds = 0;
+        law.sinceCrime = 1000;
+        law.responseStarted = false;
+        law.identified = false;
+        law.officers.clear();
+        PlanetSecurity::State().officers.clear();
+        calmedWanted = true;
+    }
+    ++state.residence.restCount;
+    state.residence.lastRestPlayTime = state.playTimeSeconds;
+    bool saved = false;
+    if (saveCheckpoint && state.surfaceExploration)
+    {
+        saved = SaveSystem::Save();
+    }
+    std::string note = "거주지 휴식 / 체력·스태미너·동료 컨디션과 탄창을 정비했습니다.";
+    if (calmedWanted)
+    {
+        note += " 실내 은신으로 1~2단계 수배가 진정되었습니다.";
+    }
+    else if (highWantedBlocked)
+    {
+        note += " 3단계 이상 고위험 수배는 은신 휴식만으로 해제되지 않습니다.";
+    }
+    if (saved)
+    {
+        note += " 안전 체크포인트 저장 완료.";
+    }
+    ShowNotice(note);
+    return true;
+}
+bool Game::ResidenceCraftKit()
+{
+    if (!state.isInsideHome || HospitalRecovery::Active())
+    {
+        return false;
+    }
+    auto &mine = game::GameLevels::Mine().GetState();
+    if (mine.loadout.HasPistol())
+    {
+        mine.pistol.TopUpRounds(mine.pistol.GetMagazineSize());
+    }
+    if (mine.loadout.HasPrimary())
+    {
+        mine.carbine.TopUpRounds(mine.carbine.GetMagazineSize());
+    }
+    auto &p = Player();
+    if (p.recoveryKits >= ResidenceState::kMaxCarryKits)
+    {
+        ShowNotice("작업대 / 휴대 회복 키트가 최대치(" + std::to_string(ResidenceState::kMaxCarryKits) +
+                   "개)입니다. 보유 총기 탄창만 보충했습니다.");
+        return false;
+    }
+    if (p.salvage >= 1)
+    {
+        --p.salvage;
+        ++p.recoveryKits;
+        ShowNotice("작업대 / 고철 1개로 회복 키트를 제작했습니다. (보유 " + std::to_string(p.recoveryKits) +
+                   "개 · 탄창 보충 완료)");
+        return true;
+    }
+    if (p.credits >= 40)
+    {
+        p.credits -= 40;
+        ++p.recoveryKits;
+        ShowNotice("작업대 / 40 크레딧으로 회복 키트를 보급했습니다. (보유 " +
+                   std::to_string(p.recoveryKits) + "개 · 탄창 보충 완료)");
+        return true;
+    }
+    ShowNotice("작업대 / 회복 키트 제작에는 고철 1개 또는 40 크레딧이 필요합니다.");
+    return false;
+}
+bool Game::ResidenceUpgradeArmor()
+{
+    if (!state.isInsideHome || HospitalRecovery::Active())
+    {
+        return false;
+    }
+    auto &r = state.residence;
+    if (r.armorTier >= ResidenceState::kMaxUpgradeTier)
+    {
+        ShowNotice("작업대 / 전술 방호복 보강이 최고 단계(3단계)에 도달했습니다.");
+        return false;
+    }
+    const int salvageCost = ResidenceState::ArmorSalvageCost(r.armorTier);
+    const int creditCost = ResidenceState::ArmorCreditCost(r.armorTier);
+    auto &p = Player();
+    if (p.salvage < salvageCost || p.credits < creditCost)
+    {
+        ShowNotice("작업대 / 방호복 보강에 고철 " + std::to_string(salvageCost) + "개와 " +
+                   std::to_string(creditCost) + " 크레딧이 필요합니다.");
+        return false;
+    }
+    p.salvage -= salvageCost;
+    p.credits -= creditCost;
+    ++r.armorTier;
+    p.maxHealth += 20;
+    p.health = (std::min)(p.maxHealth, p.health + 20);
+    p.defense += 2;
+    ShowNotice("작업대 / 전술 방호복 보강 " + std::to_string(r.armorTier) + "단계 완료 · 최대 체력 " +
+               std::to_string(p.maxHealth) + " · 방어력 " + std::to_string(p.defense));
+    return true;
+}
+bool Game::ResidenceUpgradeWeapon()
+{
+    if (!state.isInsideHome || HospitalRecovery::Active())
+    {
+        return false;
+    }
+    auto &r = state.residence;
+    if (r.weaponTier >= ResidenceState::kMaxUpgradeTier)
+    {
+        ShowNotice("작업대 / 무기 정밀 튜닝이 최고 단계(3단계)에 도달했습니다.");
+        return false;
+    }
+    const int salvageCost = ResidenceState::WeaponSalvageCost(r.weaponTier);
+    const int creditCost = ResidenceState::WeaponCreditCost(r.weaponTier);
+    auto &p = Player();
+    if (p.salvage < salvageCost || p.credits < creditCost)
+    {
+        ShowNotice("작업대 / 무기 튜닝에 고철 " + std::to_string(salvageCost) + "개와 " +
+                   std::to_string(creditCost) + " 크레딧이 필요합니다.");
+        return false;
+    }
+    p.salvage -= salvageCost;
+    p.credits -= creditCost;
+    ++r.weaponTier;
+    p.attack += 4;
+    ShowNotice("작업대 / 무기 정밀 튜닝 " + std::to_string(r.weaponTier) + "단계 완료 · 공격력 " +
+               std::to_string(p.attack));
+    return true;
+}
+bool Game::ResidenceRepairVehicles()
+{
+    if (!state.isInsideHome || HospitalRecovery::Active())
+    {
+        return false;
+    }
+    const bool carNeeds = state.car.position && state.car.health < GroundVehicle::MaxHealth;
+    const bool airNeeds = state.aircraft.position && state.aircraft.health < PlayerAircraft::MaxHealth;
+    if (!carNeeds && !airNeeds)
+    {
+        ShowNotice("작업대 / 정비할 손상 차량이나 비행체가 없습니다.");
+        return false;
+    }
+    auto &p = Player();
+    if (p.salvage >= 1)
+    {
+        --p.salvage;
+    }
+    else if (p.credits >= 80)
+    {
+        p.credits -= 80;
+    }
+    else
+    {
+        ShowNotice("작업대 / 원격 기체 정비에는 고철 1개 또는 80 크레딧이 필요합니다.");
+        return false;
+    }
+    if (carNeeds)
+    {
+        state.car.health = GroundVehicle::MaxHealth;
+        state.car.wreckSeconds = 0;
+        state.car.velocity = {};
+        state.car.speed = 0;
+    }
+    if (airNeeds)
+    {
+        state.aircraft.health = PlayerAircraft::MaxHealth;
+        state.aircraft.wreckSeconds = 0;
+        state.aircraft.Stop();
+        state.aircraft.grounded = true;
+    }
+    ShowNotice("작업대 / 등록된 차량·비행체 내구도를 100%로 원격 복구했습니다.");
+    return true;
+}
+bool Game::ResidenceRecallVehicles()
+{
+    if (!state.isInsideHome || HospitalRecovery::Active())
+    {
+        return false;
+    }
+    state.bikePosition = kJetBikePosition;
+    state.bikeYaw = kJetBikeYaw;
+    state.bikeSpeed = 0;
+    state.bikeVelocity = {};
+    state.bikeSafePosition = kJetBikePosition;
+    state.bikeSafeYaw = kJetBikeYaw;
+    state.bikeSafePoseValid = true;
+    if (state.surfaceExploration && surface && surface->Ready() && surfaceCities)
+    {
+        if (auto homeBike = surfaceCities->Point(*surface, 0, kJetBikePosition))
+        {
+            surfaceBike = *homeBike;
+            const auto frame = world::SurfaceGeometry::Frame(*homeBike);
+            surfaceBikeHeading = world::SurfaceGeometry::Unit(
+                {frame.right.x * std::cos(kJetBikeYaw) + frame.forward.x * std::sin(kJetBikeYaw),
+                 frame.right.y * std::cos(kJetBikeYaw) + frame.forward.y * std::sin(kJetBikeYaw),
+                 frame.right.z * std::cos(kJetBikeYaw) + frame.forward.z * std::sin(kJetBikeYaw)});
+        }
+        if (state.car.position && state.car.health > 0)
+        {
+            if (auto pad = surfaceCities->Point(*surface, 0, {kHomeDoor.x + 3.5f, kHomeDoor.y - 3.f}))
+            {
+                state.car.position = *pad;
+                state.car.SetYaw(0.f, world::SurfaceGeometry::Frame(*pad));
+                state.car.velocity = {};
+                state.car.speed = 0;
+            }
+        }
+    }
+    ShowNotice("거주지 단말 / 개인 바이크와 가동 중인 차량을 헤일로 거주지 앞 주차 구역으로 호출했습니다.");
+    return true;
+}
+bool Game::ResidenceDepositCredits(int amount)
+{
+    if (!state.isInsideHome || amount <= 0)
+    {
+        return false;
+    }
+    auto &p = Player();
+    auto &r = state.residence;
+    const int move = (std::min)({amount, p.credits, ResidenceState::kMaxStashCredits - r.stashCredits});
+    if (move <= 0)
+    {
+        ShowNotice("보관함 / 예치할 크레딧이 없거나 금고가 가득 찼습니다.");
+        return false;
+    }
+    p.credits -= move;
+    r.stashCredits += move;
+    ShowNotice("보관함 / " + std::to_string(move) + " 크레딧을 금고에 예치했습니다. (금고 " +
+               std::to_string(r.stashCredits) + " · 휴대 " + std::to_string(p.credits) + ")");
+    return true;
+}
+bool Game::ResidenceWithdrawCredits(int amount)
+{
+    if (!state.isInsideHome || amount <= 0)
+    {
+        return false;
+    }
+    auto &p = Player();
+    auto &r = state.residence;
+    const int move = (std::min)({amount, r.stashCredits, game::PlayerStats::kMaximumCredits - p.credits});
+    if (move <= 0)
+    {
+        ShowNotice("보관함 / 인출할 크레딧이 금고에 없습니다.");
+        return false;
+    }
+    r.stashCredits -= move;
+    p.credits += move;
+    ShowNotice("보관함 / " + std::to_string(move) + " 크레딧을 금고에서 인출했습니다. (금고 " +
+               std::to_string(r.stashCredits) + " · 휴대 " + std::to_string(p.credits) + ")");
+    return true;
+}
+bool Game::ResidenceDepositKit()
+{
+    if (!state.isInsideHome)
+    {
+        return false;
+    }
+    auto &p = Player();
+    auto &r = state.residence;
+    if (p.recoveryKits <= 0 || r.stashRecoveryKits >= ResidenceState::kMaxStashKits)
+    {
+        ShowNotice("보관함 / 보관할 회복 키트가 없거나 보관함이 가득 찼습니다.");
+        return false;
+    }
+    --p.recoveryKits;
+    ++r.stashRecoveryKits;
+    ShowNotice("보관함 / 회복 키트 1개를 보관했습니다. (보관 " + std::to_string(r.stashRecoveryKits) +
+               " · 휴대 " + std::to_string(p.recoveryKits) + ")");
+    return true;
+}
+bool Game::ResidenceWithdrawKit()
+{
+    if (!state.isInsideHome)
+    {
+        return false;
+    }
+    auto &p = Player();
+    auto &r = state.residence;
+    if (r.stashRecoveryKits <= 0 || p.recoveryKits >= ResidenceState::kMaxCarryKits)
+    {
+        ShowNotice("보관함 / 인출할 키트가 없거나 휴대 한도(" + std::to_string(ResidenceState::kMaxCarryKits) +
+                   "개)입니다.");
+        return false;
+    }
+    --r.stashRecoveryKits;
+    ++p.recoveryKits;
+    ShowNotice("보관함 / 회복 키트 1개를 꺼냈습니다. (보관 " + std::to_string(r.stashRecoveryKits) +
+               " · 휴대 " + std::to_string(p.recoveryKits) + ")");
+    return true;
+}
+bool Game::ResidenceDepositSalvage()
+{
+    if (!state.isInsideHome)
+    {
+        return false;
+    }
+    auto &p = Player();
+    auto &r = state.residence;
+    const int move = (std::min)(p.salvage, ResidenceState::kMaxStashSalvage - r.stashSalvage);
+    if (move <= 0)
+    {
+        ShowNotice("보관함 / 보관할 고철이 없거나 보관함이 가득 찼습니다.");
+        return false;
+    }
+    p.salvage -= move;
+    r.stashSalvage += move;
+    ShowNotice("보관함 / 고철 " + std::to_string(move) + "개를 보관했습니다. (보관 " +
+               std::to_string(r.stashSalvage) + " · 휴대 " + std::to_string(p.salvage) + ")");
+    return true;
+}
+bool Game::ResidenceWithdrawSalvage()
+{
+    if (!state.isInsideHome)
+    {
+        return false;
+    }
+    auto &p = Player();
+    auto &r = state.residence;
+    if (r.stashSalvage <= 0)
+    {
+        ShowNotice("보관함 / 보관된 고철이 없습니다.");
+        return false;
+    }
+    const int move = r.stashSalvage;
+    r.stashSalvage = 0;
+    p.salvage += move;
+    ShowNotice("보관함 / 고철 " + std::to_string(move) + "개를 모두 꺼냈습니다. (휴대 " +
+               std::to_string(p.salvage) + ")");
+    return true;
+}
+void Game::ResidenceCycleGender()
+{
+    state.playerGender =
+        state.playerGender == models::Gender::Male ? models::Gender::Female : models::Gender::Male;
+    ShowNotice(std::string("옷장 / 캐릭터 체형을 ") +
+               (state.playerGender == models::Gender::Male ? "남성" : "여성") + "으로 변경했습니다.");
+}
+void Game::ResidenceCycleHair()
+{
+    const unsigned next = (unsigned(state.playerHair) + 1u) % unsigned(models::HairStyle::Count);
+    state.playerHair = models::HairStyle(next);
+    static constexpr const char *kHairNames[] = {"버즈컷", "사이드파트", "컬", "단발", "포니테일", "번"};
+    ShowNotice(std::string("옷장 / 헤어스타일을 '") + kHairNames[next] + "'으로 변경했습니다.");
+}
+void Game::InteractResidence(InteractionTarget target)
+{
+    if (!state.isInsideHome || HospitalRecovery::Active())
+    {
+        return;
+    }
+    const auto &p = Player();
+    const auto &r = state.residence;
+    if (target == InteractionTarget::HomeBed)
+    {
+        const auto &law = CivicJustice::State();
+        std::string status = "체력 " + std::to_string(p.health) + "/" + std::to_string(p.maxHealth) +
+                             " · 누적 휴식 " + std::to_string(r.restCount) + "회";
+        if (law.wanted > 0)
+        {
+            status += law.wanted <= 2 ? " · 수배 " + std::to_string(law.wanted) + "단계(은신 진정 가능)"
+                                      : " · 수배 " + std::to_string(law.wanted) + "단계(고위험 봉쇄)";
+        }
+        std::vector<DialogueChoice> choices = {{"rest", "짧은 휴식 (체력·스태미너·동료·탄창 회복)"}};
+        if (state.surfaceExploration)
+        {
+            choices.push_back({"rest_save", "휴식 및 안전 체크포인트 저장"});
+        }
+        choices.push_back({"cancel", "일어나기"});
+        Dialogue::Start("residence/bed",
+                        {{"bed", "침대", "거주지 휴식", status, std::move(choices)}},
+                        [this](const std::string &choice) {
+                            if (choice == "rest")
+                            {
+                                ResidenceRest(false);
+                            }
+                            else if (choice == "rest_save")
+                            {
+                                ResidenceRest(true);
+                            }
+                        },
+                        true);
+        return;
+    }
+    if (target == InteractionTarget::HomeWorkbench)
+    {
+        const std::string header = "휴대 고철 " + std::to_string(p.salvage) + " · 크레딧 " +
+                                   std::to_string(p.credits) + " · 회복 키트 " +
+                                   std::to_string(p.recoveryKits) + "/" +
+                                   std::to_string(ResidenceState::kMaxCarryKits) + " · 방호복 " +
+                                   std::to_string(r.armorTier) + "/3 · 무기 " +
+                                   std::to_string(r.weaponTier) + "/3";
+        std::vector<DialogueChoice> choices = {
+            {"kit", "회복 키트 제작 & 탄창 보충 (고철 1 또는 40 Cr)"},
+            {"armor", r.armorTier < ResidenceState::kMaxUpgradeTier
+                          ? "전술 방호복 보강 +" + std::to_string(r.armorTier + 1) + " (고철 " +
+                                std::to_string(ResidenceState::ArmorSalvageCost(r.armorTier)) + " + " +
+                                std::to_string(ResidenceState::ArmorCreditCost(r.armorTier)) +
+                                " Cr → 최대체력+20·방어+2)"
+                          : "전술 방호복 보강 (최고 3단계 완료)"},
+            {"weapon", r.weaponTier < ResidenceState::kMaxUpgradeTier
+                           ? "무기 정밀 튜닝 +" + std::to_string(r.weaponTier + 1) + " (고철 " +
+                                 std::to_string(ResidenceState::WeaponSalvageCost(r.weaponTier)) + " + " +
+                                 std::to_string(ResidenceState::WeaponCreditCost(r.weaponTier)) +
+                                 " Cr → 공격+4)"
+                           : "무기 정밀 튜닝 (최고 3단계 완료)"},
+            {"vehicle", "차량·비행체 원격 정비 (고철 1 또는 80 Cr)"},
+            {"cancel", "작업대 닫기"}};
+        Dialogue::Start("residence/workbench",
+                        {{"bench", "작업대", "장비 정비 · 강화", header, std::move(choices)}},
+                        [this](const std::string &choice) {
+                            if (choice == "kit")
+                            {
+                                ResidenceCraftKit();
+                            }
+                            else if (choice == "armor")
+                            {
+                                ResidenceUpgradeArmor();
+                            }
+                            else if (choice == "weapon")
+                            {
+                                ResidenceUpgradeWeapon();
+                            }
+                            else if (choice == "vehicle")
+                            {
+                                ResidenceRepairVehicles();
+                            }
+                        },
+                        true);
+        return;
+    }
+    if (target == InteractionTarget::HomeStorage)
+    {
+        const std::string summary =
+            "금고 크레딧 " + std::to_string(r.stashCredits) + " (의료비 보호) · 보관 키트 " +
+            std::to_string(r.stashRecoveryKits) + "/" + std::to_string(ResidenceState::kMaxStashKits) +
+            " · 보관 고철 " + std::to_string(r.stashSalvage) + " · 외형: " +
+            (state.playerGender == models::Gender::Male ? "남성" : "여성");
+        std::vector<DialogueChoice> choices = {
+            {"dep_cr", "크레딧 200 안전 예치 (휴대 " + std::to_string(p.credits) + " Cr)"},
+            {"wd_cr", "크레딧 200 인출 (금고 " + std::to_string(r.stashCredits) + " Cr)"},
+            {"kit_toggle", p.recoveryKits > 0 && r.stashRecoveryKits < ResidenceState::kMaxStashKits
+                               ? "회복 키트 1개 보관 (보관 " + std::to_string(r.stashRecoveryKits) + ")"
+                               : "회복 키트 1개 인출 (보관 " + std::to_string(r.stashRecoveryKits) + ")"},
+            {"salvage_toggle", p.salvage > 0 ? "고철 전부 보관 (" + std::to_string(p.salvage) + "개)"
+                                             : "보관 고철 전부 인출 (" + std::to_string(r.stashSalvage) + "개)"},
+            {"hair", "옷장 · 헤어스타일 변경"},
+            {"gender", "옷장 · 체형(남성/여성) 전환"},
+            {"cancel", "보관함 닫기"}};
+        Dialogue::Start("residence/storage",
+                        {{"storage", "보관함 · 옷장", "거주지 금고", summary, std::move(choices)}},
+                        [this](const std::string &choice) {
+                            if (choice == "dep_cr")
+                            {
+                                ResidenceDepositCredits();
+                            }
+                            else if (choice == "wd_cr")
+                            {
+                                ResidenceWithdrawCredits();
+                            }
+                            else if (choice == "kit_toggle")
+                            {
+                                if (Player().recoveryKits > 0 &&
+                                    state.residence.stashRecoveryKits < ResidenceState::kMaxStashKits)
+                                {
+                                    ResidenceDepositKit();
+                                }
+                                else
+                                {
+                                    ResidenceWithdrawKit();
+                                }
+                            }
+                            else if (choice == "salvage_toggle")
+                            {
+                                if (Player().salvage > 0)
+                                {
+                                    ResidenceDepositSalvage();
+                                }
+                                else
+                                {
+                                    ResidenceWithdrawSalvage();
+                                }
+                            }
+                            else if (choice == "hair")
+                            {
+                                ResidenceCycleHair();
+                            }
+                            else if (choice == "gender")
+                            {
+                                ResidenceCycleGender();
+                            }
+                        },
+                        true);
+        return;
+    }
+    if (target == InteractionTarget::HomeTerminal)
+    {
+        const auto &law = CivicJustice::State();
+        const std::string briefing =
+            "금고 " + std::to_string(r.stashCredits) + " Cr · 방호 " + std::to_string(r.armorTier) +
+            "/3 · 무기 " + std::to_string(r.weaponTier) + "/3 · 등록 중계환 " +
+            std::to_string(state.relayNetwork.Registrations().size()) + "개 · 수배 " +
+            std::to_string(law.wanted) + "성 · 악명 " + std::to_string(int(std::round(law.infamy)));
+        std::vector<DialogueChoice> choices = {
+            {"brief", "거점·탐사 현황 확인"},
+            {"recall", "개인 바이크·차량 거주지 앞으로 호출"},
+            {"message", "리아의 보관 메시지 다시 보기"},
+            {"cancel", "단말 닫기"}};
+        Dialogue::Start(
+            "residence/terminal",
+            {{"terminal", "거주지 단말", "헤일로 07 거점", briefing, std::move(choices)}},
+            [this, briefing](const std::string &choice) {
+                if (choice == "brief")
+                {
+                    ShowNotice("거점 브리핑 / " + briefing);
+                }
+                else if (choice == "recall")
+                {
+                    ResidenceRecallVehicles();
+                }
+                else if (choice == "message")
+                {
+                    Dialogue::Say("residence/lia-archive",
+                                  "리아 · 보관 메시지 / N-0 정기 측정 요청과 전망대 접근 코드를 "
+                                  "보관했습니다. 외출과 탐사는 자유입니다.");
+                }
+            },
+            true);
+    }
 }
 // ============================================================================
 // GameCallbacks — window entry points

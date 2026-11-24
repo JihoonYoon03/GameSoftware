@@ -1356,7 +1356,19 @@ void CityHud::DrawInteractionPrompt()
     switch (target)
     {
     case InteractionTarget::HomeTerminal:
-        label = "집 단말 / 메시지 확인";
+        label = (w.surfaceExploration ? w.homeMessageRead
+                                      : w.mainQuestStage > MainQuestStage::ReadHomeTerminal)
+                    ? "집 단말 / 거점 현황 · 차량 호출"
+                    : "집 단말 / 메시지 확인";
+        break;
+    case InteractionTarget::HomeBed:
+        label = "침대 / 휴식 · 안전 저장";
+        break;
+    case InteractionTarget::HomeWorkbench:
+        label = "작업대 / 장비 강화 · 보급 정비";
+        break;
+    case InteractionTarget::HomeStorage:
+        label = "보관함 / 금고 · 외형 변경";
         break;
     case InteractionTarget::Lia:
         label = "리아 / 대화";
@@ -1632,6 +1644,18 @@ void CityHud::Draw()
         Icon("objective", 36, 139, 16, true);
         UiText(68, 153, w.isPowerRestored ? "마라에게 전력 복구 보고" : "선택 · 마라의 전력 장치 복구", 15,
                {.94f, .77f, .44f}, true);
+    }
+    if (w.isInsideHome)
+    {
+        const auto &res = w.residence;
+        const float rowY =
+            (!w.surfaceExploration && w.isSideQuestAccepted && !w.isSideQuestComplete) ? 182.f : 153.f;
+        const std::string status = "거주지 거점 · 금고 " + std::to_string(res.stashCredits) + " Cr · 킷 " +
+                                   std::to_string(res.stashRecoveryKits) + " · 고철 " +
+                                   std::to_string(res.stashSalvage) + " · 방어 " +
+                                   std::to_string(res.armorTier) + "/3 · 무기 " +
+                                   std::to_string(res.weaponTier) + "/3";
+        UiText(68, rowY, status, 14, {.65f, .9f, .81f}, true);
     }
     MapHud::DrawMinimap();
     DrawInteractionPrompt();

@@ -53,6 +53,7 @@ class PlanetParty
     bool Joined(CompanionId id) const;
     bool Owns(CompanionId id, CompanionPlace place) const;
     bool Damage(CompanionId id, int amount, bool playerOwned);
+    void RecoverAll();
     void Defend(CompanionId id, float yaw, std::uint64_t targetId = 0, bool blocked = false);
     // Capture before changing scene ownership; publish only to the current owner's adapter.
     void Capture();

@@ -292,7 +292,10 @@ enum class InteractionTarget
     Relay,
     Community,
     GroundVehicle,
-    Aircraft
+    Aircraft,
+    HomeBed,
+    HomeWorkbench,
+    HomeStorage
 };
 
 constexpr float kPi = 3.14159265f;
@@ -302,6 +305,9 @@ constexpr int kCanvasHeight = 800;
 constexpr Vector2 kHomeBuildingPosition = {-9, -7};
 constexpr Vector2 kObservatoryBuildingPosition = {10, -9};
 constexpr Vector2 kHomeDoor = {-7, -3.5f};
+constexpr Vector2 kHomeBedInteraction = {-1.35f, -1.65f};
+constexpr Vector2 kHomeWorkbenchInteraction = {-1.15f, 1.4f};
+constexpr Vector2 kHomeStorageInteraction = {1.65f, -.15f};
 constexpr Vector2 kLiaPosition = {-4, 0};
 constexpr Vector2 kCityKainPosition = {-1, .5f};
 constexpr Vector2 kMaraPosition = {0, 3};
@@ -506,9 +512,43 @@ struct GroundVehicle
                   bool projectile = false) const;
 };
 
+struct ResidenceState
+{
+    static constexpr int kMaxUpgradeTier = 3;
+    static constexpr int kMaxCarryKits = 8;
+    static constexpr int kMaxStashKits = 12;
+    static constexpr int kMaxStashSalvage = 999;
+    static constexpr int kMaxStashCredits = 9999999;
+    static constexpr int kCreditTransferStep = 200;
+    int stashCredits = 0;
+    int stashRecoveryKits = 0;
+    int stashSalvage = 0;
+    int armorTier = 0;
+    int weaponTier = 0;
+    int restCount = 0;
+    float lastRestPlayTime = -1000.f;
+    static int ArmorSalvageCost(int tier)
+    {
+        return 2 + tier;
+    }
+    static int ArmorCreditCost(int tier)
+    {
+        return 120 + tier * 80;
+    }
+    static int WeaponSalvageCost(int tier)
+    {
+        return 2 + tier;
+    }
+    static int WeaponCreditCost(int tier)
+    {
+        return 140 + tier * 100;
+    }
+};
+
 // State owned by Game. Renderers read it without changing gameplay.
 struct GameState
 {
+    ResidenceState residence;
     world::RelayNetwork relayNetwork;
     std::string selectedRelay, relaySource, relayTarget, relayStatus;
     float relayElapsed = 0;
@@ -744,6 +784,21 @@ class Game
     bool IsQuestInteraction(InteractionTarget target) const;
     void InteractWithNearbyTarget();
 
+    bool ResidenceRest(bool saveCheckpoint);
+    bool ResidenceCraftKit();
+    bool ResidenceUpgradeArmor();
+    bool ResidenceUpgradeWeapon();
+    bool ResidenceRepairVehicles();
+    bool ResidenceRecallVehicles();
+    bool ResidenceDepositCredits(int amount = ResidenceState::kCreditTransferStep);
+    bool ResidenceWithdrawCredits(int amount = ResidenceState::kCreditTransferStep);
+    bool ResidenceDepositKit();
+    bool ResidenceWithdrawKit();
+    bool ResidenceDepositSalvage();
+    bool ResidenceWithdrawSalvage();
+    void ResidenceCycleGender();
+    void ResidenceCycleHair();
+
   private:
     Game();
     GameState state;
@@ -770,6 +825,7 @@ class Game
     FrameSchedule frameSchedule;
     void StartSurface(bool insideHome);
     void InteractSurfaceStory(InteractionTarget target);
+    void InteractResidence(InteractionTarget target);
     static unsigned char NormalizeKey(unsigned char key);
     void UpdatePlayerMovement(float deltaSeconds);
     void UpdateCamera(float deltaSeconds);

@@ -2164,8 +2164,9 @@ world::CityCore FrontierSurface::Describe()
             (position.x - kFrontierEntry.x) * 2 + (mesh.minimum.x + mesh.maximum.x) * scale.x,
             (position.y - kFrontierEntry.y) * 2 + (mesh.minimum.y + mesh.maximum.y) * scale.y,
             mesh.minimum.z * scale.z * 2};
-        lot.sizeMeters = {mesh.physicalSize.x * scale.x * 2, mesh.physicalSize.y * scale.y * 2,
-                          mesh.physicalSize.z * scale.z * 2};
+        lot.sizeMeters = {(mesh.maximum.x - mesh.minimum.x) * scale.x * 2,
+                          (mesh.maximum.y - mesh.minimum.y) * scale.y * 2,
+                          (mesh.maximum.z - mesh.minimum.z) * scale.z * 2};
         lot.palette = world::SurfaceStructure::Palette{palette.body, palette.accent, palette.emission};
         if (lot.sizeMeters.x > .001 && lot.sizeMeters.y > .001 && lot.sizeMeters.z > .001)
         {

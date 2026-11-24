@@ -208,6 +208,7 @@ void InteriorScene::Draw()
         });
         scene.PlaceWorldActor("bed", -2.6f, -2.6f, WorldBounds(-2.6f, -2.6f, 1.8f, 1.1f, 22), 1, 3, [this]() {
             Drawing::DrawProp(models::ModelLibrary::Get().bed, {-2.05f, -2.05f});
+            Drawing::DrawGlow(Drawing::WorldToScreen(-2.05f, -1.85f, 16), 16, ColorRGBA(.45f, .78f, .92f, .7f));
         });
         scene.PlaceWorldActor("terminal", 1.3f, -2.6f, WorldBounds(1, -2.6f, 1.6f, 1.4f, 65), 1, 4, [this]() {
             Drawing::DrawModel3D(models::ModelLibrary::Get().console, Drawing::WorldToScreen(1.6f, -2.4f),
@@ -217,7 +218,18 @@ void InteriorScene::Draw()
         scene.PlaceWorldActor("table", -2.4f, 1.1f, WorldBounds(-2.4f, 1.1f, 1.2f, .6f, 55), 1, 5, [this]() {
             Drawing::DrawProp(models::ModelLibrary::Get().table, {-1.8f, 1.4f});
             Drawing::DrawProp(models::ModelLibrary::Get().chair, {-1.8f, 2.15f});
+            Drawing::DrawProp(models::ModelLibrary::Get().recoveryKit, {-1.55f, 1.35f}, {.65f, .65f, .65f}, {},
+                              .3f, .44f);
+            Drawing::DrawProp(models::ModelLibrary::Get().salvage, {-2.08f, 1.42f}, {.55f, .55f, .55f}, {},
+                              -.4f, .44f);
             Drawing::DrawGlow(Drawing::WorldToScreen(-2, 1.4f, 35), 18, ColorRGBA(1, .63f, .28f));
+        });
+        scene.PlaceWorldActor("storage", 1.85f, -.55f, WorldBounds(1.85f, -.55f, .9f, .9f, 45), 1, 5.5f, [this]() {
+            models::Palette palette;
+            palette.body = {.24f, .36f, .42f, 1};
+            palette.accent = {.88f, .64f, .28f, 1};
+            Drawing::DrawProp(models::ModelLibrary::Get().box, {2.25f, -.15f}, {.78f, .78f, .78f}, palette);
+            Drawing::DrawGlow(Drawing::WorldToScreen(2.25f, -.15f, 34), 16, ColorRGBA(.95f, .74f, .32f, .8f));
         });
         scene.PlaceWorldActor("door", 1.9f, 1.9f, WorldBounds(1.9f, 1.9f, 1, 1, 0), 1, 6,
                               [this]() { Drawing::DrawTile(1.9f, 1.9f, 1, 1, ColorRGBA(.15f, .45f, .47f)); });
@@ -228,6 +240,24 @@ void InteriorScene::Draw()
             2, 0, [this]() {
                 Drawing::DrawPerson(Game::Get().GetState().playerPosition, ColorRGBA(.67f, .8f, .82f), true);
             });
+        scene.PlaceWorldActor("bed-label", -2.05f, -2.05f, WorldBounds(-2.05f, -2.05f, 0, 0, 55, 80), 3, 0,
+                              [this]() {
+                                  Vector2 label = Drawing::WorldToScreen(-2.05f, -2.05f, 48);
+                                  Drawing::DrawLabel(label.x - 42, label.y, "침대 · 휴식",
+                                                     ColorRGBA(.75f, .92f, 1));
+                              });
+        scene.PlaceWorldActor("workbench-label", -1.8f, 1.4f, WorldBounds(-1.8f, 1.4f, 0, 0, 65, 80), 3, 0,
+                              [this]() {
+                                  Vector2 label = Drawing::WorldToScreen(-1.8f, 1.4f, 58);
+                                  Drawing::DrawLabel(label.x - 48, label.y, "작업대 · 정비",
+                                                     ColorRGBA(1, .84f, .52f));
+                              });
+        scene.PlaceWorldActor("storage-label", 2.25f, -.15f, WorldBounds(2.25f, -.15f, 0, 0, 60, 80), 3, 0,
+                              [this]() {
+                                  Vector2 label = Drawing::WorldToScreen(2.25f, -.15f, 54);
+                                  Drawing::DrawLabel(label.x - 50, label.y, "보관함 · 옷장",
+                                                     ColorRGBA(1, .86f, .55f));
+                              });
         scene.PlaceWorldActor("terminal-label", 1, -1.2f, WorldBounds(1, -1.2f, 0, 0, 80, 80), 3, 0,
                               [this]() {
                                   Vector2 label = Drawing::WorldToScreen(1, -1.2f, 65);
@@ -237,6 +267,9 @@ void InteriorScene::Draw()
             Vector2 label = Drawing::WorldToScreen(2.4f, 2.4f);
             Drawing::DrawLabel(label.x - 20, label.y + 25, "출구");
         });
+        scene.GetGraph().Reparent("bed-label", *scene.GetGraph().Find("bed"));
+        scene.GetGraph().Reparent("workbench-label", *scene.GetGraph().Find("table"));
+        scene.GetGraph().Reparent("storage-label", *scene.GetGraph().Find("storage"));
         scene.GetGraph().Reparent("terminal-label", *scene.GetGraph().Find("terminal"));
         scene.GetGraph().Reparent("door-label", *scene.GetGraph().Find("door"));
     }

@@ -29,7 +29,7 @@ namespace tutorial
 namespace
 {
 constexpr std::uint64_t kMaximumFile = 16 * 1024 * 1024;
-constexpr unsigned kSchema = 12;
+constexpr unsigned kSchema = 13;
 void Require(bool value, const char *message)
 {
     if (!value)
@@ -252,6 +252,7 @@ class SaveArchive
         writer.Tracking(c);
         writer.GroundVehicleRecord(c.game.car);
         writer.AircraftRecord(c.game.aircraft);
+        writer.ResidenceRecord(c.game.residence);
         Checkpoint clean;
         SaveArchive reader(true, writer.Bytes());
         reader.Value(clean);
@@ -263,6 +264,7 @@ class SaveArchive
         reader.Tracking(clean);
         reader.GroundVehicleRecord(clean.game.car);
         reader.AircraftRecord(clean.game.aircraft);
+        reader.ResidenceRecord(clean.game.residence);
         Require(reader.Finished(), "메모리 월드 기록에 지원하지 않는 데이터가 있습니다.");
         clean.game.playerMotion.mobility.RestoreStamina(c.game.playerMotion.mobility.Stamina(),
                                                         c.game.playerMotion.mobility.RegenDelay());
@@ -1187,6 +1189,27 @@ class SaveArchive
             }
         }
     }
+    void ResidenceRecord(ResidenceState &res)
+    {
+        Fields(res.stashCredits, res.stashRecoveryKits, res.stashSalvage, res.armorTier, res.weaponTier,
+               res.restCount, res.lastRestPlayTime);
+    }
+    void ResidenceRecords(Campaign &v)
+    {
+        std::uint64_t count = v.worlds.size();
+        Value(count);
+        Require(count == v.worlds.size(), "거주지 상태 확장의 월드 수가 다릅니다.");
+        std::set<std::string> keys;
+        auto entry = v.worlds.begin();
+        for (std::uint64_t i = 0; i < count; ++i)
+        {
+            std::string key = reading ? std::string{} : (entry++)->first;
+            Value(key);
+            Require(v.worlds.count(key) && keys.insert(key).second,
+                    "거주지 상태 확장의 월드 ID가 올바르지 않습니다.");
+            ResidenceRecord(v.worlds.at(key).game.residence);
+        }
+    }
     void Value(Checkpoint &v)
     {
         Fields(v.planet, v.layout, v.digest, v.pose, v.origin, v.bike, v.bikeHeading, v.mineReturn, v.game,
@@ -1312,6 +1335,14 @@ void Validate(const Checkpoint &c)
     Require(m.player.attack >= 0 && m.player.attack <= 10000 && m.player.defense >= 0 &&
                 m.player.defense <= 10000,
             "저장된 전투 능력치가 올바르지 않습니다.");
+    const auto &res = w.residence;
+    Require(res.stashCredits >= 0 && res.stashCredits <= ResidenceState::kMaxStashCredits &&
+                res.stashRecoveryKits >= 0 && res.stashRecoveryKits <= ResidenceState::kMaxStashKits &&
+                res.stashSalvage >= 0 && res.stashSalvage <= ResidenceState::kMaxStashSalvage &&
+                res.armorTier >= 0 && res.armorTier <= ResidenceState::kMaxUpgradeTier &&
+                res.weaponTier >= 0 && res.weaponTier <= ResidenceState::kMaxUpgradeTier &&
+                res.restCount >= 0 && std::isfinite(res.lastRestPlayTime) && res.lastRestPlayTime >= -1000.f,
+            "저장된 거주지 상태가 올바르지 않습니다.");
     Require(w.residents.size() == (story ? size_t(Overworld::ResidentPopulation()) : 0),
             "저장된 주민 수가 현재 도시 생성 규칙과 다릅니다.");
     Require(w.buildings.size() <= 4096, "저장된 건물 수가 허용 범위를 초과했습니다.");
@@ -1547,6 +1578,20 @@ Campaign Decode(const std::filesystem::path &path)
             "저장 형식 버전이 다릅니다. 원본 파일은 변경하지 않았습니다.");
     Require(world::ContentLayout::SupportsRevision(envelope.layout),
             "저장된 도시 배치 버전이 현재 게임과 다릅니다.");
+    std::vector<unsigned char> residenceExtension;
+    if (envelope.schema >= 13)
+    {
+        Require(envelope.payload.size() >= 8, "거주지 상태 확장의 길이 정보가 없습니다.");
+        SaveArchive footer(true,
+                           std::vector<unsigned char>(envelope.payload.end() - 8, envelope.payload.end()));
+        std::uint64_t size = 0;
+        footer.Value(size);
+        Require(size > 0 && size <= envelope.payload.size() - 8,
+                "거주지 상태 확장의 길이가 올바르지 않습니다.");
+        const size_t start = envelope.payload.size() - 8 - size_t(size);
+        residenceExtension.assign(envelope.payload.begin() + start, envelope.payload.end() - 8);
+        envelope.payload.resize(start);
+    }
     std::vector<unsigned char> mobilityExtension;
     if (envelope.schema >= 9)
     {
@@ -1710,6 +1755,12 @@ Campaign Decode(const std::filesystem::path &path)
         SaveArchive mobility(true, std::move(mobilityExtension));
         mobility.MobilityRecords(result, envelope.schema);
         Require(mobility.Finished(), "기동 상태 확장에 지원하지 않는 데이터가 있습니다.");
+    }
+    if (envelope.schema >= 13)
+    {
+        SaveArchive residence(true, std::move(residenceExtension));
+        residence.ResidenceRecords(result);
+        Require(residence.Finished(), "거주지 상태 확장에 지원하지 않는 데이터가 있습니다.");
     }
     ValidateCampaign(result);
     return result;
@@ -1982,6 +2033,8 @@ void CarryTraveler(const Checkpoint &source, Checkpoint &target)
     target.game.playerHair = source.game.playerHair;
     target.game.uiPreferences = source.game.uiPreferences;
     target.game.playTimeSeconds = source.game.playTimeSeconds;
+    target.game.residence.armorTier = source.game.residence.armorTier;
+    target.game.residence.weaponTier = source.game.residence.weaponTier;
     const auto &mobility = source.game.playerMotion.mobility;
     target.game.playerMotion.mobility.RestoreStamina(mobility.Stamina(), mobility.RegenDelay());
     target.civic.infamy = source.civic.infamy;
@@ -2157,6 +2210,12 @@ bool SaveSystem::Save(const std::filesystem::path &path)
         mobilityFooter.Value(mobilitySize);
         payload.insert(payload.end(), mobility.Bytes().begin(), mobility.Bytes().end());
         payload.insert(payload.end(), mobilityFooter.Bytes().begin(), mobilityFooter.Bytes().end());
+        SaveArchive residence(false), residenceFooter(false);
+        residence.ResidenceRecords(candidate);
+        std::uint64_t residenceSize = residence.Bytes().size();
+        residenceFooter.Value(residenceSize);
+        payload.insert(payload.end(), residence.Bytes().begin(), residence.Bytes().end());
+        payload.insert(payload.end(), residenceFooter.Bytes().begin(), residenceFooter.Bytes().end());
         Require(payload.size() <= kMaximumFile, "저장 데이터가 허용 크기를 초과했습니다.");
         SaveArchive header(false);
         unsigned char magic[8] = {'S', 'G', 'W', 'O', 'R', 'L', 'D', 0};

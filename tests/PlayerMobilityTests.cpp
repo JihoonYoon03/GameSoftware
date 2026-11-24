@@ -226,20 +226,23 @@ void TestSavedStamina()
         output.write(reinterpret_cast<const char *>(bytes.data()), std::streamsize(bytes.size()));
         assert(output.good());
     };
-    assert(number(8) >= 10);
-    const auto extensionSize = number(bytes.size() - 8);
-    const size_t extStart = bytes.size() - 8 - size_t(extensionSize);
+    const auto schema = number(8);
+    assert(schema >= 10);
+    const size_t mobilityEnd =
+        schema >= 13 ? bytes.size() - 8 - size_t(number(bytes.size() - 8)) : bytes.size();
+    const auto extensionSize = number(mobilityEnd - 8);
+    const size_t extStart = mobilityEnd - 8 - size_t(extensionSize);
     assert(number(extStart) == 1);
     const size_t keyLength = size_t(number(extStart + 8));
     const size_t staminaOffset = extStart + 16 + keyLength;
-    assert(staminaOffset + 8 <= bytes.size() - 8);
+    assert(staminaOffset + 8 <= mobilityEnd - 8);
     const auto originalBytes = bytes;
     const float nan = std::numeric_limits<float>::quiet_NaN();
     std::memcpy(bytes.data() + staminaOffset, &nan, sizeof(nan));
     write(bad);
     assert(!SaveSystem::CheckFile(bad));
     // Schema 9 stored only one float per planet: the obsolete cooldown.
-    bytes = originalBytes;
+    bytes.assign(originalBytes.begin(), originalBytes.begin() + std::ptrdiff_t(mobilityEnd));
     const float oldCooldown = .75f;
     bytes.erase(bytes.begin() + std::ptrdiff_t(staminaOffset), bytes.end() - 8);
     const auto *cooldownPtr = reinterpret_cast<const unsigned char *>(&oldCooldown);

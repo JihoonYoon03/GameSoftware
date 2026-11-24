@@ -64,6 +64,21 @@ bool PlanetParty::Damage(CompanionId id, int amount, bool playerOwned)
     Publish();
     return true;
 }
+void PlanetParty::RecoverAll()
+{
+    for (auto &member : state.members)
+    {
+        if (!member.joined)
+        {
+            continue;
+        }
+        member.combat.health = (std::max)(member.combat.health, 100);
+        member.combat.downedSeconds = 0;
+        member.combat.hitGrace = 0;
+        member.combat.engaged = false;
+    }
+    Publish();
+}
 void PlanetParty::Defend(CompanionId id, float yaw, std::uint64_t targetId, bool blocked)
 {
     auto &m = state.members.at(size_t(id));

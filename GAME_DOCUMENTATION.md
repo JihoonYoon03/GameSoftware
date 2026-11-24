@@ -1,7 +1,7 @@
 # SimpleGame 게임 개발 통합 문서
 
 통합일: 2026-10-14  
-최종 진행 정리: 2026-11-24 · OpenGL 4.5 / 144+ FPS 렌더·시뮬레이션 최적화 및 CQ-01~08 구조 정비(52절) + 차세대 렌더링 최적화 R1~R3 구현 완료(55절: v4 팩·EBO·36B 압축 정점·Mega-VBO/EBO MDI·화면 비율 LOD0~2·전용 그림자 프록시·원거리 스킨 완화) + GPT 실측 건물·PBR·지원/전환 클립·UI 통합(54절) / 저장 스키마 12 호환 유지 / Human v4 선택 통합·R4·CQ-09 대기
+최종 진행 정리: 2026-11-24 · OpenGL 4.5 / 144+ FPS 렌더·시뮬레이션 최적화 및 CQ-01~08 구조 정비(52절) + 차세대 렌더링 최적화 R1~R3 구현 완료(55절) + CQ-09 플레이어 거주지 고유 기능 구현 완료(56절: 침대 휴식·은신/안전 저장, 작업대 제작·방호/무기 강화·원격 정비, 보관함 금고·의료비 보호·옷장, 거점 단말·차량 호출, 저장 스키마 13(1~12 하위 호환)) / 작업 중 Human v4 리소스 제외 유지 / 다음 단계 CQ-10·R4 대기
 
 현재 개발 계획 브랜치: `iss04_ContentQuality` · 초기 구조 기준: `iss01_actor_scene_render` · 범죄 시스템 변경 기준: `62b00b5` · 이전 도로 성능 비교 기준: `592ec4c` · 초기 기반: `41316a5`
 
@@ -97,7 +97,7 @@
 | 6 / CQ-06 | 차량·비행체 탑승/조종·파괴/잔해 로직 | 4 | CQ-01/04의 이동 공간과 CQ-05의 조작/피해 규칙에 맞춘다. 이후 AI/치안이 반응할 이동·탑승·파괴 상태를 먼저 안정시킨다. | 대상 이동 수단의 탑승부터 조종·이탈·파괴·잔해 정리까지 상태 전환과 소유권이 일관된다. | 정비 완료(52절) — NPC 차량 탈취·전 거점 차량/비행체 재배치·비행체 고고도 순항(140m/s, 280m)·충돌 피해·추락 폭발 및 낙하 물리 통일 |
 | 7 / CQ-07 | NPC·적·경찰 AI 행동 개선 | 3 | CQ-04~06의 공간·전투·이동 수단 규칙을 공통 전제로 행동을 개선한다. | 대상 AI가 상황과 자신의 역할에 맞게 행동하며, 상태 전환·길 찾기·상호작용에서 모순이나 고착이 없다. | 정비 완료(52절) — 시체 오사 필터·3D 고도 시야·1장 스크래퍼 시야/기동/위협공유·행성 동료 현장 구조/측면 산개 반영 |
 | 8 / CQ-08 | 수배 시스템 난이도 스케일링 | 1 | 플레이어의 실제 대응 능력과 경찰 AI가 정해진 CQ-05~07 이후에 조정해야 수치만 올리는 난이도를 피할 수 있다. | 사용자가 정한 단계별 난이도와 대응 원칙이 실제 플레이에서 구분되고, 추적·대응·해제 흐름이 납득 가능하다. | 정비 완료(52절) — 5단계 병과(순찰/기동/중무장/저격/대공요격)·1성 투항 벌금·5성 대공 3D 사격·티어별 도주 시간 반영 |
-| 9 / CQ-09 | 플레이어 거주지 고유 기능 | 6 | CQ-02~04의 진행/도시 구조와 CQ-05~08의 외부 활동을 바탕으로 돌아올 거점의 역할을 정한다. | 사용자가 지정한 거주지 기능이 바깥 활동과 연결되고 반복해서 방문할 이유를 만든다. 기능 종류는 아직 정하지 않는다. | 대기 |
+| 9 / CQ-09 | 플레이어 거주지 고유 기능 | 6 | CQ-02~04의 진행/도시 구조와 CQ-05~08의 외부 활동을 바탕으로 돌아올 거점의 역할을 정한다. | 침대(휴식·수배 진정·안전 저장)·작업대(키트 제작·방호복/무기 3단계 강화·차량/비행체 원격 정비)·보관함/옷장(의료비 보호 금고·물자 보관·외형 변경)·거점 단말(현황 브리핑·차량 호출)을 헤일로 거주지 내부에 구현하고 저장 스키마 13·HUD·모니터·회귀 테스트로 연결했다. | 구현 완료(56절) |
 | 10 / CQ-10 | 빈 구역 콘텐츠·미니퀘스트 등 추가 | 10 | 안정된 지역·인물·행동·거점 체계를 재사용해 앞 단계의 확장성을 실제 콘텐츠로 검증한다. | 대상 빈 구역에 장소/인물/활동의 맥락이 있는 콘텐츠가 들어가고, 기존 진행과 충돌하지 않는다. 수량·의뢰 내용은 별도 확정한다. | 대기 |
 | 11 / CQ-11 | 모델 퀄리티 개선 및 차세대 렌더링 최적화(R1~R4) | 8 | 공간 용도·출입·전투/탑승 동작과 필요한 자산이 안정된 뒤 최종 모델 작업의 재제작을 줄인다. v4 파이프라인(EBO·정점 압축·LOD·그림자 프록시·GPU 컬링/MDI·PBR 텍스처 배열, 53절)을 선행/병행 구축해 상향된 폴리곤 상한을 목표 기기(RTX 3070 Ti Laptop 60fps / RAM 16GB)에서 방어한다. | R1~R4 렌더링 최적화 경로가 검증되고, 대상 모델의 형상·크기·재질·LOD0~2·그림자 프록시·가동/접촉 지점이 53절 규모별 상한과 아트 방향에 맞는다. 단순 폴리곤 증가를 완료 기준으로 삼지 않는다. | R1~R3 구현 완료(55절) · Human v4 자산 선택 통합 및 R4 대기 |
 | 12 / CQ-12 | UI 배치·디자인·가독성 최종 구체화 | 7 | 앞 단계에서 확정된 정보와 조작 흐름을 기준으로 전체 UI의 위계와 일관성을 정리한다. | 대상 화면의 배치·디자인·정보 우선순위가 통일되고, 실제 장면/해상도에서 읽고 조작할 수 있다. | 대기 |
@@ -1306,7 +1306,29 @@ CQ-07을 A 이동·경로 안정성, B 감지·기억·역할별 판단, C 동�
     - `planet_surface_security_5stars`: 평균 **`1.664 ms`** (`p95 2.156 ms` / **~464 FPS**), 그림자 **`32,475`삼각형 (-68.7%)**
     - `city_security_5stars`: 평균 **`1.291 ms`** (`p95 1.664 ms` / **~601 FPS**), 메인 `116,217`삼각형 대비 그림자 **`38,300`삼각형 (-67.0%)**
     - 작업 집합 메모리(Working Set): 약 **`261 MB`**
-- **후속 선택 지점:** 신규 납품된 v4 인간 캐릭터 자산 2종([`HumanV4`](Resource/Documentation/HUMAN_REFERENCE_V4_ko.md) vs [`HumanSheet`](Resource/Documentation/HUMAN_DRAWING_ONLY_V4_ko.md) + 1024² PBR 9장) 중 실제 게임에 적용할 버전 선택 및 R4(공유 PBR 텍스처 배열 확장)·CQ-09(거주지 기능) 착수 대기.
+- **후속 선택 지점:** 신규 납품된 v4 인간 캐릭터 자산 2종([`HumanV4`](Resource/Documentation/HUMAN_REFERENCE_V4_ko.md) vs [`HumanSheet`](Resource/Documentation/HUMAN_DRAWING_ONLY_V4_ko.md) + 1024² PBR 9장)은 작업 중 상태이므로 제외하고, 아래 56절에서 CQ-09를 먼저 구현했다.
+
+#### 56. CQ-09 플레이어 거주지 고유 기능 구현 (2026-11-24)
+
+**반영 범위:** 헤일로 07 플레이어 거주지(`InteriorScene`)를 외부 탐사·전투·수배·차량 운용·의료 이송과 유기적으로 연결되는 복귀 거점으로 확장하고, 저장 스키마 13(1~12 하위 호환), HUD 상호작용/상태 스트립, 로컬 모니터 텔레메트리, 단위·세이브·GPU 회귀 검증을 완료했다. (작업 중인 `HumanV4`/`HumanSheet` 리소스는 건드리지 않았다.)
+
+- **거주지 4개 거점 스테이션 (`SimpleGame/Game.h`, `SimpleGame/Game.cpp`, `SimpleGame/Scene.cpp`, `SimpleGame/Overworld.h/.cpp`):**
+  - `GameState::residence`(`ResidenceState`)와 `InteractionTarget::HomeBed` / `HomeWorkbench` / `HomeStorage`를 추가하고, `InteriorScene::Draw()`에 침대(`"침대 · 휴식"`), 작업대(`"작업대 · 정비"`, 회복 키트·고철 소품 배치), 보관함(`"보관함 · 옷장"`, 동선 비간섭 충돌 박스 `{2.25, -0.15}`) 시각 연출을 구성했다.
+  - **침대 (`ResidenceRest`):** 체력·스태미너(`PlayerMobility::MaxStamina`)·보유 총기 탄창·동료(`PlanetParty::RecoverAll()` 및 광산/개척지 동료) 회복. 실내 은신으로 1~2단계 수배(`wanted <= 2`)와 열기/추적 병력을 진정시키며, 3단계 이상 고위험 수배는 은신 휴식으로 해제되지 않고 유지된다. 행성 탐사 모드에서는 휴식과 함께 안전 체크포인트 저장(`rest_save`)을 지원한다.
+  - **작업대 (`ResidenceCraftKit`, `ResidenceUpgradeArmor`, `ResidenceUpgradeWeapon`, `ResidenceRepairVehicles`):** 고철 1개(우선) 또는 40 Cr로 회복 키트 제작 + 보유 총기 무료 탄창 보충, 전술 방호복 보강(최대 3단계, 단계당 최대 체력 `+20`·방어 `+2`), 무기 정밀 튜닝(최대 3단계, 단계당 공격 `+4`), 손상/파손된 공용차(`car`) 및 비행체(`aircraft`) 원격 100% 복구(고철 1개 또는 80 Cr).
+  - **보관함 · 옷장 (`ResidenceDeposit*`, `ResidenceWithdraw*`, `ResidenceCycleHair`, `ResidenceCycleGender`):** 크레딧(200 Cr 단위, 상한 9,999,999)·회복 키트(최대 12개)·고철(최대 999개) 안전 보관/인출. 금고에 예치한 자산은 쓰러짐 시 `HospitalRecovery` 의료비 차감 대상에서 제외된다. 옷장에서 헤어스타일 6종 순환 및 남성/여성 체형 전환을 제공한다.
+  - **거주지 단말 (`InteractResidence(HomeTerminal)`, `ResidenceRecallVehicles`):** 서장 최초 열람(리아 메시지·`Signal` 임무 제안)은 기존 흐름을 100% 보존하고, 열람 이후에는 거점·탐사 현황 브리핑, 개인 바이크·가동 차량의 헤일로 거주지 앞 주차 구역 호출, 리아 보관 메시지 재열람 메뉴를 제공한다.
+- **저장 스키마 13 · HUD · 모니터 (`SimpleGame/Save.cpp`, `SimpleGame/Hud.cpp`, `SimpleGame/Monitoring/Monitor.cpp`):**
+  - `Save.cpp` 스키마를 `12 → 13`으로 확장하고, 끝부분 푸터(`ResidenceRecords`)와 `SaveArchive::Capture()` 메모리 캡처·`Validate()` 범위 검증·`CarryTraveler()` 장비 단계 승계를 연결했다. 스키마 1~12 기존 세이브 파일은 기본값으로 무손실 호환 로드된다.
+  - `Hud.cpp`에 4개 스테이션별 `[E]` 상호작용 안내 문구와 실내 상단 거점 요약 스트립(`금고 Cr · 킷 · 고철 · 방어 N/3 · 무기 N/3`)을 추가하고, `Monitor.cpp` `WorldSnapshot::Build`의 `player.residence` JSON 블록을 노출했다.
+- **전체 회귀 검사 중 함께 발견·수정한 엔진/테스트 결함:**
+  - `SimpleGame/Level.cpp` `FrontierSurface::Describe()`에서 정규화(`[0, 1]`) 건물에 `mesh.physicalSize`를 중복 곱해 개척지 건물 충돌 박스가 약 4배 팽창하던 문제를 `PlanetCities::Describe()`와 동일하게 `(mesh.maximum - mesh.minimum) * scale * 2`로 수정했다.
+  - `SimpleGame/Game.cpp` `Dialogue::Advance()`/`Start()`에서 반복 가능 대화(`repeatable=true`) 완료 시 `record.pendingChoice`를 비우지 않아 재진입 시 직전 선택이 자동 선택되던 결함을 수정했다(리아 동행 대화 및 거주지 4개 메뉴 재열람 정상화).
+  - `tests/GameplayTests.cpp`(`TestWorldCheckpoints` `legacy8` 정리 누락, `TestPlanetCommunity` 치명 충돌 후 시체 비충돌 검증 순서, `TestChapterOne` 기동 약탈자 추적 조준, `WriteLegacyCheckpoint` 스키마 13/12 지원) 및 `tests/PlayerMobilityTests.cpp`(스키마 13 푸터 오프셋 대응)를 갱신하고 `TestResidenceFeatures()`(`--residence`)를 추가했다.
+- **검증 (`build/opt-x64` Release x64):**
+  - `GameplayTests --residence` 및 **전체 `GameplayTests.exe`** 통과.
+  - `ResourceAssetsTests`, `ResourceLoadingTests`, `RoadPlanTests`, `MovementTests`, `PlayerMobilityTests`, `CivicTests`, `WorldTests`(47,366), `WorldStreamingTests`(48,917) 전부 통과.
+  - `RenderingTests --glfw`(실내 씬·HUD·전 구간 GPU 회귀 및 벤치마크, GL 오류 0건), `RenderingTests --flight-stress --glfw`(1,800프레임) 통과. 다음 계획 단계는 **CQ-10(맵 빈 구역 콘텐츠·미니퀘스트 확장)** 또는 **R4(공유 PBR 텍스처 배열 확장)**이다.
 
 ### 전체 구조 검토와 반복 비용 리팩토링 — 2026-10-28
 
