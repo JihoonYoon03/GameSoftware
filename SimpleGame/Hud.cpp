@@ -3758,6 +3758,14 @@ void PlanetHud::DrawMap(bool full)
             }
         }
         static std::unordered_set<std::string_view> drawnStructures;
+        struct ClearOnExit
+        {
+            std::unordered_set<std::string_view> &set;
+            ~ClearOnExit()
+            {
+                set.clear();
+            }
+        } clearDrawnStructures{drawnStructures};
         drawnStructures.clear();
         auto structure = [&](const world::SurfaceStructure &item) {
             const double diag = std::hypot(item.sizeMeters.x, item.sizeMeters.y);

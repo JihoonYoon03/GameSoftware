@@ -2907,44 +2907,54 @@ void PlanetScene::Draw()
             DrawSurfaceModel(*it->second.model, it->second.chunk->frame, *session);
         }
     }
-    static std::unordered_set<std::string_view> drawnStructureIds;
-    drawnStructureIds.clear();
-    const double planetRadius = session->Planet().radiusMeters;
-    auto submitStructure = [&](const world::SurfaceStructure &structure) {
-        if (!drawnStructureIds.insert(structure.id).second)
+    {
+        static std::unordered_set<std::string_view> drawnStructureIds;
+        struct ClearOnExit
         {
-            return;
-        }
-        const double maxDist =
-            terrainView.radiusMeters + std::hypot(structure.sizeMeters.x, structure.sizeMeters.y) * .5;
-        const double limit = maxDist / planetRadius;
-        if (limit < 2.)
-        {
-            const double dx = terrainView.center.normal.x - structure.frame.origin.normal.x;
-            const double dy = terrainView.center.normal.y - structure.frame.origin.normal.y;
-            const double dz = terrainView.center.normal.z - structure.frame.origin.normal.z;
-            if (dx * dx + dy * dy + dz * dz > limit * limit)
+            std::unordered_set<std::string_view> &set;
+            ~ClearOnExit()
+            {
+                set.clear();
+            }
+        } clearDrawnStructureIds{drawnStructureIds};
+        drawnStructureIds.clear();
+        const double planetRadius = session->Planet().radiusMeters;
+        auto submitStructure = [&](const world::SurfaceStructure &structure) {
+            if (!drawnStructureIds.insert(structure.id).second)
             {
                 return;
             }
-        }
-        if (world::SurfaceGeometry::Distance(planetRadius, terrainView.center, structure.frame.origin) <
-            maxDist)
+            const double maxDist =
+                terrainView.radiusMeters + std::hypot(structure.sizeMeters.x, structure.sizeMeters.y) * .5;
+            const double limit = maxDist / planetRadius;
+            if (limit < 2.)
+            {
+                const double dx = terrainView.center.normal.x - structure.frame.origin.normal.x;
+                const double dy = terrainView.center.normal.y - structure.frame.origin.normal.y;
+                const double dz = terrainView.center.normal.z - structure.frame.origin.normal.z;
+                if (dx * dx + dy * dy + dz * dz > limit * limit)
+                {
+                    return;
+                }
+            }
+            if (world::SurfaceGeometry::Distance(planetRadius, terrainView.center, structure.frame.origin) <
+                maxDist)
+            {
+                DrawSurfaceStructure(structure, *session, frustum, playerScreen);
+            }
+        };
+        for (const auto &chunk : visible)
         {
-            DrawSurfaceStructure(structure, *session, frustum, playerScreen);
+            for (const auto &structure : chunk->structures)
+            {
+                submitStructure(structure);
+            }
         }
-    };
-    for (const auto &chunk : visible)
-    {
-        for (const auto &structure : chunk->structures)
+        // Collision's bounded neighbourhood is also the object fallback during chunk publication.
+        for (auto structure : session->NearbyStructures())
         {
-            submitStructure(structure);
+            submitStructure(*structure);
         }
-    }
-    // Collision's bounded neighbourhood is also the object fallback during chunk publication.
-    for (auto structure : session->NearbyStructures())
-    {
-        submitStructure(*structure);
     }
     if (Game::Get().IsStoryWorld())
     {
