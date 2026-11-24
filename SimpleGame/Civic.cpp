@@ -222,19 +222,31 @@ Obstacle ClipObstacle(const models::ResourceMesh &mesh, models::Point scale, flo
 {
     Obstacle obstacle{{1.e9f, 1.e9f}, {-1.e9f, -1.e9f}, {}, std::make_shared<std::vector<Footprint>>()};
     float c = std::cos(yaw), s = std::sin(yaw);
-    for (size_t i = 0; i < mesh.vertices.size(); i += 3)
+    const size_t indexCount = mesh.LodIndexCount();
+    const size_t firstIndex = mesh.packedVertices.empty() ? 0 : size_t(mesh.lods[0].firstIndex);
+    auto vertAt = [&](size_t offset) -> models::Point {
+        if (!mesh.packedVertices.empty())
+        {
+            const auto &v = mesh.packedVertices[mesh.IndexAt(firstIndex + offset)];
+            return {v.x, v.y, v.z};
+        }
+        const auto &v = mesh.vertices[offset];
+        return {v.x, v.y, v.z};
+    };
+    for (size_t i = 0; i < indexCount; i += 3)
     {
-        float z0 = mesh.vertices[i].z * scale.z, z1 = mesh.vertices[i + 1].z * scale.z,
-              z2 = mesh.vertices[i + 2].z * scale.z;
+        const auto p0 = vertAt(i), p1 = vertAt(i + 1), p2 = vertAt(i + 2);
+        float z0 = p0.z * scale.z, z1 = p1.z * scale.z, z2 = p2.z * scale.z;
         if ((std::max)({z0, z1, z2}) < .04f || (std::min)({z0, z1, z2}) > 1.f)
         {
             continue;
         }
         std::array<models::Point, 8> polygon, clipped;
+        const models::Point tri[3] = {p0, p1, p2};
         size_t count = 3;
         for (size_t k = 0; k < count; ++k)
         {
-            const auto &v = mesh.vertices[i + k];
+            const auto &v = tri[k];
             polygon[k] = {v.x * scale.x * c - v.y * scale.y * s, v.x * scale.x * s + v.y * scale.y * c,
                           v.z * scale.z};
         }

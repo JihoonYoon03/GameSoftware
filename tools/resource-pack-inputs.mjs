@@ -35,8 +35,8 @@ export function resourcePackStatus(root) {
         const manifest = JSON.parse(fs.readFileSync(path.join(folder, 'manifest.json'), 'utf8'));
         const binary = path.join(folder, 'game-assets.bin');
         const size = fs.statSync(binary).size;
-        if (manifest.schema !== 'game_resource_pack_v3' || size !== manifest.bytes ||
-            size < 12 || size > maxPackBytes || !manifest.assets?.length || !manifest.sources ||
+        if (manifest.schema !== 'game_resource_pack_v4' || size !== manifest.bytes ||
+            size < 16 || size > maxPackBytes || !manifest.assets?.length || !manifest.sources ||
             !Object.keys(manifest.sources).length) return { current: false, reason: 'invalid resource pack' };
         if (JSON.stringify(manifest.buildInputs) !== JSON.stringify(buildInputHashes(root)))
             return { current: false, reason: 'converter, assembly settings or road catalogue changed' };

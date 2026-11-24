@@ -4067,7 +4067,7 @@ void TestImportedWorldAndFlights()
             // An open shelter's AABB centre is walkable. Probe an actual low body surface
             // instead of incorrectly requiring its empty centre/canopy to be solid.
             const auto &mesh = models::ResourceAssets::Get(prop.model->resourceId);
-            for (const auto &vertex : mesh.vertices)
+            for (const auto &vertex : mesh.packedVertices)
             {
                 if (vertex.z > .05f && vertex.z < .9f)
                 {

@@ -310,16 +310,21 @@ void Drawing::DrawModel3D(const models::Model &model, Vector2 screen, models::Po
         models::ResourceAssets::Sample(model.resourceId, pose, matrices);
         renderqueue::Depth(true);
         renderqueue::Begin(GL_TRIANGLES);
-        for (size_t triangle = 0; triangle < resource.vertices.size(); triangle += 3)
+        const size_t indexCount = resource.LodIndexCount();
+        for (size_t triangle = 0; triangle < indexCount; triangle += 3)
         {
-            if (resource.vertices[triangle].visibility == 1 && (!pose || !pose->armed))
+            const auto v0 = models::ResourceAssets::TriangleVertex(resource, triangle);
+            if (v0.visibility == 1 && (!pose || !pose->armed))
             {
                 continue;
             }
+            const models::ResourceVertex tri[3] = {
+                v0, models::ResourceAssets::TriangleVertex(resource, triangle + 1),
+                models::ResourceAssets::TriangleVertex(resource, triangle + 2)};
             models::Point positions[3];
             for (size_t j = 0; j < 3; ++j)
             {
-                auto p = models::ResourceAssets::SkinPoint(resource.vertices[triangle + j], matrices);
+                auto p = models::ResourceAssets::SkinPoint(tri[j], matrices);
                 positions[j] = transform.Apply({p.x * scale.x, p.y * scale.y, p.z * scale.z});
             }
             auto a = positions[0], b = positions[1], c = positions[2];
@@ -333,7 +338,7 @@ void Drawing::DrawModel3D(const models::Model &model, Vector2 screen, models::Po
                               : 1;
             for (size_t j = 0; j < 3; ++j)
             {
-                const auto &v = resource.vertices[triangle + j];
+                const auto &v = tri[j];
                 const auto &tint = v.palette == 1   ? palette.body
                                    : v.palette == 2 ? palette.accent
                                                     : palette.emission;

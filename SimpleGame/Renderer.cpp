@@ -71,9 +71,9 @@ void main() {
 
 const char *kMeshVertexSsboBody = R"GLSL(
 layout(location = 0) in vec3 vertexPosition;
-layout(location = 1) in vec3 vertexNormal;
+layout(location = 1) in vec2 vertexOctNormal;
 layout(location = 2) in vec4 vertexColor;
-layout(location = 3) in vec3 vertexInfo;
+layout(location = 3) in vec4 vertexInfo;
 layout(location = 4) in vec4 instanceAnchor;
 layout(location = 5) in vec4 instanceScale;
 layout(location = 6) in vec4 instanceRotation;
@@ -84,6 +84,7 @@ layout(location = 10) in vec4 instanceFinish;
 layout(location = 11) in vec4 instanceTranslation;
 layout(location = 12) in vec4 vertexJoints;
 layout(location = 13) in vec4 vertexWeights;
+layout(location = 14) in vec2 vertexUv;
 layout(std430, binding = 0) readonly buffer BonePalettes {
     mat4 boneMatrices[];
 };
@@ -99,6 +100,15 @@ out vec4 finish;
 out float surface;
 out float coverage;
 out float holographic;
+out vec2 meshUv;
+out float hasAuthoredUv;
+vec3 decodeOctNormal(vec2 e) {
+    vec3 v = vec3(e.xy, 1.0 - abs(e.x) - abs(e.y));
+    if (v.z < 0.0) {
+        v.xy = (1.0 - abs(v.yx)) * vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0);
+    }
+    return normalize(v);
+}
 mat3 rotation(vec3 a) {
     float c = cos(a.x), s = sin(a.x), p = cos(a.y), q = sin(a.y), r = cos(a.z), t = sin(a.z);
     return mat3(c, s, 0., -s, c, 0., 0., 0., 1.) *
@@ -109,7 +119,7 @@ void main() {
     int j = int(vertexInfo.y + 0.5);
     mat3 rotate = rotation(instanceRotation.xyz);
     vec3 pos = vertexPosition;
-    vec3 nrm = vertexNormal;
+    vec3 nrm = decodeOctNormal(vertexOctNormal);
     int boneBase = int(floor(instanceRotation.w + 0.5));
     if (boneBase >= 0) {
         mat4 skin = boneMatrices[boneBase + int(vertexJoints.x + 0.5)] * vertexWeights.x
@@ -117,12 +127,14 @@ void main() {
                   + boneMatrices[boneBase + int(vertexJoints.z + 0.5)] * vertexWeights.z
                   + boneMatrices[boneBase + int(vertexJoints.w + 0.5)] * vertexWeights.w;
         pos = (skin * vec4(vertexPosition, 1.0)).xyz;
-        nrm = mat3(skin) * vertexNormal;
+        nrm = mat3(skin) * nrm;
     }
     vec3 p = rotate * (pos * instanceScale.xyz) + instanceTranslation.xyz;
     normal = normalize(rotate * (nrm / instanceScale.xyz));
     localPosition = p;
     surface = vertexInfo.z;
+    meshUv = vertexUv;
+    hasAuthoredUv = vertexInfo.w;
     tint = vertexColor;
     if (vertexInfo.x > 2.5) tint *= instanceEmission;
     else if (vertexInfo.x > 1.5) tint *= instanceAccent;
@@ -158,9 +170,9 @@ void main() {
 
 const char *kMeshVertexUniformBody = R"GLSL(
 layout(location = 0) in vec3 vertexPosition;
-layout(location = 1) in vec3 vertexNormal;
+layout(location = 1) in vec2 vertexOctNormal;
 layout(location = 2) in vec4 vertexColor;
-layout(location = 3) in vec3 vertexInfo;
+layout(location = 3) in vec4 vertexInfo;
 layout(location = 4) in vec4 instanceAnchor;
 layout(location = 5) in vec4 instanceScale;
 layout(location = 6) in vec4 instanceRotation;
@@ -171,6 +183,7 @@ layout(location = 10) in vec4 instanceFinish;
 layout(location = 11) in vec4 instanceTranslation;
 layout(location = 12) in vec4 vertexJoints;
 layout(location = 13) in vec4 vertexWeights;
+layout(location = 14) in vec2 vertexUv;
 uniform mat4 mvp;
 uniform mat4 bones[32];
 uniform int useBones;
@@ -186,6 +199,15 @@ out vec4 finish;
 out float surface;
 out float coverage;
 out float holographic;
+out vec2 meshUv;
+out float hasAuthoredUv;
+vec3 decodeOctNormal(vec2 e) {
+    vec3 v = vec3(e.xy, 1.0 - abs(e.x) - abs(e.y));
+    if (v.z < 0.0) {
+        v.xy = (1.0 - abs(v.yx)) * vec2(v.x >= 0.0 ? 1.0 : -1.0, v.y >= 0.0 ? 1.0 : -1.0);
+    }
+    return normalize(v);
+}
 mat3 rotation(vec3 a) {
     float c = cos(a.x), s = sin(a.x), p = cos(a.y), q = sin(a.y), r = cos(a.z), t = sin(a.z);
     return mat3(c, s, 0., -s, c, 0., 0., 0., 1.) *
@@ -196,19 +218,21 @@ void main() {
     int j = int(vertexInfo.y + 0.5);
     mat3 rotate = rotation(instanceRotation.xyz);
     vec3 pos = vertexPosition;
-    vec3 nrm = vertexNormal;
+    vec3 nrm = decodeOctNormal(vertexOctNormal);
     if (useBones != 0) {
         mat4 skin = bones[int(vertexJoints.x + 0.5)] * vertexWeights.x
                   + bones[int(vertexJoints.y + 0.5)] * vertexWeights.y
                   + bones[int(vertexJoints.z + 0.5)] * vertexWeights.z
                   + bones[int(vertexJoints.w + 0.5)] * vertexWeights.w;
         pos = (skin * vec4(vertexPosition, 1.0)).xyz;
-        nrm = mat3(skin) * vertexNormal;
+        nrm = mat3(skin) * nrm;
     }
     vec3 p = rotate * (pos * instanceScale.xyz) + instanceTranslation.xyz;
     normal = normalize(rotate * (nrm / instanceScale.xyz));
     localPosition = p;
     surface = vertexInfo.z;
+    meshUv = vertexUv;
+    hasAuthoredUv = vertexInfo.w;
     tint = vertexColor;
     if (vertexInfo.x > 2.5) tint *= instanceEmission;
     else if (vertexInfo.x > 1.5) tint *= instanceAccent;
@@ -273,6 +297,8 @@ in vec4 finish;
 in float surface;
 in float coverage;
 in float holographic;
+in vec2 meshUv;
+in float hasAuthoredUv;
 out vec4 fragColor;
 void main() {
     if (shadowPass != 0) {
@@ -532,19 +558,29 @@ namespace rendering
 struct VertexBuffer
 {
     GLuint id = 0;
+    GLuint ebo = 0;
     ~VertexBuffer()
     {
         if (id)
         {
             glDeleteBuffers(1, &id);
         }
+        if (ebo)
+        {
+            glDeleteBuffers(1, &ebo);
+        }
     }
 };
 struct Mesh::Data
 {
-    using Vertex = models::ResourceVertex;
+    using Vertex = models::PackedResourceVertex;
     std::shared_ptr<VertexBuffer> buffer;
-    size_t vertexCount = 0;
+    std::array<models::SubmeshRange, size_t(models::LodLevel::Count)> lods = {};
+    GLenum indexType = GL_UNSIGNED_INT;
+    GLint baseVertex = 0;
+    bool inMegaBuffer = false;
+    bool hasLods = false;
+    float boundSpan = 1.f;
     float roughness = .7f, metallic = .2f;
     bool ground = false;
     bool imported = false;
@@ -566,10 +602,25 @@ struct Renderer::MeshData
         // scale.w carries armed flag (1/0); rotation.w carries SSBO bone base index (-1 if unskinned).
         float anchor[4], scale[4], rotation[4], body[4], accent[4], emission[4], finish[4], translation[4];
     };
+    struct DrawElementsIndirectCommand
+    {
+        GLuint count = 0;
+        GLuint instanceCount = 0;
+        GLuint firstIndex = 0;
+        GLint baseVertex = 0;
+        GLuint baseInstance = 0;
+    };
+    static_assert(sizeof(DrawElementsIndirectCommand) == 20, "Indirect command must be 20 bytes");
+    struct MegaSlice
+    {
+        GLint baseVertex = 0;
+        std::array<models::SubmeshRange, size_t(models::LodLevel::Count)> lods = {};
+    };
     struct Batch
     {
         std::shared_ptr<rendering::Mesh> mesh;
         models::SkinMatrices bones;
+        std::uint8_t lod = 0;
         bool armed = false;
         bool posed = false;
         int bindPoseSlot = -1;
@@ -605,8 +656,74 @@ struct Renderer::MeshData
         }
     };
     std::unordered_map<const models::Model *, std::shared_ptr<rendering::Mesh>> meshes;
-    // Pure v3 resource bindings share one immutable GPU VBO across wrappers (RENDER_RESOURCE_REQUEST.md).
+    // Dynamic RegisterStatic assemblies share one immutable GPU VBO+EBO across wrappers.
     std::unordered_map<unsigned int, std::weak_ptr<rendering::VertexBuffer>> resourceBuffers;
+    // Global Mega-VBO + Mega-EBO for all immutable v4 pack assets (zero VBO/EBO rebinds + MDI).
+    std::shared_ptr<rendering::VertexBuffer> megaBuffer;
+    std::vector<MegaSlice> megaSlices;
+    std::vector<DrawElementsIndirectCommand> indirectCommands;
+    GLuint indirectBuffer = 0;
+    size_t indirectCapacity = 0;
+    void EnsureMegaBuffer()
+    {
+        if (megaBuffer)
+        {
+            return;
+        }
+        const size_t packCount = models::ResourceAssets::PackMeshCount();
+        if (packCount == 0)
+        {
+            return;
+        }
+        size_t totalVerts = 0, totalIndices = 0;
+        for (size_t id = 1; id <= packCount; ++id)
+        {
+            const auto &res = models::ResourceAssets::Get(unsigned(id));
+            totalVerts += res.packedVertices.size();
+            totalIndices += res.indexBytes == 2 ? res.indices16.size() : res.indices32.size();
+        }
+        std::vector<models::PackedResourceVertex> verts;
+        std::vector<std::uint32_t> indices;
+        verts.reserve(totalVerts);
+        indices.reserve(totalIndices);
+        megaSlices.assign(packCount + 1, {});
+        for (size_t id = 1; id <= packCount; ++id)
+        {
+            const auto &res = models::ResourceAssets::Get(unsigned(id));
+            auto &slice = megaSlices[id];
+            slice.baseVertex = GLint(verts.size());
+            const std::uint32_t baseIndex = std::uint32_t(indices.size());
+            for (size_t k = 0; k < size_t(models::LodLevel::Count); ++k)
+            {
+                slice.lods[k] = {baseIndex + res.lods[k].firstIndex, res.lods[k].indexCount};
+            }
+            verts.insert(verts.end(), res.packedVertices.begin(), res.packedVertices.end());
+            if (res.indexBytes == 2)
+            {
+                for (std::uint16_t idx : res.indices16)
+                {
+                    indices.push_back(std::uint32_t(idx));
+                }
+            }
+            else
+            {
+                indices.insert(indices.end(), res.indices32.begin(), res.indices32.end());
+            }
+        }
+        megaBuffer = std::make_shared<rendering::VertexBuffer>();
+        glBindVertexArray(0);
+        glGenBuffers(1, &megaBuffer->id);
+        glBindBuffer(GL_ARRAY_BUFFER, megaBuffer->id);
+        const size_t vBytes = verts.size() * sizeof(models::PackedResourceVertex);
+        glBufferData(GL_ARRAY_BUFFER, GLsizeiptr(vBytes), verts.data(), GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glGenBuffers(1, &megaBuffer->ebo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, megaBuffer->ebo);
+        const size_t iBytes = indices.size() * sizeof(std::uint32_t);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, GLsizeiptr(iBytes), indices.data(), GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        profiling::Count(profiling::Counter::MeshUploadBytes, vBytes + iBytes);
+    }
     struct MaterialEntry
     {
         std::shared_ptr<rendering::Material> value;
@@ -616,8 +733,8 @@ struct Renderer::MeshData
     std::uint64_t materialClock = 0;
     // Uniform-path batch lookup (fallback for < GL 4.3).
     std::unordered_multimap<size_t, size_t> batchKeys;
-    // SSBO-path batch lookup: 1 batch per unique Model pointer regardless of pose/armed state!
-    std::unordered_map<const models::Model *, size_t> ssboBatches;
+    // SSBO-path batch lookup: keyed by (Model*, lodLevel) regardless of pose/armed state!
+    std::unordered_map<std::uint64_t, size_t> ssboBatches;
     std::vector<Batch> batches;
     size_t batchCount = 0;
     models::ResourcePoseSampler poses;
@@ -628,6 +745,7 @@ struct Renderer::MeshData
     size_t boneSsboCapacity = 0;
     bool useSsbo = false;
     bool useBaseInstance = false;
+    bool useMdi = false;
 
     struct ModelUniforms
     {
@@ -765,8 +883,14 @@ struct Renderer::MeshData
         {
             glDeleteBuffers(1, &boneSsbo);
         }
+        if (indirectBuffer)
+        {
+            glDeleteBuffers(1, &indirectBuffer);
+        }
         meshes.clear();
         resourceBuffers.clear();
+        megaBuffer.reset();
+        megaSlices.clear();
         if (program)
         {
             glDeleteProgram(program);
@@ -796,7 +920,7 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
     {
         mesh = std::make_shared<rendering::Mesh>();
         auto &geometry = *mesh->data;
-        std::vector<rendering::Mesh::Data::Vertex> vertices;
+        std::vector<models::PackedResourceVertex> packedVertices;
         geometry.ground = model.ground;
         const auto &library = models::ModelLibrary::Get();
         geometry.imported = model.resourceId != 0;
@@ -822,9 +946,17 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
             }
             geometry.ground = geometry.ground || resource.name.find("ground/") == 0;
             geometry.holographic = resource.name.find("Transit_AirGuide_") != std::string::npos;
+            geometry.boundSpan = (std::max)({resource.maximum.x - resource.minimum.x,
+                                             resource.maximum.y - resource.minimum.y,
+                                             resource.maximum.z - resource.minimum.z});
             if (model.count)
             {
-                vertices = resource.vertices;
+                const auto unpacked = models::ResourceAssets::UnpackLod0Triangles(resource);
+                packedVertices.reserve(unpacked.size());
+                for (const auto &v : unpacked)
+                {
+                    packedVertices.push_back(models::ResourceAssets::PackVertex(v));
+                }
             }
         }
         else
@@ -865,21 +997,25 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
             {
                 surface = models::Surface::Glass;
             }
-            vertices.push_back({p.x,
-                                p.y,
-                                p.z,
-                                n.x,
-                                n.y,
-                                n.z,
-                                part.color[0],
-                                part.color[1],
-                                part.color[2],
-                                part.color[3],
-                                float(part.palette),
-                                float(part.joint),
-                                float(surface),
-                                {float(part.joint), 31, 31, 31},
-                                {1, 0, 0, 0}});
+            models::ResourceVertex rv{p.x,
+                                      p.y,
+                                      p.z,
+                                      n.x,
+                                      n.y,
+                                      n.z,
+                                      part.color[0],
+                                      part.color[1],
+                                      part.color[2],
+                                      part.color[3],
+                                      float(part.palette),
+                                      float(part.joint),
+                                      float(surface),
+                                      {float(part.joint), 31, 31, 31},
+                                      {1, 0, 0, 0},
+                                      0.f,
+                                      0.f,
+                                      false};
+            packedVertices.push_back(models::ResourceAssets::PackVertex(rv));
         };
         for (size_t i = 0; i < model.count; ++i)
         {
@@ -929,29 +1065,133 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
                 }
             }
         }
-        const auto &upload = model.resourceId && !model.count
-                                 ? models::ResourceAssets::Get(model.resourceId).vertices
-                                 : vertices;
-        geometry.vertexCount = upload.size();
         const bool sharedGeometry = model.resourceId && !model.count;
-        if (sharedGeometry)
+        if (sharedGeometry && model.resourceId <= models::ResourceAssets::PackMeshCount())
         {
-            geometry.buffer = data.resourceBuffers[model.resourceId].lock();
+            data.EnsureMegaBuffer();
+            const auto &slice = data.megaSlices[model.resourceId];
+            geometry.buffer = data.megaBuffer;
+            geometry.inMegaBuffer = true;
+            geometry.baseVertex = slice.baseVertex;
+            geometry.lods = slice.lods;
+            geometry.indexType = GL_UNSIGNED_INT;
+            geometry.hasLods = geometry.lods[1].indexCount < geometry.lods[0].indexCount ||
+                               geometry.lods[2].indexCount < geometry.lods[0].indexCount;
         }
-        if (!geometry.buffer)
+        else if (sharedGeometry)
         {
-            geometry.buffer = std::make_shared<rendering::VertexBuffer>();
-            glGenBuffers(1, &geometry.buffer->id);
-            glBindBuffer(GL_ARRAY_BUFFER, geometry.buffer->id);
-            glBufferData(GL_ARRAY_BUFFER, upload.size() * sizeof(rendering::Mesh::Data::Vertex),
-                         upload.data(), GL_STATIC_DRAW);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            profiling::Count(profiling::Counter::MeshUploadBytes,
-                             upload.size() * sizeof(rendering::Mesh::Data::Vertex));
-            if (sharedGeometry)
+            const auto &resource = models::ResourceAssets::Get(model.resourceId);
+            geometry.lods = resource.lods;
+            geometry.indexType = resource.indexBytes == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT;
+            geometry.hasLods = geometry.lods[1].indexCount < geometry.lods[0].indexCount ||
+                               geometry.lods[2].indexCount < geometry.lods[0].indexCount;
+            geometry.buffer = data.resourceBuffers[model.resourceId].lock();
+            if (!geometry.buffer)
             {
+                geometry.buffer = std::make_shared<rendering::VertexBuffer>();
+                glBindVertexArray(0);
+                glGenBuffers(1, &geometry.buffer->id);
+                glBindBuffer(GL_ARRAY_BUFFER, geometry.buffer->id);
+                const size_t vBytes =
+                    resource.packedVertices.size() * sizeof(models::PackedResourceVertex);
+                glBufferData(GL_ARRAY_BUFFER, GLsizeiptr(vBytes), resource.packedVertices.data(),
+                             GL_STATIC_DRAW);
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+                glGenBuffers(1, &geometry.buffer->ebo);
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, geometry.buffer->ebo);
+                size_t iBytes = 0;
+                if (resource.indexBytes == 2)
+                {
+                    iBytes = resource.indices16.size() * sizeof(std::uint16_t);
+                    glBufferData(GL_ELEMENT_ARRAY_BUFFER, GLsizeiptr(iBytes), resource.indices16.data(),
+                                 GL_STATIC_DRAW);
+                }
+                else
+                {
+                    iBytes = resource.indices32.size() * sizeof(std::uint32_t);
+                    glBufferData(GL_ELEMENT_ARRAY_BUFFER, GLsizeiptr(iBytes), resource.indices32.data(),
+                                 GL_STATIC_DRAW);
+                }
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+                profiling::Count(profiling::Counter::MeshUploadBytes, vBytes + iBytes);
                 data.resourceBuffers[model.resourceId] = geometry.buffer;
             }
+        }
+        else
+        {
+            if (!packedVertices.empty())
+            {
+                models::Point mn = {1.e9f, 1.e9f, 1.e9f}, mx = {-1.e9f, -1.e9f, -1.e9f};
+                for (const auto &v : packedVertices)
+                {
+                    mn.x = (std::min)(mn.x, v.x);
+                    mx.x = (std::max)(mx.x, v.x);
+                    mn.y = (std::min)(mn.y, v.y);
+                    mx.y = (std::max)(mx.y, v.y);
+                    mn.z = (std::min)(mn.z, v.z);
+                    mx.z = (std::max)(mx.z, v.z);
+                }
+                geometry.boundSpan = (std::max)({mx.x - mn.x, mx.y - mn.y, mx.z - mn.z});
+            }
+            const models::SubmeshRange full{0, std::uint32_t(packedVertices.size())};
+            geometry.lods = {full, full, full, full};
+            geometry.buffer = std::make_shared<rendering::VertexBuffer>();
+            glBindVertexArray(0);
+            glGenBuffers(1, &geometry.buffer->id);
+            glBindBuffer(GL_ARRAY_BUFFER, geometry.buffer->id);
+            const size_t vBytes = packedVertices.size() * sizeof(models::PackedResourceVertex);
+            glBufferData(GL_ARRAY_BUFFER, GLsizeiptr(vBytes), packedVertices.data(), GL_STATIC_DRAW);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glGenBuffers(1, &geometry.buffer->ebo);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, geometry.buffer->ebo);
+            size_t iBytes = 0;
+            if (packedVertices.size() <= 65535)
+            {
+                geometry.indexType = GL_UNSIGNED_SHORT;
+                std::vector<std::uint16_t> idx(packedVertices.size());
+                for (size_t i = 0; i < idx.size(); ++i)
+                {
+                    idx[i] = std::uint16_t(i);
+                }
+                iBytes = idx.size() * sizeof(std::uint16_t);
+                glBufferData(GL_ELEMENT_ARRAY_BUFFER, GLsizeiptr(iBytes), idx.data(), GL_STATIC_DRAW);
+            }
+            else
+            {
+                geometry.indexType = GL_UNSIGNED_INT;
+                std::vector<std::uint32_t> idx(packedVertices.size());
+                for (size_t i = 0; i < idx.size(); ++i)
+                {
+                    idx[i] = std::uint32_t(i);
+                }
+                iBytes = idx.size() * sizeof(std::uint32_t);
+                glBufferData(GL_ELEMENT_ARRAY_BUFFER, GLsizeiptr(iBytes), idx.data(), GL_STATIC_DRAW);
+            }
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+            profiling::Count(profiling::Counter::MeshUploadBytes, vBytes + iBytes);
+        }
+    }
+
+    const float worldExtent = mesh->data->boundSpan *
+                              (std::max)({std::fabs(scale.x), std::fabs(scale.y), std::fabs(scale.z)});
+    const float screenPx = worldExtent * 36.f * tutorial::WorldCamera::zoom;
+    const float screenCoverage = screenPx / 800.f;
+    if (!mesh->data->ground && mesh->data->staticResource && !mesh->data->holographic && model.resourceId &&
+        !data.owner && tutorial::WorldCamera::zoom < .75f && screenPx < 7.f)
+    {
+        ++data.statistics.culledObjects;
+        return true;
+    }
+    std::uint8_t lod = 0;
+    if (!mesh->data->ground && mesh->data->hasLods)
+    {
+        if (screenCoverage < .05f)
+        {
+            lod = 2;
+        }
+        else if (screenCoverage < .12f)
+        {
+            lod = 1;
         }
     }
 
@@ -990,12 +1230,23 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
 
     const bool posed = pose && !mesh->data->staticResource;
     const bool armed = pose && pose->armed;
+    models::CharacterPose throttledPose;
+    const models::CharacterPose *samplePose = pose;
+    if (posed && lod > 0)
+    {
+        throttledPose = *pose;
+        const float step = lod >= 2 ? (1.f / 15.f) : (1.f / 30.f);
+        throttledPose.animationPhase = std::floor(throttledPose.animationPhase / (step * 10.f)) * (step * 10.f);
+        throttledPose.locomotionPhase = std::floor(throttledPose.locomotionPhase / step) * step;
+        samplePose = &throttledPose;
+    }
     size_t batchIndex = data.batchCount;
     float boneBaseAttr = -1.f;
 
     if (data.useSsbo)
     {
-        auto foundBatch = data.ssboBatches.find(&model);
+        const std::uint64_t batchKey = (std::uint64_t(reinterpret_cast<std::uintptr_t>(&model)) << 2) | lod;
+        auto foundBatch = data.ssboBatches.find(batchKey);
         if (foundBatch != data.ssboBatches.end())
         {
             batchIndex = foundBatch->second;
@@ -1009,9 +1260,10 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
             batchIndex = data.batchCount++;
             auto &batch = data.batches[batchIndex];
             batch.mesh = mesh;
+            batch.lod = lod;
             batch.bindPoseSlot = -1;
             batch.instances.clear();
-            data.ssboBatches.emplace(&model, batchIndex);
+            data.ssboBatches.emplace(batchKey, batchIndex);
         }
         if (posed)
         {
@@ -1022,10 +1274,10 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
                 for (size_t j = 0; j < 11; ++j)
                 {
                     models::Point o = {}, x = {1, 0, 0}, y = {0, 1, 0}, z = {0, 0, 1};
-                    o = pose->Apply(o, models::Joint(j));
-                    x = pose->Apply(x, models::Joint(j));
-                    y = pose->Apply(y, models::Joint(j));
-                    z = pose->Apply(z, models::Joint(j));
+                    o = samplePose->Apply(o, models::Joint(j));
+                    x = samplePose->Apply(x, models::Joint(j));
+                    y = samplePose->Apply(y, models::Joint(j));
+                    z = samplePose->Apply(z, models::Joint(j));
                     float matrix[] = {x.x - o.x, x.y - o.y, x.z - o.z, 0, y.x - o.x, y.y - o.y, y.z - o.z, 0,
                                       z.x - o.x, z.y - o.y, z.z - o.z, 0, o.x,       o.y,       o.z,       1};
                     std::copy(matrix, matrix + 16, bones.begin() + j * 16);
@@ -1033,7 +1285,7 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
             }
             else
             {
-                data.poses.Sample(model.resourceId, *pose, bones);
+                data.poses.Sample(model.resourceId, *samplePose, bones);
             }
             const size_t baseMatrix = data.boneStream.size() / 16;
             data.boneStream.insert(data.boneStream.end(), bones.begin(), bones.end());
@@ -1059,7 +1311,7 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
         {
             if (posed && model.resourceId)
             {
-                data.poses.Sample(model.resourceId, *pose, bones);
+                data.poses.Sample(model.resourceId, *samplePose, bones);
             }
             else
             {
@@ -1067,17 +1319,17 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
                 for (size_t j = 0; posed && !model.resourceId && j < 11; ++j)
                 {
                     models::Point o = {}, x = {1, 0, 0}, y = {0, 1, 0}, z = {0, 0, 1};
-                    o = pose->Apply(o, models::Joint(j));
-                    x = pose->Apply(x, models::Joint(j));
-                    y = pose->Apply(y, models::Joint(j));
-                    z = pose->Apply(z, models::Joint(j));
+                    o = samplePose->Apply(o, models::Joint(j));
+                    x = samplePose->Apply(x, models::Joint(j));
+                    y = samplePose->Apply(y, models::Joint(j));
+                    z = samplePose->Apply(z, models::Joint(j));
                     float matrix[] = {x.x - o.x, x.y - o.y, x.z - o.z, 0, y.x - o.x, y.y - o.y, y.z - o.z, 0,
                                       z.x - o.x, z.y - o.y, z.z - o.z, 0, o.x,       o.y,       o.z,       1};
                     std::copy(matrix, matrix + 16, bones.begin() + j * 16);
                 }
             }
         }
-        size_t key = std::hash<const models::Model *>{}(&model);
+        size_t key = std::hash<const models::Model *>{}(&model) ^ (size_t(lod) * 2654435761u);
         if (needsBones)
         {
             key ^= std::hash<std::string_view>{}(
@@ -1087,7 +1339,7 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
         for (auto it = candidates.first; it != candidates.second; ++it)
         {
             const auto &batch = data.batches[it->second];
-            if (batch.mesh == mesh && batch.armed == armed && batch.posed == needsBones &&
+            if (batch.mesh == mesh && batch.lod == lod && batch.armed == armed && batch.posed == needsBones &&
                 (!needsBones || std::memcmp(batch.bones.data(), bones.data(), sizeof(bones)) == 0))
             {
                 batchIndex = it->second;
@@ -1102,6 +1354,7 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
             }
             auto &batch = data.batches[data.batchCount++];
             batch.mesh = mesh;
+            batch.lod = lod;
             if (needsBones)
             {
                 batch.bones = bones;
@@ -1129,7 +1382,15 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
     std::copy(palette.emission.begin(), palette.emission.end(), instance.emission);
     data.batches[batchIndex].instances.push_back(instance);
     ++data.statistics.objects;
-    data.statistics.triangles += unsigned(mesh->data->vertexCount / 3);
+    data.statistics.triangles += unsigned(mesh->data->lods[lod].indexCount / 3);
+    if (lod == 1)
+    {
+        ++data.statistics.lod1Instances;
+    }
+    else if (lod == 2)
+    {
+        ++data.statistics.lod2Instances;
+    }
     if (!data.collecting)
     {
         DrawModels();
@@ -1295,35 +1556,116 @@ void Renderer::DrawModels()
         }
     };
 
+    auto bindMeshBuffer = [](GLuint vbo, GLuint ebo) {
+        using V = models::PackedResourceVertex;
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(V), reinterpret_cast<void *>(offsetof(V, x)));
+        glVertexAttribPointer(1, 2, GL_SHORT, GL_TRUE, sizeof(V), reinterpret_cast<void *>(offsetof(V, nx)));
+        glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(V),
+                              reinterpret_cast<void *>(offsetof(V, r)));
+        glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(V),
+                              reinterpret_cast<void *>(offsetof(V, palette)));
+        glVertexAttribPointer(12, 4, GL_UNSIGNED_BYTE, GL_FALSE, sizeof(V),
+                              reinterpret_cast<void *>(offsetof(V, joints)));
+        glVertexAttribPointer(13, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(V),
+                              reinterpret_cast<void *>(offsetof(V, weights)));
+        glVertexAttribPointer(14, 2, GL_HALF_FLOAT, GL_FALSE, sizeof(V),
+                              reinterpret_cast<void *>(offsetof(V, u)));
+    };
+
     auto drawPass = [&](int pass) {
         GLuint boundMeshBuffer = 0;
         int boundImported = -1;
+        if (data.useMdi && data.megaBuffer)
+        {
+            data.indirectCommands.clear();
+            size_t totalInstances = 0, totalVerts = 0, instancedBatches = 0;
+            for (size_t index = 0; index < data.batchCount; ++index)
+            {
+                auto &batch = data.batches[index];
+                auto &mesh = *batch.mesh->data;
+                if (mesh.ground != (pass == 0) || !mesh.inMegaBuffer || batch.instances.empty())
+                {
+                    continue;
+                }
+                const auto &range =
+                    mesh.lods[pass == 1 ? size_t(models::LodLevel::ShadowProxy) : size_t(batch.lod)];
+                if (range.indexCount == 0)
+                {
+                    continue;
+                }
+                data.indirectCommands.push_back({range.indexCount, GLuint(batch.instances.size()),
+                                                 range.firstIndex, mesh.baseVertex,
+                                                 GLuint(batch.baseInstance)});
+                totalInstances += batch.instances.size();
+                totalVerts += size_t(range.indexCount) * batch.instances.size();
+                if (batch.instances.size() > 1)
+                {
+                    ++instancedBatches;
+                }
+            }
+            if (!data.indirectCommands.empty())
+            {
+                boundMeshBuffer = data.megaBuffer->id;
+                bindMeshBuffer(data.megaBuffer->id, data.megaBuffer->ebo);
+                glUniform1i(data.uniforms.imported, 1);
+                boundImported = 1;
+                if (!data.indirectBuffer)
+                {
+                    glGenBuffers(1, &data.indirectBuffer);
+                }
+                const size_t cmdBytes =
+                    data.indirectCommands.size() * sizeof(MeshData::DrawElementsIndirectCommand);
+                if (cmdBytes > data.indirectCapacity)
+                {
+                    data.indirectCapacity = (std::max)(cmdBytes, data.indirectCapacity * 2);
+                }
+                glBindBuffer(GL_DRAW_INDIRECT_BUFFER, data.indirectBuffer);
+                glBufferData(GL_DRAW_INDIRECT_BUFFER, GLsizeiptr(data.indirectCapacity), nullptr,
+                             GL_STREAM_DRAW);
+                glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0, GLsizeiptr(cmdBytes),
+                                data.indirectCommands.data());
+                glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, nullptr,
+                                            GLsizei(data.indirectCommands.size()), 0);
+                glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+                profiling::Count(profiling::Counter::DrawCalls);
+                profiling::Count(profiling::Counter::RenderedInstances, totalInstances);
+                profiling::Count(profiling::Counter::SubmittedVertices, totalVerts);
+                ++data.statistics.drawCalls;
+                if (pass == 1)
+                {
+                    ++data.statistics.shadowDraws;
+                    data.statistics.shadowTriangles += unsigned(totalVerts / 3);
+                }
+                if (instancedBatches > 0)
+                {
+                    data.statistics.instancedDraws += unsigned(instancedBatches);
+                    profiling::Count(profiling::Counter::InstancedDrawCalls, instancedBatches);
+                }
+            }
+        }
         for (size_t index = 0; index < data.batchCount; ++index)
         {
             auto &batch = data.batches[index];
             auto &mesh = *batch.mesh->data;
-            if (mesh.ground != (pass == 0))
+            if (mesh.ground != (pass == 0) || batch.instances.empty() ||
+                (data.useMdi && data.megaBuffer && mesh.inMegaBuffer))
+            {
+                continue;
+            }
+            const auto &range =
+                mesh.lods[pass == 1 ? size_t(models::LodLevel::ShadowProxy) : size_t(batch.lod)];
+            if (range.indexCount == 0)
             {
                 continue;
             }
             const GLuint meshBuf = mesh.buffer ? mesh.buffer->id : 0;
+            const GLuint meshEbo = mesh.buffer ? mesh.buffer->ebo : 0;
             if (meshBuf != boundMeshBuffer)
             {
                 boundMeshBuffer = meshBuf;
-                using V = rendering::Mesh::Data::Vertex;
-                glBindBuffer(GL_ARRAY_BUFFER, meshBuf);
-                glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(V),
-                                      reinterpret_cast<void *>(offsetof(V, x)));
-                glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(V),
-                                      reinterpret_cast<void *>(offsetof(V, nx)));
-                glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(V),
-                                      reinterpret_cast<void *>(offsetof(V, r)));
-                glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(V),
-                                      reinterpret_cast<void *>(offsetof(V, palette)));
-                glVertexAttribPointer(12, 4, GL_FLOAT, GL_FALSE, sizeof(V),
-                                      reinterpret_cast<void *>(offsetof(V, joints)));
-                glVertexAttribPointer(13, 4, GL_FLOAT, GL_FALSE, sizeof(V),
-                                      reinterpret_cast<void *>(offsetof(V, weights)));
+                bindMeshBuffer(meshBuf, meshEbo);
             }
             if (!data.useBaseInstance)
             {
@@ -1349,25 +1691,43 @@ void Renderer::DrawModels()
                 }
                 glUniform1i(data.uniforms.armed, batch.armed ? 1 : 0);
             }
-            if (data.useBaseInstance)
+            const size_t idxStride = mesh.indexType == GL_UNSIGNED_SHORT ? 2u : 4u;
+            const void *idxOffset = reinterpret_cast<const void *>(size_t(range.firstIndex) * idxStride);
+            if (data.useBaseInstance && mesh.baseVertex != 0 &&
+                glDrawElementsInstancedBaseVertexBaseInstance != nullptr)
             {
-                glDrawArraysInstancedBaseInstance(GL_TRIANGLES, 0, GLsizei(mesh.vertexCount),
-                                                  GLsizei(batch.instances.size()),
-                                                  GLuint(batch.baseInstance));
+                glDrawElementsInstancedBaseVertexBaseInstance(
+                    GL_TRIANGLES, GLsizei(range.indexCount), mesh.indexType, idxOffset,
+                    GLsizei(batch.instances.size()), mesh.baseVertex, GLuint(batch.baseInstance));
+            }
+            else if (data.useBaseInstance && mesh.baseVertex == 0 &&
+                     glDrawElementsInstancedBaseInstance != nullptr)
+            {
+                glDrawElementsInstancedBaseInstance(GL_TRIANGLES, GLsizei(range.indexCount), mesh.indexType,
+                                                    idxOffset, GLsizei(batch.instances.size()),
+                                                    GLuint(batch.baseInstance));
+            }
+            else if (mesh.baseVertex != 0 && glDrawElementsInstancedBaseVertex != nullptr)
+            {
+                glDrawElementsInstancedBaseVertex(GL_TRIANGLES, GLsizei(range.indexCount), mesh.indexType,
+                                                  idxOffset, GLsizei(batch.instances.size()),
+                                                  mesh.baseVertex);
             }
             else
             {
-                glDrawArraysInstanced(GL_TRIANGLES, 0, GLsizei(mesh.vertexCount),
-                                      GLsizei(batch.instances.size()));
+                glDrawElementsInstanced(GL_TRIANGLES, GLsizei(range.indexCount), mesh.indexType, idxOffset,
+                                        GLsizei(batch.instances.size()));
             }
             profiling::Count(profiling::Counter::DrawCalls);
             profiling::Count(profiling::Counter::RenderedInstances, batch.instances.size());
             profiling::Count(profiling::Counter::SubmittedVertices,
-                             mesh.vertexCount * batch.instances.size());
+                             size_t(range.indexCount) * batch.instances.size());
             ++data.statistics.drawCalls;
             if (pass == 1)
             {
                 ++data.statistics.shadowDraws;
+                data.statistics.shadowTriangles +=
+                    unsigned((size_t(range.indexCount) * batch.instances.size()) / 3);
             }
             if (batch.instances.size() > 1)
             {
@@ -1647,19 +2007,22 @@ Renderer::Renderer(int width, int height)
         glGenVertexArrays(1, &m_meshes->fullscreenVao);
         glGenVertexArrays(1, &m_meshes->modelVao);
         glBindVertexArray(m_meshes->modelVao);
-        for (GLuint a = 0; a < 14; ++a)
+        for (GLuint a = 0; a < 15; ++a)
         {
             glEnableVertexAttribArray(a);
             glVertexAttribDivisor(a, (a >= 4 && a < 12) ? 1 : 0);
         }
         glBindVertexArray(0);
 
-        m_meshes->useBaseInstance = GLEW_VERSION_4_2 && glDrawArraysInstancedBaseInstance != nullptr;
+        m_meshes->useBaseInstance = GLEW_VERSION_4_2 && glDrawElementsInstancedBaseInstance != nullptr &&
+                                    glDrawElementsInstancedBaseVertexBaseInstance != nullptr;
         if (GLEW_VERSION_4_3 && glBindBufferBase != nullptr)
         {
             m_meshes->program = compileCore(kMeshVertexSsboBody, kMeshFragmentBody);
             m_meshes->useSsbo = m_meshes->program != 0;
         }
+        m_meshes->useMdi = GLEW_VERSION_4_3 && glMultiDrawElementsIndirect != nullptr && m_meshes->useSsbo &&
+                           m_meshes->useBaseInstance;
         if (!m_meshes->program)
         {
             m_meshes->useSsbo = false;
@@ -1811,10 +2174,10 @@ unsigned int Renderer::CompileProgram(const char *vertex, const char *fragment)
             glAttachShader(program, shader);
         }
         const char *attributes[] = {
-            "vertexPosition", "vertexNormal",        "vertexColor",  "vertexInfo",     "instanceAnchor",
+            "vertexPosition", "vertexOctNormal",     "vertexColor",  "vertexInfo",     "instanceAnchor",
             "instanceScale",  "instanceRotation",    "instanceBody", "instanceAccent", "instanceEmission",
-            "instanceFinish", "instanceTranslation", "vertexJoints", "vertexWeights"};
-        for (GLuint a = 0; a < 14; ++a)
+            "instanceFinish", "instanceTranslation", "vertexJoints", "vertexWeights",  "vertexUv"};
+        for (GLuint a = 0; a < 15; ++a)
         {
             glBindAttribLocation(program, a, attributes[a]);
         }

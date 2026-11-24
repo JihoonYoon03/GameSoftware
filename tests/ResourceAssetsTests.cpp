@@ -18,7 +18,10 @@ int main()
         {
             const auto id = ResourceAssets::Find(std::string("character/") + gender + "/" + role);
             const auto &mesh = ResourceAssets::Get(id);
-            assert(mesh.boneCount == 23 && !mesh.vertices.empty());
+            assert(mesh.boneCount == 23 && !mesh.packedVertices.empty() && mesh.TriangleCount() > 100);
+            assert(mesh.TriangleCount(LodLevel::Lod1) < mesh.TriangleCount(LodLevel::Lod0));
+            assert(mesh.TriangleCount(LodLevel::Lod2) < mesh.TriangleCount(LodLevel::Lod1));
+            assert(mesh.TriangleCount(LodLevel::ShadowProxy) < mesh.TriangleCount(LodLevel::Lod0));
             // Civic reactions plus the original clips and generated Ride exceed the old 32-clip cap.
             assert(mesh.Clips().size() > 32);
             for (const char *name : {"Idle", "Run", "Ride", "Hit_Front", "GetUp_Back"})
@@ -29,7 +32,7 @@ int main()
             SkinMatrices matrices;
             ResourceAssets::Sample(id, nullptr, matrices);
             assert(std::all_of(matrices.begin(), matrices.end(), [](float v) { return std::isfinite(v); }));
-            const auto point = ResourceAssets::SkinPoint(mesh.vertices.front(), matrices);
+            const auto point = ResourceAssets::SkinPoint(mesh.packedVertices.front(), matrices);
             assert(std::isfinite(point.x) && std::isfinite(point.y) && std::isfinite(point.z));
             const auto &rig = *mesh.rig;
             for (int clip : {rig.idle, rig.walk, rig.run, rig.aim, rig.fire, rig.melee, rig.carryIdle,

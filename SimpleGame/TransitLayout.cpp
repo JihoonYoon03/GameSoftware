@@ -115,6 +115,10 @@ std::string Fit(const std::string &asset, float length, float width = 1)
     if (ready.insert(key).second)
     {
         auto mesh = source;
+        mesh.vertices = models::ResourceAssets::UnpackLod0Triangles(source);
+        mesh.packedVertices.clear();
+        mesh.indices16.clear();
+        mesh.indices32.clear();
         float sx = length / original;
         for (auto &v : mesh.vertices)
         {
@@ -184,7 +188,7 @@ void Append(models::ResourceMesh &mesh, const models::ResourceMesh &part, Vector
             float altitude = 0, float yaw = 0)
 {
     float c = std::cos(yaw), s = std::sin(yaw);
-    for (auto v : part.vertices)
+    for (auto v : models::ResourceAssets::UnpackLod0Triangles(part))
     {
         float x = v.x, nx = v.nx;
         v.x = offset.x + x * c - v.y * s;
@@ -202,8 +206,11 @@ std::string Paint(const std::string &asset)
     if (ready.insert(name).second)
     {
         auto mesh = Source(asset);
+        mesh.packedVertices.clear();
+        mesh.indices16.clear();
+        mesh.indices32.clear();
         mesh.vertices.clear();
-        const auto &vertices = Source(asset).vertices;
+        const auto vertices = models::ResourceAssets::UnpackLod0Triangles(Source(asset));
         for (size_t i = 0; i < vertices.size(); i += 3)
         {
             if (vertices[i].nz > .5f)
@@ -228,7 +235,12 @@ std::string Assembly(const std::string &asset)
     static std::set<std::string> ready;
     if (ready.insert(name).second)
     {
-        auto mesh = Source(asset);
+        const auto &src = Source(asset);
+        auto mesh = src;
+        mesh.vertices = models::ResourceAssets::UnpackLod0Triangles(src);
+        mesh.packedVertices.clear();
+        mesh.indices16.clear();
+        mesh.indices32.clear();
         for (const auto &part : roadArt.at(asset).companions)
         {
             if (part.name.find("JunctionMarking_") != std::string::npos)
@@ -265,7 +277,12 @@ void RoadSpan(std::vector<TransitPlacement> &result, const std::string &prefix, 
 std::string Deform(const std::string &asset, const std::string &key,
                    const std::function<Vector2(Vector2)> &map)
 {
-    auto mesh = Source(Assembly(asset));
+    const auto &src = Source(Assembly(asset));
+    auto mesh = src;
+    mesh.vertices = models::ResourceAssets::UnpackLod0Triangles(src);
+    mesh.packedVertices.clear();
+    mesh.indices16.clear();
+    mesh.indices32.clear();
     for (auto &v : mesh.vertices)
     {
         Vector2 p = {v.x, v.y}, q = map(p);
@@ -1148,8 +1165,13 @@ const models::Model &CityPlan::Ground(DistrictGround ground)
             auto id = models::ResourceAssets::Find(names[i]);
             if (i == 0)
             {
-                auto mesh = models::ResourceAssets::Get(id);
+                const auto &src = models::ResourceAssets::Get(id);
+                auto mesh = src;
                 mesh.name = "ground/city-pavement";
+                mesh.vertices = models::ResourceAssets::UnpackLod0Triangles(src);
+                mesh.packedVertices.clear();
+                mesh.indices16.clear();
+                mesh.indices32.clear();
                 for (auto &v : mesh.vertices)
                 {
                     float light = (v.r + v.g + v.b) / 3;

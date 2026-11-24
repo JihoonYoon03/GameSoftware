@@ -135,8 +135,8 @@ bool ModelFactory::ValidateModel(const Model &model)
     if (model.resourceId)
     {
         const auto &mesh = ResourceAssets::Get(model.resourceId);
-        return model.space == CoordinateSpace::World && !mesh.vertices.empty() &&
-               mesh.vertices.size() % 3 == 0;
+        return model.space == CoordinateSpace::World && mesh.HasGeometry() &&
+               mesh.LodIndexCount() % 3 == 0;
     }
     if (unsigned(model.space) > unsigned(CoordinateSpace::World))
     {

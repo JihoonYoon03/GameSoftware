@@ -239,7 +239,9 @@ function convert(name, relative, kind = 'prop', options = {}) {
                     let js = joints && remap ? joints[index].map(j => remap[j]) : [31, 31, 31, 31];
                     let ws = weights && remap ? weights[index] : [1, 0, 0, 0];
                     const total = ws.reduce((a, b) => a + b, 0); if (total < .99 || total > 1.01) throw Error('Skin weights');
-                    vertices.push([...pos, ...n.map(v => v / length), ...color, palette, visibility, surface, ...js, ...ws.map(v => v / total)]);
+                    const uvCoord = uv ? uv[index] : [0, 0];
+                    vertices.push([...pos, ...n.map(v => v / length), ...color, palette, visibility, surface,
+                        ...js, ...ws.map(v => v / total), uvCoord[0], uvCoord[1], uv ? 1 : 0]);
                 }
             }
         }
@@ -414,10 +416,219 @@ function convert(name, relative, kind = 'prop', options = {}) {
         }
         animationSamples.set(animationKey, clips);
     }
-    if (!vertices.length || vertices.length % 3 || vertices.some(v => v.length !== 21 || v.some(n => !Number.isFinite(n)))) throw Error('Invalid converted mesh: ' + name);
+    if (!vertices.length || vertices.length % 3 || vertices.some(v => v.length !== 24 || v.some(n => !Number.isFinite(n)))) throw Error('Invalid converted mesh: ' + name);
     if (clips.length > maxAnimationClips) throw Error('Animation clip limit exceeded: ' + name);
-    assets.push({ name, relative, vertices, boneCount: skin?.joints.length ?? 0, clips,
+    const packed = buildIndexedLodMesh(name, vertices, skin?.joints.length ?? 0, lo, hi);
+    assets.push({ name, relative, packed, boneCount: skin?.joints.length ?? 0, clips,
         rig: animationRigs.get(animationKey), lo, hi, physical, sockets });
+}
+
+const f32Tmp = new Float32Array(1);
+const u32Tmp = new Uint32Array(f32Tmp.buffer);
+function floatToHalf(val) {
+    if (!Number.isFinite(val)) return 0;
+    const clamped = Math.max(-65504, Math.min(65504, val));
+    f32Tmp[0] = clamped;
+    const x = u32Tmp[0];
+    const sign = (x >>> 16) & 0x8000;
+    const exp = ((x >>> 23) & 0xff) - 127 + 15;
+    let mant = x & 0x007fffff;
+    if (exp <= 0) {
+        if (exp < -10) return sign;
+        mant = (mant | 0x00800000) >>> (1 - exp);
+        return sign | ((mant + 0x00001000) >>> 13);
+    }
+    if (exp >= 31) return sign | 0x7bff;
+    return sign | (exp << 10) | ((mant + 0x00001000) >>> 13);
+}
+function encodeOctNormal(nx, ny, nz) {
+    const len = Math.hypot(nx, ny, nz);
+    let x = len > 1e-10 ? nx / len : 0;
+    let y = len > 1e-10 ? ny / len : 0;
+    let z = len > 1e-10 ? nz / len : 1;
+    const invL1 = 1 / (Math.abs(x) + Math.abs(y) + Math.abs(z));
+    x *= invL1; y *= invL1;
+    if (z < 0) {
+        const ox = (1 - Math.abs(y)) * (x >= 0 ? 1 : -1);
+        const oy = (1 - Math.abs(x)) * (y >= 0 ? 1 : -1);
+        x = ox; y = oy;
+    }
+    return [
+        Math.max(-32767, Math.min(32767, Math.round(x * 32767))),
+        Math.max(-32767, Math.min(32767, Math.round(y * 32767)))
+    ];
+}
+function quantizeWeights(ws) {
+    const raw = ws.map(w => Math.max(0, w) * 255);
+    const q = raw.map(v => Math.floor(v));
+    let rem = 255 - (q[0] + q[1] + q[2] + q[3]);
+    const order = [0, 1, 2, 3].sort((a, b) => (raw[b] - q[b]) - (raw[a] - q[a]));
+    for (let i = 0; i < 4 && rem > 0; ++i) {
+        if (q[order[i]] < 255) { q[order[i]]++; rem--; }
+    }
+    for (let i = 3; i >= 0 && rem < 0; --i) {
+        if (q[order[i]] > 0) { q[order[i]]--; rem++; }
+    }
+    return q;
+}
+function decimateIndices(uniqueMeta, lod0Indices, lo, hi, targetRatio, boneCount, shadowMode) {
+    const lod0Tris = lod0Indices.length / 3;
+    const targetTris = Math.max(24, Math.round(lod0Tris * targetRatio));
+    const spanX = Math.max(1e-4, hi[0] - lo[0]);
+    const spanY = Math.max(1e-4, hi[1] - lo[1]);
+    const spanZ = Math.max(1e-4, hi[2] - lo[2]);
+    const maxSpan = Math.max(spanX, spanY, spanZ);
+    const clusterAt = (gridN) => {
+        const scale = gridN / maxSpan;
+        const clusters = new Map();
+        const remap = new Uint32Array(uniqueMeta.length);
+        for (let i = 0; i < uniqueMeta.length; ++i) {
+            const v = uniqueMeta[i];
+            const cx = Math.floor((v.x - lo[0]) * scale);
+            const cy = Math.floor((v.y - lo[1]) * scale);
+            const cz = Math.floor((v.z - lo[2]) * scale);
+            const key = shadowMode
+                ? `${cx},${cy},${cz},${v.visibility},${boneCount > 0 ? v.domBone : 0}`
+                : `${cx},${cy},${cz},${v.palette},${v.visibility},${v.surface},${boneCount > 0 ? v.domBone : 0}`;
+            let rep = clusters.get(key);
+            if (rep === undefined) {
+                rep = i;
+                clusters.set(key, rep);
+            }
+            remap[i] = rep;
+        }
+        const out = [];
+        const seen = new Set();
+        for (let i = 0; i < lod0Indices.length; i += 3) {
+            const a = remap[lod0Indices[i]], b = remap[lod0Indices[i + 1]], c = remap[lod0Indices[i + 2]];
+            if (a === b || b === c || c === a) continue;
+            // Preserve winding while deduplicating identical triangles.
+            let k0 = a, k1 = b, k2 = c;
+            if (k1 < k0 && k1 < k2) { const t = k0; k0 = k1; k1 = k2; k2 = t; }
+            else if (k2 < k0 && k2 < k1) { const t = k2; k2 = k1; k1 = k0; k0 = t; }
+            const triKey = (BigInt(k0) << 42n) | (BigInt(k1) << 21n) | BigInt(k2);
+            if (seen.has(triKey)) continue;
+            seen.add(triKey);
+            out.push(a, b, c);
+        }
+        return out;
+    };
+    let low = 3, high = 96;
+    let best = null, bestErr = Infinity;
+    for (let iter = 0; iter < 8 && low <= high; ++iter) {
+        const mid = (low + high) >> 1;
+        const cand = clusterAt(mid);
+        const tris = cand.length / 3;
+        const err = Math.abs(tris - targetTris);
+        if (tris >= 16 && tris < lod0Tris && err < bestErr) {
+            best = cand;
+            bestErr = err;
+        }
+        if (tris < targetTris) low = mid + 1;
+        else high = mid - 1;
+    }
+    if (!best || best.length < 36 || best.length >= lod0Indices.length * 0.92) return null;
+    return best;
+}
+function buildIndexedLodMesh(name, rawVertices, boneCount, lo, hi) {
+    const uniqueBufs = [];
+    const uniqueMeta = [];
+    const vertMap = new Map();
+    const lod0Indices = new Array(rawVertices.length);
+    const scratch = Buffer.allocUnsafe(36);
+    for (let i = 0; i < rawVertices.length; ++i) {
+        const v = rawVertices[i];
+        const [onx, ony] = encodeOctNormal(v[3], v[4], v[5]);
+        const hu = floatToHalf(v[21]);
+        const hv = floatToHalf(v[22]);
+        const r = Math.max(0, Math.min(255, Math.round(v[6] * 255)));
+        const g = Math.max(0, Math.min(255, Math.round(v[7] * 255)));
+        const b = Math.max(0, Math.min(255, Math.round(v[8] * 255)));
+        const a = Math.max(0, Math.min(255, Math.round(v[9] * 255)));
+        const palette = v[10] | 0;
+        const visibility = v[11] | 0;
+        const surface = v[12] | 0;
+        const flags = v[23] ? 1 : 0;
+        const j0 = v[13] | 0, j1 = v[14] | 0, j2 = v[15] | 0, j3 = v[16] | 0;
+        const qw = quantizeWeights([v[17], v[18], v[19], v[20]]);
+        scratch.writeFloatLE(v[0], 0);
+        scratch.writeFloatLE(v[1], 4);
+        scratch.writeFloatLE(v[2], 8);
+        scratch.writeInt16LE(onx, 12);
+        scratch.writeInt16LE(ony, 14);
+        scratch.writeUInt16LE(hu, 16);
+        scratch.writeUInt16LE(hv, 18);
+        scratch[20] = r; scratch[21] = g; scratch[22] = b; scratch[23] = a;
+        scratch[24] = palette; scratch[25] = visibility; scratch[26] = surface; scratch[27] = flags;
+        scratch[28] = j0; scratch[29] = j1; scratch[30] = j2; scratch[31] = j3;
+        scratch[32] = qw[0]; scratch[33] = qw[1]; scratch[34] = qw[2]; scratch[35] = qw[3];
+        const key = scratch.toString('latin1');
+        let idx = vertMap.get(key);
+        if (idx === undefined) {
+            idx = uniqueBufs.length;
+            vertMap.set(key, idx);
+            uniqueBufs.push(Buffer.from(scratch));
+            let domBone = j0, maxW = qw[0];
+            if (qw[1] > maxW) { maxW = qw[1]; domBone = j1; }
+            if (qw[2] > maxW) { maxW = qw[2]; domBone = j2; }
+            if (qw[3] > maxW) { domBone = j3; }
+            uniqueMeta.push({ x: v[0], y: v[1], z: v[2], palette, visibility, surface, domBone });
+        }
+        lod0Indices[i] = idx;
+    }
+    const lod0Tris = lod0Indices.length / 3;
+    const isGround = name.startsWith('ground/');
+    const isSignal = name.startsWith('scenery/City_TrafficSignal');
+    const isTransit = name.startsWith('transit/');
+    const allIndices = lod0Indices.slice();
+    const lodOffsets = [0, 0, 0, 0];
+    const lodCounts = [lod0Indices.length, lod0Indices.length, lod0Indices.length, lod0Indices.length];
+    if (lod0Tris >= 250 && !isGround && !isSignal) {
+        if (!isTransit) {
+            const lod1 = decimateIndices(uniqueMeta, lod0Indices, lo, hi, 0.48, boneCount, false);
+            if (lod1) {
+                lodOffsets[1] = allIndices.length;
+                lodCounts[1] = lod1.length;
+                for (let i = 0; i < lod1.length; ++i) allIndices.push(lod1[i]);
+            }
+            const lod2 = decimateIndices(uniqueMeta, lod0Indices, lo, hi, 0.22, boneCount, false);
+            if (lod2 && lod2.length < lodCounts[1]) {
+                lodOffsets[2] = allIndices.length;
+                lodCounts[2] = lod2.length;
+                for (let i = 0; i < lod2.length; ++i) allIndices.push(lod2[i]);
+            } else {
+                lodOffsets[2] = lodOffsets[1];
+                lodCounts[2] = lodCounts[1];
+            }
+        }
+        const shadow = decimateIndices(uniqueMeta, lod0Indices, lo, hi, 0.24, boneCount, true);
+        if (shadow && shadow.length < lodCounts[0] * 0.85) {
+            lodOffsets[3] = allIndices.length;
+            lodCounts[3] = shadow.length;
+            for (let i = 0; i < shadow.length; ++i) allIndices.push(shadow[i]);
+        } else {
+            lodOffsets[3] = lodOffsets[2];
+            lodCounts[3] = lodCounts[2];
+        }
+    }
+    const uniqueVertexCount = uniqueBufs.length;
+    const indexBytes = uniqueVertexCount <= 65535 ? 2 : 4;
+    const vertexBuffer = Buffer.concat(uniqueBufs);
+    const indexBuffer = Buffer.allocUnsafe(allIndices.length * indexBytes);
+    if (indexBytes === 2) {
+        for (let i = 0; i < allIndices.length; ++i) indexBuffer.writeUInt16LE(allIndices[i], i * 2);
+    } else {
+        for (let i = 0; i < allIndices.length; ++i) indexBuffer.writeUInt32LE(allIndices[i], i * 4);
+    }
+    return {
+        uniqueVertexCount,
+        totalIndexCount: allIndices.length,
+        indexBytes,
+        lodOffsets,
+        lodCounts,
+        vertexBuffer,
+        indexBuffer
+    };
 }
 
 const recipes = JSON.parse(fs.readFileSync(path.join(resources, 'Documentation/assembly_recipes.json')));
@@ -546,19 +757,30 @@ for (const asset of assets) {
     asset.bank = bankIndices.get(hash);
     sampledBankIndices.set(asset.clips, asset.bank);
 }
-u32(0x41524d45); u32(3); u32(assets.length); u32(banks.length);
+u32(0x41524d45); u32(4); u32(assets.length); u32(banks.length);
 chunks.push(...banks);
 for (const asset of assets) {
-    text(asset.name); text(asset.relative); u32(asset.vertices.length); u32(asset.boneCount); u32(asset.bank);
+    const p = asset.packed;
+    text(asset.name); text(asset.relative);
+    u32(p.uniqueVertexCount); u32(p.totalIndexCount); u32(p.indexBytes);
+    u32(asset.boneCount); u32(asset.bank);
+    for (let k = 0; k < 4; ++k) u32(p.lodOffsets[k]);
+    for (let k = 0; k < 4; ++k) u32(p.lodCounts[k]);
     f32([...asset.lo, ...asset.hi, ...asset.physical, ...asset.sockets.flat()]);
-    f32(asset.vertices.flat());
+    chunks.push(p.vertexBuffer);
+    chunks.push(p.indexBuffer);
 }
 const binary = Buffer.concat(chunks), digest = crypto.createHash('sha256').update(binary).digest('hex');
 if (binary.length > maxPackBytes) throw Error('Resource pack exceeds the runtime size limit');
-const report = { schema: 'game_resource_pack_v3', converter: 'tools/pack-resources.mjs', bytes: binary.length, sha256: digest,
+const report = { schema: 'game_resource_pack_v4', converter: 'tools/pack-resources.mjs', bytes: binary.length, sha256: digest,
     animationBanks: banks.length,
     buildInputs: buildInputHashes(root),
-    sources: Object.fromEntries([...inputs].sort()), assets: assets.map(a => ({ name: a.name, source: a.relative, triangles: a.vertices.length / 3,
+    sources: Object.fromEntries([...inputs].sort()), assets: assets.map(a => ({ name: a.name, source: a.relative,
+        triangles: a.packed.lodCounts[0] / 3,
+        uniqueVertices: a.packed.uniqueVertexCount,
+        indexBytes: a.packed.indexBytes,
+        lods: { lod0: a.packed.lodCounts[0] / 3, lod1: a.packed.lodCounts[1] / 3,
+            lod2: a.packed.lodCounts[2] / 3, shadow: a.packed.lodCounts[3] / 3 },
         bones: a.boneCount, animationBank: a.bank, physical_world_units: a.physical, bounds: [a.lo, a.hi], clips: a.clips.map(c => c.name) })) };
 if (checking) {
     if (!fs.existsSync(path.join(output, 'game-assets.bin')) || !fs.readFileSync(path.join(output, 'game-assets.bin')).equals(binary)) throw Error('Resource pack is stale; regenerate it.');

@@ -22,8 +22,8 @@ test('freshness detects missing, stale and corrupt caches after a pull', () => {
         const folder = path.join(fixture, 'Resource/Runtime');
         fs.mkdirSync(folder);
         const binary = path.join(folder, 'game-assets.bin');
-        fs.writeFileSync(binary, Buffer.alloc(12));
-        const manifest = { schema: 'game_resource_pack_v3', bytes: 12, sha256: fileHash(binary),
+        fs.writeFileSync(binary, Buffer.alloc(16));
+        const manifest = { schema: 'game_resource_pack_v4', bytes: 16, sha256: fileHash(binary),
             assets: [{ name: 'test' }], sources: { 'Characters/Test': fileHash(source) },
             buildInputs: buildInputHashes(fixture) };
         const save = () => fs.writeFileSync(path.join(folder, 'manifest.json'), JSON.stringify(manifest));
@@ -40,9 +40,9 @@ test('freshness detects missing, stale and corrupt caches after a pull', () => {
         manifest.buildInputs = buildInputHashes(fixture);
         save();
         assert.equal(resourcePackStatus(fixture).current, true);
-        fs.writeFileSync(binary, Buffer.alloc(12, 1));
+        fs.writeFileSync(binary, Buffer.alloc(16, 1));
         assert.equal(resourcePackStatus(fixture).current, false);
-        fs.writeFileSync(binary, Buffer.alloc(12));
+        fs.writeFileSync(binary, Buffer.alloc(16));
         delete manifest.buildInputs;
         save();
         assert.equal(resourcePackStatus(fixture).current, false); // Legacy cache must regenerate once.

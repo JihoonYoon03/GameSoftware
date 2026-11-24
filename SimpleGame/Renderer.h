@@ -27,7 +27,8 @@ class Mesh
 };
 struct FrameStatistics
 {
-    unsigned int objects = 0, triangles = 0, drawCalls = 0, instancedDraws = 0, shadowDraws = 0;
+    unsigned int objects = 0, triangles = 0, shadowTriangles = 0, drawCalls = 0, instancedDraws = 0,
+                 shadowDraws = 0, lod1Instances = 0, lod2Instances = 0, culledObjects = 0;
 };
 } // namespace rendering
 

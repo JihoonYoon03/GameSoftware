@@ -32,13 +32,27 @@ function sourceTriangles(relative) {
     source.scenes[source.scene ?? 0].nodes.forEach(visit);
     return triangles;
 }
-assert.equal(manifest.schema, 'game_resource_pack_v3');
+assert.equal(manifest.schema, 'game_resource_pack_v4');
 assert.ok(data.length <= maxPackBytes);
 assert.equal(data.length, manifest.bytes);
-assert.ok(data.length >= 12 && data.length <= 512 * 1024 * 1024, 'Resource pack exceeds runtime size limit');
+assert.ok(data.length >= 16 && data.length <= 512 * 1024 * 1024, 'Resource pack exceeds runtime size limit');
 assert.equal(crypto.createHash('sha256').update(data).digest('hex'), manifest.sha256);
-let offset = 0, vertices = 0, animationFrames = 0;
+let offset = 0, vertices = 0, uniqueVerticesTotal = 0, lod0IndicesTotal = 0, shadowIndicesTotal = 0, animationFrames = 0;
 function u32() { const value = data.readUInt32LE(offset); offset += 4; return value; }
+function u16() { const value = data.readUInt16LE(offset); offset += 2; return value; }
+function i16() { const value = data.readInt16LE(offset); offset += 2; return value; }
+function u8() { const value = data[offset]; offset += 1; return value; }
+function decodeOct(ix, iy) {
+    let x = Math.max(-1, ix / 32767), y = Math.max(-1, iy / 32767);
+    let z = 1 - Math.abs(x) - Math.abs(y);
+    if (z < 0) {
+        const ox = (1 - Math.abs(y)) * (x >= 0 ? 1 : -1);
+        const oy = (1 - Math.abs(x)) * (y >= 0 ? 1 : -1);
+        x = ox; y = oy;
+    }
+    const len = Math.hypot(x, y, z);
+    return len > 1e-8 ? [x / len, y / len, z / len] : [0, 0, 1];
+}
 function floats(count) {
     assert.ok(count >= 0 && offset + count * 4 <= data.length, 'Truncated float array');
     const result = Array.from({ length: count }, () => {
@@ -55,7 +69,7 @@ function text() {
     return result;
 }
 assert.equal(u32(), 0x41524d45);
-assert.equal(u32(), 3);
+assert.equal(u32(), 4);
 const count = u32(), names = new Set();
 const bankCount = u32(), banks = [];
 assert.equal(bankCount, manifest.animationBanks);
@@ -92,8 +106,20 @@ const signalDigests = new Set();
 assert.equal(count, manifest.assets.length);
 assert.ok(count <= 512, 'Resource pack exceeds runtime asset limit');
 for (let asset = 0; asset < count; ++asset) {
-    const name = text(), source = text(), vertexCount = u32(), bones = u32(), bank = u32();
+    const name = text(), source = text();
+    const uniqueVertexCount = u32(), totalIndexCount = u32(), indexBytes = u32();
+    const bones = u32(), bank = u32();
+    const lodOffsets = [u32(), u32(), u32(), u32()];
+    const lodCounts = [u32(), u32(), u32(), u32()];
     assert.ok(bank <= bankCount);
+    assert.ok(indexBytes === 2 || indexBytes === 4);
+    assert.ok(uniqueVertexCount > 0 && uniqueVertexCount <= 2000000);
+    assert.ok(totalIndexCount > 0 && totalIndexCount % 3 === 0);
+    if (indexBytes === 2) assert.ok(uniqueVertexCount <= 65535);
+    for (let k = 0; k < 4; ++k) {
+        assert.ok(lodCounts[k] > 0 && lodCounts[k] % 3 === 0, 'Invalid LOD index count: ' + name);
+        assert.ok(lodOffsets[k] + lodCounts[k] <= totalIndexCount, 'LOD range out of bounds: ' + name);
+    }
     const { clipNames, gear } = bank ? banks[bank - 1] : { clipNames: [], gear: new Map() };
     if (bank) assert.equal(bones, banks[bank - 1].bones);
     const report = manifest.assets[asset];
@@ -102,8 +128,10 @@ for (let asset = 0; asset < count; ++asset) {
         ?.pbrMetallicRoughness?.baseColorFactor : undefined;
     assert.ok(!names.has(name)); names.add(name);
     assert.equal(name, report.name); assert.equal(source, report.source);
-    assert.equal(vertexCount, report.triangles * 3); assert.equal(bones, report.bones);
-    assert.ok(vertexCount > 0 && vertexCount % 3 === 0 && bones < 32);
+    assert.equal(lodCounts[0], report.triangles * 3); assert.equal(bones, report.bones);
+    assert.equal(uniqueVertexCount, report.uniqueVertices);
+    assert.equal(indexBytes, report.indexBytes);
+    assert.ok(bones < 32);
     assert.equal(bank, report.animationBank);
     const bounds = floats(6), physical = floats(3), sockets = floats(18);
     for (let axis = 0; axis < 3; ++axis) {
@@ -125,25 +153,39 @@ for (let asset = 0; asset < count; ++asset) {
     if (name.startsWith('scenery/City_TrafficSignal')) assert.ok(bounds[2] > 2.3, 'Traffic head must hover above the road');
     if (name === 'scenery/City_PedestrianHologram_6m') assert.ok(bounds[5] < .076, 'Pedestrian signal must remain at floor level');
     const vertexStart = offset;
-    for (let vertex = 0; vertex < vertexCount; ++vertex) {
-        const values = floats(21);
+    for (let vertex = 0; vertex < uniqueVertexCount; ++vertex) {
+        const pos = floats(3);
+        const onx = i16(), ony = i16();
+        const hu = u16(), hv = u16();
+        assert.ok((hu & 0x7c00) !== 0x7c00 && (hv & 0x7c00) !== 0x7c00, 'Nonfinite half UV');
+        const rgba = [u8() / 255, u8() / 255, u8() / 255, u8() / 255];
+        const palette = u8(), visibility = u8(), surface = u8(), flags = u8();
+        const joints = [u8(), u8(), u8(), u8()];
+        const weights = [u8(), u8(), u8(), u8()];
         for (let axis = 0; axis < 3; ++axis) {
-            assert.ok(values[axis] >= bounds[axis] - 1e-5 && values[axis] <= bounds[axis + 3] + 1e-5, 'Bounds mismatch');
+            assert.ok(pos[axis] >= bounds[axis] - 1e-5 && pos[axis] <= bounds[axis + 3] + 1e-5, 'Bounds mismatch');
         }
-        assert.ok(Math.abs(Math.hypot(...values.slice(3, 6)) - 1) < 1e-4, 'Invalid normal');
-        assert.ok([0, 1, 2, 3].includes(values[10]), 'Invalid palette slot');
-        assert.ok([0, 1, 2].includes(values[11]), 'Invalid visibility');
+        const normal = decodeOct(onx, ony);
+        assert.ok(Math.abs(Math.hypot(...normal) - 1) < 1e-4, 'Invalid normal');
+        assert.ok([0, 1, 2, 3].includes(palette), 'Invalid palette slot');
+        assert.ok([0, 1, 2].includes(visibility), 'Invalid visibility');
+        assert.ok(flags <= 1, 'Invalid vertex flags');
         let sum = 0;
         for (let weight = 0; weight < 4; ++weight) {
-            const joint = values[13 + weight], amount = values[17 + weight];
-            assert.ok(Number.isInteger(joint) && joint >= 0 && (joint < bones || joint === 31));
-            assert.ok(amount >= 0 && amount <= 1); sum += amount;
+            const joint = joints[weight], amount = weights[weight];
+            assert.ok(joint < bones || joint === 31, 'Invalid skin joint');
+            sum += amount;
         }
-        assert.ok(Math.abs(sum - 1) < .001, 'Unnormalized skin');
-        if (name.startsWith('ground/')) assert.equal(values[2], 0, 'Ground must meet actor floor');
-        if (skinColor && values[12] === 7) for (let channel = 0; channel < 4; ++channel)
-            assert.ok(Math.abs(values[6 + channel] - skinColor[channel]) < 1e-6,
+        assert.equal(sum, 255, 'Unnormalized packed skin weights');
+        if (name.startsWith('ground/')) assert.equal(pos[2], 0, 'Ground must meet actor floor');
+        if (skinColor && surface === 7) for (let channel = 0; channel < 4; ++channel)
+            assert.ok(Math.abs(rgba[channel] - skinColor[channel]) <= (1 / 255) + 1e-6,
                 'Authored character skin color was replaced: ' + name);
+    }
+    const indexStart = offset;
+    for (let i = 0; i < totalIndexCount; ++i) {
+        const idx = indexBytes === 2 ? u16() : u32();
+        assert.ok(idx < uniqueVertexCount, 'Index out of vertex bounds: ' + name);
     }
     if (name.startsWith('scenery/City_TrafficSignal'))
         signalDigests.add(crypto.createHash('sha256').update(data.subarray(vertexStart, offset)).digest('hex'));
@@ -168,7 +210,10 @@ for (let asset = 0; asset < count; ++asset) {
     if (name.startsWith('vehicle/')) for (const clip of ['Hover_Idle', 'Cruise']) assert.ok(clipNames.includes(clip));
     if (name.startsWith('aircraft/')) for (const clip of ['Aircraft_Reference', 'Cruise', 'LandingGear_Retract', 'LandingGear_Deploy', 'Canopy_Open', 'Cargo_Open']) assert.ok(clipNames.includes(clip));
     if (name.startsWith('aircraft/')) assert.notDeepEqual(gear.get('Cruise'), gear.get('Aircraft_Reference'), 'Cruising landing gear must retract');
-    vertices += vertexCount;
+    vertices += lodCounts[0];
+    uniqueVerticesTotal += uniqueVertexCount;
+    lod0IndicesTotal += lodCounts[0];
+    shadowIndicesTotal += lodCounts[3];
 }
 assert.equal(offset, data.length, 'Unexpected trailing data');
 assert.ok(resourcePackStatus(root).current, 'Runtime pack must match current sources and converter');
@@ -231,4 +276,6 @@ for (const [name, module] of Object.entries(roadPlan.modules)) {
         assert.ok(Math.abs(report.bounds[1][axis] - maximum) < .00001, 'Road render maximum: ' + name);
     }
 }
-console.log(JSON.stringify({ event: 'resource_pack_validated', assets: count, vertices, animation_frames: animationFrames, bytes: data.length }));
+console.log(JSON.stringify({ event: 'resource_pack_validated', schema: 'v4', assets: count,
+    lod0_triangles: lod0IndicesTotal / 3, shadow_triangles: shadowIndicesTotal / 3,
+    unique_vertices: uniqueVerticesTotal, animation_frames: animationFrames, bytes: data.length }));

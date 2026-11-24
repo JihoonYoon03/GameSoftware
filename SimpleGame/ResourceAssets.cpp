@@ -8,20 +8,138 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <map>
 #include <memory>
 #include <stdexcept>
+#include <string_view>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 
 namespace models
 {
 namespace
 {
-static_assert(sizeof(ResourceVertex) == 21 * sizeof(float), "Resource vertex layout changed");
+static_assert(sizeof(PackedResourceVertex) == 36, "PackedResourceVertex layout must be 36 bytes");
+static_assert(std::is_trivially_copyable<PackedResourceVertex>::value, "PackedResourceVertex must be POD");
 static_assert(sizeof(Point) == 3 * sizeof(float), "Resource point layout changed");
+
+std::uint16_t FloatToHalf(float value)
+{
+    if (!std::isfinite(value))
+    {
+        return 0;
+    }
+    value = std::clamp(value, -65504.f, 65504.f);
+    std::uint32_t x = 0;
+    std::memcpy(&x, &value, sizeof(x));
+    const std::uint32_t sign = (x >> 16) & 0x8000u;
+    const int exp = int((x >> 23) & 0xffu) - 127 + 15;
+    std::uint32_t mant = x & 0x007fffffu;
+    if (exp <= 0)
+    {
+        if (exp < -10)
+        {
+            return std::uint16_t(sign);
+        }
+        mant = (mant | 0x00800000u) >> (1 - exp);
+        return std::uint16_t(sign | ((mant + 0x00001000u) >> 13));
+    }
+    if (exp >= 31)
+    {
+        return std::uint16_t(sign | 0x7bffu);
+    }
+    return std::uint16_t(sign | (std::uint32_t(exp) << 10) | ((mant + 0x00001000u) >> 13));
+}
+float HalfToFloat(std::uint16_t h)
+{
+    const std::uint32_t sign = std::uint32_t(h & 0x8000u) << 16;
+    const std::uint32_t exp = (h >> 10) & 0x1fu;
+    std::uint32_t mant = h & 0x03ffu;
+    std::uint32_t bits = 0;
+    if (exp == 0)
+    {
+        if (mant == 0)
+        {
+            bits = sign;
+        }
+        else
+        {
+            int e = -14;
+            while ((mant & 0x0400u) == 0)
+            {
+                mant <<= 1;
+                --e;
+            }
+            mant &= 0x03ffu;
+            bits = sign | (std::uint32_t(e + 127) << 23) | (mant << 13);
+        }
+    }
+    else if (exp == 31)
+    {
+        bits = sign | 0x7f800000u | (mant << 13);
+    }
+    else
+    {
+        bits = sign | ((exp + 112u) << 23) | (mant << 13);
+    }
+    float out = 0;
+    std::memcpy(&out, &bits, sizeof(out));
+    return out;
+}
+std::array<std::int16_t, 2> EncodeOctNormal(float nx, float ny, float nz)
+{
+    const float len = std::sqrt(nx * nx + ny * ny + nz * nz);
+    float x = len > 1.e-10f ? nx / len : 0.f;
+    float y = len > 1.e-10f ? ny / len : 0.f;
+    float z = len > 1.e-10f ? nz / len : 1.f;
+    const float invL1 = 1.f / (std::fabs(x) + std::fabs(y) + std::fabs(z));
+    x *= invL1;
+    y *= invL1;
+    if (z < 0.f)
+    {
+        const float ox = (1.f - std::fabs(y)) * (x >= 0.f ? 1.f : -1.f);
+        const float oy = (1.f - std::fabs(x)) * (y >= 0.f ? 1.f : -1.f);
+        x = ox;
+        y = oy;
+    }
+    return {std::int16_t(std::clamp(int(std::lround(x * 32767.f)), -32767, 32767)),
+            std::int16_t(std::clamp(int(std::lround(y * 32767.f)), -32767, 32767))};
+}
+Point DecodeOctNormal(std::int16_t ix, std::int16_t iy)
+{
+    float x = (std::max)(-1.f, float(ix) / 32767.f);
+    float y = (std::max)(-1.f, float(iy) / 32767.f);
+    float z = 1.f - std::fabs(x) - std::fabs(y);
+    if (z < 0.f)
+    {
+        const float ox = (1.f - std::fabs(y)) * (x >= 0.f ? 1.f : -1.f);
+        const float oy = (1.f - std::fabs(x)) * (y >= 0.f ? 1.f : -1.f);
+        x = ox;
+        y = oy;
+    }
+    const float len = std::sqrt(x * x + y * y + z * z);
+    return len > 1.e-8f ? Point{x / len, y / len, z / len} : Point{0, 0, 1};
+}
+struct PackedVertexKey
+{
+    PackedResourceVertex v;
+    bool operator==(const PackedVertexKey &o) const noexcept
+    {
+        return std::memcmp(&v, &o.v, sizeof(v)) == 0;
+    }
+};
+struct PackedVertexKeyHash
+{
+    size_t operator()(const PackedVertexKey &k) const noexcept
+    {
+        return std::hash<std::string_view>{}(
+            std::string_view(reinterpret_cast<const char *>(&k.v), sizeof(k.v)));
+    }
+};
 class Reader
 {
   public:
@@ -108,7 +226,7 @@ struct Store
         unsigned int magic, version;
         reader.Read(&magic);
         reader.Read(&version);
-        if (magic != 0x41524d45 || version != 3)
+        if (magic != 0x41524d45 || version != 4)
         {
             throw std::runtime_error(
                 "Unsupported resource pack version: rebuild or run node tools/ensure-resources.mjs");
@@ -287,7 +405,8 @@ struct Store
             banks.push_back({bones, std::move(clips), std::move(rig)});
         }
         meshes.reserve(count);
-        size_t vertices = 0;
+        size_t lod0Triangles = 0;
+        size_t uniqueVerticesTotal = 0;
         for (unsigned int index = 0; index < count; ++index)
         {
             meshes.emplace_back();
@@ -298,9 +417,30 @@ struct Store
             {
                 throw std::runtime_error("Duplicate resource asset name");
             }
-            auto vertexCount = reader.Count(2000000);
+            const auto uniqueVertexCount = reader.Count(2000000);
+            const auto totalIndexCount = reader.Count(6000000);
+            const auto indexBytes = reader.Count(4);
             mesh.boneCount = reader.Count(31);
-            auto bank = reader.Count(bankCount);
+            const auto bank = reader.Count(bankCount);
+            if (uniqueVertexCount == 0 || totalIndexCount == 0 || totalIndexCount % 3 != 0 ||
+                (indexBytes != 2 && indexBytes != 4) ||
+                (indexBytes == 2 && uniqueVertexCount > 65535))
+            {
+                throw std::runtime_error("Invalid v4 indexed mesh header");
+            }
+            mesh.indexBytes = std::uint8_t(indexBytes);
+            std::array<std::uint32_t, 4> offsets{}, counts{};
+            reader.Read(offsets.data(), offsets.size());
+            reader.Read(counts.data(), counts.size());
+            for (size_t k = 0; k < 4; ++k)
+            {
+                if (counts[k] == 0 || counts[k] % 3 != 0 ||
+                    size_t(offsets[k]) + size_t(counts[k]) > totalIndexCount)
+                {
+                    throw std::runtime_error("Invalid v4 LOD submesh range");
+                }
+                mesh.lods[k] = {offsets[k], counts[k]};
+            }
             if (bank)
             {
                 if (banks[bank - 1].bones != mesh.boneCount)
@@ -314,46 +454,66 @@ struct Store
             reader.Read(&mesh.maximum);
             reader.Read(&mesh.physicalSize);
             reader.Read(mesh.sockets.data(), mesh.sockets.size());
-            if (vertexCount == 0 || vertexCount % 3)
+            mesh.packedVertices.resize(uniqueVertexCount);
+            reader.Read(mesh.packedVertices.data(), uniqueVertexCount);
+            for (const auto &vertex : mesh.packedVertices)
             {
-                throw std::runtime_error("Resource asset is not a triangle list");
-            }
-            mesh.vertices.resize(vertexCount);
-            reader.Read(mesh.vertices.data(), vertexCount);
-            for (const auto &vertex : mesh.vertices)
-            {
-                // Validate each named field without reading past a scalar object's bounds.
-                if (!std::isfinite(vertex.x) || !std::isfinite(vertex.y) || !std::isfinite(vertex.z) ||
-                    !std::isfinite(vertex.nx) || !std::isfinite(vertex.ny) || !std::isfinite(vertex.nz))
+                if (!std::isfinite(vertex.x) || !std::isfinite(vertex.y) || !std::isfinite(vertex.z))
                 {
                     throw std::runtime_error("Nonfinite resource vertex");
                 }
-                float sum = 0;
+                unsigned sum = 0;
                 for (size_t j = 0; j < 4; ++j)
                 {
-                    const float joint = vertex.joints[j], weight = vertex.weights[j];
-                    if (!std::isfinite(joint) || joint < 0 || joint > 31 || joint != std::floor(joint) ||
-                        (joint >= mesh.boneCount && joint != 31) || !std::isfinite(weight) || weight < 0)
+                    const unsigned joint = vertex.joints[j];
+                    if (joint > 31 || (joint >= mesh.boneCount && joint != 31))
                     {
                         throw std::runtime_error("Invalid resource skin binding");
                     }
-                    sum += weight;
+                    sum += vertex.weights[j];
                 }
-                if (std::fabs(sum - 1) > .001f)
+                if (sum != 255)
                 {
                     throw std::runtime_error("Unnormalized resource skin");
                 }
             }
-            vertices += vertexCount;
+            if (indexBytes == 2)
+            {
+                mesh.indices16.resize(totalIndexCount);
+                reader.Read(mesh.indices16.data(), totalIndexCount);
+                for (std::uint16_t idx : mesh.indices16)
+                {
+                    if (idx >= uniqueVertexCount)
+                    {
+                        throw std::runtime_error("Resource index out of range");
+                    }
+                }
+            }
+            else
+            {
+                mesh.indices32.resize(totalIndexCount);
+                reader.Read(mesh.indices32.data(), totalIndexCount);
+                for (std::uint32_t idx : mesh.indices32)
+                {
+                    if (idx >= uniqueVertexCount)
+                    {
+                        throw std::runtime_error("Resource index out of range");
+                    }
+                }
+            }
+            lod0Triangles += mesh.lods[0].indexCount / 3;
+            uniqueVerticesTotal += uniqueVertexCount;
         }
         if (reader.remaining)
         {
             throw std::runtime_error("Unexpected trailing resource pack data");
         }
         profiling::Count(profiling::Counter::DiskCacheHits);
-        std::printf("{\"event\":\"resource_pack_loaded\",\"asset_count\":%zu,\"triangles\":%zu,\"skin_"
-                    "palette_limit\":32,\"animation_clips\":%zu,\"pack_path\":\"%s\"}\n",
-                    meshes.size(), vertices / 3, animationClips, packPath.generic_u8string().c_str());
+        std::printf("{\"event\":\"resource_pack_loaded\",\"schema\":\"v4\",\"asset_count\":%zu,"
+                    "\"triangles\":%zu,\"unique_vertices\":%zu,\"skin_palette_limit\":32,"
+                    "\"animation_clips\":%zu,\"pack_path\":\"%s\"}\n",
+                    meshes.size(), lod0Triangles, uniqueVerticesTotal, animationClips,
+                    packPath.generic_u8string().c_str());
     }
 };
 Store &Assets()
@@ -442,6 +602,117 @@ const ResourceMesh &ResourceAssets::Get(unsigned int id)
     }
     return id <= store.meshes.size() ? store.meshes[id - 1] : *store.assemblies[id - store.meshes.size() - 1];
 }
+size_t ResourceAssets::PackMeshCount()
+{
+    return Assets().meshes.size();
+}
+PackedResourceVertex ResourceAssets::PackVertex(const ResourceVertex &vertex)
+{
+    PackedResourceVertex p{};
+    p.x = vertex.x;
+    p.y = vertex.y;
+    p.z = vertex.z;
+    const auto oct = EncodeOctNormal(vertex.nx, vertex.ny, vertex.nz);
+    p.nx = oct[0];
+    p.ny = oct[1];
+    p.u = FloatToHalf(vertex.u);
+    p.v = FloatToHalf(vertex.v);
+    auto u8Norm = [](float c) { return std::uint8_t(std::clamp(int(std::lround(c * 255.f)), 0, 255)); };
+    p.r = u8Norm(vertex.r);
+    p.g = u8Norm(vertex.g);
+    p.b = u8Norm(vertex.b);
+    p.a = u8Norm(vertex.a);
+    p.palette = std::uint8_t(std::clamp(int(std::lround(vertex.palette)), 0, 3));
+    p.visibility = std::uint8_t(std::clamp(int(std::lround(vertex.visibility)), 0, 2));
+    p.surface = std::uint8_t(std::clamp(int(std::lround(vertex.surface)), 0, 15));
+    p.flags = vertex.hasUv ? 1u : 0u;
+    std::array<float, 4> raw{};
+    std::array<int, 4> q{};
+    int sum = 0;
+    for (size_t i = 0; i < 4; ++i)
+    {
+        p.joints[i] = std::uint8_t(std::clamp(int(std::lround(vertex.joints[i])), 0, 31));
+        raw[i] = (std::max)(0.f, vertex.weights[i]) * 255.f;
+        q[i] = int(std::floor(raw[i]));
+        sum += q[i];
+    }
+    int rem = 255 - sum;
+    std::array<size_t, 4> order = {0, 1, 2, 3};
+    std::sort(order.begin(), order.end(),
+              [&](size_t a, size_t b) { return (raw[a] - q[a]) > (raw[b] - q[b]); });
+    for (size_t i = 0; i < 4 && rem > 0; ++i)
+    {
+        if (q[order[i]] < 255)
+        {
+            ++q[order[i]];
+            --rem;
+        }
+    }
+    for (int i = 3; i >= 0 && rem < 0; --i)
+    {
+        if (q[order[size_t(i)]] > 0)
+        {
+            --q[order[size_t(i)]];
+            ++rem;
+        }
+    }
+    for (size_t i = 0; i < 4; ++i)
+    {
+        p.weights[i] = std::uint8_t(q[i]);
+    }
+    return p;
+}
+ResourceVertex ResourceAssets::UnpackVertex(const PackedResourceVertex &p)
+{
+    const auto n = DecodeOctNormal(p.nx, p.ny);
+    ResourceVertex v{};
+    v.x = p.x;
+    v.y = p.y;
+    v.z = p.z;
+    v.nx = n.x;
+    v.ny = n.y;
+    v.nz = n.z;
+    v.r = float(p.r) / 255.f;
+    v.g = float(p.g) / 255.f;
+    v.b = float(p.b) / 255.f;
+    v.a = float(p.a) / 255.f;
+    v.palette = float(p.palette);
+    v.visibility = float(p.visibility);
+    v.surface = float(p.surface);
+    for (size_t i = 0; i < 4; ++i)
+    {
+        v.joints[i] = float(p.joints[i]);
+        v.weights[i] = float(p.weights[i]) / 255.f;
+    }
+    v.u = HalfToFloat(p.u);
+    v.v = HalfToFloat(p.v);
+    v.hasUv = (p.flags & 1u) != 0;
+    return v;
+}
+ResourceVertex ResourceAssets::TriangleVertex(const ResourceMesh &mesh, size_t lodVertexIndex, LodLevel lod)
+{
+    if (!mesh.packedVertices.empty())
+    {
+        const auto &range = mesh.lods[size_t(lod)];
+        return UnpackVertex(mesh.packedVertices[mesh.IndexAt(size_t(range.firstIndex) + lodVertexIndex)]);
+    }
+    return mesh.vertices[lodVertexIndex];
+}
+std::vector<ResourceVertex> ResourceAssets::UnpackLod0Triangles(const ResourceMesh &mesh)
+{
+    if (mesh.packedVertices.empty())
+    {
+        return mesh.vertices;
+    }
+    const auto &range = mesh.lods[0];
+    std::vector<ResourceVertex> result;
+    result.reserve(range.indexCount);
+    for (size_t i = 0; i < range.indexCount; ++i)
+    {
+        result.push_back(UnpackVertex(mesh.packedVertices[mesh.IndexAt(size_t(range.firstIndex) + i)]));
+    }
+    return result;
+}
 unsigned int ResourceAssets::RegisterStatic(ResourceMesh mesh)
 {
     auto &store = Assets();
@@ -452,9 +723,56 @@ unsigned int ResourceAssets::RegisterStatic(ResourceMesh mesh)
     }
     mesh.boneCount = 0;
     mesh.animations.reset();
+    mesh.rig.reset();
+    if (!mesh.vertices.empty())
+    {
+        mesh.packedVertices.clear();
+        mesh.indices16.clear();
+        mesh.indices32.clear();
+        std::unordered_map<PackedVertexKey, std::uint32_t, PackedVertexKeyHash> dedup;
+        dedup.reserve(mesh.vertices.size());
+        std::vector<std::uint32_t> indices;
+        indices.reserve(mesh.vertices.size());
+        for (auto &v : mesh.vertices)
+        {
+            v.joints = {31, 31, 31, 31};
+            v.weights = {1, 0, 0, 0};
+            const auto packed = PackVertex(v);
+            auto it = dedup.find({packed});
+            if (it == dedup.end())
+            {
+                const auto idx = std::uint32_t(mesh.packedVertices.size());
+                dedup.emplace(PackedVertexKey{packed}, idx);
+                mesh.packedVertices.push_back(packed);
+                indices.push_back(idx);
+            }
+            else
+            {
+                indices.push_back(it->second);
+            }
+        }
+        if (mesh.packedVertices.size() <= 65535)
+        {
+            mesh.indexBytes = 2;
+            mesh.indices16.resize(indices.size());
+            for (size_t i = 0; i < indices.size(); ++i)
+            {
+                mesh.indices16[i] = std::uint16_t(indices[i]);
+            }
+        }
+        else
+        {
+            mesh.indexBytes = 4;
+            mesh.indices32 = std::move(indices);
+        }
+        const SubmeshRange full{0, std::uint32_t(mesh.vertices.size())};
+        mesh.lods = {full, full, full, full};
+        mesh.vertices.clear();
+        mesh.vertices.shrink_to_fit();
+    }
     mesh.minimum = {1.e9f, 1.e9f, 1.e9f};
     mesh.maximum = {-1.e9f, -1.e9f, -1.e9f};
-    for (auto &v : mesh.vertices)
+    for (auto &v : mesh.packedVertices)
     {
         mesh.minimum.x = (std::min)(mesh.minimum.x, v.x);
         mesh.maximum.x = (std::max)(mesh.maximum.x, v.x);
@@ -463,7 +781,7 @@ unsigned int ResourceAssets::RegisterStatic(ResourceMesh mesh)
         mesh.minimum.z = (std::min)(mesh.minimum.z, v.z);
         mesh.maximum.z = (std::max)(mesh.maximum.z, v.z);
         v.joints = {31, 31, 31, 31};
-        v.weights = {1, 0, 0, 0};
+        v.weights = {255, 0, 0, 0};
     }
     mesh.physicalSize = {mesh.maximum.x - mesh.minimum.x, mesh.maximum.y - mesh.minimum.y,
                          mesh.maximum.z - mesh.minimum.z};
@@ -587,6 +905,19 @@ Point ResourceAssets::SkinPoint(const ResourceVertex &vertex, const SkinMatrices
     {
         const float *m = matrices.data() + size_t(vertex.joints[i]) * 16;
         float w = vertex.weights[i];
+        result.x += (m[0] * vertex.x + m[4] * vertex.y + m[8] * vertex.z + m[12]) * w;
+        result.y += (m[1] * vertex.x + m[5] * vertex.y + m[9] * vertex.z + m[13]) * w;
+        result.z += (m[2] * vertex.x + m[6] * vertex.y + m[10] * vertex.z + m[14]) * w;
+    }
+    return result;
+}
+Point ResourceAssets::SkinPoint(const PackedResourceVertex &vertex, const SkinMatrices &matrices)
+{
+    Point result = {};
+    for (size_t i = 0; i < 4; ++i)
+    {
+        const float *m = matrices.data() + size_t(vertex.joints[i]) * 16;
+        const float w = float(vertex.weights[i]) / 255.f;
         result.x += (m[0] * vertex.x + m[4] * vertex.y + m[8] * vertex.z + m[12]) * w;
         result.y += (m[1] * vertex.x + m[5] * vertex.y + m[9] * vertex.z + m[13]) * w;
         result.z += (m[2] * vertex.x + m[6] * vertex.y + m[10] * vertex.z + m[14]) * w;

@@ -255,9 +255,12 @@ bool ArtSurface(Vector2 point, float height)
         Vector2 delta = Sub(point, placement.position);
         Vector2 local = {delta.x * std::cos(placement.yaw) + delta.y * std::sin(placement.yaw),
                          -delta.x * std::sin(placement.yaw) + delta.y * std::cos(placement.yaw)};
-        for (size_t i = 0; i < mesh.vertices.size(); i += 3)
+        const size_t idxCount = mesh.LodIndexCount();
+        for (size_t i = 0; i < idxCount; i += 3)
         {
-            const auto &a = mesh.vertices[i], &b = mesh.vertices[i + 1], &c = mesh.vertices[i + 2];
+            const auto a = models::ResourceAssets::TriangleVertex(mesh, i),
+                       b = models::ResourceAssets::TriangleVertex(mesh, i + 1),
+                       c = models::ResourceAssets::TriangleVertex(mesh, i + 2);
             if (a.nz < .7f || a.surface == 4 || a.r > .3f)
             {
                 continue;

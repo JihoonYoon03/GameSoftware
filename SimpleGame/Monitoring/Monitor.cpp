@@ -1488,13 +1488,14 @@ void ModelJson(std::ostream &out, const CatalogEntry &entry, const std::shared_p
         auto appendResource = [&](const CatalogResource &input) {
             const auto &resource = *input.mesh;
             const auto &matrices = input.matrices;
-            for (size_t triangle = 0; triangle < resource.vertices.size(); triangle += 3)
+            const size_t indexCount = resource.LodIndexCount();
+            for (size_t triangle = 0; triangle < indexCount; triangle += 3)
             {
                 if (triangle % (256 * 3) == 0)
                 {
                     CheckCatalogCancellation(cancel);
                 }
-                const auto &v = resource.vertices[triangle];
+                const auto v = models::ResourceAssets::TriangleVertex(resource, triangle);
                 if (v.visibility == 1)
                 {
                     continue;
@@ -1505,8 +1506,9 @@ void ModelJson(std::ostream &out, const CatalogEntry &entry, const std::shared_p
                 for (size_t j = 0; j < 3; ++j)
                 {
                     out << (j ? "," : "");
-                    PointJson(out,
-                              models::ResourceAssets::SkinPoint(resource.vertices[triangle + j], matrices));
+                    const auto tv =
+                        j == 0 ? v : models::ResourceAssets::TriangleVertex(resource, triangle + j);
+                    PointJson(out, models::ResourceAssets::SkinPoint(tv, matrices));
                 }
                 out << "]}";
                 firstPart = false;
@@ -1548,7 +1550,7 @@ void ModelJson(std::ostream &out, const CatalogEntry &entry, const std::shared_p
     {
         const auto &resource = *entry.resources.front().mesh;
         out << ",\"source\":" << Quote(resource.source + ".glb")
-            << ",\"triangles\":" << resource.vertices.size() / 3;
+            << ",\"triangles\":" << resource.TriangleCount();
         models::Point previewScale = {1, 1, 1};
         if (std::string(category) == "building")
         {

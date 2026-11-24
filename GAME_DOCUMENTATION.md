@@ -1,7 +1,7 @@
 # SimpleGame 게임 개발 통합 문서
 
 통합일: 2026-10-14  
-최종 진행 정리: 2026-11-23 · OpenGL 4.5 / 144+ FPS 렌더·시뮬레이션 최적화 및 CQ-01~08 구조 정비(52절) + 차세대 렌더링 최적화 기술 계획(R1~R4: EBO·정점압축·LOD·그림자 프록시·GPU 컬링/MDI·텍스처 배열) 및 규모별 폴리곤 상한 개정(53절) / 저장 스키마 12 호환 유지 / CQ-09~12 착수 대기
+최종 진행 정리: 2026-11-24 · OpenGL 4.5 / 144+ FPS 렌더·시뮬레이션 최적화 및 CQ-01~08 구조 정비(52절) + 차세대 렌더링 최적화 R1~R3 구현 완료(55절: v4 팩·EBO·36B 압축 정점·Mega-VBO/EBO MDI·화면 비율 LOD0~2·전용 그림자 프록시·원거리 스킨 완화) + GPT 실측 건물·PBR·지원/전환 클립·UI 통합(54절) / 저장 스키마 12 호환 유지 / Human v4 선택 통합·R4·CQ-09 대기
 
 현재 개발 계획 브랜치: `iss04_ContentQuality` · 초기 구조 기준: `iss01_actor_scene_render` · 범죄 시스템 변경 기준: `62b00b5` · 이전 도로 성능 비교 기준: `592ec4c` · 초기 기반: `41316a5`
 
@@ -99,7 +99,7 @@
 | 8 / CQ-08 | 수배 시스템 난이도 스케일링 | 1 | 플레이어의 실제 대응 능력과 경찰 AI가 정해진 CQ-05~07 이후에 조정해야 수치만 올리는 난이도를 피할 수 있다. | 사용자가 정한 단계별 난이도와 대응 원칙이 실제 플레이에서 구분되고, 추적·대응·해제 흐름이 납득 가능하다. | 정비 완료(52절) — 5단계 병과(순찰/기동/중무장/저격/대공요격)·1성 투항 벌금·5성 대공 3D 사격·티어별 도주 시간 반영 |
 | 9 / CQ-09 | 플레이어 거주지 고유 기능 | 6 | CQ-02~04의 진행/도시 구조와 CQ-05~08의 외부 활동을 바탕으로 돌아올 거점의 역할을 정한다. | 사용자가 지정한 거주지 기능이 바깥 활동과 연결되고 반복해서 방문할 이유를 만든다. 기능 종류는 아직 정하지 않는다. | 대기 |
 | 10 / CQ-10 | 빈 구역 콘텐츠·미니퀘스트 등 추가 | 10 | 안정된 지역·인물·행동·거점 체계를 재사용해 앞 단계의 확장성을 실제 콘텐츠로 검증한다. | 대상 빈 구역에 장소/인물/활동의 맥락이 있는 콘텐츠가 들어가고, 기존 진행과 충돌하지 않는다. 수량·의뢰 내용은 별도 확정한다. | 대기 |
-| 11 / CQ-11 | 모델 퀄리티 개선 및 차세대 렌더링 최적화(R1~R4) | 8 | 공간 용도·출입·전투/탑승 동작과 필요한 자산이 안정된 뒤 최종 모델 작업의 재제작을 줄인다. v4 파이프라인(EBO·정점 압축·LOD·그림자 프록시·GPU 컬링/MDI·PBR 텍스처 배열, 53절)을 선행/병행 구축해 상향된 폴리곤 상한을 목표 기기(RTX 3070 Ti Laptop 60fps / RAM 16GB)에서 방어한다. | R1~R4 렌더링 최적화 경로가 검증되고, 대상 모델의 형상·크기·재질·LOD0~2·그림자 프록시·가동/접촉 지점이 53절 규모별 상한과 아트 방향에 맞는다. 단순 폴리곤 증가를 완료 기준으로 삼지 않는다. | 대기 (53절 계획 확정) |
+| 11 / CQ-11 | 모델 퀄리티 개선 및 차세대 렌더링 최적화(R1~R4) | 8 | 공간 용도·출입·전투/탑승 동작과 필요한 자산이 안정된 뒤 최종 모델 작업의 재제작을 줄인다. v4 파이프라인(EBO·정점 압축·LOD·그림자 프록시·GPU 컬링/MDI·PBR 텍스처 배열, 53절)을 선행/병행 구축해 상향된 폴리곤 상한을 목표 기기(RTX 3070 Ti Laptop 60fps / RAM 16GB)에서 방어한다. | R1~R4 렌더링 최적화 경로가 검증되고, 대상 모델의 형상·크기·재질·LOD0~2·그림자 프록시·가동/접촉 지점이 53절 규모별 상한과 아트 방향에 맞는다. 단순 폴리곤 증가를 완료 기준으로 삼지 않는다. | R1~R3 구현 완료(55절) · Human v4 자산 선택 통합 및 R4 대기 |
 | 12 / CQ-12 | UI 배치·디자인·가독성 최종 구체화 | 7 | 앞 단계에서 확정된 정보와 조작 흐름을 기준으로 전체 UI의 위계와 일관성을 정리한다. | 대상 화면의 배치·디자인·정보 우선순위가 통일되고, 실제 장면/해상도에서 읽고 조작할 수 있다. | 대기 |
 
 #### 순서 운영 원칙
@@ -1284,6 +1284,29 @@ CQ-07을 A 이동·경로 안정성, B 감지·기억·역할별 판단, C 동�
 - **신규 UI 아이콘 14종 & `CURRENT_PLAY_UI` 반영 (`Hud.cpp`, `ui_manifest.json`):**
   - `ui_complete.png`(159 스프라이트)의 신규 `HUDIcons/Icons`(`stamina`, `carbine`, `ground_car`, `flight`, `landing`, `security`, `checkpoint`, `relay`)를 모두 연결했다 — 체력 바 하단 스태미너+회피 기준선, 펄스 카빈 아이콘·`전술 집중` 독립 라인·Q 휠 `Icons/carbine`, 차량/비행체 내구도 바·착륙 상태·`E` 안내·도움말 비행 조작, 수배 1성 투항/5성 대공 요격 경고·경고/보안 알림 아이콘, 행성 지도 `Icons/relay`·`Icons/destination` 범례·페이지네이션, 체크포인트/행성 선택 확장 패널(`840×620`)과 손실 없는 경로 페이지네이션을 반영했다.
 - **검증 (`build/opt-x64` Release x64):** `pack-resources.mjs` & `check-resource-pack.mjs`(230에셋, 1,017,096정점), `MovementTests`, `PlayerMobilityTests`, `WorldTests`(47,366), `WorldStreamingTests`(48,917), `NpcSupportTests`, `CivicTests`, `GameplayTests --city-facilities` / `--story-followups`, `RenderingTests --benchmark --glfw`(159 UI 스프라이트·14 실측 건물·20 신규 클립·16장면 전 구간 0/120 초과, `planet_surface` 1.101 ms / ~909 FPS, `planet_surface_security_5stars` 1.709 ms / ~585 FPS) 전부 통과.
+
+##### 55. 차세대 렌더링 최적화 R1~R3(v4 리소스 팩·EBO·36B 압축 정점·Mega-VBO/EBO MDI·LOD0~2·그림자 프록시·원거리 스킨 완화) 구현 (2026-11-24)
+
+**반영 범위:** 53절 로드맵의 R1(v4 리소스 팩·인덱스 버퍼·정점 압축), R2(화면 투영 기반 LOD0~2·전용 그림자 프록시·소형 프롭 컬링), R3(Mega-VBO/EBO 기반 `glMultiDrawElementsIndirect` 통합 드로우·원거리 스킨 평가 주기 완화)를 팩 파이프라인과 엔진 런타임에 구현했다.
+
+- **R1 — v4 리소스 팩 & 36B 압축 정점 + EBO (`tools/pack-resources.mjs`, `check-resource-pack.mjs`, `resource-pack-inputs.mjs`, `SimpleGame/ResourceAssets.h/.cpp`):**
+  - 스키마를 `game_resource_pack_v4`(`version = 4`)로 업그레이드하고, 기존 84 B 비인덱스 정점을 **36 B `PackedResourceVertex`**(`float3` 위치 12 B + `snorm16×2` 옥타헤드럴 법선 4 B + `fp16×2` UV0 4 B + `unorm8×4` RGBA 4 B + `u8×4` 팔레트/가시성/표면/플래그 4 B + `u8×4` 본 인덱스 4 B + `unorm8×4` 합 255 정규화 가중치 4 B)로 압축하고 중복 정점을 제거해 `uint16`/`uint32` EBO로 패킹했다.
+  - 런타임 팩 크기: **`93.5 MB → 36.77 MB` (-60.7%, 4단계 LOD·그림자 프록시 인덱스 및 241클립 포함)**. 고유 정점 `675,525개`, GPU 전체 정적 메시 업로드 `32.2 MB`.
+  - CPU 소비자(`Civic.cpp`, `Drawing.cpp`, `ModelLibrary.cpp`, `TransitLayout.cpp`, `Monitoring/Monitor.cpp`)를 v4 인덱스/압축 정점 접근자로 전환하고, `RegisterStatic()`도 자동 정점 압축·중복 제거·EBO 생성을 적용했다.
+- **R2 — 4단계 LOD0~2 · 전용 그림자 프록시 · 소형 프롭 컬링 (`tools/pack-resources.mjs`, `SimpleGame/Renderer.h/.cpp`):**
+  - `LOD0`은 원본 삼각형 100%(339,032삼각형)를 무손실 보존하고, 250삼각형 이상 자산(건물·차량·비행체·캐릭터·크리처·프롭·설비)에 대해 팔레트·표면·가시성·지배 본 경계를 보존하는 결정적 공간 클러스터링으로 `LOD1`(~48%)·`LOD2`(~22%)·`ShadowProxy`(~24%, 전체 그림자 삼각형 `339,032 → 87,658`, **-74.1%**)를 추가 VBO 메모리 증가 없이 기존 정점 인덱스로 생성했다.
+  - `Renderer::SubmitModel`에서 메시 바운드×스케일×`WorldCamera::zoom` 기반 화면 투영 비율로 `LOD0`(≥12%)·`LOD1`(5~12%)·`LOD2`(<5%)를 선택하고, 원경/고고도(`zoom < 0.75`)에서 7 px 미만 소형 정적 프롭을 컬링한다. 640×400 그림자 패스(`pass == 1`)는 전량 `ShadowProxy`로 제출한다.
+- **R3 — Mega-VBO/EBO `glMultiDrawElementsIndirect` (MDI) & 원거리 스킨 완화 (`SimpleGame/Renderer.cpp`):**
+  - `game-assets.bin`의 모든 정적 팩 에셋(230종)을 단일 **Mega-VBO + Mega-EBO**로 통합 업로드해 패스당 버퍼 바인딩 전환을 제거하고, OpenGL 4.3+/4.5 환경에서 모든 임포트 배치를 패스당 **단일 `glMultiDrawElementsIndirect` 호출**로 일괄 제출한다(`GL 3.3` 폴백 유지).
+  - GLSL 4.50/3.30 버텍스 셰이더에서 36 B 압축 정점(옥타헤드럴 법선 복원·`fp16` UV0·`u8` 스킨/색상)을 직접 디코딩하며, `LOD1`/`LOD2` 원거리 스킨 인스턴스는 애니메이션 위상을 30 Hz/15 Hz로 양자화해 `ResourcePoseSampler` 캐시 적중률을 높였다.
+- **검증 (`build/opt-x64` Release x64):**
+  - `pack-resources.mjs`, `check-resource-pack.mjs`, `tests/ResourcePipelineTests.mjs`, `ResourceAssetsTests`, `ResourceLoadingTests`, `RoadPlanTests`, `MovementTests`, `PlayerMobilityTests`, `CivicTests`, `WorldTests`(47,366), `WorldStreamingTests`(48,917), `GameplayTests --city-facilities` / `--story-followups` 전부 통과.
+  - 전체 GPU 시각·회귀 검사(`RenderingTests --glfw`), `RenderingTests --flight-stress --glfw`(1,800프레임 전 지역 고속 비행), `RenderingTests --benchmark --glfw`(16장면 전 구간 `0/120` 초과, GL 오류 0건) 전부 통과:
+    - `planet_surface`: 평균 **`1.026 ms`** (`p95 1.387 ms` / **~721 FPS**), 드로우 콜 `48.7`, 메인 `103,076`삼각형 대비 그림자 **`32,341`삼각형 (-68.6%)**
+    - `planet_surface_security_5stars`: 평균 **`1.664 ms`** (`p95 2.156 ms` / **~464 FPS**), 그림자 **`32,475`삼각형 (-68.7%)**
+    - `city_security_5stars`: 평균 **`1.291 ms`** (`p95 1.664 ms` / **~601 FPS**), 메인 `116,217`삼각형 대비 그림자 **`38,300`삼각형 (-67.0%)**
+    - 작업 집합 메모리(Working Set): 약 **`261 MB`**
+- **후속 선택 지점:** 신규 납품된 v4 인간 캐릭터 자산 2종([`HumanV4`](Resource/Documentation/HUMAN_REFERENCE_V4_ko.md) vs [`HumanSheet`](Resource/Documentation/HUMAN_DRAWING_ONLY_V4_ko.md) + 1024² PBR 9장) 중 실제 게임에 적용할 버전 선택 및 R4(공유 PBR 텍스처 배열 확장)·CQ-09(거주지 기능) 착수 대기.
 
 ### 전체 구조 검토와 반복 비용 리팩토링 — 2026-10-28
 

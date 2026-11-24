@@ -67,22 +67,22 @@ void TestModelsAndRig()
     {
         assert(model.resourceId && ModelFactory::ValidateModel(model));
         const auto &resource = ResourceAssets::Get(model.resourceId);
-        assert(resource.boneCount == 23 && resource.vertices.size() > 300);
+        assert(resource.boneCount == 23 && !resource.packedVertices.empty() && resource.LodIndexCount() > 300);
         auto standing = ModelRig::Pose(0, false);
         auto moving = ModelRig::Pose(2, true);
         SkinMatrices first, second;
         ResourceAssets::Sample(model.resourceId, &standing, first);
         ResourceAssets::Sample(model.resourceId, &moving, second);
         assert(first != second);
-        for (const auto &vertex : resource.vertices)
+        for (const auto &vertex : resource.packedVertices)
         {
-            float sum = 0;
+            unsigned sum = 0;
             for (size_t j = 0; j < 4; ++j)
             {
-                assert(vertex.joints[j] >= 0 && vertex.joints[j] <= 31);
+                assert(vertex.joints[j] <= 31);
                 sum += vertex.weights[j];
             }
-            assert(std::fabs(sum - 1) < .0001f);
+            assert(sum == 255);
             const auto p = ResourceAssets::SkinPoint(vertex, first);
             assert(std::isfinite(p.x) && std::isfinite(p.y) && std::isfinite(p.z));
         }
@@ -129,9 +129,9 @@ void TestHairAndBodyShape()
         const auto &male = ResourceAssets::Get(library.characters[role].resourceId);
         const auto &female = ResourceAssets::Get(library.femaleCharacters[role].resourceId);
         assert(male.name != female.name && male.boneCount == female.boneCount);
-        assert(male.vertices.size() != female.vertices.size() ||
-               std::memcmp(male.vertices.data(), female.vertices.data(),
-                           male.vertices.size() * sizeof(ResourceVertex)) != 0);
+        assert(male.packedVertices.size() != female.packedVertices.size() ||
+               std::memcmp(male.packedVertices.data(), female.packedVertices.data(),
+                           male.packedVertices.size() * sizeof(PackedResourceVertex)) != 0);
     }
 }
 void TestAnimationBlending()
@@ -377,9 +377,9 @@ void TestCityAndTravel()
         for (size_t car = 0; car < 4; ++car)
         {
             const auto &model = ResourceAssets::Get(library.vehicles[car].body.resourceId);
-            for (size_t j = 0; j < model.vertices.size(); j += 9)
+            for (size_t j = 0; j < model.packedVertices.size(); j += 3)
             {
-                const auto &vertex = model.vertices[j];
+                const auto &vertex = model.packedVertices[j];
                 auto v = transform.Apply({vertex.x, vertex.y, vertex.z});
                 float x = p.x + v.x, y = p.y + v.y;
                 for (const auto &b : world.buildings)
@@ -2294,7 +2294,7 @@ void BenchmarkQuality(const std::filesystem::path &output)
         }
         bool npcShotsObserved = false;
         std::vector<double> samples;
-        double draws = 0, instanced = 0, triangles = 0;
+        double draws = 0, instanced = 0, triangles = 0, shadowTris = 0, lod1 = 0, lod2 = 0, culled = 0;
         for (int frame = 0; frame < 144; ++frame)
         {
             const auto previousDraws = profiling::ReadCounter(profiling::Counter::DrawCalls);
@@ -2361,6 +2361,10 @@ void BenchmarkQuality(const std::filesystem::path &output)
                 const auto &stats = GameRenderer::Get().Backend().GetFrameStatistics();
                 instanced += stats.instancedDraws;
                 triangles += stats.triangles;
+                shadowTris += stats.shadowTriangles;
+                lod1 += stats.lod1Instances;
+                lod2 += stats.lod2Instances;
+                culled += stats.culledObjects;
             }
         }
         if (scenario == 6)
@@ -2382,10 +2386,15 @@ void BenchmarkQuality(const std::filesystem::path &output)
                << ",\"max_ms\":" << samples.back() << ",\"over_budget_frames\":" << overBudget
                << ",\"sample_frames\":" << samples.size() << ",\"draw_calls\":" << draws / samples.size()
                << ",\"instanced_draws\":" << instanced / samples.size()
-               << ",\"triangles\":" << triangles / samples.size() << "}";
+               << ",\"triangles\":" << triangles / samples.size()
+               << ",\"shadow_triangles\":" << shadowTris / samples.size()
+               << ",\"lod1_instances\":" << lod1 / samples.size()
+               << ",\"lod2_instances\":" << lod2 / samples.size()
+               << ",\"culled_objects\":" << culled / samples.size() << "}";
         std::cout << names[scenario] << ": average " << average << " ms; p95 " << p95 << " ms (" << 1000 / p95
-                  << " fps); p99 " << p99 << " ms; over 16.67 ms " << overBudget << "/" << samples.size()
-                  << std::endl;
+                  << " fps); p99 " << p99 << " ms; draws " << draws / samples.size()
+                  << "; tris " << triangles / samples.size() << " (shadow " << shadowTris / samples.size()
+                  << "); over 16.67 ms " << overBudget << "/" << samples.size() << std::endl;
     }
     report << "]}";
 }
