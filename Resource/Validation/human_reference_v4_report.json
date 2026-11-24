@@ -1,0 +1,86 @@
+{
+  "bones_verified": 23,
+  "max_inverse_bind_delta_m": 0.0,
+  "meshes_verified": 1978,
+  "stages": {
+    "LOD0": {
+      "part_count": 659,
+      "max_part_triangles": 432
+    },
+    "LOD1": {
+      "part_count": 653,
+      "max_part_triangles": 200
+    },
+    "LOD2": {
+      "part_count": 601,
+      "max_part_triangles": 132
+    },
+    "ShadowProxy": {
+      "part_count": 65,
+      "max_part_triangles": 132
+    }
+  },
+  "character_assemblies_verified": 11,
+  "outfit_body_combinations": 54,
+  "remodeled_equipment": 32,
+  "max_equipment_bounds_center_delta_m": 0.009425,
+  "assembly_triangles_with_optional_parts": {
+    "LOD0": [
+      4568,
+      5766
+    ],
+    "LOD1": [
+      2080,
+      2922
+    ],
+    "LOD2": [
+      937,
+      1205
+    ],
+    "ShadowProxy": [
+      794,
+      1018
+    ]
+  },
+  "embedded_shared_maps": 6,
+  "blender": {
+    "source_detail_parts": 659,
+    "reimported_meshes": 1978,
+    "motion_checks": {
+      "HUMAN_7H__Walk": {
+        "frames_sampled": [
+          0,
+          15,
+          30
+        ],
+        "max_displacement_m": 0.323868,
+        "parts": 24
+      },
+      "HUMAN_7H__Aim_Base": {
+        "frames_sampled": [
+          0,
+          1
+        ],
+        "max_displacement_m": 0.891457,
+        "parts": 24
+      },
+      "HUMAN_7H__Ride_Base": {
+        "frames_sampled": [
+          0,
+          1
+        ],
+        "max_displacement_m": 0.596281,
+        "parts": 22
+      },
+      "HUMAN_7H__Dodge_Back_L": {
+        "frames_sampled": [
+          0,
+          6,
+          12
+        ],
+        "max_displacement_m": 0.416549,
+        "parts": 23
+      }
+    }
+  }
+}

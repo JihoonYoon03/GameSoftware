@@ -122,10 +122,10 @@ void main() {
     vec3 nrm = decodeOctNormal(vertexOctNormal);
     int boneBase = int(floor(instanceRotation.w + 0.5));
     if (boneBase >= 0) {
-        mat4 skin = boneMatrices[boneBase + int(vertexJoints.x + 0.5)] * vertexWeights.x
-                  + boneMatrices[boneBase + int(vertexJoints.y + 0.5)] * vertexWeights.y
-                  + boneMatrices[boneBase + int(vertexJoints.z + 0.5)] * vertexWeights.z
-                  + boneMatrices[boneBase + int(vertexJoints.w + 0.5)] * vertexWeights.w;
+        mat4 skin = boneMatrices[boneBase + int(vertexJoints.x + 0.5)] * vertexWeights.x;
+        if (vertexWeights.y > 0.0) skin += boneMatrices[boneBase + int(vertexJoints.y + 0.5)] * vertexWeights.y;
+        if (vertexWeights.z > 0.0) skin += boneMatrices[boneBase + int(vertexJoints.z + 0.5)] * vertexWeights.z;
+        if (vertexWeights.w > 0.0) skin += boneMatrices[boneBase + int(vertexJoints.w + 0.5)] * vertexWeights.w;
         pos = (skin * vec4(vertexPosition, 1.0)).xyz;
         nrm = mat3(skin) * nrm;
     }
@@ -161,8 +161,12 @@ void main() {
         depth = -7000.0;
     }
     gl_Position = mvp * vec4(screen, depth, 1.0);
-    bool instArmed = instanceScale.w > 0.5;
-    if (((imported != 0 ? j == 1 : j == 10) && !instArmed) || (shadowPass != 0 && finish.w < 0.5)) {
+    int visFlags = int(floor(instanceScale.w + 0.5));
+    bool instArmed = (visFlags & 1) != 0;
+    bool hiddenSlot = (j == 2 && (visFlags & 2) != 0) ||
+                      (j == 3 && (visFlags & 4) != 0) ||
+                      (j == 4 && (visFlags & 8) != 0);
+    if (((imported != 0 ? j == 1 : j == 10) && !instArmed) || hiddenSlot || (shadowPass != 0 && finish.w < 0.5)) {
         gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
     }
 }
@@ -220,10 +224,10 @@ void main() {
     vec3 pos = vertexPosition;
     vec3 nrm = decodeOctNormal(vertexOctNormal);
     if (useBones != 0) {
-        mat4 skin = bones[int(vertexJoints.x + 0.5)] * vertexWeights.x
-                  + bones[int(vertexJoints.y + 0.5)] * vertexWeights.y
-                  + bones[int(vertexJoints.z + 0.5)] * vertexWeights.z
-                  + bones[int(vertexJoints.w + 0.5)] * vertexWeights.w;
+        mat4 skin = bones[min(31, int(vertexJoints.x + 0.5))] * vertexWeights.x;
+        if (vertexWeights.y > 0.0) skin += bones[min(31, int(vertexJoints.y + 0.5))] * vertexWeights.y;
+        if (vertexWeights.z > 0.0) skin += bones[min(31, int(vertexJoints.z + 0.5))] * vertexWeights.z;
+        if (vertexWeights.w > 0.0) skin += bones[min(31, int(vertexJoints.w + 0.5))] * vertexWeights.w;
         pos = (skin * vec4(vertexPosition, 1.0)).xyz;
         nrm = mat3(skin) * nrm;
     }
@@ -259,7 +263,11 @@ void main() {
         depth = -7000.0;
     }
     gl_Position = mvp * vec4(screen, depth, 1.0);
-    if (((imported != 0 ? j == 1 : j == 10) && armed == 0) || (shadowPass != 0 && finish.w < 0.5)) {
+    int visFlags = int(floor(instanceScale.w + 0.5));
+    bool hiddenSlot = (j == 2 && (visFlags & 2) != 0) ||
+                      (j == 3 && (visFlags & 4) != 0) ||
+                      (j == 4 && (visFlags & 8) != 0);
+    if (((imported != 0 ? j == 1 : j == 10) && armed == 0) || hiddenSlot || (shadowPass != 0 && finish.w < 0.5)) {
         gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
     }
 }
@@ -287,8 +295,12 @@ uniform int shadowPass;
 uniform sampler2DArray pbrBaseArray;
 uniform sampler2DArray pbrNormalArray;
 uniform sampler2DArray pbrOrmArray;
+uniform sampler2DArray pbrDetailBaseArray;
+uniform sampler2DArray pbrDetailNormalArray;
+uniform sampler2DArray pbrDetailOrmArray;
 uniform sampler2D damageMask;
 uniform int hasPbr;
+uniform int hasPbrDetail;
 uniform int hasDamageMask;
 in vec3 normal;
 in vec3 localPosition;
@@ -332,19 +344,45 @@ void main() {
     float ao = 1.0;
     vec2 triUv = (abs(n.z) > 0.72) ? localPosition.xy : ((abs(n.x) > abs(n.y)) ? localPosition.yz : localPosition.xz);
     triUv *= 0.45;
-    if (hasPbr != 0 && (surface < 2.5 || (surface > 4.5 && surface < 6.5))) {
-        float layer = (surface > 0.5 && surface < 1.5) ? 1.0 : (surface > 1.5 && surface < 2.5) ? 2.0 : 0.0;
-        vec3 pbrBase = texture(pbrBaseArray, vec3(triUv, layer)).rgb;
-        vec3 pbrNrm = texture(pbrNormalArray, vec3(triUv, layer)).xyz * 2.0 - 1.0;
-        vec3 pbrOrm = texture(pbrOrmArray, vec3(triUv, layer)).rgb;
+    vec2 sampleUv = hasAuthoredUv > 0.5 ? meshUv : triUv;
+    bool useDetail = hasPbrDetail != 0 && (surface > 4.5);
+    bool usePilot = hasPbr != 0 && !useDetail && (surface < 2.5 || (surface > 4.5 && surface < 6.5));
+    if (useDetail || usePilot) {
+        vec3 pbrBase = vec3(1.0);
+        vec3 pbrNrm = vec3(0.0, 0.0, 1.0);
+        vec3 pbrOrm = vec3(1.0, rough, metal);
+        float normalStrength = 0.32;
+        float grainStrength = 0.24;
+        float aoStrength = 0.35;
+        if (useDetail) {
+            // Detail 512^2 array: 0=SkinMicrograin, 3=Road_Basalt(Rubber), 4=Rock_Mine(Stone).
+            float detailLayer = surface > 6.5 ? 0.0 : (surface > 5.5 ? 4.0 : 3.0);
+            vec2 dUv = surface > 6.5 ? sampleUv * 1.8 : sampleUv;
+            pbrBase = texture(pbrDetailBaseArray, vec3(dUv, detailLayer)).rgb;
+            pbrNrm = texture(pbrDetailNormalArray, vec3(dUv, detailLayer)).xyz * 2.0 - 1.0;
+            pbrOrm = texture(pbrDetailOrmArray, vec3(dUv, detailLayer)).rgb;
+            if (surface > 6.5) {
+                normalStrength = 0.20;
+                grainStrength = 0.14;
+                aoStrength = 0.24;
+            }
+        } else {
+            // Pilot 1024^2 array: 0=CastPaving, 1=TechnicalWeave(Fabric), 2=BrushedSteel(Metal), 3=PaintedAlloy.
+            float layer = (surface > 0.5 && surface < 1.5) ? 1.0
+                        : (surface > 1.5 && surface < 2.5) ? 2.0
+                        : (metal > 0.35 ? 3.0 : 0.0);
+            pbrBase = texture(pbrBaseArray, vec3(sampleUv, layer)).rgb;
+            pbrNrm = texture(pbrNormalArray, vec3(sampleUv, layer)).xyz * 2.0 - 1.0;
+            pbrOrm = texture(pbrOrmArray, vec3(sampleUv, layer)).rgb;
+        }
         vec3 upRef = abs(n.z) > 0.9 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 0.0, 1.0);
         vec3 tangent = normalize(cross(upRef, n));
         vec3 bitangent = cross(n, tangent);
         vec3 detailN = normalize(tangent * pbrNrm.x + bitangent * pbrNrm.y + n * max(0.25, pbrNrm.z));
-        n = normalize(mix(n, detailN, 0.32));
+        n = normalize(mix(n, detailN, normalStrength));
         float grain = dot(pbrBase, vec3(0.299, 0.587, 0.114));
-        baseColor *= mix(1.0, clamp(0.78 + grain * 0.42, 0.80, 1.18), 0.24);
-        ao = mix(1.0, pbrOrm.r, 0.35);
+        baseColor *= mix(1.0, clamp(0.78 + grain * 0.42, 0.80, 1.18), grainStrength);
+        ao = mix(1.0, pbrOrm.r, aoStrength);
         rough = clamp(mix(rough, pbrOrm.g, 0.35), 0.08, 0.98);
         metal = clamp(mix(metal, pbrOrm.b, 0.25), 0.0, 1.0);
     }
@@ -511,9 +549,10 @@ void main() {
 }
 )GLSL";
 
-bool IsIdentitySkin(const models::SkinMatrices &m)
+bool IsIdentitySkin(const models::SkinMatrices &m, size_t count = models::kMaxSkinBones)
 {
-    for (size_t j = 0; j < 32; ++j)
+    const size_t limit = (std::min)(count, size_t(models::kMaxSkinBones));
+    for (size_t j = 0; j < limit; ++j)
     {
         for (size_t r = 0; r < 4; ++r)
         {
@@ -587,6 +626,7 @@ struct Mesh::Data
     bool staticResource = false;
     bool identityBindPose = true;
     bool holographic = false;
+    unsigned int boneCount = 0;
     models::SkinMatrices bindPose = {};
 };
 Mesh::Mesh() : data(new Data())
@@ -752,7 +792,8 @@ struct Renderer::MeshData
         GLint mvp = -1, cartoon = -1, shadowPass = -1, shadowJitter = -1, hologramTime = -1;
         GLint bones = -1, useBones = -1, armed = -1, imported = -1;
         GLint pbrBaseArray = -1, pbrNormalArray = -1, pbrOrmArray = -1, damageMask = -1;
-        GLint hasPbr = -1, hasDamageMask = -1;
+        GLint pbrDetailBaseArray = -1, pbrDetailNormalArray = -1, pbrDetailOrmArray = -1;
+        GLint hasPbr = -1, hasPbrDetail = -1, hasDamageMask = -1;
         void Initialize(GLuint program)
         {
             mvp = glGetUniformLocation(program, "mvp");
@@ -767,8 +808,12 @@ struct Renderer::MeshData
             pbrBaseArray = glGetUniformLocation(program, "pbrBaseArray");
             pbrNormalArray = glGetUniformLocation(program, "pbrNormalArray");
             pbrOrmArray = glGetUniformLocation(program, "pbrOrmArray");
+            pbrDetailBaseArray = glGetUniformLocation(program, "pbrDetailBaseArray");
+            pbrDetailNormalArray = glGetUniformLocation(program, "pbrDetailNormalArray");
+            pbrDetailOrmArray = glGetUniformLocation(program, "pbrDetailOrmArray");
             damageMask = glGetUniformLocation(program, "damageMask");
             hasPbr = glGetUniformLocation(program, "hasPbr");
+            hasPbrDetail = glGetUniformLocation(program, "hasPbrDetail");
             hasDamageMask = glGetUniformLocation(program, "hasDamageMask");
         }
     } uniforms;
@@ -904,7 +949,8 @@ struct Renderer::MeshData
 
 bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, models::Point scale,
                            const models::Transform3D &transform, float depth, const models::Palette &palette,
-                           const models::CharacterPose *pose, float shadowGroundZ, float damage)
+                           const models::CharacterPose *pose, float shadowGroundZ, float damage,
+                           int *sharedSkinSlot, std::uint8_t visibilityMask)
 {
     if (!m_meshes->program)
     {
@@ -924,7 +970,7 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
         geometry.ground = model.ground;
         const auto &library = models::ModelLibrary::Get();
         geometry.imported = model.resourceId != 0;
-        for (size_t joint = 0; joint < 32; ++joint)
+        for (size_t joint = 0; joint < models::kMaxSkinBones; ++joint)
         {
             for (size_t axis = 0; axis < 4; ++axis)
             {
@@ -934,11 +980,12 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
         if (model.resourceId)
         {
             const auto &resource = models::ResourceAssets::Get(model.resourceId);
+            geometry.boneCount = resource.boneCount;
             geometry.staticResource = resource.boneCount == 0;
             if (!geometry.staticResource)
             {
                 models::ResourceAssets::Sample(model.resourceId, nullptr, geometry.bindPose);
-                geometry.identityBindPose = IsIdentitySkin(geometry.bindPose);
+                geometry.identityBindPose = IsIdentitySkin(geometry.bindPose, geometry.boneCount);
             }
             else
             {
@@ -961,6 +1008,7 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
         }
         else
         {
+            geometry.boneCount = unsigned(models::Joint::Count);
             geometry.staticResource = false;
             geometry.identityBindPose = true;
         }
@@ -1267,38 +1315,54 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
         }
         if (posed)
         {
-            models::SkinMatrices bones;
-            if (!model.resourceId)
+            if (sharedSkinSlot && *sharedSkinSlot >= 0)
             {
-                bones = mesh->data->bindPose;
-                for (size_t j = 0; j < 11; ++j)
-                {
-                    models::Point o = {}, x = {1, 0, 0}, y = {0, 1, 0}, z = {0, 0, 1};
-                    o = samplePose->Apply(o, models::Joint(j));
-                    x = samplePose->Apply(x, models::Joint(j));
-                    y = samplePose->Apply(y, models::Joint(j));
-                    z = samplePose->Apply(z, models::Joint(j));
-                    float matrix[] = {x.x - o.x, x.y - o.y, x.z - o.z, 0, y.x - o.x, y.y - o.y, y.z - o.z, 0,
-                                      z.x - o.x, z.y - o.y, z.z - o.z, 0, o.x,       o.y,       o.z,       1};
-                    std::copy(matrix, matrix + 16, bones.begin() + j * 16);
-                }
+                boneBaseAttr = float(*sharedSkinSlot);
+                ++data.statistics.skinSlotReuses;
             }
             else
             {
-                data.poses.Sample(model.resourceId, *samplePose, bones);
+                models::SkinMatrices bones;
+                if (!model.resourceId)
+                {
+                    bones = mesh->data->bindPose;
+                    for (size_t j = 0; j < 11; ++j)
+                    {
+                        models::Point o = {}, x = {1, 0, 0}, y = {0, 1, 0}, z = {0, 0, 1};
+                        o = samplePose->Apply(o, models::Joint(j));
+                        x = samplePose->Apply(x, models::Joint(j));
+                        y = samplePose->Apply(y, models::Joint(j));
+                        z = samplePose->Apply(z, models::Joint(j));
+                        float matrix[] = {x.x - o.x, x.y - o.y, x.z - o.z, 0, y.x - o.x, y.y - o.y, y.z - o.z, 0,
+                                          z.x - o.x, z.y - o.y, z.z - o.z, 0, o.x,       o.y,       o.z,       1};
+                        std::copy(matrix, matrix + 16, bones.begin() + j * 16);
+                    }
+                }
+                else
+                {
+                    data.poses.Sample(model.resourceId, *samplePose, bones);
+                }
+                const size_t pushBones = (std::max)(
+                    size_t(1), (std::min)(size_t(mesh->data->boneCount), size_t(models::kMaxSkinBones)));
+                const size_t baseMatrix = data.boneStream.size() / 16;
+                data.boneStream.insert(data.boneStream.end(), bones.begin(), bones.begin() + pushBones * 16);
+                boneBaseAttr = float(baseMatrix);
+                if (sharedSkinSlot)
+                {
+                    *sharedSkinSlot = int(baseMatrix);
+                }
             }
-            const size_t baseMatrix = data.boneStream.size() / 16;
-            data.boneStream.insert(data.boneStream.end(), bones.begin(), bones.end());
-            boneBaseAttr = float(baseMatrix);
         }
         else if (!mesh->data->identityBindPose)
         {
             auto &batch = data.batches[batchIndex];
             if (batch.bindPoseSlot < 0)
             {
+                const size_t pushBones = (std::max)(
+                    size_t(1), (std::min)(size_t(mesh->data->boneCount), size_t(models::kMaxSkinBones)));
                 batch.bindPoseSlot = int(data.boneStream.size() / 16);
                 data.boneStream.insert(data.boneStream.end(), mesh->data->bindPose.begin(),
-                                       mesh->data->bindPose.end());
+                                       mesh->data->bindPose.begin() + pushBones * 16);
             }
             boneBaseAttr = float(batch.bindPoseSlot);
         }
@@ -1367,9 +1431,10 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
     }
 
     const float clampedDamage = std::clamp(damage, 0.f, 1.f);
+    const unsigned int visFlags = (armed ? 1u : 0u) | (unsigned(visibilityMask & 0x7u) << 1u);
     MeshData::Instance instance = {
         {screen.x, screen.y, depth, mesh->data->holographic ? 1.f : 0.f},
-        {scale.x, scale.y, scale.z, armed ? 1.f : 0.f},
+        {scale.x, scale.y, scale.z, float(visFlags)},
         {transform.yaw, transform.pitch, transform.roll, boneBaseAttr},
         {},
         {},
@@ -1449,6 +1514,11 @@ const rendering::FrameStatistics &Renderer::GetFrameStatistics() const
 {
     return m_meshes->statistics;
 }
+const PbrTextureBudget &Renderer::GetPbrTextureBudget() const
+{
+    static const PbrTextureBudget empty{};
+    return m_assets ? m_assets->PbrBudget() : empty;
+}
 
 void Renderer::DrawModels()
 {
@@ -1514,10 +1584,15 @@ void Renderer::DrawModels()
         glUniform2f(data.uniforms.shadowJitter, 0, 0);
         glUniform1f(data.uniforms.hologramTime, holoTime);
         const bool pbrReady = shadow == 0 && m_assets && m_assets->HasPbrTextures();
+        const bool pbrDetailReady = shadow == 0 && m_assets && m_assets->HasPbrDetailTextures();
         const bool dmgReady = shadow == 0 && m_assets && m_assets->HasDamageMask();
         if (data.uniforms.hasPbr >= 0)
         {
             glUniform1i(data.uniforms.hasPbr, pbrReady ? 1 : 0);
+        }
+        if (data.uniforms.hasPbrDetail >= 0)
+        {
+            glUniform1i(data.uniforms.hasPbrDetail, pbrDetailReady ? 1 : 0);
         }
         if (data.uniforms.hasDamageMask >= 0)
         {
@@ -1541,7 +1616,19 @@ void Renderer::DrawModels()
             glBindTexture(GL_TEXTURE_2D, m_assets->DamageMaskTexture());
             glUniform1i(data.uniforms.damageMask, 4);
         }
-        if (pbrReady || dmgReady)
+        if (pbrDetailReady)
+        {
+            glActiveTexture(GL_TEXTURE5);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, m_assets->PbrDetailBaseArray());
+            glUniform1i(data.uniforms.pbrDetailBaseArray, 5);
+            glActiveTexture(GL_TEXTURE6);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, m_assets->PbrDetailNormalArray());
+            glUniform1i(data.uniforms.pbrDetailNormalArray, 6);
+            glActiveTexture(GL_TEXTURE7);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, m_assets->PbrDetailOrmArray());
+            glUniform1i(data.uniforms.pbrDetailOrmArray, 7);
+        }
+        if (pbrReady || pbrDetailReady || dmgReady)
         {
             glActiveTexture(GL_TEXTURE0);
         }

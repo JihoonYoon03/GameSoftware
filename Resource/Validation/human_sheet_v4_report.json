@@ -1,0 +1,91 @@
+{
+  "skinning_rig_bones": 23,
+  "max_inverse_bind_delta_m": 0.0,
+  "body_masters_per_stage": 2,
+  "assemblies": 17,
+  "part_layers": {
+    "LOD0": {
+      "Body": 2,
+      "Clothing": 13,
+      "SkinAttachment": 6,
+      "SocketAttachment": 119
+    },
+    "LOD1": {
+      "Body": 2,
+      "Clothing": 13,
+      "SkinAttachment": 6,
+      "SocketAttachment": 119
+    },
+    "LOD2": {
+      "Body": 2,
+      "Clothing": 13,
+      "SkinAttachment": 6,
+      "SocketAttachment": 47
+    },
+    "ShadowProxy": {
+      "Body": 2,
+      "SkinAttachment": 6,
+      "SocketAttachment": 37,
+      "Clothing": 3
+    }
+  },
+  "assembled_max_triangles": {
+    "LOD0": 13486,
+    "LOD1": 4874,
+    "LOD2": 1949,
+    "ShadowProxy": 1248
+  },
+  "embedded_maps": 13,
+  "shared_accessories": 9,
+  "blender": {
+    "connected_body_vertices": {
+      "Human_Male_MasterBody": 2331,
+      "Human_Female_MasterBody": 2331
+    },
+    "body_cross_sections_mm": {
+      "Human_Male_MasterBody": {
+        "Heavy": {
+          "shoulders": 550.1,
+          "knee_gap": 119.91,
+          "foot_gap": 124.0
+        },
+        "Basis": {
+          "shoulders": 497.78,
+          "knee_gap": 104.33,
+          "foot_gap": 99.05
+        },
+        "Lean": {
+          "shoulders": 454.13,
+          "knee_gap": 87.54,
+          "foot_gap": 72.5
+        }
+      },
+      "Human_Female_MasterBody": {
+        "Heavy": {
+          "shoulders": 472.42,
+          "knee_gap": 122.45,
+          "foot_gap": 124.0
+        },
+        "Basis": {
+          "shoulders": 434.64,
+          "knee_gap": 107.76,
+          "foot_gap": 101.05
+        },
+        "Lean": {
+          "shoulders": 399.7,
+          "knee_gap": 90.62,
+          "foot_gap": 74.87
+        }
+      }
+    },
+    "reimported_meshes": 396,
+    "animated_pose_delta_degrees": {
+      "IDLE": 54.2,
+      "WALK": 59.04,
+      "RUN": 102.73,
+      "AIM": 94.8,
+      "DODGE": 100.55,
+      "SUPPORT": 132.62
+    }
+  }
+}

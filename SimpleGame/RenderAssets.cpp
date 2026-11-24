@@ -569,7 +569,10 @@ struct RenderAssets::Data
     static constexpr int kTextAtlasWidth = 2048;
     static constexpr int kTextAtlasHeight = 1024;
     GLuint uiAtlas = 0;
-    GLuint pbrBaseArray = 0, pbrNormalArray = 0, pbrOrmArray = 0, damageMaskTex = 0;
+    GLuint pbrBaseArray = 0, pbrNormalArray = 0, pbrOrmArray = 0;
+    GLuint pbrDetailBaseArray = 0, pbrDetailNormalArray = 0, pbrDetailOrmArray = 0;
+    GLuint damageMaskTex = 0;
+    PbrTextureBudget pbrBudget;
     int uiWidth = 2048, uiHeight = 0;
     std::unordered_map<std::string, Sprite> sprites;
     std::filesystem::path exportRoot;
@@ -597,6 +600,18 @@ struct RenderAssets::Data
         if (pbrOrmArray)
         {
             glDeleteTextures(1, &pbrOrmArray);
+        }
+        if (pbrDetailBaseArray)
+        {
+            glDeleteTextures(1, &pbrDetailBaseArray);
+        }
+        if (pbrDetailNormalArray)
+        {
+            glDeleteTextures(1, &pbrDetailNormalArray);
+        }
+        if (pbrDetailOrmArray)
+        {
+            glDeleteTextures(1, &pbrDetailOrmArray);
         }
         if (damageMaskTex)
         {
@@ -720,27 +735,79 @@ RenderAssets::RenderAssets() : m_data(new Data())
                                  layer.At("sha256").Text(),
                          "backdrop PNG hash " + file);
         }
-        // GFX-01 / GFX-08: Load optional shared PBR pilot texture arrays (1024^2 x 4) and vehicle damage mask (256^2).
-        const fs::path resourceRoot = uiRoot.parent_path().parent_path();
-        const fs::path pilotDir = resourceRoot / "Export" / "Textures" / "Pilot";
-        const fs::path damagePath =
-            resourceRoot / "Export" / "Textures" / "SharedDamage" / "Vehicle_DamageMask.png";
-        constexpr const char *kPilotSets[4] = {"Pilot_CastPaving", "Pilot_TechnicalWeave", "Pilot_BrushedSteel",
-                                               "Pilot_PaintedAlloy"};
-        auto uploadArray = [&](const char *suffix, bool srgb) -> GLuint {
-            constexpr int kSize = 1024, kLayers = 4;
-            std::vector<unsigned char> merged;
-            merged.reserve(size_t(kSize) * kSize * 4 * kLayers);
-            for (int layer = 0; layer < kLayers; ++layer)
+        // R4 / GFX-01 / GFX-08: Load immutable shared PBR texture arrays (1024^2 pilot x 4 + 512^2 skin/world x 9)
+        // and vehicle damage mask (256^2) under an explicit VRAM residency budget.
+        // Locate Resource/Export/Textures independently of staged Resource/UI/Export so build-tree runs find PBR assets.
+        fs::path resourceRoot = uiRoot.parent_path().parent_path();
+        {
+            auto searchDir = fs::path(module).parent_path();
+            for (int level = 0; level < 7 && !searchDir.empty(); ++level)
             {
-                const fs::path p = pilotDir / (std::string(kPilotSets[layer]) + suffix);
+                const auto candidateRoot = searchDir / L"Resource";
                 std::error_code ec;
+                if (fs::is_directory(candidateRoot / L"Export" / L"Textures" / L"Pilot", ec))
+                {
+                    resourceRoot = candidateRoot;
+                    break;
+                }
+                const auto parent = searchDir.parent_path();
+                if (parent == searchDir)
+                {
+                    break;
+                }
+                searchDir = parent;
+            }
+        }
+        const fs::path texturesDir = resourceRoot / "Export" / "Textures";
+        const fs::path pilotDir = texturesDir / "Pilot";
+        const fs::path materialPilotDir = resourceRoot / "Export" / "MaterialPilot" / "Textures";
+        const fs::path damagePath = texturesDir / "SharedDamage" / "Vehicle_DamageMask.png";
+        float anisotropy = 1.f;
+        if (GLEW_EXT_texture_filter_anisotropic)
+        {
+            GLfloat maxAniso = 1.f;
+            glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAniso);
+            anisotropy = std::clamp(float(maxAniso), 1.f, 8.f);
+        }
+        m_data->pbrBudget.anisotropy = anisotropy;
+        auto mipLevels = [](int size) {
+            int levels = 1;
+            for (int s = size; s > 1; s >>= 1)
+            {
+                ++levels;
+            }
+            return levels;
+        };
+        auto arrayMipBytes = [&](int size, int layers) {
+            size_t total = 0;
+            const int levels = mipLevels(size);
+            for (int level = 0, w = size; level < levels; ++level, w = (std::max)(1, w >> 1))
+            {
+                total += size_t(w) * size_t(w) * 4u * size_t(layers);
+            }
+            return total;
+        };
+        auto uploadArray = [&](const std::vector<fs::path> &prefixes, const char *suffix, int size, bool srgb,
+                               bool &usedImmutable, size_t &bytesOut) -> GLuint {
+            const int layers = int(prefixes.size());
+            if (layers <= 0)
+            {
+                return 0;
+            }
+            const size_t estBytes = arrayMipBytes(size, layers);
+            if (m_data->pbrBudget.residentBytes + estBytes > m_data->pbrBudget.budgetBytes)
+            {
+                return 0;
+            }
+            std::error_code ec;
+            for (int layer = 0; layer < layers; ++layer)
+            {
+                fs::path p = prefixes[size_t(layer)];
+                p += suffix;
                 if (!fs::is_regular_file(p, ec))
                 {
                     return 0;
                 }
-                auto px = DecodePng(factory.Get(), p, kSize, kSize);
-                merged.insert(merged.end(), px.begin(), px.end());
             }
             GLuint tex = 0;
             glGenTextures(1, &tex);
@@ -749,24 +816,87 @@ RenderAssets::RenderAssets() : m_data(new Data())
             glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
-            glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, srgb ? GL_SRGB8_ALPHA8 : GL_RGBA8, kSize, kSize, kLayers, 0,
-                         GL_RGBA, GL_UNSIGNED_BYTE, merged.data());
+            if (anisotropy > 1.f)
+            {
+                glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
+            }
+            const GLenum internalFormat = srgb ? GL_SRGB8_ALPHA8 : GL_RGBA8;
+            const int levels = mipLevels(size);
+            if (glTexStorage3D != nullptr)
+            {
+                glTexStorage3D(GL_TEXTURE_2D_ARRAY, levels, internalFormat, size, size, layers);
+                usedImmutable = true;
+            }
+            else
+            {
+                glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, internalFormat, size, size, layers, 0, GL_RGBA,
+                             GL_UNSIGNED_BYTE, nullptr);
+            }
+            for (int layer = 0; layer < layers; ++layer)
+            {
+                fs::path p = prefixes[size_t(layer)];
+                p += suffix;
+                auto px = DecodePng(factory.Get(), p, size, size);
+                glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, layer, size, size, 1, GL_RGBA, GL_UNSIGNED_BYTE,
+                                px.data());
+            }
             glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
             glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+            bytesOut = estBytes;
+            profiling::Count(profiling::Counter::TextureUploadBytes, estBytes);
             return tex;
         };
         try
         {
             if (maximumTextureSize >= 1024 && GLEW_VERSION_3_0)
             {
-                GLuint baseArr = uploadArray("_BaseColor.png", false);
-                GLuint nrmArr = baseArr ? uploadArray("_Normal.png", false) : 0;
-                GLuint ormArr = nrmArr ? uploadArray("_ORM.png", false) : 0;
+                const std::vector<fs::path> pilotPrefixes = {
+                    pilotDir / "Pilot_CastPaving", pilotDir / "Pilot_TechnicalWeave",
+                    pilotDir / "Pilot_BrushedSteel", pilotDir / "Pilot_PaintedAlloy"};
+                bool imm0 = false, imm1 = false, imm2 = false;
+                size_t b0 = 0, b1 = 0, b2 = 0;
+                GLuint baseArr = uploadArray(pilotPrefixes, "_BaseColor.png", 1024, false, imm0, b0);
+                GLuint nrmArr = baseArr ? uploadArray(pilotPrefixes, "_Normal.png", 1024, false, imm1, b1) : 0;
+                GLuint ormArr = nrmArr ? uploadArray(pilotPrefixes, "_ORM.png", 1024, false, imm2, b2) : 0;
                 if (baseArr && nrmArr && ormArr)
                 {
                     m_data->pbrBaseArray = baseArr;
                     m_data->pbrNormalArray = nrmArr;
                     m_data->pbrOrmArray = ormArr;
+                    m_data->pbrBudget.pilotLayers = unsigned(pilotPrefixes.size());
+                    m_data->pbrBudget.residentBytes += b0 + b1 + b2;
+                    m_data->pbrBudget.immutableStorage = imm0 && imm1 && imm2;
+                }
+                else
+                {
+                    if (baseArr) glDeleteTextures(1, &baseArr);
+                    if (nrmArr) glDeleteTextures(1, &nrmArr);
+                    if (ormArr) glDeleteTextures(1, &ormArr);
+                }
+            }
+            if (maximumTextureSize >= 512 && GLEW_VERSION_3_0)
+            {
+                // Layer 0: SkinMicrograin; 1..8: world/building/road/mine/ruin/terrain PBR sets (all 512^2).
+                const std::vector<fs::path> detailPrefixes = {
+                    materialPilotDir / "SkinMicrograin", texturesDir / "Habitat_Concrete",
+                    texturesDir / "Habitat_Panels",      texturesDir / "Road_Basalt",
+                    texturesDir / "Rock_Mine",           texturesDir / "Ruin_Obsidian",
+                    texturesDir / "Terrain_AlienGrass",  texturesDir / "Terrain_Dunes",
+                    texturesDir / "Terrain_Regolith"};
+                bool imm0 = false, imm1 = false, imm2 = false;
+                size_t b0 = 0, b1 = 0, b2 = 0;
+                GLuint baseArr = uploadArray(detailPrefixes, "_BaseColor.png", 512, false, imm0, b0);
+                GLuint nrmArr = baseArr ? uploadArray(detailPrefixes, "_Normal.png", 512, false, imm1, b1) : 0;
+                GLuint ormArr = nrmArr ? uploadArray(detailPrefixes, "_ORM.png", 512, false, imm2, b2) : 0;
+                if (baseArr && nrmArr && ormArr)
+                {
+                    m_data->pbrDetailBaseArray = baseArr;
+                    m_data->pbrDetailNormalArray = nrmArr;
+                    m_data->pbrDetailOrmArray = ormArr;
+                    m_data->pbrBudget.detailLayers = unsigned(detailPrefixes.size());
+                    m_data->pbrBudget.residentBytes += b0 + b1 + b2;
+                    m_data->pbrBudget.immutableStorage =
+                        m_data->pbrBudget.immutableStorage && imm0 && imm1 && imm2;
                 }
                 else
                 {
@@ -786,9 +916,20 @@ RenderAssets::RenderAssets() : m_data(new Data())
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, px.data());
+                if (glTexStorage2D != nullptr)
+                {
+                    glTexStorage2D(GL_TEXTURE_2D, mipLevels(256), GL_RGBA8, 256, 256);
+                    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 256, 256, GL_RGBA, GL_UNSIGNED_BYTE, px.data());
+                }
+                else
+                {
+                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, px.data());
+                }
                 glGenerateMipmap(GL_TEXTURE_2D);
                 glBindTexture(GL_TEXTURE_2D, 0);
+                const size_t dmgBytes = arrayMipBytes(256, 1);
+                m_data->pbrBudget.residentBytes += dmgBytes;
+                profiling::Count(profiling::Counter::TextureUploadBytes, dmgBytes);
                 m_data->damageMaskTex = tex;
             }
         }
@@ -1213,6 +1354,18 @@ unsigned int RenderAssets::PbrOrmArray() const
 {
     return m_data->pbrOrmArray;
 }
+unsigned int RenderAssets::PbrDetailBaseArray() const
+{
+    return m_data->pbrDetailBaseArray;
+}
+unsigned int RenderAssets::PbrDetailNormalArray() const
+{
+    return m_data->pbrDetailNormalArray;
+}
+unsigned int RenderAssets::PbrDetailOrmArray() const
+{
+    return m_data->pbrDetailOrmArray;
+}
 unsigned int RenderAssets::DamageMaskTexture() const
 {
     return m_data->damageMaskTex;
@@ -1221,9 +1374,18 @@ bool RenderAssets::HasPbrTextures() const
 {
     return m_data->pbrBaseArray != 0 && m_data->pbrNormalArray != 0 && m_data->pbrOrmArray != 0;
 }
+bool RenderAssets::HasPbrDetailTextures() const
+{
+    return m_data->pbrDetailBaseArray != 0 && m_data->pbrDetailNormalArray != 0 &&
+           m_data->pbrDetailOrmArray != 0;
+}
 bool RenderAssets::HasDamageMask() const
 {
     return m_data->damageMaskTex != 0;
+}
+const PbrTextureBudget &RenderAssets::PbrBudget() const
+{
+    return m_data->pbrBudget;
 }
 bool RenderAssets::DrawBackdropLayer(const std::string &name, bool cartoon, int renderWidth)
 {

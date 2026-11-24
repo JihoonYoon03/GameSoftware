@@ -42,7 +42,6 @@ struct SubmeshRange
     std::uint32_t firstIndex = 0;
     std::uint32_t indexCount = 0;
 };
-using SkinMatrices = std::array<float, 32 * 16>;
 struct ResourceClip
 {
     std::string name;
@@ -111,6 +110,7 @@ class ResourceAssets
     static void Sample(unsigned int id, const CharacterPose *pose, SkinMatrices &matrices);
     static Point Muzzle(const CharacterPose &pose);
     static Point HandR(unsigned int id, const CharacterPose &pose);
+    static Point Socket(unsigned int id, const CharacterPose &pose, RigSocket socket);
     static Point SkinPoint(const ResourceVertex &vertex, const SkinMatrices &matrices);
     static Point SkinPoint(const PackedResourceVertex &vertex, const SkinMatrices &matrices);
 };

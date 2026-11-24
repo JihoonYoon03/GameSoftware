@@ -6,6 +6,25 @@
 
 namespace models
 {
+constexpr unsigned int kMaxSkinBones = 72;
+using SkinMatrices = std::array<float, kMaxSkinBones * 16>;
+enum class RigPreset : std::uint8_t
+{
+    LegacyHuman7H,
+    Mixamo,
+    Custom
+};
+enum class RigSocket : std::uint8_t
+{
+    Head,
+    Chest,
+    Back,
+    Pelvis,
+    HandR,
+    HandL,
+    Muzzle,
+    Count
+};
 using AnimationMatrix = std::array<float, 16>;
 struct AnimationRotation
 {
@@ -48,8 +67,34 @@ struct AnimationRig
     std::vector<AnimationSample> samples;
     std::vector<std::array<unsigned int, 3>> triangles;
     std::vector<SolePoint> soles;
+    RigPreset preset = RigPreset::LegacyHuman7H;
     int idle = -1, walk = -1, run = -1, aim = -1, fire = -1, melee = -1, muzzle = -1, handR = -1;
+    int head = -1, chest = -1, back = -1, pelvis = -1, spine = -1, handL = -1;
+    std::array<float, kMaxSkinBones> upperBodyMask = {};
+    std::array<float, kMaxSkinBones> upperBodyFullMask = {};
     int carryIdle = -1, carryWalk = -1, carryRun = -1, reload = -1;
+    int SocketBone(RigSocket socket) const
+    {
+        switch (socket)
+        {
+        case RigSocket::Head:
+            return head;
+        case RigSocket::Chest:
+            return chest;
+        case RigSocket::Back:
+            return back;
+        case RigSocket::Pelvis:
+            return pelvis;
+        case RigSocket::HandR:
+            return handR;
+        case RigSocket::HandL:
+            return handL;
+        case RigSocket::Muzzle:
+            return muzzle >= 0 ? muzzle : handR;
+        default:
+            return -1;
+        }
+    }
     std::array<int, 16> dodgeClips = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
     // CQ-07C2 shared support bank (8 clips): Treat(Enter/Loop/Exit), Inspect(Enter/Loop/Exit), Carry(Idle/Walk).
     std::array<int, 8> supportClips = {-1, -1, -1, -1, -1, -1, -1, -1};
@@ -77,13 +122,14 @@ struct ResourceClip;
 class LayeredAnimation
 {
   public:
+    static void ClassifyRig(AnimationRig &rig);
     static void BindDodgeClip(AnimationRig &rig, const std::string &name, int index);
     static void BindSupportClip(AnimationRig &rig, const std::string &name, int index);
     static void BindTransitionClip(AnimationRig &rig, const std::string &name, int index);
     static void Prepare(ResourceClip &clip, const AnimationRig &rig);
     // Prepare only graph-referenced clips; keep every authored matrix clip available.
     static void PrepareGraph(std::vector<ResourceClip> &clips, const AnimationRig &rig);
-    static void Sample(const ResourceMesh &mesh, const CharacterPose &pose, std::array<float, 512> &skin);
+    static void Sample(const ResourceMesh &mesh, const CharacterPose &pose, SkinMatrices &skin);
 };
 // ============================================================================
 // CharacterAnimation — simulation-owned phase, smoothed velocity and aim transitions

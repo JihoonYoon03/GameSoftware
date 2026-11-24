@@ -296,10 +296,12 @@ void Drawing::DrawInteractionMarker(Vector2 worldPosition, const std::string &la
 // ============================================================================
 void Drawing::DrawModel3D(const models::Model &model, Vector2 screen, models::Point scale,
                           const models::Transform3D &transform, float depth, const models::Palette &palette,
-                          const models::CharacterPose *pose, float shadowGroundZ, float damage)
+                          const models::CharacterPose *pose, float shadowGroundZ, float damage,
+                          int *sharedSkinSlot, std::uint8_t visibilityMask)
 {
     if (GameRenderer::Get().Backend().SubmitModel(model, {screen.x, screen.y}, scale, transform, depth,
-                                                  palette, pose, shadowGroundZ, damage))
+                                                  palette, pose, shadowGroundZ, damage, sharedSkinSlot,
+                                                  visibilityMask))
     {
         return;
     }
@@ -531,14 +533,15 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
         rotation.position.z = .12f;
     }
     const auto &characterModel = models::ModelLibrary::Character(type, gender);
+    int skinSlot = -1;
     DrawModel3D(characterModel, screen,
                 {models::WorldScale::characterScale, models::WorldScale::characterScale,
                  models::WorldScale::characterScale},
-                rotation, (position.x + position.y) * 36, palette, &pose);
+                rotation, (position.x + position.y) * 36, palette, &pose, 0, 0, &skinSlot);
     DrawHair(screen,
              {models::WorldScale::characterScale, models::WorldScale::characterScale,
               models::WorldScale::characterScale},
-             rotation, (position.x + position.y) * 36, pose, type, gender, hair);
+             rotation, (position.x + position.y) * 36, pose, type, gender, hair, &skinSlot);
     if (carryingSupply && characterModel.resourceId)
     {
         // CQ-07C2 carry prop contract: attach Interior_Med_Kit to animated hand.R socket.
@@ -561,7 +564,7 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
 }
 void Drawing::DrawHair(Vector2 screen, models::Point scale, const models::Transform3D &rotation, float depth,
                        const models::CharacterPose &pose, models::CharacterType type, models::Gender gender,
-                       models::HairStyle hair)
+                       models::HairStyle hair, int *sharedSkinSlot)
 {
     if (type == models::CharacterType::HeavyCombat)
     {
@@ -578,7 +581,8 @@ void Drawing::DrawHair(Vector2 screen, models::Point scale, const models::Transf
         scale.x *= .94f;
         scale.y *= .91f;
     }
-    DrawModel3D(models::ModelLibrary::Hair(hair, covered), screen, scale, rotation, depth, palette, &pose);
+    DrawModel3D(models::ModelLibrary::Hair(hair, covered), screen, scale, rotation, depth, palette, &pose, 0,
+                0, sharedSkinSlot);
 }
 void Drawing::DrawCharacterAppearance(Vector2 screen, ColorRGBA coat, models::CharacterType type, int frame,
                                       int direction)
@@ -589,9 +593,11 @@ void Drawing::DrawCharacterAppearance(Vector2 screen, ColorRGBA coat, models::Ch
     models::Transform3D rotation;
     constexpr float yaw[] = {.78539816f, 2.3561945f, -.78539816f, -2.3561945f};
     rotation.yaw = yaw[(std::max)(0, (std::min)(3, direction))];
+    int skinSlot = -1;
     DrawModel3D(models::ModelLibrary::Get().characters.at(size_t(type)), screen, {1, 1, 1}, rotation, 0,
-                palette, &pose);
-    DrawHair(screen, {1, 1, 1}, rotation, 0, pose, type, models::Gender::Male, models::HairStyle::SidePart);
+                palette, &pose, 0, 0, &skinSlot);
+    DrawHair(screen, {1, 1, 1}, rotation, 0, pose, type, models::Gender::Male, models::HairStyle::SidePart,
+             &skinSlot);
 }
 namespace
 {

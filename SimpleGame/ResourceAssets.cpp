@@ -243,7 +243,7 @@ struct Store
         size_t animationClips = 0;
         for (unsigned bank = 0; bank < bankCount; ++bank)
         {
-            unsigned bones = reader.Count(31), clipCount = reader.Count(256);
+            unsigned bones = reader.Count(kMaxSkinBones - 1), clipCount = reader.Count(256);
             if (!bones || !clipCount)
             {
                 throw std::runtime_error("Invalid resource animation bank");
@@ -275,6 +275,7 @@ struct Store
                     rig->handR = int(j);
                 }
             }
+            LayeredAnimation::ClassifyRig(*rig);
             unsigned sampleCount = reader.Count(128);
             for (unsigned j = 0; j < sampleCount; ++j)
             {
@@ -398,7 +399,7 @@ struct Store
             {
                 throw std::runtime_error("Missing required character animation");
             }
-            if (bones == 23)
+            if (bones == 23 || rig->preset == RigPreset::Mixamo)
             {
                 LayeredAnimation::PrepareGraph(*clips, *rig);
             }
@@ -420,7 +421,7 @@ struct Store
             const auto uniqueVertexCount = reader.Count(2000000);
             const auto totalIndexCount = reader.Count(6000000);
             const auto indexBytes = reader.Count(4);
-            mesh.boneCount = reader.Count(31);
+            mesh.boneCount = reader.Count(kMaxSkinBones - 1);
             const auto bank = reader.Count(bankCount);
             if (uniqueVertexCount == 0 || totalIndexCount == 0 || totalIndexCount % 3 != 0 ||
                 (indexBytes != 2 && indexBytes != 4) ||
@@ -466,7 +467,7 @@ struct Store
                 for (size_t j = 0; j < 4; ++j)
                 {
                     const unsigned joint = vertex.joints[j];
-                    if (joint > 31 || (joint >= mesh.boneCount && joint != 31))
+                    if (joint >= kMaxSkinBones || (joint >= mesh.boneCount && joint != 31 && joint != kMaxSkinBones - 1))
                     {
                         throw std::runtime_error("Invalid resource skin binding");
                     }
@@ -510,9 +511,9 @@ struct Store
         }
         profiling::Count(profiling::Counter::DiskCacheHits);
         std::printf("{\"event\":\"resource_pack_loaded\",\"schema\":\"v4\",\"asset_count\":%zu,"
-                    "\"triangles\":%zu,\"unique_vertices\":%zu,\"skin_palette_limit\":32,"
+                    "\"triangles\":%zu,\"unique_vertices\":%zu,\"skin_palette_limit\":%u,"
                     "\"animation_clips\":%zu,\"pack_path\":\"%s\"}\n",
-                    meshes.size(), lod0Triangles, uniqueVerticesTotal, animationClips,
+                    meshes.size(), lod0Triangles, uniqueVerticesTotal, kMaxSkinBones, animationClips,
                     packPath.generic_u8string().c_str());
     }
 };
@@ -800,7 +801,7 @@ void ResourceAssets::Bind(Model &model, const std::string &name)
 void ResourceAssets::Sample(unsigned int id, const CharacterPose *pose, SkinMatrices &matrices)
 {
     matrices.fill(0);
-    for (size_t joint = 0; joint < 32; ++joint)
+    for (size_t joint = 0; joint < kMaxSkinBones; ++joint)
     {
         for (size_t axis = 0; axis < 4; ++axis)
         {
@@ -808,7 +809,9 @@ void ResourceAssets::Sample(unsigned int id, const CharacterPose *pose, SkinMatr
         }
     }
     const auto &mesh = Get(id);
-    if (pose && mesh.boneCount == 23 && mesh.rig && !pose->riding)
+    const bool layeredRig = mesh.rig && (mesh.boneCount == 23 || mesh.rig->preset == RigPreset::Mixamo) &&
+                            mesh.rig->idle >= 0 && mesh.rig->walk >= 0 && mesh.rig->run >= 0;
+    if (pose && layeredRig && !pose->riding)
     {
         LayeredAnimation::Sample(mesh, *pose, matrices);
         return;
@@ -818,7 +821,7 @@ void ResourceAssets::Sample(unsigned int id, const CharacterPose *pose, SkinMatr
     {
         return;
     }
-    const size_t size = mesh.boneCount * 16;
+    const size_t size = (std::min)(size_t(mesh.boneCount), size_t(kMaxSkinBones)) * 16;
     std::copy_n(base.clip->matrices.data() + size * base.frame, size, matrices.begin());
 }
 Point ResourceAssets::Muzzle(const CharacterPose &pose)
@@ -827,34 +830,56 @@ Point ResourceAssets::Muzzle(const CharacterPose &pose)
     const auto &mesh = Get(id);
     if (mesh.rig && mesh.rig->muzzle >= 0 && !pose.riding)
     {
-        SkinMatrices matrices;
-        Sample(id, &pose, matrices);
-        AnimationMatrix skin;
-        std::copy_n(matrices.begin() + mesh.rig->muzzle * 16, 16, skin.begin());
-        auto world = AnimationMath::Multiply(skin, mesh.rig->bind[size_t(mesh.rig->muzzle)]);
-        return {world[12], world[13], world[14]};
+        return Socket(id, pose, RigSocket::Muzzle);
     }
     auto selection = Select(Get(id), &pose, true);
     return selection.clip ? selection.clip->muzzles[selection.frame] : Point{.5f, 0, .8f};
 }
-Point ResourceAssets::HandR(unsigned int id, const CharacterPose &pose)
+Point ResourceAssets::Socket(unsigned int id, const CharacterPose &pose, RigSocket socket)
 {
     const auto &mesh = Get(id);
-    if (mesh.rig && mesh.rig->handR >= 0 && !pose.riding)
+    if (mesh.rig && !pose.riding)
     {
-        SkinMatrices matrices;
-        Sample(id, &pose, matrices);
-        AnimationMatrix skin;
-        std::copy_n(matrices.begin() + mesh.rig->handR * 16, 16, skin.begin());
-        auto world = AnimationMath::Multiply(skin, mesh.rig->bind[size_t(mesh.rig->handR)]);
-        return {world[12], world[13], world[14]};
+        const int bone = mesh.rig->SocketBone(socket);
+        if (bone >= 0 && size_t(bone) < mesh.rig->bind.size() && size_t(bone) < kMaxSkinBones)
+        {
+            SkinMatrices matrices;
+            Sample(id, &pose, matrices);
+            AnimationMatrix skin;
+            std::copy_n(matrices.begin() + size_t(bone) * 16, 16, skin.begin());
+            auto world = AnimationMath::Multiply(skin, mesh.rig->bind[size_t(bone)]);
+            return {world[12], world[13], world[14]};
+        }
     }
-    return {.22f, -.18f, .72f};
+    switch (socket)
+    {
+    case RigSocket::Head:
+        return {0.f, 0.f, 1.15f};
+    case RigSocket::Chest:
+        return {.08f, 0.f, .92f};
+    case RigSocket::Back:
+        return {-.14f, 0.f, .90f};
+    case RigSocket::Pelvis:
+        return {0.f, 0.f, .64f};
+    case RigSocket::HandL:
+        return {.22f, .18f, .72f};
+    case RigSocket::Muzzle:
+        return {.5f, 0.f, .8f};
+    case RigSocket::HandR:
+    default:
+        return {.22f, -.18f, .72f};
+    }
+}
+Point ResourceAssets::HandR(unsigned int id, const CharacterPose &pose)
+{
+    return Socket(id, pose, RigSocket::HandR);
 }
 void ResourcePoseSampler::Sample(unsigned int id, const CharacterPose &pose, SkinMatrices &matrices)
 {
     const auto &mesh = ResourceAssets::Get(id);
-    if (mesh.boneCount != 23 || !mesh.rig || pose.riding)
+    const bool layeredRig = mesh.rig && (mesh.boneCount == 23 || mesh.rig->preset == RigPreset::Mixamo) &&
+                            mesh.rig->idle >= 0 && mesh.rig->walk >= 0 && mesh.rig->run >= 0;
+    if (!layeredRig || pose.riding)
     {
         ResourceAssets::Sample(id, &pose, matrices);
         return;

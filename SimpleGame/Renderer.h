@@ -28,7 +28,8 @@ class Mesh
 struct FrameStatistics
 {
     unsigned int objects = 0, triangles = 0, shadowTriangles = 0, drawCalls = 0, instancedDraws = 0,
-                 shadowDraws = 0, lod1Instances = 0, lod2Instances = 0, culledObjects = 0;
+                 shadowDraws = 0, lod1Instances = 0, lod2Instances = 0, culledObjects = 0,
+                 skinSlotReuses = 0;
 };
 } // namespace rendering
 
@@ -44,6 +45,7 @@ enum class SurfaceMaterial
     Metal,
     Glass
 };
+struct PbrTextureBudget;
 class RenderAssets;
 
 // ============================================================================
@@ -100,7 +102,8 @@ class Renderer
     void DrawSolidRect(float x, float y, float z, float size, float r, float g, float b, float a);
     bool SubmitModel(const models::Model &model, RenderPoint screen, models::Point scale,
                      const models::Transform3D &transform, float depth, const models::Palette &palette,
-                     const models::CharacterPose *pose, float shadowGroundZ = 0, float damage = 0);
+                     const models::CharacterPose *pose, float shadowGroundZ = 0, float damage = 0,
+                     int *sharedSkinSlot = nullptr, std::uint8_t visibilityMask = 0);
     void BeginModels();
     void EndModels();
     // Call between model passes on the GL thread, before a streamed Model is destroyed/reused.
@@ -109,6 +112,7 @@ class Renderer
     bool DeferOverlay(std::function<void()> draw);
     bool DrawMineDarkness();
     const rendering::FrameStatistics &GetFrameStatistics() const;
+    const PbrTextureBudget &GetPbrTextureBudget() const;
 
   private:
     void CreatePostProcessing();

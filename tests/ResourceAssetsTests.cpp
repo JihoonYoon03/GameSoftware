@@ -5,6 +5,127 @@
 #include <iostream>
 #include <stdexcept>
 
+namespace
+{
+void TestMixamoRigAndSockets()
+{
+    using namespace models;
+    static_assert(kMaxSkinBones == 72, "Skin palette must hold full 65-bone Mixamo rigs + extra sockets");
+    assert(SkinMatrices{}.size() == size_t(kMaxSkinBones) * 16);
+
+    // 1) Synthetic full 65-bone Mixamo skeleton hierarchy (standard mixamorig: prefix)
+    AnimationRig mixamo;
+    auto addBone = [&](const char *name, int parent) {
+        const int idx = int(mixamo.names.size());
+        mixamo.names.emplace_back(name);
+        mixamo.parents.push_back(parent);
+        return idx;
+    };
+    const int hips = addBone("mixamorig:Hips", -1);
+    const int spine = addBone("mixamorig:Spine", hips);
+    const int spine1 = addBone("mixamorig:Spine1", spine);
+    const int spine2 = addBone("mixamorig:Spine2", spine1);
+    const int neck = addBone("mixamorig:Neck", spine2);
+    const int head = addBone("mixamorig:Head", neck);
+    const int headTop = addBone("mixamorig:HeadTop_End", head);
+    (void)headTop;
+    const int lShoulder = addBone("mixamorig:LeftShoulder", spine2);
+    const int lArm = addBone("mixamorig:LeftArm", lShoulder);
+    const int lForeArm = addBone("mixamorig:LeftForeArm", lArm);
+    const int lHand = addBone("mixamorig:LeftHand", lForeArm);
+    for (const char *finger : {"Thumb", "Index", "Middle", "Ring", "Pinky"})
+    {
+        int prev = lHand;
+        for (int seg = 1; seg <= 4; ++seg)
+        {
+            prev = addBone((std::string("mixamorig:LeftHand") + finger + std::to_string(seg)).c_str(), prev);
+        }
+    }
+    const int rShoulder = addBone("mixamorig:RightShoulder", spine2);
+    const int rArm = addBone("mixamorig:RightArm", rShoulder);
+    const int rForeArm = addBone("mixamorig:RightForeArm", rArm);
+    const int rHand = addBone("mixamorig:RightHand", rForeArm);
+    int rIndexTip = rHand;
+    for (const char *finger : {"Thumb", "Index", "Middle", "Ring", "Pinky"})
+    {
+        int prev = rHand;
+        for (int seg = 1; seg <= 4; ++seg)
+        {
+            prev = addBone((std::string("mixamorig:RightHand") + finger + std::to_string(seg)).c_str(), prev);
+            if (std::string(finger) == "Index" && seg == 4)
+            {
+                rIndexTip = prev;
+            }
+        }
+    }
+    const int lUpLeg = addBone("mixamorig:LeftUpLeg", hips);
+    const int lLeg = addBone("mixamorig:LeftLeg", lUpLeg);
+    const int lFoot = addBone("mixamorig:LeftFoot", lLeg);
+    const int lToe = addBone("mixamorig:LeftToeBase", lFoot);
+    const int rUpLeg = addBone("mixamorig:RightUpLeg", hips);
+    const int rLeg = addBone("mixamorig:RightLeg", rUpLeg);
+    const int rFoot = addBone("mixamorig:RightFoot", rLeg);
+    const int rToe = addBone("mixamorig:RightToeBase", rFoot);
+    assert(mixamo.names.size() == 63);
+    assert(mixamo.names.size() < kMaxSkinBones);
+
+    LayeredAnimation::ClassifyRig(mixamo);
+    assert(mixamo.preset == RigPreset::Mixamo);
+    assert(mixamo.SocketBone(RigSocket::Pelvis) == hips);
+    assert(mixamo.spine == spine);
+    assert(mixamo.SocketBone(RigSocket::Chest) == spine2);
+    assert(mixamo.SocketBone(RigSocket::Back) == spine1);
+    assert(mixamo.SocketBone(RigSocket::Head) == head);
+    assert(mixamo.SocketBone(RigSocket::HandL) == lHand);
+    assert(mixamo.SocketBone(RigSocket::HandR) == rHand);
+    assert(mixamo.SocketBone(RigSocket::Muzzle) == rHand); // Falls back to HandR when no dedicated Muzzle bone exists.
+
+    // Upper-body masks must spare pelvis and legs, ramp across Spine -> Spine1 -> Spine2, and cover arms/hands/fingers.
+    for (int lower : {hips, lUpLeg, lLeg, lFoot, lToe, rUpLeg, rLeg, rFoot, rToe})
+    {
+        assert(mixamo.upperBodyMask[size_t(lower)] == 0.f);
+        assert(mixamo.upperBodyFullMask[size_t(lower)] == 0.f);
+    }
+    assert(std::fabs(mixamo.upperBodyMask[size_t(spine)] - 0.35f) < 0.0001f);
+    assert(std::fabs(mixamo.upperBodyMask[size_t(spine1)] - 0.75f) < 0.0001f);
+    assert(std::fabs(mixamo.upperBodyFullMask[size_t(spine)] - 1.f) < 0.0001f);
+    assert(std::fabs(mixamo.upperBodyFullMask[size_t(spine1)] - 1.f) < 0.0001f);
+    for (int upper : {spine2, neck, head, lShoulder, lHand, rShoulder, rHand, rIndexTip})
+    {
+        assert(std::fabs(mixamo.upperBodyMask[size_t(upper)] - 1.f) < 0.0001f);
+        assert(std::fabs(mixamo.upperBodyFullMask[size_t(upper)] - 1.f) < 0.0001f);
+    }
+
+    // 2) Legacy 23-bone HUMAN_7H character asset must keep LegacyHuman7H classification, exact legacy masks, and valid sockets.
+    const auto explorerId = ResourceAssets::Find("character/Male/Explorer");
+    const auto &explorer = ResourceAssets::Get(explorerId);
+    assert(explorer.rig && explorer.rig->preset == RigPreset::LegacyHuman7H);
+    const auto &legacy = *explorer.rig;
+    assert(legacy.SocketBone(RigSocket::Pelvis) >= 0);
+    assert(legacy.SocketBone(RigSocket::Chest) >= 0);
+    assert(legacy.SocketBone(RigSocket::Back) >= 0);
+    assert(legacy.SocketBone(RigSocket::Head) >= 0);
+    assert(legacy.SocketBone(RigSocket::HandR) >= 0);
+    assert(legacy.SocketBone(RigSocket::HandL) >= 0);
+    assert(legacy.SocketBone(RigSocket::Muzzle) >= 0);
+    for (size_t i = 0; i < 23; ++i)
+    {
+        const float expected = (i < 2 || i >= 17) ? 0.f : (i == 2 ? 0.35f : (i == 3 ? 0.75f : 1.f));
+        assert(std::fabs(legacy.upperBodyMask[i] - expected) < 0.0001f);
+    }
+    CharacterPose pose{};
+    for (unsigned s = 0; s < unsigned(RigSocket::Count); ++s)
+    {
+        const auto pos = ResourceAssets::Socket(explorerId, pose, RigSocket(s));
+        assert(std::isfinite(pos.x) && std::isfinite(pos.y) && std::isfinite(pos.z));
+    }
+    const auto headPos = ResourceAssets::Socket(explorerId, pose, RigSocket::Head);
+    const auto chestPos = ResourceAssets::Socket(explorerId, pose, RigSocket::Chest);
+    const auto pelvisPos = ResourceAssets::Socket(explorerId, pose, RigSocket::Pelvis);
+    assert(headPos.z > chestPos.z && chestPos.z > pelvisPos.z);
+}
+} // namespace
+
 // Link the production resource/animation core; no window or graphics context is needed.
 int main()
 {
@@ -91,5 +212,6 @@ int main()
         rejected = true;
     }
     assert(rejected);
-    std::cout << "Resource asset loading and animation regression checks passed.\n";
+    TestMixamoRigAndSockets();
+    std::cout << "Resource asset loading, Mixamo rig/socket and animation regression checks passed.\n";
 }

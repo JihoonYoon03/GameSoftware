@@ -10,7 +10,32 @@ namespace models
 {
 namespace
 {
-using PoseBuffer = std::array<BonePose, 32>;
+using PoseBuffer = std::array<BonePose, kMaxSkinBones>;
+std::string CanonicalBoneName(const std::string &raw)
+{
+    std::string s;
+    s.reserve(raw.size());
+    for (unsigned char ch : raw)
+    {
+        if (ch >= 'A' && ch <= 'Z')
+        {
+            s.push_back(char(ch - 'A' + 'a'));
+        }
+        else
+        {
+            s.push_back(char(ch));
+        }
+    }
+    if (s.compare(0, 10, "mixamorig:") == 0 || s.compare(0, 10, "mixamorig_") == 0)
+    {
+        s.erase(0, 10);
+    }
+    else if (s.compare(0, 9, "mixamorig") == 0 && s.size() > 9)
+    {
+        s.erase(0, 9);
+    }
+    return s;
+}
 float Dot(AnimationRotation a, AnimationRotation b)
 {
     return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
@@ -38,9 +63,9 @@ float Smooth(float x)
     x = std::clamp(x, 0.f, 1.f);
     return x * x * (3 - 2 * x);
 }
-void Globals(const AnimationRig &rig, const PoseBuffer &local, std::array<AnimationMatrix, 32> &global)
+void Globals(const AnimationRig &rig, const PoseBuffer &local, std::array<AnimationMatrix, kMaxSkinBones> &global)
 {
-    for (size_t j = 0; j < rig.parents.size(); ++j)
+    for (size_t j = 0; j < rig.parents.size() && j < kMaxSkinBones; ++j)
     {
         auto m = AnimationMath::Matrix(local[j]);
         global[j] = rig.parents[j] < 0 ? m : AnimationMath::Multiply(global[size_t(rig.parents[j])], m);
@@ -81,8 +106,8 @@ void UpperLayer(const ResourceMesh &mesh, PoseBuffer &base, const PoseBuffer &la
         return;
     }
     const auto &rig = *mesh.rig;
-    const size_t count = rig.parents.size();
-    std::array<AnimationRotation, 32> baseWorldRot{}, layerWorldRot{}, resultWorldRot{};
+    const size_t count = (std::min)(rig.parents.size(), size_t(kMaxSkinBones));
+    std::array<AnimationRotation, kMaxSkinBones> baseWorldRot{}, layerWorldRot{}, resultWorldRot{};
     for (size_t j = 0; j < count; ++j)
     {
         const int parent = rig.parents[j];
@@ -90,8 +115,7 @@ void UpperLayer(const ResourceMesh &mesh, PoseBuffer &base, const PoseBuffer &la
         const auto lq = Normalized(layer[j].rotation);
         baseWorldRot[j] = parent < 0 ? bq : Product(baseWorldRot[size_t(parent)], bq);
         layerWorldRot[j] = parent < 0 ? lq : Product(layerWorldRot[size_t(parent)], lq);
-        // HUMAN_7H spine through muzzle: branch mask leaves root, pelvis and six leg bones intact.
-        const float mask = j < 2 || j >= 17 ? 0.f : fullMask ? 1.f : j == 2 ? .35f : j == 3 ? .75f : 1.f;
+        const float mask = fullMask ? rig.upperBodyFullMask[j] : rig.upperBodyMask[j];
         const float w = std::clamp(alpha * mask, 0.f, 1.f);
         if (w <= 0)
         {
@@ -305,6 +329,142 @@ AnimationWeights AnimationBlendSpace::Evaluate(const AnimationRig &rig, float le
 // ============================================================================
 // LayeredAnimation
 // ============================================================================
+void LayeredAnimation::ClassifyRig(AnimationRig &rig)
+{
+    const size_t count = (std::min)(rig.names.size(), size_t(kMaxSkinBones));
+    rig.upperBodyMask.fill(0.f);
+    rig.upperBodyFullMask.fill(0.f);
+    bool hasMixamoPrefix = false;
+    bool hasHips = false, hasLeftUpLeg = false, hasRightUpLeg = false;
+    int spine0 = -1, spine1 = -1, spine2 = -1;
+    std::vector<std::string> canon(count);
+    for (size_t j = 0; j < count; ++j)
+    {
+        const auto &raw = rig.names[j];
+        if (raw.size() >= 9 && (raw.compare(0, 9, "mixamorig") == 0 || raw.compare(0, 9, "Mixamorig") == 0))
+        {
+            hasMixamoPrefix = true;
+        }
+        canon[j] = CanonicalBoneName(raw);
+        const auto &c = canon[j];
+        if (c == "hips")
+        {
+            hasHips = true;
+            rig.pelvis = int(j);
+        }
+        else if (c == "pelvis" && rig.pelvis < 0)
+        {
+            rig.pelvis = int(j);
+        }
+        if (c == "leftupleg" || c == "thigh.l")
+        {
+            hasLeftUpLeg = true;
+        }
+        if (c == "rightupleg" || c == "thigh.r")
+        {
+            hasRightUpLeg = true;
+        }
+        if (c == "spine" && spine0 < 0)
+        {
+            spine0 = int(j);
+        }
+        else if (c == "spine1" && spine1 < 0)
+        {
+            spine1 = int(j);
+        }
+        else if ((c == "spine2" || c == "chest") && spine2 < 0)
+        {
+            spine2 = int(j);
+        }
+        if (c == "head" && rig.head < 0)
+        {
+            rig.head = int(j);
+        }
+        if ((c == "hand.r" || c == "righthand") && rig.handR < 0)
+        {
+            rig.handR = int(j);
+        }
+        if ((c == "hand.l" || c == "lefthand") && rig.handL < 0)
+        {
+            rig.handL = int(j);
+        }
+        if (c == "muzzle" && rig.muzzle < 0)
+        {
+            rig.muzzle = int(j);
+        }
+    }
+    rig.spine = spine0 >= 0 ? spine0 : (count > 2 ? 2 : -1);
+    rig.chest = spine2 >= 0 ? spine2 : (spine1 >= 0 ? spine1 : rig.spine);
+    rig.back = spine1 >= 0 ? spine1 : (spine2 >= 0 ? spine2 : rig.spine);
+    if (hasMixamoPrefix || (hasHips && hasLeftUpLeg && hasRightUpLeg))
+    {
+        rig.preset = RigPreset::Mixamo;
+    }
+    else if (count == 23)
+    {
+        rig.preset = RigPreset::LegacyHuman7H;
+    }
+    else
+    {
+        rig.preset = RigPreset::Custom;
+    }
+    if (rig.preset == RigPreset::LegacyHuman7H)
+    {
+        for (size_t j = 0; j < count; ++j)
+        {
+            if (j < 2 || j >= 17)
+            {
+                rig.upperBodyMask[j] = 0.f;
+                rig.upperBodyFullMask[j] = 0.f;
+            }
+            else
+            {
+                rig.upperBodyMask[j] = j == 2 ? .35f : j == 3 ? .75f : 1.f;
+                rig.upperBodyFullMask[j] = 1.f;
+            }
+        }
+        return;
+    }
+    auto hasAncestor = [&](size_t bone, int target) {
+        if (target < 0)
+        {
+            return false;
+        }
+        int cur = int(bone);
+        for (size_t depth = 0; cur >= 0 && cur < int(count) && depth <= count; ++depth)
+        {
+            if (cur == target)
+            {
+                return true;
+            }
+            cur = cur < int(rig.parents.size()) ? rig.parents[size_t(cur)] : -1;
+        }
+        return false;
+    };
+    for (size_t j = 0; j < count; ++j)
+    {
+        if (!hasAncestor(j, spine0))
+        {
+            rig.upperBodyMask[j] = 0.f;
+            rig.upperBodyFullMask[j] = 0.f;
+        }
+        else if (int(j) == spine0)
+        {
+            rig.upperBodyMask[j] = .35f;
+            rig.upperBodyFullMask[j] = 1.f;
+        }
+        else if (int(j) == spine1)
+        {
+            rig.upperBodyMask[j] = .75f;
+            rig.upperBodyFullMask[j] = 1.f;
+        }
+        else
+        {
+            rig.upperBodyMask[j] = 1.f;
+            rig.upperBodyFullMask[j] = 1.f;
+        }
+    }
+}
 void LayeredAnimation::BindDodgeClip(AnimationRig &rig, const std::string &name, int index)
 {
     if (name.compare(0, 6, "Dodge_") != 0)
@@ -416,8 +576,7 @@ void LayeredAnimation::Prepare(ResourceClip &clip, const AnimationRig &rig)
         }
     }
 }
-void LayeredAnimation::Sample(const ResourceMesh &mesh, const CharacterPose &pose,
-                              std::array<float, 512> &skin)
+void LayeredAnimation::Sample(const ResourceMesh &mesh, const CharacterPose &pose, SkinMatrices &skin)
 {
     const auto &rig = *mesh.rig;
     float speed = pose.blended   ? std::hypot(pose.moveLeft, pose.moveForward)
@@ -610,17 +769,19 @@ void LayeredAnimation::Sample(const ResourceMesh &mesh, const CharacterPose &pos
     const float leanWeight = pose.blended ? (1 - aim) * (1 - (dodgeLayer ? pose.dodgeWeight : 0)) *
                                                 (1 - transWeight) * (1 - supportWeight)
                                           : 0;
-    if (leanWeight > 0.f && (pose.motionForwardLean != 0.f || pose.motionSideLean != 0.f))
+    if (leanWeight > 0.f && rig.spine >= 0 && size_t(rig.spine) < mesh.boneCount &&
+        (pose.motionForwardLean != 0.f || pose.motionSideLean != 0.f))
     {
         AnimationRotation pitch = {0, std::sin(pose.motionForwardLean * leanWeight * .5f), 0,
                                    std::cos(pose.motionForwardLean * leanWeight * .5f)};
         AnimationRotation roll = {std::sin(pose.motionSideLean * leanWeight * .5f), 0, 0,
                                   std::cos(pose.motionSideLean * leanWeight * .5f)};
-        base[2].rotation = Product(base[2].rotation, Product(pitch, roll));
+        base[size_t(rig.spine)].rotation = Product(base[size_t(rig.spine)].rotation, Product(pitch, roll));
     }
-    std::array<AnimationMatrix, 32> world{};
+    std::array<AnimationMatrix, kMaxSkinBones> world{};
     Globals(rig, base, world);
-    for (size_t j = 0; j < mesh.boneCount; ++j)
+    const size_t boneLimit = (std::min)(size_t(mesh.boneCount), size_t(kMaxSkinBones));
+    for (size_t j = 0; j < boneLimit; ++j)
     {
         auto m = AnimationMath::Multiply(world[j], rig.inverseBind[j]);
         std::copy(m.begin(), m.end(), skin.begin() + j * 16);
@@ -631,12 +792,17 @@ void LayeredAnimation::Sample(const ResourceMesh &mesh, const CharacterPose &pos
         float minimum = 1.e9f;
         for (const auto &sole : rig.soles)
         {
+            if (sole.bone >= boneLimit)
+            {
+                continue;
+            }
             const float *m = skin.data() + sole.bone * 16;
             minimum = (std::min)(minimum, m[2] * sole.position.x + m[6] * sole.position.y +
                                               m[10] * sole.position.z + m[14]);
         }
         float lift = std::clamp(.0007f - minimum, 0.f, .03f);
-        for (size_t j = 1; j < mesh.boneCount; ++j)
+        const size_t liftStart = rig.preset == RigPreset::Mixamo ? 0u : 1u;
+        for (size_t j = liftStart; j < boneLimit; ++j)
         {
             skin[j * 16 + 14] += lift;
         }

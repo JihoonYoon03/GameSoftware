@@ -20,6 +20,16 @@ class UiAtlasCatalog
     static UiAtlasCatalog Load(const std::filesystem::path &exportRoot);
 };
 
+struct PbrTextureBudget
+{
+    size_t residentBytes = 0;
+    size_t budgetBytes = 128u * 1024u * 1024u;
+    unsigned int pilotLayers = 0;
+    unsigned int detailLayers = 0;
+    bool immutableStorage = false;
+    float anisotropy = 1.f;
+};
+
 // Generated materials and bounded Korean text texture cache.
 class RenderAssets
 {
@@ -38,9 +48,14 @@ class RenderAssets
     unsigned int PbrBaseArray() const;
     unsigned int PbrNormalArray() const;
     unsigned int PbrOrmArray() const;
+    unsigned int PbrDetailBaseArray() const;
+    unsigned int PbrDetailNormalArray() const;
+    unsigned int PbrDetailOrmArray() const;
     unsigned int DamageMaskTexture() const;
     bool HasPbrTextures() const;
+    bool HasPbrDetailTextures() const;
     bool HasDamageMask() const;
+    const PbrTextureBudget &PbrBudget() const;
 
   private:
     struct Data;

@@ -182,7 +182,7 @@ const animationRigs = new Map();
 const aimBlendSpace = JSON.parse(fs.readFileSync(path.join(resources, 'Documentation/aim_locomotion_blending.json')));
 function convert(name, relative, kind = 'prop', options = {}) {
     const template = load(relative), skin = template.json.skins?.[0], jointNames = skin?.joints.map(i => template.json.nodes[i].name) ?? ['root'];
-    if (jointNames.length >= 32) throw Error('Skin palette exceeds 31 joints: ' + relative);
+    if (jointNames.length >= 72) throw Error('Skin palette exceeds 71 joints: ' + relative);
     const vertices = [], c = basis(kind); let invC = inverse(c);
     const attachments = { 'engine.L': [], 'engine.R': [], nose: [] };
     const engineSurfaces = { 'engine.L': [], 'engine.R': [] };
@@ -341,8 +341,16 @@ function convert(name, relative, kind = 'prop', options = {}) {
         });
         const bind = inverseBinds.map(m => multiply(c, multiply(inverse(m), invC)));
         const human = kind === 'human';
-        const soles = human ? Object.entries(aimBlendSpace.blend_floor_correction.sole_bind_points).flatMap(([side, points]) =>
-            points.map(p => ({ bone: jointNames.indexOf('foot.' + side), point: point(c, [p[0], p[2], -p[1]]) }))) : [];
+        const findFootBone = side => {
+            const legacy = jointNames.indexOf('foot.' + side);
+            if (legacy >= 0) return legacy;
+            const mixamoName = side === 'L' ? 'LeftFoot' : 'RightFoot';
+            return jointNames.findIndex(n => n === mixamoName || n === 'mixamorig:' + mixamoName || n === 'mixamorig_' + mixamoName);
+        };
+        const soles = human ? Object.entries(aimBlendSpace.blend_floor_correction.sole_bind_points).flatMap(([side, points]) => {
+            const bone = findFootBone(side);
+            return bone >= 0 ? points.map(p => ({ bone, point: point(c, [p[0], p[2], -p[1]]) })) : [];
+        }) : [];
         animationRigs.set(animationKey, { parents, bind, names: jointNames,
             samples: human ? aimBlendSpace.samples : [], triangles: human ? aimBlendSpace.triangles : [], soles });
     }
@@ -374,7 +382,8 @@ function convert(name, relative, kind = 'prop', options = {}) {
                         for (const [node, pose] of aim) if (/spine|chest|neck|head|clavicle|arm|hand|weapon|muzzle/.test(template.json.nodes[node].name)) overrides.set(node, pose);
                     }
                     const world = globals(template, overrides);
-                    const pelvis = socket('pelvis', world);
+                    const pelvis = socketNode('pelvis') >= 0 ? socket('pelvis', world)
+                        : (socketNode('mixamorig:Hips') >= 0 ? socket('mixamorig:Hips', world) : socket('Hips', world));
                     for (let j = 0; j < skin.joints.length; ++j) {
                         let m = multiply(c, multiply(world[skin.joints[j]], multiply(inverseBinds[j], invC)));
                         if (clip.name === 'Ride') m[14] -= pelvis[2] - .17;

@@ -46,7 +46,7 @@ class Drawing
                            const ai::SupportState *support = nullptr);
     static void DrawHair(Vector2 screen, models::Point scale, const models::Transform3D &rotation,
                          float depth, const models::CharacterPose &pose, models::CharacterType type,
-                         models::Gender gender, models::HairStyle hair);
+                         models::Gender gender, models::HairStyle hair, int *sharedSkinSlot = nullptr);
     static void DrawCharacterAppearance(Vector2 screenPosition, ColorRGBA coat, models::CharacterType type,
                                         int frame = 0, int direction = 0);
 
@@ -80,6 +80,7 @@ class Drawing
     static void DrawModel3D(const models::Model &model, Vector2 screen, models::Point scale,
                             const models::Transform3D &transform, float depth, const models::Palette &palette,
                             const models::CharacterPose *pose = nullptr, float shadowGroundZ = 0,
-                            float damage = 0);
+                            float damage = 0, int *sharedSkinSlot = nullptr,
+                            std::uint8_t visibilityMask = 0);
 };
 } // namespace tutorial

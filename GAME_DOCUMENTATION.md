@@ -1,7 +1,7 @@
 # SimpleGame 게임 개발 통합 문서
 
 통합일: 2026-10-14  
-최종 진행 정리: 2026-11-24 · OpenGL 4.5 / 144+ FPS 렌더·시뮬레이션 최적화 및 CQ-01~08 구조 정비(52절) + 차세대 렌더링 최적화 R1~R3 구현 완료(55절) + CQ-09 플레이어 거주지 고유 기능 구현 완료(56절: 침대 휴식·은신/안전 저장, 작업대 제작·방호/무기 강화·원격 정비, 보관함 금고·의료비 보호·옷장, 거점 단말·차량 호출, 저장 스키마 13(1~12 하위 호환)) / 작업 중 Human v4 리소스 제외 유지 / 다음 단계 CQ-10·R4 대기
+최종 진행 정리: 2026-11-24 · OpenGL 4.5 / 144+ FPS 렌더·시뮬레이션 최적화 및 CQ-01~08 구조 정비(52절) + 차세대 렌더링 최적화 R1~R4 구현 완료(55절·57절: v4 팩·EBO·Mega-VBO MDI·LOD·불변 PBR 텍스처 배열 4+9 레이어·멀티파츠 skinSlot 공유·visibilityMask + Mixamo 72본 표준 스켈레톤 런타임) + CQ-09 플레이어 거주지 고유 기능 구현 완료(56절: 저장 스키마 13) / 작업 중 Human v4 리소스 제외 유지 / 다음 단계 CQ-10 대기
 
 현재 개발 계획 브랜치: `iss04_ContentQuality` · 초기 구조 기준: `iss01_actor_scene_render` · 범죄 시스템 변경 기준: `62b00b5` · 이전 도로 성능 비교 기준: `592ec4c` · 초기 기반: `41316a5`
 
@@ -1229,7 +1229,7 @@ CQ-07을 A 이동·경로 안정성, B 감지·기억·역할별 판단, C 동�
 | **R1** | **v4 리소스 팩 · 인덱스 버퍼(EBO) · 압축 정점 포맷** | 현행 v3의 비인덱스 삼각형 리스트(`ResourceVertex` 84 B × 3 = `252 B/삼각형`)를 `uint16/uint32` EBO + 압축 정점(`pos` 12 B + `oct normal/tangent` 8 B + `uv0` half2 4 B + `color/mat` 4 B + 스킨 `u8×4/unorm8×4` 8 B = 정적 **28 B** / 스킨 **36 B**)으로 전환. 공용 팩 + 지역/자산군 청크 분할 인덱스 지원. | 삼각형당 저장·VRAM 비용 `252 B → ~25~45 B` (**약 4~6배 절감**). 512 MB~1 GB 예산 내 고유 메시 수용량 `32만 → 500만+ 삼각형`으로 확대. | 51절 GFX-01/03 UV·탄젠트·재질 슬롯 스키마 확정 |
 | **R2** | **화면 투영·거리 기반 다단계 LOD (LOD0~2) & 전용 그림자 프록시** | 45° 쿼터뷰 카메라 거리·줌·화면 투영 비율(Screen Coverage)에 따라 `LOD0`(근접 ≥12%, ≤45 m) → `LOD1`(중거리 5~12%, 45~110 m, ~45~50%) → `LOD2`(원경/고고도 비행 <5%, 110 m+, ~15~25%) → `소형 프롭 컬링`(<8 px)을 ±10% 히스테리시스로 전환. 640×400 그림자 패스는 전용 저폴리 `Shadow Proxy`(LOD0의 15~30%) 또는 `LOD2` 제출. | 밀집 도시·고고도 순항 시 동시 렌더 삼각형 **50~70% 절감**, 그림자 패스 정점 처리량 **70~85% 절감**. | R1 v4 메시 헤더에 LOD 범위·그림자 프록시 서브메시 오프셋 추가 |
 | **R3** | **계층적 프러스텀/Hi-Z 오클루전 컬링 · 정적 HLOD · MDI (`OpenGL 4.6`) · 원거리 스킨 완화** | 정적 건물/도로를 16~32 m 공간 청크(`SpatialChunk`)로 묶어 계층적 AABB 컬링 및 원거리 정적 HLOD 적용. 대도시 가림 제거를 위한 Compute 기반 Frustum + Hi-Z 오클루전 컬링과 `glMultiDrawElementsIndirect`(MDI, 필요 시 OpenGL 4.6 `gl_DrawID`) 통합 드로우. 중·원거리 NPC/차량의 스킨 평가 주기를 60 Hz → 30/15 Hz로 단계 완화. | 대도시·항성계 수도 밀집 구역 드로우 콜 **50회 미만 유지**, 건물 뒤 비가시 오브젝트 GPU 제거, 대규모 군집 CPU/GPU 병목 해소. | R1~R2 완료 및 16장면 벤치마크 계측 |
-| **R4** | **공유 PBR 텍스처 배열(`Texture2DArray`) · BC7/BC5(KTX2) · 스트리밍 상주 예산** | BaseColor/Emissive(BC7 sRGB), Normal(BC5 선형 XY 복원), ORM(BC7 선형)을 `glTexStorage3D` 텍스처 배열로 통합. 인스턴스 속성으로 `materialId/layerId/tint/wear` 전달해 배칭 깨짐 방지. 작업 스레드 디코딩 + GL 소유 스레드 프레임당 2 MiB 비동기 스테이징 업로드, 월드 텍스처 상주 예산 `128~512 MiB` 관리. | 텍스처 전환으로 인한 드로우 분할 제거, 볼트·패널선·봉제선 등 미세 디테일을 폴리곤 대신 노멀/트림 텍스처로 표현. | R1 v4 팩 + GFX-01 시범 세트 검수 |
+| **R4** | **공유 PBR 텍스처 배열(`Texture2DArray`) · 멀티파츠 `skinSlot` 공유 · 소켓 부착 · 상주 예산** | BaseColor/Emissive(BC7 sRGB), Normal(BC5 선형 XY 복원), ORM(BC7 선형)을 `glTexStorage3D` 텍스처 배열로 통합하고 인스턴스 속성(`materialId/layerId/tint/wear`)으로 전달해 R3 MDI 단일 배칭을 유지한다. 동시에 모듈러 3계층 캐릭터(53.3절)를 위해 동일 캐릭터의 `바디+의복+헤어+스킨 파츠`가 SSBO 본 행렬 1슬롯(2 KB)을 공유(`skinSlot`)하고, 강체 장비는 소켓(`head`/`chest`/`back`/`pelvis`/`hand.R`) 정적 부착 및 `visibility` 가림 마스크로 클리핑·중복 드로우를 제거한다. 월드 텍스처 상주 예산 `128~512 MiB` 관리. | 텍스처 전환으로 인한 MDI 분할 제거, 캐릭터 멀티파츠 본 SSBO 전송량 **75~80% 절감**, 잔주름·재봉선·볼트·패널선을 폴리곤 대신 PBR 노멀/ORM 맵으로 표현. | R1~R3 완료(55절) + GFX-01/3계층 캐릭터 계약 확정 |
 
 - **장면 성능 예산 (RTX 3070 Ti Laptop 60 FPS / 16.6 ms 기준):** R1~R4 적용 후 대도시·항성계 수도 + 5성 수배 동시 교전(건물 40동·NPC 60명·차량 20대·비행체 6대·프롭 120개)에서 LOD/오클루전 적용 후 화면 동시 가시 삼각형 **120만 ~ 180만 이하**, 그림자 패스 **35만 이하**, 드로우 콜 **< 60**, GPU 렌더 시간 **4~6 ms 이내**를 목표로 검증한다.
 
@@ -1265,9 +1265,34 @@ CQ-07을 A 이동·경로 안정성, B 감지·기억·역할별 판단, C 동�
 | 대형 랜드마크·초고층 (`building`) | 최대 53,008 | 50,000 | **100,000 ~ 120,000** | 45,000 | 15,000 | 12,000 |
 
 - **적용 경계 (게이트 규칙):**
-  - 기존 v3 런타임 팩(`game-assets.bin`)이 R1(EBO·정점 압축)·R2(LOD·그림자 프록시)로 전환되기 전까지 기존 2,293개 파트의 `part_polygon_budgets.json`(최대 200삼각형) 호환 계약을 유지하며, 기존 파트를 억지로 재분할하거나 불필요하게 면을 늘리지 않는다.
+  - R1(v4 팩·EBO·36 B 압축 정점)·R2(LOD0~2·그림자 프록시·소형 컬링)·R3(Mega-VBO/EBO MDI·원거리 스킨 완화)는 55절에서 구현 완료되었다. 기존 v3 호환 파트는 억지로 재분할하거나 면을 늘리지 않고 보존한다.
   - 신규/리메이크(CQ-11, GFX-02 등) 자산은 위 v4 파트·조립체 상한을 모두 적용한다. 중형 이상은 LOD0~2와 그림자 프록시를 동시 납품하고, 유형별 생략·컬링·LOD2 겸용 조건은 예산표를 따른다. 볼트·나사·미세 홈·봉제선은 공유 Normal/ORM/Trim 텍스처로 처리한다.
   - 한도를 맞추기 위해 원래 파트를 임의로 쪼개거나 GLB 파일 수를 늘리는 우회 분할 금지 원칙은 v4에서도 그대로 유지한다.
+
+###### 53.3 모듈러 3계층 캐릭터 구조(기본 인체 뼈대 + 의복 + 추가 파츠) 및 R4 연동 계획 (2026-11-24 개정)
+
+**배경:** 캐릭터의 팔·다리·몸통·의복을 작은 파츠 단위로 잘게 쪼개 모델링할 경우 경계면 버텍스 노멀 단절, UV 텍셀 밀도 불일치, 관절 웨이트 찢어짐으로 디테일이 무너지는 문제가 발생한다. 이에 캐릭터 제작·렌더 구조를 **“단일 마스터 인체 뼈대(스켈레톤) + 의복 레이어 + 추가 파츠” 3계층 모듈러 구조**로 확정하고 R4와 함께 런타임 기반을 연동한다.
+
+| 계층 | 구성 요소 | 모델링·리깅 규칙 | 런타임 렌더·최적화 규칙 (R1~R4) |
+|---|---|---|---|
+| **1계층 · 기본 인체 뼈대** | 남/여 마스터 베이스 인체 1종 + **신규 표준 Mixamo 스켈레톤 프리셋** (`mixamorig:Hips`~`Head`/`Left·RightHand`/`Foot`, 22본 코어 또는 65본 풀, 엔진 최대 72본; 기존 `HUMAN_7H` 23본 하위 호환 유지) | 단일 연속 메시로 실루엣·연속 노멀·UV·관절 웨이트를 먼저 확정한다. 팔/몸통/다리를 소형 파츠로 절단하지 않는다. | 의복 아래 가려지는 피부 폴리곤은 중복 렌더·관절 클리핑 방지를 위해 익스포트 시 제거하거나 `PackedResourceVertex::visibility` 슬롯 마스크(`0=항상/노출부`, `1=무장`, `2=상체`, `3=하체`, `4=머리`)로 숨긴다. |
+| **2계층 · 의복 레이어** | 상·하의 또는 전신 의복 세트(코트·작업복·방호복 등, 세트당 1~2메시) | 마스터 베이스 인체 위에 감싸 모델링하고 **Data Transfer로 베이스 웨이트를 전사**해 관절 변형을 일치시킨다. 큰 실루엣(어깨선·옷자락·벨트 볼륨)은 메시로, 잔주름·재봉선·원단 질감은 R4 PBR Normal/ORM으로 표현한다. | 1계층과 동일한 Mixamo 마스터 본·애니메이션 뱅크 및 R4 **`skinSlot`(SSBO 본 행렬 1슬롯)**을 공유한다. 소형 파츠 800삼각형 한도로 억지 분할하지 않고 아래 캐릭터 합산 예산으로 관리한다. |
+| **3계층 · 추가 파츠** | 변형 파츠(헤어·망토 등) + 강체 부착 파츠(헬멧·고글·배낭·견갑·파우치·무기) | 변형이 필요한 파츠만 동일 Mixamo 마스터 스킨 메시로 제작한다. 변형이 불필요한 강체 장비는 소켓 원점 기준 **정적 메시**로 제작한다. | 스킨 파츠는 1~2계층과 같은 `skinSlot`을 공유한다. 강체 장비는 `Head`(`mixamorig:Head`)·`Chest`(`mixamorig:Spine2`)·`Back`(`mixamorig:Spine1`)·`Pelvis`(`mixamorig:Hips`)·`HandR`(`mixamorig:RightHand`)·`HandL`(`mixamorig:LeftHand`) 소켓에 정적 부착(스킨 비용 0)하며, 원경(`zoom < 0.75`, 7 px 미만)에서는 R2 소형 프롭 컬링으로 자동 생략한다. |
+
+- **캐릭터 1명 합산 권장 폴리곤 예산 (LOD0 / 3계층 전체 합계):**
+  - 일반 군중 NPC: **권장 2,000 ~ 4,000 삼각형** (상한 12,000 / `LOD1` ~45~50% / `LOD2` ~15~25% / `ShadowProxy` ~1,200~1,800).
+  - 플레이어 · 주요 서사 NPC: **권장 3,500 ~ 8,000 삼각형** (상한 18,000 / `LOD1` ~45~50% / `LOD2` ~15~25% / `ShadowProxy` ~1,800~2,200).
+- **R4 엔진 연동 계약:**
+  1. **공유 PBR `GL_TEXTURE_2D_ARRAY`:** 1024² 파일럿 4종(`CastPaving`/`TechnicalWeave`/`BrushedSteel`/`PaintedAlloy`) + 512² 디테일/피부 9종(`SkinMicrograin`/`Habitat_*`/`Road_Basalt`/`Rock_Mine`/`Ruin_Obsidian`/`Terrain_*`)을 `glTexStorage3D` 불변 저장소 + 이방성 필터링(최대 8×)으로 상주시켜, 파츠가 4~5개로 구성되어도 텍스처 바인딩 전환 없이 R3 **단일 MDI 패스**를 유지한다.
+  2. **캐릭터당 `skinSlot` 1회 업로드 & `boneCount` 밀착 패킹:** `Renderer::SubmitModel`에서 캐릭터 1명의 본 행렬(`mesh.boneCount`개, 최대 72본)을 SSBO에 1회만 기록하고 `바디·의복·헤어·스킨 파츠`가 같은 `skinSlot`을 재사용해 군중 100명+ 환경에서도 SSBO 대역폭 증가를 차단한다.
+  3. **Mixamo 자동 인식·소켓 부착 & 바디 가림 마스크:** `LayeredAnimation::ClassifyRig`가 Mixamo(`mixamorig:*` / `Hips`+`LeftUpLeg`+`RightUpLeg`) 및 기존 `HUMAN_7H` 리그를 본 이름·부모 계층으로 자동 분류해 상체 블렌드 마스크와 7종 소켓(`Head`/`Chest`/`Back`/`Pelvis`/`HandR`/`HandL`/`Muzzle`)을 바인딩하며, `visibilityMask`(`visibility 2/3/4`)로 의복 하부 피부 클리핑을 차단한다.
+- **리깅·웨이트 세부 계약 (신규 Mixamo 프리셋 기준 · 기존 `HUMAN_7H` 하위 호환):**
+  1. **신규 인간형 스켈레톤 기본 = Mixamo 프리셋:** 앞으로 제작하는 모든 신규/리메이크 인간형 모델은 **Mixamo 표준 스켈레톤 프리셋**(`mixamorig:Hips` → `Spine` → `Spine1` → `Spine2` → `Neck` → `Head`, 좌/우 `Shoulder`/`Arm`/`ForeArm`/`Hand`[+손가락 선택], 좌/우 `UpLeg`/`Leg`/`Foot`/`ToeBase`, 총 22본 코어 또는 65본 풀 — 엔진 상한 71본)을 기본 골격으로 사용한다. 기존 납품 완료된 `HUMAN_7H` 23본 자산은 재제작하지 않고 하위 호환으로 유지한다.
+  2. **마스터 Armature & `inverseBindMatrices` 완전 일치:** 1계층(마스터 바디)·2계층(의복)·3계층(스킨 파츠)은 반드시 동일한 마스터 Mixamo Armature 원본을 링크/복사해 바인딩하며, 본 개수·이름·부모 순서·바인드 포즈(`inverseBindMatrices`)·스케일을 변경하지 않는다(R4 `skinSlot` 공유 및 공유 애니메이션 뱅크 필수 조건). 임의 트위스트본/보조본 추가는 금지한다.
+  3. **남/여 동일 골격 + 메시 핏(Fit) 분리:** 남성과 여성의 Mixamo 골격·바인드 포즈는 100% 동일하게 고정하고, 체형 차이는 메시 실루엣(어깨·허리·골반)으로만 표현해 공유 애니메이션 뱅크와 소켓 좌표를 완전 공유한다.
+  4. **의복 웨이트 2단계 처리:** 마스터 인체에서 `Data Transfer(Vertex Groups · Nearest Face Interpolated)`로 웨이트를 전사한 뒤, (a) 코트 자락·하단 등 좌/우 다리 경계는 가벼운 `Smooth(Factor 0.3~0.5, 1~2회)`로 찢어짐을 방지하고, (b) 벨트 버클·가슴판·어깨 패드 같은 경질 부속은 지배 본 1개에 100% 경직 웨이트를 지정해 늘어남을 막는다.
+  5. **정점당 최대 4본 & 정규화:** v4 36 B 압축 정점(`joints[4]`/`weights[4]`, `u8×4` 합 255) 호환을 위해 익스포트 전 `Limit Total(4)` → `Clean(0.01 미만 제거)` → `Normalize All`을 필수 적용한다.
+  6. **강체 소켓 파츠 무리깅 & 클립 중복 내장 금지:** 헬멧·고글·배낭·견갑·파우치·무기 등 강체 파츠는 Armature/Skin 없이 소켓 로컬 원점(`(0,0,0)`, `+X` 전방, `+Z` 상단) 정적 메시로 내보낸다. 스킨 파츠 GLB에는 바인드 포즈 스켈레톤·메시만 포함하고 모션 클립은 공유 `AnimationBanks/`에서만 로드한다.
 
 ##### 54. GPT 신규 리소스(실측 건물 14종 · PBR 텍스처 · 지원/전환 20클립 · UI 14종) 런타임 통합 (2026-11-24)
 
@@ -1329,6 +1354,35 @@ CQ-07을 A 이동·경로 안정성, B 감지·기억·역할별 판단, C 동�
   - `GameplayTests --residence` 및 **전체 `GameplayTests.exe`** 통과.
   - `ResourceAssetsTests`, `ResourceLoadingTests`, `RoadPlanTests`, `MovementTests`, `PlayerMobilityTests`, `CivicTests`, `WorldTests`(47,366), `WorldStreamingTests`(48,917) 전부 통과.
   - `RenderingTests --glfw`(실내 씬·HUD·전 구간 GPU 회귀 및 벤치마크, GL 오류 0건), `RenderingTests --flight-stress --glfw`(1,800프레임) 통과. 다음 계획 단계는 **CQ-10(맵 빈 구역 콘텐츠·미니퀘스트 확장)** 또는 **R4(공유 PBR 텍스처 배열 확장)**이다.
+
+#### 57. 차세대 렌더링 최적화 R4(불변 PBR 텍스처 배열 · 멀티파츠 skinSlot 공유 · 바디 가림 마스크) 및 Mixamo 표준 스켈레톤 런타임 구현 (2026-11-24)
+
+**반영 범위:** 53절 로드맵의 마지막 단계인 **R4(공유 불변 PBR 텍스처 배열·VRAM 예산 가드·멀티파츠 캐릭터 SSBO 본 공유·바디 가림 마스크)**를 완료하고, 향후 제작하는 모든 인간형 모델의 기본 스켈레톤을 **Mixamo 표준 프리셋(`mixamorig:*` 65본)**으로 수용할 수 있도록 엔진·리소스 변환기·문서를 일괄 업그레이드했다. 기존 23본 `HUMAN_7H` v4 리소스 팩과는 100% 하위 호환되며, 작업 중인 `HumanV4`/`HumanSheet` 파일은 건드리지 않았다.
+
+- **Mixamo 표준 스켈레톤 프리셋 · 72본 팔레트 · 명명 소켓 (`SimpleGame/Animation.h/.cpp`, `SimpleGame/ResourceAssets.h/.cpp`, `tools/pack-resources.mjs`, `tools/check-resource-pack.mjs`):**
+  - 스킨 팔레트 상한을 `32 → 72본`(`models::kMaxSkinBones = 72`, `SkinMatrices = std::array<float, 72 * 16>`)으로 확장해 65본 Mixamo 본 계층 + 루트/소켓 여유를 수용하고, 정적 메시 센티넬 조인트(`31` 또는 `71`)를 모두 허용하도록 파이프라인을 확장했다.
+  - `RigPreset`(`LegacyHuman7H` / `Mixamo` / `Custom`)과 `RigSocket`(`Head` / `Chest` / `Back` / `Pelvis` / `HandR` / `HandL` / `Muzzle`)을 추가하고, `LayeredAnimation::ClassifyRig()`에서 본 이름 접두사(`mixamorig:`/`mixamorig_`) 정규화와 부모 계층 탐색으로 Mixamo/레거시 리그를 자동 분류한다.
+  - Mixamo 리그에서는 `Hips`/다리 계층 `0.0`, `Spine` `0.35`, `Spine1` `0.75`, `Spine2`/목/머리/양팔/손가락 `1.0`의 상체 레이어 마스크와 소켓(`Pelvis=Hips`, `Back=Spine1`, `Chest=Spine2`, `Head=Head`, `HandR=RightHand`, `HandL=LeftHand`, `Muzzle→HandR` 폴백)을 자동 구성하며, 기존 23본 `HUMAN_7H`는 기존 마스크·접지 보정을 비트 단위로 그대로 보존한다. `ResourceAssets::Socket()`으로 임의 소켓의 포즈 적용 월드 오프셋을 조회할 수 있다.
+- **R4 불변 PBR 텍스처 배열(4+9 레이어) · 8× 비등방성 · 128 MiB VRAM 예산 (`SimpleGame/RenderAssets.h/.cpp`, `SimpleGame/Renderer.h/.cpp`):**
+  - `RenderAssets`에 `PbrTextureBudget`(`budgetBytes = 128 MiB`)을 도입하고 `glTexStorage3D`/`glTexStorage2D` 불변 스토리지 할당 + 하드웨어 비등방성 필터링(최대 8×) + 레이어별 `glTexSubImage3D` 스트리밍 업로드를 구현했다. 또한 빌드 출력 폴더(`build/opt-x64/Release/Resource/UI/Export`) 실행 시에도 상위 `Resource/Export/Textures/Pilot`을 독립 탐색해 PBR 텍스처 누락을 방지했다.
+  - **파일럿 PBR 배열(1024²×4, 64.00 MiB, 유닛 1~3):** `CastPaving`, `TechnicalWeave`, `BrushedSteel`, `PaintedAlloy`.
+  - **디테일/피부/월드 PBR 배열(512²×9, 36.00 MiB, 유닛 5~7):** `SkinMicrograin`(레이어 0), `Habitat_Concrete`, `Habitat_Panels`, `Road_Basalt`, `Rock_Mine`, `Ruin_Obsidian`, `Terrain_AlienGrass`, `Terrain_Dunes`, `Terrain_Regolith`.
+  - **차량 손상 마스크(256², 0.33 MiB, 유닛 4):** 총 상주 PBR VRAM은 **`100.33 MiB / 128 MiB`**(`105,207,072 B`)로 예산 내 안정 유지되며, 패스 시작 시 1회 바인딩 후 추가 텍스처 리바인드 없이 단일 MDI 패스를 100% 보존한다. 셰이더(`kMeshFragmentBody`)는 제작 UV(`hasAuthoredUv > 0.5`) 우선·없으면 트라이플래너(`triUv`) 폴백으로 피부(`SkinMicrograin`)·암석(`Rock_Mine`)·고무(`Road_Basalt`)·직물·금속·도장 표면에 마이크로 그레인/노멀/ORM을 적용한다.
+- **R4 멀티파츠 캐릭터 `skinSlot` 공유 · 밀착 SSBO 패킹 · `visibilityMask` (`SimpleGame/Renderer.h/.cpp`, `SimpleGame/Drawing.h/.cpp`):**
+  - `Renderer::SubmitModel`과 `Drawing::DrawModel3D`/`DrawHair`/`DrawPerson`/`DrawCharacterAppearance`에 `sharedSkinSlot` 포인터와 `visibilityMask`(하위 3비트: `upperBody/lowerBody/head` 가림)를 연결했다. 바디 제출 시 계산·업로드한 SSBO 본 슬롯을 헤어(및 향후 의복/파츠)가 그대로 재사용(`FrameStatistics::skinSlotReuses`)해 CPU 포즈 샘플링과 SSBO 대역폭을 절감한다.
+  - 정점 셰이더 스키닝 루프에 `vertexWeights.y/z/w > 0.0` 가드를 추가해 `mesh.boneCount`만큼만 밀착 SSBO 푸시해도 센티넬 인덱스 OOB/NaN이 발생하지 않으며, 1본 정점의 불필요한 행렬 읽기를 생략한다. `instanceScale.w`에 `armed` + `visibilityMask` 비트를 패킹해 `visibility 2/3/4` 태그 정점을 버텍스 단계에서 안전하게 컬링한다.
+- **문서·테스트 및 GPU 벤치마크 검증 (`build/opt-x64` Release x64, RTX 5080, 1280×800, 24프레임 예열 + 120프레임 실측):**
+  - `GAME_DOCUMENTATION.md`(53.1·53.3·57절), `Resource/RENDER_RESOURCE_REQUEST.md`(7.1·7.3절), `Resource/Documentation/POLYGON_BUDGET_ko.md`에 R4 완료와 Mixamo 표준 스켈레톤·3계층 모듈러 캐릭터 계약을 반영했다.
+  - 리소스 팩 검증(`tools/check-resource-pack.mjs`: v4 230에셋·339,032삼각형·`skin_palette_limit=72`, `tests/ResourcePipelineTests.mjs`) 통과.
+  - CPU 회귀 전체 통과: `ResourceAssetsTests`(합성 63본 Mixamo 분류·소켓·상체 마스크 + 23본 `HUMAN_7H` 호환성), `ResourceLoadingTests`, `RoadPlanTests`, `MovementTests`, `PlayerMobilityTests`, `CivicTests`, `WorldTests`(47,366), `WorldStreamingTests`(48,917), `GameplayTests`(전체 및 `--residence`/`--city-facilities`/`--story-followups`).
+  - GPU 회귀 전체 통과: `RenderingTests --r4-only`(WGL/GLFW 양쪽: `pilot=4`, `detail=9`, 불변 스토리지, `aniso=8x`, VRAM `100.333 MiB`, `skinSlot` 공유·`visibilityMask` GL 오류 0건), `RenderingTests --flight-stress --glfw`(1,800프레임), **전체 `RenderingTests --glfw`** 통과.
+  - **R4 적용 16장면 GPU 벤치마크 주요 결과(전 16장면 16.67ms 초과 `0/120`, 최악 P95 `1.887 ms` / 530 FPS):**
+    - `city`: 평균 `1.142 ms` · P95 `1.495 ms`(669 FPS) · 드로우콜 `79.1` · `skinSlot` 재사용 `15.3/프레임`
+    - `city_security_5stars`: 평균 `1.333 ms` · P95 `1.623 ms`(616 FPS) · 드로우콜 `79.4` · `skinSlot` 재사용 `9.9/프레임`
+    - `frontier_convoy`: 평균 `0.526 ms` · P95 `0.678 ms`(1475 FPS) · 드로우콜 `33.2` · `skinSlot` 재사용 `9.0/프레임`
+    - `planet_surface`: 평균 `0.892 ms` · P95 `1.426 ms`(701 FPS) · 드로우콜 `48.7` · `skinSlot` 재사용 `12.6/프레임`
+    - `planet_surface_security_5stars`: 평균 `1.462 ms` · P95 `1.887 ms`(530 FPS) · 드로우콜 `53.4` · `skinSlot` 재사용 `12.1/프레임`
+  - 이로써 차세대 렌더링 최적화 R1~R4가 모두 완료되었으며, 다음 계획 단계는 **CQ-10(맵 빈 구역 콘텐츠·미니퀘스트 확장)**이다.
 
 ### 전체 구조 검토와 반복 비용 리팩토링 — 2026-10-28
 

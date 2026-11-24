@@ -76,7 +76,7 @@ assert.equal(bankCount, manifest.animationBanks);
 assert.ok(bankCount > 0 && bankCount <= 512);
 for (let bank = 0; bank < bankCount; ++bank) {
     const bones = u32(), clips = u32(), clipNames = [], gear = new Map();
-    assert.ok(bones > 0 && bones < 32 && clips > 0 && clips <= maxAnimationClips);
+    assert.ok(bones > 0 && bones < 72 && clips > 0 && clips <= maxAnimationClips);
     const boneNames = [];
     for (let j = 0; j < bones; ++j) {
         boneNames.push(text()); const parent = u32() - 1; floats(16);
@@ -131,7 +131,7 @@ for (let asset = 0; asset < count; ++asset) {
     assert.equal(lodCounts[0], report.triangles * 3); assert.equal(bones, report.bones);
     assert.equal(uniqueVertexCount, report.uniqueVertices);
     assert.equal(indexBytes, report.indexBytes);
-    assert.ok(bones < 32);
+    assert.ok(bones < 72);
     assert.equal(bank, report.animationBank);
     const bounds = floats(6), physical = floats(3), sockets = floats(18);
     for (let axis = 0; axis < 3; ++axis) {
@@ -173,7 +173,7 @@ for (let asset = 0; asset < count; ++asset) {
         let sum = 0;
         for (let weight = 0; weight < 4; ++weight) {
             const joint = joints[weight], amount = weights[weight];
-            assert.ok(joint < bones || joint === 31, 'Invalid skin joint');
+            assert.ok(joint < bones || joint === 31 || joint === 71, 'Invalid skin joint');
             sum += amount;
         }
         assert.equal(sum, 255, 'Unnormalized packed skin weights');

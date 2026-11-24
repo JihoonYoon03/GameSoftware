@@ -7,6 +7,7 @@
 #include "Monitoring/Monitor.h"
 #include "Overworld.h"
 #include "Profiler.h"
+#include "RenderAssets.h"
 #include "RenderQueue.h"
 #include "ResidentAI.h"
 #include "ResourceAssets.h"
@@ -566,6 +567,51 @@ void TestBatchReuse()
     assert(draw(1, .3f) == baseline);
 }
 
+void TestR4PbrAndSkinSharing()
+{
+    auto &renderer = GameRenderer::Get().Backend();
+    const auto &budget = renderer.GetPbrTextureBudget();
+    assert(budget.pilotLayers == 4);
+    assert(budget.detailLayers == 9);
+    assert(budget.immutableStorage);
+    assert(budget.residentBytes > 0 && budget.residentBytes <= budget.budgetBytes);
+    assert(budget.anisotropy >= 1.f);
+
+    // Character body + hair must share one skin matrix SSBO slot via DrawPerson.
+    Game::Get().Reset();
+    auto &world = Game::Get().GetState();
+    world.cameraPosition = {0.f, 0.f};
+    Begin();
+    renderer.BeginModels();
+    Drawing::DrawPerson({0.f, 0.f}, {.3f, .5f, .7f}, false, CharacterType::Explorer, true, 0.f, Gender::Male,
+                        HairStyle::SidePart);
+    renderer.EndModels();
+    const auto stats = renderer.GetFrameStatistics();
+    assert(stats.objects >= 2);
+    assert(stats.skinSlotReuses >= 1);
+    assert(glGetError() == GL_NO_ERROR);
+
+    // Explicit visibilityMask + sharedSkinSlot passthrough must also execute cleanly without GL errors.
+    Begin();
+    renderer.BeginModels();
+    int sharedSlot = -1;
+    const auto &body = ModelLibrary::Character(CharacterType::Explorer, Gender::Female);
+    const auto &hair = ModelLibrary::Hair(HairStyle::SidePart, false);
+    CharacterPose pose = ModelRig::Pose(1.2f, true, false);
+    Transform3D t;
+    Drawing::DrawModel3D(body, {560.f, 400.f}, {1, 1, 1}, t, 0, {}, &pose, 0.f, 0.f, &sharedSlot, 0x7);
+    assert(sharedSlot >= 0);
+    const int beforeReuse = sharedSlot;
+    Drawing::DrawModel3D(hair, {560.f, 400.f}, {1, 1, 1}, t, 0, {}, &pose, 0.f, 0.f, &sharedSlot, 0x0);
+    assert(sharedSlot == beforeReuse);
+    renderer.EndModels();
+    assert(renderer.GetFrameStatistics().skinSlotReuses >= 1);
+    assert(glGetError() == GL_NO_ERROR);
+    std::cout << "R4 PBR arrays (pilot=" << budget.pilotLayers << ", detail=" << budget.detailLayers
+              << ", vram=" << (double(budget.residentBytes) / (1024.0 * 1024.0)) << " MiB, aniso="
+              << budget.anisotropy << "x) and skinSlot sharing checks passed.\n";
+}
+
 void TestAntialiasing()
 {
     auto &renderer = GameRenderer::Get().Backend();
@@ -625,7 +671,34 @@ void TestDepth()
         GameRenderer::Get().Backend().EndModels();
         return Pixels();
     };
-    assert(draw(false) == draw(true)); // Object submission order cannot override depth.
+    const auto forward = draw(false);
+    const auto backward = draw(true);
+    size_t diffs = 0;
+    int maxDiff = 0;
+    for (size_t i = 0; i < forward.size(); i += 4)
+    {
+        const int m = (std::max)({std::abs(int(forward[i]) - int(backward[i])),
+                                  std::abs(int(forward[i + 1]) - int(backward[i + 1])),
+                                  std::abs(int(forward[i + 2]) - int(backward[i + 2])),
+                                  std::abs(int(forward[i + 3]) - int(backward[i + 3]))});
+        if (m > 0)
+        {
+            ++diffs;
+            maxDiff = (std::max)(maxDiff, m);
+        }
+    }
+    // 4x MSAA + PBR texture sampling can introduce a 1-LSB rounding difference on shared-seam pixels;
+    // any real depth-order error between the red and blue boxes exceeds 100/255 across thousands of pixels.
+    assert(maxDiff <= 1 && diffs <= 16);
+    {
+        auto &renderer = GameRenderer::Get().Backend();
+        const auto saved = renderer.GetStyle();
+        auto noAa = saved;
+        noAa.antialiasing = false;
+        renderer.SetStyle(noAa);
+        assert(draw(false) == draw(true));
+        renderer.SetStyle(saved);
+    }
     auto overlay = [](bool translated) {
         Begin();
         auto &renderer = GameRenderer::Get().Backend();
@@ -2115,8 +2188,15 @@ void BenchmarkQuality(const std::filesystem::path &output)
 #else
     constexpr bool optimized = true;
 #endif
+    const auto &pbr = GameRenderer::Get().Backend().GetPbrTextureBudget();
     report << "{\"gpu\":\"" << glGetString(GL_RENDERER)
            << "\",\"resolution\":[1280,800],\"optimized\":" << (optimized ? "true" : "false")
+           << ",\"pbr_vram_bytes\":" << pbr.residentBytes
+           << ",\"pbr_budget_bytes\":" << pbr.budgetBytes
+           << ",\"pbr_pilot_layers\":" << pbr.pilotLayers
+           << ",\"pbr_detail_layers\":" << pbr.detailLayers
+           << ",\"pbr_immutable\":" << (pbr.immutableStorage ? "true" : "false")
+           << ",\"pbr_anisotropy\":" << pbr.anisotropy
            << ",\"warmup\":24,\"frames\":120,\"scenes\":[";
     auto &world = Game::Get().GetState();
     for (int scenario = 0; scenario < 16; ++scenario)
@@ -2294,7 +2374,8 @@ void BenchmarkQuality(const std::filesystem::path &output)
         }
         bool npcShotsObserved = false;
         std::vector<double> samples;
-        double draws = 0, instanced = 0, triangles = 0, shadowTris = 0, lod1 = 0, lod2 = 0, culled = 0;
+        double draws = 0, instanced = 0, triangles = 0, shadowTris = 0, lod1 = 0, lod2 = 0, culled = 0,
+               skinReuses = 0;
         for (int frame = 0; frame < 144; ++frame)
         {
             const auto previousDraws = profiling::ReadCounter(profiling::Counter::DrawCalls);
@@ -2365,6 +2446,7 @@ void BenchmarkQuality(const std::filesystem::path &output)
                 lod1 += stats.lod1Instances;
                 lod2 += stats.lod2Instances;
                 culled += stats.culledObjects;
+                skinReuses += stats.skinSlotReuses;
             }
         }
         if (scenario == 6)
@@ -2390,11 +2472,13 @@ void BenchmarkQuality(const std::filesystem::path &output)
                << ",\"shadow_triangles\":" << shadowTris / samples.size()
                << ",\"lod1_instances\":" << lod1 / samples.size()
                << ",\"lod2_instances\":" << lod2 / samples.size()
-               << ",\"culled_objects\":" << culled / samples.size() << "}";
+               << ",\"culled_objects\":" << culled / samples.size()
+               << ",\"skin_slot_reuses\":" << skinReuses / samples.size() << "}";
         std::cout << names[scenario] << ": average " << average << " ms; p95 " << p95 << " ms (" << 1000 / p95
                   << " fps); p99 " << p99 << " ms; draws " << draws / samples.size()
                   << "; tris " << triangles / samples.size() << " (shadow " << shadowTris / samples.size()
-                  << "); over 16.67 ms " << overBudget << "/" << samples.size() << std::endl;
+                  << "); skinReuse " << skinReuses / samples.size()
+                  << "; over 16.67 ms " << overBudget << "/" << samples.size() << std::endl;
     }
     report << "]}";
 }
@@ -2446,6 +2530,14 @@ int main(int argc, char **argv)
         CaptureMapNavigation(output);
         GameRenderer::Get().Shutdown();
         std::cout << "Map visual checks passed.\n";
+        return 0;
+    }
+    if (argc > 1 && std::string(argv[1]) == "--r4-only")
+    {
+        OffscreenContext context;
+        GameRenderer::Get().Initialize();
+        TestR4PbrAndSkinSharing();
+        GameRenderer::Get().Shutdown();
         return 0;
     }
     if (argc > 1 && std::string(argv[1]) == "--benchmark")
@@ -2550,6 +2642,7 @@ int main(int argc, char **argv)
     std::cout << "Checking antialiasing, depth and effect occlusion.\n" << std::flush;
     TestAntialiasing();
     TestBatchReuse();
+    TestR4PbrAndSkinSharing();
     TestShadowGroundRebase();
     TestDepth();
     TestEffectDepth();
