@@ -151,36 +151,60 @@ void TestMixamoRigAndSockets()
     LayeredAnimation::Prepare(clip63, mixamo);
     assert(clip63.localFrames.size() == size_t(clip63.frames) * mixamo.names.size());
 
-    // 4) Real CQ-11 Mixamo modular asset (Field_Medic_Coat_LOD0) packed via mixamo_characters.json.
+    // 4) Real CQ-11 Mixamo modular 4-part set (Coat, Cargo_Pants, Boots, Bun_Hair) packed via mixamo_characters.json.
     assert(ResourceAssets::TryFind("modular/nonexistent_part") == 0);
-    const auto coatId = ResourceAssets::TryFind("modular/outfit/Field_Medic_Coat");
-    assert(coatId != 0);
-    const auto &coat = ResourceAssets::Get(coatId);
-    assert(coat.boneCount == 22);
-    assert(coat.rig && coat.rig->preset == RigPreset::Mixamo);
-    assert(coat.TriangleCount(LodLevel::Lod0) == 3197);
-    assert(coat.TriangleCount(LodLevel::Lod1) < coat.TriangleCount(LodLevel::Lod0));
-    assert(coat.TriangleCount(LodLevel::Lod2) < coat.TriangleCount(LodLevel::Lod1));
-    assert(coat.TriangleCount(LodLevel::ShadowProxy) < coat.TriangleCount(LodLevel::Lod0));
-    for (unsigned s = 0; s < unsigned(RigSocket::Count); ++s)
+    struct ExpectedPart
     {
-        assert(coat.rig->SocketBone(RigSocket(s)) >= 0);
-        const auto pos = ResourceAssets::Socket(coatId, pose, RigSocket(s));
-        assert(std::isfinite(pos.x) && std::isfinite(pos.y) && std::isfinite(pos.z));
-    }
-    const auto coatHead = ResourceAssets::Socket(coatId, pose, RigSocket::Head);
-    const auto coatChest = ResourceAssets::Socket(coatId, pose, RigSocket::Chest);
-    const auto coatPelvis = ResourceAssets::Socket(coatId, pose, RigSocket::Pelvis);
-    assert(coatHead.z > coatChest.z && coatChest.z > coatPelvis.z);
-    for (const auto &v : coat.packedVertices)
+        const char *name;
+        unsigned lod0Tris;
+        unsigned expectedSurface;
+    };
+    const ExpectedPart parts[] = {
+        {"modular/outfit/Field_Medic_Coat", 3197, 1},
+        {"modular/outfit/Field_Medic_Cargo_Pants", 2600, 1},
+        {"modular/outfit/Field_Medic_Boots", 2398, 5},
+        {"modular/part/Field_Medic_Bun_Hair", 2417, 1},
+    };
+    const void *sharedMixamoRig = nullptr;
+    for (const auto &spec : parts)
     {
-        assert(v.surface == 1); // Fabric matte PBR surface (not metal fallback).
-        assert(v.palette == 0); // Authored BaseColor texture preserved without tint override.
+        const auto partId = ResourceAssets::TryFind(spec.name);
+        assert(partId != 0);
+        const auto &part = ResourceAssets::Get(partId);
+        assert(part.boneCount == 22);
+        assert(part.rig && part.rig->preset == RigPreset::Mixamo);
+        if (!sharedMixamoRig)
+        {
+            sharedMixamoRig = part.rig.get();
+        }
+        else
+        {
+            assert(part.rig.get() == sharedMixamoRig); // All 4 parts share one deduplicated Mixamo rig bank.
+        }
+        assert(part.TriangleCount(LodLevel::Lod0) == spec.lod0Tris);
+        assert(part.TriangleCount(LodLevel::Lod1) < part.TriangleCount(LodLevel::Lod0));
+        assert(part.TriangleCount(LodLevel::Lod2) < part.TriangleCount(LodLevel::Lod1));
+        assert(part.TriangleCount(LodLevel::ShadowProxy) < part.TriangleCount(LodLevel::Lod0));
+        for (unsigned s = 0; s < unsigned(RigSocket::Count); ++s)
+        {
+            assert(part.rig->SocketBone(RigSocket(s)) >= 0);
+            const auto pos = ResourceAssets::Socket(partId, pose, RigSocket(s));
+            assert(std::isfinite(pos.x) && std::isfinite(pos.y) && std::isfinite(pos.z));
+        }
+        const auto headSock = ResourceAssets::Socket(partId, pose, RigSocket::Head);
+        const auto chestSock = ResourceAssets::Socket(partId, pose, RigSocket::Chest);
+        const auto pelvisSock = ResourceAssets::Socket(partId, pose, RigSocket::Pelvis);
+        assert(headSock.z > chestSock.z && chestSock.z > pelvisSock.z);
+        for (const auto &v : part.packedVertices)
+        {
+            assert(v.surface == spec.expectedSurface);
+            assert(v.palette == 0); // Authored BaseColor texture preserved without tint override.
+        }
+        SkinMatrices skin;
+        ResourceAssets::Sample(partId, &pose, skin);
+        const auto skinnedPt = ResourceAssets::SkinPoint(part.packedVertices.front(), skin);
+        assert(std::isfinite(skinnedPt.x) && std::isfinite(skinnedPt.y) && std::isfinite(skinnedPt.z));
     }
-    SkinMatrices coatSkin;
-    ResourceAssets::Sample(coatId, &pose, coatSkin);
-    const auto skinnedPt = ResourceAssets::SkinPoint(coat.packedVertices.front(), coatSkin);
-    assert(std::isfinite(skinnedPt.x) && std::isfinite(skinnedPt.y) && std::isfinite(skinnedPt.z));
 }
 } // namespace
 

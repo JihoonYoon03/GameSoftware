@@ -13,8 +13,47 @@
       "tintable": false,
       "hides_body_mask": 2,
       "lod0_max_tris": 4000
+    },
+    {
+      "id": "Field_Medic_Cargo_Pants",
+      "source": "HumanV4/Field_Medic_Cargo_Pants_LOD0",
+      "slot": "lower",
+      "surface": "fabric",
+      "tintable": false,
+      "hides_body_mask": 3,
+      "lod0_max_tris": 4000
+    },
+    {
+      "id": "Field_Medic_Boots",
+      "source": "HumanV4/Field_Medic_Boots_LOD0",
+      "slot": "feet",
+      "surface": "rubber",
+      "tintable": false,
+      "hides_body_mask": 0,
+      "lod0_max_tris": 4000
     }
   ],
-  "attachments": [],
-  "presets": {}
+  "attachments": [
+    {
+      "id": "Field_Medic_Bun_Hair",
+      "source": "HumanV4/Field_Medic_Bun_Hair_LOD0",
+      "slot": "hair",
+      "skinned": true,
+      "surface": "fabric",
+      "tintable": false,
+      "lod0_max_tris": 3000
+    }
+  ],
+  "presets": {
+    "Field_Medic": {
+      "outfits": [
+        "modular/outfit/Field_Medic_Coat",
+        "modular/outfit/Field_Medic_Cargo_Pants",
+        "modular/outfit/Field_Medic_Boots"
+      ],
+      "attachments": [
+        "modular/part/Field_Medic_Bun_Hair"
+      ]
+    }
+  }
 }

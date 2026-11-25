@@ -175,6 +175,25 @@ void InteriorScene::Draw()
     WorldView view;
     auto &scene = *this;
     {
+        rendering::SceneLighting light;
+        light.keyDirection = {-.25f, -.35f, .90f};
+        light.keyColor = {1.02f, .96f, .88f};
+        light.keyIntensity = .94f;
+        light.skyColor = {.54f, .68f, .80f};
+        light.groundColor = {.46f, .42f, .38f};
+        light.ambientIntensity = .86f;
+        light.rimColor = {.42f, .78f, .90f};
+        light.rimIntensity = .24f;
+        light.exposure = 1.20f;
+        light.shadowStrength = .26f;
+        GameRenderer::Get().Backend().SetLighting(light);
+        Drawing::AddPointLight({-.3f, -2.5f}, 1.4f, 5.0f, {.32f, .80f, .94f}, .85f);
+        Drawing::AddPointLight({-2.05f, -1.85f}, .65f, 3.8f, {.45f, .80f, .95f}, .72f);
+        Drawing::AddPointLight({1.6f, -2.2f}, .95f, 4.4f, {.30f, .95f, .90f}, .92f);
+        Drawing::AddPointLight({-1.9f, 1.4f}, .95f, 4.6f, {1.f, .65f, .28f}, 1.05f);
+        Drawing::AddPointLight({2.25f, -.15f}, .75f, 3.4f, {.95f, .74f, .34f}, .62f);
+    }
+    {
         profiling::Scope placementTimer(profiling::Timer::ScenePlacement);
         scene.BeginPlacement();
         for (int x = -3; x < 3; ++x)
@@ -309,6 +328,26 @@ void FacilityInteriorScene::Draw()
                             : kind == UrbanFacilityKind::Clinic  ? "의무관"
                             : kind == UrbanFacilityKind::Workshop ? "정비사"
                                                                  : "행정관";
+    {
+        rendering::SceneLighting light;
+        light.keyDirection = {-.22f, -.30f, .92f};
+        light.keyColor = kind == UrbanFacilityKind::Clinic     ? std::array<float, 3>{.96f, 1.04f, 1.08f}
+                         : kind == UrbanFacilityKind::Workshop ? std::array<float, 3>{1.08f, .92f, .76f}
+                         : kind == UrbanFacilityKind::Market   ? std::array<float, 3>{1.00f, 1.04f, .94f}
+                                                               : std::array<float, 3>{.96f, 1.00f, 1.08f};
+        light.keyIntensity = 1.00f;
+        light.skyColor = {accentCol.r * .40f + .44f, accentCol.g * .40f + .48f, accentCol.b * .40f + .54f};
+        light.groundColor = {.44f, .44f, .46f};
+        light.ambientIntensity = .90f;
+        light.rimColor = {accentCol.r, accentCol.g, accentCol.b};
+        light.rimIntensity = .26f;
+        light.exposure = 1.22f;
+        light.shadowStrength = .26f;
+        GameRenderer::Get().Backend().SetLighting(light);
+        Drawing::AddPointLight({0.f, -2.1f}, 1.45f, 5.8f, accentCol, .95f);
+        Drawing::AddPointLight({-1.6f, -1.4f}, .95f, 4.4f, {1.f, .96f, .88f}, .78f);
+        Drawing::AddPointLight({1.8f, -1.4f}, .95f, 4.4f, accentCol, .82f);
+    }
     {
         profiling::Scope placementTimer(profiling::Timer::ScenePlacement);
         scene.BeginPlacement();
@@ -1059,6 +1098,9 @@ void CityScene::Draw()
 {
     WorldView view;
     auto &scene = *this;
+    GameRenderer::Get().Backend().SetLighting(rendering::SceneLighting{});
+    Drawing::AddPointLight(kCityReceiverPosition, 1.1f, 5.5f, {.32f, .92f, .96f}, .85f);
+    Drawing::AddPointLight(kObservatoryBuildingPosition, 1.8f, 6.5f, {.42f, .84f, 1.f}, .75f);
     {
         profiling::Scope placementTimer(profiling::Timer::ScenePlacement);
         scene.BeginPlacement();
@@ -1114,6 +1156,20 @@ void ObservatoryScene::Draw()
 {
     WorldView view;
     auto &scene = *this;
+    {
+        rendering::SceneLighting light;
+        light.keyDirection = {-.32f, -.40f, .85f};
+        light.keyColor = {.98f, 1.03f, 1.08f};
+        light.keyIntensity = 1.08f;
+        light.skyColor = {.62f, .80f, .96f};
+        light.groundColor = {.44f, .52f, .58f};
+        light.ambientIntensity = .92f;
+        light.rimColor = {.48f, .86f, 1.f};
+        light.rimIntensity = .30f;
+        light.exposure = 1.22f;
+        GameRenderer::Get().Backend().SetLighting(light);
+        Drawing::AddPointLight(kObservatoryConsole, 1.0f, 5.5f, {.30f, .92f, 1.f}, 1.05f);
+    }
     {
         profiling::Scope timer(profiling::Timer::ScenePlacement);
         scene.BeginPlacement();
@@ -1308,6 +1364,26 @@ void MineScene::Draw()
 {
     WorldView view;
     auto &scene = *this;
+    {
+        rendering::SceneLighting light;
+        light.keyDirection = {-.25f, -.30f, .92f};
+        light.keyColor = {.88f, .94f, 1.00f};
+        light.keyIntensity = .82f;
+        light.skyColor = {.46f, .58f, .70f};
+        light.groundColor = {.38f, .36f, .42f};
+        light.ambientIntensity = .84f;
+        light.rimColor = {.42f, .78f, .92f};
+        light.rimIntensity = .26f;
+        light.exposure = 1.24f;
+        light.shadowStrength = .32f;
+        GameRenderer::Get().Backend().SetLighting(light);
+        const auto &w = Game::Get().GetState();
+        Drawing::AddPointLight(w.playerPosition, 1.05f, 6.2f, {.76f, .92f, 1.f}, 1.10f);
+        Drawing::AddPointLight(kPowerBypass, 1.1f, 5.2f, {1.f, .68f, .28f}, .95f);
+        Drawing::AddPointLight(kRuinSignal, 1.2f, 6.5f, {.38f, .94f, 1.f}, 1.15f);
+        Drawing::AddPointLight(kObserverGlyph, 1.3f, 6.8f, {.58f, .44f, 1.f}, 1.15f);
+        Drawing::AddPointLight(kCoordinateTerminal, 1.1f, 5.5f, {.34f, .96f, .88f}, .95f);
+    }
     if (cachedRevision != GameLevels::Mine().GetState().mapRevision)
     {
         rendercache::InvalidateTerrain();
@@ -1584,6 +1660,22 @@ void FrontierScene::Draw()
     WorldView view;
     auto &level = GameLevels::Chapter();
     const auto &state = level.GetState();
+    {
+        rendering::SceneLighting light;
+        light.keyDirection = {-.48f, -.36f, .76f};
+        light.keyColor = {1.10f, .99f, .85f};
+        light.keyIntensity = 1.16f;
+        light.skyColor = {.64f, .80f, .92f};
+        light.groundColor = {.58f, .50f, .38f};
+        light.ambientIntensity = .92f;
+        light.rimColor = {.92f, .78f, .56f};
+        light.rimIntensity = .26f;
+        light.exposure = 1.22f;
+        GameRenderer::Get().Backend().SetLighting(light);
+        Drawing::AddPointLight({10.5f, 10.5f}, 1.2f, 6.0f, {.34f, .92f, .96f}, .95f);
+        Drawing::AddPointLight({32.5f, 12.5f}, 1.1f, 5.5f, {1.f, .74f, .34f}, .85f);
+        Drawing::AddPointLight({33.5f, 32.5f}, 1.2f, 6.0f, {.52f, .76f, 1.f}, .90f);
+    }
     BeginPlacement();
     for (int y0 = -16; y0 < kFrontierHeight + 16; y0 += 8)
     {
@@ -3274,6 +3366,40 @@ void PlanetScene::Draw()
     }
     WorldView view;
     auto snapshot = session->Stream().Snapshot();
+    {
+        rendering::SceneLighting light;
+        const auto loc = Game::Get().PlanetLocation().value_or(session->Location());
+        if (loc.regionId != "overworld" && snapshot->planet)
+        {
+            const auto kind = snapshot->planet->Region(loc.regionId).definition.kind;
+            if (kind == world::RegionKind::AncientRuins)
+            {
+                light.keyDirection = {-.42f, -.38f, .78f};
+                light.keyColor = {.94f, .98f, 1.08f};
+                light.skyColor = {.56f, .66f, .92f};
+                light.groundColor = {.42f, .40f, .52f};
+                light.rimColor = {.58f, .78f, 1.f};
+                light.rimIntensity = .34f;
+            }
+            else if (kind == world::RegionKind::Outlaw)
+            {
+                light.keyDirection = {-.50f, -.34f, .74f};
+                light.keyColor = {1.12f, .94f, .80f};
+                light.skyColor = {.68f, .68f, .76f};
+                light.groundColor = {.56f, .44f, .36f};
+                light.rimColor = {.96f, .64f, .40f};
+                light.rimIntensity = .28f;
+            }
+            else if (kind == world::RegionKind::Mine)
+            {
+                light.keyDirection = {-.44f, -.40f, .78f};
+                light.keyColor = {1.08f, .98f, .84f};
+                light.skyColor = {.64f, .74f, .84f};
+                light.groundColor = {.56f, .48f, .36f};
+            }
+        }
+        GameRenderer::Get().Backend().SetLighting(light);
+    }
     const auto terrainView = Game::Get().SurfaceTerrainView();
     auto &d = *data;
     if (d.epoch != snapshot->statistics.epoch)

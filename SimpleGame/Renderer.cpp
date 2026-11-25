@@ -41,11 +41,16 @@ uniform sampler2D scene;
 uniform vec2 texel;
 uniform float clockTime;
 uniform int pixelMode;
+uniform float exposure;
 in vec2 uv;
 out vec4 fragColor;
 vec3 bright(vec2 p) {
     vec3 c = texture(scene, clamp(p, vec2(0.001), vec2(0.999))).rgb;
-    return c * smoothstep(0.72, 0.98, max(c.r, max(c.g, c.b)));
+    float lum = max(c.r, max(c.g, c.b));
+    return c * smoothstep(0.74, 1.02, lum);
+}
+vec3 acesFilmic(vec3 x) {
+    return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0);
 }
 void main() {
     vec2 sampleUv = pixelMode != 0 ? (floor(uv / texel) + 0.5) * texel : uv;
@@ -54,18 +59,22 @@ void main() {
     if (pixelMode == 0) {
         for (int i = 1; i <= 3; ++i) {
             vec2 d = texel * float(i * 2);
+            vec2 dg = d * 0.7071;
             float weight = float(4 - i);
-            bloom += (bright(uv + vec2(d.x, 0.0)) + bright(uv - vec2(d.x, 0.0))) * weight;
-            bloom += (bright(uv + vec2(0.0, d.y)) + bright(uv - vec2(0.0, d.y))) * weight;
+            bloom += (bright(uv + vec2(d.x, 0.0)) + bright(uv - vec2(d.x, 0.0)) +
+                      bright(uv + vec2(0.0, d.y)) + bright(uv - vec2(0.0, d.y))) * weight;
+            bloom += (bright(uv + dg) + bright(uv - dg) +
+                      bright(uv + vec2(dg.x, -dg.y)) + bright(uv + vec2(-dg.x, dg.y))) * (weight * 0.65);
         }
     }
-    color += bloom * 0.012;
-    color *= vec3(0.98, 1.04, 1.08);
-    color = pow(vec3(1.0) - exp(-color * 1.35), vec3(0.9));
+    vec3 lin = pow(max(color, vec3(0.0)), vec3(2.2));
+    lin += bloom * 0.011;
+    lin *= vec3(0.99, 1.015, 1.035) * max(0.5, exposure);
+    color = pow(acesFilmic(lin), vec3(1.0 / 2.2));
     vec2 p = sampleUv * 2.0 - 1.0;
-    color *= 1.0 - 0.16 * dot(p, p);
+    color *= 1.0 - 0.14 * dot(p, p);
     float noise = fract(sin(dot(uv + fract(clockTime * 0.07), vec2(12.9898, 78.233))) * 43758.5453);
-    fragColor = vec4(color + (pixelMode != 0 ? 0.0 : (noise - 0.5) * 0.007), 1.0);
+    fragColor = vec4(color + (pixelMode != 0 ? 0.0 : (noise - 0.5) * 0.006), 1.0);
 }
 )GLSL";
 
@@ -92,9 +101,11 @@ uniform mat4 mvp;
 uniform int shadowPass;
 uniform int imported;
 uniform vec2 shadowJitter;
+uniform vec2 shadowSlope;
 uniform float hologramTime;
 out vec3 normal;
 out vec3 localPosition;
+out vec3 fragIsoPos;
 out vec4 tint;
 out vec4 finish;
 out float surface;
@@ -149,12 +160,14 @@ void main() {
         coverage = 0.64;
     }
     if (vertexInfo.x > 2.5) surface = 4.0;
+    float vertHeight = p.z;
     if (shadowPass != 0) {
         float ground = instanceTranslation.w;
-        p.xy += vec2(0.38, 0.55) * max(0.0, p.z - ground);
+        p.xy += shadowSlope * max(0.0, p.z - ground);
         p.z = ground;
     }
     vec2 screen = instanceAnchor.xy + vec2((p.x - p.y) * 36.0, (p.x + p.y) * 18.0 - p.z * 44.0);
+    fragIsoPos = vec3(screen.x, screen.y + vertHeight * 44.0, vertHeight);
     float depth = instanceAnchor.z + (p.x + p.y) * 36.0 + p.z * (1296.0 / 44.0);
     if (shadowPass != 0) {
         screen += shadowJitter;
@@ -195,9 +208,11 @@ uniform int armed;
 uniform int shadowPass;
 uniform int imported;
 uniform vec2 shadowJitter;
+uniform vec2 shadowSlope;
 uniform float hologramTime;
 out vec3 normal;
 out vec3 localPosition;
+out vec3 fragIsoPos;
 out vec4 tint;
 out vec4 finish;
 out float surface;
@@ -251,12 +266,14 @@ void main() {
         coverage = 0.64;
     }
     if (vertexInfo.x > 2.5) surface = 4.0;
+    float vertHeight = p.z;
     if (shadowPass != 0) {
         float ground = instanceTranslation.w;
-        p.xy += vec2(0.38, 0.55) * max(0.0, p.z - ground);
+        p.xy += shadowSlope * max(0.0, p.z - ground);
         p.z = ground;
     }
     vec2 screen = instanceAnchor.xy + vec2((p.x - p.y) * 36.0, (p.x + p.y) * 18.0 - p.z * 44.0);
+    fragIsoPos = vec3(screen.x, screen.y + vertHeight * 44.0, vertHeight);
     float depth = instanceAnchor.z + (p.x + p.y) * 36.0 + p.z * (1296.0 / 44.0);
     if (shadowPass != 0) {
         screen += shadowJitter;
@@ -302,8 +319,17 @@ uniform sampler2D damageMask;
 uniform int hasPbr;
 uniform int hasPbrDetail;
 uniform int hasDamageMask;
+uniform vec3 uKeyDir;
+uniform vec4 uKeyColor;
+uniform vec4 uSkyColor;
+uniform vec4 uGroundColor;
+uniform vec4 uRimColor;
+uniform int uPointLightCount;
+uniform vec4 uPointLightPos[16];
+uniform vec4 uPointLightColor[16];
 in vec3 normal;
 in vec3 localPosition;
+in vec3 fragIsoPos;
 in vec4 tint;
 in vec4 finish;
 in float surface;
@@ -312,9 +338,71 @@ in float holographic;
 in vec2 meshUv;
 in float hasAuthoredUv;
 out vec4 fragColor;
+vec3 srgbToLinear(vec3 c) {
+    return c * (c * (c * 0.305306011 + 0.682171111) + 0.012522878);
+}
+vec3 linearToSrgb(vec3 c) {
+    c = max(c, vec3(0.0));
+    return pow(c, vec3(1.0 / 2.2));
+}
+float ggxD(float ndh, float a2) {
+    float d = ndh * ndh * (a2 - 1.0) + 1.0;
+    return a2 / (3.14159265 * d * d + 0.0001);
+}
+float smithV(float ndv, float ndl, float a2) {
+    float gv = ndl * sqrt(ndv * ndv * (1.0 - a2) + a2);
+    float gl = ndv * sqrt(ndl * ndl * (1.0 - a2) + a2);
+    return 0.5 / max(gv + gl, 0.0005);
+}
+vec3 fresnelSchlick(float cosTheta, vec3 f0) {
+    float t = clamp(1.0 - cosTheta, 0.0, 1.0);
+    float t2 = t * t;
+    return f0 + (1.0 - f0) * (t2 * t2 * t);
+}
+vec3 evalDirectPbr(vec3 n, vec3 v, vec3 l, vec3 albedo, vec3 f0, float rough, float metal,
+                   vec3 lightRad, float surfType, bool celMode) {
+    float rawNdl = dot(n, l);
+    float ndl = max(rawNdl, 0.0);
+    float ndv = max(dot(n, v), 0.02);
+    // Soft wrap lighting for skin so faces/hands stay warm across the terminator.
+    bool isSkin = surfType > 6.5;
+    bool isCloth = surfType > 0.5 && surfType < 1.5;
+    float wrapNdl = isSkin ? clamp((rawNdl + 0.24) / 1.24, 0.0, 1.0) : ndl;
+    float diffFactor = wrapNdl;
+    if (celMode) {
+        // Anti-aliased 3-band stylized PBR response without stair-stepping on curved cloth folds.
+        float band1 = smoothstep(0.14, 0.24, wrapNdl);
+        float band2 = smoothstep(0.56, 0.68, wrapNdl);
+        diffFactor = mix(0.06, 0.58, band1) + 0.42 * band2;
+    }
+    vec3 h = normalize(l + v);
+    float ndh = max(dot(n, h), 0.0);
+    float vdh = max(dot(v, h), 0.0);
+    float a = max(rough * rough, 0.045);
+    float a2 = a * a;
+    vec3 F = fresnelSchlick(vdh, f0);
+    float D = ggxD(ndh, a2);
+    float V = smithV(ndv, max(ndl, 0.02), a2);
+    vec3 spec = D * V * F * ndl;
+    if (celMode) {
+        spec *= mix(0.72, 1.15, smoothstep(0.25, 0.70, ndh));
+    }
+    vec3 kD = (vec3(1.0) - F) * (1.0 - metal);
+    vec3 diff = (kD * albedo / 3.14159265) * diffFactor;
+    // Subsurface scatter warmth on skin terminator + subtle grazing cloth sheen on fabric folds.
+    vec3 extra = vec3(0.0);
+    if (isSkin) {
+        float sss = smoothstep(-0.20, 0.28, rawNdl) * (1.0 - smoothstep(0.18, 0.68, rawNdl));
+        extra += albedo * vec3(0.45, 0.14, 0.08) * sss * 0.22;
+    } else if (isCloth) {
+        float sheen = pow(1.0 - ndv, 3.0) * (0.35 + 0.65 * diffFactor);
+        extra += mix(albedo, vec3(1.0), 0.35) * sheen * 0.11;
+    }
+    return (diff * 3.14159265 + spec + extra) * lightRad;
+}
 void main() {
     if (shadowPass != 0) {
-        fragColor = vec4(0.0, 0.0, 0.0, 0.30 * tint.a);
+        fragColor = vec4(0.0, 0.0, 0.0, uGroundColor.w * tint.a);
         return;
     }
     // Stable ordered coverage preserves depth for the player, regardless of batch order.
@@ -332,14 +420,17 @@ void main() {
         return;
     }
     vec3 n = normalize(normal);
+    if (gl_FrontFacing && surface > 0.5 && surface < 1.5) {
+        n = -n;
+    }
     float rough = finish.x;
     float metal = finish.y;
-    if (surface > 0.5 && surface < 1.5) { rough = 0.94; metal = 0.0; }
-    if (surface > 1.5 && surface < 2.5) { rough = 0.35; metal = 0.75; }
-    if (surface > 2.5 && surface < 3.5) { rough = 0.12; metal = 0.15; }
-    if (surface > 4.5 && surface < 5.5) { rough = 0.96; metal = 0.0; }
-    if (surface > 5.5 && surface < 6.5) { rough = 0.9; metal = 0.0; }
-    if (surface > 6.5) { rough = 0.75; metal = 0.0; }
+    if (surface > 0.5 && surface < 1.5) { rough = 0.90; metal = 0.0; }
+    if (surface > 1.5 && surface < 2.5) { rough = 0.44; metal = 0.36; }
+    if (surface > 2.5 && surface < 3.5) { rough = 0.12; metal = 0.16; }
+    if (surface > 4.5 && surface < 5.5) { rough = 0.92; metal = 0.0; }
+    if (surface > 5.5 && surface < 6.5) { rough = 0.86; metal = 0.0; }
+    if (surface > 6.5) { rough = 0.66; metal = 0.0; }
     vec3 baseColor = tint.rgb;
     float ao = 1.0;
     vec2 triUv = (abs(n.z) > 0.72) ? localPosition.xy : ((abs(n.x) > abs(n.y)) ? localPosition.yz : localPosition.xz);
@@ -351,9 +442,9 @@ void main() {
         vec3 pbrBase = vec3(1.0);
         vec3 pbrNrm = vec3(0.0, 0.0, 1.0);
         vec3 pbrOrm = vec3(1.0, rough, metal);
-        float normalStrength = 0.32;
+        float normalStrength = 0.34;
         float grainStrength = 0.24;
-        float aoStrength = 0.35;
+        float aoStrength = 0.38;
         if (useDetail) {
             // Detail 512^2 array: 0=SkinMicrograin, 3=Road_Basalt(Rubber), 4=Rock_Mine(Stone).
             float detailLayer = surface > 6.5 ? 0.0 : (surface > 5.5 ? 4.0 : 3.0);
@@ -397,15 +488,64 @@ void main() {
         rough = clamp(rough + scuffs * 0.35 + soot * 0.25 - chips * 0.15, 0.08, 0.98);
         metal = clamp(metal + chips * 0.45 - soot * 0.45, 0.0, 1.0);
     }
-    vec3 l = normalize(vec3(-0.35, -0.45, 0.82));
+    if (surface > 3.5 && surface < 4.5) {
+        vec3 emissive = tint.rgb * (1.0 + finish.z * 0.35);
+        fragColor = vec4(emissive, coverage < 0.5 ? 1.0 : tint.a);
+        return;
+    }
+    vec3 albedo = srgbToLinear(clamp(baseColor, 0.0, 1.0));
+    vec3 f0 = mix(vec3(0.04), albedo, metal);
     vec3 v = normalize(vec3(1.0, 1.0, 0.818));
-    float diffuse = max(0.0, dot(n, l));
-    float light = (cartoon != 0 ? (diffuse < 0.22 ? 0.46 : diffuse < 0.65 ? 0.72 : 1.0) : 0.48 + 0.52 * diffuse) * ao;
-    float spec = pow(max(0.0, dot(n, normalize(l + v))), mix(90.0, 8.0, rough)) * (1.0 - rough) * 0.65;
-    float rim = pow(1.0 - max(0.0, dot(n, v)), 3.0) * 0.08;
-    vec3 color = baseColor * light + mix(vec3(0.7, 0.83, 0.9), baseColor, metal) * spec + vec3(0.2, 0.4, 0.48) * rim;
-    if (surface > 3.5 && surface < 4.5) color = tint.rgb * (1.0 + finish.z * 0.25);
-    fragColor = vec4(color, coverage < 0.5 ? 1.0 : tint.a);
+    vec3 l = normalize(uKeyDir);
+    bool celMode = cartoon != 0;
+
+    // 1) Primary directional sun/key light + subtle cool sky fill from opposite azimuth (prevents crushed shadows).
+    vec3 keyRad = srgbToLinear(uKeyColor.rgb) * uKeyColor.w;
+    vec3 lit = evalDirectPbr(n, v, l, albedo, f0, rough, metal, keyRad, surface, celMode) * mix(0.72, 1.0, ao);
+    vec3 fillDir = normalize(vec3(-l.x, -l.y, 0.58));
+    vec3 skyLin = srgbToLinear(uSkyColor.rgb);
+    vec3 groundLin = srgbToLinear(uGroundColor.rgb);
+    float fillNdl = max(dot(n, fillDir), 0.0);
+    lit += albedo * (1.0 - metal * 0.55) * skyLin * (fillNdl * 0.24 * uSkyColor.w) * ao;
+
+    // 2) Hemisphere sky/ground diffuse IBL + environment specular reflection (gives shadow sides rich color volume).
+    float hemi = clamp(n.z * 0.5 + 0.5, 0.0, 1.0);
+    float ndv = max(dot(n, v), 0.02);
+    vec3 fEnv = fresnelSchlick(ndv, f0) * (1.0 - rough * 0.72);
+    vec3 kDEnv = (vec3(1.0) - fEnv) * (1.0 - metal * 0.60);
+    vec3 envDiff = mix(groundLin, skyLin, hemi) * uSkyColor.w * albedo * kDEnv * ao;
+    vec3 reflDir = reflect(-v, n);
+    float reflUp = clamp(reflDir.z * 0.5 + 0.5, 0.0, 1.0);
+    vec3 envSpecColor = mix(groundLin * 0.90, skyLin * 1.45, reflUp);
+    vec3 envSpec = envSpecColor * fEnv * ((1.0 - rough) * (1.0 - rough) * 0.75 + 0.10) * uSkyColor.w * ao;
+    lit += envDiff + envSpec;
+
+    // 3) Subtle atmospheric Fresnel rim light (separates character silhouettes cleanly in isometric view).
+    float rimPow = pow(1.0 - ndv, 3.0) * (0.35 + 0.65 * hemi);
+    lit += srgbToLinear(uRimColor.rgb) * (uRimColor.w * rimPow) * mix(vec3(0.65), albedo + 0.35, 0.45) * ao;
+
+    // 4) Dynamic 3D point lights in isometric world space (streetlights, lamps, muzzle flash, beacons).
+    for (int i = 0; i < 16; ++i) {
+        if (i >= uPointLightCount) break;
+        vec4 lp = uPointLightPos[i];
+        vec2 ds = lp.xy - fragIsoPos.xy;
+        vec3 toLight = vec3(0.5 * (ds.y / 18.0 + ds.x / 36.0),
+                            0.5 * (ds.y / 18.0 - ds.x / 36.0),
+                            lp.z - fragIsoPos.z);
+        float d2 = dot(toLight, toLight);
+        float r2 = lp.w * lp.w;
+        if (d2 >= r2) continue;
+        float dist = sqrt(max(d2, 0.0004));
+        float ratio2 = d2 / max(r2, 0.0004);
+        float win = clamp(1.0 - ratio2 * ratio2, 0.0, 1.0);
+        float atten = (win * win) / (1.0 + d2 * 0.55);
+        vec4 lc = uPointLightColor[i];
+        vec3 pRad = srgbToLinear(lc.rgb) * (lc.w * atten * 2.1);
+        lit += evalDirectPbr(n, v, toLight / dist, albedo, f0, rough, metal, pRad, surface, false);
+    }
+
+    vec3 outColor = linearToSrgb(lit);
+    fragColor = vec4(outColor, coverage < 0.5 ? 1.0 : tint.a);
 }
 )GLSL";
 
@@ -789,17 +929,20 @@ struct Renderer::MeshData
 
     struct ModelUniforms
     {
-        GLint mvp = -1, cartoon = -1, shadowPass = -1, shadowJitter = -1, hologramTime = -1;
+        GLint mvp = -1, cartoon = -1, shadowPass = -1, shadowJitter = -1, shadowSlope = -1, hologramTime = -1;
         GLint bones = -1, useBones = -1, armed = -1, imported = -1;
         GLint pbrBaseArray = -1, pbrNormalArray = -1, pbrOrmArray = -1, damageMask = -1;
         GLint pbrDetailBaseArray = -1, pbrDetailNormalArray = -1, pbrDetailOrmArray = -1;
         GLint hasPbr = -1, hasPbrDetail = -1, hasDamageMask = -1;
+        GLint keyDir = -1, keyColor = -1, skyColor = -1, groundColor = -1, rimColor = -1;
+        GLint pointLightCount = -1, pointLightPos = -1, pointLightColor = -1;
         void Initialize(GLuint program)
         {
             mvp = glGetUniformLocation(program, "mvp");
             cartoon = glGetUniformLocation(program, "cartoon");
             shadowPass = glGetUniformLocation(program, "shadowPass");
             shadowJitter = glGetUniformLocation(program, "shadowJitter");
+            shadowSlope = glGetUniformLocation(program, "shadowSlope");
             hologramTime = glGetUniformLocation(program, "hologramTime");
             bones = glGetUniformLocation(program, "bones[0]");
             useBones = glGetUniformLocation(program, "useBones");
@@ -815,17 +958,26 @@ struct Renderer::MeshData
             hasPbr = glGetUniformLocation(program, "hasPbr");
             hasPbrDetail = glGetUniformLocation(program, "hasPbrDetail");
             hasDamageMask = glGetUniformLocation(program, "hasDamageMask");
+            keyDir = glGetUniformLocation(program, "uKeyDir");
+            keyColor = glGetUniformLocation(program, "uKeyColor");
+            skyColor = glGetUniformLocation(program, "uSkyColor");
+            groundColor = glGetUniformLocation(program, "uGroundColor");
+            rimColor = glGetUniformLocation(program, "uRimColor");
+            pointLightCount = glGetUniformLocation(program, "uPointLightCount");
+            pointLightPos = glGetUniformLocation(program, "uPointLightPos[0]");
+            pointLightColor = glGetUniformLocation(program, "uPointLightColor[0]");
         }
     } uniforms;
     struct PostUniforms
     {
-        GLint scene = -1, texel = -1, clockTime = -1, pixelMode = -1;
+        GLint scene = -1, texel = -1, clockTime = -1, pixelMode = -1, exposure = -1;
         void Initialize(GLuint program)
         {
             scene = glGetUniformLocation(program, "scene");
             texel = glGetUniformLocation(program, "texel");
             clockTime = glGetUniformLocation(program, "clockTime");
             pixelMode = glGetUniformLocation(program, "pixelMode");
+            exposure = glGetUniformLocation(program, "exposure");
         }
     } postUniforms;
     struct ShadowUniforms
@@ -880,6 +1032,8 @@ struct Renderer::MeshData
     GLuint activeFbo = 0;
     std::uint64_t mapRevision = 0;
     bool powered = false;
+    rendering::SceneLighting lighting;
+    std::vector<rendering::PointLight> pointLights;
     rendering::FrameStatistics statistics;
 
     ~MeshData()
@@ -1519,6 +1673,49 @@ const PbrTextureBudget &Renderer::GetPbrTextureBudget() const
     static const PbrTextureBudget empty{};
     return m_assets ? m_assets->PbrBudget() : empty;
 }
+void Renderer::SetLighting(const rendering::SceneLighting &lighting)
+{
+    m_meshes->lighting = lighting;
+}
+const rendering::SceneLighting &Renderer::GetLighting() const
+{
+    return m_meshes->lighting;
+}
+void Renderer::AddPointLight(const rendering::PointLight &light)
+{
+    if (light.radiusUnits <= .05f || light.intensity <= .001f)
+    {
+        return;
+    }
+    const float margin = light.radiusUnits * 48.f + 160.f;
+    if (light.screenX < -margin || light.screenX > float(m_width) + margin || light.screenY < -margin ||
+        light.screenY > float(m_height) + margin)
+    {
+        return;
+    }
+    auto &lights = m_meshes->pointLights;
+    if (lights.size() < rendering::kMaxPointLights)
+    {
+        lights.push_back(light);
+        return;
+    }
+    auto score = [&](const rendering::PointLight &l) {
+        const float dx = l.screenX - float(m_width) * .5f;
+        const float dy = l.screenY - float(m_height) * .5f;
+        return (l.intensity * l.radiusUnits) / (1.f + (dx * dx + dy * dy) * .00001f);
+    };
+    const float candidateScore = score(light);
+    auto weakest = std::min_element(lights.begin(), lights.end(),
+                                    [&](const auto &a, const auto &b) { return score(a) < score(b); });
+    if (weakest != lights.end() && candidateScore > score(*weakest))
+    {
+        *weakest = light;
+    }
+}
+void Renderer::ClearPointLights()
+{
+    m_meshes->pointLights.clear();
+}
 
 void Renderer::DrawModels()
 {
@@ -1582,7 +1779,66 @@ void Renderer::DrawModels()
         glUniform1i(data.uniforms.cartoon, m_style.cartoon ? 1 : 0);
         glUniform1i(data.uniforms.shadowPass, shadow);
         glUniform2f(data.uniforms.shadowJitter, 0, 0);
+        const auto &lt = data.lighting;
+        const float kLen =
+            std::sqrt(lt.keyDirection[0] * lt.keyDirection[0] + lt.keyDirection[1] * lt.keyDirection[1] +
+                      lt.keyDirection[2] * lt.keyDirection[2]);
+        const float kx = kLen > 1e-4f ? lt.keyDirection[0] / kLen : -.35f;
+        const float ky = kLen > 1e-4f ? lt.keyDirection[1] / kLen : -.45f;
+        const float kz = kLen > 1e-4f ? lt.keyDirection[2] / kLen : .82f;
+        if (data.uniforms.shadowSlope >= 0)
+        {
+            const float invZ = 1.f / (std::max)(.42f, kz);
+            glUniform2f(data.uniforms.shadowSlope, std::clamp(-kx * invZ, -.9f, .9f),
+                        std::clamp(-ky * invZ, -.9f, .9f));
+        }
         glUniform1f(data.uniforms.hologramTime, holoTime);
+        if (data.uniforms.keyDir >= 0)
+        {
+            glUniform3f(data.uniforms.keyDir, kx, ky, kz);
+        }
+        if (data.uniforms.keyColor >= 0)
+        {
+            glUniform4f(data.uniforms.keyColor, lt.keyColor[0], lt.keyColor[1], lt.keyColor[2], lt.keyIntensity);
+        }
+        if (data.uniforms.skyColor >= 0)
+        {
+            glUniform4f(data.uniforms.skyColor, lt.skyColor[0], lt.skyColor[1], lt.skyColor[2], lt.ambientIntensity);
+        }
+        if (data.uniforms.groundColor >= 0)
+        {
+            glUniform4f(data.uniforms.groundColor, lt.groundColor[0], lt.groundColor[1], lt.groundColor[2],
+                        lt.shadowStrength);
+        }
+        if (data.uniforms.rimColor >= 0)
+        {
+            glUniform4f(data.uniforms.rimColor, lt.rimColor[0], lt.rimColor[1], lt.rimColor[2], lt.rimIntensity);
+        }
+        const int lightCount = shadow == 0 ? int((std::min)(data.pointLights.size(), size_t(rendering::kMaxPointLights))) : 0;
+        if (data.uniforms.pointLightCount >= 0)
+        {
+            glUniform1i(data.uniforms.pointLightCount, lightCount);
+        }
+        if (lightCount > 0 && data.uniforms.pointLightPos >= 0 && data.uniforms.pointLightColor >= 0)
+        {
+            std::array<float, rendering::kMaxPointLights * 4> posBuf{};
+            std::array<float, rendering::kMaxPointLights * 4> colBuf{};
+            for (int i = 0; i < lightCount; ++i)
+            {
+                const auto &pl = data.pointLights[size_t(i)];
+                posBuf[size_t(i) * 4 + 0] = pl.screenX;
+                posBuf[size_t(i) * 4 + 1] = pl.screenY;
+                posBuf[size_t(i) * 4 + 2] = pl.heightUnits;
+                posBuf[size_t(i) * 4 + 3] = pl.radiusUnits;
+                colBuf[size_t(i) * 4 + 0] = pl.r;
+                colBuf[size_t(i) * 4 + 1] = pl.g;
+                colBuf[size_t(i) * 4 + 2] = pl.b;
+                colBuf[size_t(i) * 4 + 3] = pl.intensity;
+            }
+            glUniform4fv(data.uniforms.pointLightPos, lightCount, posBuf.data());
+            glUniform4fv(data.uniforms.pointLightColor, lightCount, colBuf.data());
+            data.statistics.pointLights = unsigned(lightCount);
+        }
         const bool pbrReady = shadow == 0 && m_assets && m_assets->HasPbrTextures();
         const bool pbrDetailReady = shadow == 0 && m_assets && m_assets->HasPbrDetailTextures();
         const bool dmgReady = shadow == 0 && m_assets && m_assets->HasDamageMask();
@@ -2438,6 +2694,7 @@ void Renderer::SetPresentationViewport()
 void Renderer::BeginScene(int width, int height)
 {
     m_meshes->statistics = {};
+    m_meshes->pointLights.clear();
     m_viewportWidth = width;
     m_viewportHeight = height;
     if (HasPostProcessing())
@@ -2507,6 +2764,10 @@ void Renderer::EndScene(float seconds)
     glUniform2f(m_meshes->postUniforms.texel, 1.f / m_renderWidth, 1.f / m_renderHeight);
     glUniform1f(m_meshes->postUniforms.clockTime, seconds);
     glUniform1i(m_meshes->postUniforms.pixelMode, m_style.resolution == WorldResolution::Native ? 0 : 1);
+    if (m_meshes->postUniforms.exposure >= 0)
+    {
+        glUniform1f(m_meshes->postUniforms.exposure, m_meshes->lighting.exposure);
+    }
     glBindVertexArray(m_meshes->fullscreenVao);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     profiling::Count(profiling::Counter::DrawCalls);

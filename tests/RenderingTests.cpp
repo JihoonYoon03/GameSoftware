@@ -608,12 +608,22 @@ void TestR4PbrAndSkinSharing(const std::filesystem::path *output = nullptr)
     assert(renderer.GetFrameStatistics().skinSlotReuses >= 1);
     assert(glGetError() == GL_NO_ERROR);
 
-    // CQ-11 Mixamo 3-tier modular character render + skinSlot sharing + rigid socket attachment + visual capture.
+    // CQ-11 Mixamo 3-tier modular 4-part character render + skinSlot sharing + rigid socket attachment + visual capture.
     const Model *coat = ModelLibrary::ModularPart("modular/outfit/Field_Medic_Coat");
+    const Model *pants = ModelLibrary::ModularPart("modular/outfit/Field_Medic_Cargo_Pants");
+    const Model *boots = ModelLibrary::ModularPart("modular/outfit/Field_Medic_Boots");
+    const Model *bunHair = ModelLibrary::ModularPart("modular/part/Field_Medic_Bun_Hair");
     assert(coat && coat->resourceId);
+    assert(pants && pants->resourceId);
+    assert(boots && boots->resourceId);
+    assert(bunHair && bunHair->resourceId);
     assert(ModelLibrary::ModularPart("modular/nonexistent_part") == nullptr);
     ModularCharacter modular;
-    modular.outfits = {coat, coat}; // Verify two skinned Mixamo layers share one SSBO skinSlot.
+    modular.outfits = {coat, pants, boots};
+    ModularAttachment hairAtt;
+    hairAtt.model = bunHair;
+    hairAtt.skinned = true;
+    modular.attachments.push_back(hairAtt);
     ModularAttachment backKit;
     backKit.model = &ModelLibrary::Get().recoveryKit;
     backKit.socket = RigSocket::Back;
@@ -627,49 +637,171 @@ void TestR4PbrAndSkinSharing(const std::filesystem::path *output = nullptr)
     Drawing::DrawModularCharacter(modular, {0.f, 0.f}, .78539816f, pose);
     renderer.EndModels();
     const auto modStats = renderer.GetFrameStatistics();
-    assert(modStats.objects >= 3);
-    assert(modStats.skinSlotReuses >= 1);
+    assert(modStats.objects >= 5);
+    assert(modStats.skinSlotReuses >= 3); // All 4 skinned Mixamo parts (coat/pants/boots/hair) share one SSBO skinSlot.
     assert(glGetError() == GL_NO_ERROR);
+
+    // R5 Lighting check: dynamic 3D point light physically illuminates nearby meshes + F7 continuous/cel PBR both pass.
+    auto renderCoatWithLight = [&](bool withPointLight, bool continuousPbr) {
+        auto savedStyle = renderer.GetStyle();
+        auto st = savedStyle;
+        st.cartoon = !continuousPbr;
+        renderer.SetStyle(st);
+        renderer.SetLighting(rendering::SceneLighting{});
+        Begin();
+        if (withPointLight)
+        {
+            renderer.AddPointLight({640.f, 440.f, 1.2f, 8.0f, 1.f, .62f, .22f, 2.4f});
+        }
+        renderer.BeginModels();
+        CharacterPose restPose{};
+        Transform3D rot;
+        rot.yaw = .78539816f;
+        const float s = WorldScale::characterScale * 3.2f;
+        Drawing::DrawModel3D(*coat, {640.f, 520.f}, {s, s, s}, rot, 0.f, {}, &restPose);
+        renderer.EndModels();
+        const auto litStats = renderer.GetFrameStatistics();
+        assert(withPointLight ? (litStats.pointLights >= 1) : (litStats.pointLights == 0));
+        assert(glGetError() == GL_NO_ERROR);
+        auto px = Pixels();
+        renderer.SetStyle(savedStyle);
+        return px;
+    };
+    const auto coatBase = renderCoatWithLight(false, false);
+    const auto coatLit = renderCoatWithLight(true, false);
+    const auto coatCont = renderCoatWithLight(false, true);
+    assert(coatLit != coatBase);  // Dynamic 3D point light must visibly illuminate the 3D surface.
+    assert(coatCont != coatBase); // Stylized PBR cel (F7 on) and continuous GGX PBR (F7 off) must differ.
 
     if (output)
     {
-        // Visual inspection turnaround capture: legacy Female Medic (1.80 m scale ref) + Field_Medic_Coat at 3 angles.
+        // 1) Full 4-part Field Medic assembly turnaround (Hair + Coat + Cargo Pants + Boots) vs legacy Female Medic
+        // (1.80 m height reference) on a neutral studio backdrop under R5 GGX PBR + hemisphere IBL + 3D rim lights.
+        renderer.SetLighting(rendering::SceneLighting{});
         Begin();
+        glClearColor(0.16f, 0.19f, 0.24f, 1.f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        renderer.AddPointLight({500.f, 540.f, 1.4f, 7.0f, 1.f, .74f, .40f, 1.35f});
+        renderer.AddPointLight({1080.f, 540.f, 1.4f, 7.0f, .34f, .86f, 1.f, 1.35f});
         renderer.BeginModels();
         CharacterPose restPose{};
-        const float s = WorldScale::characterScale * 3.2f;
+        const float s = WorldScale::characterScale * 4.2f;
         Transform3D refRot;
         refRot.yaw = .78539816f;
         Palette medPal;
         medPal.body = {.82f, .86f, .88f, 1.f};
-        Drawing::DrawModel3D(ModelLibrary::Character(CharacterType::Medic, Gender::Female), {210.f, 560.f},
+        Drawing::DrawModel3D(ModelLibrary::Character(CharacterType::Medic, Gender::Female), {190.f, 640.f},
                              {s, s, s}, refRot, 0.f, medPal, &restPose);
         const float yaws[3] = {.78539816f, 2.3561945f, -2.3561945f};
-        const float xs[3] = {510.f, 800.f, 1080.f};
+        const float xs[3] = {490.f, 790.f, 1080.f};
         for (int i = 0; i < 3; ++i)
         {
             Transform3D rot;
             rot.yaw = yaws[i];
             int slot = -1;
-            Drawing::DrawModel3D(*coat, {xs[i], 560.f}, {s, s, s}, rot, 0.f, {}, &restPose, 0.f, 0.f, &slot);
+            Drawing::DrawModel3D(*coat, {xs[i], 640.f}, {s, s, s}, rot, 0.f, {}, &restPose, 0.f, 0.f, &slot);
+            Drawing::DrawModel3D(*pants, {xs[i], 640.f}, {s, s, s}, rot, 0.f, {}, &restPose, 0.f, 0.f, &slot);
+            Drawing::DrawModel3D(*boots, {xs[i], 640.f}, {s, s, s}, rot, 0.f, {}, &restPose, 0.f, 0.f, &slot);
+            Drawing::DrawModel3D(*bunHair, {xs[i], 640.f}, {s, s, s}, rot, 0.f, {}, &restPose, 0.f, 0.f, &slot);
             if (i == 2)
             {
                 const auto back = ResourceAssets::Socket(coat->resourceId, restPose, RigSocket::Back);
                 Transform3D packRot = rot;
-                packRot.position = rot.Apply({back.x * s - .28f, back.y * s, back.z * s});
-                Drawing::DrawModel3D(ModelLibrary::Get().recoveryKit, {xs[i], 560.f}, {2.2f, 2.2f, 2.2f}, packRot,
+                packRot.position = rot.Apply({back.x * s - .34f, back.y * s, back.z * s});
+                Drawing::DrawModel3D(ModelLibrary::Get().recoveryKit, {xs[i], 640.f}, {2.8f, 2.8f, 2.8f}, packRot,
                                      2.f, {});
             }
         }
         renderer.EndModels();
         renderer.EndScene(0.f);
         assert(glGetError() == GL_NO_ERROR);
-        Save(*output / "cq11-field-medic-coat.bmp");
+        Save(*output / "cq11-field-medic-assembly.bmp");
+
+        // 2) Ultra close-up (5.8x scale) Front + Rear in Continuous GGX PBR mode (F7 off) for seam & material audit.
+        const auto savedStyle = renderer.GetStyle();
+        auto pbrStyle = savedStyle;
+        pbrStyle.cartoon = false;
+        renderer.SetStyle(pbrStyle);
+        renderer.SetLighting(rendering::SceneLighting{});
+        Begin();
+        glClearColor(0.15f, 0.18f, 0.23f, 1.f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        renderer.AddPointLight({360.f, 520.f, 1.4f, 8.0f, 1.f, .76f, .44f, 1.45f});
+        renderer.AddPointLight({920.f, 520.f, 1.4f, 8.0f, .36f, .86f, 1.f, 1.45f});
+        renderer.BeginModels();
+        const float bigS = WorldScale::characterScale * 5.8f;
+        const float closeYaws[2] = {.78539816f, -2.3561945f};
+        const float closeXs[2] = {420.f, 860.f};
+        for (int i = 0; i < 2; ++i)
+        {
+            Transform3D rot;
+            rot.yaw = closeYaws[i];
+            int slot = -1;
+            Drawing::DrawModel3D(*coat, {closeXs[i], 700.f}, {bigS, bigS, bigS}, rot, 0.f, {}, &restPose, 0.f, 0.f,
+                                 &slot);
+            Drawing::DrawModel3D(*pants, {closeXs[i], 700.f}, {bigS, bigS, bigS}, rot, 0.f, {}, &restPose, 0.f, 0.f,
+                                 &slot);
+            Drawing::DrawModel3D(*boots, {closeXs[i], 700.f}, {bigS, bigS, bigS}, rot, 0.f, {}, &restPose, 0.f, 0.f,
+                                 &slot);
+            Drawing::DrawModel3D(*bunHair, {closeXs[i], 700.f}, {bigS, bigS, bigS}, rot, 0.f, {}, &restPose, 0.f, 0.f,
+                                 &slot);
+        }
+        renderer.EndModels();
+        renderer.EndScene(0.f);
+        renderer.SetStyle(savedStyle);
+        assert(glGetError() == GL_NO_ERROR);
+        Save(*output / "cq11-field-medic-closeup-pbr.bmp");
+
+        // 3) Live Home Interior (5 real R5 3D point lights) with the assembled 4-part Field Medic at 1:1 gameplay scale.
+        Game::Get().Reset();
+        auto &w = Game::Get().GetState();
+        w.isInsideHome = true;
+        w.playerPosition = w.cameraPosition = {0.f, 0.f};
+        Begin();
+        game::SceneManager::Get(game::SceneKind::Interior).Draw();
+        {
+            renderqueue::Flush();
+            const auto first = WorldCamera::FromViewport({0, 0}),
+                       last = WorldCamera::FromViewport({float(kCanvasWidth), float(kCanvasHeight)});
+            glMatrixMode(GL_PROJECTION);
+            glPushMatrix();
+            glLoadIdentity();
+            glOrtho(first.x, last.x, last.y, first.y, -65536, 65536);
+            glMatrixMode(GL_MODELVIEW);
+            renderer.BeginModels();
+            ModularCharacter ingameMedic;
+            ingameMedic.outfits = {coat, pants, boots};
+            ingameMedic.attachments.push_back(hairAtt);
+            Drawing::DrawModularCharacter(ingameMedic, {-1.2f, 0.4f}, .78539816f, restPose);
+            Drawing::DrawModularCharacter(ingameMedic, {1.3f, -0.3f}, -2.3561945f, restPose);
+            renderer.EndModels();
+            renderqueue::Flush();
+            glMatrixMode(GL_PROJECTION);
+            glPopMatrix();
+            glMatrixMode(GL_MODELVIEW);
+        }
+        renderer.EndScene(0.f);
+        assert(glGetError() == GL_NO_ERROR);
+        Save(*output / "r5-interior.bmp");
+
+        w.isInsideHome = false;
+        w.playerPosition = w.cameraPosition = kLiaPosition;
+        Begin();
+        game::SceneManager::Get(game::SceneKind::Background).Draw();
+        renderqueue::Flush();
+        glDepthMask(GL_TRUE);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        game::SceneManager::Get(game::SceneKind::Exterior).Draw();
+        renderer.EndScene(0.f);
+        assert(glGetError() == GL_NO_ERROR);
+        Save(*output / "r5-city.bmp");
+        Game::Get().Reset();
     }
 
     std::cout << "R4 PBR arrays (pilot=" << budget.pilotLayers << ", detail=" << budget.detailLayers
               << ", vram=" << (double(budget.residentBytes) / (1024.0 * 1024.0)) << " MiB, aniso="
-              << budget.anisotropy << "x), skinSlot sharing and CQ-11 Mixamo modular coat checks passed.\n";
+              << budget.anisotropy
+              << "x), R5 GGX/IBL/point-lights, skinSlot sharing and CQ-11 Mixamo modular coat checks passed.\n";
 }
 
 void TestAntialiasing()
@@ -747,9 +879,9 @@ void TestDepth()
             maxDiff = (std::max)(maxDiff, m);
         }
     }
-    // 4x MSAA + PBR texture sampling can introduce a 1-LSB rounding difference on shared-seam pixels;
-    // any real depth-order error between the red and blue boxes exceeds 100/255 across thousands of pixels.
-    assert(maxDiff <= 1 && diffs <= 16);
+    // 4x MSAA + PBR texture sampling + linear-to-sRGB encoding can introduce a 1-LSB rounding difference along
+    // shared-seam silhouette pixels; any real depth-order error exceeds 100/255 across thousands of pixels.
+    assert(maxDiff <= 1 && diffs <= 64);
     {
         auto &renderer = GameRenderer::Get().Backend();
         const auto saved = renderer.GetStyle();
@@ -957,10 +1089,11 @@ void CaptureScenes(const std::filesystem::path &output)
             for (size_t i = 0; i < currentScroll.size(); i += 4)
             {
                 // MSAA changes fractional edge coverage by a few quantisation levels during
-                // subpixel movement. Count visible changes, retaining the same 2% pop limit.
-                if (std::abs(int(currentScroll[i]) - int(previousScroll[i])) > 3 ||
-                    std::abs(int(currentScroll[i + 1]) - int(previousScroll[i + 1])) > 3 ||
-                    std::abs(int(currentScroll[i + 2]) - int(previousScroll[i + 2])) > 3)
+                // subpixel movement (amplified slightly by ACES Filmic exposure). Count visible
+                // changes, retaining the same 2% pop limit.
+                if (std::abs(int(currentScroll[i]) - int(previousScroll[i])) > 6 ||
+                    std::abs(int(currentScroll[i + 1]) - int(previousScroll[i + 1])) > 6 ||
+                    std::abs(int(currentScroll[i + 2]) - int(previousScroll[i + 2])) > 6)
                 {
                     ++changed;
                 }

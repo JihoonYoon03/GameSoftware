@@ -29,7 +29,29 @@ struct FrameStatistics
 {
     unsigned int objects = 0, triangles = 0, shadowTriangles = 0, drawCalls = 0, instancedDraws = 0,
                  shadowDraws = 0, lod1Instances = 0, lod2Instances = 0, culledObjects = 0,
-                 skinSlotReuses = 0;
+                 skinSlotReuses = 0, pointLights = 0;
+};
+constexpr unsigned int kMaxPointLights = 16;
+struct PointLight
+{
+    float screenX = 0, screenY = 0;
+    float heightUnits = .5f;
+    float radiusUnits = 4.f;
+    float r = 1.f, g = 1.f, b = 1.f;
+    float intensity = 1.f;
+};
+struct SceneLighting
+{
+    std::array<float, 3> keyDirection = {-.35f, -.45f, .82f};
+    std::array<float, 3> keyColor = {1.06f, 1.02f, .95f};
+    float keyIntensity = 1.12f;
+    std::array<float, 3> skyColor = {.68f, .80f, .92f};
+    std::array<float, 3> groundColor = {.54f, .51f, .47f};
+    float ambientIntensity = .92f;
+    std::array<float, 3> rimColor = {.48f, .76f, .90f};
+    float rimIntensity = .26f;
+    float exposure = 1.24f;
+    float shadowStrength = .28f;
 };
 } // namespace rendering
 
@@ -111,6 +133,10 @@ class Renderer
     void BindObject(std::vector<rendering::RenderObject> *objects);
     bool DeferOverlay(std::function<void()> draw);
     bool DrawMineDarkness();
+    void SetLighting(const rendering::SceneLighting &lighting);
+    const rendering::SceneLighting &GetLighting() const;
+    void AddPointLight(const rendering::PointLight &light);
+    void ClearPointLights();
     const rendering::FrameStatistics &GetFrameStatistics() const;
     const PbrTextureBudget &GetPbrTextureBudget() const;
 

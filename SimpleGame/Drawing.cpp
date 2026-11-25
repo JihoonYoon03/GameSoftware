@@ -111,6 +111,14 @@ void Drawing::DrawGlow(Vector2 position, float size, ColorRGBA color)
     SetColor(color);
     GameRenderer::Get().Backend().DrawGlow(position.x, position.y, size);
 }
+void Drawing::AddPointLight(Vector2 worldPosition, float heightUnits, float radiusUnits, ColorRGBA color,
+                            float intensity)
+{
+    const auto screen = WorldToScreen(worldPosition.x, worldPosition.y, 0.f);
+    const auto offset = renderqueue::GetTranslation();
+    GameRenderer::Get().Backend().AddPointLight({screen.x + offset[0], screen.y + offset[1], heightUnits,
+                                                 radiusUnits, color.r, color.g, color.b, intensity});
+}
 void Drawing::DrawMaterialQuad(Vector2 a, Vector2 b, Vector2 c, Vector2 d, SurfaceMaterial material,
                                ColorRGBA color)
 {
@@ -560,6 +568,8 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
         muzzle = rotation.Apply({muzzle.x * bodyScale, muzzle.y * bodyScale, muzzle.z * bodyScale});
         DrawGlow(WorldToScreen(position.x + muzzle.x, position.y + muzzle.y, muzzle.z * 44), 19,
                  {1, .85f, .4f});
+        AddPointLight({position.x + muzzle.x, position.y + muzzle.y}, muzzle.z, 5.5f, {1.f, .82f, .42f},
+                      1.85f * std::clamp(flash / .055f, .25f, 1.f));
     }
 }
 void Drawing::DrawHair(Vector2 screen, models::Point scale, const models::Transform3D &rotation, float depth,

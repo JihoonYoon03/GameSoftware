@@ -38,6 +38,8 @@ class Drawing
     static void DrawTile(float x, float y, float width, float depth, ColorRGBA color);
     static void DrawBox(float x, float y, float width, float depth, float height, ColorRGBA color);
     static void DrawGlow(Vector2 position, float size, ColorRGBA color);
+    static void AddPointLight(Vector2 worldPosition, float heightUnits, float radiusUnits, ColorRGBA color,
+                              float intensity = 1.f);
     static void DrawPerson(Vector2 worldPosition, ColorRGBA coat, bool isPlayer = false,
                            models::CharacterType type = models::CharacterType::Explorer, bool walking = false,
                            float facingYaw = .78539816f, models::Gender gender = models::Gender::Male,

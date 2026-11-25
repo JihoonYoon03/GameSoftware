@@ -23,6 +23,7 @@ CRITICAL MULTI-VIEW CONSISTENCY RULES:
 
 - Arrange the 4 views strictly inside 4 equal quadrants (2x2 grid) with generous pure white (#FFFFFF) padding around every quadrant so T-pose hands and silhouettes NEVER touch or cross quadrant borders. Use strictly orthographic cameras with the same scale and the same ground or center baseline relative to each quadrant.
 - Every strap, seam, buckle, vent, panel line, asymmetry, silhouette, and color zone MUST match 100% continuously across Front, Back, Left Side, and Right Side views (no vanishing straps, no mismatched hems or proportions).
+- For paired parts (e.g., boots or shoulder guards), generate one turnaround sheet showing only the wearer's left part in all four views. Generate separate left and right sheets only when the sides differ substantially in overall shape. Treat differences limited to color, markings, or small details as one paired design.
 - If MOUNT_TYPE is SKINNED_GARMENT:
   * Wear the garment on a neutral matte-gray featureless 1.8m adult mannequin in strict horizontal T-pose (arms straight out at 90 degrees).
   * In Left Side and Right Side views, NEVER cut off the sleeves into empty armholes; show the full foreshortened T-pose sleeve cleanly extending toward the camera.
@@ -42,5 +43,6 @@ AFTER IMAGE GENERATION:
 
 - For VIEW_SET 4-view, split the generated master sheet at its exact horizontal and vertical midpoints. Export top-left as `01_front.png`, bottom-left as `02_left.png`, top-right as `03_back.png`, and bottom-right as `04_right.png`.
 - Put the four PNGs in a folder named `<PART_NAME>`. Use identical square 1024 × 1024 canvases with pure white backgrounds, preserving aspect ratio, common scale, and ground or center baseline. Keep full silhouettes and white clearance. When a silhouette touches a quadrant border, regenerate the sheet before exporting.
+- For paired parts with the same or substantially similar overall shape, export only the four views of the wearer's left part. Use the left part name (e.g., `Boot_L`) for the folder. When the overall shapes differ substantially, export each side to its own folder.
 - When VIEW_SET is explicitly 2-view for an empty standalone garment, use only the two upper quadrants for the front and back. Export only those two views.
 

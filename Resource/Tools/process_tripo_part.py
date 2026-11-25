@@ -191,6 +191,7 @@ def edit_geometry(obj, fitted=False):
     bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context="VERTS")
     if not bm.faces:
         raise ValueError("Cleanup removed every face")
+    bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
     bm.to_mesh(obj.data)
     bm.free()
     obj.data.update()

@@ -1,7 +1,7 @@
 # SimpleGame 게임 개발 통합 문서
 
 통합일: 2026-10-14  
-최종 진행 정리: 2026-11-25 · OpenGL 4.5 / 144+ FPS 렌더·시뮬레이션 최적화 및 CQ-01~08 구조 정비(52절) + 차세대 렌더링 최적화 R1~R4 구현 완료(55절·57절: v4 팩·EBO·Mega-VBO MDI·LOD·불변 PBR 텍스처 배열 4+9 레이어·멀티파츠 skinSlot 공유·visibilityMask + Mixamo 72본 표준 스켈레톤 런타임) + CQ-09 플레이어 거주지 고유 기능 구현 완료(56절: 저장 스키마 13) + CQ-04B 절차 도시 생성·현실 도로망·입체 교통·교통신호 체계 구현 완료(58절: Layout Revision 5) + 구 5도시 경계 보강·CQ-04 C2 전 도시 시설 실내 출입(저장 스키마 14)·CQ-10 빈 구역 콘텐츠 및 미니퀘스트 구현 완료(59절) + CQ-12 UI 배치·디자인·가독성 최종 구체화 구현 완료(60절) + CQ-11 Mixamo 3계층 모듈러 캐릭터 엔진 연동 파이프라인 구축 및 1호 자산(`Field_Medic_Coat_LOD0`) 실렌더 검수 완료(61절) / 남은 순서: CQ-11 잔여 Mixamo 바디·의복·애니메이션 뱅크 자산 납품 → 후속 조명·PBR 계산 개선(R5) → 2~4장 스토리 확장 대기
+최종 진행 정리: 2026-11-25 · OpenGL 4.5 / 144+ FPS 렌더·시뮬레이션 최적화 및 CQ-01~08 구조 정비(52절) + 차세대 렌더링 최적화 R1~R4 구현 완료(55절·57절: v4 팩·EBO·Mega-VBO MDI·LOD·불변 PBR 텍스처 배열 4+9 레이어·멀티파츠 skinSlot 공유·visibilityMask + Mixamo 72본 표준 스켈레톤 런타임) + CQ-09 플레이어 거주지 고유 기능 구현 완료(56절: 저장 스키마 13) + CQ-04B 절차 도시 생성·현실 도로망·입체 교통·교통신호 체계 구현 완료(58절: Layout Revision 5) + 구 5도시 경계 보강·CQ-04 C2 전 도시 시설 실내 출입(저장 스키마 14)·CQ-10 빈 구역 콘텐츠 및 미니퀘스트 구현 완료(59절) + CQ-12 UI 배치·디자인·가독성 최종 구체화 구현 완료(60절) + CQ-11 Mixamo 3계층 모듈러 캐릭터 엔진 연동 파이프라인 구축 및 1호 자산(`Field_Medic_Coat_LOD0`) 실렌더 검수 완료(61절) + R5 물리 기반 조명(Cook-Torrance GGX · 반구 IBL · 동적 3D 포인트 라이트 · ACES Filmic 톤매핑) 구현 완료(62절) / 남은 순서: CQ-11 잔여 Mixamo 바디·의복·애니메이션 뱅크 자산 납품·교체 → 모델별 고유 PBR 텍스처 확장 → 2~4장 스토리 확장 대기
 
 현재 개발 계획 브랜치: `iss04_ContentQuality` · 초기 구조 기준: `iss01_actor_scene_render` · 범죄 시스템 변경 기준: `62b00b5` · 이전 도로 성능 비교 기준: `592ec4c` · 초기 기반: `41316a5`
 
@@ -1606,11 +1606,47 @@ CQ-07을 A 이동·경로 안정성, B 감지·기억·역할별 판단, C 동�
 - **Blender 후처리 스크립트 보강 ([process_tripo_part.py](Resource/Tools/process_tripo_part.py)):** 목·손목·밑단 대형 개구부를 보존하면서 둘레 `≤ 12 cm`(변 `≤ 16`) 소형 찢어짐만 선별 보수하고 인접 UV·머티리얼을 자동 보간하는 `repair_small_holes()` 및 Blender 4.x 호환 `apply_shading()`을 추가했다.
 
 ##### 61.3 검증 결과 (2026-11-25 · Release x64 / RTX 5080)
-- **리소스 팩 & 파이프라인:** `node tools/pack-resources.mjs` (`231` 에셋 · `342,229` LOD0 tris · `37,012,050 B`), `--check` 재변환 일치, `check-resource-pack.mjs`, `tests/ResourcePipelineTests.mjs` 전원 통과.
+- **리소스 팩 & 파이프라인:** `node tools/pack-resources.mjs` (`234` 에셋 · `349,644` LOD0 tris · `37,541,884 B`), `--check` 재변환 일치, `check-resource-pack.mjs`, `tests/ResourcePipelineTests.mjs` 전원 통과.
+- **최소 4파츠 조합(`Field_Medic_Bun_Hair` · `Field_Medic_Coat` · `Field_Medic_Cargo_Pants` · `Field_Medic_Boots`) 통합 검수:**
+  - 4종 모두 22본 Mixamo 스켈레톤 100% 일치·무가중치 정점 0개·높이 스택(`-0.009 m ~ 1.816 m`) 정합·공유 애니메이션 뱅크 `14` 단일 통합 완료.
+  - 자동 생성 LOD: 코트 `3,197→1,506→676 / Shadow 768`, 카고팬츠 `2,600→1,239→577 / Shadow 625`, 부츠 `2,398→1,172→480 / Shadow 656`, 번 헤어 `2,417→1,172→532 / Shadow 532` (합계 LOD0 `10,612` / LOD1 `5,089` / LOD2 `2,265` / Shadow `2,581` tris).
+  - 육안 검수 중 `Field_Medic_Coat_LOD0.glb`의 `-X` 반쪽 면 법선 뒤집힘(`negX_signedVol = -0.01712`)을 포착해, [Renderer.cpp](SimpleGame/Renderer.cpp)에 Y-down 투영 기준 양면 PBR 법선 반전(`if (gl_FrontFacing) n = -n;`)을 추가하고 [process_tripo_part.py](Resource/Tools/process_tripo_part.py)의 `cleanup_mesh`에 무조건 `recalc_face_normals`를 추가했다.
 - **CPU/GPU 회귀 및 실렌더 육안 검수:**
-  - [tests/ResourceAssetsTests.cpp](tests/ResourceAssetsTests.cpp): 합성 63본 Mixamo `LayeredAnimation::Prepare()` 통과 + 실제 `modular/outfit/Field_Medic_Coat` 22본 분류·7소켓·`LOD0~2`/`ShadowProxy`·`surface=1`/`palette=0` 검증 통과.
+  - [tests/ResourceAssetsTests.cpp](tests/ResourceAssetsTests.cpp): 합성 63본 Mixamo `LayeredAnimation::Prepare()` 통과 + 4파츠 전원 22본 분류·단일 `rig` 공유·7소켓·`LOD0~2`/`ShadowProxy`·재질(`fabric=1`/`rubber=5`)·`palette=0` 검증 통과.
   - `ResourceLoadingTests`, `MapHudTests`, `GameplayTests --cq10-facilities` 통과.
-  - [tests/RenderingTests.cpp](tests/RenderingTests.cpp) `--r4-only --glfw`: `DrawModularCharacter()` 다중 스킨 `skinSlot` 재사용(`≥ 1`) + `RigSocket::Back` 강체 부착물 검증 통과, 실제 GPU 턴어라운드 캡처(`cq11-field-medic-coat.bmp`)에서 기존 1.80 m 여성 의무병 대비 정밀 스케일 일치·정면/측면/후면 방향 정합·무광 직물 쉐이딩·부착 소켓 정렬·결함 0건 육안 확인.
+  - [tests/RenderingTests.cpp](tests/RenderingTests.cpp) `--r4-only --glfw`: 4파츠 풀 조합 `DrawModularCharacter()` 단일 `skinSlot` 공유(`skinSlotReuses ≥ 3`) + `RigSocket::Back` 강체 부착물 검증 통과. 실제 GPU 턴어라운드(`cq11-field-medic-assembly-v3.png`)·연속 GGX 클로즈업(`cq11-field-medic-closeup-pbr-v3.png`)·거주지 1:1 실내 배치(`cq11-field-medic-ingame-v3.png`)에서 기존 1.80 m 여성 의무병 대비 정밀 스케일 일치·파츠 접합(헤어↔칼라↔코트↔카고팬츠↔부츠)·지면 접지·양팔 색감 일치·R5 난색/한색 포인트 라이트 반응 육안 확인.
+
+#### 62. R5 물리 기반 조명(Cook-Torrance GGX · 반구 IBL · 동적 3D 포인트 라이트 · ACES Filmic 톤매핑) 구현 (2026-11-25 · 구현 완료)
+
+**배경:** 기존 `Renderer.cpp`의 9줄짜리 sRGB Blinn-Phong 조명과 하드코딩된 단일 방향광/단색 앰비언트를 선형 색공간 기반의 물리 기반 조명(PBR) 파이프라인으로 전면 개선해, CQ-11 신규 Mixamo 의복/캐릭터 모델과 실내·도시·광산·개척지·행성 바이옴 전역의 질감·입체감·분위기 표현을 끌어올렸다.
+
+##### 62.1 코어 조명 API 및 선형 색공간 GGX PBR 셰이더 ([Renderer.h](SimpleGame/Renderer.h), [Renderer.cpp](SimpleGame/Renderer.cpp), [Drawing.h](SimpleGame/Drawing.h)/[Drawing.cpp](SimpleGame/Drawing.cpp))
+- **씬 조명 및 동적 포인트 라이트 API (`rendering::SceneLighting`, `rendering::PointLight`, `kMaxPointLights = 16`):**
+  - `Renderer::SetLighting()`/`GetLighting()`으로 씬별 태양/키 라이트 방향·색상·강도, 하늘/지면 반구 IBL 색상·강도, 대기 림 라이트, 노출(`exposure`), 그림자 농도(`shadowStrength`)를 제어하고, `Renderer::AddPointLight()`/`Drawing::AddPointLight()`로 월드 3D 좌표 기반 실시간 광원을 최대 16개까지 제출한다(화면 절두체 컬링 + 세기 우선 정렬, `BeginScene()` 자동 초기화, `FrameStatistics::pointLights` 집계).
+- **쿼터뷰 3D 포인트 라이트 정밀 복원:**
+  - `kMeshVertexSsboBody`/`kMeshVertexUniformBody`가 `fragIsoPos = vec3(screen.x, screen.y + vertHeight * 44.0, vertHeight)`를 전달하고 프래그먼트 셰이더에서 `dX/dY/dZ` 월드 단위 3D 벡터를 역산하므로, 구면 행성 청크나 `renderqueue::Translate` 오프셋이 적용된 모든 장면에서도 별도 행렬 변경 없이 정확한 3D 법선 반응과 UE4 윈도우 역제곱 감쇠(`pow(1 - (d/r)^4, 2) / (1 + 0.55*d^2)`)를 계산한다.
+- **Cook-Torrance GGX BRDF + 스타일라이즈드 PBR 셀/연속 듀얼 모드 (F7):**
+  - `kMeshFragmentBody`에서 sRGB↔선형 변환, `ggxD`/`smithV`/`fresnelSchlick` 마이크로패싯 BRDF, 하늘/지면 반구 디퓨즈·스페큘러 IBL + 반대 방위각 은은한 하늘 반사 필 라이트, 재질별 특화 항(직물 쉰 `surface == 1`, 피부 서브서피스 랩 `surface == 7`, 도장 합금 `surface == 2` `rough=0.44, metal=0.36`), 대기 프레넬 림 라이트를 계산한다.
+  - F7 키로 **스타일라이즈드 PBR 셀 모드**(`cartoon != 0`, 안티앨리어싱 3단 `smoothstep` 음영 + GGX 하이라이트)와 **연속 GGX PBR 모드**(`cartoon == 0`)를 실시간 전환할 수 있다.
+- **12-탭 소프트 블룸 + ACES Filmic 톤매핑 (`kPostFragmentBody`):**
+  - 기존 4-탭 단순 블룸을 12-탭 축+대각 소프트 블룸과 `exposure` 연동 ACES Filmic 톤매핑으로 교체해 밝은 발광체·총구 섬광·직사광 하이라이트의 색 포화·클리핑을 억제했다(`pixelMode != 0` F8 도트 모드는 선명도 유지).
+
+##### 62.2 전 장면·바이옴 조명 프리셋 및 동적 광원 배치 ([Scene.cpp](SimpleGame/Scene.cpp), [Drawing.cpp](SimpleGame/Drawing.cpp))
+- **전투 동적 광원:** `Drawing::DrawPerson()`에서 사격 시(`armed && flash > 0`) 총구 위치에 따뜻한 호박색 3D 포인트 라이트를 실시간 추가한다.
+- **장면·바이옴별 조명 연출:**
+  - `InteriorScene`(플레이어 거주지): 창문/침대/단말의 차가운 시안 광원과 작업대·정비 구역의 따뜻한 호박색 램프, 보관함 광원 등 5개 3D 포인트 라이트로 실내 난색/한색 대비를 구현했다.
+  - `FacilityInteriorScene`(도시 시설 실내): 시장·진료소·작업장·시민회관 용도별 전용 조명 톤과 3개 포인트 라이트를 적용했다.
+  - `CityScene` / `ObservatoryScene` / `MineScene` / `FrontierScene` / `PlanetScene`: 청명한 도시 주광 + 가로등/수신기 광원, 고지대 한색 전망대, 어두운 지하 갱도 + 플레이어 헤드램프/신호/문양 광원, 황금빛 개척지 석양, 행성 바이옴(`AncientRuins`/`Outlaw`/`Mine`/`Settlement`) 동적 톤 전환을 적용했다.
+
+##### 62.3 보정(v2) 및 검증 결과 (2026-11-25 · Release x64 / RTX 5080)
+- **육안 검수 및 보정 패스(v2):** 1차 캡처에서 다수 건축물 기본 벽면(`surface == 2`)이 생크롬(`metal=0.78`)으로 분류되어 그늘 면이 과도하게 어둡고 포인트 라이트 반사가 좁은 원으로 맺히던 현상을 포착해, `surface == 2`를 도장 합금(`rough=0.44, metal=0.36`)으로 조정하고 선형 반구 IBL·반대 방위각 하늘 필·노출(`1.24`)을 보정했다. 2차 캡처(`r5-interior-v2.png`, `r5-city-v2.png`, `r5-coat-v2.png`)에서 거주지 난색/한색 벽·바닥 라이팅, 도시 그림자 면 창문·이음새 판독성, `Field_Medic_Coat_LOD0` 직물 쉰·주름 음영을 육안 확인했다.
+- **회귀 테스트:** `ResourceAssetsTests`, `MapHudTests`, `GameplayTests --cq10-facilities`, `RenderingTests --r4-only --glfw`(동적 포인트 라이트 픽셀 변화·`pointLights >= 1`·F7 셀/GGX 모드 차이·GL 오류 0건 포함), 전체 `RenderingTests` 전원 통과.
+- **16개 장면 120프레임 실GPU 벤치마크 (`1280×800`, RTX 5080, `performance.json`):** 전 16개 장면 `over_budget_frames = 0 / 120` (16.67 ms 예산 초과 0건).
+  - `city`: avg `1.177 ms` / P95 `1.597 ms` (**626 FPS**)
+  - `planet_surface`: avg `0.932 ms` / P95 `1.404 ms` (**712 FPS**)
+  - `city_security_5stars`: avg `1.545 ms` / P95 `1.925 ms` (**519 FPS**)
+  - `planet_surface_security_5stars`: avg `1.545 ms` / P95 `2.235 ms` (**447 FPS**)
+  - `pbr_vram_bytes`: `105,207,072 B` (약 `100.3 MiB` / `128 MiB` 예산 이내).
 
 ### 전체 구조 검토와 반복 비용 리팩토링 — 2026-10-28
 
