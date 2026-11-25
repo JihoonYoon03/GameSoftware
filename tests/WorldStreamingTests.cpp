@@ -114,11 +114,30 @@ void ContentContracts()
     auto north = ContentLayout::Generate(*plan, {0, 1, 2});
     Check(junctionCell.streets.size() == 2 && east.streets.size() == 2 && north.streets.size() == 2,
           "Interior blocks publish shared street nodes");
-    Check(G::Distance(p.radiusMeters, junctionCell.streets[0].points.back(), east.streets[0].points.front()) <
-                  1.e-6 &&
-              G::Distance(p.radiusMeters, junctionCell.streets[1].points.back(),
-                          north.streets[1].points.front()) < 1.e-6,
-          "Neighbouring streets join the same physical junction without gaps");
+    if (plan->layoutRevision >= 5)
+    {
+        Check(!east.intersections.empty() && !north.intersections.empty(),
+              "CQ-04B publishes explicit intersection pads at shared street nodes");
+        const auto &eastPad = east.intersections.front();
+        const auto &northPad = north.intersections.front();
+        Check(G::Distance(p.radiusMeters, junctionCell.streets[0].points.back(), eastPad.center) <=
+                      eastPad.radiusMeters + .5 &&
+                  G::Distance(p.radiusMeters, east.streets[0].points.front(), eastPad.center) <=
+                      eastPad.radiusMeters + .5 &&
+                  G::Distance(p.radiusMeters, junctionCell.streets[1].points.back(), northPad.center) <=
+                      northPad.radiusMeters + .5 &&
+                  G::Distance(p.radiusMeters, north.streets[1].points.front(), northPad.center) <=
+                      northPad.radiusMeters + .5,
+              "Neighbouring streets meet the shared intersection pad stop-line cleanly");
+    }
+    else
+    {
+        Check(G::Distance(p.radiusMeters, junctionCell.streets[0].points.back(), east.streets[0].points.front()) <
+                      1.e-6 &&
+                  G::Distance(p.radiusMeters, junctionCell.streets[1].points.back(),
+                              north.streets[1].points.front()) < 1.e-6,
+              "Neighbouring streets join the same physical junction without gaps");
+    }
     double districtMaximum = 0, capitalMaximum = 0;
     std::vector<SurfaceStructure> structures;
     for (std::size_t region = 0; region < plan->regions.size(); ++region)
@@ -141,8 +160,16 @@ void ContentContracts()
                               Difference(s.frame.origin.normal, a.frame.origin.normal) < 1.e-12 &&
                               Difference(s.sizeMeters, a.sizeMeters) < 1.e-12,
                           "Stable identity, geometry and orientation");
-                    Check(s.Contains(s.frame.origin, p.radiusMeters),
-                          "The rendered rectangle's centre is solid");
+                    if (s.solid)
+                    {
+                        Check(s.Contains(s.frame.origin, p.radiusMeters),
+                              "The rendered rectangle's centre is solid");
+                    }
+                    else
+                    {
+                        Check(!s.Contains(s.frame.origin, p.radiusMeters),
+                              "Walkable plazas and streetscape props stay non-solid");
+                    }
                     auto outside = G::Advance(s.frame, std::cos(s.yaw) * (s.sizeMeters.x * .5 + 1),
                                               std::sin(s.yaw) * (s.sizeMeters.x * .5 + 1), p.radiusMeters)
                                        .origin;
@@ -166,20 +193,28 @@ void ContentContracts()
                         capitalMaximum = (std::max)(capitalMaximum, s.sizeMeters.z);
                     }
                     ++count;
-                    structures.push_back(s);
+                    if (s.solid)
+                    {
+                        structures.push_back(s);
+                    }
                 }
                 for (const auto &road : cell.streets)
                 {
-                    Check(road.lanes == 2 || road.lanes == 4 || road.lanes == 6,
+                    Check(road.kind == StreetKind::PedestrianPlaza
+                              ? road.lanes == 0
+                              : (road.lanes == 2 || road.lanes == 4 || road.lanes == 6),
                           "City road hierarchy remains two/four/six lanes");
-                    for (size_t i = 1; i < road.points.size(); ++i)
+                    if (road.kind != StreetKind::RingRoad)
                     {
-                        auto a = G::ToLocal(plan->regions[region].frame, road.points[i - 1], p.radiusMeters);
-                        auto b = G::ToLocal(plan->regions[region].frame, road.points[i], p.radiusMeters);
-                        double dx = std::fabs(b.x - a.x), dy = std::fabs(b.y - a.y);
-                        Check((std::min)(dx, dy) < std::hypot(dx, dy) * .3,
-                              "Generated settlement street axes match Halo's quarter-view basis while "
-                              "retaining gentle warps");
+                        for (size_t i = 1; i < road.points.size(); ++i)
+                        {
+                            auto a = G::ToLocal(plan->regions[region].frame, road.points[i - 1], p.radiusMeters);
+                            auto b = G::ToLocal(plan->regions[region].frame, road.points[i], p.radiusMeters);
+                            double dx = std::fabs(b.x - a.x), dy = std::fabs(b.y - a.y);
+                            Check((std::min)(dx, dy) < std::hypot(dx, dy) * .3,
+                                  "Generated settlement street axes match Halo's quarter-view basis while "
+                                  "retaining gentle warps");
+                        }
                     }
                 }
             }

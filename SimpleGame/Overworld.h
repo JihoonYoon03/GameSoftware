@@ -238,6 +238,7 @@ class TrafficSystem
     void StopForImpact(std::uint64_t id);
     TrafficLight Light(int lane, TrafficTurn turn) const;
     bool PedestrianGreen(int junction, int road = -1) const;
+    bool PedestrianFlashing(int junction, int road = -1) const;
     unsigned int PedestrianGroups(int junction) const;
     int CrossingRoad(int junction, Vector2 position) const;
     bool HasRightTurnSignal(int lane) const;
@@ -304,6 +305,35 @@ class AirTraffic
     float spawnTimer = 0;
 };
 
+// ============================================================================
+// IntersectionSignalController — CQ-04B procedural city 4-phase signal controller
+// (concurrent walk, actuated left-turn, Green Wave offset, flashing walk, preemption)
+// ============================================================================
+struct ProceduralSignalState
+{
+    TrafficLight mainThrough = TrafficLight::Green;
+    TrafficLight mainLeft = TrafficLight::Red;
+    TrafficLight sideThrough = TrafficLight::Red;
+    TrafficLight sideLeft = TrafficLight::Red;
+    bool mainWalkGreen = false;
+    bool mainWalkFlashing = false;
+    bool sideWalkGreen = false;
+    bool sideWalkFlashing = false;
+    bool rightTurnBlockedMain = false;
+    bool rightTurnBlockedSide = false;
+    bool emergencyPreempted = false;
+    double cycleSeconds = 54.;
+};
+class IntersectionSignalController
+{
+  public:
+    static ProceduralSignalState Evaluate(const world::SurfaceIntersection &intersection,
+                                          double worldTimeSeconds, bool mainLeftDemand = true,
+                                          bool sideLeftDemand = true, bool pedestrianDemand = true,
+                                          int emergencyAxis = -1);
+    static TrafficLight ApproachLight(const world::SurfaceIntersection &intersection, double approachYaw,
+                                      TrafficTurn turn, double worldTimeSeconds, int emergencyAxis = -1);
+};
 // ============================================================================
 // PlanetTraffic — bounded spherical traffic, independent of city-local coordinates and render chunks
 // ============================================================================

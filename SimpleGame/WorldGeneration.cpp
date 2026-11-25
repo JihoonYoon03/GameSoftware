@@ -305,6 +305,16 @@ double PlanetTerrain::Fractal(Vector3d p, double frequency, unsigned octaves, st
     }
     return value / total;
 }
+void PlanetTerrain::SetTerraces(std::vector<SettlementTerrace> pads)
+{
+    for (auto &pad : pads)
+    {
+        G::Validate(pad.center);
+        const double angular = (pad.radiusMeters + pad.featherMeters) / planet.radiusMeters;
+        pad.cosBound = angular >= G::Pi ? -1. : std::cos(angular);
+    }
+    terraces = std::move(pads);
+}
 double PlanetTerrain::Height(const SurfacePoint &point) const
 {
     G::Validate(point);
@@ -322,6 +332,22 @@ double PlanetTerrain::Height(const SurfacePoint &point) const
         double weight = 1 - Smooth((Distance(planet, point, *homeland) / coast - .70) / .50);
         double floor = SeaLevelMeters + 180 + Fractal(point.normal, 65 * radiusScale, 3, 355) * 220;
         height += (std::max)(0., floor - height) * weight;
+    }
+    // CQ-04B: Gentle settlement terracing keeps urban blocks within buildable slope (< 1.2m / block)
+    // before fixed story reservations are applied on top.
+    for (const auto &pad : terraces)
+    {
+        if (G::Dot(point.normal, pad.center.normal) < pad.cosBound)
+        {
+            continue;
+        }
+        const double distance = Distance(planet, point, pad.center);
+        if (distance >= pad.radiusMeters + pad.featherMeters)
+        {
+            continue;
+        }
+        const double weight = (1. - Smooth((distance - pad.radiusMeters) / pad.featherMeters)) * .88;
+        height += (pad.elevationMeters - height) * weight;
     }
     for (const auto &pad : reservations)
     {
@@ -664,7 +690,9 @@ void AddRelays(GeneratedPlanet &result, const GenerationSettings &settings, cons
     }
     if (planet.generatorVersion >= 2)
     {
+        auto savedTerraces = result.terrain.Terraces();
         result.terrain = PlanetTerrain(planet, std::move(pads), result.terrain.Homeland());
+        result.terrain.SetTerraces(std::move(savedTerraces));
     }
 }
 } // namespace
@@ -1273,6 +1301,51 @@ GeneratedPlanet PlanetGenerator::Generate(const std::atomic_bool *cancel) const
     std::sort(result.regions.begin(), result.regions.end(),
               [](const auto &a, const auto &b) { return a.definition.id < b.definition.id; });
     result.RebuildRegionIndex();
+    if (layoutRevision >= 5)
+    {
+        // CQ-04B: Apply gentle terracing inside procedural settlements so urban blocks stay flat and buildable.
+        std::vector<SettlementTerrace> terraces;
+        for (const auto &r : result.regions)
+        {
+            if (r.definition.kind != RegionKind::Settlement || r.definition.storyFixed ||
+                r.center.space != SpaceKind::Surface)
+            {
+                continue;
+            }
+            const double rad = (std::max)(120., r.boundingRadiusMeters * .80);
+            const double feather = (std::max)(80., r.boundingRadiusMeters * .28);
+            bool overlapsFixed = false;
+            for (const auto &res : result.terrain.Reservations())
+            {
+                if (Distance(planet, r.center.position, res.center) < rad + feather + res.radiusMeters)
+                {
+                    overlapsFixed = true;
+                    break;
+                }
+            }
+            if (overlapsFixed)
+            {
+                continue;
+            }
+            SettlementTerrace pad;
+            pad.regionId = r.definition.id;
+            pad.center = r.center.position;
+            pad.radiusMeters = rad;
+            pad.featherMeters = feather;
+            pad.elevationMeters = r.center.position.altitudeMeters;
+            terraces.push_back(std::move(pad));
+        }
+        result.terrain.SetTerraces(std::move(terraces));
+        for (auto &r : result.regions)
+        {
+            if (r.center.space == SpaceKind::Surface && !r.definition.storyFixed)
+            {
+                r.center.position.altitudeMeters = result.terrain.Height(r.center.position);
+                r.access.position.altitudeMeters = result.terrain.Height(r.access.position);
+                r.frame.origin = r.center.position;
+            }
+        }
+    }
     for (auto &r : result.regions)
     {
         r.biome = result.terrain.Sample(r.access.position).biome;
@@ -1638,6 +1711,57 @@ void BuildConnections(GeneratedPlanet &result, const GenerationSettings &setting
     {
         return;
     }
+    // CQ-04B (Rev 5+): Create directional perimeter portals on every surface settlement (including District and
+    // authored CityCore settlements like Halo) right on the outer ring road so incoming intercity highways
+    // fuse cleanly with perimeter portals instead of stabbing into city centres or mine entrances.
+    std::vector<std::vector<unsigned>> regionPortals(sites);
+    const bool multiPortal = result.layoutRevision >= 5;
+    if (multiPortal)
+    {
+        for (unsigned rIdx = 0; rIdx < sites; ++rIdx)
+        {
+            const auto &region = result.regions[rIdx];
+            if (region.definition.kind != RegionKind::Settlement || region.center.space != SpaceKind::Surface)
+            {
+                continue;
+            }
+            const auto *core = result.cityCores ? result.cityCores->Find(region.definition.id) : nullptr;
+            const unsigned count = (region.definition.tier >= SettlementTier::Town || core) ? 4u : 2u;
+            double ringRadius = (std::max)(180., region.boundingRadiusMeters * .68);
+            if (core)
+            {
+                ringRadius = (std::min)(region.boundingRadiusMeters * .88,
+                                        (std::max)(ringRadius, core->radiusMeters + 120.));
+            }
+            for (unsigned k = 0; k < count; ++k)
+            {
+                const double angle = k * (2. * G::Pi / double(count));
+                Vector3d local = {std::cos(angle) * ringRadius, std::sin(angle) * ringRadius, 0};
+                auto pt = G::FromLocal(region.frame, local, p.radiusMeters);
+                pt.altitudeMeters = result.terrain.Height(pt);
+                if (pt.altitudeMeters < PlanetTerrain::SeaLevelMeters + 10)
+                {
+                    local = Mul(local, .65);
+                    pt = G::FromLocal(region.frame, local, p.radiusMeters);
+                    pt.altitudeMeters = result.terrain.Height(pt);
+                }
+                if (pt.altitudeMeters < PlanetTerrain::SeaLevelMeters + 10 ||
+                    Distance(p, pt, result.nodes[rIdx].location.position) < 60.)
+                {
+                    continue;
+                }
+                if (core && std::hypot(local.x, local.y) < core->radiusMeters + 35.)
+                {
+                    continue;
+                }
+                const unsigned nodeIdx = unsigned(result.nodes.size());
+                result.nodes.push_back({"portal_" + region.definition.id + "_" + std::to_string(k),
+                                        region.definition.id, Location(p, region.definition.id, pt), false});
+                regionPortals[rIdx].push_back(nodeIdx);
+            }
+        }
+    }
+    const unsigned baseNodes = unsigned(result.nodes.size());
     struct Pair
     {
         double cost;
@@ -1670,15 +1794,15 @@ void BuildConnections(GeneratedPlanet &result, const GenerationSettings &setting
     };
     std::set<std::pair<unsigned, unsigned>> used;
     const bool distributed = result.layoutRevision >= 4;
-    std::vector<unsigned> degree(sites, 0);
+    std::vector<unsigned> degree(baseNodes, 0);
     auto authored = [&](unsigned node) {
         return result.cityCores && result.cityCores->Find(result.nodes[node].regionId);
     };
     // Keep one slot for local relay access, plus the authored city's physical approach.
     auto regionalLimit = [&](unsigned node) { return authored(node) ? 2u : 3u; };
-    std::vector<unsigned> junction(sites), ports(sites, 0), portLimit;
+    std::vector<unsigned> junction(baseNodes), ports(baseNodes, 0), portLimit;
     std::iota(junction.begin(), junction.end(), 0u);
-    for (unsigned i = 0; i < sites; ++i)
+    for (unsigned i = 0; i < baseNodes; ++i)
     {
         portLimit.push_back(authored(i) ? 3u : 4u);
     }
@@ -1704,6 +1828,52 @@ void BuildConnections(GeneratedPlanet &result, const GenerationSettings &setting
             ++ports[junction[b]];
         }
     };
+    // Stitch each settlement's perimeter portals in a clean chain (site -> p0 -> p1 -> ...) so every
+    // cardinal portal stays at degree <= 2 before intercity highways attach, and never exceeds degree 3.
+    if (multiPortal)
+    {
+        for (unsigned rIdx = 0; rIdx < sites; ++rIdx)
+        {
+            const auto &ps = regionPortals[rIdx];
+            if (ps.empty())
+            {
+                continue;
+            }
+            connect(rIdx, ps.front());
+            for (std::size_t k = 1; k < ps.size(); ++k)
+            {
+                connect(ps[k - 1], ps[k]);
+            }
+        }
+    }
+    auto pickEndpoint = [&](unsigned regionIdx, const SurfacePoint &toward, unsigned &outNode) -> bool {
+        double bestDist = std::numeric_limits<double>::infinity();
+        bool found = false;
+        for (unsigned portal : regionPortals[regionIdx])
+        {
+            if (degree[portal] >= 3u)
+            {
+                continue;
+            }
+            const double d = Distance(p, result.nodes[portal].location.position, toward);
+            if (d < bestDist)
+            {
+                bestDist = d;
+                outNode = portal;
+                found = true;
+            }
+        }
+        if (found)
+        {
+            return true;
+        }
+        if (!distributed || degree[regionIdx] < regionalLimit(regionIdx))
+        {
+            outNode = regionIdx;
+            return true;
+        }
+        return false;
+    };
     for (auto pair : pairs)
     {
         unsigned a = root(pair.a), b = root(pair.b);
@@ -1711,12 +1881,21 @@ void BuildConnections(GeneratedPlanet &result, const GenerationSettings &setting
         {
             continue;
         }
-        if (distributed &&
-            (degree[pair.a] >= regionalLimit(pair.a) || degree[pair.b] >= regionalLimit(pair.b)))
+        unsigned nodeA = pair.a, nodeB = pair.b;
+        if (multiPortal)
+        {
+            if (!pickEndpoint(pair.a, result.nodes[pair.b].location.position, nodeA) ||
+                !pickEndpoint(pair.b, result.nodes[pair.a].location.position, nodeB))
+            {
+                continue;
+            }
+        }
+        else if (distributed &&
+                 (degree[pair.a] >= regionalLimit(pair.a) || degree[pair.b] >= regionalLimit(pair.b)))
         {
             continue;
         }
-        connect(pair.a, pair.b);
+        connect(nodeA, nodeB);
         group[a] = b;
     }
     for (unsigned node = 0; node < sites; ++node)
@@ -1732,14 +1911,24 @@ void BuildConnections(GeneratedPlanet &result, const GenerationSettings &setting
             {
                 continue;
             }
-            if (distributed &&
-                (degree[pair.a] >= regionalLimit(pair.a) || degree[pair.b] >= regionalLimit(pair.b)))
+            unsigned nodeA = pair.a, nodeB = pair.b;
+            if (multiPortal)
+            {
+                if (!pickEndpoint(pair.a, result.nodes[pair.b].location.position, nodeA) ||
+                    !pickEndpoint(pair.b, result.nodes[pair.a].location.position, nodeB))
+                {
+                    continue;
+                }
+            }
+            else if (distributed &&
+                     (degree[pair.a] >= regionalLimit(pair.a) || degree[pair.b] >= regionalLimit(pair.b)))
             {
                 continue;
             }
-            if (!used.count({pair.a, pair.b}))
+            const unsigned lo = (std::min)(nodeA, nodeB), hi = (std::max)(nodeA, nodeB);
+            if (!used.count({lo, hi}))
             {
-                connect(pair.a, pair.b);
+                connect(nodeA, nodeB);
                 if (++added == 1)
                 {
                     break;
@@ -2036,6 +2225,18 @@ std::uint64_t GeneratedPlanet::Digest() const
         scalar(pad.featherMeters);
         scalar(pad.elevationMeters);
         number(pad.priority);
+    }
+    if (!terrain.Terraces().empty())
+    {
+        number(terrain.Terraces().size());
+        for (const auto &pad : terrain.Terraces())
+        {
+            text(pad.regionId);
+            point(pad.center);
+            scalar(pad.radiusMeters);
+            scalar(pad.featherMeters);
+            scalar(pad.elevationMeters);
+        }
     }
     number(anchors.size());
     for (const auto &anchor : anchors)

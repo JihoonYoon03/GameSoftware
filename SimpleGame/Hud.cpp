@@ -3750,6 +3750,55 @@ void PlanetHud::DrawMap(bool full)
             routeIndex = std::make_unique<world::RouteSpatialIndex>(*snapshot->planet);
             indexedPlanet = snapshot->planet;
         }
+        // CQ-04B (Rev 5+): Match WorldStreaming settlement clipping so removed intra-city connection
+        // diagonals never ghost onto the minimap or zoomed regional map over Halo / Ordin Mine.
+        struct MapSettlementClip
+        {
+            world::Vector3d normal;
+            double cosInner;
+        };
+        std::vector<MapSettlementClip> mapClips;
+        const bool rev5Map = snapshot->planet->layoutRevision >= 5;
+        if (rev5Map && range < 10000)
+        {
+            for (const auto &region : snapshot->planet->regions)
+            {
+                if (region.definition.kind != world::RegionKind::Settlement ||
+                    region.center.space != world::SpaceKind::Surface)
+                {
+                    continue;
+                }
+                double clipRadius = (std::max)(160., region.boundingRadiusMeters * .66);
+                if (snapshot->planet->cityCores)
+                {
+                    if (const auto *core = snapshot->planet->cityCores->Find(region.definition.id))
+                    {
+                        clipRadius = (std::max)(clipRadius, core->radiusMeters + 100.);
+                    }
+                }
+                if (!chordFar(region.center.position, focus, clipRadius + range + 60.))
+                {
+                    mapClips.push_back({region.center.position.normal,
+                                        std::cos((std::max)(10., clipRadius - 6.) / planetRadius)});
+                }
+            }
+        }
+        auto insideClippedCity = [&](const world::SurfacePoint &a, const world::SurfacePoint &b) {
+            if (mapClips.empty())
+            {
+                return false;
+            }
+            const auto midN = world::SurfaceGeometry::Unit(
+                {a.normal.x + b.normal.x, a.normal.y + b.normal.y, a.normal.z + b.normal.z});
+            for (const auto &clip : mapClips)
+            {
+                if (world::SurfaceGeometry::Dot(midN, clip.normal) > clip.cosInner)
+                {
+                    return true;
+                }
+            }
+            return false;
+        };
         routeIndex->QueryInto(focus, range * 1.5, nearbyRoutes);
         profiling::Count(profiling::Counter::PlanetMapRoutesRejected,
                          snapshot->planet->connections.size() - nearbyRoutes.size());
@@ -3759,6 +3808,17 @@ void PlanetHud::DrawMap(bool full)
             if (edge.mode != world::RouteMode::Road && (!full || range < 10000))
             {
                 continue;
+            }
+            if (rev5Map && edge.mode == world::RouteMode::Road &&
+                edge.from < snapshot->planet->nodes.size() && edge.to < snapshot->planet->nodes.size() &&
+                snapshot->planet->nodes[edge.from].regionId == snapshot->planet->nodes[edge.to].regionId)
+            {
+                const auto &reg = snapshot->planet->Region(snapshot->planet->nodes[edge.from].regionId);
+                if (reg.definition.kind == world::RegionKind::Settlement &&
+                    reg.center.space == world::SpaceKind::Surface)
+                {
+                    continue;
+                }
             }
             const size_t stride = range > 200000  ? (std::max)(size_t(1), (edge.points.size() + 5) / 6)
                                   : range > 10000 ? (std::max)(size_t(1), (edge.points.size() + 23) / 24)
@@ -3771,6 +3831,10 @@ void PlanetHud::DrawMap(bool full)
                 profiling::Count(profiling::Counter::PlanetMapSegmentsVisited);
                 const auto &a = edge.points[i - stride];
                 const auto &b = edge.points[(std::min)(i, edge.points.size() - 1)];
+                if (edge.mode == world::RouteMode::Road && insideClippedCity(a, b))
+                {
+                    continue;
+                }
                 const double length = stride == 1 ? routeIndex->SegmentLength(route, i - 1)
                                                   : world::SurfaceGeometry::Distance(planetRadius, a, b);
                 if (chordFar(a, focus, range * 1.5 + length) ||
@@ -3832,17 +3896,69 @@ void PlanetHud::DrawMap(bool full)
                 }
                 for (const auto &road : chunk->roads)
                 {
-                    if (road.sidewalkMeters <= 0 || road.points.size() < 2)
+                    if (road.points.size() < 2)
                     {
                         continue;
                     }
-                    const float wPx = full ? 1.f : float(road.widthMeters) * view.scale;
+                    if (road.kind == world::StreetKind::PedestrianPlaza)
+                    {
+                        if (!full)
+                        {
+                            const float wPx = float(road.widthMeters) * view.scale;
+                            MapLine(view, project(road.points.front()), project(road.points.back()),
+                                    {.48f, .55f, .54f, .85f}, wPx);
+                        }
+                        continue;
+                    }
+                    if (road.sidewalkMeters <= 0)
+                    {
+                        continue;
+                    }
+                    const ColorRGBA col = road.kind == world::StreetKind::RingRoad
+                                              ? ColorRGBA(.50f, .62f, .60f)
+                                          : (road.kind == world::StreetKind::Elevated ||
+                                             road.kind == world::StreetKind::ElevatedRamp)
+                                              ? ColorRGBA(.58f, .68f, .72f)
+                                          : (road.kind == world::StreetKind::Underpass ||
+                                             road.kind == world::StreetKind::UnderpassRamp)
+                                              ? ColorRGBA(.28f, .44f, .50f)
+                                              : ColorRGBA(.39f, .47f, .46f);
+                    const float wPx = full ? 1.f : (std::max)(1.5f, float(road.widthMeters) * view.scale);
                     Vector2 prev = project(road.points[0]);
                     for (std::size_t i = 1; i < road.points.size(); ++i)
                     {
                         const Vector2 curr = project(road.points[i]);
-                        MapLine(view, prev, curr, {.39f, .47f, .46f}, wPx);
+                        MapLine(view, prev, curr, col, wPx);
                         prev = curr;
+                    }
+                }
+                // Draw CQ-04B intersection pads and roundabouts so trimmed road segments connect cleanly on the map.
+                for (const auto &inter : chunk->intersections)
+                {
+                    if (chordFar(inter.center, focus, range + inter.radiusMeters))
+                    {
+                        continue;
+                    }
+                    const Vector2 pos = project(inter.center);
+                    if (Game::Distance(pos, view.worldCenter) > range + float(inter.radiusMeters))
+                    {
+                        continue;
+                    }
+                    const Vector2 sp = view.Project(pos);
+                    const float rPx = (std::max)(1.8f, float(inter.radiusMeters) * view.scale);
+                    if (Game::Distance(sp, view.center) + rPx > view.radius)
+                    {
+                        continue;
+                    }
+                    if (inter.control == world::IntersectionControl::Roundabout && inter.islandRadiusMeters > 1.)
+                    {
+                        Drawing::DrawEllipse(sp.x, sp.y, rPx, rPx, {.44f, .54f, .53f, 1.f});
+                        const float islPx = (std::max)(1.f, float(inter.islandRadiusMeters) * view.scale);
+                        Drawing::DrawEllipse(sp.x, sp.y, islPx, islPx, {.22f, .42f, .33f, 1.f});
+                    }
+                    else
+                    {
+                        Drawing::DrawEllipse(sp.x, sp.y, rPx * .95f, rPx * .95f, {.39f, .47f, .46f, 1.f});
                     }
                 }
                 for (const auto &item : chunk->structures)

@@ -1273,13 +1273,21 @@ unsigned int TrafficSystem::Random()
 void TrafficSystem::Reset()
 {
     vehicles.clear();
-    signals.assign(RoadNetwork::Get().junctions.size(), {});
+    const auto &net = RoadNetwork::Get();
+    signals.assign(net.junctions.size(), {});
     randomState = 0x71b39a5u;
     nextId = 0;
     accumulator = spawnTimer = impactCooldown = 0;
     for (size_t i = 0; i < signals.size(); ++i)
     {
-        signals[i].phase = static_cast<SignalPhase>(int(i % 4) * 3);
+        // CQ-04B: Green Wave arterial coordination along each city's main collector axis
+        // instead of arbitrary i % 4 phase scattering.
+        const auto pos = net.junctions[i].position;
+        const float offset = std::fmod(std::fabs(pos.x) * .16f, 10.f);
+        signals[i].phase =
+            (std::fabs(std::fmod(pos.y + 17.f, 100.f)) < 6.f) ? SignalPhase::MainThrough
+                                                              : static_cast<SignalPhase>(int(i % 4) * 3);
+        signals[i].elapsed = (signals[i].phase == SignalPhase::MainThrough) ? offset : 0.f;
     }
 }
 bool TrafficSystem::OutsideView(Vector2 p, Vector2 camera, float padding, float altitude)
@@ -1585,11 +1593,25 @@ float TrafficSystem::PhaseDuration(int junction) const
     {
         return 2;
     }
-    return int(phase) % 3 == 0 ? (int(phase) % 6 == 0 ? 10.f : 5.f) : 3.f;
+    // CQ-04B: Realistic Korean signal timing — 10s through, 5s protected left, 3.0s amber, 1.5s all-red clearance.
+    if (int(phase) % 3 == 0)
+    {
+        return int(phase) % 6 == 0 ? 10.f : 5.f;
+    }
+    return int(phase) % 3 == 1 ? 3.f : 1.5f;
+}
+bool TrafficSystem::PedestrianFlashing(int junction, int road) const
+{
+    if (!PedestrianGreen(junction, road))
+    {
+        return false;
+    }
+    const float remaining = PhaseDuration(junction) - signals[size_t(junction)].elapsed;
+    return remaining <= 4.f;
 }
 bool TrafficSystem::CanStartCrossing(int junction, float travelSeconds, int road) const
 {
-    return PedestrianGreen(junction, road) &&
+    return PedestrianGreen(junction, road) && !PedestrianFlashing(junction, road) &&
            PhaseDuration(junction) - signals[junction].elapsed >= travelSeconds + 1.f;
 }
 bool TrafficSystem::CrossingOccupied(const GameState &world, int junction) const
@@ -1897,6 +1919,20 @@ void TrafficSystem::Step(GameState &world, float dt)
         auto &signal = signals[i];
         signal.elapsed += dt;
         float duration = PhaseDuration(int(i));
+        // CQ-04B: Emergency Preemption — wanted >= 2 security responders within 17.5 world units (35m)
+        // shorten conflicting green after a minimum 4s green so patrol units clear junctions smoothly.
+        if (CivicJustice::State().wanted >= 2 && int(signal.phase) < 12 && int(signal.phase) % 3 == 0 &&
+            signal.elapsed >= 4.f)
+        {
+            const auto &officers = CivicJustice::State().officers;
+            const bool urgentNear = std::any_of(officers.begin(), officers.end(), [&](const SecurityOfficer &o) {
+                return o.health > 0 && Game::Distance(o.position, net.junctions[i].position) <= 17.5f;
+            });
+            if (urgentNear)
+            {
+                duration = (std::min)(duration, 4.f);
+            }
+        }
         if (signal.elapsed < duration)
         {
             continue;
@@ -2123,6 +2159,15 @@ void TrafficSystem::Step(GameState &world, float dt)
             {
                 gap = (std::min)(gap, lane.length - car.distance - 3.6f);
                 target = (std::min)(target, (std::max)(0.f, gap * 2));
+            }
+            // CQ-04B: Defensive braking if a fast player vehicle/bike runs a red into the junction.
+            if (!committed && world.isBikeMounted && std::fabs(world.bikeSpeed) > 2.5f &&
+                Game::Distance(world.playerPosition, net.junctions[lane.to].position) <
+                    net.junctions[lane.to].radius + 3.5f &&
+                lane.length - car.distance < 9.f)
+            {
+                gap = (std::min)(gap, lane.length - car.distance - 3.6f);
+                target = (std::min)(target, (std::max)(0.f, gap * 1.5f));
             }
         }
         else
@@ -2738,6 +2783,47 @@ void PlanetTraffic::BindLayout(std::shared_ptr<const world::GeneratedPlanet> inp
             prepared->push_back(std::move(route));
         }
     };
+    struct TrafficSettlementClip
+    {
+        world::Vector3d normal;
+        double cosInner;
+    };
+    std::vector<TrafficSettlementClip> settlementClips;
+    const bool rev5Traffic = input->layoutRevision >= 5 && !input->regions.empty();
+    if (rev5Traffic)
+    {
+        for (const auto &region : input->regions)
+        {
+            if (region.definition.kind != world::RegionKind::Settlement ||
+                region.center.space != world::SpaceKind::Surface)
+            {
+                continue;
+            }
+            double clipRadius = (std::max)(160., region.boundingRadiusMeters * .66);
+            if (input->cityCores)
+            {
+                if (const auto *core = input->cityCores->Find(region.definition.id))
+                {
+                    clipRadius = (std::max)(clipRadius, core->radiusMeters + 100.);
+                }
+            }
+            settlementClips.push_back({region.center.position.normal,
+                                       std::cos((std::max)(10., clipRadius - 6.) / p.radiusMeters)});
+        }
+    }
+    auto insideBuiltCity = [&](const world::SurfacePoint &pt) {
+        for (const auto &clip : settlementClips)
+        {
+            if (TG::Dot(pt.normal, clip.normal) > clip.cosInner)
+            {
+                return true;
+            }
+        }
+        return false;
+    };
+    // Reserve node IDs well past macro nodes + CityCore portal markers (nodes.size() + kCityCount * 2).
+    unsigned nextSyntheticNode = unsigned(input->nodes.size()) + unsigned(Overworld::kCityCount * 4) + 16u;
+
     for (size_t i = 0; i < input->connections.size(); ++i)
     {
         const auto &edge = input->connections[i];
@@ -2748,7 +2834,65 @@ void PlanetTraffic::BindLayout(std::shared_ptr<const world::GeneratedPlanet> inp
         auto id = world::WorldIdentity::ContentKey(p, "overworld", "traffic1.edge." + std::to_string(i));
         if (edge.mode == world::RouteMode::Road)
         {
-            add({id + ".road", edge.from, edge.to, false, edge.points});
+            if (rev5Traffic)
+            {
+                // Skip removed intra-settlement logical edges; clip intercity highways outside built Ring Roads.
+                bool intraSettlement = false;
+                if (edge.from < input->nodes.size() && edge.to < input->nodes.size() &&
+                    input->nodes[edge.from].regionId == input->nodes[edge.to].regionId)
+                {
+                    const auto &reg = input->Region(input->nodes[edge.from].regionId);
+                    intraSettlement = (reg.definition.kind == world::RegionKind::Settlement &&
+                                       reg.center.space == world::SpaceKind::Surface);
+                }
+                if (!intraSettlement)
+                {
+                    std::vector<world::SurfacePoint> seg;
+                    bool clippedStart = false;
+                    unsigned partIdx = 0;
+                    auto flushSeg = [&](bool clippedEnd) {
+                        if (seg.size() >= 2)
+                        {
+                            const unsigned fNode = clippedStart ? nextSyntheticNode++ : edge.from;
+                            const unsigned tNode = clippedEnd ? nextSyntheticNode++ : edge.to;
+                            const std::string suffix =
+                                partIdx == 0 ? ".road" : (".road." + std::to_string(partIdx));
+                            ++partIdx;
+                            add({id + suffix, fNode, tNode, false, std::move(seg)});
+                        }
+                        seg.clear();
+                    };
+                    for (std::size_t k = 1; k < edge.points.size(); ++k)
+                    {
+                        const auto &pa = edge.points[k - 1];
+                        const auto &pb = edge.points[k];
+                        const double segLen = TG::Distance(p.radiusMeters, pa, pb);
+                        const unsigned subSteps = (std::max)(1u, unsigned(std::ceil(segLen / 40.)));
+                        for (unsigned s = 0; s < subSteps; ++s)
+                        {
+                            const auto qa = TransitArc(pa, pb, double(s) / subSteps);
+                            const auto qb = TransitArc(pa, pb, double(s + 1) / subSteps);
+                            const auto qm = TransitArc(pa, pb, (s + .5) / subSteps);
+                            if (insideBuiltCity(qm))
+                            {
+                                flushSeg(true);
+                                clippedStart = true;
+                                continue;
+                            }
+                            if (seg.empty())
+                            {
+                                seg.push_back(qa);
+                            }
+                            seg.push_back(qb);
+                        }
+                    }
+                    flushSeg(false);
+                }
+            }
+            else
+            {
+                add({id + ".road", edge.from, edge.to, false, edge.points});
+            }
         }
         PlanetTrafficRoute flight{id + ".air", edge.from, edge.to, true};
         const auto a = edge.points.front(), b = edge.points.back();
@@ -2770,6 +2914,29 @@ void PlanetTraffic::BindLayout(std::shared_ptr<const world::GeneratedPlanet> inp
             flight.points.push_back(TransitArc(TransitArc(a, control, t), TransitArc(control, b, t), t));
         }
         add(std::move(flight));
+    }
+    // CQ-04B (Rev 5+): Populate ground traffic routes directly on the newly built Ring Roads and
+    // major 4/6-lane urban arterials (including elevated viaducts and underpasses).
+    if (rev5Traffic)
+    {
+        for (std::size_t rIdx = 0; rIdx < input->regions.size(); ++rIdx)
+        {
+            auto urbanRoutes = world::ContentLayout::TrafficRoutes(*input, rIdx);
+            if (urbanRoutes.empty())
+            {
+                continue;
+            }
+            const auto &regId = input->regions[rIdx].definition.id;
+            const unsigned baseNode = nextSyntheticNode;
+            unsigned maxLocal = 0;
+            for (auto &ur : urbanRoutes)
+            {
+                maxLocal = (std::max)(maxLocal, (std::max)(ur.fromNode, ur.toNode));
+                auto rid = world::WorldIdentity::ContentKey(p, regId, "traffic5." + ur.suffix);
+                add({std::move(rid), baseNode + ur.fromNode, baseNode + ur.toNode, false, std::move(ur.points)});
+            }
+            nextSyntheticNode = baseNode + maxLocal + 2u;
+        }
     }
     // The macro planner ends each authored city's roads at its first real approach join.
     // Add two directed lane-centre paths on that existing pavement; never invent a bridge across lots.
@@ -2797,7 +2964,7 @@ void PlanetTraffic::BindLayout(std::shared_ptr<const world::GeneratedPlanet> inp
                 continue;
             }
             const unsigned nodeId = unsigned(node - input->nodes.begin());
-            if (std::none_of(prepared->begin(), prepared->end(), [&](const auto &v) {
+            if (!rev5Traffic && std::none_of(prepared->begin(), prepared->end(), [&](const auto &v) {
                     return !v.airborne && (v.from == nodeId || v.to == nodeId);
                 }))
             {
@@ -3409,6 +3576,157 @@ bool PlanetTraffic::Arrive(PlanetTrafficActor &actor, const PlanetTrafficRoute &
     profiling::Count(profiling::Counter::TrafficHandoffs);
     return true;
 }
+ProceduralSignalState IntersectionSignalController::Evaluate(const world::SurfaceIntersection &intersection,
+                                                             double worldTimeSeconds, bool mainLeftDemand,
+                                                             bool sideLeftDemand, bool pedestrianDemand,
+                                                             int emergencyAxis)
+{
+    ProceduralSignalState s;
+    if (intersection.control != world::IntersectionControl::Signalized)
+    {
+        // Unsignalized (2x2), Yield, Roundabout, and GradeSeparated junctions have no traffic lights.
+        s.mainThrough = s.mainLeft = s.sideThrough = s.sideLeft = TrafficLight::Green;
+        s.cycleSeconds = 0.;
+        return s;
+    }
+    const bool sixLane = intersection.maxLanes >= 6;
+    const double dMain = sixLane ? 14. : 12.;
+    const double dMainAmb = 3.;
+    const double dClear = 1.5;
+    const double dMainLeft = mainLeftDemand ? (sixLane ? 6. : 5.) : 0.;
+    const double dMainLeftAmb = mainLeftDemand ? 2.5 : 0.;
+    const double dMainLeftClear = mainLeftDemand ? 1.5 : 0.;
+    const double dSide = sixLane ? 11. : 10.;
+    const double dSideAmb = 3.;
+    const double dSideClear = 1.5;
+    const double dSideLeft = sideLeftDemand ? 5. : 0.;
+    const double dSideLeftAmb = sideLeftDemand ? 2.5 : 0.;
+    const double dSideLeftClear = sideLeftDemand ? 1.5 : 0.;
+    const double dAllWalk = (intersection.hasAllWalk && pedestrianDemand) ? 8. : 0.;
+    const double dAllWalkClear = dAllWalk > 0. ? 1.5 : 0.;
+
+    const double cycle = dMain + dMainAmb + dClear + dMainLeft + dMainLeftAmb + dMainLeftClear + dSide +
+                         dSideAmb + dSideClear + dSideLeft + dSideLeftAmb + dSideLeftClear + dAllWalk +
+                         dAllWalkClear;
+    s.cycleSeconds = cycle;
+
+    if (emergencyAxis == 0 || emergencyAxis == 1)
+    {
+        s.emergencyPreempted = true;
+        s.mainThrough = (emergencyAxis == 0) ? TrafficLight::Green : TrafficLight::Red;
+        s.sideThrough = (emergencyAxis == 1) ? TrafficLight::Green : TrafficLight::Red;
+        s.mainLeft = s.sideLeft = TrafficLight::Red;
+        s.mainWalkGreen = s.sideWalkGreen = false;
+        s.rightTurnBlockedMain = sixLane && s.mainThrough != TrafficLight::Green;
+        s.rightTurnBlockedSide = sixLane && s.sideThrough != TrafficLight::Green;
+        return s;
+    }
+
+    double t = std::fmod(worldTimeSeconds + intersection.greenWaveOffsetSeconds, cycle);
+    if (t < 0.)
+    {
+        t += cycle;
+    }
+    s.mainThrough = s.mainLeft = s.sideThrough = s.sideLeft = TrafficLight::Red;
+
+    auto consume = [&](double dur) -> bool {
+        if (dur <= 0.)
+        {
+            return false;
+        }
+        if (t < dur)
+        {
+            return true;
+        }
+        t -= dur;
+        return false;
+    };
+    if (consume(dMain))
+    {
+        s.mainThrough = TrafficLight::Green;
+        if (pedestrianDemand && !intersection.hasAllWalk)
+        {
+            s.mainWalkGreen = true;
+            s.mainWalkFlashing = (dMain - t) <= 4.;
+        }
+    }
+    else if (consume(dMainAmb))
+    {
+        s.mainThrough = TrafficLight::Amber;
+    }
+    else if (consume(dClear))
+    {
+    }
+    else if (consume(dMainLeft))
+    {
+        // Protected left turn: all pedestrian crosswalks strictly Red (zero conflict).
+        s.mainLeft = TrafficLight::Green;
+    }
+    else if (consume(dMainLeftAmb))
+    {
+        s.mainLeft = TrafficLight::Amber;
+    }
+    else if (consume(dMainLeftClear))
+    {
+    }
+    else if (consume(dSide))
+    {
+        s.sideThrough = TrafficLight::Green;
+        if (pedestrianDemand && !intersection.hasAllWalk)
+        {
+            s.sideWalkGreen = true;
+            s.sideWalkFlashing = (dSide - t) <= 4.;
+        }
+    }
+    else if (consume(dSideAmb))
+    {
+        s.sideThrough = TrafficLight::Amber;
+    }
+    else if (consume(dSideClear))
+    {
+    }
+    else if (consume(dSideLeft))
+    {
+        s.sideLeft = TrafficLight::Green;
+    }
+    else if (consume(dSideLeftAmb))
+    {
+        s.sideLeft = TrafficLight::Amber;
+    }
+    else if (consume(dSideLeftClear))
+    {
+    }
+    else if (consume(dAllWalk))
+    {
+        s.mainWalkGreen = s.sideWalkGreen = true;
+        s.mainWalkFlashing = s.sideWalkFlashing = (dAllWalk - t) <= 4.;
+    }
+    s.rightTurnBlockedMain = sixLane && s.mainThrough != TrafficLight::Green;
+    s.rightTurnBlockedSide = sixLane && s.sideThrough != TrafficLight::Green;
+    return s;
+}
+TrafficLight IntersectionSignalController::ApproachLight(const world::SurfaceIntersection &intersection,
+                                                         double approachYaw, TrafficTurn turn,
+                                                         double worldTimeSeconds, int emergencyAxis)
+{
+    if (intersection.control != world::IntersectionControl::Signalized)
+    {
+        return TrafficLight::Green;
+    }
+    const auto state = Evaluate(intersection, worldTimeSeconds, true, true, true, emergencyAxis);
+    const double diff = std::remainder(approachYaw - intersection.mainAxisYaw, kPi);
+    const bool isMainAxis = std::fabs(diff) < kPi * .25;
+    if (turn == TrafficTurn::Left)
+    {
+        return isMainAxis ? state.mainLeft : state.sideLeft;
+    }
+    if (turn == TrafficTurn::Right && intersection.maxLanes >= 6)
+    {
+        return isMainAxis ? state.mainThrough : state.sideThrough;
+    }
+    return isMainAxis ? state.mainThrough : state.sideThrough;
+}
+
 void PlanetTraffic::Advance(PlanetTrafficActor &actor, float seconds, const GameState &world,
                             const world::SurfaceSession &session, bool exterior)
 {
@@ -3482,6 +3800,79 @@ void PlanetTraffic::Advance(PlanetTrafficActor &actor, float seconds, const Game
             }
         }
     }
+    // CQ-04B: Ground surface traffic obeys active chunk Signalized intersections and Roundabout yield rules.
+    if (!actor.airborne)
+    {
+        if (auto snapshot = session.Stream().Snapshot())
+        {
+            const int urgentAxis = (CivicJustice::State().wanted >= 2) ? 0 : -1;
+            const auto actorLocal = session.Local(actor.position);
+            const auto heading = world::SurfaceGeometry::TransformDirection(
+                actor.heading, session.Origin(), session.Origin());
+            for (const auto &chunk : snapshot->chunks)
+            {
+                if (chunk->intersections.empty())
+                {
+                    continue;
+                }
+                for (const auto &inter : chunk->intersections)
+                {
+                    if (inter.control != world::IntersectionControl::Signalized &&
+                        inter.control != world::IntersectionControl::Roundabout)
+                    {
+                        continue;
+                    }
+                    const double dist =
+                        world::SurfaceGeometry::Distance(radius, actor.position, inter.center);
+                    if (dist < inter.radiusMeters + .5 || dist > inter.radiusMeters + 16.)
+                    {
+                        continue;
+                    }
+                    const auto interLocal = session.Local(inter.center);
+                    const double dx = interLocal.x - actorLocal.x, dy = interLocal.y - actorLocal.y;
+                    const double dLen = std::hypot(dx, dy);
+                    if (dLen < .1)
+                    {
+                        continue;
+                    }
+                    const double forwardDot = (dx * heading.x + dy * heading.y) / dLen;
+                    if (forwardDot < .65)
+                    {
+                        continue;
+                    }
+                    if (inter.control == world::IntersectionControl::Signalized)
+                    {
+                        const double approachYaw = std::atan2(dy, dx);
+                        if (IntersectionSignalController::ApproachLight(
+                                inter, approachYaw, TrafficTurn::Straight,
+                                double(world.animationTimeSeconds), urgentAxis) != TrafficLight::Green)
+                        {
+                            const double stopGap = (std::max)(0., dist - (inter.radiusMeters + 2.));
+                            target = (std::min)(target, stopGap * 1.4);
+                        }
+                    }
+                    else if (inter.control == world::IntersectionControl::Roundabout)
+                    {
+                        // Yield to any circulating ground vehicle already inside the roundabout ring.
+                        for (const auto &other : state.actors)
+                        {
+                            if (other.id == actor.id || other.airborne || other.health <= 0)
+                            {
+                                continue;
+                            }
+                            if (world::SurfaceGeometry::Distance(radius, other.position, inter.center) <=
+                                inter.radiusMeters + 5.)
+                            {
+                                const double stopGap = (std::max)(0., dist - (inter.radiusMeters + 2.));
+                                target = (std::min)(target, stopGap * 1.2);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
     if (!actor.airborne)
     {
         for (const auto &other : state.actors)
@@ -3540,7 +3931,14 @@ void PlanetTraffic::Advance(PlanetTrafficActor &actor, float seconds, const Game
         if (!next)
         {
             progress = std::clamp(progress, 0., route->lengthMeters);
-            actor.speedMeters = 0;
+            if (planet && planet->layoutRevision >= 5 && route->portalCity < 0)
+            {
+                direction = -direction;
+            }
+            else
+            {
+                actor.speedMeters = 0;
+            }
         }
         else
         {

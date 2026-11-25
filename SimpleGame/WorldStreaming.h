@@ -39,6 +39,11 @@ struct RoadRibbon
     double widthMeters = 6;
     double sidewalkMeters = 0;
     unsigned lanes = 2;
+    StreetKind kind = StreetKind::Surface;
+    double startWidthMeters = 0;
+    double elevationOffsetMeters = 0;
+    bool hasMedian = false;
+    bool hasLeftPocket = false;
 };
 // ============================================================================
 // SurfaceChunk — immutable CPU terrain, contact grid and clipped route publication
@@ -51,6 +56,7 @@ struct SurfaceChunk
     std::vector<TerrainVertex> vertices;
     std::vector<std::size_t> regions;
     std::vector<RoadRibbon> roads;
+    std::vector<SurfaceIntersection> intersections;
     std::vector<SurfaceStructure> structures;
     double radiusMeters = 0;
     std::size_t Bytes() const;

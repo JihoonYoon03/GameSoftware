@@ -421,8 +421,12 @@ void CityScene::DrawTrafficInfrastructure(game::Scene &scene)
                     const auto &out = net.lanes[arm];
                     auto d = out.direction;
                     Vector2 n = RoadNetwork::RightOf(d);
-                    bool walk = Overworld::Traffic().PedestrianGreen(int(junction), out.road);
-                    ColorRGBA pedestrian = walk ? ColorRGBA(.15f, 1, .78f) : ColorRGBA(.95f, .21f, .28f);
+                    const bool walk = Overworld::Traffic().PedestrianGreen(int(junction), out.road);
+                    const bool flashing = Overworld::Traffic().PedestrianFlashing(int(junction), out.road);
+                    const bool flashOn = !flashing || std::fmod(Game::Get().GetState().animationTimeSeconds * 2.5f, 1.f) < .5f;
+                    ColorRGBA pedestrian = !walk     ? ColorRGBA(.95f, .21f, .28f)
+                                           : flashOn ? ColorRGBA(.15f, 1, .78f)
+                                                     : ColorRGBA(1, .74f, .18f);
                     float half = net.roads[out.road].lanes * RoadNetwork::kLaneWidth * .5f;
                     auto across = add(p, mul(d, j.radius + 1.f));
                     // Rails sit on the two long edges of the native four-metre crosswalk.
@@ -467,7 +471,15 @@ void CityScene::DrawTrafficInfrastructure(game::Scene &scene)
                             const auto &resource = models::ResourceAssets::Get(
                                 models::ModelLibrary::TrafficSignal(0).resourceId);
                             auto label = Drawing::WorldToScreen(head.x, head.y, resource.maximum.z * 44 + 12);
-                            Drawing::DrawLabel(label.x - 20, label.y, "좌회전", {.2f, 1, .75f});
+                            Drawing::DrawLabel(label.x - 24, label.y, "◀ 좌회전", {.2f, 1, .75f});
+                        }
+                        else if (Overworld::Traffic().HasRightTurnSignal(incoming) &&
+                                 Overworld::Traffic().Light(incoming, TrafficTurn::Straight) != TrafficLight::Green)
+                        {
+                            const auto &resource = models::ResourceAssets::Get(
+                                models::ModelLibrary::TrafficSignal(0).resourceId);
+                            auto label = Drawing::WorldToScreen(head.x, head.y, resource.maximum.z * 44 + 12);
+                            Drawing::DrawLabel(label.x - 28, label.y, "우회전 정지", {1.f, .35f, .32f});
                         }
                     }
                     // Paint the stop line at the actual approach boundary, immediately before the crossing.
@@ -1862,44 +1874,286 @@ std::unique_ptr<models::Model> SurfaceModel(const world::SurfaceChunk &chunk, do
             }
         }
     }
+    // Helper: estimate local terrain slope (dz/dx, dz/dy in world units) near (wx, wy) from chunk terrain grid
+    // so intersection pads & roundabouts conform smoothly to hillside slopes without clipping into roads.
+    auto terrainSlopeAt = [&](double wx, double wy, double &dzdx, double &dzdy) {
+        dzdx = 0.;
+        dzdy = 0.;
+        if (chunk.cells == 0 || positions.size() < size_t((chunk.cells + 1) * (chunk.cells + 1)))
+        {
+            return;
+        }
+        double bestDist2 = 1.e30;
+        unsigned bestX = 0, bestY = 0;
+        const unsigned stride = chunk.cells + 1;
+        for (unsigned y = 0; y < chunk.cells; ++y)
+        {
+            for (unsigned x = 0; x < chunk.cells; ++x)
+            {
+                const auto &p = positions[y * stride + x];
+                const double dx = double(p.x) - wx, dy = double(p.y) - wy;
+                const double d2 = dx * dx + dy * dy;
+                if (d2 < bestDist2)
+                {
+                    bestDist2 = d2;
+                    bestX = x;
+                    bestY = y;
+                }
+            }
+        }
+        const auto &p00 = positions[bestY * stride + bestX];
+        const auto &p10 = positions[bestY * stride + bestX + 1];
+        const auto &p01 = positions[(bestY + 1) * stride + bestX];
+        const double ux = double(p10.x - p00.x), uy = double(p10.y - p00.y), uz = double(p10.z - p00.z);
+        const double vx = double(p01.x - p00.x), vy = double(p01.y - p00.y), vz = double(p01.z - p00.z);
+        const double det = ux * vy - uy * vx;
+        if (std::fabs(det) > 1.e-6)
+        {
+            dzdx = std::clamp((uz * vy - uy * vz) / det, -.35, .35);
+            dzdy = std::clamp((ux * vz - uz * vx) / det, -.35, .35);
+        }
+    };
     for (const auto &road : chunk.roads)
     {
-        for (std::size_t i = 1; i < road.points.size(); ++i)
+        if (road.points.size() < 2)
         {
-            auto a = SurfaceProjection(road.points[i - 1], chunk.frame, radius),
-                 b = SurfaceProjection(road.points[i], chunk.frame, radius);
-            double length = std::hypot(b.x - a.x, b.y - a.y);
-            if (length < .01)
+            continue;
+        }
+        // Filter duplicate consecutive projected points and build continuous 3D miter normals so sloped
+        // roads and curves share exact vertices with zero horizontal cap chevrons and zero V-gaps.
+        std::vector<world::Vector3d> pts;
+        pts.reserve(road.points.size());
+        for (const auto &rp : road.points)
+        {
+            const auto proj = SurfaceProjection(rp, chunk.frame, radius);
+            if (!pts.empty() && std::hypot(proj.x - pts.back().x, proj.y - pts.back().y) < .01)
             {
                 continue;
             }
-            auto strip = [&](double width, double offset, double lift, std::array<float, 4> color) {
-                double nx = -(b.y - a.y) / length, ny = (b.x - a.x) / length;
-                double left = offset + width * .5, right = offset - width * .5;
-                models::Point p{float((a.x + nx * left) / 2), float((a.y + ny * left) / 2),
+            pts.push_back(proj);
+        }
+        const std::size_t nPts = pts.size();
+        if (nPts < 2)
+        {
+            continue;
+        }
+        std::vector<double> segNx(nPts - 1, 0.), segNy(nPts - 1, 1.);
+        for (std::size_t i = 0; i + 1 < nPts; ++i)
+        {
+            const double dx = pts[i + 1].x - pts[i].x, dy = pts[i + 1].y - pts[i].y;
+            const double len = std::hypot(dx, dy);
+            segNx[i] = -dy / len;
+            segNy[i] = dx / len;
+        }
+        std::vector<double> miterX(nPts, 0.), miterY(nPts, 1.), miterScale(nPts, 1.);
+        miterX[0] = segNx[0];
+        miterY[0] = segNy[0];
+        miterX[nPts - 1] = segNx[nPts - 2];
+        miterY[nPts - 1] = segNy[nPts - 2];
+        for (std::size_t i = 1; i + 1 < nPts; ++i)
+        {
+            const double ax = segNx[i - 1] + segNx[i], ay = segNy[i - 1] + segNy[i];
+            const double alen = std::hypot(ax, ay);
+            if (alen > 1.e-4)
+            {
+                const double mx = ax / alen, my = ay / alen;
+                const double denom = mx * segNx[i - 1] + my * segNy[i - 1];
+                miterX[i] = mx;
+                miterY[i] = my;
+                miterScale[i] = (std::min)(1.35, 1. / (std::max)(.5, denom));
+            }
+            else
+            {
+                miterX[i] = segNx[i];
+                miterY[i] = segNy[i];
+                miterScale[i] = 1.;
+            }
+        }
+        const bool isUnderpass =
+            road.kind == world::StreetKind::Underpass || road.kind == world::StreetKind::UnderpassRamp;
+        const bool isElevated =
+            road.kind == world::StreetKind::Elevated || road.kind == world::StreetKind::ElevatedRamp;
+        const bool isBridge = road.kind == world::StreetKind::Bridge;
+        const std::array<float, 4> roadAsphalt =
+            isUnderpass ? std::array<float, 4>{.12f, .15f, .19f, 1}
+                        : std::array<float, 4>{.16f, .2f, .23f, 1};
+        const std::array<float, 4> roadApron =
+            road.sidewalkMeters >= 1.5 ? std::array<float, 4>{.38f, .43f, .43f, 1}
+                                       : std::array<float, 4>{.31f, .35f, .36f, 1};
+        for (std::size_t i = 1; i < nPts; ++i)
+        {
+            const auto &a = pts[i - 1];
+            const auto &b = pts[i];
+            const double t0 = double(i - 1) / double((std::max)(std::size_t(1), nPts - 1));
+            const double t1 = double(i) / double((std::max)(std::size_t(1), nPts - 1));
+            const double wStart = (road.kind == world::StreetKind::Taper && road.startWidthMeters > .5)
+                                      ? (road.startWidthMeters + (road.widthMeters - road.startWidthMeters) * t0)
+                                      : road.widthMeters;
+            const double wEnd = (road.kind == world::StreetKind::Taper && road.startWidthMeters > .5)
+                                    ? (road.startWidthMeters + (road.widthMeters - road.startWidthMeters) * t1)
+                                    : road.widthMeters;
+            auto taperedStrip = [&](double wA, double wB, double offA, double offB, double lift,
+                                    std::array<float, 4> color) {
+                const double lA = (offA + wA * .5) * miterScale[i - 1];
+                const double rA = (offA - wA * .5) * miterScale[i - 1];
+                const double lB = (offB + wB * .5) * miterScale[i];
+                const double rB = (offB - wB * .5) * miterScale[i];
+                const double nxA = miterX[i - 1], nyA = miterY[i - 1];
+                const double nxB = miterX[i], nyB = miterY[i];
+                models::Point p{float((a.x + nxA * lA) / 2), float((a.y + nyA * lA) / 2),
                                 float((a.z + lift) / 2)},
-                    q{float((b.x + nx * left) / 2), float((b.y + ny * left) / 2), float((b.z + lift) / 2)},
-                    r{float((a.x + nx * right) / 2), float((a.y + ny * right) / 2), float((a.z + lift) / 2)},
-                    s{float((b.x + nx * right) / 2), float((b.y + ny * right) / 2), float((b.z + lift) / 2)},
+                    q{float((b.x + nxB * lB) / 2), float((b.y + nyB * lB) / 2), float((b.z + lift) / 2)},
+                    r{float((a.x + nxA * rA) / 2), float((a.y + nyA * rA) / 2), float((a.z + lift) / 2)},
+                    s{float((b.x + nxB * rB) / 2), float((b.y + nyB * rB) / 2), float((b.z + lift) / 2)},
                     n{0, 0, 1};
                 triangle({p, r, q}, {n, n, n}, color);
                 triangle({q, r, s}, {n, n, n}, color);
             };
+            auto strip = [&](double width, double offset, double lift, std::array<float, 4> color) {
+                taperedStrip(width, width, offset, offset, lift, color);
+            };
+            if (road.kind == world::StreetKind::PedestrianPlaza)
+            {
+                taperedStrip(wStart, wEnd, 0, 0, .01, {.46f, .51f, .52f, 1});
+                taperedStrip(wStart * .92, wEnd * .92, 0, 0, .022, {.54f, .59f, .60f, 1});
+                continue;
+            }
             if (road.sidewalkMeters > 0)
             {
-                strip(road.widthMeters + road.sidewalkMeters * 2, 0, 0, {.38f, .43f, .43f, 1});
+                taperedStrip(wStart + road.sidewalkMeters * 2, wEnd + road.sidewalkMeters * 2, 0, 0, 0, roadApron);
             }
-            strip(road.widthMeters, 0, .015, {.16f, .2f, .23f, 1});
-            if (road.sidewalkMeters > 0)
+            taperedStrip(wStart, wEnd, 0, 0, .015, roadAsphalt);
+            if (isElevated || isBridge || isUnderpass)
+            {
+                // Side guardrails / retaining walls + underpass cyan guide strip.
+                const double halfA = wStart * .5 + .45, halfB = wEnd * .5 + .45;
+                const std::array<float, 4> railColor =
+                    isUnderpass ? std::array<float, 4>{.24f, .30f, .36f, 1}
+                                : std::array<float, 4>{.48f, .54f, .58f, 1};
+                taperedStrip(.45, .45, halfA, halfB, isUnderpass ? .55 : .35, railColor);
+                taperedStrip(.45, .45, -halfA, -halfB, isUnderpass ? .55 : .35, railColor);
+                if (isUnderpass)
+                {
+                    taperedStrip(.12, .12, halfA - .32, halfB - .32, .38, {.22f, .86f, .92f, 1});
+                    taperedStrip(.12, .12, -halfA + .32, -halfB + .32, .38, {.22f, .86f, .92f, 1});
+                }
+            }
+            // Draw standard centreline & lane markings on urban streets AND regional intercity highways.
+            if (road.hasMedian && road.lanes >= 6)
+            {
+                strip(1.3, 0, .04, {.34f, .40f, .40f, 1});
+                strip(.75, 0, .06, {.25f, .44f, .33f, 1});
+            }
+            else if (road.hasMedian && road.lanes >= 4)
+            {
+                strip(.12, -.22, .03, {.85f, .73f, .34f, 1});
+                strip(.12, .22, .03, {.85f, .73f, .34f, 1});
+            }
+            else
             {
                 strip(.12, 0, .03, {.82f, .71f, .36f, 1});
-                for (unsigned lane = 1; lane < road.lanes; ++lane)
+            }
+            if (road.sidewalkMeters < 1.5 && wStart >= 6.)
+            {
+                // Crisp outer white edge lines for regional highways & bridges.
+                taperedStrip(.10, .10, wStart * .5 - .35, wEnd * .5 - .35, .028, {.66f, .72f, .73f, 1});
+                taperedStrip(.10, .10, -(wStart * .5 - .35), -(wEnd * .5 - .35), .028, {.66f, .72f, .73f, 1});
+            }
+            for (unsigned lane = 1; lane < road.lanes; ++lane)
+            {
+                if (lane * 2 == road.lanes)
                 {
-                    if (lane * 2 == road.lanes)
-                    {
-                        continue;
-                    }
-                    strip(.09, -road.widthMeters * .5 + lane * 3., .03, {.61f, .68f, .68f, 1});
+                    continue;
+                }
+                const double frac = double(lane) / double(road.lanes) - .5;
+                taperedStrip(.09, .09, wStart * frac, wEnd * frac, .03, {.61f, .68f, .68f, 1});
+            }
+        }
+    }
+    // CQ-04B: Render explicit slope-conforming SurfaceIntersection pads, roundabouts, and box-culvert slabs.
+    for (const auto &inter : chunk.intersections)
+    {
+        const auto c = SurfaceProjection(inter.center, chunk.frame, radius);
+        // Sit slightly above road deck/markings and tilt along local hillside slope so zero clipping occurs.
+        const double cx = c.x / 2., cy = c.y / 2., cz = (c.z + .108) / 2.;
+        double dzdx = 0., dzdy = 0.;
+        terrainSlopeAt(cx, cy, dzdx, dzdy);
+        auto padZ = [&](double px, double py, double lift) {
+            return float(cz + dzdx * (px - cx) + dzdy * (py - cy) + lift);
+        };
+        const models::Point n{0, 0, 1};
+        auto disc = [&](double innerR, double outerR, double lift, unsigned segs, std::array<float, 4> col,
+                        double rotYaw = 0.) {
+            for (unsigned s = 0; s < segs; ++s)
+            {
+                const double a0 = rotYaw + double(s) * (6.28318530718 / segs);
+                const double a1 = rotYaw + double(s + 1) * (6.28318530718 / segs);
+                const double c0 = std::cos(a0), s0 = std::sin(a0), c1 = std::cos(a1), s1 = std::sin(a1);
+                const double ox0 = cx + c0 * outerR, oy0 = cy + s0 * outerR;
+                const double ox1 = cx + c1 * outerR, oy1 = cy + s1 * outerR;
+                models::Point o0{float(ox0), float(oy0), padZ(ox0, oy0, lift)};
+                models::Point o1{float(ox1), float(oy1), padZ(ox1, oy1, lift)};
+                if (innerR <= .01)
+                {
+                    models::Point centerPt{float(cx), float(cy), float(cz + lift)};
+                    triangle({centerPt, o0, o1}, {n, n, n}, col);
+                }
+                else
+                {
+                    const double ix0 = cx + c0 * innerR, iy0 = cy + s0 * innerR;
+                    const double ix1 = cx + c1 * innerR, iy1 = cy + s1 * innerR;
+                    models::Point i0{float(ix0), float(iy0), padZ(ix0, iy0, lift)};
+                    models::Point i1{float(ix1), float(iy1), padZ(ix1, iy1, lift)};
+                    triangle({i0, o0, o1}, {n, n, n}, col);
+                    triangle({i0, o1, i1}, {n, n, n}, col);
+                }
+            }
+        };
+        const double rWorld = inter.radiusMeters * .5;
+        if (inter.control == world::IntersectionControl::Roundabout && inter.islandRadiusMeters > 1.)
+        {
+            const double islW = inter.islandRadiusMeters * .5;
+            // Sidewalk apron + annular asphalt carriageway + raised central green island + yield ring.
+            disc(islW - .3, rWorld + 1.2, 0., 20, {.38f, .43f, .43f, 1});
+            disc(islW, rWorld, .01, 20, {.16f, .2f, .23f, 1});
+            disc(islW + .15, islW + .3, .02, 20, {.82f, .71f, .36f, 1});
+            disc(0., islW, .06, 16, {.36f, .42f, .42f, 1});
+            disc(0., islW * .82, .08, 16, {.24f, .44f, .33f, 1});
+        }
+        else if (inter.control == world::IntersectionControl::GradeSeparated && inter.underpassBelow)
+        {
+            // Short box-culvert plaza roof slab over the -5.4m underpass (cutaway when player enters below).
+            disc(0., rWorld * 1.18, .02, 8, {.46f, .51f, .53f, 1}, inter.mainAxisYaw + .392699);
+            disc(0., rWorld * .94, .035, 8, {.54f, .59f, .60f, 1}, inter.mainAxisYaw + .392699);
+        }
+        else
+        {
+            // Clean axis-aligned octagonal asphalt pad covering the intersection core without X-crossing markings.
+            const std::array<float, 4> apronCol =
+                inter.maxLanes >= 4 ? std::array<float, 4>{.38f, .43f, .43f, 1}
+                                    : std::array<float, 4>{.33f, .38f, .39f, 1};
+            disc(0., rWorld * 1.12, 0., 8, apronCol, inter.mainAxisYaw + .392699);
+            disc(0., rWorld * 1.02, .01, 8, {.16f, .2f, .23f, 1}, inter.mainAxisYaw + .392699);
+            // Stop-line / crosswalk accent bands on cardinal approaches.
+            if (inter.control == world::IntersectionControl::Signalized)
+            {
+                for (int arm = 0; arm < 4; ++arm)
+                {
+                    const double ang = inter.mainAxisYaw + arm * 1.5707963268;
+                    const double ca = std::cos(ang), sa = std::sin(ang);
+                    const double nx = -sa, ny = ca;
+                    const double dist = rWorld * .88;
+                    const double halfSpan = rWorld * .50;
+                    const double x0 = cx + ca * (dist - .28) + nx * halfSpan, y0 = cy + sa * (dist - .28) + ny * halfSpan;
+                    const double x1 = cx + ca * (dist + .28) + nx * halfSpan, y1 = cy + sa * (dist + .28) + ny * halfSpan;
+                    const double x2 = cx + ca * (dist - .28) - nx * halfSpan, y2 = cy + sa * (dist - .28) - ny * halfSpan;
+                    const double x3 = cx + ca * (dist + .28) - nx * halfSpan, y3 = cy + sa * (dist + .28) - ny * halfSpan;
+                    models::Point p0{float(x0), float(y0), padZ(x0, y0, .022)};
+                    models::Point p1{float(x1), float(y1), padZ(x1, y1, .022)};
+                    models::Point p2{float(x2), float(y2), padZ(x2, y2, .022)};
+                    models::Point p3{float(x3), float(y3), padZ(x3, y3, .022)};
+                    triangle({p0, p2, p1}, {n, n, n}, {.68f, .75f, .76f, 1});
+                    triangle({p1, p2, p3}, {n, n, n}, {.68f, .75f, .76f, 1});
                 }
             }
         }
@@ -2386,8 +2640,13 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
                     auto stripe = add(across, normal, offset);
                     strip(add(stripe, d, -.8f), add(stripe, d, .8f), .22f, {.65f, .74f, .73f, 1}, false);
                 }
-                bool walk = traffic.PedestrianGreen(int(junction), out.road);
-                ColorRGBA pedestrian = walk ? ColorRGBA(.15f, 1, .78f) : ColorRGBA(.95f, .21f, .28f);
+                const bool walk = traffic.PedestrianGreen(int(junction), out.road);
+                const bool flashing = traffic.PedestrianFlashing(int(junction), out.road);
+                const bool flashOn =
+                    !flashing || std::fmod(Game::Get().GetState().animationTimeSeconds * 2.5f, 1.f) < .5f;
+                ColorRGBA pedestrian = !walk     ? ColorRGBA(.95f, .21f, .28f)
+                                       : flashOn ? ColorRGBA(.15f, 1, .78f)
+                                                 : ColorRGBA(1, .74f, .18f);
                 for (float edge : {-1.f, 1.f})
                 {
                     auto center = add(across, d, .9f * edge);
@@ -2938,6 +3197,96 @@ void PlanetScene::Draw()
         if (frustum.Visible(cscr, cpadH, cpadH, cpadV, cpadV))
         {
             DrawSurfaceModel(*it->second.model, it->second.chunk->frame, *session);
+        }
+    }
+    // CQ-04B: Render live 4-aspect procedural city signals (concurrent walk, flashing walk, left arrow)
+    // and grade-separated cutaway guides for active surface chunks.
+    {
+        const double planetRadius = session->Planet().radiusMeters;
+        const int urgentAxis = (CivicJustice::State().wanted >= 2) ? 0 : -1;
+        const bool flashPhase = std::fmod(w.animationTimeSeconds * 2.5f, 1.f) < .5f;
+        for (const auto &chunk : visible)
+        {
+            for (const auto &inter : chunk->intersections)
+            {
+                if (inter.control != world::IntersectionControl::Signalized &&
+                    inter.control != world::IntersectionControl::GradeSeparated)
+                {
+                    continue;
+                }
+                const auto p = SurfaceProjection(inter.center, session->Origin(), planetRadius);
+                const float px = float(p.x / 2.), py = float(p.y / 2.), pz = float(p.z / 2.);
+                const auto scr = Drawing::WorldToScreen(px, py, pz * 44.f);
+                if (!frustum.Visible(scr, 260, 260, 220, 220))
+                {
+                    continue;
+                }
+                const float rW = float(inter.radiusMeters * .5);
+                if (inter.control == world::IntersectionControl::Signalized)
+                {
+                    const auto sig = IntersectionSignalController::Evaluate(
+                        inter, double(w.animationTimeSeconds), true, true, true, urgentAxis);
+                    auto lightCol = [](TrafficLight l) {
+                        return l == TrafficLight::Green   ? ColorRGBA(.18f, 1.f, .76f)
+                               : l == TrafficLight::Amber ? ColorRGBA(1.f, .72f, .16f)
+                                                          : ColorRGBA(.96f, .22f, .28f);
+                    };
+                    renderqueue::PushMatrix();
+                    renderqueue::Translate(0, -pz * 44.f, pz * (1296.f / 44.f));
+                    for (int arm = 0; arm < 4; ++arm)
+                    {
+                        const bool isMain = (arm % 2 == 0);
+                        const float ang = float(inter.mainAxisYaw) + arm * (kPi * .5f);
+                        const Vector2 d{std::cos(ang), std::sin(ang)};
+                        const Vector2 n{-d.y, d.x};
+                        const Vector2 edgeCenter{px + d.x * (rW * .90f), py + d.y * (rW * .90f)};
+                        const bool walk = isMain ? sig.mainWalkGreen : sig.sideWalkGreen;
+                        const bool flash = isMain ? sig.mainWalkFlashing : sig.sideWalkFlashing;
+                        const ColorRGBA walkCol = !walk            ? ColorRGBA(.95f, .21f, .28f)
+                                                  : (!flash || flashPhase) ? ColorRGBA(.15f, 1.f, .78f)
+                                                                           : ColorRGBA(1.f, .74f, .18f);
+                        Drawing::DrawHologramStrip(
+                            {edgeCenter.x - n.x * (rW * .42f), edgeCenter.y - n.y * (rW * .42f)},
+                            {edgeCenter.x + n.x * (rW * .42f), edgeCenter.y + n.y * (rW * .42f)}, .12f, walkCol,
+                            .09f);
+                        const TrafficLight throughL = isMain ? sig.mainThrough : sig.sideThrough;
+                        const TrafficLight leftL = isMain ? sig.mainLeft : sig.sideLeft;
+                        const bool leftActive = leftL == TrafficLight::Green;
+                        const ColorRGBA stopCol = leftActive ? ColorRGBA(.2f, 1.f, .76f) : lightCol(throughL);
+                        const Vector2 stopPos{px + d.x * (rW * 1.05f) - n.x * (rW * .24f),
+                                              py + d.y * (rW * 1.05f) - n.y * (rW * .24f)};
+                        Drawing::DrawHologramStrip({stopPos.x - n.x * .55f, stopPos.y - n.y * .55f},
+                                                   {stopPos.x + n.x * .55f, stopPos.y + n.y * .55f}, .16f, stopCol,
+                                                   .12f);
+                    }
+                    renderqueue::PopMatrix();
+                }
+                else if (inter.control == world::IntersectionControl::GradeSeparated)
+                {
+                    // Quarter-view cutaway guide strips when player approaches under an overpass or underpass slab.
+                    const double distToPlayer =
+                        world::SurfaceGeometry::Distance(planetRadius, session->Pose().origin, inter.center);
+                    if (distToPlayer < inter.radiusMeters + 18.)
+                    {
+                        renderqueue::PushMatrix();
+                        renderqueue::Translate(0, -pz * 44.f, pz * (1296.f / 44.f));
+                        const float ang = float(inter.mainAxisYaw);
+                        const Vector2 d{std::cos(ang), std::sin(ang)};
+                        const Vector2 n{-d.y, d.x};
+                        const ColorRGBA guideCol = inter.underpassBelow ? ColorRGBA(.22f, .92f, 1.f, .85f)
+                                                                        : ColorRGBA(.95f, .82f, .28f, .85f);
+                        for (float side : {-1.f, 1.f})
+                        {
+                            const Vector2 a{px - d.x * rW + n.x * (rW * .55f * side),
+                                            py - d.y * rW + n.y * (rW * .55f * side)};
+                            const Vector2 b{px + d.x * rW + n.x * (rW * .55f * side),
+                                            py + d.y * rW + n.y * (rW * .55f * side)};
+                            Drawing::DrawHologramStrip(a, b, .14f, guideCol, .14f);
+                        }
+                        renderqueue::PopMatrix();
+                    }
+                }
+            }
         }
     }
     {

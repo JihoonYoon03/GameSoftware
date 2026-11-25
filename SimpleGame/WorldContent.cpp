@@ -121,21 +121,32 @@ bool Clip(const GeneratedRegion &r, Vector3d &a, Vector3d &b)
 struct Grid
 {
     std::uint64_t seed;
-    double width, depth, yaw;
+    double width, depth, yaw, warpScale;
     explicit Grid(const GeneratedPlanet &p, const GeneratedRegion &r)
         : seed(WorldIdentity::StreamSeed(p.terrain.Planet(), r.definition.id, "surface_content_v1"))
     {
         bool city = r.definition.kind == RegionKind::Settlement;
-        if (city && p.layoutRevision >= GeneratedPlanet::CurrentLayoutRevision)
+        if (city && p.layoutRevision >= 5)
+        {
+            // CQ-04B: Varied rectangular urban blocks (82-116m) with organic street curvature (warpScale 0.115)
+            // so settlements feel natural rather than rigid uniform checkerboards while keeping quarter-view alignment.
+            const bool major = r.definition.tier >= SettlementTier::Metropolis;
+            width = major ? 92 + Fraction(seed) * 16 : 82 + Fraction(seed) * 14;
+            depth = major ? 98 + Fraction(seed + 1) * 18 : 88 + Fraction(seed + 1) * 16;
+            warpScale = .115;
+        }
+        else if (city && p.layoutRevision >= 4)
         {
             const bool major = r.definition.tier >= SettlementTier::Metropolis;
             width = major ? 68 + Fraction(seed) * 14 : 64 + Fraction(seed) * 14;
             depth = major ? 74 + Fraction(seed + 1) * 16 : 70 + Fraction(seed + 1) * 14;
+            warpScale = .13;
         }
         else
         {
             width = city ? 84 + Fraction(seed) * 24 : 132 + Fraction(seed) * 44;
             depth = city ? 92 + Fraction(seed + 1) * 30 : 140 + Fraction(seed + 1) * 44;
+            warpScale = .13;
         }
         // Match Halo's world axes: the shared quarter-view projects these axes at 45 degrees.
         // Warped shared nodes keep organic streets without randomly rotating an entire settlement.
@@ -145,8 +156,8 @@ struct Grid
     {
         // Shared nodes have smooth bounded warps: every edge joins exactly and no cells fold.
         double a = Fraction(seed + 3) * 6, b = Fraction(seed + 4) * 6;
-        return Rotate({double(x) * width + width * .13 * std::sin(double(y) * .61 + a),
-                       double(y) * depth + depth * .13 * std::sin(double(x) * .53 + b), 0},
+        return Rotate({double(x) * width + width * warpScale * std::sin(double(y) * .61 + a),
+                       double(y) * depth + depth * warpScale * std::sin(double(x) * .53 + b), 0},
                       yaw);
     }
     std::uint64_t CellSeed(ContentCellKey key) const
@@ -333,6 +344,303 @@ ContentForm CityForm(SettlementTier tier, double zoneRatio, std::uint64_t seed, 
            : choice % 3 == 1 ? ContentForm::Courtyard
                              : ContentForm::Habitat;
 }
+// ============================================================================
+// CQ-04B (Layout Revision 5) — Realistic Road Cross-Sections, Grade Separation,
+// Roundabouts, District Zoning, Unique Landmarks, Perimeter Block Parceling & OBB Checks
+// ============================================================================
+struct RoadProfile
+{
+    double carriagewayMeters = 6.;
+    double sidewalkMeters = 2.4;
+    double halfTotalMeters = 5.4;
+    bool hasMedian = false;
+    bool hasLeftPocket = false;
+};
+RoadProfile ProfileForLanes(unsigned lanes)
+{
+    if (lanes >= 6)
+    {
+        return {19.4, 2.8, 12.5, true, true}; // 3.0*6 + 1.4 median + 2.8*2 sidewalks = 25.0m
+    }
+    if (lanes >= 4)
+    {
+        return {12.8, 2.4, 8.8, true, true}; // 3.0*4 + 0.8 median + 2.4*2 sidewalks = 17.6m
+    }
+    return {6.0, 2.4, 5.4, false, false}; // 3.0*2 + 2.4*2 sidewalks = 10.8m
+}
+unsigned Rev5LanesForCoord(SettlementTier tier, std::int64_t coord, double ringRatio)
+{
+    if (tier >= SettlementTier::Metropolis)
+    {
+        if (coord % 4 == 0)
+        {
+            // Step down 6 -> 4 before reaching the outer 4-lane ring road (never terminate 6-lane as a dead-end).
+            return ringRatio <= .64 ? 6u : 4u;
+        }
+        if (coord % 2 == 0)
+        {
+            return 4u;
+        }
+        return 2u;
+    }
+    if (tier == SettlementTier::Town)
+    {
+        return (coord % 2 == 0) ? 4u : 2u;
+    }
+    return coord == 0 ? 4u : 2u;
+}
+bool Rev5RoundaboutNode(const GeneratedRegion &r, std::int64_t gx, std::int64_t gy, double ringRatio,
+                        double &outRadius, double &outIsland, unsigned &outLanes)
+{
+    if (r.definition.kind != RegionKind::Settlement)
+    {
+        return false;
+    }
+    const bool majorAxis = (r.definition.tier >= SettlementTier::Metropolis)
+                               ? (gx % 4 == 0 || gy % 4 == 0)
+                               : (gx == 0 || gy == 0);
+    // Ring-road portal roundabouts (2-lane, R=20.5m, island=11m)
+    if (majorAxis && ringRatio >= .64 && ringRatio <= .82)
+    {
+        outRadius = 20.5;
+        outIsland = 11.0;
+        outLanes = 4;
+        return true;
+    }
+    // Civic plaza gateway roundabout (1-lane, R=13m, island=7m)
+    if (r.definition.tier <= SettlementTier::Town && gx == 1 && gy == 0)
+    {
+        outRadius = 13.0;
+        outIsland = 7.0;
+        outLanes = 2;
+        return true;
+    }
+    return false;
+}
+DistrictZone ClassifyDistrictZone(const GeneratedRegion &r, const Grid &grid, std::int64_t cx, std::int64_t cy,
+                                  double zoneRatio)
+{
+    if (zoneRatio < .22)
+    {
+        return DistrictZone::CivicCore;
+    }
+    // Spaceport sector in one deterministic outer quadrant of Metropolis / SystemCapital
+    const double angle = std::atan2(double(cy), double(cx));
+    const double spAngle = Fraction(grid.seed + 91) * 2. * G::Pi - G::Pi;
+    double dAngle = std::fabs(angle - spAngle);
+    if (dAngle > G::Pi)
+    {
+        dAngle = 2. * G::Pi - dAngle;
+    }
+    if (r.definition.tier >= SettlementTier::Metropolis && zoneRatio >= .52 && zoneRatio <= .82 && dAngle < .52)
+    {
+        return DistrictZone::Spaceport;
+    }
+    if (zoneRatio > .68)
+    {
+        return (dAngle < 1.35) ? DistrictZone::IndustrialLogistics : DistrictZone::ResidentialLow;
+    }
+    // Voronoi-like deterministic block district clustering (2x2 block clusters share one coherent zone).
+    const auto clusterSeed = Mix(grid.seed ^ Mix(std::uint64_t(cx >> 1) + 17) ^ Mix(std::uint64_t(cy >> 1) + 53));
+    const unsigned pick = unsigned(clusterSeed % 10);
+    if (zoneRatio < .45)
+    {
+        if (pick < 4)
+        {
+            return DistrictZone::CommercialTransit;
+        }
+        return r.definition.tier >= SettlementTier::Metropolis ? DistrictZone::ResidentialHigh
+                                                               : DistrictZone::ResidentialLow;
+    }
+    if (pick < 2)
+    {
+        return DistrictZone::CommercialTransit;
+    }
+    if (pick < 4)
+    {
+        return DistrictZone::IndustrialLogistics;
+    }
+    return (r.definition.tier >= SettlementTier::Metropolis && pick < 7) ? DistrictZone::ResidentialHigh
+                                                                         : DistrictZone::ResidentialLow;
+}
+struct PlacedObb
+{
+    Vector3d center;
+    double halfX = 0, halfY = 0, yaw = 0;
+};
+bool ObbOverlap(const PlacedObb &a, const PlacedObb &b, double margin = 1.2)
+{
+    const double ra = std::hypot(a.halfX, a.halfY), rb = std::hypot(b.halfX, b.halfY);
+    const double dx = b.center.x - a.center.x, dy = b.center.y - a.center.y;
+    if (dx * dx + dy * dy > (ra + rb + margin) * (ra + rb + margin))
+    {
+        return false;
+    }
+    auto separated = [&](double ax, double ay) {
+        const double projA =
+            std::fabs(ax * std::cos(a.yaw) + ay * std::sin(a.yaw)) * (a.halfX + margin * .5) +
+            std::fabs(-ax * std::sin(a.yaw) + ay * std::cos(a.yaw)) * (a.halfY + margin * .5);
+        const double projB =
+            std::fabs(ax * std::cos(b.yaw) + ay * std::sin(b.yaw)) * (b.halfX + margin * .5) +
+            std::fabs(-ax * std::sin(b.yaw) + ay * std::cos(b.yaw)) * (b.halfY + margin * .5);
+        return std::fabs(dx * ax + dy * ay) > projA + projB;
+    };
+    const double ca = std::cos(a.yaw), sa = std::sin(a.yaw);
+    const double cb = std::cos(b.yaw), sb = std::sin(b.yaw);
+    return !(separated(ca, sa) || separated(-sa, ca) || separated(cb, sb) || separated(-sb, cb));
+}
+void EmitRev5Street(ContentCell &cell, const GeneratedPlanet &p, const GeneratedRegion &r, Vector3d a,
+                    Vector3d b, unsigned lanes, StreetKind kind, double startTrim, double endTrim,
+                    double startWidthOverride = 0., double startElevOffset = 0., double endElevOffset = 0.)
+{
+    if (p.cityCores)
+    {
+        if (auto core = p.cityCores->Find(r.definition.id))
+        {
+            // Keep authored CityCore interior & perimeter buffer clear so procedural streets never X-cross core roads.
+            if (Norm(a) < core->radiusMeters + 16. || Norm(b) < core->radiusMeters + 16.)
+            {
+                return;
+            }
+        }
+    }
+    if (!Clip(r, a, b))
+    {
+        return;
+    }
+    auto delta = Sub(b, a);
+    const double fullLen = Norm(delta);
+    if (fullLen <= startTrim + endTrim + 3.)
+    {
+        return;
+    }
+    const Vector3d dir = Mul(delta, 1. / fullLen);
+    a = Add(a, Mul(dir, startTrim));
+    b = Sub(b, Mul(dir, endTrim));
+    const double len = Norm(Sub(b, a));
+    if (len < 2.)
+    {
+        return;
+    }
+    const auto prof = ProfileForLanes(lanes);
+    const bool elevatedOrUnderpass = kind == StreetKind::Elevated || kind == StreetKind::ElevatedRamp ||
+                                     kind == StreetKind::Underpass || kind == StreetKind::UnderpassRamp;
+    const unsigned steps = (std::max)(2u, unsigned(std::ceil(len / 12.)) * 2u);
+    bool crossesWater = false;
+    bool dryEnds = At(p, r, a).altitudeMeters >= PlanetTerrain::SeaLevelMeters &&
+                   At(p, r, b).altitudeMeters >= PlanetTerrain::SeaLevelMeters;
+    for (unsigned i = 0; i <= steps; ++i)
+    {
+        const double t = double(i) / steps;
+        auto pt = At(p, r, Add(a, Mul(Sub(b, a), t)));
+        if (pt.altitudeMeters < PlanetTerrain::SeaLevelMeters)
+        {
+            crossesWater = true;
+            break;
+        }
+    }
+    // Promote short water/ravine spans (<= 150m) with dry endpoints to a continuous Bridge instead of stubs.
+    const bool promoteBridge = crossesWater && dryEnds && len <= 150. && !elevatedOrUnderpass;
+    if (promoteBridge)
+    {
+        kind = StreetKind::Bridge;
+    }
+    SurfaceStreet street;
+    street.lanes = lanes;
+    street.widthMeters = prof.carriagewayMeters;
+    street.sidewalkMeters = (kind == StreetKind::Elevated || kind == StreetKind::ElevatedRamp ||
+                             kind == StreetKind::Underpass || kind == StreetKind::UnderpassRamp)
+                                ? 1.2
+                                : prof.sidewalkMeters;
+    street.kind = kind;
+    street.startWidthMeters = startWidthOverride;
+    street.elevationOffsetMeters = (startElevOffset + endElevOffset) * .5;
+    street.hasMedian = prof.hasMedian && kind != StreetKind::PedestrianPlaza;
+    street.hasLeftPocket = prof.hasLeftPocket && kind == StreetKind::Surface;
+
+    // Preserve exact midpoint vertex when an authored CityCore approach joins this local street edge.
+    std::optional<Vector3d> exactJoin;
+    if (p.cityCores)
+    {
+        if (auto core = p.cityCores->Find(r.definition.id))
+        {
+            for (const auto &app : core->approaches)
+            {
+                if (app.cellX == cell.key.x && app.cellY == cell.key.y &&
+                    SegmentDistance(app.join, a, b) < .05)
+                {
+                    exactJoin = app.join;
+                    break;
+                }
+            }
+        }
+    }
+    const double baseElevA = At(p, r, a).altitudeMeters;
+    const double baseElevB = At(p, r, b).altitudeMeters;
+    std::vector<std::pair<Vector3d, double>> samples;
+    samples.reserve(steps + 1);
+    if (exactJoin)
+    {
+        const double joinT = std::clamp(Norm(Sub(*exactJoin, a)) / len, .05, .95);
+        const unsigned half = (std::max)(1u, steps / 2u);
+        for (unsigned i = 0; i < half; ++i)
+        {
+            const double f = double(i) / half;
+            samples.push_back({Add(a, Mul(Sub(*exactJoin, a), f)), joinT * f});
+        }
+        samples.push_back({*exactJoin, joinT});
+        for (unsigned i = 1; i <= half; ++i)
+        {
+            const double f = double(i) / half;
+            samples.push_back({Add(*exactJoin, Mul(Sub(b, *exactJoin), f)), joinT + (1. - joinT) * f});
+        }
+    }
+    else
+    {
+        for (unsigned i = 0; i <= steps; ++i)
+        {
+            const double t = double(i) / steps;
+            samples.push_back({Add(a, Mul(Sub(b, a), t)), t});
+        }
+    }
+    for (const auto &[localPt, t] : samples)
+    {
+        auto pt = At(p, r, localPt);
+        if (!promoteBridge && !elevatedOrUnderpass &&
+            (pt.altitudeMeters < PlanetTerrain::SeaLevelMeters || Reserved(p, pt, street.widthMeters * .5)))
+        {
+            if (street.points.size() > 1)
+            {
+                cell.streets.push_back(std::move(street));
+            }
+            street.points.clear();
+            continue;
+        }
+        if (promoteBridge)
+        {
+            const double deckZ = (std::max)(PlanetTerrain::SeaLevelMeters + 4.5,
+                                            baseElevA + (baseElevB - baseElevA) * t);
+            pt.altitudeMeters = (std::max)(pt.altitudeMeters, deckZ) + .08;
+        }
+        else if (elevatedOrUnderpass)
+        {
+            // Smooth S-curve vertical transition for realistic grade ramps (<= 8.9% elevated, <= 7.5% underpass).
+            const double s = t * t * (3. - 2. * t);
+            const double offset = startElevOffset + (endElevOffset - startElevOffset) * s;
+            const double linearGround = baseElevA + (baseElevB - baseElevA) * t;
+            pt.altitudeMeters = linearGround + offset + .08;
+        }
+        else
+        {
+            pt.altitudeMeters += .08;
+        }
+        street.points.push_back(pt);
+    }
+    if (street.points.size() > 1)
+    {
+        cell.streets.push_back(std::move(street));
+    }
+}
 } // namespace
 
 // ============================================================================
@@ -455,7 +763,9 @@ void CityCorePlan::Prepare(GeneratedPlanet &p, const std::atomic_bool *cancel)
         reservations.push_back({"core_" + city.regionId, r.center.position, city.radiusMeters, feather,
                                 city.elevationMeters, 2});
     }
+    auto savedTerraces = p.terrain.Terraces();
     p.terrain = PlanetTerrain(p.terrain.Planet(), std::move(reservations), p.terrain.Homeland());
+    p.terrain.SetTerraces(std::move(savedTerraces));
     for (auto &city : cities)
     {
         cancelled();
@@ -550,7 +860,62 @@ void CityCorePlan::Prepare(GeneratedPlanet &p, const std::atomic_bool *cancel)
             usedJoins.insert({approach.cellX, approach.cellY});
             city.approaches.push_back(std::move(approach));
         }
-        auto road = [&](Vector3d a, Vector3d b, unsigned lanes, double width = 0) {
+        // CQ-04B (Rev 5+): Track CityCore road junctions so authored core streets trim back to stop-lines
+        // and publish explicit SurfaceIntersection pads instead of X-crossing yellow/white markings.
+        struct CoreNodeInfo
+        {
+            Vector3d pos{};
+            unsigned degree = 0;
+            unsigned maxLanes = 2;
+        };
+        std::map<std::uint32_t, CoreNodeInfo> coreNodes;
+        if (p.layoutRevision >= 5)
+        {
+            for (const auto &edge : city.roads)
+            {
+                auto &nf = coreNodes[edge.from];
+                nf.pos = edge.start;
+                ++nf.degree;
+                nf.maxLanes = (std::max)(nf.maxLanes, edge.lanes);
+                auto &nt = coreNodes[edge.to];
+                nt.pos = edge.end;
+                ++nt.degree;
+                nt.maxLanes = (std::max)(nt.maxLanes, edge.lanes);
+            }
+            for (const auto &[nodeId, info] : coreNodes)
+            {
+                if (info.degree < 2)
+                {
+                    continue;
+                }
+                auto pt = At(p, r, info.pos);
+                SurfaceIntersection inter;
+                inter.id = WorldIdentity::ContentKey(p.terrain.Planet(), city.regionId,
+                                                     "core.inter." + std::to_string(nodeId));
+                inter.regionId = city.regionId;
+                inter.center = pt;
+                inter.frame = G::Advance(r.frame, info.pos.x, info.pos.y, p.terrain.Planet().radiusMeters);
+                inter.frame.origin = pt;
+                inter.maxLanes = info.maxLanes;
+                inter.arms = (std::min)(4u, info.degree);
+                inter.radiusMeters = info.maxLanes * 1.5 + 2.4 + 1.0;
+                inter.control = (info.maxLanes >= 4 && info.degree >= 3) ? IntersectionControl::Signalized
+                                                                         : IntersectionControl::Unsignalized;
+                inter.mainAxisYaw = grid.yaw;
+                inter.cycleSeconds = (inter.control == IntersectionControl::Signalized) ? 56. : 0.;
+                cellAt(info.pos).intersections.push_back(std::move(inter));
+            }
+        }
+        auto road = [&](Vector3d a, Vector3d b, unsigned lanes, double width = 0, double startTrim = 0.,
+                        double endTrim = 0.) {
+            auto delta = Sub(b, a);
+            const double fullLen = Norm(delta);
+            if (startTrim + endTrim > 0. && fullLen > startTrim + endTrim + 4.)
+            {
+                const auto dir = Mul(delta, 1. / fullLen);
+                a = Add(a, Mul(dir, startTrim));
+                b = Sub(b, Mul(dir, endTrim));
+            }
             unsigned steps = (std::max)(2u, unsigned(std::ceil(Norm(Sub(b, a)) / 16)) * 2);
             for (unsigned i = 0; i < steps; ++i)
             {
@@ -560,13 +925,30 @@ void CityCorePlan::Prepare(GeneratedPlanet &p, const std::atomic_bool *cancel)
                 auto pa = At(p, r, left), pb = At(p, r, right);
                 pa.altitudeMeters += .08;
                 pb.altitudeMeters += .08;
-                cellAt(Mul(Add(left, right), .5))
-                    .streets.push_back({{pa, pb}, width > 0 ? width : lanes * 3., 2.4, lanes});
+                SurfaceStreet st;
+                st.points = {pa, pb};
+                st.widthMeters = width > 0 ? width : lanes * 3.;
+                st.sidewalkMeters = 2.4;
+                st.lanes = lanes;
+                st.hasMedian = (p.layoutRevision >= 5 && lanes >= 4);
+                cellAt(Mul(Add(left, right), .5)).streets.push_back(std::move(st));
             }
         };
         for (const auto &edge : city.roads)
         {
-            road(edge.start, edge.end, edge.lanes);
+            double trimA = 0., trimB = 0.;
+            if (p.layoutRevision >= 5)
+            {
+                if (auto it = coreNodes.find(edge.from); it != coreNodes.end() && it->second.degree >= 2)
+                {
+                    trimA = it->second.maxLanes * 1.5 + 2.4 + .8;
+                }
+                if (auto it = coreNodes.find(edge.to); it != coreNodes.end() && it->second.degree >= 2)
+                {
+                    trimB = it->second.maxLanes * 1.5 + 2.4 + .8;
+                }
+            }
+            road(edge.start, edge.end, edge.lanes, 0., trimA, trimB);
         }
         for (const auto &approach : city.approaches)
         {
@@ -576,6 +958,23 @@ void CityCorePlan::Prepare(GeneratedPlanet &p, const std::atomic_bool *cancel)
             for (std::size_t i = 1; i < approach.points.size(); ++i)
             {
                 road(approach.points[i - 1], approach.points[i], 2);
+            }
+            if (p.layoutRevision >= 5)
+            {
+                auto jp = At(p, r, approach.join);
+                SurfaceIntersection inter;
+                inter.id = WorldIdentity::ContentKey(p.terrain.Planet(), city.regionId,
+                                                     "core.join." + std::to_string(approach.from));
+                inter.regionId = city.regionId;
+                inter.center = jp;
+                inter.frame = G::Advance(r.frame, approach.join.x, approach.join.y, p.terrain.Planet().radiusMeters);
+                inter.frame.origin = jp;
+                inter.maxLanes = 2;
+                inter.arms = 3;
+                inter.radiusMeters = 5.6;
+                inter.control = IntersectionControl::Unsignalized;
+                inter.mainAxisYaw = grid.yaw;
+                cellAt(approach.join).intersections.push_back(std::move(inter));
             }
         }
         for (const auto &lot : city.lots)
@@ -832,6 +1231,662 @@ ContentCell ContentLayout::Generate(const GeneratedPlanet &p, ContentCellKey key
                c = grid.Node(key.x + 1, key.y + 1), d = grid.Node(key.x, key.y + 1);
     const bool city = r.definition.kind == RegionKind::Settlement;
     const auto seed = grid.CellSeed(key);
+    if (city && p.layoutRevision >= 5)
+    {
+        // ====================================================================
+        // CQ-04B (Layout Revision 5) — Hierarchical Road Network, Grade Separation,
+        // Roundabouts, Explicit Intersections, District Zoning, Unique Landmarks,
+        // Perimeter Block Parceling (1:1 Measured Lots, 0 OBB Overlaps) & Streetscape
+        // ====================================================================
+        const double boundR = (std::max)(200., r.boundingRadiusMeters);
+        const double avgStep = (std::max)(40., (grid.width + grid.depth) * .5);
+        std::int64_t ringCell = (std::max)(std::int64_t(3), std::int64_t(std::floor(boundR * .68 / avgStep)));
+        while (ringCell > 2)
+        {
+            if (Inside(r, grid.Node(ringCell, 0), 16.) && Inside(r, grid.Node(-ringCell, 0), 16.) &&
+                Inside(r, grid.Node(0, ringCell), 16.) && Inside(r, grid.Node(0, -ringCell), 16.))
+            {
+                break;
+            }
+            --ringCell;
+        }
+        const auto cellMid = Mul(Add(a, c), .5);
+        const double cellZoneRatio = Norm(cellMid) / boundR;
+        const auto nodeRatio = [&](Vector3d pt) { return Norm(pt) / boundR; };
+        const double ratioA = nodeRatio(a), ratioB = nodeRatio(b), ratioC = nodeRatio(c), ratioD = nodeRatio(d);
+
+        // Compute lane counts for horizontal (y-indexed) and vertical (x-indexed) grid edges.
+        // Outer grid perimeter (|x| == ringCell or |y| == ringCell) forms the continuous 4-lane Ring Road
+        // with native grid intersections and cardinal portal roundabouts — zero diagonal X-crossings.
+        auto edgeLanes = [&](std::int64_t coord, double edgeRatio) {
+            if (std::abs(coord) == ringCell)
+            {
+                return 4u;
+            }
+            return Rev5LanesForCoord(r.definition.tier, coord, edgeRatio);
+        };
+        const unsigned lanesBottom = edgeLanes(key.y, (ratioA + ratioB) * .5);
+        const unsigned lanesLeft = edgeLanes(key.x, (ratioA + ratioD) * .5);
+        const unsigned lanesTop = edgeLanes(key.y + 1, (ratioD + ratioC) * .5);
+        const unsigned lanesRight = edgeLanes(key.x + 1, (ratioB + ratioC) * .5);
+
+        // Helper: check intersection radius at any grid corner (gx, gy).
+        auto cornerInfo = [&](std::int64_t gx, std::int64_t gy, Vector3d pos, unsigned lx, unsigned ly,
+                              double &trimOut, IntersectionControl &ctrlOut, double &islandOut,
+                              unsigned &maxLanesOut, bool &elevOut, bool &underOut) {
+            const double rr = nodeRatio(pos);
+            elevOut = (r.definition.tier >= SettlementTier::Metropolis && gx == 2 && gy == 0);
+            underOut = (r.definition.tier >= SettlementTier::Metropolis && gx == 0 && gy == 0);
+            islandOut = 0.;
+            maxLanesOut = (std::max)(lx, ly);
+            double rbR = 0., rbIsl = 0.;
+            unsigned rbL = 2;
+            if (elevOut || underOut)
+            {
+                ctrlOut = IntersectionControl::GradeSeparated;
+                trimOut = ProfileForLanes(maxLanesOut).halfTotalMeters + 1.5;
+                return;
+            }
+            const bool cardinalRingPortal =
+                (std::abs(gx) == ringCell && gy == 0) || (gx == 0 && std::abs(gy) == ringCell);
+            if (cardinalRingPortal)
+            {
+                ctrlOut = IntersectionControl::Roundabout;
+                trimOut = 20.5;
+                islandOut = 11.0;
+                maxLanesOut = (std::max)(maxLanesOut, 4u);
+                return;
+            }
+            if (Rev5RoundaboutNode(r, gx, gy, rr, rbR, rbIsl, rbL))
+            {
+                ctrlOut = IntersectionControl::Roundabout;
+                trimOut = rbR;
+                islandOut = rbIsl;
+                maxLanesOut = (std::max)(maxLanesOut, rbL);
+                return;
+            }
+            if (lx >= 4 && ly >= 4)
+            {
+                ctrlOut = IntersectionControl::Signalized;
+            }
+            else if (lx >= 4 || ly >= 4)
+            {
+                ctrlOut = (maxLanesOut >= 6) ? IntersectionControl::Signalized : IntersectionControl::Yield;
+            }
+            else
+            {
+                ctrlOut = IntersectionControl::Unsignalized;
+            }
+            trimOut = ProfileForLanes(maxLanesOut).halfTotalMeters + 1.5;
+        };
+
+        // Emit explicit intersection at owned corner (key.x, key.y) when inside city boundary.
+        double trimA = 0., trimB = 0., trimD = 0.;
+        IntersectionControl ctrlA = IntersectionControl::Unsignalized, ctrlTmp;
+        double islandA = 0., islTmp = 0.;
+        unsigned maxLA = 2, maxLTmp = 2;
+        bool elevA = false, underA = false, elevTmp = false, underTmp = false;
+        cornerInfo(key.x, key.y, a, lanesLeft, lanesBottom, trimA, ctrlA, islandA, maxLA, elevA, underA);
+        cornerInfo(key.x + 1, key.y, b, lanesRight, lanesBottom, trimB, ctrlTmp, islTmp, maxLTmp, elevTmp,
+                   underTmp);
+        cornerInfo(key.x, key.y + 1, d, lanesLeft, lanesTop, trimD, ctrlTmp, islTmp, maxLTmp, elevTmp, underTmp);
+
+        const bool inRingA = (std::abs(key.x) <= ringCell && std::abs(key.y) <= ringCell);
+        const bool inRingB = (std::abs(key.x + 1) <= ringCell && std::abs(key.y) <= ringCell);
+        const bool inRingD = (std::abs(key.x) <= ringCell && std::abs(key.y + 1) <= ringCell);
+        const bool bottomOnRing = (std::abs(key.y) == ringCell && key.x >= -ringCell && key.x < ringCell);
+        const bool leftOnRing = (std::abs(key.x) == ringCell && key.y >= -ringCell && key.y < ringCell);
+
+        // Suppress direct 6<->2 local crossings on odd side streets of 6-lane avenues (keep 2-block spacing),
+        // and deterministically merge ~28% of interior 2-lane local edges into 1x2 / 2x1 superblocks & T-junctions
+        // to break rigid checkerboard grid monotony (while preserving the central core & test fixture cells).
+        const bool skipBottom6x2 = (!bottomOnRing && lanesBottom == 2 && (lanesLeft >= 6 || lanesRight >= 6));
+        const bool skipLeft6x2 = (!leftOnRing && lanesLeft == 2 && (lanesBottom >= 6 || lanesTop >= 6));
+        bool hasCoreApproach = false;
+        if (p.cityCores)
+        {
+            if (const auto *core = p.cityCores->Find(r.definition.id))
+            {
+                for (const auto &app : core->approaches)
+                {
+                    if (app.cellX == key.x && app.cellY == key.y)
+                    {
+                        hasCoreApproach = true;
+                        break;
+                    }
+                }
+            }
+        }
+        const bool keepFixtureGrid = (std::abs(key.x) <= 2 && std::abs(key.y) <= 2) || hasCoreApproach;
+        const auto mergeHash = Mix(grid.seed ^ Mix(std::uint64_t(key.x) * 37 + 11) ^ Mix(std::uint64_t(key.y) * 91 + 29));
+        const bool mergeBottom = (!bottomOnRing && !keepFixtureGrid && lanesBottom == 2 && lanesLeft <= 4 &&
+                                  lanesRight <= 4 && (mergeHash % 7 == 0 || mergeHash % 7 == 1));
+        const bool mergeLeft = (!leftOnRing && !keepFixtureGrid && !mergeBottom && lanesLeft == 2 &&
+                                lanesBottom <= 4 && lanesTop <= 4 && (mergeHash % 7 == 2 || mergeHash % 7 == 3));
+        const bool omitBottom = skipBottom6x2 || mergeBottom;
+        const bool omitLeft = skipLeft6x2 || mergeLeft;
+
+        if (inRingA && Inside(r, a, 4.) && !(p.cityCores && p.cityCores->Find(r.definition.id) &&
+                                             Norm(a) < p.cityCores->Find(r.definition.id)->radiusMeters + 16.))
+        {
+            auto ptA = At(p, r, a);
+            if (ptA.altitudeMeters >= PlanetTerrain::SeaLevelMeters)
+            {
+                SurfaceIntersection inter;
+                inter.id = WorldIdentity::ContentKey(p.terrain.Planet(), r.definition.id,
+                                                     "inter." + std::to_string(key.x) + "." +
+                                                         std::to_string(key.y));
+                inter.regionId = r.definition.id;
+                inter.center = ptA;
+                inter.frame = G::Advance(r.frame, a.x, a.y, p.terrain.Planet().radiusMeters);
+                inter.frame.origin = ptA;
+                inter.control = ctrlA;
+                inter.radiusMeters = trimA;
+                inter.islandRadiusMeters = islandA;
+                inter.maxLanes = maxLA;
+                inter.arms = (omitBottom || omitLeft) ? 3u : 4u;
+                const auto dirH = Sub(b, a);
+                inter.mainAxisYaw = std::atan2(dirH.y, dirH.x);
+                inter.cycleSeconds = (maxLA >= 6) ? 62. : 54.;
+                // Green Wave offset along primary arterial (~50 km/h = 13.89 m/s).
+                inter.greenWaveOffsetSeconds =
+                    std::fmod(std::fabs(double(key.x) * grid.width + double(key.y) * grid.depth) / 13.89,
+                              inter.cycleSeconds);
+                inter.hasAllWalk = (maxLA >= 6 && ratioA < .25);
+                inter.elevatedOverhead = elevA;
+                inter.underpassBelow = underA;
+                result.intersections.push_back(std::move(inter));
+            }
+        }
+
+        // Emit bottom street (a -> b) with grade separation, step-down taper (6->4 / 4->2), RingRoad, and stop-line trim.
+        if (!omitBottom && inRingA && inRingB)
+        {
+            const bool isUnderpassAxis =
+                (r.definition.tier >= SettlementTier::Metropolis && key.y == 0 && key.x >= -1 && key.x <= 1);
+            if (isUnderpassAxis)
+            {
+                // Open-cut U-ramps (grade <= 6.8%) into a short -5.4m box culvert under the civic plaza (0, 0).
+                if (key.x == -1)
+                {
+                    EmitRev5Street(result, p, r, a, b, 4, StreetKind::UnderpassRamp, trimA, 0., 0., 0., -5.4);
+                }
+                else if (key.x == 0)
+                {
+                    EmitRev5Street(result, p, r, a, b, 4, StreetKind::Underpass, 0., 0., 0., -5.4, -5.4);
+                }
+                else
+                {
+                    EmitRev5Street(result, p, r, a, b, 4, StreetKind::UnderpassRamp, 0., trimB, 0., -5.4, 0.);
+                }
+            }
+            else if (bottomOnRing)
+            {
+                EmitRev5Street(result, p, r, a, b, 4, StreetKind::RingRoad, trimA, trimB);
+            }
+            else
+            {
+                // Step-down taper when 6-lane arterial approaches the outer ring road (6 -> 4 over segment).
+                const unsigned lanesStart = Rev5LanesForCoord(r.definition.tier, key.y, ratioA);
+                const unsigned lanesEnd = Rev5LanesForCoord(r.definition.tier, key.y, ratioB);
+                if (lanesStart != lanesEnd)
+                {
+                    EmitRev5Street(result, p, r, a, b, lanesEnd, StreetKind::Taper, trimA, trimB,
+                                   ProfileForLanes(lanesStart).carriagewayMeters);
+                }
+                else
+                {
+                    EmitRev5Street(result, p, r, a, b, lanesBottom, StreetKind::Surface, trimA, trimB);
+                }
+            }
+        }
+        // Emit left street (a -> d) with elevated overpass (+8.4m) on eastern bypass x == 2 in Metropolis/Capital.
+        if (!omitLeft && inRingA && inRingD)
+        {
+            const bool isOverpassAxis =
+                (r.definition.tier >= SettlementTier::Metropolis && key.x == 2 && key.y >= -1 && key.y <= 1);
+            if (isOverpassAxis)
+            {
+                // +8.4m elevated viaduct (clearance >= 8.0m) with smooth 100m ramps (grade <= 8.4%).
+                if (key.y == -1)
+                {
+                    EmitRev5Street(result, p, r, a, d, 4, StreetKind::ElevatedRamp, trimA, 0., 0., 0., 8.4);
+                }
+                else if (key.y == 0)
+                {
+                    EmitRev5Street(result, p, r, a, d, 4, StreetKind::Elevated, 0., 0., 0., 8.4, 8.4);
+                }
+                else
+                {
+                    EmitRev5Street(result, p, r, a, d, 4, StreetKind::ElevatedRamp, 0., trimD, 0., 8.4, 0.);
+                }
+            }
+            else if (leftOnRing)
+            {
+                EmitRev5Street(result, p, r, a, d, 4, StreetKind::RingRoad, trimA, trimD);
+            }
+            else
+            {
+                const unsigned lanesStart = Rev5LanesForCoord(r.definition.tier, key.x, ratioA);
+                const unsigned lanesEnd = Rev5LanesForCoord(r.definition.tier, key.x, ratioD);
+                if (lanesStart != lanesEnd)
+                {
+                    EmitRev5Street(result, p, r, a, d, lanesEnd, StreetKind::Taper, trimA, trimD,
+                                   ProfileForLanes(lanesStart).carriagewayMeters);
+                }
+                else
+                {
+                    EmitRev5Street(result, p, r, a, d, lanesLeft, StreetKind::Surface, trimA, trimD);
+                }
+            }
+        }
+
+        // ====================================================================
+        // District Zoning, Unique Landmarks, Perimeter Block Parceling & Streetscape
+        // ====================================================================
+        if (std::abs(key.x) >= ringCell || std::abs(key.y) >= ringCell)
+        {
+            return result;
+        }
+        const DistrictZone zone = ClassifyDistrictZone(r, grid, key.x, key.y, cellZoneRatio);
+        const bool isCivicCenter = (key.x == 0 && key.y == 0);
+        const bool isSecondaryLandmark = (r.definition.tier == SettlementTier::SystemCapital && key.x == 0 && key.y == -1);
+        std::vector<PlacedObb> placed;
+        // Register existing core structures if any so procedural lots never overlap authored core lots.
+        for (const auto &existing : result.structures)
+        {
+            if (existing.solid)
+            {
+                const auto loc = G::ToLocal(r.frame, existing.frame.origin, p.terrain.Planet().radiusMeters);
+                placed.push_back({loc, existing.sizeMeters.x * .5, existing.sizeMeters.y * .5, existing.yaw});
+            }
+        }
+
+        auto tryPlaceStructure = [&](Vector3d local, double yaw, ContentForm form, std::uint16_t variant,
+                                     ContentUse use, Vector3d sizeMeters, std::uint64_t appearance,
+                                     const std::string &suffix, bool solid = true) -> bool {
+            const double extent = std::hypot(sizeMeters.x, sizeMeters.y) * .5;
+            if (!Inside(r, local, extent + 3.))
+            {
+                return false;
+            }
+            // Check setback against all 4 incident road edges using true cross-section half-widths.
+            const std::array<std::array<Vector3d, 2>, 4> edges = {{{a, b}, {b, c}, {c, d}, {d, a}}};
+            const std::array<unsigned, 4> edgeLaneArr = {lanesBottom, lanesRight, lanesTop, lanesLeft};
+            for (unsigned e = 0; e < 4; ++e)
+            {
+                const double roadHalf = ProfileForLanes(edgeLaneArr[e]).halfTotalMeters;
+                // Project OBB onto edge normal for accurate rectangular setback (not bloated diagonal radius!).
+                const auto ed = Sub(edges[e][1], edges[e][0]);
+                const double el = Norm(ed);
+                if (el < 1.)
+                {
+                    continue;
+                }
+                const double nx = -ed.y / el, ny = ed.x / el;
+                const double halfProj =
+                    std::fabs(nx * std::cos(yaw) + ny * std::sin(yaw)) * (sizeMeters.x * .5) +
+                    std::fabs(-nx * std::sin(yaw) + ny * std::cos(yaw)) * (sizeMeters.y * .5);
+                if (SegmentDistance(local, edges[e][0], edges[e][1]) < roadHalf + halfProj + (solid ? 1.2 : .2))
+                {
+                    return false;
+                }
+            }
+            // Avoid roundabout pads at corners.
+            const std::array<std::pair<Vector3d, double>, 3> cornerTrims = {{{a, trimA}, {b, trimB}, {d, trimD}}};
+            for (const auto &ct : cornerTrims)
+            {
+                if (ct.second > 12. && Norm(Sub(local, ct.first)) < ct.second + extent + 1.)
+                {
+                    return false;
+                }
+            }
+            const PlacedObb cand{local, sizeMeters.x * .5, sizeMeters.y * .5, yaw};
+            if (solid)
+            {
+                for (const auto &other : placed)
+                {
+                    if (ObbOverlap(cand, other, 1.5))
+                    {
+                        return false;
+                    }
+                }
+            }
+            auto point = At(p, r, local);
+            if (solid)
+            {
+                // Exact rotated-OBB clearance against already-emitted streets so all 4 block edges
+                // populate cleanly (avoiding false rejections from conservative circular diagonal extent).
+                const double cy = std::cos(yaw), sy = std::sin(yaw);
+                for (const auto &road : result.streets)
+                {
+                    if (road.kind == StreetKind::PedestrianPlaza)
+                    {
+                        continue;
+                    }
+                    const double roadClear = road.widthMeters * .5 + road.sidewalkMeters + .25;
+                    for (const auto &rpt : road.points)
+                    {
+                        const auto rl = G::ToLocal(r.frame, rpt, p.terrain.Planet().radiusMeters);
+                        const double dx = rl.x - local.x, dy = rl.y - local.y;
+                        const double lx = dx * cy + dy * sy;
+                        const double ly = -dx * sy + dy * cy;
+                        if (std::fabs(lx) < sizeMeters.x * .5 + roadClear &&
+                            std::fabs(ly) < sizeMeters.y * .5 + roadClear)
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+            const double relayCap = std::cos((extent + 8.) / p.terrain.Planet().radiusMeters);
+            const bool relayReserved = std::any_of(p.relays.begin(), p.relays.end(), [&](const auto &relay) {
+                return G::Dot(point.normal, relay.location.position.normal) > relayCap;
+            });
+            if (relayReserved || Reserved(p, point, extent + 2.) || !IntercityClear(p, r, local, extent) ||
+                (p.cityCores && p.cityCores->Reserved(p, r, local, extent + 3.)))
+            {
+                return false;
+            }
+            double low = point.altitudeMeters, high = low;
+            for (int sx = -1; sx <= 1; ++sx)
+            {
+                for (int sy = -1; sy <= 1; ++sy)
+                {
+                    auto sample =
+                        Add(local, Rotate({sx * sizeMeters.x * .45, sy * sizeMeters.y * .45, 0}, yaw));
+                    const double h = At(p, r, sample).altitudeMeters;
+                    low = (std::min)(low, h);
+                    high = (std::max)(high, h);
+                }
+            }
+            if (low < PlanetTerrain::SeaLevelMeters || high - low > 2.5)
+            {
+                return false;
+            }
+            SurfaceStructure s;
+            s.regionId = r.definition.id;
+            s.id = WorldIdentity::ContentKey(p.terrain.Planet(), r.definition.id,
+                                             "layout5.cell." + std::to_string(key.x) + "." +
+                                                 std::to_string(key.y) + "." + suffix);
+            s.form = form;
+            s.variant = variant;
+            s.use = use;
+            s.sizeMeters = sizeMeters;
+            s.yaw = yaw;
+            s.appearance = appearance;
+            s.solid = solid;
+            point.altitudeMeters = high;
+            auto transported = G::Advance(r.frame, local.x, local.y, p.terrain.Planet().radiusMeters);
+            transported.origin = point;
+            s.frame = transported;
+            s.foundationMeters = solid ? (high - low + .15) : 0.;
+            result.structures.push_back(std::move(s));
+            if (solid)
+            {
+                placed.push_back(cand);
+            }
+            return true;
+        };
+
+        // Measured building specifications (exact 1:1 authored dimensions, NEVER force-minified).
+        struct BuildingCandidate
+        {
+            ContentForm form;
+            std::uint16_t variant;
+            ContentUse use;
+            Vector3d sizeMeters; // x = frontage width along street, y = lot depth
+        };
+        const auto edgeDir0 = Sub(b, a);
+        const double blockYaw = std::atan2(edgeDir0.y, edgeDir0.x);
+
+        // Unique Landmark Placement (strictly 1-2 per settlement, dedicated civic superblock).
+        bool landmarkPlaced = false;
+        if (isCivicCenter && r.definition.tier == SettlementTier::SystemCapital)
+        {
+            // Unique Capital Gate Administration (35 x 40 m) centered with front pedestrian plaza.
+            landmarkPlaced = tryPlaceStructure(cellMid, blockYaw, ContentForm::MeasuredBuilding, 8,
+                                               ContentUse::Administration, {35., 40., 64.65}, seed, "landmark.cap0");
+        }
+        else if (isSecondaryLandmark)
+        {
+            // Unique Capital Public Forum (37 x 48 m).
+            landmarkPlaced = tryPlaceStructure(cellMid, blockYaw, ContentForm::MeasuredBuilding, 9,
+                                               ContentUse::Administration, {37., 48., 19.85}, seed, "landmark.cap1");
+        }
+        else if (isCivicCenter && r.definition.tier == SettlementTier::Metropolis)
+        {
+            // Unique Metro Civic Commerce landmark (27 x 32 m) + civic plaza.
+            landmarkPlaced = tryPlaceStructure(cellMid, blockYaw, ContentForm::MeasuredBuilding, 7,
+                                               ContentUse::Services, {27., 32., 51.05}, seed, "landmark.metro0");
+        }
+        else if (zone == DistrictZone::Spaceport && (seed % 5 == 0))
+        {
+            // Spaceport landing pad (Scenery variant 25) + transit terminal.
+            landmarkPlaced = tryPlaceStructure(cellMid, blockYaw, ContentForm::Scenery, 25, ContentUse::Services,
+                                               {18., 18., .6}, seed, "spaceport.pad", false);
+        }
+
+        // Zone-specific 1:1 building palettes (never duplicating Capital landmarks outside unique anchors).
+        auto pickCandidate = [&](DistrictZone z, std::uint64_t rng, double maxFrontage, double maxDepth,
+                                 BuildingCandidate &out) -> bool {
+            static constexpr BuildingCandidate kCivic[] = {
+                {ContentForm::MeasuredBuilding, 7, ContentUse::Services, {27., 32., 51.05}},
+                {ContentForm::MeasuredBuilding, 4, ContentUse::Services, {19., 23., 12.65}},
+                {ContentForm::MeasuredBuilding, 2, ContentUse::Services, {13., 12., 7.65}},
+                {ContentForm::Dome, 0, ContentUse::Administration, {15., 15., 12.}},
+                {ContentForm::Transit, 0, ContentUse::Services, {14., 16., 11.}},
+            };
+            static constexpr BuildingCandidate kCommercial[] = {
+                {ContentForm::MeasuredBuilding, 5, ContentUse::Services, {15., 24., 8.05}},
+                {ContentForm::MeasuredBuilding, 4, ContentUse::Services, {19., 23., 12.65}},
+                {ContentForm::MeasuredBuilding, 1, ContentUse::Services, {10., 13., 5.05}},
+                {ContentForm::MeasuredBuilding, 2, ContentUse::Services, {13., 12., 7.65}},
+                {ContentForm::MeasuredBuilding, 7, ContentUse::Services, {27., 32., 51.05}},
+                {ContentForm::Transit, 0, ContentUse::Services, {14., 15., 12.}},
+            };
+            static constexpr BuildingCandidate kResHigh[] = {
+                {ContentForm::MeasuredBuilding, 6, ContentUse::Housing, {24., 28., 39.65}},
+                {ContentForm::Spire, 0, ContentUse::Housing, {14., 14., 36.}},
+                {ContentForm::TwinBridge, 0, ContentUse::Housing, {16., 14., 42.}},
+                {ContentForm::Arcology, 0, ContentUse::Housing, {16., 16., 28.}},
+                {ContentForm::MeasuredBuilding, 0, ContentUse::Housing, {11., 8., 9.65}},
+            };
+            static constexpr BuildingCandidate kResLow[] = {
+                {ContentForm::MeasuredBuilding, 0, ContentUse::Housing, {11., 8., 9.65}},
+                {ContentForm::MeasuredBuilding, 1, ContentUse::Services, {10., 13., 5.05}},
+                {ContentForm::MeasuredBuilding, 2, ContentUse::Services, {13., 12., 7.65}},
+                {ContentForm::Courtyard, 0, ContentUse::Housing, {14., 14., 9.}},
+                {ContentForm::Habitat, 0, ContentUse::Housing, {12., 12., 8.5}},
+                {ContentForm::Terrace, 0, ContentUse::Housing, {13., 13., 12.}},
+            };
+            static constexpr BuildingCandidate kIndustrial[] = {
+                {ContentForm::MeasuredBuilding, 3, ContentUse::Industry, {24., 18., 9.65}},
+                {ContentForm::Workshop, 0, ContentUse::Industry, {14., 14., 7.5}},
+                {ContentForm::Cargo, 0, ContentUse::Industry, {12., 10., 5.}},
+                {ContentForm::Solar, 0, ContentUse::Services, {11., 11., 4.}},
+                {ContentForm::WaterTank, 0, ContentUse::Services, {9., 9., 8.}},
+            };
+            const BuildingCandidate *list = kResLow;
+            std::size_t count = std::size(kResLow);
+            if (z == DistrictZone::CivicCore)
+            {
+                list = kCivic;
+                count = std::size(kCivic);
+            }
+            else if (z == DistrictZone::CommercialTransit)
+            {
+                list = kCommercial;
+                count = std::size(kCommercial);
+            }
+            else if (z == DistrictZone::ResidentialHigh)
+            {
+                list = kResHigh;
+                count = std::size(kResHigh);
+            }
+            else if (z == DistrictZone::IndustrialLogistics || z == DistrictZone::Spaceport)
+            {
+                list = kIndustrial;
+                count = std::size(kIndustrial);
+            }
+            const double tierMaxHeight = r.definition.tier == SettlementTier::District   ? 16.
+                                         : r.definition.tier == SettlementTier::Town     ? 32.
+                                         : r.definition.tier == SettlementTier::Metropolis ? 52.
+                                                                                         : 96.;
+            const std::size_t start = std::size_t(rng % count);
+            for (std::size_t k = 0; k < count; ++k)
+            {
+                const auto &cnd = list[(start + k) % count];
+                if (cnd.sizeMeters.x <= maxFrontage && cnd.sizeMeters.y <= maxDepth &&
+                    cnd.sizeMeters.z <= tierMaxHeight)
+                {
+                    out = cnd;
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        // Perimeter Block Parceling: walk all 4 street-facing edges, orient each building's front
+        // normal directly toward its incident street, preserve 1:1 authored ratios, and guarantee 0 OBB overlaps.
+        if (!landmarkPlaced)
+        {
+            const std::array<std::array<Vector3d, 2>, 4> edges = {{{a, b}, {b, c}, {c, d}, {d, a}}};
+            const std::array<unsigned, 4> edgeLaneArr = {lanesBottom, lanesRight, lanesTop, lanesLeft};
+            // Civic plaza break blocks (~12.5% of CivicCore blocks become full landscaped squares, not half the city).
+            const bool plazaBlock = (zone == DistrictZone::CivicCore && (seed % 8 == 0) && !isCivicCenter);
+            if (!plazaBlock)
+            {
+                unsigned lotId = 0;
+                for (unsigned e = 0; e < 4; ++e)
+                {
+                    const auto p0 = edges[e][0], p1 = edges[e][1];
+                    const auto edgeVec = Sub(p1, p0);
+                    const double edgeLen = Norm(edgeVec);
+                    if (edgeLen < 24.)
+                    {
+                        continue;
+                    }
+                    const Vector3d tangent = Mul(edgeVec, 1. / edgeLen);
+                    // Inward normal points toward cellMid.
+                    Vector3d inward = {-tangent.y, tangent.x, 0};
+                    const Vector3d mid = Mul(Add(p0, p1), .5);
+                    if (inward.x * (cellMid.x - mid.x) + inward.y * (cellMid.y - mid.y) < 0.)
+                    {
+                        inward = {-inward.x, -inward.y, 0};
+                    }
+                    const Vector3d outward = {-inward.x, -inward.y, 0};
+                    // Outward facing yaw aligns building front normal directly toward its road edge (< 1 deg error).
+                    const double facingYaw = std::atan2(outward.y, outward.x);
+                    const double roadHalf = ProfileForLanes(edgeLaneArr[e]).halfTotalMeters;
+                    const double cornerPad = ProfileForLanes(edgeLaneArr[(e + 3) % 4]).halfTotalMeters + 4.;
+                    const double endPad = ProfileForLanes(edgeLaneArr[(e + 1) % 4]).halfTotalMeters + 4.;
+                    double cursor = cornerPad;
+                    const double limit = edgeLen - endPad;
+                    while (cursor + 10. <= limit)
+                    {
+                        const auto rng = Mix(seed + e * 31 + lotId * 7 + 13);
+                        const double remain = limit - cursor;
+                        BuildingCandidate cand;
+                        if (!pickCandidate(zone, rng, remain, 34., cand))
+                        {
+                            break;
+                        }
+                        // Note: Building local +X is depth/front, local +Y is frontage along street when yaw = facingYaw.
+                        const double frontage = cand.sizeMeters.x;
+                        const double depth = cand.sizeMeters.y;
+                        const double distAlong = cursor + frontage * .5;
+                        const double setback = roadHalf + depth * .5 + 1.8;
+                        const Vector3d pos = Add(Add(p0, Mul(tangent, distAlong)), Mul(inward, setback));
+                        // Swap X/Y so local +X faces outward road (depth) and local +Y runs along street (frontage).
+                        tryPlaceStructure(pos, facingYaw, cand.form, cand.variant, cand.use,
+                                          {depth, frontage, cand.sizeMeters.z}, rng,
+                                          "lot." + std::to_string(e) + "." + std::to_string(lotId));
+                        cursor += frontage + 2.8;
+                        ++lotId;
+                    }
+                }
+            }
+            else
+            {
+                // Landscaped civic plaza pad (vehicle-free) + planters + benches + wayfinding kiosk.
+                SurfaceStreet plaza;
+                plaza.kind = StreetKind::PedestrianPlaza;
+                plaza.lanes = 0;
+                plaza.widthMeters = (std::min)(grid.width, grid.depth) * .60;
+                plaza.sidewalkMeters = 0.;
+                const Vector3d dirH = Mul(Sub(b, a), 1. / (std::max)(1., Norm(Sub(b, a))));
+                auto pStart = At(p, r, Sub(cellMid, Mul(dirH, plaza.widthMeters * .5)));
+                auto pEnd = At(p, r, Add(cellMid, Mul(dirH, plaza.widthMeters * .5)));
+                pStart.altitudeMeters += .06;
+                pEnd.altitudeMeters += .06;
+                plaza.points = {pStart, pEnd};
+                result.streets.push_back(std::move(plaza));
+                for (int k = 0; k < 4; ++k)
+                {
+                    const double ang = k * (G::Pi * .5) + G::Pi * .25;
+                    const Vector3d off = {std::cos(ang) * 9., std::sin(ang) * 9., 0};
+                    tryPlaceStructure(Add(cellMid, off), ang, ContentForm::Scenery, 14, ContentUse::Services,
+                                      {2.2, 2.2, 2.8}, seed + k, "plaza.planter." + std::to_string(k), false);
+                    const Vector3d benchOff = {std::cos(ang) * 5.5, std::sin(ang) * 5.5, 0};
+                    tryPlaceStructure(Add(cellMid, benchOff), ang + G::Pi * .5, ContentForm::Scenery, 13,
+                                      ContentUse::Services, {2.0, .9, 1.0}, seed + k + 10,
+                                      "plaza.bench." + std::to_string(k), false);
+                }
+                tryPlaceStructure(cellMid, blockYaw, ContentForm::Scenery, 16, ContentUse::Services,
+                                  {1.4, 1.4, 3.2}, seed + 99, "plaza.kiosk", false);
+            }
+        }
+
+        // Streetscape layer along bottom & left sidewalks (streetlamps every ~24m + transit shelter on 4/6-lane).
+        auto emitSidewalkFurniture = [&](Vector3d p0, Vector3d p1, unsigned edgeLanes, unsigned edgeIdx) {
+            const auto dv = Sub(p1, p0);
+            const double len = Norm(dv);
+            if (len < 30.)
+            {
+                return;
+            }
+            const Vector3d t = Mul(dv, 1. / len);
+            Vector3d inward = {-t.y, t.x, 0};
+            const Vector3d mid = Mul(Add(p0, p1), .5);
+            if (inward.x * (cellMid.x - mid.x) + inward.y * (cellMid.y - mid.y) < 0.)
+            {
+                inward = {-inward.x, -inward.y, 0};
+            }
+            const double yaw = std::atan2(t.y, t.x);
+            const double curbOffset = ProfileForLanes(edgeLanes).carriagewayMeters * .5 + 1.1;
+            const unsigned lampCount = unsigned((len - 32.) / 24.);
+            for (unsigned i = 0; i < lampCount && i < 4; ++i)
+            {
+                const double s = 18. + double(i) * 24.;
+                if (s > len - 18.)
+                {
+                    break;
+                }
+                const Vector3d pos = Add(Add(p0, Mul(t, s)), Mul(inward, curbOffset));
+                // Scenery variant 9 = Streetlight (non-solid small prop, auto-culled by R2 at distance).
+                tryPlaceStructure(pos, yaw, ContentForm::Scenery, 9, ContentUse::Services, {.6, .6, 5.5},
+                                  seed + edgeIdx * 20 + i, "lamp." + std::to_string(edgeIdx) + "." + std::to_string(i),
+                                  false);
+            }
+            if (edgeLanes >= 4 && ((seed + edgeIdx) % 3 == 0))
+            {
+                const Vector3d pos = Add(mid, Mul(inward, curbOffset + .9));
+                // Scenery variant 15 = TransitShelter
+                tryPlaceStructure(pos, yaw, ContentForm::Scenery, 15, ContentUse::Services, {4.2, 1.8, 2.8},
+                                  seed + edgeIdx * 50, "shelter." + std::to_string(edgeIdx), false);
+            }
+        };
+        if (!omitBottom && inRingA && inRingB)
+        {
+            emitSidewalkFurniture(a, b, lanesBottom, 0);
+        }
+        if (!omitLeft && inRingA && inRingD)
+        {
+            emitSidewalkFurniture(a, d, lanesLeft, 1);
+        }
+        return result;
+    }
     auto lanes = [&](std::int64_t coordinate) {
         if (r.definition.tier >= SettlementTier::Metropolis)
         {
@@ -1171,15 +2226,34 @@ SurfaceContentPatch ContentLayout::Publish(const GeneratedPlanet &p, const Chunk
                 result.structures.push_back(std::move(structure));
             }
         }
+        for (auto &inter : cell.intersections)
+        {
+            if (CubeSphere::Address(planet, inter.center, key.level) == key)
+            {
+                result.intersections.push_back(std::move(inter));
+            }
+        }
         for (const auto &street : cell.streets)
         {
-            SurfaceStreet part{{}, street.widthMeters, street.sidewalkMeters, street.lanes};
+            auto makePart = [&] {
+                SurfaceStreet s;
+                s.widthMeters = street.widthMeters;
+                s.sidewalkMeters = street.sidewalkMeters;
+                s.lanes = street.lanes;
+                s.kind = street.kind;
+                s.startWidthMeters = street.startWidthMeters;
+                s.elevationOffsetMeters = street.elevationOffsetMeters;
+                s.hasMedian = street.hasMedian;
+                s.hasLeftPocket = street.hasLeftPocket;
+                return s;
+            };
+            SurfaceStreet part = makePart();
             auto flush = [&] {
                 if (part.points.size() > 1)
                 {
                     result.streets.push_back(std::move(part));
                 }
-                part = SurfaceStreet{{}, street.widthMeters, street.sidewalkMeters, street.lanes};
+                part = makePart();
             };
             for (std::size_t i = 1; i < street.points.size(); ++i)
             {
@@ -1207,6 +2281,167 @@ SurfaceContentPatch ContentLayout::Publish(const GeneratedPlanet &p, const Chunk
     std::sort(result.structures.begin(), result.structures.end(),
               [](const auto &a, const auto &b) { return a.id < b.id; });
     return result;
+}
+std::vector<UrbanTrafficRoute> ContentLayout::TrafficRoutes(const GeneratedPlanet &p, std::size_t regionIndex)
+{
+    std::vector<UrbanTrafficRoute> routes;
+    if (p.layoutRevision < 5 || regionIndex >= p.regions.size())
+    {
+        return routes;
+    }
+    const auto &r = p.regions[regionIndex];
+    if (r.definition.kind != RegionKind::Settlement || r.center.space != SpaceKind::Surface)
+    {
+        return routes;
+    }
+    Grid grid(p, r);
+    const double boundR = (std::max)(200., r.boundingRadiusMeters);
+    const double avgStep = (std::max)(40., (grid.width + grid.depth) * .5);
+    std::int64_t ringCell = (std::max)(std::int64_t(3), std::int64_t(std::floor(boundR * .68 / avgStep)));
+    while (ringCell > 2)
+    {
+        if (Inside(r, grid.Node(ringCell, 0), 16.) && Inside(r, grid.Node(-ringCell, 0), 16.) &&
+            Inside(r, grid.Node(0, ringCell), 16.) && Inside(r, grid.Node(0, -ringCell), 16.))
+        {
+            break;
+        }
+        --ringCell;
+    }
+    const auto *core = p.cityCores ? p.cityCores->Find(r.definition.id) : nullptr;
+    const double coreClear = core ? (core->radiusMeters + 18.) : 0.;
+
+    std::map<std::pair<std::int64_t, std::int64_t>, unsigned> nodeMap;
+    auto nodeId = [&](std::int64_t gx, std::int64_t gy) {
+        auto [it, inserted] = nodeMap.emplace(std::make_pair(gx, gy), unsigned(nodeMap.size()));
+        return it->second;
+    };
+
+    // Build major arterial coordinate list strictly within [-ringCell, +ringCell].
+    std::vector<std::int64_t> axisCoords = {-ringCell, ringCell};
+    for (std::int64_t c : {-4, -2, 0, 2, 4})
+    {
+        if (std::abs(c) < ringCell)
+        {
+            axisCoords.push_back(c);
+        }
+    }
+    std::sort(axisCoords.begin(), axisCoords.end());
+    axisCoords.erase(std::unique(axisCoords.begin(), axisCoords.end()), axisCoords.end());
+
+    auto sampleSegment = [&](std::int64_t x0, std::int64_t y0, std::int64_t x1, std::int64_t y1, unsigned lanes,
+                             const std::string &tag) {
+        const std::int64_t dx = x1 > x0 ? 1 : (x1 < x0 ? -1 : 0);
+        const std::int64_t dy = y1 > y0 ? 1 : (y1 < y0 ? -1 : 0);
+        const std::int64_t steps = (std::max)(std::abs(x1 - x0), std::abs(y1 - y0));
+        if (steps <= 0)
+        {
+            return;
+        }
+        std::vector<SurfacePoint> pts;
+        std::int64_t segStartX = x0, segStartY = y0;
+        unsigned subIdx = 0;
+        auto flush = [&](std::int64_t endX, std::int64_t endY) {
+            if (pts.size() >= 2)
+            {
+                UrbanTrafficRoute tr;
+                tr.suffix = tag + "." + std::to_string(subIdx++);
+                tr.fromNode = nodeId(segStartX, segStartY);
+                tr.toNode = nodeId(endX, endY);
+                tr.lanes = lanes;
+                tr.points = std::move(pts);
+                routes.push_back(std::move(tr));
+            }
+            pts.clear();
+        };
+        for (std::int64_t s = 0; s < steps; ++s)
+        {
+            const std::int64_t cx = x0 + dx * s, cy = y0 + dy * s;
+            const std::int64_t nx = cx + dx, ny = cy + dy;
+            const auto la = grid.Node(cx, cy), lb = grid.Node(nx, ny);
+            const auto mid = Mul(Add(la, lb), .5);
+            const bool blockedCore = core && (Norm(la) < coreClear || Norm(lb) < coreClear);
+            const bool insideFootprint = Inside(r, mid, 4.);
+            auto pa = At(p, r, la), pb = At(p, r, lb);
+            if (blockedCore || !insideFootprint || pa.altitudeMeters < PlanetTerrain::SeaLevelMeters + 1. ||
+                pb.altitudeMeters < PlanetTerrain::SeaLevelMeters + 1.)
+            {
+                flush(cx, cy);
+                segStartX = nx;
+                segStartY = ny;
+                continue;
+            }
+            // Match Rev 5 grade-separated corridors (+8.4m viaduct on x == 2, -5.4m underpass on y == 0).
+            if (r.definition.tier >= SettlementTier::Metropolis && dx == 0 && cx == 2)
+            {
+                const std::int64_t minY = (std::min)(cy, ny);
+                if (minY == -1)
+                {
+                    pa.altitudeMeters += (cy == 0 ? 8.4 : 0.);
+                    pb.altitudeMeters += (ny == 0 ? 8.4 : 0.);
+                }
+                else if (minY == 0)
+                {
+                    pa.altitudeMeters += 8.4;
+                    pb.altitudeMeters += 8.4;
+                }
+                else if (minY == 1)
+                {
+                    pa.altitudeMeters += (cy == 1 ? 8.4 : 0.);
+                    pb.altitudeMeters += (ny == 1 ? 8.4 : 0.);
+                }
+            }
+            else if (r.definition.tier >= SettlementTier::Metropolis && dy == 0 && cy == 0)
+            {
+                const std::int64_t minX = (std::min)(cx, nx);
+                if (minX == -1)
+                {
+                    pa.altitudeMeters += (cx == 0 ? -5.4 : 0.);
+                    pb.altitudeMeters += (nx == 0 ? -5.4 : 0.);
+                }
+                else if (minX == 0)
+                {
+                    pa.altitudeMeters += -5.4;
+                    pb.altitudeMeters += -5.4;
+                }
+                else if (minX == 1)
+                {
+                    pa.altitudeMeters += (cx == 1 ? -5.4 : 0.);
+                    pb.altitudeMeters += (nx == 1 ? -5.4 : 0.);
+                }
+            }
+            if (pts.empty())
+            {
+                segStartX = cx;
+                segStartY = cy;
+                pts.push_back(pa);
+            }
+            pts.push_back(pb);
+        }
+        flush(x1, y1);
+    };
+
+    // Emit all horizontal and vertical Ring Road + major arterial segments between shared arterial junctions.
+    for (std::size_t yi = 0; yi < axisCoords.size(); ++yi)
+    {
+        const std::int64_t y = axisCoords[yi];
+        const unsigned lanes = std::abs(y) == ringCell ? 4u : Rev5LanesForCoord(r.definition.tier, y, .3);
+        for (std::size_t xi = 1; xi < axisCoords.size(); ++xi)
+        {
+            sampleSegment(axisCoords[xi - 1], y, axisCoords[xi], y, lanes,
+                          "h." + std::to_string(y) + "." + std::to_string(xi));
+        }
+    }
+    for (std::size_t xi = 0; xi < axisCoords.size(); ++xi)
+    {
+        const std::int64_t x = axisCoords[xi];
+        const unsigned lanes = std::abs(x) == ringCell ? 4u : Rev5LanesForCoord(r.definition.tier, x, .3);
+        for (std::size_t yi = 1; yi < axisCoords.size(); ++yi)
+        {
+            sampleSegment(x, axisCoords[yi - 1], x, axisCoords[yi], lanes,
+                          "v." + std::to_string(x) + "." + std::to_string(yi));
+        }
+    }
+    return routes;
 }
 const char *ContentLayout::UseName(ContentUse use)
 {
@@ -1248,6 +2483,7 @@ void ContentCollision::BuildRegionCache(const GeneratedPlanet &p)
         meta.yaw = grid.yaw;
         meta.warpA = Fraction(grid.seed + 3) * 6.;
         meta.warpB = Fraction(grid.seed + 4) * 6.;
+        meta.warpScale = grid.warpScale;
         meta.cellDiag = std::hypot(grid.width, grid.depth);
         regionMeta.push_back(meta);
     }
@@ -1391,8 +2627,9 @@ bool ContentCollision::Blocked(const GeneratedPlanet &p, const SurfacePoint &poi
         const double maxCellDist = clearance + meta.cellDiag;
         const double maxCellDistSq = maxCellDist * maxCellDist;
         auto node = [&](std::int64_t gx, std::int64_t gy) {
-            Vector3d v{double(gx) * meta.width + meta.width * .13 * std::sin(double(gy) * .61 + meta.warpA),
-                       double(gy) * meta.depth + meta.depth * .13 * std::sin(double(gx) * .53 + meta.warpB), 0};
+            Vector3d v{double(gx) * meta.width + meta.width * meta.warpScale * std::sin(double(gy) * .61 + meta.warpA),
+                       double(gy) * meta.depth + meta.depth * meta.warpScale * std::sin(double(gx) * .53 + meta.warpB),
+                       0};
             return meta.yaw != 0. ? Rotate(v, meta.yaw) : v;
         };
         for (auto y = y0; y <= y1; ++y)

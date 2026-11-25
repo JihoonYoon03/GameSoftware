@@ -73,11 +73,62 @@ struct SurfaceStructure
     double FoundationTopMeters() const;
     bool Contains(const SurfacePoint &point, double planetRadius, double clearance = 0) const;
 };
+enum class StreetKind : std::uint8_t
+{
+    Surface,
+    RingRoad,
+    Taper,
+    Bridge,
+    Elevated,
+    ElevatedRamp,
+    Underpass,
+    UnderpassRamp,
+    PedestrianPlaza
+};
+enum class IntersectionControl : std::uint8_t
+{
+    Unsignalized,
+    Yield,
+    Roundabout,
+    Signalized,
+    GradeSeparated
+};
+enum class DistrictZone : std::uint8_t
+{
+    CivicCore,
+    CommercialTransit,
+    ResidentialHigh,
+    ResidentialLow,
+    IndustrialLogistics,
+    Spaceport
+};
 struct SurfaceStreet
 {
     std::vector<SurfacePoint> points;
     double widthMeters = 6, sidewalkMeters = 0;
     unsigned lanes = 2;
+    StreetKind kind = StreetKind::Surface;
+    double startWidthMeters = 0; // Nonzero on Taper segments: smoothly tapers startWidth -> widthMeters.
+    double elevationOffsetMeters = 0; // +8.4 elevated viaduct, -5.4 underpass, 0 surface.
+    bool hasMedian = false;
+    bool hasLeftPocket = false;
+};
+struct SurfaceIntersection
+{
+    std::string id, regionId;
+    SurfacePoint center;
+    TangentFrame frame;
+    IntersectionControl control = IntersectionControl::Unsignalized;
+    double radiusMeters = 8.;
+    double islandRadiusMeters = 0.; // > 0 on Roundabout (central traffic island)
+    unsigned maxLanes = 2;
+    unsigned arms = 2;
+    double mainAxisYaw = 0.;
+    double cycleSeconds = 56.;
+    double greenWaveOffsetSeconds = 0.;
+    bool hasAllWalk = false;
+    bool elevatedOverhead = false;
+    bool underpassBelow = false;
 };
 struct ContentCellKey
 {
@@ -91,11 +142,13 @@ struct ContentCell
     ContentCellKey key;
     std::vector<SurfaceStructure> structures;
     std::vector<SurfaceStreet> streets;
+    std::vector<SurfaceIntersection> intersections;
 };
 struct SurfaceContentPatch
 {
     std::vector<SurfaceStructure> structures;
     std::vector<SurfaceStreet> streets;
+    std::vector<SurfaceIntersection> intersections;
 };
 struct CoreLot
 {
@@ -147,6 +200,13 @@ class CityCorePlan
                   double clearance) const;
     std::uint64_t Digest() const;
 };
+struct UrbanTrafficRoute
+{
+    std::string suffix;
+    unsigned fromNode = 0, toNode = 0;
+    std::vector<SurfacePoint> points;
+    unsigned lanes = 4;
+};
 // ============================================================================
 // ContentLayout — seeded, bounded neighbourhoods; no GL, assets, quests or visit state
 // ============================================================================
@@ -156,7 +216,8 @@ class ContentLayout
     static constexpr unsigned Revision = GeneratedPlanet::CurrentLayoutRevision;
     static bool SupportsRevision(unsigned revision)
     {
-        return revision == Revision || revision == GeneratedPlanet::LegacyLayoutRevision;
+        return revision >= GeneratedPlanet::LegacyLayoutRevision &&
+               revision <= GeneratedPlanet::CurrentLayoutRevision;
     }
     static std::vector<ContentCellKey> Near(const GeneratedPlanet &planet, const SurfacePoint &point,
                                             double radiusMeters);
@@ -165,6 +226,8 @@ class ContentLayout
     // Canonical centre ownership for objects; street fragments own their midpoint's chunk.
     static SurfaceContentPatch Publish(const GeneratedPlanet &planet, const ChunkKey &key,
                                        double radiusMeters, const std::atomic_bool &cancel);
+    // CQ-04B (Rev 5+): Paved Ring Road and major arterial routes matching ContentLayout::Generate.
+    static std::vector<UrbanTrafficRoute> TrafficRoutes(const GeneratedPlanet &planet, std::size_t regionIndex);
     static const char *UseName(ContentUse use);
 };
 // ============================================================================
@@ -202,7 +265,7 @@ class ContentCollision
         double reach = 100;
         std::uint64_t seed = 0;
         double width = 96, depth = 96, yaw = 0;
-        double warpA = 0, warpB = 0, cellDiag = 0;
+        double warpA = 0, warpB = 0, warpScale = .13, cellDiag = 0;
         bool surface = true;
     };
     struct SpatialItem

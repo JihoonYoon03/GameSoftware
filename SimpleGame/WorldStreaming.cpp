@@ -99,6 +99,7 @@ std::size_t SurfaceChunk::Bytes() const
     std::size_t bytes = sizeof(*this) + key.planetId.capacity() +
                         vertices.capacity() * sizeof(TerrainVertex) +
                         regions.capacity() * sizeof(std::size_t) + roads.capacity() * sizeof(RoadRibbon) +
+                        intersections.capacity() * sizeof(SurfaceIntersection) +
                         structures.capacity() * sizeof(SurfaceStructure);
     for (const auto &road : roads)
     {
@@ -182,6 +183,56 @@ std::shared_ptr<const SurfaceChunk> SurfaceChunk::Build(const GeneratedPlanet &p
         result->radiusMeters =
             (std::max)(result->radiusMeters, Distance(p, center, CubeSphere::Corner(key, i % 2, i / 2)));
     }
+    struct SettlementClip
+    {
+        Vector3d normal;
+        double cosInner;
+    };
+    std::vector<SettlementClip> settlementClips;
+    if (plan.layoutRevision >= 5)
+    {
+        for (const auto &region : plan.regions)
+        {
+            if (region.definition.kind != RegionKind::Settlement || region.center.space != SpaceKind::Surface)
+            {
+                continue;
+            }
+            double clipRadius = (std::max)(160., region.boundingRadiusMeters * .66);
+            if (plan.cityCores)
+            {
+                if (const auto *core = plan.cityCores->Find(region.definition.id))
+                {
+                    clipRadius = (std::max)(clipRadius, core->radiusMeters + 100.);
+                }
+            }
+            if (Distance(p, center, region.center.position) <= clipRadius + result->radiusMeters + 24.)
+            {
+                settlementClips.push_back(
+                    {region.center.position.normal, std::cos((std::max)(10., clipRadius - 6.) / p.radiusMeters)});
+            }
+        }
+    }
+    auto insideBuiltCity = [&](const SurfacePoint &pt) {
+        for (const auto &clip : settlementClips)
+        {
+            if (G::Dot(pt.normal, clip.normal) > clip.cosInner)
+            {
+                return true;
+            }
+        }
+        return false;
+    };
+    auto makeHighwayRibbon = [&]() {
+        RoadRibbon r;
+        if (plan.layoutRevision >= 5)
+        {
+            r.widthMeters = 9.0;
+            r.sidewalkMeters = .85;
+            r.lanes = 2;
+            r.kind = StreetKind::Surface;
+        }
+        return r;
+    };
     std::size_t roadPoints = 0;
     for (const auto &edge : plan.connections)
     {
@@ -193,12 +244,23 @@ std::shared_ptr<const SurfaceChunk> SurfaceChunk::Build(const GeneratedPlanet &p
         {
             continue;
         }
-        RoadRibbon ribbon;
+        // In Rev 5+, intra-settlement logical graph edges (site <-> portal, portal <-> portal) are
+        // physically represented by the city's own hierarchical street grid and 4-lane Ring Road.
+        if (plan.layoutRevision >= 5 && edge.from < plan.nodes.size() && edge.to < plan.nodes.size() &&
+            plan.nodes[edge.from].regionId == plan.nodes[edge.to].regionId)
+        {
+            const auto &reg = plan.Region(plan.nodes[edge.from].regionId);
+            if (reg.definition.kind == RegionKind::Settlement && reg.center.space == SpaceKind::Surface)
+            {
+                continue;
+            }
+        }
+        RoadRibbon ribbon = makeHighwayRibbon();
         auto flush = [&] {
             if (ribbon.points.size() > 1)
             {
                 result->roads.push_back(std::move(ribbon));
-                ribbon = RoadRibbon{};
+                ribbon = makeHighwayRibbon();
             }
         };
         for (std::size_t i = 1; i < edge.points.size(); ++i)
@@ -226,7 +288,7 @@ std::shared_ptr<const SurfaceChunk> SurfaceChunk::Build(const GeneratedPlanet &p
                 auto left = Along(p, a, b, double(step) / steps),
                      right = Along(p, a, b, double(step + 1) / steps);
                 auto midpoint = Along(p, a, b, (step + .5) / steps);
-                if (!(CubeSphere::Address(p, midpoint, key.level) == key))
+                if (!(CubeSphere::Address(p, midpoint, key.level) == key) || insideBuiltCity(midpoint))
                 {
                     flush();
                     continue;
@@ -260,10 +322,56 @@ std::shared_ptr<const SurfaceChunk> SurfaceChunk::Build(const GeneratedPlanet &p
         return {};
     }
     result->structures = std::move(content.structures);
+    result->intersections = std::move(content.intersections);
+    // CQ-04B (Rev 5+): Emit clean slope-conforming junction pads at non-settlement highway nodes (e.g. outposts/relays)
+    // so converging intercity highways join cleanly without X-crossing shoulder lines.
+    if (plan.layoutRevision >= 5 && !plan.nodes.empty())
+    {
+        for (std::size_t nIdx = 0; nIdx < plan.nodes.size(); ++nIdx)
+        {
+            const auto &node = plan.nodes[nIdx];
+            if (!(CubeSphere::Address(p, node.location.position, key.level) == key) ||
+                insideBuiltCity(node.location.position))
+            {
+                continue;
+            }
+            unsigned roadDeg = 0;
+            for (const auto &edge : plan.connections)
+            {
+                if (edge.mode == RouteMode::Road && (edge.from == nIdx || edge.to == nIdx))
+                {
+                    ++roadDeg;
+                }
+            }
+            if (roadDeg >= 2)
+            {
+                SurfaceIntersection inter;
+                inter.id = WorldIdentity::ContentKey(p, node.regionId, "hwy.inter." + std::to_string(nIdx));
+                inter.regionId = node.regionId;
+                inter.center = node.location.position;
+                inter.center.altitudeMeters = plan.terrain.Height(inter.center);
+                inter.frame = G::Frame(inter.center);
+                inter.control = IntersectionControl::Unsignalized;
+                inter.radiusMeters = 5.4;
+                inter.maxLanes = 2;
+                inter.arms = (std::min)(4u, roadDeg);
+                result->intersections.push_back(std::move(inter));
+            }
+        }
+    }
     for (auto &street : content.streets)
     {
-        result->roads.push_back(
-            {std::move(street.points), street.widthMeters, street.sidewalkMeters, street.lanes});
+        RoadRibbon ribbon;
+        ribbon.points = std::move(street.points);
+        ribbon.widthMeters = street.widthMeters;
+        ribbon.sidewalkMeters = street.sidewalkMeters;
+        ribbon.lanes = street.lanes;
+        ribbon.kind = street.kind;
+        ribbon.startWidthMeters = street.startWidthMeters;
+        ribbon.elevationOffsetMeters = street.elevationOffsetMeters;
+        ribbon.hasMedian = street.hasMedian;
+        ribbon.hasLeftPocket = street.hasLeftPocket;
+        result->roads.push_back(std::move(ribbon));
     }
     return result;
 }

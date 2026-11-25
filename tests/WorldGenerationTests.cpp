@@ -248,7 +248,8 @@ void Routes(const GeneratedPlanet &plan)
 }
 void DistributedJunctions(const GeneratedPlanet &plan)
 {
-    Check(plan.layoutRevision == 4 && plan.Connected(), "New worlds use a connected distributed road layout");
+    Check(plan.layoutRevision == GeneratedPlanet::CurrentLayoutRevision && plan.Connected(),
+          "New worlds use a connected distributed road layout");
     std::vector<unsigned> degrees(plan.nodes.size(), 0);
     for (const auto &edge : plan.connections)
     {
@@ -323,6 +324,9 @@ void DistributedJunctions(const GeneratedPlanet &plan)
     }
     Check(*std::max_element(oldDegrees.begin(), oldDegrees.end()) > 4,
           "Legacy compatibility preserves the old star topology rather than silently moving saved actors");
+    auto rev4 = PlanetGenerator::Erma(tutorial::Overworld::StoryAnchors()).WithLayoutRevision(4).Generate();
+    Check(rev4.layoutRevision == 4 && rev4.Connected() && rev4.Digest() != plan.Digest(),
+          "Previous revision-4 saves remain supported alongside revision-5 worlds");
     Throws([&] { generator.WithLayoutRevision(999); }, "Unknown layouts are rejected explicitly");
     SurfaceStructure building;
     building.form = ContentForm::Building;
@@ -790,6 +794,167 @@ void WritePreview(const GeneratedPlanet &plan, const char *path)
     file << "]}";
     Check(bool(file), "Write preview manifest");
 }
+void TestCq04bUrbanAndSignals(const GeneratedPlanet &plan)
+{
+    // 1) Multi-portal perimeter nodes & settlement terracing pads exist in Layout Revision 5.
+    unsigned portalNodes = 0;
+    for (const auto &node : plan.nodes)
+    {
+        if (node.id.rfind("portal_", 0) == 0)
+        {
+            ++portalNodes;
+        }
+    }
+    Check(portalNodes >= 8, "CQ-04B creates directional perimeter portals on larger settlements");
+    Check(!plan.terrain.Terraces().empty(), "CQ-04B generates settlement terracing pads");
+
+    // 2) Inspect SystemCapital (lucerne_prime): intersections, grade separation, roundabouts, unique landmarks,
+    //    perimeter block OBB non-overlap, and 1:1 measured building ratios.
+    std::size_t capIdx = plan.regions.size();
+    for (std::size_t i = 0; i < plan.regions.size(); ++i)
+    {
+        if (plan.regions[i].definition.id == "lucerne_prime")
+        {
+            capIdx = i;
+            break;
+        }
+    }
+    Check(capIdx < plan.regions.size(), "SystemCapital lucerne_prime present");
+    const auto &cap = plan.regions[capIdx];
+
+    unsigned unsignalized = 0, roundabouts = 0, signalized = 0, gradeSeparated = 0;
+    unsigned ringRoads = 0, elevated = 0, underpass = 0, tapers = 0, plazas = 0;
+    unsigned capAdminCount = 0, capForumCount = 0;
+    unsigned totalSolidBuildings = 0;
+    auto inspectCell = [&](std::int64_t cx, std::int64_t cy) {
+        const auto cell = ContentLayout::Generate(plan, {capIdx, cx, cy});
+        for (const auto &inter : cell.intersections)
+        {
+            if (inter.control == IntersectionControl::Unsignalized)
+            {
+                ++unsignalized;
+            }
+            else if (inter.control == IntersectionControl::Roundabout)
+            {
+                ++roundabouts;
+                Check(inter.islandRadiusMeters >= 7. && inter.radiusMeters > inter.islandRadiusMeters,
+                      "Roundabout has valid central island and outer radius");
+            }
+            else if (inter.control == IntersectionControl::Signalized)
+            {
+                ++signalized;
+                Check(inter.cycleSeconds > 0. && inter.cycleSeconds <= 70.,
+                      "Signalized intersection cycle stays within 70s budget");
+            }
+            else if (inter.control == IntersectionControl::GradeSeparated)
+            {
+                ++gradeSeparated;
+            }
+        }
+        for (const auto &st : cell.streets)
+        {
+            if (st.kind == StreetKind::RingRoad) ++ringRoads;
+            if (st.kind == StreetKind::Elevated || st.kind == StreetKind::ElevatedRamp) ++elevated;
+            if (st.kind == StreetKind::Underpass || st.kind == StreetKind::UnderpassRamp) ++underpass;
+            if (st.kind == StreetKind::Taper) ++tapers;
+            if (st.kind == StreetKind::PedestrianPlaza) ++plazas;
+        }
+        // Verify zero OBB overlap within the cell and 1:1 authored ratios on measured buildings.
+        std::vector<const SurfaceStructure *> solids;
+        for (const auto &s : cell.structures)
+        {
+            if (s.form == ContentForm::MeasuredBuilding)
+            {
+                if (s.variant == 8) ++capAdminCount;
+                if (s.variant == 9) ++capForumCount;
+                // Verify no forced minification: smallest authored measured footprint is 8m wide.
+                Check(s.sizeMeters.x >= 7.9 && s.sizeMeters.y >= 7.9,
+                      "Measured building preserves 1:1 authored dimensions without forced minification");
+            }
+            if (s.solid)
+            {
+                ++totalSolidBuildings;
+                solids.push_back(&s);
+            }
+        }
+        for (std::size_t i = 0; i < solids.size(); ++i)
+        {
+            const auto la = G::ToLocal(cap.frame, solids[i]->frame.origin, plan.terrain.Planet().radiusMeters);
+            for (std::size_t j = i + 1; j < solids.size(); ++j)
+            {
+                const auto lb =
+                    G::ToLocal(cap.frame, solids[j]->frame.origin, plan.terrain.Planet().radiusMeters);
+                const double dist = std::hypot(la.x - lb.x, la.y - lb.y);
+                const double minHalf = (std::min)(solids[i]->sizeMeters.x, solids[i]->sizeMeters.y) * .5 +
+                                       (std::min)(solids[j]->sizeMeters.x, solids[j]->sizeMeters.y) * .5;
+                Check(dist >= minHalf - .1, "Perimeter block buildings do not overlap");
+            }
+        }
+    };
+    for (std::int64_t cy = -6; cy <= 6; ++cy)
+    {
+        for (std::int64_t cx = -6; cx <= 6; ++cx)
+        {
+            if ((std::abs(cx) <= 3 && std::abs(cy) <= 3) || cx == 0 || cy == 0 || cx == 2)
+            {
+                inspectCell(cx, cy);
+            }
+        }
+    }
+    // Also inspect along the positive X arterial from inner core out to the outer ring road perimeter.
+    const std::int64_t maxRingStep = (std::max)(std::int64_t(12), std::int64_t(cap.boundingRadiusMeters * .74 / 92.));
+    for (std::int64_t cx = 7; cx <= maxRingStep; ++cx)
+    {
+        inspectCell(cx, 0);
+    }
+    Check(unsignalized > 0 && signalized > 0 && gradeSeparated >= 2,
+          "Capital contains unsignalized 2x2, signalized 4/6-lane, and grade-separated intersections");
+    Check(elevated >= 3 && underpass >= 3,
+          "Capital contains elevated overpass (+8.4m) and open-cut underpass (-5.4m) corridors");
+    Check(ringRoads > 0 || tapers > 0 || roundabouts > 0,
+          "Capital outer perimeter emits ring roads, tapers, or roundabouts");
+    Check(capAdminCount <= 1 && capForumCount <= 1,
+          "Unique capital landmarks are never spammed across multiple blocks");
+    Check(totalSolidBuildings >= 20, "Perimeter block parceling populates urban blocks");
+
+    // 3) Procedural IntersectionSignalController contracts: concurrent walk, protected left non-conflict,
+    //    4s flashing walk, Green Wave offset, unsignalized no-light, and emergency preemption.
+    SurfaceIntersection sigInter;
+    sigInter.control = IntersectionControl::Signalized;
+    sigInter.maxLanes = 6;
+    sigInter.mainAxisYaw = 0.;
+    sigInter.greenWaveOffsetSeconds = 5.;
+    bool sawMainConcurrentWalk = false, sawFlashing = false, sawProtectedLeftNoWalk = false;
+    for (int step = 0; step < 140; ++step)
+    {
+        const auto st = tutorial::IntersectionSignalController::Evaluate(sigInter, step * .5);
+        Check(st.cycleSeconds <= 70., "Procedural 6-lane signal cycle <= 70s");
+        if (st.mainThrough == tutorial::TrafficLight::Green && st.mainWalkGreen)
+        {
+            sawMainConcurrentWalk = true;
+            if (st.mainWalkFlashing)
+            {
+                sawFlashing = true;
+            }
+        }
+        if (st.mainLeft == tutorial::TrafficLight::Green || st.sideLeft == tutorial::TrafficLight::Green)
+        {
+            Check(!st.mainWalkGreen && !st.sideWalkGreen,
+                  "Protected left turn never conflicts with a green pedestrian crosswalk");
+            sawProtectedLeftNoWalk = true;
+        }
+    }
+    Check(sawMainConcurrentWalk && sawFlashing && sawProtectedLeftNoWalk,
+          "Signal controller produces concurrent walk, 4s flashing walk, and conflict-free protected left");
+    const auto preempt = tutorial::IntersectionSignalController::Evaluate(sigInter, 0., true, true, true, 1);
+    Check(preempt.emergencyPreempted && preempt.sideThrough == tutorial::TrafficLight::Green &&
+              preempt.mainThrough == tutorial::TrafficLight::Red,
+          "Emergency preemption clears the requested responder axis");
+    SurfaceIntersection local2x2;
+    local2x2.control = IntersectionControl::Unsignalized;
+    Check(tutorial::IntersectionSignalController::Evaluate(local2x2, 12.).cycleSeconds == 0.,
+          "Unsignalized 2x2 local intersection runs without traffic lights");
+}
 } // namespace
 int main(int argc, char **argv)
 {
@@ -824,6 +989,7 @@ int main(int argc, char **argv)
         DefensiveContracts(plan);
         ProfileScales();
         SelectableProfiles();
+        TestCq04bUrbanAndSignals(plan);
         std::cout << "World generation tests passed: " << checks << " checks\n";
         return EXIT_SUCCESS;
     }

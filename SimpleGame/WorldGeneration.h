@@ -41,6 +41,14 @@ struct TerrainReservation
     double radiusMeters = 0, featherMeters = 0, elevationMeters = 0;
     std::uint8_t priority = 0;
 };
+// CQ-04B: Gentle settlement terracing pad applied below story reservations so urban blocks stay buildable.
+struct SettlementTerrace
+{
+    std::string regionId;
+    SurfacePoint center;
+    double radiusMeters = 0, featherMeters = 0, elevationMeters = 0;
+    double cosBound = -1.;
+};
 // ============================================================================
 // PlanetTerrain — stateless spherical noise and protected story land/anchor pads
 // ============================================================================
@@ -50,6 +58,11 @@ class PlanetTerrain
     static constexpr double SeaLevelMeters = -120;
     PlanetTerrain(PlanetDefinition planet, std::vector<TerrainReservation> reservations = {},
                   std::optional<SurfacePoint> homeland = std::nullopt);
+    void SetTerraces(std::vector<SettlementTerrace> pads);
+    const std::vector<SettlementTerrace> &Terraces() const
+    {
+        return terraces;
+    }
     double Height(const SurfacePoint &point) const;
     TerrainSample Sample(const SurfacePoint &point) const;
     // Reuse a contact grid's height/slope without resampling the height field.
@@ -73,6 +86,7 @@ class PlanetTerrain
     double Fractal(Vector3d point, double frequency, unsigned octaves, std::uint64_t channel) const;
     PlanetDefinition planet;
     std::vector<TerrainReservation> reservations;
+    std::vector<SettlementTerrace> terraces;
     std::optional<SurfacePoint> homeland;
     std::uint64_t terrainSeed = 0;
 };
@@ -125,7 +139,7 @@ struct TravelConnection
 class GeneratedPlanet
 {
   public:
-    static constexpr unsigned CurrentLayoutRevision = 4, LegacyLayoutRevision = 3;
+    static constexpr unsigned CurrentLayoutRevision = 5, LegacyLayoutRevision = 3;
     unsigned layoutRevision = CurrentLayoutRevision;
     explicit GeneratedPlanet(PlanetTerrain terrain);
     PlanetTerrain terrain;
