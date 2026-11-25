@@ -3350,7 +3350,8 @@ bool PlanetTraffic::Outside(const PlanetTrafficActor &actor, const GameState &wo
     const auto local = session.Local(base);
     Vector2 position{float(local.x / 2), float(local.y / 2)};
     auto viewCamera = [&](Vector2 camera) {
-        float offset = world.surfaceCameraHeight * 44 / 36;
+        const float offset =
+            world.surfaceCameraHeight * WorldCamera::IsoZScale() / (2.f * WorldCamera::IsoYScale());
         return Vector2{camera.x - offset, camera.y - offset};
     };
     if (actor.airborne)
@@ -4938,9 +4939,28 @@ void PlanetCommunity::Update(float dt, bool exterior)
             {
                 person.direction = 1;
             }
-            const bool talking = Dialogue::Active() || (i == 0 && !alarm) || (distance < 1.5 && !alarm);
+            const bool talking = (Dialogue::Active() && distance < 5.5) || (i == 0 && !alarm) ||
+                                 (distance < 1.5 && !alarm);
             const float desired = talking ? 0 : person.fearSeconds > 0 ? 2.5f : 1.1f;
             person.speed += std::clamp(desired - person.speed, -5.f * dt, 3.f * dt);
+            if (talking && !alarm && distance > .05)
+            {
+                const auto f = TG::Frame(person.position);
+                const auto toHero = TG::ToLocal(f, hero, p.radiusMeters);
+                const double len = std::hypot(toHero.x, toHero.y);
+                if (len > 1e-4)
+                {
+                    const auto targetHeading = TG::Unit(
+                        {f.right.x * (toHero.x / len) + f.forward.x * (toHero.y / len),
+                         f.right.y * (toHero.x / len) + f.forward.y * (toHero.y / len),
+                         f.right.z * (toHero.x / len) + f.forward.z * (toHero.y / len)});
+                    const float blend = 1.f - std::exp(-7.f * dt);
+                    person.heading = TG::Unit(
+                        {person.heading.x + (targetHeading.x - person.heading.x) * blend,
+                         person.heading.y + (targetHeading.y - person.heading.y) * blend,
+                         person.heading.z + (targetHeading.z - person.heading.z) * blend});
+                }
+            }
             const double step = person.speed * dt;
             if (step <= .00001)
             {
@@ -5357,7 +5377,7 @@ void PlanetCommunity::Interact()
         }
         }
         Dialogue::Say("community." + site.regionId + ".resident." + std::to_string(contact->resident),
-                      region.definition.name + " 현장 인원 / " + line);
+                      region.definition.name + " 현장 인원 / " + line, false);
         return;
     }
     if (contact->kind == 1)

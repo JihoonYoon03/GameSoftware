@@ -28,6 +28,7 @@
 #include <algorithm>
 #include <cmath>
 #include <chrono>
+#include <fstream>
 #include <limits>
 
 namespace tutorial
@@ -79,12 +80,24 @@ class WeaponCursorCapture
             Release();
             return false;
         }
-        float scale = (std::min)(client.right / float(kCanvasWidth), client.bottom / float(kCanvasHeight));
-        int width = (std::max)(1, int(kCanvasWidth * scale));
-        int height = (std::max)(1, int(kCanvasHeight * scale));
-        RECT next = {origin.x + (client.right - width) / 2, origin.y + (client.bottom - height) / 2, 0, 0};
-        next.right = next.left + width;
-        next.bottom = next.top + height;
+        const float aspect = client.bottom > 0 ? float(client.right) / float(client.bottom) : 1.6f;
+        RECT next{};
+        if (aspect >= float(kCanvasWidth) / float(kCanvasHeight) - 1e-4f)
+        {
+            next = {origin.x, origin.y, origin.x + (std::max)(1L, client.right),
+                    origin.y + (std::max)(1L, client.bottom)};
+        }
+        else
+        {
+            float scale = (std::min)(client.right / float(kCanvasWidth), client.bottom / float(kCanvasHeight));
+            int width = (std::max)(1, int(kCanvasWidth * scale));
+            int height = (std::max)(1, int(kCanvasHeight * scale));
+            next = {origin.x + (client.right - width) / 2, origin.y + (client.bottom - height) / 2, 0, 0};
+            next.right = next.left + width;
+            next.bottom = next.top + height;
+        }
+        const int width = next.right - next.left;
+        const int height = next.bottom - next.top;
         if (width > 2 && height > 2)
         {
             InflateRect(&next, -1, -1);
@@ -913,15 +926,87 @@ void Game::SyncMissionProgress()
     game::GameLevels::Mine().SyncInvestigation();
     game::GameLevels::Chapter().SyncEvidence();
 }
+float WorldCamera::zoom = WorldCamera::kDefaultZoom;
+float WorldCamera::targetZoom = WorldCamera::kDefaultZoom;
+float WorldCamera::topViewBlend = 0.f;
+
+float WorldCamera::IsoYScale()
+{
+    return 18.f + 16.f * topViewBlend;
+}
+float WorldCamera::IsoZScale()
+{
+    return 44.f - 28.f * topViewBlend;
+}
+float WorldCamera::LogicalWidth()
+{
+    const auto &w = Game::Get().GetState();
+    if (w.viewportWidth <= 0 || w.viewportHeight <= 0)
+    {
+        return float(kCanvasWidth);
+    }
+    const float aspect = float(w.viewportWidth) / float(w.viewportHeight);
+    return (std::max)(float(kCanvasWidth), float(kCanvasHeight) * aspect);
+}
+float WorldCamera::CenterOffsetX()
+{
+    return (LogicalWidth() - float(kCanvasWidth)) * .5f;
+}
+float WorldCamera::RightOffsetX()
+{
+    return LogicalWidth() - float(kCanvasWidth);
+}
+void WorldCamera::StepZoom(int direction)
+{
+    if (direction == 0)
+    {
+        return;
+    }
+    const float factor = direction > 0 ? 1.18f : (1.f / 1.18f);
+    SetZoom(targetZoom * factor, false);
+}
+void WorldCamera::SetZoom(float value, bool immediate)
+{
+    targetZoom = Game::Clamp(value, kMinZoom, kMaxZoom);
+    if (immediate)
+    {
+        zoom = targetZoom;
+    }
+}
+void WorldCamera::Update(float deltaSeconds, bool aircraftMounted)
+{
+    if (deltaSeconds <= 0.f)
+    {
+        return;
+    }
+    const float zoomFollow = 1.f - std::exp(-10.f * deltaSeconds);
+    zoom += (targetZoom - zoom) * zoomFollow;
+    if (std::fabs(targetZoom - zoom) < 0.0005f)
+    {
+        zoom = targetZoom;
+    }
+    const float targetTop = aircraftMounted ? 1.f : 0.f;
+    const float topFollow = 1.f - std::exp(-2.6f * deltaSeconds);
+    topViewBlend += (targetTop - topViewBlend) * topFollow;
+    if (std::fabs(targetTop - topViewBlend) < 0.0005f)
+    {
+        topViewBlend = targetTop;
+    }
+}
+void WorldCamera::Reset()
+{
+    zoom = targetZoom = kDefaultZoom;
+    topViewBlend = 0.f;
+}
 Vector2 WorldCamera::ToViewport(Vector2 p)
 {
-    return {kCanvasWidth * .5f + (p.x - kCanvasWidth * .5f) * zoom,
-            kCanvasHeight * .57f + (p.y - kCanvasHeight * .57f) * zoom};
+    const float cx = LogicalWidth() * .5f;
+    return {cx + (p.x - cx) * zoom, kCanvasHeight * .57f + (p.y - kCanvasHeight * .57f) * zoom};
 }
 Vector2 WorldCamera::FromViewport(Vector2 p)
 {
-    return {kCanvasWidth * .5f + (p.x - kCanvasWidth * .5f) / zoom,
-            kCanvasHeight * .57f + (p.y - kCanvasHeight * .57f) / zoom};
+    const float cx = LogicalWidth() * .5f;
+    return {cx + (p.x - cx) / zoom, kCanvasHeight * .57f + (p.y - kCanvasHeight * .57f) / zoom};
 }
 void MovementFacing::Update(Vector2 from, Vector2 to, float dt)
 {
@@ -1298,6 +1383,7 @@ void Game::UpdatePlayerMovement(float deltaSeconds)
 }
 void Game::UpdateCamera(float deltaSeconds)
 {
+    WorldCamera::Update(deltaSeconds, state.surfaceExploration && state.aircraft.mounted);
     Vector2 target = state.IsInsideAny() ? Vector2{0, 0} : state.playerPosition;
     float followAmount = 1 - std::exp(-kCameraFollowRate * deltaSeconds);
     state.cameraPosition.x += (target.x - state.cameraPosition.x) * followAmount;
@@ -1321,14 +1407,16 @@ world::SurfaceView Game::SurfaceTerrainView() const
         std::fabs(cache.originZ - origin.z) < 1.e-11 &&
         Game::Distance(cache.camera, state.cameraPosition) < .25f &&
         std::fabs(cache.camHeight - state.surfaceCameraHeight) < .1f &&
-        std::fabs(cache.zoom - WorldCamera::zoom) < .001f)
+        std::fabs(cache.zoom - WorldCamera::zoom) < .001f &&
+        std::fabs(cache.topView - WorldCamera::topViewBlend) < .002f)
     {
         return cache.result;
     }
     const double right = state.cameraPosition.x * 2, forward = state.cameraPosition.y * 2;
+    const double isoY = WorldCamera::IsoYScale(), isoZ = WorldCamera::IsoZScale();
     auto project = [&](double screenX, double screenY) {
-        const double baseX = right + screenX / 36 + screenY / 18;
-        const double baseY = forward - screenX / 36 + screenY / 18;
+        const double baseX = right + screenX / 36 + screenY / isoY;
+        const double baseY = forward - screenX / 36 + screenY / isoY;
         double x = baseX, y = baseY;
         for (unsigned i = 0; i < 6; ++i)
         {
@@ -1336,8 +1424,8 @@ world::SurfaceView Game::SurfaceTerrainView() const
                 (std::max)(world::PlanetTerrain::SeaLevelMeters, surface->ContactAt(x, y).heightMeters);
             const double height =
                 surface->Origin().origin.altitudeMeters + state.surfaceCameraHeight * 2 - ground;
-            x = baseX - height * (44. / 36);
-            y = baseY - height * (44. / 36);
+            x = baseX - height * (isoZ / (2. * isoY));
+            y = baseY - height * (isoZ / (2. * isoY));
         }
         auto point = surface->PointAt(x, y);
         point.altitudeMeters = surface->ContactAt(x, y).heightMeters;
@@ -1345,7 +1433,8 @@ world::SurfaceView Game::SurfaceTerrainView() const
     };
     view.center = project(0, 0);
     double radius = 0;
-    for (double x : {-kCanvasWidth * .5 / WorldCamera::zoom, kCanvasWidth * .5 / WorldCamera::zoom})
+    const double halfLogicalW = WorldCamera::LogicalWidth() * .5;
+    for (double x : {-halfLogicalW / WorldCamera::zoom, halfLogicalW / WorldCamera::zoom})
     {
         for (double y : {-kCanvasHeight * .57 / WorldCamera::zoom, kCanvasHeight * .43 / WorldCamera::zoom})
         {
@@ -1366,6 +1455,7 @@ world::SurfaceView Game::SurfaceTerrainView() const
         cache.camera = state.cameraPosition;
         cache.camHeight = state.surfaceCameraHeight;
         cache.zoom = WorldCamera::zoom;
+        cache.topView = WorldCamera::topViewBlend;
         cache.result = view;
         cache.valid = true;
     }
@@ -1373,6 +1463,7 @@ world::SurfaceView Game::SurfaceTerrainView() const
 }
 void Game::Reset()
 {
+    WorldCamera::Reset();
     SaveSystem::ResetCampaign();
     StopSurface();
     WeaponWheel::Close();
@@ -1382,9 +1473,11 @@ void Game::Reset()
     const int viewportWidth = state.viewportWidth;
     const int viewportHeight = state.viewportHeight;
     const UiPreferences preferences = state.uiPreferences;
+    const DisplayPreferences displayPrefs = state.displayPreferences;
     state = GameState{};
     frameSchedule = {};
     state.uiPreferences = preferences;
+    state.displayPreferences = displayPrefs;
     state.viewportWidth = viewportWidth;
     state.viewportHeight = viewportHeight;
     state.lastUpdateMilliseconds = platform::ElapsedMilliseconds();
@@ -1689,6 +1782,20 @@ void Game::KeyDown(unsigned char key, int, int)
     if (state.mapVisible && MapHud::HandleMapKey(key))
     {
         return;
+    }
+    if (!state.isPaused && state.ui.screen == UiScreen::None && !Dialogue::Active() && !state.journalVisible &&
+        !state.dialogueHistoryVisible && !state.mapVisible)
+    {
+        if (key == '+' || key == '=')
+        {
+            WorldCamera::StepZoom(+1);
+            return;
+        }
+        if (key == '-' || key == '_')
+        {
+            WorldCamera::StepZoom(-1);
+            return;
+        }
     }
     if (key == ' ' && !state.Mounted())
     {
@@ -2022,14 +2129,27 @@ void Game::KeyUp(unsigned char key, int, int)
 void Game::MouseMotion(int x, int y)
 {
     state.cursorWindowPosition = {float(x), float(y)};
-    float scale =
-        (std::min)(state.viewportWidth / float(kCanvasWidth), state.viewportHeight / float(kCanvasHeight));
-    int width = (std::max)(1, int(kCanvasWidth * scale));
-    int height = (std::max)(1, int(kCanvasHeight * scale));
-    int left = (state.viewportWidth - width) / 2, top = (state.viewportHeight - height) / 2;
-    state.cursorInsideViewport = x >= left && y >= top && x < left + width && y < top + height;
-    state.cursorPosition = {Clamp((x - left) * float(kCanvasWidth) / width, 0, float(kCanvasWidth)),
-                            Clamp((y - top) * float(kCanvasHeight) / height, 0, float(kCanvasHeight))};
+    const float logicalW = WorldCamera::LogicalWidth();
+    const float aspect = state.viewportHeight > 0 ? float(state.viewportWidth) / float(state.viewportHeight) : 1.6f;
+    if (aspect >= float(kCanvasWidth) / float(kCanvasHeight) - 1e-4f)
+    {
+        const int width = (std::max)(1, state.viewportWidth);
+        const int height = (std::max)(1, state.viewportHeight);
+        state.cursorInsideViewport = x >= 0 && y >= 0 && x < width && y < height;
+        state.cursorPosition = {Clamp(float(x) * logicalW / float(width), 0, logicalW),
+                                Clamp(float(y) * float(kCanvasHeight) / float(height), 0, float(kCanvasHeight))};
+    }
+    else
+    {
+        float scale =
+            (std::min)(state.viewportWidth / float(kCanvasWidth), state.viewportHeight / float(kCanvasHeight));
+        int width = (std::max)(1, int(kCanvasWidth * scale));
+        int height = (std::max)(1, int(kCanvasHeight * scale));
+        int left = (state.viewportWidth - width) / 2, top = (state.viewportHeight - height) / 2;
+        state.cursorInsideViewport = x >= left && y >= top && x < left + width && y < top + height;
+        state.cursorPosition = {Clamp((x - left) * float(kCanvasWidth) / width, 0, float(kCanvasWidth)),
+                                Clamp((y - top) * float(kCanvasHeight) / height, 0, float(kCanvasHeight))};
+    }
     if (!state.cursorInsideViewport)
     {
         state.mouseFiring = state.mouseAiming = false;
@@ -2217,6 +2337,11 @@ void Game::Update(float deltaSeconds)
         return;
     }
     deltaSeconds = Clamp(deltaSeconds, 0, kMaximumDeltaSeconds);
+    if (state.ui.screen == UiScreen::FacilityShop && !HospitalRecovery::Active())
+    {
+        state.animationTimeSeconds += deltaSeconds;
+        state.facilityReactionSeconds = (std::max)(0.f, state.facilityReactionSeconds - deltaSeconds);
+    }
     if (state.surfaceExploration)
     {
         UpdateSurface(deltaSeconds);
@@ -3526,7 +3651,7 @@ bool Dialogue::LocksWorld()
            !Danger();
 }
 bool Dialogue::Start(const std::string &id, std::vector<DialogueLine> lines,
-                     std::function<void(const std::string &)> completion, bool repeatable)
+                     std::function<void(const std::string &)> completion, bool repeatable, bool blocking)
 {
     auto &world = Game::Get().GetState();
     auto &d = world.dialogue;
@@ -3601,7 +3726,7 @@ bool Dialogue::Start(const std::string &id, std::vector<DialogueLine> lines,
     }
     d.active = true;
     d.suspended = false;
-    d.blocking = !Danger();
+    d.blocking = blocking && !Danger();
     d.repeatable = repeatable;
     d.completion = std::move(completion);
     world.mapVisible = false;
@@ -3702,7 +3827,7 @@ bool Dialogue::Resume()
     std::fill(std::begin(w.pressedKeys), std::end(w.pressedKeys), false);
     return true;
 }
-void Dialogue::Say(const std::string &id, const std::string &message)
+void Dialogue::Say(const std::string &id, const std::string &message, bool blocking)
 {
     auto delimiter = message.find(" / ");
     std::string speaker = delimiter == std::string::npos ? "현장 기록" : message.substr(0, delimiter);
@@ -3752,7 +3877,7 @@ void Dialogue::Say(const std::string &id, const std::string &message)
     }
     if (!lines.empty())
     {
-        Start(id, std::move(lines));
+        Start(id, std::move(lines), {}, false, blocking);
     }
 }
 std::vector<std::string> Dialogue::Journal()
@@ -4249,13 +4374,10 @@ InteractionTarget Game::FindNearbyInteraction()
         {
             return InteractionTarget::FacilityExit;
         }
-        if (Distance(state.playerPosition, {-1.05f, -.65f}) < 1.55f)
+        // Purchase/service interaction starts by talking to the facility NPC across the counter.
+        if (Distance(state.playerPosition, {-.2f, -1.05f}) < 2.05f)
         {
-            return InteractionTarget::FacilityServicePrimary;
-        }
-        if (Distance(state.playerPosition, {1.25f, -.65f}) < 1.55f)
-        {
-            return InteractionTarget::FacilityServiceSecondary;
+            return InteractionTarget::FacilityNpc;
         }
         return InteractionTarget::None;
     }
@@ -4404,6 +4526,15 @@ void Game::InteractWithNearbyTarget()
         ExitFacilityInterior();
         return;
     }
+    if (target == InteractionTarget::FacilityNpc)
+    {
+        state.StopMotion();
+        state.facingYaw = -kPi * .5f;
+        state.facilityReactionSeconds = 1.15f;
+        state.noticeSecondsRemaining = 0.f;
+        Hud::OpenMenu(UiScreen::FacilityShop);
+        return;
+    }
     if (target == InteractionTarget::FacilityServicePrimary ||
         target == InteractionTarget::FacilityServiceSecondary)
     {
@@ -4549,12 +4680,25 @@ void Game::InteractWithNearbyTarget()
         }
         if (nearest)
         {
-            nearest->conversationSeconds = 3;
+            nearest->conversationSeconds = 8.f;
+            nearest->facing.walking = false;
+            nearest->activity = ResidentActivity::Talking;
+            if (const auto rpos = ResidentPosition(*nearest))
+            {
+                const float dx = state.playerPosition.x - rpos->x;
+                const float dy = state.playerPosition.y - rpos->y;
+                if (dx * dx + dy * dy > 1.e-4f)
+                {
+                    nearest->facing.yaw = std::atan2(dy, dx);
+                }
+            }
+            // Passerby NPC conversation runs live without pausing the game; the NPC pauses and faces the player.
             Dialogue::Say("resident/" + std::to_string(nearest - state.residents.data()),
                           nearest->dialogue + (nearest->profession == ResidentProfession::Merchant
                                                    ? " [거래 안내] 악명에 따른 가격 배율: " +
                                                          std::to_string(CivicJustice::PriceMultiplier())
-                                                   : ""));
+                                                   : ""),
+                          false);
         }
         return;
     }
@@ -6168,6 +6312,226 @@ bool Game::InteractFacilityStation(InteractionTarget target)
         return true;
     }
     return false;
+}
+std::vector<FacilityServiceItem> Game::FacilityServices() const
+{
+    std::vector<FacilityServiceItem> items;
+    if (!state.facilityInterior.Active())
+    {
+        return items;
+    }
+    const auto &player = game::GameLevels::Mine().GetState().player;
+    const auto kind = state.facilityInterior.kind;
+    if (kind == UrbanFacilityKind::Market)
+    {
+        items.push_back({"회복 키트 구매",
+                         "응급 회복 키트 +1 (보유 " + std::to_string(player.recoveryKits) + ")",
+                         "40 Cr",
+                         player.credits >= 40 && player.recoveryKits < 999});
+        const bool firearmReady = Game::Get().Loadout().IsFirearmEquipped();
+        const int rounds = firearmReady ? Game::Get().ActiveFirearm().GetRounds() : 0;
+        const int magSize = firearmReady ? Game::Get().ActiveFirearm().GetMagazineSize() : 0;
+        const bool needsAmmo = firearmReady && rounds < magSize;
+        items.push_back({"권총 탄약 보충",
+                         firearmReady ? ("탄창 완충 (현재 " + std::to_string(rounds) + "/" +
+                                         std::to_string(magSize) + ")")
+                                      : "총기 장착 시 탄약 보급 가능",
+                         "25 Cr",
+                         needsAmmo && player.credits >= 25});
+        items.push_back({"고철 부품 매각",
+                         "고철 1개 판매 (보유 " + std::to_string(player.salvage) + ")",
+                         "+35 Cr",
+                         player.salvage >= 1});
+    }
+    else if (kind == UrbanFacilityKind::Clinic)
+    {
+        const bool needsHeal = player.health < player.maxHealth;
+        items.push_back({"전체 치료 · 스태미너 회복",
+                         "체력 " + std::to_string(player.health) + "/" + std::to_string(player.maxHealth) +
+                             " → 최대 회복 (크레딧 부족 시 응급 지원)",
+                         player.credits >= 30 ? "30 Cr" : "무료 지원",
+                         needsHeal});
+        items.push_back({"구급 회복 키트 구매",
+                         "의료소 전용 회복 키트 +1 (보유 " + std::to_string(player.recoveryKits) + ")",
+                         "35 Cr",
+                         player.credits >= 35 && player.recoveryKits < 999});
+    }
+    else if (kind == UrbanFacilityKind::Workshop)
+    {
+        const bool carDamaged = state.car.position && state.car.health < GroundVehicle::MaxHealth;
+        const bool airDamaged = state.aircraft.position && state.aircraft.health < PlayerAircraft::MaxHealth;
+        items.push_back({"차량 · 비행체 종합 정비",
+                         (carDamaged || airDamaged) ? "손상된 탑승 장비를 최대 내구도로 복구"
+                                                    : "현재 모든 차량과 비행체가 정상 상태입니다",
+                         player.salvage > 0 ? "고철 1" : "35 Cr",
+                         (carDamaged || airDamaged) && (player.salvage > 0 || player.credits >= 35)});
+        items.push_back({"고철로 회복 키트 제작",
+                         "고철 1개 → 회복 키트 +1 (보유 고철 " + std::to_string(player.salvage) + ")",
+                         "고철 1",
+                         player.salvage >= 1 && player.recoveryKits < 999});
+    }
+    else if (kind == UrbanFacilityKind::CivicHall)
+    {
+        const auto &law = CivicJustice::State();
+        const int fine = law.wanted * 60;
+        items.push_back({"수배 벌금 자진 정산",
+                         law.wanted == 0   ? "현재 적용된 수배가 없습니다"
+                         : law.wanted <= 2 ? ("수배 " + std::to_string(law.wanted) + "단계 해제 및 기록 정리")
+                                           : "3성 이상 중범죄는 자진 정산 불가",
+                         (law.wanted > 0 && law.wanted <= 2) ? (std::to_string(fine) + " Cr") : "—",
+                         law.wanted > 0 && law.wanted <= 2 && player.credits >= fine});
+        items.push_back({"지역 의뢰 · 조사 기록 열기",
+                         state.facilityInterior.regionName + " 주변 의뢰 및 현장 조사 기록 확인",
+                         "무료",
+                         true});
+    }
+    return items;
+}
+bool Game::ExecuteFacilityService(int serviceIndex)
+{
+    if (!state.facilityInterior.Active() || HospitalRecovery::Active())
+    {
+        return false;
+    }
+    auto finish = [&](bool ok) {
+        if (ok)
+        {
+            state.facilityReactionSeconds = 1.4f;
+        }
+        return ok;
+    };
+    auto &player = Player();
+    const auto kind = state.facilityInterior.kind;
+    if (kind == UrbanFacilityKind::Market)
+    {
+        if (serviceIndex == 0)
+        {
+            if (player.recoveryKits >= 999)
+            {
+                ShowNotice("보급 상인 / 회복 키트 보유 상한입니다.");
+                return false;
+            }
+            if (player.credits < 40)
+            {
+                ShowNotice("보급 상인 / 크레딧이 부족합니다 (회복 키트 40 Cr).");
+                return false;
+            }
+            player.credits -= 40;
+            ++player.recoveryKits;
+            ShowNotice("보급 상인 / 회복 키트 1개를 구매했습니다 (-40 Cr).");
+            return finish(true);
+        }
+        if (serviceIndex == 1)
+        {
+            if (!Loadout().IsFirearmEquipped())
+            {
+                ShowNotice("보급 상인 / 총기를 장착한 상태에서만 탄약을 보급할 수 있습니다.");
+                return false;
+            }
+            auto &gun = ActiveFirearm();
+            if (gun.GetRounds() >= gun.GetMagazineSize())
+            {
+                ShowNotice("보급 상인 / 이미 탄창이 가득 차 있습니다.");
+                return false;
+            }
+            if (player.credits < 25)
+            {
+                ShowNotice("보급 상인 / 탄약 보충에는 25 Cr가 필요합니다.");
+                return false;
+            }
+            player.credits -= 25;
+            gun.TopUpRounds(gun.GetMagazineSize());
+            ShowNotice("보급 상인 / 탄창을 완충했습니다 (-25 Cr).");
+            return finish(true);
+        }
+        if (serviceIndex == 2)
+        {
+            return finish(InteractFacilityStation(InteractionTarget::FacilityServiceSecondary));
+        }
+        return false;
+    }
+    if (kind == UrbanFacilityKind::Clinic || kind == UrbanFacilityKind::Workshop)
+    {
+        if (serviceIndex == 0)
+        {
+            return finish(InteractFacilityStation(InteractionTarget::FacilityServicePrimary));
+        }
+        if (serviceIndex == 1)
+        {
+            return finish(InteractFacilityStation(InteractionTarget::FacilityServiceSecondary));
+        }
+        return false;
+    }
+    if (kind == UrbanFacilityKind::CivicHall)
+    {
+        if (serviceIndex == 0)
+        {
+            return finish(InteractFacilityStation(InteractionTarget::FacilityServicePrimary));
+        }
+        if (serviceIndex == 1)
+        {
+            Hud::CloseMenu();
+            return finish(InteractFacilityStation(InteractionTarget::FacilityServiceSecondary));
+        }
+        return false;
+    }
+    return false;
+}
+void Game::ApplyDisplayPreferences(bool persist)
+{
+    const int count = int(platform::kResolutionOptions.size());
+    state.displayPreferences.resolutionIndex = std::clamp(state.displayPreferences.resolutionIndex, 0, count - 1);
+    const auto &opt = platform::kResolutionOptions[size_t(state.displayPreferences.resolutionIndex)];
+    platform::ApplyDisplayMode(opt.width, opt.height, state.displayPreferences.fullscreen);
+    if (persist)
+    {
+        std::ofstream out("display_settings.json", std::ios::binary | std::ios::trunc);
+        if (out)
+        {
+            out << "{\"resolutionIndex\":" << state.displayPreferences.resolutionIndex
+                << ",\"width\":" << opt.width << ",\"height\":" << opt.height
+                << ",\"fullscreen\":" << (state.displayPreferences.fullscreen ? "true" : "false") << "}\n";
+        }
+    }
+}
+void Game::LoadDisplayPreferences()
+{
+    std::ifstream in("display_settings.json", std::ios::binary);
+    if (!in)
+    {
+        return;
+    }
+    std::string content((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    auto findInt = [&](const char *key, int fallback) {
+        const auto pos = content.find(key);
+        if (pos == std::string::npos)
+        {
+            return fallback;
+        }
+        const auto colon = content.find(':', pos);
+        if (colon == std::string::npos)
+        {
+            return fallback;
+        }
+        try
+        {
+            return std::stoi(content.substr(colon + 1));
+        }
+        catch (...)
+        {
+            return fallback;
+        }
+    };
+    const int count = int(platform::kResolutionOptions.size());
+    state.displayPreferences.resolutionIndex = std::clamp(findInt("\"resolutionIndex\"", 0), 0, count - 1);
+    const auto fsPos = content.find("\"fullscreen\"");
+    if (fsPos != std::string::npos)
+    {
+        const auto truePos = content.find("true", fsPos);
+        const auto falsePos = content.find("false", fsPos);
+        state.displayPreferences.fullscreen = truePos != std::string::npos &&
+                                              (falsePos == std::string::npos || truePos < falsePos);
+    }
 }
 // ============================================================================
 // GameCallbacks — window entry points

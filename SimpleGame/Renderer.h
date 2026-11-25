@@ -137,6 +137,8 @@ class Renderer
     const rendering::SceneLighting &GetLighting() const;
     void AddPointLight(const rendering::PointLight &light);
     void ClearPointLights();
+    void SetProjectionBasis(float isoYScale, float isoZScale, bool portraitMode = false);
+    void SetAltitudeEffects(float blurAmount, float focusDepth01);
     const rendering::FrameStatistics &GetFrameStatistics() const;
     const PbrTextureBudget &GetPbrTextureBudget() const;
 

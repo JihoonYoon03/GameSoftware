@@ -38,10 +38,12 @@ void main() {
 
 const char *kPostFragmentBody = R"GLSL(
 uniform sampler2D scene;
+uniform sampler2D sceneDepth;
 uniform vec2 texel;
 uniform float clockTime;
 uniform int pixelMode;
 uniform float exposure;
+uniform vec3 uAltitudeFx;
 in vec2 uv;
 out vec4 fragColor;
 vec3 bright(vec2 p) {
@@ -55,6 +57,27 @@ vec3 acesFilmic(vec3 x) {
 void main() {
     vec2 sampleUv = pixelMode != 0 ? (floor(uv / texel) + 0.5) * texel : uv;
     vec3 color = texture(scene, sampleUv).rgb;
+    if (pixelMode == 0 && uAltitudeFx.x > 0.001) {
+        float depth = texture(sceneDepth, sampleUv).r;
+        float depthBelow = smoothstep(uAltitudeFx.y - 0.00015, uAltitudeFx.y + 0.00045, depth);
+        vec2 fromCraft = (sampleUv - vec2(0.5, 0.43)) * vec2(1.6, 1.0);
+        float outsideCraft = smoothstep(0.11, 0.24, length(fromCraft));
+        float blurMask = max(depthBelow, outsideCraft * 0.72) * uAltitudeFx.x;
+        if (blurMask > 0.005) {
+            float radius = blurMask * 5.2;
+            vec3 acc = color * 0.20;
+            vec2 off[8] = vec2[8](
+                vec2(1.0, 0.0), vec2(-1.0, 0.0), vec2(0.0, 1.0), vec2(0.0, -1.0),
+                vec2(0.707, 0.707), vec2(-0.707, 0.707), vec2(0.707, -0.707), vec2(-0.707, -0.707));
+            for (int k = 0; k < 8; ++k) {
+                vec2 u1 = clamp(sampleUv + off[k] * texel * radius, vec2(0.001), vec2(0.999));
+                vec2 u2 = clamp(sampleUv + off[k] * texel * (radius * 0.5), vec2(0.001), vec2(0.999));
+                acc += texture(scene, u1).rgb * 0.045 + texture(scene, u2).rgb * 0.055;
+            }
+            color = mix(color, acc, clamp(blurMask * 1.15, 0.0, 1.0));
+            color = mix(color, vec3(0.56, 0.70, 0.84), clamp(blurMask * 0.22, 0.0, 0.30));
+        }
+    }
     vec3 bloom = vec3(0.0);
     if (pixelMode == 0) {
         for (int i = 1; i <= 3; ++i) {
@@ -102,6 +125,7 @@ uniform int shadowPass;
 uniform int imported;
 uniform vec2 shadowJitter;
 uniform vec2 shadowSlope;
+uniform vec3 uProjectionBasis;
 uniform float hologramTime;
 out vec3 normal;
 out vec3 localPosition;
@@ -166,9 +190,20 @@ void main() {
         p.xy += shadowSlope * max(0.0, p.z - ground);
         p.z = ground;
     }
-    vec2 screen = instanceAnchor.xy + vec2((p.x - p.y) * 36.0, (p.x + p.y) * 18.0 - p.z * 44.0);
-    fragIsoPos = vec3(screen.x, screen.y + vertHeight * 44.0, vertHeight);
-    float depth = instanceAnchor.z + (p.x + p.y) * 36.0 + p.z * (1296.0 / 44.0);
+    vec2 screen;
+    float depth;
+    if (uProjectionBasis.z > 0.5) {
+        // First-person eye-level front-on camera for NPC upper-body close-up dialogue.
+        screen = instanceAnchor.xy + vec2(p.x * 52.0, -p.z * 52.0);
+        fragIsoPos = vec3(screen.x, screen.y + vertHeight * 44.0, vertHeight);
+        depth = instanceAnchor.z + p.y * 52.0;
+    } else {
+        float isoY = uProjectionBasis.x > 1.0 ? uProjectionBasis.x : 18.0;
+        float isoZ = uProjectionBasis.y > 1.0 ? uProjectionBasis.y : 44.0;
+        screen = instanceAnchor.xy + vec2((p.x - p.y) * 36.0, (p.x + p.y) * isoY - p.z * isoZ);
+        fragIsoPos = vec3(screen.x, screen.y + vertHeight * isoZ, vertHeight);
+        depth = instanceAnchor.z + (p.x + p.y) * 36.0 + p.z * (1296.0 / 44.0);
+    }
     if (shadowPass != 0) {
         screen += shadowJitter;
         depth = -7000.0;
@@ -209,6 +244,7 @@ uniform int shadowPass;
 uniform int imported;
 uniform vec2 shadowJitter;
 uniform vec2 shadowSlope;
+uniform vec3 uProjectionBasis;
 uniform float hologramTime;
 out vec3 normal;
 out vec3 localPosition;
@@ -272,9 +308,20 @@ void main() {
         p.xy += shadowSlope * max(0.0, p.z - ground);
         p.z = ground;
     }
-    vec2 screen = instanceAnchor.xy + vec2((p.x - p.y) * 36.0, (p.x + p.y) * 18.0 - p.z * 44.0);
-    fragIsoPos = vec3(screen.x, screen.y + vertHeight * 44.0, vertHeight);
-    float depth = instanceAnchor.z + (p.x + p.y) * 36.0 + p.z * (1296.0 / 44.0);
+    vec2 screen;
+    float depth;
+    if (uProjectionBasis.z > 0.5) {
+        // First-person eye-level front-on camera for NPC upper-body close-up dialogue.
+        screen = instanceAnchor.xy + vec2(p.x * 52.0, -p.z * 52.0);
+        fragIsoPos = vec3(screen.x, screen.y + vertHeight * 44.0, vertHeight);
+        depth = instanceAnchor.z + p.y * 52.0;
+    } else {
+        float isoY = uProjectionBasis.x > 1.0 ? uProjectionBasis.x : 18.0;
+        float isoZ = uProjectionBasis.y > 1.0 ? uProjectionBasis.y : 44.0;
+        screen = instanceAnchor.xy + vec2((p.x - p.y) * 36.0, (p.x + p.y) * isoY - p.z * isoZ);
+        fragIsoPos = vec3(screen.x, screen.y + vertHeight * isoZ, vertHeight);
+        depth = instanceAnchor.z + (p.x + p.y) * 36.0 + p.z * (1296.0 / 44.0);
+    }
     if (shadowPass != 0) {
         screen += shadowJitter;
         depth = -7000.0;
@@ -327,6 +374,7 @@ uniform vec4 uRimColor;
 uniform int uPointLightCount;
 uniform vec4 uPointLightPos[16];
 uniform vec4 uPointLightColor[16];
+uniform vec3 uProjectionBasis;
 in vec3 normal;
 in vec3 localPosition;
 in vec3 fragIsoPos;
@@ -525,12 +573,13 @@ void main() {
     lit += srgbToLinear(uRimColor.rgb) * (uRimColor.w * rimPow) * mix(vec3(0.65), albedo + 0.35, 0.45) * ao;
 
     // 4) Dynamic 3D point lights in isometric world space (streetlights, lamps, muzzle flash, beacons).
+    float fragIsoY = uProjectionBasis.x > 1.0 ? uProjectionBasis.x : 18.0;
     for (int i = 0; i < 16; ++i) {
         if (i >= uPointLightCount) break;
         vec4 lp = uPointLightPos[i];
         vec2 ds = lp.xy - fragIsoPos.xy;
-        vec3 toLight = vec3(0.5 * (ds.y / 18.0 + ds.x / 36.0),
-                            0.5 * (ds.y / 18.0 - ds.x / 36.0),
+        vec3 toLight = vec3(0.5 * (ds.y / fragIsoY + ds.x / 36.0),
+                            0.5 * (ds.y / fragIsoY - ds.x / 36.0),
                             lp.z - fragIsoPos.z);
         float d2 = dot(toLight, toLight);
         float r2 = lp.w * lp.w;
@@ -553,6 +602,7 @@ const char *kDarkFragmentBody = R"GLSL(
 uniform sampler2D occupancy;
 uniform sampler2D depthImage;
 uniform float viewZoom;
+uniform vec2 viewExtent;
 uniform float mapSize;
 uniform vec2 origin;
 uniform vec4 lights[24];
@@ -579,8 +629,10 @@ float trace(vec2 from, vec2 to) {
     return 0.0;
 }
 void main() {
-    vec2 screen = vec2(uv.x * 1280.0, (1.0 - uv.y) * 800.0);
-    screen = vec2(640.0, 456.0) + (screen - vec2(640.0, 456.0)) / viewZoom;
+    vec2 ext = viewExtent.x > 1.0 ? viewExtent : vec2(1280.0, 800.0);
+    vec2 screen = vec2(uv.x * ext.x, (1.0 - uv.y) * ext.y);
+    vec2 pivot = vec2(ext.x * 0.5, ext.y * 0.57);
+    screen = pivot + (screen - pivot) / viewZoom;
     vec2 s = screen - origin;
     float d = texture(depthImage, uv).r;
     float height = d < 0.9999 ? max(0.0, ((0.5 - d) * 131072.0 - 2.0 * s.y) / (88.0 + 1296.0 / 44.0)) : 0.0;
@@ -936,6 +988,7 @@ struct Renderer::MeshData
         GLint hasPbr = -1, hasPbrDetail = -1, hasDamageMask = -1;
         GLint keyDir = -1, keyColor = -1, skyColor = -1, groundColor = -1, rimColor = -1;
         GLint pointLightCount = -1, pointLightPos = -1, pointLightColor = -1;
+        GLint projectionBasis = -1;
         void Initialize(GLuint program)
         {
             mvp = glGetUniformLocation(program, "mvp");
@@ -966,18 +1019,21 @@ struct Renderer::MeshData
             pointLightCount = glGetUniformLocation(program, "uPointLightCount");
             pointLightPos = glGetUniformLocation(program, "uPointLightPos[0]");
             pointLightColor = glGetUniformLocation(program, "uPointLightColor[0]");
+            projectionBasis = glGetUniformLocation(program, "uProjectionBasis");
         }
     } uniforms;
     struct PostUniforms
     {
-        GLint scene = -1, texel = -1, clockTime = -1, pixelMode = -1, exposure = -1;
+        GLint scene = -1, sceneDepth = -1, texel = -1, clockTime = -1, pixelMode = -1, exposure = -1, altitudeFx = -1;
         void Initialize(GLuint program)
         {
             scene = glGetUniformLocation(program, "scene");
+            sceneDepth = glGetUniformLocation(program, "sceneDepth");
             texel = glGetUniformLocation(program, "texel");
             clockTime = glGetUniformLocation(program, "clockTime");
             pixelMode = glGetUniformLocation(program, "pixelMode");
             exposure = glGetUniformLocation(program, "exposure");
+            altitudeFx = glGetUniformLocation(program, "uAltitudeFx");
         }
     } postUniforms;
     struct ShadowUniforms
@@ -991,11 +1047,12 @@ struct Renderer::MeshData
     } shadowUniforms;
     struct DarkUniforms
     {
-        GLint viewZoom = -1, mapSize = -1, occupancy = -1, depthImage = -1;
+        GLint viewZoom = -1, viewExtent = -1, mapSize = -1, occupancy = -1, depthImage = -1;
         GLint origin = -1, scanner = -1, aim = -1, lightCount = -1, lights = -1;
         void Initialize(GLuint program)
         {
             viewZoom = glGetUniformLocation(program, "viewZoom");
+            viewExtent = glGetUniformLocation(program, "viewExtent");
             mapSize = glGetUniformLocation(program, "mapSize");
             occupancy = glGetUniformLocation(program, "occupancy");
             depthImage = glGetUniformLocation(program, "depthImage");
@@ -1034,6 +1091,11 @@ struct Renderer::MeshData
     bool powered = false;
     rendering::SceneLighting lighting;
     std::vector<rendering::PointLight> pointLights;
+    float projIsoY = 18.f;
+    float projIsoZ = 44.f;
+    bool portraitMode = false;
+    float altitudeBlur = 0.f;
+    float altitudeFocusDepth = 0.f;
     rendering::FrameStatistics statistics;
 
     ~MeshData()
@@ -1716,6 +1778,17 @@ void Renderer::ClearPointLights()
 {
     m_meshes->pointLights.clear();
 }
+void Renderer::SetProjectionBasis(float isoYScale, float isoZScale, bool portraitMode)
+{
+    m_meshes->projIsoY = isoYScale > 1.f ? isoYScale : 18.f;
+    m_meshes->projIsoZ = isoZScale > 1.f ? isoZScale : 44.f;
+    m_meshes->portraitMode = portraitMode;
+}
+void Renderer::SetAltitudeEffects(float blurAmount, float focusDepth01)
+{
+    m_meshes->altitudeBlur = std::clamp(blurAmount, 0.f, 1.f);
+    m_meshes->altitudeFocusDepth = std::clamp(focusDepth01, 0.f, 1.f);
+}
 
 void Renderer::DrawModels()
 {
@@ -1791,6 +1864,10 @@ void Renderer::DrawModels()
             const float invZ = 1.f / (std::max)(.42f, kz);
             glUniform2f(data.uniforms.shadowSlope, std::clamp(-kx * invZ, -.9f, .9f),
                         std::clamp(-ky * invZ, -.9f, .9f));
+        }
+        if (data.uniforms.projectionBasis >= 0)
+        {
+            glUniform3f(data.uniforms.projectionBasis, data.projIsoY, data.projIsoZ, data.portraitMode ? 1.f : 0.f);
         }
         glUniform1f(data.uniforms.hologramTime, holoTime);
         if (data.uniforms.keyDir >= 0)
@@ -2094,66 +2171,69 @@ void Renderer::DrawModels()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     renderqueue::Flush();
 
-    const int width = (std::min)(640, m_renderWidth), height = (std::min)(400, m_renderHeight);
-    if (!data.shadowTexture)
+    if (!data.portraitMode)
     {
-        glGenTextures(1, &data.shadowTexture);
-    }
-    if (!data.shadowFbo)
-    {
-        glGenFramebuffers(1, &data.shadowFbo);
-    }
-    if (data.shadowWidth != width || data.shadowHeight != height)
-    {
+        const int width = (std::min)(640, m_renderWidth), height = (std::min)(400, m_renderHeight);
+        if (!data.shadowTexture)
+        {
+            glGenTextures(1, &data.shadowTexture);
+        }
+        if (!data.shadowFbo)
+        {
+            glGenFramebuffers(1, &data.shadowFbo);
+        }
+        if (data.shadowWidth != width || data.shadowHeight != height)
+        {
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, data.shadowTexture);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glBindFramebuffer(GL_FRAMEBUFFER, data.shadowFbo);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, data.shadowTexture, 0);
+            data.shadowWidth = width;
+            data.shadowHeight = height;
+        }
+        else
+        {
+            glBindFramebuffer(GL_FRAMEBUFFER, data.shadowFbo);
+        }
+        glViewport(0, 0, width, height);
+        glClearColor(0, 0, 0, 0);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glDisable(GL_DEPTH_TEST);
+        glDepthMask(GL_FALSE);
+        glBlendEquation(GL_MAX);
+        glBlendFunc(GL_ONE, GL_ONE);
+        bindModelPass(1);
+        drawPass(1);
+        glBindVertexArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, originalFbo);
+        if (originalFbo)
+        {
+            glViewport(0, 0, m_renderWidth, m_renderHeight);
+        }
+        else
+        {
+            SetPresentationViewport();
+        }
+        glBlendEquation(GL_FUNC_ADD);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glUseProgram(data.shadowComposite);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, data.shadowTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glBindFramebuffer(GL_FRAMEBUFFER, data.shadowFbo);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, data.shadowTexture, 0);
-        data.shadowWidth = width;
-        data.shadowHeight = height;
+        glUniform1i(data.shadowUniforms.image, 0);
+        glUniform2f(data.shadowUniforms.texel, 1.f / width, 1.f / height);
+        glBindVertexArray(data.fullscreenVao);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        profiling::Count(profiling::Counter::DrawCalls);
+        glBindVertexArray(0);
+        glBindTexture(GL_TEXTURE_2D, 0);
     }
-    else
-    {
-        glBindFramebuffer(GL_FRAMEBUFFER, data.shadowFbo);
-    }
-    glViewport(0, 0, width, height);
-    glClearColor(0, 0, 0, 0);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glDisable(GL_DEPTH_TEST);
-    glDepthMask(GL_FALSE);
-    glBlendEquation(GL_MAX);
-    glBlendFunc(GL_ONE, GL_ONE);
-    bindModelPass(1);
-    drawPass(1);
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, originalFbo);
-    if (originalFbo)
-    {
-        glViewport(0, 0, m_renderWidth, m_renderHeight);
-    }
-    else
-    {
-        SetPresentationViewport();
-    }
-    glBlendEquation(GL_FUNC_ADD);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glUseProgram(data.shadowComposite);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, data.shadowTexture);
-    glUniform1i(data.shadowUniforms.image, 0);
-    glUniform2f(data.shadowUniforms.texel, 1.f / width, 1.f / height);
-    glBindVertexArray(data.fullscreenVao);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-    profiling::Count(profiling::Counter::DrawCalls);
-    glBindVertexArray(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
 
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
@@ -2302,6 +2382,10 @@ bool Renderer::DrawMineDarkness()
     glDisable(GL_BLEND);
     glUseProgram(d.darkProgram);
     glUniform1f(d.darkUniforms.viewZoom, tutorial::WorldCamera::zoom);
+    if (d.darkUniforms.viewExtent >= 0)
+    {
+        glUniform2f(d.darkUniforms.viewExtent, tutorial::WorldCamera::LogicalWidth(), float(tutorial::kCanvasHeight));
+    }
     glUniform1f(d.darkUniforms.mapSize, float(game::kMapSize));
     glUniform1i(d.darkUniforms.occupancy, 0);
     glUniform1i(d.darkUniforms.depthImage, 1);
@@ -2687,6 +2771,12 @@ void Renderer::CreatePostProcessing()
 }
 void Renderer::SetPresentationViewport()
 {
+    const float aspect = m_viewportHeight > 0 ? float(m_viewportWidth) / float(m_viewportHeight) : 1.6f;
+    if (aspect >= float(m_width) / float(m_height) - 1e-4f)
+    {
+        glViewport(0, 0, (std::max)(1, m_viewportWidth), (std::max)(1, m_viewportHeight));
+        return;
+    }
     float scale = (std::min)(m_viewportWidth / float(m_width), m_viewportHeight / float(m_height));
     int width = int(m_width * scale), height = int(m_height * scale);
     glViewport((m_viewportWidth - width) / 2, (m_viewportHeight - height) / 2, width, height);
@@ -2695,8 +2785,47 @@ void Renderer::BeginScene(int width, int height)
 {
     m_meshes->statistics = {};
     m_meshes->pointLights.clear();
+    m_meshes->projIsoY = tutorial::WorldCamera::IsoYScale();
+    m_meshes->projIsoZ = tutorial::WorldCamera::IsoZScale();
+    m_meshes->portraitMode = false;
+    m_meshes->altitudeBlur = 0.f;
+    m_meshes->altitudeFocusDepth = 0.f;
     m_viewportWidth = width;
     m_viewportHeight = height;
+    if (m_assets && height > 0)
+    {
+        m_assets->SetTextRasterScale(float(height) / float(m_height));
+    }
+    if (HasPostProcessing() && width > 0 && height > 0)
+    {
+        const float aspect = float(width) / float(height);
+        int baseW = width, baseH = height;
+        if (aspect < float(m_width) / float(m_height) - 1e-4f)
+        {
+            const float scale = (std::min)(width / float(m_width), height / float(m_height));
+            baseW = int(std::lround(m_width * scale));
+            baseH = int(std::lround(m_height * scale));
+        }
+        int targetW = m_width / int(m_style.resolution);
+        int targetH = m_height / int(m_style.resolution);
+        if (m_style.resolution == WorldResolution::Native)
+        {
+            targetW = std::clamp(baseW, 640, 3840);
+            targetH = std::clamp(baseH, 400, 2400);
+        }
+        else if (aspect >= float(m_width) / float(m_height) - 1e-4f)
+        {
+            targetH = m_height / int(m_style.resolution);
+            targetW = (std::max)(targetW, int(std::lround(targetH * aspect)));
+        }
+        if (targetW != m_renderWidth || targetH != m_renderHeight)
+        {
+            renderqueue::Flush();
+            m_renderWidth = targetW;
+            m_renderHeight = targetH;
+            CreatePostProcessing();
+        }
+    }
     if (HasPostProcessing())
     {
         const GLuint fbo = m_msaaSamples > 0 ? m_msaaFramebuffer : m_sceneFramebuffer;
@@ -2761,6 +2890,13 @@ void Renderer::EndScene(float seconds)
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_sceneTexture);
     glUniform1i(m_meshes->postUniforms.scene, 0);
+    if (m_meshes->postUniforms.sceneDepth >= 0 && m_sceneDepth)
+    {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, m_sceneDepth);
+        glUniform1i(m_meshes->postUniforms.sceneDepth, 1);
+        glActiveTexture(GL_TEXTURE0);
+    }
     glUniform2f(m_meshes->postUniforms.texel, 1.f / m_renderWidth, 1.f / m_renderHeight);
     glUniform1f(m_meshes->postUniforms.clockTime, seconds);
     glUniform1i(m_meshes->postUniforms.pixelMode, m_style.resolution == WorldResolution::Native ? 0 : 1);
@@ -2768,12 +2904,19 @@ void Renderer::EndScene(float seconds)
     {
         glUniform1f(m_meshes->postUniforms.exposure, m_meshes->lighting.exposure);
     }
+    if (m_meshes->postUniforms.altitudeFx >= 0)
+    {
+        glUniform3f(m_meshes->postUniforms.altitudeFx, m_meshes->altitudeBlur, m_meshes->altitudeFocusDepth, 0.f);
+    }
     glBindVertexArray(m_meshes->fullscreenVao);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     profiling::Count(profiling::Counter::DrawCalls);
     profiling::Count(profiling::Counter::SubmittedVertices, 3);
     glBindVertexArray(0);
     glUseProgram(0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
     glEnable(GL_BLEND);
 }
@@ -2833,7 +2976,8 @@ size_t Renderer::UiSpriteCount() const
 }
 bool Renderer::DrawBackdropLayer(const std::string &name)
 {
-    return m_assets->DrawBackdropLayer(name, GetStyle().cartoon, GetRenderWidth());
+    return m_assets->DrawBackdropLayer(name, GetStyle().cartoon, GetRenderWidth(),
+                                       tutorial::WorldCamera::LogicalWidth());
 }
 
 void Renderer::DrawSolidRect(float x, float y, float z, float size, float r, float g, float b, float a)
@@ -2908,9 +3052,10 @@ void GameRenderer::Draw()
                            renderer->GetAntialiasingSamples(), style.cartoon, style.antialiasing});
     renderqueue::BeginFrame();
     renderer->BeginScene(Game::Get().GetState().viewportWidth, Game::Get().GetState().viewportHeight);
+    const float logicalW = WorldCamera::LogicalWidth();
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0, kCanvasWidth, kCanvasHeight, 0, -65536, 65536);
+    glOrtho(0, logicalW, kCanvasHeight, 0, -65536, 65536);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glDisable(GL_DEPTH_TEST);
@@ -2921,11 +3066,11 @@ void GameRenderer::Draw()
         profiling::GpuScope gpuTimer(profiling::Timer::Background);
         if (game::GameLevels::Mine().IsActive())
         {
-            Drawing::DrawRectangle(0, 0, float(kCanvasWidth), float(kCanvasHeight), ColorRGBA(0, 0, 0));
+            Drawing::DrawRectangle(0, 0, logicalW, float(kCanvasHeight), ColorRGBA(0, 0, 0));
         }
         else if (Game::Get().GetState().surfaceExploration)
         {
-            Drawing::DrawRectangle(0, 0, float(kCanvasWidth), float(kCanvasHeight), {.045f, .085f, .11f});
+            Drawing::DrawRectangle(0, 0, logicalW, float(kCanvasHeight), {.045f, .085f, .11f});
         }
         else
         {

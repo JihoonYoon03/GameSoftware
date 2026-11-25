@@ -65,7 +65,21 @@ struct PlayerMotion
 // ============================================================================
 struct WorldCamera
 {
-    static constexpr float zoom = 1.35f;
+    static constexpr float kDefaultZoom = 1.35f;
+    static constexpr float kMinZoom = 0.70f;
+    static constexpr float kMaxZoom = 4.75f; // ~1/3 screen height for 1.80 m character, guarantees LOD0 detail.
+    static float zoom;
+    static float targetZoom;
+    static float topViewBlend; // 0 = isometric quarter-view, 1 = smooth top-down aircraft camera.
+    static float IsoYScale();
+    static float IsoZScale();
+    static float LogicalWidth();
+    static float CenterOffsetX();
+    static float RightOffsetX();
+    static void StepZoom(int direction);
+    static void SetZoom(float value, bool immediate = false);
+    static void Update(float deltaSeconds, bool aircraftMounted);
+    static void Reset();
     static Vector2 ToViewport(Vector2 point);
     static Vector2 FromViewport(Vector2 point);
 };
@@ -298,6 +312,7 @@ enum class InteractionTarget
     HomeStorage,
     FacilityEntrance,
     FacilityExit,
+    FacilityNpc,
     FacilityServicePrimary,
     FacilityServiceSecondary
 };
@@ -390,8 +405,9 @@ class Dialogue
 {
   public:
     static bool Start(const std::string &sceneId, std::vector<DialogueLine> lines,
-                      std::function<void(const std::string &)> completion = {}, bool repeatable = false);
-    static void Say(const std::string &sceneId, const std::string &message);
+                      std::function<void(const std::string &)> completion = {}, bool repeatable = false,
+                      bool blocking = true);
+    static void Say(const std::string &sceneId, const std::string &message, bool blocking = true);
     static bool Advance();
     static bool Select(size_t index);
     static void Interrupt();
@@ -416,7 +432,8 @@ enum class UiScreen
     Confirm,
     Medical,
     Checkpoint,
-    PlanetProfiles
+    PlanetProfiles,
+    FacilityShop
 };
 enum class UiAction
 {
@@ -436,6 +453,9 @@ enum class UiAction
     Cartoon,
     Resolution,
     Antialiasing,
+    DisplayResolution,
+    DisplayFullscreen,
+    FacilityService,
     Exchange,
     Choice,
     Advance,
@@ -461,6 +481,18 @@ enum class UiAction
 struct UiPreferences
 {
     float background = .94f, border = 1, content = 1;
+};
+struct DisplayPreferences
+{
+    int resolutionIndex = 0; // 0:1280x800, 1:1600x900, 2:1920x1080, 3:2560x1440, 4:3840x2160
+    bool fullscreen = false;
+};
+struct FacilityServiceItem
+{
+    std::string title;
+    std::string subtitle;
+    std::string priceLabel;
+    bool enabled = true;
 };
 struct UiState
 {
@@ -645,6 +677,7 @@ struct GameState
     std::string trackedCommunityRegion, trackedCommunityWorldKey;
     DialogueState dialogue;
     UiPreferences uiPreferences;
+    DisplayPreferences displayPreferences;
     UiState ui;
     WeaponWheelState weaponWheel;
     std::array<MapDestination, size_t(MapRegion::Count)> mapDestinations = {};
@@ -654,6 +687,7 @@ struct GameState
     bool isSideQuestComplete = false;
     float playTimeSeconds = 0;
     float animationTimeSeconds = 0;
+    float facilityReactionSeconds = 0;
     float noticeSecondsRemaining = 0;
     float noticeDurationSeconds = 0;
     float movementAmount = 0;
@@ -792,6 +826,10 @@ class Game
     bool EnterFacilityInterior(const ActiveFacilityInterior &entry);
     bool ExitFacilityInterior();
     bool InteractFacilityStation(InteractionTarget target);
+    std::vector<FacilityServiceItem> FacilityServices() const;
+    bool ExecuteFacilityService(int serviceIndex);
+    void ApplyDisplayPreferences(bool persist = true);
+    void LoadDisplayPreferences();
     bool RecoverSurfaceAt(int city, Vector2 legacyPosition);
     void Reset();
     void StartNewGame();
@@ -863,7 +901,7 @@ class Game
         std::uint64_t epoch = 0, revision = 0;
         double originX = 0, originY = 0, originZ = 0;
         Vector2 camera = {};
-        float camHeight = 0, zoom = 0;
+        float camHeight = 0, zoom = 0, topView = 0;
         world::SurfaceView result;
         bool valid = false;
     };

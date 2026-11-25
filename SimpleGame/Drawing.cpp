@@ -79,9 +79,11 @@ void Drawing::DrawEllipse(float x, float y, float radiusX, float radiusY, ColorR
 Vector2 Drawing::WorldToScreen(float x, float y, float height)
 {
     auto &world = Game::Get().GetState();
-    return {kCanvasWidth * .5f + (x - y - world.cameraPosition.x + world.cameraPosition.y) * 36,
-            kCanvasHeight * .57f + (x + y - world.cameraPosition.x - world.cameraPosition.y) * 18 - height +
-                (world.surfaceExploration ? world.surfaceCameraHeight * 44 : 0)};
+    const float isoY = WorldCamera::IsoYScale();
+    const float isoZ = WorldCamera::IsoZScale();
+    return {WorldCamera::LogicalWidth() * .5f + (x - y - world.cameraPosition.x + world.cameraPosition.y) * 36,
+            kCanvasHeight * .57f + (x + y - world.cameraPosition.x - world.cameraPosition.y) * isoY - height +
+                (world.surfaceExploration ? world.surfaceCameraHeight * isoZ : 0)};
 }
 void Drawing::DrawTile(float x, float y, float width, float depth, ColorRGBA color)
 {
@@ -357,7 +359,8 @@ void Drawing::DrawModel3D(const models::Model &model, Vector2 screen, models::Po
                                    v.g * (v.palette ? tint[1] : 1) * shade,
                                    v.b * (v.palette ? tint[2] : 1) * shade, v.a * palette.body[3]);
                 const auto &p = positions[j];
-                renderqueue::Vertex(screen.x + (p.x - p.y) * 36, screen.y + (p.x + p.y) * 18 - p.z * 44,
+                renderqueue::Vertex(screen.x + (p.x - p.y) * 36,
+                                    screen.y + (p.x + p.y) * WorldCamera::IsoYScale() - p.z * WorldCamera::IsoZScale(),
                                     depth + (p.x + p.y) * 36 + p.z * (1296.f / 44));
             }
         }
@@ -413,9 +416,10 @@ void Drawing::DrawModel3D(const models::Model &model, Vector2 screen, models::Po
         for (size_t k = 0; k < part.count; ++k)
         {
             const auto &p = v[k];
-            // Orthographic camera: yaw 45 degrees, elevation approximately 30 degrees.
+            // Orthographic camera: yaw 45 degrees, elevation transitions smoothly when airborne.
             // The third coordinate is camera depth, used by the GPU z buffer.
-            renderqueue::Vertex(screen.x + (p.x - p.y) * 36, screen.y + (p.x + p.y) * 18 - p.z * 44,
+            renderqueue::Vertex(screen.x + (p.x - p.y) * 36,
+                                screen.y + (p.x + p.y) * WorldCamera::IsoYScale() - p.z * WorldCamera::IsoZScale(),
                                 depth + (p.x + p.y) * 36 + p.z * (1296.f / 44));
         }
         renderqueue::End();
@@ -686,7 +690,8 @@ void VehicleEffects(const std::array<models::Point, 2> &exhausts,
 {
     auto project = [&](models::Point p) {
         p = rotation.Apply({p.x * scale, p.y * scale, p.z * scale});
-        return Vector2{screen.x + (p.x - p.y) * 36, screen.y + (p.x + p.y) * 18 - p.z * 44};
+        return Vector2{screen.x + (p.x - p.y) * 36,
+                       screen.y + (p.x + p.y) * WorldCamera::IsoYScale() - p.z * WorldCamera::IsoZScale()};
     };
     if (GameRenderer::Get().Backend().DeferOverlay([=]() {
             VehicleEffects(exhausts, headlights, screen, scale, rotation, palette, throttle, baseDepth);
@@ -809,7 +814,7 @@ models::Palette OcclusionPalette(const models::Model &model, Vector2 position, f
                                   corner & 2 ? mesh.maximum.y : mesh.minimum.y,
                                   corner & 4 ? mesh.maximum.z : mesh.minimum.z});
         float x = anchor.x + (p.x - p.y) * 36;
-        float y = anchor.y + (p.x + p.y) * 18 - p.z * 44;
+        float y = anchor.y + (p.x + p.y) * WorldCamera::IsoYScale() - p.z * WorldCamera::IsoZScale();
         minX = (std::min)(minX, x);
         maxX = (std::max)(maxX, x);
         minY = (std::min)(minY, y);
@@ -864,18 +869,20 @@ void Drawing::DrawProp(const models::Model &model, Vector2 position, models::Poi
                 (position.x + position.y) * 36, visiblePalette);
 }
 void Drawing::DrawWorldAircraft(Vector2 position, float altitude, models::AircraftType type, bool alternate,
-                                float yaw, float bank, bool destroyed, float wreckOpacity, float damage)
+                                float yaw, float bank, bool destroyed, float wreckOpacity, float damage,
+                                float throttle)
 {
     models::Transform3D transform;
     transform.yaw = yaw;
     transform.roll = bank;
     transform.position.z = altitude;
-    auto pose = models::ModelRig::Pose(Game::Get().GetState().animationTimeSeconds * 10, true);
+    const float clampedThrottle = Game::Clamp(throttle, 0.f, 1.f);
+    auto pose = models::ModelRig::Pose(Game::Get().GetState().animationTimeSeconds * 10, clampedThrottle > .05f);
     const auto &model = models::ModelLibrary::Aircraft(type, alternate);
     const auto palette =
         OcclusionPalette(model, position, altitude, yaw, bank,
                          destroyed ? VehicleWreck::Appearance(wreckOpacity) : models::Palette{});
-    if (!destroyed)
+    if (!destroyed && clampedThrottle > .02f)
     {
         const auto &resource = models::ResourceAssets::Get(model.resourceId);
         std::array<models::Point, 2> exhausts = {resource.sockets[0], resource.sockets[1]};
@@ -892,7 +899,7 @@ void Drawing::DrawWorldAircraft(Vector2 position, float altitude, models::Aircra
             attachment.weights = {1, 0, 0, 0};
             exhausts[side] = models::ResourceAssets::SkinPoint(attachment, matrices);
         }
-        VehicleEffects(exhausts, {}, WorldToScreen(position.x, position.y), 1, transform, palette, .65f,
+        VehicleEffects(exhausts, {}, WorldToScreen(position.x, position.y), 1, transform, palette, clampedThrottle,
                        (position.x + position.y) * 36);
     }
     Drawing::DrawModel3D(model, WorldToScreen(position.x, position.y), {1, 1, 1}, transform,

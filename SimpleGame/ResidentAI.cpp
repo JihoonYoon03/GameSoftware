@@ -633,10 +633,46 @@ void CityResidents::Update(GameState &world, float dt, int activeCity, int *deci
         const auto before = resident.position;
         if (resident.conversationSeconds > 0 && resident.activity != ResidentActivity::Crossing)
         {
-            resident.conversationSeconds = (std::max)(0.f, resident.conversationSeconds - dt);
-            resident.activity = ResidentActivity::Talking;
-            resident.blockedSeconds = 0;
-            continue;
+            const std::string myScene = "resident/" + std::to_string(index);
+            const bool activeChat = world.dialogue.active && !world.dialogue.blocking &&
+                                    world.dialogue.sceneId == myScene;
+            const float distToPlayer = Game::Distance(resident.position, world.playerPosition);
+            if (activeChat && distToPlayer > 5.5f)
+            {
+                world.dialogue.active = false;
+                resident.conversationSeconds = 0.f;
+            }
+            else
+            {
+                if (activeChat)
+                {
+                    resident.conversationSeconds = (std::max)(resident.conversationSeconds, 1.5f);
+                }
+                else
+                {
+                    resident.conversationSeconds = (std::max)(0.f, resident.conversationSeconds - dt);
+                }
+                const float dx = world.playerPosition.x - resident.position.x;
+                const float dy = world.playerPosition.y - resident.position.y;
+                if (dx * dx + dy * dy > 1.e-4f)
+                {
+                    const float targetYaw = std::atan2(dy, dx);
+                    float diff = targetYaw - resident.facing.yaw;
+                    while (diff > kPi)
+                    {
+                        diff -= 2.f * kPi;
+                    }
+                    while (diff < -kPi)
+                    {
+                        diff += 2.f * kPi;
+                    }
+                    resident.facing.yaw += std::clamp(diff, -8.5f * dt, 8.5f * dt);
+                }
+                resident.activity = ResidentActivity::Talking;
+                resident.facing.walking = false;
+                resident.blockedSeconds = 0;
+                continue;
+            }
         }
         resident.waitSeconds = (std::max)(0.f, resident.waitSeconds - dt);
         if (resident.activity == ResidentActivity::Talking)

@@ -566,8 +566,8 @@ struct RenderAssets::Data
     {
         int x, y, width, height;
     };
-    static constexpr int kTextAtlasWidth = 2048;
-    static constexpr int kTextAtlasHeight = 1024;
+    static constexpr int kTextAtlasWidth = 4096;
+    static constexpr int kTextAtlasHeight = 2048;
     GLuint uiAtlas = 0;
     GLuint pbrBaseArray = 0, pbrNormalArray = 0, pbrOrmArray = 0;
     GLuint pbrDetailBaseArray = 0, pbrDetailNormalArray = 0, pbrDetailOrmArray = 0;
@@ -581,6 +581,7 @@ struct RenderAssets::Data
     GLuint atlas = 0;
     GLuint textAtlas = 0;
     int textAtlasX = 2, textAtlasY = 2, textShelfHeight = 0;
+    float textRasterScale = 1.f;
     HDC textDc = nullptr;
     std::unordered_map<int, HFONT> textFonts;
     std::unordered_map<TextKey, TextEntry, TextKeyHash> texts;
@@ -1138,6 +1139,27 @@ std::vector<std::string> RenderAssets::WrapUtf8(const std::string &text, float w
     }
     return result;
 }
+void RenderAssets::SetTextRasterScale(float scale)
+{
+    const float clamped = (std::max)(1.f, (std::min)(3.f, std::round(scale * 2.f) * .5f));
+    if (std::fabs(clamped - m_data->textRasterScale) < .01f)
+    {
+        return;
+    }
+    renderqueue::Flush();
+    for (const auto &entry : m_data->texts)
+    {
+        if (!entry.second.inAtlas && entry.second.texture)
+        {
+            glDeleteTextures(1, &entry.second.texture);
+        }
+    }
+    m_data->texts.clear();
+    m_data->textAtlasX = 2;
+    m_data->textAtlasY = 2;
+    m_data->textShelfHeight = 0;
+    m_data->textRasterScale = clamped;
+}
 void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf8, int fontSize,
                                 bool outlined)
 {
@@ -1145,6 +1167,8 @@ void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf
     {
         return;
     }
+    const float rasterScale = m_data->textRasterScale;
+    const int pixelFontSize = (std::max)(8, int(std::lround(fontSize * rasterScale)));
     const Data::TextKey key{fontSize, outlined, utf8};
     auto found = m_data->texts.find(key);
     if (found == m_data->texts.end())
@@ -1168,10 +1192,10 @@ void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf
         {
             return;
         }
-        HFONT &font = m_data->textFonts[fontSize];
+        HFONT &font = m_data->textFonts[pixelFontSize];
         if (!font)
         {
-            font = CreateFontW(-fontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+            font = CreateFontW(-pixelFontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
                                OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH,
                                L"Malgun Gothic");
             if (!font)
@@ -1182,7 +1206,8 @@ void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf
         HGDIOBJ previousFont = SelectObject(dc, font);
         SIZE extent = {};
         GetTextExtentPoint32W(dc, text.data(), count, &extent);
-        int padding = outlined ? 3 : 1;
+        const int outlineRadius = (std::max)(2, int(std::lround(2.f * rasterScale)));
+        const int padding = outlined ? (outlineRadius + 1) : (std::max)(1, int(std::lround(rasterScale)));
         int width = (std::max)(1, int(extent.cx) + padding * 2 + 2),
             height = (std::max)(1, int(extent.cy) + padding * 2 + 2);
         BITMAPINFO info = {};
@@ -1214,17 +1239,18 @@ void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf
         }
         if (outlined)
         {
+            const int r2 = outlineRadius * outlineRadius + 1;
             auto mask = pixels;
             for (int yy = 0; yy < height; ++yy)
             {
                 for (int xx = 0; xx < width; ++xx)
                 {
                     int alpha = 0;
-                    for (int oy = -2; oy <= 2; ++oy)
+                    for (int oy = -outlineRadius; oy <= outlineRadius; ++oy)
                     {
-                        for (int ox = -2; ox <= 2; ++ox)
+                        for (int ox = -outlineRadius; ox <= outlineRadius; ++ox)
                         {
-                            if (ox * ox + oy * oy <= 5 && xx + ox >= 0 && xx + ox < width && yy + oy >= 0 &&
+                            if (ox * ox + oy * oy <= r2 && xx + ox >= 0 && xx + ox < width && yy + oy >= 0 &&
                                 yy + oy < height)
                             {
                                 alpha = (std::max)(alpha, int(mask[((yy + oy) * width + xx + ox) * 4 + 3]));
@@ -1334,8 +1360,9 @@ void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf
     }
     found->second.lastUse = ++m_data->clock;
     const auto &entry = found->second;
-    Quad(entry.texture, x - (outlined ? 2 : 0), baselineY - fontSize - (outlined ? 2 : 0),
-         (float)entry.width, (float)entry.height, entry.u0, entry.v0, entry.u1, entry.v1);
+    const float invScale = 1.f / rasterScale;
+    Quad(entry.texture, x - (outlined ? 2.f : 0.f), baselineY - fontSize - (outlined ? 2.f : 0.f),
+         float(entry.width) * invScale, float(entry.height) * invScale, entry.u0, entry.v0, entry.u1, entry.v1);
 }
 
 size_t RenderAssets::UiSpriteCount() const
@@ -1387,7 +1414,7 @@ const PbrTextureBudget &RenderAssets::PbrBudget() const
 {
     return m_data->pbrBudget;
 }
-bool RenderAssets::DrawBackdropLayer(const std::string &name, bool cartoon, int renderWidth)
+bool RenderAssets::DrawBackdropLayer(const std::string &name, bool cartoon, int renderWidth, float logicalWidth)
 {
     const std::string variant = name == "distant_skyline" && cartoon ? "_cartoon" : "smooth";
     // Use the supplied 2x layer only when the world render target can benefit from it.
@@ -1445,7 +1472,7 @@ bool RenderAssets::DrawBackdropLayer(const std::string &name, bool cartoon, int 
     }
     renderqueue::Depth(false);
     renderqueue::Color(1, 1, 1, 1);
-    Quad(found->second, 0, 0, 1280, 800);
+    Quad(found->second, 0, 0, logicalWidth > 0.f ? logicalWidth : 1280.f, 800.f);
     return true;
 }
 bool RenderAssets::DrawUiSprite(const std::string &name, float x, float y, float width, float height,

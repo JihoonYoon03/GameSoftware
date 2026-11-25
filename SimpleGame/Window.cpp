@@ -19,6 +19,9 @@ GLFWwindow *window = nullptr;
 const auto clockOrigin = std::chrono::steady_clock::now();
 std::array<unsigned char, GLFW_KEY_LAST + 1> heldKeys{};
 double scrollRemainder = 0;
+bool isFullscreen = false;
+int savedWindowX = 80, savedWindowY = 60, savedWindowW = 1280, savedWindowH = 800;
+bool hasSavedWindowPos = false;
 
 std::pair<int, int> Cursor()
 {
@@ -37,6 +40,13 @@ void Key(GLFWwindow *, int key, int, int action, int modifiers)
         return;
     }
     const auto cursor = Cursor();
+    if (action == GLFW_PRESS && key == GLFW_KEY_ENTER && (modifiers & GLFW_MOD_ALT) != 0)
+    {
+        auto &prefs = tutorial::Game::Get().GetState().displayPreferences;
+        prefs.fullscreen = !prefs.fullscreen;
+        tutorial::Game::Get().ApplyDisplayPreferences(true);
+        return;
+    }
     if (action == GLFW_RELEASE)
     {
         // Use the character from key-down, even if Shift was released first.
@@ -307,6 +317,71 @@ void SetCursorHidden(bool hidden)
             glfwSetInputMode(window, GLFW_CURSOR, mode);
         }
     }
+}
+bool ApplyDisplayMode(int width, int height, bool fullscreen)
+{
+    width = (std::max)(640, (std::min)(width, 3840));
+    height = (std::max)(400, (std::min)(height, 2400));
+    isFullscreen = fullscreen;
+    if (!window || !glfwGetWindowAttrib(window, GLFW_VISIBLE))
+    {
+        tutorial::Game::Get().Resize(width, height);
+        return true;
+    }
+    GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode *mode = monitor ? glfwGetVideoMode(monitor) : nullptr;
+    if (fullscreen && monitor && mode)
+    {
+        if (!glfwGetWindowMonitor(window))
+        {
+            glfwGetWindowPos(window, &savedWindowX, &savedWindowY);
+            glfwGetWindowSize(window, &savedWindowW, &savedWindowH);
+            hasSavedWindowPos = true;
+        }
+        const int fsW = (std::min)(width, mode->width);
+        const int fsH = (std::min)(height, mode->height);
+        glfwSetWindowMonitor(window, monitor, 0, 0, fsW, fsH, mode->refreshRate);
+    }
+    else
+    {
+        int x = savedWindowX, y = savedWindowY;
+        if (mode)
+        {
+            const int winW = (std::min)(width, mode->width);
+            const int winH = (std::min)(height, mode->height);
+            if (!hasSavedWindowPos || x < 0 || y < 20 || x + winW > mode->width + 40)
+            {
+                x = (std::max)(0, (mode->width - winW) / 2);
+                y = (std::max)(32, (mode->height - winH) / 2);
+            }
+            glfwSetWindowMonitor(window, nullptr, x, y, winW, winH, 0);
+        }
+        else
+        {
+            glfwSetWindowMonitor(window, nullptr, x, y, width, height, 0);
+        }
+        savedWindowW = width;
+        savedWindowH = height;
+    }
+    int fbW = 0, fbH = 0;
+    glfwGetFramebufferSize(window, &fbW, &fbH);
+    if (fbW > 0 && fbH > 0)
+    {
+        tutorial::GameCallbacks::Resize(fbW, fbH);
+    }
+    else
+    {
+        tutorial::GameCallbacks::Resize(width, height);
+    }
+    return true;
+}
+bool IsFullscreen()
+{
+    if (window && glfwGetWindowAttrib(window, GLFW_VISIBLE))
+    {
+        return glfwGetWindowMonitor(window) != nullptr;
+    }
+    return isFullscreen;
 }
 int ElapsedMilliseconds()
 {

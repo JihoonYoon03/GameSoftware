@@ -36,7 +36,7 @@ class WorldView
     {
         renderqueue::Flush();
         const auto first = WorldCamera::FromViewport({0, 0}),
-                   last = WorldCamera::FromViewport({float(kCanvasWidth), float(kCanvasHeight)});
+                   last = WorldCamera::FromViewport({WorldCamera::LogicalWidth(), float(kCanvasHeight)});
         glMatrixMode(GL_PROJECTION);
         glPushMatrix();
         glLoadIdentity();
@@ -300,8 +300,6 @@ void InteriorScene::Draw()
 // ============================================================================
 void FacilityInteriorScene::Draw()
 {
-    WorldView view;
-    auto &scene = *this;
     const auto &w = Game::Get().GetState();
     const auto kind = w.facilityInterior.kind;
     const ColorRGBA floorCol = kind == UrbanFacilityKind::Market    ? ColorRGBA(.24f, .31f, .29f)
@@ -316,18 +314,113 @@ void FacilityInteriorScene::Draw()
                                 : kind == UrbanFacilityKind::Clinic  ? ColorRGBA(.82f, .92f, .95f)
                                 : kind == UrbanFacilityKind::Workshop ? ColorRGBA(.78f, .52f, .24f)
                                                                      : ColorRGBA(.28f, .44f, .72f);
-    const char *primaryLabel = kind == UrbanFacilityKind::Market    ? "보급 카운터 · 구매"
-                               : kind == UrbanFacilityKind::Clinic  ? "응급 치료 · 회복"
-                               : kind == UrbanFacilityKind::Workshop ? "차량 · 비행체 정비"
-                                                                    : "행정 · 수배 정산";
-    const char *secondaryLabel = kind == UrbanFacilityKind::Market    ? "고철 매입 단말"
-                                 : kind == UrbanFacilityKind::Clinic  ? "구급 보급함"
-                                 : kind == UrbanFacilityKind::Workshop ? "개조 작업대 · 제작"
-                                                                      : "지역 의뢰 게시판";
     const char *clerkRole = kind == UrbanFacilityKind::Market    ? "보급 상인"
                             : kind == UrbanFacilityKind::Clinic  ? "의무관"
                             : kind == UrbanFacilityKind::Workshop ? "정비사"
                                                                  : "행정관";
+    const models::CharacterType clerkType = kind == UrbanFacilityKind::Clinic    ? models::CharacterType::Medic
+                                            : kind == UrbanFacilityKind::Workshop ? models::CharacterType::Engineer
+                                            : kind == UrbanFacilityKind::CivicHall ? models::CharacterType::Researcher
+                                                                                   : models::CharacterType::Civilian;
+    const models::Gender clerkGender =
+        (kind == UrbanFacilityKind::Clinic || kind == UrbanFacilityKind::Market) ? models::Gender::Female
+                                                                                 : models::Gender::Male;
+    const models::HairStyle clerkHair = kind == UrbanFacilityKind::Clinic    ? models::HairStyle::Ponytail
+                                        : kind == UrbanFacilityKind::Workshop ? models::HairStyle::Buzz
+                                        : kind == UrbanFacilityKind::CivicHall ? models::HairStyle::SidePart
+                                                                               : models::HairStyle::Bob;
+
+    // First-person player-perspective view when conversing with the facility NPC across the counter.
+    if (w.ui.screen == UiScreen::FacilityShop)
+    {
+        auto &backend = GameRenderer::Get().Backend();
+        const float logicalW = WorldCamera::LogicalWidth();
+        const float cxOff = WorldCamera::CenterOffsetX();
+        const float t = w.animationTimeSeconds;
+        const float react = Game::Clamp(w.facilityReactionSeconds / 1.4f, 0.f, 1.f);
+        const float reactNod = std::sin(react * kPi);
+        const float lightPulse = 0.94f + 0.06f * std::sin(t * 1.9f);
+
+        rendering::SceneLighting light;
+        light.keyDirection = {-.28f, .68f, .62f};
+        light.keyColor = {1.04f * lightPulse, .97f * lightPulse, .90f * lightPulse};
+        light.keyIntensity = 1.08f;
+        light.skyColor = {.50f + accentCol.r * .25f, .58f + accentCol.g * .22f, .68f + accentCol.b * .22f};
+        light.groundColor = {.38f, .34f, .32f};
+        light.ambientIntensity = .64f;
+        light.rimColor = {accentCol.r, accentCol.g, accentCol.b};
+        light.rimIntensity = .58f;
+        light.exposure = 1.24f;
+        light.shadowStrength = .20f;
+        backend.SetLighting(light);
+
+        // 1st-person eye-level interior perspective backdrop filling the entire active aspect ratio.
+        Drawing::DrawRectangle(0, 0, logicalW, kCanvasHeight,
+                               {0.05f + accentCol.r * 0.04f, 0.07f + accentCol.g * 0.05f, 0.10f + accentCol.b * 0.06f,
+                                1.f});
+        Drawing::DrawRectangle(0, 0, logicalW, 114, {0.03f, 0.05f, 0.07f, 1.f});
+        Drawing::DrawRectangle(cxOff + 64.f, 88, 468, 7,
+                               {accentCol.r * .75f, accentCol.g * .82f, accentCol.b * .90f, 0.85f * lightPulse});
+        Drawing::DrawGlow({cxOff + 298.f, 124}, 170, {accentCol.r, accentCol.g, accentCol.b, 0.25f * lightPulse});
+        for (int i = 0; i < 4; ++i)
+        {
+            const float px = cxOff + 32.f + float(i) * 134.f;
+            Drawing::DrawRectangle(px, 138, 118, 454, {0.08f, 0.11f, 0.15f, 0.78f});
+            Drawing::DrawLine({px, 138}, {px + 118, 138},
+                              {accentCol.r * .45f, accentCol.g * .52f, accentCol.b * .60f, 0.55f}, 1.5f);
+            for (int shelf = 0; shelf < 3; ++shelf)
+            {
+                const float sy = 216.f + float(shelf) * 98.f;
+                Drawing::DrawRectangle(px + 10, sy, 98, 6, {0.14f, 0.19f, 0.24f, 0.85f});
+                Drawing::DrawRectangle(
+                    px + 16, sy - 26, 28, 26,
+                    {0.18f + accentCol.r * 0.12f, 0.24f + accentCol.g * 0.12f, 0.28f + accentCol.b * 0.12f, 0.75f});
+                Drawing::DrawRectangle(px + 54, sy - 18, 34, 18, {0.12f, 0.17f, 0.22f, 0.75f});
+            }
+        }
+        Drawing::DrawGlow({cxOff + 295.f, 375}, 260, {accentCol.r * 0.9f, accentCol.g * 0.9f, accentCol.b, 0.26f});
+        renderqueue::Flush();
+
+        // Render live-animated 3D NPC upper-body close-up on the LEFT side in eye-level 1st-person projection.
+        backend.SetProjectionBasis(18.f, 44.f, true);
+        backend.BeginModels();
+        models::CharacterPose talkPose =
+            models::ModelRig::Pose(t * 1.35f, false, false, 0, false, clerkGender);
+        talkPose.motionForwardLean = 0.025f * std::sin(t * 1.4f) + 0.085f * reactNod;
+        talkPose.motionSideLean = 0.045f * std::sin(t * 0.85f);
+        models::Palette npcPal;
+        npcPal.body = {clerkCoat.r, clerkCoat.g, clerkCoat.b, 1.f};
+        npcPal.accent = {accentCol.r, accentCol.g, accentCol.b, 1.f};
+        npcPal.emission = {accentCol.r, accentCol.g, accentCol.b, 1.f};
+        const float portraitScale = models::WorldScale::characterScale * 15.8f;
+        models::Transform3D rot;
+        // Character local +X is forward; live breathing sway + attentive turn + greeting/trade nod.
+        rot.yaw = kPi * 0.5f - 0.14f + std::sin(t * 1.15f) * 0.09f + std::sin(t * 0.47f) * 0.05f;
+        rot.roll = std::sin(t * 0.85f) * 0.032f;
+        rot.pitch = -0.075f * reactNod - 0.015f * std::sin(t * 2.1f);
+        const float breatheY = std::sin(t * 2.1f) * 3.5f + reactNod * 6.0f;
+        const float swayX = std::sin(t * 0.85f) * 5.0f;
+        const Vector2 npcAnchor{cxOff + 295.f + swayX, 920.f + breatheY};
+        int sharedSlot = -1;
+        Drawing::DrawModel3D(models::ModelLibrary::Character(clerkType, clerkGender), npcAnchor,
+                             {portraitScale, portraitScale, portraitScale}, rot, 0.f, npcPal, &talkPose, 0.f, 0.f,
+                             &sharedSlot);
+        Drawing::DrawHair(npcAnchor, {portraitScale, portraitScale, portraitScale}, rot, 0.f, talkPose, clerkType,
+                          clerkGender, clerkHair, &sharedSlot);
+        backend.EndModels();
+        backend.SetProjectionBasis(WorldCamera::IsoYScale(), WorldCamera::IsoZScale(), false);
+
+        // Foreground service counter framing the NPC at upper-body / waist height across full viewport width.
+        Drawing::DrawRectangle(0, 628, logicalW, 172, {0.06f, 0.08f, 0.11f, 0.97f});
+        Drawing::DrawRectangle(0, 624, logicalW, 6,
+                               {accentCol.r * .58f, accentCol.g * .68f, accentCol.b * .74f, 0.85f});
+        Drawing::DrawLine({0, 631}, {logicalW, 631}, {1.f, 1.f, 1.f, 0.12f}, 1.5f);
+        renderqueue::Flush();
+        return;
+    }
+
+    WorldView view;
+    auto &scene = *this;
     {
         rendering::SceneLighting light;
         light.keyDirection = {-.22f, -.30f, .92f};
@@ -407,15 +500,12 @@ void FacilityInteriorScene::Draw()
                 Drawing::DrawProp(models::ModelLibrary::Get().box, {-2.75f, 1.35f}, {.85f, .85f, .85f});
             }
         });
-        const models::CharacterType clerkType = kind == UrbanFacilityKind::Clinic    ? models::CharacterType::Medic
-                                                : kind == UrbanFacilityKind::Workshop ? models::CharacterType::Engineer
-                                                : kind == UrbanFacilityKind::CivicHall ? models::CharacterType::Researcher
-                                                                                       : models::CharacterType::Civilian;
         scene.PlaceWorldActor("fclerk", -.2f, -2.05f, WorldBounds(-.2f, -2.05f, 0, 0, 90), 1, 2.5f,
-                              [this, clerkCoat, clerkType, clerkRole, accentCol]() {
-                                  Drawing::DrawPerson({-.2f, -2.05f}, clerkCoat, false, clerkType, false, kPi * .5f);
-                                  Vector2 pt = Drawing::WorldToScreen(-.2f, -2.05f, 82);
-                                  Drawing::DrawLabel(pt.x - 28, pt.y, clerkRole, accentCol);
+                              [this, clerkCoat, clerkType, clerkGender, clerkHair, clerkRole, accentCol]() {
+                                  Drawing::DrawPerson({-.2f, -2.05f}, clerkCoat, false, clerkType, false, kPi * .5f,
+                                                      clerkGender, clerkHair);
+                                  Vector2 pt = Drawing::WorldToScreen(-.2f, -2.05f, 84);
+                                  Drawing::DrawLabel(pt.x - 42, pt.y, std::string(clerkRole) + " · E 대화", accentCol);
                               });
         scene.PlaceWorldActor("fdoor", 2.1f, 1.6f, WorldBounds(2.1f, 1.6f, 1, 1, 0), 1, 5, [this, accentCol]() {
             Drawing::DrawTile(2.1f, 1.6f, 1, 1, ColorRGBA(accentCol.r * .35f, accentCol.g * .45f, accentCol.b * .45f));
@@ -423,16 +513,6 @@ void FacilityInteriorScene::Draw()
         scene.PlaceWorldActor("player", w.playerPosition.x, w.playerPosition.y,
                               WorldBounds(w.playerPosition.x, w.playerPosition.y, 0, 0, 90), 2, 0, [this, &w]() {
                                   Drawing::DrawPerson(w.playerPosition, ColorRGBA(.67f, .8f, .82f), true);
-                              });
-        scene.PlaceWorldActor("fprimary-label", -1.05f, -.65f, WorldBounds(-1.05f, -.65f, 0, 0, 65, 80), 3, 0,
-                              [this, primaryLabel, accentCol]() {
-                                  Vector2 p = Drawing::WorldToScreen(-1.05f, -1.25f, 58);
-                                  Drawing::DrawLabel(p.x - 56, p.y, primaryLabel, accentCol);
-                              });
-        scene.PlaceWorldActor("fsecondary-label", 1.25f, -.65f, WorldBounds(1.25f, -.65f, 0, 0, 65, 80), 3, 0,
-                              [this, secondaryLabel]() {
-                                  Vector2 p = Drawing::WorldToScreen(1.25f, -1.25f, 58);
-                                  Drawing::DrawLabel(p.x - 48, p.y, secondaryLabel, ColorRGBA(.92f, .96f, .98f));
                               });
         scene.PlaceWorldActor("fdoor-label", 2.5f, 1.9f, WorldBounds(2.5f, 1.9f, 0, 0, 0, 80), 3, 0, [this]() {
             Vector2 p = Drawing::WorldToScreen(2.5f, 1.9f);
@@ -2478,7 +2558,7 @@ struct ScreenFrustum
     static ScreenFrustum Current()
     {
         return {WorldCamera::FromViewport({0, 0}),
-                WorldCamera::FromViewport({float(kCanvasWidth), float(kCanvasHeight)})};
+                WorldCamera::FromViewport({WorldCamera::LogicalWidth(), float(kCanvasHeight)})};
     }
     bool Visible(Vector2 screen, float padLeft, float padRight, float padUp, float padDown) const
     {
@@ -2492,7 +2572,7 @@ void DrawSurfaceStructure(const world::SurfaceStructure &structure, const world:
     const auto &origin = session.Origin();
     const auto p = SurfaceProjection(structure.frame.origin, origin, session.Planet().radiusMeters);
     const float px = float(p.x / 2), py = float(p.y / 2);
-    const auto screen = Drawing::WorldToScreen(px, py, float(p.z / 2) * 44);
+    const auto screen = Drawing::WorldToScreen(px, py, float(p.z / 2) * WorldCamera::IsoZScale());
     const float padH = float((structure.sizeMeters.x + structure.sizeMeters.y) * 11. + structure.sizeMeters.z * 10.) + 96.f;
     const float padUp = float(structure.sizeMeters.z * 24. + (structure.sizeMeters.x + structure.sizeMeters.y) * 6.) + 96.f;
     const float padDown =
@@ -2591,7 +2671,8 @@ void DrawPlanetTraffic(const world::SurfaceSession &session)
         const auto local = session.Local(ground);
         const float height = float(local.z / 2);
         const Vector2 position{float(local.x / 2), float(local.y / 2)};
-        const auto scr = Drawing::WorldToScreen(position.x, position.y, (height + float(actor.altitudeMeters / 2)) * 44);
+        const auto scr = Drawing::WorldToScreen(
+            position.x, position.y, (height + float(actor.altitudeMeters / 2)) * WorldCamera::IsoZScale());
         const float pad = actor.airborne ? 320.f : 220.f;
         if (!frustum.Visible(scr, pad, pad, pad, pad + float(actor.altitudeMeters * 22.)))
         {
@@ -2601,7 +2682,7 @@ void DrawPlanetTraffic(const world::SurfaceSession &session)
             float(std::atan2(world::SurfaceGeometry::Dot(actor.heading, session.Origin().forward),
                              world::SurfaceGeometry::Dot(actor.heading, session.Origin().right)));
         renderqueue::PushMatrix();
-        renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
+        renderqueue::Translate(0, -height * WorldCamera::IsoZScale(), height * (1296.f / 44));
         if (actor.airborne)
         {
             Drawing::DrawWorldAircraft(
@@ -2633,8 +2714,9 @@ void DrawPlanetCommunity(const world::SurfaceSession &session)
     }
     const auto frustum = ScreenFrustum::Current();
     const auto &hero = session.Pose().origin;
+    const double communityMaxDist = Game::Get().GetState().aircraft.mounted ? 260. : 120.;
     auto withinDrawRange = [&](const world::SurfacePoint &point) {
-        return world::SurfaceGeometry::Distance(session.Planet().radiusMeters, hero, point) < 120;
+        return world::SurfaceGeometry::Distance(session.Planet().radiusMeters, hero, point) < communityMaxDist;
     };
     static constexpr models::CharacterType types[] = {
         models::CharacterType::Engineer, models::CharacterType::Miner, models::CharacterType::Medic,
@@ -2654,7 +2736,8 @@ void DrawPlanetCommunity(const world::SurfaceSession &session)
             const auto p = session.Local(person.position);
             const Vector2 position{float(p.x / 2), float(p.y / 2)};
             const float height = float(p.z / 2);
-            if (!frustum.Visible(Drawing::WorldToScreen(position.x, position.y, height * 44), 160, 160, 200, 140))
+            if (!frustum.Visible(Drawing::WorldToScreen(position.x, position.y, height * WorldCamera::IsoZScale()), 160,
+                                 160, 200, 140))
             {
                 continue;
             }
@@ -2662,7 +2745,7 @@ void DrawPlanetCommunity(const world::SurfaceSession &session)
                 float(std::atan2(world::SurfaceGeometry::Dot(person.heading, session.Origin().forward),
                                  world::SurfaceGeometry::Dot(person.heading, session.Origin().right)));
             renderqueue::PushMatrix();
-            renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
+            renderqueue::Translate(0, -height * WorldCamera::IsoZScale(), height * (1296.f / 44));
             const ColorRGBA coat = person.hitFlash > 0
                                        ? ColorRGBA(1, .3f, .25f)
                                        : person.hostile
@@ -2684,7 +2767,7 @@ void DrawPlanetCommunity(const world::SurfaceSession &session)
             const Vector2 position{float(p.x / 2), float(p.y / 2)};
             const float height = float(p.z / 2);
             renderqueue::PushMatrix();
-            renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
+            renderqueue::Translate(0, -height * WorldCamera::IsoZScale(), height * (1296.f / 44));
             models::Palette palette;
             palette.emission = {.25f, .85f, .9f, 1};
             Drawing::DrawProp(models::ModelLibrary::Scenery(models::SceneryType::Wayfinding), position,
@@ -2727,7 +2810,8 @@ void DrawPlanetCommunity(const world::SurfaceSession &session)
             const auto p = session.Local(doorPt);
             const Vector2 position{float(p.x / 2), float(p.y / 2)};
             const float height = float(p.z / 2);
-            if (!frustum.Visible(Drawing::WorldToScreen(position.x, position.y, height * 44), 180, 180, 220, 140))
+            if (!frustum.Visible(Drawing::WorldToScreen(position.x, position.y, height * WorldCamera::IsoZScale()), 180,
+                                 180, 220, 140))
             {
                 continue;
             }
@@ -2736,7 +2820,7 @@ void DrawPlanetCommunity(const world::SurfaceSession &session)
                                        : kind == UrbanFacilityKind::Workshop ? ColorRGBA(1.f, .70f, .24f)
                                                                             : ColorRGBA(.62f, .80f, 1.f);
             renderqueue::PushMatrix();
-            renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
+            renderqueue::Translate(0, -height * WorldCamera::IsoZScale(), height * (1296.f / 44));
             Drawing::DrawGlow(Drawing::WorldToScreen(position.x, position.y, 12), 20, badgeCol);
             Drawing::DrawInteractionMarker(position,
                                            dist < 14. ? Game::FacilityKindName(kind) : Game::FacilityShortLabel(kind),
@@ -2770,9 +2854,10 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
                 return std::nullopt;
             }
         }
+        const double cityDrawDist = state.aircraft.mounted ? 260. : 100.;
         auto point = cities->Point(session, city, legacy);
         if (!point || world::SurfaceGeometry::Distance(session.Planet().radiusMeters, *point,
-                                                       session.Pose().origin) > 100)
+                                                       session.Pose().origin) > cityDrawDist)
         {
             return std::nullopt;
         }
@@ -2788,12 +2873,13 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
         }
         Vector2 local{float(point->x / 2), float(point->y / 2)};
         float height = float(point->z / 2);
-        if (!frustum.Visible(Drawing::WorldToScreen(local.x, local.y, height * 44), 160, 160, 200, 140))
+        if (!frustum.Visible(Drawing::WorldToScreen(local.x, local.y, height * WorldCamera::IsoZScale()), 160, 160,
+                             200, 140))
         {
             return;
         }
         renderqueue::PushMatrix();
-        renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
+        renderqueue::Translate(0, -height * WorldCamera::IsoZScale(), height * (1296.f / 44));
         Drawing::DrawPerson(local, coat, false, type, walking, cities->Yaw(session, city, yaw), gender, hair,
                             false, 0, downed, 0, -1, motion);
         if (Game::Distance(local, state.playerPosition) < 2.2f)
@@ -2844,8 +2930,9 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
                 continue;
             }
             const Vector2 carLocal{float(point->x / 2), float(point->y / 2)};
-            if (!frustum.Visible(Drawing::WorldToScreen(carLocal.x, carLocal.y, float(point->z / 2) * 44), 220,
-                                 220, 200, 180))
+            if (!frustum.Visible(
+                    Drawing::WorldToScreen(carLocal.x, carLocal.y, float(point->z / 2) * WorldCamera::IsoZScale()),
+                    220, 220, 200, 180))
             {
                 continue;
             }
@@ -2856,8 +2943,8 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
                 palette = VehicleWreck::Appearance(VehicleWreck::Opacity(car.wreckSeconds, true));
             }
             Drawing::DrawWorldVehicle({float(point->x / 2), float(point->y / 2)},
-                                      float(point->z / 2) * 44 + 3.3f, 1, models::VehicleType(car.id % 4),
-                                      palette, car.speed / 10,
+                                      float(point->z / 2) * WorldCamera::IsoZScale() + 3.3f, 1,
+                                      models::VehicleType(car.id % 4), palette, car.speed / 10,
                                       cities->Yaw(session, city, traffic.RenderYaw(i)), car.health <= 0);
         }
         const auto &net = RoadNetwork::Get();
@@ -2875,7 +2962,7 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
                 continue;
             }
             if (!frustum.Visible(Drawing::WorldToScreen(float(point->x / 2), float(point->y / 2),
-                                                        float(point->z / 2) * 44),
+                                                        float(point->z / 2) * WorldCamera::IsoZScale()),
                                  380, 380, 260, 260))
             {
                 continue;
@@ -2888,7 +2975,7 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
                 }
                 float height = float(point->z / 2);
                 renderqueue::PushMatrix();
-                renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
+                renderqueue::Translate(0, -height * WorldCamera::IsoZScale(), height * (1296.f / 44));
                 if (glow)
                 {
                     Drawing::DrawHologramStrip(*first, *last, width, color, .085f);
@@ -2952,7 +3039,8 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
                     {
                         if (auto at = cities->Local(session, city, stop))
                         {
-                            auto label = Drawing::WorldToScreen(at->x, at->y, float(point->z / 2) * 44 + 24);
+                            auto label = Drawing::WorldToScreen(at->x, at->y,
+                                                                float(point->z / 2) * WorldCamera::IsoZScale() + 24);
                             Drawing::DrawLabel(label.x - 16, label.y, "좌회전", {.2f, 1, .75f});
                         }
                     }
@@ -2967,13 +3055,14 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
             return;
         }
         const float height = float(point->z / 2);
-        if (!frustum.Visible(Drawing::WorldToScreen(float(point->x / 2), float(point->y / 2), height * 44),
-                             260, 260, 220, 220))
+        if (!frustum.Visible(
+                Drawing::WorldToScreen(float(point->x / 2), float(point->y / 2), height * WorldCamera::IsoZScale()),
+                260, 260, 220, 220))
         {
             return;
         }
         renderqueue::PushMatrix();
-        renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
+        renderqueue::Translate(0, -height * WorldCamera::IsoZScale(), height * (1296.f / 44));
         Drawing::DrawProp(models::ModelLibrary::Transit(module.asset),
                           {float(point->x / 2), float(point->y / 2)}, {1, 1, 1}, {},
                           cities->Yaw(session, city, module.yaw), module.altitude);
@@ -3020,7 +3109,7 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
         {
             const float height = float(point->z / 2);
             renderqueue::PushMatrix();
-            renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
+            renderqueue::Translate(0, -height * WorldCamera::IsoZScale(), height * (1296.f / 44));
             DrawInfrastructureGuide(
                 {float(point->x / 2), float(point->y / 2)},
                 {float(equipment->x / 2), float(equipment->y / 2)},
@@ -3051,7 +3140,7 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
         const Vector2 local{float(p.x / 2), float(p.y / 2)};
         const float height = float(p.z / 2);
         renderqueue::PushMatrix();
-        renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
+        renderqueue::Translate(0, -height * WorldCamera::IsoZScale(), height * (1296.f / 44));
         if (facility.hasInterior)
         {
             if (const auto pad = place(0, CityFacilities::StandingPoint(facility)))
@@ -3094,7 +3183,7 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
             continue;
         }
         renderqueue::PushMatrix();
-        renderqueue::Translate(0, -float(point->z / 2) * 44, float(point->z / 2) * (1296.f / 44));
+        renderqueue::Translate(0, -float(point->z / 2) * WorldCamera::IsoZScale(), float(point->z / 2) * (1296.f / 44));
         Drawing::DrawInteractionMarker({float(point->x / 2), float(point->y / 2)}, marker.label,
                                        {.4f, .9f, .85f});
         renderqueue::PopMatrix();
@@ -3122,7 +3211,7 @@ void DrawPlanetParty(const world::SurfaceSession &session)
         float yaw = float(std::atan2(world::SurfaceGeometry::Dot(m.heading, session.Origin().forward),
                                      world::SurfaceGeometry::Dot(m.heading, session.Origin().right)));
         renderqueue::PushMatrix();
-        renderqueue::Translate(0, -float(local.z / 2) * 44, float(local.z / 2) * (1296.f / 44));
+        renderqueue::Translate(0, -float(local.z / 2) * WorldCamera::IsoZScale(), float(local.z / 2) * (1296.f / 44));
         Drawing::DrawPerson(position, i == 0 ? ColorRGBA(.9f, .58f, .3f) : ColorRGBA(.38f, .53f, .66f), false,
                             i == 0 ? models::CharacterType::Engineer : models::CharacterType::Guard,
                             m.walking, yaw, i == 0 ? models::Gender::Female : models::Gender::Male,
@@ -3222,7 +3311,7 @@ void DrawSurfaceFrontier(const world::SurfaceSession &session)
         }
         float z = height(npc.position);
         renderqueue::PushMatrix();
-        renderqueue::Translate(0, -z * 44, z * (1296.f / 44));
+        renderqueue::Translate(0, -z * WorldCamera::IsoZScale(), z * (1296.f / 44));
         Drawing::DrawPerson(*point, color, false, role, npc.facing.walking,
                             surface.Yaw(npc.combat.engaged ? npc.combat.aimYaw : npc.facing.yaw), gender,
                             hair, armed && npc.combat.engaged && npc.combat.health > 0,
@@ -3293,7 +3382,7 @@ void DrawSurfaceFrontier(const world::SurfaceSession &session)
         {
             float z = height(clue.position);
             renderqueue::PushMatrix();
-            renderqueue::Translate(0, -z * 44, z * (1296.f / 44));
+            renderqueue::Translate(0, -z * WorldCamera::IsoZScale(), z * (1296.f / 44));
             Drawing::DrawInteractionMarker(*p, clue.label,
                                            ChapterOneLevel::IsOptionalConversation(clue.action)
                                                ? ColorRGBA(.4f, .85f, .8f)
@@ -3490,7 +3579,7 @@ void PlanetScene::Draw()
     const auto &w = Game::Get().GetState();
     const auto playerScreen =
         Drawing::WorldToScreen(w.playerPosition.x, w.playerPosition.y,
-                               float(session->Local(session->Pose().origin).z / 2) * 44);
+                               float(session->Local(session->Pose().origin).z / 2) * WorldCamera::IsoZScale());
     auto &backend = GameRenderer::Get().Backend();
     backend.BeginModels();
     DrawSurfaceModel(*d.fallback, d.fallbackFrame, *session, -.08f);
@@ -3502,9 +3591,10 @@ void PlanetScene::Draw()
             continue;
         }
         const auto cp = SurfaceProjection(chunk->frame.origin, session->Origin(), session->Planet().radiusMeters);
-        const auto cscr = Drawing::WorldToScreen(float(cp.x / 2), float(cp.y / 2), float(cp.z / 2) * 44);
-        const float cpadH = float(chunk->radiusMeters) * 28.f + 200.f;
-        const float cpadV = float(chunk->radiusMeters) * 18.f + 360.f;
+        const auto cscr =
+            Drawing::WorldToScreen(float(cp.x / 2), float(cp.y / 2), float(cp.z / 2) * WorldCamera::IsoZScale());
+        const float cpadH = float(chunk->radiusMeters) * 28.f + 260.f;
+        const float cpadV = float(chunk->radiusMeters) * WorldCamera::IsoYScale() + 480.f;
         if (frustum.Visible(cscr, cpadH, cpadH, cpadV, cpadV))
         {
             DrawSurfaceModel(*it->second.model, it->second.chunk->frame, *session);
@@ -3527,7 +3617,7 @@ void PlanetScene::Draw()
                 }
                 const auto p = SurfaceProjection(inter.center, session->Origin(), planetRadius);
                 const float px = float(p.x / 2.), py = float(p.y / 2.), pz = float(p.z / 2.);
-                const auto scr = Drawing::WorldToScreen(px, py, pz * 44.f);
+                const auto scr = Drawing::WorldToScreen(px, py, pz * WorldCamera::IsoZScale());
                 if (!frustum.Visible(scr, 260, 260, 220, 220))
                 {
                     continue;
@@ -3543,7 +3633,7 @@ void PlanetScene::Draw()
                                                           : ColorRGBA(.96f, .22f, .28f);
                     };
                     renderqueue::PushMatrix();
-                    renderqueue::Translate(0, -pz * 44.f, pz * (1296.f / 44.f));
+                    renderqueue::Translate(0, -pz * WorldCamera::IsoZScale(), pz * (1296.f / 44.f));
                     for (int arm = 0; arm < 4; ++arm)
                     {
                         const bool isMain = (arm % 2 == 0);
@@ -3580,7 +3670,7 @@ void PlanetScene::Draw()
                     if (distToPlayer < inter.radiusMeters + 18.)
                     {
                         renderqueue::PushMatrix();
-                        renderqueue::Translate(0, -pz * 44.f, pz * (1296.f / 44.f));
+                        renderqueue::Translate(0, -pz * WorldCamera::IsoZScale(), pz * (1296.f / 44.f));
                         const float ang = float(inter.mainAxisYaw);
                         const Vector2 d{std::cos(ang), std::sin(ang)};
                         const Vector2 n{-d.y, d.x};
@@ -3680,7 +3770,7 @@ void PlanetScene::Draw()
         Vector2 position{float(local.x / 2), float(local.y / 2)};
         bool registered = w.relayNetwork.Registered(relay.id);
         renderqueue::PushMatrix();
-        renderqueue::Translate(0, -float(local.z / 2) * 44, float(local.z / 2) * (1296.f / 44));
+        renderqueue::Translate(0, -float(local.z / 2) * WorldCamera::IsoZScale(), float(local.z / 2) * (1296.f / 44));
         // Shared console and a billboard ring are a test representation, not a new stretched building.
         Drawing::DrawProp(models::ModelLibrary::Get().console, {position.x + 1.5f, position.y},
                           {.6f, .6f, .6f});
@@ -3704,7 +3794,7 @@ void PlanetScene::Draw()
         {
             auto local = session->Local(mineEntrance);
             renderqueue::PushMatrix();
-            renderqueue::Translate(0, -float(local.z / 2) * 44, float(local.z / 2) * (1296.f / 44));
+            renderqueue::Translate(0, -float(local.z / 2) * WorldCamera::IsoZScale(), float(local.z / 2) * (1296.f / 44));
             Drawing::DrawInteractionMarker({float(local.x / 2), float(local.y / 2)},
                                            "오르딘 광산 / 하차 후 E 입장", {.4f, .9f, 1});
             renderqueue::PopMatrix();
@@ -3723,13 +3813,17 @@ void PlanetScene::Draw()
         }
         const float height = float(local.z / 2);
         renderqueue::PushMatrix();
-        renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
+        renderqueue::Translate(0, -height * WorldCamera::IsoZScale(), height * (1296.f / 44));
         Drawing::DrawWorldVehicle(
             p, 0, 1, models::VehicleType::Coupe, palette, std::abs(w.car.speed) / 11,
             w.car.Yaw(session->Origin()), w.car.health <= 0, w.car.mounted,
             1.f - float((std::max)(0, w.car.health)) / float(GroundVehicle::MaxHealth));
         renderqueue::PopMatrix();
     }
+    float aircraftAglMeters = 0.f;
+    float aircraftYaw = 0.f;
+    float aircraftBank = 0.f;
+    Vector2 aircraftScreenCenter{WorldCamera::LogicalWidth() * .5f, kCanvasHeight * .57f};
     if (w.aircraft.position &&
         (w.aircraft.mounted ||
          world::SurfaceGeometry::Distance(session->Planet().radiusMeters, *w.aircraft.position,
@@ -3740,18 +3834,35 @@ void PlanetScene::Draw()
             (std::max)(world::PlanetTerrain::SeaLevelMeters, session->Stream().Contact(ground).heightMeters);
         const auto local = session->Local(ground);
         const float height = float(local.z / 2);
+        const float aglMeters = float((std::max)(0., w.aircraft.position->altitudeMeters - ground.altitudeMeters));
+        const float aglWorld = aglMeters * .5f;
+        const float ax = float(local.x / 2), ay = float(local.y / 2);
+        aircraftYaw = w.aircraft.Yaw(session->Origin());
+        aircraftBank = w.aircraft.bank;
+        const float horizSpeed = float(std::hypot(w.aircraft.velocity.x, w.aircraft.velocity.y));
+        const float vertSpeed = std::fabs(float(w.aircraft.velocity.z));
+        const float aircraftThrottle =
+            (!w.aircraft.mounted || (w.aircraft.grounded && horizSpeed < 1.f && vertSpeed < 0.5f))
+                ? 0.f
+                : Game::Clamp(horizSpeed / 60.f + vertSpeed / 22.f, 0.f, 1.f);
+        if (w.aircraft.mounted)
+        {
+            aircraftAglMeters = aglMeters;
+            aircraftScreenCenter = Drawing::WorldToScreen(ax, ay, (height + aglWorld) * WorldCamera::IsoZScale());
+            const float blurAmount = Game::Clamp((aglMeters - 8.f) / 130.f, 0.f, 1.f);
+            const float focusDepth = (ax + ay) * 36.f + (height + aglWorld * .55f) * (1296.f / 44.f);
+            const float focusDepth01 = 0.5f - focusDepth / 131072.f;
+            backend.SetAltitudeEffects(blurAmount, focusDepth01);
+        }
         renderqueue::PushMatrix();
-        renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
+        renderqueue::Translate(0, -height * WorldCamera::IsoZScale(), height * (1296.f / 44));
         Drawing::DrawWorldAircraft(
-            {float(local.x / 2), float(local.y / 2)},
-            float((w.aircraft.position->altitudeMeters - ground.altitudeMeters) / 2),
-            models::AircraftType::Courier, false, w.aircraft.Yaw(session->Origin()), w.aircraft.bank,
+            {ax, ay}, aglWorld, models::AircraftType::Courier, false, aircraftYaw, aircraftBank,
             w.aircraft.health <= 0, VehicleWreck::Opacity(w.aircraft.wreckSeconds, w.aircraft.grounded),
-            1.f - float((std::max)(0, w.aircraft.health)) / float(PlayerAircraft::MaxHealth));
+            1.f - float((std::max)(0, w.aircraft.health)) / float(PlayerAircraft::MaxHealth), aircraftThrottle);
         if (!w.Mounted() && w.aircraft.health > 0 && w.aircraft.grounded)
         {
-            Drawing::DrawInteractionMarker({float(local.x / 2), float(local.y / 2)}, "공용 비행체 / E 탑승",
-                                           {.4f, .9f, 1});
+            Drawing::DrawInteractionMarker({ax, ay}, "공용 비행체 / E 탑승", {.4f, .9f, 1});
         }
         renderqueue::PopMatrix();
     }
@@ -3763,11 +3874,95 @@ void PlanetScene::Draw()
     {
         float elevation = float(session->Local(session->Pose().origin).z / 2);
         renderqueue::PushMatrix();
-        renderqueue::Translate(0, -elevation * 44, elevation * (1296.f / 44));
+        renderqueue::Translate(0, -elevation * WorldCamera::IsoZScale(), elevation * (1296.f / 44));
         Drawing::DrawPerson(w.playerPosition, {.55f, .68f, .72f}, true);
         renderqueue::PopMatrix();
     }
     backend.EndModels();
+
+    // Sparse, non-repeating high-altitude wind gusts & velocity-aligned wingtip trails (never shown when stopped).
+    if (w.aircraft.mounted && w.aircraft.position && !w.aircraft.grounded)
+    {
+        const float speed = float(std::hypot(w.aircraft.velocity.x, w.aircraft.velocity.y));
+        const float altFactor = Game::Clamp((aircraftAglMeters - 12.f) / 70.f, 0.f, 1.f);
+        const float speedFactor = Game::Clamp((speed - 8.f) / 100.f, 0.f, 1.f);
+        const float windStrength = Game::Clamp(altFactor * .62f + speedFactor * .58f, 0.f, 1.f);
+        if (windStrength > .04f)
+        {
+            const float isoY = WorldCamera::IsoYScale();
+            const float isoZ = WorldCamera::IsoZScale();
+            Vector2 flow{-0.82f, -0.57f};
+            if (speed > 4.f)
+            {
+                const float vx = float(-w.aircraft.velocity.x * .5);
+                const float vy = float(-w.aircraft.velocity.y * .5);
+                const float sx = (vx - vy) * 36.f;
+                const float sy = (vx + vy) * isoY;
+                const float sl = std::hypot(sx, sy);
+                if (sl > .01f)
+                {
+                    flow = {sx / sl, sy / sl};
+                }
+            }
+            const Vector2 perp{-flow.y, flow.x};
+            const float invZoom = 1.f / (std::max)(.5f, WorldCamera::zoom);
+            const float spanX = (WorldCamera::LogicalWidth() * .52f) * invZoom;
+            const float spanY = 390.f * invZoom;
+            const float clock = w.animationTimeSeconds;
+            auto hash01 = [](float a, float b) {
+                const float s = std::sin(a * 127.1f + b * 311.7f) * 43758.5453f;
+                return s - std::floor(s);
+            };
+            const int streakCount = 4 + int(windStrength * 8.f);
+            for (int i = 0; i < streakCount; ++i)
+            {
+                const float fi = float(i + 1);
+                const float basePhase = hash01(fi, 1.37f);
+                const float rate = (0.42f + hash01(fi, 4.91f) * 0.48f) * (0.65f + windStrength * 1.05f + speedFactor * 0.9f);
+                const float t = clock * rate + basePhase;
+                const float cycle = std::floor(t);
+                const float phase = t - cycle;
+                // Quiet gap between gusts so streaks feel intermittent and never form repeating lanes.
+                if (phase > 0.54f)
+                {
+                    continue;
+                }
+                const float normPhase = phase / 0.54f;
+                const float rLat = hash01(fi * 3.1f + cycle * 17.3f, 2.71f);
+                const float rLen = hash01(fi * 5.7f + cycle * 23.9f, 8.13f);
+                const float rAng = (hash01(fi * 7.3f + cycle * 11.1f, 5.47f) - 0.5f) * 0.14f;
+                const float ca = std::cos(rAng), sa = std::sin(rAng);
+                const Vector2 dir{flow.x * ca - flow.y * sa, flow.x * sa + flow.y * ca};
+                const float along = (normPhase - 0.5f) * (spanX * 2.15f);
+                const float lateral = (rLat - 0.5f) * (spanY * 2.0f);
+                const float len = (36.f + windStrength * 74.f + speedFactor * 52.f) * (0.55f + 0.70f * rLen) * invZoom;
+                const Vector2 head{aircraftScreenCenter.x + dir.x * along + perp.x * lateral,
+                                   aircraftScreenCenter.y + dir.y * along + perp.y * lateral};
+                const Vector2 tail{head.x - dir.x * len, head.y - dir.y * len};
+                const float envelope = std::sin(normPhase * kPi);
+                const float alpha = envelope * windStrength * (0.10f + 0.16f * rLen);
+                Drawing::DrawLine(tail, head, ColorRGBA(.84f, .94f, 1.f, alpha), (0.9f + rLen * 1.1f) * invZoom);
+            }
+            // Wingtip contrails ONLY while cruising forward (speed > 18 m/s), anchored to rotated wingtips & -velocity.
+            if (speed > 18.f)
+            {
+                const float trailFactor = Game::Clamp((speed - 18.f) / 48.f, 0.f, 1.f);
+                const float ribbonAlpha = trailFactor * (0.14f + 0.20f * altFactor);
+                const float ribbonLen = (48.f + trailFactor * 96.f) * invZoom;
+                models::Transform3D wingXform;
+                wingXform.yaw = aircraftYaw;
+                wingXform.roll = aircraftBank;
+                for (float side : {-1.f, 1.f})
+                {
+                    const auto tip = wingXform.Apply({-0.38f, side * 1.15f, 0.04f});
+                    const Vector2 start{aircraftScreenCenter.x + (tip.x - tip.y) * 36.f,
+                                        aircraftScreenCenter.y + (tip.x + tip.y) * isoY - tip.z * isoZ};
+                    const Vector2 end{start.x + flow.x * ribbonLen, start.y + flow.y * ribbonLen};
+                    Drawing::DrawLine(start, end, ColorRGBA(.80f, .95f, 1.f, ribbonAlpha), 1.6f * invZoom);
+                }
+            }
+        }
+    }
 }
 
 // ============================================================================

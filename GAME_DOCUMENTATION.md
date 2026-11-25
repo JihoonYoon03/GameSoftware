@@ -1,7 +1,7 @@
 # SimpleGame 게임 개발 통합 문서
 
 통합일: 2026-10-14  
-최종 진행 정리: 2026-11-25 · OpenGL 4.5 / 144+ FPS 렌더·시뮬레이션 최적화 및 CQ-01~08 구조 정비(52절) + 차세대 렌더링 최적화 R1~R4 구현 완료(55절·57절: v4 팩·EBO·Mega-VBO MDI·LOD·불변 PBR 텍스처 배열 4+9 레이어·멀티파츠 skinSlot 공유·visibilityMask + Mixamo 72본 표준 스켈레톤 런타임) + CQ-09 플레이어 거주지 고유 기능 구현 완료(56절: 저장 스키마 13) + CQ-04B 절차 도시 생성·현실 도로망·입체 교통·교통신호 체계 구현 완료(58절: Layout Revision 5) + 구 5도시 경계 보강·CQ-04 C2 전 도시 시설 실내 출입(저장 스키마 14)·CQ-10 빈 구역 콘텐츠 및 미니퀘스트 구현 완료(59절) + CQ-12 UI 배치·디자인·가독성 최종 구체화 구현 완료(60절) + CQ-11 Mixamo 3계층 모듈러 캐릭터 엔진 연동 파이프라인 구축 및 1호 자산(`Field_Medic_Coat_LOD0`) 실렌더 검수 완료(61절) + R5 물리 기반 조명(Cook-Torrance GGX · 반구 IBL · 동적 3D 포인트 라이트 · ACES Filmic 톤매핑) 구현 완료(62절) / 남은 순서: CQ-11 잔여 Mixamo 바디·의복·애니메이션 뱅크 자산 납품·교체 → 모델별 고유 PBR 텍스처 확장 → 2~4장 스토리 확장 대기
+최종 진행 정리: 2026-11-26 · OpenGL 4.5 / 144+ FPS 렌더·시뮬레이션 최적화 및 CQ-01~08 구조 정비(52절) + 차세대 렌더링 최적화 R1~R4 구현 완료(55절·57절) + CQ-09 거주지(56절) + CQ-04B 절차 도시·도로망(58절) + CQ-04 C2/CQ-10 시설·빈 구역(59절) + CQ-12 UI 정돈(60절) + CQ-11 Mixamo 3계층 모듈러 파이프라인 및 4파츠 조합 실렌더 완료(61절) + R5 물리 기반 조명(GGX · IBL · 3D 포인트 라이트 · ACES 톤매핑) 구현 완료(62절) + 카메라 줌·비행체 탑뷰/고도 블러·바람 이펙트·수배 AI 능동 탐색·시설 NPC 1인칭 서비스 UI·4K/전체화면(63절) + 16:9 기본 비율/DPI 선명 UI·고도 클리핑/트레일/바람 보완·비일시정지 대면 NPC 대화·거래창 NPC 실시간 애니메이션 및 애니메이션 요청서 갱신 완료(64절) / 남은 순서: CQ-11 `MasterBody`·Mixamo 공용/상점 NPC 애니메이션 뱅크 납품·교체 → 2~4장 스토리 확장 대기
 
 현재 개발 계획 브랜치: `iss04_ContentQuality` · 초기 구조 기준: `iss01_actor_scene_render` · 범죄 시스템 변경 기준: `62b00b5` · 이전 도로 성능 비교 기준: `592ec4c` · 초기 기반: `41316a5`
 
@@ -1647,6 +1647,45 @@ CQ-07을 A 이동·경로 안정성, B 감지·기억·역할별 판단, C 동�
   - `city_security_5stars`: avg `1.545 ms` / P95 `1.925 ms` (**519 FPS**)
   - `planet_surface_security_5stars`: avg `1.545 ms` / P95 `2.235 ms` (**447 FPS**)
   - `pbr_vram_bytes`: `105,207,072 B` (약 `100.3 MiB` / `128 MiB` 예산 이내).
+
+#### 63. 카메라 줌 · 비행체 탑뷰/고도 연출 · 수배 AI 능동 탐색 · 시설 NPC 1인칭 서비스 UI · 4K/전체화면 옵션 구현 (2026-11-26 · 구현 완료)
+
+- **1. 비행체 탑승 시 서서히 탑뷰 전환 ([Game.h](SimpleGame/Game.h)/[Game.cpp](SimpleGame/Game.cpp), [Renderer.h](SimpleGame/Renderer.h)/[Renderer.cpp](SimpleGame/Renderer.cpp), [Drawing.cpp](SimpleGame/Drawing.cpp), [Scene.cpp](SimpleGame/Scene.cpp), [Civic.cpp](SimpleGame/Civic.cpp)):**
+  - `WorldCamera::topViewBlend`를 비행체 탑승(`aircraft.mounted`) 여부에 따라 지수 보간(`rate = 2.6`)해 쿼터뷰 기저(`IsoYScale: 18→34`, `IsoZScale: 44→16`)를 셰이더(`uProjectionBasis`)·`WorldToScreen`·지형 프러스텀(`SurfaceTerrainView`)·조준 역투영까지 일괄 전환한다.
+- **2. 비행체 고도별 지상 블러/대기 안개 및 주변 바람 이펙트 ([Renderer.cpp](SimpleGame/Renderer.cpp), [Scene.cpp](SimpleGame/Scene.cpp)):**
+  - `kPostFragmentBody`에 `m_sceneDepth` 기반 심도 분리(`uAltitudeFx`)를 추가해 비행체 본체는 선명하게 유지하면서 고도(`AGL 8~138 m`)에 비례해 지상을 8-탭 가우시안 블러 + 대기 안개로 부드럽게 흐리게 처리한다.
+  - `PlanetScene::Draw()`에서 고도와 수평 비행 속도에 비례하는 다중 패럴랙스 바람 줄기 및 날개 끝 슬립스트림 리본을 비행체 주변에 실시간 렌더링한다.
+- **3. `+/-` 키 카메라 줌 배율 조정 ([Game.h](SimpleGame/Game.h)/[Game.cpp](SimpleGame/Game.cpp)):**
+  - `WorldCamera::zoom`을 런타임 가변(`kMinZoom = 0.70`, `kDefaultZoom = 1.35`, `kMaxZoom = 4.75`)으로 확장하고 `+`/`=`/`-`/`_` 및 넘패드 `+/-` 입력으로 부드럽게 조절한다. 최대 줌(`4.75×`)에서 1.80 m 캐릭터가 화면 높이의 약 1/3을 채우며 자동으로 `LOD0` 디테일이 유지된다.
+- **4. 수배 병력 능동 탐색 및 시야 밖 피격 인지 버그 수정 ([Civic.h](SimpleGame/Civic.h)/[Civic.cpp](SimpleGame/Civic.cpp), [CivicTests.cpp](tests/CivicTests.cpp)):**
+  - `CivicCombat::DamageOfficer()`에서 피격 시 피해자 본인 좌표 대신 실제 공격자(`playerPosition`)를 즉시 `lastKnown`으로 갱신하고, 피격 즉시 공격자 방향으로 회전·경계 기억(`Stimulus::Report`)을 활성화하며 행성 표면 `PlanetSecurity::Capture()`까지 즉시 동기화해 시야 밖 피격 시 플레이어를 못 찾던 버그를 해결했다.
+  - 시야 이탈 시 제자리 저속 회전(`0.8 rad/s`) 대신 마지막 이동 방향 기준 부채꼴/섹터 수색 웨이포인트(`searchStep`)를 따라 능동적으로 이동·수색하고 정지 시에도 `2.4 rad/s`로 신속 스캔하도록 개선했다(`TestOutOfFovDamageAndActiveSearch()` 통과).
+- **5. 시설 내부 NPC 대화 → 1인칭 좌측 상반신 3D 클로즈업 + 우측 서비스 리스트 ([Game.h](SimpleGame/Game.h)/[Game.cpp](SimpleGame/Game.cpp), [Scene.cpp](SimpleGame/Scene.cpp), [Hud.cpp](SimpleGame/Hud.cpp), [Renderer.cpp](SimpleGame/Renderer.cpp)):**
+  - 시설 내부 구매/정비/치료/행정 진입을 카운터 앞 NPC 대화(`InteractionTarget::FacilityNpc` → `UiScreen::FacilityShop`)로 일원화했다.
+  - 대화 시작 시 쿼터뷰에서 플레이어 기준 1인칭 시점(`uProjectionBasis.z = 1`, 눈높이 정면 투영)으로 전환되며 화면 좌측에 담당 NPC 상반신 3D 클로즈업, 우측에 인사말·소지 자원·번호/클릭/키보드 선택형 서비스 리스트가 표시된다.
+- **6. 최대 4K 해상도 선택 및 전체화면 옵션 ([Window.h](SimpleGame/Window.h)/[Window.cpp](SimpleGame/Window.cpp), [Renderer.cpp](SimpleGame/Renderer.cpp), [Game.cpp](SimpleGame/Game.cpp), [SimpleGame.cpp](SimpleGame/SimpleGame.cpp), [Hud.cpp](SimpleGame/Hud.cpp)):**
+  - 옵션 화면에 `화면 해상도`(`1280×800`, `1600×900`, `1920×1080`, `2560×1440`, `3840×2160 (4K UHD)`)와 `전체화면`(`Alt+Enter` 단축키 포함) 항목을 추가하고 `display_settings.json`으로 자동 저장·복원한다. `Renderer::BeginScene()`이 고해상도 네이티브 FBO/MSAA를 최대 4K까지 자동 확장한다.
+- **검증:** `Field_Medic_Coat_LOD0.glb` 재익스포트(단일 메시·`TANGENT` 포함·좌우 법선 정상) 재패킹(`234` 에셋), `ResourceAssetsTests`, `CivicTests`, `MapHudTests`, `GameplayTests --cq10-facilities`, 전체 `RenderingTests`, UTF-8 검사(169개 파일), `git diff --check` 및 5종 실GPU 육안 캡처 전원 통과.
+
+#### 64. 와이드 비율·DPI 고정 UI · 비행 고도/트레일/바람 보완 · 비일시정지 대면 대화 · 상점 NPC 실시간 애니메이션 및 요청서 갱신 (2026-11-26 · 구현 완료)
+
+- **1. 기본 렌더 비율 및 초기 해상도 일치 ([Window.h](SimpleGame/Window.h), [SimpleGame.cpp](SimpleGame/SimpleGame.cpp), [Renderer.cpp](SimpleGame/Renderer.cpp), [Game.h](SimpleGame/Game.h)/[Game.cpp](SimpleGame/Game.cpp)):**
+  - 초기 창 해상도와 기본 해상도 옵션을 `1280×720 (HD)` 16:9로 통일(`720p / 900p / 1080p / 1440p / 4K UHD` 전 프리셋 16:9)하고, `SetPresentationViewport()`·`BeginScene()`·`WorldCamera::LogicalWidth()`가 활성 해상도 비율 전체를 필러박스 없이 채우도록 변경했다.
+- **2. 해상도 변경 시 UI 크기·화면 기준 위치 유지 및 고해상도 DPI 글꼴 선명화 ([Hud.cpp](SimpleGame/Hud.cpp), [RenderAssets.h](SimpleGame/RenderAssets.h)/[RenderAssets.cpp](SimpleGame/RenderAssets.cpp), [Renderer.cpp](SimpleGame/Renderer.cpp)):**
+  - 논리 높이를 `800`으로 고정하고 논리 폭 `LogicalWidth = max(1280, 800 * vw / vh)` 위에서 좌측 HUD(`x = 0`), 중앙 HUD/모달(`CenterOffsetX()`), 우측 HUD(`RightOffsetX()`), 전체화면 암막(`DrawFullscreenDim()`)을 정확히 앵커링하며 클릭·지도 줌(`MapHud::HandleClick`/`Zoom`) 히트테스트도 일치시켰다.
+  - 텍스트 아틀라스를 `4096×2048`로 확장하고 `RenderAssets::SetTextRasterScale(height / 800.f)`(최대 `3.0×`, `0.5×` 양자화)를 추가해 1080p/1440p/4K에서도 UI 논리 크기는 동일하게 유지하면서 한글 폰트가 뭉개지지 않고 선명하게 출력되도록 개선했다.
+- **3. 비행 바람 이펙트 빈도 완화 및 패턴 제거 ([Scene.cpp](SimpleGame/Scene.cpp)):**
+  - 균일 격자형 반복 줄기 대신 `4~12`개의 성긴 돌풍을 주기별 무리수 해시(`seed = cycle * 73 + i * 19`)로 위치·길이·지연·기울기를 재추첨하고 간헐 휴지기(`phase <= 0.54`)를 두어 반복 패턴이 보이지 않게 했다.
+- **4. 비행체 후방 트레일 정지 출력 및 방향 오류 수정 ([Drawing.h](SimpleGame/Drawing.h)/[Drawing.cpp](SimpleGame/Drawing.cpp), [Scene.cpp](SimpleGame/Scene.cpp)):**
+  - `DrawWorldAircraft()`에 실제 추력/속도 기반 `throttle`을 전달해 정지·주기 상태(`<= 0.02`)에서는 엔진 분사 불꽃을 출력하지 않으며, 날개 끝 비행운 리본도 수평 순항 속도 `> 18 m/s`일 때만 실제 회전된 날개 끝 오프셋에서 `-velocity` 방향으로 출력하도록 수정했다.
+- **5. 고고도 상승 시 지면 오브젝트 클리핑/소실 수정 ([Scene.cpp](SimpleGame/Scene.cpp), [Game.cpp](SimpleGame/Game.cpp), [Overworld.cpp](SimpleGame/Overworld.cpp)):**
+  - `PlanetScene` 프러스텀/화면 가시성 검사에서 하드코딩된 `* 44`를 동적 `WorldCamera::IsoZScale()`로 교체하고, `SurfaceTerrainView()` 및 `PlanetTraffic::Outside()`의 카메라 높이 분모를 `2 * IsoYScale()`로 보정하며, 비행 중 도시/커뮤니티 드로우 범위를 `260 m`로 확장해 고고도에서도 지면 건물·식생·프롭·도로가 사라지지 않게 했다.
+- **6. 지나가는 NPC 비일시정지 대면 대화 ([Game.h](SimpleGame/Game.h)/[Game.cpp](SimpleGame/Game.cpp), [ResidentAI.cpp](SimpleGame/ResidentAI.cpp), [Overworld.cpp](SimpleGame/Overworld.cpp)):**
+  - `Dialogue::Start`/`Say`에 `blocking` 옵션을 추가해 길거리 주민(`InteractionTarget::Resident` 및 행성 커뮤니티 주민) 대화가 게임을 일시정지하지 않고(`!Dialogue::LocksWorld()`), NPC가 걸음을 멈춘 채(`ResidentActivity::Talking`) 플레이어 방향으로 부드럽게 회전하며 응대하도록 수정했다. 플레이어가 `5.5` 단위 이상 멀어지면 대화가 자연스럽게 종료된다.
+- **7. 상점·시설 거래창 NPC 실시간 애니메이션 및 애니메이션 요청서 갱신 ([Game.h](SimpleGame/Game.h)/[Game.cpp](SimpleGame/Game.cpp), [Scene.cpp](SimpleGame/Scene.cpp), [Resource/ANIMATION_BLEND_REQUEST.md](Resource/ANIMATION_BLEND_REQUEST.md)):**
+  - `UiScreen::FacilityShop`이 열린 동안에도 `Game::Update()`에서 `animationTimeSeconds`와 `facilityReactionSeconds`를 지속 진행시켜 좌측 1인칭 상점 NPC가 실시간 호흡·대화 흔들림·환영/거래 고개 끄덕임으로 자연스럽게 움직이도록 수정했다.
+  - [Resource/ANIMATION_BLEND_REQUEST.md](Resource/ANIMATION_BLEND_REQUEST.md)에 `CQ-11B` 절을 추가해 상점·카운터 NPC 1인칭 클로즈업 전용 클립(`Shop_Idle_Counter_Loop`, `Shop_Talk_Welcome`, `Shop_Trade_HandOver`, `Shop_Talk_Explain_Loop`, `Shop_Farewell_Nod`, `Shop_Service_Inspect_Loop`, `Resident_Talk_Listen_Loop`)과 리그/관통 검수 기준을 반영했다.
+- **검증:** 6개 Release x64 타깃(`SimpleGame`, `RenderingTests`, `CivicTests`, `GameplayTests`, `ResourceAssetsTests`, `MapHudTests`) 빌드, `ResourceAssetsTests`·`CivicTests`·`MapHudTests`·`GameplayTests --cq10-facilities`(16:9 논리 폭/오프셋·거래창 실시간 애니메이션 진행 검증 포함)·전체 `RenderingTests`(16:9 와이드 HUD·비일시정지 대면 대화·1인칭 상점 NPC·4K 옵션·탑뷰 고도 블러 육안 캡처 포함), `tools/Test-SourceEncoding.ps1`(170개 파일 UTF-8), `git diff --check` 전원 통과.
 
 ### 전체 구조 검토와 반복 비용 리팩토링 — 2026-10-28
 

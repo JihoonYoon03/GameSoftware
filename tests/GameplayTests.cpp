@@ -6073,6 +6073,33 @@ void TestCq10AndUrbanFacilities()
     assert(g.EnterFacilityInterior(clinicEntry));
     assert(g.InteractFacilityStation(InteractionTarget::FacilityServicePrimary)); // Clinic primary: heal (-30 Cr, full HP)
     assert(player.health == player.maxHealth);
+    // Verify 16:9 widescreen logical UI width/anchor offsets and live-animated 1st-person FacilityShop.
+    {
+        const int prevW = w.viewportWidth, prevH = w.viewportHeight;
+        w.viewportWidth = 1920;
+        w.viewportHeight = 1080;
+        assert(std::fabs(WorldCamera::LogicalWidth() - (800.f * 16.f / 9.f)) < 0.05f);
+        assert(std::fabs(WorldCamera::CenterOffsetX() - ((WorldCamera::LogicalWidth() - 1280.f) * .5f)) < 0.05f);
+        assert(std::fabs(WorldCamera::RightOffsetX() - (WorldCamera::LogicalWidth() - 1280.f)) < 0.05f);
+        w.viewportWidth = prevW;
+        w.viewportHeight = prevH;
+    }
+    w.playerPosition = {-.2f, -.9f};
+    assert(g.FindNearbyInteraction() == InteractionTarget::FacilityNpc);
+    g.InteractWithNearbyTarget();
+    assert(w.ui.screen == UiScreen::FacilityShop && w.isPaused);
+    assert(w.facilityReactionSeconds > 0.5f);
+    {
+        const float animBefore = w.animationTimeSeconds;
+        const float reactBefore = w.facilityReactionSeconds;
+        for (int step = 0; step < 4; ++step)
+        {
+            g.Update(0.05f);
+        }
+        assert(w.animationTimeSeconds > animBefore + 0.15f);
+        assert(w.facilityReactionSeconds < reactBefore - 0.15f);
+    }
+    Hud::CloseMenu();
     assert(g.ExitFacilityInterior());
     // 3. CQ-10 Empty-Zone Content & Outlaw Raiders (no wanted heat on self-defense).
     auto *community = g.SurfaceCommunity();

@@ -1,0 +1,14 @@
+{
+  "completed": ["04_Hair", "05_Coat", "06_Trousers", "07_Boot_L", "09_ShoulderGuard_L", "13_ForearmGuard_L_Scanner"],
+  "views_root": "Field_Medic_Tripo_PBR_Multiview",
+  "export_category": "HumanV4",
+  "parts": {
+    "01_Head_Neck": {"name": "Field_Medic_Head_Neck_LOD0", "category": "Bodies", "mode": "SKINNED_OUTFIT", "tripo_faces": 15000, "target_tris": 400},
+    "02_Hand_L": {"name": "Field_Medic_Hands_LOD0", "category": "Bodies", "mode": "SKINNED_OUTFIT", "mirror_left": true, "tripo_faces": 10000, "target_tris": 800},
+    "11_KneeGuard_L": {"name": "Field_Medic_Knee_Guards_LOD0", "category": "Accessories", "mode": "SKINNED_OUTFIT", "mirror_left": true, "tripo_faces": 10000, "target_tris": 800},
+    "14_ForearmGuard_R": {"name": "Field_Medic_Forearm_Guard_R_LOD0", "category": "Accessories", "mode": "RIGID_SOCKET", "socket": "HandR", "tripo_faces": 10000, "target_tris": 400},
+    "15_MedicalPouch_R": {"name": "Field_Medic_Medical_Pouch_R_LOD0", "category": "Accessories", "mode": "RIGID_SOCKET", "socket": "Pelvis", "dimensions_wdh_m": [0.173, 0.094, 0.150], "tripo_faces": 10000, "target_tris": 400},
+    "16_RescuePack": {"name": "Field_Medic_Rescue_Pack_LOD0", "category": "Accessories", "mode": "RIGID_SOCKET", "socket": "Back", "dimensions_wdh_m": [0.366, 0.204, 0.350], "tripo_faces": 20000, "target_tris": 800},
+    "17_CartridgeRack": {"name": "Field_Medic_Cartridge_Rack_LOD0", "category": "Accessories", "mode": "RIGID_SOCKET", "socket": "Chest", "dimensions_wdh_m": [0.234, 0.093, 0.180], "tripo_faces": 10000, "target_tris": 400}
+  }
+}

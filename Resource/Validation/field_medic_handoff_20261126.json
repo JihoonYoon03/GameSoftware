@@ -1,0 +1,688 @@
+{
+  "checked_at_kst": "2026-11-26T01:20:27.552877+09:00",
+  "source_assets_modified": false,
+  "catalog_completed": [
+    "04_Hair",
+    "05_Coat",
+    "06_Trousers",
+    "07_Boot_L",
+    "09_ShoulderGuard_L",
+    "13_ForearmGuard_L_Scanner"
+  ],
+  "pipeline_cache_existed_before_audit": false,
+  "master": {
+    "bone_count": 22,
+    "bone_names": [
+      "mixamorig:Hips",
+      "mixamorig:Spine",
+      "mixamorig:Spine1",
+      "mixamorig:Spine2",
+      "mixamorig:Neck",
+      "mixamorig:Head",
+      "mixamorig:LeftShoulder",
+      "mixamorig:LeftArm",
+      "mixamorig:LeftForeArm",
+      "mixamorig:LeftHand",
+      "mixamorig:RightShoulder",
+      "mixamorig:RightArm",
+      "mixamorig:RightForeArm",
+      "mixamorig:RightHand",
+      "mixamorig:LeftUpLeg",
+      "mixamorig:LeftLeg",
+      "mixamorig:LeftFoot",
+      "mixamorig:LeftToeBase",
+      "mixamorig:RightUpLeg",
+      "mixamorig:RightLeg",
+      "mixamorig:RightFoot",
+      "mixamorig:RightToeBase"
+    ],
+    "boots_matches_master_names_hierarchy": true,
+    "boots_matches_master_inverse_binds": true
+  },
+  "deliveries": [
+    {
+      "part": "04_Hair",
+      "glb": "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Export\\HumanV4\\Field_Medic_Bun_Hair_LOD0.glb",
+      "blend": "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Source\\Hair\\Field_Medic_Bun_Hair_LOD0.blend",
+      "glb_sha256": "42e8fd5ed1cf5e6baad1adba229e9c2c98b94bf104b14024d07eec2de23b792f",
+      "blend_sha256": "30d499d79a6b06ad8f085854b1350423571f0c7231556520d63c3e131d347b98",
+      "triangles": 2417,
+      "historical_work_cap": 2500,
+      "within_historical_work_cap": true,
+      "historical_cap_is_not_new_catalog_budget": true,
+      "single_mesh": true,
+      "animation_count": 0,
+      "skin_count": 1,
+      "expects_skin": true,
+      "materials": [
+        {
+          "name": "tripo_part_0_material.002",
+          "alpha_mode": "OPAQUE",
+          "embedded_maps": {
+            "base_color": true,
+            "normal": true,
+            "metallic_roughness": null,
+            "occlusion": null
+          },
+          "metallic_factor": 0,
+          "roughness_factor": 0.8999999761581421
+        },
+        {
+          "name": "Chestnut roots",
+          "alpha_mode": "OPAQUE",
+          "embedded_maps": {
+            "base_color": null,
+            "normal": null,
+            "metallic_roughness": null,
+            "occlusion": null
+          },
+          "metallic_factor": 0,
+          "roughness_factor": 0.8500000238418579
+        }
+      ],
+      "issues": [],
+      "all_primitives_have_normal_uv_tangent": true,
+      "every_primitive_has_embedded_base_color": false,
+      "joint_count": 22,
+      "joint_names_hierarchy_match_master": true,
+      "inverse_binds_match_master": true,
+      "inverse_bind_max_abs_error": 0.0,
+      "joint_names_hierarchy_match_boots": true,
+      "inverse_binds_match_boots": true,
+      "max_influences": 1,
+      "zero_weight_vertices": 0,
+      "invalid_skin_entries": 0,
+      "max_weight_sum_error": 0.0,
+      "existing_processor_validation": [
+        2417,
+        4735,
+        22,
+        1,
+        0
+      ],
+      "embedded_base_color_present": true,
+      "material_notes": [
+        "Chestnut roots uses its embedded constant baseColorFactor; the main hair material has embedded Base Color and Normal images."
+      ],
+      "reimport": {
+        "mesh_objects": 1,
+        "armatures": 1,
+        "excluded_importer_bone_display_shapes": 1,
+        "triangles": 2417,
+        "unexpected_objects": [],
+        "bounds_xyz_m": [
+          0.22091683000326157,
+          0.2932141572237015,
+          0.26281535625457764
+        ],
+        "vertices_each_side_x": [
+          2307,
+          2427
+        ]
+      },
+      "source_images": [
+        {
+          "name": "Field_Medic_Bun_Hair_LOD0_BaseColor",
+          "packed": true,
+          "colorspace": "sRGB"
+        },
+        {
+          "name": "Field_Medic_Bun_Hair_LOD0_Normal",
+          "packed": true,
+          "colorspace": "Non-Color"
+        }
+      ],
+      "glb_preserved": true,
+      "blend_preserved": true,
+      "status": "historical_delivery_verified"
+    },
+    {
+      "part": "05_Coat",
+      "glb": "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Export\\HumanV4\\Field_Medic_Coat_LOD0.glb",
+      "blend": "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Source\\Clothes\\Field_Medic_Coat_LOD0.blend",
+      "glb_sha256": "7651bedc53e00a006e2881a4a87c718ec39d34c3ebff5147e3e873905a0ec4db",
+      "blend_sha256": "ecf8505842668c967d891eabc7f97d20f3ba43c6bb37d65cf41e857cf5c225ad",
+      "triangles": 3197,
+      "historical_work_cap": 3200,
+      "within_historical_work_cap": true,
+      "historical_cap_is_not_new_catalog_budget": true,
+      "single_mesh": true,
+      "animation_count": 0,
+      "skin_count": 1,
+      "expects_skin": true,
+      "materials": [
+        {
+          "name": "tripo_part_5_material.002",
+          "alpha_mode": "OPAQUE",
+          "embedded_maps": {
+            "base_color": true,
+            "normal": true,
+            "metallic_roughness": null,
+            "occlusion": null
+          },
+          "metallic_factor": 0,
+          "roughness_factor": 0.8999999761581421
+        }
+      ],
+      "issues": [],
+      "all_primitives_have_normal_uv_tangent": true,
+      "every_primitive_has_embedded_base_color": true,
+      "joint_count": 22,
+      "joint_names_hierarchy_match_master": true,
+      "inverse_binds_match_master": true,
+      "inverse_bind_max_abs_error": 0.0,
+      "joint_names_hierarchy_match_boots": true,
+      "inverse_binds_match_boots": true,
+      "max_influences": 4,
+      "zero_weight_vertices": 0,
+      "invalid_skin_entries": 0,
+      "max_weight_sum_error": 1.1082738637924194e-07,
+      "existing_processor_validation": [
+        3197,
+        5591,
+        22,
+        4,
+        0
+      ],
+      "embedded_base_color_present": true,
+      "reimport": {
+        "mesh_objects": 1,
+        "armatures": 1,
+        "excluded_importer_bone_display_shapes": 1,
+        "triangles": 3197,
+        "unexpected_objects": [],
+        "bounds_xyz_m": [
+          1.398347795009613,
+          0.34332291781902313,
+          0.9301695823669434
+        ],
+        "vertices_each_side_x": [
+          2804,
+          2787
+        ]
+      },
+      "source_images": [
+        {
+          "name": "Field_Medic_Coat_LOD0_BaseColor",
+          "packed": true,
+          "colorspace": "sRGB"
+        },
+        {
+          "name": "Field_Medic_Coat_LOD0_Normal",
+          "packed": true,
+          "colorspace": "Non-Color"
+        }
+      ],
+      "glb_preserved": true,
+      "blend_preserved": true,
+      "status": "historical_delivery_verified"
+    },
+    {
+      "part": "06_Trousers",
+      "glb": "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Export\\HumanV4\\Field_Medic_Cargo_Pants_LOD0.glb",
+      "blend": "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Source\\Clothes\\Field_Medic_Cargo_Pants_LOD0.blend",
+      "glb_sha256": "c06e6318331f796443d8c7f0cef79cfa35dba8b8ee9442a2b24a15cd67188172",
+      "blend_sha256": "7c7d3634b960bc0bc12320ce6fa3487d689dea2c459c7ebf3c432eb8b31a5fe6",
+      "triangles": 2600,
+      "historical_work_cap": 2600,
+      "within_historical_work_cap": true,
+      "historical_cap_is_not_new_catalog_budget": true,
+      "single_mesh": true,
+      "animation_count": 0,
+      "skin_count": 1,
+      "expects_skin": true,
+      "materials": [
+        {
+          "name": "tripo_part_4_material.002",
+          "alpha_mode": "OPAQUE",
+          "embedded_maps": {
+            "base_color": true,
+            "normal": true,
+            "metallic_roughness": null,
+            "occlusion": null
+          },
+          "metallic_factor": 0,
+          "roughness_factor": 0.8999999761581421
+        }
+      ],
+      "issues": [],
+      "all_primitives_have_normal_uv_tangent": true,
+      "every_primitive_has_embedded_base_color": true,
+      "joint_count": 22,
+      "joint_names_hierarchy_match_master": true,
+      "inverse_binds_match_master": true,
+      "inverse_bind_max_abs_error": 0.0,
+      "joint_names_hierarchy_match_boots": true,
+      "inverse_binds_match_boots": true,
+      "max_influences": 4,
+      "zero_weight_vertices": 0,
+      "invalid_skin_entries": 0,
+      "max_weight_sum_error": 1.0803341865539551e-07,
+      "existing_processor_validation": [
+        2600,
+        3889,
+        22,
+        4,
+        0
+      ],
+      "embedded_base_color_present": true,
+      "reimport": {
+        "mesh_objects": 1,
+        "armatures": 1,
+        "excluded_importer_bone_display_shapes": 1,
+        "triangles": 2600,
+        "unexpected_objects": [],
+        "bounds_xyz_m": [
+          0.424769327044487,
+          0.2540947422385216,
+          0.9322021454572678
+        ],
+        "vertices_each_side_x": [
+          1907,
+          1982
+        ]
+      },
+      "source_images": [
+        {
+          "name": "Field_Medic_Cargo_Pants_LOD0_BaseColor",
+          "packed": true,
+          "colorspace": "sRGB"
+        },
+        {
+          "name": "Field_Medic_Cargo_Pants_LOD0_Normal",
+          "packed": true,
+          "colorspace": "Non-Color"
+        }
+      ],
+      "glb_preserved": true,
+      "blend_preserved": true,
+      "status": "historical_delivery_verified"
+    },
+    {
+      "part": "07_Boot_L",
+      "glb": "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Export\\HumanV4\\Field_Medic_Boots_LOD0.glb",
+      "blend": "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Source\\Shoes\\Field_Medic_Boots_LOD0.blend",
+      "glb_sha256": "9aeca6094dd35e1304885b369f48e838fe13d426521e311b8f595edf490135a4",
+      "blend_sha256": "1a613a1f2566e2133272bddf13005131d92ea024ba91d40c7481e82de1b801e9",
+      "triangles": 2398,
+      "historical_work_cap": 2400,
+      "within_historical_work_cap": true,
+      "historical_cap_is_not_new_catalog_budget": true,
+      "single_mesh": true,
+      "animation_count": 0,
+      "skin_count": 1,
+      "expects_skin": true,
+      "materials": [
+        {
+          "name": "tripo_node_65b1e792-65ed-4a78-a472-4c69d9ce5796_material.002",
+          "alpha_mode": "OPAQUE",
+          "embedded_maps": {
+            "base_color": true,
+            "normal": true,
+            "metallic_roughness": null,
+            "occlusion": null
+          },
+          "metallic_factor": 0,
+          "roughness_factor": 0.8999999761581421
+        }
+      ],
+      "issues": [],
+      "all_primitives_have_normal_uv_tangent": true,
+      "every_primitive_has_embedded_base_color": true,
+      "joint_count": 22,
+      "joint_names_hierarchy_match_master": true,
+      "inverse_binds_match_master": true,
+      "inverse_bind_max_abs_error": 0.0,
+      "joint_names_hierarchy_match_boots": true,
+      "inverse_binds_match_boots": true,
+      "max_influences": 3,
+      "zero_weight_vertices": 0,
+      "invalid_skin_entries": 0,
+      "max_weight_sum_error": 8.940696716308594e-08,
+      "existing_processor_validation": [
+        2398,
+        3724,
+        22,
+        3,
+        0
+      ],
+      "embedded_base_color_present": true,
+      "reimport": {
+        "mesh_objects": 1,
+        "armatures": 1,
+        "excluded_importer_bone_display_shapes": 1,
+        "triangles": 2398,
+        "unexpected_objects": [],
+        "bounds_xyz_m": [
+          0.4027273654937744,
+          0.31561389565467834,
+          0.2816456966102123
+        ],
+        "vertices_each_side_x": [
+          1862,
+          1862
+        ],
+        "pose_tests": [
+          {
+            "bone": "mixamorig:LeftFoot",
+            "own_side_max_motion_m": 0.08255773184062636,
+            "opposite_side_max_motion_m": 0.0
+          },
+          {
+            "bone": "mixamorig:RightFoot",
+            "own_side_max_motion_m": 0.08255774770405382,
+            "opposite_side_max_motion_m": 0.0
+          }
+        ]
+      },
+      "source_images": [
+        {
+          "name": "Field_Medic_Boots_LOD0_BaseColor",
+          "packed": true,
+          "colorspace": "sRGB"
+        },
+        {
+          "name": "Field_Medic_Boots_LOD0_Normal",
+          "packed": true,
+          "colorspace": "Non-Color"
+        }
+      ],
+      "glb_preserved": true,
+      "blend_preserved": true,
+      "status": "historical_delivery_verified"
+    },
+    {
+      "part": "09_ShoulderGuard_L",
+      "glb": "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Export\\HumanV4\\Field_Medic_Shoulder_Guards_LOD0.glb",
+      "blend": "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Source\\Armor\\Field_Medic_Shoulder_Guards_LOD0.blend",
+      "glb_sha256": "a36745af57367cf609d39fbb3df7af1280c466adededc0ff925b242b404f2f12",
+      "blend_sha256": "4735a34bef478f7b85c66322be8c7a99db402b227158f5c1d45b5e9ee167784d",
+      "triangles": 1000,
+      "historical_work_cap": 1000,
+      "within_historical_work_cap": true,
+      "historical_cap_is_not_new_catalog_budget": true,
+      "single_mesh": true,
+      "animation_count": 0,
+      "skin_count": 1,
+      "expects_skin": true,
+      "materials": [
+        {
+          "name": "tripo_node_940736d6-8e9f-485d-ae0e-493e3690cd56_material.002",
+          "alpha_mode": "OPAQUE",
+          "embedded_maps": {
+            "base_color": true,
+            "normal": true,
+            "metallic_roughness": null,
+            "occlusion": null
+          },
+          "metallic_factor": 0,
+          "roughness_factor": 0.8999999761581421
+        }
+      ],
+      "issues": [],
+      "all_primitives_have_normal_uv_tangent": true,
+      "every_primitive_has_embedded_base_color": true,
+      "joint_count": 22,
+      "joint_names_hierarchy_match_master": true,
+      "inverse_binds_match_master": true,
+      "inverse_bind_max_abs_error": 0.0,
+      "joint_names_hierarchy_match_boots": true,
+      "inverse_binds_match_boots": true,
+      "max_influences": 1,
+      "zero_weight_vertices": 0,
+      "invalid_skin_entries": 0,
+      "max_weight_sum_error": 0.0,
+      "existing_processor_validation": [
+        1000,
+        844,
+        22,
+        1,
+        0
+      ],
+      "embedded_base_color_present": true,
+      "reimport": {
+        "mesh_objects": 1,
+        "armatures": 1,
+        "excluded_importer_bone_display_shapes": 1,
+        "triangles": 1000,
+        "unexpected_objects": [],
+        "bounds_xyz_m": [
+          0.588950514793396,
+          0.1986657828092575,
+          0.09631943702697754
+        ],
+        "vertices_each_side_x": [
+          422,
+          422
+        ],
+        "pose_tests": [
+          {
+            "bone": "mixamorig:LeftArm",
+            "own_side_max_motion_m": 0.05472747086253835,
+            "opposite_side_max_motion_m": 0.0
+          },
+          {
+            "bone": "mixamorig:RightArm",
+            "own_side_max_motion_m": 0.054727492592489844,
+            "opposite_side_max_motion_m": 0.0
+          }
+        ]
+      },
+      "source_images": [
+        {
+          "name": "Field_Medic_Shoulder_Guards_LOD0_BaseColor",
+          "packed": true,
+          "colorspace": "sRGB"
+        },
+        {
+          "name": "Field_Medic_Shoulder_Guards_LOD0_Normal",
+          "packed": true,
+          "colorspace": "Non-Color"
+        }
+      ],
+      "glb_preserved": true,
+      "blend_preserved": true,
+      "status": "historical_delivery_verified"
+    },
+    {
+      "part": "13_ForearmGuard_L_Scanner",
+      "glb": "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Export\\HumanV4\\Field_Medic_Forearm_Guard_L_Scanner_LOD0.glb",
+      "blend": "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Source\\Armor\\Field_Medic_Forearm_Guard_L_Scanner_LOD0.blend",
+      "glb_sha256": "b858f32f84fede8823089a483a2a1de8fd550417ab166b95dfcba4f52b4c4879",
+      "blend_sha256": "fe648d54439ce5e68baa50563c96ab507fd121cc68864fe1567f192a2398e258",
+      "triangles": 800,
+      "historical_work_cap": 800,
+      "within_historical_work_cap": true,
+      "historical_cap_is_not_new_catalog_budget": true,
+      "single_mesh": true,
+      "animation_count": 0,
+      "skin_count": 0,
+      "expects_skin": false,
+      "materials": [
+        {
+          "name": "tripo_node_dd21fc97-2035-499c-a9fb-f7373fbb5e28_material.002",
+          "alpha_mode": "OPAQUE",
+          "embedded_maps": {
+            "base_color": true,
+            "normal": true,
+            "metallic_roughness": null,
+            "occlusion": null
+          },
+          "metallic_factor": 0,
+          "roughness_factor": 0.8999999761581421
+        }
+      ],
+      "issues": [],
+      "all_primitives_have_normal_uv_tangent": true,
+      "every_primitive_has_embedded_base_color": true,
+      "existing_processor_validation": [
+        800,
+        965,
+        0,
+        0,
+        0
+      ],
+      "embedded_base_color_present": true,
+      "reimport": {
+        "mesh_objects": 1,
+        "armatures": 0,
+        "excluded_importer_bone_display_shapes": 0,
+        "triangles": 800,
+        "unexpected_objects": [],
+        "bounds_xyz_m": [
+          0.21807923913002014,
+          0.20845167338848114,
+          0.22702085971832275
+        ],
+        "vertices_each_side_x": [
+          0,
+          965
+        ]
+      },
+      "socket": "HandL",
+      "socket_transform_identity": true,
+      "source_images": [
+        {
+          "name": "Field_Medic_Forearm_Guard_L_Scanner_LOD0_BaseColor",
+          "packed": true,
+          "colorspace": "sRGB"
+        },
+        {
+          "name": "Field_Medic_Forearm_Guard_L_Scanner_LOD0_Normal",
+          "packed": true,
+          "colorspace": "Non-Color"
+        }
+      ],
+      "glb_preserved": true,
+      "blend_preserved": true,
+      "status": "historical_delivery_verified"
+    }
+  ],
+  "existing_six_triangle_sum": 12412,
+  "budget_notes": [
+    "Historical work caps above come from existing local processing scripts; they are not registered caps for new parts.",
+    "Coat 3197 exceeds generic 3000 NPC garment guidance; hair exceeds standalone hair 1200 guidance. Preserve existing deliveries; confirm modular character aggregate classification before certifying current budget compliance.",
+    "The existing six exceed the 12000 NPC aggregate limit before adding body or pending parts; the full player aggregate (18000) cannot be certified from this partial set."
+  ],
+  "pending": [
+    {
+      "part": "01_Head_Neck",
+      "status": "waiting_auth_and_balance",
+      "target_tris": 400,
+      "delivery_exists": false,
+      "views_valid": true
+    },
+    {
+      "part": "02_Hand_L",
+      "status": "waiting_auth_and_balance",
+      "target_tris": 800,
+      "delivery_exists": false,
+      "views_valid": true
+    },
+    {
+      "part": "11_KneeGuard_L",
+      "status": "waiting_auth_and_balance",
+      "target_tris": 800,
+      "delivery_exists": false,
+      "views_valid": true
+    },
+    {
+      "part": "14_ForearmGuard_R",
+      "status": "waiting_auth_and_balance",
+      "target_tris": 400,
+      "delivery_exists": false,
+      "views_valid": true
+    },
+    {
+      "part": "15_MedicalPouch_R",
+      "status": "waiting_auth_and_balance",
+      "target_tris": 400,
+      "delivery_exists": false,
+      "views_valid": true
+    },
+    {
+      "part": "16_RescuePack",
+      "status": "waiting_auth_and_balance",
+      "target_tris": 800,
+      "delivery_exists": false,
+      "views_valid": true
+    },
+    {
+      "part": "17_CartridgeRack",
+      "status": "waiting_auth_and_balance",
+      "target_tris": 400,
+      "delivery_exists": false,
+      "views_valid": true
+    }
+  ],
+  "knee_plan": {
+    "part": "11_KneeGuard_L",
+    "settings": {
+      "name": "Field_Medic_Knee_Guards_LOD0",
+      "category": "Accessories",
+      "mode": "SKINNED_OUTFIT",
+      "mirror_left": true,
+      "tripo_faces": 10000,
+      "target_tris": 800,
+      "has_guide": false
+    },
+    "model": "P2-20260801",
+    "views": {
+      "front": "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Blueprints\\Characters\\Field_Medic\\Field_Medic_Tripo_PBR_Multiview\\11_KneeGuard_L\\01_front.png",
+      "left": "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Blueprints\\Characters\\Field_Medic\\Field_Medic_Tripo_PBR_Multiview\\11_KneeGuard_L\\02_left.png",
+      "back": "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Blueprints\\Characters\\Field_Medic\\Field_Medic_Tripo_PBR_Multiview\\11_KneeGuard_L\\03_back.png",
+      "right": "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Blueprints\\Characters\\Field_Medic\\Field_Medic_Tripo_PBR_Multiview\\11_KneeGuard_L\\04_right.png"
+    },
+    "view_hashes": {
+      "front": "5a5b0d6346a9f0e1522c49fd09927cd9375834dbdca0621b1f18e6298dc53907",
+      "left": "6202fbef0107327f454627ee914358aa97c1f1ee9567adc3c0075b6d185d0179",
+      "back": "e28e031777f74878231ced71e9ceb64b5deea0d4e23d6c758b48e388440c8326",
+      "right": "e5c19880e65ca0674b351ac8d02700a47412bb202e0c74f00e8b78f81bceb889"
+    },
+    "destination": [
+      "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Source\\Accessories\\Field_Medic_Knee_Guards_LOD0.blend",
+      "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Export\\HumanV4\\Field_Medic_Knee_Guards_LOD0.glb"
+    ]
+  },
+  "knee_blueprint_visual_review": {
+    "reviewed_by": "Codex",
+    "views": [
+      "front",
+      "left",
+      "back",
+      "right"
+    ],
+    "has_guide": false,
+    "notes": "Standalone cream shell, dark padded backing, one wrap strap; no mannequin, no cut edges. Side views show a slight three-quarter angle; thickness/opening consistency needs candidate comparison."
+  },
+  "environment": {
+    "blender": "4.5.2 LTS",
+    "tripo_cli_on_path": false,
+    "process_api_key_present": false,
+    "user_api_key_present": false,
+    "documented_encrypted_key_file_exists": false,
+    "authentication": "unverified_no_credentials",
+    "balance": null,
+    "frozen": null,
+    "last_handoff_reported_balance": 0,
+    "balance_note": "Historical 0 is not a current balance query.",
+    "legacy_codex_session_local_record_found": false,
+    "execution_mode": "direct_stage_request_json_when_available",
+    "stage_request_json_present": false,
+    "paid_tasks_submitted_this_audit": 0,
+    "credits_consumed_this_audit": 0
+  },
+  "resume": {
+    "next_part": "11_KneeGuard_L",
+    "next_stage": "authentication_and_current_balance_preflight",
+    "run_command": "python Resource/Tools/tripo_asset_pipeline.py run 11_KneeGuard_L",
+    "credentials": "Set TRIPO_API_KEY privately in the invoking process; international region ov.",
+    "before_run": [
+      "Query current authentication, balance and frozen credits.",
+      "Check remote task history if the key has previous submissions, because no local task state is present.",
+      "Retain the existing six completed IDs and GLB files.",
+      "Use the established four-candidate P2 plan, then process actual stage request JSON files when produced."
+    ],
+    "no_fake_stage_outputs_written": true
+  }
+}

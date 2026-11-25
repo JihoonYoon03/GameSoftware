@@ -36,6 +36,10 @@ struct SecurityOfficer
     int tier = 1, health = 80;
     float cooldown = 0, navigationSeconds = 0, corpseSeconds = 0, muzzleFlash = 0;
     float blockedSeconds = 0; // Transient contact progress; restored routes are checked on use.
+    Vector2 searchAnchor = {}, searchTarget = {}, lastTargetDir = {};
+    float searchHoldSeconds = 0;
+    int searchStep = 0;
+    bool hasSearchTarget = false;
     ai::ThreatMemory threat;
     ai::TeamState teamwork;
     ai::Decision decision = ai::Decision::Routine;

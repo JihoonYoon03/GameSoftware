@@ -45,4 +45,5 @@ AFTER IMAGE GENERATION:
 - Put the four PNGs in a folder named `<PART_NAME>`. Use identical square 1024 × 1024 canvases with pure white backgrounds, preserving aspect ratio, common scale, and ground or center baseline. Keep full silhouettes and white clearance. When a silhouette touches a quadrant border, regenerate the sheet before exporting.
 - For paired parts with the same or substantially similar overall shape, export only the four views of the wearer's left part. Use the left part name (e.g., `Boot_L`) for the folder. When the overall shapes differ substantially, export each side to its own folder.
 - When VIEW_SET is explicitly 2-view for an empty standalone garment, use only the two upper quadrants for the front and back. Export only those two views.
+- For a registered 4-view part in an authorized Tripo production run, call the [Tripo pipeline](../Documentation/TRIPO_WORKFLOW_ko.md) after saving all four PNGs. Pass the registered part folder name as the job ID.
 

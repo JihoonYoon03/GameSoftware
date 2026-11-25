@@ -11,6 +11,7 @@
 #include "TransitLayout.h"
 #include "RenderAssets.h"
 #include "StoryJournal.h"
+#include "Window.h"
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -82,10 +83,33 @@ void HudCard(float x, float y, float w, float h, ColorRGBA accent = {.36f, .86f,
     }
     renderqueue::Opacity(alpha.content);
 }
+struct HudShift
+{
+    explicit HudShift(float dx)
+    {
+        renderqueue::PushMatrix();
+        renderqueue::Translate(dx, 0, 0);
+    }
+    ~HudShift()
+    {
+        renderqueue::PopMatrix();
+    }
+};
+Vector2 CenteredCursor()
+{
+    auto p = Game::Get().GetState().cursorPosition;
+    p.x -= WorldCamera::CenterOffsetX();
+    return p;
+}
+void DrawFullscreenDim(ColorRGBA color)
+{
+    const float cxOff = WorldCamera::CenterOffsetX();
+    Drawing::DrawRectangle(-cxOff, 0, WorldCamera::LogicalWidth(), float(kCanvasHeight), color);
+}
 void Button(const UiControl &control, int index)
 {
     const auto &world = Game::Get().GetState();
-    const auto cursor = world.cursorPosition;
+    const auto cursor = CenteredCursor();
     bool hover = world.cursorInsideViewport && cursor.x >= control.position.x &&
                  cursor.y >= control.position.y && cursor.x <= control.position.x + control.size.x &&
                  cursor.y <= control.position.y + control.size.y;
@@ -1027,6 +1051,7 @@ bool MapHud::Contains(Vector2 canvasPoint, bool fullMap)
 bool MapHud::Zoom(int steps, Vector2 pivot)
 {
     auto &state = Game::Get().GetState();
+    pivot.x -= WorldCamera::CenterOffsetX();
     if (PlanetMapActive() && (!Game::Get().Surface() || !Game::Get().Surface()->Ready()))
     {
         return false;
@@ -1206,6 +1231,7 @@ bool MapHud::HandleMapKey(unsigned char key)
 bool MapHud::HandleClick(Vector2 point, bool clear)
 {
     auto &world = Game::Get().GetState();
+    point.x -= world.mapVisible ? WorldCamera::CenterOffsetX() : WorldCamera::RightOffsetX();
     if (PlanetMapActive())
     {
         auto session = Game::Get().Surface();
@@ -1332,6 +1358,7 @@ bool MapHud::HandleClick(Vector2 point, bool clear)
 }
 void MapHud::DrawMinimap()
 {
+    HudShift shift(WorldCamera::RightOffsetX());
     const auto view = MapView(false);
     Drawing::DrawEllipse(view.center.x, view.center.y, view.radius, view.radius, {.025f, .07f, .08f, .92f});
     DrawSchematic(view, false);
@@ -1358,7 +1385,8 @@ void MapHud::DrawFullMap()
     {
         return;
     }
-    Drawing::DrawRectangle(0, 0, kCanvasWidth, kCanvasHeight, {.01f, .025f, .03f, .5f});
+    HudShift shift(WorldCamera::CenterOffsetX());
+    DrawFullscreenDim({.01f, .025f, .03f, .5f});
     Panel(56, 40, 1168, 720);
     Drawing::DrawRectangle(80, 126, 818, 548,
                            Region() == MapRegion::Mine ? ColorRGBA(.015f, .025f, .035f)
@@ -1495,6 +1523,26 @@ void CityHud::DrawInteractionPrompt()
     case InteractionTarget::FacilityExit:
         label = "출입문 / 거리로 나가기";
         break;
+    case InteractionTarget::FacilityNpc:
+        switch (w.facilityInterior.kind)
+        {
+        case UrbanFacilityKind::Market:
+            label = "보급 상인 / 대화 및 거래";
+            break;
+        case UrbanFacilityKind::Clinic:
+            label = "의무관 / 대화 및 치료 · 보급";
+            break;
+        case UrbanFacilityKind::Workshop:
+            label = "정비사 / 대화 및 정비 · 제작";
+            break;
+        case UrbanFacilityKind::CivicHall:
+            label = "행정관 / 대화 및 치안 · 의뢰";
+            break;
+        default:
+            label = "시설 담당자 / 대화";
+            break;
+        }
+        break;
     case InteractionTarget::FacilityServicePrimary:
         switch (w.facilityInterior.kind)
         {
@@ -1583,6 +1631,7 @@ void Hud::DrawNoticePanel()
     const ColorRGBA accent = isWarningNotice    ? ColorRGBA(1.f, .64f, .32f)
                              : isSecurityNotice ? ColorRGBA(1.f, .44f, .36f)
                                                 : ColorRGBA(.36f, .90f, .80f);
+    HudShift shift(WorldCamera::RightOffsetX());
     HudCard(902.f, 306.f, 358.f, cardH, accent);
     Icon(isWarningNotice ? "warning" : isSecurityNotice ? "security" : "check", 918, 322, 22, true,
          isWarningNotice ? ColorRGBA(1, .78f, .4f) : ColorRGBA(1, 1, 1));
@@ -1608,6 +1657,7 @@ void Hud::DrawDialogue()
         return;
     }
     auto layout = LayoutDialogue();
+    HudShift shift(WorldCamera::CenterOffsetX());
     Panel(208, layout.top, 864, layout.height);
     Icon(d.pages[d.page].channel == "무전" ? "radio" : "dialogue", 232, layout.top + 25, 24);
     for (size_t i = 0; i < layout.header.size(); ++i)
@@ -1639,6 +1689,7 @@ void Hud::DrawInteraction(const std::string &label)
     }
     auto rows = Dialogue::Wrap(label, 286, 17);
     const float h = (std::max)(50.f, 24.f + float(rows.size()) * 22.f);
+    HudShift shift(WorldCamera::CenterOffsetX());
     Panel(450, 514, 380, h);
     Drawing::DrawRectangle(450.f, 520.f, 3.f, (std::max)(8.f, h - 12.f), {.38f, .92f, .86f, .92f});
     for (size_t i = 0; i < rows.size(); ++i)
@@ -1802,24 +1853,27 @@ void MineHud::DrawScanner()
                      : mine.scannerCooldown > 0 ? 1 - mine.scannerCooldown / 6.f
                                                 : 1;
     progress = Game::Clamp(progress, 0, 1);
-    Drawing::DrawEllipse(976, 656, 24, 24, {.015f, .03f, .035f, .8f});
-    for (int i = 0; i < 60; ++i)
     {
-        float a = -kPi * .5f + i * kPi / 30, b = a + kPi / 30;
-        ColorRGBA color = i < progress * 60 ? ColorRGBA(.63f, .85f, .97f) : ColorRGBA(.15f, .22f, .27f);
-        Drawing::DrawLine({976 + std::cos(a) * 21, 656 + std::sin(a) * 21},
-                          {976 + std::cos(b) * 21, 656 + std::sin(b) * 21}, {0, 0, 0, .9f}, 7);
-        Drawing::DrawLine({976 + std::cos(a) * 21, 656 + std::sin(a) * 21},
-                          {976 + std::cos(b) * 21, 656 + std::sin(b) * 21}, color, 4);
-    }
-    UiText(971, 663, "F", 17, kUiInk, true);
-    std::string status = mine.scannerSeconds > 0    ? "구조 신호 스캔 중"
-                         : mine.scannerCooldown > 0 ? "스캐너 충전 중"
-                                                    : "구조 신호 스캔";
-    UiText(1010, 652, status, 15, {.68f, .87f, .98f}, true);
-    if (!mine.scannerContacts.empty())
-    {
-        UiText(1010, 682, "근사 신호 감지", 14, {.68f, .87f, .98f}, true);
+        HudShift shift(WorldCamera::RightOffsetX());
+        Drawing::DrawEllipse(976, 656, 24, 24, {.015f, .03f, .035f, .8f});
+        for (int i = 0; i < 60; ++i)
+        {
+            float a = -kPi * .5f + i * kPi / 30, b = a + kPi / 30;
+            ColorRGBA color = i < progress * 60 ? ColorRGBA(.63f, .85f, .97f) : ColorRGBA(.15f, .22f, .27f);
+            Drawing::DrawLine({976 + std::cos(a) * 21, 656 + std::sin(a) * 21},
+                              {976 + std::cos(b) * 21, 656 + std::sin(b) * 21}, {0, 0, 0, .9f}, 7);
+            Drawing::DrawLine({976 + std::cos(a) * 21, 656 + std::sin(a) * 21},
+                              {976 + std::cos(b) * 21, 656 + std::sin(b) * 21}, color, 4);
+        }
+        UiText(971, 663, "F", 17, kUiInk, true);
+        std::string status = mine.scannerSeconds > 0    ? "구조 신호 스캔 중"
+                             : mine.scannerCooldown > 0 ? "스캐너 충전 중"
+                                                        : "구조 신호 스캔";
+        UiText(1010, 652, status, 15, {.68f, .87f, .98f}, true);
+        if (!mine.scannerContacts.empty())
+        {
+            UiText(1010, 682, "근사 신호 감지", 14, {.68f, .87f, .98f}, true);
+        }
     }
     const auto &world = Game::Get().GetState();
     Vector2 player =
@@ -2325,6 +2379,7 @@ void ChapterHud::DrawJournal()
     {
         return;
     }
+    HudShift shift(WorldCamera::CenterOffsetX());
     if (world.surfaceExploration && world.journalVisible)
     {
         ActivityJournalUi::Draw();
@@ -2453,6 +2508,7 @@ void Hud::DrawVitals()
     }
     if (w.Mounted())
     {
+        HudShift shift(WorldCamera::RightOffsetX());
         const float cardTop = w.aircraft.mounted ? 642.f : w.car.mounted ? 676.f : 698.f;
         const float cardHeight = w.aircraft.mounted ? 148.f : w.car.mounted ? 114.f : 82.f;
         HudCard(988.f, cardTop, 272.f, cardHeight, {.42f, .90f, .94f}, false);
@@ -2533,37 +2589,40 @@ void Hud::DrawVitals()
     }
     else if (combat && mine.loadout.IsFirearmEquipped())
     {
-        HudCard(992.f, 654.f, 268.f, 132.f, {.42f, .88f, .94f}, false);
-        Drawing::DrawRectangle(1257.f, 658.f, 3.f, 124.f, {.42f, .88f, .94f, .9f});
         const auto &gun = Game::Get().ActiveFirearm();
-        Icon(mine.loadout.IsPrimaryEquipped() ? "carbine" : "pistol", 1040, 722, 28, true);
-        Icon("infinite", 1064, 754, 15, true);
-        UiText(1008, 703, gun.GetName(), 15, {.72f, .92f, .96f}, true);
-        if (w.playerMotion.mobility.FocusActive())
         {
-            UiText(1248, 676, "전술 집중", 15, {.42f, 1.f, .86f}, true, true);
-        }
-        char count[32];
-        std::snprintf(count, sizeof(count), "%02d", gun.GetRounds());
-        UiText(1182, 746, count, 38, gun.GetRounds() ? kUiInk : ColorRGBA(1, .78f, .4f), true, true);
-        UiText(1248, 745, "/ " + std::to_string(gun.GetMagazineSize()), 22, kUiInk, true, true);
-        if (gun.IsReloading())
-        {
-            Sprite("Components/hud_reload_track", 1088, 755, 156, 14);
-            Sprite("Components/hud_reload_fill", 1090, 757, 152, 10, {1, .78f, .4f}, gun.GetReloadProgress());
-            UiText(1248, 705, "재장전 중", 17, {1, .77f, .4f}, true, true);
-        }
-        else
-        {
-            float stride = (std::min)(13.f, 152.f / (std::max)(1, gun.GetMagazineSize()));
-            for (int i = 0; i < gun.GetMagazineSize(); ++i)
+            HudShift shift(WorldCamera::RightOffsetX());
+            HudCard(992.f, 654.f, 268.f, 132.f, {.42f, .88f, .94f}, false);
+            Drawing::DrawRectangle(1257.f, 658.f, 3.f, 124.f, {.42f, .88f, .94f, .9f});
+            Icon(mine.loadout.IsPrimaryEquipped() ? "carbine" : "pistol", 1040, 722, 28, true);
+            Icon("infinite", 1064, 754, 15, true);
+            UiText(1008, 703, gun.GetName(), 15, {.72f, .92f, .96f}, true);
+            if (w.playerMotion.mobility.FocusActive())
             {
-                Sprite(i < gun.GetRounds() ? "Components/hud_ammo_pip" : "Components/hud_ammo_pip_empty",
-                       1090 + i * stride, 757, (std::min)(9.f, stride - 2), 10);
+                UiText(1248, 676, "전술 집중", 15, {.42f, 1.f, .86f}, true, true);
             }
-            if (!gun.GetRounds())
+            char count[32];
+            std::snprintf(count, sizeof(count), "%02d", gun.GetRounds());
+            UiText(1182, 746, count, 38, gun.GetRounds() ? kUiInk : ColorRGBA(1, .78f, .4f), true, true);
+            UiText(1248, 745, "/ " + std::to_string(gun.GetMagazineSize()), 22, kUiInk, true, true);
+            if (gun.IsReloading())
             {
-                UiText(1248, 705, "R 재장전", 17, {1, .77f, .4f}, true, true);
+                Sprite("Components/hud_reload_track", 1088, 755, 156, 14);
+                Sprite("Components/hud_reload_fill", 1090, 757, 152, 10, {1, .78f, .4f}, gun.GetReloadProgress());
+                UiText(1248, 705, "재장전 중", 17, {1, .77f, .4f}, true, true);
+            }
+            else
+            {
+                float stride = (std::min)(13.f, 152.f / (std::max)(1, gun.GetMagazineSize()));
+                for (int i = 0; i < gun.GetMagazineSize(); ++i)
+                {
+                    Sprite(i < gun.GetRounds() ? "Components/hud_ammo_pip" : "Components/hud_ammo_pip_empty",
+                           1090 + i * stride, 757, (std::min)(9.f, stride - 2), 10);
+                }
+                if (!gun.GetRounds())
+                {
+                    UiText(1248, 705, "R 재장전", 17, {1, .77f, .4f}, true, true);
+                }
             }
         }
         if (w.cursorInsideViewport && !w.weaponWheel.visible && Game::Get().IsAiming())
@@ -2591,6 +2650,7 @@ void Hud::DrawVitals()
     }
     if (!w.Mounted() && combat && !mine.loadout.IsFirearmEquipped())
     {
+        HudShift shift(WorldCamera::RightOffsetX());
         HudCard(992.f, 704.f, 268.f, 78.f, {.42f, .80f, .82f}, false);
         Drawing::DrawRectangle(1257.f, 708.f, 3.f, 70.f, {.42f, .80f, .82f, .85f});
         Icon("unarmed", 1020, 723, 28, true);
@@ -2604,6 +2664,7 @@ void Hud::DrawVitals()
                p.x - 16, p.y - 16, 32, 32);
         if (mine.loadout.IsFirearmEquipped() && !w.playerMotion.mobility.FocusActive())
         {
+            HudShift shift(WorldCamera::RightOffsetX());
             Icon("mouse_right", 1008, 661, 18, true);
             UiText(1248, 676, "우클릭 홀드 · 조준", 14, {.78f, .90f, .90f}, true, true);
         }
@@ -2611,6 +2672,7 @@ void Hud::DrawVitals()
     const auto &law = CivicJustice::State();
     if (CivicJustice::IsExterior() && law.wanted > 0)
     {
+        HudShift shift(WorldCamera::CenterOffsetX());
         const bool airborneInterceptor =
             law.wanted >= 5 && w.aircraft.mounted && !w.aircraft.grounded;
         const bool canSurrender =
@@ -2802,17 +2864,44 @@ std::vector<UiControl> Hud::Controls()
         row(UiAction::Border, "테두리 불투명도");
         row(UiAction::Content, "내용 불투명도");
         row(UiAction::Cartoon, "카툰 명암");
-        row(UiAction::Resolution, "월드 렌더 해상도");
+        row(UiAction::Resolution, "월드 렌더 스타일");
         row(UiAction::Antialiasing, "안티앨리어싱");
+        row(UiAction::DisplayResolution, "화면 해상도");
+        row(UiAction::DisplayFullscreen, "전체화면");
         row(UiAction::Back, "뒤로");
         for (size_t i = 0; i < controls.size(); ++i)
         {
-            controls[i].position = i < 3   ? Vector2{96, 212 + float(i) * 104}
-                                   : i < 6 ? Vector2{688, 212 + float(i - 3) * 104}
-                                           : Vector2{96, 672};
-            controls[i].size = i < 6 ? Vector2{i < 3 ? 548.f : 480.f, 88} : Vector2{224, 48};
+            if (i < 3)
+            {
+                controls[i].position = {96, 212 + float(i) * 104};
+                controls[i].size = {548.f, 88.f};
+            }
+            else if (i < 8)
+            {
+                controls[i].position = {688, 202 + float(i - 3) * 82};
+                controls[i].size = {480.f, 70.f};
+            }
+            else
+            {
+                controls[i].position = {96, 672};
+                controls[i].size = {224.f, 48.f};
+            }
         }
         break;
+    case UiScreen::FacilityShop: {
+        const auto services = Game::Get().FacilityServices();
+        for (size_t i = 0; i < services.size(); ++i)
+        {
+            controls.push_back({UiAction::FacilityService,
+                                {594.f, 286.f + float(i) * 90.f},
+                                {602.f, 76.f},
+                                std::to_string(i + 1) + ". " + services[i].title,
+                                services[i].enabled,
+                                int(i)});
+        }
+        controls.push_back({UiAction::Continue, {594.f, 654.f}, {602.f, 48.f}, "대화 종료"});
+        break;
+    }
     case UiScreen::Summary:
     case UiScreen::Help:
         controls.push_back({UiAction::Back, {96, 672}, {224, 48}, "뒤로"});
@@ -3060,13 +3149,36 @@ void Hud::Activate(const UiControl &control, int direction)
         }
         if (control.action == UiAction::Resolution)
         {
-            style.resolution = style.resolution == WorldResolution::Native ? WorldResolution::Half
-                               : style.resolution == WorldResolution::Half ? WorldResolution::Quarter
-                                                                           : WorldResolution::Native;
+            if (direction < 0)
+            {
+                style.resolution = style.resolution == WorldResolution::Native ? WorldResolution::Quarter
+                                   : style.resolution == WorldResolution::Quarter ? WorldResolution::Half
+                                                                                  : WorldResolution::Native;
+            }
+            else
+            {
+                style.resolution = style.resolution == WorldResolution::Native ? WorldResolution::Half
+                                   : style.resolution == WorldResolution::Half ? WorldResolution::Quarter
+                                                                               : WorldResolution::Native;
+            }
         }
         r.SetStyle(style);
         break;
     }
+    case UiAction::DisplayResolution: {
+        const int count = int(platform::kResolutionOptions.size());
+        const int step = direction < 0 ? -1 : 1;
+        w.displayPreferences.resolutionIndex = (w.displayPreferences.resolutionIndex + step + count) % count;
+        Game::Get().ApplyDisplayPreferences(true);
+        break;
+    }
+    case UiAction::DisplayFullscreen:
+        w.displayPreferences.fullscreen = !w.displayPreferences.fullscreen;
+        Game::Get().ApplyDisplayPreferences(true);
+        break;
+    case UiAction::FacilityService:
+        Game::Get().ExecuteFacilityService(control.choice);
+        break;
     case UiAction::Exchange:
         ExchangeSupply();
         break;
@@ -3132,7 +3244,8 @@ bool Hud::HandleKey(unsigned char key)
             return true;
         }
         if (w.ui.screen == UiScreen::Pause || w.ui.screen == UiScreen::Medical ||
-            w.ui.screen == UiScreen::Supply || w.ui.screen == UiScreen::None)
+            w.ui.screen == UiScreen::Supply || w.ui.screen == UiScreen::FacilityShop ||
+            w.ui.screen == UiScreen::None)
         {
             CloseMenu();
         }
@@ -3159,6 +3272,15 @@ bool Hud::HandleKey(unsigned char key)
     if (key == 13 || key == 'e')
     {
         Activate(controls[size_t(w.ui.focus)]);
+    }
+    if (w.ui.screen == UiScreen::FacilityShop && key >= '1' && key <= '9')
+    {
+        const size_t idx = size_t(key - '1');
+        if (idx < controls.size())
+        {
+            w.ui.focus = int(idx);
+            Activate(controls[idx]);
+        }
     }
     if (w.ui.screen == UiScreen::Options && (key == 'a' || key == 'd'))
     {
@@ -3220,7 +3342,8 @@ void Hud::HandleMotion()
     }
     float minimum = action == UiAction::Content ? .85f : .8f;
     const auto &control = controls[size_t(w.ui.pressed)];
-    float ratio = Game::Clamp((w.cursorPosition.x - control.position.x - 16) / (control.size.x - 32), 0, 1);
+    const auto cursor = CenteredCursor();
+    float ratio = Game::Clamp((cursor.x - control.position.x - 16) / (control.size.x - 32), 0, 1);
     float value = std::round((minimum + ratio * (1 - minimum)) * 100) / 100;
     if (action == UiAction::Background)
     {
@@ -3248,9 +3371,10 @@ bool Hud::HandlePointer(int button, bool down)
     int hit = -1;
     if (w.cursorInsideViewport)
     {
+        const auto cursor = CenteredCursor();
         for (size_t i = 0; i < controls.size(); ++i)
         {
-            if (Inside(controls[i], w.cursorPosition))
+            if (Inside(controls[i], cursor))
             {
                 hit = int(i);
                 break;
@@ -3315,7 +3439,8 @@ void Hud::DrawMedicalFade()
     {
         return;
     }
-    Drawing::DrawRectangle(0, 0, kCanvasWidth, kCanvasHeight, {0, 0, 0, HospitalRecovery::Opacity()});
+    HudShift shift(WorldCamera::CenterOffsetX());
+    DrawFullscreenDim({0, 0, 0, HospitalRecovery::Opacity()});
     if (HospitalRecovery::Opacity() > .75f)
     {
         Icon("medical", 602, 328, 64);
@@ -3335,7 +3460,78 @@ void Hud::DrawMenu()
     {
         return;
     }
-    Drawing::DrawRectangle(0, 0, kCanvasWidth, kCanvasHeight, {.01f, .025f, .03f, .55f});
+    HudShift shift(WorldCamera::CenterOffsetX());
+    if (screen == UiScreen::FacilityShop)
+    {
+        // Keep the LEFT 1st-person 3D NPC upper-body close-up bright and unobstructed; draw the service list on the RIGHT.
+        const auto kind = w.facilityInterior.kind;
+        const ColorRGBA accent = kind == UrbanFacilityKind::Market    ? ColorRGBA(.28f, .92f, .64f)
+                                 : kind == UrbanFacilityKind::Clinic  ? ColorRGBA(.32f, .92f, .98f)
+                                 : kind == UrbanFacilityKind::Workshop ? ColorRGBA(1.f, .70f, .26f)
+                                                                      : ColorRGBA(.64f, .80f, 1.f);
+        const char *npcName = kind == UrbanFacilityKind::Market    ? "보급 상인"
+                              : kind == UrbanFacilityKind::Clinic  ? "의료소 의무관"
+                              : kind == UrbanFacilityKind::Workshop ? "정비소 정비사"
+                                                                   : "행정소 담당관";
+        const char *greeting =
+            kind == UrbanFacilityKind::Market
+                ? "어서 오세요. 필요한 보급품이나 탄약, 매각할 고철이 있으신가요?"
+            : kind == UrbanFacilityKind::Clinic
+                ? "상태를 확인해 드릴까요? 응급 치료와 구급 키트 보급이 가능합니다."
+            : kind == UrbanFacilityKind::Workshop
+                ? "차량이나 비행체 정비가 필요하신가요? 고철로 키트 제작도 됩니다."
+                : "행정 창구입니다. 경범죄 벌금 정산이나 지역 의뢰 기록을 확인하실 수 있습니다.";
+
+        // NPC nameplate card across the bottom-left counter edge
+        HudCard(48.f, 654.f, 470.f, 66.f, accent, true);
+        UiText(68.f, 682.f, npcName, 20, {.90f, .97f, .96f}, true);
+        UiText(68.f, 706.f, w.facilityInterior.regionName + " · " + w.facilityInterior.label, 14, accent, true);
+
+        // Right-side dialogue + service list panel
+        Panel(566.f, 52.f, 658.f, 680.f);
+        UiText(594.f, 92.f, w.facilityInterior.regionName + " · " + w.facilityInterior.label, 14, accent);
+        UiText(594.f, 128.f, std::string(npcName) + " · 이용 가능 서비스", 26, {.88f, .96f, .94f});
+        HudCard(594.f, 144.f, 602.f, 64.f, accent, false);
+        const auto quoteLines = Dialogue::Wrap(greeting, 570.f, 16);
+        for (size_t i = 0; i < quoteLines.size() && i < 2; ++i)
+        {
+            UiText(610.f, 170.f + float(i) * 23.f, quoteLines[i], 16, {.86f, .93f, .94f});
+        }
+        const auto &pStats = game::GameLevels::Mine().GetState().player;
+        const std::string wallet = "크레딧 " + std::to_string(pStats.credits) + " Cr  ·  키트 " +
+                                   std::to_string(pStats.recoveryKits) + "  ·  고철 " +
+                                   std::to_string(pStats.salvage) + "  ·  체력 " +
+                                   std::to_string(pStats.health) + "/" + std::to_string(pStats.maxHealth);
+        HudCard(594.f, 222.f, 602.f, 40.f, {.42f, .78f, .76f}, false);
+        UiText(612.f, 248.f, wallet, 15, {.78f, .94f, .90f});
+
+        const auto services = Game::Get().FacilityServices();
+        auto controls = Controls();
+        for (size_t i = 0; i < controls.size(); ++i)
+        {
+            Button(controls[i], int(i));
+            if (controls[i].action == UiAction::FacilityService && size_t(controls[i].choice) < services.size())
+            {
+                const auto &svc = services[size_t(controls[i].choice)];
+                const float rowY = controls[i].position.y;
+                UiText(616.f, rowY + 56.f, svc.subtitle, 14,
+                       svc.enabled ? ColorRGBA{.66f, .80f, .82f} : ColorRGBA{.50f, .56f, .60f});
+                UiText(1176.f, rowY + 34.f, svc.priceLabel, 17,
+                       svc.enabled ? accent : ColorRGBA{.55f, .58f, .60f}, false, true);
+            }
+        }
+        if (w.noticeSecondsRemaining > 0 && !w.noticeText.empty())
+        {
+            const auto noticeLines = Dialogue::Wrap(w.noticeText, 570.f, 15);
+            for (size_t i = 0; i < noticeLines.size() && i < 2; ++i)
+            {
+                UiText(600.f, 600.f + float(i) * 20.f, noticeLines[i], 15, {.58f, .95f, .84f});
+            }
+        }
+        UiText(594.f, 720.f, "W/S 또는 ↑/↓ 선택 · Enter/클릭/숫자키 실행 · Esc 대화 종료", 13, {.58f, .74f, .76f});
+        return;
+    }
+    DrawFullscreenDim({.01f, .025f, .03f, .55f});
     auto &stats = game::GameLevels::Mine().GetState().player;
     bool narrow = screen == UiScreen::Title || screen == UiScreen::Pause;
     if (screen == UiScreen::Title)
@@ -3473,21 +3669,26 @@ void Hud::DrawMenu()
                    (alpha - (i == 2 ? .85f : .8f)) / (i == 2 ? .15f : .2f));
         }
         const auto &style = GameRenderer::Get().Backend().GetStyle();
-        UiText(728, 273, style.cartoon ? "켜짐" : "꺼짐", 17, kUiInk);
-        UiText(728, 377,
-               style.resolution == WorldResolution::Native ? "기본"
-               : style.resolution == WorldResolution::Half ? "1/2"
-                                                           : "1/4",
-               17, kUiInk);
+        UiText(1148, 232, style.cartoon ? "켜짐" : "꺼짐", 17, kUiInk, false, true);
+        UiText(1148, 314,
+               style.resolution == WorldResolution::Native ? "고해상도"
+               : style.resolution == WorldResolution::Half ? "1/2 픽셀"
+                                                           : "1/4 픽셀",
+               17, kUiInk, false, true);
         int samples = GameRenderer::Get().Backend().GetAntialiasingSamples();
-        UiText(728, 481,
+        UiText(1148, 396,
                !style.antialiasing                           ? "꺼짐"
-               : style.resolution != WorldResolution::Native ? "픽셀 모드에서 미적용"
-               : samples <= 1                                ? "지원되지 않음"
-                                                             : std::to_string(samples) + "×",
-               17, kUiInk);
-        UiText(336, 637, "선택 후 A/D 또는 ←/→ 조절 · Enter 전환", 15);
-        UiText(336, 661, "UI는 네이티브 해상도 유지 · 설정은 새 게임에도 유지", 14, {.59f, .75f, .75f});
+               : style.resolution != WorldResolution::Native ? "픽셀 모드 미적용"
+               : samples <= 1                                ? "미지원"
+                                                             : std::to_string(samples) + "× MSAA",
+               17, kUiInk, false, true);
+        const int resIdx =
+            std::clamp(w.displayPreferences.resolutionIndex, 0, int(platform::kResolutionOptions.size()) - 1);
+        UiText(1148, 478, platform::kResolutionOptions[size_t(resIdx)].label, 16, {.65f, .94f, .86f}, false, true);
+        UiText(1148, 560, w.displayPreferences.fullscreen ? "켜짐 (Alt+Enter)" : "꺼짐 (창 모드)", 16,
+               w.displayPreferences.fullscreen ? ColorRGBA{.65f, .94f, .86f} : kUiInk, false, true);
+        UiText(336, 641, "선택 후 A/D 또는 ←/→ 조절 · Enter 전환 · Alt+Enter 전체화면", 15);
+        UiText(336, 665, "최대 4K 네이티브 렌더 지원 · 디스플레이 설정 자동 저장", 14, {.59f, .75f, .75f});
     }
     if (screen == UiScreen::Title || screen == UiScreen::Pause)
     {
@@ -3680,6 +3881,7 @@ void PlanetHud::Draw()
     const auto mode = Game::Get().Mode();
     if (!session->Ready() && mode == WorldMode::SurfaceExterior)
     {
+        HudShift shift(WorldCamera::CenterOffsetX());
         Panel(390, 320, 500, 138);
         UiText(420, 365,
                snapshot->statistics.error.empty() ? session->Planet().name + " 탐사 준비"
@@ -3693,6 +3895,7 @@ void PlanetHud::Draw()
     }
     // CQ-12: Centered bottom control strip (x=328..952, y=758..786), strictly non-overlapping with Vitals & Weapon HUD.
     auto drawBottomControls = [](const char *text) {
+        HudShift shift(WorldCamera::CenterOffsetX());
         const float textW = RenderAssets::MeasureUtf8(text, 13);
         const float boxW = (std::min)(636.f, textW + 28.f);
         const float boxX = 640.f - boxW * .5f;
@@ -3711,7 +3914,7 @@ void PlanetHud::Draw()
         HudCard(20.f, 134.f, 340.f, 26.f, {.42f, .90f, .78f}, false);
         UiText(34, 152, info, 13, {.68f, .92f, .84f}, true);
         CityHud::DrawInteractionPrompt();
-        drawBottomControls("WASD 이동 · E 카운터 이용/퇴장 · J 조사 기록 · Esc 메뉴");
+        drawBottomControls("WASD 이동 · E 담당자 대화/퇴장 · +/- 줌 · J 기록 · Esc 메뉴");
         return;
     }
     if (mode == WorldMode::SurfaceInterior || mode == WorldMode::SurfaceObservatory)
@@ -3755,12 +3958,13 @@ void PlanetHud::DrawMap(bool full)
         return;
     }
     const auto &w = Game::Get().GetState();
+    HudShift shift(full ? WorldCamera::CenterOffsetX() : WorldCamera::RightOffsetX());
     auto snapshot = session->Stream().Snapshot();
     float radius = full ? 244.f : 82.f, range = full ? w.planetMapRange : 160.f;
     Vector2 center = full ? Vector2{488, 400} : kMinimapCenter;
     if (full)
     {
-        Drawing::DrawRectangle(0, 0, kCanvasWidth, kCanvasHeight, {.015f, .035f, .045f, .95f});
+        DrawFullscreenDim({.015f, .035f, .045f, .95f});
         Panel(64, 82, 1152, 642);
         UiText(96, 128, range > 200000 ? "행성 개관" : range > 4000 ? "지역 탐사도" : "주변 블록 약도", 26);
         char scale[80];
@@ -4542,9 +4746,10 @@ void Hud::DrawWeaponWheel()
         return;
     }
     const auto &loadout = game::GameLevels::Mine().GetState().loadout;
+    HudShift shift(WorldCamera::CenterOffsetX());
     constexpr Vector2 center = {640, 390};
     constexpr float inner = 87, outer = 224;
-    Drawing::DrawRectangle(0, 0, kCanvasWidth, kCanvasHeight, {.01f, .025f, .035f, .75f});
+    DrawFullscreenDim({.01f, .025f, .035f, .75f});
     UiText(624, 79, "장비", 14, {.65f, .9f, .81f});
     UiText(640 - RenderAssets::MeasureUtf8("무기 선택", 32) * .5f, 125, "무기 선택", 32);
     UiText(640 - RenderAssets::MeasureUtf8("가리킨 뒤 Q를 놓으면 장착됩니다.", 18) * .5f, 157,

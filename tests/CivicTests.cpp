@@ -1011,6 +1011,47 @@ void TestHospitalAllCauses()
     HospitalRecovery::Update(3);
     assert(!mine.IsActive() && mine.GetState().quest.GetStage() == quest && Stats().health > 0);
 }
+void TestOutOfFovDamageAndActiveSearch()
+{
+    Exterior();
+    auto &w = Game::Get().GetState();
+    auto &law = CivicJustice::State();
+    w.playerPosition = {0.f, 0.f};
+    CivicJustice::Report(Offense::AssaultOfficer, {0.f, 0.f});
+    law.officers.clear();
+    SecurityOfficer officer;
+    officer.id = 9001;
+    officer.position = {4.f, 0.f};
+    officer.lastKnown = {4.f, 0.f};
+    officer.facing.yaw = 0.f; // Facing +X, directly AWAY from the player at (0, 0).
+    officer.tier = 1;
+    officer.health = 80;
+    law.officers.push_back(officer);
+    assert(!CivicJustice::CanSee(law.officers[0], w.playerPosition));
+    // Shooting/hitting the officer from behind must immediately turn them toward the attacker and update lastKnown.
+    assert(CivicCombat::DamageOfficer(0, 12, {1.f, 0.f}, true));
+    assert(Game::Distance(law.officers[0].lastKnown, w.playerPosition) < 0.05f);
+    assert(CivicJustice::CanSee(law.officers[0], w.playerPosition));
+    assert(law.officers[0].threat.Known());
+
+    // When sight is lost while wanted, the officer must actively sweep beyond lastKnown instead of stalling in place.
+    law.officers[0].position = {10.f, 10.f};
+    law.officers[0].lastKnown = {10.f, 10.f};
+    law.officers[0].searchAnchor = {10.f, 10.f};
+    law.officers[0].searchStep = 0;
+    law.officers[0].hasSearchTarget = false;
+    law.officers[0].impact = {};
+    law.officers[0].facing.yaw = 0.f;
+    law.officers[0].threat.Remember(ai::Stimulus::Report, 6.f);
+    w.playerPosition = {-30.f, -30.f}; // Out of sight range.
+    const Vector2 startPos = law.officers[0].position;
+    for (int i = 0; i < 45; ++i)
+    {
+        CivicJustice::Update(0.05f);
+    }
+    assert(law.officers[0].searchStep >= 1);
+    assert(Game::Distance(law.officers[0].position, startPos) > 1.2f);
+}
 } // namespace
 int main()
 {
@@ -1029,6 +1070,7 @@ int main()
     TestPerceptionAndRememberedPositions();
     TestCooperativeShotHold();
     TestHospitalAllCauses();
+    TestOutOfFovDamageAndActiveSearch();
     Game::Get().Reset();
     std::cout
         << "Crime, combat, physical contact, cross-city reputation, security and hospital checks passed.\n";

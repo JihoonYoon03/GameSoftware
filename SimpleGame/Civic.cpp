@@ -1999,10 +1999,84 @@ void CivicJustice::Update(float dt)
         visible |= sees;
         if (sees)
         {
+            const Vector2 moveDelta = Sub(world.playerPosition, officer.lastKnown);
+            const float moveLen = std::hypot(moveDelta.x, moveDelta.y);
+            if (moveLen > 0.05f)
+            {
+                officer.lastTargetDir = {moveDelta.x / moveLen, moveDelta.y / moveLen};
+            }
+            else
+            {
+                officer.lastTargetDir = {std::cos(world.facingYaw), std::sin(world.facingYaw)};
+            }
             officer.lastKnown = world.playerPosition;
+            officer.searchAnchor = world.playerPosition;
+            officer.searchTarget = world.playerPosition;
+            officer.searchStep = 0;
+            officer.searchHoldSeconds = 0.f;
+            officer.hasSearchTarget = false;
             if (surfaceMode)
             {
                 PlanetSecurity::SawPlayer();
+            }
+        }
+        else if (mobilized && !officer.departing && officer.threat.Known() && officer.impact.seconds <= 0)
+        {
+            if (std::hypot(officer.searchAnchor.x, officer.searchAnchor.y) < 1.e-4f &&
+                std::hypot(officer.lastKnown.x, officer.lastKnown.y) > 1.e-4f)
+            {
+                officer.searchAnchor = officer.lastKnown;
+            }
+            const float distToLast = Game::Distance(officer.position, officer.lastKnown);
+            if (distToLast <= 1.05f || officer.blockedSeconds > 0.75f)
+            {
+                officer.searchHoldSeconds += dt;
+                if (officer.searchHoldSeconds >= 0.35f || officer.blockedSeconds > 0.75f)
+                {
+                    officer.searchHoldSeconds = 0.f;
+                    officer.blockedSeconds = 0.f;
+                    const float baseAngle =
+                        (std::hypot(officer.lastTargetDir.x, officer.lastTargetDir.y) > 0.1f)
+                            ? std::atan2(officer.lastTargetDir.y, officer.lastTargetDir.x)
+                            : officer.facing.yaw;
+                    static constexpr float kFanOffsets[5] = {0.f, -0.68f, 0.68f, -1.32f, 1.32f};
+                    const int slot = int((officer.id + static_cast<std::uint64_t>(officer.searchStep) * 2ULL) % 5ULL);
+                    Vector2 bestCandidate = officer.lastKnown;
+                    bool foundCandidate = false;
+                    for (int attempt = 0; attempt < 5; ++attempt)
+                    {
+                        const float ang = (officer.searchStep == 0)
+                                              ? (baseAngle + kFanOffsets[(slot + attempt) % 5])
+                                              : (baseAngle + float(officer.searchStep + attempt) * 1.18f +
+                                                 float(officer.id % 4) * 0.78f);
+                        const float radius = 5.2f + float((officer.searchStep + attempt) % 3) * 2.4f;
+                        const Vector2 cand{officer.searchAnchor.x + std::cos(ang) * radius,
+                                           officer.searchAnchor.y + std::sin(ang) * radius};
+                        const bool blocked =
+                            surfaceMode ? PlanetSecurity::BodyBlocked(cand) : Game::Get().IsPositionBlocked(cand);
+                        if (!blocked && Game::Distance(cand, officer.position) > 1.8f)
+                        {
+                            bestCandidate = cand;
+                            foundCandidate = true;
+                            break;
+                        }
+                    }
+                    if (foundCandidate)
+                    {
+                        officer.lastKnown = bestCandidate;
+                        officer.searchTarget = bestCandidate;
+                        officer.hasSearchTarget = true;
+                        ++officer.searchStep;
+                        officer.navigationSeconds = 0.f;
+                        officer.route.clear();
+                        officer.waypoint = 0;
+                        if (civic.wanted > 0 && officer.searchStep <= 4 &&
+                            officer.threat.Remaining() < 3.5f)
+                        {
+                            officer.threat.Remember(ai::Stimulus::Report, 3.5f);
+                        }
+                    }
+                }
             }
         }
         // Tier 1 non-lethal arrest & fine compliance on surface when player is unarmed & stationary.
@@ -2107,7 +2181,8 @@ void CivicJustice::Update(float dt)
         officer.facing.Update(previous, officer.position, dt);
         if (!sees && !officer.departing && !officer.facing.walking)
         {
-            officer.facing.yaw += dt * .8f;
+            const float scanRate = (mobilized && officer.threat.Known()) ? 2.4f : .8f;
+            officer.facing.yaw += dt * scanRate;
         }
         const bool movedOrTurned =
             Game::Distance(previous, officer.position) > 1.e-4f || std::fabs(officer.facing.yaw - prevYaw) > 1.e-4f;
@@ -2424,16 +2499,41 @@ bool CivicCombat::DamageOfficer(size_t index, int damage, Vector2 impulse, bool 
     Impact(officer.impact, effectiveImpulse, officer.health == 0);
     if (playerOwned)
     {
+        const Vector2 attackerPos = Game::Get().GetState().playerPosition;
+        if (officer.health > 0)
+        {
+            const Vector2 toAttacker = Sub(attackerPos, officer.position);
+            if (std::hypot(toAttacker.x, toAttacker.y) > 1.e-4f)
+            {
+                officer.facing.yaw = std::atan2(toAttacker.y, toAttacker.x);
+                officer.lastTargetDir = Unit(toAttacker);
+            }
+            officer.lastKnown = attackerPos;
+            officer.searchAnchor = attackerPos;
+            officer.searchTarget = attackerPos;
+            officer.searchStep = 0;
+            officer.searchHoldSeconds = 0.f;
+            officer.hasSearchTarget = false;
+            officer.navigationSeconds = 0.f;
+            officer.route.clear();
+            officer.waypoint = 0;
+            officer.threat.Remember(ai::Stimulus::Report, ai::PerceptionSettings::kReportMemorySeconds);
+            if (CivicJustice::CanSee(officer, attackerPos, PlayerHeight()))
+            {
+                officer.threat.Observe(true, ai::PerceptionSettings::kOfficerMemorySeconds);
+                civic.identified = true;
+            }
+        }
         if (Game::Get().GetState().surfaceExploration)
         {
             PlanetSecurity::Report(
                 officer.health ? Offense::AssaultOfficer : Offense::OfficerKilled,
-                Game::Get().Surface()->PointAt(officer.position.x * 2, officer.position.y * 2));
+                Game::Get().Surface()->PointAt(attackerPos.x * 2, attackerPos.y * 2));
+            PlanetSecurity::Capture();
         }
         else
         {
-            CivicJustice::Report(officer.health ? Offense::AssaultOfficer : Offense::OfficerKilled,
-                                 officer.position);
+            CivicJustice::Report(officer.health ? Offense::AssaultOfficer : Offense::OfficerKilled, attackerPos);
         }
     }
     return true;
@@ -2567,7 +2667,8 @@ bool AimAtVehicles(float shotAngle, models::Point &target)
             continue;
         }
         float z = craft.altitude + (mesh.minimum.z + mesh.maximum.z) * .5f;
-        float sx = (cursor.x - kCanvasWidth * .5f) / 36, sy = (cursor.y - kCanvasHeight * .57f + z * 44) / 18;
+        float sx = (cursor.x - kCanvasWidth * .5f) / 36,
+              sy = (cursor.y - kCanvasHeight * .57f + z * WorldCamera::IsoZScale()) / WorldCamera::IsoYScale();
         models::Point p{w.cameraPosition.x + (sx + sy) * .5f, w.cameraPosition.y + (sy - sx) * .5f, z};
         float range = std::hypot(Game::Distance({p.x, p.y}, w.playerPosition), z);
         if (range < best)

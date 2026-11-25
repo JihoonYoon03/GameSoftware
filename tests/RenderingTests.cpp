@@ -795,6 +795,136 @@ void TestR4PbrAndSkinSharing(const std::filesystem::path *output = nullptr)
         renderer.EndScene(0.f);
         assert(glGetError() == GL_NO_ERROR);
         Save(*output / "r5-city.bmp");
+
+        // 4) Max camera zoom (+/- up to 4.75x: character fills ~1/3 screen height, LOD0 detail verified).
+        WorldCamera::SetZoom(WorldCamera::kMaxZoom, true);
+        assert(std::fabs(WorldCamera::zoom - WorldCamera::kMaxZoom) < 0.01f);
+        w.isInsideHome = false;
+        w.playerPosition = w.cameraPosition = kLiaPosition;
+        Begin();
+        game::SceneManager::Get(game::SceneKind::Background).Draw();
+        renderqueue::Flush();
+        glDepthMask(GL_TRUE);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        game::SceneManager::Get(game::SceneKind::Exterior).Draw();
+        renderer.EndScene(0.f);
+        assert(glGetError() == GL_NO_ERROR);
+        Save(*output / "feat-zoom-max.bmp");
+        WorldCamera::Reset();
+
+        // 5) Facility NPC 1st-person left upper-body close-up + right-side service list UI (16:9 widescreen).
+        Game::Get().Reset();
+        w.viewportWidth = 1280;
+        w.viewportHeight = 720;
+        w.surfaceExploration = true;
+        w.facilityInterior.kind = UrbanFacilityKind::Market;
+        w.facilityInterior.regionId = "halo_07";
+        w.facilityInterior.regionName = "헤일로";
+        w.facilityInterior.label = "상점 · 보급소";
+        w.playerPosition = {-.2f, -.9f};
+        assert(Game::Get().FindNearbyInteraction() == InteractionTarget::FacilityNpc);
+        Game::Get().InteractWithNearbyTarget();
+        assert(w.ui.screen == UiScreen::FacilityShop);
+        assert(Game::Get().FacilityServices().size() == 3);
+        const float shopAnim0 = w.animationTimeSeconds;
+        for (int step = 0; step < 6; ++step)
+        {
+            Game::Get().Update(0.05f);
+        }
+        assert(w.animationTimeSeconds > shopAnim0 + 0.25f);
+        glViewport(0, 0, kCanvasWidth, kCanvasHeight);
+        glClearColor(0.f, 0.f, 0.f, 1.f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        renderer.BeginScene(1280, 720);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, WorldCamera::LogicalWidth(), kCanvasHeight, 0, -65536, 65536);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        game::SceneManager::Get(game::SceneKind::FacilityInterior).Draw();
+        renderer.EndScene(0.f);
+        Hud::Render();
+        assert(glGetError() == GL_NO_ERROR);
+        Save(*output / "feat-facility-npc-fp.bmp");
+
+        // 6) Options menu showing 4K resolution selector & fullscreen toggle at 16:9 widescreen.
+        Hud::OpenMenu(UiScreen::Options);
+        w.displayPreferences.resolutionIndex = 4; // 3840x2160 (4K UHD)
+        w.displayPreferences.fullscreen = true;
+        glViewport(0, 0, kCanvasWidth, kCanvasHeight);
+        glClearColor(0.f, 0.f, 0.f, 1.f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        renderer.BeginScene(1280, 720);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, WorldCamera::LogicalWidth(), kCanvasHeight, 0, -65536, 65536);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        renderer.EndScene(0.f);
+        Hud::Render();
+        assert(glGetError() == GL_NO_ERROR);
+        Save(*output / "feat-options-4k.bmp");
+        w.displayPreferences = {};
+
+        // 7) 16:9 Exterior HUD anchoring + non-blocking passerby NPC face-to-face dialogue check.
+        Game::Get().Reset();
+        w.viewportWidth = 1280;
+        w.viewportHeight = 720;
+        w.isInsideHome = false;
+        w.playerPosition = w.cameraPosition = kLiaPosition;
+        if (!w.residents.empty())
+        {
+            w.residents[0].position = {w.playerPosition.x + 1.1f, w.playerPosition.y + 0.2f};
+            w.residents[0].facing.yaw = 0.f;
+            w.residents[0].activity = ResidentActivity::Walking;
+            if (Game::Get().FindNearbyInteraction() == InteractionTarget::Resident)
+            {
+                Game::Get().InteractWithNearbyTarget();
+                assert(Dialogue::Active() && !Dialogue::LocksWorld());
+                for (int step = 0; step < 5; ++step)
+                {
+                    Game::Get().Update(0.05f);
+                }
+                assert(w.residents[0].activity == ResidentActivity::Talking);
+            }
+        }
+        glViewport(0, 0, kCanvasWidth, kCanvasHeight);
+        glClearColor(0.f, 0.f, 0.f, 1.f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        renderer.BeginScene(1280, 720);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, WorldCamera::LogicalWidth(), kCanvasHeight, 0, -65536, 65536);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        game::SceneManager::Get(game::SceneKind::Background).Draw();
+        renderqueue::Flush();
+        glDepthMask(GL_TRUE);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        game::SceneManager::Get(game::SceneKind::Exterior).Draw();
+        renderer.EndScene(0.f);
+        Hud::Render();
+        assert(glGetError() == GL_NO_ERROR);
+        Save(*output / "feat-widescreen-hud-chat.bmp");
+        w.viewportWidth = kCanvasWidth;
+        w.viewportHeight = kCanvasHeight;
+
+        // 8) Aircraft top-view projection + high-altitude ground blur/haze + sparse wind effect check.
+        Game::Get().Reset();
+        WorldCamera::topViewBlend = 1.f;
+        assert(WorldCamera::IsoYScale() > 30.f && WorldCamera::IsoZScale() < 20.f);
+        w.isInsideHome = false;
+        w.playerPosition = w.cameraPosition = kLiaPosition;
+        Begin();
+        renderer.SetAltitudeEffects(0.75f, 0.499f);
+        game::SceneManager::Get(game::SceneKind::Background).Draw();
+        renderqueue::Flush();
+        glDepthMask(GL_TRUE);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        game::SceneManager::Get(game::SceneKind::Exterior).Draw();
+        renderer.EndScene(0.f);
+        assert(glGetError() == GL_NO_ERROR);
+        Save(*output / "feat-topview-blur.bmp");
         Game::Get().Reset();
     }
 
