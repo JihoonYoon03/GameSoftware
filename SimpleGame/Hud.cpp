@@ -583,6 +583,28 @@ void MapPin(const SchematicView &view, Vector2 position, ColorRGBA color, const 
         MapLabel(p, label, color);
     }
 }
+void MapDot(const SchematicView &view, Vector2 position, ColorRGBA color, float radius = 4.f)
+{
+    auto p = view.Project(position);
+    if (!view.Inside(p, radius + 2.f))
+    {
+        return;
+    }
+    auto oct = [&](float r, ColorRGBA c) {
+        const float d = r * .70710678f;
+        Drawing::DrawPolygon({{p.x + r, p.y},
+                              {p.x + d, p.y + d},
+                              {p.x, p.y + r},
+                              {p.x - d, p.y + d},
+                              {p.x - r, p.y},
+                              {p.x - d, p.y - d},
+                              {p.x, p.y - r},
+                              {p.x + d, p.y - d}},
+                             c);
+    };
+    oct(radius + 1.5f, {.025f, .07f, .08f, .95f});
+    oct(radius, color);
+}
 void DrawMapTiles(const SchematicView &view)
 {
     const bool mine = MapHud::Region() == MapRegion::Mine;
@@ -4119,34 +4141,62 @@ void PlanetHud::DrawMap(bool full)
                    nullptr, false, w.selectedRelay == relay.id ? 7 : 4);
         }
     }
-    // CQ-04 C2: Show enterable urban facilities (Market / Clinic / Workshop / CivicHall) on both the minimap
-    // and zoomed block map so players can locate shops, clinics, workshops, and civic halls immediately.
+    // CQ-04 C2: Show enterable urban facilities (Market / Clinic / Workshop / CivicHall) as color-coded
+    // dots directly inside the minimap and expanded map (no external label/leader lines; to be replaced by
+    // dedicated UI icons in CQ-12).
     if (range <= 900.f)
     {
         const auto *planetPtr = snapshot->planet.get();
+        const size_t maxFacilities = full ? 48 : 24;
         size_t drawnFacilities = 0;
-        for (const auto *item : session->NearbyStructures())
-        {
-            if (!item || drawnFacilities >= 24)
+        std::unordered_set<std::string_view> drawnFacilityIds;
+        auto drawFacilityDot = [&](const world::SurfaceStructure &item) {
+            if (drawnFacilities >= maxFacilities || !drawnFacilityIds.insert(item.id).second)
             {
-                continue;
+                return;
             }
-            const auto kind = Game::EnterableUrbanFacility(*item, planetPtr);
+            const auto kind = Game::EnterableUrbanFacility(item, planetPtr);
             if (kind == UrbanFacilityKind::None)
             {
-                continue;
+                return;
             }
-            const auto doorPt = Game::FacilityDoorPoint(*item, planetRadius);
+            const auto doorPt = Game::FacilityDoorPoint(item, planetRadius);
             if (world::SurfaceGeometry::Distance(planetRadius, doorPt, focus) > range + 12.)
+            {
+                return;
+            }
+            const ColorRGBA col = kind == UrbanFacilityKind::Market     ? ColorRGBA(.28f, .94f, .64f)
+                                  : kind == UrbanFacilityKind::Clinic   ? ColorRGBA(.32f, .94f, 1.f)
+                                  : kind == UrbanFacilityKind::Workshop ? ColorRGBA(1.f, .70f, .24f)
+                                                                        : ColorRGBA(.62f, .80f, 1.f);
+            MapDot(view, project(doorPt), col, full ? 4.5f : 3.5f);
+            ++drawnFacilities;
+        };
+        for (const auto &chunk : snapshot->chunks)
+        {
+            if (drawnFacilities >= maxFacilities)
+            {
+                break;
+            }
+            if (chordFar(chunk->frame.origin, focus, chunk->radiusMeters + range + 40.))
             {
                 continue;
             }
-            const ColorRGBA col = kind == UrbanFacilityKind::Market    ? ColorRGBA(.28f, .94f, .64f)
-                                  : kind == UrbanFacilityKind::Clinic  ? ColorRGBA(.32f, .94f, 1.f)
-                                  : kind == UrbanFacilityKind::Workshop ? ColorRGBA(1.f, .70f, .24f)
-                                                                       : ColorRGBA(.62f, .80f, 1.f);
-            MapPin(view, project(doorPt), col, Game::FacilityShortLabel(kind), true, full ? 5 : 4);
-            ++drawnFacilities;
+            for (const auto &item : chunk->structures)
+            {
+                drawFacilityDot(item);
+            }
+        }
+        for (const auto *item : session->NearbyStructures())
+        {
+            if (drawnFacilities >= maxFacilities)
+            {
+                break;
+            }
+            if (item)
+            {
+                drawFacilityDot(*item);
+            }
         }
     }
     if (const auto *community = Game::Get().SurfaceCommunity(); community && full)

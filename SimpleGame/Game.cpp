@@ -5842,18 +5842,55 @@ UrbanFacilityKind Game::EnterableUrbanFacility(const world::SurfaceStructure &st
     {
         return UrbanFacilityKind::None;
     }
+    const double planetR = planet->terrain.Planet().radiusMeters;
+    const auto local = world::SurfaceGeometry::ToLocal(reg->frame, structure.frame.origin, planetR);
     // Never turn Halo's own Home or Observatory landmarks into generic urban facilities.
     if (structure.regionId == "halo_07")
     {
-        const double planetR = planet->terrain.Planet().radiusMeters;
-        const auto localToHalo = world::SurfaceGeometry::ToLocal(reg->frame, structure.frame.origin, planetR);
-        if (std::hypot(localToHalo.x - kHomeBuildingPosition.x * 2.,
-                       localToHalo.y - kHomeBuildingPosition.y * 2.) < 16. ||
-            std::hypot(localToHalo.x - kObservatoryBuildingPosition.x * 2.,
-                       localToHalo.y - kObservatoryBuildingPosition.y * 2.) < 16.)
+        if (std::hypot(local.x - kHomeBuildingPosition.x * 2.,
+                       local.y - kHomeBuildingPosition.y * 2.) < 16. ||
+            std::hypot(local.x - kObservatoryBuildingPosition.x * 2.,
+                       local.y - kObservatoryBuildingPosition.y * 2.) < 16.)
         {
             return UrbanFacilityKind::None;
         }
+    }
+    // Unique capital/metropolis civic landmarks are always enterable.
+    if (structure.id.find(".landmark.") != std::string::npos)
+    {
+        return kind;
+    }
+    // Spatial thinning per facility kind: partition each settlement into kind-specific sectors with a
+    // deterministic interior anchor ([0.25, 0.75] of the sector) and tight capture radius so duplicate
+    // facilities do not cluster in a small area while remaining independent of chunk load order.
+    const double cellMeters = kind == UrbanFacilityKind::Market     ? 180.
+                              : kind == UrbanFacilityKind::Workshop ? 200.
+                              : kind == UrbanFacilityKind::Clinic   ? 220.
+                                                                    : 260.;
+    const double captureRadius = kind == UrbanFacilityKind::CivicHall ? 24. : 20.;
+    const auto gx = std::int64_t(std::floor(local.x / cellMeters));
+    const auto gy = std::int64_t(std::floor(local.y / cellMeters));
+    std::uint64_t seed = 14695981039346656037ULL;
+    auto mix = [&](std::uint64_t v) {
+        seed = (seed ^ v) * 1099511628211ULL;
+        seed ^= seed >> 33;
+    };
+    for (unsigned char ch : reg->definition.id)
+    {
+        mix(ch);
+    }
+    mix(std::uint64_t(kind) + 0x9e3779b97f4a7c15ULL);
+    mix(std::uint64_t(gx));
+    mix(std::uint64_t(gy));
+    const double u = .25 + .50 * (double(seed & 0xFFFFu) / 65535.);
+    const double v = .25 + .50 * (double((seed >> 16) & 0xFFFFu) / 65535.);
+    const double ax = (double(gx) + u) * cellMeters;
+    const double ay = (double(gy) + v) * cellMeters;
+    const double dx = local.x - ax;
+    const double dy = local.y - ay;
+    if (dx * dx + dy * dy > captureRadius * captureRadius)
+    {
+        return UrbanFacilityKind::None;
     }
     return kind;
 }
