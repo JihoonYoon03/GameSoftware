@@ -228,8 +228,10 @@ void TestSavedStamina()
     };
     const auto schema = number(8);
     assert(schema >= 10);
+    const size_t schema13End =
+        schema >= 14 ? bytes.size() - 8 - size_t(number(bytes.size() - 8)) : bytes.size();
     const size_t mobilityEnd =
-        schema >= 13 ? bytes.size() - 8 - size_t(number(bytes.size() - 8)) : bytes.size();
+        schema >= 13 ? schema13End - 8 - size_t(number(schema13End - 8)) : schema13End;
     const auto extensionSize = number(mobilityEnd - 8);
     const size_t extStart = mobilityEnd - 8 - size_t(extensionSize);
     assert(number(extStart) == 1);

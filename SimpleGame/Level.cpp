@@ -2329,7 +2329,7 @@ void FrontierSurface::Refresh()
     auto &state = level.GetState();
     bool active = false;
     if (w.surfaceExploration && g.IsStoryWorld() && g.Surface() && g.Surface()->Ready() &&
-        !g.IsSurfaceMine() && !w.isInsideHome && !w.isInObservatory)
+        !g.IsSurfaceMine() && !w.IsInsideAny())
     {
         const auto &session = *g.Surface();
         const auto &r = session.Stream().Snapshot()->planet->Region("frontier");

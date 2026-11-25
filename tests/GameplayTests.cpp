@@ -1996,10 +1996,12 @@ void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::file
         return result;
     };
     const auto schema = number(8);
-    assert(schema >= 8 && schema <= 13 &&
-           ((version >= 1 && version <= 8) || version == 11 || version == 12));
+    assert(schema >= 8 && schema <= 14 &&
+           ((version >= 1 && version <= 8) || version == 11 || version == 12 || version == 13));
+    const size_t schema13End =
+        schema >= 14 ? bytes.size() - 8 - size_t(number(bytes.size() - 8)) : bytes.size();
     const size_t schema12End =
-        schema >= 13 ? bytes.size() - 8 - size_t(number(bytes.size() - 8)) : bytes.size();
+        schema >= 13 ? schema13End - 8 - size_t(number(schema13End - 8)) : schema13End;
     const size_t schema8End =
         schema >= 9 ? schema12End - 8 - size_t(number(schema12End - 8)) : schema12End;
     const size_t trackingStart = schema8End - 8 - size_t(number(schema8End - 8));
@@ -2037,6 +2039,11 @@ void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::file
     {
         assert(schema >= 13);
         previous.assign(bytes.begin(), bytes.begin() + schema12End);
+    }
+    else if (version == 13)
+    {
+        assert(schema >= 14);
+        previous.assign(bytes.begin(), bytes.begin() + schema13End);
     }
     else
     {
@@ -5973,6 +5980,190 @@ void TestResidenceFeatures()
     g.Reset();
 }
 
+void TestCq10AndUrbanFacilities()
+{
+    using namespace tutorial;
+    PrepareCheckpointFixture();
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    assert(g.LeaveSurfaceMine());
+    CivicJustice::State().wanted = 0;
+    CivicJustice::State().heat = 0;
+    CivicJustice::State().infamy = 0;
+    const auto plan = g.Surface()->Stream().Snapshot()->planet;
+    // 1. Legacy city modernization: only halo_07 retains authored story core (115..225 m);
+    //    cinder, veil, lumen, echo retain only fixed physical location anchors (40m empty core -> full Rev 5 cities).
+    assert(plan->cityCores);
+    for (int i = 0; i < Overworld::kCityCount; ++i)
+    {
+        const auto *core = plan->cityCores->Find(Overworld::Cities()[size_t(i)].id);
+        assert(core);
+        if (i == 0)
+        {
+            assert(core->radiusMeters >= 115. && core->radiusMeters <= 225. && !core->lots.empty());
+        }
+        else
+        {
+            assert(core->radiusMeters == 40. && core->lots.empty() && core->roads.empty());
+        }
+    }
+    // 1b. Phantom-door regression check: street props/consoles/aircraft MUST NEVER classify as enterable facilities.
+    {
+        world::SurfaceStructure prop;
+        prop.id = "core1.prop_0";
+        prop.regionId = "halo_07";
+        prop.form = world::ContentForm::Scenery;
+        prop.use = world::ContentUse::Services;
+        prop.sizeMeters = {8., 8., 6.};
+        prop.solid = true;
+        assert(Game::ClassifyUrbanFacility(prop) == UrbanFacilityKind::None);
+        prop.form = world::ContentForm::Console;
+        assert(Game::ClassifyUrbanFacility(prop) == UrbanFacilityKind::None);
+        prop.form = world::ContentForm::MeasuredBuilding;
+        prop.variant = 2; // Halo_Clinic
+        assert(Game::ClassifyUrbanFacility(prop) == UrbanFacilityKind::Clinic);
+    }
+    // 2. CQ-04 C2 Urban Facility Interiors: enter, use stations, Schema 14 save/load, Monitor JSON, exit.
+    const auto returnPoint = g.Surface()->Pose().origin;
+    ActiveFacilityInterior marketEntry;
+    marketEntry.kind = UrbanFacilityKind::Market;
+    marketEntry.regionId = "halo_07";
+    marketEntry.regionName = "헤일로";
+    marketEntry.label = Game::FacilityKindName(UrbanFacilityKind::Market);
+    marketEntry.returnPoint = returnPoint;
+    marketEntry.returnYaw = 0.5f;
+    assert(g.EnterFacilityInterior(marketEntry));
+    assert(g.Mode() == WorldMode::SurfaceFacility && g.IsInteriorMode() && w.IsInsideAny());
+    auto &player = mineState.player;
+    player.credits = 200;
+    player.recoveryKits = 1;
+    player.salvage = 2;
+    assert(g.InteractFacilityStation(InteractionTarget::FacilityServicePrimary)); // Market primary: buy kit (-40 Cr, +1 kit)
+    assert(player.credits == 160 && player.recoveryKits == 2);
+    assert(g.InteractFacilityStation(InteractionTarget::FacilityServiceSecondary)); // Market secondary: sell salvage (+35 Cr, -1 salvage)
+    assert(player.credits == 195 && player.salvage == 1);
+    const std::string monitorJson = monitoring::WorldSnapshot::Build(1, "cq10-facility");
+    assert(monitorJson.find("\"facility_interior\":{\"active\":true") != std::string::npos);
+    assert(monitorJson.find("상점 · 보급소") != std::string::npos);
+    // Schema 14 save/load round-trip while inside a facility interior.
+    const auto saveFolder =
+        std::filesystem::path("x64/RevisionChecks") /
+        ("cq10-facility-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    const auto saveFile = saveFolder / "facility.sav";
+    const bool savedOk = SaveSystem::Save(saveFile);
+    if (!savedOk)
+    {
+        std::cerr << "CQ10 SaveSystem::Save failed: " << SaveSystem::Message() << "\n";
+    }
+    assert(savedOk);
+    assert(SaveSystem::CheckFile(saveFile));
+    assert(g.ExitFacilityInterior());
+    assert(g.Mode() == WorldMode::SurfaceExterior && !w.IsInsideAny());
+    assert(SaveSystem::Load(saveFile));
+    WaitForCheckpointLoad();
+    assert(g.Mode() == WorldMode::SurfaceFacility && w.facilityInterior.kind == UrbanFacilityKind::Market &&
+           w.facilityInterior.regionId == "halo_07");
+    assert(g.ExitFacilityInterior());
+    assert(g.Mode() == WorldMode::SurfaceExterior);
+    // Verify Clinic & Workshop stations as well.
+    ActiveFacilityInterior clinicEntry = marketEntry;
+    clinicEntry.kind = UrbanFacilityKind::Clinic;
+    clinicEntry.label = Game::FacilityKindName(UrbanFacilityKind::Clinic);
+    player.health = 40;
+    assert(g.EnterFacilityInterior(clinicEntry));
+    assert(g.InteractFacilityStation(InteractionTarget::FacilityServicePrimary)); // Clinic primary: heal (-30 Cr, full HP)
+    assert(player.health == player.maxHealth);
+    assert(g.ExitFacilityInterior());
+    // 3. CQ-10 Empty-Zone Content & Outlaw Raiders (no wanted heat on self-defense).
+    auto *community = g.SurfaceCommunity();
+    assert(community);
+    bool testedOutlaw = false;
+    bool testedNonCityQuest = false;
+    for (const auto &region : plan->regions)
+    {
+        if (region.center.space != world::SpaceKind::Surface ||
+            region.definition.kind == world::RegionKind::Settlement ||
+            region.definition.id == "frontier" || region.definition.id == "mq00_mine")
+        {
+            continue;
+        }
+        if (region.definition.kind == world::RegionKind::Outlaw && !testedOutlaw)
+        {
+            assert(g.RelocateSurfaceSurvey(region.access.position));
+            g.Update(0);
+            for (int i = 0; i < 120; ++i)
+            {
+                community->Update(.05f, true);
+                auto it = std::find_if(community->State().sites.begin(), community->State().sites.end(),
+                                       [&](const auto &s) { return s.regionId == region.definition.id; });
+                if (it != community->State().sites.end())
+                {
+                    break;
+                }
+            }
+            auto it = std::find_if(community->State().sites.begin(), community->State().sites.end(),
+                                   [&](const auto &s) { return s.regionId == region.definition.id; });
+            if (it != community->State().sites.end() && it->residents.size() >= 2)
+            {
+                assert(!it->residents[0].hostile);
+                assert(it->residents[1].hostile);
+                // Friendly/hostile self-fire protection: enemy-owned bolts (!playerOwned) must not hit hostile raiders.
+                auto raiderPt = it->residents[1].position;
+                raiderPt.altitudeMeters += .8;
+                assert(!community->Hit(raiderPt, 10, false));
+                const int salvageBefore = player.salvage;
+                const int wantedBefore = CivicJustice::State().wanted;
+                // Defeat all hostile raiders in the Outlaw camp -> zero wanted heat & automatic bounty completion!
+                for (size_t rIdx = 1; rIdx < it->residents.size(); ++rIdx)
+                {
+                    if (it->residents[rIdx].hostile && it->residents[rIdx].health > 0)
+                    {
+                        assert(community->Damage(it->residents[rIdx].id, 200, true));
+                    }
+                }
+                assert(CivicJustice::State().wanted == wantedBefore && CivicJustice::State().heat == 0);
+                assert(player.salvage >= salvageBefore);
+                assert(it->task == CommunityTaskProgress::Measured);
+                const std::string title = PlanetCommunity::ZoneTaskName(*it, plan.get());
+                assert(title != PlanetCommunity::TaskName(*it));
+                testedOutlaw = true;
+            }
+        }
+        else if ((region.definition.kind == world::RegionKind::AncientRuins ||
+                  region.definition.kind == world::RegionKind::Wilderness ||
+                  region.definition.kind == world::RegionKind::Mine) &&
+                 !testedNonCityQuest)
+        {
+            assert(g.RelocateSurfaceSurvey(region.access.position));
+            g.Update(0);
+            for (int i = 0; i < 120; ++i)
+            {
+                community->Update(.05f, true);
+                auto it = std::find_if(community->State().sites.begin(), community->State().sites.end(),
+                                       [&](const auto &s) { return s.regionId == region.definition.id; });
+                if (it != community->State().sites.end())
+                {
+                    break;
+                }
+            }
+            auto it = std::find_if(community->State().sites.begin(), community->State().sites.end(),
+                                   [&](const auto &s) { return s.regionId == region.definition.id; });
+            if (it != community->State().sites.end() && it->residents.size() >= 2)
+            {
+                const std::string title = PlanetCommunity::ZoneTaskName(*it, plan.get());
+                assert(title != PlanetCommunity::TaskName(*it));
+                testedNonCityQuest = true;
+            }
+        }
+        if (testedOutlaw && testedNonCityQuest)
+        {
+            break;
+        }
+    }
+    assert(testedOutlaw && testedNonCityQuest);
+    g.Reset();
+}
+
 int main(int argc, char **argv)
 {
     if (argc > 1 && std::string(argv[1]) == "--support")
@@ -6047,6 +6238,12 @@ int main(int argc, char **argv)
     static_assert(std::is_base_of<game::Level, game::MineLevel>::value);
     static_assert(!std::is_copy_constructible<game::MineLevel>::value);
     static_assert(std::is_base_of<game::Scene, game::MineScene>::value);
+    if (argc > 1 && std::string(argv[1]) == "--cq10-facilities")
+    {
+        TestCq10AndUrbanFacilities();
+        std::cout << "CQ-10 empty-zone, legacy city border and CQ-04 C2 urban facility checks passed.\n";
+        return 0;
+    }
     if (argc > 1 && std::string(argv[1]) == "--urban")
     {
         TestUrbanTraffic();
@@ -6085,6 +6282,7 @@ int main(int argc, char **argv)
     TestWorldCheckpoints();
     TestCityTrafficHandoff();
     TestPlanetCommunity();
+    TestCq10AndUrbanFacilities();
     TestPlanetSecurity();
     TestPlanetParty();
     TestPlanetProfileVisits();

@@ -4396,6 +4396,28 @@ void PlanetCommunity::Validate(const PlanetCommunityState &value, const world::P
         }
     }
 }
+static bool IsCommunitySurfaceRegion(const world::GeneratedRegion &region, const world::GeneratedPlanet &planet)
+{
+    if (region.center.space != world::SpaceKind::Surface)
+    {
+        return false;
+    }
+    if (planet.cityCores)
+    {
+        if (const auto *core = planet.cityCores->Find(region.definition.id))
+        {
+            if (!core->lots.empty() || !core->roads.empty())
+            {
+                return false;
+            }
+        }
+    }
+    if (region.definition.id == "frontier" || region.definition.id == "mq00_mine")
+    {
+        return false;
+    }
+    return true;
+}
 void PlanetCommunity::Bind(std::shared_ptr<const world::GeneratedPlanet> input)
 {
     if (!input)
@@ -4409,24 +4431,22 @@ void PlanetCommunity::Bind(std::shared_ptr<const world::GeneratedPlanet> input)
     const auto &p = input->terrain.Planet();
     Validate(state, p);
     world::ContentCollision placement;
-    for (const auto &site : state.sites)
+    for (auto &site : state.sites)
     {
         const auto &region = input->Region(site.regionId);
-        if (region.center.space != world::SpaceKind::Surface ||
-            (region.definition.kind != world::RegionKind::Settlement &&
-             region.definition.kind != world::RegionKind::Outpost) ||
-            (input->cityCores && input->cityCores->Find(site.regionId)) ||
+        if (!IsCommunitySurfaceRegion(region, *input) ||
             TG::Distance(p.radiusMeters, region.access.position, site.contact) > 220 ||
             TG::Distance(p.radiusMeters, region.access.position, site.target) > 220 ||
             TG::Distance(p.radiusMeters, site.contact, site.target) < 12 ||
             std::abs(input->terrain.Height(site.contact) - site.contact.altitudeMeters) > .25 ||
             std::abs(input->terrain.Height(site.target) - site.target.altitudeMeters) > .25)
         {
-            throw std::invalid_argument("현장 의뢰가 저장된 도시/전초기지와 맞지 않습니다.");
+            throw std::invalid_argument("현장 의뢰가 저장된 지역 정보와 맞지 않습니다.");
         }
         for (size_t i = 0; i < site.residents.size(); ++i)
         {
-            const auto &person = site.residents[i];
+            auto &person = site.residents[i];
+            person.hostile = (region.definition.kind == world::RegionKind::Outlaw && i > 0);
             const auto length = TG::Distance(p.radiusMeters, person.path[0], person.path[1]);
             auto expected =
                 TransitArc(person.path[0], person.path[1], person.distanceMeters / (std::max)(.001, length));
@@ -4435,7 +4455,8 @@ void PlanetCommunity::Bind(std::shared_ptr<const world::GeneratedPlanet> input)
                 length < 6 || length > 200 || person.distanceMeters > length + .001 ||
                 TG::Distance(p.radiusMeters, region.access.position, person.path[0]) > 220 ||
                 TG::Distance(p.radiusMeters, region.access.position, person.path[1]) > 220 ||
-                TG::Distance(p.radiusMeters, expected, person.position) > 1.6 ||
+                (!person.hostile && TG::Distance(p.radiusMeters, expected, person.position) > 1.6) ||
+                (person.hostile && TG::Distance(p.radiusMeters, region.access.position, person.position) > 220) ||
                 placement.Blocked(*input, person.position, .35) ||
                 std::abs(input->terrain.Height(person.position) - person.position.altitudeMeters) > .25)
             {
@@ -4455,7 +4476,18 @@ size_t PlanetCommunity::TargetResidents(const world::GeneratedRegion &region)
 {
     if (region.definition.kind != world::RegionKind::Settlement)
     {
-        return 4;
+        switch (region.definition.kind)
+        {
+        case world::RegionKind::Outlaw:
+            return 5;
+        case world::RegionKind::Outpost:
+        case world::RegionKind::Mine:
+            return 4;
+        case world::RegionKind::AncientRuins:
+        case world::RegionKind::Wilderness:
+        default:
+            return 3;
+        }
     }
     switch (region.definition.tier)
     {
@@ -4503,9 +4535,9 @@ bool PlanetCommunity::Populate(const world::GeneratedRegion &region)
             break;
         }
         auto cell = world::ContentLayout::Generate(*planet, key);
-        if (region.definition.kind == world::RegionKind::Outpost)
+        if (region.definition.kind != world::RegionKind::Settlement)
         {
-            // Outposts have service yards instead of urban sidewalks. Walk around actual structures.
+            // Non-city zones (Outpost/Mine/Outlaw/AncientRuins/Wilderness) have field yards instead of urban sidewalks.
             for (const auto &structure : cell.structures)
             {
                 const double x = structure.sizeMeters.x * .5 + 4, y = structure.sizeMeters.y * .5 + 4;
@@ -4614,6 +4646,62 @@ bool PlanetCommunity::Populate(const world::GeneratedRegion &region)
                 person.heading = TG::Unit(
                     TransitAdd({basis.right.x * local.x, basis.right.y * local.x, basis.right.z * local.x},
                                basis.forward, local.y));
+                person.hostile = (region.definition.kind == world::RegionKind::Outlaw && slot > 0);
+                site.residents.push_back(std::move(person));
+            }
+        }
+    }
+    // Radial field patrol fallback for rugged non-city zones (Wilderness/AncientRuins/Mine/Outlaw)
+    // when structure perimeters alone yield fewer than 2 walkable patrol segments.
+    if (region.definition.kind != world::RegionKind::Settlement && site.residents.size() < targetResidents)
+    {
+        const auto accessFrame = TG::Frame(region.access.position);
+        for (double radius : {16., 28., 44.})
+        {
+            for (int seg = 0; seg < 6 && site.residents.size() < targetResidents; ++seg)
+            {
+                const double a0 = seg * (TG::Pi / 3.0);
+                const double a1 = a0 + (TG::Pi / 3.0);
+                auto start = TG::FromLocal(accessFrame, {radius * std::cos(a0), radius * std::sin(a0), 0},
+                                           p.radiusMeters);
+                auto end = TG::FromLocal(accessFrame, {radius * std::cos(a1), radius * std::sin(a1), 0},
+                                         p.radiusMeters);
+                start.altitudeMeters = planet->terrain.Height(start);
+                end.altitudeMeters = planet->terrain.Height(end);
+                const double len = TG::Distance(p.radiusMeters, start, end);
+                if (len < 12 || len > 180 ||
+                    TG::Distance(p.radiusMeters, region.access.position, start) > 210 ||
+                    TG::Distance(p.radiusMeters, region.access.position, end) > 210)
+                {
+                    continue;
+                }
+                bool clear = true;
+                for (unsigned n = 0; n <= 8 && clear; ++n)
+                {
+                    clear = surface->LandingClear(TransitArc(start, end, n / 8.), .45);
+                }
+                if (!clear || std::any_of(site.residents.begin(), site.residents.end(), [&](const auto &other) {
+                        return TG::Distance(p.radiusMeters, other.path[0], start) < 4;
+                    }))
+                {
+                    continue;
+                }
+                CommunityResident person;
+                const auto slot = site.residents.size();
+                person.id = world::WorldIdentity::ContentKey(p, site.regionId,
+                                                             "community1.resident." + std::to_string(slot));
+                person.appearance = world::WorldIdentity::StreamSeed(
+                    p, site.regionId, "community1.appearance." + std::to_string(slot));
+                person.path = {start, end};
+                person.distanceMeters = 3;
+                person.position = TransitArc(start, end, person.distanceMeters / len);
+                person.position.altitudeMeters = planet->terrain.Height(person.position);
+                auto local = TG::ToLocal(TG::Frame(person.position), end, p.radiusMeters);
+                auto basis = TG::Frame(person.position);
+                person.heading = TG::Unit(
+                    TransitAdd({basis.right.x * local.x, basis.right.y * local.x, basis.right.z * local.x},
+                               basis.forward, local.y));
+                person.hostile = (region.definition.kind == world::RegionKind::Outlaw && slot > 0);
                 site.residents.push_back(std::move(person));
             }
         }
@@ -4661,10 +4749,7 @@ void PlanetCommunity::Update(float dt, bool exterior)
         double best = WakeMeters;
         for (const auto &region : planet->regions)
         {
-            if (region.center.space != world::SpaceKind::Surface ||
-                (region.definition.kind != world::RegionKind::Settlement &&
-                 region.definition.kind != world::RegionKind::Outpost) ||
-                (planet->cityCores && planet->cityCores->Find(region.definition.id)) ||
+            if (!IsCommunitySurfaceRegion(region, *planet) ||
                 std::any_of(state.sites.begin(), state.sites.end(),
                             [&](const auto &site) { return site.regionId == region.definition.id; }))
             {
@@ -4695,6 +4780,7 @@ void PlanetCommunity::Update(float dt, bool exterior)
                 profiling::Count(profiling::Counter::NpcMemoriesExpired);
             }
             person.perceptionCooldown -= dt;
+            person.attackCooldown = (std::max)(0.f, person.attackCooldown - dt);
             person.fearSeconds = (std::max)(0.f, person.fearSeconds - dt);
             person.hitFlash = (std::max)(0.f, person.hitFlash - dt);
             if (person.health <= 0)
@@ -4714,7 +4800,105 @@ void PlanetCommunity::Update(float dt, bool exterior)
             }
             ++active;
             profiling::Count(profiling::Counter::CommunityDetailedTicks);
-            if (person.perceptionCooldown <= 0)
+            if (person.hostile && !w.aircraft.mounted && distance < 32.0)
+            {
+                // Dedicated hostile combat AI: pursue player cleanly facing forward (never moonwalking on
+                // civilian sidewalk rails), halt into firing stance within combat range, and fire real bolts
+                // from a forward muzzle offset so they never self-collide.
+                const auto shooterLocal = PlanetSecurity::Local(person.position);
+                const auto heroLocal = PlanetSecurity::Local(hero);
+                const bool hasLos = CivicJustice::ClearLine(shooterLocal, heroLocal);
+                const auto from = person.position;
+                const auto moveFrame = TG::Frame(from);
+                const auto toHero = TG::ToLocal(moveFrame, hero, p.radiusMeters);
+                const double toHeroNorm = std::hypot(toHero.x, toHero.y);
+                const bool shouldAdvance = (distance > 11.5 || !hasLos) &&
+                                           TG::Distance(p.radiusMeters, from, person.path[0]) < 42.0;
+                bool movedCombat = false;
+                if (shouldAdvance && toHeroNorm > .1)
+                {
+                    person.speed += std::clamp(2.75f - person.speed, -6.f * dt, 5.f * dt);
+                    const double step = person.speed * dt;
+                    const double baseAngle = std::atan2(toHero.y, toHero.x);
+                    for (double turn : {0., .55, -.55, 1.15, -1.15})
+                    {
+                        auto candidate = TG::Advance(moveFrame, std::cos(baseAngle + turn) * step,
+                                                     std::sin(baseAngle + turn) * step, p.radiusMeters)
+                                             .origin;
+                        candidate.altitudeMeters = planet->terrain.Height(candidate);
+                        if (TG::Distance(p.radiusMeters, candidate, person.path[0]) > 42.0)
+                        {
+                            continue;
+                        }
+                        const bool crowded =
+                            std::any_of(site.residents.begin(), site.residents.end(), [&](const auto &other) {
+                                const double gap = TG::Distance(p.radiusMeters, candidate, other.position);
+                                return other.id != person.id && other.health > 0 && gap < 1.0 &&
+                                       gap <= TG::Distance(p.radiusMeters, from, other.position);
+                            });
+                        if ((!w.Mounted() && TG::Distance(p.radiusMeters, candidate, hero) < 1.2) ||
+                            !g.Surface()->LandingClear(candidate, .35) || crowded ||
+                            (g.SurfaceTraffic() && g.SurfaceTraffic()->Blocked(candidate, .45)) ||
+                            (g.SurfaceParty() && g.SurfaceParty()->Blocked(candidate, .45)))
+                        {
+                            continue;
+                        }
+                        person.position = candidate;
+                        const auto nextFrame = TG::Frame(candidate);
+                        const auto stepVec = TG::ToLocal(moveFrame, candidate, p.radiusMeters);
+                        if (std::hypot(stepVec.x, stepVec.y) > .001)
+                        {
+                            const float oldYaw = float(std::atan2(TG::Dot(person.heading, nextFrame.forward),
+                                                                  TG::Dot(person.heading, nextFrame.right)));
+                            const float yaw =
+                                MotionMath::Turn(oldYaw, float(std::atan2(stepVec.y, stepVec.x)), 8.f * dt);
+                            person.heading = TG::Unit(TransitAdd(
+                                {nextFrame.right.x * std::cos(yaw), nextFrame.right.y * std::cos(yaw),
+                                 nextFrame.right.z * std::cos(yaw)},
+                                nextFrame.forward, std::sin(yaw)));
+                        }
+                        person.motion.Update({}, {float(TG::Distance(p.radiusMeters, from, candidate) / 2), 0}, dt);
+                        movedCombat = true;
+                        break;
+                    }
+                }
+                if (!movedCombat)
+                {
+                    person.speed = 0;
+                    if (toHeroNorm > .01)
+                    {
+                        const float oldYaw = float(std::atan2(TG::Dot(person.heading, moveFrame.forward),
+                                                              TG::Dot(person.heading, moveFrame.right)));
+                        const float yaw =
+                            MotionMath::Turn(oldYaw, float(std::atan2(toHero.y, toHero.x)), 10.f * dt);
+                        person.heading = TG::Unit(TransitAdd(
+                            {moveFrame.right.x * std::cos(yaw), moveFrame.right.y * std::cos(yaw),
+                             moveFrame.right.z * std::cos(yaw)},
+                            moveFrame.forward, std::sin(yaw)));
+                    }
+                    person.motion.Update({}, {}, dt);
+                }
+                if (hasLos && distance < 26.0 && person.attackCooldown <= 0)
+                {
+                    person.attackCooldown = 1.25f + float(i % 3) * .25f;
+                    const auto curLocal = PlanetSecurity::Local(person.position);
+                    const float dx = heroLocal.x - curLocal.x;
+                    const float dy = heroLocal.y - curLocal.y;
+                    const float dlen = std::hypot(dx, dy);
+                    if (dlen > .05f)
+                    {
+                        const float dirX = dx / dlen, dirY = dy / dlen;
+                        // Offset muzzle 0.55 legacy units (1.1m) forward so bolts never self-hit.
+                        const Vector2 muzzle{curLocal.x + dirX * .55f, curLocal.y + dirY * .55f};
+                        const float elev = PlanetSecurity::Elevation(person.position) +
+                                           models::WorldScale::aimHeightPixels / 44.f;
+                        CivicJustice::State().bullets.push_back(
+                            {muzzle, {dirX, dirY}, 16.f, 18.f, 8, false, false, elev});
+                    }
+                }
+                continue;
+            }
+            if (!person.hostile && person.perceptionCooldown <= 0)
             {
                 person.perceptionCooldown = ai::PerceptionSettings::kScanSeconds +
                                             float(i % 4) * ai::PerceptionSettings::kScanSpreadSeconds;
@@ -4887,14 +5071,62 @@ bool PlanetCommunity::Damage(const std::string &id, int damage, bool playerOwned
         return false;
     }
     person->health = (std::max)(0, person->health - damage);
-    person->fearSeconds = 15;
-    person->lastThreat = person->position;
-    person->threat.Remember(ai::Stimulus::Report, person->fearSeconds);
+    if (!person->hostile)
+    {
+        person->fearSeconds = 15;
+        person->lastThreat = person->position;
+        person->threat.Remember(ai::Stimulus::Report, person->fearSeconds);
+    }
     person->hitFlash = .15f;
     person->speed = 0;
     if (playerOwned)
     {
-        PlanetSecurity::Report(person->health > 0 ? Offense::Assault : Offense::Homicide, person->position);
+        if (person->hostile)
+        {
+            if (person->health == 0)
+            {
+                auto &player = game::GameLevels::Mine().GetState().player;
+                if (player.salvage < 9999)
+                {
+                    ++player.salvage;
+                }
+                // CQ-10 Outlaw combat bounty: defeating all hostile raiders in an Outlaw camp
+                // completes the camp's bounty objective directly without needing to click a sensor.
+                bool campCleared = false;
+                for (auto &site : state.sites)
+                {
+                    const bool ownsRaider = std::any_of(site.residents.begin(), site.residents.end(),
+                                                        [&](const auto &r) { return r.id == id; });
+                    if (!ownsRaider)
+                    {
+                        continue;
+                    }
+                    const bool anyAlive = std::any_of(site.residents.begin(), site.residents.end(),
+                                                      [](const auto &r) { return r.hostile && r.health > 0; });
+                    if (!anyAlive && (site.task == CommunityTaskProgress::Offered ||
+                                      site.task == CommunityTaskProgress::Accepted))
+                    {
+                        site.task = CommunityTaskProgress::Measured;
+                        ActivityJournal::Refresh();
+                        campCleared = true;
+                    }
+                    break;
+                }
+                if (campCleared)
+                {
+                    Game::Get().ShowNotice(
+                        "무법자 전원 소탕 완료 (+고철 1) / 현장 접수 단말에서 현상금을 정산하세요!");
+                }
+                else
+                {
+                    Game::Get().ShowNotice("무법자 제압 / 고철 +1 획득");
+                }
+            }
+        }
+        else
+        {
+            PlanetSecurity::Report(person->health > 0 ? Offense::Assault : Offense::Homicide, person->position);
+        }
     }
     return true;
 }
@@ -4908,6 +5140,10 @@ bool PlanetCommunity::Hit(const world::SurfacePoint &point, int damage, bool pla
     {
         for (const auto &person : site.residents)
         {
+            if (!playerOwned && person.hostile)
+            {
+                continue;
+            }
             if (person.health > 0 && point.altitudeMeters >= person.position.altitudeMeters &&
                 point.altitudeMeters <= person.position.altitudeMeters + 1.9 &&
                 TG::Distance(planet->terrain.Planet().radiusMeters, point, person.position) < .7)
@@ -4947,7 +5183,7 @@ std::optional<PlanetCommunity::Contact> PlanetCommunity::Nearest() const
         }
         for (size_t n = 0; n < site.residents.size(); ++n)
         {
-            if (site.residents[n].health > 0 && site.residents[n].fearSeconds <= 0)
+            if (!site.residents[n].hostile && site.residents[n].health > 0 && site.residents[n].fearSeconds <= 0)
             {
                 offer(i, n, 2, site.residents[n].position);
             }
@@ -4971,9 +5207,26 @@ const char *PlanetCommunity::Label() const
     {
         return "현장 / 상호작용";
     }
-    return contact->kind == 1   ? "현장 센서 / 측정 기록"
-           : contact->kind == 2 ? "지역 주민 / 대화"
-                                : "현장 접수 단말 / 선택 의뢰";
+    if (contact->kind == 1 && planet && contact->site < state.sites.size())
+    {
+        const auto kind = planet->Region(state.sites[contact->site].regionId).definition.kind;
+        switch (kind)
+        {
+        case world::RegionKind::Mine:
+            return "노천 시추 지점 / 시추·채굴";
+        case world::RegionKind::Outlaw:
+            return "약탈자 교란기 / 무력화";
+        case world::RegionKind::AncientRuins:
+            return "고대 석비 / 공명 해독";
+        case world::RegionKind::Outpost:
+            return "전초 보급 비컨 / 교정";
+        case world::RegionKind::Wilderness:
+            return "야생 관측봉 / 표본 회수";
+        default:
+            return "현장 센서 / 측정 기록";
+        }
+    }
+    return contact->kind == 2 ? "현장 인원 / 대화" : "현장 접수 단말 / 지역 의뢰";
 }
 const char *PlanetCommunity::TaskName(const CommunitySite &site)
 {
@@ -4985,6 +5238,57 @@ const char *PlanetCommunity::TaskName(const CommunitySite &site)
     static const char *names[] = {"중계 잡음 측정", "전력 분기 진단", "환경 센서 점검"};
     return names[hash % 3];
 }
+const char *PlanetCommunity::ZoneTaskName(const CommunitySite &site, const world::GeneratedPlanet *planet)
+{
+    unsigned hash = 0;
+    for (unsigned char c : site.regionId)
+    {
+        hash = hash * 33 + c;
+    }
+    if (!planet)
+    {
+        return TaskName(site);
+    }
+    for (const auto &reg : planet->regions)
+    {
+        if (reg.definition.id != site.regionId)
+        {
+            continue;
+        }
+        switch (reg.definition.kind)
+        {
+        case world::RegionKind::Outpost:
+        {
+            static const char *names[] = {"전초 기상 계측", "보급 비컨 점검", "외곽 통신 교정"};
+            return names[hash % 3];
+        }
+        case world::RegionKind::Mine:
+        {
+            static const char *names[] = {"노천 광맥 시추 점검", "채굴 안전 센서 교정", "광석 운송로 측량"};
+            return names[hash % 3];
+        }
+        case world::RegionKind::Outlaw:
+        {
+            static const char *names[] = {"무법 지대 교란기 추적", "약탈자 보급 신호 탐지", "불법 중계기 위치 기록"};
+            return names[hash % 3];
+        }
+        case world::RegionKind::AncientRuins:
+        {
+            static const char *names[] = {"고대 석비 공명 측정", "유적 에너지 잔향 채집", "고대 구조물 좌표 기록"};
+            return names[hash % 3];
+        }
+        case world::RegionKind::Wilderness:
+        {
+            static const char *names[] = {"야생 지질 표본 측량", "기후 관측봉 데이터 회수", "생태계 신호 탐사"};
+            return names[hash % 3];
+        }
+        case world::RegionKind::Settlement:
+        default:
+            return TaskName(site);
+        }
+    }
+    return TaskName(site);
+}
 void PlanetCommunity::Interact()
 {
     const auto contact = Nearest();
@@ -4995,35 +5299,156 @@ void PlanetCommunity::Interact()
     auto &site = state.sites[contact->site];
     auto &g = Game::Get();
     const auto &region = planet->Region(site.regionId);
+    const char *taskTitle = ZoneTaskName(site, planet.get());
     if (contact->kind == 2)
     {
-        static const char *lines[] = {
-            "이 구역 일은 현장 단말에 올라옵니다. 급한 일정이 없다면 확인해 보세요.",
-            "큰 관문이 멎어도 동네 전력과 통신은 계속 돌봐야죠. 작은 고장부터 잡고 있어요.",
-            "다친 사람이 있으면 의료소부터 찾으세요. 외곽에서는 구조대가 오는 데 시간이 걸려요.",
-            "도시 밖에 나갈 땐 중계환부터 등록해 두세요. 돌아오는 길이 훨씬 편해집니다."};
+        const char *line = nullptr;
+        switch (region.definition.kind)
+        {
+        case world::RegionKind::Mine:
+        {
+            static const char *lines[] = {
+                "노천 광구는 지반 진동이 잦아 시추 센서를 수시로 교정해야 합니다.",
+                "채굴 구역 주변에 잔여 고철이 많습니다. 현장 의뢰를 마치면 보급품도 챙겨 드릴게요.",
+                "광석 운송 차량이 다니는 진입로는 비워 두는 편이 안전합니다.",
+                "단말에 등록된 측량 좌표만 확인해 주셔도 작업반에 큰 도움이 됩니다."};
+            line = lines[contact->resident % 4];
+            break;
+        }
+        case world::RegionKind::Outlaw:
+        {
+            static const char *lines[] = {
+                "조심하세요. 캠프 안쪽 약탈자들은 낯선 사람을 보면 바로 사격합니다.",
+                "무법자 교란기를 기록해 두면 치안대 없이도 정당방위로 정리할 수 있어요.",
+                "약탈자 무장 인원을 제압하면 고철 부품을 회수할 수 있습니다.",
+                "이 구역은 치안망 밖이라 중계환을 미리 등록해 두는 게 안전합니다."};
+            line = lines[contact->resident % 4];
+            break;
+        }
+        case world::RegionKind::AncientRuins:
+        {
+            static const char *lines[] = {
+                "이 유적의 석비는 행성 자기장과 미세하게 공명하고 있어요.",
+                "탐사 단말에 올려둔 좌표에서 잔향 데이터를 측정해 주실 수 있나요?",
+                "도시 건설 이전 시대 구조물이라 지형 변형에도 형태가 남아 있습니다.",
+                "기록을 제출하시면 탐사대 비축 고철을 추가로 나눠 드릴게요."};
+            line = lines[contact->resident % 4];
+            break;
+        }
+        case world::RegionKind::Wilderness:
+        {
+            static const char *lines[] = {
+                "야생 관측 지점은 보급이 귀해서 현장 측정 기록이 곧 생명줄입니다.",
+                "멀리 떠나기 전에 회복 키트를 챙겨 두세요. 의뢰 보상으로도 드립니다.",
+                "이 일대 지형은 기복이 크니 차량이나 비행체 고도를 잘 살피세요.",
+                "관측봉 신호를 회수해 단말에 제출해 주시면 바로 정산해 드립니다."};
+            line = lines[contact->resident % 4];
+            break;
+        }
+        default:
+        {
+            static const char *lines[] = {
+                "이 구역 일은 현장 단말에 올라옵니다. 급한 일정이 없다면 확인해 보세요.",
+                "큰 관문이 멎어도 동네 전력과 통신은 계속 돌봐야죠. 작은 고장부터 잡고 있어요.",
+                "다친 사람이 있으면 의료소부터 찾으세요. 외곽에서는 구조대가 오는 데 시간이 걸려요.",
+                "도시 밖에 나갈 땐 중계환부터 등록해 두세요. 돌아오는 길이 훨씬 편해집니다."};
+            line = lines[contact->resident % 4];
+            break;
+        }
+        }
         Dialogue::Say("community." + site.regionId + ".resident." + std::to_string(contact->resident),
-                      region.definition.name + " 주민 / " + lines[contact->resident % 4]);
+                      region.definition.name + " 현장 인원 / " + line);
         return;
     }
     if (contact->kind == 1)
     {
         if (CommunityTaskProgress::Measure(site))
         {
-            g.ShowNotice(std::string(TaskName(site)) + " / 기록 확보. 현장 접수 단말에 제출하세요.");
+            auto &player = game::GameLevels::Mine().GetState().player;
+            if (region.definition.kind == world::RegionKind::Mine)
+            {
+                if (player.salvage < 9999)
+                {
+                    ++player.salvage;
+                }
+                g.ShowNotice(std::string(taskTitle) +
+                             " / 노천 광맥 시추 완료 (원광 고철 +1 확보). 현장 단말에서 정산하세요.");
+            }
+            else if (region.definition.kind == world::RegionKind::AncientRuins)
+            {
+                player.experience += 40;
+                g.ShowNotice(std::string(taskTitle) +
+                             " / 고대 석비 공명 해독 (+40 XP). 탐사 단말에 제출하면 고대 고철을 받습니다.");
+            }
+            else if (region.definition.kind == world::RegionKind::Outpost)
+            {
+                player.health = (std::min)(player.maxHealth, player.health + 25);
+                g.GetState().playerMotion.mobility.RestoreStamina(PlayerMobility::MaxStamina, 0.f);
+                g.ShowNotice(std::string(taskTitle) +
+                             " / 전초 비컨 교정 완료 (체력 +25 · 스태미너 회복). 단말에 보고하세요.");
+            }
+            else if (region.definition.kind == world::RegionKind::Wilderness)
+            {
+                player.experience += 25;
+                g.ShowNotice(std::string(taskTitle) +
+                             " / 야생 지질 표본 회수 (+25 XP). 현장 단말에서 보급품을 수령하세요.");
+            }
+            else if (region.definition.kind == world::RegionKind::Outlaw)
+            {
+                g.ShowNotice(std::string(taskTitle) +
+                             " / 무법자 교란기 무력화 완료. 접수 단말에서 현상금을 정산하세요.");
+            }
+            else
+            {
+                g.ShowNotice(std::string(taskTitle) + " / 기록 확보. 현장 접수 단말에 제출하세요.");
+            }
         }
         return;
     }
     if (site.task == CommunityTaskProgress::Measured)
     {
-        auto &credits = game::GameLevels::Mine().GetState().player.credits;
-        const auto result = CommunityTaskProgress::Submit(site, credits);
+        auto &player = game::GameLevels::Mine().GetState().player;
+        const auto result = CommunityTaskProgress::Submit(site, player.credits);
         if (result == CommunityTaskProgress::SubmitResult::Granted)
         {
+            std::string bonusText;
+            if (region.definition.kind == world::RegionKind::Mine ||
+                region.definition.kind == world::RegionKind::Outlaw)
+            {
+                const int gain = (std::min)(2, (std::max)(0, 9999 - player.salvage));
+                player.salvage += gain;
+                if (gain > 0)
+                {
+                    bonusText = " + 고철 +" + std::to_string(gain);
+                }
+            }
+            else if (region.definition.kind == world::RegionKind::AncientRuins)
+            {
+                const int gain = (std::min)(3, (std::max)(0, 9999 - player.salvage));
+                player.salvage += gain;
+                if (gain > 0)
+                {
+                    bonusText = " + 유적 고철 +" + std::to_string(gain);
+                }
+            }
+            else if (region.definition.kind == world::RegionKind::Outpost ||
+                     region.definition.kind == world::RegionKind::Wilderness)
+            {
+                if (player.recoveryKits < 999)
+                {
+                    ++player.recoveryKits;
+                    bonusText = " + 회복 키트 +1";
+                }
+                else if (player.salvage < 9999)
+                {
+                    ++player.salvage;
+                    bonusText = " + 고철 +1";
+                }
+            }
             ActivityJournal::Refresh();
-            g.ShowNotice(std::string(TaskName(site)) + " 완료 / " +
-                         std::to_string(CommunityTaskProgress::RewardCredits) +
-                         " 크레딧. 현장 기록을 보관했습니다.");
+            g.ShowNotice(std::string(taskTitle) + " 완료 / " +
+                         std::to_string(CommunityTaskProgress::RewardCredits) + " 크레딧" + bonusText +
+                         ". 현장 기록을 보관했습니다.");
         }
         else if (result == CommunityTaskProgress::SubmitResult::WalletFull)
         {
@@ -5040,10 +5465,21 @@ void PlanetCommunity::Interact()
     }
     const auto key = state.worldKey, id = site.regionId;
     const bool active = site.task == CommunityTaskProgress::Accepted;
+    const char *zoneObjectiveDesc =
+        region.definition.kind == world::RegionKind::Outlaw
+            ? "캠프 내 적대 약탈자를 전원 소탕하거나 교란기를 무력화하세요. 보상 100 Cr + 고철 +2."
+        : region.definition.kind == world::RegionKind::Mine
+            ? "표식된 노천 시추 지점을 점검하고 원광 고철을 확보하세요. 보상 100 Cr + 고철 +3."
+        : region.definition.kind == world::RegionKind::AncientRuins
+            ? "고대 석비 공명 지점을 해독해 탐사 데이터를 회수하세요. 보상 100 Cr + 유적 고철 +3 + 40 XP."
+        : region.definition.kind == world::RegionKind::Outpost
+            ? "전초 보급 비컨을 교정하고 현장 상태를 보고하세요. 보상 100 Cr + 회복 키트 +1."
+        : region.definition.kind == world::RegionKind::Wilderness
+            ? "야생 관측 지점의 지질·생태 표본을 회수하세요. 보상 100 Cr + 회복 키트 +1 + 25 XP."
+            : "표식이 있는 센서에서 기록을 확보해 돌아오세요. 보상 100 크레딧.";
     const std::string question =
-        active ? "측정을 계속하거나 이 의뢰를 중단할 수 있습니다. 메인 임무에는 영향을 주지 않습니다."
-               : std::string(TaskName(site)) + " / 표식이 있는 센서에서 기록을 확보해 돌아오세요. 보상 " +
-                     std::to_string(CommunityTaskProgress::RewardCredits) + " 크레딧. 수락은 선택입니다.";
+        active ? "현재 의뢰를 계속 진행하거나 중단할 수 있습니다. 메인 임무에는 영향을 주지 않습니다."
+               : std::string(taskTitle) + " / " + zoneObjectiveDesc + " 수락은 선택입니다.";
     Dialogue::Start(
         "community." + id + (active ? ".manage" : ".offer"),
         {{"choice", "현장 접수 단말", "지역 의뢰", question,
@@ -5085,16 +5521,24 @@ std::vector<std::string> PlanetCommunity::Journal() const
     {
         if (CommunityTaskProgress::IsActive(site))
         {
-            lines.push_back(planet->Region(site.regionId).definition.name + " / " + TaskName(site) +
-                            (site.task == CommunityTaskProgress::Accepted ? " — 지도에 표시된 센서 측정"
-                                                                          : " — 현장 접수 단말에 기록 제출") +
+            const auto &reg = planet->Region(site.regionId);
+            const char *acceptedHint =
+                reg.definition.kind == world::RegionKind::Outlaw       ? " — 약탈자 전원 소탕 또는 교란기 무력화"
+                : reg.definition.kind == world::RegionKind::Mine       ? " — 노천 시추 지점 채굴·점검"
+                : reg.definition.kind == world::RegionKind::AncientRuins ? " — 고대 석비 공명 해독"
+                : reg.definition.kind == world::RegionKind::Outpost    ? " — 전초 보급 비컨 교정"
+                : reg.definition.kind == world::RegionKind::Wilderness ? " — 야생 관측 표본 회수"
+                                                                       : " — 지도에 표시된 센서 측정";
+            lines.push_back(reg.definition.name + " / " + ZoneTaskName(site, planet.get()) +
+                            (site.task == CommunityTaskProgress::Accepted ? acceptedHint
+                                                                          : " — 현장 접수 단말에 정산·제출") +
                             (trackedSite == &site ? " · 추적 중" : ""));
         }
     }
     if (lines.empty())
     {
         lines.push_back(
-            "진행 중인 지역 의뢰가 없습니다. 도시·전초기지의 현장 접수 단말에서 선택해 수락하세요.");
+            "진행 중인 지역 의뢰가 없습니다. 도시·전초·광구·유적·야생·무법 지대의 현장 접수 단말에서 선택해 수락하세요.");
     }
     else
     {
@@ -5722,6 +6166,15 @@ world::CityCorePlan PlanetCities::Describe(const GameState &state)
         auto center = Overworld::Cities()[size_t(city)].center;
         world::CityCore core;
         core.regionId = Overworld::Cities()[size_t(city)].id;
+        // Only halo_07 (city == 0) retains authored story landmarks (home, observatory, Lia/Mara, receiver).
+        // Non-story cities (cinder, veil, lumen, echo) keep only their fixed physical location anchor while
+        // generating 100% modern Rev 5 procedural urban streets, curved blocks, and buildings.
+        if (city > 0)
+        {
+            core.radiusMeters = 40.;
+            plan.cities.push_back(std::move(core));
+            continue;
+        }
         auto palette = [](const models::Palette &p) {
             return world::SurfaceStructure::Palette{p.body, p.accent, p.emission};
         };
@@ -5738,6 +6191,24 @@ world::CityCorePlan PlanetCities::Describe(const GameState &state)
             world::CoreLot lot;
             lot.id = "building_" + std::to_string(i);
             lot.variant = std::uint16_t(b.type);
+            switch (b.type)
+            {
+            case models::BuildingType::Workshop:
+                lot.use = world::ContentUse::Industry;
+                break;
+            case models::BuildingType::Dome:
+            case models::BuildingType::TwinBridge:
+            case models::BuildingType::TransitAtrium:
+                lot.use = world::ContentUse::Services;
+                break;
+            case models::BuildingType::Observatory:
+            case models::BuildingType::ArcologyTerrace:
+                lot.use = world::ContentUse::Administration;
+                break;
+            default:
+                lot.use = world::ContentUse::Housing;
+                break;
+            }
             lot.positionMeters = {(position.x - center.x) * 2, (position.y - center.y) * 2,
                                   mesh.minimum.z * b.height / 22};
             lot.sizeMeters = {(mesh.maximum.x - mesh.minimum.x) * b.width * 2,
@@ -5783,7 +6254,7 @@ world::CityCorePlan PlanetCities::Describe(const GameState &state)
             lot.id = std::move(id);
             lot.form = form;
             lot.variant = variant;
-            lot.use = world::ContentUse::Services;
+            lot.use = world::ContentUse::Expedition;
             lot.positionMeters = {(position.x - center.x + x * std::cos(yaw) - y * std::sin(yaw)) * 2,
                                   (position.y - center.y + x * std::sin(yaw) + y * std::cos(yaw)) * 2,
                                   (mesh.minimum.z + elevation) * 2};
@@ -5855,6 +6326,21 @@ world::CityCorePlan PlanetCities::Describe(const GameState &state)
                 core.lots.back().assetName = walkway.asset;
             }
         }
+        // Modernize legacy 5-city cores: shrink core.radiusMeters tightly around actual authored lots/roads
+        // (removing the 120..260m empty donut moat so Rev 5 urban blocks and streets stitch right up to the core).
+        double maxReach = 96.;
+        for (const auto &lot : core.lots)
+        {
+            const double p3 = std::hypot(lot.positionMeters.x, lot.positionMeters.y, lot.positionMeters.z);
+            const double s3 = std::hypot(lot.sizeMeters.x, lot.sizeMeters.y, lot.sizeMeters.z) * .5;
+            maxReach = (std::max)(maxReach, p3 + s3 + 3.);
+        }
+        for (const auto &road : core.roads)
+        {
+            maxReach = (std::max)(maxReach, std::hypot(road.start.x, road.start.y, road.start.z) + 4.);
+            maxReach = (std::max)(maxReach, std::hypot(road.end.x, road.end.y, road.end.z) + 4.);
+        }
+        core.radiusMeters = std::clamp(std::ceil(maxReach), 115., 225.);
         plan.cities.push_back(std::move(core));
     }
     plan.cities.push_back(game::GameLevels::Chapter().Surface().Describe());
@@ -5981,7 +6467,7 @@ void PlanetCities::Update(GameState &state, const world::SurfaceSession &session
     {
         return;
     }
-    const bool exterior = !state.isInsideHome && !state.isInObservatory && !Game::Get().IsSurfaceMine();
+    const bool exterior = !state.IsInsideAny() && !Game::Get().IsSurfaceMine();
     double best = CitySimulation::LeaveMeters + 1;
     for (int city = 0; city < Overworld::kCityCount; ++city)
     {
@@ -6162,9 +6648,19 @@ InteractionTarget PlanetCities::Nearby(const GameState &state, const world::Surf
     {
         consider(kCityKainPosition, InteractionTarget::Kain);
     }
+    const auto planSnap = session.Stream().Snapshot();
+    const auto *planetPtr = planSnap ? planSnap->planet.get() : nullptr;
     for (size_t i = 0; i < state.residents.size(); ++i)
     {
         const auto &r = state.residents[i];
+        if (r.cityIndex > 0 && planetPtr && planetPtr->cityCores)
+        {
+            if (const auto *core = planetPtr->cityCores->Find(Overworld::Cities()[size_t(r.cityIndex)].id);
+                core && core->lots.empty() && core->roads.empty())
+            {
+                continue;
+            }
+        }
         if (r.health <= 0 || r.fearSeconds > 0 ||
             (i == Overworld::kKainResidentSlot && game::GameLevels::Chapter().GetState().kainJoined))
         {
@@ -6235,6 +6731,14 @@ bool PlanetCities::OccupiedAt(const GameState &state, const world::SurfaceSessio
     if (city < 0 || city >= Overworld::kCityCount)
     {
         return false;
+    }
+    if (city > 0 && plan.cityCores)
+    {
+        if (const auto *core = plan.cityCores->Find(Overworld::Cities()[size_t(city)].id);
+            core && core->lots.empty() && core->roads.empty())
+        {
+            return false;
+        }
     }
     const auto &region = foundRegion ? *foundRegion : plan.Region(Overworld::Cities()[size_t(city)].id);
     if (!foundRegion && !within300(region.center.position))

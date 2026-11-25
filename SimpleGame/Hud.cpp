@@ -1429,6 +1429,56 @@ void CityHud::DrawInteractionPrompt()
     case InteractionTarget::PowerRelay:
         label = "전력 장치 / 확인";
         break;
+    case InteractionTarget::FacilityEntrance:
+    {
+        static std::string entranceLabel;
+        entranceLabel = w.nearbyFacilityEntrance.label + " / 들어가기";
+        label = entranceLabel.c_str();
+        break;
+    }
+    case InteractionTarget::FacilityExit:
+        label = "출입문 / 거리로 나가기";
+        break;
+    case InteractionTarget::FacilityServicePrimary:
+        switch (w.facilityInterior.kind)
+        {
+        case UrbanFacilityKind::Market:
+            label = "보급 카운터 / 회복 키트 구매 (40 Cr)";
+            break;
+        case UrbanFacilityKind::Clinic:
+            label = "진료대 / 응급 치료 (30 Cr)";
+            break;
+        case UrbanFacilityKind::Workshop:
+            label = "정비 콘솔 / 공용차·비행체 정비 (고철 1 / 35 Cr)";
+            break;
+        case UrbanFacilityKind::CivicHall:
+            label = "행정 · 치안 창구 / 수배 정산";
+            break;
+        default:
+            label = "시설 카운터 / 이용";
+            break;
+        }
+        break;
+    case InteractionTarget::FacilityServiceSecondary:
+        switch (w.facilityInterior.kind)
+        {
+        case UrbanFacilityKind::Market:
+            label = "고철 매입 단말 / 고철 판매 (+35 Cr)";
+            break;
+        case UrbanFacilityKind::Clinic:
+            label = "구급 보급함 / 회복 키트 보급 (35 Cr)";
+            break;
+        case UrbanFacilityKind::Workshop:
+            label = "개조 작업대 / 고철로 회복 키트 제작";
+            break;
+        case UrbanFacilityKind::CivicHall:
+            label = "지역 의뢰 게시판 / 조사 기록 확인";
+            break;
+        default:
+            label = "보조 단말 / 이용";
+            break;
+        }
+        break;
     default:
         break;
     }
@@ -1932,7 +1982,7 @@ ActivityDetail ActivityBody(const std::vector<ActivityRow> &rows)
     {
         result.title = {"수락한 지역 의뢰가 없습니다."};
         result.y = 338;
-        result.pages = Hud::TextPages("도시와 전초기지의 현장 접수 단말에서 의뢰를 확인할 수 있습니다.\n\n"
+        result.pages = Hud::TextPages("도시·전초기지·광구·고대 유적·야생·무법 지대의 현장 접수 단말에서 의뢰를 확인할 수 있습니다.\n\n"
                                       "자유 탐험과 이야기 임무는 계속할 수 있습니다.",
                                       560, 20, 10);
         return result;
@@ -3551,6 +3601,19 @@ void PlanetHud::Draw()
         return;
     }
     const auto &state = Game::Get().GetState();
+    if (mode == WorldMode::SurfaceFacility)
+    {
+        const std::string area = state.facilityInterior.regionName + " · " + state.facilityInterior.label;
+        Hud::DrawActivityObjective(area + " · E 카운터/출입문 · J 조사 기록");
+        const auto &player = game::GameLevels::Mine().GetState().player;
+        const std::string info = "소지 " + std::to_string(player.credits) + " Cr · 회복 키트 " +
+                                 std::to_string(player.recoveryKits) + " · 고철 " +
+                                 std::to_string(player.salvage);
+        UiText(68, 153, info, 14, {.65f, .9f, .81f}, true);
+        CityHud::DrawInteractionPrompt();
+        UiText(32, 728, "WASD 이동 · E 카운터 이용/퇴장 · J 조사 기록 · Esc 메뉴", 16);
+        return;
+    }
     if (mode == WorldMode::SurfaceInterior || mode == WorldMode::SurfaceObservatory)
     {
         const std::string area =
@@ -3737,10 +3800,33 @@ void PlanetHud::DrawMap(bool full)
                 regionPoly.push_back(
                     view.Project(project(world::SurfaceGeometry::FromLocal(r.frame, vertex, planetRadius))));
             }
-            MapPolygonData(view, regionPoly.data(), regionPoly.size(),
-                           !w.relayNetwork.RegionVisited(r.definition.id)       ? ColorRGBA(.13f, .2f, .21f)
-                           : r.definition.kind == world::RegionKind::Settlement ? ColorRGBA(.19f, .31f, .32f)
-                                                                                : ColorRGBA(.22f, .29f, .23f));
+            ColorRGBA zoneColor(.13f, .2f, .21f);
+            if (w.relayNetwork.RegionVisited(r.definition.id))
+            {
+                switch (r.definition.kind)
+                {
+                case world::RegionKind::Settlement:
+                    zoneColor = {.19f, .31f, .32f};
+                    break;
+                case world::RegionKind::Outpost:
+                    zoneColor = {.18f, .32f, .28f};
+                    break;
+                case world::RegionKind::Mine:
+                    zoneColor = {.32f, .27f, .17f};
+                    break;
+                case world::RegionKind::Outlaw:
+                    zoneColor = {.35f, .18f, .17f};
+                    break;
+                case world::RegionKind::AncientRuins:
+                    zoneColor = {.27f, .22f, .34f};
+                    break;
+                case world::RegionKind::Wilderness:
+                default:
+                    zoneColor = {.21f, .30f, .22f};
+                    break;
+                }
+            }
+            MapPolygonData(view, regionPoly.data(), regionPoly.size(), zoneColor);
         }
         static std::weak_ptr<const world::GeneratedPlanet> indexedPlanet;
         static std::unique_ptr<world::RouteSpatialIndex> routeIndex;
@@ -3763,23 +3849,37 @@ void PlanetHud::DrawMap(bool full)
         {
             for (const auto &region : snapshot->planet->regions)
             {
-                if (region.definition.kind != world::RegionKind::Settlement ||
-                    region.center.space != world::SpaceKind::Surface)
+                if (region.center.space != world::SpaceKind::Surface)
                 {
                     continue;
                 }
-                double clipRadius = (std::max)(160., region.boundingRadiusMeters * .66);
-                if (snapshot->planet->cityCores)
+                if (region.definition.kind == world::RegionKind::Settlement)
                 {
-                    if (const auto *core = snapshot->planet->cityCores->Find(region.definition.id))
+                    double clipRadius = (std::max)(160., region.boundingRadiusMeters * .66);
+                    if (snapshot->planet->cityCores)
                     {
-                        clipRadius = (std::max)(clipRadius, core->radiusMeters + 100.);
+                        if (const auto *core = snapshot->planet->cityCores->Find(region.definition.id);
+                            core && (!core->lots.empty() || !core->roads.empty()))
+                        {
+                            clipRadius = (std::max)(clipRadius, core->radiusMeters + 100.);
+                        }
+                    }
+                    if (!chordFar(region.center.position, focus, clipRadius + range + 60.))
+                    {
+                        mapClips.push_back({region.center.position.normal,
+                                            std::cos((std::max)(10., clipRadius - 6.) / planetRadius)});
                     }
                 }
-                if (!chordFar(region.center.position, focus, clipRadius + range + 60.))
+                else if (region.definition.kind == world::RegionKind::Outlaw ||
+                         region.definition.kind == world::RegionKind::AncientRuins ||
+                         region.definition.kind == world::RegionKind::Wilderness)
                 {
-                    mapClips.push_back({region.center.position.normal,
-                                        std::cos((std::max)(10., clipRadius - 6.) / planetRadius)});
+                    constexpr double kCampClearMeters = 26.;
+                    if (!chordFar(region.access.position, focus, kCampClearMeters + range + 60.))
+                    {
+                        mapClips.push_back(
+                            {region.access.position.normal, std::cos(kCampClearMeters / planetRadius)});
+                    }
                 }
             }
         }
@@ -4019,20 +4119,59 @@ void PlanetHud::DrawMap(bool full)
                    nullptr, false, w.selectedRelay == relay.id ? 7 : 4);
         }
     }
-    if (const auto *community = Game::Get().SurfaceCommunity(); community && full)
+    // CQ-04 C2: Show enterable urban facilities (Market / Clinic / Workshop / CivicHall) on both the minimap
+    // and zoomed block map so players can locate shops, clinics, workshops, and civic halls immediately.
+    if (range <= 900.f)
     {
-        const auto *trackedSite = ActivityJournal::TrackedCommunity();
-        for (const auto &site : community->State().sites)
+        const auto *planetPtr = snapshot->planet.get();
+        size_t drawnFacilities = 0;
+        for (const auto *item : session->NearbyStructures())
         {
-            if (!CommunityTaskProgress::IsActive(site) || trackedSite == &site)
+            if (!item || drawnFacilities >= 24)
             {
                 continue;
             }
-            const auto &target = site.task == CommunityTaskProgress::Accepted ? site.target : site.contact;
-            MapPin(view, project(target), {1, .8f, .35f},
-                   site.task == CommunityTaskProgress::Accepted ? PlanetCommunity::TaskName(site)
-                                                                : "현장 기록 제출",
-                   full, 5);
+            const auto kind = Game::EnterableUrbanFacility(*item, planetPtr);
+            if (kind == UrbanFacilityKind::None)
+            {
+                continue;
+            }
+            const auto doorPt = Game::FacilityDoorPoint(*item, planetRadius);
+            if (world::SurfaceGeometry::Distance(planetRadius, doorPt, focus) > range + 12.)
+            {
+                continue;
+            }
+            const ColorRGBA col = kind == UrbanFacilityKind::Market    ? ColorRGBA(.28f, .94f, .64f)
+                                  : kind == UrbanFacilityKind::Clinic  ? ColorRGBA(.32f, .94f, 1.f)
+                                  : kind == UrbanFacilityKind::Workshop ? ColorRGBA(1.f, .70f, .24f)
+                                                                       : ColorRGBA(.62f, .80f, 1.f);
+            MapPin(view, project(doorPt), col, Game::FacilityShortLabel(kind), true, full ? 5 : 4);
+            ++drawnFacilities;
+        }
+    }
+    if (const auto *community = Game::Get().SurfaceCommunity(); community && full)
+    {
+        const auto *trackedSite = ActivityJournal::TrackedCommunity();
+        const auto *planetPtr = snapshot->planet.get();
+        for (const auto &site : community->State().sites)
+        {
+            if (trackedSite == &site)
+            {
+                continue;
+            }
+            if (CommunityTaskProgress::IsActive(site))
+            {
+                const auto &target = site.task == CommunityTaskProgress::Accepted ? site.target : site.contact;
+                MapPin(view, project(target), {1, .8f, .35f},
+                       site.task == CommunityTaskProgress::Accepted
+                           ? PlanetCommunity::ZoneTaskName(site, planetPtr)
+                           : "현장 기록 제출",
+                       full, 5);
+            }
+            else if (site.task == CommunityTaskProgress::Offered && range < 6000)
+            {
+                MapPin(view, project(site.contact), {.58f, .88f, .96f}, "현장 의뢰", full, 4);
+            }
         }
     }
     auto &chapter = game::GameLevels::Chapter();
@@ -4201,6 +4340,7 @@ void Hud::Render()
         case WorldMode::SurfaceExterior:
         case WorldMode::SurfaceInterior:
         case WorldMode::SurfaceObservatory:
+        case WorldMode::SurfaceFacility:
             planet.Draw();
             break;
         case WorldMode::LegacyFrontier:

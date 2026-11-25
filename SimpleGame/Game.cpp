@@ -147,6 +147,10 @@ WorldMode Game::Mode() const
         {
             return WorldMode::SurfaceObservatory;
         }
+        if (state.facilityInterior.Active())
+        {
+            return WorldMode::SurfaceFacility;
+        }
         return WorldMode::SurfaceExterior;
     }
     if (game::GameLevels::Chapter().IsActive())
@@ -171,13 +175,15 @@ bool Game::IsSurfaceMode() const
 {
     const auto mode = Mode();
     return mode == WorldMode::SurfaceExterior || mode == WorldMode::SurfaceInterior ||
-           mode == WorldMode::SurfaceObservatory || mode == WorldMode::SurfaceMine;
+           mode == WorldMode::SurfaceObservatory || mode == WorldMode::SurfaceFacility ||
+           mode == WorldMode::SurfaceMine;
 }
 bool Game::IsInteriorMode() const
 {
     const auto mode = Mode();
     return mode == WorldMode::LegacyInterior || mode == WorldMode::LegacyObservatory ||
-           mode == WorldMode::SurfaceInterior || mode == WorldMode::SurfaceObservatory;
+           mode == WorldMode::SurfaceInterior || mode == WorldMode::SurfaceObservatory ||
+           mode == WorldMode::SurfaceFacility;
 }
 bool Game::IsExteriorMode() const
 {
@@ -1145,7 +1151,7 @@ bool Game::HasWalkingControls() const
     }
     if (state.surfaceExploration)
     {
-        return state.isInsideHome || state.isInObservatory || (surface && surface->Ready());
+        return state.IsInsideAny() || (surface && surface->Ready());
     }
     const auto *level = game::GameLevels::Active();
     return !level || level->UsesWalkingControls();
@@ -1176,7 +1182,7 @@ void Game::UpdatePlayerMovement(float deltaSeconds)
     state.movementSpeed = 0;
     if (state.isBikeMounted &&
         (!game::GameLevels::Active() || (state.surfaceExploration && !IsSurfaceMine())) &&
-        !state.isInsideHome && !state.isInObservatory)
+        !state.IsInsideAny())
     {
         Overworld::UpdateBike(state, deltaSeconds);
         state.playerMotion.mobility.Update(deltaSeconds, {}, state.facingYaw, false, false, false, false);
@@ -1292,7 +1298,7 @@ void Game::UpdatePlayerMovement(float deltaSeconds)
 }
 void Game::UpdateCamera(float deltaSeconds)
 {
-    Vector2 target = (state.isInsideHome || state.isInObservatory) ? Vector2{0, 0} : state.playerPosition;
+    Vector2 target = state.IsInsideAny() ? Vector2{0, 0} : state.playerPosition;
     float followAmount = 1 - std::exp(-kCameraFollowRate * deltaSeconds);
     state.cameraPosition.x += (target.x - state.cameraPosition.x) * followAmount;
     state.cameraPosition.y += (target.y - state.cameraPosition.y) * followAmount;
@@ -1703,7 +1709,7 @@ void Game::KeyDown(unsigned char key, int, int)
             state.StopMotion();
         }
         else if ((key == '[' || key == ']') && !repeated && !state.mapVisible && !IsSurfaceMine() &&
-                 !state.isInsideHome && !state.isInObservatory && surface && surface->Ready())
+                 !state.IsInsideAny() && surface && surface->Ready())
         {
             const auto plan = surface->Stream().Snapshot()->planet;
             if (!plan->regions.empty())
@@ -2100,6 +2106,18 @@ std::optional<world::WorldLocation> Game::PlanetLocation() const
             return location;
         }
         auto location = surface->Location();
+        if (state.facilityInterior.Active())
+        {
+            const auto &fi = state.facilityInterior;
+            location.position = world::SurfaceGeometry::FromLocal(
+                world::SurfaceGeometry::Frame(fi.returnPoint),
+                {(state.playerPosition.x - 2.5f) * 2, (state.playerPosition.y - 1.9f) * 2, 0.},
+                surface->Planet().radiusMeters);
+            location.regionId = fi.regionId;
+            location.space = world::SpaceKind::Interior;
+            location.layer = 3;
+            return location;
+        }
         if ((state.isInsideHome || state.isInObservatory) && surfaceCities)
         {
             Vector2 door = state.isInsideHome ? kHomeDoor : kBeaconPosition;
@@ -2121,7 +2139,7 @@ std::optional<world::WorldLocation> Game::PlanetLocation() const
     }
     static_assert(world::WorldCatalog::MetersPerLegacyUnit == models::WorldScale::metersPerUnit,
                   "Planet adapter and model units must agree");
-    if (state.isInsideHome || state.isInObservatory || game::GameLevels::Active())
+    if (state.IsInsideAny() || game::GameLevels::Active())
     {
         return std::nullopt;
     }
@@ -2249,7 +2267,7 @@ void Game::Update(float deltaSeconds)
             CivicCombat::Update(deltaSeconds);
             CivicJustice::Update(deltaSeconds);
         }
-        if (!activeLevel && !state.isInsideHome && !state.isInObservatory)
+        if (!activeLevel && !state.IsInsideAny())
         {
             BodyCollision::Update(deltaSeconds);
             Overworld::Traffic().Update(state, deltaSeconds);
@@ -2317,7 +2335,7 @@ bool Game::RelocateSurfaceSurvey(const world::SurfacePoint &point)
         surfaceParty->Capture();
     }
     const auto travelers = surfaceParty ? surfaceParty->NearbyTravelers() : std::array<bool, 2>{};
-    if (!state.surfaceExploration || IsSurfaceMine() || state.isInsideHome || state.isInObservatory ||
+    if (!state.surfaceExploration || IsSurfaceMine() || state.IsInsideAny() ||
         !surface || !surface->Relocate(point))
     {
         return false;
@@ -2346,7 +2364,7 @@ bool Game::RelocateSurfaceSurvey(const world::SurfacePoint &point)
 bool Game::EnterSurfaceMine()
 {
     if (!IsStoryWorld() || !state.surfaceExploration || !surface || !surface->Ready() ||
-        game::GameLevels::Active() || state.isInsideHome || state.isInObservatory || IsSurfaceMine() ||
+        game::GameLevels::Active() || state.IsInsideAny() || IsSurfaceMine() ||
         state.isPaused || state.mapVisible || state.weaponWheel.visible || Dialogue::Active() ||
         state.journalVisible || state.dialogueHistoryVisible || HospitalRecovery::Active())
     {
@@ -2540,7 +2558,7 @@ void Game::UpdateGroundVehicleLifecycle(float dt)
         }
         return;
     }
-    if (state.isInsideHome || state.isInObservatory || IsSurfaceMine() || (groundVehicleSpawnRetry -= dt) > 0)
+    if (state.IsInsideAny() || IsSurfaceMine() || (groundVehicleSpawnRetry -= dt) > 0)
     {
         return;
     }
@@ -2793,7 +2811,7 @@ void Game::InteractGroundVehicle()
 
 void Game::ToggleSurfaceBike()
 {
-    if (!surface || IsSurfaceMine() || state.isInsideHome || state.isInObservatory)
+    if (!surface || IsSurfaceMine() || state.IsInsideAny())
     {
         return;
     }
@@ -2923,7 +2941,7 @@ bool Game::LandOnSurface(const world::SurfacePoint &point, int city, unsigned se
     {
         surfaceParty->Capture();
     }
-    const auto travelers = surfaceParty && !IsSurfaceMine() && !state.isInsideHome && !state.isInObservatory
+    const auto travelers = surfaceParty && !IsSurfaceMine() && !state.IsInsideAny()
                                ? surfaceParty->NearbyTravelers()
                                : std::array<bool, 2>{};
     auto oldFrame = surface ? surface->Origin() : world::TangentFrame{};
@@ -2961,6 +2979,7 @@ bool Game::LandOnSurface(const world::SurfacePoint &point, int city, unsigned se
     }
     CivicCombat::ClearProjectiles();
     state.isInsideHome = state.isInObservatory = false;
+    state.facilityInterior.Clear();
     auto bikeHeading = world::SurfaceGeometry::TransformDirection(
         {std::cos(state.bikeYaw), std::sin(state.bikeYaw), 0}, oldFrame, surface->Origin());
     state.bikeYaw = float(std::atan2(bikeHeading.y, bikeHeading.x));
@@ -3026,12 +3045,12 @@ void Game::UpdateSurface(float dt)
     const auto streamVelocity =
         state.aircraft.mounted ? state.aircraft.velocity : world::Vector3d{velocity.x * 2, velocity.y * 2, 0};
     surface->Update(
-        IsSurfaceMine() || state.isInsideHome || state.isInObservatory ? world::Vector3d{} : streamVelocity,
+        IsSurfaceMine() || state.IsInsideAny() ? world::Vector3d{} : streamVelocity,
         relayDestination, state.aircraft.mounted,
         surface->Ready() ? std::optional<world::SurfaceView>(SurfaceTerrainView()) : std::nullopt);
     if (!surface->Ready())
     {
-        if (state.isInsideHome || state.isInObservatory)
+        if (state.IsInsideAny())
         {
             const bool advancing = !state.isPaused && !state.mapVisible && !state.weaponWheel.visible &&
                                    !state.journalVisible && !state.dialogueHistoryVisible &&
@@ -3087,7 +3106,7 @@ void Game::UpdateSurface(float dt)
         RelayTravel::Update(dt);
         return;
     }
-    if (!IsSurfaceMine() && !state.isInsideHome && !state.isInObservatory)
+    if (!IsSurfaceMine() && !state.IsInsideAny())
     {
         state.relayNetwork.Observe(*surface->Stream().Snapshot()->planet, surface->Location());
     }
@@ -3101,7 +3120,7 @@ void Game::UpdateSurface(float dt)
     if (surfaceCities)
     {
         surfaceCities->Update(state, *surface, 0);
-        if (advancing && (IsSurfaceMine() || state.isInsideHome || state.isInObservatory))
+        if (advancing && (IsSurfaceMine() || state.IsInsideAny()))
         {
             surfaceCities->Update(state, *surface, dt);
         }
@@ -3110,7 +3129,7 @@ void Game::UpdateSurface(float dt)
     {
         if (surfaceCommunity)
         {
-            surfaceCommunity->Update(dt, !IsSurfaceMine() && !state.isInsideHome && !state.isInObservatory);
+            surfaceCommunity->Update(dt, !IsSurfaceMine() && !state.IsInsideAny());
         }
         state.playTimeSeconds += dt;
         CivicJustice::Update(dt);
@@ -3120,8 +3139,7 @@ void Game::UpdateSurface(float dt)
         PlayerAircraftController::Update(*this, dt);
         if (surfaceTraffic && !HospitalRecovery::Active())
         {
-            surfaceTraffic->Update(state, *surface, dt,
-                                   !IsSurfaceMine() && !state.isInsideHome && !state.isInObservatory);
+            surfaceTraffic->Update(state, *surface, dt, !IsSurfaceMine() && !state.IsInsideAny());
         }
     }
     if (HospitalRecovery::Active())
@@ -3161,7 +3179,7 @@ void Game::UpdateSurface(float dt)
         }
         return;
     }
-    if (advancing && (state.isInsideHome || state.isInObservatory))
+    if (advancing && state.IsInsideAny())
     {
         state.animationTimeSeconds += dt;
         if (!Dialogue::Active())
@@ -3813,7 +3831,7 @@ bool Game::IsPositionBlocked(Vector2 position)
 {
     profiling::Count(profiling::Counter::CollisionQueries);
     if (state.surfaceExploration && surface && surface->Ready() && state.aircraft.position &&
-        !state.aircraft.mounted && !IsSurfaceMine() && !state.isInsideHome && !state.isInObservatory)
+        !state.aircraft.mounted && !IsSurfaceMine() && !state.IsInsideAny())
     {
         auto point = PlanetSecurity::Point(position);
         point.altitudeMeters = surface->Stream().Contact(point).heightMeters;
@@ -3834,7 +3852,7 @@ bool Game::IsPositionBlocked(Vector2 position)
         return CivicJustice::Solid(position, .16f, state.isBikeMounted ? state.bikeElevation : 0,
                                    state.isBikeMounted);
     }
-    if (state.surfaceExploration && !IsSurfaceMine() && !state.isInsideHome && !state.isInObservatory)
+    if (state.surfaceExploration && !IsSurfaceMine() && !state.IsInsideAny())
     {
         if (!surface)
         {
@@ -3889,6 +3907,19 @@ bool Game::IsPositionBlocked(Vector2 position)
     if (state.isInObservatory)
     {
         return position.x < -3.8f || position.x > 3.8f || position.y < -3.8f || position.y > 3.8f;
+    }
+    if (state.facilityInterior.Active())
+    {
+        if (position.x < -3.2f || position.x > 3.2f || position.y < -2.4f || position.y > 2.4f)
+        {
+            return true;
+        }
+        // Service counter desk across the back of the facility room (walkable in front, clerk behind).
+        const bool counter =
+            position.x > -2.35f && position.x < 2.35f && position.y > -2.15f && position.y < -1.15f;
+        const bool sideCrate =
+            position.x < -2.45f && position.y > .75f && position.y < 1.95f;
+        return counter || sideCrate;
     }
     if (position.x < kWorldMinX || position.x > kWorldMaxX || position.y < kWorldMinY ||
         position.y > kWorldMaxY)
@@ -4023,7 +4054,7 @@ bool Game::IsQuestInteraction(InteractionTarget target) const
 }
 InteractionTarget Game::FindNearbyInteraction()
 {
-    if (state.surfaceExploration && !IsSurfaceMine() && !state.isInsideHome && !state.isInObservatory)
+    if (state.surfaceExploration && !IsSurfaceMine() && !state.IsInsideAny())
     {
         if (state.aircraft.mounted)
         {
@@ -4142,10 +4173,90 @@ InteractionTarget Game::FindNearbyInteraction()
                 return InteractionTarget::Relay;
             }
         }
+        // CQ-04 C2: Discover walkable urban facility entrances (Market / Clinic / Workshop / CivicHall)
+        // on all 5 legacy cities and all procedural settlements without overriding higher-priority interactions.
+        if (target == InteractionTarget::None && surface && surface->Ready())
+        {
+            const auto snapshot = surface->Stream().Snapshot();
+            if (snapshot && snapshot->planet)
+            {
+                const double planetR = surface->Planet().radiusMeters;
+                const auto playerOrigin = surface->Pose().origin;
+                double bestDoorMeters = 4.6;
+                ActiveFacilityInterior bestEntry;
+                for (const auto *item : surface->NearbyStructures())
+                {
+                    if (!item)
+                    {
+                        continue;
+                    }
+                    const auto kind = EnterableUrbanFacility(*item, snapshot->planet.get());
+                    if (kind == UrbanFacilityKind::None)
+                    {
+                        continue;
+                    }
+                    const world::GeneratedRegion *reg = nullptr;
+                    for (const auto &candidateReg : snapshot->planet->regions)
+                    {
+                        if (candidateReg.definition.id == item->regionId)
+                        {
+                            reg = &candidateReg;
+                            break;
+                        }
+                    }
+                    if (!reg)
+                    {
+                        continue;
+                    }
+                    const auto localP = world::SurfaceGeometry::ToLocal(item->frame, playerOrigin, planetR);
+                    const double cy = std::cos(item->yaw), sy = std::sin(item->yaw);
+                    const double lx = localP.x * cy + localP.y * sy;
+                    const double ly = -localP.x * sy + localP.y * cy;
+                    const double hx = item->sizeMeters.x * .5, hy = item->sizeMeters.y * .5;
+                    // Distance from player to the closest perimeter facade of this building.
+                    const double cx = std::clamp(lx, -hx, hx);
+                    const double cyClamped = std::clamp(ly, -hy, hy);
+                    const double facadeDist = std::hypot(lx - cx, ly - cyClamped);
+                    if (facadeDist < bestDoorMeters)
+                    {
+                        bestDoorMeters = facadeDist;
+                        bestEntry.kind = kind;
+                        bestEntry.regionId = reg->definition.id;
+                        bestEntry.regionName = reg->definition.name;
+                        bestEntry.facilityId = item->id;
+                        bestEntry.label = std::string(FacilityKindName(kind));
+                        bestEntry.returnPoint = playerOrigin;
+                        bestEntry.returnYaw = state.facingYaw;
+                    }
+                }
+                if (bestEntry.Active())
+                {
+                    state.nearbyFacilityEntrance = std::move(bestEntry);
+                    return InteractionTarget::FacilityEntrance;
+                }
+            }
+        }
+        state.nearbyFacilityEntrance.Clear();
         return target;
     }
     if (HospitalRecovery::Active())
     {
+        return InteractionTarget::None;
+    }
+    if (state.facilityInterior.Active())
+    {
+        if (Distance(state.playerPosition, {2.5f, 1.9f}) < 1.45f)
+        {
+            return InteractionTarget::FacilityExit;
+        }
+        if (Distance(state.playerPosition, {-1.05f, -.65f}) < 1.55f)
+        {
+            return InteractionTarget::FacilityServicePrimary;
+        }
+        if (Distance(state.playerPosition, {1.25f, -.65f}) < 1.55f)
+        {
+            return InteractionTarget::FacilityServiceSecondary;
+        }
         return InteractionTarget::None;
     }
     if (state.isInObservatory)
@@ -4283,6 +4394,22 @@ void Game::InteractWithNearbyTarget()
         }
     }
     const InteractionTarget target = FindNearbyInteraction();
+    if (target == InteractionTarget::FacilityEntrance)
+    {
+        EnterFacilityInterior(state.nearbyFacilityEntrance);
+        return;
+    }
+    if (target == InteractionTarget::FacilityExit)
+    {
+        ExitFacilityInterior();
+        return;
+    }
+    if (target == InteractionTarget::FacilityServicePrimary ||
+        target == InteractionTarget::FacilityServiceSecondary)
+    {
+        InteractFacilityStation(target);
+        return;
+    }
     if (target == InteractionTarget::HomeBed || target == InteractionTarget::HomeWorkbench ||
         target == InteractionTarget::HomeStorage)
     {
@@ -4895,7 +5022,7 @@ const world::RelayCandidate *RelayTravel::Nearby()
 {
     auto &g = Game::Get();
     const auto &s = g.GetState();
-    if (!s.surfaceExploration || g.IsSurfaceMine() || s.isInsideHome || s.isInObservatory || !g.Surface() ||
+    if (!s.surfaceExploration || g.IsSurfaceMine() || s.IsInsideAny() || !g.Surface() ||
         !g.Surface()->Ready())
     {
         return nullptr;
@@ -4911,7 +5038,7 @@ const char *RelayTravel::Restriction(std::string_view destination)
     {
         return "행성 지형을 준비 중입니다.";
     }
-    if (g.IsSurfaceMine() || s.isInsideHome || s.isInObservatory)
+    if (g.IsSurfaceMine() || s.IsInsideAny())
     {
         return "지상의 중계환에서 이용할 수 있습니다.";
     }
@@ -5641,6 +5768,369 @@ void Game::InteractResidence(InteractionTarget target)
             },
             true);
     }
+}
+// ============================================================================
+// CQ-04 C2 — Urban Facility Interiors (Market / Clinic / Workshop / CivicHall)
+// ============================================================================
+UrbanFacilityKind Game::ClassifyUrbanFacility(const world::SurfaceStructure &structure)
+{
+    if (!structure.solid || structure.sizeMeters.x < 5. || structure.sizeMeters.y < 5. ||
+        structure.sizeMeters.z < 3.5)
+    {
+        return UrbanFacilityKind::None;
+    }
+    // Strict whitelist of actual architectural building forms (never street props, consoles, crates, or aircraft).
+    switch (structure.form)
+    {
+    case world::ContentForm::MeasuredBuilding:
+    case world::ContentForm::Building:
+    case world::ContentForm::Habitat:
+    case world::ContentForm::Terrace:
+    case world::ContentForm::Workshop:
+    case world::ContentForm::Dome:
+    case world::ContentForm::Spire:
+    case world::ContentForm::TwinBridge:
+    case world::ContentForm::Arcology:
+    case world::ContentForm::Transit:
+    case world::ContentForm::Courtyard:
+        break;
+    default:
+        return UrbanFacilityKind::None;
+    }
+    if (structure.use == world::ContentUse::Administration)
+    {
+        return UrbanFacilityKind::CivicHall;
+    }
+    if (structure.use == world::ContentUse::Industry)
+    {
+        return UrbanFacilityKind::Workshop;
+    }
+    if (structure.use == world::ContentUse::Services)
+    {
+        // Deterministic split between Market and Clinic based on building variant/id.
+        if (structure.form == world::ContentForm::MeasuredBuilding && structure.variant == 2)
+        {
+            return UrbanFacilityKind::Clinic;
+        }
+        std::uint64_t h = 14695981039346656037ULL;
+        for (unsigned char ch : structure.id)
+        {
+            h = (h ^ ch) * 1099511628211ULL;
+        }
+        return (h % 3 == 0) ? UrbanFacilityKind::Clinic : UrbanFacilityKind::Market;
+    }
+    return UrbanFacilityKind::None;
+}
+UrbanFacilityKind Game::EnterableUrbanFacility(const world::SurfaceStructure &structure,
+                                               const world::GeneratedPlanet *planet)
+{
+    const auto kind = ClassifyUrbanFacility(structure);
+    if (kind == UrbanFacilityKind::None || !planet)
+    {
+        return UrbanFacilityKind::None;
+    }
+    const world::GeneratedRegion *reg = nullptr;
+    for (const auto &candidate : planet->regions)
+    {
+        if (candidate.definition.id == structure.regionId)
+        {
+            reg = &candidate;
+            break;
+        }
+    }
+    if (!reg || reg->definition.kind != world::RegionKind::Settlement)
+    {
+        return UrbanFacilityKind::None;
+    }
+    // Never turn Halo's own Home or Observatory landmarks into generic urban facilities.
+    if (structure.regionId == "halo_07")
+    {
+        const double planetR = planet->terrain.Planet().radiusMeters;
+        const auto localToHalo = world::SurfaceGeometry::ToLocal(reg->frame, structure.frame.origin, planetR);
+        if (std::hypot(localToHalo.x - kHomeBuildingPosition.x * 2.,
+                       localToHalo.y - kHomeBuildingPosition.y * 2.) < 16. ||
+            std::hypot(localToHalo.x - kObservatoryBuildingPosition.x * 2.,
+                       localToHalo.y - kObservatoryBuildingPosition.y * 2.) < 16.)
+        {
+            return UrbanFacilityKind::None;
+        }
+    }
+    return kind;
+}
+const char *Game::FacilityKindName(UrbanFacilityKind kind)
+{
+    switch (kind)
+    {
+    case UrbanFacilityKind::Market:
+        return "상점 · 보급소";
+    case UrbanFacilityKind::Clinic:
+        return "의료소";
+    case UrbanFacilityKind::Workshop:
+        return "정비소 · 공방";
+    case UrbanFacilityKind::CivicHall:
+        return "행정 · 의뢰소";
+    default:
+        return "";
+    }
+}
+const char *Game::FacilityShortLabel(UrbanFacilityKind kind)
+{
+    switch (kind)
+    {
+    case UrbanFacilityKind::Market:
+        return "상점";
+    case UrbanFacilityKind::Clinic:
+        return "의료소";
+    case UrbanFacilityKind::Workshop:
+        return "정비소";
+    case UrbanFacilityKind::CivicHall:
+        return "행정소";
+    default:
+        return "";
+    }
+}
+world::SurfacePoint Game::FacilityDoorPoint(const world::SurfaceStructure &structure, double planetRadius)
+{
+    const double cy = std::cos(structure.yaw), sy = std::sin(structure.yaw);
+    const double forward = structure.sizeMeters.y * .5 + 1.1;
+    // Front door offset along structure's local +Y facade.
+    auto pt = world::SurfaceGeometry::FromLocal(
+        structure.frame, {-sy * forward, cy * forward, 0}, planetRadius);
+    pt.altitudeMeters = structure.frame.origin.altitudeMeters;
+    return pt;
+}
+bool Game::EnterFacilityInterior(const ActiveFacilityInterior &entry)
+{
+    if (!state.surfaceExploration || !entry.Active() || state.Mounted() || IsSurfaceMine() ||
+        state.isInsideHome || state.isInObservatory || HospitalRecovery::Active())
+    {
+        return false;
+    }
+    state.facilityInterior = entry;
+    state.isInsideHome = false;
+    state.isInObservatory = false;
+    state.StopMotion();
+    state.playerPosition = {2.05f, 1.55f};
+    state.cameraPosition = {0, 0};
+    state.surfaceCameraHeight = 0;
+    state.facingYaw = -kPi * .75f;
+    ShowNotice(entry.regionName + " · " + entry.label + " 입장 / E 카운터 이용 · 출입문으로 퇴장");
+    return true;
+}
+bool Game::ExitFacilityInterior()
+{
+    if (!state.facilityInterior.Active())
+    {
+        return false;
+    }
+    const auto exitPoint = state.facilityInterior.returnPoint;
+    const float exitYaw = state.facilityInterior.returnYaw;
+    const std::string label = state.facilityInterior.label;
+    state.facilityInterior.Clear();
+    state.StopMotion();
+    if (surface && surface->Ready())
+    {
+        surface->Relocate(exitPoint, .32, 0);
+        const auto local = surface->Local(surface->Pose().origin);
+        state.playerPosition = {float(local.x / 2), float(local.y / 2)};
+        state.cameraPosition = state.playerPosition;
+    }
+    state.facingYaw = exitYaw;
+    ShowNotice(label + "에서 거리로 나왔습니다.");
+    return true;
+}
+bool Game::InteractFacilityStation(InteractionTarget target)
+{
+    if (!state.facilityInterior.Active() || HospitalRecovery::Active())
+    {
+        return false;
+    }
+    constexpr int kMaxRecoveryKits = 999;
+    auto &player = Player();
+    const auto kind = state.facilityInterior.kind;
+    if (kind == UrbanFacilityKind::Market)
+    {
+        if (target == InteractionTarget::FacilityServicePrimary)
+        {
+            // Buy recovery kit (40 Cr) or refill ammo (25 Cr).
+            if (player.recoveryKits < kMaxRecoveryKits)
+            {
+                if (player.credits < 40)
+                {
+                    ShowNotice("상점 · 보급소 / 회복 키트 구매에는 40 Cr가 필요합니다.");
+                    return false;
+                }
+                player.credits -= 40;
+                ++player.recoveryKits;
+                ShowNotice("상점 · 보급소 / 회복 키트 1개 구매 (-40 Cr · 보유 " +
+                           std::to_string(player.recoveryKits) + "개)");
+                return true;
+            }
+            if (Loadout().IsFirearmEquipped())
+            {
+                auto &gun = ActiveFirearm();
+                if (gun.GetRounds() < gun.GetMagazineSize())
+                {
+                    if (player.credits < 25)
+                    {
+                        ShowNotice("상점 · 보급소 / 탄창 보충에는 25 Cr가 필요합니다.");
+                        return false;
+                    }
+                    player.credits -= 25;
+                    gun.TopUpRounds(gun.GetMagazineSize());
+                    ShowNotice("상점 · 보급소 / 탄창 완충 (-25 Cr)");
+                    return true;
+                }
+            }
+            ShowNotice("상점 · 보급소 / 회복 키트와 탄약이 모두 충분합니다.");
+            return true;
+        }
+        // Secondary: sell salvage (+35 Cr per salvage)
+        if (player.salvage <= 0)
+        {
+            ShowNotice("고철 매입 단말 / 매각할 고철이 없습니다.");
+            return false;
+        }
+        const int room = game::PlayerStats::kMaximumCredits - player.credits;
+        if (room < 35)
+        {
+            ShowNotice("고철 매입 단말 / 소지 크레딧이 한도에 도달해 매각할 수 없습니다.");
+            return false;
+        }
+        --player.salvage;
+        player.credits += 35;
+        ShowNotice("고철 매입 단말 / 고철 1개 매각 (+35 Cr · 잔여 고철 " +
+                   std::to_string(player.salvage) + ")");
+        return true;
+    }
+    if (kind == UrbanFacilityKind::Clinic)
+    {
+        if (target == InteractionTarget::FacilityServicePrimary)
+        {
+            if (player.health >= player.maxHealth)
+            {
+                ShowNotice("의료소 / 체력이 이미 최대 상태입니다.");
+                return true;
+            }
+            const int cost = player.credits >= 30 ? 30 : 0;
+            player.credits -= cost;
+            player.health = player.maxHealth;
+            state.playerMotion.mobility.RestoreStamina(PlayerMobility::MaxStamina, 0.f);
+            ShowNotice(cost > 0 ? "의료소 / 응급 치료 완료 (-30 Cr · 체력 완전 회복)"
+                                : "의료소 / 긴급 무상 처치 완료 (체력 완전 회복)");
+            return true;
+        }
+        if (player.recoveryKits >= kMaxRecoveryKits)
+        {
+            ShowNotice("구급 보급함 / 회복 키트가 이미 최대 보유량입니다.");
+            return true;
+        }
+        if (player.credits < 35)
+        {
+            ShowNotice("구급 보급함 / 회복 키트 구매에는 35 Cr가 필요합니다.");
+            return false;
+        }
+        player.credits -= 35;
+        ++player.recoveryKits;
+        ShowNotice("구급 보급함 / 회복 키트 1개 보급 (-35 Cr)");
+        return true;
+    }
+    if (kind == UrbanFacilityKind::Workshop)
+    {
+        if (target == InteractionTarget::FacilityServicePrimary)
+        {
+            bool repaired = false;
+            if (state.car.position && state.car.health < GroundVehicle::MaxHealth)
+            {
+                repaired = true;
+            }
+            if (state.aircraft.position && state.aircraft.health < PlayerAircraft::MaxHealth)
+            {
+                repaired = true;
+            }
+            if (!repaired)
+            {
+                ShowNotice("정비소 · 공방 / 현재 파손된 차량·비행체가 없습니다.");
+                return true;
+            }
+            if (player.salvage > 0)
+            {
+                --player.salvage;
+            }
+            else if (player.credits >= 35)
+            {
+                player.credits -= 35;
+            }
+            else
+            {
+                ShowNotice("정비소 · 공방 / 수리에는 고철 1개 또는 35 Cr가 필요합니다.");
+                return false;
+            }
+            if (state.car.position)
+            {
+                state.car.health = GroundVehicle::MaxHealth;
+                state.car.wreckSeconds = 0;
+            }
+            if (state.aircraft.position)
+            {
+                state.aircraft.health = PlayerAircraft::MaxHealth;
+                state.aircraft.wreckSeconds = 0;
+            }
+            ShowNotice("정비소 · 공방 / 차량 및 비행체 정비를 완료했습니다.");
+            return true;
+        }
+        // Secondary: craft recovery kit from 1 salvage
+        if (player.recoveryKits >= kMaxRecoveryKits)
+        {
+            ShowNotice("개조 작업대 / 회복 키트가 최대 보유량입니다.");
+            return false;
+        }
+        if (player.salvage < 1)
+        {
+            ShowNotice("개조 작업대 / 회복 키트 제작에는 고철 1개가 필요합니다.");
+            return false;
+        }
+        --player.salvage;
+        ++player.recoveryKits;
+        ShowNotice("개조 작업대 / 고철 1개로 회복 키트 제작 완료.");
+        return true;
+    }
+    if (kind == UrbanFacilityKind::CivicHall)
+    {
+        if (target == InteractionTarget::FacilityServicePrimary)
+        {
+            auto &law = CivicJustice::State();
+            if (law.wanted > 0 && law.wanted <= 2)
+            {
+                const int fine = law.wanted * 60;
+                if (player.credits < fine)
+                {
+                    ShowNotice("행정 · 치안 창구 / 수배 해제 벌금 " + std::to_string(fine) +
+                               " Cr가 부족합니다.");
+                    return false;
+                }
+                player.credits -= fine;
+                law.wanted = 0;
+                law.heat = 0;
+                ShowNotice("행정 · 치안 창구 / 벌금 " + std::to_string(fine) +
+                           " Cr 납부 · 수배가 해제되었습니다.");
+                return true;
+            }
+            if (law.wanted >= 3)
+            {
+                ShowNotice("행정 · 치안 창구 / 중범죄(3성 이상)는 자진 납부로 해제할 수 없습니다.");
+                return false;
+            }
+            ShowNotice(state.facilityInterior.regionName +
+                       " 행정 · 의뢰소 / 현재 수배 없음 · 주변 지역 의뢰는 옆 게시판에서 확인하세요.");
+            return true;
+        }
+        // Secondary: open Journal on Local Activities tab or highlight nearby active site.
+        state.journalVisible = true;
+        ShowNotice("지역 의뢰 게시판 / J 기록에서 수락된 의뢰와 주변 현장 활동을 확인할 수 있습니다.");
+        return true;
+    }
+    return false;
 }
 // ============================================================================
 // GameCallbacks — window entry points

@@ -310,8 +310,8 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
     const int surfaceCity = surfaceCities ? surfaceCities->ActiveCity() : -1;
     const bool citySimulation = !tutorial::SaveSystem::Loading() &&
                                 (!world.surfaceExploration || surfaceCity >= 0) && !level.active &&
-                                !chapter.active && !world.isPaused && !world.isInsideHome &&
-                                !world.isInObservatory && !world.mapVisible && !world.weaponWheel.visible &&
+                                !chapter.active && !world.isPaused && !world.IsInsideAny() &&
+                                !world.mapVisible && !world.weaponWheel.visible &&
                                 !tutorial::Dialogue::LocksWorld() && !tutorial::HospitalRecovery::Active();
     const bool story = tutorial::Game::Get().IsStoryWorld();
     const bool cityLia =
@@ -526,12 +526,25 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         }
         result.Raw("surface_streaming", streaming.Finish());
     }
-    result.Text("current_region_id", chapter.active ? "frontier" : level.active ? "mine" : outdoorId);
-    result.Text("current_area", chapter.active          ? "빛나는 개척지 · 발전기/운송대/폐설비"
-                                : level.active          ? "광산 · 구조 신호 조사"
-                                : world.isInObservatory ? "헤일로 전망대 관측실"
-                                : world.isInsideHome    ? "플레이어의 집"
-                                                        : outdoorName);
+    result.Text("current_region_id", chapter.active                       ? "frontier"
+                                     : level.active                       ? "mine"
+                                     : world.facilityInterior.Active()    ? world.facilityInterior.regionId
+                                                                          : outdoorId);
+    result.Text("current_area", chapter.active                    ? "빛나는 개척지 · 발전기/운송대/폐설비"
+                                : level.active                    ? "광산 · 구조 신호 조사"
+                                : world.facilityInterior.Active() ? (world.facilityInterior.regionName + " · " +
+                                                                     world.facilityInterior.label)
+                                : world.isInObservatory           ? "헤일로 전망대 관측실"
+                                : world.isInsideHome              ? "플레이어의 집"
+                                                                  : outdoorName);
+    {
+        JsonObject fi;
+        fi.Bool("active", world.facilityInterior.Active());
+        fi.Text("kind", tutorial::Game::FacilityKindName(world.facilityInterior.kind));
+        fi.Text("region_id", world.facilityInterior.regionId);
+        fi.Text("label", world.facilityInterior.label);
+        result.Raw("facility_interior", fi.Finish());
+    }
     result.Seconds("play_time_seconds", world.playTimeSeconds);
     size_t communityPopulation = 0, currentCommunity = 0, activeCommunity = 0;
     if (const auto *community = tutorial::Game::Get().SurfaceCommunity())

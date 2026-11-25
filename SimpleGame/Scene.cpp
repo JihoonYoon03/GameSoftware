@@ -277,6 +277,133 @@ void InteriorScene::Draw()
 }
 
 // ============================================================================
+// FacilityInteriorScene — CQ-04 C2 walkable Market / Clinic / Workshop / CivicHall
+// ============================================================================
+void FacilityInteriorScene::Draw()
+{
+    WorldView view;
+    auto &scene = *this;
+    const auto &w = Game::Get().GetState();
+    const auto kind = w.facilityInterior.kind;
+    const ColorRGBA floorCol = kind == UrbanFacilityKind::Market    ? ColorRGBA(.24f, .31f, .29f)
+                               : kind == UrbanFacilityKind::Clinic  ? ColorRGBA(.27f, .36f, .39f)
+                               : kind == UrbanFacilityKind::Workshop ? ColorRGBA(.28f, .27f, .25f)
+                                                                    : ColorRGBA(.22f, .28f, .36f);
+    const ColorRGBA accentCol = kind == UrbanFacilityKind::Market    ? ColorRGBA(.28f, .92f, .64f)
+                                : kind == UrbanFacilityKind::Clinic  ? ColorRGBA(.32f, .92f, .98f)
+                                : kind == UrbanFacilityKind::Workshop ? ColorRGBA(1.f, .68f, .24f)
+                                                                     : ColorRGBA(.62f, .78f, 1.f);
+    const ColorRGBA clerkCoat = kind == UrbanFacilityKind::Market    ? ColorRGBA(.28f, .62f, .52f)
+                                : kind == UrbanFacilityKind::Clinic  ? ColorRGBA(.82f, .92f, .95f)
+                                : kind == UrbanFacilityKind::Workshop ? ColorRGBA(.78f, .52f, .24f)
+                                                                     : ColorRGBA(.28f, .44f, .72f);
+    const char *primaryLabel = kind == UrbanFacilityKind::Market    ? "보급 카운터 · 구매"
+                               : kind == UrbanFacilityKind::Clinic  ? "응급 치료 · 회복"
+                               : kind == UrbanFacilityKind::Workshop ? "차량 · 비행체 정비"
+                                                                    : "행정 · 수배 정산";
+    const char *secondaryLabel = kind == UrbanFacilityKind::Market    ? "고철 매입 단말"
+                                 : kind == UrbanFacilityKind::Clinic  ? "구급 보급함"
+                                 : kind == UrbanFacilityKind::Workshop ? "개조 작업대 · 제작"
+                                                                      : "지역 의뢰 게시판";
+    const char *clerkRole = kind == UrbanFacilityKind::Market    ? "보급 상인"
+                            : kind == UrbanFacilityKind::Clinic  ? "의무관"
+                            : kind == UrbanFacilityKind::Workshop ? "정비사"
+                                                                 : "행정관";
+    {
+        profiling::Scope placementTimer(profiling::Timer::ScenePlacement);
+        scene.BeginPlacement();
+        for (int x = -3; x < 4; ++x)
+        {
+            for (int y = -2; y < 3; ++y)
+            {
+                scene.PlaceWorldActor(
+                    "ftile/" + std::to_string(x) + "/" + std::to_string(y), float(x), float(y),
+                    WorldBounds(float(x), float(y), 1, 1, 0), 0, 0, [this, x, y, floorCol]() {
+                        Drawing::DrawMaterialTile(float(x), float(y), SurfaceMaterial::Metal, floorCol);
+                    });
+            }
+        }
+        scene.PlaceWorldActor("fwall/back", -3, -2.5f, WorldBounds(-3, -2.5f, 7, .12f, 95), 1, 0, [this]() {
+            for (int i = 0; i < 7; ++i)
+            {
+                Drawing::DrawProp(models::ModelLibrary::Get().wall, {-3.f + i, -2.5f}, {1, .12f, 95.f / 44});
+            }
+        });
+        scene.PlaceWorldActor("fwall/side", -3.4f, -2.5f, WorldBounds(-3.4f, -2.5f, .12f, 5, 95), 1, 1, [this]() {
+            for (int i = 0; i < 5; ++i)
+            {
+                Drawing::DrawProp(models::ModelLibrary::Get().wall, {-3.4f, -2.5f + i}, {1, .12f, 95.f / 44}, {},
+                                  kPi / 2);
+            }
+        });
+        scene.PlaceWorldActor("fbanner", -1.f, -2.4f, WorldBounds(-1.f, -2.4f, 0, 0, 80, 150), 1, 2,
+                              [this, accentCol]() {
+                                  Vector2 pt = Drawing::WorldToScreen(-1.f, -2.4f, 68);
+                                  Drawing::DrawLine(pt, {pt.x + 120, pt.y + 60}, accentCol, 14);
+                              });
+        scene.PlaceWorldActor("fcounter", -2.2f, -1.9f, WorldBounds(-2.2f, -1.9f, 4.4f, .9f, 45), 1, 3,
+                              [this, kind, accentCol]() {
+                                  Drawing::DrawProp(models::ModelLibrary::Get().table, {-1.1f, -1.55f}, {1.6f, 1.f, 1.f});
+                                  Drawing::DrawProp(models::ModelLibrary::Get().console, {1.25f, -1.65f}, {.95f, .95f, .95f});
+                                  if (kind == UrbanFacilityKind::Market || kind == UrbanFacilityKind::Clinic)
+                                  {
+                                      Drawing::DrawProp(models::ModelLibrary::Get().recoveryKit, {-1.35f, -1.5f},
+                                                        {.75f, .75f, .75f}, {}, .2f, .44f);
+                                  }
+                                  else
+                                  {
+                                      Drawing::DrawProp(models::ModelLibrary::Get().salvage, {-1.35f, -1.5f},
+                                                        {.65f, .65f, .65f}, {}, -.3f, .44f);
+                                  }
+                                  Drawing::DrawGlow(Drawing::WorldToScreen(-1.05f, -1.25f, 34), 20, accentCol);
+                                  Drawing::DrawGlow(Drawing::WorldToScreen(1.25f, -1.25f, 34), 18, accentCol);
+                              });
+        scene.PlaceWorldActor("fcrates", -2.9f, 1.2f, WorldBounds(-2.9f, 1.2f, .9f, .9f, 45), 1, 4, [this, kind]() {
+            if (kind == UrbanFacilityKind::Clinic)
+            {
+                Drawing::DrawProp(models::ModelLibrary::Get().bed, {-2.6f, 1.2f});
+            }
+            else
+            {
+                Drawing::DrawProp(models::ModelLibrary::Get().box, {-2.75f, 1.35f}, {.85f, .85f, .85f});
+            }
+        });
+        const models::CharacterType clerkType = kind == UrbanFacilityKind::Clinic    ? models::CharacterType::Medic
+                                                : kind == UrbanFacilityKind::Workshop ? models::CharacterType::Engineer
+                                                : kind == UrbanFacilityKind::CivicHall ? models::CharacterType::Researcher
+                                                                                       : models::CharacterType::Civilian;
+        scene.PlaceWorldActor("fclerk", -.2f, -2.05f, WorldBounds(-.2f, -2.05f, 0, 0, 90), 1, 2.5f,
+                              [this, clerkCoat, clerkType, clerkRole, accentCol]() {
+                                  Drawing::DrawPerson({-.2f, -2.05f}, clerkCoat, false, clerkType, false, kPi * .5f);
+                                  Vector2 pt = Drawing::WorldToScreen(-.2f, -2.05f, 82);
+                                  Drawing::DrawLabel(pt.x - 28, pt.y, clerkRole, accentCol);
+                              });
+        scene.PlaceWorldActor("fdoor", 2.1f, 1.6f, WorldBounds(2.1f, 1.6f, 1, 1, 0), 1, 5, [this, accentCol]() {
+            Drawing::DrawTile(2.1f, 1.6f, 1, 1, ColorRGBA(accentCol.r * .35f, accentCol.g * .45f, accentCol.b * .45f));
+        });
+        scene.PlaceWorldActor("player", w.playerPosition.x, w.playerPosition.y,
+                              WorldBounds(w.playerPosition.x, w.playerPosition.y, 0, 0, 90), 2, 0, [this, &w]() {
+                                  Drawing::DrawPerson(w.playerPosition, ColorRGBA(.67f, .8f, .82f), true);
+                              });
+        scene.PlaceWorldActor("fprimary-label", -1.05f, -.65f, WorldBounds(-1.05f, -.65f, 0, 0, 65, 80), 3, 0,
+                              [this, primaryLabel, accentCol]() {
+                                  Vector2 p = Drawing::WorldToScreen(-1.05f, -1.25f, 58);
+                                  Drawing::DrawLabel(p.x - 56, p.y, primaryLabel, accentCol);
+                              });
+        scene.PlaceWorldActor("fsecondary-label", 1.25f, -.65f, WorldBounds(1.25f, -.65f, 0, 0, 65, 80), 3, 0,
+                              [this, secondaryLabel]() {
+                                  Vector2 p = Drawing::WorldToScreen(1.25f, -1.25f, 58);
+                                  Drawing::DrawLabel(p.x - 48, p.y, secondaryLabel, ColorRGBA(.92f, .96f, .98f));
+                              });
+        scene.PlaceWorldActor("fdoor-label", 2.5f, 1.9f, WorldBounds(2.5f, 1.9f, 0, 0, 0, 80), 3, 0, [this]() {
+            Vector2 p = Drawing::WorldToScreen(2.5f, 1.9f);
+            Drawing::DrawLabel(p.x - 26, p.y + 24, "거리 출구");
+        });
+    }
+    scene.DrawActors();
+}
+
+// ============================================================================
 // CityScene
 // ============================================================================
 Vector2 CityScene::GetTrafficPosition(int index)
@@ -2446,12 +2573,14 @@ void DrawPlanetCommunity(const world::SurfaceSession &session)
             renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
             const ColorRGBA coat = person.hitFlash > 0
                                        ? ColorRGBA(1, .3f, .25f)
-                                       : ColorRGBA(.3f + float(person.appearance % 5) * .08f, .5f, .6f);
+                                       : person.hostile
+                                             ? ColorRGBA(.86f, .24f, .16f)
+                                             : ColorRGBA(.3f + float(person.appearance % 5) * .08f, .5f, .6f);
             Drawing::DrawPerson(
-                position, coat, false, types[i % 4], person.speed > .1f, yaw,
-                models::Gender(person.appearance % 2),
-                models::HairStyle((person.appearance >> 8) % size_t(models::HairStyle::Count)), false, 0,
-                person.health <= 0, person.speed / 2, -1, &person.motion);
+                position, coat, false, person.hostile ? models::CharacterType::HeavyCombat : types[i % 4],
+                person.speed > .1f, yaw, models::Gender(person.appearance % 2),
+                models::HairStyle((person.appearance >> 8) % size_t(models::HairStyle::Count)), person.hostile,
+                0, person.health <= 0, person.speed / 2, -1, &person.motion);
             renderqueue::PopMatrix();
         }
         auto terminal = [&](const world::SurfacePoint &point, const char *label, bool mark) {
@@ -2474,9 +2603,55 @@ void DrawPlanetCommunity(const world::SurfaceSession &session)
             }
             renderqueue::PopMatrix();
         };
+        const auto *planetPtr = session.Stream().Snapshot() ? session.Stream().Snapshot()->planet.get() : nullptr;
         terminal(site.contact, site.task == 2 ? "현장 기록 제출" : "선택 의뢰",
                  site.task != 1 && site.task != 3);
-        terminal(site.target, PlanetCommunity::TaskName(site), site.task == 1);
+        terminal(site.target, PlanetCommunity::ZoneTaskName(site, planetPtr), site.task == 1);
+    }
+    // CQ-04 C2: Render visible doorway markers and color-coded facility signs on all nearby enterable
+    // urban facilities (within 46m) so players can identify Market / Clinic / Workshop / CivicHall at a glance.
+    const auto snapshot = session.Stream().Snapshot();
+    if (snapshot && snapshot->planet)
+    {
+        const double planetR = session.Planet().radiusMeters;
+        size_t facilityBadges = 0;
+        for (const auto *item : session.NearbyStructures())
+        {
+            if (!item || facilityBadges >= 18)
+            {
+                continue;
+            }
+            const auto kind = Game::EnterableUrbanFacility(*item, snapshot->planet.get());
+            if (kind == UrbanFacilityKind::None)
+            {
+                continue;
+            }
+            const auto doorPt = Game::FacilityDoorPoint(*item, planetR);
+            const double dist = world::SurfaceGeometry::Distance(planetR, hero, doorPt);
+            if (dist > 46.)
+            {
+                continue;
+            }
+            const auto p = session.Local(doorPt);
+            const Vector2 position{float(p.x / 2), float(p.y / 2)};
+            const float height = float(p.z / 2);
+            if (!frustum.Visible(Drawing::WorldToScreen(position.x, position.y, height * 44), 180, 180, 220, 140))
+            {
+                continue;
+            }
+            const ColorRGBA badgeCol = kind == UrbanFacilityKind::Market    ? ColorRGBA(.28f, .94f, .64f)
+                                       : kind == UrbanFacilityKind::Clinic  ? ColorRGBA(.32f, .94f, 1.f)
+                                       : kind == UrbanFacilityKind::Workshop ? ColorRGBA(1.f, .70f, .24f)
+                                                                            : ColorRGBA(.62f, .80f, 1.f);
+            renderqueue::PushMatrix();
+            renderqueue::Translate(0, -height * 44, height * (1296.f / 44));
+            Drawing::DrawGlow(Drawing::WorldToScreen(position.x, position.y, 12), 20, badgeCol);
+            Drawing::DrawInteractionMarker(position,
+                                           dist < 14. ? Game::FacilityKindName(kind) : Game::FacilityShortLabel(kind),
+                                           badgeCol);
+            renderqueue::PopMatrix();
+            ++facilityBadges;
+        }
     }
 }
 void DrawSurfaceCities(const world::SurfaceSession &session)
@@ -2488,10 +2663,20 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
     }
     const auto frustum = ScreenFrustum::Current();
     const auto &state = Game::Get().GetState();
+    const auto planSnap = session.Stream().Snapshot();
+    const auto *planetPtr = planSnap ? planSnap->planet.get() : nullptr;
     auto place = [&](int city, Vector2 legacy) -> std::optional<world::Vector3d> {
         if (cities->Status(city).band != CitySimulationBand::Detailed)
         {
             return std::nullopt;
+        }
+        if (city > 0 && planetPtr && planetPtr->cityCores)
+        {
+            if (const auto *core = planetPtr->cityCores->Find(Overworld::Cities()[size_t(city)].id);
+                core && core->lots.empty() && core->roads.empty())
+            {
+                return std::nullopt;
+            }
         }
         auto point = cities->Point(session, city, legacy);
         if (!point || world::SurfaceGeometry::Distance(session.Planet().radiusMeters, *point,
@@ -3469,6 +3654,7 @@ Scene &SceneManager::Get(SceneKind kind)
         result[size_t(SceneKind::Interior)] = std::make_unique<InteriorScene>();
         result[size_t(SceneKind::Exterior)] = std::make_unique<CityScene>();
         result[size_t(SceneKind::Observatory)] = std::make_unique<ObservatoryScene>();
+        result[size_t(SceneKind::FacilityInterior)] = std::make_unique<FacilityInteriorScene>();
         result[size_t(SceneKind::Mine)] = std::make_unique<MineScene>();
         result[size_t(SceneKind::Frontier)] = std::make_unique<FrontierScene>();
         result[size_t(SceneKind::Planet)] = std::make_unique<PlanetScene>();
@@ -3491,6 +3677,8 @@ SceneKind SceneManager::Current()
     case WorldMode::SurfaceObservatory:
     case WorldMode::LegacyObservatory:
         return SceneKind::Observatory;
+    case WorldMode::SurfaceFacility:
+        return SceneKind::FacilityInterior;
     case WorldMode::SurfaceExterior:
         return SceneKind::Planet;
     case WorldMode::LegacyFrontier:

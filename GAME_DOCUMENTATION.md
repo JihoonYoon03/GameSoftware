@@ -1,7 +1,7 @@
 # SimpleGame 게임 개발 통합 문서
 
 통합일: 2026-10-14  
-최종 진행 정리: 2026-11-24 · OpenGL 4.5 / 144+ FPS 렌더·시뮬레이션 최적화 및 CQ-01~08 구조 정비(52절) + 차세대 렌더링 최적화 R1~R4 구현 완료(55절·57절: v4 팩·EBO·Mega-VBO MDI·LOD·불변 PBR 텍스처 배열 4+9 레이어·멀티파츠 skinSlot 공유·visibilityMask + Mixamo 72본 표준 스켈레톤 런타임) + CQ-09 플레이어 거주지 고유 기능 구현 완료(56절: 저장 스키마 13) + CQ-04B 절차 도시 생성·현실 도로망·입체 교통·교통신호 체계 구현 완료(58절: Layout Revision 5) / 작업 중 Human v4 리소스 제외 유지 / 다음 단계 CQ-10 대기
+최종 진행 정리: 2026-11-25 · OpenGL 4.5 / 144+ FPS 렌더·시뮬레이션 최적화 및 CQ-01~08 구조 정비(52절) + 차세대 렌더링 최적화 R1~R4 구현 완료(55절·57절: v4 팩·EBO·Mega-VBO MDI·LOD·불변 PBR 텍스처 배열 4+9 레이어·멀티파츠 skinSlot 공유·visibilityMask + Mixamo 72본 표준 스켈레톤 런타임) + CQ-09 플레이어 거주지 고유 기능 구현 완료(56절: 저장 스키마 13) + CQ-04B 절차 도시 생성·현실 도로망·입체 교통·교통신호 체계 구현 완료(58절: Layout Revision 5) + 구 5도시 경계 보강·CQ-04 C2 전 도시 시설 실내 출입(저장 스키마 14)·CQ-10 빈 구역 콘텐츠 및 미니퀘스트 구현 완료(59절) / 작업 중 Human v4 리소스 제외 유지 / 다음 단계 CQ-11(신규 모델 자산 교체) 또는 CQ-12(UI 최종 마감) 대기
 
 현재 개발 계획 브랜치: `iss04_ContentQuality` · 초기 구조 기준: `iss01_actor_scene_render` · 범죄 시스템 변경 기준: `62b00b5` · 이전 도로 성능 비교 기준: `592ec4c` · 초기 기반: `41316a5`
 
@@ -92,13 +92,13 @@
 | 1 / CQ-01 | 행성 규모 절차 생성 심리스 월드와 지역 연결 | 9 | 지역의 관계·접근·복귀 구조가 이후 도시·이동 수단·퀘스트 배치의 기준이다. 현재 구현을 에르마의 고정/절차 지역으로 이전하며 A~H로 나눠 개발한다. | 도시 4단계와 비도시 지대, 구면 순환·스트리밍·연속 탐사·자율 수락·빠른 이동이 공통 행성 기반에서 연결된다. | 정비 완료(52절) — 반경 비례 지형·260km 대륙 도로·공용 허브 중계환·4단계 도시 방사형 밀도·실내/야외 분리 반영 / 사용자 플레이 검증 대기 |
 | 2 / CQ-02 | 오픈월드에 맞는 게임 진행 구조 | 5 | CQ-01 위에서 공간 접근 조건과 사건 진행 조건을 구분해야 특정 동선에 묶인 후속 콘텐츠가 반복되지 않는다. | 자유 탐험과 필요한 선행 조건이 구분되고, 대상 콘텐츠의 방문 순서·중단·복귀가 진행 상태와 모순되지 않는다. | 정비 완료(52절) — `WorldMode` 상태 머신 및 `Game::Player()`/`Loadout()`/`ActiveFirearm()` 통합 진입점 정리 / 사용자 실행 대기 |
 | 3 / CQ-03 | 인물 서사·스토리·게임 진행 개연성 강화 | 12 | CQ-01~02의 공간/진행 구조에 인물의 목적과 사건 인과를 맞춘다. 앞 두 단계에서도 필요한 서사 조건은 함께 대조한다. | 사용자가 지정한 인물·사건·동선·진행 조건이 서로 납득 가능하게 연결된다. 구체적인 대사/분기는 별도 확정한다. | A~C 소스 구현 — 현재 콘텐츠의 대사·선택 반응·조사 기록·완료 후 재방문, 33~35절 / 사용자 실행 대기 |
-| 4 / CQ-04 | 도시 디자인·인프라·건물 형상/용도/출입 구체화 | 11 | CQ-01~03을 토대로 도시 공간을 확정해야 길 찾기·승하차·교전·실내 콘텐츠의 기준이 안정된다. | 대상 도시의 시설 역할과 접근/출입 동선이 일치하고, 플레이 가능한 공간으로 작동한다. | 1차 정비 완료(52·54절) / **CQ-04B 도시 생성·도로망·입체 교통·교통신호 구현 완료(58절 · Layout Revision 5)** · C2 실내 출입 확장 대기 |
+| 4 / CQ-04 | 도시 디자인·인프라·건물 형상/용도/출입 구체화 | 11 | CQ-01~03을 토대로 도시 공간을 확정해야 길 찾기·승하차·교전·실내 콘텐츠의 기준이 안정된다. | 대상 도시의 시설 역할과 접근/출입 동선이 일치하고, 플레이 가능한 공간으로 작동한다. | **구현 완료(52·54·58·59절)** — CQ-04B(Layout Revision 5 도시·도로망·입체 교통·교통신호) + 구 5도시 경계 보강 + CQ-04 C2 전 도시 시설(상점·의료소·정비소·행정 의뢰소) 실내 출입·서비스·저장 스키마 14 완료 |
 | 5 / CQ-05 | 전투 구체화·독자적인 전투 방식·플레이어 이동 확장 | 2 | 전투의 규칙과 플레이어 능력을 먼저 정해야 상대 AI와 수배 난이도를 그에 맞춰 설계할 수 있다. | 사용자가 확정한 전투/이동 방식의 기본 플레이 순환과 입력·충돌·애니메이션 연결이 성립한다. | 정비 완료(52절) — 표면 V/R/G 복구·회피 무적(180ms)·전술 집중(+30%/탄약 보충)·주 무장 `PulseCarbine`·표면 근접 부채꼴/넉백 통일 |
 | 6 / CQ-06 | 차량·비행체 탑승/조종·파괴/잔해 로직 | 4 | CQ-01/04의 이동 공간과 CQ-05의 조작/피해 규칙에 맞춘다. 이후 AI/치안이 반응할 이동·탑승·파괴 상태를 먼저 안정시킨다. | 대상 이동 수단의 탑승부터 조종·이탈·파괴·잔해 정리까지 상태 전환과 소유권이 일관된다. | 정비 완료(52절) — NPC 차량 탈취·전 거점 차량/비행체 재배치·비행체 고고도 순항(140m/s, 280m)·충돌 피해·추락 폭발 및 낙하 물리 통일 |
 | 7 / CQ-07 | NPC·적·경찰 AI 행동 개선 | 3 | CQ-04~06의 공간·전투·이동 수단 규칙을 공통 전제로 행동을 개선한다. | 대상 AI가 상황과 자신의 역할에 맞게 행동하며, 상태 전환·길 찾기·상호작용에서 모순이나 고착이 없다. | 정비 완료(52절) — 시체 오사 필터·3D 고도 시야·1장 스크래퍼 시야/기동/위협공유·행성 동료 현장 구조/측면 산개 반영 |
 | 8 / CQ-08 | 수배 시스템 난이도 스케일링 | 1 | 플레이어의 실제 대응 능력과 경찰 AI가 정해진 CQ-05~07 이후에 조정해야 수치만 올리는 난이도를 피할 수 있다. | 사용자가 정한 단계별 난이도와 대응 원칙이 실제 플레이에서 구분되고, 추적·대응·해제 흐름이 납득 가능하다. | 정비 완료(52절) — 5단계 병과(순찰/기동/중무장/저격/대공요격)·1성 투항 벌금·5성 대공 3D 사격·티어별 도주 시간 반영 |
 | 9 / CQ-09 | 플레이어 거주지 고유 기능 | 6 | CQ-02~04의 진행/도시 구조와 CQ-05~08의 외부 활동을 바탕으로 돌아올 거점의 역할을 정한다. | 침대(휴식·수배 진정·안전 저장)·작업대(키트 제작·방호복/무기 3단계 강화·차량/비행체 원격 정비)·보관함/옷장(의료비 보호 금고·물자 보관·외형 변경)·거점 단말(현황 브리핑·차량 호출)을 헤일로 거주지 내부에 구현하고 저장 스키마 13·HUD·모니터·회귀 테스트로 연결했다. | 구현 완료(56절) |
-| 10 / CQ-10 | 빈 구역 콘텐츠·미니퀘스트 등 추가 | 10 | 안정된 지역·인물·행동·거점 체계를 재사용해 앞 단계의 확장성을 실제 콘텐츠로 검증한다. | 대상 빈 구역에 장소/인물/활동의 맥락이 있는 콘텐츠가 들어가고, 기존 진행과 충돌하지 않는다. 수량·의뢰 내용은 별도 확정한다. | 대기 |
+| 10 / CQ-10 | 빈 구역 콘텐츠·미니퀘스트 등 추가 | 10 | 안정된 지역·인물·행동·거점 체계를 재사용해 앞 단계의 확장성을 실제 콘텐츠로 검증한다. | 대상 빈 구역에 장소/인물/활동의 맥락이 있는 콘텐츠가 들어가고, 기존 진행과 충돌하지 않는다. 수량·의뢰 내용은 별도 확정한다. | **구현 완료(59절)** — 비도시 5종(전초·노천 광구·무법 지대·고대 유적·야생) 2×2 현장 거점·지역 특화 미니퀘스트 및 보너스 보상·무법자 약탈자 교전(정당방위 무수배)·지역별 지도 색상/핀 반영 |
 | 11 / CQ-11 | 모델 퀄리티 개선 및 차세대 렌더링 최적화(R1~R4) | 8 | 공간 용도·출입·전투/탑승 동작과 필요한 자산이 안정된 뒤 최종 모델 작업의 재제작을 줄인다. v4 파이프라인(EBO·정점 압축·LOD·그림자 프록시·GPU 컬링/MDI·PBR 텍스처 배열, 53절)을 선행/병행 구축해 상향된 폴리곤 상한을 목표 기기(RTX 3070 Ti Laptop 60fps / RAM 16GB)에서 방어한다. | R1~R4 렌더링 최적화 경로가 검증되고, 대상 모델의 형상·크기·재질·LOD0~2·그림자 프록시·가동/접촉 지점이 53절 규모별 상한과 아트 방향에 맞는다. 단순 폴리곤 증가를 완료 기준으로 삼지 않는다. | R1~R4 구현 완료(55·57절) · Mixamo 3계층 신규 모델 자산 교체 대기 |
 | 12 / CQ-12 | UI 배치·디자인·가독성 최종 구체화 | 7 | 앞 단계에서 확정된 정보와 조작 흐름을 기준으로 전체 UI의 위계와 일관성을 정리한다. | 대상 화면의 배치·디자인·정보 우선순위가 통일되고, 실제 장면/해상도에서 읽고 조작할 수 있다. | 대기 |
 
@@ -1526,7 +1526,43 @@ CQ-07을 A 이동·경로 안정성, B 감지·기억·역할별 판단, C 동�
       - `city_security_5stars`(전 구간 최대 부하): 평균 `1.439 ms` · P95 `1.949 ms` (**513.0 FPS**) · 드로우콜 `78.7`
       - `roads_junction`: 평균 `0.999 ms` · P95 `1.307 ms` (**765.3 FPS**) / `roads_overpass`: 평균 `1.052 ms` · P95 `1.343 ms` (**744.4 FPS**) / `roads_ramp`: 평균 `0.814 ms` · P95 `1.178 ms` (**849.0 FPS**)
   - **소스 위생:** `Test-SourceEncoding.ps1` 통과 (`169 files` UTF-8), `git diff --check` 공백 오류 0건.
-  - 다음 계획 단계는 **CQ-10(빈 구역 콘텐츠·미니퀘스트 확장)** 또는 **CQ-11(Mixamo 3계층 신규 모델 자산 교체)**이다.
+
+#### 59. 구 5도시 경계 보강·CQ-04 C2 도시 시설 실내 출입·CQ-10 빈 구역 콘텐츠 및 미니퀘스트 구현 (2026-11-25 · 구현 완료 · Save Schema 14)
+
+**배경:** CQ-04B(Layout Revision 5) 완료 이후 남아 있던 ① 구 5도시(`halo_07`·`cinder`·`veil`·`lumen`·`echo`) 고정 `260 m` `CityCore` 반경으로 인한 `120~260 m` 빈 도넛 공백 및 사각 경계 외곽 배치 문제, ② 전 도시(구 5도시 + 절차 정착지) 서비스·산업·행정 건물의 실내 진입 부재(`CQ-04 C2`), ③ 비도시 5종 구역(전초·노천 광구·무법 지대·고대 유적·야생)의 현장 거점·미니퀘스트·위협 콘텐츠 공백(`CQ-10`)을 일괄 구현하고 저장 스키마 14로 영속화했다.
+
+##### 59.1 구 5도시 현대화(물리 위치만 고정) 및 헤일로 코어 경계 보강
+- **비스토리 4도시 완전 Rev 5 절차 전환([Overworld.cpp](SimpleGame/Overworld.cpp), [WorldContent.cpp](SimpleGame/WorldContent.cpp), [Scene.cpp](SimpleGame/Scene.cpp)):** 메인 스토리 진행에 필수적인 `halo_07`(`city == 0`, 집·전망대·리아·마라·수신망·바이크)과 `frontier`(1장 개척지)만 authored `CityCore`를 유지하고, 나머지 4도시(`cinder`·`veil`·`lumen`·`echo`)는 물리 좌표 앵커(`radiusMeters = 40 m`, 빈 `lots`/`roads`)만 남겨 `CityCorePlan::Reserved`·`EmitRev5Street`·`TrafficRoutes`·`PlanetCommunity`가 중심 `(0, 0)`까지 100% 최신 Rev 5 절차 도시(유기적 곡선 블록·2/4/6차선·회전교차로·입체도로·실측 건물·절차 교통/주민)로 생성되도록 전환했다.
+- **헤일로 코어 동적 축소 및 버퍼 밀착:** `halo_07`의 `core.radiusMeters`를 고정 `260 m` 대신 실제 배치된 건물·도로의 3D 도달 반경(`[115 m, 225 m]`)으로 축소하고 `EmitRev5Street`(`+8 m`)·`CityCorePlan::Prepare`(`+18 m`)·`SurfaceIntersection`(`+8 m`)·`TrafficRoutes`(`+10 m`)를 밀착해 빈 도넛 공백을 제거했다. `ClassifyDistrictZone`에서 5도시별 지구 성격을 차별화했다.
+
+##### 59.2 CQ-04 C2 — 전 도시 공용 시설 실내 출입 (`WorldMode::SurfaceFacility` · Save Schema 14)
+- **엄격한 건물 화이트리스트(유령 출입문 제거) 및 진입·퇴장([Game.h](SimpleGame/Game.h), [Game.cpp](SimpleGame/Game.cpp)):**
+  - `UrbanFacilityKind` 4종(`Market` 상점·보급소 / `Clinic` 의료소 / `Workshop` 정비소·공방 / `CivicHall` 행정·의뢰소)과 `EnterableUrbanFacility()`·`FacilityDoorPoint()`·`FacilityShortLabel()`을 단일 판정 경로로 통합했다.
+  - `ClassifyUrbanFacility()`는 실제 건축 메시(`MeasuredBuilding`·`Building`·`Habitat`·`Terrace`·`Workshop`·`Dome`·`Spire`·`TwinBridge`·`Arcology`·`Transit`·`Courtyard`, 최소 `5.0 × 5.0 × 3.5 m`)만 허용하며, `PlanetCities::Describe()`의 소품·콘솔·가로등·주차 비행체에는 `ContentUse::Expedition`을 부여하고 건물 유형별 `ContentUse`를 정확히 매핑해 헤일로 시작 지점 인근 소품에서 발생하던 유령 상점/의료소 출입문 버그를 제거했다.
+  - 기존 헤일로 `CityFacilities::All()`(4종 · `interiors == 2`) 및 `"building_entrance_contract":"awaiting_delivery"` 계약을 100% 보존하면서, 모든 정착지 시설 정면에서 `E`로 실내 입장·퇴장 및 2개 스테이션(회복 키트·탄창·고철 매각 / 응급 치료·구급 보급 / 공용차·비행체 정비·키트 제작 / 1~2성 수배 벌금 정산·지역 의뢰 게시판)을 이용할 수 있다.
+- **3D 출입구 배지·미니맵/확대 지도 아이콘·모니터·저장 스키마 14:**
+  - [Scene.cpp](SimpleGame/Scene.cpp): 반경 `46 m` 이내 진입 가능 시설 출입구에 색상별 바닥 글로우 및 한글 배지(`상점`/`의료소`/`정비소`/`행정소`)를 표시하고, `SceneKind::FacilityInterior` 실내 씬을 렌더링한다.
+  - [Hud.cpp](SimpleGame/Hud.cpp): 미니맵(`160 m`)과 확대 지도(`range ≤ 900 m`) 모두에 진입 가능 시설 핀(에메랄드 `상점`·시안 `의료소`·호박 `정비소`·블루 `행정소`)을 표시하고, `WorldMode::SurfaceFacility` 전용 HUD를 제공한다.
+  - [Monitor.cpp](SimpleGame/Monitoring/Monitor.cpp): `"facility_interior": { "active", "kind", "region_id", "label" }` 추가.
+  - [Save.cpp](SimpleGame/Save.cpp): `kSchema = 14`, footer 프레임 `FacilityRecords` 추가(Schema 1~13 하위 호환, `SaveArchive::Capture()` 왕복 직렬화, `IsInsideAny()` 통합).
+
+##### 59.3 CQ-10 — 비도시 5종 구역 고유 지형/밀도·차별화 미니퀘스트·약탈자 전투 AI·비도시 도로 접합
+- **비도시 5종 고밀도·고유 형성/팔레트([WorldContent.cpp](SimpleGame/WorldContent.cpp)):**
+  - 중심 `(0, 0)`을 `3×3` 시그니처 거점, 주변 `|x| ≤ 1, |y| ≤ 1`을 `2×2` 외곽 링, 외곽 셀을 `2×2`(배치율 `50%`)로 확장해 평야 공백을 제거하고, 5종 구역마다 서로 다른 배치 형상·메시·팔레트를 적용했다: **전초(`Outpost`)** 청록 물류 안마당 / **노천 광구(`Mine`)** 녹슨 황토 시추·컨베이어·사일로·광석 채굴장 / **무법 지대(`Outlaw`)** 원형 방벽·주차 차량·고철 더미·적갈 경고색 요새 / **고대 유적(`AncientRuins`)** `18.5 m` 중앙 오벨리스크와 방사형 석비·아치 열주(시안-바이올렛 발광) / **야생(`Wilderness`)** 불규칙 군집 암석 첨탑·갈대·소형 기상 관측 캠프.
+- **구역별 차별화 미니퀘스트 및 약탈자 전투 AI 수정([Overworld.cpp](SimpleGame/Overworld.cpp)):**
+  - **약탈자 문워크·자탄 충돌 수정:** 적대 약탈자(`hostile = true`)가 플레이어를 포착(`32 m`)하면 시민 보도 순찰 루프와 분리된 전용 교전 브랜치로 분기해 장애물을 회피하며 정면 추격(`11.5 m` 이상) → 사격 거리 정지 자세(`speed = 0`)로 전환하며, 총구 오프셋 `+0.55` 월드(`1.1 m`) 및 `!playerOwned` 적대 아군 피격 제외로 자탄 자폭 버그를 제거했다.
+  - **구역별 차별화 목표·현장 효과·보상:** **무법 지대(`Outlaw`)** 캠프 내 약탈자 전원 소탕 시 자동 완료(`Measured` 전환, 정당방위 무수배 + 고철 보너스) / **노천 광구(`Mine`)** 시추 시 원광 고철 `+1` 즉시 획득 + 정산 고철 `+2` / **고대 유적(`AncientRuins`)** 석비 해독 `+40 XP` + 유적 고철 `+3` / **전초(`Outpost`)** 비컨 교정 시 체력 `+25`·스태미너 완충 + 회복 키트 `+1` / **야생(`Wilderness`)** 표본 회수 `+25 XP` + 회복 키트 `+1`.
+- **비도시 구형 사선 도로 절단 및 원형 회전교차로 합류([WorldStreaming.cpp](SimpleGame/WorldStreaming.cpp), [Hud.cpp](SimpleGame/Hud.cpp)):**
+  - `Outlaw`·`AncientRuins`·`Wilderness` 캠프 반경 `26 m` 내부로 포장 간선도로가 예각 관통하지 않도록 3D 리본과 지도 모두에서 클리핑하고, `Outpost`·`Mine` 및 시외 합류 노드(`roadDeg ≥ 2`)는 유입 도로를 `6.8 m` 정지선에서 깔끔히 절단한 뒤 `7.8 m` 원형 회전교차로(`IntersectionControl::Roundabout`)로 접합해 비정상적 예각 겹침을 제거했다.
+
+##### 59.4 자동 검증 결과 (2026-11-25 · Release x64 / RTX 5080)
+- **회귀 테스트:** [tests/GameplayTests.cpp](tests/GameplayTests.cpp) `TestCq10AndUrbanFacilities()`(`--cq10-facilities` 및 기본 풀 스위트 — `halo_07` 코어 `115~225 m` 및 비스토리 4도시 Rev 5 전환 검증, 소품/콘솔 유령 출입문 차단 검증, `Market`/`Clinic` 실내 출입·거래·모니터 JSON·Schema 14 저장/복원 왕복, `Outlaw` 약탈자 자탄 방지·전원 소탕 자동 완료·무수배 검증) + `WriteLegacyCheckpoint`·[tests/PlayerMobilityTests.cpp](tests/PlayerMobilityTests.cpp) Schema 14 푸터 호환 갱신.
+- **CPU 회귀 전체 통과:** `GameplayTests` (`--cq10-facilities` + `--residence` + `--city-facilities` + `--story-followups` + 기본 전체), `PlayerMobilityTests`, `WorldGenerationTests` (**254,855 checks**), `WorldStreamingTests` (**136,396 checks**), `WorldTests` (**47,366 assertions**), `MapHudTests`, `RoadPlanTests`, `CivicTests` (`0.0133 ms/update`), `MovementTests`, `ResourceAssetsTests`, `SecurityResponseTests`, `PlayerCombatTests`, `SceneGraphTests`, `StartupTests`.
+- **GPU 렌더링 및 16장면 벤치마크 통과 (RTX 5080, OpenGL 4.6, 1280×800, 4× MSAA):**
+  - `RenderingTests --r4-only --glfw`: 통과 (`100.333 MiB`, 8× 이방성, `skinSlot` 공유).
+  - `RenderingTests --flight-stress --glfw`: **1,800프레임 통과**.
+  - `RenderingTests --benchmark build/opt-x64/renders-cq10-v2 --glfw` 및 `RenderingTests build/opt-x64/renders-cq10-full --glfw`: 전 16장면 **`0/120` over 16.67 ms** 통과 (`planet_surface` P95 `1.288 ms` / **776.7 FPS**, `planet_surface_security_5stars` P95 `1.879 ms` / **532.1 FPS**, `city` P95 `1.488 ms` / **672.1 FPS**, `city_security_5stars` P95 `1.837 ms` / **544.4 FPS**, `roads_junction` P95 `1.366 ms` / **732.2 FPS**).
+- 다음 계획 단계는 **CQ-11(Mixamo 3계층 신규 모델 자산 교체)** 또는 **CQ-12(UI 배치·디자인·가독성 최종 마감)**이다.
 
 ### 전체 구조 검토와 반복 비용 리팩토링 — 2026-10-28
 

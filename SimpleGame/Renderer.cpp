@@ -2632,6 +2632,7 @@ void GameRenderer::Draw()
     }
     const auto &state = Game::Get().GetState();
     const char *scene = game::GameLevels::Mine().IsActive()      ? "mine"
+                        : state.facilityInterior.Active()        ? "facility_interior"
                         : state.isInsideHome                     ? "interior"
                         : state.isInObservatory                  ? "observatory"
                         : game::GameLevels::Chapter().IsActive() ? "frontier"

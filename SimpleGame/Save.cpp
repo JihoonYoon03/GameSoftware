@@ -29,7 +29,7 @@ namespace tutorial
 namespace
 {
 constexpr std::uint64_t kMaximumFile = 16 * 1024 * 1024;
-constexpr unsigned kSchema = 13;
+constexpr unsigned kSchema = 14;
 void Require(bool value, const char *message)
 {
     if (!value)
@@ -253,6 +253,7 @@ class SaveArchive
         writer.GroundVehicleRecord(c.game.car);
         writer.AircraftRecord(c.game.aircraft);
         writer.ResidenceRecord(c.game.residence);
+        writer.FacilityRecord(c.game.facilityInterior);
         Checkpoint clean;
         SaveArchive reader(true, writer.Bytes());
         reader.Value(clean);
@@ -265,6 +266,7 @@ class SaveArchive
         reader.GroundVehicleRecord(clean.game.car);
         reader.AircraftRecord(clean.game.aircraft);
         reader.ResidenceRecord(clean.game.residence);
+        reader.FacilityRecord(clean.game.facilityInterior);
         Require(reader.Finished(), "메모리 월드 기록에 지원하지 않는 데이터가 있습니다.");
         clean.game.playerMotion.mobility.RestoreStamina(c.game.playerMotion.mobility.Stamina(),
                                                         c.game.playerMotion.mobility.RegenDelay());
@@ -1210,6 +1212,38 @@ class SaveArchive
             ResidenceRecord(v.worlds.at(key).game.residence);
         }
     }
+    void FacilityRecord(ActiveFacilityInterior &fi)
+    {
+        int kindInt = reading ? 0 : int(fi.kind);
+        Value(kindInt);
+        Require(kindInt >= int(UrbanFacilityKind::None) && kindInt <= int(UrbanFacilityKind::CivicHall),
+                "저장된 도시 시설 종류가 올바르지 않습니다.");
+        if (reading)
+        {
+            fi = {};
+            fi.kind = UrbanFacilityKind(kindInt);
+        }
+        if (fi.Active())
+        {
+            Fields(fi.regionId, fi.regionName, fi.label, fi.returnPoint, fi.returnYaw);
+        }
+    }
+    void FacilityRecords(Campaign &v)
+    {
+        std::uint64_t count = v.worlds.size();
+        Value(count);
+        Require(count == v.worlds.size(), "도시 시설 실내 확장의 월드 수가 다릅니다.");
+        std::set<std::string> keys;
+        auto entry = v.worlds.begin();
+        for (std::uint64_t i = 0; i < count; ++i)
+        {
+            std::string key = reading ? std::string{} : (entry++)->first;
+            Value(key);
+            Require(v.worlds.count(key) && keys.insert(key).second,
+                    "도시 시설 실내 확장의 월드 ID가 올바르지 않습니다.");
+            FacilityRecord(v.worlds.at(key).game.facilityInterior);
+        }
+    }
     void Value(Checkpoint &v)
     {
         Fields(v.planet, v.layout, v.digest, v.pose, v.origin, v.bike, v.bikeHeading, v.mineReturn, v.game,
@@ -1323,9 +1357,17 @@ void Validate(const Checkpoint &c)
     const auto &m = c.mine;
     const auto &f = c.chapter;
     Require(w.surfaceExploration && !(w.isInsideHome && w.isInObservatory) &&
+                !(w.facilityInterior.Active() && (w.isInsideHome || w.isInObservatory)) &&
                 c.mineReturn.has_value() == m.active &&
-                (!m.active || (!w.isInsideHome && !w.isInObservatory && !w.isBikeMounted)),
+                (!m.active || (!w.IsInsideAny() && !w.isBikeMounted)),
             "저장된 공간/층 상태가 올바르지 않습니다.");
+    if (w.facilityInterior.Active())
+    {
+        G::Validate(w.facilityInterior.returnPoint);
+        Require(!w.facilityInterior.regionId.empty() && !w.facilityInterior.label.empty() &&
+                    std::isfinite(w.facilityInterior.returnYaw),
+                "저장된 도시 시설 실내 복귀 정보가 올바르지 않습니다.");
+    }
     Require(m.player.health > 0 && m.player.health <= m.player.maxHealth && m.player.maxHealth <= 100000 &&
                 m.player.level >= 1 && m.player.level <= 1000 && m.player.experience >= 0 &&
                 m.player.credits >= 0 && m.player.credits <= game::PlayerStats::kMaximumCredits &&
@@ -1370,7 +1412,7 @@ void Validate(const Checkpoint &c)
     {
         Require(view.zoom >= .25f && view.zoom <= 32, "저장된 현장 지도 확대 값이 올바르지 않습니다.");
     }
-    if (!m.active && !w.isInsideHome && !w.isInObservatory)
+    if (!m.active && !w.IsInsideAny())
     {
         auto p = G::ToLocal(c.origin, c.pose.origin, c.planet.radiusMeters);
         Require(std::hypot(p.x - w.playerPosition.x * 2, p.y - w.playerPosition.y * 2) < .2,
@@ -1578,6 +1620,20 @@ Campaign Decode(const std::filesystem::path &path)
             "저장 형식 버전이 다릅니다. 원본 파일은 변경하지 않았습니다.");
     Require(world::ContentLayout::SupportsRevision(envelope.layout),
             "저장된 도시 배치 버전이 현재 게임과 다릅니다.");
+    std::vector<unsigned char> facilityExtension;
+    if (envelope.schema >= 14)
+    {
+        Require(envelope.payload.size() >= 8, "도시 시설 실내 확장의 길이 정보가 없습니다.");
+        SaveArchive footer(true,
+                           std::vector<unsigned char>(envelope.payload.end() - 8, envelope.payload.end()));
+        std::uint64_t size = 0;
+        footer.Value(size);
+        Require(size > 0 && size <= envelope.payload.size() - 8,
+                "도시 시설 실내 확장의 길이가 올바르지 않습니다.");
+        const size_t start = envelope.payload.size() - 8 - size_t(size);
+        facilityExtension.assign(envelope.payload.begin() + start, envelope.payload.end() - 8);
+        envelope.payload.resize(start);
+    }
     std::vector<unsigned char> residenceExtension;
     if (envelope.schema >= 13)
     {
@@ -1761,6 +1817,12 @@ Campaign Decode(const std::filesystem::path &path)
         SaveArchive residence(true, std::move(residenceExtension));
         residence.ResidenceRecords(result);
         Require(residence.Finished(), "거주지 상태 확장에 지원하지 않는 데이터가 있습니다.");
+    }
+    if (envelope.schema >= 14)
+    {
+        SaveArchive facility(true, std::move(facilityExtension));
+        facility.FacilityRecords(result);
+        Require(facility.Finished(), "도시 시설 실내 확장에 지원하지 않는 데이터가 있습니다.");
     }
     ValidateCampaign(result);
     return result;
@@ -2216,6 +2278,12 @@ bool SaveSystem::Save(const std::filesystem::path &path)
         residenceFooter.Value(residenceSize);
         payload.insert(payload.end(), residence.Bytes().begin(), residence.Bytes().end());
         payload.insert(payload.end(), residenceFooter.Bytes().begin(), residenceFooter.Bytes().end());
+        SaveArchive facility(false), facilityFooter(false);
+        facility.FacilityRecords(candidate);
+        std::uint64_t facilitySize = facility.Bytes().size();
+        facilityFooter.Value(facilitySize);
+        payload.insert(payload.end(), facility.Bytes().begin(), facility.Bytes().end());
+        payload.insert(payload.end(), facilityFooter.Bytes().begin(), facilityFooter.Bytes().end());
         Require(payload.size() <= kMaximumFile, "저장 데이터가 허용 크기를 초과했습니다.");
         SaveArchive header(false);
         unsigned char magic[8] = {'S', 'G', 'W', 'O', 'R', 'L', 'D', 0};
@@ -2317,7 +2385,7 @@ bool SaveSystem::SwitchPlanet(std::string_view id)
         Require(profile != nullptr, "알 수 없는 행성 프로필입니다.");
         auto &g = Game::Get();
         Require(!profile->SameWorld(g.surface->Planet()), "현재 탐사 중인 행성입니다.");
-        Require(!g.IsSurfaceMine() && !g.state.isInsideHome && !g.state.isInObservatory &&
+        Require(!g.IsSurfaceMine() && !g.state.IsInsideAny() &&
                     !g.state.isBikeMounted && !g.state.relayPreparing,
                 "지상에서 바이크를 내리고 중계 이동을 마친 뒤 행성을 선택해 주세요.");
         auto source = SaveArchive::Capture();
@@ -2496,7 +2564,7 @@ void SaveSystem::Update()
         g.state.StopMotion();
         g.state.cameraPosition = g.state.playerPosition;
         g.state.surfaceCameraHeight =
-            (!g.IsSurfaceMine() && !g.state.isInsideHome && !g.state.isInObservatory)
+            (!g.IsSurfaceMine() && !g.state.IsInsideAny())
                 ? float(g.surface->Local(g.surface->Pose().origin).z / 2)
                 : 0;
         g.state.bikeSafePoseValid = false;

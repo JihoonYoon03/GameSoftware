@@ -450,6 +450,8 @@ struct CommunityResident
     ai::ThreatMemory threat;
     std::optional<world::SurfacePoint> lastThreat;
     float perceptionCooldown = 0;
+    bool hostile = false;
+    float attackCooldown = 0;
 };
 struct CommunitySite
 {
@@ -510,6 +512,7 @@ class PlanetCommunity
     void Interact();
     std::vector<std::string> Journal() const;
     static const char *TaskName(const CommunitySite &site);
+    static const char *ZoneTaskName(const CommunitySite &site, const world::GeneratedPlanet *planet);
 
   private:
     bool Populate(const world::GeneratedRegion &region);

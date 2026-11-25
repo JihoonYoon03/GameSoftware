@@ -53,6 +53,7 @@ enum class SceneKind
     Interior,
     Exterior,
     Observatory,
+    FacilityInterior,
     Mine,
     Frontier,
     Planet,
@@ -106,6 +107,15 @@ class CityScene final : public Scene
 // ObservatoryScene : Scene
 // ============================================================================
 class ObservatoryScene final : public Scene
+{
+  public:
+    void Draw() override;
+};
+
+// ============================================================================
+// FacilityInteriorScene : Scene — CQ-04 C2 walkable Market / Clinic / Workshop / CivicHall
+// ============================================================================
+class FacilityInteriorScene final : public Scene
 {
   public:
     void Draw() override;

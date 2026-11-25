@@ -836,6 +836,7 @@ void TransferToHospital()
         civic.hospitals.empty() ? HospitalSite{0, kHomeDoor} : civic.hospitals[size_t(civic.hospital)];
     world.isInsideHome = world.isInObservatory = world.isBikeMounted = world.mapVisible = world.mouseFiring =
         world.mouseAiming = false;
+    world.facilityInterior.Clear();
     world.StopMotion();
     bool transported = true;
     if (world.surfaceExploration)
@@ -1444,7 +1445,7 @@ CivicState &CivicJustice::State()
 bool CivicJustice::IsExterior()
 {
     const auto &world = Game::Get().GetState();
-    return !world.isInsideHome && !world.isInObservatory &&
+    return !world.IsInsideAny() &&
            (world.surfaceExploration
                 ? Game::Get().Surface() && Game::Get().Surface()->Ready() && !Game::Get().IsSurfaceMine()
                 : !game::GameLevels::Active());

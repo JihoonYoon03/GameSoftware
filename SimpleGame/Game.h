@@ -295,7 +295,11 @@ enum class InteractionTarget
     Aircraft,
     HomeBed,
     HomeWorkbench,
-    HomeStorage
+    HomeStorage,
+    FacilityEntrance,
+    FacilityExit,
+    FacilityServicePrimary,
+    FacilityServiceSecondary
 };
 
 constexpr float kPi = 3.14159265f;
@@ -545,10 +549,41 @@ struct ResidenceState
     }
 };
 
+// CQ-04 C2: Walkable urban facility interiors across all 5 legacy cities and procedural settlements.
+enum class UrbanFacilityKind : std::uint8_t
+{
+    None = 0,
+    Market = 1,
+    Clinic = 2,
+    Workshop = 3,
+    CivicHall = 4
+};
+struct ActiveFacilityInterior
+{
+    UrbanFacilityKind kind = UrbanFacilityKind::None;
+    std::string regionId, regionName, facilityId, label;
+    world::SurfacePoint returnPoint{};
+    float returnYaw = 0;
+    bool Active() const
+    {
+        return kind != UrbanFacilityKind::None;
+    }
+    void Clear()
+    {
+        *this = {};
+    }
+};
+
 // State owned by Game. Renderers read it without changing gameplay.
 struct GameState
 {
     ResidenceState residence;
+    ActiveFacilityInterior facilityInterior;
+    ActiveFacilityInterior nearbyFacilityEntrance;
+    bool IsInsideAny() const
+    {
+        return isInsideHome || isInObservatory || facilityInterior.Active();
+    }
     world::RelayNetwork relayNetwork;
     std::string selectedRelay, relaySource, relayTarget, relayStatus;
     float relayElapsed = 0;
@@ -678,6 +713,7 @@ enum class WorldMode : std::uint8_t
     LegacyFrontier,
     SurfaceInterior,
     SurfaceObservatory,
+    SurfaceFacility,
     SurfaceExterior,
     SurfaceMine
 };
@@ -746,6 +782,16 @@ class Game
     }
     bool EnterSurfaceMine();
     bool LeaveSurfaceMine();
+    // CQ-04 C2: Urban facility interior entry, exit, and station services across all settlements.
+    static UrbanFacilityKind ClassifyUrbanFacility(const world::SurfaceStructure &structure);
+    static UrbanFacilityKind EnterableUrbanFacility(const world::SurfaceStructure &structure,
+                                                    const world::GeneratedPlanet *planet);
+    static const char *FacilityKindName(UrbanFacilityKind kind);
+    static const char *FacilityShortLabel(UrbanFacilityKind kind);
+    static world::SurfacePoint FacilityDoorPoint(const world::SurfaceStructure &structure, double planetRadius);
+    bool EnterFacilityInterior(const ActiveFacilityInterior &entry);
+    bool ExitFacilityInterior();
+    bool InteractFacilityStation(InteractionTarget target);
     bool RecoverSurfaceAt(int city, Vector2 legacyPosition);
     void Reset();
     void StartNewGame();

@@ -230,7 +230,8 @@ void AddStreet(ContentCell &cell, const GeneratedPlanet &p, const GeneratedRegio
 {
     if (p.cityCores)
     {
-        if (auto core = p.cityCores->Find(r.definition.id))
+        if (auto core = p.cityCores->Find(r.definition.id);
+            core && (!core->lots.empty() || !core->roads.empty()))
         {
             if (Norm(a) < core->radiusMeters + 20 || Norm(b) < core->radiusMeters + 20)
             {
@@ -420,6 +421,37 @@ bool Rev5RoundaboutNode(const GeneratedRegion &r, std::int64_t gx, std::int64_t 
 DistrictZone ClassifyDistrictZone(const GeneratedRegion &r, const Grid &grid, std::int64_t cx, std::int64_t cy,
                                   double zoneRatio)
 {
+    // Distinct district zoning character for the 5 legacy story-region cities so each modernizes
+    // with its own outer skyline, streetscape, and facility mix around its core.
+    const auto clusterSeed = Mix(grid.seed ^ Mix(std::uint64_t(cx >> 1) + 17) ^ Mix(std::uint64_t(cy >> 1) + 53));
+    const unsigned pick = unsigned(clusterSeed % 10);
+    if (r.definition.id == "cinder")
+    {
+        if (zoneRatio < .30) return DistrictZone::CivicCore;
+        return pick < 6 ? DistrictZone::IndustrialLogistics
+                        : (pick < 8 ? DistrictZone::CommercialTransit : DistrictZone::ResidentialLow);
+    }
+    if (r.definition.id == "veil")
+    {
+        if (zoneRatio < .32) return DistrictZone::CivicCore;
+        return pick < 5 ? DistrictZone::ResidentialHigh : DistrictZone::CommercialTransit;
+    }
+    if (r.definition.id == "lumen")
+    {
+        if (zoneRatio < .25) return DistrictZone::CivicCore;
+        return pick < 6 ? DistrictZone::CommercialTransit : DistrictZone::ResidentialLow;
+    }
+    if (r.definition.id == "echo")
+    {
+        if (zoneRatio < .30) return DistrictZone::CivicCore;
+        return pick < 7 ? DistrictZone::ResidentialLow : DistrictZone::CommercialTransit;
+    }
+    if (r.definition.id == "halo_07")
+    {
+        if (zoneRatio < .34) return DistrictZone::CivicCore;
+        return pick < 4 ? DistrictZone::CommercialTransit
+                        : (pick < 8 ? DistrictZone::ResidentialLow : DistrictZone::IndustrialLogistics);
+    }
     if (zoneRatio < .22)
     {
         return DistrictZone::CivicCore;
@@ -441,8 +473,6 @@ DistrictZone ClassifyDistrictZone(const GeneratedRegion &r, const Grid &grid, st
         return (dAngle < 1.35) ? DistrictZone::IndustrialLogistics : DistrictZone::ResidentialLow;
     }
     // Voronoi-like deterministic block district clustering (2x2 block clusters share one coherent zone).
-    const auto clusterSeed = Mix(grid.seed ^ Mix(std::uint64_t(cx >> 1) + 17) ^ Mix(std::uint64_t(cy >> 1) + 53));
-    const unsigned pick = unsigned(clusterSeed % 10);
     if (zoneRatio < .45)
     {
         if (pick < 4)
@@ -495,10 +525,12 @@ void EmitRev5Street(ContentCell &cell, const GeneratedPlanet &p, const Generated
 {
     if (p.cityCores)
     {
-        if (auto core = p.cityCores->Find(r.definition.id))
+        if (auto core = p.cityCores->Find(r.definition.id);
+            core && (!core->lots.empty() || !core->roads.empty()))
         {
-            // Keep authored CityCore interior & perimeter buffer clear so procedural streets never X-cross core roads.
-            if (Norm(a) < core->radiusMeters + 16. || Norm(b) < core->radiusMeters + 16.)
+            // Keep authored CityCore interior & tight perimeter buffer clear so procedural streets stitch cleanly
+            // right outside the core without leaving an empty moat or X-crossing authored roads.
+            if (Norm(a) < core->radiusMeters + 8. || Norm(b) < core->radiusMeters + 8.)
             {
                 return;
             }
@@ -819,8 +851,9 @@ void CityCorePlan::Prepare(GeneratedPlanet &p, const std::atomic_bool *cancel)
                 }
             }
             direction = Mul(direction, 1 / Norm(direction));
+            const double approachMargin = p.layoutRevision >= 5 ? 18. : 40.;
             auto outside = start;
-            for (unsigned step = 0; Norm(outside) < city.radiusMeters + 40 && step < 200; ++step)
+            for (unsigned step = 0; Norm(outside) < city.radiusMeters + approachMargin && step < 200; ++step)
             {
                 outside = Add(outside, Mul(direction, 4));
             }
@@ -837,8 +870,8 @@ void CityCorePlan::Prepare(GeneratedPlanet &p, const std::atomic_bool *cancel)
                         continue;
                     }
                     auto a = grid.Node(x, y), b = grid.Node(x + 1, y), middle = Mul(Add(a, b), .5);
-                    if (Norm(a) < city.radiusMeters + 40 || Norm(b) < city.radiusMeters + 40 ||
-                        !Inside(r, middle, 12))
+                    if (Norm(a) < city.radiusMeters + approachMargin ||
+                        Norm(b) < city.radiusMeters + approachMargin || !Inside(r, middle, 12))
                     {
                         continue;
                     }
@@ -1006,7 +1039,7 @@ bool CityCorePlan::Reserved(const GeneratedPlanet &, const GeneratedRegion &regi
                             double clearance) const
 {
     auto city = Find(region.definition.id);
-    if (!city)
+    if (!city || (city->lots.empty() && city->roads.empty()))
     {
         return false;
     }
@@ -1366,8 +1399,9 @@ ContentCell ContentLayout::Generate(const GeneratedPlanet &p, ContentCellKey key
         const bool omitBottom = skipBottom6x2 || mergeBottom;
         const bool omitLeft = skipLeft6x2 || mergeLeft;
 
-        if (inRingA && Inside(r, a, 4.) && !(p.cityCores && p.cityCores->Find(r.definition.id) &&
-                                             Norm(a) < p.cityCores->Find(r.definition.id)->radiusMeters + 16.))
+        const auto *activeCore = p.cityCores ? p.cityCores->Find(r.definition.id) : nullptr;
+        const bool authoredCore = activeCore && (!activeCore->lots.empty() || !activeCore->roads.empty());
+        if (inRingA && Inside(r, a, 4.) && !(authoredCore && Norm(a) < activeCore->radiusMeters + 8.))
         {
             auto ptA = At(p, r, a);
             if (ptA.altitudeMeters >= PlanetTerrain::SeaLevelMeters)
@@ -1916,9 +1950,15 @@ ContentCell ContentLayout::Generate(const GeneratedPlanet &p, ContentCellKey key
     const double cellZoneRatio =
         city ? Norm(cellMid) / (std::max)(200., r.boundingRadiusMeters) : 1.;
     // Dense 3x3 urban parcels in Core & Mid-ring; 2x2 parcels in Outer industrial/suburban fringe.
+    // CQ-10 (Rev 5+): Populate non-city zones with distinct high-density thematic formations:
+    // central (0,0) gets a 3x3 signature compound/sanctuary, surrounding ring (|x|<=1,|y|<=1) gets 2x2
+    // contextual yards/outcrops, and outer cells get denser 2x2 scattered landmarks/biome features.
     const bool denseUrban = city && p.layoutRevision >= GeneratedPlanet::CurrentLayoutRevision &&
                             cellZoneRatio <= .68;
-    const unsigned gridCols = denseUrban ? 3u : (city ? 2u : 1u);
+    const bool rev5NonCity = !city && !entrance && p.layoutRevision >= 5;
+    const bool nonCityCore = rev5NonCity && key.x == 0 && key.y == 0;
+    const bool nonCityRing = rev5NonCity && !nonCityCore && std::abs(key.x) <= 1 && std::abs(key.y) <= 1;
+    const unsigned gridCols = (denseUrban || nonCityCore) ? 3u : ((city || rev5NonCity) ? 2u : 1u);
     const unsigned slots = gridCols * gridCols;
     for (unsigned slot = 0; slot < slots; ++slot)
     {
@@ -1927,9 +1967,26 @@ ContentCell ContentLayout::Generate(const GeneratedPlanet &p, ContentCellKey key
             return {};
         }
         auto random = Mix(seed + slot);
-        if (!city && random % 9 != 0 && (key.x != 0 || key.y != 0))
+        if (!city && !nonCityCore)
         {
-            continue;
+            if (nonCityRing)
+            {
+                if (random % 3 == 0)
+                {
+                    continue;
+                }
+            }
+            else if (rev5NonCity)
+            {
+                if (random % 2 != 0)
+                {
+                    continue;
+                }
+            }
+            else if (random % 9 != 0 && (key.x != 0 || key.y != 0))
+            {
+                continue;
+            }
         }
         // Civic plazas in core (center slot of periodic blocks) and courtyard green breaks elsewhere.
         if (denseUrban && cellZoneRatio < .28 && slot == 4 && (seed % 3 == 0))
@@ -1940,12 +1997,55 @@ ContentCell ContentLayout::Generate(const GeneratedPlanet &p, ContentCellKey key
         {
             continue;
         }
-        const double u = denseUrban ? (.20 + .30 * double(slot % 3))
-                         : city     ? (.26 + .48 * double(slot % 2))
-                                    : .5;
-        const double v = denseUrban ? (.20 + .30 * double(slot / 3))
-                         : city     ? (.26 + .48 * double(slot / 2))
-                                    : .5;
+        double u = (denseUrban || nonCityCore) ? (.18 + .32 * double(slot % 3))
+                   : (city || rev5NonCity)     ? (.26 + .48 * double(slot % 2))
+                                               : .5;
+        double v = (denseUrban || nonCityCore) ? (.18 + .32 * double(slot / 3))
+                   : (city || rev5NonCity)     ? (.26 + .48 * double(slot / 2))
+                                               : .5;
+        // Give non-city zones distinct spatial geometry instead of identical rectangular grids.
+        if (rev5NonCity)
+        {
+            if (nonCityCore && r.definition.kind == RegionKind::AncientRuins)
+            {
+                // Monumental circular colonnade around a central ceremonial obelisk.
+                if (slot == 4)
+                {
+                    u = .5;
+                    v = .5;
+                }
+                else
+                {
+                    const unsigned ringSlot = slot > 4 ? slot - 1 : slot;
+                    const double theta = ringSlot * (G::Pi / 4.0);
+                    u = .5 + .34 * std::cos(theta);
+                    v = .5 + .34 * std::sin(theta);
+                }
+            }
+            else if (nonCityCore && r.definition.kind == RegionKind::Outlaw)
+            {
+                // Fortified hexagonal barricade ring around a central raider command shack.
+                if (slot == 4)
+                {
+                    u = .5;
+                    v = .5;
+                }
+                else
+                {
+                    const unsigned ringSlot = slot > 4 ? slot - 1 : slot;
+                    const double theta = ringSlot * (G::Pi / 4.0) + .22;
+                    const double rad = (ringSlot % 2 == 0) ? .34 : .27;
+                    u = .5 + rad * std::cos(theta);
+                    v = .5 + rad * std::sin(theta);
+                }
+            }
+            else if (r.definition.kind == RegionKind::Wilderness)
+            {
+                // Organic jittered natural clusters (never rigid straight rows).
+                u = std::clamp(u + (Fraction(random + 11) - .5) * .24, .12, .88);
+                v = std::clamp(v + (Fraction(random + 17) - .5) * .24, .12, .88);
+            }
+        }
         auto local = Add(Mul(Add(Mul(a, 1 - u), Mul(b, u)), 1 - v), Mul(Add(Mul(d, 1 - u), Mul(c, u)), v));
         if (entrance)
         {
@@ -2066,10 +2166,14 @@ ContentCell ContentLayout::Generate(const GeneratedPlanet &p, ContentCellKey key
             {
             case RegionKind::Outpost:
                 structure.use = ContentUse::Expedition;
-                if (p.layoutRevision >= GeneratedPlanet::CurrentLayoutRevision && random % 2 == 0)
+                structure.palette = SurfaceStructure::Palette{
+                    {.26f, .39f, .44f, 1.f}, {.34f, .76f, .74f, 1.f}, {.26f, .92f, .86f, 1.f}};
+                if (p.layoutRevision >= GeneratedPlanet::CurrentLayoutRevision &&
+                    ((nonCityCore && (slot == 4 || slot == 1 || slot == 3)) || random % 3 == 0))
                 {
                     structure.form = ContentForm::MeasuredBuilding;
-                    const unsigned pick = unsigned((random / 2) % 3);
+                    const unsigned pick =
+                        nonCityCore ? (slot == 4 ? 1u : slot == 1 ? 0u : 2u) : unsigned((random / 2) % 3);
                     structure.variant = std::uint16_t(10 + pick); // Frontier_FieldWorkshop / FreightDepot / Relay
                     structure.sizeMeters = pick == 0   ? Vector3d{12., 11., 5.35}
                                            : pick == 1 ? Vector3d{20., 16., 10.25}
@@ -2077,14 +2181,23 @@ ContentCell ContentLayout::Generate(const GeneratedPlanet &p, ContentCellKey key
                 }
                 else
                 {
-                    structure.form = random % 3 == 0   ? ContentForm::Relay
-                                     : random % 3 == 1 ? ContentForm::Solar
-                                                       : ContentForm::Shelter;
+                    const unsigned mod = unsigned(random % 4);
+                    structure.form = mod == 0   ? ContentForm::Relay
+                                     : mod == 1 ? ContentForm::Solar
+                                     : mod == 2 ? ContentForm::Cargo
+                                                : ContentForm::Shelter;
+                    structure.sizeMeters = mod == 0   ? Vector3d{6.5, 6.5, 11.5}
+                                           : mod == 1 ? Vector3d{8.5, 6.5, 3.2}
+                                           : mod == 2 ? Vector3d{7.5, 5.5, 3.6}
+                                                      : Vector3d{8., 9., 4.4};
                 }
                 break;
             case RegionKind::Mine:
                 structure.use = ContentUse::Mining;
-                if (p.layoutRevision >= GeneratedPlanet::CurrentLayoutRevision && (random % 2 == 0 || entrance))
+                structure.palette = SurfaceStructure::Palette{
+                    {.42f, .33f, .24f, 1.f}, {.86f, .58f, .22f, 1.f}, {.96f, .68f, .20f, 1.f}};
+                if (p.layoutRevision >= GeneratedPlanet::CurrentLayoutRevision &&
+                    (entrance || (nonCityCore && (slot == 4 || slot == 1)) || random % 4 == 0))
                 {
                     structure.form = ContentForm::MeasuredBuilding;
                     structure.variant = 13; // Mine_AccessSupport
@@ -2092,31 +2205,139 @@ ContentCell ContentLayout::Generate(const GeneratedPlanet &p, ContentCellKey key
                 }
                 else
                 {
-                    structure.form = ContentForm::Conveyor;
-                    structure.sizeMeters = {8, 14, 5};
+                    const unsigned mod = unsigned((nonCityCore ? slot : random) % 5);
+                    if (mod == 0 || mod == 2)
+                    {
+                        structure.form = ContentForm::Conveyor;
+                        structure.sizeMeters = {8., 15., 5.2};
+                    }
+                    else if (mod == 1)
+                    {
+                        structure.form = ContentForm::WaterTank;
+                        structure.sizeMeters = {7.5, 7.5, 8.5};
+                    }
+                    else if (mod == 3)
+                    {
+                        structure.form = ContentForm::Generator;
+                        structure.sizeMeters = {5.5, 6.5, 4.2};
+                    }
+                    else
+                    {
+                        structure.form = ContentForm::Rock;
+                        structure.sizeMeters = {7. + Fraction(random + 3) * 4., 6. + Fraction(random + 5) * 4.,
+                                                4. + Fraction(random + 7) * 3.5};
+                        structure.yaw += Fraction(random + 9) * G::Pi;
+                    }
                 }
                 break;
             case RegionKind::Outlaw:
                 structure.use = ContentUse::Salvage;
-                if (p.layoutRevision >= GeneratedPlanet::CurrentLayoutRevision && random % 3 == 0)
+                structure.palette = SurfaceStructure::Palette{
+                    {.26f, .20f, .21f, 1.f}, {.84f, .26f, .18f, 1.f}, {1.f, .34f, .18f, 1.f}};
+                if (nonCityCore && slot == 4)
                 {
                     structure.form = ContentForm::MeasuredBuilding;
-                    structure.variant = 12; // Frontier_DecommissionedRelay
+                    structure.variant = 12; // Raider command shack (Frontier_DecommissionedRelay)
                     structure.sizeMeters = {10., 10., 4.65};
                 }
                 else
                 {
-                    structure.form = random % 2 ? ContentForm::Cargo : ContentForm::Shelter;
+                    const unsigned mod = unsigned((nonCityCore ? slot : random) % 5);
+                    if (nonCityCore)
+                    {
+                        // Orient defensive barricades/vehicles tangent to the circular raider ring.
+                        structure.yaw = std::atan2(v - .5, u - .5) + G::Pi * .5;
+                    }
+                    if (mod == 0 || mod == 2)
+                    {
+                        structure.form = ContentForm::Cargo;
+                        structure.sizeMeters = {8.5, 4.2, 3.4};
+                    }
+                    else if (mod == 1)
+                    {
+                        structure.form = ContentForm::Vehicle;
+                        structure.variant = std::uint16_t(random % 4);
+                        structure.sizeMeters = {5.2, 2.6, 2.2};
+                    }
+                    else if (mod == 3)
+                    {
+                        structure.form = ContentForm::Shelter;
+                        structure.sizeMeters = {7.5, 8.5, 4.2};
+                    }
+                    else
+                    {
+                        structure.form = ContentForm::Salvage;
+                        structure.sizeMeters = {4.8, 4.8, 2.8};
+                    }
                 }
                 break;
             case RegionKind::AncientRuins:
                 structure.use = ContentUse::Archaeology;
-                structure.form = random % 2 ? ContentForm::Monolith : ContentForm::Arch;
-                structure.sizeMeters = {6, 8, 10};
+                structure.palette = SurfaceStructure::Palette{
+                    {.24f, .26f, .35f, 1.f}, {.56f, .44f, .86f, 1.f}, {.38f, .88f, 1.f, 1.f}};
+                if (nonCityCore && slot == 4)
+                {
+                    structure.form = ContentForm::Monolith;
+                    structure.sizeMeters = {7.5, 7.5, 18.5};
+                }
+                else if ((nonCityCore && (slot % 2 == 0)) || (!nonCityCore && random % 3 == 0))
+                {
+                    structure.form = ContentForm::Arch;
+                    structure.sizeMeters = {7., 10., 11.5};
+                    if (nonCityCore)
+                    {
+                        structure.yaw = std::atan2(v - .5, u - .5);
+                    }
+                }
+                else if (random % 4 == 0 && !nonCityCore)
+                {
+                    structure.form = ContentForm::Rock;
+                    structure.sizeMeters = {6.5, 6.5, 5.5};
+                    structure.yaw += Fraction(random + 4) * G::Pi;
+                }
+                else
+                {
+                    structure.form = ContentForm::Monolith;
+                    structure.sizeMeters = {5.5, 6.5, 11.5 + Fraction(random + 2) * 5.5};
+                    if (nonCityCore)
+                    {
+                        structure.yaw = std::atan2(v - .5, u - .5) + G::Pi * .5;
+                    }
+                }
                 break;
-            default:
+            default: // Wilderness
                 structure.use = ContentUse::Expedition;
-                structure.form = random % 2 ? ContentForm::Shelter : ContentForm::WaterTank;
+                structure.palette = SurfaceStructure::Palette{
+                    {.30f, .38f, .30f, 1.f}, {.48f, .60f, .40f, 1.f}, {.44f, .88f, .68f, 1.f}};
+                if (nonCityCore && (slot == 4 || slot == 1))
+                {
+                    structure.form = slot == 4 ? ContentForm::Shelter : ContentForm::Solar;
+                    structure.sizeMeters = slot == 4 ? Vector3d{7.5, 8.5, 4.2} : Vector3d{7.5, 5.5, 3.2};
+                }
+                else
+                {
+                    const unsigned mod = unsigned(random % 5);
+                    if (mod <= 2)
+                    {
+                        structure.form = ContentForm::Rock;
+                        structure.sizeMeters = {5.5 + Fraction(random + 1) * 6.5,
+                                                5.5 + Fraction(random + 2) * 6.5,
+                                                3.8 + Fraction(random + 3) * 6.5};
+                        structure.yaw += Fraction(random + 5) * G::Pi;
+                    }
+                    else if (mod == 3)
+                    {
+                        structure.form = ContentForm::Reeds;
+                        structure.solid = false;
+                        structure.sizeMeters = {5.5, 5.5, 2.8};
+                        structure.yaw += Fraction(random + 7) * G::Pi;
+                    }
+                    else
+                    {
+                        structure.form = random % 2 ? ContentForm::WaterTank : ContentForm::Shelter;
+                        structure.sizeMeters = {6.5, 7., 4.6};
+                    }
+                }
                 break;
             }
         }
@@ -2308,7 +2529,8 @@ std::vector<UrbanTrafficRoute> ContentLayout::TrafficRoutes(const GeneratedPlane
         --ringCell;
     }
     const auto *core = p.cityCores ? p.cityCores->Find(r.definition.id) : nullptr;
-    const double coreClear = core ? (core->radiusMeters + 18.) : 0.;
+    const bool authoredCore = core && (!core->lots.empty() || !core->roads.empty());
+    const double coreClear = authoredCore ? (core->radiusMeters + 10.) : 0.;
 
     std::map<std::pair<std::int64_t, std::int64_t>, unsigned> nodeMap;
     auto nodeId = [&](std::int64_t gx, std::int64_t gy) {

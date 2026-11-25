@@ -193,22 +193,75 @@ std::shared_ptr<const SurfaceChunk> SurfaceChunk::Build(const GeneratedPlanet &p
     {
         for (const auto &region : plan.regions)
         {
-            if (region.definition.kind != RegionKind::Settlement || region.center.space != SpaceKind::Surface)
+            if (region.center.space != SpaceKind::Surface)
             {
                 continue;
             }
-            double clipRadius = (std::max)(160., region.boundingRadiusMeters * .66);
-            if (plan.cityCores)
+            if (region.definition.kind == RegionKind::Settlement)
             {
-                if (const auto *core = plan.cityCores->Find(region.definition.id))
+                double clipRadius = (std::max)(160., region.boundingRadiusMeters * .66);
+                if (plan.cityCores)
                 {
-                    clipRadius = (std::max)(clipRadius, core->radiusMeters + 100.);
+                    if (const auto *core = plan.cityCores->Find(region.definition.id);
+                        core && (!core->lots.empty() || !core->roads.empty()))
+                    {
+                        clipRadius = (std::max)(clipRadius, core->radiusMeters + 100.);
+                    }
+                }
+                if (Distance(p, center, region.center.position) <= clipRadius + result->radiusMeters + 24.)
+                {
+                    settlementClips.push_back(
+                        {region.center.position.normal,
+                         std::cos((std::max)(10., clipRadius - 6.) / p.radiusMeters)});
                 }
             }
-            if (Distance(p, center, region.center.position) <= clipRadius + result->radiusMeters + 24.)
+            else if (region.definition.kind == RegionKind::Outlaw ||
+                     region.definition.kind == RegionKind::AncientRuins ||
+                     region.definition.kind == RegionKind::Wilderness)
             {
-                settlementClips.push_back(
-                    {region.center.position.normal, std::cos((std::max)(10., clipRadius - 6.) / p.radiusMeters)});
+                // Unpaved wild/ruin/outlaw camps: terminate paved intercity highways cleanly outside
+                // the camp perimeter instead of slicing through ruins or barricades at acute angles.
+                constexpr double kCampClearMeters = 26.;
+                if (Distance(p, center, region.access.position) <= kCampClearMeters + result->radiusMeters + 24.)
+                {
+                    settlementClips.push_back(
+                        {region.access.position.normal, std::cos(kCampClearMeters / p.radiusMeters)});
+                }
+            }
+        }
+        // Trim incoming highway ribbons cleanly at every non-settlement paved junction/roundabout rim
+        // so converging rural roads never stab/cross each other at acute V-angles.
+        for (std::size_t nIdx = 0; nIdx < plan.nodes.size(); ++nIdx)
+        {
+            const auto &node = plan.nodes[nIdx];
+            if (Distance(p, center, node.location.position) > result->radiusMeters + 24.)
+            {
+                continue;
+            }
+            unsigned roadDeg = 0;
+            for (const auto &edge : plan.connections)
+            {
+                if (edge.mode == RouteMode::Road && (edge.from == nIdx || edge.to == nIdx))
+                {
+                    ++roadDeg;
+                }
+            }
+            if (roadDeg >= 2)
+            {
+                bool alreadyClipped = false;
+                for (const auto &clip : settlementClips)
+                {
+                    if (G::Dot(node.location.position.normal, clip.normal) > clip.cosInner)
+                    {
+                        alreadyClipped = true;
+                        break;
+                    }
+                }
+                if (!alreadyClipped)
+                {
+                    settlementClips.push_back(
+                        {node.location.position.normal, std::cos(6.8 / p.radiusMeters)});
+                }
             }
         }
     }
@@ -323,15 +376,51 @@ std::shared_ptr<const SurfaceChunk> SurfaceChunk::Build(const GeneratedPlanet &p
     }
     result->structures = std::move(content.structures);
     result->intersections = std::move(content.intersections);
-    // CQ-04B (Rev 5+): Emit clean slope-conforming junction pads at non-settlement highway nodes (e.g. outposts/relays)
-    // so converging intercity highways join cleanly without X-crossing shoulder lines.
+    // CQ-04B (Rev 5+): Emit clean circular roundabout pads at non-settlement paved highway junctions
+    // (outposts/mines/relays) matching the 6.8m ribbon trim so converging highways join smoothly at any angle.
     if (plan.layoutRevision >= 5 && !plan.nodes.empty())
     {
         for (std::size_t nIdx = 0; nIdx < plan.nodes.size(); ++nIdx)
         {
             const auto &node = plan.nodes[nIdx];
-            if (!(CubeSphere::Address(p, node.location.position, key.level) == key) ||
-                insideBuiltCity(node.location.position))
+            if (!(CubeSphere::Address(p, node.location.position, key.level) == key))
+            {
+                continue;
+            }
+            bool insideSettlementOrWildCamp = false;
+            for (const auto &region : plan.regions)
+            {
+                if (region.center.space != SpaceKind::Surface)
+                {
+                    continue;
+                }
+                if (region.definition.kind == RegionKind::Settlement)
+                {
+                    double clipR = (std::max)(160., region.boundingRadiusMeters * .66);
+                    if (plan.cityCores)
+                    {
+                        if (const auto *core = plan.cityCores->Find(region.definition.id);
+                            core && (!core->lots.empty() || !core->roads.empty()))
+                        {
+                            clipR = (std::max)(clipR, core->radiusMeters + 100.);
+                        }
+                    }
+                    if (Distance(p, node.location.position, region.center.position) < clipR - 6.)
+                    {
+                        insideSettlementOrWildCamp = true;
+                        break;
+                    }
+                }
+                else if ((region.definition.kind == RegionKind::Outlaw ||
+                          region.definition.kind == RegionKind::AncientRuins ||
+                          region.definition.kind == RegionKind::Wilderness) &&
+                         Distance(p, node.location.position, region.access.position) < 26.)
+                {
+                    insideSettlementOrWildCamp = true;
+                    break;
+                }
+            }
+            if (insideSettlementOrWildCamp)
             {
                 continue;
             }
@@ -351,8 +440,8 @@ std::shared_ptr<const SurfaceChunk> SurfaceChunk::Build(const GeneratedPlanet &p
                 inter.center = node.location.position;
                 inter.center.altitudeMeters = plan.terrain.Height(inter.center);
                 inter.frame = G::Frame(inter.center);
-                inter.control = IntersectionControl::Unsignalized;
-                inter.radiusMeters = 5.4;
+                inter.control = IntersectionControl::Roundabout;
+                inter.radiusMeters = 7.8;
                 inter.maxLanes = 2;
                 inter.arms = (std::min)(4u, roadDeg);
                 result->intersections.push_back(std::move(inter));

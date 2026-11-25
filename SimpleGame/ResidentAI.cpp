@@ -529,7 +529,7 @@ void CityResidents::UpdateThreat(GameState &world, Resident &resident, size_t in
         const bool watcher = resident.profession == ResidentProfession::Guard ||
                              resident.profession == ResidentProfession::Observer;
         const ai::Vision vision{3 + reputation * .05f, watcher ? 1.4f : 1.1f, 1.2f, .8f};
-        const bool exterior = !world.isInsideHome && !world.isInObservatory && !Game::Get().IsSurfaceMine() &&
+        const bool exterior = !world.IsInsideAny() && !Game::Get().IsSurfaceMine() &&
                               !world.aircraft.mounted;
         const float height = world.isBikeMounted ? world.bikeElevation : 0;
         profiling::Count(profiling::Counter::NpcPerceptionQueries);
