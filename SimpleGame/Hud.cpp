@@ -64,6 +64,24 @@ void Panel(float x, float y, float w, float h)
     Sprite("Components/panel_border", x, y, w, h, {1, 1, 1}, 1, true);
     renderqueue::Opacity(alpha.content);
 }
+// CQ-12: Unified frosted HUD card with consistent translucent backdrop, crisp rim, and optional theme stripe.
+void HudCard(float x, float y, float w, float h, ColorRGBA accent = {.36f, .86f, .82f}, bool leftStripe = true)
+{
+    const auto &alpha = Game::Get().GetState().uiPreferences;
+    const float bgA = .74f * alpha.background;
+    const float rimA = .42f * alpha.border;
+    Drawing::DrawRectangle(x, y, w, h, {.028f, .058f, .076f, bgA});
+    Drawing::DrawRectangle(x, y, w, 1.f, {.38f, .66f, .68f, rimA});
+    Drawing::DrawRectangle(x, y + h - 1.f, w, 1.f, {.24f, .44f, .48f, rimA * .85f});
+    Drawing::DrawRectangle(x, y, 1.f, h, {.30f, .54f, .58f, rimA * .85f});
+    Drawing::DrawRectangle(x + w - 1.f, y, 1.f, h, {.30f, .54f, .58f, rimA * .85f});
+    if (leftStripe)
+    {
+        Drawing::DrawRectangle(x, y + 4.f, 3.f, (std::max)(4.f, h - 8.f),
+                               {accent.r, accent.g, accent.b, .92f * alpha.border});
+    }
+    renderqueue::Opacity(alpha.content);
+}
 void Button(const UiControl &control, int index)
 {
     const auto &world = Game::Get().GetState();
@@ -527,8 +545,13 @@ struct MapLabelBounds
     float x, y, width;
 };
 std::vector<MapLabelBounds> mapLabels;
-void MapLabel(Vector2 anchor, const char *label, ColorRGBA color)
+void MapLabel(Vector2 anchor, const char *label, ColorRGBA color, bool allowSuppress = true,
+              Vector2 boundsMin = kMapMinimum, Vector2 boundsMax = kMapMaximum)
 {
+    if (!label || !*label)
+    {
+        return;
+    }
     float width = 0;
     for (const unsigned char *p = reinterpret_cast<const unsigned char *>(label); *p;)
     {
@@ -537,27 +560,38 @@ void MapLabel(Vector2 anchor, const char *label, ColorRGBA color)
         width += bytes == 1 ? 8 : 15;
         p += bytes;
     }
-    constexpr Vector2 offsets[] = {{12, 5}, {12, 27}, {12, -17}, {12, 49}, {12, -39}};
+    const Vector2 offsets[] = {{12, 5},         {12, 25},         {12, -15},
+                               {-width - 12, 5}, {-width - 12, 25}, {-width - 12, -15},
+                               {12, 45},        {12, -35}};
     Vector2 position = {};
+    bool placed = false;
     for (auto offset : offsets)
     {
-        position = {Game::Clamp(anchor.x + offset.x, kMapMinimum.x + 5, kMapMaximum.x - width - 5),
-                    Game::Clamp(anchor.y + offset.y, kMapMinimum.y + 19, kMapMaximum.y - 5)};
+        const float maxX = (std::max)(boundsMin.x + 5.f, boundsMax.x - width - 5.f);
+        const float maxY = (std::max)(boundsMin.y + 19.f, boundsMax.y - 5.f);
+        position = {Game::Clamp(anchor.x + offset.x, boundsMin.x + 5.f, maxX),
+                    Game::Clamp(anchor.y + offset.y, boundsMin.y + 19.f, maxY)};
         bool overlap = false;
         for (auto other : mapLabels)
         {
-            overlap |= position.x < other.x + other.width + 4 && position.x + width + 4 > other.x &&
-                       position.y > other.y - 20 && position.y - 20 < other.y;
+            overlap |= position.x < other.x + other.width + 6 && position.x + width + 6 > other.x &&
+                       position.y > other.y - 21 && position.y - 21 < other.y;
         }
         if (!overlap)
         {
+            placed = true;
             break;
         }
     }
-    mapLabels.push_back({position.x, position.y, width});
-    if (std::fabs(position.y - anchor.y) > 10)
+    if (!placed && allowSuppress)
     {
-        Drawing::DrawLine(anchor, {position.x - 3, position.y - 6}, {.45f, .6f, .5f, .7f});
+        return;
+    }
+    mapLabels.push_back({position.x, position.y, width});
+    if (std::fabs(position.y - anchor.y) > 10 || position.x < anchor.x - 4)
+    {
+        const float leaderX = position.x < anchor.x ? position.x + width + 3 : position.x - 3;
+        Drawing::DrawLine(anchor, {leaderX, position.y - 6}, {.45f, .6f, .5f, .7f});
     }
     Drawing::DrawLabel(position.x, position.y, label, color);
 }
@@ -1539,23 +1573,28 @@ void Hud::DrawNoticePanel()
                                   w.noticeText.find("투항") != std::string::npos ||
                                   w.noticeText.find("벌금") != std::string::npos ||
                                   w.noticeText.find("보안") != std::string::npos;
-    Icon(isWarningNotice ? "warning" : isSecurityNotice ? "security" : "check", 918, 322, 22, true,
-         isWarningNotice ? ColorRGBA(1, .78f, .4f) : ColorRGBA(1, 1, 1));
     const auto pages = TextPages(w.noticeText, 294, 16, 4);
     const float secondsPerPage = (std::max)(1.f, w.noticeDurationSeconds / pages.size());
     const auto page = (std::min)(pages.size() - 1,
                                  size_t((std::max)(0.f, w.noticeDurationSeconds - w.noticeSecondsRemaining) /
                                         secondsPerPage));
     const auto &rows = pages[page];
+    const float cardH = 34.f + float(rows.size()) * 24.f + (pages.size() > 1 ? 22.f : 0.f);
+    const ColorRGBA accent = isWarningNotice    ? ColorRGBA(1.f, .64f, .32f)
+                             : isSecurityNotice ? ColorRGBA(1.f, .44f, .36f)
+                                                : ColorRGBA(.36f, .90f, .80f);
+    HudCard(902.f, 306.f, 358.f, cardH, accent);
+    Icon(isWarningNotice ? "warning" : isSecurityNotice ? "security" : "check", 918, 322, 22, true,
+         isWarningNotice ? ColorRGBA(1, .78f, .4f) : ColorRGBA(1, 1, 1));
     for (size_t i = 0; i < rows.size(); ++i)
     {
         UiText(954, 342 + float(i) * 24, rows[i], 16, kUiInk, true);
     }
     if (pages.size() > 1)
     {
-        UiText(954, 366 + float(rows.size()) * 24,
-               std::to_string(page + 1) + " / " + std::to_string(pages.size()) + " · 자동 다음", 14, kUiInk,
-               true);
+        UiText(954, 346 + float(rows.size()) * 24,
+               std::to_string(page + 1) + " / " + std::to_string(pages.size()) + " · 자동 다음", 14,
+               {.72f, .86f, .84f}, true);
     }
 }
 
@@ -1599,14 +1638,16 @@ void Hud::DrawInteraction(const std::string &label)
         return;
     }
     auto rows = Dialogue::Wrap(label, 286, 17);
-    float h = (std::max)(48.f, 24.f + float(rows.size()) * 22);
+    const float h = (std::max)(50.f, 24.f + float(rows.size()) * 22.f);
     Panel(450, 514, 380, h);
+    Drawing::DrawRectangle(450.f, 520.f, 3.f, (std::max)(8.f, h - 12.f), {.38f, .92f, .86f, .92f});
     for (size_t i = 0; i < rows.size(); ++i)
     {
-        UiText(468, 545 + float(i) * 22, rows[i], 17);
+        UiText(468, 544 + float(i) * 22, rows[i], 17);
     }
-    Sprite("Components/keycap", 788, 526, 28, 28);
-    UiText(797, 546, "E", 17);
+    const float keyY = 514.f + (h - 28.f) * .5f;
+    Sprite("Components/keycap", 788, keyY, 28, 28);
+    UiText(797, keyY + 20.f, "E", 17);
 }
 void Hud::DrawObjective(const std::string &objective, const std::string &context)
 {
@@ -1614,20 +1655,25 @@ void Hud::DrawObjective(const std::string &objective, const std::string &context
     const bool submit = site && site->task == CommunityTaskProgress::Measured;
     const bool hold = submit && game::GameLevels::Mine().GetState().player.credits >
                                     game::PlayerStats::kMaximumCredits - CommunityTaskProgress::RewardCredits;
-    Icon(hold ? "activity_payment_hold" : submit ? "activity_submit" : "activity_track", 32, 36, 24, true);
-    const auto pages = TextPages(objective, 420, 18, 2);
+    const auto pages = TextPages(objective, 412, 18, 2);
     const auto page = size_t((std::max)(0.f, Game::Get().GetState().playTimeSeconds) / 5) % pages.size();
     const auto &rows = pages[page];
+    const auto detail = context + (pages.size() > 1 ? " · " + std::to_string(page + 1) + "/" +
+                                                          std::to_string(pages.size()) + " · J 전체 목표"
+                                                    : "");
+    const auto detailPages = TextPages(detail, 412, 14, 2);
+    const size_t detailPage =
+        size_t((std::max)(0, Game::Get().GetState().lastUpdateMilliseconds) / 6000) % detailPages.size();
+    const float cardH = 38.f + float(rows.size()) * 26.f + float(detailPages[detailPage].size()) * 21.f;
+    const ColorRGBA accent = hold ? ColorRGBA(1.f, .76f, .36f)
+                             : submit ? ColorRGBA(.42f, .95f, .72f)
+                                      : ColorRGBA(.36f, .88f, .88f);
+    HudCard(20.f, 20.f, 472.f, cardH, accent);
+    Icon(hold ? "activity_payment_hold" : submit ? "activity_submit" : "activity_track", 32, 36, 24, true);
     for (size_t i = 0; i < rows.size(); ++i)
     {
         UiText(68, 57 + i * 26, rows[i], 18, kUiInk, true);
     }
-    const auto detail = context + (pages.size() > 1 ? " · " + std::to_string(page + 1) + "/" +
-                                                          std::to_string(pages.size()) + " · J 전체 목표"
-                                                    : "");
-    const auto detailPages = TextPages(detail, 420, 14, 2);
-    const size_t detailPage =
-        size_t((std::max)(0, Game::Get().GetState().lastUpdateMilliseconds) / 6000) % detailPages.size();
     for (size_t i = 0; i < detailPages[detailPage].size(); ++i)
     {
         UiText(68, 58 + float(rows.size()) * 26 + float(i) * 21, detailPages[detailPage][i], 14,
@@ -1648,17 +1694,21 @@ void Hud::DrawActivityObjective(const std::string &context)
     const bool submit = site && site->task == CommunityTaskProgress::Measured;
     const bool hold = submit && game::GameLevels::Mine().GetState().player.credits >
                                     game::PlayerStats::kMaximumCredits - CommunityTaskProgress::RewardCredits;
+    const ColorRGBA accent = hold ? ColorRGBA(1.f, .76f, .36f)
+                             : submit ? ColorRGBA(.42f, .95f, .72f)
+                                      : ColorRGBA(.36f, .88f, .88f);
+    HudCard(20.f, 20.f, 472.f, 108.f, accent);
     Icon(hold ? "activity_payment_hold" : submit ? "activity_submit" : "activity_track", 32, 36, 24, true);
     // Fixed baselines leave the existing city/mine progress HUD below untouched. Every long row cycles.
-    const auto title = TextPages(goal.title, 420, 18, 1);
-    const auto action = TextPages(goal.action, 420, 18, 1);
+    const auto title = TextPages(goal.title, 412, 18, 1);
+    const auto action = TextPages(goal.action, 412, 18, 1);
     const auto detail =
         TextPages(goal.location + " · J 전체 기록" + (hold ? " · 소지 한도 / 현장 정산 보류" : std::string()),
-                  420, 14, 1);
+                  412, 14, 1);
     const size_t tick = size_t((std::max)(0, w.lastUpdateMilliseconds) / 5000);
-    UiText(68, 57, title[tick % title.size()].front(), 18, kUiInk, true);
-    UiText(68, 88, action[tick % action.size()].front(), 18, kUiInk, true);
-    UiText(68, 116, detail[tick % detail.size()].front(), 14, {.68f, .83f, .83f}, true);
+    UiText(68, 57, title[tick % title.size()].front(), 18, {.78f, .96f, .94f}, true);
+    UiText(68, 86, action[tick % action.size()].front(), 17, kUiInk, true);
+    UiText(68, 113, detail[tick % detail.size()].front(), 14, {.68f, .83f, .83f}, true);
 }
 
 void CityHud::Draw()
@@ -2362,6 +2412,12 @@ void Hud::DrawVitals()
     }
     const auto &stats = mine.player;
     const bool critical = stats.health <= stats.maxHealth * .25f;
+    // CQ-12: Unified bottom-left Vitals + Quick Supply card (x=20..308, y=678..786), clear of bottom controls.
+    HudCard(20.f, 678.f, 288.f, 108.f,
+            critical ? ColorRGBA(1.f, .44f, .36f) : ColorRGBA(.46f, .90f, .82f));
+    const std::string supplyLine = "G 키트 " + std::to_string(stats.recoveryKits) + " · 고철 " +
+                                   std::to_string(stats.salvage) + " · " + std::to_string(stats.credits) + " Cr";
+    UiText(34, 699, supplyLine, 13, {.72f, .90f, .86f}, true);
     Icon("health", 32, 736, 24, true);
     UiText(66, 735, std::to_string(stats.health), 28, critical ? ColorRGBA(1, .56f, .44f) : kUiInk, true);
     float maximumX = 76.f + RenderAssets::MeasureUtf8(std::to_string(stats.health), 28);
@@ -2382,21 +2438,25 @@ void Hud::DrawVitals()
         Drawing::DrawRectangle(dodgeMarkX, 770, 2, 10, {.9f, .96f, .94f, .8f});
         if (mobility.Dodging() || low)
         {
-            UiText(302, 779, mobility.Dodging() ? "회피 중 · 공격 제한" : "회피에 필요한 스태미너 부족", 14, ink,
-                   true);
+            UiText(318, 748, mobility.Dodging() ? "회피 중 · 공격 제한" : "스태미너 부족", 13, ink, true);
         }
     }
     bool combat = game::GameLevels::IsCombatActive() || CivicCombat::Available();
     if (critical)
     {
-        UiText(32, 690,
+        HudCard(20.f, 642.f, 288.f, 30.f, {1.f, .44f, .34f});
+        UiText(34, 663,
                game::GameLevels::IsCombatActive()
-                   ? (stats.recoveryKits > 0 ? "위험 · G 회복" : "위험 · 회복 키트 없음")
+                   ? (stats.recoveryKits > 0 ? "위험 · G 회복 키트 사용" : "위험 · 회복 키트 없음")
                    : "위험 · 의료 지원 필요",
-               16, {1, .61f, .46f}, true);
+               15, {1, .61f, .46f}, true);
     }
     if (w.Mounted())
     {
+        const float cardTop = w.aircraft.mounted ? 642.f : w.car.mounted ? 676.f : 698.f;
+        const float cardHeight = w.aircraft.mounted ? 148.f : w.car.mounted ? 114.f : 82.f;
+        HudCard(988.f, cardTop, 272.f, cardHeight, {.42f, .90f, .94f}, false);
+        Drawing::DrawRectangle(1257.f, cardTop + 4.f, 3.f, cardHeight - 8.f, {.42f, .90f, .94f, .9f});
         const float driveSpeed = w.aircraft.mounted
                                      ? float(std::hypot(w.aircraft.velocity.x, w.aircraft.velocity.y) / 2)
                                  : w.car.mounted ? w.car.speed
@@ -2473,13 +2533,15 @@ void Hud::DrawVitals()
     }
     else if (combat && mine.loadout.IsFirearmEquipped())
     {
+        HudCard(992.f, 654.f, 268.f, 132.f, {.42f, .88f, .94f}, false);
+        Drawing::DrawRectangle(1257.f, 658.f, 3.f, 124.f, {.42f, .88f, .94f, .9f});
         const auto &gun = Game::Get().ActiveFirearm();
         Icon(mine.loadout.IsPrimaryEquipped() ? "carbine" : "pistol", 1040, 722, 28, true);
         Icon("infinite", 1064, 754, 15, true);
-        UiText(1040, 699, gun.GetName(), 15, {.72f, .92f, .96f}, true);
+        UiText(1008, 703, gun.GetName(), 15, {.72f, .92f, .96f}, true);
         if (w.playerMotion.mobility.FocusActive())
         {
-            UiText(1248, 671, "전술 집중", 15, {.42f, 1.f, .86f}, true, true);
+            UiText(1248, 676, "전술 집중", 15, {.42f, 1.f, .86f}, true, true);
         }
         char count[32];
         std::snprintf(count, sizeof(count), "%02d", gun.GetRounds());
@@ -2529,52 +2591,59 @@ void Hud::DrawVitals()
     }
     if (!w.Mounted() && combat && !mine.loadout.IsFirearmEquipped())
     {
-        Icon("unarmed", 1040, 723, 28, true);
-        UiText(1248, 736, "맨손", 25, kUiInk, true, true);
-        UiText(1248, 764, "좌클릭 근접 · Q 홀드 무기 선택", 15, kUiInk, true, true);
+        HudCard(992.f, 704.f, 268.f, 78.f, {.42f, .80f, .82f}, false);
+        Drawing::DrawRectangle(1257.f, 708.f, 3.f, 70.f, {.42f, .80f, .82f, .85f});
+        Icon("unarmed", 1020, 723, 28, true);
+        UiText(1246, 736, "맨손", 25, kUiInk, true, true);
+        UiText(1246, 764, "좌클릭 근접 · Q 홀드 무기 선택", 15, kUiInk, true, true);
     }
     if (combat && !Game::Get().IsAiming() && w.cursorInsideViewport && !w.weaponWheel.visible)
     {
         auto p = w.cursorPosition;
         Sprite(mine.loadout.IsFirearmEquipped() ? "Components/cursor_hip" : "Components/cursor_unarmed",
                p.x - 16, p.y - 16, 32, 32);
-        if (mine.loadout.IsFirearmEquipped())
+        if (mine.loadout.IsFirearmEquipped() && !w.playerMotion.mobility.FocusActive())
         {
-            Icon("mouse_right", 1034, 666, 20, true);
-            UiText(1248, 683, "우클릭 홀드 · 조준", 15, kUiInk, true, true);
+            Icon("mouse_right", 1008, 661, 18, true);
+            UiText(1248, 676, "우클릭 홀드 · 조준", 14, {.78f, .90f, .90f}, true, true);
         }
     }
     const auto &law = CivicJustice::State();
     if (CivicJustice::IsExterior() && law.wanted > 0)
     {
-        Icon("security", 526, 38, 21, true, {1, .78f, .4f});
-        for (int i = 0; i < 5; ++i)
-        {
-            UiText(558 + i * 35, 60, i < law.wanted ? "★" : "☆", 25, {1, .78f, .4f}, true);
-        }
-        Sprite("Components/hud_heat_track", 556, 71, 169, 10);
-        Sprite("Components/hud_heat_fill", 558, 73, 165, 6, {1, .78f, .4f},
-               Game::Clamp(law.heat / CivicJustice::kMaximumHeat, 0, 1));
         const bool airborneInterceptor =
             law.wanted >= 5 && w.aircraft.mounted && !w.aircraft.grounded;
         const bool canSurrender =
             w.surfaceExploration && law.wanted == 1 && law.heat < 60 && !w.Mounted() &&
             std::any_of(law.officers.begin(), law.officers.end(),
                         [](const auto &o) { return o.health > 0 && !o.departing; });
-        UiText(570, 106,
+        const bool hasSubLine = canSurrender || (law.responseStarted && !law.identified);
+        const float cardH = hasSubLine ? 120.f : 98.f;
+        const ColorRGBA alertCol =
+            airborneInterceptor ? ColorRGBA(1.f, .40f, .34f) : ColorRGBA(1.f, .74f, .34f);
+        HudCard(508.f, 20.f, 276.f, cardH, alertCol);
+        Icon("security", 522, 36, 21, true, {1, .78f, .4f});
+        for (int i = 0; i < 5; ++i)
+        {
+            UiText(554 + i * 35, 58, i < law.wanted ? "★" : "☆", 25, {1, .78f, .4f}, true);
+        }
+        Sprite("Components/hud_heat_track", 552, 69, 169, 10);
+        Sprite("Components/hud_heat_fill", 554, 71, 165, 6, {1, .78f, .4f},
+               Game::Clamp(law.heat / CivicJustice::kMaximumHeat, 0, 1));
+        UiText(524, 104,
                airborneInterceptor ? "대공 요격 경계 · 보안망 추적 중"
                : law.identified    ? "보안망 추적 중"
                                    : "수색 중 · 미식별",
                15, airborneInterceptor ? ColorRGBA(1, .56f, .44f) : ColorRGBA(1, .78f, .4f), true);
         if (canSurrender)
         {
-            UiText(570, 128, "비무장 투항 가능 · 지상에서 맨손으로 정지", 14, {.65f, .9f, .81f}, true);
+            UiText(524, 126, "비무장 투항 가능 · 맨손 정지", 14, {.65f, .9f, .81f}, true);
         }
         else if (law.responseStarted && !law.identified)
         {
             int remaining = int(std::ceil(
                 (std::max)(0.f, CivicJustice::kUnidentifiedEscapeSeconds - law.initialUnseenSeconds)));
-            UiText(570, 128, "미발각 해제까지 " + std::to_string(remaining) + "초", 14, {.87f, .88f, .76f},
+            UiText(524, 126, "미발각 해제까지 " + std::to_string(remaining) + "초", 14, {.87f, .88f, .76f},
                    true);
         }
     }
@@ -3622,6 +3691,14 @@ void PlanetHud::Draw()
                17);
         return;
     }
+    // CQ-12: Centered bottom control strip (x=328..952, y=758..786), strictly non-overlapping with Vitals & Weapon HUD.
+    auto drawBottomControls = [](const char *text) {
+        const float textW = RenderAssets::MeasureUtf8(text, 13);
+        const float boxW = (std::min)(636.f, textW + 28.f);
+        const float boxX = 640.f - boxW * .5f;
+        HudCard(boxX, 758.f, boxW, 28.f, {.36f, .82f, .80f}, false);
+        UiText(640.f - textW * .5f, 777.f, text, 13, {.78f, .90f, .89f}, true);
+    };
     const auto &state = Game::Get().GetState();
     if (mode == WorldMode::SurfaceFacility)
     {
@@ -3631,9 +3708,10 @@ void PlanetHud::Draw()
         const std::string info = "소지 " + std::to_string(player.credits) + " Cr · 회복 키트 " +
                                  std::to_string(player.recoveryKits) + " · 고철 " +
                                  std::to_string(player.salvage);
-        UiText(68, 153, info, 14, {.65f, .9f, .81f}, true);
+        HudCard(20.f, 134.f, 340.f, 26.f, {.42f, .90f, .78f}, false);
+        UiText(34, 152, info, 13, {.68f, .92f, .84f}, true);
         CityHud::DrawInteractionPrompt();
-        UiText(32, 728, "WASD 이동 · E 카운터 이용/퇴장 · J 조사 기록 · Esc 메뉴", 16);
+        drawBottomControls("WASD 이동 · E 카운터 이용/퇴장 · J 조사 기록 · Esc 메뉴");
         return;
     }
     if (mode == WorldMode::SurfaceInterior || mode == WorldMode::SurfaceObservatory)
@@ -3642,7 +3720,7 @@ void PlanetHud::Draw()
             mode == WorldMode::SurfaceInterior ? "헤일로 · 거주지" : "헤일로 · 전망대";
         Hud::DrawActivityObjective(area + " · E 대화·조사 / M 지도");
         CityHud::DrawInteractionPrompt();
-        UiText(32, 728, "WASD 이동 · E 상호작용 · J 조사 기록 · Esc 메뉴", 16);
+        drawBottomControls("WASD 이동 · E 상호작용 · J 조사 기록 · Esc 메뉴");
         return;
     }
     auto location = Game::Get().PlanetLocation().value_or(session->Location());
@@ -3656,15 +3734,17 @@ void PlanetHud::Draw()
     CityHud::DrawInteractionPrompt();
     auto ll = world::SurfaceGeometry::ToDegrees(location.position);
     char coordinates[160];
-    std::snprintf(coordinates, sizeof(coordinates), "%.4f° / %.4f° · %.0fm", ll[0], ll[1],
+    std::snprintf(coordinates, sizeof(coordinates), "%s · %.4f° / %.4f° · %.0fm", area.c_str(), ll[0], ll[1],
                   location.position.altitudeMeters - world::PlanetTerrain::SeaLevelMeters);
-    UiText(32, 154, coordinates, 14, {.64f, .79f, .76f});
+    const float coordW = (std::min)(472.f, RenderAssets::MeasureUtf8(coordinates, 13) + 28.f);
+    HudCard(20.f, 134.f, coordW, 26.f, {.36f, .78f, .78f}, false);
+    UiText(34, 152, coordinates, 13, {.72f, .88f, .86f}, true);
     const char *controls =
-        state.aircraft.mounted ? "W/S 이동 · A/D 조향 · Shift 순항 · Space/C 상승/하강 · X 제동 · E 착륙/하차"
-        : state.car.mounted    ? "W 가속 · S 제동/후진 · A/D 조향 · E 하차"
-        : state.isBikeMounted  ? "W 가속 · S 제동/후진 · A/D 조향 · Space 부스트 · E 하차"
-                               : "WASD 이동 · Shift 달리기 · Space 회피 · V 근접 · R 재장전 · G 회복 · E 탑승/상호작용";
-    UiText(32, 728, controls, 16);
+        state.aircraft.mounted ? "W/S 이동 · A/D 조향 · Shift 순항 · Space/C 고도 · X 제동 · E 착륙/하차"
+        : state.car.mounted    ? "W 가속 · S 제동/후진 · A/D 조향 · E 하차 · M 지도"
+        : state.isBikeMounted  ? "W 가속 · S 제동/후진 · A/D 조향 · Space 부스트 · E 하차 · M 지도"
+                               : "WASD 이동 · Shift 달리기 · Space 회피 · V 근접 · R 재장전 · G 회복 · E 상호작용 · M 지도";
+    drawBottomControls(controls);
 }
 void PlanetHud::DrawMap(bool full)
 {
@@ -3681,8 +3761,8 @@ void PlanetHud::DrawMap(bool full)
     if (full)
     {
         Drawing::DrawRectangle(0, 0, kCanvasWidth, kCanvasHeight, {.015f, .035f, .045f, .95f});
-        Panel(64, 92, 1152, 616);
-        UiText(96, 143, range > 200000 ? "행성 개관" : range > 4000 ? "지역 탐사도" : "주변 블록 약도", 26);
+        Panel(64, 82, 1152, 642);
+        UiText(96, 128, range > 200000 ? "행성 개관" : range > 4000 ? "지역 탐사도" : "주변 블록 약도", 26);
         char scale[80];
         if (range >= 1000)
         {
@@ -3693,15 +3773,8 @@ void PlanetHud::DrawMap(bool full)
             std::snprintf(scale, sizeof(scale), "표시 반경 %.0f m", range);
         }
         UiText(820, 196, scale, 18);
-        UiText(96, 174, "휠 +/- 확대·축소 · 방향키 이동 · C 내 위치 · P 행성 전체 · 0 초기화", 15);
-        UiText(96, 650,
-               w.mapRegisteredRelaysOnly ? "L 필터: 등록 중계환"
-                                         : "L 필터: 발견 중계환 · 미방문 지역은 미확인 표시",
-               15);
-        UiText(96, 682,
-               Game::Get().IsSurfaceMine() ? "Tab 지하 약도 / 지상 지도 · M 닫기"
-                                           : "좌클릭 목적지/중계환 선택 · 우클릭 해제 · M 닫기",
-               15);
+        UiText(96, 156, "휠 +/- 확대·축소 · 방향키 이동", 14, {.74f, .86f, .86f});
+        UiText(96, 176, "C 내 위치 · P 행성 전체 · 0 초기화", 14, {.70f, .82f, .82f});
         UiText(820, 626, "현장 E 등록 · 주차 후 이동", 15);
         UiText(820, 659, "차량은 출발지에 남습니다.", 15);
     }
@@ -4130,9 +4203,8 @@ void PlanetHud::DrawMap(bool full)
             const float iconSize = selected ? 20.f : 16.f;
             Icon("relay", projected.x - iconSize * .5f, projected.y - iconSize * .5f, iconSize, false,
                  registered ? ColorRGBA(.35f, 1, .9f) : ColorRGBA(.65f, .69f, .75f));
-            UiText(projected.x + iconSize * .5f + 4, projected.y + 4,
-                   registered ? "등록 중계환" : "발견 · E 등록 필요", 13,
-                   registered ? ColorRGBA(.35f, 1, .9f) : ColorRGBA(.65f, .69f, .75f));
+            MapLabel(projected, registered ? "등록 중계환" : "발견 · E 등록",
+                     registered ? ColorRGBA(.35f, 1, .9f) : ColorRGBA(.65f, .69f, .75f), true);
         }
         else
         {
@@ -4313,7 +4385,7 @@ void PlanetHud::DrawMap(bool full)
             if (full)
             {
                 Icon("destination", point.x - 9, point.y - 9, 18, false, {1, .78f, .3f});
-                UiText(point.x + 12, point.y + 5, "목적지", 13, {1, .78f, .3f});
+                MapLabel(point, "목적지", {1, .78f, .3f}, false);
             }
             else
             {
@@ -4361,16 +4433,52 @@ void PlanetHud::DrawMap(bool full)
             UiText(820, (w.relayPreparing ? 608.f : 586.f) + float(i) * 22, pages[page][i], 15,
                    {.76f, .87f, .82f});
         }
-        Icon("relay", 96, 650, 14, false, {.35f, 1, .9f});
-        UiText(116, 661, "청록 · 중계환", 13, {.72f, .92f, .89f});
-        Icon("destination", 96, 672, 14, false, {1, .78f, .3f});
-        UiText(116, 683, "금색 핀 · 지정 목적지", 13, {.92f, .86f, .68f});
+        // CQ-12: Unified non-overlapping Full Map Legend Row (y=658..674, strictly below map circle bottom y=644)
+        // + Filter/Controls Footer (y=690..714).
+        Drawing::DrawLine({96, 652}, {790, 652}, {.32f, .52f, .54f, .45f}, 1.f);
+        Icon("relay", 96, 659, 13, false, {.35f, 1, .9f});
+        UiText(114, 671, "중계환", 13, {.72f, .92f, .89f});
+        Icon("destination", 168, 659, 13, false, {1, .78f, .3f});
+        UiText(186, 671, "목적지", 13, {.94f, .86f, .66f});
+        auto legendDot = [](float x, float y, ColorRGBA c, const char *name) {
+            Drawing::DrawEllipse(x, y, 4.f, 4.f, c);
+            UiText(x + 9.f, y + 5.f, name, 13, {.82f, .90f, .90f});
+        };
+        legendDot(248.f, 666.f, {.28f, .94f, .64f}, "상점");
+        legendDot(302.f, 666.f, {.32f, .94f, 1.f}, "의료");
+        legendDot(356.f, 666.f, {1.f, .70f, .24f}, "정비");
+        legendDot(410.f, 666.f, {.62f, .80f, 1.f}, "행정");
+        legendDot(464.f, 666.f, {.58f, .88f, .96f}, "의뢰");
+        UiText(96, 692,
+               w.mapRegisteredRelaysOnly ? "L 필터: 등록 중계환만 표시"
+                                         : "L 필터: 발견 중계환 · 미방문 지역은 미확인 표시",
+               14, {.74f, .86f, .85f});
+        UiText(96, 712,
+               Game::Get().IsSurfaceMine() ? "Tab 지하 약도 / 지상 지도 · M 닫기"
+                                           : "좌클릭 목적지/중계환 선택 · 우클릭 해제 · M 닫기",
+               14, {.70f, .82f, .82f});
         const float meters = range * .5f;
-        Drawing::DrawLine({284, 704}, {406, 704}, {.7f, .88f, .87f}, 2);
+        Drawing::DrawLine({576, 707}, {690, 707}, {.7f, .88f, .87f}, 2);
         char distance[64];
         std::snprintf(distance, sizeof(distance), meters >= 1000 ? "%.1f km" : "%.0f m",
                       meters >= 1000 ? meters / 1000 : meters);
-        UiText(416, 709, distance, 14);
+        UiText(700, 712, distance, 14, {.80f, .92f, .90f});
+    }
+    else
+    {
+        // CQ-12: Isometric 45-degree North compass indicator on minimap rim + compact facility color key below.
+        const Vector2 northPos{center.x - radius * .72f, center.y - radius * .72f};
+        Drawing::DrawEllipse(northPos.x, northPos.y, 9.f, 9.f, {.03f, .07f, .09f, .92f});
+        UiText(northPos.x - 4.5f, northPos.y + 4.5f, "N", 12, {.52f, .96f, .90f}, true);
+        HudCard(1042.f, 218.f, 218.f, 26.f, {.36f, .84f, .82f}, false);
+        auto miniKey = [](float x, ColorRGBA c, const char *name) {
+            Drawing::DrawEllipse(x, 231.f, 3.5f, 3.5f, c);
+            UiText(x + 7.f, 236.f, name, 12, {.78f, .90f, .88f}, true);
+        };
+        miniKey(1054.f, {.28f, .94f, .64f}, "상점");
+        miniKey(1106.f, {.32f, .94f, 1.f}, "의료");
+        miniKey(1158.f, {1.f, .70f, .24f}, "정비");
+        miniKey(1210.f, {.62f, .80f, 1.f}, "행정");
     }
 }
 

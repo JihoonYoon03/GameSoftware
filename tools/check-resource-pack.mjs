@@ -168,7 +168,7 @@ for (let asset = 0; asset < count; ++asset) {
         const normal = decodeOct(onx, ony);
         assert.ok(Math.abs(Math.hypot(...normal) - 1) < 1e-4, 'Invalid normal');
         assert.ok([0, 1, 2, 3].includes(palette), 'Invalid palette slot');
-        assert.ok([0, 1, 2].includes(visibility), 'Invalid visibility');
+        assert.ok([0, 1, 2, 3, 4].includes(visibility), 'Invalid visibility');
         assert.ok(flags <= 1, 'Invalid vertex flags');
         let sum = 0;
         for (let weight = 0; weight < 4; ++weight) {
@@ -216,6 +216,38 @@ for (let asset = 0; asset < count; ++asset) {
     shadowIndicesTotal += lodCounts[3];
 }
 assert.equal(offset, data.length, 'Unexpected trailing data');
+const mixamoCatalogPath = path.join(root, 'Resource/Documentation/mixamo_characters.json');
+if (fs.existsSync(mixamoCatalogPath)) {
+    const mixamo = JSON.parse(fs.readFileSync(mixamoCatalogPath, 'utf8'));
+    assert.equal(mixamo.schema, 'mixamo_3tier_v1');
+    for (const [prefix, list, expectSkinned] of [
+        ['modular/body/', mixamo.bodies ?? [], true],
+        ['modular/outfit/', mixamo.outfits ?? [], true],
+        ['modular/part/', mixamo.attachments ?? [], null]
+    ]) {
+        for (const item of list) {
+            const report = manifest.assets.find(asset => asset.name === prefix + item.id);
+            assert.ok(report, 'Modular Mixamo asset missing from pack: ' + prefix + item.id);
+            assert.equal(report.source, item.source);
+            const rigid = expectSkinned === null ? (item.skinned === false || Boolean(item.socket)) : !expectSkinned;
+            if (rigid) {
+                assert.equal(report.bones, 0, 'Rigid Mixamo socket part must have 0 bones: ' + item.id);
+            } else {
+                assert.ok(report.bones > 0 && report.bones <= (mixamo.max_bones ?? 71),
+                    'Skinned Mixamo part bone count out of range: ' + item.id);
+                assert.ok(report.animationBank > 0, 'Skinned Mixamo part missing rig bank: ' + item.id);
+            }
+            if (item.lod0_max_tris) {
+                assert.ok(report.triangles <= item.lod0_max_tris,
+                    `Mixamo LOD0 budget exceeded for ${item.id}: ${report.triangles}/${item.lod0_max_tris}`);
+            }
+            if (report.triangles >= 250) {
+                assert.ok(report.lods.lod1 < report.lods.lod0, 'Mixamo LOD1 must simplify LOD0: ' + item.id);
+                assert.ok(report.lods.shadow < report.lods.lod0, 'Mixamo shadow proxy must simplify LOD0: ' + item.id);
+            }
+        }
+    }
+}
 assert.ok(resourcePackStatus(root).current, 'Runtime pack must match current sources and converter');
 assert.equal([...names].filter(n => n.startsWith('aircraft/')).length, 8);
 assert.equal([...names].filter(n => n.startsWith('scenery/')).length, 36);

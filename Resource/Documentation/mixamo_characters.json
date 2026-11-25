@@ -1,0 +1,20 @@
+{
+  "schema": "mixamo_3tier_v1",
+  "skeleton_preset": "Mixamo",
+  "max_bones": 71,
+  "animation_banks": [],
+  "bodies": [],
+  "outfits": [
+    {
+      "id": "Field_Medic_Coat",
+      "source": "HumanV4/Field_Medic_Coat_LOD0",
+      "slot": "upper",
+      "surface": "fabric",
+      "tintable": false,
+      "hides_body_mask": 2,
+      "lod0_max_tris": 4000
+    }
+  ],
+  "attachments": [],
+  "presets": {}
+}

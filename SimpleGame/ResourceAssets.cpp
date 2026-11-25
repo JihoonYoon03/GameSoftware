@@ -586,13 +586,18 @@ Selection Select(const ResourceMesh &mesh, const CharacterPose *pose, bool upper
 
 unsigned int ResourceAssets::Find(const std::string &name)
 {
-    const auto &names = Assets().names;
-    auto found = names.find(name);
-    if (found == names.end())
+    const auto id = TryFind(name);
+    if (!id)
     {
         throw std::runtime_error("Resource mapping missing: " + name);
     }
-    return found->second;
+    return id;
+}
+unsigned int ResourceAssets::TryFind(const std::string &name)
+{
+    const auto &names = Assets().names;
+    auto found = names.find(name);
+    return found == names.end() ? 0u : found->second;
 }
 const ResourceMesh &ResourceAssets::Get(unsigned int id)
 {
@@ -624,7 +629,7 @@ PackedResourceVertex ResourceAssets::PackVertex(const ResourceVertex &vertex)
     p.b = u8Norm(vertex.b);
     p.a = u8Norm(vertex.a);
     p.palette = std::uint8_t(std::clamp(int(std::lround(vertex.palette)), 0, 3));
-    p.visibility = std::uint8_t(std::clamp(int(std::lround(vertex.visibility)), 0, 2));
+    p.visibility = std::uint8_t(std::clamp(int(std::lround(vertex.visibility)), 0, 4));
     p.surface = std::uint8_t(std::clamp(int(std::lround(vertex.surface)), 0, 15));
     p.flags = vertex.hasUv ? 1u : 0u;
     std::array<float, 4> raw{};
@@ -632,7 +637,7 @@ PackedResourceVertex ResourceAssets::PackVertex(const ResourceVertex &vertex)
     int sum = 0;
     for (size_t i = 0; i < 4; ++i)
     {
-        p.joints[i] = std::uint8_t(std::clamp(int(std::lround(vertex.joints[i])), 0, 31));
+        p.joints[i] = std::uint8_t(std::clamp(int(std::lround(vertex.joints[i])), 0, int(kMaxSkinBones - 1)));
         raw[i] = (std::max)(0.f, vertex.weights[i]) * 255.f;
         q[i] = int(std::floor(raw[i]));
         sum += q[i];
@@ -797,6 +802,19 @@ void ResourceAssets::Bind(Model &model, const std::string &name)
     model.resourceId = Find(name);
     model.space = CoordinateSpace::World;
     model.count = 0;
+}
+bool ResourceAssets::BindOptional(Model &model, const std::string &name)
+{
+    const auto id = TryFind(name);
+    if (!id)
+    {
+        model.resourceId = 0;
+        return false;
+    }
+    model.resourceId = id;
+    model.space = CoordinateSpace::World;
+    model.count = 0;
+    return true;
 }
 void ResourceAssets::Sample(unsigned int id, const CharacterPose *pose, SkinMatrices &matrices)
 {

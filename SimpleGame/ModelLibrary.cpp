@@ -497,6 +497,23 @@ const Model &ModelLibrary::Transit(const std::string &name)
     }
     return *model;
 }
+const Model *ModelLibrary::ModularPart(const std::string &name)
+{
+    static std::map<std::string, std::unique_ptr<Model>> parts;
+    auto it = parts.find(name);
+    if (it != parts.end())
+    {
+        return it->second.get();
+    }
+    auto model = std::make_unique<Model>();
+    if (!ResourceAssets::BindOptional(*model, name))
+    {
+        return nullptr;
+    }
+    const Model *ptr = model.get();
+    parts.emplace(name, std::move(model));
+    return ptr;
+}
 const char *ModelLibrary::SceneryName(SceneryType type)
 {
     constexpr const char *names[] = {"Road_2Lane_4m",         "Road_4Lane_4m",

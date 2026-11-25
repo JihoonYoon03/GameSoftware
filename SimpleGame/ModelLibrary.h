@@ -303,6 +303,8 @@ class ModelLibrary
     static const Model &TrafficSignal(unsigned int state);
     static const Model &Transit(const std::string &name);
     static const Model &MeasuredBuilding(MeasuredBuildingType type);
+    // CQ-11 Mixamo 3-tier modular parts (stable heap address for GPU mesh cache; nullptr if absent).
+    static const Model *ModularPart(const std::string &name);
 };
 
 // ============================================================================

@@ -99,6 +99,50 @@ void TestInputAndLetterboxing()
     game.MouseButton(GLFW_MOUSE_BUTTON_LEFT, GLFW_PRESS, 4, 4);
     assert(!selected.active && !world.mouseFiring);
 }
+void TestCq12HudZoneSeparation()
+{
+    struct Rect
+    {
+        float x, y, w, h;
+        bool Overlaps(const Rect &o) const
+        {
+            return x < o.x + o.w && x + w > o.x && y < o.y + o.h && y + h > o.y;
+        }
+    };
+    // CQ-12 canonical 1280x800 HUD cards: zero overlap across top, right, and bottom zones.
+    const Rect objective{20.f, 20.f, 472.f, 108.f};
+    const Rect coords{20.f, 134.f, 472.f, 26.f};
+    const Rect wanted{508.f, 20.f, 276.f, 120.f};
+    const Rect minimap{1070.f, 42.f, 172.f, 172.f};
+    const Rect minimapKey{1042.f, 218.f, 218.f, 26.f};
+    const Rect notice{902.f, 306.f, 358.f, 140.f};
+    const Rect criticalAlert{20.f, 642.f, 288.f, 30.f};
+    const Rect vitals{20.f, 678.f, 288.f, 108.f};
+    const Rect bottomControls{322.f, 758.f, 636.f, 28.f};
+    const Rect telemetry{988.f, 642.f, 272.f, 148.f};
+    const Rect hudZones[] = {objective,     coords, wanted, minimap,        minimapKey,
+                             notice,        criticalAlert,  vitals,         bottomControls,
+                             telemetry};
+    for (size_t i = 0; i < std::size(hudZones); ++i)
+    {
+        assert(hudZones[i].x >= 0.f && hudZones[i].y >= 0.f &&
+               hudZones[i].x + hudZones[i].w <= float(kCanvasWidth) &&
+               hudZones[i].y + hudZones[i].h <= float(kCanvasHeight));
+        for (size_t j = i + 1; j < std::size(hudZones); ++j)
+        {
+            assert(!hudZones[i].Overlaps(hudZones[j]));
+        }
+    }
+    // Full Planet Map: map circle bottom (y=644) vs Legend Row (y=656..676) vs Footer (y=680..718).
+    const float mapCircleBottom = 400.f + 244.f;
+    const Rect fullMapLegend{96.f, 656.f, 440.f, 20.f};
+    const Rect fullMapFooter{96.f, 680.f, 460.f, 38.f};
+    const Rect fullMapScale{576.f, 698.f, 200.f, 20.f};
+    assert(fullMapLegend.y > mapCircleBottom);
+    assert(!fullMapLegend.Overlaps(fullMapFooter));
+    assert(!fullMapLegend.Overlaps(fullMapScale));
+    assert(!fullMapFooter.Overlaps(fullMapScale));
+}
 } // namespace
 int main()
 {
@@ -106,7 +150,8 @@ int main()
     TestFixedRotatedProjection();
     TestFullMapAndLayerDestinations();
     TestInputAndLetterboxing();
+    TestCq12HudZoneSeparation();
     std::cout << "Map checks passed: fixed 45-degree rotation, fog selection, circular bounds, full-map "
                  "selection, area isolation, "
-                 "repeat-safe input and letterboxing.\n";
+                 "repeat-safe input, letterboxing and CQ-12 HUD layout separation.\n";
 }

@@ -167,9 +167,13 @@ function textureColor(data, texture, uv) {
     return Array.from({ length: 4 }, (_, c) => c === 3 && image.channels === 3 ? 1 : image.pixels[(y * image.width + x) * image.channels + c] / 255);
 }
 const characterScale = 1.8 / (2 * 1.26);
+function isHumanKind(kind) {
+    return kind === 'human' || kind === 'mixamo_part' || kind === 'mixamo_socket';
+}
 function basis(kind) {
-    const s = kind === 'human' ? .5 / characterScale : .5;
-    return kind === 'human' || kind === 'creature'
+    const human = isHumanKind(kind);
+    const s = human ? .5 / characterScale : .5;
+    return human || kind === 'creature'
         ? [0, s, 0, 0, 0, 0, s, 0, s, 0, 0, 0, 0, 0, 0, 1]
         : [s, 0, 0, 0, 0, 0, s, 0, 0, -s, 0, 0, 0, 0, 0, 1];
 }
@@ -211,6 +215,7 @@ function convert(name, relative, kind = 'prop', options = {}) {
                 const base = [...(pbr.baseColorFactor ?? [1, 1, 1, 1])];
                 if (skinOverride && /Skin/.test(materialName)) base.splice(0, 4, ...skinOverride);
                 let palette = /Glow|Emission|Emissive/.test(materialName) || material.emissiveFactor?.some(x => x > 0) ? 3
+                    : options.tintable === false ? 0
                     : /Cloth|Vehicle_|Hair/.test(materialName) ? 1 : /Accent|Trim/.test(materialName) ? 2 : 0;
                 if (options.neutralEmission && palette === 3) base.splice(0, 4, 1, 1, 1, 1);
                 if (options.signalState !== undefined && /StopGlyph|WaitGlyph|GoGlyph/.test(nodeName)) {
@@ -219,9 +224,17 @@ function convert(name, relative, kind = 'prop', options = {}) {
                     base.splice(0, 4, ...(nodeName.includes(active) ? colors[options.signalState] : [.025, .045, .055, 1]));
                     palette = nodeName.includes(active) ? 3 : 0;
                 }
+                const surfaceMap = { default: 0, fabric: 1, metal: 2, glass: 3, emissive: 4, rubber: 5, stone: 6, skin: 7 };
+                const inferredMatteCloth = (pbr.metallicFactor ?? 1) <= 0.15 && (pbr.roughnessFactor ?? 0.5) >= 0.70;
                 const surface = palette === 3 ? 4 : /Skin/.test(materialName) ? 7 : /Glass/.test(materialName) ? 3
-                    : /Cloth|Fabric|Hair/.test(materialName) ? 1 : /Rubber/.test(materialName) ? 5 : /Rock|Soil|Grass|Sand|Mine/.test(materialName) ? 6 : 2;
-                const visibility = /Weapon_CoilPistol/.test(nodeName) ? 1 : /Hair/.test(nodeName) ? 2 : 0;
+                    : /Cloth|Fabric|Hair/.test(materialName) ? 1 : /Rubber/.test(materialName) ? 5
+                    : /Rock|Soil|Grass|Sand|Mine/.test(materialName) ? 6
+                    : options.defaultSurface !== undefined ? (surfaceMap[options.defaultSurface] ?? 2)
+                    : (kind === 'mixamo_part' && inferredMatteCloth) ? 1 : 2;
+                const visibility = /Weapon_CoilPistol/.test(nodeName) ? 1
+                    : /^Body_Upper/i.test(nodeName) || /Hair/.test(nodeName) ? 2
+                    : /^Body_Lower/i.test(nodeName) ? 3
+                    : /^Body_Head/i.test(nodeName) ? 4 : 0;
                 const transform = nodeSkin ? identity() : world[i];
                 const normalMatrix = inverse(multiply(c, transform));
                 const slot = /Engine_.*_L$/.test(nodeName) ? 'engine.L' : /Engine_.*_R$/.test(nodeName) ? 'engine.R' : /Nose_/.test(nodeName) ? 'nose' : null;
@@ -271,7 +284,7 @@ function convert(name, relative, kind = 'prop', options = {}) {
         }
         vertices.splice(0, vertices.length, ...triangles);
     }
-    let [lo, hi] = bounds(vertices), physical = hi.map((v, i) => (v - lo[i]) * (kind === 'human' ? characterScale : 1));
+    let [lo, hi] = bounds(vertices), physical = hi.map((v, i) => (v - lo[i]) * (isHumanKind(kind) ? characterScale : 1));
     if (kind === 'vehicle') {
         const ground = lo[2];
         for (const v of vertices) v[2] -= ground;
@@ -327,9 +340,12 @@ function convert(name, relative, kind = 'prop', options = {}) {
         sockets[4] = socket('driver_socket');
         if (kind === 'aircraft') sockets[5] = ['engine.L', 'engine.R'].map(n => jointNames.indexOf(n)).concat(0);
     }
-    // The same source rig is used by both body profiles and all hair variants.
+    // The same source rig is used by both body profiles and all hair/outfit variants.
     // Geometry fitting never changes these palettes; sample a source/basis only once.
-    const animationKey = JSON.stringify([relative, kind, c]);
+    const mixamoBanks = kind === 'mixamo_part' ? (options.animationBanks ?? []) : [];
+    const animationKey = kind === 'mixamo_part'
+        ? JSON.stringify(['mixamo', jointNames, mixamoBanks, c])
+        : JSON.stringify([relative, kind, c]);
     if (skin && !animationRigs.has(animationKey)) {
         const nodeParents = new Map();
         template.json.nodes.forEach((n, i) => (n.children ?? []).forEach(child => nodeParents.set(child, i)));
@@ -357,7 +373,44 @@ function convert(name, relative, kind = 'prop', options = {}) {
     let clips = animationSamples.get(animationKey);
     if (!clips) {
         clips = [];
-        if (skin) {
+        if (skin && kind === 'mixamo_part') {
+            for (const bankRel of mixamoBanks) {
+                const bankData = load(bankRel);
+                const bankSkin = bankData.json.skins?.[0];
+                if (!bankSkin) throw Error('Shared Mixamo animation bank missing skin: ' + bankRel);
+                const bankJoints = bankSkin.joints.map(i => bankData.json.nodes[i].name);
+                if (JSON.stringify(bankJoints) !== JSON.stringify(jointNames))
+                    throw Error('Mixamo animation bank skeleton mismatch: ' + bankRel);
+                const bankInvBinds = accessor(bankData, bankSkin.inverseBindMatrices);
+                const bankMuzzleNode = bankData.json.nodes.findIndex(n => /muzzle/i.test(n.name));
+                for (const clip of bankData.json.animations ?? []) {
+                    if (clips.some(existing => existing.name === clip.name))
+                        throw Error('Duplicate shared Mixamo clip: ' + clip.name);
+                    const duration = Math.max(1 / 30, ...((clip.samplers ?? []).map(s => accessor(bankData, s.input).at(-1)[0])));
+                    const frames = Math.max(2, Math.round(duration * 30) + 1), matrices = [], muzzles = [];
+                    for (let frame = 0; frame < frames; ++frame) {
+                        const overrides = sampleOverrides(bankData, clip, Math.min(duration, frame / 30));
+                        const world = globals(bankData, overrides);
+                        for (let j = 0; j < bankSkin.joints.length; ++j) {
+                            const m = multiply(c, multiply(world[bankSkin.joints[j]], multiply(bankInvBinds[j], invC)));
+                            matrices.push(...m);
+                        }
+                        muzzles.push(...(bankMuzzleNode < 0 ? [0, 0, 0] : point(c, point(world[bankMuzzleNode], [0, 0, 0]))));
+                    }
+                    clips.push({ name: clip.name, duration, frames, matrices, muzzles });
+                }
+            }
+            if (!clips.length) {
+                // Rig-only bind-pose bank so Mixamo hierarchy, sockets and skinSlot sharing are live before animations land.
+                const frames = 2, duration = 1 / 30, matrices = [], muzzles = [];
+                const idMat = identity();
+                for (let frame = 0; frame < frames; ++frame) {
+                    for (let j = 0; j < skin.joints.length; ++j) matrices.push(...idMat);
+                    muzzles.push(0, 0, 0);
+                }
+                clips.push({ name: 'BindPose', duration, frames, matrices, muzzles });
+            }
+        } else if (skin) {
             const inverseBinds = accessor(template, skin.inverseBindMatrices);
             const sourceClips = template.json.animations ?? [];
             const selected = kind === 'human' ? [...sourceClips] : sourceClips.filter(a => ['Reference_A', 'Idle', 'Walk', 'Run', 'Aim_Base', 'Attack_Fire', 'Attack_Melee', 'Jump_Air',
@@ -734,6 +787,36 @@ convert('transit/Transit_AirGuide_Straight_16m', 'Transit/Transit_AirGuide_Strai
 
 const roadPlan = roadPlanCatalog(root, checking);
 for (const name of Object.keys(roadPlan.modules)) convert('transit/' + name, 'RoadPlan/' + name, 'prop');
+
+// CQ-11 Mixamo 3-tier modular character catalog (bodies, outfits, skinned/socket attachments).
+const mixamoCatalogPath = path.join(resources, 'Documentation/mixamo_characters.json');
+if (fs.existsSync(mixamoCatalogPath)) {
+    const mixamo = JSON.parse(fs.readFileSync(mixamoCatalogPath, 'utf8'));
+    if (mixamo.schema !== 'mixamo_3tier_v1') throw Error('Unsupported mixamo_characters.json schema');
+    const sharedBanks = mixamo.animation_banks ?? [];
+    for (const body of mixamo.bodies ?? []) {
+        convert('modular/body/' + body.id, body.source, 'mixamo_part', {
+            animationBanks: sharedBanks,
+            defaultSurface: body.surface ?? 'skin',
+            tintable: body.tintable ?? false
+        });
+    }
+    for (const outfit of mixamo.outfits ?? []) {
+        convert('modular/outfit/' + outfit.id, outfit.source, 'mixamo_part', {
+            animationBanks: sharedBanks,
+            defaultSurface: outfit.surface ?? 'fabric',
+            tintable: outfit.tintable ?? false
+        });
+    }
+    for (const att of mixamo.attachments ?? []) {
+        const rigid = att.skinned === false || Boolean(att.socket);
+        convert('modular/part/' + att.id, att.source, rigid ? 'mixamo_socket' : 'mixamo_part', {
+            animationBanks: rigid ? [] : sharedBanks,
+            defaultSurface: att.surface ?? (rigid ? 'metal' : 'fabric'),
+            tintable: att.tintable ?? false
+        });
+    }
+}
 
 const chunks = [];
 function u32(value) { const b = Buffer.alloc(4); b.writeUInt32LE(value); chunks.push(b); }

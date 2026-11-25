@@ -584,6 +584,74 @@ void Drawing::DrawHair(Vector2 screen, models::Point scale, const models::Transf
     DrawModel3D(models::ModelLibrary::Hair(hair, covered), screen, scale, rotation, depth, palette, &pose, 0,
                 0, sharedSkinSlot);
 }
+void Drawing::DrawModularCharacter(const models::ModularCharacter &character, Vector2 worldPosition,
+                                   float facingYaw, const models::CharacterPose &pose,
+                                   const models::Palette &bodyPalette, float scaleMultiplier)
+{
+    const Vector2 screen = WorldToScreen(worldPosition.x, worldPosition.y);
+    const float depth = (worldPosition.x + worldPosition.y) * 36.f;
+    const float s = models::WorldScale::characterScale * scaleMultiplier;
+    const models::Point charScale{s, s, s};
+    models::Transform3D rotation;
+    rotation.yaw = facingYaw;
+    int skinSlot = -1;
+    unsigned int rigSourceId = 0;
+
+    // Tier 1: Base body (optional visibilityMask hides upper/lower/head when covered by outfits).
+    if (character.body && character.body->resourceId)
+    {
+        rigSourceId = character.body->resourceId;
+        DrawModel3D(*character.body, screen, charScale, rotation, depth, bodyPalette, &pose, 0, 0, &skinSlot,
+                    character.bodyVisibilityMask);
+    }
+
+    // Tier 2: Skinned outfits sharing the exact same SSBO skinSlot.
+    for (size_t i = 0; i < character.outfits.size(); ++i)
+    {
+        const auto *outfit = character.outfits[i];
+        if (!outfit || !outfit->resourceId)
+        {
+            continue;
+        }
+        if (!rigSourceId)
+        {
+            rigSourceId = outfit->resourceId;
+        }
+        const models::Palette palette =
+            i < character.outfitPalettes.size() ? character.outfitPalettes[i] : models::Palette{};
+        DrawModel3D(*outfit, screen, charScale, rotation, depth, palette, &pose, 0, 0, &skinSlot);
+    }
+
+    // Tier 3: Additional parts (skinned parts reuse skinSlot; rigid parts attach to animated RigSockets).
+    for (const auto &att : character.attachments)
+    {
+        if (!att.model || !att.model->resourceId)
+        {
+            continue;
+        }
+        if (att.skinned)
+        {
+            DrawModel3D(*att.model, screen, charScale, rotation, depth, att.palette, &pose, 0, 0, &skinSlot);
+            continue;
+        }
+        models::Transform3D rigid = rotation;
+        rigid.yaw += att.localRotation.yaw;
+        rigid.pitch += att.localRotation.pitch;
+        rigid.roll += att.localRotation.roll;
+        models::Point localPos = att.localOffset;
+        if (rigSourceId)
+        {
+            const auto sock = models::ResourceAssets::Socket(rigSourceId, pose, att.socket);
+            localPos.x += sock.x * s;
+            localPos.y += sock.y * s;
+            localPos.z += sock.z * s;
+        }
+        rigid.position = rotation.Apply(localPos);
+        const models::Point attScale{att.localScale.x * scaleMultiplier, att.localScale.y * scaleMultiplier,
+                                     att.localScale.z * scaleMultiplier};
+        DrawModel3D(*att.model, screen, attScale, rigid, depth + 0.5f, att.palette, nullptr, 0, 0, nullptr);
+    }
+}
 void Drawing::DrawCharacterAppearance(Vector2 screen, ColorRGBA coat, models::CharacterType type, int frame,
                                       int direction)
 {

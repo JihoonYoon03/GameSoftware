@@ -567,7 +567,7 @@ void TestBatchReuse()
     assert(draw(1, .3f) == baseline);
 }
 
-void TestR4PbrAndSkinSharing()
+void TestR4PbrAndSkinSharing(const std::filesystem::path *output = nullptr)
 {
     auto &renderer = GameRenderer::Get().Backend();
     const auto &budget = renderer.GetPbrTextureBudget();
@@ -607,9 +607,69 @@ void TestR4PbrAndSkinSharing()
     renderer.EndModels();
     assert(renderer.GetFrameStatistics().skinSlotReuses >= 1);
     assert(glGetError() == GL_NO_ERROR);
+
+    // CQ-11 Mixamo 3-tier modular character render + skinSlot sharing + rigid socket attachment + visual capture.
+    const Model *coat = ModelLibrary::ModularPart("modular/outfit/Field_Medic_Coat");
+    assert(coat && coat->resourceId);
+    assert(ModelLibrary::ModularPart("modular/nonexistent_part") == nullptr);
+    ModularCharacter modular;
+    modular.outfits = {coat, coat}; // Verify two skinned Mixamo layers share one SSBO skinSlot.
+    ModularAttachment backKit;
+    backKit.model = &ModelLibrary::Get().recoveryKit;
+    backKit.socket = RigSocket::Back;
+    backKit.skinned = false;
+    backKit.localOffset = {-.12f, 0.f, 0.f};
+    backKit.localScale = {.85f, .85f, .85f};
+    modular.attachments.push_back(backKit);
+
+    Begin();
+    renderer.BeginModels();
+    Drawing::DrawModularCharacter(modular, {0.f, 0.f}, .78539816f, pose);
+    renderer.EndModels();
+    const auto modStats = renderer.GetFrameStatistics();
+    assert(modStats.objects >= 3);
+    assert(modStats.skinSlotReuses >= 1);
+    assert(glGetError() == GL_NO_ERROR);
+
+    if (output)
+    {
+        // Visual inspection turnaround capture: legacy Female Medic (1.80 m scale ref) + Field_Medic_Coat at 3 angles.
+        Begin();
+        renderer.BeginModels();
+        CharacterPose restPose{};
+        const float s = WorldScale::characterScale * 3.2f;
+        Transform3D refRot;
+        refRot.yaw = .78539816f;
+        Palette medPal;
+        medPal.body = {.82f, .86f, .88f, 1.f};
+        Drawing::DrawModel3D(ModelLibrary::Character(CharacterType::Medic, Gender::Female), {210.f, 560.f},
+                             {s, s, s}, refRot, 0.f, medPal, &restPose);
+        const float yaws[3] = {.78539816f, 2.3561945f, -2.3561945f};
+        const float xs[3] = {510.f, 800.f, 1080.f};
+        for (int i = 0; i < 3; ++i)
+        {
+            Transform3D rot;
+            rot.yaw = yaws[i];
+            int slot = -1;
+            Drawing::DrawModel3D(*coat, {xs[i], 560.f}, {s, s, s}, rot, 0.f, {}, &restPose, 0.f, 0.f, &slot);
+            if (i == 2)
+            {
+                const auto back = ResourceAssets::Socket(coat->resourceId, restPose, RigSocket::Back);
+                Transform3D packRot = rot;
+                packRot.position = rot.Apply({back.x * s - .28f, back.y * s, back.z * s});
+                Drawing::DrawModel3D(ModelLibrary::Get().recoveryKit, {xs[i], 560.f}, {2.2f, 2.2f, 2.2f}, packRot,
+                                     2.f, {});
+            }
+        }
+        renderer.EndModels();
+        renderer.EndScene(0.f);
+        assert(glGetError() == GL_NO_ERROR);
+        Save(*output / "cq11-field-medic-coat.bmp");
+    }
+
     std::cout << "R4 PBR arrays (pilot=" << budget.pilotLayers << ", detail=" << budget.detailLayers
               << ", vram=" << (double(budget.residentBytes) / (1024.0 * 1024.0)) << " MiB, aniso="
-              << budget.anisotropy << "x) and skinSlot sharing checks passed.\n";
+              << budget.anisotropy << "x), skinSlot sharing and CQ-11 Mixamo modular coat checks passed.\n";
 }
 
 void TestAntialiasing()
@@ -2536,7 +2596,16 @@ int main(int argc, char **argv)
     {
         OffscreenContext context;
         GameRenderer::Get().Initialize();
-        TestR4PbrAndSkinSharing();
+        if (argc > 2 && std::string(argv[2]) != "--glfw")
+        {
+            std::filesystem::path output = argv[2];
+            std::filesystem::create_directories(output);
+            TestR4PbrAndSkinSharing(&output);
+        }
+        else
+        {
+            TestR4PbrAndSkinSharing();
+        }
         GameRenderer::Get().Shutdown();
         return 0;
     }
@@ -2651,6 +2720,7 @@ int main(int argc, char **argv)
     TestQuestAndResources();
     std::filesystem::path output = argc > 1 ? argv[1] : "x64/ModelChecks/renders";
     std::filesystem::create_directories(output);
+    TestR4PbrAndSkinSharing(&output);
     TestCityCoverage(output);
     CaptureScenes(output);
     TestPixelPresentation(output);

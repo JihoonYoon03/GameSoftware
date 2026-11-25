@@ -12,7 +12,8 @@ const buildFiles = [
     'Resource/Documentation/directional_transitions.json',
     'Resource/Documentation/scenery_assemblies.json', 'Resource/Documentation/transit_modules.json',
     'Resource/Documentation/road_plan_modules.json', 'SimpleGame/RoadPlanCatalog.h',
-    'Resource/Documentation/aim_locomotion_blending.json'
+    'Resource/Documentation/aim_locomotion_blending.json',
+    'Resource/Documentation/mixamo_characters.json'
 ];
 export function fileHash(filename) {
     return crypto.createHash('sha256').update(fs.readFileSync(filename)).digest('hex');

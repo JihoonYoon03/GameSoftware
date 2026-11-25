@@ -93,13 +93,37 @@ struct ResourceMesh
     }
 };
 
+// CQ-11 Mixamo 3-tier modular character descriptor (stable Model* pointers from ModelLibrary).
+struct ModularAttachment
+{
+    const Model *model = nullptr;
+    RigSocket socket = RigSocket::Head;
+    bool skinned = false;
+    Point localOffset = {};
+    Transform3D localRotation = {};
+    Point localScale = {1, 1, 1};
+    Palette palette = {};
+};
+struct ModularCharacter
+{
+    const Model *body = nullptr;
+    std::vector<const Model *> outfits;
+    std::vector<Palette> outfitPalettes;
+    std::vector<ModularAttachment> attachments;
+    // Lower 3 bits map to shader visibility slots: bit 0 -> slot 2 (Body_Upper), bit 1 -> slot 3 (Body_Lower),
+    // bit 2 -> slot 4 (Body_Head).
+    std::uint8_t bodyVisibilityMask = 0;
+};
+
 class ResourceAssets
 {
   public:
     static unsigned int Find(const std::string &name);
+    static unsigned int TryFind(const std::string &name);
     static const ResourceMesh &Get(unsigned int id);
     static size_t PackMeshCount();
     static void Bind(Model &model, const std::string &name);
+    static bool BindOptional(Model &model, const std::string &name);
     // Immutable runtime assembly of imported transit surfaces; source pack remains unchanged.
     static unsigned int RegisterStatic(ResourceMesh mesh);
     static PackedResourceVertex PackVertex(const ResourceVertex &vertex);

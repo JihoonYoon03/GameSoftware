@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "Game.h"
 #include "Renderer.h"
+#include "ResourceAssets.h"
 #include "Dependencies/glew/include/GL/glew.h"
 #include "Window.h"
 #include <functional>
@@ -47,6 +48,9 @@ class Drawing
     static void DrawHair(Vector2 screen, models::Point scale, const models::Transform3D &rotation,
                          float depth, const models::CharacterPose &pose, models::CharacterType type,
                          models::Gender gender, models::HairStyle hair, int *sharedSkinSlot = nullptr);
+    static void DrawModularCharacter(const models::ModularCharacter &character, Vector2 worldPosition,
+                                     float facingYaw, const models::CharacterPose &pose,
+                                     const models::Palette &bodyPalette = {}, float scaleMultiplier = 1.f);
     static void DrawCharacterAppearance(Vector2 screenPosition, ColorRGBA coat, models::CharacterType type,
                                         int frame = 0, int direction = 0);
 

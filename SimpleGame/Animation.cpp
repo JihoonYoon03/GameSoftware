@@ -558,11 +558,11 @@ void LayeredAnimation::PrepareGraph(std::vector<ResourceClip> &clips, const Anim
 
 void LayeredAnimation::Prepare(ResourceClip &clip, const AnimationRig &rig)
 {
-    size_t bones = rig.parents.size();
+    size_t bones = (std::min)(rig.parents.size(), size_t(kMaxSkinBones));
     clip.localFrames.resize(size_t(clip.frames) * bones);
     for (unsigned frame = 0; frame < clip.frames; ++frame)
     {
-        std::array<AnimationMatrix, 32> world{};
+        std::array<AnimationMatrix, kMaxSkinBones> world{};
         for (size_t j = 0; j < bones; ++j)
         {
             AnimationMatrix skin;

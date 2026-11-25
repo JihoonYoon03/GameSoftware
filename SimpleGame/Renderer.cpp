@@ -189,7 +189,7 @@ layout(location = 12) in vec4 vertexJoints;
 layout(location = 13) in vec4 vertexWeights;
 layout(location = 14) in vec2 vertexUv;
 uniform mat4 mvp;
-uniform mat4 bones[32];
+uniform mat4 bones[72];
 uniform int useBones;
 uniform int armed;
 uniform int shadowPass;
@@ -224,10 +224,10 @@ void main() {
     vec3 pos = vertexPosition;
     vec3 nrm = decodeOctNormal(vertexOctNormal);
     if (useBones != 0) {
-        mat4 skin = bones[min(31, int(vertexJoints.x + 0.5))] * vertexWeights.x;
-        if (vertexWeights.y > 0.0) skin += bones[min(31, int(vertexJoints.y + 0.5))] * vertexWeights.y;
-        if (vertexWeights.z > 0.0) skin += bones[min(31, int(vertexJoints.z + 0.5))] * vertexWeights.z;
-        if (vertexWeights.w > 0.0) skin += bones[min(31, int(vertexJoints.w + 0.5))] * vertexWeights.w;
+        mat4 skin = bones[min(71, int(vertexJoints.x + 0.5))] * vertexWeights.x;
+        if (vertexWeights.y > 0.0) skin += bones[min(71, int(vertexJoints.y + 0.5))] * vertexWeights.y;
+        if (vertexWeights.z > 0.0) skin += bones[min(71, int(vertexJoints.z + 0.5))] * vertexWeights.z;
+        if (vertexWeights.w > 0.0) skin += bones[min(71, int(vertexJoints.w + 0.5))] * vertexWeights.w;
         pos = (skin * vec4(vertexPosition, 1.0)).xyz;
         nrm = mat3(skin) * nrm;
     }
@@ -1774,7 +1774,8 @@ void Renderer::DrawModels()
                 glUniform1i(data.uniforms.useBones, batch.posed ? 1 : 0);
                 if (batch.posed)
                 {
-                    glUniformMatrix4fv(data.uniforms.bones, 32, GL_FALSE, batch.bones.data());
+                    glUniformMatrix4fv(data.uniforms.bones, GLsizei(models::kMaxSkinBones), GL_FALSE,
+                                       batch.bones.data());
                 }
                 glUniform1i(data.uniforms.armed, batch.armed ? 1 : 0);
             }

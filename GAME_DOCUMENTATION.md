@@ -1,7 +1,7 @@
 # SimpleGame 게임 개발 통합 문서
 
 통합일: 2026-10-14  
-최종 진행 정리: 2026-11-25 · OpenGL 4.5 / 144+ FPS 렌더·시뮬레이션 최적화 및 CQ-01~08 구조 정비(52절) + 차세대 렌더링 최적화 R1~R4 구현 완료(55절·57절: v4 팩·EBO·Mega-VBO MDI·LOD·불변 PBR 텍스처 배열 4+9 레이어·멀티파츠 skinSlot 공유·visibilityMask + Mixamo 72본 표준 스켈레톤 런타임) + CQ-09 플레이어 거주지 고유 기능 구현 완료(56절: 저장 스키마 13) + CQ-04B 절차 도시 생성·현실 도로망·입체 교통·교통신호 체계 구현 완료(58절: Layout Revision 5) + 구 5도시 경계 보강·CQ-04 C2 전 도시 시설 실내 출입(저장 스키마 14)·CQ-10 빈 구역 콘텐츠 및 미니퀘스트 구현 완료(59절) / 작업 중 Human v4 리소스 제외 유지 / 다음 단계 CQ-11(신규 모델 자산 교체) 또는 CQ-12(UI 최종 마감) 대기
+최종 진행 정리: 2026-11-25 · OpenGL 4.5 / 144+ FPS 렌더·시뮬레이션 최적화 및 CQ-01~08 구조 정비(52절) + 차세대 렌더링 최적화 R1~R4 구현 완료(55절·57절: v4 팩·EBO·Mega-VBO MDI·LOD·불변 PBR 텍스처 배열 4+9 레이어·멀티파츠 skinSlot 공유·visibilityMask + Mixamo 72본 표준 스켈레톤 런타임) + CQ-09 플레이어 거주지 고유 기능 구현 완료(56절: 저장 스키마 13) + CQ-04B 절차 도시 생성·현실 도로망·입체 교통·교통신호 체계 구현 완료(58절: Layout Revision 5) + 구 5도시 경계 보강·CQ-04 C2 전 도시 시설 실내 출입(저장 스키마 14)·CQ-10 빈 구역 콘텐츠 및 미니퀘스트 구현 완료(59절) + CQ-12 UI 배치·디자인·가독성 최종 구체화 구현 완료(60절) + CQ-11 Mixamo 3계층 모듈러 캐릭터 엔진 연동 파이프라인 구축 및 1호 자산(`Field_Medic_Coat_LOD0`) 실렌더 검수 완료(61절) / 남은 순서: CQ-11 잔여 Mixamo 바디·의복·애니메이션 뱅크 자산 납품 → 후속 조명·PBR 계산 개선(R5) → 2~4장 스토리 확장 대기
 
 현재 개발 계획 브랜치: `iss04_ContentQuality` · 초기 구조 기준: `iss01_actor_scene_render` · 범죄 시스템 변경 기준: `62b00b5` · 이전 도로 성능 비교 기준: `592ec4c` · 초기 기반: `41316a5`
 
@@ -99,8 +99,8 @@
 | 8 / CQ-08 | 수배 시스템 난이도 스케일링 | 1 | 플레이어의 실제 대응 능력과 경찰 AI가 정해진 CQ-05~07 이후에 조정해야 수치만 올리는 난이도를 피할 수 있다. | 사용자가 정한 단계별 난이도와 대응 원칙이 실제 플레이에서 구분되고, 추적·대응·해제 흐름이 납득 가능하다. | 정비 완료(52절) — 5단계 병과(순찰/기동/중무장/저격/대공요격)·1성 투항 벌금·5성 대공 3D 사격·티어별 도주 시간 반영 |
 | 9 / CQ-09 | 플레이어 거주지 고유 기능 | 6 | CQ-02~04의 진행/도시 구조와 CQ-05~08의 외부 활동을 바탕으로 돌아올 거점의 역할을 정한다. | 침대(휴식·수배 진정·안전 저장)·작업대(키트 제작·방호복/무기 3단계 강화·차량/비행체 원격 정비)·보관함/옷장(의료비 보호 금고·물자 보관·외형 변경)·거점 단말(현황 브리핑·차량 호출)을 헤일로 거주지 내부에 구현하고 저장 스키마 13·HUD·모니터·회귀 테스트로 연결했다. | 구현 완료(56절) |
 | 10 / CQ-10 | 빈 구역 콘텐츠·미니퀘스트 등 추가 | 10 | 안정된 지역·인물·행동·거점 체계를 재사용해 앞 단계의 확장성을 실제 콘텐츠로 검증한다. | 대상 빈 구역에 장소/인물/활동의 맥락이 있는 콘텐츠가 들어가고, 기존 진행과 충돌하지 않는다. 수량·의뢰 내용은 별도 확정한다. | **구현 완료(59절)** — 비도시 5종(전초·노천 광구·무법 지대·고대 유적·야생) 2×2 현장 거점·지역 특화 미니퀘스트 및 보너스 보상·무법자 약탈자 교전(정당방위 무수배)·지역별 지도 색상/핀 반영 |
-| 11 / CQ-11 | 모델 퀄리티 개선 및 차세대 렌더링 최적화(R1~R4) | 8 | 공간 용도·출입·전투/탑승 동작과 필요한 자산이 안정된 뒤 최종 모델 작업의 재제작을 줄인다. v4 파이프라인(EBO·정점 압축·LOD·그림자 프록시·GPU 컬링/MDI·PBR 텍스처 배열, 53절)을 선행/병행 구축해 상향된 폴리곤 상한을 목표 기기(RTX 3070 Ti Laptop 60fps / RAM 16GB)에서 방어한다. | R1~R4 렌더링 최적화 경로가 검증되고, 대상 모델의 형상·크기·재질·LOD0~2·그림자 프록시·가동/접촉 지점이 53절 규모별 상한과 아트 방향에 맞는다. 단순 폴리곤 증가를 완료 기준으로 삼지 않는다. | R1~R4 구현 완료(55·57절) · Mixamo 3계층 신규 모델 자산 교체 대기 |
-| 12 / CQ-12 | UI 배치·디자인·가독성 최종 구체화 | 7 | 앞 단계에서 확정된 정보와 조작 흐름을 기준으로 전체 UI의 위계와 일관성을 정리한다. | 대상 화면의 배치·디자인·정보 우선순위가 통일되고, 실제 장면/해상도에서 읽고 조작할 수 있다. | 대기 |
+| 11 / CQ-11 | 모델 퀄리티 개선 및 차세대 렌더링 최적화(R1~R4) | 8 | 공간 용도·출입·전투/탑승 동작과 필요한 자산이 안정된 뒤 최종 모델 작업의 재제작을 줄인다. v4 파이프라인(EBO·정점 압축·LOD·그림자 프록시·GPU 컬링/MDI·PBR 텍스처 배열, 53절)을 선행/병행 구축해 상향된 폴리곤 상한을 목표 기기(RTX 3070 Ti Laptop 60fps / RAM 16GB)에서 방어한다. | R1~R4 렌더링 최적화 경로가 검증되고, 대상 모델의 형상·크기·재질·LOD0~2·그림자 프록시·가동/접촉 지점이 53절 규모별 상한과 아트 방향에 맞는다. 단순 폴리곤 증가를 완료 기준으로 삼지 않는다. | R1~R4 및 **Mixamo 3계층 연동 파이프라인 완료(55·57·61절)** · 1호 자산(`Field_Medic_Coat_LOD0`) 검수 통과 · 잔여 바디/의복/애니메이션 납품 대기 |
+| 12 / CQ-12 | UI 배치·디자인·가독성 최종 구체화 | 7 | 앞 단계에서 확정된 정보와 조작 흐름을 기준으로 전체 UI의 위계와 일관성을 정리한다. | 대상 화면의 배치·디자인·정보 우선순위가 통일되고, 실제 장면/해상도에서 읽고 조작할 수 있다. | **구현 완료(60절)** — 전 HUD 반투명 다크글라스(`HudCard`) 통일·좌하단 바이탈/조작 안내 겹침 제거·상시 물자(키트/고철/Cr) 표시·전체 지도 상단/하단 범례 및 지도 경계 분리·`MapLabel` 충돌 억제·미니맵 `N` 방위표/시설 색상 범례·1280×800 영역 분리 자동 회귀 통과 |
 
 #### 순서 운영 원칙
 
@@ -1562,7 +1562,55 @@ CQ-07을 A 이동·경로 안정성, B 감지·기억·역할별 판단, C 동�
   - `RenderingTests --r4-only --glfw`: 통과 (`100.333 MiB`, 8× 이방성, `skinSlot` 공유).
   - `RenderingTests --flight-stress --glfw`: **1,800프레임 통과**.
   - `RenderingTests --benchmark build/opt-x64/renders-cq10-v2 --glfw` 및 `RenderingTests build/opt-x64/renders-cq10-full --glfw`: 전 16장면 **`0/120` over 16.67 ms** 통과 (`planet_surface` P95 `1.288 ms` / **776.7 FPS**, `planet_surface_security_5stars` P95 `1.879 ms` / **532.1 FPS**, `city` P95 `1.488 ms` / **672.1 FPS**, `city_security_5stars` P95 `1.837 ms` / **544.4 FPS**, `roads_junction` P95 `1.366 ms` / **732.2 FPS**).
-- 다음 계획 단계는 **CQ-11(Mixamo 3계층 신규 모델 자산 교체)** 또는 **CQ-12(UI 배치·디자인·가독성 최종 마감)**이다.
+
+#### 60. CQ-12 UI 배치·디자인·가독성 최종 구체화 (2026-11-25 · 구현 완료)
+
+**배경:** CQ-01~10에서 누적된 탐사·전투·탑승·치안·시설 출입·행성 지도 정보를 `1280×800` 논리 해상도 기준으로 재정비하여, ① 기존 `PlanetHud::Draw()` 하단 조작 안내(`(32, 728)`)가 좌하단 HP 수치(`100 / 100`)와 정면 충돌하던 결함, ② 전체 행성 지도(`PlanetHud::DrawMap(true)`)에서 필터·조작 문구와 범례가 동일 픽셀(`(96, 650~683)`)에 겹치고 지도 원형 경계(`y = 156..644`)가 상단 부제/하단 범례를 가로지르던 결함, ③ 맨바닥 외곽선 글자만으로 떠 있던 HUD 요소들의 배경 대비 부족과 시각적 불일치를 일괄 해결했다.
+
+##### 60.1 HUD 비주얼 통일(`HudCard`) 및 1280×800 영역 분리 ([SimpleGame/Hud.cpp](SimpleGame/Hud.cpp))
+- **공통 다크글라스 카드(`HudCard`):** `uiPreferences`의 배경(`background`)·테두리(`border`)·내용(`content`) 불투명도 설정을 그대로 존중하는 반투명 다크글라스 카드 + 좌/우 상태색 강조 스트라이프 헬퍼를 도입해 모든 HUD 카드의 시인성과 위계를 통일했다.
+- **좌하단 바이탈·상시 물자 카드 및 하단 중앙 조작 필 분리:**
+  - `Hud::DrawVitals()` 좌하단 카드(`x = 20..308, y = 678..786`)에 **상시 물자 요약(`G 키트 N · 고철 N · N Cr`) + HP 수치/게이지 + 스태미너/회피 임계선**을 통합하고, 치명 HP 경고를 카드 바로 위(`y = 642..672`)로 분리했다.
+  - `PlanetHud::Draw()` 하단 조작 안내를 좌하단에서 제거하고 **하단 중앙 슬림 필(`x = 322..958, y = 758..786`)**로 옮겨 바이탈(`x ≤ 308`)·우하단 무기/탈것 텔레메트리(`x ≥ 988`)와 0px 겹침을 보장했다.
+- **전술·치안·목표·알림·상호작용 카드 정리:**
+  - 좌상단 목표 카드(`DrawObjective`/`DrawActivityObjective`, `x = 20..492, y = 20..128`) + 하단 좌표/소지 스트립(`y = 134..160`), 상단 중앙 5성 수배 카드(`x = 508..784, y = 20..140`), 우측 알림 토스트(`DrawNoticePanel`, `x = 902..1260, y = 306+`), 중앙 하단 상호작용 프롬프트(`DrawInteraction`, 좌측 시안 스트라이프 + 수직 중앙 정렬 `[E]` 키캡), 우하단 무기(`y = 654..786`, `"우클릭 홀드 · 조준"`/`"전술 집중"` 카드 내부 수용)·맨손(`y = 704..782`)·탈것/비행체(`y = 642..790`) 카드를 일관된 다크글라스 스타일로 통일했다.
+
+##### 60.2 미니맵·전체 행성 지도 가독성 및 라벨 충돌 억제 ([SimpleGame/Hud.cpp](SimpleGame/Hud.cpp))
+- **`MapLabel()` 자동 배치·충돌 억제:** 기존 우측 단일 배치 대신 좌·우 후보 오프셋 + 패널 경계 클램핑 + 밀집 시 억제(`allowSuppress = true`)를 적용하고, 중계환(`"등록 중계환"`/`"발견 · E 등록"`)과 목적지(`"목적지"`) 라벨까지 모두 `MapLabel()`을 경유하도록 통합했다.
+- **미니맵 `N` 방위표 & 시설 색상 범례 필:** 행성 미니맵 테두리 북서(45° 아이소메트릭 북쪽)에 `N` 방위 배지를 표시하고, 미니맵 하단(`x = 1042..1260, y = 218..244`)에 4종 진입 가능 시설 색상 키(`상점·의료·정비·행정`)를 컴팩트 카드로 배치했다.
+- **전체 행성 지도 상단/하단 여백 재구성:** 외부 패널(`64, 82, 1152, 642`) 내부에서 상단 부제를 2줄(`y = 156 / 176`, 원형 지도 좌측 여백 전용)로 정리하고, 지도 원형 하단(`y = 644`) 아래에 구분선(`y = 652`) → 가로 범례 1줄(`y = 659..671`: `중계환·목적지·상점·의료·정비·행정·의뢰`) → 필터/조작 안내(`y = 692 / 712`) + 축척 막대(`x = 576..690, y = 707`)를 겹침 없이 분리했다. 기존 `MapHud::Contains`·`PlanetToMap`·`PlanetAt`·`RelayControls()` 히트박스는 100% 보존했다.
+
+##### 60.3 자동 검증 및 시각 검수 결과 (2026-11-25 · Release x64 / RTX 5080)
+- **회귀 테스트:** [tests/MapHudTests.cpp](tests/MapHudTests.cpp)에 `TestCq12HudZoneSeparation()`을 추가해 `1280×800` 10개 HUD 카드 전 쌍 비겹침·화면 내 경계 및 전체 지도 원형 하단(`y = 644`) vs 범례·푸터·축척 비겹침을 자동 검증했다.
+- **CPU/GPU 통과:** `MapHudTests`, `GameplayTests` (`--cq10-facilities` + 전체), `PlayerMobilityTests`, `RenderingTests --r4-only --glfw`(`100.333 MiB`, 8× 이방성, `skinSlot` 공유), `RenderingTests --flight-stress --glfw`(1,800프레임), `RenderingTests --benchmark` 및 전체 `RenderingTests --glfw` 통과(전 16장면 **`0/120` over 16.67 ms**: `planet_surface` P95 `1.274 ms` / **784.8 FPS**, `planet_surface_security_5stars` P95 `1.967 ms` / **508.3 FPS**, `city` P95 `1.581 ms` / **632.7 FPS**, `city_security_5stars` P95 `1.685 ms` / **593.4 FPS**, `roads_junction` P95 `1.342 ms` / **745.0 FPS**).
+- **시각 검수:** `ui-city-combat.bmp`, `civic-wanted.bmp`, `planet-survey-map.bmp`, `planet-surface.bmp` 실제 GPU 렌더 캡처를 육안 확인해 1차 발견된 무기 카드 상단 경계 걸침 및 전체 지도 원형 경계 교차를 보정·재캡처하여 최종 0건 겹침을 확인했다.
+- 이로써 `iss04_ContentQuality`의 엔진·콘텐츠·UI 코드 단계(**CQ-01~10, R1~R4, CQ-12**)가 모두 완료되었으며, 이후 예정 순서는 **① CQ-11 Mixamo 3계층 신규 모델 자산 교체 → ② 조명·PBR 계산 개선(가칭 R5: 모델별 고유 PBR 텍스처·물리 기반 BRDF/환경광·동적 광원/그림자 고도화 — 세부 범위는 착수 시 확정) → ③ 2~4장 스토리 확장**이다.
+
+#### 61. CQ-11 Mixamo 3계층 모듈러 캐릭터 엔진 연동 파이프라인 구축 및 1호 자산 검수 (2026-11-25 · 파이프라인 구현 완료)
+
+**배경:** CQ-11 신규 캐릭터 1호 자산([Field_Medic_Coat_LOD0.glb](Resource/Export/HumanV4/Field_Medic_Coat_LOD0.glb))과 마스터 베이스([Master_Mixamo_Base.blend](Resource/Source/Characters/Master_Mixamo_Base.blend))를 전수 검수하고, 향후 Mixamo 바디·의복·강체 소켓 파츠·공유 애니메이션 뱅크가 납품되는 즉시 C++ 코드 수정 없이 v4 런타임 팩과 게임 렌더러에 자동 연결되는 3계층 모듈러 파이프라인을 완성했다.
+
+##### 61.1 1호 자산(`Field_Medic_Coat_LOD0.glb`) 및 `Master_Mixamo_Base.blend` 검수 결과
+- **스켈레톤·스키닝:** `Master_Mixamo_Base.blend`(22본 Mixamo 코어, `MasterBody` 3,742 tris, 높이 `1.80 m`)와 `Field_Medic_Coat_LOD0.glb`의 22본 이름·순서가 100% 일치하며, 가중치 검증 결과 `zeroWeightVerts = 0`, `minWeightSum = 1.0`, `maxWeightSum = 1.0`, `maxInfl = 4`, 애니메이션 중복 내장 `0개`로 57절·7.3절 계약을 완벽히 충족했다.
+- **형상·스케일·텍스처:** `3,197 tris`(`5,591 verts`), 6종 필수 속성(`POSITION/NORMAL/TEXCOORD_0/TANGENT/JOINTS_0/WEIGHTS_0`) 완비, 실측 `1.398 m(양팔) × 0.930 m(높이, Y=0.659~1.589 m) × 0.343 m(전후)`, 내장 PNG `BaseColor`(`3.18 MB`) + `Normal`(`1.24 MB`), `roughness=0.9, metallic=0.0`.
+- **검수 중 발견·보완 사항:** 머티리얼 이름(`tripo_part_5_material.002`)에 `Cloth` 키워드가 없어 기존 패커가 금속(`surface=2`)으로 오분류할 위험을 패커의 카탈로그 기본 재질(`surface: "fabric"`) 및 PBR 거칠기/금속도 추론으로 해결했다.
+
+##### 61.2 데이터 기반 패커·검증기 및 C++ 3계층 모듈러 런타임 구현
+- **선언형 Mixamo 카탈로그 ([mixamo_characters.json](Resource/Documentation/mixamo_characters.json), [resource-pack-inputs.mjs](tools/resource-pack-inputs.mjs)):** `bodies`(1계층)·`outfits`(2계층)·`attachments`(3계층 스킨/강체 소켓)·`animation_banks`(공유 Mixamo 애니메이션 뱅크)를 선언하는 스키마(`mixamo_3tier_v1`)를 신설해 증분 해시 추적 대상에 포함했다.
+- **패커·바이너리 검증기 확장 ([pack-resources.mjs](tools/pack-resources.mjs), [check-resource-pack.mjs](tools/check-resource-pack.mjs)):**
+  - `kind = 'mixamo_part'`(스킨) / `'mixamo_socket'`(강체 정적)을 추가하고, `Body_Upper(2)`/`Body_Lower(3)`/`Body_Head(4)` 가시성 태그, 무틴트 원본 텍스처 보존(`tintable: false → palette=0`), 자동 `LOD0→LOD1→LOD2→ShadowProxy` 생성(`Field_Medic_Coat`: `3,197 → 1,506 → 676 / Shadow 768`, 16-bit EBO)을 연결했다.
+  - Mixamo 애니메이션 뱅크 미납품 단계에서도 경량 2프레임 `BindPose` 뱅크를 자동 발행해 런타임 `ResourceMesh::rig` 분류(`RigPreset::Mixamo`)·7종 `RigSocket` 조회·`skinSlot` 공유가 즉시 동작하며, 추후 `animation_banks`에 Mixamo 클립 GLB를 등록하면 동일 파이프라인으로 전체 클립이 자동 공유된다.
+- **C++ 72본 잔여 상한 해소 및 3계층 렌더 API ([Animation.cpp](SimpleGame/Animation.cpp), [ResourceAssets.h](SimpleGame/ResourceAssets.h)/[ResourceAssets.cpp](SimpleGame/ResourceAssets.cpp), [Renderer.cpp](SimpleGame/Renderer.cpp), [ModelLibrary.h](SimpleGame/ModelLibrary.h)/[ModelLibrary.cpp](SimpleGame/ModelLibrary.cpp), [Drawing.h](SimpleGame/Drawing.h)/[Drawing.cpp](SimpleGame/Drawing.cpp)):**
+  - `LayeredAnimation::Prepare()`의 잔여 `32본` 배열을 `kMaxSkinBones(72)`로 수정하고, `ResourceAssets::PackVertex()`의 조인트(`0..71`)·가시성(`0..4`) 클램프와 `Renderer.cpp` 비-SSBO 폴백 셰이더 `bones[72]`를 확장해 65본 풀 Mixamo 리그까지 안전하게 수용했다.
+  - `ResourceAssets::TryFind()`/`BindOptional()`, 안정 힙 캐시 `ModelLibrary::ModularPart(name)`, `ModularCharacter`/`ModularAttachment`, 그리고 1계층 바디(`bodyVisibilityMask`) + 2계층 의복(`skinSlot` 공유) + 3계층 스킨/강체 소켓 파츠(`ResourceAssets::Socket()`)를 일괄 제출하는 `Drawing::DrawModularCharacter()`를 구현했다.
+- **Blender 후처리 스크립트 보강 ([process_tripo_part.py](Resource/Tools/process_tripo_part.py)):** 목·손목·밑단 대형 개구부를 보존하면서 둘레 `≤ 12 cm`(변 `≤ 16`) 소형 찢어짐만 선별 보수하고 인접 UV·머티리얼을 자동 보간하는 `repair_small_holes()` 및 Blender 4.x 호환 `apply_shading()`을 추가했다.
+
+##### 61.3 검증 결과 (2026-11-25 · Release x64 / RTX 5080)
+- **리소스 팩 & 파이프라인:** `node tools/pack-resources.mjs` (`231` 에셋 · `342,229` LOD0 tris · `37,012,050 B`), `--check` 재변환 일치, `check-resource-pack.mjs`, `tests/ResourcePipelineTests.mjs` 전원 통과.
+- **CPU/GPU 회귀 및 실렌더 육안 검수:**
+  - [tests/ResourceAssetsTests.cpp](tests/ResourceAssetsTests.cpp): 합성 63본 Mixamo `LayeredAnimation::Prepare()` 통과 + 실제 `modular/outfit/Field_Medic_Coat` 22본 분류·7소켓·`LOD0~2`/`ShadowProxy`·`surface=1`/`palette=0` 검증 통과.
+  - `ResourceLoadingTests`, `MapHudTests`, `GameplayTests --cq10-facilities` 통과.
+  - [tests/RenderingTests.cpp](tests/RenderingTests.cpp) `--r4-only --glfw`: `DrawModularCharacter()` 다중 스킨 `skinSlot` 재사용(`≥ 1`) + `RigSocket::Back` 강체 부착물 검증 통과, 실제 GPU 턴어라운드 캡처(`cq11-field-medic-coat.bmp`)에서 기존 1.80 m 여성 의무병 대비 정밀 스케일 일치·정면/측면/후면 방향 정합·무광 직물 쉐이딩·부착 소켓 정렬·결함 0건 육안 확인.
 
 ### 전체 구조 검토와 반복 비용 리팩토링 — 2026-10-28
 

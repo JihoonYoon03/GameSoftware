@@ -123,6 +123,64 @@ void TestMixamoRigAndSockets()
     const auto chestPos = ResourceAssets::Socket(explorerId, pose, RigSocket::Chest);
     const auto pelvisPos = ResourceAssets::Socket(explorerId, pose, RigSocket::Pelvis);
     assert(headPos.z > chestPos.z && chestPos.z > pelvisPos.z);
+
+    // 3) Synthetic 63-bone Mixamo clip must pass LayeredAnimation::Prepare() without hitting the old 32-bone cap.
+    mixamo.bind.resize(mixamo.names.size());
+    mixamo.inverseBind.resize(mixamo.names.size());
+    for (size_t j = 0; j < mixamo.names.size(); ++j)
+    {
+        AnimationMatrix id{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, float(j) * 0.02f, 1};
+        mixamo.bind[j] = id;
+        mixamo.inverseBind[j] = AnimationMath::Inverse(id);
+    }
+    ResourceClip clip63;
+    clip63.name = "Idle";
+    clip63.frames = 2;
+    clip63.duration = 0.5f;
+    clip63.matrices.resize(size_t(clip63.frames) * mixamo.names.size() * 16, 0.f);
+    for (unsigned f = 0; f < clip63.frames; ++f)
+    {
+        for (size_t j = 0; j < mixamo.names.size(); ++j)
+        {
+            for (size_t a = 0; a < 4; ++a)
+            {
+                clip63.matrices[(f * mixamo.names.size() + j) * 16 + a * 5] = 1.f;
+            }
+        }
+    }
+    LayeredAnimation::Prepare(clip63, mixamo);
+    assert(clip63.localFrames.size() == size_t(clip63.frames) * mixamo.names.size());
+
+    // 4) Real CQ-11 Mixamo modular asset (Field_Medic_Coat_LOD0) packed via mixamo_characters.json.
+    assert(ResourceAssets::TryFind("modular/nonexistent_part") == 0);
+    const auto coatId = ResourceAssets::TryFind("modular/outfit/Field_Medic_Coat");
+    assert(coatId != 0);
+    const auto &coat = ResourceAssets::Get(coatId);
+    assert(coat.boneCount == 22);
+    assert(coat.rig && coat.rig->preset == RigPreset::Mixamo);
+    assert(coat.TriangleCount(LodLevel::Lod0) == 3197);
+    assert(coat.TriangleCount(LodLevel::Lod1) < coat.TriangleCount(LodLevel::Lod0));
+    assert(coat.TriangleCount(LodLevel::Lod2) < coat.TriangleCount(LodLevel::Lod1));
+    assert(coat.TriangleCount(LodLevel::ShadowProxy) < coat.TriangleCount(LodLevel::Lod0));
+    for (unsigned s = 0; s < unsigned(RigSocket::Count); ++s)
+    {
+        assert(coat.rig->SocketBone(RigSocket(s)) >= 0);
+        const auto pos = ResourceAssets::Socket(coatId, pose, RigSocket(s));
+        assert(std::isfinite(pos.x) && std::isfinite(pos.y) && std::isfinite(pos.z));
+    }
+    const auto coatHead = ResourceAssets::Socket(coatId, pose, RigSocket::Head);
+    const auto coatChest = ResourceAssets::Socket(coatId, pose, RigSocket::Chest);
+    const auto coatPelvis = ResourceAssets::Socket(coatId, pose, RigSocket::Pelvis);
+    assert(coatHead.z > coatChest.z && coatChest.z > coatPelvis.z);
+    for (const auto &v : coat.packedVertices)
+    {
+        assert(v.surface == 1); // Fabric matte PBR surface (not metal fallback).
+        assert(v.palette == 0); // Authored BaseColor texture preserved without tint override.
+    }
+    SkinMatrices coatSkin;
+    ResourceAssets::Sample(coatId, &pose, coatSkin);
+    const auto skinnedPt = ResourceAssets::SkinPoint(coat.packedVertices.front(), coatSkin);
+    assert(std::isfinite(skinnedPt.x) && std::isfinite(skinnedPt.y) && std::isfinite(skinnedPt.z));
 }
 } // namespace
 
