@@ -1,7 +1,9 @@
 ﻿#include "stdafx.h"
 #include "Level.h"
 #include "Story.h"
+#include "StoryArc.h"
 #include "StoryJournal.h"
+#include "WorldEncounters.h"
 #include "Hud.h"
 #include "Civic.h"
 #include "CityFacilities.h"
@@ -1391,7 +1393,7 @@ void TestStoryJournalContracts()
     assert(terminal.front().id == "reported" && terminal.size() == 1);
     for (const auto &line : terminal)
     {
-        assert(line.speaker == "수신망");
+        assert(line.speaker == "헤일로 수신망" || line.speaker == "수신망");
     }
     game::MineState ongoing;
     while (ongoing.quest.GetStage() != game::MineQuestStage::Complete)
@@ -1411,7 +1413,8 @@ void TestStoryJournalContracts()
     }
     const auto status = StoryDialogue::FrontierStatus(chapter, StoryContact::Receiver);
     const auto revisit = StoryDialogue::FrontierReturn(chapter);
-    assert(status.front().id == "compared" && revisit.back().choices.size() == 2);
+    assert(status.front().id == "compared" &&
+           revisit.back().choices.size() == (chapter.waterwayUnlocked ? 3u : 2u));
     assert(revisit.back().choices[0].id == "revisit" && revisit.back().choices[1].id == "later");
     chapter.recordsCompared = false;
     assert(StoryDialogue::FrontierReturn(chapter).empty());
@@ -1996,10 +1999,15 @@ void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::file
         return result;
     };
     const auto schema = number(8);
-    assert(schema >= 8 && schema <= 14 &&
-           ((version >= 1 && version <= 8) || version == 11 || version == 12 || version == 13));
+    assert(schema >= 8 && schema <= 16 &&
+           ((version >= 1 && version <= 8) || version == 11 || version == 12 || version == 13 || version == 14 ||
+            version == 15));
+    const size_t schema15End =
+        schema >= 16 ? bytes.size() - 8 - size_t(number(bytes.size() - 8)) : bytes.size();
+    const size_t schema14End =
+        schema >= 15 ? schema15End - 8 - size_t(number(schema15End - 8)) : schema15End;
     const size_t schema13End =
-        schema >= 14 ? bytes.size() - 8 - size_t(number(bytes.size() - 8)) : bytes.size();
+        schema >= 14 ? schema14End - 8 - size_t(number(schema14End - 8)) : schema14End;
     const size_t schema12End =
         schema >= 13 ? schema13End - 8 - size_t(number(schema13End - 8)) : schema13End;
     const size_t schema8End =
@@ -2044,6 +2052,16 @@ void WriteLegacyCheckpoint(const std::filesystem::path &current, const std::file
     {
         assert(schema >= 14);
         previous.assign(bytes.begin(), bytes.begin() + schema13End);
+    }
+    else if (version == 14)
+    {
+        assert(schema >= 15);
+        previous.assign(bytes.begin(), bytes.begin() + schema14End);
+    }
+    else if (version == 15)
+    {
+        assert(schema >= 16);
+        previous.assign(bytes.begin(), bytes.begin() + schema15End);
     }
     else
     {
@@ -3394,17 +3412,20 @@ void TestStageSelectionAndLoadout()
         }
         press(13);
         assert(w.ui.screen == UiScreen::None && !w.isPaused && !w.weaponWheel.visible);
+        assert(w.surfaceExploration && g.Surface() != nullptr);
         assert(mineState.loadout.Selected() == WeaponSlot::Unarmed);
         assert(mineState.loadout.HasPistol() == (i >= int(TestStage::WeaponUnlocked)));
         assert(mineState.active == (i == int(TestStage::Mine)));
-        assert(GameLevels::Chapter().IsActive() == (i == int(TestStage::ChapterOne)));
+        assert(g.Mode() != WorldMode::LegacyFrontier &&
+               GameLevels::Chapter().IsActive() == (i == int(TestStage::ChapterOne)));
         if (i == int(TestStage::Prologue))
         {
-            assert(w.isInsideHome && w.mainQuestStage == MainQuestStage::ReadHomeTerminal);
+            assert(w.isInsideHome && w.mainQuestStage == MainQuestStage::ReadHomeTerminal &&
+                   g.Mode() == WorldMode::SurfaceInterior);
         }
         if (i == int(TestStage::Observatory))
         {
-            assert(w.isInObservatory && !w.gateSignalHeard);
+            assert(w.isInObservatory && !w.gateSignalHeard && g.Mode() == WorldMode::SurfaceObservatory);
         }
         if (i >= int(TestStage::BikeUnlocked))
         {
@@ -3414,35 +3435,42 @@ void TestStageSelectionAndLoadout()
         {
             assert(mineState.quest.GetStage() == MineQuestStage::TravelToMine &&
                    mineState.quest.IsRiaJoined() && w.isBikeMounted &&
-                   !BodyCollision::BikeBlocked(w.bikePosition, w.bikeYaw, w.bikeElevation));
+                   g.Mode() == WorldMode::SurfaceExterior);
         }
         if (i == int(TestStage::WeaponUnlocked))
         {
+            const auto &mineAccess = g.Surface()->Stream().Snapshot()->planet->Region("mq00_mine").access.position;
             assert(!w.isBikeMounted && !mineState.active &&
                    mineState.quest.GetStage() == MineQuestStage::TravelToMine &&
-                   Game::Distance(w.playerPosition, Overworld::kMineEntrance) < 2 &&
-                   !g.IsPositionBlocked(w.playerPosition));
+                   world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, g.Surface()->Pose().origin,
+                                                    mineAccess) < 6.0);
         }
         if (i == int(TestStage::Mine))
         {
-            assert(mineState.quest.IsRiaJoined() &&
+            assert(g.IsSurfaceMine() && g.Mode() == WorldMode::SurfaceMine &&
+                   mineState.quest.IsRiaJoined() &&
                    mineState.quest.GetStage() == MineQuestStage::BypassPower);
         }
         if (i == int(TestStage::ChapterOne))
         {
-            assert(mineState.quest.GetStage() == MineQuestStage::Complete && w.isComplete &&
-                   GameLevels::Chapter().IsAvailable());
+            const auto &frontierAccess = g.Surface()->Stream().Snapshot()->planet->Region("frontier").access.position;
+            assert(g.Mode() == WorldMode::SurfaceExterior &&
+                   mineState.quest.GetStage() == MineQuestStage::Complete && w.isComplete &&
+                   GameLevels::Chapter().IsAvailable() &&
+                   world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters, g.Surface()->Pose().origin,
+                                                    frontierAccess) < 8.0);
         }
     }
     assert(!g.EnterTestStage(TestStage::Count) && w.surfaceExploration);
-    // The normal narrative gives the pistol once, only after reading Ria's entrance handover.
+    // The normal narrative gives the pistol once, only after reading Ria's entrance handover on Erma surface.
     assert(g.EnterTestStage(TestStage::BikeUnlocked));
     w.isBikeMounted = false;
-    w.playerPosition = Overworld::kMineEntrance;
+    assert(g.RelocateSurfaceSurvey(g.Surface()->Stream().Snapshot()->planet->Region("mq00_mine").access.position));
     press('e');
     assert(Dialogue::Active() && !mineState.loadout.HasPistol() && !mineState.active);
     ReadDialogue();
-    assert(mineState.active && mineState.loadout.HasPistol() && !mineState.loadout.IsPistolEquipped());
+    assert(mineState.active && g.IsSurfaceMine() && mineState.loadout.HasPistol() &&
+           !mineState.loadout.IsPistolEquipped());
     assert(!mineState.loadout.GrantPistol());
     auto choose = [&](Vector2 offset) {
         g.MouseMotion(640, 400);
@@ -6191,8 +6219,527 @@ void TestCq10AndUrbanFacilities()
     g.Reset();
 }
 
+void TestFullChapterOneStoryArc()
+{
+    using namespace tutorial;
+    using namespace story;
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    auto &arc = StoryArc::Get();
+
+    auto finishDialogue = [&](int choiceIdx = 0) {
+        for (int safety = 0; Dialogue::Active() && safety < 128; ++safety)
+        {
+            auto &d = w.dialogue;
+            if (d.page < d.pages.size() && !d.pages[d.page].choices.empty() && d.selection < 0)
+            {
+                assert(Dialogue::Select(size_t(choiceIdx)));
+            }
+            assert(Dialogue::Advance());
+        }
+        assert(!Dialogue::Active());
+    };
+    auto clearZoneHostiles = [&](OpEnemyKind skipKind = OpEnemyKind::CoreCoupling) {
+        for (auto &e : arc.State().enemies)
+        {
+            if (e.active && e.kind != skipKind)
+            {
+                e.health = 0;
+                e.active = false;
+            }
+        }
+    };
+    auto interactNode = [&](OpNodeKind kind, int idx = 0) {
+        for (const auto &n : arc.State().nodes)
+        {
+            if (n.visible && n.kind == kind && n.index == idx)
+            {
+                w.playerPosition = n.position;
+                assert(arc.Interact());
+                return;
+            }
+        }
+        assert(false && "Expected StoryArc OpNode not found/visible");
+    };
+
+    // Start from completed Act 1 (including side quests to verify payoff branches)
+    g.Reset();
+    auto &ch = game::GameLevels::Chapter().GetState();
+    ch.unlocked = true;
+    ch.generatorInspected = ch.generatorRestored = ch.portableLightRepaired = true;
+    ch.convoyBriefed = ch.convoyEvacuated = ch.convoyRescued = ch.kainJoined = ch.vehicleRepaired = true;
+    ch.surveyMarkers = 3;
+    ch.ledgerFound = ch.detailLedgerFound = true;
+    ch.recordsCompared = ch.waterwayUnlocked = true;
+    w.isPowerRestored = true;
+    w.isInsideHome = false;
+    mineState.loadout.GrantPistol();
+    mineState.loadout.Select(combat::WeaponSlot::Secondary);
+    assert(arc.IsActTwoUnlocked());
+
+    // Act 2 (S20-S25): Enter Waterway via chapter1/return choice #2 ("waterway")
+    game::GameLevels::Chapter().InteractHub();
+    assert(Dialogue::Active() && w.dialogue.sceneId == "chapter1/return");
+    finishDialogue(2);
+    assert(arc.State().activeZone == OperationZone::Waterway && g.Mode() == WorldMode::StoryOperation);
+
+    // S20 Beacon + 2 Distortion Pylons + Scanner F
+    interactNode(OpNodeKind::WaterwayBeacon);
+    finishDialogue();
+    assert(arc.State().returnBeaconPlaced);
+    assert(arc.TriggerScanner());
+    interactNode(OpNodeKind::DistortionPylon, 0);
+    interactNode(OpNodeKind::DistortionPylon, 1);
+    assert(arc.State().stabilizedPylons == 2);
+
+    // S21 Survey Station: blocked while drones live, then succeeds after combat
+    interactNode(OpNodeKind::SurveyTerminal);
+    assert(!arc.State().surveyStationInvestigated);
+    clearZoneHostiles();
+    interactNode(OpNodeKind::SurveyTerminal);
+    finishDialogue();
+    assert(arc.State().surveyStationInvestigated);
+
+    // S22 Old Camp + Kain Confession choice ("criticize" = index 1)
+    interactNode(OpNodeKind::OldCampRollCall);
+    finishDialogue(1); // commits confession & queues closing
+    finishDialogue();
+    assert(arc.State().oldCampInvestigated && arc.State().kainRetreatRevealed &&
+           arc.State().kainChoice == KainChoice::Criticize);
+
+    // S23 Relay Switches + Veil Vault comparison
+    interactNode(OpNodeKind::RelaySwitch, 0);
+    interactNode(OpNodeKind::RelaySwitch, 1);
+    assert(arc.State().relaySwitchesRestored == 2);
+    interactNode(OpNodeKind::VeilVaultTerminal);
+    finishDialogue();
+    assert(arc.State().veilHypothesisFound && arc.State().observatoryDocsFound &&
+           arc.State().cityPhase == CityPhase::Uneasy);
+
+    // S24-S25 Halo return, report, Mara talk, NO timed auto-disaster on "prepare"
+    interactNode(OpNodeKind::ReturnGate);
+    assert(!arc.IsActive());
+    assert(arc.InteractHaloReceiver()); // S24 report
+    finishDialogue();
+    assert(arc.State().chapter2Reported && !arc.State().chapter3Committed);
+    assert(arc.InteractHaloMara()); // S24 Mara date discrepancy
+    finishDialogue();
+    assert(arc.InteractHaloReceiver()); // S25 choice
+    finishDialogue(1);                  // "아직 준비한다"
+    for (int i = 0; i < 20; ++i)
+    {
+        g.Update(0.05f);
+    }
+    assert(!arc.State().chapter3Committed && !arc.IsActive()); // Zero timed auto-disaster!
+
+    // Explicit Act 3 commit ("depart" = index 0)
+    assert(arc.InteractHaloReceiver());
+    finishDialogue(0);
+    assert(arc.State().chapter3Committed && arc.State().activeZone == OperationZone::CutoffFacility);
+
+    // Act 3 S30: Cutoff Facility (3 actuators + main breaker + echoed abort voice -> HaloEvacuation)
+    clearZoneHostiles();
+    interactNode(OpNodeKind::CutoffActuator, 0);
+    interactNode(OpNodeKind::CutoffActuator, 1);
+    interactNode(OpNodeKind::CutoffActuator, 2);
+    interactNode(OpNodeKind::MainPowerBreaker);
+    finishDialogue();
+    assert(arc.State().cutoffEchoTriggered && arc.State().cityPhase == CityPhase::Evacuation &&
+           arc.State().activeZone == OperationZone::HaloEvacuation);
+
+    // Act 3 S31-S33: Halo Evacuation (plaza route, closed house side rescue, backup power choice)
+    clearZoneHostiles();
+    interactNode(OpNodeKind::EvacDebrisBarricade);
+    finishDialogue();
+    interactNode(OpNodeKind::ClosedHouseSideAlley);
+    finishDialogue();
+    assert(arc.State().backupWarehouseRevealed); // detailLedgerFound revealed it immediately!
+    interactNode(OpNodeKind::BackupPowerConsole);
+    finishDialogue(1); // "signal_records"
+    assert(arc.State().evacPriority == EvacuationPriority::SignalRecords && arc.State().evacCommsConnected &&
+           arc.State().haloEvacuationComplete);
+
+    // Act 3 S34: Outer Control safe-base clinic prep -> Gate Interior
+    interactNode(OpNodeKind::ReturnGate);
+    assert(arc.State().activeZone == OperationZone::OuterControl);
+    interactNode(OpNodeKind::OuterControlPrep);
+    finishDialogue();
+    assert(arc.State().outerControlChecked);
+    interactNode(OpNodeKind::GateThresholdPortal);
+    assert(arc.State().gateEntryReached && arc.State().activeZone == OperationZone::GateInterior);
+
+    // Act 3 S35-S36: 3 independent survival proofs + boundary test & dual-channel radio
+    clearZoneHostiles();
+    interactNode(OpNodeKind::ProofMarker);
+    assert(!arc.State().missingExpeditionConfirmedAlive);
+    interactNode(OpNodeKind::ProofRadio);
+    finishDialogue();
+    assert(!arc.State().missingExpeditionConfirmedAlive);
+    interactNode(OpNodeKind::ProofScanner);
+    finishDialogue();
+    assert(arc.State().missingExpeditionConfirmedAlive);
+    interactNode(OpNodeKind::BoundaryTestConsole);
+    finishDialogue();
+    assert(arc.State().boundaryTestDone && arc.State().chapter3Complete && arc.IsRiaAvailable());
+
+    // Act 4 S40-S41: Sequential extraction of 3 fixed survivors + Medevac safe-base preservation
+    clearZoneHostiles();
+    for (int s = 0; s < 3; ++s)
+    {
+        interactNode(OpNodeKind::SurvivorExtract);
+        clearZoneHostiles();
+        for (int step = 0; step < 300 && arc.ReceivedSurvivorCount() <= s; ++step)
+        {
+            arc.Update(0.05f);
+        }
+        assert(arc.ReceivedSurvivorCount() == s + 1);
+        if (s == 0)
+        {
+            // Verify medevac recovers at Outer Control and NEVER reverts received survivor #0!
+            assert(arc.HandleMedevacRecovery());
+            assert(arc.State().activeZone == OperationZone::OuterControl && arc.ReceivedSurvivorCount() == 1 &&
+                   arc.State().survivors[0] == SurvivorStatus::Received);
+            interactNode(OpNodeKind::GateThresholdPortal);
+            clearZoneHostiles();
+        }
+    }
+    finishDialogue(); // MQ04A/all-received
+    assert(arc.State().allSurvivorsReceived);
+
+    // Act 4 S42-S43: Gate Core (2 control points -> 4 shootable couplings -> return line -> external sector loss)
+    interactNode(OpNodeKind::AdvanceToCore);
+    assert(arc.State().activeZone == OperationZone::GateCore);
+    clearZoneHostiles(OpEnemyKind::CoreCoupling);
+    interactNode(OpNodeKind::CoreControlPoint, 0);
+    interactNode(OpNodeKind::CoreControlPoint, 1);
+    assert(arc.State().controlPointsDisabled[0] && arc.State().controlPointsDisabled[1]);
+    for (auto &e : arc.State().enemies)
+    {
+        if (e.active && e.kind == OpEnemyKind::CoreCoupling)
+        {
+            w.playerPosition = {e.position.x - 1.f, e.position.y};
+            for (int swings = 0; swings < 4 && e.active; ++swings)
+            {
+                arc.TryMelee(w.playerPosition, 0.f);
+            }
+        }
+    }
+    finishDialogue(); // MQ04B/core-stopped
+    assert(arc.State().coreStopped && arc.State().couplingsDestroyed == 4);
+
+    interactNode(OpNodeKind::CoreReturnLine);
+    finishDialogue(); // MQ04C/sector-loss ("여긴… 아직 빛이 있어.")
+    assert(arc.State().returnConfirmed && arc.State().sectorLossTriggered &&
+           arc.State().riaStatus == RiaStatus::Missing && arc.State().cityPhase == CityPhase::Recovery &&
+           !arc.IsActive());
+    // Strict invariant: Ria NEVER auto-respawns anywhere after Act 4!
+    assert(!g.HasCompanion(CompanionId::Ria, CompanionPlace::Surface));
+    assert(!g.HasCompanion(CompanionId::Ria, CompanionPlace::Mine));
+    assert(!g.HasCompanion(CompanionId::Ria, CompanionPlace::Frontier));
+    assert(!g.IsQuestInteraction(InteractionTarget::Lia));
+
+    // Act 4 S44: Safety line + file Ria as Missing
+    assert(arc.InteractHaloSafetyLine());
+    finishDialogue();
+    assert(arc.State().safetyLineChecked);
+    assert(arc.InteractHaloReceiver());
+    finishDialogue();
+    assert(arc.State().supportLogsRecovered && arc.State().missingFiled && arc.State().chapter4Complete);
+
+    // Epilogue S50-S52: Shelter (Mara + lamp toggle), Clinic, Workshop (Kain choice payoff), 17-day Nereus signal
+    assert(arc.InteractHaloMara());
+    finishDialogue();
+    assert(arc.State().epilogueShelterVisited);
+    const bool lampBefore = arc.State().shelterLampOn;
+    assert(arc.InteractHaloShelterLamp() && arc.State().shelterLampOn != lampBefore);
+    assert(arc.InteractHaloEpilogueClinic());
+    finishDialogue();
+    assert(arc.State().epilogueClinicVisited);
+    assert(arc.InteractHaloEpilogueWorkshop());
+    finishDialogue();
+    assert(arc.State().epilogueWorkshopVisited && arc.State().epilogueRecoveryTaskDone);
+    assert(arc.InteractHaloReceiver()); // S52 day skip choice
+    finishDialogue(0);                  // "수신 기록 정리를 마친다 (17일 후)"
+    finishDialogue();                   // Nereus signal dialogue
+    assert(arc.State().epilogueDaySkipped && arc.State().nereusSignalReceived);
+    // Replayable audio log works cleanly without mutating flags
+    assert(arc.InteractHaloReceiver());
+    finishDialogue();
+
+    // Journal records now accurately contain Veil & Nereus facts ONLY after achieved
+    const auto records = StoryJournal::Collect(w, mineState, ch);
+    assert(std::any_of(records.begin(), records.end(), [](const InvestigationRecord &r) {
+        return r.id == "act2/veil" && r.fact.find("장막") != std::string::npos;
+    }));
+    assert(std::any_of(records.begin(), records.end(), [](const InvestigationRecord &r) {
+        return r.id == "epilogue/nereus" && r.fact.find("네레우스") != std::string::npos;
+    }));
+
+    // Save Schema 15 round-trip persistence check
+    PrepareCheckpointFixture();
+    arc.Reset();
+    arc.State().cityPhase = CityPhase::Recovery;
+    arc.State().riaStatus = RiaStatus::Missing;
+    arc.State().kainChoice = KainChoice::Criticize;
+    arc.State().evacPriority = EvacuationPriority::SignalRecords;
+    arc.State().chapter2Reported = arc.State().chapter3Committed = arc.State().chapter3Complete = true;
+    arc.State().allSurvivorsReceived = arc.State().coreStopped = arc.State().returnConfirmed = true;
+    arc.State().sectorLossTriggered = arc.State().chapter4Complete = true;
+    arc.State().survivors = {SurvivorStatus::Received, SurvivorStatus::Received, SurvivorStatus::Received};
+    arc.State().epilogueShelterVisited = arc.State().epilogueClinicVisited = arc.State().epilogueWorkshopVisited = true;
+    arc.State().epilogueDaySkipped = arc.State().nereusSignalReceived = true;
+    const auto saveFolder =
+        std::filesystem::path("x64/RevisionChecks") /
+        ("story-arc-s15-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    const auto saveFile = saveFolder / "chapter1-epilogue.sav";
+    const bool savedOk = SaveSystem::Save(saveFile);
+    if (!savedOk)
+    {
+        std::cerr << "StoryArc Schema 15 Save failed: " << SaveSystem::Message() << "\n";
+    }
+    assert(savedOk);
+    assert(SaveSystem::CheckFile(saveFile));
+    arc.Reset();
+    assert(arc.State().riaStatus == RiaStatus::Available);
+    assert(SaveSystem::Load(saveFile));
+    WaitForCheckpointLoad();
+    assert(arc.State().riaStatus == RiaStatus::Missing && arc.State().cityPhase == CityPhase::Recovery &&
+           arc.State().kainChoice == KainChoice::Criticize &&
+           arc.State().evacPriority == EvacuationPriority::SignalRecords &&
+           arc.State().chapter4Complete && arc.State().nereusSignalReceived);
+
+    // Open-World integration verification: Act 2->Halo surface return, n0_outskirts portal, Epilogue Halo surface props & missing Ria guard.
+    assert(g.EnterTestStage(TestStage::ActTwoWaterway));
+    assert(w.surfaceExploration && arc.IsActive());
+    arc.LeaveZoneToHalo(true);
+    assert(w.surfaceExploration && g.Mode() == WorldMode::SurfaceExterior && g.SurfaceCities() &&
+           g.SurfaceCities()->ActiveCity() == 0);
+    const auto &n0Pos = g.Surface()->Stream().Snapshot()->planet->Region("n0_outskirts").access.position;
+    assert(g.RelocateSurfaceSurvey(n0Pos));
+    assert(g.FindNearbyInteraction() == InteractionTarget::StoryOperationPortal);
+
+    assert(g.EnterTestStage(TestStage::EpilogueRecovery));
+    assert(w.surfaceExploration && g.Mode() == WorldMode::SurfaceExterior && arc.IsRiaMissing());
+    assert(!g.SurfaceParty() || !g.SurfaceParty()->Joined(CompanionId::Ria));
+    if (auto liaPt = g.SurfaceCities()->Point(*g.Surface(), 0, kLiaPosition))
+    {
+        assert(g.RelocateSurfaceSurvey(*liaPt));
+        assert(g.FindNearbyInteraction() != InteractionTarget::Lia);
+    }
+    if (auto clinicPt = g.SurfaceCities()->Point(*g.Surface(), 0, {11.f, -2.f}))
+    {
+        assert(g.RelocateSurfaceSurvey(*clinicPt));
+        assert(g.FindNearbyInteraction() == InteractionTarget::StoryEpilogueClinic);
+    }
+    const auto epGoal = ActivityJournal::Current();
+    assert(!epGoal.title.empty() && epGoal.surfaceTarget.has_value());
+    g.Reset();
+}
+
+void TestWorldEncounters()
+{
+    using namespace tutorial;
+    using namespace encounters;
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    auto &we = WorldEncounters::Get();
+
+    auto finishDialogue = [&](int choiceIdx = 0) {
+        for (int safety = 0; Dialogue::Active() && safety < 64; ++safety)
+        {
+            auto &d = w.dialogue;
+            if (d.page < d.pages.size() && !d.pages[d.page].choices.empty() && d.selection < 0)
+            {
+                assert(Dialogue::Select(size_t(choiceIdx)));
+            }
+            assert(Dialogue::Advance());
+        }
+        assert(!Dialogue::Active());
+    };
+
+    // 1) Legacy Halo outskirts: 4 rich 4-stage encounters playable end-to-end
+    g.Reset();
+    w.isInsideHome = false;
+    we.PopulateForCurrentWorld();
+    assert(we.State().live.size() == 4);
+
+    // 1A) ConvoyAmbush: Briefing -> Wave 1 combat -> 2 Repairs -> Wave 2 + Boss -> Escort -> Branch Choice
+    {
+        auto &enc = we.State().live[0];
+        assert(enc.archetype == Archetype::ConvoyAmbush);
+        w.playerPosition = enc.legacyAnchor;
+        we.Update(0.05f);
+        assert(enc.activeInRange && we.HasNearbyInteraction());
+        assert(we.Interact());
+        finishDialogue(0); // Accept
+        assert(enc.phase == Phase::Stage1);
+        // Defeat Wave 1 via HitAtLegacyPoint
+        for (auto &e : enc.enemies)
+        {
+            if (e.active && e.wave == 1)
+            {
+                assert(we.HitAtLegacyPoint(we.ToLegacyWorld(enc, e.offset), 200, true));
+            }
+        }
+        assert(enc.phase == Phase::Stage2);
+        // Complete both vehicle repair nodes
+        for (const auto &n : enc.nodes)
+        {
+            if (n.requiredStage == 2)
+            {
+                w.playerPosition = we.ToLegacyWorld(enc, n.offset);
+                assert(we.Interact());
+            }
+        }
+        assert(enc.phase == Phase::Stage3 && enc.wave2Spawned);
+        // Defeat Wave 2 + Boss -> escort starts
+        for (auto &e : enc.enemies)
+        {
+            if (e.active)
+            {
+                assert(we.HitAtLegacyPoint(we.ToLegacyWorld(enc, e.offset), 300, true));
+            }
+        }
+        for (int step = 0; step < 300 && enc.phase == Phase::Stage3; ++step)
+        {
+            we.Update(0.05f);
+        }
+        assert(enc.phase == Phase::Stage4);
+        w.playerPosition = enc.legacyAnchor;
+        const int crBefore = g.Player().credits;
+        assert(we.Interact());
+        finishDialogue(0); // OptionA
+        assert(enc.phase == Phase::Completed && enc.rewardClaimed && g.Player().credits > crBefore + 200 &&
+               we.State().totalCompleted == 1);
+    }
+
+    // 1B) SmugglerStandoff: Briefing -> 2 Clues -> 3-way Standoff Choice (Negotiate bloodless OptionB)
+    {
+        auto &enc = we.State().live[2];
+        assert(enc.archetype == Archetype::SmugglerStandoff);
+        w.playerPosition = enc.legacyAnchor;
+        we.Update(0.05f);
+        assert(we.Interact());
+        finishDialogue(0);
+        assert(enc.phase == Phase::Stage2);
+        for (const auto &n : enc.nodes)
+        {
+            if (n.requiredStage == 2)
+            {
+                w.playerPosition = we.ToLegacyWorld(enc, n.offset);
+                assert(we.Interact());
+            }
+        }
+        assert(enc.phase == Phase::Stage3);
+        for (const auto &n : enc.nodes)
+        {
+            if (n.requiredStage == 3)
+            {
+                w.playerPosition = we.ToLegacyWorld(enc, n.offset);
+                assert(we.Interact());
+            }
+        }
+        const int salvBefore = g.Player().salvage;
+        finishDialogue(1); // "negotiate" -> bloodless OptionB
+        assert(enc.phase == Phase::Completed && enc.choice == ResolutionChoice::OptionB &&
+               g.Player().salvage >= salvBefore + 5 && we.State().totalCompleted == 2);
+    }
+
+    // 1C) RelayDefenseHold: Briefing -> 2 Cooling Valves -> 26s 2-Wave Hold Defense -> Perfect Bonus
+    {
+        auto &enc = we.State().live[3];
+        assert(enc.archetype == Archetype::RelayDefenseHold);
+        w.playerPosition = enc.legacyAnchor;
+        we.Update(0.05f);
+        assert(we.Interact());
+        finishDialogue(0);
+        for (const auto &n : enc.nodes)
+        {
+            if (n.requiredStage == 2)
+            {
+                w.playerPosition = we.ToLegacyWorld(enc, n.offset);
+                assert(we.Interact());
+            }
+        }
+        assert(enc.phase == Phase::Stage3);
+        // Clear Wave 1 & hold through 26 seconds + Wave 2
+        for (int step = 0; step < 600 && enc.phase == Phase::Stage3; ++step)
+        {
+            for (auto &e : enc.enemies)
+            {
+                if (e.active)
+                {
+                    we.HitAtLegacyPoint(we.ToLegacyWorld(enc, e.offset), 300, true);
+                }
+            }
+            we.Update(0.05f);
+        }
+        assert(enc.wave2Spawned && enc.phase == Phase::Stage4 && enc.beaconHealth >= 60);
+        w.playerPosition = enc.legacyAnchor;
+        assert(we.Interact());
+        finishDialogue(0);
+        assert(enc.phase == Phase::Completed && we.State().totalCompleted == 3);
+    }
+
+    // 2) Planet Surface: 16+ encounters covering ALL 10 archetypes + F scanner reveals hidden nodes + Schema 16 Save/Load
+    PrepareCheckpointFixture();
+    assert(g.LeaveSurfaceMine());
+    we.PopulateForCurrentWorld();
+    assert(we.State().live.size() >= 16);
+    std::set<Archetype> seenTypes;
+    for (const auto &enc : we.State().live)
+    {
+        seenTypes.insert(enc.archetype);
+    }
+    assert(seenTypes.size() == size_t(Archetype::Count));
+    // Verify F scanner reveals hidden OutlawBountyRaid antennas
+    for (auto &enc : we.State().live)
+    {
+        if (enc.archetype == Archetype::OutlawBountyRaid)
+        {
+            assert(g.RelocateSurfaceSurvey(enc.surfaceAnchor));
+            we.Update(0.05f);
+            assert(we.TriggerScannerPing());
+            for (const auto &n : enc.nodes)
+            {
+                assert(n.revealed);
+            }
+            enc.phase = Phase::Stage2;
+            enc.stageObjectivesDone = 1;
+            we.State().totalCompleted = 4;
+            we.State().activeEncounterId = enc.id;
+            break;
+        }
+    }
+    // Schema 16 Save/Load round-trip check
+    const auto saveFolder =
+        std::filesystem::path("x64/RevisionChecks") /
+        ("encounters-s16-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    const auto saveFile = saveFolder / "encounters.sav";
+    assert(SaveSystem::Save(saveFile) && SaveSystem::CheckFile(saveFile));
+    we.Reset();
+    assert(we.State().totalCompleted == 0);
+    assert(SaveSystem::Load(saveFile));
+    WaitForCheckpointLoad();
+    we.PopulateForCurrentWorld();
+    assert(we.State().totalCompleted == 4 && !we.State().activeEncounterId.empty());
+    g.Reset();
+}
+
 int main(int argc, char **argv)
 {
+    if (argc > 1 && std::string(argv[1]) == "--encounters")
+    {
+        TestWorldEncounters();
+        std::cout << "WorldEncounters (10 archetypes, 4-stage combat/escort/branch/hold, scanner, Schema 16) passed.\n";
+        return 0;
+    }
+    if (argc > 1 && std::string(argv[1]) == "--story-arc")
+    {
+        TestFullChapterOneStoryArc();
+        std::cout << "Full Chapter 1 story arc (Acts 2-4, Epilogue, Ria missing invariant, Schema 15 save) passed.\n";
+        return 0;
+    }
     if (argc > 1 && std::string(argv[1]) == "--support")
     {
         TestNpcSupport();
@@ -6333,6 +6880,8 @@ int main(int argc, char **argv)
     TestStoryAndReentry();
     TestNpcSupport();
     TestChapterOne();
+    TestFullChapterOneStoryArc();
+    TestWorldEncounters();
     TestConnectedOverworld();
     TestCityQuestAccess();
     TestImportedWorldAndFlights();

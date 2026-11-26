@@ -1,5 +1,5 @@
 {
-  "completed": ["04_Hair", "05_Coat", "06_Trousers", "07_Boot_L", "09_ShoulderGuard_L", "13_ForearmGuard_L_Scanner"],
+  "completed": ["04_Hair", "05_Coat", "06_Trousers", "07_Boot_L", "09_ShoulderGuard_L", "13_ForearmGuard_L_Scanner", "11_KneeGuard_L"],
   "views_root": "Field_Medic_Tripo_PBR_Multiview",
   "export_category": "HumanV4",
   "parts": {

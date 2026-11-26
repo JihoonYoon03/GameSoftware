@@ -1,0 +1,431 @@
+{
+  "levels": {
+    "LOD0": {
+      "Coat": {
+        "file": "Field_Medic_Coat_LOD0.glb",
+        "triangles": 2896,
+        "cap": 2900,
+        "skinned": true
+      },
+      "Cargo_Pants": {
+        "file": "Field_Medic_Cargo_Pants_LOD0.glb",
+        "triangles": 1995,
+        "cap": 2000,
+        "skinned": true
+      },
+      "Boots": {
+        "file": "Field_Medic_Boots_LOD0.glb",
+        "triangles": 1246,
+        "cap": 1250,
+        "skinned": true
+      },
+      "Bun_Hair": {
+        "file": "Field_Medic_Bun_Hair_LOD0.glb",
+        "triangles": 1146,
+        "cap": 1150,
+        "skinned": true
+      },
+      "Shoulder_Guards": {
+        "file": "Field_Medic_Shoulder_Guards_LOD0.glb",
+        "triangles": 746,
+        "cap": 750,
+        "skinned": true
+      },
+      "Knee_Guards": {
+        "file": "Field_Medic_Knee_Guards_LOD0.glb",
+        "triangles": 646,
+        "cap": 650,
+        "skinned": true
+      },
+      "Head_Neck": {
+        "file": "Field_Medic_Head_Neck_LOD0.glb",
+        "triangles": 328,
+        "cap": 400,
+        "skinned": true
+      },
+      "Hands": {
+        "file": "Field_Medic_Hands_LOD0.glb",
+        "triangles": 570,
+        "cap": 800,
+        "skinned": true
+      },
+      "Forearm_Guard_L_Scanner": {
+        "file": "Field_Medic_Forearm_Guard_L_Scanner_LOD0.glb",
+        "triangles": 176,
+        "cap": 400,
+        "skinned": false,
+        "socket": "HandL",
+        "bone": "mixamorig:LeftHand",
+        "socket_local_matrix_gltf": [
+          0.99967664,
+          -0.02541677,
+          -3.9e-07,
+          0.0,
+          0.02540833,
+          0.99935365,
+          0.02541635,
+          0.0,
+          -0.00064599,
+          -0.02540834,
+          0.99967641,
+          0.0,
+          0.02567808,
+          0.02191742,
+          0.08858903,
+          1.0
+        ]
+      },
+      "Forearm_Guard_R": {
+        "file": "Field_Medic_Forearm_Guard_R_LOD0.glb",
+        "triangles": 88,
+        "cap": 400,
+        "skinned": false,
+        "socket": "HandR",
+        "bone": "mixamorig:RightHand",
+        "socket_local_matrix_gltf": [
+          -0.99967664,
+          -0.02541677,
+          -3.9e-07,
+          0.0,
+          -0.02540833,
+          0.99935365,
+          0.02541635,
+          0.0,
+          -0.00064599,
+          0.02540834,
+          -0.99967641,
+          0.0,
+          -0.02450313,
+          0.01504903,
+          0.08441243,
+          1.0
+        ]
+      },
+      "Medical_Pouch_R": {
+        "file": "Field_Medic_Medical_Pouch_R_LOD0.glb",
+        "triangles": 176,
+        "cap": 400,
+        "skinned": false,
+        "socket": "Pelvis",
+        "bone": "mixamorig:Hips",
+        "socket_local_matrix_gltf": [
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          -1.0,
+          0.0,
+          -1.0,
+          0.0,
+          0.0,
+          0.0,
+          -0.155,
+          0.078124,
+          -0.0098992,
+          1.0
+        ]
+      },
+      "Rescue_Pack": {
+        "file": "Field_Medic_Rescue_Pack_LOD0.glb",
+        "triangles": 484,
+        "cap": 800,
+        "skinned": false,
+        "socket": "Back",
+        "bone": "mixamorig:Spine1",
+        "socket_local_matrix_gltf": [
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          -1.0,
+          0.0,
+          -1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          -0.14787601,
+          -0.09236467,
+          1.0
+        ]
+      },
+      "Cartridge_Rack": {
+        "file": "Field_Medic_Cartridge_Rack_LOD0.glb",
+        "triangles": 308,
+        "cap": 400,
+        "skinned": false,
+        "socket": "Chest",
+        "bone": "mixamorig:Spine2",
+        "socket_local_matrix_gltf": [
+          0.0,
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          -1.0,
+          0.0,
+          -1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.12212399,
+          0.05590272,
+          1.0
+        ]
+      }
+    },
+    "LOD1": {
+      "Coat": {
+        "file": "Field_Medic_Coat_LOD1.glb",
+        "triangles": 1286,
+        "cap": 1290,
+        "skinned": true
+      },
+      "Cargo_Pants": {
+        "file": "Field_Medic_Cargo_Pants_LOD1.glb",
+        "triangles": 886,
+        "cap": 890,
+        "skinned": true
+      },
+      "Boots": {
+        "file": "Field_Medic_Boots_LOD1.glb",
+        "triangles": 552,
+        "cap": 556,
+        "skinned": true
+      },
+      "Bun_Hair": {
+        "file": "Field_Medic_Bun_Hair_LOD1.glb",
+        "triangles": 507,
+        "cap": 511,
+        "skinned": true
+      },
+      "Shoulder_Guards": {
+        "file": "Field_Medic_Shoulder_Guards_LOD1.glb",
+        "triangles": 328,
+        "cap": 333,
+        "skinned": true
+      },
+      "Knee_Guards": {
+        "file": "Field_Medic_Knee_Guards_LOD1.glb",
+        "triangles": 285,
+        "cap": 289,
+        "skinned": true
+      },
+      "Head_Neck": {
+        "file": "Field_Medic_Head_Neck_LOD1.glb",
+        "triangles": 173,
+        "cap": 178,
+        "skinned": true
+      },
+      "Hands": {
+        "file": "Field_Medic_Hands_LOD1.glb",
+        "triangles": 352,
+        "cap": 356,
+        "skinned": true
+      },
+      "Forearm_Guard_L_Scanner": {
+        "file": "Field_Medic_Forearm_Guard_L_Scanner_LOD1.glb",
+        "triangles": 176,
+        "cap": 178,
+        "skinned": false
+      },
+      "Forearm_Guard_R": {
+        "file": "Field_Medic_Forearm_Guard_R_LOD1.glb",
+        "triangles": 88,
+        "cap": 178,
+        "skinned": false
+      },
+      "Medical_Pouch_R": {
+        "file": "Field_Medic_Medical_Pouch_R_LOD1.glb",
+        "triangles": 176,
+        "cap": 178,
+        "skinned": false
+      },
+      "Rescue_Pack": {
+        "file": "Field_Medic_Rescue_Pack_LOD1.glb",
+        "triangles": 352,
+        "cap": 356,
+        "skinned": false
+      },
+      "Cartridge_Rack": {
+        "file": "Field_Medic_Cartridge_Rack_LOD1.glb",
+        "triangles": 174,
+        "cap": 178,
+        "skinned": false
+      }
+    },
+    "LOD2": {
+      "Coat": {
+        "file": "Field_Medic_Coat_LOD2.glb",
+        "triangles": 602,
+        "cap": 606,
+        "skinned": true
+      },
+      "Cargo_Pants": {
+        "file": "Field_Medic_Cargo_Pants_LOD2.glb",
+        "triangles": 414,
+        "cap": 418,
+        "skinned": true
+      },
+      "Boots": {
+        "file": "Field_Medic_Boots_LOD2.glb",
+        "triangles": 257,
+        "cap": 261,
+        "skinned": true
+      },
+      "Bun_Hair": {
+        "file": "Field_Medic_Bun_Hair_LOD2.glb",
+        "triangles": 236,
+        "cap": 240,
+        "skinned": true
+      },
+      "Shoulder_Guards": {
+        "file": "Field_Medic_Shoulder_Guards_LOD2.glb",
+        "triangles": 152,
+        "cap": 156,
+        "skinned": true
+      },
+      "Knee_Guards": {
+        "file": "Field_Medic_Knee_Guards_LOD2.glb",
+        "triangles": 130,
+        "cap": 135,
+        "skinned": true
+      },
+      "Head_Neck": {
+        "file": "Field_Medic_Head_Neck_LOD2.glb",
+        "triangles": 78,
+        "cap": 83,
+        "skinned": true
+      },
+      "Hands": {
+        "file": "Field_Medic_Hands_LOD2.glb",
+        "triangles": 162,
+        "cap": 167,
+        "skinned": true
+      },
+      "Forearm_Guard_L_Scanner": {
+        "file": "Field_Medic_Forearm_Guard_L_Scanner_LOD2.glb",
+        "triangles": 78,
+        "cap": 83,
+        "skinned": false
+      },
+      "Forearm_Guard_R": {
+        "file": "Field_Medic_Forearm_Guard_R_LOD2.glb",
+        "triangles": 78,
+        "cap": 83,
+        "skinned": false
+      },
+      "Medical_Pouch_R": {
+        "file": "Field_Medic_Medical_Pouch_R_LOD2.glb",
+        "triangles": 78,
+        "cap": 83,
+        "skinned": false
+      },
+      "Rescue_Pack": {
+        "file": "Field_Medic_Rescue_Pack_LOD2.glb",
+        "triangles": 162,
+        "cap": 167,
+        "skinned": false
+      },
+      "Cartridge_Rack": {
+        "file": "Field_Medic_Cartridge_Rack_LOD2.glb",
+        "triangles": 78,
+        "cap": 83,
+        "skinned": false
+      }
+    },
+    "ShadowProxy": {
+      "Coat": {
+        "file": "Field_Medic_Coat_ShadowProxy.glb",
+        "triangles": 402,
+        "cap": 406,
+        "skinned": true
+      },
+      "Cargo_Pants": {
+        "file": "Field_Medic_Cargo_Pants_ShadowProxy.glb",
+        "triangles": 276,
+        "cap": 280,
+        "skinned": true
+      },
+      "Boots": {
+        "file": "Field_Medic_Boots_ShadowProxy.glb",
+        "triangles": 171,
+        "cap": 175,
+        "skinned": true
+      },
+      "Bun_Hair": {
+        "file": "Field_Medic_Bun_Hair_ShadowProxy.glb",
+        "triangles": 157,
+        "cap": 161,
+        "skinned": true
+      },
+      "Shoulder_Guards": {
+        "file": "Field_Medic_Shoulder_Guards_ShadowProxy.glb",
+        "triangles": 101,
+        "cap": 105,
+        "skinned": true
+      },
+      "Knee_Guards": {
+        "file": "Field_Medic_Knee_Guards_ShadowProxy.glb",
+        "triangles": 87,
+        "cap": 91,
+        "skinned": true
+      },
+      "Head_Neck": {
+        "file": "Field_Medic_Head_Neck_ShadowProxy.glb",
+        "triangles": 51,
+        "cap": 56,
+        "skinned": true
+      },
+      "Hands": {
+        "file": "Field_Medic_Hands_ShadowProxy.glb",
+        "triangles": 108,
+        "cap": 112,
+        "skinned": true
+      },
+      "Forearm_Guard_L_Scanner": {
+        "file": "Field_Medic_Forearm_Guard_L_Scanner_ShadowProxy.glb",
+        "triangles": 50,
+        "cap": 56,
+        "skinned": false
+      },
+      "Forearm_Guard_R": {
+        "file": "Field_Medic_Forearm_Guard_R_ShadowProxy.glb",
+        "triangles": 50,
+        "cap": 56,
+        "skinned": false
+      },
+      "Medical_Pouch_R": {
+        "file": "Field_Medic_Medical_Pouch_R_ShadowProxy.glb",
+        "triangles": 49,
+        "cap": 56,
+        "skinned": false
+      },
+      "Rescue_Pack": {
+        "file": "Field_Medic_Rescue_Pack_ShadowProxy.glb",
+        "triangles": 107,
+        "cap": 112,
+        "skinned": false
+      },
+      "Cartridge_Rack": {
+        "file": "Field_Medic_Cartridge_Rack_ShadowProxy.glb",
+        "triangles": 49,
+        "cap": 56,
+        "skinned": false
+      }
+    }
+  },
+  "totals": {
+    "LOD0": 10805,
+    "LOD1": 5335,
+    "LOD2": 2505,
+    "ShadowProxy": 1658
+  },
+  "rig_bones": 22
+}

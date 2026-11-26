@@ -492,9 +492,12 @@ void LegacyIntegration()
     Check(std::hypot(home.x - tutorial::kHomeDoor.x, home.y - tutorial::kHomeDoor.y) < 1.e-7,
           "Existing home coordinate is the source of truth");
     game.EnterTestStage(tutorial::TestStage::Mine);
-    Check(!game.PlanetLocation(), "A does not pretend the legacy mine is seamless");
+    Check(game.IsSurfaceMine() && game.GetState().surfaceExploration,
+          "Mine stage entry runs on the Erma open-world surface mine path");
     game.EnterTestStage(tutorial::TestStage::ChapterOne);
-    Check(!game.PlanetLocation(), "A does not pretend the legacy frontier is seamless");
+    auto frontierLoc = game.PlanetLocation();
+    Check(frontierLoc.has_value() && frontierLoc->regionId == "frontier",
+          "Chapter One stage entry runs seamlessly on Erma's open-world frontier region");
     game.Reset();
 }
 } // namespace

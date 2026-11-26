@@ -1,0 +1,85 @@
+{
+  "method": "Independent ray parity checks of points flagged by nearest-face normal; no geometry modified.",
+  "pants_may_have_open_boundaries": true,
+  "results": [
+    {
+      "sample": {
+        "vertex": 185,
+        "distance": 0.013490812852978706,
+        "co": [
+          0.015540034510195255,
+          0.0022377800196409225,
+          0.5900628566741943
+        ]
+      },
+      "nearest_face": 1045,
+      "nearest_point": [
+        0.028934450820088387,
+        0.0006529671372845769,
+        0.5897799730300903
+      ],
+      "nearest_normal": [
+        0.2915804982185364,
+        0.8045818209648132,
+        -0.5173285007476807
+      ],
+      "ray_tests": [
+        {
+          "direction": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "intersections": 2,
+          "odd_parity_inside": false
+        },
+        {
+          "direction": [
+            -1.0,
+            0.0,
+            0.0
+          ],
+          "intersections": 2,
+          "odd_parity_inside": false
+        },
+        {
+          "direction": [
+            0.0,
+            1.0,
+            0.0
+          ],
+          "intersections": 0,
+          "odd_parity_inside": false
+        },
+        {
+          "direction": [
+            0.0,
+            -1.0,
+            0.0
+          ],
+          "intersections": 0,
+          "odd_parity_inside": false
+        },
+        {
+          "direction": [
+            0.9087184071540833,
+            0.3551313281059265,
+            0.219345822930336
+          ],
+          "intersections": 2,
+          "odd_parity_inside": false
+        },
+        {
+          "direction": [
+            -0.9087184071540833,
+            -0.3551313281059265,
+            -0.219345822930336
+          ],
+          "intersections": 2,
+          "odd_parity_inside": false
+        }
+      ],
+      "all_rays_even": true
+    }
+  ]
+}

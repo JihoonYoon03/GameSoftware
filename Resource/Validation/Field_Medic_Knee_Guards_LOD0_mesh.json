@@ -1,0 +1,60 @@
+{
+  "part": "11_KneeGuard_L",
+  "blend": "Resource\\Source\\Accessories\\Field_Medic_Knee_Guards_LOD0.blend",
+  "glb": "Resource\\Export\\HumanV4\\Field_Medic_Knee_Guards_LOD0.glb",
+  "blend_sha256": "8e3735c3f0433a4d1851880c5f5a4bfb1d4a2ce7cef03afd35dd79a44b0bb783",
+  "glb_sha256": "188deb407d5f30e1dff1dd55b17bad0d1758fb9f946bde3f2b36f7c9b6e0532d",
+  "triangles": 784,
+  "cap": 800,
+  "mesh_instances": 1,
+  "animations": 0,
+  "master_joints": 22,
+  "inverse_binds_match_master": true,
+  "max_influences": 2,
+  "zero_weight_vertices": 0,
+  "embedded_maps": [
+    "baseColor",
+    "normal",
+    "metallicRoughness"
+  ],
+  "packed_blend_images": [
+    "Field_Medic_Knee_Guards_LOD0_BaseColor",
+    "Field_Medic_Knee_Guards_LOD0_Roughness",
+    "Field_Medic_Knee_Guards_LOD0_Metallic",
+    "Field_Medic_Knee_Guards_LOD0_Normal"
+  ],
+  "blender_reimport": true,
+  "pose_test_rad": 0.5,
+  "opposite_side_max_displacement_m": 0.0,
+  "rest_fit": {
+    "triangles": 784,
+    "pant_triangle_overlap_pairs": 0,
+    "near_surface_inside_vertices": 1,
+    "deepest_inside_m": 0.013490812852978706,
+    "inside_samples": [
+      {
+        "vertex": 185,
+        "distance": 0.013490812852978706,
+        "co": [
+          0.015540034510195255,
+          0.0022377800196409225,
+          0.5900628566741943
+        ]
+      }
+    ],
+    "pose_tests": [
+      {
+        "bone": "mixamorig:LeftLeg",
+        "angle_rad": 0.55,
+        "own_side_max_m": 0.07726669277719206,
+        "opposite_side_max_m": 0.0
+      },
+      {
+        "bone": "mixamorig:RightLeg",
+        "angle_rad": 0.55,
+        "own_side_max_m": 0.07726669277719206,
+        "opposite_side_max_m": 0.0
+      }
+    ]
+  }
+}

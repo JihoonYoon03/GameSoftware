@@ -3,6 +3,7 @@
 #include "CityFacilities.h"
 #include "Civic.h"
 #include "Level.h"
+#include "StoryArc.h"
 #include "ResidentAI.h"
 #include "ResourceAssets.h"
 #include "TransitLayout.h"
@@ -39,6 +40,10 @@ bool PlanetParty::Joined(CompanionId id) const
 }
 bool PlanetParty::Owns(CompanionId id, CompanionPlace place) const
 {
+    if (id == CompanionId::Ria && story::StoryArc::Get().IsRiaMissing())
+    {
+        return false;
+    }
     const auto &member = state.members.at(size_t(id));
     return member.joined && member.place == place;
 }
@@ -163,6 +168,11 @@ void PlanetParty::Join()
     for (size_t i = 0; i < state.members.size(); ++i)
     {
         auto &member = state.members[i];
+        if (i == 0 && story::StoryArc::Get().IsRiaMissing())
+        {
+            member.joined = false;
+            continue;
+        }
         if (member.joined || !(i == 0 ? mine.quest.IsRiaJoined() : field.kainJoined))
         {
             continue;
@@ -6654,7 +6664,8 @@ InteractionTarget PlanetCities::Nearby(const GameState &state, const world::Surf
     {
         consider(facility.exterior, facility.target);
     }
-    if ((!Game::Get().SurfaceParty() || !Game::Get().SurfaceParty()->Joined(CompanionId::Ria)) &&
+    if (!story::StoryArc::Get().IsRiaMissing() &&
+        (!Game::Get().SurfaceParty() || !Game::Get().SurfaceParty()->Joined(CompanionId::Ria)) &&
         !CivicCombat::LandmarkDown(kLiaPosition))
     {
         consider(kLiaPosition, InteractionTarget::Lia);
@@ -6663,10 +6674,24 @@ InteractionTarget PlanetCities::Nearby(const GameState &state, const world::Surf
     {
         consider(kMaraPosition, InteractionTarget::Mara);
     }
-    if (!Game::Get().SurfaceParty() && game::GameLevels::Chapter().GetState().kainJoined &&
-        !CivicCombat::LandmarkDown(kCityKainPosition))
+    if (game::GameLevels::Chapter().GetState().kainJoined && !CivicCombat::LandmarkDown(kCityKainPosition) &&
+        (!Game::Get().SurfaceParty() || !Game::Get().SurfaceParty()->Joined(CompanionId::Kain)))
     {
         consider(kCityKainPosition, InteractionTarget::Kain);
+    }
+    const auto &arc = story::StoryArc::Get().State();
+    if (arc.sectorLossTriggered && !arc.chapter4Complete)
+    {
+        consider({25.f, 7.f}, InteractionTarget::StorySafetyLine);
+    }
+    if (arc.chapter4Complete)
+    {
+        if (game::GameLevels::Chapter().GetState().portableLightRepaired)
+        {
+            consider({kMaraPosition.x + 1.6f, kMaraPosition.y}, InteractionTarget::StoryShelterLamp);
+        }
+        consider({11.f, -2.f}, InteractionTarget::StoryEpilogueClinic);
+        consider({19.f, 2.f}, InteractionTarget::StoryEpilogueWorkshop);
     }
     const auto planSnap = session.Stream().Snapshot();
     const auto *planetPtr = planSnap ? planSnap->planet.get() : nullptr;
@@ -6790,10 +6815,15 @@ bool PlanetCities::OccupiedAt(const GameState &state, const world::SurfaceSessio
     {
         for (auto point : {kLiaPosition, kMaraPosition, kCityKainPosition})
         {
+            if (point.x == kLiaPosition.x && point.y == kLiaPosition.y && story::StoryArc::Get().IsRiaMissing())
+            {
+                continue;
+            }
             if (Game::Get().SurfaceParty() &&
                 ((point.x == kLiaPosition.x && point.y == kLiaPosition.y &&
                   Game::Get().SurfaceParty()->Joined(CompanionId::Ria)) ||
-                 (point.x == kCityKainPosition.x && point.y == kCityKainPosition.y)))
+                 (point.x == kCityKainPosition.x && point.y == kCityKainPosition.y &&
+                  Game::Get().SurfaceParty()->Joined(CompanionId::Kain))))
             {
                 continue;
             }

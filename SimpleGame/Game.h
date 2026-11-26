@@ -314,7 +314,14 @@ enum class InteractionTarget
     FacilityExit,
     FacilityNpc,
     FacilityServicePrimary,
-    FacilityServiceSecondary
+    FacilityServiceSecondary,
+    StoryOperationNode,
+    StoryOperationPortal,
+    StorySafetyLine,
+    StoryShelterLamp,
+    StoryEpilogueClinic,
+    StoryEpilogueWorkshop,
+    WorldEncounter
 };
 
 constexpr float kPi = 3.14159265f;
@@ -511,6 +518,10 @@ enum class TestStage
     WeaponUnlocked,
     Mine,
     ChapterOne,
+    ActTwoWaterway,
+    ActThreeCrisis,
+    ActFourGateCore,
+    EpilogueRecovery,
     SurfaceSurvey,
     Count
 };
@@ -749,7 +760,8 @@ enum class WorldMode : std::uint8_t
     SurfaceObservatory,
     SurfaceFacility,
     SurfaceExterior,
-    SurfaceMine
+    SurfaceMine,
+    StoryOperation
 };
 
 class Game
@@ -805,6 +817,7 @@ class Game
     bool HasCompanion(CompanionId id, CompanionPlace place) const;
     std::optional<Vector2> ResidentPosition(const Resident &resident) const;
     bool RelocateSurfaceSurvey(const world::SurfacePoint &point);
+    bool ReturnToSurface(Vector2 legacyDoor, int city = 0);
     bool IsSurfaceMine() const
     {
         return surfaceMineReturn.has_value();
@@ -923,7 +936,6 @@ class Game
     float groundVehicleSpawnRetry = 0;
     void StoreSurfaceBikeHeading();
     void RestoreSurfaceBikeHeading();
-    bool ReturnToSurface(Vector2 legacyDoor, int city = 0);
     bool SurfaceLandingClear(const world::SurfacePoint &point, int city, bool ignoreServiceCar = false,
                              bool ignoreAircraft = false) const;
     bool LandOnSurface(const world::SurfacePoint &point, int city = -1, unsigned searchRings = 8);

@@ -1,0 +1,51 @@
+{
+  "part": "11_KneeGuard_L",
+  "region": "ov",
+  "starting_balance": 1000.0,
+  "tasks": [
+    {
+      "stage": "candidate_1",
+      "task_id": "5a63f025-4174-48f0-8b01-d015531df577",
+      "type": "multiview_to_model",
+      "status": "success",
+      "credits_consumed": 100.0,
+      "completed_at": "2026-11-26T13:01:19.768178Z"
+    },
+    {
+      "stage": "candidate_2",
+      "task_id": "59154429-9b5a-4907-aed1-ec50f3ba48d3",
+      "type": "multiview_to_model",
+      "status": "success",
+      "credits_consumed": 100.0,
+      "completed_at": "2026-11-26T13:01:15.327614Z"
+    },
+    {
+      "stage": "candidate_3",
+      "task_id": "60cd3e7a-3789-43b4-a4ce-2bbe660fdf69",
+      "type": "multiview_to_model",
+      "status": "success",
+      "credits_consumed": 100.0,
+      "completed_at": "2026-11-26T13:01:17.152576Z"
+    },
+    {
+      "stage": "candidate_4",
+      "task_id": "449eb95e-6d04-4cf7-aa14-3f831828db0f",
+      "type": "multiview_to_model",
+      "status": "success",
+      "credits_consumed": 100.0,
+      "completed_at": "2026-11-26T13:01:17.680054Z"
+    },
+    {
+      "stage": "texture",
+      "task_id": "78ac9757-f2a5-4da1-bbde-d4119a8af793",
+      "type": "texture_model",
+      "status": "success",
+      "credits_consumed": 10.0,
+      "completed_at": "2026-11-26T13:06:48.489846Z"
+    }
+  ],
+  "total_credits_consumed": 410.0,
+  "balance": 590.0,
+  "frozen": 0.0,
+  "reported_at": "2026-11-26T22:09:46.4881383+09:00"
+}

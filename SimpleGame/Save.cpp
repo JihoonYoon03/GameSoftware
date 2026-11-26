@@ -5,6 +5,8 @@
 #include "CityInfrastructure.h"
 #include "ResidentAI.h"
 #include "Level.h"
+#include "StoryArc.h"
+#include "WorldEncounters.h"
 #include "Overworld.h"
 #include "Scene.h"
 #ifndef NOMINMAX
@@ -29,7 +31,7 @@ namespace tutorial
 namespace
 {
 constexpr std::uint64_t kMaximumFile = 16 * 1024 * 1024;
-constexpr unsigned kSchema = 14;
+constexpr unsigned kSchema = 16;
 void Require(bool value, const char *message)
 {
     if (!value)
@@ -56,6 +58,8 @@ struct Checkpoint
     PlanetSecurityState security;
     std::vector<PlanetTrafficLink> trafficLinks;
     PlanetCommunityState community;
+    story::StoryArcState storyArc;
+    encounters::WorldEncountersState encounters;
     bool legacyLeftTraffic = false;
 };
 std::string WorldKey(const world::PlanetDefinition &planet)
@@ -219,6 +223,10 @@ class SaveArchive
         c.game = g.state;
         c.mine = game::GameLevels::Mine().GetState();
         c.chapter = game::GameLevels::Chapter().GetState();
+        c.storyArc = story::StoryArc::Get().State();
+        encounters::WorldEncounters::Get().SyncSaveRecords();
+        c.encounters = encounters::WorldEncounters::Get().State();
+        c.encounters.live.clear();
         c.civic = CivicJustice::State();
         c.security = PlanetSecurity::State();
         if (g.surfaceCities)
@@ -234,6 +242,10 @@ class SaveArchive
         if (g.surfaceParty)
         {
             c.party = g.surfaceParty->State();
+            if (c.storyArc.riaStatus == story::RiaStatus::Missing)
+            {
+                c.party.members[0].joined = false;
+            }
         }
         if (g.surfaceCommunity)
         {
@@ -254,6 +266,8 @@ class SaveArchive
         writer.AircraftRecord(c.game.aircraft);
         writer.ResidenceRecord(c.game.residence);
         writer.FacilityRecord(c.game.facilityInterior);
+        writer.StoryArcRecord(c.storyArc);
+        writer.EncounterRecord(c.encounters);
         Checkpoint clean;
         SaveArchive reader(true, writer.Bytes());
         reader.Value(clean);
@@ -267,6 +281,8 @@ class SaveArchive
         reader.AircraftRecord(clean.game.aircraft);
         reader.ResidenceRecord(clean.game.residence);
         reader.FacilityRecord(clean.game.facilityInterior);
+        reader.StoryArcRecord(clean.storyArc);
+        reader.EncounterRecord(clean.encounters);
         Require(reader.Finished(), "메모리 월드 기록에 지원하지 않는 데이터가 있습니다.");
         clean.game.playerMotion.mobility.RestoreStamina(c.game.playerMotion.mobility.Stamina(),
                                                         c.game.playerMotion.mobility.RegenDelay());
@@ -1244,6 +1260,110 @@ class SaveArchive
             FacilityRecord(v.worlds.at(key).game.facilityInterior);
         }
     }
+    void StoryArcRecord(story::StoryArcState &sa)
+    {
+        auto enumField = [&](auto &e, int limit, const char *err) {
+            int val = reading ? 0 : int(e);
+            Value(val);
+            Require(val >= 0 && val < limit, err);
+            if (reading)
+            {
+                e = static_cast<std::decay_t<decltype(e)>>(val);
+            }
+        };
+        if (reading)
+        {
+            sa = {};
+        }
+        enumField(sa.cityPhase, int(story::CityPhase::Count), "저장된 도시 단계가 올바르지 않습니다.");
+        enumField(sa.riaStatus, int(story::RiaStatus::Count), "저장된 리아 상태가 올바르지 않습니다.");
+        enumField(sa.kainChoice, int(story::KainChoice::Count), "저장된 카인 선택이 올바르지 않습니다.");
+        enumField(sa.evacPriority, int(story::EvacuationPriority::Count), "저장된 대피 우선순위가 올바르지 않습니다.");
+        enumField(sa.activeZone, int(story::OperationZone::Count), "저장된 작전 구역이 올바르지 않습니다.");
+        enumField(sa.resumeZone, int(story::OperationZone::Count), "저장된 복귀 구역이 올바르지 않습니다.");
+        for (int i = 0; i < 3; ++i)
+        {
+            enumField(sa.survivors[size_t(i)], int(story::SurvivorStatus::Count),
+                      "저장된 탐사대원 인수 상태가 올바르지 않습니다.");
+        }
+        Fields(sa.returnBeaconPlaced, sa.stabilizedPylons, sa.surveyStationInvestigated, sa.oldCampInvestigated,
+               sa.kainRetreatRevealed, sa.relaySwitchesRestored, sa.veilHypothesisFound, sa.observatoryDocsFound,
+               sa.chapter2Reported, sa.chapter3Committed, sa.cutoffRelaysDisabled, sa.cutoffEchoTriggered,
+               sa.evacRouteSecured, sa.evacSideRescueDone, sa.evacCommsConnected, sa.haloEvacuationComplete,
+               sa.outerControlChecked, sa.gateEntryReached, sa.proofMarkerRead, sa.proofLiveQuestion,
+               sa.proofInstrumentGap, sa.missingExpeditionConfirmedAlive, sa.boundaryTestDone, sa.chapter3Complete,
+               sa.allSurvivorsReceived, sa.controlPointsDisabled[0], sa.controlPointsDisabled[1],
+               sa.couplingsDestroyed, sa.coreStopped, sa.returnConfirmed, sa.sectorLossTriggered,
+               sa.safetyLineChecked, sa.supportLogsRecovered, sa.missingFiled, sa.chapter4Complete,
+               sa.epilogueShelterVisited, sa.epilogueClinicVisited, sa.epilogueWorkshopVisited,
+               sa.epilogueRecoveryTaskDone, sa.shelterLampOn, sa.epilogueDaySkipped, sa.nereusSignalReceived,
+               sa.backupWarehouseRevealed, sa.warehouseCluesFound);
+    }
+    void StoryArcRecords(Campaign &v)
+    {
+        std::uint64_t count = v.worlds.size();
+        Value(count);
+        Require(count == v.worlds.size(), "스토리 챕터 확장의 월드 수가 다릅니다.");
+        std::set<std::string> keys;
+        auto entry = v.worlds.begin();
+        for (std::uint64_t i = 0; i < count; ++i)
+        {
+            std::string key = reading ? std::string() : (entry++)->first;
+            Value(key);
+            Require(v.worlds.count(key) && keys.insert(key).second,
+                    "스토리 챕터 확장의 월드 ID가 올바르지 않습니다.");
+            StoryArcRecord(v.worlds.at(key).storyArc);
+        }
+    }
+    void EncounterRecord(encounters::WorldEncountersState &es)
+    {
+        if (reading)
+        {
+            es = {};
+        }
+        Fields(es.worldKey, es.totalCompleted, es.activeEncounterId);
+        std::uint64_t count = reading ? 0 : es.saved.size();
+        Value(count);
+        Require(count <= 256, "저장된 인카운터 기록 수가 허용 범위를 초과했습니다.");
+        if (reading)
+        {
+            es.saved.resize(size_t(count));
+        }
+        for (size_t i = 0; i < size_t(count); ++i)
+        {
+            auto &e = es.saved[i];
+            Value(e.id);
+            int arch = reading ? 0 : int(e.archetype);
+            int ph = reading ? 0 : int(e.phase);
+            int ch = reading ? 0 : int(e.choice);
+            Fields(arch, ph, ch, e.stageObjectivesDone, e.rewardClaimed);
+            Require(arch >= 0 && arch < int(encounters::Archetype::Count) && ph >= 0 &&
+                        ph < int(encounters::Phase::Count) && ch >= 0 &&
+                        ch < int(encounters::ResolutionChoice::Count),
+                    "저장된 인카운터 상태 값이 올바르지 않습니다.");
+            if (reading)
+            {
+                e.archetype = encounters::Archetype(arch);
+                e.phase = encounters::Phase(ph);
+                e.choice = encounters::ResolutionChoice(ch);
+            }
+        }
+    }
+    void EncounterRecords(Campaign &v)
+    {
+        std::uint64_t count = v.worlds.size();
+        Value(count);
+        Require(count == v.worlds.size(), "인카운터 확장의 월드 수가 다릅니다.");
+        std::set<std::string> keys;
+        auto entry = v.worlds.begin();
+        for (std::uint64_t i = 0; i < count; ++i)
+        {
+            std::string key = reading ? std::string() : (entry++)->first;
+            Value(key);
+            Require(v.worlds.count(key) && keys.insert(key).second, "인카운터 확장의 월드 ID가 올바르지 않습니다.");
+            EncounterRecord(v.worlds.at(key).encounters);
+        }
+    }
     void Value(Checkpoint &v)
     {
         Fields(v.planet, v.layout, v.digest, v.pose, v.origin, v.bike, v.bikeHeading, v.mineReturn, v.game,
@@ -1323,7 +1443,9 @@ void Validate(const Checkpoint &c)
     PlanetCommunity::Validate(c.community, c.planet);
     if (!c.party.worldKey.empty() && c.planet.storyPlanet)
     {
-        Require(c.party.members[0].joined == c.mine.quest.IsRiaJoined() &&
+        const bool riaExpectedJoined =
+            c.mine.quest.IsRiaJoined() && c.storyArc.riaStatus != story::RiaStatus::Missing;
+        Require(c.party.members[0].joined == riaExpectedJoined &&
                     c.party.members[1].joined == c.chapter.kainJoined,
                 "동료의 합류 기록과 임무 기록이 다릅니다.");
         for (const auto &member : c.party.members)
@@ -1495,7 +1617,7 @@ void Validate(const Checkpoint &c)
                     w.dialogue.scenes.empty() && w.dialogue.events.empty() && w.dialogue.history.empty() &&
                     !w.homeMessageRead && !w.gateSignalHeard && !w.hasDescendedObservatory &&
                     !w.isSideQuestAccepted && !w.isPowerRestored && !w.isSideQuestComplete && !w.isComplete &&
-                    !f.kainJoined,
+                    !f.kainJoined && c.storyArc.IsDefaultClean(),
                 "일반 행성에 에르마 전용 현장/인물/진행 기록이 섞여 있습니다.");
         for (int i = 0; i < int(MissionId::Count); ++i)
         {
@@ -1620,6 +1742,32 @@ Campaign Decode(const std::filesystem::path &path)
             "저장 형식 버전이 다릅니다. 원본 파일은 변경하지 않았습니다.");
     Require(world::ContentLayout::SupportsRevision(envelope.layout),
             "저장된 도시 배치 버전이 현재 게임과 다릅니다.");
+    std::vector<unsigned char> encounterExtension;
+    if (envelope.schema >= 16)
+    {
+        Require(envelope.payload.size() >= 8, "인카운터 확장의 길이 정보가 없습니다.");
+        SaveArchive footer(true,
+                           std::vector<unsigned char>(envelope.payload.end() - 8, envelope.payload.end()));
+        std::uint64_t size = 0;
+        footer.Value(size);
+        Require(size > 0 && size <= envelope.payload.size() - 8, "인카운터 확장의 길이가 올바르지 않습니다.");
+        const size_t start = envelope.payload.size() - 8 - size_t(size);
+        encounterExtension.assign(envelope.payload.begin() + start, envelope.payload.end() - 8);
+        envelope.payload.resize(start);
+    }
+    std::vector<unsigned char> storyArcExtension;
+    if (envelope.schema >= 15)
+    {
+        Require(envelope.payload.size() >= 8, "스토리 챕터 확장의 길이 정보가 없습니다.");
+        SaveArchive footer(true,
+                           std::vector<unsigned char>(envelope.payload.end() - 8, envelope.payload.end()));
+        std::uint64_t size = 0;
+        footer.Value(size);
+        Require(size > 0 && size <= envelope.payload.size() - 8, "스토리 챕터 확장의 길이가 올바르지 않습니다.");
+        const size_t start = envelope.payload.size() - 8 - size_t(size);
+        storyArcExtension.assign(envelope.payload.begin() + start, envelope.payload.end() - 8);
+        envelope.payload.resize(start);
+    }
     std::vector<unsigned char> facilityExtension;
     if (envelope.schema >= 14)
     {
@@ -1823,6 +1971,18 @@ Campaign Decode(const std::filesystem::path &path)
         SaveArchive facility(true, std::move(facilityExtension));
         facility.FacilityRecords(result);
         Require(facility.Finished(), "도시 시설 실내 확장에 지원하지 않는 데이터가 있습니다.");
+    }
+    if (envelope.schema >= 15)
+    {
+        SaveArchive storyArc(true, std::move(storyArcExtension));
+        storyArc.StoryArcRecords(result);
+        Require(storyArc.Finished(), "스토리 챕터 확장에 지원하지 않는 데이터가 있습니다.");
+    }
+    if (envelope.schema >= 16)
+    {
+        SaveArchive encArch(true, std::move(encounterExtension));
+        encArch.EncounterRecords(result);
+        Require(encArch.Finished(), "인카운터 확장에 지원하지 않는 데이터가 있습니다.");
     }
     ValidateCampaign(result);
     return result;
@@ -2284,6 +2444,18 @@ bool SaveSystem::Save(const std::filesystem::path &path)
         facilityFooter.Value(facilitySize);
         payload.insert(payload.end(), facility.Bytes().begin(), facility.Bytes().end());
         payload.insert(payload.end(), facilityFooter.Bytes().begin(), facilityFooter.Bytes().end());
+        SaveArchive storyArc(false), storyArcFooter(false);
+        storyArc.StoryArcRecords(candidate);
+        std::uint64_t storyArcSize = storyArc.Bytes().size();
+        storyArcFooter.Value(storyArcSize);
+        payload.insert(payload.end(), storyArc.Bytes().begin(), storyArc.Bytes().end());
+        payload.insert(payload.end(), storyArcFooter.Bytes().begin(), storyArcFooter.Bytes().end());
+        SaveArchive encArch(false), encFooter(false);
+        encArch.EncounterRecords(candidate);
+        std::uint64_t encSize = encArch.Bytes().size();
+        encFooter.Value(encSize);
+        payload.insert(payload.end(), encArch.Bytes().begin(), encArch.Bytes().end());
+        payload.insert(payload.end(), encFooter.Bytes().begin(), encFooter.Bytes().end());
         Require(payload.size() <= kMaximumFile, "저장 데이터가 허용 크기를 초과했습니다.");
         SaveArchive header(false);
         unsigned char magic[8] = {'S', 'G', 'W', 'O', 'R', 'L', 'D', 0};
@@ -2542,6 +2714,14 @@ void SaveSystem::Update()
         CityResidents::Get().RefreshSidewalks();
         game::GameLevels::Mine().GetState() = std::move(record.mine);
         game::GameLevels::Chapter().GetState() = std::move(record.chapter);
+        story::StoryArc::Get().State() = std::move(record.storyArc);
+        if (story::StoryArc::Get().IsActive())
+        {
+            story::StoryArc::Get().RebuildActiveZone();
+        }
+        encounters::WorldEncounters::Get().State() = std::move(record.encounters);
+        encounters::WorldEncounters::Get().State().live.clear();
+        encounters::WorldEncounters::Get().State().worldKey.clear();
         CivicJustice::State() = std::move(record.civic);
         PlanetSecurity::State() = std::move(record.security);
         Overworld::Flights() = std::move(record.flights);

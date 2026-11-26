@@ -1,0 +1,209 @@
+{
+  "checked_at_kst": "2026-11-26T21:54:41.590793+09:00",
+  "region": "ov",
+  "credentials": {
+    "encrypted_credential_import_succeeded": true,
+    "authentication_succeeded": true,
+    "key_printed_or_copied_to_project": false
+  },
+  "account": {
+    "balance_response_code": 0,
+    "balance": 0.0,
+    "frozen": 0.0,
+    "usage_response_code": 0,
+    "usage": [],
+    "note": "Empty usage response and zero frozen credits; not a claim of complete cross-key account history."
+  },
+  "local": {
+    "pipeline_cache_exists": false,
+    "stage_request_json_present": false,
+    "completed_parts_resubmitted": false,
+    "blender_available": true,
+    "tripo_cli_on_path": false,
+    "execution_mode": "existing project Python API pipeline; direct JSON stage processing"
+  },
+  "plan": {
+    "part": "11_KneeGuard_L",
+    "settings": {
+      "name": "Field_Medic_Knee_Guards_LOD0",
+      "category": "Accessories",
+      "mode": "SKINNED_OUTFIT",
+      "mirror_left": true,
+      "tripo_faces": 10000,
+      "target_tris": 800,
+      "has_guide": false
+    },
+    "model": "P2-20260801",
+    "views": {
+      "front": "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Blueprints\\Characters\\Field_Medic\\Field_Medic_Tripo_PBR_Multiview\\11_KneeGuard_L\\01_front.png",
+      "left": "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Blueprints\\Characters\\Field_Medic\\Field_Medic_Tripo_PBR_Multiview\\11_KneeGuard_L\\02_left.png",
+      "back": "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Blueprints\\Characters\\Field_Medic\\Field_Medic_Tripo_PBR_Multiview\\11_KneeGuard_L\\03_back.png",
+      "right": "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Blueprints\\Characters\\Field_Medic\\Field_Medic_Tripo_PBR_Multiview\\11_KneeGuard_L\\04_right.png"
+    },
+    "view_hashes": {
+      "front": "5a5b0d6346a9f0e1522c49fd09927cd9375834dbdca0621b1f18e6298dc53907",
+      "left": "6202fbef0107327f454627ee914358aa97c1f1ee9567adc3c0075b6d185d0179",
+      "back": "e28e031777f74878231ced71e9ceb64b5deea0d4e23d6c758b48e388440c8326",
+      "right": "e5c19880e65ca0674b351ac8d02700a47412bb202e0c74f00e8b78f81bceb889"
+    },
+    "destination": [
+      "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Source\\Accessories\\Field_Medic_Knee_Guards_LOD0.blend",
+      "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Export\\HumanV4\\Field_Medic_Knee_Guards_LOD0.glb"
+    ]
+  },
+  "paid_api_steps": [
+    {
+      "order": 1,
+      "endpoint": "POST /v3/generation/multiview-to-model",
+      "purpose": "geometry candidate 1",
+      "estimated_credits": 100,
+      "payload": {
+        "inputs": [
+          {
+            "front": "<upload:C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Blueprints\\Characters\\Field_Medic\\Field_Medic_Tripo_PBR_Multiview\\11_KneeGuard_L\\01_front.png>"
+          },
+          {
+            "left": "<upload:C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Blueprints\\Characters\\Field_Medic\\Field_Medic_Tripo_PBR_Multiview\\11_KneeGuard_L\\02_left.png>"
+          },
+          {
+            "back": "<upload:C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Blueprints\\Characters\\Field_Medic\\Field_Medic_Tripo_PBR_Multiview\\11_KneeGuard_L\\03_back.png>"
+          },
+          {
+            "right": "<upload:C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Blueprints\\Characters\\Field_Medic\\Field_Medic_Tripo_PBR_Multiview\\11_KneeGuard_L\\04_right.png>"
+          }
+        ],
+        "model": "P2-20260801",
+        "model_seed": "<distinct saved seed 1>",
+        "face_limit": 10000,
+        "quad": false,
+        "texture": false,
+        "pbr": false
+      }
+    },
+    {
+      "order": 2,
+      "endpoint": "POST /v3/generation/multiview-to-model",
+      "purpose": "geometry candidate 2",
+      "estimated_credits": 100,
+      "payload": {
+        "inputs": [
+          {
+            "front": "<upload:C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Blueprints\\Characters\\Field_Medic\\Field_Medic_Tripo_PBR_Multiview\\11_KneeGuard_L\\01_front.png>"
+          },
+          {
+            "left": "<upload:C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Blueprints\\Characters\\Field_Medic\\Field_Medic_Tripo_PBR_Multiview\\11_KneeGuard_L\\02_left.png>"
+          },
+          {
+            "back": "<upload:C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Blueprints\\Characters\\Field_Medic\\Field_Medic_Tripo_PBR_Multiview\\11_KneeGuard_L\\03_back.png>"
+          },
+          {
+            "right": "<upload:C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Blueprints\\Characters\\Field_Medic\\Field_Medic_Tripo_PBR_Multiview\\11_KneeGuard_L\\04_right.png>"
+          }
+        ],
+        "model": "P2-20260801",
+        "model_seed": "<distinct saved seed 2>",
+        "face_limit": 10000,
+        "quad": false,
+        "texture": false,
+        "pbr": false
+      }
+    },
+    {
+      "order": 3,
+      "endpoint": "POST /v3/generation/multiview-to-model",
+      "purpose": "geometry candidate 3",
+      "estimated_credits": 100,
+      "payload": {
+        "inputs": [
+          {
+            "front": "<upload:C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Blueprints\\Characters\\Field_Medic\\Field_Medic_Tripo_PBR_Multiview\\11_KneeGuard_L\\01_front.png>"
+          },
+          {
+            "left": "<upload:C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Blueprints\\Characters\\Field_Medic\\Field_Medic_Tripo_PBR_Multiview\\11_KneeGuard_L\\02_left.png>"
+          },
+          {
+            "back": "<upload:C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Blueprints\\Characters\\Field_Medic\\Field_Medic_Tripo_PBR_Multiview\\11_KneeGuard_L\\03_back.png>"
+          },
+          {
+            "right": "<upload:C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Blueprints\\Characters\\Field_Medic\\Field_Medic_Tripo_PBR_Multiview\\11_KneeGuard_L\\04_right.png>"
+          }
+        ],
+        "model": "P2-20260801",
+        "model_seed": "<distinct saved seed 3>",
+        "face_limit": 10000,
+        "quad": false,
+        "texture": false,
+        "pbr": false
+      }
+    },
+    {
+      "order": 4,
+      "endpoint": "POST /v3/generation/multiview-to-model",
+      "purpose": "geometry candidate 4",
+      "estimated_credits": 100,
+      "payload": {
+        "inputs": [
+          {
+            "front": "<upload:C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Blueprints\\Characters\\Field_Medic\\Field_Medic_Tripo_PBR_Multiview\\11_KneeGuard_L\\01_front.png>"
+          },
+          {
+            "left": "<upload:C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Blueprints\\Characters\\Field_Medic\\Field_Medic_Tripo_PBR_Multiview\\11_KneeGuard_L\\02_left.png>"
+          },
+          {
+            "back": "<upload:C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Blueprints\\Characters\\Field_Medic\\Field_Medic_Tripo_PBR_Multiview\\11_KneeGuard_L\\03_back.png>"
+          },
+          {
+            "right": "<upload:C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Blueprints\\Characters\\Field_Medic\\Field_Medic_Tripo_PBR_Multiview\\11_KneeGuard_L\\04_right.png>"
+          }
+        ],
+        "model": "P2-20260801",
+        "model_seed": "<distinct saved seed 4>",
+        "face_limit": 10000,
+        "quad": false,
+        "texture": false,
+        "pbr": false
+      }
+    },
+    {
+      "order": 5,
+      "endpoint": "POST /v3/models/texture",
+      "purpose": "PBR texture for selected candidate only",
+      "estimated_credits": 10,
+      "payload": {
+        "input": "<selected_task_id>",
+        "model": "v3.5-20260815",
+        "pbr": true,
+        "texture_quality": "standard",
+        "delight": true,
+        "texture_prompt": {
+          "images": [
+            {
+              "front": "<uploaded front token>"
+            },
+            {
+              "left": "<uploaded left token>"
+            },
+            {
+              "back": "<uploaded back token>"
+            },
+            {
+              "right": "<uploaded right token>"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "estimated_total_credits": 410,
+  "available_credit_shortfall": 410,
+  "local_blender_credits": 0,
+  "pricing_sources": [
+    "https://developers.tripo3d.ai/en/models/p2",
+    "https://developers.tripo3d.ai/en/pricing"
+  ],
+  "status": "waiting_api_credits",
+  "next_stage": "Recheck balance and saved state, then run the same 11_KneeGuard_L job.",
+  "tasks_submitted_this_check": [],
+  "credits_consumed_this_check": 0,
+  "parts_completed_this_check": []
+}

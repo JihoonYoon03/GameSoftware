@@ -10,7 +10,9 @@
 #include "RenderCache.h"
 #include "TransitLayout.h"
 #include "RenderAssets.h"
+#include "StoryArc.h"
 #include "StoryJournal.h"
+#include "WorldEncounters.h"
 #include "Window.h"
 #include <algorithm>
 #include <cmath>
@@ -770,6 +772,15 @@ void DrawCitySchematic(const SchematicView &view, bool full)
     MapPin(view, kHomeDoor, {.74f, .85f, .8f}, nullptr, full, 3);
     MapPin(view, world.bikePosition, {1, .72f, .3f}, nullptr, full, 3);
     MapPin(view, Overworld::kMineEntrance, {.98f, .76f, .4f}, "광산 입구", full, 4);
+    for (const auto &enc : encounters::WorldEncounters::Get().State().live)
+    {
+        if (!enc.surfaceSpace && enc.phase != encounters::Phase::Completed)
+        {
+            const bool active = enc.phase != encounters::Phase::Dormant;
+            MapPin(view, enc.legacyAnchor, active ? ColorRGBA(1.f, .82f, .28f) : ColorRGBA(.98f, .58f, .26f),
+                   full ? enc.title.c_str() : nullptr, full, active ? 5 : 4);
+        }
+    }
     Vector2 objective = kHomeDoor;
     if (world.mainQuestStage == MainQuestStage::MeetLia)
     {
@@ -1543,6 +1554,35 @@ void CityHud::DrawInteractionPrompt()
             break;
         }
         break;
+    case InteractionTarget::StoryOperationNode:
+    {
+        static std::string opLabel;
+        opLabel = story::StoryArc::Get().NearbyInteractionLabel(w.playerPosition);
+        label = opLabel.empty() ? "상호작용" : opLabel.c_str();
+        break;
+    }
+    case InteractionTarget::StoryOperationPortal:
+        label = "N-0 외곽 작전 구역 / 진입";
+        break;
+    case InteractionTarget::StorySafetyLine:
+        label = "헤일로 동부 소실 구획 안전선 / 확인";
+        break;
+    case InteractionTarget::StoryShelterLamp:
+        label = story::StoryArc::Get().State().shelterLampOn ? "대피소 휴대 조명 / 끄기" : "대피소 휴대 조명 / 켜기";
+        break;
+    case InteractionTarget::StoryEpilogueClinic:
+        label = "임시 의료소 / 구조 탐사대원 3명 확인";
+        break;
+    case InteractionTarget::StoryEpilogueWorkshop:
+        label = "정비소 · 복구팀 / 카인과 대화";
+        break;
+    case InteractionTarget::WorldEncounter:
+    {
+        static std::string encLabel;
+        encLabel = encounters::WorldEncounters::Get().NearbyInteractionLabel();
+        label = encLabel.empty() ? "현장 인카운터" : encLabel.c_str();
+        break;
+    }
     case InteractionTarget::FacilityServicePrimary:
         switch (w.facilityInterior.kind)
         {
@@ -1767,7 +1807,11 @@ void CityHud::Draw()
     const auto &w = Game::Get().GetState();
     std::string objective;
     auto &chapter = game::GameLevels::Chapter();
-    if (chapter.IsAvailable())
+    if (story::StoryArc::Get().IsActTwoUnlocked())
+    {
+        objective = story::StoryArc::Get().CurrentObjectiveAction();
+    }
+    else if (chapter.IsAvailable())
     {
         objective = chapter.Objective();
     }
@@ -2850,9 +2894,11 @@ std::vector<UiControl> Hud::Controls()
     case UiScreen::Stages:
         for (int i = 0; i < int(TestStage::Count); ++i)
         {
+            const int col = i < 6 ? 0 : 1;
+            const int rowIdx = i < 6 ? i : (i - 6);
             controls.push_back({UiAction::EnterStage,
-                                {96, 211 + i * 56.f},
-                                {652, 48},
+                                {96.f + col * 340.f, 211.f + rowIdx * 56.f},
+                                {324.f, 48.f},
                                 Game::StageName(TestStage(i)),
                                 true,
                                 i});
@@ -3100,21 +3146,13 @@ void Hud::Activate(const UiControl &control, int direction)
                 break;
             }
             CloseMenu();
-            if (w.surfaceExploration)
-            {
-                g.StartNewGame();
-            }
-            else if (game::GameLevels::Chapter().IsActive())
-            {
-                game::GameLevels::Chapter().Leave();
-            }
-            else if (game::GameLevels::Mine().IsActive())
+            if (game::GameLevels::Mine().IsActive() && !w.surfaceExploration)
             {
                 game::GameLevels::Mine().Restart();
             }
             else
             {
-                g.Reset();
+                g.StartNewGame();
             }
         }
         else
@@ -3712,22 +3750,25 @@ void Hud::DrawMenu()
     }
     if (screen == UiScreen::Stages)
     {
-        UiText(96, 86, "테스트 진입", 14, {.65f, .9f, .81f});
-        UiText(96, 164, "시작 지점과 기능 해금 지점만 모았습니다.", 18);
-        UiText(96, 636, "선택 시 현재 진행이 초기화됩니다. 이전 필수 스토리는 완료 처리됩니다.", 18,
+        UiText(96, 86, "오픈월드 챕터 · 구간 테스트", 14, {.65f, .9f, .81f});
+        UiText(96, 164, "모든 챕터와 구간이 에르마 오픈월드 행성 위에서 즉시 시작됩니다.", 18);
+        UiText(96, 636, "선택 시 현재 진행이 초기화되며 이전 필수 스토리가 자동 반영됩니다.", 18,
                {1, .88f, .65f});
         UiText(1176, 711, "방향 키 이동 · Enter 선택 · Esc 뒤로", 14, kUiInk, false, true);
         Drawing::DrawLine({780, 211}, {780, 567}, {.18f, .28f, .32f});
         int stage = (std::min)(int(TestStage::Count) - 1, (std::max)(0, w.ui.focus));
         const char *descriptions[] = {
-            "헤일로의 집에서 서장을 시작합니다. 기본 장착은 맨손입니다.",
-            "전망대의 시작 지점으로 이동합니다. 이전 필수 스토리는 완료 처리됩니다.",
-            "바이크에 탑승한 상태로 광산 출발 지점에서 시작합니다.",
-            "광산 입구 야외에서 시작합니다. 권총을 보유하지만 기본 장착은 맨손입니다.",
-            "광산 탐험의 시작 지점으로 이동합니다. 구조와 스캔을 확인할 수 있습니다.",
-            "1장 빛나는 개척지의 시작 지점으로 이동합니다.",
-            "에르마의 도시·광산·개척지와 중계환을 탐사합니다. 이전 필수 진행은 완료 처리합니다. [ / ]는 "
-            "개발용 지역 이동입니다."};
+            "에르마 헤일로 거주지에서 서장을 시작합니다. 문을 나서면 행성 전역으로 이어집니다.",
+            "헤일로 전망대 관측 데크에서 시작합니다. 하강하면 헤일로 오픈월드 광장으로 이어집니다.",
+            "헤일로 오픈월드 광장에서 바이크에 탑승한 채 오르딘 광산으로 바로 출발합니다.",
+            "오르딘 광산 표면 입구에서 시작합니다. 권총이 해금되며 리아가 동행합니다.",
+            "오르딘 광산 내부에서 시작합니다. 출구로 나오면 오픈월드 광산 입구로 복귀합니다.",
+            "1장 빛나는 개척지 오픈월드 구역에 직접 진입합니다. 세 현장을 자유 순서로 조사합니다.",
+            "2장 외곽 수로 조사(S20~S25): N-0 외곽 진입 · 왜곡 표식 · 폐측량소 · 옛 야영지 · 봉쇄 중계실.",
+            "3장 관문이 열리는 밤(S30~S36): 외곽 차단 설비 · 헤일로 07구역 대피 · 외부 제어소 · 관문 내부.",
+            "4장 닫히는 문(S40~S44): 핵심 결합부 폐쇄 후 에르마 오픈월드 복구 헤일로로 귀환합니다.",
+            "에필로그 빈 채널(S50~S52): 오픈월드 복구 헤일로에서 마라·의료소·카인과 17일 후 신호를 확인합니다.",
+            "에르마 행성의 도시·광산·개척지·랜덤 인카운터·중계환을 자유롭게 탐사합니다."};
         Icon("stage", 824, 222, 36);
         auto heading = Dialogue::Wrap(Game::StageName(TestStage(stage)), 328, 24);
         for (size_t i = 0; i < heading.size(); ++i)
@@ -4500,6 +4541,20 @@ void PlanetHud::DrawMap(bool full)
             }
         }
     }
+    for (const auto &enc : encounters::WorldEncounters::Get().State().live)
+    {
+        if (!enc.surfaceSpace || enc.phase == encounters::Phase::Completed)
+        {
+            continue;
+        }
+        if (world::SurfaceGeometry::Distance(planetRadius, enc.surfaceAnchor, focus) <= range * 1.25)
+        {
+            const bool active = enc.phase != encounters::Phase::Dormant;
+            MapPin(view, project(enc.surfaceAnchor),
+                   active ? ColorRGBA(1.f, .86f, .30f) : ColorRGBA(1.f, .56f, .24f),
+                   full ? enc.title.c_str() : nullptr, full, active ? 6 : 4);
+        }
+    }
     auto &chapter = game::GameLevels::Chapter();
     if (full && chapter.IsActive() && range < 4000 && Game::Get().FocusedMission() == MissionId::Frontier)
     {
@@ -4699,6 +4754,17 @@ void Hud::Render()
         static PlanetHud planet;
         switch (Game::Get().Mode())
         {
+        case WorldMode::StoryOperation:
+        {
+            const auto &arc = story::StoryArc::Get();
+            DrawObjective(arc.CurrentObjectiveAction(), arc.ActiveZoneTitle() + " · F 스캔 · V 근접 · Q 무기");
+            const std::string prompt = arc.NearbyInteractionLabel(w.playerPosition);
+            if (!prompt.empty())
+            {
+                DrawInteraction(prompt);
+            }
+            break;
+        }
         case WorldMode::SurfaceExterior:
         case WorldMode::SurfaceInterior:
         case WorldMode::SurfaceObservatory:
@@ -4721,6 +4787,23 @@ void Hud::Render()
         }
         DrawVitals();
         DrawNoticePanel();
+        if (const auto *enc = encounters::WorldEncounters::Get().ActiveEncounter())
+        {
+            HudCard(20.f, 168.f, 472.f, 70.f, {1.f, .78f, .34f, .92f});
+            UiText(36.f, 194.f, encounters::WorldEncounters::Get().CurrentObjectiveTitle(), 16, {1.f, .86f, .44f});
+            UiText(36.f, 222.f, encounters::WorldEncounters::Get().CurrentObjectiveAction(), 15, kUiInk);
+            (void)enc;
+        }
+        if (story::StoryArc::Get().State().epilogueTransitionSeconds > 0.f)
+        {
+            const float alpha = Game::Clamp(story::StoryArc::Get().State().epilogueTransitionSeconds / 1.2f, 0.f, 1.f);
+            HudShift centered(WorldCamera::CenterOffsetX());
+            Drawing::DrawRectangle(340.f, 170.f, 600.f, 128.f, {.03f, .06f, .08f, .92f * alpha});
+            Drawing::DrawRectangle(340.f, 170.f, 600.f, 3.f, {.36f, .96f, .86f, alpha});
+            UiText(370.f, 212.f, "붕괴 후 17일 · 빈 작업대", 24, {.86f, .96f, .96f, alpha});
+            UiText(370.f, 248.f, "수신기 표시등 점등 — 발신지: 네레우스 / 송신 시각 미확인", 16,
+                   {.42f, .96f, .84f, alpha});
+        }
         DrawDialogue();
     }
     if (PlanetMapActive() && w.mapVisible)

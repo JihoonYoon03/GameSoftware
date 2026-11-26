@@ -567,49 +567,42 @@
   "pending": [
     {
       "part": "01_Head_Neck",
-      "status": "waiting_auth_and_balance",
+      "status": "not_started_after_knee_trial",
       "target_tris": 400,
       "delivery_exists": false,
       "views_valid": true
     },
     {
       "part": "02_Hand_L",
-      "status": "waiting_auth_and_balance",
-      "target_tris": 800,
-      "delivery_exists": false,
-      "views_valid": true
-    },
-    {
-      "part": "11_KneeGuard_L",
-      "status": "waiting_auth_and_balance",
+      "status": "not_started_after_knee_trial",
       "target_tris": 800,
       "delivery_exists": false,
       "views_valid": true
     },
     {
       "part": "14_ForearmGuard_R",
-      "status": "waiting_auth_and_balance",
+      "status": "not_started_after_knee_trial",
       "target_tris": 400,
       "delivery_exists": false,
       "views_valid": true
     },
     {
       "part": "15_MedicalPouch_R",
-      "status": "waiting_auth_and_balance",
+      "status": "not_started_after_knee_trial",
       "target_tris": 400,
       "delivery_exists": false,
       "views_valid": true
     },
     {
       "part": "16_RescuePack",
-      "status": "waiting_auth_and_balance",
+      "status": "not_started_after_knee_trial",
       "target_tris": 800,
       "delivery_exists": false,
       "views_valid": true
     },
     {
       "part": "17_CartridgeRack",
-      "status": "waiting_auth_and_balance",
+      "status": "not_started_after_knee_trial",
       "target_tris": 400,
       "delivery_exists": false,
       "views_valid": true
@@ -673,16 +666,99 @@
     "credits_consumed_this_audit": 0
   },
   "resume": {
-    "next_part": "11_KneeGuard_L",
-    "next_stage": "authentication_and_current_balance_preflight",
-    "run_command": "python Resource/Tools/tripo_asset_pipeline.py run 11_KneeGuard_L",
-    "credentials": "Set TRIPO_API_KEY privately in the invoking process; international region ov.",
-    "before_run": [
-      "Query current authentication, balance and frozen credits.",
-      "Check remote task history if the key has previous submissions, because no local task state is present.",
-      "Retain the existing six completed IDs and GLB files.",
-      "Use the established four-candidate P2 plan, then process actual stage request JSON files when produced."
-    ],
-    "no_fake_stage_outputs_written": true
-  }
+    "next_stage": "knee_trial_completed",
+    "next_part": null,
+    "run_command": null,
+    "existing_job_done": true,
+    "additional_parts_started": false,
+    "modeling_thread_title": "Resume Field Medic modeling"
+  },
+  "latest_tripo_preflight": {
+    "report": "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Validation\\Field_Medic_Knee_Guards_LOD0_tripo.json",
+    "checked_at_kst": "2026-11-26T22:09:46.4881383+09:00",
+    "authentication_succeeded": true,
+    "balance": 590.0,
+    "frozen": 0.0,
+    "status": "knee_trial_completed",
+    "total_credits_consumed": 410.0
+  },
+  "initial_audit_fields_are_historical": true,
+  "latest_checked_at_kst": "2026-11-26T22:13:48.658112+09:00",
+  "latest_catalog_completed": [
+    "04_Hair",
+    "05_Coat",
+    "06_Trousers",
+    "07_Boot_L",
+    "09_ShoulderGuard_L",
+    "13_ForearmGuard_L_Scanner",
+    "11_KneeGuard_L"
+  ],
+  "new_deliveries": [
+    {
+      "part": "11_KneeGuard_L",
+      "blend": "Resource\\Source\\Accessories\\Field_Medic_Knee_Guards_LOD0.blend",
+      "glb": "Resource\\Export\\HumanV4\\Field_Medic_Knee_Guards_LOD0.glb",
+      "blend_sha256": "8e3735c3f0433a4d1851880c5f5a4bfb1d4a2ce7cef03afd35dd79a44b0bb783",
+      "glb_sha256": "188deb407d5f30e1dff1dd55b17bad0d1758fb9f946bde3f2b36f7c9b6e0532d",
+      "triangles": 784,
+      "cap": 800,
+      "mesh_instances": 1,
+      "animations": 0,
+      "master_joints": 22,
+      "inverse_binds_match_master": true,
+      "max_influences": 2,
+      "zero_weight_vertices": 0,
+      "embedded_maps": [
+        "baseColor",
+        "normal",
+        "metallicRoughness"
+      ],
+      "packed_blend_images": [
+        "Field_Medic_Knee_Guards_LOD0_BaseColor",
+        "Field_Medic_Knee_Guards_LOD0_Roughness",
+        "Field_Medic_Knee_Guards_LOD0_Metallic",
+        "Field_Medic_Knee_Guards_LOD0_Normal"
+      ],
+      "blender_reimport": true,
+      "pose_test_rad": 0.5,
+      "opposite_side_max_displacement_m": 0.0,
+      "rest_fit": {
+        "triangles": 784,
+        "pant_triangle_overlap_pairs": 0,
+        "near_surface_inside_vertices": 1,
+        "deepest_inside_m": 0.013490812852978706,
+        "inside_samples": [
+          {
+            "vertex": 185,
+            "distance": 0.013490812852978706,
+            "co": [
+              0.015540034510195255,
+              0.0022377800196409225,
+              0.5900628566741943
+            ]
+          }
+        ],
+        "pose_tests": [
+          {
+            "bone": "mixamorig:LeftLeg",
+            "angle_rad": 0.55,
+            "own_side_max_m": 0.07726669277719206,
+            "opposite_side_max_m": 0.0
+          },
+          {
+            "bone": "mixamorig:RightLeg",
+            "angle_rad": 0.55,
+            "own_side_max_m": 0.07726669277719206,
+            "opposite_side_max_m": 0.0
+          }
+        ]
+      },
+      "modeling_thread_title": "Resume Field Medic modeling",
+      "modeling_thread_id": "01a217f3-08ee-7460-9daa-aec1d9d359f8",
+      "independent_published_glb_validation_passed": true,
+      "existing_six_blend_and_glb_hashes_preserved": true,
+      "auxiliary_check": "C:\\Users\\wlgns\\Documents\\Github\\GameSoftware\\Resource\\Validation\\Field_Medic_Knee_Guards_LOD0_auxiliary.json",
+      "auxiliary_note": "One nearest-face-normal inside classification was checked independently using six ray directions. All six had even intersection parity, supporting an outside classification. No geometry was altered during this diagnostic."
+    }
+  ]
 }

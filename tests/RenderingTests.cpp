@@ -4,6 +4,8 @@
 #include "Civic.h"
 #include "Hud.h"
 #include "Level.h"
+#include "StoryArc.h"
+#include "WorldEncounters.h"
 #include "Monitoring/Monitor.h"
 #include "Overworld.h"
 #include "Profiler.h"
@@ -925,6 +927,107 @@ void TestR4PbrAndSkinSharing(const std::filesystem::path *output = nullptr)
         renderer.EndScene(0.f);
         assert(glGetError() == GL_NO_ERROR);
         Save(*output / "feat-topview-blur.bmp");
+
+        // 9) Chapter 1 Arc GPU verification: Act 2 Waterway & Act 4 Gate Core scenes.
+        Game::Get().EnterTestStage(TestStage::ActTwoWaterway);
+        w.viewportWidth = 1280;
+        w.viewportHeight = 720;
+        glViewport(0, 0, kCanvasWidth, kCanvasHeight);
+        glClearColor(0.f, 0.f, 0.f, 1.f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        renderer.BeginScene(1280, 720);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, WorldCamera::LogicalWidth(), kCanvasHeight, 0, -65536, 65536);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        game::SceneManager::Get(game::SceneKind::StoryOperation).Draw();
+        renderer.EndScene(0.f);
+        Hud::Render();
+        assert(glGetError() == GL_NO_ERROR);
+        Save(*output / "story-act2-waterway.bmp");
+
+        Game::Get().EnterTestStage(TestStage::ActFourGateCore);
+        w.viewportWidth = 1280;
+        w.viewportHeight = 720;
+        glViewport(0, 0, kCanvasWidth, kCanvasHeight);
+        glClearColor(0.f, 0.f, 0.f, 1.f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        renderer.BeginScene(1280, 720);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, WorldCamera::LogicalWidth(), kCanvasHeight, 0, -65536, 65536);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        game::SceneManager::Get(game::SceneKind::StoryOperation).Draw();
+        renderer.EndScene(0.f);
+        Hud::Render();
+        assert(glGetError() == GL_NO_ERROR);
+        Save(*output / "story-act4-gatecore.bmp");
+
+        // 10) Open-World 4-Stage Random Encounter GPU capture (ConvoyAmbush active combat + live HUD card).
+        Game::Get().Reset();
+        w.isInsideHome = false;
+        w.viewportWidth = 1280;
+        w.viewportHeight = 720;
+        auto &we = encounters::WorldEncounters::Get();
+        we.PopulateForCurrentWorld();
+        if (!we.State().live.empty())
+        {
+            auto &enc = we.State().live[0];
+            w.playerPosition = w.cameraPosition = enc.legacyAnchor;
+            we.Update(0.05f);
+            enc.phase = encounters::Phase::Stage1;
+            we.State().activeEncounterId = enc.id;
+            for (auto &e : enc.enemies)
+            {
+                if (e.wave == 1)
+                {
+                    e.active = true;
+                }
+            }
+        }
+        glViewport(0, 0, kCanvasWidth, kCanvasHeight);
+        glClearColor(0.f, 0.f, 0.f, 1.f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        renderer.BeginScene(1280, 720);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, WorldCamera::LogicalWidth(), kCanvasHeight, 0, -65536, 65536);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        game::SceneManager::Get(game::SceneKind::Background).Draw();
+        renderqueue::Flush();
+        glDepthMask(GL_TRUE);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        game::SceneManager::Get(game::SceneKind::Exterior).Draw();
+        renderer.EndScene(0.f);
+        Hud::Render();
+        assert(glGetError() == GL_NO_ERROR);
+        Save(*output / "encounter-convoy-ambush.bmp");
+
+        // 11) Open-World Epilogue Halo GPU capture (PlanetScene + Recovery lighting + clinic/workshop/missing-sector).
+        Game::Get().EnterTestStage(TestStage::EpilogueRecovery);
+        w.viewportWidth = 1280;
+        w.viewportHeight = 720;
+        Game::Get().Update(0.016f);
+        glViewport(0, 0, kCanvasWidth, kCanvasHeight);
+        glClearColor(0.f, 0.f, 0.f, 1.f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        renderer.BeginScene(1280, 720);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, WorldCamera::LogicalWidth(), kCanvasHeight, 0, -65536, 65536);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        game::SceneManager::Get(game::SceneKind::Planet).Draw();
+        renderer.EndScene(0.f);
+        Hud::Render();
+        assert(glGetError() == GL_NO_ERROR);
+        Save(*output / "openworld-epilogue-halo.bmp");
+
+        w.viewportWidth = kCanvasWidth;
+        w.viewportHeight = kCanvasHeight;
         Game::Get().Reset();
     }
 

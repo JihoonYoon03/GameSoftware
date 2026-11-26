@@ -5,6 +5,8 @@
 #include "Drawing.h"
 #include "Hud.h"
 #include "Overworld.h"
+#include "StoryArc.h"
+#include "WorldEncounters.h"
 #include "ResidentAI.h"
 #include "ResourceAssets.h"
 #include "TransitLayout.h"
@@ -832,6 +834,23 @@ void TransferToHospital()
     chapter.active = false;
     chapter.bullets.clear();
     chapter.tracers.clear();
+    if (story::StoryArc::Get().IsActive())
+    {
+        // Story operations use Outer Control safe-base clinic (Act 3-4) or Halo return while preserving
+        // received survivors, core shutdown, and Ria's permanent missing status.
+        story::StoryArc::Get().HandleMedevacRecovery();
+        std::fill(std::begin(world.pressedKeys), std::end(world.pressedKeys), false);
+        civic.heat = 0;
+        ClearPursuit();
+        civic.officers.clear();
+        planetary.officers.clear();
+        civic.bullets.clear();
+        civic.tracers.clear();
+        civic.airBullets.clear();
+        civic.airTracers.clear();
+        civic.playerImpact = {};
+        return;
+    }
     auto hospital =
         civic.hospitals.empty() ? HospitalSite{0, kHomeDoor} : civic.hospitals[size_t(civic.hospital)];
     world.isInsideHome = world.isInObservatory = world.isBikeMounted = world.mapVisible = world.mouseFiring =
@@ -1339,6 +1358,10 @@ bool PlanetSecurity::Hit(models::Point p, int damage, bool playerOwned, bool com
         }
     }
     if (g.SurfaceCommunity() && g.SurfaceCommunity()->Hit(point, damage, playerOwned))
+    {
+        return true;
+    }
+    if (encounters::WorldEncounters::Get().HitAtWorldPoint(point, damage, playerOwned))
     {
         return true;
     }
@@ -2832,6 +2855,10 @@ void CivicCombat::Melee()
     const bool focused = world.playerMotion.mobility.ConsumeFocus();
     const int meleeDamage =
         int((30 + (Game::Get().Player().level - 1) * 4) * (focused ? 1.3f : 1.f));
+    if (encounters::WorldEncounters::Get().TryMelee(world.playerPosition, world.facingYaw, world.surfaceExploration))
+    {
+        return;
+    }
     auto impulse = Add({}, aim, focused ? 5.2f : 4.f);
     auto hit = [&](Vector2 p) {
         auto d = Sub(p, world.playerPosition);
@@ -2982,6 +3009,11 @@ void CivicCombat::Update(float dt)
             }
             if (bullet.remaining <= 0)
             {
+                break;
+            }
+            if (bullet.playerOwned && encounters::WorldEncounters::Get().HitAtLegacyPoint(next, bullet.damage, true))
+            {
+                bullet.remaining = 0;
                 break;
             }
             for (size_t i = 0; i < world.residents.size(); ++i)

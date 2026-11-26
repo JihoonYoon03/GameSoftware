@@ -48,7 +48,7 @@ int main(int argc, char **argv)
         tutorial::GameRenderer::Get().Initialize();
         const auto resourcesReady = Clock::now();
         renderResourcesMs = milliseconds(contextReady, resourcesReady);
-        tutorial::Game::Get().Reset();
+        tutorial::Game::Get().StartNewGame();
         tutorial::Game::Get().LoadDisplayPreferences();
         tutorial::Game::Get().ApplyDisplayPreferences(false);
         tutorial::Hud::OpenMenu(tutorial::UiScreen::Title);

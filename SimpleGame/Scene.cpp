@@ -7,6 +7,8 @@
 #include "Drawing.h"
 #include "Hud.h"
 #include "Level.h"
+#include "StoryArc.h"
+#include "WorldEncounters.h"
 #include "Overworld.h"
 #include "Profiler.h"
 #include "RenderCache.h"
@@ -1006,7 +1008,10 @@ void CityScene::DrawDepthSortedObjects(game::Scene &scene)
         placeObject({Game::Get().GetState().playerPosition.x + Game::Get().GetState().playerPosition.y,
                      SceneObjectKind::Player, 0});
     }
-    placeObject({kLiaPosition.x + kLiaPosition.y, SceneObjectKind::Lia, 0});
+    if (!story::StoryArc::Get().IsRiaMissing())
+    {
+        placeObject({kLiaPosition.x + kLiaPosition.y, SceneObjectKind::Lia, 0});
+    }
     placeObject({kMaraPosition.x + kMaraPosition.y, SceneObjectKind::Mara, 0});
     for (int i = 0; i < int(Overworld::Traffic().Vehicles().size()); ++i)
     {
@@ -1157,7 +1162,9 @@ void CityScene::DrawQuestMarkers(game::Scene &scene)
     if (game.IsQuestInteraction(InteractionTarget::CityReceiver))
     {
         marker("city-receiver", kCityReceiverPosition,
-               GameLevels::Chapter().IsAvailable()
+               story::StoryArc::Get().IsActTwoUnlocked()
+                   ? "도시 수신망 / 후속 조사 · 기록 [E]"
+               : GameLevels::Chapter().IsAvailable()
                    ? (GameLevels::Chapter().CompletedSites() == 3 &&
                               !GameLevels::Chapter().GetState().recordsCompared
                           ? "1장 / 기록 대조 [E]"
@@ -1172,15 +1179,73 @@ void CityScene::DrawQuestMarkers(game::Scene &scene)
             marker("jet-bike", game.GetState().bikePosition, "제트 바이크 탑승 [E]", {1, .75f, .4f});
         }
     }
+    const auto &arc = story::StoryArc::Get().State();
+    if (arc.sectorLossTriggered)
+    {
+        scene.PlaceWorldActor("halo-missing-sector", 25.f, 7.f, WorldBounds(25.f, 7.f, 6.f, 10.f, 60.f, 80.f), 1, 32.f,
+                              []() {
+                                  const Vector2 a = Drawing::WorldToScreen(25.f, 2.f);
+                                  const Vector2 b = Drawing::WorldToScreen(25.f, 12.f);
+                                  const Vector2 c = Drawing::WorldToScreen(31.f, 12.f);
+                                  const Vector2 d = Drawing::WorldToScreen(31.f, 2.f);
+                                  Drawing::DrawPolygon({a, b, c, d}, {.03f, .05f, .08f, .92f});
+                                  Drawing::DrawLine(a, b, {.96f, .44f, .34f, .90f}, 2.5f);
+                              });
+        if (!arc.chapter4Complete)
+        {
+            marker("safety-line", {25.f, 7.f}, "소실 구획 안전선 확인 [E]", {.98f, .52f, .38f});
+        }
+    }
+    if (arc.chapter4Complete)
+    {
+        if (!arc.epilogueClinicVisited)
+        {
+            marker("epilogue-clinic", {11.f, -2.f}, "임시 의료소 · 구조 탐사대 3명 [E]", {.38f, .94f, .76f});
+        }
+        if (!arc.epilogueWorkshopVisited)
+        {
+            marker("epilogue-workshop", {19.f, 2.f}, "정비소 · 카인 · 복구팀 [E]", {1.f, .78f, .36f});
+        }
+        if (GameLevels::Chapter().GetState().portableLightRepaired)
+        {
+            const Vector2 lampPos{kMaraPosition.x + 1.6f, kMaraPosition.y};
+            marker("shelter-lamp", lampPos,
+                   arc.shelterLampOn ? "대피소 휴대 조명 (켜짐) [E]" : "대피소 휴대 조명 (꺼짐) [E]",
+                   arc.shelterLampOn ? ColorRGBA(1.f, .88f, .46f) : ColorRGBA(.56f, .64f, .70f));
+        }
+    }
 }
 
 void CityScene::Draw()
 {
     WorldView view;
     auto &scene = *this;
-    GameRenderer::Get().Backend().SetLighting(rendering::SceneLighting{});
+    rendering::SceneLighting cityLight{};
+    const auto &arc = story::StoryArc::Get().State();
+    if (arc.cityPhase == story::CityPhase::Uneasy)
+    {
+        cityLight.keyColor = {.92f, .96f, 1.04f};
+        cityLight.groundColor = {.38f, .42f, .48f};
+    }
+    else if (arc.cityPhase == story::CityPhase::Evacuation)
+    {
+        cityLight.keyColor = {1.06f, .76f, .64f};
+        cityLight.skyColor = {.52f, .42f, .64f};
+        cityLight.groundColor = {.36f, .28f, .36f};
+    }
+    else if (arc.cityPhase == story::CityPhase::Recovery)
+    {
+        cityLight.keyColor = {.94f, .95f, 1.00f};
+        cityLight.skyColor = {.60f, .72f, .82f};
+        cityLight.groundColor = {.44f, .48f, .52f};
+    }
+    GameRenderer::Get().Backend().SetLighting(cityLight);
     Drawing::AddPointLight(kCityReceiverPosition, 1.1f, 5.5f, {.32f, .92f, .96f}, .85f);
     Drawing::AddPointLight(kObservatoryBuildingPosition, 1.8f, 6.5f, {.42f, .84f, 1.f}, .75f);
+    if (arc.chapter4Complete && GameLevels::Chapter().GetState().portableLightRepaired && arc.shelterLampOn)
+    {
+        Drawing::AddPointLight({kMaraPosition.x + 1.6f, kMaraPosition.y}, 0.9f, 4.2f, {1.f, .86f, .46f}, 1.1f);
+    }
     {
         profiling::Scope placementTimer(profiling::Timer::ScenePlacement);
         scene.BeginPlacement();
@@ -1207,6 +1272,85 @@ void CityScene::Draw()
                     }
                 });
         }
+        for (const auto &enc : encounters::WorldEncounters::Get().State().live)
+        {
+            if (enc.surfaceSpace || !enc.activeInRange || enc.phase == encounters::Phase::Completed)
+            {
+                continue;
+            }
+            const auto &we = encounters::WorldEncounters::Get();
+            const Vector2 anchor = enc.legacyAnchor;
+            scene.PlaceWorldActor("enc/" + enc.id, anchor.x, anchor.y,
+                                  WorldBounds(anchor.x, anchor.y, 24.f, 24.f, 90.f, 140.f), 1, anchor.x + anchor.y,
+                                  [&enc, &we]() {
+                                      for (const auto &n : enc.nodes)
+                                      {
+                                          if (!n.revealed || n.completed)
+                                          {
+                                              continue;
+                                          }
+                                          const bool usable =
+                                              (n.requiredStage == 0 &&
+                                               (enc.phase == encounters::Phase::Dormant ||
+                                                enc.phase == encounters::Phase::Stage4)) ||
+                                              (n.requiredStage == int(enc.phase));
+                                          if (!usable)
+                                          {
+                                              continue;
+                                          }
+                                          const Vector2 wp = we.ToLegacyWorld(enc, n.offset);
+                                          Drawing::DrawGlow(Drawing::WorldToScreen(wp.x, wp.y), 24.f,
+                                                            {n.glow.r, n.glow.g, n.glow.b, .35f});
+                                          Drawing::DrawInteractionMarker(wp, n.label + " [E]", n.glow);
+                                      }
+                                      for (const auto &npc : enc.npcs)
+                                      {
+                                          if (!npc.visible)
+                                          {
+                                              continue;
+                                          }
+                                          const Vector2 wp = we.ToLegacyWorld(enc, npc.offset);
+                                          Drawing::DrawPerson(wp, npc.coat, false, npc.type, npc.escorting, npc.yaw,
+                                                              npc.gender, npc.hair);
+                                          const Vector2 sp = Drawing::WorldToScreen(wp.x, wp.y, 58.f);
+                                          Drawing::DrawLabel(sp.x - 24.f, sp.y, npc.name, {.92f, .96f, 1.f});
+                                      }
+                                      for (const auto &e : enc.enemies)
+                                      {
+                                          if (!e.active || e.health <= 0)
+                                          {
+                                              continue;
+                                          }
+                                          const Vector2 wp = we.ToLegacyWorld(enc, e.offset);
+                                          const ColorRGBA col = e.hitFlash > .1f ? ColorRGBA(1.f, .94f, .78f)
+                                                                : e.isBoss       ? ColorRGBA(.86f, .24f, .22f)
+                                                                                 : ColorRGBA(.56f, .28f, .26f);
+                                          Drawing::DrawPerson(wp, col, false,
+                                                              e.isBoss ? models::CharacterType::HeavyCombat
+                                                                       : models::CharacterType::Guard,
+                                                              true, e.yaw, models::Gender::Male,
+                                                              models::HairStyle::Buzz, !e.meleeOnly);
+                                          const Vector2 sp = Drawing::WorldToScreen(wp.x, wp.y, 62.f);
+                                          const float ratio =
+                                              Game::Clamp(float(e.health) / float((std::max)(1, e.maxHealth)), 0.f, 1.f);
+                                          Drawing::DrawRectangle(sp.x - 22.f, sp.y, 44.f, 5.f, {.05f, .08f, .10f, .85f});
+                                          Drawing::DrawRectangle(sp.x - 21.f, sp.y + 1.f, 42.f * ratio, 3.f,
+                                                                 e.isBoss ? ColorRGBA(1.f, .64f, .22f)
+                                                                          : ColorRGBA(.96f, .32f, .30f));
+                                      }
+                                      for (const auto &tr : enc.tracers)
+                                      {
+                                          const Vector2 a =
+                                              Drawing::WorldToScreen(enc.legacyAnchor.x + tr.from.x,
+                                                                     enc.legacyAnchor.y + tr.from.y, 18.f);
+                                          const Vector2 b =
+                                              Drawing::WorldToScreen(enc.legacyAnchor.x + tr.to.x,
+                                                                     enc.legacyAnchor.y + tr.to.y, 18.f);
+                                          Drawing::DrawLine(a, b, {tr.color.r, tr.color.g, tr.color.b, tr.life * 6.f},
+                                                            2.f);
+                                      }
+                                  });
+        }
         auto &graph = scene.GetGraph();
         for (size_t i = 0; i < Game::Get().GetState().buildings.size(); ++i)
         {
@@ -1218,7 +1362,13 @@ void CityScene::Draw()
             auto name = "vehicle/" + std::to_string(vehicle.id);
             graph.Reparent("shadow/" + name, *graph.Find(name));
         }
-        graph.Reparent("marker/lia", *graph.Find("lia"));
+        if (auto *liaNode = graph.Find("lia"))
+        {
+            if (graph.Find("marker/lia"))
+            {
+                graph.Reparent("marker/lia", *liaNode);
+            }
+        }
         graph.Reparent("marker/mara", *graph.Find("mara"));
         graph.Reparent("marker/relay", *graph.Find("relay"));
         graph.Reparent("marker/beacon", *graph.Find("beacon"));
@@ -2899,7 +3049,8 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
         person(r.cityIndex, r.position, {r.coat[0], r.coat[1], r.coat[2]}, r.type, r.facing.walking,
                r.facing.yaw, r.gender, r.hair, r.health <= 0, r.name, &r.facing);
     }
-    if (!Game::Get().SurfaceParty() || !Game::Get().SurfaceParty()->Joined(CompanionId::Ria))
+    if (!story::StoryArc::Get().IsRiaMissing() &&
+        (!Game::Get().SurfaceParty() || !Game::Get().SurfaceParty()->Joined(CompanionId::Ria)))
     {
         person(0, kLiaPosition, {.89f, .52f, .28f}, models::CharacterType::Engineer, false, .7854f,
                models::Gender::Female, models::HairStyle::Ponytail,
@@ -3487,6 +3638,27 @@ void PlanetScene::Draw()
                 light.groundColor = {.56f, .48f, .36f};
             }
         }
+        const auto &arc = story::StoryArc::Get().State();
+        if (Game::Get().SurfaceCities() && Game::Get().SurfaceCities()->ActiveCity() == 0)
+        {
+            if (arc.cityPhase == story::CityPhase::Uneasy)
+            {
+                light.keyColor = {.92f, .96f, 1.04f};
+                light.groundColor = {.38f, .42f, .48f};
+            }
+            else if (arc.cityPhase == story::CityPhase::Evacuation)
+            {
+                light.keyColor = {1.06f, .76f, .64f};
+                light.skyColor = {.52f, .42f, .64f};
+                light.groundColor = {.36f, .28f, .36f};
+            }
+            else if (arc.cityPhase == story::CityPhase::Recovery)
+            {
+                light.keyColor = {.94f, .95f, 1.00f};
+                light.skyColor = {.60f, .72f, .82f};
+                light.groundColor = {.44f, .48f, .52f};
+            }
+        }
         GameRenderer::Get().Backend().SetLighting(light);
     }
     const auto terrainView = Game::Get().SurfaceTerrainView();
@@ -3756,6 +3928,82 @@ void PlanetScene::Draw()
     }
     DrawSurfaceCities(*session);
     DrawPlanetCommunity(*session);
+    {
+        const auto &we = encounters::WorldEncounters::Get();
+        const double groundH = session->Pose().origin.altitudeMeters;
+        for (const auto &enc : we.State().live)
+        {
+            if (!enc.surfaceSpace || !enc.activeInRange || enc.phase == encounters::Phase::Completed)
+            {
+                continue;
+            }
+            auto toWorld = [&](Vector2 offMeters) {
+                const auto sp = we.ToSurfaceWorld(enc, offMeters);
+                const auto loc = session->Local(sp);
+                return Vector2{float(loc.x * .5), float(loc.y * .5)};
+            };
+            const Vector2 basePos = toWorld({0.f, 0.f});
+            Drawing::AddPointLight(basePos, 1.2f, 7.f, {1.f, .78f, .36f}, .95f);
+            for (const auto &n : enc.nodes)
+            {
+                if (!n.revealed || n.completed)
+                {
+                    continue;
+                }
+                const bool usable =
+                    (n.requiredStage == 0 &&
+                     (enc.phase == encounters::Phase::Dormant || enc.phase == encounters::Phase::Stage4)) ||
+                    (n.requiredStage == int(enc.phase));
+                if (!usable)
+                {
+                    continue;
+                }
+                const Vector2 wp = toWorld(n.offset);
+                Drawing::DrawBox(wp.x - .4f, wp.y - .4f, .8f, .8f, 1.3f,
+                                 {n.glow.r * .45f, n.glow.g * .45f, n.glow.b * .45f});
+                Drawing::DrawGlow(Drawing::WorldToScreen(wp.x, wp.y), 26.f, {n.glow.r, n.glow.g, n.glow.b, .38f});
+                Drawing::DrawInteractionMarker(wp, n.label + " [E]", n.glow);
+            }
+            for (const auto &npc : enc.npcs)
+            {
+                if (!npc.visible)
+                {
+                    continue;
+                }
+                const Vector2 wp = toWorld(npc.offset);
+                Drawing::DrawPerson(wp, npc.coat, false, npc.type, npc.escorting, npc.yaw, npc.gender, npc.hair);
+                const Vector2 sp = Drawing::WorldToScreen(wp.x, wp.y, 58.f);
+                Drawing::DrawLabel(sp.x - 24.f, sp.y, npc.name, {.92f, .96f, 1.f});
+            }
+            for (const auto &e : enc.enemies)
+            {
+                if (!e.active || e.health <= 0)
+                {
+                    continue;
+                }
+                const Vector2 wp = toWorld(e.offset);
+                const ColorRGBA col = e.hitFlash > .1f ? ColorRGBA(1.f, .94f, .78f)
+                                      : e.isBoss       ? ColorRGBA(.88f, .24f, .22f)
+                                                       : ColorRGBA(.58f, .28f, .26f);
+                Drawing::DrawPerson(wp, col, false,
+                                    e.isBoss ? models::CharacterType::HeavyCombat : models::CharacterType::Guard, true,
+                                    e.yaw, models::Gender::Male, models::HairStyle::Buzz, !e.meleeOnly);
+                const Vector2 sp = Drawing::WorldToScreen(wp.x, wp.y, 62.f);
+                const float ratio = Game::Clamp(float(e.health) / float((std::max)(1, e.maxHealth)), 0.f, 1.f);
+                Drawing::DrawRectangle(sp.x - 22.f, sp.y, 44.f, 5.f, {.05f, .08f, .10f, .85f});
+                Drawing::DrawRectangle(sp.x - 21.f, sp.y + 1.f, 42.f * ratio, 3.f,
+                                       e.isBoss ? ColorRGBA(1.f, .64f, .22f) : ColorRGBA(.96f, .32f, .30f));
+            }
+            for (const auto &tr : enc.tracers)
+            {
+                const Vector2 a = toWorld(tr.from);
+                const Vector2 b = toWorld(tr.to);
+                Drawing::DrawLine(Drawing::WorldToScreen(a.x, a.y, 18.f), Drawing::WorldToScreen(b.x, b.y, 18.f),
+                                  {tr.color.r, tr.color.g, tr.color.b, tr.life * 6.f}, 2.f);
+            }
+        }
+        (void)groundH;
+    }
     DrawPlanetParty(*session);
     DrawPlanetTraffic(*session);
     CivicPresentation::DrawWorld();
@@ -3798,6 +4046,116 @@ void PlanetScene::Draw()
             Drawing::DrawInteractionMarker({float(local.x / 2), float(local.y / 2)},
                                            "오르딘 광산 / 하차 후 E 입장", {.4f, .9f, 1});
             renderqueue::PopMatrix();
+        }
+        if (story::StoryArc::Get().IsActTwoUnlocked() && !story::StoryArc::Get().State().sectorLossTriggered)
+        {
+            const auto &n0Portal = snapshot->planet->Region("n0_outskirts").access.position;
+            if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, session->Pose().origin,
+                                                 n0Portal) < 140)
+            {
+                auto local = session->Local(n0Portal);
+                const Vector2 p{float(local.x / 2), float(local.y / 2)};
+                renderqueue::PushMatrix();
+                renderqueue::Translate(0, -float(local.z / 2) * WorldCamera::IsoZScale(),
+                                       float(local.z / 2) * (1296.f / 44));
+                Drawing::AddPointLight(p, 1.4f, 6.5f, {.34f, .92f, 1.f}, 1.15f);
+                Drawing::DrawInteractionMarker(p, "N-0 외곽 작전 구역 / E 진입", {.34f, .92f, 1.f});
+                renderqueue::PopMatrix();
+            }
+        }
+        const auto &arc = story::StoryArc::Get().State();
+        if (const auto *cities = Game::Get().SurfaceCities(); cities && cities->ActiveCity() == 0)
+        {
+            auto haloLocal = [&](Vector2 legacyPt) -> std::optional<world::Vector3d> {
+                auto pt = cities->Point(*session, 0, legacyPt);
+                return pt ? std::optional<world::Vector3d>(session->Local(*pt)) : std::nullopt;
+            };
+            if (arc.sectorLossTriggered)
+            {
+                auto pA = haloLocal({25.f, 2.f}), pB = haloLocal({25.f, 12.f}),
+                     pC = haloLocal({31.f, 12.f}), pD = haloLocal({31.f, 2.f});
+                if (pA && pB && pC && pD)
+                {
+                    const float h = float(pA->z / 2);
+                    renderqueue::PushMatrix();
+                    renderqueue::Translate(0, -h * WorldCamera::IsoZScale(), h * (1296.f / 44));
+                    const Vector2 a = Drawing::WorldToScreen(float(pA->x / 2), float(pA->y / 2));
+                    const Vector2 b = Drawing::WorldToScreen(float(pB->x / 2), float(pB->y / 2));
+                    const Vector2 c = Drawing::WorldToScreen(float(pC->x / 2), float(pC->y / 2));
+                    const Vector2 d = Drawing::WorldToScreen(float(pD->x / 2), float(pD->y / 2));
+                    Drawing::DrawPolygon({a, b, c, d}, {.03f, .05f, .08f, .92f});
+                    Drawing::DrawLine(a, b, {.96f, .44f, .34f, .90f}, 2.5f);
+                    renderqueue::PopMatrix();
+                }
+                if (!arc.chapter4Complete)
+                {
+                    if (auto sp = haloLocal({25.f, 7.f}))
+                    {
+                        const float h = float(sp->z / 2);
+                        renderqueue::PushMatrix();
+                        renderqueue::Translate(0, -h * WorldCamera::IsoZScale(), h * (1296.f / 44));
+                        Drawing::DrawInteractionMarker({float(sp->x / 2), float(sp->y / 2)},
+                                                       "소실 구획 안전선 확인 [E]", {.98f, .52f, .38f});
+                        renderqueue::PopMatrix();
+                    }
+                }
+            }
+            if (arc.chapter4Complete)
+            {
+                if (auto cp = haloLocal({11.f, -2.f}))
+                {
+                    const float h = float(cp->z / 2);
+                    const Vector2 base{float(cp->x / 2), float(cp->y / 2)};
+                    renderqueue::PushMatrix();
+                    renderqueue::Translate(0, -h * WorldCamera::IsoZScale(), h * (1296.f / 44));
+                    Drawing::DrawPerson({base.x - .6f, base.y}, {.36f, .76f, .72f}, false,
+                                        models::CharacterType::Researcher, false, .6f, models::Gender::Female,
+                                        models::HairStyle::Ponytail);
+                    Drawing::DrawPerson({base.x + .5f, base.y - .4f}, {.44f, .64f, .78f}, false,
+                                        models::CharacterType::Engineer, false, 1.2f, models::Gender::Male,
+                                        models::HairStyle::SidePart);
+                    Drawing::DrawPerson({base.x + .3f, base.y + .6f}, {.58f, .62f, .46f}, false,
+                                        models::CharacterType::Engineer, false, -.8f, models::Gender::Male,
+                                        models::HairStyle::Buzz);
+                    if (!arc.epilogueClinicVisited)
+                    {
+                        Drawing::DrawInteractionMarker(base, "임시 의료소 · 구조 탐사대 3명 [E]", {.38f, .94f, .76f});
+                    }
+                    renderqueue::PopMatrix();
+                }
+                if (auto wp = haloLocal({19.f, 2.f}))
+                {
+                    const float h = float(wp->z / 2);
+                    const Vector2 base{float(wp->x / 2), float(wp->y / 2)};
+                    renderqueue::PushMatrix();
+                    renderqueue::Translate(0, -h * WorldCamera::IsoZScale(), h * (1296.f / 44));
+                    Drawing::DrawPerson(base, {.38f, .53f, .66f}, false, models::CharacterType::Guard, false, .7854f,
+                                        models::Gender::Male, models::HairStyle::Buzz);
+                    if (!arc.epilogueWorkshopVisited)
+                    {
+                        Drawing::DrawInteractionMarker(base, "정비소 · 카인 · 복구팀 [E]", {1.f, .78f, .36f});
+                    }
+                    renderqueue::PopMatrix();
+                }
+                if (GameLevels::Chapter().GetState().portableLightRepaired)
+                {
+                    if (auto lp = haloLocal({kMaraPosition.x + 1.6f, kMaraPosition.y}))
+                    {
+                        const float h = float(lp->z / 2);
+                        const Vector2 base{float(lp->x / 2), float(lp->y / 2)};
+                        renderqueue::PushMatrix();
+                        renderqueue::Translate(0, -h * WorldCamera::IsoZScale(), h * (1296.f / 44));
+                        if (arc.shelterLampOn)
+                        {
+                            Drawing::AddPointLight(base, 0.9f, 4.5f, {1.f, .86f, .46f}, 1.15f);
+                        }
+                        Drawing::DrawInteractionMarker(
+                            base, arc.shelterLampOn ? "대피소 휴대 조명 (켜짐) [E]" : "대피소 휴대 조명 (꺼짐) [E]",
+                            arc.shelterLampOn ? ColorRGBA(1.f, .88f, .46f) : ColorRGBA(.56f, .64f, .70f));
+                        renderqueue::PopMatrix();
+                    }
+                }
+            }
         }
     }
     if (w.car.position && world::SurfaceGeometry::Distance(session->Planet().radiusMeters, *w.car.position,
@@ -3965,8 +4323,281 @@ void PlanetScene::Draw()
     }
 }
 
+void StoryOperationScene::Draw()
+{
+    WorldView view;
+    const auto &w = Game::Get().GetState();
+    const auto &arc = story::StoryArc::Get().State();
+    auto &backend = GameRenderer::Get().Backend();
+
+    // Zone-specific atmospheric R5 lighting
+    rendering::SceneLighting light{};
+    ColorRGBA groundA{.20f, .24f, .26f, 1.f};
+    ColorRGBA groundB{.17f, .21f, .24f, 1.f};
+    ColorRGBA gridCol{.28f, .38f, .42f, .35f};
+    switch (arc.activeZone)
+    {
+    case story::OperationZone::Waterway:
+        light.keyColor = {.86f, .94f, 1.02f};
+        light.skyColor = {.52f, .68f, .78f};
+        groundA = {.18f, .24f, .26f, 1.f};
+        groundB = {.15f, .20f, .23f, 1.f};
+        gridCol = {.30f, .52f, .56f, .32f};
+        break;
+    case story::OperationZone::CutoffFacility:
+        light.keyColor = {1.06f, .76f, .58f};
+        light.skyColor = {.56f, .46f, .52f};
+        groundA = {.19f, .20f, .23f, 1.f};
+        groundB = {.16f, .17f, .20f, 1.f};
+        gridCol = {.62f, .38f, .26f, .35f};
+        break;
+    case story::OperationZone::HaloEvacuation:
+        light.keyColor = {1.04f, .72f, .62f};
+        light.skyColor = {.54f, .42f, .66f};
+        groundA = {.21f, .21f, .25f, 1.f};
+        groundB = {.17f, .18f, .22f, 1.f};
+        gridCol = {.56f, .34f, .40f, .34f};
+        break;
+    case story::OperationZone::OuterControl:
+        light.keyColor = {.92f, 1.00f, 1.04f};
+        light.skyColor = {.58f, .74f, .84f};
+        groundA = {.20f, .25f, .28f, 1.f};
+        groundB = {.18f, .22f, .25f, 1.f};
+        gridCol = {.34f, .64f, .70f, .36f};
+        break;
+    case story::OperationZone::GateInterior:
+        light.keyColor = {.78f, .86f, 1.12f};
+        light.skyColor = {.42f, .48f, .78f};
+        light.groundColor = {.24f, .26f, .42f};
+        groundA = {.12f, .14f, .22f, 1.f};
+        groundB = {.10f, .12f, .19f, 1.f};
+        gridCol = {.34f, .54f, .88f, .38f};
+        break;
+    case story::OperationZone::GateCore:
+        light.keyColor = {1.08f, .74f, .68f};
+        light.skyColor = {.52f, .40f, .66f};
+        light.groundColor = {.28f, .22f, .32f};
+        groundA = {.13f, .13f, .19f, 1.f};
+        groundB = {.10f, .11f, .16f, 1.f};
+        gridCol = {.74f, .34f, .40f, .40f};
+        break;
+    default:
+        break;
+    }
+    backend.SetLighting(light);
+    for (const auto &n : arc.nodes)
+    {
+        if (n.visible)
+        {
+            Drawing::AddPointLight(n.position, 1.0f, 5.2f, n.completed ? ColorRGBA(.34f, .92f, .68f) : n.glow,
+                                   n.completed ? .55f : 1.05f);
+        }
+    }
+
+    auto toScreen = [](Vector2 p, float h = 0.f) { return Drawing::WorldToScreen(p.x, p.y, h); };
+
+    // 1) Tactical isometric ground grid
+    const int maxX = int(arc.worldSize.x);
+    const int maxY = int(arc.worldSize.y);
+    for (int y = 0; y < maxY; y += 2)
+    {
+        for (int x = 0; x < maxX; x += 2)
+        {
+            const Vector2 p0 = toScreen({float(x), float(y)});
+            const Vector2 p1 = toScreen({float(x + 2), float(y)});
+            const Vector2 p2 = toScreen({float(x + 2), float(y + 2)});
+            const Vector2 p3 = toScreen({float(x), float(y + 2)});
+            Drawing::DrawPolygon({p0, p1, p2, p3}, ((x + y) / 2) % 2 == 0 ? groundA : groundB);
+        }
+    }
+    for (int x = 0; x <= maxX; x += 4)
+    {
+        Drawing::DrawLine(toScreen({float(x), 0.f}), toScreen({float(x), float(maxY)}), gridCol, 1.f);
+    }
+    for (int y = 0; y <= maxY; y += 4)
+    {
+        Drawing::DrawLine(toScreen({0.f, float(y)}), toScreen({float(maxX), float(y)}), gridCol, 1.f);
+    }
+
+    // Green Return Line beacons in GateCore (always legible during combat!)
+    if (arc.activeZone == story::OperationZone::GateCore)
+    {
+        const ColorRGBA lineCol = arc.coreStopped ? ColorRGBA(.34f, 1.f, .64f, .95f) : ColorRGBA(.24f, .86f, .54f, .65f);
+        Drawing::DrawLine(toScreen({7.5f, 22.f}), toScreen({29.f, 22.f}), lineCol, 3.2f);
+        for (float x = 10.f; x <= 28.f; x += 4.5f)
+        {
+            Drawing::DrawGlow(toScreen({x, 22.f}), 18.f, lineCol);
+        }
+    }
+
+    // 2) Anomalies (distortion shimmer rings / Observer Monoliths)
+    for (const auto &a : arc.anomalies)
+    {
+        const Vector2 sp = toScreen(a.position);
+        if (!a.monolith)
+        {
+            const ColorRGBA col =
+                a.stabilized ? ColorRGBA(.32f, .92f, .76f, .35f) : ColorRGBA(.58f, .38f, 1.f, .52f);
+            Drawing::DrawGlow(sp, a.radius * 18.f, col);
+        }
+    }
+
+    // Scanner & GateCore Phase Pulse rings
+    if (arc.scannerPulseRadius > 0.f)
+    {
+        const int segs = 36;
+        for (int i = 0; i < segs; ++i)
+        {
+            const float a0 = float(i) * (2.f * kPi / segs);
+            const float a1 = float(i + 1) * (2.f * kPi / segs);
+            Drawing::DrawLine(
+                toScreen({arc.scannerOrigin.x + std::cos(a0) * arc.scannerPulseRadius,
+                          arc.scannerOrigin.y + std::sin(a0) * arc.scannerPulseRadius}),
+                toScreen({arc.scannerOrigin.x + std::cos(a1) * arc.scannerPulseRadius,
+                          arc.scannerOrigin.y + std::sin(a1) * arc.scannerPulseRadius}),
+                {.34f, .96f, 1.f, .85f}, 2.2f);
+        }
+    }
+    if (arc.pulseWaveRadius > 0.f)
+    {
+        const int segs = 40;
+        for (int i = 0; i < segs; ++i)
+        {
+            const float a0 = float(i) * (2.f * kPi / segs);
+            const float a1 = float(i + 1) * (2.f * kPi / segs);
+            Drawing::DrawLine(
+                toScreen({34.f + std::cos(a0) * arc.pulseWaveRadius, 22.f + std::sin(a0) * arc.pulseWaveRadius}),
+                toScreen({34.f + std::cos(a1) * arc.pulseWaveRadius, 22.f + std::sin(a1) * arc.pulseWaveRadius}),
+                {1.f, .34f, .32f, .92f}, 3.2f);
+        }
+    }
+
+    // 3) Interactive node floor glows
+    for (const auto &n : arc.nodes)
+    {
+        if (!n.visible)
+        {
+            continue;
+        }
+        const Vector2 sp = toScreen(n.position);
+        const ColorRGBA col = n.completed ? ColorRGBA(.38f, .86f, .64f, .75f) : n.glow;
+        Drawing::DrawGlow(sp, n.completed ? 18.f : 32.f, {col.r, col.g, col.b, .34f});
+    }
+
+    // 4) 3D Obstacles, Monoliths, Enemies, NPCs, Player
+    renderqueue::Flush();
+    backend.BeginModels();
+    for (const auto &obs : arc.obstacles)
+    {
+        const float sx = obs.max.x - obs.min.x;
+        const float sy = obs.max.y - obs.min.y;
+        Drawing::DrawBox(obs.min.x, obs.min.y, sx, sy, obs.height, obs.color);
+    }
+    for (const auto &a : arc.anomalies)
+    {
+        if (a.monolith)
+        {
+            models::Transform3D tr;
+            tr.yaw = a.yaw;
+            models::Palette pal;
+            pal.body = {.22f, .26f, .38f, 1.f};
+            pal.emission = {.48f, .76f, 1.f, 1.f};
+            Drawing::DrawModel3D(models::ModelLibrary::Get().relief, toScreen(a.position), {1.35f, 1.35f, 1.35f}, tr,
+                                 0.f, pal);
+        }
+    }
+    for (const auto &e : arc.enemies)
+    {
+        if (!e.active || e.health <= 0)
+        {
+            continue;
+        }
+        if (e.kind == story::OpEnemyKind::CoreCoupling)
+        {
+            const bool unlocked = arc.controlPointsDisabled[0] && arc.controlPointsDisabled[1];
+            const ColorRGBA body = e.hitFlash > .1f ? ColorRGBA(1.f, .92f, .72f)
+                                   : unlocked       ? ColorRGBA(.96f, .40f, .28f)
+                                                    : ColorRGBA(.42f, .46f, .54f);
+            Drawing::DrawBox(e.position.x - .62f, e.position.y - .62f, 1.24f, 1.24f, 2.4f, body);
+        }
+        else
+        {
+            const ColorRGBA col = e.hitFlash > .1f                             ? ColorRGBA(1.f, .94f, .80f)
+                                  : e.kind == story::OpEnemyKind::VoidSentinel ? ColorRGBA(.48f, .36f, .78f)
+                                  : e.kind == story::OpEnemyKind::RuinStalker  ? ColorRGBA(.68f, .32f, .28f)
+                                                                               : ColorRGBA(.30f, .46f, .64f);
+            const models::CharacterType ct = e.kind == story::OpEnemyKind::ObservatoryGuard
+                                                 ? models::CharacterType::HeavyCombat
+                                                 : models::CharacterType::Guard;
+            Drawing::DrawPerson(e.position, col, false, ct, true, e.yaw, models::Gender::Male,
+                                models::HairStyle::Buzz, true, 0.f, false);
+        }
+    }
+    for (const auto &npc : arc.npcs)
+    {
+        if (!npc.visible)
+        {
+            continue;
+        }
+        Drawing::DrawPerson(npc.position, npc.coat, false, npc.type, npc.escorting || npc.isCompanion, npc.yaw,
+                            npc.gender, npc.hair, npc.isCompanion, 0.f, false);
+    }
+    Drawing::DrawPerson(w.playerPosition, {.32f, .62f, .76f}, true, models::CharacterType::Explorer,
+                        w.movementSpeed > .1f, w.facingYaw, w.playerGender, w.playerHair);
+    backend.EndModels();
+
+    // Floating interaction markers rendered cleanly above 3D obstacles
+    for (const auto &n : arc.nodes)
+    {
+        if (!n.visible)
+        {
+            continue;
+        }
+        const ColorRGBA col = n.completed ? ColorRGBA(.38f, .86f, .64f, .75f) : n.glow;
+        Drawing::DrawInteractionMarker(n.position, n.completed ? (n.label + " (완료)") : (n.label + " [E]"), col);
+    }
+
+    // 5) Enemy HP bars, NPC nameplates, bullets & tracers
+    for (const auto &e : arc.enemies)
+    {
+        if (!e.active || e.health <= 0)
+        {
+            continue;
+        }
+        const Vector2 sp = toScreen(e.position);
+        const float ratio = Game::Clamp(float(e.health) / float((std::max)(1, e.maxHealth)), 0.f, 1.f);
+        Drawing::DrawRectangle(sp.x - 22.f, sp.y - 56.f, 44.f, 5.f, {.05f, .08f, .10f, .85f});
+        Drawing::DrawRectangle(sp.x - 21.f, sp.y - 55.f, 42.f * ratio, 3.f,
+                               e.kind == story::OpEnemyKind::CoreCoupling ? ColorRGBA(1.f, .62f, .26f)
+                                                                          : ColorRGBA(.96f, .34f, .32f));
+    }
+    for (const auto &npc : arc.npcs)
+    {
+        if (!npc.visible)
+        {
+            continue;
+        }
+        const Vector2 sp = toScreen(npc.position);
+        Drawing::DrawLabel(sp.x - 24.f, sp.y - 58.f, npc.name, {.88f, .96f, 1.f, .92f});
+    }
+    for (const auto &b : arc.bullets)
+    {
+        const Vector2 sp = toScreen(b.position);
+        Drawing::DrawEllipse(sp.x, sp.y - 18.f, 4.f, 4.f,
+                             b.playerOwned ? ColorRGBA(1.f, .92f, .52f) : ColorRGBA(1.f, .36f, .32f));
+    }
+    for (const auto &tr : arc.tracers)
+    {
+        Vector2 a = toScreen(tr.from);
+        Vector2 b = toScreen(tr.to);
+        a.y -= 18.f;
+        b.y -= 18.f;
+        Drawing::DrawLine(a, b, {tr.color.r, tr.color.g, tr.color.b, tr.life * 7.f}, 2.f);
+    }
+}
+
 // ============================================================================
-// SceneManager ? active-scene selection and resource retirement
+// SceneManager — active-scene selection and resource retirement
 // ============================================================================
 Scene &SceneManager::Get(SceneKind kind)
 {
@@ -3979,6 +4610,7 @@ Scene &SceneManager::Get(SceneKind kind)
         result[size_t(SceneKind::Mine)] = std::make_unique<MineScene>();
         result[size_t(SceneKind::Frontier)] = std::make_unique<FrontierScene>();
         result[size_t(SceneKind::Planet)] = std::make_unique<PlanetScene>();
+        result[size_t(SceneKind::StoryOperation)] = std::make_unique<StoryOperationScene>();
         result[size_t(SceneKind::Background)] = std::make_unique<BackgroundScene>();
         result[size_t(SceneKind::Hud)] = std::make_unique<HudScene>();
         return result;
@@ -3989,6 +4621,8 @@ SceneKind SceneManager::Current()
 {
     switch (Game::Get().Mode())
     {
+    case WorldMode::StoryOperation:
+        return SceneKind::StoryOperation;
     case WorldMode::SurfaceMine:
     case WorldMode::LegacyMine:
         return SceneKind::Mine;

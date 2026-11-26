@@ -3,57 +3,333 @@
   "skeleton_preset": "Mixamo",
   "max_bones": 71,
   "animation_banks": [],
-  "bodies": [],
+  "bodies": [
+    {
+      "id": "Field_Medic_Head_Neck",
+      "source": "HumanV4/FieldMedicMixamo/Field_Medic_Head_Neck_LOD0",
+      "slot": "head",
+      "surface": "skin",
+      "tintable": false,
+      "lod0_max_tris": 400,
+      "lod_sources": {
+        "LOD0": "HumanV4/FieldMedicMixamo/Field_Medic_Head_Neck_LOD0",
+        "LOD1": "HumanV4/FieldMedicMixamo/Field_Medic_Head_Neck_LOD1",
+        "LOD2": "HumanV4/FieldMedicMixamo/Field_Medic_Head_Neck_LOD2",
+        "ShadowProxy": "HumanV4/FieldMedicMixamo/Field_Medic_Head_Neck_ShadowProxy"
+      }
+    },
+    {
+      "id": "Field_Medic_Hands",
+      "source": "HumanV4/FieldMedicMixamo/Field_Medic_Hands_LOD0",
+      "slot": "hands",
+      "surface": "skin",
+      "tintable": false,
+      "lod0_max_tris": 800,
+      "lod_sources": {
+        "LOD0": "HumanV4/FieldMedicMixamo/Field_Medic_Hands_LOD0",
+        "LOD1": "HumanV4/FieldMedicMixamo/Field_Medic_Hands_LOD1",
+        "LOD2": "HumanV4/FieldMedicMixamo/Field_Medic_Hands_LOD2",
+        "ShadowProxy": "HumanV4/FieldMedicMixamo/Field_Medic_Hands_ShadowProxy"
+      }
+    }
+  ],
   "outfits": [
     {
       "id": "Field_Medic_Coat",
-      "source": "HumanV4/Field_Medic_Coat_LOD0",
+      "source": "HumanV4/FieldMedicMixamo/Field_Medic_Coat_LOD0",
       "slot": "upper",
       "surface": "fabric",
       "tintable": false,
-      "hides_body_mask": 2,
-      "lod0_max_tris": 4000
+      "lod0_max_tris": 2900,
+      "lod_sources": {
+        "LOD0": "HumanV4/FieldMedicMixamo/Field_Medic_Coat_LOD0",
+        "LOD1": "HumanV4/FieldMedicMixamo/Field_Medic_Coat_LOD1",
+        "LOD2": "HumanV4/FieldMedicMixamo/Field_Medic_Coat_LOD2",
+        "ShadowProxy": "HumanV4/FieldMedicMixamo/Field_Medic_Coat_ShadowProxy"
+      },
+      "hides_body_mask": 0
     },
     {
       "id": "Field_Medic_Cargo_Pants",
-      "source": "HumanV4/Field_Medic_Cargo_Pants_LOD0",
+      "source": "HumanV4/FieldMedicMixamo/Field_Medic_Cargo_Pants_LOD0",
       "slot": "lower",
       "surface": "fabric",
       "tintable": false,
-      "hides_body_mask": 3,
-      "lod0_max_tris": 4000
+      "lod0_max_tris": 2000,
+      "lod_sources": {
+        "LOD0": "HumanV4/FieldMedicMixamo/Field_Medic_Cargo_Pants_LOD0",
+        "LOD1": "HumanV4/FieldMedicMixamo/Field_Medic_Cargo_Pants_LOD1",
+        "LOD2": "HumanV4/FieldMedicMixamo/Field_Medic_Cargo_Pants_LOD2",
+        "ShadowProxy": "HumanV4/FieldMedicMixamo/Field_Medic_Cargo_Pants_ShadowProxy"
+      },
+      "hides_body_mask": 0
     },
     {
       "id": "Field_Medic_Boots",
-      "source": "HumanV4/Field_Medic_Boots_LOD0",
+      "source": "HumanV4/FieldMedicMixamo/Field_Medic_Boots_LOD0",
       "slot": "feet",
       "surface": "rubber",
       "tintable": false,
-      "hides_body_mask": 0,
-      "lod0_max_tris": 4000
+      "lod0_max_tris": 1250,
+      "lod_sources": {
+        "LOD0": "HumanV4/FieldMedicMixamo/Field_Medic_Boots_LOD0",
+        "LOD1": "HumanV4/FieldMedicMixamo/Field_Medic_Boots_LOD1",
+        "LOD2": "HumanV4/FieldMedicMixamo/Field_Medic_Boots_LOD2",
+        "ShadowProxy": "HumanV4/FieldMedicMixamo/Field_Medic_Boots_ShadowProxy"
+      },
+      "hides_body_mask": 0
     }
   ],
   "attachments": [
     {
       "id": "Field_Medic_Bun_Hair",
-      "source": "HumanV4/Field_Medic_Bun_Hair_LOD0",
+      "source": "HumanV4/FieldMedicMixamo/Field_Medic_Bun_Hair_LOD0",
       "slot": "hair",
-      "skinned": true,
       "surface": "fabric",
       "tintable": false,
-      "lod0_max_tris": 3000
+      "lod0_max_tris": 1150,
+      "lod_sources": {
+        "LOD0": "HumanV4/FieldMedicMixamo/Field_Medic_Bun_Hair_LOD0",
+        "LOD1": "HumanV4/FieldMedicMixamo/Field_Medic_Bun_Hair_LOD1",
+        "LOD2": "HumanV4/FieldMedicMixamo/Field_Medic_Bun_Hair_LOD2",
+        "ShadowProxy": "HumanV4/FieldMedicMixamo/Field_Medic_Bun_Hair_ShadowProxy"
+      },
+      "skinned": true
+    },
+    {
+      "id": "Field_Medic_Shoulder_Guards",
+      "source": "HumanV4/FieldMedicMixamo/Field_Medic_Shoulder_Guards_LOD0",
+      "slot": "shoulders",
+      "surface": "metal",
+      "tintable": false,
+      "lod0_max_tris": 750,
+      "lod_sources": {
+        "LOD0": "HumanV4/FieldMedicMixamo/Field_Medic_Shoulder_Guards_LOD0",
+        "LOD1": "HumanV4/FieldMedicMixamo/Field_Medic_Shoulder_Guards_LOD1",
+        "LOD2": "HumanV4/FieldMedicMixamo/Field_Medic_Shoulder_Guards_LOD2",
+        "ShadowProxy": "HumanV4/FieldMedicMixamo/Field_Medic_Shoulder_Guards_ShadowProxy"
+      },
+      "skinned": true
+    },
+    {
+      "id": "Field_Medic_Knee_Guards",
+      "source": "HumanV4/FieldMedicMixamo/Field_Medic_Knee_Guards_LOD0",
+      "slot": "knees",
+      "surface": "metal",
+      "tintable": false,
+      "lod0_max_tris": 650,
+      "lod_sources": {
+        "LOD0": "HumanV4/FieldMedicMixamo/Field_Medic_Knee_Guards_LOD0",
+        "LOD1": "HumanV4/FieldMedicMixamo/Field_Medic_Knee_Guards_LOD1",
+        "LOD2": "HumanV4/FieldMedicMixamo/Field_Medic_Knee_Guards_LOD2",
+        "ShadowProxy": "HumanV4/FieldMedicMixamo/Field_Medic_Knee_Guards_ShadowProxy"
+      },
+      "skinned": true
+    },
+    {
+      "id": "Field_Medic_Forearm_Guard_L_Scanner",
+      "source": "HumanV4/FieldMedicMixamo/Field_Medic_Forearm_Guard_L_Scanner_LOD0",
+      "slot": "forearm_left",
+      "surface": "metal",
+      "tintable": false,
+      "lod0_max_tris": 400,
+      "lod_sources": {
+        "LOD0": "HumanV4/FieldMedicMixamo/Field_Medic_Forearm_Guard_L_Scanner_LOD0",
+        "LOD1": "HumanV4/FieldMedicMixamo/Field_Medic_Forearm_Guard_L_Scanner_LOD1",
+        "LOD2": "HumanV4/FieldMedicMixamo/Field_Medic_Forearm_Guard_L_Scanner_LOD2",
+        "ShadowProxy": "HumanV4/FieldMedicMixamo/Field_Medic_Forearm_Guard_L_Scanner_ShadowProxy"
+      },
+      "skinned": false,
+      "socket": "HandL",
+      "bone": "mixamorig:LeftHand",
+      "socket_local_matrix_gltf": [
+        0.99967664,
+        -0.02541677,
+        -3.9e-07,
+        0.0,
+        0.02540833,
+        0.99935365,
+        0.02541635,
+        0.0,
+        -0.00064599,
+        -0.02540834,
+        0.99967641,
+        0.0,
+        0.02567808,
+        0.02191742,
+        0.08858903,
+        1.0
+      ]
+    },
+    {
+      "id": "Field_Medic_Forearm_Guard_R",
+      "source": "HumanV4/FieldMedicMixamo/Field_Medic_Forearm_Guard_R_LOD0",
+      "slot": "forearm_right",
+      "surface": "metal",
+      "tintable": false,
+      "lod0_max_tris": 400,
+      "lod_sources": {
+        "LOD0": "HumanV4/FieldMedicMixamo/Field_Medic_Forearm_Guard_R_LOD0",
+        "LOD1": "HumanV4/FieldMedicMixamo/Field_Medic_Forearm_Guard_R_LOD1",
+        "LOD2": "HumanV4/FieldMedicMixamo/Field_Medic_Forearm_Guard_R_LOD2",
+        "ShadowProxy": "HumanV4/FieldMedicMixamo/Field_Medic_Forearm_Guard_R_ShadowProxy"
+      },
+      "skinned": false,
+      "socket": "HandR",
+      "bone": "mixamorig:RightHand",
+      "socket_local_matrix_gltf": [
+        -0.99967664,
+        -0.02541677,
+        -3.9e-07,
+        0.0,
+        -0.02540833,
+        0.99935365,
+        0.02541635,
+        0.0,
+        -0.00064599,
+        0.02540834,
+        -0.99967641,
+        0.0,
+        -0.02450313,
+        0.01504903,
+        0.08441243,
+        1.0
+      ]
+    },
+    {
+      "id": "Field_Medic_Medical_Pouch_R",
+      "source": "HumanV4/FieldMedicMixamo/Field_Medic_Medical_Pouch_R_LOD0",
+      "slot": "hip_right",
+      "surface": "fabric",
+      "tintable": false,
+      "lod0_max_tris": 400,
+      "lod_sources": {
+        "LOD0": "HumanV4/FieldMedicMixamo/Field_Medic_Medical_Pouch_R_LOD0",
+        "LOD1": "HumanV4/FieldMedicMixamo/Field_Medic_Medical_Pouch_R_LOD1",
+        "LOD2": "HumanV4/FieldMedicMixamo/Field_Medic_Medical_Pouch_R_LOD2",
+        "ShadowProxy": "HumanV4/FieldMedicMixamo/Field_Medic_Medical_Pouch_R_ShadowProxy"
+      },
+      "skinned": false,
+      "socket": "Pelvis",
+      "bone": "mixamorig:Hips",
+      "socket_local_matrix_gltf": [
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        -1.0,
+        0.0,
+        -1.0,
+        0.0,
+        0.0,
+        0.0,
+        -0.155,
+        0.078124,
+        -0.0098992,
+        1.0
+      ]
+    },
+    {
+      "id": "Field_Medic_Rescue_Pack",
+      "source": "HumanV4/FieldMedicMixamo/Field_Medic_Rescue_Pack_LOD0",
+      "slot": "back",
+      "surface": "metal",
+      "tintable": false,
+      "lod0_max_tris": 800,
+      "lod_sources": {
+        "LOD0": "HumanV4/FieldMedicMixamo/Field_Medic_Rescue_Pack_LOD0",
+        "LOD1": "HumanV4/FieldMedicMixamo/Field_Medic_Rescue_Pack_LOD1",
+        "LOD2": "HumanV4/FieldMedicMixamo/Field_Medic_Rescue_Pack_LOD2",
+        "ShadowProxy": "HumanV4/FieldMedicMixamo/Field_Medic_Rescue_Pack_ShadowProxy"
+      },
+      "skinned": false,
+      "socket": "Back",
+      "bone": "mixamorig:Spine1",
+      "socket_local_matrix_gltf": [
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        -1.0,
+        0.0,
+        -1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        -0.14787601,
+        -0.09236467,
+        1.0
+      ]
+    },
+    {
+      "id": "Field_Medic_Cartridge_Rack",
+      "source": "HumanV4/FieldMedicMixamo/Field_Medic_Cartridge_Rack_LOD0",
+      "slot": "chest",
+      "surface": "metal",
+      "tintable": false,
+      "lod0_max_tris": 400,
+      "lod_sources": {
+        "LOD0": "HumanV4/FieldMedicMixamo/Field_Medic_Cartridge_Rack_LOD0",
+        "LOD1": "HumanV4/FieldMedicMixamo/Field_Medic_Cartridge_Rack_LOD1",
+        "LOD2": "HumanV4/FieldMedicMixamo/Field_Medic_Cartridge_Rack_LOD2",
+        "ShadowProxy": "HumanV4/FieldMedicMixamo/Field_Medic_Cartridge_Rack_ShadowProxy"
+      },
+      "skinned": false,
+      "socket": "Chest",
+      "bone": "mixamorig:Spine2",
+      "socket_local_matrix_gltf": [
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        -1.0,
+        0.0,
+        -1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.12212399,
+        0.05590272,
+        1.0
+      ]
     }
   ],
   "presets": {
     "Field_Medic": {
+      "bodies": [
+        "modular/body/Field_Medic_Head_Neck",
+        "modular/body/Field_Medic_Hands"
+      ],
       "outfits": [
         "modular/outfit/Field_Medic_Coat",
         "modular/outfit/Field_Medic_Cargo_Pants",
         "modular/outfit/Field_Medic_Boots"
       ],
       "attachments": [
-        "modular/part/Field_Medic_Bun_Hair"
-      ]
+        "modular/part/Field_Medic_Bun_Hair",
+        "modular/part/Field_Medic_Shoulder_Guards",
+        "modular/part/Field_Medic_Knee_Guards",
+        "modular/part/Field_Medic_Forearm_Guard_L_Scanner",
+        "modular/part/Field_Medic_Forearm_Guard_R",
+        "modular/part/Field_Medic_Medical_Pouch_R",
+        "modular/part/Field_Medic_Rescue_Pack",
+        "modular/part/Field_Medic_Cartridge_Rack"
+      ],
+      "body_policy": "exposed_only",
+      "total_triangles": {
+        "LOD0": 10805,
+        "LOD1": 5335,
+        "LOD2": 2505,
+        "ShadowProxy": 1658
+      }
     }
   }
 }

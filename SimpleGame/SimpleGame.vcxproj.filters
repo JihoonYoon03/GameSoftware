@@ -45,6 +45,12 @@
     <ClInclude Include="Story.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="StoryArc.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="WorldEncounters.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
     <ClInclude Include="StoryJournal.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -136,6 +142,12 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="Story.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="StoryArc.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="WorldEncounters.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="StoryJournal.cpp">

@@ -57,6 +57,7 @@ enum class SceneKind
     Mine,
     Frontier,
     Planet,
+    StoryOperation,
     Background,
     Hud,
     Count
@@ -144,6 +145,15 @@ class MineScene final : public Scene
 // FrontierScene : Scene — grassland, convoy channel and abandoned relay
 // ============================================================================
 class FrontierScene final : public Scene
+{
+  public:
+    void Draw() override;
+};
+
+// ============================================================================
+// StoryOperationScene : Scene — Chapter 1 full arc (Acts 2, 3, 4) tactical zones
+// ============================================================================
+class StoryOperationScene final : public Scene
 {
   public:
     void Draw() override;

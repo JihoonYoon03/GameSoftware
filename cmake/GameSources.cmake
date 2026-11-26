@@ -7,7 +7,9 @@ set(GAME_SOURCES
     SimpleGame/Window.cpp
     SimpleGame/Game.cpp
     SimpleGame/Story.cpp
+    SimpleGame/StoryArc.cpp
     SimpleGame/StoryJournal.cpp
+    SimpleGame/WorldEncounters.cpp
     SimpleGame/Save.cpp
     SimpleGame/Civic.cpp
     SimpleGame/CityFacilities.cpp

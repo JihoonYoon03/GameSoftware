@@ -6,6 +6,8 @@
 #include "../CityInfrastructure.h"
 #include "../AssetCache.h"
 #include "../Level.h"
+#include "../StoryArc.h"
+#include "../WorldEncounters.h"
 #include "../ModelLibrary.h"
 #include "../Profiler.h"
 #include "../PlayerCombat.h"
@@ -544,6 +546,35 @@ std::string WorldSnapshot::Build(std::uint64_t sequence, const std::string &sess
         fi.Text("region_id", world.facilityInterior.regionId);
         fi.Text("label", world.facilityInterior.label);
         result.Raw("facility_interior", fi.Finish());
+    }
+    {
+        const auto &arc = story::StoryArc::Get().State();
+        JsonObject sa;
+        sa.Text("city_phase", story::StoryArc::CityPhaseKey(arc.cityPhase));
+        sa.Text("ria_status", story::StoryArc::RiaStatusKey(arc.riaStatus));
+        sa.Text("kain_choice", story::StoryArc::KainChoiceKey(arc.kainChoice));
+        sa.Text("evacuation_priority", story::StoryArc::EvacPriorityKey(arc.evacPriority));
+        sa.Text("active_zone", story::StoryArc::ZoneKey(arc.activeZone));
+        sa.Bool("chapter2_reported", arc.chapter2Reported);
+        sa.Bool("chapter3_complete", arc.chapter3Complete);
+        sa.Bool("chapter4_complete", arc.chapter4Complete);
+        sa.Bool("nereus_signal_received", arc.nereusSignalReceived);
+        sa.Number("survivors_received", story::StoryArc::Get().ReceivedSurvivorCount());
+        result.Raw("story_arc", sa.Finish());
+    }
+    {
+        const auto &we = encounters::WorldEncounters::Get();
+        JsonObject eo;
+        eo.Number("live_count", we.State().live.size());
+        eo.Number("total_completed", we.State().totalCompleted);
+        eo.Text("active_id", we.State().activeEncounterId);
+        if (const auto *active = we.ActiveEncounter())
+        {
+            eo.Number("active_stage", encounters::WorldEncounters::StageNumber(active->phase));
+            eo.Text("active_title", active->title);
+            eo.Text("active_archetype", encounters::WorldEncounters::ArchetypeKey(active->archetype));
+        }
+        result.Raw("encounters", eo.Finish());
     }
     result.Seconds("play_time_seconds", world.playTimeSeconds);
     size_t communityPopulation = 0, currentCommunity = 0, activeCommunity = 0;
