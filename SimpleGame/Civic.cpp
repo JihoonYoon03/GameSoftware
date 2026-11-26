@@ -2667,7 +2667,7 @@ bool AimAtVehicles(float shotAngle, models::Point &target)
             continue;
         }
         float z = craft.altitude + (mesh.minimum.z + mesh.maximum.z) * .5f;
-        float sx = (cursor.x - kCanvasWidth * .5f) / 36,
+        float sx = (cursor.x - WorldCamera::LogicalWidth() * .5f) / 36,
               sy = (cursor.y - kCanvasHeight * .57f + z * WorldCamera::IsoZScale()) / WorldCamera::IsoYScale();
         models::Point p{w.cameraPosition.x + (sx + sy) * .5f, w.cameraPosition.y + (sy - sx) * .5f, z};
         float range = std::hypot(Game::Distance({p.x, p.y}, w.playerPosition), z);

@@ -1359,7 +1359,7 @@ void MineRescue::Update(float deltaSeconds)
             npc.navigationRetrySeconds = 1;
         }
         auto screen = level.Project(npc.position, 25);
-        bool outside = screen.x < -240 || screen.x > tutorial::kCanvasWidth + 240 || screen.y < -200 ||
+        bool outside = screen.x < -240 || screen.x > tutorial::WorldCamera::LogicalWidth() + 240 || screen.y < -200 ||
                        screen.y > tutorial::kCanvasHeight + 200;
         npc.outsideSeconds = outside && npc.walkedDistance > 4 ? npc.outsideSeconds + deltaSeconds : 0;
     }
@@ -1630,8 +1630,9 @@ tutorial::Vector2 MineLevel::Project(tutorial::Vector2 p, float height)
     auto &world = tutorial::Game::Get().GetState();
     const auto camera = world.cameraPosition;
     return tutorial::WorldCamera::ToViewport(
-        {tutorial::kCanvasWidth * .5f + (p.x - p.y - camera.x + camera.y) * 36,
-         tutorial::kCanvasHeight * .57f + (p.x + p.y - camera.x - camera.y) * 18 - height});
+        {tutorial::WorldCamera::LogicalWidth() * .5f + (p.x - p.y - camera.x + camera.y) * 36,
+         tutorial::kCanvasHeight * .57f +
+             (p.x + p.y - camera.x - camera.y) * tutorial::WorldCamera::IsoYScale() - height});
 }
 
 void MineLevel::ClearInput()
@@ -1794,11 +1795,12 @@ float MineLevel::GetAimAngle()
     float height = models::WorldScale::aimHeightPixels;
     if (world.surfaceExploration && !tutorial::Game::Get().IsSurfaceMine())
     {
+        const float isoZ = tutorial::WorldCamera::IsoZScale();
         height +=
             float(tutorial::Game::Get().Surface()->Local(tutorial::Game::Get().Surface()->Pose().origin).z /
                   2) *
-                44 -
-            world.surfaceCameraHeight * 44;
+                isoZ -
+            world.surfaceCameraHeight * isoZ;
     }
     auto origin = Project(world.playerPosition, height);
     return std::atan2(world.cursorPosition.y - origin.y, world.cursorPosition.x - origin.x);
@@ -1806,8 +1808,9 @@ float MineLevel::GetAimAngle()
 
 tutorial::Vector2 MineLevel::GetAimDirection(float angle)
 {
-    float sx = std::cos(angle), sy = std::sin(angle);
-    tutorial::Vector2 direction = {sx / 72 + sy / 36, sy / 36 - sx / 72};
+    const float sx = std::cos(angle), sy = std::sin(angle);
+    const float isoY2 = 2.f * tutorial::WorldCamera::IsoYScale();
+    tutorial::Vector2 direction = {sx / 72 + sy / isoY2, sy / isoY2 - sx / 72};
     float length = std::sqrt(direction.x * direction.x + direction.y * direction.y);
     return {direction.x / length, direction.y / length};
 }
@@ -2459,13 +2462,16 @@ void FrontierSurface::Observe(const std::function<void()> &operation)
               w.cursorPosition,
               w.facingYaw,
               w.surfaceCameraHeight};
+    const float halfLogicalW = tutorial::WorldCamera::LogicalWidth() * .5f;
+    const float isoY = tutorial::WorldCamera::IsoYScale();
+    const float isoZ = tutorial::WorldCamera::IsoZScale();
     auto aimOrigin = tutorial::WorldCamera::ToViewport(
-        {tutorial::kCanvasWidth * .5f +
+        {halfLogicalW +
              (w.playerPosition.x - w.playerPosition.y - w.cameraPosition.x + w.cameraPosition.y) * 36,
          tutorial::kCanvasHeight * .57f +
-             (w.playerPosition.x + w.playerPosition.y - w.cameraPosition.x - w.cameraPosition.y) * 18 -
-             models::WorldScale::aimHeightPixels + w.surfaceCameraHeight * 44 -
-             float(session.Local(session.Pose().origin).z / 2) * 44});
+             (w.playerPosition.x + w.playerPosition.y - w.cameraPosition.x - w.cameraPosition.y) * isoY -
+             models::WorldScale::aimHeightPixels + w.surfaceCameraHeight * isoZ -
+             float(session.Local(session.Pose().origin).z / 2) * isoZ});
     auto aim = MineLevel::GetAimDirection(
         std::atan2(w.cursorPosition.y - aimOrigin.y, w.cursorPosition.x - aimOrigin.x));
     auto localAim = world::SurfaceGeometry::TransformDirection({aim.x, aim.y, 0}, source, target);
@@ -2478,11 +2484,11 @@ void FrontierSurface::Observe(const std::function<void()> &operation)
     observing = true;
     auto p = w.playerPosition, c = w.cameraPosition;
     auto origin =
-        tutorial::WorldCamera::ToViewport({tutorial::kCanvasWidth * .5f + (p.x - p.y - c.x + c.y) * 36,
-                                           tutorial::kCanvasHeight * .57f + (p.x + p.y - c.x - c.y) * 18 -
+        tutorial::WorldCamera::ToViewport({halfLogicalW + (p.x - p.y - c.x + c.y) * 36,
+                                           tutorial::kCanvasHeight * .57f + (p.x + p.y - c.x - c.y) * isoY -
                                                models::WorldScale::aimHeightPixels});
     w.cursorPosition = {origin.x + float(localAim.x - localAim.y) * 360,
-                        origin.y + float(localAim.x + localAim.y) * 180};
+                        origin.y + float(localAim.x + localAim.y) * isoY * 10.f};
     operation();
 }
 void FrontierSurface::Update(float dt)
@@ -3288,10 +3294,10 @@ float ChapterOneLevel::GetAimAngle() const
 {
     const auto &world = tutorial::Game::Get().GetState();
     auto p = world.playerPosition, c = world.cameraPosition;
-    auto origin =
-        tutorial::WorldCamera::ToViewport({tutorial::kCanvasWidth * .5f + (p.x - p.y - c.x + c.y) * 36,
-                                           tutorial::kCanvasHeight * .57f + (p.x + p.y - c.x - c.y) * 18 -
-                                               models::WorldScale::aimHeightPixels});
+    auto origin = tutorial::WorldCamera::ToViewport(
+        {tutorial::WorldCamera::LogicalWidth() * .5f + (p.x - p.y - c.x + c.y) * 36,
+         tutorial::kCanvasHeight * .57f + (p.x + p.y - c.x - c.y) * tutorial::WorldCamera::IsoYScale() -
+             models::WorldScale::aimHeightPixels});
     return std::atan2(world.cursorPosition.y - origin.y, world.cursorPosition.x - origin.x);
 }
 void FrontierCombat::Attack()

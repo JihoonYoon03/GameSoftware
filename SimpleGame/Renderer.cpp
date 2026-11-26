@@ -2037,15 +2037,9 @@ void Renderer::DrawModels()
                 }
                 const size_t cmdBytes =
                     data.indirectCommands.size() * sizeof(MeshData::DrawElementsIndirectCommand);
-                if (cmdBytes > data.indirectCapacity)
-                {
-                    data.indirectCapacity = (std::max)(cmdBytes, data.indirectCapacity * 2);
-                }
                 glBindBuffer(GL_DRAW_INDIRECT_BUFFER, data.indirectBuffer);
-                glBufferData(GL_DRAW_INDIRECT_BUFFER, GLsizeiptr(data.indirectCapacity), nullptr,
+                glBufferData(GL_DRAW_INDIRECT_BUFFER, GLsizeiptr(cmdBytes), data.indirectCommands.data(),
                              GL_STREAM_DRAW);
-                glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0, GLsizeiptr(cmdBytes),
-                                data.indirectCommands.data());
                 glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, nullptr,
                                             GLsizei(data.indirectCommands.size()), 0);
                 glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
@@ -2424,7 +2418,9 @@ Renderer::Renderer(int width, int height)
     : m_width(width), m_height(height), m_viewportWidth(width), m_viewportHeight(height),
       m_renderWidth(width), m_renderHeight(height), m_meshes(new MeshData()), m_assets(new RenderAssets())
 {
-    const char *glslVersion = GLEW_VERSION_4_5 ? "#version 450 core\n" : "#version 330 core\n";
+    const char *glslVersion = GLEW_VERSION_4_5   ? "#version 450 core\n"
+                              : GLEW_VERSION_4_3 ? "#version 430 core\n"
+                                                 : "#version 330 core\n";
     auto compileCore = [&](const char *vsBody, const char *fsBody) -> GLuint {
         const std::string vs = std::string(glslVersion) + vsBody;
         const std::string fs = std::string(glslVersion) + fsBody;
@@ -2449,8 +2445,11 @@ Renderer::Renderer(int width, int height)
             m_meshes->program = compileCore(kMeshVertexSsboBody, kMeshFragmentBody);
             m_meshes->useSsbo = m_meshes->program != 0;
         }
-        m_meshes->useMdi = GLEW_VERSION_4_3 && glMultiDrawElementsIndirect != nullptr && m_meshes->useSsbo &&
-                           m_meshes->useBaseInstance;
+        const char *glVendor = reinterpret_cast<const char *>(glGetString(GL_VENDOR));
+        const bool isIntelGpu = glVendor && (std::strstr(glVendor, "Intel") != nullptr ||
+                                             std::strstr(glVendor, "INTEL") != nullptr);
+        m_meshes->useMdi = GLEW_VERSION_4_5 && !isIntelGpu && glMultiDrawElementsIndirect != nullptr &&
+                           m_meshes->useSsbo && m_meshes->useBaseInstance;
         if (!m_meshes->program)
         {
             m_meshes->useSsbo = false;
@@ -2685,7 +2684,9 @@ void Renderer::CreatePostProcessing()
 {
     if (!m_postProgram)
     {
-        const char *glslVersion = GLEW_VERSION_4_5 ? "#version 450 core\n" : "#version 330 core\n";
+        const char *glslVersion = GLEW_VERSION_4_5   ? "#version 450 core\n"
+                              : GLEW_VERSION_4_3 ? "#version 430 core\n"
+                                                 : "#version 330 core\n";
         const std::string vs = std::string(glslVersion) + kFullscreenVertexBody;
         const std::string fs = std::string(glslVersion) + kPostFragmentBody;
         m_postProgram = CompileProgram(vs.c_str(), fs.c_str());

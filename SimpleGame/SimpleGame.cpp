@@ -20,6 +20,15 @@ but WITHOUT ANY WARRANTY.
 #include <exception>
 #include <chrono>
 
+#ifdef _WIN32
+// Request the discrete GPU (NVIDIA Optimus / AMD Switchable Graphics) on hybrid-GPU laptops.
+extern "C"
+{
+    __declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001;
+    __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
+#endif
+
 int main(int argc, char **argv)
 {
     profiling::InitializeConsoleOutput();
