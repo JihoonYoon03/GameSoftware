@@ -538,6 +538,23 @@ const Model *ModelLibrary::Cq04b(const std::string &name)
     modules.emplace(name, std::move(model));
     return ptr;
 }
+const Model *ModelLibrary::ColonyV4(const std::string &name)
+{
+    static std::map<std::string, std::unique_ptr<Model>> modules;
+    auto it = modules.find(name);
+    if (it != modules.end())
+    {
+        return it->second.get();
+    }
+    auto model = std::make_unique<Model>();
+    if (!ResourceAssets::BindOptional(*model, "colony_v4/" + name))
+    {
+        return nullptr;
+    }
+    const Model *ptr = model.get();
+    modules.emplace(name, std::move(model));
+    return ptr;
+}
 const char *ModelLibrary::SceneryName(SceneryType type)
 {
     constexpr const char *names[] = {"Road_2Lane_4m",         "Road_4Lane_4m",

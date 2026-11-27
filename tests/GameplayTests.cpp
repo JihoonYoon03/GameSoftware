@@ -4637,6 +4637,8 @@ void TestAimLightingAndWallShots()
     assert(GameLevels::Mine().Lighting().At(beyondGate) > .1f);
     tutorial::Game::Get().GetState().playerPosition = {20.5f, 10.5f};
     tutorial::Game::Get().GetState().cameraPosition = tutorial::Game::Get().GetState().playerPosition;
+    const int salvageBefore = mineState.player.salvage;
+    const int kitsBefore = mineState.player.recoveryKits;
     mineState.enemies = {{{23.f, 10.5f}}};
     mineState.pistol.Reset();
     for (int i = 0; i < 3; ++i)
@@ -4647,7 +4649,10 @@ void TestAimLightingAndWallShots()
     }
     assert(mineState.enemies[0].health == 0);
     assert(mineState.kills == 1 && mineState.player.experience == kExperiencePerKill);
-    assert(mineState.drops.size() == 1);
+    // Drop is either still on the floor (beyond magnet range) or already magnetically auto-collected.
+    assert(mineState.drops.size() == 1 ||
+           (mineState.drops.empty() &&
+            (mineState.player.salvage > salvageBefore || mineState.player.recoveryKits > kitsBefore)));
 }
 void TestNpcSupport()
 {
@@ -5838,8 +5843,8 @@ void TestResidenceFeatures()
     ReadDialogue();
     assert(w.homeMessageRead && w.mainQuestStage == MainQuestStage::MeetLia);
     g.InteractWithNearbyTarget();
-    assert(Dialogue::Active());
-    ReadDialogue();
+    assert(w.ui.screen == UiScreen::HomeTerminal && !Dialogue::Active());
+    assert(Hud::HandleKey('q') && w.ui.screen == UiScreen::None);
 
     // 3. Bed: heals HP/stamina/companions, reloads firearms, calms wanted <= 2*, refuses 3*+.
     auto &player = mineState.player;
@@ -6825,23 +6830,35 @@ void TestPart2ContentAndUiOverhaul()
     mine.Rescue().Update(0.5f);
     assert(!ms.resourcePings.empty());
 
-    // 3) Frontier & Kain first encounter: rogue drones + distress flare + perimeter ambush.
+    // 3) Frontier & Kain first encounter: rogue drones + off-screen raider assault vehicle approach & dismount + dynamic yaw.
     g.Reset();
     auto &ch = GameLevels::Chapter();
     ch.Enter(true);
     auto &cs = ch.GetState();
     assert(cs.scrappers.size() == 3 && cs.survivors.size() == 5);
     assert(cs.frontierThreats.size() == 2); // 2 RogueDrones at Generator Yard.
-    w.playerPosition = {26.f, 10.5f};       // Within 10.5u of Kain triggers distress flare + ambush!
+    w.playerPosition = {26.f, 10.5f};       // Within 14u of Kain triggers distress flare + off-screen vehicle ambush!
     ch.Update(0.1f);
     assert(cs.distressFlareNoticed && cs.convoyAmbushTriggered);
+    assert(cs.raiderTransports.size() == 1 && !cs.raiderTransports[0].dismounted);
     assert(ch.ActiveThreatsNear({31.f, 11.f}, 10.f) == 2);
+    for (int step = 0; step < 50 && !cs.raiderTransports[0].dismounted; ++step)
+    {
+        ch.Update(0.1f);
+    }
+    assert(cs.raiderTransports[0].dismounted && cs.frontierThreats.size() == 4);
+    assert(std::isfinite(cs.frontierThreats[2].yaw));
 
-    // 4) Visual Wardrobe (3D Mixamo 13-part modular) & Visual Home Storage & Facility Shop items.
+    // 4) Visual Wardrobe, HomeStorage, HomeWorkbench, HomeTerminal, HomeBed + Q key immediate close!
     g.Reset();
-    Hud::OpenMenu(UiScreen::HomeStorage);
-    assert(w.ui.screen == UiScreen::HomeStorage);
-    assert(Hud::Controls().size() >= 8);
+    for (UiScreen resScreen : {UiScreen::HomeStorage, UiScreen::HomeWorkbench, UiScreen::HomeTerminal, UiScreen::HomeBed})
+    {
+        Hud::OpenMenu(resScreen);
+        assert(w.ui.screen == resScreen && !Hud::Controls().empty());
+        g.KeyDown('q', 0, 0);
+        g.KeyUp('q', 0, 0);
+        assert(w.ui.screen == UiScreen::None);
+    }
     Hud::OpenMenu(UiScreen::Wardrobe);
     assert(w.ui.screen == UiScreen::Wardrobe);
     w.playerModularMedic = true;
@@ -6850,7 +6867,20 @@ void TestPart2ContentAndUiOverhaul()
     w.playerModularPartsMask &= ~(1u << 9u); // Toggle off Rescue Pack
     const auto trimmedModular = Drawing::BuildPlayerModularCharacter(w.playerModularPartsMask);
     assert(trimmedModular.attachments.size() == 7);
-    Hud::CloseMenu();
+    g.KeyDown('q', 0, 0);
+    g.KeyUp('q', 0, 0);
+    assert(w.ui.screen == UiScreen::None);
+
+    // 4B) Subquest death failure (HospitalRecovery::Begin fails active encounter) & Main Story hide.
+    g.Reset();
+    w.isInsideHome = false;
+    auto &we = encounters::WorldEncounters::Get();
+    we.PopulateForCurrentWorld();
+    assert(!we.State().live.empty());
+    we.State().live[0].phase = encounters::Phase::Stage2;
+    we.State().activeEncounterId = we.State().live[0].id;
+    we.FailActiveEncounter();
+    assert(we.State().live[0].phase == encounters::Phase::Dormant && we.State().activeEncounterId.empty());
     // 5) V key triggers 3D mission navigation guidance on the open world (replaces V melee).
     g.EnterTestStage(TestStage::BikeUnlocked);
     w.isBikeMounted = false;
@@ -6986,6 +7016,7 @@ void TestPart2ContentAndUiOverhaul()
 }
 
 int main(int argc, char **argv)
+try
 {
     if (argc > 1 && std::string(argv[1]) == "--encounters")
     {
@@ -7156,4 +7187,10 @@ int main(int argc, char **argv)
     }
     std::cout << "Mine gameplay checks passed: weapon, quest, 30 maps, aiming, lighting, walls, combat, "
                  "scanner, rescue, reentry.\n";
+    return 0;
+}
+catch (const std::exception &e)
+{
+    std::cerr << "UNCAUGHT EXCEPTION: " << e.what() << "\n";
+    return 99;
 }

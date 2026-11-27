@@ -1826,6 +1826,30 @@ CQ-07을 A 이동·경로 안정성, B 감지·기억·역할별 판단, C 동�
   - 대화 중에도 `WASD`로 걸어 나올 수 있도록 허용했으며, 화자와 `10.5 m`(오픈월드) / `5.25`유닛(2D) 이상 멀어지면 `Dialogue::CancelByDistance()`로 대화를 자동 종료하고 기존 줌(`preDialogueZoom`)을 복원한다.
 - **검증:** `SimpleGame` + 5개 테스트 타깃 Release x64 빌드, `ResourceAssetsTests`(CQ04B 17종 핵심 모듈 포함), `MapHudTests`, `CivicTests`, `GameplayTests`(전체 7,159행 + `StartNewGame`/`EnterTestStage` 캐시 재사용 + 대면 NPC 줌인·`WASD` 이탈 자동 종료 회귀 포함), `RenderingTests --r4-only --glfw`(RTX 5080 캡처 `part3-3d-globe-map.png`, `part3-space-system-map.png`, `openworld-epilogue-halo.png`, `part2-wardrobe-3d.png`, `part2-home-storage-cards.png`, `part2-minigame-tuner.png` 육안 검수 완료), `Test-SourceEncoding.ps1`(176파일), `git diff --check` 전부 통과.
 
+#### 72. ColonyV4 에셋 전면 적용 · CQ04B 교차로/도로 이음매 · 중계환/오브젝트 배치 및 가림 · UI 겹침/서브미션 규칙 · 개척지 차량 강습 & 3D 붕괴 협곡 · 시각 거주지 UI(`Q` 닫기) · 자동 회수 (2026-11-27 · 구현 완료)
+
+- **신규 납품 ColonyV4 38종 건물 + 26종 프롭 패킹 및 런타임 배치 ([pack-resources.mjs](tools/pack-resources.mjs), [resource-pack-inputs.mjs](tools/resource-pack-inputs.mjs), [ModelLibrary.cpp](SimpleGame/ModelLibrary.cpp), [Scene.cpp](SimpleGame/Scene.cpp)):**
+  - `pack-resources.mjs`의 `textureColor()`에 외부 `image.uri` PNG 로더 및 캐시(`externalPngCache`)를 추가해 `ColonyV4` 공유 텍스처 참조 GLB를 지원하고, 구형 10종 건물 교체(기존 레거시 로트 발판 `footprint` 계약 보존)·14종 측정 건물 업그레이드·14종 신규 아키타입·26종 프롭(`colony_v4/*`, 총 `320`개 에셋, `30.9 MB`)을 패킹했다.
+  - `ResolveSurfaceStructureModel`에 `Halo_PlayerHome_v4`·`Halo_Observatory_v4`·12종 도시 용도별 건물 아키타입과 행성별 자연/거리/개척지 프롭(`prop_rock_*_v4`, `prop_tree_*_v4`, `prop_plant_seira_v4`, `prop_table_v4`, `Frontier_RelayTower_v4`, `prop_field_barricade_v4`)을 연결했다.
+- **중계환 교차로 중첩 해소 · CQ04B 7종 3D 교차로 연결 · 도로/로터리 이음매 및 지형 배치 보정 ([WorldGeneration.cpp](SimpleGame/WorldGeneration.cpp), [WorldStreaming.cpp](SimpleGame/WorldStreaming.cpp), [WorldContent.cpp](SimpleGame/WorldContent.cpp), [Scene.cpp](SimpleGame/Scene.cpp), [Level.cpp](SimpleGame/Level.cpp)):**
+  - `AddRelays::place` 2패스 탐색으로 정착지 중계환이 `(0,0)` 중앙 교차로(`26 m`) 및 76 m Rev 5 도로망(`13.5 m`)을 피해 광장 외곽에 배치되도록 수정했고, `SurfaceChunk::Build`가 중계환 노드에는 `hwy.inter.*` 교차로를 생성하지 않도록 했다.
+  - `SurfaceModel`의 팔각형 깎인 코너를 정사각 서브베이스 및 확장 로터리 에이프런(`+2.1`유닛)으로 교체하고, `CQ04B` 4지·3지 교차로 7종(`junc_cross_*`, `junc_tee_*`)과 로터리 2종을 모든 교차로에 연결하며 3D 도로 모듈의 지형 경사 피치 + 끝단 오버랩(`0.40`유닛)으로 도로 끊김·삼각형 틈을 제거했다.
+  - `mGantry`/`mPedPole`의 `2*pz` 이중 고도 버그를 수정하고 가로등/정류장/벤치/볼라드/양보 표지판에 교차로 클리어런스 + 실제 지형 고도(`sampleTerrainZ`)를 적용했으며, 비충돌 바위/프롭의 공중 부유(`WorldContent.cpp`)와 개척지 `"camp"` 테이블 교차로 침범(`{21.4, 23.0}`) 및 `flora_*` 도로 침범을 정리했다.
+  - 개척지 `convoy_shelter`/`convoy_cover_se`를 카인 시선 밖으로 재배치하고, `DrawSurfaceStructure`의 전경 투명화(오클루전 페이드)를 카인 및 활성 동료에게도 확장했다.
+- **HUD 겹침 제거 · 미니맵 하단 알림 정리 · `[G]` 아이콘 중첩 해소 · 서브미션 사망 실패 & 메인 스토리 중 숨김 & 건물 회피 ([Hud.cpp](SimpleGame/Hud.cpp), [WorldEncounters.h](SimpleGame/WorldEncounters.h), [WorldEncounters.cpp](SimpleGame/WorldEncounters.cpp), [Civic.cpp](SimpleGame/Civic.cpp), [Game.cpp](SimpleGame/Game.cpp)):**
+  - 광산 `[F]` 스캐너 카드를 무기 박스(`y=654..786`) 위 전용 카드(`y=578..642`)로 분리하고, 좌상단 광산 동료/구조/사냥·채굴 HUD를 단일 `HudCard(20, 136, 472, 62)`로 통합해 겹침을 제거했다.
+  - 미니맵 아래 알림(`DrawNoticePanel`)에서 피격/재장전/빈 상호작용/차량 조작 반복 잡음을 억제하고 목표 거리·보상·경고·임무 갱신 등 유용한 정보만 유지했다.
+  - `Hud::Button`에 `overrideIcon`을 추가해 `[G]` 우주/행성 지도 버튼의 조준선 아이콘 이중 겹침을 해결했다.
+  - `HospitalRecovery::Begin()` 시 `WorldEncounters::FailActiveEncounter()`로 진행 중 서브미션을 즉시 실패 초기화하고, 메인 스토리 진행/집중 시(`IsMainStoryFocused()`, `TrackMission`, 광산/개척지/StoryArc 진입) 서브미션 추적을 자동 해제 및 HUD 숨김 처리했다. `BuildPlanetSurfaceEncounters`의 `findClearAnchor`가 `cityCores`·`ContentCollision`(중심+20m/34m 8방향)·`ContentLayout` 도로/교차로·고속도로를 모두 회피하도록 보강했다.
+- **개척지 카인 임무 개선 & 3D 붕괴 협곡 ([Level.h](SimpleGame/Level.h), [Level.cpp](SimpleGame/Level.cpp), [Scene.cpp](SimpleGame/Scene.cpp)):**
+  - `FrontierThreat`에 동적 `yaw`/`walking`/`muzzleFlash`를 추가해 약탈자 습격조 방향 고정 버그를 수정했고, 4개 습격 웨이브 전부에 `RaiderTransport` 오프스크린 고속 차량 돌입→급정차→하차 전투 연출을 적용했다.
+  - 평면 회색 사각형이던 `FrontierTile::Canal`을 지형 상부 3D 파쇄 절벽·균열 협곡 바닥·내부 파편 능선(`FrontierGround`) + `ColonyV4` `prop_high_voltage_pillar_v4`·`convoy_wreck_v4`·`prop_rock_arid_v4` 잔해·동적 고압 전기 아크로 교체했다.
+- **보관함 정적 3/4 시점 중앙 정렬 · 작업대/단말/침대 시각 UI · `Q` 즉시 닫기 · 광산 자동 회수 ([Game.h](SimpleGame/Game.h), [Game.cpp](SimpleGame/Game.cpp), [Hud.cpp](SimpleGame/Hud.cpp), [Scene.cpp](SimpleGame/Scene.cpp), [Level.cpp](SimpleGame/Level.cpp)):**
+  - `DrawShowcaseProp`의 3D 회전 중심 보정(`-(rot.Apply(mid))`)을 수정해 `HomeStorage`의 3종 `ColonyV4` 프롭이 회전 없이 우상단 3/4 시점(전면·윗면·왼쪽 면)으로 카드 중앙에 정렬되도록 했다.
+  - `HomeWorkbench`·`HomeTerminal`·`HomeBed`를 텍스트 대화 목록에서 `ColonyV4` 3D 쇼케이스 기반 시각 대시보드(`UiScreen`)로 전환하고, 상호작용 UI·보관함·옷장·상점·일지·지도에서 `Q` 키를 누르면 닫기 버튼 선택 없이 즉시 닫히도록 구현했다.
+  - 광산 드롭 아이템에 자석 흡인(`2.65`유닛) + 근접 자동 회수(`1.45`유닛) + 간결한 획득 알림을 적용했다.
+- **검증:** `prepare-resources.ps1`(320에셋, `30,897,079 B`), Release x64 6타깃 빌드, `ResourceAssetsTests`, `MapHudTests`, `CivicTests`, `GameplayTests`(전체 통과 — `RaiderTransport` 차량 하차·동적 `yaw`, `HomeStorage`/`Workbench`/`Terminal`/`Bed` `Q`키 즉시 닫기, `FailActiveEncounter` 회귀 포함), `RenderingTests --r4-only --glfw`(RTX 5080 GPU 캡처 `part2-home-storage-cards.png`, `part2-home-workbench-cards.png`, `part3-3d-globe-map.png`, `mine-hud-clean.png`, `frontier-collapsed-gorge.png`, `openworld-epilogue-halo.png`, `openworld-halo-rev5-guidance.png` 육안 검수 완료), `Test-SourceEncoding.ps1`(176파일), `git diff --check` 전부 통과.
+
 ### 전체 구조 검토와 반복 비용 리팩토링 — 2026-10-28
 
 작업 브랜치 `iss02_Refactoring`. 전체 게임 상태·레벨·도시/주민/교통·렌더 패스·리소스·모니터 경계를

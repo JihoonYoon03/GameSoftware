@@ -683,9 +683,8 @@ void PlanetParty::Arrive(const std::array<bool, 2> &travelers)
         {
             continue;
         }
-        for (unsigned ring = 2; ring <= 8; ++ring)
-        {
-            bool placed = false;
+        bool placed = false;
+        auto tryRing = [&](unsigned ring) {
             for (unsigned j = 0; j < 8; ++j)
             {
                 auto candidate = world::SurfaceGeometry::Advance(
@@ -698,13 +697,31 @@ void PlanetParty::Arrive(const std::array<bool, 2> &travelers)
                     candidate.altitudeMeters = g.Surface()->Stream().Contact(candidate).heightMeters;
                     ChangeOwner(i, CompanionPlace::Surface, candidate);
                     placed = true;
-                    break;
+                    return;
                 }
             }
-            if (placed)
+        };
+        for (unsigned ring = 2; ring <= 8 && !placed; ++ring)
+        {
+            tryRing(ring);
+        }
+        if (!placed)
+        {
+            tryRing(1);
+            for (unsigned ring = 9; ring <= 12 && !placed; ++ring)
             {
-                break;
+                tryRing(ring);
             }
+        }
+        if (!placed)
+        {
+            const double angle = (i == 0 ? 0.5 : -0.5) * world::SurfaceGeometry::Pi;
+            auto fallback = world::SurfaceGeometry::Advance(
+                                g.Surface()->Pose(), 1.6 * std::cos(angle), 1.6 * std::sin(angle),
+                                planet->terrain.Planet().radiusMeters)
+                                .origin;
+            fallback.altitudeMeters = g.Surface()->Stream().Contact(fallback).heightMeters;
+            ChangeOwner(i, CompanionPlace::Surface, fallback);
         }
     }
     Publish();
@@ -4425,7 +4442,7 @@ static bool IsCommunitySurfaceRegion(const world::GeneratedRegion &region, const
     {
         if (const auto *core = planet.cityCores->Find(region.definition.id))
         {
-            if (!core->lots.empty() || !core->roads.empty())
+            if (!core->roads.empty())
             {
                 return false;
             }
@@ -4508,6 +4525,10 @@ size_t PlanetCommunity::TargetResidents(const world::GeneratedRegion &region)
             return 3;
         }
     }
+    if (region.definition.id == "halo_07")
+    {
+        return 14;
+    }
     switch (region.definition.tier)
     {
     case world::SettlementTier::SystemCapital:
@@ -4582,7 +4603,8 @@ bool PlanetCommunity::Populate(const world::GeneratedRegion &region)
         }
         for (const auto &street : cell.streets)
         {
-            if (street.sidewalkMeters <= 0)
+            if (street.sidewalkMeters <= 0 ||
+                (street.kind != world::StreetKind::Surface && street.kind != world::StreetKind::PedestrianPlaza))
             {
                 continue;
             }
@@ -4603,7 +4625,10 @@ bool PlanetCommunity::Populate(const world::GeneratedRegion &region)
                 } while (segment + 1 < street.points.size() && reach < 45);
                 const auto &a = street.points[first], &b = street.points[segment];
                 const double length = TG::Distance(p.radiusMeters, a, b);
-                if (length < 14)
+                const double inset = region.definition.kind == world::RegionKind::Settlement
+                                         ? (std::min)(length * .25, street.widthMeters * .5 + 5.0)
+                                         : 3.0;
+                if (length < inset * 2.0 + 8.0)
                 {
                     continue;
                 }
@@ -4628,7 +4653,7 @@ bool PlanetCommunity::Populate(const world::GeneratedRegion &region)
                     point.altitudeMeters = planet->terrain.Height(point);
                     return point;
                 };
-                const auto start = at(3), end = at((std::min)(length - 3, 65.));
+                const auto start = at(inset), end = at((std::min)(length - inset, inset + 58.));
                 if (TG::Distance(p.radiusMeters, region.access.position, start) > 210 ||
                     TG::Distance(p.radiusMeters, region.access.position, end) > 210)
                 {
@@ -4637,7 +4662,19 @@ bool PlanetCommunity::Populate(const world::GeneratedRegion &region)
                 bool clear = true;
                 for (unsigned n = 0; n <= 8 && clear; ++n)
                 {
-                    clear = surface->LandingClear(TransitArc(start, end, n / 8.), .45);
+                    const auto sample = TransitArc(start, end, n / 8.);
+                    clear = surface->LandingClear(sample, .45);
+                    if (clear && region.definition.kind == world::RegionKind::Settlement)
+                    {
+                        for (const auto &inter : cell.intersections)
+                        {
+                            if (TG::Distance(p.radiusMeters, sample, inter.center) < inter.radiusMeters + .8)
+                            {
+                                clear = false;
+                                break;
+                            }
+                        }
+                    }
                 }
                 if (!clear)
                 {
@@ -5359,7 +5396,7 @@ void PlanetCommunity::Interact()
                 "조심하세요. 캠프 안쪽 약탈자들은 낯선 사람을 보면 바로 사격합니다.",
                 "무법자 교란기를 기록해 두면 치안대 없이도 정당방위로 정리할 수 있어요.",
                 "약탈자 무장 인원을 제압하면 고철 부품을 회수할 수 있습니다.",
-                "이 구역은 치안망 밖이라 중계환을 미리 등록해 두는 게 안전합니다."};
+                "이 구역은 치안망 밖이라 워프 스테이션을 미리 등록해 두는 게 안전합니다."};
             line = lines[contact->resident % 4];
             break;
         }
@@ -5389,7 +5426,7 @@ void PlanetCommunity::Interact()
                 "이 구역 일은 현장 단말에 올라옵니다. 급한 일정이 없다면 확인해 보세요.",
                 "큰 관문이 멎어도 동네 전력과 통신은 계속 돌봐야죠. 작은 고장부터 잡고 있어요.",
                 "다친 사람이 있으면 의료소부터 찾으세요. 외곽에서는 구조대가 오는 데 시간이 걸려요.",
-                "도시 밖에 나갈 땐 중계환부터 등록해 두세요. 돌아오는 길이 훨씬 편해집니다."};
+                "도시 밖에 나갈 땐 워프 스테이션부터 등록해 두세요. 돌아오는 길이 훨씬 편해집니다."};
             line = lines[contact->resident % 4];
             break;
         }
@@ -6442,8 +6479,8 @@ void PlanetCities::Update(GameState &state, const world::SurfaceSession &session
                 if (hasLegacyRoads)
                 {
                     traffic[size_t(city)].Update(state, dt);
+                    CityResidents::Get().Update(state, dt, city, &remainingPathBudget);
                 }
-                CityResidents::Get().Update(state, dt, city, &remainingPathBudget);
             });
             ++status.detailedTicks;
             profiling::Count(profiling::Counter::CityDetailedTicks);
@@ -6455,13 +6492,13 @@ void PlanetCities::Update(GameState &state, const world::SurfaceSession &session
             {
                 auto retired = traffic[size_t(city)].AdvanceDormant(dt);
                 profiling::Count(profiling::Counter::CityRetiredWrecks, retired);
-            }
-            for (auto &resident : state.residents)
-            {
-                if (resident.cityIndex == city)
+                for (auto &resident : state.residents)
                 {
-                    CitySimulation::AdvanceDormant(resident, dt);
-                    profiling::Count(profiling::Counter::CityPassiveResidents);
+                    if (resident.cityIndex == city)
+                    {
+                        CitySimulation::AdvanceDormant(resident, dt);
+                        profiling::Count(profiling::Counter::CityPassiveResidents);
+                    }
                 }
             }
         }
@@ -6601,6 +6638,10 @@ InteractionTarget PlanetCities::Nearby(const GameState &state, const world::Surf
     {
         consider(kCityKainPosition, InteractionTarget::Kain);
     }
+    if (Game::Get().CanCompleteMission(MissionId::Frontier))
+    {
+        consider(kLiaPosition, InteractionTarget::CityReceiver);
+    }
     const auto &arc = story::StoryArc::Get().State();
     if (arc.sectorLossTriggered && !arc.chapter4Complete)
     {
@@ -6620,10 +6661,10 @@ InteractionTarget PlanetCities::Nearby(const GameState &state, const world::Surf
     for (size_t i = 0; i < state.residents.size(); ++i)
     {
         const auto &r = state.residents[i];
-        if (r.cityIndex > 0 && planetPtr && planetPtr->cityCores)
+        if (planetPtr && planetPtr->cityCores)
         {
             if (const auto *core = planetPtr->cityCores->Find(Overworld::Cities()[size_t(r.cityIndex)].id);
-                core && core->lots.empty() && core->roads.empty())
+                core && core->roads.empty())
             {
                 continue;
             }
@@ -6699,12 +6740,17 @@ bool PlanetCities::OccupiedAt(const GameState &state, const world::SurfaceSessio
     {
         return false;
     }
-    if (city > 0 && plan.cityCores)
+    bool hasLegacyRoads = true;
+    if (plan.cityCores)
     {
         if (const auto *core = plan.cityCores->Find(Overworld::Cities()[size_t(city)].id);
-            core && core->lots.empty() && core->roads.empty())
+            core && core->roads.empty())
         {
-            return false;
+            hasLegacyRoads = false;
+            if (city > 0 && core->lots.empty())
+            {
+                return false;
+            }
         }
     }
     const auto &region = foundRegion ? *foundRegion : plan.Region(Overworld::Cities()[size_t(city)].id);
@@ -6719,18 +6765,21 @@ bool PlanetCities::OccupiedAt(const GameState &state, const world::SurfaceSessio
         escapeFrom ? world::SurfaceGeometry::ToLocal(region.frame, *escapeFrom, session.Planet().radiusMeters)
                    : relative;
     const Vector2 previous{center.x + float(start.x / 2), center.y + float(start.y / 2)};
-    for (size_t i = 0; i < state.residents.size(); ++i)
+    if (hasLegacyRoads)
     {
-        const auto &r = state.residents[i];
-        if (!includePeople || r.cityIndex != city || r.health <= 0 ||
-            (i == Overworld::kKainResidentSlot && game::GameLevels::Chapter().GetState().kainJoined))
+        for (size_t i = 0; i < state.residents.size(); ++i)
         {
-            continue;
-        }
-        if (Game::Distance(query, r.position) < .36f &&
-            (!escapeFrom || Game::Distance(query, r.position) <= Game::Distance(previous, r.position)))
-        {
-            return true;
+            const auto &r = state.residents[i];
+            if (!includePeople || r.cityIndex != city || r.health <= 0 ||
+                (i == Overworld::kKainResidentSlot && game::GameLevels::Chapter().GetState().kainJoined))
+            {
+                continue;
+            }
+            if (Game::Distance(query, r.position) < .36f &&
+                (!escapeFrom || Game::Distance(query, r.position) <= Game::Distance(previous, r.position)))
+            {
+                return true;
+            }
         }
     }
     if (includePeople && city == 0)
@@ -6759,15 +6808,6 @@ bool PlanetCities::OccupiedAt(const GameState &state, const world::SurfaceSessio
             {
                 return true;
             }
-        }
-    }
-    bool hasLegacyRoads = true;
-    if (plan.cityCores)
-    {
-        if (const auto *core = plan.cityCores->Find(Overworld::Cities()[size_t(city)].id);
-            core && core->roads.empty())
-        {
-            hasLegacyRoads = false;
         }
     }
     if (!hasLegacyRoads)

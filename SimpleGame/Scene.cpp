@@ -184,9 +184,14 @@ void DrawShowcaseProp(const models::Model &model, Vector2 center, float targetPi
     const float sz = mesh.maximum.z - mesh.minimum.z;
     const float span = (std::max)({sx, sy, sz, 0.05f});
     const float scale = targetPixels / (span * 52.f);
-    const float midZ = (mesh.minimum.z + mesh.maximum.z) * 0.5f;
-    const Vector2 anchor{center.x, center.y + midZ * scale * 52.f};
-    Drawing::DrawModel3D(model, anchor, {scale, scale, scale}, rot, 0.f, pal);
+    // Subtract rotated 3D bounding-box center so every asset sits dead-center in its showcase window!
+    const models::Point mid{(mesh.minimum.x + mesh.maximum.x) * 0.5f * scale,
+                            (mesh.minimum.y + mesh.maximum.y) * 0.5f * scale,
+                            (mesh.minimum.z + mesh.maximum.z) * 0.5f * scale};
+    models::Transform3D xform = rot;
+    const models::Point rMid = rot.Apply(mid);
+    xform.position = {-rMid.x, -rMid.y, -rMid.z};
+    Drawing::DrawModel3D(model, center, {scale, scale, scale}, xform, 0.f, pal);
 }
 } // namespace
 
@@ -263,50 +268,112 @@ void InteriorScene::Draw()
         renderqueue::Flush();
         return;
     }
-    if (w.ui.screen == UiScreen::HomeStorage)
+    if (w.ui.screen == UiScreen::HomeStorage || w.ui.screen == UiScreen::HomeWorkbench ||
+        w.ui.screen == UiScreen::HomeTerminal || w.ui.screen == UiScreen::HomeBed)
     {
         auto &backend = GameRenderer::Get().Backend();
         const float logicalW = WorldCamera::LogicalWidth();
         const float cxOff = WorldCamera::CenterOffsetX();
-        const float t = w.animationTimeSeconds;
 
         rendering::SceneLighting light;
-        light.keyDirection = {-.30f, .64f, .70f};
+        light.keyDirection = {-.34f, .62f, .70f};
         light.keyColor = {1.04f, 1.00f, .94f};
         light.keyIntensity = 1.08f;
         light.skyColor = {.54f, .72f, .84f};
         light.groundColor = {.34f, .38f, .42f};
-        light.ambientIntensity = .74f;
+        light.ambientIntensity = .76f;
         light.rimColor = {.40f, .92f, .86f};
         light.rimIntensity = .58f;
-        light.exposure = 1.22f;
+        light.exposure = 1.20f;
         backend.SetLighting(light);
 
         Drawing::DrawRectangle(0, 0, logicalW, kCanvasHeight, {.04f, .06f, .09f, 1.f});
-        const float cardCenters[3] = {cxOff + 266.f, cxOff + 640.f, cxOff + 1014.f};
-        const ColorRGBA cardGlows[3] = {
-            {1.f, .78f, .32f, .24f}, {.34f, .96f, .78f, .24f}, {.48f, .82f, 1.f, .24f}};
-        for (int i = 0; i < 3; ++i)
-        {
-            Drawing::DrawGlow({cardCenters[i], 322.f}, 115.f, cardGlows[i]);
-        }
-        renderqueue::Flush();
-
-        // Render 3 real spinning 3D item props centered cleanly inside the 3 Home Storage showcase windows!
-        backend.SetProjectionBasis(18.f, 44.f, true);
-        backend.BeginModels();
         const auto &lib = models::ModelLibrary::Get();
-        models::Transform3D spin;
-        spin.yaw = t * 0.9f + 0.55f;
-        spin.pitch = -0.22f;
-        DrawShowcaseProp(lib.box, {cardCenters[0], 284.f}, 106.f, spin,
-                         {{.76f, .58f, .22f, 1}, {1.f, .84f, .36f, 1}, {1.f, .86f, .40f, 1}});
-        spin.yaw = t * 1.05f + 0.8f;
-        DrawShowcaseProp(lib.recoveryKit, {cardCenters[1], 284.f}, 102.f, spin,
-                         {{.28f, .82f, .68f, 1}, {.86f, .98f, .95f, 1}, {.38f, 1.f, .84f, 1}});
-        spin.yaw = t * 0.95f + 1.6f;
-        DrawShowcaseProp(lib.salvage, {cardCenters[2], 284.f}, 108.f, spin,
-                         {{.42f, .56f, .68f, 1}, {.88f, .68f, .32f, 1}, {.44f, .92f, 1.f, 1}});
+        // Fixed isometric 3/4 view from upper-right showing front, top, and left faces cleanly with zero spin!
+        models::Transform3D fixedIso;
+        fixedIso.yaw = 0.0f;
+        fixedIso.pitch = 0.0f;
+        fixedIso.roll = 0.0f;
+
+        if (w.ui.screen == UiScreen::HomeStorage)
+        {
+            const float cardCenters[3] = {cxOff + 266.f, cxOff + 640.f, cxOff + 1014.f};
+            const ColorRGBA cardGlows[3] = {
+                {1.f, .78f, .32f, .24f}, {.34f, .96f, .78f, .24f}, {.48f, .82f, 1.f, .24f}};
+            for (int i = 0; i < 3; ++i)
+            {
+                Drawing::DrawGlow({cardCenters[i], 283.f}, 104.f, cardGlows[i]);
+            }
+            renderqueue::Flush();
+            backend.SetProjectionBasis(20.f, 44.f, false);
+            backend.BeginModels();
+            const models::Model *mSafe = models::ModelLibrary::ColonyV4("prop_storage_locker_v4");
+            const models::Model *mKit = models::ModelLibrary::ColonyV4("prop_recovery_kit_v4");
+            const models::Model *mParts = models::ModelLibrary::ColonyV4("prop_tool_rack_v4");
+            DrawShowcaseProp(mSafe ? *mSafe : lib.box, {cardCenters[0], 283.f}, 118.f, fixedIso,
+                             {{.76f, .58f, .22f, 1}, {1.f, .84f, .36f, 1}, {1.f, .86f, .40f, 1}});
+            DrawShowcaseProp(mKit ? *mKit : lib.recoveryKit, {cardCenters[1], 283.f}, 116.f, fixedIso,
+                             {{.28f, .82f, .68f, 1}, {.86f, .98f, .95f, 1}, {.38f, 1.f, .84f, 1}});
+            DrawShowcaseProp(mParts ? *mParts : lib.salvage, {cardCenters[2], 283.f}, 118.f, fixedIso,
+                             {{.42f, .56f, .68f, 1}, {.88f, .68f, .32f, 1}, {.44f, .92f, 1.f, 1}});
+            backend.EndModels();
+            backend.SetProjectionBasis(WorldCamera::IsoYScale(), WorldCamera::IsoZScale(), false);
+            renderqueue::Flush();
+            return;
+        }
+        if (w.ui.screen == UiScreen::HomeWorkbench)
+        {
+            const float xs[4] = {cxOff + 220.f, cxOff + 500.f, cxOff + 780.f, cxOff + 1060.f};
+            const ColorRGBA glows[4] = {{.34f, .96f, .78f, .24f},
+                                        {.42f, .84f, 1.f, .24f},
+                                        {1.f, .72f, .30f, .24f},
+                                        {.62f, .92f, .46f, .24f}};
+            for (int i = 0; i < 4; ++i)
+            {
+                Drawing::DrawGlow({xs[i], 283.f}, 96.f, glows[i]);
+            }
+            renderqueue::Flush();
+            backend.SetProjectionBasis(20.f, 44.f, false);
+            backend.BeginModels();
+            const models::Model *mKit = models::ModelLibrary::ColonyV4("prop_recovery_kit_v4");
+            const models::Model *mArmor = models::ModelLibrary::ColonyV4("prop_wardrobe_bay_v4");
+            const models::Model *mWeapon = models::ModelLibrary::ColonyV4("prop_tool_rack_v4");
+            const models::Model *mLift = models::ModelLibrary::ColonyV4("prop_vehicle_lift_v4");
+            DrawShowcaseProp(mKit ? *mKit : lib.recoveryKit, {xs[0], 283.f}, 108.f, fixedIso,
+                             {{.28f, .82f, .68f, 1}, {.86f, .98f, .95f, 1}, {.38f, 1.f, .84f, 1}});
+            DrawShowcaseProp(mArmor ? *mArmor : lib.box, {xs[1], 283.f}, 114.f, fixedIso,
+                             {{.34f, .62f, .82f, 1}, {.70f, .92f, 1.f, 1}, {.42f, .86f, 1.f, 1}});
+            DrawShowcaseProp(mWeapon ? *mWeapon : lib.salvage, {xs[2], 283.f}, 114.f, fixedIso,
+                             {{.68f, .46f, .22f, 1}, {1.f, .80f, .38f, 1}, {1.f, .76f, .32f, 1}});
+            DrawShowcaseProp(mLift ? *mLift : lib.vehicles[0].body, {xs[3], 283.f}, 116.f, fixedIso,
+                             {{.38f, .66f, .46f, 1}, {.76f, .96f, .62f, 1}, {.52f, .96f, .64f, 1}});
+            backend.EndModels();
+            backend.SetProjectionBasis(WorldCamera::IsoYScale(), WorldCamera::IsoZScale(), false);
+            renderqueue::Flush();
+            return;
+        }
+        if (w.ui.screen == UiScreen::HomeTerminal)
+        {
+            Drawing::DrawGlow({cxOff + 318.f, 385.f}, 160.f, {.30f, .88f, .96f, .26f});
+            renderqueue::Flush();
+            backend.SetProjectionBasis(20.f, 44.f, false);
+            backend.BeginModels();
+            const models::Model *mHolo = models::ModelLibrary::ColonyV4("prop_holo_briefing_table_v4");
+            DrawShowcaseProp(mHolo ? *mHolo : lib.console, {cxOff + 318.f, 385.f}, 210.f, fixedIso,
+                             {{.24f, .52f, .64f, 1}, {.42f, .94f, .96f, 1}, {.36f, .96f, 1.f, 1}});
+            backend.EndModels();
+            backend.SetProjectionBasis(WorldCamera::IsoYScale(), WorldCamera::IsoZScale(), false);
+            renderqueue::Flush();
+            return;
+        }
+        // UiScreen::HomeBed
+        Drawing::DrawGlow({cxOff + 340.f, 395.f}, 160.f, {.42f, .92f, .78f, .24f});
+        renderqueue::Flush();
+        backend.SetProjectionBasis(20.f, 44.f, false);
+        backend.BeginModels();
+        const models::Model *mBed = models::ModelLibrary::ColonyV4("prop_bed_v4");
+        DrawShowcaseProp(mBed ? *mBed : lib.bed, {cxOff + 340.f, 395.f}, 215.f, fixedIso,
+                         {{.28f, .48f, .56f, 1}, {.46f, .94f, .82f, 1}, {.40f, .94f, .84f, 1}});
         backend.EndModels();
         backend.SetProjectionBasis(WorldCamera::IsoYScale(), WorldCamera::IsoZScale(), false);
         renderqueue::Flush();
@@ -2844,9 +2911,15 @@ std::unique_ptr<models::Model> SurfaceModel(const world::SurfaceChunk &chunk, do
             }
         }
     }
-    // CQ-04B: Render explicit slope-conforming SurfaceIntersection pads, roundabouts, and box-culvert slabs.
+    // CQ-04B: Render explicit slope-conforming SurfaceIntersection pads only for GradeSeparated roof slabs
+    // (or as a fallback when CQ-04B 3D intersection modules are unavailable), preventing dual-layer overlap!
+    const bool hasCq04bJunc = models::ModelLibrary::Cq04b("junc_cross_4x4") != nullptr;
     for (const auto &inter : chunk.intersections)
     {
+        if (hasCq04bJunc && inter.control != world::IntersectionControl::GradeSeparated)
+        {
+            continue;
+        }
         const auto c = SurfaceProjection(inter.center, chunk.frame, radius);
         // Sit slightly above road deck/markings and tilt along local hillside slope so zero clipping occurs.
         const double cx = c.x / 2., cy = c.y / 2., cz = (c.z + .108) / 2.;
@@ -2884,52 +2957,42 @@ std::unique_ptr<models::Model> SurfaceModel(const world::SurfaceChunk &chunk, do
             }
         };
         const double rWorld = inter.radiusMeters * .5;
+        auto squarePad = [&](double halfSpan, double lift, std::array<float, 4> col, double rotYaw) {
+            const double ca = std::cos(rotYaw), sa = std::sin(rotYaw);
+            auto pt = [&](double lx, double ly) -> models::Point {
+                const double wx = cx + lx * ca - ly * sa;
+                const double wy = cy + lx * sa + ly * ca;
+                return {float(wx), float(wy), padZ(wx, wy, lift)};
+            };
+            const models::Point p0 = pt(-halfSpan, -halfSpan);
+            const models::Point p1 = pt(halfSpan, -halfSpan);
+            const models::Point p2 = pt(halfSpan, halfSpan);
+            const models::Point p3 = pt(-halfSpan, halfSpan);
+            triangle({p0, p1, p2}, {n, n, n}, col);
+            triangle({p0, p2, p3}, {n, n, n}, col);
+        };
         if (inter.control == world::IntersectionControl::Roundabout && inter.islandRadiusMeters > 1.)
         {
             const double islW = inter.islandRadiusMeters * .5;
-            // Sidewalk apron + annular asphalt carriageway + raised central green island + yield ring.
-            disc(islW - .3, rWorld + 1.2, 0., 20, {.38f, .43f, .43f, 1});
-            disc(islW, rWorld, .01, 20, {.16f, .2f, .23f, 1});
-            disc(islW + .15, islW + .3, .02, 20, {.82f, .71f, .36f, 1});
-            disc(0., islW, .06, 16, {.36f, .42f, .42f, 1});
-            disc(0., islW * .82, .08, 16, {.24f, .44f, .33f, 1});
+            // Generous flush sidewalk apron (+2.1 world units) absorbs flat road approach corners with zero gaps.
+            disc(islW - .3, rWorld + 2.1, -.004, 24, {.38f, .43f, .43f, 1});
+            disc(islW, rWorld + .45, .004, 24, {.16f, .2f, .23f, 1});
+            disc(0., islW, .035, 20, {.24f, .44f, .33f, 1});
         }
         else if (inter.control == world::IntersectionControl::GradeSeparated && inter.underpassBelow)
         {
-            // Short box-culvert plaza roof slab over the -5.4m underpass (cutaway when player enters below).
-            disc(0., rWorld * 1.18, .02, 8, {.46f, .51f, .53f, 1}, inter.mainAxisYaw + .392699);
-            disc(0., rWorld * .94, .035, 8, {.54f, .59f, .60f, 1}, inter.mainAxisYaw + .392699);
+            // Flush square plaza roof slab over the -5.4m underpass (no chamfered octagon gaps).
+            squarePad(rWorld + 0.55, .016, {.46f, .51f, .53f, 1}, inter.mainAxisYaw);
+            squarePad(rWorld + 0.15, .028, {.54f, .59f, .60f, 1}, inter.mainAxisYaw);
         }
         else
         {
-            // Clean axis-aligned octagonal asphalt pad covering the intersection core without X-crossing markings.
+            // Flush square sub-base beneath CQ04B 3D junc_cross_*/junc_tee_* modules so approach edges never gap.
             const std::array<float, 4> apronCol =
                 inter.maxLanes >= 4 ? std::array<float, 4>{.38f, .43f, .43f, 1}
                                     : std::array<float, 4>{.33f, .38f, .39f, 1};
-            disc(0., rWorld * 1.12, 0., 8, apronCol, inter.mainAxisYaw + .392699);
-            disc(0., rWorld * 1.02, .01, 8, {.16f, .2f, .23f, 1}, inter.mainAxisYaw + .392699);
-            // Stop-line / crosswalk accent bands on cardinal approaches.
-            if (inter.control == world::IntersectionControl::Signalized)
-            {
-                for (int arm = 0; arm < 4; ++arm)
-                {
-                    const double ang = inter.mainAxisYaw + arm * 1.5707963268;
-                    const double ca = std::cos(ang), sa = std::sin(ang);
-                    const double nx = -sa, ny = ca;
-                    const double dist = rWorld * .88;
-                    const double halfSpan = rWorld * .50;
-                    const double x0 = cx + ca * (dist - .28) + nx * halfSpan, y0 = cy + sa * (dist - .28) + ny * halfSpan;
-                    const double x1 = cx + ca * (dist + .28) + nx * halfSpan, y1 = cy + sa * (dist + .28) + ny * halfSpan;
-                    const double x2 = cx + ca * (dist - .28) - nx * halfSpan, y2 = cy + sa * (dist - .28) - ny * halfSpan;
-                    const double x3 = cx + ca * (dist + .28) - nx * halfSpan, y3 = cy + sa * (dist + .28) - ny * halfSpan;
-                    models::Point p0{float(x0), float(y0), padZ(x0, y0, .022)};
-                    models::Point p1{float(x1), float(y1), padZ(x1, y1, .022)};
-                    models::Point p2{float(x2), float(y2), padZ(x2, y2, .022)};
-                    models::Point p3{float(x3), float(y3), padZ(x3, y3, .022)};
-                    triangle({p0, p2, p1}, {n, n, n}, {.68f, .75f, .76f, 1});
-                    triangle({p1, p2, p3}, {n, n, n}, {.68f, .75f, .76f, 1});
-                }
-            }
+            squarePad(rWorld + 0.60, -.006, apronCol, inter.mainAxisYaw);
+            squarePad(rWorld + 0.10, .002, {.16f, .2f, .23f, 1}, inter.mainAxisYaw);
         }
     }
     model->count = std::uint32_t(model->parts.size());
@@ -3041,6 +3104,124 @@ struct ScreenFrustum
                screen.y + padDown >= minPt.y && screen.y - padUp <= maxPt.y;
     }
 };
+const models::Model &ResolveSurfaceStructureModel(const world::SurfaceStructure &structure,
+                                                  const std::string &planetId)
+{
+    using F = world::ContentForm;
+    using U = world::ContentUse;
+    const auto h = std::hash<std::string>{}(structure.id);
+    if (structure.regionId == "halo_07")
+    {
+        if (structure.id == "building_0" || structure.id.find("building_0") != std::string::npos)
+        {
+            if (const auto *m = models::ModelLibrary::ColonyV4("Halo_PlayerHome_v4"))
+            {
+                return *m;
+            }
+        }
+        else if (structure.id == "building_1" || structure.id.find("building_1") != std::string::npos)
+        {
+            if (const auto *m = models::ModelLibrary::ColonyV4("Halo_Observatory_v4"))
+            {
+                return *m;
+            }
+        }
+    }
+    if (structure.form == F::Rock)
+    {
+        const char *rockName = planetId == "seira"   ? "prop_rock_seira_v4"
+                               : planetId == "orren" ? "prop_rock_orren_v4"
+                                                     : "prop_rock_erma_v4";
+        if (const auto *m = models::ModelLibrary::ColonyV4(rockName))
+        {
+            return *m;
+        }
+    }
+    if (structure.form == F::Scenery && structure.variant == unsigned(models::SceneryType::SailTree))
+    {
+        const char *treeName = planetId == "seira"   ? "prop_plant_seira_v4"
+                               : planetId == "orren" ? "prop_tree_orren_v4"
+                                                     : "prop_tree_erma_v4";
+        if (const auto *m = models::ModelLibrary::ColonyV4(treeName))
+        {
+            return *m;
+        }
+    }
+    if (structure.form == F::Table)
+    {
+        if (const auto *m = models::ModelLibrary::ColonyV4("prop_table_v4"))
+        {
+            return *m;
+        }
+    }
+    if (structure.form == F::Relay)
+    {
+        if (const auto *m = models::ModelLibrary::ColonyV4("Frontier_RelayTower_v4"))
+        {
+            return *m;
+        }
+    }
+    if (structure.regionId == "frontier")
+    {
+        if (structure.id.find("convoy_cover") != std::string::npos)
+        {
+            if (const auto *m = models::ModelLibrary::ColonyV4("prop_field_barricade_v4"))
+            {
+                return *m;
+            }
+        }
+    }
+    // Mix newly delivered ColonyV4 urban building archetypes into procedural colony blocks.
+    const bool genericUrbanBuilding =
+        structure.form == F::Habitat || structure.form == F::Terrace || structure.form == F::Courtyard ||
+        structure.form == F::Workshop || structure.form == F::Dome || structure.form == F::Transit ||
+        structure.form == F::Spire;
+    if (genericUrbanBuilding && (h % 3 != 0))
+    {
+        const char *pick = nullptr;
+        switch (structure.use)
+        {
+        case U::Housing: {
+            static constexpr const char *kRes[] = {"Colony_MidRise_Res_A_v4", "Colony_MidRise_Res_B_v4",
+                                                   "Colony_MidRise_Res_C_v4"};
+            pick = kRes[(h / 3) % 3];
+            break;
+        }
+        case U::Services: {
+            pick = ((h / 3) % 2 == 0) ? "Colony_MarketArcade_v4" : "Colony_KioskStrip_v4";
+            break;
+        }
+        case U::Industry:
+        case U::Mining: {
+            pick = ((h / 3) % 2 == 0) ? "Colony_AtmoRefinery_v4" : "Colony_Substation_v4";
+            break;
+        }
+        case U::Administration: {
+            pick = ((h / 3) % 2 == 0) ? "Security_Precinct_v4" : "Spaceport_ControlTower_v4";
+            break;
+        }
+        case U::Expedition:
+        case U::Salvage:
+        case U::Archaeology: {
+            static constexpr const char *kExp[] = {"Spaceport_Hangar_v4", "Frontier_Bunker_v4",
+                                                   "Frontier_RelayTower_v4"};
+            pick = kExp[(h / 3) % 3];
+            break;
+        }
+        default:
+            break;
+        }
+        if (pick)
+        {
+            if (const auto *m = models::ModelLibrary::ColonyV4(pick))
+            {
+                return *m;
+            }
+        }
+    }
+    return StructureModel(structure.form, structure.variant, structure.assetName);
+}
+
 void DrawSurfaceStructure(const world::SurfaceStructure &structure, const world::SurfaceSession &session,
                           const ScreenFrustum &frustum, Vector2 playerScreen)
 {
@@ -3058,7 +3239,7 @@ void DrawSurfaceStructure(const world::SurfaceStructure &structure, const world:
     {
         return;
     }
-    const auto &model = StructureModel(structure.form, structure.variant, structure.assetName);
+    const auto &model = ResolveSurfaceStructureModel(structure, session.Planet().id);
     if (!model.resourceId)
     {
         return;
@@ -3106,8 +3287,45 @@ void DrawSurfaceStructure(const world::SurfaceStructure &structure, const world:
         palette.body = {.42f, .65f, .65f, 1};
     }
     float width = float((structure.sizeMeters.x + structure.sizeMeters.y) * 9);
-    if (screen.y > playerScreen.y - 12 && playerScreen.y > screen.y - float(structure.sizeMeters.z * 22) - 20 &&
-        std::fabs(screen.x - playerScreen.x) < width)
+    auto occludes = [&](Vector2 focus) {
+        return screen.y > focus.y - 12 && focus.y > screen.y - float(structure.sizeMeters.z * 22) - 20 &&
+               std::fabs(screen.x - focus.x) < width;
+    };
+    bool shouldFade = occludes(playerScreen);
+    if (!shouldFade && structure.regionId == "frontier")
+    {
+        const auto &ch = GameLevels::Chapter();
+        const auto &cs = ch.GetState();
+        if (cs.generated)
+        {
+            if (auto kp = ch.Surface().Project(cs.kain.position))
+            {
+                const float kz = float(session.Local(ch.Surface().Point(cs.kain.position)).z / 2.);
+                shouldFade = occludes(Drawing::WorldToScreen(kp->x, kp->y, kz * WorldCamera::IsoZScale()));
+            }
+        }
+    }
+    if (!shouldFade)
+    {
+        if (const auto *party = Game::Get().SurfaceParty())
+        {
+            for (const auto &member : party->State().members)
+            {
+                if (member.joined && member.place != CompanionPlace::Mine && member.combat.health > 0)
+                {
+                    const auto mp = SurfaceProjection(member.position, origin, session.Planet().radiusMeters);
+                    const auto ms = Drawing::WorldToScreen(float(mp.x / 2), float(mp.y / 2),
+                                                           float(mp.z / 2) * WorldCamera::IsoZScale());
+                    if (occludes(ms))
+                    {
+                        shouldFade = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    if (shouldFade)
     {
         palette.body[3] = palette.accent[3] = palette.emission[3] = .28f;
     }
@@ -3367,6 +3585,14 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
     for (size_t i = 0; i < state.residents.size(); ++i)
     {
         const auto &r = state.residents[i];
+        if (planetPtr && planetPtr->cityCores)
+        {
+            if (const auto *core = planetPtr->cityCores->Find(Overworld::Cities()[size_t(r.cityIndex)].id);
+                core && core->roads.empty())
+            {
+                continue;
+            }
+        }
         if (i == Overworld::kKainResidentSlot && GameLevels::Chapter().GetState().kainJoined)
         {
             continue;
@@ -3651,12 +3877,18 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
                                                                    : "마라 / 선택 의뢰";
     for (auto marker : {Marker{kHomeDoor, InteractionTarget::HomeEntrance, "집 단말"},
                         Marker{kLiaPosition, InteractionTarget::Lia, "리아"},
+                        Marker{kLiaPosition, InteractionTarget::CityReceiver, "세 현장 기록 대조 [E]"},
                         Marker{kMaraPosition, InteractionTarget::Mara, surfaceMaraLabel},
                         Marker{kRelayPosition, InteractionTarget::PowerRelay, "전력 장치"},
                         Marker{kBeaconPosition, InteractionTarget::GateBeacon, "전망대"}})
     {
         if (marker.target == InteractionTarget::Lia && Game::Get().SurfaceParty() &&
             Game::Get().SurfaceParty()->Joined(CompanionId::Ria))
+        {
+            continue;
+        }
+        if (marker.target == InteractionTarget::CityReceiver &&
+            (!Game::Get().SurfaceParty() || !Game::Get().SurfaceParty()->Joined(CompanionId::Ria)))
         {
             continue;
         }
@@ -3671,8 +3903,10 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
         }
         renderqueue::PushMatrix();
         renderqueue::Translate(0, -float(point->z / 2) * WorldCamera::IsoZScale(), float(point->z / 2) * (1296.f / 44));
-        Drawing::DrawInteractionMarker({float(point->x / 2), float(point->y / 2)}, marker.label,
-                                       {.4f, .9f, .85f});
+        const ColorRGBA markerColor = marker.target == InteractionTarget::CityReceiver
+                                          ? ColorRGBA(1.f, .84f, .34f)
+                                          : ColorRGBA(.4f, .9f, .85f);
+        Drawing::DrawInteractionMarker({float(point->x / 2), float(point->y / 2)}, marker.label, markerColor);
         renderqueue::PopMatrix();
     }
 }
@@ -3705,15 +3939,23 @@ void DrawPlanetParty(const world::SurfaceSession &session)
                             i == 0 ? models::HairStyle::Ponytail : models::HairStyle::Buzz,
                             m.combat.engaged && m.combat.health > 0, m.combat.muzzleFlash,
                             m.combat.health <= 0, 0, -1, &m.motion, &m.combat.support);
-        if (Game::Distance(position, Game::Get().GetState().playerPosition) < 4)
+        const float playerDist = Game::Distance(position, Game::Get().GetState().playerPosition);
+        const bool frontierCompare = m.combat.health > 0 && Game::Get().CanCompleteMission(MissionId::Frontier);
+        const bool isQuest =
+            m.combat.health > 0 &&
+            Game::Get().IsQuestInteraction(i == 0 ? InteractionTarget::Lia : InteractionTarget::Kain);
+        if (playerDist < 4)
         {
             auto at = Drawing::WorldToScreen(position.x, position.y, 62);
             Drawing::DrawLabel(at.x - 20, at.y, i == 0 ? "리아" : "카인");
-            if (m.combat.health > 0 &&
-                Game::Get().IsQuestInteraction(i == 0 ? InteractionTarget::Lia : InteractionTarget::Kain))
-            {
-                Drawing::DrawInteractionMarker(position, i == 0 ? "리아" : "카인", {.4f, .9f, .85f});
-            }
+        }
+        if (isQuest && playerDist < 28)
+        {
+            const char *markerLabel = frontierCompare ? (i == 0 ? "리아 / 세 현장 기록 대조 [E]"
+                                                                : "카인 / 세 현장 기록 대조 [E]")
+                                                      : (i == 0 ? "리아" : "카인");
+            Drawing::DrawInteractionMarker(
+                position, markerLabel, frontierCompare ? ColorRGBA(1.f, .84f, .34f) : ColorRGBA(.4f, .9f, .85f));
         }
         renderqueue::PopMatrix();
     }
@@ -3727,15 +3969,33 @@ std::unique_ptr<models::Model> FrontierGround(const world::GeneratedPlanet &plan
     model->ground = true;
     model->space = models::CoordinateSpace::World;
     auto outside = TerrainColor(region.biome);
+    auto tileAt = [&](int tx, int ty) -> FrontierTile {
+        if (tx < 0 || ty < 0 || tx >= kFrontierWidth || ty >= kFrontierHeight)
+        {
+            return FrontierTile::Sand;
+        }
+        return state.tiles[size_t(ty * kFrontierWidth + tx)];
+    };
+    auto makeSurfacePoint = [&](double fx, double fy, double altMeters) -> models::Point {
+        auto p = world::SurfaceGeometry::FromLocal(
+            region.frame, {(fx - kFrontierEntry.x) * 2., (fy - kFrontierEntry.y) * 2., 0.},
+            planet.terrain.Planet().radiusMeters);
+        p.altitudeMeters = altMeters;
+        auto local = SurfaceProjection(p, region.frame, planet.terrain.Planet().radiusMeters);
+        return {float(local.x / 2), float(local.y / 2), float(local.z / 2)};
+    };
+    const models::Point upN{0.f, 0.f, 1.f};
     for (int y = 0; y < kFrontierHeight; ++y)
     {
         for (int x = 0; x < kFrontierWidth; ++x)
         {
-            auto tile = state.tiles[size_t(y * kFrontierWidth + x)];
+            const auto tile = state.tiles[size_t(y * kFrontierWidth + x)];
+            const bool isCanal = tile == FrontierTile::Canal;
+            const float strata = float(((x * 7 + y * 13) % 5)) * 0.012f;
             std::array<float, 4> color =
                 tile == FrontierTile::Grass   ? std::array<float, 4>{.24f, .37f, .26f, 1}
                 : tile == FrontierTile::Sand  ? std::array<float, 4>{.55f, .44f, .28f, 1}
-                : tile == FrontierTile::Canal ? std::array<float, 4>{.12f, .15f, .14f, 1}
+                : isCanal                     ? std::array<float, 4>{.045f + strata, .058f + strata, .075f + strata, 1}
                 : tile == FrontierTile::Road  ? std::array<float, 4>{.28f, .30f, .30f, 1}
                                               : std::array<float, 4>{.31f, .34f, .35f, 1};
             float edge = std::clamp(
@@ -3747,29 +4007,133 @@ std::unique_ptr<models::Model> FrontierGround(const world::GeneratedPlanet &plan
                     color[i] = outside[i] + (color[i] - outside[i]) * edge;
                 }
             }
+            const double floorAlt = isCanal ? (core.elevationMeters + .045) : (core.elevationMeters + .03);
+            const models::Point corners3D[4] = {makeSurfacePoint(x, y, floorAlt),
+                                                makeSurfacePoint(x + 1, y, floorAlt),
+                                                makeSurfacePoint(x + 1, y + 1, floorAlt),
+                                                makeSurfacePoint(x, y + 1, floorAlt)};
             for (auto indices : {std::array<unsigned, 3>{0, 1, 2}, std::array<unsigned, 3>{0, 2, 3}})
             {
-                constexpr int corners[4][2] = {{0, 0}, {1, 0}, {1, 1}, {0, 1}};
                 models::Part part;
                 part.count = 3;
                 part.color = color;
                 part.surface = models::Surface::Default;
                 for (unsigned i = 0; i < 3; ++i)
                 {
-                    auto p = world::SurfaceGeometry::FromLocal(
-                        region.frame,
-                        {(x + corners[indices[i]][0] - kFrontierEntry.x) * 2,
-                         (y + corners[indices[i]][1] - kFrontierEntry.y) * 2, 0},
-                        planet.terrain.Planet().radiusMeters);
-                    p.altitudeMeters = core.elevationMeters + .03;
-                    auto local = SurfaceProjection(p, region.frame, planet.terrain.Planet().radiusMeters);
-                    part.points[i] = {float(local.x / 2), float(local.y / 2), float(local.z / 2)};
-                    part.normals[i] = {
-                        float(world::SurfaceGeometry::Dot(p.normal, region.frame.right)),
-                        float(world::SurfaceGeometry::Dot(p.normal, region.frame.forward)),
-                        float(world::SurfaceGeometry::Dot(p.normal, region.frame.origin.normal))};
+                    part.points[i] = corners3D[indices[i]];
+                    part.normals[i] = upN;
                 }
                 model->parts.push_back(part);
+            }
+            // Emit rugged 3D fractured cliff embankments, broken concrete fault rims, and inner chasm rubble ridges
+            // ABOVE the planet terrain surface so the depth buffer never occludes the collapsed fault gorge!
+            if (isCanal)
+            {
+                auto hash01 = [](int hx, int hy, int salt) -> double {
+                    unsigned h = unsigned(hx * 374761393 + hy * 668265263 + salt * 1442695041);
+                    h = (h ^ (h >> 13)) * 1274126177u;
+                    return double((h ^ (h >> 16)) & 0xFFFFu) / 65535.0;
+                };
+                auto pushTri = [&](models::Point a, models::Point b, models::Point c, models::Point n,
+                                   std::array<float, 4> col) {
+                    models::Part p;
+                    p.count = 3;
+                    p.color = col;
+                    p.surface = models::Surface::Default;
+                    p.points[0] = a;
+                    p.points[1] = b;
+                    p.points[2] = c;
+                    p.normals[0] = p.normals[1] = p.normals[2] = n;
+                    model->parts.push_back(p);
+                };
+                auto pushQuad = [&](models::Point a, models::Point b, models::Point c, models::Point d,
+                                    models::Point n, std::array<float, 4> col) {
+                    pushTri(a, b, c, n, col);
+                    pushTri(a, c, d, n, col);
+                };
+                struct WallDir
+                {
+                    int dx, dy;
+                    double x0, y0, x1, y1;
+                    models::Point inN, outN;
+                    std::array<float, 4> rimCol, cliffCol, outerCol;
+                };
+                const WallDir walls[4] = {
+                    {0, -1, double(x), double(y), double(x + 1), double(y), {0, 1, .45f}, {0, -1, .65f},
+                     {.46f, .38f, .29f, 1}, {.19f, .16f, .14f, 1}, {.50f, .41f, .29f, 1}},
+                    {0, 1, double(x + 1), double(y + 1), double(x), double(y + 1), {0, -1, .45f}, {0, 1, .65f},
+                     {.38f, .31f, .24f, 1}, {.14f, .12f, .11f, 1}, {.45f, .37f, .26f, 1}},
+                    {-1, 0, double(x), double(y + 1), double(x), double(y), {1, 0, .45f}, {-1, 0, .65f},
+                     {.49f, .40f, .30f, 1}, {.21f, .18f, .15f, 1}, {.52f, .42f, .30f, 1}},
+                    {1, 0, double(x + 1), double(y), double(x + 1), double(y + 1), {-1, 0, .45f}, {1, 0, .65f},
+                     {.36f, .29f, .22f, 1}, {.13f, .11f, .10f, 1}, {.44f, .36f, .25f, 1}},
+                };
+                for (const auto &wDir : walls)
+                {
+                    if (tileAt(x + wDir.dx, y + wDir.dy) == FrontierTile::Canal)
+                    {
+                        continue;
+                    }
+                    // Jagged 3D fractured lip crest rising +0.42..0.82m along the collapsed chasm edge,
+                    // dropping steeply inward into the dark chasm floor and sloping smoothly into surrounding sand.
+                    const double j0 = hash01(int(wDir.x0), int(wDir.y0), 11);
+                    const double j1 = hash01(int(wDir.x1), int(wDir.y1), 11);
+                    const double jMid = hash01(x + wDir.dx * 3, y + wDir.dy * 3, 29);
+                    const double crestAlt0 = core.elevationMeters + 0.44 + j0 * 0.34;
+                    const double crestAlt1 = core.elevationMeters + 0.44 + j1 * 0.34;
+                    const double crestAltM = core.elevationMeters + 0.52 + jMid * 0.38;
+                    const double outerAlt = core.elevationMeters + 0.03;
+                    const double inStep = 0.24 + jMid * 0.14;
+                    const double outStep = 0.34;
+                    const double mx = (wDir.x0 + wDir.x1) * 0.5;
+                    const double my = (wDir.y0 + wDir.y1) * 0.5;
+                    const models::Point c0 = makeSurfacePoint(wDir.x0, wDir.y0, crestAlt0);
+                    const models::Point cM =
+                        makeSurfacePoint(mx - double(wDir.dx) * (jMid * 0.12 - 0.06),
+                                         my - double(wDir.dy) * (jMid * 0.12 - 0.06), crestAltM);
+                    const models::Point c1 = makeSurfacePoint(wDir.x1, wDir.y1, crestAlt1);
+                    const models::Point in0 =
+                        makeSurfacePoint(wDir.x0 - double(wDir.dx) * inStep, wDir.y0 - double(wDir.dy) * inStep,
+                                         floorAlt + 0.01);
+                    const models::Point in1 =
+                        makeSurfacePoint(wDir.x1 - double(wDir.dx) * inStep, wDir.y1 - double(wDir.dy) * inStep,
+                                         floorAlt + 0.01);
+                    const models::Point out0 =
+                        makeSurfacePoint(wDir.x0 + double(wDir.dx) * outStep, wDir.y0 + double(wDir.dy) * outStep,
+                                         outerAlt);
+                    const models::Point out1 =
+                        makeSurfacePoint(wDir.x1 + double(wDir.dx) * outStep, wDir.y1 + double(wDir.dy) * outStep,
+                                         outerAlt);
+                    // Inner fractured cliff face (2 jagged facets meeting at crest midpoint)
+                    pushTri(c0, cM, in0, wDir.inN, wDir.cliffCol);
+                    pushTri(cM, in1, in0, wDir.inN, wDir.rimCol);
+                    pushTri(cM, c1, in1, wDir.inN, wDir.cliffCol);
+                    // Outer rubble apron blending back into the Frontier sand shoulder
+                    pushTri(out0, cM, c0, wDir.outN, wDir.outerCol);
+                    pushTri(out0, out1, cM, wDir.outN, wDir.outerCol);
+                    pushTri(out1, c1, cM, wDir.outN, wDir.outerCol);
+                }
+                // Inner jagged fractured rock/concrete rubble slabs collapsed into the chasm floor.
+                const double hSlab = hash01(x, y, 73);
+                if (hSlab > 0.32)
+                {
+                    const double cx = double(x) + 0.25 + hash01(x, y, 81) * 0.50;
+                    const double cy = double(y) + 0.25 + hash01(x, y, 89) * 0.50;
+                    const double rad = 0.22 + hash01(x, y, 97) * 0.20;
+                    const double peakZ = floorAlt + 0.22 + (hSlab - 0.32) * 0.55;
+                    const models::Point peak = makeSurfacePoint(cx, cy, peakZ);
+                    const models::Point p0 = makeSurfacePoint(cx - rad, cy - rad * 0.6, floorAlt);
+                    const models::Point p1 = makeSurfacePoint(cx + rad * 0.9, cy - rad * 0.7, floorAlt);
+                    const models::Point p2 = makeSurfacePoint(cx + rad * 0.7, cy + rad, floorAlt);
+                    const models::Point p3 = makeSurfacePoint(cx - rad * 0.8, cy + rad * 0.8, floorAlt);
+                    const std::array<float, 4> slabLit{.28f + strata, .24f + strata, .21f + strata, 1};
+                    const std::array<float, 4> slabDark{.12f + strata, .11f + strata, .11f + strata, 1};
+                    pushTri(peak, p0, p1, {0, -0.7f, 0.7f}, slabLit);
+                    pushTri(peak, p1, p2, {0.7f, 0, 0.7f}, slabDark);
+                    pushTri(peak, p2, p3, {0, 0.7f, 0.7f}, slabDark);
+                    pushTri(peak, p3, p0, {-0.7f, 0, 0.7f}, slabLit);
+                }
+                (void)pushQuad;
             }
         }
     }
@@ -3910,10 +4274,9 @@ void DrawSurfaceFrontier(const world::SurfaceSession &session)
         }
         else
         {
-            const float yaw = surface.Yaw(std::atan2(state.kain.position.y - threat.position.y,
-                                                     state.kain.position.x - threat.position.x));
-            Drawing::DrawPerson(*p, {.76f, .28f, .22f}, false, models::CharacterType::Guard, true, yaw,
-                                models::Gender::Male, models::HairStyle::Buzz, true);
+            const float yaw = surface.Yaw(threat.yaw);
+            Drawing::DrawPerson(*p, {.76f, .28f, .22f}, false, models::CharacterType::Guard, threat.walking, yaw,
+                                models::Gender::Male, models::HairStyle::Buzz, true, threat.muzzleFlash);
             const auto lbl = Drawing::WorldToScreen(p->x, p->y, 78.f);
             Drawing::DrawLabel(lbl.x - 32.f, lbl.y,
                                threat.maxHealth >= 60 ? "중무장 습격자" : "약탈자 습격조", {1.f, .50f, .42f});
@@ -3926,13 +4289,40 @@ void DrawSurfaceFrontier(const world::SurfaceSession &session)
                                                                              : ColorRGBA(.96f, .30f, .26f));
         renderqueue::PopMatrix();
     }
+    // Render high-speed raider assault vehicles (approaching from off-screen and parked after dismount).
+    for (const auto &tr : state.raiderTransports)
+    {
+        if (!tr.active)
+        {
+            continue;
+        }
+        auto p = surface.Project(tr.position);
+        if (!p)
+        {
+            continue;
+        }
+        const float z = height(tr.position);
+        models::Palette raiderPal;
+        raiderPal.body = {.34f, .14f, .13f, 1.f};
+        raiderPal.accent = {.94f, .30f, .18f, 1.f};
+        raiderPal.emission = {1.f, .38f, .16f, 1.f};
+        renderqueue::PushMatrix();
+        renderqueue::Translate(0, -z * WorldCamera::IsoZScale(), z * (1296.f / 44));
+        Drawing::DrawWorldVehicle(*p, 3.3f, 1.f, tr.vehicleType, raiderPal, tr.throttle, surface.Yaw(tr.yaw));
+        if (!tr.dismounted)
+        {
+            const auto lbl = Drawing::WorldToScreen(p->x, p->y, 68.f);
+            Drawing::DrawLabel(lbl.x - 42.f, lbl.y, "약탈자 돌격 차량", {1.f, .44f, .26f});
+        }
+        renderqueue::PopMatrix();
+    }
     auto glow = [&](Vector2 authored, float z, float radius, ColorRGBA color) {
         if (auto p = surface.Project(authored))
         {
             Drawing::DrawGlow(Drawing::WorldToScreen(p->x, p->y, height(authored) * 44 + z), radius, color);
         }
     };
-    // Kain's distress flare column + burning wrecked convoy flames + canal high-voltage hazard pools!
+    // Kain's distress flare column + burning convoy flames + ColonyV4 collapsed fault gorge wreckage & high-voltage arcs!
     if (!state.convoyRescued)
     {
         const float animT = Game::Get().GetState().animationTimeSeconds;
@@ -3942,20 +4332,104 @@ void DrawSurfaceFrontier(const world::SurfaceSession &session)
         {
             glow(wreck, 26.f, 22.f * pulse, {1.f, .42f, .16f, .62f});
         }
-        // High-voltage electrical rift leak zones along the collapsed L-shaped fault gorge.
-        constexpr Vector2 kCanalHazards[3] = {{26.5f, 10.5f}, {30.5f, 15.5f}, {36.5f, 15.5f}};
-        for (int h = 0; h < 3; ++h)
+        // Delivered ColonyV4 tilted high-voltage pillars & canyon wreckage along the collapsed L-shaped fault rim.
+        if (const auto *hvPillar = models::ModelLibrary::ColonyV4("prop_high_voltage_pillar_v4"))
         {
-            if (auto hp = surface.Project(kCanalHazards[h]))
+            constexpr Vector2 kPillars[4] = {{26.2f, 8.2f}, {26.2f, 13.8f}, {30.5f, 15.2f}, {36.8f, 15.2f}};
+            for (int pIdx = 0; pIdx < 4; ++pIdx)
             {
-                const float hz = height(kCanalHazards[h]);
-                const auto scr = Drawing::WorldToScreen(hp->x, hp->y, hz * 44.f + 8.f);
-                Drawing::DrawEllipse(scr.x, scr.y, 38.f * pulse, 18.f * pulse, {.86f, .18f, .34f, .34f});
-                Drawing::DrawGlow(scr, 28.f * pulse, {1.f, .28f, .44f, .55f});
-                if (h == 1)
+                if (auto pp = surface.Project(kPillars[pIdx]))
                 {
-                    Drawing::DrawLabel(scr.x - 42.f, scr.y - 24.f, "고압 누전 단층", {1.f, .46f, .52f});
+                    const float pz = height(kPillars[pIdx]);
+                    models::Transform3D tr;
+                    tr.yaw = surface.Yaw(pIdx * 0.85f);
+                    tr.pitch = (pIdx % 2 == 0) ? 0.28f : -0.22f;
+                    tr.position.z = pz + 0.06f;
+                    Drawing::DrawModel3D(*hvPillar, Drawing::WorldToScreen(pp->x, pp->y), {.92f, .92f, .92f}, tr,
+                                         (pp->x + pp->y) * 36.f, {});
                 }
+            }
+        }
+        if (const auto *wreckProp = models::ModelLibrary::ColonyV4("convoy_wreck_v4"))
+        {
+            if (auto wp = surface.Project({27.6f, 15.8f}))
+            {
+                const float wz = height({27.6f, 15.8f});
+                models::Transform3D tr;
+                tr.yaw = surface.Yaw(0.65f);
+                tr.roll = 0.24f;
+                tr.pitch = -0.14f;
+                tr.position.z = wz + 0.08f;
+                Drawing::DrawModel3D(*wreckProp, Drawing::WorldToScreen(wp->x, wp->y), {.86f, .86f, .86f}, tr,
+                                     (wp->x + wp->y) * 36.f, {});
+            }
+        }
+        if (const auto *gorgeRock = models::ModelLibrary::ColonyV4("prop_rock_arid_v4"))
+        {
+            constexpr struct
+            {
+                Vector2 pos;
+                float scale;
+                float yaw;
+            } kRubble[] = {
+                {{26.8f, 7.2f}, 0.65f, 0.3f},  {{27.1f, 11.4f}, 0.82f, 1.4f}, {{26.4f, 15.1f}, 0.74f, 2.2f},
+                {{29.2f, 16.2f}, 0.78f, 0.8f}, {{33.4f, 15.7f}, 0.68f, 2.7f}, {{37.8f, 16.0f}, 0.80f, 1.9f},
+            };
+            for (const auto &rb : kRubble)
+            {
+                if (auto rp = surface.Project(rb.pos))
+                {
+                    models::Transform3D tr;
+                    tr.yaw = surface.Yaw(rb.yaw);
+                    tr.position.z = height(rb.pos) + 0.02f;
+                    Drawing::DrawModel3D(*gorgeRock, Drawing::WorldToScreen(rp->x, rp->y),
+                                         {rb.scale, rb.scale, rb.scale * 0.78f}, tr, (rp->x + rp->y) * 36.f, {});
+                }
+            }
+        }
+        // Jagged animated high-voltage electrical arc bolts jumping across the sunken 3D canyon walls!
+        struct ArcSpan
+        {
+            Vector2 a, b;
+        };
+        constexpr ArcSpan kArcs[4] = {
+            {{25.8f, 9.2f}, {28.1f, 10.6f}},
+            {{25.8f, 13.4f}, {28.1f, 14.2f}},
+            {{29.6f, 14.8f}, {31.8f, 17.1f}},
+            {{35.4f, 14.8f}, {37.6f, 17.1f}},
+        };
+        for (int h = 0; h < 4; ++h)
+        {
+            const auto pa = surface.Project(kArcs[h].a);
+            const auto pb = surface.Project(kArcs[h].b);
+            if (!pa || !pb)
+            {
+                continue;
+            }
+            const float zBase = height(kArcs[h].a) * 44.f - 10.f;
+            const auto sa = Drawing::WorldToScreen(pa->x, pa->y, zBase + 16.f);
+            const auto sb = Drawing::WorldToScreen(pb->x, pb->y, zBase + 16.f);
+            const float arcPhase = std::sin(animT * 9.f + float(h) * 2.1f);
+            if (arcPhase > -0.35f)
+            {
+                Vector2 prev = sa;
+                for (int seg = 1; seg <= 5; ++seg)
+                {
+                    const float t = float(seg) / 5.f;
+                    const float jitter = (seg == 5) ? 0.f : std::sin(animT * 27.f + float(h * 7 + seg * 5)) * 10.f;
+                    const Vector2 next{sa.x + (sb.x - sa.x) * t + jitter * 0.45f,
+                                       sa.y + (sb.y - sa.y) * t + jitter};
+                    Drawing::DrawLine(prev, next, {.42f, .88f, 1.f, .78f}, 3.2f);
+                    Drawing::DrawLine(prev, next, {.94f, .98f, 1.f, .95f}, 1.3f);
+                    prev = next;
+                }
+                Drawing::DrawGlow({(sa.x + sb.x) * .5f, (sa.y + sb.y) * .5f}, 18.f * pulse,
+                                  {.36f, .82f, 1.f, .38f});
+            }
+            if (h == 2)
+            {
+                Drawing::DrawLabel((sa.x + sb.x) * .5f - 42.f, (sa.y + sb.y) * .5f - 28.f, "붕괴 협곡 · 고압 단층",
+                                   {.82f, .94f, 1.f});
             }
         }
         if (!state.convoyBriefed)
@@ -4288,6 +4762,13 @@ void PlanetScene::Draw()
         const auto *mPlaza = models::ModelLibrary::Cq04b("plaza_tile_8m");
         const auto *mRound1 = models::ModelLibrary::Cq04b("junc_roundabout_1lane");
         const auto *mRound2 = models::ModelLibrary::Cq04b("junc_roundabout_2lane");
+        const auto *mCross2x2 = models::ModelLibrary::Cq04b("junc_cross_2x2");
+        const auto *mCross4x2 = models::ModelLibrary::Cq04b("junc_cross_4x2");
+        const auto *mCross4x4 = models::ModelLibrary::Cq04b("junc_cross_4x4");
+        const auto *mCross6x4 = models::ModelLibrary::Cq04b("junc_cross_6x4");
+        const auto *mCross6x6 = models::ModelLibrary::Cq04b("junc_cross_6x6");
+        const auto *mTee2x2 = models::ModelLibrary::Cq04b("junc_tee_2x2");
+        const auto *mTee4x2 = models::ModelLibrary::Cq04b("junc_tee_4x2");
         const auto playerWorld = session->Pose().origin;
         auto lightCol = [](TrafficLight l) {
             return l == TrafficLight::Green   ? ColorRGBA(.18f, 1.f, .76f)
@@ -4296,6 +4777,41 @@ void PlanetScene::Draw()
         };
         for (const auto &chunk : visible)
         {
+            if (chunk->roads.empty() && chunk->intersections.empty())
+            {
+                continue;
+            }
+            const auto cp = SurfaceProjection(chunk->frame.origin, session->Origin(), planetRadius);
+            const auto cscr =
+                Drawing::WorldToScreen(float(cp.x * .5), float(cp.y * .5), float(cp.z * .5) * WorldCamera::IsoZScale());
+            const float cpadH = float(chunk->radiusMeters) * 28.f + 260.f;
+            const float cpadV = float(chunk->radiusMeters) * WorldCamera::IsoYScale() + 480.f;
+            if (!frustum.Visible(cscr, cpadH, cpadH, cpadV, cpadV))
+            {
+                continue;
+            }
+            struct ProjectedInter
+            {
+                float x, y, z, rW;
+            };
+            std::vector<ProjectedInter> projInters;
+            projInters.reserve(chunk->intersections.size());
+            for (const auto &inter : chunk->intersections)
+            {
+                const auto ip = SurfaceProjection(inter.center, session->Origin(), planetRadius);
+                projInters.push_back(
+                    {float(ip.x * 0.5), float(ip.y * 0.5), float(ip.z * 0.5), float(inter.radiusMeters * 0.5)});
+            }
+            auto clearOfIntersections = [&](Vector2 posW, float extraPadW) -> bool {
+                for (const auto &pi : projInters)
+                {
+                    if (std::hypot(posW.x - pi.x, posW.y - pi.y) < pi.rW + extraPadW)
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            };
             // 1) CQ-04B 3D road segments & modern streetscape along city streets near the camera.
             for (size_t rIdx = 0; rIdx < chunk->roads.size(); ++rIdx)
             {
@@ -4344,7 +4860,12 @@ void PlanetScene::Draw()
                 const auto &rRes = models::ResourceAssets::Get(roadMod->resourceId);
                 const float spanX = (std::max)(0.5f, rRes.maximum.x - rRes.minimum.x);
                 const float spanY = (std::max)(0.5f, rRes.maximum.y - rRes.minimum.y);
-                const bool urbanStreet = road.sidewalkMeters > 0. && road.kind != world::StreetKind::PedestrianPlaza;
+                const bool gradeSep = road.kind == world::StreetKind::Elevated ||
+                                      road.kind == world::StreetKind::ElevatedRamp ||
+                                      road.kind == world::StreetKind::Underpass ||
+                                      road.kind == world::StreetKind::UnderpassRamp;
+                const bool urbanStreet =
+                    road.sidewalkMeters > 0. && road.kind != world::StreetKind::PedestrianPlaza && !gradeSep;
                 for (size_t i = 1; i < road.points.size(); ++i)
                 {
                     const auto pa = SurfaceProjection(road.points[i - 1], session->Origin(), planetRadius);
@@ -4353,7 +4874,7 @@ void PlanetScene::Draw()
                     const float bx = float(pb.x * .5), by = float(pb.y * .5), bz = float(pb.z * .5);
                     const float mx = (ax + bx) * .5f, my = (ay + by) * .5f, mz = (az + bz) * .5f;
                     const float segLenW = std::hypot(bx - ax, by - ay);
-                    if (segLenW < 0.35f || std::fabs(bz - az) > segLenW * 0.22f)
+                    if (segLenW < 0.35f || std::fabs(bz - az) > segLenW * 0.45f)
                     {
                         continue;
                     }
@@ -4363,70 +4884,81 @@ void PlanetScene::Draw()
                         continue;
                     }
                     const float yaw = std::atan2(by - ay, bx - ax);
+                    const float pitch = -std::atan2(bz - az, segLenW);
                     const float dx = (bx - ax) / segLenW;
                     const float dy = (by - ay) / segLenW;
                     const float nx = -dy, ny = dx;
                     const float targetW = float((road.widthMeters + road.sidewalkMeters * 2.) * .5);
                     const float scaleY = Game::Clamp(targetW / spanY, 0.72f, 1.35f);
-                    // Tile 3D CQ04B road modules cleanly along the segment with explicit terrain elevation.
-                    const int tiles = (std::max)(1, int(std::round(segLenW / spanX)));
-                    const float stepW = segLenW / float(tiles);
+                    // Overlap endpoints slightly (0.30 world units) and pitch along slope so bends & junctions never gap.
+                    const float padEnd = (i == 1 || i + 1 == road.points.size()) ? 0.40f : 0.12f;
+                    const float totalLen = segLenW + padEnd * 2.f;
+                    const int tiles = (std::max)(1, int(std::round(totalLen / spanX)));
+                    const float stepW = totalLen / float(tiles);
                     const float scaleX = stepW / spanX;
-                    const float roadElev = mz + 0.035f;
                     for (int t = 0; t < tiles; ++t)
                     {
-                        const float startDist = float(t) * stepW;
-                        const Vector2 pos{ax + dx * startDist, ay + dy * startDist};
-                        Drawing::DrawProp(*roadMod, pos, {scaleX, scaleY, 1.f}, {}, yaw, roadElev);
+                        const float dStart = -padEnd + float(t) * stepW;
+                        const float frac = Game::Clamp(dStart / segLenW, 0.f, 1.f);
+                        const float zStart = az + (bz - az) * frac + 0.032f;
+                        const Vector2 pos{ax + dx * dStart, ay + dy * dStart};
+                        models::Transform3D tr;
+                        tr.yaw = yaw;
+                        tr.pitch = pitch;
+                        tr.position.z = zStart;
+                        Drawing::DrawModel3D(*roadMod, Drawing::WorldToScreen(pos.x, pos.y), {scaleX, scaleY, 1.f},
+                                             tr, (pos.x + pos.y) * 36.f, {});
                     }
-                    // Place CQ04B modern streetlights, shelters, benches & bollards along urban sidewalks.
-                    if (urbanStreet && world::SurfaceGeometry::Distance(planetRadius, playerWorld, road.points[i]) < 95.)
+                    // Place CQ04B modern streetlights, shelters, benches & bollards cleanly outside intersections at true terrain Z.
+                    if (urbanStreet && i > 1 && i + 1 < road.points.size() &&
+                        world::SurfaceGeometry::Distance(planetRadius, playerWorld, road.points[i]) < 95.)
                     {
                         const float curbOffset = float(road.widthMeters * .25 + road.sidewalkMeters * .35);
-                        if (mLight && segLenW >= 5.5f && ((rIdx + i) % 2 == 0))
+                        if (mLight && segLenW >= 2.6f && ((rIdx + i) % 3 == 0))
                         {
-                            const float side = ((rIdx + i) % 4 == 0) ? 1.f : -1.f;
-                            Drawing::DrawProp(*mLight, {mx + nx * curbOffset * side, my + ny * curbOffset * side},
-                                              {1.f, 1.f, 1.f}, {}, yaw + (side > 0 ? -kPi * .5f : kPi * .5f), mz);
-                        }
-                        if (road.widthMeters >= 11.5 && segLenW >= 7.f && ((rIdx + i) % 5 == 0))
-                        {
-                            if (mShelter)
+                            const float side = ((rIdx + i) % 6 == 0) ? 1.f : -1.f;
+                            const Vector2 lp{mx + nx * curbOffset * side, my + ny * curbOffset * side};
+                            if (clearOfIntersections(lp, 2.8f))
                             {
-                                Drawing::DrawProp(*mShelter, {mx + nx * (curbOffset + .35f), my + ny * (curbOffset + .35f)},
-                                                  {1.f, 1.f, 1.f}, {}, yaw, mz);
-                            }
-                            if (mBench)
-                            {
-                                Drawing::DrawProp(*mBench, {mx - nx * (curbOffset + .2f), my - ny * (curbOffset + .2f)},
-                                                  {1.f, 1.f, 1.f}, {}, yaw + kPi, mz);
+                                Drawing::DrawProp(*mLight, lp, {1.f, 1.f, 1.f}, {},
+                                                  yaw + (side > 0 ? -kPi * .5f : kPi * .5f), mz + 0.04f);
                             }
                         }
-                        if (mBollard && road.widthMeters >= 9.5 && ((rIdx + i) % 3 == 0))
+                        if (road.widthMeters >= 11.5 && segLenW >= 2.8f && ((rIdx + i) % 7 == 0))
                         {
-                            Drawing::DrawProp(*mBollard, {ax + dx * 1.4f + nx * curbOffset, ay + dy * 1.4f + ny * curbOffset},
-                                              {1.f, 1.f, 1.f}, {}, yaw, mz);
+                            const Vector2 sp{mx + nx * (curbOffset + .35f), my + ny * (curbOffset + .35f)};
+                            if (mShelter && clearOfIntersections(sp, 4.2f))
+                            {
+                                Drawing::DrawProp(*mShelter, sp, {1.f, 1.f, 1.f}, {}, yaw, mz + 0.04f);
+                            }
+                            const Vector2 bp{mx - nx * (curbOffset + .25f), my - ny * (curbOffset + .25f)};
+                            if (mBench && clearOfIntersections(bp, 3.6f))
+                            {
+                                Drawing::DrawProp(*mBench, bp, {1.f, 1.f, 1.f}, {}, yaw + kPi, mz + 0.04f);
+                            }
+                        }
+                        if (mBollard && road.widthMeters >= 9.5 && segLenW >= 2.4f && ((rIdx + i) % 5 == 0))
+                        {
+                            const Vector2 blp{mx + nx * curbOffset, my + ny * curbOffset};
+                            if (clearOfIntersections(blp, 2.8f))
+                            {
+                                Drawing::DrawProp(*mBollard, blp, {1.f, 1.f, 1.f}, {}, yaw, mz + 0.04f);
+                            }
                         }
                     }
                 }
             }
-            // 2) CQ-04B Intersections: 4-aspect signal gantries, pedestrian poles, roundabouts & cutaway guides.
-            for (const auto &inter : chunk->intersections)
+            // 2) CQ-04B Intersections: single 3D junc_cross_*/junc_tee_*/junc_roundabout_* module + 4-aspect signals.
+            for (size_t interIdx = 0; interIdx < chunk->intersections.size(); ++interIdx)
             {
-                if (inter.control != world::IntersectionControl::Signalized &&
-                    inter.control != world::IntersectionControl::GradeSeparated &&
-                    inter.control != world::IntersectionControl::Roundabout)
-                {
-                    continue;
-                }
-                const auto p = SurfaceProjection(inter.center, session->Origin(), planetRadius);
-                const float px = float(p.x / 2.), py = float(p.y / 2.), pz = float(p.z / 2.);
+                const auto &inter = chunk->intersections[interIdx];
+                const auto &pi = projInters[interIdx];
+                const float px = pi.x, py = pi.y, pz = pi.z, rW = pi.rW;
                 const auto scr = Drawing::WorldToScreen(px, py, pz * WorldCamera::IsoZScale());
                 if (!frustum.Visible(scr, 280, 280, 240, 240))
                 {
                     continue;
                 }
-                const float rW = float(inter.radiusMeters * .5);
                 if (inter.control == world::IntersectionControl::Roundabout)
                 {
                     const auto *rb = (inter.radiusMeters >= 15. && mRound2) ? mRound2 : mRound1;
@@ -4434,75 +4966,22 @@ void PlanetScene::Draw()
                     {
                         const auto &rbRes = models::ResourceAssets::Get(rb->resourceId);
                         const float rbSpan = (std::max)(1.f, rbRes.maximum.x - rbRes.minimum.x);
-                        const float s = Game::Clamp((rW * 2.f) / rbSpan, 0.7f, 1.35f);
-                        Drawing::DrawProp(*rb, {px, py}, {s, s, 1.f}, {}, float(inter.mainAxisYaw), pz + 0.04f);
+                        const float s = Game::Clamp((rW * 2.18f) / rbSpan, 0.55f, 1.38f);
+                        Drawing::DrawProp(*rb, {px, py}, {s, s, 1.f}, {}, float(inter.mainAxisYaw), pz + 0.036f);
                     }
                     if (mPlanter && inter.islandRadiusMeters > 1.5)
                     {
-                        Drawing::DrawProp(*mPlanter, {px, py}, {1.f, 1.f, 1.f}, {}, float(inter.mainAxisYaw), pz);
+                        Drawing::DrawProp(*mPlanter, {px, py}, {1.f, 1.f, 1.f}, {}, float(inter.mainAxisYaw), pz + 0.04f);
                     }
                     if (mYield)
                     {
                         for (int arm = 0; arm < 4; arm += 2)
                         {
                             const float ang = float(inter.mainAxisYaw) + float(arm) * (kPi * .5f);
-                            Drawing::DrawProp(*mYield,
-                                              {px + std::cos(ang) * (rW * 1.05f), py + std::sin(ang) * (rW * 1.05f)},
-                                              {1.f, 1.f, 1.f}, {}, ang + kPi, pz);
+                            const Vector2 yp{px + std::cos(ang) * (rW * 1.08f), py + std::sin(ang) * (rW * 1.08f)};
+                            Drawing::DrawProp(*mYield, yp, {1.f, 1.f, 1.f}, {}, ang + kPi, pz + 0.04f);
                         }
                     }
-                }
-                else if (inter.control == world::IntersectionControl::Signalized)
-                {
-                    const auto sig = IntersectionSignalController::Evaluate(
-                        inter, double(w.animationTimeSeconds), true, true, true, urgentAxis);
-                    renderqueue::PushMatrix();
-                    renderqueue::Translate(0, -pz * WorldCamera::IsoZScale(), pz * (1296.f / 44.f));
-                    for (int arm = 0; arm < 4; ++arm)
-                    {
-                        const bool isMain = (arm % 2 == 0);
-                        const float ang = float(inter.mainAxisYaw) + arm * (kPi * .5f);
-                        const Vector2 d{std::cos(ang), std::sin(ang)};
-                        const Vector2 n{-d.y, d.x};
-                        const Vector2 edgeCenter{px + d.x * (rW * .90f), py + d.y * (rW * .90f)};
-                        const bool walk = isMain ? sig.mainWalkGreen : sig.sideWalkGreen;
-                        const bool flash = isMain ? sig.mainWalkFlashing : sig.sideWalkFlashing;
-                        const ColorRGBA walkCol = !walk            ? ColorRGBA(.95f, .21f, .28f)
-                                                  : (!flash || flashPhase) ? ColorRGBA(.15f, 1.f, .78f)
-                                                                           : ColorRGBA(1.f, .74f, .18f);
-                        Drawing::DrawHologramStrip(
-                            {edgeCenter.x - n.x * (rW * .42f), edgeCenter.y - n.y * (rW * .42f)},
-                            {edgeCenter.x + n.x * (rW * .42f), edgeCenter.y + n.y * (rW * .42f)}, .12f, walkCol,
-                            .09f);
-                        const TrafficLight throughL = isMain ? sig.mainThrough : sig.sideThrough;
-                        const TrafficLight leftL = isMain ? sig.mainLeft : sig.sideLeft;
-                        const bool leftActive = leftL == TrafficLight::Green;
-                        const ColorRGBA stopCol = leftActive ? ColorRGBA(.2f, 1.f, .76f) : lightCol(throughL);
-                        const Vector2 stopPos{px + d.x * (rW * 1.05f) - n.x * (rW * .24f),
-                                              py + d.y * (rW * 1.05f) - n.y * (rW * .24f)};
-                        Drawing::DrawHologramStrip({stopPos.x - n.x * .55f, stopPos.y - n.y * .55f},
-                                                   {stopPos.x + n.x * .55f, stopPos.y + n.y * .55f}, .16f, stopCol,
-                                                   .12f);
-                        // CQ-04B 4-aspect cantilevered traffic signal gantry & pedestrian signal poles!
-                        const Vector2 cornerPos{px + d.x * (rW * 1.02f) + n.x * (rW * .66f),
-                                                py + d.y * (rW * 1.02f) + n.y * (rW * .66f)};
-                        if (mGantry && (arm == 0 || arm == 2))
-                        {
-                            models::Palette gp;
-                            gp.emission = {stopCol.r, stopCol.g, stopCol.b, 1.f};
-                            Drawing::DrawProp(*mGantry, cornerPos, {1.f, 1.f, 1.f}, gp, ang + kPi, pz);
-                        }
-                        if (mPedPole)
-                        {
-                            models::Palette pp;
-                            pp.emission = {walkCol.r, walkCol.g, walkCol.b, 1.f};
-                            Drawing::DrawProp(*mPedPole,
-                                              {px + d.x * (rW * .94f) - n.x * (rW * .58f),
-                                               py + d.y * (rW * .94f) - n.y * (rW * .58f)},
-                                              {1.f, 1.f, 1.f}, pp, ang, pz);
-                        }
-                    }
-                    renderqueue::PopMatrix();
                 }
                 else if (inter.control == world::IntersectionControl::GradeSeparated)
                 {
@@ -4526,6 +5005,106 @@ void PlanetScene::Draw()
                             Drawing::DrawHologramStrip(a, b, .14f, guideCol, .14f);
                         }
                         renderqueue::PopMatrix();
+                    }
+                }
+                else
+                {
+                    // Render delivered CQ04B 3D 4-way or T-junction mesh replacing legacy flat octagon slabs!
+                    const models::Model *juncMod = nullptr;
+                    if (inter.arms == 3)
+                    {
+                        juncMod = (inter.maxLanes >= 4 && mTee4x2) ? mTee4x2 : mTee2x2;
+                    }
+                    else if (inter.maxLanes >= 6)
+                    {
+                        juncMod = (inter.radiusMeters >= 13.0 && mCross6x6) ? mCross6x6 : mCross6x4;
+                    }
+                    else if (inter.maxLanes >= 4)
+                    {
+                        juncMod = (inter.radiusMeters >= 9.5 && mCross4x4) ? mCross4x4 : mCross4x2;
+                    }
+                    else
+                    {
+                        juncMod = mCross2x2;
+                    }
+                    if (juncMod && juncMod->resourceId)
+                    {
+                        const auto &jRes = models::ResourceAssets::Get(juncMod->resourceId);
+                        const float jSpanX = (std::max)(1.f, jRes.maximum.x - jRes.minimum.x);
+                        const float jSpanY = (std::max)(1.f, jRes.maximum.y - jRes.minimum.y);
+                        // Keep CQ04B junctions tightly matched to incoming CQ04B road decks (just +0.004 above road deck).
+                        const float sx = Game::Clamp((rW * 2.0f + 0.55f) / jSpanX, 0.85f, 1.25f);
+                        const float sy = Game::Clamp((rW * 2.0f + 0.55f) / jSpanY, 0.85f, 1.25f);
+                        Drawing::DrawProp(*juncMod, {px, py}, {sx, sy, 1.f}, {}, float(inter.mainAxisYaw),
+                                          pz + 0.036f);
+                    }
+                    if (inter.control == world::IntersectionControl::Signalized)
+                    {
+                        const auto sig = IntersectionSignalController::Evaluate(
+                            inter, double(w.animationTimeSeconds), true, true, true, urgentAxis);
+                        // 2D hologram strips use renderqueue elevation; 3D signal props use explicit local terrain Z (never double-elevated!).
+                        renderqueue::PushMatrix();
+                        renderqueue::Translate(0, -pz * WorldCamera::IsoZScale(), pz * (1296.f / 44.f));
+                        for (int arm = 0; arm < 4; ++arm)
+                        {
+                            const bool isMain = (arm % 2 == 0);
+                            const float ang = float(inter.mainAxisYaw) + arm * (kPi * .5f);
+                            const Vector2 d{std::cos(ang), std::sin(ang)};
+                            const Vector2 n{-d.y, d.x};
+                            const Vector2 edgeCenter{px + d.x * (rW * .90f), py + d.y * (rW * .90f)};
+                            const bool walk = isMain ? sig.mainWalkGreen : sig.sideWalkGreen;
+                            const bool flash = isMain ? sig.mainWalkFlashing : sig.sideWalkFlashing;
+                            const ColorRGBA walkCol = !walk            ? ColorRGBA(.95f, .21f, .28f)
+                                                      : (!flash || flashPhase) ? ColorRGBA(.15f, 1.f, .78f)
+                                                                               : ColorRGBA(1.f, .74f, .18f);
+                            Drawing::DrawHologramStrip(
+                                {edgeCenter.x - n.x * (rW * .42f), edgeCenter.y - n.y * (rW * .42f)},
+                                {edgeCenter.x + n.x * (rW * .42f), edgeCenter.y + n.y * (rW * .42f)}, .12f, walkCol,
+                                .09f);
+                            const TrafficLight throughL = isMain ? sig.mainThrough : sig.sideThrough;
+                            const TrafficLight leftL = isMain ? sig.mainLeft : sig.sideLeft;
+                            const bool leftActive = leftL == TrafficLight::Green;
+                            const ColorRGBA stopCol = leftActive ? ColorRGBA(.2f, 1.f, .76f) : lightCol(throughL);
+                            const Vector2 stopPos{px + d.x * (rW * 1.05f) - n.x * (rW * .24f),
+                                                  py + d.y * (rW * 1.05f) - n.y * (rW * .24f)};
+                            Drawing::DrawHologramStrip({stopPos.x - n.x * .55f, stopPos.y - n.y * .55f},
+                                                       {stopPos.x + n.x * .55f, stopPos.y + n.y * .55f}, .16f, stopCol,
+                                                       .12f);
+                        }
+                        renderqueue::PopMatrix();
+                        // Draw 3D CQ-04B signal gantries & pedestrian poles outside PushMatrix using exact local ground Z!
+                        for (int arm = 0; arm < 4; ++arm)
+                        {
+                            const bool isMain = (arm % 2 == 0);
+                            const float ang = float(inter.mainAxisYaw) + arm * (kPi * .5f);
+                            const Vector2 d{std::cos(ang), std::sin(ang)};
+                            const Vector2 n{-d.y, d.x};
+                            const bool walk = isMain ? sig.mainWalkGreen : sig.sideWalkGreen;
+                            const bool flash = isMain ? sig.mainWalkFlashing : sig.sideWalkFlashing;
+                            const ColorRGBA walkCol = !walk            ? ColorRGBA(.95f, .21f, .28f)
+                                                      : (!flash || flashPhase) ? ColorRGBA(.15f, 1.f, .78f)
+                                                                               : ColorRGBA(1.f, .74f, .18f);
+                            const TrafficLight throughL = isMain ? sig.mainThrough : sig.sideThrough;
+                            const TrafficLight leftL = isMain ? sig.mainLeft : sig.sideLeft;
+                            const bool leftActive = leftL == TrafficLight::Green;
+                            const ColorRGBA stopCol = leftActive ? ColorRGBA(.2f, 1.f, .76f) : lightCol(throughL);
+                            const Vector2 cornerPos{px + d.x * (rW * 1.02f) + n.x * (rW * .66f),
+                                                    py + d.y * (rW * 1.02f) + n.y * (rW * .66f)};
+                            if (mGantry && (arm == 0 || arm == 2))
+                            {
+                                models::Palette gp;
+                                gp.emission = {stopCol.r, stopCol.g, stopCol.b, 1.f};
+                                Drawing::DrawProp(*mGantry, cornerPos, {1.f, 1.f, 1.f}, gp, ang + kPi, pz + 0.04f);
+                            }
+                            if (mPedPole)
+                            {
+                                models::Palette pp;
+                                pp.emission = {walkCol.r, walkCol.g, walkCol.b, 1.f};
+                                const Vector2 pedPos{px + d.x * (rW * .94f) - n.x * (rW * .58f),
+                                                     py + d.y * (rW * .94f) - n.y * (rW * .58f)};
+                                Drawing::DrawProp(*mPedPole, pedPos, {1.f, 1.f, 1.f}, pp, ang, pz + 0.04f);
+                            }
+                        }
                     }
                 }
             }
@@ -4698,8 +5277,8 @@ void PlanetScene::Draw()
         if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, session->Pose().origin,
                                              relay.location.position) < 6)
         {
-            Drawing::DrawLabel(center.x - 48, center.y - 34,
-                               registered ? "국지 중계환 · E" : "중계환 등록 · E", color);
+            Drawing::DrawLabel(center.x - 54, center.y - 34,
+                               registered ? "워프 스테이션 · E" : "워프 스테이션 등록 · E", color);
         }
         renderqueue::PopMatrix();
     }

@@ -330,20 +330,30 @@ int main()
     }
     assert(rejected);
     TestMixamoRigAndSockets();
-    // 5) CQ04B 35-module road, junction, traffic signal, and sidewalk streetscape kit packed into game-assets.bin.
-    for (const char *cq04bId : {"cq04b/road_local_2lane_16m", "cq04b/road_collector_4lane_16m",
+    // 5) CQ04B 35-module road, junction, traffic signal, and sidewalk streetscape kit + ColonyV4 buildings & props.
+    for (const char *assetId : {"cq04b/road_local_2lane_16m", "cq04b/road_collector_4lane_16m",
                                 "cq04b/road_arterial_6lane_16m", "cq04b/road_ring_4lane_16m",
                                 "cq04b/road_highway_regional_16m_guardrail", "cq04b/elevated_viaduct_4lane_16m",
                                 "cq04b/bridge_4lane_32m", "cq04b/junc_roundabout_1lane",
-                                "cq04b/junc_roundabout_2lane", "cq04b/signal_gantry_4aspect",
-                                "cq04b/signal_pedestrian_pole", "cq04b/sign_roundabout_yield",
-                                "cq04b/prop_streetlight_modern", "cq04b/prop_transit_shelter",
-                                "cq04b/prop_bench", "cq04b/prop_plaza_planter", "cq04b/prop_bollard"})
+                                "cq04b/junc_roundabout_2lane", "cq04b/junc_cross_2x2",
+                                "cq04b/junc_cross_4x4", "cq04b/junc_cross_6x6",
+                                "cq04b/junc_tee_2x2", "cq04b/junc_tee_4x2",
+                                "cq04b/signal_gantry_4aspect", "cq04b/signal_pedestrian_pole",
+                                "cq04b/sign_roundabout_yield", "cq04b/prop_streetlight_modern",
+                                "cq04b/prop_transit_shelter", "cq04b/prop_bench",
+                                "cq04b/prop_plaza_planter", "cq04b/prop_bollard",
+                                "colony_v4/Halo_PlayerHome_v4", "colony_v4/Halo_Observatory_v4",
+                                "colony_v4/Spaceport_Hangar_v4", "colony_v4/Security_Precinct_v4",
+                                "colony_v4/Colony_MidRise_Res_A_v4", "colony_v4/Colony_MarketArcade_v4",
+                                "colony_v4/prop_storage_locker_v4", "colony_v4/prop_recovery_kit_v4",
+                                "colony_v4/prop_tool_rack_v4", "colony_v4/prop_holo_briefing_table_v4",
+                                "colony_v4/prop_bed_v4", "colony_v4/prop_high_voltage_pillar_v4",
+                                "colony_v4/convoy_wreck_v4", "colony_v4/prop_rock_erma_v4"})
     {
-        const auto id = ResourceAssets::TryFind(cq04bId);
+        const auto id = ResourceAssets::TryFind(assetId);
         assert(id != 0);
         const auto &asset = ResourceAssets::Get(id);
         assert(asset.TriangleCount(LodLevel::Lod0) > 0);
     }
-    std::cout << "Resource asset loading, Mixamo rig/socket, CQ04B road kit and animation regression checks passed.\n";
+    std::cout << "Resource asset loading, Mixamo rig/socket, CQ04B, ColonyV4 and animation regression checks passed.\n";
 }

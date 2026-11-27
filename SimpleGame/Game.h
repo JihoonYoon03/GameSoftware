@@ -454,7 +454,10 @@ enum class UiScreen
     PlanetProfiles,
     FacilityShop,
     Wardrobe,
-    HomeStorage
+    HomeStorage,
+    HomeWorkbench,
+    HomeTerminal,
+    HomeBed
 };
 enum class UiAction
 {
@@ -488,6 +491,9 @@ enum class UiAction
     WardrobeRotate,
     WardrobeAutoRotate,
     StorageAction,
+    WorkbenchAction,
+    TerminalAction,
+    BedAction,
     Exchange,
     Choice,
     Advance,
@@ -1011,7 +1017,7 @@ class RelayTravel
     static const world::RelayCandidate *Nearby();
     static const char *Restriction(std::string_view destination);
     static bool Begin(const std::string &destination);
-    static void Cancel(const std::string &reason = "중계 이동을 취소했습니다.");
+    static void Cancel(const std::string &reason = "워프 이동을 취소했습니다.");
     static void Interact();
     static void Update(float deltaSeconds);
 };

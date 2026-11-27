@@ -1073,7 +1073,7 @@ void TestR4PbrAndSkinSharing(const std::filesystem::path *output = nullptr)
         assert(glGetError() == GL_NO_ERROR);
         Save(*output / "part2-wardrobe-3d.bmp");
 
-        // 14) Part 2 GPU capture: Visual Home Storage with 3 live spinning 3D item props inside glass windows.
+        // 14) Part 2 GPU capture: Visual Home Storage with fixed 3/4 centered ColonyV4 3D props inside glass windows.
         Hud::OpenMenu(UiScreen::HomeStorage);
         glViewport(0, 0, kCanvasWidth, kCanvasHeight);
         glClearColor(0.f, 0.f, 0.f, 1.f);
@@ -1089,6 +1089,23 @@ void TestR4PbrAndSkinSharing(const std::filesystem::path *output = nullptr)
         Hud::Render();
         assert(glGetError() == GL_NO_ERROR);
         Save(*output / "part2-home-storage-cards.bmp");
+
+        // 14B) Visual Home Workbench 4-card 3D showcase UI capture.
+        Hud::OpenMenu(UiScreen::HomeWorkbench);
+        glViewport(0, 0, kCanvasWidth, kCanvasHeight);
+        glClearColor(0.f, 0.f, 0.f, 1.f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        renderer.BeginScene(1280, 720);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, WorldCamera::LogicalWidth(), kCanvasHeight, 0, -65536, 65536);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        game::SceneManager::Get(game::SceneKind::Interior).Draw();
+        renderer.EndScene(0.f);
+        Hud::Render();
+        assert(glGetError() == GL_NO_ERROR);
+        Save(*output / "part2-home-workbench-cards.bmp");
 
         // 15) Part 2 GPU capture: Visual Facility Shop (1st-person live NPC + 3D item cards).
         Hud::CloseMenu();
@@ -1177,6 +1194,51 @@ void TestR4PbrAndSkinSharing(const std::filesystem::path *output = nullptr)
         Save(*output / "part3-space-system-map.bmp");
         w.mapVisible = false;
         w.mapSpaceMode = false;
+
+        // 19) Frontier sunken 3D collapsed fault gorge + ColonyV4 pillars/wreck + Kain visibility capture.
+        Game::Get().EnterTestStage(TestStage::ChapterOne);
+        w.viewportWidth = 1280;
+        w.viewportHeight = 720;
+        if (auto &ch = game::GameLevels::Chapter(); ch.GetState().generated)
+        {
+            Game::Get().RelocateSurfaceSurvey(ch.Surface().Point({29.5f, 14.2f}));
+            Game::Get().WaitForSurfaceLoaded();
+            Game::Get().Update(0.15f);
+        }
+        glViewport(0, 0, kCanvasWidth, kCanvasHeight);
+        glClearColor(0.f, 0.f, 0.f, 1.f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        renderer.BeginScene(1280, 720);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, WorldCamera::LogicalWidth(), kCanvasHeight, 0, -65536, 65536);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        game::SceneManager::Get(game::SceneKind::Planet).Draw();
+        renderer.EndScene(0.f);
+        Hud::Render();
+        assert(glGetError() == GL_NO_ERROR);
+        Save(*output / "frontier-collapsed-gorge.bmp");
+
+        // 20) Mine HUD non-overlapping scanner + unified left-top status card capture.
+        Game::Get().EnterTestStage(TestStage::Mine);
+        w.viewportWidth = 1280;
+        w.viewportHeight = 720;
+        Game::Get().Update(0.05f);
+        glViewport(0, 0, kCanvasWidth, kCanvasHeight);
+        glClearColor(0.f, 0.f, 0.f, 1.f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        renderer.BeginScene(1280, 720);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, WorldCamera::LogicalWidth(), kCanvasHeight, 0, -65536, 65536);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        game::SceneManager::Get(game::SceneKind::Mine).Draw();
+        renderer.EndScene(0.f);
+        Hud::Render();
+        assert(glGetError() == GL_NO_ERROR);
+        Save(*output / "mine-hud-clean.bmp");
 
         w.viewportWidth = kCanvasWidth;
         w.viewportHeight = kCanvasHeight;

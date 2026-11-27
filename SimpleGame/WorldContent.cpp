@@ -647,9 +647,13 @@ void EmitRev5Street(ContentCell &cell, const GeneratedPlanet &p, const Generated
         bool blockedByLandmark = false;
         if (landmarkCore)
         {
-            const double clear = street.widthMeters * .5 + 2.5;
+            const double clear = (std::max)(0.5, street.widthMeters * .5 - 1.5);
             for (const auto &lot : landmarkCore->lots)
             {
+                if (!lot.solid || lot.sizeMeters.x <= 3.0 || lot.sizeMeters.y <= 3.0)
+                {
+                    continue;
+                }
                 const double dx = localPt.x - lot.positionMeters.x;
                 const double dy = localPt.y - lot.positionMeters.y;
                 const double c = std::cos(lot.yaw), s = std::sin(lot.yaw);
@@ -663,9 +667,10 @@ void EmitRev5Street(ContentCell &cell, const GeneratedPlanet &p, const Generated
                 }
             }
         }
+        const bool blockReserved =
+            !(landmarkCore && r.definition.id == "halo_07") && Reserved(p, pt, street.widthMeters * .5);
         if (!promoteBridge && !elevatedOrUnderpass &&
-            (blockedByLandmark || pt.altitudeMeters < PlanetTerrain::SeaLevelMeters ||
-             Reserved(p, pt, street.widthMeters * .5)))
+            (blockedByLandmark || pt.altitudeMeters < PlanetTerrain::SeaLevelMeters || blockReserved))
         {
             if (street.points.size() > 1)
             {
@@ -1701,7 +1706,8 @@ ContentCell ContentLayout::Generate(const GeneratedPlanet &p, ContentCellKey key
             s.yaw = yaw;
             s.appearance = appearance;
             s.solid = solid;
-            point.altitudeMeters = high;
+            // Solid buildings sit at high with a skirt foundation; non-solid props & rocks sit at center/low so they never float.
+            point.altitudeMeters = solid ? high : (form == ContentForm::Rock ? low : point.altitudeMeters);
             auto transported = G::Advance(r.frame, local.x, local.y, p.terrain.Planet().radiusMeters);
             transported.origin = point;
             s.frame = transported;
@@ -2459,11 +2465,13 @@ ContentCell ContentLayout::Generate(const GeneratedPlanet &p, ContentCellKey key
         {
             continue;
         }
-        point.altitudeMeters = high;
+        const bool embedLow = structure.form == ContentForm::Rock || structure.form == ContentForm::Reeds ||
+                              !structure.solid;
+        point.altitudeMeters = embedLow ? low : high;
         auto transported = G::Advance(r.frame, local.x, local.y, p.terrain.Planet().radiusMeters);
         transported.origin = point;
         structure.frame = transported;
-        structure.foundationMeters = high - low + .15;
+        structure.foundationMeters = embedLow ? 0. : (high - low + .15);
         result.structures.push_back(std::move(structure));
     }
     return result;

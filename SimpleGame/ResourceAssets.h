@@ -135,6 +135,7 @@ class ResourceAssets
     static Point Muzzle(const CharacterPose &pose);
     static Point HandR(unsigned int id, const CharacterPose &pose);
     static Point Socket(unsigned int id, const CharacterPose &pose, RigSocket socket);
+    static bool SocketMatrix(unsigned int id, const CharacterPose &pose, RigSocket socket, AnimationMatrix &out);
     static Point SkinPoint(const ResourceVertex &vertex, const SkinMatrices &matrices);
     static Point SkinPoint(const PackedResourceVertex &vertex, const SkinMatrices &matrices);
 };

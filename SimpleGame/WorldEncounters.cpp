@@ -3,6 +3,8 @@
 #include "Civic.h"
 #include "Level.h"
 #include "Overworld.h"
+#include "StoryArc.h"
+#include "WorldContent.h"
 #include "WorldGeneration.h"
 #include "WorldStreaming.h"
 #include <algorithm>
@@ -541,6 +543,156 @@ void WorldEncounters::BuildPlanetSurfaceEncounters()
 
     std::set<Archetype> usedTypes;
     const double R = planet.terrain.Planet().radiusMeters;
+    world::ContentCollision contentCollision;
+    world::RouteSpatialIndex routeIndex(planet);
+    std::vector<std::size_t> nearbyRoutes;
+    std::map<world::ContentCellKey, world::ContentCell> cellCache;
+    auto isAnchorClear = [&](const world::SurfacePoint &pt) -> bool {
+        const auto contact = session->Stream().Contact(pt);
+        if (!contact.land || contact.heightMeters < world::PlanetTerrain::SeaLevelMeters + 4.0 ||
+            contact.slope > 0.24)
+        {
+            return false;
+        }
+        // Keep clear of all region anchors, relays, city cores, and already-placed encounters.
+        for (const auto &a : planet.anchors)
+        {
+            if (a.location.space == world::SpaceKind::Surface &&
+                world::SurfaceGeometry::Distance(R, pt, a.location.position) < 55.0)
+            {
+                return false;
+            }
+        }
+        for (const auto &rel : planet.relays)
+        {
+            if (world::SurfaceGeometry::Distance(R, pt, rel.location.position) < 55.0)
+            {
+                return false;
+            }
+        }
+        for (const auto &other : state.live)
+        {
+            if (other.surfaceSpace && world::SurfaceGeometry::Distance(R, pt, other.surfaceAnchor) < 90.0)
+            {
+                return false;
+            }
+        }
+        if (planet.cityCores)
+        {
+            for (const auto &r : planet.regions)
+            {
+                if (r.center.space != world::SpaceKind::Surface)
+                {
+                    continue;
+                }
+                const auto *core = planet.cityCores->Find(r.definition.id);
+                if (!core)
+                {
+                    continue;
+                }
+                if (world::SurfaceGeometry::Distance(R, pt, r.center.position) < core->radiusMeters + 48.0)
+                {
+                    return false;
+                }
+                if (world::SurfaceGeometry::Distance(R, pt, r.center.position) < r.boundingRadiusMeters + 60.0)
+                {
+                    const auto loc = world::SurfaceGeometry::ToLocal(r.frame, pt, R);
+                    if (planet.cityCores->Reserved(planet, r, loc, 36.0))
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+        // Check procedural buildings/structures across the full ~36m encounter arena footprint.
+        if (contentCollision.Blocked(planet, pt, 14.0))
+        {
+            return false;
+        }
+        const auto localFrame = world::SurfaceGeometry::Frame(pt);
+        for (double ringR : {20.0, 34.0})
+        {
+            for (int k = 0; k < 8; ++k)
+            {
+                const double a = double(k) * (kPi * 0.25);
+                const auto probe =
+                    world::SurfaceGeometry::FromLocal(localFrame, {std::cos(a) * ringR, std::sin(a) * ringR, 0.0}, R);
+                if (contentCollision.Blocked(planet, probe, 8.0))
+                {
+                    return false;
+                }
+            }
+        }
+        // Reject procedural urban streets and intersections.
+        for (const auto &ck : world::ContentLayout::Near(planet, pt, 42.0))
+        {
+            auto it = cellCache.find(ck);
+            if (it == cellCache.end())
+            {
+                it = cellCache.emplace(ck, world::ContentLayout::Generate(planet, ck)).first;
+            }
+            const auto &cell = it->second;
+            for (const auto &inter : cell.intersections)
+            {
+                if (world::SurfaceGeometry::Distance(R, pt, inter.center) < inter.radiusMeters + 22.0)
+                {
+                    return false;
+                }
+            }
+            for (const auto &st : cell.streets)
+            {
+                const double clearDist = st.widthMeters * 0.5 + st.sidewalkMeters + 20.0;
+                for (const auto &sp : st.points)
+                {
+                    if (world::SurfaceGeometry::Distance(R, pt, sp) < clearDist)
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+        // Reject intercity highways.
+        routeIndex.QueryInto(pt, 52.0, nearbyRoutes);
+        for (const auto idx : nearbyRoutes)
+        {
+            const auto &edge = planet.connections[idx];
+            if (edge.mode != world::RouteMode::Road)
+            {
+                continue;
+            }
+            for (const auto &ep : edge.points)
+            {
+                if (world::SurfaceGeometry::Distance(R, pt, ep) < 24.0)
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    };
+    auto findClearAnchor = [&](const world::SurfacePoint &originPt, double minDist, double maxDist,
+                               std::uint64_t seed) -> std::optional<world::SurfacePoint> {
+        const auto frame = world::SurfaceGeometry::Frame(originPt);
+        constexpr int kRings = 6;
+        constexpr int kAngles = 16;
+        for (int ring = 0; ring < kRings; ++ring)
+        {
+            const double dist = minDist + (maxDist - minDist) * (double(ring) / double(kRings - 1));
+            for (int step = 0; step < kAngles; ++step)
+            {
+                const int idx = int((seed + std::uint64_t(step) + std::uint64_t(ring * 3)) % kAngles);
+                const double ang = double(idx) * (2.0 * kPi / double(kAngles));
+                auto cand =
+                    world::SurfaceGeometry::FromLocal(frame, {std::cos(ang) * dist, std::sin(ang) * dist, 0.0}, R);
+                if (isAnchorClear(cand))
+                {
+                    cand.altitudeMeters = session->Stream().Contact(cand).heightMeters;
+                    return cand;
+                }
+            }
+        }
+        return std::nullopt;
+    };
     // 1) Region-anchored rich 4-stage encounters across every non-story & outer region
     for (const auto &reg : planet.regions)
     {
@@ -554,6 +706,14 @@ void WorldEncounters::BuildPlanetSurfaceEncounters()
             break;
         }
         const std::uint64_t h = HashString(reg.definition.id + ":" + key);
+        const bool isCity = reg.definition.kind == world::RegionKind::Settlement;
+        const double minDist = isCity ? (std::max)(reg.boundingRadiusMeters + 58.0, 320.0) : 52.0;
+        const double maxDist = isCity ? minDist + 240.0 : 180.0;
+        const auto clearPt = findClearAnchor(reg.access.position, minDist, maxDist, h);
+        if (!clearPt)
+        {
+            continue;
+        }
         Archetype type = ArchetypeForRegion(reg.definition.kind, h);
         // Ensure all 10 archetypes are strongly represented across the planet!
         if (usedTypes.size() < size_t(Archetype::Count) && usedTypes.count(type))
@@ -573,37 +733,34 @@ void WorldEncounters::BuildPlanetSurfaceEncounters()
         enc.regionId = reg.definition.id;
         enc.archetype = type;
         enc.surfaceSpace = true;
-        // Offset cleanly outside settlement plaza so it never crowds core city quest NPCs
-        const double offsetDist = reg.definition.kind == world::RegionKind::Settlement ? 120.0 : 48.0;
-        const double ang = double(h % 360) * (kPi / 180.0);
-        const auto frame = world::SurfaceGeometry::Frame(reg.access.position);
-        enc.surfaceAnchor = world::SurfaceGeometry::FromLocal(
-            frame, {std::cos(ang) * offsetDist, std::sin(ang) * offsetDist, 0.0}, R);
-        enc.surfaceAnchor.altitudeMeters = session->Stream().Contact(enc.surfaceAnchor).heightMeters;
+        enc.surfaceAnchor = *clearPt;
         BuildArchetypeLayout(enc, h);
         state.live.push_back(std::move(enc));
     }
 
-    // 2) Roaming roadside & wilderness dynamic encounter pockets around Halo & travel corridors
+    // 2) Roaming roadside & wilderness dynamic encounter pockets safely outside Halo urban perimeter
     const auto *halo = planet.regions.empty() ? nullptr : &planet.regions.front();
     if (halo)
     {
-        const Vector2 roamOffsets[] = {{210.f, -85.f}, {-195.f, -140.f}, {165.f, 220.f}, {-240.f, 155.f},
-                                       {340.f, 45.f},  {-320.f, -20.f}};
+        const double haloOuter = (std::max)(halo->boundingRadiusMeters + 65.0, 360.0);
         const Archetype roamTypes[] = {Archetype::ConvoyAmbush,     Archetype::RogueDroneSwarm,
                                        Archetype::SmugglerStandoff, Archetype::RelayDefenseHold,
                                        Archetype::CrashedFreighter, Archetype::MissingPatrol};
-        const auto baseFrame = world::SurfaceGeometry::Frame(halo->access.position);
         for (size_t i = 0; i < 6; ++i)
         {
+            const std::uint64_t seed = HashString("roam_" + std::to_string(i) + ":" + key) + i * 3;
+            const auto clearPt =
+                findClearAnchor(halo->access.position, haloOuter + double(i % 2) * 55.0, haloOuter + 280.0, seed);
+            if (!clearPt)
+            {
+                continue;
+            }
             EncounterInstance enc;
             enc.id = "roam_" + std::to_string(i);
             enc.regionId = halo->definition.id;
             enc.archetype = roamTypes[i];
             enc.surfaceSpace = true;
-            enc.surfaceAnchor = world::SurfaceGeometry::FromLocal(
-                baseFrame, {double(roamOffsets[i].x), double(roamOffsets[i].y), 0.0}, R);
-            enc.surfaceAnchor.altitudeMeters = session->Stream().Contact(enc.surfaceAnchor).heightMeters;
+            enc.surfaceAnchor = *clearPt;
             BuildArchetypeLayout(enc, HashString(enc.id + key));
             state.live.push_back(std::move(enc));
         }
@@ -711,8 +868,17 @@ void WorldEncounters::Update(float dt)
         }
     }
     const auto &w = Game::Get().GetState();
-    if (w.IsInsideAny() || game::GameLevels::Mine().IsActive() || game::GameLevels::Chapter().IsActive())
+    if (HospitalRecovery::Active())
     {
+        return;
+    }
+    if (w.IsInsideAny() || game::GameLevels::Mine().IsActive() || game::GameLevels::Chapter().IsActive() ||
+        story::StoryArc::Get().IsActive())
+    {
+        if (!state.activeEncounterId.empty())
+        {
+            Untrack();
+        }
         return;
     }
     PopulateForCurrentWorld();
@@ -1426,13 +1592,90 @@ bool WorldEncounters::Interact()
     return false;
 }
 
+void WorldEncounters::FailActiveEncounter()
+{
+    bool failedAny = false;
+    for (auto &enc : state.live)
+    {
+        if (enc.phase != Phase::Dormant && enc.phase != Phase::Completed)
+        {
+            const bool discoveredBefore = enc.discoveredNotified;
+            enc.phase = Phase::Dormant;
+            enc.choice = ResolutionChoice::None;
+            enc.stageObjectivesDone = 0;
+            enc.wave2Spawned = false;
+            enc.defenseHoldSeconds = 0.f;
+            enc.beaconHealth = 120.f;
+            enc.rewardClaimed = false;
+            enc.activeInRange = false;
+            BuildArchetypeLayout(enc, HashString(enc.id + state.worldKey));
+            enc.discoveredNotified = discoveredBefore;
+            failedAny = true;
+        }
+    }
+    state.activeEncounterId.clear();
+    if (failedAny)
+    {
+        SyncSaveRecords();
+    }
+}
+
+void WorldEncounters::Untrack()
+{
+    state.activeEncounterId.clear();
+}
+
+bool WorldEncounters::IsMainStoryFocused() const
+{
+    const auto mode = Game::Get().Mode();
+    if (mode != WorldMode::SurfaceExterior && mode != WorldMode::LegacyCity)
+    {
+        return true;
+    }
+    if (game::GameLevels::Mine().IsActive() || game::GameLevels::Chapter().IsActive() ||
+        story::StoryArc::Get().IsActive())
+    {
+        return true;
+    }
+    const auto &g = Game::Get();
+    if (g.IsStoryWorld())
+    {
+        // When the player is actively inside an accepted encounter zone, allow its HUD card.
+        for (const auto &enc : state.live)
+        {
+            if (enc.activeInRange && enc.phase != Phase::Dormant && enc.phase != Phase::Completed)
+            {
+                return false;
+            }
+        }
+        const auto focused = g.FocusedMission();
+        if (focused == MissionId::Signal || focused == MissionId::Mine || focused == MissionId::Frontier)
+        {
+            return true;
+        }
+        if (story::StoryArc::Get().IsActTwoUnlocked() && !story::StoryArc::Get().State().chapter4Complete &&
+            !ActivityJournal::TrackedCommunity())
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 const EncounterInstance *WorldEncounters::ActiveEncounter() const
 {
+    const auto mode = Game::Get().Mode();
+    if (mode != WorldMode::SurfaceExterior && mode != WorldMode::LegacyCity)
+    {
+        return nullptr;
+    }
+    const auto &w = Game::Get().GetState();
     if (!state.activeEncounterId.empty())
     {
         for (const auto &enc : state.live)
         {
-            if (enc.id == state.activeEncounterId && enc.phase != Phase::Completed)
+            if (enc.id == state.activeEncounterId && enc.surfaceSpace == w.surfaceExploration &&
+                enc.phase != Phase::Completed && enc.phase != Phase::Dormant)
             {
                 return &enc;
             }
@@ -1440,7 +1683,8 @@ const EncounterInstance *WorldEncounters::ActiveEncounter() const
     }
     for (const auto &enc : state.live)
     {
-        if (enc.activeInRange && enc.phase != Phase::Dormant && enc.phase != Phase::Completed)
+        if (enc.surfaceSpace == w.surfaceExploration && enc.activeInRange && enc.phase != Phase::Dormant &&
+            enc.phase != Phase::Completed)
         {
             return &enc;
         }

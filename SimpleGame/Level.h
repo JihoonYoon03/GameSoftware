@@ -453,7 +453,8 @@ enum class ChapterAction
     ConvoySupply,
     Mission,
     RiaTalk,
-    KainTalk
+    KainTalk,
+    CompareRecords
 };
 struct ChapterInteraction
 {
@@ -498,6 +499,21 @@ struct FrontierThreat
     float fireCooldown = 0;
     float patrolPhase = 0;
     bool active = false;
+    float yaw = 0;
+    bool walking = false;
+    float muzzleFlash = 0;
+};
+struct RaiderTransport
+{
+    tutorial::Vector2 position = {};
+    tutorial::Vector2 stopPosition = {};
+    float yaw = 0;
+    float speed = 0;
+    float throttle = 1.f;
+    models::VehicleType vehicleType = models::VehicleType::Hauler;
+    bool active = false;
+    bool dismounted = false;
+    std::vector<FrontierThreat> passengers;
 };
 struct ChapterOneState
 {
@@ -520,6 +536,7 @@ struct ChapterOneState
     std::vector<ChapterProjectile> bullets;
     std::vector<Tracer> tracers;
     std::vector<FrontierThreat> frontierThreats;
+    std::vector<RaiderTransport> raiderTransports;
     bool convoyAmbushTriggered = false;
     bool convoyWave2Spawned = false;
     bool convoyAmbushCleared = false;

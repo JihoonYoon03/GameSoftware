@@ -313,6 +313,8 @@ class ModelLibrary
     static const Model *ModularPart(const std::string &name);
     // CQ-04B v4 city road, junction, grade-separation, signal & streetscape modules.
     static const Model *Cq04b(const std::string &name);
+    // ColonyV4 newly delivered colony buildings (14 archetypes) & props (26 interior/facility/street/nature props).
+    static const Model *ColonyV4(const std::string &name);
 };
 
 // ============================================================================

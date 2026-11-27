@@ -498,7 +498,7 @@ const char *Game::MissionObjective(MissionId focused) const
 {
     if (!IsStoryWorld())
     {
-        return "행성 자유 탐사 · 중계환 발견·등록 / M 지도";
+        return "행성 자유 탐사 · 워프 스테이션 발견·등록 / M 지도";
     }
     if (focused == MissionId::Signal)
     {
@@ -620,6 +620,10 @@ bool ActivityJournal::TrackMission(MissionId id)
     }
     g.GetState().trackedCommunityRegion.clear();
     g.GetState().trackedCommunityWorldKey.clear();
+    if (id == MissionId::Signal || id == MissionId::Mine || id == MissionId::Frontier)
+    {
+        encounters::WorldEncounters::Get().Untrack();
+    }
     return true;
 }
 bool ActivityJournal::TrackCommunity(const std::string &id)
@@ -841,7 +845,38 @@ ActivityObjective ActivityJournal::Current()
             const auto &field = chapter.GetState();
             if (chapter.CompletedSites() == 3 || field.comparisonStarted)
             {
+                if (const auto *party = g.SurfaceParty())
+                {
+                    const auto &members = party->State().members;
+                    const double radius = g.Surface()->Planet().radiusMeters;
+                    const auto &hero = g.Surface()->Pose().origin;
+                    int bestIdx = -1;
+                    double bestDist = 40.0;
+                    for (int i = 0; i < 2; ++i)
+                    {
+                        const auto &m = members[size_t(i)];
+                        if (!m.joined || m.place == CompanionPlace::Mine || m.combat.health <= 0)
+                        {
+                            continue;
+                        }
+                        const double d = world::SurfaceGeometry::Distance(radius, hero, m.position);
+                        if (d <= bestDist)
+                        {
+                            bestDist = d;
+                            bestIdx = i;
+                        }
+                    }
+                    if (bestIdx >= 0)
+                    {
+                        goal.surfaceTarget = members[size_t(bestIdx)].position;
+                        goal.location = bestIdx == 0 ? "동행 동료 · 리아" : "동행 동료 · 카인";
+                        goal.action = "리아 또는 카인과 세 현장 기록 대조 [E]";
+                        break;
+                    }
+                }
                 city(kLiaPosition);
+                goal.location = "헤일로 광장 · 기록 대조";
+                goal.action = "헤일로 광장에서 세 현장 기록 대조 [E]";
                 break;
             }
             goal.location = "빛나는 개척지";
@@ -1595,9 +1630,26 @@ void Game::UpdateCamera(float deltaSeconds)
         target = {state.playerPosition.x * 0.55f + speaker.x * 0.45f,
                   state.playerPosition.y * 0.55f + speaker.y * 0.45f};
     }
-    float followAmount = 1 - std::exp(-kCameraFollowRate * deltaSeconds);
+    const float followRate = state.aircraft.mounted                       ? 28.0f
+                             : (state.car.mounted || state.isBikeMounted) ? 10.0f
+                                                                          : kCameraFollowRate;
+    const float followAmount = 1.f - std::exp(-followRate * deltaSeconds);
     state.cameraPosition.x += (target.x - state.cameraPosition.x) * followAmount;
     state.cameraPosition.y += (target.y - state.cameraPosition.y) * followAmount;
+    // Clamp maximum trailing lag during high-speed flight (up to 140 m/s = 70 u/s) so the aircraft never outruns the viewport.
+    if (state.aircraft.mounted && !state.IsInsideAny())
+    {
+        const float dx = target.x - state.cameraPosition.x;
+        const float dy = target.y - state.cameraPosition.y;
+        const float dist = std::hypot(dx, dy);
+        constexpr float kMaxAircraftCameraLag = 1.6f;
+        if (dist > kMaxAircraftCameraLag)
+        {
+            const float keep = kMaxAircraftCameraLag / dist;
+            state.cameraPosition.x = target.x - dx * keep;
+            state.cameraPosition.y = target.y - dy * keep;
+        }
+    }
 }
 world::SurfaceView Game::SurfaceTerrainView() const
 {
@@ -2080,7 +2132,7 @@ void Game::KeyDown(unsigned char key, int, int)
         FieldMinigame::HandleKey(key);
         return;
     }
-    if (key == 27) // Escape
+    if (key == 27 || key == 'q') // Escape or Q immediately exits open overlay screens
     {
         if (state.journalVisible || state.dialogueHistoryVisible)
         {
@@ -2093,11 +2145,14 @@ void Game::KeyDown(unsigned char key, int, int)
             state.mapDragging = false;
             return;
         }
-        state.isPaused = !state.isPaused;
-        state.StopMotion();
-        state.mouseFiring = state.mouseAiming = false;
-        std::fill(state.pressedKeys, state.pressedKeys + 256, false);
-        return;
+        if (key == 27)
+        {
+            state.isPaused = !state.isPaused;
+            state.StopMotion();
+            state.mouseFiring = state.mouseAiming = false;
+            std::fill(state.pressedKeys, state.pressedKeys + 256, false);
+            return;
+        }
     }
     bool repeated = state.pressedKeys[key];
     if (key == 'e' && state.interactionHeld)
@@ -2150,12 +2205,12 @@ void Game::KeyDown(unsigned char key, int, int)
             if (state.mapVisible)
             {
                 MapHud::OnMapOpened();
+                state.mouseFiring = state.mouseAiming = false;
             }
             else
             {
                 state.mapDragging = false;
             }
-            state.StopMotion();
         }
         else if ((key == '[' || key == ']') && !repeated && !state.mapVisible && !IsSurfaceMine() &&
                  !state.IsInsideAny() && surface && surface->Ready())
@@ -2280,14 +2335,12 @@ void Game::KeyDown(unsigned char key, int, int)
                 state.planetMapSurface = false;
             }
             MapHud::OnMapOpened();
+            state.mouseFiring = state.mouseAiming = false;
         }
         else
         {
             state.mapDragging = false;
         }
-        state.StopMotion();
-        state.mouseFiring = state.mouseAiming = false;
-        std::fill(std::begin(state.pressedKeys), std::end(state.pressedKeys), false);
         state.pressedKeys['m'] = true;
         return;
     }
@@ -2719,7 +2772,8 @@ void Game::Update(float deltaSeconds)
         Dialogue::UpdateCameraAndProximity(deltaSeconds);
     }
     if ((state.ui.screen == UiScreen::FacilityShop || state.ui.screen == UiScreen::Wardrobe ||
-         state.ui.screen == UiScreen::HomeStorage) &&
+         state.ui.screen == UiScreen::HomeStorage || state.ui.screen == UiScreen::HomeWorkbench ||
+         state.ui.screen == UiScreen::HomeTerminal || state.ui.screen == UiScreen::HomeBed) &&
         !HospitalRecovery::Active())
     {
         state.animationTimeSeconds += deltaSeconds;
@@ -3703,7 +3757,7 @@ void Game::UpdateSurface(float dt)
     {
         if (state.relayPreparing)
         {
-            RelayTravel::Cancel("의료 이송으로 중계 이동을 취소했습니다.");
+            RelayTravel::Cancel("의료 이송으로 워프 이동을 취소했습니다.");
         }
         return;
     }
@@ -3980,9 +4034,10 @@ void Game::UpdateSurface(float dt)
             ShowNotice("피해 / 체력 -" + std::to_string(healthBefore - healthAfter));
         }
         UpdateCamera(dt);
-        float targetHeight = float(surface->Local(surface->Pose().origin).z / 2);
+        const float targetHeight = float(surface->Local(surface->Pose().origin).z / 2);
+        const float heightFollowRate = state.aircraft.mounted ? 18.0f : kCameraFollowRate;
         state.surfaceCameraHeight +=
-            (targetHeight - state.surfaceCameraHeight) * (1 - std::exp(-kCameraFollowRate * dt));
+            (targetHeight - state.surfaceCameraHeight) * (1.f - std::exp(-heightFollowRate * dt));
         game::SceneManager::Update(dt);
     }
 }
@@ -4225,7 +4280,9 @@ bool Dialogue::Start(const std::string &id, std::vector<DialogueLine> lines,
     d.hasSpeakerAnchor = false;
     d.speakerSurfacePosition.reset();
     // Resolve nearby physical NPC speaker for cinematic zoom-in focus and distance auto-cancel.
-    if (!d.pages.empty() && world.ui.screen == UiScreen::None)
+    // Anchor radii stay strictly inside UpdateCameraAndProximity's break thresholds (10.5 m / 5.25 u)
+    // so reaching a mission interaction point ahead of a trailing companion never auto-cancels the dialogue.
+    if (!d.pages.empty() && world.ui.screen == UiScreen::None && d.blocking && !world.Mounted())
     {
         const auto &first = d.pages[d.page];
         const bool isRemote = first.channel.find("무전") != std::string::npos ||
@@ -4234,6 +4291,8 @@ bool Dialogue::Start(const std::string &id, std::vector<DialogueLine> lines,
                               first.channel.find("기록") != std::string::npos ||
                               first.channel.find("시스템") != std::string::npos ||
                               first.speaker == "현장 기록" || first.speaker == "발신자 미상";
+        const bool namedCompanion = first.speaker.find("리아") != std::string::npos ||
+                                    first.speaker.find("카인") != std::string::npos;
         if (!isRemote)
         {
             auto &game = Game::Get();
@@ -4243,12 +4302,18 @@ bool Dialogue::Start(const std::string &id, std::vector<DialogueLine> lines,
                 const auto *session = game.Surface();
                 const double R = session->Planet().radiusMeters;
                 const auto playerOrigin = session->Pose().origin;
-                double bestScore = 14.0;
+                constexpr double kAnchorNamedMeters = 8.0;
+                constexpr double kAnchorOtherMeters = 6.5;
+                double bestScore = kAnchorNamedMeters;
                 std::optional<world::SurfacePoint> bestPt;
                 auto considerSurface = [&](const world::SurfacePoint &pt, const char *nameTag) {
-                    const double dist = world::SurfaceGeometry::Distance(R, playerOrigin, pt);
                     const bool nameMatch = nameTag && first.speaker.find(nameTag) != std::string::npos;
-                    const double limit = nameMatch ? 14.0 : 10.0;
+                    if (namedCompanion && !nameMatch)
+                    {
+                        return;
+                    }
+                    const double dist = world::SurfaceGeometry::Distance(R, playerOrigin, pt);
+                    const double limit = nameMatch ? kAnchorNamedMeters : kAnchorOtherMeters;
                     const double score = nameMatch ? dist * 0.5 : dist;
                     if (dist <= limit && score < bestScore)
                     {
@@ -4310,13 +4375,19 @@ bool Dialogue::Start(const std::string &id, std::vector<DialogueLine> lines,
             }
             else if (!world.IsInsideAny())
             {
-                float bestScore = 5.5f;
+                constexpr float kAnchorNamedUnits = 4.0f;
+                constexpr float kAnchorOtherUnits = 3.25f;
+                float bestScore = kAnchorNamedUnits;
                 Vector2 bestPos{};
                 bool found = false;
                 auto consider2D = [&](Vector2 pos, const char *nameTag) {
-                    const float dist = Game::Distance(world.playerPosition, pos);
                     const bool nameMatch = nameTag && first.speaker.find(nameTag) != std::string::npos;
-                    const float limit = nameMatch ? 6.5f : 5.0f;
+                    if (namedCompanion && !nameMatch)
+                    {
+                        return;
+                    }
+                    const float dist = Game::Distance(world.playerPosition, pos);
+                    const float limit = nameMatch ? kAnchorNamedUnits : kAnchorOtherUnits;
                     const float score = nameMatch ? dist * 0.5f : dist;
                     if (dist <= limit && score < bestScore)
                     {
@@ -4356,14 +4427,18 @@ bool Dialogue::Start(const std::string &id, std::vector<DialogueLine> lines,
                     d.speakerLocalPosition = bestPos;
                 }
             }
-            // Apply smooth cinematic zoom-in whenever conversing with an NPC in the live world.
-            if (!d.zoomApplied)
+            // Apply smooth cinematic zoom-in only when the physical speaker is actually nearby face-to-face.
+            if (d.hasSpeakerAnchor)
             {
-                d.preDialogueZoom = WorldCamera::targetZoom;
-                d.zoomApplied = true;
+                if (!d.zoomApplied)
+                {
+                    d.preDialogueZoom = WorldCamera::targetZoom;
+                    d.zoomApplied = true;
+                }
+                const float dialogueZoom =
+                    (std::min)(WorldCamera::kMaxZoom, (std::max)(d.preDialogueZoom * 1.38f, 2.05f));
+                WorldCamera::SetZoom(dialogueZoom, false);
             }
-            const float dialogueZoom = (std::min)(WorldCamera::kMaxZoom, (std::max)(d.preDialogueZoom * 1.38f, 2.05f));
-            WorldCamera::SetZoom(dialogueZoom, false);
         }
     }
     world.mapVisible = false;
@@ -4521,6 +4596,10 @@ void Dialogue::UpdateCameraAndProximity(float deltaSeconds)
             w.playerAnimation.Update(deltaSeconds, {vel.x, vel.y, 0.f}, w.facingYaw, false, false);
         }
     }
+    if (!walkingAway)
+    {
+        return;
+    }
     constexpr double kBreakMeters = 10.5;
     constexpr float kBreakUnits = 5.25f;
     if (w.surfaceExploration && !game.IsSurfaceMine() && !w.IsInsideAny() && game.surface &&
@@ -4623,8 +4702,8 @@ std::vector<std::string> Dialogue::Journal()
         const auto &s = Game::Get().GetState();
         std::vector<std::string> lines = {
             Game::Get().Surface()->Planet().name + " 탐사 기록",
-            "이 행성의 지형·도시·지대와 중계환은 고유 시드로 생성됩니다.",
-            "발견한 중계환을 E로 등록하면 같은 행성 안에서 이동할 수 있습니다.",
+            "이 행성의 지형·도시·지대와 워프 스테이션은 고유 시드로 생성됩니다.",
+            "발견한 워프 스테이션을 E로 등록하면 같은 행성 안에서 이동할 수 있습니다.",
             "발견 " + std::to_string(s.relayNetwork.Discoveries().size()) + " / 등록 " +
                 std::to_string(s.relayNetwork.Registrations().size()),
             "행성 선택은 탐사 테스트 기능입니다. 현장 기록은 행성별로 유지됩니다.",
@@ -4822,7 +4901,7 @@ bool Game::IsQuestInteraction(InteractionTarget target) const
     }
     if (target == InteractionTarget::CityReceiver)
     {
-        return false;
+        return state.surfaceExploration && CanCompleteMission(MissionId::Frontier);
     }
     const auto &arc = story::StoryArc::Get().State();
     auto stage = game::GameLevels::Mine().GetState().quest.GetStage();
@@ -4888,7 +4967,9 @@ bool Game::IsQuestInteraction(InteractionTarget target) const
                 return !state.isPowerRestored;
             }
         }
-        return target == InteractionTarget::Lia && CanCompleteMission(MissionId::Frontier);
+        return (target == InteractionTarget::Lia || target == InteractionTarget::Kain ||
+                target == InteractionTarget::CityReceiver) &&
+               CanCompleteMission(MissionId::Frontier);
     }
     if (game::GameLevels::Chapter().IsAvailable() &&
         (target == InteractionTarget::HomeTerminal || target == InteractionTarget::ApartmentExit ||
@@ -6211,7 +6292,7 @@ const char *RelayTravel::Restriction(std::string_view destination)
     }
     if (g.IsSurfaceMine() || s.IsInsideAny())
     {
-        return "지상의 중계환에서 이용할 수 있습니다.";
+        return "지상의 워프 스테이션에서 이용할 수 있습니다.";
     }
     if (s.Mounted())
     {
@@ -6233,16 +6314,16 @@ const char *RelayTravel::Restriction(std::string_view destination)
     const auto *source = Nearby();
     if (!source || !s.relayNetwork.Registered(source->id))
     {
-        return "가까운 중계환을 E로 등록한 뒤 이용해 주세요.";
+        return "가까운 워프 스테이션을 E로 등록한 뒤 이용해 주세요.";
     }
     const auto *target = world::RelayNetwork::Find(*g.Surface()->Stream().Snapshot()->planet, destination);
     if (!target || !s.relayNetwork.Registered(destination))
     {
-        return "목적지 중계환에 직접 방문해 등록해야 합니다.";
+        return "목적지 워프 스테이션에 직접 방문해 등록해야 합니다.";
     }
     if (source->id == target->id)
     {
-        return "현재 위치의 중계환입니다. 다른 목적지를 선택하세요.";
+        return "현재 위치의 워프 스테이션입니다. 다른 목적지를 선택하세요.";
     }
     return nullptr;
 }
@@ -6257,7 +6338,7 @@ bool RelayTravel::Begin(const std::string &destination)
     if (auto reason = Restriction(destination))
     {
         s.relayStatus = reason;
-        g.ShowNotice(std::string("중계 이동 / ") + reason);
+        g.ShowNotice(std::string("워프 이동 / ") + reason);
         return false;
     }
     s.relaySource = Nearby()->id;
@@ -6270,7 +6351,7 @@ bool RelayTravel::Begin(const std::string &destination)
     s.StopMotion();
     s.mouseAiming = s.mouseFiring = false;
     std::fill(std::begin(s.pressedKeys), std::end(s.pressedKeys), false);
-    g.ShowNotice("중계 이동 / 도착 지형과 착지 공간을 준비합니다. X 또는 Esc로 취소할 수 있습니다.");
+    g.ShowNotice("워프 이동 / 도착 지형과 착지 공간을 준비합니다. X 또는 Esc로 취소할 수 있습니다.");
     return true;
 }
 void RelayTravel::Cancel(const std::string &reason)
@@ -6287,7 +6368,7 @@ void RelayTravel::Cancel(const std::string &reason)
     s.relayTarget.clear();
     s.relayElapsed = 0;
     s.StopMotion();
-    g.ShowNotice(std::string("중계 이동 / ") + reason);
+    g.ShowNotice(std::string("워프 이동 / ") + reason);
 }
 void RelayTravel::Interact()
 {
@@ -6310,8 +6391,8 @@ void RelayTravel::Interact()
     s.planetMapSurface = true;
     s.StopMotion();
     g.ShowNotice(
-        added ? "국지 중계환 등록 / M 지도에서 등록한 다른 중계환을 선택하세요. 임무 진행은 바뀌지 않습니다."
-              : "국지 중계환 / 등록한 다른 목적지를 지도에서 선택하세요.");
+        added ? "워프 스테이션 등록 / M 지도에서 등록한 다른 워프 스테이션을 선택하세요. 임무 진행은 바뀌지 않습니다."
+              : "워프 스테이션 / 등록한 다른 목적지를 지도에서 선택하세요.");
 }
 void RelayTravel::Update(float dt)
 {
@@ -6328,7 +6409,7 @@ void RelayTravel::Update(float dt)
     }
     if (!Nearby() || Nearby()->id != s.relaySource)
     {
-        Cancel("출발 중계환을 벗어났습니다.");
+        Cancel("출발 워프 스테이션을 벗어났습니다.");
         return;
     }
     s.relayElapsed += dt;
@@ -6350,10 +6431,38 @@ void RelayTravel::Update(float dt)
     }
     const auto destination = target->location.position;
     const auto name = snapshot->planet->Region(target->regionId).definition.name;
+    // Bring all joined surface companions along on Warp Station travel, even if they lagged > 12 m behind.
+    std::array<bool, 2> warpCompanions = {};
+    if (auto *party = g.SurfaceParty())
+    {
+        party->Capture();
+        const auto &members = party->State().members;
+        for (size_t i = 0; i < members.size(); ++i)
+        {
+            const bool missingRia = (i == 0 && story::StoryArc::Get().IsRiaMissing());
+            warpCompanions[i] = !missingRia && members[i].joined && members[i].place != CompanionPlace::Mine;
+        }
+    }
     if (!g.LandOnSurface(destination))
     {
         Cancel("도착 공간이 점유돼 있습니다. 출발 위치를 유지합니다.");
         return;
+    }
+    if (auto *party = g.SurfaceParty())
+    {
+        const double radius = g.Surface()->Planet().radiusMeters;
+        const auto &origin = g.Surface()->Pose().origin;
+        const auto &members = party->State().members;
+        std::array<bool, 2> remaining = {};
+        for (size_t i = 0; i < members.size(); ++i)
+        {
+            remaining[i] = warpCompanions[i] &&
+                           world::SurfaceGeometry::Distance(radius, members[i].position, origin) > 10.0;
+        }
+        if (remaining[0] || remaining[1])
+        {
+            party->Arrive(remaining);
+        }
     }
     s.relayPreparing = false;
     s.relaySource.clear();
@@ -6365,8 +6474,12 @@ void RelayTravel::Update(float dt)
         g.SurfaceCities()->Update(s, *g.Surface(), 0);
     }
     game::GameLevels::Chapter().Surface().Refresh();
+    if (auto *party = g.SurfaceParty())
+    {
+        party->Update(0);
+    }
     s.relayNetwork.Observe(*snapshot->planet, g.Surface()->Location());
-    g.ShowNotice("중계 이동 / " + name + " 도착. 바이크와 현장 인원·조사·보상 상태는 유지됩니다.");
+    g.ShowNotice("워프 이동 / " + name + " 도착. 동행 인원과 함께 이동했으며 바이크·조사·보상 상태는 유지됩니다.");
 }
 // ============================================================================
 // Game — CQ-09 player residence hub (rest, crafting/upgrades, stash, terminal)
@@ -6761,84 +6874,18 @@ void Game::InteractResidence(InteractionTarget target)
     {
         return;
     }
-    const auto &p = Player();
-    const auto &r = state.residence;
     if (target == InteractionTarget::HomeBed)
     {
-        const auto &law = CivicJustice::State();
-        std::string status = "체력 " + std::to_string(p.health) + "/" + std::to_string(p.maxHealth) +
-                             " · 누적 휴식 " + std::to_string(r.restCount) + "회";
-        if (law.wanted > 0)
-        {
-            status += law.wanted <= 2 ? " · 수배 " + std::to_string(law.wanted) + "단계(은신 진정 가능)"
-                                      : " · 수배 " + std::to_string(law.wanted) + "단계(고위험 봉쇄)";
-        }
-        std::vector<DialogueChoice> choices = {{"rest", "짧은 휴식 (체력·스태미너·동료·탄창 회복)"}};
-        if (state.surfaceExploration)
-        {
-            choices.push_back({"rest_save", "휴식 및 안전 체크포인트 저장"});
-        }
-        choices.push_back({"cancel", "일어나기"});
-        Dialogue::Start("residence/bed",
-                        {{"bed", "침대", "거주지 휴식", status, std::move(choices)}},
-                        [this](const std::string &choice) {
-                            if (choice == "rest")
-                            {
-                                ResidenceRest(false);
-                            }
-                            else if (choice == "rest_save")
-                            {
-                                ResidenceRest(true);
-                            }
-                        },
-                        true);
+        state.StopMotion();
+        state.noticeSecondsRemaining = 0.f;
+        Hud::OpenMenu(UiScreen::HomeBed);
         return;
     }
     if (target == InteractionTarget::HomeWorkbench)
     {
-        const std::string header = "휴대 고철 " + std::to_string(p.salvage) + " · 크레딧 " +
-                                   std::to_string(p.credits) + " · 회복 키트 " +
-                                   std::to_string(p.recoveryKits) + "/" +
-                                   std::to_string(ResidenceState::kMaxCarryKits) + " · 방호복 " +
-                                   std::to_string(r.armorTier) + "/3 · 무기 " +
-                                   std::to_string(r.weaponTier) + "/3";
-        std::vector<DialogueChoice> choices = {
-            {"kit", "회복 키트 제작 & 탄창 보충 (고철 1 또는 40 Cr)"},
-            {"armor", r.armorTier < ResidenceState::kMaxUpgradeTier
-                          ? "전술 방호복 보강 +" + std::to_string(r.armorTier + 1) + " (고철 " +
-                                std::to_string(ResidenceState::ArmorSalvageCost(r.armorTier)) + " + " +
-                                std::to_string(ResidenceState::ArmorCreditCost(r.armorTier)) +
-                                " Cr → 최대체력+20·방어+2)"
-                          : "전술 방호복 보강 (최고 3단계 완료)"},
-            {"weapon", r.weaponTier < ResidenceState::kMaxUpgradeTier
-                           ? "무기 정밀 튜닝 +" + std::to_string(r.weaponTier + 1) + " (고철 " +
-                                 std::to_string(ResidenceState::WeaponSalvageCost(r.weaponTier)) + " + " +
-                                 std::to_string(ResidenceState::WeaponCreditCost(r.weaponTier)) +
-                                 " Cr → 공격+4)"
-                           : "무기 정밀 튜닝 (최고 3단계 완료)"},
-            {"vehicle", "차량·비행체 원격 정비 (고철 1 또는 80 Cr)"},
-            {"cancel", "작업대 닫기"}};
-        Dialogue::Start("residence/workbench",
-                        {{"bench", "작업대", "장비 정비 · 강화", header, std::move(choices)}},
-                        [this](const std::string &choice) {
-                            if (choice == "kit")
-                            {
-                                ResidenceCraftKit();
-                            }
-                            else if (choice == "armor")
-                            {
-                                ResidenceUpgradeArmor();
-                            }
-                            else if (choice == "weapon")
-                            {
-                                ResidenceUpgradeWeapon();
-                            }
-                            else if (choice == "vehicle")
-                            {
-                                ResidenceRepairVehicles();
-                            }
-                        },
-                        true);
+        state.StopMotion();
+        state.noticeSecondsRemaining = 0.f;
+        Hud::OpenMenu(UiScreen::HomeWorkbench);
         return;
     }
     if (target == InteractionTarget::HomeStorage)
@@ -6850,55 +6897,10 @@ void Game::InteractResidence(InteractionTarget target)
     }
     if (target == InteractionTarget::HomeTerminal)
     {
-        const auto &law = CivicJustice::State();
-        const std::string briefing =
-            "금고 " + std::to_string(r.stashCredits) + " Cr · 방호 " + std::to_string(r.armorTier) +
-            "/3 · 무기 " + std::to_string(r.weaponTier) + "/3 · 등록 중계환 " +
-            std::to_string(state.relayNetwork.Registrations().size()) + "개 · 수배 " +
-            std::to_string(law.wanted) + "성 · 악명 " + std::to_string(int(std::round(law.infamy)));
-        const auto &arc = story::StoryArc::Get().State();
-        std::vector<DialogueChoice> choices = {
-            {"brief", "거점·탐사 현황 확인"},
-            {"recall", "개인 바이크·차량 거주지 앞으로 호출"},
-            {"message", arc.nereusSignalReceived ? "네레우스 수신 기록 다시 듣기"
-                        : story::StoryArc::Get().IsRiaMissing() ? "리아가 남긴 마지막 메시지 보기"
-                                                                : "리아의 보관 메시지 다시 보기"},
-            {"cancel", "단말 닫기"}};
-        Dialogue::Start(
-            "residence/terminal",
-            {{"terminal", "거주지 단말", "헤일로 07 거점", briefing, std::move(choices)}},
-            [this, briefing](const std::string &choice) {
-                if (choice == "brief")
-                {
-                    ShowNotice("거점 브리핑 / " + briefing);
-                }
-                else if (choice == "recall")
-                {
-                    ResidenceRecallVehicles();
-                }
-                else if (choice == "message")
-                {
-                    const auto &a = story::StoryArc::Get().State();
-                    if (a.nereusSignalReceived)
-                    {
-                        Dialogue::Say("residence/nereus-replay",
-                                      "수신 기록 · 리아의 음성 (네레우스 · 송신 시각 미확인) / 수신 확인. "
-                                      "여기 조명이 하나 켜졌어. 누가 듣고 있으면…");
-                    }
-                    else if (story::StoryArc::Get().IsRiaMissing())
-                    {
-                        Dialogue::Say("residence/lia-last",
-                                      "리아 · 마지막 수신 / …여긴, 아직 빛이 있어.");
-                    }
-                    else
-                    {
-                        Dialogue::Say("residence/lia-archive",
-                                      "리아 · 보관 메시지 / N-0 정기 측정 중에 이상한 응답이 잡혔어. "
-                                      "전망대 접근 코드 같이 보내 둘게.");
-                    }
-                }
-            },
-            true);
+        state.StopMotion();
+        state.noticeSecondsRemaining = 0.f;
+        Hud::OpenMenu(UiScreen::HomeTerminal);
+        return;
     }
 }
 // ============================================================================

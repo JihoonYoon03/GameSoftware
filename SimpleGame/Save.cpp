@@ -2161,18 +2161,18 @@ void ValidateRegistry(const Checkpoint &c, const world::GeneratedPlanet &plan)
             "중계 기록의 월드 ID가 일치하지 않습니다.");
     for (const auto &id : c.game.relayNetwork.Discoveries())
     {
-        Require(world::RelayNetwork::Find(plan, id) != nullptr, "존재하지 않는 중계환 발견 기록입니다.");
+        Require(world::RelayNetwork::Find(plan, id) != nullptr, "존재하지 않는 워프 스테이션 발견 기록입니다.");
     }
     for (const auto &id : c.game.relayNetwork.Registrations())
     {
-        Require(c.game.relayNetwork.Discovered(id), "발견되지 않은 중계환 등록 기록입니다.");
+        Require(c.game.relayNetwork.Discovered(id), "발견되지 않은 워프 스테이션 등록 기록입니다.");
     }
     for (const auto &id : c.game.relayNetwork.VisitedRegions())
     {
         plan.Region(id);
     }
     Require(c.game.selectedRelay.empty() || world::RelayNetwork::Find(plan, c.game.selectedRelay),
-            "선택한 중계환이 현재 월드에 없습니다.");
+            "선택한 워프 스테이션이 현재 월드에 없습니다.");
     for (const auto &link : c.trafficLinks)
     {
         const auto &region = plan.Region(Overworld::Cities()[size_t(link.city)].id);
@@ -2468,7 +2468,7 @@ bool SaveSystem::Save(const std::filesystem::path &path)
         WriteAtomic(path, bytes);
         campaign = std::move(candidate);
         Refresh();
-        message = g.state.relayPreparing ? "월드 저장 완료 / 진행 중인 중계 이동은 출발 위치로 복원됩니다."
+        message = g.state.relayPreparing ? "월드 저장 완료 / 진행 중인 워프 이동은 출발 위치로 복원됩니다."
                                          : "월드 저장 완료 / 현재 위치·현장·발견·진행 기록을 보관했습니다.";
         g.ShowNotice(message);
         return true;
@@ -2559,7 +2559,7 @@ bool SaveSystem::SwitchPlanet(std::string_view id)
         Require(!profile->SameWorld(g.surface->Planet()), "현재 탐사 중인 행성입니다.");
         Require(!g.IsSurfaceMine() && !g.state.IsInsideAny() &&
                     !g.state.isBikeMounted && !g.state.relayPreparing,
-                "지상에서 바이크를 내리고 중계 이동을 마친 뒤 행성을 선택해 주세요.");
+                "지상에서 바이크를 내리고 워프 이동을 마친 뒤 행성을 선택해 주세요.");
         auto source = SaveArchive::Capture();
         Validate(source);
         ValidateRegistry(source, *g.surface->Stream().Snapshot()->planet);

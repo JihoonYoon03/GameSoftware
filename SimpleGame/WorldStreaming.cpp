@@ -432,7 +432,7 @@ std::shared_ptr<const SurfaceChunk> SurfaceChunk::Build(const GeneratedPlanet &p
                     ++roadDeg;
                 }
             }
-            if (roadDeg >= 2)
+            if (roadDeg >= 2 && !node.relay)
             {
                 SurfaceIntersection inter;
                 inter.id = WorldIdentity::ContentKey(p, node.regionId, "hwy.inter." + std::to_string(nIdx));
@@ -441,7 +441,8 @@ std::shared_ptr<const SurfaceChunk> SurfaceChunk::Build(const GeneratedPlanet &p
                 inter.center.altitudeMeters = plan.terrain.Height(inter.center);
                 inter.frame = G::Frame(inter.center);
                 inter.control = IntersectionControl::Roundabout;
-                inter.radiusMeters = 7.8;
+                inter.radiusMeters = 12.5;
+                inter.islandRadiusMeters = 4.2;
                 inter.maxLanes = 2;
                 inter.arms = (std::min)(4u, roadDeg);
                 result->intersections.push_back(std::move(inter));

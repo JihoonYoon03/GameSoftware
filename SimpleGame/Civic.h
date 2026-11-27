@@ -155,6 +155,7 @@ class CivicJustice
     static constexpr float kSightHalfAngle = .95993109f; // 55 degrees; total field of view is 110 degrees.
     static CivicState &State();
     static void Reset(GameState &world);
+    static bool IsCrimeSuppressed();
     static void Report(Offense offense, Vector2 position);
     static int WantedForHeat(float heat);
     static std::optional<SecurityDispatchTarget> DispatchTarget();

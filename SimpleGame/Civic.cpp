@@ -66,6 +66,7 @@ void EnsureSurfaceTargets()
     const double planetRadius = g.Surface()->Planet().radiusMeters;
     const auto &hero = g.Surface()->Pose().origin;
     bool cityNear[Overworld::kCityCount] = {};
+    bool cityLegacyRoads[Overworld::kCityCount] = {};
     bool anyNear = false;
     for (int city = 0; city < Overworld::kCityCount; ++city)
     {
@@ -74,6 +75,15 @@ void EnsureSurfaceTargets()
         {
             cityNear[city] = true;
             anyNear = true;
+        }
+        cityLegacyRoads[city] = true;
+        if (snapshot->planet->cityCores)
+        {
+            if (const auto *core = snapshot->planet->cityCores->Find(Overworld::Cities()[size_t(city)].id);
+                core && core->roads.empty())
+            {
+                cityLegacyRoads[city] = false;
+            }
         }
     }
     if (!anyNear)
@@ -113,7 +123,7 @@ void EnsureSurfaceTargets()
     {
         const auto &r = residents[i];
         if (r.health > 0 && r.cityIndex >= 0 && r.cityIndex < Overworld::kCityCount &&
-            cityNear[r.cityIndex] &&
+            cityNear[r.cityIndex] && cityLegacyRoads[r.cityIndex] &&
             !(i == Overworld::kKainResidentSlot && game::GameLevels::Chapter().GetState().kainJoined))
         {
             add(r.cityIndex, r.position, int(i), -1, nullptr);
@@ -1765,9 +1775,68 @@ bool CivicJustice::CanSee(const SecurityOfficer &officer, Vector2 target, float 
     }
     return ClearLine(officer.position, target);
 }
+bool CivicJustice::IsCrimeSuppressed()
+{
+    auto &g = Game::Get();
+    const auto &w = g.GetState();
+    if (g.IsSurfaceMine() || game::GameLevels::Mine().IsActive() || story::StoryArc::Get().IsActive() ||
+        game::GameLevels::Chapter().IsActive())
+    {
+        return true;
+    }
+    if (!w.surfaceExploration || !g.IsStoryWorld() || !g.Surface() || !g.Surface()->Ready())
+    {
+        return false;
+    }
+    const auto *session = g.Surface();
+    const auto snapshot = session->Stream().Snapshot();
+    if (!snapshot || !snapshot->planet)
+    {
+        return false;
+    }
+    const auto &planet = *snapshot->planet;
+    const double R = session->Planet().radiusMeters;
+    const auto playerPos = session->Pose().origin;
+    const auto loc = g.PlanetLocation().value_or(session->Location());
+    auto inRegion = [&](const char *regionId, double minRadius) -> bool {
+        if (loc.regionId == regionId)
+        {
+            return true;
+        }
+        for (const auto &reg : planet.regions)
+        {
+            if (reg.definition.id == regionId && reg.center.space == world::SpaceKind::Surface)
+            {
+                const double rad = (std::max)(reg.boundingRadiusMeters, minRadius);
+                return world::SurfaceGeometry::Distance(R, playerPos, reg.center.position) <= rad;
+            }
+        }
+        return false;
+    };
+    const auto &ch = game::GameLevels::Chapter().GetState();
+    const bool frontierMissionLive =
+        w.missions.Active(MissionId::Frontier) ||
+        (w.missions.Status(MissionId::Frontier) != MissionStatus::Completed && !ch.recordsCompared &&
+         (ch.generatorInspected || ch.convoyAmbushTriggered || ch.escortStarted || !ch.frontierThreats.empty() ||
+          g.FocusedMission() == MissionId::Frontier));
+    if (frontierMissionLive && inRegion("frontier", 220.0))
+    {
+        return true;
+    }
+    if (w.missions.Active(MissionId::Mine) && inRegion("mq00_mine", 160.0))
+    {
+        return true;
+    }
+    if (story::StoryArc::Get().IsActTwoUnlocked() && !story::StoryArc::Get().State().chapter4Complete &&
+        inRegion("n0_outskirts", 220.0))
+    {
+        return true;
+    }
+    return false;
+}
 void CivicJustice::Report(Offense offense, Vector2 position)
 {
-    if (HospitalRecovery::Active())
+    if (HospitalRecovery::Active() || IsCrimeSuppressed())
     {
         return;
     }
@@ -1954,6 +2023,8 @@ void CivicJustice::Update(float dt)
             officer.threat.Forget();
             officer.decision = ai::Decision::Routine;
             officer.teamwork = {};
+            officer.facing.walking = false;
+            officer.muzzleFlash = 0.f;
             officer.corpseSeconds += dt;
             continue;
         }
@@ -2383,7 +2454,7 @@ void CivicJustice::Update(float dt)
     {
         profiling::Count(profiling::Counter::SecurityDispatchDeferred);
     }
-    if ((IsExterior() || surfaceMode) && target && civic.spawnSeconds <= 0 &&
+    if (!IsCrimeSuppressed() && (IsExterior() || surfaceMode) && target && civic.spawnSeconds <= 0 &&
         living < size_t(response.responderLimit) && civic.officers.size() < SecurityResponse::kOfficerSlots)
     {
         civic.spawnSeconds = response.reinforcementSeconds;
@@ -3257,6 +3328,7 @@ void BodyCollision::AgeResident(Resident &resident, float dt)
     AdvanceImpact(resident.position, resident.impact, dt, false);
     if (resident.health <= 0)
     {
+        resident.facing.walking = false;
         resident.corpseSeconds += dt;
     }
 }
@@ -3292,6 +3364,7 @@ void BodyCollision::UpdateCity(float dt, int city, bool playerPresent)
         }
         if (resident.health <= 0)
         {
+            resident.facing.walking = false;
             resident.corpseSeconds += dt;
         }
     }
@@ -3323,6 +3396,7 @@ void BodyCollision::Update(float dt)
             MoveResident(size_t(&resident - world.residents.data()), before, resident.position);
         if (resident.health <= 0)
         {
+            resident.facing.walking = false;
             resident.corpseSeconds += dt;
         }
     }
@@ -3873,6 +3947,7 @@ void HospitalRecovery::Begin()
         }
     }
     Dialogue::Interrupt();
+    encounters::WorldEncounters::Get().FailActiveEncounter();
     civic.recovery = RecoveryPhase::FadeOut;
     civic.recoverySeconds = 0;
     world.mouseFiring = world.mouseAiming = false;

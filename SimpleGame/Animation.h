@@ -22,6 +22,8 @@ enum class RigSocket : std::uint8_t
     Pelvis,
     HandR,
     HandL,
+    ForearmR,
+    ForearmL,
     Muzzle,
     Count
 };
@@ -69,7 +71,7 @@ struct AnimationRig
     std::vector<SolePoint> soles;
     RigPreset preset = RigPreset::LegacyHuman7H;
     int idle = -1, walk = -1, run = -1, aim = -1, fire = -1, melee = -1, muzzle = -1, handR = -1;
-    int head = -1, chest = -1, back = -1, pelvis = -1, spine = -1, handL = -1;
+    int head = -1, chest = -1, back = -1, pelvis = -1, spine = -1, handL = -1, forearmR = -1, forearmL = -1;
     std::array<float, kMaxSkinBones> upperBodyMask = {};
     std::array<float, kMaxSkinBones> upperBodyFullMask = {};
     int carryIdle = -1, carryWalk = -1, carryRun = -1, reload = -1;
@@ -89,6 +91,10 @@ struct AnimationRig
             return handR;
         case RigSocket::HandL:
             return handL;
+        case RigSocket::ForearmR:
+            return forearmR >= 0 ? forearmR : handR;
+        case RigSocket::ForearmL:
+            return forearmL >= 0 ? forearmL : handL;
         case RigSocket::Muzzle:
             return muzzle >= 0 ? muzzle : handR;
         default:

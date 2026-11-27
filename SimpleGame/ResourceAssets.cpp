@@ -855,6 +855,30 @@ Point ResourceAssets::Muzzle(const CharacterPose &pose)
     auto selection = Select(Get(id), &pose, true);
     return selection.clip ? selection.clip->muzzles[selection.frame] : Point{.5f, 0, .8f};
 }
+bool ResourceAssets::SocketMatrix(unsigned int id, const CharacterPose &pose, RigSocket socket, AnimationMatrix &out)
+{
+    out.fill(0.f);
+    out[0] = out[5] = out[10] = out[15] = 1.f;
+    const auto &mesh = Get(id);
+    if (mesh.rig && !pose.riding)
+    {
+        const int bone = mesh.rig->SocketBone(socket);
+        if (bone >= 0 && size_t(bone) < mesh.rig->bind.size() && size_t(bone) < kMaxSkinBones)
+        {
+            SkinMatrices matrices;
+            Sample(id, &pose, matrices);
+            AnimationMatrix skin;
+            std::copy_n(matrices.begin() + size_t(bone) * 16, 16, skin.begin());
+            out = AnimationMath::Multiply(skin, mesh.rig->bind[size_t(bone)]);
+            return true;
+        }
+    }
+    const Point fallback = Socket(id, pose, socket);
+    out[12] = fallback.x;
+    out[13] = fallback.y;
+    out[14] = fallback.z;
+    return false;
+}
 Point ResourceAssets::Socket(unsigned int id, const CharacterPose &pose, RigSocket socket)
 {
     const auto &mesh = Get(id);
@@ -882,10 +906,12 @@ Point ResourceAssets::Socket(unsigned int id, const CharacterPose &pose, RigSock
     case RigSocket::Pelvis:
         return {0.f, 0.f, .64f};
     case RigSocket::HandL:
+    case RigSocket::ForearmL:
         return {.22f, .18f, .72f};
     case RigSocket::Muzzle:
         return {.5f, 0.f, .8f};
     case RigSocket::HandR:
+    case RigSocket::ForearmR:
     default:
         return {.22f, -.18f, .72f};
     }

@@ -52,6 +52,9 @@ class RenderAssets
     unsigned int PbrDetailBaseArray() const;
     unsigned int PbrDetailNormalArray() const;
     unsigned int PbrDetailOrmArray() const;
+    unsigned int AssetAlbedoArray() const;
+    unsigned int AssetNormalArray() const;
+    int AssetAlbedoLayer(const std::string &assetName) const;
     unsigned int DamageMaskTexture() const;
     unsigned int EffectMasksTexture() const;
     unsigned int WaterFlowTexture() const;
@@ -61,6 +64,7 @@ class RenderAssets
     unsigned int SpaceNebulaTexture() const;
     bool HasPbrTextures() const;
     bool HasPbrDetailTextures() const;
+    bool HasAssetAlbedoTextures() const;
     bool HasDamageMask() const;
     bool HasEffectTextures() const;
     const PbrTextureBudget &PbrBudget() const;

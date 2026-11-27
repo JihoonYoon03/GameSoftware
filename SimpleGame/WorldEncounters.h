@@ -198,6 +198,9 @@ class WorldEncounters
     void Reset();
     void PopulateForCurrentWorld();
     void Update(float dt);
+    void FailActiveEncounter();
+    void Untrack();
+    bool IsMainStoryFocused() const;
 
     // Combat & interaction hooks (both SurfaceExterior and LegacyCity)
     bool HitAtWorldPoint(const world::SurfacePoint &point, int damage, bool playerOwned);

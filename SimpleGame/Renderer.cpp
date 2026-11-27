@@ -362,9 +362,12 @@ uniform sampler2DArray pbrOrmArray;
 uniform sampler2DArray pbrDetailBaseArray;
 uniform sampler2DArray pbrDetailNormalArray;
 uniform sampler2DArray pbrDetailOrmArray;
+uniform sampler2DArray assetAlbedoArray;
+uniform sampler2DArray assetNormalArray;
 uniform sampler2D damageMask;
 uniform int hasPbr;
 uniform int hasPbrDetail;
+uniform int hasAssetAlbedo;
 uniform int hasDamageMask;
 uniform vec3 uKeyDir;
 uniform vec4 uKeyColor;
@@ -484,8 +487,19 @@ void main() {
     vec2 triUv = (abs(n.z) > 0.72) ? localPosition.xy : ((abs(n.x) > abs(n.y)) ? localPosition.yz : localPosition.xz);
     triUv *= 0.45;
     vec2 sampleUv = hasAuthoredUv > 0.5 ? meshUv : triUv;
-    bool useDetail = hasPbrDetail != 0 && (surface > 4.5);
-    bool usePilot = hasPbr != 0 && !useDetail && (surface < 2.5 || (surface > 4.5 && surface < 6.5));
+    bool useAssetAlbedo = hasAssetAlbedo != 0 && finish.z < -0.5 && hasAuthoredUv > 0.5;
+    if (useAssetAlbedo) {
+        float assetLayer = floor(-finish.z - 0.5);
+        baseColor = texture(assetAlbedoArray, vec3(meshUv, assetLayer)).rgb * tint.rgb;
+        vec3 assetN = texture(assetNormalArray, vec3(meshUv, assetLayer)).xyz * 2.0 - 1.0;
+        vec3 upRef = abs(n.z) > 0.9 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 0.0, 1.0);
+        vec3 tangent = normalize(cross(upRef, n));
+        vec3 bitangent = cross(n, tangent);
+        vec3 perturbed = normalize(tangent * assetN.x + bitangent * assetN.y + n * max(0.25, assetN.z));
+        n = normalize(mix(n, perturbed, 0.55));
+    }
+    bool useDetail = !useAssetAlbedo && hasPbrDetail != 0 && (surface > 4.5);
+    bool usePilot = !useAssetAlbedo && hasPbr != 0 && !useDetail && (surface < 3.5 || (surface > 4.5 && surface < 6.5));
     if (useDetail || usePilot) {
         vec3 pbrBase = vec3(1.0);
         vec3 pbrNrm = vec3(0.0, 0.0, 1.0);
@@ -493,6 +507,7 @@ void main() {
         float normalStrength = 0.34;
         float grainStrength = 0.24;
         float aoStrength = 0.38;
+        bool isGlassPbr = (surface > 2.5 && surface < 3.5);
         if (useDetail) {
             // Detail 512^2 array: 0=SkinMicrograin, 3=Road_Basalt(Rubber), 4=Rock_Mine(Stone).
             float detailLayer = surface > 6.5 ? 0.0 : (surface > 5.5 ? 4.0 : 3.0);
@@ -506,24 +521,38 @@ void main() {
                 aoStrength = 0.24;
             }
         } else {
-            // Pilot 1024^2 array: 0=CastPaving, 1=TechnicalWeave(Fabric), 2=BrushedSteel(Metal), 3=PaintedAlloy.
-            float layer = (surface > 0.5 && surface < 1.5) ? 1.0
+            // Pilot 1024^2 array: 0=CastPaving, 1=TechnicalWeave(Fabric), 2=BrushedSteel(Metal),
+            // 3=PaintedAlloy, 4=Colony_GlassCurtain(Glass/Windows/Domes).
+            float layer = isGlassPbr ? 4.0
+                        : (surface > 0.5 && surface < 1.5) ? 1.0
                         : (surface > 1.5 && surface < 2.5) ? 2.0
                         : (metal > 0.35 ? 3.0 : 0.0);
             pbrBase = texture(pbrBaseArray, vec3(sampleUv, layer)).rgb;
             pbrNrm = texture(pbrNormalArray, vec3(sampleUv, layer)).xyz * 2.0 - 1.0;
             pbrOrm = texture(pbrOrmArray, vec3(sampleUv, layer)).rgb;
+            if (isGlassPbr) {
+                normalStrength = 0.52;
+                aoStrength = 0.52;
+            }
         }
         vec3 upRef = abs(n.z) > 0.9 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 0.0, 1.0);
         vec3 tangent = normalize(cross(upRef, n));
         vec3 bitangent = cross(n, tangent);
         vec3 detailN = normalize(tangent * pbrNrm.x + bitangent * pbrNrm.y + n * max(0.25, pbrNrm.z));
         n = normalize(mix(n, detailN, normalStrength));
-        float grain = dot(pbrBase, vec3(0.299, 0.587, 0.114));
-        baseColor *= mix(1.0, clamp(0.78 + grain * 0.42, 0.80, 1.18), grainStrength);
-        ao = mix(1.0, pbrOrm.r, aoStrength);
-        rough = clamp(mix(rough, pbrOrm.g, 0.35), 0.08, 0.98);
-        metal = clamp(mix(metal, pbrOrm.b, 0.25), 0.0, 1.0);
+        if (isGlassPbr) {
+            vec3 tintedGlass = pbrBase * mix(vec3(1.0), baseColor * 1.45, 0.60);
+            baseColor = mix(baseColor, tintedGlass, 0.90);
+            ao = mix(1.0, pbrOrm.r, aoStrength);
+            rough = clamp(mix(0.14, pbrOrm.g, 0.60), 0.08, 0.72);
+            metal = clamp(mix(0.18, pbrOrm.b, 0.45), 0.0, 0.85);
+        } else {
+            float grain = dot(pbrBase, vec3(0.299, 0.587, 0.114));
+            baseColor *= mix(1.0, clamp(0.78 + grain * 0.42, 0.80, 1.18), grainStrength);
+            ao = mix(1.0, pbrOrm.r, aoStrength);
+            rough = clamp(mix(rough, pbrOrm.g, 0.35), 0.08, 0.98);
+            metal = clamp(mix(metal, pbrOrm.b, 0.25), 0.0, 1.0);
+        }
     }
     float damage = clamp(abs(finish.w) - 1.0, 0.0, 1.0);
     if (hasDamageMask != 0 && damage > 0.01 && surface < 2.5) {
@@ -537,7 +566,8 @@ void main() {
         metal = clamp(metal + chips * 0.45 - soot * 0.45, 0.0, 1.0);
     }
     if (surface > 3.5 && surface < 4.5) {
-        vec3 emissive = tint.rgb * (1.0 + finish.z * 0.35);
+        float emBoost = finish.z > 0.0 ? finish.z : 1.0;
+        vec3 emissive = tint.rgb * (1.0 + emBoost * 0.35);
         fragColor = vec4(emissive, coverage < 0.5 ? 1.0 : tint.a);
         return;
     }
@@ -840,6 +870,7 @@ struct Mesh::Data
     bool staticResource = false;
     bool identityBindPose = true;
     bool holographic = false;
+    int albedoLayer = -1;
     unsigned int boneCount = 0;
     models::SkinMatrices bindPose = {};
 };
@@ -1007,7 +1038,8 @@ struct Renderer::MeshData
         GLint bones = -1, useBones = -1, armed = -1, imported = -1;
         GLint pbrBaseArray = -1, pbrNormalArray = -1, pbrOrmArray = -1, damageMask = -1;
         GLint pbrDetailBaseArray = -1, pbrDetailNormalArray = -1, pbrDetailOrmArray = -1;
-        GLint hasPbr = -1, hasPbrDetail = -1, hasDamageMask = -1;
+        GLint assetAlbedoArray = -1, assetNormalArray = -1;
+        GLint hasPbr = -1, hasPbrDetail = -1, hasAssetAlbedo = -1, hasDamageMask = -1;
         GLint keyDir = -1, keyColor = -1, skyColor = -1, groundColor = -1, rimColor = -1;
         GLint pointLightCount = -1, pointLightPos = -1, pointLightColor = -1;
         GLint projectionBasis = -1;
@@ -1029,9 +1061,12 @@ struct Renderer::MeshData
             pbrDetailBaseArray = glGetUniformLocation(program, "pbrDetailBaseArray");
             pbrDetailNormalArray = glGetUniformLocation(program, "pbrDetailNormalArray");
             pbrDetailOrmArray = glGetUniformLocation(program, "pbrDetailOrmArray");
+            assetAlbedoArray = glGetUniformLocation(program, "assetAlbedoArray");
+            assetNormalArray = glGetUniformLocation(program, "assetNormalArray");
             damageMask = glGetUniformLocation(program, "damageMask");
             hasPbr = glGetUniformLocation(program, "hasPbr");
             hasPbrDetail = glGetUniformLocation(program, "hasPbrDetail");
+            hasAssetAlbedo = glGetUniformLocation(program, "hasAssetAlbedo");
             hasDamageMask = glGetUniformLocation(program, "hasDamageMask");
             keyDir = glGetUniformLocation(program, "uKeyDir");
             keyColor = glGetUniformLocation(program, "uKeyColor");
@@ -1234,6 +1269,7 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
             geometry.boundSpan = (std::max)({resource.maximum.x - resource.minimum.x,
                                              resource.maximum.y - resource.minimum.y,
                                              resource.maximum.z - resource.minimum.z});
+            geometry.albedoLayer = m_assets ? m_assets->AssetAlbedoLayer(resource.name) : -1;
             if (model.count)
             {
                 const auto unpacked = models::ResourceAssets::UnpackLod0Triangles(resource);
@@ -1670,6 +1706,7 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
 
     const float clampedDamage = std::clamp(damage, 0.f, 1.f);
     const unsigned int visFlags = (armed ? 1u : 0u) | (unsigned(visibilityMask & 0x7u) << 1u);
+    const float finishZ = (mesh->data->albedoLayer >= 0) ? -float(mesh->data->albedoLayer + 1) : 1.f;
     MeshData::Instance instance = {
         {screen.x, screen.y, depth, mesh->data->holographic ? 1.f : 0.f},
         {scale.x, scale.y, scale.z, float(visFlags)},
@@ -1677,7 +1714,7 @@ bool Renderer::SubmitModel(const models::Model &model, RenderPoint screen, model
         {},
         {},
         {},
-        {roughness, metallic, 1.f, (castsShadow ? 1.f : -1.f) * (1.f + clampedDamage)},
+        {roughness, metallic, finishZ, (castsShadow ? 1.f : -1.f) * (1.f + clampedDamage)},
         // The fourth component carries the receiver plane without enlarging the instance stream.
         {transform.position.x, transform.position.y, transform.position.z, shadowGroundZ}};
     std::copy(palette.body.begin(), palette.body.end(), instance.body);
@@ -1940,6 +1977,7 @@ void Renderer::DrawModels()
         }
         const bool pbrReady = shadow == 0 && m_assets && m_assets->HasPbrTextures();
         const bool pbrDetailReady = shadow == 0 && m_assets && m_assets->HasPbrDetailTextures();
+        const bool assetAlbedoReady = shadow == 0 && m_assets && m_assets->HasAssetAlbedoTextures();
         const bool dmgReady = shadow == 0 && m_assets && m_assets->HasDamageMask();
         if (data.uniforms.hasPbr >= 0)
         {
@@ -1948,6 +1986,10 @@ void Renderer::DrawModels()
         if (data.uniforms.hasPbrDetail >= 0)
         {
             glUniform1i(data.uniforms.hasPbrDetail, pbrDetailReady ? 1 : 0);
+        }
+        if (data.uniforms.hasAssetAlbedo >= 0)
+        {
+            glUniform1i(data.uniforms.hasAssetAlbedo, assetAlbedoReady ? 1 : 0);
         }
         if (data.uniforms.hasDamageMask >= 0)
         {
@@ -1983,7 +2025,16 @@ void Renderer::DrawModels()
             glBindTexture(GL_TEXTURE_2D_ARRAY, m_assets->PbrDetailOrmArray());
             glUniform1i(data.uniforms.pbrDetailOrmArray, 7);
         }
-        if (pbrReady || pbrDetailReady || dmgReady)
+        if (assetAlbedoReady)
+        {
+            glActiveTexture(GL_TEXTURE8);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, m_assets->AssetAlbedoArray());
+            glUniform1i(data.uniforms.assetAlbedoArray, 8);
+            glActiveTexture(GL_TEXTURE9);
+            glBindTexture(GL_TEXTURE_2D_ARRAY, m_assets->AssetNormalArray());
+            glUniform1i(data.uniforms.assetNormalArray, 9);
+        }
+        if (pbrReady || pbrDetailReady || assetAlbedoReady || dmgReady)
         {
             glActiveTexture(GL_TEXTURE0);
         }

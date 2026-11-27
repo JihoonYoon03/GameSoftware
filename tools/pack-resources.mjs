@@ -156,12 +156,20 @@ function png(bytes) {
     }
     return { width, height, channels, pixels };
 }
+const externalPngCache = new Map();
 function textureColor(data, texture, uv) {
     const index = data.json.textures[texture].source;
     if (!data.images.has(index)) {
-        const image = data.json.images[index], view = data.json.bufferViews[image.bufferView];
-        if (!view || image.mimeType !== 'image/png') throw Error('Embedded PNG required');
-        data.images.set(index, png(data.binary.subarray(view.byteOffset ?? 0, (view.byteOffset ?? 0) + view.byteLength)));
+        const image = data.json.images[index];
+        if (image.uri && !image.uri.startsWith('data:')) {
+            const fullPath = path.resolve(path.dirname(path.join(resources, 'Export', data.relative + '.glb')), decodeURIComponent(image.uri));
+            if (!externalPngCache.has(fullPath)) externalPngCache.set(fullPath, png(fs.readFileSync(fullPath)));
+            data.images.set(index, externalPngCache.get(fullPath));
+        } else {
+            const view = data.json.bufferViews[image.bufferView];
+            if (!view || image.mimeType !== 'image/png') throw Error('Embedded PNG required');
+            data.images.set(index, png(data.binary.subarray(view.byteOffset ?? 0, (view.byteOffset ?? 0) + view.byteLength)));
+        }
     }
     const image = data.images.get(index), x = Math.floor(((uv[0] % 1 + 1) % 1) * image.width), y = Math.floor(((uv[1] % 1 + 1) % 1) * image.height);
     return Array.from({ length: 4 }, (_, c) => c === 3 && image.channels === 3 ? 1 : image.pixels[(y * image.width + x) * image.channels + c] / 255);
@@ -214,7 +222,8 @@ function convert(name, relative, kind = 'prop', options = {}) {
                 const material = data.json.materials?.[primitive.material] ?? {}, materialName = material.name ?? '', pbr = material.pbrMetallicRoughness ?? {};
                 const base = [...(pbr.baseColorFactor ?? [1, 1, 1, 1])];
                 if (skinOverride && /Skin/.test(materialName)) base.splice(0, 4, ...skinOverride);
-                let palette = /Glow|Emission|Emissive/.test(materialName) || material.emissiveFactor?.some(x => x > 0) ? 3
+                const isGlass = /Glass/i.test(materialName);
+                let palette = !isGlass && (/Glow|Emission|Emissive/.test(materialName) || material.emissiveFactor?.some(x => x > 0)) ? 3
                     : options.tintable === false ? 0
                     : /Cloth|Vehicle_|Hair/.test(materialName) ? 1 : /Accent|Trim/.test(materialName) ? 2 : 0;
                 if (options.neutralEmission && palette === 3) base.splice(0, 4, 1, 1, 1, 1);
@@ -226,9 +235,9 @@ function convert(name, relative, kind = 'prop', options = {}) {
                 }
                 const surfaceMap = { default: 0, fabric: 1, metal: 2, glass: 3, emissive: 4, rubber: 5, stone: 6, skin: 7 };
                 const inferredMatteCloth = (pbr.metallicFactor ?? 1) <= 0.15 && (pbr.roughnessFactor ?? 0.5) >= 0.70;
-                const surface = palette === 3 ? 4 : /Skin/.test(materialName) ? 7 : /Glass/.test(materialName) ? 3
-                    : /Cloth|Fabric|Hair/.test(materialName) ? 1 : /Rubber/.test(materialName) ? 5
-                    : /Rock|Soil|Grass|Sand|Mine/.test(materialName) ? 6
+                const surface = palette === 3 ? 4 : /Skin/i.test(materialName) ? 7 : isGlass ? 3
+                    : /Cloth|Fabric|Hair/i.test(materialName) ? 1 : /Rubber/i.test(materialName) ? 5
+                    : /Rock|Soil|Grass|Sand|Mine/i.test(materialName) ? 6
                     : options.defaultSurface !== undefined ? (surfaceMap[options.defaultSurface] ?? 2)
                     : (kind === 'mixamo_part' && inferredMatteCloth) ? 1 : 2;
                 const visibility = /Weapon_CoilPistol/.test(nodeName) ? 1
@@ -248,13 +257,15 @@ function convert(name, relative, kind = 'prop', options = {}) {
                     const n = [0, 1, 2].map(r => normals[index].reduce((sum, v, axis) => sum + normalMatrix[r * 4 + axis] * v, 0));
                     const length = Math.hypot(...n); if (length < 1e-10) throw Error('Zero normal');
                     let color = base;
-                    if (pbr.baseColorTexture && uv) color = base.map((v, axis) => v * textureColor(data, pbr.baseColorTexture.index, uv[index])[axis]);
+                    const hasTex = Boolean(pbr.baseColorTexture && uv);
+                    if (hasTex && !options.gpuAlbedo && !isGlass) color = base.map((v, axis) => v * textureColor(data, pbr.baseColorTexture.index, uv[index])[axis]);
                     let js = joints && remap ? joints[index].map(j => remap[j]) : [31, 31, 31, 31];
                     let ws = weights && remap ? weights[index] : [1, 0, 0, 0];
                     const total = ws.reduce((a, b) => a + b, 0); if (total < .99 || total > 1.01) throw Error('Skin weights');
                     const uvCoord = uv ? uv[index] : [0, 0];
+                    const uvFlag = options.gpuAlbedo ? (hasTex ? 1 : 0) : (uv ? 1 : 0);
                     vertices.push([...pos, ...n.map(v => v / length), ...color, palette, visibility, surface,
-                        ...js, ...ws.map(v => v / total), uvCoord[0], uvCoord[1], uv ? 1 : 0]);
+                        ...js, ...ws.map(v => v / total), uvCoord[0], uvCoord[1], uvFlag]);
                 }
             }
         }
@@ -285,6 +296,10 @@ function convert(name, relative, kind = 'prop', options = {}) {
         vertices.splice(0, vertices.length, ...triangles);
     }
     let [lo, hi] = bounds(vertices), physical = hi.map((v, i) => (v - lo[i]) * (isHumanKind(kind) ? characterScale : 1));
+    if (options.footprint) {
+        physical[0] = options.footprint[0];
+        physical[1] = options.footprint[1];
+    }
     if (kind === 'vehicle') {
         const ground = lo[2];
         for (const v of vertices) v[2] -= ground;
@@ -735,27 +750,48 @@ for (const hair of ['Buzz', 'SidePart', 'Curls', 'Bob', 'Ponytail', 'Bun']) {
     }
 }
 for (const vehicle of ['Coupe', 'Shuttle', 'Hauler', 'Patrol', 'JetBike']) convert('vehicle/' + vehicle, 'Vehicles/' + vehicle, 'vehicle');
-for (const [name, file, height] of [['Habitat', 'Habitat_7p2m', 7.2], ['Terraced', 'TerracedPods_10p8m', 10.8],
-    ['Workshop', 'Workshop_5p4m', 5.4], ['Dome', 'RibDome_6p5m', 6.5], ['Observatory', 'Observatory_11p5m', 11.5]])
-    convert('building/' + name, 'Buildings/' + file, 'prop', { normalize: true, height });
+const colonyV4Path = path.join(resources, 'Documentation/colony_v4_assets.json');
+const colonyV4 = fs.existsSync(colonyV4Path) ? JSON.parse(fs.readFileSync(colonyV4Path, 'utf8')) : null;
+const colonyV4Source = (entry) => {
+    const file = entry?.levels?.LOD0?.file;
+    if (!file) return null;
+    return file.replace(/^Export[\\/]/i, '').replace(/\.glb$/i, '');
+};
+const colonyV4ReplacementSource = (legacyFile) => {
+    const replId = colonyV4?.replacements?.[legacyFile];
+    return replId ? colonyV4Source(colonyV4.buildings?.[replId]) : null;
+};
+for (const [name, file, height, footprint] of [
+    ['Habitat', 'Habitat_7p2m', 7.2, [3.1725, 2.1613]],
+    ['Terraced', 'TerracedPods_10p8m', 10.8, [6.0, 2.1613]],
+    ['Workshop', 'Workshop_5p4m', 5.4, [4.1725, 3.1613]],
+    ['Dome', 'RibDome_6p5m', 6.5, [4.1131, 4.1131]],
+    ['Observatory', 'Observatory_11p5m', 11.5, [4.1131, 4.1131]]]) {
+    const src = colonyV4ReplacementSource(file) ?? ('Buildings/' + file);
+    convert('building/' + name, src, 'prop', { normalize: true, height, footprint });
+}
 const architecture = JSON.parse(fs.readFileSync(path.join(resources, 'Documentation/architecture_styles.json')));
-for (const [name, file] of [['SpireHelix', 'Spire_Helix_12F'], ['TwinBridge', 'Tower_TwinBridge_16F'],
-    ['ArcologyTerrace', 'Arcology_Terrace_10F'], ['TransitAtrium', 'Civic_TransitAtrium_4F'],
-    ['CourtyardHabitat', 'Habitat_Courtyard_3F']]) {
+for (const [name, file, footprint] of [
+    ['SpireHelix', 'Spire_Helix_12F', [8.3838, 8.3838]],
+    ['TwinBridge', 'Tower_TwinBridge_16F', [9.75, 5.25]],
+    ['ArcologyTerrace', 'Arcology_Terrace_10F', [9.5, 8.75]],
+    ['TransitAtrium', 'Civic_TransitAtrium_4F', [11.5, 8.0]],
+    ['CourtyardHabitat', 'Habitat_Courtyard_3F', [10.5, 8.5]]]) {
     const style = architecture.styles[file];
     if (!style || !(style.floor_count > 0) || !(style.storey_height_m > 0))
         throw Error('Architecture dimensions missing: ' + file);
-    // Match the existing normalized building contract while retaining every authored façade,
-    // glazing and roof component. Physical dimensions remain derived from the assembled GLB.
-    convert('building/' + name, 'Buildings/' + file, 'prop',
-        { normalize: true, height: style.floor_count * style.storey_height_m });
+    // Match the existing normalized building contract while upgrading to delivered ColonyV4 industrial/concrete prefabs.
+    const src = colonyV4ReplacementSource(file) ?? ('Buildings/' + file);
+    convert('building/' + name, src, 'prop',
+        { normalize: true, height: style.floor_count * style.storey_height_m, footprint });
 }
 const measuredBuildings = JSON.parse(fs.readFileSync(path.join(resources, 'Documentation/measured_buildings.json')));
 for (const [name, prefab] of Object.entries(measuredBuildings.prefabs)) {
     const dims = prefab.structure_dimensions_m;
     if (!dims || dims.length !== 3 || dims.some(v => !(v > 0)))
         throw Error('Measured building dimensions missing: ' + name);
-    convert('building/' + name, 'MeasuredBuildings/' + name, 'prop', { normalize: true });
+    const src = colonyV4Source(colonyV4?.buildings?.[name]) ?? ('MeasuredBuildings/' + name);
+    convert('building/' + name, src, 'prop', { normalize: true });
 }
 for (const name of ['RelaySentinel', 'RiftGrazer', 'VeilWalker']) for (const variant of ['', '_Variant']) convert('creature/' + name + variant, 'Creatures/' + name + variant, 'creature');
 for (const [name, file, normalize] of [['box', 'Interior_Crate', true], ['salvage', 'Gear_Engineer_Powerpack', false],
@@ -801,14 +837,16 @@ if (fs.existsSync(mixamoCatalogPath)) {
         convert('modular/body/' + body.id, body.source, 'mixamo_part', {
             animationBanks: sharedBanks,
             defaultSurface: body.surface ?? 'skin',
-            tintable: body.tintable ?? false
+            tintable: body.tintable ?? false,
+            gpuAlbedo: true
         });
     }
     for (const outfit of mixamo.outfits ?? []) {
         convert('modular/outfit/' + outfit.id, outfit.source, 'mixamo_part', {
             animationBanks: sharedBanks,
             defaultSurface: outfit.surface ?? 'fabric',
-            tintable: outfit.tintable ?? false
+            tintable: outfit.tintable ?? false,
+            gpuAlbedo: true
         });
     }
     for (const att of mixamo.attachments ?? []) {
@@ -816,7 +854,8 @@ if (fs.existsSync(mixamoCatalogPath)) {
         convert('modular/part/' + att.id, att.source, rigid ? 'mixamo_socket' : 'mixamo_part', {
             animationBanks: rigid ? [] : sharedBanks,
             defaultSurface: att.surface ?? (rigid ? 'metal' : 'fabric'),
-            tintable: att.tintable ?? false
+            tintable: att.tintable ?? false,
+            gpuAlbedo: !rigid
         });
     }
 }
@@ -830,6 +869,21 @@ if (fs.existsSync(cq04bCatalogPath)) {
         if (!lod0File) continue;
         const stem = lod0File.replace(/\.glb$/i, '');
         convert('cq04b/' + id, 'CQ04B/' + stem, 'prop');
+    }
+}
+
+// ColonyV4 newly delivered buildings (14 new archetypes) & props (26 interior/facility/street/nature props).
+if (colonyV4) {
+    for (const [id, entry] of Object.entries(colonyV4.buildings ?? {})) {
+        if (entry?.role !== 'new') continue;
+        const src = colonyV4Source(entry);
+        if (!src) continue;
+        convert('colony_v4/' + id, src, 'prop', { normalize: true });
+    }
+    for (const [id, entry] of Object.entries(colonyV4.props ?? {})) {
+        const src = colonyV4Source(entry);
+        if (!src) continue;
+        convert('colony_v4/' + id, src, 'prop');
     }
 }
 

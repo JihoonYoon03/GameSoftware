@@ -136,6 +136,11 @@ class AssetJson
         AssetRequire(type == Type::String, "expected string");
         return text;
     }
+    static AssetJson ParseText(const std::string &s)
+    {
+        size_t pos = 0;
+        return Parse(s, pos, 0);
+    }
     int Integer() const
     {
         AssetRequire(type == Type::Number && std::isfinite(number) && number == std::floor(number) &&
@@ -398,6 +403,165 @@ std::vector<unsigned char> DecodePngScaled(IWICImagingFactory *factory, const st
     outW = targetW;
     outH = targetH;
     return pixels;
+}
+std::vector<unsigned char> DecodePngMemorySquare(IWICImagingFactory *factory, const unsigned char *bytes,
+                                                 size_t byteCount, int targetSize)
+{
+    if (!bytes || byteCount == 0 || targetSize <= 0)
+    {
+        return {};
+    }
+    using Microsoft::WRL::ComPtr;
+    ComPtr<IWICStream> stream;
+    ComPtr<IWICBitmapDecoder> decoder;
+    ComPtr<IWICBitmapFrameDecode> frame;
+    UINT w = 0, h = 0;
+    if (FAILED(factory->CreateStream(&stream)) ||
+        FAILED(stream->InitializeFromMemory(const_cast<BYTE *>(reinterpret_cast<const BYTE *>(bytes)),
+                                            DWORD(byteCount))) ||
+        FAILED(factory->CreateDecoderFromStream(stream.Get(), nullptr, WICDecodeMetadataCacheOnLoad, &decoder)) ||
+        FAILED(decoder->GetFrame(0, &frame)) || FAILED(frame->GetSize(&w, &h)) || w == 0 || h == 0)
+    {
+        return {};
+    }
+    ComPtr<IWICBitmapSource> source = frame;
+    if (int(w) != targetSize || int(h) != targetSize)
+    {
+        ComPtr<IWICBitmapScaler> scaler;
+        if (SUCCEEDED(factory->CreateBitmapScaler(&scaler)) &&
+            SUCCEEDED(scaler->Initialize(frame.Get(), UINT(targetSize), UINT(targetSize),
+                                         WICBitmapInterpolationModeFant)))
+        {
+            source = scaler;
+        }
+        else
+        {
+            return {};
+        }
+    }
+    ComPtr<IWICFormatConverter> converter;
+    if (FAILED(factory->CreateFormatConverter(&converter)) ||
+        FAILED(converter->Initialize(source.Get(), GUID_WICPixelFormat32bppRGBA, WICBitmapDitherTypeNone, nullptr, 0,
+                                     WICBitmapPaletteTypeCustom)))
+    {
+        return {};
+    }
+    std::vector<unsigned char> pixels(size_t(targetSize) * size_t(targetSize) * 4u);
+    if (FAILED(converter->CopyPixels(nullptr, UINT(targetSize * 4), UINT(pixels.size()), pixels.data())))
+    {
+        return {};
+    }
+    return pixels;
+}
+bool ExtractGlbMaterialPng(const std::filesystem::path &glbPath, bool wantNormal, std::vector<unsigned char> &pngOut)
+{
+    std::error_code ec;
+    if (!std::filesystem::is_regular_file(glbPath, ec))
+    {
+        return false;
+    }
+    std::ifstream in(glbPath, std::ios::binary);
+    if (!in)
+    {
+        return false;
+    }
+    std::uint32_t hdr[5] = {};
+    in.read(reinterpret_cast<char *>(hdr), sizeof(hdr));
+    if (!in || hdr[0] != 0x46546C67u || hdr[4] != 0x4E4F534Au || hdr[3] == 0 || hdr[3] > 8u * 1024u * 1024u)
+    {
+        return false;
+    }
+    std::string jsonText(hdr[3], '\0');
+    in.read(jsonText.data(), std::streamsize(hdr[3]));
+    std::uint32_t binHdr[2] = {};
+    in.read(reinterpret_cast<char *>(binHdr), sizeof(binHdr));
+    if (!in || binHdr[1] != 0x004E4942u)
+    {
+        return false;
+    }
+    const std::streamoff binStart = in.tellg();
+    AssetJson root;
+    try
+    {
+        root = AssetJson::ParseText(jsonText);
+    }
+    catch (...)
+    {
+        return false;
+    }
+    if (root.type != AssetJson::Type::Object)
+    {
+        return false;
+    }
+    auto findObj = [](const AssetJson &obj, const char *key) -> const AssetJson * {
+        if (obj.type != AssetJson::Type::Object)
+        {
+            return nullptr;
+        }
+        auto it = obj.object.find(key);
+        return it != obj.object.end() ? &it->second : nullptr;
+    };
+    const AssetJson *materials = findObj(root, "materials");
+    const AssetJson *textures = findObj(root, "textures");
+    const AssetJson *images = findObj(root, "images");
+    const AssetJson *views = findObj(root, "bufferViews");
+    if (!materials || !textures || !images || !views || materials->array.empty())
+    {
+        return false;
+    }
+    const AssetJson *texRef = nullptr;
+    for (const auto &mat : materials->array)
+    {
+        if (wantNormal)
+        {
+            texRef = findObj(mat, "normalTexture");
+        }
+        else if (const AssetJson *pbr = findObj(mat, "pbrMetallicRoughness"))
+        {
+            texRef = findObj(*pbr, "baseColorTexture");
+        }
+        if (texRef)
+        {
+            break;
+        }
+    }
+    const AssetJson *texIdxVal = texRef ? findObj(*texRef, "index") : nullptr;
+    if (!texIdxVal || texIdxVal->type != AssetJson::Type::Number)
+    {
+        return false;
+    }
+    const size_t texIdx = size_t(texIdxVal->number);
+    if (texIdx >= textures->array.size())
+    {
+        return false;
+    }
+    const AssetJson *srcVal = findObj(textures->array[texIdx], "source");
+    if (!srcVal || srcVal->type != AssetJson::Type::Number || size_t(srcVal->number) >= images->array.size())
+    {
+        return false;
+    }
+    const AssetJson *bvVal = findObj(images->array[size_t(srcVal->number)], "bufferView");
+    if (!bvVal || bvVal->type != AssetJson::Type::Number || size_t(bvVal->number) >= views->array.size())
+    {
+        return false;
+    }
+    const AssetJson &bv = views->array[size_t(bvVal->number)];
+    const AssetJson *offVal = findObj(bv, "byteOffset");
+    const AssetJson *lenVal = findObj(bv, "byteLength");
+    if (!lenVal || lenVal->type != AssetJson::Type::Number)
+    {
+        return false;
+    }
+    const size_t byteOff = (offVal && offVal->type == AssetJson::Type::Number) ? size_t(offVal->number) : 0u;
+    const size_t byteLen = size_t(lenVal->number);
+    if (byteLen == 0 || byteOff + byteLen > size_t(binHdr[0]))
+    {
+        return false;
+    }
+    pngOut.resize(byteLen);
+    in.seekg(binStart + std::streamoff(byteOff), std::ios::beg);
+    in.read(reinterpret_cast<char *>(pngOut.data()), std::streamsize(byteLen));
+    return bool(in);
 }
 // CPU layout caches are bounded and independent of GL/context lifetime. They are used
 // only on the game thread, including CPU-only dialogue tests.
@@ -689,6 +853,8 @@ struct RenderAssets::Data
     GLuint uiAtlas = 0;
     GLuint pbrBaseArray = 0, pbrNormalArray = 0, pbrOrmArray = 0;
     GLuint pbrDetailBaseArray = 0, pbrDetailNormalArray = 0, pbrDetailOrmArray = 0;
+    GLuint assetAlbedoArray = 0, assetNormalArray = 0;
+    std::unordered_map<std::string, int> assetAlbedoLayers;
     GLuint damageMaskTex = 0;
     GLuint effectMasksTex = 0, waterFlowTex = 0;
     std::unordered_map<std::string, GLuint> planetAlbedoTex;
@@ -736,6 +902,14 @@ struct RenderAssets::Data
         if (pbrDetailOrmArray)
         {
             glDeleteTextures(1, &pbrDetailOrmArray);
+        }
+        if (assetAlbedoArray)
+        {
+            glDeleteTextures(1, &assetAlbedoArray);
+        }
+        if (assetNormalArray)
+        {
+            glDeleteTextures(1, &assetNormalArray);
         }
         if (damageMaskTex)
         {
@@ -1001,7 +1175,8 @@ RenderAssets::RenderAssets() : m_data(new Data())
             {
                 const std::vector<fs::path> pilotPrefixes = {
                     pilotDir / "Pilot_CastPaving", pilotDir / "Pilot_TechnicalWeave",
-                    pilotDir / "Pilot_BrushedSteel", pilotDir / "Pilot_PaintedAlloy"};
+                    pilotDir / "Pilot_BrushedSteel", pilotDir / "Pilot_PaintedAlloy",
+                    texturesDir / "ColonyV4" / "Colony_GlassCurtain"};
                 bool imm0 = false, imm1 = false, imm2 = false;
                 size_t b0 = 0, b1 = 0, b2 = 0;
                 GLuint baseArr = uploadArray(pilotPrefixes, "_BaseColor.png", 1024, false, imm0, b0);
@@ -1161,6 +1336,112 @@ RenderAssets::RenderAssets() : m_data(new Data())
             }
             m_data->spaceNebulaTex =
                 loadPlanetary2d(colonyV4Dir / "Space_Starfield_Nebula.png", 2048, 1024, false);
+            // High-resolution per-asset BaseColor + Normal texture arrays for UV-unwrapped modular characters
+            // so painted 1024^2..2048^2 detail renders sharply instead of vertex-color interpolation blur.
+            {
+                const fs::path medicDir = resourceRoot / "Export" / "HumanV4" / "FieldMedicMixamo";
+                constexpr int kCharTexSize = 1024;
+                struct GlbLayerSpec
+                {
+                    const char *glbFile;
+                    const char *assetA;
+                    const char *assetB;
+                };
+                static constexpr GlbLayerSpec kSpecs[] = {
+                    {"Field_Medic_Head_Neck_LOD0.glb", "modular/body/Field_Medic_Head_Neck",
+                     "modular/body/Field_Medic_Hands"},
+                    {"Field_Medic_Coat_LOD0.glb", "modular/outfit/Field_Medic_Coat", nullptr},
+                    {"Field_Medic_Cargo_Pants_LOD0.glb", "modular/outfit/Field_Medic_Cargo_Pants", nullptr},
+                    {"Field_Medic_Boots_LOD0.glb", "modular/outfit/Field_Medic_Boots", nullptr},
+                    {"Field_Medic_Bun_Hair_LOD0.glb", "modular/part/Field_Medic_Bun_Hair", nullptr},
+                    {"Field_Medic_Shoulder_Guards_LOD0.glb", "modular/part/Field_Medic_Shoulder_Guards", nullptr},
+                    {"Field_Medic_Knee_Guards_LOD0.glb", "modular/part/Field_Medic_Knee_Guards", nullptr},
+                };
+                const size_t layerCount = std::size(kSpecs);
+                std::vector<std::vector<unsigned char>> albedoPixels(layerCount);
+                std::vector<std::vector<unsigned char>> normalPixels(layerCount);
+                bool allFound = true;
+                for (size_t li = 0; li < layerCount; ++li)
+                {
+                    std::vector<unsigned char> pngBytes;
+                    if (!ExtractGlbMaterialPng(medicDir / kSpecs[li].glbFile, false, pngBytes))
+                    {
+                        allFound = false;
+                        break;
+                    }
+                    albedoPixels[li] =
+                        DecodePngMemorySquare(factory.Get(), pngBytes.data(), pngBytes.size(), kCharTexSize);
+                    if (albedoPixels[li].empty())
+                    {
+                        allFound = false;
+                        break;
+                    }
+                    std::vector<unsigned char> nrmBytes;
+                    if (ExtractGlbMaterialPng(medicDir / kSpecs[li].glbFile, true, nrmBytes))
+                    {
+                        normalPixels[li] =
+                            DecodePngMemorySquare(factory.Get(), nrmBytes.data(), nrmBytes.size(), kCharTexSize);
+                    }
+                    if (normalPixels[li].empty())
+                    {
+                        normalPixels[li].resize(size_t(kCharTexSize) * size_t(kCharTexSize) * 4u);
+                        auto &np = normalPixels[li];
+                        for (size_t k = 0; k < np.size(); k += 4)
+                        {
+                            np[k + 0] = 128;
+                            np[k + 1] = 128;
+                            np[k + 2] = 255;
+                            np[k + 3] = 255;
+                        }
+                    }
+                }
+                if (allFound)
+                {
+                    auto uploadGlbArray = [&](const std::vector<std::vector<unsigned char>> &layers) -> GLuint {
+                        GLuint tex = 0;
+                        glGenTextures(1, &tex);
+                        glBindTexture(GL_TEXTURE_2D_ARRAY, tex);
+                        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                        glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                        if (anisotropy > 1.f)
+                        {
+                            glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
+                        }
+                        if (glTexStorage3D != nullptr)
+                        {
+                            glTexStorage3D(GL_TEXTURE_2D_ARRAY, mipLevels(kCharTexSize), GL_RGBA8, kCharTexSize,
+                                           kCharTexSize, GLsizei(layerCount));
+                        }
+                        else
+                        {
+                            glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8, kCharTexSize, kCharTexSize,
+                                         GLsizei(layerCount), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+                        }
+                        for (size_t li = 0; li < layerCount; ++li)
+                        {
+                            glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, GLint(li), kCharTexSize, kCharTexSize, 1,
+                                            GL_RGBA, GL_UNSIGNED_BYTE, layers[li].data());
+                        }
+                        glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+                        glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+                        profiling::Count(profiling::Counter::TextureUploadBytes,
+                                         arrayMipBytes(kCharTexSize, int(layerCount)));
+                        return tex;
+                    };
+                    m_data->assetAlbedoArray = uploadGlbArray(albedoPixels);
+                    m_data->assetNormalArray = uploadGlbArray(normalPixels);
+                    for (size_t li = 0; li < layerCount; ++li)
+                    {
+                        m_data->assetAlbedoLayers[kSpecs[li].assetA] = int(li);
+                        if (kSpecs[li].assetB)
+                        {
+                            m_data->assetAlbedoLayers[kSpecs[li].assetB] = int(li);
+                        }
+                    }
+                }
+            }
         }
         catch (const std::exception &)
         {
@@ -1631,6 +1912,19 @@ unsigned int RenderAssets::PbrDetailOrmArray() const
 {
     return m_data->pbrDetailOrmArray;
 }
+unsigned int RenderAssets::AssetAlbedoArray() const
+{
+    return m_data->assetAlbedoArray;
+}
+unsigned int RenderAssets::AssetNormalArray() const
+{
+    return m_data->assetNormalArray;
+}
+int RenderAssets::AssetAlbedoLayer(const std::string &assetName) const
+{
+    auto it = m_data->assetAlbedoLayers.find(assetName);
+    return it != m_data->assetAlbedoLayers.end() ? it->second : -1;
+}
 unsigned int RenderAssets::DamageMaskTexture() const
 {
     return m_data->damageMaskTex;
@@ -1670,6 +1964,10 @@ bool RenderAssets::HasPbrDetailTextures() const
 {
     return m_data->pbrDetailBaseArray != 0 && m_data->pbrDetailNormalArray != 0 &&
            m_data->pbrDetailOrmArray != 0;
+}
+bool RenderAssets::HasAssetAlbedoTextures() const
+{
+    return m_data->assetAlbedoArray != 0 && m_data->assetNormalArray != 0;
 }
 bool RenderAssets::HasDamageMask() const
 {

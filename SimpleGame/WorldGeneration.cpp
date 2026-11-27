@@ -572,68 +572,95 @@ void AddRelays(GeneratedPlanet &result, const GenerationSettings &settings, cons
     auto pads = result.terrain.Reservations();
     auto place = [&](const GeneratedRegion &region, SurfacePoint target) {
         auto frame = G::Frame(target);
-        for (unsigned ring = 0; ring <= 16; ++ring)
+        const bool avoidRev5Grid =
+            region.definition.kind == RegionKind::Settlement && region.center.space == SpaceKind::Surface;
+        for (int pass = 0; pass < (avoidRev5Grid ? 2 : 1); ++pass)
         {
-            for (unsigned step = 0; step < (ring ? 16u : 1u); ++step)
+            for (unsigned ring = 0; ring <= 16; ++ring)
             {
-                double distance = (std::min)(96., settings.relayCoverageMeters * .045) * ring / 16;
-                auto point = G::Advance(frame, distance * std::cos(step * G::Pi / 8),
-                                        distance * std::sin(step * G::Pi / 8), planet.radiusMeters)
-                                 .origin;
-                double height = result.terrain.Height(point);
-                if (height < PlanetTerrain::SeaLevelMeters + 4)
+                for (unsigned step = 0; step < (ring ? 16u : 1u); ++step)
                 {
-                    continue;
-                }
-                if (result.terrain.Sample(point).slope > .25)
-                {
-                    continue;
-                }
-                bool clear = true;
-                for (const auto &anchor : result.anchors)
-                {
-                    if (anchor.location.space == SpaceKind::Surface &&
-                        Distance(planet, point, anchor.location.position) < 22)
+                    double distance = (std::min)(96., settings.relayCoverageMeters * .045) * ring / 16;
+                    auto point = G::Advance(frame, distance * std::cos(step * G::Pi / 8),
+                                            distance * std::sin(step * G::Pi / 8), planet.radiusMeters)
+                                     .origin;
+                    double height = result.terrain.Height(point);
+                    if (height < PlanetTerrain::SeaLevelMeters + 4)
                     {
-                        clear = false;
+                        continue;
                     }
-                }
-                if (auto core = result.cityCores ? result.cityCores->Find(region.definition.id) : nullptr)
-                {
-                    auto local = G::ToLocal(region.frame, point, planet.radiusMeters);
-                    for (const auto &lot : core->lots)
+                    if (result.terrain.Sample(point).slope > .25)
                     {
-                        if (!lot.solid)
-                        {
-                            continue;
-                        }
-                        double dx = local.x - lot.positionMeters.x, dy = local.y - lot.positionMeters.y;
-                        if (std::fabs(dx * std::cos(lot.yaw) + dy * std::sin(lot.yaw)) <
-                                lot.sizeMeters.x * .5 + 4 &&
-                            std::fabs(-dx * std::sin(lot.yaw) + dy * std::cos(lot.yaw)) <
-                                lot.sizeMeters.y * .5 + 4)
+                        continue;
+                    }
+                    bool clear = true;
+                    for (const auto &anchor : result.anchors)
+                    {
+                        if (anchor.location.space == SpaceKind::Surface &&
+                            Distance(planet, point, anchor.location.position) < 22)
                         {
                             clear = false;
                         }
                     }
-                    for (const auto &road : core->roads)
+                    if (auto core = result.cityCores ? result.cityCores->Find(region.definition.id) : nullptr)
                     {
-                        auto d = Add(road.end, Mul(road.start, -1));
-                        double t =
-                            std::clamp(((local.x - road.start.x) * d.x + (local.y - road.start.y) * d.y) /
-                                           (d.x * d.x + d.y * d.y),
-                                       0., 1.);
-                        if (std::hypot(local.x - road.start.x - d.x * t, local.y - road.start.y - d.y * t) <
-                            road.lanes * 1.5 + 3)
+                        auto local = G::ToLocal(region.frame, point, planet.radiusMeters);
+                        for (const auto &lot : core->lots)
+                        {
+                            if (!lot.solid)
+                            {
+                                continue;
+                            }
+                            double dx = local.x - lot.positionMeters.x, dy = local.y - lot.positionMeters.y;
+                            if (std::fabs(dx * std::cos(lot.yaw) + dy * std::sin(lot.yaw)) <
+                                    lot.sizeMeters.x * .5 + 4 &&
+                                std::fabs(-dx * std::sin(lot.yaw) + dy * std::cos(lot.yaw)) <
+                                    lot.sizeMeters.y * .5 + 4)
+                            {
+                                clear = false;
+                            }
+                        }
+                        for (const auto &road : core->roads)
+                        {
+                            auto d = Add(road.end, Mul(road.start, -1));
+                            double t =
+                                std::clamp(((local.x - road.start.x) * d.x + (local.y - road.start.y) * d.y) /
+                                               (d.x * d.x + d.y * d.y),
+                                           0., 1.);
+                            if (std::hypot(local.x - road.start.x - d.x * t, local.y - road.start.y - d.y * t) <
+                                road.lanes * 1.5 + 3)
+                            {
+                                clear = false;
+                            }
+                        }
+                    }
+                    // Pass 0 keeps Settlement relays out of Rev 5 procedural street centerlines & grid intersections;
+                    // Pass 1 falls back cleanly on narrow coastal/steep settlements where no grid-clear pad exists.
+                    if (clear && avoidRev5Grid && pass == 0)
+                    {
+                        const auto local = G::ToLocal(region.frame, point, planet.radiusMeters);
+                        if (std::hypot(local.x, local.y) < 26.0)
                         {
                             clear = false;
                         }
+                        else
+                        {
+                            const double stepGrid = 76.0;
+                            const double gx =
+                                std::fabs(std::fmod(std::fabs(local.x) + stepGrid * 0.5, stepGrid) - stepGrid * 0.5);
+                            const double gy =
+                                std::fabs(std::fmod(std::fabs(local.y) + stepGrid * 0.5, stepGrid) - stepGrid * 0.5);
+                            if (gx < 13.5 || gy < 13.5)
+                            {
+                                clear = false;
+                            }
+                        }
                     }
-                }
-                if (clear)
-                {
-                    point.altitudeMeters = height;
-                    return point;
+                    if (clear)
+                    {
+                        point.altitudeMeters = height;
+                        return point;
+                    }
                 }
             }
         }

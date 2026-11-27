@@ -530,10 +530,20 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
         downed |= CivicJustice::State().playerImpact.response == BodyResponse::Knockdown ||
                   HospitalRecovery::Active();
     }
+    if (downed)
+    {
+        walking = false;
+        armed = false;
+        flash = 0.f;
+        melee = 0.f;
+        locomotionSpeed = 0.f;
+        reloadProgress = -1.f;
+    }
     models::CharacterPose pose;
     if (isPlayer)
     {
-        pose = Game::Get().PlayerPose(armed ? flash / .055f : 0);
+        pose = downed ? models::ModelRig::Pose(0.f, false, false, 0.f, false, gender)
+                      : Game::Get().PlayerPose(armed ? flash / .055f : 0);
         if (world.playerModularMedic)
         {
             const auto modular = BuildPlayerModularCharacter(world.playerModularPartsMask);
@@ -543,7 +553,7 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
     }
     else
     {
-        pose = models::ModelRig::Pose(world.animationTimeSeconds * 10, walking, armed,
+        pose = models::ModelRig::Pose(downed ? 0.f : world.animationTimeSeconds * 10, walking, armed,
                                       armed ? flash / .055f : 0, false, gender);
         pose.meleeSeconds = melee;
         pose.locomotionSpeed = locomotionSpeed;

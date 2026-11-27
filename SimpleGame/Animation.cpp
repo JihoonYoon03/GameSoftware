@@ -388,6 +388,14 @@ void LayeredAnimation::ClassifyRig(AnimationRig &rig)
         {
             rig.handL = int(j);
         }
+        if ((c == "forearm.r" || c == "rightforearm") && rig.forearmR < 0)
+        {
+            rig.forearmR = int(j);
+        }
+        if ((c == "forearm.l" || c == "leftforearm") && rig.forearmL < 0)
+        {
+            rig.forearmL = int(j);
+        }
         if (c == "muzzle" && rig.muzzle < 0)
         {
             rig.muzzle = int(j);

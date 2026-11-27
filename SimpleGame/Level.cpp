@@ -2538,14 +2538,24 @@ void MineLevel::Update(float deltaSeconds)
             state.huntStreak = 0;
         }
     }
-    // Proximity auto-pickup so hunting and looting flow smoothly without tedious E-spam.
+    // Magnetic proximity auto-pickup: nearby drops glide into the player and collect automatically without E.
     if (!state.drops.empty())
     {
-        int autoPicked = 0;
+        int autoKits = 0, autoSalvage = 0;
         auto &drops = state.drops;
+        for (auto &drop : drops)
+        {
+            const float d = tutorial::Game::Distance(playerPos, drop.position);
+            if (d > 0.05f && d < 2.65f)
+            {
+                const float pull = (std::min)(d, 6.2f * deltaSeconds);
+                drop.position.x += (playerPos.x - drop.position.x) / d * pull;
+                drop.position.y += (playerPos.y - drop.position.y) / d * pull;
+            }
+        }
         drops.erase(std::remove_if(drops.begin(), drops.end(),
                                    [&](const Drop &drop) {
-                                       if (tutorial::Game::Distance(playerPos, drop.position) >= 0.85f)
+                                       if (tutorial::Game::Distance(playerPos, drop.position) >= 1.45f)
                                        {
                                            return false;
                                        }
@@ -2553,18 +2563,35 @@ void MineLevel::Update(float deltaSeconds)
                                        {
                                            state.player.recoveryKits =
                                                (std::min)(999, state.player.recoveryKits + 1);
+                                           ++autoKits;
                                        }
                                        else
                                        {
                                            state.player.salvage = (std::min)(9999, state.player.salvage + 1);
                                            state.player.credits = (std::min)(PlayerStats::kMaximumCredits,
                                                                              state.player.credits + 6);
+                                           ++autoSalvage;
                                        }
-                                       ++autoPicked;
                                        return true;
                                    }),
                     drops.end());
-        (void)autoPicked;
+        if (autoKits > 0 || autoSalvage > 0)
+        {
+            std::string msg = "자동 회수 / ";
+            if (autoKits > 0)
+            {
+                msg += "회복 키트 +" + std::to_string(autoKits);
+            }
+            if (autoSalvage > 0)
+            {
+                if (autoKits > 0)
+                {
+                    msg += " · ";
+                }
+                msg += "고철 +" + std::to_string(autoSalvage) + " · +" + std::to_string(autoSalvage * 6) + " Cr";
+            }
+            tutorial::Game::Get().ShowNotice(msg);
+        }
     }
     combat.Update(deltaSeconds);
     combat.UpdateNpcs(deltaSeconds);
@@ -2702,7 +2729,8 @@ world::CityCore FrontierSurface::Describe()
     prop("breaker", F::Breaker, library.breaker, {12.4f, 10.5f}, true);
     prop("workbench", F::Table, library.table, {9.5f, 13.5f}, true);
     prop("workbench_light", F::Lantern, library.lantern, {9.5f, 13.5f}, false, {.7f, .7f, .7f});
-    prop("camp", F::Table, library.table, {24.5f, 21.7f}, true);
+    // Place camp table on the SW grass shoulder beside the 4-way crossroad (never inside the intersection!).
+    prop("camp", F::Table, library.table, {21.4f, 23.0f}, true);
     for (int i = 0; i < 2; ++i)
     {
         auto type = i ? models::VehicleType::Shuttle : models::VehicleType::Hauler;
@@ -2711,13 +2739,13 @@ world::CityCore FrontierSurface::Describe()
         model("convoy_" + std::to_string(i), F::Vehicle, unsigned(type), library.vehicles[size_t(type)].body,
               {32.5f + i * 3.5f, 9.5f}, {1, 1, 1}, true, palette);
     }
-    // Improvised canyon barricade & disaster pocket cover props framing Kain's isolated defense line.
+    // Improvised canyon barricade & disaster pocket cover props framing Kain's defense line without occluding Kain.
     model("convoy_shelter", F::Scenery, unsigned(S::FieldShelter), models::ModelLibrary::Scenery(S::FieldShelter),
-          {29.0f, 12.8f}, {.85f, .85f, .85f}, true);
+          {28.2f, 9.2f}, {.85f, .85f, .85f}, true);
     model("convoy_cover_nw", F::Scenery, unsigned(S::CargoContainer),
-          models::ModelLibrary::Scenery(S::CargoContainer), {28.5f, 7.6f}, {.72f, .72f, .72f}, true);
+          models::ModelLibrary::Scenery(S::CargoContainer), {28.8f, 6.8f}, {.72f, .72f, .72f}, true);
     model("convoy_cover_se", F::Scenery, unsigned(S::CargoContainer),
-          models::ModelLibrary::Scenery(S::CargoContainer), {34.8f, 13.6f}, {.72f, .72f, .72f}, true);
+          models::ModelLibrary::Scenery(S::CargoContainer), {36.6f, 13.8f}, {.72f, .72f, .72f}, true);
     constexpr tutorial::Vector2 markers[] = {{38.5f, 6.5f}, {42.5f, 13.0f}, {37.5f, 19.5f}};
     for (unsigned i = 0; i < 3; ++i)
     {
@@ -2730,8 +2758,11 @@ world::CityCore FrontierSurface::Describe()
     for (unsigned i = 0; i < 75; ++i)
     {
         tutorial::Vector2 p{2.5f + float((i * 17) % 43), 3.5f + float((i * 13) % 37)};
-        if (level.IsBlocked(p) || std::fabs(p.x - 5.5f) < 1.5f || std::fabs(p.x - 24.5f) < 1.5f ||
-            std::fabs(p.y - 20.5f) < 1.5f)
+        // Keep nature props well clear of Frontier roads, sidewalks, intersections, and collapsed fault gorge.
+        if (level.IsBlocked(p) || std::fabs(p.x - 5.5f) < 3.5f || std::fabs(p.x - 24.5f) < 3.5f ||
+            std::fabs(p.y - 20.5f) < 3.5f || (p.x >= 22.f && std::fabs(p.y - 30.5f) < 3.5f) ||
+            std::hypot(p.x - 24.5f, p.y - 20.5f) < 6.0f || std::hypot(p.x - 5.5f, p.y - 20.5f) < 6.0f ||
+            (p.x >= 25.f && p.x <= 41.f && p.y >= 4.f && p.y <= 17.5f))
         {
             continue;
         }
@@ -3141,6 +3172,7 @@ void FrontierMap::Generate()
     }
     // Open-world Frontier set-piece threats (kept strictly separate from scrappers[3] & survivors[5]).
     state.frontierThreats.clear();
+    state.raiderTransports.clear();
     state.frontierThreats.push_back({{11.8f, 11.6f}, {11.8f, 11.6f}, 36, 36, FrontierThreatKind::RogueDrone, 1.2f, 0.f, true});
     state.frontierThreats.push_back({{13.6f, 10.6f}, {13.6f, 10.6f}, 36, 36, FrontierThreatKind::RogueDrone, 1.8f, 3.1f, true});
     state.convoyAmbushTriggered = false;
@@ -3349,7 +3381,9 @@ const char *ChapterOneLevel::Objective() const
     }
     if (CompletedSites() == 3)
     {
-        return "헤일로의 리아·카인과 세 현장 기록 대조 [E]";
+        return tutorial::Game::Get().GetState().surfaceExploration
+                   ? "리아·카인 또는 헤일로 광장에서 세 현장 기록 대조 [E]"
+                   : "헤일로의 리아·카인과 세 현장 기록 대조 [E]";
     }
     if (state.escortStarted && !state.convoyRescued)
     {
@@ -3470,6 +3504,19 @@ std::vector<ChapterInteraction> ChapterOneLevel::Interactions() const
     {
         result.push_back({ChapterAction::ConvoySupply, {24.5f, 20.5f}, "운송대 보급 / 회복 키트 교환 [E]"});
     }
+    if (planet && CompletedSites() == 3 && !state.recordsCompared &&
+        tutorial::Game::Get().CanCompleteMission(tutorial::MissionId::Frontier))
+    {
+        if (CompanionAvailable(tutorial::CompanionId::Ria))
+        {
+            result.push_back({ChapterAction::CompareRecords, state.ria.position, "리아 / 세 현장 기록 대조 [E]"});
+        }
+        if (CompanionAvailable(tutorial::CompanionId::Kain))
+        {
+            result.push_back({ChapterAction::CompareRecords, state.kain.position, "카인 / 세 현장 기록 대조 [E]"});
+        }
+        return result;
+    }
     appendConversations(result);
     return result;
 }
@@ -3514,6 +3561,11 @@ void ChapterOneLevel::Interact()
     ChapterInteraction point{};
     if (!NearestInteraction(point))
     {
+        return;
+    }
+    if (point.action == ChapterAction::CompareRecords)
+    {
+        InteractHub();
         return;
     }
     if (IsOptionalConversation(point.action))
@@ -3787,6 +3839,13 @@ int ChapterOneLevel::ActiveThreatsNear(tutorial::Vector2 center, float radius) c
             ++count;
         }
     }
+    for (const auto &tr : state.raiderTransports)
+    {
+        if (tr.active && !tr.dismounted && tutorial::Game::Distance(tr.stopPosition, center) <= radius)
+        {
+            count += int(tr.passengers.size());
+        }
+    }
     return count;
 }
 
@@ -3919,7 +3978,8 @@ void ChapterOneLevel::InteractHub()
                                  !tutorial::CivicCombat::LandmarkDown(tutorial::kCityKainPosition);
             }
             const auto *party = tutorial::Game::Get().SurfaceParty();
-            return party && party->Owns(companion, tutorial::CompanionPlace::Surface) &&
+            return party && party->Joined(companion) &&
+                   party->State().members.at(size_t(companion)).place != tutorial::CompanionPlace::Mine &&
                    party->State().members.at(size_t(companion)).combat.health > 0;
         };
         bool started = Dialogue::Start(
@@ -4333,26 +4393,50 @@ void FrontierCombat::Update(float deltaSeconds)
         tutorial::Game::Get().ShowNotice(
             "긴급 구조 신호 / 북동쪽 단층 협곡에 운송대가 고립됐습니다! 북쪽 능선이나 동쪽 교두보로 진입해 지원하세요!");
     }
+    auto dispatchRaiderTransport = [&](tutorial::Vector2 approachDir, tutorial::Vector2 stopPos,
+                                       models::VehicleType vType, std::vector<FrontierThreat> squad) {
+        const float len = (std::max)(0.01f, std::hypot(approachDir.x, approachDir.y));
+        const tutorial::Vector2 unit{approachDir.x / len, approachDir.y / len};
+        // Start comfortably off-screen (>= 24 tiles from player) and race in at high speed.
+        float launchDist = 24.f;
+        tutorial::Vector2 startPos{stopPos.x + unit.x * launchDist, stopPos.y + unit.y * launchDist};
+        if (tutorial::Game::Distance(startPos, world.playerPosition) < 22.f)
+        {
+            launchDist += 10.f;
+            startPos = {stopPos.x + unit.x * launchDist, stopPos.y + unit.y * launchDist};
+        }
+        RaiderTransport tr;
+        tr.position = startPos;
+        tr.stopPosition = stopPos;
+        tr.yaw = std::atan2(stopPos.y - startPos.y, stopPos.x - startPos.x);
+        tr.speed = 17.5f;
+        tr.throttle = 1.f;
+        tr.vehicleType = vType;
+        tr.active = true;
+        tr.dismounted = false;
+        tr.passengers = std::move(squad);
+        state.raiderTransports.push_back(std::move(tr));
+    };
     if (!state.convoyBriefed && !state.convoyAmbushTriggered && distToKain < 14.f)
     {
         state.convoyAmbushTriggered = true;
-        state.frontierThreats.push_back(
-            {{29.5f, 6.8f}, {30.5f, 10.5f}, 48, 48, FrontierThreatKind::ConvoyRaider, 0.8f, 0.f, true});
-        state.frontierThreats.push_back(
-            {{35.0f, 12.2f}, {30.5f, 10.5f}, 48, 48, FrontierThreatKind::ConvoyRaider, 1.1f, 1.5f, true});
+        dispatchRaiderTransport(
+            {1.f, -0.45f}, {35.2f, 8.2f}, models::VehicleType::Hauler,
+            {{{34.2f, 7.6f}, {30.5f, 10.5f}, 48, 48, FrontierThreatKind::ConvoyRaider, 0.8f, 0.f, true},
+             {{35.0f, 11.4f}, {30.5f, 10.5f}, 48, 48, FrontierThreatKind::ConvoyRaider, 1.1f, 1.5f, true}});
         tutorial::Game::Get().ShowNotice(
-            "카인 · 무전 / 북쪽 능선 너머로 오셨군! 부상자 둘을 뒤로 숨긴 채 버티는 중이오 — 습격조부터 저지합시다!");
+            "카인 · 무전 / 북동쪽에서 약탈자 돌격 차량이 고속 접근 중입니다! 하차하기 전에 사격 준비하십시오!");
     }
     if (state.convoyAmbushTriggered && !state.convoyWave2Spawned && !state.convoyBriefed &&
         level.ActiveThreatsNear({31.f, 11.f}, 14.f) <= 1)
     {
         state.convoyWave2Spawned = true;
-        state.frontierThreats.push_back(
-            {{36.2f, 7.2f}, {30.5f, 10.5f}, 64, 64, FrontierThreatKind::ConvoyRaider, 0.9f, 0.4f, true});
-        state.frontierThreats.push_back(
-            {{31.0f, 13.6f}, {30.5f, 10.5f}, 64, 64, FrontierThreatKind::ConvoyRaider, 1.2f, 2.2f, true});
+        dispatchRaiderTransport(
+            {1.f, 0.15f}, {36.8f, 11.2f}, models::VehicleType::Patrol,
+            {{{36.2f, 9.6f}, {30.5f, 10.5f}, 64, 64, FrontierThreatKind::ConvoyRaider, 0.9f, 0.4f, true},
+             {{33.2f, 12.8f}, {30.5f, 10.5f}, 64, 64, FrontierThreatKind::ConvoyRaider, 1.2f, 2.2f, true}});
         tutorial::Game::Get().ShowNotice(
-            "카인 · 무전 / 경계하십시오! 잔해 너머에서 중무장 증원조가 협곡 안쪽으로 밀고 들어옵니다!");
+            "카인 · 무전 / 경계하십시오! 동쪽 협곡 밖에서 중무장 습격 차량이 추가 돌입합니다!");
     }
     if (state.convoyAmbushTriggered && state.convoyWave2Spawned && !state.convoyAmbushCleared &&
         level.ActiveThreatsNear({31.f, 11.f}, 15.f) == 0)
@@ -4363,6 +4447,46 @@ void FrontierCombat::Update(float deltaSeconds)
             tutorial::Game::Get().ShowNotice(
                 "운송대 방어선 안정 / 협곡 습격조를 격퇴했습니다. 방어선 앞의 카인과 구출 작전을 논의하세요 [E]");
         }
+    }
+    // Advance incoming raider assault vehicles: race in from off-screen, brake hard, and dismount squad into combat.
+    for (auto &tr : state.raiderTransports)
+    {
+        if (!tr.active || tr.dismounted)
+        {
+            continue;
+        }
+        const float rem = tutorial::Game::Distance(tr.position, tr.stopPosition);
+        if (rem <= 0.35f)
+        {
+            tr.position = tr.stopPosition;
+            tr.speed = 0.f;
+            tr.throttle = 0.f;
+            tr.dismounted = true;
+            const float perpX = -std::sin(tr.yaw), perpY = std::cos(tr.yaw);
+            for (size_t idx = 0; idx < tr.passengers.size(); ++idx)
+            {
+                auto raider = tr.passengers[idx];
+                const float side = (idx % 2 == 0) ? 1.f : -1.f;
+                const tutorial::Vector2 dismountPos{tr.stopPosition.x + perpX * (1.4f * side),
+                                                    tr.stopPosition.y + perpY * (1.4f * side)};
+                raider.position = level.IsBlocked(dismountPos) ? tr.stopPosition : dismountPos;
+                raider.yaw = std::atan2(world.playerPosition.y - raider.position.y,
+                                        world.playerPosition.x - raider.position.x);
+                raider.walking = true;
+                state.frontierThreats.push_back(raider);
+            }
+            tr.passengers.clear();
+            continue;
+        }
+        const float targetSpeed = rem < 5.5f ? (std::max)(2.2f, rem * 3.1f) : 17.5f;
+        tr.speed += (targetSpeed - tr.speed) * (std::min)(1.f, deltaSeconds * 7.f);
+        tr.throttle = rem < 3.5f ? 0.15f : 1.f;
+        const float step = (std::min)(rem, tr.speed * deltaSeconds);
+        const float dx = (tr.stopPosition.x - tr.position.x) / rem;
+        const float dy = (tr.stopPosition.y - tr.position.y) / rem;
+        tr.position.x += dx * step;
+        tr.position.y += dy * step;
+        tr.yaw = std::atan2(dy, dx);
     }
     // Spawn 3 pocket guards protecting the 3 scattered disaster pockets once Kain briefs the player.
     if (state.convoyBriefed && !state.surveyScoutsSpawned && !state.escortStarted && !state.convoyRescued)
@@ -4430,11 +4554,17 @@ void FrontierCombat::Update(float deltaSeconds)
         }
         else
         {
+            threat.muzzleFlash = (std::max)(0.f, threat.muzzleFlash - deltaSeconds);
             const float distKain = tutorial::Game::Distance(threat.position, state.kain.position);
             const tutorial::Vector2 target =
                 (distPlayer < distKain + 1.5f || state.kain.combat.health <= 0) ? world.playerPosition
                                                                                 : state.kain.position;
             const float dist = tutorial::Game::Distance(threat.position, target);
+            if (dist > 0.05f)
+            {
+                threat.yaw = std::atan2(target.y - threat.position.y, target.x - threat.position.x);
+            }
+            bool moved = false;
             if (dist > 3.2f && dist < 16.f)
             {
                 const float step = 1.85f * deltaSeconds;
@@ -4443,8 +4573,10 @@ void FrontierCombat::Update(float deltaSeconds)
                 if (!level.IsBlocked(next))
                 {
                     threat.position = next;
+                    moved = true;
                 }
             }
+            threat.walking = moved;
             if (dist < 8.5f && threat.fireCooldown <= 0.f && state.bullets.size() < 128 &&
                 level.HasLineOfSight(threat.position, target))
             {
@@ -4452,6 +4584,7 @@ void FrontierCombat::Update(float deltaSeconds)
                                             (target.y - threat.position.y) / (std::max)(0.1f, dist)};
                 state.bullets.push_back({{threat.position, dir, 8.2f, 9.f, 7, false}, ChapterTeam::Scrapper});
                 threat.fireCooldown = 1.35f;
+                threat.muzzleFlash = 0.055f;
             }
         }
     }
@@ -4518,6 +4651,7 @@ void FrontierCombat::Update(float deltaSeconds)
         if (combat.health <= 0)
         {
             combat.threat.Forget();
+            person.facing.walking = false;
             if (friendly)
             {
                 combat.downedSeconds -= deltaSeconds;
@@ -4826,28 +4960,51 @@ void FrontierParty::Update(float deltaSeconds)
                 state.kain.facing.walking = false;
             }
         }
-        // Spawn two-stage canyon breakout ambushers at the bridgehead & trench exit when player is escorting.
+        // Spawn two-stage canyon breakout ambushers arriving via high-speed raider assault vehicles from off-screen.
+        auto dispatchEscortTruck = [&](tutorial::Vector2 approachDir, tutorial::Vector2 stopPos,
+                                       models::VehicleType vType, std::vector<FrontierThreat> squad) {
+            const float len = (std::max)(0.01f, std::hypot(approachDir.x, approachDir.y));
+            const tutorial::Vector2 unit{approachDir.x / len, approachDir.y / len};
+            float launchDist = 24.f;
+            tutorial::Vector2 startPos{stopPos.x + unit.x * launchDist, stopPos.y + unit.y * launchDist};
+            if (tutorial::Game::Distance(startPos, world.playerPosition) < 22.f)
+            {
+                launchDist += 10.f;
+                startPos = {stopPos.x + unit.x * launchDist, stopPos.y + unit.y * launchDist};
+            }
+            RaiderTransport tr;
+            tr.position = startPos;
+            tr.stopPosition = stopPos;
+            tr.yaw = std::atan2(stopPos.y - startPos.y, stopPos.x - startPos.x);
+            tr.speed = 17.5f;
+            tr.throttle = 1.f;
+            tr.vehicleType = vType;
+            tr.active = true;
+            tr.dismounted = false;
+            tr.passengers = std::move(squad);
+            state.raiderTransports.push_back(std::move(tr));
+        };
         if (reachedBridgehead && !state.escortAmbushSpawned &&
             tutorial::Game::Distance(world.playerPosition, escortFocus) < 13.f)
         {
             state.escortAmbushSpawned = true;
-            state.frontierThreats.push_back(
-                {{41.2f, 17.8f}, {41.2f, 17.8f}, 48, 48, FrontierThreatKind::EscortAmbusher, 0.9f, 0.f, true});
-            state.frontierThreats.push_back(
-                {{39.2f, 19.6f}, {39.2f, 19.6f}, 48, 48, FrontierThreatKind::EscortAmbusher, 1.3f, 2.f, true});
+            dispatchEscortTruck(
+                {1.f, 0.35f}, {41.2f, 18.2f}, models::VehicleType::Shuttle,
+                {{{41.2f, 17.8f}, {41.2f, 17.8f}, 48, 48, FrontierThreatKind::EscortAmbusher, 0.9f, 0.f, true},
+                 {{39.2f, 19.6f}, {39.2f, 19.6f}, 48, 48, FrontierThreatKind::EscortAmbusher, 1.3f, 2.f, true}});
             tutorial::Game::Get().ShowNotice(
-                "돌파 경보 1차 / 동쪽 교두보 남단에서 매복조가 퇴로를 막습니다! 카인과 함께 돌파하세요!");
+                "돌파 경보 1차 / 남동쪽에서 약탈자 차단 차량이 고속 접근합니다! 카인과 함께 돌파하세요!");
         }
         if (escortFocus.x < 31.5f && escortFocus.y > 17.5f && !state.escortAmbush2Spawned &&
             tutorial::Game::Distance(world.playerPosition, escortFocus) < 13.f)
         {
             state.escortAmbush2Spawned = true;
-            state.frontierThreats.push_back(
-                {{27.8f, 18.6f}, {27.8f, 18.6f}, 54, 54, FrontierThreatKind::EscortAmbusher, 0.9f, 0.8f, true});
-            state.frontierThreats.push_back(
-                {{28.2f, 22.0f}, {28.2f, 22.0f}, 54, 54, FrontierThreatKind::EscortAmbusher, 1.2f, 2.5f, true});
+            dispatchEscortTruck(
+                {-0.15f, 1.f}, {27.8f, 20.6f}, models::VehicleType::Patrol,
+                {{{27.8f, 18.6f}, {27.8f, 18.6f}, 54, 54, FrontierThreatKind::EscortAmbusher, 0.9f, 0.8f, true},
+                 {{28.2f, 22.0f}, {28.2f, 22.0f}, 54, 54, FrontierThreatKind::EscortAmbusher, 1.2f, 2.5f, true}});
             tutorial::Game::Get().ShowNotice(
-                "돌파 경보 2차 / 안전 야영지 직전에서 최종 차단조가 돌입합니다! 전원 무사히 엄호하세요!");
+                "돌파 경보 2차 / 안전 야영지 남쪽에서 최종 약탈자 차량이 돌입합니다! 전원 무사히 엄호하세요!");
         }
         if (all)
         {
