@@ -53,9 +53,12 @@ class RenderAssets
     unsigned int PbrDetailNormalArray() const;
     unsigned int PbrDetailOrmArray() const;
     unsigned int DamageMaskTexture() const;
+    unsigned int EffectMasksTexture() const;
+    unsigned int WaterFlowTexture() const;
     bool HasPbrTextures() const;
     bool HasPbrDetailTextures() const;
     bool HasDamageMask() const;
+    bool HasEffectTextures() const;
     const PbrTextureBudget &PbrBudget() const;
 
   private:

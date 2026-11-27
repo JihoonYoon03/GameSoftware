@@ -100,6 +100,10 @@ struct AnimationRig
     std::array<int, 8> supportClips = {-1, -1, -1, -1, -1, -1, -1, -1};
     // Directional transition bank (12 clips): Run_Turn180(L/R), Turn90(L/R), Aim_Strafe_Start(F/B/L/R), Stop(F/B/L/R).
     std::array<int, 12> transitionClips = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+    // CQ-11B shared facility/talk bank (7 clips): CounterIdle, Welcome, HandOver, Explain, Farewell, Inspect, Listen.
+    std::array<int, 7> facilityClips = {-1, -1, -1, -1, -1, -1, -1};
+    // CQ-06B/C shared vehicle boarding bank (12 clips): Coupe(Enter/Exit L/R, DriverIdle), Courier(Enter/Exit L, PilotIdle/Ascent/BankL/R/Land).
+    std::array<int, 12> boardingClips = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
 };
 struct AnimationWeights
 {
@@ -126,6 +130,8 @@ class LayeredAnimation
     static void BindDodgeClip(AnimationRig &rig, const std::string &name, int index);
     static void BindSupportClip(AnimationRig &rig, const std::string &name, int index);
     static void BindTransitionClip(AnimationRig &rig, const std::string &name, int index);
+    static void BindFacilityClip(AnimationRig &rig, const std::string &name, int index);
+    static void BindBoardingClip(AnimationRig &rig, const std::string &name, int index);
     static void Prepare(ResourceClip &clip, const AnimationRig &rig);
     // Prepare only graph-referenced clips; keep every authored matrix clip available.
     static void PrepareGraph(std::vector<ResourceClip> &clips, const AnimationRig &rig);

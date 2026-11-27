@@ -703,6 +703,9 @@ void main() {
 const char *kEffectFragmentBody = R"GLSL(
 uniform float seconds;
 uniform int effect;
+uniform sampler2D effectMasks;
+uniform sampler2D waterFlow;
+uniform int hasEffectTex;
 in vec2 uv;
 in vec4 tint;
 out vec4 fragColor;
@@ -710,7 +713,14 @@ void main() {
     if (effect == 0) {
         float wave = sin(uv.x * 25.0 + uv.y * 13.0 - seconds * 2.2) * 0.5 + 0.5;
         float ripple = sin(length(uv - 0.5) * 48.0 - seconds * 3.0) * 0.5 + 0.5;
-        vec3 water = mix(vec3(0.025, 0.13, 0.19), vec3(0.12, 0.52, 0.59), pow(wave * ripple, 3.0));
+        float foam = pow(wave * ripple, 3.0);
+        if (hasEffectTex != 0) {
+            vec2 flow = (texture(waterFlow, uv).rg * 2.0 - 1.0) * 0.035;
+            vec2 wuv = uv + vec2(0.021, -0.013) * seconds + flow * sin(seconds * 1.4);
+            float maskR = texture(effectMasks, wuv).r;
+            foam = mix(foam, maskR * (0.65 + 0.35 * wave), 0.65);
+        }
+        vec3 water = mix(vec3(0.025, 0.13, 0.19), vec3(0.12, 0.52, 0.59), foam);
         fragColor = vec4(water, 0.86);
     } else if (effect == 1) {
         float height = 1.0 - uv.y;
@@ -718,8 +728,12 @@ void main() {
         float width = (1.0 - height) * 0.35 + 0.035;
         float flame = 1.0 - smoothstep(width * 0.3, width, abs(uv.x - 0.5 + sway));
         flame *= smoothstep(0.0, 0.08, uv.y) * smoothstep(0.0, 0.1, height);
-        vec3 color = mix(vec3(1.0, 0.22, 0.035), vec3(1.0, 0.9, 0.3), flame * (1.0 - height));
-        fragColor = vec4(color, flame);
+        if (hasEffectTex != 0) {
+            float breakup = texture(effectMasks, vec2(uv.x, uv.y * 2.0) + vec2(0.0, -0.67 * seconds)).g;
+            flame *= mix(0.65, 1.25, breakup);
+        }
+        vec3 color = mix(vec3(1.0, 0.22, 0.035), vec3(1.0, 0.9, 0.3), clamp(flame * (1.0 - height), 0.0, 1.0));
+        fragColor = vec4(color, clamp(flame, 0.0, 1.0));
     } else if (effect == 3) {
         float t = uv.x, y = uv.y - 0.5;
         float envelope = smoothstep(0.0, 0.07, t) * pow(max(0.0, 1.0 - t), 1.35);
@@ -730,13 +744,21 @@ void main() {
                       exp(-pow((y + separation + sway) / width, 2.0));
         float halo = exp(-pow(y / (0.26 * pow(1.0 - t, 0.7) + 0.012), 2.0)) * envelope;
         float alpha = clamp(cores * envelope * 0.93 + halo * 0.37, 0.0, 1.0) * tint.a;
+        if (hasEffectTex != 0) {
+            float breakup = texture(effectMasks, vec2(uv.y, uv.x * 2.0) + vec2(0.0, -0.67 * seconds)).g;
+            alpha *= mix(0.72, 1.15, breakup);
+        }
         vec3 outer = mix(vec3(0.035, 0.16, 0.68), tint.rgb, 0.40);
         vec3 inner = mix(tint.rgb, vec3(0.55, 1.0, 1.0), 0.60);
-        fragColor = vec4(mix(outer, inner, clamp(cores * envelope, 0.0, 1.0)), alpha);
+        fragColor = vec4(mix(outer, inner, clamp(cores * envelope, 0.0, 1.0)), clamp(alpha, 0.0, 1.0));
     } else {
         float radius = length((uv - 0.5) * 2.0);
         float ring = 1.0 - smoothstep(0.02, 0.11, abs(radius - 0.78));
-        fragColor = vec4(0.35, 0.93, 1.0, ring * 0.8);
+        if (hasEffectTex != 0) {
+            float scan = texture(effectMasks, uv + vec2(0.0, -0.17 * seconds)).b;
+            ring *= mix(0.77, 1.15, scan);
+        }
+        fragColor = vec4(0.35, 0.93, 1.0, clamp(ring * 0.8, 0.0, 1.0));
     }
 }
 )GLSL";
@@ -2475,6 +2497,10 @@ Renderer::Renderer(int width, int height)
             m_meshes->shadowUniforms.Initialize(m_meshes->shadowComposite);
         }
         m_effectProgram = compileCore(kEffectVertexBody, kEffectFragmentBody);
+        if (m_assets && m_assets->HasEffectTextures())
+        {
+            renderqueue::SetEffectTextures(m_assets->EffectMasksTexture(), m_assets->WaterFlowTexture());
+        }
     }
     if (GLEW_VERSION_3_0)
     {

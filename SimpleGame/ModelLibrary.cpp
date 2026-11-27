@@ -241,7 +241,10 @@ void Generate(Library &library)
     for (size_t i = 0; i < library.vehicles.size(); ++i)
     {
         auto &vehicle = library.vehicles[i];
-        ResourceAssets::Bind(vehicle.body, std::string("vehicle/") + vehicles[i]);
+        if (i != 0 || !ResourceAssets::BindOptional(vehicle.body, "boarding/Coupe"))
+        {
+            ResourceAssets::Bind(vehicle.body, std::string("vehicle/") + vehicles[i]);
+        }
         const auto &resource = ResourceAssets::Get(vehicle.body.resourceId);
         std::copy_n(resource.sockets.begin(), 2, vehicle.exhausts.begin());
         std::copy_n(resource.sockets.begin() + 2, 2, vehicle.headlights.begin());
@@ -326,8 +329,11 @@ void Generate(Library &library)
     constexpr const char *aircraft[] = {"Kite_Courier", "Manta_AirTaxi", "Mule_Skycrane", "Warden_Survey"};
     for (size_t i = 0; i < library.aircraft.size(); ++i)
     {
-        ResourceAssets::Bind(library.aircraft[i],
-                             std::string("aircraft/") + aircraft[i / 2] + (i % 2 ? "_Variant" : ""));
+        if (i != 0 || !ResourceAssets::BindOptional(library.aircraft[i], "boarding/Courier"))
+        {
+            ResourceAssets::Bind(library.aircraft[i],
+                                 std::string("aircraft/") + aircraft[i / 2] + (i % 2 ? "_Variant" : ""));
+        }
     }
     for (size_t i = 0; i < library.scenery.size(); ++i)
     {

@@ -217,6 +217,12 @@ struct CharacterPose
     float supportPhase = 0, supportWeight = 0;
     int transitionClip = -1;
     float transitionPhase = 0, transitionWeight = 0;
+    // CQ-11B facility/talk animation override (0..6): -1 inactive.
+    int facilityClip = -1;
+    float facilityPhase = 0, facilityWeight = 0;
+    // CQ-06B/C vehicle boarding/seated animation override (0..11): -1 inactive.
+    int boardingClip = -1;
+    float boardingPhase = 0, boardingWeight = 0;
     Point Apply(Point point, Joint joint) const;
 };
 // ============================================================================

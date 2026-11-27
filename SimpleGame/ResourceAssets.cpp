@@ -338,6 +338,8 @@ struct Store
                 LayeredAnimation::BindDodgeClip(*rig, name, clipIndex);
                 LayeredAnimation::BindSupportClip(*rig, name, clipIndex);
                 LayeredAnimation::BindTransitionClip(*rig, name, clipIndex);
+                LayeredAnimation::BindFacilityClip(*rig, name, clipIndex);
+                LayeredAnimation::BindBoardingClip(*rig, name, clipIndex);
                 if (name == "Idle")
                 {
                     rig->idle = clipIndex;
@@ -902,7 +904,7 @@ void ResourcePoseSampler::Sample(unsigned int id, const CharacterPose &pose, Ski
         ResourceAssets::Sample(id, &pose, matrices);
         return;
     }
-    const std::array<float, 25> nextInputs = {pose.animationPhase,
+    const std::array<float, 31> nextInputs = {pose.animationPhase,
                                               pose.recoil,
                                               pose.locomotionSpeed,
                                               pose.meleeSeconds,
@@ -926,7 +928,13 @@ void ResourcePoseSampler::Sample(unsigned int id, const CharacterPose &pose, Ski
                                               pose.supportWeight,
                                               float(pose.transitionClip),
                                               pose.transitionPhase,
-                                              pose.transitionWeight};
+                                              pose.transitionWeight,
+                                              float(pose.facilityClip),
+                                              pose.facilityPhase,
+                                              pose.facilityWeight,
+                                              float(pose.boardingClip),
+                                              pose.boardingPhase,
+                                              pose.boardingWeight};
     const unsigned int nextFlags =
         unsigned(pose.armed) | (unsigned(pose.walking) << 1) | (unsigned(pose.blended) << 2);
     if (rig != mesh.rig.get() || animations != mesh.animations.get() || flags != nextFlags ||

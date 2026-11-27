@@ -20,6 +20,7 @@ void TexCoord(float u, float v);
 void Texture(unsigned int texture);
 void SolidSample(unsigned int texture, float u, float v);
 void Effect(unsigned int program, int kind, float seconds);
+void SetEffectTextures(unsigned int masksTexture, unsigned int waterFlowTexture);
 void LineWidth(float width);
 void Depth(bool enabled, bool write = true);
 void PushMatrix();
