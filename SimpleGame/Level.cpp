@@ -2711,7 +2711,14 @@ world::CityCore FrontierSurface::Describe()
         model("convoy_" + std::to_string(i), F::Vehicle, unsigned(type), library.vehicles[size_t(type)].body,
               {32.5f + i * 3.5f, 9.5f}, {1, 1, 1}, true, palette);
     }
-    constexpr tutorial::Vector2 markers[] = {{36.5f, 13.5f}, {36.5f, 18.5f}, {29.5f, 18.5f}};
+    // Improvised canyon barricade & disaster pocket cover props framing Kain's isolated defense line.
+    model("convoy_shelter", F::Scenery, unsigned(S::FieldShelter), models::ModelLibrary::Scenery(S::FieldShelter),
+          {29.0f, 12.8f}, {.85f, .85f, .85f}, true);
+    model("convoy_cover_nw", F::Scenery, unsigned(S::CargoContainer),
+          models::ModelLibrary::Scenery(S::CargoContainer), {28.5f, 7.6f}, {.72f, .72f, .72f}, true);
+    model("convoy_cover_se", F::Scenery, unsigned(S::CargoContainer),
+          models::ModelLibrary::Scenery(S::CargoContainer), {34.8f, 13.6f}, {.72f, .72f, .72f}, true);
+    constexpr tutorial::Vector2 markers[] = {{38.5f, 6.5f}, {42.5f, 13.0f}, {37.5f, 19.5f}};
     for (unsigned i = 0; i < 3; ++i)
     {
         model("survey_" + std::to_string(i), F::Scenery, unsigned(S::SurveyTripod),
@@ -3077,8 +3084,9 @@ void FrontierMap::Generate()
             {
                 tile = FrontierTile::Road;
             }
-            // A dry, collapsed channel. Surveyed crossings at both ends remain usable.
-            if (y >= 15 && y <= 16 && x >= 27 && x <= 35)
+            // L-shaped collapsed fault gorge isolating the NE convoy pocket:
+            // only the northern ridge pass (y=2..4) and eastern rock bridgehead (x=41..45) remain passable.
+            if ((y >= 15 && y <= 16 && x >= 27 && x <= 40) || (x >= 26 && x <= 27 && y >= 5 && y <= 16))
             {
                 tile = FrontierTile::Canal;
             }
@@ -3109,10 +3117,19 @@ void FrontierMap::Generate()
     }
     state.ria.position = {6.5f, 6.5f};
     state.kain.position = {30.5f, 10.5f};
+    // 2 critically injured crew pinned behind Kain's burning barricade + 3 scattered survivors trapped across
+    // 3 distinct disaster pockets in the fractured canyon.
+    constexpr tutorial::Vector2 kSurvivorSpawns[5] = {
+        {30.8f, 11.4f}, // Injured crew behind Kain's barricade
+        {31.8f, 11.9f}, // Injured crew behind Kain's barricade
+        {39.2f, 6.8f},  // Pocket 1: NE Wreckage Crater
+        {43.2f, 13.4f}, // Pocket 2: Eastern Bridgehead Rockfall
+        {38.2f, 19.0f}  // Pocket 3: SE Sunken Relay Trench
+    };
     for (int i = 0; i < 5; ++i)
     {
         FrontierPerson survivor;
-        survivor.position = {31.f + (i % 3) * .7f, 12.f + (i / 3) * .8f};
+        survivor.position = kSurvivorSpawns[i];
         state.survivors.push_back(survivor);
     }
     for (tutorial::Vector2 p : {tutorial::Vector2{32.5f, 31.5f}, {34.5f, 29.5f}, {31.5f, 34.5f}})
@@ -3407,7 +3424,7 @@ std::vector<ChapterInteraction> ChapterOneLevel::Interactions() const
     }
     if (!state.convoyBriefed && state.kain.combat.health > 0)
     {
-        result.push_back({ChapterAction::Kain, {30.5f, 10.5f}, "카인 / 현장 인원 확인 [E]"});
+        result.push_back({ChapterAction::Kain, {30.5f, 10.5f}, "카인 / 고립 방어선 합류 · 구조 작전 [E]"});
     }
     if (!state.receiverInspected)
     {
@@ -3415,13 +3432,17 @@ std::vector<ChapterInteraction> ChapterOneLevel::Interactions() const
     }
     if (state.convoyBriefed && state.surveyMarkers < 3)
     {
-        constexpr tutorial::Vector2 markers[] = {{36.5f, 13.5f}, {36.5f, 18.5f}, {29.5f, 18.5f}};
+        constexpr tutorial::Vector2 markers[] = {{38.5f, 6.5f}, {42.5f, 13.0f}, {37.5f, 19.5f}};
+        constexpr const char *labels[] = {
+            "고립 구역 1 / 북동 잔해 격벽 차단·대원 구출 [E]",
+            "고립 구역 2 / 동쪽 교두보 잔해 해제·대원 구출 [E]",
+            "고립 구역 3 / 남동 협곡 교란 차단·회랑 개방 [E]"};
         result.push_back({ChapterAction(int(ChapterAction::SurveyOne) + state.surveyMarkers),
-                          markers[state.surveyMarkers], "측량 표식 / 안전 우회로 확인 [E]"});
+                          markers[state.surveyMarkers], labels[state.surveyMarkers]});
     }
     if (state.surveyMarkers == 3 && !state.escortStarted)
     {
-        result.push_back({ChapterAction::Escort, {32.5f, 12.5f}, "운송대 / 5명 대피 시작 [E]"});
+        result.push_back({ChapterAction::Escort, {32.5f, 12.5f}, "운송대 / 5명 전원 협곡 돌파 개시 [E]"});
     }
     if (state.convoyRescued && !state.vehicleRepaired)
     {
@@ -3606,12 +3627,13 @@ void ChapterOneLevel::Interact()
     case ChapterAction::Kain:
         state.convoyBriefed = true;
         tell(state.convoyAmbushTriggered
-                 ? "카인 / 때맞춰 지원해 주셨군요. 덕에 방어선이 버텼습니다. 제 눈앞엔 다섯 명뿐인데, 끊긴 무전기에서 "
-                   "여섯 번째 목소리가 답합니다. 대답이 온다고 그쪽으로 발을 들이면 안 됩니다. 먼저 여기 있는 다섯 "
-                   "분부터 빼냅시다. 남쪽 측량 표식 세 곳을 확인해 주십시오."
-                 : "카인 / 제 눈앞엔 다섯 명뿐인데, 끊긴 무전기에서 여섯 번째 목소리가 답합니다. 대답이 온다고 "
-                   "그쪽으로 발을 들이면 안 됩니다. 먼저 여기 있는 다섯 분부터 빼냅시다. 남쪽 측량 표식 세 곳을 "
-                   "확인해 주십시오.");
+                 ? "카인 / 때맞춰 지원해 주셨군요. 북동쪽 단층 협곡이 무너져 서쪽·남쪽 직통로가 전부 고압 누전에 "
+                   "끊겼습니다. 제 뒤에 부상자 둘이 있고, 흩어진 대원 셋이 협곡 동쪽 세 구역에 고립돼 있습니다. "
+                   "끊긴 무전기에서 여섯 번째 목소리가 들려도 절대 따라가지 마십시오. 먼저 세 고립 구역의 장애를 "
+                   "해제해 대원들을 빼낸 뒤 동쪽 교두보로 전원 돌파합시다."
+                 : "카인 / 북동쪽 단층 협곡이 무너져 직통로가 전부 끊겼습니다. 제 뒤에 부상자 둘이 있고, 흩어진 "
+                   "대원 셋이 협곡 동쪽 세 구역에 고립돼 있습니다. 끊긴 무전기에서 여섯 번째 목소리가 답해도 "
+                   "절대 그쪽으로 들어가지 마십시오. 세 고립 구역의 대원부터 구출해 동쪽 교두보 돌파로를 엽시다.");
         break;
     case ChapterAction::Receiver:
         state.receiverInspected = true;
@@ -3621,30 +3643,69 @@ void ChapterOneLevel::Interact()
     case ChapterAction::SurveyOne:
     case ChapterAction::SurveyTwo:
     case ChapterAction::SurveyThree:
+    {
+        const int pocketIndex = state.surveyMarkers;
         ++state.surveyMarkers;
-        tell(state.surveyMarkers == 3
-                 ? "카인 / 세 표식이 이어지는 길은 안전합니다. 운송대로 돌아와 주십시오. 다섯 "
-                   "명을 그 길로 옮기겠습니다."
-                 : "측량 표식 / 우회로가 끊긴 수로를 돌아 이어집니다. 다음 표식을 확인하세요.");
-        break;
-    case ChapterAction::Escort:
-        for (auto &person : state.survivors)
+        if (pocketIndex >= 0 && pocketIndex < 3 && state.survivors.size() > size_t(2 + pocketIndex))
         {
+            auto &rescued = state.survivors[size_t(2 + pocketIndex)];
+            const tutorial::Vector2 rally =
+                pocketIndex < 2 ? tutorial::Vector2{32.0f + float(pocketIndex) * 0.7f, 12.2f}
+                                : tutorial::Vector2{37.0f, 19.5f};
+            rescued.route = FindRoute(rescued.position, rally);
+            rescued.waypoint = 0;
+            rescued.arrived = false;
+            rescued.departureDelay = 0.f;
+        }
+        if (state.surveyMarkers == 1)
+        {
+            tell("구출 완료 (1/3) / 북동 잔해 고압 격벽을 차단했습니다! 고립됐던 대원이 카인의 방어선으로 "
+                 "복귀합니다. 동쪽 교두보(고립 구역 2)로 이동하세요.");
+        }
+        else if (state.surveyMarkers == 2)
+        {
+            tell("구출 완료 (2/3) / 동쪽 교두보 붕괴 잔해를 해제했습니다! 두 번째 대원이 합류하며 교두보 "
+                 "진입로가 열렸습니다. 남동 협곡(고립 구역 3)의 마지막 대원을 구출하세요.");
+        }
+        else
+        {
+            tell("카인 · 무전 / 세 번째 대원까지 확보했고 남동 협곡 돌파 회랑이 완전히 열렸습니다! 방어선으로 "
+                 "돌아와 전원 협곡 돌파를 개시하십시오.");
+        }
+        break;
+    }
+    case ChapterAction::Escort:
+        for (size_t idx = 0; idx < state.survivors.size(); ++idx)
+        {
+            auto &person = state.survivors[idx];
             person.route.clear();
+            person.arrived = false;
             auto from = person.position;
-            for (auto to : {tutorial::Vector2{36.5f, 13.5f}, {36.5f, 18.5f}, {29.5f, 18.5f}, {24.5f, 20.5f}})
+            std::vector<tutorial::Vector2> waypoints;
+            if (from.y < 15.f)
+            {
+                // North canyon survivors break out across the cleared Eastern Rock Bridgehead.
+                waypoints.push_back({42.5f, 13.0f});
+                waypoints.push_back({42.5f, 18.5f});
+                waypoints.push_back({37.5f, 19.5f});
+            }
+            else if (from.x > 38.f)
+            {
+                waypoints.push_back({37.5f, 19.5f});
+            }
+            waypoints.push_back({29.5f, 20.5f});
+            waypoints.push_back({24.5f, 20.5f});
+            for (const auto &to : waypoints)
             {
                 auto leg = FindRoute(from, to);
                 person.route.insert(person.route.end(), leg.begin(), leg.end());
                 from = to;
             }
-            auto destination =
-                tutorial::Vector2{23.5f + float(&person - state.survivors.data()) * .55f,
-                                  20.5f + float((&person - state.survivors.data()) % 2) * .55f};
+            const tutorial::Vector2 destination{23.5f + float(idx) * .55f, 20.5f + float(idx % 2) * .55f};
             auto lastLeg = FindRoute(from, destination);
             person.route.insert(person.route.end(), lastLeg.begin(), lastLeg.end());
             person.waypoint = 0;
-            person.departureDelay = float(&person - state.survivors.data()) * .8f;
+            person.departureDelay = float(idx) * .65f;
         }
         state.escortStarted = true;
         if (state.hostile && !state.negotiated)
@@ -3654,12 +3715,12 @@ void ChapterOneLevel::Interact()
                 if (scrapper.combat.health > 0)
                 {
                     scrapper.combat.threat.Remember(ai::Stimulus::Sound, 12.f);
-                    scrapper.combat.lastThreat = {29.5f, 18.5f, 0.f};
+                    scrapper.combat.lastThreat = {29.5f, 20.5f, 0.f};
                 }
             }
         }
-        tell("카인 / 다섯 분 모두 제 뒤로 오십시오. 남쪽 약탈자 구역을 지나니 주변을 경계하며 이동하겠습니다. "
-             "[진행 안내] 안전 야영지까지 엄호하거나 다른 현장을 함께 조사할 수 있습니다.");
+        tell("카인 / 전원 대열 유지! 동쪽 교두보를 넘어 안전 야영지까지 한 번에 돌파합니다! 매복에 대비해 "
+             "측후방을 엄호해 주십시오.");
         break;
     case ChapterAction::Vehicle:
         state.vehicleRepaired = true;
@@ -3795,13 +3856,22 @@ void ChapterOneLevel::InteractInteractive()
             [finishOnSurface](const tutorial::FieldMinigameOutcome &out) { finishOnSurface(25, out); });
         return;
     case ChapterAction::SurveyOne:
+        tutorial::FieldMinigame::Begin(
+            tutorial::FieldMinigameKind::CircuitBalance, "북동 잔해 고압 격벽 차단",
+            "폭주한 잔해 배선 3개를 안전 구간으로 낮춰 고립된 대원을 구출하세요.", 0x5210u,
+            [finishOnSurface](const tutorial::FieldMinigameOutcome &out) { finishOnSurface(25, out); });
+        return;
     case ChapterAction::SurveyTwo:
+        tutorial::FieldMinigame::Begin(
+            tutorial::FieldMinigameKind::ExtractionTiming, "동쪽 교두보 붕괴 잔해 해제",
+            "무너진 수송 격벽 잠금 핀을 정밀 타이밍에 맞춰 해제하고 대원을 구출하세요.", 0x5211u,
+            [finishOnSurface](const tutorial::FieldMinigameOutcome &out) { finishOnSurface(25, out); }, {}, 2);
+        return;
     case ChapterAction::SurveyThree:
         tutorial::FieldMinigame::Begin(
-            tutorial::FieldMinigameKind::SignalTuner, "측량 표식 안전 경로 동조",
-            "측량 삼각대 신호를 기준 파형에 맞춰 안전 우회 경로를 연결하세요.",
-            0x5210u + unsigned(state.surveyMarkers),
-            [finishOnSurface](const tutorial::FieldMinigameOutcome &out) { finishOnSurface(20, out); });
+            tutorial::FieldMinigameKind::SignalTuner, "남동 협곡 교란 중계기 차단",
+            "협곡 퇴로를 막는 교란 파형에 동조해 안전 돌파 회랑을 개방하세요.", 0x5212u,
+            [finishOnSurface](const tutorial::FieldMinigameOutcome &out) { finishOnSurface(25, out); });
         return;
     case ChapterAction::TradeProof:
         tutorial::FieldMinigame::Begin(
@@ -4255,34 +4325,34 @@ void FrontierCombat::Update(float deltaSeconds)
             mine.player.health = (std::min)(mine.player.maxHealth, mine.player.health + gain);
         }
     }
-    // Kain's first encounter: distress flare radio warning -> perilous 2-wave perimeter siege alongside Kain.
+    // Kain's first encounter: SOS distress flare -> perilous 2-wave canyon siege alongside Kain.
     const float distToKain = tutorial::Game::Distance(world.playerPosition, state.kain.position);
-    if (!state.convoyBriefed && !state.distressFlareNoticed && distToKain < 19.f)
+    if (!state.convoyBriefed && !state.distressFlareNoticed && distToKain < 22.f)
     {
         state.distressFlareNoticed = true;
         tutorial::Game::Get().ShowNotice(
-            "긴급 구조 신호 / 동쪽 운송대가 고압 수로에 막혀 포위됐습니다! 부상자가 있습니다 — 방어선을 지원하세요!");
+            "긴급 구조 신호 / 북동쪽 단층 협곡에 운송대가 고립됐습니다! 북쪽 능선이나 동쪽 교두보로 진입해 지원하세요!");
     }
-    if (!state.convoyBriefed && !state.convoyAmbushTriggered && distToKain < 13.5f)
+    if (!state.convoyBriefed && !state.convoyAmbushTriggered && distToKain < 14.f)
     {
         state.convoyAmbushTriggered = true;
         state.frontierThreats.push_back(
-            {{26.8f, 9.0f}, {30.5f, 10.5f}, 48, 48, FrontierThreatKind::ConvoyRaider, 0.8f, 0.f, true});
+            {{29.5f, 6.8f}, {30.5f, 10.5f}, 48, 48, FrontierThreatKind::ConvoyRaider, 0.8f, 0.f, true});
         state.frontierThreats.push_back(
-            {{35.0f, 13.0f}, {30.5f, 10.5f}, 48, 48, FrontierThreatKind::ConvoyRaider, 1.1f, 1.5f, true});
+            {{35.0f, 12.2f}, {30.5f, 10.5f}, 48, 48, FrontierThreatKind::ConvoyRaider, 1.1f, 1.5f, true});
         tutorial::Game::Get().ShowNotice(
-            "카인 · 무전 / 때맞춰 오셨군! 부상자 두 명을 뒤로 숨긴 채 버티고 있소 — 습격조부터 저지합시다!");
+            "카인 · 무전 / 북쪽 능선 너머로 오셨군! 부상자 둘을 뒤로 숨긴 채 버티는 중이오 — 습격조부터 저지합시다!");
     }
     if (state.convoyAmbushTriggered && !state.convoyWave2Spawned && !state.convoyBriefed &&
         level.ActiveThreatsNear({31.f, 11.f}, 14.f) <= 1)
     {
         state.convoyWave2Spawned = true;
         state.frontierThreats.push_back(
-            {{35.5f, 7.8f}, {30.5f, 10.5f}, 64, 64, FrontierThreatKind::ConvoyRaider, 0.9f, 0.4f, true});
+            {{36.2f, 7.2f}, {30.5f, 10.5f}, 64, 64, FrontierThreatKind::ConvoyRaider, 0.9f, 0.4f, true});
         state.frontierThreats.push_back(
-            {{30.5f, 14.2f}, {30.5f, 10.5f}, 64, 64, FrontierThreatKind::ConvoyRaider, 1.2f, 2.2f, true});
+            {{31.0f, 13.6f}, {30.5f, 10.5f}, 64, 64, FrontierThreatKind::ConvoyRaider, 1.2f, 2.2f, true});
         tutorial::Game::Get().ShowNotice(
-            "카인 · 무전 / 조심하십시오! 북동쪽 능선과 수로 쪽에서 중무장 증원조가 우회 진입합니다!");
+            "카인 · 무전 / 경계하십시오! 잔해 너머에서 중무장 증원조가 협곡 안쪽으로 밀고 들어옵니다!");
     }
     if (state.convoyAmbushTriggered && state.convoyWave2Spawned && !state.convoyAmbushCleared &&
         level.ActiveThreatsNear({31.f, 11.f}, 15.f) == 0)
@@ -4291,23 +4361,25 @@ void FrontierCombat::Update(float deltaSeconds)
         if (!state.convoyBriefed)
         {
             tutorial::Game::Get().ShowNotice(
-                "운송대 방어선 안정 / 2차 습격조까지 격퇴했습니다. 방어선 앞의 카인과 대화하세요 [E]");
+                "운송대 방어선 안정 / 협곡 습격조를 격퇴했습니다. 방어선 앞의 카인과 구출 작전을 논의하세요 [E]");
         }
     }
-    // Spawn recon scouts along the survey detour bends once Kain briefs the player (raises route-finding tension).
+    // Spawn 3 pocket guards protecting the 3 scattered disaster pockets once Kain briefs the player.
     if (state.convoyBriefed && !state.surveyScoutsSpawned && !state.escortStarted && !state.convoyRescued)
     {
         state.surveyScoutsSpawned = true;
         state.frontierThreats.push_back(
-            {{36.0f, 16.2f}, {36.0f, 16.2f}, 46, 46, FrontierThreatKind::ConvoyRaider, 1.0f, 0.f, true});
+            {{37.2f, 7.6f}, {37.2f, 7.6f}, 46, 46, FrontierThreatKind::ConvoyRaider, 1.0f, 0.f, true});
         state.frontierThreats.push_back(
-            {{31.5f, 19.2f}, {31.5f, 19.2f}, 46, 46, FrontierThreatKind::ConvoyRaider, 1.3f, 2.1f, true});
+            {{41.5f, 11.8f}, {41.5f, 11.8f}, 50, 50, FrontierThreatKind::ConvoyRaider, 1.2f, 1.4f, true});
+        state.frontierThreats.push_back(
+            {{35.5f, 19.8f}, {35.5f, 19.8f}, 52, 52, FrontierThreatKind::ConvoyRaider, 1.3f, 2.6f, true});
     }
-    // High-voltage rift leak hazard zones along the collapsed direct canal (proves why civilians cannot cut straight).
+    // High-voltage rift leak hazard zones along the collapsed L-shaped fault gorge.
     state.hazardShockCooldown = (std::max)(0.f, state.hazardShockCooldown - deltaSeconds);
     if (!state.convoyRescued && mine.player.health > 0 && state.hazardShockCooldown <= 0.f)
     {
-        constexpr tutorial::Vector2 kCanalHazards[3] = {{28.5f, 15.5f}, {31.5f, 15.5f}, {34.0f, 15.5f}};
+        constexpr tutorial::Vector2 kCanalHazards[3] = {{26.5f, 10.5f}, {30.5f, 15.5f}, {36.5f, 15.5f}};
         for (const auto &hz : kCanalHazards)
         {
             if (tutorial::Game::Distance(world.playerPosition, hz) < 1.65f)
@@ -4318,7 +4390,7 @@ void FrontierCombat::Update(float deltaSeconds)
                 }
                 state.hazardShockCooldown = 0.95f;
                 tutorial::Game::Get().ShowNotice(
-                    "고압 누전 위험 구역 / 붕괴 수로가 방전 중입니다! 동쪽 측량 우회로를 따라 돌아가세요!");
+                    "고압 누전 단층 / 협곡 직통로가 고압 방전 중입니다! 북쪽 능선이나 동쪽 교두보로 우회하세요!");
                 break;
             }
         }
@@ -4686,12 +4758,29 @@ void FrontierParty::Update(float deltaSeconds)
             follow(state.kain, 2.4f);
         }
     }
+    // Advance individual rescued pocket survivors rallying back to Kain's barricade before full breakout.
+    if (!state.escortStarted && !state.convoyRescued && state.surveyMarkers > 0)
+    {
+        for (size_t i = 2; i < state.survivors.size() && int(i - 2) < state.surveyMarkers; ++i)
+        {
+            auto &person = state.survivors[i];
+            if (!person.route.empty() && !person.arrived)
+            {
+                if (Move(person, 3.1f * deltaSeconds, deltaSeconds))
+                {
+                    person.route.clear();
+                    person.waypoint = 0;
+                    person.facing.walking = false;
+                }
+            }
+        }
+    }
     if (state.escortStarted && !state.convoyRescued)
     {
         bool all = true;
         tutorial::Vector2 escortFocus = {30.5f, 10.5f};
         bool foundWalker = false;
-        bool reachedMidpoint = false;
+        bool reachedBridgehead = false;
         for (auto &person : state.survivors)
         {
             if (person.departureDelay > 0)
@@ -4701,7 +4790,7 @@ void FrontierParty::Update(float deltaSeconds)
             }
             else if (!person.arrived)
             {
-                person.arrived = Move(person, 2.7f * deltaSeconds, deltaSeconds);
+                person.arrived = Move(person, 3.1f * deltaSeconds, deltaSeconds);
             }
             if (person.arrived)
             {
@@ -4711,9 +4800,9 @@ void FrontierParty::Update(float deltaSeconds)
             {
                 escortFocus = person.position;
                 foundWalker = true;
-                if (person.position.x < 34.5f && person.position.y > 16.5f)
+                if (person.position.x > 39.5f && person.position.y > 14.0f)
                 {
-                    reachedMidpoint = true;
+                    reachedBridgehead = true;
                 }
             }
             all = all && person.arrived;
@@ -4730,35 +4819,35 @@ void FrontierParty::Update(float deltaSeconds)
                     state.kain.route = level.FindRoute(state.kain.position, escortFocus);
                     state.kain.waypoint = 0;
                 }
-                Move(state.kain, 3.3f * deltaSeconds, deltaSeconds);
+                Move(state.kain, 3.6f * deltaSeconds, deltaSeconds);
             }
             else
             {
                 state.kain.facing.walking = false;
             }
         }
-        // Spawn two-stage ambushers along the detour corridor when the player is actively escorting.
-        if (reachedMidpoint && !state.escortAmbushSpawned &&
-            tutorial::Game::Distance(world.playerPosition, escortFocus) < 12.f)
+        // Spawn two-stage canyon breakout ambushers at the bridgehead & trench exit when player is escorting.
+        if (reachedBridgehead && !state.escortAmbushSpawned &&
+            tutorial::Game::Distance(world.playerPosition, escortFocus) < 13.f)
         {
             state.escortAmbushSpawned = true;
             state.frontierThreats.push_back(
-                {{34.5f, 19.5f}, {34.5f, 19.5f}, 48, 48, FrontierThreatKind::EscortAmbusher, 0.9f, 0.f, true});
+                {{41.2f, 17.8f}, {41.2f, 17.8f}, 48, 48, FrontierThreatKind::EscortAmbusher, 0.9f, 0.f, true});
             state.frontierThreats.push_back(
-                {{31.5f, 20.5f}, {31.5f, 20.5f}, 48, 48, FrontierThreatKind::EscortAmbusher, 1.3f, 2.f, true});
+                {{39.2f, 19.6f}, {39.2f, 19.6f}, 48, 48, FrontierThreatKind::EscortAmbusher, 1.3f, 2.f, true});
             tutorial::Game::Get().ShowNotice(
-                "호위 경보 1차 / 우회로 남동쪽 길목에서 매복조가 나타났습니다! 카인과 함께 대열을 지키세요!");
+                "돌파 경보 1차 / 동쪽 교두보 남단에서 매복조가 퇴로를 막습니다! 카인과 함께 돌파하세요!");
         }
-        if (escortFocus.x < 29.8f && escortFocus.y > 17.5f && !state.escortAmbush2Spawned &&
-            tutorial::Game::Distance(world.playerPosition, escortFocus) < 12.f)
+        if (escortFocus.x < 31.5f && escortFocus.y > 17.5f && !state.escortAmbush2Spawned &&
+            tutorial::Game::Distance(world.playerPosition, escortFocus) < 13.f)
         {
             state.escortAmbush2Spawned = true;
             state.frontierThreats.push_back(
-                {{26.8f, 18.2f}, {26.8f, 18.2f}, 54, 54, FrontierThreatKind::EscortAmbusher, 0.9f, 0.8f, true});
+                {{27.8f, 18.6f}, {27.8f, 18.6f}, 54, 54, FrontierThreatKind::EscortAmbusher, 0.9f, 0.8f, true});
             state.frontierThreats.push_back(
-                {{27.2f, 22.0f}, {27.2f, 22.0f}, 54, 54, FrontierThreatKind::EscortAmbusher, 1.2f, 2.5f, true});
+                {{28.2f, 22.0f}, {28.2f, 22.0f}, 54, 54, FrontierThreatKind::EscortAmbusher, 1.2f, 2.5f, true});
             tutorial::Game::Get().ShowNotice(
-                "호위 경보 2차 / 안전 야영지 직전에서 최종 차단조가 돌입합니다! 끝까지 엄호하세요!");
+                "돌파 경보 2차 / 안전 야영지 직전에서 최종 차단조가 돌입합니다! 전원 무사히 엄호하세요!");
         }
         if (all)
         {

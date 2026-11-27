@@ -2047,6 +2047,7 @@ void Game::KeyDown(unsigned char key, int, int)
         if (state.mapVisible)
         {
             state.mapVisible = false;
+            state.mapDragging = false;
             return;
         }
         state.isPaused = !state.isPaused;
@@ -2103,6 +2104,14 @@ void Game::KeyDown(unsigned char key, int, int)
         if (key == 'm')
         {
             state.mapVisible = !state.mapVisible;
+            if (state.mapVisible)
+            {
+                MapHud::OnMapOpened();
+            }
+            else
+            {
+                state.mapDragging = false;
+            }
             state.StopMotion();
         }
         else if ((key == '[' || key == ']') && !repeated && !state.mapVisible && !IsSurfaceMine() &&
@@ -2215,9 +2224,17 @@ void Game::KeyDown(unsigned char key, int, int)
     if (key == 'm')
     {
         state.mapVisible = !state.mapVisible;
-        if (state.mapVisible && IsSurfaceMine())
+        if (state.mapVisible)
         {
-            state.planetMapSurface = false;
+            if (IsSurfaceMine())
+            {
+                state.planetMapSurface = false;
+            }
+            MapHud::OnMapOpened();
+        }
+        else
+        {
+            state.mapDragging = false;
         }
         state.StopMotion();
         state.mouseFiring = state.mouseAiming = false;
@@ -2454,6 +2471,10 @@ void Game::MouseMotion(int x, int y)
     }
     WeaponWheel::Motion();
     Hud::HandleMotion();
+    if (state.mapVisible)
+    {
+        MapHud::HandleMotion(state.cursorPosition);
+    }
 }
 void Game::MouseButton(int button, int buttonState, int x, int y)
 {
@@ -2486,12 +2507,13 @@ void Game::MouseButton(int button, int buttonState, int x, int y)
     if (state.mapVisible)
     {
         state.mouseFiring = state.mouseAiming = false;
-        if (buttonState == GLFW_PRESS && state.cursorInsideViewport && !state.isPaused)
+        if (!state.isPaused && (button == GLFW_MOUSE_BUTTON_LEFT || button == GLFW_MOUSE_BUTTON_RIGHT))
         {
-            if (button == GLFW_MOUSE_BUTTON_LEFT || button == GLFW_MOUSE_BUTTON_RIGHT)
+            if (buttonState == GLFW_PRESS && !state.cursorInsideViewport)
             {
-                MapHud::HandleClick(state.cursorPosition, button == GLFW_MOUSE_BUTTON_RIGHT);
+                return;
             }
+            MapHud::HandlePointer(button, buttonState == GLFW_PRESS, state.cursorPosition);
         }
         return;
     }
@@ -2642,6 +2664,10 @@ void Game::Update(float deltaSeconds)
         FieldMinigame::Update(deltaSeconds);
         state.animationTimeSeconds += deltaSeconds;
         return;
+    }
+    if (state.mapVisible && !state.isPaused)
+    {
+        state.mapHologramProgress = (std::min)(1.f, state.mapHologramProgress + deltaSeconds * 3.8f);
     }
     if ((state.ui.screen == UiScreen::FacilityShop || state.ui.screen == UiScreen::Wardrobe ||
          state.ui.screen == UiScreen::HomeStorage) &&

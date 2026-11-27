@@ -235,3 +235,43 @@
 ## 13. 2026-11-23 최신 플레이 UI 보완
 
 현재 기능을 기준으로 공유 스태미너와 회피, 주 무장 펄스 카빈·전술 집중, 공용차·비행체 운용, 수배 단계별 상황, 행성 지도·중계환, 단일 저장·행성 선택용 UI를 제작했다. [현행 플레이 UI 제작·연결 명세](CURRENT_PLAY_UI_ko.md)를 사용한다. 7절의 빈 주 무장은 미보유 상태에 적용한다. 저장 미지원 안내는 저장을 지원하지 않는 테스트 진입에 한정한다.
+
+## 14. 2026-11-27 파트 3 신규 UI 리소스 및 현장 상호작용 디자인 개편 요청 (`UI-26`~`UI-30`)
+
+> **텍스처 용량 절대 상한 (공통 필수 규칙):** 단일 UI 아틀라스·배경·행성/우주 맵 텍스처 **1장당 파일 크기 및 비압축 GPU 업로드 크기는 절대 `100 MB`를 초과할 수 없다.** UI 아틀라스는 `2048×2048` 이하 RGBA8(원본 PNG ≤ `4 MB`, GPU ≤ `16 MB`)를 표준으로 유지한다.
+
+### UI-26 — 월드 공간 상호작용 안내 문구 전면 리디자인 (기존 원형 불빛 + 다이아몬드 + `[E]` 대체 · 최우선)
+
+현재 월드 오브젝트/NPC 위에 출력되는 **단순 원형 불빛(`DrawGlow`) + 단색 다이아몬드 폴리곤 + 문자열 내 `[E]` 표기**는 시인성과 완성도가 낮다. SF 개척 문명 톤에 맞는 **모듈형 월드 인터랙션 배지 세트**로 전면 교체한다.
+
+| 스프라이트 ID (`ui_complete.png` 추가) | 규격 (px) | 디자인·상태 명세 |
+|---|---:|---|
+| `Components/world_prompt_pill` | `96×40` (9-slice `12px`) | 다크 슬레이트 반투명 유리(`#0B1820` 88%) + 1px 시안 엣지 + 좌측 4px 카테고리 컬러 포인트 바. 호버/근접 시 미세 글로우 확장. |
+| `Components/world_keycap_e` | `32×32` | 문자열 `[E]`를 대체하는 독립 베벨 키캡 칩(시안 테두리 + 고대비 `E` 글리프, 근접 활성 상태용 `world_keycap_e_active` 포함). |
+| `Components/world_focus_ring` | `128×64` | 기존 뭉개진 주황/시안 원형 불빛을 대체하는 **지면 투사형 정밀 텔레메트리 링**(가는 외곽 원호 + 4방위 눈금 + 투명 중앙, 오브젝트 실루엣을 가리지 않을 것). |
+| `Icons/interact_talk` · `interact_hack` · `interact_salvage` · `interact_door` · `interact_vehicle` · `interact_quest` | 각 `32×32` | 단일 다이아몬드를 대체하는 6종 기능별 심볼(대화 말풍선 · 회로/터미널 · 보급/채굴 · 출입문 · 탑승/차량 · 주요 임무 마커). |
+
+### UI-27 — 손목 투사 3D 행성 구체 맵 & 우주 성계 지도 UI 프레임
+
+- `Components/holo_wrist_emitter` (`64×64`): 플레이어 손목 투사 원점에 배치되는 시안 홀로그램 프로젝터 링.
+- `Components/globe_bezel_ring` (`512×512`, 중앙 투명): 3D 행성 구체 외곽 방위각 눈금·경위도 베젤 및 좌/우측 줌 인디케이터.
+- `Icons/map_planet_view` · `Icons/map_space_view` (`32×32`): `[G]` 행성 3D 구체 ↔ 우주 성계 지도 전환 토글 버튼 아이콘.
+- `Icons/map_cluster_subquest` (`32×32`): 현재 구역 클러스터 내 주황 랜덤 서브퀘스트 전용 핀.
+
+### UI-28 — 3D 외관 옷장 · 보관함 · 상점 시각 아이템 카드 프레임
+
+- `Components/showcase_card_frame` (`128×128`, 9-slice `12px`): 회전 3D 실물 모델이 놓이는 유리 진열창 프레임(상단 타이틀 바 + 하단 가격/보유량 배지 슬롯 분리).
+- `Components/wardrobe_turntable_ring` (`256×96`): 3D 외관 옷장 중앙 캐릭터 하단 턴테이블 홀로그램 링 및 360° 회전 안내 화살표.
+- `Components/part_chip_on` / `part_chip_off` (`48×32`, 9-slice `8px`): Mixamo 11파츠 실시간 탈부착 토글 칩.
+
+### UI-29 — 현장 미니게임 4종 전용 콘솔 오버레이 부품
+
+- `Components/minigame_oscilloscope_grid` (`256×128`): `SignalTuner` 파형 동조기 격자 배경.
+- `Components/minigame_cipher_ring` (`256×256`): `GlyphCipher` 3중 동심 회전 고리 눈금 텍스처.
+- `Components/minigame_timing_track` (`256×32`): `ExtractionTiming` 정밀 채굴/잠금 해제 게이지 트랙 + 골드 핵심 구간 마커.
+- `Components/minigame_circuit_node` (`48×48`): `CircuitBalance` 전력 회로 슬라이더 노드.
+
+### UI-30 — 9-슬라이스 텍스트박스 경계선(Seam) 방지 납품 규격
+
+- 모든 `panel_*`·`button_*`·`card_*` 스프라이트는 **투명(`alpha = 0`) 픽셀에 인접 불투명 색상을 1~2px 컬러 블리드(Alpha Bleed / Edge Dilation)** 처리해 `GL_LINEAR` 스케일링 시 어두운 경계선이 발생하지 않도록 납품한다.
+- 아틀라스 패딩은 최소 `4px` 이상 유지하며, 9-슬라이스 내부 코너 경계(`12px`) 안쪽 2px 구간은 균일 색상/알파를 유지한다.

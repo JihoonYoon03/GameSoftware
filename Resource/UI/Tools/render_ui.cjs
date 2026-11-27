@@ -20,7 +20,8 @@ const save = (p,v) => fs.writeFileSync(path.join(root,p),JSON.stringify(v,null,2
     await sharp(path.join(root,asset.svg)).resize(asset.width,asset.height).png().toFile(path.join(root,asset.png));
   }
   // 4px gutters make linear-filter sampling safe; pixel rectangles exclude gutters.
-  const names=Object.keys(manifest.icons),cell=56,cols=8,rows=Math.ceil(names.length/cols);
+  const names=Object.keys(manifest.icons).filter(name=>manifest.icons[name].width===48&&manifest.icons[name].height===48);
+  const cell=56,cols=8,rows=Math.ceil(names.length/cols);
   const atlas={width:cols*cell,height:rows*cell,padding:4,alpha:'straight',entries:{}};
   const composites=[];
   names.forEach((name,i)=>{

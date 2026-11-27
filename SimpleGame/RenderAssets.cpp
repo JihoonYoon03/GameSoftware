@@ -397,21 +397,84 @@ GLuint Upload(int width, int height, const std::vector<unsigned char> &pixels)
     return texture;
 }
 
-void Quad(GLuint texture, float x, float y, float width, float height, float u0 = 0, float v0 = 0,
-          float u1 = 1, float v1 = 1)
+void QuadBounds(GLuint texture, float x0, float y0, float x1, float y1, float u0 = 0, float v0 = 0,
+                float u1 = 1, float v1 = 1)
 {
+    if (x1 <= x0 || y1 <= y0)
+    {
+        return;
+    }
     renderqueue::Texture(texture);
     renderqueue::Begin(GL_QUADS);
     renderqueue::TexCoord(u0, v0);
-    renderqueue::Vertex(x, y);
+    renderqueue::Vertex(x0, y0);
     renderqueue::TexCoord(u1, v0);
-    renderqueue::Vertex(x + width, y);
+    renderqueue::Vertex(x1, y0);
     renderqueue::TexCoord(u1, v1);
-    renderqueue::Vertex(x + width, y + height);
+    renderqueue::Vertex(x1, y1);
     renderqueue::TexCoord(u0, v1);
-    renderqueue::Vertex(x, y + height);
+    renderqueue::Vertex(x0, y1);
     renderqueue::End();
     renderqueue::Texture(0);
+}
+
+void Quad(GLuint texture, float x, float y, float width, float height, float u0 = 0, float v0 = 0,
+          float u1 = 1, float v1 = 1)
+{
+    QuadBounds(texture, x, y, x + width, y + height, u0, v0, u1, v1);
+}
+
+// Dilate opaque RGB colors into adjacent fully-transparent (a == 0) texels so GL_LINEAR never
+// interpolates straight-alpha UI borders/textboxes toward dark (0, 0, 0) seams under display scaling.
+void BleedTransparentRgb(int width, int height, std::vector<unsigned char> &pixels)
+{
+    if (width <= 0 || height <= 0 || pixels.size() < size_t(width) * height * 4)
+    {
+        return;
+    }
+    std::vector<unsigned char> copy = pixels;
+    for (int y = 0; y < height; ++y)
+    {
+        for (int x = 0; x < width; ++x)
+        {
+            const size_t idx = (size_t(y) * width + x) * 4;
+            if (copy[idx + 3] != 0)
+            {
+                continue;
+            }
+            unsigned rSum = 0, gSum = 0, bSum = 0, count = 0;
+            for (int oy = -1; oy <= 1; ++oy)
+            {
+                const int ny = y + oy;
+                if (ny < 0 || ny >= height)
+                {
+                    continue;
+                }
+                for (int ox = -1; ox <= 1; ++ox)
+                {
+                    const int nx = x + ox;
+                    if (nx < 0 || nx >= width)
+                    {
+                        continue;
+                    }
+                    const size_t nIdx = (size_t(ny) * width + nx) * 4;
+                    if (copy[nIdx + 3] > 0)
+                    {
+                        rSum += copy[nIdx];
+                        gSum += copy[nIdx + 1];
+                        bSum += copy[nIdx + 2];
+                        ++count;
+                    }
+                }
+            }
+            if (count > 0)
+            {
+                pixels[idx] = static_cast<unsigned char>(rSum / count);
+                pixels[idx + 1] = static_cast<unsigned char>(gSum / count);
+                pixels[idx + 2] = static_cast<unsigned char>(bSum / count);
+            }
+        }
+    }
 }
 
 std::vector<unsigned char> CreateMaterialPixels(int type)
@@ -718,6 +781,7 @@ RenderAssets::RenderAssets() : m_data(new Data())
             AssetRequire(hash.Finish() == s.rgbaHash, "atlas sprite pixels " + entry.first);
             m_data->sprites.emplace(entry.first, Data::Sprite{s.x, s.y, s.width, s.height});
         }
+        BleedTransparentRgb(m_data->uiWidth, m_data->uiHeight, pixels);
         m_data->uiAtlas = Upload(m_data->uiWidth, m_data->uiHeight, pixels);
         m_data->backdropMetadata = AssetJson::Load(uiRoot / "Backdrop/backdrop_manifest.json");
         AssetRequire(m_data->backdropMetadata.At("schema").Text() == "erma.backdrop.layers" &&
@@ -1330,15 +1394,16 @@ void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf
                 glBindTexture(GL_TEXTURE_2D, 0);
                 profiling::Count(profiling::Counter::TextureUploadBytes, empty.size());
             }
-            if (m_data->textAtlasX + width + 2 > Data::kTextAtlasWidth)
+            if (m_data->textAtlasX + width + 4 > Data::kTextAtlasWidth)
             {
-                m_data->textAtlasX = 2;
-                m_data->textAtlasY += m_data->textShelfHeight + 2;
+                m_data->textAtlasX = 4;
+                m_data->textAtlasY += m_data->textShelfHeight + 4;
                 m_data->textShelfHeight = 0;
             }
-            if (m_data->textAtlasY + height + 2 > Data::kTextAtlasHeight)
+            if (m_data->textAtlasY + height + 4 > Data::kTextAtlasHeight)
             {
-                // Flush queued quads referencing the old atlas layout, then reset the shelf.
+                // Flush queued quads referencing the old atlas layout, then clear and reset the shelf
+                // so stale glyph texels never bleed thin lines onto newly placed text boxes.
                 renderqueue::Flush();
                 for (auto it = m_data->texts.begin(); it != m_data->texts.end();)
                 {
@@ -1352,13 +1417,18 @@ void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf
                         ++it;
                     }
                 }
-                m_data->textAtlasX = 2;
-                m_data->textAtlasY = 2;
+                std::vector<unsigned char> empty(size_t(Data::kTextAtlasWidth) * Data::kTextAtlasHeight * 4, 0);
+                glBindTexture(GL_TEXTURE_2D, m_data->textAtlas);
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, Data::kTextAtlasWidth, Data::kTextAtlasHeight, 0,
+                             GL_RGBA, GL_UNSIGNED_BYTE, empty.data());
+                glBindTexture(GL_TEXTURE_2D, 0);
+                m_data->textAtlasX = 4;
+                m_data->textAtlasY = 4;
                 m_data->textShelfHeight = 0;
             }
             const int ax = m_data->textAtlasX;
             const int ay = m_data->textAtlasY;
-            m_data->textAtlasX += width + 2;
+            m_data->textAtlasX += width + 4;
             m_data->textShelfHeight = (std::max)(m_data->textShelfHeight, height);
             {
                 profiling::Scope uploadTimer(profiling::Timer::TextureUpload);
@@ -1370,10 +1440,13 @@ void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf
             }
             entry.texture = m_data->textAtlas;
             entry.inAtlas = true;
-            entry.u0 = float(ax) / float(Data::kTextAtlasWidth);
-            entry.v0 = float(ay) / float(Data::kTextAtlasHeight);
-            entry.u1 = float(ax + width) / float(Data::kTextAtlasWidth);
-            entry.v1 = float(ay + height) / float(Data::kTextAtlasHeight);
+            // Half-texel UV inset prevents GL_LINEAR from sampling neighboring shelf margins.
+            const float uInset = width > 1 ? 0.5f : 0.f;
+            const float vInset = height > 1 ? 0.5f : 0.f;
+            entry.u0 = (float(ax) + uInset) / float(Data::kTextAtlasWidth);
+            entry.v0 = (float(ay) + vInset) / float(Data::kTextAtlasHeight);
+            entry.u1 = (float(ax + width) - uInset) / float(Data::kTextAtlasWidth);
+            entry.v1 = (float(ay + height) - vInset) / float(Data::kTextAtlasHeight);
         }
         else
         {
@@ -1402,8 +1475,9 @@ void RenderAssets::DrawUtf8Text(float x, float baselineY, const std::string &utf
     found->second.lastUse = ++m_data->clock;
     const auto &entry = found->second;
     const float invScale = 1.f / rasterScale;
-    Quad(entry.texture, x - (outlined ? 2.f : 0.f), baselineY - fontSize - (outlined ? 2.f : 0.f),
-         float(entry.width) * invScale, float(entry.height) * invScale, entry.u0, entry.v0, entry.u1, entry.v1);
+    Quad(entry.texture, std::round(x - (outlined ? 2.f : 0.f)),
+         std::round(baselineY - fontSize - (outlined ? 2.f : 0.f)), float(entry.width) * invScale,
+         float(entry.height) * invScale, entry.u0, entry.v0, entry.u1, entry.v1);
 }
 
 size_t RenderAssets::UiSpriteCount() const
@@ -1537,30 +1611,39 @@ bool RenderAssets::DrawUiSprite(const std::string &name, float x, float y, float
         return false;
     }
     const auto &s = found->second;
-    auto draw = [&](float dx, float dy, float dw, float dh, float sx, float sy, float sw, float sh) {
-        Quad(m_data->uiAtlas, dx, dy, dw, dh, (s.x + sx) / m_data->uiWidth, (s.y + sy) / m_data->uiHeight,
-             (s.x + sx + sw) / m_data->uiWidth, (s.y + sy + sh) / m_data->uiHeight);
+    const float invW = 1.f / float(m_data->uiWidth);
+    const float invH = 1.f / float(m_data->uiHeight);
+    auto drawBounds = [&](float x0, float y0, float x1, float y1, float sx0, float sy0, float sx1, float sy1) {
+        QuadBounds(m_data->uiAtlas, x0, y0, x1, y1, (float(s.x) + sx0) * invW, (float(s.y) + sy0) * invH,
+                   (float(s.x) + sx1) * invW, (float(s.y) + sy1) * invH);
     };
+    const float rx0 = std::round(x);
+    const float ry0 = std::round(y);
+    const float rx1 = std::round(x + width);
+    const float ry1 = std::round(y + height);
     if (!nineSlice)
     {
         fraction = (std::max)(0.f, (std::min)(1.f, fraction));
         if (fraction > 0)
         {
-            draw(x, y, width * fraction, height, .5f, .5f, (s.width - 1.f) * fraction, s.height - 1.f);
+            drawBounds(rx0, ry0, rx0 + (rx1 - rx0) * fraction, ry1, .5f, .5f,
+                       .5f + (float(s.width) - 1.f) * fraction, float(s.height) - .5f);
         }
         return true;
     }
-    float corner = (std::min)(12.f, (std::min)(width, height) * .5f);
-    const float dx[] = {x, x + corner, x + width - corner, x + width};
-    const float dy[] = {y, y + corner, y + height - corner, y + height};
-    const float sx[] = {.5f, 12.f, s.width - 12.f, s.width - .5f};
-    const float sy[] = {.5f, 12.f, s.height - 12.f, s.height - .5f};
+    const float rw = rx1 - rx0;
+    const float rh = ry1 - ry0;
+    const float corner = std::floor((std::min)(12.f, (std::min)(rw, rh) * .5f));
+    // Exact shared vertex coordinates across all 9 sub-quads eliminate 1px internal slice seams.
+    const float dx[] = {rx0, rx0 + corner, rx1 - corner, rx1};
+    const float dy[] = {ry0, ry0 + corner, ry1 - corner, ry1};
+    const float sx[] = {.5f, 12.f, float(s.width) - 12.f, float(s.width) - .5f};
+    const float sy[] = {.5f, 12.f, float(s.height) - 12.f, float(s.height) - .5f};
     for (int yy = 0; yy < 3; ++yy)
     {
         for (int xx = 0; xx < 3; ++xx)
         {
-            draw(dx[xx], dy[yy], dx[xx + 1] - dx[xx], dy[yy + 1] - dy[yy], sx[xx], sy[yy],
-                 sx[xx + 1] - sx[xx], sy[yy + 1] - sy[yy]);
+            drawBounds(dx[xx], dy[yy], dx[xx + 1], dy[yy + 1], sx[xx], sy[yy], sx[xx + 1], sy[yy + 1]);
         }
     }
     return true;

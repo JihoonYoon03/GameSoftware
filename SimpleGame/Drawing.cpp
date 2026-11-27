@@ -6,6 +6,7 @@
 #include "TransitLayout.h"
 #include "ResourceAssets.h"
 #pragma comment(lib, "opengl32.lib")
+#include "RenderAssets.h"
 #include "RenderCache.h"
 #include "RenderQueue.h"
 #include <algorithm>
@@ -287,15 +288,44 @@ void Drawing::DrawInteractionMarker(Vector2 worldPosition, const std::string &la
         return;
     }
     auto &world = Game::Get().GetState();
-    Vector2 screenPosition =
+    const Vector2 sp =
         WorldToScreen(worldPosition.x, worldPosition.y, 49 + std::sin(world.animationTimeSeconds * 2) * 3);
-    DrawPolygon({{screenPosition.x, screenPosition.y + 7},
-                 {screenPosition.x - 5, screenPosition.y},
-                 {screenPosition.x, screenPosition.y - 7},
-                 {screenPosition.x + 5, screenPosition.y}},
-                color);
-    DrawLabel(screenPosition.x + 9, screenPosition.y + 4,
-              CivicCombat::LandmarkDown(worldPosition) ? "의료 지원 중 / 잠시 후 복귀" : label, color);
+    std::string text = CivicCombat::LandmarkDown(worldPosition) ? "의료 지원 중 / 잠시 후 복귀" : label;
+    bool hasKeyE = false;
+    if (text.size() >= 3 && text.compare(text.size() - 3, 3, "[E]") == 0)
+    {
+        hasKeyE = true;
+        text.erase(text.size() - 3);
+        while (!text.empty() && text.back() == ' ')
+        {
+            text.pop_back();
+        }
+    }
+    // Sleek frosted pill badge + category accent stripe + separated [E] keycap chip (pre-UI-26 runtime upgrade).
+    const float textW = float(RenderAssets::MeasureUtf8(text, 14));
+    const float keyExtra = hasKeyE ? 24.f : 0.f;
+    const float pillX = std::round(sp.x + 8.f);
+    const float pillY = std::round(sp.y - 12.f);
+    const float pillW = std::round(14.f + textW + keyExtra);
+    const float pillH = 22.f;
+    DrawRectangle(pillX, pillY, pillW, pillH, {.024f, .052f, .072f, .84f});
+    DrawRectangle(pillX, pillY, pillW, 1.f, {color.r, color.g, color.b, .58f});
+    DrawRectangle(pillX, pillY + pillH - 1.f, pillW, 1.f, {color.r, color.g, color.b, .38f});
+    DrawRectangle(pillX, pillY + 2.f, 3.f, pillH - 4.f, {color.r, color.g, color.b, .95f});
+    // Crisp dark-framed anchor diamond beside the pill.
+    DrawPolygon({{sp.x, sp.y + 6.5f}, {sp.x - 5.f, sp.y}, {sp.x, sp.y - 6.5f}, {sp.x + 5.f, sp.y}},
+                {.02f, .05f, .07f, .92f});
+    DrawPolygon({{sp.x, sp.y + 4.5f}, {sp.x - 3.4f, sp.y}, {sp.x, sp.y - 4.5f}, {sp.x + 3.4f, sp.y}}, color);
+    DrawLabel(pillX + 7.f, pillY + 15.f, text, {.92f, .96f, .97f});
+    if (hasKeyE)
+    {
+        const float kx = pillX + pillW - 21.f;
+        const float ky = pillY + 3.f;
+        DrawRectangle(kx, ky, 17.f, 16.f, {color.r * .25f, color.g * .30f, color.b * .32f, .94f});
+        DrawRectangle(kx, ky, 17.f, 1.f, {color.r, color.g, color.b, .85f});
+        DrawRectangle(kx, ky + 15.f, 17.f, 1.f, {color.r, color.g, color.b, .85f});
+        DrawLabel(kx + 4.5f, ky + 12.f, "E", color);
+    }
 }
 
 // ============================================================================

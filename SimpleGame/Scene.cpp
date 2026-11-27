@@ -3824,20 +3824,31 @@ void DrawSurfaceFrontier(const world::SurfaceSession &session)
     }
     for (size_t i = 0; i < state.survivors.size(); ++i)
     {
-        const bool injuredCover = !state.escortStarted && !state.convoyRescued && (i == 1 || i == 3);
-        if (injuredCover)
+        const bool barricadeInjured = !state.escortStarted && !state.convoyRescued && (i == 0 || i == 1);
+        const bool pocketTrapped =
+            !state.escortStarted && !state.convoyRescued && i >= 2 && state.surveyMarkers <= int(i - 2);
+        if (barricadeInjured || pocketTrapped)
         {
             if (auto point = surface.Project(state.survivors[i].position))
             {
                 const float z = height(state.survivors[i].position);
                 renderqueue::PushMatrix();
                 renderqueue::Translate(0, -z * WorldCamera::IsoZScale(), z * (1296.f / 44));
+                if (pocketTrapped)
+                {
+                    const float pulse = 0.75f + 0.25f * std::sin(Game::Get().GetState().animationTimeSeconds * 5.f + float(i));
+                    const auto ringScr = Drawing::WorldToScreen(point->x, point->y, 6.f);
+                    Drawing::DrawEllipse(ringScr.x, ringScr.y, 28.f * pulse, 14.f * pulse, {1.f, .32f, .24f, .30f});
+                    Drawing::DrawGlow(ringScr, 20.f * pulse, {1.f, .46f, .22f, .48f});
+                }
                 Drawing::DrawPerson(*point, {.68f, .52f, .44f}, false, models::CharacterType::Explorer, false,
                                     surface.Yaw(state.survivors[i].facing.yaw),
                                     i % 2 ? models::Gender::Female : models::Gender::Male, models::HairStyle(i % 6),
                                     false, 0.f, true);
-                const auto at = Drawing::WorldToScreen(point->x, point->y, 44.f);
-                Drawing::DrawLabel(at.x - 36.f, at.y, "부상 생존자 (엄호 필요)", {1.f, .56f, .38f});
+                const auto at = Drawing::WorldToScreen(point->x, point->y, 46.f);
+                Drawing::DrawLabel(at.x - 40.f, at.y,
+                                   pocketTrapped ? "고립 대원 (구출 필요)" : "부상 대원 (엄호 필요)",
+                                   pocketTrapped ? ColorRGBA(1.f, .72f, .34f) : ColorRGBA(1.f, .52f, .38f));
                 renderqueue::PopMatrix();
             }
         }
@@ -3887,10 +3898,12 @@ void DrawSurfaceFrontier(const world::SurfaceSession &session)
         {
             const float hover = 16.f + std::sin(threat.patrolPhase * 2.f) * 4.f;
             const auto groundScr = Drawing::WorldToScreen(p->x, p->y, 0.f);
-            const auto scr = Drawing::WorldToScreen(p->x, p->y, hover);
             Drawing::DrawSoftShadow(groundScr, 16.f, 7.f, .45f);
-            Drawing::DrawModel3D(models::ModelLibrary::Get().creatures[0], scr, {.85f, .85f, .85f},
-                                 {0.f, threat.patrolPhase, 0.f}, (p->x + p->y) * 36.f,
+            models::Transform3D droneTransform;
+            droneTransform.position.z = hover / WorldCamera::IsoZScale();
+            droneTransform.yaw = threat.patrolPhase;
+            Drawing::DrawModel3D(models::ModelLibrary::Get().creatures[0], groundScr, {.85f, .85f, .85f},
+                                 droneTransform, (p->x + p->y) * 36.f,
                                  {{.22f, .26f, .30f, 1}, {.46f, .52f, .58f, 1}, {1.f, .58f, .18f, 1}});
             const auto lbl = Drawing::WorldToScreen(p->x, p->y, 78.f);
             Drawing::DrawLabel(lbl.x - 42.f, lbl.y, "오작동 정비 드론", {1.f, .76f, .36f});
@@ -3929,8 +3942,8 @@ void DrawSurfaceFrontier(const world::SurfaceSession &session)
         {
             glow(wreck, 26.f, 22.f * pulse, {1.f, .42f, .16f, .62f});
         }
-        // High-voltage electrical rift leak zones across the collapsed canal blocking direct escape.
-        constexpr Vector2 kCanalHazards[3] = {{28.5f, 15.5f}, {31.5f, 15.5f}, {34.0f, 15.5f}};
+        // High-voltage electrical rift leak zones along the collapsed L-shaped fault gorge.
+        constexpr Vector2 kCanalHazards[3] = {{26.5f, 10.5f}, {30.5f, 15.5f}, {36.5f, 15.5f}};
         for (int h = 0; h < 3; ++h)
         {
             if (auto hp = surface.Project(kCanalHazards[h]))
@@ -3941,7 +3954,7 @@ void DrawSurfaceFrontier(const world::SurfaceSession &session)
                 Drawing::DrawGlow(scr, 28.f * pulse, {1.f, .28f, .44f, .55f});
                 if (h == 1)
                 {
-                    Drawing::DrawLabel(scr.x - 42.f, scr.y - 24.f, "고압 누전 위험 구역", {1.f, .46f, .52f});
+                    Drawing::DrawLabel(scr.x - 42.f, scr.y - 24.f, "고압 누전 단층", {1.f, .46f, .52f});
                 }
             }
         }
@@ -3955,7 +3968,7 @@ void DrawSurfaceFrontier(const world::SurfaceSession &session)
                 Drawing::DrawLine(base, top, {1.f, .38f, .20f, .52f * pulse}, 6.f);
                 Drawing::DrawLine(base, top, {1.f, .86f, .46f, .82f * pulse}, 2.f);
                 Drawing::DrawGlow(top, 26.f * pulse, {1.f, .44f, .22f, .85f});
-                Drawing::DrawLabel(top.x - 44.f, top.y - 16.f, "운송대 구조 조명탄", {1.f, .78f, .38f});
+                Drawing::DrawLabel(top.x - 48.f, top.y - 16.f, "협곡 운송대 구조 신호", {1.f, .78f, .38f});
             }
         }
     }
@@ -3975,15 +3988,16 @@ void DrawSurfaceFrontier(const world::SurfaceSession &session)
             Drawing::DrawLine(a, b, {.46f, .90f, 1.f, .72f}, 2.5f);
         }
     }
-    constexpr Vector2 markers[] = {{36.5f, 13.5f}, {36.5f, 18.5f}, {29.5f, 18.5f}};
+    constexpr Vector2 markers[] = {{38.5f, 6.5f}, {42.5f, 13.0f}, {37.5f, 19.5f}};
     for (unsigned i = 0; i < 3; ++i)
     {
-        glow(markers[i], 34, 12,
-             state.surveyMarkers > int(i) ? ColorRGBA(.3f, 1, .8f) : ColorRGBA(1, .6f, .25f, .5f));
+        glow(markers[i], 34, 14,
+             state.surveyMarkers > int(i) ? ColorRGBA(.3f, 1, .8f) : ColorRGBA(1, .38f, .22f, .68f));
     }
-    // Render glowing triangulation corridor between surveyed tripods toward the safe camp.
-    constexpr Vector2 corridor[] = {{30.8f, 10.8f}, {36.5f, 13.5f}, {36.5f, 18.5f}, {29.5f, 18.5f}, {24.5f, 20.5f}};
-    const int activeSegments = state.surveyMarkers >= 3 ? 4 : state.surveyMarkers;
+    // Render glowing canyon extraction corridor between cleared rescue pockets toward the safe camp.
+    constexpr Vector2 corridor[] = {
+        {30.8f, 10.8f}, {38.5f, 6.5f}, {42.5f, 13.0f}, {42.5f, 18.5f}, {37.5f, 19.5f}, {24.5f, 20.5f}};
+    const int activeSegments = state.surveyMarkers >= 3 ? 5 : state.surveyMarkers;
     for (int seg = 0; seg < activeSegments; ++seg)
     {
         auto p0 = surface.Project(corridor[seg]);

@@ -6906,6 +6906,46 @@ void TestPart2ContentAndUiOverhaul()
     assert(arcState.bullets.size() == 1 && arcState.tracers.empty());
     arc.Update(0.05f);
     assert(!arcState.tracers.empty());
+
+    // 8) Part 3: Wrist-projected 3D globe map (zoom-scaled LMB drag rotate, RMB destination pin, G space map).
+    g.EnterTestStage(TestStage::BikeUnlocked);
+    w.isBikeMounted = false;
+    w.mapVisible = false;
+    g.KeyDown('m', 0, 0);
+    g.KeyUp('m', 0, 0);
+    assert(w.mapVisible && w.mapHologramProgress < 0.1f && !w.mapSpaceMode);
+    for (int i = 0; i < 10; ++i)
+    {
+        g.Update(0.05f);
+    }
+    assert(w.mapHologramProgress >= 0.99f);
+    const double planetR = g.Surface()->Planet().radiusMeters;
+    // Zoomed-in LMB drag rotation distance vs zoomed-out ('p') full-globe LMB drag rotation distance.
+    w.planetMapRange = 1000.f;
+    const auto centerBeforeNear = w.planetGlobeCenter;
+    const Vector2 dragStart{488.f + WorldCamera::CenterOffsetX(), 400.f};
+    assert(MapHud::HandlePointer(GLFW_MOUSE_BUTTON_LEFT, true, dragStart));
+    MapHud::HandleMotion({dragStart.x + 60.f, dragStart.y});
+    assert(MapHud::HandlePointer(GLFW_MOUSE_BUTTON_LEFT, false, {dragStart.x + 60.f, dragStart.y}));
+    const double nearDragMeters = world::SurfaceGeometry::Distance(planetR, centerBeforeNear, w.planetGlobeCenter);
+    assert(nearDragMeters > 50.0 && nearDragMeters < 5000.0);
+
+    assert(MapHud::HandleMapKey('p'));
+    const auto centerBeforeFar = w.planetGlobeCenter;
+    assert(MapHud::HandlePointer(GLFW_MOUSE_BUTTON_LEFT, true, dragStart));
+    MapHud::HandleMotion({dragStart.x + 60.f, dragStart.y});
+    assert(MapHud::HandlePointer(GLFW_MOUSE_BUTTON_LEFT, false, {dragStart.x + 60.f, dragStart.y}));
+    const double farDragMeters = world::SurfaceGeometry::Distance(planetR, centerBeforeFar, w.planetGlobeCenter);
+    assert(farDragMeters > nearDragMeters * 20.0);
+
+    // RMB sets destination on the 3D planet globe.
+    w.planetDestination.reset();
+    assert(MapHud::HandlePointer(GLFW_MOUSE_BUTTON_RIGHT, true, {dragStart.x + 40.f, dragStart.y - 30.f}));
+    assert(w.planetDestination.has_value());
+
+    // [G] toggles Space / Star System map view.
+    assert(MapHud::HandleMapKey('g') && w.mapSpaceMode);
+    assert(MapHud::HandleMapKey('g') && !w.mapSpaceMode);
     g.Reset();
 }
 

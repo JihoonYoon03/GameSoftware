@@ -1788,6 +1788,26 @@ CQ-07을 A 이동·경로 안정성, B 감지·기억·역할별 판단, C 동�
   - **관문 N-0 코어 내부 이중 발사체 버그 수정 ([StoryArc.cpp](SimpleGame/StoryArc.cpp), [Scene.cpp](SimpleGame/Scene.cpp)):** 발사 순간 생성되던 고정 길이 짧은 광선(`2.2~3.5u`)과 `StoryOperationScene::Draw`의 `DrawEllipse` 원형 투사체 중복 렌더링을 제거하고, 광산 전투와 동일한 프레임별 실제 이동 궤적 스윕 트레이서(`prev -> next`)로 통일했다.
   - **검증:** `SimpleGame`·`GameplayTests`·`CivicTests`·`RenderingTests --r4-only --glfw`·`Test-SourceEncoding.ps1`(176파일)·`git diff --check` 전부 통과(공용차 동승 주행/조향 및 코어 내부 단일 스윕 트레이서 회귀 테스트 추가).
 
+#### 70. 빛나는 개척지 카인 구조 미션 전면 재제작 · 드론 오프셋 수정 · 파트 3 (10~18번) 완료 (2026-11-27 · 구현 완료)
+
+- **오작동 정비 드론 메쉬 위치 불일치 수정 ([Scene.cpp](SimpleGame/Scene.cpp)):**
+  - `Drawing::DrawModel3D`의 4번째 인자 `models::Transform3D`에 `{0.f, threat.patrolPhase, 0.f}`를 넘겨 첫 멤버 `position.y`에 단조 증가하는 `patrolPhase`가 들어가 메쉬가 매 프레임 대각선으로 멀어지던 버그를 `Transform3D` 명시적 초기화(`position.z = hover / IsoZScale()`, `yaw = threat.patrolPhase`, 기준점 `groundScr`)로 수정했다.
+- **빛나는 개척지 카인 대면·인원 구조 미션 전면 재제작 ([Level.cpp](SimpleGame/Level.cpp), [Scene.cpp](SimpleGame/Scene.cpp)):**
+  - 평지 한곳에 모여 있던 기존 구조를 폐기하고, 북동쪽 운송대 구역을 서쪽·남쪽에서 감싸는 **L자형 붕괴 단층 협곡(고압 누전 방전)**과 야전 방호 바리케이드(`FieldShelter`·`CargoContainer` 잔해)를 조성해 북쪽 능선·동쪽 교두보로만 진입/돌파 가능한 고립 지형을 만들었다.
+  - 생존자 5명을 **카인 방어선 뒤 부상 대원 2명**과 **협곡 3개 고립 구역(북동 잔해·동쪽 교두보·남동 협곡 중계구)에 흩어져 갇힌 대원 3명**으로 재배치하고, 2웨이브 방어전 → 구역별 맞춤 미니게임(`CircuitBalance`·`ExtractionTiming`·`SignalTuner`) + 경비 약탈자 격퇴로 각 대원 실시간 복귀 → 동쪽 교두보 2단계 매복 돌파 호위로 흐름을 완전히 재구성했다(저장 스키마 및 `TestChapterOne` 6순열 호환 유지).
+- **10·11·12. 손목 투사 3D 행성 구체 맵 · 우주 성계 지도 · 클러스터 서브퀘스트 필터 ([Game.h](SimpleGame/Game.h), [Game.cpp](SimpleGame/Game.cpp), [Hud.h](SimpleGame/Hud.h), [Hud.cpp](SimpleGame/Hud.cpp)):**
+  - **손목 투사 홀로그램:** `M`으로 확장 지도를 열 때 플레이어 오른쪽 손목 화면 좌표에서 시안 광원 링과 홀로그램 투사 광선이 뻗어 맵 프레임이 펼쳐지도록 구현했다(`mapHologramProgress`).
+  - **3D 회전 행성 구체(`GlobeView`):** 2D 평면 지도를 해석적 구면 투영/역투영 기반 3D 구체(64×64 바이옴·태양광 음영·대기 프레넬 림·곡면 경위선 캐시)로 전환했다. **좌클릭 드래그**로 3D 구체를 회전하며 확대/축소율(`halfAngle`)에 비례해 회전 속도가 자동 조정되고, **우클릭**으로 목적지를 지정/해제한다.
+  - **우주 성계 지도 (`[G]` 전환):** `에르마 주계열성`과 4개 천체(`에르마`·`세이라`·`오르엔`·`네레우스 외곽 신호`)의 3D 틸트 궤도·상대 위치·항로 호(우클릭)·정보 카드 및 탐사 행성 전환을 구현했다.
+  - **랜덤 서브퀘스트 클러스터 필터링:** 미수락 주황 랜덤 서브퀘스트(`Dormant`)는 플레이어가 위치한 현재 구역 클러스터(`NearestClusterIndex`) 범위까지만 표시하고 원거리 타 클러스터는 숨겼다.
+- **13. UI 텍스트박스 경계면 선(Seam) 아티팩트 수정 ([RenderAssets.cpp](SimpleGame/RenderAssets.cpp), [Hud.cpp](SimpleGame/Hud.cpp)):**
+  - `ui_complete.png` 업로드 전 투명 픽셀 RGB 블리드(`BleedTransparentRgb`), 9-슬라이스 공유 정점 좌표(`QuadBounds`) 정수 스냅, `HudShift`·`HudCard` 정수 스냅 및 코너 1px 중복 제거, 텍스트 아틀라스 리셋 시 0 초기화 + 4px 패딩 + 0.5px UV 인셋을 적용했다.
+- **14·15·16·17. UI·건물·프롭·텍스처(`< 100 MB`) 리소스 제작 요청서 반영 ([UI_REQUIREMENTS.md](Resource/UI/UI_REQUIREMENTS.md), [RENDER_RESOURCE_REQUEST.md](Resource/RENDER_RESOURCE_REQUEST.md), [Drawing.cpp](SimpleGame/Drawing.cpp)):**
+  - `UI-26`~`UI-30`(월드 상호작용 유리 필·독립 `[E]` 키캡·6종 기능 마커·지면 링, 3D 구체/우주 맵, 시각 카드/미니게임 부품, 9-슬라이스 블리드 규칙) 및 `Drawing::DrawInteractionMarker` 사전 런타임 폴리싱을 반영했다.
+  - `RENDER_RESOURCE_REQUEST.md` §7.5~7.6에 컨셉 부적합 구형 건물(Gen 1/1.5) 전면 교체, 신규 12종 콜로니 건물 아키타입, 실내/거리/개척지 프롭, 그리고 **단일 텍스처 1장당 절대 `100 MB` 미만** 상한의 3D 행성 구체·우주 맵·PBR 텍스처 규격을 등록했다.
+- **18. 미사용 리소스 파일 정리:** 참조가 `0`건인 폐기 레거시 에셋 **647개 파일(`96.82 MB`)**을 삭제했다(`Export/Transit/` 폐기 도로 611개, `Export/Environment/` 미사용 15개, `NPC_Guard_Helmet.glb`, `MaterialPilot/*.gltf|*.bin` 18개, 구형 `UI/Export/Atlases/icons.*` 2개).
+- **검증:** `SimpleGame` + 5개 테스트 타깃 Release x64 빌드, `ResourceAssetsTests`, `CivicTests`, `MapHudTests`, `GameplayTests`(신규 3D 구체 회전·줌 연동 속도·우클릭 목적지·`G` 우주 지도 회귀 포함), `RenderingTests --r4-only --glfw`(RTX 5080 GPU 캡처 `part3-3d-globe-map.png`, `part3-space-system-map.png`, `part2-home-storage-cards.png` 육안 검수 완료), `Test-SourceEncoding.ps1`(176파일), `git diff --check` 전부 통과.
+
 ### 전체 구조 검토와 반복 비용 리팩토링 — 2026-10-28
 
 작업 브랜치 `iss02_Refactoring`. 전체 게임 상태·레벨·도시/주민/교통·렌더 패스·리소스·모니터 경계를

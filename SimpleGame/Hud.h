@@ -70,6 +70,9 @@ class MapHud
     static void DrawMinimap();
     static void DrawFullMap();
     static bool HandleClick(Vector2 canvasPoint, bool clear = false);
+    static bool HandlePointer(int button, bool down, Vector2 canvasPoint);
+    static void HandleMotion(Vector2 canvasPoint);
+    static void OnMapOpened();
     // Shared by rendering and pointer input, so selection survives letterboxed windows.
     static Vector2 WorldToMap(Vector2 worldPoint, bool fullMap);
     static Vector2 MapToWorld(Vector2 canvasPoint, bool fullMap);

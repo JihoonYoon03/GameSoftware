@@ -1138,6 +1138,47 @@ void TestR4PbrAndSkinSharing(const std::filesystem::path *output = nullptr)
         Save(*output / "part2-minigame-tuner.bmp");
         FieldMinigame::Reset();
 
+        // 17) Part 3 GPU capture: Wrist-projected 3D Rotating Planet Globe Map (full globe view).
+        w.mapVisible = true;
+        w.planetMapSurface = true;
+        w.mapSpaceMode = false;
+        w.mapHologramProgress = 1.f;
+        MapHud::HandleMapKey('p');
+        glViewport(0, 0, kCanvasWidth, kCanvasHeight);
+        glClearColor(0.f, 0.f, 0.f, 1.f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        renderer.BeginScene(1280, 720);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, WorldCamera::LogicalWidth(), kCanvasHeight, 0, -65536, 65536);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        game::SceneManager::Get(game::SceneKind::Planet).Draw();
+        renderer.EndScene(0.f);
+        Hud::Render();
+        assert(glGetError() == GL_NO_ERROR);
+        Save(*output / "part3-3d-globe-map.bmp");
+
+        // 18) Part 3 GPU capture: Space / Star System Map view ([G] toggle).
+        MapHud::HandleMapKey('g');
+        w.mapTargetPlanetId = "orren";
+        glViewport(0, 0, kCanvasWidth, kCanvasHeight);
+        glClearColor(0.f, 0.f, 0.f, 1.f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        renderer.BeginScene(1280, 720);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, WorldCamera::LogicalWidth(), kCanvasHeight, 0, -65536, 65536);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        game::SceneManager::Get(game::SceneKind::Planet).Draw();
+        renderer.EndScene(0.f);
+        Hud::Render();
+        assert(glGetError() == GL_NO_ERROR);
+        Save(*output / "part3-space-system-map.bmp");
+        w.mapVisible = false;
+        w.mapSpaceMode = false;
+
         w.viewportWidth = kCanvasWidth;
         w.viewportHeight = kCanvasHeight;
         Game::Get().Reset();

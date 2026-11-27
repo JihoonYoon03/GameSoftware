@@ -72,16 +72,24 @@ void Panel(float x, float y, float w, float h)
 void HudCard(float x, float y, float w, float h, ColorRGBA accent = {.36f, .86f, .82f}, bool leftStripe = true)
 {
     const auto &alpha = Game::Get().GetState().uiPreferences;
+    const float rx = std::round(x);
+    const float ry = std::round(y);
+    const float rw = std::round(w);
+    const float rh = std::round(h);
     const float bgA = .74f * alpha.background;
     const float rimA = .42f * alpha.border;
-    Drawing::DrawRectangle(x, y, w, h, {.028f, .058f, .076f, bgA});
-    Drawing::DrawRectangle(x, y, w, 1.f, {.38f, .66f, .68f, rimA});
-    Drawing::DrawRectangle(x, y + h - 1.f, w, 1.f, {.24f, .44f, .48f, rimA * .85f});
-    Drawing::DrawRectangle(x, y, 1.f, h, {.30f, .54f, .58f, rimA * .85f});
-    Drawing::DrawRectangle(x + w - 1.f, y, 1.f, h, {.30f, .54f, .58f, rimA * .85f});
+    Drawing::DrawRectangle(rx, ry, rw, rh, {.028f, .058f, .076f, bgA});
+    Drawing::DrawRectangle(rx, ry, rw, 1.f, {.38f, .66f, .68f, rimA});
+    Drawing::DrawRectangle(rx, ry + rh - 1.f, rw, 1.f, {.24f, .44f, .48f, rimA * .85f});
+    // Non-overlapping vertical rims prevent double-blended corner artifacts.
+    if (rh > 2.f)
+    {
+        Drawing::DrawRectangle(rx, ry + 1.f, 1.f, rh - 2.f, {.30f, .54f, .58f, rimA * .85f});
+        Drawing::DrawRectangle(rx + rw - 1.f, ry + 1.f, 1.f, rh - 2.f, {.30f, .54f, .58f, rimA * .85f});
+    }
     if (leftStripe)
     {
-        Drawing::DrawRectangle(x, y + 4.f, 3.f, (std::max)(4.f, h - 8.f),
+        Drawing::DrawRectangle(rx + 1.f, ry + 4.f, 3.f, (std::max)(4.f, rh - 8.f),
                                {accent.r, accent.g, accent.b, .92f * alpha.border});
     }
     renderqueue::Opacity(alpha.content);
@@ -91,7 +99,7 @@ struct HudShift
     explicit HudShift(float dx)
     {
         renderqueue::PushMatrix();
-        renderqueue::Translate(dx, 0, 0);
+        renderqueue::Translate(std::round(dx), 0, 0);
     }
     ~HudShift()
     {
@@ -1020,6 +1028,418 @@ std::vector<UiControl> RelayControls()
     }
     return controls;
 }
+
+// ============================================================================
+// Part 3 (10-12): 3D Rotating Planet Globe, Wrist Hologram & Space System Map
+// ============================================================================
+constexpr Vector2 kGlobeCenter = {488.f, 400.f};
+constexpr float kGlobeRadius = 244.f;
+constexpr Vector2 kSpaceCenter = {442.f, 396.f};
+
+world::SurfacePoint CurrentGlobeCenter(const world::SurfaceSession &session)
+{
+    const auto &w = Game::Get().GetState();
+    return w.planetGlobeInitialized ? w.planetGlobeCenter : session.Pose().origin;
+}
+
+struct GlobeView
+{
+    Vector2 center = kGlobeCenter;
+    float radius = kGlobeRadius;
+    double planetRadius = 1200000.;
+    double halfAngle = world::SurfaceGeometry::Pi * 0.5;
+    double sinHalf = 1.0;
+    world::Vector3d east = {0, 1, 0};
+    world::Vector3d north = {0, 0, 1};
+    world::Vector3d forward = {1, 0, 0};
+
+    static GlobeView Build(const world::SurfaceSession &session)
+    {
+        const auto &w = Game::Get().GetState();
+        GlobeView g;
+        g.planetRadius = session.Planet().radiusMeters;
+        const auto focus = CurrentGlobeCenter(session);
+        g.forward = world::SurfaceGeometry::Unit(focus.normal);
+        const world::Vector3d upRef =
+            std::fabs(g.forward.z) < 0.995 ? world::Vector3d{0, 0, 1} : world::Vector3d{0, 1, 0};
+        g.east = world::SurfaceGeometry::Unit(world::SurfaceGeometry::Cross(upRef, g.forward));
+        g.north = world::SurfaceGeometry::Cross(g.forward, g.east);
+        g.halfAngle = Game::Clamp(double(w.planetMapRange) / g.planetRadius, 64.0 / g.planetRadius,
+                                  world::SurfaceGeometry::Pi * 0.5);
+        g.sinHalf = std::sin(g.halfAngle);
+        return g;
+    }
+
+    Vector2 Project(const world::SurfacePoint &pt, bool *frontHemisphere = nullptr) const
+    {
+        const double x = world::SurfaceGeometry::Dot(pt.normal, east);
+        const double y = world::SurfaceGeometry::Dot(pt.normal, north);
+        const double z = world::SurfaceGeometry::Dot(pt.normal, forward);
+        if (frontHemisphere)
+        {
+            *frontHemisphere = z > 0.0;
+        }
+        if (z <= 0.0)
+        {
+            return {center.x + 9999.f, center.y + 9999.f};
+        }
+        return {center.x + float((x / sinHalf) * double(radius)),
+                center.y - float((y / sinHalf) * double(radius))};
+    }
+
+    std::optional<world::SurfacePoint> Unproject(Vector2 canvas) const
+    {
+        const double dx = double(canvas.x - center.x) / double(radius);
+        const double dy = -double(canvas.y - center.y) / double(radius);
+        if (dx * dx + dy * dy > 1.0)
+        {
+            return std::nullopt;
+        }
+        const double u = dx * sinHalf;
+        const double v = dy * sinHalf;
+        const double r2 = u * u + v * v;
+        if (r2 > 1.0)
+        {
+            return std::nullopt;
+        }
+        const double z = std::sqrt((std::max)(0.0, 1.0 - r2));
+        const world::Vector3d dir = world::SurfaceGeometry::Unit(
+            {east.x * u + north.x * v + forward.x * z, east.y * u + north.y * v + forward.y * z,
+             east.z * u + north.z * v + forward.z * z});
+        return world::SurfacePoint{dir, 0.0};
+    }
+
+    world::SurfacePoint RotateByPixels(Vector2 deltaPx) const
+    {
+        // Rotation speed scales naturally with current zoom angular half-span.
+        const double dAng = (halfAngle / double(radius)) * 1.15;
+        const double dx = -double(deltaPx.x) * dAng;
+        const double dy = double(deltaPx.y) * dAng;
+        const world::Vector3d dir = world::SurfaceGeometry::Unit(
+            {forward.x + east.x * dx + north.x * dy, forward.y + east.y * dx + north.y * dy,
+             forward.z + east.z * dx + north.z * dy});
+        return world::SurfacePoint{dir, 0.0};
+    }
+
+    bool Contains(Vector2 canvas, float inset = 0.f) const
+    {
+        return Game::Distance(canvas, center) <= radius - inset;
+    }
+
+    float PixelsPerMeter() const
+    {
+        return float(double(radius) / (std::max)(1.0, planetRadius * sinHalf));
+    }
+};
+
+struct SpaceBody
+{
+    const char *id;
+    const char *name;
+    const char *systemLabel;
+    const char *summary;
+    float radiusKm;
+    float orbitAu;
+    float orbitPx;
+    float baseAngle;
+    float bodyRadius;
+    ColorRGBA baseColor;
+    ColorRGBA rimColor;
+    bool hasRing;
+    bool playable;
+};
+
+const SpaceBody kSpaceBodies[] = {
+    {"erma", "에르마 (Erma)", "에르마 주계열성계", "개척 거점 · 온대 해양과 도시 클러스터", 1200.f, 1.00f,
+     96.f, 0.48f, 17.f, {.20f, .64f, .72f}, {.46f, .96f, .90f}, false, true},
+    {"seira", "세이라 (Seira)", "외곽 탐사 성계", "저중력 위성형 · 암석 고원과 황토 협곡", 434.f, 1.58f,
+     158.f, 2.38f, 12.f, {.76f, .58f, .36f}, {.98f, .82f, .54f}, false, true},
+    {"orren", "오르엔 (Orren)", "외곽 탐사 성계", "고중력 대형 행성 · 고리대·빙하/사막", 1750.f, 2.28f,
+     222.f, 4.18f, 21.f, {.46f, .38f, .74f}, {.78f, .62f, .98f}, true, true},
+    {"nereus", "네레우스 (Nereus)", "외곽 도약 성계", "관문 N-0 잔류 신호가 지목한 미개척 성계", 0.f, 3.40f,
+     282.f, 5.45f, 11.f, {.34f, .80f, 1.f}, {.66f, .98f, 1.f}, false, false}};
+
+Vector2 ProjectSpaceOrbit(float orbitPx, float angle, float yaw, float pitch, float zoom)
+{
+    const float a = angle + yaw;
+    const float sx = std::cos(a) * orbitPx * zoom;
+    const float sy = std::sin(a) * orbitPx * zoom * std::sin(pitch);
+    return {kSpaceCenter.x + sx, kSpaceCenter.y + sy};
+}
+
+UiControl SpaceModeToggleControl(bool spaceMode)
+{
+    return {UiAction::Continue, {992.f, 92.f}, {200.f, 40.f},
+            spaceMode ? "행성 구체 [G]" : "우주 지도 [G]", true, 0};
+}
+
+UiControl ClearDestinationControl(bool hasDestination)
+{
+    return {UiAction::Back, {820.f, 92.f}, {162.f, 40.f}, "목적지 해제", hasDestination, 0};
+}
+
+Vector2 PlayerWristHudPoint()
+{
+    const auto &w = Game::Get().GetState();
+    const auto *session = Game::Get().Surface();
+    if (w.surfaceExploration && session && session->Ready() && !Game::Get().IsSurfaceMine() && !w.IsInsideAny())
+    {
+        const float elev = float(session->Local(session->Pose().origin).z / 2.0);
+        const Vector2 base =
+            Drawing::WorldToScreen(w.playerPosition.x, w.playerPosition.y, elev * WorldCamera::IsoZScale());
+        const float s = models::WorldScale::characterScale;
+        models::Transform3D rot;
+        rot.yaw = w.facingYaw;
+        const auto p = rot.Apply({0.24f * s, -0.16f * s, 0.72f * s});
+        const Vector2 worldCanvas{base.x + (p.x - p.y) * 36.f,
+                                  base.y + (p.x + p.y) * WorldCamera::IsoYScale() - p.z * WorldCamera::IsoZScale()};
+        Vector2 hudPt = WorldCamera::ToViewport(worldCanvas);
+        hudPt.x -= WorldCamera::CenterOffsetX();
+        return {Game::Clamp(hudPt.x, 40.f, 1240.f), Game::Clamp(hudPt.y, 40.f, 770.f)};
+    }
+    return {150.f, 756.f};
+}
+
+void DrawWristHologramEmitterOverlay(float progress)
+{
+    const float t = Game::Clamp(progress, 0.02f, 1.f);
+    const float ease = 1.f - (1.f - t) * (1.f - t) * (1.f - t);
+    const Vector2 wrist = PlayerWristHudPoint();
+    // Luminous wrist emitter ring + translucent cyan projection rays feeding into the floating map panel.
+    const Vector2 anchorL{64.f, 724.f};
+    const Vector2 anchorR{320.f, 724.f};
+    Drawing::DrawPolygon({wrist, anchorL, anchorR}, {.22f, .92f, .98f, 0.14f * ease});
+    Drawing::DrawLine(wrist, anchorL, {.44f, .98f, 1.f, 0.48f * ease}, 1.5f);
+    Drawing::DrawLine(wrist, anchorR, {.44f, .98f, 1.f, 0.34f * ease}, 1.2f);
+    Drawing::DrawGlow(wrist, 24.f * ease, {.30f, .96f, 1.f, 0.72f * ease});
+    Drawing::DrawEllipse(wrist.x, wrist.y, 6.f * ease, 6.f * ease, {.78f, 1.f, 1.f, 0.92f * ease});
+}
+
+int NearestClusterIndex(const world::GeneratedPlanet &planet, const world::SurfacePoint &point)
+{
+    if (planet.clusters.empty())
+    {
+        return 0;
+    }
+    int bestIdx = 0;
+    double bestDot = -2.0;
+    for (size_t i = 0; i < planet.clusters.size(); ++i)
+    {
+        const double d = world::SurfaceGeometry::Dot(planet.clusters[i].normal, point.normal);
+        if (d > bestDot)
+        {
+            bestDot = d;
+            bestIdx = int(i);
+        }
+    }
+    return bestIdx;
+}
+
+ColorRGBA BiomeGlobeColor(world::Biome biome, float elevationRatio)
+{
+    switch (biome)
+    {
+    case world::Biome::Ocean:
+        return {.05f, .17f, .27f};
+    case world::Biome::Coast:
+        return {.10f, .30f, .36f};
+    case world::Biome::Grassland:
+        return {.17f, .39f, .27f};
+    case world::Biome::Forest:
+        return {.11f, .30f, .21f};
+    case world::Biome::Desert:
+        return {.48f, .39f, .24f};
+    case world::Biome::Rocky:
+        return {.32f, .33f, .35f};
+    case world::Biome::Alpine:
+        return {.44f + elevationRatio * .12f, .47f + elevationRatio * .12f, .50f + elevationRatio * .12f};
+    case world::Biome::Ice:
+        return {.66f, .78f, .84f};
+    default:
+        return {.16f, .30f, .31f};
+    }
+}
+
+void DrawSpaceSystemMap(const world::SurfaceSession &session)
+{
+    const auto &w = Game::Get().GetState();
+    const std::string currentPlanetId = session.Planet().id;
+    const std::string selectedId = w.mapSelectedPlanetId.empty() ? currentPlanetId : w.mapSelectedPlanetId;
+
+    UiText(96, 122, "우주 성계 항법도 · 에르마 섹터", 25, {.84f, .98f, .96f});
+    UiText(96, 146, "좌클릭 드래그 궤도 회전 · 휠 확대/축소 · 좌클릭 행성 정보 · 우클릭 항로 지정", 13,
+           {.70f, .86f, .88f});
+
+    // Deep-space holographic viewport card.
+    Drawing::DrawRectangle(92.f, 160.f, 700.f, 488.f, {.018f, .036f, .058f, .94f});
+    Drawing::DrawLine({92.f, 160.f}, {792.f, 160.f}, {.30f, .74f, .82f, .72f}, 1.5f);
+    Drawing::DrawLine({92.f, 648.f}, {792.f, 648.f}, {.30f, .74f, .82f, .72f}, 1.5f);
+    Drawing::DrawLine({92.f, 160.f}, {92.f, 648.f}, {.30f, .74f, .82f, .52f}, 1.5f);
+    Drawing::DrawLine({792.f, 160.f}, {792.f, 648.f}, {.30f, .74f, .82f, .52f}, 1.5f);
+
+    // Subtle deterministic starfield.
+    for (int i = 0; i < 64; ++i)
+    {
+        const float sx = 104.f + float((i * 173 + 37) % 676);
+        const float sy = 172.f + float((i * 97 + 53) % 464);
+        const float br = 0.28f + float(i % 5) * 0.14f;
+        Drawing::DrawRectangle(sx, sy, (i % 7 == 0) ? 2.f : 1.5f, (i % 7 == 0) ? 2.f : 1.5f,
+                               {.78f, .92f, 1.f, br});
+    }
+
+    // Central star (Sol-Erma).
+    Drawing::DrawGlow(kSpaceCenter, 58.f * w.mapSpaceZoom, {1.f, .78f, .36f, .42f});
+    Drawing::DrawGlow(kSpaceCenter, 28.f * w.mapSpaceZoom, {1.f, .94f, .72f, .82f});
+    Drawing::DrawEllipse(kSpaceCenter.x, kSpaceCenter.y, 16.f * w.mapSpaceZoom, 16.f * w.mapSpaceZoom,
+                         {1.f, .95f, .78f, 1.f});
+    UiText(kSpaceCenter.x - 36.f, kSpaceCenter.y + 30.f * w.mapSpaceZoom, "에르마 주계열성", 12,
+           {1.f, .88f, .62f}, true);
+
+    // Draw orbital rings & planets.
+    Vector2 currentPos = kSpaceCenter;
+    Vector2 targetPos = kSpaceCenter;
+    bool hasTargetPos = false;
+    const SpaceBody *selectedBody = &kSpaceBodies[0];
+
+    for (const auto &body : kSpaceBodies)
+    {
+        if (selectedId == body.id)
+        {
+            selectedBody = &body;
+        }
+        // Elliptical 3D-tilted orbit ring.
+        const ColorRGBA orbitCol = body.playable ? ColorRGBA(.24f, .56f, .64f, .44f)
+                                                 : ColorRGBA(.42f, .46f, .78f, .34f);
+        Vector2 prev = ProjectSpaceOrbit(body.orbitPx, 0.f, w.mapSpaceYaw, w.mapSpacePitch, w.mapSpaceZoom);
+        for (int seg = 1; seg <= 48; ++seg)
+        {
+            const float a = float(seg) * (kPi * 2.f / 48.f);
+            const Vector2 curr = ProjectSpaceOrbit(body.orbitPx, a, w.mapSpaceYaw, w.mapSpacePitch, w.mapSpaceZoom);
+            if (curr.x >= 96.f && curr.x <= 788.f && curr.y >= 164.f && curr.y <= 644.f &&
+                prev.x >= 96.f && prev.x <= 788.f && prev.y >= 164.f && prev.y <= 644.f)
+            {
+                Drawing::DrawLine(prev, curr, orbitCol, body.id == selectedId ? 1.8f : 1.f);
+            }
+            prev = curr;
+        }
+    }
+
+    for (const auto &body : kSpaceBodies)
+    {
+        const Vector2 pos =
+            ProjectSpaceOrbit(body.orbitPx, body.baseAngle, w.mapSpaceYaw, w.mapSpacePitch, w.mapSpaceZoom);
+        const bool isCurrent = currentPlanetId == body.id;
+        const bool isSelected = selectedId == body.id;
+        const bool isTarget = w.mapTargetPlanetId == body.id;
+        if (isCurrent)
+        {
+            currentPos = pos;
+        }
+        if (isTarget)
+        {
+            targetPos = pos;
+            hasTargetPos = true;
+        }
+        if (pos.x < 104.f || pos.x > 780.f || pos.y < 172.f || pos.y > 636.f)
+        {
+            continue;
+        }
+        const float r = body.bodyRadius * Game::Clamp(w.mapSpaceZoom, 0.65f, 1.45f);
+        if (body.hasRing)
+        {
+            Drawing::DrawEllipse(pos.x, pos.y, r * 1.95f, r * 0.56f, {.74f, .66f, .92f, .32f});
+        }
+        Drawing::DrawGlow(pos, r * (isSelected ? 2.4f : 1.7f),
+                          {body.rimColor.r, body.rimColor.g, body.rimColor.b, isSelected ? .55f : .30f});
+        // 3D lit sphere disc + shadowed crescent + highlight.
+        Drawing::DrawEllipse(pos.x, pos.y, r, r, body.baseColor);
+        Drawing::DrawEllipse(pos.x + r * .18f, pos.y + r * .14f, r * .82f, r * .82f, {.02f, .04f, .07f, .44f});
+        Drawing::DrawEllipse(pos.x - r * .28f, pos.y - r * .26f, r * .46f, r * .42f,
+                             {body.rimColor.r, body.rimColor.g, body.rimColor.b, .65f});
+        if (isSelected)
+        {
+            Drawing::DrawEllipse(pos.x, pos.y, r + 6.f, r + 6.f, {.40f, .98f, .92f, .24f});
+        }
+        if (isCurrent)
+        {
+            Drawing::DrawEllipse(pos.x, pos.y, r + 9.f, r + 9.f, {.36f, 1.f, .72f, .28f});
+        }
+        UiText(pos.x - 42.f, pos.y + r + 15.f, body.name, 13,
+               isCurrent ? ColorRGBA(.46f, 1.f, .86f) : ColorRGBA(.86f, .94f, .96f), true);
+        if (isCurrent)
+        {
+            UiText(pos.x - 32.f, pos.y - r - 8.f, "[현재 위치]", 11, {.46f, 1.f, .82f}, true);
+        }
+        else if (isTarget)
+        {
+            UiText(pos.x - 32.f, pos.y - r - 8.f, "[항로 목표]", 11, {1.f, .84f, .36f}, true);
+        }
+    }
+
+    // Draw trajectory arc if a target planet is pinned.
+    if (hasTargetPos && Game::Distance(currentPos, targetPos) > 10.f)
+    {
+        const Vector2 mid{(currentPos.x + targetPos.x) * .5f, (currentPos.y + targetPos.y) * .5f - 34.f};
+        Vector2 prev = currentPos;
+        for (int i = 1; i <= 20; ++i)
+        {
+            const float u = float(i) / 20.f;
+            const float inv = 1.f - u;
+            const Vector2 pt{inv * inv * currentPos.x + 2.f * inv * u * mid.x + u * u * targetPos.x,
+                             inv * inv * currentPos.y + 2.f * inv * u * mid.y + u * u * targetPos.y};
+            if (i % 2 == 1)
+            {
+                Drawing::DrawLine(prev, pt, {1.f, .84f, .34f, .90f}, 2.2f);
+            }
+            prev = pt;
+        }
+    }
+
+    // Right-side Planet Selector & Telemetry Panel (x=812..1192).
+    UiText(820, 174, "성계 천체 목록", 18, {.78f, .95f, .94f});
+    for (size_t i = 0; i < std::size(kSpaceBodies); ++i)
+    {
+        const auto &b = kSpaceBodies[i];
+        const float y = 192.f + float(i) * 52.f;
+        const bool sel = selectedBody->id == b.id;
+        const bool cur = currentPlanetId == b.id;
+        UiControl card{UiAction::Continue, {820.f, y}, {370.f, 44.f},
+                       std::string(b.name) + (cur ? "  · 현재" : b.playable ? "  · 착륙 가능" : "  · 신호 추적"),
+                       true, int(i)};
+        Button(card, sel ? 0 : -1);
+    }
+
+    HudCard(820.f, 412.f, 370.f, 186.f, selectedBody->rimColor, false);
+    UiText(836, 440, selectedBody->name, 20, {.92f, .98f, 1.f});
+    UiText(836, 464, selectedBody->systemLabel, 13, {.64f, .88f, .90f});
+    char stats[128];
+    if (selectedBody->radiusKm > 0.f)
+    {
+        std::snprintf(stats, sizeof(stats), "반경 %.0f km  ·  궤도 %.2f AU", selectedBody->radiusKm,
+                      selectedBody->orbitAu);
+    }
+    else
+    {
+        std::snprintf(stats, sizeof(stats), "외곽 도약점  ·  거리 %.2f AU", selectedBody->orbitAu);
+    }
+    UiText(836, 490, stats, 14, {.84f, .92f, .90f});
+    const auto descPages = Hud::TextPages(selectedBody->summary, 336.f, 14, 2);
+    for (size_t i = 0; i < descPages[0].size(); ++i)
+    {
+        UiText(836, 518.f + float(i) * 20.f, descPages[0][i], 14, {.78f, .88f, .88f});
+    }
+    const bool canSwitch = selectedBody->playable && currentPlanetId != selectedBody->id;
+    UiControl switchBtn{UiAction::Continue, {836.f, 554.f}, {338.f, 34.f},
+                        currentPlanetId == selectedBody->id ? "현재 착륙 중인 행성입니다"
+                        : selectedBody->playable            ? "이 행성으로 탐사 전환"
+                                                            : "도약 관문 복구 후 항로 개방",
+                        canSwitch, 99};
+    Button(switchBtn, -1);
+
+    UiText(820, 628, "G 행성 3D 구체 복귀 · M 지도 닫기", 14, {.70f, .84f, .84f});
+    UiText(96, 672, "행성 간 상대 위치와 궤도 거리를 실시간으로 파악할 수 있습니다.", 14, {.74f, .86f, .86f});
+    UiText(96, 696, "좌클릭 드래그 회전 · 휠 확대/축소 · 우클릭 항로 목표 지정", 14, {.68f, .82f, .84f});
+}
 } // namespace
 MapRegion MapHud::Region()
 {
@@ -1029,10 +1449,33 @@ MapRegion MapHud::Region()
 }
 Vector2 MapHud::WorldToMap(Vector2 worldPoint, bool fullMap)
 {
+    if (PlanetMapActive() && fullMap)
+    {
+        if (const auto *session = Game::Get().Surface(); session && session->Ready())
+        {
+            if (const auto pt = world::SurfaceAtlas::Unproject(session->Origin(), {worldPoint.x, worldPoint.y, 0},
+                                                               session->Planet().radiusMeters))
+            {
+                return GlobeView::Build(*session).Project(*pt);
+            }
+        }
+    }
     return (PlanetMapActive() ? PlanetMapView(fullMap) : MapView(fullMap)).Project(worldPoint);
 }
 Vector2 MapHud::MapToWorld(Vector2 canvasPoint, bool fullMap)
 {
+    if (PlanetMapActive() && fullMap)
+    {
+        if (const auto *session = Game::Get().Surface(); session && session->Ready())
+        {
+            if (auto pt = GlobeView::Build(*session).Unproject(canvasPoint))
+            {
+                const auto local =
+                    world::SurfaceAtlas::Project(session->Origin(), *pt, session->Planet().radiusMeters);
+                return {float(local.x), float(local.y)};
+            }
+        }
+    }
     return (PlanetMapActive() ? PlanetMapView(fullMap) : MapView(fullMap)).Unproject(canvasPoint);
 }
 Vector2 MapHud::PlanetToMap(const world::SurfacePoint &point, bool full)
@@ -1042,8 +1485,12 @@ Vector2 MapHud::PlanetToMap(const world::SurfacePoint &point, bool full)
     {
         return {};
     }
+    if (full)
+    {
+        return GlobeView::Build(*session).Project(point);
+    }
     auto local = world::SurfaceAtlas::Project(session->Origin(), point, session->Planet().radiusMeters);
-    return PlanetMapView(full).Project({float(local.x), float(local.y)});
+    return PlanetMapView(false).Project({float(local.x), float(local.y)});
 }
 std::optional<world::SurfacePoint> MapHud::PlanetAt(Vector2 canvas)
 {
@@ -1052,13 +1499,32 @@ std::optional<world::SurfacePoint> MapHud::PlanetAt(Vector2 canvas)
     {
         return std::nullopt;
     }
-    auto local = MapToWorld(canvas, true);
-    return world::SurfaceAtlas::Unproject(session->Origin(), {local.x, local.y, 0},
-                                          session->Planet().radiusMeters);
+    return GlobeView::Build(*session).Unproject(canvas);
 }
 bool MapHud::Contains(Vector2 canvasPoint, bool fullMap)
 {
+    if (PlanetMapActive() && fullMap)
+    {
+        return Game::Distance(canvasPoint, kGlobeCenter) <= kGlobeRadius;
+    }
     return (PlanetMapActive() ? PlanetMapView(fullMap) : MapView(fullMap)).Inside(canvasPoint);
+}
+void MapHud::OnMapOpened()
+{
+    auto &w = Game::Get().GetState();
+    w.mapHologramProgress = 0.f;
+    w.mapDragging = false;
+    w.mapDraggedMoved = false;
+    w.mapSpaceMode = false;
+    if (const auto *session = Game::Get().Surface(); session && session->Ready())
+    {
+        w.planetGlobeCenter = session->Pose().origin;
+        w.planetGlobeInitialized = true;
+        if (w.mapSelectedPlanetId.empty())
+        {
+            w.mapSelectedPlanetId = session->Planet().id;
+        }
+    }
 }
 bool MapHud::Zoom(int steps, Vector2 pivot)
 {
@@ -1068,26 +1534,71 @@ bool MapHud::Zoom(int steps, Vector2 pivot)
     {
         return false;
     }
-    if (!state.mapVisible || state.relayPreparing || state.isPaused || state.ui.screen != UiScreen::None ||
-        !Contains(pivot, true))
+    if (!state.mapVisible || state.relayPreparing || state.isPaused || state.ui.screen != UiScreen::None)
     {
         return false;
     }
-    auto before = MapToWorld(pivot, true);
+    if (PlanetMapActive() && state.mapSpaceMode)
+    {
+        if (pivot.x < 92.f || pivot.x > 792.f || pivot.y < 160.f || pivot.y > 648.f)
+        {
+            return false;
+        }
+        const float mul = std::pow(1.22f, Game::Clamp(float(steps), -8.f, 8.f));
+        state.mapSpaceZoom = Game::Clamp(state.mapSpaceZoom * mul, 0.55f, 1.85f);
+        return true;
+    }
+    if (!Contains(pivot, true))
+    {
+        return false;
+    }
     float multiplier = std::pow(1.35f, Game::Clamp(float(steps), -8, 8));
     if (PlanetMapActive())
     {
+        const auto *session = Game::Get().Surface();
+        if (!state.planetGlobeInitialized)
+        {
+            state.planetGlobeCenter = session->Pose().origin;
+            state.planetGlobeInitialized = true;
+        }
+        const auto beforePt = GlobeView::Build(*session).Unproject(pivot);
         state.planetMapRange = Game::Clamp(
             state.planetMapRange / multiplier, 64,
-            float(world::SurfaceAtlas::MaximumRange(Game::Get().Surface()->Planet().radiusMeters)));
+            float(world::SurfaceAtlas::MaximumRange(session->Planet().radiusMeters)));
+        if (beforePt)
+        {
+            for (int iter = 0; iter < 5; ++iter)
+            {
+                const auto afterGlobe = GlobeView::Build(*session);
+                bool front = false;
+                const auto afterPx = afterGlobe.Project(*beforePt, &front);
+                if (!front)
+                {
+                    break;
+                }
+                const double errX = double(pivot.x - afterPx.x);
+                const double errY = double(pivot.y - afterPx.y);
+                if (errX * errX + errY * errY < 1e-10)
+                {
+                    break;
+                }
+                const double step = afterGlobe.sinHalf / double(afterGlobe.radius);
+                const double dx = -errX * step;
+                const double dy = errY * step;
+                state.planetGlobeCenter = {world::SurfaceGeometry::Unit(
+                                               {afterGlobe.forward.x + afterGlobe.east.x * dx + afterGlobe.north.x * dy,
+                                                afterGlobe.forward.y + afterGlobe.east.y * dx + afterGlobe.north.y * dy,
+                                                afterGlobe.forward.z + afterGlobe.east.z * dx + afterGlobe.north.z * dy}),
+                                           0.0};
+            }
+        }
+        return true;
     }
-    else
-    {
-        auto &navigation = state.mapViews[size_t(Region())];
-        navigation.zoom = Game::Clamp(navigation.zoom * multiplier, .25f, 32);
-    }
+    auto before = MapToWorld(pivot, true);
+    auto &navigation = state.mapViews[size_t(Region())];
+    navigation.zoom = Game::Clamp(navigation.zoom * multiplier, .25f, 32);
     auto after = MapToWorld(pivot, true);
-    auto &pan = PlanetMapActive() ? state.planetMapPan : state.mapViews[size_t(Region())].pan;
+    auto &pan = state.mapViews[size_t(Region())].pan;
     pan.x += before.x - after.x;
     pan.y += before.y - after.y;
     Pan({}); // Also applies the finite navigation bounds after zooming at an edge.
@@ -1100,31 +1611,37 @@ void MapHud::Pan(Vector2 delta)
     {
         return;
     }
-    if (PlanetMapActive() && !Game::Get().Surface())
-    {
-        return;
-    }
-    auto view = PlanetMapActive() ? PlanetMapView(true) : MapView(true);
-    auto origin = view.Unproject(view.center);
-    auto shifted = view.Unproject({view.center.x + delta.x, view.center.y + delta.y});
-    auto &pan = PlanetMapActive() ? state.planetMapPan : state.mapViews[size_t(Region())].pan;
-    float limit = PlanetMapActive()
-                      ? float(world::SurfaceAtlas::MaximumRange(Game::Get().Surface()->Planet().radiusMeters))
-                  : Region() == MapRegion::City ? 2000.f
-                                                : 256.f;
-    pan.x = Game::Clamp(pan.x + shifted.x - origin.x, -limit, limit);
-    pan.y = Game::Clamp(pan.y + shifted.y - origin.y, -limit, limit);
     if (PlanetMapActive())
     {
-        auto local = Game::Get().Surface()->Local(Game::Get().Surface()->Pose().origin);
-        double x = local.x + pan.x, y = local.y + pan.y, length = std::hypot(x, y);
-        double reach = (std::max)(0., double(limit) - state.planetMapRange);
-        if (length > reach && length > 0)
+        const auto *session = Game::Get().Surface();
+        if (!session || !session->Ready())
         {
-            pan.x = float(x * reach / length - local.x);
-            pan.y = float(y * reach / length - local.y);
+            return;
         }
+        if (state.mapSpaceMode)
+        {
+            state.mapSpaceYaw += delta.x * 0.008f;
+            state.mapSpacePitch = Game::Clamp(state.mapSpacePitch + delta.y * 0.005f, 0.22f, 1.35f);
+            return;
+        }
+        if (!state.planetGlobeInitialized)
+        {
+            state.planetGlobeCenter = session->Pose().origin;
+            state.planetGlobeInitialized = true;
+        }
+        if (std::fabs(delta.x) > 1e-4f || std::fabs(delta.y) > 1e-4f)
+        {
+            state.planetGlobeCenter = GlobeView::Build(*session).RotateByPixels({-delta.x, -delta.y});
+        }
+        return;
     }
+    auto view = MapView(true);
+    auto origin = view.Unproject(view.center);
+    auto shifted = view.Unproject({view.center.x + delta.x, view.center.y + delta.y});
+    auto &pan = state.mapViews[size_t(Region())].pan;
+    float limit = Region() == MapRegion::City ? 2000.f : 256.f;
+    pan.x = Game::Clamp(pan.x + shifted.x - origin.x, -limit, limit);
+    pan.y = Game::Clamp(pan.y + shifted.y - origin.y, -limit, limit);
 }
 void MapHud::ResetView(bool playerOnly)
 {
@@ -1132,11 +1649,18 @@ void MapHud::ResetView(bool playerOnly)
     if (PlanetMapActive())
     {
         state.planetMapPan = {};
+        if (const auto *session = Game::Get().Surface(); session && session->Ready())
+        {
+            state.planetGlobeCenter = session->Pose().origin;
+            state.planetGlobeInitialized = true;
+        }
         if (!playerOnly)
         {
             state.planetMapRange = 1000;
+            state.mapSpaceYaw = 0.42f;
+            state.mapSpacePitch = 0.56f;
+            state.mapSpaceZoom = 1.f;
         }
-        Pan({});
     }
     else
     {
@@ -1167,6 +1691,8 @@ bool MapHud::FocusTrackedObjective()
     {
         w.mapVisible = true;
         w.planetMapSurface = false;
+        w.mapSpaceMode = false;
+        w.mapHologramProgress = 0.f;
         auto &viewState = w.mapViews[size_t(MapRegion::Mine)];
         viewState.pan = {};
         const auto view = MapView(true);
@@ -1174,13 +1700,14 @@ bool MapHud::FocusTrackedObjective()
     }
     else if (goal.surfaceTarget)
     {
-        const auto point = world::SurfaceAtlas::Project(g.Surface()->Origin(), *goal.surfaceTarget,
-                                                        g.Surface()->Planet().radiusMeters);
-        const auto player = g.Surface()->Local(g.Surface()->Pose().origin);
-        w.planetMapPan = {float(point.x - player.x), float(point.y - player.y)};
+        w.planetGlobeCenter = *goal.surfaceTarget;
+        w.planetGlobeInitialized = true;
+        w.planetMapPan = {};
         w.planetMapRange = (std::min)(w.planetMapRange, 1000.f);
         w.mapVisible = true;
         w.planetMapSurface = true;
+        w.mapSpaceMode = false;
+        w.mapHologramProgress = 0.f;
     }
     else
     {
@@ -1203,12 +1730,32 @@ bool MapHud::HandleMapKey(unsigned char key)
     }
     if (PlanetMapActive())
     {
+        if (key == 'g')
+        {
+            w.mapSpaceMode = !w.mapSpaceMode;
+            w.mapDragging = false;
+            if (w.mapSpaceMode && w.mapSelectedPlanetId.empty() && Game::Get().Surface())
+            {
+                w.mapSelectedPlanetId = Game::Get().Surface()->Planet().id;
+            }
+            return true;
+        }
+        if (key == 'x' && !w.relayPreparing)
+        {
+            w.planetDestination.reset();
+            w.selectedRelay.clear();
+            w.relayStatus.clear();
+            w.mapTargetPlanetId.clear();
+            return true;
+        }
         if (key == 'p' && Game::Get().Surface())
         {
+            w.mapSpaceMode = false;
             w.planetMapRange =
                 float(world::SurfaceAtlas::MaximumRange(Game::Get().Surface()->Planet().radiusMeters));
             w.planetMapPan = {};
-            Pan({});
+            w.planetGlobeCenter = Game::Get().Surface()->Pose().origin;
+            w.planetGlobeInitialized = true;
             return true;
         }
         if (key == 'l')
@@ -1229,13 +1776,299 @@ bool MapHud::HandleMapKey(unsigned char key)
     }
     if (key == '+' || key == '=' || key == '-' || key == '_')
     {
-        Zoom(key == '+' || key == '=' ? 1 : -1,
-             (PlanetMapActive() ? PlanetMapView(true) : MapView(true)).center);
+        const Vector2 pivot = PlanetMapActive()
+                                  ? (w.mapSpaceMode ? kSpaceCenter : kGlobeCenter)
+                                  : MapView(true).center;
+        Zoom(key == '+' || key == '=' ? 1 : -1, {pivot.x + WorldCamera::CenterOffsetX(), pivot.y});
         return true;
     }
     if (key == '0' || key == 'c')
     {
         ResetView(key == 'c');
+        return true;
+    }
+    return false;
+}
+void MapHud::HandleMotion(Vector2 canvasPoint)
+{
+    auto &w = Game::Get().GetState();
+    if (!w.mapVisible || !w.mapDragging || !PlanetMapActive())
+    {
+        return;
+    }
+    const auto *session = Game::Get().Surface();
+    if (!session || !session->Ready())
+    {
+        w.mapDragging = false;
+        return;
+    }
+    Vector2 pt = canvasPoint;
+    pt.x -= WorldCamera::CenterOffsetX();
+    const Vector2 delta{pt.x - w.mapDragLast.x, pt.y - w.mapDragLast.y};
+    w.mapDragLast = pt;
+    if (Game::Distance(pt, w.mapDragStart) >= 3.f)
+    {
+        w.mapDraggedMoved = true;
+    }
+    if (w.mapSpaceMode)
+    {
+        w.mapSpaceYaw += delta.x * 0.008f;
+        w.mapSpacePitch = Game::Clamp(w.mapSpacePitch + delta.y * 0.006f, 0.22f, 1.35f);
+        return;
+    }
+    if (!w.planetGlobeInitialized)
+    {
+        w.planetGlobeCenter = session->Pose().origin;
+        w.planetGlobeInitialized = true;
+    }
+    w.planetGlobeCenter = GlobeView::Build(*session).RotateByPixels(delta);
+}
+bool MapHud::HandlePointer(int button, bool down, Vector2 canvasPoint)
+{
+    auto &w = Game::Get().GetState();
+    if (!w.mapVisible)
+    {
+        return false;
+    }
+    if (!PlanetMapActive())
+    {
+        if (down)
+        {
+            return HandleClick(canvasPoint, button == GLFW_MOUSE_BUTTON_RIGHT);
+        }
+        return false;
+    }
+    const auto *session = Game::Get().Surface();
+    if (!session || !session->Ready())
+    {
+        return false;
+    }
+    Vector2 pt = canvasPoint;
+    pt.x -= WorldCamera::CenterOffsetX();
+
+    if (!down)
+    {
+        if (button == GLFW_MOUSE_BUTTON_LEFT && w.mapDragging)
+        {
+            const bool wasClick = !w.mapDraggedMoved;
+            w.mapDragging = false;
+            w.mapDraggedMoved = false;
+            if (wasClick)
+            {
+                if (w.mapSpaceMode)
+                {
+                    for (const auto &body : kSpaceBodies)
+                    {
+                        const Vector2 bpos = ProjectSpaceOrbit(body.orbitPx, body.baseAngle, w.mapSpaceYaw,
+                                                               w.mapSpacePitch, w.mapSpaceZoom);
+                        if (Game::Distance(bpos, pt) <= body.bodyRadius + 14.f)
+                        {
+                            w.mapSelectedPlanetId = body.id;
+                            return true;
+                        }
+                    }
+                }
+                else if (!w.relayPreparing && Contains(pt, true))
+                {
+                    const GlobeView globe = GlobeView::Build(*session);
+                    const world::RelayCandidate *hit = nullptr;
+                    float nearest = 14.f;
+                    for (const auto &relay : session->Stream().Snapshot()->planet->relays)
+                    {
+                        if (w.relayNetwork.Discovered(relay.id) &&
+                            (!w.mapRegisteredRelaysOnly || w.relayNetwork.Registered(relay.id)))
+                        {
+                            bool front = false;
+                            const auto rp = globe.Project(relay.location.position, &front);
+                            if (front)
+                            {
+                                const float dist = Game::Distance(rp, pt);
+                                if (dist < nearest)
+                                {
+                                    hit = &relay;
+                                    nearest = dist;
+                                }
+                            }
+                        }
+                    }
+                    if (hit)
+                    {
+                        w.relayStatus.clear();
+                        w.selectedRelay = hit->id;
+                        w.planetDestination = hit->location.position;
+                        return true;
+                    }
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    // Button PRESS on Planet 3D Globe or Space System Map.
+    if (button == GLFW_MOUSE_BUTTON_LEFT)
+    {
+        if (Inside(SpaceModeToggleControl(w.mapSpaceMode), pt))
+        {
+            w.mapSpaceMode = !w.mapSpaceMode;
+            w.mapDragging = false;
+            if (w.mapSpaceMode && w.mapSelectedPlanetId.empty())
+            {
+                w.mapSelectedPlanetId = session->Planet().id;
+            }
+            return true;
+        }
+        if (w.mapSpaceMode)
+        {
+            const std::string selectedId =
+                w.mapSelectedPlanetId.empty() ? session->Planet().id : w.mapSelectedPlanetId;
+            for (size_t i = 0; i < std::size(kSpaceBodies); ++i)
+            {
+                const UiControl card{UiAction::Continue, {820.f, 192.f + float(i) * 52.f}, {370.f, 44.f}, ""};
+                if (Inside(card, pt))
+                {
+                    w.mapSelectedPlanetId = kSpaceBodies[i].id;
+                    return true;
+                }
+            }
+            const UiControl switchBtn{UiAction::Continue, {836.f, 554.f}, {338.f, 34.f}, ""};
+            if (Inside(switchBtn, pt))
+            {
+                for (const auto &body : kSpaceBodies)
+                {
+                    if (selectedId == body.id && body.playable && session->Planet().id != body.id)
+                    {
+                        if (SaveSystem::SwitchPlanet(body.id))
+                        {
+                            w.mapVisible = false;
+                            w.mapSpaceMode = false;
+                            w.mapDragging = false;
+                        }
+                        else if (!SaveSystem::Message().empty())
+                        {
+                            Game::Get().ShowNotice(SaveSystem::Message());
+                        }
+                        return true;
+                    }
+                }
+                return true;
+            }
+            if (pt.x >= 92.f && pt.x <= 792.f && pt.y >= 160.f && pt.y <= 648.f)
+            {
+                w.mapDragging = true;
+                w.mapDragStart = w.mapDragLast = pt;
+                w.mapDraggedMoved = false;
+                return true;
+            }
+            return false;
+        }
+        if (w.planetDestination && Inside(ClearDestinationControl(true), pt))
+        {
+            w.planetDestination.reset();
+            w.selectedRelay.clear();
+            w.relayStatus.clear();
+            return true;
+        }
+        for (const auto &control : RelayControls())
+        {
+            if (Inside(control, pt))
+            {
+                if (!control.enabled)
+                {
+                    return true;
+                }
+                if (control.action == UiAction::Back)
+                {
+                    RelayTravel::Cancel();
+                }
+                else if (control.action == UiAction::Continue)
+                {
+                    RelayTravel::Begin(w.selectedRelay);
+                }
+                else if (control.action == UiAction::Next)
+                {
+                    ++w.relayPage;
+                }
+                else if (control.action == UiAction::Previous)
+                {
+                    --w.relayPage;
+                }
+                else
+                {
+                    auto entries = RegisteredRelays();
+                    auto relay = entries.at(size_t(control.choice));
+                    w.selectedRelay = relay->id;
+                    w.relayStatus.clear();
+                    w.planetDestination = relay->location.position;
+                    w.planetGlobeCenter = relay->location.position;
+                    w.planetGlobeInitialized = true;
+                }
+                return true;
+            }
+        }
+        if (!w.relayPreparing && Contains(pt, true))
+        {
+            w.mapDragging = true;
+            w.mapDragStart = w.mapDragLast = pt;
+            w.mapDraggedMoved = false;
+            return true;
+        }
+        return false;
+    }
+
+    // Right-Click sets destination on the 3D Planet Globe (or sets navigation target on Space Map)!
+    if (button == GLFW_MOUSE_BUTTON_RIGHT)
+    {
+        if (w.mapSpaceMode)
+        {
+            for (const auto &body : kSpaceBodies)
+            {
+                const Vector2 bpos = ProjectSpaceOrbit(body.orbitPx, body.baseAngle, w.mapSpaceYaw,
+                                                       w.mapSpacePitch, w.mapSpaceZoom);
+                if (Game::Distance(bpos, pt) <= body.bodyRadius + 14.f)
+                {
+                    if (w.mapTargetPlanetId == body.id)
+                    {
+                        w.mapTargetPlanetId.clear();
+                    }
+                    else
+                    {
+                        w.mapTargetPlanetId = body.id;
+                        w.mapSelectedPlanetId = body.id;
+                    }
+                    return true;
+                }
+            }
+            w.mapTargetPlanetId.clear();
+            return true;
+        }
+        if (w.relayPreparing || !Contains(pt, true))
+        {
+            return false;
+        }
+        const GlobeView globe = GlobeView::Build(*session);
+        if (w.planetDestination)
+        {
+            bool front = false;
+            const auto existing = globe.Project(*w.planetDestination, &front);
+            if (front && Game::Distance(existing, pt) <= 14.f)
+            {
+                w.planetDestination.reset();
+                w.selectedRelay.clear();
+                w.relayStatus.clear();
+                return true;
+            }
+        }
+        auto target = globe.Unproject(pt);
+        if (!target)
+        {
+            return false;
+        }
+        auto location = *target;
+        location.altitudeMeters = session->Stream().Snapshot()->planet->terrain.Height(location);
+        w.planetDestination = location;
+        w.selectedRelay.clear();
+        w.relayStatus.clear();
         return true;
     }
     return false;
@@ -1739,10 +2572,10 @@ void Hud::DrawInteraction(const std::string &label)
     const float h = (std::max)(50.f, 24.f + float(rows.size()) * 22.f);
     HudShift shift(WorldCamera::CenterOffsetX());
     Panel(450, 514, 380, h);
-    Drawing::DrawRectangle(450.f, 520.f, 3.f, (std::max)(8.f, h - 12.f), {.38f, .92f, .86f, .92f});
+    Drawing::DrawRectangle(456.f, 522.f, 3.f, (std::max)(8.f, h - 16.f), {.38f, .92f, .86f, .92f});
     for (size_t i = 0; i < rows.size(); ++i)
     {
-        UiText(468, 544 + float(i) * 22, rows[i], 17);
+        UiText(470, 544 + float(i) * 22, rows[i], 17);
     }
     const float keyY = 514.f + (h - 28.f) * .5f;
     Sprite("Components/keycap", 788, keyY, 28, 28);
@@ -4480,13 +5313,30 @@ void PlanetHud::DrawMap(bool full)
     const auto &w = Game::Get().GetState();
     HudShift shift(full ? WorldCamera::CenterOffsetX() : WorldCamera::RightOffsetX());
     auto snapshot = session->Stream().Snapshot();
-    float radius = full ? 244.f : 82.f, range = full ? w.planetMapRange : 160.f;
-    Vector2 center = full ? Vector2{488, 400} : kMinimapCenter;
+    float radius = full ? kGlobeRadius : kMinimapRadius, range = full ? w.planetMapRange : 160.f;
+    Vector2 center = full ? kGlobeCenter : kMinimapCenter;
     if (full)
     {
-        DrawFullscreenDim({.015f, .035f, .045f, .95f});
+        const float t = Game::Clamp(w.mapHologramProgress, 0.02f, 1.f);
+        const float ease = 1.f - (1.f - t) * (1.f - t) * (1.f - t);
+        DrawFullscreenDim({.012f, .030f, .042f, 0.66f * ease});
         Panel(64, 82, 1152, 642);
-        UiText(96, 128, range > 200000 ? "행성 개관" : range > 4000 ? "지역 탐사도" : "주변 블록 약도", 26);
+        DrawWristHologramEmitterOverlay(w.mapHologramProgress);
+        Button(SpaceModeToggleControl(w.mapSpaceMode), -1);
+        if (w.mapSpaceMode)
+        {
+            DrawSpaceSystemMap(*session);
+            return;
+        }
+        if (w.planetDestination)
+        {
+            Button(ClearDestinationControl(true), -1);
+        }
+        UiText(96, 124,
+               range > 200000 ? "3D 행성 구체 · 전역 궤도도"
+               : range > 4000 ? "3D 행성 구체 · 지역 탐사도"
+                              : "3D 행성 구체 · 블록 정밀도",
+               24, {.86f, .98f, .96f});
         char scale[80];
         if (range >= 1000)
         {
@@ -4497,22 +5347,100 @@ void PlanetHud::DrawMap(bool full)
             std::snprintf(scale, sizeof(scale), "표시 반경 %.0f m", range);
         }
         UiText(820, 196, scale, 18);
-        UiText(96, 156, "휠 +/- 확대·축소 · 방향키 이동", 14, {.74f, .86f, .86f});
-        UiText(96, 176, "C 내 위치 · P 행성 전체 · 0 초기화", 14, {.70f, .82f, .82f});
+        UiText(96, 150, "좌클릭 드래그 3D 구체 회전(줌 연동) · 우클릭 목적지 지정", 13, {.74f, .90f, .90f});
+        UiText(96, 170, "휠 확대·축소 · C 내 위치 · P 전체 구체 · G 우주 지도", 13, {.70f, .84f, .84f});
         UiText(820, 626, "현장 E 등록 · 주차 후 이동", 15);
         UiText(820, 659, "차량은 출발지에 남습니다.", 15);
     }
-    Drawing::DrawEllipse(center.x, center.y, radius + 3, radius + 3, {.35f, .62f, .61f});
-    Drawing::DrawEllipse(center.x, center.y, radius, radius, {.075f, .14f, .14f});
+    if (full)
+    {
+        // Volumetric 3D planetary atmosphere halo + holographic bezel ring.
+        Drawing::DrawGlow(center, radius + 24.f, {.16f, .76f, .88f, .24f});
+        Drawing::DrawEllipse(center.x, center.y, radius + 8.f, radius + 8.f, {.18f, .64f, .78f, .22f});
+        Drawing::DrawEllipse(center.x, center.y, radius + 3.f, radius + 3.f, {.38f, .82f, .86f, .90f});
+        Drawing::DrawEllipse(center.x, center.y, radius, radius, {.028f, .078f, .115f, 1.f});
+    }
+    else
+    {
+        Drawing::DrawEllipse(center.x, center.y, radius + 3, radius + 3, {.35f, .62f, .61f});
+        Drawing::DrawEllipse(center.x, center.y, radius, radius, {.075f, .14f, .14f});
+    }
     auto local = session->Local(session->Pose().origin);
     auto view = PlanetMapView(full);
-    auto focus = session->PointAt(view.worldCenter.x, view.worldCenter.y);
+    const GlobeView globe = GlobeView::Build(*session);
+    const world::SurfacePoint focus =
+        full ? CurrentGlobeCenter(*session) : session->PointAt(view.worldCenter.x, view.worldCenter.y);
     mapLabels.clear();
     const double planetRadius = session->Planet().radiusMeters;
     const auto &originFrame = session->Origin();
+    const float pxPerMeter = full ? globe.PixelsPerMeter() : view.scale;
     auto project = [&](const world::SurfacePoint &point) {
         auto p = world::SurfaceAtlas::Project(originFrame, point, planetRadius);
         return Vector2{float(p.x), float(p.y)};
+    };
+    auto toScreen = [&](const world::SurfacePoint &point, bool *frontOut = nullptr) -> Vector2 {
+        if (full)
+        {
+            return globe.Project(point, frontOut);
+        }
+        if (frontOut)
+        {
+            *frontOut = true;
+        }
+        return view.Project(project(point));
+    };
+    auto insideDisc = [&](Vector2 p, float inset = 0.f) {
+        return Game::Distance(p, center) <= radius - inset;
+    };
+    auto drawScreenLine = [&](Vector2 a, Vector2 b, ColorRGBA color, float width) {
+        // Clip line segment analytically to the circular map disc.
+        const float dx = b.x - a.x, dy = b.y - a.y;
+        const float fx = a.x - center.x, fy = a.y - center.y;
+        const float r = (std::max)(1.f, radius - 1.f);
+        const float qa = dx * dx + dy * dy;
+        if (qa < 1e-6f)
+        {
+            return;
+        }
+        const float qb = 2.f * (fx * dx + fy * dy);
+        const float qc = fx * fx + fy * fy - r * r;
+        const float disc = qb * qb - 4.f * qa * qc;
+        if (disc < 0.f)
+        {
+            return;
+        }
+        const float s = std::sqrt(disc);
+        const float t0 = (std::max)(0.f, (-qb - s) / (2.f * qa));
+        const float t1 = (std::min)(1.f, (-qb + s) / (2.f * qa));
+        if (t1 <= t0)
+        {
+            return;
+        }
+        Drawing::DrawLine({a.x + dx * t0, a.y + dy * t0}, {a.x + dx * t1, a.y + dy * t1}, color, width);
+    };
+    auto drawSurfacePin = [&](const world::SurfacePoint &pt, ColorRGBA color, const char *label,
+                              bool showLabel, float pinRadius) {
+        bool front = false;
+        const Vector2 sp = toScreen(pt, &front);
+        if (!front || !insideDisc(sp, pinRadius + 3.f))
+        {
+            return;
+        }
+        Drawing::DrawEllipse(sp.x, sp.y, pinRadius + 1.5f, pinRadius + 1.5f, {.02f, .05f, .07f, .86f});
+        Drawing::DrawEllipse(sp.x, sp.y, pinRadius, pinRadius, color);
+        if (showLabel && label && *label && sp.y < center.y + radius - 20.f && sp.y > center.y - radius + 18.f)
+        {
+            MapLabel(sp, label, color, false);
+        }
+    };
+    auto drawSurfaceDot = [&](const world::SurfacePoint &pt, ColorRGBA color, float dotRadius) {
+        bool front = false;
+        const Vector2 sp = toScreen(pt, &front);
+        if (!front || !insideDisc(sp, dotRadius + 1.f))
+        {
+            return;
+        }
+        Drawing::DrawEllipse(sp.x, sp.y, dotRadius, dotRadius, color);
     };
     auto chordFar = [&](const world::SurfacePoint &a, const world::SurfacePoint &b, double maxMeters) {
         const double limit = maxMeters / planetRadius;
@@ -4531,6 +5459,7 @@ void PlanetHud::DrawMap(bool full)
         std::uint64_t epoch = 0, revision = 0;
         std::size_t visitedCount = 0, collisionCells = 0;
         double originX = 0, originY = 0, originZ = 0;
+        double focusX = 0, focusY = 0, focusZ = 0;
         float range = 0;
         Vector2 worldCenter = {};
         std::uint64_t version = 0;
@@ -4542,13 +5471,18 @@ void PlanetHud::DrawMap(bool full)
     const bool originMoved = std::fabs(originFrame.origin.normal.x - cache.originX) > 1.e-11 ||
                              std::fabs(originFrame.origin.normal.y - cache.originY) > 1.e-11 ||
                              std::fabs(originFrame.origin.normal.z - cache.originZ) > 1.e-11;
+    const double focusDelta =
+        std::hypot(std::hypot(focus.normal.x - cache.focusX, focus.normal.y - cache.focusY),
+                   focus.normal.z - cache.focusZ) *
+        planetRadius;
     const bool needsRebuild = !cache.valid || cache.planet != snapshot->planet.get() ||
                               cache.epoch != snapshot->statistics.epoch ||
                               cache.revision != snapshot->statistics.revision ||
                               cache.visitedCount != w.relayNetwork.VisitedRegions().size() ||
                               cache.collisionCells != session->CollisionCells() ||
                               std::fabs(cache.range - range) > .01f || originMoved ||
-                              Game::Distance(view.worldCenter, cache.worldCenter) > moveThreshold;
+                              (full ? focusDelta > moveThreshold
+                                    : Game::Distance(view.worldCenter, cache.worldCenter) > moveThreshold);
     if (needsRebuild)
     {
         cache.planet = snapshot->planet.get();
@@ -4559,43 +5493,122 @@ void PlanetHud::DrawMap(bool full)
         cache.originX = originFrame.origin.normal.x;
         cache.originY = originFrame.origin.normal.y;
         cache.originZ = originFrame.origin.normal.z;
+        cache.focusX = focus.normal.x;
+        cache.focusY = focus.normal.y;
+        cache.focusZ = focus.normal.z;
         cache.range = range;
         cache.worldCenter = view.worldCenter;
         cache.valid = true;
         ++cache.version;
         profiling::Count(profiling::Counter::MinimapRebuilds);
     }
+    const SchematicView clipView{center, {}, 1.f, radius};
     auto drawStaticMap = [&]() {
+        if (full)
+        {
+            // Render smooth 3D lit biome surface across the spherical planet globe cap (cached in DrawSlot).
+            const int gridN = range > 12000.f ? 64 : 24;
+            const double invN = 2.0 / double(gridN);
+            const double sunX = 0.50, sunY = 0.36, sunZ = 0.787;
+            for (int iy = 0; iy < gridN; ++iy)
+            {
+                const double dy0 = -1.0 + double(iy) * invN;
+                const double dy1 = dy0 + invN;
+                const double dym = (dy0 + dy1) * 0.5;
+                for (int ix = 0; ix < gridN; ++ix)
+                {
+                    const double dx0 = -1.0 + double(ix) * invN;
+                    const double dx1 = dx0 + invN;
+                    const double dxm = (dx0 + dx1) * 0.5;
+                    const double r2m = dxm * dxm + dym * dym;
+                    if (r2m > 1.04)
+                    {
+                        continue;
+                    }
+                    const double u = dxm * globe.sinHalf;
+                    const double v = dym * globe.sinHalf;
+                    const double ur2 = u * u + v * v;
+                    if (ur2 > 1.0)
+                    {
+                        continue;
+                    }
+                    const double z = std::sqrt((std::max)(0.0, 1.0 - ur2));
+                    const world::Vector3d normal = world::SurfaceGeometry::Unit(
+                        {globe.east.x * u + globe.north.x * v + globe.forward.x * z,
+                         globe.east.y * u + globe.north.y * v + globe.forward.y * z,
+                         globe.east.z * u + globe.north.z * v + globe.forward.z * z});
+                    const auto sample = snapshot->planet->terrain.Sample({normal, 0.0});
+                    const float elevRatio = Game::Clamp(float((sample.elevationMeters - 200.0) / 1800.0), 0.f, 1.f);
+                    ColorRGBA col = BiomeGlobeColor(sample.biome, elevRatio);
+                    // Apply directional sunlight + spherical limb darkening + Fresnel atmosphere rim.
+                    const double ndotl = (std::max)(0.0, u * sunX + v * sunY + z * sunZ);
+                    const float shade = float(0.32 + 0.78 * ndotl);
+                    const float limb = float(0.45 + 0.55 * std::pow(z, 0.38));
+                    const float rim = float(std::pow((std::max)(0.0, 1.0 - z), 2.6)) * 0.55f;
+                    col.r = Game::Clamp(col.r * shade * limb + rim * 0.18f, 0.f, 1.f);
+                    col.g = Game::Clamp(col.g * shade * limb + rim * 0.76f, 0.f, 1.f);
+                    col.b = Game::Clamp(col.b * shade * limb + rim * 0.88f, 0.f, 1.f);
+                    col.a = 1.f;
+                    const Vector2 q[4] = {
+                        {center.x + float(dx0 * radius), center.y - float(dy0 * radius)},
+                        {center.x + float(dx1 * radius), center.y - float(dy0 * radius)},
+                        {center.x + float(dx1 * radius), center.y - float(dy1 * radius)},
+                        {center.x + float(dx0 * radius), center.y - float(dy1 * radius)}};
+                    MapPolygonData(clipView, q, 4, col);
+                }
+            }
+            // Curved 3D latitude & longitude graticule arcs on the front hemisphere.
+            if (range > 45000.f)
+            {
+                const int latStep = range > 240000.f ? 15 : 5;
+                const int lonStep = range > 240000.f ? 30 : 10;
+                const ColorRGBA gridCol{.34f, .72f, .78f, range > 240000.f ? .24f : .16f};
+                for (int latitude = -75; latitude <= 75; latitude += latStep)
+                {
+                    for (int longitude = -180; longitude < 180; longitude += 6)
+                    {
+                        bool f0 = false, f1 = false;
+                        const auto p0 = globe.Project(world::SurfaceGeometry::FromDegrees(latitude, longitude), &f0);
+                        const auto p1 =
+                            globe.Project(world::SurfaceGeometry::FromDegrees(latitude, longitude + 6), &f1);
+                        if (f0 && f1)
+                        {
+                            drawScreenLine(p0, p1, gridCol, 1.f);
+                        }
+                    }
+                }
+                for (int longitude = -180; longitude < 180; longitude += lonStep)
+                {
+                    for (int latitude = -84; latitude < 84; latitude += 6)
+                    {
+                        bool f0 = false, f1 = false;
+                        const auto p0 = globe.Project(world::SurfaceGeometry::FromDegrees(latitude, longitude), &f0);
+                        const auto p1 =
+                            globe.Project(world::SurfaceGeometry::FromDegrees(latitude + 6, longitude), &f1);
+                        if (f0 && f1)
+                        {
+                            drawScreenLine(p0, p1, gridCol, 1.f);
+                        }
+                    }
+                }
+            }
+        }
         auto line = [&](const world::SurfacePoint &a, const world::SurfacePoint &b, ColorRGBA color,
                         float width) {
-            auto x = project(a), y = project(b);
-            // The projection cut is the antipodal rim; never draw a chord across the whole atlas.
-            if (Game::Distance(x, y) > planetRadius * .4 &&
+            bool f0 = false, f1 = false;
+            const auto p0 = toScreen(a, &f0);
+            const auto p1 = toScreen(b, &f1);
+            if (!f0 || !f1)
+            {
+                return;
+            }
+            if (!full && Game::Distance(project(a), project(b)) > planetRadius * .4 &&
                 world::SurfaceGeometry::Distance(planetRadius, a, b) < planetRadius * .2)
             {
                 return;
             }
-            MapLine(view, x, y, color, width);
+            drawScreenLine(p0, p1, color, width);
         };
-        if (full && range > 200000)
-        {
-            for (int latitude = -75; latitude <= 75; latitude += 15)
-            {
-                for (int longitude = -180; longitude < 180; longitude += 5)
-                {
-                    line(world::SurfaceGeometry::FromDegrees(latitude, longitude),
-                         world::SurfaceGeometry::FromDegrees(latitude, longitude + 5), {.16f, .25f, .27f}, 1);
-                }
-            }
-            for (int longitude = -180; longitude < 180; longitude += 30)
-            {
-                for (int latitude = -90; latitude < 90; latitude += 5)
-                {
-                    line(world::SurfaceGeometry::FromDegrees(latitude, longitude),
-                         world::SurfaceGeometry::FromDegrees(latitude + 5, longitude), {.16f, .25f, .27f}, 1);
-                }
-            }
-        }
         static std::vector<Vector2> regionPoly;
         for (const auto &r : snapshot->planet->regions)
         {
@@ -4606,46 +5619,47 @@ void PlanetHud::DrawMap(bool full)
             {
                 continue;
             }
-            if (world::SurfaceGeometry::Distance(planetRadius, r.center.position, originFrame.origin) +
-                    r.boundingRadiusMeters >=
-                planetRadius * world::SurfaceGeometry::Pi)
+            regionPoly.clear();
+            regionPoly.reserve(r.footprint.size());
+            bool allFront = true;
+            for (auto vertex : r.footprint)
+            {
+                bool f = false;
+                regionPoly.push_back(
+                    toScreen(world::SurfaceGeometry::FromLocal(r.frame, vertex, planetRadius), &f));
+                allFront = allFront && f;
+            }
+            if (!allFront)
             {
                 continue;
             }
-            regionPoly.clear();
-            regionPoly.reserve(r.footprint.size());
-            for (auto vertex : r.footprint)
-            {
-                regionPoly.push_back(
-                    view.Project(project(world::SurfaceGeometry::FromLocal(r.frame, vertex, planetRadius))));
-            }
-            ColorRGBA zoneColor(.13f, .2f, .21f);
+            ColorRGBA zoneColor(.13f, .24f, .26f, .78f);
             if (w.relayNetwork.RegionVisited(r.definition.id))
             {
                 switch (r.definition.kind)
                 {
                 case world::RegionKind::Settlement:
-                    zoneColor = {.19f, .31f, .32f};
+                    zoneColor = {.20f, .38f, .40f, .86f};
                     break;
                 case world::RegionKind::Outpost:
-                    zoneColor = {.18f, .32f, .28f};
+                    zoneColor = {.18f, .38f, .32f, .86f};
                     break;
                 case world::RegionKind::Mine:
-                    zoneColor = {.32f, .27f, .17f};
+                    zoneColor = {.38f, .30f, .18f, .86f};
                     break;
                 case world::RegionKind::Outlaw:
-                    zoneColor = {.35f, .18f, .17f};
+                    zoneColor = {.40f, .20f, .18f, .86f};
                     break;
                 case world::RegionKind::AncientRuins:
-                    zoneColor = {.27f, .22f, .34f};
+                    zoneColor = {.32f, .24f, .40f, .86f};
                     break;
                 case world::RegionKind::Wilderness:
                 default:
-                    zoneColor = {.21f, .30f, .22f};
+                    zoneColor = {.22f, .34f, .24f, .82f};
                     break;
                 }
             }
-            MapPolygonData(view, regionPoly.data(), regionPoly.size(), zoneColor);
+            MapPolygonData(clipView, regionPoly.data(), regionPoly.size(), zoneColor);
         }
         static std::weak_ptr<const world::GeneratedPlanet> indexedPlanet;
         static std::unique_ptr<world::RouteSpatialIndex> routeIndex;
@@ -4655,8 +5669,6 @@ void PlanetHud::DrawMap(bool full)
             routeIndex = std::make_unique<world::RouteSpatialIndex>(*snapshot->planet);
             indexedPlanet = snapshot->planet;
         }
-        // CQ-04B (Rev 5+): Match WorldStreaming settlement clipping so removed intra-city connection
-        // diagonals never ghost onto the minimap or zoomed regional map over Halo / Ordin Mine.
         struct MapSettlementClip
         {
             world::Vector3d normal;
@@ -4743,7 +5755,7 @@ void PlanetHud::DrawMap(bool full)
                                   : range > 10000 ? (std::max)(size_t(1), (edge.points.size() + 23) / 24)
                                                   : 1;
             const ColorRGBA roadColor =
-                edge.mode == world::RouteMode::Road ? ColorRGBA(.56f, .69f, .65f) : ColorRGBA(.3f, .47f, .59f, .5f);
+                edge.mode == world::RouteMode::Road ? ColorRGBA(.62f, .78f, .72f) : ColorRGBA(.36f, .64f, .78f, .55f);
             const float roadWidth = full ? 1.5f : 3.f;
             for (std::size_t i = stride; i < edge.points.size() + stride - 1; i += stride)
             {
@@ -4785,25 +5797,26 @@ void PlanetHud::DrawMap(bool full)
             {
                 return;
             }
-            auto position = project(item.frame.origin);
-            if (Game::Distance(position, view.worldCenter) > range + float(diag))
-            {
-                return;
-            }
             const double cy = std::cos(item.yaw), sy = std::sin(item.yaw);
             const double hx = item.sizeMeters.x * .5, hy = item.sizeMeters.y * .5;
             Vector2 quad[4];
+            bool allFront = true;
             static constexpr double kSigns[4][2] = {{-1, -1}, {1, -1}, {1, 1}, {-1, 1}};
             for (int c = 0; c < 4; ++c)
             {
                 const double x = kSigns[c][0] * hx, y = kSigns[c][1] * hy;
                 const auto pt = world::SurfaceGeometry::FromLocal(
                     item.frame, {x * cy - y * sy, x * sy + y * cy, 0}, planetRadius);
-                quad[c] = view.Project(project(pt));
+                bool f = false;
+                quad[c] = toScreen(pt, &f);
+                allFront = allFront && f;
             }
-            MapPolygonData(view, quad, 4,
-                           item.use == world::ContentUse::Housing ? ColorRGBA(.44f, .56f, .57f)
-                                                                  : ColorRGBA(.55f, .66f, .47f));
+            if (allFront)
+            {
+                MapPolygonData(clipView, quad, 4,
+                               item.use == world::ContentUse::Housing ? ColorRGBA(.46f, .60f, .62f)
+                                                                      : ColorRGBA(.58f, .70f, .50f));
+            }
         };
         if (range < 10000)
         {
@@ -4823,9 +5836,8 @@ void PlanetHud::DrawMap(bool full)
                     {
                         if (!full)
                         {
-                            const float wPx = float(road.widthMeters) * view.scale;
-                            MapLine(view, project(road.points.front()), project(road.points.back()),
-                                    {.48f, .55f, .54f, .85f}, wPx);
+                            const float wPx = float(road.widthMeters) * pxPerMeter;
+                            line(road.points.front(), road.points.back(), {.48f, .55f, .54f, .85f}, wPx);
                         }
                         continue;
                     }
@@ -4842,37 +5854,29 @@ void PlanetHud::DrawMap(bool full)
                                              road.kind == world::StreetKind::UnderpassRamp)
                                               ? ColorRGBA(.28f, .44f, .50f)
                                               : ColorRGBA(.39f, .47f, .46f);
-                    const float wPx = full ? 1.f : (std::max)(1.5f, float(road.widthMeters) * view.scale);
-                    Vector2 prev = project(road.points[0]);
+                    const float wPx = full ? 1.2f : (std::max)(1.5f, float(road.widthMeters) * pxPerMeter);
                     for (std::size_t i = 1; i < road.points.size(); ++i)
                     {
-                        const Vector2 curr = project(road.points[i]);
-                        MapLine(view, prev, curr, col, wPx);
-                        prev = curr;
+                        line(road.points[i - 1], road.points[i], col, wPx);
                     }
                 }
-                // Draw CQ-04B intersection pads and roundabouts so trimmed road segments connect cleanly on the map.
                 for (const auto &inter : chunk->intersections)
                 {
                     if (chordFar(inter.center, focus, range + inter.radiusMeters))
                     {
                         continue;
                     }
-                    const Vector2 pos = project(inter.center);
-                    if (Game::Distance(pos, view.worldCenter) > range + float(inter.radiusMeters))
-                    {
-                        continue;
-                    }
-                    const Vector2 sp = view.Project(pos);
-                    const float rPx = (std::max)(1.8f, float(inter.radiusMeters) * view.scale);
-                    if (Game::Distance(sp, view.center) + rPx > view.radius)
+                    bool front = false;
+                    const Vector2 sp = toScreen(inter.center, &front);
+                    const float rPx = (std::max)(1.8f, float(inter.radiusMeters) * pxPerMeter);
+                    if (!front || Game::Distance(sp, center) + rPx > radius)
                     {
                         continue;
                     }
                     if (inter.control == world::IntersectionControl::Roundabout && inter.islandRadiusMeters > 1.)
                     {
                         Drawing::DrawEllipse(sp.x, sp.y, rPx, rPx, {.44f, .54f, .53f, 1.f});
-                        const float islPx = (std::max)(1.f, float(inter.islandRadiusMeters) * view.scale);
+                        const float islPx = (std::max)(1.f, float(inter.islandRadiusMeters) * pxPerMeter);
                         Drawing::DrawEllipse(sp.x, sp.y, islPx, islPx, {.22f, .42f, .33f, 1.f});
                     }
                     else
@@ -4895,17 +5899,16 @@ void PlanetHud::DrawMap(bool full)
                           drawStaticMap);
     for (const auto &region : snapshot->planet->regions)
     {
-        if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, region.access.position, focus) >
-            range)
+        if (world::SurfaceGeometry::Distance(planetRadius, region.access.position, focus) > range)
         {
             continue;
         }
-        MapPin(view, project(region.access.position),
-               region.center.space == world::SpaceKind::Subsurface ? ColorRGBA(.65f, .81f, 1)
-                                                                   : ColorRGBA(.73f, .88f, .77f),
-               w.relayNetwork.RegionVisited(region.definition.id) ? region.definition.name.c_str()
-                                                                  : "미확인 지역",
-               full, full ? 4 : 3);
+        const bool visited = w.relayNetwork.RegionVisited(region.definition.id);
+        const bool showName = full && (visited || range <= 120000.f);
+        drawSurfacePin(region.access.position,
+                       region.center.space == world::SpaceKind::Subsurface ? ColorRGBA(.65f, .81f, 1)
+                                                                           : ColorRGBA(.73f, .92f, .80f),
+                       visited ? region.definition.name.c_str() : "미확인 지역", showName, full ? 4.f : 3.f);
     }
     for (const auto &relay : snapshot->planet->relays)
     {
@@ -4914,13 +5917,13 @@ void PlanetHud::DrawMap(bool full)
         {
             continue;
         }
-        if (world::SurfaceGeometry::Distance(session->Planet().radiusMeters, relay.location.position, focus) >
-            range)
+        if (world::SurfaceGeometry::Distance(planetRadius, relay.location.position, focus) > range)
         {
             continue;
         }
-        const auto projected = view.Project(project(relay.location.position));
-        if (full && view.Inside(projected, 10))
+        bool front = false;
+        const auto projected = toScreen(relay.location.position, &front);
+        if (full && front && insideDisc(projected, 10.f))
         {
             const bool registered = w.relayNetwork.Registered(relay.id);
             const bool selected = w.selectedRelay == relay.id;
@@ -4930,16 +5933,14 @@ void PlanetHud::DrawMap(bool full)
             MapLabel(projected, registered ? "등록 중계환" : "발견 · E 등록",
                      registered ? ColorRGBA(.35f, 1, .9f) : ColorRGBA(.65f, .69f, .75f), true);
         }
-        else
+        else if (front)
         {
-            MapPin(view, project(relay.location.position),
-                   w.relayNetwork.Registered(relay.id) ? ColorRGBA(.35f, 1, .9f) : ColorRGBA(.65f, .69f, .75f),
-                   nullptr, false, w.selectedRelay == relay.id ? 7 : 4);
+            drawSurfacePin(relay.location.position,
+                           w.relayNetwork.Registered(relay.id) ? ColorRGBA(.35f, 1, .9f)
+                                                               : ColorRGBA(.65f, .69f, .75f),
+                           nullptr, false, w.selectedRelay == relay.id ? 7.f : 4.f);
         }
     }
-    // CQ-04 C2: Show enterable urban facilities (Market / Clinic / Workshop / CivicHall) as color-coded
-    // dots directly inside the minimap and expanded map (no external label/leader lines; to be replaced by
-    // dedicated UI icons in CQ-12).
     if (range <= 900.f)
     {
         const auto *planetPtr = snapshot->planet.get();
@@ -4965,7 +5966,7 @@ void PlanetHud::DrawMap(bool full)
                                   : kind == UrbanFacilityKind::Clinic   ? ColorRGBA(.32f, .94f, 1.f)
                                   : kind == UrbanFacilityKind::Workshop ? ColorRGBA(1.f, .70f, .24f)
                                                                         : ColorRGBA(.62f, .80f, 1.f);
-            MapDot(view, project(doorPt), col, full ? 4.5f : 3.5f);
+            drawSurfaceDot(doorPt, col, full ? 4.5f : 3.5f);
             ++drawnFacilities;
         };
         for (const auto &chunk : snapshot->chunks)
@@ -5008,30 +6009,49 @@ void PlanetHud::DrawMap(bool full)
             if (CommunityTaskProgress::IsActive(site))
             {
                 const auto &target = site.task == CommunityTaskProgress::Accepted ? site.target : site.contact;
-                MapPin(view, project(target), {1, .8f, .35f},
-                       site.task == CommunityTaskProgress::Accepted
-                           ? PlanetCommunity::ZoneTaskName(site, planetPtr)
-                           : "현장 기록 제출",
-                       full, 5);
+                drawSurfacePin(target, {1, .8f, .35f},
+                               site.task == CommunityTaskProgress::Accepted
+                                   ? PlanetCommunity::ZoneTaskName(site, planetPtr)
+                                   : "현장 기록 제출",
+                               full, 5.f);
             }
             else if (site.task == CommunityTaskProgress::Offered && range < 6000)
             {
-                MapPin(view, project(site.contact), {.58f, .88f, .96f}, "현장 의뢰", full, 4);
+                drawSurfacePin(site.contact, {.58f, .88f, .96f}, "현장 의뢰", full, 4.f);
             }
         }
     }
+    // Item 12: Filter dormant orange random subquests to the player's current region cluster only.
+    const int playerClusterIdx = NearestClusterIndex(*snapshot->planet, session->Pose().origin);
+    const double clusterLimitMeters = (std::min)(24000.0, planetRadius * 0.045);
     for (const auto &enc : encounters::WorldEncounters::Get().State().live)
     {
         if (!enc.surfaceSpace || enc.phase == encounters::Phase::Completed)
         {
             continue;
         }
+        const bool active = enc.phase != encounters::Phase::Dormant;
+        if (!active)
+        {
+            const int encClusterIdx = NearestClusterIndex(*snapshot->planet, enc.surfaceAnchor);
+            if (encClusterIdx != playerClusterIdx)
+            {
+                continue;
+            }
+            if (!snapshot->planet->clusters.empty() &&
+                world::SurfaceGeometry::Distance(planetRadius, enc.surfaceAnchor,
+                                                 snapshot->planet->clusters[size_t(playerClusterIdx)]) >
+                    clusterLimitMeters)
+            {
+                continue;
+            }
+        }
         if (world::SurfaceGeometry::Distance(planetRadius, enc.surfaceAnchor, focus) <= range * 1.25)
         {
-            const bool active = enc.phase != encounters::Phase::Dormant;
-            MapPin(view, project(enc.surfaceAnchor),
-                   active ? ColorRGBA(1.f, .86f, .30f) : ColorRGBA(1.f, .56f, .24f),
-                   full ? enc.title.c_str() : nullptr, full, active ? 6 : 4);
+            const bool showEncLabel = full && (active || range <= 35000.f);
+            drawSurfacePin(enc.surfaceAnchor,
+                           active ? ColorRGBA(1.f, .86f, .30f) : ColorRGBA(1.f, .56f, .24f),
+                           showEncLabel ? enc.title.c_str() : nullptr, showEncLabel, active ? 6.f : 4.f);
         }
     }
     auto &chapter = game::GameLevels::Chapter();
@@ -5043,28 +6063,49 @@ void PlanetHud::DrawMap(bool full)
                 point.action != game::ChapterAction::ConvoySupply &&
                 !game::ChapterOneLevel::IsOptionalConversation(point.action))
             {
-                MapPin(view, project(chapter.Surface().Point(point.position)), {1, .79f, .36f}, point.label,
-                       full, 4);
+                drawSurfacePin(chapter.Surface().Point(point.position), {1, .79f, .36f}, point.label, full, 4.f);
             }
         }
     }
     const auto goal = ActivityJournal::Current();
-    if (goal.surfaceTarget && !goal.title.empty() &&
-        world::SurfaceGeometry::Dot(session->Origin().origin.normal, goal.surfaceTarget->normal) >
-            -1 + 1.e-12)
+    if (goal.surfaceTarget && !goal.title.empty())
     {
-        DrawTrackedMarker(view, project(*goal.surfaceTarget), goal.title, full);
+        if (full)
+        {
+            bool front = false;
+            const auto sp = globe.Project(*goal.surfaceTarget, &front);
+            if (front && insideDisc(sp, 10.f))
+            {
+                Drawing::DrawGlow(sp, 14.f, {1.f, .82f, .28f, .52f});
+                Icon("destination", sp.x - 9.f, sp.y - 9.f, 18.f, false, {1.f, .88f, .34f});
+                MapLabel(sp, goal.title.c_str(), {1.f, .90f, .42f}, true);
+            }
+            else
+            {
+                const double x = world::SurfaceGeometry::Dot(goal.surfaceTarget->normal, globe.east);
+                const double y = world::SurfaceGeometry::Dot(goal.surfaceTarget->normal, globe.north);
+                const float angle = float(std::atan2(-y, x));
+                const Vector2 edge{center.x + std::cos(angle) * (radius - 12.f),
+                                   center.y + std::sin(angle) * (radius - 12.f)};
+                DirectionArrow(edge, angle, 8.f, {1.f, .86f, .34f}, true);
+            }
+        }
+        else if (world::SurfaceGeometry::Dot(session->Origin().origin.normal, goal.surfaceTarget->normal) >
+                 -1 + 1.e-12)
+        {
+            DrawTrackedMarker(view, project(*goal.surfaceTarget), goal.title, false);
+        }
     }
     if (auto bike = Game::Get().SurfaceBike();
-        bike && world::SurfaceGeometry::Distance(session->Planet().radiusMeters, *bike, focus) < range + 10)
+        bike && world::SurfaceGeometry::Distance(planetRadius, *bike, focus) < range + 10)
     {
-        MapDisc(view, project(*bike), 4 / view.scale, {1, .76f, .4f});
+        drawSurfaceDot(*bike, {1, .76f, .4f}, full ? 4.5f : 4.f);
     }
-    if (w.aircraft.position && world::SurfaceGeometry::Distance(session->Planet().radiusMeters,
-                                                                *w.aircraft.position, focus) < range + 10)
+    if (w.aircraft.position &&
+        world::SurfaceGeometry::Distance(planetRadius, *w.aircraft.position, focus) < range + 10)
     {
-        MapPin(view, project(*w.aircraft.position), {.4f, .9f, 1},
-               w.aircraft.health > 0 ? "공용 비행체" : "비행체 잔해", full, 4);
+        drawSurfacePin(*w.aircraft.position, {.4f, .9f, 1},
+                       w.aircraft.health > 0 ? "공용 비행체" : "비행체 잔해", full, 4.f);
     }
     if (const auto *party = Game::Get().SurfaceParty())
     {
@@ -5072,12 +6113,11 @@ void PlanetHud::DrawMap(bool full)
         {
             const auto &member = party->State().members[i];
             if (member.joined && member.place != CompanionPlace::Mine &&
-                world::SurfaceGeometry::Distance(session->Planet().radiusMeters, member.position, focus) <
-                    range)
+                world::SurfaceGeometry::Distance(planetRadius, member.position, focus) < range)
             {
-                MapPin(view, project(member.position),
-                       member.combat.health > 0 ? ColorRGBA(.4f, .92f, .83f) : ColorRGBA(1, .4f, .3f),
-                       i == 0 ? "리아" : "카인", full, 4);
+                drawSurfacePin(member.position,
+                               member.combat.health > 0 ? ColorRGBA(.4f, .92f, .83f) : ColorRGBA(1, .4f, .3f),
+                               i == 0 ? "리아" : "카인", full, 4.f);
             }
         }
     }
@@ -5089,8 +6129,10 @@ void PlanetHud::DrawMap(bool full)
             {
                 continue;
             }
-            auto at = view.Project({officer.position.x * 2, officer.position.y * 2});
-            if (!view.Inside(at, 7))
+            const auto officerPt = session->PointAt(officer.position.x * 2, officer.position.y * 2);
+            bool front = false;
+            const auto at = toScreen(officerPt, &front);
+            if (!front || !insideDisc(at, 7.f))
             {
                 continue;
             }
@@ -5099,26 +6141,22 @@ void PlanetHud::DrawMap(bool full)
             {
                 float angle = officer.facing.yaw - CivicJustice::kSightHalfAngle +
                               2 * CivicJustice::kSightHalfAngle * i / 8;
-                cone.push_back(
-                    view.Project({(officer.position.x + std::cos(angle) * CivicJustice::kSightRange) * 2,
-                                  (officer.position.y + std::sin(angle) * CivicJustice::kSightRange) * 2}));
+                const auto rimPt = session->PointAt((officer.position.x + std::cos(angle) * CivicJustice::kSightRange) * 2,
+                                                    (officer.position.y + std::sin(angle) * CivicJustice::kSightRange) * 2);
+                cone.push_back(toScreen(rimPt));
             }
-            MapPolygon(view, std::move(cone), {1, .5f, .2f, .15f});
-            auto ahead = view.Project({(officer.position.x + std::cos(officer.facing.yaw)) * 2,
-                                       (officer.position.y + std::sin(officer.facing.yaw)) * 2});
+            MapPolygonData(clipView, cone.data(), cone.size(), {1, .5f, .2f, .15f});
+            const auto aheadPt = session->PointAt((officer.position.x + std::cos(officer.facing.yaw)) * 2,
+                                                  (officer.position.y + std::sin(officer.facing.yaw)) * 2);
+            const auto ahead = toScreen(aheadPt);
             DirectionArrow(at, std::atan2(ahead.y - at.y, ahead.x - at.x), 5, {1, .65f, .3f});
         }
     }
     if (w.planetDestination)
     {
-        // At an antipode a great-circle bearing is genuinely ambiguous. Keep the distance readout,
-        // but don't ask the local projection for a direction that does not exist.
-        bool hasBearing = world::SurfaceGeometry::Dot(session->Origin().origin.normal,
-                                                      w.planetDestination->normal) > -1 + 1.e-12;
-        auto point = hasBearing ? view.Project(project(*w.planetDestination)) : view.center;
-        auto player = view.Project({float(local.x), float(local.y)});
-        float distance = Game::Distance(point, view.center);
-        if (hasBearing && view.Inside(point, 10))
+        bool front = false;
+        const auto point = toScreen(*w.planetDestination, &front);
+        if (front && insideDisc(point, 10.f))
         {
             if (full)
             {
@@ -5127,30 +6165,57 @@ void PlanetHud::DrawMap(bool full)
             }
             else
             {
-                MapPin(view, project(*w.planetDestination), {1, .78f, .3f}, "목적지", false, 6);
+                drawSurfacePin(*w.planetDestination, {1, .78f, .3f}, "목적지", false, 6.f);
             }
         }
-        else if (hasBearing && distance > .001f)
+        else if (full)
         {
-            Vector2 edge{view.center.x + (point.x - view.center.x) * (radius - 12) / distance,
-                         view.center.y + (point.y - view.center.y) * (radius - 12) / distance};
-            DirectionArrow(edge, std::atan2(point.y - player.y, point.x - player.x), 8, {1, .78f, .3f}, true);
+            const double x = world::SurfaceGeometry::Dot(w.planetDestination->normal, globe.east);
+            const double y = world::SurfaceGeometry::Dot(w.planetDestination->normal, globe.north);
+            const float angle = float(std::atan2(-y, x));
+            const Vector2 edge{center.x + std::cos(angle) * (radius - 12.f),
+                               center.y + std::sin(angle) * (radius - 12.f)};
+            DirectionArrow(edge, angle, 8.f, {1, .78f, .3f}, true);
+        }
+        else if (world::SurfaceGeometry::Dot(session->Origin().origin.normal, w.planetDestination->normal) >
+                 -1 + 1.e-12)
+        {
+            const auto playerPt = view.Project({float(local.x), float(local.y)});
+            const float distance = Game::Distance(point, view.center);
+            if (distance > .001f)
+            {
+                Vector2 edge{view.center.x + (point.x - view.center.x) * (radius - 12) / distance,
+                             view.center.y + (point.y - view.center.y) * (radius - 12) / distance};
+                DirectionArrow(edge, std::atan2(point.y - playerPt.y, point.x - playerPt.x), 8, {1, .78f, .3f},
+                               true);
+            }
         }
         if (full)
         {
             char destination[80];
             std::snprintf(destination, sizeof(destination), "목적지 거리 %.2f km",
-                          world::SurfaceGeometry::Distance(session->Planet().radiusMeters,
-                                                           *w.planetDestination, session->Pose().origin) /
+                          world::SurfaceGeometry::Distance(planetRadius, *w.planetDestination,
+                                                           session->Pose().origin) /
                               1000);
-            UiText(96, 208, destination, 15);
+            UiText(96, 202, destination, 15, {1.f, .86f, .44f});
         }
     }
-    auto player = view.Project({float(local.x), float(local.y)});
-    if (view.Inside(player, 14))
+    bool playerFront = false;
+    const auto player = toScreen(session->Pose().origin, &playerFront);
+    if (playerFront && insideDisc(player, 14.f))
     {
-        DirectionArrow(player, (w.isBikeMounted ? w.bikeYaw : w.facingYaw) + kPi * .25f, full ? 12 : 8,
-                       {.3f, .95f, .88f});
+        float playerAngle = (w.isBikeMounted ? w.bikeYaw : w.facingYaw) + kPi * .25f;
+        if (full)
+        {
+            const float yaw = w.car.mounted      ? w.car.Yaw(session->Origin())
+                              : w.isBikeMounted  ? w.bikeYaw
+                                                 : w.facingYaw;
+            const auto aheadPt =
+                session->PointAt(local.x + std::cos(yaw) * 4.0, local.y + std::sin(yaw) * 4.0);
+            const auto ahead = globe.Project(aheadPt);
+            playerAngle = std::atan2(ahead.y - player.y, ahead.x - player.x);
+        }
+        DirectionArrow(player, playerAngle, full ? 12 : 8, {.3f, .95f, .88f});
     }
     if (full)
     {
@@ -5171,8 +6236,6 @@ void PlanetHud::DrawMap(bool full)
             UiText(820, (w.relayPreparing ? 608.f : 586.f) + float(i) * 22, pages[page][i], 15,
                    {.76f, .87f, .82f});
         }
-        // CQ-12: Unified non-overlapping Full Map Legend Row (y=658..674, strictly below map circle bottom y=644)
-        // + Filter/Controls Footer (y=690..714).
         Drawing::DrawLine({96, 652}, {790, 652}, {.32f, .52f, .54f, .45f}, 1.f);
         Icon("relay", 96, 659, 13, false, {.35f, 1, .9f});
         UiText(114, 671, "중계환", 13, {.72f, .92f, .89f});
@@ -5186,15 +6249,16 @@ void PlanetHud::DrawMap(bool full)
         legendDot(302.f, 666.f, {.32f, .94f, 1.f}, "의료");
         legendDot(356.f, 666.f, {1.f, .70f, .24f}, "정비");
         legendDot(410.f, 666.f, {.62f, .80f, 1.f}, "행정");
-        legendDot(464.f, 666.f, {.58f, .88f, .96f}, "의뢰");
+        legendDot(464.f, 666.f, {1.f, .56f, .24f}, "클러스터 의뢰");
         UiText(96, 692,
-               w.mapRegisteredRelaysOnly ? "L 필터: 등록 중계환만 표시"
-                                         : "L 필터: 발견 중계환 · 미방문 지역은 미확인 표시",
-               14, {.74f, .86f, .85f});
+               w.mapRegisteredRelaysOnly
+                   ? "L 필터: 등록 중계환만 · 주황 서브퀘스트는 현재 클러스터만 표시"
+                   : "L 필터: 발견 중계환 · 주황 서브퀘스트는 현재 구역 클러스터만 표시",
+               13, {.74f, .86f, .85f});
         UiText(96, 712,
-               Game::Get().IsSurfaceMine() ? "Tab 지하 약도 / 지상 지도 · M 닫기"
-                                           : "좌클릭 목적지/중계환 선택 · 우클릭 해제 · M 닫기",
-               14, {.70f, .82f, .82f});
+               Game::Get().IsSurfaceMine() ? "Tab 지하/지상 전환 · G 우주 지도 · M 닫기"
+                                           : "좌클릭 드래그 회전 · 우클릭 목적지 지정 · G 우주 지도 · M 닫기",
+               13, {.70f, .82f, .82f});
         const float meters = range * .5f;
         Drawing::DrawLine({576, 707}, {690, 707}, {.7f, .88f, .87f}, 2);
         char distance[64];
@@ -5204,7 +6268,6 @@ void PlanetHud::DrawMap(bool full)
     }
     else
     {
-        // CQ-12: Isometric 45-degree North compass indicator on minimap rim + compact facility color key below.
         const Vector2 northPos{center.x - radius * .72f, center.y - radius * .72f};
         Drawing::DrawEllipse(northPos.x, northPos.y, 9.f, 9.f, {.03f, .07f, .09f, .92f});
         UiText(northPos.x - 4.5f, northPos.y + 4.5f, "N", 12, {.52f, .96f, .90f}, true);

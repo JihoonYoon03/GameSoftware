@@ -705,6 +705,19 @@ struct GameState
     std::array<MapViewState, size_t(MapRegion::Count)> mapViews = {};
     float planetMapRange = 1000; // Radius in metres, independent of the streamed render radius.
     Vector2 planetMapPan = {};
+    world::SurfacePoint planetGlobeCenter = world::SurfaceGeometry::FromDegrees(0, 0);
+    bool planetGlobeInitialized = false;
+    bool mapSpaceMode = false;
+    float mapHologramProgress = 1.f;
+    float mapSpaceYaw = 0.42f;
+    float mapSpacePitch = 0.56f;
+    float mapSpaceZoom = 1.f;
+    std::string mapSelectedPlanetId;
+    std::string mapTargetPlanetId;
+    bool mapDragging = false;
+    Vector2 mapDragLast = {};
+    Vector2 mapDragStart = {};
+    bool mapDraggedMoved = false;
     std::optional<world::SurfacePoint> planetDestination;
     bool journalVisible = false, dialogueHistoryVisible = false;
     // Open panels/pages are transient; activity selection is stored in a separate archive extension.
