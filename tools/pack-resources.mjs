@@ -447,8 +447,9 @@ function convert(name, relative, kind = 'prop', options = {}) {
                 clips.push({ name: clip.name, duration, frames, matrices, muzzles });
             }
             if (kind === 'human') {
-                // Append shared HUMAN_7H animation banks (CQ-07C2 support + directional transitions) without duplicating meshes.
-                for (const bankRel of ['AnimationBanks/HUMAN_7H_Support', 'AnimationBanks/HUMAN_7H_Transitions']) {
+                // Append shared HUMAN_7H animation banks without duplicating meshes.
+                for (const bankRel of ['AnimationBanks/HUMAN_7H_Support', 'AnimationBanks/HUMAN_7H_Transitions',
+                    'AnimationBanks/HUMAN_7H_Facility', 'AnimationBanks/HUMAN_7H_Boarding']) {
                     const bankData = load(bankRel);
                     const bankSkin = bankData.json.skins?.[0];
                     if (!bankSkin) throw Error('Shared animation bank missing skin: ' + bankRel);
@@ -774,6 +775,8 @@ for (const [name, file, normalize] of [['rock', 'Nature_Rock_01', true], ['tree'
 
 for (const type of ['Kite_Courier', 'Manta_AirTaxi', 'Mule_Skycrane', 'Warden_Survey'])
     for (const variant of ['', '_Variant']) convert('aircraft/' + type + variant, 'Aircraft/' + type + variant, 'aircraft');
+convert('boarding/Coupe', 'CQ06/Coupe_Boarding', 'vehicle');
+convert('boarding/Courier', 'CQ06/Courier_Boarding', 'aircraft');
 const scenery = JSON.parse(fs.readFileSync(path.join(resources, 'Documentation/scenery_assemblies.json')));
 for (const name of Object.keys(scenery.assemblies)) {
     convert('scenery/' + name, 'Scenery/' + name, 'prop',

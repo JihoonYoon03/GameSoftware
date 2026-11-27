@@ -283,6 +283,10 @@ class ActivityJournal
     static const CommunitySite *TrackedCommunity();
     static std::vector<size_t> CommunityEntries();
     static void Refresh();
+    static std::optional<world::SurfacePoint> MissionGiverTarget(MissionId id);
+    static std::optional<world::SurfacePoint> GuidanceTarget(std::string *labelOut = nullptr);
+    static bool TriggerGuidance(std::optional<world::SurfacePoint> overrideTarget = std::nullopt,
+                                const std::string &label = {});
 };
 
 enum class InteractionTarget
@@ -544,7 +548,7 @@ class WeaponWheel
 };
 struct GroundVehicle
 {
-    static constexpr int MaxHealth = 140;
+    static constexpr int MaxHealth = 260;
     std::optional<world::SurfacePoint> position;
     world::Vector3d heading{};
     int health = MaxHealth;
@@ -701,6 +705,10 @@ struct GameState
     float facilityReactionSeconds = 0;
     float noticeSecondsRemaining = 0;
     float noticeDurationSeconds = 0;
+    float guidanceSecondsRemaining = 0;
+    float guidanceDurationSeconds = 8.f;
+    std::optional<world::SurfacePoint> guidanceOverrideTarget;
+    std::string guidanceLabel;
     float movementAmount = 0;
     float movementSpeed = 0;
     PlayerMotion playerMotion;
@@ -827,6 +835,8 @@ class Game
         return !state.surfaceExploration ||
                (surface && surface->Planet().SameWorld(world::WorldCatalog::Erma()));
     }
+    bool IsGroundVehicleUnlocked() const;
+    bool IsAircraftUnlocked() const;
     bool EnterSurfaceMine();
     bool LeaveSurfaceMine();
     // CQ-04 C2: Urban facility interior entry, exit, and station services across all settlements.

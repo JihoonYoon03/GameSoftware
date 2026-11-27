@@ -61,7 +61,6 @@ CityFacilities::ClearPoint CityWalkways::StaticClearance(const GameState &world)
     }
     const auto &library = models::ModelLibrary::Get();
     for (const auto &device : {std::make_pair(kBeaconPosition, &library.beacon),
-                               std::make_pair(kCityReceiverPosition, &library.console),
                                std::make_pair(kRelayPosition, &library.breaker)})
     {
         const auto &mesh = models::ResourceAssets::Get(device.second->resourceId);

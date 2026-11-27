@@ -480,7 +480,7 @@ void LegacyIntegration()
               "Read-only live location bridge");
     }
     const auto &anchors = tutorial::Overworld::StoryAnchors();
-    Check(anchors.size() == 5, "Five existing exterior story anchors");
+    Check(anchors.size() == 4, "Four existing exterior story anchors after CityReceiver removal");
     std::set<std::string> anchorIds;
     for (const auto &anchor : anchors)
     {

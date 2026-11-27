@@ -1507,8 +1507,15 @@ void CityHud::DrawInteractionPrompt()
         break;
     }
     case InteractionTarget::ObservatorySignal:
-        label = "신호 콘솔 / 기록 수신";
+    {
+        const auto &arc = story::StoryArc::Get().State();
+        label = (arc.chapter4Complete && arc.epilogueShelterVisited && arc.epilogueClinicVisited &&
+                 arc.epilogueWorkshopVisited)
+                    ? (arc.nereusSignalReceived ? "신호 콘솔 / 네레우스 수신 기록 재생"
+                                                : "신호 콘솔 / 17일 수신 기록 정리")
+                    : (w.gateSignalHeard ? "신호 콘솔 / 보관 기록 확인" : "신호 콘솔 / 기록 수신");
         break;
+    }
     case InteractionTarget::ObservatoryExit:
         label = "승강기 / 도시로 내려가기";
         break;
@@ -1794,7 +1801,7 @@ void Hud::DrawActivityObjective(const std::string &context)
     const auto title = TextPages(goal.title, 412, 18, 1);
     const auto action = TextPages(goal.action, 412, 18, 1);
     const auto detail =
-        TextPages(goal.location + " · J 전체 기록" + (hold ? " · 소지 한도 / 현장 정산 보류" : std::string()),
+        TextPages(goal.location + " · J 기록 · N 경로 안내" + (hold ? " · 소지 한도 / 현장 정산 보류" : std::string()),
                   412, 14, 1);
     const size_t tick = size_t((std::max)(0, w.lastUpdateMilliseconds) / 5000);
     UiText(68, 57, title[tick % title.size()].front(), 18, {.78f, .96f, .94f}, true);
@@ -1839,7 +1846,7 @@ void CityHud::Draw()
             objective = "승강기로 도시에 내려가기";
             break;
         default:
-            objective = "광장 수신망에서 조사 경로 확인";
+            objective = "헤일로 광장에서 리아와 조사 경로 확인";
             break;
         }
     }
@@ -2182,9 +2189,13 @@ ActivityDetail ActivityBody(const std::vector<ActivityRow> &rows)
             {
                 body += std::string(reason) + "\n";
             }
-            if (status != MissionStatus::Active)
+            if (status == MissionStatus::NotAccepted)
             {
-                body += "참여를 수락/재개한 뒤 목표를 추적할 수 있습니다.\n";
+                body += "임무는 현장의 제안자에게 직접 방문해 수락합니다. [제안자 안내] 또는 월드에서 [N] 키로 3D 경로를 표시하세요.\n";
+            }
+            else if (status != MissionStatus::Active)
+            {
+                body += "보류 중인 임무는 재개하거나 [N] 경로 안내로 현장을 찾아갈 수 있습니다.\n";
             }
         }
         const auto records = StoryJournal::Collect(w, game::GameLevels::Mine().GetState(),
@@ -2256,7 +2267,7 @@ std::vector<UiControl> ActivityJournalUi::Controls()
                                 status == MissionStatus::Active      ? "진행 보류"
                                 : status == MissionStatus::Paused    ? "재개"
                                 : status == MissionStatus::Completed ? "완료"
-                                : row.eligible                       ? "수락"
+                                : row.eligible                       ? "제안자 안내"
                                                                      : "수락 불가",
                                 unlocked && row.eligible && status != MissionStatus::Completed,
                                 row.choice});
@@ -2606,13 +2617,14 @@ void Hud::DrawVitals()
         {
             const float hpRatio = Game::Clamp(float(w.car.health) / float(GroundVehicle::MaxHealth), 0, 1);
             const ColorRGBA hpInk = hpRatio < .3f ? ColorRGBA(1, .88f, .65f) : ColorRGBA(.65f, .9f, .81f);
+            UiText(1248, 672, "방탄 차체 · 험지 주행 · 동승", 14, {.65f, .9f, .88f}, true, true);
             UiText(1248, 700,
-                   "내구도 " + std::to_string(w.car.health) + " / " + std::to_string(GroundVehicle::MaxHealth),
+                   "장갑 " + std::to_string(w.car.health) + " / " + std::to_string(GroundVehicle::MaxHealth),
                    15, hpInk, true, true);
             Drawing::DrawRectangle(1060, 709, 188, 5, {.12f, .20f, .24f});
             Drawing::DrawRectangle(1060, 709, 188 * hpRatio, 5, hpInk);
             Icon("ground_car", 1022, 730, 22, true);
-            UiText(1248, 784, "E 하차", 14, {.78f, .9f, .88f}, true, true);
+            UiText(1248, 784, "Space 부스트 · E 하차", 14, {.78f, .9f, .88f}, true, true);
         }
         else
         {
@@ -2625,10 +2637,11 @@ void Hud::DrawVitals()
             Icon("reverse", 1090, 650, 20, true);
             UiText(1248, 670, "후진", 17, kUiInk, true, true);
         }
-        else if (w.isBikeMounted && w.pressedKeys[' '] && w.bikeSpeed > 0)
+        else if ((w.isBikeMounted && w.pressedKeys[' '] && w.bikeSpeed > 0) ||
+                 (w.car.mounted && w.pressedKeys[' '] && w.car.speed > 0))
         {
-            Icon("boost", 1090, 675, 20, true);
-            UiText(1248, 695, "부스트", 17, {.55f, .95f, .88f}, true, true);
+            Icon("boost", 1090, 650, 20, true);
+            UiText(1248, 670, w.car.mounted ? "오버드라이브" : "부스트", 17, {.55f, .95f, .88f}, true, true);
         }
     }
     else if (combat && mine.loadout.IsFirearmEquipped())
@@ -3095,7 +3108,9 @@ void Hud::Activate(const UiControl &control, int direction)
         ActivityJournalUi::Select(control.choice);
         if (ActivityJournal::TrackMission(MissionId(control.choice)))
         {
-            g.ShowNotice(std::string("목표 추적 / ") + QuestParticipation::Name(MissionId(control.choice)));
+            ActivityJournal::TriggerGuidance();
+            g.ShowNotice(std::string("목표 추적 / ") + QuestParticipation::Name(MissionId(control.choice)) +
+                         " · 3D 경로 안내 [N]");
         }
         break;
     case UiAction::SelectActivity:

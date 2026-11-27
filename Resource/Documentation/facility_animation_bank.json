@@ -1,0 +1,130 @@
+{
+  "request": "CQ-11B",
+  "authored_sample_rate_hz": 60,
+  "clips": {
+    "Shop_Idle_Counter_Loop": {
+      "duration_s": 3.6,
+      "loop": true,
+      "events": {}
+    },
+    "Shop_Talk_Welcome": {
+      "duration_s": 1.2333333333333334,
+      "loop": false,
+      "events": {
+        "welcome_peak": 0.43,
+        "recover": 0.93
+      }
+    },
+    "Shop_Trade_HandOver": {
+      "duration_s": 1.1333333333333333,
+      "loop": false,
+      "events": {
+        "handover_peak": 0.49,
+        "nod_peak": 0.66,
+        "recover": 0.94
+      }
+    },
+    "Shop_Talk_Explain_Loop": {
+      "duration_s": 3.2,
+      "loop": true,
+      "events": {}
+    },
+    "Shop_Farewell_Nod": {
+      "duration_s": 0.9666666666666667,
+      "loop": false,
+      "events": {
+        "nod_peak": 0.43,
+        "recover": 0.91
+      }
+    },
+    "Shop_Service_Inspect_Loop": {
+      "duration_s": 3.2,
+      "loop": true,
+      "events": {}
+    },
+    "Resident_Talk_Listen_Loop": {
+      "duration_s": 3.0,
+      "loop": true,
+      "events": {
+        "nod_peak": 0.58
+      }
+    }
+  },
+  "mixamo_retargeted_from_human_7h": {
+    "Idle": true,
+    "Walk": true,
+    "Run": true,
+    "Aim_Base": false,
+    "Dodge_Left_L": false,
+    "Support_Inspect_Loop": true,
+    "Aim_Walk_Forward": true,
+    "Aim_Walk_ForwardLeft": true,
+    "Aim_Walk_Left": true,
+    "Aim_Walk_BackLeft": true,
+    "Aim_Walk_Back": true,
+    "Aim_Walk_BackRight": true,
+    "Aim_Walk_Right": true,
+    "Aim_Walk_ForwardRight": true,
+    "Aim_Run_Forward": true,
+    "Aim_Run_ForwardLeft": true,
+    "Aim_Run_Left": true,
+    "Aim_Run_BackLeft": true,
+    "Aim_Run_Back": true,
+    "Aim_Run_BackRight": true,
+    "Aim_Run_Right": true,
+    "Aim_Run_ForwardRight": true
+  },
+  "interruption_blend_seconds": 0.2,
+  "owns_gameplay_events": false,
+  "root_motion": "in_place",
+  "banks": {
+    "HUMAN_7H_Facility.glb": {
+      "bones": 23,
+      "inverse_bind_max_error": 0.0,
+      "durations_s": {
+        "Shop_Idle_Counter_Loop": 3.6,
+        "Shop_Talk_Welcome": 1.233333,
+        "Shop_Trade_HandOver": 1.133333,
+        "Shop_Talk_Explain_Loop": 3.2,
+        "Shop_Farewell_Nod": 0.966667,
+        "Shop_Service_Inspect_Loop": 3.2,
+        "Resident_Talk_Listen_Loop": 3.0
+      }
+    },
+    "Mixamo_22_Facility.glb": {
+      "bones": 22,
+      "inverse_bind_max_error": 0.0,
+      "durations_s": {
+        "Shop_Idle_Counter_Loop": 3.6,
+        "Shop_Talk_Welcome": 1.233333,
+        "Shop_Trade_HandOver": 1.133333,
+        "Shop_Talk_Explain_Loop": 3.2,
+        "Shop_Farewell_Nod": 0.966667,
+        "Shop_Service_Inspect_Loop": 3.2,
+        "Resident_Talk_Listen_Loop": 3.0,
+        "Idle": 2.0,
+        "Walk": 1.0,
+        "Run": 0.666667,
+        "Aim_Base": 0.033333,
+        "Dodge_Left_L": 0.4,
+        "Support_Inspect_Loop": 1.4,
+        "Aim_Walk_Forward": 1.0,
+        "Aim_Walk_ForwardLeft": 1.0,
+        "Aim_Walk_Left": 1.0,
+        "Aim_Walk_BackLeft": 1.0,
+        "Aim_Walk_Back": 1.0,
+        "Aim_Walk_BackRight": 1.0,
+        "Aim_Walk_Right": 1.0,
+        "Aim_Walk_ForwardRight": 1.0,
+        "Aim_Run_Forward": 0.666667,
+        "Aim_Run_ForwardLeft": 0.666667,
+        "Aim_Run_Left": 0.666667,
+        "Aim_Run_BackLeft": 0.666667,
+        "Aim_Run_Back": 0.666667,
+        "Aim_Run_BackRight": 0.666667,
+        "Aim_Run_Right": 0.666667,
+        "Aim_Run_ForwardRight": 0.666667
+      }
+    }
+  }
+}

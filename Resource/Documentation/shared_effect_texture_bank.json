@@ -1,0 +1,81 @@
+{
+  "request": "GFX-06",
+  "size": [
+    512,
+    512
+  ],
+  "color_space": "linear",
+  "wrap": "repeat",
+  "textures": {
+    "Frontier_Effects_Masks": {
+      "file": "Export/Textures/SharedEffects/Frontier_Effects_Masks.png",
+      "sha256": "2279e53b9a66b6fa6f129191ee2c1af5be61473e92b1ea099956b0c1797668ec",
+      "channels": {
+        "R": "water_ripples",
+        "G": "exhaust_and_flame_breakup",
+        "B": "signal_hologram_scan",
+        "A": "mine_dust_density"
+      }
+    },
+    "Frontier_Water_Flow": {
+      "file": "Export/Textures/SharedEffects/Frontier_Water_Flow.png",
+      "sha256": "55a6193448f55edbe5a113f13766a347e7436f6d09207b580b4c8bda3aaff946",
+      "channels": {
+        "R": "U",
+        "G": "V in PNG row direction",
+        "B": "unused"
+      },
+      "decode": "sample.rg * 2 - 1"
+    }
+  },
+  "material_defaults": {
+    "water": {
+      "mask": "R",
+      "tile_uv": [
+        1,
+        1
+      ],
+      "scroll_uv_per_second": [
+        0.021,
+        -0.013
+      ],
+      "flow_strength_uv_per_second": 0.035
+    },
+    "exhaust": {
+      "mask": "G",
+      "tile_uv": [
+        1,
+        2
+      ],
+      "scroll_uv_per_second": [
+        0,
+        -0.67
+      ],
+      "opacity_multiplier": 0.7
+    },
+    "signal_hologram": {
+      "mask": "B",
+      "tile_uv": [
+        1,
+        1
+      ],
+      "scroll_uv_per_second": [
+        0,
+        -0.17
+      ],
+      "modulation_strength": 0.23
+    },
+    "mine_dust": {
+      "mask": "A",
+      "tile_uv": [
+        1,
+        1
+      ],
+      "scroll_uv_per_second": [
+        0.042,
+        -0.033
+      ],
+      "opacity_multiplier": 0.44
+    }
+  }
+}

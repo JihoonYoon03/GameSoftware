@@ -523,16 +523,22 @@ void EmitRev5Street(ContentCell &cell, const GeneratedPlanet &p, const Generated
                     Vector3d b, unsigned lanes, StreetKind kind, double startTrim, double endTrim,
                     double startWidthOverride = 0., double startElevOffset = 0., double endElevOffset = 0.)
 {
+    const CityCore *landmarkCore = nullptr;
     if (p.cityCores)
     {
-        if (auto core = p.cityCores->Find(r.definition.id);
-            core && (!core->lots.empty() || !core->roads.empty()))
+        if (auto core = p.cityCores->Find(r.definition.id))
         {
-            // Keep authored CityCore interior & tight perimeter buffer clear so procedural streets stitch cleanly
-            // right outside the core without leaving an empty moat or X-crossing authored roads.
-            if (Norm(a) < core->radiusMeters + 8. || Norm(b) < core->radiusMeters + 8.)
+            if (!core->roads.empty())
             {
-                return;
+                // Keep full authored road cores clear so procedural streets stitch cleanly around their perimeter.
+                if (Norm(a) < core->radiusMeters + 8. || Norm(b) < core->radiusMeters + 8.)
+                {
+                    return;
+                }
+            }
+            else if (!core->lots.empty())
+            {
+                landmarkCore = core;
             }
         }
     }
@@ -638,8 +644,28 @@ void EmitRev5Street(ContentCell &cell, const GeneratedPlanet &p, const Generated
     for (const auto &[localPt, t] : samples)
     {
         auto pt = At(p, r, localPt);
+        bool blockedByLandmark = false;
+        if (landmarkCore)
+        {
+            const double clear = street.widthMeters * .5 + 2.5;
+            for (const auto &lot : landmarkCore->lots)
+            {
+                const double dx = localPt.x - lot.positionMeters.x;
+                const double dy = localPt.y - lot.positionMeters.y;
+                const double c = std::cos(lot.yaw), s = std::sin(lot.yaw);
+                const double lx = dx * c + dy * s;
+                const double ly = -dx * s + dy * c;
+                if (std::fabs(lx) < lot.sizeMeters.x * .5 + clear &&
+                    std::fabs(ly) < lot.sizeMeters.y * .5 + clear)
+                {
+                    blockedByLandmark = true;
+                    break;
+                }
+            }
+        }
         if (!promoteBridge && !elevatedOrUnderpass &&
-            (pt.altitudeMeters < PlanetTerrain::SeaLevelMeters || Reserved(p, pt, street.widthMeters * .5)))
+            (blockedByLandmark || pt.altitudeMeters < PlanetTerrain::SeaLevelMeters ||
+             Reserved(p, pt, street.widthMeters * .5)))
         {
             if (street.points.size() > 1)
             {
@@ -1043,9 +1069,34 @@ bool CityCorePlan::Reserved(const GeneratedPlanet &, const GeneratedRegion &regi
     {
         return false;
     }
-    if (Norm(point) < city->radiusMeters + clearance)
+    if (!city->roads.empty())
     {
-        return true;
+        if (Norm(point) < city->radiusMeters + clearance)
+        {
+            return true;
+        }
+    }
+    else
+    {
+        // Landmark-only CityCore (e.g. Halo Rev 5): preserve only the exact story buildings/props via OBBs
+        // and a modest central plaza pocket so procedural Rev 5 blocks & streets generate right around them.
+        if (Norm(point) < 12. + clearance)
+        {
+            return true;
+        }
+        for (const auto &lot : city->lots)
+        {
+            const double dx = point.x - lot.positionMeters.x;
+            const double dy = point.y - lot.positionMeters.y;
+            const double c = std::cos(lot.yaw), s = std::sin(lot.yaw);
+            const double lx = dx * c + dy * s;
+            const double ly = -dx * s + dy * c;
+            if (std::fabs(lx) < lot.sizeMeters.x * .5 + clearance + 2.5 &&
+                std::fabs(ly) < lot.sizeMeters.y * .5 + clearance + 2.5)
+            {
+                return true;
+            }
+        }
     }
     for (const auto &approach : city->approaches)
     {
@@ -1400,7 +1451,7 @@ ContentCell ContentLayout::Generate(const GeneratedPlanet &p, ContentCellKey key
         const bool omitLeft = skipLeft6x2 || mergeLeft;
 
         const auto *activeCore = p.cityCores ? p.cityCores->Find(r.definition.id) : nullptr;
-        const bool authoredCore = activeCore && (!activeCore->lots.empty() || !activeCore->roads.empty());
+        const bool authoredCore = activeCore && !activeCore->roads.empty();
         if (inRingA && Inside(r, a, 4.) && !(authoredCore && Norm(a) < activeCore->radiusMeters + 8.))
         {
             auto ptA = At(p, r, a);
@@ -2529,7 +2580,7 @@ std::vector<UrbanTrafficRoute> ContentLayout::TrafficRoutes(const GeneratedPlane
         --ringCell;
     }
     const auto *core = p.cityCores ? p.cityCores->Find(r.definition.id) : nullptr;
-    const bool authoredCore = core && (!core->lots.empty() || !core->roads.empty());
+    const bool authoredCore = core && !core->roads.empty();
     const double coreClear = authoredCore ? (core->radiusMeters + 10.) : 0.;
 
     std::map<std::pair<std::int64_t, std::int64_t>, unsigned> nodeMap;

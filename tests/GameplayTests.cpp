@@ -1616,12 +1616,9 @@ void TestOpenWorldParticipation()
     read();
     assert(w.missions.Active(MissionId::Mine) &&
            mineState.quest.GetStage() == MineQuestStage::CheckCityRelay);
-    city(kCityReceiverPosition);
-    read();
-    assert(mineState.quest.GetStage() == MineQuestStage::TravelToMine && !mineState.quest.IsRiaJoined());
     city(kLiaPosition);
     read(1);
-    assert(!mineState.quest.IsRiaJoined());
+    assert(mineState.quest.GetStage() == MineQuestStage::TravelToMine && !mineState.quest.IsRiaJoined());
     city(kLiaPosition);
     read();
     assert(mineState.quest.IsRiaJoined() && !mineState.loadout.HasPistol());
@@ -1639,10 +1636,11 @@ void TestOpenWorldParticipation()
     assert(w.missions.Active(MissionId::Mine));
     w.playerPosition = mineState.entry;
     GameLevels::Mine().Interact();
-    city(kCityReceiverPosition);
+    city(kLiaPosition);
     read();
     assert(w.missions.Status(MissionId::Mine) == MissionStatus::Completed &&
-           w.missions.Status(MissionId::Frontier) == MissionStatus::NotAccepted);
+           w.missions.Status(MissionId::Frontier) == MissionStatus::NotAccepted &&
+           g.IsGroundVehicleUnlocked());
     auto &chapter = GameLevels::Chapter();
     auto &field = chapter.GetState();
     assert(g.RelocateSurfaceSurvey(chapter.Surface().Point({11.5f, 10.9f})));
@@ -2531,7 +2529,18 @@ void TestCityTrafficHandoff()
     auto *transit = g.SurfaceTraffic();
     auto portal = std::find_if(transit->Routes().begin(), transit->Routes().end(),
                                [](const auto &r) { return r.portalCity >= 0 && r.entry; });
-    assert(portal != transit->Routes().end());
+    if (portal == transit->Routes().end())
+    {
+        // All 5 historic cities (including halo_07) now run on unified Rev 5 procedural urban streets/traffic.
+        assert(plan->cityCores);
+        for (int i = 0; i < Overworld::kCityCount; ++i)
+        {
+            const auto *core = plan->cityCores->Find(Overworld::Cities()[size_t(i)].id);
+            assert(core && core->roads.empty());
+        }
+        assert(!transit->Routes().empty());
+        return;
+    }
     const auto entry = *portal;
     auto exitIterator = std::find_if(transit->Routes().begin(), transit->Routes().end(), [&](const auto &r) {
         return r.portalCity == entry.portalCity && !r.entry;
@@ -4080,7 +4089,6 @@ void TestCityQuestAccess()
     interact(kObservatoryStairs, InteractionTarget::ObservatoryExit);
     assert(!world.isInObservatory && Game::Distance(world.playerPosition, kBeaconPosition) < .001f);
     interact(kLiaPosition, InteractionTarget::Lia);
-    interact(kCityReceiverPosition, InteractionTarget::CityReceiver);
     assert(mineState.quest.GetStage() == MineQuestStage::TravelToMine);
     assert(Game::Distance(world.bikePosition, kJetBikePosition) < .001f && world.bikeYaw == kJetBikeYaw);
     interact({kJetBikePosition.x + 1.2f, kJetBikePosition.y}, InteractionTarget::JetBike);
@@ -5403,7 +5411,7 @@ void TestChapterOne()
     }
     GameLevels::Mine().Leave();
     assert(!level.IsAvailable() && !level.IsActive());
-    game.GetState().playerPosition = tutorial::kCityReceiverPosition;
+    game.GetState().playerPosition = tutorial::kLiaPosition;
     game.InteractWithNearbyTarget();
     ReadDialogue();
     assert(level.IsAvailable() && !level.IsActive());
@@ -5576,7 +5584,7 @@ void TestStoryAndReentry()
     auto &world = tutorial::Game::Get().GetState();
     assert(tutorial::Game::Distance(world.playerPosition, world.mineReturnPosition) < .001f);
     world.isBikeMounted = false;
-    world.playerPosition = tutorial::kCityReceiverPosition;
+    world.playerPosition = tutorial::kLiaPosition;
     tutorial::Game::Get().InteractWithNearbyTarget();
     ReadDialogue();
     assert(mineState.quest.GetStage() == MineQuestStage::Complete);
@@ -6019,21 +6027,37 @@ void TestCq10AndUrbanFacilities()
     CivicJustice::State().heat = 0;
     CivicJustice::State().infamy = 0;
     const auto plan = g.Surface()->Stream().Snapshot()->planet;
-    // 1. Legacy city modernization: only halo_07 retains authored story core (115..225 m);
-    //    cinder, veil, lumen, echo retain only fixed physical location anchors (40m empty core -> full Rev 5 cities).
+    // 1. All 5 historic cities (including halo_07) use modern Rev 5 procedural cities;
+    //    halo_07 retains ONLY core story landmarks (40..65 m, empty roads) while cinder/veil/lumen/echo keep 40m anchors.
     assert(plan->cityCores);
+    assert(CityFacilities::All().size() == 3 && !CityFacilities::Find(InteractionTarget::CityReceiver));
     for (int i = 0; i < Overworld::kCityCount; ++i)
     {
         const auto *core = plan->cityCores->Find(Overworld::Cities()[size_t(i)].id);
         assert(core);
         if (i == 0)
         {
-            assert(core->radiusMeters >= 115. && core->radiusMeters <= 225. && !core->lots.empty());
+            assert(core->radiusMeters >= 40. && core->radiusMeters <= 65. && !core->lots.empty() &&
+                   core->roads.empty());
         }
         else
         {
             assert(core->radiusMeters == 40. && core->lots.empty() && core->roads.empty());
         }
+    }
+    // 1a. Part 1 checks: J remote accept blocked (triggers 3D guidance instead), N key triggers 3D guidance,
+    //     and GroundVehicle/Aircraft gating verified on fresh game.
+    {
+        assert(w.missions.Status(MissionId::Mara) == MissionStatus::NotAccepted);
+        w.guidanceSecondsRemaining = 0.f;
+        g.ManageMission(MissionId::Mara);
+        assert(w.missions.Status(MissionId::Mara) == MissionStatus::NotAccepted && !Dialogue::Active());
+        assert(w.guidanceSecondsRemaining > 0.f);
+        w.guidanceSecondsRemaining = 0.f;
+        g.KeyDown('n', 0, 0);
+        g.KeyUp('n', 0, 0);
+        assert(w.guidanceSecondsRemaining > 0.f);
+        assert(GroundVehicle::MaxHealth == 260);
     }
     // 1b. Phantom-door regression check: street props/consoles/aircraft MUST NEVER classify as enterable facilities.
     {

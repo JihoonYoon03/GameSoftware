@@ -87,7 +87,7 @@ const char *MineQuest::GetObjective() const
     case MineQuestStage::ShowRecord:
         return "집 근처 리아에게 신호 기록 보여 주기 [E]";
     case MineQuestStage::CheckCityRelay:
-        return "광장 수신망 단말에서 신호 경로 확인 [E]";
+        return "리아와 함께 신호 발신 경로 추적 [E]";
     case MineQuestStage::TravelToMine:
         return "바이크로 광산 이동 → 하차 후 입장 [E]";
     case MineQuestStage::BypassPower:
@@ -99,9 +99,9 @@ const char *MineQuest::GetObjective() const
     case MineQuestStage::CollectCoordinates:
         return "유적 안쪽 단말에서 중계 좌표 확보 [E]";
     case MineQuestStage::ReturnToHalo:
-        return "광산을 나와 헤일로 수신망에 좌표 보고 [E]";
+        return "광산을 나와 헤일로의 리아에게 좌표 보고 [E]";
     case MineQuestStage::Complete:
-        return "광산 조사 완료 / 헤일로 수신망에서 다음 조사 시작";
+        return "광산 조사 완료 / 리아와 대화해 1장 개척지 조사 시작";
     }
     return "광산 조사";
 }
@@ -112,7 +112,7 @@ const char *MineQuest::GetRiaDialogue() const
     case MineQuestStage::ShowRecord:
         return "리아 / 전망대에서 받아 온 기록부터 들려 줘. 어디를 거쳐 들어온 건지 뜯어봐야지.";
     case MineQuestStage::CheckCityRelay:
-        return "리아 / 목소리만 들어선 장비 오류인지 진짜인지 몰라. 광장 수신망에 걸어서 경로를 추적해 보자.";
+        return "리아 / 목소리만 들어선 장비 오류인지 진짜인지 몰라. 단말에 걸어서 경로를 추적해 보자.";
     case MineQuestStage::TravelToMine:
         return "리아 / 잡음 밑에 낡은 광산 통신선 주소가 겹쳐 있어. 바이크 타고 가자—입구에선 내려서 들어가야 해.";
     case MineQuestStage::BypassPower:
@@ -124,9 +124,9 @@ const char *MineQuest::GetRiaDialogue() const
     case MineQuestStage::CollectCoordinates:
         return "리아 / 문양은 사진으로 남겨 뒀어. 안쪽 단말에 신호가 스쳐 간 좌표가 아직 남아 있을 거야.";
     case MineQuestStage::ReturnToHalo:
-        return "리아 / 좌표는 챙겼어. 입구로 빠져나가서 헤일로 수신망 옛 목록이랑 맞춰 보자.";
+        return "리아 / 좌표는 챙겼어. 입구로 빠져나가서 헤일로로 돌아가자.";
     case MineQuestStage::Complete:
-        return "리아 / 광산 보고는 끝났어. 이제 헤일로 수신망에서 외곽 현장 쪽 소식을 확인해 보자.";
+        return "리아 / 광산 보고는 끝났어. 이제 1장 외곽 개척지 현장을 돌아볼 차례야.";
     }
     return "리아 / 손에 쥔 기록부터 다시 펼쳐 보자.";
 }
@@ -1760,8 +1760,10 @@ void MineLevel::Enter(bool debugEntry)
     ClearInput();
     state.invulnerability = 2;
     state.navigationCooldown = 0;
+    const bool hideRiaIntro = surfaceVisit || story::StoryArc::Get().IsRiaMissing() ||
+                              state.quest.GetStage() == MineQuestStage::Complete;
     tutorial::Game::Get().ShowNotice(
-        surfaceVisit
+        hideRiaIntro
             ? "오르딘 광산 / F 구조 신호 스캔 · E 조사·구조 · V 근접 공격. 입구에서 E로 지상에 복귀합니다."
             : state.quest.GetRiaDialogue());
 }
@@ -2828,12 +2830,12 @@ void ChapterOneLevel::Leave()
     auto &world = tutorial::Game::Get().GetState();
     world.mouseFiring = world.mouseAiming = false;
     std::fill(std::begin(world.pressedKeys), std::end(world.pressedKeys), false);
-    world.playerPosition = world.cameraPosition = tutorial::kCityReceiverPosition;
+    world.playerPosition = world.cameraPosition = tutorial::kLiaPosition;
     world.StopMotion();
     tutorial::Game::Get().ShowNotice(
         CompletedSites() == 3 && !state.recordsCompared
-            ? "헤일로 / 세 현장의 기록이 모였습니다. 도시 수신망 단말에서 대조하세요. [E]"
-            : "헤일로 / 조사 기록과 현장 상태는 유지됩니다. 수신망 단말에서 다시 출발할 수 있습니다.");
+            ? "헤일로 / 세 현장의 기록이 모였습니다. 광장의 리아 또는 카인과 기록을 대조하세요. [E]"
+            : "헤일로 / 조사 기록과 현장 상태는 유지됩니다.");
 }
 int ChapterOneLevel::CompletedSites() const
 {
@@ -2843,7 +2845,7 @@ const char *ChapterOneLevel::Objective() const
 {
     if (state.recordsCompared)
     {
-        return "1장 완료 / 수로 진입로 기록 확보 · 후속 지역 준비 중";
+        return "1장 완료 / 2장 외곽 수로 조사 가능";
     }
     if (state.comparisonStarted)
     {
@@ -2851,7 +2853,7 @@ const char *ChapterOneLevel::Objective() const
     }
     if (CompletedSites() == 3)
     {
-        return "헤일로 수신망에서 세 현장 기록 대조 [E]";
+        return "헤일로의 리아·카인과 세 현장 기록 대조 [E]";
     }
     if (state.escortStarted && !state.convoyRescued)
     {
@@ -3269,7 +3271,8 @@ void ChapterOneLevel::InteractHub()
                 {
                     state.recordsCompared = state.waterwayUnlocked = true;
                 }
-                tutorial::Game::Get().ShowNotice("1장 완료 / 외곽 수로 진입로 기록 확보! 헤일로 수신망에서 2장 '돌아오지 않은 사람들' 외곽 수로 조사를 시작할 수 있습니다.");
+                tutorial::Game::Get().ShowNotice(
+                    "1장 완료 / 외곽 수로 경로 확보 및 공용 비행체 해금! 리아·카인 또는 N-0 외곽에서 2장을 시작할 수 있습니다.");
             },
             true); // A rejected completion can be retried; the story contract rejects duplicate commits.
         if (started && !state.comparisonStarted)

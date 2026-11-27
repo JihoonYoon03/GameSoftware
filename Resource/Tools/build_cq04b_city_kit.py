@@ -1,7 +1,7 @@
 """Author the CQ-04B meter-scale road, junction, grade separation and street kit."""
 from collections import defaultdict
 import json
-from math import cos, pi, sin, tau
+from math import atan2, cos, pi, sin, tau
 from pathlib import Path
 import sys
 
@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TIERS = ("LOD0", "LOD1", "LOD2", "ShadowProxy")
 ASPHALT, CONCRETE, CURB, STEEL, DARK = "asphalt", "paving", "curb", "steel", "dark"
 WHITE, YELLOW, PLANT, GLASS, CYAN = "white", "yellow", "plant", "glass", "cyan"
+ROAD_WIDTHS = {2: (6., 10.8), 4: (12.8, 17.6), 6: (19.4, 25.)}
 
 
 class Mesh:
@@ -89,7 +90,10 @@ def road_section(g, rows, clear, median, sidewalks, lanes, lod, *, taper=False, 
         return median(x) if callable(median) else median
     def widen(x, side):
         return bay(x) if side<0 and bay else 0
-    g.strip(rows,lambda x:-1-widen(x,-1),1,0,0,ASPHALT)
+    if sidewalks:
+        g.strip(rows,lambda x:-limits(x)-widen(x,-1),limits,0,0,ASPHALT)
+    else:
+        g.strip(rows,-1,1,0,0,ASPHALT)
     if sidewalks:
         for sign in (-1,1):
             edge=lambda x: sign*(limits(x)+widen(x,sign))
@@ -194,11 +198,17 @@ def street(g, lod, length, widths, lanes, clear, median=0, *, rural=False, taper
                 rect(g,x,offset,.20,.91,.006,YELLOW)
 
 
-def cross(g,lod,a,b,tee=False):
-    widths={2:3,4:6.4,6:9.7}
-    y,x=widths[a],widths[b]
-    r=2.15 if lod==0 else 2
+def junction_dimensions(a, b):
+    y,x=ROAD_WIDTHS[a][0]/2,ROAD_WIDTHS[b][0]/2
     ex,ey=min(14,max(x+4.4,6.9)),min(14,max(y+4.4,6.9))
+    return x,y,ex,ey
+
+
+def cross(g,lod,a,b,tee=False):
+    x,y,ex,ey=junction_dimensions(a,b)
+    r=2.15
+    walk_x=ROAD_WIDTHS[b][1]/2-x
+    walk_y=ROAD_WIDTHS[a][1]/2-y
     south=-y if tee else -y-r
     g.polygon([(-x-r,south),(x+r,south),(x+r,y+r),(-x-r,y+r)],0,ASPHALT)
     for sign in (-1,1):
@@ -212,27 +222,40 @@ def cross(g,lod,a,b,tee=False):
             if tee and sy<0:
                 continue
             edge=[(sx*(x+r-r*cos(i*pi/(2*steps))),sy*(y+r-r*sin(i*pi/(2*steps)))) for i in range(steps+1)]
-            walk=edge+[(sx*ex,sy*y),(sx*ex,sy*(y+2.4)),(sx*(x+2.4),sy*ey),(sx*x,sy*ey)]
+            walk=edge+[(sx*ex,sy*y),(sx*ex,sy*(y+walk_y)),(sx*(x+walk_x),sy*(y+walk_y)),
+                       (sx*(x+walk_x),sy*ey),(sx*x,sy*ey)]
             g.polygon(walk,.145,CONCRETE)
             for (u,v),(p,q) in zip(edge,edge[1:]):
                 pts=((u,v,.006),(p,q,.006),(p,q,.145),(u,v,.145))
                 g.face(pts if sx*sy>0 else pts[::-1],CURB)
     if tee:
-        g.polygon([(-ex,-y-2.4),(ex,-y-2.4),(ex,-y),(-ex,-y)],.145,CONCRETE)
+        g.polygon([(-ex,-y-walk_y),(ex,-y-walk_y),(ex,-y),(-ex,-y)],.145,CONCRETE)
+    g.section="median_ends"
+    for sign in (-1,1):
+        if a==6:
+            g.prism([(sign*ex,-.7),(sign*ex,.7),
+                     (sign*(ex-1.25),.19),(sign*(ex-1.25),-.19)],0,.145,CURB,PLANT)
+        if b==6 and (sign>0 or not tee):
+            g.prism([(-.7,sign*ey),(.7,sign*ey),
+                     (.19,sign*(ey-1.25)),(-.19,sign*(ey-1.25))],0,.145,CURB,PLANT)
     if lod<3:
-        g.section="paint_and_stop_lines"
         for sign in (-1,1):
+            g.section="stop_line_paint"
             rect(g,sign*(ex-.70),-sign*y*.49,.20,y*.94,.004,WHITE)
             if lod<=1:
+                g.section="crosswalk_paint"
                 for i in range(-int(y/.87),int(y/.87)+1):
                     rect(g,sign*(ex-2.42),i*.87,1.91,.39,.006,WHITE)
             if sign<0 and tee:
                 continue
+            g.section="stop_line_paint"
             rect(g,sign*x*.49,sign*(ey-.70),x*.94,.20,.004,WHITE)
             if lod<=1:
+                g.section="crosswalk_paint"
                 for i in range(-int(x/.87),int(x/.87)+1):
                     rect(g,i*.87,sign*(ey-2.42),.39,1.91,.006,WHITE)
         if lod<=1:
+            g.section="turn_guide_paint"
             for sign in (-1,1):
                 for i in range(4):
                     t=(i+.12)*pi/10
@@ -260,18 +283,29 @@ def roundabout(g,lod,outer,inner,lanes):
         ring(inner+.21,inner+.33,.005,WHITE)
         if lanes==2:
             ring((inner+outer)/2-.07,(inner+outer)/2+.07,.006,WHITE,True)
-    g.section="entry_ports"
+    w,total=(value/2 for value in ROAD_WIDTHS[lanes*2])
+    mouth=outer+.26
+    end=outer+5.5
     for i in range(4):
         angle=i*pi/2
         def rotated(x,y):
             return x*cos(angle)-y*sin(angle),x*sin(angle)+y*cos(angle)
-        w=3.65 if lanes==1 else 6.7
-        start=(outer*outer-w*w)**.5
-        g.polygon([rotated(start,-w),rotated(outer+5.5,-w),
-                   rotated(outer+5.5,w),rotated(start,w)],-.003,ASPHALT)
+        start=(outer*outer-w*w)**.5-.18
+        g.section="entry_ports"
+        g.face(((*rotated(start,-w),-.004),(*rotated(mouth,-w),0),
+                (*rotated(mouth,w),0),(*rotated(start,w),-.004)),ASPHALT)
+        g.polygon([rotated(mouth,-w),rotated(end,-w),rotated(end,w),rotated(mouth,w)],0,ASPHALT)
+        g.section="entry_sidewalks"
+        for side in (-1,1):
+            g.polygon([rotated(mouth,side*w),rotated(end,side*w),
+                       rotated(end,side*total),rotated(mouth,side*total)],.145,CONCRETE)
+            g.polygon([rotated(mouth,side*(w-.13)),rotated(end,side*(w-.13)),
+                       rotated(end,side*w),rotated(mouth,side*w)],.012,CURB)
+        g.section="splitter_islands"
         g.prism([rotated(outer+.55,0),rotated(outer+4.85,-.43),rotated(outer+4.4,.68)],
                 0,.125,CURB)
         if lod<=1:
+            g.section="yield_markings"
             for j in range(5 if lanes==1 else 9):
                 a=(j+.24)*w/(5 if lanes==1 else 9)
                 g.polygon([rotated(outer+.45,a),rotated(outer+.45,a+.30),
@@ -372,9 +406,10 @@ def grade(g,lod,mode,length,width,rise):
 
 def prop(g,lod,key):
     if key=="signal_gantry_4aspect":
-        g.section="gantry"
+        g.section="gantry_support"
         g.box(0,0,2.7,.35,.42,5.4,STEEL)
         g.box(0,3.04,5.66,.30,6.4,.29,STEEL)
+        g.section="head_housing"
         for y in (2.94,5.60):
             g.box(-.21,y,5.67,.28,.43,1.07,DARK)
         for i,(role,mat) in enumerate((("red","red"),("amber","amber"),("through_green","green"),("left_arrow","green"))):
@@ -389,7 +424,7 @@ def prop(g,lod,key):
                     pts=[(-.356,y+.069*cos(i*tau/8),target+.069*sin(i*tau/8)) for i in range(8)]
                     for i in range(1,7):
                         g.face((pts[0],pts[i+1],pts[i]),mat)
-        g.section="gantry"
+        g.section="gantry_support"
         g.box(0,0,.11,.78,.78,.22,CONCRETE)
     elif key=="signal_pedestrian_pole":
         g.box(0,0,1.43,.15,.15,2.86,STEEL)
@@ -486,6 +521,66 @@ def recipes():
     for key,cap in props.items():
         add(key,cap,prop,key)
     return out
+
+
+def port(x, y, z, dx, dy, width, pavement=None):
+    result={"point_m":[x,y,z],"outward":[dx,dy,0],"width_m":width}
+    if pavement is not None:
+        result["paved_width_m"]=pavement
+    return result
+
+
+def ports_for(key, maker, args, options):
+    if maker is street:
+        length,widths,lanes,*_=args
+        if options.get("rural"):
+            return [port(0,0,0,-1,0,widths[0]),port(length,0,0,1,0,widths[1])]
+        final=4 if "6to4" in key else 2 if "4to2" in key else lanes
+        return [port(0,0,0,-1,0,widths[0],ROAD_WIDTHS[lanes][0]),
+                port(length,0,0,1,0,widths[1],ROAD_WIDTHS[final][0])]
+    if maker is grade:
+        mode,length,width,rise=args
+        start=0 if mode in ("up","down") else rise
+        return [port(0,0,start,-1,0,width),port(length,0,rise,1,0,width)]
+    if maker is cross:
+        a,b,*mode=args
+        _,_,ex,ey=junction_dimensions(a,b)
+        p,w=ROAD_WIDTHS[a]
+        q,h=ROAD_WIDTHS[b]
+        ports=[port(-ex,0,0,-1,0,w,p),port(ex,0,0,1,0,w,p),port(0,ey,0,0,1,h,q)]
+        if not mode:
+            ports.append(port(0,-ey,0,0,-1,h,q))
+        return ports
+    if maker is roundabout:
+        outer,_,lanes=args
+        paved,width=ROAD_WIDTHS[lanes*2]
+        end=outer+5.5
+        return [port(end*x,end*y,0,x,y,width,paved) for x,y in ((1,0),(0,1),(-1,0),(0,-1))]
+    return []
+
+
+def verify_ports(key, lod, geom, ports):
+    for entry in ports:
+        px,py,pz=entry["point_m"]
+        dx,dy,_=entry["outward"]
+        pavement,sidewalk=[],[]
+        for section,faces in geom.sections.items():
+            for points,material in faces:
+                for x,y,z in points:
+                    if abs((x-px)*dx+(y-py)*dy)>1e-6:
+                        continue
+                    offset=(y-py)*dx-(x-px)*dy
+                    if material==ASPHALT and abs(z-pz)<1e-6:
+                        pavement.append(offset)
+                    if material==CONCRETE and abs(z-pz-.145)<1e-6 and section in (
+                            "surface","rounded_corner_curb","entry_sidewalks"):
+                        sidewalk.append(offset)
+        declared=entry.get("paved_width_m",entry["width_m"])
+        assert pavement and abs(min(pavement)+declared/2)<1e-6 and abs(max(pavement)-declared/2)<1e-6, (
+            key,lod,entry,pavement)
+        if "paved_width_m" in entry:
+            assert sidewalk and abs(min(sidewalk)+entry["width_m"]/2)<1e-6 and abs(
+                max(sidewalk)-entry["width_m"]/2)<1e-6,(key,lod,entry,sidewalk)
 
 
 def materials():
@@ -599,7 +694,7 @@ def objects(g,group,mats):
     return result
 
 
-def review(scene, source, target):
+def review(scene, source, target, ports=None):
     def camera(name,point,focus,scale):
         data=bpy.data.cameras.new(name)
         o=bpy.data.objects.new(name,data)
@@ -609,15 +704,27 @@ def review(scene, source, target):
         data.type="ORTHO"
         data.ortho_scale=scale
         scene.camera=o
-    sources=(("junc_roundabout_1lane",(-25,9,0)),("junc_cross_4x4",(15,10,0)),
-             ("elevated_viaduct_4lane_16m",(-32,-18,0)),("bridge_2lane_32m",(5,-24,0)),
-             ("prop_transit_shelter",(17,-16,0)),("signal_gantry_4aspect",(28,-15,0)))
-    for key,location in sources:
+    if ports is None:
+        sources=(("junc_roundabout_1lane",(-25,9,0),0),("junc_cross_4x4",(15,10,0),0),
+                 ("elevated_viaduct_4lane_16m",(-32,-18,0),0),("bridge_2lane_32m",(5,-24,0),0),
+                 ("prop_transit_shelter",(17,-16,0),0),("signal_gantry_4aspect",(28,-15,0),0))
+        camera("City kit preview",(65,-91,102),(0,0,0),105)
+        filename="CQ04B_City_Kit.png"
+    else:
+        approaches=[]
+        for entry in ports:
+            key="road_arterial_6lane_16m" if entry["width_m"]==25 else "road_collector_4lane_16m"
+            x,y,_=entry["outward"]
+            approaches.append((key,entry["point_m"],atan2(y,x)))
+        sources=[("junc_cross_6x4",(0,0,0),0),*approaches]
+        camera("Road port assembly",(32,-46,77),(0,0,0),77)
+        filename="CQ04B_Port_Fit.png"
+    for key,location,yaw in sources:
         for original in source[key]:
             copy=original.copy()
             scene.collection.objects.link(copy)
             copy.location=location
-    camera("City kit preview",(65,-91,102),(0,0,0),105)
+            copy.rotation_euler.z=yaw
     world=bpy.data.worlds.new("City studio")
     world.use_nodes=True
     world.node_tree.nodes["Background"].inputs[0].default_value=(.20,.24,.31,1)
@@ -633,9 +740,9 @@ def review(scene, source, target):
     scene.cycles.use_denoising=True
     scene.render.resolution_x,scene.render.resolution_y=1440,900
     scene.render.resolution_percentage=100
-    scene.render.filepath=str(target/"CQ04B_City_Kit.png")
+    scene.render.filepath=str(target/filename)
     bpy.ops.render.render(write_still=True)
-    scene.render.filepath="//../Preview/CQ04B_City_Kit.png"
+    scene.render.filepath=f"//../Preview/{filename}"
 
 
 def main():
@@ -650,9 +757,11 @@ def main():
     first={}
     for key,(cap,maker,args,kwargs) in recipes().items():
         lods={}
+        ports=ports_for(key,maker,args,kwargs)
         for index,tier in enumerate(TIERS):
             geom=Mesh()
             maker(geom,index,*args,**kwargs)
+            verify_ports(key,tier,geom,ports)
             group=bpy.data.collections.new(key+"_"+tier)
             library.collection.children.link(group)
             meshes=objects(geom,group,style)
@@ -675,29 +784,29 @@ def main():
                 first[key]=meshes
             group.hide_viewport=True
         records[key]={"lod0_cap":cap,"lods":lods}
+        if ports:
+            records[key]["ports"]=ports
         if maker is street:
-            length,widths,lanes,*_=args
-            records[key]["ports"]=[{"point_m":[0,0,0],"width_m":widths[0]},
-                                    {"point_m":[length,0,0],"width_m":widths[1]}]
+            lanes=args[2]
             records[key]["lanes_at_start"]=lanes
-            records[key]["lanes_at_end"]=6-2 if "6to4" in key else 4-2 if "4to2" in key else lanes
-        elif maker is grade:
-            mode,length,width,rise=args
-            records[key]["ports"]=[{"point_m":[0,0,0 if mode in ("up","down") else rise],"width_m":width},
-                                    {"point_m":[length,0,rise],"width_m":width}]
+            records[key]["lanes_at_end"]=4 if "6to4" in key else 2 if "4to2" in key else lanes
     assert len(records)==35
     fixed={
         "elevated_viaduct_4lane_16m":{"deck_clearance_m":8.0,"deck_height_m":8.4,"fade_section":"deck","vertical_collision_section":"pier"},
         "elevated_ramp_4lane_100m":{"length_m":100,"rise_m":8.4,"max_grade":.084},
         "underpass_ramp_4lane_80m":{"length_m":80,"rise_m":-5.4,"max_grade":.054/.736},
         "underpass_box_culvert_32m":{"clearance_m":4.6,"road_level_m":-5.4,"roof_thickness_m":1.0,"fade_section":"roof_slab"},
-        "signal_gantry_4aspect":{"right_turn_socket_m":[-.20,6.08,5.67],
+        "signal_gantry_4aspect":{"right_turn_socket_m":[-.20,6.08,5.67],"support_section":"gantry_support",
+                                 "housing_section":"head_housing",
                                  "aspect_sections":["red","amber","through_green","left_arrow"]},
         "signal_pedestrian_pole":{"aspect_sections":["ped_stop","ped_walk","ped_flash"]},
         "road_ring_4lane_16m":{"streetlight_socket_m":[8,-8.3248,.20]},
     }
     for key,meta in fixed.items():
         records[key].update(meta)
+    fit=bpy.data.scenes.new("CQ-04B | 6x4 port fit")
+    bpy.context.window.scene=fit
+    review(fit,first,output,ports=records["junc_cross_6x4"]["ports"])
     scene=bpy.data.scenes.new("CQ-04B | review")
     bpy.context.window.scene=scene
     review(scene,first,output)

@@ -1052,13 +1052,6 @@ void CityScene::DrawUtilityDevices(game::Scene &scene)
             std::string("city-sign/") + city.id, p.x, p.y, WorldBounds(p.x, p.y, 0, 0, 100, 150), 4, 0,
             [p, label]() { Drawing::DrawInteractionMarker({p.x, p.y + 4}, label, {.5f, .8f, .85f}); });
     }
-    scene.PlaceWorldActor(
-        "city-receiver", kCityReceiverPosition.x, kCityReceiverPosition.y,
-        WorldBounds(kCityReceiverPosition.x, kCityReceiverPosition.y, .5f, .5f, 60), 4, 0, [this]() {
-            Drawing::DrawProp(models::ModelLibrary::Get().console, kCityReceiverPosition);
-            Drawing::DrawGlow(Drawing::WorldToScreen(kCityReceiverPosition.x, kCityReceiverPosition.y, 40),
-                              16, ColorRGBA(.35f, .9f, 1));
-        });
     scene.PlaceWorldActor("relay", kRelayPosition.x, kRelayPosition.y,
                           WorldBounds(kRelayPosition.x, kRelayPosition.y, .35f, .35f, 50), 4, 0, [this]() {
                               Drawing::DrawProp(models::ModelLibrary::Get().breaker, kRelayPosition);
@@ -1149,7 +1142,11 @@ void CityScene::DrawQuestMarkers(game::Scene &scene)
     }
     if (game.IsQuestInteraction(InteractionTarget::Mara))
     {
-        marker("mara", kMaraPosition, "마라 / 선택 의뢰", {1, .77f, .4f});
+        const auto &arc = story::StoryArc::Get().State();
+        const char *maraLabel = arc.chapter4Complete    ? "마라 / 대피소 [E]"
+                                : arc.sectorLossTriggered ? "마라 / 실종 접수 · 지원팀 기록 [E]"
+                                                          : "마라 / 선택 의뢰";
+        marker("mara", kMaraPosition, maraLabel, {1, .77f, .4f});
     }
     if (game.IsQuestInteraction(InteractionTarget::PowerRelay))
     {
@@ -1158,19 +1155,6 @@ void CityScene::DrawQuestMarkers(game::Scene &scene)
     if (game.IsQuestInteraction(InteractionTarget::GateBeacon))
     {
         marker("beacon", kBeaconPosition, "전망대 승강기 [E]", {.4f, .93f, .96f});
-    }
-    if (game.IsQuestInteraction(InteractionTarget::CityReceiver))
-    {
-        marker("city-receiver", kCityReceiverPosition,
-               story::StoryArc::Get().IsActTwoUnlocked()
-                   ? "도시 수신망 / 후속 조사 · 기록 [E]"
-               : GameLevels::Chapter().IsAvailable()
-                   ? (GameLevels::Chapter().CompletedSites() == 3 &&
-                              !GameLevels::Chapter().GetState().recordsCompared
-                          ? "1장 / 기록 대조 [E]"
-                          : "1장 / 현장 출발 [E]")
-                   : "도시 수신망 [E]",
-               {.4f, .9f, 1});
     }
     if (game.IsQuestInteraction(InteractionTarget::JetBike))
     {
@@ -1240,7 +1224,6 @@ void CityScene::Draw()
         cityLight.groundColor = {.44f, .48f, .52f};
     }
     GameRenderer::Get().Backend().SetLighting(cityLight);
-    Drawing::AddPointLight(kCityReceiverPosition, 1.1f, 5.5f, {.32f, .92f, .96f}, .85f);
     Drawing::AddPointLight(kObservatoryBuildingPosition, 1.8f, 6.5f, {.42f, .84f, 1.f}, .75f);
     if (arc.chapter4Complete && GameLevels::Chapter().GetState().portableLightRepaired && arc.shelterLampOn)
     {
@@ -1474,7 +1457,9 @@ void ObservatoryScene::Draw()
         scene.PlaceWorldActor(
             "lia", kObservatoryLiaPosition.x, kObservatoryLiaPosition.y,
             WorldBounds(kObservatoryLiaPosition.x, kObservatoryLiaPosition.y, 0, 0, 95), 3, -2.5f, [this]() {
-                if (Game::Get().SurfaceParty() && Game::Get().SurfaceParty()->Joined(CompanionId::Ria))
+                if (story::StoryArc::Get().IsRiaMissing() ||
+                    Game::Get().GetState().hasDescendedObservatory ||
+                    (Game::Get().SurfaceParty() && Game::Get().SurfaceParty()->Joined(CompanionId::Ria)))
                 {
                     return;
                 }
@@ -3071,6 +3056,14 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
         {
             continue;
         }
+        if (planetPtr && planetPtr->cityCores)
+        {
+            if (const auto *core = planetPtr->cityCores->Find(Overworld::Cities()[size_t(city)].id);
+                core && core->roads.empty())
+            {
+                continue;
+            }
+        }
         const auto &traffic = cities->Traffic(city);
         for (size_t i = 0; i < traffic.Vehicles().size(); ++i)
         {
@@ -3312,12 +3305,15 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
         InteractionTarget target;
         const char *label;
     };
+    const auto &arcMarker = story::StoryArc::Get().State();
+    const char *surfaceMaraLabel = arcMarker.chapter4Complete    ? "마라 / 대피소"
+                                   : arcMarker.sectorLossTriggered ? "마라 / 실종 접수"
+                                                                   : "마라 / 선택 의뢰";
     for (auto marker : {Marker{kHomeDoor, InteractionTarget::HomeEntrance, "집 단말"},
                         Marker{kLiaPosition, InteractionTarget::Lia, "리아"},
-                        Marker{kMaraPosition, InteractionTarget::Mara, "마라 / 선택 의뢰"},
+                        Marker{kMaraPosition, InteractionTarget::Mara, surfaceMaraLabel},
                         Marker{kRelayPosition, InteractionTarget::PowerRelay, "전력 장치"},
-                        Marker{kBeaconPosition, InteractionTarget::GateBeacon, "전망대"},
-                        Marker{kCityReceiverPosition, InteractionTarget::CityReceiver, "도시 수신망"}})
+                        Marker{kBeaconPosition, InteractionTarget::GateBeacon, "전망대"}})
     {
         if (marker.target == InteractionTarget::Lia && Game::Get().SurfaceParty() &&
             Game::Get().SurfaceParty()->Joined(CompanionId::Ria))
@@ -3343,7 +3339,7 @@ void DrawSurfaceCities(const world::SurfaceSession &session)
 void DrawPlanetParty(const world::SurfaceSession &session)
 {
     const auto *party = Game::Get().SurfaceParty();
-    if (!party)
+    if (!party || Game::Get().GetState().car.mounted)
     {
         return;
     }
@@ -4173,7 +4169,7 @@ void PlanetScene::Draw()
         renderqueue::PushMatrix();
         renderqueue::Translate(0, -height * WorldCamera::IsoZScale(), height * (1296.f / 44));
         Drawing::DrawWorldVehicle(
-            p, 0, 1, models::VehicleType::Coupe, palette, std::abs(w.car.speed) / 11,
+            p, 0, 1, models::VehicleType::Coupe, palette, std::abs(w.car.speed) / 16.5f,
             w.car.Yaw(session->Origin()), w.car.health <= 0, w.car.mounted,
             1.f - float((std::max)(0, w.car.health)) / float(GroundVehicle::MaxHealth));
         renderqueue::PopMatrix();
@@ -4235,6 +4231,102 @@ void PlanetScene::Draw()
         renderqueue::Translate(0, -elevation * WorldCamera::IsoZScale(), elevation * (1296.f / 44));
         Drawing::DrawPerson(w.playerPosition, {.55f, .68f, .72f}, true);
         renderqueue::PopMatrix();
+    }
+    // Genshin-style [N] 3D world-space glowing path guidance ribbon from player to tracked objective / quest giver.
+    if (w.guidanceSecondsRemaining > 0.f && snapshot && snapshot->planet)
+    {
+        if (auto target = ActivityJournal::GuidanceTarget())
+        {
+            using G = world::SurfaceGeometry;
+            const double R = session->Planet().radiusMeters;
+            const auto start = session->Pose().origin;
+            const double dot = G::Dot(start.normal, target->normal);
+            if (dot > -1.0 + 1e-12)
+            {
+                const double totalDist = G::Distance(R, start, *target);
+                const float duration = (std::max)(1.f, w.guidanceDurationSeconds);
+                const float elapsed = duration - w.guidanceSecondsRemaining;
+                const float fadeIn = Game::Clamp(elapsed / .45f, 0.f, 1.f);
+                const float fadeOut = Game::Clamp(w.guidanceSecondsRemaining / 1.1f, 0.f, 1.f);
+                const float alphaEnv = fadeIn * fadeOut;
+                const auto pFrame = session->Pose();
+                if (totalDist > 2.5)
+                {
+                    const world::Vector3d tang = G::Unit({target->normal.x - start.normal.x * dot,
+                                                          target->normal.y - start.normal.y * dot,
+                                                          target->normal.z - start.normal.z * dot});
+                    const double dirR = G::Dot(tang, pFrame.right);
+                    const double dirF = G::Dot(tang, pFrame.forward);
+                    const double rightR = -dirF;
+                    const double rightF = dirR;
+                    const double maxMeters = (std::min)(totalDist, 44.0);
+                    const int segs = (std::max)(4, int(std::ceil(maxMeters / 2.2)));
+                    const float headFrac = std::fmod(elapsed * .62f, 1.35f);
+                    std::vector<Vector2> pts;
+                    std::vector<float> zs;
+                    pts.reserve(size_t(segs + 1));
+                    zs.reserve(size_t(segs + 1));
+                    for (int i = 0; i <= segs; ++i)
+                    {
+                        const float frac = float(i) / float(segs);
+                        const double d = 1.6 + (maxMeters - 1.6) * double(frac);
+                        const double swayEnv = std::sin(frac * kPi);
+                        const double sway = std::sin(d * 0.34 - double(w.animationTimeSeconds) * 4.8) * 0.42 * swayEnv;
+                        auto pt = G::Advance(pFrame, dirR * d + rightR * sway, dirF * d + rightF * sway, R).origin;
+                        pt.altitudeMeters = (std::max)(world::PlanetTerrain::SeaLevelMeters,
+                                                       session->Stream().Contact(*snapshot, pt).heightMeters);
+                        const auto loc = session->Local(pt);
+                        pts.push_back({float(loc.x * .5), float(loc.y * .5)});
+                        zs.push_back(float(loc.z * .5));
+                    }
+                    for (int i = 0; i < segs; ++i)
+                    {
+                        const float frac = (float(i) + .5f) / float(segs);
+                        const float headDist = std::fabs(frac - headFrac);
+                        const float headBoost = Game::Clamp(1.f - headDist * 3.8f, 0.f, 1.f);
+                        const float wave = .55f + .45f * std::sin(frac * 12.f - w.animationTimeSeconds * 7.5f);
+                        const float edgeFade = Game::Clamp((1.f - frac) * 4.f, 0.f, 1.f);
+                        const float a = alphaEnv * edgeFade * (.38f + .56f * (wave * .5f + headBoost * .5f));
+                        const float avgZ = (zs[size_t(i)] + zs[size_t(i + 1)]) * .5f;
+                        const ColorRGBA col{
+                            .32f + .66f * headBoost,
+                            .92f + .08f * headBoost,
+                            .96f - .38f * headBoost,
+                            a};
+                        renderqueue::PushMatrix();
+                        renderqueue::Translate(0, -avgZ * WorldCamera::IsoZScale(), avgZ * (1296.f / 44.f));
+                        Drawing::DrawHologramStrip(pts[size_t(i)], pts[size_t(i + 1)], .20f + .14f * headBoost, col,
+                                                   .24f);
+                        renderqueue::PopMatrix();
+                        if (headBoost > .65f || (i % 4 == 2))
+                        {
+                            const Vector2 mid{(pts[size_t(i)].x + pts[size_t(i + 1)].x) * .5f,
+                                              (pts[size_t(i)].y + pts[size_t(i + 1)].y) * .5f};
+                            const auto scr = Drawing::WorldToScreen(mid.x, mid.y, (avgZ + .3f) * WorldCamera::IsoZScale());
+                            Drawing::DrawGlow(scr, 14.f + 16.f * headBoost, col);
+                            if (headBoost > .82f)
+                            {
+                                Drawing::AddPointLight(mid, avgZ + .7f, 4.5f, col, 1.0f * alphaEnv);
+                            }
+                        }
+                    }
+                }
+                if (totalDist < 120.0)
+                {
+                    auto tPt = *target;
+                    tPt.altitudeMeters = (std::max)(world::PlanetTerrain::SeaLevelMeters,
+                                                    session->Stream().Contact(*snapshot, tPt).heightMeters);
+                    const auto tLoc = session->Local(tPt);
+                    const Vector2 tp{float(tLoc.x * .5), float(tLoc.y * .5)};
+                    const float tz = float(tLoc.z * .5);
+                    const auto scrBase = Drawing::WorldToScreen(tp.x, tp.y, (tz + .4f) * WorldCamera::IsoZScale());
+                    const auto scrTop = Drawing::WorldToScreen(tp.x, tp.y, (tz + 3.2f) * WorldCamera::IsoZScale());
+                    Drawing::DrawLine(scrBase, scrTop, {1.f, .92f, .46f, .82f * alphaEnv}, 3.f);
+                    Drawing::DrawGlow(scrBase, 26.f, {.42f, .96f, 1.f, .85f * alphaEnv});
+                    Drawing::AddPointLight(tp, tz + 1.2f, 5.5f, {1.f, .9f, .48f}, 1.1f * alphaEnv);
+                }
+            }
+        }
     }
     backend.EndModels();
 

@@ -723,7 +723,7 @@ ActivityObjective ActivityJournal::Current()
             goal.location = story::StoryArc::Get().CurrentObjectiveLocation();
             if (arc.sectorLossTriggered && !arc.chapter4Complete)
             {
-                city(!arc.safetyLineChecked ? Vector2{25.f, 7.f} : kCityReceiverPosition);
+                city(!arc.safetyLineChecked ? Vector2{25.f, 7.f} : kMaraPosition);
             }
             else if (arc.chapter4Complete)
             {
@@ -741,16 +741,16 @@ ActivityObjective ActivityJournal::Current()
                 }
                 else
                 {
-                    city(kCityReceiverPosition);
+                    city(kBeaconPosition);
                 }
             }
             else if (arc.veilHypothesisFound && !arc.chapter2Reported)
             {
-                city(kCityReceiverPosition);
+                city(kLiaPosition);
             }
             else if (arc.chapter2Reported && !arc.chapter3Committed)
             {
-                city(kCityReceiverPosition);
+                city(kLiaPosition);
             }
             else
             {
@@ -788,10 +788,8 @@ ActivityObjective ActivityJournal::Current()
             switch (mine.quest.GetStage())
             {
             case game::MineQuestStage::ShowRecord:
-                city(kLiaPosition);
-                break;
             case game::MineQuestStage::CheckCityRelay:
-                city(kCityReceiverPosition);
+                city(kLiaPosition);
                 break;
             case game::MineQuestStage::TravelToMine:
                 if (!mine.quest.IsRiaJoined())
@@ -803,7 +801,7 @@ ActivityObjective ActivityJournal::Current()
             default:
                 if (mine.quest.GetStage() == game::MineQuestStage::ReturnToHalo)
                 {
-                    city(kCityReceiverPosition);
+                    city(kLiaPosition);
                 }
                 else
                 {
@@ -842,7 +840,7 @@ ActivityObjective ActivityJournal::Current()
             const auto &field = chapter.GetState();
             if (chapter.CompletedSites() == 3 || field.comparisonStarted)
             {
-                city(kCityReceiverPosition);
+                city(kLiaPosition);
                 break;
             }
             goal.location = "빛나는 개척지";
@@ -955,6 +953,114 @@ void Game::OfferMission(MissionId id, const char *channel)
         },
         true);
 }
+std::optional<world::SurfacePoint> ActivityJournal::MissionGiverTarget(MissionId id)
+{
+    auto &g = Game::Get();
+    const auto &w = g.GetState();
+    if (!w.surfaceExploration || !g.Surface() || !g.Surface()->Ready() || !g.IsStoryWorld() || !g.SurfaceCities())
+    {
+        return std::nullopt;
+    }
+    switch (id)
+    {
+    case MissionId::Signal:
+        return g.SurfaceCities()->Point(*g.Surface(), 0, !w.homeMessageRead ? kHomeDoor : kLiaPosition);
+    case MissionId::Mara:
+        return g.SurfaceCities()->Point(*g.Surface(), 0, kMaraPosition);
+    case MissionId::Mine:
+    case MissionId::Frontier:
+        return g.SurfaceCities()->Point(*g.Surface(), 0, kLiaPosition);
+    default:
+        return std::nullopt;
+    }
+}
+std::optional<world::SurfacePoint> ActivityJournal::GuidanceTarget(std::string *labelOut)
+{
+    auto &g = Game::Get();
+    const auto &w = g.GetState();
+    if (!w.surfaceExploration || !g.Surface() || !g.Surface()->Ready())
+    {
+        return std::nullopt;
+    }
+    if (w.guidanceOverrideTarget)
+    {
+        if (labelOut)
+        {
+            *labelOut = w.guidanceLabel.empty() ? "퀘스트 제안자" : w.guidanceLabel;
+        }
+        return w.guidanceOverrideTarget;
+    }
+    const auto goal = Current();
+    if (goal.surfaceTarget)
+    {
+        if (labelOut)
+        {
+            *labelOut = !goal.title.empty() ? goal.title : goal.location;
+        }
+        return goal.surfaceTarget;
+    }
+    if (w.planetDestination)
+    {
+        if (labelOut)
+        {
+            *labelOut = "지정 목적지";
+        }
+        return w.planetDestination;
+    }
+    if (g.IsStoryWorld())
+    {
+        for (int i = 0; i < int(MissionId::Count); ++i)
+        {
+            const auto id = MissionId(i);
+            if (w.missions.Status(id) == MissionStatus::NotAccepted && g.MissionEligible(id))
+            {
+                if (auto pt = MissionGiverTarget(id))
+                {
+                    if (labelOut)
+                    {
+                        *labelOut = std::string(QuestParticipation::Name(id)) + " 제안자";
+                    }
+                    return pt;
+                }
+            }
+        }
+    }
+    return std::nullopt;
+}
+bool ActivityJournal::TriggerGuidance(std::optional<world::SurfacePoint> overrideTarget, const std::string &label)
+{
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+    if (!w.surfaceExploration || !g.Surface() || !g.Surface()->Ready() || g.IsSurfaceMine() || w.IsInsideAny())
+    {
+        return false;
+    }
+    if (overrideTarget)
+    {
+        w.guidanceOverrideTarget = overrideTarget;
+        w.guidanceLabel = label;
+        w.planetDestination = overrideTarget;
+    }
+    else
+    {
+        w.guidanceOverrideTarget.reset();
+        w.guidanceLabel.clear();
+    }
+    std::string targetLabel;
+    const auto target = GuidanceTarget(&targetLabel);
+    if (!target)
+    {
+        g.ShowNotice("경로 안내 / 추적 중인 목표나 지도 목적지가 없습니다. J 또는 M에서 목표를 지정하세요.");
+        return false;
+    }
+    w.guidanceDurationSeconds = 8.f;
+    w.guidanceSecondsRemaining = 8.f;
+    const double meters = world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters,
+                                                           g.Surface()->Pose().origin, *target);
+    g.ShowNotice("경로 안내 [N] / " + (targetLabel.empty() ? std::string("목표 지점") : targetLabel) + " · 약 " +
+                 std::to_string(int(std::round(meters))) + "m");
+    return true;
+}
 void Game::ManageMission(MissionId id)
 {
     if (Dialogue::Active() || state.dialogue.suspended || HospitalRecovery::Active())
@@ -966,11 +1072,25 @@ void Game::ManageMission(MissionId id)
     {
         ShowNotice(std::string("임무 보류 / ") + QuestParticipation::Name(id) +
                    " · 발견 기록·보유품·현장 상태는 유지됩니다.");
+        return;
     }
-    else
+    if (state.missions.Status(id) == MissionStatus::NotAccepted)
     {
-        OfferMission(id);
+        // Remote acceptance from J is disabled; instead guide the player directly to the in-world quest giver.
+        state.journalVisible = false;
+        if (auto giver = ActivityJournal::MissionGiverTarget(id))
+        {
+            ActivityJournal::TriggerGuidance(giver, std::string(QuestParticipation::Name(id)) + " 제안자");
+            ShowNotice(std::string("현장 수락 필요 / ") + QuestParticipation::Name(id) +
+                       " 제안자에게 직접 방문해 수락하세요 · 3D 경로 안내 표시 [N]");
+        }
+        else
+        {
+            ShowNotice("현장 수락 필요 / 헤일로 현장의 제안자에게 직접 방문해 수락하세요.");
+        }
+        return;
     }
+    OfferMission(id);
 }
 void Game::SyncMissionProgress()
 {
@@ -1926,7 +2046,7 @@ void Game::KeyDown(unsigned char key, int, int)
     {
         state.interactionHeld = true;
     }
-    if (repeated && (key == 'e' || key == 13 || key == 'j' || key == 'h' || key == 'm'))
+    if (repeated && (key == 'e' || key == 13 || key == 'j' || key == 'h' || key == 'm' || key == 'n'))
     {
         return;
     }
@@ -2025,6 +2145,14 @@ void Game::KeyDown(unsigned char key, int, int)
         else if (key == 'q' && !repeated)
         {
             WeaponWheel::Open();
+        }
+        else if (key == 'n' && !repeated && !state.mapVisible)
+        {
+            ActivityJournal::TriggerGuidance();
+        }
+        else if (key == 'f' && !repeated && !state.mapVisible && !state.IsInsideAny())
+        {
+            encounters::WorldEncounters::Get().TriggerScannerPing();
         }
         return;
     }
@@ -2755,6 +2883,14 @@ bool Game::LeaveSurfaceMine()
     mine.scannerContacts.clear();
     mine.scannerSeconds = mine.scannerRadius = 0;
     surfaceMineReturn.reset();
+    if (surfaceParty)
+    {
+        surfaceParty->Update(0);
+        const auto &m = surfaceParty->State().members;
+        surfaceParty->Arrive(
+            {m[0].joined && m[0].combat.health > 0 && m[0].place == CompanionPlace::Mine,
+             m[1].joined && m[1].combat.health > 0 && m[1].place == CompanionPlace::Mine});
+    }
     ShowNotice(
         "오르딘 광산 입구 / 갱도·발견한 길·현장 인원·조사 기록을 유지합니다. E로 재입장할 수 있습니다.");
     return true;
@@ -2849,7 +2985,7 @@ bool Game::GroundVehicleBlocked(Vector2 position, float yaw, bool includePeople)
             auto point = surface->PointAt(probe.x * 2, probe.y * 2);
             const auto contact = surface->ContactAt(probe.x * 2, probe.y * 2);
             point.altitudeMeters = contact.heightMeters;
-            if (!contact.land || contact.slope > .35 || state.aircraft.Contains(*surface, point, .32) ||
+            if (!contact.land || contact.slope > .58 || state.aircraft.Contains(*surface, point, .32) ||
                 (surfaceBike && world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, point,
                                                                  *surfaceBike) < .65) ||
                 surface->Blocked(probe.x * 2, probe.y * 2, false) ||
@@ -2863,6 +2999,28 @@ bool Game::GroundVehicleBlocked(Vector2 position, float yaw, bool includePeople)
         }
     }
     return false;
+}
+
+bool Game::IsGroundVehicleUnlocked() const
+{
+    if (state.car.position.has_value() || !IsStoryWorld())
+    {
+        return true;
+    }
+    return state.isComplete || state.missions.Status(MissionId::Mine) == MissionStatus::Completed ||
+           game::GameLevels::Mine().GetState().quest.GetStage() == game::MineQuestStage::Complete ||
+           game::GameLevels::Chapter().IsAvailable();
+}
+
+bool Game::IsAircraftUnlocked() const
+{
+    if (state.aircraft.position.has_value() || !IsStoryWorld())
+    {
+        return true;
+    }
+    return state.missions.Status(MissionId::Frontier) == MissionStatus::Completed ||
+           game::GameLevels::Chapter().GetState().waterwayUnlocked ||
+           story::StoryArc::Get().IsActTwoUnlocked();
 }
 
 void Game::UpdateGroundVehicleLifecycle(float dt)
@@ -2897,7 +3055,8 @@ void Game::UpdateGroundVehicleLifecycle(float dt)
         }
         return;
     }
-    if (state.IsInsideAny() || IsSurfaceMine() || (groundVehicleSpawnRetry -= dt) > 0)
+    if (!IsGroundVehicleUnlocked() || state.IsInsideAny() || IsSurfaceMine() ||
+        (groundVehicleSpawnRetry -= dt) > 0)
     {
         return;
     }
@@ -2981,9 +3140,13 @@ void Game::UpdateGroundVehicle(float dt)
     const float steering = float(state.pressedKeys['d']) - float(state.pressedKeys['a']);
     const bool reverse = state.pressedKeys['s'] && !state.pressedKeys['w'];
     const bool forward = state.pressedKeys['w'] && !state.pressedKeys['s'];
-    const float targetSpeed = forward ? 11.f : reverse ? -2.2f : 0.f;
-    const float rate = (car.speed * targetSpeed < 0 || targetSpeed == 0 ? 14.f : 8.f) * MotionMath::kResponse;
-    const float yawChange = steering * 1.65f * Clamp(car.speed / 2, -1, 1) * dt;
+    const bool boost = forward && state.pressedKeys[' '];
+    // Rugged armored utility vehicle: faster highway/overdrive speed (up to 119 km/h), all-terrain slope climb,
+    // bullet-proof cabin, and companion boarding.
+    const float targetSpeed = forward ? (boost ? 16.5f : 12.5f) : reverse ? -2.8f : 0.f;
+    const float rate = (car.speed * targetSpeed < 0 || targetSpeed == 0 ? 20.f : (boost ? 15.f : 13.f)) *
+                       MotionMath::kResponse;
+    const float yawChange = steering * 1.75f * Clamp(car.speed / 2.2f, -1, 1) * dt;
     float yaw = oldYaw + yawChange;
     const auto start = state.playerPosition;
     if (yawChange != 0 && GroundVehicleBlocked(start, yaw, false))
@@ -3006,10 +3169,10 @@ void Game::UpdateGroundVehicle(float dt)
             [&](Vector2 p) { return GroundVehicleBlocked(p, yaw, false); }, .08f);
         const Vector2 actual{state.playerPosition.x - start.x, state.playerPosition.y - start.y};
         const float actLen = std::hypot(actual.x, actual.y);
-        // Apply high-speed collision damage & bounce recoil on hard impact.
-        if (preSpeed > 7.5f && reqLen > .001f && actLen < reqLen * .45f)
+        // Apply high-speed collision damage & bounce recoil only on severe impacts (armored bumper absorbs normal bumps).
+        if (preSpeed > 12.5f && reqLen > .001f && actLen < reqLen * .45f)
         {
-            const int impactDamage = (std::max)(6, int((preSpeed - 7.5f) * 4.5f));
+            const int impactDamage = (std::max)(4, int((preSpeed - 12.5f) * 2.5f));
             car.health = (std::max)(0, car.health - impactDamage);
             along = -along * .25f;
             car.velocity = {axis.x * along, axis.y * along};
@@ -3095,7 +3258,7 @@ void Game::InteractGroundVehicle()
                                          *car.position) < 4.6;
     bool commandeered = false;
     bool commandeeredOccupied = false;
-    if (!nearOwnedCar && surfaceTraffic)
+    if (!nearOwnedCar && IsGroundVehicleUnlocked() && surfaceTraffic)
     {
         world::SurfacePoint pos{};
         world::Vector3d heading{};
@@ -3544,6 +3707,10 @@ void Game::UpdateSurface(float dt)
     if (advancing)
     {
         state.animationTimeSeconds += dt;
+        if (state.guidanceSecondsRemaining > 0.f)
+        {
+            state.guidanceSecondsRemaining = (std::max)(0.f, state.guidanceSecondsRemaining - dt);
+        }
         if (!Dialogue::Active())
         {
             state.noticeSecondsRemaining -= dt;
@@ -4310,9 +4477,30 @@ bool Game::IsQuestInteraction(InteractionTarget target) const
     {
         return false;
     }
+    if (target == InteractionTarget::CityReceiver)
+    {
+        return false;
+    }
+    const auto &arc = story::StoryArc::Get().State();
     auto stage = game::GameLevels::Mine().GetState().quest.GetStage();
     if (state.surfaceExploration)
     {
+        if (arc.chapter4Complete && !arc.nereusSignalReceived && arc.epilogueShelterVisited &&
+            arc.epilogueClinicVisited && arc.epilogueWorkshopVisited &&
+            (target == InteractionTarget::GateBeacon || target == InteractionTarget::ObservatorySignal))
+        {
+            return true;
+        }
+        if (arc.sectorLossTriggered && !arc.chapter4Complete && arc.safetyLineChecked &&
+            target == InteractionTarget::Mara)
+        {
+            return true;
+        }
+        if (story::StoryArc::Get().IsActTwoUnlocked() && !arc.chapter3Committed &&
+            (arc.veilHypothesisFound || arc.chapter2Reported) && target == InteractionTarget::Lia)
+        {
+            return true;
+        }
         if (state.missions.Active(MissionId::Signal))
         {
             if (target == InteractionTarget::HomeTerminal)
@@ -4336,13 +4524,10 @@ bool Game::IsQuestInteraction(InteractionTarget target) const
         {
             if (target == InteractionTarget::Lia)
             {
-                return stage == game::MineQuestStage::ShowRecord ||
+                return stage == game::MineQuestStage::ShowRecord || stage == game::MineQuestStage::CheckCityRelay ||
+                       CanCompleteMission(MissionId::Mine) ||
                        (stage == game::MineQuestStage::TravelToMine &&
                         !game::GameLevels::Mine().GetState().quest.IsRiaJoined());
-            }
-            if (target == InteractionTarget::CityReceiver)
-            {
-                return stage == game::MineQuestStage::CheckCityRelay || CanCompleteMission(MissionId::Mine);
             }
             if (target == InteractionTarget::MineEntrance || target == InteractionTarget::JetBike)
             {
@@ -4360,13 +4545,13 @@ bool Game::IsQuestInteraction(InteractionTarget target) const
                 return !state.isPowerRestored;
             }
         }
-        return target == InteractionTarget::CityReceiver && CanCompleteMission(MissionId::Frontier);
+        return target == InteractionTarget::Lia && CanCompleteMission(MissionId::Frontier);
     }
     if (game::GameLevels::Chapter().IsAvailable() &&
         (target == InteractionTarget::HomeTerminal || target == InteractionTarget::ApartmentExit ||
-         target == InteractionTarget::HomeEntrance || target == InteractionTarget::Lia ||
-         target == InteractionTarget::GateBeacon || target == InteractionTarget::JetBike ||
-         target == InteractionTarget::ObservatorySignal || target == InteractionTarget::ObservatoryExit))
+         target == InteractionTarget::HomeEntrance || target == InteractionTarget::GateBeacon ||
+         target == InteractionTarget::JetBike || target == InteractionTarget::ObservatorySignal ||
+         target == InteractionTarget::ObservatoryExit))
     {
         return false;
     }
@@ -4380,21 +4565,20 @@ bool Game::IsQuestInteraction(InteractionTarget target) const
         return !state.isInsideHome && state.mainQuestStage == MainQuestStage::ReadHomeTerminal;
     case InteractionTarget::Lia:
         return (!state.gateSignalHeard && state.mainQuestStage == MainQuestStage::MeetLia) ||
-               (state.hasDescendedObservatory && stage == game::MineQuestStage::ShowRecord);
+               (state.hasDescendedObservatory &&
+                (stage == game::MineQuestStage::ShowRecord || stage == game::MineQuestStage::CheckCityRelay)) ||
+               stage == game::MineQuestStage::ReturnToHalo ||
+               (game::GameLevels::Chapter().IsAvailable() && !state.isInsideHome && !state.isInObservatory &&
+                !game::GameLevels::Chapter().GetState().recordsCompared);
     case InteractionTarget::Mara:
-        return !state.isSideQuestComplete && (!state.isSideQuestAccepted || state.isPowerRestored);
+        return (!state.isSideQuestComplete && (!state.isSideQuestAccepted || state.isPowerRestored)) ||
+               (arc.sectorLossTriggered && !arc.chapter4Complete && arc.safetyLineChecked);
     case InteractionTarget::PowerRelay:
         return state.isSideQuestAccepted && !state.isPowerRestored;
     case InteractionTarget::GateBeacon:
-        return state.mainQuestStage == MainQuestStage::EnterObservatory && !state.gateSignalHeard;
-    case InteractionTarget::CityReceiver:
-        return (game::GameLevels::Chapter().IsAvailable() && !state.isInsideHome && !state.isInObservatory &&
-                (!game::GameLevels::Chapter().GetState().recordsCompared ||
-                 !game::GameLevels::Chapter().GetState().portableLightRepaired ||
-                 !game::GameLevels::Chapter().GetState().vehicleRepaired ||
-                 !game::GameLevels::Chapter().GetState().detailLedgerFound)) ||
-               (state.hasDescendedObservatory && stage == game::MineQuestStage::CheckCityRelay) ||
-               stage == game::MineQuestStage::ReturnToHalo;
+        return (state.mainQuestStage == MainQuestStage::EnterObservatory && !state.gateSignalHeard) ||
+               (arc.chapter4Complete && !arc.nereusSignalReceived && arc.epilogueShelterVisited &&
+                arc.epilogueClinicVisited && arc.epilogueWorkshopVisited);
     case InteractionTarget::JetBike:
         return state.hasDescendedObservatory && state.gateSignalHeard &&
                stage == game::MineQuestStage::TravelToMine;
@@ -4482,7 +4666,10 @@ InteractionTarget Game::FindNearbyInteraction()
         const bool fixedFacility = target == InteractionTarget::HomeEntrance ||
                                    target == InteractionTarget::GateBeacon ||
                                    target == InteractionTarget::CityReceiver ||
-                                   target == InteractionTarget::PowerRelay;
+                                   target == InteractionTarget::PowerRelay ||
+                                   ((target == InteractionTarget::Lia || target == InteractionTarget::Kain ||
+                                     target == InteractionTarget::Mara) &&
+                                    IsQuestInteraction(target));
         float bikeDistance = Distance(state.playerPosition, state.bikePosition);
         if (!fixedFacility && bikeDistance < 1.8f && bikeDistance < distance)
         {
@@ -4504,8 +4691,8 @@ InteractionTarget Game::FindNearbyInteraction()
                 target = InteractionTarget::GroundVehicle;
             }
         }
-        if (vehicleAllowed && target != InteractionTarget::GroundVehicle && surface && surface->Ready() &&
-            surfaceTraffic)
+        if (vehicleAllowed && IsGroundVehicleUnlocked() && target != InteractionTarget::GroundVehicle &&
+            surface && surface->Ready() && surfaceTraffic)
         {
             if (auto npcCarMeters = surfaceTraffic->NearestGroundDistance(surface->Pose().origin, 4.8))
             {
@@ -4684,11 +4871,6 @@ InteractionTarget Game::FindNearbyInteraction()
         return InteractionTarget::JetBike;
     }
 
-    if (game::GameLevels::Chapter().IsAvailable() &&
-        Distance(state.playerPosition, kCityReceiverPosition) < 1.5f)
-    {
-        return InteractionTarget::CityReceiver;
-    }
     if (game::GameLevels::Chapter().GetState().kainJoined &&
         Distance(state.playerPosition, kCityKainPosition) < 1.1f &&
         !CivicCombat::LandmarkDown(kCityKainPosition))
@@ -5117,6 +5299,13 @@ void Game::InteractWithNearbyTarget()
         {
             return;
         }
+        if (game::GameLevels::Chapter().IsAvailable() &&
+            (game::GameLevels::Chapter().CompletedSites() == 3 ||
+             game::GameLevels::Chapter().GetState().recordsCompared))
+        {
+            game::GameLevels::Chapter().InteractHub();
+            return;
+        }
         tell(game::GameLevels::Chapter().GetState().recordsCompared
                  ? "카인 / 지도에 있던 다리는 사라졌습니다. 아래 수로가 남아 있는지 확인해야겠군요. "
                    "예전 진입로는 기록해 뒀습니다."
@@ -5130,22 +5319,43 @@ void Game::InteractWithNearbyTarget()
         {
             return;
         }
+        if (story::StoryArc::Get().IsActTwoUnlocked() && story::StoryArc::Get().InteractHaloReceiver())
+        {
+            return;
+        }
+        if (game::GameLevels::Mine().GetState().quest.Advance(game::MineQuestStage::ReturnToHalo))
+        {
+            state.isComplete = true;
+            state.mainQuestStage = MainQuestStage::Complete;
+            game::GameLevels::Chapter().Unlock();
+            tell("리아 / 광산 좌표가 N-0 외곽 설비 목록이랑 딱 맞아떨어져! 마침 그쪽 발전기·운송대·폐설비에 "
+                 "이상이 겹쳤어. 준비되면 개척지로 바로 출발하자.");
+            ShowNotice("보상 해금 / 오르딘 광산 공로로 장갑 공용 차량이 헤일로에 배치되었습니다!");
+            return;
+        }
         if (game::GameLevels::Chapter().IsAvailable())
         {
-            Dialogue::Start("city/frontier/status",
-                            StoryDialogue::FrontierStatus(game::GameLevels::Chapter().GetState()), {}, true);
+            game::GameLevels::Chapter().InteractHub();
             return;
         }
         if (state.gateSignalHeard)
         {
-            if (game::GameLevels::Mine().GetState().quest.Advance(game::MineQuestStage::ShowRecord))
+            auto &mq = game::GameLevels::Mine().GetState().quest;
+            if (mq.Advance(game::MineQuestStage::ShowRecord))
             {
-                tell("리아 / 네가 보낸 적 없는 목소리라고? 수신기 오류일 수도 있어. 광장 수신망에서 이 "
-                     "신호가 어디를 거쳤는지 확인해 보자.");
+                mq.Advance(game::MineQuestStage::CheckCityRelay);
+                tell("리아 / 네가 보낸 적 없는 목소리라고? 잠깐만, 단말로 주파수 경로를 뜯어보니 인근 "
+                     "오르딘 광산 통신선을 거쳤어! 같은 시각 실종 탐사선 구조 신호도 거기서 잡혔어. "
+                     "바이크 타고 광산으로 가자.");
+            }
+            else if (mq.Advance(game::MineQuestStage::CheckCityRelay))
+            {
+                tell("리아 / 경로를 확인했어. 오르딘 광산 통신선을 거친 신호야. 바이크로 이동해서 "
+                     "입구에서 하차한 뒤 안쪽을 조사하자.");
             }
             else
             {
-                tell(game::GameLevels::Mine().GetState().quest.GetRiaDialogue());
+                tell(mq.GetRiaDialogue());
             }
             return;
         }
@@ -5196,6 +5406,13 @@ void Game::InteractWithNearbyTarget()
     }
     if (target == InteractionTarget::PowerRelay)
     {
+        if (state.isPowerRestored)
+        {
+            ShowNotice(story::StoryArc::Get().State().chapter4Complete
+                           ? "전력 장치 / 대피소와 주거 구역 비상 배선이 안정적으로 유지되고 있습니다."
+                           : "전력 장치 / 주거 구역 전력 공급이 정상 작동 중입니다.");
+            return;
+        }
         if (state.isSideQuestAccepted)
         {
             state.isPowerRestored = true;
@@ -5224,31 +5441,48 @@ void Game::InteractWithNearbyTarget()
         {
             state.mainQuestStage = MainQuestStage::ReadGateSignal;
         }
-        ShowNotice("전망대 / 승강기를 타고 관측 데크에 도착했습니다. 북동쪽의 신호 측정 콘솔로 이동하세요.");
+        const auto &arc = story::StoryArc::Get().State();
+        if (!state.gateSignalHeard)
+        {
+            ShowNotice("전망대 / 승강기를 타고 관측 데크에 도착했습니다. 북동쪽의 신호 측정 콘솔로 이동하세요.");
+        }
+        else if (arc.chapter4Complete && !arc.nereusSignalReceived && arc.epilogueShelterVisited &&
+                 arc.epilogueClinicVisited && arc.epilogueWorkshopVisited)
+        {
+            ShowNotice("전망대 / 관측 데크에 도착했습니다. 콘솔에서 17일간의 수신 기록을 정리할 수 있습니다.");
+        }
+        else
+        {
+            ShowNotice("전망대 / 관측 데크에 도착했습니다.");
+        }
     }
     if (target == InteractionTarget::ObservatorySignal)
     {
-        if (state.surfaceExploration && state.gateSignalHeard)
+        if (story::StoryArc::Get().State().chapter4Complete && story::StoryArc::Get().InteractHaloReceiver())
         {
-            Dialogue::Start("surface/observatory-archive",
-                            {{"archive", "리아", "수신 기록",
-                              "전망대에서 받은 기록은 보관돼 있어. 광산 구조 신호와 같은 통신선을 거쳤다는 "
-                              "사실도 확인했지."}},
-                            {}, true);
             return;
         }
+        const bool first = !state.gateSignalHeard;
         state.gateSignalHeard = true;
         state.mainQuestStage = (std::max)(state.mainQuestStage, MainQuestStage::DescendObservatory);
-        Dialogue::Start("MQ00/observatory",
-                        {{"voice", "발신자 미상", "수신 기록", "…수신 확인. 이 목소리가 들리면—", {}},
-                         {"observation", "나", "현장",
-                          "숨이 멎을 뻔했다. 방금 끊긴 끝음까지 틀림없는 내 목소리다. 그런데 이런 말을 녹음한 "
-                          "기억은 없다.",
-                          {}},
-                         {"ria", "리아", "무전",
-                          "음성 기록은 일단 저장했어. 얼굴이 하얗게 질렸네… 내려와, 광장 수신망에서 어디서 "
-                          "날아온 건지 같이 뜯어보자.",
-                          {}}});
+        if (first)
+        {
+            Dialogue::Start("MQ00/observatory",
+                            {{"voice", "발신자 미상", "수신 기록", "…수신 확인. 이 목소리가 들리면—", {}},
+                             {"observation", "나", "현장",
+                              "숨이 멎을 뻔했다. 방금 끊긴 끝음까지 틀림없는 내 목소리다. 그런데 이런 말을 녹음한 "
+                              "기억은 없다.",
+                              {}},
+                             {"ria", "리아", "무전",
+                              "음성 기록은 일단 저장했어. 얼굴이 하얗게 질렸네… 내려와, 광장에서 주파수 경로를 "
+                              "같이 뜯어보자.",
+                              {}}});
+        }
+        else
+        {
+            Dialogue::Say("observatory/archive",
+                          "전망대 기록 / 전망대에서 수신한 음성과 경로 기록은 단말에 보관되어 있다.");
+        }
     }
     if (target == InteractionTarget::ObservatoryExit)
     {
@@ -5257,6 +5491,7 @@ void Game::InteractWithNearbyTarget()
             ShowNotice("조사 안내 / 관측 데크 북동쪽 콘솔에서 신호 기록을 받은 뒤 내려가세요.");
             return;
         }
+        const bool firstDescent = !state.hasDescendedObservatory;
         if (state.surfaceExploration)
         {
             if (ReturnToSurface(kBeaconPosition))
@@ -5272,7 +5507,11 @@ void Game::InteractWithNearbyTarget()
         state.cameraPosition = kBeaconPosition;
         std::fill(state.pressedKeys, state.pressedKeys + 256, false);
         state.mainQuestStage = (std::max)(state.mainQuestStage, MainQuestStage::MountJetBike);
-        ShowNotice("신호 기록 저장 / 집 근처에서 기다리는 리아에게 기록을 보여 주세요.");
+        const bool showRiaHint = firstDescent && !story::StoryArc::Get().IsRiaMissing() &&
+                                 game::GameLevels::Mine().GetState().quest.GetStage() ==
+                                     game::MineQuestStage::ShowRecord;
+        ShowNotice(showRiaHint ? "신호 기록 저장 / 집 근처에서 기다리는 리아에게 기록을 보여 주세요."
+                               : "헤일로 / 전망대 앞 승강기로 내려왔습니다.");
     }
     if (target == InteractionTarget::JetBike)
     {
@@ -5319,6 +5558,10 @@ void Game::InteractSurfaceStory(InteractionTarget target)
     }
     if (target == InteractionTarget::ObservatorySignal)
     {
+        if (story::StoryArc::Get().State().chapter4Complete && story::StoryArc::Get().InteractHaloReceiver())
+        {
+            return;
+        }
         bool first = !state.gateSignalHeard;
         state.gateSignalHeard = true;
         SyncMissionProgress();
@@ -5330,17 +5573,18 @@ void Game::InteractSurfaceStory(InteractionTarget target)
                               "숨이 멎을 뻔했다. 방금 끊긴 끝음까지 틀림없는 내 목소리다. 그런데 이런 말을 "
                               "녹음한 기억은 없다."},
                              {"ria", "리아", "무전",
-                              "음성 기록은 일단 저장했어. 얼굴이 하얗게 질렸네… 내려와, 광장 수신망에서 "
-                              "어디서 날아온 건지 같이 뜯어보자."}});
+                              "음성 기록은 일단 저장했어. 얼굴이 하얗게 질렸네… 내려와, 광장에서 나랑 "
+                              "주파수 경로를 같이 뜯어보자."}});
         }
         else
         {
-            say("observatory/archive", "전망대 기록 / 방금 받은 음성과 수신 경로는 이미 단말에 보관해 두었다.");
+            say("observatory/archive", "전망대 기록 / 전망대에서 수신한 음성과 경로 기록은 단말에 보관되어 있다.");
         }
         return;
     }
     if (target == InteractionTarget::ObservatoryExit)
     {
+        const bool firstDescent = !state.hasDescendedObservatory;
         if (ReturnToSurface(kBeaconPosition))
         {
             if (state.gateSignalHeard)
@@ -5348,7 +5592,11 @@ void Game::InteractSurfaceStory(InteractionTarget target)
                 state.hasDescendedObservatory = true;
             }
             SyncMissionProgress();
-            ShowNotice(state.gateSignalHeard
+            const bool showRiaHint = firstDescent && state.gateSignalHeard &&
+                                     !story::StoryArc::Get().IsRiaMissing() &&
+                                     state.missions.Status(MissionId::Mine) != MissionStatus::Completed &&
+                                     mine.quest.GetStage() == game::MineQuestStage::ShowRecord;
+            ShowNotice(showRiaHint
                            ? "헤일로 광장 / 전망대에서 내려왔습니다. 광장의 리아에게 음성 기록을 들려주세요."
                            : "헤일로 광장 / 전망대 앞 승강기로 내려왔습니다.");
         }
@@ -5398,6 +5646,12 @@ void Game::InteractSurfaceStory(InteractionTarget target)
         {
             return;
         }
+        if (chapter.IsAvailable() &&
+            (chapter.CompletedSites() == 3 || chapter.GetState().recordsCompared))
+        {
+            chapter.InteractHub();
+            return;
+        }
         say("kain/halo/" + std::to_string(chapter.GetState().recordsCompared),
             chapter.GetState().recordsCompared
                 ? "카인 / 지도에 있던 다리는 사라졌습니다. 아래 수로가 남아 있는지 확인해야겠군요. 예전 "
@@ -5407,6 +5661,13 @@ void Game::InteractSurfaceStory(InteractionTarget target)
     }
     if (target == InteractionTarget::PowerRelay)
     {
+        if (state.isPowerRestored)
+        {
+            ShowNotice(story::StoryArc::Get().State().chapter4Complete
+                           ? "전력 장치 / 대피소와 주거 구역 비상 배선이 안정적으로 유지되고 있습니다."
+                           : "전력 장치 / 주거 구역 전력 공급이 정상 작동 중입니다.");
+            return;
+        }
         state.isPowerRestored = true;
         ShowNotice("전력 장치 / 주거 구역 전력을 복구했습니다. 창문에 불이 들어오니 마라에게 알려 주세요.");
         return;
@@ -5417,12 +5678,56 @@ void Game::InteractSurfaceStory(InteractionTarget target)
         {
             return;
         }
+        if (story::StoryArc::Get().IsActTwoUnlocked() && story::StoryArc::Get().InteractHaloReceiver())
+        {
+            return;
+        }
         if (MissionEligible(MissionId::Mine) &&
             state.missions.Status(MissionId::Mine) != MissionStatus::Completed)
         {
             if (!state.missions.Active(MissionId::Mine))
             {
                 OfferMission(MissionId::Mine, "현장");
+                return;
+            }
+            if (CompleteMission(MissionId::Mine))
+            {
+                chapter.Unlock();
+                say("mine/report",
+                    "리아 / 광산 중계 좌표가 N-0 외곽 개척지 세 현장의 전력·통신선과 딱 겹쳐! 마침 "
+                    "거기서 정전이랑 운송대 실종이 같이 터졌거든. 준비되면 개척지로 움직이자.");
+                ShowNotice("보상 해금 / 오르딘 광산 공로로 장갑 공용 차량이 헤일로에 배치되었습니다!");
+                return;
+            }
+            if (mine.quest.GetStage() == game::MineQuestStage::ShowRecord ||
+                mine.quest.GetStage() == game::MineQuestStage::CheckCityRelay)
+            {
+                mine.quest.Advance(game::MineQuestStage::ShowRecord);
+                mine.quest.Advance(game::MineQuestStage::CheckCityRelay);
+                if (surface && surface->Ready())
+                {
+                    state.planetDestination =
+                        surface->Stream().Snapshot()->planet->Region("mq00_mine").access.position;
+                }
+                Dialogue::Start(
+                    "mission/mine/companion",
+                    {{"trace",
+                      "리아",
+                      "현장",
+                      "전망대 잡음 밑바닥을 뜯어보니까 인근 오르딘 광산 통신선 주소가 겹쳐 있어. "
+                      "광산 입구 좌표는 지도에 찍어 뒀어."},
+                     {"join",
+                      "리아",
+                      "동행 제안",
+                      "안쪽은 장비도 낡고 길도 험해. 나도 같이 내려갈게, 준비됐어?",
+                      {{"join", "같이 내려간다"}, {"later", "잠깐만 더 둘러본다"}}}},
+                    [this](const std::string &choice) {
+                        if (choice == "join" && state.missions.Active(MissionId::Mine))
+                        {
+                            game::GameLevels::Mine().GetState().quest.BeginJourney();
+                        }
+                    },
+                    true);
                 return;
             }
             if (mine.quest.GetStage() == game::MineQuestStage::TravelToMine && !mine.quest.IsRiaJoined())
@@ -5456,6 +5761,11 @@ void Game::InteractSurfaceStory(InteractionTarget target)
         if (state.missions.Active(MissionId::Frontier) ||
             state.missions.Status(MissionId::Frontier) == MissionStatus::Completed)
         {
+            if (chapter.CompletedSites() == 3 || chapter.GetState().recordsCompared)
+            {
+                chapter.InteractHub();
+                return;
+            }
             Dialogue::Start("surface/story/frontier/status",
                             StoryDialogue::FrontierStatus(chapter.GetState()), {}, true);
             return;
@@ -5471,7 +5781,7 @@ void Game::InteractSurfaceStory(InteractionTarget target)
             return;
         }
         say("lia/free",
-            "리아 / 전망대 기록은 그대로 보관해 뒀어. 준비되면 광장 수신망에서 어디서 날아온 건지 같이 뜯어보자.");
+            "리아 / 전망대 기록은 그대로 보관해 뒀어. 준비되면 나랑 같이 광산 쪽 경로를 짚어 보자.");
         return;
     }
     if (target == InteractionTarget::CityReceiver)
@@ -6255,10 +6565,13 @@ void Game::InteractResidence(InteractionTarget target)
             "/3 · 무기 " + std::to_string(r.weaponTier) + "/3 · 등록 중계환 " +
             std::to_string(state.relayNetwork.Registrations().size()) + "개 · 수배 " +
             std::to_string(law.wanted) + "성 · 악명 " + std::to_string(int(std::round(law.infamy)));
+        const auto &arc = story::StoryArc::Get().State();
         std::vector<DialogueChoice> choices = {
             {"brief", "거점·탐사 현황 확인"},
             {"recall", "개인 바이크·차량 거주지 앞으로 호출"},
-            {"message", "리아의 보관 메시지 다시 보기"},
+            {"message", arc.nereusSignalReceived ? "네레우스 수신 기록 다시 듣기"
+                        : story::StoryArc::Get().IsRiaMissing() ? "리아가 남긴 마지막 메시지 보기"
+                                                                : "리아의 보관 메시지 다시 보기"},
             {"cancel", "단말 닫기"}};
         Dialogue::Start(
             "residence/terminal",
@@ -6274,9 +6587,24 @@ void Game::InteractResidence(InteractionTarget target)
                 }
                 else if (choice == "message")
                 {
-                    Dialogue::Say("residence/lia-archive",
-                                  "리아 · 보관 메시지 / N-0 정기 측정 요청과 전망대 접근 코드를 "
-                                  "보관했습니다. 외출과 탐사는 자유입니다.");
+                    const auto &a = story::StoryArc::Get().State();
+                    if (a.nereusSignalReceived)
+                    {
+                        Dialogue::Say("residence/nereus-replay",
+                                      "수신 기록 · 리아의 음성 (네레우스 · 송신 시각 미확인) / 수신 확인. "
+                                      "여기 조명이 하나 켜졌어. 누가 듣고 있으면…");
+                    }
+                    else if (story::StoryArc::Get().IsRiaMissing())
+                    {
+                        Dialogue::Say("residence/lia-last",
+                                      "리아 · 마지막 수신 / …여긴, 아직 빛이 있어.");
+                    }
+                    else
+                    {
+                        Dialogue::Say("residence/lia-archive",
+                                      "리아 · 보관 메시지 / N-0 정기 측정 중에 이상한 응답이 잡혔어. "
+                                      "전망대 접근 코드 같이 보내 둘게.");
+                    }
                 }
             },
             true);

@@ -1,7 +1,7 @@
 # SimpleGame 게임 개발 통합 문서
 
 통합일: 2026-10-14  
-최종 진행 정리: 2026-11-27 · OpenGL 4.5 / 144+ FPS 렌더·시뮬레이션 최적화 및 CQ-01~08 구조 정비(52절) + 차세대 렌더링 최적화 R1~R4 구현 완료(55절·57절) + CQ-09 거주지(56절) + CQ-04B 절차 도시·도로망(58절) + CQ-04 C2/CQ-10 시설·빈 구역(59절) + CQ-12 UI 정돈(60절) + CQ-11 Mixamo 3계층 모듈러 파이프라인 및 4파츠 조합 실렌더 완료(61절) + R5 물리 기반 조명(GGX · IBL · 3D 포인트 라이트 · ACES 톤매핑) 구현 완료(62절) + 카메라 줌·비행체 탑뷰/고도 블러·바람 이펙트·수배 AI 능동 탐색·시설 NPC 1인칭 서비스 UI·4K/전체화면(63절) + 16:9 기본 비율/DPI 선명 UI·고도 클리핑/트레일/바람 보완·비일시정지 대면 NPC 대화·상점 NPC 실시간 애니메이션(64절) + 1챕터 메인 스토리 전 구간(서장·광산·1장 보강 + 2~4장·에필로그 구현 · Save Schema 15) 완료(65절) + 10종 4단계 오픈월드 랜덤 인카운터·서브퀘스트 확장(Save Schema 16) 완료(66절) + 메인 스토리·챕터 테스트 전 구간 에르마 오픈월드 단일 이식 및 인물 대사·말투·조사 기록 개정 통합(67절) / 남은 순서: CQ-11 `MasterBody`·Mixamo 공용/상점 NPC 애니메이션 뱅크 납품·교체 → 2챕터(네레우스 신호 후속) 구현 대기
+최종 진행 정리: 2026-11-27 · OpenGL 4.5 / 144+ FPS 렌더·시뮬레이션 최적화 및 CQ-01~08 구조 정비(52절) + 차세대 렌더링 최적화 R1~R4 구현 완료(55절·57절) + CQ-09 거주지(56절) + CQ-04B 절차 도시·도로망(58절) + CQ-04 C2/CQ-10 시설·빈 구역(59절) + CQ-12 UI 정돈(60절) + CQ-11 Mixamo 3계층 모듈러 파이프라인 및 4파츠 조합 실렌더 완료(61절) + R5 물리 기반 조명(GGX · IBL · 3D 포인트 라이트 · ACES 톤매핑) 구현 완료(62절) + 카메라 줌·비행체 탑뷰/고도 블러·바람 이펙트·수배 AI 능동 탐색·시설 NPC 1인칭 서비스 UI·4K/전체화면(63절) + 16:9 기본 비율/DPI 선명 UI·고도 클리핑/트레일/바람 보완·비일시정지 대면 NPC 대화·상점 NPC 실시간 애니메이션(64절) + 1챕터 메인 스토리 전 구간(Save Schema 15 · 65절) + 10종 4단계 오픈월드 랜덤 인카운터(Save Schema 16 · 66절) + 오픈월드 단일 이식·대사 개정(67절) + 파트 1 개편(구도심 5개 전부 Rev 5 절차 도시화·바이크 시작/차량·비행체 퀘스트 해금·공용 차 강화·도시 수신망 삭제·J 원격 수령 차단 + N키 3D 경로 안내 리본·고정 문구 정비 · 68절) 완료 / 다음: 파트 2(광산·개척지·카인 첫 대면·퍼즐/미니게임·3D 외관/실물 상점 UI) → 파트 3(3D 행성/우주 맵·클러스터 필터·UI 경계선·제작 요청서·미사용 파일 정리)
 
 현재 개발 계획 브랜치: `iss04_ContentQuality` · 초기 구조 기준: `iss01_actor_scene_render` · 범죄 시스템 변경 기준: `62b00b5` · 이전 도로 성능 비교 기준: `592ec4c` · 초기 기반: `41316a5`
 
@@ -1741,6 +1741,24 @@ CQ-07을 A 이동·경로 안정성, B 감지·기억·역할별 판단, C 동�
   - 4.11절 대사·인물 바이블 기준에 맞춰 `InteractSurfaceStory`의 전망대(`MQ00/observatory`)·마라·리아·카인·전력 장치·수신망 대사에서 관료적 보고서 문체와 시스템 규칙 노출 문구를 제거하고 화자별 존비어·호흡을 통일했다.
   - `StoryArc.cpp`의 화자 일관성(리아→카인 존댓말, 마라 존댓말 통일, 1인칭 감각 관찰 화자 `"나"` 통일, S52 단말 메타 문구 제거)을 보정하고, `StoryJournal.cpp`에 2~4장·에필로그 조사 수첩 기록 7종(`act2/beacon`·`act2/kain`·`act2/veil`·`act3/evac`·`act3/survivors`·`act4/sector-loss`·`epilogue/nereus`)을 현장감 있는 개인 수첩 문체로 복원했다.
 - **검증:** 8개 Release x64 타깃(`SimpleGame`, `GameplayTests`, `RenderingTests`, `CivicTests`, `MapHudTests`, `ResourceAssetsTests`, `MovementTests`, `WorldTests`) 빌드, `GameplayTests`(전체 + `--story-arc` + `--encounters` + 오픈월드 전 11개 스테이지·`n0_outskirts` 포털·에필로그 헤일로 표면·리아 실종 가드 검증), `WorldTests`(47,366 assertions), `MovementTests`, `CivicTests`, `MapHudTests`, `RenderingTests --r4-only`(`openworld-epilogue-halo.bmp` 16:9 오픈월드 복구 헤일로 육안 검수 통과), `tools/Test-SourceEncoding.ps1`, `git diff --check` 통과.
+
+#### 68. 오픈월드·스토리·이동·안내 구조 대규모 개편 — 파트 1 (1·2·3·4·8번) (2026-11-27 · 구현 완료)
+
+- **1. 헤일로 포함 구도심 5개 전면 Rev 5 절차 도시화 ([WorldContent.cpp](SimpleGame/WorldContent.cpp), [Overworld.cpp](SimpleGame/Overworld.cpp), [Scene.cpp](SimpleGame/Scene.cpp)):**
+  - `halo_07`에서도 구 도로망·구 건물·구 소품 배치를 제거하고 **플레이어 거주지(`Home`)·전망대(`Observatory`)·전력 장치(`power`)·전망대 승강기(`observatory_lift`)** 등 핵심 퀘스트 거점만 `core.lots`(반경 `40~65 m`, `core.roads` 비움)로 보존했다.
+  - `EmitRev5Street`·`CityCorePlan::Reserved`·`ContentLayout::Generate`·`TrafficRoutes`에서 `roads.empty()` 랜드마크 전용 코어를 OBB 단위로만 비켜 가도록 분리해, 헤일로 주변까지 최신 Rev 5 절차 블록·도로·교차로·시설·교통이 빈틈없이 생성되도록 개편했다.
+- **2. 바이크 단일 시작 · 공용 차량/비행체 퀘스트 보상 해금 · 공용 차량 메리트 대폭 강화 ([Game.h](SimpleGame/Game.h)/[Game.cpp](SimpleGame/Game.cpp), [PlayerAircraft.cpp](SimpleGame/PlayerAircraft.cpp), [Civic.cpp](SimpleGame/Civic.cpp), [Overworld.cpp](SimpleGame/Overworld.cpp), [Hud.cpp](SimpleGame/Hud.cpp), [Scene.cpp](SimpleGame/Scene.cpp)):**
+  - 새 게임 시작 시 **개인 제트 바이크만 지급**하며, **장갑 공용 차량(`IsGroundVehicleUnlocked`)**은 `오르딘 광산(MissionId::Mine)` 완료 보상, **공용 비행체(`IsAircraftUnlocked`)**는 `1장 빛나는 개척지(MissionId::Frontier)` 완료 보상으로 해금된다(NPC 차량 강탈도 차량 해금 이후로 제한).
+  - 공용 차량을 바이크 대비 확실한 상위 장거리/전투 이동수단으로 차별화: 순항 `12.5 u/s(90 km/h)` + **Space 오버드라이브 부스트 `16.5 u/s(119 km/h)`**, 장갑 내구도 `140 → 260` + 총격 `-35%` 경감 + **운전자 방탄 캡(`!car.mounted`)**, 험지 등판 경사 `0.35 → 0.58(~30°)`, 충돌 자해 임계 상향(`7.5 → 12.5 u/s`), **동료(`PlanetParty`) 차량 동승** 및 HUD 장갑/부스트 표기.
+- **3. 헤일로 `도시 수신망(CityReceiver)` 삭제 및 거점/NPC 분산 ([CityFacilities.h](SimpleGame/CityFacilities.h)/[CityFacilities.cpp](SimpleGame/CityFacilities.cpp), [FacilityApproaches.h](SimpleGame/FacilityApproaches.h), [CityWalkways.cpp](SimpleGame/CityWalkways.cpp), [Overworld.cpp](SimpleGame/Overworld.cpp), [Game.cpp](SimpleGame/Game.cpp), [StoryArc.cpp](SimpleGame/StoryArc.cpp), [Level.cpp](SimpleGame/Level.cpp), [Scene.cpp](SimpleGame/Scene.cpp), [Hud.cpp](SimpleGame/Hud.cpp)):**
+  - `halo_07/receiver` 시설·3D 콘솔·광원·마커·`city_receiver` 앵커를 제거(`CityFacilities::All()` 3종)하고, 기존 수신망 집중 진행을 자연스러운 인물·시설로 분산했다: 광산 경로 추적/보고 및 1장 대조 → **리아·카인**, 2~3장 출발/보고 → **리아·카인·N-0 외곽 포털**, 4장 실종 접수 → **마라·카인**, 에필로그 17일 정리/네레우스 수신 → **전망대 콘솔·카인(·거주지 단말 재청취)**. 광산 퇴장(`LeaveSurfaceMine`) 시 동행 동료도 함께 지상으로 나오도록 보강했다.
+- **4. `J` 조사 기록 원격 수령 차단 + 원신 스타일 `[N]` 3D 실제 월드 경로 안내 리본 ([Game.h](SimpleGame/Game.h)/[Game.cpp](SimpleGame/Game.cpp), [Hud.cpp](SimpleGame/Hud.cpp), [Scene.cpp](SimpleGame/Scene.cpp)):**
+  - `J` 화면에서 수령 가능/진행 중 임무 목록 표시는 유지하되 미수락 임무의 원격 수락을 차단하고 **`제안자 안내`** 버튼으로 교체했다.
+  - 실제 오픈월드 3D 지형 위에 대원(Geodesic) 곡선으로 흐르는 발광 에너지 리본·파동 글로우·이동 포인트 라이트·목적지 빛기둥을 투사하는 **`[N]` 3D 경로 안내 리본(`ActivityJournal::TriggerGuidance` + `PlanetScene` 렌더)**을 구현했다(`V` 근접 공격과 무충돌).
+- **8. 진행 단계 불일치 고정 문구·배우·프롬프트 전수 정비 ([Scene.cpp](SimpleGame/Scene.cpp), [Game.cpp](SimpleGame/Game.cpp), [Level.cpp](SimpleGame/Level.cpp), [Hud.cpp](SimpleGame/Hud.cpp)):**
+  - `ObservatoryScene`에서 `RiaStatus::Missing` 및 전망대 하강 이후 리아가 다시 나타나던 버그를 수정했다.
+  - 전망대 입장/퇴장(`GateBeacon`/`ObservatoryExit`), 전력 장치(`PowerRelay`), 광산 재입장(`MineLevel::Enter`), 거주지 단말 보관 메시지(`HomeTerminal`), 전망대 콘솔 프롬프트(`ObservatorySignal`), 1장 완료 문구(`"후속 지역 준비 중"` 제거), 4장 소실 직후 마라 대화(`StoryArc::InteractHaloMara`)와 마커를 현재 진행 단계에 정확히 연동했다.
+- **검증:** 9개 Release x64 타깃 빌드, `GameplayTests`(전체 + `--cq10-facilities` + `--story-arc` + `--encounters`), `WorldTests`(47,366 assertions), `WorldGenerationTests`(254,855 checks), `WorldStreamingTests`(136,396 checks), `MovementTests`, `CivicTests`, `MapHudTests`, `RenderingTests --r4-only`(`openworld-halo-rev5-guidance.bmp` Rev 5 헤일로 + 3D 경로 안내 리본 육안 검수 통과), `tools/Test-SourceEncoding.ps1` 통과.
 
 ### 전체 구조 검토와 반복 비용 리팩토링 — 2026-10-28
 

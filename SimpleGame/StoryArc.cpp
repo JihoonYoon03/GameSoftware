@@ -393,7 +393,7 @@ void StoryArc::LeaveZoneToHalo(bool preserveResume)
         {
             if (!g.ReturnToSurface({16.f, 7.f}, 0))
             {
-                g.ReturnToSurface(kCityReceiverPosition, 0);
+                g.ReturnToSurface(kHomeDoor, 0);
             }
         }
         else
@@ -1375,7 +1375,7 @@ void StoryArc::OpenS25CommitChoice()
             }
             else
             {
-                Game::Get().ShowNotice("헤일로에서 정비를 마친 뒤 준비되면 수신망에서 다시 출발할 수 있습니다.");
+                Game::Get().ShowNotice("헤일로에서 정비를 마친 뒤 리아나 카인에게 말을 걸어 다시 출발할 수 있습니다.");
             }
         },
         true);
@@ -1946,6 +1946,10 @@ bool StoryArc::InteractHaloReceiver()
 
 bool StoryArc::InteractHaloMara()
 {
+    if (state.sectorLossTriggered && !state.chapter4Complete)
+    {
+        return InteractHaloReceiver();
+    }
     if (state.chapter4Complete)
     {
         state.epilogueShelterVisited = true;
@@ -1988,6 +1992,12 @@ bool StoryArc::InteractHaloKain()
 {
     if (state.chapter4Complete)
     {
+        if (state.epilogueShelterVisited && state.epilogueClinicVisited && state.epilogueWorkshopVisited &&
+            !state.nereusSignalReceived)
+        {
+            OpenS52NereusChoice();
+            return true;
+        }
         state.epilogueWorkshopVisited = true;
         state.epilogueRecoveryTaskDone = true;
         const auto &ch = game::GameLevels::Chapter().GetState();
@@ -2016,6 +2026,10 @@ bool StoryArc::InteractHaloKain()
         Dialogue::Start("MQE01/kain-workshop", lines, {}, true);
         return true;
     }
+    if (IsActTwoUnlocked())
+    {
+        return InteractHaloReceiver();
+    }
     return false;
 }
 
@@ -2031,7 +2045,7 @@ bool StoryArc::InteractHaloSafetyLine()
         {{"s44_s1", "나", "없는 거리",
           "도로 표시선이 칼로 자른 듯 끊겨 있고 그림자도 맞물리지 않는다. 돌아가면 다른 거리가 나오지만, 외부 제어소가 있던 좌표로 이어지는 길은 어디에도 없다."},
          {"s44_s2", "카인", "현장",
-          "마지막 수신을 다시 재생해도 같은 문장뿐입니다. 수신망 단말로 가서 지원팀 기록을 회수하고 실종 접수를 마칩시다."}});
+          "마지막 수신을 다시 재생해도 같은 문장뿐입니다. 광장의 마라 씨에게 가서 지원팀 기록을 넘기고 실종 접수를 마칩시다."}});
     return true;
 }
 
@@ -2251,11 +2265,11 @@ std::string StoryArc::CurrentObjectiveAction() const
         {
             return "대피소(마라)·의료소(탐사대)·정비소(카인) 방문";
         }
-        return "헤일로 수신망에서 17일 후 기록 정리 진행";
+        return "전망대 콘솔 또는 카인과 17일 후 기록 정리 진행";
     }
     if (state.sectorLossTriggered)
     {
-        return state.safetyLineChecked ? "수신망 단말에서 지원팀 기록 회수 및 실종 접수"
+        return state.safetyLineChecked ? "광장의 마라에게 지원팀 기록 전달 및 실종 접수"
                                        : "헤일로 동부 소실 구획 안전선 확인";
     }
     if (state.coreStopped)
@@ -2303,17 +2317,17 @@ std::string StoryArc::CurrentObjectiveAction() const
     }
     if (state.chapter2Reported)
     {
-        return "준비 완료 후 헤일로 수신망에서 3장 차단 설비 출발";
+        return "준비 완료 후 리아·카인 또는 N-0 외곽에서 3장 출발";
     }
     if (state.veilHypothesisFound && state.observatoryDocsFound)
     {
-        return "헤일로 수신망에 수로 시험 기록 보고";
+        return "헤일로의 리아·카인에게 수로 시험 기록 보고";
     }
     if (IsActTwoUnlocked())
     {
         if (state.activeZone != OperationZone::Waterway)
         {
-            return "헤일로 수신망에서 2장 외곽 수로 조사 출발";
+            return "리아·카인 대화 또는 N-0 외곽으로 이동해 2장 시작";
         }
         if (!state.returnBeaconPlaced)
         {
@@ -2346,6 +2360,6 @@ std::string StoryArc::CurrentObjectiveLocation() const
     {
         return "헤일로 · 대피 구역";
     }
-    return "헤일로 · 수신망 광장";
+    return "헤일로 · 중앙 광장";
 }
 } // namespace story

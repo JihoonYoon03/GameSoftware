@@ -11,7 +11,7 @@ struct FacilityApproach
 };
 struct FacilityApproachPlan : CityWalkwayPlan
 {
-    std::array<FacilityApproach, 4> facilities = {};
+    std::array<FacilityApproach, 3> facilities = {};
 };
 
 // Derived game-thread overlay. It is deliberately excluded from saved city-core generation/digests.

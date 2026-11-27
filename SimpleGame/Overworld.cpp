@@ -422,6 +422,14 @@ void PlanetParty::Update(float seconds)
         {
             continue;
         }
+        if (g.GetState().car.mounted && g.Surface() && member.place == CompanionPlace::Surface &&
+            member.combat.health > 0)
+        {
+            member.position = g.Surface()->Pose().origin;
+            member.walking = false;
+            member.combat.engaged = false;
+            continue;
+        }
         if (member.place == CompanionPlace::Frontier && (!field.IsActive() || g.GetState().aircraft.mounted))
         {
             ChangeOwner(i, CompanionPlace::Surface, member.position);
@@ -632,7 +640,7 @@ InteractionTarget PlanetParty::Nearby(float *distance) const
 {
     auto &g = Game::Get();
     InteractionTarget result = InteractionTarget::None;
-    double best = 2.7;
+    double best = 3.8;
     for (size_t i = 0; planet && i < state.members.size(); ++i)
     {
         const auto &m = state.members[i];
@@ -5836,7 +5844,6 @@ const std::vector<world::StoryAnchor> &Overworld::StoryAnchors()
         return std::vector<world::StoryAnchor>{anchor("home_entrance", "halo_07", kHomeDoor),
                                                anchor("ria_home", "halo_07", kLiaPosition),
                                                anchor("observatory", "halo_07", kObservatoryBuildingPosition),
-                                               anchor("city_receiver", "halo_07", kCityReceiverPosition),
                                                anchor("mine_entrance", "mq00_mine", kMineEntrance)};
     }();
     return anchors;
@@ -6196,9 +6203,10 @@ world::CityCorePlan PlanetCities::Describe(const GameState &state)
         auto center = Overworld::Cities()[size_t(city)].center;
         world::CityCore core;
         core.regionId = Overworld::Cities()[size_t(city)].id;
-        // Only halo_07 (city == 0) retains authored story landmarks (home, observatory, Lia/Mara, receiver).
-        // Non-story cities (cinder, veil, lumen, echo) keep only their fixed physical location anchor while
-        // generating 100% modern Rev 5 procedural urban streets, curved blocks, and buildings.
+        // All 5 historic cities (including halo_07) now generate with the modern Rev 5 procedural city generator.
+        // Non-story cities keep only their physical anchor; halo_07 preserves ONLY its essential story landmarks
+        // (Home, Observatory, power relay, observatory lift) with empty core.roads so Rev 5 roads, intersections,
+        // curved blocks, urban facilities, and traffic generate naturally right around the story plaza.
         if (city > 0)
         {
             core.radiusMeters = 40.;
@@ -6208,37 +6216,18 @@ world::CityCorePlan PlanetCities::Describe(const GameState &state)
         auto palette = [](const models::Palette &p) {
             return world::SurfaceStructure::Palette{p.body, p.accent, p.emission};
         };
-        for (size_t i = 0; i < state.buildings.size(); ++i)
+        const size_t landmarkBuildingCount = (std::min)(state.buildings.size(), size_t(2));
+        for (size_t i = 0; i < landmarkBuildingCount; ++i)
         {
             const auto &b = state.buildings[i];
             const auto &mesh = models::ResourceAssets::Get(library.buildings[size_t(b.type)].resourceId);
             Vector2 position{b.x + (mesh.minimum.x + mesh.maximum.x) * b.width * .5f,
                              b.y + (mesh.minimum.y + mesh.maximum.y) * b.depth * .5f};
-            if (Game::Distance(position, center) > 100)
-            {
-                continue;
-            }
             world::CoreLot lot;
             lot.id = "building_" + std::to_string(i);
             lot.variant = std::uint16_t(b.type);
-            switch (b.type)
-            {
-            case models::BuildingType::Workshop:
-                lot.use = world::ContentUse::Industry;
-                break;
-            case models::BuildingType::Dome:
-            case models::BuildingType::TwinBridge:
-            case models::BuildingType::TransitAtrium:
-                lot.use = world::ContentUse::Services;
-                break;
-            case models::BuildingType::Observatory:
-            case models::BuildingType::ArcologyTerrace:
-                lot.use = world::ContentUse::Administration;
-                break;
-            default:
-                lot.use = world::ContentUse::Housing;
-                break;
-            }
+            lot.use = b.type == models::BuildingType::Observatory ? world::ContentUse::Administration
+                                                                  : world::ContentUse::Housing;
             lot.positionMeters = {(position.x - center.x) * 2, (position.y - center.y) * 2,
                                   mesh.minimum.z * b.height / 22};
             lot.sizeMeters = {(mesh.maximum.x - mesh.minimum.x) * b.width * 2,
@@ -6246,30 +6235,6 @@ world::CityCorePlan PlanetCities::Describe(const GameState &state)
                               (mesh.maximum.z - mesh.minimum.z) * b.height / 22};
             lot.palette = palette(b.palette);
             core.lots.push_back(std::move(lot));
-        }
-        for (size_t i = 0; i < net.roads.size(); ++i)
-        {
-            const auto &road = net.roads[i];
-            int lane = -1;
-            for (int index : net.junctions[size_t(road.from)].outgoing)
-            {
-                if (net.lanes[size_t(index)].road == int(i))
-                {
-                    lane = index;
-                    break;
-                }
-            }
-            if (lane < 0 || !TrafficSystem::CoreLane(lane, city))
-            {
-                continue;
-            }
-            auto a = Sub(net.junctions[size_t(road.from)].position, center),
-                 b = Sub(net.junctions[size_t(road.to)].position, center);
-            core.roads.push_back({std::uint32_t(road.from),
-                                  std::uint32_t(road.to),
-                                  {a.x * 2, a.y * 2, 0},
-                                  {b.x * 2, b.y * 2, 0},
-                                  unsigned(road.lanes)});
         }
         auto model = [&](std::string id, world::ContentForm form, std::uint16_t variant,
                          const models::Model &asset, Vector2 position, float yaw, bool solid,
@@ -6293,84 +6258,21 @@ world::CityCorePlan PlanetCities::Describe(const GameState &state)
             lot.yaw = yaw;
             lot.solid = solid;
             lot.palette = palette({});
-            if (lot.sizeMeters.x > .001 && lot.sizeMeters.y > .001 && lot.sizeMeters.z > .001 &&
-                std::hypot(lot.positionMeters.x, lot.positionMeters.y) +
-                        std::hypot(lot.sizeMeters.x, lot.sizeMeters.y) * .5 <=
-                    core.radiusMeters)
+            if (lot.sizeMeters.x > .001 && lot.sizeMeters.y > .001 && lot.sizeMeters.z > .001)
             {
                 core.lots.push_back(std::move(lot));
             }
         };
-        const auto &props = Overworld::Scenery().Props();
-        for (size_t i = 0; i < props.size(); ++i)
-        {
-            const auto &prop = props[i];
-            if (!prop.model || prop.elevation > .1f)
-            {
-                continue;
-            }
-            if (prop.type == models::SceneryType::Count)
-            {
-                bool matched = false;
-                for (unsigned type = 0; type < unsigned(models::AircraftType::Count) && !matched; ++type)
-                {
-                    for (unsigned alternate = 0; alternate < 2 && !matched; ++alternate)
-                    {
-                        if (models::ModelLibrary::Aircraft(models::AircraftType(type), alternate != 0)
-                                .resourceId == prop.model->resourceId)
-                        {
-                            model("parked_aircraft_" + std::to_string(i), world::ContentForm::Aircraft,
-                                  std::uint16_t(type * 2 + alternate), *prop.model, prop.position, prop.yaw,
-                                  prop.solid, prop.elevation);
-                            matched = true;
-                        }
-                    }
-                }
-                continue;
-            }
-            model("prop_" + std::to_string(i), world::ContentForm::Scenery, std::uint16_t(prop.type),
-                  *prop.model, prop.position, prop.yaw, prop.solid, prop.elevation);
-        }
-        if (city == 0)
-        {
-            model("receiver", world::ContentForm::Console, 0, library.console, kCityReceiverPosition, 0,
-                  true);
-            model("power", world::ContentForm::Breaker, 0, library.breaker, kRelayPosition, 0, true);
-            model("observatory_lift", world::ContentForm::Beacon, 0, library.beacon, kBeaconPosition, 0,
-                  true);
-        }
-        const auto &walkways = CityPlan::Walkways();
-        for (size_t i = 0; i < walkways.size(); ++i)
-        {
-            const auto &walkway = walkways[i];
-            if (Game::Distance(walkway.position, center) > 95 || walkway.altitude > .1f)
-            {
-                continue;
-            }
-            auto count = core.lots.size();
-            model("walkway_" + std::to_string(i), world::ContentForm::TransitMesh, 0,
-                  models::ModelLibrary::Transit(walkway.asset), walkway.position, walkway.yaw, false,
-                  walkway.altitude);
-            if (core.lots.size() > count)
-            {
-                core.lots.back().assetName = walkway.asset;
-            }
-        }
-        // Modernize legacy 5-city cores: shrink core.radiusMeters tightly around actual authored lots/roads
-        // (removing the 120..260m empty donut moat so Rev 5 urban blocks and streets stitch right up to the core).
-        double maxReach = 96.;
+        model("power", world::ContentForm::Breaker, 0, library.breaker, kRelayPosition, 0, true);
+        model("observatory_lift", world::ContentForm::Beacon, 0, library.beacon, kBeaconPosition, 0, true);
+        double maxReach = 40.;
         for (const auto &lot : core.lots)
         {
             const double p3 = std::hypot(lot.positionMeters.x, lot.positionMeters.y, lot.positionMeters.z);
             const double s3 = std::hypot(lot.sizeMeters.x, lot.sizeMeters.y, lot.sizeMeters.z) * .5;
             maxReach = (std::max)(maxReach, p3 + s3 + 3.);
         }
-        for (const auto &road : core.roads)
-        {
-            maxReach = (std::max)(maxReach, std::hypot(road.start.x, road.start.y, road.start.z) + 4.);
-            maxReach = (std::max)(maxReach, std::hypot(road.end.x, road.end.y, road.end.z) + 4.);
-        }
-        core.radiusMeters = std::clamp(std::ceil(maxReach), 115., 225.);
+        core.radiusMeters = std::clamp(std::ceil(maxReach), 40., 65.);
         plan.cities.push_back(std::move(core));
     }
     plan.cities.push_back(game::GameLevels::Chapter().Surface().Describe());
@@ -6519,14 +6421,28 @@ void PlanetCities::Update(GameState &state, const world::SurfaceSession &session
     }
     dt = Game::Clamp(dt, 0, .05f);
     remainingPathBudget = CitySimulation::PathBudget;
+    const auto planSnap = session.Stream().Snapshot();
+    const auto *planetPtr = planSnap ? planSnap->planet.get() : nullptr;
     for (int city = 0; city < Overworld::kCityCount; ++city)
     {
+        bool hasLegacyRoads = true;
+        if (planetPtr && planetPtr->cityCores)
+        {
+            if (const auto *core = planetPtr->cityCores->Find(Overworld::Cities()[size_t(city)].id);
+                core && core->roads.empty())
+            {
+                hasLegacyRoads = false;
+            }
+        }
         auto &status = simulation[size_t(city)];
         if (status.band == CitySimulationBand::Detailed)
         {
             Observe(state, session, city, [&] {
                 BodyCollision::UpdateCity(dt, city, city == activeCity);
-                traffic[size_t(city)].Update(state, dt);
+                if (hasLegacyRoads)
+                {
+                    traffic[size_t(city)].Update(state, dt);
+                }
                 CityResidents::Get().Update(state, dt, city, &remainingPathBudget);
             });
             ++status.detailedTicks;
@@ -6535,8 +6451,11 @@ void PlanetCities::Update(GameState &state, const world::SurfaceSession &session
         else
         {
             status.passiveSeconds += dt;
-            auto retired = traffic[size_t(city)].AdvanceDormant(dt);
-            profiling::Count(profiling::Counter::CityRetiredWrecks, retired);
+            if (hasLegacyRoads)
+            {
+                auto retired = traffic[size_t(city)].AdvanceDormant(dt);
+                profiling::Count(profiling::Counter::CityRetiredWrecks, retired);
+            }
             for (auto &resident : state.residents)
             {
                 if (resident.cityIndex == city)
@@ -6546,9 +6465,12 @@ void PlanetCities::Update(GameState &state, const world::SurfaceSession &session
                 }
             }
         }
-        if (auto *transit = Game::Get().SurfaceTraffic())
+        if (hasLegacyRoads)
         {
-            transit->SyncCity(city, traffic[size_t(city)], session);
+            if (auto *transit = Game::Get().SurfaceTraffic())
+            {
+                transit->SyncCity(city, traffic[size_t(city)], session);
+            }
         }
     }
 }
@@ -6838,6 +6760,19 @@ bool PlanetCities::OccupiedAt(const GameState &state, const world::SurfaceSessio
                 return true;
             }
         }
+    }
+    bool hasLegacyRoads = true;
+    if (plan.cityCores)
+    {
+        if (const auto *core = plan.cityCores->Find(Overworld::Cities()[size_t(city)].id);
+            core && core->roads.empty())
+        {
+            hasLegacyRoads = false;
+        }
+    }
+    if (!hasLegacyRoads)
+    {
+        return false;
     }
     for (const auto &car : traffic[size_t(city)].Vehicles())
     {

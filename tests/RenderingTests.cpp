@@ -1026,6 +1026,28 @@ void TestR4PbrAndSkinSharing(const std::filesystem::path *output = nullptr)
         assert(glGetError() == GL_NO_ERROR);
         Save(*output / "openworld-epilogue-halo.bmp");
 
+        // 12) Part 1 GPU capture: Rev 5 Procedural Halo + Genshin-style [N] 3D Glowing Guidance Ribbon.
+        Game::Get().EnterTestStage(TestStage::BikeUnlocked);
+        w.isBikeMounted = false;
+        w.viewportWidth = 1280;
+        w.viewportHeight = 720;
+        ActivityJournal::TriggerGuidance();
+        Game::Get().Update(0.15f);
+        glViewport(0, 0, kCanvasWidth, kCanvasHeight);
+        glClearColor(0.f, 0.f, 0.f, 1.f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        renderer.BeginScene(1280, 720);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, WorldCamera::LogicalWidth(), kCanvasHeight, 0, -65536, 65536);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        game::SceneManager::Get(game::SceneKind::Planet).Draw();
+        renderer.EndScene(0.f);
+        Hud::Render();
+        assert(glGetError() == GL_NO_ERROR);
+        Save(*output / "openworld-halo-rev5-guidance.bmp");
+
         w.viewportWidth = kCanvasWidth;
         w.viewportHeight = kCanvasHeight;
         Game::Get().Reset();

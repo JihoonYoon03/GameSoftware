@@ -1318,13 +1318,14 @@ bool PlanetSecurity::Hit(models::Point p, int damage, bool playerOwned, bool com
     auto &car = g.GetState().car;
     if (car.Contains(*g.Surface(), point, .03f, true))
     {
-        car.health = (std::max)(0, car.health - damage);
+        const int armoredDamage = (std::max)(1, int(std::round(damage * .65f)));
+        car.health = (std::max)(0, car.health - armoredDamage);
         return true;
     }
     auto body = [&](Vector2 q, float ground) {
         return Game::Distance(local, q) < .35f && z >= ground && z <= ground + .95f;
     };
-    if (!g.GetState().aircraft.mounted && !playerOwned && !companionOwned &&
+    if (!g.GetState().aircraft.mounted && !g.GetState().car.mounted && !playerOwned && !companionOwned &&
         body(g.GetState().playerPosition, Elevation(g.Surface()->Pose().origin)))
     {
         CivicCombat::DamagePlayer(damage);

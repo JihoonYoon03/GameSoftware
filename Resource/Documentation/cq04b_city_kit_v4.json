@@ -99,7 +99,13 @@
             0,
             0
           ],
-          "width_m": 10.8
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 10.8,
+          "paved_width_m": 6.0
         },
         {
           "point_m": [
@@ -107,7 +113,13 @@
             0,
             0
           ],
-          "width_m": 10.8
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 10.8,
+          "paved_width_m": 6.0
         }
       ],
       "lanes_at_start": 2,
@@ -204,7 +216,13 @@
             0,
             0
           ],
-          "width_m": 17.6
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 17.6,
+          "paved_width_m": 12.8
         },
         {
           "point_m": [
@@ -212,7 +230,13 @@
             0,
             0
           ],
-          "width_m": 17.6
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 17.6,
+          "paved_width_m": 12.8
         }
       ],
       "lanes_at_start": 4,
@@ -309,7 +333,13 @@
             0,
             0
           ],
-          "width_m": 25
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 25,
+          "paved_width_m": 19.4
         },
         {
           "point_m": [
@@ -317,7 +347,13 @@
             0,
             0
           ],
-          "width_m": 25
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 25,
+          "paved_width_m": 19.4
         }
       ],
       "lanes_at_start": 6,
@@ -414,7 +450,13 @@
             0,
             0
           ],
-          "width_m": 25
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 25,
+          "paved_width_m": 19.4
         },
         {
           "point_m": [
@@ -422,7 +464,13 @@
             0,
             0
           ],
-          "width_m": 17.6
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 17.6,
+          "paved_width_m": 12.8
         }
       ],
       "lanes_at_start": 6,
@@ -519,7 +567,13 @@
             0,
             0
           ],
-          "width_m": 17.6
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 17.6,
+          "paved_width_m": 12.8
         },
         {
           "point_m": [
@@ -527,7 +581,13 @@
             0,
             0
           ],
-          "width_m": 10.8
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 10.8,
+          "paved_width_m": 6.0
         }
       ],
       "lanes_at_start": 4,
@@ -627,11 +687,21 @@
             0,
             0
           ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
           "width_m": 10.7
         },
         {
           "point_m": [
             16,
+            0,
+            0
+          ],
+          "outward": [
+            1,
             0,
             0
           ],
@@ -735,7 +805,13 @@
             0,
             0
           ],
-          "width_m": 17.6
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 17.6,
+          "paved_width_m": 12.8
         },
         {
           "point_m": [
@@ -743,7 +819,13 @@
             0,
             0
           ],
-          "width_m": 17.6
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 17.6,
+          "paved_width_m": 12.8
         }
       ],
       "lanes_at_start": 4,
@@ -848,7 +930,13 @@
             0,
             0
           ],
-          "width_m": 25
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 25,
+          "paved_width_m": 19.4
         },
         {
           "point_m": [
@@ -856,7 +944,13 @@
             0,
             0
           ],
-          "width_m": 25
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 25,
+          "paved_width_m": 19.4
         }
       ],
       "lanes_at_start": 6,
@@ -956,7 +1050,13 @@
             0,
             0
           ],
-          "width_m": 25
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 25,
+          "paved_width_m": 19.4
         },
         {
           "point_m": [
@@ -964,7 +1064,13 @@
             0,
             0
           ],
-          "width_m": 25
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 25,
+          "paved_width_m": 19.4
         }
       ],
       "lanes_at_start": 6,
@@ -1068,11 +1174,21 @@
             0,
             0
           ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
           "width_m": 10.7
         },
         {
           "point_m": [
             16,
+            0,
+            0
+          ],
+          "outward": [
+            1,
             0,
             0
           ],
@@ -1087,11 +1203,13 @@
       "lods": {
         "LOD0": {
           "file": "junc_cross_2x2_LOD0.glb",
-          "triangles": 198,
+          "triangles": 202,
           "sections": [
             "surface",
             "rounded_corner_curb",
-            "paint_and_stop_lines"
+            "stop_line_paint",
+            "crosswalk_paint",
+            "turn_guide_paint"
           ],
           "bounds_m": [
             [
@@ -1108,11 +1226,13 @@
         },
         "LOD1": {
           "file": "junc_cross_2x2_LOD1.glb",
-          "triangles": 162,
+          "triangles": 166,
           "sections": [
             "surface",
             "rounded_corner_curb",
-            "paint_and_stop_lines"
+            "stop_line_paint",
+            "crosswalk_paint",
+            "turn_guide_paint"
           ],
           "bounds_m": [
             [
@@ -1129,11 +1249,11 @@
         },
         "LOD2": {
           "file": "junc_cross_2x2_LOD2.glb",
-          "triangles": 66,
+          "triangles": 70,
           "sections": [
             "surface",
             "rounded_corner_curb",
-            "paint_and_stop_lines"
+            "stop_line_paint"
           ],
           "bounds_m": [
             [
@@ -1150,7 +1270,7 @@
         },
         "ShadowProxy": {
           "file": "junc_cross_2x2_ShadowProxy.glb",
-          "triangles": 46,
+          "triangles": 50,
           "sections": [
             "surface",
             "rounded_corner_curb"
@@ -1168,18 +1288,78 @@
             ]
           ]
         }
-      }
+      },
+      "ports": [
+        {
+          "point_m": [
+            -7.4,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 10.8,
+          "paved_width_m": 6.0
+        },
+        {
+          "point_m": [
+            7.4,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 10.8,
+          "paved_width_m": 6.0
+        },
+        {
+          "point_m": [
+            0,
+            7.4,
+            0
+          ],
+          "outward": [
+            0,
+            1,
+            0
+          ],
+          "width_m": 10.8,
+          "paved_width_m": 6.0
+        },
+        {
+          "point_m": [
+            0,
+            -7.4,
+            0
+          ],
+          "outward": [
+            0,
+            -1,
+            0
+          ],
+          "width_m": 10.8,
+          "paved_width_m": 6.0
+        }
+      ]
     },
     "junc_cross_4x2": {
       "lod0_cap": 1500,
       "lods": {
         "LOD0": {
           "file": "junc_cross_4x2_LOD0.glb",
-          "triangles": 230,
+          "triangles": 234,
           "sections": [
             "surface",
             "rounded_corner_curb",
-            "paint_and_stop_lines"
+            "stop_line_paint",
+            "crosswalk_paint",
+            "turn_guide_paint"
           ],
           "bounds_m": [
             [
@@ -1196,11 +1376,13 @@
         },
         "LOD1": {
           "file": "junc_cross_4x2_LOD1.glb",
-          "triangles": 194,
+          "triangles": 198,
           "sections": [
             "surface",
             "rounded_corner_curb",
-            "paint_and_stop_lines"
+            "stop_line_paint",
+            "crosswalk_paint",
+            "turn_guide_paint"
           ],
           "bounds_m": [
             [
@@ -1217,11 +1399,11 @@
         },
         "LOD2": {
           "file": "junc_cross_4x2_LOD2.glb",
-          "triangles": 66,
+          "triangles": 70,
           "sections": [
             "surface",
             "rounded_corner_curb",
-            "paint_and_stop_lines"
+            "stop_line_paint"
           ],
           "bounds_m": [
             [
@@ -1238,7 +1420,7 @@
         },
         "ShadowProxy": {
           "file": "junc_cross_4x2_ShadowProxy.glb",
-          "triangles": 46,
+          "triangles": 50,
           "sections": [
             "surface",
             "rounded_corner_curb"
@@ -1256,18 +1438,78 @@
             ]
           ]
         }
-      }
+      },
+      "ports": [
+        {
+          "point_m": [
+            -7.4,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 17.6,
+          "paved_width_m": 12.8
+        },
+        {
+          "point_m": [
+            7.4,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 17.6,
+          "paved_width_m": 12.8
+        },
+        {
+          "point_m": [
+            0,
+            10.8,
+            0
+          ],
+          "outward": [
+            0,
+            1,
+            0
+          ],
+          "width_m": 10.8,
+          "paved_width_m": 6.0
+        },
+        {
+          "point_m": [
+            0,
+            -10.8,
+            0
+          ],
+          "outward": [
+            0,
+            -1,
+            0
+          ],
+          "width_m": 10.8,
+          "paved_width_m": 6.0
+        }
+      ]
     },
     "junc_cross_4x4": {
       "lod0_cap": 1500,
       "lods": {
         "LOD0": {
           "file": "junc_cross_4x4_LOD0.glb",
-          "triangles": 262,
+          "triangles": 266,
           "sections": [
             "surface",
             "rounded_corner_curb",
-            "paint_and_stop_lines"
+            "stop_line_paint",
+            "crosswalk_paint",
+            "turn_guide_paint"
           ],
           "bounds_m": [
             [
@@ -1284,11 +1526,13 @@
         },
         "LOD1": {
           "file": "junc_cross_4x4_LOD1.glb",
-          "triangles": 226,
+          "triangles": 230,
           "sections": [
             "surface",
             "rounded_corner_curb",
-            "paint_and_stop_lines"
+            "stop_line_paint",
+            "crosswalk_paint",
+            "turn_guide_paint"
           ],
           "bounds_m": [
             [
@@ -1305,11 +1549,11 @@
         },
         "LOD2": {
           "file": "junc_cross_4x4_LOD2.glb",
-          "triangles": 66,
+          "triangles": 70,
           "sections": [
             "surface",
             "rounded_corner_curb",
-            "paint_and_stop_lines"
+            "stop_line_paint"
           ],
           "bounds_m": [
             [
@@ -1326,7 +1570,7 @@
         },
         "ShadowProxy": {
           "file": "junc_cross_4x4_ShadowProxy.glb",
-          "triangles": 46,
+          "triangles": 50,
           "sections": [
             "surface",
             "rounded_corner_curb"
@@ -1344,18 +1588,79 @@
             ]
           ]
         }
-      }
+      },
+      "ports": [
+        {
+          "point_m": [
+            -10.8,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 17.6,
+          "paved_width_m": 12.8
+        },
+        {
+          "point_m": [
+            10.8,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 17.6,
+          "paved_width_m": 12.8
+        },
+        {
+          "point_m": [
+            0,
+            10.8,
+            0
+          ],
+          "outward": [
+            0,
+            1,
+            0
+          ],
+          "width_m": 17.6,
+          "paved_width_m": 12.8
+        },
+        {
+          "point_m": [
+            0,
+            -10.8,
+            0
+          ],
+          "outward": [
+            0,
+            -1,
+            0
+          ],
+          "width_m": 17.6,
+          "paved_width_m": 12.8
+        }
+      ]
     },
     "junc_cross_6x4": {
       "lod0_cap": 1500,
       "lods": {
         "LOD0": {
           "file": "junc_cross_6x4_LOD0.glb",
-          "triangles": 294,
+          "triangles": 322,
           "sections": [
             "surface",
             "rounded_corner_curb",
-            "paint_and_stop_lines"
+            "median_ends",
+            "stop_line_paint",
+            "crosswalk_paint",
+            "turn_guide_paint"
           ],
           "bounds_m": [
             [
@@ -1372,11 +1677,14 @@
         },
         "LOD1": {
           "file": "junc_cross_6x4_LOD1.glb",
-          "triangles": 258,
+          "triangles": 286,
           "sections": [
             "surface",
             "rounded_corner_curb",
-            "paint_and_stop_lines"
+            "median_ends",
+            "stop_line_paint",
+            "crosswalk_paint",
+            "turn_guide_paint"
           ],
           "bounds_m": [
             [
@@ -1393,11 +1701,12 @@
         },
         "LOD2": {
           "file": "junc_cross_6x4_LOD2.glb",
-          "triangles": 66,
+          "triangles": 94,
           "sections": [
             "surface",
             "rounded_corner_curb",
-            "paint_and_stop_lines"
+            "median_ends",
+            "stop_line_paint"
           ],
           "bounds_m": [
             [
@@ -1414,10 +1723,11 @@
         },
         "ShadowProxy": {
           "file": "junc_cross_6x4_ShadowProxy.glb",
-          "triangles": 46,
+          "triangles": 74,
           "sections": [
             "surface",
-            "rounded_corner_curb"
+            "rounded_corner_curb",
+            "median_ends"
           ],
           "bounds_m": [
             [
@@ -1432,18 +1742,79 @@
             ]
           ]
         }
-      }
+      },
+      "ports": [
+        {
+          "point_m": [
+            -10.8,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 25.0,
+          "paved_width_m": 19.4
+        },
+        {
+          "point_m": [
+            10.8,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 25.0,
+          "paved_width_m": 19.4
+        },
+        {
+          "point_m": [
+            0,
+            14,
+            0
+          ],
+          "outward": [
+            0,
+            1,
+            0
+          ],
+          "width_m": 17.6,
+          "paved_width_m": 12.8
+        },
+        {
+          "point_m": [
+            0,
+            -14,
+            0
+          ],
+          "outward": [
+            0,
+            -1,
+            0
+          ],
+          "width_m": 17.6,
+          "paved_width_m": 12.8
+        }
+      ]
     },
     "junc_cross_6x6": {
       "lod0_cap": 1500,
       "lods": {
         "LOD0": {
           "file": "junc_cross_6x6_LOD0.glb",
-          "triangles": 326,
+          "triangles": 378,
           "sections": [
             "surface",
             "rounded_corner_curb",
-            "paint_and_stop_lines"
+            "median_ends",
+            "stop_line_paint",
+            "crosswalk_paint",
+            "turn_guide_paint"
           ],
           "bounds_m": [
             [
@@ -1460,11 +1831,14 @@
         },
         "LOD1": {
           "file": "junc_cross_6x6_LOD1.glb",
-          "triangles": 290,
+          "triangles": 342,
           "sections": [
             "surface",
             "rounded_corner_curb",
-            "paint_and_stop_lines"
+            "median_ends",
+            "stop_line_paint",
+            "crosswalk_paint",
+            "turn_guide_paint"
           ],
           "bounds_m": [
             [
@@ -1481,11 +1855,12 @@
         },
         "LOD2": {
           "file": "junc_cross_6x6_LOD2.glb",
-          "triangles": 66,
+          "triangles": 118,
           "sections": [
             "surface",
             "rounded_corner_curb",
-            "paint_and_stop_lines"
+            "median_ends",
+            "stop_line_paint"
           ],
           "bounds_m": [
             [
@@ -1502,10 +1877,11 @@
         },
         "ShadowProxy": {
           "file": "junc_cross_6x6_ShadowProxy.glb",
-          "triangles": 46,
+          "triangles": 98,
           "sections": [
             "surface",
-            "rounded_corner_curb"
+            "rounded_corner_curb",
+            "median_ends"
           ],
           "bounds_m": [
             [
@@ -1520,18 +1896,78 @@
             ]
           ]
         }
-      }
+      },
+      "ports": [
+        {
+          "point_m": [
+            -14,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 25.0,
+          "paved_width_m": 19.4
+        },
+        {
+          "point_m": [
+            14,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 25.0,
+          "paved_width_m": 19.4
+        },
+        {
+          "point_m": [
+            0,
+            14,
+            0
+          ],
+          "outward": [
+            0,
+            1,
+            0
+          ],
+          "width_m": 25.0,
+          "paved_width_m": 19.4
+        },
+        {
+          "point_m": [
+            0,
+            -14,
+            0
+          ],
+          "outward": [
+            0,
+            -1,
+            0
+          ],
+          "width_m": 25.0,
+          "paved_width_m": 19.4
+        }
+      ]
     },
     "junc_tee_2x2": {
       "lod0_cap": 1100,
       "lods": {
         "LOD0": {
           "file": "junc_tee_2x2_LOD0.glb",
-          "triangles": 128,
+          "triangles": 130,
           "sections": [
             "surface",
             "rounded_corner_curb",
-            "paint_and_stop_lines"
+            "stop_line_paint",
+            "crosswalk_paint",
+            "turn_guide_paint"
           ],
           "bounds_m": [
             [
@@ -1548,11 +1984,13 @@
         },
         "LOD1": {
           "file": "junc_tee_2x2_LOD1.glb",
-          "triangles": 110,
+          "triangles": 112,
           "sections": [
             "surface",
             "rounded_corner_curb",
-            "paint_and_stop_lines"
+            "stop_line_paint",
+            "crosswalk_paint",
+            "turn_guide_paint"
           ],
           "bounds_m": [
             [
@@ -1569,11 +2007,11 @@
         },
         "LOD2": {
           "file": "junc_tee_2x2_LOD2.glb",
-          "triangles": 40,
+          "triangles": 42,
           "sections": [
             "surface",
             "rounded_corner_curb",
-            "paint_and_stop_lines"
+            "stop_line_paint"
           ],
           "bounds_m": [
             [
@@ -1590,7 +2028,7 @@
         },
         "ShadowProxy": {
           "file": "junc_tee_2x2_ShadowProxy.glb",
-          "triangles": 28,
+          "triangles": 30,
           "sections": [
             "surface",
             "rounded_corner_curb"
@@ -1608,18 +2046,64 @@
             ]
           ]
         }
-      }
+      },
+      "ports": [
+        {
+          "point_m": [
+            -7.4,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 10.8,
+          "paved_width_m": 6.0
+        },
+        {
+          "point_m": [
+            7.4,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 10.8,
+          "paved_width_m": 6.0
+        },
+        {
+          "point_m": [
+            0,
+            7.4,
+            0
+          ],
+          "outward": [
+            0,
+            1,
+            0
+          ],
+          "width_m": 10.8,
+          "paved_width_m": 6.0
+        }
+      ]
     },
     "junc_tee_4x2": {
       "lod0_cap": 1100,
       "lods": {
         "LOD0": {
           "file": "junc_tee_4x2_LOD0.glb",
-          "triangles": 160,
+          "triangles": 162,
           "sections": [
             "surface",
             "rounded_corner_curb",
-            "paint_and_stop_lines"
+            "stop_line_paint",
+            "crosswalk_paint",
+            "turn_guide_paint"
           ],
           "bounds_m": [
             [
@@ -1636,11 +2120,13 @@
         },
         "LOD1": {
           "file": "junc_tee_4x2_LOD1.glb",
-          "triangles": 142,
+          "triangles": 144,
           "sections": [
             "surface",
             "rounded_corner_curb",
-            "paint_and_stop_lines"
+            "stop_line_paint",
+            "crosswalk_paint",
+            "turn_guide_paint"
           ],
           "bounds_m": [
             [
@@ -1657,11 +2143,11 @@
         },
         "LOD2": {
           "file": "junc_tee_4x2_LOD2.glb",
-          "triangles": 40,
+          "triangles": 42,
           "sections": [
             "surface",
             "rounded_corner_curb",
-            "paint_and_stop_lines"
+            "stop_line_paint"
           ],
           "bounds_m": [
             [
@@ -1678,7 +2164,7 @@
         },
         "ShadowProxy": {
           "file": "junc_tee_4x2_ShadowProxy.glb",
-          "triangles": 28,
+          "triangles": 30,
           "sections": [
             "surface",
             "rounded_corner_curb"
@@ -1696,25 +2182,72 @@
             ]
           ]
         }
-      }
+      },
+      "ports": [
+        {
+          "point_m": [
+            -7.4,
+            0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 17.6,
+          "paved_width_m": 12.8
+        },
+        {
+          "point_m": [
+            7.4,
+            0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 17.6,
+          "paved_width_m": 12.8
+        },
+        {
+          "point_m": [
+            0,
+            10.8,
+            0
+          ],
+          "outward": [
+            0,
+            1,
+            0
+          ],
+          "width_m": 10.8,
+          "paved_width_m": 6.0
+        }
+      ]
     },
     "junc_roundabout_1lane": {
       "lod0_cap": 2200,
       "lods": {
         "LOD0": {
           "file": "junc_roundabout_1lane_LOD0.glb",
-          "triangles": 592,
+          "triangles": 632,
           "sections": [
             "surface",
             "center_island",
             "entry_ports",
+            "entry_sidewalks",
+            "splitter_islands",
+            "yield_markings",
             "island_lighting"
           ],
           "bounds_m": [
             [
               -18.5,
               -18.5,
-              -0.003
+              -0.004
             ],
             [
               18.5,
@@ -1725,18 +2258,21 @@
         },
         "LOD1": {
           "file": "junc_roundabout_1lane_LOD1.glb",
-          "triangles": 432,
+          "triangles": 472,
           "sections": [
             "surface",
             "center_island",
             "entry_ports",
+            "entry_sidewalks",
+            "splitter_islands",
+            "yield_markings",
             "island_lighting"
           ],
           "bounds_m": [
             [
               -18.5,
               -18.5,
-              -0.003
+              -0.004
             ],
             [
               18.5,
@@ -1747,17 +2283,19 @@
         },
         "LOD2": {
           "file": "junc_roundabout_1lane_LOD2.glb",
-          "triangles": 260,
+          "triangles": 300,
           "sections": [
             "surface",
             "center_island",
-            "entry_ports"
+            "entry_ports",
+            "entry_sidewalks",
+            "splitter_islands"
           ],
           "bounds_m": [
             [
               -18.5,
               -18.5,
-              -0.003
+              -0.004
             ],
             [
               18.5,
@@ -1768,17 +2306,19 @@
         },
         "ShadowProxy": {
           "file": "junc_roundabout_1lane_ShadowProxy.glb",
-          "triangles": 132,
+          "triangles": 172,
           "sections": [
             "surface",
             "center_island",
-            "entry_ports"
+            "entry_ports",
+            "entry_sidewalks",
+            "splitter_islands"
           ],
           "bounds_m": [
             [
               -18.5,
               -18.5,
-              -0.003
+              -0.004
             ],
             [
               18.5,
@@ -1787,25 +2327,86 @@
             ]
           ]
         }
-      }
+      },
+      "ports": [
+        {
+          "point_m": [
+            18.5,
+            0.0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 10.8,
+          "paved_width_m": 6.0
+        },
+        {
+          "point_m": [
+            0.0,
+            18.5,
+            0
+          ],
+          "outward": [
+            0,
+            1,
+            0
+          ],
+          "width_m": 10.8,
+          "paved_width_m": 6.0
+        },
+        {
+          "point_m": [
+            -18.5,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 10.8,
+          "paved_width_m": 6.0
+        },
+        {
+          "point_m": [
+            0.0,
+            -18.5,
+            0
+          ],
+          "outward": [
+            0,
+            -1,
+            0
+          ],
+          "width_m": 10.8,
+          "paved_width_m": 6.0
+        }
+      ]
     },
     "junc_roundabout_2lane": {
       "lod0_cap": 3200,
       "lods": {
         "LOD0": {
           "file": "junc_roundabout_2lane_LOD0.glb",
-          "triangles": 716,
+          "triangles": 756,
           "sections": [
             "surface",
             "center_island",
             "entry_ports",
+            "entry_sidewalks",
+            "splitter_islands",
+            "yield_markings",
             "island_lighting"
           ],
           "bounds_m": [
             [
               -26.0,
               -26.0,
-              -0.003
+              -0.004
             ],
             [
               26.0,
@@ -1816,18 +2417,21 @@
         },
         "LOD1": {
           "file": "junc_roundabout_2lane_LOD1.glb",
-          "triangles": 536,
+          "triangles": 576,
           "sections": [
             "surface",
             "center_island",
             "entry_ports",
+            "entry_sidewalks",
+            "splitter_islands",
+            "yield_markings",
             "island_lighting"
           ],
           "bounds_m": [
             [
               -26.0,
               -26.0,
-              -0.003
+              -0.004
             ],
             [
               26.0,
@@ -1838,17 +2442,19 @@
         },
         "LOD2": {
           "file": "junc_roundabout_2lane_LOD2.glb",
-          "triangles": 288,
+          "triangles": 328,
           "sections": [
             "surface",
             "center_island",
-            "entry_ports"
+            "entry_ports",
+            "entry_sidewalks",
+            "splitter_islands"
           ],
           "bounds_m": [
             [
               -26.0,
               -26.0,
-              -0.003
+              -0.004
             ],
             [
               26.0,
@@ -1859,17 +2465,19 @@
         },
         "ShadowProxy": {
           "file": "junc_roundabout_2lane_ShadowProxy.glb",
-          "triangles": 132,
+          "triangles": 172,
           "sections": [
             "surface",
             "center_island",
-            "entry_ports"
+            "entry_ports",
+            "entry_sidewalks",
+            "splitter_islands"
           ],
           "bounds_m": [
             [
               -26.0,
               -26.0,
-              -0.003
+              -0.004
             ],
             [
               26.0,
@@ -1878,7 +2486,65 @@
             ]
           ]
         }
-      }
+      },
+      "ports": [
+        {
+          "point_m": [
+            26.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            1,
+            0,
+            0
+          ],
+          "width_m": 17.6,
+          "paved_width_m": 12.8
+        },
+        {
+          "point_m": [
+            0.0,
+            26.0,
+            0
+          ],
+          "outward": [
+            0,
+            1,
+            0
+          ],
+          "width_m": 17.6,
+          "paved_width_m": 12.8
+        },
+        {
+          "point_m": [
+            -26.0,
+            0.0,
+            0
+          ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
+          "width_m": 17.6,
+          "paved_width_m": 12.8
+        },
+        {
+          "point_m": [
+            0.0,
+            -26.0,
+            0
+          ],
+          "outward": [
+            0,
+            -1,
+            0
+          ],
+          "width_m": 17.6,
+          "paved_width_m": 12.8
+        }
+      ]
     },
     "elevated_viaduct_4lane_16m": {
       "lod0_cap": 2000,
@@ -1971,6 +2637,11 @@
             0,
             8.4
           ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
           "width_m": 14.4
         },
         {
@@ -1978,6 +2649,11 @@
             16,
             0,
             8.4
+          ],
+          "outward": [
+            1,
+            0,
+            0
           ],
           "width_m": 14.4
         }
@@ -2078,6 +2754,11 @@
             0,
             0
           ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
           "width_m": 14.4
         },
         {
@@ -2085,6 +2766,11 @@
             100,
             0,
             8.4
+          ],
+          "outward": [
+            1,
+            0,
+            0
           ],
           "width_m": 14.4
         }
@@ -2184,6 +2870,11 @@
             0,
             0
           ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
           "width_m": 14.4
         },
         {
@@ -2191,6 +2882,11 @@
             80,
             0,
             -5.4
+          ],
+          "outward": [
+            1,
+            0,
+            0
           ],
           "width_m": 14.4
         }
@@ -2294,6 +2990,11 @@
             0,
             -5.4
           ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
           "width_m": 14.4
         },
         {
@@ -2301,6 +3002,11 @@
             32,
             0,
             -5.4
+          ],
+          "outward": [
+            1,
+            0,
+            0
           ],
           "width_m": 14.4
         }
@@ -2401,11 +3107,21 @@
             0,
             0
           ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
           "width_m": 14.4
         },
         {
           "point_m": [
             32,
+            0,
+            0
+          ],
+          "outward": [
+            1,
             0,
             0
           ],
@@ -2504,11 +3220,21 @@
             0,
             0
           ],
+          "outward": [
+            -1,
+            0,
+            0
+          ],
           "width_m": 8.3
         },
         {
           "point_m": [
             32,
+            0,
+            0
+          ],
+          "outward": [
+            1,
             0,
             0
           ],
@@ -2523,7 +3249,8 @@
           "file": "signal_gantry_4aspect_LOD0.glb",
           "triangles": 102,
           "sections": [
-            "gantry",
+            "gantry_support",
+            "head_housing",
             "red",
             "amber",
             "through_green",
@@ -2546,7 +3273,8 @@
           "file": "signal_gantry_4aspect_LOD1.glb",
           "triangles": 102,
           "sections": [
-            "gantry",
+            "gantry_support",
+            "head_housing",
             "red",
             "amber",
             "through_green",
@@ -2569,7 +3297,8 @@
           "file": "signal_gantry_4aspect_LOD2.glb",
           "triangles": 102,
           "sections": [
-            "gantry",
+            "gantry_support",
+            "head_housing",
             "red",
             "amber",
             "through_green",
@@ -2592,7 +3321,8 @@
           "file": "signal_gantry_4aspect_ShadowProxy.glb",
           "triangles": 102,
           "sections": [
-            "gantry",
+            "gantry_support",
+            "head_housing",
             "red",
             "amber",
             "through_green",
@@ -2617,6 +3347,8 @@
         6.08,
         5.67
       ],
+      "support_section": "gantry_support",
+      "housing_section": "head_housing",
       "aspect_sections": [
         "red",
         "amber",

@@ -500,7 +500,7 @@ void PlayerAircraftController::Update(Game &g, float dt)
         }
         return;
     }
-    if (g.state.IsInsideAny() || g.IsSurfaceMine() || (a.spawnRetry -= dt) > 0)
+    if (!g.IsAircraftUnlocked() || g.state.IsInsideAny() || g.IsSurfaceMine() || (a.spawnRetry -= dt) > 0)
     {
         return;
     }

@@ -29,9 +29,9 @@ bool Connected(Vector2 a, Vector2 b, const CityFacilities::ClearPoint &clear)
 }
 } // namespace
 
-const std::array<CityFacility, 4> &CityFacilities::All()
+const std::array<CityFacility, 3> &CityFacilities::All()
 {
-    static const std::array<CityFacility, 4> facilities = {{{"halo_07/home",
+    static const std::array<CityFacility, 3> facilities = {{{"halo_07/home",
                                                              "거주지 / 출입 [E]",
                                                              FacilityRole::Residence,
                                                              InteractionTarget::HomeEntrance,
@@ -49,15 +49,6 @@ const std::array<CityFacility, 4> &CityFacilities::All()
                                                              kObservatoryStairs,
                                                              {0, 1},
                                                              true},
-                                                            {"halo_07/receiver",
-                                                             "도시 수신망 / 조사 기록 [E]",
-                                                             FacilityRole::Communications,
-                                                             InteractionTarget::CityReceiver,
-                                                             kCityReceiverPosition,
-                                                             {},
-                                                             {},
-                                                             {0, 1},
-                                                             false},
                                                             {"halo_07/power",
                                                              "주거 구역 / 전력 장치 [E]",
                                                              FacilityRole::Utilities,

@@ -2,7 +2,7 @@
   "schema": "mixamo_3tier_v1",
   "skeleton_preset": "Mixamo",
   "max_bones": 71,
-  "animation_banks": [],
+  "animation_banks": ["AnimationBanks/Mixamo_22_Facility"],
   "bodies": [
     {
       "id": "Field_Medic_Head_Neck",

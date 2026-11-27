@@ -26,7 +26,7 @@ struct CityFacility
 class CityFacilities
 {
   public:
-    static const std::array<CityFacility, 4> &All();
+    static const std::array<CityFacility, 3> &All();
     static const CityFacility *Find(InteractionTarget target);
     static const CityFacility *ExitAt(Vector2 exterior);
     static Vector2 StandingPoint(const CityFacility &facility);

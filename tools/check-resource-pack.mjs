@@ -12,6 +12,10 @@ const data = fs.readFileSync(path.join(folder, 'game-assets.bin'));
 const manifest = JSON.parse(fs.readFileSync(path.join(folder, 'manifest.json'), 'utf8'));
 const recipes = JSON.parse(fs.readFileSync(path.join(root, 'Resource/Documentation/assembly_recipes.json')));
 const characterDetail = JSON.parse(fs.readFileSync(path.join(root, 'Resource/Documentation/character_detail_assemblies.json')));
+const facility = JSON.parse(fs.readFileSync(path.join(root, 'Resource/Documentation/facility_animation_bank.json')));
+const facilityClips = Object.keys(facility.clips);
+const boarding = JSON.parse(fs.readFileSync(path.join(root, 'Resource/Documentation/vehicle_boarding_bank.json')));
+const boardingClips = Object.keys(boarding.clips);
 const documents = new Map();
 function glbDocument(relative) {
     if (!documents.has(relative)) {
@@ -204,7 +208,11 @@ for (let asset = 0; asset < count; ++asset) {
         for (const clip of ['Run_Turn180_Left', 'Run_Turn180_Right', 'Turn90_Left', 'Turn90_Right',
             'Aim_Strafe_Start_Forward', 'Aim_Strafe_Stop_Forward'])
             assert.ok(transitionClips.includes(clip), 'Required transition bank clip missing: ' + clip);
-        assert.deepEqual(clipNames, [...sourceClips, 'Ride', ...supportClips, ...transitionClips],
+        assert.deepEqual(glbDocument('AnimationBanks/HUMAN_7H_Facility').animations.map(clip => clip.name),
+            facilityClips, 'Facility bank differs from its clip contract');
+        assert.deepEqual(glbDocument('AnimationBanks/HUMAN_7H_Boarding').animations.map(clip => clip.name),
+            boardingClips, 'Boarding bank differs from its clip contract');
+        assert.deepEqual(clipNames, [...sourceClips, 'Ride', ...supportClips, ...transitionClips, ...facilityClips, ...boardingClips],
             'Human source and shared bank animations must all survive conversion');
     }
     if (name.startsWith('vehicle/')) for (const clip of ['Hover_Idle', 'Cruise']) assert.ok(clipNames.includes(clip));
@@ -220,6 +228,7 @@ const mixamoCatalogPath = path.join(root, 'Resource/Documentation/mixamo_charact
 if (fs.existsSync(mixamoCatalogPath)) {
     const mixamo = JSON.parse(fs.readFileSync(mixamoCatalogPath, 'utf8'));
     assert.equal(mixamo.schema, 'mixamo_3tier_v1');
+    const expectedClips = [...facilityClips, ...Object.keys(facility.mixamo_retargeted_from_human_7h)];
     for (const [prefix, list, expectSkinned] of [
         ['modular/body/', mixamo.bodies ?? [], true],
         ['modular/outfit/', mixamo.outfits ?? [], true],
@@ -232,10 +241,13 @@ if (fs.existsSync(mixamoCatalogPath)) {
             const rigid = expectSkinned === null ? (item.skinned === false || Boolean(item.socket)) : !expectSkinned;
             if (rigid) {
                 assert.equal(report.bones, 0, 'Rigid Mixamo socket part must have 0 bones: ' + item.id);
+                assert.deepEqual(report.clips, [], 'Rigid objects follow their socket: ' + item.id);
             } else {
                 assert.ok(report.bones > 0 && report.bones <= (mixamo.max_bones ?? 71),
                     'Skinned Mixamo part bone count out of range: ' + item.id);
                 assert.ok(report.animationBank > 0, 'Skinned Mixamo part missing rig bank: ' + item.id);
+                if (report.bones === 22) assert.deepEqual(report.clips, expectedClips,
+                    'Facility and locomotion banks must survive Mixamo conversion: ' + item.id);
             }
             if (item.lod0_max_tris) {
                 assert.ok(report.triangles <= item.lod0_max_tris,
@@ -252,6 +264,14 @@ assert.ok(resourcePackStatus(root).current, 'Runtime pack must match current sou
 assert.equal([...names].filter(n => n.startsWith('aircraft/')).length, 8);
 assert.equal([...names].filter(n => n.startsWith('scenery/')).length, 36);
 assert.equal(signalDigests.size, 3, 'Red/amber/green traffic heads must differ');
+for (const id of ['Coupe', 'Courier']) {
+    const asset = manifest.assets.find(report => report.name === 'boarding/' + id);
+    assert.ok(asset, 'Missing boarding-ready vehicle: ' + id);
+    assert.equal(asset.source, 'CQ06/' + id + '_Boarding');
+    assert.ok(asset.clips.includes('Canopy_Open') && asset.clips.includes('Canopy_Close'));
+    assert.ok(asset.lods.lod1 < asset.lods.lod0 && asset.lods.lod2 < asset.lods.lod1);
+    assert.ok(asset.lods.shadow < asset.lods.lod0);
+}
 for (const [name, file] of [['SpireHelix', 'Spire_Helix_12F'], ['TwinBridge', 'Tower_TwinBridge_16F'],
     ['ArcologyTerrace', 'Arcology_Terrace_10F'], ['TransitAtrium', 'Civic_TransitAtrium_4F'],
     ['CourtyardHabitat', 'Habitat_Courtyard_3F']]) {
