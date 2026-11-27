@@ -3824,9 +3824,29 @@ void DrawSurfaceFrontier(const world::SurfaceSession &session)
     }
     for (size_t i = 0; i < state.survivors.size(); ++i)
     {
-        person(state.survivors[i], i % 3 ? models::CharacterType::Engineer : models::CharacterType::Explorer,
-               i % 2 ? models::Gender::Female : models::Gender::Male, models::HairStyle(i % 6),
-               {.65f, .69f, .51f}, i == 0 ? "운송대 생존자" : "", false);
+        const bool injuredCover = !state.escortStarted && !state.convoyRescued && (i == 1 || i == 3);
+        if (injuredCover)
+        {
+            if (auto point = surface.Project(state.survivors[i].position))
+            {
+                const float z = height(state.survivors[i].position);
+                renderqueue::PushMatrix();
+                renderqueue::Translate(0, -z * WorldCamera::IsoZScale(), z * (1296.f / 44));
+                Drawing::DrawPerson(*point, {.68f, .52f, .44f}, false, models::CharacterType::Explorer, false,
+                                    surface.Yaw(state.survivors[i].facing.yaw),
+                                    i % 2 ? models::Gender::Female : models::Gender::Male, models::HairStyle(i % 6),
+                                    false, 0.f, true);
+                const auto at = Drawing::WorldToScreen(point->x, point->y, 44.f);
+                Drawing::DrawLabel(at.x - 36.f, at.y, "부상 생존자 (엄호 필요)", {1.f, .56f, .38f});
+                renderqueue::PopMatrix();
+            }
+        }
+        else
+        {
+            person(state.survivors[i], i % 3 ? models::CharacterType::Engineer : models::CharacterType::Explorer,
+                   i % 2 ? models::Gender::Female : models::Gender::Male, models::HairStyle(i % 6),
+                   {.65f, .69f, .51f}, i == 0 ? "운송대 생존자" : "", false);
+        }
     }
     for (size_t i = 0; i < state.scrappers.size(); ++i)
     {
@@ -3865,12 +3885,15 @@ void DrawSurfaceFrontier(const world::SurfaceSession &session)
         renderqueue::Translate(0, -z * WorldCamera::IsoZScale(), z * (1296.f / 44));
         if (threat.kind == FrontierThreatKind::RogueDrone)
         {
-            const float hover = 18.f + std::sin(threat.patrolPhase * 2.f) * 5.f;
+            const float hover = 16.f + std::sin(threat.patrolPhase * 2.f) * 4.f;
+            const auto groundScr = Drawing::WorldToScreen(p->x, p->y, 0.f);
             const auto scr = Drawing::WorldToScreen(p->x, p->y, hover);
-            Drawing::DrawGlow(scr, 20.f, {1.f, .52f, .22f, .75f});
-            Drawing::DrawModel3D(models::ModelLibrary::Get().creatures[0], scr, {.62f, .62f, .62f},
+            Drawing::DrawSoftShadow(groundScr, 16.f, 7.f, .45f);
+            Drawing::DrawModel3D(models::ModelLibrary::Get().creatures[0], scr, {.85f, .85f, .85f},
                                  {0.f, threat.patrolPhase, 0.f}, (p->x + p->y) * 36.f,
-                                 {{.28f, .34f, .38f, 1}, {1.f, .52f, .20f, 1}, {1.f, .72f, .26f, 1}});
+                                 {{.22f, .26f, .30f, 1}, {.46f, .52f, .58f, 1}, {1.f, .58f, .18f, 1}});
+            const auto lbl = Drawing::WorldToScreen(p->x, p->y, 78.f);
+            Drawing::DrawLabel(lbl.x - 42.f, lbl.y, "오작동 정비 드론", {1.f, .76f, .36f});
         }
         else
         {
@@ -3878,6 +3901,9 @@ void DrawSurfaceFrontier(const world::SurfaceSession &session)
                                                      state.kain.position.x - threat.position.x));
             Drawing::DrawPerson(*p, {.76f, .28f, .22f}, false, models::CharacterType::Guard, true, yaw,
                                 models::Gender::Male, models::HairStyle::Buzz, true);
+            const auto lbl = Drawing::WorldToScreen(p->x, p->y, 78.f);
+            Drawing::DrawLabel(lbl.x - 32.f, lbl.y,
+                               threat.maxHealth >= 60 ? "중무장 습격자" : "약탈자 습격조", {1.f, .50f, .42f});
         }
         const auto bar = Drawing::WorldToScreen(p->x, p->y, 64.f);
         const float ratio = Game::Clamp(float(threat.health) / float((std::max)(1, threat.maxHealth)), 0.f, 1.f);
@@ -3893,19 +3919,44 @@ void DrawSurfaceFrontier(const world::SurfaceSession &session)
             Drawing::DrawGlow(Drawing::WorldToScreen(p->x, p->y, height(authored) * 44 + z), radius, color);
         }
     };
-    // Kain's distress flare column visible from across the open-world Frontier plains before briefing.
-    if (!state.convoyBriefed)
+    // Kain's distress flare column + burning wrecked convoy flames + canal high-voltage hazard pools!
+    if (!state.convoyRescued)
     {
-        if (auto flarePt = surface.Project({30.8f, 10.8f}))
+        const float animT = Game::Get().GetState().animationTimeSeconds;
+        const float pulse = 0.72f + 0.28f * std::sin(animT * 4.5f);
+        // Burning/sparking convoy vehicles visually sell the siege peril.
+        for (const Vector2 wreck : {Vector2{32.5f, 9.5f}, Vector2{36.0f, 9.5f}})
         {
-            const float z = height({30.8f, 10.8f});
-            const float pulse = 0.72f + 0.28f * std::sin(Game::Get().GetState().animationTimeSeconds * 4.5f);
-            const auto base = Drawing::WorldToScreen(flarePt->x, flarePt->y, z * 44.f + 18.f);
-            const auto top = Drawing::WorldToScreen(flarePt->x, flarePt->y, z * 44.f + 220.f);
-            Drawing::DrawLine(base, top, {1.f, .38f, .20f, .52f * pulse}, 6.f);
-            Drawing::DrawLine(base, top, {1.f, .86f, .46f, .82f * pulse}, 2.f);
-            Drawing::DrawGlow(top, 26.f * pulse, {1.f, .44f, .22f, .85f});
-            Drawing::DrawLabel(top.x - 44.f, top.y - 16.f, "운송대 구조 조명탄", {1.f, .78f, .38f});
+            glow(wreck, 26.f, 22.f * pulse, {1.f, .42f, .16f, .62f});
+        }
+        // High-voltage electrical rift leak zones across the collapsed canal blocking direct escape.
+        constexpr Vector2 kCanalHazards[3] = {{28.5f, 15.5f}, {31.5f, 15.5f}, {34.0f, 15.5f}};
+        for (int h = 0; h < 3; ++h)
+        {
+            if (auto hp = surface.Project(kCanalHazards[h]))
+            {
+                const float hz = height(kCanalHazards[h]);
+                const auto scr = Drawing::WorldToScreen(hp->x, hp->y, hz * 44.f + 8.f);
+                Drawing::DrawEllipse(scr.x, scr.y, 38.f * pulse, 18.f * pulse, {.86f, .18f, .34f, .34f});
+                Drawing::DrawGlow(scr, 28.f * pulse, {1.f, .28f, .44f, .55f});
+                if (h == 1)
+                {
+                    Drawing::DrawLabel(scr.x - 42.f, scr.y - 24.f, "고압 누전 위험 구역", {1.f, .46f, .52f});
+                }
+            }
+        }
+        if (!state.convoyBriefed)
+        {
+            if (auto flarePt = surface.Project({30.8f, 10.8f}))
+            {
+                const float z = height({30.8f, 10.8f});
+                const auto base = Drawing::WorldToScreen(flarePt->x, flarePt->y, z * 44.f + 18.f);
+                const auto top = Drawing::WorldToScreen(flarePt->x, flarePt->y, z * 44.f + 220.f);
+                Drawing::DrawLine(base, top, {1.f, .38f, .20f, .52f * pulse}, 6.f);
+                Drawing::DrawLine(base, top, {1.f, .86f, .46f, .82f * pulse}, 2.f);
+                Drawing::DrawGlow(top, 26.f * pulse, {1.f, .44f, .22f, .85f});
+                Drawing::DrawLabel(top.x - 44.f, top.y - 16.f, "운송대 구조 조명탄", {1.f, .78f, .38f});
+            }
         }
     }
     for (int i = 0; i < 3; ++i)
@@ -5103,19 +5154,16 @@ void StoryOperationScene::Draw()
         const Vector2 sp = toScreen(npc.position);
         Drawing::DrawLabel(sp.x - 24.f, sp.y - 58.f, npc.name, {.88f, .96f, 1.f, .92f});
     }
-    for (const auto &b : arc.bullets)
-    {
-        const Vector2 sp = toScreen(b.position);
-        Drawing::DrawEllipse(sp.x, sp.y - 18.f, 4.f, 4.f,
-                             b.playerOwned ? ColorRGBA(1.f, .92f, .52f) : ColorRGBA(1.f, .36f, .32f));
-    }
     for (const auto &tr : arc.tracers)
     {
         Vector2 a = toScreen(tr.from);
         Vector2 b = toScreen(tr.to);
-        a.y -= 18.f;
-        b.y -= 18.f;
-        Drawing::DrawLine(a, b, {tr.color.r, tr.color.g, tr.color.b, tr.life * 7.f}, 2.f);
+        a.y -= models::WorldScale::aimHeightPixels;
+        b.y -= models::WorldScale::aimHeightPixels;
+        const float fade = Game::Clamp(tr.life / .12f, 0.f, 1.f);
+        Drawing::DrawLine(a, b, {tr.color.r, tr.color.g, tr.color.b, fade * .45f}, 6.f);
+        Drawing::DrawLine(a, b, {1.f, .96f, .76f, fade}, 2.f);
+        Drawing::DrawGlow(b, 8.f, {tr.color.r, tr.color.g, tr.color.b, fade * .85f});
     }
 }
 

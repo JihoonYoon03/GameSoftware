@@ -2998,8 +2998,8 @@ bool Game::GroundVehicleBlocked(Vector2 position, float yaw, bool includePeople)
             const auto contact = surface->ContactAt(probe.x * 2, probe.y * 2);
             point.altitudeMeters = contact.heightMeters;
             if (!contact.land || contact.slope > .58 || state.aircraft.Contains(*surface, point, .32) ||
-                (surfaceBike && world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, point,
-                                                                 *surfaceBike) < .65) ||
+                (!state.car.mounted && surfaceBike &&
+                 world::SurfaceGeometry::Distance(surface->Planet().radiusMeters, point, *surfaceBike) < .65) ||
                 surface->Blocked(probe.x * 2, probe.y * 2, false) ||
                 (surfaceCities && surfaceCities->Occupied(state, *surface, probe, -1, includePeople)) ||
                 (surfaceTraffic && surfaceTraffic->Blocked(point, .16)) ||
@@ -3158,7 +3158,11 @@ void Game::UpdateGroundVehicle(float dt)
     const float targetSpeed = forward ? (boost ? 16.5f : 12.5f) : reverse ? -2.8f : 0.f;
     const float rate = (car.speed * targetSpeed < 0 || targetSpeed == 0 ? 20.f : (boost ? 15.f : 13.f)) *
                        MotionMath::kResponse;
-    const float yawChange = steering * 1.75f * Clamp(car.speed / 2.2f, -1, 1) * dt;
+    const float turnFactor = std::fabs(car.speed) > .2f ? Clamp(car.speed / 2.2f, -1.f, 1.f)
+                             : forward                  ? .55f
+                             : reverse                  ? -.55f
+                                                        : .35f;
+    const float yawChange = steering * 1.75f * turnFactor * dt;
     float yaw = oldYaw + yawChange;
     const auto start = state.playerPosition;
     if (yawChange != 0 && GroundVehicleBlocked(start, yaw, false))
@@ -3306,19 +3310,28 @@ void Game::InteractGroundVehicle()
     }
     if (commandeered)
     {
-        surface->RestorePose(world::SurfaceGeometry::Frame(*car.position), surface->Origin(), false);
+        if (!surface->RestorePose(world::SurfaceGeometry::Frame(*car.position), surface->Origin(), false))
+        {
+            surface->Relocate(*car.position, .32, 3.0);
+            car.position = surface->Pose().origin;
+        }
         if (commandeeredOccupied)
         {
             PlanetSecurity::Report(Offense::Assault, *car.position);
         }
     }
+    const auto syncedLocal = surface->Local(surface->Pose().origin);
     state.StopMotion();
     car.mounted = true;
-    state.playerPosition = center;
+    state.playerPosition = {float(syncedLocal.x / 2), float(syncedLocal.y / 2)};
     state.facingYaw = yaw;
     if (commandeered)
     {
         ShowNotice("차량 탈취 탑승 · W 가속 · S 제동/후진 · A/D 조향 · 정차 후 E 하차");
+    }
+    else
+    {
+        ShowNotice("공용 차량 탑승 · W 가속 · S 제동/후진 · A/D 조향 · Space 부스트 · 정차 후 E 하차");
     }
     state.mouseFiring = state.mouseAiming = false;
 }

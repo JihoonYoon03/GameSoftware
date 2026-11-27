@@ -3127,10 +3127,14 @@ void FrontierMap::Generate()
     state.frontierThreats.push_back({{11.8f, 11.6f}, {11.8f, 11.6f}, 36, 36, FrontierThreatKind::RogueDrone, 1.2f, 0.f, true});
     state.frontierThreats.push_back({{13.6f, 10.6f}, {13.6f, 10.6f}, 36, 36, FrontierThreatKind::RogueDrone, 1.8f, 3.1f, true});
     state.convoyAmbushTriggered = false;
+    state.convoyWave2Spawned = false;
     state.convoyAmbushCleared = false;
+    state.surveyScoutsSpawned = false;
     state.escortAmbushSpawned = false;
+    state.escortAmbush2Spawned = false;
     state.distressFlareNoticed = false;
     state.generatorArcPhase = 0.f;
+    state.hazardShockCooldown = 0.f;
     state.generated = true;
 }
 bool FrontierMap::IsWalkable(int x, int y) const
@@ -4251,32 +4255,72 @@ void FrontierCombat::Update(float deltaSeconds)
             mine.player.health = (std::min)(mine.player.maxHealth, mine.player.health + gain);
         }
     }
-    // Kain's first encounter: distress flare radio warning -> live perimeter ambush skirmish alongside Kain.
+    // Kain's first encounter: distress flare radio warning -> perilous 2-wave perimeter siege alongside Kain.
     const float distToKain = tutorial::Game::Distance(world.playerPosition, state.kain.position);
-    if (!state.convoyBriefed && !state.distressFlareNoticed && distToKain < 18.f)
+    if (!state.convoyBriefed && !state.distressFlareNoticed && distToKain < 19.f)
     {
         state.distressFlareNoticed = true;
         tutorial::Game::Get().ShowNotice(
-            "긴급 조명탄 / 동쪽 운송대 방어선에서 교전 신호가 포착됐습니다! 카인의 방어선을 지원하세요.");
+            "긴급 구조 신호 / 동쪽 운송대가 고압 수로에 막혀 포위됐습니다! 부상자가 있습니다 — 방어선을 지원하세요!");
     }
-    if (!state.convoyBriefed && !state.convoyAmbushTriggered && distToKain < 10.5f)
+    if (!state.convoyBriefed && !state.convoyAmbushTriggered && distToKain < 13.5f)
     {
         state.convoyAmbushTriggered = true;
         state.frontierThreats.push_back(
-            {{27.2f, 8.8f}, {30.5f, 10.5f}, 44, 44, FrontierThreatKind::ConvoyRaider, 0.9f, 0.f, true});
+            {{26.8f, 9.0f}, {30.5f, 10.5f}, 48, 48, FrontierThreatKind::ConvoyRaider, 0.8f, 0.f, true});
         state.frontierThreats.push_back(
-            {{34.8f, 13.2f}, {30.5f, 10.5f}, 44, 44, FrontierThreatKind::ConvoyRaider, 1.3f, 1.5f, true});
+            {{35.0f, 13.0f}, {30.5f, 10.5f}, 48, 48, FrontierThreatKind::ConvoyRaider, 1.1f, 1.5f, true});
         tutorial::Game::Get().ShowNotice(
-            "카인 · 무전 / 마침 지원이 왔군! 약탈자 습격조가 방어선을 압박하고 있소 — 같이 막아냅시다!");
+            "카인 · 무전 / 때맞춰 오셨군! 부상자 두 명을 뒤로 숨긴 채 버티고 있소 — 습격조부터 저지합시다!");
     }
-    if (state.convoyAmbushTriggered && !state.convoyAmbushCleared &&
-        level.ActiveThreatsNear({31.f, 11.f}, 18.f) == 0)
+    if (state.convoyAmbushTriggered && !state.convoyWave2Spawned && !state.convoyBriefed &&
+        level.ActiveThreatsNear({31.f, 11.f}, 14.f) <= 1)
+    {
+        state.convoyWave2Spawned = true;
+        state.frontierThreats.push_back(
+            {{35.5f, 7.8f}, {30.5f, 10.5f}, 64, 64, FrontierThreatKind::ConvoyRaider, 0.9f, 0.4f, true});
+        state.frontierThreats.push_back(
+            {{30.5f, 14.2f}, {30.5f, 10.5f}, 64, 64, FrontierThreatKind::ConvoyRaider, 1.2f, 2.2f, true});
+        tutorial::Game::Get().ShowNotice(
+            "카인 · 무전 / 조심하십시오! 북동쪽 능선과 수로 쪽에서 중무장 증원조가 우회 진입합니다!");
+    }
+    if (state.convoyAmbushTriggered && state.convoyWave2Spawned && !state.convoyAmbushCleared &&
+        level.ActiveThreatsNear({31.f, 11.f}, 15.f) == 0)
     {
         state.convoyAmbushCleared = true;
         if (!state.convoyBriefed)
         {
             tutorial::Game::Get().ShowNotice(
-                "운송대 방어선 안정 / 습격조를 격퇴했습니다. 방어선 앞의 카인과 대화하세요 [E]");
+                "운송대 방어선 안정 / 2차 습격조까지 격퇴했습니다. 방어선 앞의 카인과 대화하세요 [E]");
+        }
+    }
+    // Spawn recon scouts along the survey detour bends once Kain briefs the player (raises route-finding tension).
+    if (state.convoyBriefed && !state.surveyScoutsSpawned && !state.escortStarted && !state.convoyRescued)
+    {
+        state.surveyScoutsSpawned = true;
+        state.frontierThreats.push_back(
+            {{36.0f, 16.2f}, {36.0f, 16.2f}, 46, 46, FrontierThreatKind::ConvoyRaider, 1.0f, 0.f, true});
+        state.frontierThreats.push_back(
+            {{31.5f, 19.2f}, {31.5f, 19.2f}, 46, 46, FrontierThreatKind::ConvoyRaider, 1.3f, 2.1f, true});
+    }
+    // High-voltage rift leak hazard zones along the collapsed direct canal (proves why civilians cannot cut straight).
+    state.hazardShockCooldown = (std::max)(0.f, state.hazardShockCooldown - deltaSeconds);
+    if (!state.convoyRescued && mine.player.health > 0 && state.hazardShockCooldown <= 0.f)
+    {
+        constexpr tutorial::Vector2 kCanalHazards[3] = {{28.5f, 15.5f}, {31.5f, 15.5f}, {34.0f, 15.5f}};
+        for (const auto &hz : kCanalHazards)
+        {
+            if (tutorial::Game::Distance(world.playerPosition, hz) < 1.65f)
+            {
+                if (!world.playerMotion.mobility.Invulnerable())
+                {
+                    mine.player.health = (std::max)(1, mine.player.health - 6);
+                }
+                state.hazardShockCooldown = 0.95f;
+                tutorial::Game::Get().ShowNotice(
+                    "고압 누전 위험 구역 / 붕괴 수로가 방전 중입니다! 동쪽 측량 우회로를 따라 돌아가세요!");
+                break;
+            }
         }
     }
     // Update open-world Frontier threats (rogue generator drones, convoy raiders, escort ambushers).
@@ -4693,17 +4737,28 @@ void FrontierParty::Update(float deltaSeconds)
                 state.kain.facing.walking = false;
             }
         }
-        // Spawn midpoint ambushers along the detour corridor to make escort feel alive (when player is actively escorting).
+        // Spawn two-stage ambushers along the detour corridor when the player is actively escorting.
         if (reachedMidpoint && !state.escortAmbushSpawned &&
             tutorial::Game::Distance(world.playerPosition, escortFocus) < 12.f)
         {
             state.escortAmbushSpawned = true;
             state.frontierThreats.push_back(
-                {{31.5f, 20.5f}, {31.5f, 20.5f}, 46, 46, FrontierThreatKind::EscortAmbusher, 1.0f, 0.f, true});
+                {{34.5f, 19.5f}, {34.5f, 19.5f}, 48, 48, FrontierThreatKind::EscortAmbusher, 0.9f, 0.f, true});
             state.frontierThreats.push_back(
-                {{27.5f, 17.5f}, {27.5f, 17.5f}, 46, 46, FrontierThreatKind::EscortAmbusher, 1.4f, 2.f, true});
+                {{31.5f, 20.5f}, {31.5f, 20.5f}, 48, 48, FrontierThreatKind::EscortAmbusher, 1.3f, 2.f, true});
             tutorial::Game::Get().ShowNotice(
-                "호위 경보 / 우회로 중간 지점에서 매복조가 나타났습니다! 카인과 함께 운송대를 엄호하세요!");
+                "호위 경보 1차 / 우회로 남동쪽 길목에서 매복조가 나타났습니다! 카인과 함께 대열을 지키세요!");
+        }
+        if (escortFocus.x < 29.8f && escortFocus.y > 17.5f && !state.escortAmbush2Spawned &&
+            tutorial::Game::Distance(world.playerPosition, escortFocus) < 12.f)
+        {
+            state.escortAmbush2Spawned = true;
+            state.frontierThreats.push_back(
+                {{26.8f, 18.2f}, {26.8f, 18.2f}, 54, 54, FrontierThreatKind::EscortAmbusher, 0.9f, 0.8f, true});
+            state.frontierThreats.push_back(
+                {{27.2f, 22.0f}, {27.2f, 22.0f}, 54, 54, FrontierThreatKind::EscortAmbusher, 1.2f, 2.5f, true});
+            tutorial::Game::Get().ShowNotice(
+                "호위 경보 2차 / 안전 야영지 직전에서 최종 차단조가 돌입합니다! 끝까지 엄호하세요!");
         }
         if (all)
         {

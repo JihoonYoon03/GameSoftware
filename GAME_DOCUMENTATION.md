@@ -1780,6 +1780,13 @@ CQ-07을 A 이동·경로 안정성, B 감지·기억·역할별 판단, C 동�
   - **`UiScreen::Wardrobe`:** 화면 중앙 턴테이블 위에 라이브 회전 3D 플레이어를 크게 띄우고(`←/→`, `A/D`, 중앙 드래그 360° 회전), 좌측 기본 외형/코트 6색 스와치와 우측 **CQ-11 Mixamo 필드 메딕 11파츠 실시간 탈부착** 또는 9종 표준 프리셋을 클릭 즉시 3D 모델에 반영한다(인게임 `Drawing::DrawPerson`에도 동일 반영).
   - **`UiScreen::HomeStorage` & `UiScreen::FacilityShop`:** 텍스트 목록을 **실제 회전 3D 아이템 모델(`DrawShowcaseProp`)**이 유리 진열창 안에서 돌아가는 시각 아이템 카드로 교체하고, 아이콘·이름·보유량/가격 배지·효과 설명·즉시 보관/인출/구매 버튼을 통합했다(`FacilityShop` 좌측 1인칭 라이브 NPC 클로즈업 유지).
 - **검증:** 8개 Release x64 타깃 빌드, `ResourceAssetsTests`(13파츠 + `Mixamo_22_Facility`), `GameplayTests`(신규 `TestPart2ContentAndUiOverhaul` 포함 전체 통과), `CivicTests`, `MapHudTests`, `MovementTests`, `WorldTests`(47,365 assertions), `RenderingTests --r4-only --glfw`(신규 GPU 캡처 4종 `part2-wardrobe-3d.bmp`, `part2-home-storage-cards.bmp`, `part2-facility-shop-cards.bmp`, `part2-minigame-tuner.bmp` 육안 검수 완료), `tools/Test-SourceEncoding.ps1` 및 `git diff --check` 통과.
+- **후속 보정 (2026-11-27 — `V` 길찾기 전환 및 식별된 4건 수정):**
+  - **`V` 키 근접공격 삭제 → 길찾기 전환 ([Game.cpp](SimpleGame/Game.cpp), [Hud.cpp](SimpleGame/Hud.cpp), [Combat.cpp](SimpleGame/Combat.cpp)):** 기존 `V` 근접공격 입력·판정 및 `N` 길찾기 단축키를 정리하고, `V` 키를 현재 임무 수령/수행 지점 3D 길찾기 경로 표시(`ActivityJournal::TriggerGuidance`) 전용으로 교체했다.
+  - **공용차 탑승 후 조종 불가 수정 ([Civic.cpp](SimpleGame/Civic.cpp), [Game.cpp](SimpleGame/Game.cpp)):** 탑승 시 차량 원점에 배치되는 동승 동료(리아·카인)가 `BodyCollision::SurfaceVehicleContacts`에서 매 프레임 공용차와 충돌해 속도를 `0`으로 잠그던 원인 및 정지 상태 조향 잠금(`turnFactor = 0`)을 제거하고, 근처 주차 바이크와의 오충돌 예외 및 `RestorePose` 폴백(`Relocate`)을 추가했다.
+  - **빛나는 개척지 발전기 구역 오작동 드론 시인성 개선 ([Scene.cpp](SimpleGame/Scene.cpp)):** 차단기 분리 시 무력화되는 의도된 오작동 정비 드론(`RogueDrone`)을 가리던 불투명 주황색 발광 구체(`DrawGlow`)를 제거하고, 0.85배 다크 건메탈 기체 + 앰버 코어 + `"오작동 정비 드론"` 라벨로 실루엣을 명확히 드러냈다.
+  - **카인 첫 대면 위기감·경로 탐색 난이도 강화 ([Level.h](SimpleGame/Level.h), [Level.cpp](SimpleGame/Level.cpp), [Scene.cpp](SimpleGame/Scene.cpp)):** 부상·웅크림 상태의 생존자 2명(`"부상 생존자 (엄호 필요)"`)과 화재·스파크 운송대 잔해, 2차 중무장 증원(`64 HP`)을 포함한 2웨이브 4기 습격전, 직선 우회를 차단하는 **고압 수로 누전 위험 구역** 3곳(접촉 시 감전 피해), 측량 삼각대 굴곡부 정찰 약탈자 2기 및 2단계 호위 매복을 추가했다.
+  - **관문 N-0 코어 내부 이중 발사체 버그 수정 ([StoryArc.cpp](SimpleGame/StoryArc.cpp), [Scene.cpp](SimpleGame/Scene.cpp)):** 발사 순간 생성되던 고정 길이 짧은 광선(`2.2~3.5u`)과 `StoryOperationScene::Draw`의 `DrawEllipse` 원형 투사체 중복 렌더링을 제거하고, 광산 전투와 동일한 프레임별 실제 이동 궤적 스윕 트레이서(`prev -> next`)로 통일했다.
+  - **검증:** `SimpleGame`·`GameplayTests`·`CivicTests`·`RenderingTests --r4-only --glfw`·`Test-SourceEncoding.ps1`(176파일)·`git diff --check` 전부 통과(공용차 동승 주행/조향 및 코어 내부 단일 스윕 트레이서 회귀 테스트 추가).
 
 ### 전체 구조 검토와 반복 비용 리팩토링 — 2026-10-28
 

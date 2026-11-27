@@ -966,9 +966,6 @@ void StoryArc::UpdateEnemies(float dt)
             const float speed = 13.f;
             state.bullets.push_back(
                 {e.position, {std::cos(aim) * speed, std::sin(aim) * speed}, 1.3f, 9, false});
-            state.tracers.push_back(
-                {e.position, {e.position.x + std::cos(aim) * 2.2f, e.position.y + std::sin(aim) * 2.2f},
-                 {1.f, .44f, .36f, .9f}, .12f});
         }
     }
 }
@@ -1074,13 +1071,20 @@ void StoryArc::UpdateBullets(float dt)
             continue;
         }
         b.life -= dt;
+        const Vector2 prev = b.position;
         const Vector2 next{b.position.x + b.velocity.x * dt, b.position.y + b.velocity.y * dt};
         if (IsPositionBlocked(next, .08f))
         {
+            state.tracers.push_back({prev, next,
+                                     b.playerOwned ? ColorRGBA{1.f, .72f, .28f, 1.f} : ColorRGBA{1.f, .38f, .30f, 1.f},
+                                     .12f});
             b.life = 0.f;
             continue;
         }
         b.position = next;
+        state.tracers.push_back({prev, next,
+                                 b.playerOwned ? ColorRGBA{1.f, .72f, .28f, 1.f} : ColorRGBA{1.f, .38f, .30f, 1.f},
+                                 .12f});
         if (b.playerOwned)
         {
             for (auto &e : state.enemies)
@@ -1201,8 +1205,6 @@ bool StoryArc::TryAttack(Vector2 origin, Vector2 target)
     const float shotAngle = shot.angle;
     state.bullets.push_back(
         {origin, {std::cos(shotAngle) * speed, std::sin(shotAngle) * speed}, 1.1f, dmg, true});
-    state.tracers.push_back({origin, {origin.x + std::cos(shotAngle) * 3.5f, origin.y + std::sin(shotAngle) * 3.5f},
-                             {1.f, .92f, .62f, .95f}, .10f});
     return true;
 }
 

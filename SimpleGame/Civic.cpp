@@ -3496,7 +3496,7 @@ Vector2 BodyCollision::SurfaceVehicleContacts(const world::SurfacePoint &from, c
         {
             const auto &person = party->State().members[i];
             if (!person.joined || person.place == CompanionPlace::Mine || person.combat.health <= 0 ||
-                !nearby(person.position))
+                (w.car.mounted && person.place == CompanionPlace::Surface) || !nearby(person.position))
             {
                 continue;
             }

@@ -6858,6 +6858,54 @@ void TestPart2ContentAndUiOverhaul()
     g.KeyDown('v', 0, 0);
     g.KeyUp('v', 0, 0);
     assert(w.guidanceSecondsRemaining > 0.f);
+
+    // 6) GroundVehicle driving regression with boarded companion (Ria) must accelerate, steer, and advance.
+    g.EnterTestStage(TestStage::ChapterOne);
+    w.isBikeMounted = false;
+    for (int i = 0; i < 120 && !w.car.position; ++i)
+    {
+        g.Update(0.05f);
+    }
+    if (w.car.position)
+    {
+        g.RelocateSurfaceSurvey(*w.car.position);
+        const auto carLoc = g.Surface()->Local(*w.car.position);
+        w.playerPosition = {float(carLoc.x / 2), float(carLoc.y / 2)};
+        w.car.mounted = true;
+        w.facingYaw = w.car.Yaw(g.Surface()->Origin());
+        const auto startOrigin = g.Surface()->Pose().origin;
+        const float startYaw = w.facingYaw;
+        w.pressedKeys['w'] = true;
+        w.pressedKeys['d'] = true;
+        for (int i = 0; i < 20; ++i)
+        {
+            g.Update(0.05f);
+        }
+        w.pressedKeys['w'] = false;
+        w.pressedKeys['d'] = false;
+        const double drivenMeters = world::SurfaceGeometry::Distance(
+            g.Surface()->Planet().radiusMeters, startOrigin, g.Surface()->Pose().origin);
+        assert(drivenMeters > 1.0 && std::fabs(w.facingYaw - startYaw) > 0.05f);
+        w.car.mounted = false;
+    }
+
+    // 7) Gate Core gunfire emits swept per-frame tracers (no duplicate static beam at spawn).
+    g.EnterTestStage(TestStage::ActFourGateCore);
+    auto &arc = story::StoryArc::Get();
+    assert(arc.EnterZone(story::OperationZone::GateCore));
+    if (!g.Loadout().IsFirearmEquipped())
+    {
+        g.Loadout().GrantPistol();
+        g.Loadout().Select(combat::WeaponSlot::Secondary);
+    }
+    g.ActiveFirearm().Update(1.f);
+    auto &arcState = arc.State();
+    arcState.bullets.clear();
+    arcState.tracers.clear();
+    assert(arc.TryAttack(w.playerPosition, {w.playerPosition.x + 5.f, w.playerPosition.y}));
+    assert(arcState.bullets.size() == 1 && arcState.tracers.empty());
+    arc.Update(0.05f);
+    assert(!arcState.tracers.empty());
     g.Reset();
 }
 

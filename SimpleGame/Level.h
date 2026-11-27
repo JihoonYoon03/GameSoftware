@@ -521,10 +521,14 @@ struct ChapterOneState
     std::vector<Tracer> tracers;
     std::vector<FrontierThreat> frontierThreats;
     bool convoyAmbushTriggered = false;
+    bool convoyWave2Spawned = false;
     bool convoyAmbushCleared = false;
+    bool surveyScoutsSpawned = false;
     bool escortAmbushSpawned = false;
+    bool escortAmbush2Spawned = false;
     bool distressFlareNoticed = false;
     float generatorArcPhase = 0;
+    float hazardShockCooldown = 0;
 };
 class ChapterOneLevel;
 // ============================================================================
