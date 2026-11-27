@@ -13,6 +13,7 @@
 #include "StoryArc.h"
 #include "StoryJournal.h"
 #include "WorldEncounters.h"
+#include "FieldMinigame.h"
 #include "Window.h"
 #include <algorithm>
 #include <cmath>
@@ -1801,7 +1802,7 @@ void Hud::DrawActivityObjective(const std::string &context)
     const auto title = TextPages(goal.title, 412, 18, 1);
     const auto action = TextPages(goal.action, 412, 18, 1);
     const auto detail =
-        TextPages(goal.location + " · J 기록 · N 경로 안내" + (hold ? " · 소지 한도 / 현장 정산 보류" : std::string()),
+        TextPages(goal.location + " · J 기록 · V 경로 안내" + (hold ? " · 소지 한도 / 현장 정산 보류" : std::string()),
                   412, 14, 1);
     const size_t tick = size_t((std::max)(0, w.lastUpdateMilliseconds) / 5000);
     UiText(68, 57, title[tick % title.size()].front(), 18, {.78f, .96f, .94f}, true);
@@ -1964,6 +1965,38 @@ void MineHud::DrawScanner()
         float textY = position.y < 100 ? position.y + 36 : position.y - 24;
         Drawing::DrawLabel(textX, textY, distance, {.65f, 1, .8f, alpha});
     }
+    for (const auto &ping : mine.resourcePings)
+    {
+        Vector2 target = WorldCamera::ToViewport(Drawing::WorldToScreen(ping.position.x, ping.position.y, 16));
+        Vector2 direction = {target.x - player.x, target.y - player.y};
+        float length = Game::Distance(direction, {0, 0});
+        if (length < 120.f)
+        {
+            continue;
+        }
+        direction.x /= length;
+        direction.y /= length;
+        constexpr Vector2 center = {kCanvasWidth * .5f, kCanvasHeight * .5f};
+        float rayX = std::fabs(direction.x) > .0001f ? (center.x - 42) / std::fabs(direction.x) : 1.e8f;
+        float rayY = std::fabs(direction.y) > .0001f ? (center.y - 58) / std::fabs(direction.y) : 1.e8f;
+        float ray = (std::min)(rayX, rayY);
+        Vector2 position = {center.x + direction.x * ray, center.y + direction.y * ray};
+        float alpha = (std::min)(1.f, ping.secondsRemaining / 1.2f);
+        const ColorRGBA col = ping.isElite ? ColorRGBA(1.f, .44f, .28f, alpha)
+                              : ping.kind == game::MineNodeKind::PrismCrystal ? ColorRGBA(.46f, .94f, 1.f, alpha)
+                                                                              : ColorRGBA(1.f, .78f, .34f, alpha);
+        DirectionArrow(position, std::atan2(direction.y, direction.x), 10, col, true);
+        char label[64];
+        std::snprintf(label, sizeof(label), "%s %.0f m",
+                      ping.isElite                                    ? "정예"
+                      : ping.kind == game::MineNodeKind::PrismCrystal ? "수정맥"
+                      : ping.kind == game::MineNodeKind::SupplyCrate  ? "보급함"
+                                                                      : "광맥",
+                      Game::Distance(world.playerPosition, ping.position) * models::WorldScale::metersPerUnit);
+        float textX = Game::Clamp(position.x - 28, 12, kCanvasWidth - 96.f);
+        float textY = position.y < 100 ? position.y + 30 : position.y - 22;
+        Drawing::DrawLabel(textX, textY, label, col);
+    }
 }
 
 // ============================================================================
@@ -1983,9 +2016,28 @@ void MineHud::Draw()
     }
     MapHud::DrawMinimap();
     DrawScanner();
+    // Mine hunting & farming status strip directly below the objective card.
+    {
+        std::string strip = "사냥 " + std::to_string(s.kills) + " · 광맥 " + std::to_string(s.veinsHarvested) +
+                            "/" + std::to_string(s.resourceNodes.size()) + " · 정예 " +
+                            std::to_string(s.elitesDefeated) + "/3";
+        if (s.huntStreak >= 2)
+        {
+            strip += "  |  연속 사냥 x" + std::to_string(s.huntStreak);
+        }
+        HudCard(20.f, 134.f, 472.f, 28.f,
+                s.huntStreak >= 3 ? ColorRGBA(1.f, .78f, .32f) : ColorRGBA(.42f, .88f, .80f), false);
+        UiText(34.f, 153.f, strip, 13,
+               s.huntStreak >= 3 ? ColorRGBA(1.f, .86f, .44f) : ColorRGBA(.74f, .92f, .88f), true);
+    }
     if (!Dialogue::Active())
     {
         std::string hint;
+        const std::string resLabel = level.NearbyResourceLabel();
+        if (!resLabel.empty())
+        {
+            hint = resLabel;
+        }
         if (Game::Get().HasCompanion(CompanionId::Ria, CompanionPlace::Mine) && level.IsNear(s.riaPosition))
         {
             hint = "리아 / 대화·응급 처치";
@@ -2952,13 +3004,153 @@ std::vector<UiControl> Hud::Controls()
         for (size_t i = 0; i < services.size(); ++i)
         {
             controls.push_back({UiAction::FacilityService,
-                                {594.f, 286.f + float(i) * 90.f},
-                                {602.f, 76.f},
-                                std::to_string(i + 1) + ". " + services[i].title,
+                                {594.f, 286.f + float(i) * 106.f},
+                                {602.f, 92.f},
+                                "",
                                 services[i].enabled,
                                 int(i)});
         }
         controls.push_back({UiAction::Continue, {594.f, 654.f}, {602.f, 48.f}, "대화 종료"});
+        break;
+    }
+    case UiScreen::Wardrobe: {
+        const auto &w = Game::Get().GetState();
+        // Left panel: Base appearance controls (x = 46..378)
+        controls.push_back({UiAction::WardrobeModularMode,
+                            {46.f, 152.f},
+                            {332.f, 48.f},
+                            w.playerModularMedic ? "모드: 필드 메딕 모듈러" : "모드: 표준 개척자 슈트",
+                            true,
+                            0});
+        controls.push_back({UiAction::WardrobeGender,
+                            {46.f, 212.f},
+                            {332.f, 46.f},
+                            std::string("체형: ") + (w.playerGender == models::Gender::Male ? "남성" : "여성"),
+                            !w.playerModularMedic,
+                            0});
+        static constexpr const char *kRoleNames[9] = {
+            "개척자", "엔지니어", "경비대원", "의무관", "연구원", "광부", "중장갑 전투원", "파일럿", "시민"};
+        controls.push_back({UiAction::WardrobeOutfit,
+                            {46.f, 270.f},
+                            {332.f, 46.f},
+                            std::string("의상 프리셋: ") + kRoleNames[size_t(w.playerOutfit) % 9],
+                            !w.playerModularMedic,
+                            1});
+        static constexpr const char *kHairNames[6] = {"버즈컷", "가르마", "웨이브", "단발", "포니테일", "번 헤어"};
+        controls.push_back({UiAction::WardrobeHair,
+                            {46.f, 328.f},
+                            {332.f, 46.f},
+                            std::string("헤어스타일: ") + kHairNames[size_t(w.playerHair) % 6],
+                            !w.playerModularMedic,
+                            1});
+        // 6 Coat color swatches (2 rows x 3 columns)
+        for (int c = 0; c < 6; ++c)
+        {
+            controls.push_back({UiAction::WardrobeCoatColor,
+                                {46.f + float(c % 3) * 112.f, 412.f + float(c / 3) * 52.f},
+                                {104.f, 42.f},
+                                "",
+                                !w.playerModularMedic,
+                                c});
+        }
+        // Turntable controls on bottom-left
+        controls.push_back({UiAction::WardrobeRotate, {46.f, 540.f}, {104.f, 44.f}, "◀ 좌", true, -1});
+        controls.push_back({UiAction::WardrobeAutoRotate,
+                            {160.f, 540.f},
+                            {104.f, 44.f},
+                            w.ui.wardrobeAutoRotate ? "자동ON" : "자동OFF",
+                            true,
+                            0});
+        controls.push_back({UiAction::WardrobeRotate, {274.f, 540.f}, {104.f, 44.f}, "우 ▶", true, 1});
+        controls.push_back({UiAction::OpenHomeStorage, {46.f, 608.f}, {332.f, 46.f}, "물자 보관함으로 전환", true, 0});
+        controls.push_back({UiAction::Continue, {46.f, 666.f}, {332.f, 48.f}, "외형 적용 · 닫기 (Esc)", true, 0});
+
+        // Right panel: Per-part modular attachment toggles (Mixamo 11 parts) or Standard quick-role grid
+        if (w.playerModularMedic)
+        {
+            static constexpr const char *kPartNames[11] = {
+                "메딕 코트", "카고 팬츠", "전술 부츠", "번 헤어", "어깨 가드", "무릎 가드",
+                "왼팔 스캐너", "오른팔 가드", "의료 파우치", "구조 배낭", "탄창 랙"};
+            for (int bit = 0; bit < 11; ++bit)
+            {
+                const bool on = (w.playerModularPartsMask & (1u << unsigned(bit))) != 0;
+                const int col = bit % 2;
+                const int r = bit / 2;
+                controls.push_back({UiAction::WardrobeModularPart,
+                                    {902.f + float(col) * 168.f, 154.f + float(r) * 74.f},
+                                    {160.f, 62.f},
+                                    std::string(kPartNames[bit]) + (on ? "\n장착 중" : "\n해제됨"),
+                                    true,
+                                    bit});
+            }
+        }
+        else
+        {
+            for (int role = 0; role < 9; ++role)
+            {
+                const int col = role % 2;
+                const int r = role / 2;
+                controls.push_back({UiAction::WardrobeOutfit,
+                                    {902.f + float(col) * 168.f, 154.f + float(r) * 74.f},
+                                    {160.f, 62.f},
+                                    kRoleNames[role],
+                                    true,
+                                    100 + role});
+            }
+            controls.push_back({UiAction::WardrobeModularMode,
+                                {902.f, 540.f},
+                                {328.f, 66.f},
+                                "필드 메딕 모듈러 (13파츠)\n착용 및 파트별 커스터마이즈",
+                                true,
+                                1});
+        }
+        break;
+    }
+    case UiScreen::HomeStorage: {
+        const auto &p = game::GameLevels::Mine().GetState().player;
+        const auto &r = Game::Get().GetState().residence;
+        // Card 1: Credits Safe (x = 96..436)
+        controls.push_back({UiAction::StorageAction,
+                            {116.f, 534.f},
+                            {146.f, 44.f},
+                            "+200 예치",
+                            p.credits > 0 && r.stashCredits < ResidenceState::kMaxStashCredits,
+                            0});
+        controls.push_back({UiAction::StorageAction,
+                            {270.f, 534.f},
+                            {146.f, 44.f},
+                            "-200 인출",
+                            r.stashCredits > 0,
+                            1});
+        // Card 2: Recovery Kits (x = 470..810)
+        controls.push_back({UiAction::StorageAction,
+                            {490.f, 534.f},
+                            {146.f, 44.f},
+                            "1개 보관",
+                            p.recoveryKits > 0 && r.stashRecoveryKits < ResidenceState::kMaxStashKits,
+                            2});
+        controls.push_back({UiAction::StorageAction,
+                            {644.f, 534.f},
+                            {146.f, 44.f},
+                            "1개 인출",
+                            r.stashRecoveryKits > 0 && p.recoveryKits < ResidenceState::kMaxCarryKits,
+                            3});
+        // Card 3: Salvage Parts (x = 844..1184)
+        controls.push_back({UiAction::StorageAction,
+                            {864.f, 534.f},
+                            {146.f, 44.f},
+                            "전량 보관",
+                            p.salvage > 0 && r.stashSalvage < ResidenceState::kMaxStashSalvage,
+                            4});
+        controls.push_back({UiAction::StorageAction,
+                            {1018.f, 534.f},
+                            {146.f, 44.f},
+                            "전량 인출",
+                            r.stashSalvage > 0,
+                            5});
+        // Top-right switch to 3D Wardrobe & bottom close
+        controls.push_back({UiAction::OpenWardrobe, {884.f, 82.f}, {300.f, 52.f}, "3D 외관 옷장 열기", true, 0});
+        controls.push_back({UiAction::Continue, {470.f, 676.f}, {340.f, 48.f}, "보관함 닫기 (Esc)", true, 0});
         break;
     }
     case UiScreen::Summary:
@@ -3232,6 +3424,76 @@ void Hud::Activate(const UiControl &control, int direction)
     case UiAction::FacilityService:
         Game::Get().ExecuteFacilityService(control.choice);
         break;
+    case UiAction::OpenWardrobe:
+        OpenMenu(UiScreen::Wardrobe);
+        break;
+    case UiAction::OpenHomeStorage:
+        OpenMenu(UiScreen::HomeStorage);
+        break;
+    case UiAction::WardrobeGender:
+        Game::Get().ResidenceCycleGender();
+        break;
+    case UiAction::WardrobeOutfit: {
+        if (control.choice >= 100)
+        {
+            w.playerOutfit = models::CharacterType((control.choice - 100) % int(models::CharacterType::Count));
+            w.playerModularMedic = false;
+        }
+        else
+        {
+            const int count = int(models::CharacterType::Count);
+            const int step = direction < 0 ? -1 : 1;
+            w.playerOutfit = models::CharacterType((int(w.playerOutfit) + step + count) % count);
+        }
+        break;
+    }
+    case UiAction::WardrobeHair:
+        Game::Get().ResidenceCycleHair();
+        break;
+    case UiAction::WardrobeCoatColor:
+        w.playerCoatColor = ((control.choice % 6) + 6) % 6;
+        break;
+    case UiAction::WardrobeModularMode:
+        w.playerModularMedic = control.choice > 0 ? true : !w.playerModularMedic;
+        break;
+    case UiAction::WardrobeModularPart:
+        if (control.choice >= 0 && control.choice < 11)
+        {
+            w.playerModularPartsMask ^= (1u << unsigned(control.choice));
+        }
+        break;
+    case UiAction::WardrobeRotate:
+        w.ui.wardrobeAutoRotate = false;
+        w.ui.wardrobeYawOffset += float(control.choice) * 0.45f;
+        break;
+    case UiAction::WardrobeAutoRotate:
+        w.ui.wardrobeAutoRotate = !w.ui.wardrobeAutoRotate;
+        break;
+    case UiAction::StorageAction:
+        switch (control.choice)
+        {
+        case 0:
+            Game::Get().ResidenceDepositCredits();
+            break;
+        case 1:
+            Game::Get().ResidenceWithdrawCredits();
+            break;
+        case 2:
+            Game::Get().ResidenceDepositKit();
+            break;
+        case 3:
+            Game::Get().ResidenceWithdrawKit();
+            break;
+        case 4:
+            Game::Get().ResidenceDepositSalvage();
+            break;
+        case 5:
+            Game::Get().ResidenceWithdrawSalvage();
+            break;
+        default:
+            break;
+        }
+        break;
     case UiAction::Exchange:
         ExchangeSupply();
         break;
@@ -3298,6 +3560,7 @@ bool Hud::HandleKey(unsigned char key)
         }
         if (w.ui.screen == UiScreen::Pause || w.ui.screen == UiScreen::Medical ||
             w.ui.screen == UiScreen::Supply || w.ui.screen == UiScreen::FacilityShop ||
+            w.ui.screen == UiScreen::Wardrobe || w.ui.screen == UiScreen::HomeStorage ||
             w.ui.screen == UiScreen::None)
         {
             CloseMenu();
@@ -3339,6 +3602,11 @@ bool Hud::HandleKey(unsigned char key)
     {
         Activate(controls[size_t(w.ui.focus)], key == 'a' ? -1 : 1);
     }
+    if (w.ui.screen == UiScreen::Wardrobe && (key == 'a' || key == 'd'))
+    {
+        w.ui.wardrobeAutoRotate = false;
+        w.ui.wardrobeYawOffset += (key == 'a' ? -0.35f : 0.35f);
+    }
     if (!activity && (w.ui.screen == UiScreen::Pause || w.ui.screen == UiScreen::None) && key == 'r')
     {
         Activate({UiAction::Restart, {}, {}, ""});
@@ -3379,6 +3647,13 @@ bool Hud::HandleSpecialKey(int key)
 void Hud::HandleMotion()
 {
     auto &w = Game::Get().GetState();
+    if (w.ui.screen == UiScreen::Wardrobe && w.ui.wardrobeDragging && w.cursorInsideViewport)
+    {
+        const auto cursor = CenteredCursor();
+        w.ui.wardrobeAutoRotate = false;
+        w.ui.wardrobeYawOffset = w.ui.wardrobeDragStartYaw + (cursor.x - w.ui.wardrobeDragStartX) * 0.012f;
+        return;
+    }
     if (w.ui.screen != UiScreen::Options || w.ui.pressed < 0 || !w.cursorInsideViewport)
     {
         return;
@@ -3446,9 +3721,20 @@ bool Hud::HandlePointer(int button, bool down)
             w.ui.focus = hit;
             HandleMotion();
         }
+        else if (w.ui.screen == UiScreen::Wardrobe && w.cursorInsideViewport)
+        {
+            const auto cursor = CenteredCursor();
+            if (cursor.x >= 400.f && cursor.x <= 880.f)
+            {
+                w.ui.wardrobeDragging = true;
+                w.ui.wardrobeDragStartX = cursor.x;
+                w.ui.wardrobeDragStartYaw = w.ui.wardrobeYawOffset;
+            }
+        }
     }
     else
     {
+        w.ui.wardrobeDragging = false;
         int pressed = w.ui.pressed;
         w.ui.pressed = -1;
         if (hit >= 0 && hit == pressed)
@@ -3540,37 +3826,79 @@ void Hud::DrawMenu()
         UiText(68.f, 682.f, npcName, 20, {.90f, .97f, .96f}, true);
         UiText(68.f, 706.f, w.facilityInterior.regionName + " · " + w.facilityInterior.label, 14, accent, true);
 
-        // Right-side dialogue + service list panel
-        Panel(566.f, 52.f, 658.f, 680.f);
-        UiText(594.f, 92.f, w.facilityInterior.regionName + " · " + w.facilityInterior.label, 14, accent);
-        UiText(594.f, 128.f, std::string(npcName) + " · 이용 가능 서비스", 26, {.88f, .96f, .94f});
-        HudCard(594.f, 144.f, 602.f, 64.f, accent, false);
-        const auto quoteLines = Dialogue::Wrap(greeting, 570.f, 16);
+        // Right-side header panel (leaves item showcase windows unobstructed for live 3D item props!)
+        Panel(566.f, 52.f, 658.f, 224.f);
+        UiText(594.f, 90.f, w.facilityInterior.regionName + " · " + w.facilityInterior.label, 14, accent);
+        UiText(594.f, 124.f, std::string(npcName) + " · 시각 거래 카탈로그", 24, {.88f, .96f, .94f});
+        HudCard(594.f, 140.f, 602.f, 60.f, accent, false);
+        const auto quoteLines = Dialogue::Wrap(greeting, 570.f, 15);
         for (size_t i = 0; i < quoteLines.size() && i < 2; ++i)
         {
-            UiText(610.f, 170.f + float(i) * 23.f, quoteLines[i], 16, {.86f, .93f, .94f});
+            UiText(610.f, 165.f + float(i) * 22.f, quoteLines[i], 15, {.86f, .93f, .94f});
         }
         const auto &pStats = game::GameLevels::Mine().GetState().player;
         const std::string wallet = "크레딧 " + std::to_string(pStats.credits) + " Cr  ·  키트 " +
                                    std::to_string(pStats.recoveryKits) + "  ·  고철 " +
                                    std::to_string(pStats.salvage) + "  ·  체력 " +
                                    std::to_string(pStats.health) + "/" + std::to_string(pStats.maxHealth);
-        HudCard(594.f, 222.f, 602.f, 40.f, {.42f, .78f, .76f}, false);
-        UiText(612.f, 248.f, wallet, 15, {.78f, .94f, .90f});
+        HudCard(594.f, 212.f, 602.f, 38.f, {.42f, .78f, .76f}, false);
+        UiText(612.f, 237.f, wallet, 15, {.78f, .94f, .90f});
 
         const auto services = Game::Get().FacilityServices();
         auto controls = Controls();
+        const auto cursor = CenteredCursor();
         for (size_t i = 0; i < controls.size(); ++i)
         {
-            Button(controls[i], int(i));
             if (controls[i].action == UiAction::FacilityService && size_t(controls[i].choice) < services.size())
             {
                 const auto &svc = services[size_t(controls[i].choice)];
-                const float rowY = controls[i].position.y;
-                UiText(616.f, rowY + 56.f, svc.subtitle, 14,
-                       svc.enabled ? ColorRGBA{.66f, .80f, .82f} : ColorRGBA{.50f, .56f, .60f});
-                UiText(1176.f, rowY + 34.f, svc.priceLabel, 17,
+                const float x = controls[i].position.x;
+                const float y = controls[i].position.y;
+                const float h = controls[i].size.y;
+                const bool hovered = w.cursorInsideViewport && Inside(controls[i], cursor);
+                const bool focused = (w.ui.focus == int(i)) || hovered;
+                const ColorRGBA frameCol = !svc.enabled ? ColorRGBA{.30f, .36f, .40f, .75f}
+                                           : focused    ? ColorRGBA{accent.r, accent.g, accent.b, 1.f}
+                                                        : ColorRGBA{.34f, .62f, .66f, .85f};
+                // Left 80x92 glass showcase window (transparent when 3D prop is rendered behind it!)
+                if (svc.propKind == 0)
+                {
+                    Drawing::DrawRectangle(x, y, 80.f, h, {.05f, .10f, .14f, .90f});
+                    Icon(svc.icon, x + 22.f, y + 28.f, 36.f, false, svc.enabled ? accent : ColorRGBA{.5f, .54f, .58f});
+                }
+                else
+                {
+                    Drawing::DrawRectangle(x, y, 80.f, h, {.04f, .09f, .13f, .24f});
+                }
+                // Right 522x92 item info deck
+                Drawing::DrawRectangle(x + 80.f, y, 522.f, h,
+                                       focused ? ColorRGBA{.09f, .16f, .22f, .94f}
+                                               : ColorRGBA{.05f, .10f, .14f, .92f});
+                // Crisp outer border around the combined visual card
+                Drawing::DrawRectangle(x, y, 602.f, 2.f, frameCol);
+                Drawing::DrawRectangle(x, y + h - 2.f, 602.f, 2.f, frameCol);
+                Drawing::DrawRectangle(x, y, 2.f, h, frameCol);
+                Drawing::DrawRectangle(x + 600.f, y, 2.f, h, frameCol);
+                Drawing::DrawRectangle(x + 80.f, y + 6.f, 2.f, h - 12.f, {.30f, .56f, .60f, .55f});
+
+                // Keycap + Category + Item Title + Action Description + Price Pill
+                UiText(x + 94.f, y + 22.f, "[" + std::to_string(i + 1) + "] " + svc.category, 12,
+                       svc.enabled ? accent : ColorRGBA{.50f, .56f, .60f});
+                UiText(x + 94.f, y + 48.f, svc.title, 20,
+                       svc.enabled ? ColorRGBA{.94f, .98f, .99f} : ColorRGBA{.56f, .62f, .66f});
+                UiText(x + 94.f, y + 74.f, svc.subtitle, 14,
+                       svc.enabled ? ColorRGBA{.70f, .84f, .86f} : ColorRGBA{.48f, .54f, .58f});
+                // Price badge pill on right
+                Drawing::DrawRectangle(x + 484.f, y + 26.f, 102.f, 38.f,
+                                       svc.enabled ? ColorRGBA{.10f, .22f, .24f, .95f}
+                                                   : ColorRGBA{.10f, .12f, .14f, .85f});
+                Drawing::DrawRectangle(x + 484.f, y + 26.f, 102.f, 2.f, frameCol);
+                UiText(x + 576.f, y + 51.f, svc.priceLabel, 17,
                        svc.enabled ? accent : ColorRGBA{.55f, .58f, .60f}, false, true);
+            }
+            else
+            {
+                Button(controls[i], int(i));
             }
         }
         if (w.noticeSecondsRemaining > 0 && !w.noticeText.empty())
@@ -3578,10 +3906,146 @@ void Hud::DrawMenu()
             const auto noticeLines = Dialogue::Wrap(w.noticeText, 570.f, 15);
             for (size_t i = 0; i < noticeLines.size() && i < 2; ++i)
             {
-                UiText(600.f, 600.f + float(i) * 20.f, noticeLines[i], 15, {.58f, .95f, .84f});
+                UiText(594.f, 616.f + float(i) * 20.f, noticeLines[i], 15, {.58f, .95f, .84f});
             }
         }
-        UiText(594.f, 720.f, "W/S 또는 ↑/↓ 선택 · Enter/클릭/숫자키 실행 · Esc 대화 종료", 13, {.58f, .74f, .76f});
+        UiText(594.f, 722.f, "W/S 선택 · Enter/클릭/숫자키 구매·이용 · Esc 대화 종료", 13, {.58f, .74f, .76f});
+        return;
+    }
+    if (screen == UiScreen::Wardrobe)
+    {
+        // Keep the CENTER 3D character turntable (x = 398..882) 100% unobstructed and bright!
+        Panel(30.f, 76.f, 364.f, 656.f);
+        Panel(886.f, 76.f, 364.f, 656.f);
+        HudCard(424.f, 24.f, 432.f, 46.f, {.38f, .92f, .88f}, false);
+        UiText(640.f - RenderAssets::MeasureUtf8("외관 옷장 · 3D 실시간 파트 커스터마이즈", 18) * .5f, 54.f,
+               "외관 옷장 · 3D 실시간 파트 커스터마이즈", 18, {.92f, .98f, .98f}, true);
+
+        UiText(48.f, 114.f, "기본 외형 · 색상", 20, {.48f, .94f, .88f});
+        UiText(48.f, 138.f, "항목 선택 시 중앙 3D 모델에 즉시 반영", 13, {.68f, .82f, .86f});
+        UiText(48.f, 400.f, "코트 색상 팔레트", 14, {.78f, .90f, .92f});
+
+        UiText(904.f, 114.f, w.playerModularMedic ? "모듈러 파츠 탈부착 (11종)" : "빠른 의상 프리셋", 20,
+               {.48f, .94f, .88f});
+        UiText(904.f, 138.f,
+               w.playerModularMedic ? "클릭해 각 장비를 실시간 착용/해제" : "역할별 표준 복장 또는 Mixamo 모듈러 선택",
+               13, {.68f, .82f, .86f});
+
+        auto controls = Controls();
+        for (size_t i = 0; i < controls.size(); ++i)
+        {
+            const auto &ctrl = controls[i];
+            if (ctrl.action == UiAction::WardrobeCoatColor)
+            {
+                const ColorRGBA swatch = Drawing::PlayerCoatColor(ctrl.choice);
+                const bool active = !w.playerModularMedic && w.playerCoatColor == ctrl.choice;
+                const ColorRGBA border = active ? ColorRGBA{1.f, .94f, .52f, 1.f} : ColorRGBA{.32f, .48f, .54f, .85f};
+                Drawing::DrawRectangle(ctrl.position.x, ctrl.position.y, ctrl.size.x, ctrl.size.y,
+                                       w.playerModularMedic ? ColorRGBA{swatch.r * .4f, swatch.g * .4f, swatch.b * .4f, .6f}
+                                                            : swatch);
+                Drawing::DrawRectangle(ctrl.position.x, ctrl.position.y, ctrl.size.x, 3.f, border);
+                Drawing::DrawRectangle(ctrl.position.x, ctrl.position.y + ctrl.size.y - 3.f, ctrl.size.x, 3.f, border);
+                Drawing::DrawRectangle(ctrl.position.x, ctrl.position.y, 3.f, ctrl.size.y, border);
+                Drawing::DrawRectangle(ctrl.position.x + ctrl.size.x - 3.f, ctrl.position.y, 3.f, ctrl.size.y, border);
+                if (active)
+                {
+                    UiText(ctrl.position.x + 28.f, ctrl.position.y + 27.f, "적용 중", 14, {1.f, 1.f, 1.f}, true);
+                }
+            }
+            else
+            {
+                Button(ctrl, int(i));
+            }
+        }
+        HudCard(424.f, 722.f, 432.f, 38.f, {.36f, .84f, .82f}, false);
+        UiText(446.f, 747.f, "←/→ · A/D · 중앙 드래그로 360° 회전  |  Esc 적용 후 닫기", 13,
+               {.78f, .92f, .92f}, true);
+        return;
+    }
+    if (screen == UiScreen::HomeStorage)
+    {
+        const auto &p = game::GameLevels::Mine().GetState().player;
+        const auto &r = w.residence;
+        Panel(72.f, 52.f, 1136.f, 110.f);
+        UiText(104.f, 92.f, "헤일로 거주지 · 시각 물자 보관함", 15, {.48f, .94f, .88f});
+        UiText(104.f, 130.f, "보관함 · 안전 금고", 28, {.92f, .98f, .98f});
+        UiText(410.f, 128.f,
+               "장비 강화 현황: 방호복 +" + std::to_string(r.armorTier) + "/3 · 무기 +" +
+                   std::to_string(r.weaponTier) + "/3",
+               16, {.74f, .88f, .90f});
+
+        struct StorageCardDesc
+        {
+            float x;
+            const char *title;
+            const char *icon;
+            ColorRGBA accent;
+            std::string stockLine;
+            std::string descLine;
+            float fillRatio;
+        };
+        const StorageCardDesc cards[3] = {
+            {96.f,
+             "크레딧 안전 금고",
+             "credit",
+             {1.f, .78f, .32f},
+             "휴대 " + std::to_string(p.credits) + " Cr  /  금고 " + std::to_string(r.stashCredits) + " Cr",
+             "금고에 예치된 크레딧은 의료 이송 시 차감되지 않습니다.",
+             Game::Clamp(float(r.stashCredits) / 2000.f, 0.f, 1.f)},
+            {470.f,
+             "응급 회복 키트",
+             "heal",
+             {.36f, .96f, .78f},
+             "휴대 " + std::to_string(p.recoveryKits) + "/" + std::to_string(ResidenceState::kMaxCarryKits) +
+                 "  /  보관 " + std::to_string(r.stashRecoveryKits) + "/" +
+                 std::to_string(ResidenceState::kMaxStashKits),
+             "현장에서 G키로 즉시 체력 +45를 회복하는 필수 생존 키트.",
+             Game::Clamp(float(r.stashRecoveryKits) / float(ResidenceState::kMaxStashKits), 0.f, 1.f)},
+            {844.f,
+             "고철 · 정비 부품",
+             "parts",
+             {.46f, .84f, 1.f},
+             "휴대 " + std::to_string(p.salvage) + "개  /  보관 " + std::to_string(r.stashSalvage) + "개",
+             "작업대 장비 강화, 키트 제작, 차량·비행체 수리에 사용됩니다.",
+             Game::Clamp(float(r.stashSalvage) / 50.f, 0.f, 1.f)},
+        };
+        for (const auto &c : cards)
+        {
+            const float x = c.x;
+            const float y = 186.f;
+            const float wCard = 340.f;
+            // Upper 186..380: transparent glass showcase frame revealing the live spinning 3D prop!
+            Drawing::DrawRectangle(x, y, wCard, 194.f, {.05f, .09f, .13f, .22f});
+            Drawing::DrawRectangle(x, y, wCard, 3.f, c.accent);
+            Drawing::DrawRectangle(x, y, 2.f, 418.f, {.30f, .54f, .60f, .85f});
+            Drawing::DrawRectangle(x + wCard - 2.f, y, 2.f, 418.f, {.30f, .54f, .60f, .85f});
+            Drawing::DrawRectangle(x, y + 416.f, wCard, 2.f, {.30f, .54f, .60f, .85f});
+            // Lower 380..604: solid info & deposit/withdraw deck
+            Drawing::DrawRectangle(x + 2.f, y + 194.f, wCard - 4.f, 222.f, {.05f, .09f, .13f, .94f});
+            Drawing::DrawRectangle(x + 12.f, y + 194.f, wCard - 24.f, 2.f, {c.accent.r, c.accent.g, c.accent.b, .48f});
+            Icon(c.icon, x + 18.f, y + 210.f, 28.f, false, c.accent);
+            UiText(x + 56.f, y + 232.f, c.title, 20, {.94f, .98f, .99f});
+            UiText(x + 20.f, y + 266.f, c.stockLine, 15, c.accent);
+            // Visual stash fill bar
+            Drawing::DrawRectangle(x + 20.f, y + 278.f, wCard - 40.f, 8.f, {.03f, .05f, .07f, .95f});
+            Drawing::DrawRectangle(x + 20.f, y + 278.f, (wCard - 40.f) * c.fillRatio, 8.f, c.accent);
+            const auto wrapped = Dialogue::Wrap(c.descLine, wCard - 40.f, 14);
+            for (size_t line = 0; line < wrapped.size() && line < 2; ++line)
+            {
+                UiText(x + 20.f, y + 310.f + float(line) * 20.f, wrapped[line], 14, {.72f, .84f, .88f});
+            }
+        }
+
+        auto controls = Controls();
+        for (size_t i = 0; i < controls.size(); ++i)
+        {
+            Button(controls[i], int(i));
+        }
+        if (w.noticeSecondsRemaining > 0 && !w.noticeText.empty())
+        {
+            UiText(640.f - RenderAssets::MeasureUtf8(w.noticeText, 15) * .5f, 646.f, w.noticeText, 15,
+                   {.58f, .96f, .86f}, true);
+        }
         return;
     }
     DrawFullscreenDim({.01f, .025f, .03f, .55f});
@@ -3833,7 +4297,7 @@ void Hud::DrawMenu()
             "F / M",        "J / H",       "E·Enter / 숫자", "바이크 W·S·AD / Space"};
         const char *rows[] = {"이동 · 이동 방향 회전 / 누른 채 달리기",
                               "권총 장착 시 커서 방향 조준",
-                              "장착 무기 공격 / 근접 공격",
+                              "장착 무기 공격 / 현재 임무 수령·수행 지점 경로 안내",
                               "무기 선택 · Q 해제로 확정",
                               "재장전 / 광산·1장 회복 키트",
                               "조사·대화·승하차·출입",
@@ -4002,7 +4466,7 @@ void PlanetHud::Draw()
         state.aircraft.mounted ? "W/S 이동 · A/D 조향 · Shift 순항 · Space/C 고도 · X 제동 · E 착륙/하차"
         : state.car.mounted    ? "W 가속 · S 제동/후진 · A/D 조향 · E 하차 · M 지도"
         : state.isBikeMounted  ? "W 가속 · S 제동/후진 · A/D 조향 · Space 부스트 · E 하차 · M 지도"
-                               : "WASD 이동 · Shift 달리기 · Space 회피 · V 근접 · R 재장전 · G 회복 · E 상호작용 · M 지도";
+                               : "WASD 이동 · Shift 달리기 · Space 회피 · V 경로 안내 · R 재장전 · G 회복 · E 상호작용 · M 지도";
     drawBottomControls(controls);
 }
 void PlanetHud::DrawMap(bool full)
@@ -4772,7 +5236,7 @@ void Hud::Render()
         case WorldMode::StoryOperation:
         {
             const auto &arc = story::StoryArc::Get();
-            DrawObjective(arc.CurrentObjectiveAction(), arc.ActiveZoneTitle() + " · F 스캔 · V 근접 · Q 무기");
+            DrawObjective(arc.CurrentObjectiveAction(), arc.ActiveZoneTitle() + " · F 스캔 · V 경로 안내 · Q 무기");
             const std::string prompt = arc.NearbyInteractionLabel(w.playerPosition);
             if (!prompt.empty())
             {
@@ -4831,6 +5295,7 @@ void Hud::Render()
     }
     ChapterHud::DrawJournal();
     DrawMenu();
+    FieldMinigame::Draw();
     DrawWeaponWheel();
     renderqueue::Opacity(1);
     DrawMedicalFade();

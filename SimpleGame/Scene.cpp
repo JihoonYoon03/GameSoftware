@@ -169,11 +169,149 @@ void Scene::DrawActors()
     renderer.EndModels();
 }
 
+namespace
+{
+void DrawShowcaseProp(const models::Model &model, Vector2 center, float targetPixels,
+                      const models::Transform3D &rot, const models::Palette &pal)
+{
+    if (!model.resourceId)
+    {
+        return;
+    }
+    const auto &mesh = models::ResourceAssets::Get(model.resourceId);
+    const float sx = mesh.maximum.x - mesh.minimum.x;
+    const float sy = mesh.maximum.y - mesh.minimum.y;
+    const float sz = mesh.maximum.z - mesh.minimum.z;
+    const float span = (std::max)({sx, sy, sz, 0.05f});
+    const float scale = targetPixels / (span * 52.f);
+    const float midZ = (mesh.minimum.z + mesh.maximum.z) * 0.5f;
+    const Vector2 anchor{center.x, center.y + midZ * scale * 52.f};
+    Drawing::DrawModel3D(model, anchor, {scale, scale, scale}, rot, 0.f, pal);
+}
+} // namespace
+
 // ============================================================================
 // InteriorScene
 // ============================================================================
 void InteriorScene::Draw()
 {
+    const auto &w = Game::Get().GetState();
+    if (w.ui.screen == UiScreen::Wardrobe)
+    {
+        auto &backend = GameRenderer::Get().Backend();
+        const float logicalW = WorldCamera::LogicalWidth();
+        const float cxOff = WorldCamera::CenterOffsetX();
+        const float t = w.animationTimeSeconds;
+        const float centerX = cxOff + 640.f;
+
+        rendering::SceneLighting light;
+        light.keyDirection = {-.34f, .64f, .68f};
+        light.keyColor = {1.00f, .96f, .92f};
+        light.keyIntensity = .84f;
+        light.skyColor = {.46f, .62f, .74f};
+        light.groundColor = {.28f, .32f, .38f};
+        light.ambientIntensity = .52f;
+        light.rimColor = {.34f, .86f, .84f};
+        light.rimIntensity = .44f;
+        light.exposure = 1.00f;
+        light.shadowStrength = .18f;
+        backend.SetLighting(light);
+
+        // Full-viewport dressing bay studio backdrop with glowing turntable pedestal.
+        Drawing::DrawRectangle(0, 0, logicalW, kCanvasHeight, {.04f, .06f, .09f, 1.f});
+        Drawing::DrawRectangle(cxOff + 412.f, 64.f, 456.f, 650.f, {.06f, .10f, .14f, .82f});
+        Drawing::DrawGlow({centerX, 390.f}, 270.f, {.26f, .78f, .84f, .24f});
+        Drawing::DrawGlow({centerX, 646.f}, 180.f, {.36f, .94f, .86f, .30f});
+        Drawing::DrawEllipse(centerX, 648.f, 152.f, 26.f, {.10f, .22f, .28f, .92f});
+        Drawing::DrawEllipse(centerX, 648.f, 132.f, 20.f, {.34f, .88f, .86f, .34f});
+        Drawing::DrawEllipse(centerX, 648.f, 88.f, 13.f, {.42f, .96f, .90f, .44f});
+        renderqueue::Flush();
+
+        // Centered full-body live rotating 3D player character.
+        backend.SetProjectionBasis(18.f, 44.f, true);
+        backend.BeginModels();
+        models::CharacterPose pose =
+            models::ModelRig::Pose(t * 1.45f, false, false, 0, false, w.playerGender);
+        pose.motionForwardLean = 0.018f * std::sin(t * 1.5f);
+        pose.motionSideLean = 0.025f * std::sin(t * 0.9f);
+        models::Transform3D rot;
+        const float autoYaw = w.ui.wardrobeAutoRotate ? (t * 0.55f) : 0.f;
+        rot.yaw = kPi * 0.5f + w.ui.wardrobeYawOffset + autoYaw;
+        const float fullBodyScale = models::WorldScale::characterScale * 10.6f;
+        const Vector2 anchor{centerX, 644.f};
+        if (w.playerModularMedic)
+        {
+            const auto modular = Drawing::BuildPlayerModularCharacter(w.playerModularPartsMask);
+            Drawing::DrawModularCharacterPortrait(modular, anchor, rot, 0.f, pose, fullBodyScale);
+        }
+        else
+        {
+            const ColorRGBA coat = Drawing::PlayerCoatColor(w.playerCoatColor);
+            models::Palette pal;
+            pal.body = {coat.r, coat.g, coat.b, 1.f};
+            pal.accent = {.38f, .92f, .88f, 1.f};
+            pal.emission = {.38f, .92f, .88f, 1.f};
+            int sharedSlot = -1;
+            Drawing::DrawModel3D(models::ModelLibrary::Character(w.playerOutfit, w.playerGender), anchor,
+                                 {fullBodyScale, fullBodyScale, fullBodyScale}, rot, 0.f, pal, &pose, 0.f,
+                                 0.f, &sharedSlot);
+            Drawing::DrawHair(anchor, {fullBodyScale, fullBodyScale, fullBodyScale}, rot, 0.f, pose,
+                              w.playerOutfit, w.playerGender, w.playerHair, &sharedSlot);
+        }
+        backend.EndModels();
+        backend.SetProjectionBasis(WorldCamera::IsoYScale(), WorldCamera::IsoZScale(), false);
+        renderqueue::Flush();
+        return;
+    }
+    if (w.ui.screen == UiScreen::HomeStorage)
+    {
+        auto &backend = GameRenderer::Get().Backend();
+        const float logicalW = WorldCamera::LogicalWidth();
+        const float cxOff = WorldCamera::CenterOffsetX();
+        const float t = w.animationTimeSeconds;
+
+        rendering::SceneLighting light;
+        light.keyDirection = {-.30f, .64f, .70f};
+        light.keyColor = {1.04f, 1.00f, .94f};
+        light.keyIntensity = 1.08f;
+        light.skyColor = {.54f, .72f, .84f};
+        light.groundColor = {.34f, .38f, .42f};
+        light.ambientIntensity = .74f;
+        light.rimColor = {.40f, .92f, .86f};
+        light.rimIntensity = .58f;
+        light.exposure = 1.22f;
+        backend.SetLighting(light);
+
+        Drawing::DrawRectangle(0, 0, logicalW, kCanvasHeight, {.04f, .06f, .09f, 1.f});
+        const float cardCenters[3] = {cxOff + 266.f, cxOff + 640.f, cxOff + 1014.f};
+        const ColorRGBA cardGlows[3] = {
+            {1.f, .78f, .32f, .24f}, {.34f, .96f, .78f, .24f}, {.48f, .82f, 1.f, .24f}};
+        for (int i = 0; i < 3; ++i)
+        {
+            Drawing::DrawGlow({cardCenters[i], 322.f}, 115.f, cardGlows[i]);
+        }
+        renderqueue::Flush();
+
+        // Render 3 real spinning 3D item props centered cleanly inside the 3 Home Storage showcase windows!
+        backend.SetProjectionBasis(18.f, 44.f, true);
+        backend.BeginModels();
+        const auto &lib = models::ModelLibrary::Get();
+        models::Transform3D spin;
+        spin.yaw = t * 0.9f + 0.55f;
+        spin.pitch = -0.22f;
+        DrawShowcaseProp(lib.box, {cardCenters[0], 284.f}, 106.f, spin,
+                         {{.76f, .58f, .22f, 1}, {1.f, .84f, .36f, 1}, {1.f, .86f, .40f, 1}});
+        spin.yaw = t * 1.05f + 0.8f;
+        DrawShowcaseProp(lib.recoveryKit, {cardCenters[1], 284.f}, 102.f, spin,
+                         {{.28f, .82f, .68f, 1}, {.86f, .98f, .95f, 1}, {.38f, 1.f, .84f, 1}});
+        spin.yaw = t * 0.95f + 1.6f;
+        DrawShowcaseProp(lib.salvage, {cardCenters[2], 284.f}, 108.f, spin,
+                         {{.42f, .56f, .68f, 1}, {.88f, .68f, .32f, 1}, {.44f, .92f, 1.f, 1}});
+        backend.EndModels();
+        backend.SetProjectionBasis(WorldCamera::IsoYScale(), WorldCamera::IsoZScale(), false);
+        renderqueue::Flush();
+        return;
+    }
     WorldView view;
     auto &scene = *this;
     {
@@ -409,6 +547,40 @@ void FacilityInteriorScene::Draw()
                              &sharedSlot);
         Drawing::DrawHair(npcAnchor, {portraitScale, portraitScale, portraitScale}, rot, 0.f, talkPose, clerkType,
                           clerkGender, clerkHair, &sharedSlot);
+        // Also render live spinning 3D item models inside the right-side shop visual cards where applicable.
+        const auto services = Game::Get().FacilityServices();
+        const auto &lib = models::ModelLibrary::Get();
+        for (size_t i = 0; i < services.size() && i < 4; ++i)
+        {
+            if (services[i].propKind == 0)
+            {
+                continue;
+            }
+            const Vector2 itemCenter{cxOff + 634.f, 332.f + float(i) * 106.f};
+            models::Transform3D itemRot;
+            itemRot.yaw = t * 1.15f + float(i) * 0.9f + 0.55f;
+            itemRot.pitch = -0.24f;
+            if (services[i].propKind == 1)
+            {
+                DrawShowcaseProp(lib.recoveryKit, itemCenter, 54.f, itemRot,
+                                 {{.28f, .84f, .70f, 1}, {.92f, .98f, .96f, 1}, {.36f, 1.f, .84f, 1}});
+            }
+            else if (services[i].propKind == 2)
+            {
+                DrawShowcaseProp(lib.salvage, itemCenter, 56.f, itemRot,
+                                 {{.46f, .56f, .66f, 1}, {.92f, .70f, .34f, 1}, {.46f, .90f, 1.f, 1}});
+            }
+            else if (services[i].propKind == 3)
+            {
+                DrawShowcaseProp(lib.box, itemCenter, 52.f, itemRot,
+                                 {{.32f, .44f, .54f, 1}, {.86f, .72f, .36f, 1}, {.96f, .78f, .34f, 1}});
+            }
+            else if (services[i].propKind == 4)
+            {
+                DrawShowcaseProp(lib.vehicles[size_t(models::VehicleType::JetBike)].body, itemCenter, 60.f,
+                                 itemRot, {{.34f, .66f, .74f, 1}, {1.f, .72f, .28f, 1}, {.38f, .96f, .92f, 1}});
+            }
+        }
         backend.EndModels();
         backend.SetProjectionBasis(WorldCamera::IsoYScale(), WorldCamera::IsoZScale(), false);
 
@@ -1721,6 +1893,52 @@ void MineScene::Draw()
               MineQuestStage::CollectCoordinates);
     PlaceClue(scene, "mine-exit", GameLevels::Mine().GetState().entry, "E 광산 밖으로", {.4f, .9f, .8f},
               MineQuestStage::ReturnToHalo);
+    for (size_t i = 0; i < GameLevels::Mine().GetState().resourceNodes.size(); ++i)
+    {
+        const auto &node = GameLevels::Mine().GetState().resourceNodes[i];
+        if (node.harvested || GameLevels::Mine().Lighting().At(node.position) < .02f)
+        {
+            continue;
+        }
+        scene.PlaceWorldActor(
+            "mine-node/" + std::to_string(i), node.position.x, node.position.y,
+            WorldBounds(node.position.x, node.position.y, 0, 0, 48), 1, node.position.x + node.position.y,
+            [this, node]() {
+                auto center = Drawing::WorldToScreen(node.position.x, node.position.y);
+                const bool isPrism = node.kind == MineNodeKind::PrismCrystal;
+                const bool isCrate = node.kind == MineNodeKind::SupplyCrate;
+                const ColorRGBA glow = isPrism  ? ColorRGBA(.45f, .92f, 1.f)
+                                       : isCrate ? ColorRGBA(1.f, .76f, .28f)
+                                                 : ColorRGBA(.86f, .64f, .36f);
+                Drawing::DrawGlow({center.x, center.y - 12.f}, isPrism ? 26.f : 18.f, glow);
+                if (isCrate)
+                {
+                    Drawing::DrawModel3D(models::ModelLibrary::Get().box, center, {.78f, .78f, .78f}, {},
+                                         (node.position.x + node.position.y) * 36,
+                                         {{.48f, .40f, .26f, 1}, {.92f, .74f, .32f, 1}, {1, .82f, .36f, 1}});
+                }
+                else
+                {
+                    const models::Palette pal =
+                        isPrism ? models::Palette{{.28f, .68f, .92f, 1}, {.58f, .96f, 1.f, 1},
+                                                  {.65f, .96f, 1.f, 1}}
+                                : models::Palette{{.46f, .38f, .30f, 1}, {.82f, .62f, .34f, 1},
+                                                  {.96f, .72f, .32f, 1}};
+                    Drawing::DrawModel3D(models::ModelLibrary::Get().crystal, center,
+                                         isPrism ? models::Point{.95f, .95f, 1.15f}
+                                                 : models::Point{.78f, .78f, .86f},
+                                         {}, (node.position.x + node.position.y) * 36, pal);
+                }
+                if (GameLevels::Mine().IsNear(node.position))
+                {
+                    Drawing::DrawInteractionMarker(node.position,
+                                                   isPrism   ? "프리즘 수정맥 [E]"
+                                                   : isCrate ? "보급 상자 [E]"
+                                                             : "철광맥 [E]",
+                                                   glow);
+                }
+            });
+    }
     for (size_t i = 0; i < GameLevels::Mine().GetState().enemies.size(); ++i)
     {
         auto enemy = GameLevels::Mine().GetState().enemies[i];
@@ -1730,23 +1948,58 @@ void MineScene::Draw()
         }
         scene.PlaceWorldActor(
             "enemy/" + std::to_string(i), enemy.position.x, enemy.position.y,
-            WorldBounds(enemy.position.x, enemy.position.y, 0, 0, 65), 1, enemy.position.x + enemy.position.y,
+            WorldBounds(enemy.position.x, enemy.position.y, 0, 0, 75), 1, enemy.position.x + enemy.position.y,
             [this, enemy, i]() {
                 auto screen = Drawing::WorldToScreen(enemy.position.x, enemy.position.y);
-                Drawing::DrawSoftShadow(screen, 22, 8, .6f);
+                const float scale = enemy.kind == MineEnemyKind::RuinElite      ? 1.38f
+                                    : enemy.kind == MineEnemyKind::ArmoredBrute ? 1.20f
+                                    : enemy.kind == MineEnemyKind::Spitter      ? 0.92f
+                                                                                : 1.0f;
+                Drawing::DrawSoftShadow(screen, 22.f * scale, 8.f * scale, .6f);
+                if (enemy.kind == MineEnemyKind::RuinElite)
+                {
+                    Drawing::DrawGlow({screen.x, screen.y - 20.f}, 34.f, {1.f, .36f, .24f});
+                }
+                else if (enemy.kind == MineEnemyKind::Spitter)
+                {
+                    Drawing::DrawGlow({screen.x, screen.y - 14.f}, 18.f, {.42f, .96f, .36f});
+                }
                 models::Transform3D rotation;
                 rotation.yaw = enemy.facing.yaw;
                 auto pose = models::ModelRig::Pose(Game::Get().GetState().animationTimeSeconds * 10,
                                                    enemy.facing.walking);
-                const size_t variant = enemy.position.x < kMineGateX ? i % 2 : 2 + i % 4;
-                Drawing::DrawModel3D(models::ModelLibrary::Get().creatures[variant], screen, {1, 1, 1},
-                                     rotation, (enemy.position.x + enemy.position.y) * 36,
-                                     {{.35f, .27f, .2f, 1}, {.75f, .35f, .2f, 1}, {1, .2f, .08f, 1}}, &pose);
-                if (Game::Distance(enemy.position, Game::Get().GetState().playerPosition) < 5)
+                const size_t variant = enemy.kind == MineEnemyKind::RuinElite      ? 5
+                                       : enemy.kind == MineEnemyKind::ArmoredBrute ? 3
+                                       : enemy.kind == MineEnemyKind::Spitter      ? 2
+                                       : enemy.position.x < kMineGateX             ? i % 2
+                                                                                   : 2 + i % 4;
+                const models::Palette pal =
+                    enemy.kind == MineEnemyKind::RuinElite
+                        ? models::Palette{{.42f, .16f, .22f, 1}, {.96f, .42f, .24f, 1}, {1.f, .78f, .22f, 1}}
+                    : enemy.kind == MineEnemyKind::ArmoredBrute
+                        ? models::Palette{{.34f, .30f, .28f, 1}, {.72f, .52f, .30f, 1}, {1.f, .46f, .18f, 1}}
+                    : enemy.kind == MineEnemyKind::Spitter
+                        ? models::Palette{{.22f, .36f, .24f, 1}, {.46f, .86f, .34f, 1}, {.52f, 1.f, .38f, 1}}
+                        : models::Palette{{.35f, .27f, .2f, 1}, {.75f, .35f, .2f, 1}, {1, .2f, .08f, 1}};
+                Drawing::DrawModel3D(models::ModelLibrary::Get().creatures[variant], screen,
+                                     {scale, scale, scale}, rotation,
+                                     (enemy.position.x + enemy.position.y) * 36, pal, &pose);
+                const float showDist = enemy.kind == MineEnemyKind::RuinElite ? 9.5f : 5.5f;
+                if (Game::Distance(enemy.position, Game::Get().GetState().playerPosition) < showDist)
                 {
-                    Drawing::DrawRectangle(screen.x - 18, screen.y - 39, 36, 3, {.15f, .05f, .04f});
-                    Drawing::DrawRectangle(screen.x - 18, screen.y - 39,
-                                           36.f * enemy.health / kEnemyMaxHealth, 3, {.9f, .32f, .2f});
+                    const int maxHp = enemy.maxHealth > 0 ? enemy.maxHealth : kEnemyMaxHealth;
+                    const float ratio = Game::Clamp(float(enemy.health) / float(maxHp), 0.f, 1.f);
+                    const float barW = enemy.kind == MineEnemyKind::RuinElite ? 54.f : 36.f;
+                    const float barY = screen.y - (enemy.kind == MineEnemyKind::RuinElite ? 54.f : 39.f);
+                    Drawing::DrawRectangle(screen.x - barW * .5f, barY, barW, 4.f, {.15f, .05f, .04f});
+                    Drawing::DrawRectangle(screen.x - barW * .5f, barY, barW * ratio, 4.f,
+                                           enemy.kind == MineEnemyKind::RuinElite
+                                               ? ColorRGBA(1.f, .72f, .22f)
+                                               : ColorRGBA(.9f, .32f, .2f));
+                    if (enemy.kind == MineEnemyKind::RuinElite)
+                    {
+                        Drawing::DrawLabel(screen.x - 32.f, barY - 14.f, "유적 수호체", {1.f, .80f, .34f});
+                    }
                 }
             });
     }
@@ -3480,7 +3733,7 @@ void DrawSurfaceFrontier(const world::SurfaceSession &session)
     if (!state.kainJoined || Game::Get().HasCompanion(CompanionId::Kain, CompanionPlace::Frontier))
     {
         person(state.kain, models::CharacterType::Guard, models::Gender::Male, models::HairStyle::Buzz,
-               {.38f, .53f, .66f}, "카인", state.kainJoined);
+               {.38f, .53f, .66f}, "카인", true);
     }
     for (size_t i = 0; i < state.survivors.size(); ++i)
     {
@@ -3495,7 +3748,57 @@ void DrawSurfaceFrontier(const world::SurfaceSession &session)
             person(state.scrappers[i], i ? models::CharacterType::Guard : models::CharacterType::Explorer,
                    i == 1 ? models::Gender::Female : models::Gender::Male, models::HairStyle::Curls,
                    {.7f, .36f, .25f}, state.negotiated ? "철수 중" : "폐설비 점거자", true);
+            if (state.hostile && state.scrappers[i].combat.health > 0)
+            {
+                if (auto sp = surface.Project(state.scrappers[i].position))
+                {
+                    const float z = height(state.scrappers[i].position);
+                    const auto bar = Drawing::WorldToScreen(sp->x, sp->y, z * WorldCamera::IsoZScale() + 68.f);
+                    const float ratio = Game::Clamp(float(state.scrappers[i].combat.health) / 60.f, 0.f, 1.f);
+                    Drawing::DrawRectangle(bar.x - 20.f, bar.y, 40.f, 5.f, {.06f, .08f, .10f, .86f});
+                    Drawing::DrawRectangle(bar.x - 19.f, bar.y + 1.f, 38.f * ratio, 3.f, {.96f, .34f, .28f});
+                }
+            }
         }
+    }
+    // Render open-world Frontier threats (rogue generator drones, convoy raiders, escort ambushers).
+    for (const auto &threat : state.frontierThreats)
+    {
+        if (!threat.active || threat.health <= 0)
+        {
+            continue;
+        }
+        auto p = surface.Project(threat.position);
+        if (!p)
+        {
+            continue;
+        }
+        const float z = height(threat.position);
+        renderqueue::PushMatrix();
+        renderqueue::Translate(0, -z * WorldCamera::IsoZScale(), z * (1296.f / 44));
+        if (threat.kind == FrontierThreatKind::RogueDrone)
+        {
+            const float hover = 18.f + std::sin(threat.patrolPhase * 2.f) * 5.f;
+            const auto scr = Drawing::WorldToScreen(p->x, p->y, hover);
+            Drawing::DrawGlow(scr, 20.f, {1.f, .52f, .22f, .75f});
+            Drawing::DrawModel3D(models::ModelLibrary::Get().creatures[0], scr, {.62f, .62f, .62f},
+                                 {0.f, threat.patrolPhase, 0.f}, (p->x + p->y) * 36.f,
+                                 {{.28f, .34f, .38f, 1}, {1.f, .52f, .20f, 1}, {1.f, .72f, .26f, 1}});
+        }
+        else
+        {
+            const float yaw = surface.Yaw(std::atan2(state.kain.position.y - threat.position.y,
+                                                     state.kain.position.x - threat.position.x));
+            Drawing::DrawPerson(*p, {.76f, .28f, .22f}, false, models::CharacterType::Guard, true, yaw,
+                                models::Gender::Male, models::HairStyle::Buzz, true);
+        }
+        const auto bar = Drawing::WorldToScreen(p->x, p->y, 64.f);
+        const float ratio = Game::Clamp(float(threat.health) / float((std::max)(1, threat.maxHealth)), 0.f, 1.f);
+        Drawing::DrawRectangle(bar.x - 20.f, bar.y, 40.f, 5.f, {.05f, .08f, .10f, .86f});
+        Drawing::DrawRectangle(bar.x - 19.f, bar.y + 1.f, 38.f * ratio, 3.f,
+                               threat.kind == FrontierThreatKind::RogueDrone ? ColorRGBA(1.f, .64f, .22f)
+                                                                             : ColorRGBA(.96f, .30f, .26f));
+        renderqueue::PopMatrix();
     }
     auto glow = [&](Vector2 authored, float z, float radius, ColorRGBA color) {
         if (auto p = surface.Project(authored))
@@ -3503,16 +3806,57 @@ void DrawSurfaceFrontier(const world::SurfaceSession &session)
             Drawing::DrawGlow(Drawing::WorldToScreen(p->x, p->y, height(authored) * 44 + z), radius, color);
         }
     };
+    // Kain's distress flare column visible from across the open-world Frontier plains before briefing.
+    if (!state.convoyBriefed)
+    {
+        if (auto flarePt = surface.Project({30.8f, 10.8f}))
+        {
+            const float z = height({30.8f, 10.8f});
+            const float pulse = 0.72f + 0.28f * std::sin(Game::Get().GetState().animationTimeSeconds * 4.5f);
+            const auto base = Drawing::WorldToScreen(flarePt->x, flarePt->y, z * 44.f + 18.f);
+            const auto top = Drawing::WorldToScreen(flarePt->x, flarePt->y, z * 44.f + 220.f);
+            Drawing::DrawLine(base, top, {1.f, .38f, .20f, .52f * pulse}, 6.f);
+            Drawing::DrawLine(base, top, {1.f, .86f, .46f, .82f * pulse}, 2.f);
+            Drawing::DrawGlow(top, 26.f * pulse, {1.f, .44f, .22f, .85f});
+            Drawing::DrawLabel(top.x - 44.f, top.y - 16.f, "운송대 구조 조명탄", {1.f, .78f, .38f});
+        }
+    }
     for (int i = 0; i < 3; ++i)
     {
         glow({9.5f + i * .9f, 9.7f}, 28, 7,
              state.generatorRestored ? ColorRGBA(.35f, .94f, .8f) : ColorRGBA(.9f, .52f, .2f));
+    }
+    if (!state.generatorRestored)
+    {
+        auto g0 = surface.Project({9.5f, 9.7f});
+        auto g2 = surface.Project({11.3f, 9.7f});
+        if (g0 && g2 && std::sin(state.generatorArcPhase * 3.f) > 0.f)
+        {
+            const auto a = Drawing::WorldToScreen(g0->x, g0->y, height({9.5f, 9.7f}) * 44.f + 34.f);
+            const auto b = Drawing::WorldToScreen(g2->x, g2->y, height({11.3f, 9.7f}) * 44.f + 34.f);
+            Drawing::DrawLine(a, b, {.46f, .90f, 1.f, .72f}, 2.5f);
+        }
     }
     constexpr Vector2 markers[] = {{36.5f, 13.5f}, {36.5f, 18.5f}, {29.5f, 18.5f}};
     for (unsigned i = 0; i < 3; ++i)
     {
         glow(markers[i], 34, 12,
              state.surveyMarkers > int(i) ? ColorRGBA(.3f, 1, .8f) : ColorRGBA(1, .6f, .25f, .5f));
+    }
+    // Render glowing triangulation corridor between surveyed tripods toward the safe camp.
+    constexpr Vector2 corridor[] = {{30.8f, 10.8f}, {36.5f, 13.5f}, {36.5f, 18.5f}, {29.5f, 18.5f}, {24.5f, 20.5f}};
+    const int activeSegments = state.surveyMarkers >= 3 ? 4 : state.surveyMarkers;
+    for (int seg = 0; seg < activeSegments; ++seg)
+    {
+        auto p0 = surface.Project(corridor[seg]);
+        auto p1 = surface.Project(corridor[seg + 1]);
+        if (p0 && p1)
+        {
+            const auto s0 = Drawing::WorldToScreen(p0->x, p0->y, height(corridor[seg]) * 44.f + 22.f);
+            const auto s1 = Drawing::WorldToScreen(p1->x, p1->y, height(corridor[seg + 1]) * 44.f + 22.f);
+            Drawing::DrawLine(s0, s1, {.32f, .98f, .84f, .58f}, 4.f);
+            Drawing::DrawLine(s0, s1, {.76f, 1.f, .94f, .85f}, 1.5f);
+        }
     }
     if (state.portableLightRepaired)
     {

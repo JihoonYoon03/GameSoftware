@@ -225,6 +225,7 @@
     <ClInclude Include="WorldGeneration.h" />
     <ClInclude Include="WorldContent.h" />
     <ClInclude Include="WorldStreaming.h" />
+    <ClInclude Include="FieldMinigame.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClCompile Include="Actor\Actor.cpp" />
@@ -237,6 +238,7 @@
     <ClCompile Include="StoryArc.cpp" />
     <ClCompile Include="StoryJournal.cpp" />
     <ClCompile Include="WorldEncounters.cpp" />
+    <ClCompile Include="FieldMinigame.cpp" />
     <ClCompile Include="Save.cpp" />
     <ClCompile Include="Civic.cpp" />
     <ClCompile Include="CityFacilities.cpp" />

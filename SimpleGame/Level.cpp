@@ -5,6 +5,7 @@
 #include "StoryArc.h"
 #include "Overworld.h"
 #include "Civic.h"
+#include "FieldMinigame.h"
 #include "Hud.h"
 #include "Profiler.h"
 #include "ResourceAssets.h"
@@ -454,6 +455,7 @@ void MineMap::Generate(std::uint32_t seed)
     }
     std::shuffle(state.reachableCells.begin(), state.reachableCells.end(), random);
     state.enemies.clear();
+    int elitesAssigned = 0;
     for (int cell : state.reachableCells)
     {
         tutorial::Vector2 position = {cell % kMapSize + .5f, cell / kMapSize + .5f};
@@ -463,11 +465,112 @@ void MineMap::Generate(std::uint32_t seed)
         {
             continue;
         }
-        state.enemies.push_back({position});
+        Enemy spawned{position};
+        const size_t idx = state.enemies.size();
+        spawned.sector = position.x < float(kMineGateX) ? 1 : (position.x < 96.f ? 2 : 3);
+        const bool deepEnough = (elitesAssigned == 0 && spawned.sector == 1 && position.y > 52.f) ||
+                                (elitesAssigned == 1 && spawned.sector == 2) ||
+                                (elitesAssigned == 2 && spawned.sector == 3);
+        if (elitesAssigned < 3 && idx >= 18 && deepEnough)
+        {
+            spawned.kind = MineEnemyKind::RuinElite;
+            spawned.maxHealth = 135;
+            spawned.health = 135;
+            ++elitesAssigned;
+        }
+        else if (idx % 5 == 2)
+        {
+            spawned.kind = MineEnemyKind::Spitter;
+            spawned.maxHealth = 36;
+            spawned.health = 36;
+        }
+        else if (idx % 7 == 4)
+        {
+            spawned.kind = MineEnemyKind::ArmoredBrute;
+            spawned.maxHealth = 82;
+            spawned.health = 82;
+        }
+        else
+        {
+            spawned.kind = MineEnemyKind::Crawler;
+            spawned.maxHealth = kEnemyMaxHealth;
+            spawned.health = kEnemyMaxHealth;
+        }
+        state.enemies.push_back(spawned);
         if (state.enemies.size() == kEnemyPopulation)
         {
             break;
         }
+    }
+    // Deterministically place 20 harvestable resource nodes (10 IronVein, 4 PrismCrystal, 6 SupplyCrate).
+    state.resourceNodes.clear();
+    state.resourcePings.clear();
+    state.huntStreak = 0;
+    state.huntStreakTimer = 0.f;
+    state.elitesDefeated = 0;
+    state.veinsHarvested = 0;
+    int ironCount = 0, crystalCount = 0, crateCount = 0;
+    for (int cell : state.reachableCells)
+    {
+        if (state.resourceNodes.size() >= 20)
+        {
+            break;
+        }
+        tutorial::Vector2 position = {cell % kMapSize + .5f, cell / kMapSize + .5f};
+        if (tutorial::Game::Distance(position, state.entry) < 7.f ||
+            tutorial::Game::Distance(position, kPowerBypass) < 2.5f ||
+            tutorial::Game::Distance(position, kRuinSignal) < 2.5f ||
+            tutorial::Game::Distance(position, kObserverGlyph) < 2.5f ||
+            tutorial::Game::Distance(position, kCoordinateTerminal) < 2.5f ||
+            IsGateCell(cell % kMapSize, cell / kMapSize))
+        {
+            continue;
+        }
+        bool tooClose = false;
+        for (const auto &node : state.resourceNodes)
+        {
+            if (tutorial::Game::Distance(position, node.position) < 9.f)
+            {
+                tooClose = true;
+                break;
+            }
+        }
+        if (tooClose)
+        {
+            continue;
+        }
+        MineNodeKind kind = MineNodeKind::IronVein;
+        int yield = 2;
+        if (position.x > float(kMineGateX) + 4.f && crystalCount < 4)
+        {
+            kind = MineNodeKind::PrismCrystal;
+            yield = 4;
+            ++crystalCount;
+        }
+        else if (crateCount < 6 && (state.resourceNodes.size() % 3 == 1))
+        {
+            kind = MineNodeKind::SupplyCrate;
+            yield = 2;
+            ++crateCount;
+        }
+        else if (ironCount < 10)
+        {
+            kind = MineNodeKind::IronVein;
+            yield = 3;
+            ++ironCount;
+        }
+        else if (crateCount < 6)
+        {
+            kind = MineNodeKind::SupplyCrate;
+            yield = 2;
+            ++crateCount;
+        }
+        else
+        {
+            continue;
+        }
+        state.resourceNodes.push_back(
+            {position, kind, false, yield, unsigned(cell) ^ (seed * 2654435761u)});
     }
     state.drops.clear();
     state.bullets.clear();
@@ -578,6 +681,26 @@ void MineCombat::AdvanceBullet(Bullet &bullet, float movement)
         }
         bullet.position = next;
         bullet.remaining = (std::max)(0.f, bullet.remaining - step);
+        if (bullet.enemyOwned)
+        {
+            auto &world = tutorial::Game::Get().GetState();
+            if (state.player.health > 0 && tutorial::Game::Distance(next, world.playerPosition) < .42f)
+            {
+                if (state.invulnerability <= 0 && !world.playerMotion.mobility.Invulnerable())
+                {
+                    state.player.health -= (std::max)(1, bullet.damage - state.player.defense);
+                    world.InterruptDodge();
+                    state.invulnerability = .40f;
+                    if (state.player.health <= 0)
+                    {
+                        tutorial::HospitalRecovery::Begin();
+                    }
+                }
+                bullet.remaining = 0;
+                break;
+            }
+            continue;
+        }
         for (size_t j = 0; j < state.enemies.size(); ++j)
         {
             if (state.enemies[j].health > 0 &&
@@ -741,14 +864,47 @@ bool MineCombat::DamageEnemy(size_t index, int damage, bool playerCredit)
         return true; // NPC defence does not grant unattended player rewards.
     }
     ++state.kills;
+    ++state.huntStreak;
+    state.huntStreakTimer = 12.f;
+    const float streakMult = 1.f + 0.15f * float((std::min)(6, (std::max)(0, state.huntStreak - 1)));
     state.drops.push_back({enemy.position,
                            state.totalEnemyDeaths % 3 == 0 ? ItemKind::RecoveryKit : ItemKind::Salvage,
                            state.nextDropActorId++});
+    int bonusCredits = 4;
+    int bonusExp = 0;
+    if (enemy.kind == MineEnemyKind::RuinElite)
+    {
+        ++state.elitesDefeated;
+        bonusCredits = 45;
+        bonusExp = 45;
+        state.player.salvage = (std::min)(9999, state.player.salvage + 3);
+        state.drops.push_back({{enemy.position.x + .25f, enemy.position.y}, ItemKind::RecoveryKit,
+                               state.nextDropActorId++});
+        state.drops.push_back({{enemy.position.x - .25f, enemy.position.y}, ItemKind::Salvage,
+                               state.nextDropActorId++});
+        tutorial::Game::Get().ShowNotice(
+            "정예 개체 처치 / 유적 수호체 격파! (고철 +3 · 현상금 +" +
+            std::to_string(int(std::round(float(bonusCredits) * streakMult))) + " Cr)");
+    }
+    else if (enemy.kind == MineEnemyKind::ArmoredBrute)
+    {
+        bonusCredits = 18;
+        bonusExp = 12;
+        state.drops.push_back({{enemy.position.x + .2f, enemy.position.y}, ItemKind::Salvage,
+                               state.nextDropActorId++});
+    }
+    else if (enemy.kind == MineEnemyKind::Spitter)
+    {
+        bonusCredits = 10;
+        bonusExp = 6;
+    }
+    const int earnedCredits = int(std::round(float(bonusCredits) * streakMult));
+    state.player.credits = (std::min)(PlayerStats::kMaximumCredits, state.player.credits + earnedCredits);
     if (state.drops.size() > 128)
     {
-        state.drops.erase(state.drops.begin());
+        state.drops.erase(state.drops.begin(), state.drops.end() - 128);
     }
-    level.AddExperience(kExperiencePerKill);
+    level.AddExperience(int(std::round(float(kExperiencePerKill + bonusExp) * streakMult)));
     return true;
 }
 
@@ -1003,14 +1159,16 @@ void MineCombat::UpdateEnemies(float deltaSeconds)
                 if (!occupied)
                 {
                     enemy.position = position;
-                    enemy.health = kEnemyMaxHealth;
+                    enemy.health = enemy.maxHealth > 0 ? enemy.maxHealth : kEnemyMaxHealth;
                     enemy.attackCooldown = 1;
+                    enemy.fireCooldown = 1.4f;
                     break;
                 }
             }
             continue;
         }
         enemy.attackCooldown -= deltaSeconds;
+        enemy.fireCooldown = (std::max)(0.f, enemy.fireCooldown - deltaSeconds);
         // Only visible combatants can replace a remembered target position.
         auto sees = [&](tutorial::Vector2 p) {
             profiling::Scope timer(profiling::Timer::NpcPerception);
@@ -1107,19 +1265,36 @@ void MineCombat::UpdateEnemies(float deltaSeconds)
             }
             continue; // Reaching a remembered position never deals damage to a hidden combatant.
         }
+        if (enemy.kind == MineEnemyKind::Spitter && playerTarget && enemy.fireCooldown <= 0.f &&
+            state.bullets.size() < 128)
+        {
+            const float dist = tutorial::Game::Distance(enemy.position, target);
+            if (dist > 1.8f && dist < 7.5f && level.Map().HasLineOfSight(enemy.position, target))
+            {
+                const tutorial::Vector2 dir{(target.x - enemy.position.x) / dist,
+                                            (target.y - enemy.position.y) / dist};
+                enemy.facing.yaw = std::atan2(dir.y, dir.x);
+                Bullet bolt{enemy.position, dir, 7.2f, 8.2f, 8, false, false, 0.f, true};
+                state.bullets.push_back(bolt);
+                enemy.fireCooldown = 2.1f;
+            }
+        }
         if (enemy.attackCooldown > 0 || tutorial::Game::Distance(enemy.position, target) >= .8f ||
             !level.Map().HasLineOfSight(enemy.position, target))
         {
             continue;
         }
         enemy.facing.yaw = std::atan2(target.y - enemy.position.y, target.x - enemy.position.x);
+        const int meleeDamage = enemy.kind == MineEnemyKind::RuinElite      ? 18
+                                : enemy.kind == MineEnemyKind::ArmoredBrute ? 15
+                                                                            : 10;
         if (victim)
         {
             if (victim->hitGrace > 0)
             {
                 continue;
             }
-            victim->health = (std::max)(0, victim->health - 12);
+            victim->health = (std::max)(0, victim->health - (meleeDamage + 2));
             victim->hitGrace = .45f;
             if (!victim->health)
             {
@@ -1131,7 +1306,7 @@ void MineCombat::UpdateEnemies(float deltaSeconds)
         else if (state.invulnerability <= 0 &&
                  !tutorial::Game::Get().GetState().playerMotion.mobility.Invulnerable())
         {
-            state.player.health -= (std::max)(1, 10 - state.player.defense);
+            state.player.health -= (std::max)(1, meleeDamage - state.player.defense);
             tutorial::Game::Get().GetState().InterruptDodge();
             enemy.attackCooldown = 1;
             state.invulnerability = .45f;
@@ -1391,6 +1566,15 @@ void MineRescue::UpdateScanner(float deltaSeconds)
                                              state.rescueGroups[contact.group].rescued;
                                   }),
                    contacts.end());
+    for (auto &ping : state.resourcePings)
+    {
+        ping.secondsRemaining -= deltaSeconds;
+    }
+    state.resourcePings.erase(std::remove_if(state.resourcePings.begin(), state.resourcePings.end(),
+                                             [](const MineResourcePing &ping) {
+                                                 return ping.secondsRemaining <= 0.f;
+                                             }),
+                              state.resourcePings.end());
     if (state.scannerSeconds <= 0)
     {
         return;
@@ -1427,6 +1611,49 @@ void MineRescue::UpdateScanner(float deltaSeconds)
         tutorial::Vector2 marker = {state.scannerOrigin.x + bearing.x * estimate,
                                     state.scannerOrigin.y + bearing.y * estimate};
         contacts.push_back({angle, approximateDistance, groupIndex, marker, lifetime});
+    }
+    // Reveal harvestable ore veins, supply crates, and deep sector elites onto a separate ping list.
+    for (const auto &node : state.resourceNodes)
+    {
+        if (node.harvested)
+        {
+            continue;
+        }
+        const float dist = tutorial::Game::Distance(state.scannerOrigin, node.position);
+        if (dist > state.scannerRadius || dist > kScannerRange)
+        {
+            continue;
+        }
+        const bool exists = std::any_of(state.resourcePings.begin(), state.resourcePings.end(),
+                                        [&](const MineResourcePing &p) {
+                                            return !p.isElite &&
+                                                   tutorial::Game::Distance(p.position, node.position) < 0.25f;
+                                        });
+        if (!exists)
+        {
+            state.resourcePings.push_back({node.position, node.kind, false, 9.5f});
+        }
+    }
+    for (const auto &enemy : state.enemies)
+    {
+        if (enemy.health <= 0 || enemy.kind != MineEnemyKind::RuinElite)
+        {
+            continue;
+        }
+        const float dist = tutorial::Game::Distance(state.scannerOrigin, enemy.position);
+        if (dist > state.scannerRadius || dist > kScannerRange)
+        {
+            continue;
+        }
+        const bool exists = std::any_of(state.resourcePings.begin(), state.resourcePings.end(),
+                                        [&](const MineResourcePing &p) {
+                                            return p.isElite &&
+                                                   tutorial::Game::Distance(p.position, enemy.position) < 1.2f;
+                                        });
+        if (!exists)
+        {
+            state.resourcePings.push_back({enemy.position, MineNodeKind::PrismCrystal, true, 9.5f});
+        }
     }
 }
 
@@ -1764,7 +1991,7 @@ void MineLevel::Enter(bool debugEntry)
                               state.quest.GetStage() == MineQuestStage::Complete;
     tutorial::Game::Get().ShowNotice(
         hideRiaIntro
-            ? "오르딘 광산 / F 구조 신호 스캔 · E 조사·구조 · V 근접 공격. 입구에서 E로 지상에 복귀합니다."
+            ? "오르딘 광산 / F 구조 신호·광맥 스캔 · E 조사·채굴·구조 · V 임무 안내. 입구에서 E로 지상에 복귀합니다."
             : state.quest.GetRiaDialogue());
 }
 
@@ -2064,8 +2291,199 @@ void MineLevel::Interact()
     else
     {
         tutorial::Game::Get().ShowNotice(
-            "E 조사·구조·회수 / F 구조 신호 스캔. 불빛과 광산의 주 갱도를 따라 이동하세요.");
+            "E 조사·채굴·구조 / F 구조 신호·광맥 스캔. 불빛과 광산의 주 갱도를 따라 이동하세요.");
     }
+}
+
+void MineLevel::AlertNearbyEnemies(tutorial::Vector2 origin, float radius)
+{
+    int alerted = 0;
+    for (auto &enemy : state.enemies)
+    {
+        if (enemy.health > 0 && tutorial::Game::Distance(enemy.position, origin) <= radius)
+        {
+            enemy.target = origin;
+            enemy.threat.Remember(ai::Stimulus::Sound, ai::PerceptionSettings::kCombatMemorySeconds);
+            enemy.teamwork = {ai::TeamTask::Investigate, 0, 0};
+            enemy.searchRoute.clear();
+            enemy.searchWaypoint = 0;
+            ++alerted;
+        }
+    }
+    if (alerted > 0)
+    {
+        tutorial::Game::Get().ShowNotice("채굴 소음 경보 / 주변 괴생명체 " + std::to_string(alerted) +
+                                         "체가 소리를 듣고 접근합니다!");
+    }
+}
+
+bool MineLevel::HarvestResourceNode(size_t index, bool perfect)
+{
+    if (index >= state.resourceNodes.size() || state.resourceNodes[index].harvested)
+    {
+        return false;
+    }
+    auto &node = state.resourceNodes[index];
+    node.harvested = true;
+    ++state.veinsHarvested;
+    const int mult = perfect ? 2 : 1;
+    if (node.kind == MineNodeKind::PrismCrystal)
+    {
+        const int salvage = node.richYield * mult;
+        const int credits = 36 * mult;
+        state.player.salvage = (std::min)(9999, state.player.salvage + salvage);
+        state.player.credits = (std::min)(PlayerStats::kMaximumCredits, state.player.credits + credits);
+        AddExperience(22 * mult);
+        tutorial::Game::Get().ShowNotice(
+            std::string(perfect ? "정밀 채굴 대성공 / 프리즘 수정맥 확보 (고철 +" : "수정맥 채굴 / 고철 +") +
+            std::to_string(salvage) + " · " + std::to_string(credits) + " Cr)");
+    }
+    else if (node.kind == MineNodeKind::SupplyCrate)
+    {
+        const int kits = (perfect ? 2 : 1);
+        const int salvage = 2 * mult;
+        const int credits = 18 * mult;
+        state.player.recoveryKits = (std::min)(999, state.player.recoveryKits + kits);
+        state.player.salvage = (std::min)(9999, state.player.salvage + salvage);
+        state.player.credits = (std::min)(PlayerStats::kMaximumCredits, state.player.credits + credits);
+        AddExperience(12 * mult);
+        tutorial::Game::Get().ShowNotice("광산 보급 상자 해제 / 회복 키트 +" + std::to_string(kits) +
+                                         " · 고철 +" + std::to_string(salvage) + " · " +
+                                         std::to_string(credits) + " Cr");
+    }
+    else
+    {
+        const int salvage = node.richYield * mult;
+        const int credits = 14 * mult;
+        state.player.salvage = (std::min)(9999, state.player.salvage + salvage);
+        state.player.credits = (std::min)(PlayerStats::kMaximumCredits, state.player.credits + credits);
+        AddExperience(10 * mult);
+        tutorial::Game::Get().ShowNotice(
+            std::string(perfect ? "정밀 채굴 / 고순도 철광맥 확보 (고철 +" : "광맥 채굴 / 고철 +") +
+            std::to_string(salvage) + " · " + std::to_string(credits) + " Cr)");
+    }
+    return true;
+}
+
+std::string MineLevel::NearbyResourceLabel() const
+{
+    const auto &playerPos = tutorial::Game::Get().GetState().playerPosition;
+    for (const auto &node : state.resourceNodes)
+    {
+        if (!node.harvested && tutorial::Game::Distance(playerPos, node.position) < 1.85f)
+        {
+            if (node.kind == MineNodeKind::PrismCrystal)
+            {
+                return "E 프리즘 수정맥 정밀 채굴";
+            }
+            if (node.kind == MineNodeKind::SupplyCrate)
+            {
+                return "E 광산 보급 상자 잠금 해제";
+            }
+            return "E 철광맥 정밀 채굴";
+        }
+    }
+    return {};
+}
+
+void MineLevel::InteractInteractive()
+{
+    const auto &world = tutorial::Game::Get().GetState();
+    if (tutorial::HospitalRecovery::Active() || tutorial::Dialogue::Active() || world.mapVisible ||
+        world.isPaused || world.journalVisible || world.dialogueHistoryVisible ||
+        tutorial::FieldMinigame::Active())
+    {
+        return;
+    }
+    if (IsNear(kPowerBypass) && !PowerAvailable())
+    {
+        tutorial::FieldMinigame::Begin(
+            tutorial::FieldMinigameKind::CircuitBalance, "비상 배전반 회로 우회",
+            "과부하 걸린 갱도 배선 3개를 목표 출력 구간으로 맞추세요.", 0x1101u ^ state.seed,
+            [this](const tutorial::FieldMinigameOutcome &out) {
+                Interact();
+                if (out.perfect)
+                {
+                    state.player.credits =
+                        (std::min)(PlayerStats::kMaximumCredits, state.player.credits + 25);
+                    tutorial::Game::Get().ShowNotice("정밀 우회 보너스 / +25 Cr · 동쪽 격벽 전력 완전 안정화");
+                }
+            });
+        return;
+    }
+    if (IsNear(kRuinSignal) && !state.signalRecorded &&
+        state.quest.GetStage() < MineQuestStage::InvestigateGlyph)
+    {
+        tutorial::FieldMinigame::Begin(
+            tutorial::FieldMinigameKind::SignalTuner, "탐사선 구조 신호 동조",
+            "암벽 너머에서 울리는 구조 주파수에 수신 파형을 일치시키세요.", 0x2202u ^ state.seed,
+            [this](const tutorial::FieldMinigameOutcome &out) {
+                Interact();
+                if (out.perfect)
+                {
+                    state.player.credits =
+                        (std::min)(PlayerStats::kMaximumCredits, state.player.credits + 25);
+                }
+            });
+        return;
+    }
+    if (IsNear(kObserverGlyph) && !state.glyphRecorded &&
+        (world.surfaceExploration || state.quest.GetStage() >= MineQuestStage::InvestigateGlyph))
+    {
+        tutorial::FieldMinigame::Begin(
+            tutorial::FieldMinigameKind::GlyphCipher, "관측자 벽면 문양 해독",
+            "세 개의 동심 문양 고리를 12시 기준 표식에 정렬해 기록을 스캔하세요.", 0x3303u ^ state.seed,
+            [this](const tutorial::FieldMinigameOutcome &out) {
+                Interact();
+                if (out.perfect)
+                {
+                    state.player.credits =
+                        (std::min)(PlayerStats::kMaximumCredits, state.player.credits + 30);
+                }
+            });
+        return;
+    }
+    if (IsNear(kCoordinateTerminal) && !state.coordinatesRecorded &&
+        ((world.surfaceExploration && state.signalRecorded && state.glyphRecorded) ||
+         state.quest.GetStage() == MineQuestStage::CollectCoordinates))
+    {
+        tutorial::FieldMinigame::Begin(
+            tutorial::FieldMinigameKind::GlyphCipher, "중계 좌표 단말 암호 해제",
+            "중계망 좌표 암호 고리를 정렬해 헤일로 역추적 좌표를 추출하세요.", 0x4404u ^ state.seed,
+            [this](const tutorial::FieldMinigameOutcome &out) {
+                Interact();
+                if (out.perfect)
+                {
+                    state.player.credits =
+                        (std::min)(PlayerStats::kMaximumCredits, state.player.credits + 35);
+                }
+            });
+        return;
+    }
+    // Check nearby unharvested resource nodes before fallback.
+    for (size_t i = 0; i < state.resourceNodes.size(); ++i)
+    {
+        const auto &node = state.resourceNodes[i];
+        if (!node.harvested && IsNear(node.position))
+        {
+            const std::string title = node.kind == MineNodeKind::PrismCrystal ? "프리즘 수정맥 정밀 채굴"
+                                      : node.kind == MineNodeKind::SupplyCrate ? "광산 보급 상자 잠금 해제"
+                                                                               : "고밀도 철광맥 정밀 채굴";
+            const std::string sub = node.kind == MineNodeKind::SupplyCrate
+                                        ? "안전 핀을 맞춰 보급함을 여세요. 실패 시 잠금 경보가 울립니다."
+                                        : "핵심 절단 지점에 맞춰 드릴을 작동하세요. 빗나가면 소음에 적이 몰립니다.";
+            const int strikes = node.kind == MineNodeKind::PrismCrystal ? 3 : 2;
+            const tutorial::Vector2 pos = node.position;
+            tutorial::FieldMinigame::Begin(
+                tutorial::FieldMinigameKind::ExtractionTiming, title, sub, node.seed,
+                [this, i](const tutorial::FieldMinigameOutcome &out) {
+                    HarvestResourceNode(i, out.perfect);
+                },
+                [this, pos]() { AlertNearbyEnemies(pos, 14.f); }, strikes);
+            return;
+        }
+    }
+    Interact();
 }
 
 void MineLevel::UseRecoveryKit()
@@ -2110,7 +2528,44 @@ MineLighting &MineLevel::Lighting()
 void MineLevel::Update(float deltaSeconds)
 {
     profiling::Scope timer(profiling::Timer::Combat);
-    map.Reveal(tutorial::Game::Get().GetState().playerPosition);
+    const auto &playerPos = tutorial::Game::Get().GetState().playerPosition;
+    map.Reveal(playerPos);
+    if (state.huntStreakTimer > 0.f)
+    {
+        state.huntStreakTimer = (std::max)(0.f, state.huntStreakTimer - deltaSeconds);
+        if (state.huntStreakTimer <= 0.f)
+        {
+            state.huntStreak = 0;
+        }
+    }
+    // Proximity auto-pickup so hunting and looting flow smoothly without tedious E-spam.
+    if (!state.drops.empty())
+    {
+        int autoPicked = 0;
+        auto &drops = state.drops;
+        drops.erase(std::remove_if(drops.begin(), drops.end(),
+                                   [&](const Drop &drop) {
+                                       if (tutorial::Game::Distance(playerPos, drop.position) >= 0.85f)
+                                       {
+                                           return false;
+                                       }
+                                       if (drop.kind == ItemKind::RecoveryKit)
+                                       {
+                                           state.player.recoveryKits =
+                                               (std::min)(999, state.player.recoveryKits + 1);
+                                       }
+                                       else
+                                       {
+                                           state.player.salvage = (std::min)(9999, state.player.salvage + 1);
+                                           state.player.credits = (std::min)(PlayerStats::kMaximumCredits,
+                                                                             state.player.credits + 6);
+                                       }
+                                       ++autoPicked;
+                                       return true;
+                                   }),
+                    drops.end());
+        (void)autoPicked;
+    }
     combat.Update(deltaSeconds);
     combat.UpdateNpcs(deltaSeconds);
     rescue.Update(deltaSeconds);
@@ -2159,6 +2614,17 @@ void ChapterOneLevel::CommitConvoy()
         return;
     }
     state.convoyRewardClaimed = state.convoyRescued = state.kainJoined = true;
+    for (auto &threat : state.frontierThreats)
+    {
+        if (threat.kind == FrontierThreatKind::EscortAmbusher || threat.kind == FrontierThreatKind::ConvoyRaider)
+        {
+            threat.active = false;
+            threat.health = 0;
+        }
+    }
+    state.kain.combat.engaged = false;
+    state.ria.combat.engaged = false;
+    state.bullets.clear();
     auto &stats = GameLevels::Mine().GetState().player;
     stats.salvage = (std::min)(9999, stats.salvage + 3);
     state.receiverInspected = true;
@@ -2656,6 +3122,15 @@ void FrontierMap::Generate()
         raider.combat.health = 60;
         state.scrappers.push_back(raider);
     }
+    // Open-world Frontier set-piece threats (kept strictly separate from scrappers[3] & survivors[5]).
+    state.frontierThreats.clear();
+    state.frontierThreats.push_back({{11.8f, 11.6f}, {11.8f, 11.6f}, 36, 36, FrontierThreatKind::RogueDrone, 1.2f, 0.f, true});
+    state.frontierThreats.push_back({{13.6f, 10.6f}, {13.6f, 10.6f}, 36, 36, FrontierThreatKind::RogueDrone, 1.8f, 3.1f, true});
+    state.convoyAmbushTriggered = false;
+    state.convoyAmbushCleared = false;
+    state.escortAmbushSpawned = false;
+    state.distressFlareNoticed = false;
+    state.generatorArcPhase = 0.f;
     state.generated = true;
 }
 bool FrontierMap::IsWalkable(int x, int y) const
@@ -3103,10 +3578,18 @@ void ChapterOneLevel::Interact()
         break;
     case ChapterAction::IsolateLine:
         state.generatorRestored = true;
+        for (auto &threat : state.frontierThreats)
+        {
+            if (threat.kind == FrontierThreatKind::RogueDrone)
+            {
+                threat.active = false;
+                threat.health = 0;
+            }
+        }
         tell(CompanionAvailable(tutorial::CompanionId::Ria)
-                 ? "리아 · 무전 / 후, 도시 쪽 불은 돌아왔네. …근데 잠깐. 끊어 놓은 선로 계기판 바늘이 아직도 "
+                 ? "리아 · 무전 / 후, 도시 쪽 불은 돌아왔네. 오작동하던 정비 드론들도 멈췄어. …근데 잠깐. 끊어 놓은 선로 계기판 바늘이 아직도 "
                    "똑같은 간격으로 뛰고 있어. 전기가 없는데 왜 움직이는 거야? 일단 기록해 두자."
-                 : "선로 분리 / 도시 쪽 전력은 안정됐다. 그런데 끊어 놓은 선로의 계기판 바늘이 여전히 똑같은 "
+                 : "선로 분리 / 도시 쪽 전력은 안정됐고 오작동 드론도 정지했다. 그런데 끊어 놓은 선로의 계기판 바늘이 여전히 똑같은 "
                    "간격으로 흔들린다. 이상한 흔적을 기록했다.");
         break;
     case ChapterAction::PortableLight:
@@ -3118,9 +3601,13 @@ void ChapterOneLevel::Interact()
         break;
     case ChapterAction::Kain:
         state.convoyBriefed = true;
-        tell("카인 / 제 눈앞엔 다섯 명뿐인데, 끊긴 무전기에서 여섯 번째 목소리가 답합니다. 대답이 온다고 "
-             "그쪽으로 발을 들이면 안 됩니다. 먼저 여기 있는 다섯 분부터 빼냅시다. 남쪽 측량 표식 세 곳을 "
-             "확인해 주십시오.");
+        tell(state.convoyAmbushTriggered
+                 ? "카인 / 때맞춰 지원해 주셨군요. 덕에 방어선이 버텼습니다. 제 눈앞엔 다섯 명뿐인데, 끊긴 무전기에서 "
+                   "여섯 번째 목소리가 답합니다. 대답이 온다고 그쪽으로 발을 들이면 안 됩니다. 먼저 여기 있는 다섯 "
+                   "분부터 빼냅시다. 남쪽 측량 표식 세 곳을 확인해 주십시오."
+                 : "카인 / 제 눈앞엔 다섯 명뿐인데, 끊긴 무전기에서 여섯 번째 목소리가 답합니다. 대답이 온다고 "
+                   "그쪽으로 발을 들이면 안 됩니다. 먼저 여기 있는 다섯 분부터 빼냅시다. 남쪽 측량 표식 세 곳을 "
+                   "확인해 주십시오.");
         break;
     case ChapterAction::Receiver:
         state.receiverInspected = true;
@@ -3222,6 +3709,113 @@ void ChapterOneLevel::Interact()
     case ChapterAction::RiaTalk:
     case ChapterAction::KainTalk:
         break; // Read-only conversations are handled before the mission participation branch.
+    }
+}
+
+int ChapterOneLevel::ActiveThreatsNear(tutorial::Vector2 center, float radius) const
+{
+    int count = 0;
+    for (const auto &t : state.frontierThreats)
+    {
+        if (t.active && t.health > 0 && tutorial::Game::Distance(t.position, center) <= radius)
+        {
+            ++count;
+        }
+    }
+    return count;
+}
+
+void ChapterOneLevel::InteractInteractive()
+{
+    auto &game = tutorial::Game::Get();
+    const auto &world = game.GetState();
+    if (tutorial::HospitalRecovery::Active() || tutorial::Dialogue::Active() || world.mapVisible ||
+        world.isPaused || world.journalVisible || world.dialogueHistoryVisible ||
+        tutorial::FieldMinigame::Active())
+    {
+        return;
+    }
+    if (world.surfaceExploration && !surface.Observing())
+    {
+        surface.Observe([&] { InteractInteractive(); });
+        return;
+    }
+    ChapterInteraction point{};
+    if (!NearestInteraction(point))
+    {
+        Interact();
+        return;
+    }
+    // If Kain's perimeter ambush is active right beside the convoy, ask player to help clear raiders first.
+    if (point.action == ChapterAction::Kain && state.convoyAmbushTriggered && !state.convoyAmbushCleared &&
+        ActiveThreatsNear({31.f, 11.f}, 16.f) > 0)
+    {
+        game.ShowNotice("카인 / 지금 습격자들이 몰려오고 있습니다! 먼저 주변 위협부터 정리합시다!");
+        return;
+    }
+    auto awardPerfect = [](int bonusCr) {
+        auto &stats = GameLevels::Mine().GetState().player;
+        stats.credits = (std::min)(PlayerStats::kMaximumCredits, stats.credits + bonusCr);
+    };
+    auto finishOnSurface = [this, awardPerfect](int bonusCr, const tutorial::FieldMinigameOutcome &out) {
+        Interact();
+        if (out.perfect && bonusCr > 0)
+        {
+            awardPerfect(bonusCr);
+        }
+    };
+    switch (point.action)
+    {
+    case ChapterAction::IsolateLine:
+        tutorial::FieldMinigame::Begin(
+            tutorial::FieldMinigameKind::CircuitBalance, "N-0 누전 선로 차단 회로",
+            "과부하 걸린 개척지 발전 배선 3개를 목표 구간에 맞춰 선로를 분리하세요.", 0x5101u,
+            [finishOnSurface](const tutorial::FieldMinigameOutcome &out) { finishOnSurface(30, out); });
+        return;
+    case ChapterAction::PortableLight:
+        tutorial::FieldMinigame::Begin(
+            tutorial::FieldMinigameKind::CircuitBalance, "휴대 조명 접점 복구",
+            "부식된 조명 배선 출력을 안정 구간에 맞춰 야영 불빛을 복구하세요.", 0x5102u,
+            [finishOnSurface](const tutorial::FieldMinigameOutcome &out) { finishOnSurface(20, out); });
+        return;
+    case ChapterAction::Vehicle:
+        tutorial::FieldMinigame::Begin(
+            tutorial::FieldMinigameKind::CircuitBalance, "운송 차량 구동계 복구",
+            "운송 차량 동력 배선 3개를 균형 맞춰 구동계를 재가동하세요.", 0x5103u,
+            [finishOnSurface](const tutorial::FieldMinigameOutcome &out) { finishOnSurface(25, out); });
+        return;
+    case ChapterAction::Receiver:
+        tutorial::FieldMinigame::Begin(
+            tutorial::FieldMinigameKind::SignalTuner, "운송대 무전기 잔여 교신 동조",
+            "끊긴 무전기에서 흘러나오는 N-0/17 교신 주파수에 파형을 일치시키세요.", 0x5201u,
+            [finishOnSurface](const tutorial::FieldMinigameOutcome &out) { finishOnSurface(25, out); });
+        return;
+    case ChapterAction::SurveyOne:
+    case ChapterAction::SurveyTwo:
+    case ChapterAction::SurveyThree:
+        tutorial::FieldMinigame::Begin(
+            tutorial::FieldMinigameKind::SignalTuner, "측량 표식 안전 경로 동조",
+            "측량 삼각대 신호를 기준 파형에 맞춰 안전 우회 경로를 연결하세요.",
+            0x5210u + unsigned(state.surveyMarkers),
+            [finishOnSurface](const tutorial::FieldMinigameOutcome &out) { finishOnSurface(20, out); });
+        return;
+    case ChapterAction::TradeProof:
+        tutorial::FieldMinigame::Begin(
+            tutorial::FieldMinigameKind::ExtractionTiming, "적재함 잠금장치 해제",
+            "약탈자 적재함 잠금 핀을 정밀 타이밍에 맞춰 거래 기록을 추출하세요.", 0x5301u,
+            [finishOnSurface](const tutorial::FieldMinigameOutcome &out) { finishOnSurface(20, out); }, {}, 2);
+        return;
+    case ChapterAction::Ledger:
+    case ChapterAction::DetailLedger:
+        tutorial::FieldMinigame::Begin(
+            tutorial::FieldMinigameKind::GlyphCipher, "폐설비 발주 단말 암호 해독",
+            "삭제된 발주 기록의 암호 고리 3개를 정렬해 설비 장부를 복원하세요.",
+            point.action == ChapterAction::Ledger ? 0x5401u : 0x5402u,
+            [finishOnSurface](const tutorial::FieldMinigameOutcome &out) { finishOnSurface(30, out); });
+        return;
+    default:
+        Interact();
+        return;
     }
 }
 void ChapterOneLevel::InteractHub()
@@ -3422,6 +4016,29 @@ void FrontierCombat::Melee()
             }
         }
     }
+    // Check melee hits against open-world Frontier threats (drones, convoy raiders, escort ambushers).
+    for (auto &threat : state.frontierThreats)
+    {
+        if (!threat.active || threat.health <= 0)
+        {
+            continue;
+        }
+        const float dx = threat.position.x - world.playerPosition.x;
+        const float dy = threat.position.y - world.playerPosition.y;
+        const float distance = std::hypot(dx, dy);
+        if (distance < 1.15f && (distance < .38f || dx * aim.x + dy * aim.y > distance * .45f))
+        {
+            threat.health = (std::max)(0, threat.health - meleeDamage);
+            if (threat.health == 0)
+            {
+                threat.active = false;
+                auto &stats = GameLevels::Mine().GetState().player;
+                stats.credits = (std::min)(PlayerStats::kMaximumCredits, stats.credits + 14);
+                GameLevels::Mine().AddExperience(15);
+            }
+            return;
+        }
+    }
     if (state.negotiated)
     {
         return;
@@ -3554,21 +4171,46 @@ void FrontierCombat::Advance(ChapterProjectile &projectile, float distance)
                 shot.remaining = 0;
             }
         }
-        else if (!state.negotiated)
+        else
         {
-            for (auto &person : state.scrappers)
+            bool hitThreat = false;
+            for (auto &threat : state.frontierThreats)
             {
-                if (person.combat.health > 0 &&
-                    tutorial::Game::Distance(shot.position, person.position) < .4f)
+                if (threat.active && threat.health > 0 &&
+                    tutorial::Game::Distance(shot.position, threat.position) < .46f)
                 {
-                    state.hostile = true;
-                    person.combat.health = (std::max)(0, person.combat.health - shot.damage);
-                    if (person.combat.health == 0 && projectile.team == ChapterTeam::Player)
+                    threat.health = (std::max)(0, threat.health - shot.damage);
+                    if (threat.health == 0)
                     {
-                        GameLevels::Mine().AddExperience(kExperiencePerKill);
+                        threat.active = false;
+                        if (projectile.team == ChapterTeam::Player)
+                        {
+                            auto &stats = GameLevels::Mine().GetState().player;
+                            stats.credits = (std::min)(PlayerStats::kMaximumCredits, stats.credits + 14);
+                            GameLevels::Mine().AddExperience(15);
+                        }
                     }
                     shot.remaining = 0;
+                    hitThreat = true;
                     break;
+                }
+            }
+            if (!hitThreat && !state.negotiated)
+            {
+                for (auto &person : state.scrappers)
+                {
+                    if (person.combat.health > 0 &&
+                        tutorial::Game::Distance(shot.position, person.position) < .4f)
+                    {
+                        state.hostile = true;
+                        person.combat.health = (std::max)(0, person.combat.health - shot.damage);
+                        if (person.combat.health == 0 && projectile.team == ChapterTeam::Player)
+                        {
+                            GameLevels::Mine().AddExperience(kExperiencePerKill);
+                        }
+                        shot.remaining = 0;
+                        break;
+                    }
                 }
             }
         }
@@ -3594,6 +4236,146 @@ void FrontierCombat::Update(float deltaSeconds)
     if (world.mouseFiring)
     {
         Attack();
+    }
+    state.generatorArcPhase += deltaSeconds * 3.2f;
+    // Repaired portable camp light radiates a gentle recovery aura around the generator workbench.
+    if (state.portableLightRepaired && mine.player.health > 0 && mine.player.health < mine.player.maxHealth &&
+        tutorial::Game::Distance(world.playerPosition, {9.5f, 13.5f}) < 3.2f)
+    {
+        static float healAccum = 0.f;
+        healAccum += deltaSeconds * 4.f;
+        if (healAccum >= 1.f)
+        {
+            const int gain = int(healAccum);
+            healAccum -= float(gain);
+            mine.player.health = (std::min)(mine.player.maxHealth, mine.player.health + gain);
+        }
+    }
+    // Kain's first encounter: distress flare radio warning -> live perimeter ambush skirmish alongside Kain.
+    const float distToKain = tutorial::Game::Distance(world.playerPosition, state.kain.position);
+    if (!state.convoyBriefed && !state.distressFlareNoticed && distToKain < 18.f)
+    {
+        state.distressFlareNoticed = true;
+        tutorial::Game::Get().ShowNotice(
+            "긴급 조명탄 / 동쪽 운송대 방어선에서 교전 신호가 포착됐습니다! 카인의 방어선을 지원하세요.");
+    }
+    if (!state.convoyBriefed && !state.convoyAmbushTriggered && distToKain < 10.5f)
+    {
+        state.convoyAmbushTriggered = true;
+        state.frontierThreats.push_back(
+            {{27.2f, 8.8f}, {30.5f, 10.5f}, 44, 44, FrontierThreatKind::ConvoyRaider, 0.9f, 0.f, true});
+        state.frontierThreats.push_back(
+            {{34.8f, 13.2f}, {30.5f, 10.5f}, 44, 44, FrontierThreatKind::ConvoyRaider, 1.3f, 1.5f, true});
+        tutorial::Game::Get().ShowNotice(
+            "카인 · 무전 / 마침 지원이 왔군! 약탈자 습격조가 방어선을 압박하고 있소 — 같이 막아냅시다!");
+    }
+    if (state.convoyAmbushTriggered && !state.convoyAmbushCleared &&
+        level.ActiveThreatsNear({31.f, 11.f}, 18.f) == 0)
+    {
+        state.convoyAmbushCleared = true;
+        if (!state.convoyBriefed)
+        {
+            tutorial::Game::Get().ShowNotice(
+                "운송대 방어선 안정 / 습격조를 격퇴했습니다. 방어선 앞의 카인과 대화하세요 [E]");
+        }
+    }
+    // Update open-world Frontier threats (rogue generator drones, convoy raiders, escort ambushers).
+    for (auto &threat : state.frontierThreats)
+    {
+        if (!threat.active || threat.health <= 0)
+        {
+            continue;
+        }
+        if (threat.kind == FrontierThreatKind::RogueDrone && state.generatorRestored)
+        {
+            threat.active = false;
+            threat.health = 0;
+            continue;
+        }
+        threat.fireCooldown = (std::max)(0.f, threat.fireCooldown - deltaSeconds);
+        threat.patrolPhase += deltaSeconds * 1.45f;
+        const float distPlayer = tutorial::Game::Distance(threat.position, world.playerPosition);
+        if (threat.kind == FrontierThreatKind::RogueDrone)
+        {
+            const tutorial::Vector2 orbit{threat.anchor.x + std::cos(threat.patrolPhase) * 1.4f,
+                                          threat.anchor.y + std::sin(threat.patrolPhase) * 1.1f};
+            if (!level.IsBlocked(orbit))
+            {
+                threat.position = orbit;
+            }
+            if (distPlayer < 5.2f && threat.fireCooldown <= 0.f && state.bullets.size() < 128 &&
+                level.HasLineOfSight(threat.position, world.playerPosition))
+            {
+                const tutorial::Vector2 dir{(world.playerPosition.x - threat.position.x) / (std::max)(0.1f, distPlayer),
+                                            (world.playerPosition.y - threat.position.y) / (std::max)(0.1f, distPlayer)};
+                state.bullets.push_back({{threat.position, dir, 7.6f, 8.f, 7, false}, ChapterTeam::Scrapper});
+                threat.fireCooldown = 1.65f;
+            }
+        }
+        else
+        {
+            const float distKain = tutorial::Game::Distance(threat.position, state.kain.position);
+            const tutorial::Vector2 target =
+                (distPlayer < distKain + 1.5f || state.kain.combat.health <= 0) ? world.playerPosition
+                                                                                : state.kain.position;
+            const float dist = tutorial::Game::Distance(threat.position, target);
+            if (dist > 3.2f && dist < 16.f)
+            {
+                const float step = 1.85f * deltaSeconds;
+                const tutorial::Vector2 next{threat.position.x + (target.x - threat.position.x) / dist * step,
+                                             threat.position.y + (target.y - threat.position.y) / dist * step};
+                if (!level.IsBlocked(next))
+                {
+                    threat.position = next;
+                }
+            }
+            if (dist < 8.5f && threat.fireCooldown <= 0.f && state.bullets.size() < 128 &&
+                level.HasLineOfSight(threat.position, target))
+            {
+                const tutorial::Vector2 dir{(target.x - threat.position.x) / (std::max)(0.1f, dist),
+                                            (target.y - threat.position.y) / (std::max)(0.1f, dist)};
+                state.bullets.push_back({{threat.position, dir, 8.2f, 9.f, 7, false}, ChapterTeam::Scrapper});
+                threat.fireCooldown = 1.35f;
+            }
+        }
+    }
+    // Kain & Ria actively support the player against open-world Frontier threats (even before Kain joins!).
+    auto assistAgainstThreats = [&](FrontierPerson &ally) {
+        if (ally.combat.health <= 0 || ally.combat.cooldown > 0.f || state.bullets.size() >= 128)
+        {
+            return;
+        }
+        const FrontierThreat *nearestThreat = nullptr;
+        float bestDist = 7.2f;
+        for (const auto &threat : state.frontierThreats)
+        {
+            if (!threat.active || threat.health <= 0)
+            {
+                continue;
+            }
+            const float d = tutorial::Game::Distance(ally.position, threat.position);
+            if (d < bestDist && level.HasLineOfSight(ally.position, threat.position))
+            {
+                bestDist = d;
+                nearestThreat = &threat;
+            }
+        }
+        if (nearestThreat)
+        {
+            Fire(ally, nearestThreat->position, ChapterTeam::Companion);
+        }
+    };
+    if (state.convoyAmbushTriggered || state.escortStarted || state.kainJoined)
+    {
+        state.kain.combat.pistol.Update(deltaSeconds);
+        state.kain.combat.cooldown = (std::max)(0.f, state.kain.combat.cooldown - deltaSeconds);
+        state.kain.combat.muzzleFlash = (std::max)(0.f, state.kain.combat.muzzleFlash - deltaSeconds);
+        state.kain.combat.engaged = false;
+        assistAgainstThreats(state.kain);
+    }
+    if (tutorial::Game::Get().HasCompanion(tutorial::CompanionId::Ria, tutorial::CompanionPlace::Frontier))
+    {
+        assistAgainstThreats(state.ria);
     }
     if (!state.ledgerFound && !state.negotiated &&
         tutorial::Game::Distance(world.playerPosition, {33, 32}) < 3.8f)
@@ -3863,6 +4645,9 @@ void FrontierParty::Update(float deltaSeconds)
     if (state.escortStarted && !state.convoyRescued)
     {
         bool all = true;
+        tutorial::Vector2 escortFocus = {30.5f, 10.5f};
+        bool foundWalker = false;
+        bool reachedMidpoint = false;
         for (auto &person : state.survivors)
         {
             if (person.departureDelay > 0)
@@ -3878,7 +4663,47 @@ void FrontierParty::Update(float deltaSeconds)
             {
                 person.facing.walking = false;
             }
+            else
+            {
+                escortFocus = person.position;
+                foundWalker = true;
+                if (person.position.x < 34.5f && person.position.y > 16.5f)
+                {
+                    reachedMidpoint = true;
+                }
+            }
             all = all && person.arrived;
+        }
+        // Kain actively escorts and guards the rear flank of the 5-survivor column.
+        if (foundWalker && !state.kainJoined && state.kain.combat.health > 0)
+        {
+            const float kainDist = tutorial::Game::Distance(state.kain.position, escortFocus);
+            if (kainDist > 1.8f)
+            {
+                if (state.kain.waypoint >= state.kain.route.size() ||
+                    tutorial::Game::Distance(state.kain.route.back(), escortFocus) > 2.2f)
+                {
+                    state.kain.route = level.FindRoute(state.kain.position, escortFocus);
+                    state.kain.waypoint = 0;
+                }
+                Move(state.kain, 3.3f * deltaSeconds, deltaSeconds);
+            }
+            else
+            {
+                state.kain.facing.walking = false;
+            }
+        }
+        // Spawn midpoint ambushers along the detour corridor to make escort feel alive (when player is actively escorting).
+        if (reachedMidpoint && !state.escortAmbushSpawned &&
+            tutorial::Game::Distance(world.playerPosition, escortFocus) < 12.f)
+        {
+            state.escortAmbushSpawned = true;
+            state.frontierThreats.push_back(
+                {{31.5f, 20.5f}, {31.5f, 20.5f}, 46, 46, FrontierThreatKind::EscortAmbusher, 1.0f, 0.f, true});
+            state.frontierThreats.push_back(
+                {{27.5f, 17.5f}, {27.5f, 17.5f}, 46, 46, FrontierThreatKind::EscortAmbusher, 1.4f, 2.f, true});
+            tutorial::Game::Get().ShowNotice(
+                "호위 경보 / 우회로 중간 지점에서 매복조가 나타났습니다! 카인과 함께 운송대를 엄호하세요!");
         }
         if (all)
         {

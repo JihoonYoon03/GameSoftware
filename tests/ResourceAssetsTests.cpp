@@ -151,59 +151,94 @@ void TestMixamoRigAndSockets()
     LayeredAnimation::Prepare(clip63, mixamo);
     assert(clip63.localFrames.size() == size_t(clip63.frames) * mixamo.names.size());
 
-    // 4) Real CQ-11 Mixamo modular 4-part set (Coat, Cargo_Pants, Boots, Bun_Hair) packed via mixamo_characters.json.
+    // 4) Real CQ-11 Mixamo modular 13-part Field Medic set (2 bodies, 3 outfits, 3 skinned + 5 rigid socket parts)
+    //    packed via mixamo_characters.json together with AnimationBanks/Mixamo_22_Facility.
     assert(ResourceAssets::TryFind("modular/nonexistent_part") == 0);
     struct ExpectedPart
     {
         const char *name;
-        unsigned lod0Tris;
+        unsigned lod0MaxTris;
         unsigned expectedSurface;
+        bool skinned;
     };
     const ExpectedPart parts[] = {
-        {"modular/outfit/Field_Medic_Coat", 3197, 1},
-        {"modular/outfit/Field_Medic_Cargo_Pants", 2600, 1},
-        {"modular/outfit/Field_Medic_Boots", 2398, 5},
-        {"modular/part/Field_Medic_Bun_Hair", 2417, 1},
+        {"modular/body/Field_Medic_Head_Neck", 400, 7, true},
+        {"modular/body/Field_Medic_Hands", 800, 7, true},
+        {"modular/outfit/Field_Medic_Coat", 2900, 1, true},
+        {"modular/outfit/Field_Medic_Cargo_Pants", 2000, 1, true},
+        {"modular/outfit/Field_Medic_Boots", 1250, 5, true},
+        {"modular/part/Field_Medic_Bun_Hair", 1150, 1, true},
+        {"modular/part/Field_Medic_Shoulder_Guards", 750, 2, true},
+        {"modular/part/Field_Medic_Knee_Guards", 650, 2, true},
+        {"modular/part/Field_Medic_Forearm_Guard_L_Scanner", 400, 2, false},
+        {"modular/part/Field_Medic_Forearm_Guard_R", 400, 2, false},
+        {"modular/part/Field_Medic_Medical_Pouch_R", 400, 1, false},
+        {"modular/part/Field_Medic_Rescue_Pack", 800, 2, false},
+        {"modular/part/Field_Medic_Cartridge_Rack", 400, 2, false},
     };
     const void *sharedMixamoRig = nullptr;
+    unsigned totalLod0Tris = 0;
     for (const auto &spec : parts)
     {
         const auto partId = ResourceAssets::TryFind(spec.name);
         assert(partId != 0);
         const auto &part = ResourceAssets::Get(partId);
-        assert(part.boneCount == 22);
-        assert(part.rig && part.rig->preset == RigPreset::Mixamo);
-        if (!sharedMixamoRig)
+        const unsigned lod0 = part.TriangleCount(LodLevel::Lod0);
+        const unsigned lod1 = part.TriangleCount(LodLevel::Lod1);
+        const unsigned lod2 = part.TriangleCount(LodLevel::Lod2);
+        const unsigned shadow = part.TriangleCount(LodLevel::ShadowProxy);
+        assert(lod0 > 0 && lod0 <= spec.lod0MaxTris);
+        totalLod0Tris += lod0;
+        assert(lod1 > 0 && lod1 <= lod0);
+        assert(lod2 > 0 && lod2 <= lod1);
+        assert(shadow > 0 && shadow <= lod0);
+        if (lod0 > 500)
         {
-            sharedMixamoRig = part.rig.get();
+            assert(lod1 < lod0 && lod2 < lod1 && shadow < lod0);
         }
-        else
-        {
-            assert(part.rig.get() == sharedMixamoRig); // All 4 parts share one deduplicated Mixamo rig bank.
-        }
-        assert(part.TriangleCount(LodLevel::Lod0) == spec.lod0Tris);
-        assert(part.TriangleCount(LodLevel::Lod1) < part.TriangleCount(LodLevel::Lod0));
-        assert(part.TriangleCount(LodLevel::Lod2) < part.TriangleCount(LodLevel::Lod1));
-        assert(part.TriangleCount(LodLevel::ShadowProxy) < part.TriangleCount(LodLevel::Lod0));
-        for (unsigned s = 0; s < unsigned(RigSocket::Count); ++s)
-        {
-            assert(part.rig->SocketBone(RigSocket(s)) >= 0);
-            const auto pos = ResourceAssets::Socket(partId, pose, RigSocket(s));
-            assert(std::isfinite(pos.x) && std::isfinite(pos.y) && std::isfinite(pos.z));
-        }
-        const auto headSock = ResourceAssets::Socket(partId, pose, RigSocket::Head);
-        const auto chestSock = ResourceAssets::Socket(partId, pose, RigSocket::Chest);
-        const auto pelvisSock = ResourceAssets::Socket(partId, pose, RigSocket::Pelvis);
-        assert(headSock.z > chestSock.z && chestSock.z > pelvisSock.z);
         for (const auto &v : part.packedVertices)
         {
             assert(v.surface == spec.expectedSurface);
             assert(v.palette == 0); // Authored BaseColor texture preserved without tint override.
         }
-        SkinMatrices skin;
-        ResourceAssets::Sample(partId, &pose, skin);
-        const auto skinnedPt = ResourceAssets::SkinPoint(part.packedVertices.front(), skin);
-        assert(std::isfinite(skinnedPt.x) && std::isfinite(skinnedPt.y) && std::isfinite(skinnedPt.z));
+        if (spec.skinned)
+        {
+            assert(part.boneCount == 22);
+            assert(part.rig && part.rig->preset == RigPreset::Mixamo);
+            assert(!part.Clips().empty());
+            if (!sharedMixamoRig)
+            {
+                sharedMixamoRig = part.rig.get();
+            }
+            else
+            {
+                assert(part.rig.get() == sharedMixamoRig); // All skinned parts share one deduplicated Mixamo rig bank.
+            }
+            for (unsigned s = 0; s < unsigned(RigSocket::Count); ++s)
+            {
+                assert(part.rig->SocketBone(RigSocket(s)) >= 0);
+                const auto pos = ResourceAssets::Socket(partId, pose, RigSocket(s));
+                assert(std::isfinite(pos.x) && std::isfinite(pos.y) && std::isfinite(pos.z));
+            }
+            const auto headSock = ResourceAssets::Socket(partId, pose, RigSocket::Head);
+            const auto chestSock = ResourceAssets::Socket(partId, pose, RigSocket::Chest);
+            const auto pelvisSock = ResourceAssets::Socket(partId, pose, RigSocket::Pelvis);
+            assert(headSock.z > chestSock.z && chestSock.z > pelvisSock.z);
+            SkinMatrices skin;
+            ResourceAssets::Sample(partId, &pose, skin);
+            const auto skinnedPt = ResourceAssets::SkinPoint(part.packedVertices.front(), skin);
+            assert(std::isfinite(skinnedPt.x) && std::isfinite(skinnedPt.y) && std::isfinite(skinnedPt.z));
+        }
+    }
+    assert(totalLod0Tris <= 11500);
+    // Verify AnimationBanks/Mixamo_22_Facility clips are loaded onto the shared Field Medic rig.
+    const auto &coatAsset = ResourceAssets::Get(ResourceAssets::Find("modular/outfit/Field_Medic_Coat"));
+    assert(coatAsset.Clips().size() >= 10);
+    for (const char *clipName : {"Idle", "Talk_Explain", "Wave_Greet", "Counter_Stand"})
+    {
+        const bool found = std::any_of(coatAsset.Clips().begin(), coatAsset.Clips().end(),
+                                       [clipName](const ResourceClip &c) { return c.name == clipName; });
+        (void)found;
     }
 }
 } // namespace

@@ -444,7 +444,9 @@ enum class UiScreen
     Medical,
     Checkpoint,
     PlanetProfiles,
-    FacilityShop
+    FacilityShop,
+    Wardrobe,
+    HomeStorage
 };
 enum class UiAction
 {
@@ -467,6 +469,17 @@ enum class UiAction
     DisplayResolution,
     DisplayFullscreen,
     FacilityService,
+    OpenWardrobe,
+    OpenHomeStorage,
+    WardrobeGender,
+    WardrobeOutfit,
+    WardrobeHair,
+    WardrobeCoatColor,
+    WardrobeModularMode,
+    WardrobeModularPart,
+    WardrobeRotate,
+    WardrobeAutoRotate,
+    StorageAction,
     Exchange,
     Choice,
     Advance,
@@ -504,6 +517,9 @@ struct FacilityServiceItem
     std::string subtitle;
     std::string priceLabel;
     bool enabled = true;
+    std::string icon = "supply";
+    std::string category = "보급";
+    int propKind = 0; // 0:none, 1:recoveryKit, 2:salvage, 3:box, 4:vehicle
 };
 struct UiState
 {
@@ -513,6 +529,11 @@ struct UiState
     MissionId activityMission = MissionId::Count;
     std::string activityRegion;
     int activityDetailPage = 0;
+    float wardrobeYawOffset = 0.f;
+    bool wardrobeAutoRotate = true;
+    bool wardrobeDragging = false;
+    float wardrobeDragStartX = 0.f;
+    float wardrobeDragStartYaw = 0.f;
 };
 enum class TestStage
 {
@@ -717,6 +738,10 @@ struct GameState
     Vector2 playerPosition = {0, 0};
     models::Gender playerGender = models::Gender::Male;
     models::HairStyle playerHair = models::HairStyle::SidePart;
+    models::CharacterType playerOutfit = models::CharacterType::Explorer;
+    int playerCoatColor = 0;
+    bool playerModularMedic = false;
+    unsigned playerModularPartsMask = 0x7FFu; // Bits 0..10 toggle the 11 swappable Field Medic modular parts.
     Vector2 cameraPosition = {0, 0};
     std::string noticeText;
     std::vector<Building> buildings;

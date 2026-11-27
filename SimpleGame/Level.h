@@ -90,6 +90,34 @@ struct PlayerStats
     int salvage = 0;
     int credits = 500;
 };
+enum class MineEnemyKind
+{
+    Crawler,
+    Spitter,
+    ArmoredBrute,
+    RuinElite
+};
+enum class MineNodeKind
+{
+    IronVein,
+    PrismCrystal,
+    SupplyCrate
+};
+struct MineResourceNode
+{
+    tutorial::Vector2 position = {};
+    MineNodeKind kind = MineNodeKind::IronVein;
+    bool harvested = false;
+    int richYield = 2;
+    unsigned seed = 0;
+};
+struct MineResourcePing
+{
+    tutorial::Vector2 position = {};
+    MineNodeKind kind = MineNodeKind::IronVein;
+    bool isElite = false;
+    float secondsRemaining = 0;
+};
 struct Enemy
 {
     tutorial::Vector2 position;
@@ -104,6 +132,10 @@ struct Enemy
     std::vector<tutorial::Vector2> searchRoute;
     size_t searchWaypoint = 0;
     float searchCooldown = 0;
+    MineEnemyKind kind = MineEnemyKind::Crawler;
+    int maxHealth = kEnemyMaxHealth;
+    float fireCooldown = 0;
+    int sector = 0;
 };
 struct Drop
 {
@@ -122,6 +154,7 @@ struct Bullet
     bool companionOwned = false;
     float elevation =
         0; // Surface civic projectiles only; local mine/frontier adapters keep their own height.
+    bool enemyOwned = false;
 };
 struct Tracer
 {
@@ -223,6 +256,12 @@ struct MineState
     int returnedPeople = 0;
     unsigned int totalEnemyDeaths = 0;
     std::uint64_t nextDropActorId = 1;
+    std::vector<MineResourceNode> resourceNodes;
+    std::vector<MineResourcePing> resourcePings;
+    int huntStreak = 0;
+    float huntStreakTimer = 0;
+    int elitesDefeated = 0;
+    int veinsHarvested = 0;
 };
 
 // ============================================================================
@@ -359,6 +398,10 @@ class MineLevel final : public Level
     float GetAimAngle();
     static tutorial::Vector2 GetAimDirection(float angle);
     void Interact();
+    void InteractInteractive();
+    bool HarvestResourceNode(size_t index, bool perfect);
+    void AlertNearbyEnemies(tutorial::Vector2 origin, float radius);
+    std::string NearbyResourceLabel() const;
     bool PowerAvailable() const;
     void SyncInvestigation();
     void UseRecoveryKit();
@@ -439,6 +482,23 @@ struct ChapterProjectile
     Bullet shot;
     ChapterTeam team;
 };
+enum class FrontierThreatKind
+{
+    RogueDrone,
+    ConvoyRaider,
+    EscortAmbusher
+};
+struct FrontierThreat
+{
+    tutorial::Vector2 position = {};
+    tutorial::Vector2 anchor = {};
+    int health = 40;
+    int maxHealth = 40;
+    FrontierThreatKind kind = FrontierThreatKind::RogueDrone;
+    float fireCooldown = 0;
+    float patrolPhase = 0;
+    bool active = false;
+};
 struct ChapterOneState
 {
     bool unlocked = false, active = false, generated = false;
@@ -459,6 +519,12 @@ struct ChapterOneState
     FrontierPerson ria, kain;
     std::vector<ChapterProjectile> bullets;
     std::vector<Tracer> tracers;
+    std::vector<FrontierThreat> frontierThreats;
+    bool convoyAmbushTriggered = false;
+    bool convoyAmbushCleared = false;
+    bool escortAmbushSpawned = false;
+    bool distressFlareNoticed = false;
+    float generatorArcPhase = 0;
 };
 class ChapterOneLevel;
 // ============================================================================
@@ -566,7 +632,9 @@ class ChapterOneLevel final : public Level
     void Reset() override;
     void Update(float deltaSeconds) override;
     void Interact();
+    void InteractInteractive();
     void InteractHub();
+    int ActiveThreatsNear(tutorial::Vector2 center, float radius) const;
     bool IsBlocked(tutorial::Vector2 position) const;
     bool HasLineOfSight(tutorial::Vector2 from, tutorial::Vector2 to) const;
     std::vector<tutorial::Vector2> FindRoute(tutorial::Vector2 from, tutorial::Vector2 to) const;

@@ -10,6 +10,7 @@ set(GAME_SOURCES
     SimpleGame/StoryArc.cpp
     SimpleGame/StoryJournal.cpp
     SimpleGame/WorldEncounters.cpp
+    SimpleGame/FieldMinigame.cpp
     SimpleGame/Save.cpp
     SimpleGame/Civic.cpp
     SimpleGame/CityFacilities.cpp

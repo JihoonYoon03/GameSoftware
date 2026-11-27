@@ -4,6 +4,7 @@
 #include "StoryArc.h"
 #include "StoryJournal.h"
 #include "WorldEncounters.h"
+#include "FieldMinigame.h"
 #include "Hud.h"
 #include "Civic.h"
 #include "CityFacilities.h"
@@ -5628,8 +5629,11 @@ void TestExplorationAndMelee()
                      {{world.playerPosition.x - aim.x * .8f, world.playerPosition.y - aim.y * .8f}},
                      {{world.playerPosition.x + aim.x * 3.f, world.playerPosition.y + aim.y * 3.f}}};
     int ammunition = state.pistol.GetRounds();
+    // V key now triggers mission navigation guidance instead of melee attack.
     game.KeyDown('v', 0, 0);
     game.KeyUp('v', 0, 0);
+    assert(state.meleeSeconds == 0 && state.enemies[0].health == kEnemyMaxHealth);
+    level.Combat().Melee();
     assert(state.meleeSeconds > 0 && state.enemies[0].health == 10);
     assert(state.enemies[1].health == kEnemyMaxHealth && state.enemies[2].health == kEnemyMaxHealth);
     level.Combat().Melee();
@@ -6045,7 +6049,7 @@ void TestCq10AndUrbanFacilities()
             assert(core->radiusMeters == 40. && core->lots.empty() && core->roads.empty());
         }
     }
-    // 1a. Part 1 checks: J remote accept blocked (triggers 3D guidance instead), N key triggers 3D guidance,
+    // 1a. Part 1 checks: J remote accept blocked (triggers 3D guidance instead), V key triggers 3D guidance,
     //     and GroundVehicle/Aircraft gating verified on fresh game.
     {
         assert(w.missions.Status(MissionId::Mara) == MissionStatus::NotAccepted);
@@ -6054,8 +6058,8 @@ void TestCq10AndUrbanFacilities()
         assert(w.missions.Status(MissionId::Mara) == MissionStatus::NotAccepted && !Dialogue::Active());
         assert(w.guidanceSecondsRemaining > 0.f);
         w.guidanceSecondsRemaining = 0.f;
-        g.KeyDown('n', 0, 0);
-        g.KeyUp('n', 0, 0);
+        g.KeyDown('v', 0, 0);
+        g.KeyUp('v', 0, 0);
         assert(w.guidanceSecondsRemaining > 0.f);
         assert(GroundVehicle::MaxHealth == 260);
     }
@@ -6750,6 +6754,113 @@ void TestWorldEncounters()
     g.Reset();
 }
 
+void TestPart2ContentAndUiOverhaul()
+{
+    using namespace tutorial;
+    auto &g = Game::Get();
+    auto &w = g.GetState();
+
+    // 1) FieldMinigame: all 4 modes (CircuitBalance, SignalTuner, GlyphCipher, ExtractionTiming) + Tab bypass.
+    bool done = false;
+    bool wasPerfect = false;
+    FieldMinigame::Begin(
+        FieldMinigameKind::CircuitBalance, "회로 테스트", "테스트", 101u,
+        [&](const FieldMinigameOutcome &out) {
+            done = out.succeeded;
+            wasPerfect = out.perfect;
+        });
+    assert(FieldMinigame::Active());
+    FieldMinigame::CompleteForTest(true);
+    assert(!FieldMinigame::Active() && done && wasPerfect);
+
+    done = false;
+    bool bypassed = false;
+    FieldMinigame::Begin(
+        FieldMinigameKind::GlyphCipher, "문양 테스트", "테스트", 202u,
+        [&](const FieldMinigameOutcome &out) {
+            done = out.succeeded;
+            bypassed = out.bypassed;
+        });
+    assert(FieldMinigame::Active());
+    assert(FieldMinigame::HandleKey('d'));
+    assert(FieldMinigame::HandleKey('\t')); // Tab bypass succeeds without bonus.
+    assert(!FieldMinigame::Active() && done && bypassed);
+
+    done = false;
+    FieldMinigame::Begin(
+        FieldMinigameKind::SignalTuner, "파형 테스트", "테스트", 303u,
+        [&](const FieldMinigameOutcome &out) { done = out.succeeded; });
+    assert(FieldMinigame::Active());
+    assert(FieldMinigame::HandleKey('a') && FieldMinigame::HandleKey('w'));
+    FieldMinigame::CompleteForTest(true);
+    assert(done);
+
+    // 2) Mine overhaul: 4 enemy archetypes, 20 resource nodes, scanner resourcePings, harvest & streak.
+    ReadyMine();
+    auto &mine = GameLevels::Mine();
+    auto &ms = mine.GetState();
+    assert(ms.enemies.size() == game::kEnemyPopulation);
+    assert(ms.resourceNodes.size() == 20);
+    int crawlers = 0, spitters = 0, brutes = 0, elites = 0;
+    for (const auto &e : ms.enemies)
+    {
+        if (e.kind == game::MineEnemyKind::Crawler)
+            ++crawlers;
+        else if (e.kind == game::MineEnemyKind::Spitter)
+            ++spitters;
+        else if (e.kind == game::MineEnemyKind::ArmoredBrute)
+            ++brutes;
+        else if (e.kind == game::MineEnemyKind::RuinElite)
+            ++elites;
+    }
+    assert(crawlers > 0 && spitters > 0 && brutes > 0 && elites == 3);
+    const int beforeSalvage = ms.player.salvage;
+    const int beforeCredits = ms.player.credits;
+    assert(mine.HarvestResourceNode(0, true));
+    assert(ms.veinsHarvested == 1 && ms.player.salvage > beforeSalvage && ms.player.credits > beforeCredits);
+    assert(!mine.HarvestResourceNode(0, false)); // Already harvested.
+    ms.scannerCooldown = 0.f;
+    w.playerPosition = ms.resourceNodes[1].position;
+    mine.Rescue().Scan();
+    mine.Rescue().Update(0.5f);
+    assert(!ms.resourcePings.empty());
+
+    // 3) Frontier & Kain first encounter: rogue drones + distress flare + perimeter ambush.
+    g.Reset();
+    auto &ch = GameLevels::Chapter();
+    ch.Enter(true);
+    auto &cs = ch.GetState();
+    assert(cs.scrappers.size() == 3 && cs.survivors.size() == 5);
+    assert(cs.frontierThreats.size() == 2); // 2 RogueDrones at Generator Yard.
+    w.playerPosition = {26.f, 10.5f};       // Within 10.5u of Kain triggers distress flare + ambush!
+    ch.Update(0.1f);
+    assert(cs.distressFlareNoticed && cs.convoyAmbushTriggered);
+    assert(ch.ActiveThreatsNear({31.f, 11.f}, 10.f) == 2);
+
+    // 4) Visual Wardrobe (3D Mixamo 13-part modular) & Visual Home Storage & Facility Shop items.
+    g.Reset();
+    Hud::OpenMenu(UiScreen::HomeStorage);
+    assert(w.ui.screen == UiScreen::HomeStorage);
+    assert(Hud::Controls().size() >= 8);
+    Hud::OpenMenu(UiScreen::Wardrobe);
+    assert(w.ui.screen == UiScreen::Wardrobe);
+    w.playerModularMedic = true;
+    const auto fullModular = Drawing::BuildPlayerModularCharacter(w.playerModularPartsMask);
+    assert(fullModular.body != nullptr && fullModular.outfits.size() >= 4 && fullModular.attachments.size() == 8);
+    w.playerModularPartsMask &= ~(1u << 9u); // Toggle off Rescue Pack
+    const auto trimmedModular = Drawing::BuildPlayerModularCharacter(w.playerModularPartsMask);
+    assert(trimmedModular.attachments.size() == 7);
+    Hud::CloseMenu();
+    // 5) V key triggers 3D mission navigation guidance on the open world (replaces V melee).
+    g.EnterTestStage(TestStage::BikeUnlocked);
+    w.isBikeMounted = false;
+    w.guidanceSecondsRemaining = 0.f;
+    g.KeyDown('v', 0, 0);
+    g.KeyUp('v', 0, 0);
+    assert(w.guidanceSecondsRemaining > 0.f);
+    g.Reset();
+}
+
 int main(int argc, char **argv)
 {
     if (argc > 1 && std::string(argv[1]) == "--encounters")
@@ -6906,6 +7017,7 @@ int main(int argc, char **argv)
     TestChapterOne();
     TestFullChapterOneStoryArc();
     TestWorldEncounters();
+    TestPart2ContentAndUiOverhaul();
     TestConnectedOverworld();
     TestCityQuestAccess();
     TestImportedWorldAndFlights();

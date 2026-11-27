@@ -453,6 +453,8 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
     {
         gender = world.playerGender;
         hair = world.playerHair;
+        type = world.playerOutfit;
+        coat = PlayerCoatColor(world.playerCoatColor);
     }
     float melee = !isPlayer                             ? 0
                   : game::GameLevels::Mine().IsActive() ? game::GameLevels::Mine().GetState().meleeSeconds
@@ -472,6 +474,12 @@ void Drawing::DrawPerson(Vector2 position, ColorRGBA coat, bool isPlayer, models
     if (isPlayer)
     {
         pose = Game::Get().PlayerPose(armed ? flash / .055f : 0);
+        if (world.playerModularMedic)
+        {
+            const auto modular = BuildPlayerModularCharacter(world.playerModularPartsMask);
+            DrawModularCharacter(modular, position, yaw, pose, {}, 1.f);
+            return;
+        }
     }
     else
     {
@@ -664,6 +672,155 @@ void Drawing::DrawModularCharacter(const models::ModularCharacter &character, Ve
         const models::Point attScale{att.localScale.x * scaleMultiplier, att.localScale.y * scaleMultiplier,
                                      att.localScale.z * scaleMultiplier};
         DrawModel3D(*att.model, screen, attScale, rigid, depth + 0.5f, att.palette, nullptr, 0, 0, nullptr);
+    }
+}
+ColorRGBA Drawing::PlayerCoatColor(int colorIndex)
+{
+    static const ColorRGBA kPalette[6] = {
+        {.32f, .78f, .76f, 1.f}, // 0: 개척자 시안
+        {.42f, .52f, .64f, 1.f}, // 1: 어반 슬레이트
+        {.86f, .60f, .28f, 1.f}, // 2: 헤일로 앰버
+        {.78f, .30f, .28f, 1.f}, // 3: 크림슨 가드
+        {.30f, .72f, .48f, 1.f}, // 4: 에메랄드 메딕
+        {.26f, .30f, .36f, 1.f}, // 5: 옵시디언 나이트
+    };
+    return kPalette[((colorIndex % 6) + 6) % 6];
+}
+models::ModularCharacter Drawing::BuildPlayerModularCharacter(unsigned partsMask)
+{
+    models::ModularCharacter ch;
+    const auto *head = models::ModelLibrary::ModularPart("modular/body/Field_Medic_Head_Neck");
+    const auto *hands = models::ModelLibrary::ModularPart("modular/body/Field_Medic_Hands");
+    ch.body = (head && head->resourceId) ? head : nullptr;
+    if (hands && hands->resourceId)
+    {
+        ch.outfits.push_back(hands);
+        ch.outfitPalettes.push_back({});
+    }
+    struct SkinnedSpec
+    {
+        unsigned bit;
+        const char *name;
+        bool isOutfit;
+    };
+    static constexpr SkinnedSpec kSkinned[] = {
+        {0u, "modular/outfit/Field_Medic_Coat", true},
+        {1u, "modular/outfit/Field_Medic_Cargo_Pants", true},
+        {2u, "modular/outfit/Field_Medic_Boots", true},
+        {3u, "modular/part/Field_Medic_Bun_Hair", false},
+        {4u, "modular/part/Field_Medic_Shoulder_Guards", false},
+        {5u, "modular/part/Field_Medic_Knee_Guards", false},
+    };
+    for (const auto &spec : kSkinned)
+    {
+        if ((partsMask & (1u << spec.bit)) == 0)
+        {
+            continue;
+        }
+        const auto *m = models::ModelLibrary::ModularPart(spec.name);
+        if (!m || !m->resourceId)
+        {
+            continue;
+        }
+        if (spec.isOutfit)
+        {
+            ch.outfits.push_back(m);
+            ch.outfitPalettes.push_back({});
+        }
+        else
+        {
+            models::ModularAttachment att;
+            att.model = m;
+            att.skinned = true;
+            ch.attachments.push_back(att);
+        }
+    }
+    struct SocketSpec
+    {
+        unsigned bit;
+        const char *name;
+        models::RigSocket socket;
+    };
+    static constexpr SocketSpec kSockets[] = {
+        {6u, "modular/part/Field_Medic_Forearm_Guard_L_Scanner", models::RigSocket::HandL},
+        {7u, "modular/part/Field_Medic_Forearm_Guard_R", models::RigSocket::HandR},
+        {8u, "modular/part/Field_Medic_Medical_Pouch_R", models::RigSocket::Pelvis},
+        {9u, "modular/part/Field_Medic_Rescue_Pack", models::RigSocket::Back},
+        {10u, "modular/part/Field_Medic_Cartridge_Rack", models::RigSocket::Chest},
+    };
+    const float cs = models::WorldScale::characterScale;
+    for (const auto &spec : kSockets)
+    {
+        if ((partsMask & (1u << spec.bit)) == 0)
+        {
+            continue;
+        }
+        const auto *m = models::ModelLibrary::ModularPart(spec.name);
+        if (!m || !m->resourceId)
+        {
+            continue;
+        }
+        models::ModularAttachment att;
+        att.model = m;
+        att.skinned = false;
+        att.socket = spec.socket;
+        att.localScale = {cs, cs, cs};
+        ch.attachments.push_back(att);
+    }
+    return ch;
+}
+void Drawing::DrawModularCharacterPortrait(const models::ModularCharacter &character, Vector2 screenAnchor,
+                                           const models::Transform3D &rotation, float depth,
+                                           const models::CharacterPose &pose, float scale)
+{
+    const models::Point charScale{scale, scale, scale};
+    int skinSlot = -1;
+    unsigned int rigSourceId = 0;
+    if (character.body && character.body->resourceId)
+    {
+        rigSourceId = character.body->resourceId;
+        DrawModel3D(*character.body, screenAnchor, charScale, rotation, depth, {}, &pose, 0, 0, &skinSlot,
+                    character.bodyVisibilityMask);
+    }
+    for (size_t i = 0; i < character.outfits.size(); ++i)
+    {
+        const auto *outfit = character.outfits[i];
+        if (!outfit || !outfit->resourceId)
+        {
+            continue;
+        }
+        if (!rigSourceId)
+        {
+            rigSourceId = outfit->resourceId;
+        }
+        const models::Palette pal = i < character.outfitPalettes.size() ? character.outfitPalettes[i] : models::Palette{};
+        DrawModel3D(*outfit, screenAnchor, charScale, rotation, depth, pal, &pose, 0, 0, &skinSlot);
+    }
+    for (const auto &att : character.attachments)
+    {
+        if (!att.model || !att.model->resourceId)
+        {
+            continue;
+        }
+        if (att.skinned)
+        {
+            DrawModel3D(*att.model, screenAnchor, charScale, rotation, depth, att.palette, &pose, 0, 0, &skinSlot);
+            continue;
+        }
+        models::Transform3D rigid = rotation;
+        rigid.yaw += att.localRotation.yaw;
+        rigid.pitch += att.localRotation.pitch;
+        rigid.roll += att.localRotation.roll;
+        models::Point localPos = att.localOffset;
+        if (rigSourceId)
+        {
+            const auto sock = models::ResourceAssets::Socket(rigSourceId, pose, att.socket);
+            localPos.x += sock.x * scale;
+            localPos.y += sock.y * scale;
+            localPos.z += sock.z * scale;
+        }
+        rigid.position = rotation.Apply(localPos);
+        DrawModel3D(*att.model, screenAnchor, charScale, rigid, depth + 0.5f, att.palette, nullptr, 0, 0, nullptr);
     }
 }
 void Drawing::DrawCharacterAppearance(Vector2 screen, ColorRGBA coat, models::CharacterType type, int frame,

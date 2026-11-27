@@ -116,6 +116,9 @@
     <ClInclude Include="PlayerCombat.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="FieldMinigame.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
     <ClInclude Include="stdafx.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
@@ -148,6 +151,9 @@
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="WorldEncounters.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="FieldMinigame.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
     <ClCompile Include="StoryJournal.cpp">

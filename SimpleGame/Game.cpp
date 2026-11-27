@@ -9,6 +9,7 @@
 #include "StoryArc.h"
 #include "StoryJournal.h"
 #include "WorldEncounters.h"
+#include "FieldMinigame.h"
 #include "CityFacilities.h"
 #include "FacilityApproaches.h"
 #include "CityInfrastructure.h"
@@ -1031,7 +1032,20 @@ bool ActivityJournal::TriggerGuidance(std::optional<world::SurfacePoint> overrid
 {
     auto &g = Game::Get();
     auto &w = g.GetState();
-    if (!w.surfaceExploration || !g.Surface() || !g.Surface()->Ready() || g.IsSurfaceMine() || w.IsInsideAny())
+    if (g.IsSurfaceMine() || game::GameLevels::Mine().IsActive())
+    {
+        const auto &mine = game::GameLevels::Mine().GetState();
+        g.ShowNotice("경로 안내 [V] / " + std::string(mine.quest.GetObjective()) + " (F 스캔 · 입구 E 귀환)");
+        return true;
+    }
+    if (w.IsInsideAny())
+    {
+        const auto goal = Current();
+        g.ShowNotice("경로 안내 [V] / " + (goal.action.empty() ? std::string("야외로 나가면 3D 경로가 표시됩니다")
+                                                               : goal.action + " · 야외로 나가면 3D 경로 표시"));
+        return true;
+    }
+    if (!w.surfaceExploration || !g.Surface() || !g.Surface()->Ready())
     {
         return false;
     }
@@ -1050,14 +1064,14 @@ bool ActivityJournal::TriggerGuidance(std::optional<world::SurfacePoint> overrid
     const auto target = GuidanceTarget(&targetLabel);
     if (!target)
     {
-        g.ShowNotice("경로 안내 / 추적 중인 목표나 지도 목적지가 없습니다. J 또는 M에서 목표를 지정하세요.");
+        g.ShowNotice("경로 안내 [V] / 추적 중인 임무나 수령 가능한 제안자가 없습니다. J 또는 M에서 목표를 지정하세요.");
         return false;
     }
     w.guidanceDurationSeconds = 8.f;
     w.guidanceSecondsRemaining = 8.f;
     const double meters = world::SurfaceGeometry::Distance(g.Surface()->Planet().radiusMeters,
                                                            g.Surface()->Pose().origin, *target);
-    g.ShowNotice("경로 안내 [N] / " + (targetLabel.empty() ? std::string("목표 지점") : targetLabel) + " · 약 " +
+    g.ShowNotice("경로 안내 [V] / " + (targetLabel.empty() ? std::string("목표 지점") : targetLabel) + " · 약 " +
                  std::to_string(int(std::round(meters))) + "m");
     return true;
 }
@@ -1082,7 +1096,7 @@ void Game::ManageMission(MissionId id)
         {
             ActivityJournal::TriggerGuidance(giver, std::string(QuestParticipation::Name(id)) + " 제안자");
             ShowNotice(std::string("현장 수락 필요 / ") + QuestParticipation::Name(id) +
-                       " 제안자에게 직접 방문해 수락하세요 · 3D 경로 안내 표시 [N]");
+                       " 제안자에게 직접 방문해 수락하세요 · 3D 경로 안내 표시 [V]");
         }
         else
         {
@@ -2018,6 +2032,11 @@ void Game::KeyDown(unsigned char key, int, int)
         }
         return;
     }
+    if (FieldMinigame::Active())
+    {
+        FieldMinigame::HandleKey(key);
+        return;
+    }
     if (key == 27) // Escape
     {
         if (state.journalVisible || state.dialogueHistoryVisible)
@@ -2046,7 +2065,7 @@ void Game::KeyDown(unsigned char key, int, int)
     {
         state.interactionHeld = true;
     }
-    if (repeated && (key == 'e' || key == 13 || key == 'j' || key == 'h' || key == 'm' || key == 'n'))
+    if (repeated && (key == 'e' || key == 13 || key == 'j' || key == 'h' || key == 'm' || key == 'v'))
     {
         return;
     }
@@ -2123,16 +2142,9 @@ void Game::KeyDown(unsigned char key, int, int)
         {
             InteractWithNearbyTarget();
         }
-        else if (key == 'v' && !repeated)
+        else if (key == 'v' && !repeated && !state.mapVisible)
         {
-            if (game::GameLevels::Chapter().IsActive())
-            {
-                game::GameLevels::Chapter().Melee();
-            }
-            else if (CivicCombat::Available())
-            {
-                CivicCombat::Melee();
-            }
+            ActivityJournal::TriggerGuidance();
         }
         else if (key == 'r' && (game::GameLevels::Chapter().IsActive() || CivicCombat::Available()))
         {
@@ -2145,10 +2157,6 @@ void Game::KeyDown(unsigned char key, int, int)
         else if (key == 'q' && !repeated)
         {
             WeaponWheel::Open();
-        }
-        else if (key == 'n' && !repeated && !state.mapVisible)
-        {
-            ActivityJournal::TriggerGuidance();
         }
         else if (key == 'f' && !repeated && !state.mapVisible && !state.IsInsideAny())
         {
@@ -2231,22 +2239,7 @@ void Game::KeyDown(unsigned char key, int, int)
     }
     if (key == 'v' && !repeated)
     {
-        if (story::StoryArc::Get().IsActive())
-        {
-            story::StoryArc::Get().TryMelee(state.playerPosition, state.facingYaw);
-        }
-        else if (game::GameLevels::Mine().IsActive())
-        {
-            game::GameLevels::Mine().Combat().Melee();
-        }
-        else if (game::GameLevels::Chapter().IsActive())
-        {
-            game::GameLevels::Chapter().Melee();
-        }
-        else
-        {
-            CivicCombat::Melee();
-        }
+        ActivityJournal::TriggerGuidance();
         return;
     }
     if (story::StoryArc::Get().IsActive())
@@ -2284,7 +2277,7 @@ void Game::KeyDown(unsigned char key, int, int)
     {
         if (key == 'e')
         {
-            chapter.Interact();
+            chapter.InteractInteractive();
         }
         if (key == 'r')
         {
@@ -2300,7 +2293,7 @@ void Game::KeyDown(unsigned char key, int, int)
     {
         if (key == 'e')
         {
-            game::GameLevels::Mine().Interact();
+            game::GameLevels::Mine().InteractInteractive();
         }
         if (key == 'g' && !repeated)
         {
@@ -2349,6 +2342,11 @@ void Game::SpecialKeyDown(int key, int, int)
     }
     if (HospitalRecovery::Active())
     {
+        return;
+    }
+    if (FieldMinigame::Active())
+    {
+        FieldMinigame::HandleSpecialKey(key);
         return;
     }
     if (Hud::HandleSpecialKey(key))
@@ -2472,6 +2470,12 @@ void Game::MouseButton(int button, int buttonState, int x, int y)
     if (HospitalRecovery::Active())
     {
         state.mouseFiring = state.mouseAiming = false;
+        return;
+    }
+    if (FieldMinigame::Active())
+    {
+        state.mouseFiring = state.mouseAiming = false;
+        FieldMinigame::HandlePointer(button, buttonState == GLFW_PRESS);
         return;
     }
     if (Hud::HandlePointer(button, buttonState == GLFW_PRESS))
@@ -2633,7 +2637,15 @@ void Game::Update(float deltaSeconds)
         return;
     }
     deltaSeconds = Clamp(deltaSeconds, 0, kMaximumDeltaSeconds);
-    if (state.ui.screen == UiScreen::FacilityShop && !HospitalRecovery::Active())
+    if (FieldMinigame::Active())
+    {
+        FieldMinigame::Update(deltaSeconds);
+        state.animationTimeSeconds += deltaSeconds;
+        return;
+    }
+    if ((state.ui.screen == UiScreen::FacilityShop || state.ui.screen == UiScreen::Wardrobe ||
+         state.ui.screen == UiScreen::HomeStorage) &&
+        !HospitalRecovery::Active())
     {
         state.animationTimeSeconds += deltaSeconds;
         state.facilityReactionSeconds = (std::max)(0.f, state.facilityReactionSeconds - deltaSeconds);
@@ -5079,7 +5091,7 @@ void Game::InteractWithNearbyTarget()
     }
     if (target == InteractionTarget::FrontierSite)
     {
-        game::GameLevels::Chapter().Interact();
+        game::GameLevels::Chapter().InteractInteractive();
         return;
     }
     if (state.surfaceExploration && target == InteractionTarget::JetBike)
@@ -6495,66 +6507,9 @@ void Game::InteractResidence(InteractionTarget target)
     }
     if (target == InteractionTarget::HomeStorage)
     {
-        const std::string summary =
-            "금고 크레딧 " + std::to_string(r.stashCredits) + " (의료비 보호) · 보관 키트 " +
-            std::to_string(r.stashRecoveryKits) + "/" + std::to_string(ResidenceState::kMaxStashKits) +
-            " · 보관 고철 " + std::to_string(r.stashSalvage) + " · 외형: " +
-            (state.playerGender == models::Gender::Male ? "남성" : "여성");
-        std::vector<DialogueChoice> choices = {
-            {"dep_cr", "크레딧 200 안전 예치 (휴대 " + std::to_string(p.credits) + " Cr)"},
-            {"wd_cr", "크레딧 200 인출 (금고 " + std::to_string(r.stashCredits) + " Cr)"},
-            {"kit_toggle", p.recoveryKits > 0 && r.stashRecoveryKits < ResidenceState::kMaxStashKits
-                               ? "회복 키트 1개 보관 (보관 " + std::to_string(r.stashRecoveryKits) + ")"
-                               : "회복 키트 1개 인출 (보관 " + std::to_string(r.stashRecoveryKits) + ")"},
-            {"salvage_toggle", p.salvage > 0 ? "고철 전부 보관 (" + std::to_string(p.salvage) + "개)"
-                                             : "보관 고철 전부 인출 (" + std::to_string(r.stashSalvage) + "개)"},
-            {"hair", "옷장 · 헤어스타일 변경"},
-            {"gender", "옷장 · 체형(남성/여성) 전환"},
-            {"cancel", "보관함 닫기"}};
-        Dialogue::Start("residence/storage",
-                        {{"storage", "보관함 · 옷장", "거주지 금고", summary, std::move(choices)}},
-                        [this](const std::string &choice) {
-                            if (choice == "dep_cr")
-                            {
-                                ResidenceDepositCredits();
-                            }
-                            else if (choice == "wd_cr")
-                            {
-                                ResidenceWithdrawCredits();
-                            }
-                            else if (choice == "kit_toggle")
-                            {
-                                if (Player().recoveryKits > 0 &&
-                                    state.residence.stashRecoveryKits < ResidenceState::kMaxStashKits)
-                                {
-                                    ResidenceDepositKit();
-                                }
-                                else
-                                {
-                                    ResidenceWithdrawKit();
-                                }
-                            }
-                            else if (choice == "salvage_toggle")
-                            {
-                                if (Player().salvage > 0)
-                                {
-                                    ResidenceDepositSalvage();
-                                }
-                                else
-                                {
-                                    ResidenceWithdrawSalvage();
-                                }
-                            }
-                            else if (choice == "hair")
-                            {
-                                ResidenceCycleHair();
-                            }
-                            else if (choice == "gender")
-                            {
-                                ResidenceCycleGender();
-                            }
-                        },
-                        true);
+        state.StopMotion();
+        state.noticeSecondsRemaining = 0.f;
+        Hud::OpenMenu(UiScreen::HomeStorage);
         return;
     }
     if (target == InteractionTarget::HomeTerminal)
@@ -7021,51 +6976,72 @@ std::vector<FacilityServiceItem> Game::FacilityServices() const
     const auto kind = state.facilityInterior.kind;
     if (kind == UrbanFacilityKind::Market)
     {
-        items.push_back({"회복 키트 구매",
-                         "응급 회복 키트 +1 (보유 " + std::to_string(player.recoveryKits) + ")",
+        items.push_back({"응급 회복 키트",
+                         "즉시 체력 +45 회복 (G 사용) · 보유 " + std::to_string(player.recoveryKits) + "개",
                          "40 Cr",
-                         player.credits >= 40 && player.recoveryKits < 999});
+                         player.credits >= 40 && player.recoveryKits < 999,
+                         "heal",
+                         "의료 보급",
+                         1});
         const bool firearmReady = Game::Get().Loadout().IsFirearmEquipped();
         const int rounds = firearmReady ? Game::Get().ActiveFirearm().GetRounds() : 0;
         const int magSize = firearmReady ? Game::Get().ActiveFirearm().GetMagazineSize() : 0;
         const bool needsAmmo = firearmReady && rounds < magSize;
-        items.push_back({"권총 탄약 보충",
-                         firearmReady ? ("탄창 완충 (현재 " + std::to_string(rounds) + "/" +
+        items.push_back({"전술 탄약 팩",
+                         firearmReady ? ("장착 총기 탄창 완충 (현재 " + std::to_string(rounds) + "/" +
                                          std::to_string(magSize) + ")")
                                       : "총기 장착 시 탄약 보급 가능",
                          "25 Cr",
-                         needsAmmo && player.credits >= 25});
+                         needsAmmo && player.credits >= 25,
+                         "magazine",
+                         "화기 탄약",
+                         3});
         items.push_back({"고철 부품 매각",
-                         "고철 1개 판매 (보유 " + std::to_string(player.salvage) + ")",
+                         "정비 고철 1개를 현금으로 정산 · 보유 " + std::to_string(player.salvage) + "개",
                          "+35 Cr",
-                         player.salvage >= 1});
+                         player.salvage >= 1,
+                         "parts",
+                         "자원 매각",
+                         2});
     }
     else if (kind == UrbanFacilityKind::Clinic)
     {
         const bool needsHeal = player.health < player.maxHealth;
-        items.push_back({"전체 치료 · 스태미너 회복",
+        items.push_back({"집중 치료 · 체력 완복",
                          "체력 " + std::to_string(player.health) + "/" + std::to_string(player.maxHealth) +
                              " → 최대 회복 (크레딧 부족 시 응급 지원)",
                          player.credits >= 30 ? "30 Cr" : "무료 지원",
-                         needsHeal});
-        items.push_back({"구급 회복 키트 구매",
-                         "의료소 전용 회복 키트 +1 (보유 " + std::to_string(player.recoveryKits) + ")",
+                         needsHeal,
+                         "medical",
+                         "클리닉 시술",
+                         0});
+        items.push_back({"구급 회복 키트",
+                         "의료소 전용 회복 키트 +1 (G 사용) · 보유 " + std::to_string(player.recoveryKits) + "개",
                          "35 Cr",
-                         player.credits >= 35 && player.recoveryKits < 999});
+                         player.credits >= 35 && player.recoveryKits < 999,
+                         "heal",
+                         "의료 보급",
+                         1});
     }
     else if (kind == UrbanFacilityKind::Workshop)
     {
         const bool carDamaged = state.car.position && state.car.health < GroundVehicle::MaxHealth;
         const bool airDamaged = state.aircraft.position && state.aircraft.health < PlayerAircraft::MaxHealth;
         items.push_back({"차량 · 비행체 종합 정비",
-                         (carDamaged || airDamaged) ? "손상된 탑승 장비를 최대 내구도로 복구"
+                         (carDamaged || airDamaged) ? "손상된 탑승 장비의 장갑·엔진을 최대 내구도로 복구"
                                                     : "현재 모든 차량과 비행체가 정상 상태입니다",
                          player.salvage > 0 ? "고철 1" : "35 Cr",
-                         (carDamaged || airDamaged) && (player.salvage > 0 || player.credits >= 35)});
-        items.push_back({"고철로 회복 키트 제작",
-                         "고철 1개 → 회복 키트 +1 (보유 고철 " + std::to_string(player.salvage) + ")",
+                         (carDamaged || airDamaged) && (player.salvage > 0 || player.credits >= 35),
+                         "ground_car",
+                         "장비 정비",
+                         4});
+        items.push_back({"고철 회복 키트 제작",
+                         "고철 1개 → 응급 회복 키트 +1 제작 · 보유 고철 " + std::to_string(player.salvage) + "개",
                          "고철 1",
-                         player.salvage >= 1 && player.recoveryKits < 999});
+                         player.salvage >= 1 && player.recoveryKits < 999,
+                         "parts",
+                         "현장 제작",
+                         1});
     }
     else if (kind == UrbanFacilityKind::CivicHall)
     {
@@ -7073,14 +7049,20 @@ std::vector<FacilityServiceItem> Game::FacilityServices() const
         const int fine = law.wanted * 60;
         items.push_back({"수배 벌금 자진 정산",
                          law.wanted == 0   ? "현재 적용된 수배가 없습니다"
-                         : law.wanted <= 2 ? ("수배 " + std::to_string(law.wanted) + "단계 해제 및 기록 정리")
+                         : law.wanted <= 2 ? ("수배 " + std::to_string(law.wanted) + "단계 해제 및 치안 기록 정리")
                                            : "3성 이상 중범죄는 자진 정산 불가",
                          (law.wanted > 0 && law.wanted <= 2) ? (std::to_string(fine) + " Cr") : "—",
-                         law.wanted > 0 && law.wanted <= 2 && player.credits >= fine});
-        items.push_back({"지역 의뢰 · 조사 기록 열기",
-                         state.facilityInterior.regionName + " 주변 의뢰 및 현장 조사 기록 확인",
+                         law.wanted > 0 && law.wanted <= 2 && player.credits >= fine,
+                         "wanted",
+                         "치안 행정",
+                         0});
+        items.push_back({"지역 의뢰 · 조사 기록",
+                         state.facilityInterior.regionName + " 주변 지역 의뢰 및 현장 활동 열기",
                          "무료",
-                         true});
+                         true,
+                         "record",
+                         "행정 게시판",
+                         0});
     }
     return items;
 }

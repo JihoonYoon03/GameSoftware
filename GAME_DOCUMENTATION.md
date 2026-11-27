@@ -1752,13 +1752,34 @@ CQ-07을 A 이동·경로 안정성, B 감지·기억·역할별 판단, C 동�
   - 공용 차량을 바이크 대비 확실한 상위 장거리/전투 이동수단으로 차별화: 순항 `12.5 u/s(90 km/h)` + **Space 오버드라이브 부스트 `16.5 u/s(119 km/h)`**, 장갑 내구도 `140 → 260` + 총격 `-35%` 경감 + **운전자 방탄 캡(`!car.mounted`)**, 험지 등판 경사 `0.35 → 0.58(~30°)`, 충돌 자해 임계 상향(`7.5 → 12.5 u/s`), **동료(`PlanetParty`) 차량 동승** 및 HUD 장갑/부스트 표기.
 - **3. 헤일로 `도시 수신망(CityReceiver)` 삭제 및 거점/NPC 분산 ([CityFacilities.h](SimpleGame/CityFacilities.h)/[CityFacilities.cpp](SimpleGame/CityFacilities.cpp), [FacilityApproaches.h](SimpleGame/FacilityApproaches.h), [CityWalkways.cpp](SimpleGame/CityWalkways.cpp), [Overworld.cpp](SimpleGame/Overworld.cpp), [Game.cpp](SimpleGame/Game.cpp), [StoryArc.cpp](SimpleGame/StoryArc.cpp), [Level.cpp](SimpleGame/Level.cpp), [Scene.cpp](SimpleGame/Scene.cpp), [Hud.cpp](SimpleGame/Hud.cpp)):**
   - `halo_07/receiver` 시설·3D 콘솔·광원·마커·`city_receiver` 앵커를 제거(`CityFacilities::All()` 3종)하고, 기존 수신망 집중 진행을 자연스러운 인물·시설로 분산했다: 광산 경로 추적/보고 및 1장 대조 → **리아·카인**, 2~3장 출발/보고 → **리아·카인·N-0 외곽 포털**, 4장 실종 접수 → **마라·카인**, 에필로그 17일 정리/네레우스 수신 → **전망대 콘솔·카인(·거주지 단말 재청취)**. 광산 퇴장(`LeaveSurfaceMine`) 시 동행 동료도 함께 지상으로 나오도록 보강했다.
-- **4. `J` 조사 기록 원격 수령 차단 + 원신 스타일 `[N]` 3D 실제 월드 경로 안내 리본 ([Game.h](SimpleGame/Game.h)/[Game.cpp](SimpleGame/Game.cpp), [Hud.cpp](SimpleGame/Hud.cpp), [Scene.cpp](SimpleGame/Scene.cpp)):**
+- **4. `J` 조사 기록 원격 수령 차단 + 원신 스타일 `[V]` 3D 실제 월드 경로 안내 리본 ([Game.h](SimpleGame/Game.h)/[Game.cpp](SimpleGame/Game.cpp), [Hud.cpp](SimpleGame/Hud.cpp), [Scene.cpp](SimpleGame/Scene.cpp)):**
   - `J` 화면에서 수령 가능/진행 중 임무 목록 표시는 유지하되 미수락 임무의 원격 수락을 차단하고 **`제안자 안내`** 버튼으로 교체했다.
-  - 실제 오픈월드 3D 지형 위에 대원(Geodesic) 곡선으로 흐르는 발광 에너지 리본·파동 글로우·이동 포인트 라이트·목적지 빛기둥을 투사하는 **`[N]` 3D 경로 안내 리본(`ActivityJournal::TriggerGuidance` + `PlanetScene` 렌더)**을 구현했다(`V` 근접 공격과 무충돌).
+  - 기존 `V`키 근접 공격 바인딩을 삭제하고, 실제 오픈월드 3D 지형 위에 대원(Geodesic) 곡선으로 흐르는 발광 에너지 리본·파동 글로우·이동 포인트 라이트·목적지 빛기둥을 투사하는 **`[V]` 현재 임무 수령/수행 지점 경로 안내 리본(`ActivityJournal::TriggerGuidance` + `PlanetScene` 렌더)**으로 교체했다.
 - **8. 진행 단계 불일치 고정 문구·배우·프롬프트 전수 정비 ([Scene.cpp](SimpleGame/Scene.cpp), [Game.cpp](SimpleGame/Game.cpp), [Level.cpp](SimpleGame/Level.cpp), [Hud.cpp](SimpleGame/Hud.cpp)):**
   - `ObservatoryScene`에서 `RiaStatus::Missing` 및 전망대 하강 이후 리아가 다시 나타나던 버그를 수정했다.
   - 전망대 입장/퇴장(`GateBeacon`/`ObservatoryExit`), 전력 장치(`PowerRelay`), 광산 재입장(`MineLevel::Enter`), 거주지 단말 보관 메시지(`HomeTerminal`), 전망대 콘솔 프롬프트(`ObservatorySignal`), 1장 완료 문구(`"후속 지역 준비 중"` 제거), 4장 소실 직후 마라 대화(`StoryArc::InteractHaloMara`)와 마커를 현재 진행 단계에 정확히 연동했다.
 - **검증:** 9개 Release x64 타깃 빌드, `GameplayTests`(전체 + `--cq10-facilities` + `--story-arc` + `--encounters`), `WorldTests`(47,366 assertions), `WorldGenerationTests`(254,855 checks), `WorldStreamingTests`(136,396 checks), `MovementTests`, `CivicTests`, `MapHudTests`, `RenderingTests --r4-only`(`openworld-halo-rev5-guidance.bmp` Rev 5 헤일로 + 3D 경로 안내 리본 육안 검수 통과), `tools/Test-SourceEncoding.ps1` 통과.
+
+#### 69. 오픈월드·스토리·콘텐츠·UI 대규모 개편 — 파트 2 (신규 Mixamo 리소스 검수 · 5·6·7·9번) (2026-11-27 · 구현 완료)
+
+- **신규 납품 리소스 검수 (`CQ-11 Field_Medic` 13파츠 + `AnimationBanks/Mixamo_22_Facility`, [ResourceAssetsTests.cpp](tests/ResourceAssetsTests.cpp)):**
+  - `Resource/Documentation/mixamo_characters.json` 기반 신규 최적화 13파츠(바디 2 · 의상 3 · 스킨 부착물 3 · 리지드 소켓 5)와 `Mixamo_22_Facility` 뱅크(`asset_count=245`, `animation_clips=311`)가 `game-assets.bin`에 정상 패킹되었음을 확인하고, `ResourceAssetsTests`가 13파츠 전체의 삼각형 예산(`lod0_max_tris`), LOD 단계, 공유 22본 Mixamo 리그 중복 제거, 소켓, 표면 태그 및 시설 애니메이션 클립을 검증하도록 갱신했다.
+- **7. 임무 맞춤형 인터랙티브 미니게임 시스템 ([FieldMinigame.h](SimpleGame/FieldMinigame.h)/[FieldMinigame.cpp](SimpleGame/FieldMinigame.cpp), [Game.cpp](SimpleGame/Game.cpp), [Hud.cpp](SimpleGame/Hud.cpp)):**
+  - 단순 `E` 연타 상호작용을 대체하는 4종 현장 미니게임을 구현하고 `Game::Update`/`KeyDown`/`SpecialKeyDown`/`MouseButton`/`Hud::Render`에 통합했다(`[Esc]` 취소, `[Tab]` 무보너스 현장 우회, 헤드리스 `Interact()` 단위 테스트 하위 호환 유지):
+    1. **`CircuitBalance` (전력 회로 부하 균형):** 3개 연동 배선 출력 조율 — 광산 `BypassPower`, 개척지 `IsolateLine`·`PortableLight`·`Vehicle`.
+    2. **`SignalTuner` (듀얼 파형 동조 오실로스코프):** 주파수·위상 일치 — 광산 `RuinSignal`, 개척지 `Receiver`·`SurveyOne~Three`.
+    3. **`GlyphCipher` (3중 동심 문양 회전 해독):** 8분할 고리 정렬 — 광산 `ObserverGlyph`·`CoordinateTerminal`, 개척지 `Ledger`·`DetailLedger`.
+    4. **`ExtractionTiming` (정밀 채굴·잠금 해제 타이밍):** 골드 핵심 구간 적중 시 2배 보상 + 무소음 추출, 오차 시 주변 적 경보(`AlertNearbyEnemies`) — 광산 20개 광맥/보급 상자, 개척지 `TradeProof`.
+- **5A. 오르딘 광산 사냥·파밍 연계 전면 개편 ([Level.h](SimpleGame/Level.h)/[Level.cpp](SimpleGame/Level.cpp), [Scene.cpp](SimpleGame/Scene.cpp), [Hud.cpp](SimpleGame/Hud.cpp)):**
+  - 적 4종 아키타입(`Crawler` · 원거리 산성탄 `Spitter` · 중장갑 `ArmoredBrute` · 심부 섹터 정예 `RuinElite` 3체)과 20개 채굴/파밍 노드(`IronVein` 10 · `PrismCrystal` 4 · `SupplyCrate` 6)를 결정론적으로 배치했다.
+  - `[F]` 스캐너가 기존 `scannerContacts`(구조 무리 전용)를 건드리지 않고 별도 `resourcePings`에 광맥·보급함·정예 위치를 표시하며, 근접 자동 루팅(`0.85u`), 연속 사냥 배수(`huntStreak`, 최대 2배 경험치·현상금), HUD 사냥/광맥/정예 현황 바를 추가했다.
+- **5B·6. 빛나는 개척지 오픈월드 임무 재구성 및 카인 첫 대면 개선 ([Level.h](SimpleGame/Level.h)/[Level.cpp](SimpleGame/Level.cpp), [Scene.cpp](SimpleGame/Scene.cpp)):**
+  - 별도 `frontierThreats`를 도입(기존 `scrappers[3]`·`survivors[5]`·평화 협상 계약 유지): 발전기 구역 오작동 드론 2기 + 전기 아크 스파크 + 휴대 조명 치유 오라, 측량 삼각대 완료 시 지형을 잇는 시안 안전 경로 빔을 추가했다.
+  - **카인 첫 대면 연출:** 원거리에서도 보이는 **긴급 구조 조명탄 빛기둥**과 무전 경고 → 운송대 방어선 접근 시 **약탈자 습격전(`ConvoyRaider` 2기) 발발** 및 카인의 즉각 협동 교전 → 격퇴 후 자연스러운 브리핑 → 호위 시 카인이 5인 대열 측후방을 직접 동행 엄호하며 중간 매복(`EscortAmbusher` 2기)에 대응한다.
+- **9. 라이브 3D 외관 옷장 & 시각 아이템 카드 보관함·상점 ([Game.h](SimpleGame/Game.h)/[Game.cpp](SimpleGame/Game.cpp), [Drawing.h](SimpleGame/Drawing.h)/[Drawing.cpp](SimpleGame/Drawing.cpp), [Scene.cpp](SimpleGame/Scene.cpp), [Hud.cpp](SimpleGame/Hud.cpp)):**
+  - **`UiScreen::Wardrobe`:** 화면 중앙 턴테이블 위에 라이브 회전 3D 플레이어를 크게 띄우고(`←/→`, `A/D`, 중앙 드래그 360° 회전), 좌측 기본 외형/코트 6색 스와치와 우측 **CQ-11 Mixamo 필드 메딕 11파츠 실시간 탈부착** 또는 9종 표준 프리셋을 클릭 즉시 3D 모델에 반영한다(인게임 `Drawing::DrawPerson`에도 동일 반영).
+  - **`UiScreen::HomeStorage` & `UiScreen::FacilityShop`:** 텍스트 목록을 **실제 회전 3D 아이템 모델(`DrawShowcaseProp`)**이 유리 진열창 안에서 돌아가는 시각 아이템 카드로 교체하고, 아이콘·이름·보유량/가격 배지·효과 설명·즉시 보관/인출/구매 버튼을 통합했다(`FacilityShop` 좌측 1인칭 라이브 NPC 클로즈업 유지).
+- **검증:** 8개 Release x64 타깃 빌드, `ResourceAssetsTests`(13파츠 + `Mixamo_22_Facility`), `GameplayTests`(신규 `TestPart2ContentAndUiOverhaul` 포함 전체 통과), `CivicTests`, `MapHudTests`, `MovementTests`, `WorldTests`(47,365 assertions), `RenderingTests --r4-only --glfw`(신규 GPU 캡처 4종 `part2-wardrobe-3d.bmp`, `part2-home-storage-cards.bmp`, `part2-facility-shop-cards.bmp`, `part2-minigame-tuner.bmp` 육안 검수 완료), `tools/Test-SourceEncoding.ps1` 및 `git diff --check` 통과.
 
 ### 전체 구조 검토와 반복 비용 리팩토링 — 2026-10-28
 

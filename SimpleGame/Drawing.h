@@ -53,6 +53,11 @@ class Drawing
     static void DrawModularCharacter(const models::ModularCharacter &character, Vector2 worldPosition,
                                      float facingYaw, const models::CharacterPose &pose,
                                      const models::Palette &bodyPalette = {}, float scaleMultiplier = 1.f);
+    static void DrawModularCharacterPortrait(const models::ModularCharacter &character, Vector2 screenAnchor,
+                                             const models::Transform3D &rotation, float depth,
+                                             const models::CharacterPose &pose, float scale);
+    static ColorRGBA PlayerCoatColor(int colorIndex);
+    static models::ModularCharacter BuildPlayerModularCharacter(unsigned partsMask);
     static void DrawCharacterAppearance(Vector2 screenPosition, ColorRGBA coat, models::CharacterType type,
                                         int frame = 0, int direction = 0);
 

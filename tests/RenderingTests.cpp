@@ -6,6 +6,7 @@
 #include "Level.h"
 #include "StoryArc.h"
 #include "WorldEncounters.h"
+#include "FieldMinigame.h"
 #include "Monitoring/Monitor.h"
 #include "Overworld.h"
 #include "Profiler.h"
@@ -1047,6 +1048,95 @@ void TestR4PbrAndSkinSharing(const std::filesystem::path *output = nullptr)
         Hud::Render();
         assert(glGetError() == GL_NO_ERROR);
         Save(*output / "openworld-halo-rev5-guidance.bmp");
+
+        // 13) Part 2 GPU capture: Live 3D Wardrobe Studio with CQ-11 Mixamo Field Medic 13-part modular player.
+        Game::Get().EnterTestStage(TestStage::Prologue);
+        w.viewportWidth = 1280;
+        w.viewportHeight = 720;
+        w.playerModularMedic = true;
+        w.playerModularPartsMask = 0x7FFu;
+        w.ui.wardrobeYawOffset = -0.35f;
+        w.ui.wardrobeAutoRotate = false;
+        Hud::OpenMenu(UiScreen::Wardrobe);
+        glViewport(0, 0, kCanvasWidth, kCanvasHeight);
+        glClearColor(0.f, 0.f, 0.f, 1.f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        renderer.BeginScene(1280, 720);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, WorldCamera::LogicalWidth(), kCanvasHeight, 0, -65536, 65536);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        game::SceneManager::Get(game::SceneKind::Interior).Draw();
+        renderer.EndScene(0.f);
+        Hud::Render();
+        assert(glGetError() == GL_NO_ERROR);
+        Save(*output / "part2-wardrobe-3d.bmp");
+
+        // 14) Part 2 GPU capture: Visual Home Storage with 3 live spinning 3D item props inside glass windows.
+        Hud::OpenMenu(UiScreen::HomeStorage);
+        glViewport(0, 0, kCanvasWidth, kCanvasHeight);
+        glClearColor(0.f, 0.f, 0.f, 1.f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        renderer.BeginScene(1280, 720);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, WorldCamera::LogicalWidth(), kCanvasHeight, 0, -65536, 65536);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        game::SceneManager::Get(game::SceneKind::Interior).Draw();
+        renderer.EndScene(0.f);
+        Hud::Render();
+        assert(glGetError() == GL_NO_ERROR);
+        Save(*output / "part2-home-storage-cards.bmp");
+
+        // 15) Part 2 GPU capture: Visual Facility Shop (1st-person live NPC + 3D item cards).
+        Hud::CloseMenu();
+        w.facilityInterior.kind = UrbanFacilityKind::Market;
+        w.facilityInterior.regionId = "halo_07";
+        w.facilityInterior.regionName = "헤일로";
+        w.facilityInterior.label = "보급 상점";
+        w.facilityInterior.facilityId = "halo_market_test";
+        Hud::OpenMenu(UiScreen::FacilityShop);
+        glViewport(0, 0, kCanvasWidth, kCanvasHeight);
+        glClearColor(0.f, 0.f, 0.f, 1.f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        renderer.BeginScene(1280, 720);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, WorldCamera::LogicalWidth(), kCanvasHeight, 0, -65536, 65536);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        game::SceneManager::Get(game::SceneKind::FacilityInterior).Draw();
+        renderer.EndScene(0.f);
+        Hud::Render();
+        assert(glGetError() == GL_NO_ERROR);
+        Save(*output / "part2-facility-shop-cards.bmp");
+
+        // 16) Part 2 GPU capture: FieldMinigame SignalTuner dual-waveform oscilloscope overlay.
+        Hud::CloseMenu();
+        w.facilityInterior.Clear();
+        Game::Get().EnterTestStage(TestStage::BikeUnlocked);
+        w.viewportWidth = 1280;
+        w.viewportHeight = 720;
+        FieldMinigame::Begin(FieldMinigameKind::SignalTuner, "운송대 무전기 잔여 교신 동조",
+                             "끊긴 무전기에서 흘러나오는 N-0/17 교신 주파수에 파형을 일치시키세요.", 0x5201u,
+                             [](const FieldMinigameOutcome &) {});
+        glViewport(0, 0, kCanvasWidth, kCanvasHeight);
+        glClearColor(0.f, 0.f, 0.f, 1.f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        renderer.BeginScene(1280, 720);
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, WorldCamera::LogicalWidth(), kCanvasHeight, 0, -65536, 65536);
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+        game::SceneManager::Get(game::SceneKind::Planet).Draw();
+        renderer.EndScene(0.f);
+        Hud::Render();
+        assert(glGetError() == GL_NO_ERROR);
+        Save(*output / "part2-minigame-tuner.bmp");
+        FieldMinigame::Reset();
 
         w.viewportWidth = kCanvasWidth;
         w.viewportHeight = kCanvasHeight;
