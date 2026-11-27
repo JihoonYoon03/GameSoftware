@@ -67,6 +67,8 @@ GLuint queueProgram = 0, queueVao = 0;
 GLint queueMvpLoc = -1, queueImageLoc = -1, queueHasTexLoc = -1;
 GLuint cachedEffectProgram = 0;
 GLint cachedEffectMvpLoc = -1, cachedEffectKindLoc = -1, cachedEffectSecondsLoc = -1;
+GLint cachedEffectMasksLoc = -1, cachedEffectFlowLoc = -1, cachedEffectHasTexLoc = -1;
+GLuint sharedEffectMasksTex = 0, sharedWaterFlowTex = 0;
 bool instanceInitialized = false;
 void FlushInstances();
 
@@ -341,10 +343,34 @@ void DrawGeometry(const Geometry &geometry, GLuint buffer, const Transform &tran
                         cachedEffectMvpLoc = glGetUniformLocation(activeProgram, "mvp");
                         cachedEffectKindLoc = glGetUniformLocation(activeProgram, "effect");
                         cachedEffectSecondsLoc = glGetUniformLocation(activeProgram, "seconds");
+                        cachedEffectMasksLoc = glGetUniformLocation(activeProgram, "effectMasks");
+                        cachedEffectFlowLoc = glGetUniformLocation(activeProgram, "waterFlow");
+                        cachedEffectHasTexLoc = glGetUniformLocation(activeProgram, "hasEffectTex");
                     }
                     if (cachedEffectMvpLoc >= 0)
                     {
                         glUniformMatrix4fv(cachedEffectMvpLoc, 1, GL_FALSE, mvp);
+                    }
+                    const bool hasFx = sharedEffectMasksTex != 0 && sharedWaterFlowTex != 0;
+                    if (cachedEffectHasTexLoc >= 0)
+                    {
+                        glUniform1i(cachedEffectHasTexLoc, hasFx ? 1 : 0);
+                    }
+                    if (hasFx)
+                    {
+                        glActiveTexture(GL_TEXTURE1);
+                        glBindTexture(GL_TEXTURE_2D, sharedEffectMasksTex);
+                        if (cachedEffectMasksLoc >= 0)
+                        {
+                            glUniform1i(cachedEffectMasksLoc, 1);
+                        }
+                        glActiveTexture(GL_TEXTURE2);
+                        glBindTexture(GL_TEXTURE_2D, sharedWaterFlowTex);
+                        if (cachedEffectFlowLoc >= 0)
+                        {
+                            glUniform1i(cachedEffectFlowLoc, 2);
+                        }
+                        glActiveTexture(GL_TEXTURE0);
                     }
                 }
             }
@@ -610,6 +636,7 @@ void Shutdown()
         queueProgram = 0;
     }
     cachedEffectProgram = 0;
+    sharedEffectMasksTex = sharedWaterFlowTex = 0;
     cachedEffectMvpLoc = cachedEffectKindLoc = cachedEffectSecondsLoc = -1;
     instanceInitialized = false;
     if (streamBuffer)
@@ -776,6 +803,11 @@ void Effect(unsigned int program, int kind, float seconds)
     state.program = program;
     state.effect = program ? kind : 0;
     state.seconds = program ? seconds : 0;
+}
+void SetEffectTextures(unsigned int masksTexture, unsigned int waterFlowTexture)
+{
+    sharedEffectMasksTex = masksTexture;
+    sharedWaterFlowTex = waterFlowTexture;
 }
 void LineWidth(float width)
 {

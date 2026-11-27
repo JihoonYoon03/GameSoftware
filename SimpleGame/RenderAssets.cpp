@@ -572,6 +572,7 @@ struct RenderAssets::Data
     GLuint pbrBaseArray = 0, pbrNormalArray = 0, pbrOrmArray = 0;
     GLuint pbrDetailBaseArray = 0, pbrDetailNormalArray = 0, pbrDetailOrmArray = 0;
     GLuint damageMaskTex = 0;
+    GLuint effectMasksTex = 0, waterFlowTex = 0;
     PbrTextureBudget pbrBudget;
     int uiWidth = 2048, uiHeight = 0;
     std::unordered_map<std::string, Sprite> sprites;
@@ -617,6 +618,14 @@ struct RenderAssets::Data
         if (damageMaskTex)
         {
             glDeleteTextures(1, &damageMaskTex);
+        }
+        if (effectMasksTex)
+        {
+            glDeleteTextures(1, &effectMasksTex);
+        }
+        if (waterFlowTex)
+        {
+            glDeleteTextures(1, &waterFlowTex);
         }
         if (textAtlas)
         {
@@ -933,6 +942,38 @@ RenderAssets::RenderAssets() : m_data(new Data())
                 profiling::Count(profiling::Counter::TextureUploadBytes, dmgBytes);
                 m_data->damageMaskTex = tex;
             }
+            auto loadRepeat2d = [&](const fs::path &texPath, int size) -> GLuint {
+                std::error_code tec;
+                if (!fs::is_regular_file(texPath, tec))
+                {
+                    return 0;
+                }
+                auto px = DecodePng(factory.Get(), texPath, size, size);
+                GLuint tex = 0;
+                glGenTextures(1, &tex);
+                glBindTexture(GL_TEXTURE_2D, tex);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                if (glTexStorage2D != nullptr)
+                {
+                    glTexStorage2D(GL_TEXTURE_2D, mipLevels(size), GL_RGBA8, size, size);
+                    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, size, size, GL_RGBA, GL_UNSIGNED_BYTE, px.data());
+                }
+                else
+                {
+                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, size, size, 0, GL_RGBA, GL_UNSIGNED_BYTE, px.data());
+                }
+                glGenerateMipmap(GL_TEXTURE_2D);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                const size_t bytes = arrayMipBytes(size, 1);
+                m_data->pbrBudget.residentBytes += bytes;
+                profiling::Count(profiling::Counter::TextureUploadBytes, bytes);
+                return tex;
+            };
+            m_data->effectMasksTex = loadRepeat2d(texturesDir / "SharedEffects" / "Frontier_Effects_Masks.png", 512);
+            m_data->waterFlowTex = loadRepeat2d(texturesDir / "SharedEffects" / "Frontier_Water_Flow.png", 512);
         }
         catch (const std::exception &)
         {
@@ -1397,6 +1438,14 @@ unsigned int RenderAssets::DamageMaskTexture() const
 {
     return m_data->damageMaskTex;
 }
+unsigned int RenderAssets::EffectMasksTexture() const
+{
+    return m_data->effectMasksTex;
+}
+unsigned int RenderAssets::WaterFlowTexture() const
+{
+    return m_data->waterFlowTex;
+}
 bool RenderAssets::HasPbrTextures() const
 {
     return m_data->pbrBaseArray != 0 && m_data->pbrNormalArray != 0 && m_data->pbrOrmArray != 0;
@@ -1409,6 +1458,10 @@ bool RenderAssets::HasPbrDetailTextures() const
 bool RenderAssets::HasDamageMask() const
 {
     return m_data->damageMaskTex != 0;
+}
+bool RenderAssets::HasEffectTextures() const
+{
+    return m_data->effectMasksTex != 0 && m_data->waterFlowTex != 0;
 }
 const PbrTextureBudget &RenderAssets::PbrBudget() const
 {

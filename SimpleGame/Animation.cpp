@@ -517,6 +517,38 @@ void LayeredAnimation::BindTransitionClip(AnimationRig &rig, const std::string &
         }
     }
 }
+void LayeredAnimation::BindFacilityClip(AnimationRig &rig, const std::string &name, int index)
+{
+    constexpr const char *kNames[7] = {"Shop_Idle_Counter_Loop",   "Shop_Talk_Welcome",
+                                       "Shop_Trade_HandOver",      "Shop_Talk_Explain_Loop",
+                                       "Shop_Farewell_Nod",        "Shop_Service_Inspect_Loop",
+                                       "Resident_Talk_Listen_Loop"};
+    for (size_t i = 0; i < std::size(kNames); ++i)
+    {
+        if (name == kNames[i])
+        {
+            rig.facilityClips[i] = index;
+            return;
+        }
+    }
+}
+void LayeredAnimation::BindBoardingClip(AnimationRig &rig, const std::string &name, int index)
+{
+    constexpr const char *kNames[12] = {"Coupe_Enter_Left",        "Coupe_Exit_Left",
+                                        "Coupe_Enter_Right",       "Coupe_Exit_Right",
+                                        "Coupe_Driver_Idle_Loop",  "Courier_Enter_Left",
+                                        "Courier_Exit_Left",       "Courier_Pilot_Idle_Loop",
+                                        "Courier_Pilot_Ascent",    "Courier_Pilot_Bank_Left",
+                                        "Courier_Pilot_Bank_Right","Courier_Pilot_Land"};
+    for (size_t i = 0; i < std::size(kNames); ++i)
+    {
+        if (name == kNames[i])
+        {
+            rig.boardingClips[i] = index;
+            return;
+        }
+    }
+}
 void LayeredAnimation::PrepareGraph(std::vector<ResourceClip> &clips, const AnimationRig &rig)
 {
     std::vector<bool> required(clips.size(), false);
@@ -544,6 +576,14 @@ void LayeredAnimation::PrepareGraph(std::vector<ResourceClip> &clips, const Anim
         require(index);
     }
     for (int index : rig.transitionClips)
+    {
+        require(index);
+    }
+    for (int index : rig.facilityClips)
+    {
+        require(index);
+    }
+    for (int index : rig.boardingClips)
     {
         require(index);
     }
@@ -684,6 +724,29 @@ void LayeredAnimation::Sample(const ResourceMesh &mesh, const CharacterPose &pos
         const bool loop = pose.supportClip == 1;
         ClipPose(mesh, support, pose.supportPhase, loop, other);
         Mix(base, other, supportWeight, mesh.boneCount);
+    }
+    const int facility =
+        !dodgeLayer && pose.facilityClip >= 0 && size_t(pose.facilityClip) < rig.facilityClips.size()
+            ? rig.facilityClips[size_t(pose.facilityClip)]
+            : -1;
+    const float facilityWeight = facility >= 0 ? std::clamp(pose.facilityWeight, 0.f, 1.f) : 0.f;
+    if (facilityWeight > 0.f)
+    {
+        const bool loop = pose.facilityClip == 0 || pose.facilityClip == 3 || pose.facilityClip == 5 ||
+                          pose.facilityClip == 6;
+        ClipPose(mesh, facility, pose.facilityPhase, loop, other);
+        Mix(base, other, facilityWeight, mesh.boneCount);
+    }
+    const int boarding =
+        !dodgeLayer && pose.boardingClip >= 0 && size_t(pose.boardingClip) < rig.boardingClips.size()
+            ? rig.boardingClips[size_t(pose.boardingClip)]
+            : -1;
+    const float boardingWeight = boarding >= 0 ? std::clamp(pose.boardingWeight, 0.f, 1.f) : 0.f;
+    if (boardingWeight > 0.f)
+    {
+        const bool loop = pose.boardingClip == 4 || pose.boardingClip == 7;
+        ClipPose(mesh, boarding, pose.boardingPhase, loop, other);
+        Mix(base, other, boardingWeight, mesh.boneCount);
     }
     if (!suppressWeaponHands && pose.armed && rig.carryIdle >= 0 && rig.carryWalk >= 0 && rig.carryRun >= 0)
     {

@@ -2138,7 +2138,7 @@ void Game::KeyDown(unsigned char key, int, int)
                 }
             }
         }
-        else if (key == 'e' && !state.mapVisible && surface && surface->Ready())
+        else if (key == 'e' && !state.mapVisible && (state.IsInsideAny() || (surface && surface->Ready())))
         {
             InteractWithNearbyTarget();
         }
@@ -5238,6 +5238,11 @@ void Game::InteractWithNearbyTarget()
         }
         if (state.surfaceExploration)
         {
+            if (!surface || !surface->Ready())
+            {
+                ShowNotice("야외 지형을 준비하는 중입니다. 잠시 후 다시 나가세요.");
+                return;
+            }
             if (ReturnToSurface(kHomeDoor))
             {
                 ShowNotice("헤일로 / 거주지 앞 보행로로 나왔습니다.");

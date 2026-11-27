@@ -528,6 +528,22 @@ void FacilityInteriorScene::Draw()
             models::ModelRig::Pose(t * 1.35f, false, false, 0, false, clerkGender);
         talkPose.motionForwardLean = 0.025f * std::sin(t * 1.4f) + 0.085f * reactNod;
         talkPose.motionSideLean = 0.045f * std::sin(t * 0.85f);
+        if (w.facilityReactionSeconds > 0.f)
+        {
+            const bool isTrade = w.facilityReactionSeconds > 1.15f;
+            talkPose.facilityClip = isTrade ? 2 : 1; // Shop_Trade_HandOver / Shop_Talk_Welcome
+            talkPose.facilityPhase =
+                isTrade ? std::clamp((1.4f - w.facilityReactionSeconds) / 1.133f, 0.f, 1.f)
+                        : std::clamp((1.15f - w.facilityReactionSeconds) / 1.15f, 0.f, 1.f);
+            talkPose.facilityWeight = 1.f;
+        }
+        else
+        {
+            talkPose.facilityClip =
+                (kind == UrbanFacilityKind::Workshop || kind == UrbanFacilityKind::Clinic) ? 5 : 3;
+            talkPose.facilityPhase = std::fmod(t / 3.2f, 1.f);
+            talkPose.facilityWeight = 1.f;
+        }
         models::Palette npcPal;
         npcPal.body = {clerkCoat.r, clerkCoat.g, clerkCoat.b, 1.f};
         npcPal.accent = {accentCol.r, accentCol.g, accentCol.b, 1.f};
@@ -542,11 +558,36 @@ void FacilityInteriorScene::Draw()
         const float swayX = std::sin(t * 0.85f) * 5.0f;
         const Vector2 npcAnchor{cxOff + 295.f + swayX, 920.f + breatheY};
         int sharedSlot = -1;
-        Drawing::DrawModel3D(models::ModelLibrary::Character(clerkType, clerkGender), npcAnchor,
-                             {portraitScale, portraitScale, portraitScale}, rot, 0.f, npcPal, &talkPose, 0.f, 0.f,
-                             &sharedSlot);
-        Drawing::DrawHair(npcAnchor, {portraitScale, portraitScale, portraitScale}, rot, 0.f, talkPose, clerkType,
-                          clerkGender, clerkHair, &sharedSlot);
+        bool drewFieldMedic = false;
+        if (clerkType == models::CharacterType::Medic)
+        {
+            constexpr const char *kFieldMedicSkinned[] = {
+                "modular/body/Field_Medic_Head_Neck",    "modular/body/Field_Medic_Hands",
+                "modular/outfit/Field_Medic_Coat",       "modular/outfit/Field_Medic_Cargo_Pants",
+                "modular/outfit/Field_Medic_Boots",      "modular/part/Field_Medic_Bun_Hair",
+                "modular/part/Field_Medic_Shoulder_Guards", "modular/part/Field_Medic_Knee_Guards"};
+            if (models::ModelLibrary::ModularPart(kFieldMedicSkinned[0]))
+            {
+                const models::Palette neutralPal{};
+                for (const char *partName : kFieldMedicSkinned)
+                {
+                    if (const auto *part = models::ModelLibrary::ModularPart(partName))
+                    {
+                        Drawing::DrawModel3D(*part, npcAnchor, {portraitScale, portraitScale, portraitScale}, rot,
+                                             0.f, neutralPal, &talkPose, 0.f, 0.f, &sharedSlot);
+                    }
+                }
+                drewFieldMedic = true;
+            }
+        }
+        if (!drewFieldMedic)
+        {
+            Drawing::DrawModel3D(models::ModelLibrary::Character(clerkType, clerkGender), npcAnchor,
+                                 {portraitScale, portraitScale, portraitScale}, rot, 0.f, npcPal, &talkPose, 0.f,
+                                 0.f, &sharedSlot);
+            Drawing::DrawHair(npcAnchor, {portraitScale, portraitScale, portraitScale}, rot, 0.f, talkPose,
+                              clerkType, clerkGender, clerkHair, &sharedSlot);
+        }
         // Also render live spinning 3D item models inside the right-side shop visual cards where applicable.
         const auto services = Game::Get().FacilityServices();
         const auto &lib = models::ModelLibrary::Get();
@@ -675,9 +716,55 @@ void FacilityInteriorScene::Draw()
             }
         });
         scene.PlaceWorldActor("fclerk", -.2f, -2.05f, WorldBounds(-.2f, -2.05f, 0, 0, 90), 1, 2.5f,
-                              [this, clerkCoat, clerkType, clerkGender, clerkHair, clerkRole, accentCol]() {
-                                  Drawing::DrawPerson({-.2f, -2.05f}, clerkCoat, false, clerkType, false, kPi * .5f,
-                                                      clerkGender, clerkHair);
+                              [this, &w, clerkCoat, clerkType, clerkGender, clerkHair, clerkRole, accentCol]() {
+                                  models::CharacterPose idlePose = models::ModelRig::Pose(
+                                      w.animationTimeSeconds, false, false, 0, false, clerkGender);
+                                  idlePose.facilityClip = 0; // Shop_Idle_Counter_Loop
+                                  idlePose.facilityPhase = std::fmod(w.animationTimeSeconds / 3.6f, 1.f);
+                                  idlePose.facilityWeight = 1.f;
+                                  const Vector2 clerkPos{-.2f, -2.05f};
+                                  const Vector2 screen = Drawing::WorldToScreen(clerkPos.x, clerkPos.y);
+                                  const float depth = (clerkPos.x + clerkPos.y) * 36.f;
+                                  const float s = models::WorldScale::characterScale;
+                                  models::Transform3D rot;
+                                  rot.yaw = kPi * .5f;
+                                  int sharedSlot = -1;
+                                  bool drewFieldMedic = false;
+                                  if (clerkType == models::CharacterType::Medic)
+                                  {
+                                      constexpr const char *kFieldMedicSkinned[] = {
+                                          "modular/body/Field_Medic_Head_Neck",
+                                          "modular/body/Field_Medic_Hands",
+                                          "modular/outfit/Field_Medic_Coat",
+                                          "modular/outfit/Field_Medic_Cargo_Pants",
+                                          "modular/outfit/Field_Medic_Boots",
+                                          "modular/part/Field_Medic_Bun_Hair",
+                                          "modular/part/Field_Medic_Shoulder_Guards",
+                                          "modular/part/Field_Medic_Knee_Guards"};
+                                      if (models::ModelLibrary::ModularPart(kFieldMedicSkinned[0]))
+                                      {
+                                          const models::Palette neutralPal{};
+                                          for (const char *partName : kFieldMedicSkinned)
+                                          {
+                                              if (const auto *part = models::ModelLibrary::ModularPart(partName))
+                                              {
+                                                  Drawing::DrawModel3D(*part, screen, {s, s, s}, rot, depth,
+                                                                       neutralPal, &idlePose, 0.f, 0.f, &sharedSlot);
+                                              }
+                                          }
+                                          drewFieldMedic = true;
+                                      }
+                                  }
+                                  if (!drewFieldMedic)
+                                  {
+                                      models::Palette pal;
+                                      pal.body = {clerkCoat.r, clerkCoat.g, clerkCoat.b, 1.f};
+                                      Drawing::DrawModel3D(models::ModelLibrary::Character(clerkType, clerkGender),
+                                                           screen, {s, s, s}, rot, depth, pal, &idlePose, 0.f, 0.f,
+                                                           &sharedSlot);
+                                      Drawing::DrawHair(screen, {s, s, s}, rot, depth, idlePose, clerkType,
+                                                        clerkGender, clerkHair, &sharedSlot);
+                                  }
                                   Vector2 pt = Drawing::WorldToScreen(-.2f, -2.05f, 84);
                                   Drawing::DrawLabel(pt.x - 42, pt.y, std::string(clerkRole) + " · E 대화", accentCol);
                               });
