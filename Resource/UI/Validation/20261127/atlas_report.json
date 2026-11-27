@@ -1,0 +1,115 @@
+{
+  "status": "PASS",
+  "sprite_count": 185,
+  "legacy_count": 127,
+  "legacy_expected": 127,
+  "missing": [],
+  "duplicates": [],
+  "original_png_hashes_preserved": true,
+  "visible_rgba_crops_exact": true,
+  "transparent_gutter_px": 4,
+  "alpha_bleed_px": 2,
+  "atlas_bytes": 282355,
+  "gpu_rgba8_bytes": 16777216,
+  "bilinear_isolated_comparisons": 370,
+  "slice_constant_inner_strips": {
+    "Components/showcase_card_frame": [
+      12,
+      12,
+      12,
+      12
+    ],
+    "Components/panel_border": [
+      12,
+      12,
+      12,
+      12
+    ],
+    "Components/panel_fill": [
+      12,
+      12,
+      12,
+      12
+    ],
+    "Components/button_default": [
+      12,
+      12,
+      12,
+      12
+    ],
+    "Components/button_hover": [
+      12,
+      12,
+      12,
+      12
+    ],
+    "Components/button_pressed": [
+      12,
+      12,
+      12,
+      12
+    ],
+    "Components/button_selected": [
+      12,
+      12,
+      12,
+      12
+    ],
+    "Components/world_prompt_edge": [
+      12,
+      12,
+      12,
+      12
+    ],
+    "Components/world_prompt_fill": [
+      12,
+      12,
+      12,
+      12
+    ],
+    "Components/world_prompt_pill": [
+      12,
+      12,
+      12,
+      12
+    ],
+    "Components/part_chip_off": [
+      8,
+      8,
+      8,
+      8
+    ],
+    "Components/part_chip_on": [
+      8,
+      8,
+      8,
+      8
+    ]
+  },
+  "alpha_zero_rgb_corrected_pixels": {
+    "Components/showcase_card_frame": 984,
+    "Components/panel_border": 720,
+    "Components/panel_fill": 28,
+    "Components/button_default": 12,
+    "Components/button_disabled": 12,
+    "Components/button_hover": 12,
+    "Components/button_pressed": 12,
+    "Components/button_selected": 12,
+    "Components/button_warning": 12,
+    "Components/world_prompt_edge": 504,
+    "Components/world_prompt_fill": 20,
+    "Components/world_prompt_pill": 28,
+    "Components/keycap": 20,
+    "Components/part_chip_off": 12,
+    "Components/part_chip_on": 12,
+    "Components/gauge_critical": 4,
+    "Components/gauge_experience": 4,
+    "Components/gauge_health": 4,
+    "Components/gauge_heat": 4,
+    "Components/gauge_reload": 4,
+    "Components/gauge_scan": 4,
+    "Components/gauge_track": 4,
+    "Components/panel_accent": 8
+  },
+  "scope": "Visible source pixels preserved. Transparent RGB is extended near 9-slice edges; gutters retain alpha zero."
+}

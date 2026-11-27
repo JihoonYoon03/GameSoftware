@@ -375,7 +375,7 @@ ORM/노멀과 BaseColor는 같은 색 공간으로 뭉쳐 필터링하지 않는
 
 #### 2) 신규 건물 가짓수 추가 요청 (도시 구역 다양성 확보 · 1:1 실측 v4)
 
-기존 14종 `MeasuredBuildings`(384~4,488 tris)의 v4 디테일 상향과 더불어, 반복감을 없애기 위해 아래 **12종 신규 건물 아키타입**을 추가 요청한다.
+기존 14종 `MeasuredBuildings`(384~4,488 tris)의 v4 디테일 상향과 더불어, 반복감을 없애기 위해 아래 **14종 신규 건물 아키타입**을 추가 요청한다.
 
 | 에셋 ID (안) | 배치 구역 | 실측 규격 (W×D×H m) | 핵심 디테일 | LOD0 삼각형 상한 |
 |---|---|---|---|---|
@@ -407,6 +407,8 @@ ORM/노멀과 BaseColor는 같은 색 공간으로 뭉쳐 필터링하지 않는
 | `Planet_Seira_Albedo / Normal` · `Planet_Orren_Albedo / Normal / Ring` | 우주 성계 지도 및 타 행성 3D 구체 | `2048×1024` (행성) · `1024×256` (고리) | 장당 `2 ~ 8 MB` (절대 `< 100 MB`) |
 | `Space_Starfield_Nebula` | 우주 성계 지도 배경 성운 | `2048×1024` sRGB | `≤ 8 MB` |
 | `Colony_GlassCurtain` · `Colony_WeatheredCladding` · `Industrial_GratingTrim` · `Interior_Bulkhead` · `Storefront_SignageAtlas` · `Alien_FoliageBark` | 신규 v4 건물·프롭 공유 PBR 배열 (BaseColor / Normal / ORM / Emissive) | `1024×1024` 또는 `2048×2048` 타일/트림 시트 | 장당 `1 ~ 16 MB` (절대 `< 100 MB`) |
+
+2026-11-27. 구형 교체용 10종·기존 실측 개선 14종·신규 14종, 프롭 26종, 공유 및 지도 텍스처 33장을 납품했다. 구형 ID와 교체 에셋의 대응, LOD별 경로와 치수는 납품 문서에 기록했다. [콜로니 v4 납품 및 검증](Documentation/COLONY_V4_DELIVERY_ko.md)
 
 ---
 

@@ -71,7 +71,9 @@ ICONS = {
 
 def esc(s): return html.escape(str(s), quote=True)
 def write(path, value):
-    (ROOT / path).write_text(value, encoding='utf-8')
+    target=ROOT/path
+    if not target.exists() or target.read_text(encoding='utf-8')!=value:
+        target.write_text(value, encoding='utf-8')
 def dump(path, value): write(path, json.dumps(value, ensure_ascii=False, indent=2) + '\n')
 def svg(body, w, h, defs=''):
     return f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">{defs}{body}</svg>'
@@ -213,8 +215,10 @@ def minimap(kind='city'):
     return b+'</g>'
 
 def prompt(action='대화',target='리아',ico='dialogue'):
-    b=f'<g class="panel-fill">{rect(450,514,380,48,C["bg"],5)}</g>'
-    return b+icon(ico,464,526,23)+text(f'{target} · {action}',500,545,16,weight=700,width=273)+key('E',788,526)
+    b=f'<g class="panel-fill">{rect(450,514,380,48,"#0b1820",8)}</g>'
+    b+=f'<g class="panel-border">{rect(450.5,514.5,379,47,"none",8,extra="stroke=\"#79b5bd\"")}</g>'
+    b+=rect(456,524,4,28,C['accent'],2,extra='class="ui-icon"')
+    return b+icon(ico,470,527,22)+text(f'{target} · {action}',504,545,16,weight=700,width=264)+key('E',788,526)
 
 def reticle(state='ready',spread=15):
     color=C['amber'] if state!='ready' else C['ink']; x,y=640,380
@@ -516,15 +520,20 @@ component('hud_scan_track','<circle cx="24" cy="24" r="21" fill="#07131c" stroke
 component('hud_scan_arc','<circle cx="24" cy="24" r="21" fill="none" stroke="white" stroke-width="4" stroke-dasharray="79 132" transform="rotate(-90 24 24)"/>',48,48,role='hud_radial_arc_dynamic_mesh_preferred')
 component('hud_reticle_arm','<path d="M3 3h8" stroke="#02080d" stroke-width="6"/><path d="M3 3h8" stroke="white" stroke-width="2.5"/>',14,6,role='hud_four_independently_positioned_arms')
 for name,body,w,h,role in EXTRA_COMPONENTS: component(name,body,w,h,role=role)
+from design_20261127 import apply as apply_part3, ICONS as PART3_ICONS
+apply_part3(globals(), component)
+(ROOT/'Preview/20261127').mkdir(exist_ok=True)
+(ROOT/'Validation/20261127').mkdir(exist_ok=True)
 for name in ICONS:
-    write(f'Source/Icons/{name}.svg',svg(icon(name,0,0,24,'#ffffff'),24,24))
+    write(f'Source/Icons/{name}.svg',svg(icon(name,2,2,28,'#ffffff'),32,32) if name in PART3_ICONS
+          else svg(icon(name,0,0,24,'#ffffff'),24,24))
 HUD_ICON_NAMES='health pistol infinite reload objective wanted scan signal unknown_signal bike boost reverse speed injured rescue check warning companion destination player unarmed slot_empty mouse_right key_release activity_track activity_submit activity_payment_hold'.split()+list(HUD_ADDITIONS)
 for name in HUD_ICON_NAMES:
     write(f'Source/HUDIcons/{name}.svg',svg(hud_icon(name,4,4,24,'#ffffff'),32,32))
 
 for name,entry in SCENES.items(): write(f'Source/Screens/{name}.svg',entry['svg'])
 
-manifest=dict(version='1.4.0',title='ERMA / FIELD INTERFACE',date='2026-11-23',
+manifest=dict(version='1.5.0',title='ERMA / FIELD INTERFACE',date='2026-11-27',
     canvas=dict(width=1280,height=800,safe_margin=32,scale='uniform_min_viewport_fit',letterbox=True),
     font=dict(family='Malgun Gothic',windows_path='C:/Windows/Fonts/malgun.ttf',redistributed=False,
               text_in_assets=False,encoding='UTF-8',body_px=20,metadata_px=14,line_height=32),
@@ -535,7 +544,7 @@ manifest=dict(version='1.4.0',title='ERMA / FIELD INTERFACE',date='2026-11-23',
                  note='Existing game options use these ranges. New designs must keep independent layers; review exposes stress values down to 0.3.'),
     alpha=dict(export='straight RGBA',color_space='sRGB',blend='SRC_ALPHA, ONE_MINUS_SRC_ALPHA',
                tint='white icons are tintable; preserve full alpha, convert if using a premultiplied renderer'),
-    icons={n:dict(svg=f'Source/Icons/{n}.svg',png=f'Export/Icons/{n}.png',width=48,height=48,
+    icons={n:dict(svg=f'Source/Icons/{n}.svg',png=f'Export/Icons/{n}.png',width=32 if n in PART3_ICONS else 48,height=32 if n in PART3_ICONS else 48,
                    logical_size=24,stroke=2.1) for n in ICONS},components=COMPONENTS,
     hud_icons={n:dict(svg=f'Source/HUDIcons/{n}.svg',png=f'Export/HUDIcons/{n}.png',width=64,height=64,
                       logical_size=32,content_box=[4,4,24,24],black_outline_baked=True) for n in HUD_ICON_NAMES},
@@ -543,19 +552,23 @@ manifest=dict(version='1.4.0',title='ERMA / FIELD INTERFACE',date='2026-11-23',
              health='icon + current/max + 220x12 clipped gauge',ammo='icon + 38px current + max + 12 pips',
              runtime_primitives=['health','ammo_pips','reload','heat','scan_arc','reticle_arms','speed'],
              render_text='runtime only; black 4px outside outline; independent content opacity'),
-    atlas=dict(png='Export/Atlases/icons.png',metadata='Export/Atlases/icons.json',padding=4),
     complete_atlas=dict(png='Export/Atlases/ui_complete.png',metadata='Export/Atlases/ui_complete.json',padding=4,runtime_integration=True,runtime_validation='source_connected; user_build_and_game_checks_pending'),
     backdrop=dict(metadata='Export/Backdrop/backdrop_manifest.json',runtime_integration=True,runtime_validation='world_layers_connected; native_visual_comparison_pending'),
     activity=dict(contract='Source/activity_design_contract.json',review_states='Source/activity_review_states.json',runtime_integration=True,runtime_validation='source_connected; user_build_and_game_checks_pending'),
     current_play=dict(contract='Source/current_play_ui.json',runtime_integration=False),
+    part3=dict(contract='Source/part3_ui.json',runtime_integration=False),
     screens={n:dict(label=v['label'],requirements=v['ids'],svg=f'Source/Screens/{n}.svg',
-                    png=f'Preview/{20261123 if int(n[:2])>=71 else 20261109}/{n}.png') for n,v in SCENES.items()},
+                    png=f'Preview/{20261127 if int(n.split("_",1)[0])>=98 else 20261123 if int(n[:2])>=71 else 20261109}/{n}.png') for n,v in SCENES.items()},
     constraints=['No automatic route polyline','Map north is fixed northeast; rotate actor only',
                  'Mine geometry/targets only in explored and eligible state','Approximate signal is not an exact map pin',
                  'Unlimited spare magazines; no spare ammunition count','No bike fuel or energy resource',
                  'Archive format 8 tracking restore with formats 1-7 fallback','No unrevealed facts or unjoined companions',
                  'No interaction during medical transfer','Dialogue input must be consumed before world input'])
 dump('ui_manifest.json',manifest)
+dump('Source/part3_ui_sprites.json',dict(requests=['UI-26','UI-27','UI-28','UI-29','UI-30'],
+     pixels='straight RGBA8',assets={**{f'Icons/{n}':manifest['icons'][n] for n in PART3_ICONS},
+        **{f'Components/{n}':manifest['components'][n] for n in COMPONENTS if n.startswith(
+            ('world_prompt_','world_keycap_','world_focus_','holo_wrist_','globe_bezel_','showcase_card_','wardrobe_turntable_','part_chip_','minigame_'))}}))
 dump('Validation/text_inventory.json',TEXT_AUDIT)
 dump('Validation/panel_inventory.json',PANEL_AUDIT)
 

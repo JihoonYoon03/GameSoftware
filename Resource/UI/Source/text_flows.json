@@ -3735,6 +3735,91 @@
       "role": "current_UI_body",
       "lossless": true,
       "ellipsis": false
+    },
+    {
+      "source": "리아에게 말 걸기",
+      "lines": [
+        "리아에게 말 걸기"
+      ],
+      "lossless": true,
+      "ellipsis": false,
+      "width": 314,
+      "size": 16,
+      "weight": 400,
+      "role": "part3_ui"
+    },
+    {
+      "source": "비상 배전반 점검",
+      "lines": [
+        "비상 배전반 점검"
+      ],
+      "lossless": true,
+      "ellipsis": false,
+      "width": 314,
+      "size": 16,
+      "weight": 400,
+      "role": "part3_ui"
+    },
+    {
+      "source": "프리즘 광맥 채굴",
+      "lines": [
+        "프리즘 광맥 채굴"
+      ],
+      "lossless": true,
+      "ellipsis": false,
+      "width": 314,
+      "size": 16,
+      "weight": 400,
+      "role": "part3_ui"
+    },
+    {
+      "source": "거주 구역으로 들어가기",
+      "lines": [
+        "거주 구역으로 들어가기"
+      ],
+      "lossless": true,
+      "ellipsis": false,
+      "width": 314,
+      "size": 16,
+      "weight": 400,
+      "role": "part3_ui"
+    },
+    {
+      "source": "공용 비행체 탑승",
+      "lines": [
+        "공용 비행체 탑승"
+      ],
+      "lossless": true,
+      "ellipsis": false,
+      "width": 314,
+      "size": 16,
+      "weight": 400,
+      "role": "part3_ui"
+    },
+    {
+      "source": "북동 잔해 고압 격벽에서 차단 회로를 점검하기",
+      "lines": [
+        "북동 잔해 고압 격벽에서 ",
+        "차단 회로를 점검하기"
+      ],
+      "lossless": true,
+      "ellipsis": false,
+      "width": 314,
+      "size": 16,
+      "weight": 400,
+      "role": "part3_ui"
+    },
+    {
+      "source": "현재 탐사 중인 행성입니다.",
+      "lines": [
+        "현재 탐사 중인 행성입니다."
+      ],
+      "lossless": true,
+      "ellipsis": false,
+      "width": 320,
+      "size": 16,
+      "weight": 400,
+      "role": "part3_ui"
     }
   ],
   "policy": "Lossless wrap and numbered pages; do not ellipsize required text"

@@ -1808,6 +1808,24 @@ CQ-07을 A 이동·경로 안정성, B 감지·기억·역할별 판단, C 동�
 - **18. 미사용 리소스 파일 정리:** 참조가 `0`건인 폐기 레거시 에셋 **647개 파일(`96.82 MB`)**을 삭제했다(`Export/Transit/` 폐기 도로 611개, `Export/Environment/` 미사용 15개, `NPC_Guard_Helmet.glb`, `MaterialPilot/*.gltf|*.bin` 18개, 구형 `UI/Export/Atlases/icons.*` 2개).
 - **검증:** `SimpleGame` + 5개 테스트 타깃 Release x64 빌드, `ResourceAssetsTests`, `CivicTests`, `MapHudTests`, `GameplayTests`(신규 3D 구체 회전·줌 연동 속도·우클릭 목적지·`G` 우주 지도 회귀 포함), `RenderingTests --r4-only --glfw`(RTX 5080 GPU 캡처 `part3-3d-globe-map.png`, `part3-space-system-map.png`, `part2-home-storage-cards.png` 육안 검수 완료), `Test-SourceEncoding.ps1`(176파일), `git diff --check` 전부 통과.
 
+#### 71. 신규 납품 리소스(CQ04B 도로·ColonyV4 행성 텍스처·UI-26~29) 통합 · 시작 전 전체 맵 프리로딩 · 3D 구체 GPU 최적화 · 손목 투사 폐기 · NPC 대화 줌인/거리 종료 (2026-11-27 · 구현 완료)
+
+- **신규 납품 리소스 전면 반영 (`CQ04B` 35모듈 도로 키트 · `ColonyV4` 텍스처 · `UI-26`~`UI-29`):**
+  - **CQ04B 35모듈 3D 도로·교차로·신호·가로시설 키트 ([resource-pack-inputs.mjs](tools/resource-pack-inputs.mjs), [pack-resources.mjs](tools/pack-resources.mjs), [ModelLibrary.cpp](SimpleGame/ModelLibrary.cpp), [Scene.cpp](SimpleGame/Scene.cpp)):** `Resource/Documentation/cq04b_city_kit_v4.json`의 35개 모듈(`cq04b/*`)을 `game-assets.bin`에 패킹(총 `280`개 에셋, `40.5 MB`)하고, Rev 5 절차적 도시 렌더링에서 도로 등급별 3D 타일(`road_local_2lane_16m`·`road_collector_4lane_16m`·`road_arterial_6lane_16m`·`road_ring_4lane_16m`·`road_highway_regional_16m_guardrail`·`elevated_viaduct_4lane_16m`·`bridge_4lane_32m`·`plaza_tile_8m`), 회전교차로(`junc_roundabout_1lane/2lane`), 4현시 신호 갠트리(`signal_gantry_4aspect`), 보행자 신호등(`signal_pedestrian_pole`), 양보 표지판(`sign_roundabout_yield`), 현대 가로등·정류장·벤치·화단·볼라드(`prop_*`)를 실제 지형 고도(`elevation = mz`)에 맞춰 배치했다.
+  - **ColonyV4 행성·우주 GPU 텍스처 ([RenderAssets.cpp](SimpleGame/RenderAssets.cpp), [Renderer.cpp](SimpleGame/Renderer.cpp), [Hud.cpp](SimpleGame/Hud.cpp)):** `Resource/Export/Textures/ColonyV4/`의 `Planet_Erma_Albedo/Cloud.png`, `Planet_Seira_Albedo.png`, `Planet_Orren_Albedo/Ring.png`, `Space_Starfield_Nebula.png`를 WIC 스케일러(`<= 2048×1024`)로 GPU 업로드해 3D 구체 및 우주 성계 지도에 적용했다(오르엔 1D 반경 고리 텍스처는 행성 앞/뒤 분할 3D 경사 원환 메시로 투영).
+  - **UI-26~UI-29 아틀라스 스프라이트 연결 ([Drawing.cpp](SimpleGame/Drawing.cpp), [FieldMinigame.cpp](SimpleGame/FieldMinigame.cpp), [Hud.cpp](SimpleGame/Hud.cpp)):** `ui_complete.json/png`(185종)의 `world_prompt_pill`·`world_keycap_e`·6종 `interact_*` 아이콘, `globe_bezel_ring`·`map_planet_view`/`map_space_view`·`map_cluster_subquest`, `wardrobe_turntable_ring`·`showcase_card_frame`, `minigame_*` 5종을 런타임 UI에 직접 연결했다.
+- **게임 시작 전 전체 맵 로딩 완료 & 테스트 스테이지 전환 시 행성 캐시 재사용 ([Game.h](SimpleGame/Game.h), [Game.cpp](SimpleGame/Game.cpp), [StoryArc.cpp](SimpleGame/StoryArc.cpp)):**
+  - `Game::WaitForSurfaceLoaded()`를 추가해 행성 준비(`surface->Ready()`) 및 초기 주변 청크 스트리밍 완료(`!preparing && queued == 0 && resident > 0`)까지 대기한 뒤 게임플레이를 시작하도록 `StartNewGame()`을 변경했다.
+  - 기존 `EnterTestStage()`는 매 전환마다 `Reset()`으로 에르마 행성을 처음부터 재생성하고 있었으므로, 최초 생성된 `std::shared_ptr<const world::GeneratedPlanet>`를 `cachedErmaPlanet`에 보관해 재사용(`surface->Start(cachedErmaPlanet)`)하고 목표 구역 청크만 빠르게 프리로딩하도록 개선했다. 원격 구역(`n0_outskirts`)에서 헤일로 귀환(`StoryArc::LeaveZoneToHalo`) 시 청크 미적재로 귀환이 막히던 경계 조건도 `RelocateSurfaceSurvey` + `WaitForSurfaceLoaded()` 폴백으로 보강했다.
+- **3D 행성 구체 조작 지연 최적화 ([Hud.cpp](SimpleGame/Hud.cpp)):**
+  - 매 드래그 프레임마다 64×64 격자(4,096회) `terrain.Sample()`과 CPU 폴리곤 클리핑을 수행하던 병목을 제거하고, 단일 GPU 드로우콜 극좌표 구체 패스(`DrawTexturedSpherePass`, 18×48 링, 경도 이음매 보정 + 방향광/림/프레넬 정점 음영 + 구름 레이어)로 대체했다. 드래그 중(`w.mapDragging`)에는 경위선 밀도를 낮추고 건물 폴리곤 재빌드를 생략하며 드래그 종료 즉시 정밀 오버레이를 복원한다.
+- **손목 홀로그램 투사 연출 폐기 및 정리 ([Game.h](SimpleGame/Game.h), [Game.cpp](SimpleGame/Game.cpp), [Hud.cpp](SimpleGame/Hud.cpp), [UI_REQUIREMENTS.md](Resource/UI/UI_REQUIREMENTS.md)):**
+  - 시인성이 낮았던 `PlayerWristHudPoint`, `DrawWristHologramEmitterOverlay`, `mapHologramProgress`, `UI-27` `holo_wrist_emitter` 항목을 코드·테스트·명세에서 완전히 제거했다.
+- **NPC 대면 대화 시 카메라 줌인 & 거리 이탈 자동 종료 ([Game.h](SimpleGame/Game.h), [Game.cpp](SimpleGame/Game.cpp)):**
+  - 무전·단말이 아닌 현장 대면 NPC 대화 시작 시 가장 가까운 화자 앵커(`hasSpeakerAnchor` / `speakerSurfacePosition`)를 탐색해 카메라를 플레이어·화자 중간점(`0.55 / 0.45`)으로 부드럽게 이동시키고 줌 배율을 `>= 2.05x`로 확대한다.
+  - 대화 중에도 `WASD`로 걸어 나올 수 있도록 허용했으며, 화자와 `10.5 m`(오픈월드) / `5.25`유닛(2D) 이상 멀어지면 `Dialogue::CancelByDistance()`로 대화를 자동 종료하고 기존 줌(`preDialogueZoom`)을 복원한다.
+- **검증:** `SimpleGame` + 5개 테스트 타깃 Release x64 빌드, `ResourceAssetsTests`(CQ04B 17종 핵심 모듈 포함), `MapHudTests`, `CivicTests`, `GameplayTests`(전체 7,159행 + `StartNewGame`/`EnterTestStage` 캐시 재사용 + 대면 NPC 줌인·`WASD` 이탈 자동 종료 회귀 포함), `RenderingTests --r4-only --glfw`(RTX 5080 캡처 `part3-3d-globe-map.png`, `part3-space-system-map.png`, `openworld-epilogue-halo.png`, `part2-wardrobe-3d.png`, `part2-home-storage-cards.png`, `part2-minigame-tuner.png` 육안 검수 완료), `Test-SourceEncoding.ps1`(176파일), `git diff --check` 전부 통과.
+
 ### 전체 구조 검토와 반복 비용 리팩토링 — 2026-10-28
 
 작업 브랜치 `iss02_Refactoring`. 전체 게임 상태·레벨·도시/주민/교통·렌더 패스·리소스·모니터 경계를

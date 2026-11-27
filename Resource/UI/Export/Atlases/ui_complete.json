@@ -5,7 +5,7 @@
     "file": "ui_complete.png",
     "width": 2048,
     "height": 2048,
-    "sha256": "38402676ec8b61db25cb6171f9341efa1fb246f204ff9b93e57aa71389ac73bf"
+    "sha256": "fa739fd90e0e6edb46279c83b4865451ae3948e1c44743b7d0b107b079df818b"
   },
   "format": {
     "channels": "RGBA8",
@@ -23,7 +23,7 @@
     "mipmaps": false,
     "wrap": "clamp_to_edge"
   },
-  "source_count": 182,
+  "source_count": 185,
   "legacy_count": 127,
   "sprites": {
     "Components/globe_bezel_ring": {
@@ -32,9 +32,9 @@
       "width": 512,
       "height": 512,
       "source": "Export/Components/globe_bezel_ring.png",
-      "source_sha256": "b8b51e2915d54400e733598d8d3de1105fd5dbfaaa85842b3eb3c915658861d8",
-      "rgba_sha256": "8aea09c37fd7c8bfcc8a3d614a57041540d917abd6f34715f5f624aa02bfa821",
-      "source_rgba_sha256": "8aea09c37fd7c8bfcc8a3d614a57041540d917abd6f34715f5f624aa02bfa821",
+      "source_sha256": "18330f7569f13062326bf1a69de124fb9cf49be2a7aba1dc39f7a1ac2b0c9579",
+      "rgba_sha256": "40beb018f16198df8b3495f6ccac959ecb91ff0a1befbc33b2d31e498ad00eb2",
+      "source_rgba_sha256": "40beb018f16198df8b3495f6ccac959ecb91ff0a1befbc33b2d31e498ad00eb2",
       "uv_pixel_centers": [
         0.002197265625,
         0.002197265625,
@@ -112,9 +112,9 @@
       "width": 256,
       "height": 256,
       "source": "Export/Components/minigame_cipher_ring.png",
-      "source_sha256": "b9c61929a705bbfc71aaa828472f933ea2e76610ab2eea834a918398bbf1c258",
-      "rgba_sha256": "b387cc92bad8ca9ec9971456ced1b0b2f0c16dc5d9442ff27e3e087740580403",
-      "source_rgba_sha256": "b387cc92bad8ca9ec9971456ced1b0b2f0c16dc5d9442ff27e3e087740580403",
+      "source_sha256": "1c7aef315ab302fcf0b8992cad18ac1b72fbf8875629264afd77c10da5cfad03",
+      "rgba_sha256": "68f780f1643ca8f9eeea7f4453dc85d0dbff8611949ccfe0d3c538d99d6514a4",
+      "source_rgba_sha256": "68f780f1643ca8f9eeea7f4453dc85d0dbff8611949ccfe0d3c538d99d6514a4",
       "uv_pixel_centers": [
         0.232666015625,
         0.256103515625,
@@ -160,9 +160,9 @@
       "width": 256,
       "height": 128,
       "source": "Export/Components/minigame_oscilloscope_grid.png",
-      "source_sha256": "278a227550fa350bf64e16c65a0fa636aba7a23fd514f871ce7261b5cfa2ac34",
-      "rgba_sha256": "ccc4581a6e7a8ea5954096a0e8276c14278aa8dbd7edad83e1733aba8a76aa09",
-      "source_rgba_sha256": "ccc4581a6e7a8ea5954096a0e8276c14278aa8dbd7edad83e1733aba8a76aa09",
+      "source_sha256": "a61d4179e48f381949207566d9c4401ff9d3dc029cbd40a2551a26d265b693c5",
+      "rgba_sha256": "b82266324d0bd54348cd6271901d6358ccdd998c2fda660b988464c0372d9fd2",
+      "source_rgba_sha256": "b82266324d0bd54348cd6271901d6358ccdd998c2fda660b988464c0372d9fd2",
       "uv_pixel_centers": [
         0.556884765625,
         0.256103515625,
@@ -176,14 +176,20 @@
       "width": 128,
       "height": 128,
       "source": "Export/Components/showcase_card_frame.png",
-      "source_sha256": "b8ee4a349ae30c3106c468073974646d126302e9960cd7d39d7c03e824bbe60e",
-      "rgba_sha256": "5bfcd6c527dd72fb1eb982450b6a28c1971632882cf371d0f87a69329fbdd0a4",
-      "source_rgba_sha256": "e84cfd0d16182e46918ba903fcd85d1c7e30ca7049df2862d07c769e17263d0c",
+      "source_sha256": "58feb855c29c1a83fbb760a8eb61615cecc065013434193b6a6b1d431c18c394",
+      "rgba_sha256": "4ba61737bab2235d2ec86e54c47278cfb3762fd5777b66bcc86471588452d675",
+      "source_rgba_sha256": "95e2edf87435369ca122bb8b1f3a82593b564f8de51ca5c688d335e0cc44453c",
       "uv_pixel_centers": [
         0.685791015625,
         0.256103515625,
         0.747802734375,
         0.318115234375
+      ],
+      "nine_slice_ltrb": [
+        12,
+        12,
+        12,
+        12
       ],
       "nine_slice_inset": 12,
       "alpha_bleed_px": 2
@@ -226,9 +232,9 @@
       "width": 256,
       "height": 96,
       "source": "Export/Components/wardrobe_turntable_ring.png",
-      "source_sha256": "0e517182181f6f848ce1c2126d0f59b70c87701e366049c04359d2af956321f9",
-      "rgba_sha256": "6378c6102b3e29a49f7935593017a55a05fddae4e832eb04db2e8ce53109b2f3",
-      "source_rgba_sha256": "6378c6102b3e29a49f7935593017a55a05fddae4e832eb04db2e8ce53109b2f3",
+      "source_sha256": "581900370df1fefe8461a2869517f85fc2b5b4ff534c8da8f433e75b91bfe539",
+      "rgba_sha256": "5895c68f55cba02cbca36673443f76c31361955e5d06a64b61162e6db5e808da",
+      "source_rgba_sha256": "5895c68f55cba02cbca36673443f76c31361955e5d06a64b61162e6db5e808da",
       "uv_pixel_centers": [
         0.236572265625,
         0.486572265625,
@@ -251,6 +257,13 @@
         0.411865234375,
         0.532958984375
       ],
+      "nine_slice_ltrb": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "nine_slice_inset": 12,
       "alpha_bleed_px": 2
     },
     "Components/panel_fill": {
@@ -268,6 +281,13 @@
         0.462646484375,
         0.532958984375
       ],
+      "nine_slice_ltrb": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "nine_slice_inset": 12,
       "alpha_bleed_px": 2
     },
     "Components/world_focus_ring": {
@@ -276,9 +296,9 @@
       "width": 128,
       "height": 64,
       "source": "Export/Components/world_focus_ring.png",
-      "source_sha256": "5b33f5f699235d8e5b9b26b641280f27362bdf84e45e388aef7fbe3dda9ab0b1",
-      "rgba_sha256": "c6b813c9f45e774e8969fdb7860ec5ca502e3847b49a6674fda99366e3c0fe93",
-      "source_rgba_sha256": "c6b813c9f45e774e8969fdb7860ec5ca502e3847b49a6674fda99366e3c0fe93",
+      "source_sha256": "430ab8ace36546a3ca1433eeb11cd0ebe4efe91665a459ef71d3d203b0cd92b5",
+      "rgba_sha256": "401f2ddd38cc4ff569556d1064529df7d1382f05369ba272d11b0bf2f18f3ed0",
+      "source_rgba_sha256": "401f2ddd38cc4ff569556d1064529df7d1382f05369ba272d11b0bf2f18f3ed0",
       "uv_pixel_centers": [
         0.467041015625,
         0.486572265625,
@@ -292,9 +312,9 @@
       "width": 64,
       "height": 64,
       "source": "Export/Components/holo_wrist_emitter.png",
-      "source_sha256": "b18a1d2008a0a86201a0ecca8981b7ae956aa22c0392054b4bc6d2fa5a4a7398",
-      "rgba_sha256": "bebed8b72f029c39fc31f69dd04973c93e49df8a76b7ef3c1e228b160adcd24b",
-      "source_rgba_sha256": "bebed8b72f029c39fc31f69dd04973c93e49df8a76b7ef3c1e228b160adcd24b",
+      "source_sha256": "70c3b7a3bebb6c1ca4cc220aaf2f35600a26fbc48436fc674294a36963398f52",
+      "rgba_sha256": "0b5fca925aa4e35793f365de36c2585687b4f158493c376c3bc3b787027d65a0",
+      "source_rgba_sha256": "0b5fca925aa4e35793f365de36c2585687b4f158493c376c3bc3b787027d65a0",
       "uv_pixel_centers": [
         0.533447265625,
         0.486572265625,
@@ -909,6 +929,13 @@
         0.958740234375,
         0.568115234375
       ],
+      "nine_slice_ltrb": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "nine_slice_inset": 12,
       "alpha_bleed_px": 2
     },
     "Components/button_disabled": {
@@ -943,6 +970,13 @@
         0.161865234375,
         0.603271484375
       ],
+      "nine_slice_ltrb": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "nine_slice_inset": 12,
       "alpha_bleed_px": 2
     },
     "Components/button_pressed": {
@@ -960,6 +994,13 @@
         0.243896484375,
         0.603271484375
       ],
+      "nine_slice_ltrb": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "nine_slice_inset": 12,
       "alpha_bleed_px": 2
     },
     "Components/button_selected": {
@@ -977,6 +1018,13 @@
         0.325927734375,
         0.603271484375
       ],
+      "nine_slice_ltrb": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "nine_slice_inset": 12,
       "alpha_bleed_px": 2
     },
     "Components/button_warning": {
@@ -1034,9 +1082,9 @@
       "width": 48,
       "height": 48,
       "source": "Export/Components/minigame_circuit_node.png",
-      "source_sha256": "d8572f1927ee23bbcd1f7bafa99efdaabdd40f5ff346c3e339a368ace6345dc5",
-      "rgba_sha256": "92eb02625d8ba75f06213382d349da424fa3f5e68f470c059bc91122889cb5ed",
-      "source_rgba_sha256": "92eb02625d8ba75f06213382d349da424fa3f5e68f470c059bc91122889cb5ed",
+      "source_sha256": "3b47d42d881c9de3b23ac9ca89128fafe61cf217a6f6dc144d3b0672ec4e02e7",
+      "rgba_sha256": "6334983f354a8c5efa9c5d97cda2fd7648ff3f052f33a4587862a264882bdadd",
+      "source_rgba_sha256": "6334983f354a8c5efa9c5d97cda2fd7648ff3f052f33a4587862a264882bdadd",
       "uv_pixel_centers": [
         0.467041015625,
         0.580322265625,
@@ -2292,26 +2340,80 @@
         0.657958984375
       ]
     },
-    "Components/world_prompt_pill": {
+    "Components/world_prompt_edge": {
       "x": 1348,
       "y": 1300,
       "width": 96,
       "height": 40,
-      "source": "Export/Components/world_prompt_pill.png",
-      "source_sha256": "dc91e6d3c85c2bef8139ab6ff1dbfeeec28f923c4fd58b442dbf20029118a82b",
-      "rgba_sha256": "feb8b076dff822fa89f368e9d36b455ed5473a7da5f4054e340a91b591af31e4",
-      "source_rgba_sha256": "cc77dc32b24ca112285e3018ed1d2f0998ea577c9202eb3954321f8f80c82c65",
+      "source": "Export/Components/world_prompt_edge.png",
+      "source_sha256": "ae906b3ef1abb140508010f0bec1bf96de4670f9442fd3404ec3ad2376913ac8",
+      "rgba_sha256": "9cb231d99a8b760692e54c97f2d828b9aaa63b110f1e5b02dabb57e29d30dab1",
+      "source_rgba_sha256": "f73a500cd7ea5021f8b44bd5ec8cd009bba8d562fe75ca1faac41e2c00b26576",
       "uv_pixel_centers": [
         0.658447265625,
         0.635009765625,
         0.704833984375,
         0.654052734375
       ],
+      "nine_slice_ltrb": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "nine_slice_inset": 12,
+      "alpha_bleed_px": 2
+    },
+    "Components/world_prompt_fill": {
+      "x": 1452,
+      "y": 1300,
+      "width": 96,
+      "height": 40,
+      "source": "Export/Components/world_prompt_fill.png",
+      "source_sha256": "a8d29388c2291053cb9b3437d559f5d69522fa0ab926194ba73ded07cd5edd02",
+      "rgba_sha256": "54823ed9611b62773e612d2df7c5a25d689f958735de3db0fbcd01f325255f4b",
+      "source_rgba_sha256": "9c20f329ff9072614c7134d91a5c08f45746bba1ef5f4dfc2c4319cea45098d0",
+      "uv_pixel_centers": [
+        0.709228515625,
+        0.635009765625,
+        0.755615234375,
+        0.654052734375
+      ],
+      "nine_slice_ltrb": [
+        12,
+        12,
+        12,
+        12
+      ],
+      "nine_slice_inset": 12,
+      "alpha_bleed_px": 2
+    },
+    "Components/world_prompt_pill": {
+      "x": 1556,
+      "y": 1300,
+      "width": 96,
+      "height": 40,
+      "source": "Export/Components/world_prompt_pill.png",
+      "source_sha256": "de56818c2ac5b253bab3de5e5347a8f3246260fbcdfdae3f1111f17544e79a6e",
+      "rgba_sha256": "9781500e3c070882f8606c088516605f44cf78c3eed76d9b829861a6a792da26",
+      "source_rgba_sha256": "140c7e9d7137f102d52eeb56d93d3c7377c8135db6b30f375182da57e823a3ad",
+      "uv_pixel_centers": [
+        0.760009765625,
+        0.635009765625,
+        0.806396484375,
+        0.654052734375
+      ],
+      "nine_slice_ltrb": [
+        12,
+        12,
+        12,
+        12
+      ],
       "nine_slice_inset": 12,
       "alpha_bleed_px": 2
     },
     "Components/signal_edge": {
-      "x": 1452,
+      "x": 1660,
       "y": 1300,
       "width": 48,
       "height": 40,
@@ -2320,14 +2422,14 @@
       "rgba_sha256": "33c7f76eaf3693d6406094e34d0e4bbb5bec7975c1e0cce38a7fa1af0214b46a",
       "source_rgba_sha256": "33c7f76eaf3693d6406094e34d0e4bbb5bec7975c1e0cce38a7fa1af0214b46a",
       "uv_pixel_centers": [
-        0.709228515625,
+        0.810791015625,
         0.635009765625,
-        0.732177734375,
+        0.833740234375,
         0.654052734375
       ]
     },
     "Components/cursor_menu": {
-      "x": 1508,
+      "x": 1716,
       "y": 1300,
       "width": 40,
       "height": 40,
@@ -2336,14 +2438,14 @@
       "rgba_sha256": "5d784aef5f8dca899fb8380a02b3c22f7fb8b8fc9e7fb3a56885dae34f060e6a",
       "source_rgba_sha256": "5d784aef5f8dca899fb8380a02b3c22f7fb8b8fc9e7fb3a56885dae34f060e6a",
       "uv_pixel_centers": [
-        0.736572265625,
+        0.838134765625,
         0.635009765625,
-        0.755615234375,
+        0.857177734375,
         0.654052734375
       ]
     },
     "Components/destination_edge": {
-      "x": 1556,
+      "x": 1764,
       "y": 1300,
       "width": 40,
       "height": 40,
@@ -2352,82 +2454,102 @@
       "rgba_sha256": "9c99fad189e07099c8207196854cb778649014e4d9bbc4b793e11528de23bc13",
       "source_rgba_sha256": "9c99fad189e07099c8207196854cb778649014e4d9bbc4b793e11528de23bc13",
       "uv_pixel_centers": [
-        0.760009765625,
+        0.861572265625,
         0.635009765625,
-        0.779052734375,
+        0.880615234375,
         0.654052734375
       ]
     },
     "Components/minigame_timing_track": {
-      "x": 1604,
-      "y": 1300,
+      "x": 4,
+      "y": 1356,
       "width": 256,
       "height": 32,
       "source": "Export/Components/minigame_timing_track.png",
-      "source_sha256": "af36752de64c1d540b8640acac74f4aed7bfcb0a2cc70cf9dc933ef447713583",
-      "rgba_sha256": "b37f5c9529a3ea45ac094bf54bde310e115102b767780eacb1d0965ad76e3e7e",
-      "source_rgba_sha256": "b37f5c9529a3ea45ac094bf54bde310e115102b767780eacb1d0965ad76e3e7e",
+      "source_sha256": "72f94f4ccc4e110ab6882888fd8fa1e625c56cfffdf17ce2c13d7b36f5833626",
+      "rgba_sha256": "0ab432fd7d41a526bc104e70a3b86c838bc55f27be6609fad12ca82a0d8200fd",
+      "source_rgba_sha256": "0ab432fd7d41a526bc104e70a3b86c838bc55f27be6609fad12ca82a0d8200fd",
       "uv_pixel_centers": [
-        0.783447265625,
-        0.635009765625,
-        0.907958984375,
-        0.650146484375
+        0.002197265625,
+        0.662353515625,
+        0.126708984375,
+        0.677490234375
       ]
     },
     "Components/keycap": {
-      "x": 1868,
-      "y": 1300,
+      "x": 268,
+      "y": 1356,
       "width": 48,
       "height": 32,
       "source": "Export/Components/keycap.png",
       "source_sha256": "8ba5e096329fb0000590210d7b3503dd0eb2c22567a15e34fe9d2604573f3956",
-      "rgba_sha256": "63bd4f0c43ae1d384f02f59d5a0159b843f98dd6b4e64d5aceb267bfad2d5ac7",
+      "rgba_sha256": "daa06aed0105cce1a64b117fe65568c5e9990505a631affc378c490503296354",
       "source_rgba_sha256": "63bd4f0c43ae1d384f02f59d5a0159b843f98dd6b4e64d5aceb267bfad2d5ac7",
       "uv_pixel_centers": [
-        0.912353515625,
-        0.635009765625,
-        0.935302734375,
-        0.650146484375
-      ]
+        0.131103515625,
+        0.662353515625,
+        0.154052734375,
+        0.677490234375
+      ],
+      "nine_slice_ltrb": [
+        6,
+        6,
+        6,
+        6
+      ],
+      "nine_slice_inset": 6,
+      "alpha_bleed_px": 2
     },
     "Components/part_chip_off": {
-      "x": 1924,
-      "y": 1300,
+      "x": 324,
+      "y": 1356,
       "width": 48,
       "height": 32,
       "source": "Export/Components/part_chip_off.png",
-      "source_sha256": "93d34589873bc5be043919eba6874cb225214ee1e4bb13b445f4706388d1a74b",
-      "rgba_sha256": "21aad3dad451865a86f6c81c05129c65d8c9776ed403dde53e234ef84f546a47",
-      "source_rgba_sha256": "fc2a41578f2c0bb62bcae29a2288cc3b2acf832ec6a2afea4a37c67d35a11ed1",
+      "source_sha256": "61d1368f76877d1f2c499e75770f70900cd42a25ce421b5193e4fd1eb3390918",
+      "rgba_sha256": "4780796bebec81ee5378e257044c8725447fd658d7314e2ae3bb159877d17677",
+      "source_rgba_sha256": "3a6510530fb7498757c44babaa9e3847899210429f342b0fff801a06bfbd3406",
       "uv_pixel_centers": [
-        0.939697265625,
-        0.635009765625,
-        0.962646484375,
-        0.650146484375
+        0.158447265625,
+        0.662353515625,
+        0.181396484375,
+        0.677490234375
+      ],
+      "nine_slice_ltrb": [
+        8,
+        8,
+        8,
+        8
       ],
       "nine_slice_inset": 8,
       "alpha_bleed_px": 2
     },
     "Components/part_chip_on": {
-      "x": 1980,
-      "y": 1300,
+      "x": 380,
+      "y": 1356,
       "width": 48,
       "height": 32,
       "source": "Export/Components/part_chip_on.png",
-      "source_sha256": "eb3b3e6d599e36bb7625760ca3ccf2c189f62aed946c7fe1eb8ac4d0cfa89f95",
-      "rgba_sha256": "ba59cd7bb2e70c8d1473882c0fc8e268c94cf1582cb0c2dfb21b12001b4621cc",
-      "source_rgba_sha256": "7c1dc24f244548917a8ae0183afe4355f1206e762425b936821c6c2445137ee6",
+      "source_sha256": "12f860fb0cfd16b933f2a781a307a2f1c990f150f6345bcbd9963dd808e2ab97",
+      "rgba_sha256": "e7e854e8071315854d49ad7684a85649199372710abebd525089b55a7a7f04aa",
+      "source_rgba_sha256": "440897713af98c4dd8a9d678e5e6f832f14db2fd44b042f6793737ed8f79ede4",
       "uv_pixel_centers": [
-        0.967041015625,
-        0.635009765625,
-        0.989990234375,
-        0.650146484375
+        0.185791015625,
+        0.662353515625,
+        0.208740234375,
+        0.677490234375
+      ],
+      "nine_slice_ltrb": [
+        8,
+        8,
+        8,
+        8
       ],
       "nine_slice_inset": 8,
       "alpha_bleed_px": 2
     },
     "Components/cursor_hip": {
-      "x": 4,
+      "x": 436,
       "y": 1356,
       "width": 32,
       "height": 32,
@@ -2436,14 +2558,14 @@
       "rgba_sha256": "cfc181f3583e8aef596d3852c5c8f029e23a33f86349c6fd8f12ce14c263b046",
       "source_rgba_sha256": "cfc181f3583e8aef596d3852c5c8f029e23a33f86349c6fd8f12ce14c263b046",
       "uv_pixel_centers": [
-        0.002197265625,
+        0.213134765625,
         0.662353515625,
-        0.017333984375,
+        0.228271484375,
         0.677490234375
       ]
     },
     "Components/cursor_unarmed": {
-      "x": 44,
+      "x": 476,
       "y": 1356,
       "width": 32,
       "height": 32,
@@ -2452,190 +2574,206 @@
       "rgba_sha256": "f9bc0bde3c8b59090d02f9275ed1dd7a3a85fc6b72e6c080507104fde9f24ded",
       "source_rgba_sha256": "f9bc0bde3c8b59090d02f9275ed1dd7a3a85fc6b72e6c080507104fde9f24ded",
       "uv_pixel_centers": [
-        0.021728515625,
+        0.232666015625,
         0.662353515625,
-        0.036865234375,
+        0.247802734375,
         0.677490234375
       ]
     },
     "Components/world_keycap_e": {
-      "x": 84,
+      "x": 516,
       "y": 1356,
       "width": 32,
       "height": 32,
       "source": "Export/Components/world_keycap_e.png",
-      "source_sha256": "4dc331b29747d2a44515e1b378faa464eed86ff492f2538cbaeb36e128153af9",
-      "rgba_sha256": "fdfaaa3e2fdae90ebfa9dc0e496ddc63689644e936bbc27e46b57d82d046fb8d",
-      "source_rgba_sha256": "fdfaaa3e2fdae90ebfa9dc0e496ddc63689644e936bbc27e46b57d82d046fb8d",
+      "source_sha256": "b2aa78b8ef75f78ddab21ae258c2cc66d1e7aa2d6005fabe4326441f08b769cc",
+      "rgba_sha256": "ac3305dcf6c8229e26eafa7b8052a0ecc892375d16d579114fa048272dd4bb43",
+      "source_rgba_sha256": "ac3305dcf6c8229e26eafa7b8052a0ecc892375d16d579114fa048272dd4bb43",
       "uv_pixel_centers": [
-        0.041259765625,
+        0.252197265625,
         0.662353515625,
-        0.056396484375,
+        0.267333984375,
         0.677490234375
       ]
     },
     "Components/world_keycap_e_active": {
-      "x": 124,
+      "x": 556,
       "y": 1356,
       "width": 32,
       "height": 32,
       "source": "Export/Components/world_keycap_e_active.png",
-      "source_sha256": "63a2af021ab9acada0e22d8f9f459b4184c73f62262c8fa940c9dcc48bace2ed",
-      "rgba_sha256": "0011e3f020c9b4eca897c92eb9b279dd99bde8466f7c1398648ecc61d07389c7",
-      "source_rgba_sha256": "0011e3f020c9b4eca897c92eb9b279dd99bde8466f7c1398648ecc61d07389c7",
+      "source_sha256": "0e32a754e8ff9e98a93a50e37e97f09fa0bb511c3c860fd8c705ed19beeb815a",
+      "rgba_sha256": "baf804a46ff9eeff1e9043f6428151b0c2e44e9956701af9323a78f109690191",
+      "source_rgba_sha256": "baf804a46ff9eeff1e9043f6428151b0c2e44e9956701af9323a78f109690191",
       "uv_pixel_centers": [
-        0.060791015625,
+        0.271728515625,
         0.662353515625,
-        0.075927734375,
+        0.286865234375,
         0.677490234375
       ]
     },
     "Icons/interact_door": {
-      "x": 164,
+      "x": 596,
       "y": 1356,
       "width": 32,
       "height": 32,
       "source": "Export/Icons/interact_door.png",
-      "source_sha256": "740e789bc552674a47fcdd9e3e6356c06669ecdff0ee80003bbf22db0da2c0ab",
-      "rgba_sha256": "8e1a546b8a26d469f5b61be786fa94e1a76fc466e54fc01ce33a5a5d6d6528c9",
-      "source_rgba_sha256": "8e1a546b8a26d469f5b61be786fa94e1a76fc466e54fc01ce33a5a5d6d6528c9",
+      "source_sha256": "dca6d8ba0e1d76d394fdf29394657dc1ad9fb03eef09bc3dd7db3f1e2d7d8ac9",
+      "rgba_sha256": "9bfb0e46a04744e7f047a058e3a4a8363d34e262c02cf0a183c48e008d2e9b5f",
+      "source_rgba_sha256": "9bfb0e46a04744e7f047a058e3a4a8363d34e262c02cf0a183c48e008d2e9b5f",
       "uv_pixel_centers": [
-        0.080322265625,
+        0.291259765625,
         0.662353515625,
-        0.095458984375,
+        0.306396484375,
         0.677490234375
       ]
     },
     "Icons/interact_hack": {
-      "x": 204,
+      "x": 636,
       "y": 1356,
       "width": 32,
       "height": 32,
       "source": "Export/Icons/interact_hack.png",
-      "source_sha256": "cd04444c7859686102dbfb91a7727a3f6f360c2af3702337c601252285b6f791",
-      "rgba_sha256": "645892dada9e4f2aa904c040644dfbb8b0b3a680afad9618561a808eba042a41",
-      "source_rgba_sha256": "645892dada9e4f2aa904c040644dfbb8b0b3a680afad9618561a808eba042a41",
+      "source_sha256": "165093628f320bea871e23156889ba0abdab4918aee45c8dc5e80548b294a0e0",
+      "rgba_sha256": "c0cffed048d48a36329238967b1a0d602984ab08b5ac9b8b1f43fc73509536b5",
+      "source_rgba_sha256": "c0cffed048d48a36329238967b1a0d602984ab08b5ac9b8b1f43fc73509536b5",
       "uv_pixel_centers": [
-        0.099853515625,
+        0.310791015625,
         0.662353515625,
-        0.114990234375,
+        0.325927734375,
         0.677490234375
       ]
     },
     "Icons/interact_quest": {
-      "x": 244,
+      "x": 676,
       "y": 1356,
       "width": 32,
       "height": 32,
       "source": "Export/Icons/interact_quest.png",
-      "source_sha256": "b20ca8f26b0090c757c5efae69699e4971f38f552056643b6e0af33e7a71a0fb",
-      "rgba_sha256": "ab69d5f4791e1d8c0f07f1b17f5ecbd1092df15040ddae34e1a791e8a7b98d23",
-      "source_rgba_sha256": "ab69d5f4791e1d8c0f07f1b17f5ecbd1092df15040ddae34e1a791e8a7b98d23",
+      "source_sha256": "d03fbeaae9523f4d25e51b06451e7aba2f0eee6ba33a215f4c768922d1cc7b48",
+      "rgba_sha256": "92e6fe0b981d5692a45493c9bb258f6db601a9ab29eadf9ffeebccaa4f654045",
+      "source_rgba_sha256": "92e6fe0b981d5692a45493c9bb258f6db601a9ab29eadf9ffeebccaa4f654045",
       "uv_pixel_centers": [
-        0.119384765625,
+        0.330322265625,
         0.662353515625,
-        0.134521484375,
+        0.345458984375,
         0.677490234375
       ]
     },
     "Icons/interact_salvage": {
-      "x": 284,
+      "x": 716,
       "y": 1356,
       "width": 32,
       "height": 32,
       "source": "Export/Icons/interact_salvage.png",
-      "source_sha256": "265be3e7f4f61c99b7319b67d855881e53aa989367cd5654e277f7d4a8e04e49",
-      "rgba_sha256": "a59ace48f0fa0a8d69a25ca4507b84ab9782b0a692086ba9e5c1d6b86d4965de",
-      "source_rgba_sha256": "a59ace48f0fa0a8d69a25ca4507b84ab9782b0a692086ba9e5c1d6b86d4965de",
+      "source_sha256": "55e39cc1902b13f44134e952249ade0c218065c3b3b5f34212abe05ac742e85f",
+      "rgba_sha256": "a7908936e9fa127704c1e2af0a497af40325d7852b8074848b97ea0faab2aa85",
+      "source_rgba_sha256": "a7908936e9fa127704c1e2af0a497af40325d7852b8074848b97ea0faab2aa85",
       "uv_pixel_centers": [
-        0.138916015625,
+        0.349853515625,
         0.662353515625,
-        0.154052734375,
+        0.364990234375,
         0.677490234375
       ]
     },
     "Icons/interact_talk": {
-      "x": 324,
+      "x": 756,
       "y": 1356,
       "width": 32,
       "height": 32,
       "source": "Export/Icons/interact_talk.png",
-      "source_sha256": "c306ea6b7349cc12aa2fb09bca9dbdb6d0607c84018675cdae3f68495b341c0f",
-      "rgba_sha256": "a2522131eeb2734ed0d063d535fe0122f473c5e6d0cff0564a3f80e854c5d5d5",
-      "source_rgba_sha256": "a2522131eeb2734ed0d063d535fe0122f473c5e6d0cff0564a3f80e854c5d5d5",
+      "source_sha256": "f83250520d6b450e07a8b8f4e85b2650f39b2425e1a0819344603ad4986cb77c",
+      "rgba_sha256": "8dd634b7b1a9ce8960820a610911b6be305a2fd99741f749822ea58a9cfff5c8",
+      "source_rgba_sha256": "8dd634b7b1a9ce8960820a610911b6be305a2fd99741f749822ea58a9cfff5c8",
       "uv_pixel_centers": [
-        0.158447265625,
+        0.369384765625,
         0.662353515625,
-        0.173583984375,
+        0.384521484375,
         0.677490234375
       ]
     },
     "Icons/interact_vehicle": {
-      "x": 364,
+      "x": 796,
       "y": 1356,
       "width": 32,
       "height": 32,
       "source": "Export/Icons/interact_vehicle.png",
-      "source_sha256": "08176386c888dcbfa26fcc17167cc82d486f28c6e7501ee2f003018c25474322",
-      "rgba_sha256": "57eecccb1648db555a6bab3b1cd05956e752c5e858bf113c8adf2e5a2d465494",
-      "source_rgba_sha256": "57eecccb1648db555a6bab3b1cd05956e752c5e858bf113c8adf2e5a2d465494",
+      "source_sha256": "086f0aa2f4a40e9f2506699e1fc37858c9b0a2beaf2285e0129c917bce5590a3",
+      "rgba_sha256": "1eb6035877da9d307d0abdd02a020dbd197f8a8916b4dc701b6e120b45482de1",
+      "source_rgba_sha256": "1eb6035877da9d307d0abdd02a020dbd197f8a8916b4dc701b6e120b45482de1",
       "uv_pixel_centers": [
-        0.177978515625,
+        0.388916015625,
         0.662353515625,
-        0.193115234375,
+        0.404052734375,
         0.677490234375
       ]
     },
     "Icons/map_cluster_subquest": {
-      "x": 404,
+      "x": 836,
       "y": 1356,
       "width": 32,
       "height": 32,
       "source": "Export/Icons/map_cluster_subquest.png",
-      "source_sha256": "93d1d4bc12d7c087c107a82726ad70641433c6c65362d32ed854123eb51cc7e3",
-      "rgba_sha256": "b428f3f7a8b4060e5826d1be51df8558d2ec6c000659ea819a3f7e8b45d3684f",
-      "source_rgba_sha256": "b428f3f7a8b4060e5826d1be51df8558d2ec6c000659ea819a3f7e8b45d3684f",
+      "source_sha256": "a18bf411e1e4b3838b8f17e917072223d93ff3f4fc2ef6826ab28decd1bae031",
+      "rgba_sha256": "a60f6e0fdef9d53d960cf851a043cbc8a9ccca7ee8912296a584dc8509fd9f08",
+      "source_rgba_sha256": "a60f6e0fdef9d53d960cf851a043cbc8a9ccca7ee8912296a584dc8509fd9f08",
       "uv_pixel_centers": [
-        0.197509765625,
+        0.408447265625,
         0.662353515625,
-        0.212646484375,
+        0.423583984375,
         0.677490234375
       ]
     },
     "Icons/map_planet_view": {
-      "x": 444,
+      "x": 876,
       "y": 1356,
       "width": 32,
       "height": 32,
       "source": "Export/Icons/map_planet_view.png",
-      "source_sha256": "fc8a4bb8ac6ad6c6bda38c8852e20f0978dc8b8f886e9745db7747a8e33b75aa",
-      "rgba_sha256": "e3aa60cb7d8ef4a5c46a4637a51023011965f8cc8d4202f04b70f684cb877cb4",
-      "source_rgba_sha256": "e3aa60cb7d8ef4a5c46a4637a51023011965f8cc8d4202f04b70f684cb877cb4",
+      "source_sha256": "fa335c70a2adf05ee9974c8aaa995a4d164beb941aad3964c873d62318a2034a",
+      "rgba_sha256": "8f7946552f108a81924d1c33ffda9d82fce6c9fa76d262609da487b9520ca326",
+      "source_rgba_sha256": "8f7946552f108a81924d1c33ffda9d82fce6c9fa76d262609da487b9520ca326",
       "uv_pixel_centers": [
-        0.217041015625,
+        0.427978515625,
         0.662353515625,
-        0.232177734375,
+        0.443115234375,
         0.677490234375
       ]
     },
     "Icons/map_space_view": {
-      "x": 484,
+      "x": 916,
       "y": 1356,
       "width": 32,
       "height": 32,
       "source": "Export/Icons/map_space_view.png",
-      "source_sha256": "9e8688b0f031caee2dccdcdd2486924260bbd70071b510b11db17b431e6ff11e",
-      "rgba_sha256": "28e5cab8eb3a104463b1cc25553fcbee5802ba6336451b4470e5155b786cc6cc",
-      "source_rgba_sha256": "28e5cab8eb3a104463b1cc25553fcbee5802ba6336451b4470e5155b786cc6cc",
+      "source_sha256": "bbad3572aa97b0a26fbb78db7b6a2819303d6701657d6957cca44512ee639949",
+      "rgba_sha256": "4c27af7e8320b8b1571576cc39ce8d876818c60b4de348625c3b759b197d495e",
+      "source_rgba_sha256": "4c27af7e8320b8b1571576cc39ce8d876818c60b4de348625c3b759b197d495e",
       "uv_pixel_centers": [
-        0.236572265625,
+        0.447509765625,
         0.662353515625,
-        0.251708984375,
+        0.462646484375,
+        0.677490234375
+      ]
+    },
+    "Components/minigame_timing_target": {
+      "x": 956,
+      "y": 1356,
+      "width": 24,
+      "height": 32,
+      "source": "Export/Components/minigame_timing_target.png",
+      "source_sha256": "c9e040ca26b31c58fd80c41327a8be0cca246877f719a77541362607b6991b07",
+      "rgba_sha256": "a0ec1b1918eaf6616a200911ba4ed0796dc2b75a10cebe4deba9c7dd84b75ef4",
+      "source_rgba_sha256": "a0ec1b1918eaf6616a200911ba4ed0796dc2b75a10cebe4deba9c7dd84b75ef4",
+      "uv_pixel_centers": [
+        0.467041015625,
+        0.662353515625,
+        0.478271484375,
         0.677490234375
       ]
     },
     "Components/hud_health_track": {
-      "x": 524,
+      "x": 988,
       "y": 1356,
       "width": 224,
       "height": 16,
@@ -2644,14 +2782,14 @@
       "rgba_sha256": "a8ec330d8aa738a64fe4248cb12bcd1d3b728e19cfff00eb805e98f99986741b",
       "source_rgba_sha256": "a8ec330d8aa738a64fe4248cb12bcd1d3b728e19cfff00eb805e98f99986741b",
       "uv_pixel_centers": [
-        0.256103515625,
+        0.482666015625,
         0.662353515625,
-        0.364990234375,
+        0.591552734375,
         0.669677734375
       ]
     },
     "Components/fade_overlay": {
-      "x": 756,
+      "x": 1220,
       "y": 1356,
       "width": 16,
       "height": 16,
@@ -2660,14 +2798,14 @@
       "rgba_sha256": "3afa4bd6428ef80a2157bcd93bd31c71a55d5530fd7928b2406bf5fdb387591e",
       "source_rgba_sha256": "3afa4bd6428ef80a2157bcd93bd31c71a55d5530fd7928b2406bf5fdb387591e",
       "uv_pixel_centers": [
-        0.369384765625,
+        0.595947265625,
         0.662353515625,
-        0.376708984375,
+        0.603271484375,
         0.669677734375
       ]
     },
     "Components/hud_reload_track": {
-      "x": 780,
+      "x": 1244,
       "y": 1356,
       "width": 156,
       "height": 14,
@@ -2676,14 +2814,14 @@
       "rgba_sha256": "3578b7ceb99009170fae613d7fec00c1403b88909f08a389eff0dfa36331b410",
       "source_rgba_sha256": "3578b7ceb99009170fae613d7fec00c1403b88909f08a389eff0dfa36331b410",
       "uv_pixel_centers": [
-        0.381103515625,
+        0.607666015625,
         0.662353515625,
-        0.456787109375,
+        0.683349609375,
         0.668701171875
       ]
     },
     "Components/hud_health_fill": {
-      "x": 944,
+      "x": 1408,
       "y": 1356,
       "width": 220,
       "height": 12,
@@ -2692,14 +2830,14 @@
       "rgba_sha256": "07006f261afad82f6e852b85bac1bed06b005a18bafd6fe7f270de596a92d1a2",
       "source_rgba_sha256": "07006f261afad82f6e852b85bac1bed06b005a18bafd6fe7f270de596a92d1a2",
       "uv_pixel_centers": [
-        0.461181640625,
+        0.687744140625,
         0.662353515625,
-        0.568115234375,
+        0.794677734375,
         0.667724609375
       ]
     },
     "Components/hud_ammo_pip": {
-      "x": 1172,
+      "x": 1636,
       "y": 1356,
       "width": 11,
       "height": 12,
@@ -2708,14 +2846,14 @@
       "rgba_sha256": "8a132ae11ea4395c0a31541480fee5d2ab492da54c44b4c6bf5a96c552a1ac1f",
       "source_rgba_sha256": "8a132ae11ea4395c0a31541480fee5d2ab492da54c44b4c6bf5a96c552a1ac1f",
       "uv_pixel_centers": [
-        0.572509765625,
+        0.799072265625,
         0.662353515625,
-        0.577392578125,
+        0.803955078125,
         0.667724609375
       ]
     },
     "Components/hud_ammo_pip_empty": {
-      "x": 1191,
+      "x": 1655,
       "y": 1356,
       "width": 11,
       "height": 12,
@@ -2724,14 +2862,14 @@
       "rgba_sha256": "79b2d6af8ece1285f3266bb2869610f75aa6636f063830c0cda03c6fad14f0cc",
       "source_rgba_sha256": "79b2d6af8ece1285f3266bb2869610f75aa6636f063830c0cda03c6fad14f0cc",
       "uv_pixel_centers": [
-        0.581787109375,
+        0.808349609375,
         0.662353515625,
-        0.586669921875,
+        0.813232421875,
         0.667724609375
       ]
     },
     "Components/hud_heat_track": {
-      "x": 1210,
+      "x": 1674,
       "y": 1356,
       "width": 169,
       "height": 10,
@@ -2740,14 +2878,14 @@
       "rgba_sha256": "fad3c1a7e8dc84860ef8eb3d380ad16b7a86b2bf6ba09070e48c4698dee04cdb",
       "source_rgba_sha256": "fad3c1a7e8dc84860ef8eb3d380ad16b7a86b2bf6ba09070e48c4698dee04cdb",
       "uv_pixel_centers": [
-        0.591064453125,
+        0.817626953125,
         0.662353515625,
-        0.673095703125,
+        0.899658203125,
         0.666748046875
       ]
     },
     "Components/hud_reload_fill": {
-      "x": 1387,
+      "x": 1851,
       "y": 1356,
       "width": 152,
       "height": 10,
@@ -2756,14 +2894,14 @@
       "rgba_sha256": "3c3ef367e61ea9a4df661901909f0cf513ab3023a770732604705608bed3d707",
       "source_rgba_sha256": "3c3ef367e61ea9a4df661901909f0cf513ab3023a770732604705608bed3d707",
       "uv_pixel_centers": [
-        0.677490234375,
+        0.904052734375,
         0.662353515625,
-        0.751220703125,
+        0.977783203125,
         0.666748046875
       ]
     },
     "Components/activity_page_dot": {
-      "x": 1547,
+      "x": 2011,
       "y": 1356,
       "width": 10,
       "height": 10,
@@ -2772,126 +2910,182 @@
       "rgba_sha256": "e31b903980500e4999f5bdf9f59ff2b374c2b115405a0e609f9b14a631a6de90",
       "source_rgba_sha256": "e31b903980500e4999f5bdf9f59ff2b374c2b115405a0e609f9b14a631a6de90",
       "uv_pixel_centers": [
-        0.755615234375,
+        0.982177734375,
         0.662353515625,
-        0.760009765625,
+        0.986572265625,
         0.666748046875
       ]
     },
     "Components/gauge_critical": {
-      "x": 1565,
-      "y": 1356,
-      "width": 128,
-      "height": 8,
-      "source": "Export/Components/gauge_critical.png",
-      "source_sha256": "cd72653384e320d3777a61d0741272945b348b9a2bfe8489473582d2b87b5edc",
-      "rgba_sha256": "90ac07c546c65595a67d759557c7fd771d382839ba589e3444464806c9b31693",
-      "source_rgba_sha256": "90ac07c546c65595a67d759557c7fd771d382839ba589e3444464806c9b31693",
-      "uv_pixel_centers": [
-        0.764404296875,
-        0.662353515625,
-        0.826416015625,
-        0.665771484375
-      ]
-    },
-    "Components/gauge_experience": {
-      "x": 1701,
-      "y": 1356,
-      "width": 128,
-      "height": 8,
-      "source": "Export/Components/gauge_experience.png",
-      "source_sha256": "7e466b52ab562353e1188eec219c8f48e9c99301baf07143be27e46a3aa479e1",
-      "rgba_sha256": "932fe432f94e42052a89dcd4bcd3512ddf5fb0fd705008f4573e5e9baff6df24",
-      "source_rgba_sha256": "932fe432f94e42052a89dcd4bcd3512ddf5fb0fd705008f4573e5e9baff6df24",
-      "uv_pixel_centers": [
-        0.830810546875,
-        0.662353515625,
-        0.892822265625,
-        0.665771484375
-      ]
-    },
-    "Components/gauge_health": {
-      "x": 1837,
-      "y": 1356,
-      "width": 128,
-      "height": 8,
-      "source": "Export/Components/gauge_health.png",
-      "source_sha256": "7e466b52ab562353e1188eec219c8f48e9c99301baf07143be27e46a3aa479e1",
-      "rgba_sha256": "932fe432f94e42052a89dcd4bcd3512ddf5fb0fd705008f4573e5e9baff6df24",
-      "source_rgba_sha256": "932fe432f94e42052a89dcd4bcd3512ddf5fb0fd705008f4573e5e9baff6df24",
-      "uv_pixel_centers": [
-        0.897216796875,
-        0.662353515625,
-        0.959228515625,
-        0.665771484375
-      ]
-    },
-    "Components/gauge_heat": {
       "x": 4,
       "y": 1396,
       "width": 128,
       "height": 8,
-      "source": "Export/Components/gauge_heat.png",
-      "source_sha256": "30cfa1886f1648196f9c9b8be2c7576dcdb24e0a28822ae407bf98e12d9e9a25",
-      "rgba_sha256": "8501b818d7666b4aaea5a7a012b24ff3469072943f4d9ddf0ceda354fa709acc",
-      "source_rgba_sha256": "8501b818d7666b4aaea5a7a012b24ff3469072943f4d9ddf0ceda354fa709acc",
+      "source": "Export/Components/gauge_critical.png",
+      "source_sha256": "cd72653384e320d3777a61d0741272945b348b9a2bfe8489473582d2b87b5edc",
+      "rgba_sha256": "1711e39a2593f3ad5b66e158ebc6d567a53a503c5e3893b5cb6fbcb01647e512",
+      "source_rgba_sha256": "90ac07c546c65595a67d759557c7fd771d382839ba589e3444464806c9b31693",
       "uv_pixel_centers": [
         0.002197265625,
         0.681884765625,
         0.064208984375,
         0.685302734375
-      ]
+      ],
+      "nine_slice_ltrb": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "nine_slice_inset": 4,
+      "alpha_bleed_px": 2
     },
-    "Components/gauge_reload": {
+    "Components/gauge_experience": {
       "x": 140,
       "y": 1396,
       "width": 128,
       "height": 8,
-      "source": "Export/Components/gauge_reload.png",
-      "source_sha256": "30cfa1886f1648196f9c9b8be2c7576dcdb24e0a28822ae407bf98e12d9e9a25",
-      "rgba_sha256": "8501b818d7666b4aaea5a7a012b24ff3469072943f4d9ddf0ceda354fa709acc",
-      "source_rgba_sha256": "8501b818d7666b4aaea5a7a012b24ff3469072943f4d9ddf0ceda354fa709acc",
+      "source": "Export/Components/gauge_experience.png",
+      "source_sha256": "7e466b52ab562353e1188eec219c8f48e9c99301baf07143be27e46a3aa479e1",
+      "rgba_sha256": "1c7c3d1e470661129c3bf290d779f9e95c371ece5b57f97cbf70f72d4189099d",
+      "source_rgba_sha256": "932fe432f94e42052a89dcd4bcd3512ddf5fb0fd705008f4573e5e9baff6df24",
       "uv_pixel_centers": [
         0.068603515625,
         0.681884765625,
         0.130615234375,
         0.685302734375
-      ]
+      ],
+      "nine_slice_ltrb": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "nine_slice_inset": 4,
+      "alpha_bleed_px": 2
     },
-    "Components/gauge_scan": {
+    "Components/gauge_health": {
       "x": 276,
       "y": 1396,
       "width": 128,
       "height": 8,
-      "source": "Export/Components/gauge_scan.png",
-      "source_sha256": "cbbcd1b5131dc771e5957834619886aa75dd6c19a0ca24f05dd88bcc69537a83",
-      "rgba_sha256": "ce758dbcbc5269899d046c3ce461c76c5acdf812d4b54c3ed5592f630b772bcb",
-      "source_rgba_sha256": "ce758dbcbc5269899d046c3ce461c76c5acdf812d4b54c3ed5592f630b772bcb",
+      "source": "Export/Components/gauge_health.png",
+      "source_sha256": "7e466b52ab562353e1188eec219c8f48e9c99301baf07143be27e46a3aa479e1",
+      "rgba_sha256": "1c7c3d1e470661129c3bf290d779f9e95c371ece5b57f97cbf70f72d4189099d",
+      "source_rgba_sha256": "932fe432f94e42052a89dcd4bcd3512ddf5fb0fd705008f4573e5e9baff6df24",
       "uv_pixel_centers": [
         0.135009765625,
         0.681884765625,
         0.197021484375,
         0.685302734375
-      ]
+      ],
+      "nine_slice_ltrb": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "nine_slice_inset": 4,
+      "alpha_bleed_px": 2
     },
-    "Components/gauge_track": {
+    "Components/gauge_heat": {
       "x": 412,
       "y": 1396,
       "width": 128,
       "height": 8,
-      "source": "Export/Components/gauge_track.png",
-      "source_sha256": "e6d3a3434f2a887d1a2c9d3bebfd2b051f4c08822d703f168c6dc3d7ed5b7dd7",
-      "rgba_sha256": "68a22a647bec107cbf145186caa2f983c36e57f38b0d834ba16032d95d30301e",
-      "source_rgba_sha256": "68a22a647bec107cbf145186caa2f983c36e57f38b0d834ba16032d95d30301e",
+      "source": "Export/Components/gauge_heat.png",
+      "source_sha256": "30cfa1886f1648196f9c9b8be2c7576dcdb24e0a28822ae407bf98e12d9e9a25",
+      "rgba_sha256": "3ccdf163342abe2061ec110d89c27581f5951439d4fe30dd5ce569d814476308",
+      "source_rgba_sha256": "8501b818d7666b4aaea5a7a012b24ff3469072943f4d9ddf0ceda354fa709acc",
       "uv_pixel_centers": [
         0.201416015625,
         0.681884765625,
         0.263427734375,
         0.685302734375
-      ]
+      ],
+      "nine_slice_ltrb": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "nine_slice_inset": 4,
+      "alpha_bleed_px": 2
+    },
+    "Components/gauge_reload": {
+      "x": 548,
+      "y": 1396,
+      "width": 128,
+      "height": 8,
+      "source": "Export/Components/gauge_reload.png",
+      "source_sha256": "30cfa1886f1648196f9c9b8be2c7576dcdb24e0a28822ae407bf98e12d9e9a25",
+      "rgba_sha256": "3ccdf163342abe2061ec110d89c27581f5951439d4fe30dd5ce569d814476308",
+      "source_rgba_sha256": "8501b818d7666b4aaea5a7a012b24ff3469072943f4d9ddf0ceda354fa709acc",
+      "uv_pixel_centers": [
+        0.267822265625,
+        0.681884765625,
+        0.329833984375,
+        0.685302734375
+      ],
+      "nine_slice_ltrb": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "nine_slice_inset": 4,
+      "alpha_bleed_px": 2
+    },
+    "Components/gauge_scan": {
+      "x": 684,
+      "y": 1396,
+      "width": 128,
+      "height": 8,
+      "source": "Export/Components/gauge_scan.png",
+      "source_sha256": "cbbcd1b5131dc771e5957834619886aa75dd6c19a0ca24f05dd88bcc69537a83",
+      "rgba_sha256": "8675ce45c9987953068744ab86ed87cdc6a222c5b08fb794a2d4cb3640889c9b",
+      "source_rgba_sha256": "ce758dbcbc5269899d046c3ce461c76c5acdf812d4b54c3ed5592f630b772bcb",
+      "uv_pixel_centers": [
+        0.334228515625,
+        0.681884765625,
+        0.396240234375,
+        0.685302734375
+      ],
+      "nine_slice_ltrb": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "nine_slice_inset": 4,
+      "alpha_bleed_px": 2
+    },
+    "Components/gauge_track": {
+      "x": 820,
+      "y": 1396,
+      "width": 128,
+      "height": 8,
+      "source": "Export/Components/gauge_track.png",
+      "source_sha256": "e6d3a3434f2a887d1a2c9d3bebfd2b051f4c08822d703f168c6dc3d7ed5b7dd7",
+      "rgba_sha256": "30da59daf8b45abd967e82a10fa6099a4de62a708472e784d978c79654600ede",
+      "source_rgba_sha256": "68a22a647bec107cbf145186caa2f983c36e57f38b0d834ba16032d95d30301e",
+      "uv_pixel_centers": [
+        0.400634765625,
+        0.681884765625,
+        0.462646484375,
+        0.685302734375
+      ],
+      "nine_slice_ltrb": [
+        4,
+        4,
+        4,
+        4
+      ],
+      "nine_slice_inset": 4,
+      "alpha_bleed_px": 2
     },
     "Components/hud_heat_fill": {
-      "x": 548,
+      "x": 956,
       "y": 1396,
       "width": 165,
       "height": 6,
@@ -2900,14 +3094,14 @@
       "rgba_sha256": "c0cb14bc3db2d635de021666ab6dc0935a7ae84378b265372f16ff99c37a0727",
       "source_rgba_sha256": "c0cb14bc3db2d635de021666ab6dc0935a7ae84378b265372f16ff99c37a0727",
       "uv_pixel_centers": [
-        0.267822265625,
+        0.467041015625,
         0.681884765625,
-        0.347900390625,
+        0.547119140625,
         0.684326171875
       ]
     },
     "Components/hud_reticle_arm": {
-      "x": 721,
+      "x": 1129,
       "y": 1396,
       "width": 14,
       "height": 6,
@@ -2916,14 +3110,14 @@
       "rgba_sha256": "9ddf8cf45e8fa08fc37cf7104ee378435d353b976db989e11c3bec84a6602833",
       "source_rgba_sha256": "9ddf8cf45e8fa08fc37cf7104ee378435d353b976db989e11c3bec84a6602833",
       "uv_pixel_centers": [
-        0.352294921875,
+        0.551513671875,
         0.681884765625,
-        0.358642578125,
+        0.557861328125,
         0.684326171875
       ]
     },
     "Components/panel_accent": {
-      "x": 743,
+      "x": 1151,
       "y": 1396,
       "width": 32,
       "height": 4,
@@ -2932,15 +3126,15 @@
       "rgba_sha256": "0ad1bf0688e7a16ebceb31e6a4800851a3f5462726b2699e673fd1ead2b11147",
       "source_rgba_sha256": "432ad82b4f637a935ed33b9d2c57bb0849540b1b220f440ae6bcb46390ef7a16",
       "uv_pixel_centers": [
-        0.363037109375,
+        0.562255859375,
         0.681884765625,
-        0.378173828125,
+        0.577392578125,
         0.683349609375
       ],
       "alpha_bleed_px": 2
     },
     "Components/divider": {
-      "x": 783,
+      "x": 1191,
       "y": 1396,
       "width": 128,
       "height": 1,
@@ -2949,9 +3143,9 @@
       "rgba_sha256": "a8e744aaf389eb588dd1bbdb2195093a800f5ee84173285f17ce69dc438cee81",
       "source_rgba_sha256": "a8e744aaf389eb588dd1bbdb2195093a800f5ee84173285f17ce69dc438cee81",
       "uv_pixel_centers": [
-        0.382568359375,
+        0.581787109375,
         0.681884765625,
-        0.444580078125,
+        0.643798828125,
         0.681884765625
       ]
     }

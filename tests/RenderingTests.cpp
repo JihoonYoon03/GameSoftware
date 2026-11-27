@@ -1138,11 +1138,10 @@ void TestR4PbrAndSkinSharing(const std::filesystem::path *output = nullptr)
         Save(*output / "part2-minigame-tuner.bmp");
         FieldMinigame::Reset();
 
-        // 17) Part 3 GPU capture: Wrist-projected 3D Rotating Planet Globe Map (full globe view).
+        // 17) Part 3 GPU capture: GPU-textured 3D Rotating Planet Globe Map (full globe view).
         w.mapVisible = true;
         w.planetMapSurface = true;
         w.mapSpaceMode = false;
-        w.mapHologramProgress = 1.f;
         MapHud::HandleMapKey('p');
         glViewport(0, 0, kCanvasWidth, kCanvasHeight);
         glClearColor(0.f, 0.f, 0.f, 1.f);

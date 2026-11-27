@@ -391,10 +391,21 @@ void StoryArc::LeaveZoneToHalo(bool preserveResume)
     {
         if (g.Surface()->Ready())
         {
-            if (!g.ReturnToSurface({16.f, 7.f}, 0))
+            if (!g.ReturnToSurface({16.f, 7.f}, 0) && !g.ReturnToSurface(kHomeDoor, 0))
             {
-                g.ReturnToSurface(kHomeDoor, 0);
+                const auto haloPt = g.SurfaceCities() ? g.SurfaceCities()->Point(*g.Surface(), 0, kHomeDoor)
+                                                      : std::nullopt;
+                if (haloPt)
+                {
+                    g.RelocateSurfaceSurvey(*haloPt);
+                }
+                else if (const auto snap = g.Surface()->Stream().Snapshot(); snap && snap->planet)
+                {
+                    g.RelocateSurfaceSurvey(snap->planet->Region("halo_07").access.position);
+                }
+                g.WaitForSurfaceLoaded();
             }
+            g.Update(0);
         }
         else
         {

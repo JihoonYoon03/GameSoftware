@@ -1170,7 +1170,7 @@ Vector2 ProjectSpaceOrbit(float orbitPx, float angle, float yaw, float pitch, fl
 UiControl SpaceModeToggleControl(bool spaceMode)
 {
     return {UiAction::Continue, {992.f, 92.f}, {200.f, 40.f},
-            spaceMode ? "행성 구체 [G]" : "우주 지도 [G]", true, 0};
+            spaceMode ? "   행성 구체 [G]" : "   우주 지도 [G]", true, 0};
 }
 
 UiControl ClearDestinationControl(bool hasDestination)
@@ -1178,41 +1178,127 @@ UiControl ClearDestinationControl(bool hasDestination)
     return {UiAction::Back, {820.f, 92.f}, {162.f, 40.f}, "목적지 해제", hasDestination, 0};
 }
 
-Vector2 PlayerWristHudPoint()
+// Fast GPU-textured 3D polar sphere cap renderer (< 0.1 ms per drag frame, zero per-frame terrain.Sample).
+void DrawTexturedSpherePass(const GlobeView &globe, unsigned int textureId, float lonOffset, float alpha,
+                            bool shadeLighting)
 {
-    const auto &w = Game::Get().GetState();
-    const auto *session = Game::Get().Surface();
-    if (w.surfaceExploration && session && session->Ready() && !Game::Get().IsSurfaceMine() && !w.IsInsideAny())
+    if (!textureId)
     {
-        const float elev = float(session->Local(session->Pose().origin).z / 2.0);
-        const Vector2 base =
-            Drawing::WorldToScreen(w.playerPosition.x, w.playerPosition.y, elev * WorldCamera::IsoZScale());
-        const float s = models::WorldScale::characterScale;
-        models::Transform3D rot;
-        rot.yaw = w.facingYaw;
-        const auto p = rot.Apply({0.24f * s, -0.16f * s, 0.72f * s});
-        const Vector2 worldCanvas{base.x + (p.x - p.y) * 36.f,
-                                  base.y + (p.x + p.y) * WorldCamera::IsoYScale() - p.z * WorldCamera::IsoZScale()};
-        Vector2 hudPt = WorldCamera::ToViewport(worldCanvas);
-        hudPt.x -= WorldCamera::CenterOffsetX();
-        return {Game::Clamp(hudPt.x, 40.f, 1240.f), Game::Clamp(hudPt.y, 40.f, 770.f)};
+        return;
     }
-    return {150.f, 756.f};
+    constexpr int kRings = 18;
+    constexpr int kSegs = 48;
+    constexpr float kTwoPi = kPi * 2.f;
+    constexpr float kInvTwoPi = 1.f / kTwoPi;
+    constexpr float kInvPi = 1.f / kPi;
+    constexpr double sunX = 0.50, sunY = 0.36, sunZ = 0.787;
+
+    struct RingVert
+    {
+        float x, y, u, v, r, g, b, a;
+    };
+    RingVert prevRing[kSegs + 1];
+    RingVert currRing[kSegs + 1];
+
+    auto evalRing = [&](int ringIdx, RingVert *out) {
+        const double rf = double(ringIdx) / double(kRings);
+        for (int s = 0; s <= kSegs; ++s)
+        {
+            const double phi = double(s) * double(kTwoPi) / double(kSegs);
+            const double dx = rf * std::cos(phi);
+            const double dy = rf * std::sin(phi);
+            const double u = dx * globe.sinHalf;
+            const double v = dy * globe.sinHalf;
+            const double r2 = (std::min)(1.0, u * u + v * v);
+            const double z = std::sqrt((std::max)(0.0, 1.0 - r2));
+            const double nx = globe.east.x * u + globe.north.x * v + globe.forward.x * z;
+            const double ny = globe.east.y * u + globe.north.y * v + globe.forward.y * z;
+            const double nz = globe.east.z * u + globe.north.z * v + globe.forward.z * z;
+            const double lon = std::atan2(ny, nx);
+            const double lat = std::asin(Game::Clamp(float(nz), -1.f, 1.f));
+            float tu = float(lon) * kInvTwoPi + 0.5f + lonOffset;
+            tu -= std::floor(tu);
+            const float tv = 0.5f - float(lat) * kInvPi;
+            float cr = 1.f, cg = 1.f, cb = 1.f;
+            if (shadeLighting)
+            {
+                const double ndotl = (std::max)(0.0, u * sunX + v * sunY + z * sunZ);
+                const float shade = float(0.30 + 0.78 * ndotl);
+                const float limb = float(0.48 + 0.52 * std::pow(z, 0.36));
+                const float rim = float(std::pow((std::max)(0.0, 1.0 - z), 2.8)) * 0.42f;
+                cr = Game::Clamp(shade * limb + rim * 0.16f, 0.f, 1.f);
+                cg = Game::Clamp(shade * limb + rim * 0.78f, 0.f, 1.f);
+                cb = Game::Clamp(shade * limb + rim * 0.94f, 0.f, 1.f);
+            }
+            out[s] = {globe.center.x + float(dx * globe.radius),
+                      globe.center.y - float(dy * globe.radius),
+                      tu,
+                      tv,
+                      cr,
+                      cg,
+                      cb,
+                      alpha};
+        }
+    };
+
+    evalRing(0, prevRing);
+    renderqueue::Texture(textureId);
+    renderqueue::Begin(GL_QUADS);
+    for (int r = 1; r <= kRings; ++r)
+    {
+        evalRing(r, currRing);
+        for (int s = 0; s < kSegs; ++s)
+        {
+            const RingVert &a = prevRing[s];
+            const RingVert &b = prevRing[s + 1];
+            const RingVert &c = currRing[s + 1];
+            const RingVert &d = currRing[s];
+            // Seam-safe longitude wrap across +/-180 deg meridian (texture uses GL_REPEAT on S).
+            float ua = a.u, ub = b.u, uc = c.u, ud = d.u;
+            const float uMin = (std::min)((std::min)(ua, ub), (std::min)(uc, ud));
+            const float uMax = (std::max)((std::max)(ua, ub), (std::max)(uc, ud));
+            if (uMax - uMin > 0.5f)
+            {
+                if (ua < 0.5f) ua += 1.f;
+                if (ub < 0.5f) ub += 1.f;
+                if (uc < 0.5f) uc += 1.f;
+                if (ud < 0.5f) ud += 1.f;
+            }
+            renderqueue::Color(a.r, a.g, a.b, a.a);
+            renderqueue::TexCoord(ua, a.v);
+            renderqueue::Vertex(a.x, a.y);
+            renderqueue::Color(b.r, b.g, b.b, b.a);
+            renderqueue::TexCoord(ub, b.v);
+            renderqueue::Vertex(b.x, b.y);
+            renderqueue::Color(c.r, c.g, c.b, c.a);
+            renderqueue::TexCoord(uc, c.v);
+            renderqueue::Vertex(c.x, c.y);
+            renderqueue::Color(d.r, d.g, d.b, d.a);
+            renderqueue::TexCoord(ud, d.v);
+            renderqueue::Vertex(d.x, d.y);
+        }
+        std::copy(std::begin(currRing), std::end(currRing), std::begin(prevRing));
+    }
+    renderqueue::End();
+    renderqueue::Texture(0);
+    renderqueue::Color(1.f, 1.f, 1.f, 1.f);
 }
 
-void DrawWristHologramEmitterOverlay(float progress)
+void DrawTexturedMiniPlanet(Vector2 pos, float r, unsigned int texId, float spinOffset)
 {
-    const float t = Game::Clamp(progress, 0.02f, 1.f);
-    const float ease = 1.f - (1.f - t) * (1.f - t) * (1.f - t);
-    const Vector2 wrist = PlayerWristHudPoint();
-    // Luminous wrist emitter ring + translucent cyan projection rays feeding into the floating map panel.
-    const Vector2 anchorL{64.f, 724.f};
-    const Vector2 anchorR{320.f, 724.f};
-    Drawing::DrawPolygon({wrist, anchorL, anchorR}, {.22f, .92f, .98f, 0.14f * ease});
-    Drawing::DrawLine(wrist, anchorL, {.44f, .98f, 1.f, 0.48f * ease}, 1.5f);
-    Drawing::DrawLine(wrist, anchorR, {.44f, .98f, 1.f, 0.34f * ease}, 1.2f);
-    Drawing::DrawGlow(wrist, 24.f * ease, {.30f, .96f, 1.f, 0.72f * ease});
-    Drawing::DrawEllipse(wrist.x, wrist.y, 6.f * ease, 6.f * ease, {.78f, 1.f, 1.f, 0.92f * ease});
+    if (!texId || r < 2.f)
+    {
+        return;
+    }
+    GlobeView mini;
+    mini.center = pos;
+    mini.radius = r;
+    mini.sinHalf = 1.0;
+    mini.forward = {std::cos(spinOffset), std::sin(spinOffset), 0.18};
+    mini.forward = world::SurfaceGeometry::Unit(mini.forward);
+    mini.east = world::SurfaceGeometry::Unit(world::SurfaceGeometry::Cross({0, 0, 1}, mini.forward));
+    mini.north = world::SurfaceGeometry::Cross(mini.forward, mini.east);
+    DrawTexturedSpherePass(mini, texId, 0.f, 1.f, true);
 }
 
 int NearestClusterIndex(const world::GeneratedPlanet &planet, const world::SurfacePoint &point)
@@ -1235,31 +1321,6 @@ int NearestClusterIndex(const world::GeneratedPlanet &planet, const world::Surfa
     return bestIdx;
 }
 
-ColorRGBA BiomeGlobeColor(world::Biome biome, float elevationRatio)
-{
-    switch (biome)
-    {
-    case world::Biome::Ocean:
-        return {.05f, .17f, .27f};
-    case world::Biome::Coast:
-        return {.10f, .30f, .36f};
-    case world::Biome::Grassland:
-        return {.17f, .39f, .27f};
-    case world::Biome::Forest:
-        return {.11f, .30f, .21f};
-    case world::Biome::Desert:
-        return {.48f, .39f, .24f};
-    case world::Biome::Rocky:
-        return {.32f, .33f, .35f};
-    case world::Biome::Alpine:
-        return {.44f + elevationRatio * .12f, .47f + elevationRatio * .12f, .50f + elevationRatio * .12f};
-    case world::Biome::Ice:
-        return {.66f, .78f, .84f};
-    default:
-        return {.16f, .30f, .31f};
-    }
-}
-
 void DrawSpaceSystemMap(const world::SurfaceSession &session)
 {
     const auto &w = Game::Get().GetState();
@@ -1270,8 +1331,24 @@ void DrawSpaceSystemMap(const world::SurfaceSession &session)
     UiText(96, 146, "좌클릭 드래그 궤도 회전 · 휠 확대/축소 · 좌클릭 행성 정보 · 우클릭 항로 지정", 13,
            {.70f, .86f, .88f});
 
-    // Deep-space holographic viewport card.
-    Drawing::DrawRectangle(92.f, 160.f, 700.f, 488.f, {.018f, .036f, .058f, .94f});
+    // Deep-space holographic viewport card with ColonyV4 Space_Starfield_Nebula texture.
+    Drawing::DrawRectangle(92.f, 160.f, 700.f, 488.f, {.018f, .036f, .058f, .96f});
+    if (const unsigned int nebulaTex = GameRenderer::Get().Backend().SpaceNebulaTexture())
+    {
+        renderqueue::Color(1.f, 1.f, 1.f, .90f);
+        renderqueue::Texture(nebulaTex);
+        renderqueue::Begin(GL_QUADS);
+        renderqueue::TexCoord(0.f, 0.f);
+        renderqueue::Vertex(93.f, 161.f);
+        renderqueue::TexCoord(1.f, 0.f);
+        renderqueue::Vertex(791.f, 161.f);
+        renderqueue::TexCoord(1.f, 1.f);
+        renderqueue::Vertex(791.f, 647.f);
+        renderqueue::TexCoord(0.f, 1.f);
+        renderqueue::Vertex(93.f, 647.f);
+        renderqueue::End();
+        renderqueue::Texture(0);
+    }
     Drawing::DrawLine({92.f, 160.f}, {792.f, 160.f}, {.30f, .74f, .82f, .72f}, 1.5f);
     Drawing::DrawLine({92.f, 648.f}, {792.f, 648.f}, {.30f, .74f, .82f, .72f}, 1.5f);
     Drawing::DrawLine({92.f, 160.f}, {92.f, 648.f}, {.30f, .74f, .82f, .52f}, 1.5f);
@@ -1345,17 +1422,75 @@ void DrawSpaceSystemMap(const world::SurfaceSession &session)
             continue;
         }
         const float r = body.bodyRadius * Game::Clamp(w.mapSpaceZoom, 0.65f, 1.45f);
-        if (body.hasRing)
+        const unsigned int ringTex = body.hasRing ? GameRenderer::Get().Backend().PlanetRingTexture(body.id) : 0;
+        auto drawPlanetRingHalf = [&](bool frontHalf) {
+            if (!body.hasRing || ringTex == 0)
+            {
+                return;
+            }
+            const float rIn = r * 1.32f;
+            const float rOut = r * 2.28f;
+            const float tilt = -0.26f;
+            const float ct = std::cos(tilt), st = std::sin(tilt);
+            const float squash = 0.34f;
+            constexpr int kRingSegs = 24;
+            const float aStart = frontHalf ? 0.f : kPi;
+            const float aEnd = frontHalf ? kPi : kPi * 2.f;
+            auto ringPt = [&](float rad, float a) -> Vector2 {
+                const float lx = std::cos(a) * rad;
+                const float ly = std::sin(a) * rad * squash;
+                return {pos.x + lx * ct - ly * st, pos.y + lx * st + ly * ct};
+            };
+            renderqueue::Color(1.f, 1.f, 1.f, frontHalf ? .90f : .72f);
+            renderqueue::Texture(ringTex);
+            renderqueue::Begin(GL_QUADS);
+            for (int seg = 0; seg < kRingSegs; ++seg)
+            {
+                const float a0 = aStart + (aEnd - aStart) * float(seg) / float(kRingSegs);
+                const float a1 = aStart + (aEnd - aStart) * float(seg + 1) / float(kRingSegs);
+                const Vector2 i0 = ringPt(rIn, a0);
+                const Vector2 o0 = ringPt(rOut, a0);
+                const Vector2 o1 = ringPt(rOut, a1);
+                const Vector2 i1 = ringPt(rIn, a1);
+                renderqueue::TexCoord(0.f, 0.5f);
+                renderqueue::Vertex(i0.x, i0.y);
+                renderqueue::TexCoord(1.f, 0.5f);
+                renderqueue::Vertex(o0.x, o0.y);
+                renderqueue::TexCoord(1.f, 0.5f);
+                renderqueue::Vertex(o1.x, o1.y);
+                renderqueue::TexCoord(0.f, 0.5f);
+                renderqueue::Vertex(i1.x, i1.y);
+            }
+            renderqueue::End();
+            renderqueue::Texture(0);
+            renderqueue::Color(1.f, 1.f, 1.f, 1.f);
+        };
+        if (body.hasRing && ringTex != 0)
+        {
+            drawPlanetRingHalf(false);
+        }
+        else if (body.hasRing)
         {
             Drawing::DrawEllipse(pos.x, pos.y, r * 1.95f, r * 0.56f, {.74f, .66f, .92f, .32f});
         }
         Drawing::DrawGlow(pos, r * (isSelected ? 2.4f : 1.7f),
                           {body.rimColor.r, body.rimColor.g, body.rimColor.b, isSelected ? .55f : .30f});
-        // 3D lit sphere disc + shadowed crescent + highlight.
-        Drawing::DrawEllipse(pos.x, pos.y, r, r, body.baseColor);
-        Drawing::DrawEllipse(pos.x + r * .18f, pos.y + r * .14f, r * .82f, r * .82f, {.02f, .04f, .07f, .44f});
-        Drawing::DrawEllipse(pos.x - r * .28f, pos.y - r * .26f, r * .46f, r * .42f,
-                             {body.rimColor.r, body.rimColor.g, body.rimColor.b, .65f});
+        // Real ColonyV4 textured 3D mini-globe when available, else clean shaded disc fallback.
+        if (const unsigned int planetTex = GameRenderer::Get().Backend().PlanetAlbedoTexture(body.id))
+        {
+            DrawTexturedMiniPlanet(pos, r, planetTex, body.baseAngle + w.mapSpaceYaw * 0.5f);
+        }
+        else
+        {
+            Drawing::DrawEllipse(pos.x, pos.y, r, r, body.baseColor);
+            Drawing::DrawEllipse(pos.x + r * .18f, pos.y + r * .14f, r * .82f, r * .82f, {.02f, .04f, .07f, .44f});
+            Drawing::DrawEllipse(pos.x - r * .28f, pos.y - r * .26f, r * .46f, r * .42f,
+                                 {body.rimColor.r, body.rimColor.g, body.rimColor.b, .65f});
+        }
+        if (body.hasRing && ringTex != 0)
+        {
+            drawPlanetRingHalf(true);
+        }
         if (isSelected)
         {
             Drawing::DrawEllipse(pos.x, pos.y, r + 6.f, r + 6.f, {.40f, .98f, .92f, .24f});
@@ -1512,7 +1647,6 @@ bool MapHud::Contains(Vector2 canvasPoint, bool fullMap)
 void MapHud::OnMapOpened()
 {
     auto &w = Game::Get().GetState();
-    w.mapHologramProgress = 0.f;
     w.mapDragging = false;
     w.mapDraggedMoved = false;
     w.mapSpaceMode = false;
@@ -1692,7 +1826,6 @@ bool MapHud::FocusTrackedObjective()
         w.mapVisible = true;
         w.planetMapSurface = false;
         w.mapSpaceMode = false;
-        w.mapHologramProgress = 0.f;
         auto &viewState = w.mapViews[size_t(MapRegion::Mine)];
         viewState.pan = {};
         const auto view = MapView(true);
@@ -1707,7 +1840,6 @@ bool MapHud::FocusTrackedObjective()
         w.mapVisible = true;
         w.planetMapSurface = true;
         w.mapSpaceMode = false;
-        w.mapHologramProgress = 0.f;
     }
     else
     {
@@ -4753,6 +4885,8 @@ void Hud::DrawMenu()
         HudCard(424.f, 24.f, 432.f, 46.f, {.38f, .92f, .88f}, false);
         UiText(640.f - RenderAssets::MeasureUtf8("외관 옷장 · 3D 실시간 파트 커스터마이즈", 18) * .5f, 54.f,
                "외관 옷장 · 3D 실시간 파트 커스터마이즈", 18, {.92f, .98f, .98f}, true);
+        // UI-28 turntable ring beneath the center 3D character showcase.
+        Sprite("Components/wardrobe_turntable_ring", 512.f, 598.f, 256.f, 96.f, {.88f, .98f, 1.f, .90f});
 
         UiText(48.f, 114.f, "기본 외형 · 색상", 20, {.48f, .94f, .88f});
         UiText(48.f, 138.f, "항목 선택 시 중앙 3D 모델에 즉시 반영", 13, {.68f, .82f, .86f});
@@ -4849,6 +4983,7 @@ void Hud::DrawMenu()
             const float wCard = 340.f;
             // Upper 186..380: transparent glass showcase frame revealing the live spinning 3D prop!
             Drawing::DrawRectangle(x, y, wCard, 194.f, {.05f, .09f, .13f, .22f});
+            Sprite("Components/showcase_card_frame", x, y, wCard, 194.f, {c.accent.r, c.accent.g, c.accent.b, .72f});
             Drawing::DrawRectangle(x, y, wCard, 3.f, c.accent);
             Drawing::DrawRectangle(x, y, 2.f, 418.f, {.30f, .54f, .60f, .85f});
             Drawing::DrawRectangle(x + wCard - 2.f, y, 2.f, 418.f, {.30f, .54f, .60f, .85f});
@@ -5317,12 +5452,12 @@ void PlanetHud::DrawMap(bool full)
     Vector2 center = full ? kGlobeCenter : kMinimapCenter;
     if (full)
     {
-        const float t = Game::Clamp(w.mapHologramProgress, 0.02f, 1.f);
-        const float ease = 1.f - (1.f - t) * (1.f - t) * (1.f - t);
-        DrawFullscreenDim({.012f, .030f, .042f, 0.66f * ease});
+        DrawFullscreenDim({.012f, .030f, .042f, 0.72f});
         Panel(64, 82, 1152, 642);
-        DrawWristHologramEmitterOverlay(w.mapHologramProgress);
-        Button(SpaceModeToggleControl(w.mapSpaceMode), -1);
+        const UiControl spaceCtrl = SpaceModeToggleControl(w.mapSpaceMode);
+        Button(spaceCtrl, -1);
+        Sprite(w.mapSpaceMode ? "Icons/map_planet_view" : "Icons/map_space_view", spaceCtrl.position.x + 12.f,
+               spaceCtrl.position.y + 10.f, 20.f, 20.f, {.82f, .98f, 1.f, .96f});
         if (w.mapSpaceMode)
         {
             DrawSpaceSystemMap(*session);
@@ -5352,22 +5487,39 @@ void PlanetHud::DrawMap(bool full)
         UiText(820, 626, "현장 E 등록 · 주차 후 이동", 15);
         UiText(820, 659, "차량은 출발지에 남습니다.", 15);
     }
+    auto local = session->Local(session->Pose().origin);
+    auto view = PlanetMapView(full);
+    const GlobeView globe = GlobeView::Build(*session);
     if (full)
     {
-        // Volumetric 3D planetary atmosphere halo + holographic bezel ring.
+        // Volumetric 3D planetary atmosphere halo + fast GPU-textured sphere (0 per-frame CPU terrain.Sample).
         Drawing::DrawGlow(center, radius + 24.f, {.16f, .76f, .88f, .24f});
         Drawing::DrawEllipse(center.x, center.y, radius + 8.f, radius + 8.f, {.18f, .64f, .78f, .22f});
         Drawing::DrawEllipse(center.x, center.y, radius + 3.f, radius + 3.f, {.38f, .82f, .86f, .90f});
         Drawing::DrawEllipse(center.x, center.y, radius, radius, {.028f, .078f, .115f, 1.f});
+        const unsigned int albedoTex = GameRenderer::Get().Backend().PlanetAlbedoTexture(session->Planet().id);
+        const unsigned int cloudTex = GameRenderer::Get().Backend().PlanetCloudTexture(session->Planet().id);
+        if (albedoTex != 0)
+        {
+            DrawTexturedSpherePass(globe, albedoTex, 0.f, 1.f, true);
+            if (cloudTex != 0 && range > 18000.f)
+            {
+                const float cloudAlpha = Game::Clamp((range - 18000.f) / 140000.f, 0.f, 1.f) * 0.46f;
+                DrawTexturedSpherePass(globe, cloudTex, w.animationTimeSeconds * 0.0025f, cloudAlpha, false);
+            }
+        }
+        else
+        {
+            // Lightweight spherical shading fallback when planet texture is unavailable.
+            Drawing::DrawGlow({center.x - radius * 0.24f, center.y - radius * 0.24f}, radius * 0.85f,
+                              {.20f, .44f, .48f, .42f});
+        }
     }
     else
     {
         Drawing::DrawEllipse(center.x, center.y, radius + 3, radius + 3, {.35f, .62f, .61f});
         Drawing::DrawEllipse(center.x, center.y, radius, radius, {.075f, .14f, .14f});
     }
-    auto local = session->Local(session->Pose().origin);
-    auto view = PlanetMapView(full);
-    const GlobeView globe = GlobeView::Build(*session);
     const world::SurfacePoint focus =
         full ? CurrentGlobeCenter(*session) : session->PointAt(view.worldCenter.x, view.worldCenter.y);
     mapLabels.clear();
@@ -5463,11 +5615,13 @@ void PlanetHud::DrawMap(bool full)
         float range = 0;
         Vector2 worldCenter = {};
         std::uint64_t version = 0;
+        bool dragging = false;
         bool valid = false;
     };
     static StaticMapCacheKey staticCache[2];
     auto &cache = staticCache[full ? 1 : 0];
-    const double moveThreshold = full ? (std::max)(.5f, range * .0015f) : .5f;
+    const bool dragFast = full && w.mapDragging;
+    const double moveThreshold = full ? (std::max)(.5f, range * (dragFast ? .012f : .0015f)) : .5f;
     const bool originMoved = std::fabs(originFrame.origin.normal.x - cache.originX) > 1.e-11 ||
                              std::fabs(originFrame.origin.normal.y - cache.originY) > 1.e-11 ||
                              std::fabs(originFrame.origin.normal.z - cache.originZ) > 1.e-11;
@@ -5480,6 +5634,7 @@ void PlanetHud::DrawMap(bool full)
                               cache.revision != snapshot->statistics.revision ||
                               cache.visitedCount != w.relayNetwork.VisitedRegions().size() ||
                               cache.collisionCells != session->CollisionCells() ||
+                              cache.dragging != dragFast ||
                               std::fabs(cache.range - range) > .01f || originMoved ||
                               (full ? focusDelta > moveThreshold
                                     : Game::Distance(view.worldCenter, cache.worldCenter) > moveThreshold);
@@ -5498,6 +5653,7 @@ void PlanetHud::DrawMap(bool full)
         cache.focusZ = focus.normal.z;
         cache.range = range;
         cache.worldCenter = view.worldCenter;
+        cache.dragging = dragFast;
         cache.valid = true;
         ++cache.version;
         profiling::Count(profiling::Counter::MinimapRebuilds);
@@ -5506,71 +5662,21 @@ void PlanetHud::DrawMap(bool full)
     auto drawStaticMap = [&]() {
         if (full)
         {
-            // Render smooth 3D lit biome surface across the spherical planet globe cap (cached in DrawSlot).
-            const int gridN = range > 12000.f ? 64 : 24;
-            const double invN = 2.0 / double(gridN);
-            const double sunX = 0.50, sunY = 0.36, sunZ = 0.787;
-            for (int iy = 0; iy < gridN; ++iy)
-            {
-                const double dy0 = -1.0 + double(iy) * invN;
-                const double dy1 = dy0 + invN;
-                const double dym = (dy0 + dy1) * 0.5;
-                for (int ix = 0; ix < gridN; ++ix)
-                {
-                    const double dx0 = -1.0 + double(ix) * invN;
-                    const double dx1 = dx0 + invN;
-                    const double dxm = (dx0 + dx1) * 0.5;
-                    const double r2m = dxm * dxm + dym * dym;
-                    if (r2m > 1.04)
-                    {
-                        continue;
-                    }
-                    const double u = dxm * globe.sinHalf;
-                    const double v = dym * globe.sinHalf;
-                    const double ur2 = u * u + v * v;
-                    if (ur2 > 1.0)
-                    {
-                        continue;
-                    }
-                    const double z = std::sqrt((std::max)(0.0, 1.0 - ur2));
-                    const world::Vector3d normal = world::SurfaceGeometry::Unit(
-                        {globe.east.x * u + globe.north.x * v + globe.forward.x * z,
-                         globe.east.y * u + globe.north.y * v + globe.forward.y * z,
-                         globe.east.z * u + globe.north.z * v + globe.forward.z * z});
-                    const auto sample = snapshot->planet->terrain.Sample({normal, 0.0});
-                    const float elevRatio = Game::Clamp(float((sample.elevationMeters - 200.0) / 1800.0), 0.f, 1.f);
-                    ColorRGBA col = BiomeGlobeColor(sample.biome, elevRatio);
-                    // Apply directional sunlight + spherical limb darkening + Fresnel atmosphere rim.
-                    const double ndotl = (std::max)(0.0, u * sunX + v * sunY + z * sunZ);
-                    const float shade = float(0.32 + 0.78 * ndotl);
-                    const float limb = float(0.45 + 0.55 * std::pow(z, 0.38));
-                    const float rim = float(std::pow((std::max)(0.0, 1.0 - z), 2.6)) * 0.55f;
-                    col.r = Game::Clamp(col.r * shade * limb + rim * 0.18f, 0.f, 1.f);
-                    col.g = Game::Clamp(col.g * shade * limb + rim * 0.76f, 0.f, 1.f);
-                    col.b = Game::Clamp(col.b * shade * limb + rim * 0.88f, 0.f, 1.f);
-                    col.a = 1.f;
-                    const Vector2 q[4] = {
-                        {center.x + float(dx0 * radius), center.y - float(dy0 * radius)},
-                        {center.x + float(dx1 * radius), center.y - float(dy0 * radius)},
-                        {center.x + float(dx1 * radius), center.y - float(dy1 * radius)},
-                        {center.x + float(dx0 * radius), center.y - float(dy1 * radius)}};
-                    MapPolygonData(clipView, q, 4, col);
-                }
-            }
             // Curved 3D latitude & longitude graticule arcs on the front hemisphere.
             if (range > 45000.f)
             {
                 const int latStep = range > 240000.f ? 15 : 5;
                 const int lonStep = range > 240000.f ? 30 : 10;
+                const int arcStep = dragFast ? 12 : 6;
                 const ColorRGBA gridCol{.34f, .72f, .78f, range > 240000.f ? .24f : .16f};
                 for (int latitude = -75; latitude <= 75; latitude += latStep)
                 {
-                    for (int longitude = -180; longitude < 180; longitude += 6)
+                    for (int longitude = -180; longitude < 180; longitude += arcStep)
                     {
                         bool f0 = false, f1 = false;
                         const auto p0 = globe.Project(world::SurfaceGeometry::FromDegrees(latitude, longitude), &f0);
-                        const auto p1 =
-                            globe.Project(world::SurfaceGeometry::FromDegrees(latitude, longitude + 6), &f1);
+                        const auto p1 = globe.Project(
+                            world::SurfaceGeometry::FromDegrees(latitude, longitude + arcStep), &f1);
                         if (f0 && f1)
                         {
                             drawScreenLine(p0, p1, gridCol, 1.f);
@@ -5579,12 +5685,12 @@ void PlanetHud::DrawMap(bool full)
                 }
                 for (int longitude = -180; longitude < 180; longitude += lonStep)
                 {
-                    for (int latitude = -84; latitude < 84; latitude += 6)
+                    for (int latitude = -84; latitude < 84; latitude += arcStep)
                     {
                         bool f0 = false, f1 = false;
                         const auto p0 = globe.Project(world::SurfaceGeometry::FromDegrees(latitude, longitude), &f0);
-                        const auto p1 =
-                            globe.Project(world::SurfaceGeometry::FromDegrees(latitude + 6, longitude), &f1);
+                        const auto p1 = globe.Project(
+                            world::SurfaceGeometry::FromDegrees(latitude + arcStep, longitude), &f1);
                         if (f0 && f1)
                         {
                             drawScreenLine(p0, p1, gridCol, 1.f);
@@ -5818,7 +5924,7 @@ void PlanetHud::DrawMap(bool full)
                                                                       : ColorRGBA(.58f, .70f, .50f));
             }
         };
-        if (range < 10000)
+        if (range < 10000 && !dragFast)
         {
             for (const auto &chunk : snapshot->chunks)
             {
@@ -5897,6 +6003,12 @@ void PlanetHud::DrawMap(bool full)
     };
     rendercache::DrawSlot(full ? "planet_fullmap_static" : "planet_minimap_static", cache.version,
                           drawStaticMap);
+    if (full)
+    {
+        const float bezelR = radius + 14.f;
+        Sprite("Components/globe_bezel_ring", center.x - bezelR, center.y - bezelR, bezelR * 2.f, bezelR * 2.f,
+               {.90f, .98f, 1.f, .86f});
+    }
     for (const auto &region : snapshot->planet->regions)
     {
         if (world::SurfaceGeometry::Distance(planetRadius, region.access.position, focus) > range)
@@ -6049,9 +6161,26 @@ void PlanetHud::DrawMap(bool full)
         if (world::SurfaceGeometry::Distance(planetRadius, enc.surfaceAnchor, focus) <= range * 1.25)
         {
             const bool showEncLabel = full && (active || range <= 35000.f);
-            drawSurfacePin(enc.surfaceAnchor,
-                           active ? ColorRGBA(1.f, .86f, .30f) : ColorRGBA(1.f, .56f, .24f),
-                           showEncLabel ? enc.title.c_str() : nullptr, showEncLabel, active ? 6.f : 4.f);
+            if (full && !active)
+            {
+                bool front = false;
+                const Vector2 sp = toScreen(enc.surfaceAnchor, &front);
+                if (front && insideDisc(sp, 10.f))
+                {
+                    Sprite("Icons/map_cluster_subquest", sp.x - 10.f, sp.y - 10.f, 20.f, 20.f,
+                           {1.f, .64f, .28f, .96f});
+                    if (showEncLabel && sp.y < center.y + radius - 20.f && sp.y > center.y - radius + 18.f)
+                    {
+                        MapLabel(sp, enc.title.c_str(), ColorRGBA(1.f, .56f, .24f), false);
+                    }
+                }
+            }
+            else
+            {
+                drawSurfacePin(enc.surfaceAnchor,
+                               active ? ColorRGBA(1.f, .86f, .30f) : ColorRGBA(1.f, .56f, .24f),
+                               showEncLabel ? enc.title.c_str() : nullptr, showEncLabel, active ? 6.f : 4.f);
+            }
         }
     }
     auto &chapter = game::GameLevels::Chapter();

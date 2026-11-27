@@ -96,6 +96,25 @@ UI['UI-22']['rules']+=['Warn about unsaved progress when leaving; existing saved
 # Persist the new layout entries as well as the existing template contract.
 layout_document=json.loads((ROOT/'Source/layouts.json').read_text(encoding='utf8'))
 layout_document['layouts']=layouts
+UI.update({
+    'UI-26':entry('현장 상호작용 배지','in_range|out_of_range|wrapped_title',
+                  'focused_target|category|in_range|action_label|projection',
+                  'interact_talk|interact_hack|interact_salvage|interact_door|interact_vehicle|interact_quest',
+                  ['Draw one context badge and project the focus ring below the eligible target.','Outside range hide the active keycap and ground ring.']),
+    'UI-27':entry('행성 및 성계 지도','planet_globe|space_system|discovered_subquest',
+                  'mode|focus|orbit|zoom|detected_encounter|destination',
+                  'map_planet_view|map_space_view|map_cluster_subquest',
+                  ['Press G in the map context; keep playback/flight independent from the view switch.','Only discovered markers use the orange quest pin.']),
+    'UI-28':entry('3D 진열 프레임','wardrobe|home_storage|shop|part_on|part_off',
+                  'model|pivot|inventory|price|availability|part_mask',
+                  'check|slot_empty',['Live preview region, title and price or quantity are separate.']),
+    'UI-29':entry('현장 미니게임 콘솔','signal_tuner|glyph_cipher|extraction_timing|circuit_balance',
+                  'waveform|ring_angle|timing_target|circuit_value|input_context',
+                  'check|warning',['Separately draw measured runtime values and moving marks.']),
+    'UI-30':entry('패널 및 버튼 9분할','normal|wide|tall|low_opacity',
+                  'panel_alpha|border_alpha|content_alpha|nine_slice_inset',
+                  'check|warning',['Use atlas-only 2px RGB dilation in alpha-zero texels. Keep 4px transparent padding.']),
+})
 save('Source/layouts.json',layout_document)
 manifest=json.loads((ROOT/'ui_manifest.json').read_text(encoding='utf8'))
 for id,data in UI.items():
@@ -106,7 +125,7 @@ for id,data in UI.items():
     data['preview_screens']=[n for n,s in manifest['screens'].items() if id in s['requirements']]
     data['delivery']='shared text-free assets + named state specification + composed editable review screen'
 save('Source/ui_state_catalog.json',UI)
-lines=['# UI 요구사항 제작 대응표','','2026-11-09 디자인 v1.3. CQ-02A~E의 활동 추적·저장 복원·정산 보류·현장 완료 상태를 반영했습니다. 기존 UI-01~25와 게임 연결 이력은 보존합니다. 이번 납품은 리소스와 디자인 계약이며 게임 코드·실행 파일·Runtime 팩은 변경하지 않았습니다.','','상태·데이터·노출 조건은 `Source/ui_state_catalog.json`, 좌표는 `Source/layouts.json`, 원문 보존 검토는 `Source/text_flows.json`, 활동 계약은 `Source/activity_design_contract.json`을 확인합니다.','','| ID | UI | 상태 수 | 대표 화면 | 제작/연결 구분 |','|---|---|---:|---|---|']
+lines=['# UI 요구사항 제작 대응표','','2026-11-27 디자인 v1.5. UI-26~30과 기존 UI-01~25를 포함합니다. [파트 3 납품](PART3_UI_ko.md)에서 작품과 검수 범위를 확인할 수 있습니다.','','상태·데이터·노출 조건은 `Source/ui_state_catalog.json`, 좌표는 `Source/layouts.json`, 원문 보존 검토는 `Source/text_flows.json`, 활동 계약은 `Source/activity_design_contract.json`을 확인합니다.','','| ID | UI | 상태 수 | 대표 화면 | 제작/연결 구분 |','|---|---|---:|---|---|']
 for id,d in UI.items():
     p=', '.join(f'[{n}]({manifest["screens"][n]["png"]})' for n in d['preview_screens'])
     lines.append(f'| {id} | {d["name"]} | {len(d["states"])} | {p} | '+('기존 게임 연결 유지 / 디자인 갱신' if int(id[-2:])<=23 else '전용 디자인 납품 / 임시 게임 표현 교체용')+' |')

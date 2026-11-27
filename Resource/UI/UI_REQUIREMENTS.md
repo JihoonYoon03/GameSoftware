@@ -251,12 +251,12 @@
 | `Components/world_focus_ring` | `128×64` | 기존 뭉개진 주황/시안 원형 불빛을 대체하는 **지면 투사형 정밀 텔레메트리 링**(가는 외곽 원호 + 4방위 눈금 + 투명 중앙, 오브젝트 실루엣을 가리지 않을 것). |
 | `Icons/interact_talk` · `interact_hack` · `interact_salvage` · `interact_door` · `interact_vehicle` · `interact_quest` | 각 `32×32` | 단일 다이아몬드를 대체하는 6종 기능별 심볼(대화 말풍선 · 회로/터미널 · 보급/채굴 · 출입문 · 탑승/차량 · 주요 임무 마커). |
 
-### UI-27 — 손목 투사 3D 행성 구체 맵 & 우주 성계 지도 UI 프레임
+### UI-27 — 3D 행성 구체 맵 & 우주 성계 지도 UI 프레임
 
-- `Components/holo_wrist_emitter` (`64×64`): 플레이어 손목 투사 원점에 배치되는 시안 홀로그램 프로젝터 링.
 - `Components/globe_bezel_ring` (`512×512`, 중앙 투명): 3D 행성 구체 외곽 방위각 눈금·경위도 베젤 및 좌/우측 줌 인디케이터.
 - `Icons/map_planet_view` · `Icons/map_space_view` (`32×32`): `[G]` 행성 3D 구체 ↔ 우주 성계 지도 전환 토글 버튼 아이콘.
 - `Icons/map_cluster_subquest` (`32×32`): 현재 구역 클러스터 내 주황 랜덤 서브퀘스트 전용 핀.
+- *(폐기)* 손목 홀로그램 투사 연출(`Components/holo_wrist_emitter`)은 시인성 이슈로 기획 폐기되어 인게임에서 사용하지 않는다.
 
 ### UI-28 — 3D 외관 옷장 · 보관함 · 상점 시각 아이템 카드 프레임
 
@@ -275,3 +275,5 @@
 
 - 모든 `panel_*`·`button_*`·`card_*` 스프라이트는 **투명(`alpha = 0`) 픽셀에 인접 불투명 색상을 1~2px 컬러 블리드(Alpha Bleed / Edge Dilation)** 처리해 `GL_LINEAR` 스케일링 시 어두운 경계선이 발생하지 않도록 납품한다.
 - 아틀라스 패딩은 최소 `4px` 이상 유지하며, 9-슬라이스 내부 코너 경계(`12px`) 안쪽 2px 구간은 균일 색상/알파를 유지한다.
+
+리소스 제작과 오프라인 검수 결과는 [파트 3 납품 명세](PART3_UI_ko.md)에 기록했다. 실제 게임의 화면 배치와 조작 검수는 별도다.

@@ -328,6 +328,13 @@
     "implementation_document": "HUD_IMPLEMENTATION_ko.md",
     "priority": "current_play",
     "preview_screens": [
+      "98_prompt_talk",
+      "99_prompt_terminal",
+      "100_prompt_salvage",
+      "101_prompt_door",
+      "102_prompt_vehicle",
+      "103_prompt_quest",
+      "104_prompt_outside_range",
       "81_flight_landing",
       "82_flight_no_landing",
       "83_flight_grounded",
@@ -1113,6 +1120,175 @@
     "priority": "new_design_for_existing_feature",
     "preview_screens": [
       "40_stages"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-26": {
+    "name": "현장 상호작용 배지",
+    "states": [
+      "in_range",
+      "out_of_range",
+      "wrapped_title"
+    ],
+    "bindings": [
+      "focused_target",
+      "category",
+      "in_range",
+      "action_label",
+      "projection"
+    ],
+    "icons": [
+      "interact_talk",
+      "interact_hack",
+      "interact_salvage",
+      "interact_door",
+      "interact_vehicle",
+      "interact_quest"
+    ],
+    "rules": [
+      "Draw one context badge and project the focus ring below the eligible target.",
+      "Outside range hide the active keycap and ground ring."
+    ],
+    "presentation": "screen_or_modal",
+    "dedicated_status_panel": null,
+    "priority": "new_design_for_existing_feature",
+    "preview_screens": [
+      "98_prompt_talk",
+      "99_prompt_terminal",
+      "100_prompt_salvage",
+      "101_prompt_door",
+      "102_prompt_vehicle",
+      "103_prompt_quest",
+      "104_prompt_outside_range"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-27": {
+    "name": "행성 및 성계 지도",
+    "states": [
+      "planet_globe",
+      "space_system",
+      "discovered_subquest"
+    ],
+    "bindings": [
+      "mode",
+      "focus",
+      "orbit",
+      "zoom",
+      "detected_encounter",
+      "destination"
+    ],
+    "icons": [
+      "map_planet_view",
+      "map_space_view",
+      "map_cluster_subquest"
+    ],
+    "rules": [
+      "Press G in the map context; keep playback/flight independent from the view switch.",
+      "Only discovered markers use the orange quest pin."
+    ],
+    "presentation": "screen_or_modal",
+    "dedicated_status_panel": null,
+    "priority": "new_design_for_existing_feature",
+    "preview_screens": [
+      "105_holo_planet",
+      "106_holo_space"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-28": {
+    "name": "3D 진열 프레임",
+    "states": [
+      "wardrobe",
+      "home_storage",
+      "shop",
+      "part_on",
+      "part_off"
+    ],
+    "bindings": [
+      "model",
+      "pivot",
+      "inventory",
+      "price",
+      "availability",
+      "part_mask"
+    ],
+    "icons": [
+      "check",
+      "slot_empty"
+    ],
+    "rules": [
+      "Live preview region, title and price or quantity are separate."
+    ],
+    "presentation": "screen_or_modal",
+    "dedicated_status_panel": null,
+    "priority": "new_design_for_existing_feature",
+    "preview_screens": [
+      "107_showcase_wardrobe",
+      "108_showcase_stash",
+      "109_showcase_shop"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-29": {
+    "name": "현장 미니게임 콘솔",
+    "states": [
+      "signal_tuner",
+      "glyph_cipher",
+      "extraction_timing",
+      "circuit_balance"
+    ],
+    "bindings": [
+      "waveform",
+      "ring_angle",
+      "timing_target",
+      "circuit_value",
+      "input_context"
+    ],
+    "icons": [
+      "check",
+      "warning"
+    ],
+    "rules": [
+      "Separately draw measured runtime values and moving marks."
+    ],
+    "presentation": "screen_or_modal",
+    "dedicated_status_panel": null,
+    "priority": "new_design_for_existing_feature",
+    "preview_screens": [
+      "110_console_signal",
+      "111_console_cipher",
+      "112_console_timing",
+      "113_console_circuit"
+    ],
+    "delivery": "shared text-free assets + named state specification + composed editable review screen"
+  },
+  "UI-30": {
+    "name": "패널 및 버튼 9분할",
+    "states": [
+      "normal",
+      "wide",
+      "tall",
+      "low_opacity"
+    ],
+    "bindings": [
+      "panel_alpha",
+      "border_alpha",
+      "content_alpha",
+      "nine_slice_inset"
+    ],
+    "icons": [
+      "check",
+      "warning"
+    ],
+    "rules": [
+      "Use atlas-only 2px RGB dilation in alpha-zero texels. Keep 4px transparent padding."
+    ],
+    "presentation": "screen_or_modal",
+    "dedicated_status_panel": null,
+    "priority": "new_design_for_existing_feature",
+    "preview_screens": [
+      "114_panel_seam_review"
     ],
     "delivery": "shared text-free assets + named state specification + composed editable review screen"
   }

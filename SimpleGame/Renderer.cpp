@@ -3001,6 +3001,22 @@ size_t Renderer::UiSpriteCount() const
 {
     return m_assets->UiSpriteCount();
 }
+unsigned int Renderer::PlanetAlbedoTexture(const std::string &planetId) const
+{
+    return m_assets ? m_assets->PlanetAlbedoTexture(planetId) : 0u;
+}
+unsigned int Renderer::PlanetCloudTexture(const std::string &planetId) const
+{
+    return m_assets ? m_assets->PlanetCloudTexture(planetId) : 0u;
+}
+unsigned int Renderer::PlanetRingTexture(const std::string &planetId) const
+{
+    return m_assets ? m_assets->PlanetRingTexture(planetId) : 0u;
+}
+unsigned int Renderer::SpaceNebulaTexture() const
+{
+    return m_assets ? m_assets->SpaceNebulaTexture() : 0u;
+}
 bool Renderer::DrawBackdropLayer(const std::string &name)
 {
     return m_assets->DrawBackdropLayer(name, GetStyle().cartoon, GetRenderWidth(),

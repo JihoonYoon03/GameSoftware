@@ -411,6 +411,12 @@ struct DialogueState
     std::map<std::string, DialogueRecord> scenes;
     std::set<std::string> events;
     std::function<void(const std::string &)> completion;
+    // Transient NPC focus & proximity state (not serialized).
+    bool hasSpeakerAnchor = false;
+    Vector2 speakerLocalPosition = {};
+    std::optional<world::SurfacePoint> speakerSurfacePosition;
+    float preDialogueZoom = 0.f;
+    bool zoomApplied = false;
 };
 class Dialogue
 {
@@ -422,6 +428,8 @@ class Dialogue
     static bool Advance();
     static bool Select(size_t index);
     static void Interrupt();
+    static void CancelByDistance();
+    static void UpdateCameraAndProximity(float deltaSeconds);
     static bool Resume();
     static bool Active();
     static bool LocksWorld();
@@ -708,7 +716,6 @@ struct GameState
     world::SurfacePoint planetGlobeCenter = world::SurfaceGeometry::FromDegrees(0, 0);
     bool planetGlobeInitialized = false;
     bool mapSpaceMode = false;
-    float mapHologramProgress = 1.f;
     float mapSpaceYaw = 0.42f;
     float mapSpacePitch = 0.56f;
     float mapSpaceZoom = 1.f;
@@ -943,11 +950,13 @@ class Game
     bool ResidenceWithdrawSalvage();
     void ResidenceCycleGender();
     void ResidenceCycleHair();
+    bool WaitForSurfaceLoaded(int timeoutSeconds = 25);
 
   private:
     Game();
     GameState state;
     std::unique_ptr<world::SurfaceSession> surface;
+    std::shared_ptr<const world::GeneratedPlanet> cachedErmaPlanet;
     std::unique_ptr<PlanetCities> surfaceCities;
     std::unique_ptr<PlanetTraffic> surfaceTraffic;
     std::unique_ptr<PlanetParty> surfaceParty;
@@ -991,6 +1000,7 @@ class Game
     friend class SaveSystem;
     friend class SaveArchive;
     friend class PlayerAircraftController;
+    friend class Dialogue;
 };
 // ============================================================================
 // RelayTravel — registration, travel policy and cancellable, preloaded landing transaction

@@ -38,7 +38,23 @@ def padded_sprite(image, pad, spread):
 
 def color_bleed(key, asset):
     name=key.split('/')[1]
-    return bool(asset.get('nine_slice_inset') or name.startswith(('panel_','button_','card_')))
+    return bool(asset.get('nine_slice_ltrb') or asset.get('nine_slice_inset')
+                or name.startswith(('panel_','button_','card_','world_prompt_','showcase_card_','part_chip_')))
+
+
+def check_slice_edges(image, insets):
+    """Require two matching visible pixels on the stretchable side of each cut."""
+    w,h=image.size
+    left,top,right,bottom=insets
+    pixels=image.load()
+    def visible(pixel):
+        return pixel if pixel[3] else (0,0,0,0)
+    for a,b in ((left,left+1),(w-right-2,w-right-1)):
+        for y in range(h):
+            assert visible(pixels[a,y])==visible(pixels[b,y]),('vertical',a,b,y)
+    for a,b in ((top,top+1),(h-bottom-2,h-bottom-1)):
+        for x in range(w):
+            assert visible(pixels[x,a])==visible(pixels[x,b]),('horizontal',a,b,x)
 
 def build():
     m=read('ui_manifest.json');baseline=read('Source/performance_baseline_20261109.json')['sprites']
@@ -46,6 +62,8 @@ def build():
     assert len(assets)==sum(len(m[g]) for g in ['icons','hud_icons','components'])
     assert set(baseline)<=set(assets)
     atlas=Image.new('RGBA',(2048,2048));entries={};images={};x=y=rowh=0;pad=4;legacy=[]
+    slice_checks={}
+    bleed_changes={}
     # Stable size ordering and names make identical input deterministic.
     for key,a in sorted(assets.items(),key=lambda item:(-item[1]['height'],-item[1]['width'],item[0])):
         image=Image.open(ROOT/a['png']).convert('RGBA');w,h=image.size
@@ -61,8 +79,16 @@ def build():
         entries[key]=dict(x=px,y=py,width=w,height=h,source=a['png'],source_sha256=sha,
             rgba_sha256=digest(padded.crop((pad,pad,pad+w,pad+h)).tobytes()),source_rgba_sha256=digest(image.tobytes()),
             uv_pixel_centers=[(px+.5)/2048,(py+.5)/2048,(px+w-.5)/2048,(py+h-.5)/2048])
-        if a.get('nine_slice_inset'):
-            entries[key]['nine_slice_inset']=a['nine_slice_inset']
+        if insets:=a.get('nine_slice_ltrb'):
+            entries[key]['nine_slice_ltrb']=insets
+            if len(set(insets))==1:
+                entries[key]['nine_slice_inset']=insets[0]
+            if key.split('/')[1].startswith(('panel_','button_','card_','world_prompt_','showcase_card_','part_chip_')):
+                try:
+                    check_slice_edges(image,insets)
+                except AssertionError as error:
+                    raise AssertionError((key,str(error))) from error
+                slice_checks[key]=insets
         if bleed:
             entries[key]['alpha_bleed_px']=2
         if key in baseline:
@@ -77,6 +103,8 @@ def build():
         original,isolated=images[key]
         crop=atlas.crop((x,y,x+w,y+h))
         assert all(a[3]==b[3] and (not a[3] or a==b) for a,b in zip(crop.get_flattened_data(),original.get_flattened_data()))
+        changed=sum(a!=b for a,b in zip(crop.get_flattened_data(),original.get_flattened_data()))
+        if changed:bleed_changes[key]=changed
         strips=[(x-pad,y-pad,x+w+pad,y),(x-pad,y+h,x+w+pad,y+h+pad),(x-pad,y,x,y+h),(x+w,y,x+w+pad,y+h)]
         for region in strips:assert atlas.crop(region).getchannel('A').getbbox() is None
         # Bilinear support reaches at most one pixel outside the sprite rectangle.
@@ -95,7 +123,8 @@ def build():
     report=dict(status='PASS',sprite_count=len(entries),legacy_count=len(legacy),legacy_expected=len(baseline),missing=[],duplicates=[],
         original_png_hashes_preserved=True,visible_rgba_crops_exact=True,transparent_gutter_px=pad,alpha_bleed_px=2,
         atlas_bytes=target.stat().st_size,gpu_rgba8_bytes=atlas.width*atlas.height*4,bilinear_isolated_comparisons=gutter_checks,
+        slice_constant_inner_strips=slice_checks,alpha_zero_rgb_corrected_pixels=bleed_changes,
         scope='Visible source pixels preserved. Transparent RGB is extended near 9-slice edges; gutters retain alpha zero.')
-    save('Validation/20261123/atlas_report.json',report)
+    save('Validation/20261127/atlas_report.json',report)
     print(json.dumps(report,ensure_ascii=False))
 if __name__=='__main__':build()

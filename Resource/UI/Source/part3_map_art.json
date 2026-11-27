@@ -1,0 +1,107 @@
+{
+  "schema": "erma.ui.part3.map_art",
+  "version": 1,
+  "projected_preview_only": true,
+  "map_location_source": "game; texture carries no topology or gameplay locations",
+  "maps": {
+    "Planet_Erma_Albedo": {
+      "path": "Export/Textures/ColonyV4/Planet_Erma_Albedo.png",
+      "dimensions": [
+        4096,
+        2048
+      ],
+      "file_bytes": 7009322,
+      "rgba8_bytes": 33554432,
+      "sha256": "e73d826cc533de549bd3ee5e1d4df0d4a2b89422d21b4dc067e4039cb9d689bb",
+      "color_space": "sRGB"
+    },
+    "Planet_Erma_Normal": {
+      "path": "Export/Textures/ColonyV4/Planet_Erma_Normal.png",
+      "dimensions": [
+        4096,
+        2048
+      ],
+      "file_bytes": 10312513,
+      "rgba8_bytes": 33554432,
+      "sha256": "fdd8fadff50cd44355df6794662ecaefa11e2c33943d1ff5659a3f82e5112bd5",
+      "color_space": "linear"
+    },
+    "Planet_Erma_Cloud": {
+      "path": "Export/Textures/ColonyV4/Planet_Erma_Cloud.png",
+      "dimensions": [
+        4096,
+        2048
+      ],
+      "file_bytes": 1923475,
+      "rgba8_bytes": 33554432,
+      "sha256": "c341d106f653ad8eaf72eb28c6c5e89b8faf86fe5365692750470611bf08c657",
+      "color_space": "sRGB color, linear opacity"
+    },
+    "Planet_Seira_Albedo": {
+      "path": "Export/Textures/ColonyV4/Planet_Seira_Albedo.png",
+      "dimensions": [
+        2048,
+        1024
+      ],
+      "file_bytes": 2204216,
+      "rgba8_bytes": 8388608,
+      "sha256": "2f3781b5864a389209067afdfcb3d8a7b8dd7f662570c11dc9f9300476aeeb41",
+      "color_space": "sRGB"
+    },
+    "Planet_Seira_Normal": {
+      "path": "Export/Textures/ColonyV4/Planet_Seira_Normal.png",
+      "dimensions": [
+        2048,
+        1024
+      ],
+      "file_bytes": 4990370,
+      "rgba8_bytes": 8388608,
+      "sha256": "06de2bb78a92d968c8ae7272afa478c2a92cf52a7ca6b33bfa5c8120a2577c91",
+      "color_space": "linear"
+    },
+    "Planet_Orren_Albedo": {
+      "path": "Export/Textures/ColonyV4/Planet_Orren_Albedo.png",
+      "dimensions": [
+        2048,
+        1024
+      ],
+      "file_bytes": 2204522,
+      "rgba8_bytes": 8388608,
+      "sha256": "3a066902185128d8da23d5ed663bb4faf1020d638174d623eb78732702ee203f",
+      "color_space": "sRGB"
+    },
+    "Planet_Orren_Normal": {
+      "path": "Export/Textures/ColonyV4/Planet_Orren_Normal.png",
+      "dimensions": [
+        2048,
+        1024
+      ],
+      "file_bytes": 3947381,
+      "rgba8_bytes": 8388608,
+      "sha256": "be68ec7d71a1b3b2f204f79f851293fe7335137f1d135513c4d84d87ffcad9a2",
+      "color_space": "linear"
+    },
+    "Planet_Orren_Ring": {
+      "path": "Export/Textures/ColonyV4/Planet_Orren_Ring.png",
+      "dimensions": [
+        1024,
+        256
+      ],
+      "file_bytes": 205989,
+      "rgba8_bytes": 1048576,
+      "sha256": "17a243229a2dc0880a5da539f07e52985d81988ab8ec29e623f7d53b95dfbb71",
+      "color_space": "sRGB color, linear opacity"
+    },
+    "Space_Starfield_Nebula": {
+      "path": "Export/Textures/ColonyV4/Space_Starfield_Nebula.png",
+      "dimensions": [
+        2048,
+        1024
+      ],
+      "file_bytes": 390158,
+      "rgba8_bytes": 8388608,
+      "sha256": "ea5085a1aaef2b6179672f26d547bfde361be43bf0909b2f6a924fe89a30ba00",
+      "color_space": "sRGB"
+    }
+  }
+}

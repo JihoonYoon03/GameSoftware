@@ -520,6 +520,24 @@ const Model *ModelLibrary::ModularPart(const std::string &name)
     parts.emplace(name, std::move(model));
     return ptr;
 }
+const Model *ModelLibrary::Cq04b(const std::string &name)
+{
+    static std::map<std::string, std::unique_ptr<Model>> modules;
+    auto it = modules.find(name);
+    if (it != modules.end())
+    {
+        return it->second.get();
+    }
+    auto model = std::make_unique<Model>();
+    if (!ResourceAssets::BindOptional(*model, "cq04b/" + name))
+    {
+        return nullptr;
+    }
+    model->ground = name.rfind("road_", 0) == 0 || name.rfind("junc_", 0) == 0 || name.rfind("plaza_", 0) == 0;
+    const Model *ptr = model.get();
+    modules.emplace(name, std::move(model));
+    return ptr;
+}
 const char *ModelLibrary::SceneryName(SceneryType type)
 {
     constexpr const char *names[] = {"Road_2Lane_4m",         "Road_4Lane_4m",

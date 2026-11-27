@@ -288,6 +288,7 @@ void Drawing::DrawInteractionMarker(Vector2 worldPosition, const std::string &la
         return;
     }
     auto &world = Game::Get().GetState();
+    auto &backend = GameRenderer::Get().Backend();
     const Vector2 sp =
         WorldToScreen(worldPosition.x, worldPosition.y, 49 + std::sin(world.animationTimeSeconds * 2) * 3);
     std::string text = CivicCombat::LandmarkDown(worldPosition) ? "의료 지원 중 / 잠시 후 복귀" : label;
@@ -301,30 +302,59 @@ void Drawing::DrawInteractionMarker(Vector2 worldPosition, const std::string &la
             text.pop_back();
         }
     }
-    // Sleek frosted pill badge + category accent stripe + separated [E] keycap chip (pre-UI-26 runtime upgrade).
+    // UI-26 delivered world interaction prompt: choose semantic icon + 9-slice world_prompt_pill + world_keycap_e.
+    auto hasAny = [&](std::initializer_list<const char *> keys) {
+        for (const char *k : keys)
+        {
+            if (text.find(k) != std::string::npos)
+            {
+                return true;
+            }
+        }
+        return false;
+    };
+    const char *iconName = hasAny({"대화", "카인", "리아", "마라", "이야기", "약탈자"}) ? "Icons/interact_talk"
+                           : hasAny({"단말", "차단", "회로", "수신", "측량", "고립", "교란", "발전"})
+                               ? "Icons/interact_hack"
+                           : hasAny({"채굴", "보급", "적재", "장부", "수리", "광맥", "보관"})
+                               ? "Icons/interact_salvage"
+                           : hasAny({"출입", "입장", "귀환", "거처", "전망대", "광산", "상점", "의료", "정비", "행정"})
+                               ? "Icons/interact_door"
+                           : hasAny({"탑승", "차량", "바이크", "비행", "공용"}) ? "Icons/interact_vehicle"
+                                                                                : "Icons/interact_quest";
     const float textW = float(RenderAssets::MeasureUtf8(text, 14));
-    const float keyExtra = hasKeyE ? 24.f : 0.f;
-    const float pillX = std::round(sp.x + 8.f);
-    const float pillY = std::round(sp.y - 12.f);
-    const float pillW = std::round(14.f + textW + keyExtra);
-    const float pillH = 22.f;
-    DrawRectangle(pillX, pillY, pillW, pillH, {.024f, .052f, .072f, .84f});
-    DrawRectangle(pillX, pillY, pillW, 1.f, {color.r, color.g, color.b, .58f});
-    DrawRectangle(pillX, pillY + pillH - 1.f, pillW, 1.f, {color.r, color.g, color.b, .38f});
-    DrawRectangle(pillX, pillY + 2.f, 3.f, pillH - 4.f, {color.r, color.g, color.b, .95f});
-    // Crisp dark-framed anchor diamond beside the pill.
-    DrawPolygon({{sp.x, sp.y + 6.5f}, {sp.x - 5.f, sp.y}, {sp.x, sp.y - 6.5f}, {sp.x + 5.f, sp.y}},
-                {.02f, .05f, .07f, .92f});
-    DrawPolygon({{sp.x, sp.y + 4.5f}, {sp.x - 3.4f, sp.y}, {sp.x, sp.y - 4.5f}, {sp.x + 3.4f, sp.y}}, color);
-    DrawLabel(pillX + 7.f, pillY + 15.f, text, {.92f, .96f, .97f});
+    const float keyExtra = hasKeyE ? 28.f : 0.f;
+    const float pillW = std::round(42.f + textW + keyExtra);
+    const float pillX = std::round(sp.x - pillW * .5f);
+    const float pillY = std::round(sp.y - 16.f);
+    const float pillH = 28.f;
+    SetColor({1.f, 1.f, 1.f, .96f});
+    if (!backend.DrawUiSprite("Components/world_prompt_pill", pillX, pillY, pillW, pillH, 1.f, true))
+    {
+        DrawRectangle(pillX, pillY, pillW, pillH, {.024f, .052f, .072f, .86f});
+        DrawRectangle(pillX, pillY, pillW, 1.f, {color.r, color.g, color.b, .62f});
+    }
+    DrawRectangle(pillX + 3.f, pillY + 5.f, 3.f, pillH - 10.f, {color.r, color.g, color.b, .95f});
+    SetColor(color);
+    if (!backend.DrawUiSprite(iconName, pillX + 10.f, pillY + 6.f, 16.f, 16.f, 1.f, false))
+    {
+        DrawPolygon({{pillX + 18.f, pillY + 20.f},
+                     {pillX + 13.f, pillY + 14.f},
+                     {pillX + 18.f, pillY + 8.f},
+                     {pillX + 23.f, pillY + 14.f}},
+                    color);
+    }
+    DrawLabel(pillX + 31.f, pillY + 19.f, text, {.92f, .97f, .98f});
     if (hasKeyE)
     {
-        const float kx = pillX + pillW - 21.f;
-        const float ky = pillY + 3.f;
-        DrawRectangle(kx, ky, 17.f, 16.f, {color.r * .25f, color.g * .30f, color.b * .32f, .94f});
-        DrawRectangle(kx, ky, 17.f, 1.f, {color.r, color.g, color.b, .85f});
-        DrawRectangle(kx, ky + 15.f, 17.f, 1.f, {color.r, color.g, color.b, .85f});
-        DrawLabel(kx + 4.5f, ky + 12.f, "E", color);
+        const float kx = pillX + pillW - 26.f;
+        const float ky = pillY + 4.f;
+        SetColor({1.f, 1.f, 1.f, 1.f});
+        if (!backend.DrawUiSprite("Components/world_keycap_e", kx, ky, 20.f, 20.f, 1.f, false))
+        {
+            DrawRectangle(kx, ky, 19.f, 19.f, {color.r * .25f, color.g * .30f, color.b * .32f, .94f});
+            DrawLabel(kx + 5.f, ky + 14.f, "E", color);
+        }
     }
 }
 

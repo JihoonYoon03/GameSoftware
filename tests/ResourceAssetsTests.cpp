@@ -330,5 +330,20 @@ int main()
     }
     assert(rejected);
     TestMixamoRigAndSockets();
-    std::cout << "Resource asset loading, Mixamo rig/socket and animation regression checks passed.\n";
+    // 5) CQ04B 35-module road, junction, traffic signal, and sidewalk streetscape kit packed into game-assets.bin.
+    for (const char *cq04bId : {"cq04b/road_local_2lane_16m", "cq04b/road_collector_4lane_16m",
+                                "cq04b/road_arterial_6lane_16m", "cq04b/road_ring_4lane_16m",
+                                "cq04b/road_highway_regional_16m_guardrail", "cq04b/elevated_viaduct_4lane_16m",
+                                "cq04b/bridge_4lane_32m", "cq04b/junc_roundabout_1lane",
+                                "cq04b/junc_roundabout_2lane", "cq04b/signal_gantry_4aspect",
+                                "cq04b/signal_pedestrian_pole", "cq04b/sign_roundabout_yield",
+                                "cq04b/prop_streetlight_modern", "cq04b/prop_transit_shelter",
+                                "cq04b/prop_bench", "cq04b/prop_plaza_planter", "cq04b/prop_bollard"})
+    {
+        const auto id = ResourceAssets::TryFind(cq04bId);
+        assert(id != 0);
+        const auto &asset = ResourceAssets::Get(id);
+        assert(asset.TriangleCount(LodLevel::Lod0) > 0);
+    }
+    std::cout << "Resource asset loading, Mixamo rig/socket, CQ04B road kit and animation regression checks passed.\n";
 }

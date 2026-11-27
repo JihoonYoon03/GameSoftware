@@ -55,6 +55,10 @@ class RenderAssets
     unsigned int DamageMaskTexture() const;
     unsigned int EffectMasksTexture() const;
     unsigned int WaterFlowTexture() const;
+    unsigned int PlanetAlbedoTexture(const std::string &planetId) const;
+    unsigned int PlanetCloudTexture(const std::string &planetId) const;
+    unsigned int PlanetRingTexture(const std::string &planetId) const;
+    unsigned int SpaceNebulaTexture() const;
     bool HasPbrTextures() const;
     bool HasPbrDetailTextures() const;
     bool HasDamageMask() const;

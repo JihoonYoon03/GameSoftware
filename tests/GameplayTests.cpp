@@ -6907,18 +6907,20 @@ void TestPart2ContentAndUiOverhaul()
     arc.Update(0.05f);
     assert(!arcState.tracers.empty());
 
-    // 8) Part 3: Wrist-projected 3D globe map (zoom-scaled LMB drag rotate, RMB destination pin, G space map).
+    // 8) Part 3: Optimized 3D globe map (zoom-scaled LMB drag rotate, RMB destination pin, G space map)
+    //    plus full preloading & cached Erma planet reuse across test stage switches.
+    g.StartNewGame();
+    assert(g.Surface() != nullptr && g.Surface()->Ready());
+    const auto cachedPlanetBefore = g.Surface()->Stream().Snapshot()->planet;
+    assert(cachedPlanetBefore != nullptr);
     g.EnterTestStage(TestStage::BikeUnlocked);
+    assert(g.Surface() != nullptr && g.Surface()->Ready());
+    assert(g.Surface()->Stream().Snapshot()->planet == cachedPlanetBefore);
     w.isBikeMounted = false;
     w.mapVisible = false;
     g.KeyDown('m', 0, 0);
     g.KeyUp('m', 0, 0);
-    assert(w.mapVisible && w.mapHologramProgress < 0.1f && !w.mapSpaceMode);
-    for (int i = 0; i < 10; ++i)
-    {
-        g.Update(0.05f);
-    }
-    assert(w.mapHologramProgress >= 0.99f);
+    assert(w.mapVisible && !w.mapSpaceMode);
     const double planetR = g.Surface()->Planet().radiusMeters;
     // Zoomed-in LMB drag rotation distance vs zoomed-out ('p') full-globe LMB drag rotation distance.
     w.planetMapRange = 1000.f;
@@ -6946,6 +6948,40 @@ void TestPart2ContentAndUiOverhaul()
     // [G] toggles Space / Star System map view.
     assert(MapHud::HandleMapKey('g') && w.mapSpaceMode);
     assert(MapHud::HandleMapKey('g') && !w.mapSpaceMode);
+    w.mapVisible = false;
+
+    // 9) NPC dialogue camera zoom-in + WASD walk-away distance auto-cancel & zoom restore.
+    WorldCamera::SetZoom(WorldCamera::kDefaultZoom, true);
+    const float baseZoom = WorldCamera::targetZoom;
+    assert(g.Surface() && g.Surface()->Ready());
+    if (w.residents.empty())
+    {
+        decltype(w.residents)::value_type dummy;
+        dummy.name = "리아";
+        dummy.health = 100;
+        dummy.position = {w.playerPosition.x + 1.0f, w.playerPosition.y};
+        w.residents.push_back(dummy);
+    }
+    else
+    {
+        w.residents.front().position = {w.playerPosition.x + 1.0f, w.playerPosition.y};
+        w.residents.front().health = 100;
+    }
+    Dialogue::Start("test_npc_zoom", {{w.residents.front().name, "현장 대면 대화 테스트입니다.", "현장 대화"}}, {},
+                    true, true);
+    assert(Dialogue::Active());
+    assert(w.dialogue.hasSpeakerAnchor && w.dialogue.zoomApplied);
+    assert(WorldCamera::targetZoom >= 2.0f && WorldCamera::targetZoom > baseZoom + 0.4f);
+    // Walk away > 10.5 m using 'd' key so dialogue auto-cancels and zoom smoothly restores.
+    g.KeyDown('d', 0, 0);
+    for (int i = 0; i < 60 && Dialogue::Active(); ++i)
+    {
+        g.Update(0.1f);
+    }
+    g.KeyUp('d', 0, 0);
+    assert(!Dialogue::Active());
+    assert(!w.dialogue.zoomApplied);
+    assert(std::fabs(WorldCamera::targetZoom - baseZoom) < 0.02f);
     g.Reset();
 }
 

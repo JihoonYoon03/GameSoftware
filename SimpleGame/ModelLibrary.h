@@ -311,6 +311,8 @@ class ModelLibrary
     static const Model &MeasuredBuilding(MeasuredBuildingType type);
     // CQ-11 Mixamo 3-tier modular parts (stable heap address for GPU mesh cache; nullptr if absent).
     static const Model *ModularPart(const std::string &name);
+    // CQ-04B v4 city road, junction, grade-separation, signal & streetscape modules.
+    static const Model *Cq04b(const std::string &name);
 };
 
 // ============================================================================

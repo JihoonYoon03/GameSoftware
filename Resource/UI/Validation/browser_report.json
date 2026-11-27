@@ -1,11 +1,11 @@
 {
-  "generated": "2026-11-23T14:03:35.761Z",
+  "generated": "2026-11-27T06:44:35.825Z",
   "font": {
     "loaded": true,
     "family": "\"Malgun Gothic\", sans-serif"
   },
-  "screenCount": 97,
-  "assetCount": 159,
+  "screenCount": 114,
+  "assetCount": 185,
   "pageErrors": [],
   "overflowCount": 0,
   "overlapCount": 0,
@@ -18,10 +18,10 @@
     {
       "scene": "01_city",
       "before": 175597,
-      "after": 69685,
+      "after": 69657,
       "beforePercent": 17.14814453125,
-      "afterPercent": 6.80517578125,
-      "reductionPercent": 60.31538124227636,
+      "afterPercent": 6.80244140625,
+      "reductionPercent": 60.33132684499165,
       "definition": "Pixels with UI alpha >= 0.1 after removing world-background. Includes text, map, gauges and prompts; not a live-game measurement."
     },
     {
@@ -44,6 +44,1528 @@
     }
   ],
   "scenes": [
+    {
+      "name": "98_prompt_talk",
+      "textCount": 6,
+      "overflow": [],
+      "overlaps": [],
+      "texts": [
+        {
+          "text": "86",
+          "x": 66,
+          "y": 705,
+          "w": 32.46875,
+          "h": 37,
+          "size": 28,
+          "maxWidth": null
+        },
+        {
+          "text": "/ 100",
+          "x": 117,
+          "y": 714,
+          "w": 47.0947265625,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 110
+        },
+        {
+          "text": "N ↗",
+          "x": 1186.90625,
+          "y": 37,
+          "w": 30.09375,
+          "h": 18,
+          "size": 14,
+          "maxWidth": null
+        },
+        {
+          "text": "헤일로",
+          "x": 1120,
+          "y": 229,
+          "w": 48,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 206
+        },
+        {
+          "text": "M 지도",
+          "x": 1117.8515625,
+          "y": 255,
+          "w": 52.296875,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 206
+        },
+        {
+          "text": "리아에게 말 걸기",
+          "x": 476,
+          "y": 500,
+          "w": 138.65625,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 314
+        }
+      ]
+    },
+    {
+      "name": "99_prompt_terminal",
+      "textCount": 7,
+      "overflow": [],
+      "overlaps": [],
+      "texts": [
+        {
+          "text": "86",
+          "x": 66,
+          "y": 705,
+          "w": 32.46875,
+          "h": 37,
+          "size": 28,
+          "maxWidth": null
+        },
+        {
+          "text": "/ 100",
+          "x": 117,
+          "y": 714,
+          "w": 47.0947265625,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 110
+        },
+        {
+          "text": "미탐험",
+          "x": 1155,
+          "y": 83,
+          "w": 42,
+          "h": 18,
+          "size": 14,
+          "maxWidth": null
+        },
+        {
+          "text": "N ↗",
+          "x": 1186.90625,
+          "y": 37,
+          "w": 30.09375,
+          "h": 18,
+          "size": 14,
+          "maxWidth": null
+        },
+        {
+          "text": "광산 · 탐험 구간",
+          "x": 1085.46875,
+          "y": 229,
+          "w": 117.0625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 206
+        },
+        {
+          "text": "M 지도",
+          "x": 1117.8515625,
+          "y": 255,
+          "w": 52.296875,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 206
+        },
+        {
+          "text": "비상 배전반 점검",
+          "x": 476,
+          "y": 500,
+          "w": 138.65625,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 314
+        }
+      ]
+    },
+    {
+      "name": "100_prompt_salvage",
+      "textCount": 7,
+      "overflow": [],
+      "overlaps": [],
+      "texts": [
+        {
+          "text": "86",
+          "x": 66,
+          "y": 705,
+          "w": 32.46875,
+          "h": 37,
+          "size": 28,
+          "maxWidth": null
+        },
+        {
+          "text": "/ 100",
+          "x": 117,
+          "y": 714,
+          "w": 47.0947265625,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 110
+        },
+        {
+          "text": "미탐험",
+          "x": 1155,
+          "y": 83,
+          "w": 42,
+          "h": 18,
+          "size": 14,
+          "maxWidth": null
+        },
+        {
+          "text": "N ↗",
+          "x": 1186.90625,
+          "y": 37,
+          "w": 30.09375,
+          "h": 18,
+          "size": 14,
+          "maxWidth": null
+        },
+        {
+          "text": "광산 · 탐험 구간",
+          "x": 1085.46875,
+          "y": 229,
+          "w": 117.0625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 206
+        },
+        {
+          "text": "M 지도",
+          "x": 1117.8515625,
+          "y": 255,
+          "w": 52.296875,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 206
+        },
+        {
+          "text": "프리즘 광맥 채굴",
+          "x": 476,
+          "y": 500,
+          "w": 138.65625,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 314
+        }
+      ]
+    },
+    {
+      "name": "101_prompt_door",
+      "textCount": 6,
+      "overflow": [],
+      "overlaps": [],
+      "texts": [
+        {
+          "text": "86",
+          "x": 66,
+          "y": 705,
+          "w": 32.46875,
+          "h": 37,
+          "size": 28,
+          "maxWidth": null
+        },
+        {
+          "text": "/ 100",
+          "x": 117,
+          "y": 714,
+          "w": 47.0947265625,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 110
+        },
+        {
+          "text": "N ↗",
+          "x": 1186.90625,
+          "y": 37,
+          "w": 30.09375,
+          "h": 18,
+          "size": 14,
+          "maxWidth": null
+        },
+        {
+          "text": "헤일로",
+          "x": 1120,
+          "y": 229,
+          "w": 48,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 206
+        },
+        {
+          "text": "M 지도",
+          "x": 1117.8515625,
+          "y": 255,
+          "w": 52.296875,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 206
+        },
+        {
+          "text": "거주 구역으로 들어가기",
+          "x": 476,
+          "y": 500,
+          "w": 192.65625,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 314
+        }
+      ]
+    },
+    {
+      "name": "102_prompt_vehicle",
+      "textCount": 6,
+      "overflow": [],
+      "overlaps": [],
+      "texts": [
+        {
+          "text": "86",
+          "x": 66,
+          "y": 705,
+          "w": 32.46875,
+          "h": 37,
+          "size": 28,
+          "maxWidth": null
+        },
+        {
+          "text": "/ 100",
+          "x": 117,
+          "y": 714,
+          "w": 47.0947265625,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 110
+        },
+        {
+          "text": "N ↗",
+          "x": 1186.90625,
+          "y": 37,
+          "w": 30.09375,
+          "h": 18,
+          "size": 14,
+          "maxWidth": null
+        },
+        {
+          "text": "헤일로",
+          "x": 1120,
+          "y": 229,
+          "w": 48,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 206
+        },
+        {
+          "text": "M 지도",
+          "x": 1117.8515625,
+          "y": 255,
+          "w": 52.296875,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 206
+        },
+        {
+          "text": "공용 비행체 탑승",
+          "x": 476,
+          "y": 500,
+          "w": 138.65625,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 314
+        }
+      ]
+    },
+    {
+      "name": "103_prompt_quest",
+      "textCount": 8,
+      "overflow": [],
+      "overlaps": [],
+      "texts": [
+        {
+          "text": "86",
+          "x": 66,
+          "y": 705,
+          "w": 32.46875,
+          "h": 37,
+          "size": 28,
+          "maxWidth": null
+        },
+        {
+          "text": "/ 100",
+          "x": 117,
+          "y": 714,
+          "w": 47.0947265625,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 110
+        },
+        {
+          "text": "미탐험",
+          "x": 1155,
+          "y": 83,
+          "w": 42,
+          "h": 18,
+          "size": 14,
+          "maxWidth": null
+        },
+        {
+          "text": "N ↗",
+          "x": 1186.90625,
+          "y": 37,
+          "w": 30.09375,
+          "h": 18,
+          "size": 14,
+          "maxWidth": null
+        },
+        {
+          "text": "광산 · 탐험 구간",
+          "x": 1085.46875,
+          "y": 229,
+          "w": 117.0625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 206
+        },
+        {
+          "text": "M 지도",
+          "x": 1117.8515625,
+          "y": 255,
+          "w": 52.296875,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 206
+        },
+        {
+          "text": "북동 잔해 고압 격벽에서 ",
+          "x": 476,
+          "y": 500,
+          "w": 198.984375,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 314
+        },
+        {
+          "text": "차단 회로를 점검하기",
+          "x": 476,
+          "y": 527,
+          "w": 174.65625,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 314
+        }
+      ]
+    },
+    {
+      "name": "104_prompt_outside_range",
+      "textCount": 5,
+      "overflow": [],
+      "overlaps": [],
+      "texts": [
+        {
+          "text": "86",
+          "x": 66,
+          "y": 705,
+          "w": 32.46875,
+          "h": 37,
+          "size": 28,
+          "maxWidth": null
+        },
+        {
+          "text": "/ 100",
+          "x": 117,
+          "y": 714,
+          "w": 47.0947265625,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 110
+        },
+        {
+          "text": "N ↗",
+          "x": 1186.90625,
+          "y": 37,
+          "w": 30.09375,
+          "h": 18,
+          "size": 14,
+          "maxWidth": null
+        },
+        {
+          "text": "헤일로",
+          "x": 1120,
+          "y": 229,
+          "w": 48,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 206
+        },
+        {
+          "text": "M 지도",
+          "x": 1117.8515625,
+          "y": 255,
+          "w": 52.296875,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 206
+        }
+      ]
+    },
+    {
+      "name": "105_holo_planet",
+      "textCount": 8,
+      "overflow": [],
+      "overlaps": [],
+      "texts": [
+        {
+          "text": "에르마 · 행성 지도",
+          "x": 94,
+          "y": 78,
+          "w": 249.5,
+          "h": 40,
+          "size": 30,
+          "maxWidth": null
+        },
+        {
+          "text": "G",
+          "x": 958.9375,
+          "y": 86,
+          "w": 10.125,
+          "h": 18,
+          "size": 14,
+          "maxWidth": 34
+        },
+        {
+          "text": "성계 지도",
+          "x": 997,
+          "y": 84,
+          "w": 78.328125,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 160
+        },
+        {
+          "text": "지도 표식",
+          "x": 839,
+          "y": 191,
+          "w": 91.390625,
+          "h": 28,
+          "size": 21,
+          "maxWidth": null
+        },
+        {
+          "text": "발견한 지역 의뢰",
+          "x": 880,
+          "y": 253,
+          "w": 123.25,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 264
+        },
+        {
+          "text": "지정 목적지",
+          "x": 880,
+          "y": 304,
+          "w": 85.625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 264
+        },
+        {
+          "text": "드래그 회전 · 휠 확대 및 축소",
+          "x": 96,
+          "y": 682,
+          "w": 213.25,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 610
+        },
+        {
+          "text": "M 닫기",
+          "x": 1117.703125,
+          "y": 682,
+          "w": 52.296875,
+          "h": 21,
+          "size": 16,
+          "maxWidth": null
+        }
+      ]
+    },
+    {
+      "name": "106_holo_space",
+      "textCount": 12,
+      "overflow": [],
+      "overlaps": [],
+      "texts": [
+        {
+          "text": "에르마 성계",
+          "x": 94,
+          "y": 78,
+          "w": 160.546875,
+          "h": 40,
+          "size": 30,
+          "maxWidth": null
+        },
+        {
+          "text": "G",
+          "x": 958.9375,
+          "y": 86,
+          "w": 10.125,
+          "h": 18,
+          "size": 14,
+          "maxWidth": 34
+        },
+        {
+          "text": "행성 지도",
+          "x": 997,
+          "y": 84,
+          "w": 78.328125,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 160
+        },
+        {
+          "text": "항성",
+          "x": 462,
+          "y": 396,
+          "w": 32,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 110
+        },
+        {
+          "text": "에르마",
+          "x": 585,
+          "y": 369,
+          "w": 48,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 110
+        },
+        {
+          "text": "세이라",
+          "x": 629,
+          "y": 509,
+          "w": 48,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 110
+        },
+        {
+          "text": "오르엔",
+          "x": 265,
+          "y": 288,
+          "w": 48,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 110
+        },
+        {
+          "text": "선택한 행성",
+          "x": 839,
+          "y": 191,
+          "w": 112.390625,
+          "h": 28,
+          "size": 21,
+          "maxWidth": null
+        },
+        {
+          "text": "에르마",
+          "x": 839,
+          "y": 239,
+          "w": 78,
+          "h": 34,
+          "size": 26,
+          "maxWidth": null
+        },
+        {
+          "text": "현재 탐사 중인 행성입니다.",
+          "x": 839,
+          "y": 297,
+          "w": 220.984375,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 320
+        },
+        {
+          "text": "드래그 회전 · 휠 확대 및 축소",
+          "x": 96,
+          "y": 682,
+          "w": 213.25,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 610
+        },
+        {
+          "text": "M 닫기",
+          "x": 1117.703125,
+          "y": 682,
+          "w": 52.296875,
+          "h": 21,
+          "size": 16,
+          "maxWidth": null
+        }
+      ]
+    },
+    {
+      "name": "107_showcase_wardrobe",
+      "textCount": 26,
+      "overflow": [],
+      "overlaps": [],
+      "texts": [
+        {
+          "text": "3D 외관 옷장",
+          "x": 95,
+          "y": 78,
+          "w": 180.859375,
+          "h": 40,
+          "size": 30,
+          "maxWidth": null
+        },
+        {
+          "text": "드래그 / A·D 회전",
+          "x": 274.640625,
+          "y": 620,
+          "w": 128.71875,
+          "h": 21,
+          "size": 16,
+          "maxWidth": null
+        },
+        {
+          "text": "장착 부위",
+          "x": 666,
+          "y": 157,
+          "w": 91.390625,
+          "h": 28,
+          "size": 21,
+          "maxWidth": null
+        },
+        {
+          "text": "메딕 코트",
+          "x": 710,
+          "y": 218,
+          "w": 69.625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 96
+        },
+        {
+          "text": "장착",
+          "x": 849,
+          "y": 220,
+          "w": 28,
+          "h": 18,
+          "size": 14,
+          "maxWidth": 54
+        },
+        {
+          "text": "카고 팬츠",
+          "x": 960,
+          "y": 218,
+          "w": 69.625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 96
+        },
+        {
+          "text": "장착",
+          "x": 1099,
+          "y": 220,
+          "w": 28,
+          "h": 18,
+          "size": 14,
+          "maxWidth": 54
+        },
+        {
+          "text": "전술 부츠",
+          "x": 710,
+          "y": 287,
+          "w": 69.625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 96
+        },
+        {
+          "text": "장착",
+          "x": 849,
+          "y": 289,
+          "w": 28,
+          "h": 18,
+          "size": 14,
+          "maxWidth": 54
+        },
+        {
+          "text": "번 헤어",
+          "x": 960,
+          "y": 287,
+          "w": 53.625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 96
+        },
+        {
+          "text": "장착",
+          "x": 1099,
+          "y": 289,
+          "w": 28,
+          "h": 18,
+          "size": 14,
+          "maxWidth": 54
+        },
+        {
+          "text": "어깨 가드",
+          "x": 710,
+          "y": 356,
+          "w": 69.625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 96
+        },
+        {
+          "text": "해제",
+          "x": 849,
+          "y": 358,
+          "w": 28,
+          "h": 18,
+          "size": 14,
+          "maxWidth": 54
+        },
+        {
+          "text": "무릎 가드",
+          "x": 960,
+          "y": 356,
+          "w": 69.625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 96
+        },
+        {
+          "text": "장착",
+          "x": 1099,
+          "y": 358,
+          "w": 28,
+          "h": 18,
+          "size": 14,
+          "maxWidth": 54
+        },
+        {
+          "text": "왼팔 스캐너",
+          "x": 710,
+          "y": 425,
+          "w": 85.625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 96
+        },
+        {
+          "text": "장착",
+          "x": 849,
+          "y": 427,
+          "w": 28,
+          "h": 18,
+          "size": 14,
+          "maxWidth": 54
+        },
+        {
+          "text": "오른팔 가드",
+          "x": 960,
+          "y": 425,
+          "w": 85.625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 96
+        },
+        {
+          "text": "장착",
+          "x": 1099,
+          "y": 427,
+          "w": 28,
+          "h": 18,
+          "size": 14,
+          "maxWidth": 54
+        },
+        {
+          "text": "의료 파우치",
+          "x": 710,
+          "y": 494,
+          "w": 85.625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 96
+        },
+        {
+          "text": "해제",
+          "x": 849,
+          "y": 496,
+          "w": 28,
+          "h": 18,
+          "size": 14,
+          "maxWidth": 54
+        },
+        {
+          "text": "구조 배낭",
+          "x": 960,
+          "y": 494,
+          "w": 69.625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 96
+        },
+        {
+          "text": "장착",
+          "x": 1099,
+          "y": 496,
+          "w": 28,
+          "h": 18,
+          "size": 14,
+          "maxWidth": 54
+        },
+        {
+          "text": "탄창 랙",
+          "x": 710,
+          "y": 563,
+          "w": 53.625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 96
+        },
+        {
+          "text": "장착",
+          "x": 849,
+          "y": 565,
+          "w": 28,
+          "h": 18,
+          "size": 14,
+          "maxWidth": 54
+        },
+        {
+          "text": "Esc 닫기",
+          "x": 1109.609375,
+          "y": 693,
+          "w": 60.390625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": null
+        }
+      ]
+    },
+    {
+      "name": "108_showcase_stash",
+      "textCount": 14,
+      "overflow": [],
+      "overlaps": [],
+      "texts": [
+        {
+          "text": "거처 보관함",
+          "x": 95,
+          "y": 78,
+          "w": 160.546875,
+          "h": 40,
+          "size": 30,
+          "maxWidth": null
+        },
+        {
+          "text": "크레딧",
+          "x": 129,
+          "y": 182,
+          "w": 60,
+          "h": 27,
+          "size": 20,
+          "maxWidth": 288
+        },
+        {
+          "text": "보관 1,250",
+          "x": 219.6796875,
+          "y": 469,
+          "w": 99.041015625,
+          "h": 27,
+          "size": 20,
+          "maxWidth": 290
+        },
+        {
+          "text": "예치",
+          "x": 157,
+          "y": 536,
+          "w": 32,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 72
+        },
+        {
+          "text": "인출",
+          "x": 317,
+          "y": 536,
+          "w": 32,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 72
+        },
+        {
+          "text": "회복 키트",
+          "x": 500,
+          "y": 182,
+          "w": 87.03125,
+          "h": 27,
+          "size": 20,
+          "maxWidth": 288
+        },
+        {
+          "text": "보관 4개",
+          "x": 600.6875,
+          "y": 469,
+          "w": 78.625,
+          "h": 27,
+          "size": 20,
+          "maxWidth": 290
+        },
+        {
+          "text": "보관",
+          "x": 528,
+          "y": 536,
+          "w": 32,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 72
+        },
+        {
+          "text": "인출",
+          "x": 688,
+          "y": 536,
+          "w": 32,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 72
+        },
+        {
+          "text": "회수 부품",
+          "x": 871,
+          "y": 182,
+          "w": 87.03125,
+          "h": 27,
+          "size": 20,
+          "maxWidth": 288
+        },
+        {
+          "text": "보관 18개",
+          "x": 965.890625,
+          "y": 469,
+          "w": 90.21875,
+          "h": 27,
+          "size": 20,
+          "maxWidth": 290
+        },
+        {
+          "text": "전량 보관",
+          "x": 899,
+          "y": 536,
+          "w": 69.625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 72
+        },
+        {
+          "text": "전량 인출",
+          "x": 1059,
+          "y": 536,
+          "w": 69.625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 72
+        },
+        {
+          "text": "Esc 닫기",
+          "x": 1109.609375,
+          "y": 693,
+          "w": 60.390625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": null
+        }
+      ]
+    },
+    {
+      "name": "109_showcase_shop",
+      "textCount": 14,
+      "overflow": [],
+      "overlaps": [],
+      "texts": [
+        {
+          "text": "시설 상점",
+          "x": 95,
+          "y": 78,
+          "w": 130.546875,
+          "h": 40,
+          "size": 30,
+          "maxWidth": null
+        },
+        {
+          "text": "보급 상인",
+          "x": 122,
+          "y": 582,
+          "w": 95.734375,
+          "h": 29,
+          "size": 22,
+          "maxWidth": null
+        },
+        {
+          "text": "보유 크레딧 1,250",
+          "x": 619,
+          "y": 156,
+          "w": 146.3359375,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 240
+        },
+        {
+          "text": "응급 회복 키트",
+          "x": 729,
+          "y": 225,
+          "w": 134.0625,
+          "h": 27,
+          "size": 20,
+          "maxWidth": 289
+        },
+        {
+          "text": "보유 4개 · G 사용",
+          "x": 729,
+          "y": 264,
+          "w": 126.046875,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 375
+        },
+        {
+          "text": "40 Cr",
+          "x": 1102.21875,
+          "y": 227,
+          "w": 46.689453125,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 99
+        },
+        {
+          "text": "전술 탄약 팩",
+          "x": 729,
+          "y": 357,
+          "w": 114.0625,
+          "h": 27,
+          "size": 20,
+          "maxWidth": 289
+        },
+        {
+          "text": "총기 장착 시 탄약 보급 가능",
+          "x": 729,
+          "y": 396,
+          "w": 204.125,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 375
+        },
+        {
+          "text": "25 Cr",
+          "x": 1102.21875,
+          "y": 359,
+          "w": 46.689453125,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 99
+        },
+        {
+          "text": "고철 부품 매각",
+          "x": 729,
+          "y": 489,
+          "w": 134.0625,
+          "h": 27,
+          "size": 20,
+          "maxWidth": 289
+        },
+        {
+          "text": "정비 고철 1개 매각 · 보유 18개",
+          "x": 729,
+          "y": 528,
+          "w": 223.6875,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 375
+        },
+        {
+          "text": "+35 Cr",
+          "x": 1089.265625,
+          "y": 491,
+          "w": 59.6357421875,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 99
+        },
+        {
+          "text": "Enter / 클릭 / 숫자키로 구매 및 이용",
+          "x": 618,
+          "y": 629,
+          "w": 265.171875,
+          "h": 21,
+          "size": 16,
+          "maxWidth": 550
+        },
+        {
+          "text": "Esc 닫기",
+          "x": 1109.609375,
+          "y": 693,
+          "w": 60.390625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": null
+        }
+      ]
+    },
+    {
+      "name": "110_console_signal",
+      "textCount": 7,
+      "overflow": [],
+      "overlaps": [],
+      "texts": [
+        {
+          "text": "탐사선 구조 신호 동조",
+          "x": 274,
+          "y": 157,
+          "w": 281.53125,
+          "h": 37,
+          "size": 28,
+          "maxWidth": 710
+        },
+        {
+          "text": "동조율 74%",
+          "x": 277,
+          "y": 456,
+          "w": 107.734375,
+          "h": 27,
+          "size": 20,
+          "maxWidth": null
+        },
+        {
+          "text": "기준 파형 · 점선",
+          "x": 879.625,
+          "y": 461,
+          "w": 116.375,
+          "h": 21,
+          "size": 16,
+          "maxWidth": null
+        },
+        {
+          "text": "A/D 주파수 · W/S 위상",
+          "x": 275,
+          "y": 533,
+          "w": 186.203125,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 720
+        },
+        {
+          "text": "Space / Enter 확정",
+          "x": 276,
+          "y": 607,
+          "w": 134.859375,
+          "h": 21,
+          "size": 16,
+          "maxWidth": null
+        },
+        {
+          "text": "Tab 우회 · 보너스 없음",
+          "x": 557,
+          "y": 607,
+          "w": 162.640625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": null
+        },
+        {
+          "text": "Esc 취소",
+          "x": 937.609375,
+          "y": 607,
+          "w": 60.390625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": null
+        }
+      ]
+    },
+    {
+      "name": "111_console_cipher",
+      "textCount": 6,
+      "overflow": [],
+      "overlaps": [],
+      "texts": [
+        {
+          "text": "관측자 벽면 문양 해독",
+          "x": 274,
+          "y": 157,
+          "w": 281.53125,
+          "h": 37,
+          "size": 28,
+          "maxWidth": 710
+        },
+        {
+          "text": "선택 고리 2 / 3",
+          "x": 853,
+          "y": 292,
+          "w": 124.28125,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 174
+        },
+        {
+          "text": "W/S 고리 선택 · A/D 회전",
+          "x": 275,
+          "y": 533,
+          "w": 210.53125,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 720
+        },
+        {
+          "text": "Space / Enter 확정",
+          "x": 276,
+          "y": 607,
+          "w": 134.859375,
+          "h": 21,
+          "size": 16,
+          "maxWidth": null
+        },
+        {
+          "text": "Tab 우회 · 보너스 없음",
+          "x": 557,
+          "y": 607,
+          "w": 162.640625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": null
+        },
+        {
+          "text": "Esc 취소",
+          "x": 937.609375,
+          "y": 607,
+          "w": 60.390625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": null
+        }
+      ]
+    },
+    {
+      "name": "112_console_timing",
+      "textCount": 7,
+      "overflow": [],
+      "overlaps": [],
+      "texts": [
+        {
+          "text": "교두보 붕괴 잔해 해제",
+          "x": 274,
+          "y": 157,
+          "w": 281.53125,
+          "h": 37,
+          "size": 28,
+          "maxWidth": 710
+        },
+        {
+          "text": "진행 2 / 4",
+          "x": 277,
+          "y": 401,
+          "w": 93.46484375,
+          "h": 27,
+          "size": 20,
+          "maxWidth": null
+        },
+        {
+          "text": "정밀 적중 1 · 오차 0",
+          "x": 852.75,
+          "y": 406,
+          "w": 145.4375,
+          "h": 21,
+          "size": 16,
+          "maxWidth": null
+        },
+        {
+          "text": "Space / 클릭 / E · 금색 구간에서 입력",
+          "x": 276,
+          "y": 533,
+          "w": 305.96875,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 720
+        },
+        {
+          "text": "Space / Enter 확정",
+          "x": 276,
+          "y": 607,
+          "w": 134.859375,
+          "h": 21,
+          "size": 16,
+          "maxWidth": null
+        },
+        {
+          "text": "Tab 우회 · 보너스 없음",
+          "x": 557,
+          "y": 607,
+          "w": 162.640625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": null
+        },
+        {
+          "text": "Esc 취소",
+          "x": 937.609375,
+          "y": 607,
+          "w": 60.390625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": null
+        }
+      ]
+    },
+    {
+      "name": "113_console_circuit",
+      "textCount": 11,
+      "overflow": [],
+      "overlaps": [],
+      "texts": [
+        {
+          "text": "비상 배전반 회로 우회",
+          "x": 274,
+          "y": 157,
+          "w": 281.53125,
+          "h": 37,
+          "size": 28,
+          "maxWidth": 710
+        },
+        {
+          "text": "주전원",
+          "x": 277,
+          "y": 213,
+          "w": 54,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 250
+        },
+        {
+          "text": "75% / 목표 75%",
+          "x": 880.765625,
+          "y": 216,
+          "w": 117.84375,
+          "h": 21,
+          "size": 16,
+          "maxWidth": null
+        },
+        {
+          "text": "안정기",
+          "x": 277,
+          "y": 302,
+          "w": 54,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 250
+        },
+        {
+          "text": "40% / 목표 55%",
+          "x": 879.765625,
+          "y": 305,
+          "w": 118.84375,
+          "h": 21,
+          "size": 16,
+          "maxWidth": null
+        },
+        {
+          "text": "보조망",
+          "x": 277,
+          "y": 391,
+          "w": 54,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 250
+        },
+        {
+          "text": "64% / 목표 64%",
+          "x": 880.765625,
+          "y": 394,
+          "w": 117.84375,
+          "h": 21,
+          "size": 16,
+          "maxWidth": null
+        },
+        {
+          "text": "W/S 배선 선택 · A/D 출력 조절",
+          "x": 275,
+          "y": 533,
+          "w": 252.859375,
+          "h": 24,
+          "size": 18,
+          "maxWidth": 720
+        },
+        {
+          "text": "Space / Enter 확정",
+          "x": 276,
+          "y": 607,
+          "w": 134.859375,
+          "h": 21,
+          "size": 16,
+          "maxWidth": null
+        },
+        {
+          "text": "Tab 우회 · 보너스 없음",
+          "x": 557,
+          "y": 607,
+          "w": 162.640625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": null
+        },
+        {
+          "text": "Esc 취소",
+          "x": 937.609375,
+          "y": 607,
+          "w": 60.390625,
+          "h": 21,
+          "size": 16,
+          "maxWidth": null
+        }
+      ]
+    },
+    {
+      "name": "114_panel_seam_review",
+      "textCount": 4,
+      "overflow": [],
+      "overlaps": [],
+      "texts": [
+        {
+          "text": "9분할 · 밝은 배경 테스트",
+          "x": 96,
+          "y": 75,
+          "w": 348.6875,
+          "h": 41,
+          "size": 31,
+          "maxWidth": null
+        },
+        {
+          "text": "장착",
+          "x": 130,
+          "y": 511,
+          "w": 36,
+          "h": 24,
+          "size": 18,
+          "maxWidth": null
+        },
+        {
+          "text": "해제",
+          "x": 440,
+          "y": 511,
+          "w": 36,
+          "h": 24,
+          "size": 18,
+          "maxWidth": null
+        },
+        {
+          "text": "게임에서 사용할 잘림 경계를 좌표 그대로 고정합니다.",
+          "x": 130,
+          "y": 339,
+          "w": 486.5625,
+          "h": 27,
+          "size": 20,
+          "maxWidth": 930
+        }
+      ]
+    },
     {
       "name": "71_stamina_sprint",
       "textCount": 5,
@@ -8112,12 +9634,12 @@
         },
         {
           "text": "리아 · 대화",
-          "x": 500,
+          "x": 504,
           "y": 525,
           "w": 89.375,
           "h": 24,
           "size": 18,
-          "maxWidth": 273
+          "maxWidth": 264
         },
         {
           "text": "E",
@@ -8970,12 +10492,12 @@
         },
         {
           "text": "운송대 보급 · 교환",
-          "x": 500,
+          "x": 504,
           "y": 525,
           "w": 149.703125,
           "h": 24,
           "size": 18,
-          "maxWidth": 273
+          "maxWidth": 264
         },
         {
           "text": "E",
@@ -16033,6 +17555,87 @@
       "partial": 390
     },
     {
+      "file": "Export/Icons/interact_talk.png",
+      "width": 32,
+      "height": 32,
+      "hasAlpha": true,
+      "transparent": 704,
+      "opaque": 108,
+      "partial": 212
+    },
+    {
+      "file": "Export/Icons/interact_hack.png",
+      "width": 32,
+      "height": 32,
+      "hasAlpha": true,
+      "transparent": 680,
+      "opaque": 138,
+      "partial": 206
+    },
+    {
+      "file": "Export/Icons/interact_salvage.png",
+      "width": 32,
+      "height": 32,
+      "hasAlpha": true,
+      "transparent": 659,
+      "opaque": 140,
+      "partial": 225
+    },
+    {
+      "file": "Export/Icons/interact_door.png",
+      "width": 32,
+      "height": 32,
+      "hasAlpha": true,
+      "transparent": 653,
+      "opaque": 160,
+      "partial": 211
+    },
+    {
+      "file": "Export/Icons/interact_vehicle.png",
+      "width": 32,
+      "height": 32,
+      "hasAlpha": true,
+      "transparent": 699,
+      "opaque": 144,
+      "partial": 181
+    },
+    {
+      "file": "Export/Icons/interact_quest.png",
+      "width": 32,
+      "height": 32,
+      "hasAlpha": true,
+      "transparent": 751,
+      "opaque": 115,
+      "partial": 158
+    },
+    {
+      "file": "Export/Icons/map_planet_view.png",
+      "width": 32,
+      "height": 32,
+      "hasAlpha": true,
+      "transparent": 632,
+      "opaque": 168,
+      "partial": 224
+    },
+    {
+      "file": "Export/Icons/map_space_view.png",
+      "width": 32,
+      "height": 32,
+      "hasAlpha": true,
+      "transparent": 742,
+      "opaque": 102,
+      "partial": 180
+    },
+    {
+      "file": "Export/Icons/map_cluster_subquest.png",
+      "width": 32,
+      "height": 32,
+      "hasAlpha": true,
+      "transparent": 756,
+      "opaque": 96,
+      "partial": 172
+    },
+    {
       "file": "Export/HUDIcons/health.png",
       "width": 64,
       "height": 64,
@@ -16760,6 +18363,159 @@
       "transparent": 48,
       "opaque": 24,
       "partial": 28
+    },
+    {
+      "file": "Export/Components/world_prompt_fill.png",
+      "width": 96,
+      "height": 40,
+      "hasAlpha": true,
+      "transparent": 48,
+      "opaque": 3524,
+      "partial": 268
+    },
+    {
+      "file": "Export/Components/world_prompt_edge.png",
+      "width": 96,
+      "height": 40,
+      "hasAlpha": true,
+      "transparent": 3528,
+      "opaque": 200,
+      "partial": 112
+    },
+    {
+      "file": "Export/Components/world_prompt_pill.png",
+      "width": 96,
+      "height": 40,
+      "hasAlpha": true,
+      "transparent": 40,
+      "opaque": 304,
+      "partial": 3496
+    },
+    {
+      "file": "Export/Components/world_keycap_e.png",
+      "width": 32,
+      "height": 32,
+      "hasAlpha": true,
+      "transparent": 32,
+      "opaque": 844,
+      "partial": 148
+    },
+    {
+      "file": "Export/Components/world_keycap_e_active.png",
+      "width": 32,
+      "height": 32,
+      "hasAlpha": true,
+      "transparent": 32,
+      "opaque": 844,
+      "partial": 148
+    },
+    {
+      "file": "Export/Components/world_focus_ring.png",
+      "width": 128,
+      "height": 64,
+      "hasAlpha": true,
+      "transparent": 6820,
+      "opaque": 787,
+      "partial": 585
+    },
+    {
+      "file": "Export/Components/holo_wrist_emitter.png",
+      "width": 64,
+      "height": 64,
+      "hasAlpha": true,
+      "transparent": 3406,
+      "opaque": 163,
+      "partial": 527
+    },
+    {
+      "file": "Export/Components/globe_bezel_ring.png",
+      "width": 512,
+      "height": 512,
+      "hasAlpha": true,
+      "transparent": 253700,
+      "opaque": 725,
+      "partial": 7719
+    },
+    {
+      "file": "Export/Components/showcase_card_frame.png",
+      "width": 128,
+      "height": 128,
+      "hasAlpha": true,
+      "transparent": 15832,
+      "opaque": 440,
+      "partial": 112
+    },
+    {
+      "file": "Export/Components/wardrobe_turntable_ring.png",
+      "width": 256,
+      "height": 96,
+      "hasAlpha": true,
+      "transparent": 21979,
+      "opaque": 569,
+      "partial": 2028
+    },
+    {
+      "file": "Export/Components/part_chip_on.png",
+      "width": 48,
+      "height": 32,
+      "hasAlpha": true,
+      "transparent": 12,
+      "opaque": 1496,
+      "partial": 28
+    },
+    {
+      "file": "Export/Components/part_chip_off.png",
+      "width": 48,
+      "height": 32,
+      "hasAlpha": true,
+      "transparent": 12,
+      "opaque": 1496,
+      "partial": 28
+    },
+    {
+      "file": "Export/Components/minigame_oscilloscope_grid.png",
+      "width": 256,
+      "height": 128,
+      "hasAlpha": true,
+      "transparent": 12,
+      "opaque": 32728,
+      "partial": 28
+    },
+    {
+      "file": "Export/Components/minigame_cipher_ring.png",
+      "width": 256,
+      "height": 256,
+      "hasAlpha": true,
+      "transparent": 60482,
+      "opaque": 1427,
+      "partial": 3627
+    },
+    {
+      "file": "Export/Components/minigame_timing_track.png",
+      "width": 256,
+      "height": 32,
+      "hasAlpha": true,
+      "transparent": 20,
+      "opaque": 8108,
+      "partial": 64
+    },
+    {
+      "file": "Export/Components/minigame_timing_target.png",
+      "width": 24,
+      "height": 32,
+      "hasAlpha": true,
+      "transparent": 32,
+      "opaque": 692,
+      "partial": 44
+    },
+    {
+      "file": "Export/Components/minigame_circuit_node.png",
+      "width": 48,
+      "height": 48,
+      "hasAlpha": true,
+      "transparent": 1194,
+      "opaque": 1058,
+      "partial": 52
     }
   ],
   "stress": [
@@ -16821,7 +18577,7 @@
       "uniformScale": 1,
       "offsetX": 0,
       "offsetY": 0,
-      "file": "Validation/20261123/relay_1280x800.png",
+      "file": "Validation/20261127/globe_1280x800.png",
       "note": "Browser-rendered uniform canvas-fit design preview. Live-game integration untested."
     },
     {
@@ -16830,7 +18586,7 @@
       "uniformScale": 1.35,
       "offsetX": 96,
       "offsetY": 0,
-      "file": "Validation/20261123/relay_1920x1080.png",
+      "file": "Validation/20261127/globe_1920x1080.png",
       "note": "Browser-rendered uniform canvas-fit design preview. Live-game integration untested."
     },
     {
@@ -16839,90 +18595,130 @@
       "uniformScale": 1.8,
       "offsetX": 128,
       "offsetY": 0,
-      "file": "Validation/20261123/relay_2560x1440.png",
+      "file": "Validation/20261127/globe_2560x1440.png",
       "note": "Browser-rendered uniform canvas-fit design preview. Live-game integration untested."
     }
   ],
   "opacity": [
     {
-      "scene": "72_stamina_low",
+      "scene": "98_prompt_talk",
       "backgroundAlpha": 0.6,
-      "file": "Validation/20261123/72_stamina_low_alpha_60.png"
+      "file": "Validation/20261127/98_prompt_talk_alpha_60.png"
     },
     {
-      "scene": "72_stamina_low",
+      "scene": "98_prompt_talk",
       "backgroundAlpha": 0.8,
-      "file": "Validation/20261123/72_stamina_low_alpha_80.png"
+      "file": "Validation/20261127/98_prompt_talk_alpha_80.png"
     },
     {
-      "scene": "72_stamina_low",
+      "scene": "98_prompt_talk",
       "backgroundAlpha": 0.94,
-      "file": "Validation/20261123/72_stamina_low_alpha_94.png"
+      "file": "Validation/20261127/98_prompt_talk_alpha_94.png"
     },
     {
-      "scene": "72_stamina_low",
+      "scene": "98_prompt_talk",
       "backgroundAlpha": 1,
-      "file": "Validation/20261123/72_stamina_low_alpha_100.png"
+      "file": "Validation/20261127/98_prompt_talk_alpha_100.png"
     },
     {
-      "scene": "80_flight_cruise",
+      "scene": "103_prompt_quest",
       "backgroundAlpha": 0.6,
-      "file": "Validation/20261123/80_flight_cruise_alpha_60.png"
+      "file": "Validation/20261127/103_prompt_quest_alpha_60.png"
     },
     {
-      "scene": "80_flight_cruise",
+      "scene": "103_prompt_quest",
       "backgroundAlpha": 0.8,
-      "file": "Validation/20261123/80_flight_cruise_alpha_80.png"
+      "file": "Validation/20261127/103_prompt_quest_alpha_80.png"
     },
     {
-      "scene": "80_flight_cruise",
+      "scene": "103_prompt_quest",
       "backgroundAlpha": 0.94,
-      "file": "Validation/20261123/80_flight_cruise_alpha_94.png"
+      "file": "Validation/20261127/103_prompt_quest_alpha_94.png"
     },
     {
-      "scene": "80_flight_cruise",
+      "scene": "103_prompt_quest",
       "backgroundAlpha": 1,
-      "file": "Validation/20261123/80_flight_cruise_alpha_100.png"
+      "file": "Validation/20261127/103_prompt_quest_alpha_100.png"
     },
     {
-      "scene": "87_relay_ready",
+      "scene": "105_holo_planet",
       "backgroundAlpha": 0.6,
-      "file": "Validation/20261123/87_relay_ready_alpha_60.png"
+      "file": "Validation/20261127/105_holo_planet_alpha_60.png"
     },
     {
-      "scene": "87_relay_ready",
+      "scene": "105_holo_planet",
       "backgroundAlpha": 0.8,
-      "file": "Validation/20261123/87_relay_ready_alpha_80.png"
+      "file": "Validation/20261127/105_holo_planet_alpha_80.png"
     },
     {
-      "scene": "87_relay_ready",
+      "scene": "105_holo_planet",
       "backgroundAlpha": 0.94,
-      "file": "Validation/20261123/87_relay_ready_alpha_94.png"
+      "file": "Validation/20261127/105_holo_planet_alpha_94.png"
     },
     {
-      "scene": "87_relay_ready",
+      "scene": "105_holo_planet",
       "backgroundAlpha": 1,
-      "file": "Validation/20261123/87_relay_ready_alpha_100.png"
+      "file": "Validation/20261127/105_holo_planet_alpha_100.png"
     },
     {
-      "scene": "92_checkpoint_restricted",
+      "scene": "107_showcase_wardrobe",
       "backgroundAlpha": 0.6,
-      "file": "Validation/20261123/92_checkpoint_restricted_alpha_60.png"
+      "file": "Validation/20261127/107_showcase_wardrobe_alpha_60.png"
     },
     {
-      "scene": "92_checkpoint_restricted",
+      "scene": "107_showcase_wardrobe",
       "backgroundAlpha": 0.8,
-      "file": "Validation/20261123/92_checkpoint_restricted_alpha_80.png"
+      "file": "Validation/20261127/107_showcase_wardrobe_alpha_80.png"
     },
     {
-      "scene": "92_checkpoint_restricted",
+      "scene": "107_showcase_wardrobe",
       "backgroundAlpha": 0.94,
-      "file": "Validation/20261123/92_checkpoint_restricted_alpha_94.png"
+      "file": "Validation/20261127/107_showcase_wardrobe_alpha_94.png"
     },
     {
-      "scene": "92_checkpoint_restricted",
+      "scene": "107_showcase_wardrobe",
       "backgroundAlpha": 1,
-      "file": "Validation/20261123/92_checkpoint_restricted_alpha_100.png"
+      "file": "Validation/20261127/107_showcase_wardrobe_alpha_100.png"
+    },
+    {
+      "scene": "110_console_signal",
+      "backgroundAlpha": 0.6,
+      "file": "Validation/20261127/110_console_signal_alpha_60.png"
+    },
+    {
+      "scene": "110_console_signal",
+      "backgroundAlpha": 0.8,
+      "file": "Validation/20261127/110_console_signal_alpha_80.png"
+    },
+    {
+      "scene": "110_console_signal",
+      "backgroundAlpha": 0.94,
+      "file": "Validation/20261127/110_console_signal_alpha_94.png"
+    },
+    {
+      "scene": "110_console_signal",
+      "backgroundAlpha": 1,
+      "file": "Validation/20261127/110_console_signal_alpha_100.png"
+    },
+    {
+      "scene": "114_panel_seam_review",
+      "backgroundAlpha": 0.6,
+      "file": "Validation/20261127/114_panel_seam_review_alpha_60.png"
+    },
+    {
+      "scene": "114_panel_seam_review",
+      "backgroundAlpha": 0.8,
+      "file": "Validation/20261127/114_panel_seam_review_alpha_80.png"
+    },
+    {
+      "scene": "114_panel_seam_review",
+      "backgroundAlpha": 0.94,
+      "file": "Validation/20261127/114_panel_seam_review_alpha_94.png"
+    },
+    {
+      "scene": "114_panel_seam_review",
+      "backgroundAlpha": 1,
+      "file": "Validation/20261127/114_panel_seam_review_alpha_100.png"
     }
   ],
   "scope": "Production raster asset checks and browser-rendered design previews. No game code, Runtime cache, gameplay or menu behavior tested."

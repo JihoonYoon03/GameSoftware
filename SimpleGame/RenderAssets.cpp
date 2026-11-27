@@ -344,6 +344,61 @@ std::vector<unsigned char> DecodePng(IWICImagingFactory *factory, const std::fil
                  "PNG decoding " + path.u8string());
     return pixels;
 }
+std::vector<unsigned char> DecodePngScaled(IWICImagingFactory *factory, const std::filesystem::path &path,
+                                           int maxWidth, int maxHeight, int &outW, int &outH)
+{
+    using Microsoft::WRL::ComPtr;
+    ComPtr<IWICBitmapDecoder> decoder;
+    ComPtr<IWICBitmapFrameDecode> frame;
+    UINT w = 0, h = 0;
+    if (FAILED(factory->CreateDecoderFromFilename(path.c_str(), nullptr, GENERIC_READ,
+                                                  WICDecodeMetadataCacheOnLoad, &decoder)) ||
+        FAILED(decoder->GetFrame(0, &frame)) || FAILED(frame->GetSize(&w, &h)) || w == 0 || h == 0)
+    {
+        return {};
+    }
+    int targetW = int(w);
+    int targetH = int(h);
+    if (targetW > maxWidth || targetH > maxHeight)
+    {
+        const double sx = double(maxWidth) / double(targetW);
+        const double sy = double(maxHeight) / double(targetH);
+        const double s = (std::min)(sx, sy);
+        targetW = (std::max)(1, int(std::lround(double(targetW) * s)));
+        targetH = (std::max)(1, int(std::lround(double(targetH) * s)));
+    }
+    ComPtr<IWICBitmapSource> source = frame;
+    if (targetW != int(w) || targetH != int(h))
+    {
+        ComPtr<IWICBitmapScaler> scaler;
+        if (SUCCEEDED(factory->CreateBitmapScaler(&scaler)) &&
+            SUCCEEDED(scaler->Initialize(frame.Get(), UINT(targetW), UINT(targetH),
+                                         WICBitmapInterpolationModeFant)))
+        {
+            source = scaler;
+        }
+        else
+        {
+            targetW = int(w);
+            targetH = int(h);
+        }
+    }
+    ComPtr<IWICFormatConverter> converter;
+    if (FAILED(factory->CreateFormatConverter(&converter)) ||
+        FAILED(converter->Initialize(source.Get(), GUID_WICPixelFormat32bppRGBA, WICBitmapDitherTypeNone,
+                                     nullptr, 0, WICBitmapPaletteTypeCustom)))
+    {
+        return {};
+    }
+    std::vector<unsigned char> pixels(size_t(targetW) * size_t(targetH) * 4);
+    if (FAILED(converter->CopyPixels(nullptr, UINT(targetW * 4), UINT(pixels.size()), pixels.data())))
+    {
+        return {};
+    }
+    outW = targetW;
+    outH = targetH;
+    return pixels;
+}
 // CPU layout caches are bounded and independent of GL/context lifetime. They are used
 // only on the game thread, including CPU-only dialogue tests.
 template <typename Key, typename Value> class LayoutCache
@@ -636,6 +691,10 @@ struct RenderAssets::Data
     GLuint pbrDetailBaseArray = 0, pbrDetailNormalArray = 0, pbrDetailOrmArray = 0;
     GLuint damageMaskTex = 0;
     GLuint effectMasksTex = 0, waterFlowTex = 0;
+    std::unordered_map<std::string, GLuint> planetAlbedoTex;
+    std::unordered_map<std::string, GLuint> planetCloudTex;
+    std::unordered_map<std::string, GLuint> planetRingTex;
+    GLuint spaceNebulaTex = 0;
     PbrTextureBudget pbrBudget;
     int uiWidth = 2048, uiHeight = 0;
     std::unordered_map<std::string, Sprite> sprites;
@@ -689,6 +748,22 @@ struct RenderAssets::Data
         if (waterFlowTex)
         {
             glDeleteTextures(1, &waterFlowTex);
+        }
+        if (spaceNebulaTex)
+        {
+            glDeleteTextures(1, &spaceNebulaTex);
+        }
+        for (const auto &entry : planetAlbedoTex)
+        {
+            glDeleteTextures(1, &entry.second);
+        }
+        for (const auto &entry : planetCloudTex)
+        {
+            glDeleteTextures(1, &entry.second);
+        }
+        for (const auto &entry : planetRingTex)
+        {
+            glDeleteTextures(1, &entry.second);
         }
         if (textAtlas)
         {
@@ -1038,6 +1113,54 @@ RenderAssets::RenderAssets() : m_data(new Data())
             };
             m_data->effectMasksTex = loadRepeat2d(texturesDir / "SharedEffects" / "Frontier_Effects_Masks.png", 512);
             m_data->waterFlowTex = loadRepeat2d(texturesDir / "SharedEffects" / "Frontier_Water_Flow.png", 512);
+            // ColonyV4 planetary globe & space starfield textures (capped <= 2048x1024 for fast upload & < 100 MB).
+            const fs::path colonyV4Dir = texturesDir / "ColonyV4";
+            auto loadPlanetary2d = [&](const fs::path &texPath, int maxW, int maxH, bool wrapRepeatS) -> GLuint {
+                std::error_code tec;
+                if (!fs::is_regular_file(texPath, tec))
+                {
+                    return 0;
+                }
+                int w = 0, h = 0;
+                auto px = DecodePngScaled(factory.Get(), texPath, maxW, maxH, w, h);
+                if (px.empty() || w <= 0 || h <= 0)
+                {
+                    return 0;
+                }
+                GLuint tex = 0;
+                glGenTextures(1, &tex);
+                glBindTexture(GL_TEXTURE_2D, tex);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapRepeatS ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, px.data());
+                glBindTexture(GL_TEXTURE_2D, 0);
+                profiling::Count(profiling::Counter::TextureUploadBytes, px.size());
+                return tex;
+            };
+            if (GLuint t = loadPlanetary2d(colonyV4Dir / "Planet_Erma_Albedo.png", 2048, 1024, true))
+            {
+                m_data->planetAlbedoTex["erma"] = t;
+            }
+            if (GLuint t = loadPlanetary2d(colonyV4Dir / "Planet_Erma_Cloud.png", 2048, 1024, true))
+            {
+                m_data->planetCloudTex["erma"] = t;
+            }
+            if (GLuint t = loadPlanetary2d(colonyV4Dir / "Planet_Seira_Albedo.png", 1024, 512, true))
+            {
+                m_data->planetAlbedoTex["seira"] = t;
+            }
+            if (GLuint t = loadPlanetary2d(colonyV4Dir / "Planet_Orren_Albedo.png", 1024, 512, true))
+            {
+                m_data->planetAlbedoTex["orren"] = t;
+            }
+            if (GLuint t = loadPlanetary2d(colonyV4Dir / "Planet_Orren_Ring.png", 1024, 256, true))
+            {
+                m_data->planetRingTex["orren"] = t;
+            }
+            m_data->spaceNebulaTex =
+                loadPlanetary2d(colonyV4Dir / "Space_Starfield_Nebula.png", 2048, 1024, false);
         }
         catch (const std::exception &)
         {
@@ -1519,6 +1642,25 @@ unsigned int RenderAssets::EffectMasksTexture() const
 unsigned int RenderAssets::WaterFlowTexture() const
 {
     return m_data->waterFlowTex;
+}
+unsigned int RenderAssets::PlanetAlbedoTexture(const std::string &planetId) const
+{
+    auto it = m_data->planetAlbedoTex.find(planetId);
+    return it != m_data->planetAlbedoTex.end() ? it->second : 0u;
+}
+unsigned int RenderAssets::PlanetCloudTexture(const std::string &planetId) const
+{
+    auto it = m_data->planetCloudTex.find(planetId);
+    return it != m_data->planetCloudTex.end() ? it->second : 0u;
+}
+unsigned int RenderAssets::PlanetRingTexture(const std::string &planetId) const
+{
+    auto it = m_data->planetRingTex.find(planetId);
+    return it != m_data->planetRingTex.end() ? it->second : 0u;
+}
+unsigned int RenderAssets::SpaceNebulaTexture() const
+{
+    return m_data->spaceNebulaTex;
 }
 bool RenderAssets::HasPbrTextures() const
 {

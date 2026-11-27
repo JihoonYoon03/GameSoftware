@@ -1583,6 +1583,18 @@ void Game::UpdateCamera(float deltaSeconds)
 {
     WorldCamera::Update(deltaSeconds, state.surfaceExploration && state.aircraft.mounted);
     Vector2 target = state.IsInsideAny() ? Vector2{0, 0} : state.playerPosition;
+    if (state.dialogue.active && state.dialogue.hasSpeakerAnchor && !state.IsInsideAny())
+    {
+        Vector2 speaker = state.dialogue.speakerLocalPosition;
+        if (state.surfaceExploration && !IsSurfaceMine() && surface && surface->Ready() &&
+            state.dialogue.speakerSurfacePosition)
+        {
+            const auto loc = surface->Local(*state.dialogue.speakerSurfacePosition);
+            speaker = {float(loc.x * 0.5), float(loc.y * 0.5)};
+        }
+        target = {state.playerPosition.x * 0.55f + speaker.x * 0.45f,
+                  state.playerPosition.y * 0.55f + speaker.y * 0.45f};
+    }
     float followAmount = 1 - std::exp(-kCameraFollowRate * deltaSeconds);
     state.cameraPosition.x += (target.x - state.cameraPosition.x) * followAmount;
     state.cameraPosition.y += (target.y - state.cameraPosition.y) * followAmount;
@@ -1729,13 +1741,62 @@ void Game::StartSurface(bool insideHome)
     surfaceTraffic = std::make_unique<PlanetTraffic>();
     surfaceParty = std::make_unique<PlanetParty>();
     surfaceCommunity = std::make_unique<PlanetCommunity>();
-    surface->Start(
-        world::PlanetGenerator::Erma(Overworld::StoryAnchors()).WithCityCores(PlanetCities::Describe(state)));
+    if (cachedErmaPlanet)
+    {
+        // Keep Chapter 1 surface frontier layout initialized even when reusing the cached planet plan.
+        (void)game::GameLevels::Chapter().Surface().Describe();
+        surface->Start(cachedErmaPlanet);
+    }
+    else
+    {
+        surface->Start(
+            world::PlanetGenerator::Erma(Overworld::StoryAnchors()).WithCityCores(PlanetCities::Describe(state)));
+    }
+}
+bool Game::WaitForSurfaceLoaded(int timeoutSeconds)
+{
+    if (!surface)
+    {
+        return false;
+    }
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds((std::max)(1, timeoutSeconds));
+    while (!surface->Ready() && std::chrono::steady_clock::now() < deadline)
+    {
+        UpdateSurface(0);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    if (!surface->Ready())
+    {
+        return false;
+    }
+    UpdateSurface(0);
+    if (IsStoryWorld() && !cachedErmaPlanet)
+    {
+        if (const auto snap = surface->Stream().Snapshot(); snap && snap->planet)
+        {
+            cachedErmaPlanet = snap->planet;
+        }
+    }
+    // Wait until all initial surrounding terrain/city chunks finish streaming before gameplay begins.
+    const auto chunkDeadline = std::chrono::steady_clock::now() + std::chrono::seconds(8);
+    while (std::chrono::steady_clock::now() < chunkDeadline)
+    {
+        UpdateSurface(0);
+        const auto snap = surface->Stream().Snapshot();
+        if (snap && !snap->statistics.preparing && snap->statistics.queued == 0 && snap->statistics.resident > 0)
+        {
+            break;
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    UpdateSurface(0);
+    return true;
 }
 void Game::StartNewGame()
 {
     Reset();
     StartSurface(true);
+    WaitForSurfaceLoaded();
     ShowNotice("리아 · 수신 메시지 / 좋은 아침. 전망대에 이상한 응답이 잡혔어. 집 단말부터 확인하고 밖으로 나와 줘.");
 }
 void Game::Resize(int width, int height)
@@ -1784,31 +1845,9 @@ bool Game::EnterTestStage(TestStage stage)
     Reset();
     game::GameLevels::PrepareTestEntry(stage);
 
-    auto waitSurfaceReady = [&]() {
-        if (!surface)
-        {
-            return false;
-        }
-        const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(20);
-        while (!surface->Ready() && std::chrono::steady_clock::now() < deadline)
-        {
-            UpdateSurface(0);
-            std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        }
-        if (surface->Ready())
-        {
-            UpdateSurface(0);
-            return true;
-        }
-        return false;
-    };
-
-    // Every chapter/stage jump boots directly into the unified Erma open-world surface.
+    // Every chapter/stage jump reuses cachedErmaPlanet (no full planet regeneration) and preloads chunks.
     StartSurface(stage == TestStage::Prologue);
-    if (stage != TestStage::Prologue && stage != TestStage::SurfaceSurvey)
-    {
-        waitSurfaceReady();
-    }
+    WaitForSurfaceLoaded();
 
     if (stage == TestStage::Observatory)
     {
@@ -1895,6 +1934,10 @@ bool Game::EnterTestStage(TestStage stage)
                 surfaceCities->Update(state, *surface, 0);
             }
         }
+    }
+    if (surface && surface->Ready() && !IsSurfaceMine() && !state.IsInsideAny())
+    {
+        WaitForSurfaceLoaded();
     }
     state.cameraPosition = state.playerPosition;
     ShowNotice(std::string("오픈월드 챕터 진입 / ") + StageName(stage) + " · 이전 필수 진행 완료");
@@ -2213,6 +2256,12 @@ void Game::KeyDown(unsigned char key, int, int)
             {
                 Dialogue::Select(size_t(key - '1'));
             }
+            return;
+        }
+        const bool walkAwayKey = state.dialogue.hasSpeakerAnchor && !state.Mounted() &&
+                                 (key == 'w' || key == 'a' || key == 's' || key == 'd');
+        if (walkAwayKey)
+        {
             return;
         }
         if (key == 'm' || Dialogue::LocksWorld())
@@ -2665,9 +2714,9 @@ void Game::Update(float deltaSeconds)
         state.animationTimeSeconds += deltaSeconds;
         return;
     }
-    if (state.mapVisible && !state.isPaused)
+    if (Dialogue::Active() && !state.isPaused && !HospitalRecovery::Active() && state.ui.screen == UiScreen::None)
     {
-        state.mapHologramProgress = (std::min)(1.f, state.mapHologramProgress + deltaSeconds * 3.8f);
+        Dialogue::UpdateCameraAndProximity(deltaSeconds);
     }
     if ((state.ui.screen == UiScreen::FacilityShop || state.ui.screen == UiScreen::Wardrobe ||
          state.ui.screen == UiScreen::HomeStorage) &&
@@ -4173,6 +4222,150 @@ bool Dialogue::Start(const std::string &id, std::vector<DialogueLine> lines,
     d.blocking = blocking && !Danger();
     d.repeatable = repeatable;
     d.completion = std::move(completion);
+    d.hasSpeakerAnchor = false;
+    d.speakerSurfacePosition.reset();
+    // Resolve nearby physical NPC speaker for cinematic zoom-in focus and distance auto-cancel.
+    if (!d.pages.empty() && world.ui.screen == UiScreen::None)
+    {
+        const auto &first = d.pages[d.page];
+        const bool isRemote = first.channel.find("무전") != std::string::npos ||
+                              first.channel.find("수신") != std::string::npos ||
+                              first.channel.find("단말") != std::string::npos ||
+                              first.channel.find("기록") != std::string::npos ||
+                              first.channel.find("시스템") != std::string::npos ||
+                              first.speaker == "현장 기록" || first.speaker == "발신자 미상";
+        if (!isRemote)
+        {
+            auto &game = Game::Get();
+            if (world.surfaceExploration && !game.IsSurfaceMine() && !world.IsInsideAny() && game.Surface() &&
+                game.Surface()->Ready())
+            {
+                const auto *session = game.Surface();
+                const double R = session->Planet().radiusMeters;
+                const auto playerOrigin = session->Pose().origin;
+                double bestScore = 14.0;
+                std::optional<world::SurfacePoint> bestPt;
+                auto considerSurface = [&](const world::SurfacePoint &pt, const char *nameTag) {
+                    const double dist = world::SurfaceGeometry::Distance(R, playerOrigin, pt);
+                    const bool nameMatch = nameTag && first.speaker.find(nameTag) != std::string::npos;
+                    const double limit = nameMatch ? 14.0 : 10.0;
+                    const double score = nameMatch ? dist * 0.5 : dist;
+                    if (dist <= limit && score < bestScore)
+                    {
+                        bestScore = score;
+                        bestPt = pt;
+                    }
+                };
+                if (const auto *party = game.SurfaceParty())
+                {
+                    const auto &m = party->State().members;
+                    if (m[0].joined && m[0].place != CompanionPlace::Mine)
+                    {
+                        considerSurface(m[0].position, "리아");
+                    }
+                    if (m[1].joined && m[1].place != CompanionPlace::Mine)
+                    {
+                        considerSurface(m[1].position, "카인");
+                    }
+                }
+                auto &chapter = game::GameLevels::Chapter();
+                if (chapter.IsActive())
+                {
+                    considerSurface(chapter.Surface().Point(chapter.GetState().kain.position), "카인");
+                    considerSurface(chapter.Surface().Point(chapter.GetState().ria.position), "리아");
+                    for (const auto &s : chapter.GetState().scrappers)
+                    {
+                        if (s.combat.health > 0)
+                        {
+                            considerSurface(chapter.Surface().Point(s.position), "약탈자");
+                        }
+                    }
+                    for (const auto &s : chapter.GetState().survivors)
+                    {
+                        considerSurface(chapter.Surface().Point(s.position), "생존자");
+                    }
+                }
+                for (const auto &res : world.residents)
+                {
+                    if (res.health > 0)
+                    {
+                        considerSurface(session->PointAt(res.position.x * 2.0, res.position.y * 2.0),
+                                        res.name.c_str());
+                    }
+                }
+                if (const auto *comm = game.SurfaceCommunity())
+                {
+                    for (const auto &site : comm->State().sites)
+                    {
+                        considerSurface(site.contact, nullptr);
+                    }
+                }
+                if (bestPt)
+                {
+                    d.hasSpeakerAnchor = true;
+                    d.speakerSurfacePosition = *bestPt;
+                    const auto loc = session->Local(*bestPt);
+                    d.speakerLocalPosition = {float(loc.x * 0.5), float(loc.y * 0.5)};
+                }
+            }
+            else if (!world.IsInsideAny())
+            {
+                float bestScore = 5.5f;
+                Vector2 bestPos{};
+                bool found = false;
+                auto consider2D = [&](Vector2 pos, const char *nameTag) {
+                    const float dist = Game::Distance(world.playerPosition, pos);
+                    const bool nameMatch = nameTag && first.speaker.find(nameTag) != std::string::npos;
+                    const float limit = nameMatch ? 6.5f : 5.0f;
+                    const float score = nameMatch ? dist * 0.5f : dist;
+                    if (dist <= limit && score < bestScore)
+                    {
+                        bestScore = score;
+                        bestPos = pos;
+                        found = true;
+                    }
+                };
+                if (game::GameLevels::Mine().IsActive())
+                {
+                    const auto &ms = game::GameLevels::Mine().GetState();
+                    consider2D(ms.riaPosition, "리아");
+                    for (const auto &s : ms.survivors)
+                    {
+                        consider2D(s.position, "생존자");
+                    }
+                }
+                else if (game::GameLevels::Chapter().IsActive())
+                {
+                    const auto &cs = game::GameLevels::Chapter().GetState();
+                    consider2D(cs.kain.position, "카인");
+                    consider2D(cs.ria.position, "리아");
+                }
+                else
+                {
+                    for (const auto &res : world.residents)
+                    {
+                        if (res.health > 0)
+                        {
+                            consider2D(res.position, res.name.c_str());
+                        }
+                    }
+                }
+                if (found)
+                {
+                    d.hasSpeakerAnchor = true;
+                    d.speakerLocalPosition = bestPos;
+                }
+            }
+            // Apply smooth cinematic zoom-in whenever conversing with an NPC in the live world.
+            if (!d.zoomApplied)
+            {
+                d.preDialogueZoom = WorldCamera::targetZoom;
+                d.zoomApplied = true;
+            }
+            const float dialogueZoom = (std::min)(WorldCamera::kMaxZoom, (std::max)(d.preDialogueZoom * 1.38f, 2.05f));
+            WorldCamera::SetZoom(dialogueZoom, false);
+        }
+    }
     world.mapVisible = false;
     world.journalVisible = world.dialogueHistoryVisible = false;
     if (d.blocking)
@@ -4234,6 +4427,13 @@ bool Dialogue::Advance()
     bool apply = d.repeatable || d.events.insert(id + "/complete").second;
     d.active = false;
     d.suspended = false;
+    if (d.zoomApplied)
+    {
+        WorldCamera::SetZoom(d.preDialogueZoom, false);
+        d.zoomApplied = false;
+    }
+    d.hasSpeakerAnchor = false;
+    d.speakerSurfacePosition.reset();
     if (callback && apply)
     {
         callback(record.choice);
@@ -4254,6 +4454,91 @@ void Dialogue::Interrupt()
     {
         w.dialogue.active = false;
         w.dialogue.suspended = true;
+        if (w.dialogue.zoomApplied)
+        {
+            WorldCamera::SetZoom(w.dialogue.preDialogueZoom, false);
+            w.dialogue.zoomApplied = false;
+        }
+    }
+}
+void Dialogue::CancelByDistance()
+{
+    auto &w = Game::Get().GetState();
+    auto &d = w.dialogue;
+    if (!d.active)
+    {
+        return;
+    }
+    d.active = false;
+    d.suspended = false;
+    d.completion = {};
+    if (d.zoomApplied)
+    {
+        WorldCamera::SetZoom(d.preDialogueZoom, false);
+        d.zoomApplied = false;
+    }
+    d.hasSpeakerAnchor = false;
+    d.speakerSurfacePosition.reset();
+    Game::Get().ShowNotice("대화 종료 / 대화 상대와 거리가 멀어져 대화가 끊어졌습니다.");
+}
+void Dialogue::UpdateCameraAndProximity(float deltaSeconds)
+{
+    auto &game = Game::Get();
+    auto &w = game.GetState();
+    auto &d = w.dialogue;
+    if (!d.active)
+    {
+        return;
+    }
+    // Always keep camera zoom-in & speaker framing smooth during active dialogue.
+    game.UpdateCamera(deltaSeconds);
+    if (!d.hasSpeakerAnchor || w.mapVisible || w.journalVisible || w.dialogueHistoryVisible)
+    {
+        return;
+    }
+    // Allow player to walk away from an NPC mid-conversation using WASD; auto-cancel if too far.
+    const bool walkingAway = !w.Mounted() && (w.pressedKeys['w'] || w.pressedKeys['a'] ||
+                                              w.pressedKeys['s'] || w.pressedKeys['d']);
+    if (walkingAway && deltaSeconds > 0.f)
+    {
+        if (w.surfaceExploration && !game.IsSurfaceMine() && !w.IsInsideAny() && game.surface &&
+            game.surface->Ready())
+        {
+            const auto before = w.playerPosition;
+            game.UpdatePlayerMovement(deltaSeconds);
+            const auto desired = w.playerPosition;
+            game.surface->Move((desired.x - before.x) * 2.0, (desired.y - before.y) * 2.0, false);
+            const auto pos = game.surface->Local(game.surface->Pose().origin);
+            w.playerPosition = {float(pos.x * 0.5), float(pos.y * 0.5)};
+            const auto &vel = w.playerMotion.velocity;
+            game.surface->Update({vel.x * 2.0, vel.y * 2.0, 0.0}, std::nullopt, false, game.SurfaceTerrainView());
+            w.playerAnimation.Update(deltaSeconds, {vel.x, vel.y, 0.f}, w.facingYaw, false, false);
+        }
+        else if (!w.IsInsideAny())
+        {
+            game.UpdatePlayerMovement(deltaSeconds);
+            const auto &vel = w.playerMotion.velocity;
+            w.playerAnimation.Update(deltaSeconds, {vel.x, vel.y, 0.f}, w.facingYaw, false, false);
+        }
+    }
+    constexpr double kBreakMeters = 10.5;
+    constexpr float kBreakUnits = 5.25f;
+    if (w.surfaceExploration && !game.IsSurfaceMine() && !w.IsInsideAny() && game.surface &&
+        game.surface->Ready() && d.speakerSurfacePosition)
+    {
+        const double dist = world::SurfaceGeometry::Distance(
+            game.surface->Planet().radiusMeters, game.surface->Pose().origin, *d.speakerSurfacePosition);
+        if (dist > kBreakMeters)
+        {
+            CancelByDistance();
+        }
+    }
+    else if (!w.IsInsideAny())
+    {
+        if (Game::Distance(w.playerPosition, d.speakerLocalPosition) > kBreakUnits)
+        {
+            CancelByDistance();
+        }
     }
 }
 bool Dialogue::Resume()
@@ -4266,6 +4551,13 @@ bool Dialogue::Resume()
     }
     d.active = d.blocking = true;
     d.suspended = false;
+    if (d.hasSpeakerAnchor && !d.zoomApplied)
+    {
+        d.preDialogueZoom = WorldCamera::targetZoom;
+        d.zoomApplied = true;
+        const float dialogueZoom = (std::min)(WorldCamera::kMaxZoom, (std::max)(d.preDialogueZoom * 1.38f, 2.05f));
+        WorldCamera::SetZoom(dialogueZoom, false);
+    }
     w.journalVisible = w.dialogueHistoryVisible = false;
     w.mouseFiring = w.mouseAiming = false;
     std::fill(std::begin(w.pressedKeys), std::end(w.pressedKeys), false);

@@ -1,0 +1,58 @@
+{
+  "schema": "erma.ui.part3",
+  "version": 1,
+  "requests": [
+    "UI-26",
+    "UI-27",
+    "UI-28",
+    "UI-29",
+    "UI-30"
+  ],
+  "layer_opacity": {
+    "fill": 0.88,
+    "border": 1,
+    "content": 1
+  },
+  "keycap_glyph": "fixed default E",
+  "limits_bytes": {
+    "single_texture": 100000000,
+    "atlas_png": 4000000,
+    "atlas_rgba8": 16777216
+  },
+  "slice_policy": {
+    "default": 12,
+    "part_chip_on": 8,
+    "part_chip_off": 8,
+    "padding": 4,
+    "alpha_zero_rgb_bleed": 2
+  },
+  "sprite_ids": [
+    "Components/world_prompt_fill",
+    "Components/world_prompt_edge",
+    "Components/world_prompt_pill",
+    "Components/world_keycap_e",
+    "Components/world_keycap_e_active",
+    "Components/world_focus_ring",
+    "Components/holo_wrist_emitter",
+    "Components/globe_bezel_ring",
+    "Components/showcase_card_frame",
+    "Components/wardrobe_turntable_ring",
+    "Components/part_chip_on",
+    "Components/part_chip_off",
+    "Components/minigame_oscilloscope_grid",
+    "Components/minigame_cipher_ring",
+    "Components/minigame_timing_track",
+    "Components/minigame_timing_target",
+    "Components/minigame_circuit_node",
+    "Icons/interact_talk",
+    "Icons/interact_hack",
+    "Icons/interact_salvage",
+    "Icons/interact_door",
+    "Icons/interact_vehicle",
+    "Icons/interact_quest",
+    "Icons/map_planet_view",
+    "Icons/map_space_view",
+    "Icons/map_cluster_subquest"
+  ],
+  "runtime_integration": "art resources; runtime layout wiring tracked separately"
+}

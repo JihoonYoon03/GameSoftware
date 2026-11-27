@@ -550,8 +550,14 @@ void FieldMinigame::Draw()
             const float fillW = Game::Clamp(val / 100.f, 0.f, 1.f) * trackW;
             Drawing::DrawRectangle(trackX, trackY + 2.f, fillW, trackH - 4.f,
                                    locked ? ColorRGBA{.44f, .98f, .66f, .95f} : ColorRGBA{.36f, .86f, .94f, .92f});
-            Drawing::DrawRectangle(trackX + fillW - 2.f, trackY - 3.f, 4.f, trackH + 6.f,
-                                   {.98f, .99f, 1.f, 1.f});
+            Drawing::SetColor({1.f, 1.f, 1.f, 1.f});
+            if (!GameRenderer::Get().Backend().DrawUiSprite("Components/minigame_circuit_node",
+                                                            trackX + fillW - 11.f, trackY - 4.f, 22.f, 22.f, 1.f,
+                                                            false))
+            {
+                Drawing::DrawRectangle(trackX + fillW - 2.f, trackY - 3.f, 4.f, trackH + 6.f,
+                                       {.98f, .99f, 1.f, 1.f});
+            }
         }
         const bool ready = IsCircuitBalanced();
         DrawTextUtf8(bodyX, bodyY + 218.f,
@@ -564,10 +570,15 @@ void FieldMinigame::Draw()
     {
         const float scopeH = 148.f;
         DrawBox(bodyX, bodyY, bodyW, scopeH, {.02f, .06f, .08f, .98f}, {.30f, .68f, .72f, .85f});
-        for (int g = 1; g < 4; ++g)
+        Drawing::SetColor({1.f, 1.f, 1.f, .86f});
+        if (!GameRenderer::Get().Backend().DrawUiSprite("Components/minigame_oscilloscope_grid", bodyX + 2.f,
+                                                        bodyY + 2.f, bodyW - 4.f, scopeH - 4.f, 1.f, false))
         {
-            const float gy = bodyY + scopeH * float(g) * 0.25f;
-            Drawing::DrawLine({bodyX + 4.f, gy}, {bodyX + bodyW - 4.f, gy}, {.16f, .32f, .36f, .45f}, 1.f);
+            for (int g = 1; g < 4; ++g)
+            {
+                const float gy = bodyY + scopeH * float(g) * 0.25f;
+                Drawing::DrawLine({bodyX + 4.f, gy}, {bodyX + bodyW - 4.f, gy}, {.16f, .32f, .36f, .45f}, 1.f);
+            }
         }
         const float midY = bodyY + scopeH * 0.5f;
         const float amp = scopeH * 0.34f;
@@ -609,6 +620,9 @@ void FieldMinigame::Draw()
     {
         const float gcx = cx;
         const float gcy = bodyY + 112.f;
+        Drawing::SetColor({1.f, 1.f, 1.f, .72f});
+        GameRenderer::Get().Backend().DrawUiSprite("Components/minigame_cipher_ring", gcx - 108.f, gcy - 108.f,
+                                                   216.f, 216.f, 1.f, false);
         const float radii[3] = {96.f, 68.f, 40.f};
         Drawing::DrawRectangle(gcx - 5.f, gcy - 112.f, 10.f, 18.f, {.98f, .84f, .36f, 1.f});
         Drawing::DrawLine({gcx, gcy - 102.f}, {gcx, gcy - 26.f}, {.98f, .84f, .36f, .42f}, 1.5f);
@@ -648,15 +662,26 @@ void FieldMinigame::Draw()
     {
         const float barY = bodyY + 72.f;
         const float barH = 38.f;
-        DrawBox(bodyX, barY, bodyW, barH, {.03f, .06f, .09f, .96f}, {.34f, .66f, .72f, .88f});
+        Drawing::SetColor({1.f, 1.f, 1.f, 1.f});
+        if (!GameRenderer::Get().Backend().DrawUiSprite("Components/minigame_timing_track", bodyX, barY, bodyW,
+                                                        barH, 1.f, true))
+        {
+            DrawBox(bodyX, barY, bodyW, barH, {.03f, .06f, .09f, .96f}, {.34f, .66f, .72f, .88f});
+        }
         const float zL = Game::Clamp(gState.zoneCenter - gState.zoneHalfWidth, 0.f, 1.f);
         const float zR = Game::Clamp(gState.zoneCenter + gState.zoneHalfWidth, 0.f, 1.f);
-        Drawing::DrawRectangle(bodyX + 2.f + zL * (bodyW - 4.f), barY + 3.f, (zR - zL) * (bodyW - 4.f),
-                               barH - 6.f, {.24f, .76f, .82f, .52f});
+        Drawing::DrawRectangle(bodyX + 2.f + zL * (bodyW - 4.f), barY + 4.f, (zR - zL) * (bodyW - 4.f),
+                               barH - 8.f, {.24f, .76f, .82f, .52f});
         const float pL = Game::Clamp(gState.zoneCenter - gState.perfectHalfWidth, 0.f, 1.f);
         const float pR = Game::Clamp(gState.zoneCenter + gState.perfectHalfWidth, 0.f, 1.f);
-        Drawing::DrawRectangle(bodyX + 2.f + pL * (bodyW - 4.f), barY + 2.f, (pR - pL) * (bodyW - 4.f),
-                               barH - 4.f, {.98f, .82f, .32f, .85f});
+        Drawing::SetColor({1.f, 1.f, 1.f, .96f});
+        if (!GameRenderer::Get().Backend().DrawUiSprite("Components/minigame_timing_target",
+                                                        bodyX + 2.f + pL * (bodyW - 4.f), barY + 2.f,
+                                                        (pR - pL) * (bodyW - 4.f), barH - 4.f, 1.f, false))
+        {
+            Drawing::DrawRectangle(bodyX + 2.f + pL * (bodyW - 4.f), barY + 2.f, (pR - pL) * (bodyW - 4.f),
+                                   barH - 4.f, {.98f, .82f, .32f, .85f});
+        }
         const float nx = bodyX + 2.f + gState.needlePos * (bodyW - 4.f);
         Drawing::DrawRectangle(nx - 3.f, barY - 7.f, 6.f, barH + 14.f, {.99f, .99f, 1.f, 1.f});
 

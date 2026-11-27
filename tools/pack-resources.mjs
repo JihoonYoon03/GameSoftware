@@ -821,6 +821,18 @@ if (fs.existsSync(mixamoCatalogPath)) {
     }
 }
 
+// CQ-04B v4 procedural city road, junction, grade-separation, signal & streetscape kit (35 modules).
+const cq04bCatalogPath = path.join(resources, 'Documentation/cq04b_city_kit_v4.json');
+if (fs.existsSync(cq04bCatalogPath)) {
+    const cq04b = JSON.parse(fs.readFileSync(cq04bCatalogPath, 'utf8'));
+    for (const [id, entry] of Object.entries(cq04b.assets ?? {})) {
+        const lod0File = entry?.lods?.LOD0?.file;
+        if (!lod0File) continue;
+        const stem = lod0File.replace(/\.glb$/i, '');
+        convert('cq04b/' + id, 'CQ04B/' + stem, 'prop');
+    }
+}
+
 const chunks = [];
 function u32(value) { const b = Buffer.alloc(4); b.writeUInt32LE(value); chunks.push(b); }
 function f32(values) { const b = Buffer.alloc(values.length * 4); values.forEach((v, i) => b.writeFloatLE(v, i * 4)); chunks.push(b); }

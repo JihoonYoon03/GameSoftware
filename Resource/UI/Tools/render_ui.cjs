@@ -15,23 +15,13 @@ const save = (p,v) => fs.writeFileSync(path.join(root,p),JSON.stringify(v,null,2
   const priorHashes=fs.existsSync(path.join(root,'Validation/sha256.json'))?read('Validation/sha256.json'):{};
   const unchanged=p=>fs.existsSync(path.join(root,p))&&priorHashes[p]===crypto.createHash('sha256').update(fs.readFileSync(path.join(root,p))).digest('hex');
   const productionAssets=[...Object.values(manifest.icons),...Object.values(manifest.hud_icons||{}),...Object.values(manifest.components)];
-  for(const asset of productionAssets){
+  for(const asset of process.argv.includes('--skip-sprites')?[]:productionAssets){
     if(unchanged(asset.svg)&&unchanged(asset.png))continue;
-    await sharp(path.join(root,asset.svg)).resize(asset.width,asset.height).png().toFile(path.join(root,asset.png));
+    const file=path.join(root,asset.png);
+    const png=await sharp(path.join(root,asset.svg)).resize(asset.width,asset.height).png().toBuffer();
+    if(!fs.existsSync(file)||!fs.readFileSync(file).equals(png))fs.writeFileSync(file,png);
   }
-  // 4px gutters make linear-filter sampling safe; pixel rectangles exclude gutters.
-  const names=Object.keys(manifest.icons).filter(name=>manifest.icons[name].width===48&&manifest.icons[name].height===48);
-  const cell=56,cols=8,rows=Math.ceil(names.length/cols);
-  const atlas={width:cols*cell,height:rows*cell,padding:4,alpha:'straight',entries:{}};
-  const composites=[];
-  names.forEach((name,i)=>{
-    const x=(i%cols)*cell+4,y=Math.floor(i/cols)*cell+4;
-    composites.push({input:path.join(root,manifest.icons[name].png),left:x,top:y});
-    atlas.entries[name]={x,y,width:48,height:48,uv:[x/atlas.width,y/atlas.height,(x+48)/atlas.width,(y+48)/atlas.height]};
-  });
-  if(!Object.values(manifest.icons).every(a=>unchanged(a.svg)&&unchanged(a.png))||!fs.existsSync(path.join(root,'Export/Atlases/icons.png')))
-    await sharp({create:{width:atlas.width,height:atlas.height,channels:4,background:'#00000000'}}).composite(composites).png().toFile(path.join(root,'Export/Atlases/icons.png'));
-  save('Export/Atlases/icons.json',atlas);
+  if(process.argv.includes('--sprites-only')) {console.log('Rasterized '+productionAssets.length+' sprites');return;}
   const assetChecks=[];
   for(const asset of productionAssets){
     const m=await sharp(path.join(root,asset.png)).metadata();
@@ -85,23 +75,23 @@ const save = (p,v) => fs.writeFileSync(path.join(root,p),JSON.stringify(v,null,2
   for(const [width,height] of [[1280,800],[1920,1080],[2560,1440]]){
     const scale=Math.min(width/1280,height/800);
     const tab=await browser.newPage({viewport:{width,height},deviceScaleFactor:1});
-    const scene=await page.evaluate(()=>window.uiScenes['87_relay_ready'].svg);
+    const scene=await page.evaluate(()=>window.uiScenes['105_holo_planet'].svg);
     await tab.setContent(`<style>html,body{margin:0;background:#071016}body{display:flex;align-items:center;justify-content:center;width:100vw;height:100vh}svg{display:block;width:${1280*scale}px;height:${800*scale}px}</style>`+scene);
     await tab.evaluate(()=>document.fonts.ready);
-    const file=`Validation/20261123/relay_${width}x${height}.png`;
+    const file=`Validation/20261127/globe_${width}x${height}.png`;
     fs.writeFileSync(path.join(root,file),await tab.screenshot());await tab.close();
     resolutions.push({width,height,uniformScale:scale,offsetX:(width-1280*scale)/2,offsetY:(height-800*scale)/2,file,
       note:'Browser-rendered uniform canvas-fit design preview. Live-game integration untested.'});
   }
   // Background opacity stress captures in the same renderer.
   const opacity=[];
-  for(const name of ['72_stamina_low','80_flight_cruise','87_relay_ready','92_checkpoint_restricted']){
+  for(const name of ['98_prompt_talk','103_prompt_quest','105_holo_planet','107_showcase_wardrobe','110_console_signal','114_panel_seam_review']){
     for(const alpha of [0.6,0.8,0.94,1]){
       const tab=await browser.newPage({viewport:{width:1280,height:800}});
       const scene=await page.evaluate(n=>window.uiScenes[n].svg,name);
       await tab.setContent(`<style>html,body{margin:0}svg{display:block;--panel-opacity:${alpha};--border-opacity:.8;--content-opacity:.85}</style>`+scene);
       await tab.evaluate(()=>document.fonts.ready);
-      const filename=`Validation/20261123/${name}_alpha_${Math.round(alpha*100)}.png`;
+      const filename=`Validation/20261127/${name}_alpha_${Math.round(alpha*100)}.png`;
       if(!unchanged(manifest.screens[name].svg)||!fs.existsSync(path.join(root,filename)))fs.writeFileSync(path.join(root,filename),await tab.screenshot());await tab.close();
       opacity.push({scene:name,backgroundAlpha:alpha,file:filename});
     }
@@ -139,10 +129,10 @@ const save = (p,v) => fs.writeFileSync(path.join(root,p),JSON.stringify(v,null,2
       comparisons.push({input:await sharp(Buffer.from(`<svg width="800" height="30"><rect width="800" height="30" fill="#07131c"/><text x="16" y="21" fill="white" font-family="sans-serif" font-size="15">${label}</text></svg>`)).png().toBuffer(),left:j*800,top:i*530+500});
     }
   }
-  if(!fs.existsSync(path.join(root,'Preview/HUD_before_after_20261028.png'))||coverage.some(c=>!unchanged(manifest.screens[c.scene].svg)))
-    await sharp({create:{width:1600,height:1590,channels:4,background:'#07131c'}}).composite(comparisons).png().toFile(path.join(root,'Preview/HUD_before_after_20261028.png'));
+  if(!fs.existsSync(path.join(root,'Preview/20261127/HUD_before_after.png'))||coverage.some(c=>!unchanged(manifest.screens[c.scene].svg)))
+    await sharp({create:{width:1600,height:1590,channels:4,background:'#07131c'}}).composite(comparisons).png().toFile(path.join(root,'Preview/20261127/HUD_before_after.png'));
   // Contact sheet uses rasterized SVG review screens, not live-game images.
-  const recent=scenes.filter(s=>Number(s.name.slice(0,2))>=71);
+  const recent=scenes.filter(s=>Number(s.name.split('_')[0])>=98);
   const thumbs=[];const sheetW=1600,tileW=400,tileH=280;
   for(let i=0;i<recent.length;i++){
     const n=recent[i].name;
@@ -151,7 +141,7 @@ const save = (p,v) => fs.writeFileSync(path.join(root,p),JSON.stringify(v,null,2
     const caption=Buffer.from(`<svg width="400" height="30"><rect width="400" height="30" fill="#10242d"/><text x="12" y="20" fill="#eef5ef" font-size="12" font-family="Malgun Gothic">${n} · ${manifest.screens[n].requirements.join(' / ')}</text></svg>`);
     thumbs.push({input:await sharp(caption).png().toBuffer(),left:(i%4)*tileW,top:Math.floor(i/4)*tileH+250});
   }
-  await sharp({create:{width:sheetW,height:Math.ceil(recent.length/4)*tileH,channels:4,background:'#071016'}}).composite(thumbs).png().toFile(path.join(root,'Preview/20261123/contact_sheet.png'));
+  await sharp({create:{width:sheetW,height:Math.ceil(recent.length/4)*tileH,channels:4,background:'#071016'}}).composite(thumbs).png().toFile(path.join(root,'Preview/20261127/contact_sheet.png'));
   const report={generated:new Date().toISOString(),font,screenCount:scenes.length,assetCount:assetChecks.length,
     pageErrors:errors,overflowCount:scenes.reduce((n,s)=>n+s.overflow.length,0),overlapCount:scenes.reduce((n,s)=>n+s.overlaps.length,0),controlCheck,coverage,scenes,assets:assetChecks,stress,resolutions,opacity,
     scope:'Production raster asset checks and browser-rendered design previews. No game code, Runtime cache, gameplay or menu behavior tested.'};

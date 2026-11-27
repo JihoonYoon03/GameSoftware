@@ -8058,5 +8058,775 @@
     "screen": "97_flight_controls",
     "text": "뒤로 · Esc",
     "size": 16
+  },
+  {
+    "screen": "98_prompt_talk",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "98_prompt_talk",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "98_prompt_talk",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "98_prompt_talk",
+    "text": "헤일로",
+    "size": 16
+  },
+  {
+    "screen": "98_prompt_talk",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "98_prompt_talk",
+    "text": "리아에게 말 걸기",
+    "size": 18
+  },
+  {
+    "screen": "99_prompt_terminal",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "99_prompt_terminal",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "99_prompt_terminal",
+    "text": "미탐험",
+    "size": 14
+  },
+  {
+    "screen": "99_prompt_terminal",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "99_prompt_terminal",
+    "text": "광산 · 탐험 구간",
+    "size": 16
+  },
+  {
+    "screen": "99_prompt_terminal",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "99_prompt_terminal",
+    "text": "비상 배전반 점검",
+    "size": 18
+  },
+  {
+    "screen": "100_prompt_salvage",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "100_prompt_salvage",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "100_prompt_salvage",
+    "text": "미탐험",
+    "size": 14
+  },
+  {
+    "screen": "100_prompt_salvage",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "100_prompt_salvage",
+    "text": "광산 · 탐험 구간",
+    "size": 16
+  },
+  {
+    "screen": "100_prompt_salvage",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "100_prompt_salvage",
+    "text": "프리즘 광맥 채굴",
+    "size": 18
+  },
+  {
+    "screen": "101_prompt_door",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "101_prompt_door",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "101_prompt_door",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "101_prompt_door",
+    "text": "헤일로",
+    "size": 16
+  },
+  {
+    "screen": "101_prompt_door",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "101_prompt_door",
+    "text": "거주 구역으로 들어가기",
+    "size": 18
+  },
+  {
+    "screen": "102_prompt_vehicle",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "102_prompt_vehicle",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "102_prompt_vehicle",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "102_prompt_vehicle",
+    "text": "헤일로",
+    "size": 16
+  },
+  {
+    "screen": "102_prompt_vehicle",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "102_prompt_vehicle",
+    "text": "공용 비행체 탑승",
+    "size": 18
+  },
+  {
+    "screen": "103_prompt_quest",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "103_prompt_quest",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "103_prompt_quest",
+    "text": "미탐험",
+    "size": 14
+  },
+  {
+    "screen": "103_prompt_quest",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "103_prompt_quest",
+    "text": "광산 · 탐험 구간",
+    "size": 16
+  },
+  {
+    "screen": "103_prompt_quest",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "103_prompt_quest",
+    "text": "북동 잔해 고압 격벽에서 ",
+    "size": 18
+  },
+  {
+    "screen": "103_prompt_quest",
+    "text": "차단 회로를 점검하기",
+    "size": 18
+  },
+  {
+    "screen": "104_prompt_outside_range",
+    "text": "86",
+    "size": 28
+  },
+  {
+    "screen": "104_prompt_outside_range",
+    "text": "/ 100",
+    "size": 18
+  },
+  {
+    "screen": "104_prompt_outside_range",
+    "text": "N ↗",
+    "size": 14
+  },
+  {
+    "screen": "104_prompt_outside_range",
+    "text": "헤일로",
+    "size": 16
+  },
+  {
+    "screen": "104_prompt_outside_range",
+    "text": "M 지도",
+    "size": 16
+  },
+  {
+    "screen": "105_holo_planet",
+    "text": "에르마 · 행성 지도",
+    "size": 30
+  },
+  {
+    "screen": "105_holo_planet",
+    "text": "G",
+    "size": 14
+  },
+  {
+    "screen": "105_holo_planet",
+    "text": "성계 지도",
+    "size": 18
+  },
+  {
+    "screen": "105_holo_planet",
+    "text": "지도 표식",
+    "size": 21
+  },
+  {
+    "screen": "105_holo_planet",
+    "text": "발견한 지역 의뢰",
+    "size": 16
+  },
+  {
+    "screen": "105_holo_planet",
+    "text": "지정 목적지",
+    "size": 16
+  },
+  {
+    "screen": "105_holo_planet",
+    "text": "드래그 회전 · 휠 확대 및 축소",
+    "size": 16
+  },
+  {
+    "screen": "105_holo_planet",
+    "text": "M 닫기",
+    "size": 16
+  },
+  {
+    "screen": "106_holo_space",
+    "text": "에르마 성계",
+    "size": 30
+  },
+  {
+    "screen": "106_holo_space",
+    "text": "G",
+    "size": 14
+  },
+  {
+    "screen": "106_holo_space",
+    "text": "행성 지도",
+    "size": 18
+  },
+  {
+    "screen": "106_holo_space",
+    "text": "항성",
+    "size": 16
+  },
+  {
+    "screen": "106_holo_space",
+    "text": "에르마",
+    "size": 16
+  },
+  {
+    "screen": "106_holo_space",
+    "text": "세이라",
+    "size": 16
+  },
+  {
+    "screen": "106_holo_space",
+    "text": "오르엔",
+    "size": 16
+  },
+  {
+    "screen": "106_holo_space",
+    "text": "선택한 행성",
+    "size": 21
+  },
+  {
+    "screen": "106_holo_space",
+    "text": "에르마",
+    "size": 26
+  },
+  {
+    "screen": "106_holo_space",
+    "text": "현재 탐사 중인 행성입니다.",
+    "size": 18
+  },
+  {
+    "screen": "106_holo_space",
+    "text": "드래그 회전 · 휠 확대 및 축소",
+    "size": 16
+  },
+  {
+    "screen": "106_holo_space",
+    "text": "M 닫기",
+    "size": 16
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "3D 외관 옷장",
+    "size": 30
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "드래그 / A·D 회전",
+    "size": 16
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "장착 부위",
+    "size": 21
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "메딕 코트",
+    "size": 16
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "장착",
+    "size": 14
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "카고 팬츠",
+    "size": 16
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "장착",
+    "size": 14
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "전술 부츠",
+    "size": 16
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "장착",
+    "size": 14
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "번 헤어",
+    "size": 16
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "장착",
+    "size": 14
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "어깨 가드",
+    "size": 16
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "해제",
+    "size": 14
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "무릎 가드",
+    "size": 16
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "장착",
+    "size": 14
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "왼팔 스캐너",
+    "size": 16
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "장착",
+    "size": 14
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "오른팔 가드",
+    "size": 16
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "장착",
+    "size": 14
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "의료 파우치",
+    "size": 16
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "해제",
+    "size": 14
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "구조 배낭",
+    "size": 16
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "장착",
+    "size": 14
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "탄창 랙",
+    "size": 16
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "장착",
+    "size": 14
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "text": "Esc 닫기",
+    "size": 16
+  },
+  {
+    "screen": "108_showcase_stash",
+    "text": "거처 보관함",
+    "size": 30
+  },
+  {
+    "screen": "108_showcase_stash",
+    "text": "크레딧",
+    "size": 20
+  },
+  {
+    "screen": "108_showcase_stash",
+    "text": "보관 1,250",
+    "size": 20
+  },
+  {
+    "screen": "108_showcase_stash",
+    "text": "예치",
+    "size": 16
+  },
+  {
+    "screen": "108_showcase_stash",
+    "text": "인출",
+    "size": 16
+  },
+  {
+    "screen": "108_showcase_stash",
+    "text": "회복 키트",
+    "size": 20
+  },
+  {
+    "screen": "108_showcase_stash",
+    "text": "보관 4개",
+    "size": 20
+  },
+  {
+    "screen": "108_showcase_stash",
+    "text": "보관",
+    "size": 16
+  },
+  {
+    "screen": "108_showcase_stash",
+    "text": "인출",
+    "size": 16
+  },
+  {
+    "screen": "108_showcase_stash",
+    "text": "회수 부품",
+    "size": 20
+  },
+  {
+    "screen": "108_showcase_stash",
+    "text": "보관 18개",
+    "size": 20
+  },
+  {
+    "screen": "108_showcase_stash",
+    "text": "전량 보관",
+    "size": 16
+  },
+  {
+    "screen": "108_showcase_stash",
+    "text": "전량 인출",
+    "size": 16
+  },
+  {
+    "screen": "108_showcase_stash",
+    "text": "Esc 닫기",
+    "size": 16
+  },
+  {
+    "screen": "109_showcase_shop",
+    "text": "시설 상점",
+    "size": 30
+  },
+  {
+    "screen": "109_showcase_shop",
+    "text": "보급 상인",
+    "size": 22
+  },
+  {
+    "screen": "109_showcase_shop",
+    "text": "보유 크레딧 1,250",
+    "size": 18
+  },
+  {
+    "screen": "109_showcase_shop",
+    "text": "응급 회복 키트",
+    "size": 20
+  },
+  {
+    "screen": "109_showcase_shop",
+    "text": "보유 4개 · G 사용",
+    "size": 16
+  },
+  {
+    "screen": "109_showcase_shop",
+    "text": "40 Cr",
+    "size": 18
+  },
+  {
+    "screen": "109_showcase_shop",
+    "text": "전술 탄약 팩",
+    "size": 20
+  },
+  {
+    "screen": "109_showcase_shop",
+    "text": "총기 장착 시 탄약 보급 가능",
+    "size": 16
+  },
+  {
+    "screen": "109_showcase_shop",
+    "text": "25 Cr",
+    "size": 18
+  },
+  {
+    "screen": "109_showcase_shop",
+    "text": "고철 부품 매각",
+    "size": 20
+  },
+  {
+    "screen": "109_showcase_shop",
+    "text": "정비 고철 1개 매각 · 보유 18개",
+    "size": 16
+  },
+  {
+    "screen": "109_showcase_shop",
+    "text": "+35 Cr",
+    "size": 18
+  },
+  {
+    "screen": "109_showcase_shop",
+    "text": "Enter / 클릭 / 숫자키로 구매 및 이용",
+    "size": 16
+  },
+  {
+    "screen": "109_showcase_shop",
+    "text": "Esc 닫기",
+    "size": 16
+  },
+  {
+    "screen": "110_console_signal",
+    "text": "탐사선 구조 신호 동조",
+    "size": 28
+  },
+  {
+    "screen": "110_console_signal",
+    "text": "동조율 74%",
+    "size": 20
+  },
+  {
+    "screen": "110_console_signal",
+    "text": "기준 파형 · 점선",
+    "size": 16
+  },
+  {
+    "screen": "110_console_signal",
+    "text": "A/D 주파수 · W/S 위상",
+    "size": 18
+  },
+  {
+    "screen": "110_console_signal",
+    "text": "Space / Enter 확정",
+    "size": 16
+  },
+  {
+    "screen": "110_console_signal",
+    "text": "Tab 우회 · 보너스 없음",
+    "size": 16
+  },
+  {
+    "screen": "110_console_signal",
+    "text": "Esc 취소",
+    "size": 16
+  },
+  {
+    "screen": "111_console_cipher",
+    "text": "관측자 벽면 문양 해독",
+    "size": 28
+  },
+  {
+    "screen": "111_console_cipher",
+    "text": "선택 고리 2 / 3",
+    "size": 18
+  },
+  {
+    "screen": "111_console_cipher",
+    "text": "W/S 고리 선택 · A/D 회전",
+    "size": 18
+  },
+  {
+    "screen": "111_console_cipher",
+    "text": "Space / Enter 확정",
+    "size": 16
+  },
+  {
+    "screen": "111_console_cipher",
+    "text": "Tab 우회 · 보너스 없음",
+    "size": 16
+  },
+  {
+    "screen": "111_console_cipher",
+    "text": "Esc 취소",
+    "size": 16
+  },
+  {
+    "screen": "112_console_timing",
+    "text": "교두보 붕괴 잔해 해제",
+    "size": 28
+  },
+  {
+    "screen": "112_console_timing",
+    "text": "진행 2 / 4",
+    "size": 20
+  },
+  {
+    "screen": "112_console_timing",
+    "text": "정밀 적중 1 · 오차 0",
+    "size": 16
+  },
+  {
+    "screen": "112_console_timing",
+    "text": "Space / 클릭 / E · 금색 구간에서 입력",
+    "size": 18
+  },
+  {
+    "screen": "112_console_timing",
+    "text": "Space / Enter 확정",
+    "size": 16
+  },
+  {
+    "screen": "112_console_timing",
+    "text": "Tab 우회 · 보너스 없음",
+    "size": 16
+  },
+  {
+    "screen": "112_console_timing",
+    "text": "Esc 취소",
+    "size": 16
+  },
+  {
+    "screen": "113_console_circuit",
+    "text": "비상 배전반 회로 우회",
+    "size": 28
+  },
+  {
+    "screen": "113_console_circuit",
+    "text": "주전원",
+    "size": 18
+  },
+  {
+    "screen": "113_console_circuit",
+    "text": "75% / 목표 75%",
+    "size": 16
+  },
+  {
+    "screen": "113_console_circuit",
+    "text": "안정기",
+    "size": 18
+  },
+  {
+    "screen": "113_console_circuit",
+    "text": "40% / 목표 55%",
+    "size": 16
+  },
+  {
+    "screen": "113_console_circuit",
+    "text": "보조망",
+    "size": 18
+  },
+  {
+    "screen": "113_console_circuit",
+    "text": "64% / 목표 64%",
+    "size": 16
+  },
+  {
+    "screen": "113_console_circuit",
+    "text": "W/S 배선 선택 · A/D 출력 조절",
+    "size": 18
+  },
+  {
+    "screen": "113_console_circuit",
+    "text": "Space / Enter 확정",
+    "size": 16
+  },
+  {
+    "screen": "113_console_circuit",
+    "text": "Tab 우회 · 보너스 없음",
+    "size": 16
+  },
+  {
+    "screen": "113_console_circuit",
+    "text": "Esc 취소",
+    "size": 16
+  },
+  {
+    "screen": "114_panel_seam_review",
+    "text": "9분할 · 밝은 배경 테스트",
+    "size": 31
+  },
+  {
+    "screen": "114_panel_seam_review",
+    "text": "장착",
+    "size": 18
+  },
+  {
+    "screen": "114_panel_seam_review",
+    "text": "해제",
+    "size": 18
+  },
+  {
+    "screen": "114_panel_seam_review",
+    "text": "게임에서 사용할 잘림 경계를 좌표 그대로 고정합니다.",
+    "size": 20
   }
 ]

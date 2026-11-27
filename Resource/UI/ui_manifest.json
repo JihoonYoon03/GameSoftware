@@ -1,7 +1,7 @@
 {
-  "version": "1.4.0",
+  "version": "1.5.0",
   "title": "ERMA / FIELD INTERFACE",
-  "date": "2026-11-23",
+  "date": "2026-11-27",
   "canvas": {
     "width": 1280,
     "height": 800,
@@ -687,63 +687,72 @@
       "png": "Export/Icons/interact_talk.png",
       "width": 32,
       "height": 32,
-      "role": "part3"
+      "logical_size": 24,
+      "stroke": 2.1
     },
     "interact_hack": {
       "svg": "Source/Icons/interact_hack.svg",
       "png": "Export/Icons/interact_hack.png",
       "width": 32,
       "height": 32,
-      "role": "part3"
+      "logical_size": 24,
+      "stroke": 2.1
     },
     "interact_salvage": {
       "svg": "Source/Icons/interact_salvage.svg",
       "png": "Export/Icons/interact_salvage.png",
       "width": 32,
       "height": 32,
-      "role": "part3"
+      "logical_size": 24,
+      "stroke": 2.1
     },
     "interact_door": {
       "svg": "Source/Icons/interact_door.svg",
       "png": "Export/Icons/interact_door.png",
       "width": 32,
       "height": 32,
-      "role": "part3"
+      "logical_size": 24,
+      "stroke": 2.1
     },
     "interact_vehicle": {
       "svg": "Source/Icons/interact_vehicle.svg",
       "png": "Export/Icons/interact_vehicle.png",
       "width": 32,
       "height": 32,
-      "role": "part3"
+      "logical_size": 24,
+      "stroke": 2.1
     },
     "interact_quest": {
       "svg": "Source/Icons/interact_quest.svg",
       "png": "Export/Icons/interact_quest.png",
       "width": 32,
       "height": 32,
-      "role": "part3"
+      "logical_size": 24,
+      "stroke": 2.1
     },
     "map_planet_view": {
       "svg": "Source/Icons/map_planet_view.svg",
       "png": "Export/Icons/map_planet_view.png",
       "width": 32,
       "height": 32,
-      "role": "part3"
+      "logical_size": 24,
+      "stroke": 2.1
     },
     "map_space_view": {
       "svg": "Source/Icons/map_space_view.svg",
       "png": "Export/Icons/map_space_view.png",
       "width": 32,
       "height": 32,
-      "role": "part3"
+      "logical_size": 24,
+      "stroke": 2.1
     },
     "map_cluster_subquest": {
       "svg": "Source/Icons/map_cluster_subquest.svg",
       "png": "Export/Icons/map_cluster_subquest.png",
       "width": 32,
       "height": 32,
-      "role": "part3"
+      "logical_size": 24,
+      "stroke": 2.1
     }
   },
   "components": {
@@ -1167,107 +1176,160 @@
       "height": 10,
       "role": "page_position_tint"
     },
+    "world_prompt_fill": {
+      "svg": "Source/Components/world_prompt_fill.svg",
+      "png": "Export/Components/world_prompt_fill.png",
+      "width": 96,
+      "height": 40,
+      "role": "background_opacity",
+      "nine_slice_ltrb": [
+        12,
+        12,
+        12,
+        12
+      ]
+    },
+    "world_prompt_edge": {
+      "svg": "Source/Components/world_prompt_edge.svg",
+      "png": "Export/Components/world_prompt_edge.png",
+      "width": 96,
+      "height": 40,
+      "role": "border_opacity",
+      "nine_slice_ltrb": [
+        12,
+        12,
+        12,
+        12
+      ]
+    },
     "world_prompt_pill": {
       "svg": "Source/Components/world_prompt_pill.svg",
       "png": "Export/Components/world_prompt_pill.png",
       "width": 96,
       "height": 40,
-      "role": "part3",
-      "nine_slice_inset": 12
+      "role": "combined_fallback; layered fill/edge plus runtime category stripe preferred",
+      "nine_slice_ltrb": [
+        12,
+        12,
+        12,
+        12
+      ]
     },
     "world_keycap_e": {
       "svg": "Source/Components/world_keycap_e.svg",
       "png": "Export/Components/world_keycap_e.png",
       "width": 32,
       "height": 32,
-      "role": "part3"
+      "role": "fixed_E_vector"
     },
     "world_keycap_e_active": {
       "svg": "Source/Components/world_keycap_e_active.svg",
       "png": "Export/Components/world_keycap_e_active.png",
       "width": 32,
       "height": 32,
-      "role": "part3"
+      "role": "fixed_E_vector"
     },
     "world_focus_ring": {
       "svg": "Source/Components/world_focus_ring.svg",
       "png": "Export/Components/world_focus_ring.png",
       "width": 128,
       "height": 64,
-      "role": "part3"
+      "role": "project_to_ground; transparent center"
     },
     "holo_wrist_emitter": {
       "svg": "Source/Components/holo_wrist_emitter.svg",
       "png": "Export/Components/holo_wrist_emitter.png",
       "width": 64,
       "height": 64,
-      "role": "part3"
+      "role": "fixed_aspect"
     },
     "globe_bezel_ring": {
       "svg": "Source/Components/globe_bezel_ring.svg",
       "png": "Export/Components/globe_bezel_ring.png",
       "width": 512,
       "height": 512,
-      "role": "part3"
+      "role": "fixed_aspect"
     },
     "showcase_card_frame": {
       "svg": "Source/Components/showcase_card_frame.svg",
       "png": "Export/Components/showcase_card_frame.png",
       "width": 128,
       "height": 128,
-      "role": "part3",
-      "nine_slice_inset": 12
+      "role": "frame; live stage and separate title/price zones",
+      "nine_slice_ltrb": [
+        12,
+        12,
+        12,
+        12
+      ]
     },
     "wardrobe_turntable_ring": {
       "svg": "Source/Components/wardrobe_turntable_ring.svg",
       "png": "Export/Components/wardrobe_turntable_ring.png",
       "width": 256,
       "height": 96,
-      "role": "part3"
+      "role": "fixed_aspect"
     },
     "part_chip_on": {
       "svg": "Source/Components/part_chip_on.svg",
       "png": "Export/Components/part_chip_on.png",
       "width": 48,
       "height": 32,
-      "role": "part3",
-      "nine_slice_inset": 8
+      "role": "toggle; state mark and label are separate",
+      "nine_slice_ltrb": [
+        8,
+        8,
+        8,
+        8
+      ]
     },
     "part_chip_off": {
       "svg": "Source/Components/part_chip_off.svg",
       "png": "Export/Components/part_chip_off.png",
       "width": 48,
       "height": 32,
-      "role": "part3",
-      "nine_slice_inset": 8
+      "role": "toggle; state mark and label are separate",
+      "nine_slice_ltrb": [
+        8,
+        8,
+        8,
+        8
+      ]
     },
     "minigame_oscilloscope_grid": {
       "svg": "Source/Components/minigame_oscilloscope_grid.svg",
       "png": "Export/Components/minigame_oscilloscope_grid.png",
       "width": 256,
       "height": 128,
-      "role": "part3"
+      "role": "static grid; waveforms drawn live"
     },
     "minigame_cipher_ring": {
       "svg": "Source/Components/minigame_cipher_ring.svg",
       "png": "Export/Components/minigame_cipher_ring.png",
       "width": 256,
       "height": 256,
-      "role": "part3"
+      "role": "dials; animate individual radii and key marks separately"
     },
     "minigame_timing_track": {
       "svg": "Source/Components/minigame_timing_track.svg",
       "png": "Export/Components/minigame_timing_track.png",
       "width": 256,
       "height": 32,
-      "role": "part3"
+      "role": "track; hit zone center/width supplied by gameplay"
+    },
+    "minigame_timing_target": {
+      "svg": "Source/Components/minigame_timing_target.svg",
+      "png": "Export/Components/minigame_timing_target.png",
+      "width": 24,
+      "height": 32,
+      "role": "gold perfect-zone overlay; fit actual zone"
     },
     "minigame_circuit_node": {
       "svg": "Source/Components/minigame_circuit_node.svg",
       "png": "Export/Components/minigame_circuit_node.png",
       "width": 48,
       "height": 48,
-      "role": "part3"
+      "role": "fixed_aspect"
     }
   },
   "hud_icons": {
@@ -1750,11 +1812,6 @@
     ],
     "render_text": "runtime only; black 4px outside outline; independent content opacity"
   },
-  "atlas": {
-    "png": "Export/Atlases/icons.png",
-    "metadata": "Export/Atlases/icons.json",
-    "padding": 4
-  },
   "complete_atlas": {
     "png": "Export/Atlases/ui_complete.png",
     "metadata": "Export/Atlases/ui_complete.json",
@@ -1775,9 +1832,156 @@
   },
   "current_play": {
     "contract": "Source/current_play_ui.json",
-    "runtime_integration": true
+    "runtime_integration": false
+  },
+  "part3": {
+    "contract": "Source/part3_ui.json",
+    "runtime_integration": false
   },
   "screens": {
+    "98_prompt_talk": {
+      "label": "현장 안내 / 대화",
+      "requirements": [
+        "UI-07",
+        "UI-26"
+      ],
+      "svg": "Source/Screens/98_prompt_talk.svg",
+      "png": "Preview/20261127/98_prompt_talk.png"
+    },
+    "99_prompt_terminal": {
+      "label": "현장 안내 / 단말 조사",
+      "requirements": [
+        "UI-07",
+        "UI-26"
+      ],
+      "svg": "Source/Screens/99_prompt_terminal.svg",
+      "png": "Preview/20261127/99_prompt_terminal.png"
+    },
+    "100_prompt_salvage": {
+      "label": "현장 안내 / 회수",
+      "requirements": [
+        "UI-07",
+        "UI-26"
+      ],
+      "svg": "Source/Screens/100_prompt_salvage.svg",
+      "png": "Preview/20261127/100_prompt_salvage.png"
+    },
+    "101_prompt_door": {
+      "label": "현장 안내 / 출입",
+      "requirements": [
+        "UI-07",
+        "UI-26"
+      ],
+      "svg": "Source/Screens/101_prompt_door.svg",
+      "png": "Preview/20261127/101_prompt_door.png"
+    },
+    "102_prompt_vehicle": {
+      "label": "현장 안내 / 탑승",
+      "requirements": [
+        "UI-07",
+        "UI-26"
+      ],
+      "svg": "Source/Screens/102_prompt_vehicle.svg",
+      "png": "Preview/20261127/102_prompt_vehicle.png"
+    },
+    "103_prompt_quest": {
+      "label": "현장 안내 / 긴 임무명",
+      "requirements": [
+        "UI-07",
+        "UI-26"
+      ],
+      "svg": "Source/Screens/103_prompt_quest.svg",
+      "png": "Preview/20261127/103_prompt_quest.png"
+    },
+    "104_prompt_outside_range": {
+      "label": "현장 안내 / 범위 밖",
+      "requirements": [
+        "UI-07",
+        "UI-26"
+      ],
+      "svg": "Source/Screens/104_prompt_outside_range.svg",
+      "png": "Preview/20261127/104_prompt_outside_range.png"
+    },
+    "105_holo_planet": {
+      "label": "지도 / 손목 투사 행성",
+      "requirements": [
+        "UI-27"
+      ],
+      "svg": "Source/Screens/105_holo_planet.svg",
+      "png": "Preview/20261127/105_holo_planet.png"
+    },
+    "106_holo_space": {
+      "label": "지도 / 성계 전환",
+      "requirements": [
+        "UI-27"
+      ],
+      "svg": "Source/Screens/106_holo_space.svg",
+      "png": "Preview/20261127/106_holo_space.png"
+    },
+    "107_showcase_wardrobe": {
+      "label": "진열 UI / 외관 옷장",
+      "requirements": [
+        "UI-28"
+      ],
+      "svg": "Source/Screens/107_showcase_wardrobe.svg",
+      "png": "Preview/20261127/107_showcase_wardrobe.png"
+    },
+    "108_showcase_stash": {
+      "label": "진열 UI / 보관함",
+      "requirements": [
+        "UI-28"
+      ],
+      "svg": "Source/Screens/108_showcase_stash.svg",
+      "png": "Preview/20261127/108_showcase_stash.png"
+    },
+    "109_showcase_shop": {
+      "label": "진열 UI / 시설 상점",
+      "requirements": [
+        "UI-28"
+      ],
+      "svg": "Source/Screens/109_showcase_shop.svg",
+      "png": "Preview/20261127/109_showcase_shop.png"
+    },
+    "110_console_signal": {
+      "label": "현장 콘솔 / 파형 동조",
+      "requirements": [
+        "UI-29"
+      ],
+      "svg": "Source/Screens/110_console_signal.svg",
+      "png": "Preview/20261127/110_console_signal.png"
+    },
+    "111_console_cipher": {
+      "label": "현장 콘솔 / 문양 해독",
+      "requirements": [
+        "UI-29"
+      ],
+      "svg": "Source/Screens/111_console_cipher.svg",
+      "png": "Preview/20261127/111_console_cipher.png"
+    },
+    "112_console_timing": {
+      "label": "현장 콘솔 / 정밀 추출",
+      "requirements": [
+        "UI-29"
+      ],
+      "svg": "Source/Screens/112_console_timing.svg",
+      "png": "Preview/20261127/112_console_timing.png"
+    },
+    "113_console_circuit": {
+      "label": "현장 콘솔 / 회로 균형",
+      "requirements": [
+        "UI-29"
+      ],
+      "svg": "Source/Screens/113_console_circuit.svg",
+      "png": "Preview/20261127/113_console_circuit.png"
+    },
+    "114_panel_seam_review": {
+      "label": "공용 패널 / 9분할 크기 비교",
+      "requirements": [
+        "UI-30"
+      ],
+      "svg": "Source/Screens/114_panel_seam_review.svg",
+      "png": "Preview/20261127/114_panel_seam_review.png"
+    },
     "71_stamina_sprint": {
       "label": "도보 HUD / 달리기",
       "requirements": [

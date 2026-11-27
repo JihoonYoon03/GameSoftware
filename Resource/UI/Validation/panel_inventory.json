@@ -446,5 +446,68 @@
     "y": 90,
     "w": 932,
     "h": 620
+  },
+  {
+    "screen": "105_holo_planet",
+    "x": 56,
+    "y": 40,
+    "w": 1168,
+    "h": 720
+  },
+  {
+    "screen": "106_holo_space",
+    "x": 56,
+    "y": 40,
+    "w": 1168,
+    "h": 720
+  },
+  {
+    "screen": "107_showcase_wardrobe",
+    "x": 56,
+    "y": 40,
+    "w": 1168,
+    "h": 720
+  },
+  {
+    "screen": "108_showcase_stash",
+    "x": 56,
+    "y": 40,
+    "w": 1168,
+    "h": 720
+  },
+  {
+    "screen": "109_showcase_shop",
+    "x": 56,
+    "y": 40,
+    "w": 1168,
+    "h": 720
+  },
+  {
+    "screen": "110_console_signal",
+    "x": 236,
+    "y": 119,
+    "w": 808,
+    "h": 559
+  },
+  {
+    "screen": "111_console_cipher",
+    "x": 236,
+    "y": 119,
+    "w": 808,
+    "h": 559
+  },
+  {
+    "screen": "112_console_timing",
+    "x": 236,
+    "y": 119,
+    "w": 808,
+    "h": 559
+  },
+  {
+    "screen": "113_console_circuit",
+    "x": 236,
+    "y": 119,
+    "w": 808,
+    "h": 559
   }
 ]

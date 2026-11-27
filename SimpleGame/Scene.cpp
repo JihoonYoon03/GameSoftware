@@ -4264,38 +4264,198 @@ void PlanetScene::Draw()
             DrawSurfaceModel(*it->second.model, it->second.chunk->frame, *session);
         }
     }
-    // CQ-04B: Render live 4-aspect procedural city signals (concurrent walk, flashing walk, left arrow)
-    // and grade-separated cutaway guides for active surface chunks.
+    // CQ-04B: Render delivered v4 3D road segments, intersection roundabouts, 4-aspect signal gantries,
+    // pedestrian signal poles, streetscape props, and grade-separated cutaway guides for active surface chunks.
     {
         const double planetRadius = session->Planet().radiusMeters;
         const int urgentAxis = (CivicJustice::State().wanted >= 2) ? 0 : -1;
         const bool flashPhase = std::fmod(w.animationTimeSeconds * 2.5f, 1.f) < .5f;
+        const auto *mGantry = models::ModelLibrary::Cq04b("signal_gantry_4aspect");
+        const auto *mPedPole = models::ModelLibrary::Cq04b("signal_pedestrian_pole");
+        const auto *mYield = models::ModelLibrary::Cq04b("sign_roundabout_yield");
+        const auto *mLight = models::ModelLibrary::Cq04b("prop_streetlight_modern");
+        const auto *mPlanter = models::ModelLibrary::Cq04b("prop_plaza_planter");
+        const auto *mShelter = models::ModelLibrary::Cq04b("prop_transit_shelter");
+        const auto *mBench = models::ModelLibrary::Cq04b("prop_bench");
+        const auto *mBollard = models::ModelLibrary::Cq04b("prop_bollard");
+        const auto *mRoadLocal = models::ModelLibrary::Cq04b("road_local_2lane_16m");
+        const auto *mRoadCollector = models::ModelLibrary::Cq04b("road_collector_4lane_16m");
+        const auto *mRoadArterial = models::ModelLibrary::Cq04b("road_arterial_6lane_16m");
+        const auto *mRoadRing = models::ModelLibrary::Cq04b("road_ring_4lane_16m");
+        const auto *mRoadHighway = models::ModelLibrary::Cq04b("road_highway_regional_16m_guardrail");
+        const auto *mViaduct = models::ModelLibrary::Cq04b("elevated_viaduct_4lane_16m");
+        const auto *mBridge = models::ModelLibrary::Cq04b("bridge_4lane_32m");
+        const auto *mPlaza = models::ModelLibrary::Cq04b("plaza_tile_8m");
+        const auto *mRound1 = models::ModelLibrary::Cq04b("junc_roundabout_1lane");
+        const auto *mRound2 = models::ModelLibrary::Cq04b("junc_roundabout_2lane");
+        const auto playerWorld = session->Pose().origin;
+        auto lightCol = [](TrafficLight l) {
+            return l == TrafficLight::Green   ? ColorRGBA(.18f, 1.f, .76f)
+                   : l == TrafficLight::Amber ? ColorRGBA(1.f, .72f, .16f)
+                                              : ColorRGBA(.96f, .22f, .28f);
+        };
         for (const auto &chunk : visible)
         {
+            // 1) CQ-04B 3D road segments & modern streetscape along city streets near the camera.
+            for (size_t rIdx = 0; rIdx < chunk->roads.size(); ++rIdx)
+            {
+                const auto &road = chunk->roads[rIdx];
+                if (road.points.size() < 2)
+                {
+                    continue;
+                }
+                const models::Model *roadMod = nullptr;
+                if (road.kind == world::StreetKind::PedestrianPlaza)
+                {
+                    roadMod = mPlaza;
+                }
+                else if (road.kind == world::StreetKind::Elevated || road.kind == world::StreetKind::ElevatedRamp)
+                {
+                    roadMod = mViaduct;
+                }
+                else if (road.kind == world::StreetKind::Bridge)
+                {
+                    roadMod = mBridge;
+                }
+                else if (road.kind == world::StreetKind::RingRoad)
+                {
+                    roadMod = mRoadRing;
+                }
+                else if (road.sidewalkMeters <= 0.)
+                {
+                    roadMod = mRoadHighway;
+                }
+                else if (road.widthMeters >= 14.5)
+                {
+                    roadMod = mRoadArterial;
+                }
+                else if (road.widthMeters >= 9.5)
+                {
+                    roadMod = mRoadCollector;
+                }
+                else
+                {
+                    roadMod = mRoadLocal;
+                }
+                if (!roadMod || !roadMod->resourceId)
+                {
+                    continue;
+                }
+                const auto &rRes = models::ResourceAssets::Get(roadMod->resourceId);
+                const float spanX = (std::max)(0.5f, rRes.maximum.x - rRes.minimum.x);
+                const float spanY = (std::max)(0.5f, rRes.maximum.y - rRes.minimum.y);
+                const bool urbanStreet = road.sidewalkMeters > 0. && road.kind != world::StreetKind::PedestrianPlaza;
+                for (size_t i = 1; i < road.points.size(); ++i)
+                {
+                    const auto pa = SurfaceProjection(road.points[i - 1], session->Origin(), planetRadius);
+                    const auto pb = SurfaceProjection(road.points[i], session->Origin(), planetRadius);
+                    const float ax = float(pa.x * .5), ay = float(pa.y * .5), az = float(pa.z * .5);
+                    const float bx = float(pb.x * .5), by = float(pb.y * .5), bz = float(pb.z * .5);
+                    const float mx = (ax + bx) * .5f, my = (ay + by) * .5f, mz = (az + bz) * .5f;
+                    const float segLenW = std::hypot(bx - ax, by - ay);
+                    if (segLenW < 0.35f || std::fabs(bz - az) > segLenW * 0.22f)
+                    {
+                        continue;
+                    }
+                    const auto mScr = Drawing::WorldToScreen(mx, my, mz * WorldCamera::IsoZScale());
+                    if (!frustum.Visible(mScr, 360.f, 360.f, 280.f, 280.f))
+                    {
+                        continue;
+                    }
+                    const float yaw = std::atan2(by - ay, bx - ax);
+                    const float dx = (bx - ax) / segLenW;
+                    const float dy = (by - ay) / segLenW;
+                    const float nx = -dy, ny = dx;
+                    const float targetW = float((road.widthMeters + road.sidewalkMeters * 2.) * .5);
+                    const float scaleY = Game::Clamp(targetW / spanY, 0.72f, 1.35f);
+                    // Tile 3D CQ04B road modules cleanly along the segment with explicit terrain elevation.
+                    const int tiles = (std::max)(1, int(std::round(segLenW / spanX)));
+                    const float stepW = segLenW / float(tiles);
+                    const float scaleX = stepW / spanX;
+                    const float roadElev = mz + 0.035f;
+                    for (int t = 0; t < tiles; ++t)
+                    {
+                        const float startDist = float(t) * stepW;
+                        const Vector2 pos{ax + dx * startDist, ay + dy * startDist};
+                        Drawing::DrawProp(*roadMod, pos, {scaleX, scaleY, 1.f}, {}, yaw, roadElev);
+                    }
+                    // Place CQ04B modern streetlights, shelters, benches & bollards along urban sidewalks.
+                    if (urbanStreet && world::SurfaceGeometry::Distance(planetRadius, playerWorld, road.points[i]) < 95.)
+                    {
+                        const float curbOffset = float(road.widthMeters * .25 + road.sidewalkMeters * .35);
+                        if (mLight && segLenW >= 5.5f && ((rIdx + i) % 2 == 0))
+                        {
+                            const float side = ((rIdx + i) % 4 == 0) ? 1.f : -1.f;
+                            Drawing::DrawProp(*mLight, {mx + nx * curbOffset * side, my + ny * curbOffset * side},
+                                              {1.f, 1.f, 1.f}, {}, yaw + (side > 0 ? -kPi * .5f : kPi * .5f), mz);
+                        }
+                        if (road.widthMeters >= 11.5 && segLenW >= 7.f && ((rIdx + i) % 5 == 0))
+                        {
+                            if (mShelter)
+                            {
+                                Drawing::DrawProp(*mShelter, {mx + nx * (curbOffset + .35f), my + ny * (curbOffset + .35f)},
+                                                  {1.f, 1.f, 1.f}, {}, yaw, mz);
+                            }
+                            if (mBench)
+                            {
+                                Drawing::DrawProp(*mBench, {mx - nx * (curbOffset + .2f), my - ny * (curbOffset + .2f)},
+                                                  {1.f, 1.f, 1.f}, {}, yaw + kPi, mz);
+                            }
+                        }
+                        if (mBollard && road.widthMeters >= 9.5 && ((rIdx + i) % 3 == 0))
+                        {
+                            Drawing::DrawProp(*mBollard, {ax + dx * 1.4f + nx * curbOffset, ay + dy * 1.4f + ny * curbOffset},
+                                              {1.f, 1.f, 1.f}, {}, yaw, mz);
+                        }
+                    }
+                }
+            }
+            // 2) CQ-04B Intersections: 4-aspect signal gantries, pedestrian poles, roundabouts & cutaway guides.
             for (const auto &inter : chunk->intersections)
             {
                 if (inter.control != world::IntersectionControl::Signalized &&
-                    inter.control != world::IntersectionControl::GradeSeparated)
+                    inter.control != world::IntersectionControl::GradeSeparated &&
+                    inter.control != world::IntersectionControl::Roundabout)
                 {
                     continue;
                 }
                 const auto p = SurfaceProjection(inter.center, session->Origin(), planetRadius);
                 const float px = float(p.x / 2.), py = float(p.y / 2.), pz = float(p.z / 2.);
                 const auto scr = Drawing::WorldToScreen(px, py, pz * WorldCamera::IsoZScale());
-                if (!frustum.Visible(scr, 260, 260, 220, 220))
+                if (!frustum.Visible(scr, 280, 280, 240, 240))
                 {
                     continue;
                 }
                 const float rW = float(inter.radiusMeters * .5);
-                if (inter.control == world::IntersectionControl::Signalized)
+                if (inter.control == world::IntersectionControl::Roundabout)
+                {
+                    const auto *rb = (inter.radiusMeters >= 15. && mRound2) ? mRound2 : mRound1;
+                    if (rb && rb->resourceId)
+                    {
+                        const auto &rbRes = models::ResourceAssets::Get(rb->resourceId);
+                        const float rbSpan = (std::max)(1.f, rbRes.maximum.x - rbRes.minimum.x);
+                        const float s = Game::Clamp((rW * 2.f) / rbSpan, 0.7f, 1.35f);
+                        Drawing::DrawProp(*rb, {px, py}, {s, s, 1.f}, {}, float(inter.mainAxisYaw), pz + 0.04f);
+                    }
+                    if (mPlanter && inter.islandRadiusMeters > 1.5)
+                    {
+                        Drawing::DrawProp(*mPlanter, {px, py}, {1.f, 1.f, 1.f}, {}, float(inter.mainAxisYaw), pz);
+                    }
+                    if (mYield)
+                    {
+                        for (int arm = 0; arm < 4; arm += 2)
+                        {
+                            const float ang = float(inter.mainAxisYaw) + float(arm) * (kPi * .5f);
+                            Drawing::DrawProp(*mYield,
+                                              {px + std::cos(ang) * (rW * 1.05f), py + std::sin(ang) * (rW * 1.05f)},
+                                              {1.f, 1.f, 1.f}, {}, ang + kPi, pz);
+                        }
+                    }
+                }
+                else if (inter.control == world::IntersectionControl::Signalized)
                 {
                     const auto sig = IntersectionSignalController::Evaluate(
                         inter, double(w.animationTimeSeconds), true, true, true, urgentAxis);
-                    auto lightCol = [](TrafficLight l) {
-                        return l == TrafficLight::Green   ? ColorRGBA(.18f, 1.f, .76f)
-                               : l == TrafficLight::Amber ? ColorRGBA(1.f, .72f, .16f)
-                                                          : ColorRGBA(.96f, .22f, .28f);
-                    };
                     renderqueue::PushMatrix();
                     renderqueue::Translate(0, -pz * WorldCamera::IsoZScale(), pz * (1296.f / 44.f));
                     for (int arm = 0; arm < 4; ++arm)
@@ -4323,14 +4483,31 @@ void PlanetScene::Draw()
                         Drawing::DrawHologramStrip({stopPos.x - n.x * .55f, stopPos.y - n.y * .55f},
                                                    {stopPos.x + n.x * .55f, stopPos.y + n.y * .55f}, .16f, stopCol,
                                                    .12f);
+                        // CQ-04B 4-aspect cantilevered traffic signal gantry & pedestrian signal poles!
+                        const Vector2 cornerPos{px + d.x * (rW * 1.02f) + n.x * (rW * .66f),
+                                                py + d.y * (rW * 1.02f) + n.y * (rW * .66f)};
+                        if (mGantry && (arm == 0 || arm == 2))
+                        {
+                            models::Palette gp;
+                            gp.emission = {stopCol.r, stopCol.g, stopCol.b, 1.f};
+                            Drawing::DrawProp(*mGantry, cornerPos, {1.f, 1.f, 1.f}, gp, ang + kPi, pz);
+                        }
+                        if (mPedPole)
+                        {
+                            models::Palette pp;
+                            pp.emission = {walkCol.r, walkCol.g, walkCol.b, 1.f};
+                            Drawing::DrawProp(*mPedPole,
+                                              {px + d.x * (rW * .94f) - n.x * (rW * .58f),
+                                               py + d.y * (rW * .94f) - n.y * (rW * .58f)},
+                                              {1.f, 1.f, 1.f}, pp, ang, pz);
+                        }
                     }
                     renderqueue::PopMatrix();
                 }
                 else if (inter.control == world::IntersectionControl::GradeSeparated)
                 {
-                    // Quarter-view cutaway guide strips when player approaches under an overpass or underpass slab.
                     const double distToPlayer =
-                        world::SurfaceGeometry::Distance(planetRadius, session->Pose().origin, inter.center);
+                        world::SurfaceGeometry::Distance(planetRadius, playerWorld, inter.center);
                     if (distToPlayer < inter.radiusMeters + 18.)
                     {
                         renderqueue::PushMatrix();

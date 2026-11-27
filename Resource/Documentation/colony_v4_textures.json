@@ -1,0 +1,404 @@
+{
+  "request": "7.6.2",
+  "max_texture_bytes": 100000000,
+  "orm": "R occlusion / G roughness / B metallic",
+  "planetary_role": "presentation; not the gameplay elevation or navigation grid",
+  "textures": {
+    "Colony_GlassCurtain_BaseColor": {
+      "path": "Export/Textures/ColonyV4/Colony_GlassCurtain_BaseColor.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "sRGB",
+      "mapping": "repeat UV",
+      "bytes": 694015,
+      "sha256": "799a8e1c62ae179f78524045f9a2986b34a41ff12c742932bf4a34cebad8131b"
+    },
+    "Colony_GlassCurtain_Normal": {
+      "path": "Export/Textures/ColonyV4/Colony_GlassCurtain_Normal.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "linear",
+      "mapping": "repeat UV",
+      "bytes": 669676,
+      "sha256": "d9c7b97ec8bd7277e38046e62e667e1d7637478c014fed9927c817f769bbdd1e"
+    },
+    "Colony_GlassCurtain_ORM": {
+      "path": "Export/Textures/ColonyV4/Colony_GlassCurtain_ORM.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "linear",
+      "mapping": "repeat UV",
+      "bytes": 198437,
+      "sha256": "5f791f62f332aeb9cfba2401961d8595b45f14bfa366ff8885b99a9a70290b89"
+    },
+    "Colony_GlassCurtain_Emissive": {
+      "path": "Export/Textures/ColonyV4/Colony_GlassCurtain_Emissive.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "sRGB",
+      "mapping": "repeat UV",
+      "bytes": 83876,
+      "sha256": "cc0b70ace0a1200249dc29e11d774c6af73c3bbec6711cae3316a343e5916125"
+    },
+    "Colony_WeatheredCladding_BaseColor": {
+      "path": "Export/Textures/ColonyV4/Colony_WeatheredCladding_BaseColor.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "sRGB",
+      "mapping": "repeat UV",
+      "bytes": 646778,
+      "sha256": "b17f0036495feeb009cf555d8eb33e7b6cc38cfd8a08d3f0847a164d9eaff13b"
+    },
+    "Colony_WeatheredCladding_Normal": {
+      "path": "Export/Textures/ColonyV4/Colony_WeatheredCladding_Normal.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "linear",
+      "mapping": "repeat UV",
+      "bytes": 1323174,
+      "sha256": "f9462fe2ed321775f2b119cc5feb9e1469ac7ff510979619edece33d85545f72"
+    },
+    "Colony_WeatheredCladding_ORM": {
+      "path": "Export/Textures/ColonyV4/Colony_WeatheredCladding_ORM.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "linear",
+      "mapping": "repeat UV",
+      "bytes": 203361,
+      "sha256": "1edcf32e2ca2a599d5b4fc21831c3479ae653ac1d5c38e451c12312ac545dd4f"
+    },
+    "Colony_WeatheredCladding_Emissive": {
+      "path": "Export/Textures/ColonyV4/Colony_WeatheredCladding_Emissive.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "sRGB",
+      "mapping": "repeat UV",
+      "bytes": 3129,
+      "sha256": "79238174f0b3e2441720c46339b8cce2c8be2c19a1507831e726b51b8bbe3b82"
+    },
+    "Industrial_GratingTrim_BaseColor": {
+      "path": "Export/Textures/ColonyV4/Industrial_GratingTrim_BaseColor.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "sRGB",
+      "mapping": "repeat UV",
+      "bytes": 820437,
+      "sha256": "a973a2733bd993fed1ce46a844de260b03c88593f0805601d57f6c5a91621d12"
+    },
+    "Industrial_GratingTrim_Normal": {
+      "path": "Export/Textures/ColonyV4/Industrial_GratingTrim_Normal.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "linear",
+      "mapping": "repeat UV",
+      "bytes": 1719078,
+      "sha256": "b950d9d44124f0a7a96d4b1cca45f44fdb8d04c168c58a529a012f7c9f8fef32"
+    },
+    "Industrial_GratingTrim_ORM": {
+      "path": "Export/Textures/ColonyV4/Industrial_GratingTrim_ORM.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "linear",
+      "mapping": "repeat UV",
+      "bytes": 228498,
+      "sha256": "064414156c64c521f6cc7c82c06c37f872301011805e573536d7d080c7d551f3"
+    },
+    "Industrial_GratingTrim_Emissive": {
+      "path": "Export/Textures/ColonyV4/Industrial_GratingTrim_Emissive.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "sRGB",
+      "mapping": "repeat UV",
+      "bytes": 3129,
+      "sha256": "79238174f0b3e2441720c46339b8cce2c8be2c19a1507831e726b51b8bbe3b82"
+    },
+    "Interior_Bulkhead_BaseColor": {
+      "path": "Export/Textures/ColonyV4/Interior_Bulkhead_BaseColor.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "sRGB",
+      "mapping": "repeat UV",
+      "bytes": 594927,
+      "sha256": "f239d0f8e6b3dfcb141ca8f2be9a5ed5927a897a8df1113c191f89ea7296fcb3"
+    },
+    "Interior_Bulkhead_Normal": {
+      "path": "Export/Textures/ColonyV4/Interior_Bulkhead_Normal.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "linear",
+      "mapping": "repeat UV",
+      "bytes": 962357,
+      "sha256": "5b125bcd0e80f9888ef327f96e4ef62ea9ec6fb7f327ea94a0051dd2172e70e0"
+    },
+    "Interior_Bulkhead_ORM": {
+      "path": "Export/Textures/ColonyV4/Interior_Bulkhead_ORM.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "linear",
+      "mapping": "repeat UV",
+      "bytes": 199869,
+      "sha256": "a01e8718ada9d44e6921e79c038037a5e9586825b0687dea57c65f33b3f6f087"
+    },
+    "Interior_Bulkhead_Emissive": {
+      "path": "Export/Textures/ColonyV4/Interior_Bulkhead_Emissive.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "sRGB",
+      "mapping": "repeat UV",
+      "bytes": 3129,
+      "sha256": "79238174f0b3e2441720c46339b8cce2c8be2c19a1507831e726b51b8bbe3b82"
+    },
+    "Storefront_SignageAtlas_BaseColor": {
+      "path": "Export/Textures/ColonyV4/Storefront_SignageAtlas_BaseColor.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "sRGB",
+      "mapping": "2x2 atlas",
+      "bytes": 601648,
+      "sha256": "6b7bb3d2cf20d715b4c6775bbd1e3e3ef0bbacb6ce05b42ba5ab9c55f794a35d"
+    },
+    "Storefront_SignageAtlas_Normal": {
+      "path": "Export/Textures/ColonyV4/Storefront_SignageAtlas_Normal.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "linear",
+      "mapping": "2x2 atlas",
+      "bytes": 765447,
+      "sha256": "c6c859c781e75ce3c28c6107001c51309d6448542a3bb725f1c10244ed4f1b3b"
+    },
+    "Storefront_SignageAtlas_ORM": {
+      "path": "Export/Textures/ColonyV4/Storefront_SignageAtlas_ORM.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "linear",
+      "mapping": "2x2 atlas",
+      "bytes": 190793,
+      "sha256": "2b8572bb4b9ab6ed0a3a8988ec69c27362dc59a7cff68d457021a6456003f88a"
+    },
+    "Storefront_SignageAtlas_Emissive": {
+      "path": "Export/Textures/ColonyV4/Storefront_SignageAtlas_Emissive.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "sRGB",
+      "mapping": "2x2 atlas",
+      "bytes": 28558,
+      "sha256": "1fdfa731f4653b36f79b3fef5b8056bd6bc2b86434dfd4bd78ec49aeeedb7514"
+    },
+    "Alien_FoliageBark_BaseColor": {
+      "path": "Export/Textures/ColonyV4/Alien_FoliageBark_BaseColor.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "sRGB",
+      "mapping": "repeat UV",
+      "bytes": 1177193,
+      "sha256": "955b245d4942d142e55be4001ceffea1938bbfaf13c5be4d464dcbfc1ce1c44d"
+    },
+    "Alien_FoliageBark_Normal": {
+      "path": "Export/Textures/ColonyV4/Alien_FoliageBark_Normal.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "linear",
+      "mapping": "repeat UV",
+      "bytes": 2048957,
+      "sha256": "601e8b9b938719c11fb175df7c81dd2118748d8264572cb92b8aa4edeb200e2b"
+    },
+    "Alien_FoliageBark_ORM": {
+      "path": "Export/Textures/ColonyV4/Alien_FoliageBark_ORM.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "linear",
+      "mapping": "repeat UV",
+      "bytes": 124543,
+      "sha256": "62eb783ecaef1f6ba02885135001223244394583f12ad9e60323752719328eea"
+    },
+    "Alien_FoliageBark_Emissive": {
+      "path": "Export/Textures/ColonyV4/Alien_FoliageBark_Emissive.png",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "sRGB",
+      "mapping": "repeat UV",
+      "bytes": 3129,
+      "sha256": "79238174f0b3e2441720c46339b8cce2c8be2c19a1507831e726b51b8bbe3b82"
+    },
+    "Planet_Erma_Cloud": {
+      "path": "Export/Textures/ColonyV4/Planet_Erma_Cloud.png",
+      "size": [
+        4096,
+        2048
+      ],
+      "channels": 4,
+      "colorspace": "sRGB color, linear opacity",
+      "mapping": "equirectangular",
+      "bytes": 1923475,
+      "sha256": "c341d106f653ad8eaf72eb28c6c5e89b8faf86fe5365692750470611bf08c657"
+    },
+    "Planet_Erma_Albedo": {
+      "path": "Export/Textures/ColonyV4/Planet_Erma_Albedo.png",
+      "size": [
+        4096,
+        2048
+      ],
+      "channels": 3,
+      "colorspace": "sRGB",
+      "mapping": "equirectangular",
+      "bytes": 7009322,
+      "sha256": "e73d826cc533de549bd3ee5e1d4df0d4a2b89422d21b4dc067e4039cb9d689bb"
+    },
+    "Planet_Erma_Normal": {
+      "path": "Export/Textures/ColonyV4/Planet_Erma_Normal.png",
+      "size": [
+        4096,
+        2048
+      ],
+      "channels": 3,
+      "colorspace": "linear",
+      "mapping": "equirectangular / tangent +Y",
+      "bytes": 10312513,
+      "sha256": "fdd8fadff50cd44355df6794662ecaefa11e2c33943d1ff5659a3f82e5112bd5"
+    },
+    "Planet_Seira_Albedo": {
+      "path": "Export/Textures/ColonyV4/Planet_Seira_Albedo.png",
+      "size": [
+        2048,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "sRGB",
+      "mapping": "equirectangular",
+      "bytes": 2204216,
+      "sha256": "2f3781b5864a389209067afdfcb3d8a7b8dd7f662570c11dc9f9300476aeeb41"
+    },
+    "Planet_Seira_Normal": {
+      "path": "Export/Textures/ColonyV4/Planet_Seira_Normal.png",
+      "size": [
+        2048,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "linear",
+      "mapping": "equirectangular / tangent +Y",
+      "bytes": 4990370,
+      "sha256": "06de2bb78a92d968c8ae7272afa478c2a92cf52a7ca6b33bfa5c8120a2577c91"
+    },
+    "Planet_Orren_Albedo": {
+      "path": "Export/Textures/ColonyV4/Planet_Orren_Albedo.png",
+      "size": [
+        2048,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "sRGB",
+      "mapping": "equirectangular",
+      "bytes": 2204522,
+      "sha256": "3a066902185128d8da23d5ed663bb4faf1020d638174d623eb78732702ee203f"
+    },
+    "Planet_Orren_Normal": {
+      "path": "Export/Textures/ColonyV4/Planet_Orren_Normal.png",
+      "size": [
+        2048,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "linear",
+      "mapping": "equirectangular / tangent +Y",
+      "bytes": 3947381,
+      "sha256": "be68ec7d71a1b3b2f204f79f851293fe7335137f1d135513c4d84d87ffcad9a2"
+    },
+    "Space_Starfield_Nebula": {
+      "path": "Export/Textures/ColonyV4/Space_Starfield_Nebula.png",
+      "size": [
+        2048,
+        1024
+      ],
+      "channels": 3,
+      "colorspace": "sRGB",
+      "mapping": "equirectangular sky",
+      "bytes": 390158,
+      "sha256": "ea5085a1aaef2b6179672f26d547bfde361be43bf0909b2f6a924fe89a30ba00"
+    },
+    "Planet_Orren_Ring": {
+      "path": "Export/Textures/ColonyV4/Planet_Orren_Ring.png",
+      "size": [
+        1024,
+        256
+      ],
+      "channels": 4,
+      "colorspace": "sRGB color, linear opacity",
+      "mapping": "U radial / V azimuth",
+      "bytes": 205989,
+      "sha256": "17a243229a2dc0880a5da539f07e52985d81988ab8ec29e623f7d53b95dfbb71"
+    }
+  }
+}
